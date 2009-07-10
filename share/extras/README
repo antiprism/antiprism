@@ -1,0 +1,35 @@
+Antiprism Resources - Extras
+============================
+
+The extra resources are unsupported, and provided for interest only. They
+may be useful as examples. Programs or scripts may require modification
+before they will work.
+
+
+python
+------
+
+o  anim_spin.py
+     Makes a spinning polyhedron animation
+
+o  helix.py
+     Makes a helix by repeatedly bonding a polyhedron to itself
+
+o  trunc_scale.py
+     Makes an animation of the full range of an idealised truncation 
+
+o  trunc_switch.py
+     Makes an animation that switches between a dual pair by truncation
+
+
+shell_scripts
+-------------
+
+o  demo.sh
+     Bash script to display the demonstration models (Jean-Pierre Demailly)
+     
+o  dual_pair.sh
+     Bash script to make a dual pair (Roger Kaufman)
+
+
+

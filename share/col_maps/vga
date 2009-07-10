@@ -1,0 +1,23 @@
+# Antiprism Resource File - http://www.antiprism.com
+# This file may be copied, modified and redistributed
+#
+# colour map file
+# vga
+# Original VGA named colours (converted by Roger Kaufman)
+  0	 =   0   0   0    # Black
+  1    =   0   0 128    # Blue
+  2    =   0 128   0    # Green
+  3    =   0 128 128    # Cyan
+  4    = 128   0   0    # Red
+  5    = 128   0 128    # Magenta
+  6    = 128 128   0    # Brown
+  7    = 192 192 192    # LightGrey
+  8    = 128 128 128    # DarkGrey
+  9    =   0   0 255    # LightBlue
+ 10    =   0 255   0    # LightGreen
+ 11    =   0 255 255    # LightCyan
+ 12    = 255   0   0    # LightRed
+ 13    = 255   0 255    # LightMagenta
+ 14    = 255 255   0    # Yellow
+ 15    = 255 255 255    # White
+ 

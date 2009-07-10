@@ -1,0 +1,300 @@
+/*
+   Copyright (c) 2003-2009, Adrian Rossiter
+
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+      The above copyright notice and this permission notice shall be included
+      in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+*/
+
+/*
+   Name: off_report.cc
+   Description: analyse an off_file and print a report
+   Project: Antiprism - http://www.antiprism.com
+*/
+
+#include <string.h>
+#include <unistd.h>
+#include <math.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <string>
+#include <vector>
+#include <set>
+
+#include "rep_print.h"
+#include "../base/antiprism.h"
+
+using std::string;
+using std::vector;
+using std::set;
+
+
+
+class or_opts: public prog_opts
+{
+   public:
+      vec3d center;
+      bool center_is_centroid;
+      int sig_digits;
+      string sections;
+      string counts;
+      bool orient;
+      char edge_type;
+      string ifile;
+      string ofile;
+
+      or_opts(): prog_opts("off_report"), center(vec3d(0,0,0)),
+                 center_is_centroid(false), sig_digits(17),
+                 orient(true), edge_type('a')
+                 {}
+
+      void process_command_line(int argc, char **argv);
+      void usage();
+};
+
+
+void or_opts::usage()
+{
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] [input_file]\n"
+"\n"
+"Read a file in OFF format and generate a report\n"
+"\n"
+"Options\n"
+"%s"
+"  -c <cent> centre of shape in form 'X,Y,Z', or C to use\n"
+"            centroid (default, '0,0,0')\n"
+"  -S <secs> Print values by sections, given as a list of letters\n"
+"            A - all                     G - general\n"
+"            F - faces                   E - edges\n"
+"            S - solid Angles            a - plane angles\n"
+"            D - distances (min/max)     s - symmetry\n"
+"  -C <vals> Print counts of values, given as a list of letters\n"
+"            A - All                     F - faces type by angles\n"
+"            E - edge lengths\n"
+"            S - solid angles            D - dihedral angles\n"
+"            s - face sides              o - vertex orders\n"
+"  -k        keep orientation, don't try to orient the faces\n"
+"  -E <type> edges for report, e - explicit edges, i - implicit edges\n"
+"            a - explicit and implicit (default)\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+"  -d <dgts> number of significant digits (default 17) or if negative\n"
+"            then the number of digits after the decimal point\n"
+"\n"
+"\n", prog_name(), help_ver_text);
+}
+
+
+     
+void or_opts::process_command_line(int argc, char **argv)
+{
+   char errmsg[MSG_SZ];
+   extern char *optarg;
+   extern int optind, opterr;
+   opterr = 0;
+   char c;
+   
+   handle_long_opts(argc, argv);
+
+   while( (c = getopt(argc, argv, ":hc:S:C:kE:o:d:")) != -1 ) {
+      if(common_opts(c))
+         continue;
+
+      switch(c) {
+         case 'c':
+            if(strcmp(optarg, "C")==0)
+               center_is_centroid = true;
+            else if(!center.read(optarg, errmsg))
+               error(errmsg, c);
+            break;
+
+         case 'S':
+            if(strspn(optarg, "AGFEaSsD") == strlen(optarg))
+               sections = optarg;
+            else {
+               error("contains incorrect section type letter", c);
+            }
+            break;
+
+         case 'C':
+            if(strspn(optarg, "AFEDSso") == strlen(optarg))
+               counts = optarg;
+            else {
+               error("contains incorrect count type letter", c);
+            }
+            break;
+
+         case 'k':
+            orient = false;
+            break;
+
+         case 'E':
+            if(!strlen(optarg)==1 || !strchr("eia", *optarg))
+               error("reporting edge type must be e, i or a");
+            edge_type = *optarg;
+            break;
+
+         case 'd':
+            if(!read_int(optarg, &sig_digits, errmsg))
+               error(errmsg, c);
+            break;
+
+         case 'o':
+            ofile = optarg;
+            break;
+
+         default:
+            error("unknown command line error");
+      }
+   }
+
+   if(argc-optind > 1)
+      error("too many arguments");
+   
+   if(argc-optind == 1)
+      ifile=argv[optind];
+
+   if(sections=="" && counts=="") {
+      warning("no print options set, setting option -S G");
+      sections = "G";
+   }
+
+}
+
+void print_sections(rep_printer &rep, const char *sections)
+{
+   for(const char *c=sections; *c; c++) {
+      switch(*c) {
+         case 'A':
+            rep.general_sec();
+            rep.faces_sec();
+            rep.edges_sec();
+            rep.angles_sec();
+            rep.solid_angles_sec();
+            rep.distances_sec();
+            break;
+         case 'G':
+            rep.general_sec();
+            break;
+         case 'F':
+            rep.faces_sec();
+            break;
+         case 'E':
+            rep.edges_sec();
+            break;
+         case 'a':
+            rep.angles_sec();
+            break;
+         case 'S':
+            rep.solid_angles_sec();
+            break;
+         case 'D':
+            rep.distances_sec();
+            break;
+         case 's':
+            rep.symmetry();
+            break;
+      }
+   }
+}
+
+void print_counts(rep_printer &rep, const char *counts)
+{
+   for(const char *c=counts; *c; c++) {
+      switch(*c) {
+         case 'A':
+            rep.face_sides_cnts();
+            rep.vert_order_cnts();
+            rep.face_angles_cnts();
+            rep.edge_lengths_cnts();
+            rep.solid_angles_cnts();
+            rep.dihedral_angles_cnts();
+            break;
+         case 'F':
+            rep.face_angles_cnts();
+            break;
+         case 'E':
+            rep.edge_lengths_cnts();
+            break;
+         case 'D':
+            rep.dihedral_angles_cnts();
+            break;
+         case 'S':
+            rep.solid_angles_cnts();
+            break;
+         case 's':
+            rep.face_sides_cnts();
+            break;
+         case 'o':
+            rep.vert_order_cnts();
+            break;
+      }
+   }
+}
+
+int main(int argc, char *argv[])
+{
+   or_opts opts;
+   opts.process_command_line(argc, argv);
+
+   char errmsg[MSG_SZ];
+   col_geom_v geom;
+   if(!geom.read(opts.ifile, errmsg))
+      opts.error(errmsg);
+   if(*errmsg)
+      opts.warning(errmsg);
+   
+   if(opts.edge_type=='a')
+      geom.add_missing_impl_edges();
+   else if(opts.edge_type=='i') {
+      geom.clear_edges();
+      geom.add_missing_impl_edges();
+   }
+   
+   if(opts.center_is_centroid)
+      opts.center = centroid(*geom.get_verts());
+
+   FILE *ofile = stdout;  // write to stdout by default
+   if(opts.ofile != "") {
+      ofile = fopen(opts.ofile.c_str(), "w");
+      if(ofile == 0)
+         opts.error("could not open output file '"+opts.ofile+"'");
+   }
+
+   rep_printer rep(geom, ofile);
+   rep.set_sig_dgts(opts.sig_digits);
+   rep.set_center(opts.center);
+   rep.is_oriented(); // set oriented value before orienting
+   if(opts.orient) {
+      geom.orient();
+      if(geom_info(geom).volume()<0) // inefficient
+         geom.orient_reverse();
+   }
+      
+
+   
+   print_sections(rep, opts.sections.c_str()); 
+   print_counts(rep, opts.counts.c_str()); 
+   
+   if(opts.ofile=="")
+      fclose(ofile);
+
+   return 0;
+}
+   
+

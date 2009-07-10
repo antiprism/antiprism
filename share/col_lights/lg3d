@@ -1,0 +1,18 @@
+OFF
+# Antiprism Resource File - http://www.antiprism.com
+# This file may be copied, modified and redistributed
+#
+# lights file
+# Simulate LiveGraphics3D lighting (Roger Kaufman)
+4 4 0
+# light vertices
+ 0.86602 -0.61602  0.93301
+ 0.36602 -0.18301  1.68301
+-0.50000 -0.43301  1.25000
+-0.36602  0.18301 -1.68301
+# light colours 
+1  0  1.0 0.0 0.0
+1  1  0.0 1.0 0.0
+1  2  0.0 0.0 1.0
+1  3  1.0 1.0 1.0
+

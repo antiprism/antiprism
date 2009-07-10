@@ -1,0 +1,59 @@
+#Process with configure to produce setup.py
+
+from distutils.core import setup, Extension
+import glob
+
+#------------ Build Options-------------------
+
+# If using Cygwin GCC: may be set to '-mno-cygwin' to build a module
+# that is not dependant on the Cygwin environment
+#no_cygwin_option = '-mno-cygwin'
+no_cygwin_option = ''
+
+#------------ End of Options -----------------0
+
+
+
+
+
+# Make a list of the library string, stripping the -l from each library.
+libs = [lib[2:] for lib in '@LIBS@'.split()]
+
+# Make a list of the sourcefile. Use the swig wrapper from this
+# directory and the library source in ../../base
+source_files = ['antiprism_wrap.cc']
+source_files.extend(glob.glob('lib_src/*.cc'))
+
+ext_comp_args=[]
+ext_link_args=[]
+
+
+if len(no_cygwin_option.strip()):
+   ext_comp_args.append(no_cygwin_option)
+   ext_link_args.append(no_cygwin_option)
+
+
+setup(
+   name='@PACKAGE_NAME@',
+   version='@PACKAGE_VERSION@',
+   description='Antiprism Python binding',
+   author='Adrian Rossiter',
+   author_email='@PACKAGE_BUGREPORT@',
+   maintainer='Adrian Rossiter',
+   maintainer_email='@PACKAGE_BUGREPORT@',
+   url='http://www.antiprism.com/',
+   py_modules=['antiprism'],
+   # Examples scripts scripts=[''],
+   ext_modules=[Extension('_antiprism', source_files,
+                      libraries=libs,
+                      swig_opts=['-c++'],
+                      define_macros=[ ("VERSION", "\"%s\""%'@PACKAGE_VERSION@'),
+                                      ("SUPDIR", "\".\""),
+                                      ("FOUND_GLU", @FOUND_GLU@),
+                                      ("UTIMER", @UTIMER@),
+                                      ("USLEEP", @USLEEP@)
+                                    ],
+                      extra_compile_args=ext_comp_args,
+                      extra_link_args=ext_link_args
+                     )],
+      )

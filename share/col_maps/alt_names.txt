@@ -1,0 +1,14 @@
+grey16=hsv16_0_0_0:1
+grey_wrap16=hsv16_0_0_0:1:0
+grey64=hsv64_0_0_0:1
+grey_wrap64=hsv64_0_0_0:1:0
+grey256=hsv256_0_0_0:1
+grey_wrap256=hsv256_0_0_0:1:0
+
+gray16=hsv16_0_0_0:1
+gray_wrap16=hsv16_0_0_0:1:0
+gray64=hsv64_0_0_0:1
+gray_wrap64=hsv64_0_0_0:1:0
+gray256=hsv256_0_0_0:1
+gray_wrap256=hsv256_0_0_0:1:0
+

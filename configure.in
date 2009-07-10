@@ -1,0 +1,231 @@
+#                                               -*- Autoconf -*-
+# Process this file with autoconf to produce a configure script.
+
+AC_PREREQ(2.59)
+AC_INIT(antiprism, 0.20.pre08, adrian@antiprism.com)
+AM_INIT_AUTOMAKE([1.9 foreign])
+
+AC_CONFIG_SRCDIR([base/antiprism.h])
+AC_CONFIG_HEADER([config.h])
+# Checks for programs.
+AC_PROG_CXX
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_RANLIB
+#AC_DISABLE_SHARED
+#AC_DISABLE_STATIC
+AC_LIBTOOL_WIN32_DLL
+AC_PROG_LIBTOOL
+
+# Check whether Python module should be built
+AC_ARG_ENABLE( python,
+   [  --disable-python        exclude mod_python and support for metric modules written in python],
+   [ if test x"$enableval" != xyes; then enable_python="no"; fi ], [ enable_python="yes" ] )
+
+AM_PATH_PYTHON(2.3, [], [enable_python="no"])
+      
+AM_CONDITIONAL(BUILD_PY_MOD, false)
+AM_CONDITIONAL(USE_SWIG, false)
+
+enable_python="disabled" #disable python for this release
+if test x"$enable_python" = x"yes" ;
+then
+   AM_CONDITIONAL(BUILD_PY_MOD, true)
+   echo "will build Python Module";
+# Check whether Python module wrapper will be regenerated with swig
+   AC_PROG_SWIG(1.3.21)
+   SWIG_ENABLE_CXX
+   SWIG_PYTHON
+   if test "$SWIG_LIB" ; then
+      AM_CONDITIONAL(USE_SWIG, true)
+      echo "SWIG is available to rebuild the Python module interface"
+   else
+      echo
+      echo "*********************************************"
+      echo "   SWIG is not available. It is not needed to build and "
+      echo "   install this package. However, if the library source is "
+      echo "   modified then the changes will not be included in the "
+      echo "   Python module."
+      echo "*********************************************"
+      echo
+   fi
+else
+   echo
+   echo "*********************************************"
+   echo "   the Python module will not be built"
+   echo "   either configure was run with --disable-python"
+   echo "   or a Python development package is not installed (or found)"
+   echo "*********************************************"
+   echo
+fi
+
+# Allow newly installed binaries to find installed library
+if $CC -Wl,-rpath,/usr/lib -S -o /dev/null -xc /dev/null >/dev/null 2>&1;
+then
+   AM_CONDITIONAL(USE_RPATH_FLAGS, true)
+   echo "can add -Wl,-rpath to LDFLAGS"
+else
+   AM_CONDITIONAL(USE_RPATH_FLAGS, false)
+   echo "cannot add -Wl,-rpath to LDFLAGS"
+fi
+
+# Add -fno-strict-aliasing to CFLAGS if accepted
+ALIASING_FLAG=
+if $CC -fno-strict-aliasing -S -o /dev/null -xc /dev/null >/dev/null 2>&1;
+then
+   ALIASING_FLAG="-fno-strict-aliasing"
+   CXXFLAGS="$ALIASING_FLAG $CXXFLAGS"
+fi
+AC_SUBST(ALIASING_FLAG)
+
+
+AC_CANONICAL_HOST
+case $host_os in
+  *cygwin* ) HOST_CYGWIN=yes;;
+         * ) HOST_CYGWIN=no;;
+esac
+
+ADD_X_PATHS=yes
+if test x"$HOST_CYGWIN" = x"yes" ; then
+   AC_CHECK_LIB([GL], [glBegin], [ADD_X_PATHS=no], [
+      AC_CHECK_LIB([opengl32], [main], [ADD_X_PATHS=no])] )
+fi
+
+if test x"$ADD_X_PATHS" = x"yes" ; then
+   AC_PATH_X
+   if ! test x"$x_libraries" = x ; then
+      LDFLAGS="$LDFLAGS -L$x_libraries"
+   fi
+   if ! test x"$x_includes" = x ; then
+      CPPFLAGS="$CPPFLAGS -I$x_includes"
+   fi
+fi
+
+AC_CHECK_FUNC([gettimeofday], [utimer=1], [utimer=0])
+if test $utimer = 0 ; then
+   AC_MSG_CHECKING([for timeGetTime in winmm])
+   my_ac_save_LIBS=$LIBS
+   LIBS="-lwinmm $LIBS"
+   AC_TRY_LINK([#include <windef.h>
+             #include <mmsystem.h>
+             ],
+             [timeGetTime();],
+             [ dnl worked!
+             utimer=2; AC_MSG_RESULT([yes])
+             ],
+             [ dnl failed, restore LIBS
+             LIBS=$my_ac_save_LIBS; utimer=0; AC_MSG_RESULT(no);
+             AC_MSG_ERROR([no suitable subsecond time function found])
+             ],            )
+fi
+
+AC_CHECK_LIB([m], [acos])
+AC_CHECK_LIB([GL], [glBegin], LIBS="-lGL $LIBS", [
+   AC_CHECK_LIB([opengl32], [main])] )
+
+FOUND_GLU=1
+AC_CHECK_LIB([GLU], [gluBeginCurve], LIBS="-lGLU $LIBS", [
+   AC_CHECK_LIB([glu32], [main], LIBS="-lglu32 $LIBS", FOUND_GLU=0)] )
+
+AC_CHECK_HEADERS([GL/gl.h GL/glu.h], [], [FOUND_GLU=0])
+
+if test $FOUND_GLU = 0 ; then
+   echo
+   echo "*********************************************"
+   echo "   missing some OpenGL or GLU library or header"
+   echo "   check OpenGL and GLU development packages are installed"
+   echo "*********************************************"
+   echo
+fi
+
+AH_TEMPLATE([FOUND_GLU], [The GL and GLU libraries and headers were found])
+AC_DEFINE_UNQUOTED([FOUND_GLU], [$FOUND_GLU])
+AC_SUBST(FOUND_GLU)
+
+NO_GLUT=0
+GLUT=1
+OPENGLUT=2
+
+AC_CHECK_LIB([glut], [glutSwapBuffers], [GLUT_LIB="-lglut"; glut_type=$GLUT],[
+   AC_CHECK_LIB([openglut], [main],
+      [GLUT_LIB="-lopenglut"; glut_type=$OPENGLUT], [
+   AC_CHECK_LIB([glut32], [main], [GLUT_LIB="-lglut32"; glut_type=$GLUT],
+      [GLUT_LIB=""; glut_type=$NO_GLUT] )] )] )
+
+AC_CHECK_HEADERS([GL/glut.h], , [glut_type=$NO_GLUT])
+
+if test $glut_type = 0 ; then
+   echo
+   echo "*********************************************"
+   echo "   missing GLUT library or header"
+   echo "   check GLUT development package is installed"
+   echo "*********************************************"
+   echo
+fi
+
+if test ! $FOUND_GLU = 0 && test ! $glut_type = 0 ; then
+   AM_CONDITIONAL(BUILD_ANTIVIEW, true)
+   echo "OpenGL/GLUT found, antiview will be built"
+else
+   AM_CONDITIONAL(BUILD_ANTIVIEW, false)
+   echo
+   echo "*********************************************"
+   echo "   antiview will not be built"
+   echo "   missing OpenGL or GLUT components (details above)"
+   echo "*********************************************"
+   echo
+fi
+
+AC_SUBST(GLUT_LIB)
+
+AH_TEMPLATE([GLUT_TYPE], [The GLUT library that will used 1=GLUT, 2=OpenGLUT])
+AC_DEFINE_UNQUOTED([GLUT_TYPE], [$glut_type])
+
+
+# Timer
+
+AH_TEMPLATE([UTIMER], [usec timer to use 1=gettimeofday, 2=timeGetTime])
+AC_DEFINE_UNQUOTED([UTIMER], [$utimer])
+UTIMER=$utimer
+AC_SUBST(UTIMER)
+
+AC_CHECK_FUNC([usleep], [usleep=1],
+   [AC_CHECK_HEADER([winbase.h], [usleep=2],
+      [AC_MSG_ERROR([no suitable subsecond sleep function found])], [#include <windows.h>])
+   ])
+AH_TEMPLATE([USLEEP], [usec sleep function to use 1=usleep, 2=Sleep])
+AC_DEFINE_UNQUOTED([USLEEP], [$usleep])
+USLEEP=$usleep
+AC_SUBST(USLEEP)
+
+# Python binding
+
+
+# Checks for header files.
+AC_HEADER_STDC
+AC_CHECK_HEADERS([float.h limits.h stdlib.h string.h unistd.h])
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_HEADER_STDBOOL
+AC_C_CONST
+AC_C_INLINE
+AC_TYPE_SIZE_T
+AC_STRUCT_TM
+
+# Checks for library functions.
+AC_FUNC_ERROR_AT_LINE
+AC_FUNC_MALLOC
+AC_FUNC_MEMCMP
+AC_FUNC_REALLOC
+AC_FUNC_STRTOD
+AC_CHECK_FUNCS([floor memset pow sqrt strchr strcspn strpbrk strrchr strspn strstr strtol])
+
+AC_CONFIG_FILES([Makefile
+                 aview/Makefile
+                 base/Makefile
+                 src/Makefile
+                 src_extra/Makefile
+                 ])
+                 #python/Makefile
+                 #python/distutils/setup.py
+AC_OUTPUT

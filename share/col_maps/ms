@@ -1,0 +1,55 @@
+# Antiprism Resource File - http://www.antiprism.com
+# This file may be copied, modified and redistributed
+#
+# colour map file
+# ms
+# A color map based on the Microsoft color dialog (Roger Kaufman)
+# http://publib.boulder.ibm.com/infocenter/dmndhelp/v6rxmx/index.jsp?topic=/com.ibm.btools.help.modeler.doc/doc/concepts/accessibility/colordialog.html
+0  = 128 255 0    # applegreen
+1  = 0 255 255    # aqua
+2  = 0 0 0        # black
+3  = 0 0 255      # blue
+4  = 128 0 255    # blueviolet
+5  = 128 64 64    # chocolate
+6  = 64 0 128     # darkblueviolet
+7  = 64 0 0       # darkbrown
+8  = 0 64 0       # darkforestgreen
+9  = 128 128 64   # darkolive
+10 = 255 128 0    # darkorange
+11 = 64 0 64      # darkpurple
+12 = 64 0 64      # darkpurple
+13 = 128 0 0      # darkred
+14 = 0 64 64      # darkteal
+15 = 0 64 128     # darkturquoise
+16 = 0 128 255    # deepskyblue
+17 = 0 128 0      # green
+18 = 128 128 128  # grey
+19 = 0 255 64     # lightgreen
+20 = 192 192 192  # lightgrey
+21 = 64 128 128   # lightteal
+22 = 0 255 0      # lime
+23 = 255 0 255    # magenta
+24 = 128 0 64     # maroon
+25 = 0 0 160      # mediumblue
+26 = 128 128 255  # mediumslateblue
+27 = 0 0 64       # midnightblue
+28 = 0 0 128      # navy
+29 = 128 128 0    # olive
+30 = 128 255 128  # palegreen
+31 = 255 128 192  # palerose
+32 = 128 128 192  # paleslateblue
+33 = 128 255 255  # paleturquoise
+34 = 255 255 128  # paleyellow
+35 = 255 128 255  # pink
+36 = 255 128 64   # pumpkin
+37 = 128 0 128    # purple
+38 = 255 0 0      # red
+39 = 255 0 128    # rose
+40 = 128 64 0     # saddlebrown
+41 = 255 128 128  # salmon
+42 = 0 128 64     # seagreen
+43 = 0 255 128    # springgreen
+44 = 0 128 128    # teal
+45 = 0 128 192    # turquoise
+46 = 255 255 255  # white
+47 = 255 255 0    # yellow
