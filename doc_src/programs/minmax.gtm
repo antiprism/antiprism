@@ -1,0 +1,52 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+Make a geometric representation of a polyhedron having only face data
+<PRE>
+   minmax -p u -n 100000 -o unscrambled.off scrambled.off
+</PRE>
+Run for a bit longer, don't need <I>-p u</I> this time
+<PRE>
+   minmax -n 100000 -o unscrambled2.off unscrambled.off
+</PRE>
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+Doesn't always succeed. An option to keep the spherical polygons convex
+should improve it. The program shows the progress every 1000 iterations
+by printing the longest and shortest edge lengths.
+
+#include "<<END>>"

@@ -1,0 +1,71 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+Make a cube for display in LiveGraphics3D
+<PRE>
+   unipoly cube | off2m > cube.m
+</PRE>
+
+Use LiveGraphics3D colouring
+<PRE>
+   unipoly cube | off2m -l > cube.m
+</PRE>
+
+Make a thickened red cube frame with blue vertices
+<PRE>
+   unipoly cube | off2m -X ve -e 0.01 -E 1.0,0.0,0.0 -V 0.0,0.0,1.0 > cube.m
+</PRE>
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+The 'm' format output can be displayed in
+<A HREF="http://www.vis.uni-stuttgart.de/~kraus/LiveGraphics3D/">LiveGraphics3D </A>.
+<P>
+<I>off2m</I> was written by
+<A HREF="http://www.interocitors.com/polyhedra/">Roger Kaufman</A>.
+<P>
+Roger has put together an
+<A HREF="http://www.antiprism.com/misc/off2m_tester.zip">off2m testing package</A>
+which can be downloaded and used to view the off2m output.
+<P>
+LiveGraphics3D is free for non-commercial use and can be downloaded
+from the
+<A HREF="http://www.vis.uni-stuttgart.de/~kraus/LiveGraphics3D/">LiveGraphics3D Site</A>.
+
+
+
+
+#include "<<END>>"

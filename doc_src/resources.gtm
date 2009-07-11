@@ -1,0 +1,112 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<H2>Working with Edges</H2>
+The
+<A HREF="off_format.html">OFF format</A> is generally used to
+hold face and coordinate data. Using the OFF format to work with
+edges is less well established. This is an overview of how
+edges are managed within Antiprism.
+
+<H3>What is an edge?</H3>
+
+There are two ways that an edge can be read from an OFF file. The
+two types are handled differently in the programs
+<DL>
+<DT><I>Explicit Edges</I>
+<DD>These are set up from any OFF faces having exactly two vertices.
+    Their colour is the OFF face colour.
+    <P>
+<DT><I>Implicit Edges</I>
+<DD>These are extracted from all the OFF faces. They are the edges of
+    the faces. Any pair of neighbouring vertices in an OFF face is
+    considered an implicit edge. Implicit edges have a default
+    colour (equivalent to colour index zero).
+</DL>
+
+<H3>How are edges read and written?</H3>
+
+When an Antiprism program reads an OFF file the two-vertex faces
+are converted to edges - they are added to the edge list rather than
+the face list. A particular program may then manipulate the edge list
+and add implicit edges, or clear all the edges, etc.
+<P>
+When an Antiprism program writes an OFF file its current list of
+edge elements is written out as two-vertex OFF faces, with their
+colour if they have one. These will be interpreted as explicit edges
+when the file is next read by an Antiprism program.
+<P>
+An edge joining any pair of vertices can only appear once in the
+edge list. If the OFF input includes more than one two-vertex face
+with the same vertices, in either order,
+then the edge will have its colour overwritten.
+
+<H3>How can edges be manipulated?</H3>
+
+<I>off_color</I> colours edges. If the edge is not already in the
+program's edge edge list it will be added. Otherwise, the new colour
+will overwrite the old one. The colouring of explicit and
+implicit edges can be controlled with <I>off_color -E</I>
+<P>
+<I>off_util -x e</I> will clear the edge list.
+<P>
+<I>off_util -x vf</I> will isolate the edge list. The faces section of
+the OFF file output will contain only the edges.
+<P>
+<I>off_util -s</I> will make a skeleton. Edges not already in the
+edge list will be coloured with the colour of an adjoining face, then
+all the faces will be removed.
+
+
+
+<H3>How do particular programs use edges?</H3>
+
+<DL>
+<DT><I>Model programs: polygon, unipoly</I>
+<DD>These tend not to include edges in the OFF output. Edges can be added
+    afterwards with <I>off_color -e</I>. However, some programs e.g.
+    <I>lat_grid</I>, use edges to represent struts.
+    <P>
+<DT><I>Model programs that use another model as a base: poly_kscope, kcycle</I>
+<DD>These tend to preserve edge elements in the output, if it
+    is sensible to do so.
+    <P>
+<DT><I>Geometric transformation programs: off_trans, off_align</I>
+<DD>These will preserve edge elements
+    <P>
+<DT><I>Antiview and most conversion programs: off2pov, off2vrml, off2m</I>
+<DD>The default behaviour is to set up the explicit and implicit
+    edges, and to use the explicit edge colours for any duplicated edges.
+    <P>
+    If the implicit faces aren't wanted then they can be hidden by
+    colouring them transparent black with option <I>-E x</I>.
+    <P>
+    If only implicit faces are wanted then the two-vertex OFF faces
+    can be stripped before using the conversion program. This can be
+    done with <I>off_util -x e</I>.
+    <P>
+<DT><I>Reporting programs: off_report, off_query</I>
+<DD>The default behaviour is to set up the explicit and implicit
+    edges for the report or query. This can be changed with option
+    <I>-E</I>
+    <P>
+<DT><I>Minmax, off2eig</I>
+<DD>These use edges as connecting elements. If there are any explicit
+    edges then just these will be used. If there are no explicit
+    edges then the implicit edges will be used.
+    <P>
+    If only implicit faces are wanted then the two-vertex OFF faces
+    can be stripped with <I>off_util -x e</I>.
+    <P>
+    If both explicit and implicit edges are wanted then the implicit
+    edges can be added in with <I>off_color -E i -e 0</I>
+   
+</DL>
+
+#include "<<END>>"

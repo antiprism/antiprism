@@ -1,0 +1,60 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+A cube with edges of 2 units
+<PRE>
+   polygon -t pri -e 2 -l 2 -o cube.off 4
+</PRE>
+
+A hexagonal based pyramid
+<PRE>
+   polygon -t pyr -o hex_pyramid.off 6
+</PRE>
+
+A uniform pentagrammic antiprism
+<PRE>
+   polygon -t ant -e 1 -E 1 -o pent_anti.off 5/2
+</PRE>
+
+A uniform pentagrammic crossed antiprism
+<PRE>
+   polygon -t ant -e 1 -E 1 -o pent_cross_anti.off 5/3
+</PRE>
+
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+#include "<<END>>"

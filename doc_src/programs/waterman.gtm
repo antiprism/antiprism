@@ -1,0 +1,68 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+Make a Root 10 Waterman polyhedron
+<PRE>
+    waterman -r 10,2 fcc | antiview
+</PRE>
+<P>
+Make a Root 100 Waterman polyhedron, with symmetrically coloured faces
+<PRE>
+    waterman -r 100,2 fcc -F S | antiview
+</PRE>
+<P>
+Make a Root 100 Waterman polyhedron centred on an octahedron centre, with
+symmetrically coloured faces
+<PRE>
+    waterman -q 0.5,0.5,0.5 -r 100,2 fcc -F S | antiview
+</PRE>
+
+   
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+<I>waterman</I> was written by
+<A HREF="http://www.interocitors.com/polyhedra/">Roger Kaufman</A>
+(with contributions from Adrian Rossiter.)
+<P>
+For more details about these polyhedra see 
+<A HREF="http://www.watermanpolyhedron.com/watermanpolyhedra1.html">
+Waterman Polyhedra</A>
+on Steve Waterman's site.
+<P>
+The program uses an efficient algorithm that makes it suitable for
+calculating Waterman polyhedra up to root 1,000,000 and more.
+
+#include "<<END>>"

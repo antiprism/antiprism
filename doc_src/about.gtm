@@ -1,0 +1,230 @@
+
+#define HL_ABOUT class=curpage
+
+#define PATH_UP ./
+#undef LINK_NEXT
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#about">About</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#contact">Contact</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#updates">Updates</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#map">Site Map</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2>
+<A NAME="about">About</A>
+</H2>
+
+The various programs included in Antiprism were developed for
+personal use. I wrote them as an aid to understanding and
+exploring ideas in geometry.
+<P>
+My main interest has been visual results, and that tends to be a primary
+criterion for deciding whether a program is working correctly or not.
+While I would like the programs to work as well as possible they
+aren't meant to be considered as producing careful numerical solutions,
+even though the coordinate data for the models is usually to high
+precision.
+<P>
+I have made the programs available in the hope that they will be of
+interest to other people, maybe useful, but mostly that they will be
+fun to play with.
+
+<H2>
+<A NAME="contact">Contact</A>
+</H2>
+
+The Antiprism site and project are developed and maintained by
+<A HREF="http://www.terra.es/personal/adrian_r/">Adrian Rossiter</A>.
+You can contact me by email at
+<A HREF="mailto:<<EMAIL>>"><<EMAIL>></A>.
+<P>
+The 
+<A HREF="http://tech.groups.yahoo.com/group/antiprism/">Antiprism List</A>
+is a general and informal list for discussing geometry. There are lots
+of posts about the Antiprism programs. Please, feel free to use this group
+to ask for support, give feedback, or generally discuss the Antiprism
+programs. Posts about other programs or projects are very welcome,
+as are posts just to share your interests in geometry.
+
+
+<H2>
+<A NAME="updates">Site Updates</A>
+</H2>
+
+See the latest
+<A HREF="download/news_file.html">NEWS</A>
+file for changes in the Antiprism releases.
+<P>
+
+<CENTER>
+<TABLE CLASS="tbl1" BORDER="0" WIDTH="95%" CELLSPACING="1" CELLPADDING="2">
+<TR CLASS=tbl1 ALIGN=left VALIGN=top>
+<TH CLASS=tbl1>Date</TH>
+<TH CLASS=tbl1>News</TH>
+</TR>
+
+<TR CLASS=tbl1 VALIGN=TOP>
+<TD>02/12/2008</TD>
+<TD>
+Antiprism 0.19.1 released.
+</TD>
+</TR>
+
+<TR CLASS=tbl1 VALIGN=TOP>
+<TD>28/11/2008</TD>
+<TD>
+Antiprism 0.19 released. Program documentation updated.
+</TD>
+</TR>
+
+<TR CLASS=tbl1 VALIGN=TOP>
+<TD>22/05/2008</TD>
+<TD>
+Antiprism 0.18.1 released.
+</TD>
+</TR>
+
+<TR CLASS=tbl1 VALIGN=TOP>
+<TD>22/05/2008</TD>
+<TD>
+Antiprism 0.18 released. Program documentation updated.
+</TD>
+</TR>
+
+<TR CLASS=tbl1 VALIGN=TOP>
+<TD>15/01/2008</TD>
+<TD>
+Antiprism 0.17.1 released. Program documentation updated.
+</TD>
+</TR>
+
+<TR CLASS=tbl1 VALIGN=TOP>
+<TD>06/01/2008</TD>
+<TD>
+Antiprism 0.17 released. Program documentation updated. Examples updated.
+</TD>
+</TR>
+
+<TR CLASS=tbl1 VALIGN=TOP>
+<TD>03/01/2008</TD>
+<TD>
+New album of
+<A HREF="album/815_truncations/index.html">Truncation Animations</A>.
+</TD>
+</TR>
+
+<TR CLASS=tbl1 VALIGN=TOP>
+<TD>26/11/2007</TD>
+<TD>
+Antiprism 0.16 released. Program documentation updated.
+</TD>
+</TR>
+
+<TR CLASS=tbl1 VALIGN=TOP>
+<TD>22/08/2007</TD>
+<TD>
+Antiprism 0.15 released. Program documentation updated.
+</TD>
+</TR>
+
+<TR CLASS=tbl1 VALIGN=TOP>
+<TD>28/06/2007</TD>
+<TD>
+New album of
+<A HREF="album/825_sym_tets/index.html">Symmetry Tetrahedra Animations</A>.
+</TD>
+</TR>
+
+<TR CLASS=tbl1 VALIGN=TOP>
+<TD>25/06/2007</TD>
+<TD>
+Added the
+<A HREF="album/index.html">Geometry Album</A>
+which was originally on my Home Site.
+</TD>
+</TR>
+
+<TR CLASS=tbl1 VALIGN=TOP>
+<TD>20/06/2007</TD>
+<TD>
+Antiprism 0.14 released. Program documentation updated.
+Changes relating to build changes. Some tidying
+of the text.
+</TD>
+</TR>
+
+<TR CLASS=tbl1 VALIGN=TOP>
+<TD>13/04/2007</TD>
+<TD>
+Antiprism 0.13 released.
+Program documentation updated.
+</TD>
+</TR>
+
+<TR CLASS=tbl1 VALIGN=TOP>
+<TD>26/02/2007</TD>
+<TD>
+Antiprism 0.12 released.
+Program documentation updated.
+</TD>
+</TR>
+
+<TR CLASS=tbl1 VALIGN=TOP>
+<TD>11/02/2007</TD>
+<TD>
+Antiprism 0.11 released.
+Program documentation updated.
+</TD>
+</TR>
+
+<TR CLASS=tbl1 VALIGN=TOP>
+<TD>21/11/2006</TD>
+<TD>
+Antiprism 0.10 released.
+Program documentation updated.
+<A HREF="examples/index.html">Examples</A> page expanded.
+</TD>
+</TR>
+
+<TR CLASS=tbl1 VALIGN=TOP>
+<TD>07/11/2006</TD>
+<TD>
+Support Forum references changed to new 
+<A HREF="http://tech.groups.yahoo.com/group/antiprism/">Antiprism List</A> 
+in <A HREF="#contact">Contact Section</A> and on
+<A HREF="index.html">Home Page</A>.
+</TD>
+</TR>
+
+<TR CLASS=tbl1 VALIGN=TOP>
+<TD>10/09/2006</TD>
+<TD>
+Antiprism site and project launched with release of Antiprism 0.09.
+</TD>
+</TR>
+
+</TABLE>
+</CENTER>
+
+<H2>
+<A NAME="map">Site Map</A>
+</H2>
+
+All the pages on this site.
+<P>
+
+#sitemap
+
+
+#include "<<END>>"

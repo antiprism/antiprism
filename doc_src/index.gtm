@@ -1,0 +1,89 @@
+
+#define HL_HOME class=curpage
+
+#define PATH_UP ./
+
+#define DUMMY_TITLE_CURRENT Home
+
+#undef LINK_NEXT 
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1 class="main_title"><IMG SRC="css/images/logo_ant02.gif" ALT="Antiprism" WIDTH="315" HEIGHT="100"></h1>
+
+
+<CENTER>
+<TABLE WIDTH="70%">
+<TR><TD ALIGN=CENTER>
+<CENTER>
+<B>
+Antiprism is a set of programs for generating, manipulating,
+transforming and visualising polyhedra.
+</B>
+</CENTER>
+</TD></TR>
+</TABLE>
+</CENTER>
+<P>
+
+<CENTER>
+<SMALL><B><A HREF="<<PATH_UP>>about.html#updates">
+          What's new?</A>
+       </B>
+       (<<TIMESTAMP>>)
+       </SMALL>
+</CENTER>
+<BR>
+
+<CENTER>
+
+<TABLE CLASS=tbl1 BORDER="0" CELLSPACING="1" CELLPADDING="20">
+<TR CLASS=tbl1>
+<TD>
+
+<UL>
+<LI><B><A HREF="<<PATH_UP>>programs/index.html">Programs</A></B>
+    and documentation
+<LI><B><A HREF="<<PATH_UP>>examples/index.html">Examples</A></B>
+    showing the programs at work
+<LI><B><A HREF="<<PATH_UP>>album/index.html">Album</A></B>
+    of images and animations made with the programs
+<LI><B><A HREF="<<PATH_UP>>download/index.html">Download</A></B>
+    programs and source code
+<LI><B><A HREF="<<PROJECT_PAGE>>">Project Page</A></B> at SourceForge
+<LI><B><A HREF="<<PATH_UP>>about.html">About the Site</A></B> with
+       <A HREF="<<PATH_UP>>about.html#map">site map</A> and
+       <A HREF="<<PATH_UP>>about.html#updates">latest updates</A>
+</UL>
+<P>
+</TD></TR>
+</TABLE>
+</CENTER>
+<P>
+
+<CENTER>
+<TABLE WIDTH="80%" BORDER=0>
+<TR><TD ALIGN=CENTER>
+
+<H3>About the Project</H3>
+
+The Antiprism programs are open source and use the
+<A HREF="http://en.wikipedia.org/wiki/MIT_License">MIT License</A>.
+<P>
+The project is hosted at SourceForge, details are on the
+<A HREF="<<PROJECT_PAGE>>">Antiprism Project Page</A>. The
+<A HREF="http://sourceforge.net/project/showfiles.php?group_id=176443">Program Files</A>
+can be download there.
+<P>
+The 
+<A HREF="http://tech.groups.yahoo.com/group/antiprism/">Antiprism List</A>
+can be used to ask for support, give feedback, or generally
+discuss the Antiprism programs.
+
+</TD></TR>
+</TABLE>
+</CENTER>
+
+#include "<<END>>"

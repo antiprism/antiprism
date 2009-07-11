@@ -1,0 +1,73 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+Display a ball pack as balls
+<PRE>
+   packer 2 10 |  off2vrml -xef -v b -o pack.wrl
+</PRE>
+Display an icosahedron without its faces
+<PRE>
+   unipoly icosahedron | off2vrml -x f -o icosa.wrl
+</PRE>
+Display an icosahedron without its vertex or edge elements
+<PRE>
+   unipoly icosahedron | off2vrml -x ef -o icosa.wrl
+</PRE>
+Display an icosahedron with thin vertex and edge elements
+<PRE>
+   unipoly icosahedron | off2vrml -v 0.01 -e 0.008 -o icosa.wrl
+</PRE>
+Display a polyhedron with self-intersecting polygons, using
+transparent faces
+<PRE>
+   polygon -t anti 5/3 | off2vrml -F 0.3,0.6,0.8,0.5 -o anti.wrl
+</PRE>
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+When viewing in the VRML browser the rotation centre will most likely
+be assigned to the Look At point. Rotations given with option <I>-R</I>
+happen prior to viewing and use the actual rotation centre.
+<P>
+Use <I>-v b</I> to draw ball packs.
+<P>
+OFF files with a lot of elements will produce large VRML files that
+may be difficult to render on some machines. Excluding vertex and
+edge elements will greatly reduce the resources required to render
+the VRML file.
+
+
+#include "<<END>>"

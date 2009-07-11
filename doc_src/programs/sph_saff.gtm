@@ -1,0 +1,76 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+Distribute 200 points on a sphere 
+<PRE>
+   sph_saff 200 | antiview -v b
+</PRE>
+
+Distribute 200 points on a sphere, start at the poles 
+<PRE>
+   sph_saff -p 200 | antiview -v b
+</PRE>
+
+Distribute 200 points on a sphere, using a golden section offset
+<PRE>
+   sph_saff -a 222.49223595 200 | antiview -v b
+</PRE>
+
+An attractive spiral
+<PRE>
+   sph_saff -a 65 500 | antiview -v b
+</PRE>
+
+
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+An implementation of an
+<A HREF="http://www.math.niu.edu/~rusin/known-math/97/spherefaq">
+"Easy method for a fairly good point distribution [Saff/Kuijlaars]"
+</A>
+<P> 
+<A HREF="http://www.ogre.nu/">Anton Sherwood</A> helped with
+details of the algorithm. The angle offset option uses
+his method for
+<A HREF="http://www.ogre.nu/pack/pack.htm">spirals based on the
+golden ratio</A>.
+<P>
+The output can be run through <I>conv_hull</I> to create a polyhedron.
+
+
+
+#include "<<END>>"

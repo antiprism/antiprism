@@ -1,0 +1,89 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+The Sphericon
+<PRE>
+   n_icons | antiview
+</PRE>
+
+The Dual of the Spherican
+<PRE>
+   n_icons -d | antiview
+</PRE>
+
+A Hybrid of the Sphericon and its Dual
+<PRE>
+   n_icons -H | antiview
+</PRE>
+
+The N-icon of order 20 twisted 5 increments. The five surfaces are 
+colored with the default colors. No edges or vertices are shown.
+<PRE>
+   n_icons -n 20 -t 5 -f 1 | antiview -x ve
+</PRE>
+
+Same as above but only using colors red, orange, and yellow.
+<PRE>
+   n_icons -n 20 -t 5 -f 1 -F red,orange,yellow | antiview -x ve
+</PRE>
+
+Same as above but 50 percent transparent.
+<PRE>
+   n_icons -n 20 -t 5 -f 1 -F red,orange,yellow -T 128 | antiview -x ve
+</PRE>
+
+The N-icon of order 30 twisted 5 increments. The faces are colored 
+white and the edges are the default colors. The edges are sized in 
+antiview and only the explicit edges created in n_icon are shown.
+<PRE>
+   n_icons -n 30 -t 5 -f 5 -F white -e | antiview -e 0.1 -v 0.1 -E x
+</PRE>
+
+The reporting subsystem is used. A list of even order N-icons with 
+twists between 3 and 30 and more than one surface are listed.
+<PRE>
+   n_icons -J n -K 3,30 -L
+</PRE>
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+<I>n_icons</I> was written by
+<A HREF="http://www.interocitors.com/polyhedra/">Roger Kaufman</A>.
+For more details on the construction see Roger's
+<A HREF="http://www.interocitors.com/polyhedra/n_icons/index.html">
+N-icon study</A>.
+
+#include "<<END>>"

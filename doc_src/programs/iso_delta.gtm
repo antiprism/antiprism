@@ -1,0 +1,61 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+View polyhedron number 20 in the list
+<PRE>
+   iso_delta 20 | antiview
+</PRE>
+
+View 3 pairs of star-pentagon dipyramids at an angle of 2 degrees
+<PRE>
+   iso_delta -c k -n 5/2 -k 3 -a 2 | antiview
+</PRE>
+
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+<I>iso_delta</I> was written by
+<A HREF="http://www.interocitors.com/polyhedra/">Roger Kaufman</A>.
+<P>
+It is based on a paper by G. C. Shephard
+<I>Periodica Mathematica Hungarica, Volume 39, Numbers 1-3, 2000 ,
+pp. 83-106(24)</I>
+with enhancements by
+<A HREF="http://www.orchidpalms.com/polyhedra">Jim McNeill</A>
+and Adrian Rossiter.
+
+
+#include "<<END>>"

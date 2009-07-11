@@ -1,0 +1,18 @@
+
+#define HL_DOWN class=curpage
+
+#undef LINK_NEXT
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<PRE>
+#entities ON
+#include "NEWS"
+#entities OFF
+</PRE>
+
+#include "<<END>>"

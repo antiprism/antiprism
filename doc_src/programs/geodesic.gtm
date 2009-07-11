@@ -1,0 +1,120 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+A 4 frequency Class II icosahedral geodesic sphere
+<PRE>
+   geodesic -o geo_sphere.off -c 2 4
+</PRE>
+A planar octahedron with a Class III 1,2 pattern repeated 3 times along
+an edge
+<PRE>
+   geodesic -p o -M p -o geo_octahedron.off -c 1,2 3
+</PRE>
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+When an input file is specified the geodesic faces are coloured
+the same as the base polyhedron face they corespond to.
+<P>
+Geodesic faces may bridge across an edge of the base polyhedron.
+If the edge belongs to only one face, or is shared by faces with
+opposite orientations, the geodesic faces that bridge the edge
+will not be included in the output.
+<P>
+All the patterns may be specified by a pair of integers. If the
+integers are <I>a</I> and <I>b</I>,a triangular grid is laid out on
+the polyhedron face, having
+<I>(a&sup2;&nbsp;+&nbsp;ab&nbsp;+&nbsp;b&sup2;)/Highest&nbsp;Common&nbsp;Factor(a,&nbsp;b)</I>
+divisions. Taking the face edges in order it is posible, starting
+at a face vertex, to step <I>a</I> units in the direction of one edge, then
+<I>b</I> units in the direction of the following edge and, if lying on the
+face, this point will be a geodesic vertex. The process can be repeated
+three times from this geodesic vertex, finding the original face vertex
+and up to two new geodesic vertices. The process is continued until all
+the geodesic vertices covering the face have been found.
+<P>
+
+<TABLE BORDER=0 CELLSPACING="5">
+<TR>
+<TD ALIGN="CENTER"><B>0,6</B></TD>
+    <TD ALIGN="CENTER"><B>1,5</B></TD>
+    <TD ALIGN="CENTER"><B>2,4</B></TD>
+    <TD ALIGN="CENTER"><B>3,3</B></TD>
+    <TD ALIGN="CENTER"><B>4,2</B></TD>
+    <TD ALIGN="CENTER"><B>5,1</B></TD>
+    <TD ALIGN="CENTER"><B>6,0</B></TD>
+</TR>
+<TR>
+    <TD><IMG SRC="images/geo_T06.gif" ALT="" BORDER=0 WIDTH=70 HEIGHT=70></TD>
+    <TD><IMG SRC="images/geo_T15.gif" ALT="" BORDER=0 WIDTH=70 HEIGHT=70></TD>
+    <TD><IMG SRC="images/geo_T24.gif" ALT="" BORDER=0 WIDTH=70 HEIGHT=70></TD>
+    <TD><IMG SRC="images/geo_T33.gif" ALT="" BORDER=0 WIDTH=70 HEIGHT=70></TD>
+    <TD><IMG SRC="images/geo_T42.gif" ALT="" BORDER=0 WIDTH=70 HEIGHT=70></TD>
+    <TD><IMG SRC="images/geo_T51.gif" ALT="" BORDER=0 WIDTH=70 HEIGHT=70></TD>
+    <TD><IMG SRC="images/geo_T60.gif" ALT="" BORDER=0 WIDTH=70 HEIGHT=70></TD>
+</TR>
+<TR>
+    <TD ALIGN="CENTER"><I><SMALL>F6 Class I</SMALL></I></TD>
+    <TD ALIGN="CENTER"><I><SMALL>1x 1,5 Class III</SMALL></I></TD>
+    <TD ALIGN="CENTER"><I><SMALL>2x 1,2 Class III</SMALL></I></TD>
+    <TD ALIGN="CENTER"><I><SMALL>F6 Class II</SMALL></I></TD>
+    <TD ALIGN="CENTER"><I><SMALL>2x 2,1 Class III</SMALL></I></TD>
+    <TD ALIGN="CENTER"><I><SMALL>1x 5,1 Class III</SMALL></I></TD>
+    <TD ALIGN="CENTER"><I><SMALL>F6 Class I</SMALL></I></TD>
+</TR>
+</TABLE>
+    
+<P>
+In terms of the general pattern the Class I pattern is equivalent to
+<I>0,1</I> with the frequency value corresponding to divisions along
+an edge. The Class II pattern is equivalent to <I>1,1</I> with
+frequency value corresponding to half the divisions
+along an edge. Any pattern <I>a,b</I> with <I>a,&nbsp;b&nbsp;&gt;&nbsp;0</I>
+and <I>a&nbsp;&ne;&nbsp;b</I>
+is a Class III pattern. Class III patterns are chieral, with <I>a,b</I>
+and <I>b,a</I> being mirror images of each other.
+<P>
+Another way of understanding the pattern formed by the integer pair is that
+if the frequency is <I>f</I> then it is possible to move between face
+vertices by moving <I>fa</I> vertices along one line, then turning and
+moving <I>fb</I> along another line.
+<P>
+For some patterns there will be geodesic vertices lying on the polyhedron
+edges between the face vertices. There will be
+<I>f x Highest&nbsp;Common&nbsp;Factor(a,&nbsp;b)</I>
+steps between these geodesic vertices along each polyhedron edge.
+<P>
+
+#include "<<END>>"

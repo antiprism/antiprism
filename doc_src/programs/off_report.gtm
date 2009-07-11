@@ -1,0 +1,64 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+Full report
+
+<PRE>
+   off_report -S A -C A poly.off
+</PRE>
+
+Volume and area of a unit edged icosahedron
+
+<PRE>
+   unipoly icosahedron | off_trans -s e | off_report -S G
+</PRE>
+
+Report all angle information for a rhombic dodecahedron
+
+<PRE>
+   unipoly cuboctahedron | pol_recip | off_report -S Sa -C SD
+</PRE>
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+Use with caution! This program hasn't had extensive testing. It
+is very possible that some calculations
+may fail under particular conditions. Please, report any bugs.
+<P>
+The options letters may change in future versions.
+
+
+#include "<<END>>"

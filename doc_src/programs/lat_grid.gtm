@@ -1,0 +1,59 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+View a cubic section of Close Cubic Packing
+<PRE>
+   lat_grid fcc 6 | antiview -v b
+</PRE>
+Make a spherical section of a diamond grid
+<PRE>
+   lat_grid -c s -s 3 diamond 16 > diam.off
+</PRE>
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+Spherical container suggested by
+<A HREF="http://www.watermanpolyhedron.com/">Steve Waterman</A>,
+who has made a collection of
+<A HREF="http://www.watermanpolyhedron.com/APmain.html">
+hulls of spherically contained lattices</A>.
+<P>
+The grids of shortest strut length represent the edges of a
+packing of polyhedra, with the exception of diamond, HCP diamond
+and K_4.
+
+
+#include "<<END>>"

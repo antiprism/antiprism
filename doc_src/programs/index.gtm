@@ -1,0 +1,125 @@
+
+#define HL_PROG class=curpage
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#programs">Antiprism&nbsp;Programs</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#general">General&nbsp;Documentation</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#external">Links</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A>
+Antiprism Documentation
+</A></H2>
+
+<H3><A NAME="programs">
+Programs
+</A></H3>
+
+<B>Display</B>
+<UL>
+<LI><A HREF="antiview.html">antiview</A> - interactive OFF file viewer
+</UL>
+
+<B>Conversion</B>
+<UL>
+<LI><A HREF="off2pov.html">off2pov</A> - converts OFF files to POV format
+<LI><A HREF="off2vrml.html">off2vrml</A> - converts OFF files to VRML format
+<LI><A HREF="off2m.html">off2m</A> - converts an OFF file to LiveGraphics3D 'm' format
+<LI><A HREF="off2crds.html">off2crds</A> - converts an OFF file to a coordinate file
+<LI><A HREF="m2off.html">m2off</A> - converts a LiveGraphics3D 'm' file to OFF format
+</UL>
+
+<B>Manipulation</B>
+<UL>
+<LI><A HREF="off_color.html">off_color</A> - adds colours to an OFF file
+<LI><A HREF="off_trans.html">off_trans</A> -
+   transformations (rotations, translations, etc) of OFF files
+<LI><A HREF="off_align.html">off_align</A> - alignment of OFF files 
+<LI><A HREF="off_util.html">off_util</A> - utilities for OFF files (orientation, merging, etc)
+</UL>
+
+<B>Reporting</B>
+<UL>
+<LI><A HREF="off_report.html">off_report</A> - report of global measures (e.g. area, volume, centroid), maxima, and counts
+<LI><A HREF="off_query.html">off_query</A> - list element data
+</UL>
+  
+<B>Generation</B>
+<UL>
+<LI><A HREF="conv_hull.html">conv_hull</A> - convex hulls (using Qhull)
+<LI><A HREF="pol_recip.html">pol_recip</A> - polar reciprocals (duals)
+<LI><A HREF="geodesic.html">geodesic</A> - geodesic spheres
+<LI><A HREF="polygon.html">polygon</A> - polygon based polyhedra (prisms, pyramids, etc)
+<LI><A HREF="iso_delta.html">iso_delta</A> - isohedral deltahedra
+<LI><A HREF="conway.html">conway</A> - Conway Notation transformations
+<LI><A HREF="poly_kscope.html">poly_kscope</A> - polyhedral kaleidoscope
+<LI><A HREF="unitile2d.html">unitile2d</A> - makes uniform tilings on a surface
+<LI><A HREF="string_art.html">string_art</A> - string figures
+<LI><A HREF="lat_grid.html">lat_grid</A> - lattices and grids with integer coordinates
+<LI><A HREF="bravais.html">bravais</A> - Bravais lattices
+<LI><A HREF="waterman.html">waterman</A> - Waterman polyhedra
+<LI><A HREF="zono.html">zono</A> - zonohedra
+<LI><A HREF="n_icons.html">n_icons</A> - sphericon like polyhedra 
+<LI><A HREF="kcycle.html">kcycle</A> - kaleidocycle rings of polyhedron 
+<LI><A HREF="jitterbug.html">jitterbug</A> - jitterbug transformation
+<LI><A HREF="poly_weave.html">poly_weave</A> - weave based on a polyhedron
+<LI><A HREF="canonical.html">canonical</A> - canonicalize a polyhedron
+<LI><A HREF="sph_rings.html">sph_rings</A> - rings of points on a sphere
+<LI><A HREF="sph_saff.html">sph_saff</A> - spiral points on a sphere (Saff and Kuiljaars)
+<LI><A HREF="repel.html">repel</A> - equilibrium of points repelling on a sphere
+<LI><A HREF="minmax.html">minmax</A> - minimise a spherical tesselation's
+      maximum edge length, turn face data only into a spherical tesselation
+</UL>
+
+<H3><A NAME="general">
+General Documentation
+</A></H3>
+
+<UL>
+<LI><A HREF="resources.html">Antiprism Resource Files</A>
+<LI><A HREF="named_cols.html">Named Colours in Antiprism</A>
+<LI><A HREF="edges.html">Using edges in Antiprism</A>
+<LI><A HREF="off_format.html">OFF format description</A>
+</UL>
+
+<BR><P>
+
+<H2><A NAME="external">
+Links to Complementary Programs
+</A></H2>
+
+<B>Using OFF format</B>
+<UL>
+<LI><A HREF="http://www.geomview.org/">Geomview</A>
+    - 3D viewing and processing
+<LI><A HREF="http://www.javaview.de/">JavaView</A>
+    - 3D viewing and processing (Java)
+<LI><A HREF="http://www.springie.com/">Springie</A>
+    (by Tim Tyler)
+    - 3D viewing and processing (Java)
+<LI><A HREF="http://www.qhull.org/">Qhull</A> -
+    convex hulls and delaunay triangulation
+</UL>
+
+<B>Handling Antiprism Export Formats</B>
+<UL>
+<LI><A HREF="http://www.javaview.de/">POV-ray</A>
+    - Persistence of Vision Raytracer using pov format
+<LI><A HREF="http://www.web3d.org/x3d/vrml/tools/viewers_and_browsers/">VRML Viewers</A>
+    - Links to VRML viewers
+<LI><A HREF="http://www.vis.uni-stuttgart.de/~kraus/LiveGraphics3D/">LiveGraphics3D</A>
+    - Java applet for 3D viewing using Mathematica format
+<LI><A HREF="http://www.imagemagick.org/">ImageMagick</A>
+    - Image processing, builds animations
+</UL>
+
+#include "<<END>>"

@@ -1,0 +1,61 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+Make a cube, distort it, and canonicalize it back into a cube
+<PRE>
+   unipoly cube | off_trans -S 1,2,3 | canonical > canonic_cube.off
+</PRE>
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+The program will not always converge, and produce the canonical form.
+In this cases it may help to distort the polyhedron before running
+canonical. This could be done with <I>off_util -S</I>, <I>repel</I>,
+<I>minmax</I>, <I>off_trans</I> or even editing the OFF file by hand.
+<P>
+George Hart has a page on
+<A HREF="http://www.georgehart.com/virtual-polyhedra/canonical.html">
+canonicalization</A>.
+<P>
+Uses algorithms by George W. Hart,
+<A HREF="http://www.georgehart.com/">http://www.georgehart.com/</A>.
+The 'Mathematica' algorithms have been written to follow George Hart's
+<A HREF="http://library.wolfram.com/infocenter/Articles/2012/">
+Mathematica implementation</A>
+<P>
+
+
+#include "<<END>>"

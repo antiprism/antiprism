@@ -1,0 +1,59 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+Bond vertices 4, 5 and 6 of poly1.off to the first three vertices of
+poly2.off and write them into a single file in order poly1 then poly2.
+<PRE>
+   off_align -M 2 -p 0,1,2,4,5,6 -b poly1.off poly2.off
+</PRE>
+
+Augment face 1 of an icosahedron, making a polyhedron
+with 22 faces
+<PRE>
+   off_align -F 1 -b tet icosa 
+</PRE>
+
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+This can be used to build larger structures using polyhedra
+as bricks.
+<P>
+When using <I>-F</I> the specified faces are deleted from the
+output. Faces in the base polyhderon that come after the bonding
+face will have their index numbers decreased by one in the output.
+
+#include "<<END>>"

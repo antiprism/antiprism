@@ -1,0 +1,79 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+A truncated octahedron
+<PRE>
+   conway tk4Y4 | antiview
+</PRE>
+
+A Great rhombicuboctahedron with coloured faces
+<PRE>
+   conway -c m -f 1 dmO | antiview
+</PRE>
+
+A snub geodesic sphere
+<PRE>
+   geodesic 3 | conway -f 1 s | antiview
+</PRE>
+
+A snub pentagrammic antiprism
+<PRE>
+   conway s ant5/2 | antiview
+</PRE>
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+<I>conway</I> was written by
+<A HREF="http://www.interocitors.com/polyhedra/">Roger Kaufman</A>.
+It uses algorithms by George W. Hart,
+<A HREF="http://www.georgehart.com/">http://www.georgehart.com/</A>.
+<P>
+The Conway Notation algorithms were adapted from the
+Javascript on George Hart's
+<A HREF="http://www.georgehart.com/virtual-polyhedra/conway_notation.html">
+Conway Notation</A> page.
+<P>
+Canonicalization and planarization may not always converge on
+a convex polyhedron.
+<P>
+George Hart has a page on
+<A HREF="http://www.georgehart.com/virtual-polyhedra/canonical.html">
+canonicalization</A>.
+The 'Mathematica' algorithms have been written to follow his
+<A HREF="http://library.wolfram.com/infocenter/Articles/2012/">
+Mathematica implementation</A>
+
+#include "<<END>>"

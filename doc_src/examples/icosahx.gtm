@@ -1,0 +1,119 @@
+
+#define HL_EXAS class=curpage
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+The example is used to present a variety modelling techniques. For
+an easy way to make helixes from polyhedra see <I>extras/python/helix.py</I>
+in the Antiprism data directory, which bonds by face rather than vertex
+using <I>off_align -F</I>.
+
+<H3>1. Make an icosahedron</H3>
+
+<IMG SRC="icosahx01.gif" ALT="" HEIGHT=120 WIDTH=160 ALIGN=RIGHT>
+This can be done with <I>unipoly</I>, which can be used to make all
+the uniform polyhedra.
+<PRE>
+   unipoly icosahedron &gt; icosa.off
+</PRE>
+Display with
+<PRE>
+   off2pov -o icosa.pov icosa.off
+   povray +a +p icosa.pov
+</PRE>
+
+<H3>2. Find faces to join</H3>
+
+<IMG SRC="icosahx02.gif" ALT="" HEIGHT=120 WIDTH=160 ALIGN=RIGHT>
+The icosahelix will be made by repeatedly copying the icosahadron
+and always bonding the same two faces together. The faces are
+specified by three index numbers. Use <I>off2pov</I> with the
+<I>-n</I> option to display the icosahedron with its vertex numbers.
+<PRE>
+   off2pov -x vf -n -o icosa.pov icosa.off
+   povray +a +p icosa.pov
+</PRE>
+<P>
+If you have <I>antiview</I> available then that is the easier option
+<PRE>
+   antiview -x f -n v icosa.off
+</PRE>
+Joining vertices 3,8,9 to 10,7,11 looks like it would make
+a nice helix.
+
+<H3>3. Colour the icosahedron</H3>
+
+<IMG SRC="icosahx03a.gif" ALT="" HEIGHT=120 WIDTH=160 ALIGN=RIGHT>
+Colour the icosahedron with <I>off_color</I>. It might be nice
+to give it a minimal proper colouring. It would have three
+colours with no two adjoining faces having the same colour.
+This can be done with <I>-f P</I> option.
+<PRE>
+   off_color -f P icosa.off &gt; color_icosa.off
+</PRE>
+
+Display the result.
+
+<PRE>
+   off2pov -o color_icosa.pov color_icosa.off
+   povray +a +p color_icosa.pov
+</PRE>
+
+Colours with a bit more contrast would be better. Instead
+of setting colour values use the <I>-f P</I> option (small <I>p</I>)
+to set colour indexes, which can be converted into colour
+values using a color map file.
+<P>
+Make a the file containing the following lines and call it <I>colormap.txt</I>
+<PRE>
+1 = 0.3 0.3 0.8
+2 = 0.8 0.1 0.2
+3 = 0.9 0.9 0.7
+</PRE>
+<IMG SRC="icosahx03b.gif" ALT="" HEIGHT=120 WIDTH=160 ALIGN=RIGHT>
+The first number is the index followed by three numbers ranging 0-1
+for the colour value. The first number is the amount of red, then the
+amount of green, then the amount of blue. Using this file index 1 will
+be coloured bluish, index 2 reddish, and index 3 pale cream.
+<P>
+Colour the icosahedron again, this time using the colour map.
+<PRE>
+   off_color -f p icosa.off -m colormap.txt &gt; color_icosa.off
+</PRE>
+
+Display it.
+
+<PRE>
+   off2pov -o color_icosa.pov color_icosa.off
+   povray +a +p color_icosa.pov
+</PRE>
+
+
+<H3>4. Build the helix</H3>
+
+The <I>off_align</I> program will align one polyhedron relative to
+another.
+<P>
+<IMG SRC="icosahx04.gif" ALT="" HEIGHT=80 WIDTH=230 ALIGN=RIGHT>
+Copy color_icosa.off to icosahx.off to start the helix. Now join
+a copy of the icosahedron to the start of the helix. The <I>-p</I>
+option specifies the vertices that will be joined. The <I>-Mi 2</I>
+option makes sure the new icosahedron is joined at the front of the
+file. This is so its vertex numbers won't change and then the command
+can be repeated to add the following icosahedra.
+<PRE>
+   off_align -p 3,8,9,10,7,11 -M 2 -b color_icosa.off -o icosahx.off icosahx.off
+</PRE>
+Repeat the command another ten times for a twelve icosahedron icosahelix.
+<P>
+Display the completed icosahelix.
+<PRE>
+   off2pov -o icosahx.pov icosahx.off
+   povray +a +p icosahx.pov
+</PRE>
+
+#include "<<END>>"
