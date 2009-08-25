@@ -133,7 +133,7 @@ int coloring::y_gradient(vec3d vec, vec3d cent, double height, int def_sz)
    int sz = def_sz;
    if(cmaps.size()>0 && cmaps[0]->max_index()>0)
       sz = cmaps[0]->max_index();
-   return sz * (0.5*height+(vec-cent)[1])/height;
+   return (int)(sz * (0.5*height+(vec-cent)[1])/height);
 }
 
 
@@ -681,7 +681,7 @@ bool read_colorings(coloring clrngs[], const char *line, char *errmsg,
       
       double cps;
       if(get_cycle_rate(parts[i], &cps)) {
-         clrng.set_cycle_msecs(1000/cps);
+         clrng.set_cycle_msecs((int)(1000/cps));
          if(col_map && errmsg)
             snprintf(errmsg, MSG_SZ,
                   "cycle_rate '%s' is also a valid colour map name", parts[i]);

@@ -1169,7 +1169,7 @@ void disp_num_labels::gl_geom(const scene &scen)
 // disp_sym
 
 disp_sym::disp_sym(): show_axes(false), show_mirrors(false),
-   show_rotrefls(false)
+   show_rotrefls(false), sym()
 {
    v().set_show(false);
    e().set_show(false);
@@ -1438,6 +1438,7 @@ void view_opts::set_view_vals(scene &scen)
       sc_geom.add_disp(geom_defs);
       sc_geom.set_label(lab_defs);
       sc_geom.set_sym(sym_defs);
+      //fprintf(stderr, "before geom = %p\n", sc_geom.get_sym
       sc_geom.set_geom(geom);
 
 
@@ -1474,7 +1475,7 @@ const char *view_opts::help_view_text =
 "  -s <syms> show symmetry elements. The element string can include\n"
 "               x - rotation axes\n"
 "               m - mirror planes\n"
-"               r - rotation-refflection planes\n"
+"               r - rotation-reflection planes\n"
 "               a - all elements (same as xmr)\n"
 "  -m <maps> colour maps to be tried in turn (default: rand), optionally\n"
 "            followed by elements to map from v, e or f (default: vef)\n";

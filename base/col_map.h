@@ -58,7 +58,7 @@ class color_map
       color_map(): shift(0), step(1), wrap(0) {}
 
       ///Destructor
-      ~color_map() {}
+      virtual ~color_map() {}
       
       ///Initialise from a string
       /** \param map_name the map name.
@@ -140,7 +140,6 @@ class color_map
 class color_map_remap: public color_map
 {
    public:
-
       ///Get a copy of the map
       /** \return a pointer to the dynamically allocated copy,
        * which must be freed by the caller with \c delete, 0 indicates
@@ -158,7 +157,6 @@ class color_map_remap: public color_map
 class color_map_spread: public color_map
 {
    public:
-
       ///Get a copy of the map
       /** \return a pointer to the dynamically allocated copy,
        * which must be freed by the caller with \c delete, 0 indicates
@@ -248,6 +246,9 @@ class color_map_range_hsv: public color_map_range
 class color_map_range_rgb: public color_map_range
 {
    public:
+      ///Destructor
+      ~color_map_range_rgb() {}
+
       ///Initialise from a string
       /** \param map_name the map name.
        * \param errmsg an array at least \c MSG_SZ chars long to

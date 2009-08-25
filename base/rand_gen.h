@@ -2,7 +2,7 @@
  * Robin Whittle  rw@firstpr.com.au    2005 September 21 
  * http://www.firstpr.com.au/dsp/rand31/rand31-park-miller-carta.cc.txt
  *
- * Add Antiprism - http://www.antiprism.com by Adrian Rossiter.
+ * Added to Antiprism - http://www.antiprism.com by Adrian Rossiter.
  * The original commented code is included at the end of this file.
  */
 
@@ -12,6 +12,9 @@
  * \brief A pseudo-random number generator
  */
 
+#include <stdlib.h>
+#include <math.h>
+#include <time.h>
 
 #define consta 16807            
 
@@ -34,16 +37,47 @@ class rand_gen {
       /**\param seedin the seed, if zero is used, then
        * the seed will be set to 1. */
       void seedi(long unsigned int seedin)
-          { if (seedin == 0) seedin = 1; seed31 = seedin; }
+         { if (seedin == 0) seedin = 1; seed31 = seedin; }
+
+      ///Set the seed with the current time.
+      /**\param seedin the seed, if zero is used, then
+       * the seed will be set to 1. */
+      void time_seed()
+         { seedi(time(0)); nextrand(); }
 
       ///Get a psuedo-random integer
       /**\return a pseudo-random integer. */
       long unsigned int ranlui() { return nextrand(); }
 
-      ///Get a psuedo-random floating point number
-      /**\return a pseudo-random float in the range (0.0, 1.0). */
-      float ranf() { return (nextrand() / 2147483647.0); }
+      ///Get a psuedo-random floating point number in range 0.0 <= num <= 1.0
+      /**\return a pseudo-random float in the range 0.0 - 1.0, including 1.0.*/
+      double ranf() { return (nextrand() / 2147483647.0); }
     
+      ///Get a psuedo-random floating point number in range 0.0 <= num < 1.0
+      /**\return a pseudo-random float in the range 0.0 - 1.0, excluding 1.0.*/
+      double ranf_exclude_end() { return (nextrand() / 2147483648.0); }
+    
+      ///Get a psuedo-random floating point number in range low <= num <= high
+      /**\return a pseudo-random float in the range low - high, including high.*/
+      double ran_in_range(double low, double high)
+      {
+         return low + (high-low)*ranf();
+      }
+      
+      ///Get a psuedo-random floating point number in range low <= num < high
+      /**\return a pseudo-random float in the range low - high, excluding high.*/
+      double ran_in_range_exclude_end(double low, double high)
+      {
+         return low + (high-low)*ranf_exclude_end();
+      }
+
+      ///Get a psuedo-random integer in range low <= num <=high
+      /**\return a pseudo-random integer in the range low - high, including high.*/
+      long ran_int_in_range(long low, long high)
+      {
+         return (long)floor(low + ((high+1)-low)*ranf_exclude_end());
+      }
+
 };
 
 

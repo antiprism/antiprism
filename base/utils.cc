@@ -461,9 +461,8 @@ FILE *open_file_data(const string &dir, const string &fname, string *aname=0)
          fpath = dir + name;
          if((file=fopen_file(fpath)))
             return file;
-         else
-            *aname = name;    // may be used to open an internal resource
       }
+      *aname = name;    // may be used to open an internal resource
    }
   
    return 0;

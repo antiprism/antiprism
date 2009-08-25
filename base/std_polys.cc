@@ -369,7 +369,7 @@ string expand_abbrevs(const string &name, const char *abbrevs[][2], size_t last)
    char name_cpy[MSG_SZ];
    strncpy(name_cpy, name.c_str(), MSG_SZ);
    vector<char *> parts;
-   split_line(name_cpy, parts, "_");
+   split_line(name_cpy, parts, RES_SEPARATOR);
    for(unsigned int i=1; i<parts.size(); i++) {
       size_t j;
       for(j=0; j<last; j++) {
@@ -381,6 +381,21 @@ string expand_abbrevs(const string &name, const char *abbrevs[][2], size_t last)
       expanded += (j<last) ? abbrevs[j][1] : parts[i];
    }
    return expanded;
+}
+
+void set_resource_polygon_color(geom_if &geom)
+{
+   if(col_geom_v *cg = dynamic_cast<col_geom_v *>(&geom)) {
+      coloring clrng(cg);
+      color_map_map *overrides = new color_map_map;
+      overrides->set_col(60, col_val(0.9,0.45,0.0)); // triangle
+      overrides->set_col(36, col_val(0.7,0.1,0.2));  // pentagram
+      clrng.add_cmap(overrides);
+      color_map *cmap = init_color_map("spread+53*12");
+      clrng.add_cmap(cmap);
+
+      clrng.f_avg_angle(true);
+   }
 }
 
 
@@ -439,10 +454,12 @@ const char *u_abbrevs[][2] = {
 
 
 
+
 int make_resource_uniform(geom_if &geom, string name, char *errmsg)
 {
    if(name.size()<2 || !strchr("uU", name[0]) || name.find('.')!=string::npos)
-      return -1; // not uniform name
+      return -1; // not uniform name (the "." indicates a likely local file)
+                 // so the name is not handled
 
    uni_poly uni;
    int sym_no;
@@ -454,7 +471,7 @@ int make_resource_uniform(geom_if &geom, string name, char *errmsg)
          return 1; // fail
       }
    }
-   else if(name[1] == '_') {
+   else if(strchr(RES_SEPARATOR, name[1])) {
       string expanded = expand_abbrevs(name, u_abbrevs,
             sizeof(u_abbrevs)/sizeof(u_abbrevs[0]));
       sym_no = uni.lookup_sym_no(expanded.c_str());
@@ -472,6 +489,7 @@ int make_resource_uniform(geom_if &geom, string name, char *errmsg)
 
    double e_len = geom.edge_vec(geom.faces(0,0), geom.faces(0,1)).mag();
    geom.transform(mat3d::scale(1/e_len));
+   set_resource_polygon_color(geom);
    return 0; // name found
 }
 
@@ -494,7 +512,8 @@ const char *j_abbrevs[][2] = {
 int make_resource_johnson(geom_if &geom, string name, char *errmsg)
 {
    if(name.size()<2 || !strchr("jJ", name[0]) || name.find('.')!=string::npos)
-      return -1; // not johnson name
+      return -1; // not johnson name (the "." indicates a likely local file)
+                 // so the name is not handled
 
    j_poly json;
    int sym_no;
@@ -506,7 +525,7 @@ int make_resource_johnson(geom_if &geom, string name, char *errmsg)
          return 1; // fail
       }
    }
-   else if(name[1] == '_') {
+   else if(strchr(RES_SEPARATOR, name[1])) {
       string expanded = expand_abbrevs(name, j_abbrevs,
             sizeof(j_abbrevs)/sizeof(j_abbrevs[0]));
       sym_no = json.lookup_sym_no(expanded.c_str());
@@ -520,6 +539,7 @@ int make_resource_johnson(geom_if &geom, string name, char *errmsg)
       return -1; // not johnson name
    
    json.get_poly(geom, sym_no);
+   set_resource_polygon_color(geom);
    return 0; // name found
 }
 
@@ -530,7 +550,7 @@ bool make_resource_geom(geom_if &geom, string name, char *errmsg)
       *errmsg = '\0';
    geom.clear_all();
    
-   if(!name.size() || name.find('.')!=string::npos)
+   if(!name.size())
       return false;
 
    // Look for an internal alternative name
@@ -580,19 +600,6 @@ bool make_resource_geom(geom_if &geom, string name, char *errmsg)
       }
    }
 
-
-   if(geom_ok)
-      if(col_geom_v *cg = dynamic_cast<col_geom_v *>(&geom)) {
-         coloring clrng(cg);
-         color_map_map *overrides = new color_map_map;
-         overrides->set_col(60, col_val(0.9,0.45,0.0)); // triangle
-         overrides->set_col(36, col_val(0.7,0.1,0.2));  // pentagram
-         clrng.add_cmap(overrides);
-         color_map *cmap = init_color_map("spread+53*12");
-         clrng.add_cmap(cmap);
-
-         clrng.f_avg_angle(true);
-      }
 
    return geom_ok;
 }

@@ -44,6 +44,9 @@ const size_t MSG_SZ = 256;
 ///The default number of significant digits when writing numbers
 const int DEF_SIG_DGTS = 16;
 
+///Characters that separate parts of a resource name
+const char RES_SEPARATOR[] = "_ ";
+
 ///For selecting which elements a function acts upon
 const char ELEM_NONE = 0;
 const char ELEM_VERTS = 1;

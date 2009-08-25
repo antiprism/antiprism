@@ -478,7 +478,7 @@ void sch_sym::find_full_sym_type(const set<sch_axis> &full_sym)
             break;
          }
       sym_type = ax.get_sym_type();
-      to_std = mat3d::alignment(max_fold1.get_axis(), max_fold1.get_perp(),
+      to_std = mat3d::alignment(ax.get_axis(), ax.get_perp(),
                vec3d::z, vec3d::x);
    }
    
@@ -970,6 +970,7 @@ bool sch_sym::init(int type, int n, const mat3d &pos, char *errmsg)
    nfold = 0;
    axes.clear();
    mirrors.clear();
+   sub_syms.clear();
 
    if((type<C1 || type>Ih)) {
       if(errmsg)
@@ -1126,4 +1127,261 @@ const set<vec3d> &sch_sym::get_mirrors() const
    return mirrors;
 }
 
+
+void get_equiv_elems(const geom_if &geom, const t_set &ts,
+      vector<vector<set<int> > > *equiv_sets)
+{
+   col_geom_v merged_geom = geom;
+   vector<map<int, set<int> > > orig_equivs;
+   sort_merge_elems(merged_geom, "vef", epsilon, &orig_equivs);
+   col_geom_v test_geom = merged_geom;
+
+   vector<map<int, set<int> > > equiv_elems(3);
+   int cnts[3] = { merged_geom.verts().size(),
+                   merged_geom.edges().size(),
+                   merged_geom.faces().size() };
+
+   for(set<mat3d>::iterator si=ts.begin(); si!=ts.end(); si++) {
+      col_geom_v trans_geom = merged_geom;
+      trans_geom.transform(*si);
+      vector<map<int, set<int> > > new_equivs;
+      check_congruence(merged_geom, trans_geom, sym_eps, &new_equivs);
+      update_equiv_elems(equiv_elems, new_equivs, cnts);
+   }
+
+   if(equiv_sets)
+      equiv_elems_to_sets(*equiv_sets, equiv_elems, orig_equivs);
+}
+
+
+void sch_sym::add_sub_axes(const sch_sym &sub) const
+{
+   vector<int> factors;
+   int fold=sub.get_nfold();
+   factors.push_back(fold);
+   for(int i=1; i<=fold/2; i++)
+      if(fold%i==0)
+         factors.push_back(fold/i);
+   for(unsigned int i=0; i<factors.size(); i++) {
+      sch_sym sub_ax(sub);
+      sub_ax.set_nfold(factors[i]);
+      switch(sub.get_sym_type()) {
+         case C:
+            sub_syms.push_back(sub_ax);
+            break;
+         case Cv:
+            sub_syms.push_back(sub_ax);
+            sub_ax.set_sym_type(C);
+            sub_syms.push_back(sub_ax);
+            break;
+         case Ch:
+            sub_syms.push_back(sub_ax);
+            sub_ax.set_sym_type(C);
+            sub_syms.push_back(sub_ax);
+            if(factors[i]>2 && factors[i]%2==0) {
+               sub_ax.set_sym_type(S);
+               sub_syms.push_back(sub_ax);
+            }
+            break;
+         case D:
+            sub_syms.push_back(sub_ax);
+            sub_ax.set_sym_type(C);
+            sub_syms.push_back(sub_ax);
+            break;
+         case Dv:
+            sub_syms.push_back(sub_ax);
+            sub_ax.set_sym_type(D);
+            sub_syms.push_back(sub_ax);
+            sub_ax.set_sym_type(C);
+            sub_syms.push_back(sub_ax);
+            sub_ax.set_nfold(2*sub.get_nfold());
+            sub_ax.set_sym_type(S);
+            sub_syms.push_back(sub_ax);
+            sub_ax = sub;
+            sub_ax.set_to_std(mat3d::rot(0,0,M_PI/(2*nfold))*sub.get_to_std());
+            sub_ax.set_sym_type(Cv);
+            sub_syms.push_back(sub_ax);
+            break;
+         case Dh:
+            sub_syms.push_back(sub_ax);
+            sub_ax.set_sym_type(D);
+            sub_syms.push_back(sub_ax);
+            sub_ax.set_sym_type(C);
+            sub_syms.push_back(sub_ax);
+            sub_ax.set_sym_type(Cv);
+            sub_syms.push_back(sub_ax);
+            sub_ax.set_sym_type(Ch);
+            sub_syms.push_back(sub_ax);
+            if(factors[i]>2 && factors[i]%2==0) {
+               sub_ax.set_sym_type(S);
+               sub_syms.push_back(sub_ax);
+               sub_ax.set_nfold(sub.get_nfold()/2);
+               sub_ax.set_sym_type(Dv);
+               sub_syms.push_back(sub_ax);
+            }
+            //add other Cv and Dv
+
+       }
+   }
+}
+
+
+
+sch_sym sch_sym::get_sub_sym(int sub_type, int sub_fold, int conj_type) const
+{
+   // Dont allow alternative descriptions of "lesser" symmetries
+   if( (sub_fold<2 && sub_type>=C && sub_type<=Dh) ||
+       (sub_fold==2 && sub_type==S) )
+      return sch_sym();
+
+   const vec3d axis = vec3d::z;
+   const vec3d perp = vec3d::x;
+   
+   mat3d trans;
+   if(sub_type==Cv)
+      trans = mat3d::rot(axis, M_PI/2);
+   if(sub_type==D || sub_type==Dv || sub_type==Dh )
+      trans = mat3d::rot(axis, conj_type*M_PI/sub_fold);
+      
+   if(sub_fold==5 && (sym_type==Ih || sym_type==I))
+      trans *= mat3d::rot(A5, axis);
+   if(sub_fold==3 && sym_type>=T)
+      trans *= mat3d::alignment(A3, vec3d(1,-1,0), axis, perp);
+   if(sub_fold==2 && (sym_type==O || sym_type==Oh)) {
+      if(conj_type==0)
+         trans *= mat3d::rot(vec3d(1,0,1), axis);
+   }
+
+   //mat3d trans2=mat3d::inverse(trans*to_std);
+   //(trans2*axis).dump("axis");
+   //(trans2*perp).dump("perp");
+   //trans2.dump();
+
+   sch_sym ax(sub_type, sub_fold, trans*to_std);
+
+   return ax;
+}
+
+
+
+
+const vector<sch_sym> &sch_sym::get_sub_syms() const
+{
+   if(sub_syms.size()==0 && sym_type!=unknown) {
+      sch_sym sym = *this;
+      switch(sym_type) {
+         case Ih:
+            sym.sym_type=I;
+            sub_syms.push_back(sym);
+            sym.sym_type=Th;
+            sub_syms.push_back(sym);
+            sym.sym_type=T;
+            sub_syms.push_back(sym);
+            sub_syms.push_back(get_sub_sym(Dv,5)); 
+            sub_syms.push_back(get_sub_sym(Dv,3)); 
+            sub_syms.push_back(get_sub_sym(Dh,2)); 
+            break;
+
+         case I:
+            sym.sym_type=T;
+            sub_syms.push_back(sym);
+            sub_syms.push_back(get_sub_sym(D,5)); 
+            sub_syms.push_back(get_sub_sym(D,3)); 
+            sub_syms.push_back(get_sub_sym(D,2)); 
+            break;
+         
+         case Oh:
+            sym.sym_type=O;
+            sub_syms.push_back(sym);
+            sym.sym_type=Td;
+            sub_syms.push_back(sym);
+            sym.sym_type=T;
+            sub_syms.push_back(sym);
+            sub_syms.push_back(get_sub_sym(Dh,4)); 
+            sub_syms.push_back(get_sub_sym(Dv,3)); 
+            sub_syms.push_back(get_sub_sym(Dh,2)); 
+            break;
+         
+         case O:
+            sym.sym_type=T;
+            sub_syms.push_back(sym);
+            sub_syms.push_back(get_sub_sym(D,4)); 
+            sub_syms.push_back(get_sub_sym(D,3)); 
+            sub_syms.push_back(get_sub_sym(D,2)); 
+            break;
+
+         case Th:
+            sym.sym_type=T;
+            sub_syms.push_back(sym);
+            sub_syms.push_back(get_sub_sym(S,6)); 
+            sub_syms.push_back(get_sub_sym(Dh,2)); 
+            break;
+
+         case Td:
+            sym.sym_type=T;
+            sub_syms.push_back(sym);
+            sub_syms.push_back(get_sub_sym(Cv,3)); 
+            sub_syms.push_back(get_sub_sym(Dv,2)); 
+            break;
+         
+         case T:
+            sub_syms.push_back(get_sub_sym(C,3)); 
+            sub_syms.push_back(get_sub_sym(D,2)); 
+            break;
+
+         default:
+            add_sub_axes(*this);
+
+      }
+   }
+   return sub_syms;
+}
+
+
+/*
+const set<sch_sym> &sch_sym::get_sub_syms() const
+{
+   if(sub_syms.size()==0 && sym_type!=unknown) {
+      sch_sym sym = *this;
+      if(sym_type==Ih) {
+         sym.sym_type=I;
+         sub_syms.insert(sym);
+      }
+      if(sym_type==Oh) {
+         sym.sym_type=O;
+         sub_syms.insert(sym);
+         sym.sym_type=Td;
+         sub_syms.insert(sym);
+      }
+      if(sym_type==Ih || sym_type==Oh) {
+         sym.sym_type=Th;
+         sub_syms.insert(sym);
+      }
+      if(sym_type==Ih || sym_type==I || sym_type==Oh || sym_type==O ||
+            sym_type==Th || sym_type==T) {
+         sym.sym_type=T;
+         sub_syms.insert(sym);
+      }
+
+      get_axes();
+      for(set<sch_axis>::const_iterator si=axes.begin(); si!=axes.end(); ++si)
+         add_sub_syms(*si);
+   }
+   return sub_syms;
+}
+*/
+
+/*
+bool sch_sym::operator <(const sch_sym &s) const
+{
+   if(sym_type < s.sym_type)
+      return true;
+   if(nfold < s.nfold)
+      return true;
+
+   // Expensive test!!!
+   // Could normalise to_std and compare on that
+   return get_axes() < s.get_axes();
+}
+*/
 

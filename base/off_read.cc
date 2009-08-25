@@ -133,7 +133,6 @@ bool off_file_read(string file_name, geom_if &geom, char *errmsg)
       ifile = open_sup_file(file_name.c_str(), "/models/", &alt_name);
       
    if(alt_name!="") {  // an alt name found before a file with the name
-
       if(make_resource_geom(geom, alt_name, errmsg2))
          geom_ok = true;
       else {

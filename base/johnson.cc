@@ -57,7 +57,7 @@ void tbond(geom_if &geom, model_func base, model_func brick, int f=0, int b_f=0)
 void J_tetrahedron(geom_if &geom)
                   { uni_pgon(geom, pyramid(3)); }
 void J_icosahedron(geom_if &geom)
-                  { icosahedron(geom); unit_edge(geom); }
+                  { icosahedron(geom); geom.orient_reverse(); unit_edge(geom); }
 void J_dodecahedron(geom_if &geom)
                   { dodecahedron(geom); unit_edge(geom); }
 void J_icosidodecahedron(geom_if &geom)

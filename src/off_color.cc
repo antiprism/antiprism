@@ -257,15 +257,21 @@ void color_vals_to_idxs(col_geom_v &geom, char elems=ELEM_ALL,
 
 class o_col_opts: public prog_opts {
    public:
-      string v_col_op;
+      char v_col_op;
+      sch_sym v_sub_sym;
+      vector<set<int> > v_equivs;
       col_val v_col;
-      
-      string f_col_op;
-      col_val f_col;
 
-      string e_col_op;
+      char e_col_op;
+      sch_sym e_sub_sym;
+      vector<set<int> > e_equivs;
       col_val e_col;
-      
+       
+      char f_col_op;
+      sch_sym f_sub_sym;
+      vector<set<int> > f_equivs;
+      col_val f_col;
+     
       char edge_type;
       bool uncoloured;
 
@@ -279,12 +285,14 @@ class o_col_opts: public prog_opts {
       string ifile;
       string ofile;
 
-      o_col_opts(): prog_opts("off_color"), edge_type('x'), uncoloured(false),
+      o_col_opts(): prog_opts("off_color"),
+                    v_col_op(0), e_col_op(0), f_col_op(0),
+                    edge_type('x'), uncoloured(false),
                     range_elems(ELEM_NONE), v2i_elems(ELEM_NONE)
          {
             for(int i=0; i<3; i++)
-               if(color_map *rand = init_color_map("rand"))
-                  clrngs[i].add_cmap(rand);
+               if(color_map *cmap = init_color_map("spread"))
+                  clrngs[i].add_cmap(cmap);
          }
 
       void process_command_line(int argc, char **argv);
@@ -377,6 +385,7 @@ void o_col_opts::usage()
 void o_col_opts::process_command_line(int argc, char **argv)
 {
    char errmsg[MSG_SZ];
+   char errmsg2[MSG_SZ];
    extern char *optarg;
    extern int optind, opterr;
    opterr = 0;
@@ -391,30 +400,75 @@ void o_col_opts::process_command_line(int argc, char **argv)
 
       switch(c) {
          case 'v':
-            if(v_col.read(optarg, errmsg))
+            if(v_col.read(optarg, errmsg)) {
                v_col_op = 'o';
-            else if(strlen(optarg)==1 && strchr("uUpPsSnNFECLM", *optarg))
-               v_col_op = optarg;
+               break;
+            }
+            split_line(optarg, parts, ",");
+            if(strlen(parts[0])==1 && strchr("uUpPsSnNFECLM", *parts[0]))
+               v_col_op = *parts[0];
             else
                error("invalid colouring", c);
+
+            if(parts.size()>2 || (strchr("sS", (char)v_col_op)&&parts.size()>3))
+               error("too many comma separated parts", c);
+            
+            if(strchr("sS", v_col_op)) {
+               v_sub_sym = sch_sym();
+               if(parts.size()==2 &&
+                     !v_sub_sym.init(parts[1], mat3d(), errmsg2)) {
+                  snprintf(errmsg, MSG_SZ, "invalid subsymmetry: %s", errmsg2);
+                  error(errmsg, c);
+               }
+            }
             break;
 
          case 'f':
-            if(f_col.read(optarg, errmsg))
+            if(f_col.read(optarg, errmsg)) {
                f_col_op = 'o';
-            else if(strlen(optarg)==1 && strchr("uUpPsSnNaAkKGCLlM",*optarg))
-               f_col_op = optarg;
+               break;
+            }
+            split_line(optarg, parts, ",");
+            if(strlen(parts[0])==1 &&strchr("uUpPsSnNaAkKGCLlM",*parts[0]))
+               f_col_op = *parts[0];
             else
                error("invalid colouring", c);
+
+            if(parts.size()>2 || (strchr("sS", (char)f_col_op)&&parts.size()>3))
+               error("too many comma separated parts", c);
+            
+            if(strchr("sS", f_col_op)) {
+               f_sub_sym = sch_sym();
+               if(parts.size()==2 &&
+                     !f_sub_sym.init(parts[1], mat3d(), errmsg2)) {
+                  snprintf(errmsg, MSG_SZ, "invalid subsymmetry: %s", errmsg2);
+                  error(errmsg, c);
+               }
+            }
             break;
 
          case 'e':
-            if(e_col.read(optarg, errmsg))
+            if(e_col.read(optarg, errmsg)) {
                e_col_op = 'o';
-            else if(strlen(optarg)==1 && strchr("uUpPsSkKFGCLM", *optarg))
-               e_col_op = optarg;
+               break;
+            }
+            split_line(optarg, parts, ",");
+            if(strlen(parts[0])==1 && strchr("uUpPsSkKFGCLM", *parts[0]))
+               e_col_op = *parts[0];
             else
                error("invalid colouring", c);
+
+            if(parts.size()>2 || (strchr("sS", (char)e_col_op)&&parts.size()>3))
+               error("too many comma separated parts", c);
+            
+            if(strchr("sS", f_col_op)) {
+               e_sub_sym = sch_sym();
+               if(parts.size()==2 &&
+                     !e_sub_sym.init(parts[1], mat3d(), errmsg2)) {
+                  snprintf(errmsg, MSG_SZ, "invalid subsymmetry: %s", errmsg2);
+                  error(errmsg, c);
+               }
+            }
             break;
 
          case 'E':
@@ -487,7 +541,7 @@ void o_col_opts::process_command_line(int argc, char **argv)
 
    // default: explicit for mapping only othrwise explicit and implicit
    if(edge_type=='x')
-      edge_type = (e_col_op=="" || e_col_op=="M") ? 'e' : 'a';
+      edge_type = (!e_col_op || e_col_op=='M') ? 'e' : 'a';
    
    if(argc-optind > 1)
       error("too many arguments");
@@ -571,7 +625,7 @@ int main(int argc, char *argv[])
    // store original edges
    vector<vector<int> > &edges = *geom.get_edges();
    map<vector<int>, col_val> expl_edges;
-   if(opts.e_col_op[0] && strchr("pP", opts.e_col_op[0]) &&
+   if(opts.e_col_op && strchr("pP", opts.e_col_op) &&
          !strchr("iI", opts.edge_type))
       opts.edge_type = 'i';
    if(opts.edge_type=='a')
@@ -587,20 +641,50 @@ int main(int argc, char *argv[])
    // Get symmetry if necessary
    sch_sym sym;
    vector<vector<set<int> > > sym_equivs;
-   if( (opts.f_col_op!="" && strchr("sS", opts.f_col_op[0])) ||
-       (opts.e_col_op!="" && strchr("sS", opts.e_col_op[0])) ||
-       (opts.v_col_op!="" && strchr("sS", opts.v_col_op[0]))   )
+   if( (opts.f_col_op && strchr("sS", opts.f_col_op)) ||
+       (opts.e_col_op && strchr("sS", opts.e_col_op)) ||
+       (opts.v_col_op && strchr("sS", opts.v_col_op))   ) {
       sym.init(geom, &sym_equivs);
+      opts.v_equivs = sym_equivs[0];
+      opts.e_equivs = sym_equivs[1];
+      opts.f_equivs = sym_equivs[2];
 
+      if(opts.v_sub_sym.get_sym_type() != sch_sym::unknown) {
+         sch_sym sub = sym.get_sub_sym(opts.v_sub_sym.get_sym_type(),
+               opts.v_sub_sym.get_nfold());
+         get_equiv_elems(geom, sub.get_trans(), &sym_equivs);
+         opts.v_equivs = sym_equivs[0];
+      }
+      if(opts.e_sub_sym.get_sym_type() != sch_sym::unknown) {
+         sch_sym sub = sym.get_sub_sym(opts.e_sub_sym.get_sym_type(),
+               opts.e_sub_sym.get_nfold());
+         get_equiv_elems(geom, sub.get_trans(), &sym_equivs);
+         opts.e_equivs = sym_equivs[1];
+      }  
+      if(opts.f_sub_sym.get_sym_type() != sch_sym::unknown) {
+         sch_sym sub = sym.get_sub_sym(opts.f_sub_sym.get_sym_type(),
+               opts.f_sub_sym.get_nfold());
+         get_equiv_elems(geom, sub.get_trans(), &sym_equivs);
+         opts.f_equivs = sym_equivs[2];
+      }
+   }
+
+   //sch_sym sub = sym.get_sub_sym(sch_sym::C, 5);
+   //const t_set &ts = sub.get_trans();
+   //t_set::const_iterator si;
+   //for(si=ts.begin(); si!=ts.end(); si++)
+   //   si->dump();
+
+   //get_equiv_elems(geom, sub.get_trans(), &sym_equivs);
+
+
+   //sym_repeat(geom, geom, ts);
 
   
-   char extra[MSG_SZ];
-   extra[MSG_SZ-1] = '\0';
    coloring &fc = opts.clrngs[2];
    fc.set_geom(&geom);
-   if(opts.f_col_op!="") {
-      char op = opts.f_col_op[0];
-      strncpy(extra, opts.f_col_op.c_str()+1, MSG_SZ-1);
+   if(opts.f_col_op) {
+      char op = opts.f_col_op;
       if(op=='o')
          fc.f_one_col(opts.f_col);
       else if(strchr("uU", op))
@@ -630,10 +714,8 @@ int main(int argc, char *argv[])
   
    coloring &ec = opts.clrngs[1];
    ec.set_geom(&geom);
-   if(opts.e_col_op!="") {
-      char op = opts.e_col_op[0];
-      strncpy(extra, opts.e_col_op.c_str()+1, MSG_SZ-1);
-        
+   if(opts.e_col_op) {
+      char op = opts.e_col_op;
       if(op=='o')
          ec.e_one_col(opts.e_col);
       else if(strchr("uU", op))
@@ -657,9 +739,8 @@ int main(int argc, char *argv[])
    
    coloring &vc = opts.clrngs[0];
    vc.set_geom(&geom);
-   if(opts.v_col_op!="") {
-      char op = opts.v_col_op[0];
-      strncpy(extra, opts.v_col_op.c_str()+1, MSG_SZ-1);
+   if(opts.v_col_op) {
+      char op = opts.v_col_op;
       if(op=='o')
          vc.v_one_col(opts.v_col);
       else if(strchr("uU", op))
@@ -701,11 +782,11 @@ int main(int argc, char *argv[])
    
    // Average colour values from adjoining elements after converting
    // index numbers
-   if(opts.e_col_op[0]=='F')
+   if(opts.e_col_op=='F')
       ec.e_face_color();
-   if(opts.v_col_op[0]=='F')
+   if(opts.v_col_op=='F')
       vc.v_face_color();
-   else if(opts.v_col_op[0]=='E')
+   else if(opts.v_col_op=='E')
       vc.v_edge_color();
 
    // Finally convert to index numbers

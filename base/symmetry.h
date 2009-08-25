@@ -228,6 +228,15 @@ class iso_type
       
 };
 
+
+///Get sets of elements that are equivalent under a set of transformations
+/**\param geom the geometry.
+ * \param ts the set of transfromations to apply.
+ * \param equiv_sets vectors of sets of equivalent elements for
+ * vertices (0), edges (1) and faces (2). */
+void get_equiv_elems(const geom_if &geom, const t_set &ts,
+      vector<vector<set<int> > > *equiv_sets);
+
 class sch_axis;
 
 ///Class for symmetry elements in Schoenflies notation.
@@ -241,11 +250,31 @@ class sch_sym
    private:
       int sym_type;
       int nfold;
+      mutable vector<sch_sym> sub_syms;
       mutable set<sch_axis> axes;
       mutable set<vec3d> mirrors;
       mat3d to_std;
 
+      void add_sub_axes(const sch_sym &sub) const;
       void find_full_sym_type(const set<sch_axis> &full_sym);
+
+      ///Set the symmetry type for the axis
+      /**\param type the symmetry type of the axis as the Schoenflies
+       * identifier. */
+      void set_sym_type(int type) { sym_type=type; }
+      
+      ///Set the n-fold order of the axis.
+      /**If the symmetry type is \c sym_S then the axis has
+       * rotational n/2-fold symmetry.
+       * \param n the n-fold order of the axis. */
+      void set_nfold(int n) { nfold = n; }
+
+      ///Set the tranformation to standard symmetry type.
+      /**\param trans the transformation that carries an object with the
+       * symmetry type onto the standard set of symmetries for that type. */
+      void set_to_std(const mat3d &trans) { to_std=trans; }
+
+
 
    public:
       ///Constructor
@@ -338,8 +367,22 @@ class sch_sym
       /**\return The set of symmetry transformations for this symmetry type. */
       t_set get_trans() const;
 
+      ///Get the symmetry subgroups
+      /**Only one example is included from each conjugacy class
+       * \return The symmetry subgroups. */
+      const vector<sch_sym> &get_sub_syms() const;
+
+      ///Get a symmetry subgroup
+      /**\param sub_type the symmetry subgroup type.
+       * \param sub_fold the n-fold order if the subgroup has a principal axis.
+       * \param conj_type use to select from inequivalent (non-conjugate)
+       * subgroups.
+       * \return the symmetry, which will have symmetry type \c unknown if
+       * the parameters are invalid. */
+      sch_sym get_sub_sym(int sub_type, int sub_fold=1, int conj_type=0) const;
+      
       ///Get the axes or mirrors.
-      /**\return The symetry axes or mirrors. */
+      /**\return The symmetry axes or mirrors. */
       const set<sch_axis> &get_axes() const;
 
       ///Get the mirrors.
@@ -349,6 +392,13 @@ class sch_sym
       ///Check if a valid symmetry type is set.
       /**\return \c true if set to valid type, otherwise \c false */
       bool is_set() const { return sym_type!=unknown; }
+
+      // Less than.
+      /* Only for containers that need it
+       * \param s the symmetry axis to compare for less than.
+       * \return \c true if this axis is less than \arg s, otherwise \c false.*/
+      //bool operator <(const sch_sym &s) const;
+
 
 };
 

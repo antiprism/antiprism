@@ -140,6 +140,9 @@ inline geom_v model(model_func pfunc)
    return g;
 }
 
+void set_resource_polygon_color(geom_if &geom);
+string expand_abbrevs(const string &name,
+      const char *abbrevs[][2], size_t last);
 
 class uni_poly
 {

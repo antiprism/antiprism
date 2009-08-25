@@ -100,6 +100,9 @@ class bound_sphere
       bound_sphere(const vector<vec3d> &points=vector<vec3d>(),
             double cutoff=-1);
       
+      ///Destructor
+      virtual ~bound_sphere() {}
+      
       /// Add points and calculate the new bounding sphere
       /**\param points points to add
        * \param cutoff ignore points beyond this distance from the

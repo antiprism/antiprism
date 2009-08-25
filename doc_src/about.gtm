@@ -75,6 +75,16 @@ file for changes in the Antiprism releases.
 </TR>
 
 <TR CLASS=tbl1 VALIGN=TOP>
+<TD>28/07/2009</TD>
+<TD>
+New albums of resource polyhedra in Antiprism:
+<A HREF="album/810_uniform/index.html">uniform polyhedra</A>,
+<A HREF="album/811_johnson/index.html">Johnson solids</A> and
+<A HREF="album/812_polygons/index.html">polygon-based polyhedra</A>.
+</TD>
+</TR>
+
+<TR CLASS=tbl1 VALIGN=TOP>
 <TD>02/12/2008</TD>
 <TD>
 Antiprism 0.19.1 released.

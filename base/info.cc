@@ -380,7 +380,7 @@ void geom_info::find_vert_cons()
    }
 }
    
-double sph_tri_area(vec3d u0, vec3d u1, vec3d u2)
+static double sph_tri_area(vec3d u0, vec3d u1, vec3d u2)
 {
    double sign = 1 - 2*(vtriple(u0, u1, u2)>0);
    vec3d u[3] = {u0, u1, u2};
@@ -392,7 +392,7 @@ double sph_tri_area(vec3d u0, vec3d u1, vec3d u2)
          ang = 2*M_PI - ang;
       area += ang;
    }
-   return area - M_PI ;
+   return area - M_PI;
 }
 
 void geom_info::find_solid_angles()

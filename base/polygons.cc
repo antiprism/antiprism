@@ -30,6 +30,7 @@
 #include <algorithm>
 
 #include "polygons.h"
+#include "std_polys.h"
 #include "symmetry.h"
 #include "utils.h"
 
@@ -346,6 +347,9 @@ void snub_antiprism::make_poly_part(geom_if &geom)
 
 int make_resource_pgon(geom_if &geom, string pname, char *errmsg)
 {
+   if(pname.find('.')!=string::npos)
+      return -1; // not polygon res name (the "." indicates a likely local file)
+                 // so the name is not handled
    char pnam[MSG_SZ];
    strncpy(pnam, pname.c_str(), MSG_SZ);
    int num_sides;
@@ -403,6 +407,7 @@ int make_resource_pgon(geom_if &geom, string pname, char *errmsg)
    }
 
    delete poly;
+   set_resource_polygon_color(geom);
    return ret;
 }
 

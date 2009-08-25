@@ -42,7 +42,6 @@ using std::vector;
 using std::map;
 using std::swap;
 
-
 class spid_opts : public prog_opts {
    public:
       
@@ -341,6 +340,17 @@ int make_spidron(geom_if &spid, geom_if &base, double ang, double ang2, int len,
 }
    
 
+double v_ang_at_ax(const vec3d &v0, const vec3d &v1, const vec3d &ax)
+{
+   vec3d n0 = vcross(v0, ax).unit();
+   vec3d n1 = vcross(v1, ax).unit();
+   double ang = acos(vdot(n0, n1));
+   if(vdot(ax, vcross(n0, n1))<0)
+      ang = 2*M_PI - ang;
+   return ang;
+}
+
+
 
 int main(int argc, char *argv[])
 {
@@ -365,6 +375,16 @@ int main(int argc, char *argv[])
    if(!spid.write(opts.ofile, errmsg))
       opts.error(errmsg);
 
+   vec3d ax(1,1.2,1.3);
+   vec3d v0(-1,1,0.3);
+   int divs = 10;
+   for(int i=0; i<divs; i++) {
+      double ang = 2*M_PI*i/divs;
+      vec3d v_to = mat3d::rot(ax, ang)*v0;
+      double ang_to = v_ang_at_ax(v0, v_to, ax);
+      fprintf(stderr, "ang=%g, ang_to=%g\n", rad2deg(ang), rad2deg(ang_to));
+   }
+   
    return 0;
 }
 

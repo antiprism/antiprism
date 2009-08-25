@@ -139,8 +139,8 @@ class disp_sym: public disp_poly
       bool show_rotrefls;
 
       sch_sym sym;
-      col_geom_v elems;
-      scene_geom sc_geom_elems;
+      //col_geom_v elems;
+      //scene_geom sc_geom_elems;
       
       virtual void disp_changed();
 

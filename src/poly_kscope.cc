@@ -31,6 +31,7 @@
 #include <stdarg.h>
 #include <unistd.h>
 #include <math.h>
+#include <limits.h>
 
 #include <string>
 #include <vector>
@@ -199,6 +200,9 @@ void get_arrow(col_geom_v &geom, const sch_sym &sym)
 
    mat3d trans = mat3d::transl(vec3d(0.1, 0.2, 0.4));
    int fold = sym.get_nfold();
+   if(fold==1)
+      fold = INT_MAX;
+
    switch(sym.get_sym_type()) {
       case sch_sym::C1:
       case sch_sym::Cs:
@@ -219,18 +223,18 @@ void get_arrow(col_geom_v &geom, const sch_sym &sym)
          trans = mat3d::transl(vec3d(3.2/tan(M_PI/fold), 0, 0)) *
                  mat3d::rot(vec3d::z, -M_PI/2) * trans;
          break;
-      
+
       case sch_sym::Dv:
          trans = mat3d::rot(vec3d::z, 0.5*M_PI/fold) *
-                 mat3d::transl(vec3d(-3.2/tan(0.5*M_PI/fold), 0, 0)) *
-                 mat3d::rot(vec3d::z, M_PI/2) * trans;
+                 mat3d::transl(vec3d(3.2/tan(M_PI/fold), 0, 0)) *
+                 mat3d::rot(vec3d::z, -M_PI/2) * trans;
          break;
 
       case sch_sym::T:
       case sch_sym::Td:
       case sch_sym::Th:
          trans = mat3d::alignment(vec3d::z, vec3d::x,
-                       vec3d(1,1,1), vec3d(0,-1,1)) *
+                                  vec3d(1,1,1), vec3d(0,-1,1)) *
                  mat3d::transl(vec3d(0, 0.5, 3)) *
                  mat3d::rot(vec3d::z, M_PI/2) * trans;
          break;
@@ -247,7 +251,7 @@ void get_arrow(col_geom_v &geom, const sch_sym &sym)
                  mat3d::transl(vec3d(0, 1, 5.5)) *
                  mat3d::rot(vec3d::z, M_PI/2) * trans;
          break;
-         
+
    }
 
    geom.transform(trans);
@@ -286,17 +290,17 @@ int main(int argc, char *argv[])
    sch_sym part_sym(geom, &equivs);
 
    /*
-   for(int i=0; i<3; i++) {
+      for(int i=0; i<3; i++) {
       const char *elems[] = { "verts", "edges", "faces" };
       fprintf(stderr, "\n%s\n", elems[i]);
       for(unsigned int j=0; j<equivs[i].size(); j++) {
-         set<int>::iterator si;
-         for(si=equivs[i][j].begin(); si!=equivs[i][j].end(); ++si)
-            fprintf(stderr, "%d  ", *si);
-         fprintf(stderr, "\n");
+      set<int>::iterator si;
+      for(si=equivs[i][j].begin(); si!=equivs[i][j].end(); ++si)
+      fprintf(stderr, "%d  ", *si);
+      fprintf(stderr, "\n");
       }
-   }
-   */
+      }
+      */
 
    t_set min_ts;
    min_ts.min_set(final_sym.get_trans(), part_sym.get_trans());

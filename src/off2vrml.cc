@@ -58,8 +58,8 @@ void o2v_opts::usage()
 "\n"
 "Usage: %s [options] input_files\n"
 "\n"
-"Convert files in OFF format to POV format for display in POV-ray. If\n"
-"input_files are not given the program reads from standard input.\n"
+"Convert files in OFF format to VRML format. If input_files are not\n"
+"given the program reads from standard input.\n"
 "\n"
 "Options\n"
 "%s"
@@ -134,6 +134,7 @@ int main(int argc, char *argv[])
    opts.process_command_line(argc, argv);
    scene scen = opts.scen_defs;
    opts.set_view_vals(scen);
+   fprintf(stderr, "sym=%p\n", scen.get_geoms()[0].get_sym());
 
    FILE *ofile = stdout;  // write to stdout by default
    if(opts.ofile != "") {
