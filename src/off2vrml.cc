@@ -134,7 +134,6 @@ int main(int argc, char *argv[])
    opts.process_command_line(argc, argv);
    scene scen = opts.scen_defs;
    opts.set_view_vals(scen);
-   fprintf(stderr, "sym=%p\n", scen.get_geoms()[0].get_sym());
 
    FILE *ofile = stdout;  // write to stdout by default
    if(opts.ofile != "") {

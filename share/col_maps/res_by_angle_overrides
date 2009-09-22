@@ -1,0 +1,10 @@
+# Antiprism Resource File - http://www.antiprism.com
+# This file may be copied, modified and redistributed
+#
+# colour map file
+# res_by_angle_overrides
+# Used by the map name "res_by_angle", which colours the same way
+# as the uniform and Johnson resource models
+60 = 0.9,0.45,0.0   # triangle
+36 = 0.7,0.1,0.2    # pentagram
+

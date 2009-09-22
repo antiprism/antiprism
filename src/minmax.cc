@@ -49,11 +49,12 @@ class mm_opts: public prog_opts
       char placement;
       double shorten_by;
       double lengthen_by;
+      vec4d ellipsoid;
       
       string ifile;
       string ofile;
 
-      mm_opts(): prog_opts("minmax"), num_iters(1000), algm('a'),
+      mm_opts(): prog_opts("minmax"), num_iters(1000), algm('v'),
                  placement('n'), shorten_by(1.0), lengthen_by(0.0)
                  {}
 
@@ -69,9 +70,9 @@ void mm_opts::usage()
 "Usage: %s [options] [input_file]\n"
 "\n"
 "Read a file in OFF format containing a graph of a polyhedron, with or\n"
-"without vertex coordinates, and try to create a spherical tesselation\n"
-"where the maximum edge is a minimum length. If input_file is not given\n"
-"the program reads from standard input.\n"
+"without vertex coordinates, and try to create a spherical or ellipsoidal\n"
+"tesselation where the maximum edge is a minimum length. If input_file is\n"
+"not given the program reads from standard input.\n"
 "\n"
 "Options\n"
 "%s"
@@ -79,13 +80,16 @@ void mm_opts::usage()
 "  -s <perc> percentage to shorten the maximum edge by (default 1)\n" 
 "  -l <perc> percentage to lengthen the minimum edge by (default 1)\n" 
 "  -a <alg>  length changing algorithm\n"
+"              v - shortest and longest edges attached to a vertex (default)\n"
 "              a - shortest and longest of all edges\n"
-"              v - shortest and longest of edges attached to a vertex\n"
 "  -p <mthd> method of placement onto a unit sphere:\n"
 "              n - project onto the sphere (default)\n"
 "              r - random placement\n"
 "              u - unscramble: place a small polygon on one side and the\n"
 "                  rest of the vertices at a point on the other side\n"
+"  -E <prms> use ellipsoid, three numbers separated by commas are the\n"
+"            axis lengths (for a superellipsoid an optional fourth number\n"
+"            gives the power)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
 "\n", prog_name(), help_ver_text);
@@ -100,10 +104,11 @@ void mm_opts::process_command_line(int argc, char **argv)
    extern int optind, opterr;
    opterr = 0;
    char c;
+   vector<double> nums;
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hn:s:l:a:p:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hn:s:l:a:p:E:o:")) != -1 ) {
       if(common_opts(c))
          continue;
 
@@ -146,6 +151,17 @@ void mm_opts::process_command_line(int argc, char **argv)
             placement = *optarg;
             break;
 
+         case 'E': 
+            if(!read_double_list(optarg, nums, errmsg))
+               error(errmsg, c);
+            if(nums.size()<3 || nums.size()>4)
+               error("must give three or four numbers only", c);
+            ellipsoid = vec4d(nums[0], nums[1], nums[2],
+                                              (nums.size()==4) ? nums[3]: 2);
+            if(ellipsoid[3]<=0)
+               error("superellipsoid power must be greater than zero", c);
+            break;
+
          default:
             error("unknown command line error");
       }
@@ -160,13 +176,25 @@ void mm_opts::process_command_line(int argc, char **argv)
 }
 
 
-void initial_placement(geom_if &geom, char placement)
+void to_ellipsoid(vec3d &v, vec4d ellipsoid)
+{
+   if(!ellipsoid.is_set())
+      v.to_unit();
+   else if (v.mag2()>epsilon) {
+      double scale=0;
+      for(unsigned int i=0; i<3; i++)
+         scale += pow(fabs(v[i]/ellipsoid[i]), ellipsoid[3]);
+      v *= pow(scale, -1/ellipsoid[3]);
+   }
+}
+
+void initial_placement(geom_if &geom, char placement, vec4d ellipsoid)
 {
    vector<int> face = (*geom.get_faces())[0];
    switch(placement) {
       case 'n':
          for(unsigned int i=0; i<geom.get_verts()->size(); i++)
-            (*geom.get_verts())[i].to_unit();
+            to_ellipsoid((*geom.get_verts())[i], ellipsoid);
          break;
       
       case 'u':
@@ -183,13 +211,16 @@ void initial_placement(geom_if &geom, char placement)
          
       case 'r':
          srand(0);
-         for(unsigned int i=0; i<geom.get_verts()->size(); i++)
-            (*geom.get_verts())[i] = vec3d::random().unit();
+         for(unsigned int i=0; i<geom.get_verts()->size(); i++) {
+            (*geom.get_verts())[i] = vec3d::random();
+            to_ellipsoid((*geom.get_verts())[i], ellipsoid);
+         }
          break;
    }
 }
 
-void minmax_a(geom_v &geom, double shorten_factor, double lengthen_factor, int n=1000)
+void minmax_a(geom_v &geom, double shorten_factor, double lengthen_factor,
+      int n=1000, vec4d ellipsoid=vec4d())
 {
    vector<vec3d> &verts = *geom.get_verts();
    vector<vector<int> > &edges = *geom.get_edges();
@@ -213,17 +244,17 @@ void minmax_a(geom_v &geom, double shorten_factor, double lengthen_factor, int n
       p1 = edges[max_edge][1];
       vec3d diff = verts[p1] - verts[p0];
       verts[p0] += diff*shorten_factor;
-      verts[p0].to_unit();
+      to_ellipsoid(verts[p0], ellipsoid);
       verts[p1] -= diff*shorten_factor;
-      verts[p1].to_unit();
+      to_ellipsoid(verts[p1], ellipsoid);
 
       p0 = edges[min_edge][0];
       p1 = edges[min_edge][1];
       diff = verts[p1] - verts[p0];
       verts[p0] -= diff*lengthen_factor;
-      verts[p0].to_unit();
+      to_ellipsoid(verts[p0], ellipsoid);
       verts[p1] += diff*lengthen_factor;
-      verts[p1].to_unit();
+      to_ellipsoid(verts[p1], ellipsoid);
       
       if((cnt+1)%100 == 0)
          fprintf(stderr, ".");
@@ -286,7 +317,8 @@ void minmax_v(geom_v &geom, vector<vector<int> > &eds, double shorten_factor, do
 }
 */
  
-void minmax_v(geom_v &geom, vector<vector<int> > &eds, double shorten_factor, double lengthen_factor, int n=1000)
+void minmax_v(geom_v &geom, vector<vector<int> > &eds, double shorten_factor,
+      double lengthen_factor, int n=1000, vec4d ellipsoid=vec4d())
 {
    vector<vec3d> &verts = *geom.get_verts();
    int max_edge=0, min_edge=0, p0, p1;
@@ -295,6 +327,8 @@ void minmax_v(geom_v &geom, vector<vector<int> > &eds, double shorten_factor, do
       g_max_dist = 0;
       g_min_dist = 1e100;
       for(unsigned int v=0; v<verts.size(); v++) {
+         if(eds[v].size()==0)
+            continue;
          max_dist = 0;
          min_dist = 1e100;
          for(unsigned int i=0; i<eds[v].size(); i++) {
@@ -318,13 +352,13 @@ void minmax_v(geom_v &geom, vector<vector<int> > &eds, double shorten_factor, do
          p1 = eds[v][max_edge];
          vec3d diff = verts[p1] - verts[p0];
          verts[p0] += diff*shorten_factor;
-         verts[p0].to_unit();
+         to_ellipsoid(verts[p0], ellipsoid);
 
          p0 = v;
          p1 = eds[v][min_edge];
          diff = verts[p1] - verts[p0];
          verts[p0] -= diff*lengthen_factor;
-         verts[p0].to_unit();
+         to_ellipsoid(verts[p0], ellipsoid);
       }
       
       if((cnt+1)%100 == 0)
@@ -456,10 +490,10 @@ int main(int argc, char *argv[])
    
    if(geom.get_edges()->size()) {
       if(opts.algm!='u')
-         initial_placement(geom, opts.placement);
+         initial_placement(geom, opts.placement, opts.ellipsoid);
       if(opts.algm=='a')
          minmax_a(geom, opts.shorten_by/200, opts.lengthen_by/200,
-               opts.num_iters);
+               opts.num_iters, opts.ellipsoid);
       else{
          vector<vector<int> > &edges = *geom.get_edges();
          vector<vector<int> > eds(geom.get_verts()->size());
@@ -469,7 +503,7 @@ int main(int argc, char *argv[])
          }
          if(opts.algm=='v')
             minmax_v(geom, eds, opts.shorten_by/200, opts.lengthen_by/200,
-               opts.num_iters);
+               opts.num_iters, opts.ellipsoid);
          else if(opts.algm=='u')
             minmax_unit(geom, eds, opts.shorten_by/200, opts.num_iters);
       }

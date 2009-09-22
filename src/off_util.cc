@@ -32,6 +32,7 @@
 #include <ctype.h>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include "../base/antiprism.h"
 
@@ -57,13 +58,15 @@ class pr_opts: public prog_opts {
       string merge_elems;
       int sig_compare;
       int sig_digits;
+      double unzip_frac;
       
       string ofile;
 
       pr_opts(): prog_opts("off_util"), orient(false),
                  triangulate(false), skeleton(false),
                  sph_proj(false), trunc(false), edges_to_faces(false),
-                 sig_compare(-1), sig_digits(DEF_SIG_DGTS) {}
+                 sig_compare(-1), sig_digits(DEF_SIG_DGTS), unzip_frac(100.0)
+                 {}
       void process_command_line(int argc, char **argv);
       void usage();
 };
@@ -140,7 +143,7 @@ void pr_opts::process_command_line(int argc, char **argv)
 
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hH:stOd:x:T:ESM:l:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hH:stOd:x:T:ESM:l:u:o:")) != -1 ) {
       if(common_opts(c))
          continue;
 
@@ -235,6 +238,10 @@ void pr_opts::process_command_line(int argc, char **argv)
             break;
 
 
+         case 'u':
+            if(!read_double(optarg, &unzip_frac, errmsg))
+               error(errmsg, c);
+            break;
 
          case 'o':
             ofile = optarg;
@@ -254,6 +261,118 @@ void pr_opts::process_command_line(int argc, char **argv)
       ifiles.push_back(string(argv[optind++]));
 
 }
+
+
+//void get_unzip_face_connections(const geom_if &geom)
+//{
+//}
+
+/*
+int unzip_poly(geom_if &geom, double unzip_frac, char *errmsg)
+{
+   geom.orient();
+   geom_info info(geom);
+   map<vector<int>, vector<int> > ef_pairs;
+   geom.get_edge_face_pairs(ef_pairs, false);
+   map<vector<int>, vector<int> >::const_iterator mi;
+   for(mi=ef_pairs.begin(); mi!=ef_pairs.end(); ++mi) {
+      if(mi->second.size()!=2) {
+         if(errmsg)
+            sprintf(errmsg, "cannot unzip, geometry is not a polyhedron");
+         return 0;
+      }
+   }
+   / *
+   geom_info d_info(info.get_dual());
+   vector<vector<int> > f_cons = d_info.get_vert_cons();
+   vector<int> f_seen(info.num_faces(), 0);
+   int level=0;
+   stack<int> cur_faces;
+   cur_faces.push(0);
+* /
+
+   
+
+   return 1;
+}
+*/
+
+struct tree_face
+{
+   int idx;
+   int start;
+   int cur;
+   vector<int> orig_cons;
+   vector<int> cons;
+   tree_face(int index, vector<int> original_cons, int con_idx=-1);
+   int get_next_idx();
+};
+
+tree_face::tree_face(int index, vector<int> original_cons, int con_idx):
+   idx(index), orig_cons(original_cons)
+{
+   if(con_idx==-1) {
+      cur = -1;
+      start = 0;
+   }
+   else {
+      vector<int>::iterator vi =
+         std::find(orig_cons.begin(), orig_cons.end(), con_idx);
+      start = cur = vi-orig_cons.begin();
+      fprintf(stderr, "   %sidx=%d, first cur=%d, first_start=%d\n", vi==orig_cons.end()?"vi is at end!!!!! ": "", idx, cur,start);
+   }
+}
+
+int tree_face::get_next_idx()
+{
+   fprintf(stderr, "   idx=%d, cur=%d, start=%d, cur-start+1=%d, sz=%d", idx, cur, start, cur-start+1, (int)orig_cons.size());
+   int next_idx;
+   if(cur-start+1 >= (int)orig_cons.size()) // all connections seen
+      next_idx = -1;
+   else
+      next_idx = orig_cons[++cur % orig_cons.size()]; // wrap at end of cons list
+   fprintf(stderr, ", next_idx=%d\n", next_idx);
+   return next_idx;
+}
+
+
+int unzip_poly(col_geom_v &geom, char * /*errmsg*/)
+{
+   geom.orient();
+   geom_v dual;
+   get_dual(geom, dual);
+   geom_info info(dual);
+   const vector<vector<int> > &f_cons = info.get_vert_cons();
+   vector<tree_face> face_list;
+   vector<bool> seen(geom.faces().size(), false);
+   int level=0;
+   
+   //start at first vertex of first face
+   face_list.push_back(tree_face(0, f_cons[0]));
+   geom.set_f_col(0, level);
+
+   while(face_list.size()<geom.faces().size()) {  // quit when all faces seen
+      level++;
+      int list_sz = face_list.size();
+      for(int i=0; i<list_sz; i++) {   // faces currently in tree
+         fprintf(stderr, "\ni=%d\n", i);
+         int idx;
+         while((idx=face_list[i].get_next_idx())>=0) { // face conections
+            fprintf(stderr, "   idx=%d\n", idx);
+            if(!seen[idx]) { // unseen face
+               seen[idx] = true;
+               face_list.push_back(
+                     tree_face(idx, f_cons[idx], face_list[i].idx) );
+               geom.set_f_col(idx, level);
+               continue;
+            }
+         }
+      }
+   }
+
+   return 1;
+}
+
 
 void make_edges_to_faces(geom_if &geom)
 {
@@ -315,6 +434,8 @@ void process_file(col_geom_v &geom, pr_opts opts)
    }
    if(opts.trunc)
       truncate_verts(geom, opts.trunc_ratio, opts.trunc_v_ord);
+   if(opts.unzip_frac!=100.0)
+      unzip_poly(geom, /*opts.unzip_frac,*/ errmsg);
    if(opts.edges_to_faces)
       make_edges_to_faces(geom);
    if(opts.triangulate)

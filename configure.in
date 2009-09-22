@@ -2,17 +2,21 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT(antiprism, 0.20.pre08, adrian@antiprism.com)
+AC_INIT(antiprism, 0.20.pre09, adrian@antiprism.com)
 AM_INIT_AUTOMAKE([1.9 foreign])
 
 AC_CONFIG_SRCDIR([base/antiprism.h])
 AC_CONFIG_HEADER([config.h])
+AC_CONFIG_MACRO_DIR([m4])
+
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_CPP
 #AC_DISABLE_SHARED
 #AC_DISABLE_STATIC
+
+#LT_INIT([win32_dll])
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 

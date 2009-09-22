@@ -30,6 +30,8 @@ xx-xx-09 Adrian Rossiter <adrian@antiprism.com>
            antiview,off2vrml,off2pov: new option -s to display
              symmetry elements
            off_util: new option -H for general help
+           minmax: new ellipsoid and superellipsoid surfaces, default
+             algorithm is v
            Resources: new colour map files and generatable maps,
              uniform and Johnson model files removed and are now
              internal unit-edged and coloured
