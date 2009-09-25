@@ -59,6 +59,7 @@ void rep_printer::general_sec()
    fprintf(ofile, "oriented = %s\n", is_oriented()?"yes":"no");
    fprintf(ofile, "orientable = %s\n", is_orientable()?"yes":"no");
    fprintf(ofile, "closed = %s\n", is_closed()?"yes":"no");
+   fprintf(ofile, "polyhedron = %s\n", is_polyhedron()?"yes":"no");
    fprintf(ofile, "num_parts = %d\n", num_parts());
    fprintf(ofile, "area = %s\n", d2s(s1, face_areas().sum));
    fprintf(ofile, "volume = ");

@@ -267,35 +267,6 @@ void pr_opts::process_command_line(int argc, char **argv)
 //{
 //}
 
-/*
-int unzip_poly(geom_if &geom, double unzip_frac, char *errmsg)
-{
-   geom.orient();
-   geom_info info(geom);
-   map<vector<int>, vector<int> > ef_pairs;
-   geom.get_edge_face_pairs(ef_pairs, false);
-   map<vector<int>, vector<int> >::const_iterator mi;
-   for(mi=ef_pairs.begin(); mi!=ef_pairs.end(); ++mi) {
-      if(mi->second.size()!=2) {
-         if(errmsg)
-            sprintf(errmsg, "cannot unzip, geometry is not a polyhedron");
-         return 0;
-      }
-   }
-   / *
-   geom_info d_info(info.get_dual());
-   vector<vector<int> > f_cons = d_info.get_vert_cons();
-   vector<int> f_seen(info.num_faces(), 0);
-   int level=0;
-   stack<int> cur_faces;
-   cur_faces.push(0);
-* /
-
-   
-
-   return 1;
-}
-*/
 
 struct tree_face
 {
@@ -319,26 +290,33 @@ tree_face::tree_face(int index, vector<int> original_cons, int con_idx):
       vector<int>::iterator vi =
          std::find(orig_cons.begin(), orig_cons.end(), con_idx);
       start = cur = vi-orig_cons.begin();
-      fprintf(stderr, "   %sidx=%d, first cur=%d, first_start=%d\n", vi==orig_cons.end()?"vi is at end!!!!! ": "", idx, cur,start);
    }
 }
 
 int tree_face::get_next_idx()
 {
-   fprintf(stderr, "   idx=%d, cur=%d, start=%d, cur-start+1=%d, sz=%d", idx, cur, start, cur-start+1, (int)orig_cons.size());
-   int next_idx;
-   if(cur-start+1 >= (int)orig_cons.size()) // all connections seen
-      next_idx = -1;
+   if(cur-start+1 >= (int)orig_cons.size())       // all connections seen
+      return -1;
    else
-      next_idx = orig_cons[++cur % orig_cons.size()]; // wrap at end of cons list
-   fprintf(stderr, ", next_idx=%d\n", next_idx);
-   return next_idx;
+      return orig_cons[++cur % orig_cons.size()]; // wrap at end of cons list
 }
 
-
-int unzip_poly(col_geom_v &geom, char * /*errmsg*/)
+class unzip_tree
 {
-   geom.orient();
+   private:
+      int root;
+      map<int, vector<int> > tree;
+
+   public:
+      unzip_tree(): root(0) {}
+      int init_basic(col_geom_v &geom);
+      int flatten(const col_geom_v &geom, col_geom_v &net_geom);
+};
+
+int unzip_tree::init_basic(col_geom_v &geom)
+{
+   tree.clear();
+   
    geom_v dual;
    get_dual(geom, dual);
    geom_info info(dual);
@@ -348,27 +326,82 @@ int unzip_poly(col_geom_v &geom, char * /*errmsg*/)
    int level=0;
    
    //start at first vertex of first face
-   face_list.push_back(tree_face(0, f_cons[0]));
-   geom.set_f_col(0, level);
+   root = 0;
+   face_list.push_back(tree_face(root, f_cons[root]));
 
    while(face_list.size()<geom.faces().size()) {  // quit when all faces seen
       level++;
       int list_sz = face_list.size();
-      for(int i=0; i<list_sz; i++) {   // faces currently in tree
-         fprintf(stderr, "\ni=%d\n", i);
+      for(int i=0; i<list_sz; i++) {  // faces currently in tree
          int idx;
          while((idx=face_list[i].get_next_idx())>=0) { // face conections
-            fprintf(stderr, "   idx=%d\n", idx);
-            if(!seen[idx]) { // unseen face
+            if(!seen[idx]) {  // unseen face
                seen[idx] = true;
                face_list.push_back(
                      tree_face(idx, f_cons[idx], face_list[i].idx) );
-               geom.set_f_col(idx, level);
+               //geom.set_f_col(idx, level);
                continue;
             }
          }
       }
    }
+
+   for(unsigned int i=0; i<face_list.size(); i++)
+      if(face_list[i].cons.size())
+         tree[face_list[i].idx] = face_list[i].cons;
+
+   return 1;
+}
+
+int unzip_tree::flatten(const col_geom_v &geom, col_geom_v &net_geom)
+{
+   return 1;
+   /*
+   net_geom = geom;
+   net_geom.set_f_col(root, level);
+   int level=0;
+   int cur_face = root;
+   stack<int> faces;
+   faces.push(cur_face);
+   int cur_v_num = 0;
+   stack<int> v_nums;
+   v_nums.push(cur_v_num);
+   int col = 1;
+   while(level) {
+      if(cur_v_num == cur_face.size()) {
+         level--;
+         face_stack.pop();
+         continue;
+      }
+      map<int, vector<int> >::const_iterator mi =
+         tree.find(cur_face[cur_v_num]);
+      if(mi != tree.end()) {
+         level++;
+         
+
+
+
+      level++;
+
+
+
+      //geom.set_f_col(idx, level);
+   }
+   */
+}
+
+int unzip_poly(col_geom_v &geom, char *errmsg)
+{
+   geom_info info(geom);
+   if(!info.is_polyhedron()) {
+      strcpy(errmsg, "not a polyhedron");
+      return 0;
+   }
+   unzip_tree tree;
+   tree.init_basic(geom);
+   col_geom_v net_geom;
+   tree.flatten(geom, net_geom);
+   geom = net_geom;
 
    return 1;
 }

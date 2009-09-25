@@ -119,6 +119,7 @@ class geom_info
    private:
       vec3d cent;
       bool closed;
+      bool polyhedron;
       int oriented;
       int orientable;
       int number_parts;
@@ -190,6 +191,7 @@ class geom_info
       bool is_closed();
       bool is_oriented();
       bool is_orientable();
+      bool is_polyhedron();
       
       int num_verts() { return geom.verts().size(); }
       int num_edges() { return geom.edges().size(); }

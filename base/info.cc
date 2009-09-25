@@ -122,11 +122,17 @@ void geom_info::find_edge_face_pairs()
       geom.get_edge_face_pairs(efpairs, true);
    else
       geom.get_edge_face_pairs(efpairs, false);
+   polyhedron = true;
    closed = true;
    map<vector<int>, vector<int> >::iterator ei; 
-   for(ei=efpairs.begin(); ei!=efpairs.end(); ++ei)
-      if(ei->second[0]<0 || ei->second[1]<0)
+   for(ei=efpairs.begin(); ei!=efpairs.end(); ++ei) {
+      if(ei->second[0]<0 || ei->second[1]<0 ) {
          closed = false;
+         polyhedron = false;
+      }
+      if(ei->second.size()>2)
+         polyhedron = false;
+   }
 }
 
 void geom_info::find_f_areas()
@@ -498,6 +504,14 @@ bool geom_info::is_closed()
    if(efpairs.size()==0)
       find_edge_face_pairs();
    return closed;
+}
+
+
+bool geom_info::is_polyhedron()
+{   
+   if(efpairs.size()==0)
+      find_edge_face_pairs();
+   return polyhedron;
 }
 
 

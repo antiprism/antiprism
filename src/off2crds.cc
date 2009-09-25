@@ -72,7 +72,7 @@ void o2c_opts::usage()
 "  -s <sep>  string to separate coordinates (default \" \")\n"
 "  -d <dgts> number of significant digits (default 17) or if negative\n"
 "            then the number of digits after the decimal point\n"
-"  -o <file> file name for output (otherwise prints to stdout)\n"
+"  -o <file> write output to file (default: write to standard output)\n"
 "\n"
 "\n", prog_name(), help_ver_text);
 }
