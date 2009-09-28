@@ -132,7 +132,7 @@ void lutil_opts::usage()
 "  -Z <col>  add center vertex to final product in color col\n"
 "  -y <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
-"  -o <file> file name for output (otherwise prints to stdout)\n"
+"  -o <file> write output to file (default: write to standard output)\n"
 "\nListing Options\n"
 "  -L        list unique radial distances of points from center (and offset)\n"
 "  -S        list every possible strut value\n"
@@ -589,7 +589,7 @@ void process_lattices(col_geom_v &geom, lutil_opts opts)
    if (opts.append_lattice)
       tgeom = geom;
    
-   color_vef(geom, opts.vert_col[0], opts.edge_col[0], opts.face_col[0]);
+   geom.color_vef(opts.vert_col[0], opts.edge_col[0], opts.face_col[0]);
 
    for(unsigned int i=0; i<opts.remove_vertex_color_list.size(); i++)
       remove_vertex_by_color(geom, opts.remove_vertex_color_list[i], opts.is_vertex_color);
@@ -616,7 +616,7 @@ void process_lattices(col_geom_v &geom, lutil_opts opts)
    if(opts.voronoi_cells) {
       col_geom_v vgeom;
       if (get_voronoi_geom(geom, vgeom, opts.voronoi_central_cell, false, opts.epsilon)) {
-         color_vef(vgeom, opts.vert_col[2], opts.edge_col[2], opts.face_col[2]);
+         vgeom.color_vef(opts.vert_col[2], opts.edge_col[2], opts.face_col[2]);
                       
          geom.clear_all();
          geom.append(vgeom);
@@ -626,7 +626,7 @@ void process_lattices(col_geom_v &geom, lutil_opts opts)
    if (opts.convex_hull) {    
       // vebosity = true
       if (do_convex_hull(geom, opts.add_hull, true))
-         color_vef(geom, opts.vert_col[1], opts.edge_col[1], opts.face_col[1]);
+         geom.color_vef(opts.vert_col[1], opts.edge_col[1], opts.face_col[1]);
    }
    
    if (opts.append_lattice) {

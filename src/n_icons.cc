@@ -193,7 +193,7 @@ void ncon_opts::usage()
 "  -c <clse> close open model if m2<m. Valid values h or v\n"
 "               h = horizontal closure  v = vertical closure\n"
 "  -I        info on current n-icon\n"     
-"  -o <file> file name for output (otherwise prints to stdout)\n"
+"  -o <file> write output to file (default: write to standard output)\n"
 "\nColoring Options\n"
 "  -f <mthd> mthd is face coloring method. The coloring is done before twist\n"
 "            using colors in the face color list with -F\n"
@@ -416,6 +416,8 @@ void ncon_opts::process_command_line(int argc, char **argv)
                   sscanf(face_color_names[2], "%d", &face_deck);
                   if (face_deck < 2)
                      error("indexes randomizing set must be positive",c);
+                  if (face_deck < face_deal)
+                     error("indexes randomizing set must not be less than n",c);
                }
                if (face_deal < 0)
                   face_deal = 0;
@@ -493,6 +495,8 @@ void ncon_opts::process_command_line(int argc, char **argv)
                   sscanf(edge_color_names[2], "%d", &edge_deck);
                   if (edge_deck < 2)
                      error("indexes randomizing set must be positive",c);
+                  if (edge_deck < edge_deal)
+                     error("indexes randomizing set must not be less than n",c);
                }
                if (edge_deal < 0)
                   edge_deal = 0;
@@ -1731,29 +1735,19 @@ void ncon_info(int ncon_order, bool point_cut, int twist, bool hybrid, bool info
       fprintf(stderr,"\n");
    }
 }
-
-int rand_in_range_int(double rng[], int seed)
-{
-   rand_gen rnd(seed+130);
-   rnd.seedi((rnd.ranlui()*rnd.ranlui()*rnd.ranlui())&0xFFFFFFFF);
-   return (int)floor(rng[0] + (rng[1]-rng[0])*rnd.ranf() + 0.5);
-}
  
 void build_deal(int num_cards, int deck_size, int opacity, string face_pattern, vector<colorList *> &color_list)
 {
-   int seed_inc=0;
-   time_t now;
-   time(&now);
-   seed_inc = (int)now;
-   double range[2] = {0,deck_size-1};
-      
+fprintf(stderr,"size = %d\n",color_list.size());
+   rand_gen ran;
+   ran.time_seed();
+
    vector<int> cards;
    for(int i=0; i<deck_size; i++)
       cards.push_back(i);
       
    for(int i=0; i<num_cards; i++) {
-      seed_inc+=86400;
-      int random = rand_in_range_int(range,seed_inc);
+      int random = ran.ran_int_in_range(0,deck_size-1);
       int j = cards[random%cards.size()];
       int opq = face_pattern[i%face_pattern.size()] == '1' ? opacity : 255;
       add_color(color_list,col_val(j),opq);

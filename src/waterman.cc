@@ -134,7 +134,7 @@ void waterman_opts::usage()
 "  -v        verbose output (on computational errors)\n"
 "  -y <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
-"  -o <file> file name for output (otherwise prints to stdout)\n"
+"  -o <file> write output to file (default: write to standard output)\n"
 "\nScene Options\n"
 "  -C <opt>  c - convex hull only (default), i - keep interior, s - supress\n"
 "  -V <col>  vertex color, in form 'R,G,B,A' (3 or 4 values 0.0-1.0, or 0-255)\n"
@@ -728,7 +728,7 @@ int main(int argc, char *argv[])
       // vebosity = true
       do_convex_hull(geom, opts.add_hull, true);
          
-      color_vef(geom, opts.vert_col, opts.edge_col, opts.face_col);
+      geom.color_vef(opts.vert_col, opts.edge_col, opts.face_col);
       
       if (opts.color_method)
          color_by_symmetry_normals(geom, opts.color_method, opts.face_opaqueness);

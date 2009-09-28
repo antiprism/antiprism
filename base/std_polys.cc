@@ -33,6 +33,7 @@
 
 #include "polygons.h"
 #include "std_polys.h"
+#include "skilling.h"
 #include "math_utils.h"
 #include "utils.h"
 #include "coloring.h"
@@ -600,6 +601,16 @@ bool make_resource_geom(geom_if &geom, string name, char *errmsg)
       }
    }
 
+   if(!geom_ok) {
+      int ret = make_resource_uniform_compound(geom, name, errmsg2);
+      if(ret==0)
+         geom_ok = true;
+      else if(ret > 0) {
+         if(errmsg)
+            strcpy(errmsg, errmsg2);
+         return false;
+      }
+   }
 
    return geom_ok;
 }

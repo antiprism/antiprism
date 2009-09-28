@@ -43,7 +43,6 @@
 #include <algorithm>
 
 #include "../base/antiprism.h"
-#include "lattice_grid.h"
 
 using std::string;
 using std::vector;
@@ -474,7 +473,7 @@ void cn_opts::usage()
 "              also used in ambo as a truncation of 1/2\n"
 "  -u        make final product be averge unit edge length\n"
 "  -v        verbose output\n"
-"  -o <file> file name for output (otherwise prints to stdout)\n"
+"  -o <file> write output to file (default: write to standard output)\n"
 "\n"
 "Canonicalization and Planarization options\n"
 "  -p <mthd> inter-step planarization method\n"
@@ -1603,7 +1602,7 @@ int main(int argc, char *argv[])
    }
    
    // color edges and resolve indexes
-   color_vef(geom, opts.vert_col, opts.edge_col, col_val());
+   geom.color_vef(opts.vert_col, opts.edge_col, col_val());
    apply_color_values(geom, opts);
 
    if(!geom.write(opts.ofile, errmsg))

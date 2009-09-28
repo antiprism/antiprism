@@ -105,7 +105,7 @@ void o2m_opts::usage()
 "               to include, respectively, vertices, edges and faces\n"
 "               (default: ef - edges and faces)\n"
 "  -l        let LiveGraphics3D do the coloring itself\n"
-"  -o <file> file name for output (otherwise prints to stdout)\n"
+"  -o <file> write output to file (default: write to standard output)\n"
 "\n"
 "  Scene options\n"
 "\n"

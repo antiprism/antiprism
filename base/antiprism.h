@@ -48,5 +48,6 @@
 #include "gl_writer.h"
 #include "polygons.h"
 #include "std_polys.h"
+#include "skilling.h"
 
 #endif // ANTIPRISM_H

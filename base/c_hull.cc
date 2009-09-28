@@ -36,6 +36,7 @@
 #include <string>
 
 #include "geom.h"
+#include "geom_utils.h"
 #include "utils.h"
 
 #include "qh_qhull_a.h"
@@ -409,3 +410,103 @@ int get_voronoi_cells(geom_if &geom, vector<col_geom_v> &cells,
 }
 
  
+// test points versus hull functions
+
+bool test_points_vs_hull(const vector<vec3d> &P, col_geom_v &hull, bool inside, bool surface, bool outside, double epsilon)
+{
+   const vector<vec3d> &verts = hull.verts();
+   const vector<vector<int> > &faces = hull.faces();
+
+   vec3d C = centroid(verts);
+
+   bool answer = true;
+   for(unsigned int i=0;i<faces.size();i++) {
+      vec3d n = face_norm(verts, faces[i]).unit();
+      double D = vdot(verts[faces[i][0]]-C, n);
+      if(D < 0) { // Make sure the normal points outwards
+         D = -D;
+         n = -n;
+      }
+
+      for(unsigned int j=0;j<P.size();j++) {
+         double t = vdot(P[j]-C, n);
+         if (t < D-epsilon && !inside)
+            answer = false;
+         else
+         if (t > D+epsilon && !outside)
+            answer = false;
+         else
+         if (!surface)
+            answer = false;
+ 
+      if(!answer)
+         break;
+      }
+
+   if(!answer)
+      break;
+   }
+
+   return answer;
+}
+
+bool is_geom_fully_outside_hull(col_geom_v &geom, col_geom_v &hull, double epsilon)
+{
+   return test_points_vs_hull(geom.verts(),hull,false,false,true,epsilon);
+}
+
+bool is_geom_outside_hull(col_geom_v &geom, col_geom_v &hull, double epsilon)
+{
+   return test_points_vs_hull(geom.verts(),hull,false,true,true,epsilon);
+}
+
+bool is_geom_on_surface_hull(col_geom_v &geom, col_geom_v &hull, double epsilon)
+{
+   return test_points_vs_hull(geom.verts(),hull,false,true,false,epsilon);
+}
+
+bool is_geom_inside_hull(col_geom_v &geom, col_geom_v &hull, double epsilon)
+{
+   return test_points_vs_hull(geom.verts(),hull,true,true,false,epsilon);
+}
+
+bool is_geom_fully_inside_hull(col_geom_v &geom, col_geom_v &hull, double epsilon)
+{
+   return test_points_vs_hull(geom.verts(),hull,true,false,false,epsilon);
+}
+
+bool is_point_fully_outside_hull(const vec3d &P, col_geom_v &hull, double epsilon)
+{
+   col_geom_v tgeom;
+   tgeom.add_vert(P);
+   return is_geom_fully_outside_hull(tgeom, hull, epsilon);
+}
+
+bool is_point_outside_hull(const vec3d &P, col_geom_v &hull, double epsilon)
+{
+   col_geom_v tgeom;
+   tgeom.add_vert(P);
+   return is_geom_outside_hull(tgeom, hull, epsilon);
+}
+
+bool is_point_on_surface_hull(const vec3d &P, col_geom_v &hull, double epsilon)
+{
+   col_geom_v tgeom;
+   tgeom.add_vert(P);
+   return is_geom_on_surface_hull(tgeom, hull, epsilon);
+}
+
+bool is_point_inside_hull(const vec3d &P, col_geom_v &hull, double epsilon)
+{
+   col_geom_v tgeom;
+   tgeom.add_vert(P);
+   return is_geom_inside_hull(tgeom, hull, epsilon);
+}
+
+bool is_point_fully_inside_hull(const vec3d &P, col_geom_v &hull, double epsilon)
+{
+   col_geom_v tgeom;
+   tgeom.add_vert(P);
+   return is_geom_fully_inside_hull(tgeom, hull, epsilon);
+}
+
