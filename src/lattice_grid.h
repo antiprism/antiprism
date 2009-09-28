@@ -50,8 +50,7 @@ bool hcp_diamond_test(int x, int y, int z);         // dist2 = 27
 
 void add_struts(geom_if &geom, int len2);
 
-// new stuff starts here
-// some actual stuff for lattice code only
+// for lattice code only
 void geom_container_clip(col_geom_v &, col_geom_v &, double, vec3d, double);
 void geom_spherical_clip(col_geom_v &, double, vec3d, double);
 void list_grid_radii(col_geom_v &, vec3d, double);
@@ -59,8 +58,7 @@ void list_grid_struts(col_geom_v &, double);
 void add_color_struts(col_geom_v &, double, col_val);
 void color_centroid(col_geom_v &, col_val);
 
-// color functions
-void color_vef(col_geom_v &, col_val, col_val, col_val);
+// color functions for lattice programs
 vec3d sort_vec3d_chiral(const vec3d &);
 vec3d sort_vec3d(vec3d &);
 void color_by_symmetry_normals(col_geom_v &, char, int);
@@ -69,19 +67,6 @@ void color_edges_by_sqrt(col_geom_v &, char);
 // convex hull and voronoi wrappers
 int do_convex_hull(col_geom_v &, bool, bool);
 int get_voronoi_geom(col_geom_v &, col_geom_v &, bool, bool, double);
-
-// test points versus hull functions
-bool test_points_vs_hull(const vector<vec3d> &, col_geom_v &, bool, bool, bool, double);
-bool is_geom_fully_outside_hull(col_geom_v &, col_geom_v &, double);
-bool is_geom_outside_hull(col_geom_v &, col_geom_v &, double);
-bool is_geom_on_surface_hull(col_geom_v &, col_geom_v &, double);
-bool is_geom_inside_hull(col_geom_v &, col_geom_v &, double);
-bool is_geom_fully_inside_hull(col_geom_v &, col_geom_v &, double);
-bool is_point_fully_outside_hull(const vec3d &, col_geom_v &, double);
-bool is_point_outside_hull(const vec3d &, col_geom_v &, double);
-bool is_point_on_surface_hull(const vec3d &, col_geom_v &, double);
-bool is_point_inside_hull(const vec3d &, col_geom_v &, double);
-bool is_point_fully_inside_hull(const vec3d &, col_geom_v &, double);
 
 
 class int_lat_grid

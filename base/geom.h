@@ -619,6 +619,9 @@ class col_geom_v: public col_geom, public geom_v {
       virtual int add_col_edge(int v_idx1, int v_idx2, col_val col);
 
       virtual void add_missing_impl_edges();
+      
+      /// Color convenience function
+      virtual void color_vef(col_val vert_col, col_val edge_col, col_val face_col);
        
       virtual void delete_verts(vector<int> &v_nos, map<int, int> *vert_map=0);
       virtual void delete_edges(vector<int> &e_nos, map<int, int> *edge_map=0);

@@ -35,6 +35,7 @@
 #include "off_file.h"
 #include "geodesic.h"
 #include "symmetry.h"
+#include "coloring.h"
 
 bool add_hull(geom_if &geom, string qh_args="", char *errmsg=0);
 bool set_hull(geom_if &geom, string qh_args="", char *errmsg=0);
@@ -483,6 +484,18 @@ void col_geom_v::add_missing_impl_edges()
    // restore original edges and colours
    for(unsigned int e=0; e<e_edges.size(); ++e)
       add_col_edge(e_edges[e], get_col(cols, e));
+}
+
+
+
+void col_geom_v::color_vef(col_val vert_col, col_val edge_col, col_val face_col)
+{
+   coloring clrng(this);
+   
+   clrng.v_one_col(vert_col);
+   add_missing_impl_edges();
+   clrng.e_one_col(edge_col);
+   clrng.f_one_col(face_col);
 }
 
 

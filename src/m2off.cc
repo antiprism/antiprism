@@ -80,7 +80,7 @@ void m2off_opts::usage()
 "  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
 "  -b        use back face colors instead of front ones, if available\n"
-"  -o <file> file name for output (otherwise prints to stdout)\n"
+"  -o <file> write output to file (default: write to standard output)\n"
 "\nScene Options\n"
 "  -v        turn model to LiveGraphics3D viewpoint\n"
 "  -C <file> dump color lights into OFF file\n"

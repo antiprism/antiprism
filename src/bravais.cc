@@ -1000,19 +1000,10 @@ double bravais_volume(string crystal_system, vector<double> &vecs, vector<double
    return volume;
 }
 
-double random_in_range(double rng[], int seed, double step=1)
-{
-   rand_gen rnd((seed+130));
-   rnd.seedi((rnd.ranlui()*rnd.ranlui()*rnd.ranlui())&0xFFFFFFFF);
-   return fmod(rng[0] + (rng[1]-rng[0])*rnd.ranf(), step+epsilon);
-}
-
 // return random angle
-double bravais_random_angle(double max_angle, int seed_inc)
+double bravais_random_angle(rand_gen &ran, double max_angle)
 {
-   // keep random angle from being an end point
-   double range[2] = {0.001,0.999};
-   return max_angle * random_in_range(range,seed_inc);
+   return ran.ran_in_range_exclude_end(0.001, max_angle); // avoid 0 and max_angle
 }
 
 // sort the three elements without altering original order
@@ -1181,21 +1172,19 @@ int bravais_check(string &crystal_system, string &centering, vector<double> &vec
    else
    // angles can be set to random values for other crystal systems
    if (!angles.size()) {
-      int seed_inc=0;
-      time_t now;
-      time(&now);
-      seed_inc = (int)now;
-
+      rand_gen ran;
+      ran.time_seed();
+      
       if (crystal_system == "monoclinic") {
          alpha = 90.0;
          beta = 90.0;
          gamma = 90.0;
          // don't let beta equal 90
          while(beta == 90.0)
-            beta = bravais_random_angle(180,seed_inc);
+            beta = bravais_random_angle(ran, 180.0);
       }
       else if (crystal_system == "trigonal") {
-         alpha = bravais_random_angle(60,seed_inc);
+         alpha = bravais_random_angle(ran, 60.0);
          beta = alpha;
          gamma = alpha;
       }
@@ -1204,9 +1193,9 @@ int bravais_check(string &crystal_system, string &centering, vector<double> &vec
          beta = 360.0;
          gamma = 360.0;
          while(alpha+beta+gamma >= 360 || gamma >= alpha+beta || beta >= alpha+gamma || alpha >= beta+gamma) {
-            alpha = bravais_random_angle(180,seed_inc);
-            beta = bravais_random_angle(180,seed_inc+=1);
-            gamma = bravais_random_angle(180,seed_inc+=1);
+            alpha = bravais_random_angle(ran, 180.0);
+            beta = bravais_random_angle(ran, 180.0);
+            gamma = bravais_random_angle(ran, 180.0);
          }
       }
 
@@ -1871,7 +1860,7 @@ void do_bravais(col_geom_v &geom, col_geom_v &container, brav_opts &opts)
    if(opts.voronoi_cells) {
       col_geom_v vgeom;
       if (get_voronoi_geom(geom, vgeom, opts.voronoi_central_cell, false, opts.epsilon)) {
-         color_vef(vgeom, opts.vert_col[2], opts.edge_col[2], opts.face_col[2]);
+         vgeom.color_vef(opts.vert_col[2], opts.edge_col[2], opts.face_col[2]);
                       
          geom.clear_all();
          geom.append(vgeom);
@@ -1881,7 +1870,7 @@ void do_bravais(col_geom_v &geom, col_geom_v &container, brav_opts &opts)
    if (opts.convex_hull) {    
       // vebosity = true
       if (do_convex_hull(geom, opts.add_hull, true))
-         color_vef(geom, opts.vert_col[1], opts.edge_col[1], opts.face_col[1]);
+         geom.color_vef(opts.vert_col[1], opts.edge_col[1], opts.face_col[1]);
    }
    
    if (opts.append_lattice) {

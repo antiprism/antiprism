@@ -41,6 +41,7 @@
 #include <vector>
 
 #include "../base/antiprism.h"
+#include "../base/transforms.h"
 
 using std::string;
 using std::vector;
@@ -122,6 +123,7 @@ IsoDeltaItem iso_delta_item_list[] = {
 #define term3 sqrt(5.0/8-sqrt(5)/8)
 // = 0.58778525229247312... also sqrt((10-sqrt(20))/16) or 0.5*sqrt(0.5*(5-sqrt(5)))
 
+// notes added as to what changed from what was listed in the paper
 IsoDeltaVector iso_delta_vector_list[] = {
    {"T1(1)",   vec3d(1,-1,1)/sqrt(3), vec3d(1,0,0), vec3d(1,-1,-1)/sqrt(3),
                sqrt(3)/2, 1.207106781186550, sqrt(3)/2},
@@ -408,7 +410,7 @@ class id_opts: public prog_opts {
                  n(0),
                  d(1),
                  k(0),
-                 coloring_method('S')
+                 coloring_method('T')
              {}
 
       void process_command_line(int argc, char **argv);
@@ -434,7 +436,7 @@ void id_opts::usage()
 "  -l        display the list of Isohedral Deltahedra 1 thru 42\n"
 "  -t        generate triangle only (Isohedral Deltahedra 1 to 42 and option -d)\n"
 "  -v        verbose output (Isohedral Deltahedra 1 thru 42 and option -d)\n"
-"  -o <file> file name for output (otherwise prints to stdout)\n"
+"  -o <file> write output to file (default: write to standard output)\n"
 // undocumented switch
 //"  -w        allow angle on b,e,f,m,n,o,p,q creates bi-hedral forms\n"
 "\nIsohedral Deltahedra Options\n"
@@ -448,7 +450,7 @@ void id_opts::usage()
 "  -c <type> compound cases (a thru f from Shephard's paper)\n"
 "              a - tetrahedron repeated k times, evenly spaced\n"
 "                     k=1 tetrahedron, k=2 Stella Octangula\n"
-"                     Uniform Compound UC23 when n/d is 2/1\n"
+"                     Uniform Compound Set UC23 when n/d is 2/1\n"
 "              b - 5 or 10 tetrahedra\n"
 "                     k=1 icosahedral, k=2 with horizontal reflection\n"
 "                     Uniform Compounds UC05 and UC06\n"
@@ -468,10 +470,10 @@ void id_opts::usage()
 "\n         additional cases:\n"
 "              g - 2 tetrahedra using -a angle (default: 45.0)\n"
 "                     At 45.0 degrees is Uniform Compound UC04\n"
-"                     Uniform Compound UC23 when n/d is 2/1 and k=1\n"
+"                     Uniform Compound Set UC23 when n/d is 2/1 and k=1\n"
 "              h - 2 tetrahedra repeated k times, evenly spaced\n"
 "                     using -a angle (default: 1.0)\n"
-"                     Uniform Compound UC23 when n/d is 2/1 for any k\n"
+"                     Uniform Compound Set UC23 when n/d is 2/1 for any k\n"
 "              i - 6 tetrahedra using -a angle (default: 45.0)\n"
 "                     Uniform Compound UC01. At 45.0 degrees is UC03\n"
 "              j - 12 tetrahedra using -a angle (default: 30.0)\n"
@@ -495,10 +497,11 @@ void id_opts::usage()
 "                     relaxed dual of Uniform Compounds UC58\n"
 "\nColoring Options\n"
 "  -C <opt> compound coloring\n"
-"              key word: none - sets no color (default: S)\n"
+"              key word: none - sets no color (default: T)\n"
 "              lower case outputs map indexes. upper case outputs color values\n"
 "              c,C - unique coloring for each constituent\n"
-"              s,S - sub-symmetry style coloring\n"
+"              s,S - symmetric colouring\n"
+"              t,T - sub-symmetry style coloring\n"
 "\n"
 "\n", prog_name(), help_ver_text);
 }
@@ -510,8 +513,10 @@ void id_opts::process_command_line(int argc, char **argv)
    opterr = 0;
    char c;
    char errmsg[MSG_SZ];
+   
+   handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hldtvwc:n:a:k:C:o:-:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hldtvwc:n:a:k:C:o:")) != -1 ) {
       if(common_opts(c))
          continue;
 
@@ -581,7 +586,7 @@ void id_opts::process_command_line(int argc, char **argv)
             if(!strcasecmp(optarg,"none"))
                coloring_method = '\0';
             else
-            if(strspn(optarg, "cCsS") != strlen(optarg) || strlen(optarg)>1) {
+            if(strspn(optarg, "cCsStT") != strlen(optarg) || strlen(optarg)>1) {
                snprintf(errmsg, MSG_SZ, "invalid coloring method %s\n", optarg);
                error(errmsg, c);
             }
@@ -643,11 +648,11 @@ void id_opts::process_command_line(int argc, char **argv)
       warning("k is ignored");
     
    // if one from the table or -d then force color by constituent    
-   if (!case_type.length() && (coloring_method == 'S' || coloring_method == 's')) {
-      if (coloring_method == 'S')
+   if (!case_type.length() && (coloring_method == 'T' || coloring_method == 't')) {
+      if (coloring_method == 'T')
          coloring_method = 'C';
       else
-      if (coloring_method == 's')
+      if (coloring_method == 't')
          coloring_method = 'c';
    }
 
@@ -707,10 +712,10 @@ void make_poly(col_geom_v &geom, string sym_type, bool triangle_only, bool verbo
    }
 }
 
-void make_delta_dipyramid(col_geom_v &geom, int n, int d, bool triangle_only, bool verbose)
+void make_delta_dipyramid(col_geom_v &geom, int n, int d, bool triangle_only = false, bool verbose = false)
 {
-   char buf1[80];
-   char buf2[80];
+   char buf1[MSG_SZ];
+   char buf2[MSG_SZ];
 
    sprintf(buf1,"D%dh",n);
    sprintf(buf2,"[%d/%d,1/2,1/2]",d,n);
@@ -734,6 +739,7 @@ void make_delta_dipyramid(col_geom_v &geom, int n, int d, bool triangle_only, bo
       verbose_output(A, B, C, alpha, beta, gamma);
 }
 
+/*
 void unit_tetrahedron(col_geom_v &geom)
 {
    tetrahedron(geom);
@@ -745,54 +751,54 @@ void unit_octahedron(col_geom_v &geom)
    octahedron(geom);
    geom.transform(mat3d::scale(1.0/sqrt(2)));
 }
+*/
 
-void transform_and_repeat(col_geom_v &geom, string sym_to, string sym_from, mat3d pos=mat3d())
+void tet_to_dihedral(col_geom_v &geom, string sym_from, int k, mat3d pos=mat3d())
 {
-   t_set ts;
-   ts.min_set(sch_sym(sym_to).get_trans(), sch_sym(sym_from).get_trans(), pos);
-   geom.transform(pos);
-   sym_repeat(geom, geom, ts, ELEM_VERTS|ELEM_EDGES|ELEM_FACES);
-}
-
-
-void tet_to_dihedral(col_geom_v &geom, string sym_from, int n, mat3d pos=mat3d())
-{
-   char sym_to[80];
-   sprintf(sym_to,"D%d%s",n,((n%4 == 0) ? "h" : "v"));
+   char sym_to[MSG_SZ];
+   sprintf(sym_to,"D%d%s",k,((k%4 == 0) ? "h" : "v"));
    transform_and_repeat(geom, sym_to, sym_from, pos);
 }
 
 
 void case_a_star_tetrahedron(col_geom_v &geom, int k)
 {
-   unit_tetrahedron(geom);
+   make_resource_geom(geom,"u1");
    tet_to_dihedral(geom, "Td", 2*k);
 }
-
 
 void case_b_5_or_10_tetrahedra(col_geom_v &geom, double angle, int k)
 {
    if (angle == INFINITY)
       angle = 0;
 
-   unit_tetrahedron(geom);
+   make_resource_geom(geom,"u1");
+   
+   // to construct in one statement for Ih
+   // transform_and_repeat(geom, (k == 1 ? "I" : "Ih"), "Td", mat3d::rot(0,angle,0));
 
-   transform_and_repeat(geom, (k == 1 ? "I" : "Ih"), "Td", mat3d::rot(0,angle,0));
+   if (k == 1)
+      transform_and_repeat(geom, "I", "Td", mat3d::rot(0,angle,0));
+   else
+   if (k == 2) {
+      transform_and_repeat(geom, "Oh", "Td", mat3d::rot(0,angle,0));
+      transform_and_repeat(geom, "I", "Oh");
+   }
 }
 
 void case_c_2_dipyramids(col_geom_v &geom, double angle, int n, int d)
 {
    if (angle == INFINITY) {
       angle = (M_PI/2)/n; // 90/n degrees
-      //fprintf(stderr,"angle calculated is %g\n",rad2deg(angle));
+      fprintf(stderr,"angle calculated is %g\n",rad2deg(angle));
    }
 
    fprintf(stderr,"Using: ");
-   make_delta_dipyramid(geom, n, d, false, false);
+   make_delta_dipyramid(geom, n, d);
 
-   char sym_from[80];
+   char sym_from[MSG_SZ];
    sprintf(sym_from,"D%dh",n);
-   char sym_to[80];
+   char sym_to[MSG_SZ];
    sprintf(sym_to,"D%dh",2*n);
 
    // advance angle so that angle = 0 is coincident constituents
@@ -805,10 +811,10 @@ void case_d_6_octahedra(col_geom_v &geom, double angle)
    if (angle == INFINITY)
       angle = (M_PI/8); // 22.5 degrees
 
-   unit_octahedron(geom);
+   make_resource_geom(geom,"u5");
 
    // at 0 degrees, produced 3 coincident octahedra
-   transform_and_repeat(geom, "D2h", "Oh", mat3d::rot(0,angle,0));
+   transform_and_repeat(geom, "D2h", "Oh", mat3d::rot(0,0,angle));
    transform_and_repeat(geom, "T", "D2h");
 }
 
@@ -818,10 +824,21 @@ void case_e_4_or_8_triangular_dipyramids(col_geom_v &geom, double angle, int k)
       angle = 0;
 
    fprintf(stderr,"Using: ");
-   make_delta_dipyramid(geom, 3, 1, false, false);
+   make_delta_dipyramid(geom, 3, 1);
 
-   transform_and_repeat(geom, (k == 1 ? "O" : "Oh"), "D3h",
-      mat3d::rot(vec3d(0,0,1),vec3d(1,1,1)) * mat3d::rot(0,0,angle+M_PI/12));
+   // to construct in one statement for Oh
+   // transform_and_repeat(geom, (k == 1 ? "O" : "Oh"), "D3h",
+   //    mat3d::rot(vec3d(0,0,1),vec3d(1,1,1)) * mat3d::rot(0,0,angle+M_PI/12));
+   
+   if (k == 1)
+      transform_and_repeat(geom, "O", "D3h",
+         mat3d::rot(vec3d(0,0,1),vec3d(1,1,1)) * mat3d::rot(0,0,angle+M_PI/12));
+   else
+   if (k == 2) {
+      transform_and_repeat(geom, "D6h", "D3h");
+      transform_and_repeat(geom, "O", "D6h",
+         mat3d::rot(vec3d(0,0,1),vec3d(1,1,1)) * mat3d::rot(0,0,angle+M_PI/12));
+   }
 }
 
 void case_f_6_or_12_pentagonal_dipyramids(col_geom_v &geom, double angle, int k)
@@ -831,13 +848,26 @@ void case_f_6_or_12_pentagonal_dipyramids(col_geom_v &geom, double angle, int k)
 
    fprintf(stderr,"Using: ");
    if (k == 1 || k == 2)
-      make_delta_dipyramid(geom, 5, 1, false, false);
+      make_delta_dipyramid(geom, 5, 1);
    else
    if (k == 3 || k == 4)
-      make_delta_dipyramid(geom, 5, 2, false, false);
+      make_delta_dipyramid(geom, 5, 2);
+      
+   double phi = (1 + sqrt(5))/2;
 
-   transform_and_repeat(geom, ((k == 1 || k == 3) ? "I" : "Ih"), "D5h",
-      mat3d::rot(vec3d(0,0,1),vec3d(0,1,(1 + sqrt(5))/2)) * mat3d::rot(0,0,angle+M_PI/5) );
+   // to construct in one statement for Ih
+   // transform_and_repeat(geom, ((k == 1 || k == 3) ? "I" : "Ih"), "D5h",
+   //    mat3d::rot(vec3d(0,0,1),vec3d(0,1,phi)) * mat3d::rot(0,0,angle+M_PI/5));
+
+   if (k == 1 || k == 3)
+      transform_and_repeat(geom, "I", "D5h",
+         mat3d::rot(vec3d(0,0,1),vec3d(0,1,phi)) * mat3d::rot(0,0,angle+M_PI/5));
+   else
+   if (k == 2 || k == 4) {
+      transform_and_repeat(geom, "D10h", "D5h");
+      transform_and_repeat(geom, "I", "D10h",
+         mat3d::rot(vec3d(0,0,1),vec3d(0,1,phi)) * mat3d::rot(0,0,angle+M_PI/5));
+   }
 }
 
 void case_g_2_tetrahedra(col_geom_v &geom, double angle)
@@ -845,7 +875,7 @@ void case_g_2_tetrahedra(col_geom_v &geom, double angle)
    if (angle == INFINITY)
       angle = (M_PI/4); // 45 degrees
 
-   unit_tetrahedron(geom);
+   make_resource_geom(geom,"u1");
 
    // advance angle so that angle = 0 is coincident constituents
    geom.transform(mat3d::rot(0,0,angle));
@@ -863,37 +893,21 @@ void case_h_2k_tetrahedra(col_geom_v &geom, double angle, int k)
 
 void case_i_6_tetrahedra(col_geom_v &geom, double angle)
 {
-   case_g_2_tetrahedra(geom, angle);
-   transform_and_repeat(geom, "T", "D2v");
+   make_resource_geom(geom,"u1");
+   
+   transform_and_repeat(geom, "T", "T", mat3d::rot(0,0,angle));
 }
 
 void case_j_12_tetrahedra(col_geom_v &geom, double angle)
 {
    if (angle == INFINITY)
       angle = (M_PI/6); // 30 degrees;
-
-   case_g_2_tetrahedra(geom, angle);
-   transform_and_repeat(geom, "O", (fmod(angle+45.0,90.0) == 0 ? "Oh" : "D2v"));
+   
+   make_resource_geom(geom,"u1");
+   
+   transform_and_repeat(geom, "S2", "T");
+   transform_and_repeat(geom, "T", "Oh", mat3d::rot(0,0,angle));
 }
-
-/*
-void case_k_2k_dipyramids(col_geom_v &geom, double angle, int k, int n, int d)
-{
-   if (angle == INFINITY)
-      angle = deg2rad(1.0);
-
-   fprintf(stderr,"Using: ");
-   make_delta_dipyramid(geom, n, d, false, false);
-
-   char sym_from[80];
-   sprintf(sym_from,"D%dh",n);
-   char sym_to[80];
-   sprintf(sym_to,"D%dh",k*n);
-
-   // at calculated angles, does not produce coincident constituents
-   transform_and_repeat(geom, sym_to, sym_from, mat3d::rot(0,0,angle+M_PI));
-}
-*/
 
 void case_k_2k_dipyramids(col_geom_v &geom, double angle, int k, int n, int d)
 {
@@ -901,11 +915,11 @@ void case_k_2k_dipyramids(col_geom_v &geom, double angle, int k, int n, int d)
       angle = deg2rad(1.0);
 
    fprintf(stderr,"Using: ");
-   make_delta_dipyramid(geom, n, d, false, false);
+   make_delta_dipyramid(geom, n, d);
 
-   char sym_from[80];
+   char sym_from[MSG_SZ];
    sprintf(sym_from,"D%dh",n);   
-   char sym_to[80];
+   char sym_to[MSG_SZ];
    sprintf(sym_to,"D%dh",k*n);
 
    transform_and_repeat(geom, sym_from, sym_from, mat3d::rot(0,0,angle+M_PI));
@@ -915,29 +929,40 @@ void case_k_2k_dipyramids(col_geom_v &geom, double angle, int k, int n, int d)
 void case_l_k_dipyramids(col_geom_v &geom, int k, int n, int d)
 {
    fprintf(stderr,"Using: ");
-   make_delta_dipyramid(geom, n, d, false, false);
+   make_delta_dipyramid(geom, n, d);
 
-   char sym_from[80];
+   char sym_from[MSG_SZ];
    sprintf(sym_from,"D%dh",n);
-   char sym_to[80];
+   char sym_to[MSG_SZ];
    sprintf(sym_to,"D%dh",k*n);
 
    transform_and_repeat(geom, sym_to, sym_from);
 }
 
-void case_m_6_or_12_triangular_dipyramids(col_geom_v &geom, double angle, int k)
+void case_m_10_or_20_triangular_dipyramids(col_geom_v &geom, double angle, int k)
 {
    if (angle == INFINITY)
       angle = 0;
 
    fprintf(stderr,"Using: ");
-   make_delta_dipyramid(geom, 3, 1, false, false);
+   make_delta_dipyramid(geom, 3, 1);
 
    double phi = (1 + sqrt(5))/2;
    double iphi = 1/phi;
 
-   transform_and_repeat(geom, (k == 1 ? "I" : "Ih"), "D3h",
-      mat3d::rot(vec3d(0,0,1), vec3d(iphi,0,phi)) * mat3d::rot(0,0,angle+M_PI/6) );
+   // to construct in one statement for Ih
+   // transform_and_repeat(geom, (k == 1 ? "I" : "Ih"), "D3h",
+   //   mat3d::rot(vec3d(0,0,1), vec3d(iphi,0,phi)) * mat3d::rot(0,0,angle+M_PI/6));
+
+   if (k == 1)
+      transform_and_repeat(geom, "I", "D3h",
+         mat3d::rot(vec3d(0,0,1), vec3d(iphi,0,phi)) * mat3d::rot(0,0,angle+M_PI/6));
+   else
+   if (k == 2) {
+      transform_and_repeat(geom, "D6h", "D3h");
+      transform_and_repeat(geom, "I", "D6h",
+         mat3d::rot(vec3d(0,0,1), vec3d(iphi,0,phi)) * mat3d::rot(0,0,angle+M_PI/6));
+   }
 }
 
 void case_n_6_10_3_star_dipyramids(col_geom_v &geom, double angle)
@@ -946,12 +971,12 @@ void case_n_6_10_3_star_dipyramids(col_geom_v &geom, double angle)
       angle = 0;
 
    fprintf(stderr,"Using: ");
-   make_delta_dipyramid(geom, 10, 3, false, false);
+   make_delta_dipyramid(geom, 10, 3);
 
    double phi = (1 + sqrt(5))/2;
 
-   transform_and_repeat(geom, "Ih", "D10h",
-      mat3d::rot(vec3d(0,0,1), vec3d(0,1,phi)) * mat3d::rot(0,0,angle+M_PI/10) );
+   transform_and_repeat(geom, "I", "D10h",
+      mat3d::rot(vec3d(0,0,1), vec3d(0,1,phi)) * mat3d::rot(0,0,angle+M_PI/10));
 }
 
 void case_o_5_or_10_augmented_tetrahedra(col_geom_v &geom, double angle, int k)
@@ -959,7 +984,16 @@ void case_o_5_or_10_augmented_tetrahedra(col_geom_v &geom, double angle, int k)
    if (angle == INFINITY)
       angle = 0;
 
-   transform_and_repeat(geom, (k == 1 ? "I" : "Ih"), "Td", mat3d::rot(0,angle,0) );
+   // to construct in one statement for Ih
+   // transform_and_repeat(geom, (k == 1 ? "I" : "Ih"), "Td", mat3d::rot(0,angle,0));
+
+   if (k == 1)
+      transform_and_repeat(geom, "I", "Td", mat3d::rot(0,angle,0));
+   else
+   if (k == 2) {
+      transform_and_repeat(geom, "Oh", "Td", mat3d::rot(0,angle,0));
+      transform_and_repeat(geom, "I", "Oh");
+   }
 }
 
 void case_p_5_augmented_octahedra(col_geom_v &geom, double angle)
@@ -967,7 +1001,7 @@ void case_p_5_augmented_octahedra(col_geom_v &geom, double angle)
    if (angle == INFINITY)
       angle = 0;
 
-   transform_and_repeat(geom, "Ih", "Oh", mat3d::rot(0,angle,0));
+   transform_and_repeat(geom, "I", "Oh", mat3d::rot(0,angle,0));
 }
 
 void case_q_5_excavated_octahedra(col_geom_v &geom, double angle)
@@ -975,7 +1009,7 @@ void case_q_5_excavated_octahedra(col_geom_v &geom, double angle)
    if (angle == INFINITY)
       angle = 0;
 
-   transform_and_repeat(geom, "Ih", "Oh", mat3d::rot(0,angle,0));
+   transform_and_repeat(geom, "I", "Oh", mat3d::rot(0,angle,0));
 }
 
 int main(int argc, char *argv[])
@@ -1031,7 +1065,7 @@ int main(int argc, char *argv[])
          case_l_k_dipyramids(geom, opts.k, opts.n, opts.d);
       else
       if (opts.case_type == "m")
-         case_m_6_or_12_triangular_dipyramids(geom, opts.angle, opts.k);
+         case_m_10_or_20_triangular_dipyramids(geom, opts.angle, opts.k);
       else
       if (opts.case_type == "n")
          case_n_6_10_3_star_dipyramids(geom, opts.angle);
@@ -1080,13 +1114,21 @@ int main(int argc, char *argv[])
 
    geom.orient();
 
-  fprintf(stderr,"coloring_method = >%c<\n",opts.coloring_method);
+//fprintf(stderr,"coloring_method = >%c<\n",opts.coloring_method);
 
    // initialize, set color map
    coloring clrng(&geom);
-      
-   color_map *rand = init_color_map("jumble");
-   clrng.add_cmap(rand);
+   color_map_map *overrides = new color_map_map;
+   overrides->set_col(0, col_val(1.0,0.5,0.0)); // orange
+   overrides->set_col(1, col_val(1.0,1.0,0.0)); // yellow
+   overrides->set_col(2, col_val(1.0,0.0,0.0)); // red
+   overrides->set_col(3, col_val(0.0,0.5,0.0)); // green
+   overrides->set_col(4, col_val(0.0,0.0,1.0)); // blue
+   overrides->set_col(5, col_val(1.0,0.0,1.0)); // magnenta
+   overrides->set_col(6, col_val(0.0,1.0,1.0)); // cyan
+   clrng.add_cmap(overrides);
+   color_map *cmap = init_color_map("spread+2");
+   clrng.add_cmap(cmap);
 
    // color by sub-symmetry  as map indexes happened by default in sym_repeat()
    if (!opts.coloring_method) {
@@ -1096,18 +1138,28 @@ int main(int argc, char *argv[])
       geom.clear_v_cols();
    }
    else
-   if (opts.coloring_method == 'S' ) {
-      // color by sub-symmetry, resolve map indexes
+   if (opts.coloring_method == 'S' ||  opts.coloring_method == 's') {
+      sch_sym sym;
+      vector<vector<set<int> > > sym_equivs;
+      sym.init(geom, &sym_equivs);
+      clrng.v_sets(sym_equivs[0], opts.coloring_method == 'S');
+      clrng.e_sets(sym_equivs[1], opts.coloring_method == 'S');
+      clrng.f_sets(sym_equivs[2], opts.coloring_method == 'S');
+   }
+   else
+   if (opts.coloring_method == 'C' ||  opts.coloring_method == 'c') {
+     // color by constituents
+     clrng.f_parts(opts.coloring_method == 'C');
+     geom.add_missing_impl_edges();
+     clrng.e_face_color();
+     clrng.v_face_color();
+   }
+   
+   if (opts.coloring_method == 'S' || opts.coloring_method == 'T') {
+      // color by symmetry or sub-symmetry, resolve map indexes
       clrng.v_apply_cmap();
       clrng.e_apply_cmap();
       clrng.f_apply_cmap();
-   }
-   if (opts.coloring_method == 'C' ||  opts.coloring_method == 'c') {
-      // color by constituents
-      clrng.f_parts(opts.coloring_method == 'C');
-      geom.add_missing_impl_edges();
-      clrng.e_face_color();
-      clrng.v_face_color();
    }
    
    char errmsg[MSG_SZ]="";
