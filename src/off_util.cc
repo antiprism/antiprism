@@ -32,6 +32,7 @@
 #include <ctype.h>
 #include <string>
 #include <vector>
+#include <stack>
 #include <algorithm>
 
 #include "../base/antiprism.h"
@@ -40,6 +41,7 @@
 
 using std::string;
 using std::vector;
+using std::stack;
 
 
 
@@ -264,11 +266,6 @@ void pr_opts::process_command_line(int argc, char **argv)
 }
 
 
-//void get_unzip_face_connections(const geom_if &geom)
-//{
-//}
-
-
 struct tree_face
 {
    int idx;
@@ -340,6 +337,7 @@ int unzip_tree::init_basic(col_geom_v &geom)
                seen[idx] = true;
                face_list.push_back(
                      tree_face(idx, f_cons[idx], face_list[i].idx) );
+               face_list[i].cons.push_back(idx);
                //geom.set_f_col(idx, level);
                continue;
             }
@@ -356,39 +354,48 @@ int unzip_tree::init_basic(col_geom_v &geom)
 
 int unzip_tree::flatten(const col_geom_v &geom, col_geom_v &net_geom)
 {
-   return 1;
-   /*
    net_geom = geom;
-   net_geom.set_f_col(root, level);
    int level=0;
+   net_geom.set_f_col(root, level);
    int cur_face = root;
-   stack<int> faces;
-   faces.push(cur_face);
-   int cur_v_num = 0;
-   stack<int> v_nums;
-   v_nums.push(cur_v_num);
-   int col = 1;
-   while(level) {
-      if(cur_v_num == cur_face.size()) {
+   stack<int> face_stack;
+   face_stack.push(cur_face);
+   unsigned int cur_con_num = 0;
+   stack<int> con_num_stack;
+   con_num_stack.push(cur_con_num);
+   int col = 0;
+   while(level>=0) {
+      //fprintf(stderr, "new loop: L=%d, cur_con_num=%d, cur_face=%d, prev=%d\n", level, cur_con_num, cur_face, level==0 ? -1 : face_stack.top());
+      
+      if(cur_con_num==0) { // process new face
+         //fprintf(stderr, "\tprocess face\n");
+         net_geom.set_f_col(cur_face, col);
+      }
+      if(level==0)
+         col = cur_con_num + 1;
+
+      if(cur_con_num == tree[cur_face].size()) {  // finish at this level
+         //fprintf(stderr, "\ttree.size()=%d, tree[%d].size()=%d\n", tree.size(), cur_face, tree[cur_face].size());
+         //fprintf(stderr, "\tfinish at level\n");
+         if(level) {
+            cur_face = face_stack.top();
+            face_stack.pop();
+            cur_con_num = con_num_stack.top() + 1;  // reset and increment
+            con_num_stack.pop();
+         }
          level--;
-         face_stack.pop();
          continue;
       }
-      map<int, vector<int> >::const_iterator mi =
-         tree.find(cur_face[cur_v_num]);
-      if(mi != tree.end()) {
-         level++;
-         
 
-
-
-      level++;
-
-
-
-      //geom.set_f_col(idx, level);
+      unsigned int next_idx = tree[cur_face][cur_con_num];
+      //fprintf(stderr, "\tgo out a level\n");
+      level++;                         
+      face_stack.push(cur_face);  
+      cur_face = next_idx;
+      con_num_stack.push(cur_con_num);
+      cur_con_num = 0;
    }
-   */
+   return 1;
 }
 
 int unzip_poly(col_geom_v &geom, char *errmsg)

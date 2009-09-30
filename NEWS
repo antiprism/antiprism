@@ -34,7 +34,8 @@ xx-xx-09 Adrian Rossiter <adrian@antiprism.com>
              algorithm is v
            Resources: new colour map files and generatable maps,
              uniform and Johnson model files removed and are now
-             internal unit-edged and coloured
+             internal unit-edged and coloured, new uniform
+             compounds (by Roger Kaufman)
            All: --help and --version options. New shift, step,
              and wrap modifiers for reindexing colour maps
            
