@@ -165,4 +165,16 @@ vec3d nearest_point(vec3d P, const vector<vec3d> &plane, const vector<int> &idxs
 }
 
 
+double angle_around_axis(const vec3d &v0, const vec3d &v1, const vec3d &axis)
+{
+   vec3d n0 = vcross(v0, axis).unit();
+   vec3d n1 = vcross(v1, axis).unit();
+   double ang = acos(vdot(n0, n1));
+   if(vdot(axis, vcross(n0, n1))<0)
+      ang = 2*M_PI - ang;
+   return ang;
+}
+
+
+
 

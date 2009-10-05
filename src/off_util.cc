@@ -61,13 +61,16 @@ class pr_opts: public prog_opts {
       int sig_compare;
       int sig_digits;
       double unzip_frac;
+      int unzip_root;
+      int unzip_centre;
       
       string ofile;
 
       pr_opts(): prog_opts("off_util"), orient(false),
                  triangulate(false), skeleton(false),
                  sph_proj(false), trunc(false), edges_to_faces(false),
-                 sig_compare(-1), sig_digits(DEF_SIG_DGTS), unzip_frac(100.0)
+                 sig_compare(-1), sig_digits(DEF_SIG_DGTS),
+                 unzip_frac(100.0), unzip_root(0), unzip_centre(0)
                  {}
       void process_command_line(int argc, char **argv);
       void usage();
@@ -143,6 +146,7 @@ void pr_opts::process_command_line(int argc, char **argv)
    extern int optind, opterr;
    opterr = 0;
    char c;
+   vector<char *> parts;
 
    handle_long_opts(argc, argv);
 
@@ -242,8 +246,26 @@ void pr_opts::process_command_line(int argc, char **argv)
 
 
          case 'u':
-            if(!read_double(optarg, &unzip_frac, errmsg))
+            split_line(optarg, parts, ",");
+            if(parts.size()>1 && !read_double(parts[1], &unzip_frac, errmsg))
                error(errmsg, c);
+            
+            /*
+            if(!read_int(parts[0], &unzip_root, errmsg))
+               error(errmsg, c);
+
+            unzip_frac = 0.0;
+            if(parts.size()>1 && !read_double(parts[1], &unzip_frac, errmsg))
+               error(errmsg, c);
+            
+            unzip_centre = 'o';
+            if(parts.size()>2) {
+               if(strlen(parts[2])==1 && strchr("cf", *parts[2]))
+                   unzip_centre = *parts[2];
+               else
+                  error("invalid unzip centring type, must be c or f", c);
+            }
+            */
             break;
 
          case 'o':
@@ -308,8 +330,9 @@ class unzip_tree
    public:
       unzip_tree(): root(0) {}
       int init_basic(col_geom_v &geom);
-      int flatten(const col_geom_v &geom, col_geom_v &net_geom);
+      int flatten(const col_geom_v &geom, col_geom_v &net_geom, double fract);
 };
+
 
 int unzip_tree::init_basic(col_geom_v &geom)
 {
@@ -322,7 +345,7 @@ int unzip_tree::init_basic(col_geom_v &geom)
    vector<tree_face> face_list;
    vector<bool> seen(geom.faces().size(), false);
    int level=0;
-   
+
    //start at first vertex of first face
    root = 0;
    face_list.push_back(tree_face(root, f_cons[root]));
@@ -352,27 +375,106 @@ int unzip_tree::init_basic(col_geom_v &geom)
    return 1;
 }
 
-int unzip_tree::flatten(const col_geom_v &geom, col_geom_v &net_geom)
+
+
+int unzip_tree::flatten(const col_geom_v &geom, col_geom_v &net_geom,
+      double fract=0.0)
 {
    net_geom = geom;
    int level=0;
-   net_geom.set_f_col(root, level);
    int cur_face = root;
    stack<int> face_stack;
    face_stack.push(cur_face);
    unsigned int cur_con_num = 0;
    stack<int> con_num_stack;
    con_num_stack.push(cur_con_num);
-   int col = 0;
+   map<int, int> cur_idx_map;
+   stack<map<int, int> > idx_map_stack;
+   idx_map_stack.push(cur_idx_map);
+   stack<mat3d> trans_stack;
+   trans_stack.push(mat3d());
+   stack<vec3d> norm_stack;
+   
    while(level>=0) {
       //fprintf(stderr, "new loop: L=%d, cur_con_num=%d, cur_face=%d, prev=%d\n", level, cur_con_num, cur_face, level==0 ? -1 : face_stack.top());
       
       if(cur_con_num==0) { // process new face
-         //fprintf(stderr, "\tprocess face\n");
-         net_geom.set_f_col(cur_face, col);
+         //fprintf(stderr, "\tprocess face %d\n", cur_face);
+         vector<int> &face = net_geom.raw_faces()[cur_face];
+         map<int, int> new_idx_map;
+         vector<int> join_edge;
+         int first_mapped_i=-1;
+         //mat3d inv_prev_trans = mat3d::inverse(trans_stack.top());
+         for(unsigned int i=0; i<face.size(); i++) {
+            int idx = face[i];
+            int new_idx;
+            if(cur_face == root) {  // new vertices to help deletion later
+               net_geom.add_vert(net_geom.verts(idx));
+               new_idx = net_geom.verts().size()-1;
+            }
+            else {
+               // Find vertices common to current and previous faces, and use
+               // duplicated vertices for the non-join vertices in the cur face.
+               map<int, int>::const_iterator mi = 
+                  idx_map_stack.top().find(face[i]);
+               if(mi == idx_map_stack.top().end()) {
+                  net_geom.add_vert(trans_stack.top()*net_geom.verts(idx));
+                  new_idx = net_geom.verts().size()-1;
+               }
+               else {
+                  new_idx = mi->second;
+                  join_edge.push_back(new_idx);
+                  // if the join edges don't follow each other they
+                  // are in the first and last positions, and so are
+                  // sequential in reverse order
+                  if(join_edge.size()==1)
+                     first_mapped_i = i;
+                  else if(join_edge.size()==2) {
+                     if(i-first_mapped_i>1)
+                        std::swap(join_edge[0], join_edge[1]);
+                  }
+               }
+            }
+
+            face[i] = new_idx;
+            new_idx_map[idx] = new_idx;
+         }
+         idx_map_stack.push(new_idx_map);
+       
+         mat3d trans;
+         vec3d norm = net_geom.face_norm(cur_face);
+         if(cur_face!=root) {
+            // set join_edge so it is in order for previous face
+            const vector<int> &prev_face = net_geom.faces(face_stack.top());
+            unsigned int j;
+            for(j=0; j<prev_face.size(); j++)
+               if(prev_face[j] == join_edge[0])
+                  break;
+            if(prev_face[(j+1)%prev_face.size()] == join_edge[1]) {
+               std::reverse(face.begin(), face.end());
+               norm *= -1.0;
+            }
+            else
+               std::swap(join_edge[0], join_edge[1]);
+
+            
+            vec3d axis = net_geom.edge_vec(join_edge).unit();
+            double ang = angle_around_axis(norm, norm_stack.top(), axis);
+            ang *= (1-fract);
+            mat3d rot = mat3d::rot(axis, ang);
+            vec3d offset = net_geom.verts(join_edge[0]);
+            trans = mat3d::transl(offset) * rot * mat3d::transl(-offset);
+
+            for(unsigned int i=0; i<face.size(); i++) {
+               if(face[i]!=join_edge[0] && face[i]!=join_edge[1])
+                  net_geom.raw_verts()[face[i]] = 
+                     trans * net_geom.verts(face[i]);
+            }
+            norm = rot * norm;  // normal needs rotating because face rotated
+         }
+         norm_stack.push(norm);
+         trans_stack.push(trans * trans_stack.top());
       }
-      if(level==0)
-         col = cur_con_num + 1;
 
       if(cur_con_num == tree[cur_face].size()) {  // finish at this level
          //fprintf(stderr, "\ttree.size()=%d, tree[%d].size()=%d\n", tree.size(), cur_face, tree[cur_face].size());
@@ -382,6 +484,9 @@ int unzip_tree::flatten(const col_geom_v &geom, col_geom_v &net_geom)
             face_stack.pop();
             cur_con_num = con_num_stack.top() + 1;  // reset and increment
             con_num_stack.pop();
+            idx_map_stack.pop();
+            norm_stack.pop();
+            trans_stack.pop();
          }
          level--;
          continue;
@@ -395,10 +500,15 @@ int unzip_tree::flatten(const col_geom_v &geom, col_geom_v &net_geom)
       con_num_stack.push(cur_con_num);
       cur_con_num = 0;
    }
+
+   vector<int> del_verts(geom.verts().size());
+   for(unsigned int i=0; i<geom.verts().size(); i++)
+      del_verts[i] = i;
+   net_geom.delete_verts(del_verts);
    return 1;
 }
 
-int unzip_poly(col_geom_v &geom, char *errmsg)
+int unzip_poly(col_geom_v &geom, double fract, char *errmsg)
 {
    geom_info info(geom);
    if(!info.is_polyhedron()) {
@@ -408,7 +518,7 @@ int unzip_poly(col_geom_v &geom, char *errmsg)
    unzip_tree tree;
    tree.init_basic(geom);
    col_geom_v net_geom;
-   tree.flatten(geom, net_geom);
+   tree.flatten(geom, net_geom, fract);
    geom = net_geom;
 
    return 1;
@@ -476,7 +586,7 @@ void process_file(col_geom_v &geom, pr_opts opts)
    if(opts.trunc)
       truncate_verts(geom, opts.trunc_ratio, opts.trunc_v_ord);
    if(opts.unzip_frac!=100.0)
-      unzip_poly(geom, /*opts.unzip_frac,*/ errmsg);
+      unzip_poly(geom, opts.unzip_frac, errmsg);
    if(opts.edges_to_faces)
       make_edges_to_faces(geom);
    if(opts.triangulate)
@@ -513,7 +623,7 @@ int main(int argc, char *argv[])
 
    if(!geoms.write(opts.ofile, errmsg, opts.sig_digits))
       opts.error(errmsg);
-   
+
    return 0;
 }
    

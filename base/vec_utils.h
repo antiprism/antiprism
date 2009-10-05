@@ -163,5 +163,12 @@ vec3d nearest_point(vec3d P, const vector <vec3d> &points,
  * \return A normal to the face. */
 vec3d face_norm(const vector<vec3d> &verts, const vector<int> &face, bool allow_zero=false);
 
+///Get the angle required to rotate one vector onto another around an axis
+/**\param v0 vector to rotate (perpendicular to axis)
+ * \param v1 vector to rotate onto (perpendicular to axis)
+ * \param axis axis to rotate around (perpendicular to v0 and v1)
+ * \return angle, in range 0 <= ang < 2PI */
+double angle_around_axis(const vec3d &v0, const vec3d &v1, const vec3d &axis);
+
 #endif // VEC_UTILS_H
 

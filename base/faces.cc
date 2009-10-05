@@ -154,3 +154,46 @@ bool face_bond(geom_if &geom, geom_if &bgeom, int f, int b_f, int off, bool merg
 }
 
 
+int combine_faces(vector<int> &base, vector<int> brick, const vector<int> &edge)
+{
+   int v0 = edge[0];
+   int v1 = edge[1];
+   vector<int> *faces[2] = {&base, &brick};
+   // write faces so brick is {edge[1], ...., edge[0]} and
+   // base is {edge[0], ... interior vertices ..., edge[1]}
+   // then the interior vertices of brick can be appended to base
+   // swap edge vertices if they appear in reverse order in base
+   int found = 0;
+   for(int f=0; f<2; f++) {
+      vector<int> &face = *faces[f];
+      int f_sz = face.size();
+      for(int i=0; i<f_sz; i++) {
+         if(face[i]==v0) {
+            if(face[(i+1)%f_sz]==v1) {
+               found++;
+               std::rotate(face.begin(), face.begin()+(i+1)%f_sz, face.end());
+               if(f==1)
+                  std::reverse(face.begin(), face.end());
+               break;
+            }
+            else if(face[(i-1+f_sz)%f_sz]==v1) {
+               found++;
+               std::rotate(face.begin(), face.begin()+i, face.end());
+               if(f==0)
+                  std::swap(v0, v1);
+               break;
+            }
+         }
+      }
+   }
+
+   if(found != 2)   // edge not found in a face
+      return 0;
+
+   if(brick.size()>2)
+      base.insert(base.end(), brick.begin()+1, brick.end()-1);
+   return 1;
+}
+
+
+
