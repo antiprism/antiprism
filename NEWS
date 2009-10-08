@@ -29,7 +29,8 @@ xx-xx-09 Adrian Rossiter <adrian@antiprism.com>
              appends dual to original geometry
            antiview,off2vrml,off2pov: new option -s to display
              symmetry elements
-           off_util: new option -H for general help
+           off_util: new option -H for general help, new option -u
+             to unfold a polyhedron net
            minmax: new ellipsoid and superellipsoid surfaces, default
              algorithm is v
            Resources: new colour map files and generatable maps,

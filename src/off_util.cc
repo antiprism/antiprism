@@ -62,7 +62,7 @@ class pr_opts: public prog_opts {
       int sig_digits;
       double unzip_frac;
       int unzip_root;
-      int unzip_centre;
+      char unzip_centre;
       
       string ofile;
 
@@ -70,7 +70,7 @@ class pr_opts: public prog_opts {
                  triangulate(false), skeleton(false),
                  sph_proj(false), trunc(false), edges_to_faces(false),
                  sig_compare(-1), sig_digits(DEF_SIG_DGTS),
-                 unzip_frac(100.0), unzip_root(0), unzip_centre(0)
+                 unzip_frac(100.0), unzip_root(0), unzip_centre('x')
                  {}
       void process_command_line(int argc, char **argv);
       void usage();
@@ -105,6 +105,10 @@ void pr_opts::usage()
 "            v, e and f to remove OFF faces with one vertex (vertices),\n"
 "            two-vertices (edges) and three or more vertices (faces)\n"
 "  -S        project onto unit sphere centred at origin\n"
+"  -u <args> unfold a polyhedron into a net, takes up to three comma separated\n"
+"            values for base face index, dihedral fraction (normally 1.0 to\n"
+"            -1.0, default: 0.0 flat), a final 'f' centres on centroid of\n"
+"            face centres\n"
 "  -d <dgts> number of significant digits (default %d) or if negative\n"
 "            then the number of digits after the decimal point\n"
 "  -o <file> write output to file (default: write to standard output)\n"
@@ -247,10 +251,6 @@ void pr_opts::process_command_line(int argc, char **argv)
 
          case 'u':
             split_line(optarg, parts, ",");
-            if(parts.size()>1 && !read_double(parts[1], &unzip_frac, errmsg))
-               error(errmsg, c);
-            
-            /*
             if(!read_int(parts[0], &unzip_root, errmsg))
                error(errmsg, c);
 
@@ -258,14 +258,13 @@ void pr_opts::process_command_line(int argc, char **argv)
             if(parts.size()>1 && !read_double(parts[1], &unzip_frac, errmsg))
                error(errmsg, c);
             
-            unzip_centre = 'o';
+            unzip_centre = 'x';
             if(parts.size()>2) {
-               if(strlen(parts[2])==1 && strchr("cf", *parts[2]))
+               if(strlen(parts[2])==1 && strchr("f", *parts[2]))
                    unzip_centre = *parts[2];
                else
-                  error("invalid unzip centring type, must be c or f", c);
+                  error("invalid unzip centring type, can only be f", c);
             }
-            */
             break;
 
          case 'o':
@@ -328,15 +327,16 @@ class unzip_tree
       map<int, vector<int> > tree;
 
    public:
-      unzip_tree(): root(0) {}
-      int init_basic(col_geom_v &geom);
+      unzip_tree(): root(-1) {}
+      int init_basic(col_geom_v &geom, int first_face);
       int flatten(const col_geom_v &geom, col_geom_v &net_geom, double fract);
 };
 
 
-int unzip_tree::init_basic(col_geom_v &geom)
+int unzip_tree::init_basic(col_geom_v &geom, int first_face)
 {
    tree.clear();
+   root = first_face;
    
    geom_v dual;
    get_dual(geom, dual);
@@ -344,15 +344,14 @@ int unzip_tree::init_basic(col_geom_v &geom)
    const vector<vector<int> > &f_cons = info.get_vert_cons();
    vector<tree_face> face_list;
    vector<bool> seen(geom.faces().size(), false);
-   int level=0;
 
    //start at first vertex of first face
-   root = 0;
    face_list.push_back(tree_face(root, f_cons[root]));
 
+   int list_sz = -1;
    while(face_list.size()<geom.faces().size()) {  // quit when all faces seen
-      level++;
-      int list_sz = face_list.size();
+   //while((int)face_list.size()>list_sz) {  // quit when all faces seen
+      list_sz = face_list.size();
       for(int i=0; i<list_sz; i++) {  // faces currently in tree
          int idx;
          while((idx=face_list[i].get_next_idx())>=0) { // face conections
@@ -508,19 +507,40 @@ int unzip_tree::flatten(const col_geom_v &geom, col_geom_v &net_geom,
    return 1;
 }
 
-int unzip_poly(col_geom_v &geom, double fract, char *errmsg)
+
+int unzip_poly(col_geom_v &geom, int root, double fract, char centring,
+      char *errmsg)
 {
    geom_info info(geom);
    if(!info.is_polyhedron()) {
-      strcpy(errmsg, "not a polyhedron");
+      strcpy(errmsg, "input not a polyhedron (temporary restriction)");
       return 0;
    }
+   if(info.num_parts()>1) {
+      strcpy(errmsg, "input not connected (temporary restriction)");
+      return 0;
+   }
+   if(root<0 || root>=(int)geom.faces().size()) {
+      sprintf(errmsg, "root face '%d' is not a valid face index number", root);
+      return 0;
+   }
+   if(!strchr("fx", centring)) {
+      sprintf(errmsg, "invalid centring type '%c', must be f or x", centring);
+      return 0;
+   }
+
    unzip_tree tree;
-   tree.init_basic(geom);
+   tree.init_basic(geom, root);
    col_geom_v net_geom;
    tree.flatten(geom, net_geom, fract);
-   geom = net_geom;
 
+   if(centring=='f') {
+      vector<vec3d> f_cents;
+      net_geom.face_cents(f_cents);
+      net_geom.transform(mat3d::transl(-centroid(f_cents)));
+   }
+
+   geom = net_geom;
    return 1;
 }
 
@@ -585,8 +605,12 @@ void process_file(col_geom_v &geom, pr_opts opts)
    }
    if(opts.trunc)
       truncate_verts(geom, opts.trunc_ratio, opts.trunc_v_ord);
-   if(opts.unzip_frac!=100.0)
-      unzip_poly(geom, opts.unzip_frac, errmsg);
+   if(opts.unzip_frac!=100.0) {
+      if(!unzip_poly(geom, opts.unzip_root, opts.unzip_frac, 
+            opts.unzip_centre, errmsg))
+         opts.error(errmsg, 'u');
+   }
+
    if(opts.edges_to_faces)
       make_edges_to_faces(geom);
    if(opts.triangulate)
