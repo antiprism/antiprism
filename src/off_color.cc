@@ -148,8 +148,7 @@ bool color_proc_torange_hsv::init(const char *range_name, char *errmsg)
             cur_idx = 3;
          else {
             if(errmsg)
-               sprintf(errmsg, "invalid component letter '%c'",
-                     (cur_idx<0) ? *rngs : *p);
+               sprintf(errmsg, "invalid component letter '%c'", *p);
             return false;
          }
          cur_comp = *p;
@@ -327,9 +326,8 @@ void o_col_opts::usage()
 "               n,N - colour by number of sides\n"
 "               a,A - colour by average internal angle (to nearest degree)\n"
 "               k,K - sets of faces connected by face edges\n"
-"               G   - gradient on Y coordinate of normal\n"
-"               C   - gradient on Y coordinate of centroid\n"
-"               R   - map HSVA values onto the specified HSVA ranges\n"
+"               g,G - gradient on Y coordinate of normal\n"
+"               c,C - gradient on Y coordinate of centroid\n"
 "               L   - lighting effect by normal (see option -l)\n"
 "               l   - lighting effect by centroid (see option -l)\n"
 "               M   - use colour map to convert existing colour index numbers\n"
@@ -344,9 +342,8 @@ void o_col_opts::usage()
 "               s,S - symmetric colouring\n"
 "               k,K - sets of edges connected by edges\n"
 "               F   - colour with average adjoining face colour\n"
-"               G   - gradient on Y coordinate of edge direction\n"
-"               C   - gradient on Y coordinate of centroid\n"
-"               R   - map HSVA values onto the specified HSVA ranges\n"
+"               g,G - gradient on Y coordinate of edge direction\n"
+"               c,C - gradient on Y coordinate of centroid\n"
 "               L   - lighting effect (see option -l)\n"
 "               M   - use colour map to convert existing colour index numbers\n"
 "                     into to values\n"
@@ -358,8 +355,7 @@ void o_col_opts::usage()
 "               n,N - colour by order of vertex\n"
 "               F   - colour with average adjoining face colour\n"
 "               E   - colour with average adjoining edge colour\n"
-"               C   - gradient on Y coordinate\n"
-"               R   - map HSVA values onto the specified HSVA ranges\n"
+"               c,C - gradient on Y coordinate\n"
 "               L   - lighting effect (see option -l)\n"
 "               M   - use colour map to convert existing colour index numbers\n"
 "                     into to values\n"
@@ -405,7 +401,7 @@ void o_col_opts::process_command_line(int argc, char **argv)
                break;
             }
             split_line(optarg, parts, ",");
-            if(strlen(parts[0])==1 && strchr("uUpPsSnNFECLM", *parts[0]))
+            if(strlen(parts[0])==1 && strchr("uUpPsSnNFEcCLM", *parts[0]))
                v_col_op = *parts[0];
             else
                error("invalid colouring", c);
@@ -429,7 +425,7 @@ void o_col_opts::process_command_line(int argc, char **argv)
                break;
             }
             split_line(optarg, parts, ",");
-            if(strlen(parts[0])==1 &&strchr("uUpPsSnNaAkKGCLlM",*parts[0]))
+            if(strlen(parts[0])==1 &&strchr("uUpPsSnNaAkKgGcCLlM",*parts[0]))
                f_col_op = *parts[0];
             else
                error("invalid colouring", c);
@@ -453,7 +449,7 @@ void o_col_opts::process_command_line(int argc, char **argv)
                break;
             }
             split_line(optarg, parts, ",");
-            if(strlen(parts[0])==1 && strchr("uUpPsSkKFGCLM", *parts[0]))
+            if(strlen(parts[0])==1 && strchr("uUpPsSkKFgGcCLM", *parts[0]))
                e_col_op = *parts[0];
             else
                error("invalid colouring", c);
@@ -495,7 +491,7 @@ void o_col_opts::process_command_line(int argc, char **argv)
                error(errmsg, c);
             if(parts.size()>1) {
                if(strspn(parts[1], "vef") != strlen(parts[1])) {
-                  snprintf(errmsg, MSG_SZ, "elements to hide are %s must be "
+                  snprintf(errmsg, MSG_SZ, "elements for colour ranges are %s must be "
                      "v, e, or f\n", optarg);
                   error(errmsg, c);
                }

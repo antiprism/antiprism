@@ -99,8 +99,12 @@ bool color_map::init_strip(char *map_name, char *errmsg)
    return true;
 }
 
-static color_map* init_color_map_generated(const char *map_name)
+static color_map* init_color_map_generated(const char *map_name, char *errmsg=0)
 {
+   char errmsg2[MSG_SZ];
+   if(!errmsg)
+      errmsg = errmsg2;
+
    char name[MSG_SZ];
    strncpy(name, map_name, MSG_SZ);
    name[MSG_SZ-1] = '\0';
@@ -138,7 +142,7 @@ static color_map* init_color_map_generated(const char *map_name)
 
    else if(strcmp(name, "hsv")==0) {
       cmap = new color_map_range_hsv();
-      if(cmap && !cmap->init(map_name+3)) {
+      if(cmap && !cmap->init(map_name+3, errmsg)) {
          delete cmap;
          cmap = 0;
       }
@@ -196,10 +200,11 @@ color_map* init_color_map(const char *map_name, char *errmsg)
       }
    }
    else {
-      cmap = init_color_map_generated(map_name);
+      char errmsg2[MSG_SZ];
+      cmap = init_color_map_generated(map_name, errmsg2);
       if(errmsg)
-         snprintf(errmsg, MSG_SZ, "could not open colour map file \'%s\'",
-                  map_name);
+         snprintf(errmsg, MSG_SZ, "could not open colour map file \'%s\': %s",
+                  map_name, errmsg2);
    }
 
    return cmap;
@@ -259,7 +264,7 @@ col_val color_map_range::get_col(int idx)
    }
    return col;
 }
-
+/*
 bool color_map_range::init(const char *map_name, char *errmsg)
 {
    char name[MSG_SZ];
@@ -299,6 +304,104 @@ bool color_map_range::init(const char *map_name, char *errmsg)
    }
    set_map_sz((map_sz>0) ? map_sz : 256);
    
+   return true;
+}
+*/
+bool color_map_range::init(const char *map_name, char *errmsg)
+{
+   char name[MSG_SZ];
+   strncpy(name, map_name, MSG_SZ-1);
+   name[MSG_SZ-1] = '\0';
+
+   if(!init_strip(name, errmsg))
+      return false;
+   
+   vector<char *> vals;
+   split_line(name, vals, "_");
+   if(vals.size() > 2) {
+      if(errmsg)
+         sprintf(errmsg, "map_name contains more than one '_'");
+      return false;
+   }
+
+   // Followed by the map size
+   int map_sz=-1;
+   char errmsg2[MSG_SZ];
+   if(*map_name != '_') {
+      if(vals.size() && !read_int(vals[0], &map_sz, errmsg2)) {
+         if(errmsg)
+            sprintf(errmsg, "map size: %s", errmsg2);
+         return false;
+      }
+   }
+   if(vals.size()==1)
+      return true;
+
+   int rng_len = strlen(vals[1]);
+   char rngs[MSG_SZ];
+   char *q = rngs;
+   int cur_idx = -1;
+   char cur_comp = 'X';
+   for(const char *p=vals[1]; p-vals[1]<rng_len+1; p++) {
+      fprintf(stderr, "*p = %c\n", *p);
+      if(strchr("HhSsVvAa", *p) || cur_idx<0 || *p=='\0') {
+         *q = '\0';
+         if(cur_idx>=0) {
+            if(read_double_list(rngs, ranges[cur_idx], errmsg2, 0, ":")) {
+               if(ranges[cur_idx].size()==0) {
+                  if(errmsg)
+                     sprintf(errmsg, "component letter '%c' isn't followed "
+                           "by any values", cur_comp);
+                  return false;
+               }
+
+               for(unsigned int j=0; j<ranges[cur_idx].size(); j++) {
+                  if(ranges[cur_idx][j]<0) {
+                     if(errmsg)
+                        sprintf(errmsg, "component letter '%c' contains a "
+                              "negative value", cur_comp);
+                     return false;
+                  }
+               }
+            }
+            else {
+               if(errmsg)
+                  sprintf(errmsg, "component letter '%c': %s", cur_comp, errmsg2);
+               return false;
+            }
+         }
+         if(strchr("Hh", *p))
+            cur_idx = 0;
+         else if(strchr("Ss", *p))
+            cur_idx = 1;
+         else if(strchr("Vv", *p))
+            cur_idx = 2;
+         else if(strchr("Aa", *p))
+            cur_idx = 3;
+         else {
+            if(errmsg)
+               sprintf(errmsg, "invalid component letter '%c'", *p);
+            return false;
+         }
+         cur_comp = *p;
+         q = rngs;
+      }
+      else if(!(isdigit(*p) || *p == '.' || *p == ':')) {
+         if(errmsg)
+            sprintf(errmsg, "invalid component letter '%c'", *p);
+         return false;
+      }
+      else if(!isspace(*p)) {
+         *q++ = *p;
+      }
+   }
+
+   for(int i=0; i<4; i++)
+      for(unsigned int j=0; j<ranges[i].size(); j++)
+         fprintf(stderr, "ranges[%d][%u] = %g\n", i, j, ranges[i][j]);
+   
+   set_map_sz((map_sz>0) ? map_sz : 256);
+
    return true;
 }
 

@@ -97,10 +97,10 @@ void dome_opts::process_command_line(int argc, char **argv)
    handle_long_opts(argc, argv);
 
    while( (c = getopt(argc, argv, ":hr:t:io:")) != -1 ) {
-      switch(c) {
-         if(common_opts(c))
-            continue;
+      if(common_opts(c))
+         continue;
 
+      switch(c) {
          case 'o':
             ofile = optarg;
             break;

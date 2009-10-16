@@ -267,7 +267,7 @@ bool read_double_list(char *str, vector<double> &nums, char *errmsg, int len,
          return false;
       }
       if(len && i>len) {
-         snprintf(errmsg, MSG_SZ, "more than %d integers given", len);
+         snprintf(errmsg, MSG_SZ, "more than %d numbers given", len);
          return false;
       }
       nums.push_back(num);

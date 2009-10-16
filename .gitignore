@@ -32,6 +32,7 @@ stamp-h1
 src_extra/twist
 src_extra/spidron
 src_extra/off2txt
+src_extra/dome_layer
 src/off2pov
 src/off2eig
 src/off2m
