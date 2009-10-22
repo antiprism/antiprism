@@ -1654,7 +1654,18 @@ bool view_opts::read_disp_option(char opt, char *optarg, char *errmsg)
             else
                cam_defs.set_rotation(mat3d::rot((vec)*deg2rad()));
             break;
-                
+         
+         case 'P':
+            if(!read_double(optarg, &val, errmsg2))
+               strcpy(errmsg, errmsg2);
+            if(val <= 0)
+               strcpy(errmsg, "perspective factor must be a positive number");
+            else
+               cam_defs.set_persp(val);
+
+            break;
+
+ 
          case 'B':
             if(!col.read(optarg, errmsg2))
                strcpy(errmsg, errmsg2);
