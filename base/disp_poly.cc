@@ -469,6 +469,9 @@ void disp_poly::vrml_trans_end(FILE *ofile)
 
 void disp_poly::vrml_geom(FILE *ofile, const scene &scen, int sig_digits)
 {
+   if(disp_geom.verts().size()==0)   // Don't write out empty geometries
+      return;
+   
    vrml_protos(ofile);
    vrml_trans_begin(ofile, scen);
 
@@ -709,7 +712,7 @@ void disp_poly::pov_object(FILE *ofile)
 {
    fprintf(ofile,
 "#if (show)\n"
-"union {\n"
+//"union {\n"
 "#declare NoColour = <-1, -1, -1, 0>; // Indicates no colour has been set" 
 "// Display vertex elements\n"
 "#if(verts_show)\n"
@@ -755,13 +758,15 @@ void disp_poly::pov_object(FILE *ofile)
 "// Extra object\n"
 "disp_extra()\n"
 "\n"
-"}\n\n"
+//"}\n\n"
 "#end // (show)\n");
 }
 
 
 void disp_poly::pov_geom(FILE *ofile, const scene &, int sig_digits)
 {
+   if(disp_geom.verts().size()==0)   // Don't write out empty geometries
+      return;
    pov_default_vals(ofile);
    pov_disp_macros(ofile);
    pov_elements(ofile, sig_digits);
@@ -1664,7 +1669,6 @@ bool view_opts::read_disp_option(char opt, char *optarg, char *errmsg)
                cam_defs.set_persp(val);
 
             break;
-
  
          case 'B':
             if(!col.read(optarg, errmsg2))
