@@ -130,6 +130,7 @@ const char *get_help(const char* name)
    help["prism"] = help_polygon;
    help["antiprism"] = help_polygon;
    help["uc"] = help_uniform_compounds;
+   help["col_map"] = help_color_map;
    char hname[MSG_SZ];
    to_resource_name(hname, name);
    map<string, const char *>::iterator mi = help.find(hname);

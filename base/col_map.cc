@@ -101,9 +101,10 @@ bool color_map::init_strip(char *map_name, char *errmsg)
 
 static color_map* init_color_map_generated(const char *map_name, char *errmsg=0)
 {
-   char errmsg2[MSG_SZ];
+   char errmsg_tmp[MSG_SZ];
    if(!errmsg)
-      errmsg = errmsg2;
+      errmsg = errmsg_tmp;
+   strcpy(errmsg, "name not found");  // default error message
 
    char name[MSG_SZ];
    strncpy(name, map_name, MSG_SZ);
@@ -113,20 +114,22 @@ static color_map* init_color_map_generated(const char *map_name, char *errmsg=0)
 
    color_map *cmap = 0;
      
-   if(*map_name=='\0' || strcmp(name, "null")==0)  // A null map
+   if(*map_name=='\0' || strcmp(name, "null")==0) {  // A null map
       cmap = new color_map_map();
+   }
    
+   /*
    else if(strcmp(name, "rand")==0) {
       cmap = new color_map_range_rand_hsv();
-      if(cmap && !cmap->init(map_name+4)) {
+      if(cmap && !cmap->init(map_name+name_len, errmsg)) {
          delete cmap;
          cmap = 0;
       }
-   }
-
+   } 
+   
    else if(strcmp(name, "randhsv")==0) {
       cmap = new color_map_range_rand_hsv();
-      if(cmap && !cmap->init(map_name+7)) {
+      if(cmap && !cmap->init(map_name+name_len, errmsg)) {
          delete cmap;
          cmap = 0;
       }
@@ -134,7 +137,7 @@ static color_map* init_color_map_generated(const char *map_name, char *errmsg=0)
 
    else if(strcmp(name, "randrgb")==0) {
       cmap = new color_map_range_rand_rgb();
-      if(cmap && !cmap->init(map_name+7)) {
+      if(cmap && !cmap->init(map_name+name_len, errmsg)) {
          delete cmap;
          cmap = 0;
       }
@@ -142,7 +145,7 @@ static color_map* init_color_map_generated(const char *map_name, char *errmsg=0)
 
    else if(strcmp(name, "hsv")==0) {
       cmap = new color_map_range_hsv();
-      if(cmap && !cmap->init(map_name+3, errmsg)) {
+      if(cmap && !cmap->init(map_name+name_len, errmsg)) {
          delete cmap;
          cmap = 0;
       }
@@ -150,22 +153,79 @@ static color_map* init_color_map_generated(const char *map_name, char *errmsg=0)
 
    else if(strcmp(name, "rgb")==0) {
       cmap = new color_map_range_rgb();
-      if(cmap && !cmap->init(map_name+3)) {
+      if(cmap && !cmap->init(map_name+name_len, errmsg)) {
          delete cmap;
          cmap = 0;
+      }
+   }
+
+
+   */
+
+   else if(strcmp(name, "rnd")==0 ||
+           strcmp(name, "rand")==0 ||
+           strcmp(name, "random")==0  ) {
+      cmap = new color_map_range_rand_hsv();
+      if(cmap && !cmap->init(map_name+name_len, errmsg)) {
+         delete cmap;
+         cmap = 0;
+      }
+      if(!cmap) {
+         cmap = new color_map_range_rand_rgb();
+         if(cmap && !cmap->init(map_name+name_len, errmsg)) {
+            delete cmap;
+            cmap = 0;
+         }
+      }
+   }
+
+   else if(strcmp(name, "rng")==0 ||
+           strcmp(name, "range")==0 ) {
+      cmap = new color_map_range_hsv();
+      if(cmap && !cmap->init(map_name+name_len, errmsg)) {
+         delete cmap;
+         cmap = 0;
+      }
+      if(!cmap) {
+         cmap = new color_map_range_rgb();
+         if(cmap && !cmap->init(map_name+name_len, errmsg)) {
+            delete cmap;
+            cmap = 0;
+         }
       }
    }
 
    else if(strcmp(name, "spread")==0) {
       cmap = new color_map_spread();
-      if(cmap && !cmap->init(map_name+6)) {
+      if(cmap && !cmap->init(map_name+name_len, errmsg)) {
          delete cmap;
          cmap = 0;
       }
    }
 
-   else if(strcmp(name, "remap")==0)
+   else if(strcmp(name, "grey")==0 ||
+           strcmp(name, "greyw")==0 ||
+           strcmp(name, "gray")==0  ||
+           strcmp(name, "grayw")==0 ) {
+      if(strspn(map_name+name_len,"0123456789-+*%")==strlen(map_name+name_len)){
+         bool wrp = (name[strlen(name)-1]=='w');
+         char grey_name[MSG_SZ];
+         size_t num_dgts = strspn(map_name+name_len,"0123456789");
+         strncpy(grey_name, map_name+name_len, num_dgts);
+         snprintf(grey_name+num_dgts, MSG_SZ-num_dgts-1,
+               "_H0S0V0:1%s%s", wrp?":0":"", map_name+name_len+num_dgts);
+         //fprintf(stderr, "grey name is '%s'\n", grey_name);    
+         cmap = new color_map_range_hsv();
+         if(cmap && !cmap->init(grey_name, errmsg)) {
+            delete cmap;
+            cmap = 0;
+         }
+      }
+   }
+
+   else if(strcmp(name, "remap")==0) {
       cmap = new color_map_remap();
+   }
 
    return cmap;
 }
@@ -202,7 +262,7 @@ color_map* init_color_map(const char *map_name, char *errmsg)
    else {
       char errmsg2[MSG_SZ];
       cmap = init_color_map_generated(map_name, errmsg2);
-      if(errmsg)
+      if(!cmap && errmsg)
          snprintf(errmsg, MSG_SZ, "could not open colour map file \'%s\': %s",
                   map_name, errmsg2);
    }
@@ -213,7 +273,8 @@ color_map* init_color_map(const char *map_name, char *errmsg)
 
 void color_map::set_wrap(int wrp)
 {
-   if(wrp<0) wrp=max_index();
+   if(wrp<0)
+      wrp=max_index();
    wrap = (wrp<0) ? 0 : wrp;
 }
 
@@ -309,6 +370,8 @@ bool color_map_range::init(const char *map_name, char *errmsg)
 */
 bool color_map_range::init(const char *map_name, char *errmsg)
 {
+   if(errmsg)
+      *errmsg = '\0';
    char name[MSG_SZ];
    strncpy(name, map_name, MSG_SZ-1);
    name[MSG_SZ-1] = '\0';
@@ -318,14 +381,16 @@ bool color_map_range::init(const char *map_name, char *errmsg)
    
    vector<char *> vals;
    split_line(name, vals, "_");
+   //for(unsigned int i=0; i<vals.size(); i++)
+   //   fprintf(stderr, "vals[%d] = '%s'\n", i, vals[i]);
+
    if(vals.size() > 2) {
       if(errmsg)
          sprintf(errmsg, "map_name contains more than one '_'");
       return false;
    }
 
-   // Followed by the map size
-   int map_sz=-1;
+   // Get the map size
    char errmsg2[MSG_SZ];
    if(*map_name != '_') {
       if(vals.size() && !read_int(vals[0], &map_sz, errmsg2)) {
@@ -333,18 +398,33 @@ bool color_map_range::init(const char *map_name, char *errmsg)
             sprintf(errmsg, "map size: %s", errmsg2);
          return false;
       }
+      if(vals.size()<2)
+         return true;
    }
-   if(vals.size()==1)
-      return true;
-
-   int rng_len = strlen(vals[1]);
+   
+   if(strspn(vals.back(), "HhSsVv") && strspn(vals.back(), "RrGgBb")) {
+      if(errmsg)
+         sprintf(errmsg, "cannot include both RGB and HSV components");
+      return false;
+   }
+   size_t char_cnt;
+   bool is_hsv = (set_func==((void (col_val::*)(double, double, double, double))&col_val::set_hsva));
+   if( ( is_hsv && (char_cnt=strspn(vals.back(), "RrGgBb"))) ||
+       (!is_hsv && (char_cnt=strspn(vals.back(), "HhSsVv"))) ) {
+      if(errmsg)
+         sprintf(errmsg, "invalid component letter '%c'",
+               *(vals.back()+char_cnt-1));
+      return false;
+   }
+   
+   int rng_len = strlen(vals.back());
    char rngs[MSG_SZ];
    char *q = rngs;
    int cur_idx = -1;
    char cur_comp = 'X';
-   for(const char *p=vals[1]; p-vals[1]<rng_len+1; p++) {
-      fprintf(stderr, "*p = %c\n", *p);
-      if(strchr("HhSsVvAa", *p) || cur_idx<0 || *p=='\0') {
+   for(const char *p=vals.back(); p-vals.back()<rng_len+1; p++) {
+      //fprintf(stderr, "*p = %c\n", *p);
+      if(strchr("HhSsVvAaRrGgBb", *p) || cur_idx<0 || *p=='\0') {
          *q = '\0';
          if(cur_idx>=0) {
             if(read_double_list(rngs, ranges[cur_idx], errmsg2, 0, ":")) {
@@ -370,11 +450,11 @@ bool color_map_range::init(const char *map_name, char *errmsg)
                return false;
             }
          }
-         if(strchr("Hh", *p))
+         if(strchr("HhRr", *p))
             cur_idx = 0;
-         else if(strchr("Ss", *p))
+         else if(strchr("SsGg", *p))
             cur_idx = 1;
-         else if(strchr("Vv", *p))
+         else if(strchr("VvBb", *p))
             cur_idx = 2;
          else if(strchr("Aa", *p))
             cur_idx = 3;
@@ -396,12 +476,12 @@ bool color_map_range::init(const char *map_name, char *errmsg)
       }
    }
 
-   for(int i=0; i<4; i++)
-      for(unsigned int j=0; j<ranges[i].size(); j++)
-         fprintf(stderr, "ranges[%d][%u] = %g\n", i, j, ranges[i][j]);
-   
-   set_map_sz((map_sz>0) ? map_sz : 256);
+   set_wrap(get_wrap());
 
+   //for(int i=0; i<4; i++)
+   //   for(unsigned int j=0; j<ranges[i].size(); j++)
+   //      fprintf(stderr, "ranges[%d][%u] = %g\n", i, j, ranges[i][j]);
+   
    return true;
 }
 
@@ -425,6 +505,7 @@ bool color_map_range_hsv::init(const char *map_name, char *errmsg)
    ranges[2].push_back(0.9);
    ranges[3].push_back(1);
    
+   set_map_sz(256);
    int ret = color_map_range::init(map_name, errmsg);
    
    return ret;
@@ -455,8 +536,9 @@ bool color_map_range_rgb::init(const char *map_name, char *errmsg)
    ranges[2].push_back(1);
    ranges[3].push_back(1);
    
+   set_map_sz(256);
    int ret = color_map_range::init(map_name, errmsg);
-   
+ 
    return ret;
 }
 
@@ -472,6 +554,7 @@ bool color_map_range_rand_hsv::init(const char *map_name, char *errmsg)
    ranges[2].push_back(1);
    ranges[3].push_back(1);
    
+   set_map_sz(-1);
    int ret = color_map_range::init(map_name, errmsg);
    
    return ret;
@@ -489,8 +572,8 @@ bool color_map_range_rand_rgb::init(const char *map_name, char *errmsg)
    ranges[2].push_back(1);
    ranges[3].push_back(1);
    
+   set_map_sz(-1);
    int ret = color_map_range::init(map_name, errmsg);
-   
    return ret;
 }
 
@@ -498,10 +581,11 @@ col_val color_map_range_rand::get_col(int idx)
 {
    col_val col;
    idx = get_effective_index(idx);
-   (col.*set_func)( rand_in_range(ranges[0], idx*1),
-                      rand_in_range(ranges[1], idx*2),
-                      rand_in_range(ranges[2], idx*3),
-                      rand_in_range(ranges[3], idx*4) );
+   if(get_wrap() || get_map_sz()==-1 || idx<get_map_sz())
+      (col.*set_func)( rand_in_range(ranges[0], idx*1),
+                       rand_in_range(ranges[1], idx*2),
+                       rand_in_range(ranges[2], idx*3),
+                       rand_in_range(ranges[3], idx*4) );
    return col;
 }
 
