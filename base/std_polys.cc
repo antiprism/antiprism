@@ -388,13 +388,8 @@ void set_resource_polygon_color(geom_if &geom)
 {
    if(col_geom_v *cg = dynamic_cast<col_geom_v *>(&geom)) {
       coloring clrng(cg);
-      color_map_map *overrides = new color_map_map;
-      overrides->set_col(60, col_val(0.9,0.45,0.0)); // triangle
-      overrides->set_col(36, col_val(0.7,0.1,0.2));  // pentagram
-      clrng.add_cmap(overrides);
-      color_map *cmap = init_color_map("spread+53*12");
+      color_map *cmap = init_color_map("uniform");
       clrng.add_cmap(cmap);
-
       clrng.f_avg_angle(true);
    }
 }

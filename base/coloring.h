@@ -125,8 +125,7 @@ class coloring {
       void set_geom(col_geom_v *geo) { geom = geo; }
 
       ///Convert a colour index into a colour value.
-      /**The HSVA ranges are respected if a random colour is allocated.
-       * \param idx the index to convert.
+      /** \param idx the index to convert.
        * \return The final RGBA colour. */
       col_val idx_to_val(int idx) const;
 

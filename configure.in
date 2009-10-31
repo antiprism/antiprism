@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.59)
+AC_PREREQ(2.61)
 AC_INIT(antiprism, 0.20.pre09, adrian@antiprism.com)
 AM_INIT_AUTOMAKE([1.9 foreign])
 
@@ -16,9 +16,9 @@ AC_PROG_CPP
 #AC_DISABLE_SHARED
 #AC_DISABLE_STATIC
 
-#LT_INIT([win32_dll])
-AC_LIBTOOL_WIN32_DLL
-AC_PROG_LIBTOOL
+LT_INIT([win32_dll])
+#AC_LIBTOOL_WIN32_DLL
+#AC_PROG_LIBTOOL
 
 # Check whether Python module should be built
 AC_ARG_ENABLE( python,

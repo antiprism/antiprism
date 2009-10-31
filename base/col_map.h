@@ -45,13 +45,9 @@ class color_map
       int wrap;     // wrap index numbers back to zero at this index size.
 
    protected:
-      ///Initialise from a string, stripping parameters from the end
-      /** \param map_name the map name.
-       * \param errmsg an array at least \c MSG_SZ chars long to
-       * return any error message.
-       * \return true if the file could be read, otherwise false
-       * and the error is detailed in \a errmsg. */
-      bool init_strip(char *map_name, char *errmsg=0);
+      ///Copy parameters
+      /**\param cmap the colour map to copy parameters from. */
+      void copy_params(const color_map &cmap);
 
    public:
       ///Constructor
@@ -67,6 +63,14 @@ class color_map
        * \return true if the file could be read, otherwise false
        * and the error is detailed in \a errmsg. */
       virtual bool init(const char *map_name, char *errmsg =0);
+
+      ///Initialise from a string, stripping parameters from the end
+      /** \param map_name the map name.
+       * \param errmsg an array at least \c MSG_SZ chars long to
+       * return any error message.
+       * \return true if the file could be read, otherwise false
+       * and the error is detailed in \a errmsg. */
+      bool init_strip(char *map_name, char *errmsg=0);
 
       ///Get a copy of the map with any with the values indexed by order
       /** \return a pointer to the dynamically allocated condensed copy,
@@ -453,6 +457,63 @@ class color_map_map : public color_map
 
 };
 
+///A colour map that looks up in other colour maps in order
+class color_map_multi : public color_map
+{
+   private:
+      //The colour maps to be tried sequentially.
+      vector<color_map *> cmaps;
+
+   public:
+      // Constructor
+      color_map_multi() : color_map() {}
+
+      ///Copy Constructor
+      /**\param cmap the multiple colour map to copy from. */
+      color_map_multi(const color_map_multi &cmap);
+      
+      ///Copy Assignment
+      /**\param cmap the multiple colour map to copy from. */
+      color_map_multi &operator =(const color_map_multi &cmap);
+      
+      ///Destructor
+      ~color_map_multi();
+
+      ///Initialise from a string
+      /**The colour map can be in the Antiprism, GIMP or Fractint format. If
+       * the filename isn't found then the name will be looked for in the
+       * Antiprism data directory colour map resources.
+       * \param map_name the map name.
+       * \param errmsg an array at least \c MSG_SZ chars long to
+       * return any error message.
+       * \return true if the file could be read, otherwise false
+       * and the error is detailed in \a errmsg. */
+      virtual bool init(const char *map_name, char *errmsg=0);
+      ///Get a copy of the map
+      /** \return a pointer to the dynamically allocated copy,
+       * which must be freed by the caller with \c delete, 0 indicates
+       * that the clone failed. */
+      
+      virtual color_map *clone() { return new color_map_multi(*this); }
+
+      ///Add a colour map.
+      /**\param col_map the colour map.
+       * \param pos the position to add it, or at the end if pos is
+       * greater then the current size */
+      void add_cmap(color_map *col_map, unsigned int pos=UINT_MAX);
+
+      ///Delete a colour map.
+      /**\param pos the position of the colour map to delete, or delete
+       * the last colour map if \c pos is greater than or equal to the
+       * current size */
+      void del_cmap(unsigned int pos=UINT_MAX);
+      
+      ///Get the colour value for an index number.
+      /**\param idx the index.
+       * \return The colour. */
+      virtual col_val get_col(int idx);
+
+};
 
 ///Create a colour map from its name
 /**The map may be read from a file or generated.

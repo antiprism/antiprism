@@ -102,7 +102,6 @@ void coloring::cycle_map_cols()
 col_val coloring::idx_to_val(int idx) const
 {
    col_val col;
-   //fprintf(stderr, "cmaps.size = %u\n", cmaps.size());
    for(unsigned int i=0; i<cmaps.size(); i++) {
       col = cmaps[i]->get_col(idx);
       if(col.is_set())
@@ -678,7 +677,6 @@ bool read_colorings(coloring clrngs[], const char *line, char *errmsg,
    
    for(int i=0; i<parts_sz; i++) {
       color_map *col_map = init_color_map(parts[i], errmsg2);
-      
       double cps;
       if(get_cycle_rate(parts[i], &cps)) {
          clrng.set_cycle_msecs((int)(1000/cps));
