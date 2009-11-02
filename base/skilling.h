@@ -37,9 +37,7 @@
 using std::string;
 
 
-double v_ang_at_ax(const vec3d &v0, const vec3d &v1, const vec3d &ax);
 int make_resource_uniform_compound(geom_if &geom, string pname, char *errmsg=0);
-
 
 struct UCItem {
    int uc_case;

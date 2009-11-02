@@ -51,24 +51,14 @@ using std::vector;
 #define phi ((1+sqrt(5))/2)
 #define iphi (1/phi)
 
-// using UC13:
-//
-// 20 octahedra - 45.6696674755810360 degrees  0.7970860657398561 radians (uc14)
-// 10 octahedra - 0 degrees                    0                  radians (uc15)
-// 10 octahedra - 60 degrees                   1.0471975511965976 radians (uc16)
-// 5 octahedra  - 22.2387560929649410 degrees  0.3881395153701884 radians (uc17)
-
-double v_ang_at_ax(const vec3d &v0, const vec3d &v1, const vec3d &ax)
-{
-   vec3d n0 = vcross(v0, ax).unit();
-   vec3d n1 = vcross(v1, ax).unit();
-   double ang = acos(vdot(n0, n1));
-   if(vdot(ax, vcross(n0, n1))<0)
-      ang = 2*M_PI - ang;
-   return ang;
-}
-
-double twenty_octahedra_angle()
+// oct_case = 0 // UC19 20 Tetrahemihexahedra 45.6696674755810220... degrees (using 0 degrees as starting point)
+// oct_case = 1 // UC14 20 Octahedra -23.430911382616046... degrees (using UC10 which starts at -45 degrees) (negate the returned angle)
+//                 case 1 not currently used. Instead use oct_case = 2 and add 45.6696674755810220... = 67.908423568545970 degrees
+// oct_case = 2 // UC15 10 Octahedra  22.238756092964941... degrees (using UC10 white starts at -45 degrees)
+//              // UC16 10 Octahedra  82.238756092964941... degrees (use oct_case = 2 and add 60 degrees)
+//                 note: information only. UC15 and UC16 are generated with 0 and 60 degrees using the same tranformation used by 20 Tetrahemihexahedra
+// returns radians
+double octahedra_angle(int oct_case)
 {
    double a = 1/(phi*phi)-1/sqrt(phi);
    double b = -1+1/sqrt(phi*phi*phi);
@@ -76,11 +66,17 @@ double twenty_octahedra_angle()
 
    vec3d v_ax = vec3d(1,1,1);    // unit axis vector
    
-   // 20 Octahedra (or 20 Tetrahemihexahedra) occur at 45.6696674755810220...
-   vec3d v0 = vec3d(a,-b,c);     // starting vertex position
-   vec3d v1 = vec3d(-a,b,c);     // final pos
+   // start out with 45.6696674755810220... = 23.430911382616046... + 22.238756092964941...
+   vec3d v0 = vec3d(a,-b,c);
+   vec3d v1 = vec3d(-a,b,c);
    
-   return v_ang_at_ax(v0,v1,v_ax);
+   if (oct_case == 1)
+      v1 = vec3d(0,0,1); // this angle is 23.430911382616046...
+   else
+   if (oct_case == 2)
+      v0 = vec3d(0,0,1); // this angle is 22.238756092964941...
+   
+   return angle_around_axis(v0,v1,v_ax);
 }
 
 void build_uniform_compound(col_geom_v &geom, int uc_case, int uc_num, string sym_from, string sym_to, double angle)
@@ -154,23 +150,29 @@ void build_uniform_compound(col_geom_v &geom, int uc_case, int uc_num, string sy
    // UC10 4 octahedra rotational
    // UC11 8 octahedra rotational
    // UC12 4 octahedra
+   // UC13 20 octahedra rotational
+   // UC14 20 octahedra
    // UC30 4 triangular prisms
    // UC31 8 triangular prisms
    // UC38 4 hexagonal prisms
    if (uc_case == 3) {
-      if (uc_num == 10 || uc_num == 11)
-         angle += M_PI/12; // variable (with 15 degree advance)
+      string sym_to_local = sym_to;
+      if (uc_num == 10 || uc_num == 11 || uc_num == 13 || uc_num == 14) {
+         angle -= M_PI/4; // variable (subtract 45 degrees so 0 causes simultaneous octahedra)
+         // make UC10 first, then use that to make UC11, UC13 and UC14
+         if (uc_num == 11 || uc_num == 13 || uc_num == 14)
+            sym_to_local = "T";
+      }
       else
       if (uc_num == 31)
          transform_and_repeat(geom, "D3v", "D3h");
-      transform_and_repeat(geom, sym_to, sym_from, mat3d::rot(vec3d(0,0,1), vec3d(1,1,1)) * mat3d::rot(0,0,angle));
+      transform_and_repeat(geom, sym_to_local, sym_from, mat3d::rot(vec3d(0,0,1), vec3d(1,1,1)) * mat3d::rot(0,0,angle));
+      if (uc_num == 11 || uc_num == 13 || uc_num == 14)
+         transform_and_repeat(geom, sym_to, "T");
    }
    else
-   // UC13 20 octahedra rotational
-   // UC14 20 octahedra (irrational angle of 45.6696674755810220... see above)
    // UC15 10 octahedra 1 (0 degrees)
    // UC16 10 octahedra 2 (60 degrees)
-   //(UC17 5 octahedra is taken care of with simple transform, uc_case 0 above)
    // UC19 20 tetrahemihexahedra
    if (uc_case == 4) {
       if (uc_num == 19)
@@ -260,8 +262,8 @@ UCItem uc_item_list[] = {
    { 3,   "ant3",     "D3v",   "T",     -1,      "UC10",  "4 octahedra rotational"},
    { 3,   "ant3",     "D3v",   "O",     -1,      "UC11",  "8 octahedra rotational"},
    { 3,   "ant3",     "D3v",   "T",     M_PI/12, "UC12",  "4 octahedra"},
-   { 4,   "ant3",     "D3v",   "I",     -1,      "UC13",  "20 octahedra rotational"},
-   { 4,   "ant3",     "D3v",   "I",     -1,      "UC14",  "20 octahedra"},
+   { 3,   "ant3",     "D3v",   "I",     -1,      "UC13",  "20 octahedra rotational"},
+   { 3,   "ant3",     "D3v",   "I",     -1,      "UC14",  "20 octahedra"},
    { 4,   "ant3",     "D3v",   "I",      0,      "UC15",  "10 octahedra 1"},
    { 4,   "ant3",     "D3v",   "I",     M_PI/3,  "UC16",  "10 octahedra 2"},
    { 0,   "u5",       "Oh",    "I",     -1,      "UC17",  "5 octahedra"},
@@ -364,8 +366,11 @@ int uc_poly::get_poly(col_geom_v &geom, int sym, double angle, int n, int d, int
       sym_to = sym_to_local;
    }
    else
-   if (uc_num==14 || uc_num==19)
-      angle = twenty_octahedra_angle();
+   if (uc_num == 14)
+      angle = octahedra_angle(2)+octahedra_angle(0); // add 45.6696674755810220... degrees
+   else
+   if (uc_num == 19)
+      angle = octahedra_angle(0);
    else
    if (uc_items[sym].angle != -1)
       angle = uc_items[sym].angle;
@@ -793,16 +798,7 @@ int make_resource_uniform_compound(geom_if &geom, string name, char *errmsg)
       uniform_compounds.get_poly(*cg,sym_no,angle,n,d,k);
       
       coloring clrng(cg);
-      color_map_map *overrides = new color_map_map;
-      overrides->set_col(0, col_val(1.0,0.5,0.0)); // orange
-      overrides->set_col(1, col_val(1.0,1.0,0.0)); // yellow
-      overrides->set_col(2, col_val(1.0,0.0,0.0)); // red
-      overrides->set_col(3, col_val(0.0,0.5,0.0)); // green
-      overrides->set_col(4, col_val(0.0,0.0,1.0)); // blue
-      overrides->set_col(5, col_val(1.0,0.0,1.0)); // magnenta
-      overrides->set_col(6, col_val(0.0,1.0,1.0)); // cyan
-      clrng.add_cmap(overrides);
-      color_map *cmap = init_color_map("spread+2");
+      color_map *cmap = init_color_map("compound");
       clrng.add_cmap(cmap);
 
       clrng.v_apply_cmap();

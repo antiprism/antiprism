@@ -48,6 +48,7 @@ class lutil_opts: public prog_opts {
       vector<string> ifiles;
       string ofile;
       string cfile;
+      string rfile;
 
       vector<double> strut_len;
       bool strip_faces;
@@ -130,6 +131,7 @@ void lutil_opts::usage()
 "  -A        append the original lattice to the final product\n"
 "  -O        translate center of final product to origin\n"
 "  -Z <col>  add center vertex to final product in color col\n"
+"  -R <file> repeat off file at every vertex in lattice\n"
 "  -y <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
@@ -178,7 +180,7 @@ void lutil_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hzx:X:c:k:r:q:s:D:C:AV:E:F:T:Z:OLSy:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hzx:X:c:k:r:q:s:D:C:AV:E:F:T:Z:OR:LSy:o:")) != -1 ) {
       if(common_opts(c))
          continue;
 
@@ -513,6 +515,10 @@ void lutil_opts::process_command_line(int argc, char **argv)
          case 'O':
             trans_to_origin = true;
             break;
+            
+         case 'R':
+            rfile = optarg;
+            break;
 
          case 'L':
             list_radii = true;
@@ -654,6 +660,24 @@ void process_lattices(col_geom_v &geom, lutil_opts opts)
    // add central vertex last so not to alter listing outcomes
    if (opts.cent_col.is_set())
       color_centroid(geom, opts.cent_col);
+      
+   // place geom at every vertex in lattice
+   col_geom_v repeater;
+   if(opts.rfile.length()) {
+      if(!repeater.read(opts.rfile, errmsg))
+         opts.error(errmsg);
+      if(*errmsg)
+         opts.warning(errmsg);
+
+      col_geom_v geom2;
+      for(unsigned int i=0; i<geom.get_verts()->size(); i++) {
+         col_geom_v rep = repeater;
+         rep.transform(mat3d::transl((*geom.get_verts())[i]));
+         geom2.append(rep);
+      }
+      geom = geom2;
+      sort_merge_elems(geom, "vef", opts.epsilon);
+   }
 }
 
 int main(int argc, char *argv[])
