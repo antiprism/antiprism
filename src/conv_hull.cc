@@ -74,8 +74,6 @@ void ch_opts::usage()
 
 void ch_opts::process_command_line(int argc, char **argv)
 {
-   extern char *optarg;
-   extern int optind, opterr;
    opterr = 0;
    char c;
    

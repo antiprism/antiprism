@@ -150,8 +150,6 @@ void waterman_opts::usage()
 
 void waterman_opts::process_command_line(int argc, char **argv)
 {
-   extern char *optarg;
-   extern int optind, opterr;
    opterr = 0;
    char c;
    char errmsg[MSG_SZ];

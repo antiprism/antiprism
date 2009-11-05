@@ -10,7 +10,8 @@ xx-xx-09 Adrian Rossiter <adrian@antiprism.com>
              -S uses the symmetries of another polyhedron, -t tests
              the symmetry type by repeating an arrow
            off_report: new option -S s for a symmetry report
-           off_trans: new option -P aligns to standard symmetry type
+           off_trans: new option -P aligns to standard symmetry type,
+             rotate a pair of vectors onto another moved from -A to -R
            off_color: options -m -M -c combined as option -m. Lower
              case colourings always set index, upper case colourings
              always apply colour map. Default colour map is 'rand'.
@@ -30,7 +31,8 @@ xx-xx-09 Adrian Rossiter <adrian@antiprism.com>
            antiview,off2vrml,off2pov: new option -s to display
              symmetry elements
            off_util: new option -H for general help, new option -u
-             to unfold a polyhedron net
+             to unfold a polyhedron net, new option -x V deletes
+             free vertices
            minmax: new ellipsoid and superellipsoid surfaces, default
              algorithm is v
            Resources: new colour map files and generatable maps,

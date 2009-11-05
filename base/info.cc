@@ -96,6 +96,8 @@ void geom_info::reset()
    vertex_angles.clear();
    f_areas.clear();
    vert_cons.clear();
+   free_verts_found = false;
+   free_verts.clear();
 }
 
 
@@ -385,7 +387,27 @@ void geom_info::find_vert_cons()
       }
    }
 }
-   
+
+void geom_info::find_free_verts()
+{
+   free_verts.clear();
+   const geom_if &geom = get_geom();
+   vector<int> cnt(geom.verts().size());
+   for(unsigned int i=0; i<geom.faces().size(); i++)
+      for(unsigned int j=0; j<geom.faces(i).size(); j++)
+         cnt[geom.faces(i, j)]++;
+   for(unsigned int i=0; i<geom.edges().size(); i++)
+      for(unsigned int j=0; j<geom.edges(i).size(); j++)
+         cnt[geom.edges(i, j)]++;
+  
+   for(int i=0; i<(int)cnt.size(); i++)
+      if(cnt[i]==0)
+         free_verts.push_back(i);
+
+   free_verts_found = true;
+}
+
+
 static double sph_tri_area(vec3d u0, vec3d u1, vec3d u2)
 {
    double sign = 1 - 2*(vtriple(u0, u1, u2)>0);

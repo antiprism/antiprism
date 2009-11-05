@@ -343,7 +343,7 @@ bool color_map_range::init(const char *map_name, char *errmsg)
 
    if(!init_strip(name, errmsg))
       return false;
-   
+
    vector<char *> vals;
    split_line(name, vals, "_");
    //for(unsigned int i=0; i<vals.size(); i++)
@@ -363,10 +363,14 @@ bool color_map_range::init(const char *map_name, char *errmsg)
             sprintf(errmsg, "map size: %s", errmsg2);
          return false;
       }
-      if(vals.size()<2)
-         return true;
    }
    
+   if(get_wrap()==-1)
+      set_wrap(max_index());
+      
+   if(*map_name != '_' && vals.size()<2) // A size was given but no comp ranges
+         return true;
+
    if(strspn(vals.back(), "HhSsVv") && strspn(vals.back(), "RrGgBb")) {
       if(errmsg)
          sprintf(errmsg, "cannot include both RGB and HSV components");
@@ -440,8 +444,6 @@ bool color_map_range::init(const char *map_name, char *errmsg)
          *q++ = *p;
       }
    }
-
-   set_wrap(get_wrap());
 
    //for(int i=0; i<4; i++)
    //   for(unsigned int j=0; j<ranges[i].size(); j++)

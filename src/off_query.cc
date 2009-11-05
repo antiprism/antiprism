@@ -201,8 +201,6 @@ void add_to_list(vector<int> &list, vector<int> &to_add)
 void oq_opts::process_command_line(int argc, char **argv)
 {
    char errmsg[MSG_SZ];
-   extern char *optarg;
-   extern int optind, opterr;
    opterr = 0;
    char c;
    vector<pair<char, char *> > args;

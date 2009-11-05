@@ -147,8 +147,6 @@ const char *get_help(const char* name)
 void pr_opts::process_command_line(int argc, char **argv)
 {
    char errmsg[MSG_SZ];
-   extern char *optarg;
-   extern int optind, opterr;
    opterr = 0;
    char c;
    vector<char *> parts;
@@ -213,8 +211,8 @@ void pr_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'x':
-            if(strspn(optarg, "vef") != strlen(optarg)) {
-               snprintf(errmsg, MSG_SZ, "elements to hide are %s must be v, e, or f\n", optarg);
+            if(strspn(optarg, "Vvef") != strlen(optarg)) {
+               snprintf(errmsg, MSG_SZ, "elements to hide are %s must be V, v, e, or f\n", optarg);
                error(errmsg, c);
             }
             filt_elems=optarg;
@@ -232,7 +230,7 @@ void pr_opts::process_command_line(int argc, char **argv)
             if(strchr(optarg, 's') && strlen(optarg)>1) {
                error("s is for sorting only, cannot be used with v, e, or f", c);
             }
-            if(strspn(optarg, "ef") && !strspn(optarg, "v")) {
+            if(strspn(optarg, "ef") && !strchr(optarg, 'v')) {
                warning("without v, some orphan vertices may result", c);
             }
             merge_elems=optarg;
@@ -570,6 +568,8 @@ void make_skeleton(geom_if &geom)
 void filter(geom_if &geom, const char *elems)
 {
    col_geom_v *cgv = dynamic_cast<col_geom_v *>(&geom);
+   if(strchr(elems, 'V'))
+      geom.delete_verts(geom.get_info().get_free_verts());
    if(strchr(elems, 'v'))
       cgv->clear_v_cols();
    if(strchr(elems, 'e'))

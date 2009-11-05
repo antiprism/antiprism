@@ -151,6 +151,8 @@ class geom_info
       vector<double> f_areas;
       vector<double> f_max_nonplanars;
       vector<vector<int> > vert_cons;
+      vector<int> free_verts;
+      bool free_verts_found;
       geom_v dual;
       sch_sym sym;
    
@@ -159,6 +161,7 @@ class geom_info
       void find_face_angles();
       void find_dihedral_angles();
       void find_vert_cons();
+      void find_free_verts();
       void find_solid_angles();
       void find_e_lengths(map<double, int, ang_less> &e_lens,
          const vector<vector<int> > &edges, elem_lims &lens);
@@ -174,7 +177,8 @@ class geom_info
    public:
       geom_info(const geom_if &geo) :
          cent(vec3d(0,0,0)), oriented(-1), orientable(-1),
-         v_dsts(geo), e_dsts(geo), ie_dsts(geo), f_dsts(geo), geom(geo)
+         v_dsts(geo), e_dsts(geo), ie_dsts(geo), f_dsts(geo),
+         free_verts_found(false), geom(geo)
          {}
       
       void reset();
@@ -229,13 +233,15 @@ class geom_info
       //verts
       const vector<vector<int> > &get_vert_cons()
          { if(!vert_cons.size()) find_vert_cons(); return vert_cons; }
-      vector<double> &get_vertex_angles()
+      const vector<double> &get_vertex_angles()
          { if(!vertex_angles.size()) find_solid_angles(); return vertex_angles;}
       map<double, int, ang_less> &get_solid_angles()
          { if(!sol_angles.size()) find_solid_angles(); return sol_angles; }
       map<pair<int, int>, double> &get_vertex_plane_angs()
          { if(!vertex_plane_angs.size()) find_face_angles();
             return vertex_plane_angs; }
+      const vector<int> &get_free_verts()
+         { if(!free_verts_found) find_free_verts(); return free_verts;}
       
       //edges
       map<vector<int>, vector<int> > &get_edge_face_pairs()

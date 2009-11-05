@@ -288,11 +288,7 @@ class o_col_opts: public prog_opts {
                     v_col_op(0), e_col_op(0), f_col_op(0),
                     edge_type('x'), uncoloured(false),
                     range_elems(ELEM_NONE), v2i_elems(ELEM_NONE)
-         {
-            for(int i=0; i<3; i++)
-               if(color_map *cmap = init_color_map("spread"))
-                  clrngs[i].add_cmap(cmap);
-         }
+         {}
 
       void process_command_line(int argc, char **argv);
       void usage();
@@ -382,8 +378,6 @@ void o_col_opts::process_command_line(int argc, char **argv)
 {
    char errmsg[MSG_SZ];
    char errmsg2[MSG_SZ];
-   extern char *optarg;
-   extern int optind, opterr;
    opterr = 0;
    vector<char *> parts;
    char c;
@@ -681,6 +675,15 @@ int main(int argc, char *argv[])
    fc.set_geom(&geom);
    if(opts.f_col_op) {
       char op = opts.f_col_op;
+      color_map *cmap = 0;
+      if(fc.get_cmaps().size()==0) {
+         if(strchr("GgCc", op))
+            cmap = init_color_map("range");
+         else
+            cmap = init_color_map("spread");
+      }
+      if(cmap)
+         fc.add_cmap(cmap);
       if(op=='o')
          fc.f_one_col(opts.f_col);
       else if(strchr("uU", op))
@@ -712,6 +715,15 @@ int main(int argc, char *argv[])
    ec.set_geom(&geom);
    if(opts.e_col_op) {
       char op = opts.e_col_op;
+      color_map *cmap = 0;
+      if(ec.get_cmaps().size()==0) {
+         if(strchr("GgCc", op))
+            cmap = init_color_map("range");
+         else
+            cmap = init_color_map("spread");
+      }
+      if(cmap)
+         ec.add_cmap(cmap);
       if(op=='o')
          ec.e_one_col(opts.e_col);
       else if(strchr("uU", op))
@@ -737,6 +749,15 @@ int main(int argc, char *argv[])
    vc.set_geom(&geom);
    if(opts.v_col_op) {
       char op = opts.v_col_op;
+      color_map *cmap = 0;
+      if(vc.get_cmaps().size()==0) {
+         if(strchr("Cc", op))
+            cmap = init_color_map("range");
+         else
+            cmap = init_color_map("spread");
+      }
+      if(cmap)
+         vc.add_cmap(cmap);
       if(op=='o')
          vc.v_one_col(opts.v_col);
       else if(strchr("uU", op))

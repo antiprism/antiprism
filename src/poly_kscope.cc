@@ -109,8 +109,6 @@ void ksc_opts::usage()
 void ksc_opts::process_command_line(int argc, char **argv)
 {
    char errmsg[MSG_SZ];
-   extern char *optarg;
-   extern int optind, opterr;
    opterr = 0;
    char c;
    vector<double> nums;

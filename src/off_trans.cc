@@ -73,7 +73,10 @@ void trans_opts::usage()
 "            about the x, y and z axes. If four numbers, the first three\n"
 "            are a direction vector for the axis, the last number is the\n"
 "            angle (degrees) to rotate. If six numbers, these are two\n"
-"            vectors and rotate to carry the first to the second\n"
+"            vectors (from,to) and rotate to carry the first to the second.\n"
+"            If twelve numbers these are four vectors (from1,from2,to1,to2)\n"
+"            and rotate to carry the first onto the third then rotate around\n"
+"            the third to carry the second onto the fourth\n"
 "  -M <norm> reflect in a plane, three numbers separated by commas which\n"
 "            give a vector normal to the plane of reflection.\n"
 "  -S <scal> scale, one, three or four numbers separated by commas. If one\n"
@@ -82,8 +85,7 @@ void trans_opts::usage()
 "            z axes. If four numbers, the first three are a direction\n"
 "            vector for the scaling, the last number is the factor to scale\n"
 "  -I        inversion\n"
-"  -A <crds> transformation that will align two pairs of vectors (12 numbers,\n"
-"            coordinates of from1,from2,to1,to2) or two sets of three points\n"
+"  -A <crds> transformation that will align two sets of three points\n"
 "            (18 numbers coordinates of from1,from2,from3,to1,to2,to3)\n"
 "  -a <angs> transformation that makes particular angles between the\n"
 "            mapped axes, angles in degrees in form yz_ang,zx_ang,xy_ang\n"
@@ -160,8 +162,6 @@ bool rel_scale_val(geom_if &geom, char rel_scale, double *scale, char *errmsg)
 void trans_opts::process_command_line(int argc, char **argv)
 {
    char errmsg[MSG_SZ];
-   extern char *optarg;
-   extern int optind, opterr;
    opterr = 0;
    char c;
    vector<pair<char, char *> > args;
@@ -209,8 +209,13 @@ void trans_opts::process_command_line(int argc, char **argv)
             else if(nums.size()==6)
                trans_m2 = mat3d::rot(vec3d(nums[0], nums[1], nums[2]),
                      vec3d(nums[3], nums[4], nums[5]));
+            else if(nums.size()==12)
+               trans_m2 = mat3d::alignment(vec3d(nums[0], nums[1], nums[2]),
+                                           vec3d(nums[3], nums[4], nums[5]),
+                                           vec3d(nums[6], nums[7], nums[8]),
+                                           vec3d(nums[9], nums[10], nums[11]));
             else {
-               snprintf(errmsg, MSG_SZ, "must give three, four or six numbers (%lu were given)", (unsigned long)nums.size());
+               snprintf(errmsg, MSG_SZ, "must give 3, 4, 6 of 12 numbers (%lu were given)", (unsigned long)nums.size());
                error(errmsg, c);
             }
             trans_m = trans_m2 * trans_m;
@@ -262,12 +267,7 @@ void trans_opts::process_command_line(int argc, char **argv)
          case 'A':
             if(!read_double_list(optarg, nums, errmsg))
                error(errmsg, c);
-            if(nums.size()==12)
-               trans_m2 = mat3d::alignment(vec3d(nums[0], nums[1], nums[2]),
-                                           vec3d(nums[3], nums[4], nums[5]),
-                                           vec3d(nums[6], nums[7], nums[8]),
-                                           vec3d(nums[9], nums[10], nums[11]));
-            else if(nums.size()==18)
+            if(nums.size()==18)
                trans_m2 = mat3d::alignment(vec3d(nums[0], nums[1], nums[2]),
                                            vec3d(nums[3], nums[4], nums[5]),
                                            vec3d(nums[6], nums[7], nums[8]),
@@ -275,7 +275,7 @@ void trans_opts::process_command_line(int argc, char **argv)
                                            vec3d(nums[12], nums[13], nums[14]),
                                            vec3d(nums[15], nums[16], nums[17]));
             else {
-               snprintf(errmsg, MSG_SZ, "must give 12 or 18 numbers (%lu were given)", (unsigned long)nums.size());
+               snprintf(errmsg, MSG_SZ, "must give 18 numbers (%lu were given)", (unsigned long)nums.size());
                error(errmsg, c);
             }
             trans_m = trans_m2 * trans_m;

@@ -35,6 +35,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <math.h>
@@ -86,7 +87,6 @@ void prog_opts::message(string msg, const char *msg_type, string opt)
 
 bool prog_opts::common_opts(char c)
 {
-   extern int optopt;
    switch(c) {
       case 'h':
          usage();

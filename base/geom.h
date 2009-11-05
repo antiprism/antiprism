@@ -42,6 +42,8 @@ using std::vector;
 using std::map;
 using std::string;
 
+class geom_info;
+
 /// Geometry Interface
 class geom_if
 {
@@ -203,19 +205,22 @@ class geom_if
       /**\param v_idxs vertex index numbers to delete
        * \param vert_map a map of old index numbers to new index numbers,
        * deleted vertices map to index \c -1.  */
-      virtual void delete_verts(vector<int> &v_idxs, map<int, int> *vert_map=0);
+      virtual void delete_verts(const vector<int> &v_idxs,
+            map<int, int> *vert_map=0);
       
       /// Delete several edges
       /**\param e_idxs edge index numbers to delete
        * \param edge_map a map of old index numbers to new index numbers,
        * deleted edges map to index \c -1.  */
-      virtual void delete_edges(vector<int> &e_idxs, map<int, int> *edge_map=0);
+      virtual void delete_edges(const vector<int> &e_idxs, 
+            map<int, int> *edge_map=0);
       
       /// Delete several faces
       /**\param f_idxs face index numbers to delete
        * \param face_map a map of old index numbers to new index numbers,
        * deleted faces map to index \c -1.  */
-      virtual void delete_faces(vector<int> &f_idxs, map<int, int> *face_map=0);
+      virtual void delete_faces(const vector<int> &f_idxs,
+           map<int, int> *face_map=0);
       
       /// Delete all the vertices
       virtual void clear_verts();
@@ -518,7 +523,9 @@ class geom_if
       virtual void write_crds(FILE *file, const char *sep=" ",
             int sig_dgts=DEF_SIG_DGTS) const;
 
-      
+      /// Get geom_info object
+      /**\return geom_info object associated with this geometry. */
+      geom_info get_info();
       
       /// Get implicit edges
       /** Returns the edges of the polygon faces
@@ -623,9 +630,12 @@ class col_geom_v: public col_geom, public geom_v {
       /// Color convenience function
       virtual void color_vef(col_val vert_col, col_val edge_col, col_val face_col);
        
-      virtual void delete_verts(vector<int> &v_nos, map<int, int> *vert_map=0);
-      virtual void delete_edges(vector<int> &e_nos, map<int, int> *edge_map=0);
-      virtual void delete_faces(vector<int> &f_nos, map<int, int> *face_map=0);
+      virtual void delete_verts(const vector<int> &v_nos,
+            map<int, int> *vert_map=0);
+      virtual void delete_edges(const vector<int> &e_nos,
+            map<int, int> *edge_map=0);
+      virtual void delete_faces(const vector<int> &f_nos,
+            map<int, int> *face_map=0);
       virtual void append(const geom_if& geom);
       
       virtual void clear_verts();
@@ -867,7 +877,6 @@ inline void geom_if::transform(const mat3d &trans)
 {
    ::transform(raw_verts(), trans);
 }
-
 
 inline col_geom_v::col_geom_v(const geom_if &geom)
 { 

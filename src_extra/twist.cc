@@ -111,8 +111,6 @@ bool tw_opts::read_centroid_verts(char *optarg, char *errmsg)
 void tw_opts::process_command_line(int argc, char **argv)
 {
    char errmsg[MSG_SZ];
-   extern char *optarg;
-   extern int optind, opterr;
    opterr = 0;
    char c;
    

@@ -100,8 +100,6 @@ void mm_opts::usage()
 void mm_opts::process_command_line(int argc, char **argv)
 {
    char errmsg[MSG_SZ];
-   extern char *optarg;
-   extern int optind, opterr;
    opterr = 0;
    char c;
    vector<double> nums;

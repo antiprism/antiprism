@@ -26,6 +26,7 @@
  * \brief classes to color all elements of a type.
  */
 
+#include <limits.h>
 #include <algorithm>
 #include "rand_gen.h"
 #include "prop_col.h"
@@ -130,9 +131,14 @@ inline double fract(double rng[], double frac)
 int coloring::y_gradient(vec3d vec, vec3d cent, double height, int def_sz)
 {
    int sz = def_sz;
-   if(cmaps.size()>0 && cmaps[0]->max_index()>0)
-      sz = cmaps[0]->max_index();
-   return (int)(sz * (0.5*height+(vec-cent)[1])/height);
+   if(cmaps.size()>0) {
+      if(cmaps[0]->max_index()>0)
+         sz = cmaps[0]->max_index();
+      else
+         sz = INT_MAX;
+   }
+
+   return (int)floor(sz * (0.5*height+(vec-cent)[1])/(height+epsilon));
 }
 
 
@@ -588,9 +594,10 @@ void coloring::e_parts(bool as_values)
 void coloring::e_direction(bool as_values)
 {
    for(unsigned int i=0; i<get_geom()->edges().size(); i++) {
-      vec3d v = -2.0*(get_geom()->edge_vec(i)).unit();
+      vec3d v = 2.0*(get_geom()->edge_vec(i)).unit();
       if(v[1]<0)
          v = -v;
+      v -= vec3d::y;  // put v[1] in the range -1.0 to 1.0;
       int idx = y_gradient(v);
       if(as_values)
          get_geom()->set_e_col(i, idx_to_val(idx));
@@ -605,7 +612,7 @@ void coloring::e_mid_point(bool as_values)
    vec3d cent = bb.get_centre();
    double height = bb.get_max()[1] - bb.get_min()[1];
    for(unsigned int i=0; i<get_geom()->edges().size(); i++) {
-      int idx = y_gradient(get_geom()->edge_cent(i).unit(), cent, height);
+      int idx = y_gradient(get_geom()->edge_cent(i), cent, height);
       if(as_values)
          get_geom()->set_e_col(i, idx_to_val(idx));
       else

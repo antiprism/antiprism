@@ -32,6 +32,7 @@
 #include <algorithm>
 
 #include "geom.h"
+#include "info.h"
 #include "off_file.h"
 #include "geodesic.h"
 #include "symmetry.h"
@@ -127,18 +128,19 @@ void geom_if::delete_vert(int vert, map<int, int> *vert_map)
 }
 
  
-void geom_if::delete_verts(vector<int> &v_nos, map<int, int> *vert_map)
+void geom_if::delete_verts(const vector<int> &v_nos, map<int, int> *vert_map)
 {
+   vector<int> dels = v_nos;
    map<int, int> tmp;
    map<int, int> *v_map = (vert_map) ? vert_map : &tmp;
    v_map->clear();
-   if(!v_nos.size())
+   if(!dels.size())
       return;
-   sort(v_nos.begin(), v_nos.end());
+   sort(dels.begin(), dels.end());
    unsigned int del_verts_cnt=0;
    int map_to;
    for(unsigned int i=0; i<verts().size(); i++) {
-      if(del_verts_cnt<v_nos.size() && (int)i==v_nos[del_verts_cnt]) {
+      if(del_verts_cnt<dels.size() && (int)i==dels[del_verts_cnt]) {
          del_verts_cnt++;
          map_to = -1;
       }
@@ -180,17 +182,18 @@ void geom_if::delete_verts(vector<int> &v_nos, map<int, int> *vert_map)
    
 
 
-void geom_if::delete_faces(vector<int> &f_nos, map<int, int> *face_map)
+void geom_if::delete_faces(const vector<int> &f_nos, map<int, int> *face_map)
 {
+   vector<int> dels = f_nos;
    if(face_map)
       face_map->clear();
-   if(!f_nos.size())
+   if(!dels.size())
       return;
-   sort(f_nos.begin(), f_nos.end());
+   sort(dels.begin(), dels.end());
    unsigned int del_faces_cnt=0;
    int map_to;
    for(unsigned int i=0; i<faces().size() ; i++) {
-      if(del_faces_cnt<f_nos.size() && (int)i==f_nos[del_faces_cnt]) {
+      if(del_faces_cnt<dels.size() && (int)i==dels[del_faces_cnt]) {
          del_faces_cnt++;
          map_to = -1;
       }
@@ -205,17 +208,18 @@ void geom_if::delete_faces(vector<int> &f_nos, map<int, int> *face_map)
 }
    
 
-void geom_if::delete_edges(vector<int> &e_nos, map<int, int> *edge_map)
+void geom_if::delete_edges(const vector<int> &e_nos, map<int, int> *edge_map)
 {
+   vector<int> dels = e_nos;
    if(edge_map)
       edge_map->clear();
-   if(!e_nos.size())
+   if(!dels.size())
       return;
-   sort(e_nos.begin(), e_nos.end());
+   sort(dels.begin(), dels.end());
    unsigned int del_edges_cnt=0;
    int map_to;
    for(unsigned int i=0; i<edges().size() ; i++) {
-      if(del_edges_cnt<e_nos.size() && (int)i==e_nos[del_edges_cnt]) {
+      if(del_edges_cnt<dels.size() && (int)i==dels[del_edges_cnt]) {
          del_edges_cnt++;
          map_to = -1;
       }
@@ -374,6 +378,11 @@ void geom_if::write_crds(FILE *file, const char *sep, int sig_dgts) const
    return crds_write(file, *this, sep, sig_dgts);
 }
 
+geom_info geom_if::get_info()
+{
+   return geom_info(*this);
+}
+
 
 vector<int> make_edge(int v_idx1, int v_idx2)
 {
@@ -500,7 +509,7 @@ void col_geom_v::color_vef(col_val vert_col, col_val edge_col, col_val face_col)
 
 
 
-void col_geom_v::delete_verts(vector<int> &v_nos, map<int, int> *vert_map)
+void col_geom_v::delete_verts(const vector<int> &v_nos, map<int, int> *vert_map)
 {
    map<int, int> tmp;
    map<int, int> *v_map = (vert_map) ? vert_map : &tmp;
@@ -508,7 +517,7 @@ void col_geom_v::delete_verts(vector<int> &v_nos, map<int, int> *vert_map)
    remap_vert_cols(*v_map);
 }
 
-void col_geom_v::delete_faces(vector<int> &f_nos, map<int, int> *face_map)
+void col_geom_v::delete_faces(const vector<int> &f_nos, map<int, int> *face_map)
 {
    map<int, int> tmp;
    map<int, int> *f_map = (face_map) ? face_map : &tmp;
@@ -516,7 +525,7 @@ void col_geom_v::delete_faces(vector<int> &f_nos, map<int, int> *face_map)
    remap_face_cols(*f_map);
 }
 
-void col_geom_v::delete_edges(vector<int> &e_nos, map<int, int> *edge_map)
+void col_geom_v::delete_edges(const vector<int> &e_nos, map<int, int> *edge_map)
 {
    map<int, int> tmp;
    map<int, int> *e_map = (edge_map) ? edge_map : &tmp;

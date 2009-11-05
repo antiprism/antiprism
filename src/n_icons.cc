@@ -260,8 +260,6 @@ void ncon_opts::usage()
 
 void ncon_opts::process_command_line(int argc, char **argv)
 {
-   extern char *optarg;
-   extern int optind, opterr;
    opterr = 0;
    char c;
    char errmsg[MSG_SZ];
@@ -1037,7 +1035,7 @@ void add_caps(col_geom_v &geom, vector<coordList *> &coordinates, vector<faceLis
    else
    if (!is_even(ncon_order) || add_poles ) {
       pole[0]->idx = 0;
-      if ((!is_even(ncon_order) && !half_model(longitudes) || add_poles))
+      if (!half_model(longitudes) || add_poles)
          pole[1]->idx = 0;
    }
 
