@@ -35,7 +35,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
-#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <math.h>
@@ -85,7 +84,7 @@ void prog_opts::message(string msg, const char *msg_type, string opt)
 }
 
 
-bool prog_opts::common_opts(char c)
+bool prog_opts::common_opts(char c, char opt)
 {
    switch(c) {
       case 'h':
@@ -93,10 +92,10 @@ bool prog_opts::common_opts(char c)
          exit(0);
 
       case '?':
-         error("unknown option", string("-")+(char)optopt);
+         error("unknown option", string("-")+opt);
 
       case ':':
-         error("missing argument", string("-")+(char)optopt);
+         error("missing argument", string("-")+opt);
 
       default:
          return false;

@@ -342,7 +342,7 @@ void brav_opts::process_command_line(int argc, char **argv)
    handle_long_opts(argc, argv);
 
    while( (c = getopt(argc, argv, ":hHc:k:r:p:q:s:uv:a:g:G:d:y:D:C:AV:E:F:T:Z:OR:lLSo:")) != -1 ) {
-      if(common_opts(c))
+      if(common_opts(c, optopt))
          continue;
 
       switch(c) {

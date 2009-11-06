@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT(antiprism, 0.20.pre09, adrian@antiprism.com)
+AC_INIT(antiprism, 0.20.pre10, adrian@antiprism.com)
 AM_INIT_AUTOMAKE([1.9 foreign])
 
 AC_CONFIG_SRCDIR([base/antiprism.h])
@@ -96,10 +96,10 @@ fi
 
 if test x"$ADD_X_PATHS" = x"yes" ; then
    AC_PATH_X
-   if ! test x"$x_libraries" = x ; then
+   if test x"$x_libraries" != x"NONE" -a x"$x_libraries" != x; then
       LDFLAGS="$LDFLAGS -L$x_libraries"
    fi
-   if ! test x"$x_includes" = x ; then
+   if test x"$x_includes" != x"NONE" -a x"$x_libraries" != x; then
       CPPFLAGS="$CPPFLAGS -I$x_includes"
    fi
 fi

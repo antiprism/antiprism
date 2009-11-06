@@ -179,7 +179,7 @@ void lutil_opts::process_command_line(int argc, char **argv)
    handle_long_opts(argc, argv);
 
    while( (c = getopt(argc, argv, ":hzx:X:c:k:r:q:s:D:C:AV:E:F:T:Z:OR:LSy:o:")) != -1 ) {
-      if(common_opts(c))
+      if(common_opts(c, optopt))
          continue;
 
       switch(c) {

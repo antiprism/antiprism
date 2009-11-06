@@ -112,7 +112,7 @@ void kc_opts::process_command_line(int argc, char **argv)
    handle_long_opts(argc, argv);
 
    while( (c = getopt(argc, argv, ":ha:n:i:o:")) != -1 ) {
-      if(common_opts(c))
+      if(common_opts(c, optopt))
          continue;
 
       switch(c) {

@@ -114,7 +114,7 @@ void jb_opts::process_command_line(int argc, char **argv)
    handle_long_opts(argc, argv);
 
    while( (c = getopt(argc, argv, ":hf:c:l:tTro:")) != -1 ) {
-      if(common_opts(c))
+      if(common_opts(c, optopt))
          continue;
 
       switch(c) {

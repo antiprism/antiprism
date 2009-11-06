@@ -706,7 +706,7 @@ void ut_opts::process_command_line(int argc, char **argv)
    handle_long_opts(argc, argv);
 
    while( (c = getopt(argc, argv, ":hp:s:l:w:r:R:d:gT:S:W:o:")) != -1 ) {
-      if(common_opts(c))
+      if(common_opts(c, optopt))
          continue;
 
       switch(c) {

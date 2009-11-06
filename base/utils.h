@@ -122,9 +122,10 @@ class prog_opts {
       void handle_long_opts(int argc, char *argv[]);
 
       ///Process common options
-      /**\param c the option character.
+      /**\param c the character returned by getopt.
+       * \param opt the option character being considered by getopt.
        * \return whether the option was handled. */
-      bool common_opts(char c);
+      bool common_opts(char c, char opt);
 };
 
 

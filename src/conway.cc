@@ -529,7 +529,7 @@ void cn_opts::process_command_line(int argc, char **argv)
    handle_long_opts(argc, argv);
 
    while( (c = getopt(argc, argv, ":hHdrtuvp:c:n:l:i:j:z:f:V:E:F:T:O:M:o:")) != -1 ) {
-      if(common_opts(c))
+      if(common_opts(c, optopt))
          continue;
 
       switch(c) {
