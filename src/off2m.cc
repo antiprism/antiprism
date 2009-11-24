@@ -61,8 +61,8 @@ class o2m_opts: public prog_opts {
       string ofile;
 
       o2m_opts(): prog_opts("off2m"),
-             edge_size(0.001),
-             point_size(0.02),
+             edge_size(0.0),
+             point_size(0.0),
              lighting(false),
              include_elems("ef"),
              // face colors need to be explictly set since LG3D defaults to black
@@ -93,8 +93,9 @@ void o2m_opts::usage()
 "\n"
 "Options\n"
 "%s"
-"  -v <size> vertex sphere size (default: 0.02)\n"
-"  -e <size> frame model edge thickness size (default: 0.001)\n"
+"  -v <size> vertex sphere size (default: 0.02 of bounding box diagonal)\n"
+"  -e <size> frame model edge thickness size (default: 0.001 of bounding\n"
+"            box diagonal)\n"
 "  -V <col>  default vertex colour, in form 'R,G,B' (3 values\n"
 "               0.0-1.0, or 0-255) or hex 'xFFFFFF'\n"
 "  -E <col>  default edge colour, in form 'R,G,B' (3 values\n"
@@ -237,7 +238,8 @@ string Vtxt(vec3d v, int dgts)
 }
 
 
-void print_m_solid(FILE *ofile, col_geom_v &geom, int sig_digits, col_val face_col)
+void print_m_solid(FILE *ofile, col_geom_v &geom, int sig_digits,
+      col_val face_col)
 {
    const vector<vector<int> > &faces = geom.faces();
    const vector<vec3d> &verts = geom.verts();
@@ -267,7 +269,8 @@ void print_m_solid(FILE *ofile, col_geom_v &geom, int sig_digits, col_val face_c
 } 
 
 
-void print_m_frame_edge(FILE *ofile, vec3d v1, vec3d v2, int sig_digits, double edge_size, col_val edge_col)
+void print_m_frame_edge(FILE *ofile, vec3d v1, vec3d v2, int sig_digits,
+      double edge_size, col_val edge_col)
 {
    fprintf(ofile,"{");
    fprintf(ofile, "Thickness[%g], ", edge_size);
@@ -278,7 +281,8 @@ void print_m_frame_edge(FILE *ofile, vec3d v1, vec3d v2, int sig_digits, double 
    fprintf(ofile, "]}");
 } 
 
-void print_m_frame(FILE *ofile, col_geom_v &geom, int sig_digits, double edge_size, col_val edge_col, string include_elems)
+void print_m_frame(FILE *ofile, col_geom_v &geom, int sig_digits,
+      double edge_size, col_val edge_col, string include_elems)
 {
    const vector<vector<int> > &edges = geom.edges();
    const vector<vec3d> &verts = geom.verts();
@@ -297,7 +301,8 @@ void print_m_frame(FILE *ofile, col_geom_v &geom, int sig_digits, double edge_si
 } 
 
 
-void print_m_points(FILE *ofile, col_geom_v &geom, int sig_digits, double point_size, col_val vert_col, string include_elems)
+void print_m_points(FILE *ofile, col_geom_v &geom, int sig_digits,
+      double point_size, col_val vert_col, string include_elems)
 {
    const vector<vec3d> &verts = geom.verts();
    vec3d vc;
@@ -325,7 +330,8 @@ void print_m_head(FILE *ofile)
    fprintf(ofile,"Graphics3D[{\n");
 }
 
-void print_m_tail(FILE *ofile, col_geom_v &geom, bool lighting, col_val &bg, vec3d view_point)
+void print_m_tail(FILE *ofile, col_geom_v &geom, bool lighting, col_val &bg,
+      vec3d view_point)
 {
    bound_sphere b_sph(geom.verts());
    vec3d center = b_sph.get_centre();
@@ -338,7 +344,8 @@ void print_m_tail(FILE *ofile, col_geom_v &geom, bool lighting, col_val &bg, vec
    if (view_point[0] == 0 && view_point[1] == 0 && view_point[2] == 0)
       view_point[2] = radius * 100;
 
-   fprintf(ofile,"ViewPoint -> {%g,%g,%g}, ", view_point[0], view_point[1], view_point[2]);
+   fprintf(ofile,"ViewPoint -> {%g,%g,%g}, ",
+         view_point[0], view_point[1], view_point[2]);
 
    // Setting ViewVertical with Y upright makes them model appear the same as in AntiView, off2pov, etc
    fprintf(ofile,"ViewVertical -> {0.0,1.0,0.0},\n");
@@ -369,6 +376,14 @@ int main(int argc, char *argv[])
    if(opts.f_dtype==1)
       geom.triangulate(col_val::invisible);
       
+   bound_box bbox(geom.verts());
+   double to_model_units = 2.0/(bbox.get_max()-bbox.get_min()).mag();
+   if(opts.point_size==0.0)
+      opts.point_size = 0.02/to_model_units;
+   if(opts.edge_size==0.0)
+      opts.edge_size = 0.001/to_model_units;
+      
+
    FILE *ofile = stdout;  // write to stdout by default
    if(opts.ofile != "") {
       ofile = fopen(opts.ofile.c_str(), "w");
@@ -378,9 +393,11 @@ int main(int argc, char *argv[])
 
    print_m_head(ofile);
    if(strchr(opts.include_elems.c_str(), 'v'))
-      print_m_points(ofile, geom, opts.sig_digits, opts.point_size, opts.vert_col, opts.include_elems);
+      print_m_points(ofile, geom, opts.sig_digits,
+            opts.point_size*to_model_units, opts.vert_col, opts.include_elems);
    if(strchr(opts.include_elems.c_str(), 'e'))
-      print_m_frame(ofile, geom, opts.sig_digits, opts.edge_size, opts.edge_col, opts.include_elems);
+      print_m_frame(ofile, geom, opts.sig_digits,
+            opts.edge_size*to_model_units, opts.edge_col, opts.include_elems);
    if(strchr(opts.include_elems.c_str(), 'f'))
       print_m_solid(ofile, geom, opts.sig_digits, opts.face_col);
    print_m_tail(ofile, geom, opts.lighting, opts.bg_col, opts.view_point);

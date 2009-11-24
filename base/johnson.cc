@@ -26,6 +26,8 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include <ctype.h>
+
 #include "std_polys.h"
 #include "polygons.h"
 

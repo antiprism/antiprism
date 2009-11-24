@@ -26,6 +26,7 @@
  * \brief Input processing for col_val
 */
 
+#include <ctype.h>
 #include <string.h>
 
 #include "utils.h"

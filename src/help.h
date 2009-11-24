@@ -3,7 +3,8 @@ const char *help_help =
 "===========\n"
 "Type 'off_util -H topic_name' for help on each topic\n"
 "\n"
-"models: builtin models\n"
+"col_map : colour map specification and resource colour maps\n"
+"models:   builtin models\n"
 "   uniform: uniform polyhedra\n"
 "   johnson: johnson polyhedra\n"
 "   uc:      uniform compounds\n";
