@@ -58,6 +58,11 @@ class geom_if
       /// Check whether geometry is set.
       /**\return \c true if the geometry is set, otherwise \c false. */
       operator bool() const { return verts().size()>0; }
+      
+      /// Copy Assignment 
+      /** Initialise from another geometry that implements \c geom_if */
+      geom_if &operator =(const geom_if &geom);
+
 
       //-------------------------------------------
       // Element Access
@@ -595,11 +600,6 @@ class col_geom_v: public col_geom, public geom_v {
       /** Initialise from another geometry that implements \c geom_if */
       col_geom_v(const geom_if &geom);
 
-      /// Copy Assignment 
-      /** Initialise from another geometry that implements \c geom_if */
-      col_geom_v &operator =(const geom_if &geom)
-         {clear_all(); append(geom); return *this; }
-
       /// Add a vertex with a colour.
       /**\param vert vertex to add.
        * \param col colour of the vertex.
@@ -650,6 +650,15 @@ class col_geom_v: public col_geom, public geom_v {
 
 
 // Implementation of inline functions
+inline geom_if &geom_if::operator =(const geom_if &geom)
+{
+   if(this != &geom) {
+      clear_all();
+      append(geom);
+   }
+   return *this;
+}
+
 
 inline vec3d geom_if::edge_v(int e_idx, int v_no) const
 {

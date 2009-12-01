@@ -535,6 +535,7 @@ void col_geom_v::delete_edges(const vector<int> &e_nos, map<int, int> *edge_map)
 
 void col_geom_v::append(const geom_if &geom)
 {
+   fprintf(stderr, "col_geom_v::append\n");
    const col_geom *cg = dynamic_cast<const col_geom *>(&geom);
    if(cg)
       col_geom::append(*cg, verts().size(), edges().size(), faces().size());
