@@ -1736,7 +1736,6 @@ void ncon_info(int ncon_order, bool point_cut, int twist, bool hybrid, bool info
  
 void build_deal(int num_cards, int deck_size, int opacity, string face_pattern, vector<colorList *> &color_list)
 {
-fprintf(stderr,"size = %d\n",color_list.size());
    rand_gen ran;
    ran.time_seed();
 

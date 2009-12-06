@@ -425,6 +425,9 @@ void edge_query(FILE *ofile, rep_printer &rep, oq_opts &opts)
          case 'd':
             query_items.push_back(&rep_printer::e_distance);
             break;
+         case 'C':
+            query_items.push_back(&rep_printer::e_centroid);
+            break;
          case 'D':
             query_items.push_back(&rep_printer::e_direction);
             break;

@@ -423,7 +423,14 @@ void rep_printer::e_distance(int e_idx)
    char str[MSG_SZ];
    fprintf(ofile, "%s", d2s(str, dist));
 }
-   
+
+void rep_printer::e_centroid(int e_idx)
+{
+   char str[MSG_SZ];
+   fprintf(ofile, "%s", v2s(str, geom.edge_cent(e_idx)));
+}
+
+ 
 void rep_printer::e_direction(int e_idx)
 {
    vec3d v0 = geom.verts(geom.edges(e_idx, 0));

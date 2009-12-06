@@ -91,6 +91,7 @@ class rep_printer: public geom_info
       void e_dihedral_angle(int e_idx);
       void e_central_angle(int e_idx);
       void e_distance(int e_idx);
+      void e_centroid(int e_idx);
       void e_direction(int e_idx);
       void e_length(int e_idx);
       

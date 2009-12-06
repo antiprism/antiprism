@@ -571,7 +571,8 @@ col_val color_map_spread::get_col(int idx)
    eff_idx = ((long)eff_idx*step_by) % num_entries;
    int interval = eff_idx/entries_per_interval;
    float H = (float)eff_idx/entries_per_interval - interval;
-   float S, V;
+   float S = 0.0;
+   float V = 0.0;
    switch(interval) {
       case 0:
          S = 0.9;
@@ -816,7 +817,7 @@ color_map_multi::~color_map_multi()
       delete cmaps[i];
 }
 
-color_map_multi::color_map_multi(const color_map_multi &cmap)
+color_map_multi::color_map_multi(const color_map_multi &cmap) : color_map(cmap)
 {
    copy_params(cmap);
    for(unsigned int i=0; i<cmap.cmaps.size(); i++)
