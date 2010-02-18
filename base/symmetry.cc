@@ -347,9 +347,7 @@ iso_type &iso_type::init(mat3d m)
 
    vec4d quat = m.get_quaternion();
    double cos_a = quat[3];
-   if(fabs(cos_a) > 1)
-      cos_a = cos_a>0 ? 1 : -1;
-   ang = 2*acos(cos_a);
+   ang = 2*acos(safe_for_trig(cos_a));
 
    if(sqrt(1-cos_a*cos_a)>epsilon)
       axis = vec3d(quat[0], quat[1], quat[2]);

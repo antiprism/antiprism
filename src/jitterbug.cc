@@ -197,7 +197,7 @@ double get_tri_ang(double cyc_val)
    double c = fmod(cyc_val, 0.25)*4;
    if((cyc_val>0.25&&cyc_val<0.5) || cyc_val>0.75)
       c=1-c;
-   double ang = asin(sqrt(3*c*c/(4*c*c-2*c+1)));
+   double ang = asin(safe_for_trig(sqrt(3*c*c/(4*c*c-2*c+1))));
    if(cyc_val<0.25)
       tri_ang = ang;
    else if(cyc_val<0.5)

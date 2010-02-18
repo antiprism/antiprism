@@ -346,7 +346,7 @@ void disp_poly::vrml_edges(FILE *ofile)
       vec3d dir = vs[es[i][0]] -  vs[es[i][1]];
       double ht =  dir.mag() ;
       dir /= ht; // to unit
-      double ang = -acos(dir[1]);         // angle between dir and y-axis
+      double ang = -acos(safe_for_trig(dir[1])); // angle between dir and y-axis
       vec3d axis = vcross(dir, vec3d(0,1,0)).unit();  // axis
       fprintf(ofile, "E_%s { C %s R %s %g\n\t  ht %g ",
             dots2underscores(sc_geom->get_name()).c_str(),

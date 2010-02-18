@@ -31,6 +31,7 @@
 
 #include <stdio.h>
 
+#include "math_utils.h"
 #include "mat3d.h"
 
      
@@ -150,7 +151,7 @@ vec3d quat2euler(const vec4d &quat)
    
    return -vec3d(
          atan2(2*(quat[1]*quat[2] + quat[0]*quat[3]), -sqx-sqy+sqz+sqw),
-         asin(-2*(quat[2]*quat[0] - quat[1]*quat[3])),
+         asin(safe_for_trig(-2*(quat[2]*quat[0] - quat[1]*quat[3]))),
          atan2(2*(quat[0]*quat[1] + quat[2]*quat[3]),  sqx-sqy-sqz+sqw)  );
 }
  
@@ -244,7 +245,7 @@ mat3d &mat3d::set_alignment(vec3d from1, vec3d from2, vec3d to1, vec3d to2)
    vec3d norm2 = vcross(to2, to1).unit();
 
    // find the angle to rotate abot to1, in the range -180<ang<=180
-   double ang = acos(vdot(norm1, norm2));
+   double ang = acos(safe_for_trig(vdot(norm1, norm2)));
    if(vtriple(to1, norm1, norm2)<0)
       ang *= -1;
 

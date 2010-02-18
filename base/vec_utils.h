@@ -107,17 +107,6 @@ bool three_plane_intersect(vec3d Q0, vec3d n0, vec3d Q1, vec3d n1,
 bool lines_nearest_points(vec3d P0, vec3d P1, vec3d Q0, vec3d Q1,
       vec3d &P, vec3d &Q);
 
-///Get the intersection point of two lines
-/**If the lines do not exactly intersect then the point returned
- * is half way along the shortest segment that joins the lines.
- * \param P a point on the first line.
- * \param P_dir the direction of the first line.
- * \param Q a point on the second line.
- * \param Q_dir the direction of the second line.
- * \return The point of intersection. */
-vec3d lines_intersection(vec3d P, vec3d P_dir, vec3d Q, vec3d Q_dir);
-
-
 ///Get the nearest point on a line to a particular point.
 /**\param P a point.
  * \param Q0 a point on the line.

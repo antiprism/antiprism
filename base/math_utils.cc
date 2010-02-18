@@ -32,10 +32,6 @@
 
 #include <algorithm>
 #include <math.h>
-using std::min;
-using std::max;
-
-
 #include "math_utils.h"
 
 // Greatest Common Divisor
@@ -111,14 +107,15 @@ int cubic(double coeffs[4], double sol[3])
       DIS = pow(Q,2)+P;
       if ( DIS < 0.0 ) {
          //three real solutions!
-         //Confine the argument of ACOS to the interval [-1;1]!
-         double PHI = acos(min(1.0,max(-1.0,Q/sqrt(-P))));
+         double PHI = acos(safe_for_trig(Q/sqrt(-P)));
          P=2.0*pow((-P),(5.e-1*THIRD));
          for (int i=0; i<3; i++)
             U[i] = P*cos((PHI+2*((double)i)*M_PI)*THIRD)-W;
-         sol[0] = min(U[0], min(U[1], U[2]));
-         sol[1] = max(min(U[0], U[1]),max( min(U[0], U[2]), min(U[1], U[2])));
-         sol[2] = max(U[0], max(U[1], U[2]));
+         sol[0] = std::min(U[0], std::min(U[1], U[2]));
+         sol[1] = std::max(std::min(U[0], U[1]),
+                           std::max( std::min(U[0], U[2]),
+                                     std::min(U[1], U[2])  ));
+         sol[2] = std::max(U[0], std::max(U[1], U[2]));
          L = 3;
       }
       else {
@@ -191,7 +188,7 @@ int quartic(double dd[5], double sol[4], double sol_i[4])
    
    zsol = -1.e99;
    for(int i=0;i<ncube;i++)
-      zsol = max(zsol, z[i]); //Not sure C has max fct
+      zsol = std::max(zsol, z[i]); //Not sure C has max fct
    z[0] = zsol;
    xK2 = 2.0*z[0] -p;
    xK = sqrt(xK2);

@@ -35,6 +35,18 @@
 
 #include "prop_col.h"
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+
+#include <algorithm>
+using std::max;
+using std::min;
+//#define max(x,y) (((x)>(y))?(x):(y))
+//#define min(x,y) (((x)<(y))?(x):(y))
+
+
 Graph::Graph (col_geom_v &dgeom): geom(dgeom)
 {
    VERTICES = geom.verts().size();

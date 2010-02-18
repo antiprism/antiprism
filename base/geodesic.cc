@@ -36,6 +36,7 @@
 #include <algorithm>
 
 #include "geodesic.h"
+#include "math_utils.h"
 #include "geom_utils.h"
 
 using std::swap;
@@ -314,8 +315,8 @@ void geodesic::grid_to_points(vector<int> indx, vector<vec3d> &gverts)
          // find X, nearest point to origin, O, on line AB
          vec3d X = (A + B)/2.0;
          double Xmag = X.mag();
-         double ang_XOA = -acos(vdot(A, X)/Xmag);
-         double ang_XOB = acos(vdot(B, X)/Xmag);
+         double ang_XOA = -acos(safe_for_trig(vdot(A, X)/Xmag));
+         double ang_XOB =  acos(safe_for_trig(vdot(B, X)/Xmag));
          double ang_AOB = ang_XOB - ang_XOA;
          //fprintf(stderr, "\nk=%f\nXOA=%f\nXOB=%f\nAOB = %f\nlen edgevec=%f\n", k, ang_XOA, ang_XOB, ang_AOB, edge_vec.mag());
          vec3d unit_edge_vec = edge_vec;

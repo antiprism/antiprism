@@ -33,6 +33,7 @@
 #include <algorithm>
 #include "info.h"
 #include "transforms.h"
+#include "math_utils.h"
 #include "geom_utils.h"
 
 using std::set;
@@ -197,7 +198,8 @@ void geom_info::face_angles_lengths(int f_no, vector<double> &angs,
       (*lens)[j] = v1.mag();
       if(!norm.is_set())
          norm = vcross(v0,v1);
-      angs[j] = acos(vdot(v0, v1)/((*lens)[(j+fsz-1)%fsz]*(*lens)[j]));
+      angs[j] = acos(safe_for_trig(
+                       vdot(v0, v1)/((*lens)[(j+fsz-1)%fsz]*(*lens)[j])  ));
       double sign = vdot(norm, vcross(v0, v1));
       if(sign<0)
          angs[j] = 2*M_PI - angs[j];
@@ -286,7 +288,7 @@ void geom_info::find_dihedral_angles()
       }
       else
          cos_a = 1;  // one face on an edge
-      double ang = acos(cos_a);
+      double ang = acos(safe_for_trig(cos_a));
       if(sign<0) // in oriented polyhedron
           ang = 2*M_PI - ang;
 
@@ -324,18 +326,31 @@ void geom_info::find_vert_cons()
 
    vector<int> del_faces;
    const vector<vector<int> > &dfaces = dual.faces(); 
+   
+   // this needs checking
    for(unsigned int i=0; i<dfaces.size(); i++)
       if(dfaces[i].size()<2)
          del_faces.push_back(i);
-   dual.delete_faces(del_faces);
+   //dual.delete_faces(del_faces);
 
-   if(!dual.get_faces()->size()) {   // set up an unordered list
+   if(del_faces.size()) {   // set up an unordered list
+      vector<vector<int> > es = geom.edges();
+      geom.get_impl_edges(es);
+      for(unsigned int i=0; i<es.size(); i++) {
+         vert_cons[es[i][0]].push_back(es[i][1]);
+         vert_cons[es[i][1]].push_back(es[i][0]);
+      }
+      return;
+   }
+   
+   /* if(!dual.get_faces()->size()) {   // set up an unordered list
       for(unsigned int i=0; i<geom.edges().size(); i++) {
          vert_cons[geom.edges(i, 0)].push_back(geom.edges(i, 1));
          vert_cons[geom.edges(i, 1)].push_back(geom.edges(i, 0));
       }
       return;
-   }
+   } */
+
    dual.orient();
    const vector<vector<int> > &faces = geom.faces();
    for(unsigned int i=0; i<dfaces.size(); i++) {
@@ -354,6 +369,8 @@ void geom_info::find_vert_cons()
                      vert_cons[i].push_back(faces[f][(v+sz-1)%sz]);
                }
                else {
+                  fprintf(stderr, "faces.size()=%u, f=%u, vert_cons.size()=%u, i=%d\n", faces.size(), f, vert_cons.size(), i);
+                  fprintf(stderr, "vert_cons[%d].size()=%d, j=%d\n", i, vert_cons[i].size(), j);
                   if(faces[f][(v+1)%sz]==vert_cons[i][j-1])
                      vert_cons[i].push_back(faces[f][(v+sz-1)%sz]);
                   else 
@@ -414,8 +431,8 @@ static double sph_tri_area(vec3d u0, vec3d u1, vec3d u2)
    vec3d u[3] = {u0, u1, u2};
    double ang, area=0;
    for(int i=0; i<3; i++) {
-      ang = acos(-vdot(vcross(u[(i-1+3)%3], u[i]).unit(),
-                       vcross(u[i], u[(i+1)%3]).unit()) );
+      ang = acos(safe_for_trig(vdot(vcross(u[(i-1+3)%3], u[i]).unit(),
+                       vcross(u[i], u[(i+1)%3]).unit()) ));
       if(sign<0)
          ang = 2*M_PI - ang;
       area += ang;

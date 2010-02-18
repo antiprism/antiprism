@@ -30,6 +30,7 @@
 #ifndef MATH_UTILS_H
 #define MATH_UTILS_H
 
+#include <algorithm>
 #include <math.h>
 
 #include "const.h"
@@ -85,6 +86,14 @@ int cubic(double coeffs[4], double sol[3]);
 bool double_equality(const double &d1, const double &d2,
       const double &eps=epsilon);
 
+///Make a value safe to use as an argument with acos and asin
+/**Map the value to the nearest value in the range
+ * -1.0<=val<=1.0 to ensure that it is safe to use with
+ *  \c acos() and \c asin().
+ * \param val value to make safe.
+ * \return A safe value. */
+double safe_for_trig(double val);
+
 // inline function definitions
 
 inline double deg2rad(double ang)
@@ -102,12 +111,17 @@ inline bool is_even(int n)
    return (n%2==0);
 }
 
+inline double safe_for_trig(double val) {
+   return (std::min(1.0, std::max(-1.0, val)));
+}
+
 inline bool double_equality(const double &d1, const double &d2,
       const double &eps)
 {
    const double diff = d1 - d2;
    return diff < eps && diff > -eps;
 }
+
 
 
 #endif // MATH_UTILS_H

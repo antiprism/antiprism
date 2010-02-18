@@ -412,7 +412,8 @@ void rep_printer::e_central_angle(int e_idx)
    vec3d v0 = geom.verts(geom.edges(e_idx, 0)) - center();
    vec3d v1 = geom.verts(geom.edges(e_idx, 1)) - center();
    char str[MSG_SZ];
-   fprintf(ofile, "%s", d2s(str, rad2deg(acos(vdot(v0.unit(), v1.unit())))));
+   fprintf(ofile, "%s",
+         d2s(str, rad2deg(acos(safe_for_trig(vdot(v0.unit(), v1.unit()))))) );
 }
    
 void rep_printer::e_distance(int e_idx)

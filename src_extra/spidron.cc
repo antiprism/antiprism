@@ -160,15 +160,15 @@ int add_spidron_unit(geom_if &spid, double ang, double ang2, vec3d &cent, bool f
    int v0idx = spid.get_verts()->size()-2;
    vec3d v0 = (*spid.get_verts())[v0idx];
    vec3d v1 = (*spid.get_verts())[v0idx+1];
-   vec3d mid = (v0 + v1)/2.0;              // Midpoint of edge
-   double R = (cent-v0).mag();             // Radius of polygon
-   double L = (mid-v0).mag();              // Half edge length 
-   double H = (cent-mid).mag();            // Height from edge to centre
-   double theta = acos(H/R);               // Half angle of edge at centre
-   double l = cos(ang2)*L/cos(ang);        // Half inner edge length
-   //double l = L/(2*cos(ang));            // Half inner edge length
-   double r = l/sin(theta);                // Radius of inner edge
-   double h_tri = L*tan(ang);              // Height of base triangle
+   vec3d mid = (v0 + v1)/2.0;               // Midpoint of edge
+   double R = (cent-v0).mag();              // Radius of polygon
+   double L = (mid-v0).mag();               // Half edge length 
+   double H = (cent-mid).mag();             // Height from edge to centre
+   double theta = acos(safe_for_trig(H/R)); // Half angle of edge at centre
+   double l = cos(ang2)*L/cos(ang);         // Half inner edge length
+   //double l = L/(2*cos(ang));             // Half inner edge length
+   double r = l/sin(theta);                 // Radius of inner edge
+   double h_tri = L*tan(ang);               // Height of base triangle
    double delta_x = H-r;
    double delta_y = (1.0-2*fold)*sqrt(h_tri*h_tri - delta_x*delta_x);
    vec3d norm = vcross(v1-v0, cent-v0).unit();
@@ -218,21 +218,21 @@ int add_spidron_unit2(geom_if &spid, double ang, double ang2, vec3d &cent, bool 
    vec3d v0 = (*spid.get_verts())[v0idx];
    vec3d v1 = (*spid.get_verts())[v0idx+1];
    vec3d norm = vcross(v1-v0, cent-v0).unit();
-   vec3d mid = (v0 + v1)/2.0;              // Midpoint of edge
-   double R = (cent-v0).mag();             // Radius of polygon
-   double L = (mid-v0).mag();              // Half edge length 
-   double H = (cent-mid).mag();            // Hieght from edge to centre
-   double theta = acos(H/R);               // Half angle of edge at centre
+   vec3d mid = (v0 + v1)/2.0;               // Midpoint of edge
+   double R = (cent-v0).mag();              // Radius of polygon
+   double L = (mid-v0).mag();               // Half edge length 
+   double H = (cent-mid).mag();             // Hieght from edge to centre
+   double theta = acos(safe_for_trig(H/R)); // Half angle of edge at centre
   
-   double h = sin(ang2)*L/cos(ang);        // 2nd triangle height
-   double mid2r = R - h;                   // radius to mid inner edgd
-   //double r = mid2r/cos(theta);            // radius to inner edge
-   double l = cos(ang2)*L/cos(ang);        // Half inner edge length
-   double delta_x = mid2r*tan(theta);      // length proj of half inner edge
+   double h = sin(ang2)*L/cos(ang);         // 2nd triangle height
+   double mid2r = R - h;                    // radius to mid inner edgd
+   //double r = mid2r/cos(theta);           // radius to inner edge
+   double l = cos(ang2)*L/cos(ang);         // Half inner edge length
+   double delta_x = mid2r*tan(theta);       // length proj of half inner edge
    double delta_y = (1.0-2*fold)*sqrt(l*l - delta_x*delta_x);
-   //double rot_ang = acos(lp/l);            // angle to rot 2nd triangle
+   //double rot_ang = acos(lp/l);           // angle to rot 2nd triangle
    
-   vec3d mid2 = v1 + h*(cent-v1).unit();   // mid-point inner edge
+   vec3d mid2 = v1 + h*(cent-v1).unit();    // mid-point inner edge
    vec3d perp = vcross(cent-v1, norm).unit();
    vec3d P = mid2 - perp*delta_x + norm*delta_y;
    vec3d Q = mid2 + perp*delta_x - norm*delta_y;
@@ -277,7 +277,7 @@ int add_spidron_unit2(geom_if &spid, double ang, double ang2, vec3d &cent, bool 
    vec3d P2 = trans*P;
    vec3d V0 = (P-Q).unit();
    vec3d V1 = (P2-Q).unit();
-   double beta = acos(vdot(V0, V1));
+   double beta = acos(safe_for_trig(vdot(V0, V1)));
    double slant = l/cos(beta/2);
    vec3d rad_dir = ((P+P2)/2.0 - Q).unit();
    cent = Q + rad_dir*slant;
@@ -342,7 +342,7 @@ double v_ang_at_ax(const vec3d &v0, const vec3d &v1, const vec3d &ax)
 {
    vec3d n0 = vcross(v0, ax).unit();
    vec3d n1 = vcross(v1, ax).unit();
-   double ang = acos(vdot(n0, n1));
+   double ang = acos(safe_for_trig(vdot(n0, n1)));
    if(vdot(ax, vcross(n0, n1))<0)
       ang = 2*M_PI - ang;
    return ang;

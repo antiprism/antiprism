@@ -26,7 +26,7 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-
+#include "math_utils.h"
 #include "vec_utils.h"
 
 vec3d line_plane_intersect(vec3d Q, vec3d n, vec3d P0, vec3d P1, int *where)
@@ -95,21 +95,14 @@ bool lines_nearest_points(vec3d P0, vec3d P1, vec3d Q0, vec3d Q1,
     double c = vdot(v2, v2);
     double d = vdot(v1, w);
     double e = vdot(v2, w);
-    double s = (b*e-c*d)/(a*c-b*b);
-    double t = (a*e-b*d)/(a*c-b*b);
-    P = P1 + s*(P1-P0);
-    Q = Q1 + t*(Q1-Q0);
-    return (a*c-b*b > epsilon);
+    double D = a*c-b*b;
+    double s = (b*e-c*d)/D;
+    double t = (a*e-b*d)/D;
+    P = P0 + s*(P1-P0);
+    Q = Q0 + t*(Q1-Q0);
+    return (D > epsilon);
 }
 
-vec3d lines_intersection(vec3d P, vec3d P_dir, vec3d Q, vec3d Q_dir)
-{
-   vec3d N1, N2;
-   if(lines_nearest_points(P, P+P_dir, Q, Q+Q_dir, N1, N2))
-      return (N1+N2)/2.0;
-   else
-      return vec3d();
-}
 
 vec3d nearest_point(vec3d P, vec3d Q0, vec3d Q1, vec3d Q2)
 {
@@ -169,7 +162,7 @@ double angle_around_axis(const vec3d &v0, const vec3d &v1, const vec3d &axis)
 {
    vec3d n0 = vcross(v0, axis).unit();
    vec3d n1 = vcross(v1, axis).unit();
-   double ang = acos(vdot(n0, n1));
+   double ang = acos(safe_for_trig(vdot(n0, n1)));
    if(vdot(axis, vcross(n0, n1))<0)
       ang = 2*M_PI - ang;
    return ang;

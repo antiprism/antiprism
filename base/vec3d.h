@@ -263,15 +263,24 @@ inline vec3d vec3d::unit() const
 
 inline vec3d& vec3d::to_unit()
 {
+   /*
 	double magn = mag();
-	if(magn > 1e-20)
-		operator *=(1/magn);
-	else {
-		v[0] = 0;
-		v[1] = 0;
-		v[2] = 1;
-	}
+	operator *=(1/magn);
+   for(int i=0; i<3; i++)
+	   if(isinf(v[i]))
+         return x;   // return some unit vector
 	return *this;
+   */
+
+   double magn = mag();
+   if(magn > 1e-20)
+      operator *=(1/magn);
+   else {
+      v[0] = 0;
+      v[1] = 0;
+      v[2] = 1;
+   }
+   return *this;
 }
 
 

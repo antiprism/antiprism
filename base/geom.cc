@@ -265,6 +265,7 @@ void geom_if::clear_all() { clear_verts(); clear_edges(); clear_faces(); }
 
 void geom_if::get_impl_edges(vector<vector<int> > &edgs) const
 {
+   // edgs hasn't been cleared
    for(unsigned int i=0; i<faces().size(); ++i)
       for(unsigned int j=0; j<faces(i).size(); ++j)
          edgs.push_back(

@@ -32,15 +32,7 @@
       removed use of iostreams, graph initialised from a geometry object
 */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
-
 #include "geom.h"
-
-#define max(x,y) (((x)>(y))?(x):(y))
-#define min(x,y) (((x)<(y))?(x):(y))
 
 enum Logic { _NO , _YES };
 enum Status { _COLORED, _NEIGHBOR, _FREE, _SELECTED };

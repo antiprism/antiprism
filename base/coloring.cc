@@ -27,6 +27,7 @@
  */
 
 #include <limits.h>
+#include <string.h>
 #include <algorithm>
 #include "rand_gen.h"
 #include "prop_col.h"

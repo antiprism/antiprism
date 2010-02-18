@@ -48,7 +48,7 @@ using std::vector;
 
 int get_num_decs(const char *str)
 {
-   char *p = strchr(str, '.');
+   const char *p = strchr(str, '.');
    if(!p)
       return 0;
    // Find the number of digits after the decimal point

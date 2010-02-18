@@ -143,7 +143,7 @@ void make_sph_rings(geom_if &geom, int rings, int divs, bool stagger, bool pts_a
          if(val<-1 || val>1)
             num_pts = 1;
          else
-            num_pts = floor(2*M_PI / acos(val));
+            num_pts = floor(2*M_PI / acos(safe_for_trig(val)));
       }
       
       double horz_ang_inc = 2*M_PI/num_pts;

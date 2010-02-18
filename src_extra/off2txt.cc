@@ -244,7 +244,7 @@ int detect_star_polygon(geom_if *geom, int face_idx)
 
    vec3d v1 = verts[face[1]] - verts[face[0]];
    vec3d v2 = verts[face[1]] - verts[face[2]];
-   double angle = acos(vdot(v1, v2)/(v1.mag()*v2.mag()));
+   double angle = acos(safe_for_trig(vdot(v1, v2)/(v1.mag()*v2.mag())));
    angle *= radian;
 
    double m = face.size();

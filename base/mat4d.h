@@ -32,6 +32,8 @@
 #define MAT4D_H
 
 #include <math.h>
+
+#include "math_utils.h"
 #include "vec4d.h"
 
 
@@ -321,12 +323,7 @@ inline mat4d &mat4d::set_rot(vec4d v_from, vec4d v_to)
    n2 = vcross(vec4d::random().unit(), v_from, v_to);
    n3 = vcross(n2, v_from, v_to);
    orth = vcross(v_from, n2, n3);
-   
-   double cos_a = vdot(v_from, v_to);
-   if(fabs(cos_a) > 1)
-      cos_a = cos_a>0 ? 1 : -1;
-   
-   set_rot(n2, n3, acos(cos_a));
+   set_rot(n2, n3, acos(safe_for_trig(vdot(v_from, v_to))) );
    return *this;
 }
 

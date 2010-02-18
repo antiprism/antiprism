@@ -162,6 +162,15 @@ void kc_opts::process_command_line(int argc, char **argv)
 
 }
 
+vec3d lines_intersection(vec3d P, vec3d P_dir, vec3d Q, vec3d Q_dir)
+{
+   vec3d N1, N2;
+   if(lines_nearest_points(P, P+P_dir, Q, Q+Q_dir, N1, N2))
+      return (N1+N2)/2.0;
+   else
+      return vec3d();
+}
+
 
 void kcycle(col_geom_v geom, col_geom_v &cycle, int num_prs, vector<int> idxs, double angle)
 {
@@ -183,11 +192,13 @@ void kcycle(col_geom_v geom, col_geom_v &cycle, int num_prs, vector<int> idxs, d
    // Use spherical trig to find the angle to rotate e2 about e1 until
    // it is normal to n2 
    int sign1 = vtriple(e1, e2, n2) > 0;
-   double ang1 =  acos( (vdot(e2, n2) - vdot(e1, n2)*vdot(e1, e2) ) /
-                        (vcross(e1, n2).mag()*vcross(e1, e2).mag())   );
+   double ang1 =  acos( safe_for_trig(
+                        (vdot(e2, n2) - vdot(e1, n2)*vdot(e1, e2) ) /
+                        (vcross(e1, n2).mag()*vcross(e1, e2).mag())   ));
    int sign2 = vdot(e1, e2) > 0;
-   double ang2 =  acos( (- vdot(e1, n2)*vdot(e1, e2) ) /
-                        (vcross(e1, n2).mag()*vcross(e1, e2).mag())   );
+   double ang2 =  acos( safe_for_trig(
+                        (- vdot(e1, n2)*vdot(e1, e2) ) /
+                        (vcross(e1, n2).mag()*vcross(e1, e2).mag())   ));
    double ang =  (2*sign1 - 1)*ang1 - (2*sign2 - 1)*ang2;
    
    mat3d trans2 = mat3d::rot(e1, ang);

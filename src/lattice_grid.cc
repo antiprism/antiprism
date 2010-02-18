@@ -128,9 +128,9 @@ void add_struts(geom_if &geom, int len2)
 void int_lat_grid::make_lattice(geom_if &geom)
 {
    if(!centre.is_set())
-      centre = vec3d(1,1,1)*(o_width/2);
-   double o_off = o_width/2 + epsilon;
-   double i_off = i_width/2 - epsilon;
+      centre = vec3d(1,1,1)*(o_width/2.0);
+   double o_off = o_width/2.0 + epsilon;
+   double i_off = i_width/2.0 - epsilon;
    int i, j, k;
    for (k=int(ceil(centre[2]-o_off)); k<=centre[2]+o_off; k++)
       for (j=int(ceil(centre[1]-o_off)); j<=centre[1]+o_off; j++)
