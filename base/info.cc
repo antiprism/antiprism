@@ -369,8 +369,6 @@ void geom_info::find_vert_cons()
                      vert_cons[i].push_back(faces[f][(v+sz-1)%sz]);
                }
                else {
-                  fprintf(stderr, "faces.size()=%u, f=%u, vert_cons.size()=%u, i=%d\n", faces.size(), f, vert_cons.size(), i);
-                  fprintf(stderr, "vert_cons[%d].size()=%d, j=%d\n", i, vert_cons[i].size(), j);
                   if(faces[f][(v+1)%sz]==vert_cons[i][j-1])
                      vert_cons[i].push_back(faces[f][(v+sz-1)%sz]);
                   else 
