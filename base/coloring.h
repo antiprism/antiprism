@@ -310,8 +310,7 @@ class coloring {
 };
 
 
-bool read_colorings(coloring clrng[], const char *line, char *errmsg=0,
-      int max_parts=4);
+bool read_colorings(coloring clrng[], const char *line, char *errmsg=0);
 
 #endif // COLORING_H
 

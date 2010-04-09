@@ -157,7 +157,8 @@ void get_pol_recip_verts(const geom_if &geom, geom_if &dual,
       double recip_rad, vec3d centre, double inf)
 {
    const double min_lim = 1e-15;
-   const int r_sign = 1 - 2*(recip_rad<0);
+   //const int r_sign = 1 - 2*(recip_rad<0); // -ve rad will reflect in centre
+   const int r_sign = 1;                   // no reflection in centre
    
    vec3d vert;
    const vector<vec3d> &verts = geom.verts();

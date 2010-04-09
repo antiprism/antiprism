@@ -472,7 +472,7 @@ void o_col_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'm':
-            if(!read_colorings(clrngs, optarg, errmsg, 3))
+            if(!read_colorings(clrngs, optarg, errmsg))
                error(errmsg, c);
             break;
 

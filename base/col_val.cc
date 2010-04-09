@@ -90,17 +90,19 @@ void RGBtoHSV( double r, double g, double b, double *h, double *s, double *v )
 
    delta = max - min;
 
-   if( max != 0 )
+   if( max > epsilon )     // avoid division by zero
       *s = delta / max;    // s
    else {
-      // r = g = b = 0     // s = 0, v is undefined
+      // r = g = b = 0     // s = 0, v and h are not important
       *s = 0;
-      *h = -1;
+      *h = 0;
       return;
    }
 
-   if( r == max )
-      *h = ( g - b ) / delta;    // between yellow & magenta
+   if( delta < epsilon)             // grey range, avoid division by zero
+      *h = 0;
+   else if( r == max )
+      *h = ( g - b ) / delta;       // between yellow & magenta
    else if( g == max )
       *h = 2 + ( b - r ) / delta;   // between cyan & yellow
    else

@@ -84,9 +84,13 @@ class color_map
        * that the clone failed. */
       virtual color_map *clone() { return new color_map(*this); }
 
-      ///The maximum index number
-      /**\return The maximum index number in the map*/
-      virtual unsigned int max_index() const { return UINT_MAX-1; };
+      ///The effective size of the map
+      /**The effective size of a map is one greater than the highest
+       * index number in the map. It is the size of the smallest
+       * map (sequential, starting at 0) that will include all
+       * the entries of the map.
+       * \return The effective size */
+      virtual unsigned int effective_size() const { return UINT_MAX; };
 
       ///Get the map shift
       /**Lookup of colour values is determined by (shift + index*step)%wrap
@@ -221,7 +225,7 @@ class color_map_range: public color_map
       
       ///The maximum index number
       /**\return The maximum index number in the map*/
-      virtual unsigned int max_index() const { return map_sz; };
+      virtual unsigned int effective_size() const { return map_sz; };
 
 };
 
@@ -438,7 +442,7 @@ class color_map_map : public color_map
       
       ///The maximum index number
       /**\return The maximum index number */
-      virtual unsigned int max_index() const;
+      virtual unsigned int effective_size() const;
       
       ///Get the colour value for an index number.
       /**\param idx the index.

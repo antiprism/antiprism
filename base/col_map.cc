@@ -281,7 +281,7 @@ color_map* init_color_map(const char *map_name, char *errmsg)
 void color_map::set_wrap(int wrp)
 {
    if(wrp<0)
-      wrp=max_index();
+      wrp=effective_size();
    wrap = (wrp<0) ? 0 : wrp;
 }
 
@@ -367,7 +367,7 @@ bool color_map_range::init(const char *map_name, char *errmsg)
    }
    
    if(get_wrap()==-1)
-      set_wrap(max_index());
+      set_wrap(effective_size());
       
    if(*map_name != '_' && vals.size()<2) // A size was given but no comp ranges
          return true;
@@ -752,9 +752,9 @@ void color_map_map::set_col(int idx, col_val col)
 
 
 
-unsigned int color_map_map::max_index() const
+unsigned int color_map_map::effective_size() const
 {
-   return size() ? cmap.rbegin()->first : 0;
+   return size() ? cmap.rbegin()->first+1 : 0;
 }
 
 
@@ -777,7 +777,7 @@ bool color_map_map::init(const char *map_name, char *errmsg)
          strcpy(errmsg, errmsg2);
    }
    if(get_wrap()==-1)
-      set_wrap(max_index());
+      set_wrap(effective_size());
    
    if(cfile)
       fclose(cfile);

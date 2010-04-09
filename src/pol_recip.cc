@@ -55,6 +55,7 @@ class pr_opts: public prog_opts
       vec3d init_cent;
       char recip_cent_type;
       char init_cent_type;
+      bool invert;
       double inf;
       double extra_ideal_elems;
       int num_iters;
@@ -67,7 +68,7 @@ class pr_opts: public prog_opts
       pr_opts(): prog_opts("pol_recip"),
                  recip_rad(0), init_rad(0), recip_rad_type('x'),
                  recip_cent_type('x'), init_cent_type('x'),
-                 inf(1e15), extra_ideal_elems(true),
+                 invert(false), inf(1e15), extra_ideal_elems(true),
                  num_iters(100), lim_exp(13), append(false)
                  {}
 
@@ -103,6 +104,7 @@ void pr_opts::usage()
 "            or a comma separated list of vertex indices (starting from 0)\n"
 "            and the distance is to the space containing those vertices\n"
 "  -R <rad>  initial value for a radius calculation (default: calculated)\n"
+"  -i        transform dual by reflecting in centre point\n"
 "  -I <dist> maximum distance to project any normal or infinite dual vertex\n"
 "            (default: 1e15), if 0 then use actual distances and delete\n"
 "            infinite points\n"
@@ -127,7 +129,7 @@ void pr_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hc:C:r:R:xao:n:l:I:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hc:C:r:R:xao:n:l:iI:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -153,8 +155,10 @@ void pr_opts::process_command_line(int argc, char **argv)
          case 'R':
             if(!read_double(optarg, &init_rad, errmsg))
                error(errmsg, c);
-            if(init_rad < epsilon)
-               error("radius cannot be zero (or too close) or negative", c);
+            if(fabs(init_rad) < epsilon)
+               warning("radius is very small (the reciprocal will be very large)", c);
+            else if(init_rad < 0)
+               warning("radius is negative", c);
             break;
 
          case 'r':
@@ -162,14 +166,20 @@ void pr_opts::process_command_line(int argc, char **argv)
                recip_rad_type = *optarg;
             }
             else if(read_double(optarg, &recip_rad, errmsg)) {
-               if(recip_rad < epsilon)
-                  error("radius cannot be zero (or too close) or negative", c);
+               if(fabs(recip_rad) < epsilon)
+                  warning("radius is very small (the reciprocal will be very large)", c);
+               else if(recip_rad < 0)
+                  warning("radius is negative", c);
                recip_rad_type = 'r';
             }
             else if(read_int_list(optarg, space_verts, errmsg, true))
                recip_rad_type='S';
             else
                error("radius must be a radius value, or r,V,v,E,e,F,f,X or a list of index numbers", c);
+            break;
+
+         case 'i':
+            invert = true;
             break;
 
          case 'x':
@@ -270,7 +280,7 @@ int find_mid_centre(geom_if &geom, double &rad, vec3d &cent, int n, double lim)
    return 1;
 }
  
-int find_can_centre(geom_if &geom, char type, double &rad, vec3d &cent, int n, double lim)
+int find_can_centre(geom_if &geom, char type, double &rad, vec3d &cent, bool invert, int n, double lim)
 {
    bool use_e = false;
    bool use_vf = false;
@@ -295,6 +305,9 @@ int find_can_centre(geom_if &geom, char type, double &rad, vec3d &cent, int n, d
    }
    geom_v dual;
    get_dual(geom, dual, rad, cent);
+   if(invert)
+      dual.transform(
+            mat3d::transl(cent)*mat3d::inversion()*mat3d::transl(-cent));
    dual.get_impl_edges(d_edges);
    vec3d cur_cent = cent;
    double cur_rad = rad;
@@ -380,24 +393,27 @@ int find_can_centre(geom_if &geom, char type, double &rad, vec3d &cent, int n, d
       if(fabs(cent_test)<lim && fabs(rad_test)<lim)
          break;
       get_pol_recip_verts(geom, dual, rad, cur_cent);
+      if(invert)
+         dual.transform(mat3d::transl(cur_cent)*
+               mat3d::inversion()*mat3d::transl(-cur_cent));
    }
    char str[MSG_SZ];
    fprintf(stderr, "[n=%d, limit=%sachieved, r_test=%g, c_test=%g]\n"
-         "centre=(%s), radius=%.16g\n",
+         "centre=(%s), radius=%.16g%s\n",
          cnt, cnt==n?"not ":"", cent_test, rad_test,
-         vtostr(str, cent, " "), rad);
-   if(rad<0) {
-      mat3d inv = mat3d::transl(cent) *
-                  mat3d::inversion() *
-                  mat3d::transl(-cent);
-      geom.transform(inv);
-   }
+         vtostr(str, cent, " "), rad, (invert)?"i":"");
+   //if(rad<0) {
+   //   mat3d inv = mat3d::transl(cent) *
+   //               mat3d::inversion() *
+   //               mat3d::transl(-cent);
+   //   geom.transform(inv);
+   //}
 
 return 1;
 }
 
 
-void find_recip_centre(geom_if &geom, char type, double &rad, vec3d &cent, int n, double lim)
+void find_recip_centre(geom_if &geom, char type, double &rad, vec3d &cent, bool invert, int n, double lim)
 {
    if(fabs(rad)<epsilon)
       rad = epsilon/2.0;
@@ -410,25 +426,25 @@ void find_recip_centre(geom_if &geom, char type, double &rad, vec3d &cent, int n
          find_mid_centre(geom, rad, cent, n, lim);
          break;
       case 'e':
-         find_can_centre(geom, 'e', rad, cent, n, lim);
+         find_can_centre(geom, 'e', rad, cent, invert, n, lim);
          break;
       case 'E':
          rad = -rad;
-         find_can_centre(geom, 'e', rad, cent, n, lim);
+         find_can_centre(geom, 'e', rad, cent, invert, n, lim);
          break;
       case 'v':
-         find_can_centre(geom, 'v', rad, cent, n, lim);
+         find_can_centre(geom, 'v', rad, cent, invert, n, lim);
          break;
       case 'V':
          rad = -rad;
-         find_can_centre(geom, 'v', rad, cent, n, lim);
+         find_can_centre(geom, 'v', rad, cent, invert, n, lim);
          break;
       case 'a':
-         find_can_centre(geom, 'a', rad, cent, n, lim);
+         find_can_centre(geom, 'a', rad, cent, invert, n, lim);
          break;
       case 'A':
          rad = -rad;
-         find_can_centre(geom, 'a', rad, cent, n, lim);
+         find_can_centre(geom, 'a', rad, cent, invert, n, lim);
          break;
    }   
 }
@@ -543,7 +559,7 @@ int main(int argc, char *argv[])
    else {
       centre = opts.init_cent;
       find_recip_centre(geom, opts.recip_cent_type, opts.init_rad, centre,
-            opts.num_iters, lim);
+            opts.invert, opts.num_iters, lim);
    }
    
    double radius;
@@ -559,6 +575,9 @@ int main(int argc, char *argv[])
    //centre.dump("cent");
    col_geom_v dual;
    get_dual(geom, dual, radius, centre, 1.01*opts.inf);
+   if(opts.invert)
+      dual.transform(
+            mat3d::transl(centre)*mat3d::inversion()*mat3d::transl(-centre));
 
    
    vector<int> invalid_verts;

@@ -133,8 +133,8 @@ int coloring::y_gradient(vec3d vec, vec3d cent, double height, int def_sz)
 {
    int sz = def_sz;
    if(cmaps.size()>0) {
-      if(cmaps[0]->max_index()>0)
-         sz = cmaps[0]->max_index();
+      if(cmaps[0]->effective_size()>0)
+         sz = cmaps[0]->effective_size();
       else
          sz = INT_MAX;
    }
@@ -651,8 +651,7 @@ static bool get_cycle_rate(const char *str, double *cps)
 
 
 
-bool read_colorings(coloring clrngs[], const char *line, char *errmsg,
-      int max_parts)
+bool read_colorings(coloring clrngs[], const char *line, char *errmsg)
 {
    if(errmsg)
       *errmsg = '\0';
@@ -663,20 +662,6 @@ bool read_colorings(coloring clrngs[], const char *line, char *errmsg,
 
    vector<char *> parts;
    int parts_sz = split_line(line_copy, parts, ",");
-   if(parts_sz>max_parts) {
-      if(errmsg)
-         sprintf(errmsg, "the argument has more than %d part(s)", max_parts);
-      return 0;
-   }
-   
-   /*
-   string cfile = parts[0];
-   if(cfile=="") {
-      if(errmsg)
-         strcpy(errmsg, "colour map file name not given");
-      return 0;
-   }
-   */
 
    char errmsg2[MSG_SZ];
    vector<char *> map_names;
