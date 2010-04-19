@@ -37,6 +37,8 @@
 #include <vector>
 #include "vec3d.h"
 #include "vec4d.h"
+#include "mat3d.h"
+#include "geom.h"
 
 using std::string;
 using std::vector;
@@ -174,7 +176,8 @@ bool read_int(const char *str, int *i, char *errmsg=0);
  * return any error message.
  * \return true if only valid floating point numbers were read, otherwise false
  * and the error is detailed in \a errmsg. */
-bool read_double_list(vector<char *> &vals, vector<double> &nums, char *errmsg);
+bool read_double_list(vector<char *> &vals, vector<double> &nums,
+      char *errmsg=0);
 
 ///Read floating point numbers listed in a single string.
 /**The numbers in the string should be comma separated, and may
@@ -189,8 +192,8 @@ bool read_double_list(vector<char *> &vals, vector<double> &nums, char *errmsg);
  * \return true if only valid floating point numbers were read, and no more
  * than \a len (if \c len>0), otherwise false.
  * and the error is detailed in \a errmsg. */
-bool read_double_list(char *str, vector<double> &nums, char *errmsg, int len=0,
-      const char *sep=",");
+bool read_double_list(char *str, vector<double> &nums, char *errmsg=0,
+      int len=0, const char *sep=",");
 
 ///Read integers from a list of strings.
 /**The strings should only hold the integers, but may
@@ -202,7 +205,7 @@ bool read_double_list(char *str, vector<double> &nums, char *errmsg, int len=0,
  * \param is_index if true then the integers cannot be negative.
  * \return true if only valid integers were read, otherwise false
  * and the error is detailed in \a errmsg. */
-bool read_int_list(vector<char *> &vals, vector<int> &nums, char *errmsg,
+bool read_int_list(vector<char *> &vals, vector<int> &nums, char *errmsg=0,
       bool is_index=false);
 
 ///Read integers listed in a single string.
@@ -219,7 +222,7 @@ bool read_int_list(vector<char *> &vals, vector<int> &nums, char *errmsg,
  * \return true if only valid integers were read, and no more
  * than \a len (if \c len>0), otherwise false.
  * and the error is detailed in \a errmsg. */
-bool read_int_list(char *str, vector<int> &nums, char *errmsg,
+bool read_int_list(char *str, vector<int> &nums, char *errmsg=0,
       bool is_index=false, int len=0, const char *sep=",");
 
 /// Read a line of arbitrary length

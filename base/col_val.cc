@@ -117,7 +117,10 @@ void RGBtoHSV( double r, double g, double b, double *h, double *s, double *v )
 
 void HSVtoRGB( double *r, double *g, double *b, double h, double s, double v )
 {
-   h *= 360;
+   // bring h into range 0-360
+   h = fmod(h, 1.0)*360;
+   if(h<0)
+      h += 360;
 
    if( s == 0 ) {
       // achromatic (grey)
@@ -173,7 +176,7 @@ void HSVtoRGB( double *r, double *g, double *b, double h, double s, double v )
 void col_val::set_hsva(double hue, double sat, double val, double alpha)
 {
    double *hsva[] = {&hue, &sat, &val, &alpha};
-   for(int i=0; i<4; i++) {
+   for(int i=1; i<4; i++) {  // skip i=0 as hue can wrap
       if(*hsva[i] < 0)
          *hsva[i] = 0;
       else if(*hsva[i] > 1)

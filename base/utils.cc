@@ -154,12 +154,14 @@ bool read_double(const char *str, double *f, char *errmsg)
    }
 
    if(isinf(*f)) {
-      sprintf(errmsg, "number too large\n");
+      if(errmsg)
+         sprintf(errmsg, "number too large\n");
       return false;
    }
 
    if(isnan(*f)) {
-      sprintf(errmsg, "not a number\n");
+      if(errmsg)
+         sprintf(errmsg, "not a number\n");
       return false;
    }
 
@@ -180,7 +182,8 @@ bool read_int(const char *str, int *i, char *errmsg)
    }
 
    if(*i==INT_MAX) {
-      sprintf(errmsg, "integer too large\n");
+      if(errmsg)
+         sprintf(errmsg, "integer too large\n");
       return false;
    }
 
@@ -195,12 +198,14 @@ bool read_int_list(vector<char *> &vals, vector<int> &nums, char *errmsg, bool i
    int num;
    for(unsigned int i=0; i<vals.size(); i++) {
       char *v_str = vals[i];
-      if(!read_int(v_str, &num, errmsg)) {
-         snprintf(errmsg, MSG_SZ, "'%s' is not an integer", v_str);
+      if(!read_int(v_str, &num)) {
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "'%s' is not an integer", v_str);
          return false;
       }
       if(is_index && num<0) {
-         snprintf(errmsg, MSG_SZ, "'%s' is not a positive integer", v_str);
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "'%s' is not a positive integer", v_str);
          return false;
       }
       nums.push_back(num);
@@ -218,16 +223,19 @@ bool read_int_list(char *str, vector<int> &nums, char *errmsg, bool is_index,
    int i=0;
    while(v_str) {
       i++;
-      if(!read_int(v_str, &vec_idx, errmsg)) {
-         snprintf(errmsg, MSG_SZ, "\"%s\" is not an integer", v_str);
+      if(!read_int(v_str, &vec_idx)) {
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "\"%s\" is not an integer", v_str);
          return false;
       }
       if(is_index && vec_idx<0) {
-         snprintf(errmsg, MSG_SZ, "\"%s\" is not a positive integer", v_str);
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "\"%s\" is not a positive integer", v_str);
          return false;
       }
       if(len && i>len) {
-         snprintf(errmsg, MSG_SZ, "more than %d integers given", len);
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "more than %d integers given", len);
          return false;
       }
       nums.push_back(vec_idx);
@@ -237,14 +245,136 @@ bool read_int_list(char *str, vector<int> &nums, char *errmsg, bool is_index,
    return true;
 }
 
+/*
+bool read_double_list(char *str, vector<double> &nums, char *errmsg,
+      int len, const char *sep,
+      const vector<geom_if *> &geoms, const vector<mat3d> &trans);
+
+
+bool read_geom_val(char *val, vector<double> &nums, char *errmsg,
+      const vector<geom_if *> &geoms, const vector<mat3d> &trans)
+{
+   nums.clear();
+   
+   char buff;
+   char val_type;
+   unsigned int idx;
+   unsigned int geom_idx = 0;
+   if(sscanf(val, "%c%u %c", &val_type, &idx,  &buff)==2 ||
+      sscanf(val, "%c%u#%u %c", &val_type, &idx, &geom_idx, &buff)==3) {
+      if(geoms.size()==0) {
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "no geometries available\n");
+         return false;
+      }
+      if(geom_idx>geoms.size()) {
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "geometry number too large\n");
+         return false;
+      }
+
+      geom_if &geom = *geoms[geom_idx];
+      mat3d mat;
+      if(geom_idx<trans.size())
+         mat = trans[geom_idx];
+
+      //When adding new val_types: add to range check, add to switch,
+      //and make sure the value is transformed correctly by mat.
+      
+      // Check ranges up front
+      if(strchr("vV", val_type) && idx>=geom.verts().size()) {
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "vertex index number too large\n");
+         return false;
+      }
+      else if(strchr("fFcn", val_type) && idx>=geom.faces().size()) {
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "vertex index number too large\n");
+         return false;
+      }
+      if(strchr("eE", val_type) && idx>=geom.edges().size()) {
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "vertex index number too large\n");
+         return false;
+      }
+
+      vec3d vec;
+      double num;
+      switch(val_type) {
+         case 'v':
+            vec = geom.verts(idx) * mat;
+            nums.push_back(vec[0]);
+            nums.push_back(vec[1]);
+            nums.push_back(vec[2]);
+            break;
+
+         case 'V':
+            vec = geom.verts(idx) * mat;
+            nums.push_back(vec.mag());
+            break;
+
+         case 'n': {
+            vector<vec3d> verts = geom.verts();
+            transform(verts, mat);
+            vec = nearest_point(vec3d::zero, verts, geom.faces(idx));
+            nums.push_back(vec[0]);
+            nums.push_back(vec[1]);
+            nums.push_back(vec[2]);
+            break;
+         }
+
+         case 'f':
+            vec = geom.face_cent(idx) * mat;
+            nums.push_back(vec.mag());
+            break;
+
+         default:
+            if(errmsg)
+               snprintf(errmsg, MSG_SZ, "unknown value specifier\n");
+            return false;
+      }
+           
+   }
+}
+
+
+bool read_double_list(char *str, vector<double> &nums, char *errmsg,
+      int len, const char *sep,
+      const vector<geom_if *> &geoms, const vector<mat3d> &trans)
+{
+   nums.clear();
+   double num;
+   char *num_str = strtok(str, sep);
+   int i=0;
+   while(num_str) {
+      i++;
+      if(!read_double(num_str, &num) ) {
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "\"%s\" is not a number", num_str);
+         return false;
+      }
+      if(len && i>len) {
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "more than %d numbers given", len);
+         return false;
+      }
+      nums.push_back(num);
+      num_str = strtok(NULL, sep);
+   }
+
+   return true;
+}
+*/
+
 
 bool read_double_list(vector<char *> &vals, vector<double> &nums, char *errmsg)
 {
    nums.clear();
    double num;
    for(unsigned int i=0; i<vals.size(); i++) {
-      if(!read_double(vals[i], &num, errmsg) ) {
-         snprintf(errmsg, MSG_SZ, "'%s' is not a number", vals[i]);
+      if(!read_double(vals[i], &num) ) {
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "'%s' is not a number", vals[i]);
          return false;
       }
       nums.push_back(num);
@@ -262,12 +392,14 @@ bool read_double_list(char *str, vector<double> &nums, char *errmsg, int len,
    int i=0;
    while(num_str) {
       i++;
-      if(!read_double(num_str, &num, errmsg) ) {
-         snprintf(errmsg, MSG_SZ, "\"%s\" is not a number", num_str);
+      if(!read_double(num_str, &num) ) {
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "\"%s\" is not a number", num_str);
          return false;
       }
       if(len && i>len) {
-         snprintf(errmsg, MSG_SZ, "more than %d numbers given", len);
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "more than %d numbers given", len);
          return false;
       }
       nums.push_back(num);
