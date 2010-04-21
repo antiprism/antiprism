@@ -90,7 +90,7 @@ class color_map
        * map (sequential, starting at 0) that will include all
        * the entries of the map.
        * \return The effective size */
-      virtual unsigned int effective_size() const { return UINT_MAX; };
+      virtual int effective_size() const { return INT_MAX; };
 
       ///Get the map shift
       /**Lookup of colour values is determined by (shift + index*step)%wrap
@@ -223,9 +223,13 @@ class color_map_range: public color_map
       /**\return the number of entries in the map. */
       int get_map_sz() { return map_sz; }
       
-      ///The maximum index number
-      /**\return The maximum index number in the map*/
-      virtual unsigned int effective_size() const { return map_sz; };
+      ///The effective size of the map
+      /**The effective size of a map is one greater than the highest
+       * index number in the map. It is the size of the smallest
+       * map (sequential, starting at 0) that will include all
+       * the entries of the map.
+       * \return The effective size */
+      virtual int effective_size() const { return map_sz; };
 
 };
 
@@ -354,7 +358,7 @@ class color_map_map : public color_map
       // Constructor
       color_map_map() : color_map() {}
 
-      ///Initialise from a string
+      ///Initialise from a file
       /**The colour map can be in the Antiprism, GIMP or Fractint format. If
        * the filename isn't found then the name will be looked for in the
        * Antiprism data directory colour map resources.
@@ -364,6 +368,18 @@ class color_map_map : public color_map
        * \return true if the file could be read, otherwise false
        * and the error is detailed in \a errmsg. */
       virtual bool init(const char *map_name, char *errmsg=0);
+
+      ///Initialise from a formatted line
+      /**The colour map line is converted to Antiprism format in
+       * the following way: ':' is converted to a newline, and '_'
+       * to a space. If the lines are bare colours then "idx=" is
+       * added.
+       * \param map_line the map line text.
+       * \param errmsg an array at least \c MSG_SZ chars long to
+       * return any error message.
+       * \return true if the mal line was valid, otherwise false
+       * and the error is detailed in \a errmsg. */
+      bool init_from_line(const char *map_line, char *errmsg=0);
 
       ///Get a copy of the map
       /** \return a pointer to the dynamically allocated copy,
@@ -440,9 +456,13 @@ class color_map_map : public color_map
       /**\return The size */
       unsigned int size() const { return cmap.size(); }
       
-      ///The maximum index number
-      /**\return The maximum index number */
-      virtual unsigned int effective_size() const;
+      ///The effective size of the map
+      /**The effective size of a map is one greater than the highest
+       * index number in the map. It is the size of the smallest
+       * map (sequential, starting at 0) that will include all
+       * the entries of the map.
+       * \return The effective size */
+      virtual int effective_size() const;
       
       ///Get the colour value for an index number.
       /**\param idx the index.
@@ -468,9 +488,15 @@ class color_map_multi : public color_map
       //The colour maps to be tried sequentially.
       vector<color_map *> cmaps;
 
+      //Largest effective size
+      int map_sz;
+
+      //Set map_sz to the largest effective size
+      void set_map_sz();
+
    public:
       // Constructor
-      color_map_multi() : color_map() {}
+      color_map_multi() : color_map(), map_sz(0) {}
 
       ///Copy Constructor
       /**\param cmap the multiple colour map to copy from. */
@@ -493,24 +519,33 @@ class color_map_multi : public color_map
        * \return true if the file could be read, otherwise false
        * and the error is detailed in \a errmsg. */
       virtual bool init(const char *map_name, char *errmsg=0);
+      
+      
       ///Get a copy of the map
       /** \return a pointer to the dynamically allocated copy,
        * which must be freed by the caller with \c delete, 0 indicates
        * that the clone failed. */
-      
       virtual color_map *clone() { return new color_map_multi(*this); }
 
+      ///The effective size of the map
+      /**The effective size of a map is one greater than the highest
+       * index number in the map. It is the size of the smallest
+       * map (sequential, starting at 0) that will include all
+       * the entries of the map.
+       * \return The effective size */
+      virtual int effective_size() const { return map_sz; }
+      
       ///Add a colour map.
       /**\param col_map the colour map.
        * \param pos the position to add it, or at the end if pos is
        * greater then the current size */
-      void add_cmap(color_map *col_map, unsigned int pos=UINT_MAX);
+      void add_cmap(color_map *col_map, unsigned int pos=INT_MAX);
 
       ///Delete a colour map.
       /**\param pos the position of the colour map to delete, or delete
        * the last colour map if \c pos is greater than or equal to the
        * current size */
-      void del_cmap(unsigned int pos=UINT_MAX);
+      void del_cmap(unsigned int pos=INT_MAX);
       
       ///Get the colour value for an index number.
       /**\param idx the index.

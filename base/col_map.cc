@@ -231,7 +231,15 @@ static color_map* init_color_map_generated(const char *map_name, char *errmsg=0)
    }
 
    else if(strcmp(name, "remap")==0) {
-      cmap = new color_map_remap();
+      cmap = new color_map_remap;
+   }
+   
+   else if(strcmp(name, "mkmap")==0) {
+      if(map_name[name_len]=='_') {
+         color_map_map *cmm = new color_map_map;
+         if(cmm && cmm->init_from_line(map_name+name_len+1, errmsg))
+            cmap = cmm;
+      }
    }
 
    return cmap;
@@ -412,6 +420,8 @@ bool color_map_range::init(const char *map_name, char *errmsg)
                               "negative value", cur_comp);
                      return false;
                   }
+                  if(cur_comp=='h')
+                     ranges[cur_idx][j] /= 360;   // h is hue in range 0-360 
                }
             }
             else {
@@ -731,6 +741,75 @@ static bool parse_file(FILE *cfile, map<int, col_val> *cmap, char *errmsg=0)
 
 } 
       
+static bool parse_map_from_line(const char *line, map<int, col_val> *cmap,
+      char *errmsg=0)
+{
+   if(errmsg)
+      *errmsg='\0';
+
+   // copy the map string so the original will not be modified
+   char *str = new char[strlen(line)+1];
+   strcpy(str, line);
+   
+   vector<char *> entries;
+   split_line(str, entries, ":");
+   int next_idx = 0;   // index to use if no map index is given with a colour
+   bool cmap_ok = true;
+   for(unsigned int i=0; i<entries.size(); i++) {
+      char entry[MSG_SZ]; 
+      strncpy(entry, entries[i], MSG_SZ);
+      entry[MSG_SZ-1] = '\0';
+
+      // ignore comments
+      char *first_hash = strchr(entry, '#');
+      if(first_hash)
+         *first_hash = '\0';
+
+      // skip blank lines
+      char c;
+      if(sscanf(entry, " %c", &c)==EOF)
+         continue;
+      
+      // copy the map entry string
+      char *col_pos = entry;
+      char *eq_pos = strchr(entry, '=');
+      if(eq_pos) {
+         col_pos = eq_pos + 1;
+         if(strchr(col_pos, '=')) {
+            if(errmsg)
+               snprintf(errmsg, MSG_SZ, "entry %d: more than one =, '%s'", i+1, entries[i]);
+            cmap_ok = false;
+            break;
+         }
+         *eq_pos = '\0';
+         if(!read_int(entry, &next_idx) || next_idx<0) {
+            if(errmsg)
+               snprintf(errmsg, MSG_SZ, "entry %d: invalid index number, '%s'", i+1, entry);
+            cmap_ok = false;
+            break;
+         }
+      }
+
+      // Allow '' as a number separator
+      for(char *p=col_pos; *p; p++)
+         if(*p == '/')
+            *p = ' ';
+
+      col_val col;
+      col.read(col_pos, errmsg);
+      if(!col.is_set()) {
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "entry %d: invalid colour, '%s'", i+1, col_pos);
+         cmap_ok = false;
+      }
+
+      (*cmap)[next_idx++] = col;
+   }
+
+   delete[] str;
+   return cmap_ok;
+} 
+
 
 col_val color_map_map::get_col(int idx)
 {
@@ -752,7 +831,7 @@ void color_map_map::set_col(int idx, col_val col)
 
 
 
-unsigned int color_map_map::effective_size() const
+int color_map_map::effective_size() const
 {
    return size() ? cmap.rbegin()->first+1 : 0;
 }
@@ -781,6 +860,22 @@ bool color_map_map::init(const char *map_name, char *errmsg)
    
    if(cfile)
       fclose(cfile);
+
+   return cmap_ok;
+}
+
+bool color_map_map::init_from_line(const char *map_name, char *errmsg)
+{
+   char name[MSG_SZ];
+   strncpy(name, map_name, MSG_SZ);
+   name[MSG_SZ-1] = '\0';
+   
+   if(!init_strip(name, errmsg))
+      return false;
+
+   bool cmap_ok = parse_map_from_line(name, &cmap, errmsg);
+   if(get_wrap()==-1)
+      set_wrap(effective_size());
 
    return cmap_ok;
 }
@@ -820,6 +915,7 @@ color_map_multi::~color_map_multi()
 color_map_multi::color_map_multi(const color_map_multi &cmap) : color_map(cmap)
 {
    copy_params(cmap);
+   map_sz = cmap.map_sz;
    for(unsigned int i=0; i<cmap.cmaps.size(); i++)
       add_cmap(cmap.cmaps[i]->clone());
 }
@@ -828,12 +924,22 @@ color_map_multi &color_map_multi::operator=(const color_map_multi &cmap)
 {
    if(this!=&cmap) {
       copy_params(cmap);
+      map_sz = cmap.map_sz;
       while(cmaps.size())
          del_cmap();
       for(unsigned int i=0; i<cmap.cmaps.size(); i++)
          add_cmap(cmap.cmaps[i]->clone());
    }
    return *this;
+}
+
+
+void color_map_multi::set_map_sz()
+{
+   map_sz = 0;
+   for(unsigned int i=0; i<cmaps.size(); i++)
+      if(cmaps[i]->effective_size()>map_sz)
+         map_sz = cmaps[i]->effective_size();
 }
 
 
@@ -845,6 +951,8 @@ void color_map_multi::add_cmap(color_map *col_map, unsigned int pos)
    else
       mi = cmaps.begin()+pos;
    cmaps.insert(mi, col_map);
+   if(col_map->effective_size()>map_sz)
+      map_sz = col_map->effective_size();
 }
 
 
@@ -858,6 +966,7 @@ void color_map_multi::del_cmap(unsigned int pos)
          mi = cmaps.begin()+pos;
       delete *mi;
       cmaps.erase(mi);
+      set_map_sz();
    }
 }
 
