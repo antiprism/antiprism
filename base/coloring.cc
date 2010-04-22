@@ -686,8 +686,11 @@ bool read_colorings(coloring clrngs[], const char *line, char *errmsg)
                   "conversion elements '%s' is also a valid colour map name",
                   parts[i]);
       }
-      else if(col_map)
+      else if(col_map) {
          clrng.add_cmap(col_map);
+         if(errmsg && *errmsg2)
+            snprintf(errmsg, MSG_SZ, "map %d: %s", i+1, errmsg2);
+      }
       else {
          if(errmsg)
             strcpy(errmsg, errmsg2);
@@ -699,7 +702,7 @@ bool read_colorings(coloring clrngs[], const char *line, char *errmsg)
       if((conv_elems & (1<<i)))
          clrngs[i] = clrng;
    }
-
+   
    return 1;
 }
 

@@ -178,7 +178,6 @@ static color_map* init_color_map_generated(const char *map_name, char *errmsg=0)
          strncpy(grey_name, map_name+name_len, num_dgts);
          snprintf(grey_name+num_dgts, MSG_SZ-num_dgts-1,
                "_H0S0V0:1%s%s", wrp?":0":"", map_name+name_len+num_dgts);
-         //fprintf(stderr, "grey name is '%s'\n", grey_name);    
          cmap = new color_map_range_hsv();
          if(cmap && !cmap->init(grey_name, errmsg)) {
             delete cmap;
@@ -277,9 +276,14 @@ color_map* init_color_map(const char *map_name, char *errmsg)
    else {
       char errmsg2[MSG_SZ];
       cmap = init_color_map_generated(map_name, errmsg2);
-      if(!cmap && errmsg)
-         snprintf(errmsg, MSG_SZ, "could not open colour map file \'%s\': %s",
+      if(errmsg) {
+         if(cmap)
+            strcpy(errmsg, errmsg2);
+         else
+            snprintf(errmsg, MSG_SZ,
+                  "could not open colour map file \'%s\': %s",
                   map_name, errmsg2);
+      }
    }
 
    return cmap;
@@ -652,7 +656,14 @@ static bool parse_gimp_file(FILE *cfile, map<int, col_val> *cmap,char *errmsg=0)
             continue;
       }
 
-      // stage == 2
+      if(stage == 2) {
+         stage++;
+         // ignore header line
+         if(strncasecmp(line, "Columns", 7)==0)
+            continue;
+      }
+
+      // stage == 3
       char *r = strtok(line, WHITESPACE);
       char *g = (r) ? strtok(NULL, WHITESPACE) : 0;
       char *b = (g) ? strtok(NULL, WHITESPACE) : 0;
@@ -669,7 +680,7 @@ static bool parse_gimp_file(FILE *cfile, map<int, col_val> *cmap,char *errmsg=0)
       col.read(buf, errmsg);
       if(!col.is_set()) {
          if(errmsg)
-            snprintf(errmsg, MSG_SZ, "colour map: line %d: invalid colour '%s'", line_no, buf);
+            snprintf(errmsg, MSG_SZ, "gimp colour map: line %d: invalid colour '%s'", line_no, buf);
          return false;
       }
 
@@ -685,56 +696,65 @@ static bool parse_file(FILE *cfile, map<int, col_val> *cmap, char *errmsg=0)
 {
    const int line_size=1024;
    char line[line_size];
-   char buf[line_size];
-
    
    if(errmsg)
       *errmsg='\0';
 
    int line_no = 0;
+   int next_idx = 0;   // index to use if no map index is given with a colour
    while(fgets(line, line_size, cfile)) {
       line_no++;
      
+      // copy the map entry string
+      char entry[MSG_SZ]; 
+      strncpy(entry, line, MSG_SZ);
+      entry[MSG_SZ-1] = '\0';
+      
       // ignore comments
-      char *first_hash = strchr(line, '#');
+      char *first_hash = strchr(entry, '#');
       if(first_hash)
          *first_hash = '\0';
 
       // skip blank lines
-      if(sscanf(line, " %s", buf)==EOF)
+      char c;
+      if(sscanf(entry, " %c", &c)==EOF)
          continue;
-
-      if(!cmap->size() && !strchr(line, '=')) {
+ 
+      if(!cmap->size() && strncasecmp(entry, "GIMP Palette", 12)==0) {
          rewind(cfile);
          return parse_gimp_file(cfile, cmap, errmsg);
       }
             
-      char *val;
-      if(!(val = strtok(line, "="))) {
-         if(errmsg)
-            snprintf(errmsg, MSG_SZ, "colour map: line %d: missing '='", line_no);
-         return false;
-      }
 
-      int idx_no;
-      if(!read_int(val, &idx_no, buf)) {
-         if(errmsg)
-            snprintf(errmsg, MSG_SZ, "colour map: line %d: invalid index number '%s'", line_no, val);
-         return false;
+      char *col_pos = entry;
+      char *eq_pos = strchr(entry, '=');
+      if(eq_pos) {
+         col_pos = eq_pos + 1;
+         if(strchr(col_pos, '=')) {
+            if(errmsg)
+               snprintf(errmsg, MSG_SZ, "colour map: line %d: more than one =, '%s'", line_no, line);
+            return false;
+         }
+         *eq_pos = '\0';
+         if(!read_int(entry, &next_idx) || next_idx<0) {
+            if(errmsg)
+               snprintf(errmsg, MSG_SZ, "colour map: line %d: invalid index number, '%s'", line_no, entry);
+            return false;
+         }
       }
-
-      val=strtok(NULL, "\n");
 
       col_val col;
-      col.read(val, errmsg);
+      col.read(col_pos);
       if(!col.is_set()) {
          if(errmsg)
-            snprintf(errmsg, MSG_SZ, "colour map: line %d: invalid colour '%s'", line_no, val);
+            snprintf(errmsg, MSG_SZ, "colour map: line %d: invalid colour, '%s'", line_no, col_pos);
          return false;
       }
 
-      //col.get_val().dump();
-      (*cmap)[idx_no] = col;
+      if(errmsg && !*errmsg && cmap->find(next_idx)!=cmap->end())
+         snprintf(errmsg, MSG_SZ, "colour map: line %d: mapping for index %d is being overwritten", line_no, next_idx);
+
+      (*cmap)[next_idx++] = col;
    }
    
    return true;
@@ -756,6 +776,7 @@ static bool parse_map_from_line(const char *line, map<int, col_val> *cmap,
    int next_idx = 0;   // index to use if no map index is given with a colour
    bool cmap_ok = true;
    for(unsigned int i=0; i<entries.size(); i++) {
+      // copy the map entry string
       char entry[MSG_SZ]; 
       strncpy(entry, entries[i], MSG_SZ);
       entry[MSG_SZ-1] = '\0';
@@ -770,7 +791,6 @@ static bool parse_map_from_line(const char *line, map<int, col_val> *cmap,
       if(sscanf(entry, " %c", &c)==EOF)
          continue;
       
-      // copy the map entry string
       char *col_pos = entry;
       char *eq_pos = strchr(entry, '=');
       if(eq_pos) {
@@ -796,12 +816,15 @@ static bool parse_map_from_line(const char *line, map<int, col_val> *cmap,
             *p = ' ';
 
       col_val col;
-      col.read(col_pos, errmsg);
+      col.read(col_pos);
       if(!col.is_set()) {
          if(errmsg)
             snprintf(errmsg, MSG_SZ, "entry %d: invalid colour, '%s'", i+1, col_pos);
          cmap_ok = false;
       }
+
+      if(errmsg && !*errmsg && cmap->find(next_idx)!=cmap->end())
+         snprintf(errmsg, MSG_SZ, "entry %d: mapping for index %d is being overwritten", i, next_idx);
 
       (*cmap)[next_idx++] = col;
    }

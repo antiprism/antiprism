@@ -1501,7 +1501,8 @@ const char *view_opts::help_prec_text =
 "  -t <type> display type for faces 0 - native polygons, 1 - triangulate\n"
 "            polygons (default)\n";
 
-bool view_opts::read_disp_option(char opt, char *optarg, char *errmsg)
+bool view_opts::read_disp_option(char opt, char *optarg, char *errmsg,
+            vector<string> &warnings)
 {
    *errmsg = '\0';
    char errmsg2[MSG_SZ];
@@ -1559,6 +1560,8 @@ bool view_opts::read_disp_option(char opt, char *optarg, char *errmsg)
          case 'm':
             if(!read_colorings(geom_defs.get_clrngs(), optarg, errmsg2))
                strcpy(errmsg, errmsg2);
+            else if(*errmsg2)
+               warnings.push_back(errmsg2);
             break;
 
          case 'x':

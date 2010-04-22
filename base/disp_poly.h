@@ -179,7 +179,8 @@ class view_opts: public prog_opts {
 
    public:
       view_opts(const char *name): prog_opts(name) {}
-      bool read_disp_option(char opt, char *optarg, char *errmsg);
+      bool read_disp_option(char opt, char *optarg, char *errmsg,
+            vector<string> &warnings);
       void set_view_vals(scene &scen);
 };
 

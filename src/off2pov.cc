@@ -104,6 +104,7 @@ void o2p_opts::usage()
 void o2p_opts::process_command_line(int argc, char **argv)
 {
    char errmsg[MSG_SZ];
+   vector<string> warnings;
    opterr = 0;
    char c;
   
@@ -158,9 +159,11 @@ void o2p_opts::process_command_line(int argc, char **argv)
             break;
 
          default:
-            if(read_disp_option(c, optarg, errmsg)) {
+            if(read_disp_option(c, optarg, errmsg, warnings)) {
                if(*errmsg)
                   error(errmsg, c);
+               for(unsigned int i=0; i<warnings.size(); i++)
+                  warning(warnings[i], c);
             }
             else 
                error("unknown command line error");

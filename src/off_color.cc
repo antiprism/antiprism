@@ -472,8 +472,11 @@ void o_col_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'm':
+            *errmsg = '\0';
             if(!read_colorings(clrngs, optarg, errmsg))
                error(errmsg, c);
+            if(*errmsg)
+               warning(errmsg, c);
             break;
 
          case 'r': {
