@@ -255,26 +255,29 @@ color_map* init_color_map(const char *map_name, char *errmsg)
    size_t name_len = strcspn(name, "+*%");
    name[name_len] = '\0';
 
+   char errmsg2[MSG_SZ];
    string alt_name;
    FILE *cfile = open_sup_file(name, "/col_maps/", &alt_name);
    if(alt_name!="") {  // an alt name found before a file with the name
-      cmap = init_color_map_generated(alt_name.c_str());
-      if(!cmap && errmsg)
-         snprintf(errmsg, MSG_SZ, "could not open colour map file"
+      cmap = init_color_map_generated(alt_name.c_str(), errmsg2);
+      if(errmsg) {
+         if(!cmap)
+            snprintf(errmsg, MSG_SZ, "could not open colour map file"
                " \'%s=%s\'", map_name, alt_name.c_str());
+         else
+            strcpy(errmsg, errmsg2);
+      }
    }
    else if(cfile) {
-      char errmsg2[MSG_SZ];
       cmap = new color_map_map();
       if(cmap && !cmap->init(map_name, errmsg2)) {
          delete cmap;
          cmap = 0;
-         if(errmsg)
-            strcpy(errmsg, errmsg2);
       }
+      if(errmsg)
+         strcpy(errmsg, errmsg2);
    }
    else {
-      char errmsg2[MSG_SZ];
       cmap = init_color_map_generated(map_name, errmsg2);
       if(errmsg) {
          if(cmap)
@@ -875,7 +878,7 @@ bool color_map_map::init(const char *map_name, char *errmsg)
    if(cfile) {
       char errmsg2[MSG_SZ];
       cmap_ok = parse_file(cfile, &cmap, errmsg2);
-      if(!cmap_ok && errmsg)
+      if(/*!cmap_ok &&*/ errmsg)
          strcpy(errmsg, errmsg2);
    }
    if(get_wrap()==-1)
