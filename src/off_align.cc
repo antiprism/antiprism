@@ -242,7 +242,7 @@ int main(int argc, char *argv[])
          mat3d scl = mat3d::scale(
                (pts[0][0]-pts[0][1]).mag()/(pts[1][0]-pts[1][1]).mag()); 
          brick_geom.transform(scl);
-         for(unsigned int i=0; i<pts[i].size(); i++)
+         for(unsigned int i=0; i<pts[1].size(); i++)
             pts[1][i] = scl * pts[1][i];
       }
       brick_geom.transform(mat3d::alignment(pts[1],pts[0]));
