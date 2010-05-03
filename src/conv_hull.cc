@@ -26,7 +26,6 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -46,11 +45,11 @@ class ch_opts: public prog_opts {
       string ofile;
       string qh_args;
 
-      ch_opts(): prog_opts("conv_hull"), append_flg(false) {}
+      ch_opts(): prog_opts("conv_hull"),
+                 append_flg(false) {}
       void process_command_line(int argc, char **argv);
       void usage();
 };
-
 
 
 void ch_opts::usage()
@@ -74,6 +73,7 @@ void ch_opts::usage()
 
 void ch_opts::process_command_line(int argc, char **argv)
 {
+   char errmsg[MSG_SZ];
    opterr = 0;
    char c;
    
@@ -101,15 +101,12 @@ void ch_opts::process_command_line(int argc, char **argv)
       }
    }
    
-
    if(argc-optind > 1)
       error("too many arguments");
    
    if(argc-optind == 1)
       ifile=argv[optind];
-   
 }
-
 
 int main(int argc, char *argv[])
 {
@@ -122,20 +119,23 @@ int main(int argc, char *argv[])
       opts.error(errmsg);
    if(*errmsg)
       opts.warning(errmsg);
-
-   if(opts.append_flg) {
-      if(!geom.add_hull(opts.qh_args))
-         opts.error("could not create convex hull");
-   }
-   else {
-      if(!geom.set_hull(opts.qh_args))
-         opts.error("could not create convex hull");
-   }
+      
+   int ret = (opts.append_flg ? geom.add_hull(opts.qh_args, errmsg) : geom.set_hull(opts.qh_args, errmsg));
+   
+   if (ret < 0)
+      opts.error(errmsg);
+   else
+   if (ret == 0)
+      opts.warning("result is a point");
+   else
+   if (ret == 1)
+      opts.warning("result is a line");
+   else
+   if (ret == 2)
+      opts.warning("result is a polygon");
 
    if(!geom.write(opts.ofile, errmsg))
       opts.error(errmsg);
 
-   return 0;
+   return ret;
 }
-
-

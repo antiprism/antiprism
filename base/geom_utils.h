@@ -40,18 +40,20 @@ void make_polar_zono(geom_if &zono, int star_n, bool out_star);
 
 bool make_resource_geom(geom_if &geom, string name, char *errmsg=0);
 
+int find_vertex_by_coordinate(geom_if &geom, vec3d v, double eps=epsilon);
+
 // test points versus hull functions
-bool test_points_vs_hull(const vector<vec3d> &, col_geom_v &, bool, bool, bool, double);
-bool is_geom_fully_outside_hull(col_geom_v &, col_geom_v &, double);
-bool is_geom_outside_hull(col_geom_v &, col_geom_v &, double);
-bool is_geom_on_surface_hull(col_geom_v &, col_geom_v &, double);
-bool is_geom_inside_hull(col_geom_v &, col_geom_v &, double);
-bool is_geom_fully_inside_hull(col_geom_v &, col_geom_v &, double);
-bool is_point_fully_outside_hull(const vec3d &, col_geom_v &, double);
-bool is_point_outside_hull(const vec3d &, col_geom_v &, double);
-bool is_point_on_surface_hull(const vec3d &, col_geom_v &, double);
-bool is_point_inside_hull(const vec3d &, col_geom_v &, double);
-bool is_point_fully_inside_hull(const vec3d &, col_geom_v &, double);
+bool test_points_vs_hull(const vector<vec3d> &, const geom_if &, bool, bool, bool, double);
+bool is_geom_fully_outside_hull(const geom_if &, const geom_if &, double);
+bool is_geom_outside_hull(const geom_if &, const geom_if &, double);
+bool is_geom_on_surface_hull(const geom_if &, const geom_if &, double);
+bool is_geom_inside_hull(const geom_if &, const geom_if &, double);
+bool is_geom_fully_inside_hull(const geom_if &, const geom_if &, double);
+bool is_point_fully_outside_hull(const vec3d &, const geom_if &, double);
+bool is_point_outside_hull(const vec3d &, const geom_if &, double);
+bool is_point_on_surface_hull(const vec3d &, const geom_if &, double);
+bool is_point_inside_hull(const vec3d &, const geom_if &, double);
+bool is_point_fully_inside_hull(const vec3d &, const geom_if &, double);
 
 #endif // GEOM_UTILS_H
 

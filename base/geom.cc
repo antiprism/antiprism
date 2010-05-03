@@ -38,8 +38,8 @@
 #include "symmetry.h"
 #include "coloring.h"
 
-bool add_hull(geom_if &geom, string qh_args="", char *errmsg=0);
-bool set_hull(geom_if &geom, string qh_args="", char *errmsg=0);
+int add_hull(geom_if &geom, string qh_args="", char *errmsg=0);
+int set_hull(geom_if &geom, string qh_args="", char *errmsg=0);
 int orient_geom(geom_if &geom, vector<vector<int> > *parts=0);
 void orient_reverse(geom_if &geom);
 void triangulate(geom_if &geom, col_val inv=col_val(), vector<int> *fmap=0);
@@ -277,12 +277,12 @@ void geom_if::get_impl_edges(vector<vector<int> > &edgs) const
    edgs.erase(vit, edgs.end());
 }
 
-bool geom_if::add_hull(string qh_args, char *errmsg)
+int geom_if::add_hull(string qh_args, char *errmsg)
 {
    return ::add_hull(*this, qh_args, errmsg);
 }
 
-bool geom_if::set_hull(string qh_args, char *errmsg)
+int geom_if::set_hull(string qh_args, char *errmsg)
 {
    return ::set_hull(*this, qh_args, errmsg);
 }
@@ -502,10 +502,16 @@ void col_geom_v::color_vef(col_val vert_col, col_val edge_col, col_val face_col)
 {
    coloring clrng(this);
    
-   clrng.v_one_col(vert_col);
-   add_missing_impl_edges();
-   clrng.e_one_col(edge_col);
-   clrng.f_one_col(face_col);
+   if (vert_col.is_set())
+      clrng.v_one_col(vert_col);
+
+   if (edge_col.is_set()) {
+      add_missing_impl_edges();
+      clrng.e_one_col(edge_col);
+   }
+
+   if (face_col.is_set())
+      clrng.f_one_col(face_col);
 }
 
 
