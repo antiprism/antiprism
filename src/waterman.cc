@@ -48,7 +48,7 @@ using std::vector;
 
 int get_num_decs(const char *str)
 {
-   const char *p = strchr(str, '.');
+   char *p = strchr(str, '.');
    if(!p)
       return 0;
    // Find the number of digits after the decimal point
@@ -135,11 +135,17 @@ void waterman_opts::usage()
 "  -y <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
-"\nScene Options\n"
+"\nColoring Options\n"
+"\n"
+"A colour value can be a single integer (a colour index), a value in\n"
+"form 'R,G,B,A' (3 or 4 values 0.0-1.0, or 0-255) or hex 'xFFFFFF', a\n"
+"colour name from the X11 colour map, 'invisible' or 'none' (which sets\n"
+"without any colour information)\n"
+"\n"
 "  -C <opt>  c - convex hull only (default), i - keep interior, s - supress\n"
-"  -V <col>  vertex color, in form 'R,G,B,A' (3 or 4 values 0.0-1.0, or 0-255)\n"
-"  -E <col>  edge color (if convex hull)\n"
-"  -F <col>  face color (if convex hull)\n"
+"  -V <col>  vertex colour, a color value\n"
+"  -E <col>  edge color (if convex hull), a color value\n"
+"  -F <col>  face color (if convex hull), a color value\n"
 "               lower case outputs map indexes. upper case outputs color values\n"
 "               key word: s,S color by symmetry using face normals\n"
 "               key word: c,C color by symmetry using face normals (chiral)\n"
@@ -710,6 +716,7 @@ int main(int argc, char *argv[])
    opts.process_command_line(argc, argv);
 
    col_geom_v geom;
+   char errmsg[MSG_SZ]="";
 
    fprintf(stderr,"calculating points\n");
 
@@ -722,14 +729,20 @@ int main(int argc, char *argv[])
 
    if (opts.convex_hull) {
       fprintf(stderr,"performing convex hull\n");
-
-      // vebosity = true
-      do_convex_hull(geom, opts.add_hull, true);
-         
-      geom.color_vef(opts.vert_col, opts.edge_col, opts.face_col);
       
-      if (opts.color_method)
-         color_by_symmetry_normals(geom, opts.color_method, opts.face_opaqueness);
+      int ret = (opts.add_hull ? geom.add_hull("",errmsg) : geom.set_hull("",errmsg));
+      if(!ret)
+         fprintf(stderr,"%s\n",errmsg);
+      else {
+         geom.orient();
+         if (true) // verbosity
+            convex_hull_report(geom, opts.add_hull);
+            
+         if (opts.color_method)
+            color_by_symmetry_normals(geom, opts.color_method, opts.face_opaqueness);
+         else
+            geom.color_vef(opts.vert_col, opts.edge_col, opts.face_col);
+      }
    }
 
    // color vertices no matter what
@@ -740,7 +753,6 @@ int main(int argc, char *argv[])
 
    fprintf(stderr,"writing output\n");
 
-   char errmsg[MSG_SZ];
    if(!geom.write(opts.ofile, errmsg))
       opts.error(errmsg);
 
