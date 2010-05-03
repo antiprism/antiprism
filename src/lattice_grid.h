@@ -51,21 +51,20 @@ bool hcp_diamond_test(int x, int y, int z);         // dist2 = 27
 void add_struts(geom_if &geom, int len2);
 
 // for lattice code only
+double lattice_radius(const geom_if &, char);
 void geom_container_clip(col_geom_v &, col_geom_v &, double, vec3d, double);
 void geom_spherical_clip(col_geom_v &, double, vec3d, double);
-void list_grid_radii(col_geom_v &, vec3d, double);
-void list_grid_struts(col_geom_v &, double);
+void list_grid_radii(const col_geom_v &, vec3d, double);
+void list_grid_struts(const col_geom_v &, double);
 void add_color_struts(col_geom_v &, double, col_val);
-void color_centroid(col_geom_v &, col_val);
+void color_centroid(col_geom_v &, col_val, double);
 
 // color functions for lattice programs
-vec3d sort_vec3d_chiral(const vec3d &);
-vec3d sort_vec3d(vec3d &);
 void color_by_symmetry_normals(col_geom_v &, char, int);
 void color_edges_by_sqrt(col_geom_v &, char);
 
 // convex hull and voronoi wrappers
-int do_convex_hull(col_geom_v &, bool, bool);
+void convex_hull_report(const geom_v &, bool);
 int get_voronoi_geom(col_geom_v &, col_geom_v &, bool, bool, double);
 
 

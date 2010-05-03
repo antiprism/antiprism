@@ -55,7 +55,9 @@ class lutil_opts: public prog_opts {
       char color_edges_by_sqrt;
       bool is_vertex_color;
       char container;
+      bool append_container;
       double radius;
+      char radius_default;
       vec3d offset;
       bool voronoi_cells;
       bool voronoi_central_cell;
@@ -83,7 +85,9 @@ class lutil_opts: public prog_opts {
                     color_edges_by_sqrt('\0'),
                     is_vertex_color(true),
                     container('c'),
+                    append_container(false),
                     radius(0),
+                    radius_default('s'),
                     voronoi_cells(false),
                     voronoi_central_cell(false),
                     convex_hull(false),
@@ -122,6 +126,7 @@ void lutil_opts::usage()
 "  -k <file> container using convex polyhedron in off file (uses radius)\n"
 "  -r <c,n>  radius. c is radius taken to optional root n. n = 2 is sqrt\n"
 "               or  l - max insphere radius  s - min insphere radius (default)\n"
+"               or  k - take radius from container specified by -k\n"
 "  -q <vecs> center offset, in form \"a_val,b_val,c_val\" (default: none)\n"
 "  -s <s,n>  create struts. s is strut length taken to optional root n\n"
 "               use multiple -s parameters for multiple struts\n"
@@ -132,6 +137,7 @@ void lutil_opts::usage()
 "  -O        translate center of final product to origin\n"
 "  -Z <col>  add center vertex to final product in color col\n"
 "  -R <file> repeat off file at every vertex in lattice\n"
+"  -K        append cage of container of -k to final product\n"
 "  -y <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
@@ -178,7 +184,7 @@ void lutil_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hzx:X:c:k:r:q:s:D:C:AV:E:F:T:Z:OR:LSy:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hzx:X:c:k:r:q:s:D:C:AV:E:F:T:Z:KOR:LSy:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -227,16 +233,20 @@ void lutil_opts::process_command_line(int argc, char **argv)
             break;
             
          case 'r':
-            if(!read_double_list(optarg, double_parms, errmsg, 2))
-               error(errmsg, c);
-            radius = double_parms[0];
-            if(double_parms.size() == 2) {
-               if(double_parms[1] == 0)
-                  error("root for radius must be non-zero", c);
-               radius = pow(radius, 1/double_parms[1]);
+            if(strlen(optarg) == 1 && strchr("lsk", *optarg))
+               radius_default = *optarg;
+            else {
+               if(!read_double_list(optarg, double_parms, errmsg, 2))
+                  error(errmsg, c);
+               radius = double_parms[0];
+               if(double_parms.size() == 2) {
+                  if(double_parms[1] == 0)
+                     error("root for radius must be non-zero", c);
+                  radius = pow(radius, 1/double_parms[1]);
+               }
+               if(radius <= 0)
+                  error("radius cannot be negative or zero", "s", c);
             }
-            if(radius <= 0)
-               error("radius cannot be negative", "s", c);
             break;
             
          case 'q':
@@ -509,6 +519,10 @@ void lutil_opts::process_command_line(int argc, char **argv)
             if(!cent_col.read(optarg, errmsg))
                error(errmsg, c);
             break;
+            
+         case 'K':
+            append_container = true;
+            break;
 
          case 'O':
             trans_to_origin = true;
@@ -548,12 +562,15 @@ void lutil_opts::process_command_line(int argc, char **argv)
 
    while(argc-optind)
       ifiles.push_back(string(argv[optind++]));
+
+   if (radius_default == 'k' && !cfile.length())
+      error("-r k can only be used if -k container is specified");
       
    if (container == 'c' && !cfile.length() && (radius != 0 || offset.is_set()))
       warning("cubic container in use. Radius and offset ignored");
       
-   if ((container == 's' || cfile.length()) && !radius)
-      error("radius not set");
+   //if ((container == 's' || (cfile.length() && !radius_default)) && !radius)
+   //   error("radius not set");
    
    epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
@@ -573,7 +590,7 @@ void remove_vertex_by_color(col_geom_v &geom, col_val remove_vertex_color, bool 
       geom.delete_verts(del_verts);
 
    if (!verts.size())
-      fprintf(stderr,"warning: all vertices were removed!\n");
+      fprintf(stderr,"remove_vertex_by_color: warning: all vertices were removed!\n");
 }
 
 void make_skeleton(col_geom_v &geom, bool strip_faces)
@@ -583,7 +600,7 @@ void make_skeleton(col_geom_v &geom, bool strip_faces)
       geom.clear_faces();
 }
 
-void process_lattices(col_geom_v &geom, lutil_opts opts)
+void process_lattices(col_geom_v &geom, col_geom_v &container, col_geom_v &repeater, lutil_opts opts)
 {
    // add explicit edges and remove faces if necessary
    make_skeleton(geom, opts.strip_faces);
@@ -598,21 +615,14 @@ void process_lattices(col_geom_v &geom, lutil_opts opts)
    for(unsigned int i=0; i<opts.remove_vertex_color_list.size(); i++)
       remove_vertex_by_color(geom, opts.remove_vertex_color_list[i], opts.is_vertex_color);
 
-   // read in container file if using. Check existance
-   char errmsg[MSG_SZ]="";
-   col_geom_v container;
-   if(opts.cfile.length()) {
-      if(!container.read(opts.cfile, errmsg))
-         opts.error(errmsg);
-      if(*errmsg)
-         opts.warning(errmsg);
-   }
-
    for(unsigned int i=0; i<opts.strut_len.size(); i++)
       add_color_struts(geom, opts.strut_len[i]*opts.strut_len[i], opts.edge_col[0]);
       
+   if (!opts.radius && opts.radius_default != 'k')
+      opts.radius = lattice_radius(geom, opts.radius_default);
+      
    if(opts.cfile.length())
-      geom_container_clip(geom, container, opts.radius, opts.offset, opts.epsilon);
+      geom_container_clip(geom, container, (opts.radius_default == 'k') ? lattice_radius(container,opts.radius_default) : opts.radius, opts.offset, opts.epsilon);
    else
    if (opts.container == 's')
       geom_spherical_clip(geom, opts.radius, opts.offset, opts.epsilon);
@@ -621,16 +631,21 @@ void process_lattices(col_geom_v &geom, lutil_opts opts)
       col_geom_v vgeom;
       if (get_voronoi_geom(geom, vgeom, opts.voronoi_central_cell, false, opts.epsilon)) {
          vgeom.color_vef(opts.vert_col[2], opts.edge_col[2], opts.face_col[2]);
-                      
-         geom.clear_all();
-         geom.append(vgeom);
+         geom = vgeom;
       }
    }
 
-   if (opts.convex_hull) {    
-      // vebosity = true
-      if (do_convex_hull(geom, opts.add_hull, true))
+   if (opts.convex_hull) {
+      char errmsg[MSG_SZ]="";
+      int ret = (opts.add_hull ? geom.add_hull("",errmsg) : geom.set_hull("",errmsg));
+      if(ret < 0)
+         fprintf(stderr,"%s\n",errmsg);
+      else {
+         geom.orient();
+         if (true) // verbosity
+            convex_hull_report(geom, opts.add_hull);
          geom.color_vef(opts.vert_col[1], opts.edge_col[1], opts.face_col[1]);
+      }
    }
    
    if (opts.append_lattice) {
@@ -657,24 +672,24 @@ void process_lattices(col_geom_v &geom, lutil_opts opts)
 
    // add central vertex last so not to alter listing outcomes
    if (opts.cent_col.is_set())
-      color_centroid(geom, opts.cent_col);
+      color_centroid(geom, opts.cent_col, opts.epsilon);
       
    // place geom at every vertex in lattice
-   col_geom_v repeater;
    if(opts.rfile.length()) {
-      if(!repeater.read(opts.rfile, errmsg))
-         opts.error(errmsg);
-      if(*errmsg)
-         opts.warning(errmsg);
-
       col_geom_v geom2;
-      for(unsigned int i=0; i<geom.get_verts()->size(); i++) {
+      for(unsigned int i=0; i<geom.verts().size(); i++) {
          col_geom_v rep = repeater;
-         rep.transform(mat3d::transl((*geom.get_verts())[i]));
+         rep.transform(mat3d::transl((geom.verts())[i]));
          geom2.append(rep);
       }
       geom = geom2;
       sort_merge_elems(geom, "vef", opts.epsilon);
+   }
+   
+   if (opts.append_container) {
+      container.add_missing_impl_edges();
+      container.clear_faces();
+      geom.append(container);
    }
 }
 
@@ -684,8 +699,25 @@ int main(int argc, char *argv[])
    opts.process_command_line(argc, argv);
    if(!opts.ifiles.size())
       opts.ifiles.push_back("");
-
+      
+   // read in container file if using. Check existance
    char errmsg[MSG_SZ]="";
+   col_geom_v container;
+   if(opts.cfile.length()) {
+      if(!container.read(opts.cfile, errmsg))
+         opts.error(errmsg);
+      if(*errmsg)
+         opts.warning(errmsg);
+   }
+   
+   col_geom_v repeater;
+   if(opts.rfile.length()) {
+      if(!repeater.read(opts.rfile, errmsg))
+         opts.error(errmsg);
+      if(*errmsg)
+         opts.warning(errmsg);
+   }
+
    col_geom_v geoms;
    for(unsigned int i=0; i<opts.ifiles.size(); i++) {
       col_geom_v geom;
@@ -696,7 +728,7 @@ int main(int argc, char *argv[])
       geoms.append(geom);
    }
    
-   process_lattices(geoms, opts);
+   process_lattices(geoms, container, repeater, opts);
 
    if(!geoms.write(opts.ofile, errmsg))
       opts.error(errmsg);
