@@ -195,6 +195,37 @@ bool col_val::read_hexvals(char *str, char *errmsg)
          int((val/256)%256), int(val%256) );
    return true;
 }
+
+
+
+bool col_val::read_hsva_vals(char *str, char *errmsg)
+{
+   bool ret = false;
+   if((str[0] == 'h' || str[0] == 'H') && strlen(str) > 1) {
+      char hsva_str[MSG_SZ];
+      strncpy(hsva_str, str+1, MSG_SZ-1);
+      hsva_str[MSG_SZ-1] = '\0';
+      vector<double> vals;
+      bool hue_degrees = (str[0] == 'h');
+      if(read_double_list(hsva_str, vals, errmsg, 4)) {
+         int sz = vals.size();
+         double hue = vals[0];
+         if (hue_degrees)
+            hue /= 360.0;
+         for(int i=1;i<sz; i++) {
+            if(vals[i]<0 || vals[i]>1) {
+               if(errmsg)
+                  snprintf(errmsg, MSG_SZ,
+                        "hsva format, \"%g\" is not in range 0.0-1.0", vals[i]);
+               return ret;
+            }
+         }
+         set_hsva(hue,(sz < 2 ? 1.0 : vals[1]),(sz < 3 ? 1.0 : vals[2]),(sz < 4 ? 1.0 : vals[3]));
+         ret = true;
+      }
+   }
+   return ret;
+}
    
 
 bool col_val::read_colorname(char *str, char *errmsg, bool as_index)
@@ -273,6 +304,9 @@ bool col_val::read(char *str, char *errmsg)
             
    strcpy(str2, orig.c_str());
    if(read_hexvals(str2, errmsg))
+      return true;
+      
+   if(read_hsva_vals(str2, errmsg))
       return true;
 
    strcpy(str2, orig.c_str());

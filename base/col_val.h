@@ -123,6 +123,19 @@ class col_val
       /**The HSVA values are in the range 0.0-1.0. Using out of range
        * values will leave the colour unset. */
       void set_hsva(const vec4d &hsva);
+      
+      ///Set the colour with floating point hsla values.
+      /**Using out of range values will leave the colour unset.
+       *\param hue hue in range \c 0.0 - \c 1.0
+       *\param sat saturation in range \c 0.0 - \c 1.0
+       *\param lum value in range \c 0.0 - \c 1.0
+       *\param alpha alpha value in range \c 0.0 (clear) - \c 1.0 (opaque) */
+      void set_hsla(double hue, double sat, double lum, double alpha=1.0);
+      
+      ///Set the colour with floating point hsla values.
+      /**The hsla values are in the range 0.0-1.0. Using out of range
+       * values will leave the colour unset. */
+      void set_hsla(const vec4d &hsla);
 
       ///Get the index number
       /**\return The index number. */
@@ -153,6 +166,10 @@ class col_val
       /**\return The RGBA values as components in range \c 0.0 to \c 1.0. */
       vec4d get_hsva() const;
 
+     ///Get the HSLA values
+      /**\return The RGBA values as components in range \c 0.0 to \c 1.0. */
+      vec4d get_hsla() const;
+      
       ///Read access to the integer RGBA values
       int operator [](int i) const;
 
@@ -279,6 +296,17 @@ class col_val
        * \return true if a valid colour was read, otherwise false
        * and the error is detailed in \a errmsg. */
       bool read_hexvals(char *str, char *errmsg=0);
+      
+      ///Read a colour given as HSVA format in a string.
+      /**\param str a string starting with H or h followed by
+       * param str a string of 1 (h) value of plus/minus N degrees or
+       * 1 (H) decimal value in range \c 0.0 - \c 1.0.
+       * and up to 3 (SVA) optional comma separated decimals in range \c 0.0 - \c 1.0.
+       * \param errmsg an array at least \c MSG_SZ chars long to
+       * return any error message.
+       * \return true if a valid colour was read, otherwise false
+       * and the error is detailed in \a errmsg. */
+      bool read_hsva_vals(char *str, char *errmsg=0);
 
       ///Read a colour given by name.
       /**\param str the colour name to be looked up in the internal list
