@@ -54,24 +54,25 @@ using std::map;
 #define CN_ONE_HALF 0.5
 
 
-class colorList
+// colorVal class is needed because an unset col_val or a col_val which is an index cannot hold an alpha value
+class colorVal
 {
    public:
       col_val  col;
       int      opacity;
-      colorList(col_val c, int o) : col(c), opacity(o) {}
+      colorVal(col_val c, int o) : col(c), opacity(o) {}
 };
 
-void add_color(vector<colorList *> &col_list, col_val col, int opacity)
+void add_color(vector<colorVal *> &color_val, col_val col, int opacity)
 {
-   col_list.push_back(new colorList(col,opacity));
+   color_val.push_back(new colorVal(col,opacity));
 }
 
-void clear_colors(vector<colorList *> &color_list)
+void clear_colors(vector<colorVal *> &color_val)
 {
-   for (unsigned int i=0;i<color_list.size();i++)
-      delete color_list[i];
-   color_list.clear();
+   for (unsigned int i=0;i<color_val.size();i++)
+      delete color_val[i];
+   color_val.clear();
 }
 
 class ops
@@ -88,7 +89,7 @@ bool cmp_ops(const ops *a, const ops *b)
    return a->op_pos > b->op_pos;
 }
 
-int validate_cn_string(string cn_string, vector<ops *> *operations, char *operand, int *poly_size)
+int validate_cn_string(string cn_string, vector<ops *> &operations, char &operand, int &poly_size)
 {
    char current_op = '\0';
    string number_string;
@@ -100,16 +101,16 @@ int validate_cn_string(string cn_string, vector<ops *> *operations, char *operan
    string digits = "0123456789";
    string digits_allowed = "tkPAY";
 
-   *operand = '\0';
-   *poly_size = 0;
+   operand = '\0';
+   poly_size = 0;
 
    for (unsigned int i = 0; i < cn_string.length(); i++) {
       if (operators.find(cn_string[i]) != string::npos) {
-         if (*operand != '\0')
+         if (operand != '\0')
             return i;
 
          if (delayed_write) {
-            operations->push_back(new ops(i,current_op,num_val));
+            operations.push_back(new ops(i,current_op,num_val));
             delayed_write = false;
          }
 
@@ -117,27 +118,27 @@ int validate_cn_string(string cn_string, vector<ops *> *operations, char *operan
 
          // delay if t or k
          if (digits_allowed.find(current_op) == string::npos)
-            operations->push_back(new ops(i+1,current_op,num_val));
+            operations.push_back(new ops(i+1,current_op,num_val));
          else
             delayed_write = true;
       }
       else
       if (operands.find(cn_string[i]) != string::npos) {
-         if (*operand != '\0')
+         if (operand != '\0')
             return i;
 
          if (delayed_write) {
-            operations->push_back(new ops(i,current_op,num_val));
+            operations.push_back(new ops(i,current_op,num_val));
             delayed_write = false;
          }
 
-         *operand = cn_string[i];
+         operand = cn_string[i];
          current_op = '\0';
       }
       else
       if (digits.find(digits) != string::npos) {
-         if (*operand != '\0') {
-            if (digits_allowed.find(*operand) == string::npos) {
+         if (operand != '\0') {
+            if (digits_allowed.find(operand) == string::npos) {
                return i;
             }
          }
@@ -159,7 +160,7 @@ int validate_cn_string(string cn_string, vector<ops *> *operations, char *operan
                fprintf(stderr,"kis k(n), n must be 3 or greater\n");
                return i;
             }
-            operations->push_back(new ops(i+1,current_op,num_val));
+            operations.push_back(new ops(i+1,current_op,num_val));
             delayed_write = false;
          }
          else
@@ -169,12 +170,12 @@ int validate_cn_string(string cn_string, vector<ops *> *operations, char *operan
                fprintf(stderr,"trunc t(n), n must be 3 or greater\n");
                return i;
             }
-            operations->push_back(new ops(i+1,current_op,num_val));
+            operations.push_back(new ops(i+1,current_op,num_val));
             delayed_write = false;
          }
          else {
-            *poly_size = atoi(number_string.c_str());
-            if (*poly_size < 3) {
+            poly_size = atoi(number_string.c_str());
+            if (poly_size < 3) {
                fprintf(stderr,"P(n), A(n), or Y(n), n must be 3 or greater\n");
                return i;
             }
@@ -187,12 +188,12 @@ int validate_cn_string(string cn_string, vector<ops *> *operations, char *operan
 
    // if t or k was specified alone at end
    if (delayed_write) {
-      operations->push_back(new ops(cn_string.length(),current_op,num_val));
+      operations.push_back(new ops(cn_string.length(),current_op,num_val));
       delayed_write = false;
    }
 
    // if P, A or Y was specified with no digit n
-   if ((digits_allowed.find(*operand) != string::npos) && *poly_size == 0) {
+   if ((digits_allowed.find(operand) != string::npos) && poly_size == 0) {
       fprintf(stderr,"P(n), A(n), or Y(n), n must be 3 or greater\n");
       return cn_string.length();
    }
@@ -200,13 +201,13 @@ int validate_cn_string(string cn_string, vector<ops *> *operations, char *operan
    return 0;
 }
 
-string resolved_cn_string(string cn_string, bool use_truncate_algorithm)
+string resolved_cn_string(const string cn_string, bool use_truncate_algorithm)
 {
    string resolve_string = cn_string;
 
    int num_subst = 25;
-   string target[25];
-   string resolve[25];
+   string target[num_subst];
+   string resolve[num_subst];
                                              // G. Hart Commentary
    target[0] = "P4"; resolve[0] = "C";       // P4 --> C   (C is prism)
    target[1] = "A3"; resolve[1] = "O";       // A3 --> O   (O is antiprism)
@@ -309,24 +310,21 @@ class cn_opts: public prog_opts {
       bool unitize;
       bool verbosity;
       bool use_truncate_algorithm;
-      string cfile;
-      col_val vert_col;
-      col_val edge_col;
       char face_coloring_method;
-      vector<colorList *> face_colors;
       int face_opacity;
       string face_pattern;
       string write_indexes;
-      
-      coloring clrngs[3];
-      
       bool output_face_indexes;
       
+      col_val vert_col;
+      col_val edge_col;
+      vector<colorVal *> face_colors;
+      coloring clrngs[3];
+
       vector<ops *> operations;
-      
-      int epsilon_num;
 
       cn_opts(): prog_opts("conway"),
+                 cn_string(""),
                  resolve_defeat(false),
                  reverse_defeat(false),
                  operand('\0'),
@@ -344,6 +342,7 @@ class cn_opts: public prog_opts {
                  face_coloring_method('N'),
                  face_opacity(255),
                  face_pattern("1"),
+                 write_indexes(""),
                  output_face_indexes(false)
              {}
 
@@ -494,17 +493,22 @@ void cn_opts::usage()
 "  -z <n>    status reporting every n iterations, -1 for no status (default: -1)\n"
 "\n"
 "Coloring Options\n"
-"  -V <col>  vertex color, in form 'R,G,B,A' (3 or 4 values 0.0-1.0, or 0-255)\n"
-"  -E <col>  edge color (sames as -V)\n"
-"  -f <mthd> mthd is face coloring method. The coloring is done before twist\n"
-"            using colors in the face color list with -F\n"
+"\n"
+"A colour value can be a single integer (a colour index), a value in\n"
+"form 'R,G,B,A' (3 or 4 values 0.0-1.0, or 0-255) or hex 'xFFFFFF', a\n"
+"colour name from the X11 colour map, 'invisible' or 'none' (which sets\n"
+"without any colour information)\n"
+"\n"
+"  -V <col>  vertex color, a color value\n"
+"  -E <col>  edge color, a color value\n"
+"  -F <elms> face color list. default: red,darkorange1,yellow,darkgreen,cyan,\n"
+"               blue,magenta,white,grey,black. Valid color names and indexes are\n"
+"               in the X11 map. Or use only index numbers if -M map is used.\n"
+"  -f <mthd> mthd is face coloring method using face color list given in -F\n"
 "               key word: none - sets no color (default: N)\n"
 "               lower case outputs map indexes. upper case outputs color values\n"
 "               n,N - colour by number of sides\n"
 "                 X - use colors from original program (-F ignored)\n"
-"  -F <elms> face color list. default: red,darkorange1,yellow,darkgreen,cyan,\n"
-"               blue,magenta,white,grey,black. Valid color names and indexes are\n"
-"               in the X11 map. Or use only index numbers if -M map is used.\n"
 "  -T <tran> face transparency. valid range from 0 to 255\n"
 "               0 - invisible  255 - opaque (default 255)\n"
 "  -O <strg> face transparency pattern string. valid values\n"
@@ -513,7 +517,7 @@ void cn_opts::usage()
 "               to color values. file is color map file (default: X11)\n"
 "               optional elements to map are v, e or f (default: vef)\n"
 "\n"
-"\n",prog_name(), help_ver_text, epsilon_num,::epsilon,epsilon_num,::epsilon);
+"\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }
 
 void cn_opts::process_command_line(int argc, char **argv)
@@ -523,8 +527,6 @@ void cn_opts::process_command_line(int argc, char **argv)
    char errmsg[MSG_SZ];
    
    vector<char *> face_color_names;
-   
-   epsilon_num = int(-log(::epsilon)/log(10) + 0.5);
    
    handle_long_opts(argc, argv);
 
@@ -682,7 +684,7 @@ void cn_opts::process_command_line(int argc, char **argv)
    if(strspn(cn_string.c_str(), "abdegjkmoprstxTCOIDPAY0123456789,") != strlen(cn_string.c_str()))
       error("Conway Notation must consist of abdegjkmoprstxTCOIDPAY0123456789\n");
 
-   if (int pos = validate_cn_string(cn_string, &operations, &operand, &poly_size)) {
+   if (int pos = validate_cn_string(cn_string, operations, operand, poly_size)) {
       snprintf(errmsg, MSG_SZ, "Unexpected character in position %d: %s\n", pos+1, cn_string.c_str());
       error(errmsg);
    }
@@ -695,7 +697,7 @@ void cn_opts::process_command_line(int argc, char **argv)
       operations.clear();
 
       // revalidate (should be valid) to rebuild operations table
-      if (int pos = validate_cn_string(cn_string, &operations, &operand, &poly_size)) {
+      if (int pos = validate_cn_string(cn_string, operations, operand, poly_size)) {
          snprintf(errmsg, MSG_SZ, "Unexpected character in position %d: %s\n", pos+1, cn_string.c_str());
          error(errmsg);
       }
@@ -794,7 +796,8 @@ void cn_opts::process_command_line(int argc, char **argv)
 
    if (output_face_indexes && face_opacity >= 0)
       warning("when writing face indexes, transparency setting ignored","T");
-      
+   
+   int epsilon_num = int(-log(::epsilon)/log(10) + 0.5);
    lim_exp_planar = (lim_exp_planar != INT_MAX) ? lim_exp_planar : epsilon_num;
    lim_exp_canonical = (lim_exp_canonical != INT_MAX) ? lim_exp_canonical : epsilon_num;
 }
@@ -821,7 +824,7 @@ void verbose(char operation, int op_var, bool verbosity)
             fprintf(stderr,"gyro\n");
             break;
          case 'k':
-            if ( op_var != 0 )
+            if ( op_var )
                sprintf(buf,"(%d)",op_var);
             fprintf(stderr,"kis%s\n",buf);
             break;
@@ -850,12 +853,12 @@ void verbose(char operation, int op_var, bool verbosity)
             fprintf(stderr,"snub as dual, gyro, dual:\n");
             break;
          case 't':
-            if ( op_var != 0 )
+            if ( op_var )
                sprintf(buf,"(%d)",op_var);
             fprintf(stderr,"truncate as dual, kis%s, dual:\n",buf);
             break;
          case '#':
-            if ( op_var != 0 )
+            if ( op_var )
                sprintf(buf,"(%d)",op_var);
             fprintf(stderr,"truncate%s by built in function\n",buf);
             break;
@@ -1533,10 +1536,9 @@ void set_face_index_and_calc_opacity(col_geom_v &geom, int i, col_val c, int opa
    }
 }
 
-void cn_face_coloring(col_geom_v &geom, int /*AR face_coloring_method*/, vector<colorList *> face_colors, coloring &f_coloring, bool write_indexes)
+void cn_face_coloring(col_geom_v &geom, const vector<colorVal *> &face_colors, const coloring &f_coloring, bool write_indexes)
 {
    const vector<vector<int> > &faces = geom.faces();
-   // AR color_map col_map = f_coloring.get_cmap();
    color_map_map col_map;
 
    int sz = face_colors.size();
@@ -1551,8 +1553,6 @@ void apply_color_values(col_geom_v &geom, cn_opts &opts)
 {
    if (!opts.output_face_indexes) {
       opts.clrngs[2].set_geom(&geom);
-      //f_coloring fc(opts.clrng[2]);
-      //fc.apply_cmap();
       opts.clrngs[2].f_apply_cmap();
    }
 }
@@ -1573,7 +1573,7 @@ int main(int argc, char *argv[])
    col_geom_v geom;
    char errmsg[MSG_SZ];
 
-   if (opts.operand != '\0')
+   if (opts.operand)
       get_operand(geom, opts.operand, opts.poly_size);
    else {
       if(!geom.read(opts.ifile, errmsg))
@@ -1595,7 +1595,7 @@ int main(int argc, char *argv[])
       unitize_edges(geom);
 
    if (opts.face_coloring_method) {
-      cn_face_coloring(geom, opts.face_coloring_method, opts.face_colors, opts.clrngs[2], opts.output_face_indexes);
+      cn_face_coloring(geom, opts.face_colors, opts.clrngs[2], opts.output_face_indexes);
       color_uncolored_faces(geom, col_val(DEFAULT_COLOR));
    }
    

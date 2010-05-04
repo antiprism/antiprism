@@ -29,6 +29,10 @@
 #include <string.h>
 #include "col_val.h"
 
+using std::min;
+using std::max;
+
+
 col_val col_val::invisible(0,0,0,0);
 
 bool col_val::operator ==(col_val c) const
@@ -202,4 +206,121 @@ vec4d col_val::get_hsva() const
    hsva[3] = rgba_d[3];
    return hsva;
 }
+
  
+// HSL algorithms by Paul Bourke
+// http://local.wasp.uwa.edu.au/~pbourke/texture_colour/convert/
+/*
+   Calculate HSL from RGB
+   Hue is in degrees
+   Lightness is between 0 and 1
+   Saturation is between 0 and 1
+*/
+vec4d RGB2HSL(const col_val &c)
+{
+   vec4d c1(c[0],c[1],c[2],c[3]);
+   
+   double themin = 0.0;
+   double themax = 0.0;
+   double delta = 0.0;
+
+   themin = min(c1[0],min(c1[1],c1[2]));
+   themax = max(c1[0],max(c1[1],c1[2]));
+   delta = themax - themin;
+   double l = (themin + themax) / 2.0;
+   l /= 255.0; // Antiprism
+   double s = 0.0;
+   if (l > 0.0 && l < 1.0)
+      s = delta / (l < 0.5 ? (2.0*l) : (2.0-2.0*l));
+   s /= 255.0; // Antiprism
+   double h = 0.0;
+   if (delta > 0.0) {
+      if (themax == c1[0] && themax != c1[1])
+         h += (c1[1] - c1[2]) / delta;
+      if (themax == c1[1] && themax != c1[2])
+         h += (2.0 + (c1[2] - c1[0]) / delta);
+      if (themax == c1[2] && themax != c1[0])
+         h += (4.0 + (c1[0] - c1[1]) / delta);
+      h *= 60.0;
+   }
+   if (h<0.0) h+=360.0; // Antiprism
+   return(vec4d(h/360.0,s,l,c[3]/255.0));
+}
+
+/*
+   Calculate RGB from HSL, reverse of RGB2HSL()
+   Hue is in degrees
+   Lightness is between 0 and 1
+   Saturation is between 0 and 1
+*/
+col_val HSL2RGB(vec4d c1)
+{
+   c1[0] = fmod(c1[0], 1.0)*360; // Antiprism
+   if (c1[0] < 0)
+      c1[0] += 360;
+   
+   vec4d c2,sat,ctmp;
+
+   while (c1[0] < 0.0)
+      c1[0] += 360.0;
+   while (c1[0] > 360.0)
+      c1[0] -= 360.0;
+
+   if (c1[0] < 120.0) {
+      sat[0] = (120.0 - c1[0]) / 60.0;
+      sat[1] = c1[0] / 60.0;
+      sat[2] = 0.0;
+   } else if (c1[0] < 240.0) {
+      sat[0] = 0.0;
+      sat[1] = (240.0 - c1[0]) / 60.0;
+      sat[2] = (c1[0] - 120.0) / 60.0;
+   } else {
+      sat[0] = (c1[0] - 240.0) / 60.0;
+      sat[1] = 0.0;
+      sat[2] = (360.0 - c1[0]) / 60.0;
+   }
+   sat[0] = min(sat[0],1.0);
+   sat[1] = min(sat[1],1.0);
+   sat[2] = min(sat[2],1.0);
+
+   ctmp[0] = 2.0 * c1[1] * sat[0] + (1 - c1[1]);
+   ctmp[1] = 2.0 * c1[1] * sat[1] + (1 - c1[1]);
+   ctmp[2] = 2.0 * c1[1] * sat[2] + (1 - c1[1]);
+
+   if (c1[2] < 0.5) {
+      c2[0] = c1[2] * ctmp[0];
+      c2[1] = c1[2] * ctmp[1];
+      c2[2] = c1[2] * ctmp[2];
+   } else {
+      c2[0] = (1.0 - c1[2]) * ctmp[0] + 2.0 * c1[2] - 1.0;
+      c2[1] = (1.0 - c1[2]) * ctmp[1] + 2.0 * c1[2] - 1.0;
+      c2[2] = (1.0 - c1[2]) * ctmp[2] + 2.0 * c1[2] - 1.0;
+   }
+   
+   return(col_val(c2[0],c2[1],c2[2],c1[3]));
+}
+
+
+void col_val::set_hsla(double hue, double sat, double lightness, double alpha)
+{
+   double *hsla[] = {&hue, &sat, &lightness, &alpha};
+   for(int i=1; i<4; i++) {
+      if(*hsla[i] < 0)
+         *hsla[i] = 0;
+      else if(*hsla[i] > 1)
+         *hsla[i] = 1;
+   }
+
+   *this = HSL2RGB(vec4d(*hsla[0], *hsla[1], *hsla[2], *hsla[3]));
+}
+
+void col_val::set_hsla(const vec4d &hsla)
+{
+   set_hsla(hsla[0], hsla[1], hsla[2], hsla[3]);
+}
+
+
+vec4d col_val::get_hsla() const
+{
+   return RGB2HSL(*this);
+}

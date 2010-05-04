@@ -44,6 +44,7 @@ using std::string;
 using std::vector;
 using std::swap;
 using std::map;
+using std::pair;
 
 #define DEFAULT_COLOR 193,192,191,255
 #define UNSET_EDGE_COLOR 3,2,1,0
@@ -60,16 +61,16 @@ bool full_model(vector<int> longitudes)
    return(longitudes.front() == longitudes.back());
 }
 
-void add_color(vector<colorList *> &col_list, col_val col, int opacity)
+void add_color(vector<colorVal *> &color_val, col_val col, int opacity)
 {
-   col_list.push_back(new colorList(col,opacity));
+   color_val.push_back(new colorVal(col,opacity));
 }
 
-void clear_colors(vector<colorList *> &color_list)
+void clear_colors(vector<colorVal *> &color_val)
 {
-   for (unsigned int i=0;i<color_list.size();i++)
-      delete color_list[i];
-   color_list.clear();
+   for (unsigned int i=0;i<color_val.size();i++)
+      delete color_val[i];
+   color_val.clear();
 }
 
 class ncon_opts: public prog_opts {
@@ -85,7 +86,7 @@ class ncon_opts: public prog_opts {
       string cfile;
       string write_indexes;
       char face_coloring_method;
-      vector<colorList *> face_colors;
+      vector<colorVal *> face_colors;
       int face_opacity;
       string face_pattern;
       bool face_seq;
@@ -96,7 +97,7 @@ class ncon_opts: public prog_opts {
       int face_deck;
       bool face_sequential_colors;
       char edge_coloring_method;
-      vector<colorList *> edge_colors;
+      vector<colorVal *> edge_colors;
       int edge_opacity;
       string edge_pattern;
       bool edge_set_no_color;
@@ -235,7 +236,7 @@ void ncon_opts::usage()
 "  -U <tran> edge transparency. valid range from 0 to 255\n"
 "               0 - invisible  255 - opaque (default: 255)\n"
 "  -P <strg> edge transparency pattern string. valid values\n"
-"               0 - T value suppressed  1 - T value applied  (default: '1')\n"
+"               0 - U value suppressed  1 - U value applied  (default: '1')\n"
 "  -Q <col>  color given to uncolored edges and vertices of final model\n"
 "               key word: none - sets no color (default: invisible)\n"
 "  -M <map>  file,elements  when output by color values, map color indexes\n"
@@ -650,7 +651,6 @@ void ncon_opts::process_command_line(int argc, char **argv)
       warning("symmetric coloring is the same an non-symmetric coloring for odd order n-icons","S");
          
    // Set up the face color map. If none specified build default
-   // AR
    bool face_col_map = clrngs[2].get_cmaps().size() ? true : false;
    if(!face_col_map) {
       color_map_map *col_map = new color_map_map;
@@ -708,13 +708,11 @@ void ncon_opts::process_command_line(int argc, char **argv)
       face_deal = 0;
 
    // Set up the edge color map. If none specified build default
-   // AR
    bool edge_col_map = clrngs[1].get_cmaps().size() ? true : false;
    if(!edge_col_map) {
       color_map_map *col_map = new color_map_map;
       col_map->read_named_colors();
       clrngs[1].add_cmap(col_map);
-      //clrng[1].handle_no_map(1);
    }
    
    output_edge_indexes = strchr(write_indexes.c_str(), 'e');
@@ -722,10 +720,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
       warning("edge color map file has no effect when writing edge color indexes","M");
       
    // vertex color map is the same as the edge color map
-   // AR
    clrngs[0] = clrngs[1];
-   //clrng[0].set_cmap(clrng[1].get_cmap());
-   //clrng[0].handle_no_map(1);
 
    // patch for when edges have no color (separate from invisible ones)
    if (edge_set_no_color) {
@@ -789,11 +784,15 @@ void ncon_opts::process_command_line(int argc, char **argv)
       warning("when writing face indexes, transparency setting ignored","T");
    if (!face_coloring_method && face_opacity >= 0)
       warning("when faces are not colored, transparency setting ignored","T");
+   if ((!face_seq && face_deal < 0) && (face_pattern.length() > face_colors.size()))
+      warning("not all of face transparency pattern will be used","O");
       
    if (output_edge_indexes && edge_opacity >= 0)
       warning("when writing edge indexes, transparency setting ignored","U");
    if (edge_set_no_color && edge_opacity >= 0)
       warning("when edges are not colored, transparency setting ignored","U");
+   if ((!edge_seq && edge_deal < 0) && (edge_pattern.length() > edge_colors.size()))
+      warning("not all of edge transparency pattern will be used","");
 }
 
 int longitudinal_faces(int ncon_order, bool point_cut)
@@ -1734,7 +1733,7 @@ void ncon_info(int ncon_order, bool point_cut, int twist, bool hybrid, bool info
    }
 }
  
-void build_deal(int num_cards, int deck_size, int opacity, string face_pattern, vector<colorList *> &color_list)
+void build_deal(int num_cards, int deck_size, int opacity, string face_pattern, vector<colorVal *> &color_val)
 {
    rand_gen ran;
    ran.time_seed();
@@ -1747,25 +1746,25 @@ void build_deal(int num_cards, int deck_size, int opacity, string face_pattern, 
       int random = ran.ran_int_in_range(0,deck_size-1);
       int j = cards[random%cards.size()];
       int opq = face_pattern[i%face_pattern.size()] == '1' ? opacity : 255;
-      add_color(color_list,col_val(j),opq);
+      add_color(color_val,col_val(j),opq);
       cards.erase(cards.begin()+random%cards.size());
    }
 }
 
-void build_sequence(int num_entries, int seq_start, int seq_graduation, int seq_pool_size, int opacity, string face_pattern, vector<colorList *> &color_list)
+void build_sequence(int num_entries, int seq_start, int seq_graduation, int seq_pool_size, int opacity, string face_pattern, vector<colorVal *> &color_val)
 {
    if (!seq_pool_size) {
       seq_start = abs(seq_start);
       seq_graduation = abs(seq_graduation);
    }
       
-   color_list.clear();
+   color_val.clear();
    for(unsigned int i=0; i<(unsigned int)num_entries; i++) {
       int opq = face_pattern[i%face_pattern.size()] == '1' ? opacity : 255;
       if (!seq_pool_size)
-         add_color(color_list,col_val((i+seq_start)*seq_graduation),opq);
+         add_color(color_val,col_val((i+seq_start)*seq_graduation),opq);
       else
-         add_color(color_list,col_val(((i+seq_start)*seq_graduation)%seq_pool_size),opq);
+         add_color(color_val,col_val(((i+seq_start)*seq_graduation)%seq_pool_size),opq);
    }
 }
 
@@ -1916,7 +1915,6 @@ int calc_opacity(col_val ci, int opacity, const coloring &clrng)
       ret_opacity = 255;
    else {
       // get opacity from map
-      // AR ret_opacity = 255-(col_map.get_col(ci.get_idx()%col_map.size())).get_trans();
       col_val col = clrng.idx_to_val(ci.get_idx());
       if(col.is_val())
          ret_opacity = 255-col.get_trans();
@@ -1948,7 +1946,7 @@ int set_edge_index_and_calc_opacity(col_geom_v &geom, int i, col_val c, int opac
    return (calc_opacity(c, opacity, clrng));
 }
 
-void ncon_edge_coloring(col_geom_v &geom, vector<edgeList *> &edge_list, vector<poleList *> &pole, char edge_coloring_method, vector<colorList *> &edge_colors,
+void ncon_edge_coloring(col_geom_v &geom, vector<edgeList *> &edge_list, vector<poleList *> &pole, char edge_coloring_method, vector<colorVal *> &edge_colors,
                         coloring &e_clrng, int edge_opacity, map<int, pair<int, int> > &edge_color_table, bool point_cut, bool hybrid)
 {
    const vector<vector<int> > &edges = geom.edges();
@@ -2163,7 +2161,7 @@ void ncon_edge_coloring(col_geom_v &geom, vector<edgeList *> &edge_list, vector<
    }
 }
 
-void ncon_face_coloring(col_geom_v &geom, vector<faceList *> &face_list, char face_coloring_method, vector<colorList *> &face_colors,
+void ncon_face_coloring(col_geom_v &geom, vector<faceList *> &face_list, char face_coloring_method, vector<colorVal *> &face_colors,
                         coloring &f_clrng, int face_opacity, map<int, pair<int, int> > &face_color_table, bool point_cut, bool hybrid)
 {
    const vector<vector<int> > &faces = geom.faces();
@@ -2435,11 +2433,9 @@ void ncon_coloring(col_geom_v &geom, vector<faceList *> &face_list, vector<edgeL
                          opts.symmetric_coloring, opts.face_sequential_colors, opts.edge_sequential_colors);
    
    if (opts.face_coloring_method) {
-      // AR color_map face_col_map = opts.clrng[2].get_cmap();
       ncon_face_coloring(geom, face_list, opts.face_coloring_method, opts.face_colors, opts.clrngs[2], opts.face_opacity, face_color_table, opts.point_cut, opts.hybrid);
    }
    if (opts.edge_coloring_method) {
-      // AR color_map edge_col_map = opts.clrng[1].get_cmap();
       ncon_edge_coloring(geom, edge_list, pole, opts.edge_coloring_method, opts.edge_colors, opts.clrngs[1], opts.edge_opacity, edge_color_table, opts.point_cut, opts.hybrid);
    }
 

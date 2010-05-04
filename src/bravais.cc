@@ -104,6 +104,7 @@ class brav_opts: public prog_opts {
       vec3d radius_by_coord;
       vec3d offset;
       char container;
+      bool append_container;
       int sig_compare;
       bool voronoi_cells;
       bool voronoi_central_cell;
@@ -140,6 +141,7 @@ class brav_opts: public prog_opts {
                    radius(0),
                    radius_default('s'),
                    container('c'),
+                   append_container(false),
                    sig_compare(INT_MAX),
                    voronoi_cells(false),
                    voronoi_central_cell(false),
@@ -286,9 +288,10 @@ void brav_opts::usage()
 "  -A        append the original lattice to the final product\n"
 "\nContainer Options\n"
 "  -c <type> container, c - cube (default), s - sphere (uses radius)\n"
-"  -k <file> container using convex polyhedron in off file (uses radius)\n"
+"  -k <file> container is convex hull of off file or built in model (uses radius)\n"
 "  -r <c,n>  radius. c is radius taken to optional root n. n = 2 is sqrt\n"
 "               or  l - max insphere radius  s - min insphere radius (default)\n"
+"               or  k - take radius from container specified by -k\n"
 "  -p <xyz>  radius to lattice point \"x_val,y_val,z_val\"\n"
 "  -q <vecs> center offset, in form \"a_val,b_val,c_val\" (default: none)\n"
 "  -C <opt>  c - convex hull only, i - keep interior\n"
@@ -309,6 +312,7 @@ void brav_opts::usage()
 "               o - hex overlay, f - hex fill, O - cube overlay, F - cube fill\n"
 "  -O        translate centroid of final product to origin\n"
 "  -Z <col>  add centroid vertex to final product in color col\n"
+"  -K        append cage of container of -k to final product\n"
 "\nListing Options\n"
 "  -l        display the list of lattices\n"
 "  -L        list unique radial distances of points from center (and offset)\n"
@@ -323,6 +327,7 @@ void brav_opts::process_command_line(int argc, char **argv)
    char c;
    char errmsg[MSG_SZ];
   
+   bool radius_set = false;
    vector<double> double_parms;
 
    vert_col.resize(4);
@@ -341,7 +346,7 @@ void brav_opts::process_command_line(int argc, char **argv)
 
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hHc:k:r:p:q:s:uv:a:g:G:d:y:D:C:AV:E:F:T:Z:OR:lLSo:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hHc:k:r:p:q:s:uv:a:g:G:d:y:D:C:AV:E:F:T:Z:KOR:lLSo:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -361,7 +366,8 @@ void brav_opts::process_command_line(int argc, char **argv)
             break;
             
          case 'r':
-            if(strlen(optarg) == 1 && strchr("ls", *optarg))
+            radius_set = true;
+            if(strlen(optarg) == 1 && strchr("lsk", *optarg))
                radius_default = *optarg;
             else {
                if(!read_double_list(optarg, double_parms, errmsg, 2))
@@ -373,7 +379,7 @@ void brav_opts::process_command_line(int argc, char **argv)
                   radius = pow(radius, 1/double_parms[1]);
                }
                if(radius <= 0)
-                  error("radius cannot be negative", "s", c);
+                  error("radius cannot be negative or zero", "s", c);
             }
             break;
 
@@ -761,6 +767,10 @@ void brav_opts::process_command_line(int argc, char **argv)
             if(!cent_col.read(optarg, errmsg))
                error(errmsg, c);
             break;
+            
+         case 'K':
+            append_container = true;
+            break;
 
          case 'O':
             trans_to_origin = true;
@@ -831,9 +841,18 @@ void brav_opts::process_command_line(int argc, char **argv)
       if (centering.length())
          error("too many arguments");
    }
-
+   
    if (grid_for_radius && !auto_grid_type)
       error("-G required with -g a");
+      
+   if (radius_set and radius_by_coord.is_set())
+      error("-p cannot be used with -r");
+      
+   if (radius_default == 'k' && !cfile.length())
+      error("-r k can only be used if -k container is specified");
+      
+   if (append_container && !cfile.length())
+      error("container can only be appended if one is provided with -k", 'K');
 
    if (container == 'c' && !cfile.length() &&
          (radius != 0 || offset.is_set() || radius_by_coord.is_set()))
@@ -1322,13 +1341,13 @@ int bravais_check(string &crystal_system, string &centering, vector<double> &vec
 
    // only "monoclinic" or "orthorhombic" can have Base Centering (C)
    if ( csystem != 2 && csystem != 3 && centering == "c" ) {
-      fprintf(stderr,"warning in bravais_check: %s cannot have Base Centering (C)\n",crystal_systems[csystem].c_str());
+      fprintf(stderr,"bravais_check: warning: %s cannot have Base Centering (C)\n",crystal_systems[csystem].c_str());
       if (strictness > 0) {
-         fprintf(stderr,"error in bravais_check: crystal system downgrade disallowed. cannot continue\n");
+         fprintf(stderr,"bravais_check: error: crystal system downgrade disallowed. cannot continue\n");
          return 0;
       }
       else {
-         fprintf(stderr,"warning in bravais_check: downgrade to Simple Centering (P)\n");
+         fprintf(stderr,"bravais_check: warning: downgrade to Simple Centering (P)\n");
          centering = "p";
       }
    }
@@ -1466,9 +1485,7 @@ double bravais_radius(vector<int> grid, vector<double> vecs, vector<double> angl
    bravais_scale(tgeom, vecs, false);
    bravais_warp(tgeom, angles, false);
 
-   geom_info rep(tgeom);
-   rep.set_center(centroid(tgeom.verts()));
-   return( (radius_default == 's') ? rep.face_dists().min : rep.face_dists().max );
+   return lattice_radius(tgeom,radius_default);
 }
 
 double bravais_auto_grid_size(double radius, vector<double> vecs, vector<double> angles)
@@ -1580,7 +1597,7 @@ void r_lattice_overlay(col_geom_v &geom, vector<int> grid, vector<double> cell_s
       adjust += vec3d(0,1,0);
    if (!is_even(grid[0]))
       adjust += vec3d(0,0,1);
-   hgeom.transform(mat3d::transl(-centroid(*hgeom.get_verts())+centroid(*geom.get_verts())-adjust));
+   hgeom.transform(mat3d::transl(-centroid(hgeom.verts())+centroid(geom.verts())-adjust));
 
    geom.append(hgeom);
 }
@@ -1742,6 +1759,9 @@ void do_bravais(col_geom_v &geom, col_geom_v &container, brav_opts &opts)
    // find automatic grid size
    if (opts.grid_for_radius) {
       double radius = opts.radius;
+      if (opts.radius_default == 'k')
+         radius = lattice_radius(container,opts.radius_default);
+      else
       if (opts.radius_by_coord.is_set()) {
          vector<double> tangles(3,90);
          radius = bravais_radius_by_coord(opts.radius_by_coord, opts.offset, opts.vecs, tangles);
@@ -1848,7 +1868,7 @@ void do_bravais(col_geom_v &geom, col_geom_v &container, brav_opts &opts)
       opts.radius = bravais_radius(opts.grid, opts.vecs, opts.angles, opts.radius_default);
 
    if(opts.cfile.length() > 0) {
-      geom_container_clip(geom, container, opts.radius, opts.offset, opts.epsilon);
+      geom_container_clip(geom, container, (opts.radius_default == 'k') ? lattice_radius(container,opts.radius_default) : opts.radius, opts.offset, opts.epsilon);
    }
    else
    if (opts.container == 's') {
@@ -1858,17 +1878,22 @@ void do_bravais(col_geom_v &geom, col_geom_v &container, brav_opts &opts)
    if(opts.voronoi_cells) {
       col_geom_v vgeom;
       if (get_voronoi_geom(geom, vgeom, opts.voronoi_central_cell, false, opts.epsilon)) {
-         vgeom.color_vef(opts.vert_col[2], opts.edge_col[2], opts.face_col[2]);
-                      
-         geom.clear_all();
-         geom.append(vgeom);
+         vgeom.color_vef(opts.vert_col[2], opts.edge_col[2], opts.face_col[2]);                      
+         geom = vgeom;
       }
    }
 
-   if (opts.convex_hull) {    
-      // vebosity = true
-      if (do_convex_hull(geom, opts.add_hull, true))
+   if (opts.convex_hull) {
+      char errmsg[MSG_SZ]="";
+      int ret = (opts.add_hull ? geom.add_hull("",errmsg) : geom.set_hull("",errmsg));
+      if(ret < 0)
+         fprintf(stderr,"%s\n",errmsg);
+      else {
+         geom.orient();
+         if (true) // verbosity
+            convex_hull_report(geom, opts.add_hull);
          geom.color_vef(opts.vert_col[1], opts.edge_col[1], opts.face_col[1]);
+      }
    }
    
    if (opts.append_lattice) {
@@ -1880,7 +1905,7 @@ void do_bravais(col_geom_v &geom, col_geom_v &container, brav_opts &opts)
       color_by_symmetry_normals(geom, opts.color_method, opts.face_opacity);
       
    if (opts.trans_to_origin)
-      geom.transform(mat3d::transl(-centroid(*geom.get_verts())));
+      geom.transform(mat3d::transl(-centroid(geom.verts())));
 
    if (opts.list_radii)
       list_grid_radii(geom, opts.offset, opts.epsilon);
@@ -1890,7 +1915,13 @@ void do_bravais(col_geom_v &geom, col_geom_v &container, brav_opts &opts)
 
    // last so not to alter listing outcomes
    if (opts.cent_col.is_set())
-      color_centroid(geom, opts.cent_col);
+      color_centroid(geom, opts.cent_col, opts.epsilon);
+      
+   if (opts.append_container) {
+      container.add_missing_impl_edges();
+      container.clear_faces();
+      geom.append(container);
+   }
 
    //fprintf(stderr,"The volume of a single cell is %lf\n", bravais_volume(opts.crystal_system, opts.vecs, opts.angles));
 }
@@ -1907,7 +1938,7 @@ int main(int argc, char **argv)
    }
 
    // read in container file if using. Check existance
-   char errmsg[MSG_SZ];
+   char errmsg[MSG_SZ]="";
    col_geom_v container;
    if(opts.cfile.length() > 0) {
       if(!container.read(opts.cfile, errmsg))

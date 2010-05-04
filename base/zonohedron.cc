@@ -207,7 +207,8 @@ bool make_zono(geom_if &zono, const vector<vec3d> &star, char *errmsg)
       }
    }
    
-   return zono.set_hull("A0.9999999", errmsg);
+   int ret = zono.set_hull("A0.9999999", errmsg);
+   return (ret < 0 ? false : true);
 }
 
 

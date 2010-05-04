@@ -257,9 +257,9 @@ class geom_if
        * may not work, check output.)
        * \param errmsg an array at least \c MSG_SZ chars long to
        * return any error message.
-       * \return true if the convex hull could be calculated, otherwise false
+       * \return order or dimension 3, 2, 1 or 0. or -1 if qhull fails
        * and the error is detailed in \a errmsg. */
-      bool add_hull(string qh_args="", char *errmsg=0);
+      int add_hull(string qh_args="", char *errmsg=0);
 
       ///Set the geometry to its convex hull.
       /**If the convex hull could not be calculated the the geometry
@@ -268,9 +268,9 @@ class geom_if
        * may not work, check output.)
        * \param errmsg an array at least \c MSG_SZ chars long to
        * return any error message.
-       * \return true if the convex hull could be calculated, otherwise false
+       * \return order or dimension 3, 2, 1 or 0. or -1 if qhull fails
        * and the error is detailed in \a errmsg. */
-      bool set_hull(string qh_args="", char *errmsg=0);
+      int set_hull(string qh_args="", char *errmsg=0);
 
       ///Get a star of vectors to use for making a zonohedron.
       /**\param type the type of star to make can be

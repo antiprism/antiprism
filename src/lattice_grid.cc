@@ -26,8 +26,15 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include <stdio.h>
+#include <stdlib.h>
 
+#include <ctype.h>
 #include <math.h>
+#include <unistd.h>
+
+#include <string>
+#include <vector>
 #include <algorithm>
 
 #include "../base/antiprism.h"
@@ -93,7 +100,6 @@ bool hcp_diamond_test(int x, int y, int z)            //  dist2 = 27
    return false;
 }        
  
-
 // Coordinates from Vladimir Bulatov
 bool k_4_test(int x, int y, int z)                   //  dist2 = 2
 {
@@ -114,10 +120,9 @@ bool k_4_test(int x, int y, int z)                   //  dist2 = 2
    return false;
 }
 
-
 void add_struts(geom_if &geom, int len2)
 {
-   vector<vec3d> &verts = *geom.get_verts();
+   const vector<vec3d> &verts = geom.verts();
    for(unsigned int i=0; i<verts.size(); i++)
       for(unsigned int j=i; j<verts.size(); j++) {
          if(fabs((verts[i]-verts[j]).mag2() - len2) < epsilon)
@@ -126,7 +131,7 @@ void add_struts(geom_if &geom, int len2)
 }
 
 void int_lat_grid::make_lattice(geom_if &geom)
-{
+{  
    if(!centre.is_set())
       centre = vec3d(1,1,1)*(o_width/2.0);
    double o_off = o_width/2.0 + epsilon;
@@ -140,10 +145,9 @@ void int_lat_grid::make_lattice(geom_if &geom)
                k>centre[2]-i_off && k<centre[2]+i_off)
                continue;
             if(coord_test(i, j, k))
-               geom.get_verts()->push_back(vec3d(i, j, k));
+               geom.add_vert(vec3d(i, j, k));
          }
 }
-
 
 void sph_lat_grid::make_lattice(geom_if &geom)
 {
@@ -159,27 +163,55 @@ void sph_lat_grid::make_lattice(geom_if &geom)
             if(o_off<dist2 || i_off>dist2)
                continue;
             if(coord_test(i, j, k))
-               geom.get_verts()->push_back(vec3d(i, j, k));
+               geom.add_vert(vec3d(i, j, k));
          }
 }
 
+// for lattice code only
 
-// new stuff starts here
-
-// some actual stuff for lattice code only
+double lattice_radius(const geom_if &geom, char radius_type)
+{
+   geom_v tgeom = geom;
+   
+   char errmsg[MSG_SZ]="";
+   // allow radius to be calculated for some polygons
+   int dimensions = tgeom.set_hull("",errmsg);
+   if(dimensions < 0) {
+      fprintf(stderr,"%s\n",errmsg);
+      fprintf(stderr,"lattice_radius: warning: convex hull could not be created\n");
+      return 0;
+   }
+   tgeom.orient();
+   
+   geom_info rep(tgeom);
+   rep.set_center(centroid(tgeom.verts()));
+   
+   double radius = 0;
+   if (radius_type == 'k')
+      radius = rep.vert_dists().max;
+   else
+   if (radius_type == 's' && dimensions > 1)
+      radius = rep.face_dists().min;
+   else
+   if (radius_type == 'l' && dimensions > 1)
+      radius = rep.face_dists().max;
+      
+   return radius;
+}
 
 void geom_container_clip(col_geom_v &geom, col_geom_v &container, double radius, vec3d offset, double epsilon)
 {
-   if(!container.set_hull()) {
-      fprintf(stderr,"warning from geom_container_clip: Convex hull could not be created\n");
+   // container has to be convex and 3 dimensional
+   char errmsg[MSG_SZ]=""; 
+   if(container.set_hull("",errmsg) < 0) {
+      fprintf(stderr,"%s\n",errmsg);
+      fprintf(stderr,"geom_container_clip: warning: convex hull could not be created\n");
       return;
    }
    container.orient();
 
    // standardize radius of 1 on maximum vertex. Then set radius
-   geom_info rep(container);
-   rep.set_center(centroid(container.verts()));
-   mat3d trans_m = mat3d::scale((1.0/rep.vert_dists().max)*radius);
+   mat3d trans_m = mat3d::scale((1.0/lattice_radius(container,'k'))*radius);
    container.transform(trans_m);
 
    const vector<vec3d> &verts = geom.verts();
@@ -204,7 +236,7 @@ void geom_container_clip(col_geom_v &geom, col_geom_v &container, double radius,
       geom.delete_verts(del_verts);
 
    if (!verts.size())
-      fprintf(stderr,"warning from bravais_container_clip: all vertices were clipped out!\n");
+      fprintf(stderr,"bravais_container_clip: warning: all vertices were clipped out!\n");
 }
 
 void geom_spherical_clip(col_geom_v &geom, double radius, vec3d offset, double epsilon)
@@ -227,10 +259,10 @@ void geom_spherical_clip(col_geom_v &geom, double radius, vec3d offset, double e
       geom.delete_verts(del_verts);
 
    if (!verts.size())
-      fprintf(stderr,"warning from bravais_spherical_clip: all vertices were clipped out!\n");
+      fprintf(stderr,"bravais_spherical_clip: warning: all vertices were clipped out!\n");
 }
 
-void list_grid_radii(col_geom_v &geom, vec3d offset, double epsilon)
+void list_grid_radii(const col_geom_v &geom, vec3d offset, double epsilon)
 {
    const vector<vec3d> &verts = geom.verts();
    vec3d cent = centroid(verts);
@@ -274,7 +306,7 @@ void list_grid_radii(col_geom_v &geom, vec3d offset, double epsilon)
    fprintf(stderr,"Total occurrences = %d\n\n",occur_total);
 }
 
-void list_grid_struts(col_geom_v &geom, double epsilon)
+void list_grid_struts(const col_geom_v &geom, double epsilon)
 {
    const vector<vec3d> &verts = geom.verts();
 
@@ -322,28 +354,16 @@ void add_color_struts(col_geom_v &geom, double len2, col_val edge_col)
 
    for(unsigned int i=0; i<verts.size(); i++)
       for(unsigned int j=i; j<verts.size(); j++) {
-         if(fabs((verts[i]-verts[j]).mag2() - len2) < epsilon) {
-            vector<int> edge(2);
-            edge[0] = i;
-            edge[1] = j;
-            geom.add_col_edge(edge, edge_col);
-         }
+         if(fabs((verts[i]-verts[j]).mag2() - len2) < epsilon)
+            geom.add_col_edge(make_edge(i, j), edge_col);
       }
 }
 
-void color_centroid(col_geom_v &geom, col_val cent_col)
+void color_centroid(col_geom_v &geom, col_val cent_col, double epsilon)
 {
    const vector<vec3d> &verts = geom.verts();
    vec3d cent = centroid(verts);
-   int cent_idx = -1;
-   for(unsigned int i=0; i<verts.size(); i++) {
-      if (double_equality(verts[i][0], cent[0], epsilon) &&
-          double_equality(verts[i][1], cent[1], epsilon) &&
-          double_equality(verts[i][2], cent[2], epsilon)) {
-         cent_idx = i;
-         break;
-      }
-   }
+   int cent_idx = find_vertex_by_coordinate(geom, cent, epsilon);
    
    if (cent_idx == -1)
       geom.add_col_vert(cent, cent_col);
@@ -351,6 +371,8 @@ void color_centroid(col_geom_v &geom, col_val cent_col)
       geom.set_v_col(cent_idx, cent_col);
 }
 
+// color functions
+         
 // Rotational octahedral by Adrian Rossiter
 vec3d sort_vec3d_chiral(const vec3d &v)
 {
@@ -414,7 +436,6 @@ void color_by_symmetry_normals(col_geom_v &geom, char color_method, int face_opa
    // transparency
    if (face_opacity != -1)
       cmap.set_range(3, vector<double>(1, (double)face_opacity/255));
-      //clrg.set_alp_range((double)face_opacity/255);
 
    for(unsigned int i=0; i<faces.size(); i++) {
       vec3d norm = face_norm(verts, faces[i]).unit();
@@ -426,7 +447,6 @@ void color_by_symmetry_normals(col_geom_v &geom, char color_method, int face_opa
       long idx = (long)(norm[0]*1000000) + (long)(norm[1]*10000) + (long)norm[2]*100;
       if(color_method == 'S' || color_method == 'C')
          geom.set_f_col(i,cmap.get_col(idx));
-         //geom.set_f_col(i,clrg.idx_to_rand_val(idx));
       else
          geom.set_f_col(i,idx);
    }
@@ -451,36 +471,27 @@ void color_edges_by_sqrt(col_geom_v &geom, char color_method)
 
 // convex hull and voronoi wrappers
 
-int do_convex_hull(col_geom_v &geom, bool add_hull, bool verbose)
+void convex_hull_report(const geom_v &geom, bool add_hull)
 {
-   const vector<vec3d> &verts = geom.verts();
-
-   if (verts.size() < 4) {
-      fprintf(stderr,"warning from do_convex_hull: Convex hull not possible with only %lu points\n", (unsigned long)verts.size());
-      return 0;
-   }
-
-   if(!(add_hull ? geom.add_hull() : geom.set_hull())) {
-      fprintf(stderr,"warning from do_convex_hull: Convex hull could not be created\n");
-      return 0;
-   }
-   
-   geom.orient();
-      
-   if (verbose && !add_hull) {
-      geom_info rep(geom);
-      fprintf(stderr, "convex hull information:\n");
+   geom_info rep(geom);
+   fprintf(stderr,"\n");
+   fprintf(stderr, "convex hull information:\n");
+   if (!add_hull)
       fprintf(stderr, "num_verts = %d\n", rep.num_verts());
-      fprintf(stderr, "num_faces = %d\n", rep.num_faces());
+   fprintf(stderr, "num_faces = %d\n", rep.num_faces());
+   if (!add_hull && rep.num_verts() > 1)
       fprintf(stderr, "num_edges = %d\n", rep.num_verts()+rep.num_faces()-2);
-      fprintf(stderr, "area      = %.17g\n", rep.face_areas().sum);
+   if (rep.num_verts() > 2) {
+      double area = rep.face_areas().sum;
+      fprintf(stderr, "area      = %.17g\n", area);
       fprintf(stderr, "volume    = %.17g\n", fabs(rep.volume()));
-      fprintf(stderr, "isoperimetric quotient (spherical nature: v^2/a^3 x 36 x PI = 1 is sphere)\n"); 
-      fprintf(stderr, "  iq      = %.17g\n", rep.vol2_by_area3()*M_PI*36.0);
-      fprintf(stderr, "end convex hull information\n");
+      if (area) {
+         fprintf(stderr, "isoperimetric quotient (spherical nature: v^2/a^3 x 36 x PI = 1 is sphere)\n"); 
+         fprintf(stderr, "  iq      = %.17g\n", rep.vol2_by_area3()*M_PI*36.0);
+      }
    }
-   
-   return 1;
+   fprintf(stderr, "end convex hull information\n");
+   fprintf(stderr,"\n");
 }
 
 int get_voronoi_geom(col_geom_v &geom, col_geom_v &vgeom, bool central_cells, bool one_cell_only, double epsilon)
@@ -488,10 +499,15 @@ int get_voronoi_geom(col_geom_v &geom, col_geom_v &vgeom, bool central_cells, bo
    // do this in case compound lattice was sent. Simultaneous points cause problems for Voronoi Cells
    sort_merge_elems(geom, "vef", epsilon);
    
-   // store convex hull as speed up to is_geom_inside_hull()
-   col_geom_v hgeom;
-   hgeom = geom;
-   hgeom.set_hull();
+   // store convex hull of lattice as speed up to is_geom_inside_hull()
+   // has to be 3 dimensional
+   col_geom_v hgeom = geom;
+   char errmsg[MSG_SZ]=""; 
+   if(hgeom.set_hull("",errmsg) < 0) {
+      fprintf(stderr,"%s\n",errmsg);
+      fprintf(stderr,"get_voronoi_geom: warning: convex hull could not be created\n");
+      return 0;
+   }
    hgeom.orient();
    
    vec3d cent = centroid(hgeom.verts());
@@ -513,11 +529,9 @@ int get_voronoi_geom(col_geom_v &geom, col_geom_v &vgeom, bool central_cells, bo
    }
  
    if (!(vgeom.verts()).size()) {
-      fprintf(stderr,"warning: after Voronoi cells, geom is empty.\n");
+      fprintf(stderr,"get_voronoi_geom: warning: after Voronoi cells, geom is empty\n");
       return 0;
    }
    
    return 1;
 }
-
-

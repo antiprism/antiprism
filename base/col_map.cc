@@ -210,13 +210,15 @@ static color_map* init_color_map_generated(const char *map_name, char *errmsg=0)
       color_map_map *overrides = new color_map_map;
       color_map *spread_map = init_color_map("spread+2");
       if(multi && overrides && spread_map && multi->init(map_name, errmsg)) {
-         overrides->set_col(0, col_val(1.0,0.5,0.0)); // orange
-         overrides->set_col(1, col_val(1.0,1.0,0.0)); // yellow
-         overrides->set_col(2, col_val(1.0,0.0,0.0)); // red
-         overrides->set_col(3, col_val(0.0,0.5,0.0)); // green
-         overrides->set_col(4, col_val(0.0,0.0,1.0)); // blue
-         overrides->set_col(5, col_val(1.0,0.0,1.0)); // magnenta
-         overrides->set_col(6, col_val(0.0,1.0,1.0)); // cyan
+         // RK - for blending colors, make each two colors blend to different color than adjacent ones
+         // use nicer color values for green and orange
+         overrides->set_col(0, col_val(1.0,1.0,0.0)); // yellow
+         overrides->set_col(1, col_val(1.0,0.0,0.0)); // red
+         overrides->set_col(2, col_val(0.0,0.39216,0.0)); // darkgreen (X11)
+         overrides->set_col(3, col_val(0.0,0.0,1.0)); // blue
+         overrides->set_col(4, col_val(1.0,0.0,1.0)); // magnenta
+         overrides->set_col(5, col_val(0.0,1.0,1.0)); // cyan
+         overrides->set_col(6, col_val(1.0,0.49804,0.0)); // darkorange1 (X11)
          multi->add_cmap(overrides);
          multi->add_cmap(spread_map);
          cmap = multi;

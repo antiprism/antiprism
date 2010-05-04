@@ -69,12 +69,13 @@ class faceList
       faceList(int f, int lat, int lon) : face_no(f), lat(lat), lon(lon) { rotate = false; opacity = 255; }
 };
 
-class colorList
+// colorVal class is needed because an unset col_val or a col_val which is an index cannot hold an alpha value
+class colorVal
 {
    public:
       col_val  col;
       int      opacity;
-      colorList(col_val c, int o) : col(c), opacity(o) {}
+      colorVal(col_val c, int o) : col(c), opacity(o) {}
 };
 
 class polarOrb {

@@ -38,6 +38,9 @@
 #include "geom.h"
 #include "geom_utils.h"
 #include "utils.h"
+#include "math_utils.h"
+#include "transforms.h"
+#include "bbox.h"
 
 #include "qh_qhull_a.h"
 
@@ -50,6 +53,12 @@ using std::swap;
 using std::string;
 
 
+void qhull_cleanup()
+{
+   qh_freeqhull(!qh_ALL);                 // free long memory
+   int curlong, totlong;
+   qh_memfreeshort (&curlong, &totlong);  // free short mem and mem allocator
+}
 
 bool make_hull(geom_if &geom, bool append, string qh_args, char *errmsg)
 {
@@ -59,9 +68,6 @@ bool make_hull(geom_if &geom, bool append, string qh_args, char *errmsg)
    col_geom *cg = dynamic_cast<col_geom *>(&geom);
    if(cg)
       vcols = cg->vert_cols();
-
-   if(!append)
-      geom.clear_all();
    
    const int dim=3;
    coordT *points = new coordT[pts.size()*dim];
@@ -83,6 +89,7 @@ bool make_hull(geom_if &geom, bool append, string qh_args, char *errmsg)
    if(ret) {
       if(errmsg)
          snprintf(errmsg, MSG_SZ, "error calculating convex hull");
+      qhull_cleanup();
       return false;
    }
   
@@ -90,6 +97,8 @@ bool make_hull(geom_if &geom, bool append, string qh_args, char *errmsg)
    vertexT *vertex;
    
    if(!append) {
+      geom.clear_all();
+      
       int i=0;
       FORALLvertices {
          size_t idx = (vertex->point-points)/dim;
@@ -157,33 +166,183 @@ bool make_hull(geom_if &geom, bool append, string qh_args, char *errmsg)
       geom.add_face(ordered_face);
    }
    
-   // clean up
-   qh_freeqhull(!qh_ALL);                 // free long memory
-   int curlong, totlong;
-   qh_memfreeshort (&curlong, &totlong);  // free short mem and mem allocator
+   qhull_cleanup();
   
    delete[] points;
 
    return true;
 }
 
-
-bool add_hull(geom_if &geom, string qh_args, char *errmsg)
+int find_vertex_by_coordinate(geom_if &geom, vec3d v, double eps)
 {
-   return make_hull(geom, true, qh_args, errmsg);
+   const vector<vec3d> &verts = geom.verts();      
+   int v_idx = -1;
+   for(unsigned int i=0; i<verts.size(); i++) {
+      if (!compare(verts[i], v, eps)) {
+         v_idx = i;
+         break;
+      }
+   }
+   return v_idx;
+}
+
+int dimension_safe_make_hull(geom_if &geom, bool append, string qh_args, char *errmsg)
+{
+   // an empty geom should be the only reason an error can occur
+   if (!(geom.verts().size())) {
+      if(errmsg)
+         snprintf(errmsg, MSG_SZ, "convex hull could not be created. no vertices");
+      return -1;
+   }
+
+   int dimension = 3;
+   if(!make_hull(geom, append, qh_args, errmsg)) {
+      // if make_hull fails
+      // assume point, line, or polygon 3 to limit
+      
+      bound_box bb(geom.verts());
+      vec3d min = bb.get_min();
+      vec3d max = bb.get_max();
+      double D = bb.max_width();
+      
+      // store original edge number. store edge widths. check to see if widths are zero
+      vector<pair<double, int> > e(3);
+      for(unsigned int i=0; i<3; i++) {
+         e[i].second = i;
+         e[i].first = max[i]-min[i];
+      }
+      
+      // sort on width
+      sort( e.begin(), e.end() );
+      
+      // check for special cases for line or point. if so, then no make_hull() needed
+      if (!e[0].first && !e[1].first) {
+         dimension = 1;
+         if (!e[2].first)
+            dimension = 0;
+      }
+
+      // if dimension is still set at 3, no special case was found so try finding polygon or line
+      if (dimension == 3) {
+         dimension = 2;
+         
+         // create the parallel vectors
+         // shortest width (could be zero width) is the first parallel
+         // next narrowest width is the second parallel
+         vector<vec3d> pvec(2);
+         for(unsigned int i=0; i<2; i++) {
+            pvec[i] = vec3d(0,0,0);
+            pvec[i][e[i].second] = D;
+         }
+
+         // make first point in a direction from the centre that is parallel
+         // to the first edge (also narrowest edge) in the sort list
+         // add the point and keep track of it
+         vec3d cent = bb.get_centre();
+         vec3d point1 = cent + pvec[0];
+         geom.add_vert(point1);
+
+         // 2D test for polygon
+         if(!make_hull(geom, append, qh_args, errmsg)) {
+            // if still error then vertices are on a line. add point2 and try again
+            dimension = 1;
+            
+            // make second point in a direction from the centre that is parallel
+            // to the second edge (also second narrowest edge) in the sort list
+            // add the point and keep track of it
+            vec3d point2 = cent + pvec[1];
+            geom.add_vert(point2);
+            
+            // 1D test for line
+            if(!make_hull(geom, append, qh_args, errmsg)) {
+               // 0 dimensional geom should not have gotten in here. instead, make this an error so it can be spotted
+               if(errmsg)
+                  snprintf(errmsg, MSG_SZ, "convex hull failed even after checking for a line");
+               return -1;
+            }
+            
+            // delete temporaray vertex
+            int v_idx = find_vertex_by_coordinate(geom, point2, DBL_MIN);
+            if (v_idx != -1)
+               geom.delete_vert(v_idx);
+         }
+   
+         // delete temporaray vertex
+         int v_idx = find_vertex_by_coordinate(geom, point1, DBL_MIN);
+         if (v_idx != -1)
+            geom.delete_vert(v_idx);
+      }
+
+      // for dimension less than 2, what follows may have never gone through make_hull()
+      // for points and line strip any pre-existing faces or edges (that probably won't exist)
+      if (dimension < 2 && !append) {
+         geom.clear_faces();
+         geom.clear_edges();
+      }
+      
+      // if dimension is 0, if append is false, reduce to one point
+      if (dimension == 0) {
+         if (!append)
+            sort_merge_elems(geom, "v", epsilon);
+      }
+      // what should be left will be the line or polygon
+      // if 1 dimensional, add one edge between the two points
+      // a point may be double at the end so the vertices have to be sorted so first and last are the end points for the edge connection
+      else
+      if (dimension == 1) {
+         sort_merge_elems(geom, "s", epsilon);
+         // if not append, make sure all that exist is the first and last point
+         if (!append) {
+            vector <vec3d> verts = geom.verts();
+            vec3d vert1 = verts[0];
+            vec3d vert2 = verts[geom.verts().size()-1];
+            geom.clear_all();
+            geom.add_vert(vert1);
+            geom.add_vert(vert2);
+         }
+         geom.add_edge(0, geom.verts().size()-1);
+      }
+   }
+
+   return dimension;
+}
+
+/*
+int silent_make_hull(geom_if &geom, bool append, string qh_args, char *errmsg)
+{
+   // Save stderr so it can be restored.
+   int stderrSave = dup(STDERR_FILENO);
+
+   // redirect stderr
+   FILE *nullStderr = freopen("/dev/null", "w", stderr);
+   
+   int ret = dimension_safe_make_hull(geom, append, qh_args, errmsg);
+
+   // Flush before restoring stderr
+   fflush(stderr);
+   fclose(nullStderr);
+
+   // Now restore stderr, so new output goes to console.
+   dup2(stderrSave, STDERR_FILENO);
+   close(stderrSave);
+
+   return ret;
+}
+*/
+
+int add_hull(geom_if &geom, string qh_args, char *errmsg)
+{
+   int ret = dimension_safe_make_hull(geom, true, qh_args, errmsg);
+   return ret;
 }
 
 int set_hull(geom_if &geom, string qh_args, char *errmsg)
 {
-   int ret = make_hull(geom, false, qh_args, errmsg);
-   if(!ret)
+   int ret = dimension_safe_make_hull(geom, false, qh_args, errmsg);
+   if(ret < 0)
       geom.clear_all();
    return ret;
-}
-
-      
-        
-         
+}      
 
 bool get_delaunay_edges(const geom_if &geom, map<pair<int, int>, int> &edges,
       string qh_args, char *errmsg)
@@ -247,10 +406,7 @@ bool get_delaunay_edges(const geom_if &geom, map<pair<int, int>, int> &edges,
          }
    }
    
-   // clean up
-   qh_freeqhull(!qh_ALL);                 // free long memory
-   int curlong, totlong;
-   qh_memfreeshort (&curlong, &totlong);  // free short mem and mem allocator
+   qhull_cleanup();
   
    delete[] points;
 
@@ -291,13 +447,10 @@ double minimum_distance(const geom_if &geom, double sig_dist, char *errmsg)
    return min_sig_dist<1e99 ? sqrt(min_sig_dist) : sig_dist;
 }
 
-
-
-
 int get_voronoi_cells(geom_if &geom, vector<col_geom_v> &cells,
       string qh_args, char *errmsg)
 {
-   vector<vec3d> pts = *geom.get_verts();
+   const vector<vec3d> pts = geom.verts();
 
    const int dim=3;
    coordT *points = new coordT[pts.size()*dim];
@@ -390,11 +543,7 @@ int get_voronoi_cells(geom_if &geom, vector<col_geom_v> &cells,
    }
    qh_settempfree (&vertices);
 
-
-   // clean up
-   qh_freeqhull(!qh_ALL);                 // free long memory
-   int curlong, totlong;
-   qh_memfreeshort (&curlong, &totlong);  // free short mem and mem allocator
+   qhull_cleanup();
 
    delete[] points;
    
@@ -402,7 +551,7 @@ int get_voronoi_cells(geom_if &geom, vector<col_geom_v> &cells,
    for(unsigned int i=0; i<faces.size(); i++) {
       col_geom_v cell;
       for(unsigned int j=0; j<faces[i].size(); j++)
-         cell.add_vert((*vcells.get_verts())[faces[i][j]]);
+         cell.add_vert((vcells.verts())[faces[i][j]]);
       cell.add_hull();
       cells.push_back(cell);
    }
@@ -412,7 +561,7 @@ int get_voronoi_cells(geom_if &geom, vector<col_geom_v> &cells,
  
 // test points versus hull functions
 
-bool test_points_vs_hull(const vector<vec3d> &P, col_geom_v &hull, bool inside, bool surface, bool outside, double epsilon)
+bool test_points_vs_hull(const vector<vec3d> &P, const geom_if &hull, bool inside, bool surface, bool outside, double epsilon)
 {
    const vector<vec3d> &verts = hull.verts();
    const vector<vector<int> > &faces = hull.faces();
@@ -450,63 +599,62 @@ bool test_points_vs_hull(const vector<vec3d> &P, col_geom_v &hull, bool inside, 
    return answer;
 }
 
-bool is_geom_fully_outside_hull(col_geom_v &geom, col_geom_v &hull, double epsilon)
+bool is_geom_fully_outside_hull(const geom_if &geom, const geom_if &hull, double epsilon)
 {
    return test_points_vs_hull(geom.verts(),hull,false,false,true,epsilon);
 }
 
-bool is_geom_outside_hull(col_geom_v &geom, col_geom_v &hull, double epsilon)
+bool is_geom_outside_hull(const geom_if &geom, const geom_if &hull, double epsilon)
 {
    return test_points_vs_hull(geom.verts(),hull,false,true,true,epsilon);
 }
 
-bool is_geom_on_surface_hull(col_geom_v &geom, col_geom_v &hull, double epsilon)
+bool is_geom_on_surface_hull(const geom_if &geom, const geom_if &hull, double epsilon)
 {
    return test_points_vs_hull(geom.verts(),hull,false,true,false,epsilon);
 }
 
-bool is_geom_inside_hull(col_geom_v &geom, col_geom_v &hull, double epsilon)
+bool is_geom_inside_hull(const geom_if &geom, const geom_if &hull, double epsilon)
 {
    return test_points_vs_hull(geom.verts(),hull,true,true,false,epsilon);
 }
 
-bool is_geom_fully_inside_hull(col_geom_v &geom, col_geom_v &hull, double epsilon)
+bool is_geom_fully_inside_hull(const geom_if &geom, const geom_if &hull, double epsilon)
 {
    return test_points_vs_hull(geom.verts(),hull,true,false,false,epsilon);
 }
 
-bool is_point_fully_outside_hull(const vec3d &P, col_geom_v &hull, double epsilon)
+bool is_point_fully_outside_hull(const vec3d &P, const geom_if &hull, double epsilon)
 {
-   col_geom_v tgeom;
+   geom_v tgeom;
    tgeom.add_vert(P);
    return is_geom_fully_outside_hull(tgeom, hull, epsilon);
 }
 
-bool is_point_outside_hull(const vec3d &P, col_geom_v &hull, double epsilon)
+bool is_point_outside_hull(const vec3d &P, const geom_if &hull, double epsilon)
 {
-   col_geom_v tgeom;
+   geom_v tgeom;
    tgeom.add_vert(P);
    return is_geom_outside_hull(tgeom, hull, epsilon);
 }
 
-bool is_point_on_surface_hull(const vec3d &P, col_geom_v &hull, double epsilon)
+bool is_point_on_surface_hull(const vec3d &P, const geom_if &hull, double epsilon)
 {
-   col_geom_v tgeom;
+   geom_v tgeom;
    tgeom.add_vert(P);
    return is_geom_on_surface_hull(tgeom, hull, epsilon);
 }
 
-bool is_point_inside_hull(const vec3d &P, col_geom_v &hull, double epsilon)
+bool is_point_inside_hull(const vec3d &P, const geom_if &hull, double epsilon)
 {
-   col_geom_v tgeom;
+   geom_v tgeom;
    tgeom.add_vert(P);
    return is_geom_inside_hull(tgeom, hull, epsilon);
 }
 
-bool is_point_fully_inside_hull(const vec3d &P, col_geom_v &hull, double epsilon)
+bool is_point_fully_inside_hull(const vec3d &P, const geom_if &hull, double epsilon)
 {
-   col_geom_v tgeom;
+   geom_v tgeom;
    tgeom.add_vert(P);
    return is_geom_fully_inside_hull(tgeom, hull, epsilon);
 }
-
