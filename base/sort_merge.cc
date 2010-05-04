@@ -128,11 +128,12 @@ col_val average_color(vector<col_val> cols)
 col_val average_face_color(col_geom &cg, vector<facesSort> &fs, char elem, int begin, int end)
 {
    // if only one instance, return its own color
-   if (!(end-begin))
+   if (!(end-begin)) {
       if (elem=='f')
          return cg.get_f_col(fs[begin].face_no);
       else
          return cg.get_e_col(fs[begin].face_no);
+   }
    
    vector<col_val> cols;  
    bool invisible_found = false;
