@@ -112,7 +112,7 @@ static color_map* init_color_map_generated(const char *map_name, char *errmsg=0)
    char errmsg_tmp[MSG_SZ];
    if(!errmsg)
       errmsg = errmsg_tmp;
-   strcpy(errmsg, "name not found");  // default error message
+   *errmsg = '\0';
 
    char name[MSG_SZ];
    strncpy(name, map_name, MSG_SZ);
@@ -241,6 +241,9 @@ static color_map* init_color_map_generated(const char *map_name, char *errmsg=0)
          if(cmm && cmm->init_from_line(map_name+name_len+1, errmsg))
             cmap = cmm;
       }
+   }
+   else {
+      strcpy(errmsg, "name not found");
    }
 
    return cmap;
