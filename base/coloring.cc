@@ -638,6 +638,7 @@ static bool get_cycle_rate(const char *str, double *cps)
    if(len>3 && str[len-2]=='h' && str[len-1]=='z') {
       char str_copy[MSG_SZ];
       strncpy(str_copy, str, len-2);
+      str_copy[len-2] = '\0';
       double cycs;
       if(read_double(str_copy, &cycs) && cycs>=0.0) {
          *cps = cycs;
