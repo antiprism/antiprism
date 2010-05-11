@@ -114,10 +114,8 @@ class geodesic
 
    public:
       enum { err_not_tri=1 };
-      geodesic(const geom_if &base_poly, int ff, int mm, int nn, char mthd,
-            vec3d cen=vec3d(0,0,0)):
-         base(base_poly), freq(ff), m(mm), n(nn), method(mthd), centre(cen)
-         { init(); }
+      geodesic(const geom_if &base_poly, int mm, int nn=0, char mthd='s',
+            vec3d cen=vec3d(0,0,0));
       void make_geo(geom_if &geo);
 };
 

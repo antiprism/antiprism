@@ -304,24 +304,24 @@ int geom_if::orient(vector<vector<int> > *parts)
    return orient_geom(*this, parts);
 }
 
-bool geom_if::set_geodesic_planar(const geom_if &base, int freq, int m, int n)
+bool geom_if::set_geodesic_planar(const geom_if &base, int m, int n)
 {
-   if(freq<1 || m<0 || n<0 || (m==0&&n==0))
+   if(m<0 || n<0 || (m==0&&n==0))
       return false;                         // invalid pattern
-   geodesic geod(base, freq, m, n, 'p');
+   geodesic geod(base, m, n, 'p');
    geod.make_geo(*this);
    return true;                             // valid pattern
 }
       
-bool geom_if::set_geodesic_sphere(const geom_if &base, int freq, int m, int n,
-      vec3d cent)
+bool geom_if::set_geodesic_sphere(const geom_if &base, int m, int n, vec3d cent)
 {
    if(m<0 || n<0 || (m==0&&n==0))
       return false;                         // invalid pattern
-   geodesic geod(base, freq, m, n, 's', cent);
+   geodesic geod(base, m, n, 's', cent);
    geod.make_geo(*this);
    return true;                             // valid pattern
 }
+
 
 void geom_if::sphere_projection(vec3d centre, double radius)
 {

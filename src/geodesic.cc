@@ -45,7 +45,6 @@ class geo_opts: public prog_opts {
       int m;
       int n;
       char method;
-      int freq;
       int pat_freq;
       bool keep_flat;
       bool equal_len_div;
@@ -149,6 +148,9 @@ void geo_opts::process_command_line(int argc, char **argv)
                      error(errmsg, c);
                   }
                }
+               if(nums[0]==0 && nums[1]==0)
+                  error("pattern must include at least one positive integer",c);
+
                m = nums[0];
                n = nums[1];
             }
@@ -201,13 +203,8 @@ void geo_opts::process_command_line(int argc, char **argv)
       }
    }
 
-   // "Normalise" the pattern"
-   int factor = gcd(m, n);
-   pat_freq *= factor;
-   m /= factor;
-   n /= factor;
-   
-   freq = pat_freq * (m*m + m*n + n*n);
+   m *= pat_freq;
+   n *= pat_freq;
    
    return;
 }
@@ -264,9 +261,9 @@ int main(int argc, char **argv)
 
    col_geom_v geo;
    if(opts.method=='s')
-      geo.set_geodesic_sphere(geom, opts.freq, opts.m, opts.n, opts.centre);
+      geo.set_geodesic_sphere(geom, opts.m, opts.n, opts.centre);
    else if(opts.method=='p')
-      geo.set_geodesic_planar(geom, opts.freq, opts.m, opts.n);
+      geo.set_geodesic_planar(geom, opts.m, opts.n);
    
    if(!geo.write(opts.ofile, errmsg))
       opts.error(errmsg);

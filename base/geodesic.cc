@@ -194,10 +194,20 @@ inline int geodesic::index_map(int i, int j, const vector<int> &indx, int p_idx)
    return noindex;  // should never get here!
 }   
 
-
+geodesic::geodesic(const geom_if &base_poly, int mm, int nn, char mthd,
+      vec3d cen): base(base_poly), m(mm), n(nn), method(mthd), centre(cen)
+{
+   init();
+}
   
 void geodesic::init()
 {
+   // "Normalise" the pattern"
+   int fact = gcd(m, n);
+   m /= fact;
+   n /= fact;
+   freq = fact * (m*m + m*n + n*n);
+   
    //triangulate_basic(base, true, 0);
    triangulate_basic(base, false, 0);
    base.add_missing_impl_edges();

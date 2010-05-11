@@ -296,22 +296,20 @@ class geom_if
       /**A Class I pattern is made with m=0,n=1. A Class II pattern
        * is made with m=1,n=1. A Class III pattern is made with n>=1,m>1.
        * \param base the base polyhedron
-       * \param freq the frequency the pattern frequency
        * \param m the first pattern specifier.
        * \param n the second pattern specifier.
        * \return true if the pattern was valid, otherwise false. */
-      bool set_geodesic_planar(const geom_if &base, int freq, int m=1, int n=0);
+      bool set_geodesic_planar(const geom_if &base, int m, int n=0);
 
       ///Set spherical geodesic division.
       /**A Class I pattern is made with m=0,n=1. A Class II pattern
        * is made with m=1,n=1. A Class III pattern is made with n>=1,m>1.
        * \param base the base polyhedron
-       * \param freq the frequency the pattern frequency
        * \param m the first pattern specifier.
        * \param n the second pattern specifier.
        * \param cent the centre of projection.
        * \return true if the pattern was valid, otherwise false. */
-      bool set_geodesic_sphere(const geom_if &base, int freq, int m=1, int n=0,
+      bool set_geodesic_sphere(const geom_if &base, int m, int n=0,
             vec3d cent=vec3d(0,0,0));
 
       ///Project the vertices onto a sphere

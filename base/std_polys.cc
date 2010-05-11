@@ -36,6 +36,7 @@
 #include "skilling.h"
 #include "math_utils.h"
 #include "utils.h"
+#include "info.h"
 #include "coloring.h"
 
 using std::swap;
@@ -430,7 +431,13 @@ const char *alt_names[][2] = {
    {"tr_icosidodecahedron", "u28" }, 
    {"tr_icosid", "u28" }, 
    {"snub_dodecahedron", "u29" },
-   {"snub_dod", "u29" }
+   {"snub_dod", "u29" },
+   {"rd", "u7_d"},
+   {"rh_dod", "u7_d"},
+   {"rh_dodecahedron", "u7_d"},
+   {"rt", "u24_d"},
+   {"rh_tri", "u24_d"},
+   {"rh_triacontahedron", "u24_d"},
 };
 
 const char *u_abbrevs[][2] = {
@@ -451,7 +458,7 @@ const char *u_abbrevs[][2] = {
 
 
 
-int make_resource_uniform(geom_if &geom, string name, char *errmsg)
+int make_resource_uniform(geom_if &geom, string name, char *errmsg=0)
 {
    if(name.size()<2 || !strchr("uU", name[0]) || name.find('.')!=string::npos)
       return -1; // not uniform name (the "." indicates a likely local file)
@@ -505,7 +512,7 @@ const char *j_abbrevs[][2] = {
 
 
 
-int make_resource_johnson(geom_if &geom, string name, char *errmsg)
+int make_resource_johnson(geom_if &geom, string name, char *errmsg=0)
 {
    if(name.size()<2 || !strchr("jJ", name[0]) || name.find('.')!=string::npos)
       return -1; // not johnson name (the "." indicates a likely local file)
@@ -539,6 +546,77 @@ int make_resource_johnson(geom_if &geom, string name, char *errmsg)
    return 0; // name found
 }
 
+int make_resource_geodesic(geom_if &geom, string name, char *errmsg)
+{
+   if(name.size()<5 || name.substr(0,4)!="geo_" || name.find('.')!=string::npos)
+      return -1; // not geodesic name (the "." indicates a likely local file)
+                 // so the name is not handled
+
+   col_geom_v base;
+   int offset = 4;
+   if(name[offset]=='t') {
+      make_resource_uniform(base, "u_tet");
+      offset++;
+   }
+   else if(name[offset]=='o') {
+      make_resource_uniform(base, "u_oct");
+      offset++;
+   }
+   else if(name[offset]=='i') {
+      make_resource_uniform(base, "u_ico");
+      offset++;
+   }
+   else if(isdigit(name[offset])) {
+      make_resource_uniform(base, "u_ico");
+   }
+   else {
+      if(errmsg)
+         snprintf(errmsg, MSG_SZ, "geodesic base polyhedron not i, o or t");
+      return 1; // fail
+   }
+
+   char str[MSG_SZ];
+   strncpy(str, name.c_str()+offset, MSG_SZ-1);
+   str[MSG_SZ-1] = '\0';
+   vector<char *> num_strs;
+   split_line(str, num_strs, "_");
+   int nums[2] = {1, 0};
+   if(num_strs.size()>2) {
+      if(errmsg)
+         snprintf(errmsg, MSG_SZ, "geodesic division: must be given by 1 or 2 integers");
+      return 1; // fail
+   }
+
+   if(num_strs.size()>0 && !read_int(num_strs[0], &nums[0])) {
+      if(errmsg)
+         snprintf(errmsg, MSG_SZ, "geodesic division:%s division number not an integer", (num_strs.size()>1) ? " first" : "");
+      return 1; // fail
+   }
+
+   if(num_strs.size()>1 && !read_int(num_strs[1], &nums[1])) {
+      if(errmsg)
+         snprintf(errmsg, MSG_SZ, "geodesic division: second division number not an integer");
+      return 1; // fail
+   }
+
+   if(!geom.set_geodesic_sphere(base, nums[0], nums[1])) {
+      if(errmsg)
+         snprintf(errmsg, MSG_SZ, "geodesic division: invalid division");
+      return 1; // fail
+   }
+
+   return 0; // name found
+}
+
+// if name ends in "_d" then make dual of resource 
+void process_for_dual(string &name, bool &dual_flag)
+{
+   int name_sz = name.size();
+   if(name_sz>2 && name[name_sz-2]=='_' && name[name_sz-1]=='d') {
+      name.resize(name_sz-2);
+      dual_flag = !dual_flag;
+   }
+}
 
 bool make_resource_geom(geom_if &geom, string name, char *errmsg)
 {
@@ -549,6 +627,9 @@ bool make_resource_geom(geom_if &geom, string name, char *errmsg)
    if(!name.size())
       return false;
 
+   bool make_dual = false;
+   process_for_dual(name, make_dual);
+   
    // Look for an internal alternative name
    char alt_name[MSG_SZ];
    to_resource_name(alt_name, name.c_str());
@@ -556,13 +637,15 @@ bool make_resource_geom(geom_if &geom, string name, char *errmsg)
    for(unsigned int i=0; i<sizeof(alt_names)/sizeof(alt_names[0]); i++) {
       if(strcmp(alt_name, alt_names[i][0])==0) {
          name = alt_names[i][1];  // set name to the usual name for the model
+         process_for_dual(name, make_dual);
          break;
       }
    }
 
    char errmsg2[MSG_SZ];
    bool geom_ok = false;
-   
+
+  
    if(!geom_ok) {
       int ret = make_resource_pgon(geom, name, errmsg2);
       if(ret==0)
@@ -605,6 +688,31 @@ bool make_resource_geom(geom_if &geom, string name, char *errmsg)
             strcpy(errmsg, errmsg2);
          return false;
       }
+   }
+
+   if(!geom_ok) {
+      int ret = make_resource_geodesic(geom, name, errmsg2);
+      if(ret==0)
+         geom_ok = true;
+      else if(ret > 0) {
+         if(errmsg)
+            strcpy(errmsg, errmsg2);
+         return false;
+      }
+   }
+
+   if(make_dual) {
+      vec3d cent = geom.centroid();
+      geom_info info(geom);
+      info.set_center(cent);
+      double rad = info.impl_edge_dists().sum/info.num_iedges();
+      col_geom_v dual;
+      const double inf = 1200;
+      get_dual(geom, dual, rad, cent, inf);
+      add_extra_ideal_elems(dual, cent, 0.95*inf); // limit closer than inf
+      geom.clear_all();
+      geom.append(dual);
+      set_resource_polygon_color(geom);
    }
 
    return geom_ok;

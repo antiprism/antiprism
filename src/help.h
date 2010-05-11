@@ -17,15 +17,17 @@ const char *help_models =
 "======\n"
 "Antiprism includes a number of builtin models. These may be used\n"
 "by any program that expects an OFF file, by passing the model name\n"
-"instead of a file name e.g. antiview u1\n"
+"instead of a file name e.g. antiview u1. Adding _d to a resource model\n"
+"name will give the dual of the model\n"
 "\n"
 "See the help topic for each model type for more details\n"
-"   uniform: uniform polyhedra\n"
-"   johnson: johnson polyhedra\n"
-"   polygon: polygon-based polyhedra such as prisms, antiprisms,\n"
-"            pyramids, dipyramids, cupolas, orthobicupolas, gyrobicupolas\n"
-"            and snub-antiprisms\n"
-"   uc:      uniform compounds\n";
+"   uniform:  uniform polyhedra\n"
+"   johnson:  johnson polyhedra\n"
+"   polygon:  polygon-based polyhedra such as prisms, antiprisms,\n"
+"             pyramids, dipyramids, cupolas, orthobicupolas, gyrobicupolas\n"
+"             and snub-antiprisms\n"
+"   uc:       uniform compounds\n"
+"   geodesic: geodesic spheres\n";
 
 
 const char *help_uniform =
@@ -460,6 +462,33 @@ const char *help_uniform_compounds =
 "UC73   2 snub dodecadodecahedra\n"
 "UC74   2 inverted snub dodecadodecahedra\n"
 "UC75   2 snub icosidodecadodecahedra\n";
+
+const char *help_geodesic =
+"Geodesic Spheres\n"
+"================\n"
+"A geodesic sphere is specified by a base polyhedron and a pattern\n"
+"given by two integers. The pattern numbers determined the class of\n"
+"geodesic sphere, and more specifically the 'stepping' for moving\n"
+"between original base vertices in the geodesic model.\n"
+"\n"
+"o   geo_\n"
+"    optionally followed by a letter to indicate the base polyhedron\n"
+"       - i: icosahedron (default)\n"
+"       - o: octahedron\n"
+"       - t: tetrahdron\n"
+"    followed by the first pattern number\n"
+"    optionally followed by a second pattern number (default 0)\n"
+"\n"
+"Class I patterns are of the form m,0 or 0,n (the pattern frequency\n"
+"   is m or n, and this figure is also the \"frequency\")\n"
+"   e.g. geo_4, geo_o3, geo_o3_0, geo_t0_3\n"
+"Class II patterns are of the form m,m (the pattern frequency is m,i\n"
+"   but the \"frequency\" is often described as 2m)\n"
+"   e.g. geo_4_4, geo_o3_3\n"
+"Class III patterns are of the form m,n with m>0, n>0 and m=/=n (the\n"
+"   the pattern frequency is the greatest common divisor of m and n)\n"
+"   e.g. geo_4_1, geo_o3_2, geo_t4_2\n";
+
 
 const char *help_color_val =
 "Colour Values\n"
