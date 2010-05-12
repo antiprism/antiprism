@@ -1,0 +1,416 @@
+NEWS for Antiprism: http://www.antiprism.com
+
+Version 0.20
+xx-xx-09 Adrian Rossiter <adrian@antiprism.com>
+         New Programs
+           lat_util: new program for lattice utilities (by Roger
+             Kaufman)
+         Changes
+           poly_kscope: new options, -c colours a compound by part,
+             -S uses the symmetries of another polyhedron, -t tests
+             the symmetry type by repeating an arrow
+           off_report: new option -S s for a symmetry report
+           off_query: new query EC for edge centroids
+           off_trans: new option -P aligns to standard symmetry type,
+             rotate a pair of vectors onto another moved from -A to -R
+           off_color: options -m -M -c combined as option -m. Lower
+             case colourings always set index, upper case colourings
+             always apply colour map. Default colour map is 'rand'.
+             New options -vef sS to colour elements by symmetry orbit,
+             -f aA to colour by average internal angle,
+             -f kK to colour sets of faces connected by face sides,
+             -e Kk to colour sets of edges connected by edges,
+             -vef M to convert colour indexes to values using map
+             -I to convert colour values to indexes
+           unipoly,johnson: programs removed, models are in resources
+              see 'off_util -H uniform' and 'off_util -H johnson'
+           polygon: snub-antiprisms added, antiprism alignment changed
+           bravais: option -R also fills and overlays with cubes
+           iso_delta: new option -C for colouring
+           pol_recip: default centre is centroid, new option -a
+             appends dual to original geometry
+           antiview,off2vrml,off2pov: new option -s to display
+             symmetry elements
+           off_util: new option -H for general help, new option -u
+             to unfold a polyhedron net, new option -x V deletes
+             free vertices
+           minmax: new ellipsoid and superellipsoid surfaces, default
+             algorithm is v
+           Resources: new colour map files and generatable maps,
+             uniform and Johnson model files removed and are now
+             internal unit-edged and coloured, new uniform
+             compounds (by Roger Kaufman), duals (appending _d),
+             geodesic spheres
+           All: --help and --version options. New shift, step,
+             and wrap modifiers for reindexing colour maps
+           
+         Fixes
+           lat_grid: origin is the default centre for -c s
+
+Version 0.19.1
+02-12-08 Adrian Rossiter <adrian@antiprism.com>
+         Fixes
+           build: will build with GCC 4.3
+           off_color: -e p outputs colour index numbers
+
+Version 0.19
+28-11-08 Adrian Rossiter <adrian@antiprism.com>
+         New Programs
+           bravais: generates Bravais lattices, and their reciprocal
+             lattices and Dirchlet regions (by Roger Kaufman)
+           waterman: generates Waterman polyhedra (by Roger Kaufman)
+         Changes
+           all: new colour name 'invisible' for hiding elements
+           off_trans: all options are applied in the order they are
+             given. -s Ee uses explicit edges if any are present,
+             otherwise uses implicit edges. New option -S r to scale
+             a polyhedron into a unit sphere. New transformation -a
+             that makes particular angles between the mapped axes.
+             New transformation -A that aligns two pairs of vectors
+             or two sets of three points.
+           lat_grid: HCP added
+           packer: program removed
+           off2eig: moved to extra programs
+         Fixes
+           geodesic: polyhedra with square faces no longer
+             have invalid coordinates for some vertices.
+           off_trans: -s prints an error message if there are no
+             elements of the appropriate type. 
+           minmax: initial placement of vertices working
+           lat_grid: y and z coordinates not swapped
+           antiview, off2pov: vertex number displays for a vertex at
+             the centre
+           antiview: no edge rods are "flipped"
+
+
+
+Version 0.18.1
+06-06-08 Adrian Rossiter <adrian@antiprism.com>
+            build: corrected issues related to strict aliasing which
+              caused some programs to crash in some situations when
+              built with recent versions of GCC using default options
+
+Version 0.18
+23-05-08 Adrian Rossiter <adrian@antiprism.com>
+         New Programs
+            iso_delta: makes isohedral deltahedra (by Roger Kaufman)
+         Changes
+            poly_kscope: alignment of T, O and I types to have 3-fold
+              axis in direction of (1, 1, 1)
+            lat_grid: added K_4 crystal and HCP diamond
+         Fixes
+            build: corrected issues related to strict aliasing which
+              caused some programs to crash when built with recent
+              versions of GCC using default options
+            poly_kscope: Dvn and Sn work for all valid n
+            
+Version 0.17.1
+14-01-08 Adrian Rossiter <adrian@antiprism.com>
+         Fixes
+            conway, off2m: compatible with amd64
+            build: document build options needed with some versions,
+              of GCC, and eliminate "deprecated conversion" warnings
+            off_color: -e R works
+            off_align: test reporting removed
+
+Version 0.17
+06-01-08 Adrian Rossiter <adrian@antiprism.com>
+         New Programs
+            conway: Conway Notation transformations (adapted from
+              George Harts Javascript implemenation by Roger Kaufman)
+            johnson: makes Johnson polyhedra
+         Changes
+            all: index 0 is now treated as an ordinary index.
+            off_color: -fev uses -1 to clear colours
+            antiview: accepts -geometry argument when supported
+            antiview, off2*: default centre is centroid if it allows a
+              smaller container
+            off_util: new option -T truncates a polyhedron
+            off_align: align and bond by face index, option -p
+              argument order changed
+            canonical: various option changes, alternative
+              canonicalization algorithm, new option to planarize
+            polygon: make cupolas, orthobicupolas and gyrobicupolas
+            off_query: reports nonplanarity of faces
+            resources: added several scripts, two colour maps, uniform
+              and Johnson polyhedra, polygon based polyhedra. Enabled
+              alternative names for resource files
+         Fixes
+            pol_recip: centres C, M, have sensible default radius (E)
+            off_util: -d accepts a negative integer
+            off_query: no bogus warning when using -I
+            antiview: -I works
+
+Version 0.16
+25-11-07 Adrian Rossiter <adrian@antiprism.com>
+         New Programs
+            n_icons: creates conicon-like polyhedra (by Roger Kaufman)
+         Changes
+            off_color: new options -v F/E colours vertices average of
+              adjoining face/edge colours. -e F now uses average. New
+              option -M selects element types to apply colour map to.
+              Option -m searches for installed colour map files. GIMP
+              Palette and Fractint colour map file formats supported.
+            all: colours given on the command line or in colour map
+              files can be given using the X11 rgb.txt colour names
+            unitile2d: new "shear" option -S
+            antiview: new spin mode and reset command, new option -m
+              to use a colour map
+            antiview,off2pov,off2vrml,off2m: use bounding box rather
+              than minimum enclosing ball for camera positioning
+         Fixes
+            pol_recip: centres v, V, a and A now work
+            build: don't pass directory names to install without -d,
+              check for X library and include paths for OpenGL (not
+              in Cygwin)
+            packer: typos in help text
+            antiview,off2pov,off2vrml,off2m: avoid hangs when opening
+              some OFF files
+
+Version 0.15
+22-08-07 Adrian Rossiter <adrian@antiprism.com>
+         New Programs
+            sph_saff: spirals points on a sphere using Saff and
+              Kuijlaars' method
+            sph_rings: rings of points on a sphere
+         Changes
+            all: changes to edge handling have required code changes to
+              nearly all the programs. Visible changes are listed below.
+              The edge handling policy is described in the documentation
+              in "Using Edges in Antiprism"
+            off2*,antiview: option -E must be a colour ('d' is now
+              automatic, 'f' moved to off_color -e F)
+            off2pov: edge display type variable e_dtype, and associated
+              POV macros removed from output
+            off_util: element filtering, option -x replaces option -F
+            off_color: -E selects edge type to colour, -e F colours
+              edges with face colours
+            off_report, off_query: -E selects edges for report
+           
+            all: add version information to program help text
+            off2*,antiview: element colour 0,0,0,0 (shorthand 'x')
+              is used to indicate that an element should not be
+              displayed.
+            geodesic: map coloured edges and vertices, triangulate base
+              polyhedron
+            pol_recip: calculate default reciprocation centre and radius,
+              colour the dual elements like the base elements
+            antiview: fixed size element labels
+            canonical: new option -C for initial centering
+            off2eig: accept multiple files, new option to colour
+              springsets
+            off2pov,off2vrml,antiview: calculation of default vertex
+              sphere radius changed to 1/15 nearest pair, and
+              calculation now ignores very close vertices. Geometry
+              centre and width determined by minimum enclosing ball.
+              Changes to option -t, triangulate by default, use
+              GLU Tesselator when available.
+            off2m: triangulate by default, default vertex and edge
+              colours are the LG3D defaults
+            off2vrml: option -n for vertex number labels.
+            off_util: option -t to triangulate, when merging elements
+              have colour from first found element to be merged
+            build: choose OpenGLUT over standard GLUT in Windows. Remove
+              old build system Makefiles
+         Fixes
+            build: library dependencies
+            all: colour values in hex format don't corrupt argument list,
+              orientation of polyhedra with >70000 faces
+            off2vrml: centre polyhedron to have z coordinate of 0 to
+              give correct rotation centre in FreeWRL
+            m2off: preserve vertex colours
+
+Version 0.14
+20-06-07 Adrian Rossiter <adrian@antiprism.com>
+         New Programs
+            m2off: convert LiveGraphics3D 'm' format to OFF format
+              (m2off written by Roger Kaufman)
+            unitile2d: makes uniform tilings on a surface
+         Changes
+            off2vrml: increase ambient light
+            off2pov: new aspect ratio variable, redundant transparency
+               variables removed
+            off_color: option to map element colours to HSVA ranges
+            off_util: files combined before processing, new option -l for
+               merge distance, default value for -M, -M preserves
+               orientation
+            canonical: default maximum iterations for -n is no limit
+            w_shell: removed, replaced by the more general lat_grid
+            model programs: many models now oriented in same direction
+            build: Qhull source included, removes Qhull dependency,
+               use autotools build system
+         Fixes
+            off_color: use colormap files, proper colouring of non-closed
+               surfaces
+            off2pov: output compatible with MegaPOV
+            off2m: ensure external viewpoint, convert files with no faces
+            off_util: -M merges files with no faces
+ 
+Version 0.13
+13-04-07 Adrian Rossiter <adrian@antiprism.com>
+         New Programs
+            off2vrml: converts OFF files to VRML
+            off_report: reports on global measures (area, volume, etc),
+              maxima and counts
+            off_query: list element data for specified elements
+         Changes
+            off_color: transparency options, lighting colouring effect
+            antiview: use alpha value when displaying colours, element
+              numbering, orthogonal view, display in right-handed
+              coordinate system
+            off2pov: use alpha value when displaying colours, display
+              in right-handed coordinate system
+            all programs: support alpha values, revert to writing
+              colours to OFF files as decimals, write vertex colours
+              using a one vertex face, ignore data after vertex
+              coordinates, integer colours intended as decimal are
+              read as decimal
+            off_trans: relative scaling
+            pol_recip: orientable duals are oriented
+            off_util: -O flips orientation of oriented polyhedra,
+              -D digon filter replaced by -F, a more general filter,
+              -M merges coincident elements (-M by Roger Kaufman)
+            zono: option -a removed, duplicate vectors are not dropped
+         Fixes
+            antiview: -R rotation
+
+Version 0.12
+26-02-07 Adrian Rossiter <adrian@antiprism.com>
+         New Programs
+            off2m: convert to 'm' format for display in LiveGraphics3D
+              applet (off2m written by Roger Kaufman)
+         Changes
+            off_color: edge colouring using digons
+            off_util: digon filter, edges to faces, project onto sphere
+            antiview: edge elements from digons, vertex and face
+              colour options
+            off2pov: edge elements from digons and faces, vertex and
+              face colour options
+            all programs: colour options accept several colour formats,
+              write colours to OFF files as integers
+         Fixes
+            Read OFF files with colours which have an alpha value
+
+Version 0.11
+11-02-07 Adrian Rossiter <adrian@antiprism.com>
+         New Programs
+            repel: equilibrium positions of points repelling on a sphere
+            canonical: canonicalization of polyhedra
+            lat_grid: lattices and grids with integer coordinates
+         Changes
+            off_trans: new option -X, general transformations
+            off2pov: variables for transparency of elements
+            model programs: model code separated from model programs
+            Makefile: CYG=1 no longer sets option -mno-cygwin
+         Fixes
+            Read OFF files containing comments, correct whitespace
+              handling
+ 
+Version 0.10
+21-11-06 Adrian Rossiter <adrian@antiprism.com>
+         New Programs
+            antiview: command line model viewer
+            kcycle: kaleidocycle rings of polyhedra
+         Changes
+            off_color: default colours and schemes, new colouring options
+            unipoly: list by U numbers, rather than Kaleido numbers
+            pol_recip: -c C to use centroid as centre
+            various: minor changes to help text
+         Fixes
+            jitterbug: add edge counts to output
+            poly_weave: error handling
+            pol_recip: option r, specifying a radius with two points,
+              using a centre with a face or edge radius.
+            off_color: works in windows, error checking
+            all: portable processing of numeric input
+
+Version 0.09
+10-09-06 Adrian Rossiter <adrian@antiprism.com>
+         New Programs
+         Changes
+            Antiprism instead of Packinon in code and documentation
+         Fixes
+
+
+Releases 0.01 - 0.08 made under the name of Packinon 
+http://sourceforge.net/projects/packinon
+           
+Version 0.08
+08-09-06 Adrian Rossiter <adrian@antiprism.com>
+         New Programs
+           jitterbug: jitterbug transformation
+           off2crds: extract coordinates from OFF file
+         Changes
+         Fixes
+           
+Version 0.07
+03-09-06 Adrian Rossiter <adrian@antiprism.com>
+         New Programs
+           string_art: string figures
+         Changes
+           poly_kscope: symmetry notation. Th and Td switched.
+           pol_recip: make topological dual with face centroids
+             for vertices
+           minmax: new algorithm, and algorithm option
+         Fixes
+           all: read files with arbitrary line length
+           all: error checking when reading integers
+           geodesic: check for non-triangulated input, read from stdin.
+           
+Version 0.06
+13-04-06 Adrian Rossiter <adrian@antiprism.com>
+         New Programs
+           poly_weave: converts a polyhedron to a weave
+         Changes
+           off_trans: -S accepts a single scale factor
+           geodesic: options changed and reduced 
+           zono: options changed 
+         Fixes
+           off2pov: removed infinite recursion from default include files
+             in multiple file output
+           geodesic: correctly calculates faces for all input
+           zono: efficiency related limitations on star size removed
+           
+Version 0.05
+10-01-06 Adrian Rossiter <adrian@antiprism.com>
+         Changes
+           off2pov: output file made consistent and documented
+           geodesic: orients output
+         Fixes
+           Debugging messages removed from some progams
+           Various bug fixes.
+
+Version 0.04
+16-12-05 Adrian Rossiter <adrian@antiprism.com>
+         New Programs
+           off_util: merging, orientation, precision, skeleton
+         Changes
+           off2pov: new options and more flexible output
+           pol_recip: more useful radius options, handling
+             of infinite vertices
+           off_merge: functionality merged into off_util
+           polygon: better sizing options, added self-intersecting
+             polygon bases
+         Fixes
+           Error message for missing options for all programs
+           off2pov: stereo setting, error writing values in Windows.
+           Various bug fixes.
+
+Version 0.03
+14-06-05 Adrian Rossiter <adrian@antiprism.com>
+         First beta release of packinon programs.
+         Changes to all programs. Code factoring, improved error
+         checking and message text, consistent program behaviour.
+         Numerous bug fixes. Enhancements to packer and off_trans.
+         Expanded documentation.
+
+Version 0.02
+24-05-05 Adrian Rossiter <adrian@antiprism.com>
+         New programs - off_trans, off_align, poly_kscope
+         options changes in off2pov
+         Various bug fixes
+
+Version 0.01
+15-02-05 Adrian Rossiter <adrian@antiprism.com>
+         First release of packinon programs
+

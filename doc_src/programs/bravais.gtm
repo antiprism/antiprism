@@ -1,0 +1,82 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+Make a cubic section of CCP
+<PRE>
+   bravais fcc | antiview -v b
+</PRE>
+
+Make a spherical section of BCC with struts from centre to vertex
+<PRE>
+   bravais bcc -c s -r 4 -s 3,2 | antiview
+</PRE>
+
+Make the Voronoi cells of a lattice
+<PRE>
+   bravais bcc -g 3 -D c | antiview
+</PRE>
+
+Add the Voronoi cells to a lattice
+<PRE>
+   bravais bcc -g 3 -D a | antiview -v 0.1
+</PRE>
+
+Make the dual of a lattice
+<PRE>
+   bravais bcc -d c | antiview -v b
+</PRE>
+
+Make a triclinic lattice, include the cell grid
+<PRE>
+   bravais triclinic -a 60,70,80 -v 1,1.5,2 -u | antiview
+</PRE>
+
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+<I>bravais</I> was written by
+<A HREF="http://www.interocitors.com/polyhedra/">Roger Kaufman</A>.
+<P>
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -H > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+#include "<<END>>"
+
+

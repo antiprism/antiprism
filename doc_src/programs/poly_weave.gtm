@@ -1,0 +1,50 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+An interwoven set of six pentagons
+<PRE>
+   unipoly icosahedron | poly_weave -o woven_pents.off
+</PRE>
+
+An interwoven set of six pentagons. To show the circuits of the
+weave, colour the edges by face colour and hide the faces
+<PRE>
+   unipoly icosahedron | poly_weave | off_color -f U -e F | antiview -v 0.1 -x f
+</PRE>
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+#include "<<END>>"

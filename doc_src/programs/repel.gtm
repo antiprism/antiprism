@@ -1,0 +1,62 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+Make a snub cube
+<PRE>
+   repel -N 24 -l 15 | conv_hull -o snub_cube.off
+</PRE>
+Make a snub cube in fewer iterations by not using adaptive shortening
+<PRE>
+   repel -N 24 -s 1 -l 15 | conv_hull -o snub_cube.off
+</PRE>
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+The default adaptive shortening of travel will not always be quickest.
+It is worth experimenting with specific values using option <I>-s</I>.
+However, in the snub cube examples above the adaptive shortening gives
+better results, producing more accurate squares.
+<P>
+The progress report includes the number of iterations, the greatest
+distance moved by a point, the shortening factor, and the sum of all
+the forces.
+<P>
+If adaptive shortening is used then there is also a line of figures
+showing the number of times out of ten that the shortening factor
+was increased.
+
+
+#include "<<END>>"

@@ -1,0 +1,119 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+This text is based on the
+<A HREF="http://www.geomview.org/docs/html/OFF.html">OFF format description</A> in the
+<A HREF="http://www.geomview.org/docs/">Geomview Documentation</A> and
+has been edited to describe the features supported by the Antiprism programs.
+See also -
+<A HREF="http://www.geomview.org/docs/oogltour.html">Geomview OOGL Tutorial</A>.
+
+
+<H2>OFF Files in Antiprism</H2>
+
+
+The conventional suffix for OFF files is <I>'.off'</I>.
+
+<P>
+Syntax:
+
+
+<PRE>
+OFF                        # Header keyword
+<VAR>NVertices</VAR>  <VAR>NFaces</VAR>  <VAR>NEdges</VAR>  # NEdges not used or checked
+
+<VAR>x</VAR>[0]  <VAR>y</VAR>[0]  <VAR>z</VAR>[0]           # Vertices, any extra data is ignored
+...
+<VAR>x</VAR>[<VAR>NVertices</VAR>-1]  <VAR>y</VAR>[<VAR>NVertices</VAR>-1]  <VAR>z</VAR>[<VAR>NVertices</VAR>-1]
+
+                           # Faces
+                           # <VAR>Nv</VAR> = # vertices on this face
+                           # <VAR>v</VAR>[0] ... <VAR>v</VAR>[<VAR>Nv</VAR>-1]: vertex indices
+                           #    in range 0..<VAR>NVertices</VAR>-1
+<VAR>Nv</VAR>  <VAR>v</VAR>[0] <VAR>v</VAR>[1] ... <VAR>v</VAR>[<VAR>Nv</VAR>-1]  <VAR>colorspec</VAR>
+...
+                           # <VAR>colorspec</VAR> continues past <VAR>v</VAR>[<VAR>Nv</VAR>-1]
+                           # to end-of-line; may be 0 to 4 numbers
+                           # nothing: default
+                           # integer: colormap index
+                           # 3 or 4 integers: RGB[A] values 0..255
+                           # 3 or 4 floats: RGB[A] values 0..1
+</PRE>
+
+<P>
+OFF files (name for "object file format") represent collections of
+planar polygons with possibly shared vertices, a convenient way to
+describe polyhedra.  The polygons may be concave but there's no
+provision for polygons containing holes.
+<P>
+An OFF file must begin with a header line that includes the keyword
+<I>OFF</I>;
+<P>
+Three ASCII integers follow: <VAR>NVertices</VAR>, <VAR>NFaces</VAR>, and
+<VAR>NEdges</VAR>.  Thse are the number of vertices, faces, and edges,
+respectively.  Current software does not use nor check <VAR>NEdges</VAR>.
+<P>
+The vertex coordinates follow: 3 floating-point values.  They are
+implicitly numbered 0 through <VAR>NVertices</VAR>-1.
+<P>
+Following these are the face descriptions, typically written
+with one line per face.  Each has the form
+
+<PRE>
+<VAR>N</VAR>  <VAR>Vert1</VAR> <VAR>Vert2</VAR> ... <VAR>VertN</VAR>  [<VAR>color</VAR>]
+</PRE>
+
+<P>
+Here <VAR>N</VAR> is the number of vertices on this face,
+and <VAR>Vert1</VAR> through <VAR>VertN</VAR> are indices into the list of
+vertices (in the range 0..<VAR>NVertices</VAR>-1).
+
+
+<P>
+The optional <VAR>color</VAR> may take several forms.  Line breaks are
+significant here: the <VAR>color</VAR> description begins after <VAR>VertN</VAR>
+and ends with the end of the line (or the next # comment).  A
+<VAR>color</VAR> may be:
+
+
+<DL COMPACT>
+<DT>nothing
+<DD>the default color
+<DT>one integer
+<DD>index into a colormap, the index numbers can be converted to color
+    values using the <A HREF="off_color.html">off_color</A> program.
+<DT>three or four integers
+<DD>RGB and possibly alpha values in the range 0..255
+<DT>three or four floating-point numbers
+<DD>RGB and possibly alpha values in the range 0..1
+</DL>
+
+For display purposes a two-vertex face may be used to hold
+an edge color, and a one-vertex face may be used to hold a vertex
+color.
+<P>
+Antiprism treats the colour (0.0, 0.0, 0.0, 0.0), completely
+transparent black, as a non-display color.
+<P>
+A value of '1' is valid in both the integer and floating point
+ranges, which allows more than one interpretation of some colors.
+The color '1 0 0' may be a near-black written for the integer range,
+or red written for the floating point range.
+<P>
+When reading a file an integer interpretation is prefered over a
+floating point interpretation. However, if all the integer color
+values in the file are either 1 or 0 then they are all converted
+to 0.0 and 1.0 in the floating point range.
+<P>
+To avoid ambiguities color values are written in the floating
+point range and always with a decimal point.
+
+
+
+#include "<<END>>"

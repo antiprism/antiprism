@@ -1,0 +1,88 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+Create a .m file with LiveGraphics3D colouring to use as an example
+<PRE>
+   unipoly snub dodecahedron | off2m -t 0 -l > snub_dod.m
+</PRE>
+
+Convert a LiveGraphics3D model to OFF format
+<PRE>
+   m2off snub_dod.m > snub_dod.off
+</PRE>
+
+Convert a LiveGraphics3D model to OFF format, colouring it similarly
+to the way LiveGraphics3D does, and view it
+<PRE>
+    m2off -C color.off snub_dod.m | off_color -f L -l color.off | antiview
+</PRE>
+
+The next two examples use models from the 
+<A HREF="http://www.vis.uni-stuttgart.de/~kraus/LiveGraphics3D/examples/color_volumes.html">Color Volumes</A> page, which is one the
+<A HREF="http://www.vis.uni-stuttgart.de/~kraus/LiveGraphics3D/examples.html">LiveGraphics3D Examples</A> pages
+<P>
+Convert a vertex only .m file, and view it
+<PRE>
+   m2off <A HREF="http://www.vis.uni-stuttgart.de/~kraus/LiveGraphics3D/examples/color_cylinder.m">color_cylinder.m</A> | antiview -v 0.14
+</PRE>
+
+Show back face colors and start with the same viewpoint that
+LiveGraphics3D does
+<PRE>
+   m2off -b -v <A HREF="http://www.vis.uni-stuttgart.de/~kraus/LiveGraphics3D/examples/color_cube.m">color_cube.m</A> | antiview
+</PRE>
+
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+The 'm' format is used by
+<A HREF="http://www.vis.uni-stuttgart.de/~kraus/LiveGraphics3D/">LiveGraphics3D </A>.
+<P>
+If faces in the .m file are displayed using LiveGraphics3D lighting
+it is possible that they may not also have particular colours
+assigned to them. In this case the colour used in the OFF file will
+be inherited from another element. It is likely that this will not be
+what is wanted, in which case the faces can be recoloured using
+<I>off_color</I>.
+<P>
+Please,
+<A HREF="<<PATH_UP>>/about.html#contact">report any difficulties</A>
+in converting .m files.
+<P>
+
+<I>m2off</I> was written by
+<A HREF="http://www.interocitors.com/polyhedra/">Roger Kaufman</A>.
+
+#include "<<END>>"

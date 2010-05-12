@@ -1,0 +1,61 @@
+
+#define HL_DOWN class=curpage
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#current">Current Release</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#other">Older Code</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="antiprism">
+Antiprism Programs
+</A></H2>
+
+<H3><A NAME="current">
+Current Release
+</A></H3>
+
+The current version, released <<REL_DATE>> is
+<A HREF="http://sourceforge.net/project/showfiles.php?group_id=176443&amp;package_id=202971"><<ANTIPRISM_RELEASE>></A>, here are the
+<A HREF="readme_file.html">README</A>
+and
+<A HREF="news_file.html">NEWS</A>
+files.
+<P>
+This is a beta release. The programs have not had wide use
+and probably contain a significant number of bugs. Please let me know
+if you come across any bugs, or anything not working as documented.
+<P>
+I build the programs with the GNU tools on Linux and in the MSYS and
+Cygwin environments on Windows. I have received reports that Antiprism
+builds on FreeBSD and Mac OSX. Mac users may find the
+<A HREF="http://pdb.finkproject.org/pdb/package.php/antiprism">
+Fink Antiprism package</A>
+contains some useful modifications.
+
+
+<UL>
+<LI>Source code only - <A HREF="http://prdownloads.sourceforge.net/antiprism/<<ANTIPRISM_SOURCE_FILE>>?download"><<ANTIPRISM_SOURCE_FILE>></A> 
+<LI>Source code and Windows binaries - <A HREF="http://prdownloads.sourceforge.net/antiprism/<<ANTIPRISM_WIN_FILE>>?download"><<ANTIPRISM_WIN_FILE>></A>
+</UL>
+
+The binaries have no external dependencies, but the <I>antiview</I>
+viewer requires OpenGL. OpenGL and GLUT development libraries are
+required to build <I>antiview</I> from source.
+
+<H3><A NAME="older">
+Older Code
+</A></H3>
+
+Earlier versions of the code were released as
+<A HREF="http://packinon.sourceforge.net/download/">Packinon</A>,
+which included a separate release of some Python programs.
+
+#include "<<END>>"

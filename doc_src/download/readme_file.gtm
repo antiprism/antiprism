@@ -1,0 +1,17 @@
+
+#define HL_DOWN class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<PRE>
+#entities ON
+#include "README"
+#entities OFF
+</PRE>
+
+#include "<<END>>"

@@ -1,0 +1,15 @@
+#define HL_PROG class=curpage
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<PRE>
+#entities ON
+#include "EXTRAS_README"
+#entities OFF
+</PRE>
+
+#include "<<END>>"

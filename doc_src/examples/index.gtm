@@ -1,0 +1,117 @@
+
+#define HL_EXAS class=curpage
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<H2>Example Commands Using Pipes</H2>
+
+The example commands below each image can be typed, or cut and pasted,
+onto the command line. Each command creates the particular model and
+loads it into the <I>antiview</I> viewer so it can be examined.
+<P>
+Tip: when using a DOS box in Windows enable command line recall
+with the <I>doskey /insert</I> command. Previous commands are
+recalled with the up arrow, and can be edited to test changes or
+correct errors. This saves a <I>lot</I> of typing.
+<P>
+
+
+<TABLE BORDER="0" CELLSPACING=0 CELLPADDING=20 WIDTH="100%">
+<TR>
+<TD WIDTH="50%" VALIGN=TOP>
+   <A HREF="av_ex_01.jpg">
+     <IMG SRC="av_ex_01_s.jpg" ALT="" BORDER=0 WIDTH=250 HEIGHT=218><BR CLEAR=ALL>
+   </A>
+   <SMALL>unipoly 75 | off_color -f P | antiview</SMALL>
+</TD>
+
+<TD WIDTH="50%" VALIGN=TOP>
+   <A HREF="av_ex_02.jpg">
+     <IMG SRC="av_ex_02_s.jpg" ALT="" BORDER=0 WIDTH=250 HEIGHT=218><BR CLEAR=ALL>
+   </A>
+   <SMALL>geodesic -M p 8 | antiview -v b -x ef</SMALL>
+</TD>
+</TR>
+
+
+<TR>
+<TD WIDTH="50%" VALIGN=TOP>
+   <A HREF="av_ex_03.jpg">
+     <IMG SRC="av_ex_03_s.jpg" ALT="" BORDER=0 WIDTH=250 HEIGHT=218><BR CLEAR=ALL>
+
+   </A>
+   <SMALL>unipoly icosahedron | poly_weave | off_color -f U -e F | antiview -v 0.1 -x f</SMALL>
+</TD>
+
+<TD WIDTH="50%" VALIGN=TOP>
+   <A HREF="av_ex_04.jpg">
+     <IMG SRC="av_ex_04_s.jpg" ALT="" BORDER=0 WIDTH=250 HEIGHT=218><BR CLEAR=ALL>
+   </A>
+   <SMALL>geodesic 5 | off_color -v 0.9,0.0,0.0 -f 1.0,1.0,1.0 | antiview -E 0.3,0.3,0.3 -v 0.04 -e 0.02</SMALL>
+</TD>
+</TR>
+
+<TR>
+<TD WIDTH="50%" VALIGN=TOP>
+   <A HREF="av_ex_05.jpg">
+     <IMG SRC="av_ex_05_s.jpg" ALT="" BORDER=0 WIDTH=250 HEIGHT=218><BR CLEAR=ALL>
+   </A>
+   <SMALL>string_art -l 20 -T 0,0,0.707 -R 0,0,45 -l 20 -T 0,0,-0.707 -R 0,0,-45 | off_color -e 1.0,1.0,0.7 -v 1.0,0.2,0.0 | poly_kscope -s O | antiview -v 0.03  -B 0,0,0</SMALL>
+</TD>
+
+<TD WIDTH="50%" VALIGN=TOP>
+   <A HREF="av_ex_06.jpg">
+     <IMG SRC="av_ex_06_s.jpg" ALT="" BORDER=0 WIDTH=250 HEIGHT=218><BR CLEAR=ALL>
+   </A>
+   <SMALL>unipoly truncated ico | zono -m v | off_color -f 0.4,0.4,0.9 -v 0,0,0 | antiview -v 0.15</SMALL>
+</TD>
+</TR>
+
+<TR>
+<TD WIDTH="50%" VALIGN=TOP>
+   <A HREF="av_ex_07.jpg">
+     <IMG SRC="av_ex_07_s.jpg" ALT="" BORDER=0 WIDTH=250 HEIGHT=218><BR CLEAR=ALL>
+   </A>
+   <SMALL>unipoly truncated ico | zono -m v |pol_recip -r e -c C| off_color -f P -v 1.0,1.0,1.0 -s 12| antiview -v 0.08 -e 0.08 -E 1.0,1.0,1.0</SMALL>
+</TD>
+
+<TD WIDTH="50%" VALIGN=TOP>
+   <A HREF="av_ex_08.jpg">
+     <IMG SRC="av_ex_08_s.jpg" ALT="" BORDER=0 WIDTH=250 HEIGHT=218><BR CLEAR=ALL>
+   </A>
+   <SMALL>unitile2d -s t -l 90 -w 30 11 | off_color -f N -v 1.0,0.0,0.0 -s 8 -S 0.6 -V 1| antiview -v 0.03 -e 0.025 -E 0.8,0.8,0.8</SMALL>
+</TD>
+</TR>
+
+</TABLE>
+
+<H2>Example Constructions</H2>
+
+Select a model for a detailed explanation of how to build it
+using the Antiprism programs.
+
+
+<TABLE BORDER="0" CELLSPACING=0 CELLPADDING=10 WIDTH="100%">
+<TR>
+<TD WIDTH="50%" ALIGN=CENTER VALIGN=BOTTOM>
+   <A HREF="cub_oct.html">
+     <IMG SRC="cub_oct04.gif" ALT="" BORDER=0 WIDTH=160 HEIGHT=120><BR CLEAR=ALL>
+     A compound of a cube and octahedron
+   </A>
+</TD>
+
+<TD WIDTH="50%" ALIGN=CENTER VALIGN=BOTTOM>
+   <A HREF="icosahx.html">
+     <IMG SRC="icosahx04.gif" ALT="" BORDER=0 WIDTH=230 HEIGHT=80><BR CLEAR=ALL>
+     An icosahelix
+   </A>
+</TD>
+</TR>
+</TABLE>
+
+
+#include "<<END>>"

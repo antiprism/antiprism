@@ -1,0 +1,318 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#struct">POV-Ray File Structure</A></SMALL>
+<<CONT_S_END>>
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+Draw a ball pack as balls
+<PRE>
+   off2pov -v b -o pack.pov pack.off
+</PRE>
+Draw the other side of it
+<PRE>
+   off2pov -v b -R 0,180,0 -o pack.pov pack.off
+</PRE>
+Draw an icosahedron without its faces
+<PRE>
+   unipoly icosahedron | off2pov -x f -o icosa.pov
+</PRE>
+Draw an icosahedron without its vertex or edge elements
+<PRE>
+   unipoly icosahedron | off2pov -x ve -o icosa.pov
+</PRE>
+Draw an icosahedron with thin vertex and edge elements
+<PRE>
+   unipoly icosahedron | off2pov -v 0.01 -e 0.008 -o icosa.pov
+</PRE>
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+POV format for can be rendered for display by
+<A HREF="http://www.povray.org">POV-Ray</A>.
+<P>
+The output POV file is easy to edit in a text editor. Many of the program
+options which are used when creating the file can also be set afterwards
+by editing the file. See <A HREF="#struct">POV Files Structure</A>.
+<P>
+Use <I>-v b</I> to draw ball packs.
+<P>
+Shapes with self-intersecting faces generally need the <I>-t</I> option,
+otherwise they may be displayed with missing areas. However this option
+may draw parts of the face outside of the edges.
+<P>
+POV-ray may not be able to display the output, or may display it
+incorrectly. I have tried to make the generated file robust, but
+precision issues could cause problems in apparently correct POV files.
+<P>
+Including files and making changes by hand may easily break some of
+the basic functionality, for example vertex numbering and some stereo
+options.
+<P>
+You can change the default aspect ratio on the POV-Ray command line. A
+square image could be drawn with POV-Ray options
+<I>+H300&nbsp;+W300&nbsp;Declare=AspectRatio=1</I>.
+<P>
+
+<H2><A NAME="struct">
+POV-Ray File Structure
+</A></H2>
+
+The POV files output by off2pov contain a number of preset values.
+These are either values that were given as options to the program, or
+were generated automatically by the program. The POV file has been
+structured so that it may be easily changed using include files passed
+to the program and by hand editing of the file itself.
+
+<H3>Variables</H3>
+
+<H4>Scene Variables</H4>
+
+These are the variables that appear in the POV scene file. They
+appear only once in any set of output.
+<DL>
+<DT><I>Width</I>
+<DD>Maximum distace between 2 points. A figure for the size of all
+    the objects in the file.
+<DT><I>StereoType</I>
+<DD>Stereo type may be 0 - mono, 1 - single image stereo,
+    2 - double image file stereo, or 3 a composite of four views.
+    If 2 then use the povray option +KFF2 to produce the
+    left and right stereo views in separate image files.
+<DT><I>Distance</I>
+<DD>Distance from viewer to point looked at.
+<DT><I>Centre</I>
+<DD>The centre of all the objects. The point the objects are rotated about.
+<DT><I>PerspFactor</I>
+<DD>A value for the width of perspective. If 0 then use 2 for stereo views
+    and 4 for mono views. There probably won't be noticeable change above 50.
+    Perspective works by moving the viewing distance back and enlarging
+    the area which is looked at.
+<DT><I>LookAt</I>
+<DD>The point the camera looks at.
+<DT><I>Rotation</I>
+<DD>Rotation about the centre.
+<DT><I>Shadow</I>
+<DD>Whether the lights cast shadows. 0 - shadows mono no shadows stereo,
+    1 - no shadows, 2 - shadows.
+<DT><I>BgColour</I>
+<DD>Background colour.
+<DT><I>MaxTraceLevel</I>
+<DD>POV-Ray's max_trace_level. Use a higher value if black
+    areas appear when using transparency.
+<DT><I>AspectRatio</I>
+<DD>Aspect ratio of scene. With square pixels this should match the ratio
+    of the POV-Ray options Width:Height.
+</DL>
+
+A set of default geometry variables may also appear. They have the
+same name as the geometry variables but are prefixed by <I>glob_</I>.
+The geometries may then set their individual variables to these global
+values.
+<P>
+A different camera and different lights can be given in an include
+file. The default camera or lights can be excluded.
+<DL>
+<DT><I>ExcludeDefCamera</I>
+<DD>0 (or undefined) - include default camera, 1 - exclude default camera.
+    <P>
+<DT><I>ExcludeDefLights</I>
+<DD>0 (or undefined) - include default lights, 1 - exclude default lights.
+</DL>
+
+<H4>Geometry Variables</H4>
+
+These are the variables associated with each geometry. The geometries
+are processed sequentially and new values are written to these variables
+at the start of processing.
+<DL>
+<DT><I>show</I>
+<DD>1 - show object, 0 - don't show object.
+<DT><I>verts_show</I>
+<DD>1 - show vertices, 0 - don't show vertices.
+<DT><I>edges_show</I>
+<DD>1 - show edges, 0 - don't show edges.
+<DT><I>faces_show</I>
+<DD>1 - show faces, 0 - don't show faces.
+<DT><I>vert_nums_show</I>
+<DD>1 - show vertex numbers, 0 - don't show vertex numbers.
+<DT><I>vert_rad</I>
+<DD>Default radius for vertex spheres.
+<DT><I>vert_col</I>
+<DD>Default colour for vertex spheres.
+<DT><I>vert_tex</I>
+<DD>Default texture for vertex spheres.
+<DT><I>edge_rad</I>
+<DD>Default radius for edge cylinders.
+<DT><I>edge_col</I>
+<DD>Default colour for edge cylinders.
+<DT><I>edge_tex</I>
+<DD>Default texture for edge cylinders.
+<DT><I>face_col</I>
+<DD>Default colour for face polygons.
+<DT><I>face_tex</I>
+<DD>Default texture for face polygons.
+<DT><I>face_dtype</I>
+<DD>Display type for faces, may be
+    0 - POV-ray polygons,
+    1 - triangulate polygons,
+    2 - flattened polygons,
+<DT><I>col_map</I>
+<DD>Array mapping colour indexes to colours.
+<DT><I>tex_map</I>
+<DD>Array mapping colour indexes to textures.
+<DT><I>vert_col_map</I>
+<DD>Array mapping vertex colour indexes to colours.
+<DT><I>vert_tex_map</I>
+<DD>Array mapping vertex colour indexes to textures.
+<DT><I>edge_col_map</I>
+<DD>Array mapping edge colour indexes to colours.
+<DT><I>edge_tex_map</I>
+<DD>Array mapping edge colour indexes to textures.
+<DT><I>face_col_map</I>
+<DD>Array mapping face colour indexes to colours.
+<DT><I>face_tex_map</I>
+<DD>Array mapping face colour indexes to textures.
+</DL>
+
+The elements and colour indexes are held in the following arrays
+<DL>
+<DT><I>verts</I>
+<DD>Vertex coordinates. The array size is held in <I>num_verts</I>.
+<DT><I>v_cols</I>
+<DD>Vertex colours and colour indexes.
+<DT><I>edges</I>
+<DD>Edges, each entry is a two item array holding two indexes into the
+    <I>verts</I> array. The array size is held in <I>num_edges</I>.
+<DT><I>e_cols</I>
+<DD>Edge colours and colour indexes.
+<DT><I>faces</I>
+<DD>Faces, a sequential array of the face values from an OFF file. There
+    are two kinds of value, a first number says how many vertices are in
+    the face polygon, the next values are the indexes into the <I>verts</I>
+    array for these vertices. The next number is the number of vertices in the
+    next face, and so on. The array size is held in <I>num_face_items</I>.
+    The number of faces is held in <I>num_faces</I>.
+<DT><I>f_cols</I>
+<DD>Face colours and colour indexes.
+</DL>
+
+<H3>Macros</H3>
+
+The elements are drawn using POV-ray macros. These may be overriden,
+using an include file passed with option <I>-i</I> or by editing the
+POV file, allowing processing and custom drawing of the elements.
+
+
+<H4><A NAME="col_map">
+Colour Maps
+</A></H4>
+
+<PRE>col_to_tex(col, elem_tex_map, elem_col_map, def_tex)</PRE>
+<P>
+The <I>col_to_tex</I> macro maps a colour or colour index to
+a texture. <I>col</I> is the colour vector, if the second
+coefficient is -1 then the first coeefficient is a colour
+index, otherwise the vector represents a POV-ray colour.
+<I>elem_tex_map</I> maps indexes to textures.
+<I>elem_col_map</I> maps indexes to colours.
+<I>def_col</I> is the default colour.
+
+The texture is found in the following way
+<OL>
+<LI>If <I>col</I> is a POV colour then use a default texture with this colour
+<LI>If index <I>col</I> has been set in <I>elem_tex_map</I> then use this
+    texture
+<LI>If index <I>col</I> has been set in <I>elem_col_map</I> then use a
+    default texture with this colour.
+<LI>use the default texture <I>def_tex</I>. This is originally
+    set to a texture made from the default colour for the element type.
+    It may be overriden by setting it specifically, or through setting
+    <I>glob_face_tex</I>.
+</OL>
+
+<H4><A NAME="disp_vertex">
+Display Vertex
+</A></H4>
+
+<PRE>
+   disp_vertex(vertex, col)
+</PRE>
+<P>
+<I>vertex</I> is the index into the <I>verts</I> array. <I>col</I> is the
+colour.
+
+
+<H4><A NAME="disp_edge">
+Display Edge
+</A></H4>
+
+<PRE>
+   disp_edge(edge, col)
+</PRE>
+<P>
+
+<I>edge</I> is the index into the <I>edges</I> array. <I>col</I> is the colour.
+
+<H4><A NAME="disp_face">
+Display Face
+</A></H4>
+
+<PRE>
+   disp_face(face, idx, col)
+</PRE>
+<P>
+
+<I>face</I> is the face number. <I>idx</I> is the index into the <I>face</I>
+array (pointing to the value giving the number of vertices in the face).
+<I>col</I> is the colour.
+<P>
+The default macro calls one of the following macros, determined by
+the value of <I>face_dtype</I>, to actually display the face
+<P>
+<PRE>
+   disp_face_polygon(face, idx, col)
+   disp_face_flattened_polygon(face, idx, col)
+</PRE>
+
+<H4><A NAME="disp_extra">
+Display Extra
+</A></H4>
+
+<PRE>
+   disp_extra()
+</PRE>
+
+Called once for each geometry. The default macro does nothing.
+
+#include "<<END>>"

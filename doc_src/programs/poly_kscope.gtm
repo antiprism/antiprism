@@ -1,0 +1,47 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+Icosahedral arrangement of 60 cubes
+<PRE>
+   poly_kscope -s I -o tmp.off cube.off
+</PRE>
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+<I>off_trans</I> can be used to position the polyhedron before
+passing it to <I>poly_kscope</I>
+
+#include "<<END>>"

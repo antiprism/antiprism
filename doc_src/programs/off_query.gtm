@@ -1,0 +1,75 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+List the angles around each vertex of a cuboctahedron
+
+<PRE>
+   unipoly cuboct | off_query -I - VF -d 6
+</PRE>
+
+List the edge lengths of edges 5 to 10, 50 to 60 and 100 of a geodesic sphere
+
+<PRE>
+   geodesic -c 4,1 | off_query -I 5-10,50-60,100 El -d 6
+</PRE>
+
+Find the distance between opposite vertices of a unit-edged
+icosahedron.
+
+<PRE>
+   unipoly icosahedron | off_trans -s e | off_query -e 0,11 El
+</PRE>
+
+Find the angles between three vertices not on the same face
+
+<PRE>
+   unipoly icosahedron | off_trans -s e | off_query -f 0,1,11 Fa
+</PRE>
+
+Find the angles between two vertices and a supplied vertex
+
+<PRE>
+   unipoly icosahedron | off_trans -s e | off_query -v 1.0,0.0,0.0 -f 0,E0,11 Fa
+</PRE>
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+Use with caution! This program hasn't had extensive testing. It
+is very possible that some calculations
+may fail under particular conditions. Please, report any bugs.
+
+
+#include "<<END>>"

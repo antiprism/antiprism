@@ -1,0 +1,145 @@
+body {
+  background: url(../images/back.jpg) white;
+  color: black
+}
+
+h1 {
+  color: #D04040;
+  border: thin solid black;
+  text-align: center
+}
+
+h1.main_title {
+  color: #C07070;
+  border: none;
+  text-align: center
+}
+
+h2 {
+  color: #A01010;
+  background: transparent;
+  font-weight: bold
+}
+
+h3 {
+  color: #501020;
+  background: transparent
+}
+
+h4 {
+  color: black
+}
+
+
+TABLE.tbl1 {
+   background: #B0B0B0
+}
+
+TR.tbl1 {
+   background: #F2F2F2
+}
+
+TH.tbl1 {
+   background: #D0D0D0
+}
+
+TABLE.contbox {
+   background: #E0E0E0;
+
+}
+
+UL.nobullet {
+  list-style-type: none
+}
+
+PRE {
+  white-space: pre-wrap;       /* css-3 */
+  white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+  white-space: -pre-wrap;      /* Opera 4-6 */
+  white-space: -o-pre-wrap;    /* Opera 7 */
+  word-wrap: break-word;       /* Internet Explorer 5.5+ */
+}
+
+
+//UL LI {
+//  list-style-image: url(../images/bullet.gif)
+//}
+
+.tblur {
+   background: url(../images/t_edge.gif) white
+}
+
+.bblur {
+   background: url(../images/b_edge.gif) white
+}
+
+.lblur {
+   background: url(../images/l_edge.gif) white
+}
+
+.tlblur {
+   background: url(../images/tl_corner.gif) white
+}
+
+.blblur {
+   background: url(../images/bl_corner.gif) white
+}
+
+
+.surround {
+  color: white;
+  background: #602525
+}
+
+
+//.footbar, .footbar a:link, .footbar a:visited, .footbar a:active {
+//  color: #D0FFDF;
+//  background: #206060;
+//  background: #672A30;
+//  text-align: center;
+//  text-decoration: none
+//}
+
+.curpage, .curpage a:link, .curpage a:visited, .curpage a:active {
+  color: white;
+  background: #A07070;
+  text-decoration: none
+}
+
+
+.surround a:link, .surround a:visited, .surround a:active {
+  color: white;
+  text-decoration: none
+}
+
+.surround a:hover {
+  color: white;
+  text-decoration: underline
+}
+
+.menubox {
+  color: white;
+  background: #80A0A0;
+}
+
+.page {
+  color: black;
+  background: white;
+  padding: 1em
+}
+
+.intro {
+  color: #004040;
+  background: white;
+  font-weight: bold;
+  text-align: center;
+  margin-left: 15%;
+  margin-right: 15%
+}
+
+.modified {
+  font-size: small;
+  text-align: right
+}
+
+

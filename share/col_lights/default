@@ -1,0 +1,23 @@
+OFF
+# Antiprism Resource File - http://www.antiprism.com
+# This file may be copied, modified and redistributed
+#
+# lights file
+# Default lights: RGB opposite complements on the vertices of an
+# octahedron (Adrian Rossiter)
+6 12 0
+# light vertices
+ 1  0  0
+ 0  1  0
+ 0  0  1
+-1  0  0
+ 0 -1  0
+ 0  0 -1
+# light colours 
+1 0    1.0 0.0 0.0
+1 1    0.0 1.0 0.0
+1 2    0.0 0.0 1.0
+1 3    0.0 1.0 1.0
+1 4    1.0 0.0 1.0
+1 5    1.0 1.0 0.0
+

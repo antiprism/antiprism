@@ -1,0 +1,125 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+Make a cuboctahedron with the triangle faces a different colour to
+the square faces
+<PRE>
+   unipoly cuboctahedron | off_color -f N -o cubo.off
+</PRE>
+Same again, but make the colours black and white. Create a file called
+my_colormap.txt with these two lines which convert index numbers into colour
+values (with the <I>-f n</I> option faces have an index number the same as
+their number of sides).
+<PRE>
+   3 = 0.0 0.0 0.0
+   4 = 1.0 1.0 1.0
+</PRE>
+Now the command is
+<PRE>
+   unipoly cuboctahedron | off_color -f n -m my_colormap.txt -o cubo.off
+</PRE>
+
+Colour faces with unique colours
+<PRE>
+   geodesic 2 | off_color -f U | antiview -x ve
+</PRE>
+
+May a blue-green range for U by specifying a range of the hue
+<PRE>
+   geodesic 2 | off_color -f U -H 0.4,0.7| antiview -x ve
+</PRE>
+
+Make pastel colours for U by decreasing the saturation
+<PRE>
+   geodesic 2 | off_color -f U -S 0.4| antiview -x ve
+</PRE>
+
+Make dark colours for U by decreasing the value
+<PRE>
+   geodesic 2 | off_color -f U -V 0.4 -S 1| antiview -x ve
+</PRE>
+
+Choose from all possible colours for U by giving the full ranges
+of H, S and V
+<PRE>
+   geodesic 2 | off_color -f U -H 0,1 -S 0,1 -V 0,1| antiview -x ve
+</PRE>
+
+Colour edges and vertices with a rainbow effect
+<PRE>
+   geodesic 5 | off_color -f 1.0,1.0,1.0 -e L -v L | antiview -v 0.05
+</PRE>
+
+Make a lights file placing a red, green, blue and white light
+tetrahedrally, call it lts.off
+<PRE>
+OFF
+4 4 0
+1 1 1
+1 -1 -1
+-1 -1 1
+-1 1 -1
+1 0 255 0 0
+1 1 0 255 0
+1 2 0 0 255
+1 3 255 255 255
+</PRE>
+
+Colour faces with a lighting effect using these lights
+<PRE>
+   geodesic 5 | off_color -l lts.off -f L | antiview -x ve
+</PRE>
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+A selection of
+<A HREF="resources.html#lights">lights files</A>
+and
+<A HREF="resources.html#cmaps">colour map files</A>
+are included with the Antiprism resources.
+More colour maps are available from
+<A HREF="http://www.iosart.com/firefox/colorzilla/palettes.html">
+Colorzilla Palettes</A>.
+<P>
+Proper colourings are not always optimal.
+<P>
+Face colourings G and L which use normals are affected by the
+orientation of the faces. If the colouring is patchy then
+orient the faces with <I>off_util -O</I>
+
+
+
+#include "<<END>>"

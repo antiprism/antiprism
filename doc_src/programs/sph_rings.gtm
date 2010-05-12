@@ -1,0 +1,58 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+A globe
+<PRE>
+   sph_rings 12 24 | conv_hull | antiview
+</PRE>
+
+Stagger the rings on the globe
+<PRE>
+   sph_rings -s 12 24 | conv_hull | antiview
+</PRE>
+
+As many points as will fit on the 12 rings
+<PRE>
+   sph_rings 12 | antiview -v b
+</PRE>
+
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+The output can be run through <I>conv_hull</I> to create a polyhedron.
+
+
+#include "<<END>>"

@@ -1,0 +1,8 @@
+antiprism.py
+antiprism_wrap.cc
+setup.py
+include *.i
+include lib_src/*.cc
+include lib_src/*.h
+include AUTHORS
+include COPYING

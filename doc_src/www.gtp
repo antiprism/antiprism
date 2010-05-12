@@ -1,0 +1,155 @@
+define OUTPUT_DIR /home/adrian/data/proj/antiprism/www/
+//define OUTPUT_DIR /home/adrian/data/proj/antiprism/doc/anti_gen/
+
+define SPACE <<__PERL__(return " ";)>>
+define BREAK <<__PERL__(return "\n";)>>
+
+define HL_HOME
+define HL_PROG
+define HL_EXAS
+define HL_ALB
+define HL_DOWN
+define HL_ABOUT
+
+define KEYWORDS polyhedron, polyhedra, sphere, 3d, vertex, ball, packing, OFF, model, geometry, lattice
+
+define __TOC_1_ITEM__(x,y) <LI><B><A HREF="x">y</A></B>
+define __TOC_2_ITEM__(x,y) <LI><A HREF="x">y</A>
+define __TOC_3_ITEM__(x,y) <LI><A HREF="x">y</A>
+define __TOC_4_ITEM__(x,y) <LI><A HREF="x">y</A>
+define __TOC_1__(x)        <UL>x<P></UL>
+define __TOC_2__(x)        <UL>x<P></UL>
+define __TOC_3__(x)        <UL>x</UL>
+define __TOC_4__(x)        <UL>x</UL>
+
+
+
+define PATH_UP ../
+
+define CGIDIR http://www.antiprism.com/cgi-bin/
+//define CGIDIR http://localhost/cgi-bin/
+
+define PROJECT_PAGE http://sourceforge.net/projects/antiprism
+
+define TITLE_SITE Antiprism - 
+
+define HEAD c_head.tpl
+define START c_start_frame.tpl
+define END c_end_frame.tpl
+
+define EMAIL adrian@antiprism.com
+//define EMAIL2 adrian_r@charlasfc.uklinux.net
+define WWWEMAIL www_admin@charlasfc.uklinux.net
+define AUTHOR Adrian Rossiter
+
+define CONT_START <CENTER><<BREAK>>\
+<TABLE CLASS=contbox WIDTH="80%" CELLPADDING="20" BORDER="0"><<BREAK>>\
+<TR><<BREAK>>\
+<TD>
+
+define CONT_END </TD><<BREAK>>\
+</TR><<BREAK>>\
+</TABLE><<BREAK>>\
+</CENTER><<BREAK>>\
+<<BREAK>>\
+<BR><<BREAK>><<BREAK>>
+
+define CONT_S_START <CENTER><<BREAK>>\
+<TABLE CLASS=contbox WIDTH="80%" CELLPADDING="2" BORDER="0"><<BREAK>>\
+<TR><<BREAK>>\
+<TD><<BREAK>>\
+<CENTER><<BREAK>>
+
+define CONT_S_END </CENTER><<BREAK>>\
+</TD><<BREAK>>\
+</TR><<BREAK>>\
+</TABLE><<BREAK>>\
+</CENTER><<BREAK>>\
+<<BREAK>>\
+<BR><<BREAK>><<BREAK>>
+
+define BARSPACE <SMALL>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;</SMALL>
+
+define ALPHA <B>Alpha</B>: development not completed, still being tested.
+
+define OPT_INP <DT><I>input_file</I><<BREAK>>\
+<DD>input file in OFF format, or if not given the program reads from standard input<<BREAK>>
+
+define OPT_INPS <DT><I>input_files</I><<BREAK>>\
+<DD>input files in OFF format, or if not given the program reads from standard input<<BREAK>>
+
+define OPT_H <DT><I>-h</I><<BREAK>>\
+<DD>program help<<BREAK>>
+
+define OPT_D <DT><I>-d &lt;dgts&gt;</I><<BREAK>>\
+<DD>number of significant digits for output (default 17) or if<<BREAK>>\
+    negative then the number of digits after the decimal point<<BREAK>>
+
+define OPT_O <DT><I>-o &lt;file&gt;</I><<BREAK>>\
+<DD>write output to file, if this option is not used<<BREAK>>\
+    the program writes to standard output<<BREAK>>
+    
+        
+        
+
+define REL_DATE 2 December 2008
+define VER 0.19.1
+define VER_PRE antiprism-
+define ANTIPRISM_RELEASE <<VER_PRE>><<VER>>
+define ANTIPRISM_SOURCE_FILE <<ANTIPRISM_RELEASE>>.tar.gz
+define ANTIPRISM_WIN_FILE <<ANTIPRISM_RELEASE>>-win.zip
+
+
+timestamp $dd/$MM/$yyyy
+mtimestamp $dd.$MM.$yyyy
+
+./index.gtm 1 Polyhedron Modelling Software
+./programs/index.gtm 2 Programs and Documentation
+./programs/antiview.gtm 3 antiview - interactive OFF file viewer
+./programs/off2pov.gtm 3 off2pov - converts OFF files to POV format
+./programs/off2vrml.gtm 3 off2vrml - converts OFF files to VRML format
+./programs/off2m.gtm 3 off2m - converts an OFF file for LiveGraphics3D
+./programs/off2crds.gtm 3 off2crds - converts an OFF file to a coordinate file
+./programs/m2off.gtm 3 m2off - converts a LiveGraphics3D 'm' file to OFF format
+./programs/off_color.gtm 3 off_color - adds colours to an OFF file
+./programs/off_trans.gtm 3 off_trans - transformations (rotations etc) of OFF files
+./programs/off_align.gtm 3 off_align - alignment of OFF files
+./programs/off_util.gtm 3 off_util - utilities for OFF files
+./programs/off_report.gtm 3 off_report - report global measures maxima and counts
+./programs/off_query.gtm 3 off_query - list element data
+./programs/conv_hull.gtm 3 conv_hull - convex hulls (using Qhull)
+./programs/pol_recip.gtm 3 pol_recip - polar reciprocals (duals)
+./programs/geodesic.gtm 3 geodesic - geodesic spheres
+./programs/polygon.gtm 3 polygon - polygon based polyhedra
+./programs/iso_delta.gtm 3 iso_delta - isohedral deltahedra
+./programs/conway.gtm 3 conway - Conway Notation transformations
+./programs/poly_kscope.gtm 3 poly_kscope - polyhedral kaleidoscope
+./programs/unitile2d.gtm 3 unitile2d - makes uniform tilings on a surface
+./programs/string_art.gtm 3 string_art - string figures
+./programs/lat_grid.gtm 3 lat_grid - lattices and grids with integer coordinates
+./programs/bravais.gtm 3 bravais - Bravais lattices
+./programs/waterman.gtm 3 waterman - Waterman polyhedra
+./programs/zono.gtm 3 zono - zonohedra from OFF files
+./programs/n_icons.gtm 3 n_icons - sphericon like polyhedra 
+./programs/kcycle.gtm 3 kcycle - kaleidocycle rings of polyhedron
+./programs/jitterbug.gtm 3 jitterbug - jitterbug transformation
+./programs/poly_weave.gtm 3 poly_weave - weave based on a polyhedron
+./programs/canonical.gtm 3 canonical - canonicalize a polyhedon
+./programs/sph_rings.gtm 3 sph_rings - rings of points on a sphere
+./programs/sph_saff.gtm 3 sph_saff - spiral points on a sphere (Saff and Kuiljaars)
+./programs/repel.gtm 3 repel - equilibrium of points repelling on a sphere
+./programs/minmax.gtm 3 minmax - optimal spherical tesselations
+./programs/resources.gtm 3 Antiprism Resource Files
+./programs/extras_readme.gtm 4 Antiprism Resources - Extras
+./programs/named_cols.gtm 3 Named Colours in Antiprism
+./programs/edges.gtm 3 Using edges in Antiprism
+./programs/off_format.gtm 3 OFF format description
+./examples/index.gtm 2 Examples Using the Programs
+./examples/cub_oct.gtm 3 Example: Compound of a Cube and Octahedron
+./examples/icosahx.gtm 3 Example: Icosahelix
+./download/index.gtm 2 Downloads
+./download/readme_file.gtm 3 README File
+./download/news_file.gtm 3 NEWS File
+./about.gtm 2 About the Site
+
+<<__SYSTEM__(cp -a ./examples/*.jpg ./examples/*.gif <<OUTPUT_DIR>>examples)>>
