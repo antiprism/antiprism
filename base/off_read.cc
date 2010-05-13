@@ -22,7 +22,7 @@
   IN THE SOFTWARE.
 */
 
-/*!\file off_read.cc
+/* \file off_read.cc
    \brief Read OFF files
 */
 

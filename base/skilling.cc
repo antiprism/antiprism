@@ -20,8 +20,8 @@
   IN THE SOFTWARE.
 */
 
-/*!\file skilling.cc
- * \Uniform Compounds catalogued by John Skilling 
+/* \file skilling.cc
+ *\Uniform Compounds catalogued by John Skilling 
  */
 
 #include <stdio.h>

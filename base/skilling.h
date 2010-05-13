@@ -23,7 +23,7 @@
 */
 
 /*!\file skilling.h
- * \Uniform Compounds catalogued by John Skilling 
+   \brief Uniform Compounds catalogued by John Skilling 
  */
 
 #ifndef SKILLING_H

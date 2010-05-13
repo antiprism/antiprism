@@ -23,7 +23,7 @@
 */
 
 /**\file scene.h
-   Classes for a scene, camera, geometry, labelling, etc.
+   \brief Classes for a scene, camera, geometry, labelling, etc.
 */
 
 
