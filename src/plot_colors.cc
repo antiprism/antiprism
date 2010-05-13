@@ -114,9 +114,8 @@ void plot_colors_opts::usage()
 "  -o <file> write output to file (default: write to standard output)\n"
 "\nScene Options\n"
 "  -d <int>  display type. 1 - color wheel  2 - plot (default)\n"
+"               if color wheel and RGB, only one color blend is possible\n" 
 "  -m <mode> color system mode. 1 - HSV  2 - HSL  3 - RGB (default)\n"
-"               if display is color wheel and mode is mode is RGB, then outer\n"
-"               ring in RGB and inner rings are HSV\n"
 "  -r <int>  HSV/HSL chroma  0 - none (cylinder)  1 - conic  2 - hexagonal\n"
 "  -S        HSV/HSL distribute colors heptagonally, 7 ways, as in the rainbow\n"
 "  -k <int>  display type 2: container control\n"
@@ -339,9 +338,9 @@ void plot_colors_opts::process_command_line(int argc, char **argv)
    if(argc-optind > 0)
       error("too many arguments");
 
-   // fill in missing sat_powers with 1.0, meaning use centroid saturation
+   // fill in missing sat_powers with -1.0, meaning use centroid saturation
    for (int i=sat_powers.size();i<4;i++)
-      sat_powers.push_back(1.0);
+      sat_powers.push_back(-1.0);
       
    // fill in missing value_powers with -1.0, meaning use average values
    for (int i=value_powers.size();i<4;i++)
@@ -529,6 +528,10 @@ col_val blend_HSX_centroid(const vector<col_val> &cols, int color_system_mode, d
    else
    if (cols.size() == 1)
       return cols[0];
+      
+   // saturation power can't be 0 or less
+   if (sat_power <= 0.0)
+      sat_power = 1.0;
    
    // can't blend two or less colors to black
    if (cols.size() < 3)
@@ -658,7 +661,7 @@ void color_wheel(col_geom_v &geom, const vector<col_val> &cols, int color_system
       else {
          // RK - only change the powers if there is a new one not the default
          // keeps the center of the bullseye consistent with the last valid power
-         if (sat_powers[lvl] != 1.0)
+         if (sat_powers[lvl] > -1.0)
             sat_power = sat_powers[lvl];
          if (value_powers[lvl] > -1.0)
             value_power = value_powers[lvl];
@@ -986,7 +989,7 @@ int main(int argc, char *argv[])
          
          if (opts.plot_centroid) {
             for(unsigned int i=0; i<4; i++) {
-               if (!i || opts.sat_powers[i] != 1.0 || opts.value_powers[i] > -1.0) {
+               if (!i || opts.sat_powers[i] > -1.0 || opts.value_powers[i] > -1.0) {
                   col_val col = blend_HSX_centroid(cols, opts.color_system_mode, opts.sat_powers[i], opts.sat_threshold, opts.value_powers[i], opts.value_advance, opts.ryb_mode, opts.verbose);
                   plot_hsx_point(geom, col, opts.color_system_mode, opts.chroma_level, opts.ryb_mode, opts.seven_mode);
                }
@@ -1059,3 +1062,4 @@ int main(int argc, char *argv[])
       
    return 0;
 }
+
