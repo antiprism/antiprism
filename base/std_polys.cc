@@ -546,6 +546,35 @@ int make_resource_johnson(geom_if &geom, string name, char *errmsg=0)
    return 0; // name found
 }
 
+class res_coloring : public coloring
+{
+   public:
+      res_coloring(col_geom_v *geo=0) : coloring(geo) {}
+      void f_all_angles(bool as_values);
+      void f_max_angle(bool as_values);
+};
+
+
+void res_coloring::f_all_angles(bool as_values)
+{
+   geom_info info(*get_geom());
+   int faces_sz = get_geom()->faces().size();
+   for(int i=0; i<faces_sz; i++) {
+      vector<double> f_angs;
+      info.face_angles_lengths(i, f_angs);
+      sort(f_angs.rbegin(), f_angs.rend());
+      double ang_sum = 0;
+      for(unsigned int j=0; j<f_angs.size(); j++)
+         ang_sum += j*f_angs[j];
+      int idx = (int)(rad2deg(50*ang_sum/(f_angs.size()*(f_angs.size()+1)/2))+0.5);
+      if(as_values)
+         get_geom()->set_f_col(i, idx_to_val(idx));
+      else
+         get_geom()->set_f_col(i, idx);
+   }
+}
+
+
 int make_resource_geodesic(geom_if &geom, string name, char *errmsg)
 {
    if(name.size()<5 || name.substr(0,4)!="geo_" || name.find('.')!=string::npos)
@@ -605,6 +634,13 @@ int make_resource_geodesic(geom_if &geom, string name, char *errmsg)
       return 1; // fail
    }
 
+   if(col_geom_v *cg = dynamic_cast<col_geom_v *>(&geom)) {
+      res_coloring clrng(cg);
+      color_map *cmap = init_color_map("rng256_R1:0.7:1:0.5:1G1:0.4:1:0.3:1B1:0.2:1:0.7:1%");
+      clrng.add_cmap(cmap);
+      clrng.f_all_angles(true);
+   }
+   
    return 0; // name found
 }
 

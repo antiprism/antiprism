@@ -47,6 +47,15 @@ The face sorting performed by option <I>-M</I> orients faces in
 a particular way. Option <I>-O</I> will generally reorient some
 of the sorted faces, and this will always be true if the input
 is a polyhedron.
+<P>
+The coordinates of a file can be tidied up by running <I>off_util -d</I>
+twice, the first time with a negative number to truncate the coordinate
+at a number of decimals, the second time with a positive number to
+truncate the trailing zeros. For example, to tidy
+<I>pol_recip&nbsp;cubo&nbsp;|&nbsp;off_trans&nbsp;-s&nbsp;r</I>
+<PRE>
+   pol_recip cubo | off_trans -s r | off_util -d -1 | off_util -d 1
+</PRE>
 
 
 
