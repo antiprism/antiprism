@@ -1,8 +1,8 @@
 Antiprism
 =========
 
-Notes for Antiprism 0.20
-------------------------
+Notes for Antiprism 0.20.pre11
+------------------------------
 
 This release makes the Antiprism library available to C++
 developers and Python developers.
@@ -46,8 +46,8 @@ Building
 These are instructions for building from source. They aren't
 needed to run the Windows executables.
 
-Antiprism uses the autotools build system. The programs can be built
-with
+Antiprism uses the autotools build system. The programs can be
+built with
 
    ./configure
    make
@@ -60,6 +60,27 @@ See the INSTALL file for more details.
 
 The Antiview viewer depends on GLUT. A GLUT package suitable for
 developing against must be installed in order to build Antiview.
+
+
+Git Code Repository
+-------------------
+
+The Git repository contains the latest development code
+
+   https://sourceforge.net/scm/?type=git&group_id=176443
+
+Autoconf 2.61 and Automake 1.9 (or later versions) are required.
+Generate the configure script with
+
+   ./bootstrap
+
+Building the documentation is optional. Doxygen (with Graphviz dot)
+and Perl, are required. Build with
+
+   make prepare_release
+
+Follow the 'Building' section to complete the build.
+
 
 Adrian.
 -- 

@@ -28,6 +28,7 @@ docdir = $(datadir)/doc/$(PACKAGE)-$(VERSION)
 doc_DATA = README NEWS AUTHORS 
 
 install-data-local:
+	if test -d $(srcdir)/doc ; then \
 	cd $(srcdir)/doc; \
 	$(mkinstalldirs) $(DESTDIR)$(docdir); \
 	for f in * css/* images/* lib_doc/html/* ; do \
@@ -37,7 +38,8 @@ install-data-local:
 	test -d "$$d" && $(mkinstalldirs) $(DESTDIR)$(docdir)/$$d; \
 	## Install the file
 	test -f "$$f" && $(INSTALL_DATA) $$f $(DESTDIR)$(docdir)/$$f; \
-	done
+	done \
+	fi 
 	cd $(srcdir)/share; \
 	$(mkinstalldirs) $(DESTDIR)$(supdir); \
 	for f in * col_lights/* col_maps/* extras/* extras/shell_scripts/* \

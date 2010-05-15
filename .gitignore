@@ -5,6 +5,7 @@ aclocal.m4
 autom4te.cache
 config.guess
 config.h
+config.h.in
 config.log
 config.status
 config.status.lineno
@@ -24,6 +25,7 @@ stamp-h1
 *.la
 *.deps
 *.libs
+*~
 
 m4/libtool.m4
 m4/ltoptions.m4
