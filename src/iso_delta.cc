@@ -761,7 +761,7 @@ void tet_to_dihedral(col_geom_v &geom, string sym_from, int k, mat3d pos=mat3d()
 
 void case_a_star_tetrahedron(col_geom_v &geom, int k)
 {
-   make_resource_geom(geom,"u1");
+   geom.read_resource("u1");
    tet_to_dihedral(geom, "Td", 2*k);
 }
 
@@ -770,7 +770,7 @@ void case_b_5_or_10_tetrahedra(col_geom_v &geom, double angle, int k)
    if (angle == INFINITY)
       angle = 0;
 
-   make_resource_geom(geom,"u1");
+   geom.read_resource("u1");
    
    // to construct in one statement for Ih
    // transform_and_repeat(geom, (k == 1 ? "I" : "Ih"), "Td", mat3d::rot(0,angle,0));
@@ -809,7 +809,7 @@ void case_d_6_octahedra(col_geom_v &geom, double angle)
    if (angle == INFINITY)
       angle = (M_PI/8); // 22.5 degrees
 
-   make_resource_geom(geom,"u5");
+   geom.read_resource("u5");
 
    // at 0 degrees, produced 3 coincident octahedra
    transform_and_repeat(geom, "D2h", "Oh", mat3d::rot(0,0,angle));
@@ -873,7 +873,7 @@ void case_g_2_tetrahedra(col_geom_v &geom, double angle)
    if (angle == INFINITY)
       angle = (M_PI/4); // 45 degrees
 
-   make_resource_geom(geom,"u1");
+   geom.read_resource("u1");
 
    // advance angle so that angle = 0 is coincident constituents
    geom.transform(mat3d::rot(0,0,angle));
@@ -891,7 +891,7 @@ void case_h_2k_tetrahedra(col_geom_v &geom, double angle, int k)
 
 void case_i_6_tetrahedra(col_geom_v &geom, double angle)
 {
-   make_resource_geom(geom,"u1");
+   geom.read_resource("u1");
    
    transform_and_repeat(geom, "T", "T", mat3d::rot(0,0,angle));
 }
@@ -901,7 +901,7 @@ void case_j_12_tetrahedra(col_geom_v &geom, double angle)
    if (angle == INFINITY)
       angle = (M_PI/6); // 30 degrees;
    
-   make_resource_geom(geom,"u1");
+   geom.read_resource("u1");
    
    transform_and_repeat(geom, "S2", "T");
    transform_and_repeat(geom, "T", "Oh", mat3d::rot(0,0,angle));

@@ -32,11 +32,35 @@ supdir = $(datadir)/$(PACKAGE)-$(VERSION)
 libantiprism_la_CPPFLAGS = -DSUPDIR="\"$(supdir)\""
 libantiprism_la_LDFLAGS = -no-undefined -version-info 0:0:0
 
-pkginclude_HEADERS = antiprism.h \
-						const.h vec3d.h mat3d.h vec_utils.h vec4d.h \
-						mat4d.h col_val.h col_map.h col_geom.h geom.h coloring.h \
-						symmetry.h transforms.h geom_utils.h math_utils.h utils.h \
-						info.h bbox.h timing.h polygons.h std_polys.h skilling.h kaleido.h \
-						scene.h pov_writer.h vrml_writer.h gl_writer.h
-
+pkginclude_HEADERS = \
+	antiprism.h \
+	bbox.h \
+	col_geom.h \
+	col_map.h \
+	coloring.h \
+	col_val.h \
+	const.h \
+	disp_poly.h \
+	geom.h \
+	geom_utils.h \
+	gl_stroke_font.h \
+	gl_writer.h \
+	info.h \
+	mat3d.h \
+	mat4d.h \
+	math_utils.h \
+	off_file.h \
+	polygons.h \
+	pov_writer.h \
+	rand_gen.h \
+	scene.h \
+	symmetry.h \
+	timing.h \
+	transforms.h \
+	utils.h \
+	vec3d.h \
+	vec4d.h \
+	vec_utils.h \
+	vrml_writer.h
+	
 

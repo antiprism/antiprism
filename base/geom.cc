@@ -35,6 +35,7 @@
 #include "info.h"
 #include "off_file.h"
 #include "geodesic.h"
+#include "std_polys.h"
 #include "symmetry.h"
 #include "coloring.h"
 
@@ -356,6 +357,11 @@ bool geom_if::read(string file_name, char *errmsg)
 bool geom_if::read(FILE *file, char *errmsg)
 {
    return off_file_read(file, *this, errmsg);
+}
+
+bool geom_if::read_resource(string res_name, char *errmsg)
+{
+   return make_resource_geom(*this, res_name, errmsg);
 }
 
 bool geom_if::write(string file_name, char *errmsg, int sig_dgts) const

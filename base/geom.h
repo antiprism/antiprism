@@ -484,6 +484,14 @@ class geom_if
        * and the error is detailed in \a errmsg. */
       virtual bool read(FILE *file, char *errmsg=0);
 
+      ///Read resource geometry from resource model name
+      /**\param res_name the resource model name.
+       * \param errmsg an array at least \c MSG_SZ chars long to
+       * return any error message.
+       * \return true if the resource name was valid, otherwise false
+       * and the error is detailed in \a errmsg. */
+      virtual bool read_resource(string res_name="", char *errmsg=0);
+
       ///Write geometry to a file
       /**\param file_name the file name ("" for standard output.)
        * \param errmsg an array at least \c MSG_SZ chars long to

@@ -244,7 +244,7 @@ int main(int argc, char *argv[])
          opts.warning(errmsg);
    }
    else
-      tetrahedron(geom);
+      geom.read_resource("std_tet");
 
    col_geom_v cycle;
    kcycle(geom, cycle, opts.num_prs, opts.edge_idxs, opts.angle);

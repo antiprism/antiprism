@@ -36,7 +36,7 @@
 
 #include "utils.h"
 #include "off_file.h"
-#include "geom_utils.h"
+#include "std_polys.h"
 #include "polygons.h"
 
 using std::vector;

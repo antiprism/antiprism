@@ -294,11 +294,6 @@ Desided=UC75
 Idisdrid=skilling
 Skillings_Figure=skilling
 
-Small_Stellated_Dodecahedron=U34
-Great_Dodecahedron=U35
-Great_Stellated_Dodecahedron=U52
-Great_Icosahedron=U53
-
 W01=U1
 W02=U5
 W03=U6

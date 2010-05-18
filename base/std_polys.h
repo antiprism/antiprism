@@ -43,86 +43,6 @@ using std::string;
 ///A basic function type that makes a model.
 typedef void (*model_func) (geom_if &);
 
-///Get a model.
-/**A utility funcion that returns a model.
- * \param pfunc a pointer to a function that uses a geometry argument
- * to return a model.
- * \return The model. */
-geom_v model(model_func pfunc);
-
-///Make a tetrahedron.
-/**\param geom used to return the model */
-void tetrahedron(geom_if &geom);
-
-///Make a cube.
-/**\param geom used to return the model */
-void cube(geom_if &geom);
-
-///Make an octahedron.
-/**\param geom used to return the model */
-void octahedron(geom_if &geom);
-
-///Make a dodecahedron.
-/**\param geom used to return the model */
-void dodecahedron(geom_if &geom);
-
-///Make an icosahedron.
-/**\param geom used to return the model */
-void icosahedron(geom_if &geom);
-
-
-///Make a truncated tetrahedron.
-/**\param geom used to return the model */
-void tr_tetrahedron(geom_if &geom);
-
-///Make a cuboctahedron.
-/**\param geom used to return the model */
-void cuboctahedron(geom_if &geom);
-
-///Make a truncated cube.
-/**\param geom used to return the model */
-void tr_cube(geom_if &geom);
-
-///Make a truncated octahedron.
-/**\param geom used to return the model */
-void tr_octahedron(geom_if &geom);
-
-///Make a rhombicuboctahedron.
-/**\param geom used to return the model */
-void rhombicuboctahedron(geom_if &geom);
-
-///Make a truncated cuboctahedron.
-/**\param geom used to return the model */
-void tr_cuboctahedron(geom_if &geom);
-
-///Make a snub cube.
-/**\param geom used to return the model */
-void snub_cube(geom_if &geom);
-
-///Make an icosidodecahedron.
-/**\param geom used to return the model */
-void icosidodecahedron(geom_if &geom);
-
-///Make a truncated dodecahedron.
-/**\param geom used to return the model */
-void tr_dodecahedron(geom_if &geom);
-
-///Make a truncated icosahedron.
-/**\param geom used to return the model */
-void tr_icosahedron(geom_if &geom);
-
-///Make a rhombicosidodecahedron.
-/**\param geom used to return the model */
-void rhombicosidodecahedron(geom_if &geom);
-
-///Make a truncated icosidodecahedron.
-/**\param geom used to return the model */
-void tr_icosidodecahedron(geom_if &geom);
-
-///Make a snub dodecahedron.
-/**\param geom used to return the model */
-void snub_dodecahedron(geom_if &geom);
-
 ///Put face list into a normalised form.
 /**Sometimes a model is created and the face list may not be consistent
  * between machines, perhaps for numeric reasons. This function puts
@@ -131,14 +51,7 @@ void snub_dodecahedron(geom_if &geom);
  * normalized form */
 void normalised_face_list(geom_if &geom);
 
-// Inline function definitions
-
-inline geom_v model(model_func pfunc)
-{ 
-   geom_v g;
-   pfunc(g);
-   return g;
-}
+bool make_resource_geom(geom_if &geom, string name, char *errmsg=0);
 
 void set_resource_polygon_color(geom_if &geom);
 string expand_abbrevs(const string &name,

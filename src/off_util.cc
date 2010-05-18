@@ -122,9 +122,13 @@ const char *get_help(const char* name)
    map<string, const char *> help;
    help["help"] = help_help;
    help["models"] = help_models;
+   help["common_polys"] = help_common_polys;
+   help["common_polyhedra"] = help_common_polys;
    help["uniform"] = help_uniform;
    help["archimedean"] = help_uniform;
    help["platonic"] = help_uniform;
+   help["std_polys"] = help_std_polys;
+   help["std_polyhedra"] = help_std_polys;
    help["johnson"] = help_johnson;
    help["polygon"] = help_polygon;
    help["pyramid"] = help_polygon;

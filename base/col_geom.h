@@ -129,7 +129,10 @@ class col_geom
       ///Clear all the edge colours.
       void clear_f_cols();
       
-      ///Read access to vertex colours
+      ///Clear all the colours.
+      void clear_cols();
+
+       ///Read access to vertex colours
       /**\return The colour map */
       const map<int, col_val> &vert_cols() const;
       
@@ -232,6 +235,13 @@ inline void col_geom::clear_e_cols()
 inline void col_geom::clear_f_cols()
 {
    elem_cols[f_elems].clear();
+}
+
+inline void col_geom::clear_cols()
+{
+   clear_v_cols();
+   clear_e_cols();
+   clear_f_cols();
 }
 
 

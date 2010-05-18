@@ -215,11 +215,11 @@ col_geom_v get_poly(char p_type)
    col_geom_v geom;
    vector<vec3d> &verts = *geom.get_verts();
    if(p_type=='i')
-      icosahedron(geom);
+      geom.read_resource("std_ico");
    else if(p_type=='o')
-      octahedron(geom);
+      geom.read_resource("std_oct");
    else if(p_type=='t')
-      tetrahedron(geom);
+      geom.read_resource("std_tet");
    else { //if(p_type=='T') {
       double X = 0.25;
       double Y = sqrt(3.0)/12;

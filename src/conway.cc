@@ -946,23 +946,23 @@ void get_operand(col_geom_v &geom, char operand, int poly_size)
    if (uniforms.find(operand) != string::npos) {
       switch(operand) {
          case 'T':
-            tetrahedron(geom);
+            geom.read_resource("std_tet");
             break;
 
          case 'C':
-            cube(geom);
+            geom.read_resource("std_cube");
             break;
 
          case 'O':
-            octahedron(geom);
+            geom.read_resource("std_oct");
             break;
 
          case 'I':
-            icosahedron(geom);
+            geom.read_resource("std_ico");
             break;
 
          case 'D':
-            dodecahedron(geom);
+            geom.read_resource("std_dod");
             break;
       }
    }

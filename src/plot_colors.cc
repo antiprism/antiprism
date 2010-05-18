@@ -864,7 +864,7 @@ void plot_rgb_cube(col_geom_v &geom, const vector<col_val> &cols, bool ryb_mode)
       plot_rgb_point(geom, cols[i], ryb_mode);
 }
 
-bool cmp_hue(const col_val &a, const col_val &b, double eps)
+bool cmp_hue(const col_val &a, const col_val &b, double /*eps*/)
 {
    return (a.get_hsva()[0] < b.get_hsva()[0]);
 }

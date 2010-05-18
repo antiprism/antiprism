@@ -38,8 +38,6 @@ double minimum_distance(const geom_if &geom, double sig_dist=0, char *errmsg=0);
 
 void make_polar_zono(geom_if &zono, int star_n, bool out_star);
 
-bool make_resource_geom(geom_if &geom, string name, char *errmsg=0);
-
 int find_vertex_by_coordinate(geom_if &geom, vec3d v, double eps=epsilon);
 
 // test points versus hull functions

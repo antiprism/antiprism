@@ -1476,7 +1476,7 @@ void bravais_warp(col_geom_v &geom, vector<double> angles, bool inverse)
 double bravais_radius(vector<int> grid, vector<double> vecs, vector<double> angles, char radius_default)
 {
    col_geom_v tgeom;
-   cube(tgeom);
+   tgeom.read_resource("std_cube");
 
    // compensate for grid size
    for(unsigned int i=0; i<3; i++)
