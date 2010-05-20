@@ -41,22 +41,22 @@ class geo_opts: public prog_opts {
    public:
       vec3d centre;
       double radius;
-      int clas;
       int m;
       int n;
-      char method;
       int pat_freq;
+      bool trad_freq;
+      char method;
       bool keep_flat;
       bool equal_len_div;
-      char poly;
       string ifile;
       string ofile;
 
       geo_opts(): prog_opts("geodesic"),
                   centre(vec3d(0,0,0)),
-                  clas(1), m(1), n(0),
-                  method('s'),
-                  poly('x') {}
+                  m(1), n(0),
+                  pat_freq(1), trad_freq(false),
+                  method('s')
+                  {}
       void process_command_line(int argc, char **argv);
       void usage();
 };
@@ -67,19 +67,22 @@ void geo_opts::usage()
 {
    fprintf(stdout,
 "\n"
-"Usage: %s [options] [freq]\n"
+"Usage: %s [options] [input_file]\n"
 "\n"
-"Make higher frequency, plane-faced polyhedra or geodesic spheres.\n"
-"For Class I and II patterns freq (default: 1, or 2 if -d is 2) is the\n"
-"number of sections along an edge, for Class III patterns (and those\n"
-"specified by two numbers) freq is the number of times the pattern is\n"
-"repeated along an edge. Default is a frequency 1 icosahedral geodesic\n"
-"sphere\n"
+"Read a file in OFF format and make a higher frequency, plane-faced\n"
+"polyhedron or geodesic sphere. If input_file is not given the program\n"
+"reads from standard input\n"
+
 "\n"
 "Options\n"
 "%s"
-"  -p <poly> type of poly: i - icosahedron (default), o - octahedron,\n"
-"            t - tetrahedron, T - triangle\n"
+"  -f <freq> A positive integer (default: 1), the number of repeats of\n"
+"            the specified pattern along an edge\n"
+"  -F <freq> A positive integer. As -f, but if pattern resolves to Class II\n"
+"            then freq must be even and the repeat is taken as -f freq/2\n"
+"  -c <clss> face division pattern,  1 (Class I, default), 2 (Class II), or\n"
+"            two numbers separated by a comma to determine the pattern\n"
+"            (Class III, but n,0 or 0,n is Class I, and n,n is Class II)\n"
 "  -M <mthd> Method of applying the frequency pattern:\n"
 "            s - geodesic sphere (default). The pattern grid is formed\n"
 "                from divisions along each edge that make an equal angle\n"
@@ -88,13 +91,8 @@ void geo_opts::usage()
 "            p - planar. The pattern grid is formed from equal length\n"
 "                divisions along each edge, the new vertices lie on the\n"
 "                surface of the original polyhedron.\n"
-"  -c <clss> face division pattern,  1 (Class I, default) or 2 (Class II),\n"
-"            or two numbers separated by a comma to determine the pattern\n"
-"            (Class III generally, but 1,0 is Class I, 1,1 is Class II, etc)\n"
 "  -C <cent> centre of points, in form \"x_val,y_val,z_val\" (default: 0,0,0)\n"
 "            used for geodesic spheres\n"
-"  -i <file> input file in OFF format containing the base triangle-faced\n"
-"            polyhedron to be divided. If '-' then read file from stdin\n" 
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
 "\n", prog_name(), help_ver_text);
@@ -109,36 +107,29 @@ void geo_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hp:c:M:C:i:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hf:F:c:M:C:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
       switch(c) {
-         case 'p':
-            if(strlen(optarg)==1 && strchr("toiT", int(*optarg)))
-               poly = *optarg;
-            else
-               error("polyhedron type must be t, o, i or T\n", c);
+         case 'f':
+         case 'F':
+            if(!read_int(optarg, &pat_freq, errmsg) || pat_freq<1) {
+               snprintf(errmsg, MSG_SZ, "frequency is '%s', should be a positive integer", optarg);
+               error(errmsg, c);
+            }
+            trad_freq = (c=='F');
             break;
 
-         case 'M':
-            if(strlen(optarg)==1 && strchr("sp", int(*optarg)))
-               method = *optarg;
-            else
-               error("method type must be s or p\n", c);
-            break;
-         
          case 'c':
             char *pos;
             if(!(pos = strchr(optarg, ','))) {
                if( !(strcmp(optarg, "1")==0 || strcmp(optarg, "2")==0) )
                   error("class type must be 1 or 2, or two integers separated by a comma\n", c);
-               clas = atoi(optarg);
                m = 1;
                n = *optarg=='2' ? 1 : 0;
             }
             else {
-               clas = 3;
                *pos = 0;
                char *pat[] = {optarg, pos+1};
                int nums[2];
@@ -156,6 +147,13 @@ void geo_opts::process_command_line(int argc, char **argv)
             }
             break;
 
+         case 'M':
+            if(strlen(optarg)==1 && strchr("sp", int(*optarg)))
+               method = *optarg;
+            else
+               error("method type must be s or p\n", c);
+            break;
+         
          case 'C':
             if(!centre.read(optarg)) {
                snprintf(errmsg, MSG_SZ, "centre is '%s', must be three numbers separated by commas", optarg);
@@ -163,10 +161,6 @@ void geo_opts::process_command_line(int argc, char **argv)
             }
             break;
 
-         case 'i':
-            ifile = optarg;
-            break;
-            
          case 'o':
             ofile = optarg;
             break;
@@ -176,69 +170,25 @@ void geo_opts::process_command_line(int argc, char **argv)
       }
    }
 
-   if(ifile !="" && poly!='x') {
-      snprintf(errmsg, MSG_SZ, "option ignored, reading poly from '%s'", (ifile!="-")?ifile.c_str():"stdin");
-      warning(errmsg, 'p');
-   }
-
-   if(ifile =="" && poly=='x')
-      poly='i';
-
    if(argc-optind > 1)
       error("too many arguments");
    
-   pat_freq = 1;
-   if(argc-optind == 1) {
-      if(!read_int(argv[optind], &pat_freq, errmsg)) {
-         snprintf(errmsg, MSG_SZ, "value is '%s', should be a positive integer", argv[optind]);
-         error(errmsg, "frequency");
-      }
+   if(argc-optind == 1)
+      ifile = argv[optind];
+   
 
-      if(clas==2) {
-         if(!is_even(pat_freq)) {
-            snprintf(errmsg, MSG_SZ, "value is '%d', for Class II divisions it must be an even integer\n", pat_freq);
-            error(errmsg, "frequency");
-         }
-         pat_freq /= 2;
+   if(m==n && trad_freq) {
+      if(!is_even(pat_freq)) {
+         snprintf(errmsg, MSG_SZ, "frequency must be even with basic Class II pattern\n");
+         error(errmsg, "F");
       }
+      pat_freq /= 2;
    }
 
    m *= pat_freq;
    n *= pat_freq;
    
    return;
-}
-
-
-col_geom_v get_poly(char p_type)
-{
-   col_geom_v geom;
-   vector<vec3d> &verts = *geom.get_verts();
-   if(p_type=='i')
-      geom.read_resource("std_ico");
-   else if(p_type=='o')
-      geom.read_resource("std_oct");
-   else if(p_type=='t')
-      geom.read_resource("std_tet");
-   else { //if(p_type=='T') {
-      double X = 0.25;
-      double Y = sqrt(3.0)/12;
-      double Z = 0.8;
-      verts.push_back(vec3d(-X, -Y,  Z)); // 0
-      verts.push_back(vec3d( X, -Y,  Z)); // 1
-      verts.push_back(vec3d( 0,2*Y,  Z)); // 3
-
-      vector<vector<int> > &faces = *geom.get_faces();
-      int f[] = { 0, 1, 2,   0, 2, 1};
-      for(int i=0; i<1; i++) {
-         faces.push_back(vector<int>());
-         for(int j=0; j<3; j++)
-            faces.back().push_back(f[i*3+j]);
-      }
-   }
-   
-   geom.transform(mat3d::scale(1/verts[0].mag()));
-   return geom;
 }
 
 
@@ -249,15 +199,10 @@ int main(int argc, char **argv)
 
    col_geom_v geom;
    char errmsg[MSG_SZ];
-   if(opts.ifile != "") {
-      if(!geom.read(opts.ifile, errmsg))
-         opts.error(errmsg);
-      if(*errmsg)
-         opts.warning(errmsg);
-   }
-   else {
-      geom = get_poly(opts.poly);
-   }
+   if(!geom.read(opts.ifile, errmsg))
+      opts.error(errmsg);
+   if(*errmsg)
+      opts.warning(errmsg);
 
    col_geom_v geo;
    if(opts.method=='s')

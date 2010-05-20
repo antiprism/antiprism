@@ -25,6 +25,7 @@ xx-xx-09 Adrian Rossiter <adrian@antiprism.com>
            unipoly,johnson: programs removed, models are in resources
               see 'off_util -H uniform' and 'off_util -H johnson'
            polygon: snub-antiprisms added, antiprism alignment changed
+           geodesic: option reorganisation, remove base models
            bravais: option -R also fills and overlays with cubes
            iso_delta: new option -C for colouring
            pol_recip: default centre is centroid, new option -a
