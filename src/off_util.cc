@@ -101,10 +101,11 @@ void pr_opts::usage()
 "  -E        turn edges into (non-planar) faces\n"
 "  -s        skeleton, write the face edges and remove the faces\n"
 "  -t        triangulate, divide faces triangles (may add new vertices)\n"
-"  -x <elms> remove OFF face elements. The element string can include\n"
-"            v, e and f to remove OFF faces with one vertex (vertices),\n"
-"            two-vertices (edges) and three or more vertices (faces).\n"
-"            V removes vertices that are not part of any face or edge.\n"
+"  -x <elms> remove OFF face elements. The element string is processed in\n"
+"            order and can include v, e and f to remove OFF faces with one\n"
+"            vertex (vertices), two-vertices (edges) and three or more\n"
+"            vertices (faces), and V to remove vertices that are not part\n"
+"            of any face or edge.\n"
 "  -S        project onto unit sphere centred at origin\n"
 "  -u <args> unfold a polyhedron into a net, takes up to three comma separated\n"
 "            values for base face index, dihedral fraction (normally 1.0 to\n"
@@ -577,14 +578,22 @@ void make_skeleton(geom_if &geom)
 void filter(geom_if &geom, const char *elems)
 {
    col_geom_v *cgv = dynamic_cast<col_geom_v *>(&geom);
-   if(strchr(elems, 'V'))
-      geom.delete_verts(geom.get_info().get_free_verts());
-   if(strchr(elems, 'v'))
-      cgv->clear_v_cols();
-   if(strchr(elems, 'e'))
-      geom.clear_edges();
-   if(strchr(elems, 'f'))
-      geom.clear_faces();
+   for(const char *p=elems; *p; p++) {
+      switch(*p) {
+         case 'V':
+            geom.delete_verts(geom.get_info().get_free_verts());
+            break;
+         case 'v':
+            cgv->clear_v_cols();
+            break;
+         case 'e':
+            geom.clear_edges();
+            break;
+         case 'f':
+            geom.clear_faces();
+            break;
+      }
+   }
 }
 
 void proj_onto_sphere(geom_if &geom)
