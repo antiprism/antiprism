@@ -44,7 +44,7 @@ class geo_opts: public prog_opts {
       int m;
       int n;
       int pat_freq;
-      bool trad_freq;
+      bool use_step_freq;
       char method;
       bool keep_flat;
       bool equal_len_div;
@@ -54,7 +54,7 @@ class geo_opts: public prog_opts {
       geo_opts(): prog_opts("geodesic"),
                   centre(vec3d(0,0,0)),
                   m(1), n(0),
-                  pat_freq(1), trad_freq(false),
+                  pat_freq(1), use_step_freq(false),
                   method('s')
                   {}
       void process_command_line(int argc, char **argv);
@@ -76,10 +76,11 @@ void geo_opts::usage()
 "\n"
 "Options\n"
 "%s"
-"  -f <freq> A positive integer (default: 1), the number of repeats of\n"
-"            the specified pattern along an edge\n"
-"  -F <freq> A positive integer. As -f, but if pattern resolves to Class II\n"
-"            then freq must be even and the repeat is taken as -f freq/2\n"
+"  -f <freq> pattern frequency, a positive integer (default: 1) giving the\n"
+"            number of repeats of the specified pattern along an edge\n"
+"  -F <freq> final step frequency, minimum number of edges to move between\n"
+"            base vertices in the geodesic model. For a pattern m,n the\n"
+"            step frequency is pattern_frequency/(m+n)\n"
 "  -c <clss> face division pattern,  1 (Class I, default), 2 (Class II), or\n"
 "            two numbers separated by a comma to determine the pattern\n"
 "            (Class III, but n,0 or 0,n is Class I, and n,n is Class II)\n"
@@ -118,7 +119,7 @@ void geo_opts::process_command_line(int argc, char **argv)
                snprintf(errmsg, MSG_SZ, "frequency is '%s', should be a positive integer", optarg);
                error(errmsg, c);
             }
-            trad_freq = (c=='F');
+            use_step_freq = (c=='F');
             break;
 
          case 'c':
@@ -177,12 +178,15 @@ void geo_opts::process_command_line(int argc, char **argv)
       ifile = argv[optind];
    
 
-   if(m==n && trad_freq) {
-      if(!is_even(pat_freq)) {
-         snprintf(errmsg, MSG_SZ, "frequency must be even with basic Class II pattern\n");
+   if(use_step_freq) {
+      if(pat_freq%(m+n)) {
+         if(m==1 && n==1)
+            snprintf(errmsg, MSG_SZ, "frequency must be even with Class II pattern\n");
+         else
+            snprintf(errmsg, MSG_SZ, "frequency must be divisible by (m+n) with general Class III pattern\n");
          error(errmsg, "F");
       }
-      pat_freq /= 2;
+      pat_freq /= (m+n);
    }
 
    m *= pat_freq;

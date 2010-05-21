@@ -31,14 +31,18 @@ Usage
 Examples
 </A></H2>
 
-A 4 frequency Class II icosahedral geodesic sphere
+A Class II icosahedral geodesic sphere with a pattern frequency of 4
 <PRE>
-   geodesic -o geo_sphere.off -c 2 4
+   geodesic -c 2 -f 4 ico
+</PRE>
+A Class II icosahedral geodesic sphere with a final step frequency of 4
+<PRE>
+   geodesic -c 2 -F 4 ico
 </PRE>
 A planar octahedron with a Class III 1,2 pattern repeated 3 times along
 an edge
 <PRE>
-   geodesic -p o -M p -o geo_octahedron.off -c 1,2 3
+   geodesic -M p -c 1,2 -f 3 oct
 </PRE>
 
 <H2><A NAME="notes">
@@ -97,19 +101,19 @@ the geodesic vertices covering the face have been found.
 </TABLE>
     
 <P>
-In terms of the general pattern the Class I pattern is equivalent to
-<I>0,1</I> with the frequency value corresponding to divisions along
-an edge. The Class II pattern is equivalent to <I>1,1</I> with
-frequency value corresponding to half the divisions
-along an edge. Any pattern <I>a,b</I> with <I>a,&nbsp;b&nbsp;&gt;&nbsp;0</I>
+In terms of the general pattern, the Class I pattern is equivalent to
+<I>0,1</I> and the Class II pattern is equivalent to <I>1,1</I>.
+Any pattern <I>a,b</I> with <I>a,&nbsp;b&nbsp;&gt;&nbsp;0</I>
 and <I>a&nbsp;&ne;&nbsp;b</I>
 is a Class III pattern. Class III patterns are chieral, with <I>a,b</I>
 and <I>b,a</I> being mirror images of each other.
 <P>
-Another way of understanding the pattern formed by the integer pair is that
-if the frequency is <I>f</I> then it is possible to move between face
-vertices by moving <I>fa</I> vertices along one line, then turning and
-moving <I>fb</I> along another line.
+A pattern given by a general integer pair has the property that if the
+pattern repeat frequency is <I>f</I> then it is possible to move between
+base vertices by moving <I>fa</I> vertices along one line of edges, then
+turning and moving <I>fb</I> along another line of edges. This establishes
+the relationship <I>F&nbsp;=&nbsp;f(a+b)</I> between the
+<I>-f</I> and <I>-F</I> options.
 <P>
 For some patterns there will be geodesic vertices lying on the polyhedron
 edges between the face vertices. There will be
