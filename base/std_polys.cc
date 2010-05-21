@@ -40,6 +40,8 @@
 #include "coloring.h"
 
 using std::swap;
+   
+const double phi = (sqrt(5)+1)/2;
 
 void normalised_face_list(geom_if &geom)
 {
@@ -113,7 +115,6 @@ static void octahedron(geom_if &geom)
 static void dodecahedron(geom_if &geom)
 {
    geom.clear_all();
-   double phi = (sqrt(5)+1)/2;
    double iphi = 1/phi;
    geom.add_vert(vec3d( 1,  1,  1));     //  0
    geom.add_vert(vec3d( 1,  1, -1));     //  1
@@ -123,19 +124,19 @@ static void dodecahedron(geom_if &geom)
    geom.add_vert(vec3d(-1,  1, -1));     //  5
    geom.add_vert(vec3d(-1, -1,  1));     //  6
    geom.add_vert(vec3d(-1, -1, -1));     //  7
-   geom.add_vert(vec3d(0,  iphi,  phi)); //  8
-   geom.add_vert(vec3d(0,  iphi, -phi)); //  9
-   geom.add_vert(vec3d(0, -iphi, -phi)); // 10
-   geom.add_vert(vec3d(0, -iphi,  phi)); // 11
-   geom.add_vert(vec3d( phi, 0,  iphi)); // 12
-   geom.add_vert(vec3d(-phi, 0,  iphi)); // 13
-   geom.add_vert(vec3d(-phi, 0, -iphi)); // 14
-   geom.add_vert(vec3d( phi, 0, -iphi)); // 15
-   geom.add_vert(vec3d( iphi,  phi, 0)); // 16
-   geom.add_vert(vec3d( iphi, -phi, 0)); // 17
-   geom.add_vert(vec3d(-iphi, -phi, 0)); // 18
-   geom.add_vert(vec3d(-iphi,  phi, 0)); // 19
-
+   geom.add_vert(vec3d(0,     iphi, phi)); //  8
+   geom.add_vert(vec3d(0,     iphi,-phi)); //  9
+   geom.add_vert(vec3d(0,    -iphi,-phi)); // 10
+   geom.add_vert(vec3d(0,    -iphi, phi)); // 11
+   geom.add_vert(vec3d( phi,  0,    iphi)); // 12
+   geom.add_vert(vec3d(-phi,  0,    iphi)); // 13
+   geom.add_vert(vec3d(-phi,  0,   -iphi)); // 14
+   geom.add_vert(vec3d( phi,  0,   -iphi)); // 15
+   geom.add_vert(vec3d( iphi, phi,  0)); // 16
+   geom.add_vert(vec3d( iphi,-phi,  0)); // 17
+   geom.add_vert(vec3d(-iphi,-phi,  0)); // 18
+   geom.add_vert(vec3d(-iphi, phi,  0)); // 19
+   geom.transform(mat3d::rot(0,0,M_PI/2));
 
    int f[] = { 12,15, 1,16, 0,  8,11, 2,12, 0, 16,19, 4, 8, 0,
                15,12, 2,17, 3, 10, 9, 1,15, 3, 17,18, 7,10, 3,
@@ -152,7 +153,6 @@ static void dodecahedron(geom_if &geom)
 static void icosahedron(geom_if &geom)
 {
    geom.clear_all();
-   double phi = (sqrt(5)+1)/2;
    geom.add_vert(vec3d(0,  phi,  1)); //  0
    geom.add_vert(vec3d(0, -phi,  1)); //  1
    geom.add_vert(vec3d(0, -phi, -1)); //  2
@@ -165,6 +165,7 @@ static void icosahedron(geom_if &geom)
    geom.add_vert(vec3d(-phi,  1, 0)); //  9
    geom.add_vert(vec3d(-phi, -1, 0)); // 10
    geom.add_vert(vec3d( phi, -1, 0)); // 11
+   geom.transform(mat3d::rot(0,0,M_PI/2));
 
    int f[] = { 0, 4, 7,   1, 7, 4,   2, 5, 6,   3, 6, 5,
                4, 8,11,   5,11, 8,   6, 9,10,   7,10, 9,
@@ -274,7 +275,6 @@ static void icosidodecahedron(geom_if &geom)
 
 static void tr_dodecahedron(geom_if &geom)
 {
-   double phi = (sqrt(5)+1)/2;
    dodecahedron(geom);
    truncate_verts(geom, 1/(phi+2));
    geom.orient();
@@ -292,7 +292,6 @@ static void tr_icosahedron(geom_if &geom)
 static void rhombicosidodecahedron(geom_if &geom)
 {
    geom.clear_all();
-   double phi = (sqrt(5)+1)/2;
    vec3d v[3];
    for(int i=0; i<2; i++)
       for(int j=0; j<2; j++)
@@ -306,6 +305,7 @@ static void rhombicosidodecahedron(geom_if &geom)
                      geom.add_vert(vec3d(v[m][l], v[m][(l+1)%3],
                               v[m][(l+2)%3]));
          }
+   geom.transform(mat3d::rot(0,0,M_PI/2));
    geom.add_hull();
    normalised_face_list(geom);
 }
@@ -314,7 +314,6 @@ static void rhombicosidodecahedron(geom_if &geom)
 static void tr_icosidodecahedron(geom_if &geom)
 {
    geom.clear_all();
-   double phi = (sqrt(5)+1)/2;
    vec3d v[5];
    for(int i=0; i<2; i++)
       for(int j=0; j<2; j++)
@@ -328,6 +327,7 @@ static void tr_icosidodecahedron(geom_if &geom)
                for(int m=0; m<3; m++)
                   geom.add_vert(vec3d(v[l][m], v[l][(m+1)%3], v[l][(m+2)%3]));
          }
+   geom.transform(mat3d::rot(0,0,M_PI/2));
    geom.add_hull();
    normalised_face_list(geom);
 }
@@ -336,7 +336,6 @@ static void tr_icosidodecahedron(geom_if &geom)
 static void snub_dodecahedron(geom_if &geom)
 {
    geom.clear_all();
-   double phi = (sqrt(5)+1)/2;
    double third = 1/3.0;
    double K = pow(phi/2+sqrt(phi-5/27.0)/2, third) +
       pow(phi/2-sqrt(phi-5/27.0)/2, third);
@@ -363,9 +362,48 @@ static void snub_dodecahedron(geom_if &geom)
                   geom.add_vert(vec3d(v[l][m], v[l][(m+1)%3], v[l][(m+2)%3]));
                }
          }
+   geom.transform(mat3d::rot(0,0,M_PI/2));
    geom.add_hull();
    normalised_face_list(geom);
 }
+
+static void rh_dodecahedron(geom_if &geom)
+{
+   geom.clear_all();
+   col_geom_v geom2;
+   cube(geom2);
+   geom.add_verts(geom2.verts());
+   octahedron(geom2);
+   geom2.transform(mat3d::scale(2));
+   geom.add_verts(geom2.verts());
+   geom.add_hull();
+   normalised_face_list(geom);
+}
+
+
+static void rh_triacontahedron(geom_if &geom)
+{
+   geom.clear_all();
+   col_geom_v geom2;
+   icosahedron(geom2);
+   geom.add_verts(geom2.verts());
+   dodecahedron(geom2);
+   geom.add_verts(geom2.verts());
+   geom.add_hull();
+   normalised_face_list(geom);
+}
+
+static void rh_enneacontahedron(geom_if &geom)
+{
+   geom.clear_all();
+   col_geom_v geom2;
+   dodecahedron(geom2);
+   geom2.transform(mat3d::scale(1/(2*phi*phi)));
+   geom.set_zono(geom2.verts());
+   normalised_face_list(geom);
+}
+
+
 
 string expand_abbrevs(const string &name, const char *abbrevs[][2], size_t last)
 {
@@ -703,6 +741,7 @@ int make_resource_std_poly(geom_if &geom, string name, char *errmsg=0)
    models["tetrahedron"]                 = tetrahedron;
    models["tet"]                         = tetrahedron;
    models["truncated_tetrahedron"]       = tr_tetrahedron;
+   models["tr_tetrahedron"]              = tr_tetrahedron;
    models["tr_tet"]                      = tr_tetrahedron;
    models["cube"]                        = cube;
    models["truncated_cube"]              = tr_cube;
@@ -733,6 +772,7 @@ int make_resource_std_poly(geom_if &geom, string name, char *errmsg=0)
    models["cuboctahedron"]               = cuboctahedron;
    models["cubo"]                        = cuboctahedron;
    models["truncated_cuboctahedron"]     = tr_cuboctahedron;
+   models["tr_cuboctahedron"]            = tr_cuboctahedron;
    models["tr_cubo"]                     = tr_cuboctahedron;
    models["icosidodecahedron"]           = icosidodecahedron;
    models["icosid"]                      = icosidodecahedron;
@@ -745,6 +785,18 @@ int make_resource_std_poly(geom_if &geom, string name, char *errmsg=0)
    models["rhombicosidodecahedron"]      = rhombicosidodecahedron;
    models["rhombicosid"]                 = rhombicosidodecahedron;
    models["rh_icosid"]                   = rhombicosidodecahedron;
+   models["rhombic_dodecahedron"]        = rh_dodecahedron;
+   models["rh_dodecahedron"]             = rh_dodecahedron;
+   models["rh_dod"]                      = rh_dodecahedron;
+   models["rd"]                          = rh_dodecahedron;
+   models["rhombic_triacontahedron"]     = rh_triacontahedron;
+   models["rh_triacontahedron"]          = rh_triacontahedron;
+   models["rh_tri"]                      = rh_triacontahedron;
+   models["rt"]                          = rh_triacontahedron;
+   models["rhombic_enneacontahedron"]    = rh_enneacontahedron;
+   models["rh_enneacontahedron"]         = rh_enneacontahedron;
+   models["rh_ennea"]                    = rh_enneacontahedron;
+   models["re"]                          = rh_enneacontahedron;
 
    map<string, model_func>::iterator mi = models.find(name.substr(4));
    if(mi != models.end())
