@@ -404,7 +404,6 @@ static void rh_enneacontahedron(geom_if &geom)
 }
 
 
-
 string expand_abbrevs(const string &name, const char *abbrevs[][2], size_t last)
 {
    string expanded;
@@ -434,6 +433,22 @@ void set_resource_polygon_color(geom_if &geom)
       clrng.f_avg_angle(true);
    }
 }
+
+static void make_resource_dual(geom_if &geom)
+{
+      vec3d cent = geom.centroid();
+      geom_info info(geom);
+      info.set_center(cent);
+      double rad = info.impl_edge_dists().sum/info.num_iedges();
+      col_geom_v dual;
+      const double inf = 1200;
+      get_dual(geom, dual, rad, cent, inf);
+      add_extra_ideal_elems(dual, cent, 0.95*inf); // limit closer than inf
+      geom.clear_all();
+      geom.append(dual);
+      set_resource_polygon_color(geom);
+}
+
 
 
 const char *alt_names[][2] = {
@@ -480,14 +495,6 @@ const char *alt_names[][2] = {
    {"tr_icosid", "u28" }, 
    {"snub_dodecahedron", "u29" },
    {"snub_dod", "u29" },
-   {"rhombic_dodecahedron", "u7_d"},
-   {"rh_dodecahedron", "u7_d"},
-   {"rh_dod", "u7_d"},
-   {"rd", "u7_d"},
-   {"rhombic_triacontahedron", "u24_d"},
-   {"rh_triacontahedron", "u24_d"},
-   {"rh_tri", "u24_d"},
-   {"rt", "u24_d"},
    {"small_stellated_dodecahedron", "u34"},
    {"sm_st_dodecahedron", "u34"},
    {"sm_st_dod", "u34"},
@@ -500,6 +507,46 @@ const char *alt_names[][2] = {
    {"great_icosahedron", "u53"},
    {"gr_icosahedron", "u53"},
    {"gr_ico", "u53"},
+   {"triakis_tetrahedron", "u2_d"},
+   {"tri_tet", "u2_d"},
+   {"rhombic_dodecahedron", "u7_d"},
+   {"rh_dodecahedron", "u7_d"},
+   {"rh_dod", "u7_d"},
+   {"rd", "u7_d"},
+   {"triakis_octahedron", "u9_d"},
+   {"tri_oct", "u9_d"},
+   {"tetrakis_hexahedron", "u8_d"},
+   {"tetr_hex", "u8_d"},
+   {"dysdyakis_hexahedron", "u8_d"},
+   {"dysd_hex", "u8_d"},
+   {"deltoidal_icositetrahedron", "u10_d"},
+   {"delt_icosit", "u10_d"},
+   {"trapezoidal_icositetrahedron", "u10_d"},
+   {"trap_icosit", "u10_d"},
+   {"hexakis_octahedron", "u11_d"},
+   {"hex_oct", "u11_d"},
+   {"dysdyakis_dodecahedron", "u11_d"},
+   {"dysd_dod", "u11_d"},
+   {"pentagonal_icositetrahedron", "u12_d"},
+   {"pen_icosit", "u12_d"},
+   {"rhombic_triacontahedron", "u24_d"},
+   {"rh_triacontahedron", "u24_d"},
+   {"rh_tri", "u24_d"},
+   {"rt", "u24_d"},
+   {"triakis_icosahedron", "u26_d"},
+   {"tri_ico", "u26_d"},
+   {"pentakis_dodecahedron", "u25_d"},
+   {"pent_dod", "u25_d"},
+   {"deltoidal_hexacontahedron", "u27_d"},
+   {"delt_hexac", "u27_d"},
+   {"trapezoidal_hexacontahedron", "u27_d"},
+   {"trap_hexac", "u27_d"},
+   {"hexakis_icosahedron", "u28_d"},
+   {"hex_ico", "u28_d"},
+   {"dysdyakis_triacontahedron", "u28_d"},
+   {"dysd_tri", "u28_d"},
+   {"pentagonal_hexacontahedron", "u29_d"},
+   {"pen_hexac", "u29_d"},
 };
 
 const char *u_abbrevs[][2] = {
@@ -517,7 +564,25 @@ const char *u_abbrevs[][2] = {
    {"icosid", "icosidodecahedron"}
 };
 
-
+const char *ud_abbrevs[][2] = {
+   {"sm",      "small"},
+   {"gr",      "great"},
+   {"st",      "stellated"},
+   {"inv",     "inverted"},
+   {"delt",    "deltoidal"},
+   {"pen",     "pentagonal"},
+   {"med",     "medial"},
+   {"tri",     "triambic"},
+   {"ditrig",  "ditrigonal"},
+   {"tet",     "tetrahedron"},
+   {"ico",     "icosahedron"},
+   {"icosa",   "icosahedron"},
+   {"dod",     "dodecahedron"},
+   {"oct",     "octahedron"},
+   {"cubo",    "cuboctahedron"},
+   {"hexec",   "hexecontahedron"},
+   {"icositet","icositetrahedron"}
+};
 
 
 int make_resource_uniform(geom_if &geom, string name, char *errmsg=0)
@@ -526,23 +591,31 @@ int make_resource_uniform(geom_if &geom, string name, char *errmsg=0)
       return -1; // not uniform name (the "." indicates a likely local file)
                  // so the name is not handled
 
+   bool is_dual = strchr("dD", name[1]);
    uni_poly uni;
    int sym_no;
-   if(read_int(name.c_str()+1, &sym_no)) {
+   if(read_int(name.c_str()+1+is_dual, &sym_no)) {
       sym_no--;
       if(sym_no<0 || sym_no >= uni.get_last_uniform()) {
          if(errmsg)
-            snprintf(errmsg, MSG_SZ, "uniform polyhedron number out of range");
+            snprintf(errmsg, MSG_SZ, "uniform %spolyhedron number out of range",
+                  (is_dual)?"dual ":"");
          return 1; // fail
       }
    }
-   else if(strchr(RES_SEPARATOR, name[1])) {
-      string expanded = expand_abbrevs(name, u_abbrevs,
-            sizeof(u_abbrevs)/sizeof(u_abbrevs[0]));
-      sym_no = uni.lookup_sym_no(expanded.c_str());
+   else if(strchr(RES_SEPARATOR, name[1+is_dual])) {
+      string expanded;
+      if(is_dual)
+         expanded = expand_abbrevs(name, ud_abbrevs,
+               sizeof(ud_abbrevs)/sizeof(ud_abbrevs[0]));
+      else
+         expanded = expand_abbrevs(name, u_abbrevs,
+               sizeof(u_abbrevs)/sizeof(u_abbrevs[0]));
+      sym_no = uni.lookup_sym_no(expanded.c_str(), is_dual);
       if(sym_no == -1) {
          if(errmsg)
-            snprintf(errmsg, MSG_SZ, "invalid uniform polyhedron name");
+            snprintf(errmsg, MSG_SZ, "invalid uniform polyhedron %sname",
+                  (is_dual)?"dual ":"");
          return 1; // fail
       }
    }
@@ -555,8 +628,13 @@ int make_resource_uniform(geom_if &geom, string name, char *errmsg=0)
    double e_len = geom.edge_vec(geom.faces(0,0), geom.faces(0,1)).mag();
    geom.transform(mat3d::scale(1/e_len));
    set_resource_polygon_color(geom);
+
+   if(is_dual)
+      make_resource_dual(geom);
+
    return 0; // name found
 }
+
 
 const char *j_abbrevs[][2] = {
    {"tri", "triangular"},
@@ -905,19 +983,8 @@ bool make_resource_geom(geom_if &geom, string name, char *errmsg)
       }
    }
 
-   if(make_dual) {
-      vec3d cent = geom.centroid();
-      geom_info info(geom);
-      info.set_center(cent);
-      double rad = info.impl_edge_dists().sum/info.num_iedges();
-      col_geom_v dual;
-      const double inf = 1200;
-      get_dual(geom, dual, rad, cent, inf);
-      add_extra_ideal_elems(dual, cent, 0.95*inf); // limit closer than inf
-      geom.clear_all();
-      geom.append(dual);
-      set_resource_polygon_color(geom);
-   }
+   if(make_dual)
+      make_resource_dual(geom);
 
    return geom_ok;
 }

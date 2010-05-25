@@ -776,17 +776,6 @@ j_poly::j_poly()
 }
 
 
-void j_poly::list_poly(int idx, FILE *fp)
-{
-   fprintf(fp, "%2d) %s\n", idx+1, J_items[idx].name);
-}
-
-void j_poly::list_polys(FILE *fp)
-{
-   for(int i=0; i<last_J; i++)
-      list_poly(i, fp);
-}
-
 int j_poly::get_poly(geom_if &geom, int sym)
 {
    J_items[sym].pfunc(geom);

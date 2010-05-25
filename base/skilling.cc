@@ -333,18 +333,6 @@ uc_poly::uc_poly()
    last_uc = sizeof (uc_item_list) / sizeof (uc_item_list[0]);
 }
 
-void uc_poly::list_poly(int idx, FILE *fp)
-{
-   fprintf(fp, "%-4s\t%-20s\n",
-      uc_items[idx].name, uc_items[idx].description);
-}
-
-void uc_poly::list_polys(FILE *fp)
-{
-   for(int i=0; i<last_uc; i++)
-      list_poly(i, fp);
-}
-
 int uc_poly::get_poly(col_geom_v &geom, int sym, double angle, int n, int d, int k)
 {
    string constituent_str = uc_items[sym].constituent;

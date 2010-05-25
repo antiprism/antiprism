@@ -68,9 +68,7 @@ class uni_poly
       uni_poly() { last_uniform = get_uniform_list(&uniform); }
       int get_poly(geom_if &geom, int sym_no);
       bool ok() { return poly != 0; }
-      void list_poly(int idx, FILE *fp=stderr);
-      void list_polys(FILE *fp=stderr);
-      int lookup_sym_no(string sym);
+      int lookup_sym_no(string sym, int is_dual);
       int get_last_uniform() { return last_uniform; }
 
 };
@@ -92,8 +90,6 @@ class j_poly
      
       j_poly();
       int get_poly(geom_if &geom, int sym);
-      void list_poly(int idx, FILE *fp=stderr);
-      void list_polys(FILE *fp=stderr);
       int lookup_sym_no(string sym);
       int get_last_J() { return last_J; }
 

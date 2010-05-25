@@ -47,17 +47,6 @@ using std::set;
 using std::swap;
 
 
-void uni_poly::list_poly(int idx, FILE *fp)
-{
-   fprintf(fp, "%2d)  %13s  %s\n", idx+1, uniform[idx].Wythoff, uniform[idx].name);
-}
-
-void uni_poly::list_polys(FILE *fp)
-{
-   for(int i=0; i<last_uniform; i++)
-      list_poly(i, fp);
-}
-
 int uni_poly::get_poly(geom_if &geom, int sym_no)
 {
    char sym[6];
@@ -124,7 +113,7 @@ int uni_poly::get_poly(geom_if &geom, int sym_no)
 
 
 
-int uni_poly::lookup_sym_no(string sym)
+int uni_poly::lookup_sym_no(string sym, int is_dual)
 {
    // remove double spaces and spaces at beginning and end
    string sym_norm;
@@ -169,23 +158,27 @@ int uni_poly::lookup_sym_no(string sym)
    if(!*endptr)     // all of string is an integer
       return idx-1;
 
-   // is it a Wythoff symbol
-   for(int i=0; i<last_uniform; i++) {
-      if(sym_norm2==uniform[i].Wythoff)
-         return i;
+   if(!is_dual) {
+      // is it a Wythoff symbol
+      for(int i=0; i<last_uniform; i++) {
+         if(sym_norm2==uniform[i].Wythoff)
+            return i;
+      }
    }
 
    idx= -1;
-   
+  
    // is it a poly name
    for(unsigned int i=0; i<sym_norm2.size(); i++)
       if(isalpha(sym_norm2[i]))
          sym_norm2[i] = tolower(sym_norm2[i]);
+   //fprintf(stderr, "sym_name = '%s'\n", sym_norm2.c_str());
    for(int i=0; i<last_uniform; i++) {
-      if(sym_norm2==uniform[i].name)
+      const char *name = (is_dual)?uniform[i].dual:uniform[i].name;
+      if(sym_norm2==name)
          return i;
       
-      if(idx<0 && strncmp(sym_norm2.c_str(), uniform[i].name, sym_norm2.size())==0)
+      if(idx<0 && strncmp(sym_norm2.c_str(), name, sym_norm2.size())==0)
          idx = i;
    }
 

@@ -107,7 +107,7 @@ class lutil_opts: public prog_opts {
 
 void lutil_opts::usage()
 {
-   fprintf(stderr,
+   fprintf(stdout,
 "\n"
 "Usage: %s [options] [input_files]\n"
 "\n"

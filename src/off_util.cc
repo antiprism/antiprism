@@ -128,6 +128,9 @@ const char *get_help(const char* name)
    help["uniform"] = help_uniform;
    help["archimedean"] = help_uniform;
    help["platonic"] = help_uniform;
+   help["uniform_duals"] = help_uniform_duals;
+   help["ud"] = help_uniform_duals;
+   help["catalans"] = help_uniform_duals;
    help["std_polys"] = help_std_polys;
    help["std_polyhedra"] = help_std_polys;
    help["johnson"] = help_johnson;

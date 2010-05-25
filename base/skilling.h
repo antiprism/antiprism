@@ -58,8 +58,6 @@ class uc_poly
    public:     
       uc_poly();
       int get_poly(col_geom_v &geom, int sym, double angle, int n, int d, int k);
-      void list_poly(int idx, FILE *fp=stderr);
-      void list_polys(FILE *fp=stderr);
       int lookup_sym_no(string sym);
       int get_last_uc() { return last_uc; }
 

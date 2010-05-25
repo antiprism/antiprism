@@ -100,7 +100,7 @@ class plot_colors_opts: public prog_opts {
 
 void plot_colors_opts::usage()
 {
-   fprintf(stderr,
+   fprintf(stdout,
 "\n"
 "Usage: %s [options]\n"
 "\n"
