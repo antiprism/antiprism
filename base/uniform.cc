@@ -132,7 +132,8 @@ int uni_poly::lookup_sym_no(string sym, int is_dual)
 
    if(sym_norm[sym_norm.size()-1]==' ')
       sym_norm.resize(sym_norm.size()-1);
-         
+   
+
    // remove spaces either side of a punctuation mark (for Wythoff)
    string sym_norm2;
    for(unsigned int i=0; i<sym_norm.length(); i++) {
@@ -167,11 +168,17 @@ int uni_poly::lookup_sym_no(string sym, int is_dual)
    }
 
    idx= -1;
-  
+ 
    // is it a poly name
    for(unsigned int i=0; i<sym_norm2.size(); i++)
       if(isalpha(sym_norm2[i]))
          sym_norm2[i] = tolower(sym_norm2[i]);
+   // remove any space after an -akis
+   if(is_dual) {
+      size_t kis_pos = sym_norm2.find("akis ");
+      if(kis_pos != string::npos)
+         sym_norm2.erase(kis_pos+4, 1);
+   }
    //fprintf(stderr, "sym_name = '%s'\n", sym_norm2.c_str());
    for(int i=0; i<last_uniform; i++) {
       const char *name = (is_dual)?uniform[i].dual:uniform[i].name;
