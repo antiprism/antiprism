@@ -161,23 +161,6 @@ class color_map_remap: public color_map
 };
 
 
-///A colour map with a good spread of colours 
-class color_map_spread: public color_map
-{
-   public:
-      ///Get a copy of the map
-      /** \return a pointer to the dynamically allocated copy,
-       * which must be freed by the caller with \c delete, 0 indicates
-       * that the clone failed. */
-      color_map *clone() { return new color_map_spread(*this); }
-
-      ///Get the colour value for an index number.
-      /**\param idx the index.
-       * \return The colour. */
-      virtual col_val get_col(int idx);
-};
-
-
 ///A colour map using a range 
 class color_map_range: public color_map
 {
@@ -342,6 +325,23 @@ class color_map_range_rand_rgb: public color_map_range_rand
       color_map *clone() { return new color_map_range_rand_rgb(*this); }
 
 };
+
+///A colour map with a good spread of colours 
+class color_map_spread: public color_map_range
+{
+   public:
+      ///Get a copy of the map
+      /** \return a pointer to the dynamically allocated copy,
+       * which must be freed by the caller with \c delete, 0 indicates
+       * that the clone failed. */
+      color_map *clone() { return new color_map_spread(*this); }
+
+      ///Get the colour value for an index number.
+      /**\param idx the index.
+       * \return The colour. */
+      virtual col_val get_col(int idx);
+};
+
 
 
 ///A colour map with the mappings held in a map
