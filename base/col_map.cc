@@ -235,12 +235,10 @@ static color_map* init_color_map_generated(const char *map_name, char *errmsg=0)
       cmap = new color_map_remap;
    }
    
-   else if(strcmp(name, "mkmap")==0) {
-      if(map_name[name_len]=='_') {
+   else if(strcmp(name, "map")==0 && map_name[name_len]=='_') {
          color_map_map *cmm = new color_map_map;
          if(cmm && cmm->init_from_line(map_name+name_len+1, errmsg))
             cmap = cmm;
-      }
    }
    else {
       strcpy(errmsg, "name not found");
