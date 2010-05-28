@@ -76,8 +76,8 @@ void o2p_opts::usage()
 "%s"
 "  -O <type> output type, can be: 'a' all in one POV file (default),\n"
 "            's' separate files, 'o' objects only, 't' template only\n"
-"  -I <fils> include files (separated by commas) for the POV scene file\n"
 "  -i <fils> include files (separated by commas) for every POV geometry\n"
+"  -j <fils> include files (separated by commas) for the POV scene file\n"
 "  -J <fils> include files (separated by commas) containing additional POV\n"
 "            objects for the POV scene file\n"
 "  -o <file> write output to file (default: write to standard output)\n"
@@ -110,7 +110,7 @@ void o2p_opts::process_command_line(int argc, char **argv)
   
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hv:e:V:E:F:m:x:s:no:D:C:L:R:P:W:S:B:d:t:I:J:i:O:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hv:e:V:E:F:m:x:s:no:D:C:L:R:P:W:S:B:d:t:I:j:J:i:O:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -138,7 +138,7 @@ void o2p_opts::process_command_line(int argc, char **argv)
                error(errmsg, c);
             break;
 
-         case 'I':
+         case 'j':
             scene_incs.push_back(optarg);
             break;
 

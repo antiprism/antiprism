@@ -335,7 +335,7 @@ void camera::animate()
 scene::scene()
 {
    set_bg_col();
-   set_inf_dist();
+   set_inf_dist(DEF_CAMERA_INF_DIST);
    add_camera();
    cur_camera().set_name("default");
 }
