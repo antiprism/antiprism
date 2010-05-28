@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include <limits.h>
 #include <ctype.h>
 #include <sys/types.h>
@@ -120,6 +121,92 @@ void prog_opts::handle_long_opts(int argc, char *argv[])
    }
 }
 
+
+string prog_opts::get_arg_id(const char *arg, const char *maps,
+      unsigned int match_flags, char *errmsg)
+{
+   if(errmsg)
+      *errmsg = '\0';
+
+   char arg_copy[MSG_SZ];
+   bool ignore_case = !(argmatch_case_sensitive & match_flags);
+   if(ignore_case) {
+      char *q=arg_copy;
+      for(const char *p=arg; *p; ++p)
+         *q++ = tolower(*p);
+   }
+   const char *argu = (ignore_case) ? arg_copy : arg;
+
+   // set up arg -> id map
+   map<string, string> mps;
+   string argument, id;
+   int pos_no = 0;
+   int in_arg = true;
+   const char *p = maps;
+   while(true) {
+      if(*p=='|' || *p=='\0') {     // end of argument, id pair
+         if(id == "")               // no '=' in pair so ID is position number
+            id = itostr(pos_no);
+         if(argument != "")         // don't stor empty pairs
+            mps[argument] = id;
+         if(!*p)                    // end of string, finish processing
+            break;
+         argument.clear();          // start of new argument, id pair
+         id.clear();
+         in_arg=true;
+         pos_no++;
+      }
+      else if(*p=='=' && in_arg)    // end of arg, consider id next
+         in_arg = false;
+      else {
+         if(in_arg) {
+            // store argument as lowercase if 'no_case' compare
+            char q = (argmatch_case_sensitive & match_flags) ? *p : tolower(*p);
+            argument += q;
+         }
+         else
+            id += *p;
+      }
+
+      p++;
+   }
+
+   // look for exact match
+   map<string, string>::iterator mi = mps.find(argu);
+   if(mi!=mps.end())
+      return mi->second;   
+
+   // exact match excluded, match is partial or no match   
+   if(argmatch_no_partial & match_flags) {
+      if(errmsg)
+         snprintf(errmsg, MSG_SZ, "invalid argument '%s'", arg);
+      return "";
+   }
+   
+   // look for partial match
+   mi = mps.upper_bound(argu);
+   if(mi==mps.end()) {                             // no partial match found
+      if(errmsg)
+         snprintf(errmsg, MSG_SZ, "invalid argument '%s'", arg);
+      return "";
+   }
+
+   if(mi->first.substr(0, strlen(argu))==argu) {    // partial match
+      // the next entry must not be a partial match
+      map<string, string>::iterator mi_next = mi;
+      if(++mi_next==mps.end()|| !(mi_next->first.substr(0, strlen(argu))==argu))
+         return mi->second;
+      else {
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "ambiguous argument '%s'", arg);
+         return "";
+      }
+   }
+   
+   if(errmsg)
+      snprintf(errmsg, MSG_SZ, "invalid argument '%s'", arg);
+   return "";
+}
 
 
 void prog_opts::version()
@@ -654,4 +741,11 @@ FILE *open_sup_file(const char *fname, const char *subdir, string *alt_name,
 }
 
 
-
+string msg_str(const char *fmt, ...)
+{
+   char message[MSG_SZ];
+   va_list args;
+   va_start(args, fmt);
+   vsnprintf(message, MSG_SZ-1, fmt, args);
+   return message;
+}

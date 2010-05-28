@@ -47,7 +47,13 @@ using std::vector;
 class prog_opts {
    private:
       string program_name;
+
    public:
+      enum {   argmatch_default=0,
+               argmatch_case_sensitive=1,
+               argmatch_no_partial=2
+      };
+
       static const char *help_ver_text;
 
       ///Constructor
@@ -60,11 +66,11 @@ class prog_opts {
       ///Process the command line
       /**In the derived class this will process the program options
        * and arguments, probably using \c getopt. */
-      virtual void process_command_line(int argc, char **argv) = 0;
+      virtual void process_command_line(int /*argc*/, char ** /*argv*/) {};
 
       ///Usage message
       /**In the derived class this will print a program usage help message*/
-      virtual void usage() = 0;
+      virtual void usage() {};
 
       ///Usage message
       /**print a version message*/
@@ -128,6 +134,22 @@ class prog_opts {
        * \param opt the option character being considered by getopt.
        * \return whether the option was handled. */
       bool common_opts(char c, char opt);
+
+      ///Map option arguments to identifiers using matching
+      /**\param arg the option argument
+       * \maps a set of maps from argument strings to identifiers seperated
+       * by '|', e.g. 'string1=id1|sting2=id2|string3=id3'
+       * \param match flags, the default is a icase insesetive match of
+       * \p arg to a string or failing that to the start of exactly one string.
+       * \c argmatch_case_sensitive distinguishes case, \c argmatch_no_partial
+       * disallows partial matches.
+       * \param errmsg error message
+       * \return The identifier corresponding to the matched string or
+       * \"\" if the argument is not matched and the error message is copied
+       * to \a errmsg.*/
+      string get_arg_id(const char *arg, const char *maps,
+            unsigned int match_flags=argmatch_default, char *errmsg=0);
+
 };
 
 
@@ -276,6 +298,13 @@ char *to_resource_name(char *to, const char *from);
  * \return A pointer to the opened file stream. */
 FILE *open_sup_file(const char *fname, const char *subdir,
       string *alt_name=0, int *where=0, string *fpath=0);
+
+//Convert a C formated message string to a C++ string
+/** Converts the first MSG_SZ-1 characters of the C format string
+ * \param fmt the formatted string
+ * \param ... the values for the format
+ * \return The converted string. */
+string msg_str(const char *fmt, ...);
 
 ///Convert an integer to a string
 /**\param i the integer.
