@@ -49,7 +49,7 @@ class o2m_opts: public prog_opts {
       double edge_size;
       double point_size;
       bool lighting;
-      string include_elems;
+      string exclude_elems;
       col_val face_col;
       col_val edge_col;
       col_val vert_col;
@@ -64,7 +64,7 @@ class o2m_opts: public prog_opts {
              edge_size(0.0),
              point_size(0.0),
              lighting(false),
-             include_elems("ef"),
+             exclude_elems(""),
              // face colors need to be explictly set since LG3D defaults to black
              face_col(vec3d(0.8,0.9,0.9)),
              // no longer set edge and vert colors, let them default to missing
@@ -96,25 +96,26 @@ void o2m_opts::usage()
 "  -v <size> vertex sphere size (default: 0.02 of bounding box diagonal)\n"
 "  -e <size> frame model edge thickness size (default: 0.001 of bounding\n"
 "            box diagonal)\n"
+"  -x <elms> hide elements. The element string can include v, e and f\n"
+"            to hide vertices, edges and faces\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+"\n"
+"Coloring options\n"
+"  Note: alpha values are ignored. color name \"invisible\" not allowed\n"
 "  -V <col>  default vertex colour, in form 'R,G,B' (3 values\n"
 "               0.0-1.0, or 0-255) or hex 'xFFFFFF'\n"
 "  -E <col>  default edge colour, in form 'R,G,B' (3 values\n"
-"               0.0-1.0, or 0-255) or hex 'xFFFFFF', 'x' to hide implicit edges\n"
+"               0.0-1.0, or 0-255) or hex 'xFFFFFF'\n"
 "  -F <col>  default face colour, in form 'R,G,B' (3 values\n"
 "               0.0-1.0, or 0-255) or hex 'xFFFFFF' (default: 0.8,0.8,0.9)\n"
-"  -X <elms> include elements. The element string can include v, e and f\n"
-"               to include, respectively, vertices, edges and faces\n"
-"               (default: ef - edges and faces)\n"
 "  -l        let LiveGraphics3D do the coloring itself\n"
-"  -o <file> write output to file (default: write to standard output)\n"
 "\n"
-"  Scene options\n"
-"\n"
+"Scene options\n"
 "  -Y <view> specify the Live3D ViewPoint in form 'X,Y,Z'\n"
 "  -B <col>  background colour, in form 'R,G,B' (3 values\n"
 "               0.0-1.0, or 0-255) or hex 'xFFFFFF' (default: 1,1,1)\n"
 "\n"
-"  Precision options\n"
+"Precision options\n"
 "  -d <dgts> number of significant digits (default 17) or if negative\n"
 "               then the number of digits after the decimal point\n"
 "  -t <type> display type for faces 0 - polygons, 1 - triangulate\n"
@@ -132,7 +133,7 @@ void o2m_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":he:v:X:lF:E:V:d:t:o:Y:B:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":he:v:x:lF:E:V:d:t:o:Y:B:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -155,27 +156,33 @@ void o2m_opts::process_command_line(int argc, char **argv)
             lighting = true;
          break;
 
-         case 'X':
+         case 'x':
             if(strspn(optarg, "vef") != strlen(optarg)) {
-               snprintf(errmsg, MSG_SZ, "elements to include are %s must be v, e, or f\n", optarg);
+               snprintf(errmsg, MSG_SZ, "elements to exclude are %s must be v, e, or f\n", optarg);
                error(errmsg, c);
             }
-            include_elems=optarg;
+            exclude_elems=optarg;
             break;
 
          case 'F':
             if(!face_col.read(optarg, errmsg))
                error(errmsg, c);
+            if(face_col.is_inv())
+               error("face color may not be invisible", c);
             break;
 
          case 'E':
             if(!edge_col.read(optarg, errmsg))
                error(errmsg, c);
+            if(edge_col.is_inv())
+               error("edge color may not be invisible", c);
             break;
 
          case 'V':
             if(!vert_col.read(optarg, errmsg))
                error(errmsg, c);
+            if(vert_col.is_inv())
+               error("vert color may not be invisible", c);
             break;
 
          case 'd':
@@ -238,13 +245,25 @@ string Vtxt(vec3d v, int dgts)
 }
 
 
-void print_m_solid(FILE *ofile, col_geom_v &geom, int sig_digits,
+int print_m_solid(FILE *ofile, col_geom_v &geom, int sig_digits,
       col_val face_col)
 {
    const vector<vector<int> > &faces = geom.faces();
    const vector<vec3d> &verts = geom.verts();
+   
+   int last_f = -1;
+   for(int i=faces.size()-1; i>=0; i--) {
+      col_val fcol = geom.get_f_col((int)i);
+      fcol = fcol.is_val() ? fcol : face_col;
+      if(!fcol.is_inv()) {
+         last_f = i;
+         break;
+      }
+   }
+   if (last_f == -1)
+      return 0;
 
-   for(unsigned int i=0; i<faces.size(); i++) {
+   for(int i=0; i<=last_f; i++) {
       fprintf(ofile,"{");
 
       col_val fcol = geom.get_f_col((int)i);
@@ -262,10 +281,12 @@ void print_m_solid(FILE *ofile, col_geom_v &geom, int sig_digits,
       }
 
       fprintf(ofile,"}]}");
-      if((i+1)==faces.size())
+      if(i==last_f)
          fprintf(ofile,"}");
       fprintf(ofile,",\n");
    }
+   
+   return 1;
 } 
 
 
@@ -281,33 +302,59 @@ void print_m_frame_edge(FILE *ofile, vec3d v1, vec3d v2, int sig_digits,
    fprintf(ofile, "]}");
 } 
 
-void print_m_frame(FILE *ofile, col_geom_v &geom, int sig_digits,
-      double edge_size, col_val edge_col, string include_elems)
+int print_m_frame(FILE *ofile, col_geom_v &geom, int sig_digits,
+      double edge_size, col_val edge_col, bool more_to_print)
 {
    const vector<vector<int> > &edges = geom.edges();
    const vector<vec3d> &verts = geom.verts();
+   
+   int last_e = -1;
+   for(int i=edges.size()-1; i>=0; i--) {
+      col_val ecol = geom.get_e_col((int)i);
+      ecol = ecol.is_val() ? ecol : edge_col;
+      if(!ecol.is_inv()) {
+         last_e = i;
+         break;
+      }
+   }
+   if (last_e == -1)
+      return 0;
 
-   for(unsigned int i=0; i<edges.size(); i++) {
+   for(int i=0; i<=last_e; i++) {
       col_val ecol = geom.get_e_col((int)i);
       ecol = ecol.is_val() ? ecol : edge_col;
       if(ecol.is_inv())
          continue;
       print_m_frame_edge(ofile, verts[edges[i][0]], verts[edges[i][1]],
             sig_digits, edge_size, ecol);
-      if ((i+1)==edges.size() && !strchr(include_elems.c_str(), 'f'))
+      if (i==last_e && !more_to_print)
          fprintf(ofile, "}");
       fprintf(ofile,",\n");
    }
+   
+   return 1;
 } 
 
 
-void print_m_points(FILE *ofile, col_geom_v &geom, int sig_digits,
-      double point_size, col_val vert_col, string include_elems)
+int print_m_points(FILE *ofile, col_geom_v &geom, int sig_digits,
+      double point_size, col_val vert_col, bool more_to_print)
 {
    const vector<vec3d> &verts = geom.verts();
    vec3d vc;
+   
+   int last_v = -1;
+   for(int i=verts.size()-1; i>=0; i--) {
+      col_val vcol = geom.get_v_col((int)i);
+      vcol = vcol.is_val() ? vcol : vert_col;
+      if(!vcol.is_inv()) {
+         last_v = i;
+         break;
+      }
+   }
+   if (last_v == -1)
+      return 0;
 
-   for(unsigned int i=0; i<verts.size(); i++) {
+   for(int i=0; i<=last_v; i++) {
       col_val vcol = geom.get_v_col(i);
       vcol = vcol.is_val() ? vcol : vert_col;
       if(vcol.is_inv())
@@ -318,11 +365,12 @@ void print_m_points(FILE *ofile, col_geom_v &geom, int sig_digits,
       fprintf(ofile, "PointSize[%g], ", point_size);
       fprintf(ofile, "Point[%s]}", Vtxt(verts[i], sig_digits).c_str());
       
-      if ((i+1)==verts.size() && !(strchr(include_elems.c_str(), 'e') ||
-               strchr(include_elems.c_str(), 'f')))
+      if (i==last_v && !more_to_print)
          fprintf(ofile, "}");
       fprintf(ofile,",\n");
    }
+   
+   return 1;
 }
 
 void print_m_head(FILE *ofile)
@@ -390,16 +438,27 @@ int main(int argc, char *argv[])
       if(ofile == 0)
          opts.error("could not open output file \'"+opts.ofile+"\'");
    }
+   
+   bool print_v = !strchr(opts.exclude_elems.c_str(), 'v') && geom.verts().size();
+   bool print_e = !strchr(opts.exclude_elems.c_str(), 'e') && geom.edges().size();
+   bool print_f = !strchr(opts.exclude_elems.c_str(), 'f') && geom.faces().size();
+   
+   if (!print_v && !print_e && !print_f)
+      opts.error("there are no elements to output",'x');
 
    print_m_head(ofile);
-   if(strchr(opts.include_elems.c_str(), 'v'))
-      print_m_points(ofile, geom, opts.sig_digits,
-            opts.point_size*to_model_units, opts.vert_col, opts.include_elems);
-   if(strchr(opts.include_elems.c_str(), 'e'))
-      print_m_frame(ofile, geom, opts.sig_digits,
-            opts.edge_size*to_model_units, opts.edge_col, opts.include_elems);
-   if(strchr(opts.include_elems.c_str(), 'f'))
-      print_m_solid(ofile, geom, opts.sig_digits, opts.face_col);
+   if(print_v) {
+      if (!print_m_points(ofile, geom, opts.sig_digits, opts.point_size*to_model_units, opts.vert_col, (print_e || print_f)))
+         opts.error("all vertices are invisible");
+   }
+   if(print_e) {
+      if (!print_m_frame(ofile, geom, opts.sig_digits, opts.edge_size*to_model_units, opts.edge_col, print_f))
+         opts.error("all edges are invisible");
+   }
+   if(print_f) {
+      if (!print_m_solid(ofile, geom, opts.sig_digits, opts.face_col))
+         opts.error("all faces are invisible");
+   }
    print_m_tail(ofile, geom, opts.lighting, opts.bg_col, opts.view_point);
 
    if(opts.ofile!="")
