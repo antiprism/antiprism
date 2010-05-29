@@ -45,7 +45,7 @@ const size_t MSG_SZ = 256;
 const int DEF_SIG_DGTS = 16;
 
 ///The default "infinity" distance to ignore far points when positioning camera
-const int DEF_CAMERA_INF_DIST = 1000.0;
+const double DEF_CAMERA_INF_DIST = 1000.0;
 
 ///Characters that separate parts of a resource name
 const char RES_SEPARATOR[] = "_ ";

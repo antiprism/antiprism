@@ -128,14 +128,15 @@ string prog_opts::get_arg_id(const char *arg, const char *maps,
    if(errmsg)
       *errmsg = '\0';
 
-   char arg_copy[MSG_SZ];
+   char arg_lower[MSG_SZ];
    bool ignore_case = !(argmatch_case_sensitive & match_flags);
-   if(ignore_case) {
-      char *q=arg_copy;
+   if(ignore_case) {              // make lowercase copy of arg
+      char *q=arg_lower;
       for(const char *p=arg; *p; ++p)
          *q++ = tolower(*p);
+      *q = '\0';
    }
-   const char *argu = (ignore_case) ? arg_copy : arg;
+   const char *argu = (ignore_case) ? arg_lower : arg;
 
    // set up arg -> id map
    map<string, string> mps;
