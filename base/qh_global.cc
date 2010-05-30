@@ -545,7 +545,9 @@ void qh_initflags(char *command) {
 
   if (command != &qh qhull_command[0]) {
     *qh qhull_command= '\0';
-    strncat( qh qhull_command, command, sizeof( qh qhull_command));
+    // Adrian Fix warning, add terminator if command is long
+    strncat( qh qhull_command, command, sizeof( qh qhull_command)-1);
+    strcat( qh qhull_command, "");
   }
   while (*s && !isspace(*s))  /* skip program name */
     s++;
