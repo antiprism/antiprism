@@ -37,6 +37,7 @@ xx-xx-10 Adrian Rossiter <adrian@antiprism.com>
              appends dual to original geometry
            antiview,off2vrml,off2pov: new option -s to display
              symmetry elements, -I infinity distance default 1000
+           off2m: new option -x to exclude elements, -X removed
            minmax: new ellipsoid and superellipsoid surfaces, default
              algorithm is v
            Resources: new colour map files and generatable maps,
