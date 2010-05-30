@@ -52,33 +52,24 @@ Now the command is
 
 Colour faces with unique colours
 <PRE>
-   geodesic 2 | off_color -f U | antiview -x ve
+   off_color -f U geo_2 | antiview -x ve
 </PRE>
 
-May a blue-green range for U by specifying a range of the hue
+Make dark colours for U by decreasing the value of the default map
 <PRE>
-   geodesic 2 | off_color -f U -H 0.4,0.7| antiview -x ve
+   off_color -f U -r V0.4 geo_2 | antiview -x ve
 </PRE>
 
-Make pastel colours for U by decreasing the saturation
+Rather than changing a map with -r an map with the desired colours
+could be chosen e.g. a map with blue-green range and a pastel range
 <PRE>
-   geodesic 2 | off_color -f U -S 0.4| antiview -x ve
-</PRE>
-
-Make dark colours for U by decreasing the value
-<PRE>
-   geodesic 2 | off_color -f U -V 0.4 -S 1| antiview -x ve
-</PRE>
-
-Choose from all possible colours for U by giving the full ranges
-of H, S and V
-<PRE>
-   geodesic 2 | off_color -f U -H 0,1 -S 0,1 -V 0,1| antiview -x ve
+   off_color -f U -m rnd_H0.4:0.7 geo_2 | antiview -x ve
+   off_color -f U -m rand_S0.3 geo_2 | antiview -x ve
 </PRE>
 
 Colour edges and vertices with a rainbow effect
 <PRE>
-   geodesic 5 | off_color -f 1.0,1.0,1.0 -e L -v L | antiview -v 0.05
+   off_color -f 1.0,1.0,1.0 -e L -v L geo_5 | antiview -v 0.05
 </PRE>
 
 Make a lights file placing a red, green, blue and white light
@@ -98,7 +89,7 @@ OFF
 
 Colour faces with a lighting effect using these lights
 <PRE>
-   geodesic 5 | off_color -l lts.off -f L | antiview -x ve
+   off_color -l lts.off -f L geo_5 | antiview -x ve
 </PRE>
 
 <H2><A NAME="notes">

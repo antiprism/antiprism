@@ -1,0 +1,49 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+Repeat a cube in a chequerboard pattern
+<PRE>
+   lat_grid fcc 3 | lat_util -R cube | antiview
+</PRE>
+
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+<I>lat_util</I> was written by
+<A HREF="http://www.interocitors.com/polyhedra/">Roger Kaufman</A>.
+
+
+#include "<<END>>"

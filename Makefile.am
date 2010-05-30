@@ -59,4 +59,4 @@ uninstall-local:
 prepare_release:
 	cd doc_src && ./gtml doc.gtp && rm tmp.txt
 	doxygen
-	cd python && doxygen && ./doxy2swig.py xml/index.xml antiprism_doc.i && rm -rf xml
+	##cd python && doxygen && ./doxy2swig.py xml/index.xml antiprism_doc.i && rm -rf xml

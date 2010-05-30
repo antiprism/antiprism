@@ -44,7 +44,7 @@ A Great rhombicuboctahedron with coloured faces
 
 A snub geodesic sphere
 <PRE>
-   geodesic 3 | conway -f 1 s | antiview
+   conway s geo_3 | antiview
 </PRE>
 
 A snub pentagrammic antiprism

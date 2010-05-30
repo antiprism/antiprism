@@ -1,0 +1,82 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+RGB cube centroid of blue and yellow
+<PRE>
+   col_util -d 1 -M map_blue:yellow | antiview
+</PRE>
+
+HSV cylinder centroid of blue and yellow
+<PRE>
+   col_util -d 1 -M map_blue:yellow -m 1 | antiview
+</PRE>
+
+Blend in RYB mode
+<PRE>
+   col_util -d 1 -M map_blue:yellow -m 2 -y | antiview
+</PRE>
+
+Blend in RYB mode with different saturation modifiers
+<PRE>
+   col_util -d 1 -M map_blue:yellow -m 2 -y -s 0.8,1.01,2,3 | antiview
+</PRE>
+
+Compare additive and subtractive colouring
+<PRE>
+   col_util -d 1 -M map_red:green:blue -m 2 -l 1,2,3,4    | antiview
+   col_util -d 1 -M map_red:green:blue -m 2 -l 1,2,3,4 -c | antiview
+</PRE>
+
+Plot rainbow colour map in RGB cube
+<PRE>
+   col_util -M rainbow -b | antiview -v 0.03
+</PRE>
+
+Plot rainbow colour map in HSL cylinder, hexagonal dipyramid, or
+heptagonal dipyramid
+<PRE>
+   col_util -M rainbow -m 2 -r 0 | antiview -v 0.03
+   col_util -M rainbow -m 2 -r 2 | antiview -v 0.03
+   col_util -M rainbow -m 2 -r 2 -S  | antiview -v 0.03
+</PRE>
+
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+<I>col_util</I> was written by
+<A HREF="http://www.interocitors.com/polyhedra/">Roger Kaufman</A>.
+
+#include "<<END>>"

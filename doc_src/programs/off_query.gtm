@@ -41,7 +41,7 @@ List the angles around each vertex of a cuboctahedron
 List the edge lengths of edges 5 to 10, 50 to 60 and 100 of a geodesic sphere
 
 <PRE>
-   geodesic -c 4,1 | off_query -I 5-10,50-60,100 El -d 6
+   off_query -I 5-10,50-60,100 El -d 6 geo_4_1
 </PRE>
 
 Find the distance between opposite vertices of a unit-edged

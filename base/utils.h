@@ -137,16 +137,16 @@ class prog_opts {
 
       ///Map option arguments to identifiers using matching
       /**\param arg the option argument
-       * \maps a set of maps from argument strings to identifiers seperated
-       * by '|', e.g. 'string1=id1|sting2=id2|string3=id3'
-       * \param match flags, the default is a icase insesetive match of
-       * \p arg to a string or failing that to the start of exactly one string.
+       * \param maps a set of maps from argument strings to identifiers
+       * separated by '|', e.g. 'string1=id1|sting2=id2|string3=id3'
+       * \param match_flags the default is a icase insesetive match of
+       * \a arg to a string or failing that to the start of exactly one string.
        * \c argmatch_case_sensitive distinguishes case, \c argmatch_no_partial
        * disallows partial matches.
        * \param errmsg error message
-       * \return The identifier corresponding to the matched string or
-       * \"\" if the argument is not matched and the error message is copied
-       * to \a errmsg.*/
+       * \return The identifier corresponding to the matched string, or
+       * if the argument is not matched "" is returned and the error
+       * message is copied to \a errmsg.*/
       string get_arg_id(const char *arg, const char *maps,
             unsigned int match_flags=argmatch_default, char *errmsg=0);
 

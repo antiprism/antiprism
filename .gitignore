@@ -76,7 +76,7 @@ src/n_icons
 src/iso_delta
 src/bravais
 src/waterman
-src/plot_colors
+src/col_util
 aview/antiview
 python/antiprism.py
 python/antiprism.pyc

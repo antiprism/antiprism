@@ -1,10 +1,12 @@
 NEWS for Antiprism: http://www.antiprism.com
 
 Version 0.20
-xx-xx-09 Adrian Rossiter <adrian@antiprism.com>
+xx-xx-10 Adrian Rossiter <adrian@antiprism.com>
          New Programs
            lat_util: new program for lattice utilities (by Roger
              Kaufman)
+           col_util: new program for colour utilities, plots, blend
+             (by Roger Kaufman)
          Changes
            poly_kscope: new options, -c colours a compound by part,
              -S uses the symmetries of another polyhedron, -t tests
@@ -13,6 +15,9 @@ xx-xx-09 Adrian Rossiter <adrian@antiprism.com>
            off_query: new query EC for edge centroids
            off_trans: new option -P aligns to standard symmetry type,
              rotate a pair of vectors onto another moved from -A to -R
+           off_util: new option -H for general help, new option -u
+             to unfold a polyhedron net, new option -x V deletes
+             free vertices
            off_color: options -m -M -c combined as option -m. Lower
              case colourings always set index, upper case colourings
              always apply colour map. Default colour map is 'rand'.
@@ -31,17 +36,14 @@ xx-xx-09 Adrian Rossiter <adrian@antiprism.com>
            pol_recip: default centre is centroid, new option -a
              appends dual to original geometry
            antiview,off2vrml,off2pov: new option -s to display
-             symmetry elements
-           off_util: new option -H for general help, new option -u
-             to unfold a polyhedron net, new option -x V deletes
-             free vertices
+             symmetry elements, -I infinity distance default 1000
            minmax: new ellipsoid and superellipsoid surfaces, default
              algorithm is v
            Resources: new colour map files and generatable maps,
              uniform and Johnson model files removed and are now
              internal unit-edged and coloured, new uniform
-             compounds (by Roger Kaufman), duals (appending _d),
-             geodesic spheres
+             compounds (by Roger Kaufman), uniform duals,
+             general duals (appending _d), geodesic spheres
            All: --help and --version options. New shift, step,
              and wrap modifiers for reindexing colour maps
            

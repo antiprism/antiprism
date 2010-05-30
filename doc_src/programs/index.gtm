@@ -58,6 +58,7 @@ Programs
 <LI><A HREF="conv_hull.html">conv_hull</A> - convex hulls (using Qhull)
 <LI><A HREF="pol_recip.html">pol_recip</A> - polar reciprocals (duals)
 <LI><A HREF="geodesic.html">geodesic</A> - geodesic spheres
+<LI><A HREF="zono.html">zono</A> - zonohedra
 <LI><A HREF="polygon.html">polygon</A> - polygon based polyhedra (prisms, pyramids, etc)
 <LI><A HREF="iso_delta.html">iso_delta</A> - isohedral deltahedra
 <LI><A HREF="conway.html">conway</A> - Conway Notation transformations
@@ -66,8 +67,8 @@ Programs
 <LI><A HREF="string_art.html">string_art</A> - string figures
 <LI><A HREF="lat_grid.html">lat_grid</A> - lattices and grids with integer coordinates
 <LI><A HREF="bravais.html">bravais</A> - Bravais lattices
+<LI><A HREF="lat_util.html">lat_util</A> - lattice utilities
 <LI><A HREF="waterman.html">waterman</A> - Waterman polyhedra
-<LI><A HREF="zono.html">zono</A> - zonohedra
 <LI><A HREF="n_icons.html">n_icons</A> - sphericon like polyhedra 
 <LI><A HREF="kcycle.html">kcycle</A> - kaleidocycle rings of polyhedron 
 <LI><A HREF="jitterbug.html">jitterbug</A> - jitterbug transformation
@@ -78,6 +79,7 @@ Programs
 <LI><A HREF="repel.html">repel</A> - equilibrium of points repelling on a sphere
 <LI><A HREF="minmax.html">minmax</A> - minimise a spherical tesselation's
       maximum edge length, turn face data only into a spherical tesselation
+<LI><A HREF="col_util.html">col_util</A> - colour utilities, plots and blending
 </UL>
 
 <H3><A NAME="general">
