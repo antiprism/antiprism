@@ -244,6 +244,24 @@ string Vtxt(vec3d v, int dgts)
    return buf;
 }
 
+// elem_type 1=vertex, 2=edge, 3=face
+int get_last_visible(col_geom_v &geom, int elem_type, col_val def_col)
+{
+   int end = (elem_type == 1 ? geom.verts().size() : (elem_type == 2 ? geom.edges().size() : geom.faces().size()));
+
+   int last = -1;
+   for(int i=end-1; i>=0; i--) {
+      col_val col = (elem_type == 1 ? geom.get_v_col(i) : (elem_type == 2 ? geom.get_e_col(i) : geom.get_f_col(i)));
+
+      col = col.is_val() ? col : def_col;
+      if(!col.is_inv()) {
+         last = i;
+         break;
+      }
+   }
+
+   return last;
+} 
 
 int print_m_solid(FILE *ofile, col_geom_v &geom, int sig_digits,
       col_val face_col)
@@ -251,22 +269,14 @@ int print_m_solid(FILE *ofile, col_geom_v &geom, int sig_digits,
    const vector<vector<int> > &faces = geom.faces();
    const vector<vec3d> &verts = geom.verts();
    
-   int last_f = -1;
-   for(int i=faces.size()-1; i>=0; i--) {
-      col_val fcol = geom.get_f_col((int)i);
-      fcol = fcol.is_val() ? fcol : face_col;
-      if(!fcol.is_inv()) {
-         last_f = i;
-         break;
-      }
-   }
-   if (last_f == -1)
+   int last = get_last_visible(geom,3,face_col);
+   if (last == -1)
       return 0;
 
-   for(int i=0; i<=last_f; i++) {
+   for(int i=0; i<=last; i++) {
       fprintf(ofile,"{");
 
-      col_val fcol = geom.get_f_col((int)i);
+      col_val fcol = geom.get_f_col(i);
       fcol = fcol.is_val() ? fcol : face_col;
       if(fcol.is_inv())
          continue;
@@ -281,7 +291,7 @@ int print_m_solid(FILE *ofile, col_geom_v &geom, int sig_digits,
       }
 
       fprintf(ofile,"}]}");
-      if(i==last_f)
+      if(i==last)
          fprintf(ofile,"}");
       fprintf(ofile,",\n");
    }
@@ -308,26 +318,18 @@ int print_m_frame(FILE *ofile, col_geom_v &geom, int sig_digits,
    const vector<vector<int> > &edges = geom.edges();
    const vector<vec3d> &verts = geom.verts();
    
-   int last_e = -1;
-   for(int i=edges.size()-1; i>=0; i--) {
-      col_val ecol = geom.get_e_col((int)i);
-      ecol = ecol.is_val() ? ecol : edge_col;
-      if(!ecol.is_inv()) {
-         last_e = i;
-         break;
-      }
-   }
-   if (last_e == -1)
+   int last = get_last_visible(geom,2,edge_col);
+   if (last == -1)
       return 0;
 
-   for(int i=0; i<=last_e; i++) {
-      col_val ecol = geom.get_e_col((int)i);
+   for(int i=0; i<=last; i++) {
+      col_val ecol = geom.get_e_col(i);
       ecol = ecol.is_val() ? ecol : edge_col;
       if(ecol.is_inv())
          continue;
       print_m_frame_edge(ofile, verts[edges[i][0]], verts[edges[i][1]],
             sig_digits, edge_size, ecol);
-      if (i==last_e && !more_to_print)
+      if (i==last && !more_to_print)
          fprintf(ofile, "}");
       fprintf(ofile,",\n");
    }
@@ -340,21 +342,12 @@ int print_m_points(FILE *ofile, col_geom_v &geom, int sig_digits,
       double point_size, col_val vert_col, bool more_to_print)
 {
    const vector<vec3d> &verts = geom.verts();
-   vec3d vc;
    
-   int last_v = -1;
-   for(int i=verts.size()-1; i>=0; i--) {
-      col_val vcol = geom.get_v_col((int)i);
-      vcol = vcol.is_val() ? vcol : vert_col;
-      if(!vcol.is_inv()) {
-         last_v = i;
-         break;
-      }
-   }
-   if (last_v == -1)
+   int last = get_last_visible(geom,1,vert_col);
+   if (last == -1)
       return 0;
 
-   for(int i=0; i<=last_v; i++) {
+   for(int i=0; i<=last; i++) {
       col_val vcol = geom.get_v_col(i);
       vcol = vcol.is_val() ? vcol : vert_col;
       if(vcol.is_inv())
@@ -365,7 +358,7 @@ int print_m_points(FILE *ofile, col_geom_v &geom, int sig_digits,
       fprintf(ofile, "PointSize[%g], ", point_size);
       fprintf(ofile, "Point[%s]}", Vtxt(verts[i], sig_digits).c_str());
       
-      if (i==last_v && !more_to_print)
+      if (i==last && !more_to_print)
          fprintf(ofile, "}");
       fprintf(ofile,",\n");
    }
@@ -449,15 +442,15 @@ int main(int argc, char *argv[])
    print_m_head(ofile);
    if(print_v) {
       if (!print_m_points(ofile, geom, opts.sig_digits, opts.point_size*to_model_units, opts.vert_col, (print_e || print_f)))
-         opts.error("all vertices are invisible");
+         opts.error("all vertices are invisible. try excluding by -x v");
    }
    if(print_e) {
       if (!print_m_frame(ofile, geom, opts.sig_digits, opts.edge_size*to_model_units, opts.edge_col, print_f))
-         opts.error("all edges are invisible");
+         opts.error("all edges are invisible. try excluding by -x e");
    }
    if(print_f) {
       if (!print_m_solid(ofile, geom, opts.sig_digits, opts.face_col))
-         opts.error("all faces are invisible");
+         opts.error("all faces are invisible. try excluding by -x f");
    }
    print_m_tail(ofile, geom, opts.lighting, opts.bg_col, opts.view_point);
 
