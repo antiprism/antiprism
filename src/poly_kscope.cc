@@ -131,10 +131,9 @@ void ksc_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'c':
-            if(strspn(optarg, "vef") != strlen(optarg)) {
-               snprintf(errmsg, MSG_SZ, "elements to color are %s must be v, e, or f\n", optarg);
-               error(errmsg, c);
-            }
+            if(strspn(optarg, "vef") != strlen(optarg))
+               error(msg_str("elements to color are '%s' must be from v, e, f",
+                        optarg), c);
             col_elems = (strchr(optarg, 'v')!=0)*ELEM_VERTS +
                         (strchr(optarg, 'e')!=0)*ELEM_EDGES +
                         (strchr(optarg, 'f')!=0)*ELEM_FACES;

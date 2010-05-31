@@ -119,10 +119,9 @@ void jb_opts::process_command_line(int argc, char **argv)
 
       switch(c) {
          case 'f':
-            if(strspn(optarg, "xaAeo") != strlen(optarg)) {
-               snprintf(errmsg, MSG_SZ, "faces to show are %s, must be x, a, e, or o\n", optarg);
-               error(errmsg, c);
-            }
+            if(strspn(optarg, "xaAeo") != strlen(optarg))
+               error(msg_str("faces to show are '%s', must be from x, a, e, o",
+                     optarg), c);
             switch(*optarg) {
                case 'a':
                   faces = f_equ | f_oth;
@@ -142,10 +141,9 @@ void jb_opts::process_command_line(int argc, char **argv)
             break;
             
          case 'c':
-            if(strspn(optarg, "fori") != strlen(optarg)) {
-               snprintf(errmsg, MSG_SZ, "cycle type is %s, must be f, o, r, or i\n", optarg);
-               error(errmsg, c);
-            }
+            if(strspn(optarg, "fori") != strlen(optarg))
+               error(msg_str("cycle type is '%s', must be from f, o, r, i",
+                     optarg), c);
             cycle_type = *optarg;
             break;
             

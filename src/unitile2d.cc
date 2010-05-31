@@ -711,10 +711,8 @@ void ut_opts::process_command_line(int argc, char **argv)
 
       switch(c) {
          case 's':
-            if(strspn(optarg, "pcmtkKCrbRwxy") != strlen(optarg)) {
-               snprintf(errmsg, MSG_SZ, "surface type must be one of pcmtkKCwrbRxy\n");
-               error(errmsg, c);
-            }
+            if(strlen(optarg)!=1 || !strchr("pcmtkKCrbRwxy", *optarg))
+               error("surface type must be one of pcmtkKCwrbRxy", c);
             surface = *optarg;
             break;
          
@@ -760,20 +758,18 @@ void ut_opts::process_command_line(int argc, char **argv)
          case 'T':
             if(!read_double_list(optarg, nums, errmsg))
                error(errmsg, c);
-            if(nums.size()!=3) {
-               snprintf(errmsg, MSG_SZ, "must give exactly three numbers (%lu were given)", (unsigned long)nums.size());
-               error(errmsg, c);
-            }
+            if(nums.size()!=3)
+               error(msg_str("must give exactly three numbers (%lu were given)",
+                        (unsigned long)nums.size()), c);
             trans_m = mat3d::transl(vec3d(nums[0], nums[1], nums[2]));
             break;
 
          case 'S':
             if(!read_double_list(optarg, nums, errmsg))
                error(errmsg, c);
-            if(nums.size()!=2) {
-               snprintf(errmsg, MSG_SZ, "must give exactly two numbers (%lu were given)", (unsigned long)nums.size());
-               error(errmsg, c);
-            }
+            if(nums.size()!=2)
+               error(msg_str("must give exactly thwo numbers (%lu were given)",
+                        (unsigned long)nums.size()), c);
             //trans_m = mat3d::transl(vec3d(nums[0], nums[1], nums[2]));
             shear[0] = nums[0];
             shear[1] = nums[1];
@@ -782,10 +778,9 @@ void ut_opts::process_command_line(int argc, char **argv)
          case 'W':
             if(!read_double_list(optarg, nums, errmsg))
                error(errmsg, c);
-            if(nums.size()!=6) {
-               snprintf(errmsg, MSG_SZ, "4d rotation must be exactly six angles (%lu were given)", (unsigned long)nums.size());
-               error(errmsg, c);
-            }
+            if(nums.size()!=6)
+               error(msg_str("4d rotation must be exactly six angles "
+                        "(%lu were given)", (unsigned long)nums.size()), c);
             rot4d_m = mat4d::rot(nums[0], nums[1], nums[2], nums[3],
                   nums[4], nums[5]);
             break;

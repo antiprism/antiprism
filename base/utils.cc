@@ -313,12 +313,12 @@ bool read_int_list(char *str, vector<int> &nums, char *errmsg, bool is_index,
       i++;
       if(!read_int(v_str, &vec_idx)) {
          if(errmsg)
-            snprintf(errmsg, MSG_SZ, "\"%s\" is not an integer", v_str);
+            snprintf(errmsg, MSG_SZ, "'%s' is not an integer", v_str);
          return false;
       }
       if(is_index && vec_idx<0) {
          if(errmsg)
-            snprintf(errmsg, MSG_SZ, "\"%s\" is not a positive integer", v_str);
+            snprintf(errmsg, MSG_SZ, "'%s' is not a positive integer", v_str);
          return false;
       }
       if(len && i>len) {
@@ -438,7 +438,7 @@ bool read_double_list(char *str, vector<double> &nums, char *errmsg,
       i++;
       if(!read_double(num_str, &num) ) {
          if(errmsg)
-            snprintf(errmsg, MSG_SZ, "\"%s\" is not a number", num_str);
+            snprintf(errmsg, MSG_SZ, "'%s' is not a number", num_str);
          return false;
       }
       if(len && i>len) {
@@ -482,7 +482,7 @@ bool read_double_list(char *str, vector<double> &nums, char *errmsg, int len,
       i++;
       if(!read_double(num_str, &num) ) {
          if(errmsg)
-            snprintf(errmsg, MSG_SZ, "\"%s\" is not a number", num_str);
+            snprintf(errmsg, MSG_SZ, "'%s' is not a number", num_str);
          return false;
       }
       if(len && i>len) {

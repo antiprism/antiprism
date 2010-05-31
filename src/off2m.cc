@@ -157,10 +157,9 @@ void o2m_opts::process_command_line(int argc, char **argv)
          break;
 
          case 'x':
-            if(strspn(optarg, "vef") != strlen(optarg)) {
-               snprintf(errmsg, MSG_SZ, "elements to exclude are %s must be v, e, or f\n", optarg);
-               error(errmsg, c);
-            }
+            if(strspn(optarg, "vef") != strlen(optarg))
+               error(msg_str("elements to exclude are '%s' must be from "
+                        "v, e, and f", optarg), c);
             exclude_elems=optarg;
             break;
 

@@ -170,10 +170,9 @@ void lg_opts::process_command_line(int argc, char **argv)
          coord_test = hcp_diamond_test;
       else if(lt=="k_4")
          coord_test = k_4_test;
-      else {
-         snprintf(errmsg, MSG_SZ-100, "unknown lattice type '%s' (try help -h)", lt.c_str());
-         error(errmsg, "lat_type");
-      }
+      else
+         error("unknown lattice type '"+lt+"' (try "+prog_name()+" -h)",
+               "lat_type");
    }
 
 

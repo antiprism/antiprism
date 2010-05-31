@@ -84,11 +84,11 @@ void qh_checkflags(char *command, char *hiddenflags) {
   char chkopt2[]= "     ";
 
   if (*hiddenflags != ' ' || hiddenflags[strlen(hiddenflags)-1] != ' ') {
-    fprintf(qh ferr, "qhull error (qh_checkflags): hiddenflags must start and end with a space: \"%s\"", hiddenflags);
+    fprintf(qh ferr, "qhull error (qh_checkflags): hiddenflags must start and end with a space: '%s'", hiddenflags);
     qh_errexit(qh_ERRinput, NULL, NULL);
   }
   if (strpbrk(hiddenflags, ",\n\r\t")) { 
-    fprintf(qh ferr, "qhull error (qh_checkflags): hiddenflags contains commas, newlines, or tabs: \"%s\"", hiddenflags);
+    fprintf(qh ferr, "qhull error (qh_checkflags): hiddenflags contains commas, newlines, or tabs: '%s'", hiddenflags);
     qh_errexit(qh_ERRinput, NULL, NULL);
   }
   while (*s && !isspace(*s))  /* skip program name */
@@ -1242,7 +1242,7 @@ void qh_initflags(char *command) {
 	    }
 	    *t= '\0';
 	    if (!freopen (filename, "r", stdin)) {
-	      fprintf (qh ferr, "qhull error: could not open file \"%s\".", filename);
+	      fprintf (qh ferr, "qhull error: could not open file '%s'.", filename);
 	      qh_errexit (qh_ERRinput, NULL, NULL);
 	    }else {
 	      qh_option ("TInput-file", NULL, NULL);
@@ -1282,7 +1282,7 @@ void qh_initflags(char *command) {
 	    if (isquote)
 	      fprintf (qh ferr, "qhull error: missing end quote for option 'TO'.  Rest of line ignored.\n");
 	    else if (!freopen (filename, "w", stdout)) {
-	      fprintf (qh ferr, "qhull error: could not open file \"%s\".", filename);
+	      fprintf (qh ferr, "qhull error: could not open file '%s'.", filename);
 	      qh_errexit (qh_ERRinput, NULL, NULL);
 	    }else {
 	      qh_option ("TOutput-file", NULL, NULL);

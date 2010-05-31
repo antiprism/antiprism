@@ -905,11 +905,9 @@ void collect_cols(vector<col_val> &cols, plot_colors_opts &opts)
          bool open_ended_map = (map_sz >= INT_MAX);
          unsigned int max_map_sz = (open_ended_map) ? (unsigned int)opts.map_maximum : map_sz;
 //fprintf(stderr,"max map size = %u\n",max_map_sz);
-         if (open_ended_map) {
-            char errmsg[MSG_SZ];
-            snprintf(errmsg, MSG_SZ, "map entry %d: only %d out of %u map entries read in\n",i+1,opts.map_maximum,map_sz);
-            opts.warning(errmsg, 'Z');
-         }
+         if (open_ended_map)
+            opts.warning(msg_str("map entry %d: only %d out of %u map entries "
+                     "read in\n",i+1,opts.map_maximum,map_sz), 'Z');
          for(unsigned int j=0; j<max_map_sz; j++)
             collect_col(cols,maps[i]->get_col(j));
       }

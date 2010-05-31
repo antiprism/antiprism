@@ -542,10 +542,10 @@ void id_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'c':
-            if(strspn(optarg, "abcdefghijklmnopq") != strlen(optarg) || strlen(optarg)>1) {
-               snprintf(errmsg, MSG_SZ, "case type %s must be only one of a thru q\n", optarg);
-               error(errmsg, c);
-            }
+            if(strspn(optarg, "abcdefghijklmnopq") != strlen(optarg) ||
+                                                         strlen(optarg)>1)
+               error(msg_str("case type is '%s' must be only one of a thru q",
+                        optarg), c);
             case_type=optarg;
             break;
 
@@ -584,10 +584,8 @@ void id_opts::process_command_line(int argc, char **argv)
             if(!strcasecmp(optarg,"none"))
                coloring_method = '\0';
             else
-            if(strspn(optarg, "cCsStT") != strlen(optarg) || strlen(optarg)>1) {
-               snprintf(errmsg, MSG_SZ, "invalid coloring method %s\n", optarg);
-               error(errmsg, c);
-            }
+            if(strspn(optarg, "cCsStT") != strlen(optarg) || strlen(optarg)>1)
+               error(msg_str("invalid coloring method '%s'", optarg), c);
             else
                coloring_method = *optarg;
             break;

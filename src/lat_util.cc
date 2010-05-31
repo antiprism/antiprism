@@ -329,10 +329,10 @@ void lutil_opts::process_command_line(int argc, char **argv)
 
             unsigned int conv_elems = 15;
             if(parts_sz>next_parms_idx) {
-               if(strspn(parts[next_parms_idx], "lcvh") != strlen(parts[next_parms_idx])) {
-                  sprintf(errmsg,"elements to map are %s must be l, c, v or h\n",parts[next_parms_idx]);
-                  error(errmsg, c);
-               }
+               if(strspn(parts[next_parms_idx], "lcvh") !=
+                                              strlen(parts[next_parms_idx]))
+                  error(msg_str("elements to map are '%s' must be from "
+                           "l, c, v or h", parts[next_parms_idx]), c);
                conv_elems = 8*(strchr(parts[next_parms_idx], 'h')!=0) +
                             4*(strchr(parts[next_parms_idx], 'v')!=0) +
                             2*(strchr(parts[next_parms_idx], 'c')!=0) +
@@ -404,10 +404,10 @@ void lutil_opts::process_command_line(int argc, char **argv)
 
             unsigned int conv_elems = 15;
             if(parts_sz>next_parms_idx) {
-               if(strspn(parts[next_parms_idx], "lcvh") != strlen(parts[next_parms_idx])) {
-                  sprintf(errmsg,"elements to map are %s must be l, c, v or h\n",parts[next_parms_idx]);
-                  error(errmsg, c);
-               }
+               if(strspn(parts[next_parms_idx], "lcvh") != 
+                                            strlen(parts[next_parms_idx]))
+                  error(msg_str("elements to map are '%s' must be from "
+                           "l, c, v, h", parts[next_parms_idx]), c);
                conv_elems = 8*(strchr(parts[next_parms_idx], 'h')!=0) +
                             4*(strchr(parts[next_parms_idx], 'v')!=0) +
                             2*(strchr(parts[next_parms_idx], 'c')!=0) +
@@ -479,10 +479,10 @@ void lutil_opts::process_command_line(int argc, char **argv)
 
             unsigned int conv_elems = 15;
             if(parts_sz>next_parms_idx) {
-               if(strspn(parts[next_parms_idx], "lcvh") != strlen(parts[next_parms_idx])) {
-                  sprintf(errmsg,"elements to map are %s must be l, c, v or h\n",parts[next_parms_idx]);
-                  error(errmsg, c);
-               }
+               if(strspn(parts[next_parms_idx], "lcvh") != 
+                                           strlen(parts[next_parms_idx]))
+                  error(msg_str("elements to map are '%s' must be from "
+                           "l, c, v, h", parts[next_parms_idx]), c);
                conv_elems = 8*(strchr(parts[next_parms_idx], 'h')!=0) +
                             4*(strchr(parts[next_parms_idx], 'v')!=0) +
                             2*(strchr(parts[next_parms_idx], 'c')!=0) +

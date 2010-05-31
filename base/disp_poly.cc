@@ -1566,8 +1566,8 @@ bool view_opts::read_disp_option(char opt, char *optarg, char *errmsg,
 
          case 'x':
             if(strspn(optarg, "vef") != strlen(optarg))
-               snprintf(errmsg2, MSG_SZ, "elements to hide are %s must be "
-                     "v, e, or f\n", optarg);
+               snprintf(errmsg2, MSG_SZ, "elements to hide are '%s' must be "
+                     "from v, e, or f", optarg);
             else {
                if(strchr(optarg, 'v'))
                   geom_defs.v().set_show(false);
@@ -1580,7 +1580,8 @@ bool view_opts::read_disp_option(char opt, char *optarg, char *errmsg,
 
          case 'n':
             if(strspn(optarg, "vef") != strlen(optarg))
-               snprintf(errmsg2, MSG_SZ, "elements to label are %s must be v, e, or f\n", optarg);
+               snprintf(errmsg2, MSG_SZ, "elements to label are '%s' must be "
+                     "from v, e, f", optarg);
             else {
                if(strchr(optarg, 'v'))
                   lab_defs.v().set_show(true);
@@ -1594,7 +1595,7 @@ bool view_opts::read_disp_option(char opt, char *optarg, char *errmsg,
          case 's':
             if(strspn(optarg, "axmr") != strlen(optarg))
                snprintf(errmsg2, MSG_SZ, "symmetry elements to show are"
-                     "'%s' must be from a (all), x, m, r\n", optarg);
+                     "'%s' must be from a (all), x, m, r", optarg);
             else {
                sym_defs.set_show_axes(
                      strchr(optarg,'x') || strchr(optarg,'a'));

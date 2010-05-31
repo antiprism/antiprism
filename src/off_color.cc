@@ -405,11 +405,8 @@ void o_col_opts::process_command_line(int argc, char **argv)
             
             if(strchr("sS", v_col_op)) {
                v_sub_sym = sch_sym();
-               if(parts.size()==2 &&
-                     !v_sub_sym.init(parts[1], mat3d(), errmsg2)) {
-                  snprintf(errmsg, MSG_SZ, "invalid subsymmetry: %s", errmsg2);
-                  error(errmsg, c);
-               }
+               if(parts.size()==2 && !v_sub_sym.init(parts[1], mat3d(),errmsg2))
+                  error(msg_str("invalid subsymmetry: %s", errmsg2), c);
             }
             break;
 
@@ -429,11 +426,8 @@ void o_col_opts::process_command_line(int argc, char **argv)
             
             if(strchr("sS", f_col_op)) {
                f_sub_sym = sch_sym();
-               if(parts.size()==2 &&
-                     !f_sub_sym.init(parts[1], mat3d(), errmsg2)) {
-                  snprintf(errmsg, MSG_SZ, "invalid subsymmetry: %s", errmsg2);
-                  error(errmsg, c);
-               }
+               if(parts.size()==2 && !f_sub_sym.init(parts[1], mat3d(),errmsg2))
+                  error(msg_str("invalid subsymmetry: %s", errmsg2), c);
             }
             break;
 
@@ -451,13 +445,10 @@ void o_col_opts::process_command_line(int argc, char **argv)
             if(parts.size()>2 || (strchr("sS", (char)e_col_op)&&parts.size()>3))
                error("too many comma separated parts", c);
             
-            if(strchr("sS", f_col_op)) {
+            if(strchr("sS", e_col_op)) {
                e_sub_sym = sch_sym();
-               if(parts.size()==2 &&
-                     !e_sub_sym.init(parts[1], mat3d(), errmsg2)) {
-                  snprintf(errmsg, MSG_SZ, "invalid subsymmetry: %s", errmsg2);
-                  error(errmsg, c);
-               }
+               if(parts.size()==2 && !e_sub_sym.init(parts[1], mat3d(),errmsg2))
+                  error(msg_str("invalid subsymmetry: %s", errmsg2), c);
             }
             break;
 
@@ -487,11 +478,9 @@ void o_col_opts::process_command_line(int argc, char **argv)
             if(!col_proc.init(parts[0], errmsg))
                error(errmsg, c);
             if(parts.size()>1) {
-               if(strspn(parts[1], "vef") != strlen(parts[1])) {
-                  snprintf(errmsg, MSG_SZ, "elements for colour ranges are %s must be "
-                     "v, e, or f\n", optarg);
-                  error(errmsg, c);
-               }
+               if(strspn(parts[1], "vef") != strlen(parts[1]))
+                  error(msg_str("elements for colour ranges are '%s' must be "
+                     "from v, e, and f", optarg), c);
                r_elems = (strchr(parts[1], 'v')!=0)*ELEM_VERTS +
                              (strchr(parts[1], 'e')!=0)*ELEM_EDGES +
                              (strchr(parts[1], 'f')!=0)*ELEM_FACES;
@@ -508,11 +497,9 @@ void o_col_opts::process_command_line(int argc, char **argv)
          }
 
          case 'I':
-            if(strspn(optarg, "vef") != strlen(optarg)) {
-               snprintf(errmsg, MSG_SZ, "elements to map are %s must be "
-                     "v, e, or f\n", optarg);
-                  error(errmsg, c);
-            }
+            if(strspn(optarg, "vef") != strlen(optarg))
+               error(msg_str("elements to map are '%s' must be "
+                        "from v, e, and f", optarg), c);
             v2i_elems = (strchr(optarg, 'v')!=0)*ELEM_VERTS +
                         (strchr(optarg, 'e')!=0)*ELEM_EDGES +
                         (strchr(optarg, 'f')!=0)*ELEM_FACES;

@@ -96,7 +96,8 @@ bool tw_opts::read_centroid_verts(char *optarg, char *errmsg)
    while(v_str) {
       i++;
       if(!read_int(v_str, &vec_idx, errmsg) || vec_idx < 0) {
-         snprintf(errmsg, MSG_SZ, "vertex index %d, \"%s\" is not a positive integer", i, v_str);
+         snprintf(errmsg, MSG_SZ,
+               "vertex index %d, '%s' is not a positive integer", i, v_str);
          return false;
       }
       centroid_verts.push_back(vec_idx);

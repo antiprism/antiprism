@@ -563,14 +563,14 @@ void cn_opts::process_command_line(int argc, char **argv)
             if(strlen(optarg)==1 && strchr("pql", int(*optarg)))
                planarization_method = *optarg;
             else
-               error("planarize method type must be p, q or l\n", c);
+               error("planarize method type must be p, q or l", c);
             break;
 
          case 'c':
             if(strlen(optarg)==1 && strchr("nmpql", int(*optarg)))
                canonical_method = *optarg;
             else
-               error("canonical method type must be n, m, p, q or l\n", c);
+               error("canonical method type must be n, m, p, q or l", c);
             break;
 
          case 'n':
@@ -620,10 +620,8 @@ void cn_opts::process_command_line(int argc, char **argv)
             if(!strcasecmp(optarg,"none"))
                face_coloring_method = '\0';
             else
-            if(strspn(optarg, "nNX") != strlen(optarg) || strlen(optarg)>1) {
-               snprintf(errmsg, MSG_SZ, "invalid face coloring method %c\n", *optarg);
-               error(errmsg, c);
-            }
+            if(strspn(optarg, "nNX") != strlen(optarg) || strlen(optarg)>1)
+               error(msg_str("invalid face coloring method '%s'", optarg), c);
             else {
                face_coloring_method = *optarg;
                // find if write index options was selected, save seperately and strip it out
@@ -656,10 +654,9 @@ void cn_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'O':
-            if(strspn(optarg, "01") != strlen(optarg)) {
-               snprintf(errmsg, MSG_SZ, "transparency string %s must consist of 0 and 1's\n", optarg);
-               error(errmsg, c);
-            }
+            if(strspn(optarg, "01") != strlen(optarg))
+               error(msg_str("transparency string is '%s' must consist of "
+                        "0 and 1's", optarg), c);
             face_pattern=optarg;
             break;
 
@@ -682,12 +679,11 @@ void cn_opts::process_command_line(int argc, char **argv)
 
    cn_string = argv[optind];
    if(strspn(cn_string.c_str(), "abdegjkmoprstxTCOIDPAY0123456789,") != strlen(cn_string.c_str()))
-      error("Conway Notation must consist of abdegjkmoprstxTCOIDPAY0123456789\n");
+      error("Conway Notation must consist of abdegjkmoprstxTCOIDPAY0123456789");
 
-   if (int pos = validate_cn_string(cn_string, operations, operand, poly_size)) {
-      snprintf(errmsg, MSG_SZ, "Unexpected character in position %d: %s\n", pos+1, cn_string.c_str());
-      error(errmsg);
-   }
+   if (int pos = validate_cn_string(cn_string, operations, operand, poly_size))
+      error(msg_str("Unexpected character in position %d: %s", pos+1,
+               cn_string.c_str()));
 
    if (!resolve_defeat) {
       cn_string = resolved_cn_string(cn_string, use_truncate_algorithm);
@@ -697,10 +693,10 @@ void cn_opts::process_command_line(int argc, char **argv)
       operations.clear();
 
       // revalidate (should be valid) to rebuild operations table
-      if (int pos = validate_cn_string(cn_string, operations, operand, poly_size)) {
-         snprintf(errmsg, MSG_SZ, "Unexpected character in position %d: %s\n", pos+1, cn_string.c_str());
-         error(errmsg);
-      }
+      if (int pos = validate_cn_string(cn_string, operations, operand,
+                                                              poly_size))
+         error(msg_str("Unexpected character in position %d: %s",
+                  pos+1, cn_string.c_str()));
    }
 
 //fprintf(stderr,"poly_size = %d\n",poly_size);
@@ -709,10 +705,9 @@ void cn_opts::process_command_line(int argc, char **argv)
    optind++;
    if(argc-optind == 1) {
       ifile=argv[optind];
-      if (operand) {
-         snprintf(errmsg, MSG_SZ, "operand %c was specified so input file %s is unexpected\n", operand, ifile.c_str());
-         error(errmsg);
-      }
+      if (operand)
+         error(msg_str("operand %c was specified so input file '%s' is "
+                  "unexpected", operand, ifile.c_str()));
    }
 
    // operations are done in reverse order (unless defeated)
@@ -781,10 +776,9 @@ void cn_opts::process_command_line(int argc, char **argv)
          opq = 0;
       }
 
-      if (!col.is_set()) {
-         snprintf(errmsg, MSG_SZ, "face color %s not found. using grey\n", face_color_names[i]);
-         warning(errmsg,"F");
-      }
+      if (!col.is_set())
+         warning(msg_str("face color '%s' not found. using grey",
+                  face_color_names[i]), "F");
       add_color(face_colors,col,opq);
    }
 

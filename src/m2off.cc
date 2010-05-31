@@ -102,14 +102,12 @@ void m2off_opts::process_command_line(int argc, char **argv)
 
       switch(c) {
          case 'x':
-            if(strspn(optarg, "vef") != strlen(optarg)) {
-               snprintf(errmsg, MSG_SZ, "elements to hide are %s must be v, e, or f\n", optarg);
-               error(errmsg, c);
-            }
-            if(strlen(optarg)==3) {
-               snprintf(errmsg, MSG_SZ, "cannot hide all v, e, and f. arg was: %s\n", optarg);
-               error(errmsg, c);
-            }
+            if(strspn(optarg, "vef") != strlen(optarg))
+               error(msg_str("elements to hide are '%s', must be from "
+                        "v, e, and f", optarg), c);
+            if(strlen(optarg)==3)
+               error(msg_str("cannot hide '%s', this hides all elements",
+                     optarg), c);
             hide_elems=optarg;
             break;
 

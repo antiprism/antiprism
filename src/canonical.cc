@@ -188,14 +188,14 @@ void cn_opts::process_command_line(int argc, char **argv)
             if(strlen(optarg)==1 && strchr("mnlpqx", int(*optarg)))
                method = *optarg;
             else
-               error("method type must be m, n, l, p, q or x\n", c);
+               error("method type must be m, n, l, p, q or x", c);
             break;
 
           case 'C':
             if(strlen(optarg)!=1)
                error("initial centering must be exactly one character", c);
             if(!strchr("xcspq", *optarg))
-               error("initial centering must be x, c, s, p or q\n", c);
+               error("initial centering must be x, c, s, p or q", c);
             cent_type = *optarg;
             break;
 

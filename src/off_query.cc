@@ -124,13 +124,12 @@ void oq_opts::usage()
 
 bool read_idx(char *str, int *idx, char *errmsg)
 {
-   //fprintf(stderr, "read_idx str=%s\n", str);
    if(!read_int(str, idx, errmsg)) {
-      snprintf(errmsg, MSG_SZ, "\"%s\" is not an integer", str);
+      snprintf(errmsg, MSG_SZ, "'%s' is not an integer", str);
       return false;
    }
    if(idx<0) {
-      snprintf(errmsg, MSG_SZ, "\"%s\" is not a positive integer", str);
+      snprintf(errmsg, MSG_SZ, "'%s' is not a positive integer", str);
       return false;
    }
    return true;
@@ -335,23 +334,17 @@ void oq_opts::process_command_line(int argc, char **argv)
  
    int total_verts = geom.get_verts()->size() + extra_verts.size();
    for(unsigned int i=0; i<extra_faces.size(); i++)
-      for(unsigned int j=0; j<extra_faces[i].size(); j++) {
-         if(extra_faces[i][j]>total_verts-1) {
-            snprintf(errmsg, MSG_SZ, "extra face vertex e%d (%d) out of range",
+      for(unsigned int j=0; j<extra_faces[i].size(); j++)
+         if(extra_faces[i][j]>total_verts-1)
+            error(msg_str("extra face vertex e%d (%d) out of range",
                   extra_faces[i][j]-(int)geom.get_verts()->size(),
-                  extra_faces[i][j]);
-            error(errmsg, 'f');
-         }
-      }
+                  extra_faces[i][j]), 'f');
    
    int total_elems = max_elem_sz + query_elems_added;
-   for(unsigned int i=0; i<idxs.size(); i++) {
-      if(idxs[i]>total_elems-1) {
-         snprintf(errmsg, MSG_SZ, "index e%d (%d) out of range",
-               idxs[i]-max_elem_sz, idxs[i]);
-         error(errmsg, 'I');
-      }
-   }
+   for(unsigned int i=0; i<idxs.size(); i++)
+      if(idxs[i]>total_elems-1)
+         error(msg_str("index e%d (%d) out of range",
+               idxs[i]-max_elem_sz, idxs[i]), 'I');
 
    if(!idxs.size())
       error("no elements in query list, use option -I or add elements of the query type");
@@ -386,9 +379,8 @@ void vertex_query(FILE *ofile, rep_printer &rep, oq_opts &opts)
             query_items.push_back(&rep_printer::v_neighbours);
             break;
          default:
-            char str[MSG_SZ];
-            snprintf(str, MSG_SZ-1, "unknown query letter '%c'", opts.query[i]);
-            opts.error(str, "V query");
+            opts.error(msg_str("unknown query letter '%c'", opts.query[i]),
+               "V query");
       }
    }
 
@@ -435,9 +427,8 @@ void edge_query(FILE *ofile, rep_printer &rep, oq_opts &opts)
             query_items.push_back(&rep_printer::e_length);
             break;
          default:
-            char str[MSG_SZ];
-            snprintf(str, MSG_SZ-1, "unknown query letter '%c'", opts.query[i]);
-            opts.error(str, "E query");
+            opts.error(msg_str("unknown query letter %c", opts.query[i]),
+                  "E query");
       }
    }
 

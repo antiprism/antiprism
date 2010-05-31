@@ -214,10 +214,8 @@ void trans_opts::process_command_line(int argc, char **argv)
                                            vec3d(nums[3], nums[4], nums[5]),
                                            vec3d(nums[6], nums[7], nums[8]),
                                            vec3d(nums[9], nums[10], nums[11]));
-            else {
-               snprintf(errmsg, MSG_SZ, "must give 3, 4, 6 of 12 numbers (%lu were given)", (unsigned long)nums.size());
-               error(errmsg, c);
-            }
+            else
+               error(msg_str( "must give 3, 4, 6 of 12 numbers (%lu were given)", (unsigned long)nums.size()), c);
             trans_m = trans_m2 * trans_m;
             break;
 
@@ -229,21 +227,20 @@ void trans_opts::process_command_line(int argc, char **argv)
             else if(nums.size()==3)
                trans_m2=mat3d::scale(nums[0], nums[1], nums[2]);
             else if(nums.size()==4)
-               trans_m2=mat3d::scale(vec3d(nums[0], nums[1], nums[2]), nums[3]);
-            else {
-               snprintf(errmsg, MSG_SZ, "must give 1, 3 or 4 numbers (%lu were given)", (unsigned long)nums.size());
-               error(errmsg, c);
-            }
+               trans_m2=mat3d::scale(vec3d(nums[0], nums[1], nums[2]),nums[3]);
+            else
+               error(msg_str("must give 1, 3 or 4 numbers (%lu were given)",
+                        (unsigned long)nums.size()), c);
+            
             trans_m = trans_m2 * trans_m;
             break;
 
          case 'T':
             if(!read_double_list(optarg, nums, errmsg))
                error(errmsg, c);
-            if(nums.size()!=3) {
-               snprintf(errmsg, MSG_SZ, "must give exactly three numbers (%lu were given)", (unsigned long)nums.size());
-               error(errmsg, c);
-            }
+            if(nums.size()!=3)
+               error(msg_str("must give exactly three numbers (%lu were "
+                        "given)" , (unsigned long)nums.size()), c);
             trans_m2 =mat3d::transl(vec3d(nums[0], nums[1], nums[2]));
             trans_m = trans_m2 * trans_m;
             break;
@@ -251,10 +248,9 @@ void trans_opts::process_command_line(int argc, char **argv)
          case 'M':
             if(!read_double_list(optarg, nums, errmsg))
                error(errmsg, c);
-            if(nums.size()!=3) {
-               snprintf(errmsg, MSG_SZ, "must give exactly three numbers (%lu were given)", (unsigned long)nums.size());
-               error(errmsg, c);
-            }
+            if(nums.size()!=3)
+               error(msg_str("must give exactly three numbers (%lu were "
+                        "given)", (unsigned long)nums.size()), c);
             
             trans_m2 = mat3d::refl(vec3d(nums[0], nums[1], nums[2]));
             trans_m = trans_m2 * trans_m;
@@ -274,20 +270,18 @@ void trans_opts::process_command_line(int argc, char **argv)
                                            vec3d(nums[9], nums[10], nums[11]),
                                            vec3d(nums[12], nums[13], nums[14]),
                                            vec3d(nums[15], nums[16], nums[17]));
-            else {
-               snprintf(errmsg, MSG_SZ, "must give 18 numbers (%lu were given)", (unsigned long)nums.size());
-               error(errmsg, c);
-            }
+            else
+               error(msg_str("must give 18 numbers (%lu were given)",
+                        (unsigned long)nums.size()), c);
             trans_m = trans_m2 * trans_m;
             break;
 
          case 'a':
             if(!read_double_list(optarg, nums, errmsg))
                error(errmsg, c);
-            if(nums.size()!=3) {
-               snprintf(errmsg, MSG_SZ, "must give exactly three numbers (%lu were given)", (unsigned long)nums.size());
-               error(errmsg, c);
-            }
+            if(nums.size()!=3)
+               error(msg_str("must give exactly three numbers (%lu were "
+                        "given)", (unsigned long)nums.size()), c);
             bool valid;
             trans_m2 = mat3d::trans_by_angles(deg2rad(nums[0]),
                   deg2rad(nums[1]), deg2rad(nums[2]), &valid);
@@ -310,10 +304,10 @@ void trans_opts::process_command_line(int argc, char **argv)
                for(int i=0; i<12; i++)
                   trans_m2[i]=nums[i];
             }
-            else {
-               snprintf(errmsg, MSG_SZ, "must give 9 or 12 numbers (%lu were given)", (unsigned long)nums.size());
-               error(errmsg, c);
-            }
+            else
+               error(msg_str("must give 9 or 12 numbers (%lu were given)",
+                        (unsigned long)nums.size()), c);
+            
             trans_m = trans_m2 * trans_m;
             break;
 

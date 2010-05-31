@@ -115,10 +115,9 @@ void geo_opts::process_command_line(int argc, char **argv)
       switch(c) {
          case 'f':
          case 'F':
-            if(!read_int(optarg, &pat_freq, errmsg) || pat_freq<1) {
-               snprintf(errmsg, MSG_SZ, "frequency is '%s', should be a positive integer", optarg);
-               error(errmsg, c);
-            }
+            if(!read_int(optarg, &pat_freq, errmsg) || pat_freq<1)
+               error(msg_str("frequency is '%s', should be a positive integer",
+                        optarg), c);
             use_step_freq = (c=='F');
             break;
 
@@ -126,7 +125,8 @@ void geo_opts::process_command_line(int argc, char **argv)
             char *pos;
             if(!(pos = strchr(optarg, ','))) {
                if( !(strcmp(optarg, "1")==0 || strcmp(optarg, "2")==0) )
-                  error("class type must be 1 or 2, or two integers separated by a comma\n", c);
+                  error("class type must be 1 or 2, or two integers "
+                        "separated by a comma\n", c);
                m = 1;
                n = *optarg=='2' ? 1 : 0;
             }
@@ -135,10 +135,10 @@ void geo_opts::process_command_line(int argc, char **argv)
                char *pat[] = {optarg, pos+1};
                int nums[2];
                for(int i=0; i<2; i++) {
-                  if(!read_int(pat[i], &nums[i], errmsg) || nums[i] < 0) {
-                     snprintf(errmsg, MSG_SZ, "%s value is '%s' should be a positive integer or zero", (i==0) ? "first" : "second", pat[i]);
-                     error(errmsg, c);
-                  }
+                  if(!read_int(pat[i], &nums[i], errmsg) || nums[i] < 0)
+                     error(msg_str("%s value is '%s' should be a positive "
+                              "integer or zero", (i==0) ? "first" : "second",
+                              pat[i]), c);
                }
                if(nums[0]==0 && nums[1]==0)
                   error("pattern must include at least one positive integer",c);
@@ -152,14 +152,13 @@ void geo_opts::process_command_line(int argc, char **argv)
             if(strlen(optarg)==1 && strchr("sp", int(*optarg)))
                method = *optarg;
             else
-               error("method type must be s or p\n", c);
+               error("method type must be s or p", c);
             break;
          
          case 'C':
-            if(!centre.read(optarg)) {
-               snprintf(errmsg, MSG_SZ, "centre is '%s', must be three numbers separated by commas", optarg);
-               error(errmsg, c);
-            }
+            if(!centre.read(optarg))
+               error(msg_str("centre is '%s', must be three numbers separated "
+                        "by commas", optarg), c);
             break;
 
          case 'o':
@@ -181,10 +180,10 @@ void geo_opts::process_command_line(int argc, char **argv)
    if(use_step_freq) {
       if(pat_freq%(m+n)) {
          if(m==1 && n==1)
-            snprintf(errmsg, MSG_SZ, "frequency must be even with Class II pattern\n");
+            error("frequency must be even with Class II pattern", "F");
          else
-            snprintf(errmsg, MSG_SZ, "frequency must be divisible by (m+n) with general Class III pattern\n");
-         error(errmsg, "F");
+            error("frequency must be divisible by (m+n) with general "
+                  "Class III pattern", "F");
       }
       pat_freq /= (m+n);
    }

@@ -40,27 +40,6 @@
 using std::string;
 using std::vector;
 
-bool read_ints(char *ints_str, vector<int> &ints, char *errmsg)
-{
-   int i_idx;
-   char *i_str = strtok(ints_str, ",");
-   int i=0;
-   while(i_str) {
-      i++;
-      if(!read_int(i_str, &i_idx, errmsg) || i_idx < 0) {
-         snprintf(errmsg, MSG_SZ, "index no. %d, \"%s\" is not a positive integer", i, i_str);
-         return false;
-      }
-      ints.push_back(i_idx);
-      i_str = strtok(NULL, ",");
-   }
-     
-   return true;
-}
-
-
-
-
 class kc_opts: public prog_opts
 {
    private:
@@ -156,8 +135,19 @@ void kc_opts::process_command_line(int argc, char **argv)
          error("edge index numbers not given");
    }
    
-   if(argc-optind==1 && !read_ints(argv[optind], edge_idxs, errmsg))
-         error(errmsg, "edge index numbers");
+   if(argc-optind==1 && !read_int_list(argv[optind], edge_idxs, errmsg, true))
+      error(errmsg, "edge index numbers");
+
+   if(edge_idxs.size()!=4)
+      error(msg_str("exacly four numbers must be specified (%lu given)",
+               (unsigned long)edge_idxs.size()), "edge index numbers");
+
+   if(edge_idxs[0]==edge_idxs[1] || edge_idxs[2]==edge_idxs[3])
+      error(msg_str("%s pair has repeated index number",
+               (edge_idxs[0]==edge_idxs[1])?"first":"second"),
+               "edge index numbers");
+   
+
 
 
 }

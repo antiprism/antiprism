@@ -312,10 +312,9 @@ void ncon_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'x':
-            if(strspn(optarg, "tbvef") != strlen(optarg)) {
-               snprintf(errmsg, MSG_SZ, "elements to hide are %s. must be t, b, v, e or f\n", optarg);
-               error(errmsg, c);
-            }
+            if(strspn(optarg, "tbvef") != strlen(optarg))
+               error(msg_str("elements to hide are '%s' must be from "
+                        "t, b, v, e and f", optarg), c);
             hide_elems=optarg;
             break;
 
@@ -324,10 +323,9 @@ void ncon_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'c':
-            if(strspn(optarg, "hv") != strlen(optarg) || strlen(optarg)==2) {
-               snprintf(errmsg, MSG_SZ, "closure %s must be h or v (not both)\n", optarg);
-               error(errmsg, c);
-            }
+            if(strspn(optarg, "hv") != strlen(optarg) || strlen(optarg)==2)
+               error(msg_str("closure is '%s', must be h or v (not both)",
+                        optarg), c);
             closure=optarg;
             break;
 
@@ -336,10 +334,9 @@ void ncon_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'J':
-            if(strspn(optarg, "nsohijkl") != strlen(optarg) || strlen(optarg)>1) {
-               snprintf(errmsg, MSG_SZ, "n-icon type %s must be only one of n, s, o, h, i, j, k, or l\n", optarg);
-               error(errmsg, c);
-            }
+            if(strspn(optarg, "nsohijkl") != strlen(optarg) || strlen(optarg)>1)
+               error(msg_str("n-icon type is '%s', must be only one of n, s, "
+                        "o, h, i, j, k, or l\n", optarg), c);
             ncon_surf=optarg;
             break;
 
@@ -372,10 +369,9 @@ void ncon_opts::process_command_line(int argc, char **argv)
             if(!strcasecmp(optarg,"none"))
                face_coloring_method = '\0';
             else
-            if(strspn(optarg, "sStTlLmMcCnNxXyYzZoO") != strlen(optarg) || strlen(optarg)>1) {
-               snprintf(errmsg, MSG_SZ, "invalid face coloring method %c\n", *optarg);
-               error(errmsg, c);
-            }
+            if(strspn(optarg, "sStTlLmMcCnNxXyYzZoO") != strlen(optarg) ||
+                                                          strlen(optarg)>1)
+               error(msg_str("invalid face coloring method %c", *optarg), c);
             else {
                face_coloring_method = *optarg;
                // find if write index options was selected, save seperately and strip it out
@@ -435,10 +431,9 @@ void ncon_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'O':
-            if(strspn(optarg, "01") != strlen(optarg)) {
-               snprintf(errmsg, MSG_SZ, "transparency string %s must consist of 0 and 1's\n", optarg);
-               error(errmsg, c);
-            }
+            if(strspn(optarg, "01") != strlen(optarg))
+               error(msg_str("transparency string is '%s', must consist of "
+                        "0 and 1's", optarg), c);
             face_pattern=optarg;
             break;
 
@@ -451,10 +446,9 @@ void ncon_opts::process_command_line(int argc, char **argv)
             if(!strcmp(optarg,"Q"))
               edge_coloring_method = '\0';
             else
-            if(strspn(optarg, "sStTlLmMcCnNxXyYzZoO") != strlen(optarg) || strlen(optarg)>1) {
-               snprintf(errmsg, MSG_SZ, "invalid edge coloring method %c\n", *optarg);
-               error(errmsg, c);
-            }
+            if(strspn(optarg, "sStTlLmMcCnNxXyYzZoO") != strlen(optarg) ||
+                                                          strlen(optarg)>1)
+               error(msg_str("invalid edge coloring method '%s'", optarg), c);
             else {
                edge_coloring_method = *optarg;
                // find if write index options was selected, save seperately and strip it out
@@ -518,10 +512,9 @@ void ncon_opts::process_command_line(int argc, char **argv)
             break;
             
          case 'P':
-            if(strspn(optarg, "01") != strlen(optarg)) {
-               snprintf(errmsg, MSG_SZ, "transparency string %s must consist of 0 and 1's\n", optarg);
-               error(errmsg, c);
-            }
+            if(strspn(optarg, "01") != strlen(optarg))
+               error(msg_str("transparency string %s must consist of 0 and 1's",
+                        optarg), c);
             edge_pattern=optarg;
             break;
             
@@ -696,10 +689,9 @@ void ncon_opts::process_command_line(int argc, char **argv)
          opq = 0;
       }
 
-      if (!col.is_set()) {
-         snprintf(errmsg, MSG_SZ, "face color %s not found. using grey\n", face_color_names[i]);
-         warning(errmsg,"F");
-      }
+      if (!col.is_set())
+         warning(msg_str("face color '%s' not found. using grey",
+                  face_color_names[i]), "F");
       add_color(face_colors,col,opq);
    }
 
@@ -769,10 +761,9 @@ void ncon_opts::process_command_line(int argc, char **argv)
          opq = 0;
       }
 
-      if (!col.is_set()) {
-         snprintf(errmsg, MSG_SZ, "edge color %s not found. using grey\n", edge_color_names[i]);
-         warning(errmsg,"E");
-      }
+      if (!col.is_set())
+         warning(msg_str("edge color '%s' not found. using grey",
+               edge_color_names[i]), "E");
       add_color(edge_colors,col,opq);
    }
    

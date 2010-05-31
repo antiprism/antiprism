@@ -125,10 +125,9 @@ void align_opts::process_command_line(int argc, char **argv)
             if(!read_int_list(optarg, verts, errmsg, true))
                error(errmsg, c);
             n = verts.size();
-            if( n!=2 && n!=4 && n!=6) {
-               snprintf(errmsg, MSG_SZ, "must give 2, 4 or 6 vertices (%d were given)",n);
-               error(errmsg, c);
-            }
+            if( n!=2 && n!=4 && n!=6)
+               error(msg_str("must give 2, 4 or 6 vertices (%d were given)",n),
+                     c);
             if(n>2) {
                for(int i=0; i<n/2; i++) {
                   if(verts[i]==verts[(i+1)%(n/2)])
@@ -146,20 +145,18 @@ void align_opts::process_command_line(int argc, char **argv)
             align_cnt++;
             if(!read_int_list(optarg, f_bond, errmsg, true))
                error(errmsg, c);
-            if(f_bond.size()>3) {
-               snprintf(errmsg, MSG_SZ, "up to three arguments can be given (%lu were given)", (unsigned long)f_bond.size());
-               error(errmsg, c);
-            }
+            if(f_bond.size()>3)
+               error(msg_str("up to three arguments can be given (%lu were "
+                        "given)", (unsigned long)f_bond.size()), c);
             f_bond.resize(3, 0);
             break;
 
          case 'M':
             if(!read_int(optarg, &merge, errmsg))
                error(errmsg, c);
-            if(merge <0 || merge>3) {
-               snprintf(errmsg, MSG_SZ, "merge value is %d, must be 0, 1, 2 or 3", merge);
-               error(errmsg, c);
-            }
+            if(merge <0 || merge>3)
+               error(msg_str("merge value is %d, must be 0, 1, 2 or 3", merge),
+                     c);
             break;
             
          case 'R':
@@ -230,10 +227,9 @@ int main(int argc, char *argv[])
    if(opts.verts.size()) {
       for(unsigned int i=0; i<opts.verts.size(); i++) {
          vector<vec3d> &vs = (i<opts.verts.size()/2) ? verts : brick_verts;
-         if(opts.verts[i]<0 || opts.verts[i]>=(int)vs.size()) {
-            snprintf(errmsg, MSG_SZ, "vertex %d (position %d) is out of bounds", opts.verts[i], i+1);
-            opts.error(errmsg, 'p');
-         }
+         if(opts.verts[i]<0 || opts.verts[i]>=(int)vs.size())
+            opts.error(msg_str("vertex %d (position %d) is out of bounds",
+                     opts.verts[i], i+1), 'p');
          pts[!(i<opts.verts.size()/2)].push_back(vs[opts.verts[i]]);
          //fprintf(stderr, "pts[%d][%d] = ", (i<opts.verts.size()/2), pts[(i<opts.verts.size()/2)].size()-1);
          //pts[(i<opts.verts.size()/2)].back().dump();

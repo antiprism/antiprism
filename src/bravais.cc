@@ -379,7 +379,7 @@ void brav_opts::process_command_line(int argc, char **argv)
                   radius = pow(radius, 1/double_parms[1]);
                }
                if(radius <= 0)
-                  error("radius cannot be negative or zero", "s", c);
+                  error("radius cannot be negative or zero", c);
             }
             break;
 
@@ -416,10 +416,9 @@ void brav_opts::process_command_line(int argc, char **argv)
          case 'v':
             if(!read_double_list(optarg, vecs, errmsg, 4))
                error(errmsg, c);
-            if(vecs.size() < 3) {
-               snprintf(errmsg, MSG_SZ, "three vector lengths needed (%lu were given)", (unsigned long)vecs.size());
-               error(errmsg, c);
-            }
+            if(vecs.size() < 3)
+               error(msg_str("three vector lengths needed (%lu were given)",
+                        (unsigned long)vecs.size()), c);
             if(vecs[0] == 0 || vecs[1] == 0 || vecs[2] == 0)
                error("vector lengths need to be non-zero", c);
             if(vecs.size() == 4) {
@@ -433,10 +432,9 @@ void brav_opts::process_command_line(int argc, char **argv)
          case 'a': {
             if(!read_double_list(optarg, angles, errmsg, 3))
                error(errmsg, c);
-            if(angles.size() < 3) {
-               snprintf(errmsg, MSG_SZ, "three angles needed (%lu were given)", (unsigned long)angles.size());
-               error(errmsg, c);
-            }
+            if(angles.size() < 3)
+               error(msg_str("three angles needed (%lu were given)",
+                        (unsigned long)angles.size()), c);
 
             double alpha = fabs(angles[0]);
             double beta  = fabs(angles[1]);
@@ -465,10 +463,9 @@ void brav_opts::process_command_line(int argc, char **argv)
                   grid.push_back(grid[0]);
                   grid.push_back(grid[0]);
                }
-               else if(grid.size() != 3) {
-                  snprintf(errmsg, MSG_SZ, "must give one or three numbers (%lu were given)", (unsigned long)grid.size());
-                  error(errmsg, c);
-               }
+               else if(grid.size() != 3)
+                  error(msg_str("must give one or three numbers (%lu were "
+                           "given)", (unsigned long)grid.size()), c);
                if(grid[0] == 0 || grid[1] == 0 || grid[2] == 0)
                   error("grid requires positive integer(s)", c);
                //if(grid[0] != grid[1] || grid[0] != grid[2] || grid[1] != grid[2])
@@ -492,17 +489,15 @@ void brav_opts::process_command_line(int argc, char **argv)
             else { 
                if(!read_int_list(optarg, prim_vec_idxs, errmsg, true, 4))
                   error(errmsg, c);
-               if(prim_vec_idxs.size() != 4) {
-                  snprintf(errmsg, MSG_SZ, "four lattice vertex indices needed (%lu were given)", (unsigned long)prim_vec_idxs.size());
-                  error(errmsg, c);
-               }
+               if(prim_vec_idxs.size() != 4)
+                  error(msg_str("four lattice vertex indices needed (%lu were"
+                           "given)", (unsigned long)prim_vec_idxs.size()), c);
                else {
                   for(unsigned int i=0; i<3; i++) {
                      for(unsigned int j=i+1; j<4; j++) {
-                        if (prim_vec_idxs[i] == prim_vec_idxs[j]) {
-                           snprintf(errmsg, MSG_SZ, "lattice vertex indices used twice. pos: %d & %d", i+1, j+1);
-                           error(errmsg, c);
-                        }
+                        if (prim_vec_idxs[i] == prim_vec_idxs[j])
+                           error(msg_str("lattice vertex indices used twice. "
+                                    "pos: %d & %d", i+1, j+1), c);
                      }
                   }
                }
@@ -582,10 +577,10 @@ void brav_opts::process_command_line(int argc, char **argv)
 
             unsigned int conv_elems = 15;
             if(parts_sz>next_parms_idx) {
-               if(strspn(parts[next_parms_idx], "lcvh") != strlen(parts[next_parms_idx])) {
-                  sprintf(errmsg,"elements to map are %s must be l, c, v or h\n",parts[next_parms_idx]);
-                  error(errmsg, c);
-               }
+               if(strspn(parts[next_parms_idx], "lcvh") !=
+                                              strlen(parts[next_parms_idx]))
+                  error(msg_str("elements to map are '%s' must be from "
+                           "l, c, v, h", parts[next_parms_idx]), c);
                conv_elems = 8*(strchr(parts[next_parms_idx], 'h')!=0) +
                             4*(strchr(parts[next_parms_idx], 'v')!=0) +
                             2*(strchr(parts[next_parms_idx], 'c')!=0) +
@@ -652,10 +647,10 @@ void brav_opts::process_command_line(int argc, char **argv)
 
             unsigned int conv_elems = 15;
             if(parts_sz>next_parms_idx) {
-               if(strspn(parts[next_parms_idx], "lcvh") != strlen(parts[next_parms_idx])) {
-                  sprintf(errmsg,"elements to map are %s must be l, c, v or h\n",parts[next_parms_idx]);
-                  error(errmsg, c);
-               }
+               if(strspn(parts[next_parms_idx], "lcvh") !=
+                                             strlen(parts[next_parms_idx]))
+                  error(msg_str("elements to map are '%s' must be l, c, v or h",
+                           parts[next_parms_idx]), c);
                conv_elems = 8*(strchr(parts[next_parms_idx], 'h')!=0) +
                             4*(strchr(parts[next_parms_idx], 'v')!=0) +
                             2*(strchr(parts[next_parms_idx], 'c')!=0) +
@@ -727,10 +722,10 @@ void brav_opts::process_command_line(int argc, char **argv)
 
             unsigned int conv_elems = 15;
             if(parts_sz>next_parms_idx) {
-               if(strspn(parts[next_parms_idx], "lcvh") != strlen(parts[next_parms_idx])) {
-                  sprintf(errmsg,"elements to map are %s must be l, c, v or h\n",parts[next_parms_idx]);
-                  error(errmsg, c);
-               }
+               if(strspn(parts[next_parms_idx], "lcvh") !=
+                                            strlen(parts[next_parms_idx]))
+                  error(msg_str("elements to map are '%s' must be l, c, v or h",
+                           parts[next_parms_idx]), c);
                conv_elems = 8*(strchr(parts[next_parms_idx], 'h')!=0) +
                             4*(strchr(parts[next_parms_idx], 'v')!=0) +
                             2*(strchr(parts[next_parms_idx], 'c')!=0) +
@@ -1309,12 +1304,12 @@ int bravais_check(string &crystal_system, string &centering, vector<double> &vec
    if ( crystal_system_index != csystem ) {
       fprintf(stderr,"\n");
       fprintf(stderr,"warning in bravais_check: MISMATCH ...\n\n");
-      fprintf(stderr,"asked for \"%s\" which requires:\n", crystal_systems[crystal_system_index].c_str());
-      fprintf(stderr,"vector lengths: \"%s\"\n", vec_cases[vec_rule[crystal_system_index]].c_str());
-      fprintf(stderr,"angles: \"%s\"\n", angle_cases[angle_rule[crystal_system_index]].c_str());
-      fprintf(stderr,"\nbut instead found \"%s\" which has:\n", crystal_systems[csystem].c_str());
-      fprintf(stderr,"vector lengths: \"%s\"\n", vec_cases[vec_case].c_str());
-      fprintf(stderr,"angles: \"%s\"\n\n", angle_cases[angle_case].c_str());
+      fprintf(stderr,"asked for '%s' which requires:\n", crystal_systems[crystal_system_index].c_str());
+      fprintf(stderr,"vector lengths: '%s'\n", vec_cases[vec_rule[crystal_system_index]].c_str());
+      fprintf(stderr,"angles: '%s'\n", angle_cases[angle_rule[crystal_system_index]].c_str());
+      fprintf(stderr,"\nbut instead found '%s' which has:\n", crystal_systems[csystem].c_str());
+      fprintf(stderr,"vector lengths: '%s'\n", vec_cases[vec_case].c_str());
+      fprintf(stderr,"angles: '%s'\n\n", angle_cases[angle_case].c_str());
    }
 
    // this should not be able to happen
