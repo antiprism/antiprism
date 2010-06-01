@@ -51,7 +51,8 @@ class prog_opts {
    public:
       enum {   argmatch_default=0,
                argmatch_case_sensitive=1,
-               argmatch_no_partial=2
+               argmatch_no_partial=2,
+               argmatch_add_id_maps=4
       };
 
       static const char *help_ver_text;
@@ -142,7 +143,8 @@ class prog_opts {
        * \param match_flags the default is a icase insesetive match of
        * \a arg to a string or failing that to the start of exactly one string.
        * \c argmatch_case_sensitive distinguishes case, \c argmatch_no_partial
-       * disallows partial matches.
+       * disallows partial matches, \c argmatch_add_id_maps add extra maps
+       * so each identifiers maps to itself.
        * \param errmsg error message
        * \return The identifier corresponding to the matched string, or
        * if the argument is not matched "" is returned and the error

@@ -172,30 +172,33 @@ string prog_opts::get_arg_id(const char *arg, const char *maps,
       p++;
    }
 
-   // look for exact match
-   map<string, string>::iterator mi = mps.find(argu);
-   if(mi!=mps.end())
-      return mi->second;   
-
-   // exact match excluded, match is partial or no match   
-   if(argmatch_no_partial & match_flags) {
-      if(errmsg)
-         snprintf(errmsg, MSG_SZ, "invalid argument '%s'", arg);
-      return "";
-   }
-   
-   // look for partial match
-   mi = mps.upper_bound(argu);
-   if(mi==mps.end()) {                             // no partial match found
-      if(errmsg)
-         snprintf(errmsg, MSG_SZ, "invalid argument '%s'", arg);
-      return "";
+   map<string, string>::iterator mi;
+   if(argmatch_add_id_maps & match_flags) {
+      for(mi=mps.begin(); mi!=mps.end(); ++mi)
+         if(mps.find(mi->second)==mps.end())
+            mps[mi->second] = mi->second;
    }
 
-   if(mi->first.substr(0, strlen(argu))==argu) {    // partial match
-      // the next entry must not be a partial match
-      map<string, string>::iterator mi_next = mi;
-      if(++mi_next==mps.end()|| !(mi_next->first.substr(0, strlen(argu))==argu))
+   // look for match
+   mi = mps.lower_bound(argu);
+
+   if(mi!=mps.end() &&  mi->first==argu)   // exact match
+      return mi->second;
+
+   // look for valid partial match
+   if( !(argmatch_no_partial & match_flags) &&  // partial matches allowed
+         mi!=mps.end() && mi->first.substr(0, strlen(argu))==argu) {
+      // is partial match, check for ambiguity
+      map<string, string>::iterator mi2 = mi; 
+      bool ambiguous = false;
+      // run through subsequent partial matches
+      while(++mi2!=mps.end() && mi2->first.substr(0, strlen(argu))==argu)
+         if(mi2->second != mi->second) { // different values, ambiguous
+            ambiguous = true;
+            break;
+         }
+
+      if(!ambiguous)
          return mi->second;
       else {
          if(errmsg)
@@ -203,7 +206,8 @@ string prog_opts::get_arg_id(const char *arg, const char *maps,
          return "";
       }
    }
-   
+
+   // no valid match found
    if(errmsg)
       snprintf(errmsg, MSG_SZ, "invalid argument '%s'", arg);
    return "";
