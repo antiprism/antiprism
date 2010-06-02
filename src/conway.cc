@@ -706,7 +706,7 @@ void cn_opts::process_command_line(int argc, char **argv)
    if(argc-optind == 1) {
       ifile=argv[optind];
       if (operand)
-         error(msg_str("operand %c was specified so input file '%s' is "
+         error(msg_str("operand '%c' was specified so input file '%s' is "
                   "unexpected", operand, ifile.c_str()));
    }
 
@@ -869,7 +869,7 @@ void verbose(char operation, int op_var, bool verbosity)
             fprintf(stderr,"done.\n");
             break;
          default:
-            fprintf(stderr,"unexpected operator to verbose: %c\n", operation);
+            fprintf(stderr,"unexpected operator to verbose: '%c'\n", operation);
       }
    }
 }
@@ -1480,7 +1480,7 @@ void do_operations(col_geom_v &geom, vector<ops *> operations, char planarizatio
             break;
 
          default:
-            fprintf(stderr,"unexpected operator: %c\n", operations[i]->op);
+            fprintf(stderr,"unexpected operator: '%c'\n", operations[i]->op);
       }
 
       cn_planarize(geom, planarization_method, num_iters_planar, lim_planar, verbosity, rep_count);

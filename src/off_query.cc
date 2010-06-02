@@ -427,7 +427,7 @@ void edge_query(FILE *ofile, rep_printer &rep, oq_opts &opts)
             query_items.push_back(&rep_printer::e_length);
             break;
          default:
-            opts.error(msg_str("unknown query letter %c", opts.query[i]),
+            opts.error(msg_str("unknown query letter '%c'", opts.query[i]),
                   "E query");
       }
    }

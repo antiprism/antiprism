@@ -371,7 +371,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
             else
             if(strspn(optarg, "sStTlLmMcCnNxXyYzZoO") != strlen(optarg) ||
                                                           strlen(optarg)>1)
-               error(msg_str("invalid face coloring method %c", *optarg), c);
+               error(msg_str("invalid face coloring method '%c'", *optarg), c);
             else {
                face_coloring_method = *optarg;
                // find if write index options was selected, save seperately and strip it out
