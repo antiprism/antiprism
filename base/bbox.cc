@@ -66,7 +66,7 @@ void bound_box::add_b_box(const bound_box &b_box)
 
 
 bound_sphere::bound_sphere(const vector<vec3d> &points, double cutoff):
-   radius(-1), cut_off(cutoff)
+   radius(-1), cut_off(cutoff), cut_off_cnt(0)
 {
    if(points.size())
       add_points(points, cutoff);
@@ -87,6 +87,8 @@ void bound_sphere::add_b_sphere(const bound_sphere &b_sph)
    else if(b_sph.cut_off > cut_off)
       set_cut_off(b_sph.cut_off);
 
+   cut_off_cnt += b_sph.cut_off_cnt;
+
    add_b_sphere(b_sph.centre, b_sph.radius);
 }
 
@@ -106,6 +108,8 @@ void bound_sphere::find_radius_centre(const vector<vec3d> &pts)
          if(dist2 > rad2)
             rad2 = dist2;
       }
+      else
+         cut_off_cnt++;
    }
 
    centrd /= (double)n;

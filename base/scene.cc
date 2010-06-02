@@ -279,8 +279,12 @@ camera::camera(): distance(0), width(0), spin_inc(0)
 double camera::get_width() const
 { 
    double w = width;
-   if(width==0 && scen)
+   if(width==0 && scen) {
       w = scen->get_width();
+      if(scen->get_bound_sph().get_cut_off_cnt())  // add width when inf verts
+         w *= 2;
+   }
+
    return w>epsilon? w : epsilon;
 }
 

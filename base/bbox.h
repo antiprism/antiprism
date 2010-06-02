@@ -86,7 +86,8 @@ class bound_sphere
    private:
       double radius;
       vec3d centre;
-      double cut_off; // ignore points beyond this distance, if positive
+      double cut_off;   // ignore points beyond this distance, if positive
+      int cut_off_cnt;  // number of points that were cut off
 
       void find_radius_centre(const vector<vec3d> &pts);
       void add_b_sphere(vec3d cent2, double rad2);
@@ -130,6 +131,10 @@ class bound_sphere
       /// Width of the points (diameter of the sphere)
       /**\return The width */
       double get_width() const { return 2*radius; }
+      
+      /// The number of points excluded by the cut-off distance
+      /**\return The number of points cut off */
+      double get_cut_off_cnt() const { return cut_off_cnt; }
 };
 
 
