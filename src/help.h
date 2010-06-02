@@ -14,6 +14,7 @@ const char *help_help =
 "   uc:           uniform compounds\n"
 "   polygon:      prisms, pyramids, antiprisms, etc\n"
 "   std_polys:    polyhedra with usual coordinates\n"
+"   geodesic: geodesic spheres\n"
 ;
 
 const char *help_models =
@@ -25,13 +26,15 @@ const char *help_models =
 "name will give the dual of the model\n"
 "\n"
 "See the help topic for each model type for more details\n"
-"   uniform:  uniform polyhedra\n"
-"   johnson:  johnson polyhedra\n"
-"   polygon:  polygon-based polyhedra such as prisms, antiprisms,\n"
-"             pyramids, dipyramids, cupolas, orthobicupolas, gyrobicupolas\n"
-"             and snub-antiprisms\n"
-"   uc:       uniform compounds\n"
-"   geodesic: geodesic spheres\n";
+"   common_polys: common  polyhedra\n"
+"   uniform:      uniform polyhedra\n"
+"   ud:           uniform dual polyhedra\n"
+"   johnson:      johnson polyhedra\n"
+"   uc:           uniform compounds\n"
+"   polygon:      prisms, pyramids, antiprisms, etc\n"
+"   std_polys:    polyhedra with usual coordinates\n"
+"   geodesic: geodesic spheres\n"
+;
 
 const char *help_common_polys =
 "Common Polyhedra\n"
