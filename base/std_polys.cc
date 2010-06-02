@@ -628,6 +628,7 @@ int make_resource_uniform(geom_if &geom, string name, char *errmsg=0)
          expanded = expand_abbrevs(name, u_abbrevs,
                sizeof(u_abbrevs)/sizeof(u_abbrevs[0]));
       sym_no = uni.lookup_sym_no(expanded.c_str(), is_dual);
+      fprintf(stderr, "sym_no=%d\n", sym_no);
       if(sym_no == -1) {
          if(errmsg)
             snprintf(errmsg, MSG_SZ, "invalid uniform polyhedron %sname",

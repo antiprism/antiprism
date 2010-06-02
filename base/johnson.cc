@@ -811,8 +811,14 @@ int j_poly::lookup_sym_no(string sym)
    int offset = (sym_norm[0]=='j'||sym_norm[0]=='J');
    char *endptr;
    int idx = strtol(sym_norm.c_str()+offset, &endptr, 10);
-   if(!*endptr)     // all of string is an integer
-      return idx-1;
+   if(!*endptr) {    // all of string is an integer
+      idx -= 1;
+      if(idx<0 || idx >= last_J)  // out of range
+         return -1;
+      else
+         return idx-1;
+   }
+
 
    // is it a poly name
    idx= -1;
