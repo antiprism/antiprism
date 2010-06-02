@@ -57,6 +57,38 @@ bool operator <(const col_val &c1, const col_val &c2)
    return c1.get_long()<c2.get_long();
 }
 
+
+void col_val::set_complement(col_val col)
+{
+   const col_val &base_col = col.is_set() ? col : *this;
+   if(base_col.is_val()) {
+      for(int i=0; i<3; i++)
+         rgba[i] = ~base_col.rgba[i];
+   }
+   else
+      unset();
+}
+
+void col_val::set_brightness(double brt_val, col_val col)
+{
+   const col_val &base_col = col.is_set() ? col : *this;
+   if(base_col.is_val()) {
+      if(brt_val>1.0)
+         brt_val = 1.0;
+      else if(brt_val<-1.0)
+         brt_val = -1.0;
+      
+      for(int i=0; i<3; i++) {
+         if(brt_val>0)
+            rgba[i] = 255*brt_val + (1-brt_val)*base_col.rgba[i]; // to white
+         else
+            rgba[i] = (1+brt_val)*base_col.rgba[i];               // to black
+      }
+   }
+   else
+      unset();
+}
+
 // The following RGB / HSV functions are taken from
 // http://www.cs.rit.edu/~ncs/color/t_convert.html
 

@@ -137,6 +137,21 @@ class col_val
        * values will leave the colour unset. */
       void set_hsla(const vec4d &hsla);
 
+      ///Set the colour to its complement, or the complement of another colour
+      /**\param col the colour to take the complement from, or use current
+       * colour if \a col is unset (default). If \c col is an index the
+       * final colour will be unset */
+      void set_complement(col_val col = col_val());
+
+      ///Set the colour brightness, or from brightening another colour
+      /**\param brt_val the value to brighten in the range -1.0 to 1.0.
+       * Positive values brighten towards white and negative values
+       * darken towards black
+       * \param col the colour as the base to brighten, or use current
+       * colour if \a col is unset (default). If \c col is an index the
+       * final colour will be unset */
+      void set_brightness(double brt_val, col_val col = col_val());
+
       ///Get the index number
       /**\return The index number. */
       int get_idx() const;

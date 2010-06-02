@@ -93,12 +93,12 @@ geom_disp_label::geom_disp_label() :
 
 col_val geom_disp_label::get_label_col(col_val col) const
 {
-   vec4d cv = col.get_vec4d();
-   if(label_light)
-      cv += vec4d(0.5, 0.5, 0.5, 0);
+   col_val lab_col = col;
    if(label_invert)
-      cv = vec4d(1,1,1,2*cv[3]) - cv;
-   return cv;
+      lab_col.set_complement();
+   if(label_light)
+      lab_col.set_brightness(0.5-label_invert);
+   return lab_col;
 }
  
 
