@@ -121,21 +121,35 @@ void or_opts::process_command_line(int argc, char **argv)
                error(errmsg, c);
             break;
 
-         case 'S':
-            if(strspn(optarg, "AGFEaSsD") == strlen(optarg))
-               sections = optarg;
-            else {
-               error("contains incorrect section type letter", c);
+         case 'S': {
+            const char *all_section_letters = "AGFEaSsD";
+            size_t len;
+            if((len=strspn(optarg, all_section_letters)) == strlen(optarg)) {
+               if(strchr(optarg, 'A'))
+                  sections = all_section_letters;  // keep the A
+               else
+                  sections = optarg;
             }
+            else
+               error(msg_str("contains incorrect section type letter '%c'",
+                        *(optarg+len)), c);
             break;
+         }
 
-         case 'C':
-            if(strspn(optarg, "AFEDSso") == strlen(optarg))
-               counts = optarg;
-            else {
-               error("contains incorrect count type letter", c);
+         case 'C': {
+            const char *all_count_letters = "AFEDSso";
+            size_t len;
+            if((len=strspn(optarg, all_count_letters)) == strlen(optarg)) {
+               if(strchr(optarg, 'A'))
+                  counts = all_count_letters;
+               else
+                  counts = optarg;
             }
+            else
+               error(msg_str("contains incorrect section type letter '%c'",
+                        *(optarg+len)), c);
             break;
+         }
 
          case 'k':
             orient = false;
@@ -178,13 +192,7 @@ void print_sections(rep_printer &rep, const char *sections)
 {
    for(const char *c=sections; *c; c++) {
       switch(*c) {
-         case 'A':
-            rep.general_sec();
-            rep.faces_sec();
-            rep.edges_sec();
-            rep.angles_sec();
-            rep.solid_angles_sec();
-            rep.distances_sec();
+         case 'A':   // ignore
             break;
          case 'G':
             rep.general_sec();
@@ -215,13 +223,7 @@ void print_counts(rep_printer &rep, const char *counts)
 {
    for(const char *c=counts; *c; c++) {
       switch(*c) {
-         case 'A':
-            rep.face_sides_cnts();
-            rep.vert_order_cnts();
-            rep.face_angles_cnts();
-            rep.edge_lengths_cnts();
-            rep.solid_angles_cnts();
-            rep.dihedral_angles_cnts();
+         case 'A':   // ignore
             break;
          case 'F':
             rep.face_angles_cnts();
