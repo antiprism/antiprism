@@ -933,7 +933,7 @@ void color_grid(col_geom_v &geom, const vector<col_val> &cols)
    sgeom.append(make_square());
 
    int cols_sz = cols.size();
-   int dim = ceil(sqrt(cols_sz));
+   int dim = (int)ceil(sqrt(cols_sz));
 
    int k = 0;
    for(int i=0; i<dim; i++) {
