@@ -136,7 +136,7 @@ void col_util_opts::usage()
 "  -u <val>  HSV/HSL value advance. Rotates meaning of white and black\n"
 "               valid values 0.0 to 120.0 degrees (default: 0)\n"
 "  -y        RYB mode. Blend colors as in Red-Yellow-Blue color wheel\n"
-"  -c        CMY mode. Complimentary colors.  RGB->(RYB/GMO)->CMY->blend\n"
+"  -c        CMY mode. Complementary colors.  RGB->(RYB/GMO)->CMY->blend\n"
 "\nColor Source Options\n"
 "\n"
 "A colour value a value in form 'R,G,B,A' (3 or 4 values 0.0-1.0, or 0-255)\n"
@@ -151,7 +151,7 @@ void col_util_opts::usage()
 "\n"
 "  -M <map>  get colors from a color map, or multiple maps seperated by commas\n"
 "  -O <file> get colors from an OFF file\n"
-"  -U        allow only unique colors (sorts by hue)\n"
+"  -U        allow only unique colors (sorts by color)\n"
 "  -Z <int>  maximum entries to read from open ended maps (default: 256)\n"
 "\n"
 "\n",prog_name(), help_ver_text);
@@ -316,6 +316,15 @@ void col_util_opts::process_command_line(int argc, char **argv)
    if(argc-optind > 0)
       error("too many arguments");
 
+   if (display_type == 1 || display_type == 4) {
+      if (plot_centroid)
+         warning("plotting centroid colors not valid in this output mode","b");
+      if (sat_powers.size())
+         warning("saturation entries are not valid in this output mode","s");
+      if (value_powers.size())
+         warning("value entries are not valid in this output mode","l");
+   }
+
    // fill in missing sat_powers with -1.0, meaning use centroid saturation
    for (int i=sat_powers.size();i<4;i++)
       sat_powers.push_back(-1.0);
@@ -447,15 +456,7 @@ double ryb_to_hsx(double angle)
    return angle;
 }
 
-col_val rgb_simple_compliment(const col_val &col)
-{
-   int rc = 255 - col[0];
-   int gc = 255 - col[1];
-   int bc = 255 - col[2];
-   return(col_val(rc,gc,bc,col[3]));
-}
-
-col_val rgb_compliment(const col_val &col, bool ryb_mode)
+col_val rgb_complement(const col_val &col, bool ryb_mode)
 {
    // only need hue so algorithm doesn't matter
    vec4d hsxa = col.get_hsva();
@@ -898,17 +899,78 @@ void plot_rgb_cube(col_geom_v &geom, const vector<col_val> &cols, bool ryb_mode)
       plot_rgb_point(geom, cols[i], ryb_mode);
 }
 
-bool cmp_hue(const col_val &a, const col_val &b)
+col_geom_v make_square()
 {
-   return (a.get_hsva()[0] < b.get_hsva()[0]);
+   col_geom_v geom;
+      
+   geom.add_vert(vec3d(0, 0, 0)); // 0
+   geom.add_vert(vec3d(0, 1, 0)); // 1
+   geom.add_vert(vec3d(1, 1, 0)); // 2
+   geom.add_vert(vec3d(1, 0, 0)); // 3
+   
+   geom.add_edge(make_edge(0,1));
+   geom.add_edge(make_edge(1,2));
+   geom.add_edge(make_edge(2,3));
+   geom.add_edge(make_edge(3,0));
+
+   vector<int> face;
+   face.push_back(0);
+   face.push_back(1);
+   face.push_back(2);
+   face.push_back(3);
+   geom.add_face(face);
+   
+   coloring clrng(&geom);
+   clrng.v_one_col(col_val::invisible);
+   clrng.e_one_col(col_val::invisible);
+   
+   return geom;
 }
 
-class hue_cmp
+void color_grid(col_geom_v &geom, const vector<col_val> &cols)
+{
+   col_geom_v sgeom;
+   sgeom.append(make_square());
+
+   int cols_sz = cols.size();
+   int dim = ceil(sqrt(cols_sz));
+
+   int k = 0;
+   for(int i=0; i<dim; i++) {
+      for(int j=0; j<dim; j++) {
+         col_geom_v tgeom = sgeom;
+         tgeom.transform(mat3d::transl(vec3d(i,j,0)));
+         col_val c = (k<cols_sz) ? cols[k++] : col_val(col_val::invisible);
+         tgeom.set_f_col(0,c);
+         geom.append(tgeom);
+         tgeom.clear_all();
+      }
+   }
+   sort_merge_elems(geom, "ve", epsilon);
+   geom.transform(mat3d::rot(vec3d(0.0,0.0,deg2rad(-90.0))));
+}
+
+bool cmp_col(const col_val &a, const col_val &b)
+{
+   bool ret = false;
+
+   vec4d hsva_a = a.get_hsva();
+   vec4d hsva_b = b.get_hsva();
+   for(unsigned int i=0; i<4; i++) {
+      if (hsva_a[i] != hsva_b[i]) {
+         ret = (hsva_a[i] < hsva_b[i]);
+         break;
+      }
+   }
+
+   return ret;
+}
+
+class col_cmp
 {
 public:
-   double eps;
-   hue_cmp() {}
-   bool operator() (const col_val &a, const col_val &b) { return cmp_hue(a, b); }
+   col_cmp() {}
+   bool operator() (const col_val &a, const col_val &b) { return cmp_col(a, b); }
 };
 
 void collect_col(vector<col_val> &cols, const col_val &col)
@@ -960,7 +1022,7 @@ void collect_cols(vector<col_val> &cols, col_util_opts &opts)
    }
 
    if (opts.unique_colors) {
-      sort( cols.begin(), cols.end(), hue_cmp() );    
+      sort( cols.begin(), cols.end(), col_cmp() );    
       vector<col_val>::iterator ci = unique(cols.begin(), cols.end());
       cols.resize( ci - cols.begin() );
    }
@@ -975,7 +1037,7 @@ void collect_cols(vector<col_val> &cols, col_util_opts &opts)
    
    if (opts.cmy_mode)
       for(unsigned int i=0; i<cols.size(); i++)
-         cols[i] = rgb_compliment(cols[i], opts.ryb_mode);
+         cols[i] = rgb_complement(cols[i], opts.ryb_mode);
          
    for(unsigned int i=0; i<cols.size(); i++) {
       if (cols[i][3] < 32) {
@@ -1113,6 +1175,9 @@ int main(int argc, char *argv[])
          if (opts.upright_view == 1)
             geom.transform(mat3d::rot(deg2rad(-90),0,0));
       }
+      else
+      if (opts.display_type == 4)
+         color_grid(geom, cols);
 
       if(!geom.write(opts.ofile, errmsg))
          opts.error(errmsg);
