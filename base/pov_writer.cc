@@ -292,7 +292,7 @@ void pov_writer::cameras(FILE *ofile, const scene &scen)
       else
          dist_txt = "   1.2 * SceneWidth";
       fprintf(ofile, "   // Distance from viewer to LookAt point (%s)\n"
-                     "   #declare Distance = %s;\n\n",
+                     "   #declare Distance = 0.9*%s;\n\n",
                      dist_txt.c_str(), dist_txt.c_str());
 
       fprintf(ofile, "   // Rotation Centre\n"

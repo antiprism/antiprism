@@ -283,7 +283,8 @@ class sch_gen: public t_set
 sch_gen &sch_gen::C(int n)
 {
    clear();
-   for(int i=0; i<n; i++)
+   unit();
+   for(int i=1; i<n; i++)
       add(mat3d::rot(vec3d::z, 2*M_PI*i/n));
    return *this;
 }

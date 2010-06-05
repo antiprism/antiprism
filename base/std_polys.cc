@@ -469,10 +469,12 @@ const char *alt_names[][2] = {
    {"tr_cube", "u9" }, 
    {"rhombicuboctahedron", "u10" }, 
    {"rhombicubo", "u10" }, 
+   {"rh_cubo", "u10" }, 
    {"truncated_cuboctahedron", "u11" }, 
    {"tr_cuboctahedron", "u11" }, 
    {"tr_cubo", "u11" }, 
    {"snub_cube", "u12" }, 
+   {"sn_cube", "u12" }, 
    {"icosahedron", "u22" }, 
    {"ico", "u22" }, 
    {"icosa", "u22" }, 
@@ -495,6 +497,7 @@ const char *alt_names[][2] = {
    {"tr_icosid", "u28" }, 
    {"snub_dodecahedron", "u29" },
    {"snub_dod", "u29" },
+   {"sn_dod", "u29" },
    {"small_stellated_dodecahedron", "u34"},
    {"sm_st_dodecahedron", "u34"},
    {"sm_st_dod", "u34"},
@@ -628,7 +631,6 @@ int make_resource_uniform(geom_if &geom, string name, char *errmsg=0)
          expanded = expand_abbrevs(name, u_abbrevs,
                sizeof(u_abbrevs)/sizeof(u_abbrevs[0]));
       sym_no = uni.lookup_sym_no(expanded.c_str(), is_dual);
-      fprintf(stderr, "sym_no=%d\n", sym_no);
       if(sym_no == -1) {
          if(errmsg)
             snprintf(errmsg, MSG_SZ, "invalid uniform polyhedron %sname",

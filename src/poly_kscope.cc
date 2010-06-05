@@ -197,8 +197,6 @@ void get_arrow(col_geom_v &geom, const sch_sym &sym)
 
    mat3d trans = mat3d::transl(vec3d(0.1, 0.2, 0.4));
    int fold = sym.get_nfold();
-   if(fold==1)
-      fold = INT_MAX;
 
    switch(sym.get_sym_type()) {
       case sch_sym::C1:
@@ -209,22 +207,25 @@ void get_arrow(col_geom_v &geom, const sch_sym &sym)
       case sch_sym::C:
       case sch_sym::Ch:
       case sch_sym::S:
-         trans = mat3d::transl(vec3d(1.6/sin(M_PI/fold), 0, 0)) *
-                 mat3d::rot(vec3d::z, -M_PI/2) *
+         trans = mat3d::rot(vec3d::z, -M_PI/2) *
                  mat3d::transl(vec3d(-1.6,-0.2,0.0)) * trans;
+         if(fold>1)
+            trans = mat3d::transl(vec3d(1.6/sin(M_PI/fold), 0, 0)) * trans;
          break;
 
       case sch_sym::Cv:
       case sch_sym::D:
       case sch_sym::Dh:
-         trans = mat3d::transl(vec3d(3.2/tan(M_PI/fold), 0, 0)) *
-                 mat3d::rot(vec3d::z, -M_PI/2) * trans;
+         trans = mat3d::rot(vec3d::z, -M_PI/2) * trans;
+         if(fold>1)
+            trans = mat3d::transl(vec3d(3.2/tan(M_PI/fold), 0, 0)) * trans;
          break;
 
       case sch_sym::Dv:
-         trans = mat3d::rot(vec3d::z, 0.5*M_PI/fold) *
-                 mat3d::transl(vec3d(3.2/tan(M_PI/fold), 0, 0)) *
-                 mat3d::rot(vec3d::z, -M_PI/2) * trans;
+         if(fold>1)
+            trans = mat3d::rot(vec3d::z, 0.5*M_PI/fold) *
+                    mat3d::transl(vec3d(3.2/tan(M_PI/fold), 0, 0)) *
+                    mat3d::rot(vec3d::z, -M_PI/2) * trans;
          break;
 
       case sch_sym::T:
