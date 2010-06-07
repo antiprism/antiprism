@@ -50,6 +50,8 @@ class color_map
       void copy_params(const color_map &cmap);
 
    public:
+      const static int max_map_sz = INT_MAX;  // The largest size of a map  
+
       ///Constructor
       color_map(): shift(0), step(1), wrap(0) {}
 
@@ -90,7 +92,7 @@ class color_map
        * map (sequential, starting at 0) that will include all
        * the entries of the map.
        * \return The effective size */
-      virtual int effective_size() const { return INT_MAX; };
+      virtual int effective_size() const { return max_map_sz; };
 
       ///Get the map shift
       /**Lookup of colour values is determined by (shift + index*step)%wrap
@@ -330,6 +332,14 @@ class color_map_range_rand_rgb: public color_map_range_rand
 class color_map_spread: public color_map_range
 {
    public:
+      ///Initialise from a string
+      /** \param name the map name.
+       * \param errmsg an array at least \c MSG_SZ chars long to
+       * return any error message.
+       * \return true if the file could be read, otherwise false
+       * and the error is detailed in \a errmsg. */
+      virtual bool init(const char *name, char *errmsg=0);
+
       ///Get a copy of the map
       /** \return a pointer to the dynamically allocated copy,
        * which must be freed by the caller with \c delete, 0 indicates
@@ -489,14 +499,18 @@ class color_map_multi : public color_map
       vector<color_map *> cmaps;
 
       //Largest effective size
+      int max_eff_map_sz;
+      
+      //Specified map size
       int map_sz;
 
+
       //Set map_sz to the largest effective size
-      void set_map_sz();
+      void set_max_eff_map_sz();
 
    public:
       // Constructor
-      color_map_multi() : color_map(), map_sz(0) {}
+      color_map_multi() : color_map(), max_eff_map_sz(0) {}
 
       ///Copy Constructor
       /**\param cmap the multiple colour map to copy from. */
@@ -527,13 +541,18 @@ class color_map_multi : public color_map
        * that the clone failed. */
       virtual color_map *clone() { return new color_map_multi(*this); }
 
+      ///Set the map size
+      /**\param sz the number of entries in the map. */
+      void set_map_sz(int sz) { map_sz = sz; }
+
       ///The effective size of the map
       /**The effective size of a map is one greater than the highest
        * index number in the map. It is the size of the smallest
        * map (sequential, starting at 0) that will include all
        * the entries of the map.
        * \return The effective size */
-      virtual int effective_size() const { return map_sz; }
+      virtual int effective_size() const
+         { return (map_sz>=0) ? map_sz : max_eff_map_sz; }
       
       ///Add a colour map.
       /**\param col_map the colour map.

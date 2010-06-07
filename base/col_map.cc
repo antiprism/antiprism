@@ -120,6 +120,14 @@ static color_map* init_color_map_generated(const char *map_name, char *errmsg=0)
    size_t name_len = strspn(name, "abcdefghijklmnopqrstuvwxyz");
    name[name_len] = '\0';
 
+   size_t num_len = strspn(map_name+name_len, "0123456789");
+   bool extra_chars = *(map_name+name_len+num_len)!='\0';
+   int map_size = -1;
+   if(num_len)
+      map_size = atoi(string(map_name+name_len, num_len).c_str());
+
+   //fprintf(stderr, "map_size=%d, extra_chars=%d (%c)\n", map_size, extra_chars, *(map_name+name_len+num_len));
+
    color_map *cmap = 0;
      
    if(*map_name=='\0' || strcmp(name, "null")==0) {  // A null map
@@ -187,17 +195,25 @@ static color_map* init_color_map_generated(const char *map_name, char *errmsg=0)
    }
 
    else if(strcmp(name, "uniform")==0) {
+
       color_map_multi *multi = new color_map_multi;
       color_map_map *overrides = new color_map_map;
       color_map *spread_map = init_color_map("spread+53*12");
-      if(multi && overrides && spread_map && multi->init(map_name, errmsg)) {
+      
+      if(!extra_chars && multi && overrides && spread_map &&
+            multi->init(map_name , errmsg)) {
          overrides->set_col(60, col_val(0.9,0.45,0.0)); // triangle
          overrides->set_col(36, col_val(0.7,0.1,0.2));  // pentagram
          multi->add_cmap(overrides);
          multi->add_cmap(spread_map);
+         if(map_size>=0)
+            multi->set_map_sz(map_size);
          cmap = multi;
       }
       else {
+         if(extra_chars && errmsg)
+            snprintf(errmsg, MSG_SZ, "uniform map: trailing characters '%s'",
+                           map_name+name_len+num_len);
          delete cmap;
          delete overrides;
          delete spread_map;
@@ -221,6 +237,8 @@ static color_map* init_color_map_generated(const char *map_name, char *errmsg=0)
          overrides->set_col(6, col_val(1.0,0.49804,0.0)); // darkorange1 (X11)
          multi->add_cmap(overrides);
          multi->add_cmap(spread_map);
+         if(map_size>=0)
+            multi->set_map_sz(map_size);
          cmap = multi;
       }
       else {
@@ -359,6 +377,13 @@ bool color_map_range::init(const char *map_name, char *errmsg)
    char name[MSG_SZ];
    strncpy(name, map_name, MSG_SZ-1);
    name[MSG_SZ-1] = '\0';
+   
+   const char *p = strchr(map_name, '_');
+   if(p && *(p+1)=='\0') {
+      if(errmsg)
+         sprintf(errmsg, "map_name contains trailing '_'");
+      return false;
+   }
 
    if(!init_strip(name, errmsg))
       return false;
@@ -373,14 +398,20 @@ bool color_map_range::init(const char *map_name, char *errmsg)
          sprintf(errmsg, "map_name contains more than one '_'");
       return false;
    }
-
    // Get the map size
    char errmsg2[MSG_SZ];
    if(*map_name != '_') {
-      if(vals.size() && !read_int(vals[0], &map_sz, errmsg2)) {
-         if(errmsg)
-            sprintf(errmsg, "map size: %s", errmsg2);
-         return false;
+      if(vals.size()) {
+         if(!read_int(vals[0], &map_sz, errmsg2)) {
+            if(errmsg)
+               sprintf(errmsg, "map size: %s", errmsg2);
+            return false;
+         }
+         if(map_sz<0) {
+            if(errmsg)
+               sprintf(errmsg, "map size: cannot be negative");
+            return false;
+         }
       }
    }
    
@@ -542,7 +573,7 @@ bool color_map_range_rand_hsv::init(const char *map_name, char *errmsg)
    ranges[2].push_back(1);
    ranges[3].push_back(1);
    
-   set_map_sz(-1);
+   set_map_sz(max_map_sz);
    int ret = color_map_range::init(map_name, errmsg);
    
    return ret;
@@ -560,7 +591,7 @@ bool color_map_range_rand_rgb::init(const char *map_name, char *errmsg)
    ranges[2].push_back(1);
    ranges[3].push_back(1);
    
-   set_map_sz(-1);
+   set_map_sz(max_map_sz);
    int ret = color_map_range::init(map_name, errmsg);
    return ret;
 }
@@ -569,7 +600,7 @@ col_val color_map_range_rand::get_col(int idx)
 {
    col_val col;
    idx = get_effective_index(idx);
-   if(get_wrap() || get_map_sz()==-1 || idx<get_map_sz())
+   if(get_wrap() || idx<get_map_sz())
       (col.*set_func)( rand_in_range(ranges[0], idx*1),
                        rand_in_range(ranges[1], idx*2),
                        rand_in_range(ranges[2], idx*3),
@@ -577,6 +608,20 @@ col_val color_map_range_rand::get_col(int idx)
    return col;
 }
 
+
+bool color_map_spread::init(const char *map_name, char *errmsg)
+{
+   if(strchr(map_name, '_')) {
+      if(errmsg)
+         sprintf(errmsg, "spread map cannot contain '_' (does not take range specifiers)");
+      return false;
+   }
+   set_map_sz(max_map_sz);
+   int ret = color_map_range::init(map_name, errmsg);
+
+   return ret;
+}
+ 
 
 col_val color_map_spread::get_col(int idx)
 {
@@ -925,6 +970,8 @@ void color_map_map::read_named_colors()
 
 bool color_map_multi::init(const char *map_name, char *errmsg)
 {
+   max_eff_map_sz = 0;
+   map_sz = -1;
    if(!color_map::init(map_name, errmsg))
       return false;
    
@@ -945,6 +992,7 @@ color_map_multi::color_map_multi(const color_map_multi &cmap) : color_map(cmap)
 {
    copy_params(cmap);
    map_sz = cmap.map_sz;
+   max_eff_map_sz = cmap.max_eff_map_sz;
    for(unsigned int i=0; i<cmap.cmaps.size(); i++)
       add_cmap(cmap.cmaps[i]->clone());
 }
@@ -954,6 +1002,7 @@ color_map_multi &color_map_multi::operator=(const color_map_multi &cmap)
    if(this!=&cmap) {
       copy_params(cmap);
       map_sz = cmap.map_sz;
+      max_eff_map_sz = cmap.max_eff_map_sz;
       while(cmaps.size())
          del_cmap();
       for(unsigned int i=0; i<cmap.cmaps.size(); i++)
@@ -963,12 +1012,12 @@ color_map_multi &color_map_multi::operator=(const color_map_multi &cmap)
 }
 
 
-void color_map_multi::set_map_sz()
+void color_map_multi::set_max_eff_map_sz()
 {
-   map_sz = 0;
+   max_eff_map_sz = 0;
    for(unsigned int i=0; i<cmaps.size(); i++)
-      if(cmaps[i]->effective_size()>map_sz)
-         map_sz = cmaps[i]->effective_size();
+      if(cmaps[i]->effective_size()>max_eff_map_sz)
+         max_eff_map_sz = cmaps[i]->effective_size();
 }
 
 
@@ -980,8 +1029,8 @@ void color_map_multi::add_cmap(color_map *col_map, unsigned int pos)
    else
       mi = cmaps.begin()+pos;
    cmaps.insert(mi, col_map);
-   if(col_map->effective_size()>map_sz)
-      map_sz = col_map->effective_size();
+   if(col_map->effective_size()>max_eff_map_sz)
+      max_eff_map_sz = col_map->effective_size();
 }
 
 
@@ -995,7 +1044,7 @@ void color_map_multi::del_cmap(unsigned int pos)
          mi = cmaps.begin()+pos;
       delete *mi;
       cmaps.erase(mi);
-      set_map_sz();
+      set_max_eff_map_sz();
    }
 }
 
