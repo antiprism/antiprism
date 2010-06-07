@@ -51,13 +51,11 @@ class ksc_opts: public prog_opts
       mat3d trans_m;
       sch_sym sym;
       char col_elems;
-      bool test;
-      
       string sfile;
       string ifile;
       string ofile;
 
-      ksc_opts(): prog_opts("poly_kscope"), col_elems('\0'), test(false) { }
+      ksc_opts(): prog_opts("poly_kscope"), col_elems('\0') { }
 
       void process_command_line(int argc, char **argv);
       void usage();
@@ -100,7 +98,6 @@ void ksc_opts::usage()
 "  -c <elms> color elements with a different index number for each part. The\n"
 "            element string can include v, e and f to color, respectively,\n"
 "            vertices, edges and faces\n"
-"  -t        test the symmetry type by making a pattern of arrows\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
 "\n", prog_name(), help_ver_text);
@@ -116,7 +113,7 @@ void ksc_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hS:s:c:o:t")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hS:s:c:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -139,10 +136,6 @@ void ksc_opts::process_command_line(int argc, char **argv)
                         (strchr(optarg, 'f')!=0)*ELEM_FACES;
             break;
 
-         case 't':
-            test = true;
-            break;
-
          case 'o':
             ofile = optarg;
             break;
@@ -155,104 +148,8 @@ void ksc_opts::process_command_line(int argc, char **argv)
    if(argc-optind > 1)
       error("too many arguments");
    
-   if(argc-optind == 1 && test)
-      warning("input file ignored with -t");
-   
    if(argc-optind == 1)
       ifile=argv[optind];
-
-}
-
-vector<int> args2face(int v1, ...)
-{
-   vector<int> face;
-   va_list ap;
-   va_start(ap, v1); 
-   for(int i=v1; i!=-1; i=va_arg(ap, int))
-      face.push_back(i);
-   va_end(ap);
-   return face;
-}
-
-
-void get_arrow(col_geom_v &geom, const sch_sym &sym)
-{
-   geom.clear_all();
-   geom.add_vert(vec3d(0.0, 0.0, 0.0));
-   geom.add_vert(vec3d(3.0, 0.0 ,0.0));
-   geom.add_vert(vec3d(2.0, 1.0, 0.0));
-   geom.add_vert(vec3d(2.0, 0.5, 0.0));
-   geom.add_vert(vec3d(0.0, 0.5, 0.0));
-   geom.add_vert(vec3d(0.0, 0.0, 0.5));
-   geom.add_vert(vec3d(3.0, 0.0, 0.5));
-   geom.add_vert(vec3d(2.0, 0.5, 0.25));
-   geom.add_vert(vec3d(0.0, 0.5, 0.25));
-   geom.add_col_face(args2face(1, 2, 3, 4, 0, -1), col_val(0.9, 0.9, 0.7));
-   geom.add_col_face(args2face(6, 2, 7, 8, 5, -1), col_val(0.0, 0.2, 0.6));
-   geom.add_col_face(args2face(0, 1, 6, 5, -1), col_val(0.9, 0.9, 0.7));
-   geom.add_col_face(args2face(1, 2, 6, -1), col_val(0.9, 0.9, 0.7));
-   geom.add_col_face(args2face(2, 3, 7, -1), col_val(0.9, 0.9, 0.7));
-   geom.add_col_face(args2face(3, 4, 8, 7, -1), col_val(0.9, 0.9, 0.7));
-   geom.add_col_face(args2face(4, 0, 5, 8, -1), col_val(0.9, 0.9, 0.7));
-
-   mat3d trans = mat3d::transl(vec3d(0.1, 0.2, 0.4));
-   int fold = sym.get_nfold();
-
-   switch(sym.get_sym_type()) {
-      case sch_sym::C1:
-      case sch_sym::Cs:
-      case sch_sym::Ci:
-         break;
-
-      case sch_sym::C:
-      case sch_sym::Ch:
-      case sch_sym::S:
-         trans = mat3d::rot(vec3d::z, -M_PI/2) *
-                 mat3d::transl(vec3d(-1.6,-0.2,0.0)) * trans;
-         if(fold>1)
-            trans = mat3d::transl(vec3d(1.6/sin(M_PI/fold), 0, 0)) * trans;
-         break;
-
-      case sch_sym::Cv:
-      case sch_sym::D:
-      case sch_sym::Dh:
-         trans = mat3d::rot(vec3d::z, -M_PI/2) * trans;
-         if(fold>1)
-            trans = mat3d::transl(vec3d(3.2/tan(M_PI/fold), 0, 0)) * trans;
-         break;
-
-      case sch_sym::Dv:
-         if(fold>1)
-            trans = mat3d::rot(vec3d::z, 0.5*M_PI/fold) *
-                    mat3d::transl(vec3d(3.2/tan(M_PI/fold), 0, 0)) *
-                    mat3d::rot(vec3d::z, -M_PI/2) * trans;
-         break;
-
-      case sch_sym::T:
-      case sch_sym::Td:
-      case sch_sym::Th:
-         trans = mat3d::alignment(vec3d::z, vec3d::x,
-                                  vec3d(1,1,1), vec3d(0,-1,1)) *
-                 mat3d::transl(vec3d(0, 0.5, 3)) *
-                 mat3d::rot(vec3d::z, M_PI/2) * trans;
-         break;
-
-      case sch_sym::O:
-      case sch_sym::Oh:
-         //trans = mat3d::transl(vec3d(0, 3, 4)) * trans;
-         trans = mat3d::transl(vec3d(1, 0, 4)) * trans;
-         break;
-
-      case sch_sym::I:
-      case sch_sym::Ih:
-         trans = mat3d::rot(vec3d::z, vec3d(0,1,1.618)) *
-                 mat3d::transl(vec3d(0, 1, 5.5)) *
-                 mat3d::rot(vec3d::z, M_PI/2) * trans;
-         break;
-
-   }
-
-   geom.transform(trans);
 
 }
 
@@ -275,14 +172,10 @@ int main(int argc, char *argv[])
       final_sym = opts.sym;
 
    col_geom_v geom;
-   if(!opts.test) {
-      if(!geom.read(opts.ifile, errmsg))
-         opts.error(errmsg);
-      if(*errmsg)
-         opts.warning(errmsg);
-   }
-   else
-      get_arrow(geom, final_sym);
+   if(!geom.read(opts.ifile, errmsg))
+      opts.error(errmsg);
+   if(*errmsg)
+      opts.warning(errmsg);
 
    vector<vector<set<int> > > equivs;
    sch_sym part_sym(geom, &equivs);

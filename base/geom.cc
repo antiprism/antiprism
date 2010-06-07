@@ -27,8 +27,8 @@
 */
 
 
-
 #include <stdlib.h>
+#include <stdarg.h>
 #include <algorithm>
 
 #include "geom.h"
@@ -71,6 +71,19 @@ int geom_if::add_face(const vector<int> &face)
    raw_faces().push_back(face);
    return faces().size()-1;
 }
+
+int geom_if::add_face(int v1, ...)
+{
+   vector<int> face;
+   va_list ap;
+   va_start(ap, v1); 
+   for(int i=v1; i!=-1; i=va_arg(ap, int))
+      face.push_back(i);
+   va_end(ap);
+   return add_face(face);
+}
+
+
 
 int geom_if::add_faces(const vector<vector<int> > &fs)
 {

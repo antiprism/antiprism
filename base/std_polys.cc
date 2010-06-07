@@ -906,6 +906,101 @@ int make_resource_std_poly(geom_if &geom, string name, char *errmsg=0)
    return 0; // name found
 }
 
+static void get_arrow(col_geom_v &geom, const sch_sym &sym)
+{
+   geom.clear_all();
+   geom.add_vert(vec3d(0.0, 0.0, 0.0));
+   geom.add_vert(vec3d(3.0, 0.0 ,0.0));
+   geom.add_vert(vec3d(2.0, 1.0, 0.0));
+   geom.add_vert(vec3d(2.0, 0.5, 0.0));
+   geom.add_vert(vec3d(0.0, 0.5, 0.0));
+   geom.add_vert(vec3d(0.0, 0.0, 0.5));
+   geom.add_vert(vec3d(3.0, 0.0, 0.5));
+   geom.add_vert(vec3d(2.0, 0.5, 0.25));
+   geom.add_vert(vec3d(0.0, 0.5, 0.25));
+   geom.set_f_col(geom.add_face(1, 2, 3, 4, 0, -1), col_val(0.9, 0.9, 0.7));
+   geom.set_f_col(geom.add_face(6, 2, 7, 8, 5, -1), col_val(0.0, 0.2, 0.6));
+   geom.set_f_col(geom.add_face(0, 1, 6, 5, -1), col_val(0.9, 0.9, 0.7));
+   geom.set_f_col(geom.add_face(1, 2, 6, -1), col_val(0.9, 0.9, 0.7));
+   geom.set_f_col(geom.add_face(2, 3, 7, -1), col_val(0.9, 0.9, 0.7));
+   geom.set_f_col(geom.add_face(3, 4, 8, 7, -1), col_val(0.9, 0.9, 0.7));
+   geom.set_f_col(geom.add_face(4, 0, 5, 8, -1), col_val(0.9, 0.9, 0.7));
+
+   mat3d trans = mat3d::transl(vec3d(0.1, 0.2, 0.4));
+   int fold = sym.get_nfold();
+
+   switch(sym.get_sym_type()) {
+      case sch_sym::C1:
+      case sch_sym::Cs:
+      case sch_sym::Ci:
+         break;
+
+      case sch_sym::C:
+      case sch_sym::Ch:
+      case sch_sym::S:
+         trans = mat3d::rot(vec3d::z, -M_PI/2) *
+                 mat3d::transl(vec3d(-1.6,-0.2,0.0)) * trans;
+         if(fold>1)
+            trans = mat3d::transl(vec3d(1.6/sin(M_PI/fold), 0, 0)) * trans;
+         break;
+
+      case sch_sym::Cv:
+      case sch_sym::D:
+      case sch_sym::Dh:
+         trans = mat3d::rot(vec3d::z, -M_PI/2) * trans;
+         if(fold>1)
+            trans = mat3d::transl(vec3d(3.2/tan(M_PI/fold), 0, 0)) * trans;
+         break;
+
+      case sch_sym::Dv:
+         if(fold>1)
+            trans = mat3d::rot(vec3d::z, 0.5*M_PI/fold) *
+                    mat3d::transl(vec3d(3.2/tan(M_PI/fold), 0, 0)) *
+                    mat3d::rot(vec3d::z, -M_PI/2) * trans;
+         break;
+
+      case sch_sym::T:
+      case sch_sym::Td:
+      case sch_sym::Th:
+         trans = mat3d::alignment(vec3d::z, vec3d::x,
+                                  vec3d(1,1,1), vec3d(0,-1,1)) *
+                 mat3d::transl(vec3d(0, 0.5, 3)) *
+                 mat3d::rot(vec3d::z, M_PI/2) * trans;
+         break;
+
+      case sch_sym::O:
+      case sch_sym::Oh:
+         //trans = mat3d::transl(vec3d(0, 3, 4)) * trans;
+         trans = mat3d::transl(vec3d(1, 0, 4)) * trans;
+         break;
+
+      case sch_sym::I:
+      case sch_sym::Ih:
+         trans = mat3d::rot(vec3d::z, vec3d(0,1,1.618)) *
+                 mat3d::transl(vec3d(0, 1, 5.5)) *
+                 mat3d::rot(vec3d::z, M_PI/2) * trans;
+         break;
+
+   }
+
+   geom.transform(trans);
+}
+
+
+int make_resource_sym(geom_if &geom, string name, char *errmsg=0) {
+   if(name.size()<5 || name.substr(0,4)!="sym_" || name.find('.')!=string::npos)
+      return -1; // not sym_ name (the "." indicates a likely local file)
+                 // so the name is not handled
+      
+   sch_sym sym;
+   if(!sym.init(name.substr(4), mat3d(), errmsg))
+      return 1;
+
+   col_geom_v arrow;
+   get_arrow(arrow, sym);
+   sym_repeat(geom, arrow, sym.get_trans());
+   return 0;
+}
 
 
 bool make_resource_geom(geom_if &geom, string name, char *errmsg)
@@ -993,6 +1088,17 @@ bool make_resource_geom(geom_if &geom, string name, char *errmsg)
 
    if(!geom_ok) {
       int ret = make_resource_std_poly(geom, name, errmsg2);
+      if(ret==0)
+         geom_ok = true;
+      else if(ret > 0) {
+         if(errmsg)
+            strcpy(errmsg, errmsg2);
+         return false;
+      }
+   }
+
+   if(!geom_ok) {
+      int ret = make_resource_sym(geom, name, errmsg2);
       if(ret==0)
          geom_ok = true;
       else if(ret > 0) {

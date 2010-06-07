@@ -14,7 +14,8 @@ const char *help_help =
 "   uc:           uniform compounds\n"
 "   polygon:      prisms, pyramids, antiprisms, etc\n"
 "   std_polys:    polyhedra with usual coordinates\n"
-"   geodesic: geodesic spheres\n"
+"   geodesic:     geodesic spheres\n"
+"   sym:          symmetry examples\n"
 ;
 
 const char *help_models =
@@ -33,7 +34,8 @@ const char *help_models =
 "   uc:           uniform compounds\n"
 "   polygon:      prisms, pyramids, antiprisms, etc\n"
 "   std_polys:    polyhedra with usual coordinates\n"
-"   geodesic: geodesic spheres\n"
+"   geodesic:     geodesic spheres\n"
+"   sym:          symmetry examples\n"
 ;
 
 const char *help_common_polys =
@@ -696,6 +698,35 @@ const char *help_geodesic =
 "   the pattern frequency is the greatest common divisor of m and n)\n"
 "   e.g. geo_4_1, geo_o3_2, geo_t4_2\n";
 
+const char *help_sym =
+"Symmetry Examples\n"
+"=================\n"
+"These models are made as a symmetric arrangement of arrows. The\n"
+"number of arrows in the model is the size of the given symmetry\n"
+"group. To display the symmetry elements view the models with, for\n"
+"example, 'antiview -s a sym_D3h'\n"
+"\n"
+"The models are given by:\n"
+"o   sym_ followed by a Schoenflies symbol from\n"
+"            Cs  - mirror\n"
+"            Ci  - inversion\n"
+"            Cn  - cyclic rotational\n"
+"            Cnv - cyclic rotational with vertical mirror\n"
+"            Cnh - cyclic rotational with horizontal mirror\n"
+"            Dn  - dihedral rotational\n"
+"            Dnv - dihedral rotational with vertical mirror\n"
+"            Dnh - dihedral rotational with horizontal mirror\n"
+"            Sn  - cyclic rotational (n/2-fold) with inversion\n"
+"            T   - tetrahedral rotational\n"
+"            Td  - tetrahedral rotational with mirror\n"
+"            Th  - tetrahedral rotational with inversion\n"
+"            O   - octahedral rotational\n"
+"            Oh  - octahedral rotational with mirror\n"
+"            I   - icosahedral rotational\n"
+"            Ih  - icosahedral rotational with mirror\n"
+"\n"
+"   e.g. sym_Cs, sym_C3, sym_D3h, sym_S6, sym_I\n"
+;
 
 const char *help_color_val =
 "Colour Values\n"
