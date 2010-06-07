@@ -153,7 +153,7 @@ class geom_if
        * \return index number of newly added face. */
       virtual int add_face(const vector<int> &face);
 
-      ///Make a face of from integer arguments
+      /// Add a face made from integer arguments.
       /**The final argument must be a dummy value of \c -1.
        * \param v1 the first index
        * \param ... further indexes in the face, and a final -1 to terminate.
