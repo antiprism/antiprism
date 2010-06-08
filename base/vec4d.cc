@@ -42,7 +42,7 @@
 #endif
 
 
-bool vec4d::read(char *str, char *errmsg)
+bool vec4d::read(const char *str, char *errmsg)
 {
    int i;
    double f[4];

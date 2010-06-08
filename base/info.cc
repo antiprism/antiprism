@@ -97,6 +97,7 @@ void geom_info::reset()
    vertex_angles.clear();
    f_areas.clear();
    vert_cons.clear();
+   vert_norms.clear();
    free_verts_found = false;
    free_verts.clear();
 }
@@ -402,6 +403,30 @@ void geom_info::find_vert_cons()
       }
    }
 }
+
+void geom_info::find_vert_norms()
+{
+   const geom_if &geom = get_geom();
+   const unsigned int verts_sz = geom.verts().size();
+   vert_norms.assign(verts_sz, vec3d::zero);
+   vector<int> vert_face_cnt(geom.verts().size(), 0);
+   for(unsigned int i=0; i<geom.faces().size(); i++) {
+      vec3d norm = geom.face_norm(i).unit();
+      for(unsigned int j=0; j<geom.faces(i).size(); j++) {
+         const int v_idx = geom.faces(i, j);
+         vert_norms[v_idx] += norm;
+         vert_face_cnt[v_idx]++;
+      }
+   }
+
+   for(unsigned int i=0; i<verts_sz; i++) {
+      if(int cnt = vert_face_cnt[i])
+         vert_norms[i] /= cnt;
+      else
+         vert_norms[i].unset();
+   }
+}
+   
 
 void geom_info::find_free_verts()
 {

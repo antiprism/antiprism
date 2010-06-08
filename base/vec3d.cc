@@ -45,7 +45,7 @@ vec3d vec3d::y(0, 1, 0);
 vec3d vec3d::z(0, 0, 1);
 vec3d vec3d::zero(0, 0, 0);
 
-bool vec3d::read(char *str, char *errmsg)
+bool vec3d::read(const char *str, char *errmsg)
 {
    int i;
    double f[3];
