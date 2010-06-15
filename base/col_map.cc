@@ -250,7 +250,9 @@ static color_map* init_color_map_generated(const char *map_name, char *errmsg=0)
    }
 
    else if(strcmp(name, "remap")==0) {
-      cmap = new color_map_remap;
+      color_map_remap *cmr = new color_map_remap;
+      if(cmr && cmr->init(map_name, errmsg))
+         cmap = cmr;
    }
    
    else if(strcmp(name, "map")==0 && map_name[name_len]=='_') {
