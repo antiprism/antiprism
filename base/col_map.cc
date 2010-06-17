@@ -1054,11 +1054,13 @@ void color_map_multi::del_cmap(unsigned int pos)
 col_val color_map_multi::get_col(int idx)
 {
    col_val col;
-   int eff_idx = get_effective_index(idx);
+   int cur_idx = get_effective_index(idx);
    for(unsigned int i=0; i<cmaps.size(); i++) {
-      col = cmaps[i]->get_col(eff_idx);
-      if(col.is_set())
+      col = cmaps[i]->get_col(cur_idx);
+      if(col.is_val())
          break;
+      if(col.is_idx())
+         cur_idx = col.get_idx();
    }
 
    return col.is_set() ? col : col_val(idx);
