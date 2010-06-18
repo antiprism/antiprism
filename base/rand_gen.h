@@ -12,6 +12,9 @@
  * \brief A pseudo-random number generator
  */
 
+#ifndef RAND_GEN_H
+#define RAND_GEN_H
+
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
@@ -77,6 +80,14 @@ class rand_gen {
       {
          return (long)floor(low + ((high+1)-low)*ranf_exclude_end());
       }
+      
+      ///Get a psuedo-random integer in range 0 <= num <high
+      /**\return a pseudo-random integer in the range low - high, including high.*/
+      long operator() (long high)
+      {
+         return (long)floor(high*ranf_exclude_end());
+      }
+
 
 };
 
@@ -284,4 +295,5 @@ float rand31dc::ranf(void)
 
 
 
+#endif // RAND_GEN_H
 

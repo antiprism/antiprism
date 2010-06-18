@@ -529,21 +529,42 @@ int read_line(FILE *file, char **line)
    }
 }
 
-int split_line(char *line, vector<char *> &vals, const char *delims)
+int split_line(char *line, vector<char *> &vals, const char *delims,bool strict)
 {
+   vals.clear();
    if(!delims)
       delims = WHITESPACE;
-   vals.clear();
-   char *val;
-   if(!(val = strtok(line, delims)))
-      return 0;
-   
-   vals.push_back(val);
-   while((val=strtok(NULL, delims)))
+
+   if(strict) {
+      char *cur = line;
+      vals.push_back(cur);                     // always an entry, even if null
+      while(*(cur += strcspn(cur, delims))) {  // quit at end of string
+         *cur = '\0';                          // terminate part
+         cur++;                                // start of next part
+         vals.push_back(cur);                  // add even if final null
+      }
+      /*while(*cur) {                             // quit at end of string
+         cur += strcspn(cur, delims);           // next delimiter
+         if(*cur) {                             // part ended with delimiter
+            *cur = '\0';                        // terminate part
+            cur++;                              // start of next part
+            vals.push_back(cur);                // add even if final null
+         }
+      }*/
+   }
+   else {
+      char *val;
+      if(!(val = strtok(line, delims)))
+         return 0;
+
       vals.push_back(val);
+      while((val=strtok(NULL, delims)))
+         vals.push_back(val);
+   }
 
    return vals.size();
 }
+
 
 void backslash_to_forward(string &path)
 {

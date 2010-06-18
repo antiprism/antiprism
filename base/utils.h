@@ -266,8 +266,11 @@ int read_line(FILE *file, char **line);
  * \param parts the parts of the split line.
  * \param delims the characters to use as delimiters, if \c 0 then use
  * whitespace characters.
+ * \param strict if true then treat every delimiter as a separator, returning
+ * null strings between adjacent delimiters, always returning at least one part.
  * \return The number of parts. */
-int split_line(char *line, vector<char *> &parts,const char *delims=0);
+int split_line(char *line, vector<char *> &parts,const char *delims=0,
+      bool strict=false);
 
 
 ///Remove leading and trailing space, convert any whitespace to a single space
