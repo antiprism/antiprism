@@ -32,6 +32,7 @@
 #include <limits.h>
 #include <string>
 #include <map>
+#include "rand_gen.h"
 
 using std::string;
 using std::map;
@@ -160,6 +161,48 @@ class color_map_remap: public color_map
       /**\param idx the index.
        * \return The colour. */
       virtual col_val get_col(int idx) { return get_effective_index(idx); }
+};
+
+
+///A colour map that maps index numbers to shuffled packs of numbers
+class color_map_deal: public color_map
+{
+   private:
+      int map_sz;
+      int pack_sz;
+      vector<int> map_vals;
+      rand_gen rnd;
+
+   public:
+      ///Initialise from a string
+      /** \param name the map name.
+       * \param errmsg an array at least \c MSG_SZ chars long to
+       * return any error message.
+       * \return true if the file could be read, otherwise false
+       * and the error is detailed in \a errmsg. */
+      virtual bool init(const char *name, char *errmsg=0);
+
+      ///Get a copy of the map
+      /** \return a pointer to the dynamically allocated copy,
+       * which must be freed by the caller with \c delete, 0 indicates
+       * that the clone failed. */
+      color_map *clone() { return new color_map_deal(*this); }
+
+      ///The effective size of the map
+      /**The effective size of a map is one greater than the highest
+       * index number in the map. It is the size of the smallest
+       * map (sequential, starting at 0) that will include all
+       * the entries of the map.
+       * \return The effective size */
+      virtual int effective_size() const { return map_vals.size(); };
+
+      ///Get the colour value for an index number.
+      /**\param idx the index.
+       * \return The colour. */
+      virtual col_val get_col(int idx);
+
+      ///shuffle the mapping
+      void shuffle();
 };
 
 

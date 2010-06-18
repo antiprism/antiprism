@@ -30,6 +30,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <map>
+#include <algorithm>
 
 #include "geom.h"
 #include "coloring.h"
@@ -255,6 +256,12 @@ static color_map* init_color_map_generated(const char *map_name, char *errmsg=0)
          cmap = cmr;
    }
    
+   else if(strcmp(name, "deal")==0) {
+      color_map_deal *cmr = new color_map_deal;
+      if(cmr && cmr->init(map_name+name_len, errmsg))
+         cmap = cmr;
+   }
+   
    else if(strcmp(name, "map")==0 && map_name[name_len]=='_') {
          color_map_map *cmm = new color_map_map;
          if(cmm && cmm->init_from_line(map_name+name_len+1, errmsg))
@@ -336,6 +343,91 @@ color_map *color_map_map::get_condensed()
       colmap->cmap[idx++] = (mi->second);
 
    return colmap;
+}
+
+
+bool color_map_deal::init(const char *map_name, char *errmsg)
+{
+   if(errmsg)
+      *errmsg = '\0';
+   char name[MSG_SZ];
+   strncpy(name, map_name, MSG_SZ-1);
+   name[MSG_SZ-1] = '\0';
+   
+   if(!init_strip(name, errmsg))
+      return false;
+
+   vector<char *> vals;
+   split_line(name, vals, "_", true);
+
+   if(vals.size() > 2) {
+      if(errmsg)
+         sprintf(errmsg, "map_name contains more than one '_'");
+      return false;
+   }
+
+   // Get the map size
+   char errmsg2[MSG_SZ];
+   map_sz = 256;
+   if(*vals[0]) {
+      if(!read_int(vals[0], &map_sz, errmsg2)) {
+         if(errmsg)
+            sprintf(errmsg, "map size: '%s' %s", vals[0], errmsg2);
+         return false;
+      }
+      if(map_sz<0) {
+         if(errmsg)
+            sprintf(errmsg, "map size: cannot be negative");
+         return false;
+      }
+   }
+   
+   pack_sz = map_sz;
+   if(vals.size()>1 && *vals[1]) {                // pack size given
+      if(!read_int(vals[1], &pack_sz, errmsg2)) {
+         if(errmsg)
+            sprintf(errmsg, "range size: '%s' %s", vals[1], errmsg2);
+         return false;
+      }
+      if(pack_sz<1) {
+         if(errmsg)
+            sprintf(errmsg, "range size: cannot be less than 1");
+         return false;
+      }
+   }
+
+   rnd.time_seed();
+   shuffle();
+   return true;
+}
+
+void color_map_deal::shuffle()
+{
+   if(!map_sz) {
+      map_vals.clear();
+      return;
+   }
+   int num_packs = map_sz/pack_sz;
+   if(num_packs*pack_sz<map_sz)
+      num_packs+=1;
+   map_vals.resize(num_packs*pack_sz);
+   for(int i=0; i<num_packs; i++) {
+      int off = i*pack_sz;
+      for(int j=0; j<pack_sz; j++)
+         map_vals[off+j] = j;
+      std::random_shuffle(map_vals.begin()+off, map_vals.begin()+off+pack_sz,
+                                                                          rnd);
+   }
+   map_vals.resize(map_sz);
+}
+
+col_val color_map_deal::get_col(int idx)
+{
+   int eff_idx = get_effective_index(idx);
+   if(idx<(int)map_vals.size())
+      return col_val(map_vals[eff_idx]);
+   else
+      return col_val();
 }
 
 //-------------------------------------------------------------------
