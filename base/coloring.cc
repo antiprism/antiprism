@@ -104,14 +104,18 @@ void coloring::cycle_map_cols()
 col_val coloring::idx_to_val(int idx) const
 {
    col_val col;
+   int cur_idx = idx;
    for(unsigned int i=0; i<cmaps.size(); i++) {
-      col = cmaps[i]->get_col(idx);
-      if(col.is_set())
+      col = cmaps[i]->get_col(cur_idx);
+      if(col.is_val())
          break;
+      if(col.is_idx())
+         cur_idx = col.get_idx();
    }
 
    return col.is_set() ? col : col_val(idx);
 }
+
 
  
 void coloring::set_all_idx_to_val(map<int, col_val> &cols)
