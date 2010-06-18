@@ -707,4 +707,278 @@ bool read_colorings(coloring clrngs[], const char *line, char *errmsg)
    return 1;
 }
 
+
+/*
+RGB->RYB
+0 >= 60 degrees, multiply by 2
+60 >= 120 degrees, add 60
+120 >= 180 maps to 180 to 210
+180 >= 240 maps to 210 to 240
+
+So, compression happens
+at 120 it is adding 60
+at 180 it is adding 30
+at 240 it is adding 0
+
+Then
+120 >= 240 degrees, N+((240-N)/2)
+
+
+RYB->RGB
+0 >= 120 degrees, divide by 2
+120 >= 180 degrees, subtract 60
+180 maps to 120
+210 maps to 180
+240 maps to itself
+
+So, decompression happens
+at 180 it is subtracting 60
+at 210 it is subtracting 30
+at 240 it is subtracting 0
+
+Then
+180 >= 240 degrees, N-(240-N)
+*/
+
+// angle represented by 0 to 360 degrees
+// input: HSV/HSL angle
+// output: angle adjusted for RYB mode
+double hsx_to_ryb(double angle)
+{
+   if (angle > 0.0 && angle <= 60.0)
+      angle *= 2.0;
+   else
+   if (angle > 60.0 && angle <= 120.0)
+      angle += 60.0;
+   else
+   if (angle > 120.0 && angle <= 240.0)
+      angle += (240.0-angle)/2;
+   return angle;
+}
+
+// angle represented by 0 to 360 degrees
+// input: angle adjusted for RYB mode
+// output: HSV/HSL angle
+double ryb_to_hsx(double angle)
+{
+   if (angle > 0.0 && angle <= 120.0)
+      angle /= 2.0;
+   else
+   if (angle > 120.0 && angle <= 180.0)
+      angle -= 60.0;
+   else
+   if (angle > 180.0 && angle <= 240.0)
+      angle -= (240.0-angle);
+   return angle;
+}
+
+col_val rgb_complement(const col_val &col, bool ryb_mode)
+{
+   // only need hue so algorithm doesn't matter
+   vec4d hsxa = col.get_hsva();
+   double angle = rad2deg(2*M_PI*hsxa[0]);
  
+   if (ryb_mode)
+      angle = hsx_to_ryb(angle);
+
+   angle += 180.0;
+   if (angle >= 360.0)
+      angle -= 360.0;
+      
+   if (ryb_mode)
+      angle = ryb_to_hsx(angle);
+   angle /= 360.0;
+   
+   col_val rcol;
+   rcol.set_hsva(angle,hsxa[1],hsxa[2],hsxa[3]);
+   return rcol;
+}
+
+// wrapper for multiple HSV/HSL algorithms
+vec4d get_hsxa(const col_val &col, int color_system_mode)
+{
+   return (color_system_mode == 1) ? col.get_hsva() : col.get_hsla();
+}
+
+col_val set_hsxa(double hue, double sat, double val, double alpha, int color_system_mode)
+{
+   col_val col;
+   if (color_system_mode <= 1)
+      col.set_hsva(hue,sat,val,alpha);
+   else
+   if (color_system_mode == 2)
+      col.set_hsla(hue,sat,val,alpha);
+   return col;
+}
+
+// core code furnished by Adrian Rossiter
+col_val blend_HSX_centroid(const vector<col_val> &cols, int color_system_mode, double sat_power, double sat_threshold, double value_power, double value_advance, int alpha_mode, bool ryb_mode)
+{
+   // safety condition
+   if (!cols.size())
+      return col_val();
+      
+   // saturation power can't be 0 or less
+   if (sat_power <= 0.0)
+      sat_power = 1.0;
+   
+   // can't blend two or less colors to black
+   if (cols.size() < 3)
+      value_power = 0.0;
+   
+   double saturation_sum = 0.0;
+
+   double alpha_min = 1.1;
+   double alpha_max = -0.1;
+
+   // check for unset, map index, or invisible
+   bool unset_found = false;
+   bool invisible_found = false;
+   int cols_sz = cols.size();
+ 
+   vec4d sum(0.0, 0.0, 0.0, 0.0);
+   for(unsigned int i=0; i<cols.size(); i++) {
+      if (!cols[i].is_set() || cols[i].is_idx()) {
+         unset_found = true;
+         cols_sz--;
+         continue;
+      }
+      else
+      if (cols[i].is_inv()) {
+         invisible_found = true;
+         cols_sz--;
+         continue;
+      }
+
+      vec4d hsxa = get_hsxa(cols[i], color_system_mode);
+         
+      double S = pow(hsxa[1], sat_power); // map onto distorted disc
+      double angle = 2*M_PI*hsxa[0];
+      
+      // RYB mode
+      if (ryb_mode)
+         angle = deg2rad(hsx_to_ryb(rad2deg(angle)));
+
+      // if value_power is set, simulate subtractive coloring for 3 or more colors
+      double V = (value_power <= 0.0) ? hsxa[2] : pow(fabs(60.0-fmod(rad2deg(angle)+(ryb_mode ? 60.0 : 0.0)+value_advance,120.0))/60, value_power);
+
+      alpha_min = (hsxa[3] < alpha_min) ? hsxa[3] : alpha_min;
+      alpha_max = (hsxa[3] > alpha_max) ? hsxa[3] : alpha_max;
+
+      sum += vec4d(S*cos(angle), S*sin(angle), V, hsxa[3]); // point in cylinder
+
+      if (sat_threshold < 1.0)
+         saturation_sum+=hsxa[1];
+   }
+
+   // if no colors are being averaged, all are a mix of unset, indexes, and/or invisible
+   if (!cols_sz) {
+      // if any unset or indexes, return unset color (even if invisible encountered)
+      if (unset_found)
+         return(col_val());
+      else
+      // all invisible so return invisible
+      if (invisible_found)
+         return(col_val(col_val::invisible));
+   }
+
+   // average
+   sum /= cols_sz;
+
+   double H = 0.0;
+   double S = 0.0;
+   
+   // saturation
+   S = pow(sum[0]*sum[0]+sum[1]*sum[1], 0.5/sat_power); // map back from distorted disc
+   
+   // saturations less than 1/255 will happen due to inaccuracy of HSx->RGB conversion
+   // note that 255,255,254 has a saturation of 1/255 = 0.00392157..., which is the smallest valid saturation
+   if (S<1/255.0)
+      S = 0.0;
+
+   // saturation of color centroid is higher than sat_threshold, use average saturation         
+   if (S > sat_threshold)
+      S = saturation_sum/cols_sz;
+   
+   // hue
+   // if saturation is 0, no need to calculate hue
+   //if (!double_equality(sum[0],0.0,epsilon) && !double_equality(sum[1],0.0,epsilon)) { // old error, made nice pattern, but wrong
+   if (S != 0.0) {
+      H = atan2(sum[1], sum[0])/(2*M_PI);
+      if(H<0)
+         H += 1.0;
+
+      // RYB mode
+      if (ryb_mode)
+         H = deg2rad(ryb_to_hsx(rad2deg(H*2*M_PI)))/(2*M_PI);
+   }
+
+   double A = (alpha_mode <= 1) ? sum[3] : ((alpha_mode == 2) ? alpha_min : alpha_max);
+      
+   col_val col = set_hsxa(H, S, sum[2], A, color_system_mode);
+ 
+   return col;
+}
+
+col_val blend_RGB_centroid(const vector<col_val> &cols, int alpha_mode, bool ryb_mode)
+{
+   // safety condition
+   if (!cols.size())
+      return col_val();
+
+   double alpha_min = 1.1;
+   double alpha_max = -0.1;
+
+   // check for unset, map index, or invisible
+   bool unset_found = false;
+   bool invisible_found = false;
+   int cols_sz = cols.size();
+
+   vec4d col(0.0, 0.0, 0.0, 0.0);
+   for(unsigned int i=0; i<cols.size(); i++) {
+      if (!cols[i].is_set() || cols[i].is_idx()) {
+         unset_found = true;
+         cols_sz--;
+         continue;
+      }
+      else
+      if (cols[i].is_inv()) {
+         invisible_found = true;
+         cols_sz--;
+         continue;
+      }
+
+      col_val rcol = cols[i];
+      if (ryb_mode) {
+         // only need hue so algorithm doesn't matter
+         vec4d hsxa = rcol.get_hsva();
+         hsxa[0] = hsx_to_ryb(rad2deg(2*M_PI*hsxa[0]));
+         rcol.set_hsva(hsxa[0]/360.0,hsxa[1],hsxa[2],hsxa[3]);
+      }
+
+      double A = 1.0 - rcol.get_transd();
+      alpha_min = (A < alpha_min) ? A : alpha_min;
+      alpha_max = (A > alpha_max) ? A : alpha_max;
+
+      col += rcol.get_vec4d();
+   }
+
+   // if no colors are being averaged, all are a mix of unset, indexes, and/or invisible
+   if (!cols_sz) {
+       // if any unset or indexes, return unset color (even if invisible encountered)
+      if (unset_found)
+         return(col_val());
+      else
+      // all invisible so return invisible
+      if (invisible_found)
+         return(col_val(col_val::invisible));
+   }
+
+   col /= cols_sz;
+
+   if (alpha_mode > 1)
+      col[3] = (alpha_mode == 2) ? alpha_min : alpha_max;
+
+   return col;
+}
+

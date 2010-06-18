@@ -17,7 +17,7 @@ bin_PROGRAMS = off2pov off2m off2vrml off2crds m2off \
 		poly_weave off_report off_query \
 		kcycle string_art jitterbug unitile2d repel \
 		lat_grid lat_util canonical conway n_icons iso_delta \
-		bravais waterman col_util
+		bravais waterman col_util planar
 
 
 off2pov_SOURCES = off2pov.cc
@@ -60,4 +60,5 @@ bravais_LDADD = liblattice_grid.la $(LDADD)
 waterman_SOURCES = waterman.cc
 waterman_LDADD = liblattice_grid.la $(LDADD)
 col_util_SOURCES = col_util.cc
+planar_SOURCES = planar.cc
 

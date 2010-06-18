@@ -312,6 +312,15 @@ class coloring {
 
 bool read_colorings(coloring clrng[], const char *line, char *errmsg=0);
 
+// RK - Blending functions
+double hsx_to_ryb(double angle);
+double ryb_to_hsx(double angle);
+col_val rgb_complement(const col_val &col, bool ryb_mode);
+vec4d get_hsxa(const col_val &col, int color_system_mode);
+col_val set_hsxa(double hue, double sat, double val, double alpha, int color_system_mode);
+col_val blend_HSX_centroid(const vector<col_val> &cols, int color_system_mode=2, double sat_power=0, double sat_threshold=1.0, double value_power=0, double value_advance=0, int alpha_mode=3, bool ryb_mode=false);
+col_val blend_RGB_centroid(const vector<col_val> &cols, int alpha_mode=3, bool ryb_mode=false);
+
 #endif // COLORING_H
 
 
