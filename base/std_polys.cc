@@ -727,7 +727,7 @@ void res_coloring::f_all_angles(bool as_values)
          ang_sum += j*f_angs[j];
       int idx = (int)(rad2deg(50*ang_sum/(f_angs.size()*(f_angs.size()+1)/2))+0.5);
       if(as_values)
-         get_geom()->set_f_col(i, idx_to_val(idx));
+         get_geom()->set_f_col(i, get_col(idx));
       else
          get_geom()->set_f_col(i, idx);
    }

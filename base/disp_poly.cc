@@ -48,7 +48,7 @@ col_val disp_poly::get_def_v_col()
 {
    col_val col = v().get_col();
    if(col.is_idx())
-      col = get_v_clrng().idx_to_val(col.get_idx());
+      col = get_v_clrng().get_col(col.get_idx());
 
    return col.is_val() ? col : col_val(1.0,0.5,0.0);
 }
@@ -57,7 +57,7 @@ col_val disp_poly::get_def_e_col()
 {
    col_val col = e().get_col();
    if(col.is_idx())
-      col = get_e_clrng().idx_to_val(col.get_idx());
+      col = get_e_clrng().get_col(col.get_idx());
 
    return col.is_val() ? col : col_val(0.8,0.6,0.8);
 }
@@ -66,7 +66,7 @@ col_val disp_poly::get_def_f_col()
 {
    col_val col = f().get_col();
    if(col.is_idx())
-      col = get_f_clrng().idx_to_val(col.get_idx());
+      col = get_f_clrng().get_col(col.get_idx());
 
    return col.is_val() ? col : col_val(0.8,0.9,0.9);
 }
@@ -300,7 +300,7 @@ void disp_poly::vrml_verts(FILE *ofile, int sig_digits)
             vrml_vec(vs[i], sig_digits).c_str());
       col_val col = disp_geom.get_v_col(i);
       if(col.is_idx())
-         col = get_f_clrng().idx_to_val(col.get_idx());
+         col = get_f_clrng().get_col(col.get_idx());
       if(col.is_val())
          fprintf(ofile, "clr %s trn %.4f", vrml_col(col).c_str(),
                col.get_transd());
@@ -355,7 +355,7 @@ void disp_poly::vrml_edges(FILE *ofile)
       
       col_val col = disp_geom.get_e_col((int)i);
       if(col.is_idx())
-         col = get_e_clrng().idx_to_val(col.get_idx());
+         col = get_e_clrng().get_col(col.get_idx());
       if(col.is_val())
          fprintf(ofile, "clr %s trn %.4f", vrml_col(col).c_str(),
                col.get_transd());
@@ -410,7 +410,7 @@ void disp_poly::vrml_faces(FILE *ofile)
 
       col_val col = disp_geom.get_f_col((int)i);
       if(col.is_idx())
-         col = get_f_clrng().idx_to_val(col.get_idx());
+         col = get_f_clrng().get_col(col.get_idx());
       if(col.is_inv())
          continue;
       if(col.is_val())
@@ -443,7 +443,7 @@ void disp_poly::vrml_faces(FILE *ofile)
                continue;
             col_val col = disp_geom.get_f_col((int)idx);
             if(col.is_idx())
-               col = get_f_clrng().idx_to_val(col.get_idx());
+               col = get_f_clrng().get_col(col.get_idx());
             fprintf(ofile, "%s, ", vrml_col(col).c_str());
             if(!((++f_cnt)%3))
                fprintf(ofile, "\n\t");
@@ -612,7 +612,7 @@ void disp_poly::pov_vert_arrays(FILE *ofile, int sig_digits)
    for(unsigned int i=0; i<vs.size(); i++) {
       col_val col = disp_geom.get_v_col((int)i);
       if(col.is_idx())
-         col = get_v_clrng().idx_to_val(col.get_idx());
+         col = get_v_clrng().get_col(col.get_idx());
       if(col.is_set())
          fprintf(ofile, "#declare v_cols[%d]=%s;\n", i,pov_col(col).c_str());
    }
@@ -639,7 +639,7 @@ void disp_poly::pov_edge_arrays(FILE *ofile)
    for(unsigned int i=0; i<es.size(); i++) {
       col_val col = disp_geom.get_e_col((int)i);
       if(col.is_idx())
-         col = get_e_clrng().idx_to_val(col.get_idx());
+         col = get_e_clrng().get_col(col.get_idx());
       if(col.is_set())
          fprintf(ofile, "#declare e_cols[%d]=%s;\n", i,pov_col(col).c_str());
    }
@@ -677,7 +677,7 @@ void disp_poly::pov_face_arrays(FILE *ofile)
    for(unsigned int i=0; i<fs.size(); i++) {
       col_val col = disp_geom.get_f_col((int)i);
       if(col.is_idx())
-         col = get_f_clrng().idx_to_val(col.get_idx());
+         col = get_f_clrng().get_col(col.get_idx());
       if(col.is_set())
          fprintf(ofile, "#declare f_cols[%d]=%s;\n", i,pov_col(col).c_str());
    }
@@ -823,7 +823,7 @@ void disp_poly::gl_verts(const scene &scen)
    for(unsigned int i=0; i<verts.size(); i++) { 
       col_val col = disp_geom.get_v_col((int)i);
       if(col.is_idx())
-         col = get_v_clrng().idx_to_val(col.get_idx());
+         col = get_v_clrng().get_col(col.get_idx());
       if(!col.is_val())
          col = get_def_v_col(); // use default
       if(col.is_inv())
@@ -867,7 +867,7 @@ void disp_poly::gl_edges(const scene &scen)
    for(unsigned int i=0; i<edges.size(); i++) { 
       col_val col = disp_geom.get_e_col((int)i);
       if(col.is_idx())
-         col = get_e_clrng().idx_to_val(col.get_idx());
+         col = get_e_clrng().get_col(col.get_idx());
       if(!col.is_val())
          col = get_def_e_col(); // use default
       if(col.is_inv())
@@ -893,7 +893,7 @@ void disp_poly::gl_faces(const scene &)
          continue;
       col_val col = disp_geom.get_f_col((int)i);
       if(col.is_idx())
-         col = get_f_clrng().idx_to_val(col.get_idx());
+         col = get_f_clrng().get_col(col.get_idx());
       if(!col.is_val())
          col = get_def_f_col(); // use default
       if(col.is_inv())

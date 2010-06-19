@@ -44,86 +44,37 @@ coloring::coloring(col_geom_v *geo): geom(geo), cycle_msecs(0)
 
 coloring::~coloring()
 {
-   for(unsigned int i=0; i<cmaps.size(); i++)
-      delete cmaps[i];
 }
 
-coloring::coloring(const coloring &clrng):
+coloring::coloring(const coloring &clrng): color_map_multi(clrng),
    geom(clrng.geom), cycle_msecs(clrng.cycle_msecs)
 {
-   for(unsigned int i=0; i<clrng.cmaps.size(); i++)
-      add_cmap(clrng.cmaps[i]->clone());
 }
 
 coloring &coloring::operator=(const coloring &clrng)
 {
    if(this!=&clrng) {
+      color_map_multi::operator=(clrng);
       geom = clrng.geom;
       cycle_msecs = clrng.cycle_msecs;
-      while(cmaps.size())
-         del_cmap();
-      for(unsigned int i=0; i<clrng.cmaps.size(); i++)
-         add_cmap(clrng.cmaps[i]->clone());
    }
 
    return *this;
 }
 
-
-void coloring::add_cmap(color_map *col_map, unsigned int pos)
-{
-   vector<color_map *>::iterator mi;
-   if(pos>=cmaps.size())
-      mi = cmaps.end();
-   else
-      mi = cmaps.begin()+pos;
-   cmaps.insert(mi, col_map);
-}
-
-
-void coloring::del_cmap(unsigned int pos)
-{
-   if(cmaps.size()) {
-      vector<color_map *>::iterator mi;
-      if(pos>=cmaps.size())
-         mi = cmaps.end()-1;
-      else
-         mi = cmaps.begin()+pos;
-      delete *mi;
-      cmaps.erase(mi);
-   }
-}
-
-
-   
+ 
 void coloring::cycle_map_cols()
 {
    //cmap.cycle_colors();
 }
        
-col_val coloring::idx_to_val(int idx) const
-{
-   col_val col;
-   int cur_idx = idx;
-   for(unsigned int i=0; i<cmaps.size(); i++) {
-      col = cmaps[i]->get_col(cur_idx);
-      if(col.is_val())
-         break;
-      if(col.is_idx())
-         cur_idx = col.get_idx();
-   }
-
-   return col.is_set() ? col : col_val(idx);
-}
-
-
  
 void coloring::set_all_idx_to_val(map<int, col_val> &cols)
 {
    map<int, col_val>::iterator mi;
    for(mi=cols.begin(); mi!=cols.end(); mi++)
       if(mi->second.is_idx())
-         mi->second = idx_to_val(mi->second.get_idx());
+         mi->second = get_col(mi->second.get_idx());
 }
 
 
@@ -136,6 +87,7 @@ inline double fract(double rng[], double frac)
 int coloring::y_gradient(vec3d vec, vec3d cent, double height, int def_sz)
 {
    int sz = def_sz;
+   const vector<color_map *> &cmaps = get_cmaps();
    if(cmaps.size()>0) {
       if(cmaps[0]->effective_size()>0)
          sz = cmaps[0]->effective_size();
@@ -201,7 +153,7 @@ void coloring::v_unique(bool as_values)
 {
    for(unsigned int i=0; i<get_geom()->verts().size(); i++) {
       if(as_values)
-         get_geom()->set_v_col(i, idx_to_val(i));
+         get_geom()->set_v_col(i, get_col(i));
       else
          get_geom()->set_v_col(i, i);
    }
@@ -213,7 +165,7 @@ void coloring::v_sets(const vector<set<int> > &equivs, bool as_values)
    for(unsigned int i=0; i<equivs.size(); i++) {
       for(set<int>::iterator si=equivs[i].begin(); si!=equivs[i].end(); ++si) {
          if(as_values)
-            get_geom()->set_v_col(*si, idx_to_val(i));
+            get_geom()->set_v_col(*si, get_col(i));
          else
             get_geom()->set_v_col(*si, i);
       }
@@ -240,7 +192,7 @@ void coloring::v_order(bool as_values)
          f_cnt[get_geom()->faces(i, j)]++;
    for(unsigned int i=0; i<get_geom()->verts().size(); i++)
       if(as_values)
-         get_geom()->set_v_col(i, idx_to_val(f_cnt[i]));
+         get_geom()->set_v_col(i, get_col(f_cnt[i]));
       else
          get_geom()->set_v_col(i, f_cnt[i]);
 }
@@ -254,7 +206,7 @@ void coloring::v_position(bool as_values)
    for(unsigned int i=0; i<get_geom()->verts().size(); i++) {
       int idx = y_gradient(get_geom()->verts(i), cent, height);
       if(as_values)
-         get_geom()->set_v_col(i, idx_to_val(idx));
+         get_geom()->set_v_col(i, get_col(idx));
       else
          get_geom()->set_v_col(i, idx);
    }
@@ -332,7 +284,7 @@ void coloring::f_sets(const vector<set<int> > &equivs, bool as_values)
       col_val col(i);
       for(set<int>::iterator si=equivs[i].begin(); si!=equivs[i].end(); ++si) {
          if(as_values)
-            get_geom()->set_f_col(*si, idx_to_val(i));
+            get_geom()->set_f_col(*si, get_col(i));
          else
             get_geom()->set_f_col(*si, i);
       }
@@ -344,7 +296,7 @@ void coloring::f_unique(bool as_values)
 {
    for(unsigned int i=0; i<get_geom()->faces().size(); i++) {
       if(as_values)
-         get_geom()->set_f_col(i, idx_to_val(i));
+         get_geom()->set_f_col(i, get_col(i));
       else
          get_geom()->set_f_col(i, i);
    }
@@ -363,7 +315,7 @@ void coloring::f_proper(bool as_values)
    g.GraphColoring(parameter, colours);
    for(unsigned int i=0; i<get_geom()->faces().size(); i++)
       if(as_values)
-         get_geom()->set_f_col(i,idx_to_val(dgeom.get_v_col(i).get_idx()));
+         get_geom()->set_f_col(i,get_col(dgeom.get_v_col(i).get_idx()));
       else
          get_geom()->set_f_col(i, dgeom.get_v_col(i).get_idx());
 }
@@ -373,7 +325,7 @@ void coloring::f_sides(bool as_values)
 {
    for(unsigned int i=0; i<get_geom()->faces().size(); i++)
       if(as_values)
-         get_geom()->set_f_col(i, idx_to_val(get_geom()->faces(i).size()));
+         get_geom()->set_f_col(i, get_col(get_geom()->faces(i).size()));
       else
          get_geom()->set_f_col(i, get_geom()->faces(i).size());
 }
@@ -391,7 +343,7 @@ void coloring::f_avg_angle(bool as_values)
          ang_sum += f_angs[j];
       int idx = (int)(rad2deg(ang_sum/f_angs.size())+0.5);
       if(as_values)
-         get_geom()->set_f_col(i, idx_to_val(idx));
+         get_geom()->set_f_col(i, get_col(idx));
       else
          get_geom()->set_f_col(i, idx);
    }
@@ -406,7 +358,7 @@ void coloring::f_parts(bool as_values)
    for(unsigned int i=0; i<parts.size(); i++)
       for(unsigned int j=0; j<parts[i].size(); j++)
          if(as_values)
-            get_geom()->set_f_col(parts[i][j], idx_to_val(i));
+            get_geom()->set_f_col(parts[i][j], get_col(i));
          else
             get_geom()->set_f_col(parts[i][j], i);
 }
@@ -416,7 +368,7 @@ void coloring::f_normal(bool as_values)
    for(unsigned int i=0; i<get_geom()->faces().size(); i++) {
       int idx = y_gradient(get_geom()->face_norm(i).unit());
       if(as_values)
-         get_geom()->set_f_col(i, idx_to_val(idx));
+         get_geom()->set_f_col(i, get_col(idx));
       else
          get_geom()->set_f_col(i, idx);
    }
@@ -431,7 +383,7 @@ void coloring::f_centroid(bool as_values)
    for(unsigned int i=0; i<get_geom()->faces().size(); i++) {
       int idx = y_gradient(get_geom()->face_cent(i), cent, height);
       if(as_values)
-         get_geom()->set_f_col(i, idx_to_val(idx));
+         get_geom()->set_f_col(i, get_col(idx));
       else
          get_geom()->set_f_col(i, idx);
    }
@@ -472,7 +424,7 @@ void coloring::e_sets(const vector<set<int> > &equivs, bool as_values)
    for(unsigned int i=0; i<equivs.size(); i++) {
       for(set<int>::iterator si=equivs[i].begin(); si!=equivs[i].end(); ++si) {
          if(as_values)
-            get_geom()->set_e_col(*si, idx_to_val(i));
+            get_geom()->set_e_col(*si, get_col(i));
          else
             get_geom()->set_e_col(*si, i);
       }
@@ -484,7 +436,7 @@ void coloring::e_unique(bool as_values)
 {
    for(unsigned int i=0; i<get_geom()->edges().size(); i++) {
       if(as_values)
-         get_geom()->set_e_col(i, idx_to_val(i));
+         get_geom()->set_e_col(i, get_col(i));
       else
          get_geom()->set_e_col(i, i);
    }
@@ -506,7 +458,7 @@ void coloring::e_proper(bool as_values)
    for(unsigned int i=0; i<faces.size(); i++) {
       col_val col(0,0,0);
       if(as_values)
-         col = idx_to_val(dgeom.get_v_col(i).get_idx());
+         col = get_col(dgeom.get_v_col(i).get_idx());
       else
          col = dgeom.get_v_col(i).get_idx();
       get_geom()->add_col_edge(faces[i][0], faces[i][2], col);
@@ -570,7 +522,7 @@ void coloring::edge_color_and_branch(int idx, int part, bool as_values,
       edge[1] = next_idx;
       int e_idx = get_geom()->add_edge(edge);
       if(as_values)
-         get_geom()->set_e_col(e_idx, idx_to_val(part));
+         get_geom()->set_e_col(e_idx, get_col(part));
       else
          get_geom()->set_e_col(e_idx, part);
       edge_color_and_branch(next_idx, part, as_values, vcons, seen);
@@ -605,7 +557,7 @@ void coloring::e_direction(bool as_values)
       v -= vec3d::y;  // put v[1] in the range -1.0 to 1.0;
       int idx = y_gradient(v);
       if(as_values)
-         get_geom()->set_e_col(i, idx_to_val(idx));
+         get_geom()->set_e_col(i, get_col(idx));
       else
          get_geom()->set_e_col(i, idx);
    }
@@ -619,7 +571,7 @@ void coloring::e_mid_point(bool as_values)
    for(unsigned int i=0; i<get_geom()->edges().size(); i++) {
       int idx = y_gradient(get_geom()->edge_cent(i), cent, height);
       if(as_values)
-         get_geom()->set_e_col(i, idx_to_val(idx));
+         get_geom()->set_e_col(i, get_col(idx));
       else
          get_geom()->set_e_col(i, idx);
    }

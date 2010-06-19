@@ -37,13 +37,11 @@
 using std::set;
 
 ///Class for colouring the elements of a geometry 
-class coloring {
+class coloring: public color_map_multi
+{
    private:
       //The geometry to colour.
       col_geom_v *geom;
-      
-      //The colour maps to be tried sequentially.
-      vector<color_map *> cmaps;
 
       unsigned int cycle_msecs;
 
@@ -104,30 +102,9 @@ class coloring {
       ///Destructor
       ~coloring();
 
-      ///Add a colour map.
-      /**\param col_map the colour map.
-       * \param pos the position to add it, or at the end if pos is
-       * greater then the current size */
-      void add_cmap(color_map *col_map, unsigned int pos=UINT_MAX);
-
-      ///Delete a colour map.
-      /**\param pos the position of the colour map to delete, or delete
-       * the last colour map if \c pos is greater than or equal to the
-       * current size */
-      void del_cmap(unsigned int pos=UINT_MAX);
-
-      ///Get a the colour maps.
-      /**\return The colour maps. */
-      const vector<color_map *> &get_cmaps() {return cmaps;}
-
       ///Set the geometry to colour.
       /**\param geo the geometry to colour. */
       void set_geom(col_geom_v *geo) { geom = geo; }
-
-      ///Convert a colour index into a colour value.
-      /** \param idx the index to convert.
-       * \return The final RGBA colour. */
-      col_val idx_to_val(int idx) const;
 
       ///Cycle the map colours
       /**Each colour index number is mapped to the previous colour

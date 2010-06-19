@@ -331,14 +331,14 @@ void color_map::set_wrap(int wrp)
 }
 
 
-color_map *color_map_map::get_condensed()
+color_map *color_map_map::get_condensed() const
 {
    color_map_map *colmap = new color_map_map();
    if(!colmap)
       return 0;
 
    int idx=0;
-   map<int, col_val>::iterator mi;
+   map<int, col_val>::const_iterator mi;
    for(mi=cmap.begin(); mi!=cmap.end(); mi++)
       colmap->cmap[idx++] = (mi->second);
 
@@ -421,7 +421,7 @@ void color_map_deal::shuffle()
    map_vals.resize(map_sz);
 }
 
-col_val color_map_deal::get_col(int idx)
+col_val color_map_deal::get_col(int idx) const
 {
    int eff_idx = get_effective_index(idx);
    if(idx<(int)map_vals.size())
@@ -450,7 +450,7 @@ static double interpolate(int num, int map_sz, vector<double> vals)
 }
 
 
-col_val color_map_range::get_col(int idx)
+col_val color_map_range::get_col(int idx) const
 {
    col_val col;
    int eff_idx = get_effective_index(idx);
@@ -690,7 +690,7 @@ bool color_map_range_rand_rgb::init(const char *map_name, char *errmsg)
    return ret;
 }
 
-col_val color_map_range_rand::get_col(int idx)
+col_val color_map_range_rand::get_col(int idx) const
 {
    col_val col;
    idx = get_effective_index(idx);
@@ -717,7 +717,7 @@ bool color_map_spread::init(const char *map_name, char *errmsg)
 }
  
 
-col_val color_map_spread::get_col(int idx)
+col_val color_map_spread::get_col(int idx) const
 {
    int eff_idx = get_effective_index(idx);
    int num_entries = 1024;
@@ -979,9 +979,10 @@ static bool parse_map_from_line(const char *line, map<int, col_val> *cmap,
 } 
 
 
-col_val color_map_map::get_col(int idx)
+col_val color_map_map::get_col(int idx) const
 {
-   map<int, col_val>::iterator mi_idx = cmap.find(get_effective_index(idx));
+   map<int, col_val>::const_iterator mi_idx = 
+                               cmap.find(get_effective_index(idx));
    if(mi_idx!=cmap.end())  // index is in colour map
       return mi_idx->second;
    else
@@ -1143,7 +1144,7 @@ void color_map_multi::del_cmap(unsigned int pos)
 }
 
 
-col_val color_map_multi::get_col(int idx)
+col_val color_map_multi::get_col(int idx) const
 {
    col_val col;
    int cur_idx = get_effective_index(idx);
