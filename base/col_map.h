@@ -554,7 +554,7 @@ class color_map_multi : public color_map
 
    public:
       // Constructor
-      color_map_multi() : color_map(), max_eff_map_sz(0) {}
+      color_map_multi() : color_map(), max_eff_map_sz(0), map_sz(-1) {}
 
       ///Copy Constructor
       /**\param cmap the multiple colour map to copy from. */
