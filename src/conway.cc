@@ -1502,7 +1502,7 @@ int calc_opacity(col_val ci, int opacity, const coloring &clrng)
    else {
       // get opacity from map
       // AR ret_opacity = 255-(col_map.get_col(ci.get_idx()%col_map.size())).get_trans();
-      col_val col = clrng.idx_to_val(ci.get_idx());
+      col_val col = clrng.get_col(ci.get_idx());
       if(col.is_val())
          ret_opacity = 255-col.get_trans();
    }
@@ -1523,7 +1523,7 @@ void set_face_index_and_calc_opacity(col_geom_v &geom, int i, col_val c, int opa
    if (c.is_set()) {
       int opq = calc_opacity(c, opacity, f_clrng);
       if (!write_indexes) {
-         col_val resolved = f_clrng.idx_to_val(c.get_idx());
+         col_val resolved = f_clrng.get_col(c.get_idx());
          c = set_alpha(resolved,opq);
       }
       geom.set_f_col(i,c);

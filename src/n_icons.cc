@@ -1906,7 +1906,7 @@ int calc_opacity(col_val ci, int opacity, const coloring &clrng)
       ret_opacity = 255;
    else {
       // get opacity from map
-      col_val col = clrng.idx_to_val(ci.get_idx());
+      col_val col = clrng.get_col(ci.get_idx());
       if(col.is_val())
          ret_opacity = 255-col.get_trans();
    }

@@ -79,13 +79,13 @@ class color_map
       /** \return a pointer to the dynamically allocated condensed copy,
        * which must be freed by the caller with \c delete, 0 indicates
        * that the copy failed. */
-      virtual color_map *get_condensed() { return clone(); }
+      virtual color_map *get_condensed() const { return clone(); }
 
       ///Get a copy of the map
       /** \return a pointer to the dynamically allocated copy,
        * which must be freed by the caller with \c delete, 0 indicates
        * that the clone failed. */
-      virtual color_map *clone() { return new color_map(*this); }
+      virtual color_map *clone() const { return new color_map(*this); }
 
       ///The effective size of the map
       /**The effective size of a map is one greater than the highest
@@ -137,7 +137,7 @@ class color_map
       ///Get the colour value for an index number.
       /**
        * \return The colour. */
-      virtual col_val get_col(int /*idx*/) { return col_val(); }
+      virtual col_val get_col(int /*idx*/) const { return col_val(); }
 
       ///Cycle the map colours
       /**Each colour index number is mapped to the previous colour
@@ -155,12 +155,13 @@ class color_map_remap: public color_map
       /** \return a pointer to the dynamically allocated copy,
        * which must be freed by the caller with \c delete, 0 indicates
        * that the clone failed. */
-      color_map *clone() { return new color_map_remap(*this); }
+      color_map *clone() const { return new color_map_remap(*this); }
 
       ///Get the colour value for an index number.
       /**\param idx the index.
        * \return The colour. */
-      virtual col_val get_col(int idx) { return get_effective_index(idx); }
+      virtual col_val get_col(int idx) const
+         { return get_effective_index(idx); }
 };
 
 
@@ -186,7 +187,7 @@ class color_map_deal: public color_map
       /** \return a pointer to the dynamically allocated copy,
        * which must be freed by the caller with \c delete, 0 indicates
        * that the clone failed. */
-      color_map *clone() { return new color_map_deal(*this); }
+      color_map *clone() const { return new color_map_deal(*this); }
 
       ///The effective size of the map
       /**The effective size of a map is one greater than the highest
@@ -199,7 +200,7 @@ class color_map_deal: public color_map
       ///Get the colour value for an index number.
       /**\param idx the index.
        * \return The colour. */
-      virtual col_val get_col(int idx);
+      virtual col_val get_col(int idx) const;
 
       ///shuffle the mapping
       void shuffle();
@@ -229,7 +230,7 @@ class color_map_range: public color_map
       /**\return a pointer to the dynamically allocated copy,
        * which must be freed by the caller with \c delete, 0 indicates
        * that the clone failed. */
-      color_map *clone() { return new color_map_range(*this); }
+      color_map *clone() const { return new color_map_range(*this); }
 
       ///Set a range
       /**\param idx the index number of the component (0-3 for RGBA or HSVA)
@@ -241,7 +242,7 @@ class color_map_range: public color_map
       ///Get the colour value for an index number.
       /**\param idx the index.
        * \return The colour. */
-      virtual col_val get_col(int idx);
+      virtual col_val get_col(int idx) const;
 
       ///Set the map size
       /**\param sz the number of entries in the map. */
@@ -249,7 +250,7 @@ class color_map_range: public color_map
 
       ///Get the map size
       /**\return the number of entries in the map. */
-      int get_map_sz() { return map_sz; }
+      int get_map_sz() const { return map_sz; }
       
       ///The effective size of the map
       /**The effective size of a map is one greater than the highest
@@ -277,7 +278,7 @@ class color_map_range_hsv: public color_map_range
       /** \return a pointer to the dynamically allocated copy,
        * which must be freed by the caller with \c delete, 0 indicates
        * that the clone failed. */
-      color_map *clone() { return new color_map_range_hsv(*this); }
+      color_map *clone() const { return new color_map_range_hsv(*this); }
 
 };
 
@@ -301,7 +302,7 @@ class color_map_range_rgb: public color_map_range
       /** \return a pointer to the dynamically allocated copy,
        * which must be freed by the caller with \c delete, 0 indicates
        * that the clone failed. */
-      color_map *clone() { return new color_map_range_rgb(*this); }
+      color_map *clone() const { return new color_map_range_rgb(*this); }
 
 };
 
@@ -312,13 +313,13 @@ class color_map_range_rand: public color_map_range
       ///Get the colour value for an index number.
       /**\param idx the index.
        * \return The colour. */
-      virtual col_val get_col(int idx);
+      virtual col_val get_col(int idx) const;
       
       ///Get a copy of the map
       /** \return a pointer to the dynamically allocated copy,
        * which must be freed by the caller with \c delete, 0 indicates
        * that the clone failed. */
-      color_map *clone() { return new color_map_range_rand(*this); }
+      color_map *clone() const { return new color_map_range_rand(*this); }
 
 };
 
@@ -346,7 +347,7 @@ class color_map_range_rand_hsv: public color_map_range_rand
       /** \return a pointer to the dynamically allocated copy,
        * which must be freed by the caller with \c delete, 0 indicates
        * that the clone failed. */
-      color_map *clone() { return new color_map_range_rand_hsv(*this); }
+      color_map *clone() const { return new color_map_range_rand_hsv(*this); }
 
 };
 
@@ -367,7 +368,7 @@ class color_map_range_rand_rgb: public color_map_range_rand
       /** \return a pointer to the dynamically allocated copy,
        * which must be freed by the caller with \c delete, 0 indicates
        * that the clone failed. */
-      color_map *clone() { return new color_map_range_rand_rgb(*this); }
+      color_map *clone() const { return new color_map_range_rand_rgb(*this); }
 
 };
 
@@ -387,12 +388,12 @@ class color_map_spread: public color_map_range
       /** \return a pointer to the dynamically allocated copy,
        * which must be freed by the caller with \c delete, 0 indicates
        * that the clone failed. */
-      color_map *clone() { return new color_map_spread(*this); }
+      color_map *clone() const { return new color_map_spread(*this); }
 
       ///Get the colour value for an index number.
       /**\param idx the index.
        * \return The colour. */
-      virtual col_val get_col(int idx);
+      virtual col_val get_col(int idx) const;
 };
 
 
@@ -438,13 +439,13 @@ class color_map_map : public color_map
       /** \return a pointer to the dynamically allocated copy,
        * which must be freed by the caller with \c delete, 0 indicates
        * that the clone failed. */
-      color_map *clone() { return new color_map_map(*this); }
+      color_map *clone() const { return new color_map_map(*this); }
 
       ///Get a copy of the map with any with the values indexed by order
       /** \return a pointer to the dynamically allocated condensed copy,
        * which must be freed by the caller with \c delete, 0 indicates
        * that the copy failed. */
-      virtual color_map *get_condensed();
+      virtual color_map *get_condensed() const;
 
       ///Read the named colours into a colour map
       /**This is equivalent to reading in the x11 colour map from
@@ -520,7 +521,7 @@ class color_map_map : public color_map
       ///Get the colour value for an index number.
       /**\param idx the index.
        * \return The colour. */
-      virtual col_val get_col(int idx);
+      virtual col_val get_col(int idx) const;
 
       ///Set a colour value for an index number.
       /**\param idx the index.
@@ -582,7 +583,7 @@ class color_map_multi : public color_map
       /** \return a pointer to the dynamically allocated copy,
        * which must be freed by the caller with \c delete, 0 indicates
        * that the clone failed. */
-      virtual color_map *clone() { return new color_map_multi(*this); }
+      virtual color_map *clone() const { return new color_map_multi(*this); }
 
       ///Set the map size
       /**\param sz the number of entries in the map. */
@@ -608,11 +609,17 @@ class color_map_multi : public color_map
        * the last colour map if \c pos is greater than or equal to the
        * current size */
       void del_cmap(unsigned int pos=INT_MAX);
-      
+     
+      ///Get a the colour maps.
+      /**\return The colour maps. */
+      const vector<color_map *> &get_cmaps() const {return cmaps;}
+    
       ///Get the colour value for an index number.
       /**\param idx the index.
        * \return The colour. */
-      virtual col_val get_col(int idx);
+      virtual col_val get_col(int idx) const;
+
+
 
 };
 
