@@ -65,7 +65,7 @@ coloring &coloring::operator=(const coloring &clrng)
  
 void coloring::cycle_map_cols()
 {
-   //cmap.cycle_colors();
+   set_shift(get_shift()+1);
 }
        
  
@@ -591,7 +591,7 @@ void coloring::e_lights(col_geom_v lts)
 static bool get_cycle_rate(const char *str, double *cps)
 {
    size_t len = strlen(str);
-   if(len>3 && str[len-2]=='h' && str[len-1]=='z') {
+   if(len>=3 && str[len-2]=='h' && str[len-1]=='z') {
       char str_copy[MSG_SZ];
       strncpy(str_copy, str, len-2);
       str_copy[len-2] = '\0';
