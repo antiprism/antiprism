@@ -87,7 +87,7 @@ class col_util_opts: public prog_opts {
                      cmy_mode(false),
                      ryb_mode(false),
                      seven_mode(false),
-                     map_maximum(256)
+                     map_maximum(0)
                      {}
 
       void process_command_line(int argc, char **argv);
@@ -108,7 +108,7 @@ void col_util_opts::usage()
 "\nScene Options\n"
 "  -d <int>  output type. map=1  wheel=2  plot=3 (default)  grid=4\n"
 "               if color wheel and RGB, only one color blend is possible\n" 
-"  -m <mode> color system mode. HSV=1  HSL=2  RGB=3 (default)\n"
+"  -M <mode> color system mode. HSV=1  HSL=2  RGB=3 (default)\n"
 "  -r <int>  HSV/HSL chroma  0 - none (cylinder)  1 - conic  2 - hexagonal\n"
 "  -S        HSV/HSL distribute colors heptagonally, 7 ways, as in the rainbow\n"
 "  -k <int>  display type 2: container control\n"
@@ -146,7 +146,7 @@ void col_util_opts::usage()
 "\n"
 "note: -M -O and -C may all be used together\n"
 "\n"
-"  -M <map>  get colors from a color map, or multiple maps seperated by commas\n"
+"  -m <map>  get colors from a color map, or multiple maps seperated by commas\n"
 "  -O <file> get colors from an OFF file\n"
 "  -U        allow only unique colors (sorts by color)\n"
 "  -Z <int>  maximum entries to read from open ended maps (default: 256)\n"
@@ -179,7 +179,7 @@ void col_util_opts::process_command_line(int argc, char **argv)
             display_type = atoi(id.c_str());
             break;
             
-         case 'm':
+         case 'M':
             id = get_arg_id(optarg, "hsv=1|hsl=2|rgb=3", argmatch_add_id_maps, errmsg);
             if(id=="")
                error(errmsg);
@@ -271,7 +271,7 @@ void col_util_opts::process_command_line(int argc, char **argv)
             seven_mode = true;
             break;
             
-         case 'M':
+         case 'm':
             if(!read_colorings(clrngs, optarg, errmsg))
                error(errmsg, c);
             break;
@@ -530,7 +530,7 @@ double saturation_correction_7gon(double hue, double sat)
 
 void plot_hsx_point(col_geom_v &geom, const col_val &col, int color_system_mode, int chroma_level, bool ryb_mode, bool seven_mode)
 {
-   if (!col.is_set() || col.is_idx())
+   if (!col.is_val())
       return;
 
    vec4d hsxa = get_hsxa(col, color_system_mode);
@@ -610,7 +610,7 @@ col_geom_v make_cube()
 
 void plot_rgb_point(col_geom_v &geom, const col_val &col, bool ryb_mode)
 {
-   if (!col.is_set() || col.is_idx())
+   if (!col.is_val())
       return;
   
    col_val rcol = col;
@@ -710,41 +710,41 @@ public:
    bool operator() (const col_val &a, const col_val &b) { return cmp_col(a, b); }
 };
 
-void collect_col(vector<col_val> &cols, const col_val &col)
+void collect_col(vector<col_val> &cols, const col_val &col, bool no_indexes)
 {
    if (!col.is_set())
+      return;
+   else
+   if (col.is_idx() && no_indexes)
       return;
    cols.push_back(col);
 }
 
-void collect_cols_from_geom(const col_geom_v &geom, vector<col_val> &cols)
+void collect_cols_from_geom(const col_geom_v &geom, vector<col_val> &cols, bool no_indexes)
 {
    for(unsigned int i=0; i<geom.verts().size(); i++)
-      collect_col(cols,geom.get_v_col(i));
+      collect_col(cols, geom.get_v_col(i), no_indexes);
    for(unsigned int i=0; i<geom.edges().size(); i++)
-      collect_col(cols,geom.get_e_col(i));
+      collect_col(cols, geom.get_e_col(i), no_indexes);
    for(unsigned int i=0; i<geom.faces().size(); i++)
-      collect_col(cols,geom.get_f_col(i));
+      collect_col(cols, geom.get_f_col(i), no_indexes);
 }
 
 void collect_cols(vector<col_val> &cols, col_util_opts &opts)
 {
-  // maps
-  if (opts.clrngs[0].get_cmaps().size()) {
-      vector<color_map *> maps = opts.clrngs[0].get_cmaps();
-      for(unsigned int i=0; i<maps.size(); i++) {
-         unsigned int map_sz = maps[i]->effective_size();
-//fprintf(stderr,"map size = %u\n",map_sz);
-         bool open_ended_map = (map_sz >= INT_MAX);
-         unsigned int max_map_sz = (open_ended_map) ? (unsigned int)opts.map_maximum : map_sz;
-//fprintf(stderr,"max map size = %u\n",max_map_sz);
-         if (open_ended_map)
-            opts.warning(msg_str("map entry %d: only %d out of %u map entries "
-                     "read in\n",i+1,opts.map_maximum,map_sz), 'Z');
-         for(unsigned int j=0; j<max_map_sz; j++)
-            collect_col(cols,maps[i]->get_col(j));
-      }
-   }
+   const color_map_multi &map = opts.clrngs[0];
+   int map_sz = map.effective_size();
+   bool open_ended_map = (map_sz >= INT_MAX);
+   // map size priority:
+   // -Z given
+   // default for unlimited map (256)
+   // use actual map size
+   int max_map_sz = (opts.map_maximum) ? opts.map_maximum : ((open_ended_map) ? 256 : map_sz);
+
+   if (open_ended_map)
+      opts.warning(msg_str("map list: only %d out of %d map entries read in",max_map_sz,map_sz), 'Z');
+   for(int j=0; j<max_map_sz; j++)
+      collect_col(cols, map.get_col(j), opts.display_type!=4);
    
    // file
    if(opts.gfile.length()) {
@@ -755,7 +755,7 @@ void collect_cols(vector<col_val> &cols, col_util_opts &opts)
       if(*errmsg)
          opts.warning(errmsg);
       
-      collect_cols_from_geom(geom, cols);
+      collect_cols_from_geom(geom, cols, opts.display_type!=4);
    }
 
    if (opts.unique_colors) {
@@ -784,10 +784,10 @@ void collect_cols(vector<col_val> &cols, col_util_opts &opts)
    }
 
    // grid may have indexes
-   if (opts.display_type != 4) {
+   if (opts.display_type == 4) {
       for(unsigned int i=0; i<cols.size(); i++) {
          if (cols[i].is_idx()) {
-            opts.warning("color indexes detected. No color will be shown for them");
+            opts.warning("color indexes detected. unmapped cells will result");
             break;
          }
       }
@@ -806,7 +806,7 @@ int main(int argc, char *argv[])
    collect_cols(cols, opts);
    
    if (!cols.size())
-      opts.error("found no colors to plot");
+      opts.error("found no color values to plot");
       
    if (cols.size() < 3) {
       for(unsigned int i=0; i<4; i++) {
