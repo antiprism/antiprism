@@ -49,7 +49,7 @@ class color_map
       ///Copy parameters
       /**\param cmap the colour map to copy parameters from. */
       void copy_params(const color_map &cmap);
-
+      
    public:
       const static int max_map_sz = INT_MAX;  // The largest size of a map  
 
@@ -74,6 +74,14 @@ class color_map
        * \return true if the file could be read, otherwise false
        * and the error is detailed in \a errmsg. */
       bool init_strip(char *map_name, char *errmsg=0);
+
+      ///Read parameters
+      /**\param params the map name to read parameters from.
+       * \param errmsg an array at least \c MSG_SZ chars long to
+       * return any error message.
+       * \return true if the parameters could be read, otherwise false
+       * and the error is detailed in \a errmsg. */
+      bool read_params(const char *params, char *errmsg);
 
       ///Get a copy of the map with any with the values indexed by order
       /** \return a pointer to the dynamically allocated condensed copy,

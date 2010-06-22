@@ -99,6 +99,16 @@ void color_map::copy_params(const color_map &cmap)
    wrap = cmap.wrap;
 }
 
+bool color_map::read_params(const char *params, char *errmsg)
+{
+   color_map cm;
+   if(!cm.init(params, errmsg))
+      return false;
+
+   copy_params(cm);
+   return true;
+}
+
 bool color_map::init_strip(char *map_name, char *errmsg)
 {
    if(!color_map::init(map_name, errmsg))
@@ -200,9 +210,10 @@ static color_map* init_color_map_generated(const char *map_name, char *errmsg=0)
       color_map_multi *multi = new color_map_multi;
       color_map_map *overrides = new color_map_map;
       color_map *spread_map = init_color_map("spread+53*12");
-      
-      if(!extra_chars && multi && overrides && spread_map &&
-            multi->init(map_name , errmsg)) {
+     
+      if(multi && overrides && spread_map &&
+            multi->read_params(map_name, errmsg)) {
+         
          overrides->set_col(60, col_val(0.9,0.45,0.0)); // triangle
          overrides->set_col(36, col_val(0.7,0.1,0.2));  // pentagram
          multi->add_cmap(overrides);
@@ -226,7 +237,8 @@ static color_map* init_color_map_generated(const char *map_name, char *errmsg=0)
       color_map_multi *multi = new color_map_multi();
       color_map_map *overrides = new color_map_map;
       color_map *spread_map = init_color_map("spread+2");
-      if(multi && overrides && spread_map && multi->init(map_name, errmsg)) {
+      if(multi && overrides && spread_map &&
+            multi->read_params(map_name, errmsg)) {
          // RK - for blending colors, make each two colors blend to different color than adjacent ones
          // use nicer color values for green and orange
          overrides->set_col(0, col_val(1.0,1.0,0.0)); // yellow
@@ -289,13 +301,17 @@ color_map* init_color_map(const char *map_name, char *errmsg)
    string alt_name;
    FILE *cfile = open_sup_file(name, "/col_maps/", &alt_name);
    if(alt_name!="") {  // an alt name found before a file with the name
-      cmap = init_color_map_generated(alt_name.c_str(), errmsg2);
-      if(errmsg) {
-         if(!cmap)
-            snprintf(errmsg, MSG_SZ, "could not open colour map file"
-               " \'%s=%s\'", map_name, alt_name.c_str());
-         else
-            strcpy(errmsg, errmsg2);
+      cmap = new color_map_multi;
+      if(cmap) {
+         if(!cmap->init(alt_name.c_str(), errmsg2) || // init first
+            !cmap->read_params(map_name, errmsg2)) {  // then read shft-stp-wrp
+            if(errmsg) {
+               snprintf(errmsg, MSG_SZ, "could not open colour map file"
+                     " \'%s=%s\': %s", map_name, alt_name.c_str(), errmsg2);
+            }
+            delete cmap;
+            cmap = 0;
+         }
       }
    }
    else if(cfile) {
@@ -1065,13 +1081,34 @@ void color_map_map::read_named_colors()
 
 bool color_map_multi::init(const char *map_name, char *errmsg)
 {
-   max_eff_map_sz = 0;
+   color_map::init(0);
    map_sz = -1;
-   if(!color_map::init(map_name, errmsg))
-      return false;
-   
-   if(get_wrap()==-1)
-      set_wrap(0);
+   while(cmaps.size())
+      del_cmap();
+
+   if(errmsg)
+      *errmsg = '\0';
+
+   char names[MSG_SZ];
+   strncpy(names, map_name, MSG_SZ);
+   names[MSG_SZ-1] = '\0';
+
+   char errmsg2[MSG_SZ];
+   vector<char *> parts;
+   int parts_sz = split_line(names, parts, ",");   
+   for(int i=0; i<parts_sz; i++) {
+      color_map *col_map = init_color_map(parts[i], errmsg2);
+      if(col_map) {
+         add_cmap(col_map);
+         if(errmsg && *errmsg2)
+            snprintf(errmsg, MSG_SZ, "map '%s': %s", parts[i], errmsg2);
+      }
+      else {
+         if(errmsg)
+            strcpy(errmsg, errmsg2);
+         return false;
+      }
+   }
    
    return true;
 }
