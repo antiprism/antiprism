@@ -43,8 +43,7 @@ class poleList {
    public:
       int idx;
       int lat;
-      int opacity;
-      poleList() { idx = -1; lat = -1; opacity = 255; }
+      poleList() { idx = -1; lat = -1; }
 };
 
 class edgeList
@@ -53,9 +52,8 @@ class edgeList
       int edge_no;
       int lat;
       int lon;
-      bool rotate;
-      int opacity;
-      edgeList(int f, int lat, int lon) : edge_no(f), lat(lat), lon(lon) { rotate = false;  opacity = 255; }
+      bool rotate;;
+      edgeList(int f, int lat, int lon) : edge_no(f), lat(lat), lon(lon) { rotate = false; }
 };
 
 class faceList
@@ -65,17 +63,7 @@ class faceList
       int lat;
       int lon;
       bool rotate;
-      int opacity;
-      faceList(int f, int lat, int lon) : face_no(f), lat(lat), lon(lon) { rotate = false; opacity = 255; }
-};
-
-// colorVal class is needed because an unset col_val or a col_val which is an index cannot hold an alpha value
-class colorVal
-{
-   public:
-      col_val  col;
-      int      opacity;
-      colorVal(col_val c, int o) : col(c), opacity(o) {}
+      faceList(int f, int lat, int lon) : face_no(f), lat(lat), lon(lon) { rotate = false; }
 };
 
 class polarOrb {

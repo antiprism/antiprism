@@ -70,7 +70,7 @@ class col_util_opts: public prog_opts {
       vector<double> sat_powers;
       vector<double> value_powers;
       
-      coloring clrngs[3];
+      color_map_multi map;
 
       col_util_opts(): prog_opts("col_util"),
                      display_type(3),
@@ -272,7 +272,7 @@ void col_util_opts::process_command_line(int argc, char **argv)
             break;
             
          case 'm':
-            if(!read_colorings(clrngs, optarg, errmsg))
+            if(!map.init(optarg, errmsg))
                error(errmsg, c);
             break;
             
@@ -710,12 +710,12 @@ public:
    bool operator() (const col_val &a, const col_val &b) { return cmp_col(a, b); }
 };
 
-void collect_col(vector<col_val> &cols, const col_val &col, bool no_indexes)
+void collect_col(vector<col_val> &cols, const col_val &col, bool allow_indexes)
 {
    if (!col.is_set())
       return;
    else
-   if (col.is_idx() && no_indexes)
+   if (!allow_indexes && col.is_idx())
       return;
    cols.push_back(col);
 }
@@ -732,8 +732,7 @@ void collect_cols_from_geom(const col_geom_v &geom, vector<col_val> &cols, bool 
 
 void collect_cols(vector<col_val> &cols, col_util_opts &opts)
 {
-   const color_map_multi &map = opts.clrngs[0];
-   int map_sz = map.effective_size();
+   int map_sz = opts.map.effective_size();
    bool open_ended_map = (map_sz >= INT_MAX);
    // map size priority:
    // -Z given
@@ -744,7 +743,7 @@ void collect_cols(vector<col_val> &cols, col_util_opts &opts)
    if (open_ended_map)
       opts.warning(msg_str("map list: only %d out of %d map entries read in",max_map_sz,map_sz), 'Z');
    for(int j=0; j<max_map_sz; j++)
-      collect_col(cols, map.get_col(j), opts.display_type!=4);
+      collect_col(cols, opts.map.get_col(j), (opts.display_type==1 || opts.display_type==4));
    
    // file
    if(opts.gfile.length()) {
@@ -755,7 +754,7 @@ void collect_cols(vector<col_val> &cols, col_util_opts &opts)
       if(*errmsg)
          opts.warning(errmsg);
       
-      collect_cols_from_geom(geom, cols, opts.display_type!=4);
+      collect_cols_from_geom(geom, cols, (opts.display_type==1 || opts.display_type==4));
    }
 
    if (opts.unique_colors) {

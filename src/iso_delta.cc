@@ -70,11 +70,11 @@ IsoDeltaItem iso_delta_item_list[] = {
    {"T1(3)",   "Td", "[1/3,2/3,1/3]", "Additonal Isomer of T1(1) (Mobius)"},
    {"T2(1)",   "Td", "[1/3,1/3,2/3]", "Augmented Tetrahedron"},
    {"T2(2)",   "Td", "[2/3,1/3,1/3]", "Tetrahedron"},
-   {"O1",      "Oh", "[1/2,1/2,2/3]", "COMPOUND of 3 Octahedra (UC08d)"},
+   {"O1",      "Oh", "[1/2,1/2,2/3]", "COMPOUND of 3 Octahedra (UD08)"},
    {"O2(1)",   "Oh", "[1/2,1/3,1/4]", "Relaxed Excavated Rhombic Dodecahedron (Mobius)"},
    {"O2(2)",   "Oh", "[1/2,1/3,1/4]", "Relaxed Augmented Rhombic Dodecahedron (Mobius)"},
    {"O3",      "Oh", "[1/2,1/4,2/4]", "COMPOUND of 3 8/3 Star Bipyramids"},
-   {"O4(1)",   "Oh", "[1/3,1/3,2/3]", "COMPOUND of 2 Augmented Tetrahedron T2(1) (UC54d)"},
+   {"O4(1)",   "Oh", "[1/3,1/3,2/3]", "COMPOUND of 2 Augmented Tetrahedra T2(1) (UC54_d)"},
    {"O4(2)",   "Oh", "[2/3,1/3,1/3]", "COMPOUND of 2 Tetrahedra (Stella Octangula UC04)"},
    {"O5(1)",   "Oh", "[1/3,2/3,1/3]", "Augmented Cube (=T1(1))"},
    {"O5(2)",   "Oh", "[2/3,2/3,2/3]", "Excavated Cube (=T1(2))"},
@@ -88,11 +88,11 @@ IsoDeltaItem iso_delta_item_list[] = {
    {"I2(2)",   "Ih", "[1/2,3/5,4/5]", "Relaxed Excavated Did (U36) *"},
    {"I3(1)",   "Ih", "[1/2,1/3,2/5]", "Relaxed Augmented Gid (U54) *"},
    {"I3(2)",   "Ih", "[1/2,1/3,2/5]", "Relaxed Excavated Gid (U54) *"},
-   {"I3(3)",   "Ih", "[1/2,2/3,3/5]", "Relaxed Dual of Gaquatid (U73d) *"},
+   {"I3(3)",   "Ih", "[1/2,2/3,3/5]", "Relaxed Dual of Gaquatid (UD73) *"},
    {"I3(4)",   "Ih", "[1/2,2/3,2/5]", "Additional Isomer of Augmented RT I1(2) **"},
    {"I4",      "Ih", "[1/2,1/2,1/2]", "COMPOUND of 5 Octahedra (UC17)"},
-   {"I5(1)",   "Ih", "[2/3,3/5,4/5]", "Relaxed Augmented Dual of Ditdid (U41d)"},
-   {"I5(2)",   "Ih", "[1/3,2/5,4/5]", "Relaxed Excavated Dual of Ditdid (U41d)"},
+   {"I5(1)",   "Ih", "[2/3,3/5,4/5]", "Relaxed Augmented Dual of Ditdid (UD41)"},
+   {"I5(2)",   "Ih", "[1/3,2/5,4/5]", "Relaxed Excavated Dual of Ditdid (UD41)"},
    {"I6(1)",   "Ih", "[2/3,1/5,1/5]", "Augmented Icosahedron"},
    {"I6(2)",   "Ih", "[2/3,4/5,4/5]", "Excavated Icosahedron"},
    {"I7(1)",   "Ih", "[1/3,2/5,3/5]", "Excavated Gike (U53)"},
@@ -102,9 +102,9 @@ IsoDeltaItem iso_delta_item_list[] = {
    {"I8(2)",   "Ih", "[1/3,1/3,4/5]", "Excavated Gissid (U52)"},
    {"I9(1)",   "Ih", "[1/3,1/3,2/5]", "Augmented Dodecahedron"},
    {"I9(2)",   "Ih", "[1/3,1/3,2/5]", "Excavated Dodecahedron"},
-   {"I9(3)",   "Ih", "[1/3,1/3,2/5]", "Relaxed Excavated Dual of Sidtid (U30d)"},
+   {"I9(3)",   "Ih", "[1/3,1/3,2/5]", "Relaxed Excavated Dual of Sidtid (UD30)"},
    // Redundant 
-   //{"I9(4)",   "Ih", "[1/3,1/3,2/5]", "Relaxed Excavated Dual of Sidtid (U30d) (Repeat)"},
+   //{"I9(4)",   "Ih", "[1/3,1/3,2/5]", "Relaxed Excavated Dual of Sidtid (UD30) (Repeat)"},
    {"I10(1)",  "Ih", "[4/5,4/5,4/5]", "Great Icosahedron or Gike (U53)"},
    {"I10(2)",  "Ih", "[1/5,1/5,4/5]", "Augmented Sissid (U34)"},
    // Redundant 
@@ -391,14 +391,15 @@ class id_opts: public prog_opts {
       bool triangle_only;
       bool verbose;
       bool allow_angles;
-
-      string case_type;
       double angle;
       int n;
       int d;
       int k;
-      
       char coloring_method;
+      int face_opacity;
+
+      color_map_multi map;
+      string case_type;
 
       id_opts(): prog_opts("iso_delta"),
                  list_polys(false),
@@ -410,7 +411,8 @@ class id_opts: public prog_opts {
                  n(0),
                  d(1),
                  k(0),
-                 coloring_method('T')
+                 coloring_method('c'),
+                 face_opacity(255)
              {}
 
       void process_command_line(int argc, char **argv);
@@ -496,12 +498,13 @@ void id_opts::usage()
 "              q - 5 Excavated Octahedra O6(2)\n"
 "                     relaxed dual of Uniform Compounds UC58\n"
 "\nColoring Options\n"
-"  -C <opt> compound coloring\n"
-"              key word: none - sets no color (default: T)\n"
-"              lower case outputs map indexes. upper case outputs color values\n"
-"              c,C - unique coloring for each constituent\n"
-"              s,S - symmetric colouring\n"
-"              t,T - sub-symmetry style coloring\n"
+"  -f <opt> compound coloring\n"
+"              key word: none - sets no color (default: c)\n"
+"              c - unique coloring for each constituent\n"
+"              s - symmetric colouring (should always be one color)\n"
+"  -T <tran> face transparency for color values. valid range from 0 to 255\n"
+"               0 - invisible  255 - opaque (default 255)\n"
+"  -m <maps> color maps for all elements to be tried in turn (default: compound)\n"
 "\n"
 "\n", prog_name(), help_ver_text);
 }
@@ -511,10 +514,12 @@ void id_opts::process_command_line(int argc, char **argv)
    opterr = 0;
    char c;
    char errmsg[MSG_SZ];
+
+   string map_file;
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hldtvwc:n:a:k:C:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hldtvwc:n:a:k:f:T:m:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -580,14 +585,26 @@ void id_opts::process_command_line(int argc, char **argv)
                error("must be an integer 1 or greater", c);
             break;
             
-         case 'C':
+         case 'f':
             if(!strcasecmp(optarg,"none"))
                coloring_method = '\0';
             else
-            if(strspn(optarg, "cCsStT") != strlen(optarg) || strlen(optarg)>1)
+            if(strspn(optarg, "cs") != strlen(optarg) || strlen(optarg)>1)
                error(msg_str("invalid coloring method '%s'", optarg), c);
             else
                coloring_method = *optarg;
+            break;
+
+         case 'T':
+            if(!read_int(optarg, &face_opacity, errmsg))
+               error(errmsg, c);
+            if(face_opacity < 0 || face_opacity > 255) {
+               error("face transparency must be between 0 and 255", c);
+            }
+            break;
+
+         case 'm':
+            map_file = optarg;
             break;
 
          case 'o':
@@ -663,6 +680,11 @@ void id_opts::process_command_line(int argc, char **argv)
 
    if(poly.length() != 0 && (case_type.length() || make_dipyramid))
       warning("polyhedron specifier ignored if using -c or -d");
+
+   if (!map_file.size())
+      map_file = "compound";
+   if(!map.init(map_file.c_str(), errmsg))
+      error(errmsg, c);
 }
 
 void verbose_output(vec3d A, vec3d B, vec3d C, double alpha, double beta, double gamma)
@@ -1008,6 +1030,49 @@ void case_q_5_excavated_octahedra(col_geom_v &geom, double angle)
    transform_and_repeat(geom, "I", "Oh", mat3d::rot(0,angle,0));
 }
 
+void compound_coloring(col_geom_v &geom, char coloring_method, color_map_multi &map, int face_opacity)
+{
+   // color by sub-symmetry  as map indexes happened by default in sym_repeat()
+   if (!coloring_method) {
+      // no color, strip colors
+      geom.clear_f_cols();
+      geom.clear_edges();
+      geom.clear_v_cols();
+   }
+   else {
+      coloring clrng;
+      clrng.add_cmap(map.clone());
+      clrng.set_geom(&geom);
+
+      if (coloring_method == 'c') {
+         // color by constituents
+         clrng.f_parts(true);
+      }
+      else
+      if (coloring_method == 's') {
+         sch_sym sym;
+         vector<vector<set<int> > > sym_equivs;
+         sym.init(geom, &sym_equivs);
+         clrng.f_sets(sym_equivs[2], true);
+      }
+
+      // blend edges
+      geom.add_missing_impl_edges();
+      clrng.e_face_color();
+      clrng.v_face_color();
+
+      // transparency
+      if (face_opacity != 255) {
+         for (unsigned int i=0;i<geom.faces().size();i++) {
+            col_val col = geom.get_f_col(i);
+            if (col.is_val())
+               col = col_val(col[0],col[1],col[2],face_opacity);
+            geom.set_f_col(i,col);
+         }
+      }
+   }
+}
+
 int main(int argc, char *argv[])
 {
    id_opts opts;
@@ -1112,51 +1177,7 @@ int main(int argc, char *argv[])
 
 //fprintf(stderr,"coloring_method = >%c<\n",opts.coloring_method);
 
-   // initialize, set color map
-   coloring clrng(&geom);
-   color_map_map *overrides = new color_map_map;
-   overrides->set_col(0, col_val(1.0,0.5,0.0)); // orange
-   overrides->set_col(1, col_val(1.0,1.0,0.0)); // yellow
-   overrides->set_col(2, col_val(1.0,0.0,0.0)); // red
-   overrides->set_col(3, col_val(0.0,0.5,0.0)); // green
-   overrides->set_col(4, col_val(0.0,0.0,1.0)); // blue
-   overrides->set_col(5, col_val(1.0,0.0,1.0)); // magnenta
-   overrides->set_col(6, col_val(0.0,1.0,1.0)); // cyan
-   clrng.add_cmap(overrides);
-   color_map *cmap = init_color_map("spread+2");
-   clrng.add_cmap(cmap);
-
-   // color by sub-symmetry  as map indexes happened by default in sym_repeat()
-   if (!opts.coloring_method) {
-      // no color, strip colors
-      geom.clear_f_cols();
-      geom.clear_edges();
-      geom.clear_v_cols();
-   }
-   else
-   if (opts.coloring_method == 'S' ||  opts.coloring_method == 's') {
-      sch_sym sym;
-      vector<vector<set<int> > > sym_equivs;
-      sym.init(geom, &sym_equivs);
-      clrng.v_sets(sym_equivs[0], opts.coloring_method == 'S');
-      clrng.e_sets(sym_equivs[1], opts.coloring_method == 'S');
-      clrng.f_sets(sym_equivs[2], opts.coloring_method == 'S');
-   }
-   else
-   if (opts.coloring_method == 'C' ||  opts.coloring_method == 'c') {
-     // color by constituents
-     clrng.f_parts(opts.coloring_method == 'C');
-     geom.add_missing_impl_edges();
-     clrng.e_face_color();
-     clrng.v_face_color();
-   }
-   
-   if (opts.coloring_method == 'S' || opts.coloring_method == 'T') {
-      // color by symmetry or sub-symmetry, resolve map indexes
-      clrng.v_apply_cmap();
-      clrng.e_apply_cmap();
-      clrng.f_apply_cmap();
-   }
+   compound_coloring(geom, opts.coloring_method, opts.map, opts.face_opacity);
    
    char errmsg[MSG_SZ]="";
    if(!geom.write(opts.ofile, errmsg))
