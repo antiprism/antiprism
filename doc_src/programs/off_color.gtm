@@ -67,6 +67,11 @@ could be chosen e.g. a map with blue-green range and a pastel range
    off_color -f U -m rand_S0.3 geo_2 | antiview -x ve
 </PRE>
 
+Colour different elements with different maps
+<PRE>
+   off_color -f U -m f,rnd_H0.4:0.7 -e U -m e,rnd_H0.9:1.2 geo_2 | antiview -v 0.05
+</PRE>
+
 Colour edges and vertices with a rainbow effect
 <PRE>
    off_color -f 1.0,1.0,1.0 -e L -v L geo_5 | antiview -v 0.05
