@@ -1482,8 +1482,10 @@ const char *view_opts::help_view_text =
 "               m - mirror planes\n"
 "               r - rotation-reflection planes\n"
 "               a - all elements (same as xmr)\n"
-"  -m <maps> colour maps to be tried in turn (default: rand), optionally\n"
-"            followed by elements to map from v, e or f (default: vef)\n";
+"  -m <maps> a comma separated list of colour maps used to transform colour\n"
+"            indexes, a part consisting of letters from v, e, f, selects \n"
+"            the element types to apply the map list to (default 'vef').\n"
+;
 
 const char *view_opts::help_scene_text =
 "  -D <dist> distance to camera\n"

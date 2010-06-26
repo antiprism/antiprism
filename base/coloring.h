@@ -48,7 +48,7 @@ class coloring: public color_map_multi
       void face_edge_color(const vector<vector<int> > &elems,
             const map<int,col_val> &cmap);
       
-      void edge_color_and_branch(int idx, int part, bool as_values, 
+      void edge_color_and_branch(int idx, int part, bool apply_map, 
             vector<vector<int> > &vcons, vector<bool> &seen);
 
    protected:
@@ -128,20 +128,20 @@ class coloring: public color_map_multi
 
       ///Colour each vertex set with a single colour
       /**\param equivs the indexes in each set are given the same colour.
-       * \param as_values if true then colour with values, if false then
-       * colour with index numbers. */
-      void v_sets(const vector<set<int> > &equivs, bool as_values=true);
+       * \param apply_map if false, colour with index numbers, if true, convert
+       * these index numbers using the colour maps */
+      void v_sets(const vector<set<int> > &equivs, bool apply_map=true);
 
       ///Colour each vertex with a different colour.
-      /**\param as_values if true then colour with values, if false then
-       * colour with index numbers. */
-      void v_unique(bool as_values=true);
+      /**\param apply_map if false, colour with index numbers, if true, convert
+       * these index numbers using the colour maps */
+      void v_unique(bool apply_map=true);
 
       ///Colour vertices with a proper colouring.
       /**Colour so that no two adjacent vertices on a face have the same colour.
-       * \param as_values if true then colour with values, if false then
-       * colour with index numbers. */
-      void v_proper(bool as_values=true);
+       * \param apply_map if false, colour with index numbers, if true, convert
+       * these index numbers using the colour maps */
+      void v_proper(bool apply_map=true);
 
       ///Colour vertices by face colour.
       /**Colour the vertices with the colour of a face they are on. */
@@ -152,14 +152,14 @@ class coloring: public color_map_multi
       void v_edge_color();
       
       ///Colour each vertex by the number of faces it lies on.
-      /**\param as_values if true then colour with values, if false then
-       * colour with index numbers. */
-      void v_order(bool as_values=true);
+      /**\param apply_map if false, colour with index numbers, if true, convert
+       * these index numbers using the colour maps */
+      void v_order(bool apply_map=true);
 
       ///Colour each vertex by its y-coordinate.
-      /**\param as_values if true then colour with values, if false then
-       * colour with index numbers. */
-      void v_position(bool as_values=true);
+      /**\param apply_map if false, colour with index numbers, if true, convert
+       * these index numbers using the colour maps */
+      void v_position(bool apply_map=true);
       
       ///Colour each vertex using a set of lights.
       /**\param lts a geometry holding coloured vertices to use as lights.*/
@@ -178,46 +178,46 @@ class coloring: public color_map_multi
 
       ///Colour each face set with a single colour
       /**\param equivs the indexes in each set are given the same colour.
-       * \param as_values if true then colour with values, if false then
-       * colour with index numbers. */
-      void f_sets(const vector<set<int> > &equivs, bool as_values=true);
+       * \param apply_map if false, colour with index numbers, if true, convert
+       * these index numbers using the colour maps */
+      void f_sets(const vector<set<int> > &equivs, bool apply_map=true);
 
       ///Colour each face with a different colour.
-      /**\param as_values if true then colour with values, if false then
-       * colour with index numbers. */
-      void f_unique(bool as_values=true);
+      /**\param apply_map if false, colour with index numbers, if true, convert
+       * these index numbers using the colour maps */
+      void f_unique(bool apply_map=true);
 
       ///Colour faces with a proper colouring.
       /**Colour so that no two adjoining faces have the same colour.
-       * \param as_values if true then colour with values, if false then
-       * colour with index numbers. */
-      void f_proper(bool as_values=true);
+       * \param apply_map if false, colour with index numbers, if true, convert
+       * these index numbers using the colour maps */
+      void f_proper(bool apply_map=true);
       
       ///Colour each face by the number of sides it has.
-      /**\param as_values if true then colour with values, if false then
-       * colour with index numbers. */
-      void f_sides(bool as_values=true);
+      /**\param apply_map if false, colour with index numbers, if true, convert
+       * these index numbers using the colour maps */
+      void f_sides(bool apply_map=true);
 
       ///Colour each face by the average internal angle (to nearest degree.)
-      /**\param as_values if true then colour with values, if false then
-       * colour with index numbers. */
-      void f_avg_angle(bool as_values=true);
+      /**\param apply_map if false, colour with index numbers, if true, convert
+       * these index numbers using the colour maps */
+      void f_avg_angle(bool apply_map=true);
 
       ///Colour each face by the set of connected faces it is part of.
       /**To be connected two faces must share an edge.
-       * \param as_values if true then colour with values, if false then
-       * colour with index numbers. */
-      void f_parts(bool as_values=true);
+       * \param apply_map if false, colour with index numbers, if true, convert
+       * these index numbers using the colour maps */
+      void f_parts(bool apply_map=true);
       
       ///Colour each face by the y-component of the normal.
-      /**\param as_values if true then colour with values, if false then
-       * colour with index numbers. */
-      void f_normal(bool as_values=true);
+      /**\param apply_map if false, colour with index numbers, if true, convert
+       * these index numbers using the colour maps */
+      void f_normal(bool apply_map=true);
       
       ///Colour each face by the y-coordinate of the centroid.
-      /**\param as_values if true then colour with values, if false then
-       * colour with index numbers. */
-      void f_centroid(bool as_values=true);
+      /**\param apply_map if false, colour with index numbers, if true, convert
+       * these index numbers using the colour maps */
+      void f_centroid(bool apply_map=true);
       
       ///Colour each face by normal using a set of lights 
       /**\param lts a geometry holding coloured vertices to use as lights. */
@@ -240,20 +240,20 @@ class coloring: public color_map_multi
 
       ///Colour each edge set with a single colour
       /**\param equivs the indexes in each set are given the same colour.
-       * \param as_values if true then colour with values, if false then
-       * colour with index numbers. */
-      void e_sets(const vector<set<int> > &equivs, bool as_values=true);
+       * \param apply_map if false, colour with index numbers, if true, convert
+       * these index numbers using the colour maps */
+      void e_sets(const vector<set<int> > &equivs, bool apply_map=true);
 
       ///Colour each edge with a different colour.
-      /**\param as_values if true then colour with values, if false then
-       * colour with index numbers. */
-      void e_unique(bool as_values=true);
+      /**\param apply_map if false, colour with index numbers, if true, convert
+       * these index numbers using the colour maps */
+      void e_unique(bool apply_map=true);
 
       ///Proper edge colouring
       /**Colour so that no two adjacent edges on a face have the same colour.
-       * \param as_values if true then colour with values, if false then
-       * colour with index numbers. */
-      void e_proper(bool as_values=true);
+       * \param apply_map if false, colour with index numbers, if true, convert
+       * these index numbers using the colour maps */
+      void e_proper(bool apply_map=true);
 
       ///Colour by face colour
       /**Colour the edges with the colour of a face they are part of. */
@@ -261,19 +261,19 @@ class coloring: public color_map_multi
 
       ///Colour each edge by the set of connected edges it is part of.
       /**To be connected two edges must share a vertex.
-       * \param as_values if true then colour with values, if false then
-       * colour with index numbers. */
-      void e_parts(bool as_values=true);
+       * \param apply_map if false, colour with index numbers, if true, convert
+       * these index numbers using the colour maps */
+      void e_parts(bool apply_map=true);
 
       ///Colour each edge by the y-component of its direction.*/
-      /**\param as_values if true then colour with values, if false then
-       * colour with index numbers. */
-      void e_direction(bool as_values=true);
+      /**\param apply_map if false, colour with index numbers, if true, convert
+       * these index numbers using the colour maps */
+      void e_direction(bool apply_map=true);
       
       ///Colour each edge by the y-coordinate of its mid-point.
-      /**\param as_values if true then colour with values, if false then
-       * colour with index numbers. */
-      void e_mid_point(bool as_values=true);
+      /**\param apply_map if false, colour with index numbers, if true, convert
+       * these index numbers using the colour maps */
+      void e_mid_point(bool apply_map=true);
       
       ///Colour each edge using a set of lights.
       /**\param lts a geometry holding coloured vertices to use as lights.*/

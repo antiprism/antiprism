@@ -607,7 +607,11 @@ class color_map_multi : public color_map
          { return (map_sz>=0) ? map_sz : max_eff_map_sz; }
       
       ///Add a colour map.
-      /**\param col_map the colour map.
+      /**The color_map must be dynamically allocated, using \c new directly
+       * or through, for example, \c init_color_map(name). The calling
+       * program must not delete it. The \c color_map_multi object will
+       * delete the added map when it is no longer needed
+       * \param col_map the colour map.
        * \param pos the position to add it, or at the end if pos is
        * greater then the current size */
       void add_cmap(color_map *col_map, unsigned int pos=INT_MAX);
