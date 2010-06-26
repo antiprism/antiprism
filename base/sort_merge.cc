@@ -137,22 +137,24 @@ col_val average_face_color(col_geom &cg, vector<facesSort> &fs, char elem, int b
    
    vector<col_val> cols;  
    bool invisible_found = false;
+   bool unset_found = false;
    for(int i=begin;i<=end;i++) {
       col_val col;
       if(elem=='f')
          col = cg.get_f_col(fs[i].face_no);
       else
          col = cg.get_e_col(fs[i].face_no);
-         
-      if (col.is_set()) {
-         if (!col.is_inv())
-            cols.push_back(col);
-         else
-            invisible_found = true;
-      }
+
+      if (col.is_inv())
+         invisible_found = true;
+      else
+      if (!col.is_set() || col.is_idx())
+         unset_found = true;
+      else
+         cols.push_back(col);
    }
    
-   return (cols.size() ? average_color(cols) : ((invisible_found) ? col_val(col_val::invisible) : col_val()));
+   return (cols.size() ? average_color(cols) : ((unset_found) ? col_val() : col_val(col_val::invisible)));
 }
 
 void sort_faces(geom_if &geom, vector<vertexMap> vm_no_cv,
@@ -300,21 +302,23 @@ col_val average_vert_color(col_geom &cg, vector<vertSort> &vs, int begin, int en
    // if only one instance, return its own color
    if (!(end-begin))
       return cg.get_v_col(vs[begin].vert_no);
-   
-   vector<col_val> cols;
+
+   vector<col_val> cols;  
    bool invisible_found = false;
+   bool unset_found = false;
    for(int i=begin;i<=end;i++) {
       col_val col = cg.get_v_col(vs[i].vert_no);
 
-      if (col.is_set()) {
-         if (!col.is_inv())
-            cols.push_back(col);
-         else
-            invisible_found = true;
-      }
+      if (col.is_inv())
+         invisible_found = true;
+      else
+      if (!col.is_set() || col.is_idx())
+         unset_found = true;
+      else
+         cols.push_back(col);
    }
    
-   return (cols.size() ? average_color(cols) : ((invisible_found) ? col_val(col_val::invisible) : col_val()));
+   return (cols.size() ? average_color(cols) : ((unset_found) ? col_val() : col_val(col_val::invisible)));
 }
 
 void sort_vertices(geom_if &geom, vector<vertexMap> &vm_no_cv,

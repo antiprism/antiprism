@@ -48,32 +48,9 @@ using std::string;
 using std::vector;
 using std::map;
 
-#define DEFAULT_COLOR 193,192,191,255
-
 #define CN_ONE_THIRD 1/3.0
 #define CN_ONE_HALF 0.5
 
-
-// colorVal class is needed because an unset col_val or a col_val which is an index cannot hold an alpha value
-class colorVal
-{
-   public:
-      col_val  col;
-      int      opacity;
-      colorVal(col_val c, int o) : col(c), opacity(o) {}
-};
-
-void add_color(vector<colorVal *> &color_val, col_val col, int opacity)
-{
-   color_val.push_back(new colorVal(col,opacity));
-}
-
-void clear_colors(vector<colorVal *> &color_val)
-{
-   for (unsigned int i=0;i<color_val.size();i++)
-      delete color_val[i];
-   color_val.clear();
-}
 
 class ops
 {
@@ -313,13 +290,11 @@ class cn_opts: public prog_opts {
       char face_coloring_method;
       int face_opacity;
       string face_pattern;
-      string write_indexes;
-      bool output_face_indexes;
       
       col_val vert_col;
       col_val edge_col;
-      vector<colorVal *> face_colors;
-      coloring clrngs[3];
+
+      color_map_multi map;
 
       vector<ops *> operations;
 
@@ -339,11 +314,9 @@ class cn_opts: public prog_opts {
                  unitize(false),
                  verbosity(false),
                  use_truncate_algorithm(false),
-                 face_coloring_method('N'),
+                 face_coloring_method('n'),
                  face_opacity(255),
-                 face_pattern("1"),
-                 write_indexes(""),
-                 output_face_indexes(false)
+                 face_pattern("1")
              {}
 
       void process_command_line(int argc, char **argv);
@@ -493,29 +466,21 @@ void cn_opts::usage()
 "  -z <n>    status reporting every n iterations, -1 for no status (default: -1)\n"
 "\n"
 "Coloring Options\n"
-"\n"
-"A colour value can be a single integer (a colour index), a value in\n"
-"form 'R,G,B,A' (3 or 4 values 0.0-1.0, or 0-255) or hex 'xFFFFFF', a\n"
-"colour name from the X11 colour map, 'invisible' or 'none' (which sets\n"
-"without any colour information)\n"
-"\n"
-"  -V <col>  vertex color, a color value\n"
+"  -V <col>  vertex color, a color value (see off_util -H col_val)\n"
 "  -E <col>  edge color, a color value\n"
-"  -F <elms> face color list. default: red,darkorange1,yellow,darkgreen,cyan,\n"
-"               blue,magenta,white,grey,black. Valid color names and indexes are\n"
-"               in the X11 map. Or use only index numbers if -M map is used.\n"
-"  -f <mthd> mthd is face coloring method using face color list given in -F\n"
-"               key word: none - sets no color (default: N)\n"
-"               lower case outputs map indexes. upper case outputs color values\n"
-"               n,N - colour by number of sides\n"
-"                 X - use colors from original program (-F ignored)\n"
-"  -T <tran> face transparency. valid range from 0 to 255\n"
+"  -f <mthd> mthd is face coloring method using color in map\n"
+"               key word: none - sets no color (default: n)\n"
+"               n - color by number of sides\n"
+"               s - symmetric coloring\n"
+"  -T <tran> face transparency for color values. valid range from 0 to 255\n"
 "               0 - invisible  255 - opaque (default 255)\n"
 "  -O <strg> face transparency pattern string. valid values\n"
-"               0 - T value suppressed  1 - T value applied  (default '1')\n"
-"  -M <map>  file,elements  when output by color values, map color indexes\n"
-"               to color values. file is color map file (default: X11)\n"
-"               optional elements to map are v, e or f (default: vef)\n"
+"               0 - map color alpha value  1 - T alpha applied (default '1')\n"
+"  -m <maps> color maps for faces to be tried in turn (default: m1)\n"
+"               keyword m1: red,darkorange1,yellow,darkgreen,cyan,blue,magenta,\n"
+"                           white,grey,black\n"
+"               keyword m2: red,blue,green,yellow,brown,magenta,purple,grue,\n"
+"                           gray,orange (from George Hart\'s original applet)\n"
 "\n"
 "\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }
@@ -526,11 +491,11 @@ void cn_opts::process_command_line(int argc, char **argv)
    char c;
    char errmsg[MSG_SZ];
    
-   vector<char *> face_color_names;
+   string map_file;
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hHdrtuvp:c:n:l:i:j:z:f:V:E:F:T:O:M:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hHdrtuvp:c:n:l:i:j:z:f:V:E:T:O:m:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -620,14 +585,10 @@ void cn_opts::process_command_line(int argc, char **argv)
             if(!strcasecmp(optarg,"none"))
                face_coloring_method = '\0';
             else
-            if(strspn(optarg, "nNX") != strlen(optarg) || strlen(optarg)>1)
+            if(strspn(optarg, "ns") != strlen(optarg) || strlen(optarg)>1)
                error(msg_str("invalid face coloring method '%s'", optarg), c);
             else {
                face_coloring_method = *optarg;
-               // find if write index options was selected, save seperately and strip it out
-               if(strspn(optarg, "n") == strlen(optarg))
-                  write_indexes += "f";
-               face_coloring_method = tolower(face_coloring_method);
             }
             break;
             
@@ -639,10 +600,6 @@ void cn_opts::process_command_line(int argc, char **argv)
          case 'E':
             if(!edge_col.read(optarg, errmsg))
                error(errmsg, c);
-            break;
-
-         case 'F':
-            split_line(optarg, face_color_names, ",");
             break;
 
          case 'T':
@@ -660,9 +617,8 @@ void cn_opts::process_command_line(int argc, char **argv)
             face_pattern=optarg;
             break;
 
-         case 'M':
-            if(!read_colorings(clrngs, optarg, errmsg))
-               error(errmsg, c);
+         case 'm':
+            map_file = optarg;
             break;
 
          case 'o':
@@ -713,83 +669,43 @@ void cn_opts::process_command_line(int argc, char **argv)
    // operations are done in reverse order (unless defeated)
    if (!reverse_defeat)
       sort(operations.begin(), operations.end(), cmp_ops);
-      
-   // Set up the face color map. If none specified build default
-   bool face_col_map = clrngs[2].get_cmaps().size() ? true : false;
    
-   // patch. if using built in color map (from original program) ignore -M
-   if(face_col_map && face_coloring_method == 'x') {
-      warning("when using -F X, mapfile for faces is ignored",'M');
-      face_col_map = false;
-   }
-   
-   if(!face_col_map) {
-       color_map_map *col_map = new color_map_map;
-      // make color map from colors from original program (-f X)
-      if (face_coloring_method == 'x') {
-         col_map->set_col(0, col_val(0.9,0.3,0.3));    // 3-sided faces red
-         col_map->set_col(1, col_val(0.4,0.4,1.0));    // 4-sided faces blue
-         col_map->set_col(2, col_val(0.4,0.4,1.0));    // 5-sided faces green
-         col_map->set_col(3, col_val(0.9,0.9,0.2));    // 6-sided faces yellow
-         col_map->set_col(4, col_val(0.5,0.25,0.25));  // 7-sided faces brown
-         col_map->set_col(5, col_val(0.8,0.2,0.8));    // 8-sided faces magenta
-         col_map->set_col(6, col_val(0.5,0.2,0.8));    // 9-sided faces purple
-         col_map->set_col(7, col_val(0.1,0.9,0.9));    // 10-sided faces grue
-         col_map->set_col(8, col_val(0.5,0.5,0.5));    // 11-sided gray
-         col_map->set_col(9, col_val(1.0,0.6,0.1));    // 12-sided faces orange
+   if (!map_file.size())
+      map_file = "m1";
+
+   if(map_file == "m1" || map_file == "m2") {
+      color_map_map *col_map = new color_map_map;
+      if (map_file == "m1") {
+         col_map->set_col(0, col_val(1.0,0.0,0.0));      // 3-sided faces red
+         col_map->set_col(1, col_val(1.0,0.49804,0.0));  // 4-sided faces darkoranage1
+         col_map->set_col(2, col_val(1.0,1.0,0.0));      // 5-sided faces yellow
+         col_map->set_col(3, col_val(0.0,0.39216,0.0));  // 6-sided faces darkgreen
+         col_map->set_col(4, col_val(0.0,1.0,1.0));      // 7-sided faces cyan
+         col_map->set_col(5, col_val(0.0,0.0,1.0));      // 8-sided faces blue
+         col_map->set_col(6, col_val(1.0,0.0,1.0));      // 9-sided faces magenta
+         col_map->set_col(7, col_val(1.0,1.0,1.0));      // 10-sided faces white
+         col_map->set_col(8, col_val(0.5,0.5,0.5));      // 11-sided faces grey
+         col_map->set_col(9, col_val(0.0,0.0,0.0));      // 12-sided faces black
       }
       else
-         col_map->read_named_colors();
+      if (map_file == "m2") {
+         col_map->set_col(0, col_val(0.9,0.3,0.3));      // 3-sided faces red
+         col_map->set_col(1, col_val(0.4,0.4,1.0));      // 4-sided faces blue
+         col_map->set_col(2, col_val(0.4,0.4,1.0));      // 5-sided faces green
+         col_map->set_col(3, col_val(0.9,0.9,0.2));      // 6-sided faces yellow
+         col_map->set_col(4, col_val(0.5,0.25,0.25));    // 7-sided faces brown
+         col_map->set_col(5, col_val(0.8,0.2,0.8));      // 8-sided faces magenta
+         col_map->set_col(6, col_val(0.5,0.2,0.8));      // 9-sided faces purple
+         col_map->set_col(7, col_val(0.1,0.9,0.9));      // 10-sided faces grue
+         col_map->set_col(8, col_val(0.5,0.5,0.5));      // 11-sided faces gray
+         col_map->set_col(9, col_val(1.0,0.6,0.1));      // 12-sided faces orange
+      }
       col_map->set_wrap();
-      clrngs[2].add_cmap(col_map);
+      map.add_cmap(col_map);
    }
-
-   output_face_indexes = strchr(write_indexes.c_str(), 'f');
-   if (face_col_map && output_face_indexes)
-      warning("face color map file has no effect when writing face color indexes","M");
-
-   if (!face_col_map && !face_color_names.size()) {
-      char defs[] = "red,darkorange1,yellow,darkgreen,cyan,blue,magenta,"
-                    "white,grey,black";
-      split_line(defs, face_color_names, ",");
-   }
-   
-   // set up face color index map
-   for (unsigned int i=0;i<face_color_names.size();i++) {
-      col_val col;
-      int opq = face_pattern[i%face_pattern.size()] == '1' ? face_opacity : 255;
-      
-      // get the X11 colormap index number for the color name
-      if(col.read_colorname(face_color_names[i], 0, true)) {
-         if (face_col_map)
-            error("if color map specify only color index numbers","F");
-      }
-      else {
-         int tmp;
-         if(read_int(face_color_names[i], &tmp))
-            col = col_val(abs(tmp));
-      } 
-
-      // patch for invisible faces
-      if (!strcmp(face_color_names[i],"invisible")) {
-         col = col_val(col_val::invisible);
-         opq = 0;
-      }
-
-      if (!col.is_set())
-         warning(msg_str("face color '%s' not found. using grey",
-                  face_color_names[i]), "F");
-      add_color(face_colors,col,opq);
-   }
-
-   // can't have empty face color list. Insert non-index
-   if (!face_colors.size()) {
-      add_color(face_colors,col_val(),255);
-      warning("no face colors defined","F");
-   }
-
-   if (output_face_indexes && face_opacity >= 0)
-      warning("when writing face indexes, transparency setting ignored","T");
+   else
+   if(!map.init(map_file.c_str(), errmsg))
+      error(errmsg, c);
    
    int epsilon_num = int(-log(::epsilon)/log(10) + 0.5);
    lim_exp_planar = (lim_exp_planar != INT_MAX) ? lim_exp_planar : epsilon_num;
@@ -1488,74 +1404,45 @@ void do_operations(col_geom_v &geom, vector<ops *> operations, char planarizatio
    }
 }
 
-int calc_opacity(col_val ci, int opacity, const coloring &clrng)
+void cn_face_coloring(col_geom_v &geom, char face_coloring_method, color_map_multi &map, int face_opacity, string face_pattern)
 {
-   int ret_opacity = 255;
-
-   if (ci.is_set() && !ci.is_idx())
-      // it is invisible or unset edge color, all else are stored as indexes
-      ret_opacity = 255-ci.get_trans();
-   else
-   if (!ci.is_set())
-      // future opacity will be set to parameter base opacity below
-      ret_opacity = 255;
-   else {
-      // get opacity from map
-      // AR ret_opacity = 255-(col_map.get_col(ci.get_idx()%col_map.size())).get_trans();
-      col_val col = clrng.get_col(ci.get_idx());
-      if(col.is_val())
-         ret_opacity = 255-col.get_trans();
-   }
- 
-   if (opacity >= 0 && ret_opacity == 255)
-      ret_opacity = opacity;
-      
-   return ret_opacity;
-}
-
-col_val set_alpha(col_val c, int a)
-{  
-   return col_val(c[0],c[1],c[2],a);
-}
-
-void set_face_index_and_calc_opacity(col_geom_v &geom, int i, col_val c, int opacity, const coloring &f_clrng, bool write_indexes)
-{
-   if (c.is_set()) {
-      int opq = calc_opacity(c, opacity, f_clrng);
-      if (!write_indexes) {
-         col_val resolved = f_clrng.get_col(c.get_idx());
-         c = set_alpha(resolved,opq);
+   if (face_coloring_method == 'n') {
+      const vector<vector<int> > &faces = geom.faces();
+      for (unsigned int i=0;i<faces.size();i++) {
+         int fsz = faces[i].size() - 3;
+         col_val col = map.get_col(fsz);
+         if (col.is_val()) {
+            int opq = (face_pattern[fsz%face_pattern.size()] == '1') ? face_opacity : col[3];
+            col = col_val(col[0],col[1],col[2],opq);
+         }
+         geom.set_f_col(i,col);
       }
-      geom.set_f_col(i,c);
    }
-}
+   else
+   if (face_coloring_method == 's') {
+      sch_sym sym;
+      vector<vector<set<int> > > sym_equivs;
+      sym.init(geom, &sym_equivs);
 
-void cn_face_coloring(col_geom_v &geom, const vector<colorVal *> &face_colors, const coloring &f_coloring, bool write_indexes)
-{
-   const vector<vector<int> > &faces = geom.faces();
-   color_map_map col_map;
+      coloring clrng;
+      clrng.add_cmap(map.clone());
+      clrng.set_geom(&geom);
+      clrng.f_sets(sym_equivs[2], true);
 
-   int sz = face_colors.size();
-   for (unsigned int i=0;i<faces.size();i++) {
-      unsigned int k = faces[i].size() - 3;
-      int col_idx = k%sz;
-      set_face_index_and_calc_opacity(geom,i,face_colors[col_idx]->col,face_colors[col_idx]->opacity,f_coloring,write_indexes);
-   }
-}
+      // blend edges
+      geom.add_missing_impl_edges();
+      clrng.e_face_color();
+      clrng.v_face_color();
 
-void apply_color_values(col_geom_v &geom, cn_opts &opts)
-{
-   if (!opts.output_face_indexes) {
-      opts.clrngs[2].set_geom(&geom);
-      opts.clrngs[2].f_apply_cmap();
-   }
-}
-
-void color_uncolored_faces(col_geom_v &geom, col_val default_color)
-{
-   for (unsigned int i=0;i<geom.faces().size();i++) {
-      if (!(geom.get_f_col(i)).is_set())
-         geom.set_f_col(i,default_color);
+      // transparency
+      if (face_opacity != 255) {
+         for (unsigned int i=0;i<geom.faces().size();i++) {
+            col_val col = geom.get_f_col(i);
+            if (col.is_val())
+               col = col_val(col[0],col[1],col[2],face_opacity);
+            geom.set_f_col(i,col);
+         }
+      }
    }
 }
 
@@ -1588,14 +1475,11 @@ int main(int argc, char *argv[])
    if (opts.unitize)
       unitize_edges(geom);
 
-   if (opts.face_coloring_method) {
-      cn_face_coloring(geom, opts.face_colors, opts.clrngs[2], opts.output_face_indexes);
-      color_uncolored_faces(geom, col_val(DEFAULT_COLOR));
-   }
+   if (opts.face_coloring_method)
+      cn_face_coloring(geom, opts.face_coloring_method, opts.map, opts.face_opacity, opts.face_pattern);
    
-   // color edges and resolve indexes
+   // color vertices and edges
    geom.color_vef(opts.vert_col, opts.edge_col, col_val());
-   apply_color_values(geom, opts);
 
    if(!geom.write(opts.ofile, errmsg))
       opts.error(errmsg);

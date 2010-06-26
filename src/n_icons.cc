@@ -37,7 +37,6 @@
 #include <algorithm>
 
 #include "../base/antiprism.h"
-#include "../base/rand_gen.h"
 #include "n_icons.h"
 
 using std::string;
@@ -46,8 +45,8 @@ using std::swap;
 using std::map;
 using std::pair;
 
+// default color needs to be a grey, but one not often chosen
 #define DEFAULT_COLOR 193,192,191,255
-#define UNSET_EDGE_COLOR 3,2,1,0
 
 
 // Need these here since used in opts
@@ -61,16 +60,35 @@ bool full_model(vector<int> longitudes)
    return(longitudes.front() == longitudes.back());
 }
 
-void add_color(vector<colorVal *> &color_val, col_val col, int opacity)
+color_map_map * alloc_default_map()
 {
-   color_val.push_back(new colorVal(col,opacity));
+   color_map_map *col_map = new color_map_map;
+
+   col_map->set_col(0, col_val(1.0,0.0,0.0));      // red
+   col_map->set_col(1, col_val(1.0,0.49804,0.0));  // darkoranage1
+   col_map->set_col(2, col_val(1.0,1.0,0.0));      // yellow
+   col_map->set_col(3, col_val(0.0,0.39216,0.0));  // darkgreen
+   col_map->set_col(4, col_val(0.0,1.0,1.0));      // cyan
+   col_map->set_col(5, col_val(0.0,0.0,1.0));      // blue
+   col_map->set_col(6, col_val(1.0,0.0,1.0));      // magenta
+   col_map->set_col(7, col_val(1.0,1.0,1.0));      // white
+   col_map->set_col(8, col_val(0.5,0.5,0.5));      // grey
+   col_map->set_col(9, col_val(0.0,0.0,0.0));      // black
+
+   col_map->set_wrap();
+
+   return col_map;
 }
 
-void clear_colors(vector<colorVal *> &color_val)
+color_map_map * alloc_no_color_map()
 {
-   for (unsigned int i=0;i<color_val.size();i++)
-      delete color_val[i];
-   color_val.clear();
+   color_map_map *col_map = new color_map_map;
+
+   col_map->set_col(0, col_val());  // unset edge color
+
+   col_map->set_wrap();
+
+   return col_map;
 }
 
 class ncon_opts: public prog_opts {
@@ -83,30 +101,14 @@ class ncon_opts: public prog_opts {
       bool add_poles;
       int twist;
       bool info;
-      string cfile;
-      string write_indexes;
       char face_coloring_method;
-      vector<colorVal *> face_colors;
       int face_opacity;
       string face_pattern;
-      bool face_seq;
-      int face_seq_start;
-      int face_seq_graduation;
-      int face_seq_pool_size;
-      int face_deal;
-      int face_deck;
       bool face_sequential_colors;
       char edge_coloring_method;
-      vector<colorVal *> edge_colors;
       int edge_opacity;
       string edge_pattern;
       bool edge_set_no_color;
-      bool edge_seq;
-      int edge_seq_start;
-      int edge_seq_graduation;
-      int edge_seq_pool_size;
-      int edge_deal;
-      int edge_deck;
       col_val unused_edge_color;
       bool edge_sequential_colors;
       bool symmetric_coloring;
@@ -118,10 +120,8 @@ class ncon_opts: public prog_opts {
       bool long_form;
       bool filter_case2;
 
-      coloring clrngs[3];
-      
-      bool output_face_indexes;
-      bool output_edge_indexes;
+      color_map_multi face_map;
+      color_map_multi edge_map;
       
       // former global variable
       bool split;
@@ -134,33 +134,19 @@ class ncon_opts: public prog_opts {
                    add_poles(false),
                    twist(1),
                    info(false),
-                   face_coloring_method('s'), // note that it is really 'S', but face_write_indexes is set to false
+                   face_coloring_method('s'),
                    face_opacity(-1),
                    face_pattern("1"),
-                   face_seq(false),
-                   face_seq_start(0),
-                   face_seq_graduation(1),
-                   face_seq_pool_size(0),
-                   face_deal(-1),
-                   face_deck(0),
                    face_sequential_colors(true),
                    edge_coloring_method('\0'),
                    edge_opacity(-1),
                    edge_pattern("1"),
                    edge_set_no_color(false),
-                   edge_seq(false),
-                   edge_seq_start(0),
-                   edge_seq_graduation(1),
-                   edge_seq_pool_size(0),
-                   edge_deal(-1),
-                   edge_deck(0),
                    unused_edge_color(col_val::invisible),
                    edge_sequential_colors(false),
                    symmetric_coloring(false),
                    long_form(false),
                    filter_case2(false),
-                   output_face_indexes(false),
-                   output_edge_indexes(false),
                    split(false),
                    half_model_marker(0)
              {}
@@ -184,8 +170,8 @@ void ncon_opts::usage()
 "  -s        side-cut of even order n-icon (default is point-cut)\n"
 "  -H        hybrid of even order n-icon\n"
 "               -a -c and m2 have no effect with hybrids\n"
-"  -m <m,m2> longitudes of model of m sides with optional m2 of m sides showing\n"
-"            m must be even and 3 or greater (default: 36,36)\n"
+"  -M <m,m2> longitudes of model of m sides with optional m2 of m sides showing\n"
+"               m must be even and 3 or greater (default: 36,36)\n"
 "  -x <elms> t and b to exclude top and/or bottom polygons if they exist\n"
 "               v, e and f to remove OFF faces with one vertex (vertices),\n"
 "               two-vertices (edges) and three or more vertices (faces)\n"
@@ -197,51 +183,37 @@ void ncon_opts::usage()
 "  -o <file> write output to file (default: write to standard output)\n"
 "\nColoring Options\n"
 "  -f <mthd> mthd is face coloring method. The coloring is done before twist\n"
-"            using colors in the face color list with -F\n"
-"               key word: none - sets no color (default: S)\n"
+"               key word: none - sets no color (default: s)\n"
 "               lower case outputs map indexes. upper case outputs color values\n"
-"               s,S - color circuits with colors using list sequentially\n"
-"               t,T - color circuits with colors using circuit numbers\n"
-"               l,L - color latitudinally\n"
-"               m,M - color longitudinally\n"
-"               c,C - checkerboard with first two colors in face color list\n"
-"               n,N - use each color in succession\n"
-"               x,X - first two colors based on sign of x\n"
-"               y,Y - first two colors based on sign of y\n"
-"               z,Z - first two colors based on sign of z\n"
-"                        note: z is also the twist plane\n"
-"               o,O - use first eight colors per xyz octants\n"
-"  -F <elms> face color list. default: red,darkorange1,yellow,darkgreen,cyan,\n"
-"               blue,magenta,white,grey,black. Valid color names and indexes are\n"
-"               in the X11 map. Or use only index numbers if -M map is used.\n"
-"               if -M map and no color list is provided, output random colors.\n"
-"               key word: random,n,m - random color indexes. If optional n is\n"
-"                  supplied then n random color indexes are generated, out of\n"
-"                  optional m possibilities.\n"
-"               key word: seq,n,g,s - sequential color indexes order starting\n"
-"                  at optional map index number n, and optional graduation g\n"
-"                  of optional pool size of s\n"
+"               s - color circuits with colors using list sequentially\n"
+"               t - color circuits with colors using circuit numbers\n"
+"               l - color latitudinally\n"
+"               m - color longitudinally\n"
+"               c - checkerboard with first two colors in face color list\n"
+"               n - use each color in succession\n"
+"               x - first two colors based on sign of x\n"
+"               y - first two colors based on sign of y\n"
+"               z - first two colors based on sign of z\n"
+"                      note: z is also the twist plane\n"
+"               o - use first eight colors per xyz octants\n"
+"  -S        color circuits symmetrically when using coloring method s or t\n"
 "  -T <tran> face transparency. valid range from 0 to 255\n"
 "               0 - invisible  255 - opaque (default: 255)\n"
 "  -O <strg> face transparency pattern string. valid values\n"
 "               0 - T value suppressed  1 - T value applied  (default: '1')\n"
 "  -e <mthd> mthd is edge coloring method. The coloring is done before twist\n"
-"            using colors in the edge color list with -E\n"
-"               key word: none - sets no color\n"
-"               key word: Q - defer coloring all edges to option Q (default: Q)\n"
+"               key word: none - sets no color (default: Q)\n"
+"               key word: Q - defer coloring all edges to option Q\n"
 "                  or use the same letter options specified in -f\n"
-"  -E <elms> edge color list. default: red,darkorange1,yellow,darkgreen,cyan,\n"
-"               blue,magenta,white,grey,black. Valid options the same as in -F\n"
-"  -S        color circuits symmetrically when using coloring method s,S or t,T\n"
 "  -U <tran> edge transparency. valid range from 0 to 255\n"
 "               0 - invisible  255 - opaque (default: 255)\n"
 "  -P <strg> edge transparency pattern string. valid values\n"
 "               0 - U value suppressed  1 - U value applied  (default: '1')\n"
 "  -Q <col>  color given to uncolored edges and vertices of final model\n"
 "               key word: none - sets no color (default: invisible)\n"
-"  -M <map>  file,elements  when output by color values, map color indexes\n"
-"               to color values. file is color map file (default: X11)\n"
-"               optional elements to map are e or f (default: ef)\n"
+"  -m <maps> color maps to be tried in turn. (default: map_red:darkorange1:\n"
+"               yellow:darkgreen:cyan:blue:magenta:white:grey:black%%) optionally\n"
+"               followed by elements to map from v, e or f (default: vef)\n"
 "\nSurface Count Reporting (options above igonored)\n"
 "  -J <type> list n-icons with more than one surface. Valid values for type\n"
 "               n = point cut even order n_icons\n"
@@ -264,13 +236,12 @@ void ncon_opts::process_command_line(int argc, char **argv)
    opterr = 0;
    char c;
    char errmsg[MSG_SZ];
-   
-   vector<char *> face_color_names;
-   vector<char *> edge_color_names;
+
+   coloring clrngs[3];
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hn:t:sHm:x:ac:IJ:K:LZM:f:F:T:O:e:E:SU:P:Q:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hn:t:sHM:x:ac:IJ:K:LZm:f:ST:O:e:U:P:Q:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -295,7 +266,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
             hybrid = true;
             break;
             
-         case 'm':
+         case 'M':
             if(!read_int_list(optarg, longitudes, errmsg, true, 2))
                error(errmsg, c);
             if(longitudes.front()<3)
@@ -360,7 +331,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
             filter_case2 = true;
             break;
 
-         case 'M':
+         case 'm':
             if(!read_colorings(clrngs, optarg, errmsg))
                error(errmsg, c);
             break;
@@ -369,15 +340,10 @@ void ncon_opts::process_command_line(int argc, char **argv)
             if(!strcasecmp(optarg,"none"))
                face_coloring_method = '\0';
             else
-            if(strspn(optarg, "sStTlLmMcCnNxXyYzZoO") != strlen(optarg) ||
-                                                          strlen(optarg)>1)
+            if(strspn(optarg, "stlmcnxyzo") != strlen(optarg) || strlen(optarg)>1)
                error(msg_str("invalid face coloring method '%c'", *optarg), c);
             else {
                face_coloring_method = *optarg;
-               // find if write index options was selected, save seperately and strip it out
-               if(strspn(optarg, "stuvlmcnxyzo") == strlen(optarg))
-                  write_indexes += "f";
-               face_coloring_method = tolower(face_coloring_method);
                if ((face_coloring_method == 's') || (face_coloring_method == 't')) {
                   face_sequential_colors = (face_coloring_method == 's') ? true : false;
                   face_coloring_method = 's';
@@ -385,41 +351,8 @@ void ncon_opts::process_command_line(int argc, char **argv)
             }
             break;
 
-         case 'F':
-            split_line(optarg, face_color_names, ",");
-            if (face_color_names.size() > 0 && !strcasecmp(face_color_names[0],"seq")) {
-               face_seq = true;
-               if (face_color_names.size() > 1)
-                  sscanf(face_color_names[1], "%d", &face_seq_start);
-               if (face_color_names.size() > 2)
-                  sscanf(face_color_names[2], "%d", &face_seq_graduation);
-               if (face_color_names.size() > 3) {
-                  sscanf(face_color_names[3], "%d", &face_seq_pool_size);
-                  if (face_seq_pool_size < 1)
-                     error("pool size must be greater than 0",c);
-               }
-               face_color_names.clear();
-            }
-            else
-            if (face_color_names.size() > 0 && !strcasecmp(face_color_names[0],"random")) {
-               if (face_color_names.size() > 1) {
-                  sscanf(face_color_names[1], "%d", &face_deal);
-                  if (face_deal < 1)
-                     error("indexes to randomize must be positive",c);
-               }
-               if (face_color_names.size() > 2) {
-                  sscanf(face_color_names[2], "%d", &face_deck);
-                  if (face_deck < 2)
-                     error("indexes randomizing set must be positive",c);
-                  if (face_deck < face_deal)
-                     error("indexes randomizing set must not be less than n",c);
-               }
-               if (face_deal < 0)
-                  face_deal = 0;
-               if (!face_deck)
-                  face_deck = face_deal;
-               face_color_names.clear();
-            }
+         case 'S':
+            symmetric_coloring = true;
             break;
 
          case 'T':
@@ -446,61 +379,15 @@ void ncon_opts::process_command_line(int argc, char **argv)
             if(!strcmp(optarg,"Q"))
               edge_coloring_method = '\0';
             else
-            if(strspn(optarg, "sStTlLmMcCnNxXyYzZoO") != strlen(optarg) ||
-                                                          strlen(optarg)>1)
+            if(strspn(optarg, "stlmcnxyzo") != strlen(optarg) || strlen(optarg)>1)
                error(msg_str("invalid edge coloring method '%s'", optarg), c);
             else {
                edge_coloring_method = *optarg;
-               // find if write index options was selected, save seperately and strip it out
-               if(strspn(optarg, "stlmcnxyzo") == strlen(optarg))
-                  write_indexes += "e";
-               edge_coloring_method = tolower(edge_coloring_method);
                if ((edge_coloring_method == 's') || (edge_coloring_method == 't')) {
                   edge_sequential_colors = (edge_coloring_method == 's') ? true : false;
                   edge_coloring_method = 's';
                }
             }
-            break;
-
-         case 'E':
-            split_line(optarg, edge_color_names, ",");
-            if (edge_color_names.size() > 0 && !strcasecmp(edge_color_names[0],"seq")) {
-               edge_seq = true;
-               if (edge_color_names.size() > 1)
-                  sscanf(edge_color_names[1], "%d", &edge_seq_start);
-               if (edge_color_names.size() > 2)
-                  sscanf(edge_color_names[2], "%d", &edge_seq_graduation);
-              if (edge_color_names.size() > 3) {
-                  sscanf(edge_color_names[3], "%d", &edge_seq_pool_size);
-                  if (edge_seq_pool_size < 1)
-                     error("pool size must be greater than 0",c);
-               }
-               edge_color_names.clear();
-            }
-            else
-            if (edge_color_names.size() > 0 && !strcasecmp(edge_color_names[0],"random")) {
-               if (edge_color_names.size() > 1) {
-                  sscanf(edge_color_names[1], "%d", &edge_deal);
-                  if (edge_deal < 1)
-                     error("indexes to randomize must be positive",c);
-               }
-               if (edge_color_names.size() > 2) {
-                  sscanf(edge_color_names[2], "%d", &edge_deck);
-                  if (edge_deck < 2)
-                     error("indexes randomizing set must be positive",c);
-                  if (edge_deck < edge_deal)
-                     error("indexes randomizing set must not be less than n",c);
-               }
-               if (edge_deal < 0)
-                  edge_deal = 0;
-               if (!edge_deck)
-                  edge_deck = edge_deal;
-               edge_color_names.clear();
-            }
-            break;
-            
-         case 'S':
-            symmetric_coloring = true;
             break;
 
          case 'U':
@@ -585,7 +472,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
             error("hybrids have no twist 0","t");
 
          if (longitudes.front() != longitudes.back())
-            warning("for hybrids m2 has no effect. Full models only","m");
+            warning("for hybrids m2 has no effect. Full models only","M");
          longitudes.back() = longitudes.front()/2;
 
          if (closure.length() > 0) {
@@ -604,7 +491,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
 
       // Let us allow globes (Twist = 0) to have uneven number of longitudes
       if((twist != 0) && (!is_even(longitudes.front())))
-         error("if twist -t is not 0 then -m m must be even","t");
+         error("if twist -t is not 0 then -M m must be even","M");
 
       // poles are only for odd order or even order side cuts
       if (is_even(ncon_order) && point_cut) {
@@ -638,152 +525,35 @@ void ncon_opts::process_command_line(int argc, char **argv)
    
    if (((face_coloring_method != 's') && (face_coloring_method != 't') &&
         (edge_coloring_method != 's') && (edge_coloring_method != 't')) && symmetric_coloring)
-      error("symmetric coloring is only for coloring methods s,S or t,T","S");
+      error("symmetric coloring is only for coloring methods s or t","S");
       
    if (!is_even(ncon_order) && symmetric_coloring)
       warning("symmetric coloring is the same an non-symmetric coloring for odd order n-icons","S");
-         
-   // Set up the face color map. If none specified build default
-   bool face_col_map = clrngs[2].get_cmaps().size() ? true : false;
-   if(!face_col_map) {
-      color_map_map *col_map = new color_map_map;
-      col_map->read_named_colors();
-      clrngs[2].add_cmap(col_map);
-   }
-   
-   output_face_indexes = strchr(write_indexes.c_str(), 'f');
-   if (face_col_map && output_face_indexes)
-      warning("face color map file has no effect when writing face color indexes","M");
 
-   //for(unsigned int i=0; i<col_map.size(); i++) {
-   //   vec3d cv = col_map[i].get_vec3d();
-   //   fprintf(stderr, "%d: RGBColor[%g, %g, %g]\n", i, cv[0], cv[1], cv[2]);
-   //}
-
-   // default face colors are set here
-   if (!face_col_map && !face_color_names.size() && !face_seq && face_deal < 0) {
-      char defs[] = "red,darkorange1,yellow,darkgreen,cyan,blue,magenta,"
-                    "white,grey,black";
-      split_line(defs, face_color_names, ",");
-   }
-   
-   // set up face color index map
-   for (unsigned int i=0;i<face_color_names.size();i++) {
-      col_val col;
-      int opq = face_pattern[i%face_pattern.size()] == '1' ? face_opacity : 255;
-      
-      // get the X11 colormap index number for the color name
-      if(col.read_colorname(face_color_names[i], 0, true)) {
-         if (face_col_map)
-            error("if color map specify only color index numbers","F");
-      }
-      else {
-         int tmp;
-         if(read_int(face_color_names[i], &tmp))
-            col = col_val(abs(tmp));
-      } 
-
-      // patch for invisible faces
-      if (!strcmp(face_color_names[i],"invisible")) {
-         col = col_val(col_val::invisible);
-         opq = 0;
-      }
-
-      if (!col.is_set())
-         warning(msg_str("face color '%s' not found. using grey",
-                  face_color_names[i]), "F");
-      add_color(face_colors,col,opq);
-   }
-
-   // can't have empty face color list. if not sequential create default dealt color map
-   if (!face_colors.size() && !face_seq && face_deal < 0)
-      face_deal = 0;
-
-   // Set up the edge color map. If none specified build default
-   bool edge_col_map = clrngs[1].get_cmaps().size() ? true : false;
-   if(!edge_col_map) {
-      color_map_map *col_map = new color_map_map;
-      col_map->read_named_colors();
-      clrngs[1].add_cmap(col_map);
-   }
-   
-   output_edge_indexes = strchr(write_indexes.c_str(), 'e');
-   if (edge_col_map && output_edge_indexes)
-      warning("edge color map file has no effect when writing edge color indexes","M");
-      
-   // vertex color map is the same as the edge color map
-   clrngs[0] = clrngs[1];
-
-   // patch for when edges have no color (separate from invisible ones)
-   if (edge_set_no_color) {
-      if (edge_color_names.size()) {
-         warning("when edges have no color, edge colors names ignored","E");
-         edge_color_names.clear();
-      }
-      if (edge_opacity >= 0) {
-         warning("when edges have no color, transparency setting ignored","U");
-         edge_opacity = -1;
-      }
-      // reset to default so no other edge pattern will emerge
-      edge_pattern = "1";
-      edge_seq = false;
-      edge_deal = -1;
-
-      // color model with unset edge color
-      add_color(edge_colors,col_val(UNSET_EDGE_COLOR),0);
-   }
+   if((clrngs[2].get_cmaps()).size())
+      face_map = clrngs[2];
    else
-   if (!edge_col_map && !edge_color_names.size() && !edge_seq && edge_deal < 0) {
-      char defs[] = "red,darkorange1,yellow,darkgreen,cyan,blue,magenta,"
-                    "white,grey,black";
-      split_line(defs, edge_color_names, ",");
-   }
-   
-   // set up edge color index map
-   for (unsigned int i=0;i<edge_color_names.size();i++) {
-      col_val col;
-      int opq = edge_pattern[i%edge_pattern.size()] == '1' ? edge_opacity : 255;
-      
-      // get the X11 colormap index number for the color name
-      if(col.read_colorname(edge_color_names[i], 0, true)) {
-         if (edge_col_map)
-            error("if color map specify only color index numbers","F");
-      }
-      else {
-         int tmp;
-         if(read_int(edge_color_names[i], &tmp))
-            col = col_val(abs(tmp));
-      } 
+{
+      face_map.add_cmap(alloc_default_map());
+fprintf(stderr,"adding default face map\n");
+}
 
-      // patch for invisible edges
-      if (!strcmp(edge_color_names[i],"invisible")) {
-         col = col_val(col_val::invisible);
-         opq = 0;
-      }
+   // patch for setting edges with no color
+   if (edge_set_no_color)
+      edge_map.add_cmap(alloc_no_color_map());
+   else
+   // process as was done with face map
+   if((clrngs[1].get_cmaps()).size())
+      edge_map = clrngs[1];
+   else
+{
+      edge_map.add_cmap(alloc_default_map());
+fprintf(stderr,"adding default edge map\n");
+}
 
-      if (!col.is_set())
-         warning(msg_str("edge color '%s' not found. using grey",
-               edge_color_names[i]), "E");
-      add_color(edge_colors,col,opq);
-   }
-   
-   // can't have empty edge color list. if not sequential create default dealt color map
-   if (edge_colors.size() == 0 && !edge_seq && edge_deal < 0)
-      edge_deal = 0;
-   
-   if (output_face_indexes && face_opacity >= 0)
-      warning("when writing face indexes, transparency setting ignored","T");
-   if (!face_coloring_method && face_opacity >= 0)
-      warning("when faces are not colored, transparency setting ignored","T");
-   if ((!face_seq && face_deal < 0) && (face_pattern.length() > face_colors.size()))
-      warning("not all of face transparency pattern will be used","O");
-      
-   if (output_edge_indexes && edge_opacity >= 0)
-      warning("when writing edge indexes, transparency setting ignored","U");
-   if (edge_set_no_color && edge_opacity >= 0)
-      warning("when edges are not colored, transparency setting ignored","U");
-   if ((!edge_seq && edge_deal < 0) && (edge_pattern.length() > edge_colors.size()))
-      warning("not all of edge transparency pattern will be used","");
+   // vertex color map is the same as the edge color map
+   //if((clrngs[0].get_cmaps()).size())
+   //   warning("vertex map has no effect","m");
 }
 
 int longitudinal_faces(int ncon_order, bool point_cut)
@@ -1723,41 +1493,6 @@ void ncon_info(int ncon_order, bool point_cut, int twist, bool hybrid, bool info
       fprintf(stderr,"\n");
    }
 }
- 
-void build_deal(int num_cards, int deck_size, int opacity, string face_pattern, vector<colorVal *> &color_val)
-{
-   rand_gen ran;
-   ran.time_seed();
-
-   vector<int> cards;
-   for(int i=0; i<deck_size; i++)
-      cards.push_back(i);
-      
-   for(int i=0; i<num_cards; i++) {
-      int random = ran.ran_int_in_range(0,deck_size-1);
-      int j = cards[random%cards.size()];
-      int opq = face_pattern[i%face_pattern.size()] == '1' ? opacity : 255;
-      add_color(color_val,col_val(j),opq);
-      cards.erase(cards.begin()+random%cards.size());
-   }
-}
-
-void build_sequence(int num_entries, int seq_start, int seq_graduation, int seq_pool_size, int opacity, string face_pattern, vector<colorVal *> &color_val)
-{
-   if (!seq_pool_size) {
-      seq_start = abs(seq_start);
-      seq_graduation = abs(seq_graduation);
-   }
-      
-   color_val.clear();
-   for(unsigned int i=0; i<(unsigned int)num_entries; i++) {
-      int opq = face_pattern[i%face_pattern.size()] == '1' ? opacity : 255;
-      if (!seq_pool_size)
-         add_color(color_val,col_val((i+seq_start)*seq_graduation),opq);
-      else
-         add_color(color_val,col_val(((i+seq_start)*seq_graduation)%seq_pool_size),opq);
-   }
-}
 
 void color_uncolored_faces(col_geom_v &geom, col_val default_color)
 {
@@ -1806,19 +1541,6 @@ void color_unused_edges(col_geom_v &geom, col_val unused_edge_color)
    }
 }
 
-void unset_colored_edges(col_geom_v &geom, col_val unset_edge_color)
-{ 
-   for (unsigned int i=0;i<geom.edges().size();i++) {
-      if (geom.get_e_col(i) == unset_edge_color)
-         geom.set_e_col(i,col_val());
-   }
-   
-   for (unsigned int i=0;i<geom.verts().size();i++) {
-      if (geom.get_v_col(i) == unset_edge_color)
-         geom.set_v_col(i,col_val());
-   }
-}
-
 void reassert_colored_edges(col_geom_v &geom, col_val default_color)
 {
    const vector<vector<int> > &edges = geom.edges();
@@ -1845,105 +1567,53 @@ col_val set_alpha(col_val c, int a)
    return col_val(c[0],c[1],c[2],a);
 }
 
-void apply_face_opacity(col_geom_v &geom, vector<faceList *> &face_list)
+// safe transparency setting. don't allow alpha set if
+// color is index
+// color is invisible
+// -T or -U have not been set
+void set_vert_color(col_geom_v &geom, int i, col_val c, int opacity)
 {
-   for (unsigned int i=0;i<face_list.size();i++) {
-      if ((geom.get_f_col(i)).is_set())
-         geom.set_f_col(i,set_alpha(geom.get_f_col(i),face_list[i]->opacity));
-   }
+   if (c.is_val() && !c.is_inv() && opacity != -1)
+      c = set_alpha(c,opacity);
+   geom.set_v_col(i,c);
 }
 
-void apply_edge_opacity(col_geom_v &geom, vector<edgeList *> &edge_list, vector<poleList *> &pole)
+void set_edge_col(col_geom_v &geom, int i, col_val c, int opacity)
 {
-   const vector<vector<int> > &edges = geom.edges();
-   
-   for (unsigned int i=0;i<edge_list.size();i++) {
-      int j = edge_list[i]->edge_no;
-      if ((geom.get_e_col(j)).is_set()) {
-         int opq = edge_list[i]->opacity;
-         geom.set_e_col(j,set_alpha(geom.get_e_col(j),opq));
-         int v1 = edges[j][0];
-         int v2 = edges[j][1];
-         geom.set_v_col(v1,set_alpha(geom.get_v_col(v1),opq));
-         geom.set_v_col(v2,set_alpha(geom.get_v_col(v2),opq));
-      }
-   }
-
-   for (unsigned int i=0;i<2;i++) {
-      if (pole[i]->idx > -1) {
-         if ((geom.get_v_col(pole[i]->idx)).is_set()) {
-            int opq = pole[i]->opacity;
-            geom.set_v_col(pole[i]->idx,set_alpha(geom.get_v_col(pole[i]->idx),opq));
-         }
-      }
-   }
+   if (c.is_val() && !c.is_inv() && opacity != -1)
+      c = set_alpha(c,opacity);
+   geom.set_e_col(i,c);
 }
 
-void apply_color_values(col_geom_v &geom, ncon_opts &opts)
+void set_face_color(col_geom_v &geom, int i, col_val c, int opacity)
 {
-   if (!opts.output_face_indexes) {
-      opts.clrngs[2].set_geom(&geom);
-      opts.clrngs[2].f_apply_cmap();
-   }
-   if (!opts.output_edge_indexes) {
-      opts.clrngs[1].set_geom(&geom);
-      opts.clrngs[1].e_apply_cmap();
-      opts.clrngs[0].set_geom(&geom);
-      opts.clrngs[0].v_apply_cmap();
-   }
-}
-
-int calc_opacity(col_val ci, int opacity, const coloring &clrng)
-{
-   int ret_opacity = 255;
-
-   if (ci.is_set() && !ci.is_idx())
-      // it is invisible or unset edge color, all else are stored as indexes
-      ret_opacity = 255-ci.get_trans();
-   else
-   if (!ci.is_set())
-      // future opacity will be set to parameter base opacity below
-      ret_opacity = 255;
-   else {
-      // get opacity from map
-      col_val col = clrng.get_col(ci.get_idx());
-      if(col.is_val())
-         ret_opacity = 255-col.get_trans();
-   }
- 
-   if (opacity >= 0 && ret_opacity == 255)
-      ret_opacity = opacity;
-      
-   return ret_opacity;
-}
-
-int set_face_index_and_calc_opacity(col_geom_v &geom, int i, col_val c, int opacity, coloring &clrng)
-{
+   if (c.is_val() && !c.is_inv() && opacity != -1)
+      c = set_alpha(c,opacity);
    geom.set_f_col(i,c);
-   return (calc_opacity(c, opacity, clrng));
 }
 
-void set_edge_and_verts_col(col_geom_v &geom, int i, col_val c)
+void set_edge_and_verts_col(col_geom_v &geom, int i, col_val c, int opacity)
 {
-      const vector<vector<int> > &edges = geom.edges();
-      geom.set_e_col(i,c);
-      geom.set_v_col(edges[i][0],c);
-      geom.set_v_col(edges[i][1],c);
+   set_edge_col(geom,i,c,opacity);
+
+   set_vert_color(geom,geom.edges()[i][0],c,opacity);
+   set_vert_color(geom,geom.edges()[i][1],c,opacity);
 }
 
-int set_edge_index_and_calc_opacity(col_geom_v &geom, int i, col_val c, int opacity, coloring &clrng)
+void set_edge_color(col_geom_v &geom, int i, col_val c, int opacity)
 {
-   set_edge_and_verts_col(geom,i,c);
-   return (calc_opacity(c, opacity, clrng));
+   set_edge_and_verts_col(geom,i,c,opacity);
 }
 
-void ncon_edge_coloring(col_geom_v &geom, vector<edgeList *> &edge_list, vector<poleList *> &pole, char edge_coloring_method, vector<colorVal *> &edge_colors,
-                        coloring &e_clrng, int edge_opacity, map<int, pair<int, int> > &edge_color_table, bool point_cut, bool hybrid)
+
+void ncon_edge_coloring(col_geom_v &geom, vector<edgeList *> &edge_list, vector<poleList *> &pole, char edge_coloring_method,
+                        color_map_multi edge_map, int edge_opacity, string edge_pattern,
+                        map<int, pair<int, int> > &edge_color_table, bool point_cut, bool hybrid)
 {
    const vector<vector<int> > &edges = geom.edges();
    const vector<vec3d> &verts = geom.verts();
-   
-   int sz = edge_colors.size();
+
+   int opq = 255;
 
    if ( edge_coloring_method == 's' ) {
       for (unsigned int i=0;i<edge_list.size();i++) {
@@ -1951,26 +1621,26 @@ void ncon_edge_coloring(col_geom_v &geom, vector<edgeList *> &edge_list, vector<
          int lat = edge_list[i]->lat;
 
          if ( edge_list[i]->lat < 0 ) {
-            edge_list[i]->opacity = set_edge_index_and_calc_opacity(geom,j,col_val(),edge_opacity,e_clrng);
+            set_edge_color(geom,j,col_val(),edge_opacity);
          }
          else {
-            if ( edge_list[i]->rotate || (hybrid && point_cut)) { // front side
-               int col_idx = edge_color_table[lat].second%sz;
-               edge_list[i]->opacity = set_edge_index_and_calc_opacity(geom,j,edge_colors[col_idx]->col,edge_colors[col_idx]->opacity,e_clrng);
-            }
-            else {
-               int col_idx = edge_color_table[lat].first%sz;
-               edge_list[i]->opacity = set_edge_index_and_calc_opacity(geom,j,edge_colors[col_idx]->col,edge_colors[col_idx]->opacity,e_clrng);
-            }
+            int col_idx = 0;
+            if ( edge_list[i]->rotate || (hybrid && point_cut)) // front side
+               col_idx = edge_color_table[lat].second;
+            else
+               col_idx = edge_color_table[lat].first;
+
+            opq = edge_pattern[col_idx%edge_pattern.size()] == '1' ? edge_opacity : 255;
+            set_edge_color(geom,j,edge_map.get_col(col_idx),opq);
          }
       }
       
       for (unsigned int i=0;i<2;i++) {
          if (pole[i]->idx > -1) {
             int lat = pole[i]->lat;
-            int col_idx = edge_color_table[lat].second%sz;
-            pole[i]->opacity = calc_opacity(edge_colors[col_idx]->col,edge_colors[col_idx]->opacity,e_clrng);
-            geom.set_v_col(pole[i]->idx,edge_colors[col_idx]->col);
+            int col_idx = edge_color_table[lat].second;
+            opq = edge_pattern[col_idx%edge_pattern.size()] == '1' ? edge_opacity : 255;;
+            set_vert_color(geom,pole[i]->idx,edge_map.get_col(col_idx),opq);
          }
       }
    }
@@ -1979,21 +1649,20 @@ void ncon_edge_coloring(col_geom_v &geom, vector<edgeList *> &edge_list, vector<
       for (unsigned int i=0;i<edge_list.size();i++) {
          int j = edge_list[i]->edge_no; 
          if ( edge_list[i]->lat < 0 ) {
-            edge_list[i]->opacity = set_edge_index_and_calc_opacity(geom,j,col_val(),edge_opacity,e_clrng);
+            set_edge_color(geom,j,col_val(),edge_opacity);
          }
          else {
             int lat = edge_list[i]->lat;
-            int col_idx = lat%sz;
-            edge_list[i]->opacity = set_edge_index_and_calc_opacity(geom,j,edge_colors[col_idx]->col,edge_colors[col_idx]->opacity,e_clrng);
+            opq = edge_pattern[lat%edge_pattern.size()] == '1' ? edge_opacity : 255;
+            set_edge_color(geom,j,edge_map.get_col(lat),opq);
          }
       }
            
       for (unsigned int i=0;i<2;i++) {
          if (pole[i]->idx > -1) {
             int lat = pole[i]->lat;
-            int col_idx = lat%sz;
-            pole[i]->opacity = calc_opacity(edge_colors[col_idx]->col,edge_colors[col_idx]->opacity,e_clrng);
-            geom.set_v_col(pole[i]->idx,edge_colors[col_idx]->col);
+            opq = edge_pattern[lat%edge_pattern.size()] == '1' ? edge_opacity : 255;
+            set_vert_color(geom,pole[i]->idx,edge_map.get_col(lat),opq);
          }
       }
    }
@@ -2002,20 +1671,19 @@ void ncon_edge_coloring(col_geom_v &geom, vector<edgeList *> &edge_list, vector<
       for (unsigned int i=0;i<edge_list.size();i++) {
          int j = edge_list[i]->edge_no;
          if ( edge_list[i]->lon < 0 ) {
-            edge_list[i]->opacity = set_edge_index_and_calc_opacity(geom,j,col_val(),edge_opacity,e_clrng);
+            set_edge_color(geom,j,col_val(),edge_opacity);
          }
          else {
             int lon = edge_list[i]->lon;
-            int col_idx = lon%sz;
-            edge_list[i]->opacity = set_edge_index_and_calc_opacity(geom,j,edge_colors[col_idx]->col,edge_colors[col_idx]->opacity,e_clrng);
+            opq = edge_pattern[lon%edge_pattern.size()] == '1' ? edge_opacity : 255;
+            set_edge_color(geom,j,edge_map.get_col(lon),opq);
          }
       }
       
       // poles don't have any longitude
       for (unsigned int i=0;i<2;i++) {
          if (pole[i]->idx > -1) {
-            pole[i]->opacity = 255;
-            geom.set_v_col(pole[i]->idx,col_val());
+            set_vert_color(geom,pole[i]->idx,col_val(DEFAULT_COLOR),edge_opacity);
          }
       }
    }
@@ -2024,38 +1692,44 @@ void ncon_edge_coloring(col_geom_v &geom, vector<edgeList *> &edge_list, vector<
       for (unsigned int i=0;i<edge_list.size();i++) {
          int j = edge_list[i]->edge_no;
          if ( edge_list[i]->lat < 0 )
-            edge_list[i]->opacity = set_edge_index_and_calc_opacity(geom,j,col_val(),edge_opacity,e_clrng);
-         else
-         if ( (is_even(edge_list[i]->lat) && is_even(edge_list[i]->lon)) ||
-              (!is_even(edge_list[i]->lat) && !is_even(edge_list[i]->lon)) )
-            edge_list[i]->opacity = set_edge_index_and_calc_opacity(geom,j,edge_colors[0%sz]->col,edge_colors[0%sz]->opacity,e_clrng);
-         else
-            edge_list[i]->opacity = set_edge_index_and_calc_opacity(geom,j,edge_colors[1%sz]->col,edge_colors[1%sz]->opacity,e_clrng);
+            set_edge_color(geom,j,col_val(),edge_opacity);
+         else {
+            int n = -1;
+            if ( (is_even(edge_list[i]->lat) && is_even(edge_list[i]->lon)) ||
+                 (!is_even(edge_list[i]->lat) && !is_even(edge_list[i]->lon)) )
+               n = 0;
+            else
+               n = 1;
+
+            opq = edge_pattern[n%edge_pattern.size()] == '1' ? edge_opacity : 255;
+            set_edge_color(geom,j,edge_map.get_col(n),opq);
+         }
       }
       
       // poles will be colored based North/South
       for (unsigned int i=0;i<2;i++) {
          if (pole[i]->idx > -1) {
-            pole[i]->opacity = calc_opacity(edge_colors[i%sz]->col,edge_colors[i%sz]->opacity,e_clrng);
-            geom.set_v_col(pole[i]->idx,edge_colors[i%sz]->col);
+            opq = edge_pattern[i%edge_pattern.size()] == '1' ? edge_opacity : 255;
+            set_vert_color(geom,pole[i]->idx,edge_map.get_col(i),opq);
          }
       }
    }
    else
    if ( edge_coloring_method == 'n' ) {
+      // keep track of index beyond loop
       unsigned int k = 0;
       for (unsigned int i=0;i<edge_list.size();i++) {
          int j = edge_list[i]->edge_no;
-         int col_idx = k%sz;
-         edge_list[i]->opacity = set_edge_index_and_calc_opacity(geom,j,edge_colors[col_idx]->col,edge_colors[col_idx]->opacity,e_clrng);
+         opq = edge_pattern[i%edge_pattern.size()] == '1' ? edge_opacity : 255;
+         set_edge_color(geom,j,edge_map.get_col(i),opq);
          k++;
       }
       
       for (unsigned int i=0;i<2;i++) {
-         int col_idx = k%sz;
+         int col_idx = k;
          if (pole[i]->idx > -1) {
-            pole[i]->opacity = calc_opacity(edge_colors[col_idx]->col,edge_colors[col_idx]->opacity,e_clrng);
-            geom.set_v_col(pole[i]->idx,edge_colors[col_idx]->col);
+            opq = edge_pattern[k%edge_pattern.size()] == '1' ? edge_opacity : 255;
+            set_vert_color(geom,pole[i]->idx,edge_map.get_col(col_idx),opq);
          }
          k++;
       }
@@ -2080,20 +1754,30 @@ void ncon_edge_coloring(col_geom_v &geom, vector<edgeList *> &edge_list, vector<
          if (hybrid && point_cut)
             d *= -1;
 
+         col_val c;
+         int n = -1;
          if ( d > 0.0 )
-            edge_list[i]->opacity = set_edge_index_and_calc_opacity(geom,j,edge_colors[0%sz]->col,edge_colors[0%sz]->opacity,e_clrng);
+            n = 0;
          else
          if ( d < 0.0 )
-            edge_list[i]->opacity = set_edge_index_and_calc_opacity(geom,j,edge_colors[1%sz]->col,edge_colors[1%sz]->opacity,e_clrng);
-         else
-            edge_list[i]->opacity = set_edge_index_and_calc_opacity(geom,j,col_val(),edge_opacity,e_clrng);
+            n = 1;
+         else {
+            n = -1;
+            opq = edge_opacity;
+            c = col_val(DEFAULT_COLOR);
+         }
+
+         if (n > -1) {
+            opq = edge_pattern[n%edge_pattern.size()] == '1' ? edge_opacity : 255;
+            c = edge_map.get_col(n);
+         }
+         set_edge_color(geom,j,c,opq);
       }
       
       // poles are on the axis
       for (unsigned int i=0;i<2;i++) {
          if (pole[i]->idx > -1) {
-            pole[i]->opacity = 255;
-            geom.set_v_col(pole[i]->idx,col_val());
+            set_vert_color(geom,pole[i]->idx,col_val(DEFAULT_COLOR),edge_opacity);
          }
       }
    }
@@ -2114,51 +1798,62 @@ void ncon_edge_coloring(col_geom_v &geom, vector<edgeList *> &edge_list, vector<
          if (hybrid && point_cut)
             dz *= -1;
 
+         col_val c;
+         int n = -1;
          // by octant number 1 to 8
          if (( dx > 0.0 ) && ( dy > 0.0 ) && ( dz > 0.0 ))
-            edge_list[i]->opacity = set_edge_index_and_calc_opacity(geom,j,edge_colors[0%sz]->col,edge_colors[0%sz]->opacity,e_clrng);
+            n = 0;
          else
          if (( dx < 0.0 ) && ( dy > 0.0 ) && ( dz > 0.0 ))
-            edge_list[i]->opacity = set_edge_index_and_calc_opacity(geom,j,edge_colors[1%sz]->col,edge_colors[1%sz]->opacity,e_clrng);
+            n = 1;
          else
          if (( dx < 0.0 ) && ( dy < 0.0 ) && ( dz > 0.0 ))
-            edge_list[i]->opacity = set_edge_index_and_calc_opacity(geom,j,edge_colors[2%sz]->col,edge_colors[2%sz]->opacity,e_clrng);
+            n = 2;
          else
          if (( dx > 0.0 ) && ( dy < 0.0 ) && ( dz > 0.0 ))
-            edge_list[i]->opacity = set_edge_index_and_calc_opacity(geom,j,edge_colors[3%sz]->col,edge_colors[3%sz]->opacity,e_clrng);
+            n = 3;
          else
          if (( dx > 0.0 ) && ( dy > 0.0 ) && ( dz < 0.0 ))
-            edge_list[i]->opacity = set_edge_index_and_calc_opacity(geom,j,edge_colors[4%sz]->col,edge_colors[4%sz]->opacity,e_clrng);
+            n = 4;
          else
          if (( dx < 0.0 ) && ( dy > 0.0 ) && ( dz < 0.0 ))
-            edge_list[i]->opacity = set_edge_index_and_calc_opacity(geom,j,edge_colors[5%sz]->col,edge_colors[5%sz]->opacity,e_clrng);
+            n = 5;
          else
          if (( dx < 0.0 ) && ( dy < 0.0 ) && ( dz < 0.0 ))
-            edge_list[i]->opacity = set_edge_index_and_calc_opacity(geom,j,edge_colors[6%sz]->col,edge_colors[6%sz]->opacity,e_clrng);
+            n = 6;
          else
          if (( dx > 0.0 ) && ( dy < 0.0 ) && ( dz < 0.0 ))
-            edge_list[i]->opacity = set_edge_index_and_calc_opacity(geom,j,edge_colors[7%sz]->col,edge_colors[7%sz]->opacity,e_clrng);
-         else
-            edge_list[i]->opacity = set_edge_index_and_calc_opacity(geom,j,col_val(),edge_opacity,e_clrng);
+            n = 7;
+         else {
+            n = -1;
+            opq = edge_opacity;
+            c = col_val(DEFAULT_COLOR);
+         }
+
+         if (n > -1) {
+            opq = edge_pattern[n%edge_pattern.size()] == '1' ? edge_opacity : 255;
+            c = edge_map.get_col(n);
+         }
+         set_edge_color(geom,j,c,opq);
       }
 
       // poles are on the axis
       for (unsigned int i=0;i<2;i++) {
          if (pole[i]->idx > -1) {
-            pole[i]->opacity = 255;
-            geom.set_v_col(pole[i]->idx,col_val());
+            set_vert_color(geom,pole[i]->idx,col_val(DEFAULT_COLOR),edge_opacity);
          }
       }
    }
 }
 
-void ncon_face_coloring(col_geom_v &geom, vector<faceList *> &face_list, char face_coloring_method, vector<colorVal *> &face_colors,
-                        coloring &f_clrng, int face_opacity, map<int, pair<int, int> > &face_color_table, bool point_cut, bool hybrid)
+void ncon_face_coloring(col_geom_v &geom, vector<faceList *> &face_list, char face_coloring_method,
+                        color_map_multi face_map, int face_opacity, string face_pattern,
+                        map<int, pair<int, int> > &face_color_table, bool point_cut, bool hybrid)
 {
    const vector<vector<int> > &faces = geom.faces();
    const vector<vec3d> &verts = geom.verts();
-   
-   int sz = face_colors.size();
+
+   int opq = 255;
    
    if ( face_coloring_method == 's' ) {
       for (unsigned int i=0;i<face_list.size();i++) {
@@ -2166,17 +1861,17 @@ void ncon_face_coloring(col_geom_v &geom, vector<faceList *> &face_list, char fa
          int lat = face_list[i]->lat;
 
          if ( face_list[i]->lat < 0 ) {
-            face_list[i]->opacity = set_face_index_and_calc_opacity(geom,j,col_val(),face_opacity,f_clrng);
+            set_face_color(geom,j,col_val(),face_opacity);
          }
          else {
-            if ( face_list[i]->rotate || (hybrid && point_cut)) { // front side
-               int col_idx = face_color_table[lat].second%sz;
-               face_list[i]->opacity = set_face_index_and_calc_opacity(geom,j,face_colors[col_idx]->col,face_colors[col_idx]->opacity,f_clrng);
-            }
-            else {
-               int col_idx = face_color_table[lat].first%sz;
-               face_list[i]->opacity = set_face_index_and_calc_opacity(geom,j,face_colors[col_idx]->col,face_colors[col_idx]->opacity,f_clrng);
-            }
+            int col_idx = 0;
+            if ( face_list[i]->rotate || (hybrid && point_cut)) // front side
+               col_idx = face_color_table[lat].second;
+            else
+               col_idx = face_color_table[lat].first;
+
+            opq = face_pattern[col_idx%face_pattern.size()] == '1' ? face_opacity : 255;
+            set_face_color(geom,j,face_map.get_col(col_idx),opq);
          }
       }
    }
@@ -2185,12 +1880,12 @@ void ncon_face_coloring(col_geom_v &geom, vector<faceList *> &face_list, char fa
       for (unsigned int i=0;i<face_list.size();i++) {
          int j = face_list[i]->face_no; 
          if ( face_list[i]->lat < 0 ) {
-            face_list[i]->opacity = set_face_index_and_calc_opacity(geom,j,col_val(),face_opacity,f_clrng);
+            set_face_color(geom,j,col_val(),face_opacity);
          }
          else {
-            int lat = face_list[i]->lat;
-            int col_idx = lat%sz;
-            face_list[i]->opacity = set_face_index_and_calc_opacity(geom,j,face_colors[col_idx]->col,face_colors[col_idx]->opacity,f_clrng);
+            int lat = face_list[i]->lat;;
+            opq = face_pattern[lat%face_pattern.size()] == '1' ? face_opacity : 255;
+            set_face_color(geom,j,face_map.get_col(lat),opq);
          }
       }
    }
@@ -2199,12 +1894,12 @@ void ncon_face_coloring(col_geom_v &geom, vector<faceList *> &face_list, char fa
       for (unsigned int i=0;i<face_list.size();i++) {
          int j = face_list[i]->face_no;
          if ( face_list[i]->lon < 0 ) {
-            face_list[i]->opacity = set_face_index_and_calc_opacity(geom,j,col_val(),face_opacity,f_clrng);
+            set_face_color(geom,j,col_val(),face_opacity);
          }
          else {
             int lon = face_list[i]->lon;
-            int col_idx = lon%sz;
-            face_list[i]->opacity = set_face_index_and_calc_opacity(geom,j,face_colors[col_idx]->col,face_colors[col_idx]->opacity,f_clrng);
+            opq = face_pattern[lon%face_pattern.size()] == '1' ? face_opacity : 255;
+            set_face_color(geom,j,face_map.get_col(lon),opq);
          }
       }
    }
@@ -2213,23 +1908,26 @@ void ncon_face_coloring(col_geom_v &geom, vector<faceList *> &face_list, char fa
       for (unsigned int i=0;i<face_list.size();i++) {
          int j = face_list[i]->face_no;
          if ( face_list[i]->lat < 0 )
-            face_list[i]->opacity = set_face_index_and_calc_opacity(geom,j,col_val(),face_opacity,f_clrng);
-         else
-         if ( (is_even(face_list[i]->lat) && is_even(face_list[i]->lon)) ||
-              (!is_even(face_list[i]->lat) && !is_even(face_list[i]->lon)) )
-            face_list[i]->opacity = set_face_index_and_calc_opacity(geom,j,face_colors[0%sz]->col,face_colors[0%sz]->opacity,f_clrng);
-         else
-            face_list[i]->opacity = set_face_index_and_calc_opacity(geom,j,face_colors[1%sz]->col,face_colors[1%sz]->opacity,f_clrng);
+            set_face_color(geom,j,col_val(),face_opacity);
+         else {
+            int n = -1;
+            if ( (is_even(face_list[i]->lat) && is_even(face_list[i]->lon)) ||
+                 (!is_even(face_list[i]->lat) && !is_even(face_list[i]->lon)) )
+               n = 0;
+            else
+               n = 1;
+
+            opq = face_pattern[n%face_pattern.size()] == '1' ? face_opacity : 255;
+            set_face_color(geom,j,face_map.get_col(n),opq);
+         }
       }
    }
    else
    if ( face_coloring_method == 'n' ) {
-      unsigned int k = 0;
       for (unsigned int i=0;i<face_list.size();i++) {
          int j = face_list[i]->face_no;
-         int col_idx = k%sz;
-         face_list[i]->opacity = set_face_index_and_calc_opacity(geom,j,face_colors[col_idx]->col,face_colors[col_idx]->opacity,f_clrng);
-         k++;
+         opq = face_pattern[i%face_pattern.size()] == '1' ? face_opacity : 255;
+         set_face_color(geom,j,face_map.get_col(i),opq);
       }
    }
    else
@@ -2252,13 +1950,24 @@ void ncon_face_coloring(col_geom_v &geom, vector<faceList *> &face_list, char fa
          if (hybrid && point_cut)
             d *= -1;
 
+         col_val c;
+         int n = -1;
          if ( d > 0.0 )
-            face_list[i]->opacity = set_face_index_and_calc_opacity(geom,j,face_colors[0%sz]->col,face_colors[0%sz]->opacity,f_clrng);
+            n = 0;
          else
          if ( d < 0.0 )
-            face_list[i]->opacity = set_face_index_and_calc_opacity(geom,j,face_colors[1%sz]->col,face_colors[1%sz]->opacity,f_clrng);
-         else
-            face_list[i]->opacity = set_face_index_and_calc_opacity(geom,j,col_val(),face_opacity,f_clrng);
+            n = 1;
+         else {
+            n = -1;
+            opq = face_opacity;
+            c = col_val(DEFAULT_COLOR);
+         }
+
+         if (n > -1) {
+            opq = face_pattern[n%face_pattern.size()] == '1' ? face_opacity : 255;
+            c = face_map.get_col(n);
+         }
+         set_face_color(geom,j,c,opq);
       }
    }
    else
@@ -2279,31 +1988,42 @@ void ncon_face_coloring(col_geom_v &geom, vector<faceList *> &face_list, char fa
             dz *= -1;
 
          // by octant number 1 to 8
+         col_val c;
+         int n = -1;
          if (( dx > 0.0 ) && ( dy > 0.0 ) && ( dz > 0.0 ))
-            face_list[i]->opacity = set_face_index_and_calc_opacity(geom,j,face_colors[0%sz]->col,face_colors[0%sz]->opacity,f_clrng);
+            n = 0;
          else
          if (( dx < 0.0 ) && ( dy > 0.0 ) && ( dz > 0.0 ))
-            face_list[i]->opacity = set_face_index_and_calc_opacity(geom,j,face_colors[1%sz]->col,face_colors[1%sz]->opacity,f_clrng);
+            n = 1;
          else
          if (( dx < 0.0 ) && ( dy < 0.0 ) && ( dz > 0.0 ))
-            face_list[i]->opacity = set_face_index_and_calc_opacity(geom,j,face_colors[2%sz]->col,face_colors[2%sz]->opacity,f_clrng);
+            n = 2;
          else
          if (( dx > 0.0 ) && ( dy < 0.0 ) && ( dz > 0.0 ))
-            face_list[i]->opacity = set_face_index_and_calc_opacity(geom,j,face_colors[3%sz]->col,face_colors[3%sz]->opacity,f_clrng);
+            n = 3;
          else
          if (( dx > 0.0 ) && ( dy > 0.0 ) && ( dz < 0.0 ))
-            face_list[i]->opacity = set_face_index_and_calc_opacity(geom,j,face_colors[4%sz]->col,face_colors[4%sz]->opacity,f_clrng);
+            n = 4;
          else
          if (( dx < 0.0 ) && ( dy > 0.0 ) && ( dz < 0.0 ))
-            face_list[i]->opacity = set_face_index_and_calc_opacity(geom,j,face_colors[5%sz]->col,face_colors[5%sz]->opacity,f_clrng);
+            n = 5;
          else
          if (( dx < 0.0 ) && ( dy < 0.0 ) && ( dz < 0.0 ))
-            face_list[i]->opacity = set_face_index_and_calc_opacity(geom,j,face_colors[6%sz]->col,face_colors[6%sz]->opacity,f_clrng);
+            n = 6;
          else
          if (( dx > 0.0 ) && ( dy < 0.0 ) && ( dz < 0.0 ))
-            face_list[i]->opacity = set_face_index_and_calc_opacity(geom,j,face_colors[7%sz]->col,face_colors[7%sz]->opacity,f_clrng);
-         else
-            face_list[i]->opacity = set_face_index_and_calc_opacity(geom,j,col_val(),face_opacity,f_clrng);
+            n = 7;
+         else {
+            n = -1;
+            opq = face_opacity;
+            c = col_val(DEFAULT_COLOR);
+         }
+
+         if (n > -1) {
+            opq = face_pattern[n%face_pattern.size()] == '1' ? face_opacity : 255;
+            c = face_map.get_col(n);
+         }
+         set_face_color(geom,j,c,opq);
       }
    }
 }
@@ -2402,20 +2122,6 @@ void build_color_tables(map<int, pair<int, int> > &edge_color_table, map<int, pa
 
 void ncon_coloring(col_geom_v &geom, vector<faceList *> &face_list, vector<edgeList *> &edge_list, vector<poleList *> &pole, ncon_opts &opts)
 {
-   if (opts.face_deal > -1)
-      build_deal((!opts.face_deal ? (int)(geom.faces().size()) : opts.face_deal), (!opts.face_deck ? (int)(geom.faces().size()) : opts.face_deck),
-      opts.face_opacity, opts.face_pattern, opts.face_colors);
-   else
-   if (opts.face_seq)
-      build_sequence(geom.faces().size(), opts.face_seq_start, opts.face_seq_graduation, opts.face_seq_pool_size, opts.face_opacity, opts.face_pattern, opts.face_colors);
-
-   if (opts.edge_deal > -1)
-      build_deal((!opts.edge_deal ? (int)(geom.edges().size()) : opts.edge_deal), (!opts.edge_deck ? (int)(geom.edges().size()) : opts.edge_deck),
-      opts.edge_opacity, opts.edge_pattern, opts.edge_colors);
-   else      
-   if (opts.edge_seq)
-      build_sequence(geom.edges().size(), opts.edge_seq_start, opts.edge_seq_graduation, opts.edge_seq_pool_size, opts.edge_opacity, opts.edge_pattern, opts.edge_colors);
- 
    map<int, pair<int, int> > edge_color_table;
    map<int, pair<int, int> > face_color_table;
    if (opts.face_coloring_method == 's' || opts.edge_coloring_method == 's')
@@ -2423,24 +2129,20 @@ void ncon_coloring(col_geom_v &geom, vector<faceList *> &face_list, vector<edgeL
                          opts.ncon_order, opts.point_cut, opts.hybrid, opts.twist,
                          opts.symmetric_coloring, opts.face_sequential_colors, opts.edge_sequential_colors);
    
-   if (opts.face_coloring_method) {
-      ncon_face_coloring(geom, face_list, opts.face_coloring_method, opts.face_colors, opts.clrngs[2], opts.face_opacity, face_color_table, opts.point_cut, opts.hybrid);
-   }
-   if (opts.edge_coloring_method) {
-      ncon_edge_coloring(geom, edge_list, pole, opts.edge_coloring_method, opts.edge_colors, opts.clrngs[1], opts.edge_opacity, edge_color_table, opts.point_cut, opts.hybrid);
-   }
+   if (opts.face_coloring_method)
+      ncon_face_coloring(geom, face_list, opts.face_coloring_method,
+                         opts.face_map, opts.face_opacity, opts.face_pattern,
+                         face_color_table, opts.point_cut, opts.hybrid);
+
+   if (opts.edge_coloring_method)
+      ncon_edge_coloring(geom, edge_list, pole, opts.edge_coloring_method,
+                         opts.edge_map, opts.edge_opacity, opts.edge_pattern,
+                         edge_color_table, opts.point_cut, opts.hybrid);
 
    if (opts.face_coloring_method)
       color_uncolored_faces(geom, col_val(DEFAULT_COLOR));
    if (opts.edge_coloring_method)
       color_uncolored_edges(geom, edge_list, pole, col_val(DEFAULT_COLOR));
-      
-   apply_color_values(geom, opts);
-   
-   if (!opts.output_face_indexes)
-      apply_face_opacity(geom, face_list);
-   if (!opts.output_edge_indexes) 
-      apply_edge_opacity(geom, edge_list, pole);
 }
       
 double hybrid_twist_angle(int n, int t)
@@ -2571,9 +2273,6 @@ void ncon_subsystem(ncon_opts opts)
    // process edges with no color
    if (opts.unused_edge_color.is_set())
       color_unused_edges(geom, opts.unused_edge_color);
-   // edge models of no color have colors unset
-   if (opts.edge_set_no_color)
-      unset_colored_edges(geom, col_val(UNSET_EDGE_COLOR));
    // vertices can get out of sync with their edges.
    if (!opts.edge_set_no_color)
       reassert_colored_edges(geom, col_val(DEFAULT_COLOR));
