@@ -730,6 +730,9 @@ double ryb_to_hsx(double angle)
 
 col_val rgb_complement(const col_val &col, bool ryb_mode)
 {
+   if (!col.is_val() || col.is_inv())
+      return col;
+
    // only need hue so algorithm doesn't matter
    vec4d hsxa = col.get_hsva();
    double angle = rad2deg(2*M_PI*hsxa[0]);
@@ -908,8 +911,8 @@ col_val blend_RGB_centroid(const vector<col_val> &cols, int alpha_mode, bool ryb
       if (ryb_mode) {
          // only need hue so algorithm doesn't matter
          vec4d hsxa = rcol.get_hsva();
-         hsxa[0] = hsx_to_ryb(rad2deg(2*M_PI*hsxa[0]));
-         rcol.set_hsva(hsxa[0]/360.0,hsxa[1],hsxa[2],hsxa[3]);
+         hsxa[0] = hsx_to_ryb(rad2deg(2*M_PI*hsxa[0]))/360.0;
+         rcol.set_hsva(hsxa);
       }
 
       double A = 1.0 - rcol.get_transd();
@@ -931,6 +934,15 @@ col_val blend_RGB_centroid(const vector<col_val> &cols, int alpha_mode, bool ryb
    }
 
    col /= cols_sz;
+
+   if (ryb_mode) {
+      col_val rcol(col);
+      // only need hue so algorithm doesn't matter
+      vec4d hsxa = rcol.get_hsva();
+      hsxa[0] = ryb_to_hsx(rad2deg(2*M_PI*hsxa[0]))/360.0;
+      rcol.set_hsva(hsxa);
+      col = rcol.get_vec4d();
+   }
 
    if (alpha_mode > 1)
       col[3] = (alpha_mode == 2) ? alpha_min : alpha_max;
