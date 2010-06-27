@@ -617,8 +617,8 @@ void plot_rgb_point(col_geom_v &geom, const col_val &col, bool ryb_mode)
    if (ryb_mode) {
       // only need hue so algorithm doesn't matter
       vec4d hsxa = rcol.get_hsva();
-      hsxa[0] = hsx_to_ryb(rad2deg(2*M_PI*hsxa[0]));
-      rcol.set_hsva(hsxa[0]/360.0,hsxa[1],hsxa[2],hsxa[3]);
+      hsxa[0] = hsx_to_ryb(rad2deg(2*M_PI*hsxa[0]))/360.0;
+      rcol.set_hsva(hsxa);
    }
 
    geom.add_col_vert(vec3d(rcol[0]/255.0,rcol[1]/255.0,rcol[2]/255.0),col);
