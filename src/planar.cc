@@ -83,7 +83,7 @@ class planar_opts: public prog_opts {
                         value_power(0.0),
                         sat_threshold(1.0),
                         value_advance(0.0),
-                        alpha_mode(2),
+                        alpha_mode(3),
                         face_opacity(255),
                         sig_compare(INT_MAX),
                         epsilon(0)
