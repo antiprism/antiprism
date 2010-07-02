@@ -83,7 +83,7 @@ class planar_opts: public prog_opts {
                         value_power(0.0),
                         sat_threshold(1.0),
                         value_advance(0.0),
-                        alpha_mode(2),
+                        alpha_mode(3),
                         face_opacity(255),
                         sig_compare(INT_MAX),
                         epsilon(0)
@@ -340,15 +340,6 @@ face_normal::face_normal(const geom_if &geom, int idx, vec3d C, double eps)
    const vector<vec3d> &verts = geom.verts();
    
    normal = face_norm(verts, faces[idx]);
-   
-   // eliminate small error
-   double eps_recip = 1/eps;
-   for(unsigned int i=0; i<3; i++) {
-      if (double_equality(normal[i], 0.0, eps))
-         normal[i] = 0.0;
-      else
-         normal[i] = floorf(normal[i] * eps_recip + 0.5) / eps_recip;
-   }
 //normal.dump("normal");
    
    if (!C.is_set())
@@ -441,6 +432,12 @@ void build_coplanar_faces_list(const geom_if &geom, vector<vector<int> > &coplan
    
    stable_sort( face_normal_table.begin(), face_normal_table.end(), vert_cmp(eps) );
 
+// debug
+//for(unsigned int i=0; i<face_normal_table.size(); i++) {
+//   vec3d v = face_normal_table[i].first;
+//   fprintf(stderr,"%d : %.17lf %.17lf %.17lf\n",i,v[0],v[1],v[2]);
+//}
+
    vector<int> coplanar_face;
    // at least one face is on a plane
    coplanar_face.push_back(face_normal_table[0].second);
@@ -452,6 +449,9 @@ void build_coplanar_faces_list(const geom_if &geom, vector<vector<int> > &coplan
          coplanar_normals.push_back(fnormals[face_normal_table[i-1].second]);
          coplanar_face.clear();
       }
+// debug
+//else
+//fprintf(stderr,"%d and %d are equal\n",i-1,i);
       coplanar_face.push_back(face_normal_table[i].second);
    }
    coplanar_faces_list.push_back(coplanar_face);

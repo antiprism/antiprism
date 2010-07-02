@@ -62,6 +62,7 @@ class col_util_opts: public prog_opts {
       double sat_threshold;
       double value_power;
       double value_advance;
+      int alpha_mode;
       bool cmy_mode;
       bool ryb_mode;
       bool seven_mode;
@@ -84,6 +85,7 @@ class col_util_opts: public prog_opts {
                      plot_centroid(false),
                      sat_threshold(1.0),
                      value_advance(0.0),
+                     alpha_mode(3),
                      cmy_mode(false),
                      ryb_mode(false),
                      seven_mode(false),
@@ -132,6 +134,7 @@ void col_util_opts::usage()
 "               4 numbers can be entered seperated by commas\n"
 "  -u <val>  HSV/HSL value advance. Rotates meaning of white and black\n"
 "               valid values 0.0 to 120.0 degrees (default: 0)\n"
+"  -a <int>  alpha to use for blend. average=1  minimum=2  maximum=3 (default)\n"
 "  -y        RYB mode. Blend colors as in Red-Yellow-Blue color wheel\n"
 "  -c        CMY mode. Complementary colors.  RGB->(RYB/GMO)->CMY->blend\n"
 "\nColor Source Options\n"
@@ -167,7 +170,7 @@ void col_util_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hd:m:k:q:z:f:r:s:t:u:v:bcySl:M:O:UZ:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hd:m:k:q:z:f:r:s:t:u:v:ba:cySl:M:O:UZ:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -257,6 +260,13 @@ void col_util_opts::process_command_line(int argc, char **argv)
             
          case 'b':
             plot_centroid = true;
+            break;
+
+         case 'a':
+            id = get_arg_id(optarg, "average=1|minimum=2|maximum=3", argmatch_add_id_maps, errmsg);
+            if(id=="")
+               error(errmsg);
+            alpha_mode = atoi(id.c_str());
             break;
             
          case 'c':
@@ -387,7 +397,7 @@ void get_chroma(const col_val &col, int chroma_level, double &hue, double &chrom
 
 // furnished by Adrian Rossiter
 void color_wheel(col_geom_v &geom, const vector<col_val> &cols, int color_system_mode,
-                 vector<double> &sat_powers, double sat_threshold, vector<double> &value_powers, double value_advance, bool ryb_mode)
+                 vector<double> &sat_powers, double sat_threshold, vector<double> &value_powers, double value_advance, int alpha_mode, bool ryb_mode)
 {
    // RK - dynamic polygon size
    unsigned int sz = cols.size();
@@ -423,7 +433,7 @@ void color_wheel(col_geom_v &geom, const vector<col_val> &cols, int color_system
       }
       if (color_system_mode == 3)
          // RK - if RGB mode, only show that blend in all four levels
-         geom.add_col_face(face, blend_RGB_centroid(cols, 1, ryb_mode));
+         geom.add_col_face(face, blend_RGB_centroid(cols, alpha_mode, ryb_mode));
       else {
          // RK - only change the powers if there is a new one not the default
          // keeps the center of the bullseye consistent with the last valid power
@@ -432,7 +442,7 @@ void color_wheel(col_geom_v &geom, const vector<col_val> &cols, int color_system
          if (value_powers[lvl] > -1.0)
             value_power = value_powers[lvl];
                
-         geom.add_col_face(face, blend_HSX_centroid(cols, color_system_mode, sat_power, sat_threshold, value_power, value_advance, 1, ryb_mode));
+         geom.add_col_face(face, blend_HSX_centroid(cols, color_system_mode, sat_power, sat_threshold, value_power, value_advance, alpha_mode, ryb_mode));
       }
    }
    
@@ -854,7 +864,7 @@ int main(int argc, char *argv[])
    // else it is a model
    else {
       if (opts.display_type == 2)
-         color_wheel(geom, cols, opts.color_system_mode, opts.sat_powers, opts.sat_threshold, opts.value_powers, opts.value_advance, opts.ryb_mode);
+         color_wheel(geom, cols, opts.color_system_mode, opts.sat_powers, opts.sat_threshold, opts.value_powers, opts.value_advance, opts.alpha_mode, opts.ryb_mode);
       else
       if (opts.display_type == 3) {
          if (opts.color_system_mode == 1 || opts.color_system_mode == 2) {
@@ -863,7 +873,7 @@ int main(int argc, char *argv[])
             if (opts.plot_centroid) {
                for(unsigned int i=0; i<4; i++) {
                   if (!i || opts.sat_powers[i] > -1.0 || opts.value_powers[i] > -1.0) {
-                     col_val col = blend_HSX_centroid(cols, opts.color_system_mode, opts.sat_powers[i], opts.sat_threshold, opts.value_powers[i], opts.value_advance, 1, opts.ryb_mode);
+                     col_val col = blend_HSX_centroid(cols, opts.color_system_mode, opts.sat_powers[i], opts.sat_threshold, opts.value_powers[i], opts.value_advance, opts.alpha_mode, opts.ryb_mode);
                      plot_hsx_point(geom, col, opts.color_system_mode, opts.chroma_level, opts.ryb_mode, opts.seven_mode);
                   }
                }
@@ -874,7 +884,7 @@ int main(int argc, char *argv[])
             plot_rgb_cube(geom, cols, opts.ryb_mode);
             
             if (opts.plot_centroid) {
-               col_val col = blend_RGB_centroid(cols, 1, opts.ryb_mode);
+               col_val col = blend_RGB_centroid(cols, opts.alpha_mode, opts.ryb_mode);
                plot_rgb_point(geom, col, opts.ryb_mode);
             }
          }
