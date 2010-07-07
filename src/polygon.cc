@@ -53,16 +53,21 @@ class pg_opts: public prog_opts {
       double edge2;
       int num_sides;
       int fraction;
+      double twist_ang;
+      bool make_trapezo;
+
       string ofile;
 
       bool e_given;
       bool h_given;
+      bool a_given;
 
       pg_opts(): prog_opts("polygon"), type(t_prism), subtype(-1),
                  edge(1.0), circumrad(0.0), inrad(0.0),
                  height(-1), edge2(-1),
-                 num_sides(5), fraction(1),
-                 e_given(false), h_given(false) {}
+                 num_sides(5), fraction(1), twist_ang(0.0),
+                 make_trapezo(false),
+                 e_given(false), h_given(false), a_given(false) {}
       void process_command_line(int argc, char **argv);
       void usage();
 };
@@ -95,6 +100,10 @@ void pg_opts::usage()
 "  -l <hgt>  height of upper vertices above base polygon\n"
 "            (default: circumradius of polygon\n"
 "  -E <len>  length of non-polygon edges (default: use -l)\n"
+"  -a <ang>  angle (degrees) to rotate antiprism polygons, in opposite\n"
+"            directions\n"
+"  -T        for a given pyramid or antiprism make a trapezohedron that\n"
+"            includes it as a part\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
 "\n", prog_name(), help_ver_text);
@@ -108,7 +117,7 @@ void pg_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":ht:e:r:R:E:l:s:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":ht:e:r:R:E:l:s:o:a:T")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -192,7 +201,18 @@ void pg_opts::process_command_line(int argc, char **argv)
             if(inrad<0)
                error("radius cannot be negative", c);
             break;
-            
+
+         case 'a':
+            a_given = true;
+            if(!read_double(optarg, &twist_ang, errmsg))
+               error(errmsg, c);
+            twist_ang = deg2rad(twist_ang);
+            break;
+
+         case 'T':
+            make_trapezo = true;
+            break;
+
          case 'o':
             ofile = optarg;
             break;
@@ -222,6 +242,13 @@ void pg_opts::process_command_line(int argc, char **argv)
       if(fraction >= num_sides)
          error("fractional part must be less than number of sides", "number of sides");
    }
+
+   if(a_given && type!=t_antiprism)
+      error("angle option can only be used with antiprisms", "a");
+   
+   if(make_trapezo && !(type==t_antiprism || type==t_pyramid))
+      error("only a pyramid or an antiprisms can be made into a trapezodron"
+            , "T");
 }
 
 
@@ -250,11 +277,20 @@ int main(int argc, char *argv[])
          poly = new prism(pgon);
          break;
       case pg_opts::t_antiprism:
-         poly = new antiprism(pgon);
-         break;
+         {
+            antiprism *ant = new antiprism(pgon);
+            ant->set_twist_angle(opts.twist_ang);
+            ant->set_output_trapezohedron(opts.make_trapezo);
+            poly = ant;
+            break;
+         }
       case pg_opts::t_pyramid:
-         poly = new pyramid(pgon);
-         break;
+         {
+            pyramid *pyr = new pyramid(pgon);
+            pyr->set_output_trapezohedron(opts.make_trapezo);
+            poly = pyr;
+            break;
+         }
       case pg_opts::t_dipyramid:
          poly = new dipyramid(pgon);
          break;

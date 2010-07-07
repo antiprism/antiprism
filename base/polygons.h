@@ -168,17 +168,27 @@ class prism: public polygon {
 
 ///Make an %antiprism
 class antiprism: public polygon {
+   private:
+      double twist_angle;
+      bool output_trapezohedron;
+      void make_trapezo_part(geom_if &geom);
    public:
       ///Constructor
       /**\param sides the number of sides to the base-polygon.
        * \param fract the value m in the {n/m} description. */
-      antiprism(int sides, int fract=1) : polygon(sides, fract) {}
+      antiprism(int sides, int fract=1) : polygon(sides, fract),
+         twist_angle(0.0), output_trapezohedron(false) {}
 
       ///Constructor
       /**\param pgon %polygon to base the polyhedron on. */
-      antiprism(polygon &pgon) : polygon(pgon) { height = radius;}
+      antiprism(polygon &pgon) : polygon(pgon),
+         twist_angle(0.0), output_trapezohedron(false)
+         { height = radius;}
 
       bool set_edge2(double e2, char *msg=0);
+      void set_output_trapezohedron(bool flag=true)
+         { output_trapezohedron=flag; }
+      void set_twist_angle(double ang) { twist_angle=ang; }
       void make_poly_part(geom_if &geom);
 }; 
 
@@ -206,17 +216,24 @@ class snub_antiprism: public polygon {
 
 ///Make a %pyramid
 class pyramid: public polygon {
+   private:
+      bool output_trapezohedron;
+
    public:
       ///Constructor
       /**\param sides the number of sides to the base %polygon.
        * \param fract the value m in the {n/m} description. */
-      pyramid(int sides, int fract=1) : polygon(sides, fract) {}
+      pyramid(int sides, int fract=1) : polygon(sides, fract),
+         output_trapezohedron(false) {}
       
       ///Constructor
       /**\param pgon %polygon to base the polyhedron on. */
-      pyramid(polygon &pgon) : polygon(pgon) { height = radius;}
+      pyramid(polygon &pgon) : polygon(pgon), output_trapezohedron(false)
+         { height = radius;}
       
       bool set_edge2(double e2, char *msg=0);
+      void set_output_trapezohedron(bool flag=true)
+         { output_trapezohedron=flag; }
       void make_poly_part(geom_if &geom);
 }; 
 

@@ -108,31 +108,47 @@ void antiprism::make_poly_part(geom_if &geom)
 {
    vector<vec3d> verts;
    vector<vector<int> > faces;
-   verts.resize(2*num_sides);
-   faces.resize(2+2*num_sides);
+   vector<vector<int> > caps(2);
+   verts.resize(2*num_sides+2*output_trapezohedron);
+   faces.resize(2*num_sides);
+   
    geom_v pgon, pgon2;
    add_polygon(pgon);
+   pgon.transform(mat3d::rot(vec3d::z,  angle()/4-twist_angle/2));
    add_polygon(pgon2);
-   vec3d r = (-angle()/2)*vec3d::z;
-   pgon2.transform(mat3d::rot(r[0], r[1], r[2]));
+   pgon2.transform(mat3d::rot(vec3d::z,-angle()/4+twist_angle/2));
+   if(output_trapezohedron) {
+      double apex_ht = 0.5*height*(cos(angle()/2)+cos(twist_angle)) /
+            (cos(angle()/2)-cos(twist_angle));
+      verts[2*num_sides] = vec3d(0,0,apex_ht);
+      verts[2*num_sides+1] = vec3d(0,0,-apex_ht);
+   }
    
    for(int i=0; i<num_sides; i++) {
       verts[i] = pgon.verts(i) + (height/2)*vec3d::z;
       verts[i+num_sides] = pgon2.verts(i) - (height/2)*vec3d::z;
-      faces[0].push_back(i);
-      faces[1].push_back(i+num_sides);
-      faces[2+i].push_back(i);
-      faces[2+i].push_back((i+1)%num_sides);
-      faces[2+i].push_back(i + num_sides);
-      faces[2+i+num_sides].push_back((i+1)%num_sides + num_sides);
-      faces[2+i+num_sides].push_back(i%num_sides + num_sides);
-      faces[2+i+num_sides].push_back((i+1)%num_sides);
+      if(!output_trapezohedron) {
+         caps[0].push_back(i);
+         caps[1].push_back(i+num_sides);
+      }
+      faces[i].push_back(i);
+      if(output_trapezohedron)
+         faces[i].push_back(2*num_sides+1);
+      faces[i].push_back((i+1)%num_sides);
+      faces[i].push_back(i + num_sides);
+      faces[i+num_sides].push_back((i+1)%num_sides + num_sides);
+      if(output_trapezohedron)
+         faces[i+num_sides].push_back(2*num_sides);
+      faces[i+num_sides].push_back(i%num_sides + num_sides);
+      faces[i+num_sides].push_back((i+1)%num_sides);
    }
-   reverse(faces[0].begin(), faces[0].end());
+   
+   if(!output_trapezohedron) {
+      reverse(caps[0].begin(), caps[0].end());
+      geom.add_faces(caps);
+   }
    geom.add_verts(verts);
    geom.add_faces(faces);
-   //align dihedral axis with x-axis
-   geom.transform(mat3d::rot(vec3d::z, M_PI*fraction/(2.0*num_sides)));
 }
 
 bool pyramid::set_edge2(double e2, char *msg) {
@@ -144,6 +160,15 @@ bool pyramid::set_edge2(double e2, char *msg) {
 
 void pyramid::make_poly_part(geom_if &geom)
 {
+   if(output_trapezohedron) {
+      antiprism ant(num_sides, fraction);
+      ant.set_radius(radius);
+      ant.set_height(height*(1/cos(angle()/2)-1));
+      ant.set_output_trapezohedron();
+      ant.make_poly(geom);
+      return;
+   }
+
    geom_v pgon;
    add_polygon(pgon);
    geom.add_face(pgon.faces(0));
