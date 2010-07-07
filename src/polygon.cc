@@ -247,7 +247,7 @@ void pg_opts::process_command_line(int argc, char **argv)
       error("angle option can only be used with antiprisms", "a");
    
    if(make_trapezo && !(type==t_antiprism || type==t_pyramid))
-      error("only a pyramid or an antiprisms can be made into a trapezodron"
+      error("only a pyramid or an antiprisms can be made into a trapezohedron"
             , "T");
 }
 

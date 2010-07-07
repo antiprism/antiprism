@@ -27,6 +27,7 @@
 */
 
 #include <stdlib.h>
+#include <float.h>
 #include <algorithm>
 
 #include "polygons.h"
@@ -120,6 +121,11 @@ void antiprism::make_poly_part(geom_if &geom)
    if(output_trapezohedron) {
       double apex_ht = 0.5*height*(cos(angle()/2)+cos(twist_angle)) /
             (cos(angle()/2)-cos(twist_angle));
+      if(apex_ht>DBL_MAX)
+         apex_ht=DBL_MAX;
+      else if(apex_ht<-DBL_MAX)
+         apex_ht=-DBL_MAX;
+
       verts[2*num_sides] = vec3d(0,0,apex_ht);
       verts[2*num_sides+1] = vec3d(0,0,-apex_ht);
    }
