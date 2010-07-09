@@ -533,10 +533,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
    if((clrngs[2].get_cmaps()).size())
       face_map = clrngs[2];
    else
-{
       face_map.add_cmap(alloc_default_map());
-fprintf(stderr,"adding default face map\n");
-}
 
    // patch for setting edges with no color
    if (edge_set_no_color)
@@ -546,10 +543,7 @@ fprintf(stderr,"adding default face map\n");
    if((clrngs[1].get_cmaps()).size())
       edge_map = clrngs[1];
    else
-{
       edge_map.add_cmap(alloc_default_map());
-fprintf(stderr,"adding default edge map\n");
-}
 
    // vertex color map is the same as the edge color map
    //if((clrngs[0].get_cmaps()).size())
