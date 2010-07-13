@@ -34,23 +34,39 @@ Examples
 
 A cube with edges of 2 units
 <PRE>
-   polygon -t pri -e 2 -l 2 -o cube.off 4
+   polygon -e 2 -l 2 pri 4 | antiview
 </PRE>
 
 A hexagonal based pyramid
 <PRE>
-   polygon -t pyr -o hex_pyramid.off 6
+   polygon pyr 6 | antiview
 </PRE>
 
 A uniform pentagrammic antiprism
 <PRE>
-   polygon -t ant -e 1 -E 1 -o pent_anti.off 5/2
+   polygon -e 1 -E 1 ant 5/2 | antiview
 </PRE>
 
 A uniform pentagrammic crossed antiprism
 <PRE>
-   polygon -t ant -e 1 -E 1 -o pent_cross_anti.off 5/3
+   polygon -e 1 -E 1 ant 5/3 | antiview
 </PRE>
+
+A uniform crossed gyroelongated pentagrammic dipyramid
+<PRE>
+   polygon -e 1 -E 1 -s gyro dip 5/3 | antiview
+</PRE>
+
+A hexagonal trapezohedron
+<PRE>
+   polygon -s trap dip 6  | antiview
+</PRE>
+
+A twisted hexagonal trapezohedron
+<PRE>
+   polygon -s trap -a 45 dip 6  | antiview
+</PRE>
+
 
 
 <H2><A NAME="notes">

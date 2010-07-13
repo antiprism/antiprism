@@ -39,12 +39,17 @@
 ///Make a uniform %polygon
 class polygon {
    protected:
-      int num_sides; ///< The number of sides to the %polygon.
-      int fraction;  ///< The value m in the {n/m} description.
-      int parts;     ///< The number of parts (the %polygon may be a compound).
-      double radius; ///< The circumradius.
-      double height; ///< The height, of a %polygon based polyhedron.
-      
+      int num_sides;      ///< The number of sides to the %polygon.
+      int fraction;       ///< The value m in the {n/m} description.
+      int parts;          ///< The number of parts (polygon may be compound).
+      double radius;      ///< The circumradius.
+      double height;      ///< The height of a %polygon based polyhedron.
+      double twist_angle; ///< An angle to twist a %polygon based polyhedron.
+      int subtype;        ///< The subtype of a  %polygon based polyhedron.
+      int max_subtype;    ///< The highest number for a subtype
+   
+      void set_max_subtype(int max) { max_subtype = (max>0) ? max : 0; }
+
    public:
       ///Constructor
       /**\param sides the number of sides to the %polygon.
@@ -78,6 +83,12 @@ class polygon {
       /**\return the number of sides. */
       int get_num_sides() { return num_sides; }
 
+      ///Get the number of component parts of a %polygon
+      /**If the polygon fraction is not in lowest form the polygon will
+       * be compound and have more than one part.
+       * \return the number of sides. */
+      int get_parts() { return parts; }
+
       ///Add a %polygon aligned with the xy plane and at a given z-height
       /**\param geom the geometry to add the %polygon to.
        * \param ht the height on the z-axis to place the %polygon. */
@@ -85,7 +96,7 @@ class polygon {
 
       ///Make a %polygon based polyhedron.
       /**\param geom a geometry to return the polyhedron. */
-      void make_poly(geom_if &geom);
+      virtual void make_poly(geom_if &geom);
      
       ///Set the height
       /**\param ht the height.
@@ -109,7 +120,7 @@ class polygon {
             if(msg) strcpy(msg, "cannot set slanting edge for this polyhedron");
             return false; }
       
-      ///Set the sub-type of the %polygon based polyhedron.
+      ///Set the subtype of the %polygon based polyhedron.
       /**Some %polygon based polyhedra come in several forms, and setting
        * the sub-type can select a particular form.
        * \param typ the sub-type number.
@@ -117,11 +128,17 @@ class polygon {
        * the error message if the edge length was not valid.
        * \return \c true if the sub-type was valid, otherwise \c false and
        * \c msg contains the error messge. */
-      virtual bool set_subtype(int typ, char *msg=0)
-         {  typ=0;
-            if(msg) strcpy(msg, "this type of polyhedron has no sub-types");
-            return false; }
+      virtual bool set_subtype(int typ, char *msg=0);
 
+      ///Set the twist angle of the %polygon based polyhedron.
+      /**Some polyhedra can be transformed by a twist, controlled
+       * by this angle. NAN indicates that no twist should be considered.
+       * \param ang the angle of twist. */
+      virtual bool set_twist_angle(double ang=NAN, char *msg=0)
+         {  ang=0;
+            if(msg) strcpy(msg, "twist angle cannot be set for this type of polyhedron");
+            return false; }
+      
       ///Make a part of (or a complete) polygon-based polyhedron
       /**Make a non-compound polyhedron, using \c num_sides and
        * \c fraction for {n/m}. If \c parts is greater than \c 1
@@ -152,16 +169,23 @@ class dihedron: public polygon {
 ///Make a %prism
 class prism: public polygon {
    public:
+      enum { subtype_antiprism=1,
+             subtype_trapezohedron };
+
       ///Constructor
       /**\param sides the number of sides to the base-polygon.
        * \param fract the value m in the {n/m} description. */
-      prism(int sides, int fract=1) : polygon(sides, fract) {}
+      prism(int sides, int fract=1) : polygon(sides, fract)
+         { set_max_subtype(2); }
 
       ///Constructor
       /**\param pgon %polygon to base the polyhedron on. */
-      prism(polygon &pgon) : polygon(pgon) { height = radius;}
+      prism(polygon &pgon) : polygon(pgon)
+         { height = radius; set_max_subtype(2); }
 
-      bool set_edge2(double e2, char * /*msg*/ =0) { height = e2; return true; }
+      bool set_twist_angle(double ang=NAN, char * /*msg*/ =0)
+         { twist_angle=ang; return true; }
+      bool set_edge2(double e2, char * /*msg*/ =0) { height=e2; return true; }
       void make_poly_part(geom_if &geom);
 }; 
 
@@ -169,87 +193,102 @@ class prism: public polygon {
 ///Make an %antiprism
 class antiprism: public polygon {
    private:
-      double twist_angle;
-      bool output_trapezohedron;
       void make_trapezo_part(geom_if &geom);
+
    public:
+      enum { subtype_trapezohedron=1, subtype_antihermaphrodite };
+      
       ///Constructor
       /**\param sides the number of sides to the base-polygon.
        * \param fract the value m in the {n/m} description. */
-      antiprism(int sides, int fract=1) : polygon(sides, fract),
-         twist_angle(0.0), output_trapezohedron(false) {}
+      antiprism(int sides, int fract=1) : polygon(sides, fract)
+         { set_max_subtype(2); }
 
       ///Constructor
       /**\param pgon %polygon to base the polyhedron on. */
-      antiprism(polygon &pgon) : polygon(pgon),
-         twist_angle(0.0), output_trapezohedron(false)
-         { height = radius;}
+      antiprism(polygon &pgon) : polygon(pgon)
+         { height = radius; set_max_subtype(2); }
 
+      bool set_twist_angle(double ang=NAN, char * /*msg*/ =0)
+         { twist_angle=ang; return true; }
       bool set_edge2(double e2, char *msg=0);
-      void set_output_trapezohedron(bool flag=true)
-         { output_trapezohedron=flag; }
-      void set_twist_angle(double ang) { twist_angle=ang; }
       void make_poly_part(geom_if &geom);
 }; 
 
 
 ///Make a %snub-antiprism
 class snub_antiprism: public polygon {
-   private:
-      int type;
    public:
       ///Constructor
       /**\param sides the number of sides to the base-polygon.
        * \param fract the value m in the {n/m} description. */
-      snub_antiprism(int sides, int fract=1) : polygon(sides, fract), type(0) {}
+      snub_antiprism(int sides, int fract=1) : polygon(sides, fract)
+         { set_max_subtype(1); }
 
       ///Constructor
       /**\param pgon %polygon to base the polyhedron on. */
-      snub_antiprism(polygon &pgon) : polygon(pgon), type(0) { height = radius;}
+      snub_antiprism(polygon &pgon) : polygon(pgon)
+         { height = radius; set_max_subtype(1); }
      
       bool set_edge2(double e2, char *msg=0);
       bool set_height(double /*h*/, char *msg=0);
-      bool set_subtype(int typ=0, char *msg=0);
       void make_poly_part(geom_if &geom);
 }; 
 
 
 ///Make a %pyramid
-class pyramid: public polygon {
-   private:
-      bool output_trapezohedron;
-
+class pyramid: public polygon
+{
    public:
+      enum { subtype_antihermaphrodite=1,
+             subtype_elongated,
+             subtype_gyroelongated };
+
       ///Constructor
       /**\param sides the number of sides to the base %polygon.
        * \param fract the value m in the {n/m} description. */
-      pyramid(int sides, int fract=1) : polygon(sides, fract),
-         output_trapezohedron(false) {}
+      pyramid(int sides, int fract=1) : polygon(sides, fract)
+         { set_max_subtype(3); }
       
       ///Constructor
       /**\param pgon %polygon to base the polyhedron on. */
-      pyramid(polygon &pgon) : polygon(pgon), output_trapezohedron(false)
-         { height = radius;}
+      pyramid(polygon &pgon) : polygon(pgon)
+         { height = radius; set_max_subtype(3); }
       
+      bool set_twist_angle(double ang=NAN, char * /*msg*/ =0)
+         { twist_angle=ang; return true; }
       bool set_edge2(double e2, char *msg=0);
-      void set_output_trapezohedron(bool flag=true)
-         { output_trapezohedron=flag; }
       void make_poly_part(geom_if &geom);
 }; 
 
 
 ///Make a %dipyramid
-class dipyramid: public pyramid {
+class dipyramid: public pyramid
+{
+   private:
+      void make_scal_part(geom_if &geom);
+
    public:
+      enum { subtype_trapezohedron=1,
+             subtype_elongated,
+             subtype_gyroelongated,
+             subtype_scalenohedron,
+             subtype_dip_scalenohedron
+      };
+
+
       ///Constructor
       /**\param sides the number of sides to the base-polygon.
        * \param fract the value m in the {n/m} description. */
-      dipyramid(int sides, int fract=1) : pyramid(sides, fract) {}
+      dipyramid(int sides, int fract=1) : pyramid(sides, fract)
+         { set_max_subtype(5); }
 
       ///Constructor
       /**\param pgon %polygon to base the polyhedron on. */
-      dipyramid(polygon &pgon) : pyramid(pgon) {}
+      dipyramid(polygon &pgon) : pyramid(pgon)
+         { set_max_subtype(5); }
       
+      void make_poly(geom_if &geom);
       void make_poly_part(geom_if &geom);
 }; 
 
@@ -257,15 +296,21 @@ class dipyramid: public pyramid {
 ///Make a %cupola
 class cupola: public polygon {
    public:
+      enum { subtype_elongated=1,
+             subtype_gyroelongated };
       ///Constructor
       /**\param sides the number of sides to the base-polygon.
        * \param fract the value m in the {n/m} description. */
-     cupola(int sides, int fract=1) : polygon(sides, fract) {}
+     cupola(int sides, int fract=1) : polygon(sides, fract)
+        { set_max_subtype(2); }
 
       ///Constructor
       /**\param pgon %polygon to base the polyhedron on. */
-     cupola(polygon &pgon) : polygon(pgon) { height = radius;}
+     cupola(polygon &pgon) : polygon(pgon)
+        { height = radius; set_max_subtype(2); }
      
+     bool set_twist_angle(double ang=NAN, char * /*msg*/ =0)
+         { twist_angle=ang; return true; }
      bool set_edge2(double e2, char *msg=0);
      void make_poly_part(geom_if &geom);
 }; 
@@ -302,6 +347,8 @@ class gyrobicupola: public cupola {
       void make_poly_part(geom_if &geom);
 };
 
+
+
 ///Make a uniform model of a polygon-based polyhedron.
 /**The model has all its edges set to one and its faces are regular. For
  * prism's, antiprisms and pyramids the resulting model wil be uniform.
@@ -319,17 +366,5 @@ template <class T> bool uni_pgon(geom_if &geom, T pgon)
 
 int make_resource_pgon(geom_if &geom, string pname, char *errmsg=0);
       
-
-// Inline function definitions
-
-inline polygon::polygon(int sides, int fract) :
-   fraction(fract), radius(1.0), height(0)
-{
-   parts = gcd(sides, fract);
-   num_sides = sides/parts;
-   fraction = fract/parts;
-}
-
-
 #endif // POLYGONS_H
 
