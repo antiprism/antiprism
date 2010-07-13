@@ -71,6 +71,7 @@ class rep_printer: public geom_info
 
       void face_sides_cnts();
       void vert_order_cnts();
+      void vert_heights_cnts();
       void solid_angles_cnts();
       void face_angles_cnts();
       void edge_lengths_cnts();

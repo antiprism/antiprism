@@ -89,6 +89,7 @@ void or_opts::usage()
 "            E - edge lengths\n"
 "            S - solid angles            D - dihedral angles\n"
 "            s - face sides              o - vertex orders\n"
+"            h - vertex heights (z-crds)\n"
 "  -k        keep orientation, don't try to orient the faces\n"
 "  -E <type> edges for report, e - explicit edges, i - implicit edges\n"
 "            a - explicit and implicit (default)\n"
@@ -137,7 +138,7 @@ void or_opts::process_command_line(int argc, char **argv)
          }
 
          case 'C': {
-            const char *all_count_letters = "AFEDSso";
+            const char *all_count_letters = "AFEDSsoh";
             size_t len;
             if((len=strspn(optarg, all_count_letters)) == strlen(optarg)) {
                if(strchr(optarg, 'A'))
@@ -242,6 +243,9 @@ void print_counts(rep_printer &rep, const char *counts)
             break;
          case 'o':
             rep.vert_order_cnts();
+            break;
+         case 'h':
+            rep.vert_heights_cnts();
             break;
       }
    }

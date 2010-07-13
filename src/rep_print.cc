@@ -222,6 +222,24 @@ void rep_printer::symmetry()
 }
 
 
+void rep_printer::vert_heights_cnts()
+{
+   char s1[MSG_SZ];
+   fprintf(ofile, "[vert_heights_cnts]\n");
+   map<double, int, ang_less> v_heights;
+   const vector<vec3d> &verts = geom.verts();
+   unsigned int sz = verts.size();
+   for(unsigned int i=0; i<sz; i++)
+      v_heights[verts[i][2]]++;
+
+   map<double, int, ang_less>::iterator hi;
+   for(hi=v_heights.begin(); hi!=v_heights.end(); ++hi)
+      fprintf(ofile, "%s = %d\n",
+            d2s(s1, hi->first), hi->second);
+   fprintf(ofile, "\n");
+}
+
+
 void rep_printer::edge_lengths_cnts()
 {
    char s1[MSG_SZ];
