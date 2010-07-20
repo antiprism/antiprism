@@ -96,6 +96,7 @@ class ncon_opts: public prog_opts {
       string ofile;
 
       int ncon_order;
+      int d;
       bool point_cut;
       bool hybrid;
       bool add_poles;
@@ -129,6 +130,7 @@ class ncon_opts: public prog_opts {
 
       ncon_opts(): prog_opts("n_icons"),
                    ncon_order(4),
+                   d(1),
                    point_cut(true),
                    hybrid(false),
                    add_poles(false),
@@ -165,7 +167,8 @@ void ncon_opts::usage()
 "\n"
 "Options\n"
 "%s"
-"  -n <n>    n-icon of order n. Must be 3 or greater (default: 4)\n"
+"  -n <n/d>  n-icon of order n. n must be 3 or greater (default: 4)\n"
+"               use d to make star n-icon. n/d must be co-prime. d less than n\n"
 "  -t <twst> number of twists. Can be negative, positive or 0 (default: 1)\n"
 "  -s        side-cut of even order n-icon (default is point-cut)\n"
 "  -H        hybrid of even order n-icon\n"
@@ -246,12 +249,29 @@ void ncon_opts::process_command_line(int argc, char **argv)
          continue;
 
       switch(c) {
-         case 'n':
+         case 'n': {
+            char *p;
+            p = strchr(optarg, '/');
+            if(p!=0) {
+               *p++='\0';
+               if(!read_int(p, &d, errmsg))
+                  error(errmsg, "n/d (d part)");
+            }
+
             if(!read_int(optarg, &ncon_order, errmsg))
-               error(errmsg, c);
+               error(errmsg, "n/d (n part)");
             if(ncon_order<3)
-               error("n must be 3 or greater", c);
+               error("n must be an integer 3 or greater", "n/d (n part)");
+            if(d < 1)
+               error("d must be 1 or greater", "n/d (d part)");
+
+            if (ncon_order>0 && d>0 && gcd(ncon_order,d) != 1)
+               error("n and d must be co-prime");
+
+            if(d >= ncon_order)
+               error("d must be less than n", "n/d (d part)");
             break;
+         }
 
          case 't':
             if(!read_int(optarg, &twist, errmsg))
@@ -608,9 +628,9 @@ void clear_edges(vector<edgeList *> &edge_list)
    edge_list.clear();
 }
 
-void build_prime_meridian(col_geom_v &geom, vector<int> &prime_meridian, vector<coordList *> &coordinates, int ncon_order, bool point_cut)
+void build_prime_meridian(col_geom_v &geom, vector<int> &prime_meridian, vector<coordList *> &coordinates, int ncon_order, int d, bool point_cut)
 {
-   double arc = 360.0/ncon_order;
+   double arc = 360.0/ncon_order*d;
    double interior_angle = (180.0-arc)/2.0;
    double radius = sin(deg2rad(interior_angle))/sin(deg2rad(arc));
 
@@ -979,7 +999,7 @@ void close_latitudinal_or_find_twist_plane(col_geom_v &geom, vector<polarOrb *> 
 }
 
 void do_twist(col_geom_v &geom, vector<polarOrb *> &polar_orbit, vector<coordList *> &coordinates, vector<faceList *> &face_list, 
-              vector<edgeList *> &edge_list, int twist, int ncon_order, vector<int> longitudes)
+              vector<edgeList *> &edge_list, int twist, int ncon_order, int d, vector<int> longitudes)
 {
    // this function wasn't designed for twist 0
    if (twist == 0)
@@ -993,7 +1013,7 @@ void do_twist(col_geom_v &geom, vector<polarOrb *> &polar_orbit, vector<coordLis
    vector<vector<int> > &edges = geom.raw_edges();
    vector<vec3d> &verts = geom.raw_verts();
 
-   double arc = (360.0 / ncon_order) * twist * (+1);
+   double arc = (360.0 / ncon_order * d) * twist * (+1);
    mat3d rot = mat3d::rot(0, 0, deg2rad(-arc));
 
    for (unsigned int i=0;i<face_list.size();i++) {
@@ -2155,7 +2175,7 @@ double hybrid_twist_angle(int n, int t)
 void build_globe(col_geom_v &geom, vector<coordList *> &coordinates, vector<faceList *> &face_list, vector<edgeList *> &edge_list, vector<poleList *> &pole, ncon_opts &opts)
 {
    vector<int> prime_meridian;
-   build_prime_meridian(geom, prime_meridian, coordinates, opts.ncon_order, opts.point_cut);
+   build_prime_meridian(geom, prime_meridian, coordinates, opts.ncon_order, opts.d, opts.point_cut);
    form_globe(geom, prime_meridian, coordinates, face_list, edge_list, opts.edge_coloring_method,
               opts.ncon_order, opts.point_cut, opts.longitudes, opts.closure, opts.half_model_marker);
    add_caps(geom, coordinates, face_list, pole, opts.ncon_order, opts.point_cut, opts.hybrid, opts.longitudes,
@@ -2226,7 +2246,7 @@ void process_normal(col_geom_v &geom, ncon_opts &opts)
       close_latitudinal_or_find_twist_plane(geom, polar_orbit, face_list, pole, opts.ncon_order, opts.point_cut,
                                             opts.longitudes, opts.add_poles, opts.closure, opts.half_model_marker);
  
-   do_twist(geom, polar_orbit, coordinates, face_list, edge_list, opts.twist, opts.ncon_order, opts.longitudes);
+   do_twist(geom, polar_orbit, coordinates, face_list, edge_list, opts.twist, opts.ncon_order, opts.d, opts.longitudes);
    polar_orbit.clear();
    
    // clean up
