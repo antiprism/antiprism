@@ -998,8 +998,33 @@ void close_latitudinal_or_find_twist_plane(col_geom_v &geom, vector<polarOrb *> 
    }
 }
 
+// untangle polar orbit. patch for n/m
+void sort_polar_orbit(col_geom_v &geom, vector<polarOrb *> &polar_orbit)
+{
+   const vector<vec3d> &verts = geom.verts();
+
+   vec3d v0 = verts[polar_orbit[0]->coord_no];
+   int sz = polar_orbit.size();
+   vector<pair<double, int> > angles(sz);
+   for(unsigned int i=0; i<sz; i++) {
+      int j = polar_orbit[i]->coord_no;
+      double y = v0[1] - verts[j][1];
+      double x = v0[0] - verts[j][0];
+      angles[i].second = j;
+      angles[i].first = rad2deg(atan2(y,x));
+      if (angles[i].first < 0.0)
+         angles[i].first += 360;
+   }
+   
+   // sort on angles
+   sort( angles.begin(), angles.end() );
+
+   for (unsigned int i=0; i<polar_orbit.size(); i++)
+      polar_orbit[i]->coord_no = angles[i].second;
+}
+
 void do_twist(col_geom_v &geom, vector<polarOrb *> &polar_orbit, vector<coordList *> &coordinates, vector<faceList *> &face_list, 
-              vector<edgeList *> &edge_list, int twist, int ncon_order, int d, vector<int> longitudes)
+              vector<edgeList *> &edge_list, int twist, int ncon_order, vector<int> longitudes)
 {
    // this function wasn't designed for twist 0
    if (twist == 0)
@@ -1009,11 +1034,14 @@ void do_twist(col_geom_v &geom, vector<polarOrb *> &polar_orbit, vector<coordLis
    if (2*longitudes.back() <= longitudes.front())
       return;
 
+   // patch for n/m models
+   sort_polar_orbit(geom, polar_orbit);
+
    vector<vector<int> > &faces = geom.raw_faces();
    vector<vector<int> > &edges = geom.raw_edges();
    vector<vec3d> &verts = geom.raw_verts();
 
-   double arc = (360.0 / ncon_order * d) * twist * (+1);
+   double arc = (360.0 / ncon_order) * twist * (+1);
    mat3d rot = mat3d::rot(0, 0, deg2rad(-arc));
 
    for (unsigned int i=0;i<face_list.size();i++) {
@@ -2246,7 +2274,7 @@ void process_normal(col_geom_v &geom, ncon_opts &opts)
       close_latitudinal_or_find_twist_plane(geom, polar_orbit, face_list, pole, opts.ncon_order, opts.point_cut,
                                             opts.longitudes, opts.add_poles, opts.closure, opts.half_model_marker);
  
-   do_twist(geom, polar_orbit, coordinates, face_list, edge_list, opts.twist, opts.ncon_order, opts.d, opts.longitudes);
+   do_twist(geom, polar_orbit, coordinates, face_list, edge_list, opts.twist, opts.ncon_order, opts.longitudes);
    polar_orbit.clear();
    
    // clean up
