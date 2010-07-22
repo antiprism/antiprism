@@ -462,22 +462,6 @@ void build_coplanar_faces_list(const geom_if &geom, vector<vector<int> > &coplan
    face_normal_table.clear();
 }
 
-double angle_around_axis(const vec3d &v0, const vec3d &v1, const vec3d &axis)
-{
-   vec3d n0 = vcross(v0, axis).unit();
-   vec3d n1 = vcross(v1, axis).unit();
-   double t = vdot(n0, n1);
-   if (t > 1.0)
-      t = 1.0;
-   else
-   if (t < -1.0)
-      t = -1.0;
-   double ang = acos(t);
-   if(vdot(axis, vcross(n0, n1))<0)
-      ang = 2*M_PI - ang;
-   return ang;
-}
-
 // http://geometryalgorithms.com/Archive/algorithm_0106/algorithm_0106.htm
 bool lines_nearest_points(const vec3d &P0, const vec3d &P1, const vec3d &Q0, const vec3d &Q1,
                           vec3d &P, vec3d &Q, double eps)
