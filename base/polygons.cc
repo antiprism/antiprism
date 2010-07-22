@@ -37,8 +37,8 @@
 
 
 polygon::polygon(int sides, int fract) :
-   fraction(fract), radius(1.0), height(0), twist_angle(NAN),
-   subtype(0), max_subtype(0)
+   fraction(fract), radius(1.0), radius2(NAN), height(NAN), height2(NAN),
+   twist_angle(NAN), subtype(0), max_subtype(0)
 {
    parts = gcd(sides, fract);
    num_sides = sides/parts;
@@ -64,7 +64,7 @@ bool polygon::set_subtype(int typ, char *msg)
 
 
 
-void polygon::add_polygon(geom_if &geom, double ht=0)
+void polygon::add_polygon(geom_if &geom, double ht)
 {
    vector<int> face(num_sides);
    int offset = geom.verts().size();
@@ -89,15 +89,22 @@ void polygon::make_poly(geom_if &geom)
    }
 }
 
+void polygon::dump()
+{
+   fprintf(stderr, "\npolygon %d x {%d/%d}\n", parts, num_sides, fraction);
+   fprintf(stderr, "subtype %d out of %d\n", subtype, max_subtype);
+   fprintf(stderr, "r=%g, r2=%g, h=%g, h2=%g, a=%g\n\n",
+         radius, radius2, height, height2, twist_angle);
+}
+
+
 void dihedron::make_poly_part(geom_if &geom)
 {
-   geom_v pgon;
-   add_polygon(pgon, height);
-   geom.add_verts(pgon.verts());
-   vector<int> face = pgon.faces(0);
-   geom.add_face(face);
-   reverse(face.begin(), face.end());
-   geom.add_face(face);
+   add_polygon(geom);
+   if(subtype==subtype_default) {
+      geom.add_face(geom.faces(0));
+      reverse(geom.raw_faces()[1].begin(), geom.raw_faces()[1].end());
+   }
 }
 
 
@@ -106,6 +113,8 @@ void prism::make_poly_part(geom_if &geom)
    if(!isnan(twist_angle) || subtype==subtype_trapezohedron ||
                              subtype==subtype_antiprism) {
       antiprism ant = *this;
+      if(!isnan(twist_angle) || subtype==subtype_antiprism)
+         ant.set_subtype(0);
       if(subtype==subtype_trapezohedron)
          ant.set_subtype(antiprism::subtype_trapezohedron);
 
@@ -115,6 +124,7 @@ void prism::make_poly_part(geom_if &geom)
       return;
    }
 
+   double ht = (!isnan(height)) ? height : radius;
    vector<vec3d> verts;
    vector<vector<int> > faces;
    verts.resize(2*num_sides);
@@ -122,8 +132,8 @@ void prism::make_poly_part(geom_if &geom)
    geom_v pgon;
    add_polygon(pgon);
    for(int i=0; i<num_sides; i++) {
-      verts[i] = pgon.verts(i) + (height/2)*vec3d::z;
-      verts[i+num_sides] = pgon.verts(i) - (height/2)*vec3d::z;
+      verts[i] = pgon.verts(i) + (ht/2)*vec3d::z;
+      verts[i+num_sides] = pgon.verts(i) - (ht/2)*vec3d::z;
       faces[0].push_back(i);
       faces[1].push_back(i+num_sides);
       faces[2+i].push_back(i);
@@ -140,15 +150,107 @@ void prism::make_poly_part(geom_if &geom)
 bool antiprism::set_edge2(double e2, char *msg)
 {
    double dist = 2*radius*sin(angle()/4);
-   height = (e2>dist) ? sqrt(e2*e2-dist*dist) : 0;
-   if(msg && e2-dist<-epsilon)
-      strcpy(msg, "too short to reach between vertices");
-   return (e2-dist > -epsilon);
+   double ht = (e2>dist) ? sqrt(e2*e2-dist*dist) : 0;
+   if(e2-dist<-epsilon) {
+      if(msg)
+         strcpy(msg, "too short to reach between vertices");
+      return false;
+   }
+   return set_height(ht, msg);
 }
+
+bool antiprism::set_height(double ht, char *msg)
+{ 
+   if(subtype==subtype_subdivided_scalenohedron) {
+      double E = sqrt(ht*ht+pow(2*radius*sin(angle()/4), 2));
+      if(fabs(radius) > E-epsilon) {
+         if(msg)
+            strcpy(msg, "antprism slant height to short to close polyhedron at apex");
+         return false;
+      }
+   }
+
+   height = ht;
+   return true;
+}
+
+void antiprism::make_scal_part(geom_if &geom)
+{
+   antiprism ant(*this);
+   ant.set_subtype(0);
+   ant.set_twist_angle(0);
+   ant.make_poly_part(geom);
+   geom.clear_faces();
+   
+   double ht = (!isnan(height)) ? height : radius;
+   double apex_ht = isnan(height2) ? 2*ht : height2;
+   int apex_idx1 = geom.add_vert(vec3d(0, 0, apex_ht));
+   int apex_idx2 = geom.add_vert(vec3d(0, 0,-apex_ht));
+
+   for(int i=0; i<num_sides; i++) {
+      geom.add_face(i, i+num_sides, apex_idx1, -1);
+      geom.add_face(i+num_sides, i, apex_idx2, -1);
+      geom.add_face(i+num_sides, (i+1)%num_sides, apex_idx1, -1);
+      geom.add_face((i+1)%num_sides, i+num_sides, apex_idx2, -1);
+   }
+}
+
+static void add_scal_faces(geom_if &geom, int v0, int v1, int v2, int v3,
+      double ht2)
+{
+   vec3d cent = 0.25 * (geom.verts(v0)+geom.verts(v1)+
+                                    geom.verts(v2)+geom.verts(v3));
+   vec3d norm = vcross(geom.verts(v0)-geom.verts(v2),
+                             geom.verts(v3)-geom.verts(v1)).unit();
+   int ap = geom.add_vert(cent+norm*ht2);
+   geom.add_face(v0, v1, ap, -1);
+   geom.add_face(v1, v2, ap, -1);
+   geom.add_face(v2, v3, ap, -1);
+   geom.add_face(v3, v0, ap, -1);
+}
+
+void antiprism::make_escal_part(geom_if &geom)
+{
+   double ht = (!isnan(height)) ? height : radius;
+   double ht2 = isnan(height2) ? 2*ht : height2;
+   
+   double E = sqrt(ht*ht+pow(2*radius*sin(angle()/4), 2));
+   double apex_ht = ht/2; // default to "flat" on failure
+   if(radius<E)
+      apex_ht += sqrt(E*E-radius*radius);
+   
+   antiprism ant(*this);
+   ant.set_subtype(0);
+   ant.set_twist_angle(0);
+   ant.make_poly_part(geom);
+   geom.clear_faces();
+   
+   int apex_idx1 = geom.add_vert(vec3d(0, 0, apex_ht));
+   int apex_idx2 = geom.add_vert(vec3d(0, 0,-apex_ht));
+
+   for(int i=0; i<num_sides; i++) {
+      add_scal_faces(geom, i, i+num_sides, (i+1)%num_sides, apex_idx1, ht2);
+      add_scal_faces(geom, (i+1)%num_sides+num_sides, (i+1)%num_sides,
+            i+num_sides, apex_idx2, ht2);
+   }
+}
+
+
+
 
 
 void antiprism::make_poly_part(geom_if &geom)
 {
+   if(subtype==subtype_scalenohedron) {
+      make_scal_part(geom);
+      return;
+   }
+   else if(subtype==subtype_subdivided_scalenohedron) {
+      make_escal_part(geom);
+      return;
+   }
+
+   double ht = (!isnan(height)) ? height : radius;
    int extra_verts = 2*(subtype==subtype_trapezohedron) +
                      1*(subtype==subtype_antihermaphrodite);
    int extra_faces = 2-extra_verts;
@@ -166,7 +268,7 @@ void antiprism::make_poly_part(geom_if &geom)
    add_polygon(pgon2);
    pgon2.transform(mat3d::rot(vec3d::z,-angle()/4+twist_ang/2));
    if(extra_verts) {
-      double apex_ht = 0.5*height*(cos(angle()/2)+cos(twist_ang)) /
+      double apex_ht = 0.5*ht*(cos(angle()/2)+cos(twist_ang)) /
             (cos(twist_ang)-cos(angle()/2));
       if(apex_ht>FLT_MAX)
          apex_ht=FLT_MAX;
@@ -179,8 +281,8 @@ void antiprism::make_poly_part(geom_if &geom)
    }
    
    for(int i=0; i<num_sides; i++) {
-      verts[i] = pgon.verts(i) + (height/2)*vec3d::z;
-      verts[i+num_sides] = pgon2.verts(i) - (height/2)*vec3d::z;
+      verts[i] = pgon.verts(i) + (ht/2)*vec3d::z;
+      verts[i+num_sides] = pgon2.verts(i) - (ht/2)*vec3d::z;
       if(extra_faces) {
          caps[0].push_back(i);
          if(extra_faces>1)
@@ -218,6 +320,7 @@ bool pyramid::set_edge2(double e2, char *msg) {
 
 void pyramid::make_poly_part(geom_if &geom)
 {
+   double ht = (!isnan(height)) ? height : radius;
    if( (subtype==0 && !isnan(twist_angle)) ||
             subtype==subtype_antihermaphrodite) {
       antiprism ant = *this;
@@ -225,10 +328,10 @@ void pyramid::make_poly_part(geom_if &geom)
 
       double twist_ang = isnan(twist_angle) ? 0.0 : twist_angle - angle()/2;
       ant.set_twist_angle(twist_ang);
-      double ant_ht = height * (cos(twist_ang)/cos(angle()/2)-1);
+      double ant_ht = ht * (cos(twist_ang)/cos(angle()/2)-1);
       ant.set_height(ant_ht);
       ant.make_poly(geom);
-      geom.raw_verts()[geom.verts().size()-1]=vec3d(0,0,-(0.5*ant_ht+height));
+      geom.raw_verts()[geom.verts().size()-1]=vec3d(0,0,-(0.5*ant_ht+ht));
       return;
    }
 
@@ -242,7 +345,7 @@ void pyramid::make_poly_part(geom_if &geom)
       face[2] = num_sides;
       pyr.add_face(face);
    }
-   pyr.add_vert(height*vec3d::z);
+   pyr.add_vert(ht*vec3d::z);
 
    if(subtype==0) {
       geom.append(pyr);
@@ -250,19 +353,39 @@ void pyramid::make_poly_part(geom_if &geom)
    else if(subtype==subtype_elongated) {
       prism pri(*this); 
       pri.set_subtype(0);
-      pri.set_height(get_edge());
+      pri.set_height((isnan(height2)) ? get_edge() : height2);
       pri.make_poly_part(geom);
-      face_bond(geom, pyr);
+      if(num_sides>2)
+         face_bond(geom, pyr);
+      else {
+         geom.delete_faces(vector<int>(1, 0));
+         int apex = geom.add_vert(vec3d(0, 0, pri.get_height()/2+ht));
+         geom.add_face(0, 1, apex, -1);
+         geom.add_face(1, 0, apex, -1);
+      }
+
    }
    else if(subtype==subtype_gyroelongated) {
       antiprism ant(*this);
       ant.set_subtype(0);
-      ant.set_edge2(get_edge());
+      if(isnan(height2))
+         ant.set_edge2(get_edge());
+      else
+         ant.set_height(height2);
       ant.make_poly_part(geom);
-      face_bond(geom, pyr);
+      if(num_sides>2)
+         face_bond(geom, pyr);
+      else {
+         geom.delete_faces(vector<int>(1, 0));
+         int apex = geom.add_vert(vec3d(0, 0, get_height()/2+ht));
+         geom.add_face(0, 1, apex, -1);
+         geom.add_face(1, 0, apex, -1);
+      }
    }
 }
-  
+
+
+/*
 void dipyramid::make_scal_part(geom_if &geom)
 {
    double twist_ang = isnan(twist_angle) ? 0.0 : twist_angle;
@@ -293,27 +416,52 @@ void dipyramid::make_scal_part(geom_if &geom)
       verts[2*i+1] = verts[2*i+1]*R2 + vec3d(0,0,-ring_ht);
    }
 }
+*/
+
+
+void dipyramid::make_scal_part(geom_if &geom)
+{
+   double ht = (!isnan(height)) ? height : radius;
+   double inrad = radius*cos(angle()/2);
+   double rad2 = isnan(radius2) ? inrad : radius2;
+
+   polygon pgon(num_sides, fraction);
+   pgon.set_radius(radius);
+   geom_v pg;
+   pgon.add_polygon(pg);
+   for(int i=0; i<num_sides; i++) {
+      geom.add_vert(pg.verts(i));
+      geom.add_vert((rad2/inrad)*0.5*(pg.verts(i)+pg.verts((i+1)%num_sides)));
+   }
+   int apex_idx1 = geom.add_vert(vec3d(0, 0, ht));
+   int apex_idx2 = geom.add_vert(vec3d(0, 0,-ht));
+
+   for(int i=0; i<2*num_sides; i++) {
+      geom.add_face(i, (i+1)%(2*num_sides), apex_idx1, -1);
+      geom.add_face((i+1)%(2*num_sides), i, apex_idx2, -1);
+   }
+}
+
 
 
 void dipyramid::make_poly_part(geom_if &geom)
 {
+   double ht = (!isnan(height)) ? height : radius;
    if( (subtype==0 && !isnan(twist_angle)) ||    // make trapezohedron
             subtype==subtype_trapezohedron) {
       antiprism ant = *this;
       ant.set_subtype(antiprism::subtype_trapezohedron);
       double twist_ang = isnan(twist_angle) ? 0.0 : twist_angle - angle()/2;
       ant.set_twist_angle(twist_ang);
-      double ant_ht = height * (cos(twist_ang)/cos(angle()/2)-1);
+      double ant_ht = ht * (cos(twist_ang)/cos(angle()/2)-1);
       ant.set_height(ant_ht);
       ant.make_poly(geom);
       for(int i=0; i<2; i++)       // make sure apex heights are correct
          geom.raw_verts()[geom.verts().size()-1-i] =
-            vec3d(0, 0, (1-2*i)*(0.5*ant_ht+height));
+            vec3d(0, 0, (1-2*i)*(0.5*ant_ht+ht));
    }
-   else if(subtype == subtype_scalenohedron ||      // make scalenohedron types
-           subtype == subtype_dip_scalenohedron) {
+   else if(subtype==subtype_dip_scalenohedron)
       make_scal_part(geom);
-   }
    else {                                           // make dipyramid types
       // Make the top part, possibly elongated or gyroelongated
       pyramid::make_poly_part(geom);
@@ -324,23 +472,15 @@ void dipyramid::make_poly_part(geom_if &geom)
       pyr.set_twist_angle();
       geom_v pyr_geom;
       pyr.make_poly_part(pyr_geom);
-      face_bond(geom, pyr_geom);
-   }
-}
-
-void dipyramid::make_poly(geom_if &geom)
-{
-   geom_v poly_unit;
-   make_poly_part(poly_unit);
-   poly_unit.orient();
-   int fold = num_sides;
-   if(subtype==subtype_scalenohedron || subtype==subtype_dip_scalenohedron)
-      fold/=2;
-   geom.append(poly_unit);
-   for(int i=1; i<parts; i++) {
-      geom_v rep = poly_unit;
-      rep.transform(mat3d::rot(vec3d::z, 2*M_PI*i/parts/fold));
-      geom.append(rep);
+      if(num_sides>2)
+         face_bond(geom, pyr_geom);
+      else {
+         geom.delete_faces(vector<int>(1, 0));
+         int off = (subtype==0) ? 0 : 2;
+         int apex = geom.add_vert(vec3d(0, 0, geom.verts(off)[2]-ht));
+         geom.add_face(0+off, 1+off, apex, -1);
+         geom.add_face(1+off, 0+off, apex, -1);
+      }
    }
 }
 
@@ -356,6 +496,23 @@ bool cupola::set_edge2(double e2, char *msg)
    return (e2*e2-diff2 > -epsilon);
 }
 
+static void prism_wrap(geom_if &geom, int num_wraps)
+{
+   vector<vector<int> > &faces = geom.raw_faces();
+   int sz = faces.size();
+   for(int i=0; i<sz; i++) {
+      int f_sz = faces[i].size();
+      for(int w=0; w<num_wraps; w++) {
+         if(i<2)  // double wind the caps
+            faces[i].insert(faces[i].end(),
+                  faces[i].begin(), faces[i].begin()+f_sz);
+         else     // repeat the side faces
+            geom.add_face(faces[i]);
+      }
+   }
+}
+   
+
 void cupola::make_poly_part(geom_if &geom)
 {
    geom_v cup_geom;
@@ -370,9 +527,13 @@ void cupola::make_poly_part(geom_if &geom)
       for(int i=0; i<num_sides; i++)
          cup_geom.raw_faces()[0].push_back(i);
    }
+   if(subtype==subtype_semicupola)
+      cup_geom.clear_faces();
+   
    vec3d r = (-angle()/4)*vec3d::z;
    cup_geom.transform(mat3d::rot(r[0], r[1], r[2]));
-   add_polygon(cup_geom, height);
+   double ht = (!isnan(height)) ? height : radius;
+   add_polygon(cup_geom, ht);
    for(int i=0; i<2*num_sides; i++) {
       vector<int> face;
       int v = i%n2;
@@ -384,24 +545,59 @@ void cupola::make_poly_part(geom_if &geom)
       cup_geom.add_face(face);
    }
 
-   if(subtype==0) {
+   if(subtype==subtype_default || subtype==subtype_semicupola) {
       geom.append(cup_geom);
+      if(subtype==subtype_semicupola)
+         cup_geom.clear_faces();
    }
    else if(subtype==subtype_elongated) {
       prism pri(large);
       pri.set_twist_angle(twist_angle);
-      pri.set_height(get_edge());
+      pri.set_height((isnan(height2)) ? get_edge() : height2);
       pri.make_poly_part(geom);
+      if(semi)
+         prism_wrap(geom, 2);
       face_bond(geom, cup_geom);
    }
    else if(subtype==subtype_gyroelongated) {
       antiprism ant(large);
       ant.set_twist_angle(twist_angle);
-      ant.set_edge2(get_edge());
+      if(isnan(height2))
+         ant.set_edge2(get_edge());
+      else
+         ant.set_height(height2);
       ant.make_poly_part(geom);
+      if(semi)
+         prism_wrap(geom, 2);
       face_bond(geom, cup_geom);
    }
 }
+
+void cupola::make_poly(geom_if &geom)
+{
+   polygon::make_poly(geom);
+   //merge vertices which are coincident in compound
+   map<int, int> vmap;
+   if(!is_even(fraction) && is_even(parts)) {
+      for(int i=0; i<parts/2; i++) {
+         int base_part = i;                   // keep base part polygon verts
+         int merge_part = base_part+parts/2;  // use base part polygon verts
+         int lrg_sz = 2*num_sides;            // num sides of the large polygon
+         
+         // How many polygon steps to turn -1 vertices on {op_sz/1}
+         int off;
+         for(off=0; off<lrg_sz; off++)
+            if((off*fraction)%lrg_sz==lrg_sz-1)
+               break;
+         
+         for(int j=0; j<lrg_sz; j++)
+            vmap[merge_part*num_sides*3 + j] = 
+               base_part*num_sides*3 + (j+off)%lrg_sz;
+      }
+   }
+   geom.verts_merge(vmap);
+}
+
 
 void orthobicupola::make_poly_part(geom_if &geom)
 {

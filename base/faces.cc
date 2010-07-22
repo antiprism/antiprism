@@ -122,22 +122,20 @@ bool face_bond(geom_if &geom, geom_if &bgeom, int f, int b_f, int off, bool merg
 {
    //transform(bgeom, mat3d::rot(1.0001, 0.0002, 0.0003));
 
-   vector<vec3d> pts;
-   pts.push_back(geom.verts(geom.faces(f, 0)));
-   pts.push_back(geom.verts(geom.faces(f, 1)));
-   pts.push_back(geom.verts(geom.faces(f, 2)));
-   int fsz = bgeom.faces(b_f).size();
-   vector<vec3d> bpts;
-   bpts.push_back(bgeom.verts(bgeom.faces(b_f, off%fsz)));
-   bpts.push_back(bgeom.verts(bgeom.faces(b_f, (off-1+fsz)%fsz)));
-   bpts.push_back(bgeom.verts(bgeom.faces(b_f, (off-2+fsz)%fsz)));
+   int f_sz = geom.faces(f).size();
+   int f_bsz = bgeom.faces(b_f).size();
+   vector<vec3d> pts, bpts;
+   for(int i=0; i<f_sz; i++) {
+      pts.push_back(geom.verts(geom.faces(f, i%f_sz)));
+      bpts.push_back(bgeom.verts(bgeom.faces(b_f, (off-i+f_bsz)%f_bsz)));
+   }
    
    bgeom.transform(mat3d::alignment(bpts, pts));
    
    map<int, int> vmap;
    for(unsigned int i=0; i<bgeom.faces(b_f).size(); i++)
-      vmap[bgeom.faces(b_f, (off-i+fsz)%fsz)+geom.verts().size()] =
-            geom.faces(f, i);
+      vmap[bgeom.faces(b_f, (off-i+f_bsz)%f_bsz)+geom.verts().size()] =
+            geom.faces(f, i%f_sz);
    
    if(merge) {
       vector<int> del_faces(1);
@@ -146,7 +144,6 @@ bool face_bond(geom_if &geom, geom_if &bgeom, int f, int b_f, int off, bool merg
       del_faces[0] = b_f;
       bgeom.delete_faces(del_faces);
       geom.append(bgeom);
-
       geom.verts_merge(vmap);
    }
 

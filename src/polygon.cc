@@ -42,16 +42,17 @@ using std::string;
 
 class pg_opts: public prog_opts {
    public:
-      enum {t_polygon=1, t_prism, t_antiprism, t_pyramid,
+      enum {t_prism=1, t_antiprism, t_pyramid,
          t_dipyramid, t_cupola, t_orthobicupola, t_gyrobicupola,
          t_snub_antiprism, t_dihedron };
       int type;
       string subtype_str;
       int subtype;
       double edge;
-      double circumrad;
-      double inrad;
+      double radius;
+      double radius2;
       double height;
+      double height2;
       double edge2;
       int num_sides;
       int fraction;
@@ -62,8 +63,8 @@ class pg_opts: public prog_opts {
       bool h_given;
 
       pg_opts(): prog_opts("polygon"), type(t_prism), subtype(-1),
-                 edge(1.0), circumrad(0.0), inrad(0.0),
-                 height(NAN), edge2(NAN), fraction(1),
+                 edge(NAN), radius(NAN), radius2(NAN),
+                 height(NAN), height2(NAN), edge2(NAN), fraction(1),
                  twist_ang(NAN),
                  e_given(false), h_given(false)
                  {}
@@ -81,35 +82,37 @@ void pg_opts::usage()
 "\n"
 "Make polyhedra based on polygons. The polyhedron type and subtype may be\n"
 "given by (partial) name or number\n"
-"   1. polygon\n"
-"   2. prism (angle: polygons twist, forming an antiprism)\n"
+"   1. prism (angle: polygons twist, forming an antiprism)\n"
 "        subtypes: 1. antiprism, from triangulating side faces\n"
 "                  2. trapezohedron, with this antiprism-ised belt\n"
-"   3. antiprism (angle: polygons twist)\n"
+"   2. antiprism (angle: polygons twist)\n"
 "        subtypes: 1. trapezohedron, with this antiprism belt\n"
 "                  2. antihermaphrodite, with this antiprism base\n"
-"   4. pyramid (angle: base separates, polygons twist to antihermaphrodite)\n"
+"                  3. scalenohedron\n"
+"                  3. subdivided_scalenohedron\n"
+"   3. pyramid (angle: base separates, polygons twist to antihermaphrodite)\n"
 "        subtypes: 1. antihermaphrodite, with this antiprism base\n"
 "                  2. elongated\n"
 "                  3. gyroelongated\n"
-"   5. dipyramid (angle: base separates, polygons twist to trapezohedron)\n"
+"   4. dipyramid (angle: base separates, polygons twist to trapezohedron)\n"
 "        subtypes: 1. trapezohedron, with this pyramid apex\n"
 "                  2. elongated\n"
 "                  3. gyroelongated\n"
-"                  4. scalenohedron\n"
-"                  5. dip_scalenohedron\n"
-"   6. cupola\n"
+"                  4. dipyramid_scalenohedron\n"
+"   5. cupola\n"
 "        subtypes: 1. elongated\n"
 "                  2. gyroelongated\n"
-"   7. orthobicupola\n"
+"                  3. semicupola\n"
+"   6. orthobicupola\n"
 "        subtypes: 1. elongated\n"
 "                  2. gyroelongated\n"
-"   8. gyrobicupola\n"
+"   7. gyrobicupola\n"
 "        subtypes: 1. elongated\n"
 "                  2. gyroelongated\n"
-"   9. snub-antiprism\n"
+"   8. snub-antiprism\n"
 "        subtypes: 1. inverted, triangle band inverted\n"
-"   10.dihedron\n"
+"   9. dihedron\n"
+"        subtypes: 1. polygon\n"
 "\n"
 "num_sides is a number (N) optionally followed by / and a second\n"
 "number (N/M). N is the number of vertices spaced equally on a\n"
@@ -121,12 +124,13 @@ void pg_opts::usage()
 "  -s <subt> a number or name (see type list above) indicting a subtype\n"
 "            or modification of a polyhedron\n"
 "  -e <len>  length of polygon edges (default: 1)\n"
-"  -R <rad>  circumradius of polygon (default: use -e)\n"
-"  -r <rad>  inradius of polygon (default: use -e)\n"
+"  -E <len>  length of non-polygon edges (default: calculate from -l)\n"
+"  -r <rad>  circumradius of polygon (default: calculate from -e)\n"
+"  -R <rad>  a second radius value\n"
 "  -l <hgt>  height of upper vertices above base polygon\n"
-"            (default: circumradius of polygon\n"
-"  -E <len>  length of non-polygon edges (default: use -l)\n"
-"  -a <ang>  angle (degrees) to decrease the angle between antiprism polygons\n"
+"            (default: circumradius of polygon)\n"
+"  -L <hgt>  a second height or length value\n"
+"  -a <ang>  twist angle (degrees)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
 "\n", prog_name(), help_ver_text);
@@ -140,7 +144,7 @@ void pg_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":he:r:R:E:l:s:o:a:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":he:E:r:R:l:L:s:o:a:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -156,6 +160,11 @@ void pg_opts::process_command_line(int argc, char **argv)
             if(!read_double(optarg, &height, errmsg))
                error(errmsg, c);
             break;
+
+          case 'L':
+            if(!read_double(optarg, &height2, errmsg))
+               error(errmsg, c);
+            break;
             
          case 'E':
             if(h_given)
@@ -169,7 +178,7 @@ void pg_opts::process_command_line(int argc, char **argv)
             
           case 'e':
             if(e_given)
-               error("can only use one of options -e, -R, -r", "polygon edge");
+               error("can only use one of options -e, -r", "polygon edge");
             e_given = true;
             if(!read_double(optarg, &edge, errmsg))
                error(errmsg, c);
@@ -177,26 +186,19 @@ void pg_opts::process_command_line(int argc, char **argv)
                error("edge length cannot be negative", c);
             break;
             
-         case 'R':
-            if(e_given)
-               error("can only use one of options -e, -R, -r", "polygon edge");
-            e_given = true;
-            if(!read_double(optarg, &circumrad, errmsg))
-               error(errmsg, c);
-            if(circumrad<0)
-               error("radius cannot be negative", c);
-            break;
-            
          case 'r':
             if(e_given)
-               error("can only use one of options -e, -R, -r", "polygon edge");
-            h_given = true;
-            if(!read_double(optarg, &inrad, errmsg))
+               error("can only use one of options -e, -r", "polygon edge");
+            e_given = true;
+            if(!read_double(optarg, &radius, errmsg))
                error(errmsg, c);
-            if(inrad<0)
-               error("radius cannot be negative", c);
             break;
 
+         case 'R':
+            if(!read_double(optarg, &radius2, errmsg))
+               error(errmsg, c);
+            break;
+            
          case 'a':
             if(!read_double(optarg, &twist_ang, errmsg))
                error(errmsg, c);
@@ -216,18 +218,9 @@ void pg_opts::process_command_line(int argc, char **argv)
       error("must give two arguments");
 
    // Determine type
-   string params = "polygon=" + itostr(t_polygon) +
-                   "|prism=" + itostr(t_prism) +
-                   "|antiprism=" + itostr(t_antiprism) +
-                   "|pyramid=" + itostr(t_pyramid) +
-                   "|dipyramid=" + itostr(t_dipyramid) +
-                   "|cupola=" + itostr(t_cupola) +
-                   "|orthobicupola=" + itostr(t_orthobicupola) +
-                   "|gyrobicupola=" + itostr(t_gyrobicupola) +
-                   "|snub-antiprism=" + itostr(t_snub_antiprism) +
-                   "|dihedron=" + itostr(t_dihedron)
-                   ;
-            
+   string params = "|prism|antiprism|pyramid|dipyramid|cupola|orthobicupola"
+                   "|gyrobicupola|snub-antiprism|dihedron";
+             
    string arg_id = get_arg_id(argv[optind], params.c_str(),
          argmatch_default | argmatch_add_id_maps, errmsg);
    if(arg_id=="")
@@ -239,18 +232,23 @@ void pg_opts::process_command_line(int argc, char **argv)
    if(subtype_str != "") {
       params="0";
       if(type==t_prism)
-         params += "|antiprism=1|trapezohedron=2";
+         params += "|antiprism|trapezohedron";
       else if(type==t_antiprism)
-         params += "|trapezohedron=1|antihermaphrodite=2";
+         params += "|trapezohedron|antihermaphrodite|scalenohedron"
+            "|subdivided_scalenohedron";
       else if(type==t_pyramid)
-         params += "|antihermaphrodite=1|elongated=2|gyroelongated=3";
+         params += "|antihermaphrodite|elongated|gyroelongated";
       else if(type==t_dipyramid)
-         params += "|trapezohedron=1|elongated=2|gyroelongated=3|"
-            "scalenohedron=4|dip_scalenohedron=5";
-      else if(type==t_cupola || type==t_orthobicupola ||type==t_gyrobicupola)
-         params += "|elongated=1|gyroelongated=2";
+         params += "|trapezohedron=1|elongated=2|gyroelongated"
+            "|dipyramid_scalenohedron";
+      else if(type==t_orthobicupola ||type==t_gyrobicupola)
+         params += "|elongated|gyroelongated";
+      else if(type==t_cupola)
+         params += "|elongated|gyroelongated|semicupola";
       else if(type==t_snub_antiprism)
-         params += "|inverted=1";
+         params += "|inverted";
+      else if(type==t_dihedron)
+         params += "|polygon";
 
       arg_id = get_arg_id(subtype_str.c_str(), params.c_str(),
             argmatch_default | argmatch_add_id_maps, errmsg);
@@ -275,8 +273,8 @@ void pg_opts::process_command_line(int argc, char **argv)
       error("must be an integer 2 or greater", "number of sides");
    if(fraction < 1)
       error("fractional part must be 1 or greater", "number of sides");
-   if(fraction >= num_sides)
-      error("fractional part must be less than number of sides", "number of sides");
+   //if(fraction >= num_sides)
+   //   error("fractional part must be less than number of sides", "number of sides");
 
 }
 
@@ -290,18 +288,15 @@ int main(int argc, char *argv[])
    polygon pgon(opts.num_sides, opts.fraction);
 
    // make n-polygon in xz plane with centre at origin
-   if(opts.circumrad!=0)
-      pgon.set_radius(opts.circumrad);
-   else if(opts.inrad!=0)
-      pgon.set_inradius(opts.inrad);
-   else
+   if(!isnan(opts.radius))
+      pgon.set_radius(opts.radius);
+   else if(!isnan(opts.edge))
       pgon.set_edge(opts.edge);
-
+   else
+      pgon.set_edge(1.0);
+   
    polygon *poly=0;
    switch(opts.type) {
-      case pg_opts::t_polygon:
-         poly = new polygon(pgon);
-         break;
       case pg_opts::t_prism:
          poly = new prism(pgon);
          break;
@@ -313,16 +308,6 @@ int main(int argc, char *argv[])
          break;
       case pg_opts::t_dipyramid:
          poly = new dipyramid(pgon);
-         if((opts.subtype==dipyramid::subtype_scalenohedron ||
-             opts.subtype==dipyramid::subtype_dip_scalenohedron)
-             && poly->get_num_sides()%2) {
-            if(poly->get_parts()==1)
-                opts.error("polygon for scalenohedron must have an even number"
-                      "of sides", "number of sides");
-            else
-                opts.error("polygon for component of scalenohedron compound"
-                      "must have an even number of sides", "number of sides");
-         }
          break;
       case pg_opts::t_cupola:
          poly = new cupola(pgon);
@@ -344,22 +329,32 @@ int main(int argc, char *argv[])
    char errmsg[MSG_SZ];
    if(opts.subtype>-1) {
       if(!poly->set_subtype(opts.subtype, errmsg))
-         opts.warning(errmsg, 's');
+         opts.error(errmsg, 's');
    }
+   
+   if(opts.type==pg_opts::t_cupola && opts.subtype==3 &&
+         ((poly->get_fraction()*poly->get_parts())%2) )
+      opts.error("semicupola with odd (compound) fraction cannot close", "polygon type");
+         
    
    if(!isnan(opts.twist_ang)) {
       if(!poly->set_twist_angle(opts.twist_ang, errmsg))
-         opts.warning(errmsg, 'a');
+         opts.error(errmsg, 'a');
    }
    
    if(!isnan(opts.height)) {
       if(!poly->set_height(opts.height, errmsg))
-         opts.warning(errmsg, 'l');
+         opts.error(errmsg, 'l');
    }
    else if(!isnan(opts.edge2))
       if(!poly->set_edge2(opts.edge2, errmsg))
-         opts.warning(errmsg, 'E');
-         
+         opts.error(errmsg, 'E');
+
+   if(!poly->set_height2(opts.height2, errmsg))
+         opts.error(errmsg, 'L');
+   if(!poly->set_radius2(opts.radius2, errmsg))
+         opts.error(errmsg, 'R');
+
    geom_v geom;
    poly->make_poly(geom);
    delete poly;
