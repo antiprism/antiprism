@@ -209,10 +209,10 @@ static void add_scal_faces(geom_if &geom, int v0, int v1, int v2, int v3,
    geom.add_face(v3, v0, ap, -1);
 }
 
-void antiprism::make_escal_part(geom_if &geom)
+void antiprism::make_subscal_part(geom_if &geom)
 {
    double ht = (!isnan(height)) ? height : radius;
-   double ht2 = isnan(height2) ? 2*ht : height2;
+   double ht2 = (!isnan(height2)) ? height2 : 0.0;
    
    double E = sqrt(ht*ht+pow(2*radius*sin(angle()/4), 2));
    double apex_ht = ht/2; // default to "flat" on failure
@@ -246,7 +246,7 @@ void antiprism::make_poly_part(geom_if &geom)
       return;
    }
    else if(subtype==subtype_subdivided_scalenohedron) {
-      make_escal_part(geom);
+      make_subscal_part(geom);
       return;
    }
 

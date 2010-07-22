@@ -226,7 +226,7 @@ class antiprism: public polygon {
    private:
       void make_trapezo_part(geom_if &geom);
       void make_scal_part(geom_if &geom);
-      void make_escal_part(geom_if &geom);
+      void make_subscal_part(geom_if &geom);
 
    public:
       enum { subtype_trapezohedron=1,
