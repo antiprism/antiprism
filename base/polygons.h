@@ -343,6 +343,11 @@ class cupola: public polygon {
       /**\param pgon %polygon to base the polyhedron on. */
      cupola(polygon &pgon) : polygon(pgon) { set_max_subtype(3); }
      
+     ///Check whether it is a compound with paired components
+     /** \return true if compound withe paired components, else false */
+     bool has_paired_component() const
+        { return !is_even(fraction) && is_even(parts); }
+
      bool set_twist_angle(double ang=NAN, char * /*msg*/ =0)
          { twist_angle=ang; return true; }
      bool set_edge2(double e2, char *msg=0);

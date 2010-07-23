@@ -502,7 +502,7 @@ static void prism_wrap(geom_if &geom, int num_wraps)
    int sz = faces.size();
    for(int i=0; i<sz; i++) {
       int f_sz = faces[i].size();
-      for(int w=0; w<num_wraps; w++) {
+      for(int w=0; w<num_wraps-1; w++) {
          if(i<2)  // double wind the caps
             faces[i].insert(faces[i].end(),
                   faces[i].begin(), faces[i].begin()+f_sz);
@@ -515,47 +515,61 @@ static void prism_wrap(geom_if &geom, int num_wraps)
 
 void cupola::make_poly_part(geom_if &geom)
 {
-   geom_v cup_geom;
+   bool paired = has_paired_component();
    bool semi = is_even(fraction);
+   geom_v cup_geom;
    vector<vec3d> verts;
    vector<vector<int> > faces;
    int n2 = (2-semi)*num_sides;
    polygon large(n2, fraction/(1+semi));
    large.set_edge(get_edge());
    large.add_polygon(cup_geom);
-   if(semi) {
-      for(int i=0; i<num_sides; i++)
+   if(semi || paired) {
+      for(int i=0; i<n2; i++)
          cup_geom.raw_faces()[0].push_back(i);
    }
    if(subtype==subtype_semicupola)
       cup_geom.clear_faces();
    
-   vec3d r = (-angle()/4)*vec3d::z;
-   cup_geom.transform(mat3d::rot(r[0], r[1], r[2]));
+   cup_geom.transform(mat3d::rot(vec3d::z, -angle()/4));
    double ht = (!isnan(height)) ? height : radius;
-   add_polygon(cup_geom, ht);
-   for(int i=0; i<2*num_sides; i++) {
-      vector<int> face;
-      int v = i%n2;
-      face.push_back(v);
-      face.push_back(n2 + ((i+1)/2)%num_sides);
-      if(is_even(i))
-         face.push_back(n2 + ((i/2+1)%num_sides));
-      face.push_back((v+1)%n2);
-      cup_geom.add_face(face);
+   for(int part=0; part<1+paired; part++) {
+      int v_sz = cup_geom.verts().size();
+      add_polygon(cup_geom, ht);
+      int off = 0;
+      if(part==1) {
+         mat3d rot = mat3d::rot(vec3d::z, M_PI/num_sides);
+         for(int j=0; j<num_sides; j++) {
+            vec3d &v = cup_geom.raw_verts()[v_sz+j];
+            v = rot*v;
+         }
+         // How many polygon steps to turn -1 vertices on large polygon
+         for(off=0; off<n2; off++)
+            if((off*fraction)%n2==1)
+               break;
+      }
+      
+      for(int i=0; i<2*num_sides; i++) {
+         vector<int> face;
+         int v = (i+n2-off)%n2;
+         face.push_back(v);
+         face.push_back(v_sz + ((i+1)/2)%num_sides);
+         if(is_even(i))
+            face.push_back(v_sz + ((i/2+1)%num_sides));
+         face.push_back((v+1)%n2);
+         cup_geom.add_face(face);
+      }
    }
 
    if(subtype==subtype_default || subtype==subtype_semicupola) {
       geom.append(cup_geom);
-      if(subtype==subtype_semicupola)
-         cup_geom.clear_faces();
    }
    else if(subtype==subtype_elongated) {
       prism pri(large);
       pri.set_twist_angle(twist_angle);
       pri.set_height((isnan(height2)) ? get_edge() : height2);
       pri.make_poly_part(geom);
-      if(semi)
+      if(semi || paired)
          prism_wrap(geom, 2);
       face_bond(geom, cup_geom);
    }
@@ -567,35 +581,28 @@ void cupola::make_poly_part(geom_if &geom)
       else
          ant.set_height(height2);
       ant.make_poly_part(geom);
-      if(semi)
+      if(semi || paired)
          prism_wrap(geom, 2);
       face_bond(geom, cup_geom);
    }
 }
 
+
 void cupola::make_poly(geom_if &geom)
 {
-   polygon::make_poly(geom);
-   //merge vertices which are coincident in compound
-   map<int, int> vmap;
-   if(!is_even(fraction) && is_even(parts)) {
-      for(int i=0; i<parts/2; i++) {
-         int base_part = i;                   // keep base part polygon verts
-         int merge_part = base_part+parts/2;  // use base part polygon verts
-         int lrg_sz = 2*num_sides;            // num sides of the large polygon
-         
-         // How many polygon steps to turn -1 vertices on {op_sz/1}
-         int off;
-         for(off=0; off<lrg_sz; off++)
-            if((off*fraction)%lrg_sz==lrg_sz-1)
-               break;
-         
-         for(int j=0; j<lrg_sz; j++)
-            vmap[merge_part*num_sides*3 + j] = 
-               base_part*num_sides*3 + (j+off)%lrg_sz;
+   if(has_paired_component()) {
+      geom_v poly_unit;
+      make_poly_part(poly_unit);
+      poly_unit.orient();
+      geom.append(poly_unit);
+      for(int i=1; i<parts/2; i++) {
+         geom_v rep = poly_unit;
+         rep.transform(mat3d::rot(vec3d::z, M_PI*i/parts/num_sides));
+         geom.append(rep);
       }
    }
-   geom.verts_merge(vmap);
+   else
+      polygon::make_poly(geom);
 }
 
 

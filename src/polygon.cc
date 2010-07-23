@@ -88,27 +88,27 @@ void pg_opts::usage()
 "   2. antiprism (angle: polygons twist)\n"
 "        subtypes: 1. trapezohedron, with this antiprism belt\n"
 "                  2. antihermaphrodite, with this antiprism base\n"
-"                  3. scalenohedron\n"
-"                  3. subdivided_scalenohedron\n"
+"                  3. scalenohedron (-L for apex height)\n"
+"                  4. subdivided_scalenohedron (-L for apex height)\n"
 "   3. pyramid (angle: base separates, polygons twist to antihermaphrodite)\n"
 "        subtypes: 1. antihermaphrodite, with this antiprism base\n"
-"                  2. elongated\n"
-"                  3. gyroelongated\n"
+"                  2. elongated (-L for prism height)\n"
+"                  3. gyroelongated (-L for antiprism height)\n"
 "   4. dipyramid (angle: base separates, polygons twist to trapezohedron)\n"
 "        subtypes: 1. trapezohedron, with this pyramid apex\n"
-"                  2. elongated\n"
-"                  3. gyroelongated\n"
-"                  4. dipyramid_scalenohedron\n"
+"                  2. elongated (-L for prism height)\n"
+"                  3. gyroelongated (-L for antiprism height)\n"
+"                  4. dipyramid_scalenohedron (-R for alternate vertex radius)\n"
 "   5. cupola\n"
-"        subtypes: 1. elongated\n"
-"                  2. gyroelongated\n"
+"        subtypes: 1. elongated (-L for prism height)\n"
+"                  2. gyroelongated (-L for antiprism height)\n"
 "                  3. semicupola\n"
 "   6. orthobicupola\n"
-"        subtypes: 1. elongated\n"
-"                  2. gyroelongated\n"
+"        subtypes: 1. elongated (-L for prism height)\n"
+"                  2. gyroelongated (-L for antiprism height)\n"
 "   7. gyrobicupola\n"
-"        subtypes: 1. elongated\n"
-"                  2. gyroelongated\n"
+"        subtypes: 1. elongated (-L for prism height)\n"
+"                  2. gyroelongated (-L for antiprism height)\n"
 "   8. snub-antiprism\n"
 "        subtypes: 1. inverted, triangle band inverted\n"
 "   9. dihedron\n"
@@ -235,12 +235,12 @@ void pg_opts::process_command_line(int argc, char **argv)
          params += "|antiprism|trapezohedron";
       else if(type==t_antiprism)
          params += "|trapezohedron|antihermaphrodite|scalenohedron"
-            "|subdivided_scalenohedron";
+                   "|subdivided_scalenohedron";
       else if(type==t_pyramid)
          params += "|antihermaphrodite|elongated|gyroelongated";
       else if(type==t_dipyramid)
-         params += "|trapezohedron=1|elongated=2|gyroelongated"
-            "|dipyramid_scalenohedron";
+         params += "|trapezohedron|elongated|gyroelongated"
+                   "|dipyramid_scalenohedron";
       else if(type==t_orthobicupola ||type==t_gyrobicupola)
          params += "|elongated|gyroelongated";
       else if(type==t_cupola)
