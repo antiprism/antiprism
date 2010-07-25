@@ -268,8 +268,10 @@ void antiprism::make_poly_part(geom_if &geom)
    add_polygon(pgon2);
    pgon2.transform(mat3d::rot(vec3d::z,-angle()/4+twist_ang/2));
    if(extra_verts) {
-      double apex_ht = 0.5*ht*(cos(angle()/2)+cos(twist_ang)) /
-            (cos(twist_ang)-cos(angle()/2));
+      double apex_ht = 0.5*ht;
+      if(num_sides!=2)
+         apex_ht *= (cos(angle()/2)+cos(twist_ang)) /
+                                         (cos(twist_ang)-cos(angle()/2));
       if(apex_ht>FLT_MAX)
          apex_ht=FLT_MAX;
       else if(apex_ht<-FLT_MAX)
@@ -368,16 +370,16 @@ void pyramid::make_poly_part(geom_if &geom)
    else if(subtype==subtype_gyroelongated) {
       antiprism ant(*this);
       ant.set_subtype(0);
-      if(isnan(height2))
-         ant.set_edge2(get_edge());
-      else
+      if(!isnan(height2))                   // prefer height2
          ant.set_height(height2);
+      else if(!ant.set_edge2(get_edge()))   // try polygon edge
+         ant.set_height(ht);                // failed so use pyr height
       ant.make_poly_part(geom);
       if(num_sides>2)
          face_bond(geom, pyr);
       else {
          geom.delete_faces(vector<int>(1, 0));
-         int apex = geom.add_vert(vec3d(0, 0, get_height()/2+ht));
+         int apex = geom.add_vert(vec3d(0, 0, ant.get_height()/2+ht));
          geom.add_face(0, 1, apex, -1);
          geom.add_face(1, 0, apex, -1);
       }
@@ -597,7 +599,7 @@ void cupola::make_poly(geom_if &geom)
       geom.append(poly_unit);
       for(int i=1; i<parts/2; i++) {
          geom_v rep = poly_unit;
-         rep.transform(mat3d::rot(vec3d::z, M_PI*i/parts/num_sides));
+         rep.transform(mat3d::rot(vec3d::z, 2*M_PI*i/parts/num_sides));
          geom.append(rep);
       }
    }

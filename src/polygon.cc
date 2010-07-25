@@ -273,8 +273,8 @@ void pg_opts::process_command_line(int argc, char **argv)
       error("must be an integer 2 or greater", "number of sides");
    if(fraction < 1)
       error("fractional part must be 1 or greater", "number of sides");
-   //if(fraction >= num_sides)
-   //   error("fractional part must be less than number of sides", "number of sides");
+   if(fraction%num_sides==0)
+      error("fractional part cannot be a multiple of the number of sides", "number of sides");
 
 }
 
@@ -334,9 +334,18 @@ int main(int argc, char *argv[])
    
    if(opts.type==pg_opts::t_cupola && opts.subtype==3 &&
          ((poly->get_fraction()*poly->get_parts())%2) )
-      opts.error("semicupola with odd (compound) fraction cannot close", "polygon type");
+      opts.error("cannot make a semicupola unless the specified polygon fraction has a denominator and it is even", "polygon type");
          
-   
+   if(poly->get_num_sides()==2 && (opts.subtype==1||!isnan(opts.twist_ang)) ) {
+      if(opts.type==pg_opts::t_pyramid)
+         opts.error("cannot make an antihermaphrodite from a digonal pyramid",
+               "subtype or twist angle");
+      if(opts.type==pg_opts::t_dipyramid)
+         opts.error("cannot make a trapezohedron from a digonal dipyramid",
+               "subtype or twist angle");
+   }
+         
+    
    if(!isnan(opts.twist_ang)) {
       if(!poly->set_twist_angle(opts.twist_ang, errmsg))
          opts.error(errmsg, 'a');
