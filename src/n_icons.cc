@@ -517,7 +517,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
          }
          
          if (hybrid && symmetric_coloring)
-            warning("symmetric coloring is the same an non-symmetric coloring for hybrids","S");
+            warning("for hybrids, symmetric coloring is the same for faces but not edges","S");
       }
 
       // Let us allow globes (Twist = 0) to have uneven number of longitudes
