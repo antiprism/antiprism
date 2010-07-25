@@ -1035,7 +1035,7 @@ void sort_polar_orbit(col_geom_v &geom, vector<polarOrb *> &polar_orbit)
    vec3d v0 = verts[polar_orbit[0]->coord_no];
    int sz = polar_orbit.size();
    vector<pair<double, int> > angles(sz);
-   for(unsigned int i=0; i<sz; i++) {
+   for(int i=0; i<sz; i++) {
       int j = polar_orbit[i]->coord_no;
       angles[i].second = j;
       angles[i].first = rad2deg(angle_around_axis(v0,verts[j],vec3d(0,0,1)));
@@ -1045,7 +1045,7 @@ void sort_polar_orbit(col_geom_v &geom, vector<polarOrb *> &polar_orbit)
    // sort on angles
    sort( angles.begin(), angles.end() );
 
-   for (unsigned int i=0; i<sz; i++)
+   for (int i=0; i<sz; i++)
       polar_orbit[i]->coord_no = angles[i].second;
 }
 
