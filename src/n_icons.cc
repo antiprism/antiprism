@@ -28,6 +28,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <float.h>
 
 #include <ctype.h>
 #include <unistd.h>
@@ -98,6 +99,9 @@ class ncon_opts: public prog_opts {
       int ncon_order;
       int d;
       bool nm_shell;
+      bool hide_indent;
+      double inner_radius;
+      double outer_radius;
       bool point_cut;
       bool hybrid;
       bool add_poles;
@@ -133,6 +137,9 @@ class ncon_opts: public prog_opts {
                    ncon_order(4),
                    d(1),
                    nm_shell(true),
+                   hide_indent(true),
+                   inner_radius(FLT_MAX),
+                   outer_radius(FLT_MAX),
                    point_cut(true),
                    hybrid(false),
                    add_poles(false),
@@ -185,6 +192,8 @@ void ncon_opts::usage()
 "  -c <clse> close open model if m2<m. Valid values h or v\n"
 "               h = horizontal closure  v = vertical closure\n"
 "  -z        for n/d, make non-shell model. n/d must be co-prime\n"
+"  -r        for n/d shell model, override inner radius. greater than 0\n"
+"  -R        for n/d shell model, override outer radius. greater than 0\n"
 "  -I        info on current n-icon\n"     
 "  -o <file> write output to file (default: write to standard output)\n"
 "\nColoring Options\n"
@@ -217,6 +226,7 @@ void ncon_opts::usage()
 "               0 - U value suppressed  1 - U value applied  (default: '1')\n"
 "  -Q <col>  color given to uncolored edges and vertices of final model\n"
 "               key word: none - sets no color (default: invisible)\n"
+"  -Y        for n/d shells, when showing edges, show indented edges\n"
 "  -m <maps> color maps to be tried in turn. (default: map_red:darkorange1:\n"
 "               yellow:darkgreen:cyan:blue:magenta:white:grey:black%%) optionally\n"
 "               followed by elements to map from v, e or f (default: vef)\n"
@@ -247,7 +257,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hn:t:sHM:x:ac:zIJ:K:LZm:f:ST:O:e:U:P:Q:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hn:t:sHM:x:ac:zr:R:IJ:K:LZm:f:ST:O:e:U:P:Q:Yo:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -322,6 +332,20 @@ void ncon_opts::process_command_line(int argc, char **argv)
 
          case 'z':
             nm_shell = false;
+            break;
+
+         case 'r':
+            if(!read_double(optarg, &inner_radius, errmsg))
+               error(errmsg, c);
+           if (inner_radius <= 0.0)
+               error("inner radius must be greater than 0", c);
+            break;
+
+         case 'R':
+            if(!read_double(optarg, &outer_radius, errmsg))
+               error(errmsg, c);
+            if (outer_radius <= 0.0)
+               error("outer radius must be greater than 0", c);
             break;
 
          case 'I':
@@ -434,6 +458,10 @@ void ncon_opts::process_command_line(int argc, char **argv)
                error(errmsg, c);
             break;
 
+        case 'Y':
+            hide_indent = false;
+            break;
+
          case 'o':
             ofile = optarg;
             break;
@@ -481,6 +509,12 @@ void ncon_opts::process_command_line(int argc, char **argv)
       if (!nm_shell)
          if (ncon_order>0 && d>0 && gcd(ncon_order,d) != 1)
             error("when not making shells, n and d must be co-prime","z");
+
+      if (!hide_indent && !nm_shell)
+         warning("show indented edges only valid in n/d shells","y");
+
+      if (!hide_indent && !edge_coloring_method)
+         warning("indented edges will not be shown unless an edge coloring is used (-e)","y");
       
       if (ncon_range.size() > 0)
          error("not valid without -J","K");
@@ -517,7 +551,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
          }
          
          if (hybrid && symmetric_coloring)
-            warning("for hybrids, symmetric coloring is the same for faces but not edges","S");
+            warning("symmetric coloring is the same an non-symmetric coloring for hybrids","S");
       }
 
       // Let us allow globes (Twist = 0) to have uneven number of longitudes
@@ -639,27 +673,32 @@ void clear_edges(vector<edgeList *> &edge_list)
    edge_list.clear();
 }
 
-void build_prime_meridian(col_geom_v &geom, vector<int> &prime_meridian, vector<coordList *> &coordinates, int ncon_order, int d, bool nm_shell, bool &point_cut)
+void build_prime_meridian(col_geom_v &geom, vector<int> &prime_meridian, vector<coordList *> &coordinates, int ncon_order, int d, bool nm_shell,
+                          double &inner_radius, double &outer_radius, bool &point_cut)
 {
    double arc = (nm_shell) ? 360.0/ncon_order : 360.0/ncon_order*d;
    double interior_angle = (180.0-arc)/2.0;
-   double outer_radius = sin(deg2rad(interior_angle))/sin(deg2rad(arc));
+   double outer_radius_calc = sin(deg2rad(interior_angle))/sin(deg2rad(arc));
+   if (outer_radius == FLT_MAX)
+      outer_radius = outer_radius_calc;
 
    // formula furnished by Adrian Rossiter
    //r = R * cos(pi*m/n) / cos(pi*(m-1)/n)
-   double inner_radius = 0.0;
    if (nm_shell) {
-      int n = ncon_order/2;
-      if (2*d>n)
-         d = n-d;
-      inner_radius = outer_radius * cos(M_PI*d/n) / cos(M_PI*(d-1)/n);
+      if (inner_radius == FLT_MAX) {
+         int n = ncon_order/2;
+         if (2*d>n)
+            d = n-d;
+         inner_radius = outer_radius_calc * cos(M_PI*d/n) / cos(M_PI*(d-1)/n);
+      }
    }
-//fprintf(stderr,"outer radius = %g  inner radius = %g\n",outer_radius,inner_radius);
 
+   bool radii_swapped = false;
    double angle = -90.0;
    if ( is_even(ncon_order) && !point_cut ) {
       if (nm_shell) {
          swap(outer_radius,inner_radius);
+         radii_swapped = true;
          // now treat it like a point cut
          point_cut = true;
       }
@@ -674,6 +713,10 @@ void build_prime_meridian(col_geom_v &geom, vector<int> &prime_meridian, vector<
       add_coord(geom, coordinates, vec3d(cos(deg2rad(angle))*radius, sin(deg2rad(angle))*radius, 0));
       angle += arc;
    }
+
+   // swap these back for future reference
+   if ( radii_swapped )
+      swap(outer_radius,inner_radius);
 }
 
 void form_globe(col_geom_v &geom, vector<int> &prime_meridian, vector<coordList *> &coordinates, vector<faceList *> &face_list, vector<edgeList *> &edge_list,
@@ -1673,6 +1716,33 @@ void set_edge_color(col_geom_v &geom, int i, col_val c, int opacity)
    set_edge_and_verts_col(geom,i,c,opacity);
 }
 
+void set_shell_indent_edges_invisible(col_geom_v &geom, vector<edgeList *> &edge_list, vector<poleList *> &pole, int ncon_order, bool point_cut, bool radius_reverse)
+{
+   int n = ncon_order/2;
+
+   for (unsigned int i=0;i<edge_list.size();i++) {
+      int j = edge_list[i]->edge_no;
+      int lat = edge_list[i]->lat;
+      bool set_invisible = (is_even(n) && point_cut && !is_even(lat)) || (is_even(n) && !point_cut && is_even(lat)) || (!is_even(n) && is_even(lat));
+      if (radius_reverse) {
+         set_invisible = (set_invisible) ? false : true;
+fprintf(stderr,"doing it\n");
+}
+      if (set_invisible)
+         set_edge_color(geom,j,col_val::invisible,255);
+   }
+
+   for (unsigned int i=0;i<2;i++) {
+      if (pole[i]->idx > -1) {
+         int lat = pole[i]->lat;
+         bool set_invisible = (is_even(n) && point_cut && !is_even(lat)) || (is_even(n) && !point_cut && is_even(lat)) || (!is_even(n) && is_even(lat));
+         if (radius_reverse)
+            set_invisible = (set_invisible) ? false : true;
+         if (set_invisible)
+            set_vert_color(geom,pole[i]->idx,col_val::invisible,255);
+      }
+   }
+}
 
 void ncon_edge_coloring(col_geom_v &geom, vector<edgeList *> &edge_list, vector<poleList *> &pole, char edge_coloring_method,
                         color_map_multi edge_map, int edge_opacity, string edge_pattern,
@@ -2236,13 +2306,16 @@ double hybrid_twist_angle(int n, int t, bool nm_shell)
 
 void build_globe(col_geom_v &geom, vector<coordList *> &coordinates, vector<faceList *> &face_list, vector<edgeList *> &edge_list, vector<poleList *> &pole, ncon_opts &opts)
 {
+   bool point_cut_save = opts.point_cut;
    vector<int> prime_meridian;
-   build_prime_meridian(geom, prime_meridian, coordinates, opts.ncon_order, opts.d, opts.nm_shell, opts.point_cut);
+   build_prime_meridian(geom, prime_meridian, coordinates, opts.ncon_order, opts.d, opts.nm_shell, opts.inner_radius, opts.outer_radius, opts.point_cut);
    form_globe(geom, prime_meridian, coordinates, face_list, edge_list, opts.edge_coloring_method,
               opts.ncon_order, opts.point_cut, opts.longitudes, opts.closure, opts.half_model_marker);
    add_caps(geom, coordinates, face_list, pole, opts.ncon_order, opts.point_cut, opts.hybrid, opts.longitudes,
       opts.split, opts.add_poles, opts.hide_elems);
    ncon_coloring(geom, face_list, edge_list, pole, opts);
+   if (opts.nm_shell && opts.hide_indent)
+      set_shell_indent_edges_invisible(geom, edge_list, pole, opts.ncon_order, point_cut_save, (opts.inner_radius > opts.outer_radius));
 }
 
 void process_hybrid(col_geom_v &geom, ncon_opts &opts)
@@ -2260,6 +2333,8 @@ void process_hybrid(col_geom_v &geom, ncon_opts &opts)
 
    // build side cut half first
    bool point_cut_save = opts.point_cut;
+   double inner_radius_save = opts.inner_radius;
+   double outer_radius_save = opts.outer_radius;
    opts.point_cut = false;
    build_globe(geom_d, coordinates, face_list, edge_list, pole, opts);
 
@@ -2268,6 +2343,8 @@ void process_hybrid(col_geom_v &geom, ncon_opts &opts)
    clear_faces(face_list);
    clear_edges(edge_list);
 
+   opts.inner_radius = inner_radius_save;
+   opts.outer_radius = outer_radius_save;
    opts.point_cut = true;
    build_globe(geom, coordinates, face_list, edge_list, pole, opts);
    opts.point_cut = point_cut_save;
@@ -2353,12 +2430,16 @@ void ncon_subsystem(ncon_opts opts)
 
    if (opts.info) {
       vector<surfaceTable *> surface_table;
-      surfaceData sd;
-      if (opts.d > 1)
-         fprintf(stderr,"surface info is not yet available when d > 1\n");
-      else
+      if (opts.d > 1) {
+         fprintf(stderr,"surface info not available for star n_icons\n");
+         if (opts.nm_shell)
+            fprintf(stderr,"shell model: outer radius = %.17lf  inner radius = %.17lf\n",opts.outer_radius,opts.inner_radius);
+      }
+      else {
+         surfaceData sd;
          ncon_info(opts.ncon_order, opts.point_cut, opts.twist, opts.hybrid, opts.info, surface_table, sd);
-      surface_table.clear();
+         surface_table.clear();
+      }
       model_info(geom, opts.info);
    }
    
