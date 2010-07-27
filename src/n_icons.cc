@@ -28,6 +28,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <float.h>
 
 #include <ctype.h>
 #include <unistd.h>
@@ -97,6 +98,10 @@ class ncon_opts: public prog_opts {
 
       int ncon_order;
       int d;
+      bool nm_shell;
+      bool hide_indent;
+      double inner_radius;
+      double outer_radius;
       bool point_cut;
       bool hybrid;
       bool add_poles;
@@ -131,6 +136,10 @@ class ncon_opts: public prog_opts {
       ncon_opts(): prog_opts("n_icons"),
                    ncon_order(4),
                    d(1),
+                   nm_shell(true),
+                   hide_indent(true),
+                   inner_radius(FLT_MAX),
+                   outer_radius(FLT_MAX),
                    point_cut(true),
                    hybrid(false),
                    add_poles(false),
@@ -168,7 +177,7 @@ void ncon_opts::usage()
 "Options\n"
 "%s"
 "  -n <n/d>  n-icon of order n. n must be 3 or greater (default: 4)\n"
-"               use d to make star n-icon. n/d must be co-prime. d less than n\n"
+"               use d to make star n-icon. d less than n\n"
 "  -t <twst> number of twists. Can be negative, positive or 0 (default: 1)\n"
 "  -s        side-cut of even order n-icon (default is point-cut)\n"
 "  -H        hybrid of even order n-icon\n"
@@ -182,6 +191,9 @@ void ncon_opts::usage()
 "                only valid if m2<m. Not valid with -c h\n"
 "  -c <clse> close open model if m2<m. Valid values h or v\n"
 "               h = horizontal closure  v = vertical closure\n"
+"  -z        for n/d, make non-shell model. n/d must be co-prime\n"
+"  -r        for n/d shell model, override inner radius. greater than 0\n"
+"  -R        for n/d shell model, override outer radius. greater than 0\n"
 "  -I        info on current n-icon\n"     
 "  -o <file> write output to file (default: write to standard output)\n"
 "\nColoring Options\n"
@@ -214,6 +226,7 @@ void ncon_opts::usage()
 "               0 - U value suppressed  1 - U value applied  (default: '1')\n"
 "  -Q <col>  color given to uncolored edges and vertices of final model\n"
 "               key word: none - sets no color (default: invisible)\n"
+"  -Y        for n/d shells, when showing edges, show indented edges\n"
 "  -m <maps> color maps to be tried in turn. (default: map_red:darkorange1:\n"
 "               yellow:darkgreen:cyan:blue:magenta:white:grey:black%%) optionally\n"
 "               followed by elements to map from v, e or f (default: vef)\n"
@@ -244,7 +257,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hn:t:sHM:x:ac:IJ:K:LZm:f:ST:O:e:U:P:Q:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hn:t:sHM:x:ac:zr:R:IJ:K:LZm:f:ST:O:e:U:P:Q:Yo:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -264,9 +277,6 @@ void ncon_opts::process_command_line(int argc, char **argv)
                error("n must be an integer 3 or greater", "n/d (n part)");
             if(d < 1)
                error("d must be 1 or greater", "n/d (d part)");
-
-            if (ncon_order>0 && d>0 && gcd(ncon_order,d) != 1)
-               error("n and d must be co-prime");
 
             if(d >= ncon_order)
                error("d must be less than n", "n/d (d part)");
@@ -318,6 +328,24 @@ void ncon_opts::process_command_line(int argc, char **argv)
                error(msg_str("closure is '%s', must be h or v (not both)",
                         optarg), c);
             closure=optarg;
+            break;
+
+         case 'z':
+            nm_shell = false;
+            break;
+
+         case 'r':
+            if(!read_double(optarg, &inner_radius, errmsg))
+               error(errmsg, c);
+           if (inner_radius <= 0.0)
+               error("inner radius must be greater than 0", c);
+            break;
+
+         case 'R':
+            if(!read_double(optarg, &outer_radius, errmsg))
+               error(errmsg, c);
+            if (outer_radius <= 0.0)
+               error("outer radius must be greater than 0", c);
             break;
 
          case 'I':
@@ -430,6 +458,10 @@ void ncon_opts::process_command_line(int argc, char **argv)
                error(errmsg, c);
             break;
 
+        case 'Y':
+            hide_indent = false;
+            break;
+
          case 'o':
             ofile = optarg;
             break;
@@ -470,6 +502,19 @@ void ncon_opts::process_command_line(int argc, char **argv)
          longitudes.push_back(36);
          longitudes.push_back(36);
       }
+
+     if (d == 1 || (ncon_order-d) == 1)
+         nm_shell = false;
+
+      if (!nm_shell)
+         if (ncon_order>0 && d>0 && gcd(ncon_order,d) != 1)
+            error("when not making shells, n and d must be co-prime","z");
+
+      if (!hide_indent && !nm_shell)
+         warning("show indented edges only valid in n/d shells","y");
+
+      if (!hide_indent && !edge_coloring_method)
+         warning("indented edges will not be shown unless an edge coloring is used (-e)","y");
       
       if (ncon_range.size() > 0)
          error("not valid without -J","K");
@@ -628,23 +673,50 @@ void clear_edges(vector<edgeList *> &edge_list)
    edge_list.clear();
 }
 
-void build_prime_meridian(col_geom_v &geom, vector<int> &prime_meridian, vector<coordList *> &coordinates, int ncon_order, int d, bool point_cut)
+void build_prime_meridian(col_geom_v &geom, vector<int> &prime_meridian, vector<coordList *> &coordinates, int ncon_order, int d, bool nm_shell,
+                          double &inner_radius, double &outer_radius, bool &point_cut)
 {
-   double arc = 360.0/ncon_order*d;
+   double arc = (nm_shell) ? 360.0/ncon_order : 360.0/ncon_order*d;
    double interior_angle = (180.0-arc)/2.0;
-   double radius = sin(deg2rad(interior_angle))/sin(deg2rad(arc));
+   double outer_radius_calc = sin(deg2rad(interior_angle))/sin(deg2rad(arc));
+   if (outer_radius == FLT_MAX)
+      outer_radius = outer_radius_calc;
 
+   // formula furnished by Adrian Rossiter
+   //r = R * cos(pi*m/n) / cos(pi*(m-1)/n)
+   if (nm_shell) {
+      if (inner_radius == FLT_MAX) {
+         int n = ncon_order/2;
+         if (2*d>n)
+            d = n-d;
+         inner_radius = outer_radius_calc * cos(M_PI*d/n) / cos(M_PI*(d-1)/n);
+      }
+   }
+
+   bool radii_swapped = false;
    double angle = -90.0;
-   if ( is_even(ncon_order) && !point_cut )
-      angle += ( arc / 2.0 );
+   if ( is_even(ncon_order) && !point_cut ) {
+      if (nm_shell) {
+         swap(outer_radius,inner_radius);
+         radii_swapped = true;
+         // now treat it like a point cut
+         point_cut = true;
+      }
+      else
+         angle += ( arc / 2.0 );
+   }
 
    int num_vertices = longitudinal_faces(ncon_order, point_cut) + 1;
    for (int i=0;i<num_vertices;i++) {
       prime_meridian.push_back(i);
-      add_coord(geom, coordinates, vec3d(cos(deg2rad(angle))*radius,
-               sin(deg2rad(angle))*radius, 0));
+      double radius = (!nm_shell || is_even(i)) ? outer_radius : inner_radius;
+      add_coord(geom, coordinates, vec3d(cos(deg2rad(angle))*radius, sin(deg2rad(angle))*radius, 0));
       angle += arc;
    }
+
+   // swap these back for future reference
+   if ( radii_swapped )
+      swap(outer_radius,inner_radius);
 }
 
 void form_globe(col_geom_v &geom, vector<int> &prime_meridian, vector<coordList *> &coordinates, vector<faceList *> &face_list, vector<edgeList *> &edge_list,
@@ -1006,24 +1078,21 @@ void sort_polar_orbit(col_geom_v &geom, vector<polarOrb *> &polar_orbit)
    vec3d v0 = verts[polar_orbit[0]->coord_no];
    int sz = polar_orbit.size();
    vector<pair<double, int> > angles(sz);
-   for(unsigned int i=0; i<sz; i++) {
+   for(int i=0; i<sz; i++) {
       int j = polar_orbit[i]->coord_no;
-      double y = v0[1] - verts[j][1];
-      double x = v0[0] - verts[j][0];
       angles[i].second = j;
-      angles[i].first = rad2deg(atan2(y,x));
-      if (angles[i].first < 0.0)
-         angles[i].first += 360;
+      angles[i].first = rad2deg(angle_around_axis(v0,verts[j],vec3d(0,0,1)));
+//fprintf(stderr,"%d = %d  %g\n",i,polar_orbit[i]->coord_no,angles[i].first);
    }
    
    // sort on angles
    sort( angles.begin(), angles.end() );
 
-   for (unsigned int i=0; i<polar_orbit.size(); i++)
+   for (int i=0; i<sz; i++)
       polar_orbit[i]->coord_no = angles[i].second;
 }
 
-void do_twist(col_geom_v &geom, vector<polarOrb *> &polar_orbit, vector<coordList *> &coordinates, vector<faceList *> &face_list, 
+void ncon_twist(col_geom_v &geom, vector<polarOrb *> &polar_orbit, vector<coordList *> &coordinates, vector<faceList *> &face_list, 
               vector<edgeList *> &edge_list, int twist, int ncon_order, vector<int> longitudes)
 {
    // this function wasn't designed for twist 0
@@ -1033,9 +1102,6 @@ void do_twist(col_geom_v &geom, vector<polarOrb *> &polar_orbit, vector<coordLis
    // can't twist when half or less of model is showing
    if (2*longitudes.back() <= longitudes.front())
       return;
-
-   // patch for n/m models
-   sort_polar_orbit(geom, polar_orbit);
 
    vector<vector<int> > &faces = geom.raw_faces();
    vector<vector<int> > &edges = geom.raw_edges();
@@ -1065,6 +1131,9 @@ void do_twist(col_geom_v &geom, vector<polarOrb *> &polar_orbit, vector<coordLis
                coordinates[j]->rotated = true;
          }
       }
+
+   // patch for n/m models
+   sort_polar_orbit(geom, polar_orbit);
 
    // Create Doubly Circularly Linked List
    for (int i=0;i<(int)polar_orbit.size();i++)
@@ -1222,7 +1291,7 @@ void model_info(col_geom_v &geom, bool info)
    if (info) {
       unsigned long fsz = geom.faces().size();
       unsigned long vsz = geom.verts().size();
-      fprintf(stderr,"The particular model shown has %lu faces, %lu vertices, and %lu edges\n",
+      fprintf(stderr,"The graphical model shown has %lu faces, %lu vertices, and %lu edges\n",
          fsz,vsz,(fsz + vsz - 2));
       fprintf(stderr,"\n");
    }
@@ -1647,6 +1716,33 @@ void set_edge_color(col_geom_v &geom, int i, col_val c, int opacity)
    set_edge_and_verts_col(geom,i,c,opacity);
 }
 
+void set_shell_indent_edges_invisible(col_geom_v &geom, vector<edgeList *> &edge_list, vector<poleList *> &pole, int ncon_order, bool point_cut, bool radius_reverse)
+{
+   int n = ncon_order/2;
+
+   for (unsigned int i=0;i<edge_list.size();i++) {
+      int j = edge_list[i]->edge_no;
+      int lat = edge_list[i]->lat;
+      bool set_invisible = (is_even(n) && point_cut && !is_even(lat)) || (is_even(n) && !point_cut && is_even(lat)) || (!is_even(n) && is_even(lat));
+      if (radius_reverse) {
+         set_invisible = (set_invisible) ? false : true;
+fprintf(stderr,"doing it\n");
+}
+      if (set_invisible)
+         set_edge_color(geom,j,col_val::invisible,255);
+   }
+
+   for (unsigned int i=0;i<2;i++) {
+      if (pole[i]->idx > -1) {
+         int lat = pole[i]->lat;
+         bool set_invisible = (is_even(n) && point_cut && !is_even(lat)) || (is_even(n) && !point_cut && is_even(lat)) || (!is_even(n) && is_even(lat));
+         if (radius_reverse)
+            set_invisible = (set_invisible) ? false : true;
+         if (set_invisible)
+            set_vert_color(geom,pole[i]->idx,col_val::invisible,255);
+      }
+   }
+}
 
 void ncon_edge_coloring(col_geom_v &geom, vector<edgeList *> &edge_list, vector<poleList *> &pole, char edge_coloring_method,
                         color_map_multi edge_map, int edge_opacity, string edge_pattern,
@@ -2108,7 +2204,7 @@ void build_circuit_table(int n, int twist, bool hybrid, bool symmetric_coloring,
       t--;
    
    int t_mult = symmetric_coloring ? 1 : 2; 
-      
+
    int d = gcd(n,t_mult*t);
 
    for(int i=0; i<=d/2; i++) {
@@ -2164,11 +2260,13 @@ void build_color_tables(map<int, pair<int, int> > &edge_color_table, map<int, pa
 
 void ncon_coloring(col_geom_v &geom, vector<faceList *> &face_list, vector<edgeList *> &edge_list, vector<poleList *> &pole, ncon_opts &opts)
 {
+   int twist = (opts.nm_shell && opts.hybrid) ? opts.twist/2 : opts.twist;
+
    map<int, pair<int, int> > edge_color_table;
    map<int, pair<int, int> > face_color_table;
    if (opts.face_coloring_method == 's' || opts.edge_coloring_method == 's')
       build_color_tables(edge_color_table, face_color_table,
-                         opts.ncon_order, opts.point_cut, opts.hybrid, opts.twist,
+                         opts.ncon_order, opts.point_cut, opts.hybrid, twist,
                          opts.symmetric_coloring, opts.face_sequential_colors, opts.edge_sequential_colors);
    
    if (opts.face_coloring_method)
@@ -2187,8 +2285,13 @@ void ncon_coloring(col_geom_v &geom, vector<faceList *> &face_list, vector<edgeL
       color_uncolored_edges(geom, edge_list, pole, col_val(DEFAULT_COLOR));
 }
       
-double hybrid_twist_angle(int n, int t)
+double hybrid_twist_angle(int n, int t, bool nm_shell)
 {
+   if (nm_shell) {
+      n /= 2;
+      t /= 2;
+   }
+
    // there is no twist 0 so positive twists have to be adjusted
    int twist = t;
    if ( twist > 0 )
@@ -2197,18 +2300,22 @@ double hybrid_twist_angle(int n, int t)
    // twist 1, 2, 3 is really twist 0.5, 1.5, 2.5 so add half twist
    double half_twist = (double)360/(n*2);
    double angle = half_twist + half_twist*twist*2;
+
    return angle;
 }
 
 void build_globe(col_geom_v &geom, vector<coordList *> &coordinates, vector<faceList *> &face_list, vector<edgeList *> &edge_list, vector<poleList *> &pole, ncon_opts &opts)
 {
+   bool point_cut_save = opts.point_cut;
    vector<int> prime_meridian;
-   build_prime_meridian(geom, prime_meridian, coordinates, opts.ncon_order, opts.d, opts.point_cut);
+   build_prime_meridian(geom, prime_meridian, coordinates, opts.ncon_order, opts.d, opts.nm_shell, opts.inner_radius, opts.outer_radius, opts.point_cut);
    form_globe(geom, prime_meridian, coordinates, face_list, edge_list, opts.edge_coloring_method,
               opts.ncon_order, opts.point_cut, opts.longitudes, opts.closure, opts.half_model_marker);
    add_caps(geom, coordinates, face_list, pole, opts.ncon_order, opts.point_cut, opts.hybrid, opts.longitudes,
       opts.split, opts.add_poles, opts.hide_elems);
    ncon_coloring(geom, face_list, edge_list, pole, opts);
+   if (opts.nm_shell && opts.hide_indent)
+      set_shell_indent_edges_invisible(geom, edge_list, pole, opts.ncon_order, point_cut_save, (opts.inner_radius > opts.outer_radius));
 }
 
 void process_hybrid(col_geom_v &geom, ncon_opts &opts)
@@ -2216,6 +2323,7 @@ void process_hybrid(col_geom_v &geom, ncon_opts &opts)
    vector<coordList *> coordinates;
    vector<faceList *> face_list;
    vector<edgeList *> edge_list;
+
    // create memory for poles 0 - North Pole 1 - South Pole
    vector<poleList *> pole;
    pole.push_back(new poleList);
@@ -2225,6 +2333,8 @@ void process_hybrid(col_geom_v &geom, ncon_opts &opts)
 
    // build side cut half first
    bool point_cut_save = opts.point_cut;
+   double inner_radius_save = opts.inner_radius;
+   double outer_radius_save = opts.outer_radius;
    opts.point_cut = false;
    build_globe(geom_d, coordinates, face_list, edge_list, pole, opts);
 
@@ -2233,6 +2343,8 @@ void process_hybrid(col_geom_v &geom, ncon_opts &opts)
    clear_faces(face_list);
    clear_edges(edge_list);
 
+   opts.inner_radius = inner_radius_save;
+   opts.outer_radius = outer_radius_save;
    opts.point_cut = true;
    build_globe(geom, coordinates, face_list, edge_list, pole, opts);
    opts.point_cut = point_cut_save;
@@ -2243,7 +2355,7 @@ void process_hybrid(col_geom_v &geom, ncon_opts &opts)
 
    // we can do the twist by transforming just one part.
    // negative angle because z reflection
-   mat3d trans = mat3d::rot(0, 0, deg2rad(-hybrid_twist_angle(opts.ncon_order, opts.twist)) ) * mat3d::refl(vec3d(0,0,1));
+   mat3d trans = mat3d::rot(0, 0, deg2rad(-hybrid_twist_angle(opts.ncon_order, opts.twist, opts.nm_shell)) ) * mat3d::refl(vec3d(0,0,1));
    geom.transform(trans);
 
    // finally merge the two halves and merge the vertices
@@ -2261,6 +2373,7 @@ void process_normal(col_geom_v &geom, ncon_opts &opts)
    vector<coordList *> coordinates;
    vector<faceList *> face_list;
    vector<edgeList *> edge_list;
+
    // create memory for poles 0 - North Pole 1 - South Pole
    vector<poleList *> pole;
    pole.push_back(new poleList);
@@ -2274,7 +2387,7 @@ void process_normal(col_geom_v &geom, ncon_opts &opts)
       close_latitudinal_or_find_twist_plane(geom, polar_orbit, face_list, pole, opts.ncon_order, opts.point_cut,
                                             opts.longitudes, opts.add_poles, opts.closure, opts.half_model_marker);
  
-   do_twist(geom, polar_orbit, coordinates, face_list, edge_list, opts.twist, opts.ncon_order, opts.longitudes);
+   ncon_twist(geom, polar_orbit, coordinates, face_list, edge_list, opts.twist, opts.ncon_order, opts.longitudes);
    polar_orbit.clear();
    
    // clean up
@@ -2298,16 +2411,35 @@ void ncon_subsystem(ncon_opts opts)
    col_geom_v geom;
    char errmsg[MSG_SZ];
 
+   bool point_cut_save = opts.point_cut;
+   if (opts.nm_shell) {
+      opts.ncon_order *= 2;
+      opts.twist *= 2;
+   }
+
    if (opts.hybrid)
       process_hybrid(geom, opts);
    else
       process_normal(geom, opts);
 
+   if (opts.nm_shell) {
+      opts.ncon_order /= 2;
+      opts.twist /= 2;
+      opts.point_cut = point_cut_save;
+   }
+
    if (opts.info) {
       vector<surfaceTable *> surface_table;
-      surfaceData sd;
-      ncon_info(opts.ncon_order, opts.point_cut, opts.twist, opts.hybrid, opts.info, surface_table, sd);
-      surface_table.clear();
+      if (opts.d > 1) {
+         fprintf(stderr,"surface info not available for star n_icons\n");
+         if (opts.nm_shell)
+            fprintf(stderr,"shell model: outer radius = %.17lf  inner radius = %.17lf\n",opts.outer_radius,opts.inner_radius);
+      }
+      else {
+         surfaceData sd;
+         ncon_info(opts.ncon_order, opts.point_cut, opts.twist, opts.hybrid, opts.info, surface_table, sd);
+         surface_table.clear();
+      }
       model_info(geom, opts.info);
    }
    
