@@ -395,6 +395,7 @@ class id_opts: public prog_opts {
       int n;
       int d;
       int k;
+      int s;
       char coloring_method;
       int face_opacity;
 
@@ -411,6 +412,7 @@ class id_opts: public prog_opts {
                  n(0),
                  d(1),
                  k(0),
+                 s(1),
                  coloring_method('c'),
                  face_opacity(255)
              {}
@@ -446,15 +448,16 @@ void id_opts::usage()
 "  -n <n/d>  n/d (d is optional)\n"
 "              note: for option -d and compound cases c, g, h:\n"
 "              n and d must be such that (2 < n/d < 6)\n"
-"  -k <k>    k (for various use)\n"
+"  -k <int>  in special cases, for specifying number of constituents\n"
+"  -s <int>  in special cases, for subtypes (default: 1)\n"
 "\nIsohedral Deltahedra Special Cases\n"
 "  -d        dipyramid of n/d using -n n/d (infinite set)\n"
 "  -c <type> compound cases (a thru f from Shephard's paper)\n"
 "              a - tetrahedron repeated k times, evenly spaced\n"
-"                     k=1 tetrahedron, k=2 Stella Octangula\n"
+"                     when k=1 tetrahedron, when k=2 Stella Octangula\n"
 "                     Uniform Compound Set UC23 when n/d is 2/1\n"
 "              b - 5 or 10 tetrahedra\n"
-"                     k=1 icosahedral, k=2 with horizontal reflection\n"
+"                     s=1 icosahedral, s=2 with horizontal reflection\n"
 "                     Uniform Compounds UC05 and UC06\n"
 "              c - 2 dipyramids of n/d using -a angle (default: calculated)\n"
 "                     relaxed dual of Uniform Compound Set UC20 and k=1\n"
@@ -462,12 +465,12 @@ void id_opts::usage()
 "                     At 45.0 degrees is 3 Octahedra\n"
 "                     dual of Uniform Compound Set UC07\n"
 "              e - 4 or 8 triangular dipyramids\n"
-"                     k=1 octahedral, k=2 with horizontal reflection\n"
+"                     s=1 octahedral, s=2 with horizontal reflection\n"
 "                     relaxed duals of Uniform Compounds UC30 & UC31\n"
 "              f - 6 or 12 5/1 pentagonal or 5/2 star dipyramids\n"
-"                     5/1: k=1 icosahedral, k=2 with horizontal reflection\n"
+"                     5/1: s=1 icosahedral, s=2 with horizontal reflection\n"
 "                          relaxed duals of Uniform Compounds UC34 & UC35\n"
-"                     5/2: k=3 icosahedral, k=4 with horizontal reflection\n"
+"                     5/2: s=3 icosahedral, s=4 with horizontal reflection\n"
 "                          relaxed duals of Uniform Compounds UC36 & UC37\n"
 "\n         additional cases:\n"
 "              g - 2 tetrahedra using -a angle (default: 45.0)\n"
@@ -486,12 +489,12 @@ void id_opts::usage()
 "              l - k dipyramids of n/d using -n n/d, evenly spaced\n"
 "                     relaxed dual of Uniform Compound Set UC21\n"
 "              m - 10 or 20 triangular dipyramids\n"
-"                     k=1 icosahedral, k=2 with horizontal reflection\n"
+"                     s=1 icosahedral, s=2 with horizontal reflection\n"
 "                     relaxed duals of Uniform Compounds UC32 & UC33\n"
 "              n - 6 10/3 star dipyramids\n"
 "                     relaxed dual of Uniform Compounds UC41\n"
 "              o - 5 or 10 Augmented Tetrahedra T2(1)\n"
-"                     k=1 icosahedral, k=2 with horizontal reflection\n"
+"                     s=1 icosahedral, s=2 with horizontal reflection\n"
 "                     relaxed duals of Uniform Compounds UC55 & UC56\n"
 "              p - 5 Augmented Octahedra O6(1)\n"
 "                     relaxed dual of Uniform Compounds UC57\n"
@@ -515,11 +518,12 @@ void id_opts::process_command_line(int argc, char **argv)
    char c;
    char errmsg[MSG_SZ];
 
+   bool s_is_set = false;
    string map_file;
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hldtvwc:n:a:k:f:T:m:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hldtvwc:n:a:k:s:f:T:m:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -584,6 +588,14 @@ void id_opts::process_command_line(int argc, char **argv)
             if(k<1)
                error("must be an integer 1 or greater", c);
             break;
+
+         case 's':
+            if(!read_int(optarg, &s, errmsg))
+               error(errmsg, c);
+            if(s<1)
+               error("must be an integer 1 or greater", c);
+            s_is_set = true;
+            break;
             
          case 'f':
             if(!strcasecmp(optarg,"none"))
@@ -647,18 +659,22 @@ void id_opts::process_command_line(int argc, char **argv)
          error("k must be greater then 0");
    }
    else
+   if (k != 0)
+      warning("k is ignored");
+
+   // check s
    if (case_type == "b" || case_type == "e" || case_type == "m" || case_type == "o") {
-      if (k != 1 && k !=2)
-         error("k must 1 or 2");
+      if (s != 1 && s !=2)
+         error("s must 1 or 2");
    }
    else
    if (case_type == "f") {
-      if (k < 1 || k > 4)
-         error("k must 1, 2, 3 or 4");
+      if (s < 1 || s > 4)
+         error("s must 1, 2, 3 or 4");
    }
    else
-   if (k != 0)
-      warning("k is ignored");
+   if (s_is_set)
+      warning("s is ignored");
     
    // if one from the table or -d then force color by constituent    
    if (!case_type.length() && (coloring_method == 'T' || coloring_method == 't')) {
@@ -911,6 +927,9 @@ void case_h_2k_tetrahedra(col_geom_v &geom, double angle, int k)
 
 void case_i_6_tetrahedra(col_geom_v &geom, double angle)
 {
+   if (angle == INFINITY)
+      angle = (M_PI/4); // 45 degrees
+
    geom.read_resource("u1");
    
    transform_and_repeat(geom, "T", "T", mat3d::rot(0,0,angle));
@@ -1093,7 +1112,7 @@ int main(int argc, char *argv[])
          case_a_star_tetrahedron(geom, opts.k);
       else
       if (opts.case_type == "b")
-         case_b_5_or_10_tetrahedra(geom, opts.angle, opts.k);
+         case_b_5_or_10_tetrahedra(geom, opts.angle, opts.s);
       else
       if (opts.case_type == "c")
          case_c_2_dipyramids(geom, opts.angle, opts.n, opts.d);
@@ -1102,10 +1121,10 @@ int main(int argc, char *argv[])
          case_d_6_octahedra(geom, opts.angle);
       else
       if (opts.case_type == "e")
-         case_e_4_or_8_triangular_dipyramids(geom, opts.angle, opts.k);
+         case_e_4_or_8_triangular_dipyramids(geom, opts.angle, opts.s);
       else
       if (opts.case_type == "f")
-         case_f_6_or_12_pentagonal_dipyramids(geom, opts.angle, opts.k);
+         case_f_6_or_12_pentagonal_dipyramids(geom, opts.angle, opts.s);
       else
       if (opts.case_type == "g")
          case_g_2_tetrahedra(geom, opts.angle);
@@ -1126,7 +1145,7 @@ int main(int argc, char *argv[])
          case_l_k_dipyramids(geom, opts.k, opts.n, opts.d);
       else
       if (opts.case_type == "m")
-         case_m_10_or_20_triangular_dipyramids(geom, opts.angle, opts.k);
+         case_m_10_or_20_triangular_dipyramids(geom, opts.angle, opts.s);
       else
       if (opts.case_type == "n")
          case_n_6_10_3_star_dipyramids(geom, opts.angle);
@@ -1137,7 +1156,7 @@ int main(int argc, char *argv[])
          make_poly(geom, sym_type, false, false,
                    id_polys.A(sym_no), id_polys.B(sym_no), id_polys.C(sym_no),
                    id_polys.alpha(sym_no), id_polys.beta(sym_no), id_polys.gamma(sym_no));
-         case_o_5_or_10_augmented_tetrahedra(geom, opts.angle, opts.k);
+         case_o_5_or_10_augmented_tetrahedra(geom, opts.angle, opts.s);
       }
       else
       if (opts.case_type == "p") {

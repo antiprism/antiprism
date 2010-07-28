@@ -68,7 +68,7 @@ class cn_opts: public prog_opts
                  edge_factor(50),
                  plane_factor(20),
                  lim_exp_canonical(INT_MAX),
-                 method('m'),
+                 method('n'),
                  cent_type('\0'),
                  num_iters_preplanar(-1),
                  lim_exp_preplanar(INT_MAX),
