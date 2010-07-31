@@ -32,7 +32,9 @@ xx-xx-10 Adrian Rossiter <adrian@antiprism.com>
            polygon: many new models added, antiprism alignment changed
            geodesic: option reorganisation, remove base models
            bravais: option -R also fills and overlays with cubes
-           iso_delta: new option -C for colouring
+           iso_delta: new colouring options
+           n_icons: fractional polygon models, colouring option
+              changes
            pol_recip: default centre is centroid, new option -a
              appends dual to original geometry
            antiview,off2vrml,off2pov: new option -s to display
