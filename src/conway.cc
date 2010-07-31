@@ -316,7 +316,9 @@ class cn_opts: public prog_opts {
                  use_truncate_algorithm(false),
                  face_coloring_method('n'),
                  face_opacity(255),
-                 face_pattern("1")
+                 face_pattern("1"),
+                 vert_col(col_val(255,215,0)),
+                 edge_col(col_val(211,211,211))
              {}
 
       void process_command_line(int argc, char **argv);
@@ -1428,11 +1430,6 @@ void cn_face_coloring(col_geom_v &geom, char face_coloring_method, color_map_mul
       clrng.add_cmap(map.clone());
       clrng.set_geom(&geom);
       clrng.f_sets(sym_equivs[2], true);
-
-      // blend edges
-      geom.add_missing_impl_edges();
-      clrng.e_face_color();
-      clrng.v_face_color();
 
       // transparency
       if (face_opacity != 255) {

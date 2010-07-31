@@ -47,6 +47,12 @@ using std::vector;
 void canonicalize_mm(geom_if &geom, double edge_factor, double plane_factor, int n, double lim,
                      int divergence_test, int rep_count, bool planar_only)
 {
+   // do a scale to get edges close to 1
+   geom_info info(geom);
+   double scale = info.iedge_lengths().sum/info.num_iedges();
+   if (scale)
+      geom.transform(mat3d::scale(1/scale));
+
    const vector<vec3d> &verts = geom.verts();
    const vector<vector<int> > &faces = geom.faces();
    vector<vector<int> > edges;
@@ -217,6 +223,12 @@ vec3d edge_nearpoints_centroid(geom_if &geom, vec3d cent)
 // http://www.georgehart.com/virtual-polyhedra/conway_notation.html
 void canonicalize_cn(geom_if &geom, int n, double lim, char method, int divergence_test, int rep_count)
 {
+   // do a scale to get edges close to 1
+   geom_info info(geom);
+   double scale = info.iedge_lengths().sum/info.num_iedges();
+   if (scale)
+      geom.transform(mat3d::scale(1/scale));
+
    geom_v dual;
    get_dual(geom, dual, 0);
    const vector<vec3d> &verts = geom.verts();
