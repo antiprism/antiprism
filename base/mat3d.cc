@@ -197,8 +197,11 @@ mat3d &mat3d::set_alignment(vector<vec3d> from, vector<vec3d> to)
       for(unsigned int j=0; j<3; j++)
          from[j] = trans * from[j];
          
-      vec3d norm1 = vcross(from[2]-from[0], from[1]-from[0]).unit();
-      vec3d norm2 = vcross(to[2]-to[0], to[1]-to[0]).unit();
+      vec3d norm1 = vcross(from[2]-from[0], from[1]-from[0]);
+      vec3d norm2 = vcross(to[2]-to[0], to[1]-to[0]);
+      // Maybe test form norm size here
+      norm1.to_unit();
+      norm2.to_unit();
       trans = mat3d::transl(to[0])
             * mat3d::rot(norm1, norm2)
             * mat3d::transl(-to[0])
@@ -241,8 +244,11 @@ mat3d &mat3d::set_alignment(vec3d from1, vec3d from2, vec3d to1, vec3d to2)
    from1 = trans * from1;
    from2 = trans * from2;
 
-   vec3d norm1 = vcross(from2, from1).unit();
-   vec3d norm2 = vcross(to2, to1).unit();
+   vec3d norm1 = vcross(from2, from1);
+   vec3d norm2 = vcross(to2, to1);
+   // Maybe test form norm size here
+   norm1.to_unit();
+   norm2.to_unit();
 
    // find the angle to rotate abot to1, in the range -180<ang<=180
    double ang = acos(safe_for_trig(vdot(norm1, norm2)));

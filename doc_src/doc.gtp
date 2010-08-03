@@ -107,6 +107,7 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/off_trans.gtm 2 off_trans - transformations (rotations etc) of OFF files
 ./doc/off_align.gtm 2 off_align - alignment of OFF files
 ./doc/off_util.gtm 2 off_util - utilities for OFF files
+./doc/planar.gtm 2 planar - convert overlapping coplanar polygons to tiles
 ./doc/off_report.gtm 2 off_report - report global measures maxima and counts
 ./doc/off_query.gtm 2 off_query - list element data
 ./doc/conv_hull.gtm 2 conv_hull - convex hulls (using Qhull)

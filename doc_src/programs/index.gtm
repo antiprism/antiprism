@@ -45,6 +45,7 @@ Programs
    transformations (rotations, translations, etc) of OFF files
 <LI><A HREF="off_align.html">off_align</A> - alignment of OFF files 
 <LI><A HREF="off_util.html">off_util</A> - utilities for OFF files (orientation, merging, etc)
+<LI><A HREF="planar.html">planar</A> - convert overlapping coplanar polygons into non-overlapping tiles
 </UL>
 
 <B>Reporting</B>

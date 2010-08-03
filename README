@@ -1,11 +1,12 @@
 Antiprism
 =========
 
-Notes for Antiprism 0.20.pre12
+Notes for Antiprism 0.20.pre13
 ------------------------------
 
 This release makes the Antiprism library available to C++
-developers and Python developers.
+developers and Python developers (Python interface currently
+disabled).
 
 In order to make the interface consistent there have been many
 changes to the core code. This must therefore be considered an

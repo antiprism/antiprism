@@ -844,18 +844,26 @@ static bool is_sym(const geom_if &test_geom, const geom_if &geom,
       const vector<int> &test_v_code, const vector<int> &v_code,
       bool orient, mat3d &trans, vector<map<int, set<int> > > &new_equivs)
 {
+   int v_sz = test_geom.verts().size();
    // code to vertex idx for this sym
-   vector<int> c2v_map(test_geom.verts().size());
-   for(unsigned int v=0; v<test_geom.verts().size(); v++)
+   vector<int> c2v_map(v_sz);
+   for(int v=0; v<v_sz; v++)
       c2v_map[v_code[v]] = v;
-   vector<int> v_map(test_geom.verts().size());
-   for(unsigned int v=0; v<test_geom.verts().size(); v++)
+   vector<int> v_map(v_sz);
+   for(int v=0; v<v_sz; v++)
       v_map[v] = c2v_map[test_v_code[v]];
 
    vector<vec3d> t_pts(3), pts(3);
-   for(unsigned int i=0; i<3; i++) {
+   for(int i=0; i<2; i++) {
       t_pts[i] = test_geom.verts(i);
-      pts[i] = test_geom.verts(v_map[i]);
+      pts[i]   = test_geom.verts(v_map[i]);
+   }
+   // Choose a third point that is not colinear with the first two
+   for(int i=2; i<v_sz; i++) {
+      t_pts[2] = test_geom.verts(i);
+      pts[2]   = test_geom.verts(v_map[i]);
+      if(fabs(vtriple(pts[0], pts[0], pts[i])) > epsilon)
+         break;
    }
 
    if(orient)

@@ -1,0 +1,65 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+Display uniform compounds without flashing, compare the command
+below with <TT>antiview uc6</TT> .
+<PRE>
+   planar uc6 -f b | antiview
+</PRE>
+
+Make a compound of three triangular prisms, colour faces by part, then
+blend the result
+<PRE>
+   polygon pri 12/4 | off_color -f K | planar -f b | antiview
+</PRE>
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+Overlapping coplanar polygons of different colours are not generally
+handled well by display programs. In <I>antiview</I>, for example,
+the colour of the overlapping region may switch rapidly as a model
+is rotated, producing a flashing effect. The <I>planar</I> program
+provides a solution to this by replacing the regions of overlap with
+non-overlapping polygons. The new polygons may be coloured with a
+blend of the colours from the overlapping polygons.
+<P>
+
+<I>planar</I> was written by
+<A HREF="http://www.interocitors.com/polyhedra/">Roger Kaufman</A>.
+<P>
+
+
+#include "<<END>>"

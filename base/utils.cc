@@ -66,7 +66,7 @@ string dots2underscores(string str)
 }
 
 const char *prog_opts::help_ver_text =
-"  -h,--help this help message\n"
+"  -h,--help this help message (run 'off_util -H help' for general help)\n"
 "  --version version information\n";
 
 

@@ -159,7 +159,11 @@ class polygon {
       ///Set the twist angle of the %polygon based polyhedron.
       /**Some polyhedra can be transformed by a twist, controlled
        * by this angle. NAN indicates that no twist should be considered.
-       * \param ang the angle of twist. */
+       * \param ang the angle of twist (default: NAN for no twist).
+       * \param msg a string with length at least \c MSG_SZ to hold
+       * the error message if the edge length was not valid.
+       * \return \c true if the polyhedron could be twisted, otherwise
+       * \c false and \c msg contains the error messge. */
       virtual bool set_twist_angle(double ang=NAN, char *msg=0)
          {  ang=0;
             if(msg) strcpy(msg, "twist angle cannot be set for this type of polyhedron");
