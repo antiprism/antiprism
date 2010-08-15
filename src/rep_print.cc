@@ -72,25 +72,41 @@ fprintf(ofile, "\n");
 void rep_printer::faces_sec()
 {
    char s1[MSG_SZ];
+   char s2[MSG_SZ];
+   int sz = num_faces();
    fprintf(ofile, "[faces]\n");
-   fprintf(ofile, "num_faces = %d\n", num_faces());
-   fprintf(ofile, "area = %s\n", d2s(s1, face_areas().sum));
-   fprintf(ofile, "face_area_max = %s (%d)\n",
-         d2s(s1, face_areas().max), face_areas().idx[elem_lims::IDX_MAX]);
-   fprintf(ofile, "face_area_min = %s (%d)\n",
-         d2s(s1, face_areas().min), face_areas().idx[elem_lims::IDX_MIN]);
+   fprintf(ofile, "num_faces = %d\n", sz);
+   fprintf(ofile, "area = %s\n", d2s(s1, (sz) ? face_areas().sum : 0.0));
+   fprintf(ofile, "face_area_max = %s (%s)\n",
+         d2s(s1, (sz) ? face_areas().max : 0.0),
+         (sz) ? d2s(s2, face_areas().idx[elem_lims::IDX_MAX]) : "n/a");
+   fprintf(ofile, "face_area_min = %s (%s)\n",
+         d2s(s1, (sz) ? face_areas().min : 0.0),
+         (sz) ? d2s(s2, face_areas().idx[elem_lims::IDX_MIN]) : "n/a");
    fprintf(ofile, "face_area_avg = %s\n",
-         d2s(s1, face_areas().sum/num_faces()));
+         d2s(s1, (sz) ? face_areas().sum/sz : 0.0));
    fprintf(ofile, "volume = ");
-   if(is_closed())
+   if(sz && is_closed())
       fprintf(ofile, "%s\n", d2s(s1, volume()));
    else
       fprintf(ofile, "n/a (not closed)\n");
-   fprintf(ofile, "vol2_by_area3 = ");
-   if(is_closed())
-      fprintf(ofile, "%s\n", d2s(s1, vol2_by_area3()));
+   fprintf(ofile, "isoperimetric_quotient = ");
+   if(sz && is_closed())
+      fprintf(ofile, "%s\n", d2s(s1, isoperimetric_quotient()));
    else
       fprintf(ofile, "n/a (not closed)\n");
+
+   double max_nonplanar = 0.0;
+   double sum_nonplanar = 0.0;
+   for(int i=0; i<sz; i++) {
+      double nonplanar = get_f_max_nonplanars()[i];
+      sum_nonplanar += nonplanar;
+      if(nonplanar>max_nonplanar)
+         max_nonplanar = nonplanar;
+   }
+   fprintf(ofile, "maximum_nonplanarity = %s\n", d2s(s1, max_nonplanar));
+   fprintf(ofile, "average_nonplanarity = %s\n",
+         d2s(s1, (sz) ? sum_nonplanar/sz : 0.0));
    fprintf(ofile, "\n");
 }
 

@@ -206,7 +206,8 @@ class geom_info
       elem_lims face_areas() { if(f_areas.size()==0) find_f_areas();
                            return area; }
       double volume() { if(f_areas.size()==0) find_f_areas(); return vol;}
-      double vol2_by_area3() { return pow(volume(),2)/pow(face_areas().sum,3); }
+      double isoperimetric_quotient()
+         { return 36.0*M_PI*pow(volume(),2)/pow(face_areas().sum,3); }
 
       elem_lims edge_lengths() { get_e_lengths(); return edge_len; }
       elem_lims iedge_lengths() { get_ie_lengths(); return iedge_len; }

@@ -273,7 +273,7 @@ double get_iq(const geom_if &geom)
    if (rep.num_verts() > 2) {
       // make sure area is non-zero
       if (rep.face_areas().sum)
-         iq = rep.vol2_by_area3()*M_PI*36.0;
+         iq = rep.isoperimetric_quotient();
    }
    return iq;
 }

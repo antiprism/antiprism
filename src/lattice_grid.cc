@@ -487,7 +487,7 @@ void convex_hull_report(const geom_v &geom, bool add_hull)
       fprintf(stderr, "volume    = %.17g\n", fabs(rep.volume()));
       if (area) {
          fprintf(stderr, "isoperimetric quotient (spherical nature: v^2/a^3 x 36 x PI = 1 is sphere)\n"); 
-         fprintf(stderr, "  iq      = %.17g\n", rep.vol2_by_area3()*M_PI*36.0);
+         fprintf(stderr, "  iq      = %.17g\n", rep.isoperimetric_quotient());
       }
    }
    fprintf(stderr, "end convex hull information\n");
