@@ -862,7 +862,8 @@ static bool is_sym(const geom_if &test_geom, const geom_if &geom,
    for(int i=2; i<v_sz; i++) {
       t_pts[2] = test_geom.verts(i);
       pts[2]   = test_geom.verts(v_map[i]);
-      if(fabs(vtriple(pts[0], pts[0], pts[i])) > epsilon)
+      vec3d norm = vcross(pts[1]-pts[0], pts[2]-pts[0]);
+      if(norm.mag2()>(epsilon*epsilon))
          break;
    }
 
