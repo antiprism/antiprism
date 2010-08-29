@@ -890,9 +890,9 @@ static int find_syms(const geom_if &geom, t_set &ts,
    col_geom_v test_geom = merged_geom;
 
    geom_info inf(merged_geom);
-   if(inf.num_parts()>1 || !inf.is_orientable())
-      test_geom.set_hull("-A0.99999");
-   
+   //if(inf.num_parts()>1 || !inf.is_orientable()) // for octahemioctaheron=Td
+   test_geom.set_hull(msg_str("-A%.15f", 1.0-sym_eps));
+
    geom_info g_inf(test_geom);
    const vector<vector<int> > &edges = g_inf.get_impl_edges();
    const vector<vector<int> > &v_cons = g_inf.get_vert_cons();
@@ -923,10 +923,11 @@ static int find_syms(const geom_if &geom, t_set &ts,
                mat3d trans;
                vector<map<int, set<int> > > new_equivs;
                if(is_sym(test_geom, merged_geom, test_v_code,v_code, orient,
-                        trans, new_equivs))
+                        trans, new_equivs)) {
                   ts.add(trans);
-               if(equiv_sets)
-                  update_equiv_elems(equiv_elems, new_equivs, cnts);
+                  if(equiv_sets)
+                     update_equiv_elems(equiv_elems, new_equivs, cnts);
+               }
             }
          }
       }
