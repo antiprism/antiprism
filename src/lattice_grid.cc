@@ -50,7 +50,11 @@ bool bcc_test(int x, int y, int z)                   //dist2 = 3, 4, 8
 {   return ( (x%2&&y%2&&z%2) || !(x%2||y%2||z%2) ); }
 
 bool hcp_test(int x, int y, int z)                   // dist2 = 18
-{ int m=x+y+z; return (m%6==0) && ((x-m/12)%3==0) && ((y-m/12)%3==0); }
+{ 
+   int m = x+y+z;
+   int n = (m < 0); // for integer division  
+   return (m%6==0) && ((x-m/12-n)%3==0) && ((y-m/12-n)%3==0);
+}
 
 bool rh_dodec_test(int x, int y, int z)              // dist2 = 3 (8)
 {   return ( (x%2&&y%2&&z%2) || !(((x+y+z)/2)%2==0||(x%2||y%2||z%2)) ); }
