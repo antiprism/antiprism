@@ -53,7 +53,7 @@ bool hcp_test(int x, int y, int z)                   // dist2 = 18
 { 
    int m = x+y+z;
    int n = (m < 0); // for integer division  
-   return (m%6==0) && ((x-m/12-n)%3==0) && ((y-m/12-n)%3==0);
+   return (m%6==0) && ((x-m/12+n)%3==0) && ((y-m/12+n)%3==0);
 }
 
 bool rh_dodec_test(int x, int y, int z)              // dist2 = 3 (8)
