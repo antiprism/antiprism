@@ -128,6 +128,26 @@ void disp_poly::animate()
 // --------------------------------------------------------------
 // disp_poly - vrml 
 
+
+static void vrml_translation_begin(FILE *ofile, const scene &scen)
+{
+   fprintf(ofile,
+"# scene transformations\n"
+"Transform {\n"
+"   translation %s\n"
+"   children [\n\n"
+"# forget indentation and carry on...\n\n",
+      vrml_vec(-scen.cur_camera().get_lookat()).c_str());
+}
+
+
+static void vrml_translation_end(FILE *ofile)
+{
+   fprintf(ofile, "# close scene transformations\n   ]\n}\n");
+}
+
+
+
 void disp_poly::vrml_protos(FILE *ofile)
 {
    col_val vcol = get_def_v_col();
@@ -249,17 +269,6 @@ void disp_poly::vrml_protos(FILE *ofile)
 "}\n", dots2underscores(sc_geom->get_name()).c_str(),
        /*vrml_col(fcol).c_str(),*/
        fcol.get_transd());
-}
-
-void disp_poly::vrml_trans_begin(FILE *ofile, const scene &scen)
-{
-   fprintf(ofile,
-         "# scene transformations\n"
-         "Transform {\n"
-         "   translation %s\n"
-         "   children [\n\n"
-         "# forget indentation and carry on...\n\n",
-   vrml_vec(-scen.cur_camera().get_lookat()).c_str());
 }
 
  
@@ -457,23 +466,13 @@ void disp_poly::vrml_faces(FILE *ofile)
    fprintf(ofile, "\n\n\n");
 }
 
-void disp_poly::vrml_trans_end(FILE *ofile)
-{
-
-   fprintf(ofile, "# close scene transformations\n"
-"   ]\n"
-"}\n");
-
-}
-
-
 void disp_poly::vrml_geom(FILE *ofile, const scene &scen, int sig_digits)
 {
    if(disp_geom.verts().size()==0)   // Don't write out empty geometries
       return;
    
    vrml_protos(ofile);
-   vrml_trans_begin(ofile, scen);
+   vrml_translation_begin(ofile, scen);
 
    if(f().get_show() || use_lines)
       vrml_coords(ofile, sig_digits);
@@ -492,7 +491,7 @@ void disp_poly::vrml_geom(FILE *ofile, const scene &scen, int sig_digits)
    if(f().get_show())
       vrml_faces(ofile);
    
-   vrml_trans_end(ofile);
+   vrml_translation_end(ofile);
 }      
 
 // --------------------------------------------------------------
@@ -710,7 +709,7 @@ void disp_poly::pov_col_maps(FILE *ofile)
 
 void disp_poly::pov_object(FILE *ofile)
 {
-   fprintf(ofile,
+    fprintf(ofile,
 "#if (show)\n"
 //"union {\n"
 "#declare NoColour = <-1, -1, -1, 0>; // Indicates no colour has been set" 
@@ -949,10 +948,79 @@ disp_num_labels::disp_num_labels()
 }
 
 
-void disp_num_labels::pov_geom(FILE *file, const scene &scen, int sig_dgts)
+void disp_num_labels::pov_geom(FILE *ofile, const scene &/*scen*/,
+      int /*sig_dgts*/)
 {
-   if(file || &scen || sig_dgts)
-      fprintf(stderr, "\n");
+   fprintf(ofile,
+         "// Label display flags\n"
+         "#declare show = 1; // Show object, may be 1 - show, 0 hide\n"
+         "\n"
+         "   // Show elements of a type values may be 1 - show, 0 - hide\n"
+         "   #declare vert_labs_show = %d;\n"
+         "   #declare edge_labs_show = %d;\n"
+         "   #declare face_labs_show = %d;\n"
+         "\n",
+         v().get_show(),
+         e().get_show(),
+         f().get_show() );
+
+    fprintf(ofile, 
+"   // Label colour for elements (used to set up default textures\n"
+"   #declare vert_lab_col = %s; // %s\n"
+"   #declare edge_lab_col = %s; // %s\n"
+"   #declare face_lab_col = %s; // %s\n"
+"\n",
+       pov_col(get_label_col(v().get_col())).c_str(),
+       pov_col(get_label_col(v().get_col())).c_str(),
+       pov_col(get_label_col(e().get_col())).c_str(),
+       pov_col(get_label_col(e().get_col())).c_str(),
+       pov_col(get_label_col(f().get_col())).c_str(),
+       pov_col(get_label_col(f().get_col())).c_str() );
+
+
+   fprintf(ofile,
+"#if (show)\n"
+//"union {\n"
+"#declare NoColour = <-1, -1, -1, 0>; // Indicates no colour has been set" 
+"// Display vertex elements\n"
+"#if(vert_labs_show)\n"
+"   #declare i=0;\n"
+"   #while (i<num_verts)\n"
+"      disp_elem_label(verts[i], str(i, 0, 0), vert_lab_col) \n"
+"      #declare i=i+1;\n"
+"      #end\n"
+"   #end // (vert_labs_show)\n"
+"\n"
+"// Display edge elements\n"
+"#if (edge_labs_show)\n"
+"   #declare i=0;\n"
+"   #while (i<num_edges)\n"
+"      #declare centroid = (edge[i][0] + edge[i][1])/2.0;\n"
+"      disp_elem_label(centroid, str(i, 0, 0), vert_lab_col) \n"
+"      #declare i=i+1;\n"
+"      #end\n"
+"   #end // (edges_show)\n"
+"\n"
+"// Display face elements\n"
+"#if (face_labs_show)\n"
+"   #declare face_no=0;"
+"   #declare idx=0;\n"
+"   #while (face_no<num_faces)\n"
+"      #local centroid=0;\n"
+"      #local i=0;\n"
+"      #while (i< faces[idx])\n"
+"         #local centroid=centroid+verts[faces[idx+i+1]];\n"
+"         #local i = i+1;\n"
+"         #end\n"
+"      #local centroid=centroid/faces[idx];\n"
+"      disp_elem_label(centroid, str(i, 0, 0), vert_lab_col) \n"
+"      #declare idx = idx + faces[idx] + 1;\n"
+"      #declare face_no=face_no+1;\n"
+"      #end\n"
+"   #end // (face_labs_show)\n"
+"#end // (show)\n"
+"\n");
+
 }
 
 
@@ -961,27 +1029,27 @@ void disp_num_labels::vrml_protos(FILE *ofile, const scene &scen)
    col_val bg = scen.get_bg_col();
    bool bg_dark = (bg[0]+bg[1]+bg[2])<1.5;
    vec3d txt_col = vec3d(bg_dark, bg_dark, bg_dark);
-   double txt_sz = sc_geom->get_width()/30;
+   double txt_sz = scen.get_width()/30;
 
    fprintf(ofile, 
 "\n"
 "PROTO LAB [\n"
-"   field SFColor clr %s"
-"   field MFString txt \"\"\n"
-"   field SFVec3f pos 0 0 0\n"
+"   field SFColor lab_clr %s"
+"   field MFString lab_txt \"\"\n"
+"   field SFVec3f lab_pos 0 0 0\n"
 "]\n"
 "{\n"
 "   Transform {\n"
-"      translation IS pos\n"
+"      translation IS lab_pos\n"
 "      children [\n"
 "         Billboard {\n"
 "            axisOfRotation 0 0 0\n"
 "            children [\n"
 "               Shape {\n"
-"                  geometry Text { string IS txt fontStyle FontStyle { size %g justify \"MIDDLE\"} }\n"
+"                  geometry Text { string IS lab_txt fontStyle FontStyle { size %g justify \"MIDDLE\"} }\n"
 "                  appearance Appearance {\n"
 "                     material Material {\n"
-"                        diffuseColor IS clr\n"
+"                        diffuseColor IS lab_clr\n"
 "                     }\n"
 "                  }\n"
 "               }\n"
@@ -990,6 +1058,33 @@ void disp_num_labels::vrml_protos(FILE *ofile, const scene &scen)
 "      ]\n"
 "   }\n"
 "}\n",  vrml_col(txt_col).c_str(), txt_sz);
+
+   char lab_lets[3];
+   col_val lab_cols[3];
+   lab_lets[0] = 'V';
+   lab_cols[0] = get_label_col(v().get_col());
+   lab_lets[1] = 'E';
+   lab_cols[1] = get_label_col(e().get_col());
+   lab_lets[2] = 'F';
+   lab_cols[2] = get_label_col(f().get_col());
+
+   for(int i=0; i<3; i++) {
+      fprintf(ofile,
+"\n"
+"PROTO %cLAB [\n"
+"   field SFColor clr %s\n"
+"   field MFString txt \"\"\n"
+"   field SFVec3f pos 0 0 0\n"
+"]\n"
+"{\n"
+"   Group {\n"
+"   children [\n"
+"      LAB { lab_clr IS clr lab_txt IS txt lab_pos IS pos }\n"
+"      ]\n"
+"   }\n"
+"}\n"
+"\n", lab_lets[i], vrml_col(lab_cols[i]).c_str() );
+   }
 
 }
 
@@ -1002,7 +1097,7 @@ void disp_num_labels::vrml_verts(FILE *ofile)
    for(int i=0; i<v_sz; i++) {
       if(geom.get_v_col((int)i).is_inv())
          continue;
-      fprintf(ofile, "LAB { txt \"%d\" pos %s }\n",
+      fprintf(ofile, "VLAB { txt \"%d\" pos %s }\n",
             i, vrml_vec(sc_geom->get_v_label_pos(i), 4).c_str());
    }
    fprintf(ofile, "\n\n\n");
@@ -1010,23 +1105,43 @@ void disp_num_labels::vrml_verts(FILE *ofile)
 
 void disp_num_labels::vrml_edges(FILE *ofile)
 {
+   const col_geom_v &geom = sc_geom->get_geom();
+   fprintf(ofile, "# Edge number labels\n");
+   int e_sz = geom.edges().size();
+   for(int i=0; i<e_sz; i++) {
+      if(geom.get_e_col((int)i).is_inv())
+         continue;
+      fprintf(ofile, "ELAB { txt \"%d\" pos %s }\n",
+            i, vrml_vec(sc_geom->get_e_label_pos(i), 4).c_str());
+   }
    fprintf(ofile, "\n\n\n");
 }
 
 void disp_num_labels::vrml_faces(FILE *ofile)
 {
+   const col_geom_v &geom = sc_geom->get_geom();
+   fprintf(ofile, "# Face number labels\n");
+   int f_sz = geom.faces().size();
+   for(int i=0; i<f_sz; i++) {
+      if(geom.get_f_col((int)i).is_inv())
+         continue;
+      fprintf(ofile, "FLAB { txt \"%d\" pos %s }\n",
+            i, vrml_vec(sc_geom->get_f_label_pos(i), 4).c_str());
+   }
    fprintf(ofile, "\n\n\n");
 }
 
 void disp_num_labels::vrml_geom(FILE *ofile, const scene &scen, int)
 {
    vrml_protos(ofile, scen);
+   vrml_translation_begin(ofile, scen);
    if(v().get_show())
       vrml_verts(ofile);
    if(e().get_show())
       vrml_edges(ofile);
    if(f().get_show())
       vrml_faces(ofile);
+   vrml_translation_end(ofile);
 }      
 
 
@@ -1506,8 +1621,9 @@ const char *view_opts::help_prec_text =
 bool view_opts::read_disp_option(char opt, char *optarg, char *errmsg,
             vector<string> &warnings)
 {
-   *errmsg = '\0';
    char errmsg2[MSG_SZ];
+   *errmsg = '\0';
+   *errmsg2 = '\0';
    double val;
    int num;
    vec3d vec;
@@ -1568,7 +1684,7 @@ bool view_opts::read_disp_option(char opt, char *optarg, char *errmsg,
 
          case 'x':
             if(strspn(optarg, "vef") != strlen(optarg))
-               snprintf(errmsg2, MSG_SZ, "elements to hide are '%s' must be "
+               snprintf(errmsg, MSG_SZ, "elements to hide are '%s' must be "
                      "from v, e, or f", optarg);
             else {
                if(strchr(optarg, 'v'))
@@ -1582,7 +1698,7 @@ bool view_opts::read_disp_option(char opt, char *optarg, char *errmsg,
 
          case 'n':
             if(strspn(optarg, "vef") != strlen(optarg))
-               snprintf(errmsg2, MSG_SZ, "elements to label are '%s' must be "
+               snprintf(errmsg, MSG_SZ, "elements to label are '%s' must be "
                      "from v, e, f", optarg);
             else {
                if(strchr(optarg, 'v'))
@@ -1596,7 +1712,7 @@ bool view_opts::read_disp_option(char opt, char *optarg, char *errmsg,
 
          case 's':
             if(strspn(optarg, "axmr") != strlen(optarg))
-               snprintf(errmsg2, MSG_SZ, "symmetry elements to show are"
+               snprintf(errmsg, MSG_SZ, "symmetry elements to show are"
                      "'%s' must be from a (all), x, m, r", optarg);
             else {
                sym_defs.set_show_axes(

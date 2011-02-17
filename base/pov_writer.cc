@@ -117,10 +117,10 @@ void pov_writer::scene_header(FILE *ofile, const scene &scen)
          "#ifndef(AspectRatio) #declare AspectRatio = 1.33333; #end\n\n");
 
    fprintf(ofile, "// Vertex numbering\n"
-           "#declare TextSize = %g; // if not 0 use value calc'd from geom\n"
+           "#declare TextSize = %g; // if 0 use value calc'd from geom\n"
            "#declare TextColour = %s; //\n"
            "#declare FontFile = \"cyrvetic.ttf\"\n\n",
-           text_size, pov_col(text_colour).c_str());
+           scen.get_width()/20, pov_col(text_colour).c_str());
 }
 
 
@@ -242,30 +242,26 @@ void pov_writer::common_macros(FILE *ofile)
          "#end\n"
          "\n"
          "\n"
-         "#macro disp_elem_nums()\n"
+         "#macro disp_elem_label(pos, txt, col)\n"
          "   #if(TextSize=0)\n"
-         "   //#declare TextSize = 2*vert_sz;\n"
          "      #declare TextSize = SceneWidth/40;\n"
          "      #end\n"
-         "   #declare Pt=0;\n"
-         "   #while (Pt<num_verts)\n"
-         "      text {\n"
-         "         ttf FontFile str(Pt, 0, 0) 1 0\n"
-         "         pigment {TextColour}\n"
-         "         scale <TextSize, TextSize, TextSize/20>\n"
-         "         translate -<TextSize/2, TextSize/2, TextSize/40>\n"
-         "         #declare vec = vnormalize(verts[Pt] - PtsCentre);\n"
-         "         #declare loc =  verts[Pt] + (1.2*vert_sz+TextSize)*vec;\n"
-         "         translate SceneCentre + vrotate(loc - SceneCentre, Rotation)\n"
-         "         transform {\n"
-         "            translate -SceneCentre\n"
-         "            rotate Rotation\n"
-         "            translate SceneCentre\n"
-         "            inverse\n"
-         "         }\n"
+         "   text {\n"
+         "      ttf FontFile txt 1 0\n"
+         "      pigment { rgbt col }\n"
+         "      scale <TextSize, TextSize, TextSize/20>\n"
+         "      translate -<TextSize/2, TextSize/2, TextSize/40>\n"
+         "      #declare vec = vnormalize(pos - PtsCentre);\n"
+         "      #declare loc =  pos + (1.2*vert_sz+TextSize)*vec;\n"
+         "      translate SceneCentre + vrotate(loc - SceneCentre, Rotation)\n"
+         "      transform {\n"
+         "         translate -SceneCentre\n"
+         "         rotate Rotation\n"
+         "         translate SceneCentre\n"
+         "         inverse\n"
          "      }\n"
-         "      #declare Pt = Pt+1;\n"
-         "      #end\n"
+         "   }\n"
+         "\n"
          "#end\n"
          "\n"
          "\n\n");
@@ -416,6 +412,8 @@ void pov_writer::geometry_objects(FILE *ofile, const scene &scen, int sig_dgts)
             const vector<geom_disp *> &disps = sgeoms[i].get_disps();
             for(unsigned int j=0; j<disps.size(); j++) 
                disps[j]->pov_geom(gfile, scen, sig_dgts);
+            if(sgeoms[i].get_label())
+               sgeoms[i].get_label()->pov_geom(gfile, scen, sig_dgts);
             if(sgeoms[i].get_sym())
                sgeoms[i].get_sym()->pov_geom(gfile, scen, sig_dgts);
             fclose(gfile);
@@ -425,6 +423,8 @@ void pov_writer::geometry_objects(FILE *ofile, const scene &scen, int sig_dgts)
          const vector<geom_disp *> &disps = sgeoms[i].get_disps();
          for(unsigned int j=0; j<disps.size(); j++)
             disps[j]->pov_geom(ofile, scen, sig_dgts);
+         if(sgeoms[i].get_label())
+            sgeoms[i].get_label()->pov_geom(ofile, scen, sig_dgts);
          if(sgeoms[i].get_sym())
             sgeoms[i].get_sym()->pov_geom(ofile, scen, sig_dgts);
       }

@@ -87,7 +87,7 @@ void o2v_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hv:e:V:E:F:m:x:ns:lo:D:C:L:R:P:I:B:d:t:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hv:e:V:E:F:m:x:n:s:lo:D:C:L:R:P:I:B:d:t:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 

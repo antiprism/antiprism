@@ -110,7 +110,7 @@ void o2p_opts::process_command_line(int argc, char **argv)
   
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hv:e:V:E:F:m:x:s:no:D:C:L:R:P:W:S:B:d:t:I:j:J:i:O:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hv:e:V:E:F:m:x:s:n:o:D:C:L:R:P:W:S:B:d:t:I:j:J:i:O:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -157,7 +157,7 @@ void o2p_opts::process_command_line(int argc, char **argv)
                error("output type must be 'a' all in one, 's' separate files, 'o' objects only 't' template only", c);
             o_type = *optarg;
             break;
-
+         
          default:
             if(read_disp_option(c, optarg, errmsg, warnings)) {
                if(*errmsg)
