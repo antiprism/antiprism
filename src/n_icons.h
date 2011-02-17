@@ -52,7 +52,7 @@ class edgeList
       int edge_no;
       int lat;
       int lon;
-      bool rotate;;
+      bool rotate;
       edgeList(int f, int lat, int lon) : edge_no(f), lat(lat), lon(lon) { rotate = false; }
 };
 
@@ -62,8 +62,9 @@ class faceList
       int face_no;
       int lat;
       int lon;
+      int polygon_no;
       bool rotate;
-      faceList(int f, int lat, int lon) : face_no(f), lat(lat), lon(lon) { rotate = false; }
+      faceList(int f, int lat, int lon, int polygon_no) : face_no(f), lat(lat), lon(lon), polygon_no(polygon_no) { rotate = false; }
 };
 
 class polarOrb {

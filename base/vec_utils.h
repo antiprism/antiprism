@@ -59,7 +59,7 @@ vec3d centroid(const vector<vec3d> &pts, const vector<int> &idxs = vector<int>()
  * </ul>
  * \return the point of intersection (it will be unset if the line doesn't
  * intersect the plane. */
-vec3d line_plane_intersect(vec3d Q, vec3d n, vec3d P0, vec3d P1, int *where=0);
+vec3d line_plane_intersect(vec3d Q, vec3d n, vec3d P0, vec3d P1, int *where=0, double eps=epsilon);
 
 ///Get the point of intersection of a line and a plane.
 /**\param Q0 a point on the plane.
@@ -78,7 +78,7 @@ vec3d line_plane_intersect(vec3d Q, vec3d n, vec3d P0, vec3d P1, int *where=0);
  * </ul>
  * \return The point of intersection (it will be unset if the line doesn't
  * intersect the plane*/
-vec3d line_plane_intersect(vec3d Q0, vec3d Q1, vec3d Q2, vec3d P0, vec3d P1, int *where=0);
+vec3d line_plane_intersect(vec3d Q0, vec3d Q1, vec3d Q2, vec3d P0, vec3d P1, int *where=0, double eps=epsilon);
 
 ///Get the line where two planes intersect.
 /**\param Q0 a point on the first plane.
@@ -89,11 +89,11 @@ vec3d line_plane_intersect(vec3d Q0, vec3d Q1, vec3d Q2, vec3d P0, vec3d P1, int
  * \param dir to return the direction of the line of intersection.
  * \return \c true if the planes intersect, otherwise \c false. */
 bool two_plane_intersect(vec3d Q0, vec3d n0, vec3d Q1, vec3d n1,
-      vec3d &P, vec3d &dir);
+      vec3d &P, vec3d &dir, double eps=epsilon);
 
 //unused
 bool three_plane_intersect(vec3d Q0, vec3d n0, vec3d Q1, vec3d n1,
-      vec3d Q2, vec3d &n2, vec3d &P);
+      vec3d Q2, vec3d &n2, vec3d &P, double eps=epsilon);
 
 ///Get the nearest point on a line to another (skew) line
 /**\param P0 a point on the first line.
@@ -105,7 +105,7 @@ bool three_plane_intersect(vec3d Q0, vec3d n0, vec3d Q1, vec3d n1,
  * \return \c true if there is one nesarpoint per line, otherwise \c false (the
  * lines are parallel.) */
 bool lines_nearest_points(vec3d P0, vec3d P1, vec3d Q0, vec3d Q1,
-      vec3d &P, vec3d &Q);
+      vec3d &P, vec3d &Q, double eps=epsilon);
 
 ///Get the nearest point on a line to a particular point.
 /**\param P a point.
@@ -124,14 +124,14 @@ inline vec3d nearest_point(vec3d P, vec3d Q0, vec3d Q1)
  * \param Q1 a second point on the plane.
  * \param Q2 a third points on the plane, not on the line Q0Q1.
  * \return The point on the plane through Q0, Q1 and Q2 that is closest to P. */
-vec3d nearest_point(vec3d P, vec3d Q0, vec3d Q1, vec3d Q2);
+vec3d nearest_point(vec3d P, vec3d Q0, vec3d Q1, vec3d Q2, double eps=epsilon);
 
 ///Get the nearest point on a space to a particular point.
 /**\param P a point.
  * \param points independant points determining the space (one, two
  * or three points as the space is a point, line or plane.)
  * \return The point on the space that is closest to P. */
-vec3d nearest_point(vec3d P, const vector <vec3d> &points);
+vec3d nearest_point(vec3d P, const vector <vec3d> &points, double eps=epsilon);
 
 ///Get the nearest point on a space to a particular point.
 /**\param P a point.
@@ -141,7 +141,7 @@ vec3d nearest_point(vec3d P, const vector <vec3d> &points);
  * is a point, line or plane.)
  * \return The point on the space that is closest to P. */
 vec3d nearest_point(vec3d P, const vector <vec3d> &points,
-      const vector<int> &idxs);
+      const vector<int> &idxs, double eps=epsilon);
 
 ///Get a face normal and face area
 /**\param verts a set of vertices
@@ -158,6 +158,12 @@ vec3d face_norm(const vector<vec3d> &verts, const vector<int> &face, bool allow_
  * \param axis axis to rotate around (perpendicular to v0 and v1)
  * \return angle, in range 0 <= ang < 2PI */
 double angle_around_axis(const vec3d &v0, const vec3d &v1, const vec3d &axis);
+
+// RK - some commonly used line intersection functions
+vec3d lines_intersection(const vec3d &P0, const vec3d &P1, const vec3d &Q0, const vec3d &Q1, double eps=epsilon);
+bool in_segment(const vec3d &P, const vec3d &Q0, const vec3d &Q1, double eps=epsilon);
+vec3d lines_intersection_in_segments(const vec3d &P0, const vec3d &P1, const vec3d &Q0, const vec3d &Q1, double eps=epsilon);
+vec3d point_in_segment(const vec3d &P, const vec3d &Q0, const vec3d &Q1, double eps=epsilon);
 
 #endif // VEC_UTILS_H
 
