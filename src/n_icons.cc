@@ -1055,7 +1055,7 @@ bool vertex_exists_in_face(const vector<int> &face, const int &v_idx)
    return found;
 }
 
-vector<int> find_face_by_lat_lon(col_geom_v &geom, vector<faceList *> &face_list, int lat, int lon)
+vector<int> find_face_by_lat_lon(vector<faceList *> &face_list, int lat, int lon)
 {
    vector<int> idx;
    for (unsigned int i=0;i<face_list.size();i++) {
@@ -1231,14 +1231,12 @@ int apply_latitudes(col_geom_v &geom, vector<vector<int> > &original_faces, vect
    return max_lat_used;
 }
 
-void fix_polygon_numbers(col_geom_v &geom, vector<faceList *> &face_list, vector<int> &longitudes, int max_lat_used)
+void fix_polygon_numbers(vector<faceList *> &face_list, vector<int> &longitudes, int max_lat_used)
 {
-   const vector<vector<int> > &faces = geom.faces();
-
    for (int i=0;i<=max_lat_used;i++) {
       int polygon_min = INT_MAX;
       for (unsigned int j=0;j<2;j++) {
-         vector<int> idx = find_face_by_lat_lon(geom,face_list,i,(longitudes.front()/2)-j);
+         vector<int> idx = find_face_by_lat_lon(face_list,i,(longitudes.front()/2)-j);
          for (unsigned int k=0;k<idx.size();k++) {
             int polygon_no = face_list[idx[k]]->polygon_no;
             if (polygon_no < polygon_min)
@@ -1256,7 +1254,6 @@ void fix_polygon_numbers(col_geom_v &geom, vector<faceList *> &face_list, vector
 void form_angular_model(col_geom_v &geom, vector<int> &prime_meridian, vector<coordList *> &coordinates, vector<faceList *> &face_list, vector<edgeList *> &edge_list, vector<poleList *> &pole,
                         int ncon_order, int d, bool &point_cut, bool hybrid_patch, vector<int> &longitudes, double angle, bool &double_sweep, char face_coloring_method, double eps)
 {
-   const vector<vector<int> > &faces = geom.faces();
    const vector<vec3d> &verts = geom.verts();
 
    // entries for numbering latitudes
@@ -1397,7 +1394,7 @@ void form_angular_model(col_geom_v &geom, vector<int> &prime_meridian, vector<co
 
    int max_lat_used = apply_latitudes(geom, original_faces, split_face_indexes, face_list, edge_list, pole, double_sweep, hybrid_patch, eps);
    if (face_coloring_method == 'c' && !double_sweep)
-      fix_polygon_numbers(geom, face_list, longitudes, max_lat_used);
+      fix_polygon_numbers(face_list, longitudes, max_lat_used);
 }
 
 // for method 2. to hide uneeded edges
@@ -1562,7 +1559,7 @@ vector<int> calc_polygon_numbers(int n, int d, bool point_cut)
 
    vector<int> polygon_numbers(n);
    int polygon_no = 0;
-   for (unsigned int i=0;i<n;i++) {
+   for (int i=0;i<n;i++) {
       polygon_numbers[i] = polygon_no;
       polygon_no++;
       if (polygon_no >= polygon_size)
@@ -1576,7 +1573,7 @@ vector<int> calc_polygon_numbers(int n, int d, bool point_cut)
    int start = (point_cut) ? 1 : 0;
    int end = polygon_numbers.size()-1;
 
-   for (unsigned int i=start;i<=lats;i++) {
+   for (int i=start;i<=lats;i++) {
       if (polygon_numbers[i] > polygon_numbers[end])
          polygon_numbers[i] = polygon_numbers[end];
       end--;
@@ -3200,7 +3197,7 @@ void ncon_face_coloring_by_adjacent_face(col_geom_v &geom, vector<faceList *> &f
    int map_cnt = 0;
    for (int i=0;i<lats;i++) {
       bool faces_painted = false;
-      vector<int> idx = find_face_by_lat_lon(geom,face_list,i,longitudes.front()/2);
+      vector<int> idx = find_face_by_lat_lon(face_list,i,longitudes.front()/2);
       if (face_opacity != -1)
          opq = face_pattern[map_cnt%face_pattern.size()] == '1' ? face_opacity : 255;
       col_val c = set_alpha(face_map.get_col(map_cnt),opq);
@@ -3251,7 +3248,7 @@ void ncon_face_coloring_by_compound(col_geom_v &geom, vector<faceList *> &face_l
       lats++;
 
    for (int i=0;i<lats;i++) {
-      vector<int> idx = find_face_by_lat_lon(geom,face_list,i,longitudes.front()/2);
+      vector<int> idx = find_face_by_lat_lon(face_list,i,longitudes.front()/2);
       for (unsigned int j=0;j<idx.size();j++) {
          int polygon_no = face_list[idx[j]]->polygon_no;
          polygon_table.push_back(make_pair(polygon_no,idx[j]));
@@ -3264,7 +3261,7 @@ void ncon_face_coloring_by_compound(col_geom_v &geom, vector<faceList *> &face_l
 
    int map_cnt = 0;
    int polygon_no_last = -1;
-   for (int i=0;i<polygon_table.size();i++) {
+   for (unsigned int i=0;i<polygon_table.size();i++) {
       pair<int, int> polygons = polygon_table[i];
       int polygon_no = polygons.first;
       int face_no = polygons.second;
