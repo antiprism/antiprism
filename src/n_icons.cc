@@ -575,16 +575,26 @@ void ncon_opts::process_command_line(int argc, char **argv)
 
       if (build_method == 2) {
          if (d == 1 || (ncon_order-d) == 1)
-            error("in n/d shells (construction method 2), d (or n-d) must be greater than 1","n");
+            error("in construction method 2, d (or n-d) must be greater than 1","n");
 
          if (strchr(closure.c_str(), 'h')) {
-            warning("closure of h not valid in n/d shells (construction method 2)","c");
+            warning("closure of h not valid in construction method 2","c");
             closure.clear();
          }
       }
       else {
+         if (inner_radius != FLT_MAX) {
+            warning("inner radius is only valid in construction method 2","r");
+            inner_radius = FLT_MAX;
+         }
+
+         if (outer_radius != FLT_MAX) {
+            warning("outer radius is only valid in construction method 2","R");
+            outer_radius = FLT_MAX;
+         }
+
          if (!hide_indent) {
-            warning("show indented edges only valid in n/d shells (construction method 2)","Y");
+            warning("show indented edges only valid in construction method 2","Y");
             hide_indent = true;
          }
       }
@@ -1555,14 +1565,18 @@ void build_prime_meridian(col_geom_v &geom, vector<int> &prime_meridian, vector<
 
 vector<int> calc_polygon_numbers(int n, int d, bool point_cut)
 {
-   int polygon_size = (gcd(n,d) != 1) ? ((d > (int)ceil((double)n/2)) ? n-d : d) : 0;
+   int base_polygon = n;
+   int gc = gcd(n,d);
+   if (gc != 1)
+      base_polygon = n/gc;
+   int num_polygons = n / base_polygon;
 
    vector<int> polygon_numbers(n);
    int polygon_no = 0;
    for (int i=0;i<n;i++) {
       polygon_numbers[i] = polygon_no;
       polygon_no++;
-      if (polygon_no >= polygon_size)
+      if (polygon_no >= num_polygons)
          polygon_no = 0;
    }
 
