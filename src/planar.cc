@@ -56,8 +56,8 @@ class planar_opts: public prog_opts {
       string ifile;
       string ofile;
       
-      bool how_planar;
       char face_color_method;
+      int planar_merge_type;
       int color_system_mode;
       bool cmy_mode;
       bool ryb_mode;
@@ -74,8 +74,8 @@ class planar_opts: public prog_opts {
       double epsilon;
 
       planar_opts(): prog_opts("planar"),
-                        how_planar(false),
                         face_color_method('\0'),
+                        planar_merge_type(0),
                         color_system_mode(2),
                         cmy_mode(false),
                         ryb_mode(false),
@@ -105,11 +105,12 @@ void planar_opts::usage()
 "\n"
 "Options\n"
 "%s"
-"  -x        measure planar-ness (0 = planar)\n"
+"  -b <opt>  process overlapping and adjacent planar faces\n"  
+"               tile=1  merge=2  (default: none)\n"
 "  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
-"\nColor Blending Options (for option -F B)\n"
+"\nColor Blending Options (for option -b)\n"
 "  -M <mode> color blending mode. HSV=1  HSL=2 (default)  RGB=3\n"
 "  -s <sat>  HSV/HSL saturation curve. Greather than 0  (default: 1)\n"
 "               1.0 - no curve. lower than 1.0 makes blends more pastel\n"
@@ -127,11 +128,10 @@ void planar_opts::usage()
 "  -y        RYB mode. Blend colors as in Red-Yellow-Blue color wheel\n"
 "  -c        CMY mode. Complementary colors.  RGB->(RYB/GMO)->CMY->blend\n"
 "\nColoring Options\n"
-"  -f <opt>  face color option\n"
-"               d - unique color for faces on the same plane\n"
-"               f - unique color for faces on opposite planes\n"
-"               b - blend existing colors of overlaping planes\n"
-"                 note: -T and -m do not apply to -f b\n"
+"  -f <opt>  face color option (processed before -b)\n"
+"               d - unique color for faces with opposite normals\n"
+"               f - unique color for faces on same and opposite planes\n"
+"               o - unique color for faces on same planes only\n"
 "  -T <tran> face opacity for color by symmetry. valid range from 0 to 255\n"
 "  -m <maps> color maps for faces to be tried in turn (default: compound)\n"
 "\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
@@ -148,7 +148,7 @@ void planar_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hl:xM:s:t:v:u:a:cyf:T:m:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hl:b:M:s:t:v:u:a:cyf:T:m:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -164,8 +164,11 @@ void planar_opts::process_command_line(int argc, char **argv)
             }
             break;
             
-         case 'x':
-            how_planar = true;
+         case 'b':
+            id = get_arg_id(optarg, "tile=1|merge=2", argmatch_add_id_maps, errmsg);
+            if(id=="")
+               error(errmsg);
+            planar_merge_type = atoi(id.c_str());
             break;
             
          case 'M':
@@ -219,8 +222,8 @@ void planar_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'f':
-            if(!strlen(optarg)==1 || !strchr("dfb", *optarg))
-               error("color method must be d, f or b");
+            if(!strlen(optarg)==1 || !strchr("dfo", *optarg))
+               error("color method must be d, f or o");
             face_color_method = *optarg;
             break;
          
@@ -264,38 +267,6 @@ void geom_dump(const col_geom_v &geom, string s)
    char filename[MSG_SZ];
    sprintf(filename,"geom_dump_%s.off",s.c_str());
    geom.write(filename, errmsg);
-}
-
-double get_iq(const geom_if &geom)
-{
-   double iq = 0;
-   geom_info rep(geom);
-   if (rep.num_verts() > 2) {
-      // make sure area is non-zero
-      if (rep.face_areas().sum)
-         iq = rep.isoperimetric_quotient();
-   }
-   return iq;
-}
-
-double measure_planarity(const geom_if &geom)
-{
-   double planarity = 0;
-   
-   for(unsigned int i=0; i<geom.faces().size(); i++) {
-      geom_v tgeom;
-      vector<int> face = geom.faces(i);
-      for(unsigned int j=0; j<face.size(); j++)
-         tgeom.add_vert(geom.verts(face[j]));
-      tgeom.add_face(face);
-      int ret = tgeom.set_hull();
-      double iq = (ret > 2) ? get_iq(tgeom) : 0;
-      fprintf(stderr,"face(%d) iq = %.17g\n",i,iq);
-      planarity += iq;
-      tgeom.clear_all();
-   }
-   
-   return planarity;
 }
 
 bool cmp_verts(const pair<vec3d, int> &a, const pair<vec3d, int> &b, double eps)
@@ -461,72 +432,6 @@ void build_coplanar_faces_list(const geom_if &geom, vector<vector<int> > &coplan
    coplanar_face.clear();
 
    face_normal_table.clear();
-}
-
-// http://geometryalgorithms.com/Archive/algorithm_0106/algorithm_0106.htm
-bool lines_nearest_points(const vec3d &P0, const vec3d &P1, const vec3d &Q0, const vec3d &Q1,
-                          vec3d &P, vec3d &Q, double eps)
-{
-    vec3d u = (P1-P0);
-    vec3d v = (Q1-Q0);
-    vec3d w = P0-Q0;
-    double a = vdot(u, u);
-    double b = vdot(u, v);
-    double c = vdot(v, v);
-    double d = vdot(u, w);
-    double e = vdot(v, w);
-    double D = a*c-b*b;
-    double sc = (b*e-c*d)/D;
-    double tc = (a*e-b*d)/D;
-    P = P0 + sc*u;
-    Q = Q0 + tc*v;
-    return (D > eps);
-}
-
-vec3d lines_intersection(const vec3d &P0, const vec3d &P1, const vec3d &Q0, const vec3d &Q1, double eps)
-{
-   vec3d N1, N2;
-   // lines might not be parallel and still miss so check if nearest points is not zero
-   if(lines_nearest_points(P0, P1, Q0, Q1, N1, N2, eps) && ((N1-N2).mag() < eps))
-      return (N1+N2)/2.0;
-   else
-      return vec3d();
-}
-
-bool in_segment(const vec3d &P, const vec3d &Q0, const vec3d &Q1, double eps)
-{
-   bound_box bb;
-   vector<vec3d> points(2);
-   
-   points[0] = Q0;
-   points[1] = Q1;
-
-   bb.add_points(points);
-   vec3d min = bb.get_min();
-   vec3d max = bb.get_max();
-
-   return (compare(min,P,eps)<=0 && compare(max,P,eps)>=0);
-}
-
-vec3d lines_intersection_in_segments(const vec3d &P0, const vec3d &P1, const vec3d &Q0, const vec3d &Q1, double eps)
-{
-   vec3d intersection = lines_intersection(P0, P1, Q0, Q1, eps);
-   
-   if (intersection.is_set() && (!in_segment(intersection, P0, P1, eps) || !in_segment(intersection, Q0, Q1, eps)))
-      intersection = vec3d();
-
-   return intersection;
-}
-
-vec3d point_in_segment(const vec3d &P, const vec3d &Q0, const vec3d &Q1, double eps)
-{
-   vec3d intersection = nearest_point(P, Q0, Q1);
-
-   if (intersection.is_set() && (compare(P,intersection,eps) || !in_segment(intersection, Q0, Q1, eps)))
-      intersection = vec3d();
-
-   return intersection;
-   //return (intersection.is_set() && !compare(P,intersection,eps) && in_segment(intersection, Q0, Q1, eps));
 }
 
 // furshished by Adrian Rossiter
@@ -1263,8 +1168,23 @@ return;
    sort_merge_elems(geom, "ve", eps);
 }
 
-void color_by_plane(col_geom_v &geom, char face_color_method, int face_opacity, color_map_multi &map,
-                    int color_system_mode, double sat_power, double sat_threshold, double value_power, double value_advance, int alpha_mode, bool ryb_mode, double eps)
+void planar_merge(col_geom_v &geom, int planar_merge_type, int color_system_mode, double sat_power, double sat_threshold, double value_power, double value_advance, int alpha_mode, bool ryb_mode, double eps)
+{
+   face_normals fnormals(geom,eps);
+
+   vector<vector<int> > coplanar_faces_list;
+   vector<face_normal> coplanar_normals;
+   
+   bool point_outward = true;
+   bool fold_normals = false;
+   build_coplanar_faces_list(geom, coplanar_faces_list, coplanar_normals, fnormals, point_outward, fold_normals, eps);
+   
+   geom.add_missing_impl_edges();
+   blend_overlapping_colors(geom, coplanar_faces_list, coplanar_normals, fnormals,
+                            color_system_mode, sat_power, sat_threshold, value_power, value_advance, alpha_mode, ryb_mode, eps);
+}
+
+void color_by_plane(col_geom_v &geom, char face_color_method, int face_opacity, color_map_multi &map, double eps)
 {
    face_normals fnormals(geom,eps);
 
@@ -1276,30 +1196,22 @@ void color_by_plane(col_geom_v &geom, char face_color_method, int face_opacity, 
    bool fold_normals = (face_color_method == 'f' || face_color_method == 'F') ? true : false;
    build_coplanar_faces_list(geom, coplanar_faces_list, coplanar_normals, fnormals, point_outward, fold_normals, eps);
    
-   if (face_color_method == 'b') {
-      geom.add_missing_impl_edges();
-      blend_overlapping_colors(geom, coplanar_faces_list, coplanar_normals, fnormals,
-                               color_system_mode, sat_power, sat_threshold, value_power, value_advance, alpha_mode, ryb_mode, eps);
-   }
-   else
-   if (face_color_method == 'd' || face_color_method == 'f') {
-      for(unsigned int i=0; i<coplanar_faces_list.size(); i++) {
-         for(unsigned int j=0; j<coplanar_faces_list[i].size(); j++) {
-            //fprintf(stderr,"plane = %d  face = %d\n", i, coplanar_faces_list[i][j]);
-            int k = coplanar_faces_list[i][j];
-            col_val col = map.get_col(i);
-            geom.set_f_col(k,col);
-         }
+   for(unsigned int i=0; i<coplanar_faces_list.size(); i++) {
+      for(unsigned int j=0; j<coplanar_faces_list[i].size(); j++) {
+         //fprintf(stderr,"plane = %d  face = %d\n", i, coplanar_faces_list[i][j]);
+         int k = coplanar_faces_list[i][j];
+         col_val col = map.get_col(i);
+         geom.set_f_col(k,col);
       }
+   }
 
-      // transparency
-      if (face_opacity != 255) {
-         for (unsigned int i=0;i<geom.faces().size();i++) {
-            col_val col = geom.get_f_col(i);
-            if (col.is_val())
-               col = col_val(col[0],col[1],col[2],face_opacity);
-            geom.set_f_col(i,col);
-         }
+   // transparency
+   if (face_opacity != 255) {
+      for (unsigned int i=0;i<geom.faces().size();i++) {
+         col_val col = geom.get_f_col(i);
+         if (col.is_val())
+            col = col_val(col[0],col[1],col[2],face_opacity);
+         geom.set_f_col(i,col);
       }
    }
 }
@@ -1316,17 +1228,15 @@ int main(int argc, char *argv[])
    if(*errmsg)
       opts.warning(errmsg);
 
-   if(opts.how_planar)
-      fprintf(stderr,"\nthe total planarity measures to: %.17g\n", measure_planarity(geom));
-
    if (opts.cmy_mode)
       for(unsigned int i=0; i<geom.faces().size(); i++)
          geom.set_f_col(i,rgb_complement(geom.get_f_col(i), opts.ryb_mode));
 
-   // face color by symmetry normals
    if (opts.face_color_method)
-      color_by_plane(geom, opts.face_color_method, opts.face_opacity, opts.map,
-                     opts.color_system_mode, opts.sat_power, opts.sat_threshold, opts.value_power, opts.value_advance, opts.alpha_mode, opts.ryb_mode, opts.epsilon);
+      color_by_plane(geom, opts.face_color_method, opts.face_opacity, opts.map, opts.epsilon);
+
+   if (opts.planar_merge_type)
+      planar_merge(geom, opts.planar_merge_type, opts.color_system_mode, opts.sat_power, opts.sat_threshold, opts.value_power, opts.value_advance, opts.alpha_mode, opts.ryb_mode, opts.epsilon);
 
    if(!geom.write(opts.ofile, errmsg))
       opts.error(errmsg);
