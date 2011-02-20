@@ -36,18 +36,18 @@
 #include "transforms.h"
 #include "math_utils.h"
 
-///Make a uniform %polygon
+///Make a uniform polygon
 class polygon {
    protected:
-      int num_sides;      ///< The number of sides to the %polygon.
-      int fraction;       ///< The value m in the {n/m} description.
+      int num_sides;    ///< The number of sides of the polygon (n of {n/d})
+      int step;         ///< The number of verts stepped by an side (m of {n/d})
       int parts;          ///< The number of parts (polygon may be compound).
       double radius;      ///< The polygon circumradius.
       double radius2;     ///< A second radius.
       double height;      ///< The primary height of a polyhedron.
       double height2;     ///< A second height used for a polyhedron.
       double twist_angle; ///< An angle to twist a polyhedron.
-      int subtype;        ///< The subtype of a  %polygon based polyhedron.
+      int subtype;        ///< The subtype of a %polygon based polyhedron.
       int max_subtype;    ///< The highest number for a subtype
    
       void set_max_subtype(int max) { max_subtype = (max>0) ? max : 0; }
@@ -56,9 +56,10 @@ class polygon {
       enum { subtype_default=0 };
 
       ///Constructor
-      /**\param sides the number of sides to the %polygon.
-       * \param fract the value m in the {n/m} description. */
-      polygon(int sides, int fract=1);
+      /**Polygon in form {N/D} (with N/D not necessarily in lowest form.)
+       * \param N number of sides to the (compound) polygon.
+       * \param D the number of vertices stepped by an edge (default 1) */
+      polygon(int N, int D=1);
       
       ///Destructor
       virtual ~polygon() {}
@@ -76,7 +77,7 @@ class polygon {
       virtual bool set_radius2(double r, char *msg=0)
          { radius2 = r; msg=0; return true;}
 
-      ///Set the edge (%polygon side) length
+      ///Set the edge (polygon side) length
       /**\param len the edge length. */
       void set_edge(double len) { radius = 0.5*len/sin(angle()/2); }
 
@@ -86,28 +87,28 @@ class polygon {
 
       ///Get the angle that an edge makes at the centre
       /**\return the angle, in radians. */
-      double angle() { return 2*M_PI*fraction/num_sides; }
+      double angle() { return 2*M_PI*step/num_sides; }
 
-      ///Get the number of sides of the %polygon.
+      ///Get the number of sides of the (component) polygon.
       /**\return the number of sides. */
       int get_num_sides() { return num_sides; }
 
-      ///Get the number of sides of the %polygon.
-      /**\return the number of sides. */
-      int get_fraction() { return fraction; }
+      ///Get the number of vertices stepped by a side of the (component) polygon
+      /**\return the number of vertices stepped. */
+      int get_step() { return step; }
 
-      ///Get the number of component parts of a %polygon
-      /**If the polygon fraction is not in lowest form the polygon will
+      ///Get the number of component parts of a polygon
+      /**If the polygon step is not in lowest form the polygon will
        * be compound and have more than one part.
        * \return the number of sides. */
       int get_parts() { return parts; }
 
-      ///Add a %polygon aligned with the xy plane and at a given z-height
-      /**\param geom the geometry to add the %polygon to.
-       * \param ht the height on the z-axis to place the %polygon. */
+      ///Add a polygon aligned with the xy plane and at a given z-height
+      /**\param geom the geometry to add the polygon to.
+       * \param ht the height on the z-axis to place the polygon. */
       void add_polygon(geom_if &geom, double ht=0);
 
-      ///Make a %polygon based polyhedron.
+      ///Make a polygon based polyhedron.
       /**\param geom a geometry to return the polyhedron. */
       virtual void make_poly(geom_if &geom);
      
@@ -171,7 +172,7 @@ class polygon {
       
       ///Make a part of (or a complete) polygon-based polyhedron
       /**Make a non-compound polyhedron, using \c num_sides and
-       * \c fraction for {n/m}. If \c parts is greater than \c 1
+       * \c step for {n/d}. If \c parts is greater than \c 1
        * then polygon::make_poly will make a compound by repeating this
        * polyhedron \c parts times.
        * \param geom a geometry to return the polyhedron. */
@@ -188,9 +189,10 @@ class dihedron: public polygon {
       enum { subtype_polygon=1 };
 
       ///Constructor
-      /**\param sides the number of sides to the base-polygon.
-       * \param fract the value m in the {n/m} description. */
-      dihedron(int sides, int fract=1) : polygon(sides, fract)
+      /**Base polygon in form {N/D} (with N/D not necessarily in lowest form.)
+       * \param N number of sides to the (compound) polygon.
+       * \param D the number of vertices stepped by an edge (default 1) */
+      dihedron(int N, int D=1) : polygon(N, D)
          { set_max_subtype(1); }
 
       ///Constructor
@@ -209,9 +211,10 @@ class prism: public polygon {
              subtype_trapezohedron };
 
       ///Constructor
-      /**\param sides the number of sides to the base-polygon.
-       * \param fract the value m in the {n/m} description. */
-      prism(int sides, int fract=1) : polygon(sides, fract)
+      /**Base polygon in form {N/D} (with N/D not necessarily in lowest form.)
+       * \param N number of sides to the (compound) polygon.
+       * \param D the number of vertices stepped by an edge (default 1) */
+      prism(int N, int D=1) : polygon(N, D)
          { set_max_subtype(2); }
 
       ///Constructor
@@ -239,9 +242,10 @@ class antiprism: public polygon {
              subtype_subdivided_scalenohedron };
       
       ///Constructor
-      /**\param sides the number of sides to the base-polygon.
-       * \param fract the value m in the {n/m} description. */
-      antiprism(int sides, int fract=1) : polygon(sides, fract)
+      /**Base polygon in form {N/D} (with N/D not necessarily in lowest form.)
+       * \param N number of sides to the (compound) polygon.
+       * \param D the number of vertices stepped by an edge (default 1) */
+      antiprism(int N, int D=1) : polygon(N, D)
          { set_max_subtype(4); }
 
       ///Constructor
@@ -260,9 +264,10 @@ class antiprism: public polygon {
 class snub_antiprism: public polygon {
    public:
       ///Constructor
-      /**\param sides the number of sides to the base-polygon.
-       * \param fract the value m in the {n/m} description. */
-      snub_antiprism(int sides, int fract=1) : polygon(sides, fract)
+      /**Base polygon in form {N/D} (with N/D not necessarily in lowest form.)
+       * \param N number of sides to the (compound) polygon.
+       * \param D the number of vertices stepped by an edge (default 1) */
+      snub_antiprism(int N, int D=1) : polygon(N, D)
          { set_max_subtype(1); }
 
       ///Constructor
@@ -285,9 +290,10 @@ class pyramid: public polygon
       };
 
       ///Constructor
-      /**\param sides the number of sides to the base %polygon.
-       * \param fract the value m in the {n/m} description. */
-      pyramid(int sides, int fract=1) : polygon(sides, fract)
+      /**Base polygon in form {N/D} (with N/D not necessarily in lowest form.)
+       * \param N number of sides to the (compound) polygon.
+       * \param D the number of vertices stepped by an edge (default 1) */
+      pyramid(int N, int D=1) : polygon(N, D)
          { set_max_subtype(3); }
       
       ///Constructor
@@ -316,9 +322,10 @@ class dipyramid: public pyramid
 
 
       ///Constructor
-      /**\param sides the number of sides to the base-polygon.
-       * \param fract the value m in the {n/m} description. */
-      dipyramid(int sides, int fract=1) : pyramid(sides, fract)
+      /**Base polygon in form {N/D} (with N/D not necessarily in lowest form.)
+       * \param N number of sides to the (compound) polygon.
+       * \param D the number of vertices stepped by an edge (default 1) */
+      dipyramid(int N, int D=1) : pyramid(N, D)
          { set_max_subtype(5); }
 
       ///Constructor
@@ -335,27 +342,22 @@ class cupola: public polygon {
    public:
       enum { subtype_elongated=1,
              subtype_gyroelongated,
-             subtype_semicupola
+             subtype_cuploid
       };
       ///Constructor
-      /**\param sides the number of sides to the base-polygon.
-       * \param fract the value m in the {n/m} description. */
-     cupola(int sides, int fract=1) : polygon(sides, fract)
+      /**Base polygon in form {N/D} (with N/D not necessarily in lowest form.)
+       * \param N number of sides to the (compound) polygon.
+       * \param D the number of vertices stepped by an edge (default 1) */
+     cupola(int N, int D=1) : polygon(N, D)
         { set_max_subtype(3); }
 
       ///Constructor
       /**\param pgon %polygon to base the polyhedron on. */
      cupola(polygon &pgon) : polygon(pgon) { set_max_subtype(3); }
      
-     ///Check whether it is a compound with paired components
-     /** \return true if compound withe paired components, else false */
-     bool has_paired_component() const
-        { return !is_even(fraction) && is_even(parts); }
-
      bool set_twist_angle(double ang=NAN, char * /*msg*/ =0)
          { twist_angle=ang; return true; }
      bool set_edge2(double e2, char *msg=0);
-     void make_poly(geom_if &geom);
      void make_poly_part(geom_if &geom);
 }; 
 
@@ -364,9 +366,10 @@ class cupola: public polygon {
 class orthobicupola: public cupola {
    public:
       ///Constructor
-      /**\param sides the number of sides to the base-polygon.
-       * \param fract the value m in the {n/m} description. */
-      orthobicupola(int sides, int fract=1) : cupola(sides, fract)
+      /**Base polygon in form {N/D} (with N/D not necessarily in lowest form.)
+       * \param N number of sides to the (compound) polygon.
+       * \param D the number of vertices stepped by an edge (default 1) */
+      orthobicupola(int N, int D=1) : cupola(N, D)
         { set_max_subtype(2); }
 
       ///Constructor
@@ -381,9 +384,10 @@ class orthobicupola: public cupola {
 class gyrobicupola: public cupola {
    public:
       ///Constructor
-      /**\param sides the number of sides to the base-polygon.
-       * \param fract the value m in the {n/m} description. */
-      gyrobicupola(int sides, int fract=1) : cupola(sides, fract)
+      /**Base polygon in form {N/D} (with N/D not necessarily in lowest form.)
+       * \param N number of sides to the (compound) polygon.
+       * \param D the number of vertices stepped by an edge (default 1) */
+      gyrobicupola(int N, int D=1) : cupola(N, D)
         { set_max_subtype(2); }
 
       ///Constructor

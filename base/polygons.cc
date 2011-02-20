@@ -36,13 +36,13 @@
 #include "utils.h"
 
 
-polygon::polygon(int sides, int fract) :
-   fraction(fract), radius(1.0), radius2(NAN), height(NAN), height2(NAN),
+polygon::polygon(int N, int M) :
+   radius(1.0), radius2(NAN), height(NAN), height2(NAN),
    twist_angle(NAN), subtype(0), max_subtype(0)
 {
-   parts = gcd(sides, fract);
-   num_sides = sides/parts;
-   fraction = fract/parts;
+   parts = gcd(N, M);
+   num_sides = N/parts;
+   step = (M/parts)%num_sides;
 }
    
 bool polygon::set_subtype(int typ, char *msg)
@@ -91,7 +91,7 @@ void polygon::make_poly(geom_if &geom)
 
 void polygon::dump()
 {
-   fprintf(stderr, "\npolygon %d x {%d/%d}\n", parts, num_sides, fraction);
+   fprintf(stderr, "\npolygon %d x {%d/%d}\n", parts, num_sides, step);
    fprintf(stderr, "subtype %d out of %d\n", subtype, max_subtype);
    fprintf(stderr, "r=%g, r2=%g, h=%g, h2=%g, a=%g\n\n",
          radius, radius2, height, height2, twist_angle);
@@ -407,7 +407,7 @@ void dipyramid::make_scal_part(geom_if &geom)
       R2 = edge*cos(ang/2 - twist_ang)/sin(ang);
    }
 
-   dipyramid dip(num_sides, fraction);
+   dipyramid dip(num_sides, step);
    dip.set_height(height);
    dip.set_twist_angle();
    dip.set_subtype(0);
@@ -427,7 +427,7 @@ void dipyramid::make_scal_part(geom_if &geom)
    double inrad = radius*cos(angle()/2);
    double rad2 = isnan(radius2) ? inrad : radius2;
 
-   polygon pgon(num_sides, fraction);
+   polygon pgon(num_sides, step);
    pgon.set_radius(radius);
    geom_v pg;
    pgon.add_polygon(pg);
@@ -517,53 +517,38 @@ static void prism_wrap(geom_if &geom, int num_wraps)
 
 void cupola::make_poly_part(geom_if &geom)
 {
-   bool paired = has_paired_component();
-   bool semi = is_even(fraction);
+   bool even = is_even(step);
    geom_v cup_geom;
    vector<vec3d> verts;
    vector<vector<int> > faces;
-   int n2 = (2-semi)*num_sides;
-   polygon large(n2, fraction/(1+semi));
+   int n2 = (2-even)*num_sides;
+   polygon large(n2, step/(1+even));
    large.set_edge(get_edge());
    large.add_polygon(cup_geom);
-   if(semi || paired) {
+   if(even) {
       for(int i=0; i<n2; i++)
          cup_geom.raw_faces()[0].push_back(i);
    }
-   if(subtype==subtype_semicupola)
+   if(subtype==subtype_cuploid)
       cup_geom.clear_faces();
    
    cup_geom.transform(mat3d::rot(vec3d::z, -angle()/4));
    double ht = (!isnan(height)) ? height : radius;
-   for(int part=0; part<1+paired; part++) {
-      int v_sz = cup_geom.verts().size();
-      add_polygon(cup_geom, ht);
-      int off = 0;
-      if(part==1) {
-         mat3d rot = mat3d::rot(vec3d::z, M_PI/num_sides);
-         for(int j=0; j<num_sides; j++) {
-            vec3d &v = cup_geom.raw_verts()[v_sz+j];
-            v = rot*v;
-         }
-         // How many polygon steps to turn -1 vertices on large polygon
-         for(off=0; off<n2; off++)
-            if((off*fraction)%n2==1)
-               break;
-      }
-      
-      for(int i=0; i<2*num_sides; i++) {
-         vector<int> face;
-         int v = (i+n2-off)%n2;
-         face.push_back(v);
-         face.push_back(v_sz + ((i+1)/2)%num_sides);
-         if(is_even(i))
-            face.push_back(v_sz + ((i/2+1)%num_sides));
-         face.push_back((v+1)%n2);
-         cup_geom.add_face(face);
-      }
+   int v_sz = cup_geom.verts().size();
+   add_polygon(cup_geom, ht);
+   int off = 0;
+   for(int i=0; i<2*num_sides; i++) {
+      vector<int> face;
+      int v = (i+n2-off)%n2;
+      face.push_back(v);
+      face.push_back(v_sz + ((i+1)/2)%num_sides);
+      if(is_even(i))
+         face.push_back(v_sz + ((i/2+1)%num_sides));
+      face.push_back((v+1)%n2);
+      cup_geom.add_face(face);
    }
 
-   if(subtype==subtype_default || subtype==subtype_semicupola) {
+   if(subtype==subtype_default || subtype==subtype_cuploid) {
       geom.append(cup_geom);
    }
    else if(subtype==subtype_elongated) {
@@ -571,7 +556,7 @@ void cupola::make_poly_part(geom_if &geom)
       pri.set_twist_angle(twist_angle);
       pri.set_height((isnan(height2)) ? get_edge() : height2);
       pri.make_poly_part(geom);
-      if(semi || paired)
+      if(even)
          prism_wrap(geom, 2);
       face_bond(geom, cup_geom);
    }
@@ -583,28 +568,10 @@ void cupola::make_poly_part(geom_if &geom)
       else
          ant.set_height(height2);
       ant.make_poly_part(geom);
-      if(semi || paired)
+      if(even)
          prism_wrap(geom, 2);
       face_bond(geom, cup_geom);
    }
-}
-
-
-void cupola::make_poly(geom_if &geom)
-{
-   if(has_paired_component()) {
-      geom_v poly_unit;
-      make_poly_part(poly_unit);
-      poly_unit.orient();
-      geom.append(poly_unit);
-      for(int i=1; i<parts/2; i++) {
-         geom_v rep = poly_unit;
-         rep.transform(mat3d::rot(vec3d::z, 2*M_PI*i/parts/num_sides));
-         geom.append(rep);
-      }
-   }
-   else
-      polygon::make_poly(geom);
 }
 
 
@@ -659,7 +626,7 @@ bool snub_antiprism::set_height(double /*h*/, char *msg)
 void snub_antiprism::make_poly_part(geom_if &geom)
 {
    const double sqrt_epsilon = sqrt(epsilon);
-   const double ang_inc = fraction*M_PI/num_sides;
+   const double ang_inc = step*M_PI/num_sides;
    const double s = sin(ang_inc);
    const double c = cos(ang_inc);
    double coeffs[5];
@@ -743,7 +710,7 @@ void snub_antiprism::make_poly_part(geom_if &geom)
    col_geom_v geom2 = geom;
    face_bond(geom, geom2, geom.faces().size()-1, geom2.faces().size()-1, 1);
    //align dihedral axis with x-axis
-   geom.transform(mat3d::rot(vec3d::z, M_PI*fraction/(2.0*num_sides)));
+   geom.transform(mat3d::rot(vec3d::z, M_PI*step/(2.0*num_sides)));
 }
 
 
@@ -755,26 +722,26 @@ int make_resource_pgon(geom_if &geom, string pname, char *errmsg)
    char pnam[MSG_SZ];
    strncpy(pnam, pname.c_str(), MSG_SZ);
    int num_sides;
-   int fraction=1;
+   int step=1;
    char *pnum = pnam+3;
    char *p = strchr(pnum, '/');
    if(p!=0) {
       *p++='\0';
-      if(!read_int(p, &fraction))
+      if(!read_int(p, &step))
          return -1;
    }
    if(!read_int(pnum, &num_sides))
       return -1;
    if(num_sides<2)
       return -1;
-   if(fraction<1)
+   if(step<1)
       return -1;
-   if(fraction >= num_sides)
+   if(step%num_sides==0)
       return -1;
    
    *pnum = '\0';
 
-   polygon pgon(num_sides, fraction);
+   polygon pgon(num_sides, step);
    polygon *poly;
    if(strcasecmp("pri", pnam)==0)
       poly = new prism(pgon);

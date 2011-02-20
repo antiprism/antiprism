@@ -55,7 +55,7 @@ class pg_opts: public prog_opts {
       double height2;
       double edge2;
       int num_sides;
-      int fraction;
+      int step;
       double twist_ang;
 
       string ofile;
@@ -64,7 +64,7 @@ class pg_opts: public prog_opts {
 
       pg_opts(): prog_opts("polygon"), type(t_prism), subtype(-1),
                  edge(NAN), radius(NAN), radius2(NAN),
-                 height(NAN), height2(NAN), edge2(NAN), fraction(1),
+                 height(NAN), height2(NAN), edge2(NAN), step(1),
                  twist_ang(NAN),
                  e_given(false), h_given(false)
                  {}
@@ -102,7 +102,7 @@ void pg_opts::usage()
 "   5. cupola\n"
 "        subtypes: 1. elongated (-L for prism height)\n"
 "                  2. gyroelongated (-L for antiprism height)\n"
-"                  3. semicupola\n"
+"                  3. cupoloid\n"
 "   6. orthobicupola\n"
 "        subtypes: 1. elongated (-L for prism height)\n"
 "                  2. gyroelongated (-L for antiprism height)\n"
@@ -244,7 +244,7 @@ void pg_opts::process_command_line(int argc, char **argv)
       else if(type==t_orthobicupola ||type==t_gyrobicupola)
          params += "|elongated|gyroelongated";
       else if(type==t_cupola)
-         params += "|elongated|gyroelongated|semicupola";
+         params += "|elongated|gyroelongated|cupoloid";
       else if(type==t_snub_antiprism)
          params += "|inverted";
       else if(type==t_dihedron)
@@ -263,18 +263,18 @@ void pg_opts::process_command_line(int argc, char **argv)
    char *p = strchr(argv[optind+1], '/');
    if(p!=0) {
       *p++='\0';
-      if(!read_int(p, &fraction, errmsg))
-         error(errmsg, "number of sides (fractional part)");
+      if(!read_int(p, &step, errmsg))
+         error(errmsg, "number of sides (denominator of polygon fraction)");
    }
 
    if(!read_int(argv[optind+1], &num_sides, errmsg))
       error(errmsg, "number of sides");
    if(num_sides<2)
       error("must be an integer 2 or greater", "number of sides");
-   if(fraction < 1)
-      error("fractional part must be 1 or greater", "number of sides");
-   if(fraction%num_sides==0)
-      error("fractional part cannot be a multiple of the number of sides", "number of sides");
+   if(step < 1)
+      error("denominator of polygon fraction must be 1 or greater", "number of sides");
+   if(step%num_sides==0)
+      error("denominator of polygon fraction cannot be a multiple of the number of sides", "number of sides");
 
 }
 
@@ -285,7 +285,7 @@ int main(int argc, char *argv[])
    pg_opts opts;
    opts.process_command_line(argc, argv);
 
-   polygon pgon(opts.num_sides, opts.fraction);
+   polygon pgon(opts.num_sides, opts.step);
 
    // make n-polygon in xz plane with centre at origin
    if(!isnan(opts.radius))
@@ -333,8 +333,8 @@ int main(int argc, char *argv[])
    }
    
    if(opts.type==pg_opts::t_cupola && opts.subtype==3 &&
-         ((poly->get_fraction()*poly->get_parts())%2) )
-      opts.error("cannot make a semicupola unless the specified polygon fraction has a denominator and it is even", "polygon type");
+         ((poly->get_step()*poly->get_parts())%2) )
+      opts.error("cannot make a cupoloid unless the specified polygon fraction (in lowest form) has an even denominator", "polygon type");
          
    if(poly->get_num_sides()==2 && (opts.subtype==1||!isnan(opts.twist_ang)) ) {
       if(opts.type==pg_opts::t_pyramid)
