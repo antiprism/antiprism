@@ -115,8 +115,8 @@ void pg_opts::usage()
 "        subtypes: 1. polygon\n"
 "\n"
 "num_sides is a number (N) optionally followed by / and a second\n"
-"number (N/M). N is the number of vertices spaced equally on a\n"
-"circle, and each vertex is joined to the Mth (default: 1) vertex\n"
+"number (N/D). N is the number of vertices spaced equally on a\n"
+"circle, and each vertex is joined to the Dth (default: 1) vertex\n"
 "moving around the circle.\n"
 "\n"
 "Options\n"
@@ -270,11 +270,11 @@ void pg_opts::process_command_line(int argc, char **argv)
    if(!read_int(argv[optind+1], &num_sides, errmsg))
       error(errmsg, "number of sides");
    if(num_sides<2)
-      error("must be an integer 2 or greater", "number of sides");
+      error("number of sides must be an integer 2 or greater", "num_sides");
    if(step < 1)
-      error("denominator of polygon fraction must be 1 or greater", "number of sides");
+      error("denominator of polygon fraction must be 1 or greater", "num_sides");
    if(step%num_sides==0)
-      error("denominator of polygon fraction cannot be a multiple of the number of sides", "number of sides");
+      error("denominator of polygon fraction cannot be a multiple of the number of sides", "num_sides");
 
 }
 
