@@ -25,6 +25,7 @@ stamp-h1
 *.la
 *.deps
 *.libs
+*.exe
 *~
 
 m4/libtool.m4

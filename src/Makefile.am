@@ -1,10 +1,10 @@
 
-LDADD = ../base/libantiprism.la
+LDADD = $(top_builddir)/base/libantiprism.la
 #LDFLAGS += -L../base -lantiprism
 
-if USE_RPATH_FLAGS
-AM_LDFLAGS = -Wl,-rpath,$(libdir)
-endif
+#if USE_RPATH_FLAGS
+#AM_LDFLAGS = -Wl,-rpath,$(libdir)
+#endif
 
 noinst_LTLIBRARIES = liblattice_grid.la
 					 

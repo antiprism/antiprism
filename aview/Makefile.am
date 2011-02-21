@@ -1,9 +1,9 @@
 
-LDADD = ../base/libantiprism.la
+LDADD = $(top_builddir)/base/libantiprism.la
 
-if USE_RPATH_FLAGS
-AM_LDFLAGS = -Wl,-rpath,$(libdir)
-endif
+#if USE_RPATH_FLAGS
+#AM_LDFLAGS = -Wl,-rpath,$(libdir)
+#endif
 
 
 bin_PROGRAMS = antiview

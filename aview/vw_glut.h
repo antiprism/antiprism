@@ -39,16 +39,16 @@
    #include "../config.h"
 #endif
 
-#define NO_GLUT 0
-#define GLUT 1
-#define OPENGLUT 2
-#define FREEGLUT 3
+#define FOUND_NO_GLUT 0
+#define FOUND_GLUT 1
+#define FOUND_OPENGLUT 2
+#define FOUND_FREEGLUT 3
 
-#if GLUT_TYPE == GLUT
+#if GLUT_TYPE == FOUND_GLUT
    #include <GL/glut.h>
-#elif GLUT_TYPE == OPENGLUT
+#elif GLUT_TYPE == FOUND_OPENGLUT
    #include <GL/openglut.h>
-#elif GLUT_TYPE == FREEGLUT
+#elif GLUT_TYPE == FOUND_FREEGLUT
   #include <GL/freeglut.h>
 #else
    #error "No GLUT library has been specified"

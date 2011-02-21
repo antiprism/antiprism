@@ -1,10 +1,10 @@
 
-#LDADD = ../base/libantiprism.la
-LDFLAGS += -L../base -lantiprism
+LDADD = $(top_builddir)/base/libantiprism.la
+#LDFLAGS += -L../base -lantiprism
 
-if USE_RPATH_FLAGS
-AM_LDFLAGS = -Wl,-rpath,$(libdir)
-endif
+#if USE_RPATH_FLAGS
+#AM_LDFLAGS = -Wl,-rpath,$(libdir)
+#endif
 
 
 bin_PROGRAMS = twist spidron off2txt dome_layer

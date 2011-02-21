@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT(antiprism, 0.20.pre13, adrian@antiprism.com)
+AC_INIT(antiprism, 0.20.pre14, adrian@antiprism.com)
 AM_INIT_AUTOMAKE([1.9 foreign])
 
 AC_CONFIG_SRCDIR([base/antiprism.h])
@@ -63,14 +63,14 @@ else
 fi
 
 # Allow newly installed binaries to find installed library
-if $CC -Wl,-rpath,/usr/lib -S -o /dev/null -xc /dev/null >/dev/null 2>&1;
-then
-   AM_CONDITIONAL(USE_RPATH_FLAGS, true)
-   echo "can add -Wl,-rpath to LDFLAGS"
-else
-   AM_CONDITIONAL(USE_RPATH_FLAGS, false)
-   echo "cannot add -Wl,-rpath to LDFLAGS"
-fi
+#if $CC -Wl,-rpath,/usr/lib -S -o /dev/null -xc /dev/null >/dev/null 2>&1;
+#then
+#   AM_CONDITIONAL(USE_RPATH_FLAGS, true)
+#   echo "can add -Wl,-rpath to LDFLAGS"
+#else
+#   AM_CONDITIONAL(USE_RPATH_FLAGS, false)
+#   echo "cannot add -Wl,-rpath to LDFLAGS"
+#fi
 
 # Add -fno-strict-aliasing to CFLAGS if accepted
 ALIASING_FLAG=
@@ -88,11 +88,22 @@ case $host_os in
          * ) HOST_CYGWIN=no;;
 esac
 
+case $host_os in
+  *mingw* )  HOST_MINGW=yes;;
+         * ) HOST_MINGW=no;;
+esac
+
+
 ADD_X_PATHS=yes
+if test x"$HOST_MINGW" = x"yes" ; then
+   ADD_X_PATHS=no
+fi
+
 if test x"$HOST_CYGWIN" = x"yes" ; then
    AC_CHECK_LIB([GL], [glBegin], [ADD_X_PATHS=no], [
       AC_CHECK_LIB([opengl32], [main], [ADD_X_PATHS=no])] )
 fi
+
 
 if test x"$ADD_X_PATHS" = x"yes" ; then
    AC_PATH_X
