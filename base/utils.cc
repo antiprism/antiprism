@@ -512,8 +512,14 @@ int read_line(FILE *file, char **line)
 
    int offset = 0;
    while (true) {
-      if (!fgets(*line + offset, linesize - offset, file))
-         return (offset != 0) ? 0 : (ferror(file)) ? -1 : 1;
+      if (!fgets(*line + offset, linesize - offset, file)) {
+         if(offset != 0)
+            return 0;
+         else {
+            *(*line+offset) = '\0'; // terminate the line
+            return (ferror(file)) ? -1 : 1;
+         }
+      }
       int len = offset + strlen(*line + offset);
       if ((*line)[len - 1] == '\n') {
          (*line)[len - 1] = 0;
