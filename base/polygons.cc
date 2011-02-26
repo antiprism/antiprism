@@ -42,7 +42,7 @@ polygon::polygon(int N, int M) :
 {
    parts = gcd(N, M);
    num_sides = N/parts;
-   step = (M/parts)%num_sides;
+   step = M/parts;
 }
    
 bool polygon::set_subtype(int typ, char *msg)
@@ -150,8 +150,8 @@ void prism::make_poly_part(geom_if &geom)
 bool antiprism::set_edge2(double e2, char *msg)
 {
    double dist = 2*radius*sin(angle()/4);
-   double ht = (e2>dist) ? sqrt(e2*e2-dist*dist) : 0;
-   if(e2-dist<-epsilon) {
+   double ht = (fabs(e2)>fabs(dist)) ? sqrt(e2*e2-dist*dist) : 0;
+   if(fabs(e2)-fabs(dist)<-epsilon) {
       if(msg)
          strcpy(msg, "too short to reach between vertices");
       return false;
