@@ -30,7 +30,7 @@
 #ifndef GL_WRITER_H
 #define GL_WRITER_H
 
-#include "scene.h"
+#include "../base/antiprism.h"
 #include "gl_stroke_font.h"
 
 // conversion functions

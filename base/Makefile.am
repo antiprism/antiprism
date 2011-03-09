@@ -9,7 +9,6 @@ libantiprism_la_SOURCES = off_read.cc off_write.cc crds_read.cc disp_poly.cc\
    coloring.cc prop_col.cc named_cols.cc geodesic.cc zonohedron.cc \
 	johnson.cc uniform.cc kaleido.cc std_polys.cc skilling.cc \
 	timing.cc polygons.cc pov_writer.cc scene.cc \
-	gl_writer.cc stipple.cc gl_stroke_font.cc \
 	canonic.cc trans.cc faces.cc vrml_writer.cc \
    \
    qh_user.cc qh_global.cc qh_stat.cc qh_io.cc \
@@ -17,7 +16,7 @@ libantiprism_la_SOURCES = off_read.cc off_write.cc crds_read.cc disp_poly.cc\
 	qh_geom.cc qh_poly.cc qh_qset.cc qh_mem.cc \
    \
 	antiprism.h bbox.h col_map.h const.h disp_poly.h\
-	geodesic.h geom.h geom_utils.h gl_stroke_font.h gl_writer.h \
+	geodesic.h geom.h geom_utils.h \
 	col_val.h col_geom.h info.h mat3d.h mat4d.h math_utils.h named_cols.h \
    off_file.h pov_writer.h coloring.h prop_col.h timing.h \
 	polygons.h std_polys.h skilling.h kaleido.h \
@@ -31,6 +30,7 @@ libantiprism_la_SOURCES = off_read.cc off_write.cc crds_read.cc disp_poly.cc\
 supdir = $(datadir)/$(PACKAGE)-$(VERSION)
 libantiprism_la_CPPFLAGS = -DSUPDIR="\"$(supdir)\""
 libantiprism_la_LDFLAGS = -no-undefined -version-info 0:0:0
+libantiprism_la_LIBADD = tesselator/libtess.la
 
 pkginclude_HEADERS = \
 	antiprism.h \
@@ -43,8 +43,6 @@ pkginclude_HEADERS = \
 	disp_poly.h \
 	geom.h \
 	geom_utils.h \
-	gl_stroke_font.h \
-	gl_writer.h \
 	info.h \
 	mat3d.h \
 	mat4d.h \

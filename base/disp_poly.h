@@ -30,7 +30,7 @@
 #ifndef DISP_POLY_H
 #define DISP_POLY_H
 
-#include "scene.h"
+#include "../base/antiprism.h"
 
 class disp_poly : public geom_disp
 {
@@ -66,11 +66,6 @@ class disp_poly : public geom_disp
       void pov_include_files(FILE *ofile);
       void pov_object(FILE *ofile);
 
-      void gl_verts(const scene &scen);
-      void gl_edges(const scene &scen);
-      void gl_faces(const scene &scen);
-
-
    public:
       disp_poly();
       
@@ -99,7 +94,7 @@ class disp_poly : public geom_disp
       
       void vrml_geom(FILE *ofile, const scene &scen, int sig_dgts=DEF_SIG_DGTS);
       void pov_geom(FILE *ofile, const scene &scen, int sig_dgts=DEF_SIG_DGTS);
-      void gl_geom(const scene &scen);
+      //void gl_geom(const scene &scen);
 };
 
 
@@ -127,11 +122,11 @@ class disp_num_labels : public geom_disp_label
 
       void vrml_geom(FILE *ofile, const scene &scen, int sig_dgts=DEF_SIG_DGTS);
       void pov_geom(FILE *ofile, const scene &scen, int sig_dgts=DEF_SIG_DGTS);
-      void gl_geom(const scene &scen);
+      //void gl_geom(const scene &scen);
  };
 
 
-class disp_sym: public disp_poly
+class disp_sym: public virtual disp_poly
 {
    protected:
       bool show_axes;
@@ -159,14 +154,15 @@ class disp_sym: public disp_poly
 
       void vrml_geom(FILE *ofile, const scene &scen, int sig_dgts=DEF_SIG_DGTS);
       void pov_geom(FILE *ofile, const scene &scen, int sig_dgts=DEF_SIG_DGTS);
-      void gl_geom(const scene &scen);
+      //void gl_geom(const scene &scen);
 
 };
 
 class view_opts: public prog_opts {
+   private:
+      disp_poly *geom_defs;
    public:
       scene scen_defs;
-      disp_poly geom_defs;
       disp_num_labels lab_defs;
       disp_sym sym_defs;
       camera cam_defs;
@@ -178,10 +174,16 @@ class view_opts: public prog_opts {
       static const char *help_prec_text;
 
    public:
-      view_opts(const char *name): prog_opts(name) {}
+      view_opts(const char *name): prog_opts(name)
+         { geom_defs = new disp_poly(); }
+      ~view_opts() { delete geom_defs;}
       bool read_disp_option(char opt, char *optarg, char *errmsg,
             vector<string> &warnings);
       void set_view_vals(scene &scen);
+      void set_geom_defs(const disp_poly &defs)
+        { delete geom_defs;
+          geom_defs = dynamic_cast<disp_poly *>(defs.clone()); }
+      disp_poly &get_geom_defs() { return *geom_defs; }
 };
 
 

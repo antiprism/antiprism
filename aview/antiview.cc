@@ -32,6 +32,7 @@
 
 #include "../base/antiprism.h"
 #include "vw_glut.h"
+#include "disp_poly_gl.h"
 
 
 glut_state glut_s;
@@ -172,6 +173,7 @@ int main(int argc, char* argv[])
    glutMotionFunc(motion_cb);
    
    vw_opts opts;
+   opts.set_geom_defs(disp_poly_gl());
    opts.process_command_line(argc, argv);
    opts.set_view_vals(glut_s.scen);
 

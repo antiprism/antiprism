@@ -195,7 +195,7 @@ class geom_disp
 
       ///Display geometry as OpenGL.
       /**\param scen the scene that the display is part of.*/
-      virtual void gl_geom(const scene &scen)=0;
+      virtual void gl_geom(const scene &/*scen*/) {};
 
       ///Update animated properties.
       virtual void animate() {}

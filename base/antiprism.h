@@ -45,7 +45,6 @@
 #include "disp_poly.h"
 #include "vrml_writer.h"
 #include "pov_writer.h"
-#include "gl_writer.h"
 #include "polygons.h"
 
 #endif // ANTIPRISM_H

@@ -14,7 +14,9 @@ AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_CPP
 #AC_DISABLE_SHARED
-#AC_DISABLE_STATIC
+AC_DISABLE_STATIC
+
+AC_LANG([C++])
 
 LT_INIT([win32_dll])
 #AC_LIBTOOL_WIN32_DLL
@@ -62,16 +64,6 @@ else
    echo
 fi
 
-# Allow newly installed binaries to find installed library
-#if $CC -Wl,-rpath,/usr/lib -S -o /dev/null -xc /dev/null >/dev/null 2>&1;
-#then
-#   AM_CONDITIONAL(USE_RPATH_FLAGS, true)
-#   echo "can add -Wl,-rpath to LDFLAGS"
-#else
-#   AM_CONDITIONAL(USE_RPATH_FLAGS, false)
-#   echo "cannot add -Wl,-rpath to LDFLAGS"
-#fi
-
 # Add -fno-strict-aliasing to CFLAGS if accepted
 ALIASING_FLAG=
 if $CC -fno-strict-aliasing -S -o /dev/null -xc /dev/null >/dev/null 2>&1;
@@ -81,39 +73,6 @@ then
 fi
 AC_SUBST(ALIASING_FLAG)
 
-
-AC_CANONICAL_HOST
-case $host_os in
-  *cygwin* ) HOST_CYGWIN=yes;;
-         * ) HOST_CYGWIN=no;;
-esac
-
-case $host_os in
-  *mingw* )  HOST_MINGW=yes;;
-         * ) HOST_MINGW=no;;
-esac
-
-
-ADD_X_PATHS=yes
-if test x"$HOST_MINGW" = x"yes" ; then
-   ADD_X_PATHS=no
-fi
-
-if test x"$HOST_CYGWIN" = x"yes" ; then
-   AC_CHECK_LIB([GL], [glBegin], [ADD_X_PATHS=no], [
-      AC_CHECK_LIB([opengl32], [main], [ADD_X_PATHS=no])] )
-fi
-
-
-if test x"$ADD_X_PATHS" = x"yes" ; then
-   AC_PATH_X
-   if test x"$x_libraries" != x"NONE" -a x"$x_libraries" != x; then
-      LDFLAGS="$LDFLAGS -L$x_libraries"
-   fi
-   if test x"$x_includes" != x"NONE" -a x"$x_libraries" != x; then
-      CPPFLAGS="$CPPFLAGS -I$x_includes"
-   fi
-fi
 
 AC_CHECK_FUNC([gettimeofday], [utimer=1], [utimer=0])
 if test $utimer = 0 ; then
@@ -134,14 +93,66 @@ if test $utimer = 0 ; then
 fi
 
 AC_CHECK_LIB([m], [acos])
-AC_CHECK_LIB([GL], [glBegin], LIBS="-lGL $LIBS", [
-   AC_CHECK_LIB([opengl32], [main])] )
 
-FOUND_GLU=1
-AC_CHECK_LIB([GLU], [gluBeginCurve], LIBS="-lGLU $LIBS", [
-   AC_CHECK_LIB([glu32], [main], LIBS="-lglu32 $LIBS", FOUND_GLU=0)] )
+NO_GLUT=0
+GLUT=1
+OPENGLUT=2
+FREEGLUT=3
 
-AC_CHECK_HEADERS([GL/gl.h GL/glu.h], [], [FOUND_GLU=0])
+glut_type=$NO_GLUT
+AC_ARG_WITH(
+   [openglut],
+   [AS_HELP_STRING([--with-openglut], [build using OpenGLUT])],
+   [glut_type=$OPENGLUT],
+   [AC_ARG_WITH([freeglut],
+         [AS_HELP_STRING([--with-freeglut], [build using Freeglut])],
+         [glut_type=$FREEGLUT])]
+)
+
+AC_PATH_X
+no_x_possibilities="yes"
+if test x"$no_x" = x"yes" ; then
+   no_x_possibilities="yes no"
+fi
+
+FOUND_GLU=0
+for no_x in $no_x_possibilities; do
+   AX_CHECK_GL
+   if test ! x"$no_gl" = x"yes" ; then
+      AX_CHECK_GLU
+      if test ! x"$no_glu" = x"yes" ; then
+         FOUND_GLU=1
+         GLPROG_LIBS = "$GLU_LIBS $GL_LIBS $LIBS"
+         GLPROG_CXXFLAGS = "$GLU_CFLAGS $LIBS"
+         if test $glut_type = $NO_GLUT ; then
+            AX_CHECK_GLUT
+            if test ! x"$no_glut" = x"yes" ; then
+               glut_type=$GLUT
+            fi
+         else
+            if test $glut_type = $OPENGLUT ; then
+            AC_CHECK_HEADER([GL/openglut.h], [
+            AC_CHECK_LIB([openglut], [main],
+               [GLUT_LIBS="-lopenglut"; glut_type=$OPENGLUT],
+               [glut_type=$NOGLUT] )
+            ])
+            else
+               if test $glut_type = $FREEGLUT ; then
+               AC_CHECK_HEADER([GL/freeglut.h], [
+               AC_CHECK_LIB([freeglut], [main],
+                  [GLUT_LIBS="-lfreeglut"; glut_type=$FREEGLUT],
+                  [glut_type=$NOGLUT] )
+               ])
+               fi
+            fi
+         fi
+      fi
+      if FOUND_GL=1 ; then
+         # Do not use X if not required; if no_x is yes then leave it as yes
+         break
+      fi
+   fi
+done
 
 if test $FOUND_GLU = 0 ; then
    echo
@@ -155,20 +166,11 @@ fi
 AH_TEMPLATE([FOUND_GLU], [The GL and GLU libraries and headers were found])
 AC_DEFINE_UNQUOTED([FOUND_GLU], [$FOUND_GLU])
 AC_SUBST(FOUND_GLU)
+AC_SUBST(GLPROG_LIBS)
+AC_SUBST(GLPROG_CXXFLAGS)
 
-NO_GLUT=0
-GLUT=1
-OPENGLUT=2
 
-AC_CHECK_LIB([glut], [glutSwapBuffers], [GLUT_LIB="-lglut"; glut_type=$GLUT],[
-   AC_CHECK_LIB([openglut], [main],
-      [GLUT_LIB="-lopenglut"; glut_type=$OPENGLUT], [
-   AC_CHECK_LIB([glut32], [main], [GLUT_LIB="-lglut32"; glut_type=$GLUT],
-      [GLUT_LIB=""; glut_type=$NO_GLUT] )] )] )
-
-AC_CHECK_HEADERS([GL/glut.h], , [glut_type=$NO_GLUT])
-
-if test $glut_type = 0 ; then
+if test $glut_type = $NO_GLUT ; then
    echo
    echo "*********************************************"
    echo "   missing GLUT library or header"
@@ -190,7 +192,8 @@ else
    echo
 fi
 
-AC_SUBST(GLUT_LIB)
+AC_SUBST(GLUT_LIBS)
+AC_SUBST(GLUT_CFLAGS)
 
 AH_TEMPLATE([GLUT_TYPE], [The GLUT library that will used 1=GLUT, 2=OpenGLUT])
 AC_DEFINE_UNQUOTED([GLUT_TYPE], [$glut_type])
@@ -236,6 +239,7 @@ AC_CHECK_FUNCS([floor memset pow sqrt strchr strcspn strpbrk strrchr strspn strs
 
 AC_CONFIG_FILES([Makefile
                  aview/Makefile
+                 base/tesselator/Makefile
                  base/Makefile
                  src/Makefile
                  src_extra/Makefile

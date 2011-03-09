@@ -34,6 +34,7 @@
 #include <GL/glu.h>
 
 #include "../base/antiprism.h"
+#include "gl_writer.h"
 
 #ifdef HAVE_CONFIG_H
    #include "../config.h"

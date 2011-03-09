@@ -1,7 +1,7 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = base src src_extra
+SUBDIRS = base/tesselator base src src_extra
 if BUILD_ANTIVIEW
 SUBDIRS += aview
 endif

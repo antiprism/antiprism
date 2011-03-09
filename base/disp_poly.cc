@@ -37,7 +37,6 @@
 #include "disp_poly.h"
 #include "vrml_writer.h"
 #include "pov_writer.h"
-#include "gl_writer.h"
       
 
 disp_poly::disp_poly(): triangulate(true), face_alpha(-1), use_lines(false)  
@@ -779,164 +778,6 @@ void disp_poly::pov_geom(FILE *ofile, const scene &, int sig_digits)
 #endif
 
 
-#if FOUND_GLU == 1
-
-#include <GL/gl.h>
-#include <GL/glu.h>
-
-
-extern unsigned char stippleMask[17][128];
-
-void gl_set_material(col_val col = vec3d(.5,.5,.5), bool trans=true,
-      bool both_sides=true);
- 
-void gl_set_material(col_val col, bool trans, bool both_sides)
-{
-   vec4d cv = col.get_vec4d();
-   int sides = both_sides ? GL_FRONT_AND_BACK : GL_FRONT;
-   GLfloat f_specular[] = { cv[0]/2, cv[1]/2, cv[2]/2, 1.0 };
-   GLfloat f_diffuse[] = { cv[0], cv[1], cv[2], 1.0 };
-   GLfloat f_shininess[] = { 100.0 };
-   glMaterialfv(sides, GL_SPECULAR, f_specular);
-   glMaterialfv(sides, GL_DIFFUSE, f_diffuse);
-   glMaterialfv(sides, GL_SHININESS, f_shininess);
-   if(trans)
-      glPolygonStipple(stippleMask[int(cv[3]*16+0.5)]);
-}
-
- 
-
-void disp_poly::gl_verts(const scene &scen)
-{
-   double v_rad = get_vert_rad();
-   double extra = 10*v_rad/scen.get_width();
-   int long_div = int(11*(1+extra));
-   int lat_div = int(7*(1+extra));
-   GLUquadric *quad = gluNewQuadric();
-   GLuint sph = glGenLists(1);
-   glNewList(sph, GL_COMPILE);
-   gluSphere(quad, v_rad, long_div, lat_div);
-   glEndList();
-   
-   const vector<vec3d> &verts = disp_geom.verts();
-   for(unsigned int i=0; i<verts.size(); i++) { 
-      col_val col = disp_geom.get_v_col((int)i);
-      if(col.is_idx())
-         col = get_v_clrng().get_col(col.get_idx());
-      if(!col.is_val())
-         col = get_def_v_col(); // use default
-      if(col.is_inv())
-         continue;
-
-      gl_set_material(col, get_elem_trans(), false);
-      glPushMatrix();
-      glTranslated(verts[i][0], verts[i][1], verts[i][2]);
-      glCallList(sph);
-      glPopMatrix();
-   }
-   glDeleteLists(sph, 1);
-   gluDeleteQuadric(quad);
-}
-
-static void edge_cyl_trans(vec3d p1, vec3d p2)
-{
-   vec3d p1to2 = p2 - p1;
-   glTranslated(p1[0], p1[1], p1[2]);
-   mat3d rot = mat3d::rot(vec3d(0,0,1), p1to2);
-   glMultMatrixd(rot.transpose().get_m());
-   glScaled(1, 1, p1to2.mag());
-} 
-
-
-void disp_poly::gl_edges(const scene &scen)
-{
-   double e_rad = get_edge_rad();
-   double extra = 10*e_rad/scen.get_width();
-   int long_div = int(11*(1+extra));
-   int lat_div = 1;
-   
-   GLUquadric *quad = gluNewQuadric();
-   GLuint cyl = glGenLists(1);
-   glNewList(cyl, GL_COMPILE);
-   gluCylinder(quad, e_rad, e_rad, 1, long_div, lat_div);
-   glEndList();
-   
-   const vector<vec3d> &verts = disp_geom.verts();
-   const vector<vector<int> > &edges = disp_geom.edges();
-   for(unsigned int i=0; i<edges.size(); i++) { 
-      col_val col = disp_geom.get_e_col((int)i);
-      if(col.is_idx())
-         col = get_e_clrng().get_col(col.get_idx());
-      if(!col.is_val())
-         col = get_def_e_col(); // use default
-      if(col.is_inv())
-         continue;
-
-      gl_set_material(col, get_elem_trans(), false);
-      glPushMatrix();
-      edge_cyl_trans(verts[edges[i][0]], verts[edges[i][1]]);
-      glCallList(cyl);
-      glPopMatrix();
-   }
-   glDeleteLists(cyl, 1);
-   gluDeleteQuadric(quad);
-}
-
-
-void disp_poly::gl_faces(const scene &)
-{
-   const vector<vec3d> &verts = disp_geom.verts();
-   const vector<vector<int> > &faces = disp_geom.faces();
-   for(unsigned int i=0; i<faces.size(); i++) { 
-      if(faces[i].size()<3)
-         continue;
-      col_val col = disp_geom.get_f_col((int)i);
-      if(col.is_idx())
-         col = get_f_clrng().get_col(col.get_idx());
-      if(!col.is_val())
-         col = get_def_f_col(); // use default
-      if(col.is_inv())
-         continue;
-
-      gl_set_material(col, get_elem_trans());
-      glBegin(GL_POLYGON);
-      vec3d norm = face_norm(verts,faces[i]);
-      glNormal3dv(norm.get_v());
-      for(unsigned int j=0; j<faces[i].size(); j++)
-         glVertex3dv(verts[faces[i][j]].get_v());
-      glEnd();
-   }
-}
-
-#else
-
-void disp_poly::gl_verts(const scene &) {}
-void disp_poly::gl_edges(const scene &) {}
-void disp_poly::gl_faces(const scene &) {}
-
-#endif // FOUND_GLU == 1
-
-
-void disp_poly::gl_geom(const scene &scen)
-{
-   if(v().get_show())
-      gl_verts(scen);
-   if(f().get_show())
-      gl_faces(scen);
-   if(e().get_show())
-      gl_edges(scen);
-}
-
-
-
-
-
-
-
-
-
-
-
 // --------------------------------------------------------------
 // disp_num_labels 
 
@@ -1144,145 +985,6 @@ void disp_num_labels::vrml_geom(FILE *ofile, const scene &scen, int)
    vrml_translation_end(ofile);
 }      
 
-
-#if FOUND_GLU == 1
-
-#include <GL/gl.h>
-#include <GL/glu.h>
-
-
-static void draw_text(char *str, double font_sz, vec3d pos, int halign=1,
-      int valign=1, bool bill=true,
-      const anti_StrokeFont*font=ANTI_STROKE_ROMAN)
-{  
-   const float drop = 33.33;
-   const float height = 152.38;
-   float scale = font_sz/height;
-   float width = antiStrokeLength(font, (unsigned char *)str);
-  
-   float off_x=0, off_y=0;
-   switch(halign) {
-      case 0: // left
-         off_x=0;
-         break;
-      case 1: // centre
-         off_x -= 0.5 * width;
-         break;
-      case 2: // right
-         off_x -= width;
-         break;
-   }
-   
-   switch(valign) {
-      case 0: // bottom
-         off_y -= -drop;
-         break;
-      case 1: // centre
-         off_y -= height/2 - drop;
-         break;
-      case 2: // right
-         off_y -= height - drop;
-         break;
-      case 3: // right
-         off_y = 0;
-         break;
-   }
-   
-   glLineWidth(1.5);
-   glPushMatrix();
-   glTranslated(pos[0], pos[1], pos[2]);
-   
-   if(bill) {
-      float m[16];
-      glGetFloatv(GL_MODELVIEW_MATRIX , m);
-      for(int i=0; i<3; i++ ) 
-         for(int j=0; j<3; j++ ) {
-            if ( i==j )
-               m[i*4+j] = 1;
-            else
-               m[i*4+j] = 0;
-         }
-      glLoadMatrixf(m);
-   }
-  
-   glScalef(scale, scale, scale);
-   glTranslatef(off_x, off_y, 0);
-   glNormal3f(0,0,1);
-   for (char *c=str; *c ; c++)
-      antiStrokeCharacter(font, *c);
-   glPopMatrix();
-}
-
-
-
-static void gl_write_label(char *label, vec3d pos, const camera &cam)
-{
-   draw_text(label, cam.get_text_sz(pos), pos);
-}
-
-
-void disp_num_labels::gl_verts(const scene &scen)
-{
-   col_geom_v &geom = sc_geom->get_geom();
-   gl_set_material(get_label_col(v().get_col()), get_elem_trans());
-   char label[64];
-   const vector<vec3d> &verts = geom.verts();
-   for(unsigned int i=0; i<verts.size(); i++) {
-      if(geom.get_v_col((int)i).is_inv())
-         continue;
-      sprintf(label, "%u", i);
-      gl_write_label(label, sc_geom->get_v_label_pos(i), scen.cur_camera());
-   }
-}
-
-void disp_num_labels::gl_edges(const scene &scen)
-{
-   col_geom_v &geom = sc_geom->get_geom();
-   gl_set_material(get_label_col(e().get_col()), get_elem_trans());
-   char label[64];
-   const vector<vector<int> > &edges = geom.edges();
-   for(unsigned int i=0; i<edges.size(); i++) { 
-      if(geom.get_e_col((int)i).is_inv())
-         continue;
-      sprintf(label, "%u", i);
-      gl_write_label(label, sc_geom->get_e_label_pos(i), scen.cur_camera());
-   }
-}
-
-
-void disp_num_labels::gl_faces(const scene &scen)
-{
-   col_geom_v &geom = sc_geom->get_geom();
-   gl_set_material(get_label_col(f().get_col()), get_elem_trans());
-   char label[64];
-   const vector<vector<int> > &faces = geom.faces();
-   for(unsigned int i=0; i<faces.size(); i++) { 
-      if(geom.get_f_col((int)i).is_inv())
-         continue;
-      sprintf(label, "%u", i);
-      gl_write_label(label, sc_geom->get_f_label_pos(i), scen.cur_camera());
-   }
-}
-
-#else
-
-void disp_num_labels::gl_verts(const scene &) {}
-void disp_num_labels::gl_edges(const scene &) {}
-void disp_num_labels::gl_faces(const scene &) {}
-
-#endif // FOUND_GLU == 1
-
-
-void disp_num_labels::gl_geom(const scene &scen)
-{
-   //camera->set_label_rot();
-   if(v().get_show())
-      gl_verts(scen);
-   if(f().get_show())
-      gl_faces(scen);
-   if(e().get_show())
-      gl_edges(scen);
-}
 
 
 // --------------------------------------------------------------
@@ -1527,12 +1229,6 @@ void disp_sym::pov_geom(FILE *ofile, const scene &scen, int /*sig_dgts*/)
    disp_poly::pov_geom(ofile, scen, 4);
 }
 
-void disp_sym::gl_geom(const scene &scen)
-{
-   disp_poly::gl_geom(scen);
-}
-
-
 
 // --------------------------------------------------------------
 // Other functions
@@ -1550,12 +1246,12 @@ void view_opts::set_view_vals(scene &scen)
       if(*errmsg)
          warning(errmsg);
    
-      if((geom_defs.e().get_col()!=col_val(0,0,0,0)))
+      if((get_geom_defs().e().get_col()!=col_val(0,0,0,0)))
          geom.add_missing_impl_edges();
       
       scene_geom sc_geom;
       sc_geom.set_scene(&scen);
-      sc_geom.add_disp(geom_defs);
+      sc_geom.add_disp(get_geom_defs());
       sc_geom.set_label(lab_defs);
       sc_geom.set_sym(sym_defs);
       //fprintf(stderr, "before geom = %p\n", sc_geom.get_sym
@@ -1633,7 +1329,7 @@ bool view_opts::read_disp_option(char opt, char *optarg, char *errmsg,
    switch(opt) {
       case 'v':
          if(strcmp(optarg, "b")==0) {
-            geom_defs.v().set_size(geom_disp::rad_ball);
+            get_geom_defs().v().set_size(geom_disp::rad_ball);
          }
          else {
             if(!read_double(optarg, &val, errmsg2))
@@ -1641,7 +1337,7 @@ bool view_opts::read_disp_option(char opt, char *optarg, char *errmsg,
             else if(val < 0)
                strcpy(errmsg, "vertex sphere radius cannot be negative");
             else
-               geom_defs.v().set_size(val);
+               get_geom_defs().v().set_size(val);
          }
          break;
 
@@ -1651,32 +1347,32 @@ bool view_opts::read_disp_option(char opt, char *optarg, char *errmsg,
             else if(val < 0)
                strcpy(errmsg, "edge cylinder radius cannot be negative");
             else
-               geom_defs.e().set_size(val);
+               get_geom_defs().e().set_size(val);
             break;
 
          case 'V':
             if(!col.read(optarg, errmsg2))
                strcpy(errmsg, errmsg2);
             else
-               geom_defs.v().set_col(col);
+               get_geom_defs().v().set_col(col);
             break;
             
          case 'E':
             if(!col.read(optarg, errmsg2))
                strcpy(errmsg, errmsg2);
             else
-               geom_defs.e().set_col(col);
+               get_geom_defs().e().set_col(col);
             break;
          
          case 'F':
             if(!col.read(optarg, errmsg2))
                strcpy(errmsg, errmsg2);
             else
-               geom_defs.f().set_col(col);
+               get_geom_defs().f().set_col(col);
             break;
 
          case 'm':
-            if(!read_colorings(geom_defs.get_clrngs(), optarg, errmsg2))
+            if(!read_colorings(get_geom_defs().get_clrngs(), optarg, errmsg2))
                strcpy(errmsg, errmsg2);
             else if(*errmsg2)
                warnings.push_back(errmsg2);
@@ -1688,11 +1384,11 @@ bool view_opts::read_disp_option(char opt, char *optarg, char *errmsg,
                      "from v, e, or f", optarg);
             else {
                if(strchr(optarg, 'v'))
-                  geom_defs.v().set_show(false);
+                  get_geom_defs().v().set_show(false);
                if(strchr(optarg, 'e'))
-                  geom_defs.e().set_show(false);
+                  get_geom_defs().e().set_show(false);
                if(strchr(optarg, 'f'))
-                  geom_defs.f().set_show(false);
+                  get_geom_defs().f().set_show(false);
             }
             break;
 
@@ -1730,7 +1426,7 @@ bool view_opts::read_disp_option(char opt, char *optarg, char *errmsg,
             else if(num < 0 || num >1)
                strcpy(errmsg, "display type for faces must be 0 or 1");
             else
-               geom_defs.set_triangulate(num);
+               get_geom_defs().set_triangulate(num);
             break;
 
 

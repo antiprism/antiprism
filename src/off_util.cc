@@ -568,7 +568,6 @@ void make_edges_to_faces(geom_if &geom)
 
 void triangulate_faces(geom_if &geom)
 {
-   geom.add_missing_impl_edges();
    geom.triangulate(col_val::invisible);
 }
 

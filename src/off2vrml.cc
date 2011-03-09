@@ -97,7 +97,7 @@ void o2v_opts::process_command_line(int argc, char **argv)
             break;
                
          case 'l':
-            geom_defs.set_use_lines(true);
+            get_geom_defs().set_use_lines(true);
             break;
 
          case 'd':

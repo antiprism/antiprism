@@ -1,4 +1,3 @@
-
 /*
    Copyright (c) 2003-2008, Adrian Rossiter
 
@@ -31,14 +30,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <map>
 #include <algorithm>
 
+#include "tesselator/glu.h"
 #include "geom.h"
 
 #ifdef HAVE_CONFIG_H
    #include "../config.h"
 #endif
 
+#define APIENTRY 
 
 void triangulate_basic(geom_if &geom, bool sq_diag, col_val inv,
       vector<int> *fmap)
@@ -99,10 +101,7 @@ void triangulate_basic(geom_if &geom, bool sq_diag, col_val inv,
    geom.delete_faces(del_faces);
 }
 
-#if(FOUND_GLU)
 
-#include <GL/gl.h>
-#include <GL/glu.h>
 
 struct face_tris {
    geom_if *geom;
@@ -129,6 +128,7 @@ struct face_tris {
 
 void face_tris::update_faces()
 {
+   std::map< vector<int>, int> edge_cnts;
    for(unsigned int i=0; i<idxs.size()/3; ++i) {
       vector<int> face(3);
       for(int j=0; j<3; ++j)
@@ -137,12 +137,19 @@ void face_tris::update_faces()
       if(cg)
          cg->set_f_col(idx, col);
 
-      if(inv.is_set()) {
-         for(int j=0; j<3; ++j) {
-            vector<int> edge = make_edge(face[j],  face[(j+1)%3]);
-            const vector<vector<int> > &edges = geom->edges();
-            if(find(edges.begin(), edges.end(), edge) == edges.end()) {
-               int eidx = geom->add_edge(edge);
+      if(inv.is_set())
+         for(int j=0; j<3; ++j)
+            edge_cnts[make_edge(face[j],  face[(j+1)%3])]++;
+   }
+
+   if(inv.is_set()) {
+      const vector<vector<int> > &edges = geom->edges(); 
+      std::map< vector<int>, int>::const_iterator mi;
+      for(mi=edge_cnts.begin(); mi!=edge_cnts.end(); ++mi) {
+         if(mi->second==2) { // new edge internal to a face
+            if(find(edges.begin(),edges.end(), mi->first) == edges.end()) {
+               // new edge is not an explicit edge so add as an invisible edge
+               int eidx = geom->add_edge(mi->first);
                if(cg)
                   cg->set_e_col(eidx, inv);
             }
@@ -151,8 +158,8 @@ void face_tris::update_faces()
    }
 }
 
-// Dummy callback ensures GL_TRIANGLES are used
-extern "C" APIENTRY void tri_eflag(GLboolean)
+// Dummy callback ensures localGL_TRIANGLES are used
+extern "C" APIENTRY void tri_eflag(localGLboolean)
 {
 }
 
@@ -163,8 +170,8 @@ extern "C" APIENTRY void tri_vert(void *vdata, void *data)
    f_tris->idxs.push_back(idx);
 }
 
-extern "C" APIENTRY void tri_combine(GLdouble coords[3],
-      GLdouble **, GLfloat *, void **dataOut, void *data )
+extern "C" APIENTRY void tri_combine(localGLdouble coords[3],
+      localGLdouble **, localGLfloat *, void **dataOut, void *data )
 {
    vec3d *v = new vec3d(coords[0], coords[1], coords[2]);
    face_tris *f_tris = (face_tris *)data;
@@ -177,37 +184,39 @@ extern "C" APIENTRY void tri_combine(GLdouble coords[3],
 }
 
 
-class tesselator {
+class anti_tesselator {
    private:
-      GLUtesselator *tess;
+      localGLUtesselator *tess;
 
    public:
-      tesselator();
-      ~tesselator();
-      operator GLUtesselator *() { return tess; }
+      anti_tesselator();
+      ~anti_tesselator();
+      operator localGLUtesselator *() { return tess; }
 
 };
       
-tesselator::tesselator()
+anti_tesselator::anti_tesselator()
 {
-   tess = gluNewTess();
-   gluTessProperty(tess, GLU_TESS_WINDING_RULE, GLU_TESS_WINDING_NONZERO);
-   gluTessCallback(tess, GLU_TESS_EDGE_FLAG, (_GLUfuncptr)tri_eflag);
-   gluTessCallback(tess, GLU_TESS_VERTEX_DATA, (_GLUfuncptr)tri_vert);
-   gluTessCallback(tess, GLU_TESS_COMBINE_DATA, (_GLUfuncptr)tri_combine);
+   tess = localgluNewTess();
+   localgluTessProperty(tess, localGLU_TESS_WINDING_RULE, localGLU_TESS_WINDING_NONZERO);
+   localgluTessCallback(tess, localGLU_TESS_EDGE_FLAG, (_localGLfuncptr)tri_eflag);
+   localgluTessCallback(tess, localGLU_TESS_VERTEX_DATA, (_localGLfuncptr)tri_vert);
+   localgluTessCallback(tess, localGLU_TESS_COMBINE_DATA, (_localGLfuncptr)tri_combine);
 }
    
-tesselator::~tesselator()
+anti_tesselator::~anti_tesselator()
 {
-   gluDeleteTess(tess);
+   localgluDeleteTess(tess);
 }
 
 
 void triangulate(geom_if &geom, col_val inv, vector<int> *fmap)
 {
-   tesselator tess;
+   anti_tesselator tess;
    col_geom *cg = dynamic_cast<col_geom *>(&geom);
    vector<vector<int> > faces = geom.faces();
+   vector<vector<int> > impl_edges;
+   geom.get_impl_edges(impl_edges);
    map<int, col_val> fcolmap;
    if(cg)
       fcolmap = cg->face_cols();
@@ -236,26 +245,18 @@ void triangulate(geom_if &geom, col_val inv, vector<int> *fmap)
       }
       else {
          face_tris f_tris(&geom, col, inv);
-         gluTessBeginPolygon(tess, &f_tris);
+         localgluTessBeginPolygon(tess, &f_tris);
          for(unsigned int j=0; j<faces[i].size(); j++) {
             double vtx[3]; // tesselator sometimes fails when using doubles (?)
             vtx[0] = (float)verts[faces[i][j]][0];
             vtx[1] = (float)verts[faces[i][j]][1];
             vtx[2] = (float)verts[faces[i][j]][2];
-            gluTessVertex(tess, vtx, &faces[i][j]);
+            localgluTessVertex(tess, vtx, &faces[i][j]);
          }
-         gluEndPolygon(tess);
+         localgluTessEndPolygon(tess);
       }
    }
 }
 
-#else // not (FOUND_GLU)
-
-void triangulate(geom_if &geom, col_val inv, vector<int> *fmap)
-{
-   triangulate_basic(geom, true, inv, fmap);
-}
-
-#endif // (FOUND_GLU)
 
 
