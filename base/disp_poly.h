@@ -30,7 +30,7 @@
 #ifndef DISP_POLY_H
 #define DISP_POLY_H
 
-#include "../base/antiprism.h"
+#include "scene.h"
 
 class disp_poly : public geom_disp
 {
