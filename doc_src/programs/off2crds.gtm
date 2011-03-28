@@ -34,7 +34,7 @@ Examples
 
 Coordinates of a cube's vertices
 <PRE>
-   unipoly cube | off2crds -o cube_coords.txt
+   off2crds -o cube_coords.txt cube
 </PRE>
    
 <H2><A NAME="notes">

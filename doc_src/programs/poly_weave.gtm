@@ -34,13 +34,13 @@ Examples
 
 An interwoven set of six pentagons
 <PRE>
-   unipoly icosahedron | poly_weave -o woven_pents.off
+   poly_weave -o woven_pents.off icosahedron
 </PRE>
 
 An interwoven set of six pentagons. To show the circuits of the
 weave, colour the edges by face colour and hide the faces
 <PRE>
-   unipoly icosahedron | poly_weave | off_color -f U -e F | antiview -v 0.1 -x f
+   poly_weave icosahedron | off_color -f U -e F | antiview -v 0.1 -x f
 </PRE>
 
 <H2><A NAME="notes">

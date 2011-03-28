@@ -38,7 +38,7 @@ Display some polyhedra
 </PRE>
 Colour a polyhedron by polygon type and display it
 <PRE>
-   unipoly truncated cubo | off_color -f N -s 60| antiview
+   off_color -f N tr_cuboctahedron | antiview
 </PRE>
 Display a ball pack as balls
 <PRE>
@@ -46,20 +46,20 @@ Display a ball pack as balls
 </PRE>
 Draw an icosahedron without its faces
 <PRE>
-   unipoly icosahedron | antiview -x f
+   antiview -x f icosahedron
 </PRE>
 Display a proper coloured icosahedron without its vertex or edge elements
 <PRE>
-   unipoly icosahedron | off_color -f P | antiview -x ve 
+   off_color -f P icosahedron | antiview -x ve 
 </PRE>
 Display an icosahedron with thin vertex and edge elements
 <PRE>
-   unipoly icosahedron | antiview -v 0.01 -e 0.008
+   antiview -v 0.01 -e 0.008 icosahedron
 </PRE>
 Display an icosahedron-based weave, excluding faces, and showing the
 edges in the face colour
 <PRE>
-   unipoly icosahedron | poly_weave | off_color -f U -e F | antiview -v 0.1 -x f
+   poly_weave icosahedron | off_color -f U -e F | antiview -v 0.1 -x f
 </PRE>
 
 <H2><A NAME="notes">

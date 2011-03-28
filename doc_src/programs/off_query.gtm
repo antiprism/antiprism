@@ -35,7 +35,7 @@ Examples
 List the angles around each vertex of a cuboctahedron
 
 <PRE>
-   unipoly cuboct | off_query -I - VF -d 6
+   off_query -I - VF -d 6 cubo
 </PRE>
 
 List the edge lengths of edges 5 to 10, 50 to 60 and 100 of a geodesic sphere
@@ -48,19 +48,19 @@ Find the distance between opposite vertices of a unit-edged
 icosahedron.
 
 <PRE>
-   unipoly icosahedron | off_trans -s e | off_query -e 0,11 El
+   off_trans -s e icosahedron | off_query -e 0,11 El
 </PRE>
 
 Find the angles between three vertices not on the same face
 
 <PRE>
-   unipoly icosahedron | off_trans -s e | off_query -f 0,1,11 Fa
+   off_trans -s e icosahedron | off_query -f 0,1,11 Fa
 </PRE>
 
 Find the angles between two vertices and a supplied vertex
 
 <PRE>
-   unipoly icosahedron | off_trans -s e | off_query -v 1.0,0.0,0.0 -f 0,E0,11 Fa
+   off_trans -s e icosahedron | off_query -v 1.0,0.0,0.0 -f 0,E0,11 Fa
 </PRE>
 
 <H2><A NAME="notes">

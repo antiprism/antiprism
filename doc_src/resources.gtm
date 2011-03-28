@@ -68,7 +68,7 @@ all the faces will be removed.
 <H3>How do particular programs use edges?</H3>
 
 <DL>
-<DT><I>Model programs: polygon, unipoly</I>
+<DT><I>Model programs: polygon, also named models</I>
 <DD>These tend not to include edges in the OFF output. Edges can be added
     afterwards with <I>off_color -e</I>. However, some programs e.g.
     <I>lat_grid</I>, use edges to represent struts.

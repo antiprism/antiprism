@@ -12,10 +12,10 @@ way of making the model is given at the end.
 
 <H3>1. Make a cube</H3>
 
-This can be done with <I>unipoly</I>, which can be used to make all
-the uniform polyhedra.
+A cube can be constructed by name, and any named polyhedron can be
+output using <I>off_util</I>
 <PRE>
-   unipoly cube &gt; cube.off
+   off_util cube &gt; cube.off
 </PRE>
 
 <IMG SRC="cub_oct01.gif" ALT="" HEIGHT=120 WIDTH=160 ALIGN=RIGHT>
@@ -34,7 +34,7 @@ to be the distance from the cube centre to the mid-point of an edge, and
 the sphere centre must be the centre of the cube.
 <P>
 <IMG SRC="cub_oct02a.gif" ALT="" HEIGHT=120 WIDTH=160 ALIGN=RIGHT>
-<I>unipoly</I> has centred the cube on (0, 0, 0), but <I>pol_recip</I>
+The cube was originally centred on (0, 0, 0), but <I>pol_recip</I>
 will find this appropriate reciprocation centre by default.
 The radius can be specified using the
 <I>-r</I> option and passing two adjacent vertex index numbers of the cube.

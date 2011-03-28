@@ -43,15 +43,15 @@ Draw the other side of it
 </PRE>
 Draw an icosahedron without its faces
 <PRE>
-   unipoly icosahedron | off2pov -x f -o icosa.pov
+   off2pov -x f -o icosa.pov icosahedron
 </PRE>
 Draw an icosahedron without its vertex or edge elements
 <PRE>
-   unipoly icosahedron | off2pov -x ve -o icosa.pov
+   off2pov -x ve -o icosa.pov icosahedron
 </PRE>
 Draw an icosahedron with thin vertex and edge elements
 <PRE>
-   unipoly icosahedron | off2pov -v 0.01 -e 0.008 -o icosa.pov
+   off2pov -v 0.01 -e 0.008 -o icosa.pov icosahedron
 </PRE>
 
 <H2><A NAME="notes">

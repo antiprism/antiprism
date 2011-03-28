@@ -38,7 +38,7 @@ A medium sized polar zonohedron
 </PRE>
 A rhombic triacontaahedron
 <PRE>
-   unipoly icosahedron | zono -m v -o rh_tri.off
+   zono -m v -o rh_tri.off icosahedron
 </PRE>
 
 <H2><A NAME="notes">

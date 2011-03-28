@@ -35,7 +35,7 @@ Examples
 Make a cuboctahedron with the triangle faces a different colour to
 the square faces
 <PRE>
-   unipoly cuboctahedron | off_color -f N -o cubo.off
+   off_color -f N -o cubo.off cuboctahedron
 </PRE>
 Same again, but make the colours black and white. Create a file called
 my_colormap.txt with these two lines which convert index numbers into colour
@@ -47,7 +47,7 @@ their number of sides).
 </PRE>
 Now the command is
 <PRE>
-   unipoly cuboctahedron | off_color -f n -m my_colormap.txt -o cubo.off
+   off_color -f n -m my_colormap.txt -o cubo.off cuboctahedron
 </PRE>
 
 Colour faces with unique colours

@@ -15,11 +15,12 @@ using <I>off_align -F</I>.
 <H3>1. Make an icosahedron</H3>
 
 <IMG SRC="icosahx01.gif" ALT="" HEIGHT=120 WIDTH=160 ALIGN=RIGHT>
-This can be done with <I>unipoly</I>, which can be used to make all
-the uniform polyhedra.
+An icosahedron can be constructed by name, and any named polyhedron can be
+output using <I>off_util</I>
 <PRE>
-   unipoly icosahedron &gt; icosa.off
+   off_util icosahedron &gt; icosa.off
 </PRE>
+
 Display with
 <PRE>
    off2pov -o icosa.pov icosa.off

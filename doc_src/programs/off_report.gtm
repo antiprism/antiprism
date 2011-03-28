@@ -41,13 +41,13 @@ Full report
 Volume and area of a unit edged icosahedron
 
 <PRE>
-   unipoly icosahedron | off_trans -s e | off_report -S G
+   off_trans -s e icosahedron | off_report -S G
 </PRE>
 
 Report all angle information for a rhombic dodecahedron
 
 <PRE>
-   unipoly cuboctahedron | pol_recip | off_report -S Sa -C SD
+   pol_recip cuboctahedron | off_report -S Sa -C SD
 </PRE>
 
 <H2><A NAME="notes">
