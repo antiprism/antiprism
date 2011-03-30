@@ -32,7 +32,7 @@
 
 #include "scene.h"
 
-class disp_poly : public geom_disp
+class disp_poly : public virtual geom_disp
 {
    private:
       coloring clrngs[3];
@@ -101,7 +101,7 @@ class disp_poly : public geom_disp
 
 
 
-class disp_num_labels : public geom_disp_label
+class disp_num_labels : public virtual geom_disp_label
 {
    private:
 
@@ -161,10 +161,10 @@ class disp_sym: public virtual disp_poly
 class view_opts: public prog_opts {
    private:
       disp_poly *geom_defs;
+      disp_num_labels *lab_defs;
+      disp_sym *sym_defs;
    public:
       scene scen_defs;
-      disp_num_labels lab_defs;
-      disp_sym sym_defs;
       camera cam_defs;
       
       vector<string> ifiles;
@@ -174,15 +174,15 @@ class view_opts: public prog_opts {
       static const char *help_prec_text;
 
    public:
-      view_opts(const char *name): prog_opts(name)
-         { geom_defs = new disp_poly(); }
-      ~view_opts() { delete geom_defs;}
+      view_opts(const char *name);
+      ~view_opts();
+
       bool read_disp_option(char opt, char *optarg, char *errmsg,
             vector<string> &warnings);
       void set_view_vals(scene &scen);
-      void set_geom_defs(const disp_poly &defs)
-        { delete geom_defs;
-          geom_defs = dynamic_cast<disp_poly *>(defs.clone()); }
+      void set_geom_defs(const disp_poly &defs);
+      void set_num_label_defs(const disp_num_labels &defs);
+      void set_sym_defs(const disp_sym &defs);
       disp_poly &get_geom_defs() { return *geom_defs; }
 };
 

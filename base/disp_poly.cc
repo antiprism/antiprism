@@ -1233,6 +1233,39 @@ void disp_sym::pov_geom(FILE *ofile, const scene &scen, int /*sig_dgts*/)
 // --------------------------------------------------------------
 // Other functions
 
+view_opts::view_opts(const char *name): prog_opts(name)
+{
+   geom_defs = new disp_poly();
+   lab_defs = new disp_num_labels();
+   sym_defs = new disp_sym();
+}
+
+view_opts::~view_opts()
+{ 
+   delete geom_defs;
+   delete lab_defs;
+   delete sym_defs;
+}
+
+void view_opts::set_geom_defs(const disp_poly &defs)
+{
+   delete geom_defs;
+   geom_defs = dynamic_cast<disp_poly *>(defs.clone());
+}
+
+void view_opts::set_num_label_defs(const disp_num_labels &defs)
+{ 
+   delete lab_defs;
+   lab_defs = dynamic_cast<disp_num_labels *>(defs.clone());
+}
+
+void view_opts::set_sym_defs(const disp_sym &defs)
+{ 
+   delete sym_defs;
+   sym_defs = dynamic_cast<disp_sym *>(defs.clone());
+}
+
+
 void view_opts::set_view_vals(scene &scen)
 {
    scen = scen_defs;
@@ -1252,8 +1285,8 @@ void view_opts::set_view_vals(scene &scen)
       scene_geom sc_geom;
       sc_geom.set_scene(&scen);
       sc_geom.add_disp(get_geom_defs());
-      sc_geom.set_label(lab_defs);
-      sc_geom.set_sym(sym_defs);
+      sc_geom.set_label(*lab_defs);
+      sc_geom.set_sym(*sym_defs);
       //fprintf(stderr, "before geom = %p\n", sc_geom.get_sym
       sc_geom.set_geom(geom);
 
@@ -1398,11 +1431,11 @@ bool view_opts::read_disp_option(char opt, char *optarg, char *errmsg,
                      "from v, e, f", optarg);
             else {
                if(strchr(optarg, 'v'))
-                  lab_defs.v().set_show(true);
+                  lab_defs->v().set_show(true);
                if(strchr(optarg, 'e'))
-                  lab_defs.e().set_show(true);
+                  lab_defs->e().set_show(true);
                if(strchr(optarg, 'f'))
-                  lab_defs.f().set_show(true);
+                  lab_defs->f().set_show(true);
             }
             break;
 
@@ -1411,11 +1444,11 @@ bool view_opts::read_disp_option(char opt, char *optarg, char *errmsg,
                snprintf(errmsg, MSG_SZ, "symmetry elements to show are"
                      "'%s' must be from a (all), x, m, r", optarg);
             else {
-               sym_defs.set_show_axes(
+               sym_defs->set_show_axes(
                      strchr(optarg,'x') || strchr(optarg,'a'));
-               sym_defs.set_show_mirrors(
+               sym_defs->set_show_mirrors(
                      strchr(optarg,'m') || strchr(optarg,'a'));
-               sym_defs.set_show_rotrefls(
+               sym_defs->set_show_rotrefls(
                      strchr(optarg,'r') || strchr(optarg,'a'));
             }
             break;

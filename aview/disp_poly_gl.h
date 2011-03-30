@@ -45,7 +45,7 @@ class disp_poly_gl : public virtual disp_poly
 };
 
 
-class disp_num_labels_gl : public disp_num_labels
+class disp_num_labels_gl : public virtual disp_num_labels
 {
    private:
       void gl_faces(const scene &scen);
@@ -58,10 +58,10 @@ class disp_num_labels_gl : public disp_num_labels
  };
 
 
-class disp_sym_gl: public disp_sym, public disp_poly_gl
+class disp_sym_gl: public virtual disp_sym, public virtual disp_poly_gl
 {
    public:
-      geom_disp *clone() const { return new disp_sym(*this); }
+      geom_disp *clone() const { return new disp_sym_gl(*this); }
       void gl_geom(const scene &scen);
 
 };

@@ -195,14 +195,14 @@ class geom_disp
 
       ///Display geometry as OpenGL.
       /**\param scen the scene that the display is part of.*/
-      virtual void gl_geom(const scene &/*scen*/) {};
+      virtual void gl_geom(const scene &/*scen*/) {}
 
       ///Update animated properties.
       virtual void animate() {}
  
 };
 
-class geom_disp_label: public geom_disp
+class geom_disp_label: public virtual geom_disp
 {
    private:
       bool label_light;

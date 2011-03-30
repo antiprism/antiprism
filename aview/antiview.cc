@@ -174,6 +174,8 @@ int main(int argc, char* argv[])
    
    vw_opts opts;
    opts.set_geom_defs(disp_poly_gl());
+   opts.set_num_label_defs(disp_num_labels_gl());
+   opts.set_sym_defs(disp_sym_gl());
    opts.process_command_line(argc, argv);
    opts.set_view_vals(glut_s.scen);
 
