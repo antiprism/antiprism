@@ -13,26 +13,24 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_CPP
-#AC_DISABLE_SHARED
+AC_DISABLE_SHARED
 AC_DISABLE_STATIC
 
 AC_LANG([C++])
 
 LT_INIT([win32_dll])
-#AC_LIBTOOL_WIN32_DLL
-#AC_PROG_LIBTOOL
 
 # Check whether Python module should be built
-AC_ARG_ENABLE( python,
-   [  --disable-python        exclude mod_python and support for metric modules written in python],
-   [ if test x"$enableval" != xyes; then enable_python="no"; fi ], [ enable_python="yes" ] )
+#AC_ARG_ENABLE( python,
+#   [  --disable-python        exclude mod_python and support for metric modules written in python],
+#   [ if test x"$enableval" != xyes; then enable_python="no"; fi ], [ enable_python="yes" ] )
 
-AM_PATH_PYTHON(2.3, [], [enable_python="no"])
+#AM_PATH_PYTHON(2.3, [], [enable_python="no"])
       
 AM_CONDITIONAL(BUILD_PY_MOD, false)
 AM_CONDITIONAL(USE_SWIG, false)
 
-enable_python="disabled" #disable python for this release
+#enable_python="disabled" #disable python for this release
 if test x"$enable_python" = x"yes" ;
 then
    AM_CONDITIONAL(BUILD_PY_MOD, true)
@@ -54,14 +52,14 @@ then
       echo "*********************************************"
       echo
    fi
-else
-   echo
-   echo "*********************************************"
-   echo "   the Python module will not be built"
-   echo "   either configure was run with --disable-python"
-   echo "   or a Python development package is not installed (or found)"
-   echo "*********************************************"
-   echo
+#else
+#   echo
+#   echo "*********************************************"
+#   echo "   the Python module will not be built"
+#   echo "   either configure was run with --disable-python"
+#   echo "   or a Python development package is not installed (or found)"
+#   echo "*********************************************"
+#   echo
 fi
 
 # Add -fno-strict-aliasing to CFLAGS if accepted
@@ -69,7 +67,7 @@ ALIASING_FLAG=
 if $CC -fno-strict-aliasing -S -o /dev/null -xc /dev/null >/dev/null 2>&1;
 then
    ALIASING_FLAG="-fno-strict-aliasing"
-   CXXFLAGS="$ALIASING_FLAG $CXXFLAGS"
+   CPPFLAGS="$ALIASING_FLAG $CXXFLAGS"
 fi
 AC_SUBST(ALIASING_FLAG)
 
@@ -109,50 +107,40 @@ AC_ARG_WITH(
          [glut_type=$FREEGLUT])]
 )
 
-AC_PATH_X
-no_x_possibilities="yes"
-if test x"$no_x" = x"yes" ; then
-   no_x_possibilities="yes no"
-fi
-
 FOUND_GLU=0
-for no_x in $no_x_possibilities; do
-   AX_CHECK_GL
-   if test ! x"$no_gl" = x"yes" ; then
-      AX_CHECK_GLU
-      if test ! x"$no_glu" = x"yes" ; then
-         FOUND_GLU=1
-         GLPROG_LIBS = "$GLU_LIBS $GL_LIBS $LIBS"
-         GLPROG_CXXFLAGS = "$GLU_CFLAGS $LIBS"
-         if test $glut_type = $NO_GLUT ; then
-            AX_CHECK_GLUT
-            if test ! x"$no_glut" = x"yes" ; then
-               glut_type=$GLUT
-            fi
+AX_CHECK_GL
+if test ! x"$no_gl" = x"yes" ; then
+   AX_CHECK_GLU
+   if test ! x"$no_glu" = x"yes" ; then
+      FOUND_GLU=1
+      GLPROG_LIBS="$GLU_LIBS $GL_LIBS $LIBS"
+      GLPROG_CXXFLAGS="$GLU_CFLAGS $LIBS"
+      if test $glut_type = $NO_GLUT ; then
+         AX_CHECK_GLUT
+         if test ! x"$no_glut" = x"yes" ; then
+            glut_type=$GLUT
+         fi
+      else
+         if test $glut_type = $OPENGLUT ; then
+            glut_type=$NO_GLUT
+            AC_CHECK_HEADER([GL/openglut.h],
+               [AC_CHECK_LIB([openglut], [main],
+                  [GLUT_LIBS="-lopenglut"; glut_type=$OPENGLUT]) ])
          else
-            if test $glut_type = $OPENGLUT ; then
-            AC_CHECK_HEADER([GL/openglut.h], [
-            AC_CHECK_LIB([openglut], [main],
-               [GLUT_LIBS="-lopenglut"; glut_type=$OPENGLUT],
-               [glut_type=$NOGLUT] )
-            ])
-            else
-               if test $glut_type = $FREEGLUT ; then
-               AC_CHECK_HEADER([GL/freeglut.h], [
-               AC_CHECK_LIB([freeglut], [main],
-                  [GLUT_LIBS="-lfreeglut"; glut_type=$FREEGLUT],
-                  [glut_type=$NOGLUT] )
-               ])
-               fi
+            if test $glut_type = $FREEGLUT ; then
+               glut_type=$NO_GLUT
+               AC_CHECK_HEADER([GL/freeglut.h],
+                  [AC_CHECK_LIB([freeglut], [main],
+                     [GLUT_LIBS="-lfreeglut"; glut_type=$FREEGLUT]) ])
             fi
          fi
       fi
-      if FOUND_GL=1 ; then
+   fi
+   if FOUND_GL=1 ; then
          # Do not use X if not required; if no_x is yes then leave it as yes
          break
-      fi
    fi
-done
+fi
 
 if test $FOUND_GLU = 0 ; then
    echo
