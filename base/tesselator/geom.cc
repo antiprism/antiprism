@@ -205,7 +205,7 @@ printf("*********************%d\n",RandomInterpolate);
 
 #endif
 
-#define Swap(a,b)	if (1) { localGLUvertex *t = a; a = b; b = t; } else {}
+#define Swap(a,b)	do { localGLUvertex *t = a; a = b; b = t; } while (0)
 
 void __localgl_edgeIntersect( localGLUvertex *o1, localGLUvertex *d1,
 			 localGLUvertex *o2, localGLUvertex *d2,

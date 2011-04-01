@@ -39,6 +39,7 @@ class disp_poly : public virtual geom_disp
       timer cmap_tmrs[3];
 
       bool triangulate;
+      unsigned int winding_rule;
       int  face_alpha;
       bool use_lines;              // vrml
       vector<string> includes;     // pov
@@ -80,6 +81,8 @@ class disp_poly : public virtual geom_disp
       
       void set_triangulate(bool tri);
       bool get_triangulate() { return triangulate; }
+      bool set_winding_rule(unsigned int winding);
+      unsigned int get_winding_rule() { return winding_rule; }
       void set_face_alpha(int alpha);
 
       void set_use_lines(bool lines) { use_lines = lines; }

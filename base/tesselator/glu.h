@@ -30,6 +30,7 @@
 #ifndef __glu_h__
 #define __glu_h__
 
+#include "../const.h"
 #include "gl.h"
 
 #ifdef __cplusplus
@@ -91,12 +92,18 @@ extern "C" {
 #define localGLU_TESS_NEED_COMBINE_CALLBACK     100156
 
 /* TessWinding */
+#define localGLU_TESS_WINDING_ODD               TESS_WINDING_ODD
+#define localGLU_TESS_WINDING_NONZERO           TESS_WINDING_NONZERO
+#define localGLU_TESS_WINDING_POSITIVE          TESS_WINDING_POSITIVE
+#define localGLU_TESS_WINDING_NEGATIVE          TESS_WINDING_NEGATIVE
+#define localGLU_TESS_WINDING_ABS_GEQ_TWO       TESS_WINDING_ABS_GEQ_TWO
+/*
 #define localGLU_TESS_WINDING_ODD               100130
 #define localGLU_TESS_WINDING_NONZERO           100131
 #define localGLU_TESS_WINDING_POSITIVE          100132
 #define localGLU_TESS_WINDING_NEGATIVE          100133
 #define localGLU_TESS_WINDING_ABS_GEQ_TWO       100134
-
+*/
 
 /*************************************************************/
 

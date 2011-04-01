@@ -347,10 +347,17 @@ class geom_if
        * The default leaves them with default colours. If it is set to
        * col_val::invisible then the new elements are given a colour that
        * indicates that they should not be displayed.
+       * \param winding selects resulting faces acording to winding number
+       *    TESS_WINDING_ODD
+       *    TESS_WINDING_NONZERO (default)
+       *    TESS_WINDING_POSITIVE
+       *    TESS_WINDING_NEGATIVE
+       *    TESS_WINDING_ABS_GEQ_TWO
        * \param fmap a vector to return the face mapping. Each old face
        * index maps to the first index of faces it was converted to. A
        * final index holds the total number of new faces */
-      void triangulate(col_val col=col_val(), vector<int> *fmap=0);
+      void triangulate(col_val col=col_val(),
+            unsigned int winding=TESS_WINDING_NONZERO, vector<int> *fmap=0);
 
       
       //-------------------------------------------
@@ -610,8 +617,7 @@ class col_geom_v: public col_geom, public geom_v {
 
       /// Copy Assignment 
       /** Initialise from another geometry that implements \c geom_if */
-      col_geom_v &operator =(const geom_if &geom)
-         {clear_all(); append(geom); return *this; }
+      col_geom_v &operator =(const geom_if &geom);
 
       /// Add a vertex with a colour.
       /**\param vert vertex to add.

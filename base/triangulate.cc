@@ -191,6 +191,7 @@ class anti_tesselator {
    public:
       anti_tesselator();
       ~anti_tesselator();
+      bool set_winding_rule(unsigned int winding_rule);
       operator localGLUtesselator *() { return tess; }
 
 };
@@ -198,7 +199,7 @@ class anti_tesselator {
 anti_tesselator::anti_tesselator()
 {
    tess = localgluNewTess();
-   localgluTessProperty(tess, localGLU_TESS_WINDING_RULE, localGLU_TESS_WINDING_NONZERO);
+   set_winding_rule(TESS_WINDING_NONZERO);
    localgluTessCallback(tess, localGLU_TESS_EDGE_FLAG, (_localGLfuncptr)tri_eflag);
    localgluTessCallback(tess, localGLU_TESS_VERTEX_DATA, (_localGLfuncptr)tri_vert);
    localgluTessCallback(tess, localGLU_TESS_COMBINE_DATA, (_localGLfuncptr)tri_combine);
@@ -209,10 +210,20 @@ anti_tesselator::~anti_tesselator()
    localgluDeleteTess(tess);
 }
 
+bool anti_tesselator::set_winding_rule(unsigned int winding_rule)
+{
+   if(winding_rule<TESS_WINDING_ODD || winding_rule>TESS_WINDING_ABS_GEQ_TWO)
+      return false;
 
-void triangulate(geom_if &geom, col_val inv, vector<int> *fmap)
+   localgluTessProperty(tess, localGLU_TESS_WINDING_RULE, winding_rule);
+   return true;
+}
+
+void triangulate(geom_if &geom, col_val inv, unsigned int winding,
+      vector<int> *fmap)
 {
    anti_tesselator tess;
+   tess.set_winding_rule(winding);
    col_geom *cg = dynamic_cast<col_geom *>(&geom);
    vector<vector<int> > faces = geom.faces();
    vector<vector<int> > impl_edges;

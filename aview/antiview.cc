@@ -115,7 +115,7 @@ void vw_opts::process_command_line(int argc, char **argv)
 
    handle_long_opts(argc, argv);
    
-   while((c = getopt(argc, argv, ":hv:e:iV:E:F:w:m:x:n:s:I:D:C:L:R:B:")) != -1) {
+   while((c = getopt(argc, argv, ":hv:e:iV:E:F:w:m:x:n:s:T:I:D:C:L:R:B:")) != -1) {
       if(common_opts(c, optopt))
          continue;
 

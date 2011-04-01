@@ -43,7 +43,8 @@ int add_hull(geom_if &geom, string qh_args="", char *errmsg=0);
 int set_hull(geom_if &geom, string qh_args="", char *errmsg=0);
 int orient_geom(geom_if &geom, vector<vector<int> > *parts=0);
 void orient_reverse(geom_if &geom);
-void triangulate(geom_if &geom, col_val inv=col_val(), vector<int> *fmap=0);
+int triangulate(geom_if &geom, col_val inv=col_val(),
+      unsigned int winding_rule=TESS_WINDING_NONZERO, vector<int> *fmap=0);
 void get_star(const geom_if &geom, vector<vec3d> &star, char type='v',
       vec3d centre=vec3d(0,0,0));
 bool make_zono(geom_if &zono, const vector<vec3d> &star, char *errmsg=0);
@@ -357,9 +358,9 @@ void geom_if::sym_align()
 }
 
 
-void geom_if::triangulate(col_val col, vector<int> *fmap)
+void geom_if::triangulate(col_val col, unsigned int winding, vector<int> *fmap)
 {
-   ::triangulate(*this, col, fmap);
+   ::triangulate(*this, col, winding, fmap);
 }
 
 bool geom_if::read(string file_name, char *errmsg)
@@ -499,6 +500,12 @@ void geom_if::verts_merge(map<int, int> &vmap)
 }
 
 
+col_geom_v &col_geom_v::operator =(const geom_if &geom)
+{
+   clear_all();
+   append(geom);
+   return *this;
+}
 
 
 void col_geom_v::add_missing_impl_edges()

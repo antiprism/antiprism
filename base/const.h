@@ -51,11 +51,18 @@ const double DEF_CAMERA_INF_DIST = 1000.0;
 const char RES_SEPARATOR[] = "_ ";
 
 ///For selecting which elements a function acts upon
-const char ELEM_NONE = 0;
+const char ELEM_NONE  = 0;
 const char ELEM_VERTS = 1;
 const char ELEM_EDGES = 2;
 const char ELEM_FACES = 4;
 const char ELEM_ALL = ELEM_VERTS | ELEM_EDGES | ELEM_FACES;
+
+const unsigned int TESS_WINDING_ODD         = 100130;
+const unsigned int TESS_WINDING_NONZERO     = 100131;
+const unsigned int TESS_WINDING_POSITIVE    = 100132;
+const unsigned int TESS_WINDING_NEGATIVE    = 100133;
+const unsigned int TESS_WINDING_ABS_GEQ_TWO = 100134;
+
 
 #endif // CONST_H
 

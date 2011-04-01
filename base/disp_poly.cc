@@ -39,7 +39,8 @@
 #include "pov_writer.h"
       
 
-disp_poly::disp_poly(): triangulate(true), face_alpha(-1), use_lines(false)  
+disp_poly::disp_poly(): triangulate(true), winding_rule(TESS_WINDING_NONZERO),
+   face_alpha(-1), use_lines(false)
 { 
 }
 
@@ -71,11 +72,13 @@ col_val disp_poly::get_def_f_col()
 }
 
 void disp_poly::geom_changed()
-{ 
+{
+   if(!sc_geom || &(sc_geom->get_geom()) == 0)  // no geometry set
+      return;
    disp_geom = sc_geom->get_geom();
    vector<int> face_map;
    if(triangulate)
-      disp_geom.triangulate(col_val::invisible, &face_map);
+      disp_geom.triangulate(col_val::invisible, winding_rule, &face_map);
    else {
       face_map.resize(sc_geom->get_geom().faces().size());
       for(unsigned int i=0; i<face_map.size(); i++)
@@ -100,6 +103,18 @@ void disp_poly::set_triangulate(bool tri)
       triangulate=tri;
       geom_changed();
    }
+
+}
+
+bool disp_poly::set_winding_rule(unsigned int winding)
+{
+   if(winding_rule!=winding) {
+      if(winding<TESS_WINDING_ODD || winding>TESS_WINDING_ABS_GEQ_TWO)
+         return false;
+      winding_rule=winding;
+      geom_changed();
+   }
+   return true;
 
 }
 
@@ -1287,7 +1302,6 @@ void view_opts::set_view_vals(scene &scen)
       sc_geom.add_disp(get_geom_defs());
       sc_geom.set_label(*lab_defs);
       sc_geom.set_sym(*sym_defs);
-      //fprintf(stderr, "before geom = %p\n", sc_geom.get_sym
       sc_geom.set_geom(geom);
 
 
@@ -1329,6 +1343,8 @@ const char *view_opts::help_view_text =
 "  -m <maps> a comma separated list of colour maps used to transform colour\n"
 "            indexes, a part consisting of letters from v, e, f, selects \n"
 "            the element types to apply the map list to (default 'vef').\n"
+"  -T <rule> select face parts to display according to winding number\n"
+"            from: odd, nonzero (default), positive, negative, abs_geq_two\n"
 ;
 
 const char *view_opts::help_scene_text =
@@ -1453,6 +1469,17 @@ bool view_opts::read_disp_option(char opt, char *optarg, char *errmsg,
             }
             break;
 
+         case 'T':
+         {
+            const char *params = "odd|nonzero|positive|negative|abs_geq_two\n";
+            string arg_id = get_arg_id(optarg, params,
+                  argmatch_default, errmsg);
+            if(arg_id=="")
+               error(msg_str("invalid winding rule '%s'", optarg).c_str(), opt);
+            get_geom_defs().set_winding_rule(TESS_WINDING_ODD+atoi(arg_id.c_str()));
+            break;
+         }
+
          case 't':
             if(!read_int(optarg, &num, errmsg2))
                strcpy(errmsg, errmsg2);
@@ -1461,8 +1488,7 @@ bool view_opts::read_disp_option(char opt, char *optarg, char *errmsg,
             else
                get_geom_defs().set_triangulate(num);
             break;
-
-
+         
          case 'w':
             if(!read_double(optarg, &val, errmsg))
                strcpy(errmsg, errmsg2);
