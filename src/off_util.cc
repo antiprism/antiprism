@@ -49,7 +49,7 @@ class pr_opts: public prog_opts {
    public:
       vector<string> ifiles;
       bool orient;
-      bool triangulate;
+      unsigned int triangulate_rule;
       bool skeleton;
       bool sph_proj;
       bool trunc;
@@ -67,7 +67,7 @@ class pr_opts: public prog_opts {
       string ofile;
 
       pr_opts(): prog_opts("off_util"), orient(false),
-                 triangulate(false), skeleton(false),
+                 triangulate_rule(0), skeleton(false),
                  sph_proj(false), trunc(false), edges_to_faces(false),
                  sig_compare(-1), sig_digits(DEF_SIG_DGTS),
                  unzip_frac(100.0), unzip_root(0), unzip_centre('x')
@@ -167,7 +167,7 @@ void pr_opts::process_command_line(int argc, char **argv)
 
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hH:stOd:x:T:ESM:l:u:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hH:st:Od:x:T:ESM:l:u:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -216,8 +216,15 @@ void pr_opts::process_command_line(int argc, char **argv)
             break;
 
          case 't':
-            triangulate = true;
+         {
+            string arg_id = get_arg_id(optarg,
+                  "odd|nonzero|positive|negative|abs_geq_two",
+                  argmatch_default, errmsg);
+            if(arg_id=="")
+               error(msg_str("invalid winding rule '%s'", optarg).c_str(), c);
+            triangulate_rule = TESS_WINDING_ODD + atoi(arg_id.c_str());
             break;
+         }
 
          case 'd':
             if(!read_int(optarg, &sig_digits, errmsg))
@@ -566,9 +573,9 @@ void make_edges_to_faces(geom_if &geom)
    geom.append(egeom);
 }
 
-void triangulate_faces(geom_if &geom)
+void triangulate_faces(geom_if &geom, unsigned int winding_rule)
 {
-   geom.triangulate(col_val::invisible);
+   geom.triangulate(col_val::invisible, winding_rule);
 }
 
 void make_skeleton(geom_if &geom)
@@ -635,8 +642,8 @@ void process_file(col_geom_v &geom, pr_opts opts)
 
    if(opts.edges_to_faces)
       make_edges_to_faces(geom);
-   if(opts.triangulate)
-      triangulate_faces(geom);
+   if(opts.triangulate_rule)
+      triangulate_faces(geom, opts.triangulate_rule);
    if(opts.skeleton)
       make_skeleton(geom);
    if(opts.filt_elems!="")

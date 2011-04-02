@@ -110,7 +110,7 @@ void o2p_opts::process_command_line(int argc, char **argv)
   
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hv:e:V:E:F:m:x:s:T:n:o:D:C:L:R:P:W:S:B:d:t:I:j:J:i:O:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hv:e:V:E:F:m:x:s:n:o:D:C:L:R:P:W:S:B:d:t:I:j:J:i:O:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 

@@ -1343,8 +1343,9 @@ const char *view_opts::help_view_text =
 "  -m <maps> a comma separated list of colour maps used to transform colour\n"
 "            indexes, a part consisting of letters from v, e, f, selects \n"
 "            the element types to apply the map list to (default 'vef').\n"
-"  -T <rule> select face parts to display according to winding number\n"
-"            from: odd, nonzero (default), positive, negative, abs_geq_two\n"
+"  -t <disp> select face parts to display according to winding number\n"
+"            from: odd, nonzero (default), positive, negative, abs_geq_two,\n"
+"            no_triangulation (use native polygon display)\n"
 ;
 
 const char *view_opts::help_scene_text =
@@ -1359,9 +1360,7 @@ const char *view_opts::help_scene_text =
 
 const char *view_opts::help_prec_text =
 "  -d <dgts> number of significant digits (default 17) or if negative\n"
-"            then the number of digits after the decimal point\n"
-"  -t <type> display type for faces 0 - native polygons, 1 - triangulate\n"
-"            polygons (default)\n";
+"            then the number of digits after the decimal point\n";
 
 bool view_opts::read_disp_option(char opt, char *optarg, char *errmsg,
             vector<string> &warnings)
@@ -1370,7 +1369,6 @@ bool view_opts::read_disp_option(char opt, char *optarg, char *errmsg,
    *errmsg = '\0';
    *errmsg2 = '\0';
    double val;
-   int num;
    vec3d vec;
    col_val col;
 
@@ -1469,26 +1467,21 @@ bool view_opts::read_disp_option(char opt, char *optarg, char *errmsg,
             }
             break;
 
-         case 'T':
+         case 't':
          {
-            const char *params = "odd|nonzero|positive|negative|abs_geq_two\n";
+            const char *params = "odd|nonzero|positive|negative|abs_geq_two|no_triangulation\n";
             string arg_id = get_arg_id(optarg, params,
                   argmatch_default, errmsg);
             if(arg_id=="")
                error(msg_str("invalid winding rule '%s'", optarg).c_str(), opt);
-            get_geom_defs().set_winding_rule(TESS_WINDING_ODD+atoi(arg_id.c_str()));
+            int arg_id_num = atoi(arg_id.c_str());
+            if(arg_id_num==5) // no_triangulation
+               get_geom_defs().set_triangulate(false);
+            else
+               get_geom_defs().set_winding_rule(TESS_WINDING_ODD+arg_id_num);
             break;
          }
 
-         case 't':
-            if(!read_int(optarg, &num, errmsg2))
-               strcpy(errmsg, errmsg2);
-            else if(num < 0 || num >1)
-               strcpy(errmsg, "display type for faces must be 0 or 1");
-            else
-               get_geom_defs().set_triangulate(num);
-            break;
-         
          case 'w':
             if(!read_double(optarg, &val, errmsg))
                strcpy(errmsg, errmsg2);
