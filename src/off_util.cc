@@ -143,6 +143,8 @@ const char *get_help(const char* name)
    help["geo"] = help_geodesic;
    help["geodesic"] = help_geodesic;
    help["sym"] = help_sym;
+   help["color"] = help_color;
+   help["colour"] = help_color;
    help["col_val"] = help_color_val;
    help["col_names"] = help_color_names;
    help["col_map"] = help_color_map;

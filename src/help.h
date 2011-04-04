@@ -3,9 +3,10 @@ const char *help_help =
 "===========\n"
 "Type 'off_util -H topic_name' for help on each topic\n"
 "\n"
-"col_val :     colour value formats\n"
-"col_names :   colour names\n"
-"col_map :     colour map formats and resource colour maps\n"
+"colour:       selecting colours for models\n"
+"   col_val :     colour value formats\n"
+"   col_names :   colour names\n"
+"   col_map :     colour map formats and resource colour maps\n"
 "models:       builtin models\n"
 "   common_polys: common  polyhedra\n"
 "   uniform:      uniform polyhedra\n"
@@ -727,6 +728,22 @@ const char *help_sym =
 "\n"
 "   e.g. sym_Cs, sym_C3, sym_D3h, sym_S6, sym_I\n"
 ;
+
+const char *help_color =
+"Colour\n"
+"======\n"
+"Colouring a model usually involves specifying individual colours. A colour\n"
+"can be specified directly in a number of formats, or can be the name of a\n"
+"colour that Antiprism recognises, or can be an index number that will\n"
+"generally be turned into a final colour by looking it up in a colour map.\n"
+"Antiprism includes some colour maps, and facilities for creating new ones.\n"
+"\n"
+"See these help topics for more details\n"
+"   col_val :     colour value formats\n"
+"   col_names :   colour names\n"
+"   col_map :     colour map formats and resource colour maps\n"
+;
+
 
 const char *help_color_val =
 "Colour Values\n"
