@@ -65,7 +65,7 @@ ALIASING_FLAG=
 if $CC -fno-strict-aliasing -S -o /dev/null -xc /dev/null >/dev/null 2>&1;
 then
    ALIASING_FLAG="-fno-strict-aliasing"
-   CPPFLAGS="$ALIASING_FLAG $CXXFLAGS"
+   CPPFLAGS="$ALIASING_FLAG $CPPFLAGS"
 fi
 AC_SUBST(ALIASING_FLAG)
 
@@ -94,6 +94,17 @@ NO_GLUT=0
 GLUT=1
 OPENGLUT=2
 FREEGLUT=3
+
+AC_PATH_X
+if test x"$no_x" = x"yes" ; then
+   AC_CANONICAL_HOST
+   case $host_os in
+      *cygwin* ) CPPFLAGS="-I/usr/include/opengl $CPPFLAGS"
+                 LDFLAGS="-L/usr/lib/w32api $LDFLAGS"
+                 ;;
+   esac
+fi
+
 
 glut_type=$NO_GLUT
 AC_ARG_WITH(
