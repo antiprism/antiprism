@@ -1,7 +1,7 @@
 Antiprism
 =========
 
-Notes for Antiprism 0.20.pre13
+Notes for Antiprism 0.20.pre14
 ------------------------------
 
 This release makes the Antiprism library available to C++
@@ -61,6 +61,15 @@ See the INSTALL file for more details.
 
 The Antiview viewer depends on GLUT. A GLUT package suitable for
 developing against must be installed in order to build Antiview.
+If building against a locally installed Glut package, ensure that
+the headers are in a GL subdirectory.
+
+Cygwin
+------
+run configure with "--with-x=no" to avoid building against X, if
+it is installed. It should be possible to build native Windows
+binaries by cross-compiling using the tools provided by Cygwin;
+the -mno-compiler option is not supported.
 
 
 Git Code Repository

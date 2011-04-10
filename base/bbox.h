@@ -90,7 +90,7 @@ class bound_sphere
       int cut_off_cnt;  // number of points that were cut off
 
       void find_radius_centre(const vector<vec3d> &pts);
-      void add_b_sphere(vec3d cent2, double rad2);
+      void add_b_sphere(vec3d cent, double rad);
 
    public:
       /// Constructer

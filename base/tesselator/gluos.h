@@ -14,10 +14,6 @@
 #define NOIME
 #include <windows.h>
 
-/* Disable warnings */
-#pragma warning(disable : 4101)
-#pragma warning(disable : 4244)
-#pragma warning(disable : 4761)
 #define localGLAPI
 
 #else

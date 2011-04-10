@@ -136,21 +136,21 @@ void bound_sphere::find_radius_centre(const vector<vec3d> &pts)
    add_b_sphere(new_centre, new_radius);
 }
 
-void bound_sphere::add_b_sphere(vec3d cent2, double rad2)
+void bound_sphere::add_b_sphere(vec3d cent, double rad)
 {
    if(centre.is_set()) {
-      vec3d offset = cent2 - centre;
-      if(offset.mag() < (radius+rad2)*epsilon) // relatively very close centres
-         radius = (radius>rad2) ? radius : rad2;
+      vec3d offset = cent - centre;
+      if(offset.mag() < (radius+rad)*epsilon) // relatively very close centres
+         radius = (radius>rad) ? radius : rad;
       else {                                   // use container of two spheres
          vec3d u = offset.unit();
-         centre = 0.5 * ( (centre - u*radius) + (cent2 + u*rad2) );
-         radius = ((cent2 + u*rad2) - centre).mag();
+         centre = 0.5 * ( (centre - u*radius) + (cent + u*rad) );
+         radius = ((cent + u*rad) - centre).mag();
       }
    }
    else {
-      centre = cent2;
-      radius = rad2;
+      centre = cent;
+      radius = rad;
    }
 }
 
