@@ -486,7 +486,7 @@ void pov_writer::camera_lights(FILE *ofile)
 "\n"
 "#ifndef(ExcludeDefLights) #declare ExcludeDefLights=0; #end\n"
 "#if(!ExcludeDefLights)\n"
-"   light_source {LookAt + <0, 0, SceneWidth*10> color White \n"
+"   light_source {LookAt + <0, 0, SceneWidth*10> color <0.7, 0.7, 0.7> \n"
 "      #if (Shadow=1|(!Shadow & StereoType))\n"
 "         shadowless\n"
 "      #end\n"
