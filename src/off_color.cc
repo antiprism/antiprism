@@ -251,8 +251,7 @@ void color_vals_to_idxs(col_geom_v &geom, char elems=ELEM_ALL,
    }
 }
 
-
-
+enum {CV_UNSET=1, CV_INDEX=2, CV_VALUE=4, CV_INVISIBLE=8};
 
 class o_col_opts: public prog_opts {
    public:
@@ -272,7 +271,7 @@ class o_col_opts: public prog_opts {
       col_val f_col;
      
       char edge_type;
-      bool uncoloured;
+      unsigned int selection;
 
       coloring clrngs[3];
 
@@ -286,7 +285,7 @@ class o_col_opts: public prog_opts {
 
       o_col_opts(): prog_opts("off_color"),
                     v_col_op(0), e_col_op(0), f_col_op(0),
-                    edge_type('x'), uncoloured(false),
+                    edge_type('x'), selection(0),
                     range_elems(ELEM_NONE), v2i_elems(ELEM_NONE)
          {}
 
@@ -369,7 +368,9 @@ void o_col_opts::usage()
 "  -I <elms> map color values to index numbers (after other procesing)\n"
 "            elements to map are from v, e and f (default none)\n"
 "  -w <wdth> width of sphere containing points (default: calculated)\n"
-"  -U        colour only uncoloured elements\n"
+"  -U <typs> colour only elements with particular current colour types:\n"
+"            u - unset, i - indexed, v - visible colour value, x - invisible.\n"
+"            A ~ before the letter will select the opposite.\n" 
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
 "\n", prog_name(), help_ver_text);
@@ -381,11 +382,12 @@ void o_col_opts::process_command_line(int argc, char **argv)
    char errmsg2[MSG_SZ];
    opterr = 0;
    vector<char *> parts;
+   bool prev_char_was_not;
    char c;
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hv:f:e:E:s:m:M:c:l:Uo:r:I:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hv:f:e:E:s:m:M:c:l:U:o:r:I:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -507,7 +509,29 @@ void o_col_opts::process_command_line(int argc, char **argv)
             break;
 
           case 'U':
-            uncoloured = true;
+            selection = 0;
+            prev_char_was_not = false;
+            for(const char *p = optarg; *p; p++) {
+               unsigned int new_select = 0;
+               if(*p == '~') {
+                  if(prev_char_was_not)
+                     error("types cannot include repeated '~'", c);
+                  prev_char_was_not = true;
+               }
+               else if(*p == 'u')
+                  new_select = CV_UNSET;
+               else if(*p == 'i')
+                  new_select = CV_INDEX;
+               else if(*p == 'v')
+                  new_select = CV_VALUE;
+               else if(*p == 'x')
+                  new_select = CV_INVISIBLE;
+               else
+                  error(msg_str("invalid type character '%c'", *p), c);
+
+               if(new_select)
+                  selection |= (prev_char_was_not) ? ~new_select : new_select;
+            }
             break;
 
          case 'o':
@@ -559,19 +583,36 @@ bool lights_read(const string &fname, col_geom_v *lights, char *errmsg)
    return true;
 }
 
-void restore_orig_cols(col_geom_v &geom, col_geom_v &orig_geom)
+inline unsigned int col_type(const col_val &col)
+{ return CV_UNSET*col.is_def() + CV_INDEX*col.is_idx() + 
+         CV_VALUE*(col.is_val()&&!col.is_inv()) + CV_INVISIBLE*col.is_inv(); }
+
+void restore_orig_cols(col_geom_v &geom, col_geom_v &restore_geom,
+      unsigned int selection, unsigned int orig_edges_sz)
 {
-   map<int, col_val>::const_iterator mi;
-   for(mi= orig_geom.vert_cols().begin(); mi!=orig_geom.vert_cols().end(); ++mi)
-      geom.set_v_col(mi->first, mi->second);
-   
-   for(mi=orig_geom.face_cols().begin(); mi!=orig_geom.face_cols().end(); ++mi)
-      geom.set_f_col(mi->first, mi->second);
-   
-   for(unsigned int i=0; i<orig_geom.edges().size(); i++) {
-      col_val col = orig_geom.get_e_col(i);
-      if(col.is_set())
-         geom.add_col_edge(orig_geom.edges(i), col);
+   for(unsigned int i=0; i<restore_geom.verts().size(); i++) {
+      col_val col = restore_geom.get_v_col(i);
+      if(!(col_type(col)&selection))  // restore colours of unselected elements
+         geom.set_v_col(i, col);
+   }
+
+   vector<int> del_edges;
+   for(unsigned int i=0; i<geom.edges().size(); i++) {
+      col_val col;
+      if(i<restore_geom.verts().size())
+         col = restore_geom.get_e_col(i);
+      if(!(col_type(col)&selection))  // restore cols of unselected elements
+         geom.set_e_col(i, col);
+      // implicit edges with unset colour were not selected to be coloured
+      if(i>=orig_edges_sz && !geom.get_e_col(i).is_set())
+         del_edges.push_back(i);
+   }
+   geom.delete_edges(del_edges);
+
+   for(unsigned int i=0; i<restore_geom.faces().size(); i++) {
+      col_val col = restore_geom.get_f_col(i);
+      if(!(col_type(col)&selection))  // restore colours of unselected elements
+         geom.set_f_col(i, col);
    }
 }
    
@@ -589,10 +630,6 @@ int main(int argc, char *argv[])
    if(*errmsg)
       opts.warning(errmsg);
 
-   col_geom_v orig_geom;
-   if(opts.uncoloured)
-      orig_geom = geom;
-
    // read lights
    col_geom_v lights;
    if(opts.lfile!="") {
@@ -605,6 +642,7 @@ int main(int argc, char *argv[])
 
    // store original edges
    vector<vector<int> > &edges = *geom.get_edges();
+   unsigned int orig_edges_sz = edges.size();
    map<vector<int>, col_val> expl_edges;
    if(opts.e_col_op && strchr("pP", opts.e_col_op) &&
          !strchr("iI", opts.edge_type))
@@ -617,6 +655,10 @@ int main(int argc, char *argv[])
       geom.clear_edges();
       geom.add_missing_impl_edges();
    }
+
+   col_geom_v store_geom;
+   if(opts.selection)
+      store_geom = geom;
 
 
    // Get symmetry if necessary
@@ -801,6 +843,9 @@ int main(int argc, char *argv[])
    color_vals_to_idxs(geom, opts.v2i_elems);
 
 
+   if(opts.selection)
+      restore_orig_cols(geom, store_geom, opts.selection, orig_edges_sz);
+   
 
    // restore original edges
    map<vector<int>, col_val>::iterator ei;
@@ -814,9 +859,6 @@ int main(int argc, char *argv[])
             geom.add_col_edge(ei->first, ei->second);
    }
 
-   if(opts.uncoloured)
-      restore_orig_cols(geom, orig_geom);
-   
    if(!geom.write(opts.ofile, errmsg))
       opts.error(errmsg);
 
