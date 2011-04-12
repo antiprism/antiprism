@@ -149,6 +149,7 @@ class geom_info
       map<pair<int, int>, double> vertex_plane_angs;
       vector<double> edge_dihedrals;
       vector<double> f_areas;
+      vector<double> f_perimeters;
       vector<double> f_max_nonplanars;
       vector<vector<int> > vert_cons;
       vector<vec3d> vert_norms;
@@ -169,6 +170,7 @@ class geom_info
          const vector<vector<int> > &edges, elem_lims &lens);
       void find_e_lengths();
       void find_f_areas();
+      void find_f_perimeters();
       void find_f_max_nonplanars();
       void find_oriented();
       void find_symmetry();
@@ -275,6 +277,8 @@ class geom_info
          { if(!face_angles.size()) find_face_angles(); return face_angles; }
       vector<double> &get_f_areas()
          { if(!f_areas.size()) find_f_areas(); return f_areas; }
+      vector<double> &get_f_perimeters()
+         { if(!f_perimeters.size()) find_f_perimeters(); return f_perimeters; }
       vector<double> &get_f_max_nonplanars()
          { if(!f_max_nonplanars.size()) find_f_max_nonplanars();
            return f_max_nonplanars; }

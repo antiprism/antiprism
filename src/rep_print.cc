@@ -544,7 +544,13 @@ void rep_printer::f_area(int f_idx)
    char str[MSG_SZ];
    fprintf(ofile, "%s", d2s(str, get_f_areas()[f_idx]));
 }
-   
+
+void rep_printer::f_perimeter(int f_idx)
+{
+   char str[MSG_SZ];
+   fprintf(ofile, "%s", d2s(str, get_f_perimeters()[f_idx]));
+}
+    
 void rep_printer::f_centroid(int f_idx)
 {
    char str[MSG_SZ];

@@ -104,6 +104,7 @@ class rep_printer: public geom_info
       void f_sides(int f_idx);
       void f_distance(int f_idx);
       void f_area(int f_idx);
+      void f_perimeter(int f_idx);
       void f_max_nonplanar(int f_idx);
       void f_centroid(int f_idx);
       void f_lengths(int f_idx);

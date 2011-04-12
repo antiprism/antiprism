@@ -96,6 +96,7 @@ void geom_info::reset()
    sol_angles.clear();
    vertex_angles.clear();
    f_areas.clear();
+   f_perimeters.clear();
    vert_cons.clear();
    vert_norms.clear();
    free_verts_found = false;
@@ -157,6 +158,19 @@ void geom_info::find_f_areas()
       }
       area.sum += f_areas[i];
       vol += face_vol(i);
+   }
+}
+
+void geom_info::find_f_perimeters()
+{
+   f_perimeters.resize(num_faces());
+   const vector<vector<int> > &faces = geom.faces();
+   for(unsigned int i=0; i<faces.size(); i++) {
+      double perim = 0.0;
+      unsigned int fsz = faces[i].size();
+      for(unsigned int j=0; j<fsz; j++)
+         perim += geom.edge_vec(faces[i][j], faces[i][(j+1)%fsz]).mag();
+      f_perimeters[i] = perim;
    }
 }
 
@@ -508,7 +522,6 @@ void geom_info::find_solid_angles()
    }
 }
    
-
 void geom_info::find_e_lengths(map<double, int, ang_less> &e_lens,
       const vector<vector<int> > &edges, elem_lims &lens)
 {
@@ -534,6 +547,7 @@ void geom_info::find_e_lengths(map<double, int, ang_less> &e_lens,
          ei->second += 1;
    }
 }
+
 
 void geom_info::find_f_max_nonplanars()
 {

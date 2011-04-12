@@ -100,6 +100,7 @@ void oq_opts::usage()
 "       N - normal                  C - centroid\n"
 "       a - angles                  l - lengths\n"
 "       s - number of sides         p - max nonplanar distance\n"
+"       P - perimeter\n"
 "\n"
 "Options\n"
 "%s"
@@ -478,6 +479,9 @@ void face_query(FILE *ofile, rep_printer &rep, oq_opts &opts)
             break;
          case 'p':
             query_items.push_back(&rep_printer::f_max_nonplanar);
+            break;
+         case 'P':
+            query_items.push_back(&rep_printer::f_perimeter);
             break;
          default:
             char str[MSG_SZ];
