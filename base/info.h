@@ -151,6 +151,7 @@ class geom_info
       vector<double> f_areas;
       vector<double> f_max_nonplanars;
       vector<vector<int> > vert_cons;
+      vector<vec3d> vert_norms;
       vector<int> free_verts;
       bool free_verts_found;
       geom_v dual;
@@ -161,6 +162,7 @@ class geom_info
       void find_face_angles();
       void find_dihedral_angles();
       void find_vert_cons();
+      void find_vert_norms();
       void find_free_verts();
       void find_solid_angles();
       void find_e_lengths(map<double, int, ang_less> &e_lens,
@@ -232,6 +234,8 @@ class geom_info
       double angle_defect() { return num_verts()*2*M_PI - angles().sum; }
 
       //verts
+      const vector<vec3d> &get_vert_norms()
+         { if(!vert_norms.size()) find_vert_norms(); return vert_norms; }
       const vector<vector<int> > &get_vert_cons()
          { if(!vert_cons.size()) find_vert_cons(); return vert_cons; }
       const vector<double> &get_vertex_angles()

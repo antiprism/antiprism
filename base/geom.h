@@ -120,10 +120,16 @@ class geom_if
       /**\param f_idx face index number.
        * \param v_no the position the vertex appears in the face,
        * \c 0, \c 1, \c 2, ...
-       * \return The vertex index number.
-       */
+       * \return The vertex index number. */
       virtual int faces(int f_idx, int v_no) const =0;
       
+      /// Get the index number of a vertex of a face mod the size of the face 
+      /**\param f_idx face index number.
+       * \param v_no the position the vertex appears in the face,
+       * \c 0, \c 1, \c 2, ...
+       * \return The vertex index number. */
+      virtual int faces_mod(int f_idx, int v_no) const;
+
       /// Get the coordinates of a vertex of an face. 
       /**\param f_idx face index number.
        * \param v_no the posisition the vertex appears in the face,
@@ -545,7 +551,7 @@ class geom_if
 
       /// Get geom_info object
       /**\return geom_info object associated with this geometry. */
-      geom_info get_info();
+      geom_info get_info() const;
       
       /// Get implicit edges
       /** Returns the edges of the polygon faces
@@ -680,6 +686,16 @@ inline vec3d geom_if::face_v(int f_idx, int v_no) const
    return verts(faces(f_idx, v_no));
 }
 
+inline int geom_if::faces_mod(int f_idx, int v_no) const
+{
+   unsigned int f_sz = faces(f_idx).size();
+   v_no = v_no%f_sz;
+   if(v_no<0)
+      v_no += f_sz;
+   return faces(f_idx, v_no);
+}
+
+
 
 inline vector<vec3d> &geom_v::raw_verts()
 {
@@ -737,7 +753,6 @@ inline int geom_v::faces(int f_idx, int v_no) const
 {
    return face_elems[f_idx][v_no];
 }
-
 
 // col_geom_v
 

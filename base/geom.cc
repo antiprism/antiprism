@@ -399,7 +399,7 @@ void geom_if::write_crds(FILE *file, const char *sep, int sig_dgts) const
    return crds_write(file, *this, sep, sig_dgts);
 }
 
-geom_info geom_if::get_info()
+geom_info geom_if::get_info() const
 {
    return geom_info(*this);
 }

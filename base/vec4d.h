@@ -117,7 +117,7 @@ class vec4d
       * return any error message.
       * \return true if a valid vector was read, otherwise false
       * and the error is detailed in \a errmsg. */
-     bool read(char *str, char *errmsg=0);
+     bool read(const char *str, char *errmsg=0);
      
 
      ///Debugging print of a vector variable
