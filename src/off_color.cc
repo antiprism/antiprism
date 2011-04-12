@@ -370,7 +370,7 @@ void o_col_opts::usage()
 "  -w <wdth> width of sphere containing points (default: calculated)\n"
 "  -U <typs> colour only elements with particular current colour types:\n"
 "            u - unset, i - indexed, v - visible colour value, x - invisible.\n"
-"            A ~ before the letter will select the opposite.\n" 
+"            ~ before the letter will select the opposite.\n" 
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
 "\n", prog_name(), help_ver_text);
@@ -599,7 +599,7 @@ void restore_orig_cols(col_geom_v &geom, col_geom_v &restore_geom,
    vector<int> del_edges;
    for(unsigned int i=0; i<geom.edges().size(); i++) {
       col_val col;
-      if(i<restore_geom.verts().size())
+      if(i<restore_geom.edges().size())
          col = restore_geom.get_e_col(i);
       if(!(col_type(col)&selection))  // restore cols of unselected elements
          geom.set_e_col(i, col);
