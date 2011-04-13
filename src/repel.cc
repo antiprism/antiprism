@@ -184,11 +184,10 @@ void random_placement(geom_v &geom, int n)
 {
    vector<vec3d> &verts = *geom.get_verts();
    verts.clear();
-   time_t t;
-   time(&t);
-   srand(t);
+   rand_gen rnd;
+   rnd.time_seed();
    for(int i=0; i<n; i++)
-      verts.push_back(vec3d::random().unit());
+      verts.push_back(vec3d::random(rnd).unit());
 }
 
 void repel(col_geom_v &geom, REPEL_FN rep_fn, double shorten_factor, double limit, int n)

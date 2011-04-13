@@ -36,6 +36,7 @@
 #include <math.h>
 
 #include "const.h"
+#include "rand_gen.h"
 
 ///Vector with 3 components
 class vec3d
@@ -122,8 +123,14 @@ class vec3d
      void unset();
      
      ///Get a random vector.
+     //Uses rand(). Seed with srand() as appropriate.
      /**\return A random vector with magnitude less then or equal to one. */
      static vec3d random();
+     
+     ///Get a random vector.
+     //Uses random numbers provided by the rand_gen argument.
+     /**\return A random vector with magnitude less then or equal to one. */
+     static vec3d random(rand_gen &rnd);
      
      ///Check whether a vector has been set
      /**\return \c true if set, otherwise \c false */
@@ -252,6 +259,18 @@ inline vec3d vec3d::random()
    } while(u.mag2()>1);
 	return u;
 }
+
+inline vec3d vec3d::random(rand_gen &rnd)
+{
+   vec3d u;
+   do {
+      u[0] = 1.0 - 2.0*rnd.ranf();
+      u[1] = 1.0 - 2.0*rnd.ranf();
+      u[2] = 1.0 - 2.0*rnd.ranf();
+   } while(u.mag2()>1);
+	return u;
+}
+
 
 
 inline vec3d vec3d::unit() const

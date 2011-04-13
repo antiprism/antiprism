@@ -208,12 +208,15 @@ void initial_placement(geom_if &geom, char placement, vec4d ellipsoid)
          break;
          
       case 'r':
-         srand(0);
+      {
+         rand_gen rnd;
+         rnd.time_seed();
          for(unsigned int i=0; i<geom.get_verts()->size(); i++) {
-            (*geom.get_verts())[i] = vec3d::random();
+            (*geom.get_verts())[i] = vec3d::random(rnd);
             to_ellipsoid((*geom.get_verts())[i], ellipsoid);
          }
          break;
+      }
    }
 }
 
@@ -283,12 +286,14 @@ void minmax_v(geom_v &geom, vector<vector<int> > &eds, double shorten_factor, do
 {
    vector<vec3d> &verts = *geom.get_verts();
    double perim=24;
+   rand_gen rnd;
+   rnd.time_seed();
    for(int cnt=0; cnt<n; cnt++) {
       for(unsigned int v=0; v<verts.size(); v++) {
          double cur_sum, test_sum;
          get_dist_sum(verts, verts[v], eds[v], cur_sum);
          for(int j=0; j<20;j++) {
-            vec3d test_vert =(verts[v] + vec3d::random()*shorten_factor).unit();
+            vec3d test_vert =(verts[v] + vec3d::random(rnd)*shorten_factor).unit();
             if( get_dist_sum(verts, test_vert, eds[v], test_sum) &&
                 test_sum<cur_sum ) {
                cur_sum = test_sum;

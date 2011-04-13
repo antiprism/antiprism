@@ -36,8 +36,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include "rand_gen.h"
 
-///Vector with 3 components
+///Vector with 4 components
 class vec4d
 {
    public:
@@ -106,6 +107,11 @@ class vec4d
      /**\return A random vector with magnitude less then or equal to one. */
      static vec4d random();
      
+     ///Get a random vector.
+     //Uses random numbers provided by the rand_gen argument.
+     /**\return A random vector with magnitude less then or equal to one. */
+     static vec4d random(rand_gen &rnd);
+     
      ///Check whether a vector has been set
      /**\return \c true if set, otherwise \c false */
      bool is_set() const { return !isnan(v[0]); }
@@ -173,6 +179,17 @@ inline vec4d vec4d::random()
 	return u;
 }
 
+inline vec4d vec4d::random(rand_gen &rnd)
+{
+   vec4d u;
+   do {
+      u[0] = 1.0 - 2.0*rnd.ranf();
+      u[1] = 1.0 - 2.0*rnd.ranf();
+      u[2] = 1.0 - 2.0*rnd.ranf();
+      u[3] = 1.0 - 2.0*rnd.ranf();
+   } while(u.mag2()>1);
+	return u;
+}
 
 inline vec4d vec4d::unit() const
 {
