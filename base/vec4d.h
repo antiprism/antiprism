@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003, Adrian Rossiter
+   Copyright (c) 2003-2011, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -21,7 +21,6 @@
   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
   IN THE SOFTWARE.
 */
-
 
 /*! \file vec4d.h
  *  \brief Vector for 4D geometry
@@ -98,6 +97,38 @@ class vec4d
       * \return A reference to the component. */
      inline double &operator [](int idx) { return v[idx]; }
            
+     ///Get the x component
+     /**\return The value of the x component. */
+     inline double x() const { return v[0]; }
+ 
+     ///Get the x component
+     /**\return The value of the x component. */
+     inline double &x() { return v[0]; }
+
+     ///Get the y component
+     /**\return The value of the y component. */
+     inline double y() const { return v[1]; }
+ 
+     ///Get the x component
+     /**\return The value of the x component. */
+     inline double &y() { return v[1]; }
+
+     ///Get the z component
+     /**\return The value of the z component. */
+     inline double z() const { return v[2]; }
+ 
+     ///Get the x component
+     /**\return The value of the x component. */
+     inline double &z() { return v[2]; }
+
+     ///Get the w component
+     /**\return The value of the z component. */
+     inline double w() const { return v[3]; }
+ 
+     ///Get the w component
+     /**\return The value of the x component. */
+     inline double &w() { return v[3]; }
+
      ///Unset the vector.
      /**Put the vector into the initial unset state. The vector will return
       * \c false if tested */
@@ -130,6 +161,12 @@ class vec4d
      /**\param var a string to identify the vector variable.
       * \param file file stream to print the variable. */
      void dump(const char *var="", FILE *file=stderr) const;
+
+     static vec4d X;
+     static vec4d Y;
+     static vec4d Z;
+     static vec4d W;
+     static vec4d zero;
 
 };
 

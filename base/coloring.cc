@@ -554,7 +554,7 @@ void coloring::e_direction(bool apply_map)
       vec3d v = 2.0*(get_geom()->edge_vec(i)).unit();
       if(v[1]<0)
          v = -v;
-      v -= vec3d::y;  // put v[1] in the range -1.0 to 1.0;
+      v -= vec3d::Y;  // put v[1] in the range -1.0 to 1.0;
       int idx = y_gradient(v);
       if(apply_map)
          get_geom()->set_e_col(i, get_col(idx));

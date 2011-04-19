@@ -164,25 +164,25 @@ class sch_gen: public t_set
       ///Set up horizontal mirror transformation group.
       /**Mirror normal (0,0,1).
        *\return reference to this object with the transformations set. */
-      sch_gen &h_refl() { return refl(vec3d::z); }
+      sch_gen &h_refl() { return refl(vec3d::Z); }
       
       ///Set up vertical mirror transformation group.
       /**Mirror normal (0,1,0).
        *\return reference to this object with the transformations set. */
-      sch_gen &v_refl() { return refl(vec3d::y); }
+      sch_gen &v_refl() { return refl(vec3d::Y); }
 
       ///Set up vertical mirror transformation group.
       /**Mirror normal (0,1,0) rotated PI/2n radians around (0,0,1).
        *\param n used for angle to rotate mirror, as PI/n radians.
        *\return reference to this object with the transformations set. */
       sch_gen &v_refl(int n)
-         { return refl(mat3d::rot(vec3d::z,-0.5*M_PI/n)*vec3d::y); }
+         { return refl(mat3d::rot(vec3d::Z,-0.5*M_PI/n)*vec3d::Y); }
 
       ///Set up dihedral symmetry transformation group.
       /**Rotation axis (1,0,0).
        *\return reference to this object with the transformations set. */
       sch_gen &C2()
-         { C(2); conjugate(mat3d::rot(vec3d::z, vec3d::x)); return *this; }
+         { C(2); conjugate(mat3d::rot(vec3d::Z, vec3d::Y)); return *this; }
 
       ///Set up Cs transformation group.
       /**Mirror normal in direction (0,0,1).
@@ -238,19 +238,19 @@ class sch_gen: public t_set
        *\return reference to this object with the transformations set. */
       sch_gen &S(int n)
          { return C(n/2) * (sch_gen().unit() +
-               mat3d::refl(vec3d::z)*mat3d::rot(vec3d::z,2*M_PI/n)); }
+               mat3d::refl(vec3d::Z)*mat3d::rot(vec3d::Z,2*M_PI/n)); }
 
       ///Set up T symmetry transformation group.
       /**3-fold axes (1,1,1), (1,-1,-1).
        *\return reference to this object with the transformations set. */
       sch_gen &T()
-         { return D(2) * (sch_gen().C(3).conjugate(mat3d::rot(vec3d::z, A3))); }
+         { return D(2) * (sch_gen().C(3).conjugate(mat3d::rot(vec3d::Z, A3))); }
 
       ///Set up Td symmetry transformation group.
       /**3-fold axes (1,1,1), (1,-1,-1).
        *\return reference to this object with the transformations set. */
       sch_gen &Td()
-         { return T() * sch_gen().refl(vec3d::y+vec3d::x); }
+         { return T() * sch_gen().refl(vec3d::Y+vec3d::X); }
 
       ///Set up Th symmetry transformation group.
       /**3-fold axes (1,1,1), (1,-1,-1).
@@ -261,7 +261,7 @@ class sch_gen: public t_set
       /**4-fold axes (1,0,0), (0,1,0).
        *\return reference to this object with the transformations set. */
       sch_gen &O()
-         { return T() * (sch_gen().unit() + mat3d::rot(vec3d::x, M_PI/2)); }
+         { return T() * (sch_gen().unit() + mat3d::rot(vec3d::X, M_PI/2)); }
 
       ///Set up Oh symmetry transformation group.
       /**4-fold axes (1,0,0), (0,1,0).
@@ -272,7 +272,7 @@ class sch_gen: public t_set
       /**5-fold axes (0,1,phi), (0,1,-phi).
        *\return reference to this object with the transformations set. */
       sch_gen &I()
-         { return T() * sch_gen().C(5).conjugate(mat3d::rot(vec3d::z, A5)); }
+         { return T() * sch_gen().C(5).conjugate(mat3d::rot(vec3d::Z, A5)); }
 
       ///Set up Ih symmetry transformation group.
       /**5-fold axes (0,1,phi), (0,1,-phi).
@@ -285,7 +285,7 @@ sch_gen &sch_gen::C(int n)
    clear();
    unit();
    for(int i=1; i<n; i++)
-      add(mat3d::rot(vec3d::z, 2*M_PI*i/n));
+      add(mat3d::rot(vec3d::Z, 2*M_PI*i/n));
    return *this;
 }
 
@@ -478,7 +478,7 @@ void sch_sym::find_full_sym_type(const set<sch_axis> &full_sym)
          }
       sym_type = ax.get_sym_type();
       to_std = mat3d::alignment(ax.get_axis(), ax.get_perp(),
-               vec3d::z, vec3d::x);
+               vec3d::Z, vec3d::X);
    }
    
    // principal axis
@@ -487,9 +487,9 @@ void sch_sym::find_full_sym_type(const set<sch_axis> &full_sym)
       vec3d perp = max_fold1.get_perp();
       if(perp.is_set())
          to_std = mat3d::alignment(max_fold1.get_axis(), max_fold1.get_perp(),
-               vec3d::z, vec3d::x);
+               vec3d::Z, vec3d::X);
       else
-         to_std = mat3d::rot(max_fold1.get_axis(), vec3d::z);
+         to_std = mat3d::rot(max_fold1.get_axis(), vec3d::Z);
    }
    
    // tetrahedral
@@ -501,7 +501,7 @@ void sch_sym::find_full_sym_type(const set<sch_axis> &full_sym)
       else
          sym_type = sch_sym::T;
      
-      vec3d A3b = mat3d::rot(vec3d::z, M_PI)*A3;
+      vec3d A3b = mat3d::rot(vec3d::Z, M_PI)*A3;
       if(vdot(max_fold1.get_axis(), max_fold2.get_axis()) > 0)
          A3b *= -1;
 
@@ -518,7 +518,7 @@ void sch_sym::find_full_sym_type(const set<sch_axis> &full_sym)
          sym_type = sch_sym::O;
       
       to_std = mat3d::alignment(max_fold1.get_axis(), max_fold2.get_axis(),
-                           vec3d::z, vec3d::x);
+                           vec3d::Z, vec3d::X);
    }
    
    // icosahedral
@@ -595,7 +595,7 @@ sch_sym::sch_sym(const t_set &ts): sym_type(unknown), nfold(1), to_std(mat3d())
    else if(v2ax.size()==1 && v2ax.begin()->second.size()==1 &&
           v2ax.begin()->second[0].get_sym_type()==sch_sym::Cs) { //one refl
       axes.clear();
-      to_std = mat3d::rot(v2ax.begin()->second[0].get_axis(), vec3d::z);
+      to_std = mat3d::rot(v2ax.begin()->second[0].get_axis(), vec3d::Z);
       sym_type = sch_sym::Cs;
    }
    else {// remaining possibilities have rotational axis   
@@ -1243,8 +1243,8 @@ sch_sym sch_sym::get_sub_sym(int sub_type, int sub_fold, int conj_type) const
        (sub_fold==2 && sub_type==S) )
       return sch_sym();
 
-   const vec3d axis = vec3d::z;
-   const vec3d perp = vec3d::x;
+   const vec3d axis = vec3d::Z;
+   const vec3d perp = vec3d::X;
    
    mat3d trans;
    if(sub_type==Cv)

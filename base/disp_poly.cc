@@ -1199,13 +1199,13 @@ void disp_sym::disp_changed()
       mat3d trans = mat3d::transl(cent);
       if(ax->get_nfold()==2 && (sym.get_sym_type()==sch_sym::D ||
             sym.get_sym_type()==sch_sym::Dv || sym.get_sym_type()==sch_sym::Dh))
-         trans *= mat3d::alignment(vec3d::z, vec3d::x,
-               ax->get_axis(), mat3d::inverse(sym.get_to_std())*vec3d::z-cent);
+         trans *= mat3d::alignment(vec3d::Z, vec3d::X,
+               ax->get_axis(), mat3d::inverse(sym.get_to_std())*vec3d::Z-cent);
       else if(ax->get_perp().is_set())
-         trans *= mat3d::alignment(vec3d::z, vec3d::x,
+         trans *= mat3d::alignment(vec3d::Z, vec3d::X,
                ax->get_axis(), ax->get_perp());
       else
-         trans *=  mat3d::rot(vec3d::z, ax->get_axis());
+         trans *=  mat3d::rot(vec3d::Z, ax->get_axis());
       int sym_type = ax->get_sym_type();
       if(show_rotrefls && (sym_type==sch_sym::S  || sym_type==sch_sym::Dv ) ) {
          add_rotrefl_elem(disp_geom, rad, trans);
@@ -1220,7 +1220,7 @@ void disp_sym::disp_changed()
       mat3d turn;
       set<vec3d>::const_iterator mir;
       for(mir=mirrors.begin(); mir!=mirrors.end(); ++mir) {
-         mat3d trans = mat3d::transl(cent) * turn * mat3d::rot(vec3d::z, *mir);
+         mat3d trans = mat3d::transl(cent) * turn * mat3d::rot(vec3d::Z, *mir);
          add_mirror_elem(disp_geom, 1.05*sc_geom->get_width()/2, trans);
       }
    }
