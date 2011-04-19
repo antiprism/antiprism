@@ -159,8 +159,6 @@ void col_util_opts::usage()
 
 void col_util_opts::process_command_line(int argc, char **argv)
 {
-   extern char *optarg;
-   extern int optind, opterr, optopt;
    opterr = 0;
    char c;
    char errmsg[MSG_SZ];

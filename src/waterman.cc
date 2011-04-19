@@ -33,7 +33,6 @@
 #include <ctype.h>
 #include <math.h>
 #include <limits.h>
-#include <unistd.h>
 
 #include <string>
 #include <vector>

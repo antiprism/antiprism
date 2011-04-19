@@ -31,7 +31,6 @@
 #include <float.h>
 
 #include <ctype.h>
-#include <unistd.h>
 
 #include <string>
 #include <vector>

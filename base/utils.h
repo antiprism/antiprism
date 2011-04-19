@@ -39,12 +39,14 @@
 #include "vec4d.h"
 #include "mat3d.h"
 #include "geom.h"
+#include "utils_ultragetopt.h"
 
 using std::string;
 using std::vector;
 
 ///Command line processing
-class prog_opts {
+class prog_opts: public ultra_getopt
+{
    private:
       string program_name;
 
@@ -68,6 +70,14 @@ class prog_opts {
       /**In the derived class this will process the program options
        * and arguments, probably using \c getopt. */
       virtual void process_command_line(int /*argc*/, char ** /*argv*/) {};
+
+      ///Getopt
+      /**Getopt replacement for consistency on different platforms
+       * \param argc number of arguments
+       * \param arv argument list
+       * \param optstring option specifier string
+       * \return index number of option on success, -1 on failure */
+      //int getopt(int argc, char **argv, char *optstring) {};
 
       ///Usage message
       /**In the derived class this will print a program usage help message*/
