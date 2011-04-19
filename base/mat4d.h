@@ -320,7 +320,9 @@ inline mat4d &mat4d::set_rot(vec4d v_from, vec4d v_to)
    v_from.unit();
    v_to.unit();
    vec4d n2, n3, orth;
-   n2 = vcross(vec4d::random().unit(), v_from, v_to);
+   rand_gen rnd;
+   rnd.time_seed();
+   n2 = vcross(vec4d::random(rnd).unit(), v_from, v_to);
    n3 = vcross(n2, v_from, v_to);
    orth = vcross(v_from, n2, n3);
    set_rot(n2, n3, acos(safe_for_trig(vdot(v_from, v_to))) );

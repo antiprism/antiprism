@@ -147,11 +147,6 @@ class vec3d
      void unset();
      
      ///Get a random vector.
-     //Uses rand(). Seed with srand() as appropriate.
-     /**\return A random vector with magnitude less then or equal to one. */
-     static vec3d random();
-     
-     ///Get a random vector.
      //Uses random numbers provided by the rand_gen argument.
      /**\return A random vector with magnitude less then or equal to one. */
      static vec3d random(rand_gen &rnd);
@@ -271,17 +266,6 @@ inline vec3d::vec3d(float *vals)
 	v[0] = vals[0];
 	v[1] = vals[1];
 	v[2] = vals[2];
-}
-
-inline vec3d vec3d::random()
-{
-   vec3d u;
-   do {
-      u[0] = 1.0 - 2.0*rand()/(RAND_MAX-1);
-      u[1] = 1.0 - 2.0*rand()/(RAND_MAX-1);
-      u[2] = 1.0 - 2.0*rand()/(RAND_MAX-1);
-   } while(u.mag2()>1);
-	return u;
 }
 
 inline vec3d vec3d::random(rand_gen &rnd)

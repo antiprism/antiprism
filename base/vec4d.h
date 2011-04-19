@@ -135,10 +135,6 @@ class vec4d
      void unset();
      
      ///Get a random vector.
-     /**\return A random vector with magnitude less then or equal to one. */
-     static vec4d random();
-     
-     ///Get a random vector.
      //Uses random numbers provided by the rand_gen argument.
      /**\return A random vector with magnitude less then or equal to one. */
      static vec4d random(rand_gen &rnd);
@@ -202,18 +198,6 @@ inline vec4d::vec4d(double i, double j, double k, double l)
 	v[1] = j;
 	v[2] = k;
 	v[3] = l;
-}
-
-inline vec4d vec4d::random()
-{
-   vec4d u;
-   do {
-      u[0] = 1.0 - 2.0*rand()/(RAND_MAX-1);
-      u[1] = 1.0 - 2.0*rand()/(RAND_MAX-1);
-      u[2] = 1.0 - 2.0*rand()/(RAND_MAX-1);
-      u[3] = 1.0 - 2.0*rand()/(RAND_MAX-1);
-   } while(u.mag2()>1);
-	return u;
 }
 
 inline vec4d vec4d::random(rand_gen &rnd)
