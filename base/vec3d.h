@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2008, Adrian Rossiter
+   Copyright (c) 2003-2011, Adrian Rossiter
    
    Antiprism - http://www.antiprism.com
 
@@ -108,6 +108,30 @@ class vec3d
      /**\param idx the component index.
       * \return A reference to the component. */
      inline double &operator [](int idx) { return v[idx]; }
+
+     ///Get the x component
+     /**\return The value of the x component. */
+     inline double x() const { return v[0]; }
+ 
+     ///Get the x component
+     /**\return The value of the x component. */
+     inline double &x() { return v[0]; }
+
+     ///Get the y component
+     /**\return The value of the y component. */
+     inline double y() const { return v[1]; }
+ 
+     ///Get the x component
+     /**\return The value of the x component. */
+     inline double &y() { return v[1]; }
+
+     ///Get the z component
+     /**\return The value of the z component. */
+     inline double z() const { return v[2]; }
+ 
+     ///Get the x component
+     /**\return The value of the x component. */
+     inline double &z() { return v[2]; }
      
      ///Get a pointer to the vector component array.
      /** \return A pointer to the underlying component array. */
@@ -121,11 +145,6 @@ class vec3d
      /**Put the vector into the initial unset state. The vector will return
       * \c false if tested */
      void unset();
-     
-     ///Get a random vector.
-     //Uses rand(). Seed with srand() as appropriate.
-     /**\return A random vector with magnitude less then or equal to one. */
-     static vec3d random();
      
      ///Get a random vector.
      //Uses random numbers provided by the rand_gen argument.
@@ -151,9 +170,9 @@ class vec3d
       * \param file file stream to print the variable. */
      void dump(const char *var="", FILE *file=stderr) const;
 
-     static vec3d x;
-     static vec3d y;
-     static vec3d z;
+     static vec3d X;
+     static vec3d Y;
+     static vec3d Z;
      static vec3d zero;
 
 };
@@ -247,17 +266,6 @@ inline vec3d::vec3d(float *vals)
 	v[0] = vals[0];
 	v[1] = vals[1];
 	v[2] = vals[2];
-}
-
-inline vec3d vec3d::random()
-{
-   vec3d u;
-   do {
-      u[0] = 1.0 - 2.0*rand()/(RAND_MAX-1);
-      u[1] = 1.0 - 2.0*rand()/(RAND_MAX-1);
-      u[2] = 1.0 - 2.0*rand()/(RAND_MAX-1);
-   } while(u.mag2()>1);
-	return u;
 }
 
 inline vec3d vec3d::random(rand_gen &rnd)

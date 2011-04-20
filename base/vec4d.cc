@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2008, Adrian Rossiter
+   Copyright (c) 2003-2011, Adrian Rossiter
    
    Antiprism - http://www.antiprism.com
 
@@ -22,7 +22,6 @@
   IN THE SOFTWARE.
 */
 
-
 /* \file vec4d.cc
  *  \brief Vectors for 4D geometry
  *
@@ -40,6 +39,12 @@
 #ifndef NAN
 #define NAN (0.0F/0.0F)
 #endif
+
+vec4d vec4d::X(1, 0, 0, 0);
+vec4d vec4d::Y(0, 1, 0, 0);
+vec4d vec4d::Z(0, 0, 1, 0);
+vec4d vec4d::W(0, 0, 0, 1);
+vec4d vec4d::zero(0, 0, 0, 0);
 
 
 bool vec4d::read(const char *str, char *errmsg)

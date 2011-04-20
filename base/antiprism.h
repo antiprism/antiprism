@@ -37,6 +37,7 @@
 #include "transforms.h"
 #include "geom_utils.h"
 #include "math_utils.h"
+#include "utils_ultragetopt.h"
 #include "utils.h"
 #include "info.h"
 #include "bbox.h"

@@ -1,24 +1,30 @@
-
 NOTE TO DEVELOPERS
+------------------
+All the Antiprism source code is supplied under a permissive licence.
 
-The Antiprism source is provided under permissive licences. The aim of
-this is to promote the development of new polyhedron software by making
-it convenient to reuse the Antiprism source in other projects. While not
-required by the licences, if you make any improvements to the source
-that could reasonably be incorporated back into Antiprism, like bug
-fixes, optimisations or new features, then please contribute your
-changes back for inclusion under the MIT Licence.
+The aim of using permissive licensing is to promote the development of
+new polyhedron software by making it convenient to reuse the Antiprism
+source code in other projects.
+
+Please, support this aim. If you incorporate Antiprism source code
+into your own project and make any improvements that could reasonably
+be incorporated back into the Antiprism project, like bug fixes,
+optimisations or new features, then please contribute your changes
+for inclusion in back into Antiprism under a permissive (preferably
+MIT) licence.
 
 Adrian.
 adrian@antiprism.com
 
 
-Antiprism is covered by the following licences
+=======================================================================
+Antiprism contains software supplied under the following licences
 
 ------------------------------------------------------------------------
+The bulk of the code, with specific author varying, is:
 
-Copyright (c) 2003-2009, Adrian Rossiter
-Copyright (c) 2006-2009, Roger Kaufman
+Copyright (c) 2003-20011, Adrian Rossiter
+Copyright (c) 2006-20011, Roger Kaufman
 Includes ideas and algorithms by George W. Hart, http://www.georgehart.com
 
 Permission is hereby granted, free of charge, to any person obtaining a
@@ -41,33 +47,7 @@ IN THE SOFTWARE.
 
 
 ------------------------------------------------------------------------
-
-Copyright (c) 1996-2000 Darko Kirovski, Miodrag Podkonjak and the Regents of
-                        the University of California
-
-Contact author(s) for original code: darko@cs.ucla.edu, miodrag@cs.ucla.edu
-Affiliationss: UCLA, Computer Science
-
-Permission is hereby granted, free of charge, to any person obtaining 
-a copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation 
-the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-and/or sell copies of the Software, and to permit persons to whom the 
-Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
-DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
-OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
-THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
-------------------------------------------------------------------------
+Qhull - Convex Hulls, Delaunay, Voronoi: base/qh_*
 
                     Qhull, Copyright (c) 1993-2003
 
@@ -113,8 +93,7 @@ All files except library source files have been removed. Minor changes
 made for a clean build as C++.
 
 ------------------------------------------------------------------------
-
-kaleido
+kaleido - uniform polyhedra: base/kaleido.* base/uniform.cc
 
 Kaleidoscopic construction of uniform polyhedra
 Copyright © 1991-2002 Dr. Zvi Har'El <rl@math.technion.ac.il>
@@ -151,38 +130,45 @@ Author:
 
 
 ------------------------------------------------------------------------
+Ultra-Getopt: base/utils_ultragetopt.*
 
-Copyright (c) 1999-2000 Pawel W. Olszta. All Rights Reserved.
-Written by Pawel W. Olszta, <olszta@sourceforge.net>
-Creation date: Thu Dec 16 1999
+Copyright (c) 2007, Kevin Locke <kwl7@cornell.edu>
 
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to
+deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included
-in all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
-PAWEL W. OLSZTA BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+IN THE SOFTWARE.
 
 
 ------------------------------------------------------------------------
-
-rand_gen.h
+Random number generator: base/rand_gen.h
 
 Public Domain
 Robin Whittle  rw@firstpr.com.au    2005 September 21 
 
 
 ------------------------------------------------------------------------
+May include code by Paul Bourke - http://paulbourke.net/
+
+This will be marked in the source. If reusing this code please also
+include an attribution notice.
+
+
+------------------------------------------------------------------------
+GLUtesselator: base/tesselator/*
 
 License Applicability. Except to the extent portions of this file are
 made subject to an alternative license as permitted in the SGI Free
@@ -215,6 +201,59 @@ Window System(R) (Version 1.3), released October 19, 1998. This software
 was created using the OpenGL(R) version 1.2.1 Sample Implementation
 published by SGI, but has not been independently verified as being
 compliant with the OpenGL(R) version 1.2.1 Specification.
+
+
+------------------------------------------------------------------------
+Minimal proper colouring: base/prop_col.*
+
+Copyright (c) 1996-2000 Darko Kirovski, Miodrag Podkonjak and the Regents of
+                        the University of California
+
+Contact author(s) for original code: darko@cs.ucla.edu, miodrag@cs.ucla.edu
+Affiliationss: UCLA, Computer Science
+
+Permission is hereby granted, free of charge, to any person obtaining 
+a copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation 
+the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+and/or sell copies of the Software, and to permit persons to whom the 
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
+THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+------------------------------------------------------------------------
+OpenGLUT: OpenGLUT.dll, supplied in Windows binary package only
+
+Copyright (c) 1999-2000 Pawel W. Olszta. All Rights Reserved.
+Written by Pawel W. Olszta, <olszta@sourceforge.net>
+Creation date: Thu Dec 16 1999
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+PAWEL W. OLSZTA BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 ------------------------------------------------------------------------

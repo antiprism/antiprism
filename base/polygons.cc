@@ -69,8 +69,8 @@ void polygon::add_polygon(geom_if &geom, double ht)
    vector<int> face(num_sides);
    int offset = geom.verts().size();
    for(int i=0; i<num_sides; i++) {
-      geom.add_vert(radius*cos(i*angle())*vec3d::x + ht*vec3d::z +
-               -radius*sin(i*angle())*vec3d::y);
+      geom.add_vert(radius*cos(i*angle())*vec3d::X + ht*vec3d::Z +
+               -radius*sin(i*angle())*vec3d::Y);
       face[i] = offset+i;
    }
    geom.add_face(face);
@@ -84,7 +84,7 @@ void polygon::make_poly(geom_if &geom)
    geom.append(poly_unit);
    for(int i=1; i<parts; i++) {
       geom_v rep = poly_unit;
-      rep.transform(mat3d::rot(vec3d::z, 2*M_PI*i/parts/num_sides));
+      rep.transform(mat3d::rot(vec3d::Z, 2*M_PI*i/parts/num_sides));
       geom.append(rep);
    }
 }
@@ -132,8 +132,8 @@ void prism::make_poly_part(geom_if &geom)
    geom_v pgon;
    add_polygon(pgon);
    for(int i=0; i<num_sides; i++) {
-      verts[i] = pgon.verts(i) + (ht/2)*vec3d::z;
-      verts[i+num_sides] = pgon.verts(i) - (ht/2)*vec3d::z;
+      verts[i] = pgon.verts(i) + (ht/2)*vec3d::Z;
+      verts[i+num_sides] = pgon.verts(i) - (ht/2)*vec3d::Z;
       faces[0].push_back(i);
       faces[1].push_back(i+num_sides);
       faces[2+i].push_back(i);
@@ -264,9 +264,9 @@ void antiprism::make_poly_part(geom_if &geom)
    geom_v pgon, pgon2;
    add_polygon(pgon);
    double twist_ang = isnan(twist_angle) ? 0.0 : twist_angle;
-   pgon.transform(mat3d::rot(vec3d::z,  angle()/4-twist_ang/2));
+   pgon.transform(mat3d::rot(vec3d::Z,  angle()/4-twist_ang/2));
    add_polygon(pgon2);
-   pgon2.transform(mat3d::rot(vec3d::z,-angle()/4+twist_ang/2));
+   pgon2.transform(mat3d::rot(vec3d::Z,-angle()/4+twist_ang/2));
    if(extra_verts) {
       double apex_ht = 0.5*ht;
       if(num_sides!=2)
@@ -283,8 +283,8 @@ void antiprism::make_poly_part(geom_if &geom)
    }
    
    for(int i=0; i<num_sides; i++) {
-      verts[i] = pgon.verts(i) + (ht/2)*vec3d::z;
-      verts[i+num_sides] = pgon2.verts(i) - (ht/2)*vec3d::z;
+      verts[i] = pgon.verts(i) + (ht/2)*vec3d::Z;
+      verts[i+num_sides] = pgon2.verts(i) - (ht/2)*vec3d::Z;
       if(extra_faces) {
          caps[0].push_back(i);
          if(extra_faces>1)
@@ -347,7 +347,7 @@ void pyramid::make_poly_part(geom_if &geom)
       face[2] = num_sides;
       pyr.add_face(face);
    }
-   pyr.add_vert(ht*vec3d::z);
+   pyr.add_vert(ht*vec3d::Z);
 
    if(subtype==0) {
       geom.append(pyr);
@@ -532,7 +532,7 @@ void cupola::make_poly_part(geom_if &geom)
    if(subtype==subtype_cuploid)
       cup_geom.clear_faces();
    
-   cup_geom.transform(mat3d::rot(vec3d::z, -angle()/4));
+   cup_geom.transform(mat3d::rot(vec3d::Z, -angle()/4));
    double ht = (!isnan(height)) ? height : radius;
    int v_sz = cup_geom.verts().size();
    add_polygon(cup_geom, ht);
@@ -686,10 +686,10 @@ void snub_antiprism::make_poly_part(geom_if &geom)
    vector<int> bond_face;
    for(int i=0; i<num_sides; i++) {
       int a = num_sides+2*i;
-      geom.add_vert(r*cos(2*i*ang_inc)*vec3d::x + h*vec3d::z +
-            -r*sin(2*i*ang_inc)*vec3d::y);
-      geom.add_vert(r*cos((2*i+1)*ang_inc)*vec3d::x - h*vec3d::z +
-            -r*sin((2*i+1)*ang_inc)*vec3d::y);
+      geom.add_vert(r*cos(2*i*ang_inc)*vec3d::X + h*vec3d::Z +
+            -r*sin(2*i*ang_inc)*vec3d::Y);
+      geom.add_vert(r*cos((2*i+1)*ang_inc)*vec3d::X - h*vec3d::Z +
+            -r*sin((2*i+1)*ang_inc)*vec3d::Y);
       vector<int> face(3);
       face[0] = i;
       face[1] = a;
@@ -710,7 +710,7 @@ void snub_antiprism::make_poly_part(geom_if &geom)
    col_geom_v geom2 = geom;
    face_bond(geom, geom2, geom.faces().size()-1, geom2.faces().size()-1, 1);
    //align dihedral axis with x-axis
-   geom.transform(mat3d::rot(vec3d::z, M_PI*step/(2.0*num_sides)));
+   geom.transform(mat3d::rot(vec3d::Z, M_PI*step/(2.0*num_sides)));
 }
 
 

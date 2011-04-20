@@ -4,8 +4,8 @@ lib_LTLIBRARIES = libantiprism.la
 libantiprism_la_SOURCES = off_read.cc off_write.cc crds_read.cc disp_poly.cc\
    geom.cc geom_utils.cc col_geom.cc col_map.cc col_val.cc dual.cc vec3d.cc mat3d.cc \
    vec4d.cc mat4d.cc vec_utils.cc vec_utils_norm.cc vec_utils_cent.cc \
-	utils.cc math_utils.cc c_hull.cc triangulate.cc symmetry.cc \
-	sort_merge.cc bbox.cc col_read.cc info.cc \
+	utils.cc utils_ultragetopt.cc math_utils.cc c_hull.cc triangulate.cc \
+	symmetry.cc sort_merge.cc bbox.cc col_read.cc info.cc \
    coloring.cc prop_col.cc named_cols.cc geodesic.cc zonohedron.cc \
 	johnson.cc uniform.cc kaleido.cc std_polys.cc skilling.cc \
 	timing.cc polygons.cc pov_writer.cc scene.cc \
@@ -25,12 +25,13 @@ libantiprism_la_SOURCES = off_read.cc off_write.cc crds_read.cc disp_poly.cc\
 	qh_qhull.h qh_qset.h qh_stat.h qh_user.h \
 	\
 	rand_gen.h scene.h symmetry.h transforms.h \
-	utils.h vec3d.h vec4d.h vec_utils.h vrml_writer.h
+	utils.h utils_ultragetopt.h vec3d.h vec4d.h vec_utils.h vrml_writer.h
 
 supdir = $(datadir)/$(PACKAGE)-$(VERSION)
-libantiprism_la_CPPFLAGS = -DSUPDIR="\"$(supdir)\""
+libantiprism_la_CPPFLAGS = -DSUPDIR="\"$(supdir)\"" 
 libantiprism_la_LDFLAGS = -no-undefined -version-info 0:0:0
 libantiprism_la_LIBADD = tesselator/libtess.la
+
 
 pkginclude_HEADERS = \
 	antiprism.h \
@@ -56,6 +57,7 @@ pkginclude_HEADERS = \
 	timing.h \
 	transforms.h \
 	utils.h \
+	utils_ultragetopt.h \
 	vec3d.h \
 	vec4d.h \
 	vec_utils.h \

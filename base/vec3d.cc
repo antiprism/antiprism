@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2008, Adrian Rossiter
+   Copyright (c) 2003-2011, Adrian Rossiter
    
    Antiprism - http://www.antiprism.com
 
@@ -40,9 +40,9 @@
 #define NAN (0.0F/0.0F)
 #endif
 
-vec3d vec3d::x(1, 0, 0);
-vec3d vec3d::y(0, 1, 0);
-vec3d vec3d::z(0, 0, 1);
+vec3d vec3d::X(1, 0, 0);
+vec3d vec3d::Y(0, 1, 0);
+vec3d vec3d::Z(0, 0, 1);
 vec3d vec3d::zero(0, 0, 0);
 
 bool vec3d::read(const char *str, char *errmsg)
