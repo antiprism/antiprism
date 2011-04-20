@@ -37,6 +37,11 @@ Repeat a cube in a chequerboard pattern
    lat_grid fcc 3 | lat_util -R cube | antiview
 </PRE>
 
+Include points of a grid that are inside a truncated octahedron. Include the cage of the truncated octahedron. Add struts of 2. Make a convex hull of the included points and keep the interior points. Color the convex hull symetrically and make transparent.
+<PRE>
+   lat_grid fcc 3 | lat_util -s 2 -k tr_oct -K -C i -F S -T 128 | antiview
+</PRE>
+
 
 <H2><A NAME="notes">
 Notes

@@ -34,7 +34,12 @@ Examples
 
 Make a cube, distort it, and canonicalize it back into a cube
 <PRE>
-   unipoly cube | off_trans -S 1,2,3 | canonical > canonic_cube.off
+   off_util cube | off_trans -S 1,2,3 | canonical | antiview
+</PRE>
+
+Make a geodesic sphere, canonicalize it, and add it to it reciprocal
+<PRE>
+   geodesic -c 2 ico | canonical | pol_recip -a | antiview
 </PRE>
 
 <H2><A NAME="notes">

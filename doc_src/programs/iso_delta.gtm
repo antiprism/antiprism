@@ -32,14 +32,14 @@ Usage
 Examples
 </A></H2>
 
-View polyhedron number 20 in the list
+View polyhedron number 9 in the list
 <PRE>
-   iso_delta 20 | antiview
+   iso_delta 9 | antiview
 </PRE>
 
-View 3 pairs of star-pentagon dipyramids at an angle of 2 degrees
+View 2 pairs of star-pentagon dipyramids at an angle of 3 degrees
 <PRE>
-   iso_delta -c k -n 5/2 -k 3 -a 2 | antiview
+   iso_delta -c k -n 5/2 -k 2 -a 3 | antiview
 </PRE>
 
 

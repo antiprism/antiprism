@@ -39,7 +39,7 @@ The Sphericon
 
 The Dual of the Spherican
 <PRE>
-   n_icons -d | antiview
+   n_icons -s | antiview
 </PRE>
 
 A Hybrid of the Sphericon and its Dual
@@ -47,27 +47,41 @@ A Hybrid of the Sphericon and its Dual
    n_icons -H | antiview
 </PRE>
 
-The N-icon of order 20 twisted 5 increments. The five surfaces are 
+The N-icon of 20 twisted 5 increments. The five surfaces are 
 colored with the default colors. No edges or vertices are shown.
 <PRE>
-   n_icons -n 20 -t 5 -f 1 | antiview -x ve
+   n_icons -n 20 -t 5 -f s | antiview
 </PRE>
 
 Same as above but only using colors red, orange, and yellow.
 <PRE>
-   n_icons -n 20 -t 5 -f 1 -F red,orange,yellow | antiview -x ve
+   n_icons -n 20 -t 5 -f s -m map_red:orange:yellow% | antiview
 </PRE>
 
 Same as above but 50 percent transparent.
 <PRE>
-   n_icons -n 20 -t 5 -f 1 -F red,orange,yellow -T 128 | antiview -x ve
+   n_icons -n 20 -t 5 -f s -m map_red:orange:yellow% -T 128 | antiview
 </PRE>
 
-The N-icon of order 30 twisted 5 increments. The faces are colored 
-white and the edges are the default colors. The edges are sized in 
-antiview and only the explicit edges created in n_icon are shown.
+The N-icon of 30 twisted 5 increments. The faces are colored 
+white and the edges are the default colors.
 <PRE>
-   n_icons -n 30 -t 5 -f 5 -F white -e | antiview -e 0.1 -v 0.1 -E x
+   n_icons -n 30 -t 5 -f n -m map_white%,f -e s | antiview -e 0.1 -v 0.1
+</PRE>
+
+The N-icon of 12/4 twisted 2 increments colored by compound.
+<PRE>
+   n_icons -n 12/4 -t 2 -f c | antiview
+</PRE>
+
+The N-icon of 12/4 twisted 4 increments colored by compound. Shell model is created and 3/4 open to view interior.
+<PRE>
+   n_icons -n 12/4 -t 2 -f c -z 2 -M 36,27 | antiview
+</PRE>
+
+The N-icon of 12/4 twisted 4 increments colored by compound. Star polygon model is created and 3/4 open to view interior.
+<PRE>
+   n_icons -n 12/4 -t 2 -f c -z 3 -M 36,27 | antiview
 </PRE>
 
 The reporting subsystem is used. A list of even order N-icons with 

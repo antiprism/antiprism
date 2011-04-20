@@ -66,6 +66,7 @@ class col_util_opts: public prog_opts {
       bool cmy_mode;
       bool ryb_mode;
       bool seven_mode;
+      double brightness_adj;
       int map_maximum;
 
       vector<double> sat_powers;
@@ -74,7 +75,7 @@ class col_util_opts: public prog_opts {
       color_map_multi map;
 
       col_util_opts(): prog_opts("col_util"),
-                     display_type(3),
+                     display_type(1),
                      color_system_mode(3),
                      map_type(1),
                      show_container(2),
@@ -89,6 +90,7 @@ class col_util_opts: public prog_opts {
                      cmy_mode(false),
                      ryb_mode(false),
                      seven_mode(false),
+                     brightness_adj(0),
                      map_maximum(0)
                      {}
 
@@ -107,23 +109,27 @@ void col_util_opts::usage()
 "Options\n"
 "%s"
 "  -o <file> write output to file (default: write to standard output)\n"
+"  -f <type> for output type 4, map is output instead of OFF file\n"
+"               map type: rgb=1  antiprism=2  decimal=3 (default: 1)\n"
 "\nScene Options\n"
-"  -d <int>  output type. map=1  wheel=2  plot=3 (default)  grid=4\n"
-"               if color wheel and RGB, only one color blend is possible\n" 
-"  -M <mode> color system mode. HSV=1  HSL=2  RGB=3 (default)\n"
+"  -M <mode> color system mode. HSV=1  HSL=2  RGB=3 (default: 3)\n"
+"               plot as cone, bicone or cube respectively\n"
+"  -d <int>  output type. plot=1  wheel=2  grid=3  map=4 (default: 1)\n"
+"               if color wheel and RGB, only one color blend is possible\n"
+"\nOutput type 1 options\n" 
 "  -r <int>  HSV/HSL chroma  0 - none (cylinder)  1 - conic  2 - hexagonal\n"
 "  -S        HSV/HSL distribute colors heptagonally, 7 ways, as in the rainbow\n"
-"  -k <int>  display type 2: container control\n"
-"               0 - suppress  1 - no facets on chroma-2  2 - full (default)\n"
-"  -z <int>  display type 2: 1 - show upright  2 - don\'t rotate cube\n"
-"  -q <int>  height of the HSL cones  1 - double  2 - make 90 degree dihedral\n"
-"  -f <type> output type 1, map type: rgb=1 (default)  antiprism=2  decimal=3\n"
+"  -k <int>  container control (default: 2)\n"
+"               0 - suppress  1 - no facets on chroma-2  2 - full\n"
+"  -z <int>  1 - show model upright  2 - upright but don\'t rotate RGB cube\n"
+"  -q <int>  height of the HSL cones (default: no change)\n"
+"               1 - double  2 - make 90 degree dihedral\n"
+"  -p        plot color centroid(s)\n"
 "\nColor Blending Options\n"
-"  -b        output type 3: plot color centroid(s)\n"
-"  -s <sat>  HSV/HSL saturation curve. Greather than 0  (default: 1)\n"
+"  -s <sat>  HSV/HSL saturation curve. Greather than 0 (default: 1)\n"
 "               1.0 - no curve. lower than 1.0 makes blends more pastel\n"
 "               4 numbers can be entered seperated by commas\n"
-"  -t <val>  HSV/HSL threshold to use average saturation. (default: 1)\n"
+"  -t <val>  HSV/HSL threshold to use average saturation (default: 1)\n"
 "               between 0.0 (all averaging) and 1.0 (no averaging)\n"
 "  -v <val>  HSV/HSL value curve (default: 0)\n"
 "               simulates subtractive coloring for blending 3 or more colors\n"
@@ -132,25 +138,18 @@ void col_util_opts::usage()
 "               1.0 - no curve. lower than 1.0 number makes blends lighter\n"
 "               0.0 - use average value instead\n"
 "               4 numbers can be entered seperated by commas\n"
-"  -u <val>  HSV/HSL value advance. Rotates meaning of white and black\n"
+"  -u <val>  HSV/HSL value advance. Rotates meaning of blend to white and black\n"
 "               valid values 0.0 to 120.0 degrees (default: 0)\n"
-"  -a <int>  alpha to use for blend. average=1  minimum=2  maximum=3 (default)\n"
+"  -a <int>  alpha to use for blend. average=1  minimum=2  maximum=3 (default: 3)\n"
 "  -y        RYB mode. Blend colors as in Red-Yellow-Blue color wheel\n"
 "  -c        CMY mode. Complementary colors.  RGB->(RYB/GMO)->CMY->blend\n"
-"\nColor Source Options\n"
-"\n"
-"A colour value a value in form 'R,G,B,A' (3 or 4 values 0.0-1.0, or 0-255)\n"
-"or hex 'xFFFFFF'\n"
-"HSV color format may also be used in the form of \'(h or H),S,V,A\'\n"
-"  note that the prefix of \'h\' or \'H\' must be used\n"
-"  h is any angle. e.g h30.0  or  H is any real number. e.g H0.0833\n"
-"  S (saturation), V (value) and A (alpha) are optional real\n"
-"  numbers from 0.0 to 1.0 (default: S,V,A = 1.0,1.0,1.0)\n"
-"\n"
-"note: -M -O and -C may all be used together\n"
-"\n"
+"  -b <val>  All color sytem modes. brightness adjustment for final blended color\n"
+"               valid values -1.0 to +1.0 (default: 0)\n"
+"               negative for darker, positive for lighter, 0 for no change\n"
+"\nColoring Options (run 'off_util -H color' for help on color formats)\n"
 "  -m <map>  get colors from a color map, or multiple maps seperated by commas\n"
 "  -O <file> get colors from an OFF file\n"
+"               note: -m and -O may be used together\n"
 "  -U        allow only unique colors (sorts by color)\n"
 "  -Z <int>  maximum entries to read from open ended maps (default: 256)\n"
 "\n"
@@ -170,13 +169,13 @@ void col_util_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hd:m:k:q:z:f:r:s:t:u:v:ba:cySl:M:O:UZ:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hd:m:k:q:z:f:r:b:s:t:u:v:pa:cySl:M:O:UZ:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
       switch(c) {
          case 'd':
-            id = get_arg_id(optarg, "map=1|wheel=2|plot=3|grid=4", argmatch_add_id_maps, errmsg);
+            id = get_arg_id(optarg, "plot=1|wheel=2|grid=3|map=4", argmatch_add_id_maps, errmsg);
             if(id=="")
                error(errmsg);
             display_type = atoi(id.c_str());
@@ -223,6 +222,13 @@ void col_util_opts::process_command_line(int argc, char **argv)
             if(chroma_level < 0 || chroma_level > 3)
                error("display type must be between 0 and 3", c);
             break;
+
+        case 'b':
+            if(!read_double(optarg, &brightness_adj, errmsg))
+               error(errmsg, c);
+            if(brightness_adj < -1.0 || brightness_adj > 1.0)
+               error("brightness adjustment must be between -1.0 and 1.0", c);
+            break;
             
          case 's':
             if(!read_double_list(optarg, double_parms, errmsg, 4))
@@ -258,7 +264,7 @@ void col_util_opts::process_command_line(int argc, char **argv)
             }
             break;
             
-         case 'b':
+         case 'p':
             plot_centroid = true;
             break;
 
@@ -319,7 +325,7 @@ void col_util_opts::process_command_line(int argc, char **argv)
    if(argc-optind > 0)
       error("too many arguments");
 
-   if (display_type == 1 || display_type == 4) {
+   if (display_type == 3 || display_type == 4) {
       if (plot_centroid)
          warning("plotting centroid colors not valid in this output mode","b");
       if (sat_powers.size())
@@ -397,7 +403,7 @@ void get_chroma(const col_val &col, int chroma_level, double &hue, double &chrom
 
 // furnished by Adrian Rossiter
 void color_wheel(col_geom_v &geom, const vector<col_val> &cols, int color_system_mode,
-                 vector<double> &sat_powers, double sat_threshold, vector<double> &value_powers, double value_advance, int alpha_mode, bool ryb_mode)
+                 vector<double> &sat_powers, double sat_threshold, vector<double> &value_powers, double value_advance, int alpha_mode, bool ryb_mode, double brightness_adj)
 {
    // RK - dynamic polygon size
    unsigned int sz = cols.size();
@@ -431,9 +437,13 @@ void color_wheel(col_geom_v &geom, const vector<col_val> &cols, int color_system
          geom.add_vert(vec3d(rad*cos(ang), rad*sin(ang), 0.01*lvl));
          face[i] = geom.verts().size()-1;
       }
-      if (color_system_mode == 3)
+      if (color_system_mode == 3) {
          // RK - if RGB mode, only show that blend in all four levels
-         geom.add_col_face(face, blend_RGB_centroid(cols, alpha_mode, ryb_mode));
+         col_val col = blend_RGB_centroid(cols, alpha_mode, ryb_mode);
+         if (brightness_adj)
+            col.set_brightness(brightness_adj);
+         geom.add_col_face(face, col);
+      }
       else {
          // RK - only change the powers if there is a new one not the default
          // keeps the center of the bullseye consistent with the last valid power
@@ -441,8 +451,11 @@ void color_wheel(col_geom_v &geom, const vector<col_val> &cols, int color_system
             sat_power = sat_powers[lvl];
          if (value_powers[lvl] > -1.0)
             value_power = value_powers[lvl];
-               
-         geom.add_col_face(face, blend_HSX_centroid(cols, color_system_mode, sat_power, sat_threshold, value_power, value_advance, alpha_mode, ryb_mode));
+
+         col_val col = blend_HSX_centroid(cols, color_system_mode, sat_power, sat_threshold, value_power, value_advance, alpha_mode, ryb_mode);
+         if (brightness_adj)
+            col.set_brightness(brightness_adj);
+         geom.add_col_face(face, col);
       }
    }
    
@@ -538,10 +551,13 @@ double saturation_correction_7gon(double hue, double sat)
    return (sat * scale);
 }
 
-void plot_hsx_point(col_geom_v &geom, const col_val &col, int color_system_mode, int chroma_level, bool ryb_mode, bool seven_mode)
+void plot_hsx_point(col_geom_v &geom, col_val &col, int color_system_mode, int chroma_level, bool ryb_mode, bool seven_mode, double brightness_adj)
 {
    if (!col.is_val())
       return;
+
+   if (brightness_adj)
+      col.set_brightness(brightness_adj);
 
    vec4d hsxa = get_hsxa(col, color_system_mode);
 
@@ -581,8 +597,10 @@ void plot_hsx_point(col_geom_v &geom, const col_val &col, int color_system_mode,
 
 void plot_hsx(col_geom_v &geom, const vector<col_val> &cols, int color_system_mode, int chroma_level, bool ryb_mode, bool seven_mode)
 {
-   for(unsigned int i=0; i<cols.size(); i++)
-      plot_hsx_point(geom, cols[i], color_system_mode, chroma_level, ryb_mode, seven_mode);
+   for(unsigned int i=0; i<cols.size(); i++) {
+      col_val col = cols[i]; // can't be const
+      plot_hsx_point(geom, col, color_system_mode, chroma_level, ryb_mode, seven_mode, 0);
+   }
 }
 
 col_geom_v make_cube()
@@ -618,11 +636,14 @@ col_geom_v make_cube()
    return geom;
 }
 
-void plot_rgb_point(col_geom_v &geom, const col_val &col, bool ryb_mode)
+void plot_rgb_point(col_geom_v &geom, col_val &col, bool ryb_mode, double brightness_adj)
 {
    if (!col.is_val())
       return;
-  
+
+   if (brightness_adj)
+      col.set_brightness(brightness_adj);
+
    col_val rcol = col;
    if (ryb_mode) {
       // only need hue so algorithm doesn't matter
@@ -636,8 +657,10 @@ void plot_rgb_point(col_geom_v &geom, const col_val &col, bool ryb_mode)
 
 void plot_rgb_cube(col_geom_v &geom, const vector<col_val> &cols, bool ryb_mode)
 {
-   for(unsigned int i=0; i<cols.size(); i++)
-      plot_rgb_point(geom, cols[i], ryb_mode);
+   for(unsigned int i=0; i<cols.size(); i++) {
+      col_val col = cols[i]; // can't be const
+      plot_rgb_point(geom, col, ryb_mode, 0);
+   }
 }
 
 col_geom_v make_square()
@@ -720,12 +743,12 @@ public:
    bool operator() (const col_val &a, const col_val &b) { return cmp_col(a, b); }
 };
 
-void collect_col(vector<col_val> &cols, const col_val &col, bool allow_indexes)
+void collect_col(vector<col_val> &cols, const col_val &col, bool no_indexes)
 {
    if (!col.is_set())
       return;
    else
-   if (!allow_indexes && col.is_idx())
+   if (no_indexes && col.is_idx())
       return;
    cols.push_back(col);
 }
@@ -753,7 +776,7 @@ void collect_cols(vector<col_val> &cols, col_util_opts &opts)
    if (open_ended_map)
       opts.warning(msg_str("map list: only %d out of %d map entries read in",max_map_sz,map_sz), 'Z');
    for(int j=0; j<max_map_sz; j++)
-      collect_col(cols, opts.map.get_col(j), (opts.display_type==1 || opts.display_type==4));
+      collect_col(cols, opts.map.get_col(j), (opts.display_type==1 || opts.display_type==2));
    
    // file
    if(opts.gfile.length()) {
@@ -764,7 +787,7 @@ void collect_cols(vector<col_val> &cols, col_util_opts &opts)
       if(*errmsg)
          opts.warning(errmsg);
       
-      collect_cols_from_geom(geom, cols, (opts.display_type==1 || opts.display_type==4));
+      collect_cols_from_geom(geom, cols, (opts.display_type==1 || opts.display_type==2));
    }
 
    if (opts.unique_colors) {
@@ -793,7 +816,7 @@ void collect_cols(vector<col_val> &cols, col_util_opts &opts)
    }
 
    // grid may have indexes
-   if (opts.display_type == 4) {
+   if (opts.display_type == 3) {
       for(unsigned int i=0; i<cols.size(); i++) {
          if (cols[i].is_idx()) {
             opts.warning("color indexes detected. unmapped cells will result");
@@ -827,7 +850,7 @@ int main(int argc, char *argv[])
    }
 
    // output map file
-   if(opts.display_type == 1) {
+   if(opts.display_type == 4) {
       FILE *ofile = stdout;  // write to stdout by default
       if(opts.ofile != "") {
          ofile = fopen(opts.ofile.c_str(), "w");
@@ -861,12 +884,10 @@ int main(int argc, char *argv[])
       if(opts.ofile!="")
          fclose(ofile);
    }
-   // else it is a model
+   // else it is a plot/model
    else {
-      if (opts.display_type == 2)
-         color_wheel(geom, cols, opts.color_system_mode, opts.sat_powers, opts.sat_threshold, opts.value_powers, opts.value_advance, opts.alpha_mode, opts.ryb_mode);
-      else
-      if (opts.display_type == 3) {
+      // a plot
+      if (opts.display_type == 1) {
          if (opts.color_system_mode == 1 || opts.color_system_mode == 2) {
             plot_hsx(geom, cols, opts.color_system_mode, opts.chroma_level, opts.ryb_mode, opts.seven_mode);
             
@@ -874,7 +895,7 @@ int main(int argc, char *argv[])
                for(unsigned int i=0; i<4; i++) {
                   if (!i || opts.sat_powers[i] > -1.0 || opts.value_powers[i] > -1.0) {
                      col_val col = blend_HSX_centroid(cols, opts.color_system_mode, opts.sat_powers[i], opts.sat_threshold, opts.value_powers[i], opts.value_advance, opts.alpha_mode, opts.ryb_mode);
-                     plot_hsx_point(geom, col, opts.color_system_mode, opts.chroma_level, opts.ryb_mode, opts.seven_mode);
+                     plot_hsx_point(geom, col, opts.color_system_mode, opts.chroma_level, opts.ryb_mode, opts.seven_mode, opts.brightness_adj);
                   }
                }
             }
@@ -885,7 +906,7 @@ int main(int argc, char *argv[])
             
             if (opts.plot_centroid) {
                col_val col = blend_RGB_centroid(cols, opts.alpha_mode, opts.ryb_mode);
-               plot_rgb_point(geom, col, opts.ryb_mode);
+               plot_rgb_point(geom, col, opts.ryb_mode, opts.brightness_adj);
             }
          }
 
@@ -907,7 +928,7 @@ int main(int argc, char *argv[])
          }
       
          // HSL height, before turning upright
-         if (opts.hsl_height && opts.color_system_mode == 2) {
+         if (opts.color_system_mode == 2 && opts.hsl_height) {
             geom.transform(mat3d::scale(1.0,1.0,2.0));
             // if option to make 90 degree dihedral permeters
             if (opts.hsl_height == 2 && opts.chroma_level) {
@@ -925,7 +946,10 @@ int main(int argc, char *argv[])
             geom.transform(mat3d::rot(deg2rad(-90),0,0));
       }
       else
-      if (opts.display_type == 4)
+      if (opts.display_type == 2)
+         color_wheel(geom, cols, opts.color_system_mode, opts.sat_powers, opts.sat_threshold, opts.value_powers, opts.value_advance, opts.alpha_mode, opts.ryb_mode, opts.brightness_adj);
+      else
+      if (opts.display_type == 3)
          color_grid(geom, cols);
 
       if(!geom.write(opts.ofile, errmsg))

@@ -775,9 +775,12 @@ col_val set_hsxa(double hue, double sat, double val, double alpha, int color_sys
 // core code furnished by Adrian Rossiter
 col_val blend_HSX_centroid(const vector<col_val> &cols, int color_system_mode, double sat_power, double sat_threshold, double value_power, double value_advance, int alpha_mode, bool ryb_mode)
 {
-   // safety condition
+   // no colors, return unset color. one color, return that color
    if (!cols.size())
       return col_val();
+   else
+   if (cols.size() == 1)
+      return cols[0];
       
    // saturation power can't be 0 or less
    if (sat_power <= 0.0)
@@ -883,9 +886,12 @@ col_val blend_HSX_centroid(const vector<col_val> &cols, int color_system_mode, d
 
 col_val blend_RGB_centroid(const vector<col_val> &cols, int alpha_mode, bool ryb_mode)
 {
-   // safety condition
+   // no colors, return unset color. one color, return that color
    if (!cols.size())
       return col_val();
+   else
+   if (cols.size() == 1)
+      return cols[0];
 
    double alpha_min = 1.1;
    double alpha_max = -0.1;

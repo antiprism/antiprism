@@ -39,7 +39,7 @@ A truncated octahedron
 
 A Great rhombicuboctahedron with coloured faces
 <PRE>
-   conway -c m -f 1 dmO | antiview
+   conway -c m -f n dmO | antiview
 </PRE>
 
 A snub geodesic sphere

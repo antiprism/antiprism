@@ -49,7 +49,7 @@ Make the Voronoi cells of a lattice
 
 Add the Voronoi cells to a lattice
 <PRE>
-   bravais bcc -g 3 -D a | antiview -v 0.1
+   bravais bcc -g 3 -D c -A | antiview -v 0.1
 </PRE>
 
 Make the dual of a lattice
