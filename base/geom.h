@@ -22,7 +22,7 @@
   IN THE SOFTWARE.
 */
 
-/*!\file geom.h
+/*!\file base/geom.h
  * \brief Classes to represent a geometry
 */
 

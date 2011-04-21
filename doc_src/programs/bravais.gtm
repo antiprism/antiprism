@@ -21,7 +21,7 @@ Usage
 </A></H2>
 
 <PRE>
-<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+<<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
@@ -71,7 +71,7 @@ Notes
 <A HREF="http://www.interocitors.com/polyhedra/">Roger Kaufman</A>.
 <P>
 <PRE>
-<<__SYSTEM__(<<BASENAME>> -H > tmp.txt)>>
+<<__SYSTEM__(../src/<<BASENAME>> -H > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF

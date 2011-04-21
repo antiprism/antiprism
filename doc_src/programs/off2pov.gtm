@@ -22,7 +22,7 @@ Usage
 </A></H2>
 
 <PRE>
-<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+<<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF

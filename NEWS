@@ -17,7 +17,7 @@ xx-xx-10 Adrian Rossiter <adrian@antiprism.com>
              rotate a pair of vectors onto another moved from -A to -R
            off_util: new option -H for general help, new option -u
              to unfold a polyhedron net, new option -x V deletes
-             free vertices
+             free vertices, -t new triangulations.
            off_color: options -m -M -c combined as option -m. Lower
              case colourings always set index, upper case colourings
              always apply colour map. Default colour map is 'rand'.
@@ -41,6 +41,7 @@ xx-xx-10 Adrian Rossiter <adrian@antiprism.com>
              appends dual to original geometry
            antiview,off2vrml,off2pov: new option -s to display
              symmetry elements, -I infinity distance default 1000
+             -t triangulation options
            off2m: new option -x to exclude elements, -X removed
            minmax: new ellipsoid and superellipsoid surfaces, default
              algorithm is v
