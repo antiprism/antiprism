@@ -26,7 +26,6 @@
    \brief Timing utilities
 */
 
-#include <unistd.h>
 #include "timing.h"
 
 #ifdef HAVE_CONFIG_H
@@ -36,6 +35,7 @@
 
 #if UTIMER == 1   // gettimeofday
 
+#include <unistd.h>
 #include <sys/time.h>
 int timer::get_time(struct time_val *tp)
 {
