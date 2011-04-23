@@ -182,7 +182,7 @@ class sch_gen: public t_set
       /**Rotation axis (1,0,0).
        *\return reference to this object with the transformations set. */
       sch_gen &C2()
-         { C(2); conjugate(mat3d::rot(vec3d::Z, vec3d::Y)); return *this; }
+         { C(2); conjugate(mat3d::rot(vec3d::Z, vec3d::X)); return *this; }
 
       ///Set up Cs transformation group.
       /**Mirror normal in direction (0,0,1).
