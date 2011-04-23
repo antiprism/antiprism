@@ -62,6 +62,7 @@ class pr_opts: public prog_opts {
       double unzip_frac;
       int unzip_root;
       char unzip_centre;
+      char unzip_z_align;
       
       string ofile;
 
@@ -69,7 +70,8 @@ class pr_opts: public prog_opts {
                  triangulate_rule(0), skeleton(false),
                  sph_proj(false), trunc(false), edges_to_faces(false),
                  sig_compare(-1), sig_digits(DEF_SIG_DGTS),
-                 unzip_frac(100.0), unzip_root(0), unzip_centre('x')
+                 unzip_frac(100.0), unzip_root(0), unzip_centre('x'),
+                 unzip_z_align(false)
                  {}
       void process_command_line(int argc, char **argv);
       void usage();
@@ -109,8 +111,8 @@ void pr_opts::usage()
 "  -S        project onto unit sphere centred at origin\n"
 "  -u <args> unfold a polyhedron into a net, takes up to three comma separated\n"
 "            values for base face index, dihedral fraction (normally 1.0 to\n"
-"            -1.0, default: 0.0 flat), a final 'f' centres on centroid of\n"
-"            face centres\n"
+"            -1.0, default: 0.0 flat), and final option letters: 'f' centre\n"
+"            on centroid of face centres, 'z' align base face normal to z_axis.\n"
 "  -d <dgts> number of significant digits (default %d) or if negative\n"
 "            then the number of digits after the decimal point\n"
 "  -o <file> write output to file (default: write to standard output)\n"
@@ -282,10 +284,15 @@ void pr_opts::process_command_line(int argc, char **argv)
             
             unzip_centre = 'x';
             if(parts.size()>2) {
-               if(strlen(parts[2])==1 && strchr("f", *parts[2]))
-                   unzip_centre = *parts[2];
-               else
-                  error("invalid unzip centring type, can only be f", c);
+               if(strspn(parts[2], "zf") != strlen(parts[2])) {
+                  snprintf(errmsg, MSG_SZ, "unzip options are '%s' must include"
+                        "only f, u\n", parts[2]);
+                  error(errmsg, c);
+               }
+               if(strchr(parts[2], 'f'))
+                   unzip_centre = 'f';
+               if(strchr(parts[2], 'z'))
+                   unzip_z_align = true;
             }
             break;
 
@@ -531,7 +538,7 @@ int unzip_tree::flatten(const col_geom_v &geom, col_geom_v &net_geom,
 
 
 int unzip_poly(col_geom_v &geom, int root, double fract, char centring,
-      char *errmsg)
+      bool unzip_z_align, char *errmsg)
 {
    geom_info info(geom);
    if(!info.is_polyhedron()) {
@@ -551,6 +558,9 @@ int unzip_poly(col_geom_v &geom, int root, double fract, char centring,
       return 0;
    }
 
+   if(unzip_z_align)
+      geom.transform(mat3d::rot(geom.face_norm(root), vec3d::Z));
+      
    unzip_tree tree;
    tree.init_basic(geom, root);
    col_geom_v net_geom;
@@ -638,7 +648,7 @@ void process_file(col_geom_v &geom, pr_opts opts)
       truncate_verts(geom, opts.trunc_ratio, opts.trunc_v_ord);
    if(opts.unzip_frac!=100.0) {
       if(!unzip_poly(geom, opts.unzip_root, opts.unzip_frac, 
-            opts.unzip_centre, errmsg))
+            opts.unzip_centre, opts.unzip_z_align, errmsg))
          opts.error(errmsg, 'u');
    }
 
