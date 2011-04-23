@@ -145,10 +145,6 @@ if test ! x"$no_gl" = x"yes" ; then
          fi
       fi
    fi
-   if FOUND_GL=1 ; then
-         # Do not use X if not required; if no_x is yes then leave it as yes
-         break
-   fi
 fi
 
 if test $FOUND_GLU = 0 ; then
