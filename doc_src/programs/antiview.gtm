@@ -21,7 +21,7 @@ Usage
 </A></H2>
 
 <PRE>
-<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+<<__SYSTEM__(../aview/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF

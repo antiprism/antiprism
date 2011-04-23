@@ -21,7 +21,7 @@ Usage
 </A></H2>
 
 <PRE>
-<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+<<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
@@ -34,17 +34,17 @@ Examples
 
 Make a cube for display in LiveGraphics3D
 <PRE>
-   unipoly cube | off2m > cube.m
+   off_util cube | off2m > cube.m
 </PRE>
 
-Use LiveGraphics3D colouring
+Use LiveGraphics3D colouring. Don't display edges or vertices
 <PRE>
-   unipoly cube | off2m -l > cube.m
+   off_util cube | off2m -x ve -l > cube.m
 </PRE>
 
-Make a thickened red cube frame with blue vertices
+Make a thickened red cube frame with green vertices
 <PRE>
-   unipoly cube | off2m -X ve -e 0.01 -E 1.0,0.0,0.0 -V 0.0,0.0,1.0 > cube.m
+   off_util cube | off2m -x f -e 0.01 -E red -V green > cube.m
 </PRE>
 
 <H2><A NAME="notes">

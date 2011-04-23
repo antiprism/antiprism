@@ -21,7 +21,7 @@ Usage
 </A></H2>
 
 <PRE>
-<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+<<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
@@ -34,7 +34,7 @@ Examples
 
 Create a .m file with LiveGraphics3D colouring to use as an example
 <PRE>
-   unipoly snub dodecahedron | off2m -t 0 -l > snub_dod.m
+   off_util snub_dodecahedron | off2m -t 0 -l > snub_dod.m
 </PRE>
 
 Convert a LiveGraphics3D model to OFF format

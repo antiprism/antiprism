@@ -40,7 +40,6 @@
 #include <vector>
 
 #include "../base/antiprism.h"
-#include "../base/transforms.h"
 
 using std::string;
 using std::vector;
@@ -499,13 +498,13 @@ void id_opts::usage()
 "                     relaxed dual of Uniform Compounds UC57\n"
 "              q - 5 Excavated Octahedra O6(2)\n"
 "                     relaxed dual of Uniform Compounds UC58\n"
-"\nColoring Options\n"
+"\nColoring Options (run 'off_util -H color' for help on color formats)\n"
 "  -f <opt> compound coloring\n"
 "              key word: none - sets no color (default: c)\n"
 "              c - unique coloring for each constituent\n"
 "              s - symmetric colouring (should always be one color)\n"
 "  -T <tran> face transparency for color values. valid range from 0 to 255\n"
-"               0 - invisible  255 - opaque (default 255)\n"
+"               0 - invisible  255 - opaque (default: 255)\n"
 "  -m <maps> color maps for all elements to be tried in turn (default: compound)\n"
 "\n"
 "\n", prog_name(), help_ver_text);
@@ -699,7 +698,7 @@ void id_opts::process_command_line(int argc, char **argv)
    if (!map_file.size())
       map_file = "compound";
    if(!map.init(map_file.c_str(), errmsg))
-      error(errmsg, c);
+      error(errmsg, 'm');
 }
 
 void verbose_output(vec3d A, vec3d B, vec3d C, double alpha, double beta, double gamma)

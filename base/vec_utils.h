@@ -57,6 +57,7 @@ vec3d centroid(const vector<vec3d> &pts, const vector<int> &idxs = vector<int>()
  * <li>3 - on P1
  * <li>4 - outside P1
  * </ul>
+ * \param eps value for contolling the limit of precision
  * \return the point of intersection (it will be unset if the line doesn't
  * intersect the plane. */
 vec3d line_plane_intersect(vec3d Q, vec3d n, vec3d P0, vec3d P1, int *where=0, double eps=epsilon);
@@ -76,6 +77,7 @@ vec3d line_plane_intersect(vec3d Q, vec3d n, vec3d P0, vec3d P1, int *where=0, d
  * <li>3 - on P1
  * <li>4 - outside P1
  * </ul>
+ * \param eps value for contolling the limit of precision
  * \return The point of intersection (it will be unset if the line doesn't
  * intersect the plane*/
 vec3d line_plane_intersect(vec3d Q0, vec3d Q1, vec3d Q2, vec3d P0, vec3d P1, int *where=0, double eps=epsilon);
@@ -87,13 +89,14 @@ vec3d line_plane_intersect(vec3d Q0, vec3d Q1, vec3d Q2, vec3d P0, vec3d P1, int
  * \param n1 the normal to the second plane.
  * \param P to return a point on the line of intersection.
  * \param dir to return the direction of the line of intersection.
+ * \param eps value for contolling the limit of precision
  * \return \c true if the planes intersect, otherwise \c false. */
 bool two_plane_intersect(vec3d Q0, vec3d n0, vec3d Q1, vec3d n1,
       vec3d &P, vec3d &dir, double eps=epsilon);
 
 //unused
-bool three_plane_intersect(vec3d Q0, vec3d n0, vec3d Q1, vec3d n1,
-      vec3d Q2, vec3d &n2, vec3d &P, double eps=epsilon);
+//bool three_plane_intersect(vec3d Q0, vec3d n0, vec3d Q1, vec3d n1,
+//      vec3d Q2, vec3d &n2, vec3d &P, double eps=epsilon);
 
 ///Get the nearest point on a line to another (skew) line
 /**\param P0 a point on the first line.
@@ -102,6 +105,7 @@ bool three_plane_intersect(vec3d Q0, vec3d n0, vec3d Q1, vec3d n1,
  * \param Q1 another point on the second line.
  * \param P to return the nearest point on the first line.
  * \param Q to return the nearest point on the second line.
+ * \param eps value for contolling the limit of precision
  * \return \c true if there is one nesarpoint per line, otherwise \c false (the
  * lines are parallel.) */
 bool lines_nearest_points(vec3d P0, vec3d P1, vec3d Q0, vec3d Q1,
@@ -123,6 +127,7 @@ inline vec3d nearest_point(vec3d P, vec3d Q0, vec3d Q1)
  * \param Q0 a point on the plane.
  * \param Q1 a second point on the plane.
  * \param Q2 a third points on the plane, not on the line Q0Q1.
+ * \param eps value for contolling the limit of precision
  * \return The point on the plane through Q0, Q1 and Q2 that is closest to P. */
 vec3d nearest_point(vec3d P, vec3d Q0, vec3d Q1, vec3d Q2, double eps=epsilon);
 
@@ -130,6 +135,7 @@ vec3d nearest_point(vec3d P, vec3d Q0, vec3d Q1, vec3d Q2, double eps=epsilon);
 /**\param P a point.
  * \param points independant points determining the space (one, two
  * or three points as the space is a point, line or plane.)
+ * \param eps value for contolling the limit of precision
  * \return The point on the space that is closest to P. */
 vec3d nearest_point(vec3d P, const vector <vec3d> &points, double eps=epsilon);
 
@@ -139,6 +145,7 @@ vec3d nearest_point(vec3d P, const vector <vec3d> &points, double eps=epsilon);
  * \param idxs the index numbers of independant points from \a points that
  * determine the space (one, two or three index numbers as the space
  * is a point, line or plane.)
+ * \param eps value for contolling the limit of precision
  * \return The point on the space that is closest to P. */
 vec3d nearest_point(vec3d P, const vector <vec3d> &points,
       const vector<int> &idxs, double eps=epsilon);

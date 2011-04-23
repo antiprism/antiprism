@@ -2,7 +2,7 @@
 lib_LTLIBRARIES = libantiprism.la
 
 libantiprism_la_SOURCES = off_read.cc off_write.cc crds_read.cc disp_poly.cc\
-   geom.cc col_geom.cc col_map.cc col_val.cc dual.cc vec3d.cc mat3d.cc \
+   geom.cc geom_utils.cc col_geom.cc col_map.cc col_val.cc dual.cc vec3d.cc mat3d.cc \
    vec4d.cc mat4d.cc vec_utils.cc vec_utils_norm.cc vec_utils_cent.cc \
 	utils.cc utils_ultragetopt.cc math_utils.cc c_hull.cc triangulate.cc \
 	symmetry.cc sort_merge.cc bbox.cc col_read.cc info.cc \

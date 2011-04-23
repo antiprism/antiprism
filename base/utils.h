@@ -71,14 +71,6 @@ class prog_opts: public ultra_getopt
        * and arguments, probably using \c getopt. */
       virtual void process_command_line(int /*argc*/, char ** /*argv*/) {};
 
-      ///Getopt
-      /**Getopt replacement for consistency on different platforms
-       * \param argc number of arguments
-       * \param arv argument list
-       * \param optstring option specifier string
-       * \return index number of option on success, -1 on failure */
-      //int getopt(int argc, char **argv, char *optstring) {};
-
       ///Usage message
       /**In the derived class this will print a program usage help message*/
       virtual void usage() {};

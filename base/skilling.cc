@@ -623,10 +623,11 @@ int set_uc_args(int sym, double &angle, int &n, int &d, int &k, char *errmsg)
       }
       
       if (sym==20 || sym==21) {
-         if ((double)n/d <= 2.0) {
-            snprintf(errmsg, MSG_SZ, "for UC%d, n/d (%d/%d) must be greater than 2",sym,n,d);
-            return 1;
-         }
+         // RK - this constraint is not necessary for prisms
+         //if ((double)n/d <= 2.0) {
+         //   snprintf(errmsg, MSG_SZ, "for UC%d, n/d (%d/%d) must be greater than 2",sym,n,d);
+         //   return 1;
+         //}
       }
       else
       if (sym>=22) {

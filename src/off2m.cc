@@ -65,11 +65,11 @@ class o2m_opts: public prog_opts {
              lighting(false),
              exclude_elems(""),
              // face colors need to be explictly set since LG3D defaults to black
-             face_col(vec3d(0.8,0.9,0.9)),
+             face_col(vec3d(0.8,0.9,0.9)), // same as antiview
              // no longer set edge and vert colors, let them default to missing
              //edge_col(vec3d(0,0,0)),
              //vert_col(vec3d(0,0,0)),
-             sig_digits(17),
+             sig_digits(DEF_SIG_DGTS),
              f_dtype(1),
              bg_col(vec3d(1,1,1)),
              view_point(vec3d(0,0,0))
@@ -99,28 +99,25 @@ void o2m_opts::usage()
 "            to hide vertices, edges and faces\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
-"Coloring options\n"
-"  Note: alpha values are ignored. color name \"invisible\" not allowed\n"
-"  -V <col>  default vertex colour, in form 'R,G,B' (3 values\n"
-"               0.0-1.0, or 0-255) or hex 'xFFFFFF'\n"
-"  -E <col>  default edge colour, in form 'R,G,B' (3 values\n"
-"               0.0-1.0, or 0-255) or hex 'xFFFFFF'\n"
-"  -F <col>  default face colour, in form 'R,G,B' (3 values\n"
-"               0.0-1.0, or 0-255) or hex 'xFFFFFF' (default: 0.8,0.8,0.9)\n"
+"\nColoring Options (run 'off_util -H color' for help on color formats)\n"
+"Note: transparency (alpha) is ignored. color name \"invisible\" not allowed\n"
+"\n"
+"  -V <col>  vertex color\n"
+"  -E <col>  edge color\n"
+"  -F <col>  face color (default: 0.8,0.8,0.9)\n"
 "  -l        let LiveGraphics3D do the coloring itself\n"
 "\n"
 "Scene options\n"
 "  -Y <view> specify the Live3D ViewPoint in form 'X,Y,Z'\n"
-"  -B <col>  background colour, in form 'R,G,B' (3 values\n"
-"               0.0-1.0, or 0-255) or hex 'xFFFFFF' (default: 1,1,1)\n"
+"  -B <col>  background color (default: 1.0,1.0,1.0)\n"
 "\n"
 "Precision options\n"
-"  -d <dgts> number of significant digits (default 17) or if negative\n"
-"               then the number of digits after the decimal point\n"
+"  -d <dgts> number of significant digits (default %d) or if negative\n"
+"            then the number of digits after the decimal point\n"
 "  -t <type> display type for faces 0 - polygons, 1 - triangulate\n"
 "               polygons (default)\n"
 "\n"
-"\n", prog_name(), help_ver_text);
+"\n", prog_name(), help_ver_text, DEF_SIG_DGTS);
 }
 
 
@@ -234,11 +231,9 @@ string Vtxt(vec3d v, int dgts)
 {
    char buf[128];
    if(dgts>0)
-      snprintf(buf, 128, "{%.*g, %.*g, %.*g}", dgts, v[0], dgts, v[1],
-            dgts,v[2]);
+      snprintf(buf, 128, "{%.*g, %.*g, %.*g}", dgts, v[0], dgts, v[1], dgts, v[2]);
    else
-      snprintf(buf, 128, "{%.*f, %.*f, %.*f}", -dgts, v[0], -dgts, v[1],
-            -dgts, v[2]);
+      snprintf(buf, 128, "{%.*f, %.*f, %.*f}", -dgts, v[0], -dgts, v[1], -dgts, v[2]);
    return buf;
 }
 
@@ -261,8 +256,7 @@ int get_last_visible(col_geom_v &geom, int elem_type, col_val def_col)
    return last;
 } 
 
-int print_m_solid(FILE *ofile, col_geom_v &geom, int sig_digits,
-      col_val face_col)
+int print_m_solid(FILE *ofile, col_geom_v &geom, int sig_digits, col_val face_col)
 {
    const vector<vector<int> > &faces = geom.faces();
    const vector<vec3d> &verts = geom.verts();
@@ -298,8 +292,7 @@ int print_m_solid(FILE *ofile, col_geom_v &geom, int sig_digits,
 } 
 
 
-void print_m_frame_edge(FILE *ofile, vec3d v1, vec3d v2, int sig_digits,
-      double edge_size, col_val edge_col)
+void print_m_frame_edge(FILE *ofile, vec3d v1, vec3d v2, int sig_digits, double edge_size, col_val edge_col)
 {
    fprintf(ofile,"{");
    fprintf(ofile, "Thickness[%g], ", edge_size);
@@ -310,8 +303,7 @@ void print_m_frame_edge(FILE *ofile, vec3d v1, vec3d v2, int sig_digits,
    fprintf(ofile, "]}");
 } 
 
-int print_m_frame(FILE *ofile, col_geom_v &geom, int sig_digits,
-      double edge_size, col_val edge_col, bool more_to_print)
+int print_m_frame(FILE *ofile, col_geom_v &geom, int sig_digits, double edge_size, col_val edge_col, bool more_to_print)
 {
    const vector<vector<int> > &edges = geom.edges();
    const vector<vec3d> &verts = geom.verts();
@@ -336,8 +328,7 @@ int print_m_frame(FILE *ofile, col_geom_v &geom, int sig_digits,
 } 
 
 
-int print_m_points(FILE *ofile, col_geom_v &geom, int sig_digits,
-      double point_size, col_val vert_col, bool more_to_print)
+int print_m_points(FILE *ofile, col_geom_v &geom, int sig_digits, double point_size, col_val vert_col, bool more_to_print)
 {
    const vector<vec3d> &verts = geom.verts();
    
@@ -369,8 +360,7 @@ void print_m_head(FILE *ofile)
    fprintf(ofile,"Graphics3D[{\n");
 }
 
-void print_m_tail(FILE *ofile, col_geom_v &geom, bool lighting, col_val &bg,
-      vec3d view_point)
+void print_m_tail(FILE *ofile, col_geom_v &geom, bool lighting, col_val &bg, vec3d view_point)
 {
    bound_sphere b_sph(geom.verts());
    vec3d center = b_sph.get_centre();

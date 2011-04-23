@@ -21,7 +21,7 @@ Usage
 </A></H2>
 
 <PRE>
-<<__SYSTEM__(<<BASENAME>> -h > tmp.txt)>>
+<<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
@@ -35,13 +35,38 @@ Examples
 Display uniform compounds without flashing, compare the command
 below with <TT>antiview uc6</TT> .
 <PRE>
-   planar uc6 -f b | antiview
+   planar -d tile uc6 | antiview
 </PRE>
 
 Make a compound of three triangular prisms, colour faces by part, then
 blend the result
 <PRE>
-   polygon pri 12/4 | off_color -f K | planar -f b | antiview
+   polygon pri 12/4 | off_color -f K | planar -d tile | antiview
+</PRE>
+
+Same as above, but this time merge the faces instead of tiling
+<PRE>
+   polygon pri 12/4 | off_color -f K | planar -d merge | antiview
+</PRE>
+
+Make a compound of four 5/2 star prisms, coloured by compound and blended using RGB. Edges are also blended
+<PRE>
+   planar -d tile -M rgb uc21_n5/2k4 -E e | antiview -v 0.01
+</PRE>
+
+Same as above but edges and vertices are supressed in antiview
+<PRE>
+   planar -d tile -M rgb uc21_n5/2k4 | antiview -x ve
+</PRE>
+
+Same as above but modulo2 faces are made invisible
+<PRE>
+   planar -d tile -M rgb -p 2 uc21_n5/2k4 | antiview -x ve
+</PRE>
+
+The faces of uniform compound 75 are colored by winding number
+<PRE>
+   planar -d tile -W -m map_white:red uc75 | antiview -x ve
 </PRE>
 
 <H2><A NAME="notes">

@@ -466,17 +466,17 @@ void cn_opts::usage()
 "               exponent (default: %d giving %.0e)\n"
 "  -z <n>    status reporting every n iterations, -1 for no status (default: -1)\n"
 "\n"
-"Coloring Options\n"
-"  -V <col>  vertex color, a color value (see off_util -H col_val)\n"
-"  -E <col>  edge color, a color value\n"
+"\nColoring Options (run 'off_util -H color' for help on color formats)\n"
+"  -V <col>  vertex color\n"
+"  -E <col>  edge color\n"
 "  -f <mthd> mthd is face coloring method using color in map\n"
 "               key word: none - sets no color (default: n)\n"
 "               n - color by number of sides\n"
 "               s - symmetric coloring\n"
 "  -T <tran> face transparency for color values. valid range from 0 to 255\n"
-"               0 - invisible  255 - opaque (default 255)\n"
+"               0 - invisible  255 - opaque (default: 255)\n"
 "  -O <strg> face transparency pattern string. valid values\n"
-"               0 - map color alpha value  1 - T alpha applied (default '1')\n"
+"               0 - map color alpha value  1 -T alpha applied (default: '1')\n"
 "  -m <maps> color maps for faces to be tried in turn (default: m1)\n"
 "               keyword m1: red,darkorange1,yellow,darkgreen,cyan,blue,magenta,\n"
 "                           white,grey,black\n"
@@ -706,7 +706,7 @@ void cn_opts::process_command_line(int argc, char **argv)
    }
    else
    if(!map.init(map_file.c_str(), errmsg))
-      error(errmsg, c);
+      error(errmsg, 'm');
    
    int epsilon_num = int(-log(::epsilon)/log(10) + 0.5);
    lim_exp_planar = (lim_exp_planar != INT_MAX) ? lim_exp_planar : epsilon_num;
