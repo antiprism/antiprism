@@ -6,11 +6,11 @@ Notes for Antiprism 0.20.pre14
 
 This release makes the Antiprism library available to C++
 developers and Python developers (Python interface currently
-disabled).
+disabled), and includes an installer for Windows.
 
 In order to make the interface consistent there have been many
 changes to the core code. This must therefore be considered an
-UNSTABLE realease.
+UNSTABLE release.
 
 Please report any bugs.
 
@@ -30,15 +30,15 @@ documented.
 
 There are two release files.
 
-   antiprism-0.xx.tar.gz   - source code only
-   antiprism-0.xx-win.zip  - source code and Windows executables
+   antiprism-0.xx.tar.gz       - source code
+   antiprism-0.xx_install.exe  - Windows installer
 
-The Windows executables are in the bin directory, and do not need
-to be installed. To access the resources, set the ANTIPRISM_DATA
-environment variable to the path of the 'share' directory. In a
-DOS box the command would be something like
+In Windows, access to the resources may be optionally enabled by
+setting the ANTIPRISM_DATA environment variable to the path of
+the 'data' directory in the install directory. In a DOS box the
+command would be something like
 
-   set ANTIPRISM_DATA="c:\some\dir\antiprism-0.xx\share"
+   set ANTIPRISM_DATA="c:\Program Files\antiprism\data"
 
 
 Building

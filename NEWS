@@ -26,6 +26,7 @@ xx-xx-10 Adrian Rossiter <adrian@antiprism.com>
              -f kK to colour sets of faces connected by face sides,
              -e Kk to colour sets of edges connected by edges,
              -vef M to convert colour indexes to values using map
+             -U select elements to colour by colour type
              -I to convert colour values to indexes
            planar: new program for blending colours of overlapping
              coplanar polgons

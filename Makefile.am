@@ -25,7 +25,7 @@ distcleancheck_listfiles = \
 
 supdir = $(datadir)/$(PACKAGE)-$(VERSION)
 docdir = $(datadir)/doc/$(PACKAGE)-$(VERSION)
-doc_DATA = README NEWS AUTHORS 
+doc_DATA = README NEWS AUTHORS COPYING
 
 install-data-local:
 	if test -d $(srcdir)/doc ; then \
