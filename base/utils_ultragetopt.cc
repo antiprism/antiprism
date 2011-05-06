@@ -407,7 +407,8 @@ int ultra_getopt::permute_options(int argc, char *argv[], const char *shortopts,
 
    /* If we already have an option or no more possible, give up */
    if (curopt >= argc
-         || (argv[curopt][0] != '\0' && strchr(optleaders, argv[curopt][0])))
+         || (argv[curopt][0] != '\0' && argv[curopt][1] != '\0'
+            && strchr(optleaders, argv[curopt][0])))
       return 0;
 
    for ( ; curopt < argc && argv[curopt]; curopt++) {
@@ -415,7 +416,7 @@ int ultra_getopt::permute_options(int argc, char *argv[], const char *shortopts,
       int i;
 
       /* Skip non-options */
-      if (argv[curopt][0] == '\0'
+      if (argv[curopt][0] == '\0' || argv[curopt][1] == '\0'
             || !strchr(optleaders, argv[curopt][0]))
          continue;
 
