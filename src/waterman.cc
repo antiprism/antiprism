@@ -58,7 +58,7 @@ int get_num_decs(const char *str)
    return num_decs;
 }
             
-int get_max_num_decs(const char *str, int num_parts)
+int get_max_num_decs(const char *str, const int &num_parts)
 {
    char str_copy[MSG_SZ];
    strncpy(str_copy, str, MSG_SZ);
@@ -132,7 +132,7 @@ void waterman_opts::usage()
 "  -C <opt>  c - convex hull only, i - keep interior, s - supress (default: c)\n"
 "  -t        defeat computational error testing for sphere-ray method\n"
 "  -v        verbose output (on computational errors)\n"
-"  -y <lim>  minimum distance for unique vertex locations as negative exponent\n"
+"  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
@@ -144,7 +144,7 @@ void waterman_opts::usage()
 "               key word: c,C color by symmetry using face normals (chiral)\n"
 "  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
 "\n"
-"\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5),::epsilon);
+"\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }
 
 void waterman_opts::process_command_line(int argc, char **argv)
@@ -161,7 +161,7 @@ void waterman_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hr:q:m:tvy:C:V:E:F:T:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hr:q:m:tvl:C:V:E:F:T:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -204,9 +204,7 @@ void waterman_opts::process_command_line(int argc, char **argv)
             cent_num_decs = get_max_num_decs(optarg, 3);
             if(!center.read(optarg, errmsg))
                error(errmsg, c);
-            if (!double_equality(center[0], 0.0, epsilon) ||
-                !double_equality(center[1], 0.0, epsilon) ||
-                !double_equality(center[2], 0.0, epsilon))
+            if (compare(center,vec3d(0,0,0),epsilon))
                origin_based = false;
             break;
 
@@ -226,13 +224,13 @@ void waterman_opts::process_command_line(int argc, char **argv)
             verbose = true;
             break;
 
-         case 'y':
+         case 'l':
             if(!read_int(optarg, &sig_compare, errmsg))
                error(errmsg, c);
             if(sig_compare < 0) {
                warning("limit is negative, and so ignored", c);
             }
-            if(sig_compare > 16) {
+            if(sig_compare > DEF_SIG_DGTS) {
                warning("limit is very small, may not be attainable", c);
             }
             break;
@@ -353,11 +351,11 @@ void waterman_opts::process_command_line(int argc, char **argv)
 //    ray tangent to sphere, z_near == z_far
 //    ray passes through two points of sphere, z_near != z_far
 bool sphere_ray_z_intersect_points(long &z_near, long &z_far,
-                                  double x0, double y0, // ray's xy (dz = 0)
-                                  bool &origin_based, // if true, then cx, cy, cz all equal 0
-                                  double &cx, double &cy, double &cz, // center
-                                  double &R_squared, // radius squared
-                                  double &epsilon)
+                                   const double &x0, const double &y0, // ray's xy (dz = 0)
+                                   const bool &origin_based, // if true, then cx, cy, cz all equal 0
+                                   const double &cx, const double &cy, const double &cz, // center
+                                   const double &R_squared, // radius squared
+                                   const double &eps)
 {
    // original formulas taken from http://www.ccs.neu.edu/home/fell/CSU540/programs/RayTracingFormulas.htm
    //double dx = x1 - x0;
@@ -385,12 +383,11 @@ bool sphere_ray_z_intersect_points(long &z_near, long &z_far,
       discriminant = b * b - 4 * c;
    }
 
-   //if (discriminant+epsilon < 0.0)
-   //   return false;
-   // instead explicitly set discriminant to 0
-   if (double_equality(discriminant, 0.0, epsilon))
-      discriminant = 0;
-   if (discriminant < 0.0)
+   // explicitly set discriminant to 0 if in -eps to +eps (dumb code)
+   //if (double_eq(discriminant, 0.0, eps))
+   //   discriminant = 0;
+   //if (discriminant < 0.0)
+   if (double_le(discriminant,0.0,eps))
       return false;
    double disc_rt = sqrt(discriminant);
 
@@ -398,34 +395,34 @@ bool sphere_ray_z_intersect_points(long &z_near, long &z_far,
 
    // near point
    z_intersect[0] = (-b + disc_rt)/2.0;
-   z_near = (long)floor(z_intersect[0]+epsilon); 
-//   if (double_equality(discriminant, 0.0, epsilon)) {
-   if (z_near == (long)floor(cz+epsilon)) {
+   z_near = (long)floor(z_intersect[0]+eps); 
+//   if (double_eq(discriminant, 0.0, eps)) {
+   if (z_near == (long)floor(cz+eps)) {
       z_far = z_near; // prevent z_far from being stale
    }
    else {
       // far point
       z_intersect[1] = (-b - disc_rt)/2.0;
-      z_far = (long)ceil(z_intersect[1]-epsilon); 
+      z_far = (long)ceil(z_intersect[1]-eps); 
    }
    return true;
 }
 
 // combine lattice test for fcc(type = 1) and bcc(type = 2)
-bool valid_point(int lattice_type, long x, long y, long z)
+bool valid_point(const int &lattice_type, const long &x, const long &y, const long &z)
 {
    return lattice_type == 1 ? (x+y+z)%2==0 : (x%2&&y%2&&z%2) || !(x%2||y%2||z%2);
 }
 
-bool inside_exact(long z, long z_cent, long long xy_contribution, long long i_R2)
+bool inside_exact(const long &z, const long &z_cent, const long long &xy_contribution, const long long &i_R2)
 {
 //fprintf(stderr,"z = %ld, z_cent = %ld   xy_c = %I64d, (z-z_cent)^2 = %I64d, i_R2 = %I64d\n",z,z_cent,xy_contribution,(long long)(z-z_cent)*(z-z_cent),i_R2);
    return (xy_contribution + (long long)(z-z_cent)*(z-z_cent)) <= i_R2;
 }
 
 // tester code furnished by Adrian Rossiter
-void refine_z_vals(long &z_near, long &z_far, long x, long y,
-      int lattice_type, long scale, vector<long> i_center, long long i_R2)
+void refine_z_vals(long &z_near, long &z_far, const long &x, const long &y,
+      const int &lattice_type, const long &scale, const vector<long> &i_center, const long long &i_R2)
 {
    long long xy_contribution =
       ((long long)x*scale-i_center[0])*(x*scale-i_center[0]) +
@@ -508,8 +505,8 @@ void refine_z_vals(long &z_near, long &z_far, long x, long y,
    z_far = z_fr;
 }
 
-void sphere_ray_waterman(col_geom_v &geom, int lattice_type, bool origin_based, vec3d center, double radius,
-                         double R_squared, long scale, bool verbose, bool tester_defeat, double epsilon)
+void sphere_ray_waterman(col_geom_v &geom, const int &lattice_type, const bool &origin_based, const vec3d &center, const double &radius,
+                         const double &R_squared, const long &scale, const bool &verbose, const bool &tester_defeat, const double &eps)
 {
    vector<vec3d> &verts = geom.raw_verts();
 
@@ -518,7 +515,7 @@ void sphere_ray_waterman(col_geom_v &geom, int lattice_type, bool origin_based, 
    if (!origin_based) {
       double int_part;
       double fract_part = modf(center[2], &int_part);
-      cent_z_int = double_equality(fract_part, 0.0, epsilon);
+      cent_z_int = double_eq(fract_part, 0.0, eps);
    }
 
    long rad_left_x   = (long)ceil(center[0]-radius);
@@ -552,7 +549,7 @@ void sphere_ray_waterman(col_geom_v &geom, int lattice_type, bool origin_based, 
          if (!sphere_ray_z_intersect_points(z_near, z_far,
                                             x, y,
                                             origin_based, center[0], center[1], center[2],
-                                            R_squared, epsilon)) {
+                                            R_squared, eps)) {
             //fprintf(stderr,"Ray missed the Sphere\n");
             if (!miss) {
                if (verbose)
@@ -622,8 +619,8 @@ void sphere_ray_waterman(col_geom_v &geom, int lattice_type, bool origin_based, 
       fprintf(stderr,"Total number of false misses: %ld\n",total_misses);
 }
 
-void z_guess_waterman(col_geom_v &geom, int lattice_type, vec3d center,
-      double radius, long scale, bool verbose)
+void z_guess_waterman(col_geom_v &geom, const int &lattice_type, const vec3d &center,
+                      const double &radius, const long &scale, const bool &verbose)
 {
    vector<vec3d> &verts = geom.raw_verts();
 
@@ -732,7 +729,7 @@ int main(int argc, char *argv[])
             convex_hull_report(geom, opts.add_hull);
             
          if (opts.color_method)
-            color_by_symmetry_normals(geom, opts.color_method, opts.face_opaqueness);
+            color_by_symmetry_normals(geom, opts.color_method, opts.face_opaqueness, opts.epsilon);
          else
             geom.color_vef(opts.vert_col, opts.edge_col, opts.face_col);
       }
@@ -753,3 +750,4 @@ int main(int argc, char *argv[])
 
    return 0;
 }
+

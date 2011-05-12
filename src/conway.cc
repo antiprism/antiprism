@@ -65,7 +65,7 @@ bool cmp_ops(const ops *a, const ops *b)
    return a->op_pos > b->op_pos;
 }
 
-int validate_cn_string(string cn_string, vector<ops *> &operations, char &operand, int &poly_size)
+int validate_cn_string(const string &cn_string, vector<ops *> &operations, char &operand, int &poly_size)
 {
    char current_op = '\0';
    string number_string;
@@ -177,7 +177,7 @@ int validate_cn_string(string cn_string, vector<ops *> &operations, char &operan
    return 0;
 }
 
-string resolved_cn_string(const string cn_string, bool use_truncate_algorithm)
+string resolved_cn_string(const string &cn_string, const bool &use_truncate_algorithm)
 {
    string resolve_string = cn_string;
 
@@ -279,9 +279,7 @@ class cn_opts: public prog_opts {
       char planarization_method;
       char canonical_method;
       int num_iters_planar;
-      int lim_exp_planar;
       int num_iters_canonical;
-      int lim_exp_canonical;
       int rep_count;
       bool unitize;
       bool verbosity;
@@ -289,6 +287,8 @@ class cn_opts: public prog_opts {
       char face_coloring_method;
       int face_opacity;
       string face_pattern;
+
+      double epsilon;
       
       col_val vert_col;
       col_val edge_col;
@@ -306,9 +306,7 @@ class cn_opts: public prog_opts {
                  planarization_method('p'),
                  canonical_method('\0'),
                  num_iters_planar(-1),
-                 lim_exp_planar(INT_MAX),
                  num_iters_canonical(-1),
-                 lim_exp_canonical(INT_MAX),
                  rep_count(-1),
                  unitize(false),
                  verbosity(false),
@@ -316,6 +314,7 @@ class cn_opts: public prog_opts {
                  face_coloring_method('n'),
                  face_opacity(255),
                  face_pattern("1"),
+                 epsilon(0),
                  vert_col(col_val(255,215,0)),
                  edge_col(col_val(211,211,211))
              {}
@@ -462,8 +461,6 @@ void cn_opts::usage()
 "               exponent (default: %d giving %.0e)\n"
 "  -i <itrs> maximum inter-step planarization iterations (default: no limit)\n"
 "               i = 0, no inter-step planarization\n"
-"  -j <lim>  minimum distance change to terminate planarization, as negative\n"
-"               exponent (default: %d giving %.0e)\n"
 "  -z <n>    status reporting every n iterations, -1 for no status (default: -1)\n"
 "\n"
 "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
@@ -483,7 +480,7 @@ void cn_opts::usage()
 "               keyword m2: red,blue,green,yellow,brown,magenta,purple,grue,\n"
 "                           gray,orange (from George Hart\'s original applet)\n"
 "\n"
-"\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
+"\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }
 
 void cn_opts::process_command_line(int argc, char **argv)
@@ -492,11 +489,13 @@ void cn_opts::process_command_line(int argc, char **argv)
    char c;
    char errmsg[MSG_SZ];
    
+   int sig_compare = INT_MAX;
+
    string map_file;
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hHdrtuvp:c:n:l:i:j:z:f:V:E:T:O:m:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hHdrtuvp:c:n:l:i:z:f:V:E:T:O:m:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -547,12 +546,12 @@ void cn_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'l':
-            if(!read_int(optarg, &lim_exp_canonical, errmsg))
+            if(!read_int(optarg, &sig_compare, errmsg))
                error(errmsg, c);
-            if(lim_exp_canonical < 0) {
+            if(sig_compare < 0) {
                warning("canonicalization limit is negative, and so ignored", c);
             }
-            if(lim_exp_canonical > 16) {
+            if(sig_compare > DEF_SIG_DGTS) {
                warning("canonicalization limit is very small, may not be attainable", c);
             }
             break;
@@ -562,17 +561,6 @@ void cn_opts::process_command_line(int argc, char **argv)
                error(errmsg, c);
             if(num_iters_planar < 0)
                error("number of planarization iterations 0 or greater", c);
-            break;
-
-         case 'j':
-            if(!read_int(optarg, &lim_exp_planar, errmsg))
-               error(errmsg, c);
-            if(lim_exp_planar < 0) {
-               warning("planarization limit is negative, and so ignored", c);
-            }
-            if(lim_exp_planar > 16) {
-               warning("planarization limit is very small, may not be attainable", c);
-            }
             break;
 
          case 'z':
@@ -656,9 +644,6 @@ void cn_opts::process_command_line(int argc, char **argv)
                   pos+1, cn_string.c_str()));
    }
 
-//fprintf(stderr,"poly_size = %d\n",poly_size);
-//fprintf(stderr,"operand = %c\n",operand);
-
    optind++;
    if(argc-optind == 1) {
       ifile=argv[optind];
@@ -708,12 +693,10 @@ void cn_opts::process_command_line(int argc, char **argv)
    if(!map.init(map_file.c_str(), errmsg))
       error(errmsg, 'm');
    
-   int epsilon_num = int(-log(::epsilon)/log(10) + 0.5);
-   lim_exp_planar = (lim_exp_planar != INT_MAX) ? lim_exp_planar : epsilon_num;
-   lim_exp_canonical = (lim_exp_canonical != INT_MAX) ? lim_exp_canonical : epsilon_num;
+   epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
-void verbose(char operation, int op_var, bool verbosity)
+void verbose(const char &operation, const int &op_var, const bool &verbosity)
 {
    if (verbosity) {
       char buf[80];
@@ -812,27 +795,27 @@ void project_onto_sphere(geom_if &geom)
       verts[i].to_unit();
 }
 
-void cn_planarize(col_geom_v &geom, char planarization_method, int num_iters_planar, double lim_planar, bool verbosity, int rep_count)
+void cn_planarize(col_geom_v &geom, const char &planarization_method, const int &num_iters_planar, const double &eps, const bool &verbosity, const int &rep_count)
 {
    int divergence_test = 10;
 
    if (num_iters_planar != 0) {
       verbose('_',0,verbosity);
       if (planarization_method == 'p' || planarization_method == 'q')
-         canonicalize_cn(geom, num_iters_planar, lim_planar, planarization_method, divergence_test, rep_count);
+         canonicalize_cn(geom, num_iters_planar, planarization_method, divergence_test, rep_count, eps);
       else
-         canonicalize_mm(geom, 50/100.0, 20/100.0, num_iters_planar, lim_planar, divergence_test, rep_count, true);
+         canonicalize_mm(geom, 50/100.0, 20/100.0, num_iters_planar, divergence_test, rep_count, true, eps);
    }
 }
 
-void canonicalize(col_geom_v &geom, char canonical_method, int num_iters_canonical, double lim_canonical, bool verbosity, int rep_count)
+void canonicalize(col_geom_v &geom, const char &canonical_method, const int &num_iters_canonical, const double &eps, const bool &verbosity, const int &rep_count)
 {
    int divergence_test = 10;
 
    if (canonical_method=='n') {
       verbose('@', 0, verbosity);
       centroid_to_origin(geom);
-      canonicalize_cn(geom, num_iters_canonical, lim_canonical, canonical_method, divergence_test, rep_count);
+      canonicalize_cn(geom, num_iters_canonical, canonical_method, divergence_test, rep_count, eps);
    }
    else
    if (canonical_method=='m') {
@@ -842,15 +825,15 @@ void canonicalize(col_geom_v &geom, char canonical_method, int num_iters_canonic
       centroid_to_origin(geom);
       project_onto_sphere(geom);
 
-      canonicalize_mm(geom, 50/100.0, 20/100.0, num_iters_canonical, lim_canonical, divergence_test, rep_count, false);
+      canonicalize_mm(geom, 50/100.0, 20/100.0, num_iters_canonical, divergence_test, rep_count, false, eps);
       }
    else
    if (canonical_method)
       // final planarization
-      cn_planarize(geom, canonical_method, num_iters_canonical, lim_canonical, verbosity, rep_count);
+      cn_planarize(geom, canonical_method, num_iters_canonical, verbosity, rep_count, eps);
 }
 
-void get_operand(col_geom_v &geom, char operand, int poly_size)
+void get_operand(col_geom_v &geom, const char &operand, const int &poly_size)
 {
    string uniforms = "TCOID";
 
@@ -913,18 +896,11 @@ void get_operand(col_geom_v &geom, char operand, int poly_size)
 void build_new_faces(map<string, map<string, string> > &faces_table,
                      map<string,int> verts_table, vector<vector<int> > &faces_new)
 {
-   //map<string,int>::iterator vn;
-   //unsigned int vert_num = 0;
-   //for(vn = verts_table.begin(); vn != verts_table.end(); vn++) {
-   //   fprintf(stderr,"%s = %d\n",(vn->first).c_str(),vn->second);
-   //}
-
    map<string, map<string, string> >::iterator ft;
    map<string, string>::iterator ftm;
    string face_name;
    for(ft = faces_table.begin(); ft != faces_table.end(); ft++) {
       for(ftm=ft->second.begin(); ftm!=ft->second.end(); ftm++) {
-//fprintf(stderr,"ft[%s][%s] = %s\n", ft->first.c_str(), ftm->first.c_str(), ftm->second.c_str());
          if (face_name != ft->first) {
             face_name = ft->first;
             string v0 = faces_table[face_name][ftm->first];
@@ -932,9 +908,6 @@ void build_new_faces(map<string, map<string, string> > &faces_table,
 
             vector<int> face;
             do {
-//if (verts_table[v] == 0)
-//fprintf(stderr,"might not be found %s = %s\n",face_name.c_str(),v.c_str());
-//fprintf(stderr,"v = %s\n",v.c_str());
                face.push_back(verts_table[v]);
                v = faces_table[face_name][v];
             } while( v != v0 );
@@ -966,8 +939,6 @@ void cn_ambo(col_geom_v &geom)
             verts_table[buf1] = vert_num++;
             verts_new.push_back((verts[v1]+verts[v2])*0.5);
          }
-         //fprintf(stderr,"f%d %d_%d %d_%d\n",i,(v1<v2)?v1:v2,(v1>v2)?v1:v2,(v2<v3)?v2:v3,(v2>v3)?v2:v3);
-         //fprintf(stderr,"v%d %d_%d %d_%d\n",v2,(v2<v3)?v2:v3,(v2>v3)?v2:v3,(v1<v2)?v1:v2,(v1>v2)?v1:v2);
          sprintf(buf1,"f%d",i);
          sprintf(buf2,"%d_%d",(v1<v2)?v1:v2,(v1>v2)?v1:v2);
          sprintf(buf3,"%d_%d",(v2<v3)?v2:v3,(v2>v3)?v2:v3);
@@ -1070,7 +1041,7 @@ void cn_gyro(col_geom_v &geom)
    geom.orient();
 }
 
-void cn_kis(col_geom_v &geom, int n)
+void cn_kis(col_geom_v &geom, const int &n)
 {
    vector<vector<int> > &faces = geom.raw_faces();
    vector<vec3d> &verts = geom.raw_verts();
@@ -1178,14 +1149,14 @@ void cn_reflect(col_geom_v &geom)
    geom.transform(mat3d::inversion());
 }
 
-void cn_truncate_by_algorithm(col_geom_v &geom, double ratio, int n)
+void cn_truncate_by_algorithm(col_geom_v &geom, const double &ratio, const int &n)
 {
    truncate_verts(geom, ratio, n);
    geom.orient();
 }
 
-void cn_expand(col_geom_v &geom, bool use_truncate_algorithm, char planarization_method, 
-               int num_iters_planar, double lim_planar, bool verbosity, int rep_count)
+void cn_expand(col_geom_v &geom, const bool &use_truncate_algorithm, const char &planarization_method, 
+               const int &num_iters_planar, const double &eps, const bool &verbosity, const int &rep_count)
 {
    if (use_truncate_algorithm) {
       verbose('^', 0, verbosity);
@@ -1195,7 +1166,7 @@ void cn_expand(col_geom_v &geom, bool use_truncate_algorithm, char planarization
       verbose('a',0,verbosity);
       cn_ambo(geom);
    }
-   cn_planarize(geom, planarization_method, num_iters_planar, lim_planar, verbosity, rep_count);
+   cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity, rep_count);
    if (use_truncate_algorithm) {
       verbose('^', 0, verbosity);
       cn_truncate_by_algorithm(geom, CN_ONE_HALF, 0);
@@ -1206,12 +1177,12 @@ void cn_expand(col_geom_v &geom, bool use_truncate_algorithm, char planarization
    }
 }
 
-void cn_join(col_geom_v &geom, bool use_truncate_algorithm, char planarization_method, 
-             int num_iters_planar, double lim_planar, bool verbosity, int rep_count)
+void cn_join(col_geom_v &geom, const bool &use_truncate_algorithm, const char &planarization_method, 
+             const int &num_iters_planar, const double &eps, const bool &verbosity, const int &rep_count)
 {
    verbose('d',0,verbosity);
    cn_dual(geom);
-   cn_planarize(geom, planarization_method, num_iters_planar, lim_planar, verbosity, rep_count);
+   cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity, rep_count);
    if (use_truncate_algorithm) {
       verbose('^', 0, verbosity);
       cn_truncate_by_algorithm(geom, CN_ONE_HALF, 0);
@@ -1220,59 +1191,59 @@ void cn_join(col_geom_v &geom, bool use_truncate_algorithm, char planarization_m
       verbose('a',0,verbosity);
       cn_ambo(geom);
    }
-   cn_planarize(geom, planarization_method, num_iters_planar, lim_planar, verbosity, rep_count);
+   cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity, rep_count);
    verbose('d',0,verbosity);
    cn_dual(geom);
 }
 
-void cn_meta(col_geom_v &geom, bool use_truncate_algorithm, char planarization_method,
-             int num_iters_planar, double lim_planar, bool verbosity, int rep_count)
+void cn_meta(col_geom_v &geom, const bool &use_truncate_algorithm, const char &planarization_method,
+             const int &num_iters_planar, const double &eps, const bool &verbosity, const int &rep_count)
 {
    verbose('k',0,verbosity);
    cn_kis(geom,0);
-   cn_planarize(geom, planarization_method, num_iters_planar, lim_planar, verbosity, rep_count);
+   cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity, rep_count);
    verbose('j',0,verbosity);
-   cn_join(geom, use_truncate_algorithm, planarization_method, num_iters_planar, lim_planar, verbosity, rep_count);
+   cn_join(geom, use_truncate_algorithm, planarization_method, num_iters_planar, eps, verbosity, rep_count);
 }
 
-void cn_ortho(col_geom_v &geom, bool use_truncate_algorithm, char planarization_method, 
-              int num_iters_planar, double lim_planar, bool verbosity, int rep_count)
+void cn_ortho(col_geom_v &geom, const bool &use_truncate_algorithm, const char &planarization_method,
+              const int &num_iters_planar, const double &eps, const bool &verbosity, const int &rep_count)
 {
    verbose('j',0,verbosity);
-   cn_join(geom, use_truncate_algorithm, planarization_method, num_iters_planar, lim_planar, verbosity, rep_count);
-   cn_planarize(geom, planarization_method, num_iters_planar, lim_planar, verbosity, rep_count);
+   cn_join(geom, use_truncate_algorithm, planarization_method, num_iters_planar, eps, verbosity, rep_count);
+   cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity, rep_count);
    verbose('j',0,verbosity);
-   cn_join(geom, use_truncate_algorithm, planarization_method, num_iters_planar, lim_planar, verbosity, rep_count);
+   cn_join(geom, use_truncate_algorithm, planarization_method, num_iters_planar, eps, verbosity, rep_count);
 }
 
-void cn_truncate(col_geom_v &geom, int n, char planarization_method,
-                 int num_iters_planar, double lim_planar, bool verbosity, int rep_count)
+void cn_truncate(col_geom_v &geom, const int &n, const char &planarization_method,
+                 const int &num_iters_planar, const double &eps, const bool &verbosity, const int &rep_count)
 {
    verbose('d',0,verbosity);
    cn_dual(geom);
-   cn_planarize(geom, planarization_method, num_iters_planar, lim_planar, verbosity, rep_count);
+   cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity, rep_count);
    verbose('k',n,verbosity);
    cn_kis(geom, n);
-   cn_planarize(geom, planarization_method, num_iters_planar, lim_planar, verbosity, rep_count);
+   cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity, rep_count);
    verbose('d',0,verbosity);
    cn_dual(geom);
 }
 
-void cn_snub(col_geom_v &geom, char planarization_method,
-             int num_iters_planar, double lim_planar, bool verbosity, int rep_count)
+void cn_snub(col_geom_v &geom, const char &planarization_method,
+             const int &num_iters_planar, const double &eps, const bool &verbosity, const int &rep_count)
 {
    verbose('d',0,verbosity);
    cn_dual(geom);
-   cn_planarize(geom, planarization_method, num_iters_planar, lim_planar, verbosity, rep_count);
+   cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity, rep_count);
    verbose('g',0,verbosity);
    cn_gyro(geom);
-   cn_planarize(geom, planarization_method, num_iters_planar, lim_planar, verbosity, rep_count);
+   cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity, rep_count);
    verbose('d',0,verbosity);
    cn_dual(geom);
 }
 
-void cn_bevel(col_geom_v &geom, bool use_truncate_algorithm, char planarization_method,
-              int num_iters_planar, double lim_planar, bool verbosity, int rep_count)
+void cn_bevel(col_geom_v &geom, const bool &use_truncate_algorithm, const char &planarization_method,
+              const int &num_iters_planar, const double &eps, const bool &verbosity, const int &rep_count)
 {
    if (use_truncate_algorithm) {
       verbose('#',0,verbosity);
@@ -1280,9 +1251,9 @@ void cn_bevel(col_geom_v &geom, bool use_truncate_algorithm, char planarization_
    }
    else {
       verbose('t',0,verbosity);
-      cn_truncate(geom, 0, planarization_method, num_iters_planar, lim_planar, verbosity, rep_count);
+      cn_truncate(geom, 0, planarization_method, num_iters_planar, eps, verbosity, rep_count);
    }
-   cn_planarize(geom, planarization_method, num_iters_planar, lim_planar, verbosity, rep_count);
+   cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity, rep_count);
    if (use_truncate_algorithm) {
       verbose('^', 0, verbosity);
       cn_truncate_by_algorithm(geom, CN_ONE_HALF, 0);
@@ -1293,11 +1264,10 @@ void cn_bevel(col_geom_v &geom, bool use_truncate_algorithm, char planarization_
    }
 }
 
-void do_operations(col_geom_v &geom, vector<ops *> operations, char planarization_method, int num_iters_planar, double lim_planar,
-                   bool use_truncate_algorithm, bool verbosity, int rep_count)
+void do_operations(col_geom_v &geom, const vector<ops *> &operations, const char &planarization_method, const int &num_iters_planar, const double &eps,
+                   const bool &use_truncate_algorithm, const bool &verbosity, const int &rep_count)
 {
    for(unsigned int i=0;i<operations.size();i++) {
-//fprintf(stderr,"pos = %d, op = %c, var = %d\n",operations[i]->op_pos,operations[i]->op,operations[i]->op_var);
       switch(operations[i]->op) {
          // "real" cases
          // ambo
@@ -1351,37 +1321,37 @@ void do_operations(col_geom_v &geom, vector<ops *> operations, char planarizatio
          // bevel
          case 'b':
             verbose(operations[i]->op,operations[i]->op_var,verbosity);
-            cn_bevel(geom, use_truncate_algorithm, planarization_method, num_iters_planar, lim_planar, verbosity, rep_count);
+            cn_bevel(geom, use_truncate_algorithm, planarization_method, num_iters_planar, eps, verbosity, rep_count);
             break;
 
          // expand
          case 'e':
             verbose(operations[i]->op, operations[i]->op_var, verbosity);
-            cn_expand(geom, use_truncate_algorithm, planarization_method, num_iters_planar, lim_planar, verbosity, rep_count);
+            cn_expand(geom, use_truncate_algorithm, planarization_method, num_iters_planar, eps, verbosity, rep_count);
             break;
 
          // join
          case 'j':
             verbose(operations[i]->op, operations[i]->op_var, verbosity);
-            cn_join(geom, use_truncate_algorithm, planarization_method, num_iters_planar, lim_planar, verbosity, rep_count);
+            cn_join(geom, use_truncate_algorithm, planarization_method, num_iters_planar, eps, verbosity, rep_count);
             break;
 
          // meta
          case 'm':
             verbose(operations[i]->op, operations[i]->op_var, verbosity);
-            cn_meta(geom, use_truncate_algorithm, planarization_method, num_iters_planar, lim_planar, verbosity, rep_count);
+            cn_meta(geom, use_truncate_algorithm, planarization_method, num_iters_planar, eps, verbosity, rep_count);
             break;
 
          // ortho
          case 'o':
             verbose(operations[i]->op, operations[i]->op_var, verbosity);
-            cn_ortho(geom, use_truncate_algorithm, planarization_method, num_iters_planar, lim_planar, verbosity, rep_count);
+            cn_ortho(geom, use_truncate_algorithm, planarization_method, num_iters_planar, eps, verbosity, rep_count);
             break;
 
          // snub
          case 's':
             verbose(operations[i]->op, operations[i]->op_var, verbosity);
-            cn_snub(geom, planarization_method, num_iters_planar, lim_planar, verbosity, rep_count);
+            cn_snub(geom, planarization_method, num_iters_planar, eps, verbosity, rep_count);
             break;
 
          // truncate. same as dk(n)d
@@ -1392,7 +1362,7 @@ void do_operations(col_geom_v &geom, vector<ops *> operations, char planarizatio
             }
             else {
                verbose(operations[i]->op, operations[i]->op_var, verbosity);
-               cn_truncate(geom, operations[i]->op_var, planarization_method, num_iters_planar, lim_planar, verbosity, rep_count);
+               cn_truncate(geom, operations[i]->op_var, planarization_method, num_iters_planar, eps, verbosity, rep_count);
             }
             break;
 
@@ -1400,12 +1370,12 @@ void do_operations(col_geom_v &geom, vector<ops *> operations, char planarizatio
             fprintf(stderr,"unexpected operator: '%c'\n", operations[i]->op);
       }
 
-      cn_planarize(geom, planarization_method, num_iters_planar, lim_planar, verbosity, rep_count);
+      cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity, rep_count);
 //      unitize_edges(geom);
    }
 }
 
-void cn_face_coloring(col_geom_v &geom, char face_coloring_method, color_map_multi &map, int face_opacity, string face_pattern)
+void cn_face_coloring(col_geom_v &geom, const char &face_coloring_method, const color_map_multi &map, const int &face_opacity, const string &face_pattern)
 {
    if (face_coloring_method == 'n') {
       const vector<vector<int> > &faces = geom.faces();
@@ -1463,9 +1433,9 @@ int main(int argc, char *argv[])
    geom.orient();
    centroid_to_origin(geom);
 
-   do_operations(geom, opts.operations, opts.planarization_method, opts.num_iters_planar, pow(10, -opts.lim_exp_planar),
+   do_operations(geom, opts.operations, opts.planarization_method, opts.num_iters_planar, opts.epsilon,
                  opts.use_truncate_algorithm, opts.verbosity, opts.rep_count);
-   canonicalize(geom, opts.canonical_method, opts.num_iters_canonical, pow(10, -opts.lim_exp_canonical),
+   canonicalize(geom, opts.canonical_method, opts.num_iters_canonical, opts.epsilon,
                 opts.verbosity, opts.rep_count);
 
    if (opts.unitize)

@@ -875,7 +875,7 @@ static bool is_sym(const geom_if &test_geom, const geom_if &geom,
    col_geom_v s_geom = geom;
    s_geom.transform(trans);
 
-   bool is_congruent = check_congruence(geom, s_geom, sym_eps, &new_equivs);
+   bool is_congruent = check_congruence(geom, s_geom, &new_equivs, sym_eps);
    return is_congruent;
 }
 
@@ -886,7 +886,7 @@ static int find_syms(const geom_if &geom, t_set &ts,
    
    col_geom_v merged_geom = geom;
    vector<map<int, set<int> > > orig_equivs;
-   sort_merge_elems(merged_geom, "vef", epsilon, &orig_equivs);
+   sort_merge_elems(merged_geom, "vef", &orig_equivs, epsilon);
    col_geom_v test_geom = merged_geom;
 
    geom_info inf(merged_geom);
@@ -1142,7 +1142,7 @@ void get_equiv_elems(const geom_if &geom, const t_set &ts,
 {
    col_geom_v merged_geom = geom;
    vector<map<int, set<int> > > orig_equivs;
-   sort_merge_elems(merged_geom, "vef", epsilon, &orig_equivs);
+   sort_merge_elems(merged_geom, "vef", &orig_equivs, epsilon);
    col_geom_v test_geom = merged_geom;
 
    vector<map<int, set<int> > > equiv_elems(3);
@@ -1154,7 +1154,7 @@ void get_equiv_elems(const geom_if &geom, const t_set &ts,
       col_geom_v trans_geom = merged_geom;
       trans_geom.transform(*si);
       vector<map<int, set<int> > > new_equivs;
-      check_congruence(merged_geom, trans_geom, sym_eps, &new_equivs);
+      check_congruence(merged_geom, trans_geom, &new_equivs, sym_eps);
       update_equiv_elems(equiv_elems, new_equivs, cnts);
    }
 

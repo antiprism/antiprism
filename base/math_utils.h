@@ -83,8 +83,14 @@ int quartic(double coeffs[5], double sol[4], double sol_i[4]=0);
  * \return The number of real solutions. */
 int cubic(double coeffs[4], double sol[3]);
 
-bool double_equality(const double &d1, const double &d2,
-      const double &eps=epsilon);
+// double comparison convenience functions
+int double_compare(const double &d1, const double &d2, const double &eps=epsilon);
+bool double_eq(const double &d1, const double &d2, const double &eps=epsilon);
+bool double_ne(const double &d1, const double &d2, const double &eps=epsilon);
+bool double_gt(const double &d1, const double &d2, const double &eps=epsilon);
+bool double_ge(const double &d1, const double &d2, const double &eps=epsilon);
+bool double_lt(const double &d1, const double &d2, const double &eps=epsilon);
+bool double_le(const double &d1, const double &d2, const double &eps=epsilon);
 
 ///Make a value safe to use as an argument with acos and asin
 /**Map the value to the nearest value in the range
@@ -115,14 +121,51 @@ inline double safe_for_trig(double val) {
    return (std::min(1.0, std::max(-1.0, val)));
 }
 
-inline bool double_equality(const double &d1, const double &d2,
-      const double &eps)
+// considering epsilon, return 0 if equal, -1 if d1 < d2, 1 if d1 > d2
+inline int double_compare(const double &d1, const double &d2, const double &eps)
 {
-   const double diff = d1 - d2;
-   return diff < eps && diff > -eps;
+    const double diff = d1 - d2;
+    //return (diff < -eps ? -1 : (diff > eps ? 1 : 0)); // includes epsilon as zero
+    return (diff < eps ? (diff > -eps ? 0 : -1) : 1); // excludes epsilon as zero
 }
 
+// true if d1 == d2 are considering epsilon
+inline bool double_eq(const double &d1, const double &d2, const double &eps)
+{
+   //const double diff = d1 - d2;
+   //return diff < eps && diff > -eps; // excludes epsilon as zero
+   return (!double_compare(d1,d2,eps));
+}
 
+// true if d1 != d2 considering epsilon
+inline bool double_ne(const double &d1, const double &d2, const double &eps)
+{
+   return (double_compare(d1,d2,eps));
+}
+
+// true if d1 > d2 considering epsilon
+inline bool double_gt(const double &d1, const double &d2, const double &eps)
+{
+   return (double_compare(d1,d2,eps) > 0);
+}
+
+// true if d1 >= d2 considering epsilon
+inline bool double_ge(const double &d1, const double &d2, const double &eps)
+{
+   return (double_compare(d1,d2,eps) > -1);
+}
+
+// true if d1 < d2 considering epsilon
+inline bool double_lt(const double &d1, const double &d2, const double &eps)
+{
+   return (double_compare(d1,d2,eps) < 0);
+}
+
+// true if d1 >= d2 considering epsilon
+inline bool double_le(const double &d1, const double &d2, const double &eps)
+{
+   return (double_compare(d1,d2,eps) < 1);
+}
 
 #endif // MATH_UTILS_H
 

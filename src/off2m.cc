@@ -45,6 +45,9 @@ using std::vector;
 
 class o2m_opts: public prog_opts {
    public:
+      string ifile;
+      string ofile;
+
       double edge_size;
       double point_size;
       bool lighting;
@@ -56,8 +59,6 @@ class o2m_opts: public prog_opts {
       int f_dtype;
       col_val bg_col;
       vec3d view_point;
-      string ifile;
-      string ofile;
 
       o2m_opts(): prog_opts("off2m"),
              edge_size(0.0),
@@ -219,7 +220,7 @@ void o2m_opts::process_command_line(int argc, char **argv)
    
 }
 
-string RGBtxt(col_val col)
+string RGBtxt(const col_val &col)
 {
    char buf[128];
    vec3d cv = col.get_vec3d();
@@ -227,7 +228,7 @@ string RGBtxt(col_val col)
    return buf;
 }
 
-string Vtxt(vec3d v, int dgts)
+string Vtxt(const vec3d &v, const int &dgts)
 {
    char buf[128];
    if(dgts>0)
@@ -238,7 +239,7 @@ string Vtxt(vec3d v, int dgts)
 }
 
 // elem_type 1=vertex, 2=edge, 3=face
-int get_last_visible(col_geom_v &geom, int elem_type, col_val def_col)
+int get_last_visible(const col_geom_v &geom, const int &elem_type, const col_val &def_col)
 {
    int end = (elem_type == 1 ? geom.verts().size() : (elem_type == 2 ? geom.edges().size() : geom.faces().size()));
 
@@ -256,7 +257,7 @@ int get_last_visible(col_geom_v &geom, int elem_type, col_val def_col)
    return last;
 } 
 
-int print_m_solid(FILE *ofile, col_geom_v &geom, int sig_digits, col_val face_col)
+int print_m_solid(FILE *ofile, const col_geom_v &geom, const int &sig_digits, const col_val &face_col)
 {
    const vector<vector<int> > &faces = geom.faces();
    const vector<vec3d> &verts = geom.verts();
@@ -292,18 +293,17 @@ int print_m_solid(FILE *ofile, col_geom_v &geom, int sig_digits, col_val face_co
 } 
 
 
-void print_m_frame_edge(FILE *ofile, vec3d v1, vec3d v2, int sig_digits, double edge_size, col_val edge_col)
+void print_m_frame_edge(FILE *ofile, const vec3d &v1, const vec3d &v2, const int &sig_digits, const double &edge_size, const col_val &edge_col)
 {
    fprintf(ofile,"{");
    fprintf(ofile, "Thickness[%g], ", edge_size);
    if (edge_col.is_set())
       fprintf(ofile, "%s, ", RGBtxt(edge_col).c_str());
-   fprintf(ofile, "Line[{%s, %s}", Vtxt(v1, sig_digits).c_str(),
-         Vtxt(v2, sig_digits).c_str());
+   fprintf(ofile, "Line[{%s, %s}", Vtxt(v1, sig_digits).c_str(), Vtxt(v2, sig_digits).c_str());
    fprintf(ofile, "]}");
 } 
 
-int print_m_frame(FILE *ofile, col_geom_v &geom, int sig_digits, double edge_size, col_val edge_col, bool more_to_print)
+int print_m_frame(FILE *ofile, const col_geom_v &geom, const int &sig_digits, const double &edge_size, const col_val &edge_col, const bool &more_to_print)
 {
    const vector<vector<int> > &edges = geom.edges();
    const vector<vec3d> &verts = geom.verts();
@@ -317,8 +317,7 @@ int print_m_frame(FILE *ofile, col_geom_v &geom, int sig_digits, double edge_siz
       ecol = ecol.is_val() ? ecol : edge_col;
       if(ecol.is_inv())
          continue;
-      print_m_frame_edge(ofile, verts[edges[i][0]], verts[edges[i][1]],
-            sig_digits, edge_size, ecol);
+      print_m_frame_edge(ofile, verts[edges[i][0]], verts[edges[i][1]], sig_digits, edge_size, ecol);
       if (i==last && !more_to_print)
          fprintf(ofile, "}");
       fprintf(ofile,",\n");
@@ -328,7 +327,7 @@ int print_m_frame(FILE *ofile, col_geom_v &geom, int sig_digits, double edge_siz
 } 
 
 
-int print_m_points(FILE *ofile, col_geom_v &geom, int sig_digits, double point_size, col_val vert_col, bool more_to_print)
+int print_m_points(FILE *ofile, const col_geom_v &geom, const int &sig_digits, const double &point_size, const col_val &vert_col, const bool &more_to_print)
 {
    const vector<vec3d> &verts = geom.verts();
    
@@ -360,7 +359,8 @@ void print_m_head(FILE *ofile)
    fprintf(ofile,"Graphics3D[{\n");
 }
 
-void print_m_tail(FILE *ofile, col_geom_v &geom, bool lighting, col_val &bg, vec3d view_point)
+// view_point is not changed
+void print_m_tail(FILE *ofile, const col_geom_v &geom, const bool &lighting, const col_val &bg, vec3d view_point)
 {
    bound_sphere b_sph(geom.verts());
    vec3d center = b_sph.get_centre();

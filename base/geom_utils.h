@@ -40,27 +40,27 @@ void make_polar_zono(geom_if &zono, int star_n, bool out_star);
 
 
 // RK - test points versus hull functions
-bool is_geom_fully_outside_hull(const geom_if &, const geom_if &, double);
-bool is_geom_outside_hull(const geom_if &, const geom_if &, double);
-bool is_geom_on_surface_hull(const geom_if &, const geom_if &, double);
-bool is_geom_inside_hull(const geom_if &, const geom_if &, double);
-bool is_geom_fully_inside_hull(const geom_if &, const geom_if &, double);
-bool is_point_fully_outside_hull(const vec3d &, const geom_if &, double);
-bool is_point_outside_hull(const vec3d &, const geom_if &, double);
-bool is_point_on_surface_hull(const vec3d &, const geom_if &, double);
-bool is_point_inside_hull(const vec3d &, const geom_if &, double);
-bool is_point_fully_inside_hull(const vec3d &, const geom_if &, double);
+bool is_geom_fully_outside_hull(const geom_if &, const geom_if &, double eps=epsilon);
+bool is_geom_outside_hull(const geom_if &, const geom_if &, double eps=epsilon);
+bool is_geom_on_surface_hull(const geom_if &, const geom_if &, double eps=epsilon);
+bool is_geom_inside_hull(const geom_if &, const geom_if &, double eps=epsilon);
+bool is_geom_fully_inside_hull(const geom_if &, const geom_if &, double eps=epsilon);
+bool is_point_fully_outside_hull(const vec3d &, const geom_if &, double eps=epsilon);
+bool is_point_outside_hull(const vec3d &, const geom_if &, double eps=epsilon);
+bool is_point_on_surface_hull(const vec3d &, const geom_if &, double eps=epsilon);
+bool is_point_inside_hull(const vec3d &, const geom_if &, double eps=epsilon);
+bool is_point_fully_inside_hull(const vec3d &, const geom_if &, double eps=epsilon);
 
 
 // RK - Various find functions for geom
-int find_vertex_by_coordinate(geom_if &geom, vec3d v, double eps=epsilon);
+int find_vertex_by_coordinate(geom_if &geom, const vec3d &v, double eps=epsilon);
 bool edge_exists_in_face(const vector<int> &face, const vector<int> &edge);
 bool are_edges_equal(const vector<int> &edge2, const vector<int> &edge1);
 vector<int> find_faces_with_edge(const vector<vector<int> > &faces, const vector<int> &edge);
-bool vertex_exists_in_face(const vector<int> &face, int v_idx);
-bool vertex_exists_in_edge(const vector<int> &edge, int v_idx);
-vector<int> find_faces_with_vertex(const vector<vector<int> > &faces, int v_idx);
-vector<int> find_edges_with_vertex(const vector<vector<int> > &edges, int v_idx);
+bool vertex_exists_in_face(const vector<int> &face, const int &v_idx);
+bool vertex_exists_in_edge(const vector<int> &edge, const int &v_idx);
+vector<int> find_faces_with_vertex(const vector<vector<int> > &faces, const int &v_idx);
+vector<int> find_edges_with_vertex(const vector<vector<int> > &edges, const int &v_idx);
 int find_edge_in_edge_list(const vector<vector<int> > &edges, const vector<int> &edge);
 vector<vector<int> > find_unmatched_edges(col_geom_v &geom);
 
@@ -73,8 +73,8 @@ class xnormal
       
    public:
       xnormal() { direction = 0; } // unset normal
-      xnormal(const geom_if &geom, int face_idx, vec3d C=vec3d(), double eps=epsilon); // face normal
-      xnormal(const geom_if &geom, vec3d norm, int v_idx, vec3d C=vec3d(), double eps=epsilon); // for precalculated normals
+      xnormal(const geom_if &geom, const int &face_idx, vec3d C=vec3d(), double eps=epsilon); // face normal
+      xnormal(const geom_if &geom, const vec3d &norm, const int &v_idx, vec3d C=vec3d(), double eps=epsilon); // for precalculated normals
 
       virtual ~xnormal() {}
 
@@ -96,7 +96,7 @@ class fnormals
       const geom_if *ngeom;
       vector<xnormal> normals;
 
-      vec3d average_normals(vector<int> &face_idx, string average_pattern);
+      vec3d average_normals(vector<int> &face_idx, const string &average_pattern);
       
    public:
       fnormals() {};
@@ -104,8 +104,8 @@ class fnormals
       void refresh(const geom_if &, vec3d C=vec3d(), double eps=epsilon);
       virtual ~fnormals() {}
 
-      xnormal edge_normal(int idx1, int idx2, string average_pattern, vec3d C=vec3d(), double eps=epsilon);
-      xnormal vertex_normal(int idx, string average_pattern, vec3d C=vec3d(), double eps=epsilon);
+      xnormal edge_normal(const int &idx1, const int &idx2, const string &average_pattern, vec3d C=vec3d(), double eps=epsilon);
+      xnormal vertex_normal(const int &idx, const string &average_pattern, vec3d C=vec3d(), double eps=epsilon);
       
       unsigned int size() const { return (normals.size()); }
       bool in_range(unsigned int idx) const { return (idx < (unsigned int)size()); }

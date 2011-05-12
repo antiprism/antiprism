@@ -701,7 +701,7 @@ void id_opts::process_command_line(int argc, char **argv)
       error(errmsg, 'm');
 }
 
-void verbose_output(vec3d A, vec3d B, vec3d C, double alpha, double beta, double gamma)
+void verbose_output(const vec3d &A, const vec3d &B, const vec3d &C, const double &alpha, const double &beta, const double &gamma)
 {
    A.dump("\nVector A",stderr);
    B.dump("Vector B",stderr);
@@ -712,7 +712,7 @@ void verbose_output(vec3d A, vec3d B, vec3d C, double alpha, double beta, double
    fprintf(stderr,"gamma = %1.15f\n\n", gamma);
 }
 
-void make_triangle(col_geom_v &geom, vec3d A, vec3d B, vec3d C, double alpha, double beta, double gamma)
+void make_triangle(col_geom_v &geom, const vec3d &A, const vec3d &B, const vec3d &C, const double &alpha, const double &beta, const double &gamma)
 {
    geom.add_vert(A*alpha);
    geom.add_vert(B*beta);
@@ -725,8 +725,8 @@ void make_triangle(col_geom_v &geom, vec3d A, vec3d B, vec3d C, double alpha, do
    geom.add_face(face);
 }
 
-void make_poly(col_geom_v &geom, string sym_type, bool triangle_only, bool verbose,
-               vec3d A, vec3d B, vec3d C, double alpha, double beta, double gamma)
+void make_poly(col_geom_v &geom, const string &sym_type, const bool &triangle_only, const bool &verbose,
+               const vec3d &A, const vec3d &B, const vec3d &C, const double &alpha, const double &beta, const double &gamma)
 {
    if (verbose)
       verbose_output(A, B, C, alpha, beta, gamma);
@@ -740,11 +740,11 @@ void make_poly(col_geom_v &geom, string sym_type, bool triangle_only, bool verbo
 
    if (!triangle_only) {
       sym_repeat(geom, geom, sym_type);
-      sort_merge_elems(geom, "vef", 1e-8);
+      sort_merge_elems(geom, "vef", epsilon);
    }
 }
 
-void make_delta_dipyramid(col_geom_v &geom, int n, int d, bool triangle_only = false, bool verbose = false)
+void make_delta_dipyramid(col_geom_v &geom, const int &n, const int &d, bool triangle_only = false, bool verbose = false)
 {
    char buf1[MSG_SZ];
    char buf2[MSG_SZ];
@@ -785,7 +785,7 @@ void unit_octahedron(col_geom_v &geom)
 }
 */
 
-void tet_to_dihedral(col_geom_v &geom, string sym_from, int k, mat3d pos=mat3d())
+void tet_to_dihedral(col_geom_v &geom, const string &sym_from, const int &k, mat3d pos=mat3d())
 {
    char sym_to[MSG_SZ];
    sprintf(sym_to,"D%d%s",k,((k%4 == 0) ? "h" : "v"));
@@ -793,13 +793,13 @@ void tet_to_dihedral(col_geom_v &geom, string sym_from, int k, mat3d pos=mat3d()
 }
 
 
-void case_a_star_tetrahedron(col_geom_v &geom, int k)
+void case_a_star_tetrahedron(col_geom_v &geom, const int &k)
 {
    geom.read_resource("u1");
    tet_to_dihedral(geom, "Td", 2*k);
 }
 
-void case_b_5_or_10_tetrahedra(col_geom_v &geom, double angle, int k)
+void case_b_5_or_10_tetrahedra(col_geom_v &geom, double angle, const int &k)
 {
    if (angle == INFINITY)
       angle = 0;
@@ -818,7 +818,7 @@ void case_b_5_or_10_tetrahedra(col_geom_v &geom, double angle, int k)
    }
 }
 
-void case_c_2_dipyramids(col_geom_v &geom, double angle, int n, int d)
+void case_c_2_dipyramids(col_geom_v &geom, double angle, const int &n, const int &d)
 {
    if (angle == INFINITY) {
       angle = (M_PI/2)/n; // 90/n degrees
@@ -850,7 +850,7 @@ void case_d_6_octahedra(col_geom_v &geom, double angle)
    transform_and_repeat(geom, "T", "D2h");
 }
 
-void case_e_4_or_8_triangular_dipyramids(col_geom_v &geom, double angle, int k)
+void case_e_4_or_8_triangular_dipyramids(col_geom_v &geom, double angle, const int &k)
 {
    if (angle == INFINITY)
       angle = 0;
@@ -873,7 +873,7 @@ void case_e_4_or_8_triangular_dipyramids(col_geom_v &geom, double angle, int k)
    }
 }
 
-void case_f_6_or_12_pentagonal_dipyramids(col_geom_v &geom, double angle, int k)
+void case_f_6_or_12_pentagonal_dipyramids(col_geom_v &geom, double angle, const int &k)
 {
    if (angle == INFINITY)
       angle = 0;
@@ -914,7 +914,7 @@ void case_g_2_tetrahedra(col_geom_v &geom, double angle)
    tet_to_dihedral(geom, "S4", 2); // 2*k=4
 }
 
-void case_h_2k_tetrahedra(col_geom_v &geom, double angle, int k)
+void case_h_2k_tetrahedra(col_geom_v &geom, double angle, const int &k)
 {
    if (angle == INFINITY)
       angle = deg2rad(1.0);
@@ -944,7 +944,7 @@ void case_j_12_tetrahedra(col_geom_v &geom, double angle)
    transform_and_repeat(geom, "T", "Oh", mat3d::rot(0,0,angle));
 }
 
-void case_k_2k_dipyramids(col_geom_v &geom, double angle, int k, int n, int d)
+void case_k_2k_dipyramids(col_geom_v &geom, double angle, const int &k, const int &n, const int &d)
 {
    if (angle == INFINITY)
       angle = deg2rad(1.0);
@@ -961,7 +961,7 @@ void case_k_2k_dipyramids(col_geom_v &geom, double angle, int k, int n, int d)
    transform_and_repeat(geom, sym_to, sym_from);
 }
 
-void case_l_k_dipyramids(col_geom_v &geom, int k, int n, int d)
+void case_l_k_dipyramids(col_geom_v &geom, const int &k, const int &n, const int &d)
 {
    fprintf(stderr,"Using: ");
    make_delta_dipyramid(geom, n, d);
@@ -974,7 +974,7 @@ void case_l_k_dipyramids(col_geom_v &geom, int k, int n, int d)
    transform_and_repeat(geom, sym_to, sym_from);
 }
 
-void case_m_10_or_20_triangular_dipyramids(col_geom_v &geom, double angle, int k)
+void case_m_10_or_20_triangular_dipyramids(col_geom_v &geom, double angle, const int &k)
 {
    if (angle == INFINITY)
       angle = 0;
@@ -1014,7 +1014,7 @@ void case_n_6_10_3_star_dipyramids(col_geom_v &geom, double angle)
       mat3d::rot(vec3d(0,0,1), vec3d(0,1,phi)) * mat3d::rot(0,0,angle+M_PI/10));
 }
 
-void case_o_5_or_10_augmented_tetrahedra(col_geom_v &geom, double angle, int k)
+void case_o_5_or_10_augmented_tetrahedra(col_geom_v &geom, double angle, const int &k)
 {
    if (angle == INFINITY)
       angle = 0;
@@ -1047,7 +1047,7 @@ void case_q_5_excavated_octahedra(col_geom_v &geom, double angle)
    transform_and_repeat(geom, "I", "Oh", mat3d::rot(0,angle,0));
 }
 
-void compound_coloring(col_geom_v &geom, char coloring_method, color_map_multi &map, int face_opacity)
+void compound_coloring(col_geom_v &geom, const char &coloring_method, const color_map_multi &map, const int &face_opacity)
 {
    // color by sub-symmetry  as map indexes happened by default in sym_repeat()
    if (!coloring_method) {
@@ -1191,8 +1191,6 @@ int main(int argc, char *argv[])
    }
 
    geom.orient();
-
-//fprintf(stderr,"coloring_method = >%c<\n",opts.coloring_method);
 
    compound_coloring(geom, opts.coloring_method, opts.map, opts.face_opacity);
    

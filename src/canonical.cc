@@ -46,33 +46,30 @@ using std::vector;
 class cn_opts: public prog_opts
 {
    public:
+      string ifile;
+      string ofile;
+
       int num_iters;
       double edge_factor;
       double plane_factor;
-      int lim_exp_canonical;
       char method;
       char cent_type;
       int num_iters_preplanar;
-      int lim_exp_preplanar;
       int rep_count;
       int divergence_test;
       
-      string ifile;
-      string ofile;
-      
-      int epsilon_num;
+      double epsilon;
 
       cn_opts(): prog_opts("canonical"),
                  num_iters(-1),
                  edge_factor(50),
                  plane_factor(20),
-                 lim_exp_canonical(INT_MAX),
                  method('n'),
                  cent_type('\0'),
                  num_iters_preplanar(-1),
-                 lim_exp_preplanar(INT_MAX),
                  rep_count(50),
-                 divergence_test(10)
+                 divergence_test(10),
+                 epsilon(0)
                  {}
 
       void process_command_line(int argc, char **argv);
@@ -118,10 +115,8 @@ void cn_opts::usage()
 "\n"
 "Pre-planarization Options (-C p and -C q)\n"
 "  -i <itrs> maximum number of pre-planarize iterations (default: no limit)\n"
-"  -j <lim>  minimum distance change to terminate pre-planarize, as negative\n"
-"               exponent (default: %d giving %.0e)\n"
 "\n"
-"\n",prog_name(), help_ver_text, epsilon_num,::epsilon,epsilon_num,::epsilon);
+"\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }
 
 void cn_opts::process_command_line(int argc, char **argv)
@@ -129,12 +124,12 @@ void cn_opts::process_command_line(int argc, char **argv)
    char errmsg[MSG_SZ];
    opterr = 0;
    char c;
-   
-   epsilon_num = int(-log(::epsilon)/log(10) + 0.5);
+
+   int sig_compare = INT_MAX;
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hn:e:p:l:d:M:C:i:j:z:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hn:e:p:l:d:M:C:i:z:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -158,12 +153,12 @@ void cn_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'l':
-            if(!read_int(optarg, &lim_exp_canonical, errmsg))
+            if(!read_int(optarg, &sig_compare, errmsg))
                error(errmsg, c);
-            if(lim_exp_canonical < 0) {
+            if(sig_compare < 0) {
                warning("limit is negative, and so ignored", c);
             }
-            if(lim_exp_canonical > 16) {
+            if(sig_compare > DEF_SIG_DGTS) {
                warning("limit is very small, may not be attainable", c);
             }
             break;
@@ -205,17 +200,6 @@ void cn_opts::process_command_line(int argc, char **argv)
                error("number of iterations for preplanarization must be greater than 0", c);
             break;
 
-         case 'j':
-            if(!read_int(optarg, &lim_exp_preplanar, errmsg))
-               error(errmsg, c);
-            if(lim_exp_preplanar < 0) {
-               warning("limit is negative, and so ignored", c);
-            }
-            if(lim_exp_preplanar > 16) {
-               warning("limit is very small, may not be attainable", c);
-            }
-            break;
-
          case 'z':
             if(!read_int(optarg, &rep_count, errmsg))
                error(errmsg, c);
@@ -247,8 +231,7 @@ void cn_opts::process_command_line(int argc, char **argv)
    if(argc-optind == 1)
       ifile=argv[optind];
 
-   lim_exp_preplanar = (lim_exp_preplanar != INT_MAX) ? lim_exp_preplanar : epsilon_num;
-   lim_exp_canonical = (lim_exp_canonical != INT_MAX) ? lim_exp_canonical : epsilon_num;
+   epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
 void centroid_to_origin(geom_if &geom)
@@ -279,20 +262,18 @@ int main(int argc, char *argv[])
       centroid_to_origin(geom);
 
    if(opts.cent_type=='p' || opts.cent_type=='q')
-      canonicalize_cn(geom, opts.num_iters_preplanar, pow(10, -opts.lim_exp_preplanar),
-                      opts.cent_type, opts.divergence_test, opts.rep_count);
+      canonicalize_cn(geom, opts.num_iters_preplanar, opts.cent_type, opts.divergence_test, opts.rep_count, opts.epsilon);
    else
    if(opts.cent_type=='s')
       project_onto_sphere(geom);
 
    if(opts.method=='m' || opts.method=='l') {
       bool planarize_only = (opts.method=='l') ? true : false;
-      canonicalize_mm(geom, opts.edge_factor/100, opts.plane_factor/100, opts.num_iters, pow(10, -opts.lim_exp_canonical),
-                       opts.divergence_test, opts.rep_count, planarize_only);
+      canonicalize_mm(geom, opts.edge_factor/100, opts.plane_factor/100, opts.num_iters, opts.divergence_test, opts.rep_count, planarize_only, opts.epsilon);
    }
    else {
       // conway notation canonicalize expects 'c' for canonicalize
-      canonicalize_cn(geom, opts.num_iters, pow(10, -opts.lim_exp_canonical), opts.method, opts.divergence_test, opts.rep_count);
+      canonicalize_cn(geom, opts.num_iters, opts.method, opts.divergence_test, opts.rep_count, opts.epsilon);
    }
 
    if(!geom.write(opts.ofile, errmsg))

@@ -69,7 +69,6 @@ class lutil_opts: public prog_opts {
       bool list_struts;
       col_val cent_col;
       bool trans_to_origin;
-      int sig_compare;
 
       double epsilon;
       vector<col_val> remove_vertex_color_list;
@@ -97,7 +96,6 @@ class lutil_opts: public prog_opts {
                     list_radii(false),
                     list_struts(false),
                     trans_to_origin(false),
-                    sig_compare(INT_MAX),
                     epsilon(0) {}
 
       void process_command_line(int argc, char **argv);
@@ -116,6 +114,7 @@ void lutil_opts::usage()
 "If the input possesses faces they are stripped by default.\n"
 "\n"
 "Options\n"
+"%s"
 "  -h        this help message\n"
 "  -z        suppress stripping of faces\n"
 "  -x <colr> remove every vertex of color colr\n"
@@ -137,7 +136,7 @@ void lutil_opts::usage()
 "  -Z <col>  add center vertex to final product in color col\n"
 "  -R <file> repeat off file at every vertex in lattice\n"
 "  -K        append cage of container of -k to final product\n"
-"  -y <lim>  minimum distance for unique vertex locations as negative exponent\n"
+"  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\nListing Options\n"
@@ -157,7 +156,7 @@ void lutil_opts::usage()
 "               key word: c,C color by symmetry using face normals (chiral)\n"
 "  -T <tran> face opacity for color by symmetry. valid range from 0 to 255\n"
 "\n"
-"\n",prog_name(),int(-log(::epsilon)/log(10) + 0.5),::epsilon);
+"\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }
 
 void lutil_opts::process_command_line(int argc, char **argv)
@@ -166,6 +165,7 @@ void lutil_opts::process_command_line(int argc, char **argv)
    char c;
    char errmsg[MSG_SZ];
 
+   int sig_compare = INT_MAX;
    vector<double> double_parms;
    col_val col_tmp;
    int x_used = 0;
@@ -183,7 +183,7 @@ void lutil_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hzx:X:c:k:r:q:s:D:C:AV:E:F:T:Z:KOR:LSy:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hzx:X:c:k:r:q:s:D:C:AV:E:F:T:Z:KOR:LSl:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -539,13 +539,13 @@ void lutil_opts::process_command_line(int argc, char **argv)
             list_struts = true;
             break;
             
-         case 'y':
+         case 'l':
             if(!read_int(optarg, &sig_compare, errmsg))
                error(errmsg, c);
             if(sig_compare < 0) {
                warning("limit is negative, and so ignored", c);
             }
-            if(sig_compare > 16) {
+            if(sig_compare > DEF_SIG_DGTS) {
                warning("limit is very small, may not be attainable", c);
             }
             break;
@@ -574,7 +574,7 @@ void lutil_opts::process_command_line(int argc, char **argv)
    epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
-void remove_vertex_by_color(col_geom_v &geom, col_val remove_vertex_color, bool is_vertex_color)
+void remove_vertex_by_color(col_geom_v &geom, const col_val &remove_vertex_color, const bool &is_vertex_color)
 {
    const vector<vec3d> &verts = geom.verts();
 
@@ -592,14 +592,14 @@ void remove_vertex_by_color(col_geom_v &geom, col_val remove_vertex_color, bool 
       fprintf(stderr,"remove_vertex_by_color: warning: all vertices were removed!\n");
 }
 
-void make_skeleton(col_geom_v &geom, bool strip_faces)
+void make_skeleton(col_geom_v &geom, const bool &strip_faces)
 {
    geom.add_missing_impl_edges();
    if (strip_faces)
       geom.clear_faces();
 }
 
-void process_lattices(col_geom_v &geom, col_geom_v &container, col_geom_v &repeater, lutil_opts opts)
+void process_lattices(col_geom_v &geom, col_geom_v &container, const col_geom_v &repeater, lutil_opts &opts)
 {
    // add explicit edges and remove faces if necessary
    make_skeleton(geom, opts.strip_faces);
@@ -654,7 +654,7 @@ void process_lattices(col_geom_v &geom, col_geom_v &container, col_geom_v &repea
    
    // face color by symmetry normals
    if (opts.color_method)
-      color_by_symmetry_normals(geom, opts.color_method, opts.face_opacity);
+      color_by_symmetry_normals(geom, opts.color_method, opts.face_opacity, opts.epsilon);
    
    // if color by sqrt was used, override all edges of all structure
    if (opts.color_edges_by_sqrt)
