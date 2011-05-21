@@ -233,7 +233,7 @@ void planar_opts::process_command_line(int argc, char **argv)
          case 'w':
             if(read_int(optarg, &winding_rule, errmsg)) {
                if (winding_rule < 0)
-                  error("winding rule absolute value must be greater than 0",'w');
+                  error("winding rule absolute value must be greater than or equal to 0",'w');
             }
             else {
                // built in winding rules become -1 through -10
@@ -1671,7 +1671,11 @@ bool winding_rule_filter(const int &winding_rule, const int &winding_number)
 {
    bool answer = true;
 
-   if (winding_rule >= 0 && (abs(winding_number) < winding_rule))
+   // winding_rule 0, all are true
+   if (winding_rule == 0)
+      answer = true;
+   else
+   if (winding_rule > 0 && (abs(winding_number) < winding_rule))
       answer = false;
    else
    // rule -5 implicitly done
