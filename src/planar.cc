@@ -63,6 +63,7 @@ class planar_opts: public prog_opts {
       bool hole_detection;
       vec3d center;
       bool stitch_faces;
+      bool simplify_face_edges;
       bool delete_invisible_faces;
       char edge_blending;
       char special_edge_processing;
@@ -88,11 +89,12 @@ class planar_opts: public prog_opts {
                         face_color_method('\0'),
                         planar_merge_type(0),
                         polygon_fill_type(0),
-                        winding_rule(0),
+                        winding_rule(INT_MAX),
                         color_by_winding_number(false),
                         orient(false),
                         hole_detection(true),
                         stitch_faces(false),
+                        simplify_face_edges(false),
                         delete_invisible_faces(false),
                         edge_blending('\0'),
                         special_edge_processing('\0'),
@@ -132,13 +134,14 @@ void planar_opts::usage()
 "  -p <opt>  polygon fill algorithm.  angular=1  modulo2=2 (pnpoly)\n"
 "               triangulation=3  even_overlap=4  alt_modulo2=5 (default: 1)\n"
 "  -w <opt>  winding rule, include face parts according to winding number\n"
-"               odd=1  even=2  positive=3  negative=4  nonzero=5 (default: none)\n"
-"               zodd=6  zeven=7  zpositive=8  znegative=9  zero=10\n"
-"               (6,7,8 and 9 include zero)\n"
+"               odd, even, positive, negative, nonzero, zero (default: none)\n"
+"               zodd, zeven, zpositive, znegative (includes zero)\n"
+"               or include absolute value or higher of a positive integer\n"
 "  -O        orient the faces (if possible), flip orientation if oriented\n"
 "  -H        turn off hole detection\n"
 "  -C <xyz>  center of model, in form 'X,Y,Z' (default: centroid)\n"
 "  -S        stitch seams created by tiling or merging\n"
+"  -I        rid faces of extra in line vertices\n"
 "  -e <opt>  blend existing explicit edges and/or vertices using blend options\n"
 "               e - edges  v - vertices  b - both (-d forces b, otherwise none)\n"
 "  -E <opt>  remove explicit edges and blend new ones using face colors (sets -S)\n"
@@ -197,7 +200,7 @@ void planar_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hl:d:p:w:OHC:Se:E:Db:M:s:t:v:u:a:cyf:T:m:Z:Wn:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hl:d:p:w:OHC:SIe:E:Db:M:s:t:v:u:a:cyf:T:m:Z:Wn:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -228,10 +231,17 @@ void planar_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'w':
-            id = get_arg_id(optarg, "odd=1|even=2|positive=3|negative=4|nonzero=5|zodd=6|zeven=7|zpositive=8|znegative=9|zero=10", argmatch_add_id_maps, errmsg);
-            if(id=="")
-               error(errmsg);
-            winding_rule = atoi(id.c_str());
+            if(read_int(optarg, &winding_rule, errmsg)) {
+               if (winding_rule < 0)
+                  error("winding rule absolute value must be greater than 0",'w');
+            }
+            else {
+               // built in winding rules become -1 through -10
+               id = get_arg_id(optarg, "odd|even|positive|negative|nonzero|zodd|zeven|zpositive|znegative|zero", argmatch_default, errmsg);
+               if(id=="")
+                  error(errmsg);
+               winding_rule = (atoi(id.c_str()) + 1) * (-1);
+            }
             break;
 
          case 'O':
@@ -249,6 +259,10 @@ void planar_opts::process_command_line(int argc, char **argv)
 
          case 'S':
             stitch_faces = true;
+            break;
+
+         case 'I':
+            simplify_face_edges = true;
             break;
 
          case 'e':
@@ -380,7 +394,7 @@ void planar_opts::process_command_line(int argc, char **argv)
    if (!planar_merge_type) {
       if (polygon_fill_type)
          warning("polygon fill has no effect if tile or merge is not selected","p");
-      if (winding_rule)
+      if (winding_rule != INT_MAX)
          warning("winding rule has no effect if tile of merge is not selected","w");
       if (color_by_winding_number) {
          warning("color by winding number has no effect if tile or merge is not selected","W");
@@ -400,7 +414,7 @@ void planar_opts::process_command_line(int argc, char **argv)
    if (color_by_winding_number) {
       if (polygon_fill_type != 1 && polygon_fill_type != 3)
          error("with color by winding number polygon fill type must be 1 or 3","p");
-      if (winding_rule)
+      if (winding_rule != INT_MAX)
          error("winding rule cannot be used with color by winding number","w");
    }
 
@@ -1651,32 +1665,35 @@ col_val average_color(const vector<col_val> &cols, const int &color_system_mode,
    return avg_col;
 }
 
-// odd=1  even=2  positive=3  negative=4  nonzero=5
-// zodd=6  zeven=7  zpositive=8  znegative=9  zero=10
+// odd=-1  even=-2  positive=-3  negative=-4  nonzero=-5
+// zodd=-6  zeven=-7  zpositive=-8  znegative=-9  zero=-10
 bool winding_rule_filter(const int &winding_rule, const int &winding_number)
 {
    bool answer = true;
 
-   // rule 5 implicitly done
-   if ((winding_rule < 6) && !winding_number)
+   if (winding_rule >= 0 && (abs(winding_number) < winding_rule))
       answer = false;
    else
-   if ((winding_rule == 1) && (is_even(winding_number)))
+   // rule -5 implicitly done
+   if ((winding_rule > -6) && !winding_number)
       answer = false;
    else
-   if ((winding_rule == 2 || winding_rule == 7) && (!is_even(winding_number)))
+   if ((winding_rule == -1) && (is_even(winding_number)))
       answer = false;
    else
-   if ((winding_rule == 3 || winding_rule == 8) && (winding_number < 0))
+   if ((winding_rule == -2 || winding_rule == -7) && (!is_even(winding_number)))
       answer = false;
    else
-   if ((winding_rule == 4 || winding_rule == 9) && (winding_number > 0))
+   if ((winding_rule == -3 || winding_rule == -8) && (winding_number < 0))
       answer = false;
    else
-   if ((winding_rule == 6) && (winding_number && is_even(winding_number)))
+   if ((winding_rule == -4 || winding_rule == -9) && (winding_number > 0))
       answer = false;
    else
-   if ((winding_rule == 10) && (winding_number))
+   if ((winding_rule == -6) && (winding_number && is_even(winding_number)))
+      answer = false;
+   else
+   if ((winding_rule == -10) && (winding_number))
       answer = false;
 
    return answer;
@@ -1764,7 +1781,7 @@ void sample_colors(col_geom_v &sgeom, const col_geom_v &cgeom, const int &planar
          for(unsigned int k=0; k<points.size(); k++) {
             bool answer = is_point_inside_polygon((polygon_fill_type == 3 ? tpolygon : polygon), points[k], normal, false, false, polygon_fill_type, eps);
             if (answer) {
-               if (winding_rule || color_by_winding_number) {
+               if ((winding_rule != INT_MAX) || color_by_winding_number) {
                   int winding_number = get_winding_number(polygon, points[k], original_normal, eps);
                   winding_total += winding_number;
                }
@@ -1776,16 +1793,16 @@ void sample_colors(col_geom_v &sgeom, const col_geom_v &cgeom, const int &planar
       }
 
       if (!color_by_winding_number) { 
-         if (winding_rule) {
+         if ((winding_rule != INT_MAX)) {
             // if cols.size() is not zero then there were hits
             if (cols.size()) {
                if (!winding_rule_filter(winding_rule, winding_total))
                   cols.clear();
             }
             // the magic. if there are no hits
-            // if winding rule is greater than 5 then zero is included so color it average
+            // if winding rule is less than -5 then zero is included so color it average
             else
-            if (winding_rule > 5)
+            if (winding_rule < -5)
                cols.push_back(average_color_all_faces);
          }
       }
@@ -1969,7 +1986,7 @@ void build_colinear_edge_list(const geom_if &geom, const vector<vector<int> > &e
    edge_unit_nearpoints.clear();
 }
 
-int find_end_point_vertex(const geom_if &geom, const vector<int> &vert_indexes, const double &eps)
+vector<int> find_end_points_vertex(const geom_if &geom, const vector<int> &vert_indexes, const double &eps)
 {
    const vector<vec3d> &verts = geom.verts();
 
@@ -1979,7 +1996,8 @@ int find_end_point_vertex(const geom_if &geom, const vector<int> &vert_indexes, 
    vgeom.set_hull();
 
    const vector<vec3d> &gverts = vgeom.verts();
-   vec3d end_point = gverts[0];
+   vec3d end_point1 = gverts[0];
+   vec3d end_point2 = gverts[1];
    // patch: unfortunately the verts() size can somtimes, due to math error, come out greater than 2
    // then have to take a vertex from longest edge. vert of longest edge will be at the bottom of the list
    int sz = gverts.size();
@@ -1990,19 +2008,19 @@ int find_end_point_vertex(const geom_if &geom, const vector<int> &vert_indexes, 
          distance_table.push_back(make_pair(dist,i));
       }
       sort( distance_table.begin(), distance_table.end() );
-      end_point = gverts[distance_table[sz-1].second];
+      end_point1 = gverts[distance_table[sz-1].second];
+      end_point2 = gverts[distance_table[sz-2].second];
    }
    vgeom.clear_all();
 
-   int end_idx = -1;
+   vector<int> end_indexes;
    for(unsigned int i=0;i<vert_indexes.size();i++) {
-      if (!compare(end_point, verts[vert_indexes[i]], eps)) {
-         end_idx = vert_indexes[i];
-         break;
+      if (!compare(end_point1, verts[vert_indexes[i]], eps) || !compare(end_point2, verts[vert_indexes[i]], eps)) {
+         end_indexes.push_back(vert_indexes[i]);
       }
    }
 
-   return end_idx;   
+   return end_indexes;   
 }
 
 void collect_ordered_vert_indexes(const geom_if &geom, const vector<vector<int> > &edges, const vector<int> &colinear_edges, vector<int> &colinear_verts, const double &eps)
@@ -2020,7 +2038,8 @@ void collect_ordered_vert_indexes(const geom_if &geom, const vector<vector<int> 
    vector<int>::iterator vi = unique(vert_indexes.begin(), vert_indexes.end());
    vert_indexes.resize( vi - vert_indexes.begin() );
 
-   int end_idx = find_end_point_vertex(geom, vert_indexes, eps);
+   vector<int> end_indexes = find_end_points_vertex(geom, vert_indexes, eps);
+   int end_idx = end_indexes[0];
    vec3d end_vertex = verts[end_idx];
 
    vector<pair<double, int> > distance_table;
@@ -2117,6 +2136,37 @@ void stitch_faces_on_seams(col_geom_v &geom, const double &eps)
          }
       }
    }
+}
+
+void remove_in_line_vertices(col_geom_v &geom, const double &eps)
+{
+  const vector<vec3d> &verts = geom.verts();
+
+   vector<vector<int> > implicit_edges;
+   geom.get_impl_edges(implicit_edges);
+
+   vector<vector<int> > colinear_vertex_list;
+   build_colinear_vertex_list(geom, colinear_vertex_list, eps);
+
+   vector<int> end_points;
+   for(unsigned int i=0;i<colinear_vertex_list.size();i++) {
+      vector<int> end_indexes = find_end_points_vertex(geom, colinear_vertex_list[i], eps);
+      end_points.push_back(end_indexes[0]);
+      end_points.push_back(end_indexes[1]);
+   }
+
+   sort( end_points.begin(), end_points.end() );    
+   vector<int>::iterator ei = unique(end_points.begin(), end_points.end());
+   end_points.resize( ei - end_points.begin() );
+
+   vector<int> deleted_verts;
+   for(unsigned int i=0;i<verts.size();i++) {
+      if(find(end_points.begin(), end_points.end(), i) == end_points.end())
+         deleted_verts.push_back(i);
+   }
+   end_points.clear();
+
+   geom.delete_verts(deleted_verts);
 }
 
 bool compare_edge_verts(col_geom_v &geom, const int &i, const int &j, const double &eps)
@@ -2481,6 +2531,10 @@ int main(int argc, char *argv[])
 
    if (opts.delete_invisible_faces)
       delete_invisible_faces(geom, opts.hole_detection);
+
+   // remove extra in line vertices from faces
+   if (opts.simplify_face_edges)
+      remove_in_line_vertices(geom, opts.epsilon);
 
    if (opts.hole_detection)
       make_hole_connectors_invisible(geom);
