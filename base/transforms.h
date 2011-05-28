@@ -64,15 +64,14 @@ void truncate_verts(geom_if &geom, double ratio, int order=0,geom_info *info=0);
 
 
 //delete_elem contains v, e, or f or "" to just sort.
-void sort_merge_elems(geom_if &geom, const char *delete_elems, double epsilon,
-      vector<map<int, set<int> > > *equiv_elemss=0);
-bool polygon_sort(vector<int> &polygon);
-bool check_congruence(const geom_if &geom1, const geom_if &geom2,
-      double epsilon, vector<map<int, set<int> > > *equiv_elems=0);
+void sort_merge_elems(geom_if &geom, const string &merge_elems, vector<map<int, set<int> > > *equiv_elems=0, double eps=epsilon);
+void sort_merge_elems(geom_if &geom, const string &merge_elems, const int &blend_type, double eps=epsilon);
+void sort_merge_elems(geom_if &geom, const string &merge_elems, double eps=epsilon);
+bool check_congruence(const geom_if &geom1, const geom_if &geom2, vector<map<int, set<int> > > *equiv_elems=0, double eps=epsilon);
 
 
-void canonicalize_mm(geom_if &geom, double edge_factor, double plane_factor, int n, double lim, int divergence_test, int rep_count, bool planar_only);
-void canonicalize_cn(geom_if &geom, int n, double lim, char method, int divergence_test, int rep_count);
+void canonicalize_mm(geom_if &geom, double edge_factor, double plane_factor, int n, int divergence_test, int rep_count, bool planar_only, double eps=epsilon);
+void canonicalize_cn(geom_if &geom, int n, char method, int divergence_test, int rep_count, double eps=epsilon);
 
 bool close_poly_basic(geom_if &geom);
 bool face_bond(geom_if &geom, geom_if &bgeom, int f=0, int b_f=0, int off=0, bool merge=true);

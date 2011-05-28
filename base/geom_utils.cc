@@ -38,7 +38,7 @@
 
 // RK - test points versus hull functions
 
-bool test_points_vs_hull(const vector<vec3d> &P, const geom_if &hull, bool inside, bool surface, bool outside, double epsilon)
+bool test_points_vs_hull(const vector<vec3d> &P, const geom_if &hull, const bool &inside, const bool &surface, const bool &outside, const double &eps)
 {
    const vector<vec3d> &verts = hull.verts();
    const vector<vector<int> > &faces = hull.faces();
@@ -49,17 +49,20 @@ bool test_points_vs_hull(const vector<vec3d> &P, const geom_if &hull, bool insid
    for(unsigned int i=0;i<faces.size();i++) {
       vec3d n = face_norm(verts, faces[i]).unit();
       double D = vdot(verts[faces[i][0]]-C, n);
-      if(D < 0) { // Make sure the normal points outwards
+      //if(D < 0)
+      if(double_compare(D,0,eps) < 0) { // Make sure the normal points outwards
          D = -D;
          n = -n;
       }
 
       for(unsigned int j=0;j<P.size();j++) {
          double t = vdot(P[j]-C, n);
-         if (t < D-epsilon && !inside)
+         //if (t < D-eps && !inside)
+         if ((double_compare(t,D,eps) < 0) && !inside)
             answer = false;
          else
-         if (t > D+epsilon && !outside)
+         //if (t > D+eps && !outside)
+         if ((double_compare(t,D,eps) > 0) && !outside)
             answer = false;
          else
          if (!surface)
@@ -76,70 +79,70 @@ bool test_points_vs_hull(const vector<vec3d> &P, const geom_if &hull, bool insid
    return answer;
 }
 
-bool is_geom_fully_outside_hull(const geom_if &geom, const geom_if &hull, double epsilon)
+bool is_geom_fully_outside_hull(const geom_if &geom, const geom_if &hull, double eps)
 {
-   return test_points_vs_hull(geom.verts(),hull,false,false,true,epsilon);
+   return test_points_vs_hull(geom.verts(),hull,false,false,true,eps);
 }
 
-bool is_geom_outside_hull(const geom_if &geom, const geom_if &hull, double epsilon)
+bool is_geom_outside_hull(const geom_if &geom, const geom_if &hull, double eps)
 {
-   return test_points_vs_hull(geom.verts(),hull,false,true,true,epsilon);
+   return test_points_vs_hull(geom.verts(),hull,false,true,true,eps);
 }
 
-bool is_geom_on_surface_hull(const geom_if &geom, const geom_if &hull, double epsilon)
+bool is_geom_on_surface_hull(const geom_if &geom, const geom_if &hull, double eps)
 {
-   return test_points_vs_hull(geom.verts(),hull,false,true,false,epsilon);
+   return test_points_vs_hull(geom.verts(),hull,false,true,false,eps);
 }
 
-bool is_geom_inside_hull(const geom_if &geom, const geom_if &hull, double epsilon)
+bool is_geom_inside_hull(const geom_if &geom, const geom_if &hull, double eps)
 {
-   return test_points_vs_hull(geom.verts(),hull,true,true,false,epsilon);
+   return test_points_vs_hull(geom.verts(),hull,true,true,false,eps);
 }
 
-bool is_geom_fully_inside_hull(const geom_if &geom, const geom_if &hull, double epsilon)
+bool is_geom_fully_inside_hull(const geom_if &geom, const geom_if &hull, double eps)
 {
-   return test_points_vs_hull(geom.verts(),hull,true,false,false,epsilon);
+   return test_points_vs_hull(geom.verts(),hull,true,false,false,eps);
 }
 
-bool is_point_fully_outside_hull(const vec3d &P, const geom_if &hull, double epsilon)
+bool is_point_fully_outside_hull(const vec3d &P, const geom_if &hull, double eps)
 {
    geom_v tgeom;
    tgeom.add_vert(P);
-   return is_geom_fully_outside_hull(tgeom, hull, epsilon);
+   return is_geom_fully_outside_hull(tgeom, hull, eps);
 }
 
-bool is_point_outside_hull(const vec3d &P, const geom_if &hull, double epsilon)
+bool is_point_outside_hull(const vec3d &P, const geom_if &hull, double eps)
 {
    geom_v tgeom;
    tgeom.add_vert(P);
-   return is_geom_outside_hull(tgeom, hull, epsilon);
+   return is_geom_outside_hull(tgeom, hull, eps);
 }
 
-bool is_point_on_surface_hull(const vec3d &P, const geom_if &hull, double epsilon)
+bool is_point_on_surface_hull(const vec3d &P, const geom_if &hull, double eps)
 {
    geom_v tgeom;
    tgeom.add_vert(P);
-   return is_geom_on_surface_hull(tgeom, hull, epsilon);
+   return is_geom_on_surface_hull(tgeom, hull, eps);
 }
 
-bool is_point_inside_hull(const vec3d &P, const geom_if &hull, double epsilon)
+bool is_point_inside_hull(const vec3d &P, const geom_if &hull, double eps)
 {
    geom_v tgeom;
    tgeom.add_vert(P);
-   return is_geom_inside_hull(tgeom, hull, epsilon);
+   return is_geom_inside_hull(tgeom, hull, eps);
 }
 
-bool is_point_fully_inside_hull(const vec3d &P, const geom_if &hull, double epsilon)
+bool is_point_fully_inside_hull(const vec3d &P, const geom_if &hull, double eps)
 {
    geom_v tgeom;
    tgeom.add_vert(P);
-   return is_geom_fully_inside_hull(tgeom, hull, epsilon);
+   return is_geom_fully_inside_hull(tgeom, hull, eps);
 }
 
 
 // RK - Various find functions for geom
 
-int find_vertex_by_coordinate(geom_if &geom, vec3d v, double eps)
+int find_vertex_by_coordinate(geom_if &geom, const vec3d &v, double eps)
 {
    const vector<vec3d> &verts = geom.verts();      
    int v_idx = -1;
@@ -193,7 +196,7 @@ vector<int> find_faces_with_edge(const vector<vector<int> > &faces, const vector
    return face_idxs;
 }
 
-bool vertex_exists_in_elem(const vector<int> &elem, int v_idx)
+bool vertex_exists_in_elem(const vector<int> &elem, const int &v_idx)
 {
    bool found = false;
 
@@ -207,17 +210,17 @@ bool vertex_exists_in_elem(const vector<int> &elem, int v_idx)
    return found;
 }
 
-bool vertex_exists_in_face(const vector<int> &face, int v_idx)
+bool vertex_exists_in_face(const vector<int> &face, const int &v_idx)
 {
    return vertex_exists_in_elem(face, v_idx);
 }
 
-bool vertex_exists_in_edge(const vector<int> &edge, int v_idx)
+bool vertex_exists_in_edge(const vector<int> &edge, const int &v_idx)
 {
    return vertex_exists_in_elem(edge, v_idx);
 }
 
-vector<int> find_elems_with_vertex(const vector<vector<int> > &elems, int v_idx)
+vector<int> find_elems_with_vertex(const vector<vector<int> > &elems, const int &v_idx)
 {
    vector<int> elem_idxs;
    for (unsigned int i=0;i<elems.size();i++) {
@@ -228,12 +231,12 @@ vector<int> find_elems_with_vertex(const vector<vector<int> > &elems, int v_idx)
    return elem_idxs;
 }
 
-vector<int> find_faces_with_vertex(const vector<vector<int> > &faces, int v_idx)
+vector<int> find_faces_with_vertex(const vector<vector<int> > &faces, const int &v_idx)
 {
    return find_elems_with_vertex(faces, v_idx);
 }
 
-vector<int> find_edges_with_vertex(const vector<vector<int> > &edges, int v_idx)
+vector<int> find_edges_with_vertex(const vector<vector<int> > &edges, const int &v_idx)
 {
    return find_elems_with_vertex(edges, v_idx);
 }
@@ -288,7 +291,7 @@ vector<vector<int> > find_unmatched_edges(col_geom_v &geom)
 // RK - the normals classes. xnormals for one normal. fnormals for the list of face normals.
 
 // face normal
-xnormal::xnormal(const geom_if &geom, int face_idx, vec3d C, double eps)
+xnormal::xnormal(const geom_if &geom, const int &face_idx, vec3d C, double eps)
 {
    const vector<int> &face = geom.faces()[face_idx];
    const vector<vec3d> &verts = geom.verts();
@@ -300,20 +303,16 @@ xnormal::xnormal(const geom_if &geom, int face_idx, vec3d C, double eps)
 
    double D = vdot(verts[face[0]]-C, normal);
 
-   direction = 0;
-
-   // second test in case centroid is on the hemi's face
-   if (double_equality(D, 0.0, eps) || double_equality(vdot(centroid(verts, face)-C, normal), 0.0, eps))
+   // test case centroid is on the hemi's face
+   if (double_eq(vdot(centroid(verts, face)-C, normal), 0.0, eps))
       direction = 0;
    else
-   if (D < -eps)
-      direction = -1;
-   else
-      direction = 1;
+      direction = double_compare(D, 0.0, eps);
+
 }
 
 // edge and vertex normals which have already been calculated from fnormals
-xnormal::xnormal(const geom_if &geom, vec3d norm, int v_idx, vec3d C, double eps)
+xnormal::xnormal(const geom_if &geom, const vec3d &norm, const int &v_idx, vec3d C, double eps)
 {
    const vector<vec3d> &verts = geom.verts();
 
@@ -324,15 +323,7 @@ xnormal::xnormal(const geom_if &geom, vec3d norm, int v_idx, vec3d C, double eps
 
    double D = vdot(verts[v_idx]-C, normal);
 
-   direction = 0;
-
-   if (double_equality(D, 0.0, eps))
-      direction = 0;
-   else
-   if (D < -eps)
-      direction = -1;
-   else
-      direction = 1;
+   direction = double_compare(D, 0.0, eps);
 }
 
 void fnormals::refresh(const geom_if &geom, vec3d C, double eps)
@@ -348,7 +339,7 @@ void fnormals::refresh(const geom_if &geom, vec3d C, double eps)
 }
 
 // private common code for averaging edge and vertex normals
-vec3d fnormals::average_normals(vector<int> &face_idx, string average_pattern)
+vec3d fnormals::average_normals(vector<int> &face_idx, const string &average_pattern)
 {
    vec3d norm;
 
@@ -379,7 +370,7 @@ vec3d fnormals::average_normals(vector<int> &face_idx, string average_pattern)
 }
 
 // the edge normal is centroid of all the face normals of which edge is a part of those faces
-xnormal fnormals::edge_normal(int idx1, int idx2, string average_pattern, vec3d C, double eps)
+xnormal fnormals::edge_normal(const int &idx1, const int &idx2, const string &average_pattern, vec3d C, double eps)
 {
    vector<int> edge = make_edge(idx1,idx2);
 
@@ -391,7 +382,7 @@ xnormal fnormals::edge_normal(int idx1, int idx2, string average_pattern, vec3d 
 }
 
 // the vertex normal is centroid of all the face normals of which vertex is a part of those faces
-xnormal fnormals::vertex_normal(int idx, string average_pattern, vec3d C, double eps)
+xnormal fnormals::vertex_normal(const int &idx, const string &average_pattern, vec3d C, double eps)
 {
    vector<int> face_idx = find_faces_with_vertex((*ngeom).faces(), idx);
 

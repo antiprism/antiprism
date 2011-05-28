@@ -61,6 +61,7 @@ class off_normals_opts: public prog_opts {
       string show_pointing;
       string show_elems;
       string average_pattern;
+      vec3d center;
 
       int sig_compare;
       double epsilon;
@@ -107,6 +108,7 @@ void off_normals_opts::usage()
 "               to show, respectively, vertices, edges and faces (default: f)\n"
 "  -p <opts> average pattern string for edge and vertex normals. Done before -n\n"
 "               r - raw  o - outward  i - inward  u - unit  (default: r)\n"
+"  -C <xyz>  center of model, in form 'X,Y,Z' (default: centroid)\n"
 "  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
@@ -131,22 +133,11 @@ void off_normals_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hl:n:i:s:p:O:I:E:B:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hn:i:s:p:O:I:E:B:C:l:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
       switch(c) { 
-         case 'l':
-            if(!read_int(optarg, &sig_compare, errmsg))
-               error(errmsg, c);
-            if(sig_compare < 0) {
-               warning("limit is negative, and so ignored", c);
-            }
-            if(sig_compare > 16) {
-               warning("limit is very small, may not be attainable", c);
-            }
-            break;
-            
          case 'n':
             if(strspn(optarg, "nuhHOIoiredD") != strlen(optarg)) {
                snprintf(errmsg, MSG_SZ, "plot elem normal options %s must be a combination of n, u, o, i, r, e, d, and D\n", optarg);
@@ -216,6 +207,22 @@ void off_normals_opts::process_command_line(int argc, char **argv)
                error(errmsg, c);
             break;
 
+         case 'C':
+            if(!center.read(optarg, errmsg))
+               error(errmsg, c);
+            break;
+
+         case 'l':
+            if(!read_int(optarg, &sig_compare, errmsg))
+               error(errmsg, c);
+            if(sig_compare < 0) {
+               warning("limit is negative, and so ignored", c);
+            }
+            if(sig_compare > 16) {
+               warning("limit is very small, may not be attainable", c);
+            }
+            break;
+
          case 'o':
             ofile = optarg;
             break;
@@ -235,28 +242,28 @@ void off_normals_opts::process_command_line(int argc, char **argv)
 }
 
 
-void add_normals(col_geom_v &geom, char plot_elem_normals_method, char exclude_normals_elems, char elem_normals_pointing,
-                 bool elem_normal_vecs, col_val outward_normal_col, col_val inward_normal_col, col_val edge_normal_col, col_val base_normal_col, char base_normal_method,
-                 string show_elems, string show_pointing, string average_pattern, double eps)
+void add_normals(col_geom_v &geom, const char &plot_elem_normals_method, const char &exclude_normals_elems, const char &elem_normals_pointing,
+                 const bool &elem_normal_vecs,
+                 const col_val &outward_normal_col, const col_val &inward_normal_col, const col_val &edge_normal_col, const col_val &base_normal_col, const char &base_normal_method,
+                 const string &show_elems, const string &show_pointing, const string &average_pattern, const vec3d &center, const double &eps)
 {
    col_val outward_col = outward_normal_col;
    col_val inward_col = inward_normal_col;
-   if (!inward_col.is_set() && outward_normal_col.is_set())
-      inward_col = col_val(255-outward_normal_col[0],255-outward_normal_col[1],255-outward_normal_col[2]);
+   if (!inward_col.is_set() && outward_normal_col.is_set()) {
+      inward_col = outward_normal_col;
+      inward_col.set_complement();
+   }
+
    col_val col;
    
    col_geom_v ngeom;
    vector<int> deleted_faces;
 
-   fnormals x_normals(geom, vec3d(), eps);
+   fnormals x_normals(geom, center, eps);
 
    if (strchr(show_elems.c_str(), 'f')) {
       for(unsigned int i=0;i<x_normals.size();i++) {
          xnormal x_normal = x_normals[i];
-//fprintf(stderr,"i = %d\n",i);
-//fprintf(stderr,"normal is %s hemi\n",(x_normal.is_hemispherical() ? "" : "not"));
-//fprintf(stderr,"normal is %s outward\n",(x_normal.is_outward() ? "" : "not"));
-//fprintf(stderr,"normal is %s inward\n",(x_normal.is_inward() ? "" : "not"));
          
          if (x_normal.is_hemispherical()) {
             if (!strchr(show_pointing.c_str(), 'h')) {
@@ -311,7 +318,7 @@ void add_normals(col_geom_v &geom, char plot_elem_normals_method, char exclude_n
             // get base color
             col_val bcol = (base_normal_col.is_set()) ? base_normal_col : ((base_normal_method == 'b') ? geom.get_f_col((int)i) : col);
             // add point at centroid
-            ngeom.add_col_vert(centroid(geom.verts(), geom.faces()[i]),bcol);
+            ngeom.add_col_vert(centroid(geom.verts(), geom.faces()[i]), bcol);
             // get edge color
             col_val ecol = (edge_normal_col.is_set()) ? edge_normal_col : col;
             // edge from face centroid to normal
@@ -457,6 +464,7 @@ void add_normals(col_geom_v &geom, char plot_elem_normals_method, char exclude_n
    geom.append(ngeom);
 }
 
+/*
 vec3d line_nearest_point(vec3d P, vec3d A, vec3d B)
 {
    vec3d v1 = P-A;
@@ -470,6 +478,7 @@ vec3d line_nearest_point(vec3d P, vec3d A, vec3d B)
 
    return (A+(v2*dist));
 }
+*/
 
 int main(int argc, char *argv[])
 {
@@ -486,7 +495,7 @@ int main(int argc, char *argv[])
    if(opts.plot_elem_normals_method)
       add_normals(geom, opts.plot_elem_normals_method, opts.exclude_normals_elems, opts.elem_normals_pointing,
                   opts.elem_normal_vecs, opts.outward_normal_col, opts.inward_normal_col, opts.edge_normal_col, opts.base_normal_col, opts.base_normal_method,
-                  opts.show_elems, opts.show_pointing, opts.average_pattern, opts.epsilon);
+                  opts.show_elems, opts.show_pointing, opts.average_pattern, opts.center, opts.epsilon);
 
    if(!geom.write(opts.ofile, errmsg))
       opts.error(errmsg);

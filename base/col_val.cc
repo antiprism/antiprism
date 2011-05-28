@@ -57,6 +57,21 @@ bool operator <(const col_val &c1, const col_val &c2)
    return c1.get_long()<c2.get_long();
 }
 
+void col_val::dump(const char *var, FILE *file) const
+{
+   if(var)
+      fprintf(file, "%s=", var);
+   if (!is_set())
+      fprintf(file, "(not set)\n");
+   else
+   if (is_inv())
+      fprintf(file, "invisible\n");
+   else
+   if (is_idx())
+      fprintf(file, "%d (index)\n",get_idx());
+   else
+      fprintf(file, "(%d,%d,%d,%d)\n",rgba[0],rgba[1],rgba[2],rgba[3]);
+}
 
 void col_val::set_complement(col_val col)
 {

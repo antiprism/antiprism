@@ -45,15 +45,16 @@ using std::vector;
 
 class o2t_opts: public prog_opts {
    public:
+      string ifile;
+      string ofile;
+
       bool estimate_colors;
       bool detect_rhombi;
       bool detect_star_polygons;
       bool exclude_coordinates;
       bool force_transparent;
-      int sig_compare;
+      double epsilon;
       int sig_digits;
-      string ifile;
-      string ofile;
 
       o2t_opts(): prog_opts("off2txt"),
              estimate_colors(false),
@@ -61,8 +62,8 @@ class o2t_opts: public prog_opts {
              detect_star_polygons(false),
              exclude_coordinates(false),
              force_transparent(false),
-             sig_compare(8),
-             sig_digits(17)
+             epsilon(0),
+             sig_digits(DEF_SIG_DGTS)
              {}
 
       void process_command_line(int argc, char **argv);
@@ -87,15 +88,13 @@ void o2t_opts::usage()
 "  -p        detect star polygons\n"
 "  -x        exclude coordinates\n"
 "  -t        force all faces transparent\n"
-"  -l <lim>  minimum distance for rhombi detection\n"
-"            exponent 1e-lim (default: 8 giving 1e-8)\n" 
+"  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
+"               (default: %d giving %.0e)\n"
+"  -d <dgts> number of significant digits (default %d) or if negative\n"
+"            then the number of digits after the decimal point\n"
 "  -o <file> file name for output (otherwise prints to stdout)\n"
 "\n"
-"  Precision options\n"
-"  -d <dgts> number of significant digits (default 17) or if negative\n"
-"            then the number of digits after the decimal point\n"
-"\n"
-"\n", prog_name(), help_ver_text);
+"\n", prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5),::epsilon, DEF_SIG_DGTS);
 }
 
 
@@ -104,6 +103,8 @@ void o2t_opts::process_command_line(int argc, char **argv)
    opterr = 0;
    char c;
    char errmsg[MSG_SZ];
+
+   int sig_compare = INT_MAX;
    
    handle_long_opts(argc, argv);
 
@@ -162,7 +163,8 @@ void o2t_opts::process_command_line(int argc, char **argv)
    
    if(argc-optind == 1)
       ifile=argv[optind];
-   
+
+   epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;   
 }
 
 string estimated_color(col_val col)
@@ -209,16 +211,10 @@ string estimated_color(col_val col)
    return(color);
 }
 
-bool doubleEquality(const double &d1, const double &d2, const double &epsilon)
+bool is_square(geom_if &geom, const int &face_idx, const double &eps)
 {
-   const double diff = d1 - d2;
-   return diff < epsilon && diff > -epsilon;
-}
-
-bool is_square(geom_if *geom, int face_idx, double epsilon)
-{
-   vector<vec3d> &verts = *geom->get_verts();
-   vector<vector<int> > &faces = *geom->get_faces();
+   const vector<vec3d> &verts = geom.verts();
+   const vector<vector<int> > &faces = geom.faces();
    vector<int> face = faces[face_idx];
 
    vec3d P1 = verts[face[0]];
@@ -229,23 +225,21 @@ bool is_square(geom_if *geom, int face_idx, double epsilon)
    P2 = verts[face[3]];
    double diag2 = (P2-P1).mag();
 
-   return(doubleEquality(diag1, diag2, epsilon));
+   return(double_eq(diag1, diag2, eps));
 }
 
-int detect_star_polygon(geom_if *geom, int face_idx)
+int detect_star_polygon(geom_if &geom, const int &face_idx)
 {
-   vector<vec3d> &verts = *geom->get_verts();
-   vector<vector<int> > &faces = *geom->get_faces();
+   const vector<vec3d> &verts = geom.verts();
+   const vector<vector<int> > &faces = geom.faces();
    vector<int> face = faces[face_idx];
-   
-   int star = 1;
-   static const double radian = 57.295779513082320876798;
 
    vec3d v1 = verts[face[1]] - verts[face[0]];
    vec3d v2 = verts[face[1]] - verts[face[2]];
    double angle = acos(safe_for_trig(vdot(v1, v2)/(v1.mag()*v2.mag())));
-   angle *= radian;
+   angle = rad2deg(angle);
 
+   int star = 1;
    double m = face.size();
    for(double n=2;n<m/2;n++) {
       if((int)(m/n)*n!=m && gcd((int)m,(int)n)==1){
@@ -260,7 +254,7 @@ int detect_star_polygon(geom_if *geom, int face_idx)
    return(star);
 }
 
-string Vtxt(vec3d v, int dgts)
+string Vtxt(const vec3d &v, const int &dgts)
 {
    char buf[128];
    if(dgts>0)
@@ -270,12 +264,11 @@ string Vtxt(vec3d v, int dgts)
    return buf;
 }
 
-void print_hedron_txt(FILE *ofile, geom_if *geom, int sig_digits, bool estimate_colors, bool detect_rhombi, 
-                      bool detect_star_polygons, bool exclude_coordinates, bool force_transparent, double epsilon)
+void print_hedron_txt(FILE *ofile, col_geom_v &geom, const int &sig_digits, const bool &estimate_colors, const bool &detect_rhombi, 
+                      const bool &detect_star_polygons, const bool &exclude_coordinates, const bool &force_transparent, const double &eps)
 {
-   vector<vector<int> > &faces = *geom->get_faces();
-   vector<vec3d> &verts = *geom->get_verts();
-   col_geom *cg = dynamic_cast<col_geom *>(geom);
+   const vector<vector<int> > &faces = geom.faces();
+   const vector<vec3d> &verts = geom.verts();
 
 	fprintf(ofile, "{\n");
             
@@ -283,11 +276,11 @@ void print_hedron_txt(FILE *ofile, geom_if *geom, int sig_digits, bool estimate_
    {
       //fprintf(ofile, "");
 
-      if ( detect_rhombi && faces[i].size()==4 && !is_square(geom, (int)i, epsilon) )
+      if ( detect_rhombi && faces[i].size()==4 && !is_square(geom, (int)i, eps) )
          fprintf(ofile, "D");
 
       if ( estimate_colors ) {
-         col_val col = cg->get_f_col((int)i);
+         col_val col = geom.get_f_col((int)i);
          if ( col.is_val() )
 		      fprintf(ofile, "%s", estimated_color(col).c_str());
       }
@@ -336,8 +329,8 @@ int main(int argc, char *argv[])
          opts.error("could not open output file \'"+opts.ofile+"\'");
    }
 
-   print_hedron_txt(ofile, &geom, opts.sig_digits, opts.estimate_colors, opts.detect_rhombi, 
-      opts.detect_star_polygons, opts.exclude_coordinates, opts.force_transparent, pow(10, -opts.sig_compare));
+   print_hedron_txt(ofile, geom, opts.sig_digits, opts.estimate_colors, opts.detect_rhombi, 
+      opts.detect_star_polygons, opts.exclude_coordinates, opts.force_transparent, opts.epsilon);
 
    if(opts.ofile!="")
       fclose(ofile);

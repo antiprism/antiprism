@@ -362,6 +362,11 @@ class col_val
        * otherwise \c false. */
       static bool in_range(int r, int g, int b, int a);
 
+     ///Debugging print of a vector variable
+     /**\param var a string to identify the vector variable.
+      * \param file file stream to print the variable. */
+     void dump(const char *var="", FILE *file=stderr) const;
+
 };
 
 ///Less than

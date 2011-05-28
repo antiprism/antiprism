@@ -58,7 +58,7 @@ class pr_opts: public prog_opts
       double inf;
       double extra_ideal_elems;
       int num_iters;
-      int lim_exp;
+      double epsilon;
       bool append;
 
       string ifile;
@@ -68,7 +68,7 @@ class pr_opts: public prog_opts
                  recip_rad(0), init_rad(0), recip_rad_type('x'),
                  recip_cent_type('x'), init_cent_type('x'),
                  invert(false), inf(1e15), extra_ideal_elems(true),
-                 num_iters(100), lim_exp(13), append(false)
+                 num_iters(100), epsilon(0), append(false)
                  {}
 
       void process_command_line(int argc, char **argv);
@@ -105,16 +105,16 @@ void pr_opts::usage()
 "  -R <rad>  initial value for a radius calculation (default: calculated)\n"
 "  -i        transform dual by reflecting in centre point\n"
 "  -I <dist> maximum distance to project any normal or infinite dual vertex\n"
-"            (default: 1e15), if 0 then use actual distances and delete\n"
+"            (default: %.0e), if 0 then use actual distances and delete\n"
 "            infinite points\n"
 "  -x        exclude extra elements added to duals with ideal vertices\n"
 "  -n <itrs> maximum number of iterations (default: 10000)\n"
-"  -l <lim>  minimum distance change to terminate, as negative\n"
-"            exponent 1e-lim (default: 13 giving 1e-13)\n"
+"  -l <lim>  minimum distance change to terminate, as negative exponent\n"
+"               (default: %d giving %.0e)\n"
 "  -a        append dual to original polyhedron\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
-"\n", prog_name(), help_ver_text);
+"\n", prog_name(), help_ver_text, inf, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }
 
 
@@ -125,6 +125,8 @@ void pr_opts::process_command_line(int argc, char **argv)
    char errmsg[MSG_SZ];
    opterr = 0;
    char c;
+
+   int sig_compare = INT_MAX;
    
    handle_long_opts(argc, argv);
 
@@ -208,12 +210,12 @@ void pr_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'l':
-            if(!read_int(optarg, &lim_exp, errmsg))
+            if(!read_int(optarg, &sig_compare, errmsg))
                error(errmsg, c);
-            if(lim_exp < 0) {
-               warning("limit is negative, the exponent used will be positive", c);
+            if(sig_compare < 0) {
+               warning("limit is negative, and so ignored", c);
             }
-            if(lim_exp > 16) {
+            if(sig_compare > DEF_SIG_DGTS) {
                warning("limit is very small, may not be attainable", c);
             }
             break;
@@ -231,9 +233,10 @@ void pr_opts::process_command_line(int argc, char **argv)
    if(argc-optind == 1)
       ifile=argv[optind];
 
+   epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
-int find_mid_centre(geom_if &geom, double &rad, vec3d &cent, int n, double lim)
+int find_mid_centre(geom_if &geom, double &rad, vec3d &cent, int n, const double &eps)
 {
    vector<vector<int> > g_edges;
    geom.get_impl_edges(g_edges);
@@ -268,7 +271,7 @@ int find_mid_centre(geom_if &geom, double &rad, vec3d &cent, int n, double lim)
       //cent.dump("cent");
       //fprintf(stderr, "rad=%g, delt_rad=%g,delta_cent=%g\n", rad, cur_rad-rad,
       //      (cur_cent-cent).mag());
-      if(fabs(cent_test)<lim && fabs(rad_test)<lim)
+      if(fabs(cent_test)<eps && fabs(rad_test)<eps)
          break;
    }
    char str[MSG_SZ];
@@ -279,7 +282,7 @@ int find_mid_centre(geom_if &geom, double &rad, vec3d &cent, int n, double lim)
    return 1;
 }
  
-int find_can_centre(geom_if &geom, char type, double &rad, vec3d &cent, bool invert, int n, double lim)
+int find_can_centre(geom_if &geom, char type, double &rad, vec3d &cent, bool invert, int n, const double &eps)
 {
    bool use_e = false;
    bool use_vf = false;
@@ -389,7 +392,7 @@ int find_can_centre(geom_if &geom, char type, double &rad, vec3d &cent, bool inv
       //cent.dump("cent");
       //fprintf(stderr, "rad=%g, delt_rad=%g,delta_cent=%g\n", rad, cur_rad-rad,
       //      (cur_cent-cent).mag());
-      if(fabs(cent_test)<lim && fabs(rad_test)<lim)
+      if(fabs(cent_test)<eps && fabs(rad_test)<eps)
          break;
       get_pol_recip_verts(geom, dual, rad, cur_cent);
       if(invert)
@@ -412,7 +415,7 @@ return 1;
 }
 
 
-void find_recip_centre(geom_if &geom, char type, double &rad, vec3d &cent, bool invert, int n, double lim)
+void find_recip_centre(geom_if &geom, char type, double &rad, vec3d &cent, bool invert, int n, const double &eps)
 {
    if(fabs(rad)<epsilon)
       rad = epsilon/2.0;
@@ -422,28 +425,28 @@ void find_recip_centre(geom_if &geom, char type, double &rad, vec3d &cent, bool 
          cent = centroid(*geom.get_verts());
          break;
       case 'M':
-         find_mid_centre(geom, rad, cent, n, lim);
+         find_mid_centre(geom, rad, cent, n, eps);
          break;
       case 'e':
-         find_can_centre(geom, 'e', rad, cent, invert, n, lim);
+         find_can_centre(geom, 'e', rad, cent, invert, n, eps);
          break;
       case 'E':
          rad = -rad;
-         find_can_centre(geom, 'e', rad, cent, invert, n, lim);
+         find_can_centre(geom, 'e', rad, cent, invert, n, eps);
          break;
       case 'v':
-         find_can_centre(geom, 'v', rad, cent, invert, n, lim);
+         find_can_centre(geom, 'v', rad, cent, invert, n, eps);
          break;
       case 'V':
          rad = -rad;
-         find_can_centre(geom, 'v', rad, cent, invert, n, lim);
+         find_can_centre(geom, 'v', rad, cent, invert, n, eps);
          break;
       case 'a':
-         find_can_centre(geom, 'a', rad, cent, invert, n, lim);
+         find_can_centre(geom, 'a', rad, cent, invert, n, eps);
          break;
       case 'A':
          rad = -rad;
-         find_can_centre(geom, 'a', rad, cent, invert, n, lim);
+         find_can_centre(geom, 'a', rad, cent, invert, n, eps);
          break;
    }   
 }
@@ -537,14 +540,12 @@ int main(int argc, char *argv[])
    if(e_cons!=2)
       opts.error(errmsg, "input_file");
 
-   double lim = pow(10, -opts.lim_exp);
-   // Set up init_centre
-   
+   // Set up init_centre   
    double tmp_rad = 0;
    if(opts.init_cent_type=='C')
       opts.init_cent = centroid(*geom.get_verts());
    else if(opts.init_cent_type=='M')
-      find_mid_centre(geom, tmp_rad, opts.init_cent, opts.num_iters, lim);
+      find_mid_centre(geom, tmp_rad, opts.init_cent, opts.num_iters, opts.epsilon);
 
    if(strchr("CMx", opts.recip_cent_type) && opts.recip_rad_type=='x') 
       opts.recip_rad_type='e';
@@ -558,7 +559,7 @@ int main(int argc, char *argv[])
    else {
       centre = opts.init_cent;
       find_recip_centre(geom, opts.recip_cent_type, opts.init_rad, centre,
-            opts.invert, opts.num_iters, lim);
+            opts.invert, opts.num_iters, opts.epsilon);
    }
    
    double radius;

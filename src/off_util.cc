@@ -57,7 +57,8 @@ class pr_opts: public prog_opts {
       bool edges_to_faces;
       string filt_elems;
       string merge_elems;
-      int sig_compare;
+      int blend_type;
+      double epsilon;
       int sig_digits;
       double unzip_frac;
       int unzip_root;
@@ -68,8 +69,8 @@ class pr_opts: public prog_opts {
 
       pr_opts(): prog_opts("off_util"), orient(false),
                  triangulate_rule(0), skeleton(false),
-                 sph_proj(false), trunc(false), edges_to_faces(false),
-                 sig_compare(-1), sig_digits(DEF_SIG_DGTS),
+                 sph_proj(false), trunc(false), edges_to_faces(false), blend_type(1),
+                 epsilon(0), sig_digits(DEF_SIG_DGTS),
                  unzip_frac(100.0), unzip_root(0), unzip_centre('x'),
                  unzip_z_align(false)
                  {}
@@ -92,10 +93,11 @@ void pr_opts::usage()
 "%s"
 "  -M <elms> Sort and merge elements whose coordinates are the same to\n"
 "            the number of decimal places given by option -l, elems can\n"
-"            include v, e, or f to merge vertices, edges and faces, or\n"
-"            s to sort without merging (default: vef if option -l set)\n"
-"  -l <lim>  minimum distance for unique vertex locations as exponent 1e-lim\n"
-"            (default: 8 giving 1e-8, if option -M set)\n"
+"            include v - vertice  e - edges  f - faces  a - all\n"
+"            s - sort without merging\n"
+"  -b <opt>  merge blend color. first=1  last=2  rgb=3  ryb=4 (default: 1)\n"
+"  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
+"               (default: %d giving %.0e)\n"
 "  -O        orient the faces (if possible), flip orientation if oriented\n"
 "  -T <rat>  truncate vertices by cutting edges at a ratio from each vertex,\n"
 "            can also be 'rat,num' to truncate only vertices of order num\n"
@@ -117,7 +119,7 @@ void pr_opts::usage()
 "            then the number of digits after the decimal point\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
-"\n", prog_name(), help_ver_text, DEF_SIG_DGTS);
+"\n", prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon, DEF_SIG_DGTS);
 }
 
 const char *get_help(const char* name)
@@ -169,9 +171,11 @@ void pr_opts::process_command_line(int argc, char **argv)
    char c;
    vector<char *> parts;
 
+   int sig_compare = INT_MAX;
+
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hH:st:Od:x:T:ESM:l:u:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hH:st:Od:x:T:ESM:b:l:u:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -248,18 +252,32 @@ void pr_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'M':
-            if(strspn(optarg, "svef") != strlen(optarg)) {
-               snprintf(errmsg, MSG_SZ, "elements to delete are %s must be v, e, f or s\n", optarg);
+            if(strspn(optarg, "svefa") != strlen(optarg)) {
+               snprintf(errmsg, MSG_SZ, "elements to merge are %s must be v, e, f, a or s\n", optarg);
                error(errmsg, c);
             }
             if(strchr(optarg, 's') && strlen(optarg)>1) {
                error("s is for sorting only, cannot be used with v, e, or f", c);
             }
+            if(strchr(optarg, 'a') && strlen(optarg)>1) {
+               error("a includes vef, and must be used alone", c);
+            }
             if(strspn(optarg, "ef") && !strchr(optarg, 'v')) {
                warning("without v, some orphan vertices may result", c);
             }
             merge_elems=optarg;
+            if(merge_elems == "a")
+               merge_elems = "vef";
             break;
+
+         case 'b':
+         {
+            string id = get_arg_id(optarg, "first=1|last=2|rgb=3|ryb=4", argmatch_add_id_maps, errmsg);
+            if(id=="")
+               error(errmsg);
+            blend_type = atoi(id.c_str());
+            break;
+         }
 
          case 'l':
             if(!read_int(optarg, &sig_compare, errmsg))
@@ -267,7 +285,7 @@ void pr_opts::process_command_line(int argc, char **argv)
             if(sig_compare < 0) {
                warning("limit is negative, and so ignored", c);
             }
-            if(sig_compare > 16) {
+            if(sig_compare > DEF_SIG_DGTS) {
                warning("limit is very small, may not be attainable", c);
             }
             break;
@@ -305,14 +323,10 @@ void pr_opts::process_command_line(int argc, char **argv)
       }
    }
 
-   if(merge_elems=="" && sig_compare>=0)
-      merge_elems = "vef";
-   if(sig_compare<0 and merge_elems!="")
-      sig_compare = 8;
-
    while(argc-optind)
       ifiles.push_back(string(argv[optind++]));
 
+   epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
 
@@ -630,8 +644,7 @@ void process_file(col_geom_v &geom, pr_opts opts)
 {
    char errmsg[MSG_SZ]="";
    if(opts.merge_elems!="") {
-      sort_merge_elems(geom, opts.merge_elems.c_str(),
-            pow(10, -opts.sig_compare));
+      sort_merge_elems(geom, opts.merge_elems, opts.blend_type, opts.epsilon);
    }
       
    if(opts.orient) {

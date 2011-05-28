@@ -48,13 +48,13 @@ class m2off_opts: public prog_opts {
       string ofile;
 
       string hide_elems;
-      int sig_compare;
+      double epsilon;
       bool disallow_back_faces;
       bool live3D_do_viewpoint;
       string lights_geom_file;
 
       m2off_opts(): prog_opts("m2off"),
-                    sig_compare(INT_MAX),
+                    epsilon(0),
                     disallow_back_faces(true),
                     live3D_do_viewpoint(false)
              {}
@@ -84,7 +84,7 @@ void m2off_opts::usage()
 "  -v        turn model to LiveGraphics3D viewpoint\n"
 "  -C <file> dump color lights into OFF file\n"
 "\n"
-"\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5),::epsilon);
+"\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }
 
 void m2off_opts::process_command_line(int argc, char **argv)
@@ -92,6 +92,8 @@ void m2off_opts::process_command_line(int argc, char **argv)
    opterr = 0;
    char c;
    char errmsg[MSG_SZ];
+
+   int sig_compare = INT_MAX;
    
    handle_long_opts(argc, argv);
 
@@ -116,7 +118,7 @@ void m2off_opts::process_command_line(int argc, char **argv)
             if(sig_compare < 0) {
                warning("limit is negative, and so ignored", c);
             }
-            if(sig_compare > 16) {
+            if(sig_compare > DEF_SIG_DGTS) {
                warning("limit is very small, may not be attainable", c);
             }
             break;
@@ -148,10 +150,10 @@ void m2off_opts::process_command_line(int argc, char **argv)
    if(argc-optind == 1)
       ifile=argv[optind];
       
-   sig_compare = (sig_compare != INT_MAX) ? sig_compare : int(-log(::epsilon)/log(10) + 0.5);
+   epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
-string replaceAllOccurrances(string s, string f, string r)
+string replaceAllOccurrances(string s, const string &f, const string &r)
 {
    size_t found = s.find(f);
    while(found != string::npos) {
@@ -210,7 +212,7 @@ bool is_numeric(char *number)
    return false;
 }
 
-void m_parse(string &m_txt, col_geom_v &geom, col_geom_v &geom_cv, string hide_elems, bool disallow_back_faces,
+void m_parse(string &m_txt, col_geom_v &geom, col_geom_v &geom_cv, const string &hide_elems, const bool &disallow_back_faces,
              col_geom_v &lights_geom, vec3d &view_point, vec3d &view_vertical, char *errmsg)
 {
    const vector<vector<int> > &faces = geom.faces();
@@ -250,7 +252,6 @@ void m_parse(string &m_txt, col_geom_v &geom, col_geom_v &geom_cv, string hide_e
    }
 
    while( ptok != NULL ) {
-//fprintf(stderr,"ptok = %s \n",ptok);
       if ( !strcmp(ptok,"FaceForm") ) {
          face_form = true;
       }
@@ -456,14 +457,14 @@ void live3D_check_values(col_geom_v &lights_geom, vec3d &view_point, vec3d &view
    }
 }
 
-void live3D_derotate(col_geom_v &geom, double &angle, vec3d &view_point)
+void live3D_derotate(col_geom_v &geom, const double &angle, const vec3d &view_point)
 {
    mat3d trans = mat3d::rot(0,0,-angle);
    trans = mat3d::rot(vec3d(0,0,1),view_point) * trans;
    geom.transform(trans);
 }
 
-void live3D_viewpoint(col_geom_v &geom, bool live3D_do_viewpoint, double &angle, vec3d &view_point, vec3d &view_vertical)
+void live3D_viewpoint(col_geom_v &geom, const bool &live3D_do_viewpoint, double &angle, const vec3d &view_point, const vec3d &view_vertical)
 {
    mat3d trans = mat3d::rot(view_point,vec3d(0,0,1));
    vec3d rotated_view_vertical = trans * view_vertical;
@@ -527,7 +528,7 @@ int main(int argc, char *argv[])
       opts.error(errmsg);
 
    // sort/merge all and orient faces
-   sort_merge_elems(geom, "vef", pow(10, -opts.sig_compare));
+   sort_merge_elems(geom, "vef", opts.epsilon);
    geom.orient();
 
    if(!geom.write(opts.ofile, errmsg))

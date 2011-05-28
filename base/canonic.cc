@@ -44,8 +44,8 @@ using std::vector;
 
 // Implementation of George Hart's canonicalization algorithm
 // http://library.wolfram.com/infocenter/Articles/2012/
-void canonicalize_mm(geom_if &geom, double edge_factor, double plane_factor, int n, double lim,
-                     int divergence_test, int rep_count, bool planar_only)
+void canonicalize_mm(geom_if &geom, double edge_factor, double plane_factor, int n,
+                     int divergence_test, int rep_count, bool planar_only, double eps)
 {
    // do a scale to get edges close to 1
    geom_info info(geom);
@@ -118,7 +118,7 @@ void canonicalize_mm(geom_if &geom, double edge_factor, double plane_factor, int
       if(rep_count > 0 && (cnt)%rep_count == 0)
          fprintf(stderr, "%-15d max_diff=%12.10g\n", cnt, sqrt(max_diff2));
 
-      if(sqrt(max_diff2)<lim)
+      if(sqrt(max_diff2)<eps)
          break;
 
       // see if radius is expanding or contracting unreasonably
@@ -221,7 +221,7 @@ vec3d edge_nearpoints_centroid(geom_if &geom, vec3d cent)
 
 // Implementation of George Hart's planarization and canonicalization algorithms
 // http://www.georgehart.com/virtual-polyhedra/conway_notation.html
-void canonicalize_cn(geom_if &geom, int n, double lim, char method, int divergence_test, int rep_count)
+void canonicalize_cn(geom_if &geom, int n, char method, int divergence_test, int rep_count, double eps)
 {
    // do a scale to get edges close to 1
    geom_info info(geom);
@@ -290,7 +290,7 @@ void canonicalize_cn(geom_if &geom, int n, double lim, char method, int divergen
       if(rep_count > 0 && (cnt)%rep_count == 0)
          fprintf(stderr, "%-15d max_diff=%12.10g\n", cnt, sqrt(max_diff2));
 
-      if(sqrt(max_diff2)<lim)
+      if(sqrt(max_diff2)<eps)
          break;
 
       // see if radius is expanding or contracting unreasonably

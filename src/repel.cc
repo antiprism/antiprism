@@ -48,13 +48,13 @@ class rep_opts: public prog_opts
       int num_pts;
       int rep_form;
       double shorten_by;
-      int lim_exp;
+      double epsilon;
       
       string ifile;
       string ofile;
 
       rep_opts(): prog_opts("repel"), num_iters(-1), num_pts(-1),
-                  rep_form(2), shorten_by(-1), lim_exp(13)
+                  rep_form(2), shorten_by(-1), epsilon(0)
                  {}
 
       void process_command_line(int argc, char **argv);
@@ -77,8 +77,8 @@ void rep_opts::usage()
 "  -N <num>  initialise with a number of randomly placed points\n"
 "  -n <itrs> maximum number of iterations (default: no limit)\n" 
 "  -s <perc> percentage to shorten the travel distance (default: adaptive)\n" 
-"  -l <lim>  minimum distance change to terminate, as negative\n"
-"            exponent 1e-lim (default: 13 giving 1e-13)\n" 
+"  -l <lim>  minimum distance change to terminate, as negative exponent\n"
+"               (default: %d giving %.0e)\n"
 "  -r <rep>  repelling formula\n"
 "              1 - inverse of distance\n"
 "              2 - inverse square of distance (default)\n"
@@ -86,7 +86,7 @@ void rep_opts::usage()
 "              4 - inverse square root of distance\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
-"\n", prog_name(), help_ver_text);
+"\n", prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }
 
 
@@ -96,6 +96,8 @@ void rep_opts::process_command_line(int argc, char **argv)
    char errmsg[MSG_SZ];
    opterr = 0;
    char c;
+
+   int sig_compare = INT_MAX;
    
    handle_long_opts(argc, argv);
 
@@ -126,12 +128,12 @@ void rep_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'l':
-            if(!read_int(optarg, &lim_exp, errmsg))
+            if(!read_int(optarg, &sig_compare, errmsg))
                error(errmsg, c);
-            if(lim_exp < 0) {
+            if(sig_compare < 0) {
                warning("limit is negative, and so ignored", c);
             }
-            if(lim_exp > 16) {
+            if(sig_compare > DEF_SIG_DGTS) {
                warning("limit is very small, may not be attainable", c);
             }
             break;
@@ -162,6 +164,7 @@ void rep_opts::process_command_line(int argc, char **argv)
          ifile=argv[optind];
    }
 
+   epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
 typedef vec3d (*REPEL_FN)(vec3d, vec3d);
@@ -309,7 +312,7 @@ int main(int argc, char *argv[])
    REPEL_FN fn[] = {rep_inv_dist1, rep_inv_dist2,
       rep_inv_dist3, rep_inv_dist05};
    repel(geom, fn[opts.rep_form-1], opts.shorten_by/100,
-         pow(10, -opts.lim_exp), opts.num_iters);
+         opts.epsilon, opts.num_iters);
 
    if(!geom.write(opts.ofile, errmsg))
       opts.error(errmsg);

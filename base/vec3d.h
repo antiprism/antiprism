@@ -37,6 +37,7 @@
 
 #include "const.h"
 #include "rand_gen.h"
+#include "math_utils.h"
 
 ///Vector with 3 components
 class vec3d
@@ -407,13 +408,19 @@ inline int compare(const vec3d &v1, const vec3d &v2, double eps=epsilon)
       return -1;
    if(!v2.is_set())
       return 1;
-   for(int i=0; i<3; i++)
+   for(int i=0; i<3; i++) {
+/*
       if(fabs(v1[i]-v2[i])>eps) {
          if(v1[i]<v2[i])
             return -1;
          if(v1[i]>v2[i])
             return 1;
       }
+*/
+      int ret = double_compare(v1[i],v2[i],eps);
+      if (ret)
+         return ret;
+   }
    return 0;
 }
 

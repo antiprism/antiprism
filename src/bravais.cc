@@ -104,7 +104,6 @@ class brav_opts: public prog_opts {
       vec3d offset;
       char container;
       bool append_container;
-      int sig_compare;
       bool voronoi_cells;
       bool voronoi_central_cell;
       char auto_grid_type;
@@ -141,7 +140,6 @@ class brav_opts: public prog_opts {
                    radius_default('s'),
                    container('c'),
                    append_container(false),
-                   sig_compare(INT_MAX),
                    voronoi_cells(false),
                    voronoi_central_cell(false),
                    auto_grid_type('\0'),
@@ -253,7 +251,7 @@ void brav_opts::usage()
 "\nOptions\n"
 "%s"
 "  -H        additional help\n"
-"  -y <lim>  minimum distance for unique vertex locations as negative exponent\n"
+"  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\nLattice Options\n"
@@ -313,11 +311,11 @@ void brav_opts::usage()
 "  -Z <col>  add centroid vertex to final product in color col\n"
 "  -K        append cage of container of -k to final product\n"
 "\nListing Options\n"
-"  -l        display the list of lattices\n"
+"  -B        display the list of Bravais lattices\n"
 "  -L        list unique radial distances of points from center (and offset)\n"
 "  -S        list every possible strut value\n"
 "\n"
-"\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5),::epsilon);
+"\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }
 
 void brav_opts::process_command_line(int argc, char **argv)
@@ -325,7 +323,8 @@ void brav_opts::process_command_line(int argc, char **argv)
    opterr = 0;
    char c;
    char errmsg[MSG_SZ];
-  
+
+   int sig_compare = INT_MAX;  
    bool radius_set = false;
    vector<double> double_parms;
 
@@ -345,7 +344,7 @@ void brav_opts::process_command_line(int argc, char **argv)
 
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hHc:k:r:p:q:s:uv:a:g:G:d:y:D:C:AV:E:F:T:Z:KOR:lLSo:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hHc:k:r:p:q:s:uv:a:g:G:d:l:D:C:AV:E:F:T:Z:KOR:BLSo:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -503,13 +502,13 @@ void brav_opts::process_command_line(int argc, char **argv)
             }
             break;
 
-         case 'y':
+         case 'l':
             if(!read_int(optarg, &sig_compare, errmsg))
                error(errmsg, c);
             if(sig_compare < 0) {
                warning("limit is negative, and so ignored", c);
             }
-            if(sig_compare > 16) {
+            if(sig_compare > DEF_SIG_DGTS) {
                warning("limit is very small, may not be attainable", c);
             }
             break;
@@ -786,7 +785,7 @@ void brav_opts::process_command_line(int argc, char **argv)
                r_lattice_type = 4;
             break;
 
-         case 'l':
+         case 'B':
             list_bravais = true;
             break;
 
@@ -959,7 +958,8 @@ int bravais::lookup_sym_no(string crystal_system, string centering)
 }
 
 // formulas from http://en.wikipedia.org/wiki/Bravais_lattice
-double bravais_volume(string crystal_system, vector<double> &vecs, vector<double> &angles)
+// crystal_system is not changed
+double bravais_volume(string crystal_system, const vector<double> &vecs, const vector<double> &angles)
 {
    transform(crystal_system.begin(), crystal_system.end(), crystal_system.begin(), ::tolower);
 
@@ -1012,7 +1012,7 @@ double bravais_volume(string crystal_system, vector<double> &vecs, vector<double
 }
 
 // return random angle
-double bravais_random_angle(rand_gen &ran, double max_angle)
+double bravais_random_angle(rand_gen &ran, const double &max_angle)
 {
    return ran.ran_in_range_exclude_end(0.001, max_angle); // avoid 0 and max_angle
 }
@@ -1027,7 +1027,7 @@ void sort_three(double &x, double &y, double &z, vector<double> v)
    z = v[2];
 }
 
-int bravais_check(string &crystal_system, string &centering, vector<double> &vecs, vector<double> &angles, int strictness = 0)
+int bravais_check(string &crystal_system, string &centering, vector<double> &vecs, vector<double> &angles, const int &strictness)
 {
 // strictness = 0 any change in crystal system allowed
 // strictness = 1 only upgrades in crystal system allowed
@@ -1403,7 +1403,7 @@ void bravais_centering_i(col_geom_v &geom)
    geom.add_vert(vec3d( 0,  0,  0)); // 8
 }
 
-void bravais_cell_struts(col_geom_v &geom, col_val edge_col)
+void bravais_cell_struts(col_geom_v &geom, const col_val &edge_col)
 {
    int f[] = { 0,1, 0,2, 0,4, 3,1, 3,2, 3,7, 5,1, 5,4, 5,7, 6,2, 6,4, 6,7 };
    vector<int> edge(2);
@@ -1414,7 +1414,7 @@ void bravais_cell_struts(col_geom_v &geom, col_val edge_col)
    }
 }
 
-void bravais_cell(col_geom_v &geom, string centering, bool cell_struts, col_val vert_col, col_val edge_col)
+void bravais_cell(col_geom_v &geom, const string &centering, const bool &cell_struts, const col_val &vert_col, const col_val &edge_col)
 {
    if (centering == "p")
       bravais_centering_p(geom);
@@ -1443,7 +1443,7 @@ void bravais_cell(col_geom_v &geom, string centering, bool cell_struts, col_val 
       bravais_cell_struts(geom, edge_col);
 }
 
-void bravais_scale(col_geom_v &geom, vector<double> vecs, bool inverse)
+void bravais_scale(col_geom_v &geom, const vector<double> &vecs, const bool &inverse)
 {
    // divide by 2 since original scale is 2   
    mat3d m = mat3d::scale(vecs[0]/2, vecs[1]/2, vecs[2]/2);
@@ -1454,7 +1454,7 @@ void bravais_scale(col_geom_v &geom, vector<double> vecs, bool inverse)
 }
 
 // applies angles alpha,beta and gamma without changing scale
-void bravais_warp(col_geom_v &geom, vector<double> angles, bool inverse)
+void bravais_warp(col_geom_v &geom, const vector<double> &angles, const bool &inverse)
 {
    double yz = deg2rad(angles[0]);   // alpha
    double zx = deg2rad(angles[1]);   // beta
@@ -1467,7 +1467,8 @@ void bravais_warp(col_geom_v &geom, vector<double> angles, bool inverse)
    geom.transform(m);
 }
 
-double bravais_radius(vector<int> grid, vector<double> vecs, vector<double> angles, char radius_default)
+// vecs is not changed
+double bravais_radius(const vector<int> &grid, vector<double> vecs, const vector<double> &angles, const char &radius_default)
 {
    col_geom_v tgeom;
    tgeom.read_resource("std_cube");
@@ -1482,7 +1483,7 @@ double bravais_radius(vector<int> grid, vector<double> vecs, vector<double> angl
    return lattice_radius(tgeom,radius_default);
 }
 
-double bravais_auto_grid_size(double radius, vector<double> vecs, vector<double> angles)
+double bravais_auto_grid_size(const double &radius, const vector<double> &vecs, const vector<double> &angles)
 {
    vector<int> grid(3);
    for(unsigned int i=0; i<3; i++)
@@ -1490,7 +1491,8 @@ double bravais_auto_grid_size(double radius, vector<double> vecs, vector<double>
    return (radius / bravais_radius(grid, vecs, angles, 's'));
 }
 
-double bravais_radius_by_coord(vec3d radius_by_coord, vec3d offset, vector<double> vecs, vector<double> angles)
+// radius_by_coord is not changed
+double bravais_radius_by_coord(vec3d radius_by_coord, const vec3d &offset, const vector<double> &vecs, const vector<double> &angles)
 {
    col_geom_v tgeom;
    tgeom.add_vert(radius_by_coord);
@@ -1511,13 +1513,13 @@ double bravais_radius_by_coord(vec3d radius_by_coord, vec3d offset, vector<doubl
 }
 
 // makes local copy of tgeom
-void geom_to_grid_translate(col_geom_v &geom, col_geom_v tgeom, mat3d transl_matrix)
+void geom_to_grid_translate(col_geom_v &geom, col_geom_v tgeom, const mat3d &transl_matrix)
 {
       tgeom.transform(transl_matrix);
       geom.append(tgeom);
 }
 
-void geom_to_grid(col_geom_v &geom, vector<int> grid, vector<double> cell_size, double epsilon)
+void geom_to_grid(col_geom_v &geom, const vector<int> &grid, const vector<double> &cell_size, const double &eps)
 {
    col_geom_v tgeom = geom;
    geom.clear_all();
@@ -1530,7 +1532,7 @@ void geom_to_grid(col_geom_v &geom, vector<int> grid, vector<double> cell_size, 
       }
    }
 
-   sort_merge_elems(geom, "vef", epsilon);
+   sort_merge_elems(geom, "vef", eps);
 }
 
 void bravais_eighth_cell_grid(col_geom_v &geom)
@@ -1551,7 +1553,7 @@ void bravais_eighth_cell_grid(col_geom_v &geom)
       geom.delete_verts(del_verts);
 }
 
-mat3d r_lattice_trans_mat(bool inverse)
+mat3d r_lattice_trans_mat(const bool &inverse)
 {
    mat3d trans_m;
    // transformation matrix by Adrian Rossiter
@@ -1576,12 +1578,12 @@ mat3d r_lattice_trans_mat(bool inverse)
    return trans_m;
 }
 
-void r_lattice_overlay(col_geom_v &geom, vector<int> grid, vector<double> cell_size, col_val vert_col, col_val edge_col, double epsilon)
+void r_lattice_overlay(col_geom_v &geom, const vector<int> &grid, const vector<double> &cell_size, const col_val &vert_col, const col_val &edge_col, const double &eps)
 {
    col_geom_v hgeom;
 
    bravais_cell(hgeom, "p", true, vert_col, edge_col); // hard code struts and colors for the "R" lattice
-   geom_to_grid(hgeom, grid, cell_size, epsilon);
+   geom_to_grid(hgeom, grid, cell_size, eps);
 
    hgeom.transform(r_lattice_trans_mat(false));
 
@@ -1596,7 +1598,7 @@ void r_lattice_overlay(col_geom_v &geom, vector<int> grid, vector<double> cell_s
    geom.append(hgeom);
 }
 
-void bravais_grid_type(vector<int> &grid, char auto_grid_type)
+void bravais_grid_type(vector<int> &grid, const char &auto_grid_type)
 {
    string pattern; // 0 - even 1 - odd
    if (auto_grid_type == 'p')
@@ -1617,7 +1619,7 @@ void bravais_grid_type(vector<int> &grid, char auto_grid_type)
    }
 }
 
-void bravais_primitive_vectors(vector<vec3d> &primitive_vectors, string centering)
+void bravais_primitive_vectors(vector<vec3d> &primitive_vectors, const string &centering)
 {
    double len = sqrt(2);
    primitive_vectors.push_back(vec3d(0,0,0));
@@ -1640,13 +1642,13 @@ void bravais_primitive_vectors(vector<vec3d> &primitive_vectors, string centerin
    }
 }
 
-double tetrahedral_volume(vec3d a0, vec3d a1, vec3d a2, vec3d a3)
+double tetrahedral_volume(const vec3d &a0, const vec3d &a1, const vec3d &a2, const vec3d &a3)
 {
    return -vtriple(a1-a0, a2-a0, a3-a0)/factorial(3);
 }
 
-void bravais_dual(col_geom_v &geom, vector<vec3d> primitive_vectors, vector<int> prim_vec_idxs,
-                  vector<double> vecs, vector<double> angles)
+void bravais_dual(col_geom_v &geom, const vector<vec3d> &primitive_vectors, const vector<int> &prim_vec_idxs,
+                  const vector<double> &vecs, const vector<double> &angles, const double &eps)
 {
    col_geom_v tgeom;
 
@@ -1685,7 +1687,7 @@ void bravais_dual(col_geom_v &geom, vector<vec3d> primitive_vectors, vector<int>
    vec3d a3 = tverts[3];
 
    double vecs_volume = tetrahedral_volume(a0,a1,a2,a3);
-   if (double_equality(vecs_volume, 0, epsilon)) {
+   if (double_eq(vecs_volume, 0, eps)) {
       fprintf(stderr,"error in bravais_dual: vectors are on one plane. cannot perform dual\n");
       return;
    }
@@ -1848,7 +1850,7 @@ void do_bravais(col_geom_v &geom, col_geom_v &container, brav_opts &opts)
       vector<vec3d> primitive_vectors;
       if (opts.use_centering_for_dual)
          bravais_primitive_vectors(primitive_vectors, opts.centering);
-      bravais_dual(geom, primitive_vectors, opts.prim_vec_idxs, opts.vecs, opts.angles);
+      bravais_dual(geom, primitive_vectors, opts.prim_vec_idxs, opts.vecs, opts.angles, opts.epsilon);
    }
 
    for(unsigned int i=0; i<opts.strut_len.size(); i++)
@@ -1896,7 +1898,7 @@ void do_bravais(col_geom_v &geom, col_geom_v &container, brav_opts &opts)
    }
 
    if (opts.color_method)
-      color_by_symmetry_normals(geom, opts.color_method, opts.face_opacity);
+      color_by_symmetry_normals(geom, opts.color_method, opts.face_opacity, opts.epsilon);
       
    if (opts.trans_to_origin)
       geom.transform(mat3d::transl(-centroid(geom.verts())));

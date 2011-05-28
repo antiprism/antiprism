@@ -67,6 +67,7 @@ class col_util_opts: public prog_opts {
       bool seven_mode;
       double brightness_adj;
       int map_maximum;
+      bool verbose;
 
       vector<double> sat_powers;
       vector<double> value_powers;
@@ -90,7 +91,8 @@ class col_util_opts: public prog_opts {
                      ryb_mode(false),
                      seven_mode(false),
                      brightness_adj(0),
-                     map_maximum(0)
+                     map_maximum(0),
+                     verbose(false)
                      {}
 
       void process_command_line(int argc, char **argv);
@@ -115,6 +117,7 @@ void col_util_opts::usage()
 "               plot as cone, bicone or cube respectively\n"
 "  -d <int>  output type. plot=1  wheel=2  grid=3  map=4 (default: 1)\n"
 "               if color wheel and RGB, only one color blend is possible\n"
+"  -V        verbose output. show color blend RGBA components\n"
 "\nOutput type 1 options\n" 
 "  -r <int>  HSV/HSL chroma  0 - none (cylinder)  1 - conic  2 - hexagonal\n"
 "  -S        HSV/HSL distribute colors heptagonally, 7 ways, as in the rainbow\n"
@@ -166,7 +169,7 @@ void col_util_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hd:m:k:q:z:f:r:b:s:t:u:v:pa:cySl:M:O:UZ:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hd:m:k:q:z:f:r:b:s:t:u:v:pa:cySl:M:O:UZ:Vo:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -303,6 +306,10 @@ void col_util_opts::process_command_line(int argc, char **argv)
             if(map_maximum < 0)
                error("maximum map elements to read in must be greater than 0", c);
             break;
+
+         case 'V':
+            verbose = true;
+            break;
             
          case 'o':
             ofile = optarg;
@@ -400,7 +407,7 @@ void get_chroma(const col_val &col, int chroma_level, double &hue, double &chrom
 
 // furnished by Adrian Rossiter
 void color_wheel(col_geom_v &geom, const vector<col_val> &cols, int color_system_mode,
-                 vector<double> &sat_powers, double sat_threshold, vector<double> &value_powers, double value_advance, int alpha_mode, bool ryb_mode, double brightness_adj)
+                 vector<double> &sat_powers, double sat_threshold, vector<double> &value_powers, double value_advance, int alpha_mode, bool ryb_mode, double brightness_adj, bool verbose)
 {
    // RK - dynamic polygon size
    unsigned int sz = cols.size();
@@ -439,6 +446,10 @@ void color_wheel(col_geom_v &geom, const vector<col_val> &cols, int color_system
          col_val col = blend_RGB_centroid(cols, alpha_mode, ryb_mode);
          if (brightness_adj)
             col.set_brightness(brightness_adj);
+
+         if (verbose && !lvl)
+            col.dump("[blend]");
+
          geom.add_col_face(face, col);
       }
       else {
@@ -452,6 +463,13 @@ void color_wheel(col_geom_v &geom, const vector<col_val> &cols, int color_system
          col_val col = blend_HSX_centroid(cols, color_system_mode, sat_power, sat_threshold, value_power, value_advance, alpha_mode, ryb_mode);
          if (brightness_adj)
             col.set_brightness(brightness_adj);
+
+         if (verbose) {
+            char name[MSG_SZ];
+            sprintf(name,"[blend %d]",lvl+1);
+            col.dump(name);
+         }
+
          geom.add_col_face(face, col);
       }
    }
@@ -526,7 +544,6 @@ col_geom_v make_hsx_container(int chroma_level, int color_system_mode, bool seve
 // output: angle adjusted for heptagon
 double hsx_to_7gon(double angle)
 {
-//fprintf(stderr,"angle in %g\n",angle);
    double heptagon_angle = 360.0/7.0; // 51.42857143...
    
    // take 0 to 60 range to 0 to 102.8571429...
@@ -536,7 +553,6 @@ double hsx_to_7gon(double angle)
    if (angle > 60.0)
       angle = ((angle-60.0) * heptagon_angle/60.0) + heptagon_angle*2;
 
-//fprintf(stderr,"angle out %g\n",angle);
    return angle;
 }
 
@@ -548,10 +564,11 @@ double saturation_correction_7gon(double hue, double sat)
    return (sat * scale);
 }
 
-void plot_hsx_point(col_geom_v &geom, col_val &col, int color_system_mode, int chroma_level, bool ryb_mode, bool seven_mode, double brightness_adj)
+// return the color that was finally plotted if needed
+col_val plot_hsx_point(col_geom_v &geom, col_val &col, int color_system_mode, int chroma_level, bool ryb_mode, bool seven_mode, double brightness_adj)
 {
    if (!col.is_val())
-      return;
+      return col;
 
    if (brightness_adj)
       col.set_brightness(brightness_adj);
@@ -590,6 +607,8 @@ void plot_hsx_point(col_geom_v &geom, col_val &col, int color_system_mode, int c
    double angle = 2*M_PI*H;
 
    geom.add_col_vert(vec3d(S*cos(angle), S*sin(angle), hsxa[2]), col);
+
+   return col;
 }
 
 void plot_hsx(col_geom_v &geom, const vector<col_val> &cols, int color_system_mode, int chroma_level, bool ryb_mode, bool seven_mode)
@@ -633,10 +652,11 @@ col_geom_v make_cube()
    return geom;
 }
 
-void plot_rgb_point(col_geom_v &geom, col_val &col, bool ryb_mode, double brightness_adj)
+// return the color that was finally plotted if needed
+col_val plot_rgb_point(col_geom_v &geom, col_val &col, bool ryb_mode, double brightness_adj)
 {
    if (!col.is_val())
-      return;
+      return col;
 
    if (brightness_adj)
       col.set_brightness(brightness_adj);
@@ -650,6 +670,8 @@ void plot_rgb_point(col_geom_v &geom, col_val &col, bool ryb_mode, double bright
    }
 
    geom.add_col_vert(vec3d(rcol[0]/255.0,rcol[1]/255.0,rcol[2]/255.0),col);
+
+   return col;
 }
 
 void plot_rgb_cube(col_geom_v &geom, const vector<col_val> &cols, bool ryb_mode)
@@ -792,14 +814,6 @@ void collect_cols(vector<col_val> &cols, col_util_opts &opts)
       vector<col_val>::iterator ci = unique(cols.begin(), cols.end());
       cols.resize( ci - cols.begin() );
    }
-
-/* debug. output hsv values  
-   for(unsigned int i=0; i<cols.size(); i++) {
-      vec4d hcol;
-      hcol = cols[i].get_hsva();
-      fprintf(stderr,"%g %g %g %g\n",hcol[0],hcol[1],hcol[2],hcol[3]);
-   }
-*/
    
    if (opts.cmy_mode)
       for(unsigned int i=0; i<cols.size(); i++)
@@ -892,7 +906,12 @@ int main(int argc, char *argv[])
                for(unsigned int i=0; i<4; i++) {
                   if (!i || opts.sat_powers[i] > -1.0 || opts.value_powers[i] > -1.0) {
                      col_val col = blend_HSX_centroid(cols, opts.color_system_mode, opts.sat_powers[i], opts.sat_threshold, opts.value_powers[i], opts.value_advance, opts.alpha_mode, opts.ryb_mode);
-                     plot_hsx_point(geom, col, opts.color_system_mode, opts.chroma_level, opts.ryb_mode, opts.seven_mode, opts.brightness_adj);
+                     col_val blend = plot_hsx_point(geom, col, opts.color_system_mode, opts.chroma_level, opts.ryb_mode, opts.seven_mode, opts.brightness_adj);
+                     if (opts.verbose) {
+                        char name[MSG_SZ];
+                        sprintf(name,"[blend %d]",i+1);
+                        blend.dump(name);
+                     }
                   }
                }
             }
@@ -903,7 +922,9 @@ int main(int argc, char *argv[])
             
             if (opts.plot_centroid) {
                col_val col = blend_RGB_centroid(cols, opts.alpha_mode, opts.ryb_mode);
-               plot_rgb_point(geom, col, opts.ryb_mode, opts.brightness_adj);
+               col_val blend = plot_rgb_point(geom, col, opts.ryb_mode, opts.brightness_adj);
+               if (opts.verbose)
+                  blend.dump("[blend]");
             }
          }
 
@@ -933,7 +954,6 @@ int main(int argc, char *argv[])
                // scale of heptagon to 1 is .8677674782351162 = cos(Pi*5/14)+cos(Pi*5/14) or cos(Pi*3/14)/sin(Pi*5/14)
                if (opts.seven_mode)
                   scale *= cos(M_PI*5.0/14.0)*2.0;
-//fprintf(stderr,"scale = %g\n",scale);
                geom.transform(mat3d::scale(1.0,1.0,fabs(scale)));
             }
          }
@@ -944,7 +964,7 @@ int main(int argc, char *argv[])
       }
       else
       if (opts.display_type == 2)
-         color_wheel(geom, cols, opts.color_system_mode, opts.sat_powers, opts.sat_threshold, opts.value_powers, opts.value_advance, opts.alpha_mode, opts.ryb_mode, opts.brightness_adj);
+         color_wheel(geom, cols, opts.color_system_mode, opts.sat_powers, opts.sat_threshold, opts.value_powers, opts.value_advance, opts.alpha_mode, opts.ryb_mode, opts.brightness_adj, opts.verbose);
       else
       if (opts.display_type == 3)
          color_grid(geom, cols);

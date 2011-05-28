@@ -101,7 +101,7 @@ bool lines_nearest_points(vec3d P0, vec3d P1, vec3d Q0, vec3d Q1,
     double t = (a*e-b*d)/D;
     P = P0 + s*u;
     Q = Q0 + t*v;
-    return (D > eps);
+    return (D >= eps);
 }
 
 

@@ -172,7 +172,7 @@ void sph_lat_grid::make_lattice(geom_if &geom)
 
 // for lattice code only
 
-double lattice_radius(const geom_if &geom, char radius_type)
+double lattice_radius(const geom_if &geom, const char &radius_type)
 {
    geom_v tgeom = geom;
    
@@ -202,7 +202,7 @@ double lattice_radius(const geom_if &geom, char radius_type)
    return radius;
 }
 
-void geom_container_clip(col_geom_v &geom, col_geom_v &container, double radius, vec3d offset, double epsilon)
+void geom_container_clip(col_geom_v &geom, col_geom_v &container, const double &radius, const vec3d &offset, double eps)
 {
    // container has to be convex and 3 dimensional
    char errmsg[MSG_SZ]=""; 
@@ -231,7 +231,7 @@ void geom_container_clip(col_geom_v &geom, col_geom_v &container, double radius,
 
    vector<int> del_verts;
    for(unsigned int i=0; i<verts.size(); i++) {
-      if (!is_point_inside_hull(verts[i], container, epsilon))
+      if (!is_point_inside_hull(verts[i], container, eps))
          del_verts.push_back(i);
    }
 
@@ -242,7 +242,7 @@ void geom_container_clip(col_geom_v &geom, col_geom_v &container, double radius,
       fprintf(stderr,"bravais_container_clip: warning: all vertices were clipped out!\n");
 }
 
-void geom_spherical_clip(col_geom_v &geom, double radius, vec3d offset, double epsilon)
+void geom_spherical_clip(col_geom_v &geom, const double &radius, const vec3d &offset, double eps)
 {
    const vector<vec3d> &verts = geom.verts();
    vec3d cent = centroid(verts);
@@ -254,7 +254,7 @@ void geom_spherical_clip(col_geom_v &geom, double radius, vec3d offset, double e
    vector<int> del_verts;
    for(unsigned int i=0; i<verts.size(); i++) {
       double len = (cent-verts[i]).mag();
-      if (!double_equality(len, radius, epsilon) && len > radius)
+      if (double_ne(len, radius, eps) && len > radius)
          del_verts.push_back(i);
    }
 
@@ -265,7 +265,7 @@ void geom_spherical_clip(col_geom_v &geom, double radius, vec3d offset, double e
       fprintf(stderr,"bravais_spherical_clip: warning: all vertices were clipped out!\n");
 }
 
-void list_grid_radii(const col_geom_v &geom, vec3d offset, double epsilon)
+void list_grid_radii(const col_geom_v &geom, const vec3d &offset, double eps)
 {
    const vector<vec3d> &verts = geom.verts();
    vec3d cent = centroid(verts);
@@ -280,7 +280,7 @@ void list_grid_radii(const col_geom_v &geom, vec3d offset, double epsilon)
 
    // eliminate 0 radius
    int start = 0;
-   if (double_equality(radii[0], 0, epsilon))
+   if (double_eq(radii[0], 0, eps))
       start++;
 
    // prime things
@@ -294,7 +294,7 @@ void list_grid_radii(const col_geom_v &geom, vec3d offset, double epsilon)
    fprintf(stderr,"Rank\tDistance\tD Squared\tOccurrence\n");
    fprintf(stderr,"----\t--------\t---------\t----------\n");
    for(unsigned int i=start+1;i<radii.size();i++) {
-      if (double_equality(radii[i], comp, epsilon))
+      if (double_eq(radii[i], comp, eps))
          occur++;
       else {
          occur_total += occur;
@@ -309,7 +309,7 @@ void list_grid_radii(const col_geom_v &geom, vec3d offset, double epsilon)
    fprintf(stderr,"Total occurrences = %d\n\n",occur_total);
 }
 
-void list_grid_struts(const col_geom_v &geom, double epsilon)
+void list_grid_struts(const col_geom_v &geom, double eps)
 {
    const vector<vec3d> &verts = geom.verts();
 
@@ -322,7 +322,7 @@ void list_grid_struts(const col_geom_v &geom, double epsilon)
 
    // eliminate 0 radius
    int start = 0;
-   if (double_equality(struts[0], 0, epsilon))
+   if (double_eq(struts[0], 0, eps))
       start++;
 
    // prime things
@@ -336,7 +336,7 @@ void list_grid_struts(const col_geom_v &geom, double epsilon)
    fprintf(stderr,"Rank\tDistance\tD Squared\tOccurrence\n");
    fprintf(stderr,"----\t--------\t---------\t----------\n");
    for(unsigned int i=start+1;i<struts.size();i++) {
-      if (double_equality(struts[i], comp, epsilon))
+      if (double_eq(struts[i], comp, eps))
          occur++;
       else {
          occur_total += occur;
@@ -351,22 +351,22 @@ void list_grid_struts(const col_geom_v &geom, double epsilon)
    fprintf(stderr,"Total occurrences = %d\n\n",occur_total);
 }
 
-void add_color_struts(col_geom_v &geom, double len2, col_val edge_col)
+void add_color_struts(col_geom_v &geom, const double &len2, col_val &edge_col, double eps)
 {
    const vector<vec3d> &verts = geom.verts();
 
    for(unsigned int i=0; i<verts.size(); i++)
       for(unsigned int j=i; j<verts.size(); j++) {
-         if(fabs((verts[i]-verts[j]).mag2() - len2) < epsilon)
+         if(fabs((verts[i]-verts[j]).mag2() - len2) < eps)
             geom.add_col_edge(make_edge(i, j), edge_col);
       }
 }
 
-void color_centroid(col_geom_v &geom, col_val cent_col, double epsilon)
+void color_centroid(col_geom_v &geom, col_val &cent_col, double eps)
 {
    const vector<vec3d> &verts = geom.verts();
    vec3d cent = centroid(verts);
-   int cent_idx = find_vertex_by_coordinate(geom, cent, epsilon);
+   int cent_idx = find_vertex_by_coordinate(geom, cent, eps);
    
    if (cent_idx == -1)
       geom.add_col_vert(cent, cent_col);
@@ -377,7 +377,7 @@ void color_centroid(col_geom_v &geom, col_val cent_col, double epsilon)
 // color functions
          
 // Rotational octahedral by Adrian Rossiter
-vec3d sort_vec3d_chiral(const vec3d &v)
+vec3d sort_vec3d_chiral(const vec3d &v, double eps)
 {
    vec3d c = v;
    // Rotate into positive octant
@@ -395,11 +395,11 @@ vec3d sort_vec3d_chiral(const vec3d &v)
    }
 
    // if c[1] is maximum rotate to first place: 1,2,0
-   if (c[1] > c[0] && c[1] > c[2]-epsilon)
+   if (c[1] > c[0] && c[1] > c[2]-eps)
       c = vec3d(c[1],c[2],c[0]);
    else
    // if c[2] is maximum rotate to first place: 2,0,1
-   if (c[2] > c[0] && c[2] > c[1]+epsilon)
+   if (c[2] > c[0] && c[2] > c[1]+eps)
       c = vec3d(c[2],c[0],c[1]);
    else
    // if c[0] is maximum do nothing
@@ -407,9 +407,9 @@ vec3d sort_vec3d_chiral(const vec3d &v)
 
    // Check whether c is near negative triangle external boundary, and
    // rotate to corresponding positive triangle boundary if so.
-   if(double_equality(c[0], c[1], epsilon))
+   if(double_eq(c[0], c[1], eps))
       c = vec3d(c[1], c[0], c[2]);
-   if(double_equality(c[2], 0, epsilon))
+   if(double_eq(c[2], 0, eps))
       c = vec3d(c[0], -c[2], c[1]);
 
    return c;
@@ -428,7 +428,7 @@ vec3d sort_vec3d(vec3d &v)
    return(vec3d(c[0],c[1],c[2]));
 }
 
-void color_by_symmetry_normals(col_geom_v &geom, char color_method, int face_opacity)
+void color_by_symmetry_normals(col_geom_v &geom, const char &color_method, const int &face_opacity, double eps)
 {
    const vector<vector<int> > &faces = geom.faces();
    const vector<vec3d> &verts = geom.verts();
@@ -445,7 +445,7 @@ void color_by_symmetry_normals(col_geom_v &geom, char color_method, int face_opa
       if(color_method == 's' || color_method == 'S')
          norm = sort_vec3d(norm);
       else if(color_method == 'c' || color_method == 'C')
-         norm = sort_vec3d_chiral(norm);
+         norm = sort_vec3d_chiral(norm, eps);
 
       long idx = (long)(norm[0]*1000000) + (long)(norm[1]*10000) + (long)norm[2]*100;
       if(color_method == 'S' || color_method == 'C')
@@ -455,7 +455,7 @@ void color_by_symmetry_normals(col_geom_v &geom, char color_method, int face_opa
    }
 }
 
-void color_edges_by_sqrt(col_geom_v &geom, char color_method)
+void color_edges_by_sqrt(col_geom_v &geom, const char &color_method)
 {
    geom.add_missing_impl_edges();
 
@@ -474,7 +474,7 @@ void color_edges_by_sqrt(col_geom_v &geom, char color_method)
 
 // convex hull and voronoi wrappers
 
-void convex_hull_report(const geom_v &geom, bool add_hull)
+void convex_hull_report(const geom_v &geom, const bool &add_hull)
 {
    geom_info rep(geom);
    fprintf(stderr,"\n");
@@ -497,10 +497,10 @@ void convex_hull_report(const geom_v &geom, bool add_hull)
    fprintf(stderr,"\n");
 }
 
-int get_voronoi_geom(col_geom_v &geom, col_geom_v &vgeom, bool central_cells, bool one_cell_only, double epsilon)
+int get_voronoi_geom(col_geom_v &geom, col_geom_v &vgeom, const bool &central_cells, const bool &one_cell_only, double eps)
 {
    // do this in case compound lattice was sent. Simultaneous points cause problems for Voronoi Cells
-   sort_merge_elems(geom, "vef", epsilon);
+   sort_merge_elems(geom, "vef", eps);
    
    // store convex hull of lattice as speed up to is_geom_inside_hull()
    // has to be 3 dimensional
@@ -519,11 +519,11 @@ int get_voronoi_geom(col_geom_v &geom, col_geom_v &vgeom, bool central_cells, bo
    get_voronoi_cells(geom, cells);
    
    for(unsigned int i=0; i<cells.size(); i++) {      
-      if (central_cells && !is_point_inside_hull(cent, cells[i], epsilon)) {
+      if (central_cells && !is_point_inside_hull(cent, cells[i], eps)) {
          continue;
       }
       else
-      if (!is_geom_inside_hull(cells[i], hgeom, epsilon)) {
+      if (!is_geom_inside_hull(cells[i], hgeom, eps)) {
          continue;
       }
       vgeom.append(cells[i]);

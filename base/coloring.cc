@@ -866,7 +866,7 @@ col_val blend_HSX_centroid(const vector<col_val> &cols, int color_system_mode, d
    
    // hue
    // if saturation is 0, no need to calculate hue
-   //if (!double_equality(sum[0],0.0,epsilon) && !double_equality(sum[1],0.0,epsilon)) { // old error, made nice pattern, but wrong
+   //if (double_ne(sum[0],0.0,epsilon) && double_ne(sum[1],0.0,epsilon)) { // old error, made nice pattern, but wrong
    if (S != 0.0) {
       H = atan2(sum[1], sum[0])/(2*M_PI);
       if(H<0)
