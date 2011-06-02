@@ -348,7 +348,7 @@ void pov_writer::scene_setup(FILE *ofile)
 "#end\n"
 "\n"
 "// Stereo offset (offset of images or camera from mono position)\n"
-"#declare StereoOffset = Distance/3.5;\n"
+"#declare StereoOffset = Distance/3.3;\n"
 "\n"
 "#declare CamLocOff  = <0, 0, Distance*PerspFactor>;\n"
 "\n"

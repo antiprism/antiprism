@@ -39,7 +39,7 @@ using std::vector;
 
 class o2p_opts: public view_opts {
    public:
-      int shadow;
+      bool shadow;
       int stereo_type;
       int sig_dgts;
       char o_type;
@@ -50,7 +50,7 @@ class o2p_opts: public view_opts {
       string ofile;
 
       o2p_opts(): view_opts("off2pov"),
-                  shadow(-1),
+                  shadow(false),
                   stereo_type(-1),
                   sig_dgts(DEF_SIG_DGTS),
                   o_type('a')
@@ -84,13 +84,11 @@ void o2p_opts::usage()
 "  Scene options\n"
 "%s"
 "  -P <pers> narrow the angle of perspective (range 0-100,\n"
-"            default: 2 mono, 4 stereo)\n"
-"  -W <shad> use lighting with shadows can be 0 (default) yes\n"
-"            for mono no for stereo, 1 yes, 2 no\n"
-"  -S <ster> produce stereo output, val is 0 (default) mono, 1 stereo\n"
+"            default: 2, recommend 4 for stereo option -S 1)\n"
+"  -W        use lighting with shadows"
+"  -S <type> produce stereo output, type is 0 (default) mono, 1 stereo\n"
 "            with one image file, 2 stereo with two image files (use\n"
-"            something like povrays +KFF2 option for output), 3 mono\n"
-"            with four views around the object\n"
+"            the POV-Ray +KFF2 option for output)\n"
 "\n"
 "  Precision options\n"
 "%s"
@@ -119,10 +117,7 @@ void o2p_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'W':
-            if(!read_int(optarg, &shadow, errmsg))
-               error(errmsg, c);
-            if(shadow<0 || shadow>2)
-               error("shadow must be 0, 1 or 2", c);
+            shadow = true;
             break;
 
          case 'S':
@@ -169,7 +164,6 @@ void o2p_opts::process_command_line(int argc, char **argv)
       }
    }
 
-   
    if(argc-optind >= 1)
       while(argc-optind >= 1)
          ifiles.push_back(argv[optind++]);
@@ -201,7 +195,7 @@ int main(int argc, char *argv[])
    if(opts.stereo_type >= 0)
       pov.set_stereo_type(opts.stereo_type);
  
-   if(opts.shadow >= 0)
+   if(opts.shadow)
       pov.set_shadow(opts.shadow);
 
    FILE *ofile = stdout;  // write to stdout by default
