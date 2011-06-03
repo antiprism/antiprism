@@ -244,7 +244,7 @@ bool col_val::read_colorname(char *str, char *errmsg, bool as_index)
          *p = tolower(*p);
         *p_to++ = *p;
       }
-      *p++;
+      p++;
    }
    *p_to = '\0';
    // change grey to gray

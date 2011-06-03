@@ -81,7 +81,7 @@ class prog_opts: public ultra_getopt
 
       ///Get the program name
       /**\return a pointer to the program name. */
-      const char *prog_name() { return program_name.c_str(); }
+      const char *prog_name() const { return program_name.c_str(); }
       
       ///Print a message (to standard error).
       /**The message will be preceded by the program name, the
@@ -90,7 +90,7 @@ class prog_opts: public ultra_getopt
        * \param msg the message to print.
        * \param msg_type the message type (e.g. 'warning').
        * \param opt the option letter or argument name. */
-      void message(string msg, const char *msg_type=0, string opt="");
+      void message(string msg, const char *msg_type=0, string opt="") const;
 
 
       ///Print an error message (to standard error) and exit.
@@ -99,7 +99,7 @@ class prog_opts: public ultra_getopt
        * \param msg the message to print.
        * \param opt the option letter or argument name.
        * \param exit_num The value to return when the program exits. */
-      void error(string msg, string opt="", int exit_num=1)
+      void error(string msg, string opt="", int exit_num=1) const
          { message(msg, "error", opt); exit(exit_num); }
       
       ///Print an error message (to standard error) and exit.
@@ -108,7 +108,7 @@ class prog_opts: public ultra_getopt
        * \param msg the message to print.
        * \param opt the option letter.
        * \param exit_num The value to return when the program exits. */
-      void error(string msg, char opt, int exit_num=1)
+      void error(string msg, char opt, int exit_num=1) const
          { message(msg, "error", string()+opt); exit(exit_num); }
 
       ///Print a warning message (to standard error).
@@ -116,7 +116,7 @@ class prog_opts: public ultra_getopt
        * option letter or argument name (if given).
        * \param msg the message to print.
        * \param opt the option letter or argument name. */
-      void warning(string msg, string opt="")
+      void warning(string msg, string opt="") const
          { message(msg, "warning", opt); }
 
       ///Print a warning message (to standard error).
@@ -124,7 +124,7 @@ class prog_opts: public ultra_getopt
        * option letter (if given).
        * \param msg the message to print.
        * \param opt the option letter. */
-      void warning(string msg, char opt)
+      void warning(string msg, char opt) const
          { message(msg, "warning", string()+opt); }
 
       ///Process long options

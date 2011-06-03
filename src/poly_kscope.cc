@@ -50,11 +50,15 @@ class ksc_opts: public prog_opts
       mat3d trans_m;
       sch_sym sym;
       char col_elems;
+      bool consider_part_sym;
       string sfile;
       string ifile;
       string ofile;
 
-      ksc_opts(): prog_opts("poly_kscope"), col_elems('\0') { }
+      ksc_opts(): prog_opts("poly_kscope"),
+                  col_elems('\0'),
+                  consider_part_sym(true)
+                  { }
 
       void process_command_line(int argc, char **argv);
       void usage();
@@ -97,6 +101,8 @@ void ksc_opts::usage()
 "  -c <elms> color elements with a different index number for each part. The\n"
 "            element string can include v, e and f to color, respectively,\n"
 "            vertices, edges and faces\n"
+"  -I        ignore shared symmetries, full kaleidoscopic repetition of\n"
+"            component\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
 "\n", prog_name(), help_ver_text);
@@ -112,7 +118,7 @@ void ksc_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hS:s:c:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hS:s:c:Io:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -134,6 +140,12 @@ void ksc_opts::process_command_line(int argc, char **argv)
                         (strchr(optarg, 'e')!=0)*ELEM_EDGES +
                         (strchr(optarg, 'f')!=0)*ELEM_FACES;
             break;
+
+         case 'I':
+            consider_part_sym = false;
+            break;
+
+
 
          case 'o':
             ofile = optarg;
@@ -177,7 +189,9 @@ int main(int argc, char *argv[])
       opts.warning(errmsg);
 
    vector<vector<set<int> > > equivs;
-   sch_sym part_sym(geom, &equivs);
+   sch_sym part_sym;
+   if(opts.consider_part_sym)
+      part_sym.init(geom, &equivs);
 
    /*
       for(int i=0; i<3; i++) {

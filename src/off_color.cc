@@ -614,7 +614,21 @@ void restore_orig_cols(col_geom_v &geom, col_geom_v &restore_geom,
          geom.set_f_col(i, col);
    }
 }
-   
+  
+bool warn_if_not_subgroup(const prog_opts &opts, char opt,
+      const sch_sym &whole, const sch_sym &part)
+{
+   t_set min;
+   min.min_set(whole.get_trans(), part.get_trans());
+   if( whole.get_trans().size()%part.get_trans().size() || // Lagrange
+       min.intersection(whole.get_trans(), part.get_trans()).size() !=
+                                                  part.get_trans().size()) {
+      opts.warning("group is not subgroup of model", opt);
+      return false;  // is not subgroup
+   }
+   return true; // is subgroup
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -674,18 +688,21 @@ int main(int argc, char *argv[])
       if(opts.v_sub_sym.get_sym_type() != sch_sym::unknown) {
          sch_sym sub = sym.get_sub_sym(opts.v_sub_sym.get_sym_type(),
                opts.v_sub_sym.get_nfold());
+         warn_if_not_subgroup(opts, 'v', sym, opts.v_sub_sym);
          get_equiv_elems(geom, sub.get_trans(), &sym_equivs);
          opts.v_equivs = sym_equivs[0];
       }
       if(opts.e_sub_sym.get_sym_type() != sch_sym::unknown) {
          sch_sym sub = sym.get_sub_sym(opts.e_sub_sym.get_sym_type(),
                opts.e_sub_sym.get_nfold());
+         warn_if_not_subgroup(opts, 'e', sym, opts.e_sub_sym);
          get_equiv_elems(geom, sub.get_trans(), &sym_equivs);
          opts.e_equivs = sym_equivs[1];
       }  
       if(opts.f_sub_sym.get_sym_type() != sch_sym::unknown) {
          sch_sym sub = sym.get_sub_sym(opts.f_sub_sym.get_sym_type(),
                opts.f_sub_sym.get_nfold());
+         warn_if_not_subgroup(opts, 'f', sym, opts.f_sub_sym);
          get_equiv_elems(geom, sub.get_trans(), &sym_equivs);
          opts.f_equivs = sym_equivs[2];
       }

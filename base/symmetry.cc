@@ -683,7 +683,7 @@ sch_sym::sch_sym(const t_set &ts): sym_type(unknown), nfold(1), to_std(mat3d())
 
 
 
-inline int edge_seen(map<pair<int, int>, unsigned char> &e_seen, int v0, int v1, bool update)
+static inline int edge_seen(map<pair<int, int>, unsigned char> &e_seen, int v0, int v1, bool update)
 {
    unsigned char dir = 1;
    if(v0>v1) {
@@ -704,10 +704,10 @@ inline int edge_seen(map<pair<int, int>, unsigned char> &e_seen, int v0, int v1,
    return 1;                 // 1: seen but not traversed in this direction
 }
 
-inline int edge_check(map<pair<int, int>, unsigned char> &e_seen, int v0,int v1)
+static inline int edge_check(map<pair<int, int>, unsigned char> &e_seen, int v0,int v1)
 { return edge_seen(e_seen, v0, v1, false); }
 
-inline int edge_mark(map<pair<int, int>, unsigned char> &e_seen, int v0, int v1)
+static inline int edge_mark(map<pair<int, int>, unsigned char> &e_seen, int v0, int v1)
 { return edge_seen(e_seen, v0, v1, true); }
    
 
@@ -891,13 +891,13 @@ static int find_syms(const geom_if &geom, t_set &ts,
 
    geom_info inf(merged_geom);
    //if(inf.num_parts()>1 || !inf.is_orientable()) // for octahemioctaheron=Td
-   test_geom.set_hull(msg_str("-A%.15f", 1.0-sym_eps));
+   const int dim = test_geom.set_hull(msg_str("-A%.15f", 1.0-sym_eps));
+   if(dim<2)  // contains an infinite axis, can't currently handle this
+      return 0;
 
    geom_info g_inf(test_geom);
    const vector<vector<int> > &edges = g_inf.get_impl_edges();
    const vector<vector<int> > &v_cons = g_inf.get_vert_cons();
-   if(!edges.size())
-      return 0;
    
    vector<vector<int> > r_cons = v_cons;
    for(vector<vector<int> >::iterator vi=r_cons.begin(); vi!=r_cons.end(); vi++)

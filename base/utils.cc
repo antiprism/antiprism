@@ -71,7 +71,7 @@ const char *prog_opts::help_ver_text =
 "  --version version information\n";
 
 
-void prog_opts::message(string msg, const char *msg_type, string opt)
+void prog_opts::message(string msg, const char *msg_type, string opt) const
 {
    fprintf(stderr, "%s: ", prog_name());
    if(msg_type)
