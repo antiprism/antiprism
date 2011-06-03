@@ -55,6 +55,7 @@ class pr_opts: public prog_opts {
       double trunc_ratio;
       int trunc_v_ord;
       bool edges_to_faces;
+      bool geometry_only;
       string filt_elems;
       string merge_elems;
       int blend_type;
@@ -69,7 +70,8 @@ class pr_opts: public prog_opts {
 
       pr_opts(): prog_opts("off_util"), orient(false),
                  triangulate_rule(0), skeleton(false),
-                 sph_proj(false), trunc(false), edges_to_faces(false), blend_type(1),
+                 sph_proj(false), trunc(false), edges_to_faces(false),
+                 geometry_only(false), blend_type(1),
                  epsilon(0), sig_digits(DEF_SIG_DGTS),
                  unzip_frac(100.0), unzip_root(0), unzip_centre('x'),
                  unzip_z_align(false)
@@ -105,6 +107,7 @@ void pr_opts::usage()
 "  -s        skeleton, write the face edges and remove the faces\n"
 "  -t <disp> triangulate, include face parts according to winding number\n"
 "            from: odd, nonzero, positive, negative, abs_geq_two\n"
+"  -g        geometry only, remove all colours and digons\n"
 "  -x <elms> remove OFF face elements. The element string is processed in\n"
 "            order and can include v, e and f to remove OFF faces with one\n"
 "            vertex (vertices), two-vertices (edges) and three or more\n"
@@ -175,7 +178,7 @@ void pr_opts::process_command_line(int argc, char **argv)
 
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hH:st:Od:x:T:ESM:b:l:u:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hH:st:Od:x:gT:ESM:b:l:u:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -245,6 +248,10 @@ void pr_opts::process_command_line(int argc, char **argv)
                error(errmsg, c);
             }
             filt_elems=optarg;
+            break;
+
+         case 'g':
+            geometry_only = true;
             break;
 
          case 'S':
@@ -610,6 +617,13 @@ void make_skeleton(geom_if &geom)
    geom.clear_faces();
 }
 
+void geometry_only(col_geom_v &geom)
+{
+   geom.clear_v_cols();
+   geom.clear_edges();
+   geom.clear_f_cols();
+}
+
 
 void filter(geom_if &geom, const char *elems)
 {
@@ -671,6 +685,8 @@ void process_file(col_geom_v &geom, pr_opts opts)
       triangulate_faces(geom, opts.triangulate_rule);
    if(opts.skeleton)
       make_skeleton(geom);
+   if(opts.geometry_only)
+      geometry_only(geom);
    if(opts.filt_elems!="")
       filter(geom, opts.filt_elems.c_str());
    if(opts.sph_proj)
