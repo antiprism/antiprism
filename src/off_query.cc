@@ -107,7 +107,8 @@ void oq_opts::usage()
 "            centroid (default, '0,0,0')\n"
 "  -I <idxs> list of elements by index number given as index ranges\n"
 "            separated by commas, range can be one number or two\n"
-"            numbers separated by a hyphen (defaults: 0 and largest index)\n"
+"            numbers separated by a hyphen (default range numbers: 0 and\n"
+"            largest index, default argument: any added elements else '-')\n"
 "  -v <crds> add vertex, coordinates in form 'X,Y,Z'\n"
 "  -f <vnos> add face, a list of vertex index numbers separated by commas\n"
 "  -e <vnos> add edges, a list of vertex index numbers separated by commas\n"
@@ -346,8 +347,13 @@ void oq_opts::process_command_line(int argc, char **argv)
          error(msg_str("index e%d (%d) out of range",
                idxs[i]-max_elem_sz, idxs[i]), 'I');
 
-   if(!idxs.size())
-      error("no elements in query list, use option -I or add elements of the query type");
+   if(!idxs.size()) {   // default, process all if none specified
+      char all[MSG_SZ] = "-";
+      read_idx_list(all, idx_list, max_elem_sz, errmsg);
+      add_to_list(idxs, idx_list);
+   }
+   if(!idxs.size())     // default, process all if none specified
+      error("no elements of the query type are in the geometry or were added");
 }
 
 
