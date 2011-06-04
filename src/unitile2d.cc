@@ -243,7 +243,8 @@ void unitile::ut_33336()
       if(i<3) {
          trans = trans * mat3d::transl(vec3d(0,1,0));
          cent = trans * vec3d(0,0,0);
-         add_faces(cent[0], cent[1]);
+         if(i==1)
+            add_faces(cent[0], cent[1]);
          add_faces(cent[0]+sqrt(7)/2, cent[1]+sqrt(21)/2);
       }
    }
