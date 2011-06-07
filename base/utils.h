@@ -251,6 +251,24 @@ bool read_int_list(vector<char *> &vals, vector<int> &nums, char *errmsg=0,
 bool read_int_list(char *str, vector<int> &nums, char *errmsg=0,
       bool is_index=false, int len=0, const char *sep=",");
 
+///Read index numbers listed in a single string.
+/**The string consists of comma separated index number ranges, and may
+ * have leading and trailing whitespace. A number range is either a single
+ * number, or a sequential list indicated by two numbers seperated by '-'.
+ * If the numbers are not given they default to the first and last index
+ * number respectively.
+ * \param str the string holding the comma-separated integers.
+ * \param nums used to return the integers.
+ * \param nums used to return the integers.
+ * \param nums used to return the integers.
+ * \param errmsg an array at least \c MSG_SZ chars long to
+ * return any error message.
+ * \return true if only valid index numbers were read, otherwise false.
+ * and the error is detailed in \a errmsg. */
+bool read_idx_list(char *str, vector<int> &nums, int num_idxs,
+      bool allow_extra=false, char *errmsg=0);
+
+
 /// Read a line of arbitrary length
 /**The caller is responsible for freeing the memory allocated to line
  * after each read.
@@ -312,6 +330,12 @@ FILE *open_sup_file(const char *fname, const char *subdir,
  * \param ... the values for the format
  * \return The converted string. */
 string msg_str(const char *fmt, ...);
+
+//Copy a C string
+/** The copy is dynamically allocated and must be freed with free()
+ * \param str the string to copy
+ * \return A pointer to the newly allocated string, or 0*/
+char *copy_str(const char *str);
 
 ///Convert an integer to a string
 /**\param i the integer.

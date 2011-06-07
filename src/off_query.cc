@@ -80,7 +80,7 @@ void oq_opts::usage()
 "\n"
 "Read a file in OFF format and list element data for specified elements.\n"
 "Added elements of the query type are also added to the query list.\n"
-"Added elements are referred to by En, where n is the order the element\n"
+"Added elements are referred to by xN, where N is the order the element\n"
 "was added (starting with 0). Query is a list of letters, the first is the\n"
 "query element type V, F, or E followed by the values to print\n"
 "   V - Vertex:\n"
@@ -122,71 +122,6 @@ void oq_opts::usage()
 "\n"
 "\n", prog_name(), help_ver_text);
 }
-
-bool read_idx(char *str, int *idx, char *errmsg)
-{
-   if(!read_int(str, idx, errmsg)) {
-      snprintf(errmsg, MSG_SZ, "'%s' is not an integer", str);
-      return false;
-   }
-   if(idx<0) {
-      snprintf(errmsg, MSG_SZ, "'%s' is not a positive integer", str);
-      return false;
-   }
-   return true;
-}
-
-bool read_idx_list(char *str, vector<int> &nums, int num_idxs, char *errmsg)
-{
-   nums.clear();
-   int idx, idx2;
-   char *p;
-   char *v_str = strtok(str, ",");
-   while(v_str) {
-      if((p=strchr(v_str, '-'))) {  // process a range
-         *p = '\0';  // terminate first index
-         if(*v_str) {
-            if(!read_idx(v_str, &idx, errmsg))
-               return false;
-         }
-         else
-            idx=0;
-         if(*(p+1)) {
-            if(!read_idx(p+1, &idx2, errmsg))
-               return false;
-         }
-         else
-            idx2=num_idxs-1;
-         if(*v_str && *(p+1) && idx>idx2) {
-            snprintf(errmsg, MSG_SZ, "index range, %s is greater than %s",
-                  v_str, p+1);
-            return false;
-         }
-         if((*v_str || *(p+1)) && !num_idxs) {
-            snprintf(errmsg, MSG_SZ, "invalid range, there are no elements of the query type");
-            return false;
-         }
-         for(int i=idx; i<=idx2; i++)
-            nums.push_back(i);
-      }
-      else {
-         int extra = false;
-         if(*v_str=='e'||*v_str=='E') {
-            extra = true;
-            v_str++;
-         }
-         if(v_str) {
-            if(!read_idx(v_str, &idx, errmsg))
-               return false;
-         }
-         nums.push_back(idx + extra*num_idxs);
-      }
-      v_str = strtok(NULL, ",");
-   }
-     
-   return true;
-}
-
 
 
 void add_to_list(vector<int> &list, vector<int> &to_add)
@@ -268,7 +203,7 @@ void oq_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'I':
-            if(!read_idx_list(optarg, idx_list, max_elem_sz, errmsg))
+            if(!read_idx_list(optarg, idx_list, max_elem_sz, false, errmsg))
                error(errmsg, c);
             if(!idx_list.size())
                warning("file contains no elements of this query type", c);
@@ -283,14 +218,14 @@ void oq_opts::process_command_line(int argc, char **argv)
          
          case 'f':
             if(!read_idx_list(optarg, idx_list,
-                     geom.get_verts()->size(), errmsg))
+                     geom.get_verts()->size(), true, errmsg))
                error(errmsg, c);
             extra_faces.push_back(idx_list);
             break;
 
          case 'e':
             if(!read_idx_list(optarg, idx_list,
-                     geom.get_verts()->size(), errmsg))
+                     geom.get_verts()->size(), true, errmsg))
                error(errmsg, c);
             if(!is_even(idx_list.size()))
                error("odd number of vertex index numbers", c);
@@ -337,19 +272,23 @@ void oq_opts::process_command_line(int argc, char **argv)
    for(unsigned int i=0; i<extra_faces.size(); i++)
       for(unsigned int j=0; j<extra_faces[i].size(); j++)
          if(extra_faces[i][j]>total_verts-1)
-            error(msg_str("extra face vertex e%d (%d) out of range",
-                  extra_faces[i][j]-(int)geom.get_verts()->size(),
-                  extra_faces[i][j]), 'f');
+            error(msg_str("extra face vertex x%d out of range",
+                  extra_faces[i][j]-(int)geom.get_verts()->size()), 'f');
+   
+   for(unsigned int i=0; i<extra_edges.size(); i++)
+      for(unsigned int j=0; j<extra_edges[i].size(); j++)
+         if(extra_edges[i][j]>total_verts-1)
+            error(msg_str("extra edge vertex x%d out of range",
+                  extra_edges[i][j]-(int)geom.get_verts()->size()), 'e');
    
    int total_elems = max_elem_sz + query_elems_added;
    for(unsigned int i=0; i<idxs.size(); i++)
       if(idxs[i]>total_elems-1)
-         error(msg_str("index e%d (%d) out of range",
-               idxs[i]-max_elem_sz, idxs[i]), 'I');
+         error(msg_str("index x%d out of range", idxs[i]-max_elem_sz), 'I');
 
    if(!idxs.size()) {   // default, process all if none specified
       char all[MSG_SZ] = "-";
-      read_idx_list(all, idx_list, max_elem_sz, errmsg);
+      read_idx_list(all, idx_list, max_elem_sz, false, errmsg);
       add_to_list(idxs, idx_list);
    }
    if(!idxs.size())     // default, process all if none specified

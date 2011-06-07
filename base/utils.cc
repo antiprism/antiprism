@@ -306,7 +306,6 @@ bool read_int_list(vector<char *> &vals, vector<int> &nums, char *errmsg, bool i
    return true;
 }
 
-
 bool read_int_list(char *str, vector<int> &nums, char *errmsg, bool is_index,
       int len, const char *sep)
 {
@@ -337,6 +336,81 @@ bool read_int_list(char *str, vector<int> &nums, char *errmsg, bool is_index,
      
    return true;
 }
+
+
+static bool read_idx(char *str, int *idx, int num_idxs, char *errmsg)
+{
+   if(!read_int(str, idx, errmsg)) {
+      snprintf(errmsg, MSG_SZ, "'%s' is not an integer", str);
+      return false;
+   }
+   if(*idx<0) {
+      snprintf(errmsg, MSG_SZ, "'%s' is not a positive integer", str);
+      return false;
+   }
+   if(*idx>=num_idxs) {
+      if(num_idxs==0)
+         snprintf(errmsg, MSG_SZ, "'%s' is out of range (no elements of "
+               "this type)", str);
+      else
+         snprintf(errmsg, MSG_SZ, "'%s' is out of range (too large)", str);
+      return false;
+   }
+   return true;
+}
+
+bool read_idx_list(char *str, vector<int> &nums, int num_idxs,
+      bool allow_extra, char *errmsg)
+{
+   nums.clear();
+   int idx, idx2;
+   char *p;
+   char *v_str = strtok(str, ",");
+   while(v_str) {
+      if((p=strchr(v_str, '-'))) {  // process a range
+         *p = '\0';  // terminate first index
+         if(*v_str) {
+            if(!read_idx(v_str, &idx, num_idxs, errmsg))
+               return false;
+         }
+         else
+            idx=0;
+         if(*(p+1)) {
+            if(!read_idx(p+1, &idx2, num_idxs, errmsg))
+               return false;
+         }
+         else
+            idx2=num_idxs-1;
+         if(*v_str && *(p+1) && idx>idx2) {
+            snprintf(errmsg, MSG_SZ, "index range, %s is greater than %s",
+                  v_str, p+1);
+            return false;
+         }
+         if((*v_str || *(p+1)) && !num_idxs) {
+            snprintf(errmsg, MSG_SZ, "invalid range, there are no elements of the query type");
+            return false;
+         }
+         for(int i=idx; i<=idx2; i++)
+            nums.push_back(i);
+      }
+      else {
+         int extra = false;
+         if(allow_extra && (*v_str=='x'||*v_str=='X')) {
+            extra = true;
+            v_str++;
+         }
+         if(v_str) {
+            if(!read_idx(v_str, &idx, num_idxs, errmsg))
+               return false;
+         }
+         nums.push_back(idx + extra*num_idxs);
+      }
+      v_str = strtok(NULL, ",");
+   }
+     
+   return true;
+}
+
 
 /*
 bool read_double_list(char *str, vector<double> &nums, char *errmsg,
@@ -615,6 +689,16 @@ char *to_resource_name(char *to, const char *from)
       *p = tolower(*p);
    return to;
 }
+
+char *copy_str(const char *str)
+{
+   char *p = (char *)malloc(strlen(str) + 1);
+   if(p) {
+      strcpy(p, str);
+   }
+   return p;
+}
+
 
 
 FILE *fopen_file(string &fpath)

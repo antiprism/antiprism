@@ -33,6 +33,7 @@
 #include <vector>
 #include <stack>
 #include <algorithm>
+#include <memory>
 
 #include "../base/antiprism.h"
 
@@ -41,6 +42,7 @@
 using std::string;
 using std::vector;
 using std::stack;
+using std::auto_ptr;
 
 
 
@@ -57,6 +59,10 @@ class pr_opts: public prog_opts {
       bool edges_to_faces;
       bool geometry_only;
       string filt_elems;
+      vector<string> del_elems;
+      vector<string> add_elems;
+      bool close;
+      col_val close_col;
       string merge_elems;
       int blend_type;
       double epsilon;
@@ -71,7 +77,7 @@ class pr_opts: public prog_opts {
       pr_opts(): prog_opts("off_util"), orient(false),
                  triangulate_rule(0), skeleton(false),
                  sph_proj(false), trunc(false), edges_to_faces(false),
-                 geometry_only(false), blend_type(1),
+                 geometry_only(false), close(false), blend_type(1),
                  epsilon(0), sig_digits(DEF_SIG_DGTS),
                  unzip_frac(100.0), unzip_root(0), unzip_centre('x'),
                  unzip_z_align(false)
@@ -113,6 +119,20 @@ void pr_opts::usage()
 "            vertex (vertices), two-vertices (edges) and three or more\n"
 "            vertices (faces), and V to remove vertices that are not part\n"
 "            of any face or edge.\n"
+"  -D <list> delete a list of elements, list starts with element letter\n"
+"            (f,e, v, deleted in that order, only one list per element),\n"
+"            followed by an index number list, given as index ranges\n"
+"            separated by commas, range can be one number or two numbers\n"
+"            separated by a hyphen (default range numbers: 0 and largest index)\n"
+"  -A <elem> add element, elem is element letter (v, e, f), followed by\n"
+"            element data, optionally followed by ':' and a colour. Data is\n"
+"               v: three comma separated coordinates\n"
+"               e: a comma separated list of index numbers, joined as a ring\n"
+"               f: a comma separated list of index numbers\n"
+"            negative index numbers are relative to the end of the vertex\n"
+"            list, last vertex is -1 (useful to refer to added vertices.)\n"
+"  -c <col>  close polyhedron, each hole converted to a face with colour col,\n"
+"            holes having a vertex with more than two open edges are not filled\n"
 "  -S        project onto unit sphere centred at origin\n"
 "  -u <args> unfold a polyhedron into a net, takes up to three comma separated\n"
 "            values for base face index, dihedral fraction (normally 1.0 to\n"
@@ -173,12 +193,13 @@ void pr_opts::process_command_line(int argc, char **argv)
    opterr = 0;
    char c;
    vector<char *> parts;
+   col_geom_v adding;
 
    int sig_compare = INT_MAX;
 
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hH:st:Od:x:gT:ESM:b:l:u:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hH:st:Od:x:D:A:c:gT:ESM:b:l:u:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -250,8 +271,22 @@ void pr_opts::process_command_line(int argc, char **argv)
             filt_elems=optarg;
             break;
 
+         case 'D':
+            del_elems.push_back(optarg);
+            break;
+
+         case 'A':
+            add_elems.push_back(optarg);
+            break;
+
          case 'g':
             geometry_only = true;
+            break;
+
+         case 'c':
+            if(!close_col.read(optarg, errmsg))
+               error(errmsg, c);
+            close = true;
             break;
 
          case 'S':
@@ -646,6 +681,199 @@ void filter(geom_if &geom, const char *elems)
    }
 }
 
+
+bool get_del_element_list(geom_if &geom, const string &elem, vector<vector<int> > &elem_lists, char *errmsg)
+{
+   *errmsg = '\0';
+   if(!elem.size())
+      return true;
+
+   auto_ptr<char> elem_str(copy_str(elem.c_str()));
+   if(!elem_str.get()) {
+      strcpy(errmsg, "could not allocate memory");
+      return false;
+   }
+
+   const char *elem_type_strs[] = {"vertex", "edge", "face"};
+   char elem_type_char = *elem_str;
+   int elem_type;
+   int elems_sz;
+   if(elem_type_char=='v') {
+      elem_type = 0;
+      elems_sz = geom.verts().size();
+   }
+   else if(elem_type_char=='e') {
+      elem_type = 1;
+      elems_sz = geom.edges().size();
+   }
+   else if(elem_type_char=='f') {
+      elem_type = 2;
+      elems_sz = geom.faces().size();
+   }
+   else {
+      strcpy(errmsg, msg_str("invalid element type '%c', "
+               "should be v, e, or f", elem_type_char).c_str());
+      return false;
+   }
+
+   if(elem_lists[elem_type].size()) {
+      strcpy(errmsg, msg_str("list for %s elements already given",
+               elem_type_strs[elem_type]).c_str());
+      return false;
+   }
+
+   char errmsg2[MSG_SZ];
+   if(!read_idx_list(elem_str.get()+1, elem_lists[elem_type], elems_sz,
+            false, errmsg2)) {
+      strcpy(errmsg, msg_str("list for %s elements: %s",
+               elem_type_strs[elem_type], errmsg2).c_str());
+      return false;
+   }
+
+   return true;
+}
+
+bool delete_elements(col_geom_v &geom, vector<string> del_elems, char *errmsg)
+{
+   vector<vector <int> > elem_lists(3);
+   vector<string>::const_iterator vi;
+   for(vi=del_elems.begin(); vi!=del_elems.end(); ++vi) {
+      if(!get_del_element_list(geom, *vi, elem_lists, errmsg))
+         return false;
+   }
+
+   geom.delete_faces(elem_lists[2]);
+   geom.delete_edges(elem_lists[1]);
+   geom.delete_verts(elem_lists[0]);
+   
+   return true;
+}
+
+
+bool add_element(col_geom_v &geom, const string &elem, char *errmsg)
+{
+   *errmsg = '\0';
+   char errmsg2[MSG_SZ];
+   if(!elem.size())
+      return true;
+
+   auto_ptr<char> elem_str(copy_str(elem.c_str()));
+   if(!elem_str.get()) {
+      strcpy(errmsg, "could not allocate memory");
+      return false;
+   }
+
+   char elem_type_char = *elem_str;
+   const char *elem_type_str;
+   if(elem_type_char=='v')
+      elem_type_str = "vertex";
+   else if(elem_type_char=='e')
+      elem_type_str = "edge";
+   else if(elem_type_char=='f')
+      elem_type_str = "face";
+   else {
+      strcpy(errmsg, msg_str("invalid element type '%c', "
+               "should be v, e, or f", elem_type_char).c_str());
+      return false;
+   }
+
+   vector<char *> parts;
+   int num_parts = split_line(elem_str.get()+1, parts, ":");
+   if(num_parts>2) {
+      strcpy(errmsg, "more than one ':' used");
+      return false;
+   }
+   if(num_parts==0 || parts[1]=='\0') {
+      strcpy(errmsg, msg_str("'%s': no element data", elem.c_str()).c_str());
+      return false;
+   }
+
+   col_val col;
+   if(num_parts>1 && parts[1]!='\0') {
+      if(!col.read(parts[1], errmsg2)) {
+        strcpy(errmsg, msg_str("%s colour '%s': %s",
+                 elem_type_str, parts[1], errmsg2).c_str());
+        return false;
+      }
+   }
+
+   if(elem_type_char=='v') {
+      vec3d vec;
+      if(!vec.read(parts[0], errmsg2)) {
+         strcpy(errmsg, msg_str("vertex coordinates '%s': %s", parts[0],
+                  errmsg2).c_str());
+         return false;
+      }
+      geom.add_col_vert(vec, col);
+   }
+   else if(elem_type_char=='e' || elem_type_char=='f') {
+      vector<int> idx_list;
+      if(!read_int_list(parts[0], idx_list, errmsg2)) {
+         strcpy(errmsg, msg_str("%s index numbers: '%s': %s",
+                              elem_type_str, parts[0], errmsg2).c_str());
+         return false;
+      }
+      int list_sz = idx_list.size();
+      for(int i=0; i<list_sz; i++) {
+         int idx = idx_list[i];
+         if(idx<0)
+            idx += geom.verts().size();
+         if(idx<0 || idx>=(int)geom.verts().size()) {
+            strcpy(errmsg, msg_str("%s index numbers: '%s': %d out of range",
+                              elem_type_str, parts[0], idx_list[i]).c_str());
+            return false;
+         }
+         idx_list[i] = idx;
+      }
+      if(elem_type_char=='e') {
+         if(list_sz<2) {
+            strcpy(errmsg, msg_str("%s index numbers: '%s': "
+                     "must give at least two numbers",
+                              elem_type_str, parts[0]).c_str());
+            return false;
+         }
+         if(list_sz==2)
+            geom.add_col_face(idx_list, col);
+         else {
+            for(int i=0; i<list_sz; i++)
+               geom.add_col_edge(
+                     make_edge(idx_list[i], idx_list[(i+1)%list_sz]), col);
+         }
+      }
+      if(elem_type_char=='f') {
+         if(!list_sz) {
+            strcpy(errmsg, msg_str("%s index numbers: '%s': "
+                     "no index numbers given",
+                              elem_type_str, parts[0]).c_str());
+            return false;
+         }
+         geom.add_col_face(idx_list, col);
+      }
+   }
+   return true;
+}
+
+bool add_elements(col_geom_v &geom, vector<string> add_elems, char *errmsg)
+{
+   vector<string>::const_iterator vi;
+   for(vi=add_elems.begin(); vi!=add_elems.end(); ++vi) {
+      if(!add_element(geom, *vi, errmsg))
+         return false;
+   }
+   return true;
+}
+
+
+void close_poly(col_geom_v &geom, col_val col)
+{
+   int orig_faces_sz = geom.faces().size();
+   close_poly_basic(geom);
+   if(col.is_set()) {
+      for(unsigned int i=orig_faces_sz; i<geom.faces().size(); i++)
+         geom.set_f_col(i, col);
+   }
+}
+
 void proj_onto_sphere(geom_if &geom)
 {
    vector<vec3d> &verts = *geom.get_verts();
@@ -689,6 +917,14 @@ void process_file(col_geom_v &geom, pr_opts opts)
       geometry_only(geom);
    if(opts.filt_elems!="")
       filter(geom, opts.filt_elems.c_str());
+   if(opts.add_elems.size())
+      if(!add_elements(geom, opts.add_elems, errmsg))
+         opts.error(errmsg, 'A');
+   if(opts.del_elems.size())
+      if(!delete_elements(geom, opts.del_elems, errmsg))
+         opts.error(errmsg, 'D');
+   if(opts.close)
+      close_poly(geom, opts.close_col);
    if(opts.sph_proj)
       proj_onto_sphere(geom);
 }

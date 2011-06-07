@@ -42,7 +42,7 @@ char *rep_printer::idx2s(char *buf, int idx, int elems_sz)
    if(idx<elems_sz)
       snprintf(buf, MSG_SZ, "%d", idx);
    else 
-      snprintf(buf, MSG_SZ, "E%d", idx-elems_sz);
+      snprintf(buf, MSG_SZ, "x%d", idx-elems_sz);
    return buf;
 }
 
