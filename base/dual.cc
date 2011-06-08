@@ -179,7 +179,6 @@ void get_pol_recip_verts(const geom_if &geom, geom_if &dual,
                vert = verts[faces[i][v2]] - verts[faces[i][v1]];
                vert = vcross(vert, verts[faces[i][v3]] - verts[faces[i][v2]]);
                if(vert.mag() > min_lim) {
-                  vert.to_unit();
                   double face_dist= vdot(vert, verts[faces[i][0]]-centre);
                   double dist = r_sign*recip_rad*recip_rad/face_dist;
                   if(fabs(face_dist)<min_lim || fabs(dist)>inf)
@@ -209,12 +208,13 @@ void get_dual(const geom_if &geom, geom_if &dual, double recip_rad, vec3d centre
       for(unsigned int j=0; j<faces[i].size(); ++j) {
          edge.first = faces[i][j];
          edge.second = faces[i][(j+1)%faces[i].size()];
-         if(edge.first > edge.second)
+         bool swap_idxs = (edge.first > edge.second);
+         if(swap_idxs)
             swap(edge.first, edge.second);
          mi = edges.find(edge);
          if(mi!=edges.end()) {
             mi->second.second = i;
-            if(mi->second.first > mi->second.second)
+            if(swap_idxs)
                swap(mi->second.first, mi->second.second);
          }
          else
