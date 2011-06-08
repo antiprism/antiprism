@@ -171,7 +171,21 @@ void o2p_opts::process_command_line(int argc, char **argv)
       ifiles.push_back("");
 }
 
-
+void set_geom_includes(scene &scen, const vector<string> &includes)
+{
+   vector<scene_geom> &sc_geoms = scen.get_geoms();
+   vector<scene_geom>::iterator sc_i;
+   for(sc_i=sc_geoms.begin(); sc_i!=sc_geoms.end(); ++sc_i) {
+      vector<geom_disp *> &disps = sc_i->get_disps();
+      vector<geom_disp *>::iterator disp_i;
+      for(disp_i=disps.begin(); disp_i!=disps.end(); ++disp_i) {
+         disp_poly *disp = dynamic_cast<disp_poly *>(*disp_i);
+         if(disp)
+            disp->set_includes(includes);
+      }
+   }
+}
+ 
 
 int main(int argc, char *argv[])
 {
@@ -179,6 +193,7 @@ int main(int argc, char *argv[])
    opts.process_command_line(argc, argv);
    scene scen = opts.scen_defs;
    opts.set_view_vals(scen);
+   set_geom_includes(scen, opts.geom_incs);
  
    pov_writer pov;
    pov.set_o_type(opts.o_type);
@@ -189,9 +204,8 @@ int main(int argc, char *argv[])
       pov.set_file_name("stdout");
    
    pov.set_includes(opts.scene_incs);
-   //pov.set_geom_includes(opts.geom_incs);
    pov.set_obj_includes(opts.obj_incs);
-   
+  
    if(opts.stereo_type >= 0)
       pov.set_stereo_type(opts.stereo_type);
  
