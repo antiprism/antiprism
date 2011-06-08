@@ -15,9 +15,10 @@ xx-xx-10 Adrian Rossiter <adrian@antiprism.com>
            off_query: new query EC for edge centroids
            off_trans: new option -P aligns to standard symmetry type,
              rotate a pair of vectors onto another moved from -A to -R
-           off_util: new option -H for general help, new option -u
-             to unfold a polyhedron net, new option -x V deletes
-             free vertices, -t new triangulations.
+           off_util: new optionis: -H for general help; -u to unfold a
+              polyhedron net; -x V deletes free vertices; -D deletes
+              elements; -A adds elements; -g strips colours and digons;
+              -t new triangulations.
            off_color: options -m -M -c combined as option -m. Lower
              case colourings always set index, upper case colourings
              always apply colour map. Default colour map is 'rand'.
