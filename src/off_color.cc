@@ -347,6 +347,7 @@ void o_col_opts::usage()
 "               p,P - minimal proper colouring\n"
 "               s,S - symmetric colouring\n"
 "               n,N - colour by order of vertex\n"
+"               a,A - colour by avg internal ang of vert-fig (to nearest deg)\n"
 "               F   - colour with average adjoining face colour\n"
 "               E   - colour with average adjoining edge colour\n"
 "               c,C - gradient on Y coordinate\n"
@@ -397,7 +398,7 @@ void o_col_opts::process_command_line(int argc, char **argv)
                break;
             }
             split_line(optarg, parts, ",");
-            if(strlen(parts[0])==1 && strchr("uUpPsSnNFEcCLM", *parts[0]))
+            if(strlen(parts[0])==1 && strchr("uUpPsSnNaAFEcCLM", *parts[0]))
                v_col_op = *parts[0];
             else
                error("invalid colouring", c);
@@ -817,6 +818,8 @@ int main(int argc, char *argv[])
          vc.v_sets(sym_equivs[0], op=='S');
       else if(strchr("nN", op))
          vc.v_order(op=='N');
+      else if(strchr("aA", op))
+         vc.v_avg_angle(op=='A');
       else if(strchr("cC", op))
          vc.v_position(op=='C');
       else if(strchr("L", op))

@@ -212,6 +212,20 @@ void coloring::v_position(bool apply_map)
    }
 }
 
+void coloring::v_avg_angle(bool apply_map)
+{
+   geom_info info(*get_geom());
+   col_geom_v tmp;
+   tmp.raw_verts() = get_geom()->verts();
+   tmp.raw_faces() = info.get_vert_cons();
+   col_geom_v *orig_geom = get_geom();
+   set_geom(&tmp);
+   f_avg_angle(apply_map);
+   orig_geom->raw_vert_cols() = tmp.face_cols();
+   set_geom(orig_geom);
+}
+
+
 
 void coloring::v_lights(col_geom_v lts)
 {

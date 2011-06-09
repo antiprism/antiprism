@@ -161,6 +161,12 @@ class coloring: public color_map_multi
        * these index numbers using the colour maps */
       void v_position(bool apply_map=true);
       
+      ///Colour each vertex by the average internal angle of a "vertex figure"
+      //(to nearest degree.)
+      /**\param apply_map if false, colour with index numbers, if true, convert
+       * these index numbers using the colour maps */
+      void v_avg_angle(bool apply_map=true);
+
       ///Colour each vertex using a set of lights.
       /**\param lts a geometry holding coloured vertices to use as lights.*/
       void v_lights(col_geom_v lts);
