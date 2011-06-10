@@ -254,7 +254,7 @@ void geom_spherical_clip(col_geom_v &geom, const double &radius, const vec3d &of
    vector<int> del_verts;
    for(unsigned int i=0; i<verts.size(); i++) {
       double len = (cent-verts[i]).mag();
-      if (double_ne(len, radius, eps) && len > radius)
+      if (double_gt(len, radius, eps))
          del_verts.push_back(i);
    }
 
