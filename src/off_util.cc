@@ -113,12 +113,14 @@ void pr_opts::usage()
 "  -s        skeleton, write the face edges and remove the faces\n"
 "  -t <disp> triangulate, include face parts according to winding number\n"
 "            from: odd, nonzero, positive, negative, abs_geq_two\n"
-"  -g        geometry only, remove all colours and digons\n"
+"  -g        geometry only, remove all colours, remove all two-vertex faces\n"
+"            (edges) that are also a face edge\n"
 "  -x <elms> remove OFF face elements. The element string is processed in\n"
-"            order and can include v, e and f to remove OFF faces with one\n"
+"            order and can include v, e, f to remove OFF faces with one\n"
 "            vertex (vertices), two-vertices (edges) and three or more\n"
-"            vertices (faces), and V to remove vertices that are not part\n"
-"            of any face or edge.\n"
+"            vertices (faces), V to remove vertices that are not part\n"
+"            of any face or edge, E to remove two-vertex faces (edges) that\n"
+"            are also a face edge.\n"
 "  -D <list> delete a list of elements, list starts with element letter\n"
 "            (f,e, v, deleted in that order, only one list per element),\n"
 "            followed by an index number list, given as index ranges\n"
@@ -264,8 +266,8 @@ void pr_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'x':
-            if(strspn(optarg, "Vvef") != strlen(optarg)) {
-               snprintf(errmsg, MSG_SZ, "elements to hide are %s must be V, v, e, or f\n", optarg);
+            if(strspn(optarg, "vefVE") != strlen(optarg)) {
+               snprintf(errmsg, MSG_SZ, "elements to hide are %s, can only include vefVE\n", optarg);
                error(errmsg, c);
             }
             filt_elems=optarg;
@@ -652,11 +654,32 @@ void make_skeleton(geom_if &geom)
    geom.clear_faces();
 }
 
+
+// Roger Kaufman
+void clear_unneeded_explicit_edges(geom_if &geom)
+{
+   vector<vector<int> > implicit_edges;
+   geom.get_impl_edges(implicit_edges);
+
+   const vector<vector<int> > &edges = geom.edges();
+
+   vector<int> deleted_edges;
+
+   for(unsigned int i=0; i<edges.size(); i++) {
+      int answer = find_edge_in_edge_list(implicit_edges, edges[i]);
+      if (answer > -1)
+         deleted_edges.push_back(i);
+   }
+
+   geom.delete_edges(deleted_edges);
+}
+
 void geometry_only(col_geom_v &geom)
 {
    geom.clear_v_cols();
-   geom.clear_edges();
+   geom.clear_e_cols();
    geom.clear_f_cols();
+   clear_unneeded_explicit_edges(geom);
 }
 
 
@@ -673,6 +696,9 @@ void filter(geom_if &geom, const char *elems)
             break;
          case 'e':
             geom.clear_edges();
+            break;
+         case 'E':
+            clear_unneeded_explicit_edges(geom);
             break;
          case 'f':
             geom.clear_faces();
