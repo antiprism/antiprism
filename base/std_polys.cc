@@ -432,8 +432,6 @@ void set_resource_polygon_color(geom_if &geom)
       clrng.add_cmap(cmap);
       clrng.f_avg_angle(true);
       clrng.v_avg_angle(true);
-      geom.add_missing_impl_edges();
-      clrng.e_one_col(vec3d(1.0, 1.0, 1.0));
    }
 }
 
