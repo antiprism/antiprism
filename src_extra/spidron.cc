@@ -96,10 +96,10 @@ void spid_opts::process_command_line(int argc, char **argv)
    handle_long_opts(argc, argv);
 
    while( (c = getopt(argc, argv, ":ht:a:b:l:p:o:")) != -1 ) {
-      switch(c) {
-         if(common_opts(c, optopt))
-            continue;
+      if(common_opts(c, optopt))
+         continue;
 
+      switch(c) {
          case 'o':
             ofile = optarg;
             break;
@@ -371,16 +371,6 @@ int main(int argc, char *argv[])
 
    if(!spid.write(opts.ofile, errmsg))
       opts.error(errmsg);
-
-   vec3d ax(1,1.2,1.3);
-   vec3d v0(-1,1,0.3);
-   int divs = 10;
-   for(int i=0; i<divs; i++) {
-      double ang = 2*M_PI*i/divs;
-      vec3d v_to = mat3d::rot(ax, ang)*v0;
-      double ang_to = v_ang_at_ax(v0, v_to, ax);
-      fprintf(stderr, "ang=%g, ang_to=%g\n", rad2deg(ang), rad2deg(ang_to));
-   }
    
    return 0;
 }
