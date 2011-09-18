@@ -175,12 +175,19 @@ void coloring::v_sets(const vector<set<int> > &equivs, bool apply_map)
 
 void coloring::v_proper(bool apply_map)
 {
-   long parameter[] = {1000, 10, 50, 5};
-   long colours;
-   Graph g(*get_geom());
-   g.GraphColoring(parameter, colours);
-   if(apply_map)
-      v_apply_cmap();
+   prop_color prop(geom->verts().size());
+
+   const vector<vector<int> > &faces = geom->faces();
+   for(unsigned int i=0; i<faces.size(); ++i)
+      for(unsigned int j=0; j<faces[i].size(); ++j)
+         prop.set_adj(faces[i][j], faces[i][(j+1)%faces[i].size()]);
+   
+   prop.find_colors();
+   for(unsigned int i=0; i<get_geom()->verts().size(); i++)
+      if(apply_map)
+         get_geom()->set_v_col(i, get_col(prop.get_color(i)));
+      else
+         get_geom()->set_v_col(i,prop.get_color(i));
 }
 
 
@@ -319,19 +326,24 @@ void coloring::f_unique(bool apply_map)
 
 void coloring::f_proper(bool apply_map)
 {
-   // set up duall graph
-   geom_v dual;
-   get_dual(*get_geom(), dual);
-   col_geom_v dgeom(dual);
-   long parameter[] = {1000, 10, 50, 5};
-   long colours;
-   Graph g(dgeom);
-   g.GraphColoring(parameter, colours);
+   prop_color prop(geom->faces().size());
+
+   map<vector<int>, vector<int> > ef_prs;
+   geom->get_edge_face_pairs(ef_prs, false);
+   map<vector<int>, vector<int> >::const_iterator mi;
+   for(mi=ef_prs.begin(); mi!=ef_prs.end(); ++mi) {
+      const vector<int> &f_idxs = mi->second; 
+      for(unsigned int i=0; i<f_idxs.size(); ++i)
+         for(unsigned int j=i+1; j<f_idxs.size(); ++j)
+            prop.set_adj(f_idxs[i], f_idxs[j]);
+   }
+   
+   prop.find_colors();
    for(unsigned int i=0; i<get_geom()->faces().size(); i++)
       if(apply_map)
-         get_geom()->set_f_col(i,get_col(dgeom.get_v_col(i).get_idx()));
+         get_geom()->set_f_col(i, get_col(prop.get_color(i)));
       else
-         get_geom()->set_f_col(i, dgeom.get_v_col(i).get_idx());
+         get_geom()->set_f_col(i,prop.get_color(i));
 }
 
 
@@ -459,26 +471,37 @@ void coloring::e_unique(bool apply_map)
 
 void coloring::e_proper(bool apply_map)
 {
-   // set up edges to faces graph
-   col_geom_v egeom;
-   edges_to_faces(*get_geom(), egeom, true);
-   col_geom_v dgeom;
-   get_dual(egeom, dgeom);
-   long parameter[] = {1000, 10, 50, 5};
-   long colours;
-   Graph g(dgeom);
-   g.GraphColoring(parameter, colours);
-   const vector<vector<int> > &faces = egeom.faces();
-   for(unsigned int i=0; i<faces.size(); i++) {
-      col_val col(0,0,0);
-      if(apply_map)
-         col = get_col(dgeom.get_v_col(i).get_idx());
-      else
-         col = dgeom.get_v_col(i).get_idx();
-      get_geom()->add_col_edge(faces[i][0], faces[i][2], col);
+   map<vector<int>, vector<int> > edges;
+   geom->get_edge_face_pairs(edges, false);
+   map<vector<int>, vector<int> >::iterator mi;
+   int idx=0;
+   for(mi=edges.begin(); mi!=edges.end(); ++mi)
+      mi->second[0] = idx++;   // assign index numbers to the impl edges
+   prop_color prop(idx);       // idx is total number of impl edges
+
+
+   const vector<vector<int> > &faces = geom->faces();
+   vector<int> e_next(2);
+   for(unsigned int i=0; i<faces.size(); ++i) {
+      const vector<int> &face = faces[i];
+      int f_sz = face.size();
+      for(int j=0; j<f_sz; ++j) {
+         vector<int> e = make_edge(face[j], face[(j+1)%f_sz]);
+         vector<int> e_next = make_edge(face[(j+1)%f_sz], face[(j+2)%f_sz]);
+         // An edge is adjacent to the edge that follows it on a face
+         prop.set_adj( edges[e][0], edges[e_next][0]);
+      }
+   }
+   
+   prop.find_colors();
+   for(mi=edges.begin(); mi!=edges.end(); ++mi) {
+      int e_idx = edges[mi->first][0];
+      int col_idx = prop.get_color(e_idx);
+      col_val col = (apply_map) ? get_col(col_idx) : col_val(col_idx);
+      get_geom()->add_col_edge(mi->first[0], mi->first[1], col);
    }
 }
- 
+
 
 
 void coloring::e_face_color()

@@ -10,10 +10,10 @@ Please, support this aim. If you incorporate Antiprism source code
 into your own project and make any improvements that could reasonably
 be incorporated back into the Antiprism project, like bug fixes,
 optimisations or new features, then please contribute your changes
-for inclusion in back into Antiprism under a permissive (preferably
+for inclusion back into Antiprism under a permissive (preferably
 MIT) licence.
 
-Adrian.
+Adrian Rossiter
 adrian@antiprism.com
 
 
@@ -25,7 +25,6 @@ The bulk of the code, with specific author varying, is:
 
 Copyright (c) 2003-20011, Adrian Rossiter
 Copyright (c) 2006-20011, Roger Kaufman
-Includes ideas and algorithms by George W. Hart, http://www.georgehart.com
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -45,6 +44,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 
+------------------------------------------------------------------------
+Conway notation, Canonicalization: base/canonic.cc, src/canonic.cc,
+                                   src/conway.cc
+
+Includes ideas and algorithms by George W. Hart, http://www.georgehart.com
 
 ------------------------------------------------------------------------
 Qhull - Convex Hulls, Delaunay, Voronoi: base/qh_*
@@ -201,6 +205,28 @@ Window System(R) (Version 1.3), released October 19, 1998. This software
 was created using the OpenGL(R) version 1.2.1 Sample Implementation
 published by SGI, but has not been independently verified as being
 compliant with the OpenGL(R) version 1.2.1 Specification.
+
+------------------------------------------------------------------------
+Minimal proper colouring: base/prop_col.*
+
+The author of this software is Michael Trick.  Copyright (c) 1994 by 
+Michael Trick.
+
+Permission to use, copy, modify, and distribute this software for any
+purpose without fee is hereby granted, provided that this entire notice
+is included in all copies of any software which is or includes a copy
+or modification of this software and in all copies of the supporting
+documentation for such software.
+THIS SOFTWARE IS BEING PROVIDED "AS IS", WITHOUT ANY EXPRESS OR IMPLIED
+WARRANTY.  IN PARTICULAR, NEITHER THE AUTHOR DOES NOT MAKE ANY
+REPRESENTATION OR WARRANTY OF ANY KIND CONCERNING THE MERCHANTABILITY
+OF THIS SOFTWARE OR ITS FITNESS FOR ANY PARTICULAR PURPOSE.
+
+
+   COLOR.C: Easy code for graph coloring
+   Author: Michael A. Trick, Carnegie Mellon University, trick+@cmu.edu
+   Last Modified: November 2, 1994
+   http://mat.gsia.cmu.edu/COLOR/solvers/trick.c
 
 
 ------------------------------------------------------------------------
