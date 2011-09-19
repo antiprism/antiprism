@@ -1,4 +1,106 @@
 /*
+ * The author of this software is Michael Trick.  Copyright (c) 1994 by 
+ * Michael Trick.
+ *
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose without fee is hereby granted, provided that this entire notice
+ * is included in all copies of any software which is or includes a copy
+ * or modification of this software and in all copies of the supporting
+ * documentation for such software.
+ * THIS SOFTWARE IS BEING PROVIDED "AS IS", WITHOUT ANY EXPRESS OR IMPLIED
+ * WARRANTY.  IN PARTICULAR, NEITHER THE AUTHOR DOES NOT MAKE ANY
+ * REPRESENTATION OR WARRANTY OF ANY KIND CONCERNING THE MERCHANTABILITY
+ * OF THIS SOFTWARE OR ITS FITNESS FOR ANY PARTICULAR PURPOSE.
+ */
+
+/*
+   COLOR.C: Easy code for graph coloring
+   Author: Michael A. Trick, Carnegie Mellon University, trick+@cmu.edu
+   Last Modified: November 2, 1994
+   http://mat.gsia.cmu.edu/COLOR/solvers/trick.c
+
+Graph is input in a file.  First line contains the number of nodes and
+edges.  All following contain the node numbers (from 1 to n) incident to 
+each edge.  Sample:
+
+4 4
+1 2
+2 3
+3 4
+1 4
+
+represents a four node cycle graph.
+
+Code is probably insufficiently debugged, but may be useful to some people.
+
+For more information on this code, see Anuj Mehrotra and Michael A. Trick,
+"A column generation approach to graph coloring", GSIA Technical report series.
+
+*/
+
+/*
+   Name: prop_col.h
+   Description: minimal proper colouring
+   Project: Antiprism - http://www.antiprism.com
+   Changes: 12/09/11 Adrian Rossiter <adrian@antiprism.com>
+      convert to class and use STL containers rather than arrays
+*/
+
+
+// Adrian Rossiter: converted code in class
+
+#include <set>
+#include <vector>
+
+using std::set;
+using std::vector;
+using std::pair;
+using std::make_pair;
+using std::swap;
+
+class prop_color
+{
+   private:
+      set<pair<int, int> > adj;
+      int BestColoring;
+      vector<int> ColorClass;
+      vector<int> BestColorClass;
+      int prob_count;
+      vector<int> Order;
+      vector<bool> Handled;
+      vector<vector<int> > ColorAdj;
+      vector<int> ColorCount;
+      vector<int> visit_cnt;
+
+      int lb;
+      int num_prob,max_prob;
+
+      int best_clique;
+
+      int num_node;
+      
+      int greedy_clique(int *valid,int *clique);
+      int max_w_clique(int *valid, int *clique, int lower, int target);
+      void assign_color(int node, int color);
+      void remove_color(int node, int color);
+      int color(int i, int current_color);
+      bool is_adj(int i, int j)
+         { if(i>j) swap(i, j); return adj.find(make_pair(i, j)) != adj.end(); }
+      void set_color(int i, int col) { BestColorClass[i] = col+1; }
+
+
+   public:
+      prop_color(int nodes): num_node(nodes) {};
+      void set_adj(int i, int j)
+         { if(i>j) swap(i, j); adj.insert(make_pair(i, j)); }
+      int find_colors();
+      int get_color(int i) { return BestColorClass[i]-1; }
+
+      friend struct Graph;
+};
+
+
+/*
    Copyright (c) 1996-2000 Darko Kirovski, Miodrag Podkonjak and the Regents of
                            the University of California
 
@@ -32,7 +134,6 @@
       removed use of iostreams, graph initialised from a geometry object
 */
 
-#include "geom.h"
 
 enum Logic { _NO , _YES };
 enum Status { _COLORED, _NEIGHBOR, _FREE, _SELECTED };
@@ -69,10 +170,10 @@ class Graph {
    float *rando;
    long LENGTH_RANDOM;
    long CURRENT_RANDOM;
-   col_geom_v &geom;
+   prop_color &prop;
 
    public:
-   Graph (col_geom_v &dgeom);
+   Graph (prop_color &pr_col);
    ~Graph () {
       for (long i = 0; i < VERTICES; i++)
          if (vertex[i].edge) delete vertex[i].edge;
@@ -108,3 +209,4 @@ class Window {
       void BestMis (Edge* , long& , float& );
       void ComputeCosts (Graph* );
 };
+

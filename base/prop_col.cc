@@ -1,4 +1,420 @@
 /*
+ * The author of this software is Michael Trick.  Copyright (c) 1994 by 
+ * Michael Trick.
+ *
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose without fee is hereby granted, provided that this entire notice
+ * is included in all copies of any software which is or includes a copy
+ * or modification of this software and in all copies of the supporting
+ * documentation for such software.
+ * THIS SOFTWARE IS BEING PROVIDED "AS IS", WITHOUT ANY EXPRESS OR IMPLIED
+ * WARRANTY.  IN PARTICULAR, NEITHER THE AUTHOR DOES NOT MAKE ANY
+ * REPRESENTATION OR WARRANTY OF ANY KIND CONCERNING THE MERCHANTABILITY
+ * OF THIS SOFTWARE OR ITS FITNESS FOR ANY PARTICULAR PURPOSE.
+ */
+
+/*
+   COLOR.C: Easy code for graph coloring
+   Author: Michael A. Trick, Carnegie Mellon University, trick+@cmu.edu
+   Last Modified: November 2, 1994
+   http://mat.gsia.cmu.edu/COLOR/solvers/trick.c
+
+Graph is input in a file.  First line contains the number of nodes and
+edges.  All following contain the node numbers (from 1 to n) incident to 
+each edge.  Sample:
+
+4 4
+1 2
+2 3
+3 4
+1 4
+
+represents a four node cycle graph.
+
+Code is probably insufficiently debugged, but may be useful to some people.
+
+For more information on this code, see Anuj Mehrotra and Michael A. Trick,
+"A column generation approach to graph coloring", GSIA Technical report series.
+
+*/
+
+/*
+   Name: prop_col.cc
+   Description: minimal proper colouring
+   Project: Antiprism - http://www.antiprism.com
+   Changes: 112/09/11 Adrian Rossiter <adrian@antiprism.com>
+      convert to class and use STL conatiners rather than arrays
+*/
+
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+#include "prop_col.h"
+
+int prop_color::find_colors()
+{
+   prob_count = 0;
+   visit_cnt.resize(num_node+1, 0);
+   ColorAdj.resize(num_node, vector<int> (num_node+1, 0));
+   set<pair<int, int> >::const_iterator si;
+   //printf("%d %d\n", num_node, adj.size());
+   for(si=adj.begin(); si!=adj.end(); ++si) {
+      //printf("%d %d\n", si->first+1, si->second+1);
+      
+      ColorAdj[si->first][0]++;
+      ColorAdj[si->second][0]++;
+   }
+   //fflush(stdout);
+   
+   ColorCount.resize(num_node, 0);
+   ColorClass.resize(num_node, 0);
+   Handled.resize(num_node, false);
+   Order.resize(num_node, 0);
+   BestColoring = num_node+1;
+   
+   int valid[num_node], clique[num_node];
+   for(int i=0; i<num_node; i++)
+      valid[i] = true;
+   
+   best_clique = 0;
+   num_prob = 0;
+   max_prob = 10000;
+
+   lb = max_w_clique(valid, clique, 0, num_node);
+   
+   int place = 0;
+
+   for(int i=0; i<num_node; i++) {
+      if(clique[i]) {
+         Order[place] = i;
+         Handled[i] = true;
+         place++;
+         assign_color(i,place);
+         for(int j=0;j<num_node;j++)
+            if((i!=j)&&clique[j] && (!is_adj(i, j)))
+               fprintf(stderr, "warning: proper colouring, result is not a clique\n");
+
+      }
+   }
+   
+   if(color(place, place)==0) {
+      ColorClass.clear();
+      Order.clear();
+      Handled.clear();
+      ColorAdj.clear();
+      ColorCount.clear();
+      visit_cnt.clear();
+
+      long parameter[] = {1000, 10, 50, 5};
+      long colours;
+      Graph g(*this);
+      adj.clear();
+      g.GraphColoring(parameter, colours);
+   }
+   return 0;
+
+}
+
+int prop_color::greedy_clique(int *valid, int *clique)
+{
+   for(int i=0; i<num_node; i++)
+      clique[i] = 0;
+   
+   vector<int> order(num_node+1, 0);
+   int place = 0;
+   for(int i=0; i<num_node; i++) {
+      if(valid[i]) {
+         order[place] = i;
+         place++;
+      }
+   }
+   
+   vector<int> weight(num_node, 0);
+   for (int i=0;i<num_node;i++) {
+      if (!valid[i])
+         continue;
+      for (int j=0; j<num_node; j++) {
+         if (!valid[j])
+            continue;
+         if (is_adj(i, j))
+            weight[i]++;
+      }
+   }
+
+   bool done = false;
+   while(!done) {
+      done = true;
+      for (int i=0; i<place-1; i++) {
+         int j = order[i];
+         int k = order[i+1];
+         if (weight[j] < weight[k]) {
+            order[i] = k;
+            order[i+1] = j;
+            done = false;
+         }
+      }
+   }
+
+   clique[order[0]] = true;
+   for(int i=1; i<place; i++) {
+      int j = order[i];
+      int k;
+      for(k=0; k<i; k++)
+         if(clique[order[k]] && !is_adj(j, order[k]))
+            break;
+      if(k==i)
+         clique[j] = true;
+      else
+         clique[j] = false;
+
+   }
+   int max = 0;
+   for (int i=0; i<place; i++) 
+      if(clique[order[i]])
+         max++;
+
+   return max;
+}
+
+/* Target is a goal value:  once a clique is found with value target
+   it is possible to return
+
+   Lower is a bound representing an already found clique:  once it is
+   determined that no clique exists with value better than lower, it
+   is permitted to return with a suboptimal clique.
+
+   Note, to find a clique of value 1, it is not permitted to just set
+   the lower to 1:  the recursion will not work.  Lower represents a
+   value that is the goal for the recursion.
+   */
+
+int prop_color::max_w_clique(int *valid, int *clique, int lower, int target)
+{
+   /*  printf("entered with lower %d target %d\n",lower,target);*/
+   num_prob++;
+   if(num_prob > max_prob)
+      return -1;
+   
+   for(int j=0; j<num_node; j++)
+      clique[j] = 0;
+   
+   int total_left = 0;
+   for(int i=0; i<num_node; i++)
+      if(valid[i])
+         total_left++;
+   if(total_left < lower)
+      return 0;
+
+   int incumb = greedy_clique(valid, clique);
+   if(incumb >=target)
+      return incumb;
+   if(incumb > best_clique) {
+      best_clique=incumb;
+      /*    printf("Clique of size %5d found.\n",best_clique);*/
+   }
+   /*  printf("Greedy gave %f\n",incumb);*/
+
+   vector<int> order(num_node, 0);
+   int place = 0;
+   for(int i=0; i<num_node; i++) {
+      if(clique[i]) {
+         order[place] = i;
+         total_left--;
+         place++;
+      }
+   }
+   int start = place;
+   for(int i=0; i<num_node; i++) {
+      if (!clique[i]&&valid[i]) {
+         order[place] = i;
+         place++;
+      }
+   }
+   
+   vector<int> value(num_node, 0);
+   int finish = place;
+   for(place=start; place<finish; place++) {
+      int i = order[place];
+      value[i] = 0;
+      for(int j=0; j<num_node; j++) {
+         if (valid[j] && is_adj(i, j))
+            value[i]++;
+      }
+   }
+
+   bool done = false;
+   while(!done) {
+      done = true;
+      for(place=start;place<finish-1;place++) {
+         int i = order[place];
+         int j = order[place+1];
+         if(value[i] < value[j] ) {
+            order[place] = j;
+            order[place+1] = i;
+            done = false;
+         }
+      }
+   }
+   
+   for(place=start; place<finish;place++) {
+      if (incumb + total_left < lower)
+         return 0;
+      int j = order[place];
+      total_left--;
+
+      if(clique[j])
+         continue;
+
+      int valid1[num_node];
+      for(int place1=0; place1<num_node; place1++)
+         valid1[place1] = false;
+      for(int place1=0; place1<place; place1++) {
+         int k = order[place1];
+         if(valid[k] && is_adj(j, k))
+            valid1[k] = true;
+         else
+            valid1[k] = false;
+      }
+      int clique1[num_node];
+      int new_weight = max_w_clique(valid1, clique1, incumb-1, target-1);
+      if (new_weight+1 > incumb)  {
+         /*      printf("Taking new\n");*/
+         incumb = new_weight+1;
+         for(int k=0;k<num_node;k++)
+            clique[k] = clique1[k];
+         clique[j] = true;
+         if (incumb > best_clique) {
+            best_clique=incumb;
+            /*	printf("Clique of size %5d found.\n",best_clique);*/
+         }
+      }
+
+      //else fprintf(stderr, "Taking incumb\n");
+      if(incumb >=target) break;
+   }
+   return(incumb);
+}
+
+
+
+void prop_color::assign_color(int node, int color)
+{
+   //fprintf(stderr, "  %d color +%d\n",node,color);
+   ColorClass[node] = color;
+   for(int node1=0; node1<num_node; node1++) {
+      if(node==node1)
+         continue;
+      if(is_adj(node, node1)) {
+         if(ColorAdj[node1][color]==0)
+            ColorCount[node1]++;
+         ColorAdj[node1][color]++;
+         ColorAdj[node1][0]--;
+         if (ColorAdj[node1][0] < 0)
+            fprintf(stderr, "warning: proper colouring, error setting colour\n");	
+      }
+   }
+}
+
+
+void prop_color::remove_color(int node, int color)
+{
+   //fprintf(stderr, "  %d color -%d\n",node,color);
+   ColorClass[node] = 0;
+   for(int node1=0;node1<num_node;node1++) 
+   {
+      if(node==node1)
+         continue;
+      if(is_adj(node, node1)) {
+         ColorAdj[node1][color]--;
+         if (ColorAdj[node1][color]==0)
+            ColorCount[node1]--;
+         if (ColorAdj[node1][color] < 0)
+            fprintf(stderr, "warning: proper colouring, error setting colour\n");	
+         ColorAdj[node1][0]++;
+      }
+   }
+}
+
+
+int prop_color::color(int i, int current_color)
+{
+   visit_cnt[i]++;
+   //fprintf(stderr, "entering BestColoring = %d, visit_cnt[%d]=%d\n", BestColoring, i, visit_cnt[i]);
+   if(visit_cnt[i]>1000) {
+   //   fprintf(stderr, "too many visits\n");
+      return 0;
+   }
+   prob_count++;
+   if(current_color >= BestColoring)
+      return(current_color);
+   if(BestColoring <= lb)
+      return(BestColoring);
+   if (i >= num_node)
+      return(current_color);
+   /*  printf("Node %d, num_color %d\n",i,current_color);*/
+
+   /* Find node with maximum color_adj */
+   int max = -1;
+   int place = -1;
+   for(int k=0;k<num_node;k++) {
+      if(Handled[k])
+         continue;
+      if((ColorCount[k] > max) || ((ColorCount[k]==max)&&(ColorAdj[k][0]>ColorAdj[place][0]))) {
+         //fprintf(stderr, "Best now at %d\n",k);
+         max = ColorCount[k];
+         place = k;
+      }
+   }
+   // Adrian: Disconnected graphs haven't triggered this. Original code
+   // exited. I added 'return BestColoring' as a guess of what to do if
+   // it does get triggered. Maybe some cleanup is also required to
+   // avoid a segfault
+   if(place==-1) {
+      fprintf(stderr, "Graph is disconnected.  This code needs to be updated for that case.\n");
+      return BestColoring;
+   }
+
+
+   Order[i] = place;
+   Handled[place] = true;
+
+   //fprintf(stderr, "Using node %d at level %d\n",place,i);
+   for(int j=1; j<=current_color; j++) {
+      if(!ColorAdj[place][j]) {
+         ColorClass[place] = j;
+         assign_color(place,j);
+         int new_val = color(i+1,current_color);
+         if (new_val < BestColoring){
+            BestColoring = new_val;
+            BestColorClass = ColorClass;
+         }
+         remove_color(place,j);
+         if (BestColoring<current_color) {
+            Handled[place] = false;
+            return(BestColoring);
+         }
+      }
+   }
+   
+   if(current_color+1 < BestColoring) {
+      ColorClass[place] = current_color+1;
+      assign_color(place,current_color+1);
+      int new_val = color(i+1,current_color+1);
+      if (new_val < BestColoring) {
+         BestColoring = new_val;
+         BestColorClass = ColorClass;
+      }
+
+      remove_color(place,current_color+1);
+   }
+   Handled[place] = false;
+   //fprintf(stderr, "BestColoring = %d\n", BestColoring);
+   return(BestColoring);
+}
+
+
+/*
    Copyright (c) 1996-2000 Darko Kirovski, Miodrag Podkonjak and the Regents of
                            the University of California
 
@@ -26,14 +442,13 @@
 */
 
 /*
-   Name: color.h
+   Name: prop_color.cc
    Description: minimal proper colouring
    Project: Antiprism - http://www.antiprism.com
    Changes: 16-04-04 Adrian Rossiter <adrian_r@terra.es>
       removed use of iostreams, graph initialised from a geometry object
 */
 
-#include "prop_col.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -47,9 +462,9 @@ using std::min;
 //#define min(x,y) (((x)<(y))?(x):(y))
 
 
-Graph::Graph (col_geom_v &dgeom): geom(dgeom)
+Graph::Graph(prop_color &pr_col): prop(pr_col)
 {
-   VERTICES = geom.verts().size();
+   VERTICES = prop.num_node;
    vertex = new Vertex[VERTICES];
    
    // Structures
@@ -68,21 +483,23 @@ Graph::Graph (col_geom_v &dgeom): geom(dgeom)
    }  
    
    // Edge creation
-   vector<vector<int> > edges;
-   geom.get_impl_edges(edges);
-   for (unsigned int k = 0; k < edges.size(); k++) {
-      int i = edges[k][0];
-      int j = edges[k][1];
-      ListEdge *help = new ListEdge;
-      help->pointer = &vertex[j];
-      help->next = arrayE[i].first;
-      arrayE[i].first = help;
-      help = new ListEdge;
-      help->pointer = &vertex[i];
-      help->next = arrayE[j].first;
-      arrayE[j].first = help;
-      arrayE[i].edges++;
-      arrayE[j].edges++;
+   set<pair<int, int> >::const_iterator si;
+   for(si=prop.adj.begin(); si!=prop.adj.end(); ++si) {
+      
+      int i = si->first;
+      int j = si->second;
+      if(i<j) {
+         ListEdge *help = new ListEdge;
+         help->pointer = &vertex[j];
+         help->next = arrayE[i].first;
+         arrayE[i].first = help;
+         help = new ListEdge;
+         help->pointer = &vertex[i];
+         help->next = arrayE[j].first;
+         arrayE[j].first = help;
+         arrayE[i].edges++;
+         arrayE[j].edges++;
+      }
    }
    
    // Creating dynamic arrays of edges
@@ -342,7 +759,7 @@ void Graph::GraphColoring (long *parameter, long& current_color) {
       if (vertex[i].EDGES != vertex[i].COLORED_NEIGHBORS)
         fprintf(stderr, "\noff_color: warning: mistake in proper colouring!\n");
       //printf("%ld = %ld\n", i, vertex[i].COLOR);
-      geom.set_v_col(i, vertex[i].COLOR);
+      prop.set_color(i, vertex[i].COLOR);
 
 /*      for (long j = 0; j < vertex[i].EDGES; j++)
          if (!(vertex[i].COLOR < current_color && vertex[i].COLOR >= 0) ||
@@ -596,3 +1013,8 @@ void Window::ComputeCosts (Graph *pointer) {
       if (check == _NO) { fprintf(stderr, "\nError_1!\n"); exit (-1); }
       SMALLEST_COST = -1.;
 }
+
+
+
+
+
