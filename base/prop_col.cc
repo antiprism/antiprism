@@ -341,7 +341,7 @@ int prop_color::color(int i, int current_color)
 {
    visit_cnt[i]++;
    //fprintf(stderr, "entering BestColoring = %d, visit_cnt[%d]=%d\n", BestColoring, i, visit_cnt[i]);
-   if(visit_cnt[i]>1000) {
+   if(visit_cnt[i] > max_num_visits) {
    //   fprintf(stderr, "too many visits\n");
       return 0;
    }

@@ -71,6 +71,7 @@ class prop_color
       vector<vector<int> > ColorAdj;
       vector<int> ColorCount;
       vector<int> visit_cnt;
+      const int max_num_visits; // chosen as indicator of non-completion
 
       int lb;
       int num_prob,max_prob;
@@ -90,7 +91,8 @@ class prop_color
 
 
    public:
-      prop_color(int nodes): num_node(nodes) {};
+      prop_color(int nodes, int max_visits=100):
+         max_num_visits(max_visits), num_node(nodes) {};
       void set_adj(int i, int j)
          { if(i>j) swap(i, j); adj.insert(make_pair(i, j)); }
       int find_colors();
