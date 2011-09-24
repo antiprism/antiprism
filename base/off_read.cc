@@ -200,6 +200,10 @@ bool add_face(geom_if &geom, col_geom *cg, vector<char *> vals,
       sprintf(errmsg, "face size: '%s' %s", vals[0], errmsg2);
       return 0;
    }
+   if(face_sz<1) {
+      sprintf(errmsg, "face size: '%d', must be 1 or more", face_sz);
+      return 0;
+   }
    vector<int> face(face_sz);
    for(unsigned int i=1; (i<vals.size()&&(int)i<=face_sz); i++) {
       if(!(read_int(vals[i], &face[i-1], errmsg2))) {
