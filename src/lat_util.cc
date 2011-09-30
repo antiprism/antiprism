@@ -136,8 +136,8 @@ void lutil_opts::usage()
 "  -C <opt>  c - convex hull only, i - keep interior\n"
 "  -A        append the original lattice to the final product\n"
 "  -O        translate center of final product to origin\n"
-"  -Z <col>  add center vertex to final product in color col\n"
 "  -R <file> repeat off file at every vertex in lattice\n"
+"  -Z <col>  add center vertex to final product in color col\n"
 "  -K        append cage of container of -k to final product\n"
 "  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
@@ -684,16 +684,6 @@ void process_lattices(col_geom_v &geom, col_geom_v &container, const col_geom_v 
    if (opts.trans_to_origin)
       geom.transform(mat3d::transl(-centroid(geom.verts())));
 
-   if (opts.list_radii)
-      list_grid_radii(geom, opts.offset, opts.list_radii, opts.epsilon);
-
-   if (opts.list_struts)
-      list_grid_struts(geom, opts.list_struts, opts.epsilon);
-
-   // add central vertex last so not to alter listing outcomes
-   if (opts.cent_col.is_set())
-      color_centroid(geom, opts.cent_col, opts.epsilon);
-      
    // place geom at every vertex in lattice
    if(opts.rfile.length()) {
       col_geom_v geom2;
@@ -705,6 +695,16 @@ void process_lattices(col_geom_v &geom, col_geom_v &container, const col_geom_v 
       geom = geom2;
       sort_merge_elems(geom, "vef", opts.epsilon);
    }
+
+   if (opts.list_radii)
+      list_grid_radii(geom, opts.offset, opts.list_radii, opts.epsilon);
+
+   if (opts.list_struts)
+      list_grid_struts(geom, opts.list_struts, opts.epsilon);
+
+   // add central vertex last so not to alter listing outcomes
+   if (opts.cent_col.is_set())
+      color_centroid(geom, opts.cent_col, opts.epsilon);
    
    if (opts.append_container) {
       container.add_missing_impl_edges();
