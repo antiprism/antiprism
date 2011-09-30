@@ -641,9 +641,9 @@ void id_opts::process_command_line(int argc, char **argv)
       warning("n/d is ignored");
 
 
-   if ((case_type == "a" || make_dipyramid) || 
+   if ((case_type == "a" || case_type == "l" || make_dipyramid) || 
        (!allow_angles && 
-        (case_type == "b" || case_type == "e" || case_type == "f" || case_type == "l" ||
+        (case_type == "b" || case_type == "e" || case_type == "f" || 
          case_type == "m" || case_type == "n" || case_type == "o" || case_type == "p" || case_type == "q"))) {
       if (angle != INFINITY) {
          warning("-a angle is ignored");
