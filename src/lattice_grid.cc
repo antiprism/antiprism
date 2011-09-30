@@ -267,12 +267,12 @@ void geom_spherical_clip(col_geom_v &geom, const double &radius, const vec3d &of
       fprintf(stderr,"bravais_spherical_clip: warning: all vertices were clipped out!\n");
 }
 
-void list_grid_radii(const col_geom_v &geom, const vec3d &offset, int report_type, double eps)
+void list_grid_radii(const col_geom_v &geom, const vec3d &list_radii_center, int report_type, double eps)
 {
    const vector<vec3d> &verts = geom.verts();
-   vec3d cent = centroid(verts);
-   if (offset.is_set())
-      cent += offset;
+   vec3d cent = list_radii_center;
+   if (!cent.is_set())
+      cent = centroid(verts);
 
    vector<double> radii;
    for(unsigned int i=0;i<verts.size();i++)

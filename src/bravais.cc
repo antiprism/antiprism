@@ -118,6 +118,7 @@ class brav_opts: public prog_opts {
       int r_lattice_type;
 
       bool list_bravais;
+      vec3d list_radii_center;
       int list_radii;
       int list_struts;
 
@@ -349,7 +350,7 @@ void brav_opts::process_command_line(int argc, char **argv)
 
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hHIc:k:r:p:q:s:uv:a:g:G:d:l:D:C:AV:E:F:T:Z:KOR:BL:S:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hHIc:k:r:p:q:s:uv:a:g:G:d:l:D:C:AV:E:F:T:Z:KOR:BQ:L:S:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -796,6 +797,11 @@ void brav_opts::process_command_line(int argc, char **argv)
 
          case 'B':
             list_bravais = true;
+            break;
+
+         case 'Q':
+            if(!list_radii_center.read(optarg, errmsg))
+               error(errmsg, c);
             break;
 
          case 'L':
@@ -1933,7 +1939,7 @@ void do_bravais(col_geom_v &geom, col_geom_v &container, brav_opts &opts)
       geom.transform(mat3d::transl(-centroid(geom.verts())));
 
    if (opts.list_radii)
-      list_grid_radii(geom, opts.offset, opts.list_radii, opts.epsilon);
+      list_grid_radii(geom, opts.list_radii_center, opts.list_radii, opts.epsilon);
 
    if (opts.list_struts)
       list_grid_struts(geom, opts.list_struts, opts.epsilon);
