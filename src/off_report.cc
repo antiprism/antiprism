@@ -52,6 +52,7 @@ class or_opts: public prog_opts
       string sections;
       string counts;
       bool orient;
+      string sub_sym;
       char edge_type;
       string ifile;
       string ofile;
@@ -88,8 +89,10 @@ void or_opts::usage()
 "            E - edge lengths\n"
 "            S - solid angles            D - dihedral angles\n"
 "            s - face sides              o - vertex orders\n"
-"            h - vertex heights (z-crds)\n"
+"            h - vertex heights (z-crds) O - symmetry orbits\n"
 "  -k        keep orientation, don't try to orient the faces\n"
+"  -y        subsymmetry for orbits: symmetry subgroup (Schoenflies notation)\n"
+"            optionally followed by a comma and conjugation type (integer)\n"
 "  -E <type> edges for report, e - explicit edges, i - implicit edges\n"
 "            a - explicit and implicit (default)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
@@ -109,7 +112,7 @@ void or_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hc:S:C:kE:o:d:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hc:S:C:kE:y:o:d:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -137,7 +140,7 @@ void or_opts::process_command_line(int argc, char **argv)
          }
 
          case 'C': {
-            const char *all_count_letters = "AFEDSsoh";
+            const char *all_count_letters = "AFEDSsohO";
             size_t len;
             if((len=strspn(optarg, all_count_letters)) == strlen(optarg)) {
                if(strchr(optarg, 'A'))
@@ -154,6 +157,17 @@ void or_opts::process_command_line(int argc, char **argv)
          case 'k':
             orient = false;
             break;
+
+         case 'y': {
+            int n=0;
+            for(const char *p=optarg; *p; p++) {
+               n += (*p==',');
+               if(n>2)
+                  error("too many comma separated parts", c);
+            }
+            sub_sym = optarg;
+            break;
+         }
 
          case 'E':
             if(!strlen(optarg)==1 || !strchr("eia", *optarg))
@@ -246,6 +260,9 @@ void print_counts(rep_printer &rep, const char *counts)
          case 'h':
             rep.vert_heights_cnts();
             break;
+         case 'O':
+            rep.sym_orbit_cnts();
+            break;
       }
    }
 }
@@ -282,6 +299,9 @@ int main(int argc, char *argv[])
    rep_printer rep(geom, ofile);
    rep.set_sig_dgts(opts.sig_digits);
    rep.set_center(opts.center);
+   if(!rep.set_sub_symmetry(opts.sub_sym, errmsg))
+      opts.error("could not set subsymmetry: %s", 'y');
+
    rep.is_oriented(); // set oriented value before orienting
    if(opts.orient) {
       geom.orient();

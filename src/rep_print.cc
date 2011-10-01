@@ -36,6 +36,15 @@
 using std::set;
 using std::vector;
 using std::pair;
+      
+bool rep_printer::set_sub_symmetry(const string &sub_sym, char *errmsg)
+{
+   bool valid = get_symmetry().get_sub_sym(sub_sym, errmsg).is_set();
+   if(valid)
+      sub_sym_str = sub_sym;
+   return valid;
+}
+   
 
 char *rep_printer::idx2s(char *buf, int idx, int elems_sz)
 { 
@@ -213,27 +222,50 @@ void rep_printer::symmetry()
    char s1[MSG_SZ];
    fprintf(ofile, "[symmetry]\n");
    fprintf(ofile, "type = %s\n", get_symmetry_type_name().c_str());
+   
+   fprintf(ofile, "realignments = %d fixed",
+         get_symmetry_autos().get_fixed().size());
+   int free_rots = get_symmetry_autos().num_free_rots();
+   if(free_rots==1)
+      fprintf(ofile, " x axial rotation");
+   else if(free_rots==3)
+      fprintf(ofile, " x full rotation");
+   int free_transls = get_symmetry_autos().num_free_transls();
+   if(free_transls==1)
+      fprintf(ofile, " x axial translation");
+   else if(free_transls==2)
+      fprintf(ofile, " x plane translation");
+   else if(free_transls==3)
+      fprintf(ofile, " x space translation");
+   fprintf(ofile, "\n");
+
    fprintf(ofile, "alignment_to_std =");
    mat3d m =  get_symmetry_alignment_to_std();
+
    for(int i=0; i<12; i++)
       fprintf(ofile, "%c%s", (i==0)?' ':',', d2s(s1, m[i]));
    fprintf(ofile, "\n\n");
    fprintf(ofile, "[symmetry_axes]\n");
-   const set<sch_axis> &axes = get_symmetry_axes();
+   map<string, int> ax_cnts;
+   const set<sch_axis> &axes = get_symmetry_axes(); //get_symmetry_axes();
    set<sch_axis>::const_iterator ai;
-   for(ai=axes.begin(); ai!=axes.end(); ++ai) {
-      fprintf(ofile, "%s,",
-         sch_sym(ai->get_sym_type(), ai->get_nfold()).get_symbol().c_str());
-      if(ai->get_axis().is_set())
-         fprintf(ofile, "%s,", v2s(s1, ai->get_axis()));
-      else
-         fprintf(ofile, "n/a,");
-      if(ai->get_perp().is_set())
-         fprintf(ofile, "%s,", v2s(s1, ai->get_perp()));
-      else
-         fprintf(ofile, "n/a");
-      fprintf(ofile, "\n");
-   }
+   for(ai=axes.begin(); ai!=axes.end(); ++ai)
+      ax_cnts[sch_sym(ai->get_sym_type(), ai->get_nfold()).get_symbol()]++;
+   
+   map<string, int>::const_iterator mi;
+   for(mi=ax_cnts.begin(); mi!=ax_cnts.end(); ++mi)
+      fprintf(ofile, "%s,%d\n", mi->first.c_str(), mi->second);
+   fprintf(ofile, "\n");
+
+   fprintf(ofile, "[symmetry_subgroups_nonconjugate]\n");
+   const set<sch_sym> &subs = get_symmetry_subgroups();
+   set<sch_sym>::const_iterator si;
+   map<string, int> subsym_cnts;
+   for(si=subs.begin(); si!=subs.end(); ++si)
+      subsym_cnts[si->get_symbol()]++;
+    
+   for(mi=subsym_cnts.begin(); mi!=subsym_cnts.end(); ++mi)
+      fprintf(ofile, "%s,%d\n", mi->first.c_str(), mi->second);
    fprintf(ofile, "\n");
 }
 
@@ -346,6 +378,42 @@ void rep_printer::face_angles_cnts()
    }
    fprintf(ofile, "\n");
 }
+
+void rep_printer::sym_orbit_cnts()
+{
+   fprintf(ofile, "[sym_orbit_cnts]\n");
+   // Get symmetry if necessary
+   sch_sym sym;
+   if(sub_sym_str=="") {         // use full symmetry
+      sym = get_symmetry();
+   }
+   else {                        // use subsymmetry
+      char errmsg[MSG_SZ];
+      sym = get_symmetry().get_sub_sym(sub_sym_str, errmsg);
+      if(!sym.is_set()) {
+         fprintf(ofile, "invalid subsymmetry '%s': %s\n\n",
+               sub_sym_str.c_str(), errmsg);
+         return;
+      }
+   }
+
+   const char *elems[] = {"verts", "edges", "faces"};
+   vector<vector<set<int> > > sym_equivs;
+   get_equiv_elems(geom, sym.get_trans(), &sym_equivs);
+   for(int i=0; i<3; i++) {
+      string cnt_list;
+      vector<set<int> >::const_iterator vi;
+      for(vi=sym_equivs[i].begin(); vi!=sym_equivs[i].end(); ++vi)
+         cnt_list += msg_str("%d, ", vi->size());
+      fprintf(ofile, "%s: %d ", elems[i], sym_equivs[i].size());
+      if(cnt_list.size())
+         fprintf(ofile, " (%s)",
+               cnt_list.substr(0, cnt_list.size()-2).c_str());
+      fprintf(ofile, "\n");
+   }
+   fprintf(ofile, "\n");
+}
+
 
 
 void rep_printer::v_index(int v_idx)

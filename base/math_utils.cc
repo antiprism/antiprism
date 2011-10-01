@@ -53,22 +53,26 @@ int factorial(int num)
    return result;
 }
 
+#include <stdio.h>
 // http://ericlin2.tripod.com/mis/ration.html
-double find_denom(double num, const double &eps)
+double find_denom(double num, const double &eps, int steps)
 {
    double dec = num - long(num);
+   if(!steps)
+      return 0; // less than eps to indic
    if(fabs(dec)<eps)
         return 1;
     num = 1/dec;
-    return num*find_denom(num, eps);
+    return num*find_denom(num, eps, steps-1);
 }
 
 // Convert double to rational
-void double2rational(double f, long &num, long &denom, double eps)
+void double2rational(double f, long &num, long &denom, double eps,
+      int max_steps)
 {
    int sign = (f>0) ? 1 : -1;
    f *= sign;
-   denom = long(0.5+find_denom(f, eps));
+   denom = long(0.5+find_denom(f, eps, max_steps));
    num = sign*long(0.5 + denom*f);
 }
    

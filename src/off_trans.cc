@@ -92,7 +92,16 @@ void trans_opts::usage()
 "  -X <mtrx> transformation matrix of 9 or 12 values, given left-to-right\n"
 "            top-to-bottom, used to premultipy each coordinate\n"
 "  -C        translation that carries the centroid to the origin\n"
-"  -P        align geometry with the standard alignment for its symmetry type\n"
+"  -y        align geometry with the standard alignment for a symmetry type,\n"
+"            up to three comma separated parts: symmetry subgroup (Schoenflies\n"
+"            notation) or 'full', conjugation type (integer), realignment\n"
+"            (colon separated list of an integer then decimal numbers)\n"
+"  -Y        align standard alignment of a symmetry type with its position\n"
+"            as a subgroup of another symmetry type, up to four comma\n"
+"            separated parts: containing symmetry (Schoenflies notation) or\n"
+"            file name, subgroup *Schoenflies notation), conjugation type\n"
+"            (integer), realignment (colon separated list of an integer\n"
+"            then decimal numbers)\n"
 "  -s <type> relative scaling, scale so a measure has a value of 1.\n"
 "            VAa need an oriented polyhedron, V needs a closed polyhedron.\n"
 "            A - area                       a - average face area\n"
@@ -167,7 +176,7 @@ void trans_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hT:R:M:S:IX:A:a:CPs:io:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hT:R:M:S:IX:A:a:CY:y:s:io:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -314,10 +323,84 @@ void trans_opts::process_command_line(int argc, char **argv)
             trans_m = mat3d::transl(-(trans_m*geom.centroid())) * trans_m;
             break;
          
-         case 'P': {
+         case 'Y':
+         {
+            vector<char *> parts;
+            split_line(optarg, parts, ",");
+            if(parts.size()<1 || parts.size()>4)
+               error("argument should have 1-4 comma separated parts", c);
+           
+            sch_sym sym;
+            col_geom_v sgeom;
+            if(sgeom.read(parts[0], errmsg))
+               sym.init(sgeom);
+            else if(!sym.init(parts[0], mat3d(), errmsg))
+               error(msg_str("invalid filename or symmetry type name: %s",
+                        errmsg), c);
+            
+            sch_sym sub_sym = sym;
+            if(parts.size()>1 && !sub_sym.init(parts[1], mat3d(), errmsg))
+               error(msg_str("sub-symmetry type: %s", errmsg), c);
+               
+            int sub_sym_conj = 0;
+            if(parts.size()>2) {
+               if(!read_int(parts[2], &sub_sym_conj, errmsg))
+                  error(msg_str("sub-symmetry conjugation number: %s",
+                           errmsg), c);
+            }
+ 
+            sch_sym final_sym = sym.get_sub_sym(sub_sym, sub_sym_conj, errmsg);
+            if(final_sym.get_sym_type() == sch_sym::unknown)
+               error(msg_str("sub-symmetry: %s", errmsg), c);
+
+            if(parts.size()>3) {
+               if(!final_sym.get_autos().set_realignment(parts[3], errmsg))
+                  error(msg_str("sub-symmetry realignment: %s",
+                           errmsg), c);
+            }
+
+            trans_m = mat3d::inverse(final_sym.get_autos().get_realignment() *
+                  final_sym.get_to_std()) * trans_m;
+            break;
+         }
+
+         case 'y':
+         {
             geom_v geom_cur = geom;
             geom_cur.transform(trans_m);
-            trans_m = sch_sym(geom_cur).get_to_std() * trans_m;
+            sch_sym full_sym(geom_cur);
+
+            vector<char *> parts;
+            split_line(optarg, parts, ",");
+            if(parts.size()==0 || parts.size()>3)
+               error("argument should have 1-3 comma separated parts", c);
+           
+            sch_sym sub_sym;
+            if(strncmp(parts[0], "full", strlen(optarg))==0) {
+               sub_sym = full_sym;
+            }
+            else if(!sub_sym.init(parts[0], mat3d(), errmsg))
+               error(msg_str("sub-symmetry type: %s", errmsg), c);
+               
+            int sub_sym_conj = 0;
+            if(parts.size()>1) {
+               if(!read_int(parts[1], &sub_sym_conj, errmsg))
+                  error(msg_str("sub-symmetry conjugation number: %s",
+                           errmsg), c);
+            }
+
+            sch_sym sym = full_sym.get_sub_sym(sub_sym, sub_sym_conj, errmsg);
+            if(sym.get_sym_type() == sch_sym::unknown)
+               error(msg_str("sub-symmetry: %s", errmsg), c);
+
+            if(parts.size()>2) {
+               if(!sym.get_autos().set_realignment(parts[2], errmsg))
+                  error(msg_str("sub-symmetry realignment: %s",
+                           errmsg), c);
+            }
+
+            trans_m = sym.get_autos().get_realignment() *
+                      sym.get_to_std() * trans_m;
             break;
          }
 

@@ -129,7 +129,6 @@ bool color_proc_torange_hsv::init(const char *range_name, char *errmsg)
    int cur_idx = -1;
    char cur_comp = 'X';
    for(const char *p=range_name; p-range_name<name_len+1; p++) {
-      //fprintf(stderr, "*p = %c\n", *p);
       if(strchr("HhSsVvAa", *p) || cur_idx<0 || *p=='\0') {
          *q = '\0';
          if(cur_idx>=0 && !check_and_add_range(cur_idx, rngs, errmsg2)) {
@@ -163,10 +162,6 @@ bool color_proc_torange_hsv::init(const char *range_name, char *errmsg)
          *q++ = *p;
       }
    }
-
-   //for(int i=0; i<4; i++)
-   //   for(unsigned int j=0; j<ranges[i].size(); j++)
-   //      fprintf(stderr, "ranges[%d][%u] = %g\n", i, j, ranges[i][j]);
 
    return true;
 }
@@ -255,17 +250,17 @@ enum {CV_UNSET=1, CV_INDEX=2, CV_VALUE=4, CV_INVISIBLE=8};
 class o_col_opts: public prog_opts {
    public:
       char v_col_op;
-      sch_sym v_sub_sym;
+      string v_sub_sym;
       vector<set<int> > v_equivs;
       col_val v_col;
 
       char e_col_op;
-      sch_sym e_sub_sym;
+      string e_sub_sym;
       vector<set<int> > e_equivs;
       col_val e_col;
        
       char f_col_op;
-      sch_sym f_sub_sym;
+      string f_sub_sym;
       vector<set<int> > f_equivs;
       col_val f_col;
      
@@ -308,7 +303,8 @@ void o_col_opts::usage()
 "without any colour information)\n"
 "\n"
 "Lowercase letters (except l) colour using index numbers and uppercase\n"
-"letters colour using colour values\n"
+"letters colour using colour values. Symmetric colourings are optionally\n"
+"followed, separated by commas, by a subsymmetry \n"
 "\n"
 "Options\n"
 "%s"
@@ -379,9 +375,10 @@ void o_col_opts::usage()
 void o_col_opts::process_command_line(int argc, char **argv)
 {
    char errmsg[MSG_SZ];
-   char errmsg2[MSG_SZ];
+   //char errmsg2[MSG_SZ];
    opterr = 0;
    vector<char *> parts;
+   string optarg_orig;
    bool prev_char_was_not;
    char c;
    
@@ -397,20 +394,19 @@ void o_col_opts::process_command_line(int argc, char **argv)
                v_col_op = 'o';
                break;
             }
+            optarg_orig = optarg;
             split_line(optarg, parts, ",");
             if(strlen(parts[0])==1 && strchr("uUpPsSnNaAFEcCLM", *parts[0]))
                v_col_op = *parts[0];
             else
                error("invalid colouring", c);
 
-            if(parts.size()>2 || (strchr("sS", (char)v_col_op)&&parts.size()>3))
+            if(!((strchr("sS", (char)v_col_op) && parts.size()<4) ||
+               parts.size()<2))
                error("too many comma separated parts", c);
             
-            if(strchr("sS", v_col_op)) {
-               v_sub_sym = sch_sym();
-               if(parts.size()==2 && !v_sub_sym.init(parts[1], mat3d(),errmsg2))
-                  error(msg_str("invalid subsymmetry: %s", errmsg2), c);
-            }
+            if(strchr("sS", v_col_op))
+               v_sub_sym = optarg_orig.size()>2 ? optarg_orig.substr(2) : "";
             break;
 
          case 'f':
@@ -418,20 +414,19 @@ void o_col_opts::process_command_line(int argc, char **argv)
                f_col_op = 'o';
                break;
             }
+            optarg_orig = optarg;
             split_line(optarg, parts, ",");
             if(strlen(parts[0])==1 &&strchr("uUpPsSnNaAkKgGcCLlM",*parts[0]))
                f_col_op = *parts[0];
             else
                error("invalid colouring", c);
 
-            if(parts.size()>2 || (strchr("sS", (char)f_col_op)&&parts.size()>3))
+            if(!((strchr("sS", (char)f_col_op) && parts.size()<4) ||
+               parts.size()<2))
                error("too many comma separated parts", c);
             
-            if(strchr("sS", f_col_op)) {
-               f_sub_sym = sch_sym();
-               if(parts.size()==2 && !f_sub_sym.init(parts[1], mat3d(),errmsg2))
-                  error(msg_str("invalid subsymmetry: %s", errmsg2), c);
-            }
+            if(strchr("sS", f_col_op))
+               f_sub_sym = optarg_orig.size()>2 ? optarg_orig.substr(2) : "";
             break;
 
          case 'e':
@@ -439,20 +434,19 @@ void o_col_opts::process_command_line(int argc, char **argv)
                e_col_op = 'o';
                break;
             }
+            optarg_orig = optarg;
             split_line(optarg, parts, ",");
             if(strlen(parts[0])==1 && strchr("uUpPsSkKFgGcCLM", *parts[0]))
                e_col_op = *parts[0];
             else
                error("invalid colouring", c);
 
-            if(parts.size()>2 || (strchr("sS", (char)e_col_op)&&parts.size()>3))
+            if(!((strchr("sS", (char)e_col_op) && parts.size()<4) ||
+               parts.size()<2))
                error("too many comma separated parts", c);
             
-            if(strchr("sS", e_col_op)) {
-               e_sub_sym = sch_sym();
-               if(parts.size()==2 && !e_sub_sym.init(parts[1], mat3d(),errmsg2))
-                  error(msg_str("invalid subsymmetry: %s", errmsg2), c);
-            }
+            if(strchr("sS", e_col_op))
+               e_sub_sym = optarg_orig.size()>2 ? optarg_orig.substr(2) : "";
             break;
 
          case 'E':
@@ -620,7 +614,6 @@ bool warn_if_not_subgroup(const prog_opts &opts, char opt,
       const sch_sym &whole, const sch_sym &part)
 {
    t_set min;
-   min.min_set(whole.get_trans(), part.get_trans());
    if( whole.get_trans().size()%part.get_trans().size() || // Lagrange
        min.intersection(whole.get_trans(), part.get_trans()).size() !=
                                                   part.get_trans().size()) {
@@ -686,40 +679,28 @@ int main(int argc, char *argv[])
       opts.e_equivs = sym_equivs[1];
       opts.f_equivs = sym_equivs[2];
 
-      if(opts.v_sub_sym.get_sym_type() != sch_sym::unknown) {
-         sch_sym sub = sym.get_sub_sym(opts.v_sub_sym.get_sym_type(),
-               opts.v_sub_sym.get_nfold());
-         warn_if_not_subgroup(opts, 'v', sym, opts.v_sub_sym);
+      if(opts.v_col_op && strchr("sS", opts.v_col_op)) {
+         sch_sym sub = sym.get_sub_sym(opts.v_sub_sym, errmsg);
+         if(!sub.is_set())
+            opts.error(errmsg, 'v');
          get_equiv_elems(geom, sub.get_trans(), &sym_equivs);
          opts.v_equivs = sym_equivs[0];
       }
-      if(opts.e_sub_sym.get_sym_type() != sch_sym::unknown) {
-         sch_sym sub = sym.get_sub_sym(opts.e_sub_sym.get_sym_type(),
-               opts.e_sub_sym.get_nfold());
-         warn_if_not_subgroup(opts, 'e', sym, opts.e_sub_sym);
+      if(opts.e_col_op && strchr("sS", opts.e_col_op)) {
+         sch_sym sub = sym.get_sub_sym(opts.e_sub_sym, errmsg);
+         if(!sub.is_set())
+            opts.error(errmsg, 'e');
          get_equiv_elems(geom, sub.get_trans(), &sym_equivs);
          opts.e_equivs = sym_equivs[1];
-      }  
-      if(opts.f_sub_sym.get_sym_type() != sch_sym::unknown) {
-         sch_sym sub = sym.get_sub_sym(opts.f_sub_sym.get_sym_type(),
-               opts.f_sub_sym.get_nfold());
-         warn_if_not_subgroup(opts, 'f', sym, opts.f_sub_sym);
+      }
+      if(opts.f_col_op && strchr("sS", opts.f_col_op)) {
+         sch_sym sub = sym.get_sub_sym(opts.f_sub_sym, errmsg);
+         if(!sub.is_set())
+            opts.error(errmsg, 'f');
          get_equiv_elems(geom, sub.get_trans(), &sym_equivs);
          opts.f_equivs = sym_equivs[2];
       }
    }
-
-   //sch_sym sub = sym.get_sub_sym(sch_sym::C, 5);
-   //const t_set &ts = sub.get_trans();
-   //t_set::const_iterator si;
-   //for(si=ts.begin(); si!=ts.end(); si++)
-   //   si->dump();
-
-   //get_equiv_elems(geom, sub.get_trans(), &sym_equivs);
-
-
-   //sym_repeat(geom, geom, ts);
-
   
    coloring &fc = opts.clrngs[2];
    fc.set_geom(&geom);

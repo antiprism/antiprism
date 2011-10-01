@@ -259,10 +259,11 @@ bool read_int_list(char *str, vector<int> &nums, char *errmsg=0,
  * number respectively.
  * \param str the string holding the comma-separated integers.
  * \param nums used to return the integers.
- * \param nums used to return the integers.
- * \param nums used to return the integers.
- * \param errmsg an array at least \c MSG_SZ chars long to
- * return any error message.
+ * \param num_idxs index numbers with this value or higher are out of range
+ * \param allow_extra allow out-of-range index numbers, prefixed by an x or X,
+ * which are indexed relative to num_idxs, i.e. X0 = num_idxs.
+ * \param errmsg an array at least \c MSG_SZ chars long to return any
+ * error message.
  * \return true if only valid index numbers were read, otherwise false.
  * and the error is detailed in \a errmsg. */
 bool read_idx_list(char *str, vector<int> &nums, int num_idxs,

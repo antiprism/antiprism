@@ -52,8 +52,12 @@ int factorial(int n);
  * \param num to return the numerator of the rational number.
  * \param denom to return the denominator of the rational number.
  * \param eps the maximum difference between the floating point
- * number and the rational approximation. */
-void double2rational(double f, long &num, long &denom, double eps = 0.00001);
+ * number and the rational approximation.
+ * \param max_steps the maximum number of iterations, in case the process
+ * does not converge (default 100 should exceed any reasonable number of steps).
+ */
+void double2rational(double f, long &num, long &denom, double eps = 0.00001,
+      int max_steps = 100);
 
 ///Convert degrees to radians.
 /**\param ang angle in degres, to convert.

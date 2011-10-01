@@ -169,6 +169,15 @@ t_set operator +(const t_set &s, const mat3d &m);
  * \return A refernce to \arg s with \arg m added. */
 t_set &operator +=(t_set &s, const mat3d &m);
 
+///Compare two t_sets for order
+/**Returns -1, 0, or 1 to indicate less, equal or greater. Order by
+ * size, and if equal compare matrices sequentially until not equal,
+ * and if all equal return 0.
+ * \param t0 first t_set
+ * \param t1 second t_set
+ * \return  -1, 0, or 1 to indicate t0 is less, equal or greater than t1 */
+int compare(const t_set &t0, const t_set &t1);
+
 
 ///Class for an isometry
 class iso_type
@@ -238,6 +247,115 @@ void get_equiv_elems(const geom_if &geom, const t_set &ts,
       vector<vector<set<int> > > *equiv_sets);
 
 class sch_axis;
+class sch_sym;
+
+///Class for a set of automorphisms: transformations maintaining symmetry alignment 
+class sch_sym_autos
+{
+   private:
+      vector<mat3d> fixed_trans;
+      unsigned int free_vars;
+      int fixed_type;
+      double rot[3];
+      double transl[3];
+
+      void init();
+
+   public:
+      enum {FREE_NONE=0, FREE_ROT_PRINCIPAL=1, FREE_ROT_FULL=2,
+           FREE_TRANSL_PRINCIPAL=4, FREE_TRANSL_PLANE=8, FREE_TRANSL_SPACE=16 };
+
+      ///Constructer
+      sch_sym_autos() { init(); }
+
+      ///Constructer
+      /**\param sym symmetry group to transform */
+      sch_sym_autos(const sch_sym &sym);
+
+      ///Check if has been set
+      bool is_set() const { return fixed_trans.size(); }
+
+      ///Set fixed transformation type
+      /**\param type the index number of the type (0 always the identity)
+       * \param errmsg an array at least \c MSG_SZ chars long to
+       * return any error message.
+       * \return true if the fixed transformation index is valid,
+       * otherwise false and the error is detailed in \a errmsg. */
+      bool set_fixed_type(int type, char *errmsg=0);
+
+      ///Set rotation about principal axis
+      /**\param rot_ang rotation angle about prinicipal axis, in degrees
+       * \param errmsg an array at least \c MSG_SZ chars long to
+       * return any error message.
+       * \return true if the free variable could be set, otherwise false
+       * and the error is detailed in \a errmsg. */
+      bool set_rot_principal(double rot_ang, char *errmsg=0);
+
+      ///Set rotation about origin
+      /**\param rot_x rotation about x-axis, in degrees
+       * \param rot_y rotation about y-axis, in degrees
+       * \param rot_z rotation about z-axis, in degrees
+       * \param errmsg an array at least \c MSG_SZ chars long to
+       * return any error message.
+       * \return true if the free variable could be set, otherwise false
+       * and the error is detailed in \a errmsg. */
+      bool set_rot_full(double rot_x, double rot_y, double rot_z,
+            char *errmsg=0);
+
+      ///Set translation distance along principal direction
+      /**\param transl0 translation distance
+       * \param errmsg an array at least \c MSG_SZ chars long to
+       * return any error message.
+       * \return true if the free variable could be set, otherwise false
+       * and the error is detailed in \a errmsg. */
+      bool set_transl_principal(double transl0, char *errmsg=0);
+
+      ///Set translation distances along directions which span a plane
+      /**\param transl0 first translation distance
+       * \param transl1 second translation distance
+       * \param errmsg an array at least \c MSG_SZ chars long to
+       * return any error message.
+       * \return true if the free variable could be set, otherwise false
+       * and the error is detailed in \a errmsg. */
+      bool set_transl_plane(double transl0, double transl1, char *errmsg=0);
+
+      ///Set translation distances along directions which span all space
+      /**\param transl0 first translation distance
+       * \param transl1 second translation distance
+       * \param transl2 third translation distance
+       * \param errmsg an array at least \c MSG_SZ chars long to
+       * return any error message.
+       * \return true if the free variable could be set, otherwise false
+       * and the error is detailed in \a errmsg. */
+      bool set_transl_space(double transl0, double transl1, double transl2,
+            char *errmsg=0);
+
+      /// Get  fixed realignment transformations
+      /**\return The fixed realigment transformations.*/
+      const vector<mat3d> &get_fixed() const { return fixed_trans; }
+
+      /// Number of free rotation variables
+      /**\return Number of free rotation variables (0, 1 or 3).*/
+      int num_free_rots() const;
+      
+      /// Number of free translation variables
+      /**\return Number of free translation variables (0 to 3).*/
+      int num_free_transls() const;
+      
+      ///Get realignment transformtion from current settings
+      /**\return Realignment transformation */
+      mat3d get_realignment() const;
+      
+      ///Set and get realignment transformation from a string of numbers
+      /**\param realign fixed type number and free variable list as
+       * colon separated string
+       * \param errmsg an array at least \c MSG_SZ chars long to
+       * return any error message.
+       * \return true if the realignment was valid, otherwise false
+       * and the error is detailed in \a errmsg. */
+      bool set_realignment(const char *realign, char *errmsg=0);
+};
+
 
 ///Class for symmetry elements in Schoenflies notation.
 class sch_sym
@@ -250,9 +368,10 @@ class sch_sym
    private:
       int sym_type;
       int nfold;
-      mutable vector<sch_sym> sub_syms;
+      mutable set<sch_sym> sub_syms;
       mutable set<sch_axis> axes;
       mutable set<vec3d> mirrors;
+      sch_sym_autos autos;
       mat3d to_std;
 
       void add_sub_axes(const sch_sym &sub) const;
@@ -304,7 +423,12 @@ class sch_sym
        * symmetry type onto the standard symetry type.
        * \param errmsg an array at least \c MSG_SZ chars long to
        * return any error message. */
-      sch_sym(string name, const mat3d &pos=mat3d(), char *errmsg=0);
+      sch_sym(const string &name, const mat3d &pos=mat3d(), char *errmsg=0);
+
+       ///Constructor
+      /**\param sym_ax symmetry type in symmetry axis form.
+       * \param cent coordinates of symmetry centre */
+      sch_sym(const sch_axis &sym_ax, const vec3d &cent=vec3d::zero);
 
       ///Initialiser
       /**Find the symmetry in Schoenflies notation.
@@ -334,7 +458,12 @@ class sch_sym
        * return any error message.
        * \return true if the symmetry type name was valid, otherwise false
        * and the error is detailed in \a errmsg. */
-      bool init(string name, const mat3d &pos=mat3d(), char *errmsg=0);
+      bool init(const string &name, const mat3d &pos=mat3d(), char *errmsg=0);
+
+       ///Initialiser
+      /**\param sym_axis symmetry type in symmetry axis form.
+       * \param cent coordinates of symmetry centre */
+      void init(const sch_axis &sym_axis, const vec3d &cent=vec3d::zero);
 
       ///Get the symmetry type
       /**\return the symmetry type of the axis as the Schoenflies
@@ -370,17 +499,37 @@ class sch_sym
       ///Get the symmetry subgroups
       /**Only one example is included from each conjugacy class
        * \return The symmetry subgroups. */
-      const vector<sch_sym> &get_sub_syms() const;
+      const set<sch_sym> &get_sub_syms() const;
+
+      ///Get the Euclidean outer automorphisms
+      /**These map the symmetry transformations onto themselves, with one
+       * example included from each conjugacy class, the first value 
+       * in the returned transformations is always the identity.
+       * \return The symmetry automorphisms. */
+      sch_sym_autos &get_autos();
 
       ///Get a symmetry subgroup
-      /**\param sub_type the symmetry subgroup type.
-       * \param sub_fold the n-fold order if the subgroup has a principal axis.
+      /**\param sub_sym the symmetry subgroup
        * \param conj_type use to select from inequivalent (non-conjugate)
        * subgroups.
-       * \return the symmetry, which will have symmetry type \c unknown if
-       * the parameters are invalid. */
-      sch_sym get_sub_sym(int sub_type, int sub_fold=1, int conj_type=0) const;
+       * \param errmsg an array at least \c MSG_SZ chars long to
+       * return any error message.
+       * \return the sub-symmetry, if the symmetry type is 'unknown' the
+       * error is detailed in \a errmsg. */
+      sch_sym get_sub_sym(const sch_sym &sub_sym, int conj_type=0,
+            char *errmsg=0) const;
       
+      
+      ///Get a symmetry subgroup
+      /**\param sub the symmetry subgroup name and conjugation number,
+       * separated by a comma
+       * \param errmsg an array at least \c MSG_SZ chars long to
+       * return any error message.
+       * \return the sub-symmetry, if the symmetry type is 'unknown' the
+       * error is detailed in \a errmsg. */
+      sch_sym get_sub_sym(const string &sub, char *errmsg) const;
+
+
       ///Get the axes or mirrors.
       /**\return The symmetry axes or mirrors. */
       const set<sch_axis> &get_axes() const;
@@ -388,6 +537,10 @@ class sch_sym
       ///Get the mirrors.
       /**\return The mirror normals. */
       const set<vec3d> &get_mirrors() const;
+
+      ///Is an inversion a symmetry.
+      /**\return \c true if an inversion is a symmetry, otherwise \c false */
+      bool has_inversion_symmetry() const;
 
       ///Check if a valid symmetry type is set.
       /**\return \c true if set to valid type, otherwise \c false */
@@ -397,7 +550,7 @@ class sch_sym
       /* Only for containers that need it
        * \param s the symmetry axis to compare for less than.
        * \return \c true if this axis is less than \arg s, otherwise \c false.*/
-      //bool operator <(const sch_sym &s) const;
+      bool operator <(const sch_sym &s) const;
 
 
 };
@@ -474,9 +627,6 @@ class sch_axis
       /**Print the object data to \c stdout for debugging. */
       void dump() const;
 };
-
-
-
 
 #endif // SYMMETRY_H
 

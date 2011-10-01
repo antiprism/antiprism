@@ -116,6 +116,25 @@ t_set operator +(const t_set &s, const mat3d &m)
 t_set &operator +=(t_set &s, const mat3d &m)
 { return s.add(m); }
  
+int compare(const t_set &t0, const t_set &t1)
+{
+   if(t0.size()>t1.size())
+      return 1;
+   else if(t0.size()<t1.size())
+      return -1;
+
+   // same size so test matrices one at a time
+   set<mat3d>::const_iterator i0 = t0.begin();
+   set<mat3d>::const_iterator i1 = t1.begin();
+   for( ; i0!=t0.end(); ++i0, ++i1) {
+      int cmp = compare(*i0, *i1);
+      if(cmp)
+         return cmp;
+   }
+
+   return 0;
+}
+
 
 
 
@@ -207,7 +226,7 @@ class sch_gen: public t_set
       sch_gen &Cv(int n) { return C(n) * sch_gen().v_refl(); }
 
       ///Set up Ch symmetry transformation group.
-      /**Principal axis (0,0,1). Mirror normal in direction (0,0,!).
+      /**Principal axis (0,0,1). Mirror normal in direction (0,0,1).
        *\param n principal axis is n-fold.
        *\return reference to this object with the transformations set. */
       sch_gen &Ch(int n) { return C(n) * sch_gen().h_refl(); }
@@ -340,8 +359,8 @@ iso_type &iso_type::init(mat3d m)
       return *this;
    }
 
-   transl = vec3d(m[3], m[7], m[11]);
-   m[3] = m[7] = m[11] = 0;
+   transl = m.get_transl();
+   m[3] = m[7] = m[11] = 0;  // zero translation column
    double det = m.det();
    if(det<0)
       m *= mat3d::inversion();
@@ -402,7 +421,6 @@ sch_axis::sch_axis(const mat3d &m)
    else {
       long tmp;
       double2rational(ang/(2*M_PI), tmp, nfold, sym_eps);
-      //fprintf(stderr, "ang = %ld/%ld\n", tmp, nfold);
    }
    axis = rot.get_axis();
    //map index {rt_none=0, rt_unit, rt_rot, rt_inv, rt_refl, rt_rot_refl}
@@ -466,8 +484,6 @@ void sch_sym::find_full_sym_type(const set<sch_axis> &full_sym)
    }
    nfold = max_fold1.get_nfold();
 
-
-   //fprintf(stderr, "max_nfold1=%d, max_nfold2=%d\n", max_fold1.get_nfold(), max_fold2.get_nfold());
    // dihedral axes only
    if(max_fold1.get_nfold()==2) {
       sch_axis ax = max_fold1;
@@ -598,7 +614,7 @@ sch_sym::sch_sym(const t_set &ts): sym_type(unknown), nfold(1), to_std(mat3d())
       to_std = mat3d::rot(v2ax.begin()->second[0].get_axis(), vec3d::Z);
       sym_type = sch_sym::Cs;
    }
-   else {// remaining possibilities have rotational axis   
+   else {// remaining possibilities have rotational axis
       set<sch_axis> full_sym;
       map<vec3d, vector<sch_axis> >::iterator mi;
       for(mi=v2ax.begin(); mi!=v2ax.end(); mi++) {
@@ -957,10 +973,16 @@ sch_sym::sch_sym(int type, int n, const mat3d &pos, char *errmsg)
    init(type, n, pos, errmsg);
 }
 
-sch_sym::sch_sym(string name, const mat3d &pos, char *errmsg)
+sch_sym::sch_sym(const string &name, const mat3d &pos, char *errmsg)
 {
    init(name, pos, errmsg);
 }
+      
+sch_sym::sch_sym(const sch_axis &sym_axis, const vec3d &cent)
+{
+   init(sym_axis, cent);
+}
+
 
 bool sch_sym::init(const geom_if &geom,
       vector<vector<set<int> > > *equiv_sets)
@@ -980,6 +1002,7 @@ bool sch_sym::init(int type, int n, const mat3d &pos, char *errmsg)
    axes.clear();
    mirrors.clear();
    sub_syms.clear();
+   autos = sch_sym_autos();
 
    if((type<C1 || type>Ih)) {
       if(errmsg)
@@ -1007,6 +1030,14 @@ bool sch_sym::init(int type, int n, const mat3d &pos, char *errmsg)
    if(sym_type>=C || sym_type<=S)   // principal axis
       nfold = n;
 
+   //Allow for alternative descriptions of "lesser" symmetries
+   if( (nfold<2 && sym_type>=C && sym_type<=Dh) ||
+          (nfold==2 && sym_type==S) ) {
+      sch_sym tmp(get_trans());
+      *this = tmp;
+   }
+
+
    // Maybe normalise symmetry, have to adjust to_std with this
    
    return true;
@@ -1014,7 +1045,7 @@ bool sch_sym::init(int type, int n, const mat3d &pos, char *errmsg)
 }
 
    
-bool sch_sym::init(string name, const mat3d &pos, char *errmsg)
+bool sch_sym::init(const string &name, const mat3d &pos, char *errmsg)
 {
    sym_type = unknown;
    nfold = 0;
@@ -1048,11 +1079,24 @@ bool sch_sym::init(string name, const mat3d &pos, char *errmsg)
    return init(type, fold, pos, errmsg);
 }
 
+void sch_sym::init(const sch_axis &sym_axis, const vec3d &cent)
+{
+   axes.clear();
+   mirrors.clear();
+   sub_syms.clear();
+   autos = sch_sym_autos();
+
+   sym_type = sym_axis.get_sym_type();
+   nfold = sym_axis.get_nfold();
+   to_std = mat3d::transl(cent) *
+            mat3d::alignment(vec3d::X, vec3d::Z,
+                             sym_axis.get_axis(), sym_axis.get_perp());
+   
+}
 
 
 string sch_sym::get_symbol() const
 {
-   //fprintf(stderr, "sym_type=%d\n", sym_type);
    if(sym_type<C || sym_type>S)
       return type_str[sym_type];
    else
@@ -1068,6 +1112,7 @@ t_set &sch_sym::get_trans(t_set &ts) const
       if(sym_type<C || sym_type>S) {
          typedef sch_gen &(sch_gen::* PF_SYM)();
          map<int, PF_SYM> sym_names_other;
+         sym_names_other[unknown] = &sch_gen::unit;
          sym_names_other[C1] = &sch_gen::unit;
          sym_names_other[Cs] = &sch_gen::Cs;
          sym_names_other[Ci] = &sch_gen::Ci;
@@ -1136,6 +1181,17 @@ const set<vec3d> &sch_sym::get_mirrors() const
    return mirrors;
 }
 
+bool sch_sym::has_inversion_symmetry() const
+{
+   if(sym_type==Ih||sym_type==Oh ||sym_type==Th || sym_type==Ci ||
+         (sym_type==Dv&&nfold%2) ||
+         (sym_type==Dh&&nfold%2==0) ||
+         (sym_type==S&&(nfold/2)%2) )
+      return true;
+   else
+      return false;
+}
+
 
 void get_equiv_elems(const geom_if &geom, const t_set &ts,
       vector<vector<set<int> > > *equiv_sets)
@@ -1167,230 +1223,706 @@ void sch_sym::add_sub_axes(const sch_sym &sub) const
 {
    vector<int> factors;
    int fold=sub.get_nfold();
-   factors.push_back(fold);
    for(int i=1; i<=fold/2; i++)
       if(fold%i==0)
          factors.push_back(fold/i);
    for(unsigned int i=0; i<factors.size(); i++) {
+      int nfold = factors[i];
       sch_sym sub_ax(sub);
-      sub_ax.set_nfold(factors[i]);
+      sub_ax.set_nfold(nfold);
       switch(sub.get_sym_type()) {
          case C:
-            sub_syms.push_back(sub_ax);
+            sub_syms.insert(sub_ax);
             break;
          case Cv:
-            sub_syms.push_back(sub_ax);
+            sub_syms.insert(sub_ax);
             sub_ax.set_sym_type(C);
-            sub_syms.push_back(sub_ax);
+            sub_syms.insert(sub_ax);
+            if(fold%2==0) {
+               sub_ax.set_sym_type(Cv);
+               sub_ax.set_to_std(mat3d::rot(0,0,M_PI/(fold))*sub.get_to_std());
+               sub_syms.insert(sub_ax);
+            }
             break;
          case Ch:
-            sub_syms.push_back(sub_ax);
+            sub_syms.insert(sub_ax);
             sub_ax.set_sym_type(C);
-            sub_syms.push_back(sub_ax);
+            sub_syms.insert(sub_ax);
             if(factors[i]>2 && factors[i]%2==0) {
                sub_ax.set_sym_type(S);
-               sub_syms.push_back(sub_ax);
+               sub_syms.insert(sub_ax);
             }
             break;
          case D:
-            sub_syms.push_back(sub_ax);
+            sub_syms.insert(sub_ax);
             sub_ax.set_sym_type(C);
-            sub_syms.push_back(sub_ax);
+            sub_syms.insert(sub_ax);
             break;
          case Dv:
-            sub_syms.push_back(sub_ax);
+            sub_syms.insert(sub_ax);
             sub_ax.set_sym_type(D);
-            sub_syms.push_back(sub_ax);
+            sub_syms.insert(sub_ax);
             sub_ax.set_sym_type(C);
-            sub_syms.push_back(sub_ax);
-            sub_ax.set_nfold(2*sub.get_nfold());
-            sub_ax.set_sym_type(S);
-            sub_syms.push_back(sub_ax);
-            sub_ax = sub;
-            sub_ax.set_to_std(mat3d::rot(0,0,M_PI/(2*nfold))*sub.get_to_std());
+            sub_syms.insert(sub_ax);
             sub_ax.set_sym_type(Cv);
-            sub_syms.push_back(sub_ax);
+            sub_ax.set_to_std(mat3d::rot(0,0,M_PI/(2*nfold))*sub.get_to_std());
+            sub_syms.insert(sub_ax);
+            if(nfold%2==0) {
+               sub_ax.set_to_std(mat3d::rot(0,0,-M_PI/(2*nfold))*
+                     sub.get_to_std());
+               sub_syms.insert(sub_ax);
+            }
+            sub_syms.insert(sub_ax);
+            sub_ax.set_nfold(2*nfold);
+            sub_ax.set_to_std(sub.get_to_std());
+            sub_ax.set_sym_type(S);
+            sub_syms.insert(sub_ax);
             break;
          case Dh:
-            sub_syms.push_back(sub_ax);
+            sub_syms.insert(sub_ax);
             sub_ax.set_sym_type(D);
-            sub_syms.push_back(sub_ax);
+            sub_syms.insert(sub_ax);
             sub_ax.set_sym_type(C);
-            sub_syms.push_back(sub_ax);
+            sub_syms.insert(sub_ax);
             sub_ax.set_sym_type(Cv);
-            sub_syms.push_back(sub_ax);
+            sub_syms.insert(sub_ax);
             sub_ax.set_sym_type(Ch);
-            sub_syms.push_back(sub_ax);
-            if(factors[i]>2 && factors[i]%2==0) {
+            sub_syms.insert(sub_ax);
+            if(nfold>2 && nfold%2==0) {
                sub_ax.set_sym_type(S);
-               sub_syms.push_back(sub_ax);
-               sub_ax.set_nfold(sub.get_nfold()/2);
+               sub_syms.insert(sub_ax);
+               sub_ax.set_nfold(nfold/2);
                sub_ax.set_sym_type(Dv);
-               sub_syms.push_back(sub_ax);
+               sub_syms.insert(sub_ax);
             }
-            //add other Cv and Dv
-
+            break;
        }
    }
 }
 
 
-
-sch_sym sch_sym::get_sub_sym(int sub_type, int sub_fold, int conj_type) const
-{
-   // Dont allow alternative descriptions of "lesser" symmetries
-   if( (sub_fold<2 && sub_type>=C && sub_type<=Dh) ||
-       (sub_fold==2 && sub_type==S) )
-      return sch_sym();
-
-   const vec3d axis = vec3d::Z;
-   const vec3d perp = vec3d::X;
+class same_sym_group {
+   private:
+      const sch_sym &sym;
+   public:
+      same_sym_group(sch_sym s): sym(s) {}
    
-   mat3d trans;
-   if(sub_type==Cv)
-      trans = mat3d::rot(axis, M_PI/2);
-   if(sub_type==D || sub_type==Dv || sub_type==Dh )
-      trans = mat3d::rot(axis, conj_type*M_PI/sub_fold);
-      
-   if(sub_fold==5 && (sym_type==Ih || sym_type==I))
-      trans *= mat3d::rot(A5, axis);
-   if(sub_fold==3 && sym_type>=T)
-      trans *= mat3d::alignment(A3, vec3d(1,-1,0), axis, perp);
-   if(sub_fold==2 && (sym_type==O || sym_type==Oh)) {
-      if(conj_type==0)
-         trans *= mat3d::rot(vec3d(1,0,1), axis);
+      bool operator () (const sch_sym &cmp) const {
+         if(cmp.get_sym_type()==sym.get_sym_type()) {
+            if(sym.get_sym_type()<sch_sym::C || sym.get_sym_type()>sch_sym::S)
+               return true;
+            else if(cmp.get_nfold()==sym.get_nfold())
+               return true;
+         }
+         return false;
+      }
+};
+
+
+
+sch_sym sch_sym::get_sub_sym(const string &sub, char *errmsg) const
+{
+   char errmsg2[MSG_SZ];
+   sch_sym sub_sym, final_sym;
+   
+   char *sub_cpy = copy_str(sub.c_str());   
+   bool valid = true;    // to allow free of sub_cpy in one place
+   vector<char *> parts;
+   split_line(sub_cpy, parts, ",");
+   if(parts.size()>2) {
+      strcpy(errmsg, "too many comma separated parts");
+      valid = false;
+   }
+   
+   if(valid) {
+      if(parts.size()==0 || strncmp(parts[0], "full", strlen(parts[0]))==0) {
+         sub_sym = *this;
+      }
+      else if(!sub_sym.init(parts[0], mat3d(), errmsg2)) {
+         snprintf(errmsg, MSG_SZ, "sub-symmetry type: %s", errmsg2);
+         valid = false;
+      }
+   }
+    
+   int sub_sym_conj = 0;
+   if(valid && parts.size()>1) {
+      if(!read_int(parts[1], &sub_sym_conj, errmsg2)) {
+         snprintf(errmsg, MSG_SZ,"sub-symmetry conjugation number: %s",errmsg2);
+         valid = false;
+      }
    }
 
-   //mat3d trans2=mat3d::inverse(trans*to_std);
-   //(trans2*axis).dump("axis");
-   //(trans2*perp).dump("perp");
-   //trans2.dump();
+   if(valid) {
+      final_sym = get_sub_sym(sub_sym, sub_sym_conj, errmsg2);
+      if(final_sym.get_sym_type() == sch_sym::unknown) {
+         snprintf(errmsg, MSG_SZ, "sub-symmetry: %s", errmsg2);
+         valid = false;
+      }
+   }
 
-   sch_sym ax(sub_type, sub_fold, trans*to_std);
-
-   return ax;
+   free(sub_cpy);
+   return valid ? final_sym : sch_sym();
 }
 
 
-
-
-const vector<sch_sym> &sch_sym::get_sub_syms() const
+sch_sym sch_sym::get_sub_sym(const sch_sym &sub_sym, int conj_type,char *errmsg) const
 {
+   if(errmsg) {
+      *errmsg = '\0';
+   }
+   if(conj_type<0) {
+      if(errmsg)
+         sprintf(errmsg, "conjugation type number cannot be negative");
+      return sch_sym();
+   }
+   get_sub_syms();
+   int conj = -1;
+   set<sch_sym>::const_iterator si = sub_syms.begin();
+   same_sym_group cmp(sub_sym);
+   while((si = find_if(si, sub_syms.end(), cmp))!=sub_syms.end()) {
+      ++conj;
+      if(conj==conj_type)
+         return *si;
+      ++si;
+   }
+   if(conj<0 && errmsg)
+      sprintf(errmsg, "not a sub-symmetry");
+   else if(si==sub_syms.end() && errmsg)
+      sprintf(errmsg, "conjugation type too large (last number: %d)", conj);
+
+   return sch_sym(sch_sym::unknown);
+}
+
+const set<sch_sym> &sch_sym::get_sub_syms() const
+{
+   sub_syms.clear();
+   const vec3d axis = vec3d::Z;
+   const vec3d perp = vec3d::X;
+   int dih_type;
    if(sub_syms.size()==0 && sym_type!=unknown) {
       sch_sym sym = *this;
+      sub_syms.insert(sym);
+      if(sym_type!=C1) {    // Don't add C1 a second time
+         sym.sym_type=C1;
+         sub_syms.insert(sym);
+      }
+      if(has_inversion_symmetry()) {
+         sym.sym_type=Ci;
+         sub_syms.insert(sym);
+      }
       switch(sym_type) {
          case Ih:
             sym.sym_type=I;
-            sub_syms.push_back(sym);
+            sub_syms.insert(sym);
             sym.sym_type=Th;
-            sub_syms.push_back(sym);
+            sub_syms.insert(sym);
             sym.sym_type=T;
-            sub_syms.push_back(sym);
-            sub_syms.push_back(get_sub_sym(Dv,5)); 
-            sub_syms.push_back(get_sub_sym(Dv,3)); 
-            sub_syms.push_back(get_sub_sym(Dh,2)); 
+            sub_syms.insert(sym);
+            sym.sym_type=Ci;
+            sub_syms.insert(sym);
+            sym.sym_type=Cs;
+            sub_syms.insert(sym);
+            sym.init(Dv, 5, mat3d::alignment(A5, vec3d::Z,
+                     axis, mat3d::rot(axis, M_PI/10)*vec3d::X) * to_std);
+            add_sub_axes(sym);
+            sym.init(Dv, 3, mat3d::alignment(A3, A5,
+                     axis, mat3d::rot(axis, M_PI/6 )*vec3d::X) * to_std);
+            add_sub_axes(sym);
+            sym.init(Dh, 2, to_std);
+            add_sub_axes(sym);
             break;
 
          case I:
             sym.sym_type=T;
-            sub_syms.push_back(sym);
-            sub_syms.push_back(get_sub_sym(D,5)); 
-            sub_syms.push_back(get_sub_sym(D,3)); 
-            sub_syms.push_back(get_sub_sym(D,2)); 
+            sub_syms.insert(sym);
+            sym.init(D, 5, mat3d::alignment(A5, vec3d::Z,
+                     axis, mat3d::rot(axis, M_PI/10)*vec3d::X) * to_std);
+            add_sub_axes(sym);
+            sym.init(D, 3, mat3d::alignment(A3, A5,
+                     axis, mat3d::rot(axis, M_PI/6 )*vec3d::X) * to_std);
+            add_sub_axes(sym);
+            sym.init(D, 2, to_std);
+            add_sub_axes(sym);
             break;
          
          case Oh:
             sym.sym_type=O;
-            sub_syms.push_back(sym);
+            sub_syms.insert(sym);
             sym.sym_type=Td;
-            sub_syms.push_back(sym);
+            sub_syms.insert(sym);
+            sym.sym_type=Th;
+            sub_syms.insert(sym);
             sym.sym_type=T;
-            sub_syms.push_back(sym);
-            sub_syms.push_back(get_sub_sym(Dh,4)); 
-            sub_syms.push_back(get_sub_sym(Dv,3)); 
-            sub_syms.push_back(get_sub_sym(Dh,2)); 
+            sub_syms.insert(sym);
+            sym.sym_type=Ci;
+            sub_syms.insert(sym);
+            sym.sym_type=Cs;
+            sub_syms.insert(sym);
+            sym.init(Cs, 0, mat3d::rot(vec3d(0,1,1), axis) * to_std);
+            add_sub_axes(sym);
+            sym.init(Dh, 4, to_std);
+            add_sub_axes(sym);
+            sym.init(Dv, 3, mat3d::alignment(A3, vec3d(1,-1,0), vec3d::Z, vec3d::X) * to_std);
+            add_sub_axes(sym);
+            sym.init(Dh, 2, mat3d::rot(vec3d(0,1,1), axis) * to_std);
+            add_sub_axes(sym);
             break;
-         
+            
          case O:
             sym.sym_type=T;
-            sub_syms.push_back(sym);
-            sub_syms.push_back(get_sub_sym(D,4)); 
-            sub_syms.push_back(get_sub_sym(D,3)); 
-            sub_syms.push_back(get_sub_sym(D,2)); 
+            sub_syms.insert(sym);
+            sym.init(D, 4, to_std);
+            add_sub_axes(sym);
+            sym.init(D, 3, mat3d::rot(A3, axis) * to_std);
+            add_sub_axes(sym);
+            sym.init(D, 2, mat3d::rot(vec3d(0,1,1), axis) * to_std);
+            add_sub_axes(sym);
             break;
 
          case Th:
             sym.sym_type=T;
-            sub_syms.push_back(sym);
-            sub_syms.push_back(get_sub_sym(S,6)); 
-            sub_syms.push_back(get_sub_sym(Dh,2)); 
+            sub_syms.insert(sym);
+            sym.sym_type=Ci;
+            sub_syms.insert(sym);
+            sym.sym_type=Cs;
+            sub_syms.insert(sym);
+            sym.init(S, 6, mat3d::rot(A3, axis) * to_std);
+            add_sub_axes(sym);
+            sym.init(Dh, 2, to_std);
+            add_sub_axes(sym);
             break;
 
          case Td:
             sym.sym_type=T;
-            sub_syms.push_back(sym);
-            sub_syms.push_back(get_sub_sym(Cv,3)); 
-            sub_syms.push_back(get_sub_sym(Dv,2)); 
+            sub_syms.insert(sym);
+            sym.init(Cs, 0, mat3d::rot(vec3d(0,1,1), axis) * to_std);
+            sub_syms.insert(sym);
+            sym.init(Cv, 3, mat3d::rot(A3, axis) * to_std);
+            add_sub_axes(sym);
+            sym.init(Dv, 2, to_std);
+            add_sub_axes(sym);
             break;
          
          case T:
-            sub_syms.push_back(get_sub_sym(C,3)); 
-            sub_syms.push_back(get_sub_sym(D,2)); 
+            sym.init(C, 3, mat3d::rot(A3, axis) * to_std);
+            add_sub_axes(sym);
+            sym.init(D, 2, to_std);
+            add_sub_axes(sym);
             break;
 
-         default:
+         case Dh:
+            sym.init(Cs, 0, to_std);     // horizontal mirror
+            sub_syms.insert(sym);
+            if(nfold%2==0) {       // nfold even: second axis and vert mirror
+               dih_type = Dh;
+               // vertical mirror through dihedral axis
+               sym.init(Cs, 0, mat3d::rot(vec3d::X, -M_PI/2) *
+                               mat3d::rot(axis, -M_PI/nfold) * to_std);
+               sub_syms.insert(sym);
+               sym.init(dih_type, 2, mat3d::rot(vec3d::Y, -M_PI/2) *
+                                     mat3d::rot(axis, -M_PI/nfold) * to_std);
+               add_sub_axes(sym);
+               if(nfold>2) {
+                  sym.init(Dh, nfold/2, mat3d::rot(axis, -M_PI/nfold) * to_std);
+                  add_sub_axes(sym);
+                  sym.init(Dv, nfold/2, mat3d::rot(axis, -M_PI/nfold) * to_std);
+                  add_sub_axes(sym);
+               }
+            }
+            else
+               dih_type = Cv;
+
+            // vertical mirror through dihedral axis
+            sym.init(Cs, 0, mat3d::rot(vec3d::X, -M_PI/2) * to_std);
+            sub_syms.insert(sym);
+            sym.init(dih_type, 2, mat3d::rot(vec3d::Y, -M_PI/2) * to_std);
+            add_sub_axes(sym);
             add_sub_axes(*this);
+            break;
 
+         case Dv:
+            // vertical mirror between dihedral axes
+            sym.init(Cs, 0, mat3d::rot(axis, -M_PI/(2*nfold)) *
+                            mat3d::rot(vec3d::X, M_PI/2) * to_std);
+            sub_syms.insert(sym);
+            dih_type = nfold%2 ? Ch : D;
+            sym.init(dih_type, 2, mat3d::rot(vec3d::Y, M_PI/2) * to_std);
+            add_sub_axes(sym);
+            sym.init(dih_type, 2, mat3d::rot(axis, M_PI/nfold) *
+                            mat3d::rot(vec3d::Y, M_PI/2) * to_std);
+            add_sub_axes(sym);
+            if(nfold%2 && nfold>2) {
+               sym.init(Dv, nfold/2, mat3d::rot(axis, M_PI/nfold) * to_std);
+               add_sub_axes(sym);
+            }
+            add_sub_axes(*this);
+            break;
+
+         case D:
+            dih_type = nfold%2 ? C : D;
+            sym.init(dih_type, 2, mat3d::rot(vec3d::Y, M_PI/2) * to_std);
+            add_sub_axes(sym);
+            sym.init(dih_type, 2, mat3d::rot(axis, M_PI/nfold) *
+                            mat3d::rot(vec3d::Y, M_PI/2) * to_std);
+            add_sub_axes(sym);
+            if(nfold%2 && nfold>2) {
+               sym.init(D, nfold/2, mat3d::rot(axis, M_PI/nfold) * to_std);
+               add_sub_axes(*this);
+            }
+            add_sub_axes(*this);
+            break;
+
+         case S:
+            add_sub_axes(*this);
+            break;
+
+         case Ch:
+            sym.sym_type=Cs;       // horizontal mirror
+            sub_syms.insert(sym);
+            add_sub_axes(*this);
+            break;
+
+         case Cv:
+            if(nfold%2==0) {       // nfold even: add second vertical mirror
+               sym.init(Cs, 0, mat3d::rot(axis, M_PI/nfold) *
+                               mat3d::rot(vec3d::X, M_PI/2) * to_std);
+               sub_syms.insert(sym);
+               if(nfold>2) {
+                  sym.init(Cv, nfold/2, mat3d::rot(axis, M_PI/nfold) * to_std);
+                  sub_syms.insert(sym);
+               }
+            }
+            // vertical mirror
+            sym.init(Cs, 0, mat3d::rot(vec3d::X, M_PI/2) * to_std);
+            sub_syms.insert(sym);
+            add_sub_axes(*this);
+            break;
+
+         case C:
+            add_sub_axes(*this);
+            break;
+
+         // No proper subgroups
+         case Ci:
+         case Cs:
+         case C1:
+            break;
       }
    }
+
    return sub_syms;
 }
-
-
-/*
-const set<sch_sym> &sch_sym::get_sub_syms() const
+      
+sch_sym_autos &sch_sym::get_autos()
 {
-   if(sub_syms.size()==0 && sym_type!=unknown) {
-      sch_sym sym = *this;
-      if(sym_type==Ih) {
-         sym.sym_type=I;
-         sub_syms.insert(sym);
-      }
-      if(sym_type==Oh) {
-         sym.sym_type=O;
-         sub_syms.insert(sym);
-         sym.sym_type=Td;
-         sub_syms.insert(sym);
-      }
-      if(sym_type==Ih || sym_type==Oh) {
-         sym.sym_type=Th;
-         sub_syms.insert(sym);
-      }
-      if(sym_type==Ih || sym_type==I || sym_type==Oh || sym_type==O ||
-            sym_type==Th || sym_type==T) {
-         sym.sym_type=T;
-         sub_syms.insert(sym);
-      }
-
-      get_axes();
-      for(set<sch_axis>::const_iterator si=axes.begin(); si!=axes.end(); ++si)
-         add_sub_syms(*si);
-   }
-   return sub_syms;
+   if(!autos.is_set())
+      autos = sch_sym_autos(*this);
+   return autos;
 }
-*/
 
-/*
+
 bool sch_sym::operator <(const sch_sym &s) const
 {
    if(sym_type < s.sym_type)
       return true;
-   if(nfold < s.nfold)
-      return true;
+   else if(sym_type > s.sym_type)
+      return false;
 
-   // Expensive test!!!
-   // Could normalise to_std and compare on that
-   return get_axes() < s.get_axes();
+   if(sym_type>=C && sym_type<=S) {
+      if(nfold < s.nfold)
+         return true;
+      else if(nfold > s.nfold)
+         return false;
+   }
+   
+   // Expensive test if same kind of symmetry group!!!
+   return compare(get_trans(), s.get_trans())==-1;
 }
-*/
+
+void sch_sym_autos::init()
+{
+   free_vars = FREE_NONE;
+   fixed_type = 0;
+   fixed_trans.clear();
+   for(int i=0; i<3; i++)
+      rot[i] = transl[i] = 0.0;
+}
+
+
+sch_sym_autos::sch_sym_autos(const sch_sym &sym)
+{
+   init();
+   const vec3d axis = vec3d::Z;
+   const vec3d perp = vec3d::X;
+   int type = sym.get_sym_type();
+   if(type==sch_sym::unknown)    // fixed_trans empty, indicates unset;
+      return;
+
+   int nfold = sym.get_nfold();
+   
+   vector<vector<mat3d> > fixed;       // fixed (non-free) realignments
+   fixed.push_back(vector<mat3d>(1));  // identity
+
+   if(type==sch_sym::I || type==sch_sym::O || type==sch_sym::T ||
+         type==sch_sym::D || type==sch_sym::C || type==sch_sym::C1) {
+      fixed.push_back(vector<mat3d>(2));
+      fixed.back()[1] = mat3d::inversion();      // reflect through origin
+   }
+
+   if(type==sch_sym::Td || type==sch_sym::T || type==sch_sym::S ||
+         type==sch_sym::Ch || type==sch_sym::Cv || type==sch_sym::C) {
+      fixed.push_back(vector<mat3d>(2));
+      fixed.back()[1] = mat3d::rot(M_PI, 0, 0);   // flip "principal" axis
+   }
+
+   if(type==sch_sym::Dh || type==sch_sym::Dv || type==sch_sym::D ||
+         type==sch_sym::Cv) {
+      fixed.push_back(vector<mat3d>(2));
+      fixed.back()[1] = mat3d::rot(0, 0, M_PI/nfold);// rotate base vert to edge
+   }
+
+   if((type==sch_sym::Dh || type==sch_sym::D) && nfold==2) {
+      fixed.push_back(vector<mat3d>(3));
+      fixed.back()[1] = mat3d::rot(vec3d(1,1,1),  2*M_PI/3); // rotate D2 axes
+      fixed.back()[2] = mat3d::rot(vec3d(1,1,1), -2*M_PI/3); // rotate D2 axes
+   }
+
+   // find all combinations of transformations involving one member
+   // from each set (is there an STL algorithm for this?)
+   int sz = fixed.size();
+   vector<unsigned int> visit_idxs(sz, 0);
+   while(visit_idxs[0] < fixed[0].size()) { // until first counter rolls
+      mat3d trans;
+      for(int i=0; i<sz; i++)
+         trans = fixed[i][visit_idxs[i]] * trans;
+      fixed_trans.push_back(trans);
+
+      // increment visit counters
+      visit_idxs[sz-1]++;
+      for(int j=1; j<sz; j++)
+         if(visit_idxs[sz-j]>=fixed[sz-j].size()) {
+            visit_idxs[sz-j] = 0;
+            visit_idxs[sz-j-1]++;
+         }
+   }
+   
+   if(type==sch_sym::Ch)
+      free_vars = FREE_ROT_PRINCIPAL;
+   if(type==sch_sym::Cv)
+      free_vars = FREE_TRANSL_PRINCIPAL;
+   else if(type==sch_sym::S ||  type==sch_sym::C)
+      free_vars = FREE_ROT_PRINCIPAL | FREE_TRANSL_PRINCIPAL; 
+   else if(type==sch_sym::Cs)
+      free_vars = FREE_ROT_PRINCIPAL | FREE_TRANSL_PLANE; 
+   else if(type==sch_sym::Ci)
+      free_vars = FREE_ROT_FULL;
+   else if(type==sch_sym::C1)
+      free_vars = FREE_ROT_FULL | FREE_TRANSL_SPACE; 
+}
+
+bool sch_sym_autos::set_fixed_type(int type, char *errmsg)
+{
+   int valid = false;
+   if(!is_set()) {
+      if(errmsg)
+         snprintf(errmsg, MSG_SZ, "fixed type: symmetry type not yet set");
+   }
+   else if(type<0 || type>=(int)fixed_trans.size()) {
+      if(errmsg) {
+         if(fixed_trans.size()==1)
+            snprintf(errmsg, MSG_SZ, "fixed type: invalid type %d, must be 0",
+                  type);
+         else
+            snprintf(errmsg, MSG_SZ, "fixed type: invalid type %d, must be 0-%d",
+                  type, fixed_trans.size()-1);
+      }
+   }
+   else {
+      fixed_type = type;
+      valid = true;
+   }
+
+   return valid;
+}
+
+bool sch_sym_autos::set_rot_principal(double rot_ang, char *errmsg)
+{
+   int valid = free_vars & FREE_ROT_PRINCIPAL;
+   if(valid) {
+      rot[0] = deg2rad(rot_ang);
+      rot[1] = 0.0;
+      rot[2] = 0.0;
+   }
+   else if(errmsg)
+      strcpy(errmsg, "symmetry type does not have a free principal axis rotation");
+   return valid;
+}
+
+bool sch_sym_autos::set_rot_full(double rot_x, double rot_y, double rot_z,
+      char *errmsg)
+{
+   int valid = free_vars & FREE_ROT_FULL;
+   if(valid) {
+      rot[0] = deg2rad(rot_x);
+      rot[1] = deg2rad(rot_y);
+      rot[2] = deg2rad(rot_z);
+   }
+   else if(errmsg)
+      strcpy(errmsg, "symmetry type does not have a free full rotation");
+   return valid;
+}
+
+bool sch_sym_autos::set_transl_principal(double transl0, char *errmsg)
+{
+   int valid = free_vars & FREE_TRANSL_PRINCIPAL;
+   if(valid) {
+      transl[0] = transl0;
+      transl[1] = 0.0;
+      transl[2] = 0.0;
+   }
+   else if(errmsg)
+      strcpy(errmsg, "symmetry type does not have a free principal axis translation");
+   return valid;
+}
+
+
+bool sch_sym_autos::set_transl_plane(double transl0, double transl1,
+      char *errmsg)
+{
+   int valid = free_vars & FREE_TRANSL_PLANE;
+   if(valid) {
+      transl[0] = transl0;
+      transl[1] = transl1;
+      transl[2] = 0.0;
+   }
+   else if(errmsg)
+      strcpy(errmsg, "symmetry type does not have a free plane translation");
+   return valid;
+}
+
+
+bool sch_sym_autos::set_transl_space(double transl0, double transl1,
+      double transl2, char *errmsg)
+{
+   int valid = free_vars & FREE_TRANSL_SPACE;
+   if(valid) {
+      transl[0] = transl0;
+      transl[1] = transl1;
+      transl[2] = transl2;
+   }
+   else if(errmsg)
+      strcpy(errmsg, "symmetry type does not have a free space translation");
+   return valid;
+}
+
+
+int sch_sym_autos::num_free_rots() const
+{
+   int cnt = 0;
+   if(free_vars & FREE_ROT_PRINCIPAL)
+       cnt = 1;
+   else if(free_vars & FREE_ROT_FULL)
+       cnt = 3;
+   return cnt;
+}
+   
+int sch_sym_autos::num_free_transls() const
+{
+   int cnt = 0;
+   if(free_vars & FREE_TRANSL_PRINCIPAL)
+      cnt = 1;
+   else if(free_vars & FREE_TRANSL_PLANE)
+      cnt = 2;
+   else if (free_vars & FREE_TRANSL_SPACE)
+      cnt = 3;
+   return cnt;
+}
+
+
+mat3d sch_sym_autos::get_realignment() const
+{
+   mat3d trans;
+   if(is_set())
+      trans = fixed_trans[fixed_type];
+   
+   if(free_vars & FREE_ROT_PRINCIPAL)
+      trans = mat3d::rot(vec3d::Z, rot[0]) * trans;
+   else if(free_vars & FREE_ROT_FULL)
+      trans = mat3d::rot(rot[0], rot[1], rot[2]) * trans;
+
+   if(free_vars & FREE_TRANSL_PRINCIPAL)      // z-axis
+      trans = mat3d::transl(vec3d(0, 0, transl[0])) * trans;
+   else if(free_vars & FREE_TRANSL_PLANE)     // xy-plane
+      trans = mat3d::transl(vec3d(transl[0], transl[1], 0)) * trans;
+   else if (free_vars & FREE_TRANSL_SPACE)
+      trans = mat3d::transl(vec3d(transl[0], transl[1], transl[2])) * trans;
+
+   return trans;
+}
+      
+bool sch_sym_autos::set_realignment(const char *realign, char *errmsg)
+{
+   char errmsg2[MSG_SZ];
+   vector<double> vars;
+   
+   char *realign_cpy = copy_str(realign);
+   char *p = strchr(realign_cpy, ':');
+   if(p)
+      *p = '\0';                 // terminator at first ':'
+   
+   bool valid = true;
+   int type;
+   if(p && p <= realign_cpy+1)        // empty, so set default of 0
+      type = 0;
+   else {
+      if(!read_int(realign_cpy, &type, errmsg2)) {
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "fixed type: %s", errmsg2);
+         valid =  false;
+      }
+   }
+
+   if(valid && !set_fixed_type(type, errmsg))
+      valid = false;
+
+   if(valid && p && *(p+1)) {    // colon found and characters afterwards
+      if(!read_double_list(p+1, vars, errmsg2, 0, ":")) {
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "free variables: %s", errmsg2);
+         valid = false;
+      }
+   }
+
+   free(realign_cpy);
+   if(!valid)
+      return false;
+
+   int rot_cnt = num_free_rots();         // number of rotation angles 
+   int transl_cnt = num_free_transls();   // number of translation distances 
+
+   int vars_sz = vars.size();
+   if(vars_sz && vars_sz!=rot_cnt && vars_sz!=rot_cnt+transl_cnt) {
+      if(errmsg)
+         snprintf(errmsg, MSG_SZ, "free variable list: %d numbers given, must give %d (rotation) or %d (rotation and translation) colon separated numbers", vars.size(), rot_cnt, rot_cnt+transl_cnt);
+      return false;
+   }
+
+   if(vars_sz) {
+      if(free_vars & FREE_ROT_PRINCIPAL)
+         set_rot_principal(vars[0]);
+      else if(free_vars & FREE_ROT_FULL)
+         set_rot_full(vars[0], vars[1], vars[2]);
+   }
+
+   if(vars_sz>rot_cnt) {
+      if(free_vars & FREE_TRANSL_PRINCIPAL)
+         set_transl_principal(vars[rot_cnt+0]);
+      else if(free_vars & FREE_TRANSL_PLANE)
+         set_transl_plane(vars[rot_cnt+0], vars[rot_cnt+1]);
+      else if (free_vars & FREE_TRANSL_SPACE)
+         set_transl_space(vars[rot_cnt+0], vars[rot_cnt+1], vars[rot_cnt+2]);
+   }
+
+   return true;
+}
 

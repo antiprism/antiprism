@@ -44,7 +44,9 @@ class rep_printer: public geom_info
          { return idx2s(buf, idx, num_edges()-extra_e_sz); }
       char *fidx2s(char *buf, int idx)
          { return idx2s(buf, idx, num_faces()-extra_f_sz); }
-      
+     
+      string sub_sym_str;
+
       char *idx2s(char *buf, int idx, int extra_sz);
       int extra_v_sz;
       int extra_e_sz;
@@ -58,6 +60,8 @@ class rep_printer: public geom_info
          { set_sig_dgts(); }
       
       void set_sig_dgts(int dgts=8) { sig_dgts=dgts; }
+      bool set_sub_symmetry(const string &sub_sym, char *errmsg);
+
       void extra_elems_added(int v_sz, int e_sz, int f_sz)
          { extra_v_sz += v_sz; extra_e_sz += e_sz; extra_f_sz += f_sz; }
       
@@ -76,6 +80,7 @@ class rep_printer: public geom_info
       void face_angles_cnts();
       void edge_lengths_cnts();
       void dihedral_angles_cnts();
+      void sym_orbit_cnts();
 
       void v_index(int v_idx);
       void v_coords(int v_idx);

@@ -306,6 +306,10 @@ class mat3d
      static mat3d trans_by_angles(double yz_ang, double zx_ang, double xy_ang,
            bool *valid=0);
      
+     ///Get the translation vector.
+     /* \return the translation component of the matrix. */
+     vec3d get_transl() const;
+
      ///Get quaternion
      /**Convert the rotation part of the matrix into a quaterinon.
       * \return A vector representing a quaternion
@@ -343,7 +347,7 @@ vec3d operator *(const vec3d &v, const mat3d &mat);
  * \return The result of the first matrix multiplying the second. */
 mat3d operator *(const mat3d &m1, const mat3d &m2);
 
-bool less_than(const mat3d &m1, const mat3d &m2, double eps=epsilon);
+int compare(const mat3d &m1, const mat3d &m2, double eps=epsilon);
 bool operator <(const mat3d &m1, const mat3d &m2);
 
 ///Transform a set of vectors
@@ -658,6 +662,11 @@ inline double mat3d::det() const
           +m[2]*det2(m[4], m[5], m[8], m[9]);
 }
 
+inline vec3d mat3d::get_transl() const
+{
+   return vec3d(m[3], m[7], m[11]);
+}
+
 
 inline mat3d &mat3d::operator *=(const mat3d &mat)
 {
@@ -699,7 +708,15 @@ inline mat3d operator *(const mat3d &m1, const mat3d &m2)
 
 inline bool operator <(const mat3d &m1, const mat3d &m2)
 {
-   return less_than(m1, m2, epsilon);
+   return compare(m1, m2, epsilon)==-1;
+}
+
+inline bool operator ==(const mat3d &m1, const mat3d &m2)
+{
+   for(int i=0; i<16; i++)
+      if(!double_eq(m1[i], m2[i], epsilon))
+         return false;
+   return true;
 }
 
 inline void transform(vector<vec3d> &verts, const mat3d &trans)
@@ -707,7 +724,6 @@ inline void transform(vector<vec3d> &verts, const mat3d &trans)
    for(unsigned int i=0; i<verts.size(); i++)
       verts[i] = trans * verts[i];
 }
-
 
 #endif // MAT3D_H
 

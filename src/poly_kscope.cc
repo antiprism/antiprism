@@ -49,6 +49,8 @@ class ksc_opts: public prog_opts
    public:
       mat3d trans_m;
       sch_sym sym;
+      sch_sym sub_sym;
+      int sub_sym_conj;
       char col_elems;
       bool consider_part_sym;
       string sfile;
@@ -56,7 +58,7 @@ class ksc_opts: public prog_opts
       string ofile;
 
       ksc_opts(): prog_opts("poly_kscope"),
-                  col_elems('\0'),
+                  sub_sym_conj(0), col_elems('\0'),
                   consider_part_sym(true)
                   { }
 
@@ -113,23 +115,45 @@ void ksc_opts::process_command_line(int argc, char **argv)
    char errmsg[MSG_SZ];
    opterr = 0;
    char c;
+   col_geom_v sgeom;
+   vector<char *> parts;
    vector<double> nums;
    mat3d trans_m2;
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hS:s:c:Io:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hs:c:Io:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
       switch(c) {
          case 's':
-            if(!sym.init(optarg, mat3d(), errmsg))
-               error(errmsg, c);
-            break;
+            split_line(optarg, parts, ",");
+            if(parts.size()==0 || parts.size()>3)
+               error("argument should have 1 to 3 comma separated parts", c);
+            
+            if(sgeom.read(parts[0], errmsg))
+               sym.init(sgeom);
+            else if(!sym.init(parts[0], mat3d(), errmsg))
+               error(msg_str("invalid filename or symmetry type name: %s",
+                        errmsg), c);
 
-         case 'S':
-            sfile = optarg;
+            if(parts.size()>1) {
+               if(!sub_sym.init(parts[1], mat3d(), errmsg))
+                  error(msg_str("sub-symmetry type: %s", errmsg), c);
+
+               if(parts.size()>2) {
+                  if(!read_int(parts[2], &sub_sym_conj, errmsg))
+                     error(msg_str("sub-symmetry conjugation number: %s",
+                              errmsg), c);
+               }
+
+               sym = sym.get_sub_sym(sub_sym, sub_sym_conj, errmsg);
+               if(sym.get_sym_type() == sch_sym::unknown)
+                     error(msg_str("sub-symmetry: %s", errmsg), c);
+            }
+                     
+
             break;
 
          case 'c':
@@ -170,17 +194,6 @@ int main(int argc, char *argv[])
    opts.process_command_line(argc, argv);
 
    char errmsg[MSG_SZ];
-   sch_sym final_sym;
-   if(opts.sfile!="") {
-      col_geom_v sgeom;
-      if(!sgeom.read(opts.sfile, errmsg))
-         opts.error(errmsg, 'S');
-      if(*errmsg)
-         opts.warning(errmsg, 'S');
-      final_sym.init(sgeom);
-   }
-   else
-      final_sym = opts.sym;
 
    col_geom_v geom;
    if(!geom.read(opts.ifile, errmsg))
@@ -188,26 +201,15 @@ int main(int argc, char *argv[])
    if(*errmsg)
       opts.warning(errmsg);
 
+
+
    vector<vector<set<int> > > equivs;
    sch_sym part_sym;
    if(opts.consider_part_sym)
       part_sym.init(geom, &equivs);
 
-   /*
-      for(int i=0; i<3; i++) {
-      const char *elems[] = { "verts", "edges", "faces" };
-      fprintf(stderr, "\n%s\n", elems[i]);
-      for(unsigned int j=0; j<equivs[i].size(); j++) {
-      set<int>::iterator si;
-      for(si=equivs[i][j].begin(); si!=equivs[i][j].end(); ++si)
-      fprintf(stderr, "%d  ", *si);
-      fprintf(stderr, "\n");
-      }
-      }
-      */
-
    t_set min_ts;
-   min_ts.min_set(final_sym.get_trans(), part_sym.get_trans());
+   min_ts.min_set(opts.sym.get_trans(), part_sym.get_trans());
 
    col_geom_v comp_geom;
    sym_repeat(comp_geom, geom, min_ts, opts.col_elems);

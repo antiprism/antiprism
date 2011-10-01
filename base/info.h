@@ -288,10 +288,16 @@ class geom_info
       const geom_if &get_geom() const { return geom; }
   
       //Symmetry
+      const sch_sym &get_symmetry()
+         { if(!sym.is_set()) find_symmetry(); return sym; }
       string get_symmetry_type_name()
          { if(!sym.is_set()) find_symmetry(); return sym.get_symbol(); }
       const set<sch_axis> &get_symmetry_axes()
          { if(!sym.is_set()) find_symmetry(); return sym.get_axes(); }
+      const set<sch_sym> &get_symmetry_subgroups()
+         { if(!sym.is_set()) find_symmetry(); return sym.get_sub_syms(); }
+      const sch_sym_autos &get_symmetry_autos()
+         { if(!sym.is_set()) find_symmetry(); return sym.get_autos(); }
       mat3d get_symmetry_alignment_to_std()
          { if(!sym.is_set()) find_symmetry(); return sym.get_to_std(); }
 };

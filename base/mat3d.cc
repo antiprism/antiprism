@@ -34,7 +34,7 @@
 #include "math_utils.h"
 #include "mat3d.h"
 
-     
+/*     
 bool less_than(const mat3d &m1, const mat3d &m2, double eps)
 {
    for(int i=0; i<12; i++) {
@@ -47,6 +47,21 @@ bool less_than(const mat3d &m1, const mat3d &m2, double eps)
    }
    return 0;
 }
+*/
+
+int compare(const mat3d &m1, const mat3d &m2, double eps)
+{
+   for(int i=0; i<12; i++) {
+      if(fabs(m1[i] - m2[i]) > eps) {
+         if(m1[i] < m2[i])
+            return 1;
+         else
+            return -1;
+      }
+   }
+   return 0;
+}
+
 
 mat3d &mat3d::set_inverse()
 {
