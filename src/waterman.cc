@@ -552,8 +552,8 @@ void sphere_ray_waterman(col_geom_v &geom, const int &lattice_type, const bool &
                                             R_squared, eps)) {
             //fprintf(stderr,"Ray missed the Sphere\n");
             if (!miss) {
-               if (verbose)
-                  fprintf(stderr,"error: at x = %ld, y = %ld, a false miss happened\n",x,y);
+               //if (verbose)
+               //   fprintf(stderr,"error: at x = %ld, y = %ld, a false miss happened\n",x,y);
                total_misses++;
             }
             continue;
@@ -590,17 +590,17 @@ void sphere_ray_waterman(col_geom_v &geom, const int &lattice_type, const bool &
 
             if(z_near2!=z_near) {
                total_errors++;
-               if (verbose)
-                  fprintf(stderr, "(%ld, %ld) z_near %ld -> %s\n", x, y, z_near,
-                         (z_near2!=LONG_MAX) ? itostr(z_near2).c_str() : "invalid");
+               //if (verbose)
+               //   fprintf(stderr, "(%ld, %ld) z_near %ld -> %s\n", x, y, z_near,
+               //          (z_near2!=LONG_MAX) ? itostr(z_near2).c_str() : "invalid");
                z_near = z_near2;
             }
 
             if(z_far2!=z_far) {
                total_errors++;
-               if (verbose)
-                  fprintf(stderr, "(%ld, %ld) z_far %ld -> %s\n", x, y, z_far,
-                         (z_far2!=LONG_MAX) ? itostr(z_far2).c_str() : "invalid");
+               //if (verbose)
+               //   fprintf(stderr, "(%ld, %ld) z_far %ld -> %s\n", x, y, z_far,
+               //          (z_far2!=LONG_MAX) ? itostr(z_far2).c_str() : "invalid");
                z_far = z_far2;
             }
          }
@@ -613,9 +613,9 @@ void sphere_ray_waterman(col_geom_v &geom, const int &lattice_type, const bool &
       }
    }
 
-   if (!tester_defeat)
+   if (verbose && !tester_defeat)
       fprintf(stderr,"Total computational errors found and corrected: %ld\n",total_errors);
-   if (total_misses)
+   if (verbose && total_misses)
       fprintf(stderr,"Total number of false misses: %ld\n",total_misses);
 }
 
@@ -667,18 +667,18 @@ void z_guess_waterman(col_geom_v &geom, const int &lattice_type, const vec3d &ce
             if(z_near2!=z_near) {
                total_errors++;
                //total_amount+=abs(z_near2-z_near);
-               if (verbose)
-                  fprintf(stderr, "(%ld, %ld) z_near %ld -> %s\n", x, y, z_near,
-                         (z_near2!=LONG_MAX) ? itostr(z_near2).c_str() : "invalid");
+               //if (verbose)
+               //   fprintf(stderr, "(%ld, %ld) z_near %ld -> %s\n", x, y, z_near,
+               //          (z_near2!=LONG_MAX) ? itostr(z_near2).c_str() : "invalid");
                z_near = z_near2;
             }
 
             if(z_far2!=z_far) {
                total_errors++;
                //total_amount+=abs(z_far2-z_far);
-               if (verbose)
-                  fprintf(stderr, "(%ld, %ld) z_far %ld -> %s\n", x, y, z_far,
-                         (z_far2!=LONG_MAX) ? itostr(z_far2).c_str() : "invalid");
+               //if (verbose)
+               //   fprintf(stderr, "(%ld, %ld) z_far %ld -> %s\n", x, y, z_far,
+               //          (z_far2!=LONG_MAX) ? itostr(z_far2).c_str() : "invalid");
                z_far = z_far2;
             }
 
@@ -696,7 +696,8 @@ void z_guess_waterman(col_geom_v &geom, const int &lattice_type, const vec3d &ce
       }
    }
 
-   fprintf(stderr,"Total computational errors found and corrected: %ld\n",total_errors);
+   if (verbose)
+      fprintf(stderr,"Total computational errors found and corrected: %ld\n",total_errors);
    //fprintf(stderr,"Total errors amount: %ld\n",total_amount);
 }
 
@@ -708,7 +709,8 @@ int main(int argc, char *argv[])
    col_geom_v geom;
    char errmsg[MSG_SZ]="";
 
-   fprintf(stderr,"calculating points\n");
+   if (opts.verbose)
+      fprintf(stderr,"calculating points\n");
 
    if (opts.method == 1)
       sphere_ray_waterman(geom, opts.lattice_type, opts.origin_based, opts.center, opts.radius,
@@ -718,14 +720,17 @@ int main(int argc, char *argv[])
 
 
    if (opts.convex_hull) {
-      fprintf(stderr,"performing convex hull\n");
+      if (opts.verbose)
+         fprintf(stderr,"performing convex hull\n");
       
       int ret = (opts.add_hull ? geom.add_hull("",errmsg) : geom.set_hull("",errmsg));
-      if(!ret)
-         fprintf(stderr,"%s\n",errmsg);
+      if(!ret) {
+         if (opts.verbose)
+            fprintf(stderr,"%s\n",errmsg);
+      }
       else {
          geom.orient();
-         if (true) // verbosity
+         if (opts.verbose)
             convex_hull_report(geom, opts.add_hull);
             
          if (opts.color_method)
@@ -741,12 +746,14 @@ int main(int argc, char *argv[])
       vc.v_one_col(opts.vert_col);
    }
 
-   fprintf(stderr,"writing output\n");
+   if (opts.verbose)
+      fprintf(stderr,"writing output\n");
 
    if(!geom.write(opts.ofile, errmsg))
       opts.error(errmsg);
 
-   fprintf(stderr,"done!\n");
+   if (opts.verbose)
+      fprintf(stderr,"done!\n");
 
    return 0;
 }

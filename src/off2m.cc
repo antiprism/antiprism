@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2007-2009, Roger Kaufman
+   Copyright (c) 2007-2011, Roger Kaufman
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -49,30 +49,29 @@ class o2m_opts: public prog_opts {
       string ofile;
 
       double edge_size;
-      double point_size;
+      double vert_size;
       bool lighting;
       string exclude_elems;
       col_val face_col;
       col_val edge_col;
       col_val vert_col;
+      col_val bg_col;
       int sig_digits;
       int f_dtype;
-      col_val bg_col;
       vec3d view_point;
 
       o2m_opts(): prog_opts("off2m"),
              edge_size(0.0),
-             point_size(0.0),
+             vert_size(0.0),
              lighting(false),
              exclude_elems(""),
              // face colors need to be explictly set since LG3D defaults to black
-             face_col(vec3d(0.8,0.9,0.9)), // same as antiview
-             // no longer set edge and vert colors, let them default to missing
-             //edge_col(vec3d(0,0,0)),
-             //vert_col(vec3d(0,0,0)),
+             face_col(col_val(0.8,0.9,0.9)), // the system default colors
+             edge_col(col_val(0.8,0.6,0.8)),
+             vert_col(col_val(1.0,0.5,0.0)),
+             bg_col(col_val(0.9,0.9,0.9)),
              sig_digits(DEF_SIG_DGTS),
              f_dtype(1),
-             bg_col(vec3d(1,1,1)),
              view_point(vec3d(0,0,0))
              {}
 
@@ -94,8 +93,8 @@ void o2m_opts::usage()
 "Options\n"
 "%s"
 "  -v <size> vertex sphere size (default: 0.02 of bounding box diagonal)\n"
-"  -e <size> frame model edge thickness size (default: 0.001 of bounding\n"
-"            box diagonal)\n"
+"  -e <size> frame model edge thickness size (default: 0.01 of bounding\n"
+"            box diagonal if vertex sphere is 0, else vertex_rad/1.5)\n"
 "  -x <elms> hide elements. The element string can include v, e and f\n"
 "            to hide vertices, edges and faces\n"
 "  -o <file> write output to file (default: write to standard output)\n"
@@ -103,14 +102,14 @@ void o2m_opts::usage()
 "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
 "Note: transparency (alpha) is ignored. color name \"invisible\" not allowed\n"
 "\n"
-"  -V <col>  vertex color\n"
-"  -E <col>  edge color\n"
+"  -V <col>  vertex color (default: 1.0,0.5,0.0)\n"
+"  -E <col>  edge color (default: 0.8,0.6,0.8)\n"
 "  -F <col>  face color (default: 0.8,0.8,0.9)\n"
 "  -l        let LiveGraphics3D do the coloring itself\n"
 "\n"
 "Scene options\n"
 "  -Y <view> specify the Live3D ViewPoint in form 'X,Y,Z'\n"
-"  -B <col>  background color (default: 1.0,1.0,1.0)\n"
+"  -B <col>  background color (default: 0.9,0.9,0.9)\n"
 "\n"
 "Precision options\n"
 "  -d <dgts> number of significant digits (default %d) or if negative\n"
@@ -143,9 +142,9 @@ void o2m_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'v':
-            if(!read_double(optarg, &point_size, errmsg))
+            if(!read_double(optarg, &vert_size, errmsg))
                error(errmsg, c);
-            if(point_size < 0)
+            if(vert_size < 0)
                error("point size cannot be zero or negative", c);
             break;
 
@@ -327,7 +326,7 @@ int print_m_frame(FILE *ofile, const col_geom_v &geom, const int &sig_digits, co
 } 
 
 
-int print_m_points(FILE *ofile, const col_geom_v &geom, const int &sig_digits, const double &point_size, const col_val &vert_col, const bool &more_to_print)
+int print_m_points(FILE *ofile, const col_geom_v &geom, const int &sig_digits, const double &vert_size, const col_val &vert_col, const bool &more_to_print)
 {
    const vector<vec3d> &verts = geom.verts();
    
@@ -343,7 +342,7 @@ int print_m_points(FILE *ofile, const col_geom_v &geom, const int &sig_digits, c
       fprintf(ofile,"{");
       if (vcol.is_set())
          fprintf(ofile, "%s, ", RGBtxt(vcol).c_str());
-      fprintf(ofile, "PointSize[%g], ", point_size);
+      fprintf(ofile, "PointSize[%g], ", vert_size);
       fprintf(ofile, "Point[%s]}", Vtxt(verts[i], sig_digits).c_str());
       
       if (i==last && !more_to_print)
@@ -407,10 +406,14 @@ int main(int argc, char *argv[])
       
    bound_box bbox(geom.verts());
    double to_model_units = 2.0/(bbox.get_max()-bbox.get_min()).mag();
-   if(opts.point_size==0.0)
-      opts.point_size = 0.02/to_model_units;
-   if(opts.edge_size==0.0)
-      opts.edge_size = 0.001/to_model_units;
+   if(opts.vert_size==0.0)
+      opts.vert_size = 0.02/to_model_units;
+   if(opts.edge_size==0.0) {
+      if (opts.vert_size==0.0)
+         opts.edge_size = 0.01/to_model_units;
+      else
+         opts.edge_size = opts.vert_size/1.5;
+   }
       
 
    FILE *ofile = stdout;  // write to stdout by default
@@ -429,7 +432,7 @@ int main(int argc, char *argv[])
 
    print_m_head(ofile);
    if(print_v) {
-      if (!print_m_points(ofile, geom, opts.sig_digits, opts.point_size*to_model_units, opts.vert_col, (print_e || print_f)))
+      if (!print_m_points(ofile, geom, opts.sig_digits, opts.vert_size*to_model_units, opts.vert_col, (print_e || print_f)))
          opts.error("all vertices are invisible. try excluding by -x v");
    }
    if(print_e) {

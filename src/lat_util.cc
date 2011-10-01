@@ -65,11 +65,13 @@ class lutil_opts: public prog_opts {
       bool append_lattice;
       char color_method;
       int face_opacity;
-      bool list_radii;
-      bool list_struts;
+      vec3d list_radii_center;
+      int list_radii;
+      int list_struts;
       col_val cent_col;
       bool trans_to_origin;
 
+      bool verbose;
       double epsilon;
       vector<col_val> remove_vertex_color_list;
       
@@ -93,9 +95,10 @@ class lutil_opts: public prog_opts {
                     append_lattice(false),
                     color_method('\0'),
                     face_opacity(-1),
-                    list_radii(false),
-                    list_struts(false),
+                    list_radii(0),
+                    list_struts(0),
                     trans_to_origin(false),
+                    verbose(false),
                     epsilon(0) {}
 
       void process_command_line(int argc, char **argv);
@@ -116,6 +119,7 @@ void lutil_opts::usage()
 "Options\n"
 "%s"
 "  -h        this help message\n"
+"  -I        verbose output\n"
 "  -z        suppress stripping of faces\n"
 "  -x <colr> remove every vertex of color colr\n"
 "               use multiple -x parameters for multiple colors\n"
@@ -132,16 +136,19 @@ void lutil_opts::usage()
 "               c - cells only, i - cell(s) touching center only\n"
 "  -C <opt>  c - convex hull only, i - keep interior\n"
 "  -A        append the original lattice to the final product\n"
-"  -O        translate center of final product to origin\n"
-"  -Z <col>  add center vertex to final product in color col\n"
 "  -R <file> repeat off file at every vertex in lattice\n"
 "  -K        append cage of container of -k to final product\n"
+"  -Z <col>  add center vertex to final product in color col\n"
+"  -O        translate center of final product to origin\n"
 "  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\nListing Options\n"
-"  -L        list unique radial distances of points from center (and offset)\n"
-"  -S        list every possible strut value\n"
+"  -Q <vecs> center for radius calculations in -L (default: centroid)\n"
+"  -L <opt>  list unique radial distances of points\n"
+"               f - full report, v - values only (to stdout)\n"
+"  -S <opt>  list every possible strut value\n"
+"               f - full report, v - values only (to stdout)\n"
 "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
 "  -V <col>  vertex color, (optional) elements, (optional) opacity\n"
 "               elements to color are l - lattice  c - convex hull  v - voronoi\n"
@@ -183,11 +190,15 @@ void lutil_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hzx:X:c:k:r:q:s:D:C:AV:E:F:T:Z:KOR:LSl:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hIzx:X:c:k:r:q:s:D:C:AV:E:F:T:Z:KOR:Q:L:S:l:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
       switch(c) {
+         case 'I':
+            verbose = true;
+            break;
+
          case 'z':
             strip_faces = false;
             break;
@@ -531,12 +542,29 @@ void lutil_opts::process_command_line(int argc, char **argv)
             rfile = optarg;
             break;
 
+         case 'Q':
+            if(!list_radii_center.read(optarg, errmsg))
+               error(errmsg, c);
+            break;
+
          case 'L':
-            list_radii = true;
+            if(strlen(optarg) > 1 || !strchr("fv", *optarg))
+               error("list radii arg is '"+string(optarg)+"' must be f or v", c);
+            if(strchr("f", *optarg))
+               list_radii = 1;
+            else
+            if(strchr("v", *optarg))
+               list_radii = 2;
             break;
 
          case 'S':
-            list_struts = true;
+            if(strlen(optarg) > 1 || !strchr("fv", *optarg))
+               error("list struts arg is '"+string(optarg)+"' must be f or v", c);
+            if(strchr("f", *optarg))
+               list_struts = 1;
+            else
+            if(strchr("v", *optarg))
+               list_struts = 2;
             break;
             
          case 'l':
@@ -621,10 +649,10 @@ void process_lattices(col_geom_v &geom, col_geom_v &container, const col_geom_v 
       opts.radius = lattice_radius(geom, opts.radius_default);
       
    if(opts.cfile.length())
-      geom_container_clip(geom, container, (opts.radius_default == 'k') ? lattice_radius(container,opts.radius_default) : opts.radius, opts.offset, opts.epsilon);
+      geom_container_clip(geom, container, (opts.radius_default == 'k') ? lattice_radius(container,opts.radius_default) : opts.radius, opts.offset, opts.verbose, opts.epsilon);
    else
    if (opts.container == 's')
-      geom_spherical_clip(geom, opts.radius, opts.offset, opts.epsilon);
+      geom_spherical_clip(geom, opts.radius, opts.offset, opts.verbose, opts.epsilon);
 
    if(opts.voronoi_cells) {
       col_geom_v vgeom;
@@ -641,7 +669,7 @@ void process_lattices(col_geom_v &geom, col_geom_v &container, const col_geom_v 
          fprintf(stderr,"%s\n",errmsg);
       else {
          geom.orient();
-         if (true) // verbosity
+         if (opts.verbose)
             convex_hull_report(geom, opts.add_hull);
          geom.color_vef(opts.vert_col[1], opts.edge_col[1], opts.face_col[1]);
       }
@@ -659,20 +687,7 @@ void process_lattices(col_geom_v &geom, col_geom_v &container, const col_geom_v 
    // if color by sqrt was used, override all edges of all structure
    if (opts.color_edges_by_sqrt)
       color_edges_by_sqrt(geom, opts.color_edges_by_sqrt);
-   
-   if (opts.trans_to_origin)
-      geom.transform(mat3d::transl(-centroid(geom.verts())));
 
-   if (opts.list_radii)
-      list_grid_radii(geom, opts.offset, opts.epsilon);
-
-   if (opts.list_struts)
-      list_grid_struts(geom, opts.epsilon);
-
-   // add central vertex last so not to alter listing outcomes
-   if (opts.cent_col.is_set())
-      color_centroid(geom, opts.cent_col, opts.epsilon);
-      
    // place geom at every vertex in lattice
    if(opts.rfile.length()) {
       col_geom_v geom2;
@@ -684,12 +699,24 @@ void process_lattices(col_geom_v &geom, col_geom_v &container, const col_geom_v 
       geom = geom2;
       sort_merge_elems(geom, "vef", opts.epsilon);
    }
+
+   if (opts.list_radii)
+      list_grid_radii(geom, opts.list_radii_center, opts.list_radii, opts.epsilon);
+
+   if (opts.list_struts)
+      list_grid_struts(geom, opts.list_struts, opts.epsilon);
    
    if (opts.append_container) {
       container.add_missing_impl_edges();
       container.clear_faces();
       geom.append(container);
    }
+
+   if (opts.cent_col.is_set())
+      color_centroid(geom, opts.cent_col, opts.epsilon);
+
+   if (opts.trans_to_origin)
+      geom.transform(mat3d::transl(-centroid(geom.verts())));
 }
 
 int main(int argc, char *argv[])
@@ -729,8 +756,9 @@ int main(int argc, char *argv[])
    
    process_lattices(geoms, container, repeater, opts);
 
-   if(!geoms.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+   if (!opts.list_radii && !opts.list_struts)
+      if(!geoms.write(opts.ofile, errmsg))
+         opts.error(errmsg);
    
    return 0;
 }

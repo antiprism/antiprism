@@ -202,7 +202,7 @@ double lattice_radius(const geom_if &geom, const char &radius_type)
    return radius;
 }
 
-void geom_container_clip(col_geom_v &geom, col_geom_v &container, const double &radius, const vec3d &offset, double eps)
+void geom_container_clip(col_geom_v &geom, col_geom_v &container, const double &radius, const vec3d &offset, bool &verbose, double eps)
 {
    // container has to be convex and 3 dimensional
    char errmsg[MSG_SZ]=""; 
@@ -222,7 +222,8 @@ void geom_container_clip(col_geom_v &geom, col_geom_v &container, const double &
    if (offset.is_set())
       grid_cent += offset;
 
-   fprintf(stderr,"info: radius = %g (square root of %g)\n",radius,radius*radius);
+   if (verbose)
+      fprintf(stderr,"info: radius = %g (square root of %g)\n",radius,radius*radius);
 
    // translate container to center of grid
    vec3d container_cent = centroid(container.verts());
@@ -242,19 +243,20 @@ void geom_container_clip(col_geom_v &geom, col_geom_v &container, const double &
       fprintf(stderr,"bravais_container_clip: warning: all vertices were clipped out!\n");
 }
 
-void geom_spherical_clip(col_geom_v &geom, const double &radius, const vec3d &offset, double eps)
+void geom_spherical_clip(col_geom_v &geom, const double &radius, const vec3d &offset, bool &verbose, double eps)
 {
    const vector<vec3d> &verts = geom.verts();
    vec3d cent = centroid(verts);
    if (offset.is_set())
       cent += offset;
 
-   fprintf(stderr,"info: radius = %g (square root of %g)\n",radius,radius*radius);
+   if (verbose)
+      fprintf(stderr,"info: radius = %g (square root of %g)\n",radius,radius*radius);
 
    vector<int> del_verts;
    for(unsigned int i=0; i<verts.size(); i++) {
       double len = (cent-verts[i]).mag();
-      if (double_ne(len, radius, eps) && len > radius)
+      if (double_gt(len, radius, eps))
          del_verts.push_back(i);
    }
 
@@ -265,12 +267,12 @@ void geom_spherical_clip(col_geom_v &geom, const double &radius, const vec3d &of
       fprintf(stderr,"bravais_spherical_clip: warning: all vertices were clipped out!\n");
 }
 
-void list_grid_radii(const col_geom_v &geom, const vec3d &offset, double eps)
+void list_grid_radii(const col_geom_v &geom, const vec3d &list_radii_center, int report_type, double eps)
 {
    const vector<vec3d> &verts = geom.verts();
-   vec3d cent = centroid(verts);
-   if (offset.is_set())
-      cent += offset;
+   vec3d cent = list_radii_center;
+   if (!cent.is_set())
+      cent = centroid(verts);
 
    vector<double> radii;
    for(unsigned int i=0;i<verts.size();i++)
@@ -289,27 +291,39 @@ void list_grid_radii(const col_geom_v &geom, const vec3d &offset, double eps)
    int occur = 1;
    int rank = 1;
 
-   fprintf(stderr,"\nList of unique radial distances from center (and offset) in grid\n\n");
+   if (report_type == 1) {
+      fprintf(stderr,"\nList of unique radial distances from center (and offset) in grid\n\n");
 
-   fprintf(stderr,"Rank\tDistance\tD Squared\tOccurrence\n");
-   fprintf(stderr,"----\t--------\t---------\t----------\n");
+      fprintf(stderr,"Rank\tDistance\tD Squared\tOccurrence\n");
+      fprintf(stderr,"----\t--------\t---------\t----------\n");
+   }
    for(unsigned int i=start+1;i<radii.size();i++) {
       if (double_eq(radii[i], comp, eps))
          occur++;
       else {
          occur_total += occur;
-         fprintf(stderr,"%d\t%-8g\t%-8g\t%d\n",rank,comp,comp*comp,occur);
+         if (report_type == 1)
+            fprintf(stderr,"%d\t%-8g\t%-8g\t%d\n",rank,comp,comp*comp,occur);
+         else
+         if (report_type == 2)
+            fprintf(stdout,"%.17g\n",comp);
          comp = radii[i];
          occur = 1;
          rank++;
       }
    }
    occur_total += occur;
-   fprintf(stderr,"%d\t%-8g\t%-8g\t%d\n\n",rank,comp,comp*comp,occur);
-   fprintf(stderr,"Total occurrences = %d\n\n",occur_total);
+   if (report_type == 1)
+      fprintf(stderr,"%d\t%-8g\t%-8g\t%d\n\n",rank,comp,comp*comp,occur);
+   else
+   if (report_type == 2)
+      fprintf(stdout,"%.17g\n",comp);
+
+   if (report_type == 1)
+      fprintf(stderr,"Total occurrences = %d\n\n",occur_total);
 }
 
-void list_grid_struts(const col_geom_v &geom, double eps)
+void list_grid_struts(const col_geom_v &geom, int report_type, double eps)
 {
    const vector<vec3d> &verts = geom.verts();
 
@@ -331,24 +345,36 @@ void list_grid_struts(const col_geom_v &geom, double eps)
    int occur = 1;
    int rank = 1;
 
-   fprintf(stderr,"\nList of unique strut lengths in grid\n\n");
+   if (report_type == 1) {
+      fprintf(stderr,"\nList of unique strut lengths in grid\n\n");
 
-   fprintf(stderr,"Rank\tDistance\tD Squared\tOccurrence\n");
-   fprintf(stderr,"----\t--------\t---------\t----------\n");
+      fprintf(stderr,"Rank\tDistance\tD Squared\tOccurrence\n");
+      fprintf(stderr,"----\t--------\t---------\t----------\n");
+   }
    for(unsigned int i=start+1;i<struts.size();i++) {
       if (double_eq(struts[i], comp, eps))
          occur++;
       else {
          occur_total += occur;
-         fprintf(stderr,"%d\t%-8g\t%-8g\t%d\n",rank,comp,comp*comp,occur);
+         if (report_type == 1)
+            fprintf(stderr,"%d\t%-8g\t%-8g\t%d\n",rank,comp,comp*comp,occur);
+         else
+         if (report_type == 2)
+            fprintf(stdout,"%.17g\n",comp);
          comp = struts[i];
          occur = 1;
          rank++;
       }
    }
    occur_total += occur;
-   fprintf(stderr,"%d\t%-8g\t%-8g\t%d\n\n",rank,comp,comp*comp,occur);
-   fprintf(stderr,"Total occurrences = %d\n\n",occur_total);
+   if (report_type == 1)
+      fprintf(stderr,"%d\t%-8g\t%-8g\t%d\n\n",rank,comp,comp*comp,occur);
+   else
+   if (report_type == 2)
+      fprintf(stderr,"%.17g\n",comp);
+
+   if (report_type == 1)
+      fprintf(stderr,"Total occurrences = %d\n\n",occur_total);
 }
 
 void add_color_struts(col_geom_v &geom, const double &len2, col_val &edge_col, double eps)

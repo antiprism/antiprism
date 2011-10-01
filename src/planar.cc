@@ -147,7 +147,7 @@ void planar_opts::usage()
 "  -E <opt>  remove explicit edges and blend new ones using face colors (sets -S)\n"
 "               e - edges only  v - also blend vertices (default: none)\n"
 "               V - also blend invisible vertices  s - strip edges and vertices\n"
-"  -D        delete invisible faces created by modulo\n"
+"  -D        delete invisible faces created by winding rule\n"
 "  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
 "  -o <file> write output to file (default: write to standard output)\n"

@@ -118,11 +118,13 @@ class brav_opts: public prog_opts {
       int r_lattice_type;
 
       bool list_bravais;
-      bool list_radii;
-      bool list_struts;
+      vec3d list_radii_center;
+      int list_radii;
+      int list_struts;
 
       bool dual_lattice;
       
+      bool verbose;
       double epsilon;
       
       // 0 - lattice  1 - convex hull  2 - voronoi  3 - hex overlay
@@ -152,9 +154,10 @@ class brav_opts: public prog_opts {
                    trans_to_origin(false),
                    r_lattice_type(0),
                    list_bravais(false),
-                   list_radii(false),
-                   list_struts(false),
+                   list_radii(0),
+                   list_struts(0),
                    dual_lattice(false),
+                   verbose(false),
                    epsilon(0) {}
 
       void process_command_line(int argc, char **argv);
@@ -251,6 +254,7 @@ void brav_opts::usage()
 "\nOptions\n"
 "%s"
 "  -H        additional help\n"
+"  -I        verbose output\n"
 "  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
@@ -312,8 +316,10 @@ void brav_opts::usage()
 "  -K        append cage of container of -k to final product\n"
 "\nListing Options\n"
 "  -B        display the list of Bravais lattices\n"
-"  -L        list unique radial distances of points from center (and offset)\n"
-"  -S        list every possible strut value\n"
+"  -L <opt>  list unique radial distances of points from center (and offset)\n"
+"               f - full report, v - values only (to stdout)\n"
+"  -S <opt>  list every possible strut value\n"
+"               f - full report, v - values only (to stdout)\n"
 "\n"
 "\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }
@@ -344,7 +350,7 @@ void brav_opts::process_command_line(int argc, char **argv)
 
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hHc:k:r:p:q:s:uv:a:g:G:d:l:D:C:AV:E:F:T:Z:KOR:BLSo:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hHIc:k:r:p:q:s:uv:a:g:G:d:l:D:C:AV:E:F:T:Z:KOR:BQ:L:S:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -352,6 +358,10 @@ void brav_opts::process_command_line(int argc, char **argv)
          case 'H':
             extended_help();
             exit(0);
+
+         case 'I':
+            verbose = true;
+            break;
 
          case 'c':
             if(strlen(optarg) > 1 || !strchr("cs", *optarg))
@@ -789,12 +799,29 @@ void brav_opts::process_command_line(int argc, char **argv)
             list_bravais = true;
             break;
 
+         case 'Q':
+            if(!list_radii_center.read(optarg, errmsg))
+               error(errmsg, c);
+            break;
+
          case 'L':
-            list_radii = true;
+            if(strlen(optarg) > 1 || !strchr("fv", *optarg))
+               error("list radii arg is '"+string(optarg)+"' must be f or v", c);
+            if(strchr("f", *optarg))
+               list_radii = 1;
+            else
+            if(strchr("v", *optarg))
+               list_radii = 2;
             break;
 
          case 'S':
-            list_struts = true;
+            if(strlen(optarg) > 1 || !strchr("fv", *optarg))
+               error("list struts arg is '"+string(optarg)+"' must be f or v", c);
+            if(strchr("f", *optarg))
+               list_struts = 1;
+            else
+            if(strchr("v", *optarg))
+               list_struts = 2;
             break;
 
          case 'o':
@@ -1027,7 +1054,7 @@ void sort_three(double &x, double &y, double &z, vector<double> v)
    z = v[2];
 }
 
-int bravais_check(string &crystal_system, string &centering, vector<double> &vecs, vector<double> &angles, const int &strictness)
+int bravais_check(string &crystal_system, string &centering, vector<double> &vecs, vector<double> &angles, const int &strictness, bool verbose)
 {
 // strictness = 0 any change in crystal system allowed
 // strictness = 1 only upgrades in crystal system allowed
@@ -1150,7 +1177,8 @@ int bravais_check(string &crystal_system, string &centering, vector<double> &vec
       vecs.push_back(c);
    }
 
-   fprintf(stderr,"info: vector a = %g, b = %g, c = %g\n", vecs[0],vecs[1],vecs[2]);
+   if (verbose)
+      fprintf(stderr,"info: vector a = %g, b = %g, c = %g\n", vecs[0],vecs[1],vecs[2]);
 
    double alpha = 0;
    double beta = 0;
@@ -1161,6 +1189,9 @@ int bravais_check(string &crystal_system, string &centering, vector<double> &vec
 
    // fixed angle cases, otherwise if not given, random angles assigned
    if (angle_rule[crystal_system_index] == 3) {
+fprintf(stderr,"alpha = %g  beta = %g  gamma = %g\n",alpha,beta,gamma);
+      if ((alpha && alpha != 90.0) || (beta && beta != 90.0) || (gamma && gamma != 90.0)) 
+         fprintf(stderr,"warning: for crystal system %s, alpha, beta and gamma must be 90 degrees. -a ignored\n",crystal_system.c_str());
       alpha = 90;
       beta = 90;
       gamma = 90;
@@ -1172,6 +1203,7 @@ int bravais_check(string &crystal_system, string &centering, vector<double> &vec
    else
    // hexagonal, 120 can be in any position (alpha, beta, gamma are sorted order)
    if (angle_rule[crystal_system_index] == 5 && !(alpha == 90 && beta == 90 && gamma == 120)) {
+      fprintf(stderr,"warning: for crystal system %s, of alpha, beta and gamma, two values must be 90 degrees and one value 120 degrees. -a ignored\n",crystal_system.c_str());
       alpha = 90;
       beta = 90;
       gamma = 120;
@@ -1214,10 +1246,11 @@ int bravais_check(string &crystal_system, string &centering, vector<double> &vec
       angles.push_back(beta);
       angles.push_back(gamma);
 
-      fprintf(stderr,"info: RANDOM angles generated\n");
+      fprintf(stderr,"warning: RANDOM angles generated\n");
    }
 
-   fprintf(stderr,"info: angles alpha = %5.5g, beta = %5.5g, gamma = %5.5g\n", angles[0],angles[1],angles[2]);
+   if (verbose)
+      fprintf(stderr,"info: angles alpha = %5.5g, beta = %5.5g, gamma = %5.5g\n", angles[0],angles[1],angles[2]);
 
    // for evaulation, sort vector lengths and angles, low to high (if parameters are set)
    sort_three(a,b,c,vecs);
@@ -1724,7 +1757,7 @@ void bravais_dual(col_geom_v &geom, const vector<vec3d> &primitive_vectors, cons
 void do_bravais(col_geom_v &geom, col_geom_v &container, brav_opts &opts)
 {      
    int strictness = 0;
-   if (!bravais_check(opts.crystal_system, opts.centering, opts.vecs, opts.angles, strictness))
+   if (!bravais_check(opts.crystal_system, opts.centering, opts.vecs, opts.angles, strictness, opts.verbose))
       return;
 
    // if hexagonal/cubic fill option, force struts and colors for cage
@@ -1807,10 +1840,12 @@ void do_bravais(col_geom_v &geom, col_geom_v &container, brav_opts &opts)
       // translate grid into the positive realm
       geom.transform(mat3d::transl(vec3d(1,1,1)));
 
-   fprintf(stderr,"info: grid size is %d x %d x %d",opts.grid[0], opts.grid[1], opts.grid[2]);
-   if (opts.auto_grid_type == '8')
-      fprintf(stderr," (clipped to: %d.5 x %d.5 x %d.5)",opts.grid[0]-1, opts.grid[1]-1, opts.grid[2]-1);
-   fprintf(stderr,"\n");
+   if (opts.verbose) {
+      fprintf(stderr,"info: grid size is %d x %d x %d",opts.grid[0], opts.grid[1], opts.grid[2]);
+      if (opts.auto_grid_type == '8')
+         fprintf(stderr," (clipped to: %d.5 x %d.5 x %d.5)",opts.grid[0]-1, opts.grid[1]-1, opts.grid[2]-1);
+      fprintf(stderr,"\n");
+   }
 
    // if hexagonal/cubic fill option, position for true scale and warp
    if (opts.r_lattice_type == 2 || opts.r_lattice_type == 4) {
@@ -1864,11 +1899,11 @@ void do_bravais(col_geom_v &geom, col_geom_v &container, brav_opts &opts)
       opts.radius = bravais_radius(opts.grid, opts.vecs, opts.angles, opts.radius_default);
 
    if(opts.cfile.length() > 0) {
-      geom_container_clip(geom, container, (opts.radius_default == 'k') ? lattice_radius(container,opts.radius_default) : opts.radius, opts.offset, opts.epsilon);
+      geom_container_clip(geom, container, (opts.radius_default == 'k') ? lattice_radius(container,opts.radius_default) : opts.radius, opts.offset, opts.verbose, opts.epsilon);
    }
    else
    if (opts.container == 's') {
-      geom_spherical_clip(geom, opts.radius, opts.offset, opts.epsilon);
+      geom_spherical_clip(geom, opts.radius, opts.offset, opts.verbose, opts.epsilon);
    }
 
    if(opts.voronoi_cells) {
@@ -1886,7 +1921,7 @@ void do_bravais(col_geom_v &geom, col_geom_v &container, brav_opts &opts)
          fprintf(stderr,"%s\n",errmsg);
       else {
          geom.orient();
-         if (true) // verbosity
+         if (opts.verbose)
             convex_hull_report(geom, opts.add_hull);
          geom.color_vef(opts.vert_col[1], opts.edge_col[1], opts.face_col[1]);
       }
@@ -1904,10 +1939,10 @@ void do_bravais(col_geom_v &geom, col_geom_v &container, brav_opts &opts)
       geom.transform(mat3d::transl(-centroid(geom.verts())));
 
    if (opts.list_radii)
-      list_grid_radii(geom, opts.offset, opts.epsilon);
+      list_grid_radii(geom, opts.list_radii_center, opts.list_radii, opts.epsilon);
 
    if (opts.list_struts)
-      list_grid_struts(geom, opts.epsilon);
+      list_grid_struts(geom, opts.list_struts, opts.epsilon);
 
    // last so not to alter listing outcomes
    if (opts.cent_col.is_set())
@@ -1982,8 +2017,9 @@ int main(int argc, char **argv)
    if (opts.centering == "a" || opts.centering == "b")
       centering_print_str = "c(" + opts.centering + ")";
 
-   fprintf(stderr,
-      "%2d)\t%-s %s\n", sym_no+1, crystal_system_print_str.c_str(), centering_print_str.c_str());
+   if (opts.verbose)
+      fprintf(stderr,
+         "%2d)\t%-s %s\n", sym_no+1, crystal_system_print_str.c_str(), centering_print_str.c_str());
 
    if (opts.auto_grid_type == '8' && opts.centering == "p")
       opts.error("grid type of 8 cannot be used with primitive (simple) bravais cells", 'G');
@@ -1996,9 +2032,10 @@ int main(int argc, char **argv)
 
    col_geom_v geom;
    do_bravais(geom, container, opts);
-   
-   if(!geom.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+
+   if (!opts.list_radii && !opts.list_struts)   
+      if(!geom.write(opts.ofile, errmsg))
+         opts.error(errmsg);
 
    return 0;  
 }
