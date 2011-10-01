@@ -119,6 +119,7 @@ class brav_opts: public prog_opts {
 
       bool list_bravais;
       vec3d list_radii_center;
+      char list_radii_original_center;
       int list_radii;
       int list_struts;
 
@@ -154,6 +155,7 @@ class brav_opts: public prog_opts {
                    trans_to_origin(false),
                    r_lattice_type(0),
                    list_bravais(false),
+                   list_radii_original_center('\0'),
                    list_radii(0),
                    list_struts(0),
                    dual_lattice(false),
@@ -316,7 +318,9 @@ void brav_opts::usage()
 "  -K        append cage of container of -k to final product\n"
 "\nListing Options\n"
 "  -B        display the list of Bravais lattices\n"
-"  -L <opt>  list unique radial distances of points from center (and offset)\n"
+"  -Q <vecs> center for radius calculations in -L (default: centroid)\n"
+"               c - original center, o - original center + offset in -q\n"
+"  -L <opt>  list unique radial distances of points\n"
 "               f - full report, v - values only (to stdout)\n"
 "  -S <opt>  list every possible strut value\n"
 "               f - full report, v - values only (to stdout)\n"
@@ -800,6 +804,13 @@ void brav_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'Q':
+            if(strlen(optarg)==1) {
+               if(strchr("co", *optarg))
+                  list_radii_original_center = *optarg;
+               else
+                  error("invalid option", c);
+            }
+            else
             if(!list_radii_center.read(optarg, errmsg))
                error(errmsg, c);
             break;
@@ -1189,7 +1200,6 @@ int bravais_check(string &crystal_system, string &centering, vector<double> &vec
 
    // fixed angle cases, otherwise if not given, random angles assigned
    if (angle_rule[crystal_system_index] == 3) {
-fprintf(stderr,"alpha = %g  beta = %g  gamma = %g\n",alpha,beta,gamma);
       if ((alpha && alpha != 90.0) || (beta && beta != 90.0) || (gamma && gamma != 90.0)) 
          fprintf(stderr,"warning: for crystal system %s, alpha, beta and gamma must be 90 degrees. -a ignored\n",crystal_system.c_str());
       alpha = 90;
@@ -1874,6 +1884,9 @@ void do_bravais(col_geom_v &geom, col_geom_v &container, brav_opts &opts)
 
    bravais_scale(geom, opts.vecs, false);
    bravais_warp(geom, opts.angles, false);
+
+   // save original center
+   vec3d original_center = centroid(geom.verts());
    
    // save lattice in case if adding back in end
    col_geom_v tgeom;
@@ -1898,6 +1911,7 @@ void do_bravais(col_geom_v &geom, col_geom_v &container, brav_opts &opts)
    if (!opts.radius)
       opts.radius = bravais_radius(opts.grid, opts.vecs, opts.angles, opts.radius_default);
 
+   // scoop
    if(opts.cfile.length() > 0) {
       geom_container_clip(geom, container, (opts.radius_default == 'k') ? lattice_radius(container,opts.radius_default) : opts.radius, opts.offset, opts.verbose, opts.epsilon);
    }
@@ -1938,8 +1952,14 @@ void do_bravais(col_geom_v &geom, col_geom_v &container, brav_opts &opts)
    if (opts.trans_to_origin)
       geom.transform(mat3d::transl(-centroid(geom.verts())));
 
-   if (opts.list_radii)
+   if (opts.list_radii) {
+      if (opts.list_radii_original_center) {
+         opts.list_radii_center = original_center;
+         if (opts.list_radii_original_center == 'o')
+            opts.list_radii_center += opts.offset;
+      }
       list_grid_radii(geom, opts.list_radii_center, opts.list_radii, opts.epsilon);
+   }
 
    if (opts.list_struts)
       list_grid_struts(geom, opts.list_struts, opts.epsilon);

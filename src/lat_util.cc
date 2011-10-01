@@ -66,6 +66,7 @@ class lutil_opts: public prog_opts {
       char color_method;
       int face_opacity;
       vec3d list_radii_center;
+      char list_radii_original_center;
       int list_radii;
       int list_struts;
       col_val cent_col;
@@ -95,6 +96,7 @@ class lutil_opts: public prog_opts {
                     append_lattice(false),
                     color_method('\0'),
                     face_opacity(-1),
+                    list_radii_original_center('\0'),
                     list_radii(0),
                     list_struts(0),
                     trans_to_origin(false),
@@ -145,6 +147,7 @@ void lutil_opts::usage()
 "  -o <file> write output to file (default: write to standard output)\n"
 "\nListing Options\n"
 "  -Q <vecs> center for radius calculations in -L (default: centroid)\n"
+"               c - original center, o - original center + offset in -q\n"
 "  -L <opt>  list unique radial distances of points\n"
 "               f - full report, v - values only (to stdout)\n"
 "  -S <opt>  list every possible strut value\n"
@@ -543,6 +546,13 @@ void lutil_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'Q':
+            if(strlen(optarg)==1) {
+               if(strchr("co", *optarg))
+                  list_radii_original_center = *optarg;
+               else
+                  error("invalid option", c);
+            }
+            else
             if(!list_radii_center.read(optarg, errmsg))
                error(errmsg, c);
             break;
@@ -631,6 +641,9 @@ void process_lattices(col_geom_v &geom, col_geom_v &container, const col_geom_v 
 {
    // add explicit edges and remove faces if necessary
    make_skeleton(geom, opts.strip_faces);
+
+   // save original center
+   vec3d original_center = centroid(geom.verts());
    
    // save lattice in case if adding back in end
    col_geom_v tgeom;
@@ -647,7 +660,8 @@ void process_lattices(col_geom_v &geom, col_geom_v &container, const col_geom_v 
       
    if (!opts.radius && opts.radius_default != 'k')
       opts.radius = lattice_radius(geom, opts.radius_default);
-      
+
+   // scoop
    if(opts.cfile.length())
       geom_container_clip(geom, container, (opts.radius_default == 'k') ? lattice_radius(container,opts.radius_default) : opts.radius, opts.offset, opts.verbose, opts.epsilon);
    else
@@ -700,8 +714,14 @@ void process_lattices(col_geom_v &geom, col_geom_v &container, const col_geom_v 
       sort_merge_elems(geom, "vef", opts.epsilon);
    }
 
-   if (opts.list_radii)
+   if (opts.list_radii) {
+      if (opts.list_radii_original_center) {
+         opts.list_radii_center = original_center;
+         if (opts.list_radii_original_center == 'o')
+            opts.list_radii_center += opts.offset;
+      }
       list_grid_radii(geom, opts.list_radii_center, opts.list_radii, opts.epsilon);
+   }
 
    if (opts.list_struts)
       list_grid_struts(geom, opts.list_struts, opts.epsilon);
