@@ -1,7 +1,7 @@
 NEWS for Antiprism: http://www.antiprism.com
 
 Version 0.20
-xx-xx-10 Adrian Rossiter <adrian@antiprism.com>
+xx-xx-11 Adrian Rossiter <adrian@antiprism.com>
          New Programs
            lat_util: new program for lattice utilities (by Roger
              Kaufman)
@@ -11,9 +11,9 @@ xx-xx-10 Adrian Rossiter <adrian@antiprism.com>
            poly_kscope: new options, -c colours a compound by part,
              -S uses the symmetries of another polyhedron, -t tests
              the symmetry type by repeating an arrow
-           off_report: new reports -S s symmetry, -C h for heights
+           off_report: new options, -S s symmetry -C h hts, -C O orbits
            off_query: new query EC for edge centroids
-           off_trans: new option -P aligns to standard symmetry type,
+           off_trans: new options -Y, -y symmetry alignment,
              rotate a pair of vectors onto another moved from -A to -R
            off_util: new optionis: -H for general help; -u to unfold a
               polyhedron net; -x V deletes free vertices; -D deletes
