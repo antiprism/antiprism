@@ -292,7 +292,12 @@ void list_grid_radii(const col_geom_v &geom, const vec3d &list_radii_center, int
    int rank = 1;
 
    if (report_type == 1) {
-      fprintf(stderr,"\nList of unique radial distances from center (and offset) in grid\n\n");
+      char buffer[80];
+      if (!list_radii_center.is_set())
+         sprintf(buffer,"centroid");
+      else
+         sprintf(buffer,"%g,%g,%g",list_radii_center[0],list_radii_center[1],list_radii_center[2]);
+      fprintf(stderr,"\nList of unique radial distances in grid using center: %s\n\n",buffer);
 
       fprintf(stderr,"Rank\tDistance\tD Squared\tOccurrence\n");
       fprintf(stderr,"----\t--------\t---------\t----------\n");
