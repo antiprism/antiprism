@@ -606,6 +606,14 @@ int main(int argc, char *argv[])
    if(opts.extra_ideal_elems)
       add_extra_ideal_elems(dual, centre, 1.005*opts.inf);
 
+   map<int, col_val>::const_iterator mi;
+   for(mi=dual.face_cols().begin(); mi!=dual.face_cols().end(); ++mi)
+      if(mi->second.is_inv()) {
+         opts.warning("dual includes invisible faces (base model included "
+               "invisible vertices)");
+         break;
+      }
+
    dual.orient();
    if(opts.append)
       geom.append(dual);
