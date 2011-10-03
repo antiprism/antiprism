@@ -293,23 +293,22 @@ void brav_opts::usage()
 "  -c <type> container, c - cube (default), s - sphere (uses radius)\n"
 "  -k <file> container is convex hull of off file or built in model (uses radius)\n"
 "  -r <c,n>  radius. c is radius taken to optional root n. n = 2 is sqrt\n"
-"               or  l - max insphere radius  s - min insphere radius (default: s)\n"
+"               or  l - max insphere radius, s - min insphere radius (default)\n"
 "               or  k - take radius from container specified by -k\n"
 "  -p <xyz>  radius to lattice point \"x_val,y_val,z_val\"\n"
 "  -q <vecs> center offset, in form \"a_val,b_val,c_val\" (default: none)\n"
 "  -C <opt>  c - convex hull only, i - keep interior\n"
 "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
-"  -V <col>  vertex color, (optional) elements, (optional) opacity\n"
-"               elements to color are l - lattice  c - convex hull  v - voronoi\n"
+"  -V <col>  vertex color, (optional) elements, (optional) transparency\n"
+"               elements to color are l - lattice, c - convex hull, v - voronoi\n"
 "                                     h - hex relation (default elements: lcvh)\n"
-"               opacity valid range from 0 to 255\n"
-"                  0 - invisible  255 - opaque (default: 255)\n"
+"               transparency. valid range from 0 (invisible) to 255 (opaque)\n"
 "  -E <col>  edge color (same format as for vertices)\n"
 "  -F <col>  face color (same format as for vertices)\n"
 "               lower case outputs map indexes. upper case outputs color values\n"
 "               key word: s,S color by symmetry using face normals\n"
 "               key word: c,C color by symmetry using face normals (chiral)\n"
-"  -T <tran> face opacity for color by symmetry. valid range from 0 to 255\n"
+"  -T <tran> face transparency for color by symmetry. valid range from 0 to 255\n"
 "\nScene Options\n"
 "  -R <opt>  hexagonal/cubic relation (Cubic P or Trigonal only)\n"
 "               o - hex overlay, f - hex fill, O - cube overlay, F - cube fill\n"
@@ -604,7 +603,7 @@ void brav_opts::process_command_line(int argc, char **argv)
                opq = atoi(parts[next_parms_idx+1]);
                
             if (opq < 0 || opq > 255)
-               error("opacity value must be between 0 and 255", c);
+               error("transparency value must be between 0 and 255", c);
 
             for(int i=0; i<4; i++) {
               if(conv_elems & (1<<i)) {
@@ -674,7 +673,7 @@ void brav_opts::process_command_line(int argc, char **argv)
                opq = atoi(parts[next_parms_idx+1]);
                
             if (opq < 0 || opq > 255)
-               error("opacity value must be between 0 and 255", c);
+               error("transparency value must be between 0 and 255", c);
 
             for(int i=0; i<4; i++) {
               if(conv_elems & (1<<i)) {
@@ -749,7 +748,7 @@ void brav_opts::process_command_line(int argc, char **argv)
                opq = atoi(parts[next_parms_idx+1]);
                
             if (opq < 0 || opq > 255)
-               error("opacity value must be between 0 and 255", c);
+               error("transparency value must be between 0 and 255", c);
 
             for(int i=0; i<4; i++) {
                if(conv_elems & (1<<i)) {

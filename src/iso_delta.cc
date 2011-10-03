@@ -503,8 +503,7 @@ void id_opts::usage()
 "              key word: none - sets no color (default: c)\n"
 "              c - unique coloring for each constituent\n"
 "              s - symmetric colouring (should always be one color)\n"
-"  -T <tran> face transparency for color values. valid range from 0 to 255\n"
-"               0 - invisible  255 - opaque (default: 255)\n"
+"  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
 "  -m <maps> color maps for all elements to be tried in turn (default: compound)\n"
 "\n"
 "\n", prog_name(), help_ver_text);
