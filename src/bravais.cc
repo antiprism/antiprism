@@ -291,7 +291,7 @@ void brav_opts::usage()
 "  -A        append the original lattice to the final product\n"
 "\nContainer Options\n"
 "  -c <type> container, c - cube (default), s - sphere (uses radius)\n"
-"  -k <file> container is convex hull of off file or built in model (uses radius)\n"
+"  -k <file> container, convex hull of off file or built in model (uses radius)\n"
 "  -r <c,n>  radius. c is radius taken to optional root n. n = 2 is sqrt\n"
 "               or  l - max insphere radius, s - min insphere radius (default)\n"
 "               or  k - take radius from container specified by -k\n"

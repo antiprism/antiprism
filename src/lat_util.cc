@@ -127,7 +127,7 @@ void lutil_opts::usage()
 "               use multiple -x parameters for multiple colors\n"
 "  -X <colr> remove every vertex NOT of color colr\n"
 "  -c <type> container, c - cube (default), s - sphere (uses radius)\n"
-"  -k <file> container using convex polyhedron in off file (uses radius)\n"
+"  -k <file> container, convex hull of off file or built in model (uses radius)\n"
 "  -r <c,n>  radius. c is radius taken to optional root n. n = 2 is sqrt\n"
 "               or  l - max insphere radius, s - min insphere radius (default)\n"
 "               or  k - take radius from container specified by -k\n"
