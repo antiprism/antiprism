@@ -337,6 +337,8 @@ void geom_info::find_dihedral_angles()
 void geom_info::find_vert_cons()
 {
    vert_cons.resize(num_verts(), vector<int>());
+   if(!num_faces())
+      return;
    geom_v &dual = get_dual();
 
    vector<int> del_faces;
