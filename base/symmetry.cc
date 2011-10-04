@@ -1386,9 +1386,11 @@ sch_sym sch_sym::get_sub_sym(const sch_sym &sub_sym, int conj_type,char *errmsg)
       ++si;
    }
    if(conj<0 && errmsg)
-      sprintf(errmsg, "not a sub-symmetry");
+      sprintf(errmsg, "%s is not a sub-symmetry of %s",
+            sub_sym.get_symbol().c_str(), get_symbol().c_str());
    else if(si==sub_syms.end() && errmsg)
-      sprintf(errmsg, "conjugation type too large (last number: %d)", conj);
+      sprintf(errmsg, "conjugation type too large for %s (last number: %d)",
+            sub_sym.get_symbol().c_str(), conj);
 
    return sch_sym(sch_sym::unknown);
 }
