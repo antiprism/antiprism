@@ -127,9 +127,9 @@ void lutil_opts::usage()
 "               use multiple -x parameters for multiple colors\n"
 "  -X <colr> remove every vertex NOT of color colr\n"
 "  -c <type> container, c - cube (default), s - sphere (uses radius)\n"
-"  -k <file> container using convex polyhedron in off file (uses radius)\n"
+"  -k <file> container, convex hull of off file or built in model (uses radius)\n"
 "  -r <c,n>  radius. c is radius taken to optional root n. n = 2 is sqrt\n"
-"               or  l - max insphere radius  s - min insphere radius (default: s)\n"
+"               or  l - max insphere radius, s - min insphere radius (default)\n"
 "               or  k - take radius from container specified by -k\n"
 "  -q <vecs> center offset, in form \"a_val,b_val,c_val\" (default: none)\n"
 "  -s <s,n>  create struts. s is strut length taken to optional root n\n"
@@ -153,18 +153,17 @@ void lutil_opts::usage()
 "  -S <opt>  list every possible strut value\n"
 "               f - full report, v - values only (to stdout)\n"
 "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
-"  -V <col>  vertex color, (optional) elements, (optional) opacity\n"
-"               elements to color are l - lattice  c - convex hull  v - voronoi\n"
+"  -V <col>  vertex color, (optional) elements, (optional) transparency\n"
+"               elements to color are l - lattice, c - convex hull, v - voronoi\n"
 "                  (default elements: lcv)\n"
-"               opacity valid range from 0 to 255\n"
-"                  0 - invisible  255 - opaque (default: 255)\n"
+"               transparency. valid range from 0 (invisible) to 255 (opaque)\n"
 "  -E <col>  edge color (for struts, convex hulls, and voronoi)\n"
 "               lower case outputs map indexes. upper case outputs color values\n"
 "               key word: r,R for color edges by root value of final product\n"
 "  -F <col>  face color (for convex hulls and voronoi)\n"
 "               key word: s,S color by symmetry using face normals\n"
 "               key word: c,C color by symmetry using face normals (chiral)\n"
-"  -T <tran> face opacity for color by symmetry. valid range from 0 to 255\n"
+"  -T <tran> face transparency for color by symmetry. valid range from 0 to 255\n"
 "\n"
 "\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }
@@ -357,7 +356,7 @@ void lutil_opts::process_command_line(int argc, char **argv)
                opq = atoi(parts[next_parms_idx+1]);
                
             if (opq < 0 || opq > 255)
-               error("opacity value must be between 0 and 255", c);
+               error("transparency value must be between 0 and 255", c);
 
             for(int i=0; i<3; i++) {
               if(conv_elems & (1<<i)) {
@@ -432,7 +431,7 @@ void lutil_opts::process_command_line(int argc, char **argv)
                opq = atoi(parts[next_parms_idx+1]);
                
             if (opq < 0 || opq > 255)
-               error("opacity value must be between 0 and 255", c);
+               error("tranparency value must be between 0 and 255", c);
 
             for(int i=0; i<3; i++) {
               if(conv_elems & (1<<i)) {
@@ -507,7 +506,7 @@ void lutil_opts::process_command_line(int argc, char **argv)
                opq = atoi(parts[next_parms_idx+1]);
                
             if (opq < 0 || opq > 255)
-               error("opacity value must be between 0 and 255", c);
+               error("transparency value must be between 0 and 255", c);
 
             for(int i=0; i<3; i++) {
               if(conv_elems & (1<<i)) {
