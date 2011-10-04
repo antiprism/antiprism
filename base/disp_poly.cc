@@ -1318,6 +1318,8 @@ void view_opts::set_view_vals(scene &scen)
       scen.get_geoms()[i].get_disps()[0]->
          v().set_size(scen.get_geoms()[0].get_disps()[0]->get_vert_rad());
    }
+   if(scen.get_width()<epsilon)
+      warning("scene width is zero and may not be displayed correctly");
 }
    
 const char *view_opts::help_view_text =
