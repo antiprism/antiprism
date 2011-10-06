@@ -1707,12 +1707,12 @@ sch_sym_autos::sch_sym_autos(const sch_sym &sym)
             visit_idxs[sz-j-1]++;
          }
    }
-   
-   if(type==sch_sym::Ch)
+
+   if(type==sch_sym::S || type==sch_sym::Ch)
       free_vars = FREE_ROT_PRINCIPAL;
    if(type==sch_sym::Cv)
       free_vars = FREE_TRANSL_PRINCIPAL;
-   else if(type==sch_sym::S ||  type==sch_sym::C)
+   else if(type==sch_sym::C)
       free_vars = FREE_ROT_PRINCIPAL | FREE_TRANSL_PRINCIPAL; 
    else if(type==sch_sym::Cs)
       free_vars = FREE_ROT_PRINCIPAL | FREE_TRANSL_PLANE; 
@@ -1873,8 +1873,8 @@ bool sch_sym_autos::set_realignment(const char *realign, char *errmsg)
       *p = '\0';                 // terminator at first ':'
    
    bool valid = true;
-   int type;
-   if(p && p <= realign_cpy+1)        // empty, so set default of 0
+   int type=0;
+   if(*realign=='\0' || (p && p == realign_cpy)) // empty, so set default of 0
       type = 0;
    else {
       if(!read_int(realign_cpy, &type, errmsg2)) {
@@ -1904,8 +1904,24 @@ bool sch_sym_autos::set_realignment(const char *realign, char *errmsg)
 
    int vars_sz = vars.size();
    if(vars_sz && vars_sz!=rot_cnt && vars_sz!=rot_cnt+transl_cnt) {
-      if(errmsg)
-         snprintf(errmsg, MSG_SZ, "free variable list: %d numbers given, must give %d (rotation) or %d (rotation and translation) colon separated numbers", vars.size(), rot_cnt, rot_cnt+transl_cnt);
+      if(errmsg) {
+         string msg = msg_str("free variable list: %d numbers given",
+               vars.size());
+         if(rot_cnt+transl_cnt==0)
+            msg += " but there are no free variables";
+         else if(rot_cnt>0 && transl_cnt>0)
+            msg += msg_str(", must give %d (rotation) or %d (rotation then "
+                  "translation) colon separated numbers",
+                  rot_cnt, rot_cnt+transl_cnt);
+         else if(rot_cnt>0)
+            msg += msg_str(", must give %d (rotation) colon separated numbers",
+                  rot_cnt);
+         else //(transl_cnt>0)
+            msg += msg_str(", must give %d (translation) colon separated "
+                  "numbers", rot_cnt);
+
+         strncpy(errmsg, msg.c_str(), MSG_SZ);
+      }
       return false;
    }
 
