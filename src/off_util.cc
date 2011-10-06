@@ -101,7 +101,8 @@ void pr_opts::usage()
 "%s"
 "  -M <elms> Sort and merge elements whose coordinates are the same to\n"
 "            the number of decimal places given by option -l, elems can\n"
-"            include v - vertice  e - edges  f - faces  a - all\n"
+"            include: v - vertices, e - edges, f - faces,  a - all (vef),\n"
+"            b - bond (merge 've' and delete any face coincident with another),\n"
 "            s - sort without merging\n"
 "  -b <opt>  merge blend color. first=1  last=2  rgb=3  ryb=4 (default: 1)\n"
 "  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
@@ -296,8 +297,8 @@ void pr_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'M':
-            if(strspn(optarg, "svefa") != strlen(optarg)) {
-               snprintf(errmsg, MSG_SZ, "elements to merge are %s must be v, e, f, a or s\n", optarg);
+            if(strspn(optarg, "svefab") != strlen(optarg)) {
+               snprintf(errmsg, MSG_SZ, "elements to merge are %s must be v, e, f, a, b or s\n", optarg);
                error(errmsg, c);
             }
             if(strchr(optarg, 's') && strlen(optarg)>1) {
@@ -305,6 +306,9 @@ void pr_opts::process_command_line(int argc, char **argv)
             }
             if(strchr(optarg, 'a') && strlen(optarg)>1) {
                error("a includes vef, and must be used alone", c);
+            }
+            if(strchr(optarg, 'b') && strlen(optarg)>1) {
+               error("b includes vef, and must be used alone", c);
             }
             if(strspn(optarg, "ef") && !strchr(optarg, 'v')) {
                warning("without v, some orphan vertices may result", c);
@@ -912,7 +916,27 @@ void process_file(col_geom_v &geom, pr_opts opts)
 {
    char errmsg[MSG_SZ]="";
    if(opts.merge_elems!="") {
-      sort_merge_elems(geom, opts.merge_elems, opts.blend_type, opts.epsilon);
+      if(opts.merge_elems=="b") {
+         sort_merge_elems(geom, "ve", opts.blend_type, opts.epsilon);
+         col_geom_v tmp = geom;
+         vector<map<int, set<int> > > equiv_elems;
+         check_congruence(geom, tmp, &equiv_elems, opts.epsilon);
+         vector<int> del_faces;
+         map<int, set<int> >::iterator mi;
+         for(mi=equiv_elems[2].begin(); mi!=equiv_elems[2].end(); ++mi) {
+            set<int>::iterator si;
+            si = mi->second.begin();
+            ++si;
+            if(si!=mi->second.end() && *si<(int)(geom.faces().size())) {
+               for(si=mi->second.begin(); si!=mi->second.end(); ++si) {
+                  del_faces.push_back(*si);
+               }
+            }
+         }
+         geom.delete_faces(del_faces);
+      }
+      else
+         sort_merge_elems(geom, opts.merge_elems, opts.blend_type,opts.epsilon);
    }
       
    if(opts.orient) {
