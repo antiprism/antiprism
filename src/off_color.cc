@@ -385,7 +385,7 @@ void o_col_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hv:f:e:E:s:m:M:c:l:U:o:r:I:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hv:f:e:E:s:m:c:l:U:o:r:I:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
