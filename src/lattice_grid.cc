@@ -292,7 +292,7 @@ void list_grid_radii(const col_geom_v &geom, const vec3d &list_radii_center, int
    int rank = 1;
 
    if (report_type == 1) {
-      char buffer[80];
+      char buffer[MSG_SZ];
       if (!list_radii_center.is_set())
          sprintf(buffer,"centroid");
       else

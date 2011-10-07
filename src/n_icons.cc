@@ -3931,7 +3931,7 @@ void surface_subsystem(ncon_opts &opts)
                   else
                      fprintf(stderr,", ");
                }
-               char buffer[80];
+               char buffer[MSG_SZ];
                if (sd.nonchiral)
                   sprintf(buffer,"[%d+%d]",ncon_order,twist);
                else
