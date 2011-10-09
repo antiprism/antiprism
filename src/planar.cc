@@ -1704,21 +1704,17 @@ bool winding_rule_filter(const int &winding_rule, const int &winding_number)
 }
 
 // the winding number is correct when the faces are placed on the xy-plane
-// if 2D, this decision cannot be made
-// assumes point is already a hit so answer is not checked
 // geom and P are copies because they are going to be rotated
 int get_winding_number(col_geom_v geom, vec3d P, const xnormal &pnormal, const double &eps)
 {
-   if (!pnormal.is_hemispherical()) {
-      mat3d trans = mat3d::rot(pnormal.outward().unit(), vec3d(0,0,1));
-      geom.transform(trans);
+   mat3d trans = mat3d::rot(pnormal.outward().unit(), vec3d(0,0,1));
+   geom.transform(trans);
 
-      col_geom_v vgeom;
-      int v_idx = vertex_into_geom(vgeom, P, eps);
-      vgeom.transform(trans);
-      P = vgeom.verts()[v_idx];
-      vgeom.clear_all();
-   }
+   col_geom_v vgeom;
+   int v_idx = vertex_into_geom(vgeom, P, eps);
+   vgeom.transform(trans);
+   P = vgeom.verts()[v_idx];
+   vgeom.clear_all();
 
    int winding_number = 0;
    // idx = 2;
