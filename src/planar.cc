@@ -1705,11 +1705,17 @@ bool winding_rule_filter(const int &winding_rule, const int &winding_number)
 
 // the winding number is correct when the faces are placed on the xy-plane
 // geom and P are copies because they are going to be rotated
-int get_winding_number(col_geom_v geom, vec3d P, const xnormal &pnormal, const double &eps)
+int get_winding_number(col_geom_v polygon, vec3d P, const xnormal &pnormal, const double &eps)
 {
-   mat3d trans = mat3d::rot(pnormal.outward().unit(), vec3d(0,0,1));
-   geom.transform(trans);
+   mat3d trans;
+   // if hemispherical face, then just use actual direction of normal
+   if (pnormal.is_hemispherical())
+      trans = mat3d::rot(pnormal.unit(), vec3d(0,0,1));
+   else
+      trans = mat3d::rot(pnormal.outward().unit(), vec3d(0,0,1));
+   polygon.transform(trans);
 
+   // also rotate point per matrix
    col_geom_v vgeom;
    int v_idx = vertex_into_geom(vgeom, P, eps);
    vgeom.transform(trans);
@@ -1718,7 +1724,7 @@ int get_winding_number(col_geom_v geom, vec3d P, const xnormal &pnormal, const d
 
    int winding_number = 0;
    // idx = 2;
-   wn_PnPoly(geom, P, 2, winding_number, eps);
+   wn_PnPoly(polygon, P, 2, winding_number, eps);
    return winding_number;
 }
 
