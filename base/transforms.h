@@ -68,6 +68,8 @@ void sort_merge_elems(geom_if &geom, const string &merge_elems, vector<map<int, 
 void sort_merge_elems(geom_if &geom, const string &merge_elems, const int &blend_type, double eps=epsilon);
 void sort_merge_elems(geom_if &geom, const string &merge_elems, double eps=epsilon);
 bool check_congruence(const geom_if &geom1, const geom_if &geom2, vector<map<int, set<int> > > *equiv_elems=0, double eps=epsilon);
+void get_congruence_maps(const geom_if &geom, mat3d trans,
+      vector<vector<int > > &elem_maps, double eps=epsilon);
 
 
 void canonicalize_mm(geom_if &geom, double edge_factor, double plane_factor, int n, int divergence_test, int rep_count, bool planar_only, double eps=epsilon);
@@ -75,6 +77,7 @@ void canonicalize_cn(geom_if &geom, int n, char method, int divergence_test, int
 
 bool close_poly_basic(geom_if &geom);
 bool face_bond(geom_if &geom, geom_if &bgeom, int f=0, int b_f=0, int off=0, bool merge=true);
+bool face_bond_direct(geom_if &geom, geom_if &bgeom, int f=0, int b_f=0, bool merge=true);
 
 void transform_and_repeat(col_geom_v &geom, string sym_to, string sym_from, mat3d pos=mat3d());
 

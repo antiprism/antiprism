@@ -39,22 +39,390 @@ using std::string;
 using std::vector;
 using std::map;
 
+struct bond_brick
+{
+   col_geom_v geom;
+   int align_type;
+   vector<int> bond;
+};
+
+
+class bond_base
+{
+   private:
+      col_geom_v base;
+      sch_sym sym;
+      vector<bond_brick> bricks;
+
+   public:
+      enum { align_verts, align_faces, align_faces_merge };
+      enum { out_default=0, out_brick, out_base_brick, out_brick_base};
+      bond_base(geom_if &bas): base(bas) {}
+      bool set_sym(const char *sym_str, char *errmsg=0);
+      bool add_brick(char type, const string &brick_str, char *errmsg=0);
+      bool bond_all(geom_if &geom_out, int bond_type, char *errmsg=0);
+};
+
+bool bond_base::set_sym(const char *sym_str, char *errmsg)
+{
+   char errmsg2[MSG_SZ];
+   char sym_cpy[MSG_SZ]; // big enough for normal use
+   strncpy(sym_cpy, sym_str, MSG_SZ);
+
+   sch_sym full_sym(base);
+   vector<char *> parts;
+   split_line(sym_cpy, parts, ",");
+   if(parts.size()==0 || parts.size()>2) {
+      if(errmsg)
+         sprintf(errmsg, "argument should have 1 or 2 comma separated parts");
+      return false;
+   }
+           
+   sch_sym sub_sym;
+   if(strncmp(parts[0], "full", strlen(parts[0]))==0) {
+      sub_sym = full_sym;
+   }
+   else if(!sub_sym.init(parts[0], mat3d(), errmsg2)) {
+      if(errmsg)
+         snprintf(errmsg, MSG_SZ, "sub-symmetry type: %s", errmsg2);
+      return false;
+   }
+
+   int sub_sym_conj = 0;
+   if(parts.size()>1) {
+      if(!read_int(parts[1], &sub_sym_conj, errmsg2)) {
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "sub-symmetry conjugation number: %s",
+                  errmsg2);
+         return false;
+      }
+   }
+
+   sym = full_sym.get_sub_sym(sub_sym, sub_sym_conj, errmsg2);
+   if(sym.get_sym_type() == sch_sym::unknown) {
+      if(errmsg)
+         snprintf(errmsg, MSG_SZ, "sub-symmetry: %s", errmsg2);
+      return false;
+   }
+
+   return true;
+}
+
+
+int get_aligns(const vector<double> &angs0, const vector<double> &angs1,
+      vector<int> &aligns)
+{
+   vector<double> test = angs1;
+   reverse(test.begin(), test.end());
+   for(unsigned int i=0; i<angs0.size(); i++) {
+      if(cmp_face_angles(angs0, test)==0)
+         aligns.push_back(-1-i);
+      rotate(test.begin(), test.begin()+1, test.end());
+   }
+
+   reverse(test.begin(), test.end());
+   for(unsigned int i=0; i<angs0.size(); i++) {
+      if(cmp_face_angles(angs0, test)==0)
+         aligns.push_back(i);
+      rotate(test.begin(), test.begin()+1, test.end());
+   }
+   return aligns.size();
+}
+
+ 
+bool bond_base::add_brick(char type, const string &brick_str, char *errmsg)
+{
+   if(errmsg)
+      *errmsg = '\0';
+   char errmsg2[MSG_SZ];
+   char *str = copy_str(brick_str.c_str());
+   char *first_comma = strchr(str, ',');
+   if(first_comma)
+      *first_comma = '\0';
+   
+   bricks.push_back(bond_brick());
+   bond_brick &brick = bricks.back();
+   
+   if(!*str)
+      brick.geom = base;
+   else {
+      if(!brick.geom.read(str, errmsg2)) {
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "brick geometry: %s", errmsg2);
+         bricks.pop_back();
+         free(str);
+         return false;
+      }
+   }
+
+   if(first_comma) {
+      if(!read_int_list(first_comma+1, brick.bond, errmsg2, true)) {
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "bond values: %s", errmsg2);
+         bricks.pop_back();
+         free(str);
+         return false;
+      }
+   }
+
+   if(type=='v') {
+      brick.align_type = align_verts;
+      int n = brick.bond.size();
+      if(n!=2 && n!=4 && n!=6) {
+         if(errmsg)
+            strcpy(errmsg, msg_str(
+                     "must give 2, 4 or 6 vertices (%d were given)",n).c_str());
+         bricks.pop_back();
+         free(str);
+         return false;
+      }
+      if(n>2) {
+         for(int i=0; i<n/2; i++) {
+            if(brick.bond[i]==brick.bond[(i+1)%(n/2)]) {
+               if(errmsg)
+                  strcpy(errmsg, "repeated vertex index in base");
+               bricks.pop_back();
+               free(str);
+               return false;
+            }
+            if(brick.bond[n/2 + i]==brick.bond[n/2 + (i+1)%(n/2)]) {
+               if(errmsg)
+                  strcpy(errmsg, "repeated vertex index in brick");
+               bricks.pop_back();
+               free(str);
+               return false;
+            }
+         }
+      }
+      for(unsigned int i=0; i<brick.bond.size(); i++) {
+         const vector<vec3d> &vs = (i<brick.bond.size()/2) ?
+            base.verts() : brick.geom.verts();
+         if(brick.bond[i]<0 || brick.bond[i]>=(int)vs.size()) {
+            if(errmsg)
+               snprintf(errmsg, MSG_SZ,
+                        "bond values: vertex %d (position %d) is out of bounds",
+                        brick.bond[i], i+1);
+            bricks.pop_back();
+            free(str);
+            return false;
+         }
+      }
+   }
+   else if(type=='f' || type=='F') {
+      brick.align_type = (type=='f') ? align_faces : align_faces_merge;
+      if(brick.bond.size()>3) {
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ,
+                  "up to three arguments can be given (%lu were given)",
+                  (unsigned long)brick.bond.size());
+         bricks.pop_back();
+         free(str);
+         return false;
+      }
+      brick.bond.resize(3, 0);
+      int f0 = brick.bond[0];
+      int f1 = brick.bond[1];
+      if(f0<0 || f0>=(int)base.faces().size()) {
+         if(errmsg) {
+            if(base.faces().size())
+               snprintf(errmsg, MSG_SZ, "invalid base face '%d', "
+                     "last face is %d", f0, (int)base.faces().size()-1);
+            else
+               snprintf(errmsg, MSG_SZ, "base has no faces");
+         }
+         bricks.pop_back();
+         free(str);
+         return false;
+      }
+      if(f1<0 || f1>=(int)brick.geom.faces().size()) {
+         if(errmsg) {
+            if(brick.geom.faces().size())
+               strcpy(errmsg, msg_str(
+                     "invalid brick face '%d', last face is %d",
+                     f1, (int)brick.geom.faces().size()-1).c_str());
+            else
+               snprintf(errmsg, MSG_SZ, "brick has no faces");
+         }
+         bricks.pop_back();
+         free(str);
+         return false;
+      }
+      if(brick.align_type==align_faces_merge &&
+            base.faces(f0).size()!= brick.geom.faces(f1).size() ) {
+         if(errmsg)
+            strcpy(errmsg, "faces to bond have different number of sides");
+      }
+      vector<int> aligns;
+      vector<double> angs0, angs1;
+      base.get_info().face_angles_lengths(f0, angs0);
+      brick.geom.get_info().face_angles_lengths(f1, angs1);
+      if(!get_aligns(angs0, angs1, aligns)) {
+         if(errmsg)
+            sprintf(errmsg,
+                  "base and brick bonding faces are not the same shape\n");
+            return false;
+      }
+      if(brick.bond[2]>=(int)aligns.size()) {
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ,
+                  "bond selection number is %d, last selection is %d\n",
+                  brick.bond[2], aligns.size()-1);
+            return false;
+      }
+      vector<int> &face = brick.geom.raw_faces()[f1];
+      int sel = aligns[brick.bond[2]];
+      if(sel>=0)
+         rotate(face.begin(), face.begin()+sel, face.end());
+      else {
+         brick.geom.orient_reverse();
+         rotate(face.begin(), face.begin()+(-sel-1), face.end());
+      }
+   }
+   return true;
+}
+
+
+bool bond_base::bond_all(geom_if &geom_out, int out_type, char *errmsg)
+{
+   geom_out.clear_all();
+   // check for errors before making any transfromations
+   vector<bond_brick>::iterator bi;
+   for(bi=bricks.begin(); bi!=bricks.end(); ++bi) {
+      if(bi->align_type==align_faces_merge && 
+            (out_type==out_brick || out_type==out_brick_base) ) {
+         if(errmsg)
+            sprintf(errmsg,
+                  "output type is %s and not compatible with a merged brick",
+                  (out_type==out_brick) ? "brick only" : "brick then base");
+         return false;
+      }
+   }
+
+   bool has_merged_brick = false;
+   col_geom_v base_out;
+   col_geom_v brick_out;
+   vector<col_geom_v> merge_bricks;
+   map<int, vector<int> > face_params;
+   for(bi=bricks.begin(); bi!=bricks.end(); ++bi) {
+      bond_brick &brick = *bi;
+      if(brick.align_type==align_verts) {
+         vector<vector<vec3d> > pts(2);
+         for(unsigned int i=0; i<brick.bond.size(); i++) {
+            const vector<vec3d> &vs = (i<brick.bond.size()/2) ?
+               base.verts() : brick.geom.verts();
+            pts[!(i<brick.bond.size()/2)].push_back(vs[brick.bond[i]]);
+         }
+         if(pts[0].size()>1) {
+            mat3d scl = mat3d::scale(
+                  (pts[0][0]-pts[0][1]).mag()/(pts[1][0]-pts[1][1]).mag()); 
+            brick.geom.transform(scl);
+            for(unsigned int i=0; i<pts[1].size(); i++)
+               pts[1][i] = scl * pts[1][i];
+         }
+         brick.geom.transform(mat3d::alignment(pts[1],pts[0]));
+         brick_out.append(brick.geom);
+      }
+      else if(brick.align_type==align_faces ||
+              brick.align_type==align_faces_merge) {
+         int f0 = brick.bond[0];
+         int f1 = brick.bond[1];
+           
+         double e0 = base.edge_len(base.faces(f0)); // first edge
+         double e1 = brick.geom.edge_len(
+               make_edge(brick.geom.faces(f1, 0), brick.geom.faces(f1, 1)));
+         brick.geom.transform(mat3d::scale(e0/e1) );
+        
+         if(bi->align_type==align_faces) {
+            face_bond_direct(base, brick.geom, f0, f1, false);
+            brick_out.append(brick.geom);
+         }
+         else {
+            if(!has_merged_brick) {
+               has_merged_brick = true;
+               base_out = base;
+            }
+            merge_bricks.push_back(brick.geom);
+            t_set ts = sym.get_trans();
+            if(!ts.size())        // set to unit if not set
+               ts.add(mat3d());
+            for(set<mat3d>::const_iterator si=ts.begin(); si!=ts.end(); ++si) {
+               vector<vector<int> > elem_maps;
+               get_congruence_maps(base, *si, elem_maps);
+               const int f0_map = elem_maps[2][f0];
+               const vector<int> &f0_mapface = base.faces(f0_map);
+               int f0_sz = base.faces(f0).size();
+               map<int, vector<int> >::iterator vi= face_params.find(f0_map);
+               bool direct = iso_type(*si).is_direct();
+               if(vi==face_params.end() || (!(vi->second)[3] && direct) ) {
+                  int map_offset;
+                  const int idx0 = base.faces(f0)[0];
+                  for(map_offset=0; map_offset<f0_sz; map_offset++) {
+                     if(elem_maps[0][idx0]==f0_mapface[map_offset])
+                        break;
+                  }
+                  const int idx1 = base.faces(f0)[1];
+                  bool rev = (elem_maps[0][idx1]!=
+                        f0_mapface[(map_offset+1)%f0_sz]); 
+                  face_params[f0_map] = vector<int>(4);
+                  face_params[f0_map][0] = f1;
+                  face_params[f0_map][1] = merge_bricks.size()-1;
+                  face_params[f0_map][2] = direct;
+                  face_params[f0_map][3] = rev;
+               }
+            }
+         }
+      }
+   }
+
+   if(face_params.size()) {
+      map<int, vector<int> >::const_reverse_iterator mi;  
+      for(mi = face_params.rbegin(); mi!=face_params.rend(); ++mi) {
+         col_geom_v bgeom = merge_bricks[mi->second[1]];
+         if(!mi->second[2])  // symmetry was indirect
+            bgeom.transform(mat3d::inversion());
+         if(mi->second[3])   // reverse was set
+            bgeom.orient_reverse();
+         face_bond_direct(base_out, bgeom, mi->first, mi->second[0], true);
+      }
+   }
+
+   if(sym.is_set())
+      sym_repeat(brick_out, brick_out, sym);
+
+   if(out_type==out_default) {
+      if(has_merged_brick)
+         geom_out.append(base_out);
+      geom_out.append(brick_out);
+   }
+   else if(out_type==out_brick)
+      geom_out.append(brick_out);
+   else if(out_type==out_base_brick) {
+      if(has_merged_brick)
+         geom_out.append(base_out);
+      else
+         geom_out.append(base);
+      geom_out.append(brick_out);
+   }
+   else if(out_type==out_brick_base) {
+      geom_out.append(brick_out);
+      if(has_merged_brick)
+         geom_out.append(base_out);
+      else
+         geom_out.append(base);
+   }
+   return true;
+}
+
 
 class align_opts: public prog_opts {
    public:
-      vector<int> verts;
-      vector<int> f_bond;
-      bool rev_orient;
-      int merge;
-      bool merge_polys;
-      bool scale;
-      int align_cnt;
+      vector<pair<char, string> > brick_args;
+      string sym_str;
+      int out_type;
       string ifile;
-      string brick_file;
       string ofile;
 
-      align_opts(): prog_opts("off_align"), rev_orient(false), merge(-1),
-                    merge_polys(false), scale(true), align_cnt(0) {}
+      align_opts(): prog_opts("off_align"), out_type(0) {}
 
       void process_command_line(int argc, char **argv);
       void usage();
@@ -67,15 +435,18 @@ void align_opts::usage()
 "\n"
 "Usage: %s [options] [input_file]\n"
 "\n"
-"Read a file in OFF format (the base) and use its vertices to position\n"
-"copies of itself or another file in OFF format (the brick). If input_file\n"
-"is not given the program reads from standard input.\n"
+"Read a base file and brick file in OFF format, and use vertices or faces\n"
+"to position the brick with respect to the base. The brick may be repeated\n"
+"symmetrically and/or merged with the base. If input_file is not given the\n"
+"program reads from standard input.\n"
 "\n"
 "Options\n"
 "%s"
-"  -p <pts>  two, four or six points given as the vertex index number\n"
-"            in the OFF files (starting at 0), and separated by commas.\n"
-"            The base points are all given first and then the brick points.\n"
+"  -v <arg>  align by vertices, iarg is a comma separated list of a brick\n"
+"            geometry (if empty use base) optionally followed by 'r' (reverse\n"
+"            brick orientation) followed by two, four or six points given as\n"
+"            the vertex index number in the OFF files (starting at 0). The base\n"
+"            points are all given first and then the brick points.\n"
 "            Formats:\n"
 "               u1,v1 - point alignment\n"
 "                  translation u1-v1 (so v1 of brick moves to u1 of base)\n"
@@ -85,19 +456,22 @@ void align_opts::usage()
 "               u1,u2,u3,v1,v2,v3 - face alignment\n"
 "                  line alignment as above followed by a rotation\n"
 "                  around u1,u2 so v3 lies in plane of u1u2u3.\n"
-"  -f <idxs> align by face index, up to three numbers separated by commas:\n"
-"            base face index, brick face index (default: 0), polygon\n"
-"            vertex offset (default: 0) to rotate the face\n"
-"  -F <idxs> align and combine polyhedra by face index, up to three numbers\n"
-"            separated by commas: base face index, brick face index\n"
-"            (default: 0), polygon vertex offset (default: 0) to rotate the\n"
-"            face. Brick after base, merge bond vertices, remove bond faces\n"
-"  -b <file> brick file (default: base file)\n"
+"  -f <arg>  align by face index, arg is a comma separated list of a brick\n"
+"            geometry (if empty use base) optionally followed by 'r' (reverse\n"
+"            brick orientation) followed by up to three numbers separated by\n"
+"            commas: base face index, brick face index (default: 0), polygon\n"
+"            alignment selection number (default: 0)\n"
+"  -F <arg>  align and combine polyhedra by face index, arg is a comma\n"
+"            separated list of a brick geometry (if empty use base) optionally\n"
+"            followed by 'r' (reverse brick orientation) followed by up to\n"
+"            three numbers: base face index, brick face index (default: 0),\n"
+"            polygon alignment selection number (default: 0). Brick is\n"
+"            after base, bond vertices are merged, bond faces are removed\n"
 "  -M <val>  merge files. 0 (default) don't merge, 1 brick after\n"
 "            base, 2 brick before base\n"
-"  -R        reverse orientation of brick, make it bond on other side of face\n"
-"  -x        don't scale the brick if the first base edge and brick edge are\n"
-"            different lengths\n"
+"  -y <sub>  repeat bricks according to symmetry of base. sub is symmetry\n"
+"            subgroup (Schoenflies notation) or 'full' optionally followed\n"
+"            by a ',' and conjugation type (integer)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
 "\n", prog_name(), help_ver_text);
@@ -109,65 +483,31 @@ void align_opts::process_command_line(int argc, char **argv)
    char errmsg[MSG_SZ];
    opterr = 0;
    char c;
-   int n;
    mat3d trans_m2;
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hp:f:F:M:Rxb:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hv:f:F:M:y:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
       switch(c) {
-         case 'p':
-            align_cnt++;
-            if(!read_int_list(optarg, verts, errmsg, true))
-               error(errmsg, c);
-            n = verts.size();
-            if( n!=2 && n!=4 && n!=6)
-               error(msg_str("must give 2, 4 or 6 vertices (%d were given)",n),
-                     c);
-            if(n>2) {
-               for(int i=0; i<n/2; i++) {
-                  if(verts[i]==verts[(i+1)%(n/2)])
-                     error("repeated vertex index in base", c);
-                  if(verts[n/2 + i]==verts[n/2 + (i+1)%(n/2)])
-                     error("repeated vertex index in brick", c);
-               }
-            }
-            break;
-
+         case 'v':
          case 'F':
-            merge_polys = true;
-            // fall through
          case 'f':
-            align_cnt++;
-            if(!read_int_list(optarg, f_bond, errmsg, true))
-               error(errmsg, c);
-            if(f_bond.size()>3)
-               error(msg_str("up to three arguments can be given (%lu were "
-                        "given)", (unsigned long)f_bond.size()), c);
-            f_bond.resize(3, 0);
+            brick_args.push_back(pair<char, string>(c, optarg));
             break;
 
          case 'M':
-            if(!read_int(optarg, &merge, errmsg))
+            if(!read_int(optarg, &out_type, errmsg))
                error(errmsg, c);
-            if(merge <0 || merge>3)
-               error(msg_str("merge value is %d, must be 0, 1, 2 or 3", merge),
-                     c);
+            if(out_type<0 || out_type>3)
+               error(msg_str("merge value is %d, must be 0, 1, 2 or 3",
+                        out_type), c);
             break;
             
-         case 'R':
-            rev_orient = true;
-            break;
-         
-         case 'x':
-            scale = false;
-            break;
-         
-         case 'b':
-            brick_file = optarg;
+         case 'y':
+            sym_str = optarg;
             break;
          
          case 'o':
@@ -179,15 +519,8 @@ void align_opts::process_command_line(int argc, char **argv)
       }
    }
 
-   if(align_cnt==0)
-      error("no alignment given, must use option -p, -f or -F");
-   if(align_cnt>1)
-      error("more than one alignment given, must use only one -p, -f or -F");
-
-   if(merge_polys && (merge==0 || merge==2))
-      error("merge type 0 and 2 are not compatible with option -F", 'M');
-   if(merge<0) // set default merge
-      merge = 0;
+   if(brick_args.size()==0)
+      error("no brick alignments given, must use option -v, -f or -F");
       
    if(argc-optind > 1)
       error("too many arguments");
@@ -196,7 +529,6 @@ void align_opts::process_command_line(int argc, char **argv)
       ifile=argv[optind];
 
 }
-
 
 int main(int argc, char *argv[])
 {
@@ -208,92 +540,26 @@ int main(int argc, char *argv[])
    if(!geom.read(opts.ifile, errmsg))
       opts.error(errmsg);
 
-   col_geom_v brick_geom;
-   if(opts.brick_file == "")
-      brick_geom = geom;
-   else {
-      if(!brick_geom.read(opts.brick_file, errmsg))
-         opts.error(errmsg);
-   }
-  
-   if(opts.rev_orient)
-      brick_geom.orient_reverse();
-
-   vector<vec3d> &verts = *geom.get_verts();
-   vector<vec3d> &brick_verts = *brick_geom.get_verts();
-
-   vector<vector<vec3d> > pts(2);
-   if(opts.verts.size()) {
-      for(unsigned int i=0; i<opts.verts.size(); i++) {
-         vector<vec3d> &vs = (i<opts.verts.size()/2) ? verts : brick_verts;
-         if(opts.verts[i]<0 || opts.verts[i]>=(int)vs.size())
-            opts.error(msg_str("vertex %d (position %d) is out of bounds",
-                     opts.verts[i], i+1), 'p');
-         pts[!(i<opts.verts.size()/2)].push_back(vs[opts.verts[i]]);
-         //fprintf(stderr, "pts[%d][%d] = ", (i<opts.verts.size()/2), pts[(i<opts.verts.size()/2)].size()-1);
-         //pts[(i<opts.verts.size()/2)].back().dump();
-      }
-      if(opts.scale && pts[0].size()>1) {
-         mat3d scl = mat3d::scale(
-               (pts[0][0]-pts[0][1]).mag()/(pts[1][0]-pts[1][1]).mag()); 
-         brick_geom.transform(scl);
-         for(unsigned int i=0; i<pts[1].size(); i++)
-            pts[1][i] = scl * pts[1][i];
-      }
-      brick_geom.transform(mat3d::alignment(pts[1],pts[0]));
-   }
-   if(opts.f_bond.size()) {
-      vector<vector<int> > &fs = *geom.get_faces();
-      vector<vector<int> > &bfs = *brick_geom.get_faces();
-      char opt_c = opts.merge_polys ? 'F' : 'f';
-      int f0 = opts.f_bond[0];
-      int f1 = opts.f_bond[1];
-      int f1_sz = bfs[f1].size(); 
-      int offset = ((opts.f_bond[2]%f1_sz)+f1_sz)%f1_sz;
-      if(f0<0 || f0>=(int)geom.get_faces()->size())
-         opts.error("base face is out of bounds", opt_c);
-      if(f1<0 || f1>=(int)brick_geom.get_faces()->size())
-         opts.error("brick face is out of bounds", opt_c);
-      if(opts.merge_polys &&
-            (*geom.get_faces())[f0].size() != (*brick_geom.get_faces())[f1].size() )
-         opts.warning("faces to bond are different sorts of polygon", 'F');
-      if(opts.scale) {
-         vec3d e0 = verts[fs[f0][1]] - verts[fs[f0][0]];
-         vec3d e1 = brick_verts[bfs[f1][(offset+1)%f1_sz]] -
-                                           brick_verts[bfs[f1][offset]];
-         brick_geom.transform(mat3d::scale(e0.mag()/e1.mag()) );
-      }
-      face_bond(geom, brick_geom, f0, f1, offset, opts.merge_polys);
-   }
-      
-   col_geom_v *out_geom = &geom;
-   if(!opts.merge_polys) {
-      if(opts.merge==0)            // Brick only
-         out_geom = &brick_geom;
-      else if(opts.merge==1) {     // Brick after base
-         geom.append(brick_geom);
-         out_geom = &geom;
-      }
-      else if(opts.merge==2) {     // Brick before base
-         brick_geom.append(geom);
-         out_geom = &brick_geom;
-      }
+   bond_base base(geom);
+   if(opts.sym_str!="" && !base.set_sym(opts.sym_str.c_str(), errmsg))
+      opts.error(errmsg, 'y');
+   
+   vector<pair<char, string> >::iterator argi;
+   for(argi=opts.brick_args.begin(); argi!=opts.brick_args.end(); ++argi) {
+      if(!base.add_brick(argi->first, argi->second, errmsg))
+         opts.error(errmsg, argi->first);
+      else if(*errmsg)
+         opts.warning(errmsg, argi->first);
    }
 
-   /*col_geom_v *ogeom = &brick_geom;
-   if(opts.merge==1) {         // Brick after base
-      if(!opts.merge_polys)    // if -F then previously merged
-         geom.append(brick_geom);
-      ogeom = &geom;
-   }
-   else if(opts.merge==2)      // Brick before base
-      brick_geom.append(geom);
-   */
-
-   if(!out_geom->write(opts.ofile, errmsg))
+   col_geom_v geom_out;
+   if(!base.bond_all(geom_out, opts.out_type, errmsg))
+      opts.error(errmsg, 'M');
+   if(!geom_out.write(opts.ofile, errmsg))
       opts.error(errmsg);
 
    return 0;
 }
+
 
 

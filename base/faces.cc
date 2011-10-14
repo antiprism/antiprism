@@ -117,15 +117,19 @@ bool close_poly_basic(geom_if &geom)
    return true;
 }
 
+#include "info.h"
 
 bool face_bond(geom_if &geom, geom_if &bgeom, int f, int b_f, int off, bool merge)
 {
-   //transform(bgeom, mat3d::rot(1.0001, 0.0002, 0.0003));
+   //bgeom.transform(mat3d::rot(1.0001, 0.0002, 0.0003));
 
    int f_sz = geom.faces(f).size();
    int f_bsz = bgeom.faces(b_f).size();
+
    vector<vec3d> pts, bpts;
    for(int i=0; i<f_sz; i++) {
+      if(i==3)
+         break;
       pts.push_back(geom.verts(geom.faces(f, i%f_sz)));
       bpts.push_back(bgeom.verts(bgeom.faces(b_f, (off-i+f_bsz)%f_bsz)));
    }
@@ -149,6 +153,37 @@ bool face_bond(geom_if &geom, geom_if &bgeom, int f, int b_f, int off, bool merg
 
    return true;
 }
+
+bool face_bond_direct(geom_if &geom, geom_if &bgeom, int f, int b_f, bool merge)
+{
+   int f_sz = geom.faces(f).size();
+   int f_bsz = bgeom.faces(b_f).size();
+
+   vector<vec3d> pts, bpts;
+   for(int i=0; i<f_sz && i<3; i++) {
+      pts.push_back(geom.verts(geom.faces(f, i)));
+      bpts.push_back(bgeom.verts(bgeom.faces(b_f, i)));
+   }
+   
+   bgeom.transform(mat3d::alignment(bpts, pts));
+   
+   map<int, int> vmap;
+   for(unsigned int i=0; i<bgeom.faces(b_f).size(); i++)
+      vmap[bgeom.faces(b_f,i%f_bsz)+geom.verts().size()] = geom.faces(f,i%f_sz);
+   
+   if(merge) {
+      vector<int> del_faces(1);
+      del_faces[0] = f;
+      geom.delete_faces(del_faces);
+      del_faces[0] = b_f;
+      bgeom.delete_faces(del_faces);
+      geom.append(bgeom);
+      geom.verts_merge(vmap);
+   }
+
+   return true;
+}
+
 
 
 int combine_faces(vector<int> &base, vector<int> brick, const vector<int> &edge)
