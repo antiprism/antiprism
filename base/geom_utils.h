@@ -82,8 +82,8 @@ class xnormal
 
       vec3d raw() const { return normal; }  
       vec3d unit() const { return normal.unit(); }  // unit() of raw normal  
-      vec3d outward() const { return (is_outward() ? normal : -normal); }
-      vec3d inward() const { return (is_inward() ? normal : -normal); }
+      vec3d outward() const { return (is_inward() ? -normal : normal); }
+      vec3d inward() const { return (is_outward() ? -normal : normal); }
 
       bool is_outward() const { return (direction==1); }
       bool is_inward() const { return (direction==-1); }      

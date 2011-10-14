@@ -183,7 +183,8 @@ void planar_opts::usage()
 "  -Z <col>  color for areas found colorless by winding (default: invisible)\n"
 "               key word: b - force a color blend\n"
 "  -W        color by winding number. Overrides all other color options\n"
-"  -n <maps> maps for negative winding numbers (default: rng6_S0V0.5:0)\n"
+"  -n <maps> maps for negative winding numbers (default: rng17_S0V0.5:0)\n"
+"               (map position zero not used. default is 16 gradients)\n"
 "\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }
 
@@ -424,7 +425,7 @@ void planar_opts::process_command_line(int argc, char **argv)
       error(errmsg, 'm');
 
    if (!map_file_negative.size())
-      map_file_negative = "rng6_S0V0.5:0";
+      map_file_negative = "rng17_S0V0.5:0";
    if(!map_negative.init(map_file_negative.c_str(), errmsg))
       error(errmsg, 'n');
 
@@ -611,12 +612,8 @@ void project_using_normal(const vec3d &normal, int &idx, int &sign)
 }
 
 // if intersection point does not exist, insert a new one. Otherwise only return the index of the existing one
-int vertex_into_geom(col_geom_v &geom, const vec3d &P, const double &eps)
+int vertex_into_geom(col_geom_v &geom, const vec3d &P, col_val vcol, const double &eps)
 {
-   col_val vcol = col_val::invisible;
-   // uncomment for testing
-   //vcol = col_val(0.0,0.0,1.0);
-   
    int v_idx = find_vertex_by_coordinate(geom, P, eps);
    if (v_idx == -1) {
       geom.add_col_vert(P, vcol);
@@ -627,12 +624,8 @@ int vertex_into_geom(col_geom_v &geom, const vec3d &P, const double &eps)
 }
 
 // if edge already exists, do not create another one and return false. return true if new edge created
-bool edge_into_geom(col_geom_v &geom, const int &v_idx1, const int &v_idx2)
+bool edge_into_geom(col_geom_v &geom, const int &v_idx1, const int &v_idx2, col_val ecol)
 {
-   col_val ecol = col_val::invisible;
-   // uncomment for testing
-   //ecol = col_val(1.0,0.0,0.0);
-   
    vector<int> new_edge = make_edge(v_idx1, v_idx2);
 
    int answer = find_edge_in_edge_list(geom.edges(), new_edge);
@@ -653,6 +646,24 @@ col_geom_v faces_to_geom(const col_geom_v &geom, const vector<int> &face_idxs)
    }
    fgeom.delete_verts(fgeom.get_info().get_free_verts());
    return fgeom;
+}
+
+// save free edges into a geom
+col_geom_v free_edges_into_geom(const col_geom_v &geom)
+{
+   const vector<vector<int> > &faces = geom.faces();
+   const vector<vector<int> > &edges = geom.edges();
+
+   col_geom_v egeom;
+   egeom.add_verts(geom.verts());
+   for (unsigned int i=0;i<edges.size();i++) {
+      vector<int> face_idx = find_faces_with_edge(faces, edges[i]);
+      if (!face_idx.size())
+         egeom.add_col_edge(geom.edges()[i],geom.get_e_col(i));
+   }
+   egeom.delete_verts(egeom.get_info().get_free_verts());
+
+   return egeom;
 }
 
 bool is_point_on_polygon_edges(const geom_if &polygon, const vec3d &P, const double &eps)
@@ -1269,10 +1280,10 @@ bool mesh_verts(col_geom_v &geom, const double &eps)
          // sort based on distance from Q0
          sort( line_intersections.begin(), line_intersections.end() );
          // create edgelets from Q0 through intersection points to Q1 (using indexes)
-         edge_into_geom(geom, edges[i][0], line_intersections[0].second);
+         edge_into_geom(geom, edges[i][0], line_intersections[0].second, col_val::invisible);
          for(unsigned int k=0; k<line_intersections.size()-1; k++)
-            edge_into_geom(geom, line_intersections[k].second, line_intersections[k+1].second);
-         edge_into_geom(geom, line_intersections[line_intersections.size()-1].second, edges[i][1]);
+            edge_into_geom(geom, line_intersections[k].second, line_intersections[k+1].second, col_val::invisible);
+         edge_into_geom(geom, line_intersections[line_intersections.size()-1].second, edges[i][1], col_val::invisible);
       }
    }
    
@@ -1418,7 +1429,7 @@ bool mesh_edges(col_geom_v &geom, const double &eps)
             vec3d intersection_point = lines_intersection_in_segments(verts[edges[i][0]], verts[edges[i][1]], verts[edges[j][0]], verts[edges[j][1]], eps);
             if (intersection_point.is_set()) {
                // find (or create) index of this vertex
-               v_idx = vertex_into_geom(geom, intersection_point, eps);
+               v_idx = vertex_into_geom(geom, intersection_point, col_val::invisible, eps);
                // don't include existing vertices
                if (v_idx < vsz)
                   v_idx = -1;
@@ -1445,10 +1456,10 @@ bool mesh_edges(col_geom_v &geom, const double &eps)
          // sort based on distance from P0
          sort( line_intersections.begin(), line_intersections.end() );
          // create edgelets from P0 through intersection points to P1 (using indexes)
-         edge_into_geom(geom, edges[i][0], line_intersections[0].second);
+         edge_into_geom(geom, edges[i][0], line_intersections[0].second, col_val::invisible);
          for(unsigned int k=0; k<line_intersections.size()-1; k++)
-            edge_into_geom(geom, line_intersections[k].second, line_intersections[k+1].second);
-         edge_into_geom(geom, line_intersections[line_intersections.size()-1].second, edges[i][1]);
+            edge_into_geom(geom, line_intersections[k].second, line_intersections[k+1].second, col_val::invisible);
+         edge_into_geom(geom, line_intersections[line_intersections.size()-1].second, edges[i][1], col_val::invisible);
       }
    }
    
@@ -1707,12 +1718,12 @@ bool winding_rule_filter(const int &winding_rule, const int &winding_number)
 // geom and P are copies because they are going to be rotated
 int get_winding_number(col_geom_v polygon, vec3d P, const xnormal &pnormal, const double &eps)
 {
-   mat3d trans = mat3d::rot(pnormal.outward().unit(), (pnormal.is_hemispherical() ? vec3d(0,0,-1) : vec3d(0,0,1)));
+   mat3d trans = mat3d::rot(pnormal.outward().unit(), vec3d(0,0,1));
    polygon.transform(trans);
 
    // also rotate point per matrix
    col_geom_v vgeom;
-   int v_idx = vertex_into_geom(vgeom, P, eps);
+   int v_idx = vertex_into_geom(vgeom, P, col_val::invisible, eps);
    vgeom.transform(trans);
    P = vgeom.verts()[v_idx];
    vgeom.clear_all();
@@ -1968,6 +1979,9 @@ void build_colinear_edge_list(const geom_if &geom, const vector<vector<int> > &e
       edge_unit_nearpoints.push_back(make_pair(P,i));
    }
 
+   if (!edge_unit_nearpoints.size())
+      return;
+
    stable_sort( edge_unit_nearpoints.begin(), edge_unit_nearpoints.end(), vert_cmp(eps) ); 
 
    vector<int> colinear_edges;
@@ -1993,7 +2007,7 @@ vector<int> find_end_points_vertex(const geom_if &geom, const vector<int> &vert_
 
    col_geom_v vgeom;
    for(unsigned int i=0;i<vert_indexes.size();i++)
-      vertex_into_geom(vgeom, verts[vert_indexes[i]], eps);
+      vertex_into_geom(vgeom, verts[vert_indexes[i]], col_val::invisible, eps);
    vgeom.set_hull();
 
    const vector<vec3d> &gverts = vgeom.verts();
@@ -2392,6 +2406,10 @@ void delete_invisible_faces(col_geom_v &geom, const bool &hole_detection)
    const vector<vector<int> > &faces = geom.faces();
    const vector<vector<int> > &edges = geom.edges();
 
+   // if passed a geom with only verts, keep
+   if (!faces.size() && !edges.size())
+      return;
+
    vector<int> deleted_elems;
    for(unsigned int i=0; i<faces.size(); i++) {
       col_val col = geom.get_f_col(i);
@@ -2485,6 +2503,16 @@ int main(int argc, char *argv[])
       }
    }
 
+   // collect free edges get deleted later. save them if they exist
+   // color merge
+   // not much control over this feature
+   col_geom_v egeom = free_edges_into_geom(geom);
+   if (egeom.verts().size()) {
+      string elems = pre_edge_blend(egeom, 'b',
+                                    opts.color_system_mode, opts.sat_power, opts.sat_threshold, opts.value_power, opts.value_advance, opts.alpha_mode, opts.ryb_mode, opts.epsilon);
+      sort_merge_elems(egeom, elems, 1, opts.epsilon);
+   }
+
    if (opts.cmy_mode)
       do_cmy_mode(geom, opts.ryb_mode, opts.edge_blending);
 
@@ -2510,9 +2538,12 @@ int main(int argc, char *argv[])
    }
 
    string elems;
-   if (opts.edge_blending && opts.planar_merge_type)
+   if (opts.edge_blending && opts.planar_merge_type) {
       elems = post_edge_blend(geom, opts.edge_blending, original_edges_size, opts.color_system_mode,
                               opts.sat_power, opts.sat_threshold, opts.value_power, opts.value_advance, opts.alpha_mode, opts.ryb_mode, opts.epsilon);
+      // add free edges back
+      geom.append(egeom);
+   }
 
    // delay sort_merge so multiple edgelets still exist for post_edge_blend
    if (opts.planar_merge_type && elems!="")
@@ -2526,9 +2557,12 @@ int main(int argc, char *argv[])
    if (opts.stitch_faces)
       stitch_faces_on_seams(geom, opts.epsilon);
 
-   if (opts.special_edge_processing)
+   if (opts.special_edge_processing) {
       special_edge_process(geom, opts.special_edge_processing, opts.color_system_mode,
                            opts.sat_power, opts.sat_threshold, opts.value_power, opts.value_advance, opts.alpha_mode, opts.ryb_mode);
+      // add free edges back
+      geom.append(egeom);
+   }
 
    if (opts.delete_invisible_faces)
       delete_invisible_faces(geom, opts.hole_detection);
