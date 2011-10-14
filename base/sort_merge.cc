@@ -479,3 +479,47 @@ bool check_congruence(const geom_if &geom1, const geom_if &geom2, vector<map<int
    
    return ret;
 }
+
+void get_congruence_maps(const geom_if &geom, mat3d trans,
+      vector<vector<int > > &elem_maps, double eps)
+{
+   elem_maps.resize(3);
+   col_geom_v tmp = geom;
+   tmp.transform(trans);
+   vector<map<int, set<int> > > equiv_elems;
+   check_congruence(geom, tmp, &equiv_elems, eps);
+   int cnts[3];
+   cnts[0]=geom.verts().size();
+   cnts[1]=geom.edges().size();
+   cnts[2]=geom.faces().size();
+   for(int i=0; i<3; i++) {
+      elem_maps[i].resize(cnts[i]);
+      map<int, set<int> >::iterator mi;
+      for(mi=equiv_elems[i].begin(); mi!=equiv_elems[i].end(); ++mi) {
+         int to = *mi->second.begin();
+         if(to>=cnts[i])
+            to -= cnts[i];
+         elem_maps[i][to] = to;
+         set<int>::iterator si;
+         for(si=mi->second.begin(); si!=mi->second.end(); ++si) {
+            int from = (*si<cnts[i]) ? *si : *si-cnts[i];
+            if(to != from) {
+               elem_maps[i][to] = from;
+               break;
+            }
+         }
+      }
+   }
+   /*
+   for(int i=0; i<3; i++) {
+      fprintf(stderr, "%d:\n", i);
+      for(unsigned int v=0; v<elem_maps[i].size(); ++v) {
+         fprintf(stderr, "   %d -> %d", v, elem_maps[i][v]);
+         fprintf(stderr, "\n");
+      }
+      fprintf(stderr, "\n");
+   }
+   */
+}
+
+

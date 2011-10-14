@@ -231,6 +231,10 @@ class iso_type
        * \return The translation. */
       vec3d get_transl() const { return transl; }
 
+      ///Check if isometry is direct.
+      /** \return \c true if the isometry is direct, otherwise \cfalse */
+      bool is_direct() const { return rot_type>rt_none && rot_type<rt_inv; }
+
       ///Dump
       /**Print the object data to \c stdout for debugging. */
       void dump() const;
