@@ -190,15 +190,16 @@ void mat3d::dump(const char *var, FILE *strm) const
       
 mat3d &mat3d::set_alignment(vector<vec3d> from, vector<vec3d> to)
 {
-   
-   const mat3d r = mat3d::rot(0.1,0,0)
-                 * mat3d::rot(0,0.2,0)
-                 * mat3d::rot(0,0,0.3);
-   const mat3d inv_r = mat3d::rot(0,0,-0.3)
-                 * mat3d::rot(0,-0.2,0)
-                 * mat3d::rot(-0.1,0,0);
-   transform(to, r);
-      
+   const mat3d r = mat3d::rot(0.001,0,0)
+                 * mat3d::rot(0,0.002,0)
+                 * mat3d::rot(0,0,0.003);
+   const mat3d inv_r = mat3d::rot(0,0,-0.003)
+                 * mat3d::rot(0,-0.002,0)
+                 * mat3d::rot(-0.001,0,0);
+       
+   if(to.size()>1)
+      transform(to, r);
+
    mat3d trans = mat3d::transl(to[0] - from[0]);
 
    if(to.size()>1) {
@@ -222,8 +223,8 @@ mat3d &mat3d::set_alignment(vector<vec3d> from, vector<vec3d> to)
             * mat3d::transl(-to[0])
             * trans;
    }
-
-   *this = inv_r*trans;
+   
+   *this = (to.size()>1) ? inv_r * trans : trans;
    return *this;
 }
 
