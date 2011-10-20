@@ -238,7 +238,7 @@ class iso_type
       vec3d get_transl() const { return transl; }
 
       ///Check if isometry is direct.
-      /** \return \c true if the isometry is direct, otherwise \cfalse */
+      /** \return \c true if the isometry is direct, otherwise \c false */
       bool is_direct() const { return rot_type>rt_none && rot_type<rt_inv; }
 
       ///Dump

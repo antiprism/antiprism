@@ -1,18 +1,27 @@
 Antiprism
 =========
 
-Notes for Antiprism 0.20.pre17
+Notes for Antiprism 0.20.pre18
 ------------------------------
 
-This release makes the Antiprism library available to C++
-developers and Python developers (Python interface currently
-disabled), and includes an installer for Windows.
+This release include new programs, new features and many
+changes to existing programs. A summary of changes since
+Antiprism 0.19 is included in the NEWS file.
 
-In order to make the interface consistent there have been many
-changes to the core code. This must therefore be considered an
-UNSTABLE release.
+Some of the new features are: a large collection of resource
+models, accessible by name; symmetry operations for several
+programs; the Antiprism C++ library is installed with headers
+and documention and may be developed against (this is work in
+progress); a self-extracting installer is provided for the
+Windows binary package.
 
-Please report any bugs.
+Due to the extensive changes since Antiprism 0.19 this
+should be considered an UNSTABLE release.
+
+Please report any bugs!
+
+Adrian Rossiter <adrian@antiprism.com>
+http://antiprism.com/adrian
 
 
 General
@@ -92,8 +101,4 @@ and Perl, are required. Build with
 Follow the 'Building' section to complete the build.
 
 
-Adrian.
--- 
-Adrian Rossiter <adrian@antiprism.com>
-http://antiprism.com/adrian
 

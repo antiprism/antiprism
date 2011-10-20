@@ -9,7 +9,8 @@ xx-xx-11 Adrian Rossiter <adrian@antiprism.com>
              (by Roger Kaufman)
          Changes
            poly_kscope: new options, -c colours a compound by part,
-             -s use symmetries of another polyhedron, subgroup support
+             -s use symmetries of another polyhedron, subgroup support,
+             -Q report
            off_report: new options, -S s symmetry -C h hts, -C O orbits
            off_query: new query EC for edge centroids
            off_trans: new options -Y, -y symmetry alignment,
