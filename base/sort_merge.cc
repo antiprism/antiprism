@@ -462,21 +462,19 @@ bool check_congruence(const geom_if &geom1, const geom_if &geom2, vector<map<int
    col_geom_v geom = geom1;
    geom.append(geom2);
    int ret = sort_merge_elems(geom, "vef", equiv_elems, true, 0, eps);
-   
    /*
    for(int i=0; i<3; i++) {
       const char *elems[] = { "verts", "edges", "faces" };
       fprintf(stderr, "\n%s\n", elems[i]);
-      map<int, vector<int> >::iterator mi;
+      map<int, set<int> >::iterator mi;
       for(mi=(*equiv_elems)[i].begin(); mi!=(*equiv_elems)[i].end(); ++mi) {
          fprintf(stderr, "%d <- ", mi->first);
-         for(unsigned int j=0; j<mi->second.size(); j++)
-            fprintf(stderr, "%d  ", mi->second[j]);
+         for(set<int>::iterator j=mi->second.begin(); j!=mi->second.end(); j++)
+            fprintf(stderr, "%d  ", *j);
          fprintf(stderr, "\n");
       }
    }
    */
-   
    return ret;
 }
 

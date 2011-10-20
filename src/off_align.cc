@@ -285,6 +285,7 @@ bool bond_base::add_brick(char type, const string &brick_str, char *errmsg)
 bool bond_base::bond_all(geom_if &geom_out, int out_type, char *errmsg)
 {
    geom_out.clear_all();
+   double base_rad = bound_sphere(base.verts()).get_radius();
    // check for errors before making any transfromations
    vector<bond_brick>::iterator bi;
    for(bi=bricks.begin(); bi!=bricks.end(); ++bi) {
@@ -341,13 +342,15 @@ bool bond_base::bond_all(geom_if &geom_out, int out_type, char *errmsg)
                has_merged_brick = true;
                base_out = base;
             }
+            double model_rad = base_rad +
+                                 bound_sphere(bi->geom.verts()).get_radius();
             merge_bricks.push_back(brick.geom);
             t_set ts = sym.get_trans();
             if(!ts.size())        // set to unit if not set
                ts.add(mat3d());
             for(set<mat3d>::const_iterator si=ts.begin(); si!=ts.end(); ++si) {
                vector<vector<int> > elem_maps;
-               get_congruence_maps(base, *si, elem_maps);
+               get_congruence_maps(base, *si, elem_maps, model_rad*sym_eps);
                const int f0_map = elem_maps[2][f0];
                const vector<int> &f0_mapface = base.faces(f0_map);
                int f0_sz = base.faces(f0).size();

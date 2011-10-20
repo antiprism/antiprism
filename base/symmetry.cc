@@ -1650,7 +1650,6 @@ void sch_sym_autos::init()
       rot[i] = transl[i] = 0.0;
 }
 
-
 sch_sym_autos::sch_sym_autos(const sch_sym &sym)
 {
    init();
@@ -1698,6 +1697,8 @@ sch_sym_autos::sch_sym_autos(const sch_sym &sym)
       for(int i=0; i<sz; i++)
          trans = fixed[i][visit_idxs[i]] * trans;
       fixed_trans.push_back(trans);
+      //mat3d::inverse(sym.get_to_std()) * trans * sym.get_to_std() );
+
 
       // increment visit counters
       visit_idxs[sz-1]++;
@@ -1707,7 +1708,7 @@ sch_sym_autos::sch_sym_autos(const sch_sym &sym)
             visit_idxs[sz-j-1]++;
          }
    }
-
+   
    if(type==sch_sym::S || type==sch_sym::Ch)
       free_vars = FREE_ROT_PRINCIPAL;
    if(type==sch_sym::Cv)
@@ -1721,6 +1722,23 @@ sch_sym_autos::sch_sym_autos(const sch_sym &sym)
    else if(type==sch_sym::C1)
       free_vars = FREE_ROT_FULL | FREE_TRANSL_SPACE; 
 }
+
+void sch_sym_autos::set_fixed(const t_set &fixed)
+{
+   fixed_trans.clear();
+   vector<mat3d> indirect;
+   fixed_trans.push_back(mat3d());
+   set<mat3d>::const_iterator si;
+   for(si=fixed.begin(); si!=fixed.end(); ++si) {
+      iso_type iso(*si);
+      if(iso.is_direct() && iso.get_rot_type()!=iso_type::rt_unit)
+         fixed_trans.push_back(*si);
+      else if(!iso.is_direct())
+         indirect.push_back(*si);
+   }
+   fixed_trans.insert(fixed_trans.end(), indirect.begin(), indirect.end());
+}
+
 
 bool sch_sym_autos::set_fixed_type(int type, char *errmsg)
 {

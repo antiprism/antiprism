@@ -132,7 +132,13 @@ class t_set
       /**\return The number of transformations. */
       size_t size() const { return trans.size(); }
       
-      //const set<mat3d> &get_trans() const { return trans; }
+      ///Get the underlying transformation set
+      /** return The underlying transformation set */
+      const set<mat3d> &get_trans() const { return trans; }
+      
+      ///Get the underlying transformation set
+      /** return The underlying transformation set */
+      set<mat3d> &get_trans() { return trans; }
       
       ///Check if there are transformations in the set.
       /**\return \c true if set, otherwise \c false */
@@ -337,6 +343,10 @@ class sch_sym_autos
       /// Get  fixed realignment transformations
       /**\return The fixed realigment transformations.*/
       const vector<mat3d> &get_fixed() const { return fixed_trans; }
+
+      /// Set  fixed realignment transformations
+      /**\param fixed the fixed realigment transformations.*/
+      void set_fixed(const t_set &fixed);
 
       /// Number of free rotation variables
       /**\return Number of free rotation variables (0, 1 or 3).*/

@@ -33,6 +33,7 @@
 
 #include <map>
 #include "geom.h"
+#include "coloring.h"
 #include "symmetry.h"
 
 using std::pair;
@@ -41,10 +42,9 @@ class geom_info;
 
 
 void sym_repeat(geom_if &geom, const geom_if &part, const t_set &ts,
-      char col_part_elems=ELEM_NONE);
+      char col_part_elems=ELEM_NONE, coloring *clrngs=0);
 bool sym_repeat(geom_if &geom, const geom_if &part, const sch_sym &sym,
-      char col_part_elems=ELEM_NONE);
-//void sym_align(geom_if &geom);
+      char col_part_elems=ELEM_NONE, coloring *clrngs=0);
 
 int get_voronoi_cells(geom_if &geom, vector<col_geom_v> &cells,
       string qh_args="", char *errmsg=0);

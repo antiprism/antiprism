@@ -47,6 +47,7 @@ using std::make_pair;
 using std::swap;
 
 
+
 class ksc_opts: public prog_opts
 {
    public:
@@ -55,21 +56,23 @@ class ksc_opts: public prog_opts
       sch_sym sub_sym;
       int sub_sym_conj;
       char col_elems;
+      coloring clrngs[3];
       bool consider_part_sym;
+      bool print_report;
 
       bool compound_print_list;
       int compound_number;
       string compound_realignment;
-
+      
       string sfile;
       string ifile;
       string ofile;
 
       ksc_opts(): prog_opts("poly_kscope"),
                   sub_sym_conj(0), col_elems('\0'),
-                  consider_part_sym(true),
+                  consider_part_sym(true), print_report(false),
                   compound_print_list(false), compound_number(-1)
-                  { }
+                  {}
 
       void process_command_line(int argc, char **argv);
       void usage();
@@ -99,8 +102,13 @@ void ksc_opts::usage()
 "  -c <elms> color elements with a different index number for each part. The\n"
 "            element string can include v, e and f to color, respectively,\n"
 "            vertices, edges and faces\n"
+"  -m <maps> a comma separated list of colour maps used to transform colour\n"
+"            indexes (default: rand), a part consisting of letters from\n"
+"            v, e, f, selects the element types to apply the map list to\n"
+"            (default 'vef'). The 'compound' map should give useful results.\n"
 "  -I        ignore shared symmetries, full kaleidoscopic repetition of\n"
 "            component\n"
+"  -Q        print information about compound\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
 "\n", prog_name(), help_ver_text);
@@ -118,7 +126,7 @@ void ksc_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hs:c:Iy:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hs:c:m:Iy:Qo:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -155,9 +163,32 @@ void ksc_opts::process_command_line(int argc, char **argv)
             if(strspn(optarg, "vef") != strlen(optarg))
                error(msg_str("elements to color are '%s' must be from v, e, f",
                         optarg), c);
-            col_elems = (strchr(optarg, 'v')!=0)*ELEM_VERTS +
-                        (strchr(optarg, 'e')!=0)*ELEM_EDGES +
-                        (strchr(optarg, 'f')!=0)*ELEM_FACES;
+            if(strchr(optarg, 'v')!=0) {
+               clrngs[0] = coloring();
+               clrngs[0].add_cmap(color_map().clone());
+               col_elems |= ELEM_VERTS;
+            }
+            if(strchr(optarg, 'e')!=0) {
+               clrngs[0] = coloring();
+               clrngs[0].add_cmap(color_map().clone());
+               col_elems |= ELEM_EDGES;
+            }
+            if(strchr(optarg, 'f')!=0) {
+               clrngs[0] = coloring();
+               clrngs[0].add_cmap(color_map().clone());
+               col_elems |= ELEM_FACES;
+            }
+            break;
+         
+         case 'm':
+            if(!read_colorings(clrngs, optarg, errmsg))
+               error(errmsg, c);
+            if(*errmsg)
+               warning(errmsg, c);
+            col_elems |= (clrngs[0].get_cmaps().size())*ELEM_VERTS +
+                         (clrngs[1].get_cmaps().size())*ELEM_EDGES +
+                         (clrngs[2].get_cmaps().size())*ELEM_FACES;
+   
             break;
 
          case 'y':
@@ -178,7 +209,9 @@ void ksc_opts::process_command_line(int argc, char **argv)
             consider_part_sym = false;
             break;
 
-
+         case 'Q':
+            print_report = true;
+            break;
 
          case 'o':
             ofile = optarg;
@@ -204,8 +237,6 @@ struct compound_list_item
    int type_comp;
    compound_list_item(const string &su, int typ_sub=0, int typ_comp=0):
       sub(su), type_sub(typ_sub), type_comp(typ_comp) {}
-   //bool operator < (const compound_list_item &item2)
-   //   { return sub.get_symbol() < item2.sub.get_symbol(); }
 };
 
 void compound_get_list(vector<compound_list_item> &compound_list,
@@ -229,18 +260,45 @@ void compound_get_list(vector<compound_list_item> &compound_list,
  
 }
 
+void get_final_fixed(t_set &fixed, const compound_list_item &item,
+      const sch_sym &part_sym, const sch_sym &comp_sym)
+{
+   fixed.clear();
+   sch_sym sub = part_sym.get_sub_sym(sch_sym(item.sub), item.type_sub);
+   t_set part_fixed;
+   part_fixed.get_trans().insert(sub.get_autos().get_fixed().begin(),
+                                 sub.get_autos().get_fixed().end());
+   part_fixed.conjugate(mat3d::inverse(sub.get_to_std()));
+   t_set part_final;
+   part_final.min_set(part_fixed, part_sym.get_trans());
+      
+   sch_sym comp_sub = comp_sym.get_sub_sym(sch_sym(item.sub), item.type_comp);
+   t_set comp_fixed = comp_sym.get_trans();
+   comp_fixed.conjugate(mat3d::inverse(sub.get_to_std())*comp_sub.get_to_std());
+   
+   fixed.min_set(part_final, comp_fixed);
+   fixed.conjugate(sub.get_to_std());
+}      
+
+
 void compound_print_list(const sch_sym &part_sym, const sch_sym &comp_sym)
 {
    FILE *ofile = stdout;
    vector<compound_list_item> compound_list;
    compound_get_list(compound_list, part_sym, comp_sym);
    for(int i=0; i<(int)compound_list.size(); ++i) {
-      sch_sym sub(compound_list[i].sub);
-      fprintf(ofile, "%3d: %5s", i, compound_list[i].sub.c_str());
-      fprintf(ofile, " (%2d, %2d) ", 
-            compound_list[i].type_sub, compound_list[i].type_comp);
-      fprintf(ofile, " + %2d fixed",
-            sub.get_autos().get_fixed().size());
+      const compound_list_item &item = compound_list[i];
+      sch_sym sub = part_sym.get_sub_sym(sch_sym(item.sub), item.type_sub);
+
+      t_set fixed;
+      get_final_fixed(fixed, item, part_sym, comp_sym);
+      sub.get_autos().set_fixed(fixed);
+
+
+      fprintf(ofile, "%3d: %5s", i, item.sub.c_str());
+      fprintf(ofile, " (%2d, %2d) ", item.type_sub, item.type_comp);
+      fprintf(ofile, " + %2d fixed", sub.get_autos().get_fixed().size());
+      
       int free_rots = sub.get_autos().num_free_rots();
       if(free_rots==1)
          fprintf(ofile, " x axial rotation   ");
@@ -270,13 +328,18 @@ bool compound_get_component_trans(mat3d &trans,
       return false;
    }
 
-   compound_list_item compound = compound_list[compound_number];
-   char errmsg2[MSG_SZ];
+   compound_list_item item = compound_list[compound_number];
    sch_sym part_sub_sym = part_sym.get_sub_sym(
-         sch_sym(compound.sub), compound.type_sub);
-   sch_sym comp_sub_sym = comp_sym.get_sub_sym(
-         sch_sym(compound.sub), compound.type_comp);
+         sch_sym(item.sub), item.type_sub);
+   
+   t_set fixed;
+   get_final_fixed(fixed, item, part_sym, comp_sym);
+   part_sub_sym.get_autos().set_fixed(fixed);
+   
+   sch_sym comp_sub_sym =
+      comp_sym.get_sub_sym(sch_sym(item.sub), item.type_comp);
 
+   char errmsg2[MSG_SZ];
    if(!part_sub_sym.get_autos().set_realignment(realignment.c_str(), errmsg2)) {
       if(errmsg)
          snprintf(errmsg, MSG_SZ, "sub-symmetry realignment: %s", errmsg2);
@@ -290,6 +353,19 @@ bool compound_get_component_trans(mat3d &trans,
    return true;
 }
 
+void print_report(FILE *ofile, const sch_sym &final, const sch_sym &part,
+      int cnt)
+{
+   t_set k_trans;
+   k_trans.intersection(part.get_trans(), final.get_trans());
+   sch_sym kernel(k_trans);
+
+   fprintf(ofile, "\nInformation about Compound\n");
+   fprintf(ofile, "  symmetry of part:     %5s\n", part.get_symbol().c_str());
+   fprintf(ofile, "  symmetry of compound: %5s\n", final.get_symbol().c_str());
+   fprintf(ofile, "  symmetry of kernel:   %5s\n", kernel.get_symbol().c_str());
+   fprintf(ofile, "  number of components: %5d\n", cnt);
+}
 
 
 
@@ -330,8 +406,11 @@ int main(int argc, char *argv[])
    t_set min_ts;
    min_ts.min_set(opts.sym.get_trans(), part_sym.get_trans());
 
+   if(opts.print_report)
+      print_report(stderr, opts.sym, part_sym, min_ts.size());
+
    col_geom_v comp_geom;
-   sym_repeat(comp_geom, geom, min_ts, opts.col_elems);
+   sym_repeat(comp_geom, geom, min_ts, opts.col_elems, opts.clrngs);
 
    if(!comp_geom.write(opts.ofile, errmsg))
       opts.error(errmsg);

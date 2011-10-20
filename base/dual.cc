@@ -48,37 +48,42 @@ using std::string;
 
 
 void sym_repeat(geom_if &geom, const geom_if &part, const t_set &ts,
-      char col_part_elems)
+      char col_part_elems, coloring *clrngs)
 {
+   coloring tmp_clrngs[3];
+   if(!clrngs)
+      clrngs = tmp_clrngs;
+
    col_geom_v symmetry_unit = part;
-   //symmetry_unit.append(part);
    geom.clear_all();
    t_set::const_iterator si;
    int idx=0;
    for(si=ts.begin(); si!=ts.end(); si++, idx++) {
       col_geom_v sym_unit = symmetry_unit;
       sym_unit.transform(*si);
-      coloring clrng(&sym_unit);
+      for(int i=0; i<3; i++)
+         clrngs[i].set_geom(&sym_unit);
+
       if(col_part_elems & ELEM_VERTS)
-         clrng.v_one_col(idx);
+         clrngs[0].v_one_col(clrngs[0].get_col(idx));
       if(col_part_elems & ELEM_EDGES) {
          sym_unit.add_missing_impl_edges();
-         clrng.e_one_col(idx);
+         clrngs[1].e_one_col(clrngs[1].get_col(idx));
       }
       if(col_part_elems & ELEM_FACES)
-         clrng.f_one_col(idx);
+         clrngs[2].f_one_col(clrngs[2].get_col(idx));
       geom.append(sym_unit);
    }
 }
 
 bool sym_repeat(geom_if &geom, const geom_if &part, const sch_sym &sym,
-      char col_part_elems)
+      char col_part_elems, coloring *clrngs)
 {
    t_set ts;
    sym.get_trans(ts);
    if(!ts.is_set())
       return false;
-   sym_repeat(geom, part, ts, col_part_elems);
+   sym_repeat(geom, part, ts, col_part_elems, clrngs);
    return true;
 }
 
