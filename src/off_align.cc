@@ -378,7 +378,7 @@ bool bond_base::bond_all(geom_if &geom_out, int out_type, char *errmsg)
    }
 
    if(face_params.size()) {
-      map<int, vector<int> >::const_reverse_iterator mi;  
+      map<int, vector<int> >::reverse_iterator mi;  
       for(mi = face_params.rbegin(); mi!=face_params.rend(); ++mi) {
          col_geom_v bgeom = merge_bricks[mi->second[1]];
          if(!mi->second[2])  // symmetry was indirect
