@@ -297,7 +297,7 @@ void compound_print_list(const sch_sym &part_sym, const sch_sym &comp_sym)
 
       fprintf(ofile, "%3d: %5s", i, item.sub.c_str());
       fprintf(ofile, " (%2d, %2d) ", item.type_sub, item.type_comp);
-      fprintf(ofile, " + %2d fixed", sub.get_autos().get_fixed().size());
+      fprintf(ofile, " + %2u fixed", (unsigned int)sub.get_autos().get_fixed().size());
       
       int free_rots = sub.get_autos().num_free_rots();
       if(free_rots==1)
@@ -322,9 +322,14 @@ bool compound_get_component_trans(mat3d &trans,
    vector<compound_list_item> compound_list;
    compound_get_list(compound_list, part_sym, comp_sym);
    if(compound_number<0 || compound_number>=(int)compound_list.size()) {
-      if(errmsg)
-         sprintf(errmsg, "compound number '%d' is not in range 0 to %d\n",
-               compound_number, compound_list.size()-1);
+      if(errmsg) {
+         if(compound_list.size()>1)
+            sprintf(errmsg, "compound number '%d' is not in range 0 to %d\n",
+                  compound_number, (int)compound_list.size()-1);
+         else
+            sprintf(errmsg, "compound number '%d' not in range, must be 0\n",
+                  compound_number);
+      }
       return false;
    }
 

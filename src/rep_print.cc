@@ -223,8 +223,8 @@ void rep_printer::symmetry()
    fprintf(ofile, "[symmetry]\n");
    fprintf(ofile, "type = %s\n", get_symmetry_type_name().c_str());
    
-   fprintf(ofile, "realignments = %d fixed",
-         get_symmetry_autos().get_fixed().size());
+   fprintf(ofile, "realignments = %u fixed",
+         (unsigned int)get_symmetry_autos().get_fixed().size());
    int free_rots = get_symmetry_autos().num_free_rots();
    if(free_rots==1)
       fprintf(ofile, " x axial rotation");
@@ -405,7 +405,7 @@ void rep_printer::sym_orbit_cnts()
       vector<set<int> >::const_iterator vi;
       for(vi=sym_equivs[i].begin(); vi!=sym_equivs[i].end(); ++vi)
          cnt_list += msg_str("%d, ", vi->size());
-      fprintf(ofile, "%s: %d ", elems[i], sym_equivs[i].size());
+      fprintf(ofile, "%s: %u ", elems[i], (unsigned int)sym_equivs[i].size());
       if(cnt_list.size())
          fprintf(ofile, " (%s)",
                cnt_list.substr(0, cnt_list.size()-2).c_str());

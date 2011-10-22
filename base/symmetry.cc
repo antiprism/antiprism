@@ -1754,7 +1754,7 @@ bool sch_sym_autos::set_fixed_type(int type, char *errmsg)
                   type);
          else
             snprintf(errmsg, MSG_SZ, "fixed type: invalid type %d, must be 0-%d",
-                  type, fixed_trans.size()-1);
+                  type, (int)fixed_trans.size()-1);
       }
    }
    else {

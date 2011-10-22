@@ -266,7 +266,7 @@ bool bond_base::add_brick(char type, const string &brick_str, char *errmsg)
          if(errmsg)
             snprintf(errmsg, MSG_SZ,
                   "bond selection number is %d, last selection is %d\n",
-                  brick.bond[2], aligns.size()-1);
+                  brick.bond[2], (int)aligns.size()-1);
             return false;
       }
       vector<int> &face = brick.geom.raw_faces()[f1];
