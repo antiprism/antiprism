@@ -40,16 +40,16 @@ void make_polar_zono(geom_if &zono, int star_n, bool out_star);
 
 
 // RK - test points versus hull functions
-bool is_geom_fully_outside_hull(const geom_if &, const geom_if &, double eps=epsilon);
-bool is_geom_outside_hull(const geom_if &, const geom_if &, double eps=epsilon);
-bool is_geom_on_surface_hull(const geom_if &, const geom_if &, double eps=epsilon);
-bool is_geom_inside_hull(const geom_if &, const geom_if &, double eps=epsilon);
-bool is_geom_fully_inside_hull(const geom_if &, const geom_if &, double eps=epsilon);
-bool is_point_fully_outside_hull(const vec3d &, const geom_if &, double eps=epsilon);
-bool is_point_outside_hull(const vec3d &, const geom_if &, double eps=epsilon);
-bool is_point_on_surface_hull(const vec3d &, const geom_if &, double eps=epsilon);
-bool is_point_inside_hull(const vec3d &, const geom_if &, double eps=epsilon);
-bool is_point_fully_inside_hull(const vec3d &, const geom_if &, double eps=epsilon);
+bool is_geom_fully_outside_hull(const geom_if &geom, const geom_if &hull, double eps=epsilon);
+bool is_geom_outside_hull(const geom_if &geom, const geom_if &hull, double eps=epsilon);
+bool is_geom_on_surface_hull(const geom_if &geom, const geom_if &hull, double eps=epsilon);
+bool is_geom_inside_hull(const geom_if &geom, const geom_if &hull, double eps=epsilon);
+bool is_geom_fully_inside_hull(const geom_if &geom, const geom_if &hull, double eps=epsilon);
+bool is_point_fully_outside_hull(const vec3d &P, const geom_if &hull, double eps=epsilon);
+bool is_point_outside_hull(const vec3d &P, const geom_if &hull, double eps=epsilon);
+bool is_point_on_surface_hull(const vec3d &P, const geom_if &hull, double eps=epsilon);
+bool is_point_inside_hull(const vec3d &P, const geom_if &hull, double eps=epsilon);
+bool is_point_fully_inside_hull(const vec3d &P, const geom_if &hull, double eps=epsilon);
 
 
 // RK - Various find functions for geom
@@ -113,6 +113,13 @@ class fnormals
 
       xnormal operator [](unsigned int idx) const { return ((is_set() && in_range(idx)) ? normals[idx] : xnormal()); }
 };
+
+// RK - functions for winding number
+col_geom_v faces_to_geom(const col_geom_v &geom, const vector<int> &face_idxs);
+double isLeft(const vec3d &P0, const vec3d &P1, const vec3d &P2, const int &idx);
+bool wn_PnPoly(const geom_if &polygon, const vec3d &P, const int &idx, int &winding_number, double eps=epsilon);
+int get_winding_number(const geom_if &polygn, const vector<vec3d> &pnts, const xnormal &face_normal, const double eps=epsilon);
+int find_polygon_denominator(const geom_if &geom, const unsigned int &face_idx, const bool &unsign, double eps=epsilon);
 
 #endif // GEOM_UTILS_H
 

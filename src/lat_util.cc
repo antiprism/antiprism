@@ -148,10 +148,10 @@ void lutil_opts::usage()
 "\nListing Options\n"
 "  -Q <vecs> center for radius calculations in -L (default: centroid)\n"
 "               c - original center, o - original center + offset in -q\n"
-"  -L <opt>  list unique radial distances of points\n"
-"               f - full report, v - values only (to stdout)\n"
-"  -S <opt>  list every possible strut value\n"
-"               f - full report, v - values only (to stdout)\n"
+"  -L <opt>  list unique radial distances of points (to standard output)\n"
+"               f - full report, v - values only\n"
+"  -S <opt>  list every possible strut value (to standard output)\n"
+"               f - full report, v - values only\n"
 "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
 "  -V <col>  vertex color, (optional) elements, (optional) transparency\n"
 "               elements to color are l - lattice, c - convex hull, v - voronoi\n"
@@ -599,14 +599,23 @@ void lutil_opts::process_command_line(int argc, char **argv)
    while(argc-optind)
       ifiles.push_back(string(argv[optind++]));
 
+   if (container == 's' && cfile.length())
+      error("-c and -k cannot be specified together");
+
+   if (append_container && !cfile.length())
+      error("container can only be appended if one is provided with -k", 'K');
+
    if (radius_default == 'k' && !cfile.length())
-      error("-r k can only be used if -k container is specified");
+      error("-r k can only be used if -k container is specified",'r');
       
    if (container == 'c' && !cfile.length() && (radius != 0 || offset.is_set()))
       warning("cubic container in use. Radius and offset ignored");
       
    //if ((container == 's' || (cfile.length() && !radius_default)) && !radius)
    //   error("radius not set");
+
+   if (list_radii && list_struts)
+      error("cannot list radii and struts at the same time");
    
    epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
@@ -719,11 +728,11 @@ void process_lattices(col_geom_v &geom, col_geom_v &container, const col_geom_v 
          if (opts.list_radii_original_center == 'o')
             opts.list_radii_center += opts.offset;
       }
-      list_grid_radii(geom, opts.list_radii_center, opts.list_radii, opts.epsilon);
+      list_grid_radii(opts.ofile, geom, opts.list_radii_center, opts.list_radii, opts.epsilon);
    }
-
+   else
    if (opts.list_struts)
-      list_grid_struts(geom, opts.list_struts, opts.epsilon);
+      list_grid_struts(opts.ofile, geom, opts.list_struts, opts.epsilon);
    
    if (opts.append_container) {
       container.add_missing_impl_edges();

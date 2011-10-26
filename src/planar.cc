@@ -59,7 +59,7 @@ class planar_opts: public prog_opts {
       int polygon_fill_type;
       int winding_rule;
       bool color_by_winding_number;
-      bool orient;
+      char orient;
       bool hole_detection;
       vec3d center;
       bool stitch_faces;
@@ -91,7 +91,7 @@ class planar_opts: public prog_opts {
                         polygon_fill_type(0),
                         winding_rule(INT_MAX),
                         color_by_winding_number(false),
-                        orient(false),
+                        orient('\0'),
                         hole_detection(true),
                         stitch_faces(false),
                         simplify_face_edges(false),
@@ -130,14 +130,16 @@ void planar_opts::usage()
 "Options\n"
 "%s"
 "  -d <opt>  blend overlapping (tile) or adjacent (merge) planar faces\n"  
-"               tile=1  merge=2 (default: none)\n"
+"               tile=1, merge=2 (default: none)\n"
 "  -p <opt>  polygon fill algorithm.  angular=1, modulo2=2 (pnpoly)\n"
 "               triangulation=3, even_overlap=4, alt_modulo2=5 (default: 1)\n"
 "  -w <opt>  winding rule, include face parts according to winding number\n"
 "               odd, even, positive, negative, nonzero, zero (default: none)\n"
 "               zodd, zeven, zpositive, znegative (includes zero)\n"
 "               or include absolute value or higher of a positive integer\n"
-"  -O        orient the faces (if possible), flip orientation if oriented\n"
+"  -O <opt>  orient the faces first (if possible) then\n"
+"               p - positive volume, n - negative volume, r - reverse\n"
+"               R - reverse the orientation of the model as given\n"
 "  -H        turn off hole detection\n"
 "  -C <xyz>  center of model, in form 'X,Y,Z' (default: centroid)\n"
 "  -S        stitch seams created by tiling or merging\n"
@@ -201,7 +203,7 @@ void planar_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hl:d:p:w:OHC:SIe:E:Db:M:s:t:v:u:a:cyf:T:m:Z:Wn:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hl:d:p:w:O:HC:SIe:E:Db:M:s:t:v:u:a:cyf:T:m:Z:Wn:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -246,7 +248,9 @@ void planar_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'O':
-            orient = true;
+            if(strspn(optarg, "pnrR") != strlen(optarg) || strlen(optarg)>1)
+               error(msg_str("orient option is '%s', must be p, n, r or R", optarg), c);
+            orient = *optarg;
             break;
 
          case 'H':
@@ -635,19 +639,6 @@ bool edge_into_geom(col_geom_v &geom, const int &v_idx1, const int &v_idx2, col_
    return ((answer < 0) ? true : false);
 }
 
-// put faces numbers in face_idxs into fgeom
-col_geom_v faces_to_geom(const col_geom_v &geom, const vector<int> &face_idxs)
-{
-   col_geom_v fgeom;
-   fgeom.add_verts(geom.verts());
-   for(unsigned int i=0; i<face_idxs.size(); i++) {
-      unsigned int j = face_idxs[i];
-      fgeom.add_col_face(geom.faces()[j],geom.get_f_col(j));
-   }
-   fgeom.delete_verts(fgeom.get_info().get_free_verts());
-   return fgeom;
-}
-
 // save free edges into a geom
 col_geom_v free_edges_into_geom(const col_geom_v &geom)
 {
@@ -962,161 +953,6 @@ bool pnpoly(const geom_if &polygon, const vec3d &P, const int &idx, const bool &
    }
 
    return answer;
-}
-
-// Copyright 2001, softSurfer (www.softsurfer.com)
-// This code may be freely used and modified for any purpose
-// providing that this copyright notice is included with it.
-// SoftSurfer makes no warranty for this code, and cannot be held
-// liable for any real or imagined damage resulting from its use.
-// Users of this code must verify correctness for their application.
-
-//    a Point is defined by its coordinates {int x, y;}
-//===================================================================
-
-// isLeft(): tests if a point is Left|On|Right of an infinite line.
-//    Input:  three points P0, P1, and P2
-//    Return: >0 for P2 left of the line through P0 and P1
-//            =0 for P2 on the line
-//            <0 for P2 right of the line
-//    See: the January 2001 Algorithm "Area of 2D and 3D Triangles and Polygons"
-
-//inline int
-//isLeft( Point P0, Point P1, Point P2 )
-
-// RK - this works with wn_PnPoly better if a double is passed back
-
-double isLeft(const vec3d &P0, const vec3d &P1, const vec3d &P2, const int &idx)
-{
-   int idx1 = (idx+1)%3;
-   int idx2 = (idx+2)%3;
-
-   double P0_x = P0[idx1];
-   double P0_y = P0[idx2];
-
-   double P1_x = P1[idx1];
-   double P1_y = P1[idx2];
-
-   double P2_x = P2[idx1];
-   double P2_y = P2[idx2];
-
-   return ( (P1_x - P0_x) * (P2_y - P0_y)
-          - (P2_x - P0_x) * (P1_y - P0_y) );
-}
-
-//===================================================================
-
-// cn_PnPoly(): crossing number test for a point in a polygon
-//      Input:   P = a point,
-//               V[] = vertex points of a polygon V[n+1] with V[n]=V[0]
-//      Return:  0 = outside, 1 = inside
-// This code is patterned after [Franklin, 2000]
-
-//int
-//cn_PnPoly( Point P, Point* V, int n )
-
-// RK - try to use same variable names as original pnpoly
-
-/* RK - Not currently used. none of the tests consider epsilon; if used recommend using functions
-
-bool cn_PnPoly(const geom_if &polygon, const vec3d &P, const int &idx, int &crossing_number, const double &eps)
-{
-   const vector<vec3d> &verts = polygon.verts();
-
-   int idx1 = (idx+1)%3;
-   int idx2 = (idx+2)%3;
-
-   double testx = P[idx1]; // P.x
-   double testy = P[idx2]; // P.y
-
-   const vector<int> &face = polygon.faces()[0];
-   int n = face.size();
-
-   int cn = 0;    // the crossing number counter
-
-   // loop through all edges of the polygon
-   for (int i=0; i<n; i++) {    // edge from face[i] to face[i+1]
-      int j = (i+1)%n;
-
-      double vertx_i = verts[face[i]][idx1]; // V[i].x
-      double verty_i = verts[face[i]][idx2]; // V[i].y
-      double vertx_j = verts[face[j]][idx1]; // V[i+1].x
-      double verty_j = verts[face[j]][idx2]; // V[i+1].y
-
-      if (((verty_i <= testy) && (verty_j > testy))          // an upward crossing
-       || ((verty_i > testy) && (verty_j <= testy))) {       // a downward crossing
-         // compute the actual edge-ray intersect x-coordinate
-         double vt = (testy - verty_i) / (verty_j - verty_i);
-         if (testx < vertx_i + vt * (vertx_j - vertx_i))     // testx < intersect
-            ++cn;   // a valid crossing of y=testy right of testx
-       }
-   }
-
-   crossing_number = cn;
-
-   //return (cn&1);    // 0 if even (out), and 1 if odd (in)
-   return (cn&1 ? true : false); // 0 if even (out), and 1 if odd (in)
-}
-*/
-//===================================================================
-
-// wn_PnPoly(): winding number test for a point in a polygon
-//      Input:   P = a point,
-//               V[] = vertex points of a polygon V[n+1] with V[n]=V[0]
-//      Return:  wn = the winding number (=0 only if P is outside V[])
-
-//int
-//wn_PnPoly( Point P, Point* V, int n )
-
-// RK - try to use same variable names as original pnpoly
-// RK - there is proof that there are mistakes when epsilon is not considered
-// RK - wn is n time too large. winding_number = wn/n
-
-int wn_PnPoly(const geom_if &polygon, const vec3d &P, const int &idx, int &winding_number, const double &eps)
-{
-   const vector<vec3d> &verts = polygon.verts();
-
-   int idx2 = (idx+2)%3;
-
-   double testy = P[idx2]; // P.y
-
-   const vector<int> &face = polygon.faces()[0];
-   int n = face.size();
-
-   int wn = 0;    // the winding number counter
-
-   // loop through all edges of the polygon
-   for (int i=0; i<n; i++) {   // edge from face[i] to face[i+1]
-      int j = (i+1)%n;
-
-      vec3d vert_i = verts[face[i]]; // V[i]
-      vec3d vert_j = verts[face[j]]; // V[[i+1]
-
-      double verty_i = vert_i[idx2]; // V[i].y
-      double verty_j = vert_j[idx2]; // V[i+1].y
-
-      for (int i=0; i<n; i++) {      // edge from face[i] to face[i+1]
-         //if (verty_i <= testy) {   // start y <= P.y
-         if (double_le(verty_i,testy,eps)) {     
-            //if (verty_j > testy)     // an upward crossing
-            if (double_gt(verty_j,testy,eps))
-               //if (isLeft( vert_i, vert_j, P, idx ) > eps)  // P left of edge
-               if (double_gt(isLeft( vert_i, vert_j, P, idx ),0,eps))
-                  ++wn;              // have a valid up intersect
-         }
-         else {                      // start y > P.y (no test needed)
-            //if (verty_j <= testy)              // a downward crossing
-            if (double_le(verty_j,testy,eps))
-               //if (isLeft( vert_i, vert_j, P, idx ) < -eps)  // P right of edge
-               if (double_lt(isLeft( vert_i, vert_j, P, idx ),0,eps))
-                  --wn;              // have a valid down intersect
-         }
-      }
-   }
-
-   winding_number = wn / n;
-
-   return (wn ? true : false);
 }
 
 //===================================================================
@@ -1550,7 +1386,7 @@ void build_turn_map(const geom_if &geom, map<pair<int, int>, int> &turn_map, map
                continue;
             double angle = angle_map[make_pair(b,c)];;
             if (angle >= 0 && angle < base_angle)
-               angle +=360;
+               angle += 360;
             angles.push_back(make_pair(angle,c));
          }
          // the minimum angle is now the next higher angle than base angle. it will be at the top of the sort
@@ -1714,27 +1550,7 @@ bool winding_rule_filter(const int &winding_rule, const int &winding_number)
    return answer;
 }
 
-// the winding number is correct when the faces are placed on the xy-plane
-// geom and P are copies because they are going to be rotated
-int get_winding_number(col_geom_v polygon, vec3d P, const xnormal &pnormal, const double &eps)
-{
-   mat3d trans = mat3d::rot(pnormal.outward().unit(), vec3d(0,0,1));
-   polygon.transform(trans);
-
-   // also rotate point per matrix
-   col_geom_v vgeom;
-   int v_idx = vertex_into_geom(vgeom, P, col_val::invisible, eps);
-   vgeom.transform(trans);
-   P = vgeom.verts()[v_idx];
-   vgeom.clear_all();
-
-   int winding_number = 0;
-   // idx = 2;
-   wn_PnPoly(polygon, P, 2, winding_number, eps);
-   return winding_number;
-}
-
-void sample_colors(col_geom_v &sgeom, const col_geom_v &cgeom, const int &planar_merge_type, const vector<xnormal> &original_normals, const vector<int> &nonconvex_faces,
+void sample_colors(col_geom_v &sgeom, const col_geom_v &cgeom, const int &planar_merge_type, const vector<xnormal> &original_normals, const vector<int> &nonconvex_faces, const vec3d &center,
    const int &polygon_fill_type, const int &winding_rule, const bool &color_by_winding_number, col_val &zero_density_color, const bool &zero_density_force_blend, const double &brightness_adj,
    const int &color_system_mode, const double &sat_power, const double &sat_threshold, const double &value_power, const double &value_advance, const int &alpha_mode, const bool &ryb_mode, const double &eps)
 {
@@ -1756,18 +1572,17 @@ void sample_colors(col_geom_v &sgeom, const col_geom_v &cgeom, const int &planar
 
       // if the sampling face is convex
       if(find(nonconvex_faces.begin(), nonconvex_faces.end(), (int)i) == nonconvex_faces.end())
-         points.push_back(centroid(sgeom.verts(), sfaces[i]));
+         points.push_back(sgeom.face_cent(i));
       else {
       // else non-convex. need to triangulate the non-convex sample polygon to sample on centroid(s) of the triangles (until one is hit)
          vector<int> sface_idxs;
          sface_idxs.push_back(i);
          col_geom_v spolygon = faces_to_geom(sgeom, sface_idxs);
          spolygon.triangulate();
-         const vector<vector<int> > &spfaces = spolygon.faces();
          // when merging and it is a nonconvex face, then have to sample all the centroids. else only sample one of them
-         int sz = (planar_merge_type==1) ? 1 : spfaces.size();
+         int sz = (planar_merge_type==1) ? 1 : spolygon.faces().size();
          for(int k=0; k<sz; k++)
-            points.push_back(centroid(spolygon.verts(), spfaces[k]));
+            points.push_back(spolygon.face_cent(k));
       }
 
       // accumulate winding numbers
@@ -1785,24 +1600,43 @@ void sample_colors(col_geom_v &sgeom, const col_geom_v &cgeom, const int &planar
             tpolygon.triangulate();
          }
 
-        xnormal original_normal =  original_normals[j];
-        vec3d normal = original_normal.raw().unit();
+         xnormal original_normal =  original_normals[j];
+         vec3d normal = original_normal.unit();
 
          // if merging we have to sample all the centroids until there is a hit. otherwise k will begin and end at 0
-         // checking to see if points landing on edges is not necessary since centroids should always be away from edges
          for(unsigned int k=0; k<points.size(); k++) {
-            bool answer = is_point_inside_polygon((polygon_fill_type == 3 ? tpolygon : polygon), points[k], normal, false, false, polygon_fill_type, eps);
+            bool answer = is_point_inside_polygon((polygon_fill_type == 3 ? tpolygon : polygon), points[k], normal, true, false, polygon_fill_type, eps);
             if (answer) {
-               if ((winding_rule != INT_MAX) || color_by_winding_number) {
-                  int winding_number = get_winding_number(polygon, points[k], original_normal, eps);
-                  winding_total += winding_number;
+               vector<vec3d> one_point;
+               one_point.push_back(points[k]);
+               int winding_number = get_winding_number(polygon, one_point, original_normal, eps);
+
+               // if merging, find largest magnitude of winding number
+               // if they are -W and +W, chose the positive
+               if (planar_merge_type==2) {
+                  if ((abs(winding_number) > abs(winding_total)) || ((winding_number > 0) && (winding_number == -winding_total)))
+                     winding_total = winding_number;
                }
+               // otherwise just total
+               else
+                  winding_total += winding_number;
 
                cols.push_back(cgeom.get_f_col(j));
                break;
             }
          }
       }
+
+      // correct the winding number of the new face. (reverse face if necessary)
+      vector<int> face_idxs;
+      face_idxs.push_back(i);
+      col_geom_v polygon = faces_to_geom(sgeom, face_idxs);
+      vector<vec3d> one_point;
+      one_point.push_back(sgeom.face_cent(i));
+      xnormal sface_normal(sgeom, i, center, eps);
+      int winding_number = get_winding_number(polygon, one_point, sface_normal, eps);
+      if ((winding_number < 0 && winding_total > 0) || (winding_number > 0 && winding_total < 0))
+         reverse(sgeom.raw_faces()[i].begin(), sgeom.raw_faces()[i].end());
 
       if (!color_by_winding_number) { 
          if ((winding_rule != INT_MAX)) {
@@ -1855,7 +1689,7 @@ void collect_original_normals(vector<xnormal> &original_normals, const vector<in
       original_normals.push_back(fnormals[coplanar_face_list[i]]);
 }
 
-void blend_overlapping_faces(col_geom_v &geom, const vector<vector<int> > &coplanar_faces_list, const vector<xnormal> &coplanar_normals, const fnormals &fnormals,
+void blend_overlapping_faces(col_geom_v &geom, const vector<vector<int> > &coplanar_faces_list, const vector<xnormal> &coplanar_normals, const fnormals &fnormals, const vec3d &center,
    const int &planar_merge_type, const int &polygon_fill_type,
    const bool &hole_detection, const int &winding_rule, const bool &color_by_winding_number, col_val &zero_density_color, const bool &zero_density_force_blend, const double &brightness_adj,
    const int &color_system_mode, const double &sat_power, const double &sat_threshold, const double &value_power, const double &value_advance, const int &alpha_mode, const bool &ryb_mode, const double &eps)
@@ -1900,7 +1734,7 @@ void blend_overlapping_faces(col_geom_v &geom, const vector<vector<int> > &copla
       // original normals are needed for sampling colors
       vector<xnormal> original_normals;
       collect_original_normals(original_normals, coplanar_faces_list[i], fnormals);
-      sample_colors(sgeom, cgeom, planar_merge_type, original_normals, nonconvex_faces,
+      sample_colors(sgeom, cgeom, planar_merge_type, original_normals, nonconvex_faces, center,
                     polygon_fill_type, winding_rule, color_by_winding_number, zero_density_color, zero_density_force_blend, brightness_adj,
                     color_system_mode, sat_power, sat_threshold, value_power, value_advance, alpha_mode, ryb_mode, eps);
  
@@ -1928,7 +1762,7 @@ void planar_merge(col_geom_v &geom, const int &planar_merge_type, const int &pol
    bool filtered = true;
    build_coplanar_faces_list(geom, coplanar_faces_list, coplanar_normals, face_normals, point_outward, fold_normals, filtered, eps);
 
-   blend_overlapping_faces(geom, coplanar_faces_list, coplanar_normals, face_normals,
+   blend_overlapping_faces(geom, coplanar_faces_list, coplanar_normals, face_normals, center,
                            planar_merge_type, polygon_fill_type,
                            hole_detection, winding_rule, color_by_winding_number, zero_density_color, zero_density_force_blend, brightness_adj,
                            color_system_mode, sat_power, sat_threshold, value_power, value_advance, alpha_mode, ryb_mode, eps);
@@ -2357,6 +2191,9 @@ void special_edge_process(col_geom_v &geom, const char &special_edge_processing,
          geom.set_v_col(i,col_val());
    }
 
+   // and strip any standed vertices
+   geom.delete_verts(geom.get_info().get_free_verts());
+
    // if stripping only
    if (special_edge_processing == 's')
       return;
@@ -2430,9 +2267,6 @@ void delete_invisible_faces(col_geom_v &geom, const bool &hole_detection)
       geom.delete_edges(deleted_elems);
       deleted_elems.clear();
    }
-
-   // and strip any standed vertices
-   geom.delete_verts(geom.get_info().get_free_verts());
 }
 
 void make_hole_connectors_invisible(col_geom_v &geom)
@@ -2481,6 +2315,26 @@ void do_cmy_mode(col_geom_v &geom, const bool &ryb_mode, const char &edge_blendi
          geom.set_v_col(i,rgb_complement(geom.get_v_col(i), ryb_mode));
 }
 
+void orient_model(geom_if &geom, char option, char *errmsg)
+{
+   if(errmsg)
+      *errmsg = '\0';
+
+   geom_info info(geom);
+   if (!info.is_orientable())
+      if (errmsg)
+         strcpy(errmsg,"input file contains a non-orientable geometry");
+   if (!info.is_oriented() && option != 'R')
+      geom.orient();
+   info.reset();
+   double vol = info.volume();
+   if (vol == 0 && (option == 'n' || option == 'p'))
+      if (errmsg)
+         strcpy(errmsg,"volume is zero. use option r to reverse");
+   if ((vol > 0 && option == 'n') || (vol < 0 && option == 'p') || option == 'r' || option == 'R')
+      geom.orient_reverse();      
+}
+
 int main(int argc, char *argv[])
 {
    planar_opts opts;
@@ -2494,14 +2348,14 @@ int main(int argc, char *argv[])
       opts.warning(errmsg);
 
    if (opts.orient) {
-      geom.orient_reverse();
-      geom.orient();
-      geom_info rep(geom);
-      if(!rep.is_oriented()) {
-         snprintf(errmsg, MSG_SZ, "input file contains a non-orientable geometry");
+      orient_model(geom, opts.orient, errmsg);
+      if (*errmsg)
          opts.warning(errmsg, 'O');
-      }
    }
+
+   // default center is centroid
+   if (!opts.center.is_set())
+      opts.center = centroid(*geom.get_verts());
 
    // collect free edges get deleted later. save them if they exist
    // color merge

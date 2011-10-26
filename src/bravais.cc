@@ -319,10 +319,10 @@ void brav_opts::usage()
 "  -B        display the list of Bravais lattices\n"
 "  -Q <vecs> center for radius calculations in -L (default: centroid)\n"
 "               c - original center, o - original center + offset in -q\n"
-"  -L <opt>  list unique radial distances of points\n"
-"               f - full report, v - values only (to stdout)\n"
-"  -S <opt>  list every possible strut value\n"
-"               f - full report, v - values only (to stdout)\n"
+"  -L <opt>  list unique radial distances of points (to standard output)\n"
+"               f - full report, v - values only\n"
+"  -S <opt>  list every possible strut value (to standard output)\n"
+"               f - full report, v - values only\n"
 "\n"
 "\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }
@@ -877,12 +877,15 @@ void brav_opts::process_command_line(int argc, char **argv)
       
    if (radius_set and radius_by_coord.is_set())
       error("-p cannot be used with -r");
-      
-   if (radius_default == 'k' && !cfile.length())
-      error("-r k can only be used if -k container is specified");
+
+   if (container == 's' && cfile.length())
+      error("-c and -k cannot be specified together");
       
    if (append_container && !cfile.length())
       error("container can only be appended if one is provided with -k", 'K');
+
+   if (radius_default == 'k' && !cfile.length())
+      error("-r k can only be used if -k container is specified",'r');
 
    if (container == 'c' && !cfile.length() &&
          (radius != 0 || offset.is_set() || radius_by_coord.is_set()))
@@ -893,6 +896,9 @@ void brav_opts::process_command_line(int argc, char **argv)
 
    if (dual_lattice && r_lattice_type > 0)
       error("hex relation struts cannot be done on duals", 'R');
+
+   if (list_radii && list_struts)
+      error("cannot list radii and struts at the same time");
 
    epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
@@ -1957,11 +1963,11 @@ void do_bravais(col_geom_v &geom, col_geom_v &container, brav_opts &opts)
          if (opts.list_radii_original_center == 'o')
             opts.list_radii_center += opts.offset;
       }
-      list_grid_radii(geom, opts.list_radii_center, opts.list_radii, opts.epsilon);
+      list_grid_radii(opts.ofile, geom, opts.list_radii_center, opts.list_radii, opts.epsilon);
    }
-
+   else
    if (opts.list_struts)
-      list_grid_struts(geom, opts.list_struts, opts.epsilon);
+      list_grid_struts(opts.ofile, geom, opts.list_struts, opts.epsilon);
 
    // last so not to alter listing outcomes
    if (opts.cent_col.is_set())

@@ -267,8 +267,14 @@ void geom_spherical_clip(col_geom_v &geom, const double &radius, const vec3d &of
       fprintf(stderr,"bravais_spherical_clip: warning: all vertices were clipped out!\n");
 }
 
-void list_grid_radii(const col_geom_v &geom, const vec3d &list_radii_center, int report_type, double eps)
+void list_grid_radii(const string &file_name, const col_geom_v &geom, const vec3d &list_radii_center, int report_type, double eps)
 {
+   FILE *ofile = fopen(file_name.c_str(), "w");
+   if(!ofile) {
+      fprintf(stderr, "could not output file \'%s\'", file_name.c_str());
+      return;
+   }
+
    const vector<vec3d> &verts = geom.verts();
    vec3d cent = list_radii_center;
    if (!cent.is_set())
@@ -297,10 +303,10 @@ void list_grid_radii(const col_geom_v &geom, const vec3d &list_radii_center, int
          sprintf(buffer,"centroid");
       else
          sprintf(buffer,"%g,%g,%g",list_radii_center[0],list_radii_center[1],list_radii_center[2]);
-      fprintf(stderr,"\nList of unique radial distances in grid using center: %s\n\n",buffer);
+      fprintf(ofile,"\nList of unique radial distances in grid using center: %s\n\n",buffer);
 
-      fprintf(stderr,"Rank\tDistance\tD Squared\tOccurrence\n");
-      fprintf(stderr,"----\t--------\t---------\t----------\n");
+      fprintf(ofile,"Rank\tDistance\tD Squared\tOccurrence\n");
+      fprintf(ofile,"----\t--------\t---------\t----------\n");
    }
    for(unsigned int i=start+1;i<radii.size();i++) {
       if (double_eq(radii[i], comp, eps))
@@ -308,10 +314,10 @@ void list_grid_radii(const col_geom_v &geom, const vec3d &list_radii_center, int
       else {
          occur_total += occur;
          if (report_type == 1)
-            fprintf(stderr,"%d\t%-8g\t%-8g\t%d\n",rank,comp,comp*comp,occur);
+            fprintf(ofile,"%d\t%-8g\t%-8g\t%d\n",rank,comp,comp*comp,occur);
          else
          if (report_type == 2)
-            fprintf(stdout,"%.17g\n",comp);
+            fprintf(ofile,"%.17g\n",comp);
          comp = radii[i];
          occur = 1;
          rank++;
@@ -319,17 +325,23 @@ void list_grid_radii(const col_geom_v &geom, const vec3d &list_radii_center, int
    }
    occur_total += occur;
    if (report_type == 1)
-      fprintf(stderr,"%d\t%-8g\t%-8g\t%d\n\n",rank,comp,comp*comp,occur);
+      fprintf(ofile,"%d\t%-8g\t%-8g\t%d\n\n",rank,comp,comp*comp,occur);
    else
    if (report_type == 2)
-      fprintf(stdout,"%.17g\n",comp);
+      fprintf(ofile,"%.17g\n",comp);
 
    if (report_type == 1)
-      fprintf(stderr,"Total occurrences = %d\n\n",occur_total);
+      fprintf(ofile,"Total occurrences = %d\n\n",occur_total);
 }
 
-void list_grid_struts(const col_geom_v &geom, int report_type, double eps)
+void list_grid_struts(const string &file_name, const col_geom_v &geom, int report_type, double eps)
 {
+   FILE *ofile = fopen(file_name.c_str(), "w");
+   if(!ofile) {
+      fprintf(stderr, "could not output file \'%s\'", file_name.c_str());
+      return;
+   }
+
    const vector<vec3d> &verts = geom.verts();
 
    vector<double> struts;
@@ -351,10 +363,10 @@ void list_grid_struts(const col_geom_v &geom, int report_type, double eps)
    int rank = 1;
 
    if (report_type == 1) {
-      fprintf(stderr,"\nList of unique strut lengths in grid\n\n");
+      fprintf(ofile,"\nList of unique strut lengths in grid\n\n");
 
-      fprintf(stderr,"Rank\tDistance\tD Squared\tOccurrence\n");
-      fprintf(stderr,"----\t--------\t---------\t----------\n");
+      fprintf(ofile,"Rank\tDistance\tD Squared\tOccurrence\n");
+      fprintf(ofile,"----\t--------\t---------\t----------\n");
    }
    for(unsigned int i=start+1;i<struts.size();i++) {
       if (double_eq(struts[i], comp, eps))
@@ -362,10 +374,10 @@ void list_grid_struts(const col_geom_v &geom, int report_type, double eps)
       else {
          occur_total += occur;
          if (report_type == 1)
-            fprintf(stderr,"%d\t%-8g\t%-8g\t%d\n",rank,comp,comp*comp,occur);
+            fprintf(ofile,"%d\t%-8g\t%-8g\t%d\n",rank,comp,comp*comp,occur);
          else
          if (report_type == 2)
-            fprintf(stdout,"%.17g\n",comp);
+            fprintf(ofile,"%.17g\n",comp);
          comp = struts[i];
          occur = 1;
          rank++;
@@ -373,13 +385,13 @@ void list_grid_struts(const col_geom_v &geom, int report_type, double eps)
    }
    occur_total += occur;
    if (report_type == 1)
-      fprintf(stderr,"%d\t%-8g\t%-8g\t%d\n\n",rank,comp,comp*comp,occur);
+      fprintf(ofile,"%d\t%-8g\t%-8g\t%d\n\n",rank,comp,comp*comp,occur);
    else
    if (report_type == 2)
-      fprintf(stderr,"%.17g\n",comp);
+      fprintf(ofile,"%.17g\n",comp);
 
    if (report_type == 1)
-      fprintf(stderr,"Total occurrences = %d\n\n",occur_total);
+      fprintf(ofile,"Total occurrences = %d\n\n",occur_total);
 }
 
 void add_color_struts(col_geom_v &geom, const double &len2, col_val &edge_col, double eps)
