@@ -554,7 +554,9 @@ void sch_sym::find_full_sym_type(const set<sch_axis> &full_sym)
 
    // unknown symmetry
    else {
-      sym_type = sch_sym::unknown;
+      //sym_type = sch_sym::unknown;
+      //Don't allow to fail
+      sym_type = sch_sym::C1;
       to_std = mat3d();
    }
 }
@@ -951,6 +953,13 @@ static int find_syms(const geom_if &geom, t_set &ts,
 
    if(equiv_sets)
       equiv_elems_to_sets(*equiv_sets, equiv_elems, orig_equivs);
+
+   // Don't allow to fail
+   if(ts.size()==0) {
+      ts.add(mat3d());
+      if(equiv_sets)
+         get_equiv_elems(geom, ts, equiv_sets);
+   }
 
    return 1;
 }
