@@ -300,7 +300,7 @@ int main(int argc, char *argv[])
    rep.set_sig_dgts(opts.sig_digits);
    rep.set_center(opts.center);
    if(!rep.set_sub_symmetry(opts.sub_sym, errmsg))
-      opts.error("could not set subsymmetry: %s", 'y');
+      opts.error(("could not set subsymmetry: " + opts.sub_sym).c_str(), 'y');
 
    rep.is_oriented(); // set oriented value before orienting
    if(opts.orient) {

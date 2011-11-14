@@ -343,7 +343,7 @@ bool bond_base::bond_all(geom_if &geom_out, int out_type, char *errmsg)
                base_out = base;
             }
             double model_rad = base_rad +
-                                 bound_sphere(bi->geom.verts()).get_radius();
+               bound_sphere(bi->geom.verts()).get_radius();
             merge_bricks.push_back(brick.geom);
             t_set ts = sym.get_trans();
             if(!ts.size())        // set to unit if not set
@@ -354,9 +354,9 @@ bool bond_base::bond_all(geom_if &geom_out, int out_type, char *errmsg)
                const int f0_map = elem_maps[2][f0];
                const vector<int> &f0_mapface = base.faces(f0_map);
                int f0_sz = base.faces(f0).size();
-               map<int, vector<int> >::iterator vi= face_params.find(f0_map);
+               map<int, vector<int> >::iterator vi = face_params.find(f0_map);
                bool direct = iso_type(*si).is_direct();
-               if(vi==face_params.end() || (!(vi->second)[3] && direct) ) {
+               if(vi==face_params.end() || (!(vi->second)[2] && direct) ) {
                   int map_offset;
                   const int idx0 = base.faces(f0)[0];
                   for(map_offset=0; map_offset<f0_sz; map_offset++) {
@@ -368,9 +368,10 @@ bool bond_base::bond_all(geom_if &geom_out, int out_type, char *errmsg)
                         f0_mapface[(map_offset+1)%f0_sz]); 
                   face_params[f0_map] = vector<int>(4);
                   face_params[f0_map][0] = f1;
-                  face_params[f0_map][1] = merge_bricks.size()-1;
-                  face_params[f0_map][2] = direct;
-                  face_params[f0_map][3] = rev;
+                  face_params[f0_map][1] = map_offset;
+                  face_params[f0_map][2] = merge_bricks.size()-1;
+                  face_params[f0_map][3] = direct;
+                  face_params[f0_map][4] = rev;
                }
             }
          }
@@ -380,10 +381,12 @@ bool bond_base::bond_all(geom_if &geom_out, int out_type, char *errmsg)
    if(face_params.size()) {
       map<int, vector<int> >::reverse_iterator mi;  
       for(mi = face_params.rbegin(); mi!=face_params.rend(); ++mi) {
-         col_geom_v bgeom = merge_bricks[mi->second[1]];
-         if(!mi->second[2])  // symmetry was indirect
+         col_geom_v bgeom = merge_bricks[mi->second[2]];
+         vector<int> &brick_f = bgeom.raw_faces()[mi->second[0]];
+         rotate(brick_f.begin(), brick_f.begin()+mi->second[1], brick_f.end());
+         if(!mi->second[3])  // symmetry was indirect
             bgeom.transform(mat3d::inversion());
-         if(mi->second[3])   // reverse was set
+         if(mi->second[4])   // reverse was set
             bgeom.orient_reverse();
          face_bond_direct(base_out, bgeom, mi->first, mi->second[0], true);
       }
@@ -460,16 +463,15 @@ void align_opts::usage()
 "                  line alignment as above followed by a rotation\n"
 "                  around u1,u2 so v3 lies in plane of u1u2u3.\n"
 "  -f <arg>  align by face index, arg is a comma separated list of a brick\n"
-"            geometry (if empty use base) optionally followed by 'r' (reverse\n"
-"            brick orientation) followed by up to three numbers separated by\n"
-"            commas: base face index, brick face index (default: 0), polygon\n"
-"            alignment selection number (default: 0)\n"
+"            geometry (if empty use base) followed by up to three numbers\n"
+"            separated by commas: base face index, brick face index\n"
+"            (default: 0), polygon alignment selection number (default: 0)\n"
 "  -F <arg>  align and combine polyhedra by face index, arg is a comma\n"
-"            separated list of a brick geometry (if empty use base) optionally\n"
-"            followed by 'r' (reverse brick orientation) followed by up to\n"
-"            three numbers: base face index, brick face index (default: 0),\n"
-"            polygon alignment selection number (default: 0). Brick is\n"
-"            after base, bond vertices are merged, bond faces are removed\n"
+"            separated list of a brick geometry (if empty use base) followed\n"
+"            by up to three numbers: base face index, brick face index\n"
+"            (default: 0), polygon alignment selection number (default: 0).\n"
+"            Brick is after base, bond vertices are merged, bond faces are\n"
+"            removed\n"
 "  -M <val>  merge files. 0 (default) don't merge, 1 brick after\n"
 "            base, 2 brick before base\n"
 "  -y <sub>  repeat bricks according to symmetry of base. sub is symmetry\n"

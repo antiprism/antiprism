@@ -415,36 +415,6 @@ inline mat3d mat3d::transl(vec3d trans)
 }
 
 
-inline mat3d &mat3d::set_rot(vec3d axis, double a)
-{
-   to_zero();
-   m[15] = 1;
-   axis.to_unit();
-   double c = cos(a);
-   double s = sin(a);
-   double t = 1.0 - c;
-   m[0] = c + axis[0]*axis[0]*t;
-   m[5] = c + axis[1]*axis[1]*t;
-   m[10] = c + axis[2]*axis[2]*t;
-
-
-   double tmp1 = axis[0]*axis[1]*t;
-   double tmp2 = axis[2]*s;
-   m[4] = tmp1 + tmp2;
-   m[1] = tmp1 - tmp2;
-
-   tmp1 = axis[0]*axis[2]*t;
-   tmp2 = axis[1]*s;
-   m[8] = tmp1 - tmp2;
-   m[2] = tmp1 + tmp2;
-
-   tmp1 = axis[1]*axis[2]*t;
-   tmp2 = axis[0]*s;
-   m[9] = tmp1 + tmp2;
-   m[6] = tmp1 - tmp2;
-   return *this;
-}
-
 inline mat3d mat3d::rot(vec3d axis, double a)
 { 
    mat3d mat;
@@ -485,20 +455,6 @@ inline mat3d &mat3d::set_cols(const vec3d &c1, const vec3d &c2, const vec3d &c3,
    return *this;
 }
 
-inline mat3d &mat3d::set_rot(vec3d v_from, vec3d v_to)
-{
-   v_from.to_unit();
-   v_to.to_unit();
-   vec3d axis = vcross(v_from, v_to);
-   double cos_a = vdot(v_from, v_to);
-   if(fabs(cos_a) >= 1-epsilon) {
-      cos_a = cos_a>0 ? 1 : -1;
-      axis = vcross(v_from, vec3d(1.2135,2.09865,3.23784));  // fix this
-   }
-      
-   return set_rot(axis, acos(cos_a));
-}
-
 inline mat3d mat3d::rot(vec3d v_from, vec3d v_to)
 {
    mat3d mat;
@@ -506,24 +462,6 @@ inline mat3d mat3d::rot(vec3d v_from, vec3d v_to)
 }
          
    
-inline mat3d &mat3d::set_refl(vec3d norm)
-{
-   norm.to_unit();
-   double x = norm[0];
-   double y = norm[1];
-   double z = norm[2];
-   m[0] = -x*x + y*y + z*z;
-   m[1] = -2*x*y;
-   m[2] = -2*x*z;
-   m[4] = -2*y*x;
-   m[5] = x*x - y*y + z*z;
-   m[6] = -2*y*z;
-   m[8] = -2*z*x;
-   m[9] = -2*z*y;
-   m[10]= x*x + y*y - z*z;
-   return *this;
-}
-
 inline mat3d mat3d::refl(vec3d norm)
 {
    mat3d mat;
@@ -601,33 +539,6 @@ inline mat3d mat3d::alignment(vector<vec3d> from, vector<vec3d> to)
 }
 
 
-inline mat3d &mat3d::set_trans_by_angles(double yz_ang, double zx_ang,
-      double xy_ang, bool *valid)
-{
-   double sq = 1-cos(xy_ang)*cos(xy_ang)-cos(yz_ang)*cos(yz_ang) -
-      cos(zx_ang)*cos(zx_ang) + 2*cos(xy_ang)*cos(yz_ang)*cos(zx_ang);
-   if(sq<-epsilon) {
-      if(valid)
-         *valid = false;
-      to_zero();
-      return *this;
-   }
-   else if(sq<0)
-      sq = 0;
-
-   if(valid)
-      *valid = true;
-   vec3d new_x(1, 0, 0);
-   vec3d new_y(cos(xy_ang), sin(xy_ang), 0);
-   vec3d new_z(cos(zx_ang), -cos(zx_ang)/tan(xy_ang) + cos(yz_ang)/sin(xy_ang),
-               sqrt(sq)/sin(xy_ang));
-   set_cols(new_x, new_y, new_z);
-   return *this;
-}
-   
-
-
-
 inline mat3d mat3d::trans_by_angles(double yz_ang, double zx_ang, double xy_ang,
       bool *valid)
 {
@@ -667,31 +578,6 @@ inline vec3d mat3d::get_transl() const
    return vec3d(m[3], m[7], m[11]);
 }
 
-
-inline mat3d &mat3d::operator *=(const mat3d &mat)
-{
-   mat3d new_m;
-   new_m.to_zero();
-   for(int i=0; i<16; i++)
-      for(int j=0; j<4; j++)
-         new_m[i] += m[(i/4)*4+j]*mat[(j)*4 + (i%4)];
-
-   *this = new_m;
-   return *this;
-}
-
-
-inline vec3d operator *(const mat3d &mat, const vec3d &v)
-{
-   vec3d new_v(0, 0, 0);
-   for(int i=0; i<12; i++) {
-      if(i%4 != 3)
-         new_v[i/4] += mat[i]*v[i%4];
-      else
-         new_v[i/4] += mat[i];
-   }
-   return new_v;
-}
 
 inline vec3d operator *(const vec3d &v, const mat3d &m)
 {
