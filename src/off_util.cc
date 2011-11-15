@@ -104,7 +104,7 @@ void pr_opts::usage()
 "            include: v - vertices, e - edges, f - faces,  a - all (vef),\n"
 "            b - bond (merge 've' and delete any face coincident with another),\n"
 "            s - sort without merging\n"
-"  -b <opt>  merge blend color. first=1  last=2  rgb=3  ryb=4 (default: 1)\n"
+"  -b <opt>  merge blend color. first=1, last=2, rgb=3, ryb=4 (default: 1)\n"
 "  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
 "  -O        orient the faces (if possible), flip orientation if oriented\n"

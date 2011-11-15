@@ -379,6 +379,28 @@ void rep_printer::face_angles_cnts()
    fprintf(ofile, "\n");
 }
 
+void rep_printer::face_winding_cnts(const bool &unsign)
+{
+   fprintf(ofile, "[face_windings_cnts %s]\n",(unsign ? "unsigned" : "signed"));
+   map<pair<int, int>, int>::iterator mi;
+   map<pair<int, int>, int> cnts;
+   for(unsigned int i=0; i<geom.faces().size(); i++) {
+      pair<int, int> key;
+      key.first = geom.faces(i).size();
+      key.second = find_polygon_denominator(geom, i, unsign, epsilon);
+      mi = cnts.find(key);
+      if(mi == cnts.end())
+         cnts[key]=1;
+      else
+         mi->second += 1;
+   }
+   for(mi=cnts.begin(); mi!=cnts.end(); ++mi) {
+      pair<int, int> key = mi->first;
+      fprintf(ofile, "%d/%d = %d\n", key.first, key.second, mi->second);
+   }
+   fprintf(ofile, "\n");
+}
+
 void rep_printer::sym_orbit_cnts()
 {
    fprintf(ofile, "[sym_orbit_cnts]\n");

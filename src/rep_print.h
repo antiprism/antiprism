@@ -78,6 +78,7 @@ class rep_printer: public geom_info
       void vert_heights_cnts();
       void solid_angles_cnts();
       void face_angles_cnts();
+      void face_winding_cnts(const bool &unsign);
       void edge_lengths_cnts();
       void dihedral_angles_cnts();
       void sym_orbit_cnts();

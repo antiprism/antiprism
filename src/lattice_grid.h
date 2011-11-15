@@ -54,8 +54,8 @@ void add_struts(geom_if &geom, int len2);
 double lattice_radius(const geom_if &, const char &);
 void geom_container_clip(col_geom_v &, col_geom_v &, const double &, const vec3d &, bool &verbose, double eps=epsilon);
 void geom_spherical_clip(col_geom_v &, const double &, const vec3d &, bool &verbose, double eps=epsilon);
-void list_grid_radii(const col_geom_v &, const vec3d &, int report_type=1, double eps=epsilon);
-void list_grid_struts(const col_geom_v &, int report_type=1, double eps=epsilon);
+void list_grid_radii(const string &, const col_geom_v &, const vec3d &, int report_type=1, double eps=epsilon);
+void list_grid_struts(const string &, const col_geom_v &, int report_type=1, double eps=epsilon);
 void add_color_struts(col_geom_v &, const double &, col_val &, double eps=epsilon);
 void color_centroid(col_geom_v &, col_val &, double eps=epsilon);
 

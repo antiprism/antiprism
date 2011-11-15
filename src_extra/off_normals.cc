@@ -50,6 +50,7 @@ class off_normals_opts: public prog_opts {
       string ofile;
       
       char plot_elem_normals_method;
+      char normal_type;
       char exclude_normals_elems;
       char elem_normals_pointing;
       bool elem_normal_vecs;
@@ -68,6 +69,7 @@ class off_normals_opts: public prog_opts {
 
       off_normals_opts(): prog_opts("off_normals"),
                           plot_elem_normals_method('n'),
+                          normal_type('n'),
                           exclude_normals_elems('\0'),
                           elem_normals_pointing('\0'),
                           elem_normal_vecs(false),
@@ -101,13 +103,15 @@ void off_normals_opts::usage()
 "               e - connect normal to element centroid\n"
 "               d - delete faces of eliminated normals\n"
 "               D - delete all of original model\n"
+"  -t <opts> normal type\n"
+"               n - positional, p - perpendicular to element (default: n)\n"
 "  -i <elms> show pointing. The element string can include o, i and h\n"
 "               to show, respectively, outward, inward and hemispherical\n"
-"               note: exlusion occurs before o,i,r of -n (default: oih)\n"
+"               note: exlusion occurs before o, i, r of -n (default: oih)\n"
 "  -s <elms> show elements. The element string can include v, e and f\n"
 "               to show, respectively, vertices, edges and faces (default: f)\n"
 "  -p <opts> average pattern string for edge and vertex normals. Done before -n\n"
-"               r - raw  o - outward  i - inward  u - unit  (default: r)\n"
+"               r - raw, o - outward, i - inward, u - unit  (default: r)\n"
 "  -C <xyz>  center of model, in form 'X,Y,Z' (default: centroid)\n"
 "  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
@@ -133,7 +137,7 @@ void off_normals_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hn:i:s:p:O:I:E:B:C:l:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hn:t:i:s:p:O:I:E:B:C:l:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -164,6 +168,12 @@ void off_normals_opts::process_command_line(int argc, char **argv)
             else
             if(strchr(optarg, 'D'))
                exclude_normals_elems = 'D';
+            break;
+
+         case 't':
+            if(strlen(optarg) > 1 || !strchr("np", *optarg))
+               error("normal type is '"+string(optarg)+"' must be n or p", c);
+            normal_type = *optarg;
             break;
 
          case 'i':
@@ -242,7 +252,7 @@ void off_normals_opts::process_command_line(int argc, char **argv)
 }
 
 
-void add_normals(col_geom_v &geom, const char &plot_elem_normals_method, const char &exclude_normals_elems, const char &elem_normals_pointing,
+void add_normals(col_geom_v &geom, const char &plot_elem_normals_method, const char &normal_type, const char &exclude_normals_elems, const char &elem_normals_pointing,
                  const bool &elem_normal_vecs,
                  const col_val &outward_normal_col, const col_val &inward_normal_col, const col_val &edge_normal_col, const col_val &base_normal_col, const char &base_normal_method,
                  const string &show_elems, const string &show_pointing, const string &average_pattern, const vec3d &center, const double &eps)
@@ -312,13 +322,17 @@ void add_normals(col_geom_v &geom, const char &plot_elem_normals_method, const c
          if (plot_elem_normals_method == 'u')
             normal = normal.unit();
 
+         vec3d fc = geom.face_cent(i);
+         if (normal_type == 'p')
+            normal += fc;
+
          ngeom.add_col_vert(normal,col);
 
          if (elem_normal_vecs) {
             // get base color
             col_val bcol = (base_normal_col.is_set()) ? base_normal_col : ((base_normal_method == 'b') ? geom.get_f_col((int)i) : col);
             // add point at centroid
-            ngeom.add_col_vert(centroid(geom.verts(), geom.faces()[i]), bcol);
+            ngeom.add_col_vert(fc, bcol);
             // get edge color
             col_val ecol = (edge_normal_col.is_set()) ? edge_normal_col : col;
             // edge from face centroid to normal
@@ -376,6 +390,10 @@ void add_normals(col_geom_v &geom, const char &plot_elem_normals_method, const c
          if (plot_elem_normals_method == 'u')
             normal = normal.unit();
 
+         vec3d ec = centroid(geom.verts(), edge);
+         if (normal_type == 'p')
+            normal += ec;
+
          ngeom.add_col_vert(normal,col);
 
          if (elem_normal_vecs) {
@@ -385,7 +403,7 @@ void add_normals(col_geom_v &geom, const char &plot_elem_normals_method, const c
                
             col_val bcol = (base_normal_col.is_set()) ? base_normal_col : ((base_normal_method == 'b') ? expl_col : col);
             // add point at centroid
-            ngeom.add_col_vert(centroid(geom.verts(), edge), bcol);
+            ngeom.add_col_vert(ec, bcol);
             // get edge color
             col_val ecol = (edge_normal_col.is_set()) ? edge_normal_col : col;
             // edge from face centroid to normal
@@ -441,6 +459,9 @@ void add_normals(col_geom_v &geom, const char &plot_elem_normals_method, const c
          if (plot_elem_normals_method == 'u')
             normal = normal.unit();
 
+         if (normal_type == 'p')
+            normal += verts[i];
+
          ngeom.add_col_vert(normal,col);
 
          if (elem_normal_vecs) {
@@ -493,7 +514,7 @@ int main(int argc, char *argv[])
       opts.warning(errmsg);
       
    if(opts.plot_elem_normals_method)
-      add_normals(geom, opts.plot_elem_normals_method, opts.exclude_normals_elems, opts.elem_normals_pointing,
+      add_normals(geom, opts.plot_elem_normals_method, opts.normal_type, opts.exclude_normals_elems, opts.elem_normals_pointing,
                   opts.elem_normal_vecs, opts.outward_normal_col, opts.inward_normal_col, opts.edge_normal_col, opts.base_normal_col, opts.base_normal_method,
                   opts.show_elems, opts.show_pointing, opts.average_pattern, opts.center, opts.epsilon);
 
