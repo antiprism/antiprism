@@ -897,6 +897,21 @@ static bool is_sym(const geom_if &test_geom, const geom_if &geom,
    return is_congruent;
 }
 
+static void set_equiv_elems_identity(const geom_if &geom,
+      vector<vector<set<int> > > *equiv_sets)
+{
+   int cnts[3] = { geom.verts().size(),
+                   geom.edges().size(),
+                   geom.faces().size() };
+   equiv_sets->clear();
+   equiv_sets->resize(3);
+   for(int i=0; i<3; i++) {
+      (*equiv_sets)[i].resize(cnts[i]);
+      for(int j=0; j<cnts[i]; j++)
+         (*equiv_sets)[i][j].insert(j);
+   }
+}
+
 static int find_syms(const geom_if &geom, t_set &ts,
       vector<vector<set<int> > > *equiv_sets)
 {
@@ -958,7 +973,7 @@ static int find_syms(const geom_if &geom, t_set &ts,
    if(ts.size()==0) {
       ts.add(mat3d());
       if(equiv_sets)
-         get_equiv_elems(geom, ts, equiv_sets);
+         set_equiv_elems_identity(geom, equiv_sets);
    }
 
    return 1;
@@ -1205,6 +1220,13 @@ bool sch_sym::has_inversion_symmetry() const
 void get_equiv_elems(const geom_if &geom, const t_set &ts,
       vector<vector<set<int> > > *equiv_sets)
 {
+
+   equiv_sets->clear();
+   if(ts.size()<=1) {
+      set_equiv_elems_identity(geom, equiv_sets);
+      return;
+   }
+
    col_geom_v merged_geom = geom;
    vector<map<int, set<int> > > orig_equivs;
    sort_merge_elems(merged_geom, "vef", &orig_equivs, epsilon);
