@@ -36,6 +36,23 @@
 #include "geom_utils.h"
 #include "info.h"
 
+// RK - from off_util
+
+void make_edges_to_faces(geom_if &geom)
+{
+   col_geom_v egeom;
+   edges_to_faces(geom, egeom, true);
+   geom.clear_all();
+   geom.append(egeom);
+}
+
+void project_onto_sphere(geom_if &geom)
+{
+   vector<vec3d> &verts = geom.raw_verts();
+   for(unsigned int i=0; i<verts.size(); i++)
+      verts[i].to_unit();
+}
+
 
 // RK - test points versus hull functions
 

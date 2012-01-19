@@ -239,13 +239,6 @@ void centroid_to_origin(geom_if &geom)
    geom.transform(mat3d::transl(-centroid(geom.verts())));
 }
 
-void project_onto_sphere(geom_if &geom)
-{
-   vector<vec3d> &verts = geom.raw_verts();
-   for(unsigned int i=0; i<verts.size(); i++)
-      verts[i].to_unit();
-}
-
 int main(int argc, char *argv[])
 {
    cn_opts opts;

@@ -639,15 +639,6 @@ int unzip_poly(col_geom_v &geom, int root, double fract, char centring,
    return 1;
 }
 
-
-void make_edges_to_faces(geom_if &geom)
-{
-   col_geom_v egeom;
-   edges_to_faces(geom, egeom, true);
-   geom.clear_all();
-   geom.append(egeom);
-}
-
 void triangulate_faces(geom_if &geom, unsigned int winding_rule)
 {
    geom.triangulate(col_val::invisible, winding_rule);
@@ -658,7 +649,6 @@ void make_skeleton(geom_if &geom)
    geom.add_missing_impl_edges();
    geom.clear_faces();
 }
-
 
 // Roger Kaufman
 void clear_unneeded_explicit_edges(geom_if &geom)
@@ -894,7 +884,6 @@ bool add_elements(col_geom_v &geom, vector<string> add_elems, char *errmsg)
    return true;
 }
 
-
 void close_poly(col_geom_v &geom, col_val col)
 {
    int orig_faces_sz = geom.faces().size();
@@ -904,14 +893,6 @@ void close_poly(col_geom_v &geom, col_val col)
          geom.set_f_col(i, col);
    }
 }
-
-void proj_onto_sphere(geom_if &geom)
-{
-   vector<vec3d> &verts = *geom.get_verts();
-   for(unsigned int i=0; i<verts.size(); i++)
-      verts[i].to_unit();
-}
-
 
 void process_file(col_geom_v &geom, pr_opts opts)
 {
@@ -977,7 +958,7 @@ void process_file(col_geom_v &geom, pr_opts opts)
    if(opts.close)
       close_poly(geom, opts.close_col);
    if(opts.sph_proj)
-      proj_onto_sphere(geom);
+      project_onto_sphere(geom);
 }
 
 

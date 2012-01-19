@@ -39,6 +39,11 @@ double minimum_distance(const geom_if &geom, double sig_dist=0, char *errmsg=0);
 void make_polar_zono(geom_if &zono, int star_n, bool out_star);
 
 
+// RK - from off_util
+void make_edges_to_faces(geom_if &geom);
+void project_onto_sphere(geom_if &geom);
+
+
 // RK - test points versus hull functions
 bool is_geom_fully_outside_hull(const geom_if &geom, const geom_if &hull, double eps=epsilon);
 bool is_geom_outside_hull(const geom_if &geom, const geom_if &hull, double eps=epsilon);
