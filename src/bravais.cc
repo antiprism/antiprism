@@ -557,7 +557,7 @@ void brav_opts::process_command_line(int argc, char **argv)
             int next_parms_idx = 1;
 
             if (parts_sz >= 3) {
-               char parts_test[80];
+               char parts_test[MSG_SZ];
                parts_test[0] = '\0';
                strcat(parts_test,parts[0]);
                strcat(parts_test,",");
@@ -627,7 +627,7 @@ void brav_opts::process_command_line(int argc, char **argv)
             int next_parms_idx = 1;
 
             if (parts_sz >= 3) {
-               char parts_test[80];
+               char parts_test[MSG_SZ];
                parts_test[0] = '\0';
                strcat(parts_test,parts[0]);
                strcat(parts_test,",");
@@ -702,7 +702,7 @@ void brav_opts::process_command_line(int argc, char **argv)
             int next_parms_idx = 1;
 
             if (parts_sz >= 3) {
-               char parts_test[80];
+               char parts_test[MSG_SZ];
                parts_test[0] = '\0';
                strcat(parts_test,parts[0]);
                strcat(parts_test,",");

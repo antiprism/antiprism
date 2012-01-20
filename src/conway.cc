@@ -72,7 +72,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations, char 
    int num_val = 0;
    bool delayed_write = false;
 
-   string operators = "abdegjkmoprstx";
+   string operators = "abcdegjkmoprstx";
    string operands = "TCOIDPAY";
    string digits = "0123456789";
    string digits_allowed = "tkPAY";
@@ -346,7 +346,7 @@ void extended_help()
 "antiprisms, An, and pyramids, Yn, where n is a number (3 or greater) which you\n"
 "specify to indicate the size of the base you want, e.g., Y3=T, P4=C, and A3=O.\n"
 "\n"
-"Operations: Currently, abdegjkmoprst are defined. They are motivated by the\n"
+"Operations: Currently, abcdegjkmoprst are defined. They are motivated by the\n"
 "operations needed to create the Archimedean solids and their duals from the\n"
 "platonic solids.  Try each on a cube:\n"
 "\n"
@@ -362,6 +362,8 @@ void extended_help()
 "b = bevel  The bevel operation can be defined by bX=taX.  bC is the truncated\n"
 "cuboctahedron.\n"
 "Note: bevel is also known as \"omnitruncating\" the polyhedron, or omnitruncation\n"
+"\n"
+"c = chamfer   New hexagonal faces are added in place of edges.\n"
 "\n"
 "d = dual   The dual of a polyhedron has a vertex for each face, and a face for\n"
 "each vertex, of the original polyhedron, e.g., dC=O.  Duality is an operation\n"
@@ -621,9 +623,15 @@ void cn_opts::process_command_line(int argc, char **argv)
    if(argc-optind > 2)
       error("too many arguments");
 
-   cn_string = argv[optind];
-   if(strspn(cn_string.c_str(), "abdegjkmoprstxTCOIDPAY0123456789,") != strlen(cn_string.c_str()))
-      error("Conway Notation must consist of abdegjkmoprstxTCOIDPAY0123456789");
+   // avoid segfault
+   if (argc > 1)
+      cn_string = argv[optind];
+
+   if (!strlen(cn_string.c_str()))
+      error("no Conway Notation string given");
+
+   if(strspn(cn_string.c_str(), "abcdegjkmoprstxTCOIDPAY0123456789,") != strlen(cn_string.c_str()))
+      error("Conway Notation must consist of abcdegjkmoprstxTCOIDPAY0123456789");
 
    if (int pos = validate_cn_string(cn_string, operations, operand, poly_size))
       error(msg_str("Unexpected character in position %d: %s", pos+1,
@@ -647,8 +655,7 @@ void cn_opts::process_command_line(int argc, char **argv)
    if(argc-optind == 1) {
       ifile=argv[optind];
       if (operand)
-         error(msg_str("operand '%c' was specified so input file '%s' is "
-                  "unexpected", operand, ifile.c_str()));
+         error(msg_str("operand '%c' was specified so input file '%s' is unexpected", operand, ifile.c_str()));
    }
 
    // operations are done in reverse order (unless defeated)
@@ -698,7 +705,7 @@ void cn_opts::process_command_line(int argc, char **argv)
 void verbose(const char &operation, const int &op_var, const bool &verbosity)
 {
    if (verbosity) {
-      char buf[80];
+      char buf[MSG_SZ];
       buf[0] = '\0';
       switch(operation) {
          case 'a':
@@ -734,7 +741,7 @@ void verbose(const char &operation, const int &op_var, const bool &verbosity)
             fprintf(stderr,"expand as ambo, ambo:\n");
             break;
          case 'j':
-            fprintf(stderr,"join as dual, ambo, dual:\n");
+            fprintf(stderr,"join as ambo, dual:\n");
             break;
          case 'm':
             fprintf(stderr,"meta as dual, kis, join:\n");
@@ -743,7 +750,7 @@ void verbose(const char &operation, const int &op_var, const bool &verbosity)
             fprintf(stderr,"ortho as join, join:\n");
             break;
          case 's':
-            fprintf(stderr,"snub as dual, gyro, dual:\n");
+            fprintf(stderr,"snub as gyro, dual:\n");
             break;
          case 't':
             if ( op_var )
@@ -926,7 +933,7 @@ void cn_ambo(col_geom_v &geom)
    map<string, map<string, string> > faces_table;
    vector<vec3d> verts_new;
 
-   char buf1[80],buf2[80],buf3[80];
+   char buf1[MSG_SZ],buf2[MSG_SZ],buf3[MSG_SZ];
    unsigned int vert_num = 0;
    for(unsigned int i=0;i<faces.size();i++) {
       int v1 = faces[i].at(faces[i].size()-2);
@@ -962,6 +969,27 @@ void cn_ambo(col_geom_v &geom)
    geom.orient();
 }
 
+void cn_chamfer(col_geom_v &geom)
+{
+   vector<vec3d> &verts = geom.raw_verts();
+   int sz = verts.size();
+
+   // make all edges a face
+   // this is a join operation but retains the original vertex indexes
+   make_edges_to_faces(geom);
+
+   project_onto_sphere(geom);
+
+   // truncate only on the new vertices
+   vector<int> v_idxs;
+   for(unsigned int i=sz; i<verts.size(); i++)
+      v_idxs.push_back(i);
+
+   truncate_verts(geom, v_idxs, CN_ONE_HALF);
+
+   geom.orient();
+}
+
 void cn_dual(col_geom_v &geom)
 {
    col_geom_v dual;
@@ -980,7 +1008,7 @@ void cn_gyro(col_geom_v &geom)
    map<string, map<string, string> > faces_table;
    vector<vec3d> verts_new;
 
-   char buf1[80],buf2[80],buf3[80];
+   char buf1[MSG_SZ],buf2[MSG_SZ],buf3[MSG_SZ];
    unsigned int vert_num = 0;
    for(unsigned int i=0;i<verts.size();i++) {
       sprintf(buf1,"v%d",i);
@@ -1091,7 +1119,7 @@ void cn_propellor(col_geom_v &geom)
    map<string, map<string, string> > faces_table;
    vector<vec3d> verts_new;
 
-   char buf1[80],buf2[80],buf3[80];
+   char buf1[MSG_SZ],buf2[MSG_SZ],buf3[MSG_SZ];
    unsigned int vert_num = 0;
    for(unsigned int i=0;i<verts.size();i++) {
       sprintf(buf1,"v%d",i);
@@ -1179,9 +1207,9 @@ void cn_expand(col_geom_v &geom, const bool &use_truncate_algorithm, const char 
 void cn_join(col_geom_v &geom, const bool &use_truncate_algorithm, const char &planarization_method, 
              const int &num_iters_planar, const double &eps, const bool &verbosity, const int &rep_count)
 {
-   verbose('d',0,verbosity);
-   cn_dual(geom);
-   cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity, rep_count);
+//   verbose('d',0,verbosity);
+//   cn_dual(geom);
+//   cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity, rep_count);
    if (use_truncate_algorithm) {
       verbose('^', 0, verbosity);
       cn_truncate_by_algorithm(geom, CN_ONE_HALF, 0);
@@ -1231,9 +1259,9 @@ void cn_truncate(col_geom_v &geom, const int &n, const char &planarization_metho
 void cn_snub(col_geom_v &geom, const char &planarization_method,
              const int &num_iters_planar, const double &eps, const bool &verbosity, const int &rep_count)
 {
-   verbose('d',0,verbosity);
-   cn_dual(geom);
-   cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity, rep_count);
+//   verbose('d',0,verbosity);
+//   cn_dual(geom);
+//   cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity, rep_count);
    verbose('g',0,verbosity);
    cn_gyro(geom);
    cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity, rep_count);
@@ -1279,6 +1307,12 @@ void do_operations(col_geom_v &geom, const vector<ops *> &operations, const char
                verbose(operations[i]->op, operations[i]->op_var, verbosity);
                cn_ambo(geom);
             }
+            break;
+
+         // chamfer
+         case 'c':
+            verbose(operations[i]->op, operations[i]->op_var, verbosity);
+            cn_chamfer(geom);
             break;
 
          // dual
