@@ -1495,7 +1495,8 @@ const set<sch_sym> &sch_sym::get_sub_syms() const
             add_sub_axes(sym);
             sym.init(Dh, 4, to_std);
             add_sub_axes(sym);
-            sym.init(Dv, 3, mat3d::alignment(A3, vec3d(1,-1,0), vec3d::Z, vec3d::X) * to_std);
+            sym.init(Dv, 3, mat3d::alignment(A3, vec3d(1,-1,0), axis, perp)
+                  * to_std);
             add_sub_axes(sym);
             sym.init(Dh, 2, mat3d::rot(vec3d(0,1,1), axis) * to_std);
             add_sub_axes(sym);
@@ -1506,7 +1507,8 @@ const set<sch_sym> &sch_sym::get_sub_syms() const
             sub_syms.insert(sym);
             sym.init(D, 4, to_std);
             add_sub_axes(sym);
-            sym.init(D, 3, mat3d::alignment(A3, vec3d(1,-1,0), vec3d::Z, vec3d::X) * to_std);
+            sym.init(D, 3, mat3d::alignment(A3, vec3d(1,-1,0), axis, perp)
+                  * to_std);
             add_sub_axes(sym);
             sym.init(D, 2, mat3d::rot(vec3d(0,1,1), axis) * to_std);
             add_sub_axes(sym);
@@ -1530,7 +1532,8 @@ const set<sch_sym> &sch_sym::get_sub_syms() const
             sub_syms.insert(sym);
             sym.init(Cs, 0, mat3d::rot(vec3d(0,1,1), axis) * to_std);
             sub_syms.insert(sym);
-            sym.init(Cv, 3, mat3d::rot(A3, axis) * to_std);
+            sym.init(Cv, 3, mat3d::alignment(A3, vec3d(1,-1,-1), axis, perp)
+                  * to_std);
             add_sub_axes(sym);
             sym.init(Dv, 2, to_std);
             add_sub_axes(sym);
