@@ -91,8 +91,8 @@ void ksc_opts::usage()
 "\n"
 "Options\n"
 "%s"
-"  -s <sym>  symmetry type for kaleidoscope, up to three comma separated\n"
-"            parts: main symmetry (Schoenflies notation) or file name,\n"
+"  -s <sym>  (required) symmetry type for kaleidoscope, up to three comma\n"
+"            separated parts: main symmetry (Schoenflies notation) or file name,\n"
 "            subgroup (Schoenflies notation), and conjugation type (integer)\n"
 "  -y <arg>  make a compound by aligning the component to match a subsymmetry\n"
 "            with the kaleidoscope. Argument is either 'list' (to print the\n"
@@ -123,6 +123,7 @@ void ksc_opts::process_command_line(int argc, char **argv)
    vector<char *> parts;
    vector<double> nums;
    mat3d trans_m2;
+   bool option_s_seen = false;
    
    handle_long_opts(argc, argv);
 
@@ -132,6 +133,7 @@ void ksc_opts::process_command_line(int argc, char **argv)
 
       switch(c) {
          case 's':
+            option_s_seen = true;
             split_line(optarg, parts, ",");
             if(parts.size()==0 || parts.size()>3)
                error("argument should have 1 to 3 comma separated parts", c);
@@ -221,6 +223,9 @@ void ksc_opts::process_command_line(int argc, char **argv)
             error("unknown command line error");
       }
    }
+
+   if(!option_s_seen)             // -s not specified
+      error("this option was not specified, but is required", 's');
 
    if(argc-optind > 1)
       error("too many arguments");
