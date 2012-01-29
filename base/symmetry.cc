@@ -1327,6 +1327,15 @@ void sch_sym::add_sub_axes(const sch_sym &sub) const
                sub_syms.insert(sub_ax);
             }
             break;
+         case S:
+            if(nfold>2 && nfold%2==0) {
+               sub_syms.insert(sub_ax);
+               sub_ax.set_sym_type(C);
+               sub_ax.set_nfold(nfold/2);
+               sub_syms.insert(sub_ax);
+            }
+            break;
+
        }
    }
 }
