@@ -736,6 +736,9 @@ bool color_map_spread::init(const char *map_name, char *errmsg)
 col_val color_map_spread::get_col(int idx) const
 {
    int eff_idx = get_effective_index(idx);
+   if(eff_idx>=get_map_sz())
+      return col_val();
+
    int num_entries = 1024;
    int num_intervals = 4;
    //int step_by = 29+196;
