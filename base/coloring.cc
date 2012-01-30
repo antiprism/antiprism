@@ -658,6 +658,7 @@ bool read_colorings(coloring clrngs[], const char *line, char *errmsg)
    int parts_sz = split_line(line_copy, parts, ",");
 
    char errmsg2[MSG_SZ];
+      *errmsg2 = '\0';
    vector<char *> map_names;
    coloring clrng;
    unsigned int conv_elems = 0;

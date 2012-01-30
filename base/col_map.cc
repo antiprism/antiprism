@@ -65,7 +65,8 @@ bool color_map::init(const char *params, char *errmsg)
       if(*(p+1)=='\0')
          wrap=-1;
       else if(!read_int(p+1, &wrap, errmsg2)) {
-         snprintf(errmsg, MSG_SZ, "wrap: %s", errmsg2);
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "wrap: %s", errmsg2);
          return false;
       }
       *p = '\0';
@@ -74,7 +75,8 @@ bool color_map::init(const char *params, char *errmsg)
    p = strchr(prms, '*');
    if(p) {
       if(!read_int(p+1, &step, errmsg2)) {
-         snprintf(errmsg, MSG_SZ, "step size: %s", errmsg2);
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "step size: %s", errmsg2);
          return false;
       }
       *p = '\0';
@@ -83,7 +85,8 @@ bool color_map::init(const char *params, char *errmsg)
    p = strchr(prms, '+');
    if(p) {
       if(!read_int(p+1, &shift, errmsg2)) {
-         snprintf(errmsg, MSG_SZ, "shift size: %s", errmsg2);
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "shift size: %s", errmsg2);
          return false;
       }
       *p = '\0';
@@ -298,6 +301,7 @@ color_map* init_color_map(const char *map_name, char *errmsg)
    name[name_len] = '\0';
 
    char errmsg2[MSG_SZ];
+   *errmsg2 = '\0';
    string alt_name;
    FILE *cfile = open_sup_file(name, "/col_maps/", &alt_name);
    if(alt_name!="") {  // an alt name found before a file with the name
@@ -510,6 +514,7 @@ bool color_map_range::init(const char *map_name, char *errmsg)
    }
    // Get the map size
    char errmsg2[MSG_SZ];
+   *errmsg2 = '\0';
    if(*map_name != '_') {
       if(vals.size()) {
          if(!read_int(vals[0], &map_sz, errmsg2)) {
