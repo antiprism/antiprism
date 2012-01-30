@@ -1185,61 +1185,19 @@ col_val color_map_multi::get_col(int idx) const
 {
    col_val col;
    int cur_idx = get_effective_index(idx);
-   for(unsigned int i=0; i<cmaps.size(); i++) {
-      col = cmaps[i]->get_col(cur_idx);
-      if(col.is_val())
-         break;
-      if(col.is_idx())
-         cur_idx = col.get_idx();
+   if(cur_idx<effective_size()) {
+      for(unsigned int i=0; i<cmaps.size(); i++) {
+         col = cmaps[i]->get_col(cur_idx);
+         if(col.is_val())
+            break;
+         if(col.is_idx())
+            cur_idx = col.get_idx();
+      }
    }
 
    return col.is_set() ? col : col_val(idx);
 }
 
-
-/*
-bool color_map_range::init(const char *map_name, char *errmsg)
-{
-   char name[MSG_SZ];
-   strncpy(name, map_name, MSG_SZ-1);
-   name[MSG_SZ-1] = '\0';
-
-   if(!init_strip(name, errmsg))
-      return false;
-   
-   vector<char *> vals;
-   split_line(name, vals, "_");
-   if(vals.size() > 5)
-      return false;
-
-   // Followed by the map size
-   int map_sz=-1;
-   int first_comp_idx = 0;
-   if(*map_name != '_') {
-      if(vals.size() && !read_int(vals[0], &map_sz))
-         return false;
-      first_comp_idx = 1;
-   }
-
-
-   // Followed by lists of values for each of the four components
-   for(unsigned int i=first_comp_idx; i<vals.size(); i++) {
-      int comp_idx = i-first_comp_idx;
-      if(!read_double_list(vals[i], ranges[comp_idx], errmsg, 0, ":"))
-         return false;
-      for(unsigned int j=0; j<ranges[comp_idx].size(); j++)
-         if(ranges[comp_idx][j]<0) {
-            if(errmsg)
-               sprintf(errmsg, "component %d contains a negative value",
-                     comp_idx+1);
-            return false;
-         }
-   }
-   set_map_sz((map_sz>0) ? map_sz : 256);
-   
-   return true;
-}
-*/
 
  
 /*
