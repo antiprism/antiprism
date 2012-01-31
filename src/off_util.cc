@@ -804,7 +804,7 @@ bool add_element(col_geom_v &geom, const string &elem, char *errmsg)
       strcpy(errmsg, "more than one ':' used");
       return false;
    }
-   if(num_parts==0 || parts[1]=='\0') {
+   if(num_parts==0 || parts[0]=='\0') {
       strcpy(errmsg, msg_str("'%s': no element data", elem.c_str()).c_str());
       return false;
    }
