@@ -1259,8 +1259,7 @@ void sch_sym::add_sub_axes(const sch_sym &sub) const
          factors.push_back(fold/i);
    for(unsigned int i=0; i<factors.size(); i++) {
       int nfold = factors[i];
-      sch_sym sub_ax(sub);
-      sub_ax.set_nfold(nfold);
+      sch_sym sub_ax(sub.get_sym_type(), nfold, sub.get_to_std());
       switch(sub.get_sym_type()) {
          case C:
             sub_syms.insert(sub_ax);
