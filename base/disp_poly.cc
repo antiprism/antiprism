@@ -407,9 +407,11 @@ void disp_poly::vrml_edges_l(FILE *ofile)
  
    const vector<vector<int> > &es = disp_geom.edges();
    for(unsigned int i=0; i<es.size(); i++) {
-      fprintf(ofile, "%d %d -1  ", es[i][0], es[i][1]);
-      if(!(i%6))
-         fprintf(ofile, "\n");
+      if(!disp_geom.get_e_col((int)i).is_inv()) {
+         fprintf(ofile, "%d %d -1  ", es[i][0], es[i][1]);
+         if(!(i%6))
+            fprintf(ofile, "\n");
+      }
    }
    fprintf(ofile,
 "      ]\n"
