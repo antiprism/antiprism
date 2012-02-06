@@ -354,7 +354,6 @@ bool weave::find_nbrs()
 {
    map<vector<int>, vector<int> > ef_pairs;
    meta.get_edge_face_pairs(ef_pairs, false);
-   map<vector<int>, vector<int> >::iterator ef_i = ef_pairs.begin();
    
    // Find the neighbour face opposite each VEF vertex 
    nbrs.resize(meta.faces().size(), vector<int>(3));

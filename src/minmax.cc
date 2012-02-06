@@ -391,7 +391,6 @@ void minmax_unit(geom_v &geom, vector<vector<int> > &eds, double shorten_factor,
       }
    }
          
-   int max_edge=0, min_edge=0;
    double dist, max_dist=0, min_dist=1e100, g_max_dist=0, g_min_dist=1e100;
    for(int cnt=0; cnt<n; cnt++) {
       g_max_dist = 0;
@@ -408,13 +407,11 @@ void minmax_unit(geom_v &geom, vector<vector<int> > &eds, double shorten_factor,
             //fprintf(stderr, "dist=%g\n", dist);
             if(dist > max_dist) {
                max_dist = dist;
-               max_edge = i;
             }
             if(dist > g_max_dist)
                g_max_dist = dist;
             if(dist < min_dist) {
                min_dist = dist;
-               min_edge = i;
             }
             if(dist < g_min_dist)
                g_min_dist = dist;
@@ -447,13 +444,11 @@ void minmax_unit(geom_v &geom, vector<vector<int> > &eds, double shorten_factor,
 
             if(dist > max_dist) {
                max_dist = dist;
-               max_edge = i;
             }
             if(dist > g_max_dist)
                g_max_dist = dist;
             if(dist < min_dist) {
                min_dist = dist;
-               min_edge = i;
             }
             if(dist < g_min_dist)
                g_min_dist = dist;

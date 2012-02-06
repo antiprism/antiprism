@@ -74,8 +74,7 @@ class polygon {
        * the error message if the height was not valid.
        * \return \c true if the radius was valid, otherwise \c false and
        * \c msg contains the error messge. */
-      virtual bool set_radius2(double r, char *msg=0)
-         { radius2 = r; msg=0; return true;}
+      virtual bool set_radius2(double r, char *msg=0);
 
       ///Set the edge (polygon side) length
       /**\param len the edge length. */
@@ -118,8 +117,7 @@ class polygon {
        * the error message if the height was not valid.
        * \return \c true if the height was valid, otherwise \c false and
        * \c msg contains the error messge. */
-      virtual bool set_height(double ht, char *msg=0)
-         { height = ht; msg=0; return true;}
+      virtual bool set_height(double ht, char *msg=0);
 
       ///Get the height
       /**\return the height. */
@@ -131,8 +129,7 @@ class polygon {
        * the error message if the height was not valid.
        * \return \c true if the height was valid, otherwise \c false and
        * \c msg contains the error messge. */
-      virtual bool set_height2(double ht, char *msg=0)
-         { height2 = ht; msg=0; return true;}
+      virtual bool set_height2(double ht, char *msg=0);
 
       ///Set the edge length of the non-polygon edges.
       /**These are the vertical edges of a prism, the slanting edges
@@ -142,10 +139,7 @@ class polygon {
        * the error message if the edge length was not valid.
        * \return \c true if the edge length was valid, otherwise \c false and
        * \c msg contains the error messge. */
-      virtual bool set_edge2(double len2, char *msg=0)
-         {  len2=0;
-            if(msg) strcpy(msg, "cannot set slanting edge for this polyhedron");
-            return false; }
+      virtual bool set_edge2(double len2, char *msg=0);
       
       ///Set the subtype of the %polygon based polyhedron.
       /**Some %polygon based polyhedra come in several forms, and setting
@@ -165,10 +159,7 @@ class polygon {
        * the error message if the edge length was not valid.
        * \return \c true if the polyhedron could be twisted, otherwise
        * \c false and \c msg contains the error messge. */
-      virtual bool set_twist_angle(double ang=NAN, char *msg=0)
-         {  ang=0;
-            if(msg) strcpy(msg, "twist angle cannot be set for this type of polyhedron");
-            return false; }
+      virtual bool set_twist_angle(double ang=NAN, char *msg=0);
       
       ///Make a part of (or a complete) polygon-based polyhedron
       /**Make a non-compound polyhedron, using \c num_sides and
@@ -415,6 +406,34 @@ template <class T> bool uni_pgon(geom_if &geom, T pgon)
 }
 
 int make_resource_pgon(geom_if &geom, string pname, char *errmsg=0);
+
+
+
+// Inline functions
+//
+inline bool polygon::set_radius2(double r, char *)
+{ radius2 = r; return true;}
+
+inline bool polygon::set_height(double ht, char *)
+{ height = ht; return true;}
+
+inline bool polygon::set_height2(double ht, char *)
+{ height2 = ht; return true;}
+
+inline bool polygon::set_edge2(double, char *msg)
+{
+   if(msg)
+      strcpy(msg, "cannot set slanting edge for this polyhedron");
+   return false;
+}
       
+inline bool polygon::set_twist_angle(double, char *msg)
+{
+   if(msg)
+      strcpy(msg, "twist angle cannot be set for this type of polyhedron");
+   return false;
+}
+
+
 #endif // POLYGONS_H
 

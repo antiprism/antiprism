@@ -362,7 +362,6 @@ void print_m_head(FILE *ofile)
 void print_m_tail(FILE *ofile, const col_geom_v &geom, const bool &lighting, const col_val &bg, vec3d view_point)
 {
    bound_sphere b_sph(geom.verts());
-   vec3d center = b_sph.get_centre();
    double radius = b_sph.get_radius();
 
    // If ViewPoint isn't specified, Live3D sets an internal one of 1.3,-2.4,2 so the model would be tilted

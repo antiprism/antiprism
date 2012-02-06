@@ -2352,7 +2352,7 @@ void ncon_info(const int &ncon_order, const bool &point_cut, const int &twist, c
    sd.d_surfaces = 0;
    sd.d_edges = 0;
    sd.total_surfaces = 0;
-   int total_edges = 0;
+   //int total_edges = 0;
 
    sd.ncon_case2 = false;
    int case1_twist = 0;
@@ -2404,7 +2404,7 @@ void ncon_info(const int &ncon_order, const bool &point_cut, const int &twist, c
       sd.d_edges = 1;
    }
    sd.total_surfaces = sd.c_surfaces + sd.d_surfaces;
-   total_edges = sd.c_edges + sd.d_edges;
+   //total_edges = sd.c_edges + sd.d_edges;
 
    if (info) {
       fprintf(stderr,"\n");
