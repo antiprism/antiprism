@@ -141,12 +141,20 @@ mtimestamp $dd.$MM.$yyyy
 ./programs/sph_saff.gtm 3 sph_saff - spiral points on a sphere (Saff and Kuiljaars)
 ./programs/repel.gtm 3 repel - equilibrium of points repelling on a sphere
 ./programs/minmax.gtm 3 minmax - optimal spherical tesselations
-./programs/col_util.gtm 3 col_util - colour utilities, including plots and blends
+./programs/col_util.gtm 3 col_util - colour utilities including plots and blends
+
+./programs/dome_layer.gtm 2 UNSUPPORTED: dome_layer - dome strut arrangements
+./programs/twist.gtm 2 UNSUPPORTED: twist - twist the edges of a polyhedron
+./programs/spidron.gtm 2 UNSUPPORTED: spidron - spidronise a polyhedron
+./programs/off2txt.gtm 2 UNSUPPORTED: off2txt - convert an OFF file to Hedron format
+./programs/off_normals.gtm 2 UNSUPPORTED: off_normals - utility for working with normals
+
 ./programs/resources.gtm 3 Antiprism Resource Files
 ./programs/extras_readme.gtm 4 Antiprism Resources - Extras
 ./programs/named_cols.gtm 3 Named Colours in Antiprism
 ./programs/edges.gtm 3 Using edges in Antiprism
 ./programs/off_format.gtm 3 OFF format description
+
 ./examples/index.gtm 2 Examples Using the Programs
 ./examples/cub_oct.gtm 3 Example: Compound of a Cube and Octahedron
 ./examples/icosahx.gtm 3 Example: Icosahelix

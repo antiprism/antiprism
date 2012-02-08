@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/sh
 # Antiprism Example File - http://www.antiprism.com
 # This file may be copied, modified and redistributed
 #

@@ -1,6 +1,7 @@
 #define HL_PROG class=curpage
 <<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 
+<<__SYSTEM__(help2man -s 1 -n "<<TITLE_CURRENT>>" -N --include man_extra.txt ../src/<<BASENAME>>  > ../doc/man/<<BASENAME>>.1 )>>
 
 #include "<<HEAD>>"
 #include "<<START>>"

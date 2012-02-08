@@ -3,6 +3,7 @@ define OUTPUT_DIR ../
 
 define SPACE <<__PERL__(return " ";)>>
 define BREAK <<__PERL__(return "\n";)>>
+define QUOT <<__PERL__(return "\"";)>>
 
 define HL_HOME
 define HL_PROG
@@ -97,13 +98,14 @@ timestamp $dd/$MM/$yyyy
 mtimestamp $dd.$MM.$yyyy
 
 ./doc/index.gtm 1 Programs and Documentation
+
 ./doc/antiview.gtm 2 antiview - interactive OFF file viewer
-./doc/off2pov.gtm 2 off2pov - converts an OFF file to POV format
-./doc/off2vrml.gtm 2 off2vrml - converts OFF files to VRML format
-./doc/off2m.gtm 2 off2m - converts an OFF file for LiveGraphics3D
-./doc/off2crds.gtm 2 off2crds - converts an OFF file to a coordinate file
-./doc/m2off.gtm 2 m2off - converts a LiveGraphics3D 'm' file to OFF format
-./doc/off_color.gtm 2 off_color - adds colours to an OFF file
+./doc/off2pov.gtm 2 off2pov - convers an OFF file to POV format
+./doc/off2vrml.gtm 2 off2vrml - convert OFF files to VRML format
+./doc/off2m.gtm 2 off2m - convert an OFF file for LiveGraphics3D
+./doc/off2crds.gtm 2 off2crds - convert an OFF file to a coordinate file
+./doc/m2off.gtm 2 m2off - convert a LiveGraphics3D 'm' file to OFF format
+./doc/off_color.gtm 2 off_color - add colours to an OFF file
 ./doc/off_trans.gtm 2 off_trans - transformations (rotations etc) of OFF files
 ./doc/off_align.gtm 2 off_align - alignment of OFF files
 ./doc/off_util.gtm 2 off_util - utilities for OFF files
@@ -118,7 +120,7 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/iso_delta.gtm 2 iso_delta - isohedral deltahedra
 ./doc/conway.gtm 2 conway - Conway Notation transformations
 ./doc/poly_kscope.gtm 2 poly_kscope - polyhedral kaleidoscope
-./doc/unitile2d.gtm 2 unitile2d - makes uniform tilings on a surface
+./doc/unitile2d.gtm 2 unitile2d - make uniform tilings on a surface
 ./doc/string_art.gtm 2 string_art - string figures
 ./doc/lat_grid.gtm 2 lat_grid - lattices and grids with integer coordinates
 ./doc/bravais.gtm 2 bravais - Bravais lattices
@@ -133,7 +135,14 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/sph_saff.gtm 2 sph_saff - spiral points on a sphere (Saff and Kuiljaars)
 ./doc/repel.gtm 2 repel - equilibrium of points repelling on a sphere
 ./doc/minmax.gtm 2 minmax - optimal spherical tesselations
-./doc/col_util.gtm 2 col_util - colour utilities, including plots and blends
+./doc/col_util.gtm 2 col_util - colour utilities including plots and blends
+
+./doc/dome_layer.gtm 2 UNSUPPORTED: dome_layer - dome strut arrangements
+./doc/twist.gtm 2 UNSUPPORTED: twist - twist the edges of a polyhedron
+./doc/spidron.gtm 2 UNSUPPORTED: spidron - spidronise a polyhedron
+./doc/off2txt.gtm 2 UNSUPPORTED: off2txt - convert an OFF file to Hedron format
+./doc/off_normals.gtm 2 UNSUPPORTED: off_normals - utility for working with normals
+
 ./doc/resources.gtm 2 Antiprism Resource Files
 ./doc/extras_readme.gtm 3 Antiprism Resources - Extras
 ./doc/named_cols.gtm 2 Named Colours in Antiprism

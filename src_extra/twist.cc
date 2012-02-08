@@ -78,7 +78,7 @@ void tw_opts::usage()
 "%s"
 "  -c <cent> centre to twist about, in form \"x_val,y_val,z_val\"\n"
 "            (default, \"0,0,0\")\n"
-"  -t val    twist edges and amount between polyhedron (0.0) and dual (1.0)"
+"  -t val    twist edges and amount between polyhedron (0.0) and dual (1.0)\n"
 "  -s        output struts only\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"

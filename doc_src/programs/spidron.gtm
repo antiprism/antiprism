@@ -1,0 +1,69 @@
+#define HL_PROG class=curpage
+
+<<__SYSTEM__(help2man -s 1 -n "<<TITLE_CURRENT>>" -N --include man_extra2.txt ../src_extra/<<BASENAME>>  > ../doc/man/<<BASENAME>>.1 )>>
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(../src_extra/<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+Default, an in out pattern
+<PRE>
+   spidron dod | antiview -v 0.01
+</PRE>
+
+Out only, to points
+<PRE>
+   spidron dod -a 60 -b 72 -p 1 | antiview -v 0.01
+</PRE>
+
+Out only, flaring out
+<PRE>
+   spidron dod -a 72 -b 60 -p 1 | antiview -v 0.1
+</PRE>
+
+Colour is taken from the base model edges
+<PRE>
+   off_color dod -e P -m map_red:orange:white | spidron -a 60 -b 72 -p 1 | antiview
+</PRE>
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+The <I>spidron</I> program makes spidron pyramid-style models based on
+D&aacute;niel Erd&eacute;ly's
+<A HREF="http://www.spidron.hu/main.html">Spidron</A>.
+<P>
+The program does not include the spidron-nest construction.
+<P>
+Spidron units are coloured according to the colours of the corresponding
+edges on the base polyhedron.
+
+#include "<<END>>"

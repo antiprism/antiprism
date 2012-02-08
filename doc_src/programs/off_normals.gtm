@@ -1,6 +1,6 @@
 #define HL_PROG class=curpage
 
-<<__SYSTEM__(help2man -s 1 -n "<<TITLE_CURRENT>>" -N --include man_extra.txt ../src/<<BASENAME>>  > ../doc/man/<<BASENAME>>.1 )>>
+<<__SYSTEM__(help2man -s 1 -n "<<TITLE_CURRENT>>" -N --include man_extra2.txt ../src_extra/<<BASENAME>>  > ../doc/man/<<BASENAME>>.1 )>>
 
 #include "<<HEAD>>"
 #include "<<START>>"
@@ -22,7 +22,7 @@ Usage
 </A></H2>
 
 <PRE>
-<<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
+<<__SYSTEM__(../src_extra/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
@@ -33,16 +33,15 @@ Usage
 Examples
 </A></H2>
 
-Icosahedral arrangement of 60 cubes
-<PRE>
-   poly_kscope -s I -o tmp.off cube.off
-</PRE>
+
 
 <H2><A NAME="notes">
 Notes
 </A></H2>
 
-<I>off_trans</I> can be used to position the polyhedron before
-passing it to <I>poly_kscope</I>
+<I>off_normals</I> was written by
+<A HREF="http://www.interocitors.com/polyhedra/">Roger Kaufman</A>.
+
+
 
 #include "<<END>>"

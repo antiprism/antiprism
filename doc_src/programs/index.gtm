@@ -83,6 +83,20 @@ Programs
 <LI><A HREF="col_util.html">col_util</A> - colour utilities, plots and blending
 </UL>
 
+<H3><A NAME="unsupported">
+Unsupported Programs
+</A></H3>
+
+Unsupported programs may be incomplete or of limited use and
+provided for interest only
+<UL>
+<LI><A HREF="dome_layer.html">dome_layer</A> - dome strut arrangements
+<LI><A HREF="twist.html">twist</A> - twist the edges of a polyhedron
+<LI><A HREF="spidron.html">spidron</A> - spidronise a polyhedron
+<LI><A HREF="off2txt.html">off2txt</A> - convert an OFF file to Hedron format
+<LI><A HREF="off_normals.html">off_normals</A> - utility for working with normals
+</UL>
+
 <H3><A NAME="general">
 General Documentation
 </A></H3>

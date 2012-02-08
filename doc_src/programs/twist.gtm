@@ -1,0 +1,72 @@
+#define HL_PROG class=curpage
+
+<<__SYSTEM__(help2man -s 1 -n "<<TITLE_CURRENT>>" -N --include man_extra2.txt ../src_extra/<<BASENAME>>  > ../doc/man/<<BASENAME>>.1 )>>
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(../src_extra/<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+Twist the edges of an icosahedron
+<PRE>
+   src_extra/twist -t 0.5 ico  | antiview -x f -v 0.03
+</PRE>
+
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+The twisted model is like a zig-zag tensegrity, but without the
+zig-zag; the strut and its string loop lie on a plane.
+<P>
+An edge of a polyhedron has two vertices on the ends and is flanked
+by two faces. In the dual these faces are associated with vertices,
+and so an edge can be associated with four coordinates: two polyhedron
+vertices and two dual vertices.
+<P>
+The other important point is the centre. This is the centre
+of reciprocation used to find the dual.
+<P>
+An edge of a polyhedron can be associated, by the vertices
+above, with an edge in the dual. The planes through these two
+edges and the centre intersect in a line through the centre.
+The centre of a twist edge, the same size as the polyhedron
+edge can be put on this line and the twist edge rotated about
+the line by t*90 degrees. Finally, the twist edge is translated
+by the proportion <I>t</I> between the centre of the polyhedron edge
+and the centre of the dual edge.
+<P>
+Finally, the twist edge segment is extended to see where it
+intersects the planes through its edge neighbours, then the
+extended edge is scaled (using the model centre) back to the
+original size.
+
+
+#include "<<END>>"
