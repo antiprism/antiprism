@@ -130,11 +130,12 @@ void build_uniform_compound(col_geom_v &geom, int uc_case, int uc_num, string sy
    // UC01 6 tetrahedra rotational
    // UC02 12 tetrahedra rotational
    // UC03 6 tetrahedra
-   // UC08 3 cubes
+   // RK - for UC02 & UC03, generate this model actually as 6 stella octangula
    if (uc_case == 1) {
       if (uc_num == 2 || uc_num == 3) {
          transform_and_repeat(geom, "S2", sym_from);
-         sym_from = "Oh";
+         if (uc_num == 3)
+            sym_from = "Oh";
       }
       transform_and_repeat(geom, sym_to, sym_from, mat3d::rot(0,0,angle));
    }
@@ -229,6 +230,7 @@ void build_uniform_compound(col_geom_v &geom, int uc_case, int uc_num, string sy
       transform_and_repeat(geom, sym_to, sym_from, mat3d::rot(vec3d(0,0,1), vec3d(iphi,0,phi)) * mat3d::rot(0,0,angle));
    }
    else
+   // UC08 3 cubes
    // UC47 5 icosahedra
    // UC49 5 great dodecahedra
    // UC51 5 small stellated dodecahedra
@@ -249,14 +251,14 @@ void build_uniform_compound(col_geom_v &geom, int uc_case, int uc_num, string sy
 // M_PI/2  = 90 degrees
 
 UCItem uc_item_list[] = {
-   { 1,   "u1",       "Td",    "T",     -1,      "UC1",   "6 tetrahedra rotational"},
-   { 1,   "u1",       "Td",    "T",     -1,      "UC2",   "12 tetrahedra rotational"},
-   { 1,   "u1",       "Td",    "T",     M_PI/4,  "UC3",   "6 tetrahedra"},
+   { 1,   "u1",       "S4",    "T",     -1,      "UC1",   "6 tetrahedra rotational"},
+   { 1,   "u1",       "S4",    "T",     -1,      "UC2",   "12 tetrahedra rotational"},
+   { 1,   "u1",       "S4",    "T",     M_PI/4,  "UC3",   "6 tetrahedra"},
    { 0,   "u1",       "Td",    "Oh",    -1,      "UC4",   "2 tetrahedra"},
    { 0,   "u1",       "Td",    "I",     -1,      "UC5",   "5 tetrahedra"},
    { 0,   "u1",       "Td",    "I",     -1,      "UC6",   "10 tetrahedra"},
    { 2,   "u6",       "S4",    "T",     -1,      "UC7",   "6 cubes rotational"},
-   { 1,   "u6",       "Oh",    "T",     M_PI/4,  "UC8",   "3 cubes"},
+   { 9,   "u6",       "Oh",    "T",     M_PI/4,  "UC8",   "3 cubes"},
    { 0,   "u6",       "Oh",    "I",     -1,      "UC9",   "5 cubes"},
    { 3,   "ant3",     "D3v",   "T",     -1,      "UC10",  "4 octahedra rotational"},
    { 3,   "ant3",     "D3v",   "O",     -1,      "UC11",  "8 octahedra rotational"},
