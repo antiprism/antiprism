@@ -1,12 +1,14 @@
 NEWS for Antiprism: http://www.antiprism.com
 
 Version 0.20
-xx-xx-11 Adrian Rossiter <adrian@antiprism.com>
+13-02-12 Adrian Rossiter <adrian@antiprism.com>
          New Programs
            lat_util: new program for lattice utilities (by Roger
              Kaufman)
            col_util: new program for colour utilities, plots, blend
              (by Roger Kaufman)
+           planar: new program for blending colours of overlapping
+             coplanar polgons
          Changes
            poly_kscope: new options, -c colours a compound by part,
              -s use symmetries of another polyhedron, subgroup support,
@@ -31,8 +33,6 @@ xx-xx-11 Adrian Rossiter <adrian@antiprism.com>
              -vef M to convert colour indexes to values using map
              -U select elements to colour by colour type
              -I to convert colour values to indexes
-           planar: new program for blending colours of overlapping
-             coplanar polgons
            unipoly,johnson: programs removed, models are in resources
               see 'off_util -H uniform' and 'off_util -H johnson'
            polygon: many new models added, antiprism alignment changed
@@ -49,12 +49,14 @@ xx-xx-11 Adrian Rossiter <adrian@antiprism.com>
            off2m: new option -x to exclude elements, -X removed
            minmax: new ellipsoid and superellipsoid surfaces, default
              algorithm is v
+           poly_weave: use general weave patterns
            Resources: new colour map files and generatable maps,
              uniform and Johnson model files removed and are now
              internal unit-edged and coloured, new uniform
              compounds (by Roger Kaufman), uniform duals,
              general duals (appending _d), geodesic spheres,
              symmetry models
+           Documentation: document library, add man pages, 
            All: --help and --version options. New shift, step,
              and wrap modifiers for reindexing colour maps
            

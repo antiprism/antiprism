@@ -22,8 +22,9 @@ Antiprism Programs
 Current Release
 </A></H3>
 
-The current version, released <<REL_DATE>> is
-<A HREF="http://sourceforge.net/project/showfiles.php?group_id=176443&amp;package_id=202971"><<ANTIPRISM_RELEASE>></A>, here are the
+The current version is
+<A HREF="https://sourceforge.net/projects/antiprism/files/antiprism/antiprism-0.20/"><<ANTIPRISM_RELEASE>></A>,
+released <<REL_DATE>>. Here are the
 <A HREF="readme_file.html">README</A>
 and
 <A HREF="news_file.html">NEWS</A>
@@ -35,11 +36,7 @@ if you come across any bugs, or anything not working as documented.
 <P>
 I build the programs with the GNU tools on Linux and in the MSYS and
 Cygwin environments on Windows. I have received reports that Antiprism
-builds on FreeBSD and Mac OSX. Mac users may find the
-<A HREF="http://pdb.finkproject.org/pdb/package.php/antiprism">
-Fink Antiprism package</A>
-contains some useful modifications.
-
+builds on FreeBSD and Mac OSX.
 
 <UL>
 <LI>Source code only - <A HREF="http://prdownloads.sourceforge.net/antiprism/<<ANTIPRISM_SOURCE_FILE>>?download"><<ANTIPRISM_SOURCE_FILE>></A> 

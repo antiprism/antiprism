@@ -18,10 +18,9 @@
 <TABLE WIDTH="70%">
 <TR><TD ALIGN=CENTER>
 <CENTER>
-<B>
-Antiprism is a set of programs for generating, manipulating,
-transforming and visualising polyhedra.
-</B>
+<BIG><B>Antiprism Polyhedron Modelling Software</B></BIG>
+<BR>
+<I>Create, transform, analyse, and visualise polyhedra.</I>
 </CENTER>
 </TD></TR>
 </TABLE>
@@ -38,6 +37,10 @@ transforming and visualising polyhedra.
 <BR>
 
 <CENTER>
+
+<CENTER>
+<IMG SRC="css/images/pols1.png" WIDTH="400" HEIGHT="80">
+</CENTER>
 
 <TABLE CLASS=tbl1 BORDER="0" CELLSPACING="1" CELLPADDING="20">
 <TR CLASS=tbl1>
@@ -61,29 +64,44 @@ transforming and visualising polyhedra.
 </TD></TR>
 </TABLE>
 </CENTER>
-<P>
+
+<CENTER>
+<IMG SRC="css/images/pols2.png" WIDTH="400" HEIGHT="80">
+</CENTER>
+
 
 <CENTER>
 <TABLE WIDTH="80%" BORDER=0>
 <TR><TD ALIGN=CENTER>
 
-<H3>About the Project</H3>
 
+<SMALL>
 The Antiprism programs are open source and use the
-<A HREF="http://en.wikipedia.org/wiki/MIT_License">MIT License</A>.
+<A HREF="http://en.wikipedia.org/wiki/MIT_License">MIT License</A>,
+or similar permissive licences.
+</SMALL>
 <P>
-The project is hosted at SourceForge, details are on the
-<A HREF="<<PROJECT_PAGE>>">Antiprism Project Page</A>. The
-<A HREF="http://sourceforge.net/project/showfiles.php?group_id=176443">Program Files</A>
-can be download there.
+<SMALL>
+The project is hosted at SourceForge, see the
+<A HREF="<<PROJECT_PAGE>>">Antiprism Project Page</A>.
+Package releases are available from the 
+<A HREF="http://sourceforge.net/project/showfiles.php?group_id=176443">Files Area</A>. Development can be followed through the
+<A HREF="https://sourceforge.net/scm/?type=git&group_id=176443">Git Repository</A>.
+</SMALL>
 <P>
+<SMALL>
 The 
 <A HREF="http://tech.groups.yahoo.com/group/antiprism/">Antiprism List</A>
 can be used to ask for support, give feedback, or generally
 discuss the Antiprism programs.
+</SMALL>
 
 </TD></TR>
 </TABLE>
+</CENTER>
+<P><BR>
+<CENTER>
+<IMG SRC="css/images/ico_sym.png" WIDTH="480" HEIGHT="120">
 </CENTER>
 
 #include "<<END>>"

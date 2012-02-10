@@ -27,8 +27,8 @@
 #ifndef(strut_tex) #declare strut_tex = texture { T_Brass_4A } #end
 
 
-#declare strut_rad = edge_rad*strut_factor;
-#declare ring_rad = edge_rad*ring_factor;
+#declare strut_rad = edge_sz*strut_factor;
+#declare ring_rad = edge_sz*ring_factor;
 
 
 #macro rot_y_to_vec(vec)

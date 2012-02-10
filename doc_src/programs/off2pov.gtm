@@ -165,15 +165,19 @@ at the start of processing.
 <DD>1 - show edges, 0 - don't show edges.
 <DT><I>faces_show</I>
 <DD>1 - show faces, 0 - don't show faces.
-<DT><I>vert_nums_show</I>
+<DT><I>vert_labs_show</I>
 <DD>1 - show vertex numbers, 0 - don't show vertex numbers.
-<DT><I>vert_rad</I>
+<DT><I>edge_labs_show</I>
+<DD>1 - show edge numbers, 0 - don't show vertex numbers.
+<DT><I>face_labs_show</I>
+<DD>1 - show face numbers, 0 - don't show vertex numbers.
+<DT><I>vert_sz</I>
 <DD>Default radius for vertex spheres.
 <DT><I>vert_col</I>
 <DD>Default colour for vertex spheres.
 <DT><I>vert_tex</I>
 <DD>Default texture for vertex spheres.
-<DT><I>edge_rad</I>
+<DT><I>edge_sz</I>
 <DD>Default radius for edge cylinders.
 <DT><I>edge_col</I>
 <DD>Default colour for edge cylinders.
