@@ -836,7 +836,7 @@ void canonicalize(col_geom_v &geom, const char &canonical_method, const int &num
    else
    if (canonical_method)
       // final planarization
-      cn_planarize(geom, canonical_method, num_iters_canonical, verbosity, rep_count, eps);
+      cn_planarize(geom, canonical_method, num_iters_canonical, eps, verbosity, rep_count);
 }
 
 void get_operand(col_geom_v &geom, const char &operand, const int &poly_size)
