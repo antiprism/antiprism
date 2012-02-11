@@ -79,7 +79,7 @@ Cygwin
 run configure with "--with-x=no" to avoid building against X, if
 it is installed. It should be possible to build native Windows
 binaries by cross-compiling using the tools provided by Cygwin;
-the -mno-compiler option is not supported.
+the -mno-cygwin option is not supported.
 
 
 Git Code Repository
