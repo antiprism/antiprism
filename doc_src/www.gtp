@@ -92,8 +92,8 @@ define OPT_O <DT><I>-o &lt;file&gt;</I><<BREAK>>\
         
         
 
-define REL_DATE 2 December 2008
-define VER 0.19.1
+define REL_DATE 13 February 2012
+define VER 0.20
 define VER_PRE antiprism-
 define ANTIPRISM_RELEASE <<VER_PRE>><<VER>>
 define ANTIPRISM_SOURCE_FILE <<ANTIPRISM_RELEASE>>.tar.gz
@@ -143,11 +143,11 @@ mtimestamp $dd.$MM.$yyyy
 ./programs/minmax.gtm 3 minmax - optimal spherical tesselations
 ./programs/col_util.gtm 3 col_util - colour utilities including plots and blends
 
-./programs/dome_layer.gtm 2 UNSUPPORTED: dome_layer - dome strut arrangements
-./programs/twist.gtm 2 UNSUPPORTED: twist - twist the edges of a polyhedron
-./programs/spidron.gtm 2 UNSUPPORTED: spidron - spidronise a polyhedron
-./programs/off2txt.gtm 2 UNSUPPORTED: off2txt - convert an OFF file to Hedron format
-./programs/off_normals.gtm 2 UNSUPPORTED: off_normals - utility for working with normals
+./programs/dome_layer.gtm 3 UNSUPPORTED: dome_layer - dome strut arrangements
+./programs/twist.gtm 3 UNSUPPORTED: twist - twist the edges of a polyhedron
+./programs/spidron.gtm 3 UNSUPPORTED: spidron - spidronise a polyhedron
+./programs/off2txt.gtm 3 UNSUPPORTED: off2txt - convert an OFF file to Hedron format
+./programs/off_normals.gtm 3 UNSUPPORTED: off_normals - utility for working with normals
 
 ./programs/resources.gtm 3 Antiprism Resource Files
 ./programs/extras_readme.gtm 4 Antiprism Resources - Extras
@@ -155,12 +155,8 @@ mtimestamp $dd.$MM.$yyyy
 ./programs/edges.gtm 3 Using edges in Antiprism
 ./programs/off_format.gtm 3 OFF format description
 
-./examples/index.gtm 2 Examples Using the Programs
-./examples/cub_oct.gtm 3 Example: Compound of a Cube and Octahedron
-./examples/icosahx.gtm 3 Example: Icosahelix
 ./download/index.gtm 2 Downloads
 ./download/readme_file.gtm 3 README File
 ./download/news_file.gtm 3 NEWS File
 ./about.gtm 2 About the Site
 
-<<__SYSTEM__(cp -a ./examples/*.jpg ./examples/*.gif <<OUTPUT_DIR>>examples)>>

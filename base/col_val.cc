@@ -95,9 +95,10 @@ void col_val::set_brightness(double brt_val, col_val col)
       
       for(int i=0; i<3; i++) {
          if(brt_val>0)
-            rgba[i] = 255*brt_val + (1-brt_val)*base_col.rgba[i]; // to white
+            rgba[i] = (unsigned char)(255*brt_val +
+                  (1-brt_val)*base_col.rgba[i]);  // to white
          else
-            rgba[i] = (1+brt_val)*base_col.rgba[i];               // to black
+            rgba[i] = (unsigned char)((1+brt_val)*base_col.rgba[i]); //to black
       }
    }
    else
