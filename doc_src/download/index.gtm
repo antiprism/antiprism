@@ -10,7 +10,7 @@
 <<CONT_S_START>>
 <SMALL><A HREF="#current">Current Release</A></SMALL>
 <<BARSPACE>>
-<SMALL><A HREF="#other">Older Code</A></SMALL>
+<SMALL><A HREF="#older">Older Code</A></SMALL>
 <<CONT_S_END>>
 
 
@@ -23,7 +23,7 @@ Current Release
 </A></H3>
 
 The current version is
-<A HREF="https://sourceforge.net/projects/antiprism/files/antiprism/antiprism-0.20/"><<ANTIPRISM_RELEASE>></A>,
+<A HREF="https://sourceforge.net/projects/antiprism/files/antiprism"><<ANTIPRISM_RELEASE>></A>,
 released <<REL_DATE>>. Here are the
 <A HREF="readme_file.html">README</A>
 and

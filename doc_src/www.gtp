@@ -97,7 +97,7 @@ define VER 0.20
 define VER_PRE antiprism-
 define ANTIPRISM_RELEASE <<VER_PRE>><<VER>>
 define ANTIPRISM_SOURCE_FILE <<ANTIPRISM_RELEASE>>.tar.gz
-define ANTIPRISM_WIN_FILE <<ANTIPRISM_RELEASE>>-win.zip
+define ANTIPRISM_WIN_FILE <<ANTIPRISM_RELEASE>>_install.exe
 
 
 timestamp $dd/$MM/$yyyy

@@ -8,7 +8,7 @@ Version 0.20
            col_util: new program for colour utilities, plots, blend
              (by Roger Kaufman)
            planar: new program for blending colours of overlapping
-             coplanar polgons
+             coplanar polgons (by Roger Kaufman)
          Changes
            poly_kscope: new options, -c colours a compound by part,
              -s use symmetries of another polyhedron, subgroup support,

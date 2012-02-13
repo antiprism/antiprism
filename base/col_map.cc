@@ -1155,9 +1155,12 @@ color_map_multi &color_map_multi::operator=(const color_map_multi &cmap)
 void color_map_multi::set_max_eff_map_sz()
 {
    max_eff_map_sz = 0;
-   for(unsigned int i=0; i<cmaps.size(); i++)
+   for(unsigned int i=0; i<cmaps.size(); i++) {
       if(cmaps[i]->effective_size()>max_eff_map_sz)
          max_eff_map_sz = cmaps[i]->effective_size();
+      if(cmaps[i]->get_wrap() != 0)
+         max_eff_map_sz = max_map_sz;
+   }
 }
 
 
@@ -1171,6 +1174,8 @@ void color_map_multi::add_cmap(color_map *col_map, unsigned int pos)
    cmaps.insert(mi, col_map);
    if(col_map->effective_size()>max_eff_map_sz)
       max_eff_map_sz = col_map->effective_size();
+   if(col_map->get_wrap() != 0)
+      max_eff_map_sz = max_map_sz;
 }
 
 
