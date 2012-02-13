@@ -69,6 +69,11 @@ and installed with (as superuser)
 
 See the INSTALL file for more details.
 
+If there are errors relating to shared libraries when the
+installed programs are run, it may be necessary to run
+
+   sudo ldconfig
+
 The Antiview viewer depends on GLUT. A GLUT package suitable for
 developing against must be installed in order to build Antiview.
 If building against a locally installed Glut package, ensure that
