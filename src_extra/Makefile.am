@@ -12,7 +12,7 @@ LDADD = $(top_builddir)/base/libantiprism.la
 
 bin_PROGRAMS = twist spidron off2txt dome_layer off_normals
 
-man1_MANS = twist.1 spidron.1 off2txt.1 dome_layer.1 off_normals.1
+dist_man1_MANS = twist.1 spidron.1 off2txt.1 dome_layer.1 off_normals.1
 
 twist_SOURCES = twist.cc
 spidron_SOURCES = spidron.cc

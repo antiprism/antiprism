@@ -24,7 +24,7 @@ bin_PROGRAMS = off2pov off2m off2vrml off2crds m2off \
 		lat_grid lat_util canonical conway n_icons iso_delta \
 		bravais waterman col_util planar
 
-man1_MANS = off2pov.1 off2m.1 off2vrml.1 off2crds.1 m2off.1 \
+dist_man1_MANS = off2pov.1 off2m.1 off2vrml.1 off2crds.1 m2off.1 \
       off_color.1 off_util.1 off_trans.1 off_align.1 \
       poly_kscope.1 polygon.1 zono.1 conv_hull.1 pol_recip.1 \
 		geodesic.1 minmax.1 sph_saff.1 sph_rings.1 \
