@@ -34,19 +34,19 @@
    </Company_Info>
    <Program_Info>
       <Program_Name>Antiprism</Program_Name>
-      <Program_Version>0.17</Program_Version>
-      <Program_Release_Month>01</Program_Release_Month>
-      <Program_Release_Day>06</Program_Release_Day>
-      <Program_Release_Year>2008</Program_Release_Year>
+      <Program_Version>0.20</Program_Version>
+      <Program_Release_Month>02</Program_Release_Month>
+      <Program_Release_Day>13</Program_Release_Day>
+      <Program_Release_Year>2012</Program_Release_Year>
       <Program_Cost_Dollars>0.00</Program_Cost_Dollars>
       <Program_Cost_Other_Code>EUR</Program_Cost_Other_Code>
       <Program_Cost_Other>0.00</Program_Cost_Other>
       <Program_Type>Freeware</Program_Type>
       <Program_Release_Status>Beta</Program_Release_Status>
       <Program_Install_Support>Install and Uninstall</Program_Install_Support>
-      <Program_OS_Support>Win 3.1x,Win95,Win98,WinME,WinNT 3.x,WinNT 4.x,WinXP,Windows2000,Windows2003,Unix,Linux,Linux Console,Linux Gnome,Linux GPL,Linux Open Source,MS-DOS,Mac OS X</Program_OS_Support>
+      <Program_OS_Support>Linux,Linux Console,Linux Gnome,Linux GPL,Linux Open Source,Mac OS X,MS-DOS,Unix,Win2000,Win7 x32,Win98,WinVista,WinXP,Other</Program_OS_Support>
       <Program_Language>English</Program_Language>
-      <Program_Change_Info>New models and colour handling features</Program_Change_Info>
+      <Program_Change_Info>Many new features, support for symmetry, large collection of named polyhedra</Program_Change_Info>
       <Program_Specific_Category>Education</Program_Specific_Category>
       <Program_Category_Class>Education::Mathematics</Program_Category_Class>
       <Program_Categories>Graphics::Visualization</Program_Categories>
@@ -55,13 +55,13 @@
       <Includes_VB_Runtime>N</Includes_VB_Runtime>
       <Includes_DirectX>N</Includes_DirectX>
       <File_Info>
-         <Filename_Versioned>aprism17.zip</Filename_Versioned>
-         <Filename_Previous>aprism16.zip</Filename_Previous>
+         <Filename_Versioned>aprism20.zip</Filename_Versioned>
+         <Filename_Previous>aprism19.zip</Filename_Previous>
          <Filename_Generic>aprism.zip</Filename_Generic>
          <Filename_Long>antiprism.zip</Filename_Long>
          <File_Size_Bytes>5000000</File_Size_Bytes>
-         <File_Size_K>7500</File_Size_K>
-         <File_Size_MB>7.5</File_Size_MB>
+         <File_Size_K>500</File_Size_K>
+         <File_Size_MB>5</File_Size_MB>
       </File_Info>
       <Expire_Info>
          <Has_Expire_Info>N</Has_Expire_Info>
@@ -75,27 +75,27 @@
    </Program_Info>
    <Program_Descriptions>
       <English>
-         <Keywords>polyhedra,model,opengl,viewer,geodesic,uniform,geometry,off file,off format,off2vrml,off2pov,off viewer,livegraphics3d,vrml,pov-ray</Keywords>
-         <Char_Desc_45>Polyhedron modelling</Char_Desc_45>
-         <Char_Desc_80>Makes polyhedron models to view, analyze and export to other programs.</Char_Desc_80>
-         <Char_Desc_250>Makes polyhedron models to view and analyze. Exports to VRML, POV-Ray and LiveGraphics3D. Includes standard polyhedra and transformations to construct new ones.</Char_Desc_250>
-         <Char_Desc_450>Makes polyhedron models to view and analyze. Exports to VRML, POV-Ray and LiveGraphics3D. Includes standard polyhedra and transformations to construct new ones.</Char_Desc_450>
-         <Char_Desc_2000>Makes polyhedron models to view and analyze. Exports to VRML, POV-Ray and LiveGraphics3D. Includes standard polyhedra and transformations to construct new ones.</Char_Desc_2000>
+         <Keywords>polyhedron,polyhedra,model,opengl,viewer,geodesic,uniform,geometry,off file,off format,off2vrml,off2pov,antiview,off viewer,livegraphics3d,vrml,pov-ray</Keywords>
+         <Char_Desc_45>Antiprism polyhedron modelling software</Char_Desc_45>
+         <Char_Desc_80>Antiprism polyhedron modelling software: create, transform, analyse, visualise. </Char_Desc_80>
+         <Char_Desc_250>Antiprism polyhedron modelling software: create, transform, analyse, and visualise polyhedra. Includes an extensive collection of named polyehedra, tranformation and colouring of models, tools for analysis, support for working with symmetry.</Char_Desc_250>
+         <Char_Desc_450>Antiprism polyhedron modelling software: create, transform, analyse, and visualise polyhedra. Includes an extensive collection of named polyehedra, tranformation and colouring of models, tools for analysis, support for working with symmetry.</Char_Desc_450>
+         <Char_Desc_2000>Antiprism polyhedron modelling software: create, transform, analyse, and visualise polyhedra. Includes an extensive collection of named polyehedra, tranformation and colouring of models, tools for analysis, support for working with symmetry.</Char_Desc_2000>
       </English>
    </Program_Descriptions>
    <Web_Info>
       <Application_URLs>
          <Application_Info_URL>http://www.antiprism.com/</Application_Info_URL>
          <Application_Order_URL>http://www.antiprism.com/</Application_Order_URL>
-         <Application_Screenshot_URL>http://www.antiprism.com/examples/av_ex_03.jpg</Application_Screenshot_URL>
-         <Application_Icon_URL>http://www.antiprism.com/examples/cub_oct04.gif</Application_Icon_URL>
+         <Application_Screenshot_URL>http://www.antiprism.com/misc/antiprism_ss_1.png</Application_Screenshot_URL>
+         <Application_Icon_URL>http://www.antiprism.com/misc/antiprism_icon.gif</Application_Icon_URL>
          <Application_XML_File_URL>http://www.antiprism.com/misc/pad_file.xml</Application_XML_File_URL>
       </Application_URLs>
       <Download_URLs>
-         <Primary_Download_URL>http://prdownloads.sourceforge.net/antiprism/antiprism-0.17-win.zip?download</Primary_Download_URL>
-         <Secondary_Download_URL>http://prdownloads.sourceforge.net/antiprism/antiprism-0.17-win.zip?download</Secondary_Download_URL>
-         <Additional_Download_URL_1>http://prdownloads.sourceforge.net/antiprism/antiprism-0.17-win.zip?download</Additional_Download_URL_1>
-         <Additional_Download_URL_2>http://prdownloads.sourceforge.net/antiprism/antiprism-0.17-win.zip?download</Additional_Download_URL_2>
+         <Primary_Download_URL>http://sourceforge.net/projects/antiprism/files/antiprism/antiprism-0.20_install.exe</Primary_Download_URL>
+         <Secondary_Download_URL>http://sourceforge.net/projects/antiprism/files/antiprism/antiprism-0.20_install.exe</Secondary_Download_URL>
+         <Additional_Download_URL_1>http://sourceforge.net/projects/antiprism/files/antiprism/antiprism-0.20_install.exe</Additional_Download_URL_1>
+         <Additional_Download_URL_2>http://sourceforge.net/projects/antiprism/files/antiprism/antiprism-0.20_install.exe</Additional_Download_URL_2>
       </Download_URLs>
    </Web_Info>
    <Permissions>

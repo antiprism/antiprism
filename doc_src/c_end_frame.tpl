@@ -45,9 +45,9 @@ Up:
 </TR>
 
 <TR CLASS=surround>
-<TD><IMG SRC="<<PATH_UP>>images/space.gif" WIDTH=1 HEIGHT=1 ALT=""></TD>
-<TD HEIGHT=8 WIDTH=8 CLASS=blblur><IMG SRC="<<PATH_UP>>images/space.gif" WIDTH=8 HEIGHT=8 ALT=""></TD>
-<TD CLASS=bblur HEIGHT=8><IMG SRC="<<PATH_UP>>images/space.gif" WIDTH=8 HEIGHT=8 ALT=""></TD>
+<TD><IMG SRC="<<PATH_UP>>css/images/space.gif" WIDTH=1 HEIGHT=1 ALT=""></TD>
+<TD HEIGHT=8 WIDTH=8 CLASS=blblur><IMG SRC="<<PATH_UP>>css/images/space.gif" WIDTH=8 HEIGHT=8 ALT=""></TD>
+<TD CLASS=bblur HEIGHT=8><IMG SRC="<<PATH_UP>>css/images/space.gif" WIDTH=8 HEIGHT=8 ALT=""></TD>
 </TR>
 
 <TR CLASS=surround>
