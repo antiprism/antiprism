@@ -6,8 +6,13 @@ LDADD = $(top_builddir)/base/libantiprism.la
 #AM_LDFLAGS = -Wl,-rpath,$(libdir)
 #endif
 
+.cc.1: $(top_srcdir)/configure.ac
+	$(MAKE) $(AM_MAKEFLAGS) $*$(EXEEXT)
+	help2man --output=$@ ./$*$(EXEEXT)
 
 bin_PROGRAMS = twist spidron off2txt dome_layer off_normals
+
+man1_MANS = twist.1 spidron.1 off2txt.1 dome_layer.1 off_normals.1
 
 twist_SOURCES = twist.cc
 spidron_SOURCES = spidron.cc

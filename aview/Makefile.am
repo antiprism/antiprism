@@ -2,6 +2,10 @@
 LIBS = $(GLPROG_LIBS)
 CXXFLAGS = $(GLPROG_CXXFLAGS)
 
+.cc.1: $(top_srcdir)/configure.ac
+	$(MAKE) $(AM_MAKEFLAGS) $*$(EXEEXT)
+	help2man --output=$@ ./$*$(EXEEXT)
+
 
 LDADD = libantiprism_dispgl.la $(top_builddir)/base/libantiprism.la
 
@@ -16,6 +20,9 @@ libantiprism_dispgl_la_LDFLAGS = -no-undefined -version-info 0:0:0
 
 
 bin_PROGRAMS = antiview
+
+man1_MANS = antiview.1
+
 antiview_SOURCES = antiview.cc vw_glut.cc \
                    vw_glut.h
 antiview_LDADD = $(GLUT_LIBS) $(LDADD)

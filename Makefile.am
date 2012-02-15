@@ -57,25 +57,8 @@ uninstall-local:
 	rm -rf $(DESTDIR)$(supdir)
 
 prepare_release:
-	mkdir -p doc/man
 	cd doc_src && ./gtml doc.gtp && rm tmp.txt
 	doxygen
 	##cd python && doxygen && ./doxy2swig.py xml/index.xml antiprism_doc.i && rm -rf xml
-
-
-man1_MANS = doc/man/antiview.1 doc/man/bravais.1 doc/man/canonical.1 \
-doc/man/col_util.1 doc/man/conv_hull.1 doc/man/conway.1 \
-doc/man/dome_layer.1 doc/man/geodesic.1 doc/man/iso_delta.1 \
-doc/man/jitterbug.1 doc/man/kcycle.1 doc/man/lat_grid.1 \
-doc/man/lat_util.1 doc/man/m2off.1 doc/man/minmax.1 \
-doc/man/n_icons.1 doc/man/off2crds.1 doc/man/off2m.1 \
-doc/man/off2pov.1 doc/man/off2txt.1 doc/man/off2vrml.1 \
-doc/man/off_align.1 doc/man/off_color.1 doc/man/off_normals.1 \
-doc/man/off_query.1 doc/man/off_report.1 doc/man/off_trans.1 \
-doc/man/off_util.1 doc/man/planar.1 doc/man/pol_recip.1 \
-doc/man/polygon.1 doc/man/poly_kscope.1 doc/man/poly_weave.1 \
-doc/man/repel.1 doc/man/sph_rings.1 doc/man/sph_saff.1 \
-doc/man/spidron.1 doc/man/string_art.1 doc/man/twist.1 \
-doc/man/unitile2d.1 doc/man/waterman.1 doc/man/zono.1
 
 
