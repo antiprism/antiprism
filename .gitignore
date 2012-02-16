@@ -35,7 +35,6 @@ m4/lt~obsolete.m4
 m4/ltsugar.m4
 
 /doc/*
-!doc/README
 
 src_extra/twist
 src_extra/spidron
