@@ -169,7 +169,15 @@ int add_spidron_unit(geom_if &spid, double ang, double ang2, vec3d &cent, bool f
    double r = l/sin(theta);                 // Radius of inner edge
    double h_tri = L*tan(ang);               // Height of base triangle
    double delta_x = H-r;
-   double delta_y = (1.0-2*fold)*sqrt(h_tri*h_tri - delta_x*delta_x);
+   
+   // Are the angles suitable for this polygon
+   double test_val = h_tri*h_tri - delta_x*delta_x;
+   if(test_val < -epsilon)
+      return false;
+   else if(test_val < 0)
+      test_val = 0;
+   
+   double delta_y = (1.0-2*fold)*sqrt(test_val);
    vec3d norm = vcross(v1-v0, cent-v0).unit();
    vec3d perp = (cent-mid).unit();
    vec3d P = mid + perp*delta_x + norm*delta_y;
@@ -207,7 +215,7 @@ int add_spidron_unit(geom_if &spid, double ang, double ang2, vec3d &cent, bool f
    faces[f].push_back(v0idx+3);
    faces[f].push_back(v0idx+2);
    cent += norm*delta_y;
-   return 1;
+   return true;
 }
       
 
@@ -321,9 +329,11 @@ int make_spidron(geom_if &spid, geom_if &base, double ang, double ang2, int len,
             }
          }
          for(int l=0; l<len; l++) {
-            if(type==1)
-               add_spidron_unit(spid, ang, ang2, edge_cent,
-                     folds[l%folds.size()], col);
+            if(type==1) {
+               if(!add_spidron_unit(spid, ang, ang2, edge_cent,
+                     folds[l%folds.size()], col))
+                  return false;
+            }
             if(type==2) {
                bool fold = folds[l%folds.size()];
                if(!is_even(j))
@@ -363,7 +373,10 @@ int main(int argc, char *argv[])
       fold[f] = opts.pattern[f]=='0';
    
    col_geom_v spid;
-   make_spidron(spid, geom, opts.ang, opts.ang2, opts.unit_len, fold, opts.type);
+   if(!make_spidron(spid, geom, opts.ang, opts.ang2, opts.unit_len,
+            fold, opts.type))
+      opts.error("unable to make spidron units with these angles for at least "
+            "one of the polygon faces");
 
    geom_write_or_error(spid, opts.ofile, opts);
 
