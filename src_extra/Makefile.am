@@ -8,7 +8,10 @@ LDADD = $(top_builddir)/base/libantiprism.la
 
 .cc.1: $(top_srcdir)/configure.ac
 	$(MAKE) $(AM_MAKEFLAGS) $*$(EXEEXT)
-	help2man --output=$@ ./$*$(EXEEXT)
+	grep "doc/$*" ../doc_src/doc.gtp | sed -e 's/\(.*\)UNSUPPORTED: \(.*\)/[NAME]\n\2/' > /tmp/h2m_name_$*
+	help2man -i /tmp/h2m_name_$* --output=$@ ./$*$(EXEEXT)
+	rm /tmp/h2m_name_$*
+
 
 bin_PROGRAMS = twist spidron off2txt dome_layer off_normals
 

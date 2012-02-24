@@ -16,7 +16,7 @@ AC_PROG_CPP
 
 AC_LANG([C++])
 
-LT_INIT([win32_dll])
+LT_INIT([win32-dll])
 
 # Check whether Python module should be built
 #AC_ARG_ENABLE( python,

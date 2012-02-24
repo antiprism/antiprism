@@ -10,6 +10,12 @@ if BUILD_PY_MOD
 # SUBDIRS += python
 endif
 
+DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
+	$(top_srcdir)/configure AUTHORS COPYING INSTALL NEWS compile \
+	config.guess config.sub depcomp install-sh ltmain.sh missing \
+	py-compile
+
 EXTRA_DIST = bootstrap pad_file.xml doc share base/qh_COPYING.txt 
 
 #             python/antiprism.i python/antiprism_doc.i \
@@ -25,7 +31,6 @@ distcleancheck_listfiles = \
 
 supdir = $(datadir)/$(PACKAGE)-$(VERSION)
 docdir = $(datadir)/doc/$(PACKAGE)-$(VERSION)
-doc_DATA = README NEWS AUTHORS COPYING
 
 install-data-local:
 	if test -d $(srcdir)/doc ; then \

@@ -129,7 +129,7 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/n_icons.gtm 2 n_icons - sphericon like polyhedra 
 ./doc/kcycle.gtm 2 kcycle - kaleidocycle rings of polyhedron
 ./doc/jitterbug.gtm 2 jitterbug - jitterbug transformation
-./doc/poly_weave.gtm 3 poly_weave - weave based on a polyhedron
+./doc/poly_weave.gtm 2 poly_weave - weave based on a polyhedron
 ./doc/canonical.gtm 2 canonical - canonicalize a polyhedon
 ./doc/sph_rings.gtm 2 sph_rings - rings of points on a sphere
 ./doc/sph_saff.gtm 2 sph_saff - spiral points on a sphere (Saff and Kuiljaars)
