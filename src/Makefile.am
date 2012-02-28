@@ -6,6 +6,13 @@ LDADD = $(top_builddir)/base/libantiprism.la
 #AM_LDFLAGS = -Wl,-rpath,$(libdir)
 #endif
 
+.cc.1: $(top_srcdir)/configure.ac
+	$(MAKE) $(AM_MAKEFLAGS) $*$(EXEEXT)
+	grep "doc/$*" ../doc_src/doc.gtp | sed -e 's/\(.*\) 2 \(.*\)/[NAME]\n\2/' > /tmp/h2m_name_$*
+	help2man -i /tmp/h2m_name_$* --output=$@ ./$*$(EXEEXT)
+	rm /tmp/h2m_name_$*
+
+
 noinst_LTLIBRARIES = liblattice_grid.la
 					 
 liblattice_grid_la_SOURCES = lattice_grid.cc lattice_grid.h
@@ -19,6 +26,14 @@ bin_PROGRAMS = off2pov off2m off2vrml off2crds m2off \
 		lat_grid lat_util canonical conway n_icons iso_delta \
 		bravais waterman col_util planar
 
+dist_man1_MANS = off2pov.1 off2m.1 off2vrml.1 off2crds.1 m2off.1 \
+      off_color.1 off_util.1 off_trans.1 off_align.1 \
+      poly_kscope.1 polygon.1 zono.1 conv_hull.1 pol_recip.1 \
+		geodesic.1 minmax.1 sph_saff.1 sph_rings.1 \
+		poly_weave.1 off_report.1 off_query.1 \
+		kcycle.1 string_art.1 jitterbug.1 unitile2d.1 repel.1 \
+		lat_grid.1 lat_util.1 canonical.1 conway.1 n_icons.1 iso_delta.1 \
+		bravais.1 waterman.1 col_util.1 planar.1
 
 off2pov_SOURCES = off2pov.cc
 off2crds_SOURCES = off2crds.cc

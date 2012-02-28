@@ -94,17 +94,6 @@ The Git repository contains the latest development code
 
    https://sourceforge.net/scm/?type=git&group_id=176443
 
-Autoconf 2.61 and Automake 1.9 (or later versions) are required.
-Generate the configure script with
-
-   ./bootstrap
-
-Building the documentation is optional. Doxygen (with Graphviz dot),
-Perl and help2man, are required. Build with
-
-   make prepare_release
-
-Follow the 'Building' section to complete the build.
-
+See README.git for further details.
 
 

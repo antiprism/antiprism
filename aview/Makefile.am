@@ -2,6 +2,13 @@
 LIBS = $(GLPROG_LIBS)
 CXXFLAGS = $(GLPROG_CXXFLAGS)
 
+.cc.1: $(top_srcdir)/configure.ac
+	$(MAKE) $(AM_MAKEFLAGS) $*$(EXEEXT)
+	grep "doc/$*" ../doc_src/doc.gtp | sed -e 's/\(.*\) 2 \(.*\)/[NAME]\n\2/' > /tmp/h2m_name_$*
+	help2man -i /tmp/h2m_name_$* --output=$@ ./$*$(EXEEXT)
+	rm /tmp/h2m_name_$*
+
+
 
 LDADD = libantiprism_dispgl.la $(top_builddir)/base/libantiprism.la
 
@@ -16,6 +23,9 @@ libantiprism_dispgl_la_LDFLAGS = -no-undefined -version-info 0:0:0
 
 
 bin_PROGRAMS = antiview
+
+dist_man1_MANS = antiview.1
+
 antiview_SOURCES = antiview.cc vw_glut.cc \
                    vw_glut.h
 antiview_LDADD = $(GLUT_LIBS) $(LDADD)
