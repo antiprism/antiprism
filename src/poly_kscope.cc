@@ -371,10 +371,10 @@ void print_report(FILE *ofile, const sch_sym &final, const sch_sym &part,
    sch_sym kernel(k_trans);
 
    fprintf(ofile, "\nInformation about Compound\n");
-   fprintf(ofile, "  symmetry of part:     %5s\n", part.get_symbol().c_str());
-   fprintf(ofile, "  symmetry of compound: %5s\n", final.get_symbol().c_str());
-   fprintf(ofile, "  symmetry of kernel:   %5s\n", kernel.get_symbol().c_str());
-   fprintf(ofile, "  number of components: %5d\n", cnt);
+   fprintf(ofile, "  symmetry of component:    %5s\n", part.get_symbol().c_str());
+   fprintf(ofile, "  symmetry of kaleidoscope: %5s\n", final.get_symbol().c_str());
+   fprintf(ofile, "  symmetry common to both:  %5s\n", kernel.get_symbol().c_str());
+   fprintf(ofile, "  number of components:     %5d\n", cnt);
 }
 
 

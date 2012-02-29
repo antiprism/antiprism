@@ -75,9 +75,14 @@ installed programs are run, it may be necessary to run
    sudo ldconfig
 
 The Antiview viewer depends on GLUT. A GLUT package suitable for
-developing against must be installed in order to build Antiview.
-If building against a locally installed Glut package, ensure that
-the headers are in a GL subdirectory.
+developing against must be installed in order to build Antiview,
+otherwise the build and install will not include this program.
+
+If building against a locally installed GLUT package, ensure that
+the headers are in a GL subdirectory. If building against OpenGLUT
+or Freeglut but using their own names for headers and libraries
+(rather than the usual GLUT names) run configure with --with-openglut
+or --with-freeglut.
 
 Cygwin
 ------
