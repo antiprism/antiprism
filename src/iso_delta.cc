@@ -734,8 +734,8 @@ void make_poly(col_geom_v &geom, const string &sym_type, const bool &triangle_on
    if (geom.verts().size() == 0)
       make_triangle(geom, A, B, C, alpha, beta, gamma);
 
-   if(sym_type[0]=='D' || sym_type[0]=='I' )
-      geom.transform(mat3d::rot(0, M_PI/2,0));
+   if (sym_type[0]=='D' || sym_type[0]=='I')
+      geom.transform(mat3d::rot(0, M_PI/2, 0));
 
    if (!triangle_only) {
       sym_repeat(geom, geom, sym_type);
@@ -1187,6 +1187,25 @@ int main(int argc, char *argv[])
       make_poly(geom, sym_type, opts.triangle_only, opts.verbose,
                 id_polys.A(sym_no), id_polys.B(sym_no), id_polys.C(sym_no),
                 id_polys.alpha(sym_no), id_polys.beta(sym_no), id_polys.gamma(sym_no));
+
+      // patch for 9 and 14. Made with make_poly they will have merged vertices between constituents
+      if (!opts.triangle_only && (sym_no+1==9 || sym_no+1==14)) {
+         geom.clear_all();
+         if (sym_no+1==9) {
+            make_delta_dipyramid(geom, 8, 3, false, false);
+            transform_and_repeat(geom, "Oh", "D8h");
+         }
+         else
+         if (sym_no+1==14) {
+            sym_no = 2; // consituent of case 14, sent to make_poly
+            string sym_type = id_polys.get_sym_type(sym_no);
+            make_poly(geom, sym_type, false, false,
+                      id_polys.A(sym_no), id_polys.B(sym_no), id_polys.C(sym_no),
+                      id_polys.alpha(sym_no), id_polys.beta(sym_no), id_polys.gamma(sym_no));
+            transform_and_repeat(geom, "Oh", "Td");
+         }
+         geom.transform(mat3d::rot(0, M_PI/2, 0)); // as it did in make_poly for same color order as before
+      }
    }
 
    geom.orient();
