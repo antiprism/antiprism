@@ -118,11 +118,15 @@ class geom_info
 {
    private:
       vec3d cent;
-      bool closed;
-      bool polyhedron;
       int oriented;
       int orientable;
+      bool found_connectivity;
+      bool closed;
+      bool polyhedron;
+      bool known_connectivity;
+      bool even_connectivity;
       int number_parts;
+      int genus_val;
       elem_lims iedge_len;
       elem_lims edge_len;
       elem_lims so_angles;
@@ -154,12 +158,13 @@ class geom_info
       vector<vector<int> > vert_cons;
       vector<vec3d> vert_norms;
       vector<int> free_verts;
-      bool free_verts_found;
+      bool found_free_verts;
       geom_v dual;
       sch_sym sym;
    
       void find_impl_edges() { geom.get_impl_edges(impl_edges); }
       void find_edge_face_pairs();
+      void find_connectivity();
       void find_face_angles();
       void find_dihedral_angles();
       void find_vert_cons();
@@ -181,8 +186,9 @@ class geom_info
    public:
       geom_info(const geom_if &geo) :
          cent(vec3d(0,0,0)), oriented(-1), orientable(-1),
+         found_connectivity(false), genus_val(INT_MAX),
          v_dsts(geo), e_dsts(geo), ie_dsts(geo), f_dsts(geo),
-         free_verts_found(false), geom(geo)
+         found_free_verts(false), geom(geo)
          {}
       
       void reset();
@@ -195,17 +201,22 @@ class geom_info
       double face_vol(int f_no);
       void face_angles_lengths(int f_no, vector<double> &angs,
             vector<double> *lens=0);
-      
-      bool is_closed();
+
       bool is_oriented();
       bool is_orientable();
+      bool is_closed();
       bool is_polyhedron();
-      
+      bool is_even_connectivity();
+      bool is_known_connectivity();
+
       int num_verts() { return geom.verts().size(); }
       int num_edges() { return geom.edges().size(); }
       int num_iedges() { return get_impl_edges().size(); }
       int num_faces() { return geom.faces().size(); }
       int num_parts() { is_orientable(); return number_parts; }
+
+      bool is_known_genus();
+      int genus();
 
       elem_lims face_areas() { if(f_areas.size()==0) find_f_areas();
                            return area; }
@@ -248,7 +259,7 @@ class geom_info
          { if(!vertex_plane_angs.size()) find_face_angles();
             return vertex_plane_angs; }
       const vector<int> &get_free_verts()
-         { if(!free_verts_found) find_free_verts(); return free_verts;}
+         { if(!found_free_verts) find_free_verts(); return free_verts;}
       
       //edges
       map<vector<int>, vector<int> > &get_edge_face_pairs()

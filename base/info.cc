@@ -41,22 +41,6 @@ using std::vector;
 using std::pair;
 
 
-bool chk_oriented(const geom_if &geom)
-{
-   const vector<vector<int> > &faces = geom.faces();
-   set<pair<int, int> > edges;
-   pair<int, int> edge;
-   for(unsigned int f=0; f<faces.size(); f++)
-      for(unsigned int i=0; i<faces[f].size(); i++) {
-         edge = pair<int, int>(faces[f][i], faces[f][(i+1)%faces[f].size()]);
-         if(edges.find(edge)!=edges.end())
-            return false;
-         else
-            edges.insert(edge);
-      }
-   return true;
-}
-
 
 int cmp_angles(const double &a, const double &b, double min_diff)
 {
@@ -86,6 +70,8 @@ void geom_info::reset()
 {
    oriented = -1;
    orientable = -1;
+   found_connectivity = false;
+   genus_val = INT_MAX;
    dual.clear_all();
    sym = sch_sym();
    efpairs.clear();
@@ -99,7 +85,7 @@ void geom_info::reset()
    f_perimeters.clear();
    vert_cons.clear();
    vert_norms.clear();
-   free_verts_found = false;
+   found_free_verts = false;
    free_verts.clear();
 }
 
@@ -107,7 +93,7 @@ void geom_info::reset()
 bool geom_info::is_oriented()
 {
    if(oriented<0)
-      oriented = chk_oriented(geom);
+      oriented = geom.is_oriented();
    return oriented;
 }
 
@@ -116,7 +102,7 @@ bool geom_info::is_orientable()
    if(orientable<0) {
       geom_v geom2 = geom;
       number_parts = geom2.orient();
-      orientable = chk_oriented(geom2);
+      orientable = geom2.is_oriented();
    }
    return orientable;
 }
@@ -127,17 +113,37 @@ void geom_info::find_edge_face_pairs()
       geom.get_edge_face_pairs(efpairs, true);
    else
       geom.get_edge_face_pairs(efpairs, false);
+}
+
+void geom_info::find_connectivity()
+{
+   // get a copy of edge face pairs with all faces around an edge
+   map<vector<int>, vector<int> > tmp_efpairs;
+   if(is_oriented())
+      geom.get_edge_face_pairs(tmp_efpairs, false);
+   else if(efpairs.size()==0)
+      find_edge_face_pairs();
+
+   const map<vector<int>, vector<int> > &pairs =
+      is_oriented() ? tmp_efpairs : efpairs;
+
+   known_connectivity = true;
+   even_connectivity = true;
    polyhedron = true;
    closed = true;
-   map<vector<int>, vector<int> >::iterator ei; 
-   for(ei=efpairs.begin(); ei!=efpairs.end(); ++ei) {
-      if(ei->second[0]<0 || ei->second[1]<0 ) {
+   map<vector<int>, vector<int> >::const_iterator ei;
+   for(ei=pairs.begin(); ei!=pairs.end(); ++ei) {
+      if(ei->second.size()==1)     // One faces at an edge
          closed = false;
+      if(ei->second.size()!=2)    // Edge not met be exactly 2 faces
          polyhedron = false;
-      }
-      if(ei->second.size()>2)
-         polyhedron = false;
+      if(ei->second.size()%2)     // Odd number of faces at an edge
+         even_connectivity = false;
+      if(ei->second.size()>2)     // More than two faces at an edge
+         known_connectivity = false;
    }
+
+   found_connectivity = true;
 }
 
 void geom_info::find_f_areas()
@@ -460,7 +466,7 @@ void geom_info::find_free_verts()
       if(cnt[i]==0)
          free_verts.push_back(i);
 
-   free_verts_found = true;
+   found_free_verts = true;
 }
 
 
@@ -578,18 +584,34 @@ void geom_info::find_symmetry()
 
 
 bool geom_info::is_closed()
-{   
-   if(efpairs.size()==0)
-      find_edge_face_pairs();
+{
+   if(!found_connectivity)
+      find_connectivity();
    return closed;
 }
 
 
 bool geom_info::is_polyhedron()
-{   
-   if(efpairs.size()==0)
-      find_edge_face_pairs();
+{
+   if(!found_connectivity)
+      find_connectivity();
    return polyhedron;
+}
+
+
+bool geom_info::is_even_connectivity()
+{
+   if(!found_connectivity)
+      find_connectivity();
+   return even_connectivity;
+}
+
+
+bool geom_info::is_known_connectivity()
+{
+   if(!found_connectivity)
+      find_connectivity();
+   return known_connectivity;
 }
 
 
@@ -610,6 +632,30 @@ void v_distances::set_values()
    }
 }
 
+bool geom_info::is_known_genus()
+{
+   return genus()<INT_MAX-1;
+}
+
+int geom_info::genus()
+{
+   if(genus_val==INT_MAX) {
+      genus_val = INT_MAX-1;                    // 'not known' value
+      if(num_parts()==1  && is_known_connectivity()) {
+         int euler_char = num_verts() -  num_edges() + num_faces();
+         geom_v geom2 = geom;
+         if(close_poly_basic(geom2)) {
+            int num_boundaries  = geom2.faces().size() - num_faces();
+            genus_val = 2 - num_boundaries - euler_char;
+            if(is_orientable())
+               genus_val /= 2;
+            else
+               genus_val *= -1; // to indicate non-orientable genus (demigenus)
+         }
+      }
+   }
+   return genus_val;
+}
 
 void e_distances::set_values()
 {

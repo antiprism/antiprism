@@ -415,6 +415,21 @@ vector<int> make_edge(int v_idx1, int v_idx2)
    return edge;
 }
 
+bool geom_if::is_oriented() const
+{
+   set<pair<int, int> > edgs;
+   pair<int, int> edge;
+   for(unsigned int f=0; f<faces().size(); f++)
+      for(unsigned int i=0; i<faces(f).size(); i++) {
+         edge = pair<int, int>(faces(f, i), faces(f, (i+1)%faces(f).size()));
+         if(edgs.find(edge)!=edgs.end())
+            return false;
+         else
+            edgs.insert(edge);
+      }
+   return true;
+}
+
 
 
 void geom_if::add_missing_impl_edges()
