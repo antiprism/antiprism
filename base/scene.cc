@@ -257,10 +257,12 @@ vec3d scene_geom::get_f_label_pos(int idx) const
       return geom.face_cent(idx);
 } 
 
-void scene_geom::animate()
+int scene_geom::animate()
 {
+   int num_changes = 0;
    for(unsigned int i=0; i<disps.size(); i++)
-      disps[i]->animate();
+      num_changes += disps[i]->animate();
+   return num_changes;
 }
 
 
@@ -328,9 +330,15 @@ void camera::set_label_rot()
                   mat3d::transl(-scen->get_centre());
 }
 
-void camera::animate()
+int camera::animate()
 {
-   inc_spin_rot();
+   int num_changes = 0;
+   if(is_spinning()) {
+      inc_spin_rot();
+      num_changes += 1;
+   }
+
+   return num_changes;
 }
 
 // ------------------------------------------------------------------- 
@@ -453,19 +461,22 @@ bool scene::delete_camera(int idx)
 }
   
         
-void scene::animate()
+int scene::animate()
 {
+   int num_changes = 0;
    if(anim_timer.finished()) {
       vector<camera>::iterator cam;
       for(cam=cams.begin(); cam!=cams.end(); ++cam)
-         cam->animate();
+         num_changes += cam->animate();
       
       vector<scene_geom>::iterator sc_geo;
       for(sc_geo=geoms.begin(); sc_geo!=geoms.end(); ++sc_geo)
-         sc_geo->animate();
+         num_changes += sc_geo->animate();
       
    }
    anim_timer.inc_timer(1.0/cycle_rate);
+
+   return num_changes;
 } 
 
  

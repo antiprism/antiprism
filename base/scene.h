@@ -198,7 +198,8 @@ class geom_disp
       virtual void gl_geom(const scene &scen);
 
       ///Update animated properties.
-      virtual void animate() {}
+      /**\return The number of animation changes (\c 0 if no changes).*/
+      virtual int animate() { return 0; }
  
 };
 
@@ -391,7 +392,8 @@ class scene_geom: public scene_item
       void set_sym(const geom_disp &sym);
 
       ///Update animated displays.
-      void animate();
+      /**\return The number of animation changes (\c 0 if no changes).*/
+      int animate();
  
 };
 
@@ -530,7 +532,8 @@ class camera : public scene_item
       double get_text_sz(vec3d pos) const;
 
       ///Update animated properties
-      void animate();
+      /**\return The number of animation changes (\c 0 if no changes).*/
+      int animate();
 };
 
 
@@ -648,7 +651,8 @@ class scene : public scene_item {
       void set_cycle_rate(double cps) {cycle_rate=(cps<0)?0:cps;}
       
       ///Update animated items.
-      void animate();
+      /**\return The number of animation changes (\c 0 if no changes).*/
+      int animate();
 };
 
 #endif //SCENE

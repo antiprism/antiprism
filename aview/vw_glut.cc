@@ -332,8 +332,8 @@ void glut_idle_cb()
    static timer tmr;
    tmr.sleep_until_finished();
    tmr.set_timer(1/glut_s.get_fps());
-   glut_s.scen.animate();
-   glutPostRedisplay();
+   if(glut_s.scen.animate())
+      glutPostRedisplay();
 }
 
 
