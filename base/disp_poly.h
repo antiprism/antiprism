@@ -93,7 +93,7 @@ class disp_poly : public virtual geom_disp
  
       geom_disp *clone() const { return new disp_poly(*this); }
       void geom_changed();
-      void animate();
+      int animate();
       
       void vrml_geom(FILE *ofile, const scene &scen, int sig_dgts=DEF_SIG_DGTS);
       void pov_geom(FILE *ofile, const scene &scen, int sig_dgts=DEF_SIG_DGTS);

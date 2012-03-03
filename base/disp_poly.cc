@@ -127,15 +127,19 @@ void disp_poly::set_face_alpha(int alpha)
 }
 
 
-void disp_poly::animate()
+int disp_poly::animate()
 {
+   int num_changes = 0;
    for(int i=0; i<3; i++) {
       unsigned int msecs = clrngs[i].get_cycle_msecs();
       if(msecs && cmap_tmrs[i].finished()) {
+         num_changes += 1;
          clrngs[i].cycle_map_cols();
          cmap_tmrs[i].inc_timer(msecs/1000.0);
       }
-   }   
+   }
+
+   return num_changes;
 }
 
 
