@@ -78,7 +78,7 @@ double octahedra_angle(int oct_case)
    return angle_around_axis(v0,v1,v_ax);
 }
 
-void build_uniform_compound(col_geom_v &geom, int uc_case, int uc_num, string sym_from, string sym_to, double angle)
+void build_uniform_compound(geom_if &geom, int uc_case, int uc_num, string sym_from, string sym_to, double angle)
 {
    // UC04 2 tetrahedra
    // UC05 5 tetrahedra
@@ -334,7 +334,7 @@ uc_poly::uc_poly()
    last_uc = sizeof (uc_item_list) / sizeof (uc_item_list[0]);
 }
 
-int uc_poly::get_poly(col_geom_v &geom, int sym, double angle, int n, int d, int k)
+int uc_poly::get_poly(geom_if &geom, int sym, double angle, int n, int d, int k)
 {
    string constituent_str = uc_items[sym].constituent;
    string sym_from = uc_items[sym].sym_from;
@@ -677,44 +677,8 @@ int make_resource_uniform_compound(geom_if &geom, string name, char *errmsg)
    // lower case the name
    transform(name.begin(), name.end(), name.begin(), ::tolower);
 
-   // RK: code below added for finding short names
-   FILE *alt = open_sup_file("alt_names.txt", "/models/");
-   if(alt) {
-      string uc_name = name;
-      string and_the_rest;
-      
-      int loc = name.rfind("_");
-      if (loc==(int)string::npos)
-         loc = name.rfind(" ");
-
-      // use only first token if it exists
-      if (loc!=(int)string::npos) {
-         uc_name = name.substr(0, loc);
-         if (loc+1<(int)name.length())
-            and_the_rest = name.substr(loc);
-      }
-         
-      char f_name[MSG_SZ];
-      strcpy(f_name,uc_name.c_str());
-      string resolved_name = find_alt_name(alt, f_name);
-      fclose(alt);
-      if(resolved_name != "")
-         name = resolved_name + and_the_rest;
-   }
-   // RK: end code for finding short names
-
    if(name.size()<3 || name.substr(0,2)!="uc")
       return -1; // not uniform compound name
-      
-/* not needed, this happens in the parse
-   else {
-      int pos = name.rfind(".");
-      if (pos!=string::npos) {
-         if (!((name[pos-1] == 'a' || isdigit(name[pos-1])) && (pos < name.length()-1 && isdigit(name[pos+1]))))
-            return -1; // not uniform compound name
-      }
-   }
-*/
 
    double angle = INFINITY;
    int n = -1;
@@ -781,12 +745,11 @@ int make_resource_uniform_compound(geom_if &geom, string name, char *errmsg)
          snprintf(k_str, MSG_SZ, "k%d",k);
       fprintf(stderr,"UC%d_%s%s%s%s\n",sym_no+1,angle_str,n_str,d_str,k_str);
    }
+
+   uniform_compounds.get_poly(geom,sym_no,angle,n,d,k);
    
-   col_geom_v *cg = dynamic_cast<col_geom_v *>(&geom);
- 
-   if(cg) {
-      uniform_compounds.get_poly(*cg,sym_no,angle,n,d,k);
-      
+   col_geom_v *cg = dynamic_cast<col_geom_v *>(&geom); 
+   if(cg) {      
       coloring clrng(cg);
       color_map *cmap = init_color_map("compound");
       clrng.add_cmap(cmap);

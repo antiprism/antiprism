@@ -355,7 +355,7 @@ void add_extra_ideal_elems(geom_if &geom, vec3d centre, double inf)
    }
 }
 
-void transform_and_repeat(col_geom_v &geom, string sym_to, string sym_from, mat3d pos)
+void transform_and_repeat(geom_if &geom, string sym_to, string sym_from, mat3d pos)
 {
    t_set ts;
    ts.min_set(sch_sym(sym_to).get_trans(), sch_sym(sym_from).get_trans(), pos);

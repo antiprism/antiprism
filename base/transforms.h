@@ -79,6 +79,6 @@ bool close_poly_basic(geom_if &geom);
 bool face_bond(geom_if &geom, geom_if &bgeom, int f=0, int b_f=0, int off=0, bool merge=true);
 bool face_bond_direct(geom_if &geom, geom_if &bgeom, int f=0, int b_f=0, bool merge=true);
 
-void transform_and_repeat(col_geom_v &geom, string sym_to, string sym_from, mat3d pos=mat3d());
+void transform_and_repeat(geom_if &geom, string sym_to, string sym_from, mat3d pos=mat3d());
 
 #endif // TRANSFORMS_H
