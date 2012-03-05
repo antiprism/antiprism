@@ -549,6 +549,10 @@ class geom_if
       virtual void write_crds(FILE *file, const char *sep=" ",
             int sig_dgts=DEF_SIG_DGTS) const;
 
+      ///Check if geomtery is consistently oriented
+      /**\return \c true if consistently oriented, otherwise \c false. */
+      bool is_oriented() const;
+
       /// Get geom_info object
       /**\return geom_info object associated with this geometry. */
       geom_info get_info() const;

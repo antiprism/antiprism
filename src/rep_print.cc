@@ -64,18 +64,49 @@ void rep_printer::general_sec()
    fprintf(ofile, "num_faces = %d\n", num_faces());
    fprintf(ofile, "num_edges = %d\n", num_edges());
    fprintf(ofile, "centroid = (%s)\n",v2s(s1, geom.centroid()));
-   fprintf(ofile, "oriented = %s\n", is_oriented()?"yes":"no");
-   fprintf(ofile, "orientable = %s\n", is_orientable()?"yes":"no");
-   fprintf(ofile, "closed = %s\n", is_closed()?"yes":"no");
-   fprintf(ofile, "polyhedron = %s\n", is_polyhedron()?"yes":"no");
-   fprintf(ofile, "num_parts = %d\n", num_parts());
-   fprintf(ofile, "area = %s\n", d2s(s1, face_areas().sum));
-   fprintf(ofile, "volume = ");
-   if(is_closed())
-      fprintf(ofile, "%s\n", d2s(s1, volume()));
+
+   fprintf(ofile, "oriented = ");
+   if(is_known_connectivity())
+      fprintf(ofile, "%s", is_oriented()?"yes":"no");
    else
-      fprintf(ofile, "n/a (not closed)\n");
-fprintf(ofile, "\n");
+      fprintf(ofile, "n/a (calculated value: %s)", is_oriented()?"yes":"no");
+   fprintf(ofile, "\n");
+
+   fprintf(ofile, "orientable = ");
+   if(is_known_connectivity())
+      fprintf(ofile, "%s", is_orientable()?"yes":"no");
+   else
+      fprintf(ofile, "n/a (calculated value: %s)", is_orientable()?"yes":"no");
+   fprintf(ofile, "\n");
+
+   fprintf(ofile, "connectivity = %spolyhedron, %sclosed, %seven, %sknown\n",
+         is_polyhedron()?"":"not ", is_closed()?"":"not ",
+         is_even_connectivity()?"":"not ", is_known_connectivity()?"":"not ");
+
+   fprintf(ofile, "num_parts = ");
+   if(is_known_connectivity())
+      fprintf(ofile, "%d", num_parts());
+   else
+      fprintf(ofile, "n/a (calculated value: %d)", num_parts());
+   fprintf(ofile, "\n");
+
+   fprintf(ofile, "genus = ");
+   if(is_known_genus())
+      fprintf(ofile, "%d", genus());
+   else
+      fprintf(ofile, "n/a");
+   fprintf(ofile, "\n");
+
+   fprintf(ofile, "area = %s\n", d2s(s1, face_areas().sum));
+
+   fprintf(ofile, "volume = ");
+   if(geom.is_oriented() && is_polyhedron())
+      fprintf(ofile, "%s", d2s(s1, volume()));
+   else
+      fprintf(ofile, "n/a (calculated value: %s)", d2s(s1, volume()));
+   fprintf(ofile, "\n");
+
+   fprintf(ofile, "\n");
 }
 
 void rep_printer::faces_sec()

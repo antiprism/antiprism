@@ -65,15 +65,15 @@ void J_dodecahedron(geom_if &geom)
 void J_icosidodecahedron(geom_if &geom)
       { geom.read_resource("std_icosid"); unit_edge(geom); }
 void J_tr_tetrahedron(geom_if &geom)
-      { geom.read_resource("tr_tet"); unit_edge(geom); }
+      { geom.read_resource("std_tr_tet"); unit_edge(geom); }
 void J_tr_cube(geom_if &geom)
-      { geom.read_resource("tr_cube"); unit_edge(geom); }
+      { geom.read_resource("std_tr_cube"); unit_edge(geom); }
 void J_tr_icosahedron(geom_if &geom)
-      { geom.read_resource("tr_icosa"); unit_edge(geom); }
+      { geom.read_resource("std_tr_icosa"); unit_edge(geom); }
 void J_tr_dodecahedron(geom_if &geom)
-      { geom.read_resource("tr_dod"); unit_edge(geom); }
+      { geom.read_resource("std_tr_dod"); unit_edge(geom); }
 void J_rhombicosidodecahedron(geom_if &geom)
-      { geom.read_resource("rhombicosid"); unit_edge(geom); }
+      { geom.read_resource("std_rhombicosid"); unit_edge(geom); }
 void J_prism3(geom_if &geom) { uni_pgon(geom, prism(3)); }
 void J_prism4(geom_if &geom) { uni_pgon(geom, prism(4)); }
 void J_prism5(geom_if &geom) { uni_pgon(geom, prism(5)); }
