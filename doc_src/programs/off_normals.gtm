@@ -31,6 +31,20 @@ Usage
 Examples
 </A></H2>
 
+Show the normals with connectors to face centroids of a Rhombic Triacontahedron. Outward normals and connectors will be colored white
+<PRE>
+   off_normals rt -O white | antiview -v 0.075
+</PRE>
+
+Show the normals of a Rhombic Triacontahedron which has been oriented for negative volume so normals now point inward
+<PRE>
+   planar -O n rt | off_normals -O white -d f | antiview -v 0.075 -x f
+</PRE>
+
+Show the edge normals of an icosidodecahedron
+<PRE>
+   off_normals icosidodecahedron -s e -O white | antiview -v 0.075
+</PRE>
 
 
 <H2><A NAME="notes">

@@ -7,54 +7,58 @@ off_normals - utility for working with normals
 [\fIoptions\fR] [\fIinput_file\fR]
 .SH DESCRIPTION
 Display normals of faces, implicit edges, and vertices
-input_file is not given the program reads from standard input.
+If input_file is not given the program reads from standard input.
 .PP
 Options
 .HP
 \fB\-h\fR,\-\-help this help message (run 'off_util \fB\-H\fR help' for general help)
 .HP
 \fB\-\-version\fR version information
-.HP
-\fB\-n\fR <opts> plot element normals
 .TP
-n \- raw normals (default),
-u \- unit normals
+\fB\-t\fR <opt>
+normal type.  a \- added to element,  p \- positional  (default: a)
 .TP
-o \- set all outward,
-i \- set all inward
+\fB\-u\fR
+unit normals  (raw normals otherwise)
+.TP
+\fB\-e\fR
+connect normal to element centroid  (default for \fB\-t\fR p)
+.TP
+\fB\-p\fR <opt>
+force polarity. o \- set all outward,  i \- set all inward
 .IP
 r \- reverse both inward and outward
-e \- connect normal to element centroid
-d \- delete faces of eliminated normals
-D \- delete all of original model
 .HP
-\fB\-t\fR <opts> normal type
-.IP
-n \- positional, p \- perpendicular to element (default: n)
-.HP
-\fB\-i\fR <elms> show pointing. The element string can include o, i and h
+\fB\-i\fR <elms> include normals. The element string can include o, i and h
 .IP
 to show, respectively, outward, inward and hemispherical
-note: exlusion occurs before o, i, r of \fB\-n\fR (default: oih)
+note: exlusion occurs before \fB\-p\fR  (default: oih)
 .HP
-\fB\-s\fR <elms> show elements. The element string can include v, e and f
-.IP
-to show, respectively, vertices, edges and faces (default: f)
-.HP
-\fB\-p\fR <opts> average pattern string for edge and vertex normals. Done before \fB\-n\fR
+\fB\-s\fR <elms> include elements. The element string can include v, e and f
 .TP
-r \- raw, o \- outward, i \- inward, u \- unit
-(default: r)
+to show, respectively, vertices, edges and faces
+(default: f)
+.TP
+\fB\-d\fR <opt>
+delete elements.  f \- delete faces of unincluded normals
+.IP
+a \- delete all of original model
+.HP
+\fB\-c\fR <opts> average pattern string for edge and vertex normals. Done before \fB\-p\fR
+.TP
+r \- raw,
+o \- outward,  i \- inward,  u \- unit  (default: r)
 .TP
 \fB\-C\fR <xyz>
-center of model, in form 'X,Y,Z' (default: centroid)
+center of model, in form 'X,Y,Z'  (default: centroid)
 .TP
 \fB\-l\fR <lim>
 minimum distance for unique vertex locations as negative exponent
 .IP
 (default: 12 giving 1e\-12)
-.HP
-\fB\-o\fR <file> write output to file (default: write to standard output)
+.TP
+\fB\-o\fR <file> write output to file
+(default: write to standard output)
 .PP
 Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
 .TP
@@ -65,6 +69,9 @@ outward normal vertex color
 inward normal vertex color
 .IP
 default: vertex color is negative of outward col
+.TP
+\fB\-H\fR <col>
+hemispherical normal vertex color  (default: gray50)
 .TP
 \fB\-E\fR <col>
 normal vector color. connected to element centroid
