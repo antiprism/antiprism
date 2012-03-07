@@ -160,7 +160,7 @@ int uni_poly::lookup_sym_no(string sym, int is_dual)
       if(idx<0 || idx >= get_last_uniform())  // out of range
          return -1;
       else
-         return idx-1;
+         return idx;
    }
 
    if(!is_dual) {
