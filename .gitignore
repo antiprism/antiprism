@@ -40,7 +40,6 @@ src_extra/twist
 src_extra/spidron
 src_extra/off2txt
 src_extra/dome_layer
-src_extra/off_normals
 src/off2pov
 src/off2eig
 src/off2m
@@ -66,6 +65,7 @@ src/sph_rings
 src/poly_weave
 src/off_report
 src/off_query
+src/off_normals
 src/kcycle
 src/string_art
 src/jitterbug

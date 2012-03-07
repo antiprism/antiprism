@@ -52,6 +52,7 @@ Programs
 <UL>
 <LI><A HREF="off_report.html">off_report</A> - report of global measures (e.g. area, volume, centroid), maxima, and counts
 <LI><A HREF="off_query.html">off_query</A> - list element data
+<LI><A HREF="off_normals.html">off_normals</A> - utility for working with normals
 </UL>
   
 <B>Generation</B>
@@ -94,7 +95,6 @@ provided for interest only
 <LI><A HREF="twist.html">twist</A> - twist the edges of a polyhedron
 <LI><A HREF="spidron.html">spidron</A> - spidronise a polyhedron
 <LI><A HREF="off2txt.html">off2txt</A> - convert an OFF file to Hedron format
-<LI><A HREF="off_normals.html">off_normals</A> - utility for working with normals
 </UL>
 
 <H3><A NAME="general">

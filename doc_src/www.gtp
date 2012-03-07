@@ -118,6 +118,7 @@ mtimestamp $dd.$MM.$yyyy
 ./programs/planar.gtm 3 planar - convert overlapping coplanar polygons to tiles
 ./programs/off_report.gtm 3 off_report - report global measures maxima and counts
 ./programs/off_query.gtm 3 off_query - list element data
+./programs/off_normals.gtm 3 off_normals - utility for working with normals
 ./programs/conv_hull.gtm 3 conv_hull - convex hulls (using Qhull)
 ./programs/pol_recip.gtm 3 pol_recip - polar reciprocals (duals)
 ./programs/geodesic.gtm 3 geodesic - geodesic spheres
@@ -147,7 +148,6 @@ mtimestamp $dd.$MM.$yyyy
 ./programs/twist.gtm 3 UNSUPPORTED: twist - twist the edges of a polyhedron
 ./programs/spidron.gtm 3 UNSUPPORTED: spidron - spidronise a polyhedron
 ./programs/off2txt.gtm 3 UNSUPPORTED: off2txt - convert an OFF file to Hedron format
-./programs/off_normals.gtm 3 UNSUPPORTED: off_normals - utility for working with normals
 
 ./programs/resources.gtm 3 Antiprism Resource Files
 ./programs/extras_readme.gtm 4 Antiprism Resources - Extras

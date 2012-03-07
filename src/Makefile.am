@@ -24,7 +24,7 @@ bin_PROGRAMS = off2pov off2m off2vrml off2crds m2off \
 		poly_weave off_report off_query \
 		kcycle string_art jitterbug unitile2d repel \
 		lat_grid lat_util canonical conway n_icons iso_delta \
-		bravais waterman col_util planar
+		bravais waterman col_util planar off_normals
 
 dist_man1_MANS = off2pov.1 off2m.1 off2vrml.1 off2crds.1 m2off.1 \
       off_color.1 off_util.1 off_trans.1 off_align.1 \
@@ -33,7 +33,7 @@ dist_man1_MANS = off2pov.1 off2m.1 off2vrml.1 off2crds.1 m2off.1 \
 		poly_weave.1 off_report.1 off_query.1 \
 		kcycle.1 string_art.1 jitterbug.1 unitile2d.1 repel.1 \
 		lat_grid.1 lat_util.1 canonical.1 conway.1 n_icons.1 iso_delta.1 \
-		bravais.1 waterman.1 col_util.1 planar.1
+		bravais.1 waterman.1 col_util.1 planar.1 off_normals.1
 
 off2pov_SOURCES = off2pov.cc
 off2crds_SOURCES = off2crds.cc
@@ -76,4 +76,5 @@ waterman_SOURCES = waterman.cc
 waterman_LDADD = liblattice_grid.la $(LDADD)
 col_util_SOURCES = col_util.cc
 planar_SOURCES = planar.cc
+off_normals_SOURCES = off_normals.cc
 
