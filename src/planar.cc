@@ -2335,6 +2335,19 @@ void orient_model(geom_if &geom, char option, char *errmsg)
       geom.orient_reverse();      
 }
 
+// zero area faces case trouble later. Not seen so can be deleted
+void delete_zero_area_faces(geom_if &geom, const double &eps)
+{
+   vector<int> deleted_faces;
+
+   geom_info info(geom);
+   for(unsigned int i=0; i<geom.faces().size(); i++)
+      if (info.face_area(i) < eps)
+         deleted_faces.push_back(i);
+
+   geom.delete_faces(deleted_faces);
+}
+
 int main(int argc, char *argv[])
 {
    planar_opts opts;
@@ -2382,6 +2395,8 @@ int main(int argc, char *argv[])
 
    int original_edges_size = 0;
    if (opts.planar_merge_type) {
+      delete_zero_area_faces(geom, opts.epsilon);
+
       // missing edges are added so that they won't blend to invisible
       geom.add_missing_impl_edges();
       original_edges_size = geom.edges().size();
