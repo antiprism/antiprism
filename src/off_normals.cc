@@ -54,10 +54,12 @@ class off_normals_opts: public prog_opts {
       char exclude_normals_elems;
       char force_normals_polarity;
       bool elem_normal_vecs;
+      double edge_length;
       char base_normal_method;
       string show_pointing;
       string show_elems;
       string average_pattern;
+      bool alternate_calculation;
 
       col_val outward_normal_col;
       col_val inward_normal_col;
@@ -76,10 +78,12 @@ class off_normals_opts: public prog_opts {
                           exclude_normals_elems('\0'),
                           force_normals_polarity('\0'),
                           elem_normal_vecs(false),
+                          edge_length(1.0),
                           base_normal_method('b'),
                           show_pointing("oih"),
                           show_elems("f"),
                           average_pattern("r"),
+                          alternate_calculation(false),
                           hemispherical_normal_col(col_val(127,127,127)),
                           sig_compare(INT_MAX),
                           epsilon(0)
@@ -102,7 +106,8 @@ void off_normals_opts::usage()
 "%s"
 "  -t <opt>  normal type.  a - added to element,  p - positional  (default: a)\n"
 "  -u        unit normals  (raw normals otherwise)\n"
-"  -e        connect normal to element centroid  (default for -t p)\n"
+"  -e        connect to element centroid  (default for -t a)\n"
+"  -m <num>  connector length adjust  (for -t a, greater than zero, default: 1.0)\n"
 "  -p <opt>  force polarity. o - set all outward,  i - set all inward\n"
 "               r - reverse both inward and outward\n"
 "  -i <elms> include normals. The element string can include o, i and h\n"
@@ -114,6 +119,7 @@ void off_normals_opts::usage()
 "               a - delete all of original model\n"
 "  -c <opts> average pattern string for edge and vertex normals. Done before -p\n"
 "               r - raw,  o - outward,  i - inward,  u - unit  (default: r)\n"
+"  -a        alternate calculation for vertex normals\n"
 "  -C <xyz>  center of model, in form 'X,Y,Z'  (default: centroid)\n"
 "  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
@@ -140,7 +146,7 @@ void off_normals_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":ht:uep:i:s:d:c:O:I:H:E:B:C:l:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":ht:uem:p:i:s:d:c:aO:I:H:E:B:C:l:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -157,6 +163,13 @@ void off_normals_opts::process_command_line(int argc, char **argv)
 
          case 'e':
             elem_normal_vecs = true;
+            break;
+
+         case 'm':
+            if(!read_double(optarg, &edge_length, errmsg))
+               error(errmsg, c);
+            if (edge_length <= 0.0)
+               error("edge length must be greater than 0", c);
             break;
 
          case 'p':
@@ -187,6 +200,10 @@ void off_normals_opts::process_command_line(int argc, char **argv)
             if(strspn(optarg, "roiu") != strlen(optarg))
                error(msg_str("average string is '%s', must be from r, o, i, and u", optarg), c);
             average_pattern=optarg;
+            break;
+
+         case 'a':
+            alternate_calculation = true;
             break;
 
          case 'O':
@@ -256,7 +273,7 @@ void off_normals_opts::process_command_line(int argc, char **argv)
 
 
 void add_normals(col_geom_v &geom, const bool &unit_normals, const char &normal_type, const char &exclude_normals_elems, const char &force_normals_polarity,
-                 const bool &elem_normal_vecs,
+                 const bool &elem_normal_vecs, double &edge_length, bool &alternate_calculation,
                  const col_val &outward_normal_col, const col_val &inward_normal_col, const col_val &hemispherical_normal_col, const col_val &edge_normal_col, const col_val &base_normal_col,
                  const char &base_normal_method, const string &show_elems, const string &show_pointing, const string &average_pattern, const vec3d &center, const double &eps)
 {
@@ -331,8 +348,10 @@ void add_normals(col_geom_v &geom, const bool &unit_normals, const char &normal_
                normal = normal.unit();
 
             vec3d fc = geom.face_cent(i);
-            if (normal_type == 'a')
+            if (normal_type == 'a') {
+               normal *= edge_length;
                normal += fc;
+            }
 
             ngeom.add_col_vert(normal,col);
 
@@ -400,8 +419,10 @@ void add_normals(col_geom_v &geom, const bool &unit_normals, const char &normal_
             normal = normal.unit();
 
          vec3d ec = centroid(geom.verts(), edge);
-         if (normal_type == 'a')
+         if (normal_type == 'a') {
+            normal *= edge_length;
             normal += ec;
+         }
 
          ngeom.add_col_vert(normal,col);
 
@@ -424,8 +445,16 @@ void add_normals(col_geom_v &geom, const bool &unit_normals, const char &normal_
    if (strchr(show_elems.c_str(), 'v')) {
       const vector<vec3d> &verts = geom.verts();
 
+      // in case this is needed for alternate vertex normal calculation
+      geom_info info(geom);
+      const vector<vec3d> &v_norms = info.get_vert_norms();
+
       for(unsigned int i=0;i<verts.size();i++) {
-         xnormal x_normal = x_normals.vertex_normal(i, average_pattern);
+         xnormal x_normal;
+         if (alternate_calculation)
+            x_normal = xnormal(geom, v_norms[i], i, center, eps);
+         else
+            x_normal = x_normals.vertex_normal(i, average_pattern);
 
          if (x_normal.is_hemispherical()) {
            if (!strchr(show_pointing.c_str(), 'h')) {
@@ -468,8 +497,10 @@ void add_normals(col_geom_v &geom, const bool &unit_normals, const char &normal_
          if (unit_normals)
             normal = normal.unit();
 
-         if (normal_type == 'a')
+         if (normal_type == 'a') {
+            normal *= edge_length;
             normal += verts[i];
+         }
 
          ngeom.add_col_vert(normal,col);
 
@@ -523,7 +554,8 @@ int main(int argc, char *argv[])
       opts.warning(errmsg);
       
    add_normals(geom, opts.unit_normals, opts.normal_type, opts.exclude_normals_elems, opts.force_normals_polarity,
-               opts.elem_normal_vecs, opts.outward_normal_col, opts.inward_normal_col, opts.hemispherical_normal_col, opts.edge_normal_col, opts.base_normal_col,
+               opts.elem_normal_vecs, opts.edge_length, opts.alternate_calculation,
+               opts.outward_normal_col, opts.inward_normal_col, opts.hemispherical_normal_col, opts.edge_normal_col, opts.base_normal_col,
                opts.base_normal_method, opts.show_elems, opts.show_pointing, opts.average_pattern, opts.center, opts.epsilon);
 
    if(!geom.write(opts.ofile, errmsg))

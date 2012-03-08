@@ -22,7 +22,10 @@ normal type.  a \- added to element,  p \- positional  (default: a)
 unit normals  (raw normals otherwise)
 .TP
 \fB\-e\fR
-connect normal to element centroid  (default for \fB\-t\fR p)
+connect to element centroid  (default for \fB\-t\fR a)
+.TP
+\fB\-m\fR <num>
+connector length adjust  (for \fB\-t\fR a, greater than zero, default: 1.0)
 .TP
 \fB\-p\fR <opt>
 force polarity. o \- set all outward,  i \- set all inward
@@ -48,6 +51,9 @@ a \- delete all of original model
 .TP
 r \- raw,
 o \- outward,  i \- inward,  u \- unit  (default: r)
+.TP
+\fB\-a\fR
+alternate calculation for vertex normals
 .TP
 \fB\-C\fR <xyz>
 center of model, in form 'X,Y,Z'  (default: centroid)
