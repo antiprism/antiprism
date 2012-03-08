@@ -129,6 +129,7 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/waterman.gtm 2 waterman - Waterman polyhedra
 ./doc/n_icons.gtm 2 n_icons - sphericon like polyhedra 
 ./doc/kcycle.gtm 2 kcycle - kaleidocycle rings of polyhedron
+./doc/leonardo.gtm 2 leonardo - Leonardo da Vinci style models
 ./doc/jitterbug.gtm 2 jitterbug - jitterbug transformation
 ./doc/poly_weave.gtm 2 poly_weave - weave based on a polyhedron
 ./doc/canonical.gtm 2 canonical - canonicalize a polyhedon

@@ -426,29 +426,73 @@ void geom_info::find_vert_cons()
    }
 }
 
-void geom_info::find_vert_norms()
+// Calculate vertex normals as average of surrounding face normals,
+// using existing face orientation (an optimisation when it is known
+// that a model is oriented)
+static void get_vert_norms_raw_orientation(const geom_if &geom,
+      vector<vec3d> &v_norms)
 {
-   const geom_if &geom = get_geom();
    const unsigned int verts_sz = geom.verts().size();
-   vert_norms.assign(verts_sz, vec3d::zero);
+   v_norms.assign(verts_sz, vec3d::zero);
    vector<int> vert_face_cnt(geom.verts().size(), 0);
    for(unsigned int i=0; i<geom.faces().size(); i++) {
       vec3d norm = geom.face_norm(i).unit();
       for(unsigned int j=0; j<geom.faces(i).size(); j++) {
          const int v_idx = geom.faces(i, j);
-         vert_norms[v_idx] += norm;
+         v_norms[v_idx] += norm;
          vert_face_cnt[v_idx]++;
       }
    }
 
    for(unsigned int i=0; i<verts_sz; i++) {
       if(int cnt = vert_face_cnt[i])
-         vert_norms[i] /= cnt;
+         v_norms[i] /= cnt;
       else
-         vert_norms[i].unset();
+         v_norms[i].unset();
    }
 }
-   
+
+
+// Calculate vertex normals as average of surrounding face normals,
+// but locally orienting faces consistenly around a vertex before calculating
+// the normals to average
+static void get_vert_norms_general(const geom_if &geom, vector<vec3d> &v_norms)
+{
+
+   //find set of faces that each vertex belongs to
+   const int v_sz = geom.verts().size();
+   vector<set<int> > v_faces(v_sz);
+   for(unsigned int f_idx=0; f_idx<geom.faces().size(); f_idx++)
+      for(unsigned int v=0; v<geom.faces(f_idx).size(); v++)
+         v_faces[geom.faces(f_idx, v)].insert(f_idx);
+
+   // copy of vertices to be used for orientating the sets of faces
+   geom_v g_orient;
+   g_orient.raw_verts() = geom.verts();
+
+   v_norms.assign(v_sz, vec3d::zero);        // initialise normals to zero
+   for(int i=0; i<v_sz; i++) {
+      for(set<int>::iterator si=v_faces[i].begin(); si!=v_faces[i].end(); ++si)
+         g_orient.add_face(geom.faces(*si));
+      g_orient.orient();
+      vector<vec3d> f_norms;
+      g_orient.face_norms(f_norms);
+      for(unsigned int f=0; f<f_norms.size(); f++)
+         v_norms[i] += f_norms[f];
+      v_norms[i] /= f_norms.size();
+      g_orient.clear_faces();
+   }
+}
+
+void geom_info::find_vert_norms(bool local_orient)
+{
+   vert_norms_local_orient = local_orient;
+   if(local_orient)
+      get_vert_norms_general(get_geom(), vert_norms);
+   else
+      get_vert_norms_raw_orientation(get_geom(), vert_norms);
+}
+
 
 void geom_info::find_free_verts()
 {

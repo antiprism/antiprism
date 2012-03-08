@@ -69,6 +69,7 @@ src/off_normals
 src/kcycle
 src/string_art
 src/jitterbug
+src/leonardo
 src/unitile2d
 src/repel
 src/lat_grid

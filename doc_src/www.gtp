@@ -136,6 +136,7 @@ mtimestamp $dd.$MM.$yyyy
 ./programs/n_icons.gtm 3 n_icons - sphericon like polyhedra 
 ./programs/kcycle.gtm 3 kcycle - kaleidocycle rings of polyhedron
 ./programs/jitterbug.gtm 3 jitterbug - jitterbug transformation
+./programs/leonardo.gtm 3 leonardo - Leonardo da Vinci style models
 ./programs/poly_weave.gtm 3 poly_weave - weave based on a polyhedron
 ./programs/canonical.gtm 3 canonical - canonicalize a polyhedon
 ./programs/sph_rings.gtm 3 sph_rings - rings of points on a sphere
