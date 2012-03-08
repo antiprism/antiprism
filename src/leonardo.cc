@@ -158,6 +158,15 @@ vec3d lines_intersect(const vec3d &P0, const vec3d &P1, const vec3d &Q0, const v
    return (N1+N2)/2.0;
 }
 
+vec3d force_line_plane_intersect(vec3d Q, vec3d n, vec3d P0, vec3d P1)
+{
+   vec3d pt = line_plane_intersect(Q, n, P0, P1);
+   if(!pt.is_set())                     // probably coincident points
+      pt = P0 - (P0 - Q).component(n);  // use nearest point to P0 on plane
+   return pt;
+}
+
+
 bool leonardo_faces(geom_if &geom_out, const geom_if &geom, double width,
       double height, double ht_offset, bool hide_edges, bool col_from_edges,
       char *errmsg)
@@ -176,7 +185,7 @@ bool leonardo_faces(geom_if &geom_out, const geom_if &geom, double width,
    const double height_above = ht_offset;             // height "above" surface
 
    geom_info info(geom);
-   const vector<vec3d> &v_norms = info.get_vert_norms();
+   vector<vec3d> v_norms = info.get_vert_norms();
    vector<vector<int> > open_edges;
    get_open_edges(geom, open_edges);
 
@@ -214,17 +223,17 @@ bool leonardo_faces(geom_if &geom_out, const geom_if &geom, double width,
                   lines[0][j],               lines[1][j] );
 
          // vertex above "original" vertex
-         geom_out.add_vert( line_plane_intersect(F-height_above*f_norm, f_norm,
-                  v0, v0+v_norms[face[j]]));
+         geom_out.add_vert(force_line_plane_intersect(
+                  F-height_above*f_norm, f_norm, v0, v0+v_norms[face[j]]));
          // vertex above vertex on face at 'width' from neighbouring edges
-         geom_out.add_vert( line_plane_intersect(F-height_above*f_norm, f_norm,
-                  v1, v1+f_norm));
+         geom_out.add_vert(force_line_plane_intersect(
+                  F-height_above*f_norm, f_norm, v1, v1+f_norm));
          // vertex below "original" vertex
-         geom_out.add_vert( line_plane_intersect(F-height_below*f_norm, f_norm,
-                  v0, v0+v_norms[face[j]]));
+         geom_out.add_vert(force_line_plane_intersect(
+                  F-height_below*f_norm, f_norm, v0, v0+v_norms[face[j]]));
          // vertex below vertex on face at 'width' from neighbouring edges
-         geom_out.add_vert( line_plane_intersect(F-height_below*f_norm, f_norm,
-                  v1, v1+f_norm));
+         geom_out.add_vert(force_line_plane_intersect(
+                  F-height_below*f_norm, f_norm, v1, v1+f_norm));
 
          // top face
          geom_out.add_face(start+ 4*j, start+ 4*((j+1)%f_sz),
