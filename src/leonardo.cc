@@ -27,7 +27,7 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include "../anti/base/antiprism.h"
+#include "../base/antiprism.h"
 
 
 class leo_opts: public prog_opts
