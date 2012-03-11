@@ -87,7 +87,7 @@ void oq_opts::usage()
 "       c - coordinates             d - distance from centre\n"
 "       f - face index numbs        F - face angles\n"
 "       a - solid angle             n - neighbours\n"
-"       o - order\n"
+"       o - order                   g - vertex figure\n"
 "   E - Edge:\n"
 "       v - vertex index nums       d - distance from centre\n"
 "       f - face index nums         D - direction\n"
@@ -322,6 +322,12 @@ void vertex_query(FILE *ofile, rep_printer &rep, oq_opts &opts)
             break;
          case 'n':
             query_items.push_back(&rep_printer::v_neighbours);
+            break;
+         case 'g':
+            query_items.push_back(&rep_printer::v_figure);
+            break;
+         case 'G':
+            query_items.push_back(&rep_printer::v_figure_orig);
             break;
          default:
             opts.error(msg_str("unknown query letter '%c'", opts.query[i]),

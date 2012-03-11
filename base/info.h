@@ -156,6 +156,8 @@ class geom_info
       vector<double> f_perimeters;
       vector<double> f_max_nonplanars;
       vector<vector<int> > vert_cons;
+      vector<vector<int> > vert_cons_orig;
+      vector<vector<vector<int> > > vert_figs;
       vector<vec3d> vert_norms;
       bool vert_norms_local_orient;
       vector<int> free_verts;
@@ -169,6 +171,8 @@ class geom_info
       void find_face_angles();
       void find_dihedral_angles();
       void find_vert_cons();
+      void find_vert_cons_orig();
+      void find_vert_figs();
       void find_vert_norms(bool raw_orientation=false);
       void find_free_verts();
       void find_solid_angles();
@@ -253,6 +257,10 @@ class geom_info
             find_vert_norms(local_orient); return vert_norms; }
       const vector<vector<int> > &get_vert_cons()
          { if(!vert_cons.size()) find_vert_cons(); return vert_cons; }
+      const vector<vector<int> > &get_vert_cons_orig()
+         { if(!vert_cons_orig.size()) find_vert_cons_orig(); return vert_cons_orig; }
+      const vector<vector<vector<int> > > &get_vert_figs()
+         { if(!vert_figs.size()) find_vert_figs(); return vert_figs; }
       const vector<double> &get_vertex_angles()
          { if(!vertex_angles.size()) find_solid_angles(); return vertex_angles;}
       map<double, int, ang_less> &get_solid_angles()

@@ -227,5 +227,34 @@ int combine_faces(vector<int> &base, vector<int> brick, const vector<int> &edge)
    return 1;
 }
 
+/*
+// Combine face circuits into a single face by bridging between circuits
+// with edges
+void face_from_contours(const vector<vector<int> > &contours, vector<int> &face,
+      vector<vector<int> > *new_edges)
+{
+   face.clear();
+   if(new_edges)
+      new_edges->clear();
+   vector<int> fs; // faces with two or more sides
+   for(unsigned int i=0; i<contours.size(); i++)
+      if(contours[i].size()>1)
+         fs.push_back(i);
 
+   for(unsigned int i=0; i<fs.size(); i++) {
+      const int idx = fs[i];
+      if(i>0) {
+         const int prev_idx = fs[i-1];
+         face.push_back(contours[prev_idx][0]);  // first vert on prev circuit
+         if(new_edges)
+            new_edges->push_back(
+                  make_edge(contours[prev_idx][0], contours[idx][0]));
+      }
+      for(unsigned int j=0; j<contours[idx].size(); j++)
+         face.push_back(contours[i][j]);
+   }
+   for(int i=(int)fs.size()-1; i>0; i--)
+      face.push_back(contours[fs[i]][0]);
+}
+*/
 

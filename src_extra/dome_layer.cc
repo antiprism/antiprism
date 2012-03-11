@@ -155,8 +155,15 @@ int get_edge_idx(const geom_if &geom, int v0, int v1)
 
 void make_dome_eden(const col_geom_v &geom, col_geom_v &dome, double radius)
 {
-   dome = geom; 
-   const vector<vector<int> > v_cons = geom_info(dome).get_vert_cons();
+   dome = geom;
+   geom_info info(dome);
+
+  /*
+   vector<vector<int> > v_cons(info.num_verts());
+   for(int i=0; i<info.num_verts(); i++)
+      if(info.get_vert_figs()[i].size())
+         v_cons[i] = info.get_vert_figs()[i][0];
+   */
 
    proj_onto_sphere(dome);
 
@@ -182,14 +189,17 @@ void make_dome_eden(const col_geom_v &geom, col_geom_v &dome, double radius)
    }
 
    for(int i=0; i<orig_num_verts; i++) {
-      int f_sz = v_cons[i].size();
-      vector<int> face(f_sz);
-      for(int j=0; j<f_sz; j++)
-         face[j] = orig_num_verts +
-               get_edge_idx(dome, i, v_cons[i][j]);
-      dome.add_col_face(face, col_val(10));
-      for(int j=0; j<f_sz; j++)
-         dome.add_col_edge(i, face[j], col_val(2));
+      const vector<vector<int> > &v_fig = info.get_vert_figs()[i];
+      for(unsigned int j=0; j<v_fig.size(); j++) {
+         const vector<int> &cons = v_fig[j];
+         int f_sz = cons.size();
+         vector<int> face(f_sz);
+         for(int k=0; k<f_sz; k++)
+            face[k] = orig_num_verts + get_edge_idx(dome, i, cons[k]);
+         dome.add_col_face(face, col_val(10));
+         for(int k=0; k<f_sz; k++)
+            dome.add_col_edge(i, face[k], col_val(2));
+      }
    }
 }
 

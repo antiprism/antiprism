@@ -224,7 +224,9 @@ void coloring::v_avg_angle(bool apply_map)
    geom_info info(*get_geom());
    col_geom_v tmp;
    tmp.raw_verts() = get_geom()->verts();
-   tmp.raw_faces() = info.get_vert_cons();
+   for(int i=0; i<info.num_verts(); i++)
+      tmp.add_face(info.get_vert_figs()[i].size()? info.get_vert_figs()[i][0]
+                                                 : vector<int>() );
    col_geom_v *orig_geom = get_geom();
    set_geom(&tmp);
    f_avg_angle(apply_map);
@@ -367,7 +369,8 @@ void coloring::f_avg_angle(bool apply_map)
       double ang_sum = 0;
       for(unsigned int j=0; j<f_angs.size(); j++)
          ang_sum += f_angs[j];
-      int idx = (int)(rad2deg(ang_sum/f_angs.size())+0.5);
+      // set invalid faces to have impossible angle 181
+      int idx = f_angs.size() ? (int)(rad2deg(ang_sum/f_angs.size())+0.5) : 181;
       if(apply_map)
          get_geom()->set_f_col(i, get_col(idx));
       else
