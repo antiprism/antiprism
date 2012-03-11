@@ -89,6 +89,8 @@ class rep_printer: public geom_info
       void v_index(int v_idx);
       void v_coords(int v_idx);
       void v_neighbours(int v_idx);
+      void v_figure_orig(int v_idx);
+      void v_figure(int v_idx);
       void v_face_idxs(int v_idx);
       void v_solid_angle(int v_idx);
       void v_order(int v_idx);

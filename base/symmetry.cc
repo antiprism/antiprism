@@ -927,11 +927,17 @@ static int find_syms(const geom_if &geom, t_set &ts,
    const int dim = test_geom.set_hull(msg_str("-A%.15f", 1.0-sym_eps));
    if(dim<2)  // contains an infinite axis, can't currently handle this
       return 0;
+   test_geom.orient();
 
    geom_info g_inf(test_geom);
    const vector<vector<int> > &edges = g_inf.get_impl_edges();
-   const vector<vector<int> > &v_cons = g_inf.get_vert_cons();
-   
+
+   vector<vector<int> > v_cons(g_inf.num_verts());
+   for(unsigned int i=0; i<v_cons.size(); i++) {
+      if(g_inf.get_vert_figs()[i].size())      // shouldn't ever fail for hull
+         v_cons[i] = g_inf.get_vert_figs()[i][0];
+   }
+
    vector<vector<int> > r_cons = v_cons;
    for(vector<vector<int> >::iterator vi=r_cons.begin(); vi!=r_cons.end(); vi++)
       reverse(vi->begin(), vi->end());

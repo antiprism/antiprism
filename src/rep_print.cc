@@ -480,7 +480,7 @@ void rep_printer::windings_and_density_cnts()
    map<pair<int, int>, int> face_winding_counts_unsigned = face_winding_cnts(geom, true, true);
 
    geom_info info(geom);
-   const vector<vector<int> > &f_cons = info.get_vert_cons();
+   const vector<vector<int> > &f_cons = info.get_vert_cons_orig();
 
    // find vertex figure windings in separate geom
    col_geom_v vf_geom;
@@ -545,7 +545,7 @@ void rep_printer::v_coords(int v_idx)
    char str[MSG_SZ];
    fprintf(ofile, "%s", v2s(str, geom.verts(v_idx)));
 }
-   
+
 void rep_printer::v_neighbours(int v_idx)
 {
    char str[MSG_SZ];
@@ -553,7 +553,29 @@ void rep_printer::v_neighbours(int v_idx)
    for(unsigned int i=0; i<vcons.size(); i++)
       fprintf(ofile, "%s%s", vidx2s(str, vcons[i]), (i<vcons.size()-1)?" ":"");
 }
-   
+
+void rep_printer::v_figure_orig(int v_idx)
+{
+   char str[MSG_SZ];
+   const vector<int> &vcons = get_vert_cons_orig()[v_idx];
+   for(unsigned int i=0; i<vcons.size(); i++)
+      fprintf(ofile, "%s%s", vidx2s(str, vcons[i]), (i<vcons.size()-1)?" ":"");
+}
+
+
+void rep_printer::v_figure(int v_idx)
+{
+   char str[MSG_SZ];
+   const vector<vector<int> > &vfigs = get_vert_figs()[v_idx];
+   for(unsigned int i=0; i<vfigs.size(); i++) {
+      if(i>0)                     // print circuit separator
+         fprintf(ofile, ":");
+      for(unsigned int j=0; j<vfigs[i].size(); j++)
+         fprintf(ofile, "%s%s", vidx2s(str, vfigs[i][j]),
+               (j<vfigs[i].size()-1)?" ":"");
+   }
+}
+
 void rep_printer::v_face_idxs(int v_idx)
 {
    char str[MSG_SZ];

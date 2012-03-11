@@ -340,9 +340,9 @@ void geom_info::find_dihedral_angles()
 }
 
 
-void geom_info::find_vert_cons()
+void geom_info::find_vert_cons_orig()
 {
-   vert_cons.resize(num_verts(), vector<int>());
+   vert_cons_orig.resize(num_verts(), vector<int>());
    if(!num_faces())
       return;
    geom_v &dual = get_dual();
@@ -360,20 +360,12 @@ void geom_info::find_vert_cons()
       vector<vector<int> > es = geom.edges();
       geom.get_impl_edges(es);
       for(unsigned int i=0; i<es.size(); i++) {
-         vert_cons[es[i][0]].push_back(es[i][1]);
-         vert_cons[es[i][1]].push_back(es[i][0]);
+         vert_cons_orig[es[i][0]].push_back(es[i][1]);
+         vert_cons_orig[es[i][1]].push_back(es[i][0]);
       }
       return;
    }
    
-   /* if(!dual.get_faces()->size()) {   // set up an unordered list
-      for(unsigned int i=0; i<geom.edges().size(); i++) {
-         vert_cons[geom.edges(i, 0)].push_back(geom.edges(i, 1));
-         vert_cons[geom.edges(i, 1)].push_back(geom.edges(i, 0));
-      }
-      return;
-   } */
-
    dual.orient();
    const vector<vector<int> > &faces = geom.faces();
    for(unsigned int i=0; i<dfaces.size(); i++) {
@@ -387,15 +379,15 @@ void geom_info::find_vert_cons()
                   const vector<int> &nface =
                               faces[dfaces[i][(j+1)%dfaces[i].size()]];
                   if(find(nface.begin(), nface.end(), idx)!=nface.end())
-                     vert_cons[i].push_back(faces[f][(v+1)%sz]);
+                     vert_cons_orig[i].push_back(faces[f][(v+1)%sz]);
                   else
-                     vert_cons[i].push_back(faces[f][(v+sz-1)%sz]);
+                     vert_cons_orig[i].push_back(faces[f][(v+sz-1)%sz]);
                }
                else {
-                  if(faces[f][(v+1)%sz]==vert_cons[i][j-1])
-                     vert_cons[i].push_back(faces[f][(v+sz-1)%sz]);
+                  if(faces[f][(v+1)%sz]==vert_cons_orig[i][j-1])
+                     vert_cons_orig[i].push_back(faces[f][(v+sz-1)%sz]);
                   else 
-                     vert_cons[i].push_back(faces[f][(v+1)%sz]);
+                     vert_cons_orig[i].push_back(faces[f][(v+1)%sz]);
                }
                break;
             }
@@ -415,16 +407,89 @@ void geom_info::find_vert_cons()
          break;
       }
  
-   for(unsigned int j=0; j<vert_cons[0].size(); j++) {
-      if(vert_cons[0][j] == edge[0]) {
-         if(vert_cons[0][(j+1)%vert_cons[0].size()]!=edge[1]) {
-            for(unsigned int v=0; v<vert_cons.size(); v++)
-               reverse(vert_cons[v].begin(), vert_cons[v].end());
+   for(unsigned int j=0; j<vert_cons_orig[0].size(); j++) {
+      if(vert_cons_orig[0][j] == edge[0]) {
+         if(vert_cons_orig[0][(j+1)%vert_cons_orig[0].size()]!=edge[1]) {
+            for(unsigned int v=0; v<vert_cons_orig.size(); v++)
+               reverse(vert_cons_orig[v].begin(), vert_cons_orig[v].end());
          }
          break;
       }
    }
 }
+
+
+void geom_info::find_vert_cons()
+{
+   vert_cons.resize(num_verts(), vector<int>());
+   vector<vector<int> > es = geom.edges();
+   geom.get_impl_edges(es);
+   for(unsigned int i=0; i<es.size(); i++) {
+      vert_cons[es[i][0]].push_back(es[i][1]);
+      vert_cons[es[i][1]].push_back(es[i][0]);
+   }
+   return;
+}
+
+
+void geom_info::find_vert_figs()
+{
+   vert_figs.resize(num_verts());
+   get_vert_cons();
+   map<vector<int>, vector<int> > ef_pairs;
+   geom.get_edge_face_pairs(ef_pairs, false);
+
+   //find set of faces that each vertex belongs to
+   const int v_sz = geom.verts().size();
+   vector<set<int> > v_faces(v_sz);
+   for(unsigned int f_idx=0; f_idx<geom.faces().size(); f_idx++)
+      for(unsigned int v=0; v<geom.faces(f_idx).size(); v++)
+         v_faces[geom.faces(f_idx, v)].insert(f_idx);
+
+   // copy of vertices to be used for creating the sets of triangles
+   geom_v g_fig;
+   g_fig.raw_verts() = geom.verts();
+   map<vector<int>, int > circuit_edge_cnts;
+
+   for(int i=0; i<v_sz; i++) {
+      g_fig.clear_faces();
+      circuit_edge_cnts.clear();
+      bool figure_good = true;
+      for(set<int>::iterator si=v_faces[i].begin(); si!=v_faces[i].end(); ++si){
+         const vector<int> face = geom.faces(*si);
+         int f_sz = face.size();
+         vector<int> tri(3);
+         for(int n=0; n<f_sz; n++) {
+            if(face[n] == i) {
+               tri[0] = face[(n-1+f_sz)%f_sz];
+               tri[1] = face[n];
+               tri[2] = face[(n+1)%f_sz];
+               if(ef_pairs[make_edge(tri[0], tri[1])].size() != 2 ||
+                  ef_pairs[make_edge(tri[1], tri[2])].size() != 2 ) {
+                  figure_good = false;
+                  break;            // finish processing this face from set
+               }
+               circuit_edge_cnts[make_edge(tri[2], tri[0])]++;
+               g_fig.add_face(tri);
+            }
+         }
+         if(!figure_good)
+            break;               // finish processing this vertex
+      }
+      if(figure_good) {
+         unsigned int num_tris = g_fig.faces().size();
+         close_poly_basic(g_fig);
+         for(unsigned int f_idx = num_tris; f_idx<g_fig.faces().size(); f_idx++)
+            vert_figs[i].push_back(g_fig.faces(f_idx));
+         map<vector<int>, int>::const_iterator ei;
+         for(ei=circuit_edge_cnts.begin(); ei!=circuit_edge_cnts.end(); ++ei)
+            if(ei->second==2)    // closed edge must be digonal figure
+               vert_figs[i].push_back(ei->first);
+      }
+   }
+}
+
+
 
 // Calculate vertex normals as average of surrounding face normals,
 // using existing face orientation (an optimisation when it is known
