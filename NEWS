@@ -1,5 +1,20 @@
 NEWS for Antiprism: http://www.antiprism.com
 
+Version 0.21
+xx-xx-12 Adrian Rossiter <adrian@antiprism.com>
+         New Programs
+            off_normals: new program for working with normals (Roger
+              Kaufman)
+            leonardo: creates Leonardo da Vinci style models
+         Changes
+            off_query: Vg for vertex figures (Vn for connections only)
+            Models: Coxeter and Wenninger numbers as alternative names
+              for uniforms (Roger Kaufman).
+         Fixes
+            Some Johnson polyhedra not connected correctly
+            Miscellaneous small fixes.
+
+
 Version 0.20
 13-02-12 Adrian Rossiter <adrian@antiprism.com>
          New Programs

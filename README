@@ -1,23 +1,15 @@
 Antiprism
 =========
 
-Notes for Antiprism 0.20
-------------------------
+Notes for Antiprism 0.21.pre01
+------------------------------
 
-This release include new programs, new features and many
-changes to existing programs. A summary of changes is
-included in the NEWS file.
+This is a minor release to provide fixes for problems found
+in 0.20 and to distribute a couple of new programs.
 
-New features include: a large collection of resource models,
-accessible by name; symmetry operations for several programs;
-the Antiprism C++ library is installed with headers and
-documention and may be developed against (this is work in
-progress); a self-extracting installer is provided for the
-Windows binary package.
-
-Due to the extensive changes for this release, please be on
-the lookout for bugs or other issues and report them to me
-at: adrian@antiprism.com
+Due to the extensive changes in the previous release, please
+continue to be on the lookout for bugs or other issues and
+report them to me at: adrian@antiprism.com
 
 Adrian.
 
