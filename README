@@ -94,3 +94,20 @@ The Git repository contains the latest development code
 See README.git for further details.
 
 
+Note to developers
+------------------
+All the Antiprism source code is supplied under a permissive licence.
+
+The aim of using permissive licensing is to promote the development of
+new polyhedron software by making it convenient to reuse the Antiprism
+source code in other projects.
+
+Please, support this aim. If you incorporate Antiprism source code
+into your own project and make any improvements that could reasonably
+be incorporated back into the Antiprism project, like bug fixes,
+optimisations or new features, then please contribute your changes
+for inclusion back into Antiprism under a permissive (preferably
+MIT) licence.
+
+
+
