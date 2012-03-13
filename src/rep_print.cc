@@ -484,7 +484,7 @@ void rep_printer::windings_and_density_cnts()
    map<pair<int, int>, int> face_winding_counts_unsigned = face_winding_cnts(geom, true, true);
 
    geom_info info(geom);
-   const vector<vector<int> > &f_cons = info.get_vert_cons_orig();
+   const vector<vector<int> > &f_cons = info.get_vert_cons();
 
    // find vertex figure windings in separate geom
    col_geom_v vf_geom;
