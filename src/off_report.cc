@@ -86,7 +86,7 @@ void or_opts::usage()
 "            D - distances (min/max)     s - symmetry\n"
 "  -C <vals> Print counts of values, given as a list of letters\n"
 "            A - All                     F - faces type by angles\n"
-"            E - edge lengths            w - windings and density\n"
+"            E - edge lengths            w - windings\n"
 "            S - solid angles            D - dihedral angles\n"
 "            s - face sides              o - vertex orders\n"
 "            h - vertex heights (z-crds) O - symmetry orbits\n"
@@ -243,7 +243,7 @@ void print_counts(rep_printer &rep, const char *counts)
             rep.face_angles_cnts();
             break;
          case 'w':
-            rep.windings_and_density_cnts();
+            rep.windings();
             break;
          case 'E':
             rep.edge_lengths_cnts();

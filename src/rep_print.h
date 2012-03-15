@@ -53,8 +53,9 @@ class rep_printer: public geom_info
       int extra_f_sz;
       FILE *ofile;
 
-      map<pair<int, int>, int> face_winding_cnts(const geom_if &geom, const bool &polygon_types, const bool &unsign);
-      void polyhedron_density(map<pair<int, int>, int> &vertex_figure_winding_counts, map<pair<int, int>, int> &face_winding_counts);
+      void print_winding_cnts(map<pair<int, int>, int> &cnts, const bool &polygon_types, const bool &unsign);
+      map<pair<int, int>, int> get_face_windings(const bool &unsign);
+      map<pair<int, int>, int> get_vertex_figure_windings(const bool &unsign);
 
    public:
       rep_printer(geom_if &geom, FILE *outfile=stdout) :
@@ -81,7 +82,7 @@ class rep_printer: public geom_info
       void vert_heights_cnts();
       void solid_angles_cnts();
       void face_angles_cnts();
-      void windings_and_density_cnts();
+      void windings();
       void edge_lengths_cnts();
       void dihedral_angles_cnts();
       void sym_orbit_cnts();

@@ -410,9 +410,20 @@ void rep_printer::face_angles_cnts()
    fprintf(ofile, "\n");
 }
 
-map<pair<int, int>, int> rep_printer::face_winding_cnts(const geom_if &geom, const bool &polygon_types, const bool &unsign)
+void rep_printer::print_winding_cnts(map<pair<int, int>, int> &cnts, const bool &polygon_types, const bool &unsign)
 {
    fprintf(ofile, "[%s_windings_cnts %s]\n", (polygon_types ? "faces" : "vertex_figure"), (unsign ? "unsigned" : "signed"));
+
+   map<pair<int, int>, int>::iterator mi;
+   for(mi=cnts.begin(); mi!=cnts.end(); ++mi) {
+      pair<int, int> key = mi->first;
+      fprintf(ofile, "%d/%d = %d\n", key.first, key.second, mi->second);
+   }
+   fprintf(ofile, "\n");
+}
+
+map<pair<int, int>, int> rep_printer::get_face_windings(const bool &unsign)
+{
    map<pair<int, int>, int>::iterator mi;
    map<pair<int, int>, int> cnts;
    for(unsigned int i=0; i<geom.faces().size(); i++) {
@@ -426,80 +437,58 @@ map<pair<int, int>, int> rep_printer::face_winding_cnts(const geom_if &geom, con
          mi->second += 1;
    }
 
-   for(mi=cnts.begin(); mi!=cnts.end(); ++mi) {
-      pair<int, int> key = mi->first;
-      fprintf(ofile, "%d/%d = %d\n", key.first, key.second, mi->second);
+   return cnts;
+}
+
+map<pair<int, int>, int> rep_printer::get_vertex_figure_windings(const bool &unsign)
+{
+   geom_v polygon;
+   polygon.add_verts(geom.verts());
+
+   map<pair<int, int>, int>::iterator mi;
+   map<pair<int, int>, int> cnts;
+   for(unsigned int i=0; i<geom.verts().size(); i++) {
+      const vector<vector<int> > &vfigs = get_vert_figs()[i];
+      int winding = 0;
+      for(unsigned int j=0; j<vfigs.size(); j++) {
+         polygon.add_face(vfigs[j]);
+         winding += find_polygon_denominator(polygon, 0, unsign, epsilon);
+         polygon.clear_faces();
+      }
+
+      pair<int, int> key;
+      key.first = vfigs[0].size(); // assuming multiple vertex figures are the same size
+      key.second = winding;
+      mi = cnts.find(key);
+      if(mi == cnts.end())
+         cnts[key]=1;
+      else
+         mi->second += 1;
    }
-   fprintf(ofile, "\n");
 
    return cnts;
 }
 
-void rep_printer::polyhedron_density(map<pair<int, int>, int> &vertex_figure_winding_counts, map<pair<int, int>, int> &face_winding_counts)
+void rep_printer::windings()
 {
-   map<pair<int, int>, int>::iterator mi;
+   map<pair<int, int>, int> cnts;
+   bool unsign;
 
-   int v = 0;
-   for(mi=vertex_figure_winding_counts.begin(); mi!=vertex_figure_winding_counts.end(); ++mi) {
-      pair<int, int> key = mi->first;
-      v += key.second * mi->second;
-   }
+   unsign = false;
+   cnts = get_face_windings(unsign);
+   print_winding_cnts(cnts, true, unsign);
 
-   int f = 0;
-   for(mi=face_winding_counts.begin(); mi!=face_winding_counts.end(); ++mi) {
-      pair<int, int> key = mi->first;
-      f += key.second * mi->second;
-   }
+   unsign = true;
+   cnts = get_face_windings(unsign);
+   print_winding_cnts(cnts, true, unsign);
 
-   vector<vector<int> > e;
-   geom.get_impl_edges(e);
+   unsign = false;
+   cnts = get_vertex_figure_windings(unsign);
+   print_winding_cnts(cnts, false, unsign);
 
-   geom_info info(geom);
-   double vol = info.volume();
-
-   // http://en.wikipedia.org/wiki/Density_(polytope)
-   // density calculation: (dv * V) - E + (df * F) = 2D
-   // if the orientation has negative volume the formula addition is reversed
-   int density = 0;
-   if (vol < 0)
-      density = (v + (int)e.size() - f)/2;
-   else
-      density = (v - (int)e.size() + f)/2;
-
-   // if there are no vertex figures cannot calculate
-   if (!vertex_figure_winding_counts.size())
-      fprintf(stderr,"polyhedron density = n/a (cannot be calculated)\n");
-   else
-   // if not orientable, density cannot be calculated
-   if (!info.is_orientable())
-      fprintf(stderr,"polyhedron density = n/a (non-orientable)\n");
-   else
-      fprintf(stderr,"polyhedron density = %d\n", density);
-   fprintf(ofile, "\n");
-}
-
-void rep_printer::windings_and_density_cnts()
-{
-   map<pair<int, int>, int> face_winding_counts_signed = face_winding_cnts(geom, true, false);
-   map<pair<int, int>, int> face_winding_counts_unsigned = face_winding_cnts(geom, true, true);
-
-   geom_info info(geom);
-   const vector<vector<int> > &f_cons = info.get_vert_cons();
-
-   // find vertex figure windings in separate geom
-   col_geom_v vf_geom;
-   vf_geom.add_verts(geom.verts());
-   for(unsigned int i=0; i<f_cons.size(); i++)
-      // edges will cause problems when determining winding numbers
-      if (f_cons[i].size() >= 3)
-         vf_geom.add_face(f_cons[i]);
-
-   map<pair<int, int>, int> vertex_figure_winding_counts_signed = face_winding_cnts(vf_geom, false, false);
-   map<pair<int, int>, int> vertex_figure_winding_counts_unsigned = face_winding_cnts(vf_geom, false, true);
-
-   vf_geom.clear_all();
-
-   polyhedron_density(vertex_figure_winding_counts_unsigned, face_winding_counts_signed);
+   unsign = true;
+   cnts = get_vertex_figure_windings(unsign);
+   print_winding_cnts(cnts, false, unsign);
 }
 
 void rep_printer::sym_orbit_cnts()
