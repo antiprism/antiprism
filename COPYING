@@ -1,288 +1,258 @@
-NOTE TO DEVELOPERS
-------------------
-All the Antiprism source code is supplied under a permissive licence.
-
-The aim of using permissive licensing is to promote the development of
-new polyhedron software by making it convenient to reuse the Antiprism
-source code in other projects.
-
-Please, support this aim. If you incorporate Antiprism source code
-into your own project and make any improvements that could reasonably
-be incorporated back into the Antiprism project, like bug fixes,
-optimisations or new features, then please contribute your changes
-for inclusion back into Antiprism under a permissive (preferably
-MIT) licence.
-
-Adrian Rossiter
-adrian@antiprism.com
+Format: http://dep.debian.net/deps/dep5
+Upstream-Name: antiprism
+Upstream-Contact: Adrian Rossiter <adrian@antiprism.com>
+Source: <http://www.antiprism.com>
+License: MIT-and-similar
+         permissive with attribution
 
 
-=======================================================================
-Antiprism contains software supplied under the following licences
-
-------------------------------------------------------------------------
-The bulk of the code, with specific author varying, is:
-
-Copyright (c) 2003-20011, Adrian Rossiter
-Copyright (c) 2006-20011, Roger Kaufman
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following conditions:
-
+Files: *
+Comments: Bulk of the files, one author or the other
+Copyright: 2003-20011, Adrian Rossiter <adrian@antiprism.com>
+           2006-20011, Roger Kaufman
+License: Expat
+ Permission is hereby granted, free of charge, to any person obtaining a
+ copy of this software and associated documentation files (the "Software"),
+ to deal in the Software without restriction, including without limitation
+ the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ and/or sell copies of the Software, and to permit persons to whom the
+ Software is furnished to do so, subject to the following conditions:
+ .
    The above copyright notice and this permission notice shall be included
    in all copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ IN THE SOFTWARE.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-IN THE SOFTWARE.
 
-------------------------------------------------------------------------
-Conway notation, Canonicalization: base/canonic.cc, src/canonic.cc,
-                                   src/conway.cc
 
-Includes ideas and algorithms by George W. Hart, http://www.georgehart.com
+Files: base/canonic.cc src/canonic.cc src/conway.cc
+Comments: Conway notation, Canonicalization
+Copyright: 2003-20011, Adrian Rossiter <adrian@antiprism.com>
+           2006-20011, Roger Kaufman
+License:
+ Includes ideas and algorithms by George W. Hart, http://www.georgehart.com
+ .
+ Permission is hereby granted, free of charge, to any person obtaining a
+ copy of this software and associated documentation files (the "Software"),
+ to deal in the Software without restriction, including without limitation
+ the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ and/or sell copies of the Software, and to permit persons to whom the
+ Software is furnished to do so, subject to the following conditions:
+ .
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ IN THE SOFTWARE.
 
-------------------------------------------------------------------------
-Qhull - Convex Hulls, Delaunay, Voronoi: base/qh_*
 
-                    Qhull, Copyright (c) 1993-2003
-
+Files: base/qh_*
+Comment: Qhull - Convex Hulls, Delaunay, Voronoi
+Copyright: Qhull, Copyright (c) 1993-2003
        The National Science and Technology Research Center for
         Computation and Visualization of Geometric Structures
                         (The Geometry Center)
                        University of Minnesota
-
                        email: qhull@qhull.org
-
-This software includes Qhull from The Geometry Center.  Qhull is 
-copyrighted as noted above.  Qhull is free software and may be obtained 
-via http from www.qhull.org.  It may be freely copied, modified, 
-and redistributed under the following conditions:
-
-1. All copyright notices must remain intact in all files.
-
-2. A copy of this text file must be distributed along with any copies 
-   of Qhull that you redistribute; this includes copies that you have 
-   modified, or copies of programs or other software products that 
-   include Qhull.
-
-3. If you modify Qhull, you must include a notice giving the
-   name of the person performing the modification, the date of
-   modification, and the reason for such modification.
-
-4. When distributing modified versions of Qhull, or other software 
-   products that include Qhull, you must provide notice that the original 
-   source code may be obtained as noted above.
-
-5. There is no warranty or other guarantee of fitness for Qhull, it is 
-   provided solely "as is".  Bug reports or fixes may be sent to 
-   qhull_bug@qhull.org; the authors may or may not act on them as 
-   they desire.
-
-
+License:
+ This software includes Qhull from The Geometry Center.  Qhull is 
+ copyrighted as noted above.  Qhull is free software and may be obtained 
+ via http from www.qhull.org.  It may be freely copied, modified, 
+ and redistributed under the following conditions:
+ .
+ 1. All copyright notices must remain intact in all files.
+ .
+ 2. A copy of this text file must be distributed along with any copies 
+    of Qhull that you redistribute; this includes copies that you have 
+    modified, or copies of programs or other software products that 
+    include Qhull.
+ .
+ 3. If you modify Qhull, you must include a notice giving the
+    name of the person performing the modification, the date of
+    modification, and the reason for such modification.
+ .
+ 4. When distributing modified versions of Qhull, or other software 
+    products that include Qhull, you must provide notice that the original 
+    source code may be obtained as noted above.
+ .
+ 5. There is no warranty or other guarantee of fitness for Qhull, it is 
+    provided solely "as is".  Bug reports or fixes may be sent to 
+    qhull_bug@qhull.org; the authors may or may not act on them as 
+    they desire.
+ .
                       -------------------
+ .
+ Changes from Qhull 2003.1 source made by Adrian Rossiter in June 2007
+ to incorporate Qhull library code into Antiprism.
+ .
+ All files except library source files have been removed. Minor changes
+ made for a clean build as C++.
 
-Changes from Qhull 2003.1 source made by Adrian Rossiter in June 2007
-to incorporate Qhull library code into Antiprism.
 
-All files except library source files have been removed. Minor changes
-made for a clean build as C++.
+Files: base/kaleido.* base/uniform.cc
+Comments: kaleido - uniform polyhedra
+Copyright: 1991-2002 Dr. Zvi Har'El <rl@math.technion.ac.il>
+License:
+ Kaleidoscopic construction of uniform polyhedra
+ .
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
+ .
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ .
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in
+    the documentation and/or other materials provided with the
+    distribution.
+ .
+ 3. The end-user documentation included with the redistribution,
+    if any, must include the following acknowledgment:
+    "This product includes software developed by
+    Dr. Zvi Har'El (http://www.math.technion.ac.il/~rl/)."
+    Alternately, this acknowledgment may appear in the software itself,
+    if and wherever such third-party acknowledgments normally appear.
+ . 
+ This software is provided 'as-is', without any express or implied
+ warranty.  In no event will the author be held liable for any
+ damages arising from the use of this software.
+ .
+ Author:
+    Dr. Zvi Har'El,
+    Deptartment of Mathematics,
+    Technion, Israel Institue of Technology,
+    Haifa 32000, Israel.
+    E-Mail: rl@math.technion.ac.il
 
-------------------------------------------------------------------------
-kaleido - uniform polyhedra: base/kaleido.* base/uniform.cc
 
-Kaleidoscopic construction of uniform polyhedra
-Copyright © 1991-2002 Dr. Zvi Har'El <rl@math.technion.ac.il>
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions
-are met:
+Files: base/utils_ultragetopt.*
+Comments: Ultra-Getopt
+Copyright: 2007, Kevin Locke <kwl7@cornell.edu>
+License: Expat
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to
+ deal in the Software without restriction, including without limitation the
+ rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ sell copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ .
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ IN THE SOFTWARE.
 
-1. Redistributions of source code must retain the above copyright
-   notice, this list of conditions and the following disclaimer.
 
-2. Redistributions in binary form must reproduce the above copyright
-   notice, this list of conditions and the following disclaimer in
-   the documentation and/or other materials provided with the
-   distribution.
+Files: base/rand_gen.h
+Comments: Random number generator
+Copyright: public domain
+License: public-domain
+ Robin Whittle  rw@firstpr.com.au    2005 September 21 
+ http://www.firstpr.com.au/dsp/rand31/rand31-park-miller-carta.cc.txt
 
-3. The end-user documentation included with the redistribution,
-   if any, must include the following acknowledgment:
-   "This product includes software developed by
-   Dr. Zvi Har'El (http://www.math.technion.ac.il/~rl/)."
-   Alternately, this acknowledgment may appear in the software itself,
-   if and wherever such third-party acknowledgments normally appear.
+
+Files: base/tesselator/*
+Comments: GLUtesselator
+Copyright: 1991-2000 Silicon Graphics, Inc.
+License:
+ License Applicability. Except to the extent portions of this file are
+ made subject to an alternative license as permitted in the SGI Free
+ Software License B, Version 1.1 (the "License"), the contents of this
+ file are subject only to the provisions of the License. You may not use
+ this file except in compliance with the License. You may obtain a copy
+ of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
+ Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
+ .
+ http://oss.sgi.com/projects/FreeB
+ .
+ Note that, as provided in the License, the Software is distributed on an
+ "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
+ DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
+ CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
+ PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+ .
+ Original Code. The Original Code is: OpenGL Sample Implementation,
+ Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
+ Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
+ Copyright in any portions created by third parties is as indicated
+ elsewhere herein. All Rights Reserved.
+ .
+ Additional Notice Provisions: The application programming interfaces
+ established by SGI in conjunction with the Original Code are The
+ OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
+ April 1, 1999; The OpenGL(R) Graphics System Utility Library (Version
+ 1.3), released November 4, 1998; and OpenGL(R) Graphics with the X
+ Window System(R) (Version 1.3), released October 19, 1998. This software
+ was created using the OpenGL(R) version 1.2.1 Sample Implementation
+ published by SGI, but has not been independently verified as being
+ compliant with the OpenGL(R) version 1.2.1 Specification.
  
-This software is provided 'as-is', without any express or implied
-warranty.  In no event will the author be held liable for any
-damages arising from the use of this software.
 
-Author:
-	Dr. Zvi Har'El,
-	Deptartment of Mathematics,
-	Technion, Israel Institue of Technology,
-	Haifa 32000, Israel.
-	E-Mail: rl@math.technion.ac.il
-
-
-------------------------------------------------------------------------
-Ultra-Getopt: base/utils_ultragetopt.*
-
-Copyright (c) 2007, Kevin Locke <kwl7@cornell.edu>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to
-deal in the Software without restriction, including without limitation the
-rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-sell copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-IN THE SOFTWARE.
-
-
-------------------------------------------------------------------------
-Random number generator: base/rand_gen.h
-
-Public Domain
-Robin Whittle  rw@firstpr.com.au    2005 September 21 
-
-
-------------------------------------------------------------------------
-May include code by Paul Bourke - http://paulbourke.net/
-
-This will be marked in the source. If reusing this code please also
-include an attribution notice.
-
-
-------------------------------------------------------------------------
-GLUtesselator: base/tesselator/*
-
-License Applicability. Except to the extent portions of this file are
-made subject to an alternative license as permitted in the SGI Free
-Software License B, Version 1.1 (the "License"), the contents of this
-file are subject only to the provisions of the License. You may not use
-this file except in compliance with the License. You may obtain a copy
-of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
-Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-
-http://oss.sgi.com/projects/FreeB
-
-Note that, as provided in the License, the Software is distributed on an
-"AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
-DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
-CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
-PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-
-Original Code. The Original Code is: OpenGL Sample Implementation,
-Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
-Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
-Copyright in any portions created by third parties is as indicated
-elsewhere herein. All Rights Reserved.
-
-Additional Notice Provisions: The application programming interfaces
-established by SGI in conjunction with the Original Code are The
-OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
-April 1, 1999; The OpenGL(R) Graphics System Utility Library (Version
-1.3), released November 4, 1998; and OpenGL(R) Graphics with the X
-Window System(R) (Version 1.3), released October 19, 1998. This software
-was created using the OpenGL(R) version 1.2.1 Sample Implementation
-published by SGI, but has not been independently verified as being
-compliant with the OpenGL(R) version 1.2.1 Specification.
-
-------------------------------------------------------------------------
-Minimal proper colouring: base/prop_col.*
-
-The author of this software is Michael Trick.  Copyright (c) 1994 by 
-Michael Trick.
-
-Permission to use, copy, modify, and distribute this software for any
-purpose without fee is hereby granted, provided that this entire notice
-is included in all copies of any software which is or includes a copy
-or modification of this software and in all copies of the supporting
-documentation for such software.
-THIS SOFTWARE IS BEING PROVIDED "AS IS", WITHOUT ANY EXPRESS OR IMPLIED
-WARRANTY.  IN PARTICULAR, NEITHER THE AUTHOR DOES NOT MAKE ANY
-REPRESENTATION OR WARRANTY OF ANY KIND CONCERNING THE MERCHANTABILITY
-OF THIS SOFTWARE OR ITS FITNESS FOR ANY PARTICULAR PURPOSE.
-
-
+Files: base/prop_col.*
+Comments: Minimal proper colouring (two licences)
+Copyright: 1994 Michael Trick.
+           1996-2000 Darko Kirovski, Miodrag Podkonjak and the Regents of
+                        the University of California
+License:
+ The author of this software is Michael Trick.  Copyright (c) 1994 by 
+ Michael Trick.
+ .
+ Permission to use, copy, modify, and distribute this software for any
+ purpose without fee is hereby granted, provided that this entire notice
+ is included in all copies of any software which is or includes a copy
+ or modification of this software and in all copies of the supporting
+ documentation for such software.
+ THIS SOFTWARE IS BEING PROVIDED "AS IS", WITHOUT ANY EXPRESS OR IMPLIED
+ WARRANTY.  IN PARTICULAR, NEITHER THE AUTHOR DOES NOT MAKE ANY
+ REPRESENTATION OR WARRANTY OF ANY KIND CONCERNING THE MERCHANTABILITY
+ OF THIS SOFTWARE OR ITS FITNESS FOR ANY PARTICULAR PURPOSE.
+ .
    COLOR.C: Easy code for graph coloring
    Author: Michael A. Trick, Carnegie Mellon University, trick+@cmu.edu
    Last Modified: November 2, 1994
    http://mat.gsia.cmu.edu/COLOR/solvers/trick.c
+ .
+ ------------------------------------------------------------------------
+ .
+ Contact author(s) for original code: darko@cs.ucla.edu, miodrag@cs.ucla.edu
+ Affiliationss: UCLA, Computer Science
+ .
+ Permission is hereby granted, free of charge, to any person obtaining 
+ a copy of this software and associated documentation files (the "Software"),
+ to deal in the Software without restriction, including without limitation 
+ the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+ and/or sell copies of the Software, and to permit persons to whom the 
+ Software is furnished to do so, subject to the following conditions:
+ .
+ The above copyright notice and this permission notice shall be included
+ in all copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
+ EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
+ THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-
-------------------------------------------------------------------------
-Minimal proper colouring: base/prop_col.*
-
-Copyright (c) 1996-2000 Darko Kirovski, Miodrag Podkonjak and the Regents of
-                        the University of California
-
-Contact author(s) for original code: darko@cs.ucla.edu, miodrag@cs.ucla.edu
-Affiliationss: UCLA, Computer Science
-
-Permission is hereby granted, free of charge, to any person obtaining 
-a copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation 
-the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-and/or sell copies of the Software, and to permit persons to whom the 
-Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
-DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
-OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
-THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
-------------------------------------------------------------------------
-OpenGLUT: OpenGLUT.dll, supplied in Windows binary package only
-
-Copyright (c) 1999-2000 Pawel W. Olszta. All Rights Reserved.
-Written by Pawel W. Olszta, <olszta@sourceforge.net>
-Creation date: Thu Dec 16 1999
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
-PAWEL W. OLSZTA BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
-------------------------------------------------------------------------
 
 
 

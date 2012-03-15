@@ -36,9 +36,12 @@ class leo_opts: public prog_opts
 
    public:
       const double DEF_VAL;
-      const double width_factor;
-      double height;
+      const double def_width;
       double width;
+      bool width_is_perc;
+      const double def_height;
+      double height;
+      bool height_is_perc;
       bool centre_height;
       bool hide_edges;
       bool col_from_edges;
@@ -48,8 +51,8 @@ class leo_opts: public prog_opts
 
       leo_opts(): prog_opts("leonardo"),
                  DEF_VAL(1e100),
-                 width_factor(0.3),
-                 height(DEF_VAL), width(DEF_VAL),
+                 def_width(30), width(DEF_VAL), width_is_perc(true),
+                 def_height(100), height(DEF_VAL), height_is_perc(true),
                  centre_height(false),
                  hide_edges(false),
                  col_from_edges(false)
@@ -71,8 +74,10 @@ void leo_opts::usage()
 "\n"
 "Options\n"
 "%s"
-"  -w <wdth> width of the perimeter border of the faces (default: calculated)\n"
-"  -l <ht>   height to thicken faces (default: width value)\n"
+"  -w <wdth> width of the perimeter border of the faces, follow by %% for\n"
+"            percentage of maximum width without overlap (default: %g%%)\n"
+"  -l <ht>   height to thicken faces, 0 for single polygon height, follow by\n"
+"            %% for percentage of width value (default: %g%%)\n"
 "  -m        distribute the height equally on both sides of the faces, so\n"
 "            the original faces would lie in the middle of the new faces\n"
 "            (use for non-orientable models)\n"
@@ -81,7 +86,7 @@ void leo_opts::usage()
 "            (default: use face colours)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
-"\n", prog_name(), help_ver_text);
+"\n", prog_name(), help_ver_text, def_width, def_height);
 }
 
 
@@ -90,21 +95,36 @@ void leo_opts::process_command_line(int argc, char **argv)
    opterr = 0;
    char c;
    char errmsg[MSG_SZ];
+   int len;
 
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hl:w:mxieo:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hw:l:mxieo:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
       switch(c) {
-         case 'l':
-            if(!read_double(optarg, &height, errmsg))
+         case 'w':
+            len = strlen(optarg);
+            if(len && optarg[len-1]=='%') {
+               optarg[len-1] = '\0';
+               width_is_perc = true;
+            }
+            else
+               width_is_perc = false;
+            if(!read_double(optarg, &width, errmsg))
                error(errmsg, c);
             break;
 
-         case 'w':
-            if(!read_double(optarg, &width, errmsg))
+         case 'l':
+            len = strlen(optarg);
+            if(len && optarg[len-1]=='%') {
+               optarg[len-1] = '\0';
+               height_is_perc = true;
+            }
+            else
+               height_is_perc = false;
+            if(!read_double(optarg, &height, errmsg))
                error(errmsg, c);
             break;
 
@@ -154,7 +174,10 @@ void get_open_edges(const geom_if &geom, vector<vector<int> > &open_edges)
 vec3d lines_intersect(const vec3d &P0, const vec3d &P1, const vec3d &Q0, const vec3d &Q1)
 {
    vec3d N1, N2;
-   lines_nearest_points(P0, P1, Q0, Q1, N1, N2);
+   if(!lines_nearest_points(P0, P1, Q0, Q1, N1, N2)) {
+      N1 = (P0+P1)/2.0;
+      N2 = (Q0+Q1)/2.0;
+   }
    return (N1+N2)/2.0;
 }
 
@@ -181,6 +204,7 @@ bool leonardo_faces(geom_if &geom_out, const geom_if &geom, double width,
    col_geom_v *cg_out = dynamic_cast<col_geom_v *>(&geom_out);
    const bool take_colours = cg && cg_out;
 
+   bool is_solid = (height != 0.0);
    const double height_below = height + ht_offset;    // height "below" surface
    const double height_above = ht_offset;             // height "above" surface
 
@@ -207,7 +231,6 @@ bool leonardo_faces(geom_if &geom_out, const geom_if &geom, double width,
          for(int n=0; n<2; n++)
             v[n] = geom.verts(v_idx[n]);
          vec3d perp = (F - nearest_point(F, v[0], v[1])).unit();
-         vec3d dir = (v[1]-v[0]).unit();
          for(int n=0; n<2; n++) {
             vec3d u = (F-v[n]).unit();
             u *= width / u.component(perp).mag();
@@ -228,31 +251,38 @@ bool leonardo_faces(geom_if &geom_out, const geom_if &geom, double width,
          // vertex above vertex on face at 'width' from neighbouring edges
          geom_out.add_vert(force_line_plane_intersect(
                   F-height_above*f_norm, f_norm, v1, v1+f_norm));
-         // vertex below "original" vertex
-         geom_out.add_vert(force_line_plane_intersect(
-                  F-height_below*f_norm, f_norm, v0, v0+v_norms[face[j]]));
-         // vertex below vertex on face at 'width' from neighbouring edges
-         geom_out.add_vert(force_line_plane_intersect(
-                  F-height_below*f_norm, f_norm, v1, v1+f_norm));
+
+         if(is_solid) {
+            // vertex below "original" vertex
+            geom_out.add_vert(force_line_plane_intersect(
+                     F-height_below*f_norm, f_norm, v0, v0+v_norms[face[j]]));
+            // vertex below vertex on face at 'width' from neighbouring edges
+            geom_out.add_vert(force_line_plane_intersect(
+                     F-height_below*f_norm, f_norm, v1, v1+f_norm));
+         }
+
+         int N = is_solid ? 4 : 2;     // number of vertices added per unit
+         bool is_open = false;         // polygon edge is open
 
          // top face
-         geom_out.add_face(start+ 4*j, start+ 4*((j+1)%f_sz),
-                           start+ 4*((j+1)%f_sz)+1, start+ 4*j+1, -1);
-         // bottom face
-         geom_out.add_face(start+ 4*j+2, start+ 4*((j+1)%f_sz)+2,
-                           start+ 4*((j+1)%f_sz)+3, start+ 4*j+3, -1);
-         // inner vertical face
-         geom_out.add_face(start+ 4*j+1, start+ 4*((j+1)%f_sz)+1,
-                           start+ 4*((j+1)%f_sz)+3, start+ 4*j+3, -1);
+         geom_out.add_face(start+ N*j, start+ N*((j+1)%f_sz),
+                           start+ N*((j+1)%f_sz)+1, start+ N*j+1, -1);
 
-         // outer vertical face, if original edge is open
-         bool is_open = find(open_edges.begin(), open_edges.end(),
-               make_edge(face[j], face[(j+1)%f_sz])) != open_edges.end();
-         if(is_open)
-            geom_out.add_face(start+ 4*j, start+ 4*((j+1)%f_sz),
-                           start+ 4*((j+1)%f_sz)+2, start+ 4*j+2, -1);
+         if(is_solid) {
+            // bottom face
+            geom_out.add_face(start+ N*j+2, start+ N*((j+1)%f_sz)+2,
+                              start+ N*((j+1)%f_sz)+3, start+ N*j+3, -1);
+            // inner vertical face
+            geom_out.add_face(start+ N*j+1, start+ N*((j+1)%f_sz)+1,
+                              start+ N*((j+1)%f_sz)+3, start+ N*j+3, -1);
 
-
+            // outer vertical face, if original edge is open
+            is_open = find(open_edges.begin(), open_edges.end(),
+                  make_edge(face[j], face[(j+1)%f_sz])) != open_edges.end();
+            if(is_open)
+               geom_out.add_face(start+ N*j, start+ N*((j+1)%f_sz),
+                                 start+ N*((j+1)%f_sz)+2, start+ N*j+2, -1);
+         }
 
          col_val col;       // the colour to use for the faces
          if(take_colours) {
@@ -269,11 +299,13 @@ bool leonardo_faces(geom_if &geom_out, const geom_if &geom, double width,
                col = f_col;
          }
          if(cg_out && hide_edges) {
-            cg_out->add_col_edge(start+4*j, start+4*j+1, col_val::invisible);
-            cg_out->add_col_edge(start+4*j+2, start+4*j+3, col_val::invisible);
+            cg_out->add_col_edge(start+N*j, start+N*j+1, col_val::invisible);
+            if(is_solid)
+               cg_out->add_col_edge(start+N*j+2, start+N*j+3,
+                     col_val::invisible);
          }
          if(take_colours && col.is_set()) {
-            for(int i=0; i<3+is_open; i++)
+            for(int i=0; i<1 + 2*is_solid + is_open; i++)
                cg_out->set_f_col(geom_out.faces().size()-1-i, col);
          }
       }
@@ -313,11 +345,15 @@ int main(int argc, char *argv[])
    if(*errmsg)
       opts.warning(errmsg);
 
-   double width = (opts.width==opts.DEF_VAL) ?
-      opts.width_factor * min_dist_edge_to_face_cent(geom) : opts.width;
+   double width = (opts.width==opts.DEF_VAL) ? opts.def_width : opts.width;
+   if(opts.width_is_perc)
+      width *= min_dist_edge_to_face_cent(geom) / 100;
    if(width<epsilon)
       opts.warning("width is very small, if using default may need to set a value with -w");
-   double height = (opts.height==opts.DEF_VAL) ? width : opts.height;
+
+   double height = (opts.height==opts.DEF_VAL) ? opts.def_height : opts.height;
+   if(opts.height_is_perc)
+      height *= width / 100;
 
    col_geom_v geom_out;
    if(!leonardo_faces(geom_out, geom, width, height,
