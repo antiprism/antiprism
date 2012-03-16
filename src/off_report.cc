@@ -52,6 +52,7 @@ class or_opts: public prog_opts
       string sections;
       string counts;
       bool orient;
+      bool detect_symmetry;
       string sub_sym;
       char edge_type;
       string ifile;
@@ -59,7 +60,8 @@ class or_opts: public prog_opts
 
       or_opts(): prog_opts("off_report"), center(vec3d(0,0,0)),
                  center_is_centroid(false), sig_digits(17),
-                 orient(true), edge_type('a')
+                 orient(true), detect_symmetry(false),
+                 edge_type('a')
                  {}
 
       void process_command_line(int argc, char **argv);
@@ -132,6 +134,9 @@ void or_opts::process_command_line(int argc, char **argv)
                   sections = all_section_letters;  // keep the A
                else
                   sections = optarg;
+               // Record whether any sections require detecting symmetry
+               if(strcspn(sections.c_str(), "s") != sections.size())
+                  detect_symmetry = true;
             }
             else
                error(msg_str("contains incorrect section type letter '%c'",
@@ -151,6 +156,9 @@ void or_opts::process_command_line(int argc, char **argv)
             else
                error(msg_str("contains incorrect section type letter '%c'",
                         *(optarg+len)), c);
+               // Record whether any counts require detecting symmetry
+               if(strcspn(counts.c_str(), "O") != counts.size())
+                  detect_symmetry = true;
             break;
          }
 
@@ -302,7 +310,8 @@ int main(int argc, char *argv[])
    rep_printer rep(geom, ofile);
    rep.set_sig_dgts(opts.sig_digits);
    rep.set_center(opts.center);
-   if(!rep.set_sub_symmetry(opts.sub_sym, errmsg))
+
+   if(opts.detect_symmetry && !rep.set_sub_symmetry(opts.sub_sym, errmsg))
       opts.error(("could not set subsymmetry: " + opts.sub_sym).c_str(), 'y');
 
    rep.is_oriented(); // set oriented value before orienting

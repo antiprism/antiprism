@@ -932,11 +932,15 @@ static int find_syms(const geom_if &geom, t_set &ts,
    geom_info g_inf(test_geom);
    const vector<vector<int> > &edges = g_inf.get_impl_edges();
 
+   vector<vector<int> > v_cons_o = g_inf.get_vert_cons_orig();
    vector<vector<int> > v_cons(g_inf.num_verts());
    for(unsigned int i=0; i<v_cons.size(); i++) {
-      if(g_inf.get_vert_figs()[i].size())      // shouldn't ever fail for hull
+      if(g_inf.get_vert_figs()[i].size())      // shouldn't fail for 3d hull
          v_cons[i] = g_inf.get_vert_figs()[i][0];
+      else
+         v_cons[i] = g_inf.get_vert_cons()[i]; // needed for 2d hull
    }
+  g_inf.get_vert_cons_orig();
 
    vector<vector<int> > r_cons = v_cons;
    for(vector<vector<int> >::iterator vi=r_cons.begin(); vi!=r_cons.end(); vi++)
