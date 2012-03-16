@@ -387,7 +387,9 @@ bool sphere_ray_z_intersect_points(long &z_near, long &z_far,
    //if (double_eq(discriminant, 0.0, eps))
    //   discriminant = 0;
    //if (discriminant < 0.0)
-   if (double_le(discriminant,0.0,eps))
+   // RK - double_le doesn't allow for negative 0
+   //if (double_le(discriminant,0.0,eps))
+   if (discriminant < -eps)
       return false;
    double disc_rt = sqrt(discriminant);
 
