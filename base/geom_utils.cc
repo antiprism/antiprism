@@ -349,7 +349,7 @@ void fnormals::refresh(const geom_if &geom, vec3d C, double eps)
    ngeom = &geom;
 
    if (!C.is_set())
-      vec3d C = centroid((*ngeom).verts());
+      C = centroid((*ngeom).verts());
    
    normals.clear();
    for(unsigned int i=0;i<geom.faces().size();i++)

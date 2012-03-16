@@ -142,7 +142,6 @@ col_val average_face_color(const col_geom &cg, const vector<facesSort> &fs, cons
    }
    
    vector<col_val> cols;  
-   bool invisible_found = false;
    bool unset_found = false;
    for(int i=begin;i<=end;i++) {
       col_val col;
@@ -152,7 +151,7 @@ col_val average_face_color(const col_geom &cg, const vector<facesSort> &fs, cons
          col = cg.get_e_col(fs[i].face_no);
 
       if (col.is_inv())
-         invisible_found = true;
+         continue;
       else
       if (!col.is_set() || col.is_idx())
          unset_found = true;
@@ -308,13 +307,12 @@ col_val average_vert_color(const col_geom &cg, const vector<vertSort> &vs, const
       return cg.get_v_col(vs[begin].vert_no);
 
    vector<col_val> cols;  
-   bool invisible_found = false;
    bool unset_found = false;
    for(int i=begin;i<=end;i++) {
       col_val col = cg.get_v_col(vs[i].vert_no);
 
       if (col.is_inv())
-         invisible_found = true;
+         continue;
       else
       if (!col.is_set() || col.is_idx())
          unset_found = true;
