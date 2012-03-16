@@ -291,11 +291,11 @@ bool col_val::read(char *str, char *errmsg)
    string orig = str2;
    
    vector<char *> vals;
-   int split_ret, typ;
+   int typ;
    if(strchr(str2, ',')!=0)
-      split_ret = split_line(str2, vals, ",");
+      split_line(str2, vals, ",");
    else
-      split_ret = split_line(str2, vals);
+      split_line(str2, vals);
    
    from_offvals(vals, errmsg, &typ);
    if(is_set())

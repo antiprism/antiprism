@@ -145,7 +145,6 @@ void off_polys_write(FILE *ofile, const geom_if &geom, int offset)
    if(cg) {
       map<int, col_val>::const_iterator mi;
       for(mi=cg->vert_cols().begin(); mi!=cg->vert_cols().end(); mi++){
-         col_val col = mi->second;
          fprintf(ofile, "1 %d %s\n", mi->first, off_col(col_str, mi->second));
       }
    }

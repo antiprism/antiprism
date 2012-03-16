@@ -1706,8 +1706,6 @@ void sch_sym_autos::init()
 sch_sym_autos::sch_sym_autos(const sch_sym &sym)
 {
    init();
-   const vec3d axis = vec3d::Z;
-   const vec3d perp = vec3d::X;
    int type = sym.get_sym_type();
    if(type==sch_sym::unknown)    // fixed_trans empty, indicates unset;
       return;
