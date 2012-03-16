@@ -63,6 +63,7 @@ void qhull_cleanup()
 bool make_hull(geom_if &geom, bool append, string qh_args, char *errmsg)
 {
    vector<vec3d> pts = geom.verts();
+   vec3d cent = geom.centroid();
    
    map<int, col_val> vcols;
    col_geom *cg = dynamic_cast<col_geom *>(&geom);
@@ -163,7 +164,10 @@ bool make_hull(geom_if &geom, bool append, string qh_args, char *errmsg)
       else {
          ordered_face = face;
       }
-      geom.add_face(ordered_face);
+      int f_no = geom.add_face(ordered_face);
+      if(vdot(geom.face_norm(f_no), geom.face_v(f_no, 0) - cent) < -epsilon)
+         reverse(geom.raw_faces()[f_no].begin(), geom.raw_faces()[f_no].end());
+
    }
    
    qhull_cleanup();
