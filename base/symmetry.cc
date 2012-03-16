@@ -932,11 +932,15 @@ static int find_syms(const geom_if &geom, t_set &ts,
    geom_info g_inf(test_geom);
    const vector<vector<int> > &edges = g_inf.get_impl_edges();
 
+   vector<vector<int> > v_cons_o = g_inf.get_vert_cons_orig();
    vector<vector<int> > v_cons(g_inf.num_verts());
    for(unsigned int i=0; i<v_cons.size(); i++) {
-      if(g_inf.get_vert_figs()[i].size())      // shouldn't ever fail for hull
+      if(g_inf.get_vert_figs()[i].size())      // shouldn't fail for 3d hull
          v_cons[i] = g_inf.get_vert_figs()[i][0];
+      else
+         v_cons[i] = g_inf.get_vert_cons()[i]; // needed for 2d hull
    }
+  g_inf.get_vert_cons_orig();
 
    vector<vector<int> > r_cons = v_cons;
    for(vector<vector<int> >::iterator vi=r_cons.begin(); vi!=r_cons.end(); vi++)
@@ -1214,6 +1218,7 @@ const set<vec3d> &sch_sym::get_mirrors() const
 bool sch_sym::has_inversion_symmetry() const
 {
    if(sym_type==Ih||sym_type==Oh ||sym_type==Th || sym_type==Ci ||
+         (sym_type==Ch&&nfold%2==0) ||
          (sym_type==Dv&&nfold%2) ||
          (sym_type==Dh&&nfold%2==0) ||
          (sym_type==S&&(nfold/2)%2) )
@@ -1701,8 +1706,6 @@ void sch_sym_autos::init()
 sch_sym_autos::sch_sym_autos(const sch_sym &sym)
 {
    init();
-   const vec3d axis = vec3d::Z;
-   const vec3d perp = vec3d::X;
    int type = sym.get_sym_type();
    if(type==sch_sym::unknown)    // fixed_trans empty, indicates unset;
       return;
