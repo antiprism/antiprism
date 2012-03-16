@@ -1218,6 +1218,7 @@ const set<vec3d> &sch_sym::get_mirrors() const
 bool sch_sym::has_inversion_symmetry() const
 {
    if(sym_type==Ih||sym_type==Oh ||sym_type==Th || sym_type==Ci ||
+         (sym_type==Ch&&nfold%2==0) ||
          (sym_type==Dv&&nfold%2) ||
          (sym_type==Dh&&nfold%2==0) ||
          (sym_type==S&&(nfold/2)%2) )
