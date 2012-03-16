@@ -628,8 +628,13 @@ int vertex_into_geom(col_geom_v &geom, const vec3d &P, col_val vcol, const doubl
 }
 
 // if edge already exists, do not create another one and return false. return true if new edge created
+// check if edge1 and edge2 indexes are equal. If so do not allow an edge length of 0 to occur
 bool edge_into_geom(col_geom_v &geom, const int &v_idx1, const int &v_idx2, col_val ecol)
 {
+   // no edge length 0 allowed
+   if (v_idx1 == v_idx2)
+      return false;
+
    vector<int> new_edge = make_edge(v_idx1, v_idx2);
 
    int answer = find_edge_in_edge_list(geom.edges(), new_edge);

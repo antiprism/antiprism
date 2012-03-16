@@ -51,6 +51,7 @@ int decompose(Polyhedron *P);
 int newton(Polyhedron *P);
 int exceptions(Polyhedron *P);
 int count(Polyhedron *P);
+int configuration(Polyhedron *P);
 int vertices(Polyhedron *P);
 int faces(Polyhedron *P);
 int mod (int i, int j);
@@ -65,7 +66,6 @@ Polyhedron *kaleido(char *sym, Uniform *uniform, int last_uniform)
     */
    if (!(P = polyalloc()))
       return 0;
-
    /*
     * Unpack input symbol into P.
     */
@@ -76,7 +76,6 @@ Polyhedron *kaleido(char *sym, Uniform *uniform, int last_uniform)
     */
    if (!moebius(P))
       return 0;
-   
    /*
     * Decompose Schwarz triangle.
     */
@@ -96,6 +95,11 @@ Polyhedron *kaleido(char *sym, Uniform *uniform, int last_uniform)
     * Count edges and faces, update density and characteristic if needed.
     */
    if (!count(P))
+      return 0;
+   /*
+    * Generate printable vertex configuration.
+    */
+   if (!configuration(P))
       return 0;
    /*
     * Compute coordinates.
@@ -689,6 +693,38 @@ count(Polyhedron *P)
     if (P->index == GR_DIRH_IDX)
 	P->chi = P->V - P->E + P->F;
     return 1;
+}
+
+/*
+ * Generate a printable vertex configuration symbol.
+ */
+int
+configuration(Polyhedron *P)
+{
+   int j, len = 2;
+   for (j = 0; j < P->M; j++) {
+      char *s;
+      Sprintfrac(s, P->n[P->rot[j]])
+         len += strlen (s) + 1;
+      if (!j) {
+         Malloc(P->config, len, char)
+            strcpy(P->config, "(");
+      }
+      else {
+         Realloc(P->config, len, char)
+            strcat(P->config, ".");
+      }
+      strcat(P->config, s);
+      free(s);
+   }
+   strcat (P->config, ")");
+   if ((j = denominator (P->m[0])) != 1) {
+      char s[MAXDIGITS + 2];
+      sprintf(s, "/%d", j);
+      Realloc(P->config, len + strlen (s), char)
+         strcat(P->config, s);
+   }
+   return 1;
 }
 
 /*
