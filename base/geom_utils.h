@@ -124,7 +124,7 @@ col_geom_v faces_to_geom(const col_geom_v &geom, const vector<int> &face_idxs);
 double isLeft(const vec3d &P0, const vec3d &P1, const vec3d &P2, const int &idx);
 bool wn_PnPoly(const geom_if &polygon, const vec3d &P, const int &idx, int &winding_number, double eps=epsilon);
 int get_winding_number(const geom_if &polygn, const vector<vec3d> &pnts, const xnormal &face_normal, const double eps=epsilon);
-int find_polygon_denominator(const geom_if &geom, const unsigned int &face_idx, const bool &unsign, double eps=epsilon);
+int find_polygon_denominator_signed(const geom_if &geom, const unsigned int &face_idx, double eps=epsilon);
 
 #endif // GEOM_UTILS_H
 

@@ -53,9 +53,8 @@ class rep_printer: public geom_info
       int extra_f_sz;
       FILE *ofile;
 
-      void print_winding_cnts(map<pair<int, int>, int> &cnts, const bool &polygon_types, const bool &unsign);
-      map<pair<int, int>, int> get_face_windings(const bool &unsign);
-      map<pair<int, int>, int> get_vertex_figure_windings(const bool &unsign);
+      void face_winding_cnts(const vector<int> winding_numbers, const bool &unsign);
+      void vertex_figure_winding_cnts();
 
    public:
       rep_printer(geom_if &geom, FILE *outfile=stdout) :
