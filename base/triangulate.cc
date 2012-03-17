@@ -249,23 +249,16 @@ void triangulate(geom_if &geom, col_val inv, unsigned int winding,
             col = mi->second;
       }
 
-      if(faces[i].size()==3) {
-         int idx = geom.add_face(faces[i]);
-         if(cg)
-            cg->set_f_col(idx, col);
+      face_tris f_tris(&geom, col, inv);
+      localgluTessBeginPolygon(tess, &f_tris);
+      for(unsigned int j=0; j<faces[i].size(); j++) {
+         double vtx[3]; // tesselator sometimes fails when using doubles (?)
+         vtx[0] = (float)verts[faces[i][j]][0];
+         vtx[1] = (float)verts[faces[i][j]][1];
+         vtx[2] = (float)verts[faces[i][j]][2];
+         localgluTessVertex(tess, vtx, &faces[i][j]);
       }
-      else {
-         face_tris f_tris(&geom, col, inv);
-         localgluTessBeginPolygon(tess, &f_tris);
-         for(unsigned int j=0; j<faces[i].size(); j++) {
-            double vtx[3]; // tesselator sometimes fails when using doubles (?)
-            vtx[0] = (float)verts[faces[i][j]][0];
-            vtx[1] = (float)verts[faces[i][j]][1];
-            vtx[2] = (float)verts[faces[i][j]][2];
-            localgluTessVertex(tess, vtx, &faces[i][j]);
-         }
-         localgluTessEndPolygon(tess);
-      }
+      localgluTessEndPolygon(tess);
    }
 }
 

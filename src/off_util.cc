@@ -115,7 +115,8 @@ void pr_opts::usage()
 "  -E        turn edges into (non-planar) faces\n"
 "  -s        skeleton, write the face edges and remove the faces\n"
 "  -t <disp> triangulate, include face parts according to winding number\n"
-"            from: odd, nonzero, positive, negative, abs_geq_two\n"
+"            from: odd, nonzero, positive, negative, triangulate (synonym\n"
+"            for nonzero)\n"
 "  -g        geometry only, remove all colours, remove all two-vertex faces\n"
 "            (edges) that are also a face edge\n"
 "  -x <elms> remove OFF face elements. The element string is processed in\n"
@@ -260,7 +261,7 @@ void pr_opts::process_command_line(int argc, char **argv)
 
          case 't':
             arg_id = get_arg_id(optarg,
-                  "odd|nonzero|positive|negative|abs_geq_two",
+                  "odd|nonzero|positive|negative|triangulate=1",
                   argmatch_default, errmsg);
             if(arg_id=="")
                error(msg_str("invalid winding rule '%s'", optarg).c_str(), c);

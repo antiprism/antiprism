@@ -1351,9 +1351,9 @@ const char *view_opts::help_view_text =
 "  -m <maps> a comma separated list of colour maps used to transform colour\n"
 "            indexes, a part consisting of letters from v, e, f, selects \n"
 "            the element types to apply the map list to (default 'vef').\n"
-"  -t <disp> select face parts to display according to winding number\n"
-"            from: odd, nonzero (default), positive, negative, abs_geq_two,\n"
-"            no_triangulation (use native polygon display)\n"
+"  -t <disp> select face parts to display according to winding number from:\n"
+"            odd, nonzero (default), positive, negative, no_triangulation\n"
+"            (use native polygon display)\n"
 ;
 
 const char *view_opts::help_scene_text =
@@ -1477,13 +1477,13 @@ bool view_opts::read_disp_option(char opt, char *optarg, char *errmsg,
 
          case 't':
          {
-            const char *params = "odd|nonzero|positive|negative|abs_geq_two|no_triangulation\n";
+            const char *params = "odd|nonzero|positive|negative|no_triangulation\n";
             string arg_id = get_arg_id(optarg, params,
                   argmatch_default, errmsg);
             if(arg_id=="")
                error(msg_str("invalid winding rule '%s'", optarg).c_str(), opt);
             int arg_id_num = atoi(arg_id.c_str());
-            if(arg_id_num==5) // no_triangulation
+            if(arg_id_num==4) // no_triangulation
                get_geom_defs().set_triangulate(false);
             else
                get_geom_defs().set_winding_rule(TESS_WINDING_ODD+arg_id_num);
