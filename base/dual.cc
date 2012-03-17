@@ -28,6 +28,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <algorithm>
 #include <functional>
@@ -38,6 +39,7 @@
 #include "coloring.h"
 #include "symmetry.h"
 #include "transforms.h"
+#include "info.h"
 #include "math_utils.h"
 
 using std::vector;
@@ -148,6 +150,33 @@ int orient_geom(geom_if &geom, vector<vector<int> > *parts)
       part_num++;
    }
    return part_num;
+}
+
+// From planar.cc (Roger Kaufman)
+// volume to positive=1, negative=2, reverse=3
+// or flip=4 which reverse the orientation of the input model\n"
+bool orient_geom(geom_if &geom, int option, char *errmsg)
+{
+   if(errmsg)
+      *errmsg = '\0';
+
+   geom_info info(geom);
+   if (!info.is_orientable())
+      if (errmsg)
+         strcpy(errmsg,"input file contains a non-orientable geometry");
+   // if model is not oriented, don't do a pre-orientation if we just want orient_reverse
+   if (!info.is_oriented() && option != 4)
+      geom.orient();
+   info.reset();
+   double vol = info.volume();
+   if (vol == 0 && (option == 1 || option == 2))
+      if (errmsg)
+         strcpy(errmsg,"volume is zero. use option 3 to reverse");
+   if ((vol < 0 && option == 1) || (vol > 0 && option == 2) ||
+         option == 3 || option == 4)
+      geom.orient_reverse();
+
+   return option==4 || info.is_orientable();
 }
 
 

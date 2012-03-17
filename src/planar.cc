@@ -2321,29 +2321,6 @@ void do_cmy_mode(col_geom_v &geom, const bool &ryb_mode, const char &edge_blendi
          geom.set_v_col(i,rgb_complement(geom.get_v_col(i), ryb_mode));
 }
 
-// volume to positive=1, negative=2, reverse=3
-// or flip=4 which reverse the orientation of the input model\n"
-void orient_model(geom_if &geom, int option, char *errmsg)
-{
-   if(errmsg)
-      *errmsg = '\0';
-
-   geom_info info(geom);
-   if (!info.is_orientable())
-      if (errmsg)
-         strcpy(errmsg,"input file contains a non-orientable geometry");
-   // if model is not oriented, don't do a pre-orientation if we just want orient_reverse
-   if (!info.is_oriented() && option != 4)
-      geom.orient();
-   info.reset();
-   double vol = info.volume();
-   if (vol == 0 && (option == 1 || option == 2))
-      if (errmsg)
-         strcpy(errmsg,"volume is zero. use option 3 to reverse");
-   if ((vol < 0 && option == 1) || (vol > 0 && option == 2) || option == 3 || option == 4)
-      geom.orient_reverse();      
-}
-
 // zero area faces case trouble later. Not seen so can be deleted
 void delete_zero_area_faces(geom_if &geom, const double &eps)
 {
@@ -2370,7 +2347,7 @@ int main(int argc, char *argv[])
       opts.warning(errmsg);
 
    if (opts.orient) {
-      orient_model(geom, opts.orient, errmsg);
+      geom.orient(opts.orient, errmsg);
       if (*errmsg)
          opts.warning(errmsg, 'O');
    }

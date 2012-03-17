@@ -336,6 +336,14 @@ class geom_if
        * \return the number of disconnected parts. */
       int orient(vector<vector<int> > *parts=0);
 
+      ///Orient the geometry (if possible.)
+      /**\param type type of orientation, 1 - positive volume, 2 negative
+       * volume, 3 - reverse first face and orient, 4 - reverse faces without
+       * orienting.
+       * \param errmsg to return any error messages
+       * \return \c true if the orientation was succesful, otherwise \c false.*/
+      bool orient(int type, char *errmsg=0);
+
       ///Reverse the orientation of all the faces.
       void orient_reverse();
 

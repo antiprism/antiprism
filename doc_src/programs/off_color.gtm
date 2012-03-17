@@ -113,7 +113,7 @@ Proper colourings are not always optimal.
 <P>
 Face colourings G and L which use normals are affected by the
 orientation of the faces. If the colouring is patchy then
-orient the faces with <I>off_util -O</I>
+orient the faces with <I>off_util -O pos</I>
 
 
 

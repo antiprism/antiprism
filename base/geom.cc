@@ -42,6 +42,7 @@
 int add_hull(geom_if &geom, string qh_args="", char *errmsg=0);
 int set_hull(geom_if &geom, string qh_args="", char *errmsg=0);
 int orient_geom(geom_if &geom, vector<vector<int> > *parts=0);
+bool orient_geom(geom_if &geom, int type, char *errmsg=0);
 void orient_reverse(geom_if &geom);
 int triangulate(geom_if &geom, col_val inv=col_val(),
       unsigned int winding_rule=TESS_WINDING_NONZERO, vector<int> *fmap=0);
@@ -317,6 +318,11 @@ bool geom_if::set_zono(const vector<vec3d> &star, char *errmsg)
 int geom_if::orient(vector<vector<int> > *parts)
 {
    return orient_geom(*this, parts);
+}
+
+bool geom_if::orient(int type, char *errmsg)
+{
+   return orient_geom(*this, type, errmsg);
 }
 
 bool geom_if::set_geodesic_planar(const geom_if &base, int m, int n)

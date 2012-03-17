@@ -49,7 +49,7 @@ using std::auto_ptr;
 class pr_opts: public prog_opts {
    public:
       vector<string> ifiles;
-      bool orient;
+      int orient;
       unsigned int triangulate_rule;
       bool skeleton;
       bool sph_proj;
@@ -74,7 +74,7 @@ class pr_opts: public prog_opts {
       
       string ofile;
 
-      pr_opts(): prog_opts("off_util"), orient(false),
+      pr_opts(): prog_opts("off_util"), orient(0),
                  triangulate_rule(0), skeleton(false),
                  sph_proj(false), trunc(false), edges_to_faces(false),
                  geometry_only(false), close(false), blend_type(1),
@@ -107,7 +107,9 @@ void pr_opts::usage()
 "  -b <opt>  merge blend color. first=1, last=2, rgb=3, ryb=4 (default: 1)\n"
 "  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
-"  -O        orient the faces (if possible), flip orientation if oriented\n"
+"  -O <opt>  orient the faces first (if possible) then for volume\n"
+"            positive, negative, reverse, or flip which reverses the\n"
+"            orientation of the model as it was input\n"
 "  -T <rat>  truncate vertices by cutting edges at a ratio from each vertex,\n"
 "            can also be 'rat,num' to truncate only vertices of order num\n"
 "  -E        turn edges into (non-planar) faces\n"
@@ -198,12 +200,13 @@ void pr_opts::process_command_line(int argc, char **argv)
    char c;
    vector<char *> parts;
    col_geom_v adding;
+   string arg_id;
 
    int sig_compare = INT_MAX;
 
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hH:st:Od:x:D:A:c:gT:ESM:b:l:u:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hH:st:O:d:x:D:A:c:gT:ESM:b:l:u:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -223,7 +226,11 @@ void pr_opts::process_command_line(int argc, char **argv)
          }
 
          case 'O':
-            orient = true;
+            arg_id = get_arg_id(optarg,"positive=1|negative=2|reverse=3|flip=4",
+                  argmatch_add_id_maps, errmsg);
+            if(arg_id=="")
+               error(errmsg);
+            orient = atoi(arg_id.c_str());
             break;
 
          case 'T': {
@@ -252,15 +259,13 @@ void pr_opts::process_command_line(int argc, char **argv)
             break;
 
          case 't':
-         {
-            string arg_id = get_arg_id(optarg,
+            arg_id = get_arg_id(optarg,
                   "odd|nonzero|positive|negative|abs_geq_two",
                   argmatch_default, errmsg);
             if(arg_id=="")
                error(msg_str("invalid winding rule '%s'", optarg).c_str(), c);
             triangulate_rule = TESS_WINDING_ODD + atoi(arg_id.c_str());
             break;
-         }
 
          case 'd':
             if(!read_int(optarg, &sig_digits, errmsg))
@@ -894,6 +899,7 @@ void close_poly(col_geom_v &geom, col_val col)
    }
 }
 
+
 void process_file(col_geom_v &geom, pr_opts opts)
 {
    char errmsg[MSG_SZ]="";
@@ -920,16 +926,12 @@ void process_file(col_geom_v &geom, pr_opts opts)
       else
          sort_merge_elems(geom, opts.merge_elems, opts.blend_type,opts.epsilon);
    }
-      
+
    if(opts.orient) {
-      geom.orient_reverse();
-      //orient_faces(geom);
-      geom.orient();
-      geom_info rep(geom);
-      if(!rep.is_oriented()) {
-         snprintf(errmsg, MSG_SZ, "input file contains a non-orientable geometry");
+      if(!geom.orient(opts.orient, errmsg))
+         opts.error(errmsg, 'O');
+      if(*errmsg)
          opts.warning(errmsg, 'O');
-      }
    }
    if(opts.trunc)
       truncate_verts(geom, opts.trunc_ratio, opts.trunc_v_ord);
