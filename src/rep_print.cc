@@ -410,26 +410,17 @@ void rep_printer::face_angles_cnts()
    fprintf(ofile, "\n");
 }
 
-void rep_printer::print_winding_cnts(map<pair<int, int>, int> &cnts, const bool &polygon_types, const bool &unsign)
-{
-   fprintf(ofile, "[%s_windings_cnts %s]\n", (polygon_types ? "faces" : "vertex_figure"), (unsign ? "unsigned" : "signed"));
-
-   map<pair<int, int>, int>::iterator mi;
-   for(mi=cnts.begin(); mi!=cnts.end(); ++mi) {
-      pair<int, int> key = mi->first;
-      fprintf(ofile, "%d/%d = %d\n", key.first, key.second, mi->second);
-   }
-   fprintf(ofile, "\n");
-}
-
-map<pair<int, int>, int> rep_printer::get_face_windings(const bool &unsign)
+void rep_printer::face_winding_cnts(const vector<int> winding_numbers, const bool &unsign)
 {
    map<pair<int, int>, int>::iterator mi;
    map<pair<int, int>, int> cnts;
    for(unsigned int i=0; i<geom.faces().size(); i++) {
       pair<int, int> key;
       key.first = geom.faces(i).size();
-      key.second = find_polygon_denominator(geom, i, unsign, epsilon);
+      int wn = winding_numbers[i];
+      if (!unsign && (wn > key.first/2))
+         wn = key.first - wn;
+      key.second = wn;
       mi = cnts.find(key);
       if(mi == cnts.end())
          cnts[key]=1;
@@ -437,10 +428,16 @@ map<pair<int, int>, int> rep_printer::get_face_windings(const bool &unsign)
          mi->second += 1;
    }
 
-   return cnts;
+   fprintf(ofile, "[face_windings_cnts %s]\n", (unsign ? "unsigned" : "signed"));
+
+   for(mi=cnts.begin(); mi!=cnts.end(); ++mi) {
+      pair<int, int> key = mi->first;
+      fprintf(ofile, "%d/%d = %d\n", key.first, key.second, mi->second);
+   }
+   fprintf(ofile, "\n");
 }
 
-map<pair<int, int>, int> rep_printer::get_vertex_figure_windings(const bool &unsign)
+void rep_printer::vertex_figure_winding_cnts()
 {
    geom_v polygon;
    polygon.add_verts(geom.verts());
@@ -449,15 +446,31 @@ map<pair<int, int>, int> rep_printer::get_vertex_figure_windings(const bool &uns
    map<pair<int, int>, int> cnts;
    for(unsigned int i=0; i<geom.verts().size(); i++) {
       const vector<vector<int> > &vfigs = get_vert_figs()[i];
-      int winding = 0;
+      bool mult_vf = (vfigs.size() > 1) ? true : false;
+
+      int fsz_total = 0;
+      int winding = 0;         
       for(unsigned int j=0; j<vfigs.size(); j++) {
          polygon.add_face(vfigs[j]);
-         winding += find_polygon_denominator(polygon, 0, unsign, epsilon);
+         int d = find_polygon_denominator_signed(polygon, 0, epsilon);
          polygon.clear_faces();
+
+         int fsz = vfigs[j].size();
+         // if multiple vertex figures, make negative when signed to arrive a correct total winding
+         if (mult_vf) {
+            if (d > fsz/2)
+               d -= fsz;
+         }
+         fsz_total += fsz;
+         winding += d;
       }
 
+      // in case this ever happens
+      if (mult_vf && winding < 0)
+         winding += fsz_total;
+
       pair<int, int> key;
-      key.first = vfigs[0].size(); // assuming multiple vertex figures are the same size
+      key.first = fsz_total;
       key.second = winding;
       mi = cnts.find(key);
       if(mi == cnts.end())
@@ -466,29 +479,26 @@ map<pair<int, int>, int> rep_printer::get_vertex_figure_windings(const bool &uns
          mi->second += 1;
    }
 
-   return cnts;
+   fprintf(ofile, "[vertex_figure_windings_cnts unsigned]\n");
+
+   for(mi=cnts.begin(); mi!=cnts.end(); ++mi) {
+      pair<int, int> key = mi->first;
+      fprintf(ofile, "%d/%d = %d\n", key.first, key.second, mi->second);
+   }
+   fprintf(ofile, "\n");
 }
 
 void rep_printer::windings()
 {
-   map<pair<int, int>, int> cnts;
-   bool unsign;
+   // get signed winding number
+   vector<int> winding_numbers;
+   for(unsigned int i=0; i<geom.faces().size(); i++)
+      winding_numbers.push_back(find_polygon_denominator_signed(geom, i, epsilon));
 
-   unsign = false;
-   cnts = get_face_windings(unsign);
-   print_winding_cnts(cnts, true, unsign);
+   face_winding_cnts(winding_numbers, false);
+   face_winding_cnts(winding_numbers, true);
 
-   unsign = true;
-   cnts = get_face_windings(unsign);
-   print_winding_cnts(cnts, true, unsign);
-
-   unsign = false;
-   cnts = get_vertex_figure_windings(unsign);
-   print_winding_cnts(cnts, false, unsign);
-
-   unsign = true;
-   cnts = get_vertex_figure_windings(unsign);
-   print_winding_cnts(cnts, false, unsign);
+   vertex_figure_winding_cnts();
 }
 
 void rep_printer::sym_orbit_cnts()

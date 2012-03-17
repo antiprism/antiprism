@@ -632,7 +632,7 @@ int get_winding_number(const geom_if &polygn, const vector<vec3d> &pnts, const x
    return winding_number;
 }
 
-int find_polygon_denominator(const geom_if &geom, const unsigned int &face_idx, const bool &unsign, double eps)
+int find_polygon_denominator_signed(const geom_if &geom, const unsigned int &face_idx, double eps)
 {
    const vector<int> &face = geom.faces()[face_idx];
 
@@ -653,9 +653,8 @@ int find_polygon_denominator(const geom_if &geom, const unsigned int &face_idx, 
    if (!d)
       d = 1;
 
-   // if unsigned, d > n/2 is not used
-   // hemispherical faces always are treated as positively wound
-   if ((unsign || face_normal.is_hemispherical()) && d>fsz/2)
+   // hemispherical faces always are treated as positively wound so return them signed
+   if (face_normal.is_hemispherical() && d>fsz/2)
       d = fsz - d;
 
    return d;
