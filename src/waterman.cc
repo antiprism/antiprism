@@ -383,11 +383,11 @@ bool sphere_ray_z_intersect_points(long &z_near, long &z_far,
       discriminant = b * b - 4 * c;
    }
 
-   // explicitly set discriminant to 0 if in -eps to +eps (dumb code)
-   //if (double_eq(discriminant, 0.0, eps))
-   //   discriminant = 0;
-   //if (discriminant < 0.0)
-   if (double_le(discriminant,0.0,eps))
+   // explicitly set discriminant to 0 if in -eps to +eps
+   // it is set to zero so that sqrt(disciminant) will not result in -nan
+   if (double_eq(discriminant, 0.0, eps))
+      discriminant = 0;
+   if (discriminant < 0.0)
       return false;
    double disc_rt = sqrt(discriminant);
 

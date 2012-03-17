@@ -59,7 +59,7 @@ class planar_opts: public prog_opts {
       int polygon_fill_type;
       int winding_rule;
       bool color_by_winding_number;
-      char orient;
+      int orient;
       bool hole_detection;
       vec3d center;
       bool stitch_faces;
@@ -91,7 +91,7 @@ class planar_opts: public prog_opts {
                         polygon_fill_type(0),
                         winding_rule(INT_MAX),
                         color_by_winding_number(false),
-                        orient('\0'),
+                        orient(0),
                         hole_detection(true),
                         stitch_faces(false),
                         simplify_face_edges(false),
@@ -137,9 +137,9 @@ void planar_opts::usage()
 "               odd, even, positive, negative, nonzero, zero (default: none)\n"
 "               zodd, zeven, zpositive, znegative (includes zero)\n"
 "               or include absolute value or higher of a positive integer\n"
-"  -O <opt>  orient the faces first (if possible) then\n"
-"               p - positive volume, n - negative volume, r - reverse\n"
-"               R - reverse the orientation of the model as given\n"
+"  -O <opt>  orient the faces first (if possible) then for volume\n"
+"               positive=1, negative=2, reverse=3, or use flip=4\n"
+"               which reverses the orientation of the model as it was input\n"
 "  -H        turn off hole detection\n"
 "  -C <xyz>  center of model, in form 'X,Y,Z' (default: centroid)\n"
 "  -S        stitch seams created by tiling or merging\n"
@@ -248,9 +248,10 @@ void planar_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'O':
-            if(strspn(optarg, "pnrR") != strlen(optarg) || strlen(optarg)>1)
-               error(msg_str("orient option is '%s', must be p, n, r or R", optarg), c);
-            orient = *optarg;
+            id = get_arg_id(optarg, "positive=1|negative=2|reverse=3|flip=4", argmatch_add_id_maps, errmsg);
+            if(id=="")
+               error(errmsg);
+            orient = atoi(id.c_str());
             break;
 
          case 'H':
@@ -2320,7 +2321,9 @@ void do_cmy_mode(col_geom_v &geom, const bool &ryb_mode, const char &edge_blendi
          geom.set_v_col(i,rgb_complement(geom.get_v_col(i), ryb_mode));
 }
 
-void orient_model(geom_if &geom, char option, char *errmsg)
+// volume to positive=1, negative=2, reverse=3
+// or flip=4 which reverse the orientation of the input model\n"
+void orient_model(geom_if &geom, int option, char *errmsg)
 {
    if(errmsg)
       *errmsg = '\0';
@@ -2329,14 +2332,15 @@ void orient_model(geom_if &geom, char option, char *errmsg)
    if (!info.is_orientable())
       if (errmsg)
          strcpy(errmsg,"input file contains a non-orientable geometry");
-   if (!info.is_oriented() && option != 'R')
+   // if model is not oriented, don't do a pre-orientation if we just want orient_reverse
+   if (!info.is_oriented() && option != 4)
       geom.orient();
    info.reset();
    double vol = info.volume();
-   if (vol == 0 && (option == 'n' || option == 'p'))
+   if (vol == 0 && (option == 1 || option == 2))
       if (errmsg)
-         strcpy(errmsg,"volume is zero. use option r to reverse");
-   if ((vol > 0 && option == 'n') || (vol < 0 && option == 'p') || option == 'r' || option == 'R')
+         strcpy(errmsg,"volume is zero. use option 3 to reverse");
+   if ((vol < 0 && option == 1) || (vol > 0 && option == 2) || option == 3 || option == 4)
       geom.orient_reverse();      
 }
 
