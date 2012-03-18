@@ -229,7 +229,7 @@ int dimension_safe_make_hull(geom_if &geom, bool append, string qh_args, char *e
          // make first point in a direction from the centre that is parallel
          // to the first edge (also narrowest edge) in the sort list
          // add the point and keep track of it
-         vec3d cent = bb.get_centre();
+         vec3d cent = bb.get_centre() + max;
          vec3d point1 = cent + pvec[0];
          geom.add_vert(point1);
 
