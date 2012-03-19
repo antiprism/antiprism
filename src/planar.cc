@@ -2322,7 +2322,8 @@ void do_cmy_mode(col_geom_v &geom, const bool &ryb_mode, const char &edge_blendi
 }
 
 // zero area faces case trouble later. Not seen so can be deleted
-void delete_zero_area_faces(geom_if &geom, const double &eps)
+/* does not work on some complex polygons
+void delete_zero_area_faces1(geom_if &geom, const double &eps)
 {
    vector<int> deleted_faces;
 
@@ -2330,6 +2331,25 @@ void delete_zero_area_faces(geom_if &geom, const double &eps)
    for(unsigned int i=0; i<geom.faces().size(); i++)
       if (info.face_area(i) < eps)
          deleted_faces.push_back(i);
+
+   geom.delete_faces(deleted_faces);
+}
+*/
+
+// zero area faces case trouble later. Not seen so can be deleted
+// this function will delete faces that have become like two vertex edges
+void delete_zero_area_faces(geom_if &geom)
+{
+   vector<int> deleted_faces;
+
+   for(unsigned int i=0; i<geom.faces().size(); i++) {
+      vector<int> vec(1);
+      vec[0] = i;
+      geom_v polygon = faces_to_geom(geom, vec);
+      polygon.set_hull();
+      if (polygon.verts().size() == 2)
+         deleted_faces.push_back(i);
+   }
 
    geom.delete_faces(deleted_faces);
 }
@@ -2381,7 +2401,7 @@ int main(int argc, char *argv[])
 
    int original_edges_size = 0;
    if (opts.planar_merge_type) {
-      delete_zero_area_faces(geom, opts.epsilon);
+      delete_zero_area_faces(geom);
 
       // missing edges are added so that they won't blend to invisible
       geom.add_missing_impl_edges();

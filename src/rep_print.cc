@@ -410,7 +410,7 @@ void rep_printer::face_angles_cnts()
    fprintf(ofile, "\n");
 }
 
-void rep_printer::face_winding_cnts(const vector<int> winding_numbers, const bool &unsign)
+void rep_printer::face_winding_cnts(const vector<int> winding_numbers, const bool &signing)
 {
    map<pair<int, int>, int>::iterator mi;
    map<pair<int, int>, int> cnts;
@@ -418,7 +418,7 @@ void rep_printer::face_winding_cnts(const vector<int> winding_numbers, const boo
       pair<int, int> key;
       key.first = geom.faces(i).size();
       int wn = winding_numbers[i];
-      if (!unsign && (wn > key.first/2))
+      if (!signing && (wn > key.first/2))
          wn = key.first - wn;
       key.second = wn;
       mi = cnts.find(key);
@@ -428,7 +428,7 @@ void rep_printer::face_winding_cnts(const vector<int> winding_numbers, const boo
          mi->second += 1;
    }
 
-   fprintf(ofile, "[face_windings_cnts %s]\n", (unsign ? "unsigned" : "signed"));
+   fprintf(ofile, "[face_windings_cnts %s]\n", (signing ? "signed" : "unsigned"));
 
    for(mi=cnts.begin(); mi!=cnts.end(); ++mi) {
       pair<int, int> key = mi->first;
@@ -479,7 +479,7 @@ void rep_printer::vertex_figure_winding_cnts()
          mi->second += 1;
    }
 
-   fprintf(ofile, "[vertex_figure_windings_cnts unsigned]\n");
+   fprintf(ofile, "[vertex_figure_windings_cnts signed]\n");
 
    for(mi=cnts.begin(); mi!=cnts.end(); ++mi) {
       pair<int, int> key = mi->first;
