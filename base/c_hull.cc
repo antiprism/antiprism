@@ -229,39 +229,60 @@ int dimension_safe_make_hull(geom_if &geom, bool append, string qh_args, char *e
          // make first point in a direction from the centre that is parallel
          // to the first edge (also narrowest edge) in the sort list
          // add the point and keep track of it
-         vec3d cent = bb.get_centre() + max;
+         vec3d cent = bb.get_centre();
          vec3d point1 = cent + pvec[0];
          geom.add_vert(point1);
 
          // 2D test for polygon
          if(!make_hull(geom, append, qh_args, errmsg)) {
-            // if still error then vertices are on a line. add point2 and try again
-            dimension = 1;
-            
-            // make second point in a direction from the centre that is parallel
-            // to the second edge (also second narrowest edge) in the sort list
+            // if test fails need to test with another point to verify not 2D
+            // remove point 1 and enter point 2 (also second narrowest edge) in the sort list
             // add the point and keep track of it
+
+            // delete point1
+            int v_idx = find_vertex_by_coordinate(geom, point1, DBL_MIN);
+            if (v_idx != -1)
+               geom.delete_vert(v_idx);
+
             vec3d point2 = cent + pvec[1];
             geom.add_vert(point2);
-            
-            // 1D test for line
+
             if(!make_hull(geom, append, qh_args, errmsg)) {
-               // 0 dimensional geom should not have gotten in here. instead, make this an error so it can be spotted
-               if(errmsg)
-                  snprintf(errmsg, MSG_SZ, "convex hull failed even after checking for a line");
-               return -1;
+               // if still error then vertices are on a line. Add a second point
+               dimension = 1;
+               
+               // re-enter point 1 so there are 2 extra points to verify a line
+               // If fails then 1D
+               geom.add_vert(point1);
+               
+               // 1D test for line
+               if(!make_hull(geom, append, qh_args, errmsg)) {
+                  // 0 dimensional geom should not have gotten in here. instead, make this an error so it can be spotted
+                  if(errmsg)
+                     snprintf(errmsg, MSG_SZ, "convex hull failed even after checking for a line");
+                  return -1;
+               }
+               
+               // delete point1
+               v_idx = find_vertex_by_coordinate(geom, point1, DBL_MIN);
+               if (v_idx != -1)
+                  geom.delete_vert(v_idx);
             }
-            
-            // delete temporaray vertex
-            int v_idx = find_vertex_by_coordinate(geom, point2, DBL_MIN);
+   
+            // delete point2
+            v_idx = find_vertex_by_coordinate(geom, point2, DBL_MIN);
             if (v_idx != -1)
                geom.delete_vert(v_idx);
          }
-   
-         // delete temporaray vertex
-         int v_idx = find_vertex_by_coordinate(geom, point1, DBL_MIN);
-         if (v_idx != -1)
-            geom.delete_vert(v_idx);
+
+               
+         // delete point1
+         // if dimension is 1, point1 has already been deleted
+         if (dimension != 1) {
+            int v_idx = find_vertex_by_coordinate(geom, point1, DBL_MIN);
+            if (v_idx != -1)
+               geom.delete_vert(v_idx);
+         }
       }
 
       // for dimension less than 2, what follows may have never gone through make_hull()
