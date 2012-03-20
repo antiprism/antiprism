@@ -8,10 +8,16 @@ xx-xx-12 Adrian Rossiter <adrian@antiprism.com>
             leonardo: creates Leonardo da Vinci style models
          Changes
             off_query: Vg for vertex figures (Vn for connections only)
+            off_util: -O takes an argument, -t 'triangulate' is synonym
+              for nonzero, abs_geq_two removed
+            conv_hull: hulls are positively oriented
+            antiview,off2pov,off2vrml: -t abs_geq_two removed
             Models: Coxeter and Wenninger numbers as alternative names
               for uniforms (Roger Kaufman).
          Fixes
             Some Johnson polyhedra not connected correctly
+            waterman not producing correct output
+            Triangulation not applying winding rules to triangle faces
             Miscellaneous small fixes.
 
 
