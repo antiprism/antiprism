@@ -656,7 +656,7 @@ col_geom_v free_edges_into_geom(const col_geom_v &geom)
    for (unsigned int i=0;i<edges.size();i++) {
       vector<int> face_idx = find_faces_with_edge(faces, edges[i]);
       if (!face_idx.size())
-         egeom.add_col_edge(geom.edges()[i],geom.get_e_col(i));
+         egeom.add_col_edge(edges[i],geom.get_e_col(i));
    }
    egeom.delete_verts(egeom.get_info().get_free_verts());
 
@@ -1313,9 +1313,20 @@ bool mesh_edges(col_geom_v &geom, const double &eps)
 
 void make_skeleton(col_geom_v &geom)
 {
+   const vector<vector<int> > &edges = geom.edges();
+
    geom.add_missing_impl_edges();
    geom.clear_faces();
 
+   // delete edges in the form of 2 x x (where edge indexes are equal)
+   vector<int> deleted_edges;
+   for(unsigned int i=0; i<edges.size(); i++) {
+      if (edges[i][0] == edges[i][1])
+         deleted_edges.push_back(i);
+   }
+   geom.delete_edges(deleted_edges);
+
+   // make skeleton invisible
    coloring clrng(&geom);
    
    col_val ecol = col_val::invisible;
@@ -1390,7 +1401,7 @@ void build_turn_map(const geom_if &geom, map<pair<int, int>, int> &turn_map, map
             // can't go backwards
             if (c == a)
                continue;
-            double angle = angle_map[make_pair(b,c)];;
+            double angle = angle_map[make_pair(b,c)];
             if (angle >= 0 && angle < base_angle)
                angle += 360;
             angles.push_back(make_pair(angle,c));
@@ -1901,7 +1912,7 @@ void collect_ordered_vert_indexes(const geom_if &geom, const vector<vector<int> 
    distance_table.push_back(make_pair(0.0, end_idx));
    for(unsigned int i=0;i<vert_indexes.size();i++) {
       if (vert_indexes[i] == end_idx)
-         continue;;
+         continue;
       double dist = (verts[vert_indexes[i]]-end_vertex).mag();
       distance_table.push_back(make_pair(dist,vert_indexes[i]));
    }
@@ -2321,37 +2332,31 @@ void do_cmy_mode(col_geom_v &geom, const bool &ryb_mode, const char &edge_blendi
          geom.set_v_col(i,rgb_complement(geom.get_v_col(i), ryb_mode));
 }
 
-// zero area faces case trouble later. Not seen so can be deleted
-/* does not work on some complex polygons
-void delete_zero_area_faces1(geom_if &geom, const double &eps)
+// zero area faces cause trouble in blending
+col_geom_v separate_zero_area_faces(col_geom_v &geom, const double &eps)
 {
+   const vector<vector<int> > &faces = geom.faces();
+
+   col_geom_v zgeom;
+   zgeom.add_verts(geom.verts());
+
    vector<int> deleted_faces;
-
-   geom_info info(geom);
-   for(unsigned int i=0; i<geom.faces().size(); i++)
-      if (info.face_area(i) < eps)
-         deleted_faces.push_back(i);
-
-   geom.delete_faces(deleted_faces);
-}
-*/
-
-// zero area faces case trouble later. Not seen so can be deleted
-// this function will delete faces that have become like two vertex edges
-void delete_zero_area_faces(geom_if &geom)
-{
-   vector<int> deleted_faces;
-
-   for(unsigned int i=0; i<geom.faces().size(); i++) {
+   for(unsigned int i=0; i<faces.size(); i++) {
       vector<int> vec(1);
       vec[0] = i;
       geom_v polygon = faces_to_geom(geom, vec);
-      polygon.set_hull();
-      if (polygon.verts().size() == 2)
+      polygon.triangulate();
+      geom_info info(polygon);
+      if (info.face_areas().sum < eps) {
+         zgeom.add_col_face(faces[i],geom.get_f_col(i));
          deleted_faces.push_back(i);
+      }
    }
+   zgeom.delete_verts(zgeom.get_info().get_free_verts());
 
    geom.delete_faces(deleted_faces);
+
+   return zgeom;
 }
 
 int main(int argc, char *argv[])
@@ -2401,7 +2406,8 @@ int main(int argc, char *argv[])
 
    int original_edges_size = 0;
    if (opts.planar_merge_type) {
-      delete_zero_area_faces(geom);
+      // seperate out zero area faces which cause trouble in blend
+      col_geom_v zgeom = separate_zero_area_faces(geom, opts.epsilon);
 
       // missing edges are added so that they won't blend to invisible
       geom.add_missing_impl_edges();
@@ -2410,6 +2416,8 @@ int main(int argc, char *argv[])
       planar_merge(geom, opts.planar_merge_type, opts.polygon_fill_type, opts.hole_detection, opts.center,
                    opts.winding_rule, opts.color_by_winding_number, opts.zero_density_color, opts.zero_density_force_blend, opts.brightness_adj,
                    opts.color_system_mode, opts.sat_power, opts.sat_threshold, opts.value_power, opts.value_advance, opts.alpha_mode, opts.ryb_mode, opts.epsilon);
+
+      geom.append(zgeom);
    }
 
    string elems;
