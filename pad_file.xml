@@ -34,9 +34,9 @@
    </Company_Info>
    <Program_Info>
       <Program_Name>Antiprism</Program_Name>
-      <Program_Version>0.20</Program_Version>
-      <Program_Release_Month>02</Program_Release_Month>
-      <Program_Release_Day>13</Program_Release_Day>
+      <Program_Version>0.21</Program_Version>
+      <Program_Release_Month>03</Program_Release_Month>
+      <Program_Release_Day>26</Program_Release_Day>
       <Program_Release_Year>2012</Program_Release_Year>
       <Program_Cost_Dollars>0.00</Program_Cost_Dollars>
       <Program_Cost_Other_Code>EUR</Program_Cost_Other_Code>
@@ -46,7 +46,7 @@
       <Program_Install_Support>Install and Uninstall</Program_Install_Support>
       <Program_OS_Support>Linux,Linux Console,Linux Gnome,Linux GPL,Linux Open Source,Mac OS X,MS-DOS,Unix,Win2000,Win7 x32,Win98,WinVista,WinXP,Other</Program_OS_Support>
       <Program_Language>English</Program_Language>
-      <Program_Change_Info>Many new features, support for symmetry, large collection of named polyhedra</Program_Change_Info>
+      <Program_Change_Info>Bug fixes, new programs</Program_Change_Info>
       <Program_Specific_Category>Education</Program_Specific_Category>
       <Program_Category_Class>Education::Mathematics</Program_Category_Class>
       <Program_Categories>Graphics::Visualization</Program_Categories>
@@ -55,8 +55,8 @@
       <Includes_VB_Runtime>N</Includes_VB_Runtime>
       <Includes_DirectX>N</Includes_DirectX>
       <File_Info>
-         <Filename_Versioned>aprism20.zip</Filename_Versioned>
-         <Filename_Previous>aprism19.zip</Filename_Previous>
+         <Filename_Versioned>aprism21.zip</Filename_Versioned>
+         <Filename_Previous>aprism20.zip</Filename_Previous>
          <Filename_Generic>aprism.zip</Filename_Generic>
          <Filename_Long>antiprism.zip</Filename_Long>
          <File_Size_Bytes>5000000</File_Size_Bytes>
@@ -89,13 +89,13 @@
          <Application_Order_URL>http://www.antiprism.com/</Application_Order_URL>
          <Application_Screenshot_URL>http://www.antiprism.com/misc/antiprism_ss_1.png</Application_Screenshot_URL>
          <Application_Icon_URL>http://www.antiprism.com/misc/antiprism_icon.gif</Application_Icon_URL>
-         <Application_XML_File_URL>http://www.antiprism.com/misc/pad_file.xml</Application_XML_File_URL>
+         <Application_XML_File_URL>http://www.antiprism.com/files/pad_file.xml</Application_XML_File_URL>
       </Application_URLs>
       <Download_URLs>
-         <Primary_Download_URL>http://sourceforge.net/projects/antiprism/files/antiprism/antiprism-0.20_install.exe</Primary_Download_URL>
-         <Secondary_Download_URL>http://sourceforge.net/projects/antiprism/files/antiprism/antiprism-0.20_install.exe</Secondary_Download_URL>
-         <Additional_Download_URL_1>http://sourceforge.net/projects/antiprism/files/antiprism/antiprism-0.20_install.exe</Additional_Download_URL_1>
-         <Additional_Download_URL_2>http://sourceforge.net/projects/antiprism/files/antiprism/antiprism-0.20_install.exe</Additional_Download_URL_2>
+         <Primary_Download_URL>http://www.antiprism.com/files/antiprism-0.21_install.exe</Primary_Download_URL>
+         <Secondary_Download_URL>http://www.antiprism.com/files/antiprism-0.21_install.exe</Secondary_Download_URL>
+         <Additional_Download_URL_1>http://www.antiprism.com/files/antiprism-0.21_install.exe</Additional_Download_URL_1>
+         <Additional_Download_URL_2>http://www.antiprism.com/files/antiprism-0.21_install.exe</Additional_Download_URL_2>
       </Download_URLs>
    </Web_Info>
    <Permissions>
