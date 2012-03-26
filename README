@@ -1,8 +1,8 @@
 Antiprism
 =========
 
-Notes for Antiprism 0.21.rc1
-----------------------------
+Notes for Antiprism 0.21
+------------------------
 
 This is a minor release to provide fixes for problems found
 in 0.20 and to distribute a couple of new programs.
@@ -35,12 +35,11 @@ There are two release files.
    antiprism-0.xx.tar.gz       - source code
    antiprism-0.xx_install.exe  - Windows installer
 
-In Windows, access to the resources may be optionally enabled by
-setting the ANTIPRISM_DATA environment variable to the path of
-the 'data' directory in the install directory. In a DOS box the
-command would be something like
+In Windows, the DOS Box started from the Antiprism Shell menu
+item is configured and ready to run the Antiprism programs.
 
-   set ANTIPRISM_DATA="c:\Program Files\antiprism\data"
+If required, the ANTIPRISM_DATA environment variable may be
+set to the path of the 'data' directory in the install directory.
 
 
 Building
