@@ -10,7 +10,7 @@ if BUILD_PY_MOD
 # SUBDIRS += python
 endif
 
-EXTRA_DIST = bootstrap pad_file.xml README.git doc share base/qh_COPYING.txt 
+EXTRA_DIST = bootstrap pad_file.xml README.git doc doc_src share
 
 #             python/antiprism.i python/antiprism_doc.i \
 #				 python/antiprism_wrap.cc python/antiprism.py \
