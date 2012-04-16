@@ -7,7 +7,7 @@ libantiprism_la_SOURCES = off_read.cc off_write.cc crds_read.cc disp_poly.cc\
 	utils.cc utils_ultragetopt.cc math_utils.cc c_hull.cc triangulate.cc \
 	symmetry.cc sort_merge.cc bbox.cc col_read.cc info.cc \
    coloring.cc prop_col.cc named_cols.cc geodesic.cc zonohedron.cc \
-	johnson.cc uniform.cc kaleido.cc std_polys.cc skilling.cc \
+	johnson.cc uniform.cc std_polys.cc skilling.cc \
 	timing.cc polygons.cc pov_writer.cc scene.cc \
 	canonic.cc trans.cc faces.cc vrml_writer.cc \
    \
@@ -19,7 +19,7 @@ libantiprism_la_SOURCES = off_read.cc off_write.cc crds_read.cc disp_poly.cc\
 	geodesic.h geom.h geom_utils.h \
 	col_val.h col_geom.h info.h mat3d.h mat4d.h math_utils.h named_cols.h \
    off_file.h pov_writer.h coloring.h prop_col.h timing.h \
-	polygons.h std_polys.h skilling.h kaleido.h \
+	polygons.h std_polys.h skilling.h \
    \
 	qh_geom.h qh_io.h qh_mem.h qh_merge.h qh_poly.h qh_qhull_a.h \
 	qh_qhull.h qh_qset.h qh_stat.h qh_user.h \
