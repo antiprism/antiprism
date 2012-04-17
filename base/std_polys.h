@@ -31,11 +31,10 @@
 
 
 #include <stdio.h>
-#include <string>
+#include <string.h>
 
 #include "geom.h"
 #include "transforms.h"
-#include "kaleido.h"
 
 using std::string;
 
@@ -57,20 +56,25 @@ void set_resource_polygon_color(geom_if &geom);
 string expand_abbrevs(const string &name,
       const char *abbrevs[][2], size_t last);
 
+struct Uniform {
+	string Wythoff;
+	short Kaleido, Coxeter, Wenninger;
+   string name;
+   string dual;
+};
+
 class uni_poly
 {
    private:
       int last_uniform;
-      Uniform *uniform; 
-      Polyhedron *poly;
-      
-   public:
-      uni_poly() { last_uniform = get_uniform_list(&uniform); }
+      Uniform* uniform;
+
+   public:      
+      uni_poly() { last_uniform = get_uniform_table(&uniform); }
       int get_poly(geom_if &geom, int sym_no);
-      bool ok() { return poly != 0; }
       int lookup_sym_no(string sym, int is_dual);
       int get_last_uniform() { return last_uniform; }
-
+      int get_uniform_table(Uniform **uniform);
 };
 
 
