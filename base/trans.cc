@@ -81,7 +81,7 @@ void truncate_verts(geom_if &geom, vector<int> &v_idxs, double ratio, geom_info 
    map<vector<int>, vector<int> > v3maps;
    for(unsigned int i=0; i<v_idxs.size(); i++) {
       int idx = v_idxs[i];
-      const vector<int> &cons = info->get_vert_cons()[idx];
+      const vector<int> &cons = info->get_vert_cons_orig()[idx];
       int orig_vsz = verts.size();
       vector<int> tface;
       for(unsigned int j=0; j<cons.size(); j++) {

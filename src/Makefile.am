@@ -33,7 +33,7 @@ dist_man1_MANS = off2pov.1 off2m.1 off2vrml.1 off2crds.1 m2off.1 \
 		poly_weave.1 off_report.1 off_query.1 \
 		kcycle.1 string_art.1 jitterbug.1 unitile2d.1 repel.1 \
 		lat_grid.1 lat_util.1 canonical.1 conway.1 n_icons.1 iso_delta.1 \
-		bravais.1 waterman.1 col_util.1 planar.1 off_normals.1 leonardo
+		bravais.1 waterman.1 col_util.1 planar.1 off_normals.1 leonardo.1
 
 off2pov_SOURCES = off2pov.cc
 off2crds_SOURCES = off2crds.cc

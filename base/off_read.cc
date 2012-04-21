@@ -347,7 +347,7 @@ bool off_file_read(FILE *ifile, geom_if &geom, char *errmsg)
       strncat(errmsg, msg.c_str(), MSG_SZ);
    }
 
-   if(errmsg && !bool(geom))
+   if(errmsg && !bool(geom) && !*errmsg)  // no previous error message
       strncpy(errmsg, "no coordinate data", MSG_SZ);
 
    return bool(geom);
