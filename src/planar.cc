@@ -58,7 +58,11 @@ class planar_opts: public prog_opts {
       int planar_merge_type;
       int polygon_fill_type;
       int winding_rule;
+      int winding_rule_mode;
       bool color_by_winding_number;
+      bool winding_div2; // not implemented
+      bool find_direction;
+      bool verbose;
       int orient;
       bool hole_detection;
       vec3d center;
@@ -90,7 +94,11 @@ class planar_opts: public prog_opts {
                         planar_merge_type(0),
                         polygon_fill_type(0),
                         winding_rule(INT_MAX),
+                        winding_rule_mode(INT_MAX),
                         color_by_winding_number(false),
+                        winding_div2(false), // not implemented
+                        find_direction(false),
+                        verbose(false),
                         orient(0),
                         hole_detection(true),
                         stitch_faces(false),
@@ -136,20 +144,24 @@ void planar_opts::usage()
 "  -w <opt>  winding rule, include face parts according to winding number\n"
 "               odd, even, positive, negative, nonzero, zero (default: none)\n"
 "               zodd, zeven, zpositive, znegative (includes zero)\n"
-"               or include absolute value or higher of a positive integer\n"
-"  -O <opt>  orient the faces first (if possible) then for volume\n"
-"               positive=1, negative=2, reverse=3, or use flip=4\n"
-"               which reverses the orientation of the model as it was input\n"
+"               or symbol proceeding integer: eq, ne, gt, ge, lt, le  meaning\n"
+"               equal, not equal, greater than, greater than or equal, less\n"
+"               than, less than or equal. use 'a' for absolute value  e.g. gea2\n"
+"  -z        use direction of normals for hemispherical winding numbers\n"
+"  -V        verbose output (of minimum and maximum winding numbers)\n"
 "  -H        turn off hole detection\n"
-"  -C <xyz>  center of model, in form 'X,Y,Z' (default: centroid)\n"
 "  -S        stitch seams created by tiling or merging\n"
-"  -I        rid faces of extra in line vertices\n"
+"  -I        rid faces of extra in-line vertices\n"
 "  -e <opt>  blend existing explicit edges and/or vertices using blend options\n"
 "               e - edges, v - vertices, b - both (-d forces b, otherwise none)\n"
 "  -E <opt>  remove explicit edges, blend new ones using face colors (sets -S)\n"
 "               e - edges only, v - also blend vertices (default: none)\n"
 "               V - also blend invisible vertices, s - strip edges and vertices\n"
 "  -D        delete invisible faces created by winding rule\n"
+"  -O <opt>  orient the faces first (if possible) then for volume\n"
+"               positive=1, negative=2, reverse=3, or use flip=4\n"
+"               which reverses the orientation of the model as it was input\n"
+"  -C <xyz>  center of model, in form 'X,Y,Z' (default: centroid)\n"
 "  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
@@ -177,14 +189,14 @@ void planar_opts::usage()
 "               but areas with 3 or more will become slightly darker\n"
 "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
 "  -f <opt>  take face colors from map (processed before -d)\n"
-"               s - unique color for faces with same normals\n"
-"               o - unique color for faces on same and opposite normals\n"
+"               n - unique color for faces with same normals\n"
 "               p - unique color for faces on same planes only\n"
+"               o - unique color for faces on same and opposite normals\n"
 "  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
-"  -m <maps> color maps for faces to be tried in turn (default: compound)\n"
 "  -Z <col>  color for areas found colorless by winding (default: invisible)\n"
 "               key word: b - force a color blend\n"
-"  -W        color by winding number. Overrides all other color options\n"
+"  -W        color by winding number, using maps (overrides option -f)\n"
+"  -m <maps> color maps for faces to be tried in turn (default: compound)\n"
 "  -n <maps> maps for negative winding numbers (default: rng17_S0V0.5:0)\n"
 "               (map position zero not used. default is 16 gradients)\n"
 "\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
@@ -203,22 +215,11 @@ void planar_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hl:d:p:w:O:HC:SIe:E:Db:M:s:t:v:u:a:cyf:T:m:Z:Wn:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hd:p:w:zVO:HC:SIe:E:Db:M:s:t:v:u:a:cyf:T:m:Z:Wn:l:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
       switch(c) {
-         case 'l':
-            if(!read_int(optarg, &sig_compare, errmsg))
-               error(errmsg, c);
-            if(sig_compare < 0) {
-               warning("limit is negative, and so ignored", c);
-            }
-            if(sig_compare > DEF_SIG_DGTS) {
-               warning("limit is very small, may not be attainable", c);
-            }
-            break;
-            
          case 'd':
             id = get_arg_id(optarg, "tile=1|merge=2", argmatch_add_id_maps, errmsg);
             if(id=="")
@@ -233,18 +234,59 @@ void planar_opts::process_command_line(int argc, char **argv)
             polygon_fill_type = atoi(id.c_str());
             break;
 
-         case 'w':
-            if(read_int(optarg, &winding_rule, errmsg)) {
-               if (winding_rule < 0)
-                  error("winding rule absolute value must be greater than or equal to 0",'w');
+         case 'w': {
+            id = optarg;
+            // symbol proceeding integer. Symbols: eq, ne, gt, ge, lt, le"
+            // correspond to 1,2,3,4,5,6
+            if(id.substr(0,2)=="eq")
+               winding_rule_mode = 1;
+            else
+            if(id.substr(0,2)=="ne")
+               winding_rule_mode = 2;
+            else
+            if(id.substr(0,2)=="gt")
+               winding_rule_mode = 3;
+            else
+            if(id.substr(0,2)=="ge")
+               winding_rule_mode = 4;
+            else
+            if(id.substr(0,2)=="lt")
+               winding_rule_mode = 5;
+            else
+            if(id.substr(0,2)=="le")
+               winding_rule_mode = 6;
+
+            int substr_start = 2;
+            // negative winding_rule_mode will trigger absolute value evaluation later
+            if(id.substr(2,1)=="a") {
+               winding_rule_mode = -winding_rule_mode;
+               substr_start = 3;
+            }
+
+            if (winding_rule_mode != INT_MAX) {
+               int tmp;
+               char buff;
+               if(sscanf((id.substr(substr_start)).c_str(), " %d %c", &tmp, &buff) != 1)
+                  error("expecting integer number after eq,ne,gt,ge,lt,le for winding number", c);
+               winding_rule = tmp;
             }
             else {
-               // built in winding rules become -1 through -10
+               winding_rule_mode = 0;
+               // built in winding rules become 1 through 10 (when winding_rule_mode is zero)
                id = get_arg_id(optarg, "odd|even|positive|negative|nonzero|zodd|zeven|zpositive|znegative|zero", argmatch_default, errmsg);
                if(id=="")
                   error(errmsg);
-               winding_rule = (atoi(id.c_str()) + 1) * (-1);
+               winding_rule = (atoi(id.c_str()) + 1);
             }
+            break;
+         }
+
+         case 'z':
+            find_direction = true;
+            break;
+
+         case 'V':
+            verbose = true;
             break;
 
          case 'O':
@@ -347,8 +389,8 @@ void planar_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'f':
-            if(!strlen(optarg)==1 || !strchr("sop", *optarg))
-               error("color method must be s, o or p");
+            if(!strlen(optarg)==1 || !strchr("npo", *optarg))
+               error("color method must be n, p or o");
             face_color_method = *optarg;
             break;
          
@@ -377,6 +419,17 @@ void planar_opts::process_command_line(int argc, char **argv)
 
          case 'n':
             map_file_negative = optarg;
+            break;
+
+         case 'l':
+            if(!read_int(optarg, &sig_compare, errmsg))
+               error(errmsg, c);
+            if(sig_compare < 0) {
+               warning("limit is negative, and so ignored", c);
+            }
+            if(sig_compare > DEF_SIG_DGTS) {
+               warning("limit is very small, may not be attainable", c);
+            }
             break;
 
          case 'o':
@@ -420,8 +473,6 @@ void planar_opts::process_command_line(int argc, char **argv)
    if (color_by_winding_number) {
       if (polygon_fill_type != 1 && polygon_fill_type != 3)
          error("with color by winding number polygon fill type must be 1 or 3","p");
-      if (winding_rule != INT_MAX)
-         error("winding rule cannot be used with color by winding number","w");
    }
 
    if (!map_file.size())
@@ -451,6 +502,8 @@ public:
    bool operator() (const pair<vec3d, int> &a, const pair<vec3d, int> &b) { return cmp_verts(a, b, eps); }
 };
 
+// second check: if polygons are not actually on the same plane, split them up
+// RK - this can only happen when the normals are not forced outward
 vector<vector<int> > on_same_plane_filter(const geom_if &geom, const vec3d &normal, const vector<int> &coplanar_faces, const bool &filtered, const double &eps)
 {
    const vector<vector<int> > &faces = geom.faces();
@@ -492,7 +545,7 @@ vector<vector<int> > on_same_plane_filter(const geom_if &geom, const vec3d &norm
 }
 
 void build_coplanar_faces_list(const geom_if &geom, vector<vector<int> > &coplanar_faces_list, vector<xnormal> &coplanar_normals, const fnormals &fnormals,
-                               const bool &point_outward, const bool &fold_normals, const bool &filtered, const double &eps)
+                               const bool &point_outward, const bool &fold_normals, const bool &fold_normals_hemispherical, const bool &filtered, const double &eps)
 {
    // seperate out hemispherical because they often get mixed in
    vector<pair<vec3d, int> > hemispherical_table;
@@ -519,9 +572,10 @@ void build_coplanar_faces_list(const geom_if &geom, vector<vector<int> > &coplan
 
    vector<int> coplanar_faces;
 
-   // fold in hemispherical normals. this is what associates them on the same plane
+   // hemispherical normals are folded only with specific option
+   // if folded, this is what associates them on the same plane
    int sz = hemispherical_table.size();
-   if (sz > 1) {
+   if (fold_normals_hemispherical && (sz > 1)) {
       for(int i=0; i<sz-1; i++) {
          for(int j=i+1; j<sz; j++) {
             if (!compare(hemispherical_table[i].first,-hemispherical_table[j].first,eps)) {
@@ -558,7 +612,7 @@ void build_coplanar_faces_list(const geom_if &geom, vector<vector<int> > &coplan
    }
 
    
-   // if non-hemispherical normals are folded only with specific option
+   // non-hemispherical normals are folded only with specific option
    sz = face_normal_table.size();
    if (fold_normals && (sz > 1)) {
       for(int i=0; i<sz-1; i++) {
@@ -1311,12 +1365,9 @@ bool mesh_edges(col_geom_v &geom, const double &eps)
    return (deleted_edges.size() ? true : false);
 }
 
-void make_skeleton(col_geom_v &geom)
+void delete_duplicate_index_edges(col_geom_v &geom)
 {
    const vector<vector<int> > &edges = geom.edges();
-
-   geom.add_missing_impl_edges();
-   geom.clear_faces();
 
    // delete edges in the form of 2 x x (where edge indexes are equal)
    vector<int> deleted_edges;
@@ -1325,6 +1376,13 @@ void make_skeleton(col_geom_v &geom)
          deleted_edges.push_back(i);
    }
    geom.delete_edges(deleted_edges);
+}
+
+// can control color of skeleton. Here it is made invisible
+void make_skeleton(col_geom_v &geom)
+{
+   geom.add_missing_impl_edges();
+   geom.clear_faces();
 
    // make skeleton invisible
    coloring clrng(&geom);
@@ -1398,8 +1456,8 @@ void build_turn_map(const geom_if &geom, map<pair<int, int>, int> &turn_map, map
          vector<pair<double, int> > angles;
          for(unsigned int k=0; k<vcons.size(); k++) {
             int c = vcons[k];
-            // can't go backwards
-            if (c == a)
+            // can't go backwards unless it is the only possible path
+            if (c == a && vcons.size() != 1)
                continue;
             double angle = angle_map[make_pair(b,c)];
             if (angle >= 0 && angle < base_angle)
@@ -1458,6 +1516,10 @@ void construct_faces(geom_if &geom, map<pair<int, int>, int> &turn_map)
       if (c != face[0] || turn_map[make_pair(b,c)] != face[1])
          face.push_back(c);
       else {
+         // RK: patch. Do not allow faces to have sequential duplicate indexes
+         vector<int>::iterator fi = unique(face.begin(), face.end());
+         face.resize( fi - face.begin() );
+
          geom.add_face(face);
          // mark turns visited and start a new face
          fsz = face.size();
@@ -1493,7 +1555,10 @@ void analyze_faces(geom_if &geom, const int &planar_merge_type, vector<int> &non
          angle_sum += angle;
       }
       int sum = (int)floorf(angle_sum + 0.5);
-      if ((sum == 360 && planar_merge_type == 1) || (sum != 360 && planar_merge_type == 2)) {
+      // old statement: if ((sum == 360 && planar_merge_type == 1) || (sum != 360 && planar_merge_type == 2)) {
+      // ideally the interior angle sum of the tiles is -360 degrees. However it is known to be otherwise. Check less than 0
+      // the angle sum of the perimeter face is ideally 360. However it is known to sometimes be otherwise. Check greater than or equal to 0
+      if ((sum >= 0 && planar_merge_type == 1) || (sum < 0 && planar_merge_type == 2)) {
          deleted_faces.push_back(i);
          deleted_faces_count++;
       }
@@ -1529,47 +1594,83 @@ col_val average_color(const vector<col_val> &cols, const int &color_system_mode,
    return avg_col;
 }
 
-// odd=-1  even=-2  positive=-3  negative=-4  nonzero=-5
-// zodd=-6  zeven=-7  zpositive=-8  znegative=-9  zero=-10
-bool winding_rule_filter(const int &winding_rule, const int &winding_number)
+// all values can be locally altered
+bool winding_rule_filter(int winding_rule_mode, int winding_rule, int winding_number)
 {
    bool answer = true;
 
-   // winding_rule 0, all are true
-   if (winding_rule == 0)
-      answer = true;
+   // default is accept all winding numbers
+   if (winding_rule_mode == INT_MAX)
+      return answer;
+
+   // negative winding rule mode means do absolute value comparison
+   if (winding_rule_mode < 0) {
+      winding_rule_mode = abs(winding_rule_mode);
+      winding_rule = abs(winding_rule);
+      winding_number = abs(winding_number);
+   }
+
+   if (winding_rule_mode == 0) {
+      // odd=1  even=2  positive=3  negative=4  nonzero=5
+      // zodd=6  zeven=7  zpositive=8  znegative=9  zero=10
+      // rule 5 implicitly done
+      // when rule 5 or less zero is not included (probably couldn't get here)
+      if ((winding_rule < 6) && !winding_number)
+         answer = false;
+      else
+      if ((winding_rule == 1) && (is_even(winding_number)))
+         answer = false;
+      else
+      if ((winding_rule == 2 || winding_rule == 7) && (!is_even(winding_number)))
+         answer = false;
+      else
+      if ((winding_rule == 3 || winding_rule == 8) && (winding_number < 0))
+         answer = false;
+      else
+      if ((winding_rule == 4 || winding_rule == 9) && (winding_number > 0))
+         answer = false;
+      else
+      if ((winding_rule == 6) && (winding_number && is_even(winding_number)))
+         answer = false;
+      else
+      if ((winding_rule == 10) && (winding_number))
+         answer = false;
+   }
    else
-   if (winding_rule > 0 && (abs(winding_number) < winding_rule))
-      answer = false;
+   // symbol proceeding integer. Symbols: eq, ne, gt, ge, lt, le"
+   // correspond to 1,2,3,4,5,6 (negative if absolute value)
+   // equal to
+   if (winding_rule_mode == 1)
+      answer = (winding_number == winding_rule) ? true : false;
    else
-   // rule -5 implicitly done
-   if ((winding_rule > -6) && !winding_number)
-      answer = false;
+   // not equal to
+   if (winding_rule_mode == 2)
+      answer = (winding_number != winding_rule) ? true : false;
    else
-   if ((winding_rule == -1) && (is_even(winding_number)))
-      answer = false;
+   // greater than
+   if (winding_rule_mode == 3)
+      answer = (winding_number > winding_rule) ? true : false;
    else
-   if ((winding_rule == -2 || winding_rule == -7) && (!is_even(winding_number)))
-      answer = false;
+   // greater than or equal to
+   if (winding_rule_mode == 4)
+       answer = (winding_number >= winding_rule) ? true : false;
    else
-   if ((winding_rule == -3 || winding_rule == -8) && (winding_number < 0))
-      answer = false;
+   // less than
+   if (winding_rule_mode == 5)
+       answer = (winding_number < winding_rule) ? true : false;
    else
-   if ((winding_rule == -4 || winding_rule == -9) && (winding_number > 0))
-      answer = false;
-   else
-   if ((winding_rule == -6) && (winding_number && is_even(winding_number)))
-      answer = false;
-   else
-   if ((winding_rule == -10) && (winding_number))
-      answer = false;
+   // less than or equal to
+   if (winding_rule_mode == 6)
+       answer = (winding_number <= winding_rule) ? true : false;
 
    return answer;
 }
 
 void sample_colors(col_geom_v &sgeom, const col_geom_v &cgeom, const int &planar_merge_type, const vector<xnormal> &original_normals, const vector<int> &nonconvex_faces, const vec3d &center,
-   const int &polygon_fill_type, const int &winding_rule, const bool &color_by_winding_number, col_val &zero_density_color, const bool &zero_density_force_blend, const double &brightness_adj,
-   const int &color_system_mode, const double &sat_power, const double &sat_threshold, const double &value_power, const double &value_advance, const int &alpha_mode, const bool &ryb_mode, const double &eps)
+   const int &polygon_fill_type, const int &winding_rule_mode, const int &winding_rule, const bool &color_by_winding_number, const bool &find_direction, const bool &winding_div2,
+   col_val &zero_density_color, const bool &zero_density_force_blend, const double &brightness_adj,
+   const int &color_system_mode, const double &sat_power, const double &sat_threshold, const double &value_power, const double &value_advance, const int &alpha_mode, const bool &ryb_mode,
+   int &winding_total_min, int &winding_total_max, const double &eps)
 {
    const vector<vector<int> > &sfaces = sgeom.faces();
    const vector<vector<int> > &cfaces = cgeom.faces();
@@ -1596,10 +1697,16 @@ void sample_colors(col_geom_v &sgeom, const col_geom_v &cgeom, const int &planar
          sface_idxs.push_back(i);
          col_geom_v spolygon = faces_to_geom(sgeom, sface_idxs);
          spolygon.triangulate();
-         // when merging and it is a nonconvex face, then have to sample all the centroids. else only sample one of them
-         int sz = (planar_merge_type==1) ? 1 : spolygon.faces().size();
-         for(int k=0; k<sz; k++)
-            points.push_back(spolygon.face_cent(k));
+         if (!spolygon.faces().size()) {
+            //trangulation of a polygon of zero density leaves no faces
+            points.push_back(centroid(spolygon.verts()));
+         }
+         else {
+            // when merging and it is a nonconvex face, then have to sample all the centroids. else only sample one of them
+            int sz = (planar_merge_type==1) ? 1 : spolygon.faces().size();
+            for(int k=0; k<sz; k++)
+               points.push_back(spolygon.face_cent(k));
+         }
       }
 
       // accumulate winding numbers
@@ -1626,7 +1733,7 @@ void sample_colors(col_geom_v &sgeom, const col_geom_v &cgeom, const int &planar
             if (answer) {
                vector<vec3d> one_point;
                one_point.push_back(points[k]);
-               int winding_number = get_winding_number(polygon, one_point, original_normal, eps);
+               int winding_number = get_winding_number(polygon, one_point, original_normal, find_direction && original_normal.is_hemispherical(), eps);
 
                // if merging, find largest magnitude of winding number
                // if they are -W and +W, chose the positive
@@ -1655,26 +1762,32 @@ void sample_colors(col_geom_v &sgeom, const col_geom_v &cgeom, const int &planar
       if ((winding_number < 0 && winding_total > 0) || (winding_number > 0 && winding_total < 0))
          reverse(sgeom.raw_faces()[i].begin(), sgeom.raw_faces()[i].end());
 
-      if (!color_by_winding_number) { 
-         if ((winding_rule != INT_MAX)) {
-            // if cols.size() is not zero then there were hits
-            if (cols.size()) {
-               if (!winding_rule_filter(winding_rule, winding_total))
-                  cols.clear();
-            }
-            // the magic. if there are no hits
-            // if winding rule is less than -5 then zero is included so color it average
-            else
-            if (winding_rule < -5)
-               cols.push_back(average_color_all_faces);
+      if (winding_div2)
+         winding_total = (winding_total+1)/2;
+
+      if (winding_total < winding_total_min)
+         winding_total_min = winding_total;
+      if (winding_total > winding_total_max)
+         winding_total_max = winding_total;
+
+      if ((winding_rule != INT_MAX)) {
+         // if cols.size() is not zero then there were hits
+         if (cols.size()) {
+            if (!winding_rule_filter(winding_rule_mode, winding_rule, winding_total))
+               cols.clear();
          }
+         // the magic. if there are no hits
+         // if winding rule is less than 5 then zero is included so color it average
+         else
+         if ((winding_rule_mode == 0 && winding_rule > 5) || (winding_rule_mode > 0 && winding_rule == 0))
+            cols.push_back(average_color_all_faces);
       }
 
       int sz = cols.size();
 
       col_val col;
 
-      if (color_by_winding_number) {
+      if (color_by_winding_number && sz) {
          if (winding_total >= 0)
             col.set_idx(winding_total);
          else
@@ -1708,11 +1821,15 @@ void collect_original_normals(vector<xnormal> &original_normals, const vector<in
 
 void blend_overlapping_faces(col_geom_v &geom, const vector<vector<int> > &coplanar_faces_list, const vector<xnormal> &coplanar_normals, const fnormals &fnormals, const vec3d &center,
    const int &planar_merge_type, const int &polygon_fill_type,
-   const bool &hole_detection, const int &winding_rule, const bool &color_by_winding_number, col_val &zero_density_color, const bool &zero_density_force_blend, const double &brightness_adj,
+   const bool &hole_detection, const int &winding_rule_mode, const int &winding_rule, const bool &color_by_winding_number, const bool &find_direction, const bool &winding_div2, const bool &verbose,
+   col_val &zero_density_color, const bool &zero_density_force_blend, const double &brightness_adj,
    const int &color_system_mode, const double &sat_power, const double &sat_threshold, const double &value_power, const double &value_advance, const int &alpha_mode, const bool &ryb_mode, const double &eps)
 {
    col_geom_v bgeom;
    vector<int> deleted_faces;
+
+   int winding_number_min = INT_MAX;
+   int winding_number_max = INT_MIN;
    
    for(unsigned int i=0; i<coplanar_faces_list.size(); i++) {
       // load a geom with color faces. keep it and copy it.
@@ -1731,12 +1848,19 @@ void blend_overlapping_faces(col_geom_v &geom, const vector<vector<int> > &copla
 
       make_skeleton(sgeom);
 
+      // edges with duplicate indexes can happen if faces have duplicate sequential indexes
+      delete_duplicate_index_edges(geom);
+
       if (connectors.size())
          add_hole_connectors(sgeom, connectors);
       connectors.clear();
 
       // duplicate vertices and edges can cause problems
       sort_merge_elems(sgeom, "ve", 0, eps);
+
+      // sort merge can destill more duplicate indexes
+      delete_duplicate_index_edges(sgeom);
+
       mesh_verts(sgeom, eps);
       mesh_edges(sgeom, eps);
 
@@ -1751,9 +1875,19 @@ void blend_overlapping_faces(col_geom_v &geom, const vector<vector<int> > &copla
       // original normals are needed for sampling colors
       vector<xnormal> original_normals;
       collect_original_normals(original_normals, coplanar_faces_list[i], fnormals);
+
+      int winding_total_min = INT_MAX;
+      int winding_total_max = INT_MIN;
       sample_colors(sgeom, cgeom, planar_merge_type, original_normals, nonconvex_faces, center,
-                    polygon_fill_type, winding_rule, color_by_winding_number, zero_density_color, zero_density_force_blend, brightness_adj,
-                    color_system_mode, sat_power, sat_threshold, value_power, value_advance, alpha_mode, ryb_mode, eps);
+                    polygon_fill_type, winding_rule_mode, winding_rule, color_by_winding_number, find_direction, winding_div2,
+                    zero_density_color, zero_density_force_blend, brightness_adj,
+                    color_system_mode, sat_power, sat_threshold, value_power, value_advance, alpha_mode, ryb_mode,
+                    winding_total_min, winding_total_max, eps);
+
+      if (winding_total_min < winding_number_min)
+         winding_number_min = winding_total_min;
+      if (winding_total_max > winding_number_max)
+         winding_number_max = winding_total_max;
  
       bgeom.append(sgeom);
 
@@ -1763,10 +1897,16 @@ void blend_overlapping_faces(col_geom_v &geom, const vector<vector<int> > &copla
 
    geom.delete_faces(deleted_faces);
    geom.append(bgeom);
+
+   if (verbose) {
+      fprintf(stderr,"minimum winding number = %d\n",winding_number_min);
+      fprintf(stderr,"maximum winding number = %d\n",winding_number_max);
+   }
 }
 
 void planar_merge(col_geom_v &geom, const int &planar_merge_type, const int &polygon_fill_type, const bool &hole_detection, const vec3d &center,
-   const int &winding_rule, const bool &color_by_winding_number, col_val &zero_density_color, const bool &zero_density_force_blend, const double &brightness_adj,
+   const int &winding_rule_mode, const int &winding_rule, const bool &color_by_winding_number, const bool &find_direction, const bool &winding_div2, const bool &verbose,
+   col_val &zero_density_color, const bool &zero_density_force_blend, const double &brightness_adj,
    const int &color_system_mode, const double &sat_power, const double &sat_threshold, const double &value_power, const double &value_advance, const int &alpha_mode, const bool &ryb_mode, const double &eps)
 {
    fnormals face_normals(geom, center, eps);
@@ -1776,42 +1916,36 @@ void planar_merge(col_geom_v &geom, const int &planar_merge_type, const int &pol
    
    bool point_outward = true;
    bool fold_normals = false;
+   bool fold_normals_hemispherical = true;
    bool filtered = true;
-   build_coplanar_faces_list(geom, coplanar_faces_list, coplanar_normals, face_normals, point_outward, fold_normals, filtered, eps);
+   build_coplanar_faces_list(geom, coplanar_faces_list, coplanar_normals, face_normals, point_outward, fold_normals, fold_normals_hemispherical, filtered, eps);
 
    blend_overlapping_faces(geom, coplanar_faces_list, coplanar_normals, face_normals, center,
                            planar_merge_type, polygon_fill_type,
-                           hole_detection, winding_rule, color_by_winding_number, zero_density_color, zero_density_force_blend, brightness_adj,
+                           hole_detection, winding_rule_mode, winding_rule, color_by_winding_number, find_direction, winding_div2, verbose,
+                           zero_density_color, zero_density_force_blend, brightness_adj,
                            color_system_mode, sat_power, sat_threshold, value_power, value_advance, alpha_mode, ryb_mode, eps);
 }
 
-void color_by_plane(col_geom_v &geom, const char &face_color_method, const int &face_opacity, const color_map_multi &map, const vec3d &center, const double &eps)
+void color_by_plane(col_geom_v &geom, const char &face_color_method, const color_map_multi &map, const vec3d &center, const double &eps)
 {
    fnormals fnormals(geom, center, eps);
 
    vector<vector<int> > coplanar_faces_list;
    vector<xnormal> coplanar_normals;
-   
-   bool point_outward = true; // if face_color_method == 's'
-   bool fold_normals = (face_color_method == 'o') ? true : false;
+  
+   //bool point_outward = true; // always do this
+   bool point_outward = (face_color_method == 'n') ? false : true;
+   bool fold_normals_hemispherical = (face_color_method == 'n') ? false : true;
    bool filtered = (face_color_method == 'p') ? true : false;
-   build_coplanar_faces_list(geom, coplanar_faces_list, coplanar_normals, fnormals, point_outward, fold_normals, filtered, eps);
+   bool fold_normals = (face_color_method == 'o') ? true : false;
+   build_coplanar_faces_list(geom, coplanar_faces_list, coplanar_normals, fnormals, point_outward, fold_normals, fold_normals_hemispherical, filtered, eps);
    
    for(unsigned int i=0; i<coplanar_faces_list.size(); i++) {
       for(unsigned int j=0; j<coplanar_faces_list[i].size(); j++) {
          int k = coplanar_faces_list[i][j];
          col_val col = map.get_col(i);
          geom.set_f_col(k,col);
-      }
-   }
-
-   // transparency
-   if (face_opacity != 255) {
-      for (unsigned int i=0;i<geom.faces().size();i++) {
-         col_val col = geom.get_f_col(i);
-         if (col.is_val())
-            col = col_val(col[0],col[1],col[2],face_opacity);
-         geom.set_f_col(i,col);
       }
    }
 }
@@ -2332,31 +2466,14 @@ void do_cmy_mode(col_geom_v &geom, const bool &ryb_mode, const char &edge_blendi
          geom.set_v_col(i,rgb_complement(geom.get_v_col(i), ryb_mode));
 }
 
-// zero area faces cause trouble in blending
-col_geom_v separate_zero_area_faces(col_geom_v &geom, const double &eps)
+void apply_transparency(col_geom_v &geom, int face_opacity)
 {
-   const vector<vector<int> > &faces = geom.faces();
-
-   col_geom_v zgeom;
-   zgeom.add_verts(geom.verts());
-
-   vector<int> deleted_faces;
-   for(unsigned int i=0; i<faces.size(); i++) {
-      vector<int> vec(1);
-      vec[0] = i;
-      geom_v polygon = faces_to_geom(geom, vec);
-      polygon.triangulate();
-      geom_info info(polygon);
-      if (info.face_areas().sum < eps) {
-         zgeom.add_col_face(faces[i],geom.get_f_col(i));
-         deleted_faces.push_back(i);
-      }
+   for (unsigned int i=0;i<geom.faces().size();i++) {
+      col_val col = geom.get_f_col(i);
+      if (col.is_val() && !col.is_inv())
+         col = col_val(col[0],col[1],col[2],face_opacity);
+      geom.set_f_col(i,col);
    }
-   zgeom.delete_verts(zgeom.get_info().get_free_verts());
-
-   geom.delete_faces(deleted_faces);
-
-   return zgeom;
 }
 
 int main(int argc, char *argv[])
@@ -2379,7 +2496,7 @@ int main(int argc, char *argv[])
 
    // default center is centroid
    if (!opts.center.is_set())
-      opts.center = centroid(*geom.get_verts());
+      opts.center = centroid(geom.verts());
 
    // collect free edges get deleted later. save them if they exist
    // color merge
@@ -2402,22 +2519,18 @@ int main(int argc, char *argv[])
    }
 
    if (opts.face_color_method)
-      color_by_plane(geom, opts.face_color_method, opts.face_opacity, opts.map, opts.center, opts.epsilon);
+      color_by_plane(geom, opts.face_color_method, opts.map, opts.center, opts.epsilon);
 
    int original_edges_size = 0;
    if (opts.planar_merge_type) {
-      // seperate out zero area faces which cause trouble in blend
-      col_geom_v zgeom = separate_zero_area_faces(geom, opts.epsilon);
-
       // missing edges are added so that they won't blend to invisible
       geom.add_missing_impl_edges();
       original_edges_size = geom.edges().size();
 
       planar_merge(geom, opts.planar_merge_type, opts.polygon_fill_type, opts.hole_detection, opts.center,
-                   opts.winding_rule, opts.color_by_winding_number, opts.zero_density_color, opts.zero_density_force_blend, opts.brightness_adj,
+                   opts.winding_rule_mode, opts.winding_rule, opts.color_by_winding_number, opts.find_direction, opts.winding_div2, opts.verbose,
+                   opts.zero_density_color, opts.zero_density_force_blend, opts.brightness_adj,
                    opts.color_system_mode, opts.sat_power, opts.sat_threshold, opts.value_power, opts.value_advance, opts.alpha_mode, opts.ryb_mode, opts.epsilon);
-
-      geom.append(zgeom);
    }
 
    string elems;
@@ -2456,6 +2569,10 @@ int main(int argc, char *argv[])
 
    if (opts.hole_detection)
       make_hole_connectors_invisible(geom);
+
+   // transparency
+   if (opts.face_opacity != 255)
+      apply_transparency(geom, opts.face_opacity);
 
    if(!geom.write(opts.ofile, errmsg))
       opts.error(errmsg);

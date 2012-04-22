@@ -31,25 +31,24 @@ winding rule, include face parts according to winding number
 .IP
 odd, even, positive, negative, nonzero, zero (default: none)
 zodd, zeven, zpositive, znegative (includes zero)
-or include absolute value or higher of a positive integer
+or symbol proceeding integer: eq, ne, gt, ge, lt, le  meaning
+equal, not equal, greater than, greater than or equal, less
+than, less than or equal. use 'a' for absolute value  e.g. gea2
 .TP
-\fB\-O\fR <opt>
-orient the faces first (if possible) then for volume
-.IP
-positive=1, negative=2, reverse=3, or use flip=4
-which reverses the orientation of the model as it was input
+\fB\-z\fR
+use direction of normals for hemispherical winding numbers
+.TP
+\fB\-V\fR
+verbose output (of minimum and maximum winding numbers)
 .TP
 \fB\-H\fR
 turn off hole detection
-.TP
-\fB\-C\fR <xyz>
-center of model, in form 'X,Y,Z' (default: centroid)
 .TP
 \fB\-S\fR
 stitch seams created by tiling or merging
 .TP
 \fB\-I\fR
-rid faces of extra in line vertices
+rid faces of extra in\-line vertices
 .TP
 \fB\-e\fR <opt>
 blend existing explicit edges and/or vertices using blend options
@@ -64,6 +63,15 @@ V \- also blend invisible vertices, s \- strip edges and vertices
 .TP
 \fB\-D\fR
 delete invisible faces created by winding rule
+.TP
+\fB\-O\fR <opt>
+orient the faces first (if possible) then for volume
+.IP
+positive=1, negative=2, reverse=3, or use flip=4
+which reverses the orientation of the model as it was input
+.TP
+\fB\-C\fR <xyz>
+center of model, in form 'X,Y,Z' (default: centroid)
 .TP
 \fB\-l\fR <lim>
 minimum distance for unique vertex locations as negative exponent
@@ -122,13 +130,11 @@ Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
 \fB\-f\fR <opt>
 take face colors from map (processed before \fB\-d\fR)
 .IP
-s \- unique color for faces with same normals
-o \- unique color for faces on same and opposite normals
+n \- unique color for faces with same normals
 p \- unique color for faces on same planes only
+o \- unique color for faces on same and opposite normals
 .HP
 \fB\-T\fR <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
-.HP
-\fB\-m\fR <maps> color maps for faces to be tried in turn (default: compound)
 .TP
 \fB\-Z\fR <col>
 color for areas found colorless by winding (default: invisible)
@@ -136,7 +142,9 @@ color for areas found colorless by winding (default: invisible)
 key word: b \- force a color blend
 .TP
 \fB\-W\fR
-color by winding number. Overrides all other color options
+color by winding number, using maps (overrides option \fB\-f\fR)
+.HP
+\fB\-m\fR <maps> color maps for faces to be tried in turn (default: compound)
 .HP
 \fB\-n\fR <maps> maps for negative winding numbers (default: rng17_S0V0.5:0)
 .IP

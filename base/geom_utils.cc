@@ -584,7 +584,7 @@ bool wn_PnPoly(const geom_if &polygon, const vec3d &P, const int &idx, int &wind
 // geom contains one polygon
 // if points is empty, all serial triads of points in a face are tested and the highest magnitude winding number is returned
 // if complex polygon has both -W and +W winding, +W is returned
-int get_winding_number(const geom_if &polygn, const vector<vec3d> &pnts, const xnormal &face_normal, double eps)
+int get_winding_number(const geom_if &polygn, const vector<vec3d> &pnts, const xnormal &face_normal, bool find_direction, double eps)
 {
    // make copies
    geom_v polygon = polygn;
@@ -607,8 +607,20 @@ int get_winding_number(const geom_if &polygn, const vector<vec3d> &pnts, const x
       psz = (int)points.size();
    }
 
+   vec3d norm = face_normal.outward().unit();
+   double z = 1;
+   if (find_direction) {
+      double test = 0.0;
+      for(int i=2; i>=0; i--) { 
+         test = norm[i];
+         if (!double_eq(test,0.0,eps))
+            break;
+      }
+      z = (test > 0.0) ? 1 : -1; 
+   }
+
    // rotate polygon to face forward
-   mat3d trans = mat3d::rot(face_normal.outward().unit()+polygon.face_cent(0), vec3d(0,0,1));
+   mat3d trans = mat3d::rot(norm+polygon.face_cent(0), vec3d(0,0,z));
    polygon.transform(trans);
 
    // also rotate points per matrix
