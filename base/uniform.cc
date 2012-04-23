@@ -348,20 +348,20 @@ void great_dirhombicosidodecahedron_vertex_set(geom_if &geom)
 }
 
 // tetrahedron
-void U01(geom_if &geom)
+void U1(geom_if &geom)
 {
    vector<vec3d> vlist;
    vlist.push_back(vec3d(1,1,1));
 
-   calculate_coords(geom, vlist, NONE, EVEN);
+   calculate_coords(geom, vlist, NONE, ODD);
 
-   int faces3[] = { 0,1,3, 1,0,2, 2,0,3, 3,1,2,
+   int faces3[] = { 3,1,0, 2,0,1, 3,0,2, 2,1,3,
                     };
    add_faces(geom, 3, 4, faces3);
 }
 
 // truncated tetrahedron
-void U02(geom_if &geom)
+void U2(geom_if &geom)
 {
    vector<vec3d> vlist;
    vlist.push_back(vec3d(1,1,3));
@@ -378,7 +378,7 @@ void U02(geom_if &geom)
 }
 
 // octahemioctahedron
-void U03(geom_if &geom)
+void U3(geom_if &geom)
 {
    cuboctahedron_vertex_set(geom);
 
@@ -393,7 +393,7 @@ void U03(geom_if &geom)
 }
 
 // tetrahemihexahedron
-void U04(geom_if &geom)
+void U4(geom_if &geom)
 {
    octahedron_vertex_set(geom);
 
@@ -406,7 +406,7 @@ void U04(geom_if &geom)
 }
 
 //   octahedron
-void U05(geom_if &geom)
+void U5(geom_if &geom)
 {
    octahedron_vertex_set(geom);
 
@@ -417,7 +417,7 @@ void U05(geom_if &geom)
 }
 
 // cube
-void U06(geom_if &geom)
+void U6(geom_if &geom)
 {
    vector<vec3d> vlist;
    vlist.push_back(vec3d(1,1,1));
@@ -430,7 +430,7 @@ void U06(geom_if &geom)
 }
 
 //   cuboctahedron
-void U07(geom_if &geom)
+void U7(geom_if &geom)
 {
    cuboctahedron_vertex_set(geom);
 
@@ -445,7 +445,7 @@ void U07(geom_if &geom)
 }
 
 // truncated octahedron
-void U08(geom_if &geom)
+void U8(geom_if &geom)
 {
    vector<vec3d> vlist;
    vlist.push_back(vec3d(0,1,2));
@@ -464,7 +464,7 @@ void U08(geom_if &geom)
 }
 
 // truncated cube
-void U09(geom_if &geom)
+void U9(geom_if &geom)
 {
    truncated_cube_vertex_set(geom);
 
@@ -2464,367 +2464,121 @@ void U75(geom_if &geom)
 
 void U76(geom_if &geom)
 {
-   make_resource_geom(geom, "pri5");
+   geom.read_resource("std_pri5");
 }
 
 void U77(geom_if &geom)
 {
-   make_resource_geom(geom, "ant5");
+   geom.read_resource("std_ant5");
 }
 
 void U78(geom_if &geom)
 {
-   make_resource_geom(geom, "pri5/2");
+   geom.read_resource("std_pri5/2");
 }
 
 void U79(geom_if &geom)
 {
-   make_resource_geom(geom, "ant5/2");
+   geom.read_resource("std_ant5/2");
 }
 
 void U80(geom_if &geom)
 {
-   make_resource_geom(geom, "ant5/3");
+   geom.read_resource("std_pri5/3");
 }
 
-Uniform uniform_table[] = {
-   { "3|2 3",           6,  15,   1, "tetrahedron",                             "tetrahedron", },
-   { "2 3|3",           7,  16,   6, "truncated tetrahedron",                   "triakistetrahedron", },
-   { "3/2 3|3",         8,  37,  68, "octahemioctahedron",                      "octahemioctacron", },
-   { "3/2 3|2",         9,  36,  67, "tetrahemihexahedron",                     "tetrahemihexacron", },
-   { "4|2 3",          10,  17,   2, "octahedron",                              "cube", },
-   { "3|2 4",          11,  18,   3, "cube",                                    "octahedron", },
-   { "2|3 4",          12,  19,  11, "cuboctahedron",                           "rhombic dodecahedron", },
-   { "2 4|3",          13,  20,   7, "truncated octahedron",                    "tetrakishexahedron", },
-   { "2 3|4",          14,  21,   8, "truncated cube",                          "triakisoctahedron", },
-   { "3 4|2",          15,  22,  13, "rhombicuboctahedron",                     "deltoidal icositetrahedron", },
-   { "2 3 4|",         16,  23,  15, "truncated cuboctahedron",                 "disdyakisdodecahedron", },
-   { "|2 3 4",         17,  24,  17, "snub cube",                               "pentagonal icositetrahedron", },
-   { "3/2 4|4",        18,  38,  69, "small cubicuboctahedron",                 "small hexacronic icositetrahedron", },
-   { "3 4|4/3",        19,  50,  77, "great cubicuboctahedron",                 "great hexacronic icositetrahedron", },
-   { "4/3 4|3",        20,  51,  78, "cubohemioctahedron",                      "hexahemioctacron", },
-   { "4/3 3 4|",       21,  52,  79, "cubitruncated cuboctahedron",             "tetradyakishexahedron", },
-   { "3/2 4|2",        22,  59,  85, "great rhombicuboctahedron",               "great deltoidal icositetrahedron", },
-   { "3/2 2 4|",       23,  60,  86, "small rhombihexahedron",                  "small rhombihexacron", },
-   { "2 3|4/3",        24,  66,  92, "stellated truncated hexahedron",          "great triakisoctahedron", },
-   { "4/3 2 3|",       25,  67,  93, "great truncated cuboctahedron",           "great disdyakisdodecahedron", },
-   { "4/3 3/2 2|",     26,  82, 103, "great rhombihexahedron",                  "great rhombihexacron", },
-   { "5|2 3",          27,  25,   4, "icosahedron",                             "dodecahedron", },
-   { "3|2 5",          28,  26,   5, "dodecahedron",                            "icosahedron", },
-   { "2|3 5",          29,  28,  12, "icosidodecahedron",                       "rhombic triacontahedron", },
-   { "2 5|3",          30,  27,   9, "truncated icosahedron",                   "pentakisdodecahedron", },
-   { "2 3|5",          31,  29,  10, "truncated dodecahedron",                  "triakisicosahedron", },
-   { "3 5|2",          32,  30,  14, "rhombicosidodecahedron",                  "deltoidal hexecontahedron", },
-   { "2 3 5|",         33,  31,  16, "truncated icosidodecahedron",             "disdyakistriacontahedron", },
-   { "|2 3 5",         34,  32,  18, "snub dodecahedron",                       "pentagonal hexecontahedron", },
-   { "3|5/2 3",        35,  39,  70, "small ditrigonal icosidodecahedron",      "small triambic icosahedron", },
-   { "5/2 3|3",        36,  40,  71, "small icosicosidodecahedron",             "small icosacronic hexecontahedron", },
-   { "|5/2 3 3",       37,  41, 110, "small snub icosicosidodecahedron",        "small hexagonal hexecontahedron", },
-   { "3/2 5|5",        38,  42,  72, "small dodecicosidodecahedron",            "small dodecacronic hexecontahedron", },
-   { "5|2 5/2",        39,  43,  20, "small stellated dodecahedron",            "great dodecahedron", },
-   { "5/2|2 5",        40,  44,  21, "great dodecahedron",                      "small stellated dodecahedron", },
-   { "2|5/2 5",        41,  45,  73, "great dodecadodecahedron",                "medial rhombic triacontahedron", },
-   { "2 5/2|5",        42,  47,  75, "truncated great dodecahedron",            "small stellapentakisdodecahedron", },
-   { "5/2 5|2",        43,  48,  76, "rhombidodecadodecahedron",                "medial deltoidal hexecontahedron", },
-   { "2 5/2 5|",       44,  46,  74, "small rhombidodecahedron",                "small rhombidodecacron", },
-   { "|2 5/2 5",       45,  49, 111, "snub dodecadodecahedron",                 "medial pentagonal hexecontahedron", },
-   { "3|5/3 5",        46,  53,  80, "ditrigonal dodecadodecahedron",           "medial triambic icosahedron", },
-   { "3 5|5/3",        47,  54,  81, "great ditrigonal dodecicosidodecahedron", "great ditrigonal dodecacronic hexecontahedron", },
-   { "5/3 3|5",        48,  55,  82, "small ditrigonal dodecicosidodecahedron", "small ditrigonal dodecacronic hexecontahedron", },
-   { "5/3 5|3",        49,  56,  83, "icosidodecadodecahedron",                 "medial icosacronic hexecontahedron", },
-   { "5/3 3 5|",       50,  57,  84, "icositruncated dodecadodecahedron",       "tridyakisicosahedron", },
-   { "|5/3 3 5",       51,  58, 112, "snub icosidodecadodecahedron",            "medial hexagonal hexecontahedron", },
-   { "3/2|3 5",        52,  61,  87, "great ditrigonal icosidodecahedron",      "great triambic icosahedron", },
-   { "3/2 5|3",        53,  62,  88, "great icosicosidodecahedron",             "great icosacronic hexecontahedron", },
-   { "3/2 3|5",        54,  63,  89, "small icosihemidodecahedron",             "small icosihemidodecacron", },
-   { "3/2 3 5|",       55,  64,  90, "small dodecicosahedron",                  "small dodecicosacron", },
-   { "5/4 5|5",        56,  65,  91, "small dodecahemidodecahedron",            "small dodecahemidodecacron", },
-   { "3|2 5/2",        57,  68,  22, "great stellated dodecahedron",            "great icosahedron", },
-   { "5/2|2 3",        58,  69,  41, "great icosahedron",                       "great stellated dodecahedron", },
-   { "2|5/2 3",        59,  70,  94, "great icosidodecahedron",                 "great rhombic triacontahedron", },
-   { "2 5/2|3",        60,  71,  95, "great truncated icosahedron",             "great stellapentakisdodecahedron", },
-   { "2 5/2 3|",       61,  72,  96, "rhombicosahedron",                        "rhombicosacron", },
-   { "|2 5/2 3",       62,  88, 116, "great snub icosidodecahedron",            "great pentagonal hexecontahedron", },
-   { "2 5|5/3",        63,  74,  97, "small stellated truncated dodecahedron",  "great pentakisdodekahedron", },
-   { "5/3 2 5|",       64,  75,  98, "truncated dodecadodecahedron",            "medial disdyakistriacontahedron", },
-   { "|5/3 2 5",       65,  76, 114, "inverted snub dodecadodecahedron",        "medial inverted pentagonal hexecontahedron", },
-   { "5/2 3|5/3",      66,  77,  99, "great dodecicosidodecahedron",            "great dodecacronic hexecontahedron", },
-   { "5/3 5/2|3",      67,  78, 100, "small dodecahemicosahedron",              "small dodecahemicosacron", },
-   { "5/3 5/2 3|",     68,  79, 101, "great dodecicosahedron",                  "great dodecicosacron", },
-   { "|5/3 5/2 3",     69,  80, 115, "great snub dodecicosidodecahedron",       "great hexagonal hexecontahedron", },
-   { "5/4 5|3",        70,  81, 102, "great dodecahemicosahedron",              "great dodecahemicosacron", },
-   { "2 3|5/3",        71,  83, 104, "great stellated truncated dodecahedron",  "great triakisicosahedron", },
-   { "5/3 3|2",        72,  84, 105, "great rhombicosidodecahedron",            "great deltoidal hexecontahedron", },
-   { "5/3 2 3|",       73,  87, 108, "great truncated icosidodecahedron",       "great disdyakistriacontahedron", },
-   { "|5/3 2 3",       74,  73, 113, "great inverted snub icosidodecahedron",   "great inverted pentagonal hexecontahedron", },
-   { "5/3 5/2|5/3",    75,  86, 107, "great dodecahemidodecahedron",            "great dodecahemidodecacron", },
-   { "3/2 3|5/3",      76,  85, 106, "great icosihemidodecahedron",             "great icosihemidodecacron", },
-   { "|3/2 3/2 5/2",   77,  91, 118, "small retrosnub icosicosidodecahedron",   "small hexagrammic hexecontahedron", },
-   { "3/2 5/3 2|",     78,  89, 109, "great rhombidodecahedron",                "great rhombidodecacron", },
-   { "|3/2 5/3 2",     79,  90, 117, "great retrosnub icosidodecahedron",       "great pentagrammic hexecontahedron", },
-   { "3/2 5/3 3 5/2",  80,  92, 119, "great dirhombicosidodecahedron",          "great dirhombicosidodecacron", },
-   { "2 5|2",           1,   0,   0, "pentagonal prism",                        "pentagonal dipyramid", },
-   { "|2 2 5",          2,   0,   0, "pentagonal antiprism",                    "pentagonal deltohedron", },
-   { "2 5/2|2",         3,   0,   0, "pentagrammic prism",                      "pentagrammic dipyramid", },
-   { "|2 2 5/2",        4,   0,   0, "pentagrammic antiprism",                  "pentagrammic deltohedron", },
-   { "|2 2 5/3",        5,   0,   0, "pentagrammic crossed antiprism",          "pentagrammic concave deltohedron", },
+UniformItem uniform_item_list[] = {
+   { U1,  "3|2 3",           6,  15,   1, "tetrahedron",                             "tetrahedron", },
+   { U2,  "2 3|3",           7,  16,   6, "truncated tetrahedron",                   "triakistetrahedron", },
+   { U3,  "3/2 3|3",         8,  37,  68, "octahemioctahedron",                      "octahemioctacron", },
+   { U4,  "3/2 3|2",         9,  36,  67, "tetrahemihexahedron",                     "tetrahemihexacron", },
+   { U5,  "4|2 3",          10,  17,   2, "octahedron",                              "cube", },
+   { U6,  "3|2 4",          11,  18,   3, "cube",                                    "octahedron", },
+   { U7,  "2|3 4",          12,  19,  11, "cuboctahedron",                           "rhombic dodecahedron", },
+   { U8,  "2 4|3",          13,  20,   7, "truncated octahedron",                    "tetrakishexahedron", },
+   { U9,  "2 3|4",          14,  21,   8, "truncated cube",                          "triakisoctahedron", },
+   { U10, "3 4|2",          15,  22,  13, "rhombicuboctahedron",                     "deltoidal icositetrahedron", },
+   { U11, "2 3 4|",         16,  23,  15, "truncated cuboctahedron",                 "disdyakisdodecahedron", },
+   { U12, "|2 3 4",         17,  24,  17, "snub cube",                               "pentagonal icositetrahedron", },
+   { U13, "3/2 4|4",        18,  38,  69, "small cubicuboctahedron",                 "small hexacronic icositetrahedron", },
+   { U14, "3 4|4/3",        19,  50,  77, "great cubicuboctahedron",                 "great hexacronic icositetrahedron", },
+   { U15, "4/3 4|3",        20,  51,  78, "cubohemioctahedron",                      "hexahemioctacron", },
+   { U16, "4/3 3 4|",       21,  52,  79, "cubitruncated cuboctahedron",             "tetradyakishexahedron", },
+   { U17, "3/2 4|2",        22,  59,  85, "great rhombicuboctahedron",               "great deltoidal icositetrahedron", },
+   { U18, "3/2 2 4|",       23,  60,  86, "small rhombihexahedron",                  "small rhombihexacron", },
+   { U19, "2 3|4/3",        24,  66,  92, "stellated truncated hexahedron",          "great triakisoctahedron", },
+   { U20, "4/3 2 3|",       25,  67,  93, "great truncated cuboctahedron",           "great disdyakisdodecahedron", },
+   { U21, "4/3 3/2 2|",     26,  82, 103, "great rhombihexahedron",                  "great rhombihexacron", },
+   { U22, "5|2 3",          27,  25,   4, "icosahedron",                             "dodecahedron", },
+   { U23, "3|2 5",          28,  26,   5, "dodecahedron",                            "icosahedron", },
+   { U24, "2|3 5",          29,  28,  12, "icosidodecahedron",                       "rhombic triacontahedron", },
+   { U25, "2 5|3",          30,  27,   9, "truncated icosahedron",                   "pentakisdodecahedron", },
+   { U26, "2 3|5",          31,  29,  10, "truncated dodecahedron",                  "triakisicosahedron", },
+   { U27, "3 5|2",          32,  30,  14, "rhombicosidodecahedron",                  "deltoidal hexecontahedron", },
+   { U28, "2 3 5|",         33,  31,  16, "truncated icosidodecahedron",             "disdyakistriacontahedron", },
+   { U29, "|2 3 5",         34,  32,  18, "snub dodecahedron",                       "pentagonal hexecontahedron", },
+   { U30, "3|5/2 3",        35,  39,  70, "small ditrigonal icosidodecahedron",      "small triambic icosahedron", },
+   { U31, "5/2 3|3",        36,  40,  71, "small icosicosidodecahedron",             "small icosacronic hexecontahedron", },
+   { U32, "|5/2 3 3",       37,  41, 110, "small snub icosicosidodecahedron",        "small hexagonal hexecontahedron", },
+   { U33, "3/2 5|5",        38,  42,  72, "small dodecicosidodecahedron",            "small dodecacronic hexecontahedron", },
+   { U34, "5|2 5/2",        39,  43,  20, "small stellated dodecahedron",            "great dodecahedron", },
+   { U35, "5/2|2 5",        40,  44,  21, "great dodecahedron",                      "small stellated dodecahedron", },
+   { U36, "2|5/2 5",        41,  45,  73, "great dodecadodecahedron",                "medial rhombic triacontahedron", },
+   { U37, "2 5/2|5",        42,  47,  75, "truncated great dodecahedron",            "small stellapentakisdodecahedron", },
+   { U38, "5/2 5|2",        43,  48,  76, "rhombidodecadodecahedron",                "medial deltoidal hexecontahedron", },
+   { U39, "2 5/2 5|",       44,  46,  74, "small rhombidodecahedron",                "small rhombidodecacron", },
+   { U40, "|2 5/2 5",       45,  49, 111, "snub dodecadodecahedron",                 "medial pentagonal hexecontahedron", },
+   { U41, "3|5/3 5",        46,  53,  80, "ditrigonal dodecadodecahedron",           "medial triambic icosahedron", },
+   { U42, "3 5|5/3",        47,  54,  81, "great ditrigonal dodecicosidodecahedron", "great ditrigonal dodecacronic hexecontahedron", },
+   { U43, "5/3 3|5",        48,  55,  82, "small ditrigonal dodecicosidodecahedron", "small ditrigonal dodecacronic hexecontahedron", },
+   { U44, "5/3 5|3",        49,  56,  83, "icosidodecadodecahedron",                 "medial icosacronic hexecontahedron", },
+   { U45, "5/3 3 5|",       50,  57,  84, "icositruncated dodecadodecahedron",       "tridyakisicosahedron", },
+   { U46, "|5/3 3 5",       51,  58, 112, "snub icosidodecadodecahedron",            "medial hexagonal hexecontahedron", },
+   { U47, "3/2|3 5",        52,  61,  87, "great ditrigonal icosidodecahedron",      "great triambic icosahedron", },
+   { U48, "3/2 5|3",        53,  62,  88, "great icosicosidodecahedron",             "great icosacronic hexecontahedron", },
+   { U49, "3/2 3|5",        54,  63,  89, "small icosihemidodecahedron",             "small icosihemidodecacron", },
+   { U50, "3/2 3 5|",       55,  64,  90, "small dodecicosahedron",                  "small dodecicosacron", },
+   { U51, "5/4 5|5",        56,  65,  91, "small dodecahemidodecahedron",            "small dodecahemidodecacron", },
+   { U52, "3|2 5/2",        57,  68,  22, "great stellated dodecahedron",            "great icosahedron", },
+   { U53, "5/2|2 3",        58,  69,  41, "great icosahedron",                       "great stellated dodecahedron", },
+   { U54, "2|5/2 3",        59,  70,  94, "great icosidodecahedron",                 "great rhombic triacontahedron", },
+   { U55, "2 5/2|3",        60,  71,  95, "great truncated icosahedron",             "great stellapentakisdodecahedron", },
+   { U56, "2 5/2 3|",       61,  72,  96, "rhombicosahedron",                        "rhombicosacron", },
+   { U57, "|2 5/2 3",       62,  88, 116, "great snub icosidodecahedron",            "great pentagonal hexecontahedron", },
+   { U58, "2 5|5/3",        63,  74,  97, "small stellated truncated dodecahedron",  "great pentakisdodekahedron", },
+   { U59, "5/3 2 5|",       64,  75,  98, "truncated dodecadodecahedron",            "medial disdyakistriacontahedron", },
+   { U60, "|5/3 2 5",       65,  76, 114, "inverted snub dodecadodecahedron",        "medial inverted pentagonal hexecontahedron", },
+   { U61, "5/2 3|5/3",      66,  77,  99, "great dodecicosidodecahedron",            "great dodecacronic hexecontahedron", },
+   { U62, "5/3 5/2|3",      67,  78, 100, "small dodecahemicosahedron",              "small dodecahemicosacron", },
+   { U63, "5/3 5/2 3|",     68,  79, 101, "great dodecicosahedron",                  "great dodecicosacron", },
+   { U64, "|5/3 5/2 3",     69,  80, 115, "great snub dodecicosidodecahedron",       "great hexagonal hexecontahedron", },
+   { U65, "5/4 5|3",        70,  81, 102, "great dodecahemicosahedron",              "great dodecahemicosacron", },
+   { U66, "2 3|5/3",        71,  83, 104, "great stellated truncated dodecahedron",  "great triakisicosahedron", },
+   { U67, "5/3 3|2",        72,  84, 105, "great rhombicosidodecahedron",            "great deltoidal hexecontahedron", },
+   { U68, "5/3 2 3|",       73,  87, 108, "great truncated icosidodecahedron",       "great disdyakistriacontahedron", },
+   { U69, "|5/3 2 3",       74,  73, 113, "great inverted snub icosidodecahedron",   "great inverted pentagonal hexecontahedron", },
+   { U70, "5/3 5/2|5/3",    75,  86, 107, "great dodecahemidodecahedron",            "great dodecahemidodecacron", },
+   { U71, "3/2 3|5/3",      76,  85, 106, "great icosihemidodecahedron",             "great icosihemidodecacron", },
+   { U72, "|3/2 3/2 5/2",   77,  91, 118, "small retrosnub icosicosidodecahedron",   "small hexagrammic hexecontahedron", },
+   { U73, "3/2 5/3 2|",     78,  89, 109, "great rhombidodecahedron",                "great rhombidodecacron", },
+   { U74, "|3/2 5/3 2",     79,  90, 117, "great retrosnub icosidodecahedron",       "great pentagrammic hexecontahedron", },
+   { U75, "3/2 5/3 3 5/2",  80,  92, 119, "great dirhombicosidodecahedron",          "great dirhombicosidodecacron", },
+   { U76, "2 5|2",           1,   0,   0, "pentagonal prism",                        "pentagonal dipyramid", },
+   { U77, "|2 2 5",          2,   0,   0, "pentagonal antiprism",                    "pentagonal deltohedron", },
+   { U78, "2 5/2|2",         3,   0,   0, "pentagrammic prism",                      "pentagrammic dipyramid", },
+   { U79, "|2 2 5/2",        4,   0,   0, "pentagrammic antiprism",                  "pentagrammic deltohedron", },
+   { U80, "|2 2 5/3",        5,   0,   0, "pentagrammic crossed antiprism",          "pentagrammic concave deltohedron", },
 };
 
-int uni_poly::get_uniform_table(Uniform **uniform)
+uni_poly::uni_poly()
 {
-   *uniform = uniform_table;
-   return sizeof (uniform_table) / sizeof (uniform_table[0]);
+   uniform_items = uniform_item_list;
+   last_uniform = sizeof (uniform_item_list) / sizeof (uniform_item_list[0]);
 }
 
-int uni_poly::get_poly(geom_if &geom, int sym_no)
+int uni_poly::get_poly(geom_if &geom, int sym)
 {
-   sym_no++;
-
-   switch(sym_no) {
-      case 1:  U01(geom);
-               break;
-
-      case 2:  U02(geom);
-               break;
-
-      case 3:  U03(geom);
-               break;
-
-      case 4:  U04(geom);
-               break;
-
-      case 5:  U05(geom);
-               break;
-
-      case 6:  U06(geom);
-               break;
-
-      case 7:  U07(geom);
-               break;
-
-      case 8:  U08(geom);
-               break;
-
-      case 9:  U09(geom);
-               break;
-
-      case 10: U10(geom);
-               break;
-
-      case 11: U11(geom);
-               break;
-
-      case 12: U12(geom);
-               break;
-
-      case 13: U13(geom);
-               break;
-
-      case 14: U14(geom);
-               break;
-
-      case 15: U15(geom);
-               break;
-
-      case 16: U16(geom);
-               break;
-
-      case 17: U17(geom);
-               break;
-
-      case 18: U18(geom);
-               break;
-
-      case 19: U19(geom);
-               break;
-
-      case 20: U20(geom);
-               break;
-
-      case 21: U21(geom);
-               break;
-
-      case 22: U22(geom);
-               break;
-
-      case 23: U23(geom);
-               break;
-
-      case 24: U24(geom);
-               break;
-
-      case 25: U25(geom);
-               break;
-
-      case 26: U26(geom);
-               break;
-
-      case 27: U27(geom);
-               break;
-
-      case 28: U28(geom);
-               break;
-
-      case 29: U29(geom);
-               break;
-
-      case 30: U30(geom);
-               break;
-
-      case 31: U31(geom);
-               break;
-
-      case 32: U32(geom);
-               break;
-
-      case 33: U33(geom);
-               break;
-
-      case 34: U34(geom);
-               break;
-
-      case 35: U35(geom);
-               break;
-
-      case 36: U36(geom);
-               break;
-
-      case 37: U37(geom);
-               break;
-
-      case 38: U38(geom);
-               break;
-
-      case 39: U39(geom);
-               break;
-
-      case 40: U40(geom);
-               break;
-
-      case 41: U41(geom);
-               break;
-
-      case 42: U42(geom);
-               break;
-
-      case 43: U43(geom);
-               break;
-
-      case 44: U44(geom);
-               break;
-
-      case 45: U45(geom);
-               break;
-
-      case 46: U46(geom);
-               break;
-
-      case 47: U47(geom);
-               break;
-
-      case 48: U48(geom);
-               break;
-
-      case 49: U49(geom);
-               break;
-
-      case 50: U50(geom);
-               break;
-
-      case 51: U51(geom);
-               break;
-
-      case 52: U52(geom);
-               break;
-
-      case 53: U53(geom);
-               break;
-
-      case 54: U54(geom);
-               break;
-
-      case 55: U55(geom);
-               break;
-
-      case 56: U56(geom);
-               break;
-
-      case 57: U57(geom);
-               break;
-
-      case 58: U58(geom);
-               break;
-
-      case 59: U59(geom);
-               break;
-
-      case 60: U60(geom);
-               break;
-
-      case 61: U61(geom);
-               break;
-
-      case 62: U62(geom);
-               break;
-
-      case 63: U63(geom);
-               break;
-
-      case 64: U64(geom);
-               break;
-
-      case 65: U65(geom);
-               break;
-
-      case 66: U66(geom);
-               break;
-
-      case 67: U67(geom);
-               break;
-
-      case 68: U68(geom);
-               break;
-
-      case 69: U69(geom);
-               break;
-
-      case 70: U70(geom);
-               break;
-
-      case 71: U71(geom);
-               break;
-
-      case 72: U72(geom);
-               break;
-
-      case 73: U73(geom);
-               break;
-
-      case 74: U74(geom);
-               break;
-
-      case 75: U75(geom);
-               break;
-
-      case 76: U76(geom);
-               break;
-
-      case 77: U77(geom);
-               break;
-
-      case 78: U78(geom);
-               break;
-
-      case 79: U79(geom);
-               break;
-
-      case 80: U80(geom);
-               break;
-
-      //default:
-         //error("unknown uniform");
-   }
-
+   uniform_items[sym].pfunc(geom);
    return 1;
 }
 
@@ -2892,7 +2646,7 @@ int uni_poly::lookup_sym_no(string sym, int is_dual)
       
       if(!*endptr) {    // all of string is an integer
          for(int i=0;i<last_uniform;i++) {
-            if (idx == uniform[i].Kaleido)
+            if (idx == uniform_items[i].Kaleido)
                return i;
          }
          return -1; // not found
@@ -2909,7 +2663,7 @@ int uni_poly::lookup_sym_no(string sym, int is_dual)
    
       if(!*endptr) {    // all of string is an integer
          for(int i=0;i<last_uniform;i++) {
-            if (idx == uniform[i].Coxeter)
+            if (idx == uniform_items[i].Coxeter)
                return i;
          }
          return -1; // not found
@@ -2926,7 +2680,7 @@ int uni_poly::lookup_sym_no(string sym, int is_dual)
    
       if(!*endptr) {    // all of string is an integer
          for(int i=0;i<last_uniform;i++) {
-            if (idx == uniform[i].Wenninger)
+            if (idx == uniform_items[i].Wenninger)
                return i;
          }
          return -1; // not found
@@ -2936,7 +2690,7 @@ int uni_poly::lookup_sym_no(string sym, int is_dual)
    if(!is_dual) {
       // is it a Wythoff symbol
       for(int i=0; i<last_uniform; i++) {
-         if(sym_norm2==uniform[i].Wythoff)
+         if(sym_norm2==uniform_items[i].Wythoff)
             return i;
       }
    }
@@ -2955,7 +2709,7 @@ int uni_poly::lookup_sym_no(string sym, int is_dual)
    }
    //fprintf(stderr, "sym_name = '%s'\n", sym_norm2.c_str());
    for(int i=0; i<last_uniform; i++) {
-      const char *name = (is_dual)?uniform[i].dual.c_str():uniform[i].name.c_str();
+      const char *name = (is_dual)?uniform_items[i].dual.c_str():uniform_items[i].name.c_str();
       if(sym_norm2==name)
          return i;
       

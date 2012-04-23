@@ -59,7 +59,7 @@ void tbond(geom_if &geom, model_func base, model_func brick, int f=0, int b_f=0)
 void J_tetrahedron(geom_if &geom)
       { uni_pgon(geom, pyramid(3)); }
 void J_icosahedron(geom_if &geom)
-      { geom.read_resource("std_ico"); geom.orient_reverse(); unit_edge(geom); }
+      { geom.read_resource("std_ico"); unit_edge(geom); }
 void J_dodecahedron(geom_if &geom)
       { geom.read_resource("std_dod"); unit_edge(geom); }
 void J_icosidodecahedron(geom_if &geom)
@@ -109,7 +109,7 @@ void J6(geom_if &geom)
    J_icosidodecahedron(geom);
    vector<vec3d> &verts = *geom.get_verts();
    vector<vector<int> > &faces = *geom.get_faces();
-   geom.transform(mat3d::rot(centroid(verts, faces[0]), vec3d(0,1,0)));
+   geom.transform(mat3d::rot(centroid(verts, faces[29]), vec3d(0,1,0)));
    vector<int> del_verts;
    for(unsigned int i=0; i<verts.size(); i++)
       if(verts[i][1]<-epsilon)
@@ -273,62 +273,62 @@ void J56(geom_if &geom) { bond(geom, J54, J1, 5); }
 void J57(geom_if &geom) { bond(geom, J56, J1, 3); }
 
 // augmented dodecahedron
-void J58(geom_if &geom) { bond(geom, J_dodecahedron, J2, 9); }
+void J58(geom_if &geom) { bond(geom, J_dodecahedron, J2, 6); }
 
 // parabiaugmented dodecahedron
-void J59(geom_if &geom) { bond(geom, J58, J2, 0); }
+void J59(geom_if &geom) { bond(geom, J58, J2, 2); }
 
 // metabiaugmented dodecahedron
-void J60(geom_if &geom) { bond(geom, J58, J2, 3); }
+void J60(geom_if &geom) { bond(geom, J58, J2, 4); }
 
 // triaugmented dodecahedron
-void J61(geom_if &geom) { bond(geom, J60, J2, 2); }
+void J61(geom_if &geom) { bond(geom, J60, J2, 1); }
 
 // tridiminished icosahedron
 void J63(geom_if &geom)
 {
    J_icosahedron(geom);
    // largest first to avoid remapping
-   geom.delete_vert(9);
-   close_poly_basic(geom);
    geom.delete_vert(8);
    close_poly_basic(geom);
-   geom.delete_vert(1);
+   geom.delete_vert(7);
+   close_poly_basic(geom);
+   geom.delete_vert(6);
    close_poly_basic(geom);
 }
 
 // metabidiminished icosahedron
-void J62(geom_if &geom) { bond(geom, J63, J2, 5); }
+void J62(geom_if &geom) { bond(geom, J63, J2, 6); }
 
 // augmented tridiminished icosahedron
-void J64(geom_if &geom) { bond(geom, J63, J_tetrahedron); }
+void J64(geom_if &geom) { bond(geom, J63, J_tetrahedron, 1); }
 
 // augmented truncated tetrahedron
-void J65(geom_if &geom) { bond(geom, J_tr_tetrahedron, J3); }
+void J65(geom_if &geom) { bond(geom, J_tr_tetrahedron, J3, 7); }
 
 // augmented truncated cube
-void J66(geom_if &geom) { bond(geom, J_tr_cube, J4, 4); }
+void J66(geom_if &geom) { bond(geom, J_tr_cube, J4, 10); }
 
 // biaugmented truncated cube
-void J67(geom_if &geom) { bond(geom, J66, J4, 4); }
+void J67(geom_if &geom) { bond(geom, J66, J4, 9); }
 
 // augmented truncated dodecahedron
-void J68(geom_if &geom) { bond(geom, J_tr_dodecahedron, J5); }
+void J68(geom_if &geom) { bond(geom, J_tr_dodecahedron, J5, 25); }
 
 // parabiaugmented truncated dodecahedron
-void J69(geom_if &geom) { bond(geom, J68, J5, 8); }
+void J69(geom_if &geom) { bond(geom, J68, J5, 23); }
 
 // metabiaugmented truncated dodecahedron
-void J70(geom_if &geom) { bond(geom, J68, J5, 6); }
+void J70(geom_if &geom) { bond(geom, J68, J5, 25); }
 
 // triaugmented truncated dodecahedron
-void J71(geom_if &geom) { bond(geom, J70, J5, 9); }
+void J71(geom_if &geom) { bond(geom, J70, J5, 24); }
 
 // parabidiminished rhombicosidodecahedron
 void J80(geom_if &geom)
 {
    J_rhombicosidodecahedron(geom);
-   int dels[] = {4,5,8,20,19,  58,57,42,43,53};
+   int dels[] = {4,5,44,45,58,  2,3,42,43,57};
    vector<int> del_verts;
    for(int i=0; i<10; i++)
       del_verts.push_back(dels[i]);
@@ -349,7 +349,7 @@ void J73(geom_if &geom) { bond(geom, J77, J5, 40); }
 void J83(geom_if &geom)
 {
    J_rhombicosidodecahedron(geom);
-   int dels[] = {4,5,8,20,19,  13,12,27,28,38,  9,10,44,25,24};
+   int dels[] = {4,5,44,45,58,  16,18,32,34,52,  6,7,46,47,59};
    vector<int> del_verts;
    for(int i=0; i<15; i++)
       del_verts.push_back(dels[i]);
@@ -358,7 +358,7 @@ void J83(geom_if &geom)
 }
 
 // gyrate bidiminished rhombicosidodecahedron
-void J82(geom_if &geom) { tbond(geom, J83, J5, 30); }
+void J82(geom_if &geom) { tbond(geom, J83, J5, 31); }
 
 // bigyrate diminished rhombicosidodecahedron
 void J79(geom_if &geom) { tbond(geom, J82, J5, 30); }
@@ -376,12 +376,12 @@ void J76(geom_if &geom) { tbond(geom, J80, J5, 41); }
 void J78(geom_if &geom) { bond(geom, J82, J5, 30); }
 
 // metabidiminished rhombicosidodecahedron
-void J81(geom_if &geom) { bond(geom, J83, J5, 30); }
+void J81(geom_if &geom) { bond(geom, J83, J5, 31); }
 
 // snub disphenoid
 void J84(geom_if &geom)
 {
-   make_resource_pgon(geom, "snu2");
+   geom.read_resource("std_snu2");
   
    /*
    geom.clear_all();
@@ -412,7 +412,7 @@ void J84(geom_if &geom)
 // snub square antiprism
 void J85(geom_if &geom)
 {
-   make_resource_pgon(geom, "snu4");
+   geom.read_resource("std_snu4");
   
    // vertices arranged in four layers, middle layers have heights
    // h1 and h2 and vertices lie at radius r from the main axis
@@ -818,7 +818,6 @@ int j_poly::lookup_sym_no(string sym)
       else
          return idx-1;
    }
-
 
    // is it a poly name
    idx= -1;

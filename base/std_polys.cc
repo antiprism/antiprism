@@ -22,10 +22,11 @@
   IN THE SOFTWARE.
 */
 
-/* \file std_polys.cc
- * \brief Platonic and Archimedean polyhedra
- */
-
+/*
+   Name: std_polys.cc
+   Description: Uniform Polyhedra, Uniform Compounds and Johnson Solids
+   Project: Antiprism - http://www.antiprism.com
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,7 +34,6 @@
 
 #include "polygons.h"
 #include "std_polys.h"
-#include "skilling.h"
 #include "math_utils.h"
 #include "utils.h"
 #include "info.h"
@@ -52,328 +52,13 @@ void normalised_face_list(geom_if &geom)
 }
 
 
-static void tetrahedron(geom_if &geom)
-{
-   geom.clear_all();
-   geom.add_vert(vec3d(-1,  1, -1)); // 0
-   geom.add_vert(vec3d(-1, -1,  1)); // 1
-   geom.add_vert(vec3d( 1,  1,  1)); // 2
-   geom.add_vert(vec3d( 1, -1, -1)); // 3
-
-   int f[] = { 0,1,2,   0,3,1,   0,2,3,   2,1,3};
-   for(int i=0; i<4; i++) {
-      vector<int> face;
-      for(int j=0; j<3; j++)
-         face.push_back(f[i*3+j]);
-      geom.add_face(face);
-   }
-}
-
-
-
-static void cube(geom_if &geom)
-{
-   geom.clear_all();
-   geom.add_vert(vec3d( 1,  1,  1)); // 0
-   geom.add_vert(vec3d( 1,  1, -1)); // 1
-   geom.add_vert(vec3d( 1, -1,  1)); // 2
-   geom.add_vert(vec3d( 1, -1, -1)); // 3
-   geom.add_vert(vec3d(-1,  1,  1)); // 4
-   geom.add_vert(vec3d(-1,  1, -1)); // 5
-   geom.add_vert(vec3d(-1, -1,  1)); // 6
-   geom.add_vert(vec3d(-1, -1, -1)); // 7
-
-   int f[] = { 0,4,6,2,  1,3,7,5,  0,2,3,1,  4,5,7,6,  0,1,5,4,  2,6,7,3 };
-   for(int i=0; i<6; i++) {
-      vector<int> face;
-      for(int j=0; j<4; j++)
-         face.push_back(f[i*4+j]);
-      geom.add_face(face);
-   }
-}
-
-static void octahedron(geom_if &geom)
-{
-   geom.clear_all();
-   geom.add_vert(vec3d( 1,  0,  0)); // 0
-   geom.add_vert(vec3d(-1,  0,  0)); // 1
-   geom.add_vert(vec3d( 0,  1,  0)); // 2
-   geom.add_vert(vec3d( 0, -1,  0)); // 3
-   geom.add_vert(vec3d( 0,  0,  1)); // 4
-   geom.add_vert(vec3d( 0,  0, -1)); // 5
-
-   int f[] = { 0,2,4,  0,4,3,  0,3,5,  0,5,2,  1,4,2,  1,3,4,  1,5,3,  1,2,5 };
-   for(int i=0; i<8; i++) {
-      vector<int> face;
-      for(int j=0; j<3; j++)
-         face.push_back(f[i*3+j]);
-      geom.add_face(face);
-   }
-}
-
-
-static void dodecahedron(geom_if &geom)
-{
-   geom.clear_all();
-   double iphi = 1/phi;
-   geom.add_vert(vec3d( 1,  1,  1));     //  0
-   geom.add_vert(vec3d( 1,  1, -1));     //  1
-   geom.add_vert(vec3d( 1, -1,  1));     //  2
-   geom.add_vert(vec3d( 1, -1, -1));     //  3
-   geom.add_vert(vec3d(-1,  1,  1));     //  4
-   geom.add_vert(vec3d(-1,  1, -1));     //  5
-   geom.add_vert(vec3d(-1, -1,  1));     //  6
-   geom.add_vert(vec3d(-1, -1, -1));     //  7
-   geom.add_vert(vec3d(0,     iphi, phi)); //  8
-   geom.add_vert(vec3d(0,     iphi,-phi)); //  9
-   geom.add_vert(vec3d(0,    -iphi,-phi)); // 10
-   geom.add_vert(vec3d(0,    -iphi, phi)); // 11
-   geom.add_vert(vec3d( phi,  0,    iphi)); // 12
-   geom.add_vert(vec3d(-phi,  0,    iphi)); // 13
-   geom.add_vert(vec3d(-phi,  0,   -iphi)); // 14
-   geom.add_vert(vec3d( phi,  0,   -iphi)); // 15
-   geom.add_vert(vec3d( iphi, phi,  0)); // 16
-   geom.add_vert(vec3d( iphi,-phi,  0)); // 17
-   geom.add_vert(vec3d(-iphi,-phi,  0)); // 18
-   geom.add_vert(vec3d(-iphi, phi,  0)); // 19
-   geom.transform(mat3d::rot(0,0,M_PI/2));
-
-   int f[] = { 12,15, 1,16, 0,  8,11, 2,12, 0, 16,19, 4, 8, 0,
-               15,12, 2,17, 3, 10, 9, 1,15, 3, 17,18, 7,10, 3,
-               19,16, 1, 9, 5, 14,13, 4,19, 5,  9,10, 7,14, 5,
-               13,14, 7,18, 6, 11, 8, 4,13, 6, 18,17, 2,11, 6 };
-   for(int i=0; i<12; i++) {
-      vector<int> face;
-      for(int j=0; j<5; j++)
-         face.push_back(f[i*5+j]);
-      geom.add_face(face);
-   }
-}
-
-static void icosahedron(geom_if &geom)
-{
-   geom.clear_all();
-   geom.add_vert(vec3d(0,  phi,  1)); //  0
-   geom.add_vert(vec3d(0, -phi,  1)); //  1
-   geom.add_vert(vec3d(0, -phi, -1)); //  2
-   geom.add_vert(vec3d(0,  phi, -1)); //  3
-   geom.add_vert(vec3d( 1, 0,  phi)); //  4
-   geom.add_vert(vec3d( 1, 0, -phi)); //  5
-   geom.add_vert(vec3d(-1, 0, -phi)); //  6
-   geom.add_vert(vec3d(-1, 0,  phi)); //  7
-   geom.add_vert(vec3d( phi,  1, 0)); //  8
-   geom.add_vert(vec3d(-phi,  1, 0)); //  9
-   geom.add_vert(vec3d(-phi, -1, 0)); // 10
-   geom.add_vert(vec3d( phi, -1, 0)); // 11
-   geom.transform(mat3d::rot(0,0,M_PI/2));
-
-   int f[] = { 0, 4, 7,   1, 7, 4,   2, 5, 6,   3, 6, 5,
-               4, 8,11,   5,11, 8,   6, 9,10,   7,10, 9,
-               8, 0, 3,   9, 3, 0,  10, 1, 2,  11, 2, 1,
-               0, 8, 4,   0, 7, 9,   1, 4,11,   1,10, 7,
-               2,11, 5,   2, 6,10,   3, 5, 8,   3, 9, 6 };
-   for(int i=0; i<20; i++) {
-      vector<int> face;
-      for(int j=0; j<3; j++)
-         face.push_back(f[i*3+j]);
-      geom.add_face(face);
-   }
-}
-
-static void tr_tetrahedron(geom_if &geom)
-{
-   tetrahedron(geom);
-   geom.transform(mat3d::scale(3));
-   truncate_verts(geom, 1/3.0);
-   geom.orient();
-}
-  
-
-static void cuboctahedron(geom_if &geom)
-{
-   cube(geom);
-   truncate_verts(geom, 1/2.0);
-   geom.orient();
-}
-
-
-static void tr_cube(geom_if &geom)
-{
-   cube(geom);
-   truncate_verts(geom, 1-sqrt(1/2.0));
-   geom.orient();
-}
-
-
-static void tr_octahedron(geom_if &geom)
-{
-   octahedron(geom);
-   geom.transform(mat3d::scale(3));
-   truncate_verts(geom, 1/3.0);
-   geom.orient();
-}
-
-
-static void rhombicuboctahedron(geom_if &geom)
-{
-   geom.clear_all();
-   for(int i=0; i<2; i++)
-      for(int j=0; j<2; j++)
-         for(int k=0; k<2; k++) {
-            vec3d v((1-2*i), (1-2*j), (1-2*k)*(1+sqrt(2)));
-            for(int l=0; l<3; l++)
-               geom.add_vert(vec3d(v[l], v[(l+1)%3], v[(l+2)%3]));
-         }
-   geom.add_hull();
-   normalised_face_list(geom);
-}
-
-
-static void tr_cuboctahedron(geom_if &geom)
-{
-   geom.clear_all();
-   for(int i=0; i<2; i++)
-      for(int j=0; j<2; j++)
-         for(int k=0; k<2; k++) {
-            vec3d v((1-2*i), (1-2*j)*(1+sqrt(2)), (1-2*k)*(1+sqrt(8)));
-            for(int l=0; l<3; l++) {
-               geom.add_vert(vec3d(v[l], v[(l+1)%3], v[(l+2)%3]));
-               geom.add_vert(vec3d(v[(l+1)%3], v[l], v[(l+2)%3]));
-            }
-         }
-   geom.add_hull();
-   normalised_face_list(geom);
-}
-
-
-static void snub_cube(geom_if &geom)
-{
-   geom.clear_all();
-   double third = 1/3.0;
-   double K = third*(pow(17+sqrt(297), third) - pow(-17+sqrt(297), third) -1);
-   for(int i=0; i<2; i++)
-      for(int j=0; j<2; j++)
-         for(int k=0; k<2; k++) {
-            vec3d v((1-2*i), (1-2*j)*K, (1-2*k)/K);
-            if(!is_even(i+j+k))
-               swap(v[0], v[1]);
-            for(int l=0; l<3; l++)
-               geom.add_vert(vec3d(v[l], v[(l+1)%3], v[(l+2)%3]));
-         }
-   geom.add_hull();
-   normalised_face_list(geom);
-}
-
-
-static void icosidodecahedron(geom_if &geom)
-{
-   dodecahedron(geom);
-   truncate_verts(geom, 1/2.0);
-   geom.orient();
-}
-
-
-static void tr_dodecahedron(geom_if &geom)
-{
-   dodecahedron(geom);
-   truncate_verts(geom, 1/(phi+2));
-   geom.orient();
-}
-
-
-static void tr_icosahedron(geom_if &geom)
-{
-   icosahedron(geom);
-   truncate_verts(geom, 1/3.0);
-   geom.orient();
-}
-
-
-static void rhombicosidodecahedron(geom_if &geom)
-{
-   geom.clear_all();
-   vec3d v[3];
-   for(int i=0; i<2; i++)
-      for(int j=0; j<2; j++)
-         for(int k=0; k<2; k++) {
-            v[0] = vec3d ((1-2*i), (1-2*j), (1-2*k)*(phi*phi*phi));
-            v[1] = vec3d((1-2*i)*(phi*phi), (1-2*j)*phi, (1-2*k)*(2*phi));
-            v[2] = vec3d((1-2*i)*(phi*phi), (1-2*j)*(2+phi), 0);
-            for(int l=0; l<3; l++)
-               for(int m=0; m<3; m++)
-                  if(m!=2 || k)
-                     geom.add_vert(vec3d(v[m][l], v[m][(l+1)%3],
-                              v[m][(l+2)%3]));
-         }
-   geom.transform(mat3d::rot(0,0,M_PI/2));
-   geom.add_hull();
-   normalised_face_list(geom);
-}
-
-
-static void tr_icosidodecahedron(geom_if &geom)
-{
-   geom.clear_all();
-   vec3d v[5];
-   for(int i=0; i<2; i++)
-      for(int j=0; j<2; j++)
-         for(int k=0; k<2; k++) {
-            v[0] = vec3d((1-2*i)/phi, (1-2*j)/phi, (1-2*k)*(3+phi));
-            v[1] = vec3d((1-2*i)*2/phi, (1-2*j)*phi, (1-2*k)*(1+2*phi));
-            v[2] = vec3d((1-2*i)/phi, (1-2*j)*(phi*phi), (1-2*k)*(3*phi-1));
-            v[3] = vec3d((1-2*i)*(2*phi-1), (1-2*j)*2, (1-2*k)*(2+phi));
-            v[4] = vec3d((1-2*i)*phi, (1-2*j)*3, (1-2*k)*2*phi);
-            for(int l=0; l<5; l++)
-               for(int m=0; m<3; m++)
-                  geom.add_vert(vec3d(v[l][m], v[l][(m+1)%3], v[l][(m+2)%3]));
-         }
-   geom.transform(mat3d::rot(0,0,M_PI/2));
-   geom.add_hull();
-   normalised_face_list(geom);
-}
-
-
-static void snub_dodecahedron(geom_if &geom)
-{
-   geom.clear_all();
-   double third = 1/3.0;
-   double K = pow(phi/2+sqrt(phi-5/27.0)/2, third) +
-      pow(phi/2-sqrt(phi-5/27.0)/2, third);
-   double A = K - 1/K;
-   double B = K*phi + phi*phi + phi/K;
-            
-   vec3d v[5];
-   for(int i=0; i<2; i++)
-      for(int j=0; j<2; j++)
-         for(int k=0; k<2; k++) {
-            if(!is_even(i+j+k))
-               continue;
-            v[0] = vec3d((1-2*i)*2*A, (1-2*j)*2, (1-2*k)*2*B);
-            v[1] = vec3d((1-2*i)*(A+B/phi+phi), (1-2*j)*(-A*phi+B+1/phi),
-                     (1-2*k)*(A/phi+B*phi-1));
-            v[2] = vec3d((1-2*i)*(-A/phi+B*phi+1), (1-2*j)*(-A+B/phi-phi),
-                     (1-2*k)*(A*phi+B-1/phi));
-            v[3] = vec3d((1-2*i)*(-A/phi+B*phi-1), (1-2*j)*(A-B/phi-phi),
-                     (1-2*k)*(A*phi+B+1/phi));
-            v[4] = vec3d((1-2*i)*(A+B/phi-phi), (1-2*j)*(A*phi-B+1/phi),
-                     (1-2*k)*(A/phi+B*phi+1));
-            for(int l=0; l<5; l++)
-               for(int m=0; m<3; m++) {
-                  geom.add_vert(vec3d(v[l][m], v[l][(m+1)%3], v[l][(m+2)%3]));
-               }
-         }
-   geom.transform(mat3d::rot(0,0,M_PI/2));
-   geom.add_hull();
-   normalised_face_list(geom);
-}
-
 static void rh_dodecahedron(geom_if &geom)
 {
    geom.clear_all();
    col_geom_v geom2;
-   cube(geom2);
+   geom2.read_resource("std_cube");
    geom.add_verts(geom2.verts());
-   octahedron(geom2);
+   geom2.read_resource("std_oct");
    geom2.transform(mat3d::scale(2));
    geom.add_verts(geom2.verts());
    geom.add_hull();
@@ -385,22 +70,55 @@ static void rh_triacontahedron(geom_if &geom)
 {
    geom.clear_all();
    col_geom_v geom2;
-   icosahedron(geom2);
+   geom2.read_resource("std_ico");
    geom.add_verts(geom2.verts());
-   dodecahedron(geom2);
+   geom2.read_resource("std_dod");
    geom.add_verts(geom2.verts());
    geom.add_hull();
    normalised_face_list(geom);
 }
 
+
 static void rh_enneacontahedron(geom_if &geom)
 {
    geom.clear_all();
    col_geom_v geom2;
-   dodecahedron(geom2);
+   geom2.read_resource("std_dod");
    geom2.transform(mat3d::scale(1/(2*phi*phi)));
    geom.set_zono(geom2.verts());
    normalised_face_list(geom);
+}
+
+
+int make_resource_std_poly(geom_if &geom, string name, char *errmsg=0)
+{
+   if(name.size()<5 || name.substr(0,4)!="std_" || name.find('.')!=string::npos)
+      return -1; // not std poly name (the "." indicates a likely local file)
+                 // so the name is not handled
+
+   map<string, model_func> models;
+   models["rhombic_dodecahedron"]        = rh_dodecahedron;
+   models["rh_dodecahedron"]             = rh_dodecahedron;
+   models["rh_dod"]                      = rh_dodecahedron;
+   models["rd"]                          = rh_dodecahedron;
+   models["rhombic_triacontahedron"]     = rh_triacontahedron;
+   models["rh_triacontahedron"]          = rh_triacontahedron;
+   models["rh_tri"]                      = rh_triacontahedron;
+   models["rt"]                          = rh_triacontahedron;
+   models["rhombic_enneacontahedron"]    = rh_enneacontahedron;
+   models["rh_enneacontahedron"]         = rh_enneacontahedron;
+   models["rh_ennea"]                    = rh_enneacontahedron;
+   models["re"]                          = rh_enneacontahedron;
+
+   map<string, model_func>::iterator mi = models.find(name.substr(4));
+   if(mi != models.end())
+      mi->second(geom);
+   else {
+      if(errmsg)
+         snprintf(errmsg, MSG_SZ, "invalid standard polyhedron name");
+      return 1; // fail
+   }
+   return 0; // name found
 }
 
 
@@ -435,7 +153,7 @@ void set_resource_polygon_color(geom_if &geom)
    }
 }
 
-static void make_resource_dual(geom_if &geom)
+static void make_resource_dual(geom_if &geom, bool is_std = false)
 {
       vec3d cent = geom.centroid();
       geom_info info(geom);
@@ -447,9 +165,9 @@ static void make_resource_dual(geom_if &geom)
       add_extra_ideal_elems(dual, cent, 0.95*inf); // limit closer than inf
       geom.clear_all();
       geom.append(dual);
-      set_resource_polygon_color(geom);
+      if (!is_std)
+         set_resource_polygon_color(geom);
 }
-
 
 
 const char *alt_names[][2] = {
@@ -569,20 +287,297 @@ const char *alt_names[][2] = {
    {"w25", "uc6"},
    {"w26", "u30_d"},
    {"w34", "u47_d"},
+
+   // Bowers short names for Uniforms
+   {"tet", "u1"},
+   {"tut", "u2"},
+   {"oho", "u3"},
+   {"thah", "u4"},
+   {"oct", "u5"},
+   {"cube", "u6"},
+   {"co", "u7"},
+   {"toe", "u8"},
+   {"tic", "u9"},
+   {"sirco", "u10"},
+   {"girco", "u11"},
+   {"snic", "u12"},
+   {"socco", "u13"},
+   {"gocco", "u14"},
+   {"cho", "u15"},
+   {"cotco", "u16"},
+   {"querco", "u17"},
+   {"sroh", "u18"},
+   {"quith", "u19"},
+   {"quitco", "u20"},
+   {"groh", "u21"},
+   {"ike", "u22"},
+   {"doe", "u23"},
+   {"id", "u24"},
+   {"ti", "u25"},
+   {"tid", "u26"},
+   {"srid", "u27"},
+   {"grid", "u28"},
+   {"snid", "u29"},
+   {"sidtid", "u30"},
+   {"siid", "u31"},
+   {"seside", "u32"},
+   {"saddid", "u33"},
+   {"sissid", "u34"},
+   {"gad", "u35"},
+   {"did", "u36"},
+   {"tigid", "u37"},
+   {"raded", "u38"},
+   {"sird", "u39"},
+   {"siddid", "u40"},
+   {"ditdid", "u41"},
+   {"gidditdid", "u42"},
+   {"sidditdid", "u43"},
+   {"ided", "u44"},
+   {"idtid", "u45"},
+   {"sided", "u46"},
+   {"gidtid", "u47"},
+   {"giid", "u48"},
+   {"seihid", "u49"},
+   {"siddy", "u50"},
+   {"sidhid", "u51"},
+   {"gissid", "u52"},
+   {"gike", "u53"},
+   {"gid", "u54"},
+   {"tiggy", "u55"},
+   {"ri", "u56"},
+   {"gosid", "u57"},
+   {"quitsissid", "u58"},
+   {"quitdid", "u59"},
+   {"isdid", "u60"},
+   {"gaddid", "u61"},
+   {"sidhei", "u62"},
+   {"giddy", "u63"},
+   {"gisdid", "u64"},
+   {"gidhei", "u65"},
+   {"quitgissid", "u66"},
+   {"qrid", "u67"},
+   {"gaquatid", "u68"},
+   {"gisid", "u69"},
+   {"gidhid", "u70"},
+   {"geihid", "u71"},
+   {"sirsid", "u72"},
+   {"gird", "u73"},
+   {"girsid", "u74"},
+   {"gidrid", "u75"},
+   {"pip", "u76"},
+   {"pap", "u77"},
+   {"stip", "u78"},
+   {"stap", "u79"},
+   {"starp", "u80"},
+
+   // Bowers short names for Prisms and Antiprisms
+   {"trip", "pri3"},
+   {"hip", "pri6"},
+   {"hep", "pri7"},
+   {"ship", "pri7/2"},
+   {"giship", "pri7/3"},
+   {"op", "pri8"},
+   {"stop", "pri8/3"},
+   {"ep", "pri9"},
+   {"step", "pri9/2"},
+   {"gistep", "pri9/4"},
+   {"dip", "pri10"},
+   {"stiddip", "pri10/3"},
+
+   {"squap", "ant4"},
+   {"hap", "ant6"},
+   {"heap", "ant7"},
+   {"sthap", "ant7/2"},
+   {"gisthap", "ant7/3"},
+   {"gisthirp", "ant7/4"},
+   {"oap", "ant8"},
+   {"stoap", "ant8/3"},
+   {"storp", "ant8/5"},
+   {"eap", "ant9"},
+   {"steap", "ant9/2"},
+   {"gisteap", "ant9/4"},
+   {"gisterp", "ant9/5"},
+   {"dap", "ant10"},
+   {"stiddap", "ant10/3"},
+
+   // Bowers short names for Uniform Compounds
+   {"sis", "uc1"},
+   {"dis", "uc2"},
+   {"snu", "uc3"},
+   {"so", "uc4"},
+   {"ki", "uc5"},
+   {"e", "uc6"},
+   {"risdoh", "uc7"},
+   {"rah", "uc8"},
+   {"rhom", "uc9"},
+   {"dissit", "uc10"},
+   {"doso", "uc11"},
+   {"sno", "uc12"},
+   {"addasi", "uc13"},
+   {"dasi", "uc14"},
+   {"gissi", "uc15"},
+   {"si", "uc16"},
+   {"se", "uc17"},
+   {"hirki", "uc18"},
+   {"sapisseri", "uc19"},
+   {"gadsid", "uc26"},
+   {"gassid", "uc27"},
+   {"gidasid", "uc28"},
+   {"gissed", "uc29"},
+   {"ro", "uc30"},
+   {"dro", "uc31"},
+   {"kri", "uc32"},
+   {"dri", "uc33"},
+   {"kred", "uc34"},
+   {"dird", "uc35"},
+   {"gikrid", "uc36"},
+   {"giddird", "uc37"},
+   {"griso", "uc38"},
+   {"rosi", "uc39"},
+   {"rassid", "uc40"},
+   {"grassid", "uc41"},
+   {"gassic", "uc42"},
+   {"gidsac", "uc43"},
+   {"sassid", "uc44"},
+   {"sadsid", "uc45"},
+   {"siddo", "uc46"},
+   {"sne", "uc47"},
+   {"presipsido", "uc48"},
+   {"presipsi", "uc49"},
+   {"passipsido", "uc50"},
+   {"passipsi", "uc51"},
+   {"sirsido", "uc52"},
+   {"sirsei", "uc53"},
+   {"tisso", "uc54"},
+   {"taki", "uc55"},
+   {"te", "uc56"},
+   {"harie", "uc57"},
+   {"quahri", "uc58"},
+   {"arie", "uc59"},
+   {"gari", "uc60"},
+   {"iddei", "uc61"},
+   {"rasseri", "uc62"},
+   {"rasher", "uc63"},
+   {"rahrie", "uc64"},
+   {"raquahri", "uc65"},
+   {"rasquahr", "uc66"},
+   {"rasquahpri", "uc67"},
+   {"disco", "uc68"},
+   {"dissid", "uc69"},
+   {"giddasid", "uc70"},
+   {"gidsid", "uc71"},
+   {"gidrissid", "uc72"},
+   {"disdid", "uc73"},
+   {"idisdid", "uc74"},
+   {"desided", "uc75"},
+
+   // Bowers short names for Johnson Solids
+   {"squippy", "j1"},
+   {"peppy", "j2"},
+   {"tricu", "j3"},
+   {"squicu", "j4"},
+   {"pecu", "j5"},
+   {"pero", "j6"},
+   {"etripy", "j7"},
+   {"esquippy", "j8"},
+   {"epeppy", "j9"},
+   {"gyesp", "j10"},
+   {"gyepip", "j11"},
+   {"tridpy", "j12"},
+   {"pedpy", "j13"},
+   {"etidpy", "j14"},
+   {"esquidpy", "j15"},
+   {"epedpy", "j16"},
+   {"gyesqidpy", "j17"},
+   {"etcu", "j18"},
+   {"escu", "j19"},
+   {"epcu", "j20"},
+   {"epro", "j21"},
+   {"gyetcu", "j22"},
+   {"gyescu", "j23"},
+   {"gyepcu", "j24"},
+   {"gyepro", "j25"},
+   {"gybef", "j26"},
+   {"tobcu", "j27"},
+   {"squobcu", "j28"},
+   {"squigybcu", "j29"},
+   {"pobcu", "j30"},
+   {"pegybcu", "j31"},
+   {"pocuro", "j32"},
+   {"pegycuro", "j33"},
+   {"pobro", "j34"},
+   {"etobcu", "j35"},
+   {"etigybcu", "j36"},
+   {"esquigybcu", "j37"},
+   {"epobcu", "j38"},
+   {"epigybcu", "j39"},
+   {"epocuro", "j40"},
+   {"epgycuro", "j41"},
+   {"epobro", "j42"},
+   {"epgybro", "j43"},
+   {"gyetibcu", "j44"},
+   {"gyesquibcu", "j45"},
+   {"gyepibcu", "j46"},
+   {"gyepcuro", "j47"},
+   {"gyepabro", "j48"},
+   {"autip", "j49"},
+   {"bautip", "j50"},
+   {"tautip", "j51"},
+   {"aupip", "j52"},
+   {"baupip", "j53"},
+   {"auhip", "j54"},
+   {"pabauhip", "j55"},
+   {"mabauhip", "j56"},
+   {"tauhip", "j57"},
+   {"aud", "j58"},
+   {"pabaud", "j59"},
+   {"mabaud", "j60"},
+   {"taud", "j61"},
+   {"mibdi", "j62"},
+   {"teddi", "j63"},
+   {"auteddi", "j64"},
+   {"autut", "j65"},
+   {"autic", "j66"},
+   {"bautic", "j67"},
+   {"autid", "j68"},
+   {"pabautid", "j69"},
+   {"mabautid", "j70"},
+   {"tautid", "j71"},
+   {"gyrid", "j72"},
+   {"pabgyrid", "j73"},
+   {"mabgyrid", "j74"},
+   {"tagyrid", "j75"},
+   {"dirid", "j76"},
+   {"pagydrid", "j77"},
+   {"magydrid", "j78"},
+   {"bagydrid", "j79"},
+   {"pabidrid", "j80"},
+   {"mabidrid", "j81"},
+   {"gybadrid", "j82"},
+   {"tedrid", "j83"},
+   {"snadow", "j84"},
+   {"snisquap", "j85"},
+   {"waco", "j86"},
+   {"auwaco", "j87"},
+   {"wamco", "j88"},
+   {"hawmco", "j89"},
+   {"dawci", "j90"},
+   {"bilbiro", "j91"},
+   {"thawro", "j92"},
 };
 
 const char *u_abbrevs[][2] = {
-   {"tr", "truncated"},
-   {"sm", "small"},
-   {"gr", "great"},
-   {"st", "stellated"},
-   {"sn", "snub"},
-   {"tet", "tetrahedron"},
-   {"ico", "icosahedron"},
-   {"icosa", "icosahedron"},
-   {"dod", "dodecahedron"},
-   {"oct", "octahedron"},
-   {"cubo", "cuboctahedron"},
+   {"tr",     "truncated"},
+   {"sm",     "small"},
+   {"gr",     "great"},
+   {"st",     "stellated"},
+   {"sn",     "snub"},
+   {"tet",    "tetrahedron"},
+   {"ico",    "icosahedron"},
+   {"icosa",  "icosahedron"},
+   {"dod",    "dodecahedron"},
+   {"oct",    "octahedron"},
+   {"cubo",   "cuboctahedron"},
    {"icosid", "icosidodecahedron"}
 };
 
@@ -594,7 +589,7 @@ const char *ud_abbrevs[][2] = {
    {"delt",    "deltoidal"},
    {"pen",     "pentagonal"},
    {"med",     "medial"},
-   {"triam",     "triambic"},
+   {"triam",   "triambic"},
    {"ditrig",  "ditrigonal"},
    {"tri",     "triakis"},
    {"tetr",    "tetrakis"},
@@ -612,8 +607,40 @@ const char *ud_abbrevs[][2] = {
    {"icositet","icositetrahedron"}
 };
 
+const char *uc_abbrevs[][2] = {
+   {"tr",     "truncated"},
+   {"sm",     "small"},
+   {"gr",     "great"},
+   {"st",     "stellated"},
+   {"sn",     "snub"},
+   {"tet",    "tetrahedra"},
+   {"ico",    "icosahedra"},
+   {"icosa",  "icosahedra"},
+   {"dod",    "dodecahedra"},
+   {"oct",    "octahedra"},
+   {"cubo",   "cuboctahedra"},
+   {"icosid", "icosidodecahedra"},
+   {"pri",    "prisms"},
+   {"ant",    "antiprisms"},
+   {"rot",    "rotational"}
+};
 
-int make_resource_uniform(geom_if &geom, string name, char *errmsg=0)
+const char *j_abbrevs[][2] = {
+   {"tri", "triangular"},
+   {"sq",  "square"},
+   {"squ", "square"},
+   {"pe",  "pentagonal"},
+   {"pen", "pentagonal"},
+   {"el",  "elongated"},
+   {"ge",  "gyroelongated"},
+   {"tr",  "truncated"},
+   {"au",  "augmented"},
+   {"ba",  "biaugmenbted"},
+   {"ta",  "triaugmented"},
+};
+
+
+int make_resource_uniform(geom_if &geom, string name, bool is_std, char *errmsg=0)
 {
    if(name.size()<2 || !strchr("uUkKcCwW", name[0]) || name.find('.')!=string::npos)
       return -1; // not uniform name (the "." indicates a likely local file)
@@ -623,28 +650,18 @@ int make_resource_uniform(geom_if &geom, string name, char *errmsg=0)
    uni_poly uni;
    int sym_no;
    if(read_int(name.c_str()+1+is_dual, &sym_no)) {
-      if (strchr("uU", name[0])) {
-         sym_no--;
-         if(sym_no<0 || sym_no >= uni.get_last_uniform()) {
-            if(errmsg)
-               snprintf(errmsg, MSG_SZ, "uniform %spolyhedron number out of range",
-                     (is_dual)?"dual ":"");
-            return 1; // fail
-         }
-      }
-      // Kaleido, Coxeter, or Wenninger number
-      else {
-         if (is_dual)
-            name.erase(1,1);
-         sym_no = uni.lookup_sym_no(name, is_dual);
-         if(sym_no == -1) {
-            if(errmsg)
-               snprintf(errmsg, MSG_SZ, "invalid uniform polyhedron %sname",
-                     (is_dual)?"dual ":"");
-            return 1; // fail
-         }
+      // Uniform, Kaleido, Coxeter, or Wenninger number
+      if (is_dual)
+         name.erase(1,1);
+      sym_no = uni.lookup_sym_no(name, is_dual);
+      if(sym_no == -1) {
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "invalid uniform polyhedron %sname",
+                  (is_dual)?"dual ":"");
+         return 1; // fail
       }
    }
+   // if name starts with "u_" prefix
    else if(strchr(RES_SEPARATOR, name[1+is_dual])) {
       string expanded;
       if(is_dual)
@@ -667,34 +684,98 @@ int make_resource_uniform(geom_if &geom, string name, char *errmsg=0)
    
    uni.get_poly(geom, sym_no);
 
-   double e_len = geom.edge_vec(geom.faces(0,0), geom.faces(0,1)).mag();
-   geom.transform(mat3d::scale(1/e_len));
-   set_resource_polygon_color(geom);
+   if (!is_std) {
+      double e_len = geom.edge_vec(geom.faces(0,0), geom.faces(0,1)).mag();
+      geom.transform(mat3d::scale(1/e_len));
+      set_resource_polygon_color(geom);
+   }
 
+   // this is here if 'd' was the second character
    if(is_dual)
-      make_resource_dual(geom);
+      make_resource_dual(geom, is_std);
 
    return 0; // name found
 }
 
 
-const char *j_abbrevs[][2] = {
-   {"tri", "triangular"},
-   {"sq", "square"},
-   {"squ", "square"},
-   {"pe", "pentagonal"},
-   {"pen", "pentagonal"},
-   {"el", "elongated"},
-   {"ge", "gyroelongated"},
-   {"tr", "truncated"},
-   {"au", "augmented"},
-   {"ba", "biaugmenbted"},
-   {"ta", "triaugmented"},
-};
+int make_resource_uniform_compound(geom_if &geom, string name, bool is_std, char *errmsg=0)
+{
+   // lower case the name
+   transform(name.begin(), name.end(), name.begin(), ::tolower);
 
+   if(name.size()<3 || name.substr(0,2)!="uc")
+      return -1; // not uniform compound name
 
+   double angle = INFINITY;
+   int n = -1;
+   int d = -1;
+   int k = -1;
 
-int make_resource_johnson(geom_if &geom, string name, char *errmsg=0)
+   uc_poly uniform_compounds;
+      
+   // if complex parms, parse them
+   if(strpbrk(name.c_str(),RES_SEPARATOR)) {
+      char errmsg2[MSG_SZ];
+      uniform_compounds.parse_uc_args(name,angle,n,d,k,errmsg2);
+   }
+
+   int sym_no;
+   if(read_int(name.c_str()+2, &sym_no)) {
+      sym_no--;
+      if(sym_no<0 || sym_no >= uniform_compounds.get_last_uc()) {
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ, "uniform compound number out of range");
+         return 1; // fail
+      }
+   }
+   else if(strchr(RES_SEPARATOR, name[2])) {
+      string expanded = expand_abbrevs(name, uc_abbrevs,
+            sizeof(uc_abbrevs)/sizeof(uc_abbrevs[0]));
+      sym_no = uniform_compounds.lookup_sym_no(expanded.c_str());
+      if(sym_no == -1)
+         return 1; // fail
+   }
+   else
+      return -1; // not uniform compound name
+     
+   char errmsg2[MSG_SZ];
+   int ret = uniform_compounds.set_uc_args(sym_no+1,angle,n,d,k,errmsg2);
+   if (ret>0)
+      return 1; // fail
+
+   if (angle != INFINITY || n != -1 || d != -1 || k != -1) {
+      char angle_str[MSG_SZ] = "";
+      if (angle != INFINITY)
+         snprintf(angle_str, MSG_SZ, "a%g",rad2deg(angle));
+      char n_str[MSG_SZ] = "";
+      if (n != -1)
+         snprintf(n_str, MSG_SZ, "n%d",n);
+      char d_str[MSG_SZ] = "";
+      if (d > 1)
+         snprintf(d_str, MSG_SZ, "/%d",d);
+      char k_str[MSG_SZ] = "";
+      if (k != -1)
+         snprintf(k_str, MSG_SZ, "k%d",k);
+      fprintf(stderr,"UC%d_%s%s%s%s\n",sym_no+1,angle_str,n_str,d_str,k_str);
+   }
+
+   uniform_compounds.get_poly(geom,sym_no,angle,n,d,k,is_std);
+   
+   col_geom_v *cg = dynamic_cast<col_geom_v *>(&geom); 
+   if(cg && !is_std) {      
+      coloring clrng(cg);
+      color_map *cmap = init_color_map("compound");
+      clrng.add_cmap(cmap);
+
+      clrng.v_apply_cmap();
+      clrng.e_apply_cmap();
+      clrng.f_apply_cmap();
+   }
+
+   return 0; // name found
+}
+
+int make_resource_johnson(geom_if &geom, string name, bool is_std, char *errmsg=0)
 {
    if(name.size()<2 || !strchr("jJ", name[0]) || name.find('.')!=string::npos)
       return -1; // not johnson name (the "." indicates a likely local file)
@@ -724,7 +805,10 @@ int make_resource_johnson(geom_if &geom, string name, char *errmsg=0)
       return -1; // not johnson name
    
    json.get_poly(geom, sym_no);
-   set_resource_polygon_color(geom);
+
+   if (!is_std)
+      set_resource_polygon_color(geom);
+
    return 0; // name found
 }
 
@@ -757,7 +841,7 @@ void res_coloring::f_all_angles(bool as_values)
 }
 
 
-int make_resource_geodesic(geom_if &geom, string name, char *errmsg)
+int make_resource_geodesic(geom_if &geom, string name, bool is_std, char *errmsg)
 {
    if(name.size()<5 || name.substr(0,4)!="geo_" || name.find('.')!=string::npos)
       return -1; // not geodesic name (the "." indicates a likely local file)
@@ -766,15 +850,15 @@ int make_resource_geodesic(geom_if &geom, string name, char *errmsg)
    col_geom_v base;
    int offset = 4;
    if(name[offset]=='t') {
-      make_resource_uniform(base, "u_tet");
+      base.read_resource("std_tet");
       offset++;
    }
    else if(name[offset]=='o') {
-      make_resource_uniform(base, "u_oct");
+      base.read_resource("std_oct");
       offset++;
    }
    else if(name[offset]=='i') {
-      make_resource_uniform(base, "u_ico");
+      base.read_resource("std_ico");
       offset++;
    }
    else if(name[offset]=='T') {
@@ -792,7 +876,7 @@ int make_resource_geodesic(geom_if &geom, string name, char *errmsg)
       offset++;
    }
    else if(isdigit(name[offset])) {
-      make_resource_uniform(base, "u_ico");
+      base.read_resource("std_ico");
    }
    else {
       if(errmsg)
@@ -830,7 +914,8 @@ int make_resource_geodesic(geom_if &geom, string name, char *errmsg)
       return 1; // fail
    }
 
-   if(col_geom_v *cg = dynamic_cast<col_geom_v *>(&geom)) {
+   col_geom_v *cg = dynamic_cast<col_geom_v *>(&geom); 
+   if(cg && !is_std) {
       res_coloring clrng(cg);
       color_map *cmap = init_color_map("rng256_R1:0.7:1:0.5:1G1:0.4:1:0.3:1B1:0.2:1:0.7:1%");
       clrng.add_cmap(cmap);
@@ -850,84 +935,6 @@ void process_for_dual(string &name, bool &dual_flag)
    }
 }
 
-
-int make_resource_std_poly(geom_if &geom, string name, char *errmsg=0)
-{
-   if(name.size()<5 || name.substr(0,4)!="std_" || name.find('.')!=string::npos)
-      return -1; // not std poly name (the "." indicates a likely local file)
-                 // so the name is not handled
-
-   map<string, model_func> models;
-   models["tetrahedron"]                 = tetrahedron;
-   models["tet"]                         = tetrahedron;
-   models["truncated_tetrahedron"]       = tr_tetrahedron;
-   models["tr_tetrahedron"]              = tr_tetrahedron;
-   models["tr_tet"]                      = tr_tetrahedron;
-   models["cube"]                        = cube;
-   models["truncated_cube"]              = tr_cube;
-   models["tr_cube"]                     = tr_cube;
-   models["snub_cube"]                   = snub_cube;
-   models["sn_cube"]                     = snub_cube;
-   models["octahedron"]                  = octahedron;
-   models["oct"]                         = octahedron;
-   models["truncated_octahedron"]        = tr_octahedron;
-   models["tr_octahedron"]               = tr_octahedron;
-   models["tr_oct"]                      = tr_octahedron;
-   models["dodecahedron"]                = dodecahedron;
-   models["dod"]                         = dodecahedron;
-   models["truncated_dodecahedron"]      = tr_dodecahedron;
-   models["tr_dodecahedron"]             = tr_dodecahedron;
-   models["tr_dod"]                      = tr_dodecahedron;
-   models["snub_dodecahedron"]           = snub_dodecahedron;
-   models["snub_dod"]                    = snub_dodecahedron;
-   models["sn_dodecahedron"]             = snub_dodecahedron;
-   models["sn_dod"]                      = snub_dodecahedron;
-   models["icosahedron"]                 = icosahedron;
-   models["icosa"]                       = icosahedron;
-   models["ico"]                         = icosahedron;
-   models["truncated_icosahedron"]       = tr_icosahedron;
-   models["tr_icosahedron"]              = tr_icosahedron;
-   models["tr_icosa"]                    = tr_icosahedron;
-   models["tr_ico"]                      = tr_icosahedron;
-   models["cuboctahedron"]               = cuboctahedron;
-   models["cubo"]                        = cuboctahedron;
-   models["truncated_cuboctahedron"]     = tr_cuboctahedron;
-   models["tr_cuboctahedron"]            = tr_cuboctahedron;
-   models["tr_cubo"]                     = tr_cuboctahedron;
-   models["icosidodecahedron"]           = icosidodecahedron;
-   models["icosid"]                      = icosidodecahedron;
-   models["truncated_icosidodecahedron"] = tr_icosidodecahedron;
-   models["tr_icosidodecahedron"]        = tr_icosidodecahedron;
-   models["tr_icosid"]                   = tr_icosidodecahedron;
-   models["rhombicuboctahedron"]         = rhombicuboctahedron;
-   models["rhombicubo"]                  = rhombicuboctahedron;
-   models["rh_cubo"]                     = rhombicuboctahedron;
-   models["rhombicosidodecahedron"]      = rhombicosidodecahedron;
-   models["rhombicosid"]                 = rhombicosidodecahedron;
-   models["rh_icosid"]                   = rhombicosidodecahedron;
-   models["rhombic_dodecahedron"]        = rh_dodecahedron;
-   models["rh_dodecahedron"]             = rh_dodecahedron;
-   models["rh_dod"]                      = rh_dodecahedron;
-   models["rd"]                          = rh_dodecahedron;
-   models["rhombic_triacontahedron"]     = rh_triacontahedron;
-   models["rh_triacontahedron"]          = rh_triacontahedron;
-   models["rh_tri"]                      = rh_triacontahedron;
-   models["rt"]                          = rh_triacontahedron;
-   models["rhombic_enneacontahedron"]    = rh_enneacontahedron;
-   models["rh_enneacontahedron"]         = rh_enneacontahedron;
-   models["rh_ennea"]                    = rh_enneacontahedron;
-   models["re"]                          = rh_enneacontahedron;
-
-   map<string, model_func>::iterator mi = models.find(name.substr(4));
-   if(mi != models.end())
-      mi->second(geom);
-   else {
-      if(errmsg)
-         snprintf(errmsg, MSG_SZ, "invalid standard polyhedron name");
-      return 1; // fail
-   }
-   return 0; // name found
-}
 
 static void get_arrow(col_geom_v &geom, const sch_sym &sym)
 {
@@ -1026,10 +1033,82 @@ int make_resource_sym(geom_if &geom, string name, char *errmsg=0) {
 }
 
 
+int make_resource_pgon(geom_if &geom, string name, bool is_std, char *errmsg)
+{
+   if(name.find('.')!=string::npos)
+      return -1; // not polygon res name (the "." indicates a likely local file)
+                 // so the name is not handled
+
+   char pnam[MSG_SZ];
+   strncpy(pnam, name.c_str(), MSG_SZ);
+   int num_sides;
+   int step=1;
+   char *pnum = pnam+3;
+   char *p = strchr(pnum, '/');
+   if(p!=0) {
+      *p++='\0';
+      if(!read_int(p, &step))
+         return -1;
+   }
+   if(!read_int(pnum, &num_sides))
+      return -1;
+   if(num_sides<2)
+      return -1;
+   if(step<1)
+      return -1;
+   if(step%num_sides==0)
+      return -1;
+   
+   *pnum = '\0';
+
+   polygon pgon(num_sides, step);
+   polygon *poly;
+   if(strcasecmp("pri", pnam)==0)
+      poly = new prism(pgon);
+   else if(strcasecmp("ant", pnam)==0)
+      poly = new antiprism(pgon);
+   else if(strcasecmp("pyr", pnam)==0)
+      poly = new pyramid(pgon);
+   else if(strcasecmp("dip", pnam)==0)
+      poly = new dipyramid(pgon);
+   else if(strcasecmp("cup", pnam)==0)
+      poly = new cupola(pgon);
+   else if(strcasecmp("ort", pnam)==0)
+      poly = new orthobicupola(pgon);
+   else if(strcasecmp("gyr", pnam)==0)
+      poly = new gyrobicupola(pgon);
+   else if(strcasecmp("snu", pnam)==0)
+      poly = new snub_antiprism(pgon);
+   else
+      return -1;
+
+   // check can have unit edge
+   int ret;
+   poly->set_edge(1);
+   if(!poly->set_edge2(1)) {
+      if(errmsg)
+         strcpy(errmsg, "polyhedron cannot have unit edges");
+      ret = 1;
+   }
+   else {
+      poly->make_poly(geom);
+      ret = 0;
+   }
+
+   delete poly;
+
+   if (!is_std)
+      set_resource_polygon_color(geom);
+
+   return ret;
+}
+
+
 bool make_resource_geom(geom_if &geom, string name, char *errmsg)
 {
    if(errmsg)
       *errmsg = '\0';
+
    geom.clear_all();
    
    if(!name.size())
@@ -1037,6 +1116,26 @@ bool make_resource_geom(geom_if &geom, string name, char *errmsg)
 
    bool make_dual = false;
    process_for_dual(name, make_dual);
+
+   char errmsg2[MSG_SZ];
+   bool geom_ok = false;
+
+   // RK: now check for standard polys before any work is done on the name
+   // if found, then end here. if not fall through
+   if(!geom_ok) {
+      int ret = make_resource_std_poly(geom, name, errmsg2);
+      if(ret==0) {
+         if(make_dual)
+            make_resource_dual(geom, true);
+         return true;
+      }
+   }
+
+   // RK: standard keyword "std_" now used for all built-in polyhedra
+   // truncate "std_" but keep track of it
+   bool is_std = (name.size()>3 && name.substr(0,4)=="std_");
+   if (is_std)
+      name = name.substr(4);
    
    // Look for an internal alternative name
    char alt_name[MSG_SZ];
@@ -1049,13 +1148,9 @@ bool make_resource_geom(geom_if &geom, string name, char *errmsg)
          break;
       }
    }
-
-   char errmsg2[MSG_SZ];
-   bool geom_ok = false;
-
   
    if(!geom_ok) {
-      int ret = make_resource_pgon(geom, name, errmsg2);
+      int ret = make_resource_pgon(geom, name, is_std, errmsg2);
       if(ret==0)
          geom_ok = true;
       else if(ret > 0) {
@@ -1066,7 +1161,7 @@ bool make_resource_geom(geom_if &geom, string name, char *errmsg)
    }
 
    if(!geom_ok) {
-      int ret = make_resource_uniform(geom, name, errmsg2);
+      int ret = make_resource_uniform(geom, name, is_std, errmsg2);
       if(ret==0)
          geom_ok = true;
       else if(ret > 0) {
@@ -1077,7 +1172,7 @@ bool make_resource_geom(geom_if &geom, string name, char *errmsg)
    }
 
    if(!geom_ok) {
-      int ret = make_resource_johnson(geom, name, errmsg2);
+      int ret = make_resource_uniform_compound(geom, name, is_std, errmsg2);
       if(ret==0)
          geom_ok = true;
       else if(ret > 0) {
@@ -1088,7 +1183,7 @@ bool make_resource_geom(geom_if &geom, string name, char *errmsg)
    }
 
    if(!geom_ok) {
-      int ret = make_resource_uniform_compound(geom, name, errmsg2);
+      int ret = make_resource_johnson(geom, name, is_std, errmsg2);
       if(ret==0)
          geom_ok = true;
       else if(ret > 0) {
@@ -1099,18 +1194,7 @@ bool make_resource_geom(geom_if &geom, string name, char *errmsg)
    }
 
    if(!geom_ok) {
-      int ret = make_resource_geodesic(geom, name, errmsg2);
-      if(ret==0)
-         geom_ok = true;
-      else if(ret > 0) {
-         if(errmsg)
-            strcpy(errmsg, errmsg2);
-         return false;
-      }
-   }
-
-   if(!geom_ok) {
-      int ret = make_resource_std_poly(geom, name, errmsg2);
+      int ret = make_resource_geodesic(geom, name, is_std, errmsg2);
       if(ret==0)
          geom_ok = true;
       else if(ret > 0) {
@@ -1132,10 +1216,8 @@ bool make_resource_geom(geom_if &geom, string name, char *errmsg)
    }
 
    if(make_dual)
-      make_resource_dual(geom);
+      make_resource_dual(geom, is_std);
 
    return geom_ok;
 }
-
- 
 
