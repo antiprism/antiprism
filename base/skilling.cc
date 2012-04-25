@@ -20,9 +20,11 @@
   IN THE SOFTWARE.
 */
 
-/* \file skilling.cc
- *\Uniform Compounds catalogued by John Skilling 
- */
+/*
+   Name: skilling.cc
+   Description: Uniform Compounds catalogued by John Skilling 
+   Project: Antiprism - http://www.antiprism.com
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,7 +36,6 @@
 #include <vector>
 #include <algorithm>
 
-#include "skilling.h"
 #include "std_polys.h"
 #include "geom_utils.h"
 #include "math_utils.h"
@@ -334,9 +335,12 @@ uc_poly::uc_poly()
    last_uc = sizeof (uc_item_list) / sizeof (uc_item_list[0]);
 }
 
-int uc_poly::get_poly(geom_if &geom, int sym, double angle, int n, int d, int k)
+int uc_poly::get_poly(geom_if &geom, int sym, double angle, int n, int d, int k, bool is_std)
 {
    string constituent_str = uc_items[sym].constituent;
+   if (is_std)
+      constituent_str = "std_" + constituent_str;
+
    string sym_from = uc_items[sym].sym_from;
    string sym_to = uc_items[sym].sym_to;
    
@@ -363,9 +367,11 @@ int uc_poly::get_poly(geom_if &geom, int sym, double angle, int n, int d, int k)
    else
    if (uc_items[sym].angle != -1)
       angle = uc_items[sym].angle;
-      
-   make_resource_geom(geom, constituent_str);
+
+   geom.read_resource(constituent_str);
+
    build_uniform_compound(geom, uc_items[sym].uc_case, uc_num, sym_from, sym_to, angle);
+
    return 1;
 }
 
@@ -418,7 +424,8 @@ int uc_poly::lookup_sym_no(string sym)
 
    return idx;
 }
-void assign_uc_value(char operand, const char *digits_str, double &angle, int &n, int &d, int &k)
+
+void uc_poly::assign_uc_value(char operand, const char *digits_str, double &angle, int &n, int &d, int &k)
 {
    if (operand == 'a')
       angle = atof(digits_str);
@@ -434,7 +441,7 @@ void assign_uc_value(char operand, const char *digits_str, double &angle, int &n
    operand = '\0';
 }
 
-int parse_uc_args(string &name, double &angle, int &n, int &d, int &k, char *errmsg)
+int uc_poly::parse_uc_args(string &name, double &angle, int &n, int &d, int &k, char *errmsg)
 {
    int ret = 1;
    
@@ -540,7 +547,7 @@ int parse_uc_args(string &name, double &angle, int &n, int &d, int &k, char *err
    return ret;
 }
 
-int set_uc_args(int sym, double &angle, int &n, int &d, int &k, char *errmsg)
+int uc_poly::set_uc_args(int sym, double &angle, int &n, int &d, int &k, char *errmsg)
 {
    int need_angle[] = {1,2,7,10,11,13,20,22,24,26,28}; // 11 occurrances
    bool needs_angle = false;
@@ -651,113 +658,3 @@ int set_uc_args(int sym, double &angle, int &n, int &d, int &k, char *errmsg)
    return 0;
 }
 
-const char *uc_abbrevs[][2] = {
-   {"tr", "truncated"},
-   {"sm", "small"},
-   {"gr", "great"},
-   {"st", "stellated"},
-   {"sn", "snub"},
-   {"tet", "tetrahedra"},
-   {"ico", "icosahedra"},
-   {"icosa", "icosahedra"},
-   {"dod", "dodecahedra"},
-   {"oct", "octahedra"},
-   {"cubo", "cuboctahedra"},
-   {"icosid", "icosidodecahedra"},
-   {"pri", "prisms"},
-   {"ant", "antiprisms"},
-   {"rot", "rotational"}
-};
-
-int make_resource_uniform_compound(geom_if &geom, string name, char *errmsg)
-{
-   if(errmsg)
-      *errmsg = '\0';
-   
-   // lower case the name
-   transform(name.begin(), name.end(), name.begin(), ::tolower);
-
-   if(name.size()<3 || name.substr(0,2)!="uc")
-      return -1; // not uniform compound name
-
-   double angle = INFINITY;
-   int n = -1;
-   int d = -1;
-   int k = -1;
-      
-   // if complex parms, parse them
-   if(strpbrk(name.c_str(),RES_SEPARATOR)) {
-      char errmsg2[MSG_SZ];
-      parse_uc_args(name,angle,n,d,k,errmsg2);
-      // if there was something wrong with the argument string, the whole name is still intact. Continue. No error message displayed.
-      //if (ret>0) {
-      //   if(errmsg)
-      //      strcpy(errmsg, errmsg2);
-      //   return 1; // fail
-      //}
-   }
-
-   uc_poly uniform_compounds;
-   int sym_no;
-   if(read_int(name.c_str()+2, &sym_no)) {
-      sym_no--;
-      if(sym_no<0 || sym_no >= uniform_compounds.get_last_uc()) {
-         if(errmsg)
-            snprintf(errmsg, MSG_SZ, "uniform compound number out of range");
-         return 1; // fail
-      }
-   }
-   else if(strchr(RES_SEPARATOR, name[2])) {
-      string expanded = expand_abbrevs(name, uc_abbrevs,
-            sizeof(uc_abbrevs)/sizeof(uc_abbrevs[0]));
-      sym_no = uniform_compounds.lookup_sym_no(expanded.c_str());
-      if(sym_no == -1) {
-         //this error message is currently suppressed
-         //if(errmsg)
-         //   snprintf(errmsg, MSG_SZ, "invalid uniform compound polyhedron name");
-         return 1; // fail
-      }
-   }
-   else
-      return -1; // not uniform compound name
-     
-   char errmsg2[MSG_SZ];
-   int ret = set_uc_args(sym_no+1,angle,n,d,k,errmsg2);
-   if (ret>0) {
-      //this error message is currently suppressed
-      //if(errmsg)
-      //   strcpy(errmsg, errmsg2);
-      return 1; // fail
-   }
-
-   if (angle != INFINITY || n != -1 || d != -1 || k != -1) {
-      char angle_str[MSG_SZ] = "";
-      if (angle != INFINITY)
-         snprintf(angle_str, MSG_SZ, "a%g",rad2deg(angle));
-      char n_str[MSG_SZ] = "";
-      if (n != -1)
-         snprintf(n_str, MSG_SZ, "n%d",n);
-      char d_str[MSG_SZ] = "";
-      if (d > 1)
-         snprintf(d_str, MSG_SZ, "/%d",d);
-      char k_str[MSG_SZ] = "";
-      if (k != -1)
-         snprintf(k_str, MSG_SZ, "k%d",k);
-      fprintf(stderr,"UC%d_%s%s%s%s\n",sym_no+1,angle_str,n_str,d_str,k_str);
-   }
-
-   uniform_compounds.get_poly(geom,sym_no,angle,n,d,k);
-   
-   col_geom_v *cg = dynamic_cast<col_geom_v *>(&geom); 
-   if(cg) {      
-      coloring clrng(cg);
-      color_map *cmap = init_color_map("compound");
-      clrng.add_cmap(cmap);
-
-      clrng.v_apply_cmap();
-      clrng.e_apply_cmap();
-      clrng.f_apply_cmap();
-   }
-
-   return 0; // name found
-}

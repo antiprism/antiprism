@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2008, Adrian Rossiter
+   Copyright (c) 2003-2012, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -22,9 +22,11 @@
   IN THE SOFTWARE.
 */
 
-/*!\file std_polys.h
- * \brief Platonic and Archimedean polyhedra
- */
+/*
+   Name: std_polys.h
+   Description: Uniform Polyhedra, Uniform Compounds and Johnson Solids
+   Project: Antiprism - http://www.antiprism.com
+*/
 
 #ifndef STD_POLYS_H
 #define STD_POLYS_H
@@ -56,7 +58,8 @@ void set_resource_polygon_color(geom_if &geom);
 string expand_abbrevs(const string &name,
       const char *abbrevs[][2], size_t last);
 
-struct Uniform {
+struct UniformItem {
+   model_func pfunc;
 	string Wythoff;
 	short Kaleido, Coxeter, Wenninger;
    string name;
@@ -67,17 +70,41 @@ class uni_poly
 {
    private:
       int last_uniform;
-      Uniform* uniform;
+      UniformItem* uniform_items;
 
    public:      
-      uni_poly() { last_uniform = get_uniform_table(&uniform); }
-      int get_poly(geom_if &geom, int sym_no);
+      uni_poly();
+      int get_poly(geom_if &geom, int sym);
       int lookup_sym_no(string sym, int is_dual);
       int get_last_uniform() { return last_uniform; }
-      int get_uniform_table(Uniform **uniform);
 };
 
+struct UCItem {
+   int uc_case;
+   const char *constituent;
+   const char *sym_from;
+   const char *sym_to;
+   double angle;
+   const char *name;
+   const char *description;
+};
 
+class uc_poly
+{
+   private:
+      int last_uc;
+      UCItem* uc_items;
+
+   public:     
+      uc_poly();
+      int get_poly(geom_if &geom, int sym, double angle, int n, int d, int k, bool is_std);
+      int lookup_sym_no(string sym);
+      int get_last_uc() { return last_uc; }
+
+      void assign_uc_value(char operand, const char *digits_str, double &angle, int &n, int &d, int &k);
+      int parse_uc_args(string &name, double &angle, int &n, int &d, int &k, char *errmsg);
+      int set_uc_args(int sym, double &angle, int &n, int &d, int &k, char *errmsg);
+};
 
 struct JohnsonItem {
    model_func pfunc;
@@ -98,8 +125,6 @@ class j_poly
       int get_last_J() { return last_J; }
 
 };
-
-
 
 #endif // STD_POLYS_H  
 

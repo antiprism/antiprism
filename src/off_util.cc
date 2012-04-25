@@ -181,6 +181,7 @@ const char *get_help(const char* name)
    help["col_names"] = help_color_names;
    help["col_map"] = help_color_map;
    help["symmetry"] = help_symmetry;
+   help["bowers"] = help_bowers;
    char hname[MSG_SZ];
    to_resource_name(hname, name);
    map<string, const char *>::iterator mi = help.find(hname);

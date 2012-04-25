@@ -405,8 +405,6 @@ template <class T> bool uni_pgon(geom_if &geom, T pgon)
    return ret;
 }
 
-int make_resource_pgon(geom_if &geom, string pname, char *errmsg=0);
-
 
 
 // Inline functions
