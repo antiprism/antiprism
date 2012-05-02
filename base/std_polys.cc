@@ -756,7 +756,7 @@ int make_resource_uniform_compound(geom_if &geom, string name, bool is_std, char
       char k_str[MSG_SZ] = "";
       if (k != -1)
          snprintf(k_str, MSG_SZ, "k%d",k);
-      fprintf(stderr,"UC%d_%s%s%s%s\n",sym_no+1,angle_str,n_str,d_str,k_str);
+      //fprintf(stderr,"UC%d_%s%s%s%s\n",sym_no+1,angle_str,n_str,d_str,k_str);
    }
 
    uniform_compounds.get_poly(geom,sym_no,angle,n,d,k,is_std);

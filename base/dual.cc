@@ -216,7 +216,7 @@ void get_pol_recip_verts(const geom_if &geom, geom_if &dual,
                   double face_dist= vdot(vert, verts[faces[i][0]]-centre);
                   double dist = r_sign*recip_rad*recip_rad/face_dist;
                   if(fabs(face_dist)<min_lim || fabs(dist)>inf)
-                     dist = r_sign*inf * (1-2*(face_dist<0));
+                     dist = r_sign*inf * (1-2*(face_dist<0))/vert.mag();
                   dual.add_vert(vert*dist + centre);
                   v3=v2=v1=faces[i].size();   // to move on to next face
                   break;
