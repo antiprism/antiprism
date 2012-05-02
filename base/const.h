@@ -29,7 +29,14 @@
 #ifndef CONST_H
 #define CONST_H
 
+#include <math.h>
 #include <stddef.h>
+
+// frequently used constants
+static const double phi             = (sqrt(5)+1)/2; // 1.61803
+static const double sqrt_phi_plus_2 = sqrt(phi+2)  ; // 1.90211
+static const double sqrt_2          = sqrt(2)      ; // 1.41421
+static const double sqrt_3          = sqrt(3)      ; // 1.73205
 
 ///Less than this magnitude may be taken as zero
 const double epsilon = 1e-12;

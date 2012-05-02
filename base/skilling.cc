@@ -48,9 +48,6 @@ using std::string;
 using std::vector;
 
 
-#define phi ((1+sqrt(5))/2)
-#define iphi (1/phi)
-
 // oct_case = 0 // UC19 20 Tetrahemihexahedra 45.6696674755810220... degrees (using 0 degrees as starting point)
 // oct_case = 1 // UC14 20 Octahedra -23.430911382616046... degrees (using UC10 which starts at -45 degrees) (negate the returned angle)
 //                 case 1 not currently used. Instead use oct_case = 2 and add 45.6696674755810220... = 67.908423568545970 degrees
@@ -228,7 +225,7 @@ void build_uniform_compound(geom_if &geom, int uc_case, int uc_num, string sym_f
          transform_and_repeat(geom, "D6h", sym_from);
          sym_from = "D6h";
       }
-      transform_and_repeat(geom, sym_to, sym_from, mat3d::rot(vec3d(0,0,1), vec3d(iphi,0,phi)) * mat3d::rot(0,0,angle));
+      transform_and_repeat(geom, sym_to, sym_from, mat3d::rot(vec3d(0,0,1), vec3d(1/phi,0,phi)) * mat3d::rot(0,0,angle));
    }
    else
    // UC08 3 cubes
@@ -241,8 +238,6 @@ void build_uniform_compound(geom_if &geom, int uc_case, int uc_num, string sym_f
    }
 }
 
-#undef phi
-#undef iphi
 
 // M_PI/12 = 15 degrees
 // M_PI/6  = 30 degrees

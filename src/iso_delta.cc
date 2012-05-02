@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2008-2009, Roger Kaufman
+   Copyright (c) 2008-2012, Roger Kaufman
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -43,6 +43,7 @@
 
 using std::string;
 using std::vector;
+using std::swap;
 
 
 struct IsoDeltaItem {
@@ -74,8 +75,9 @@ IsoDeltaItem iso_delta_item_list[] = {
    {"O3",      "Oh", "[1/2,1/4,2/4]", "COMPOUND of 3 8/3 Star Bipyramids"},
    {"O4(1)",   "Oh", "[1/3,1/3,2/3]", "COMPOUND of 2 Augmented Tetrahedra T2(1) (UC54_d)"},
    {"O4(2)",   "Oh", "[2/3,1/3,1/3]", "COMPOUND of 2 Tetrahedra (Stella Octangula UC04)"},
-   {"O5(1)",   "Oh", "[1/3,2/3,1/3]", "Augmented Cube (=T1(1))"},
-   {"O5(2)",   "Oh", "[2/3,2/3,2/3]", "Excavated Cube (=T1(2))"},
+   // next 2 redundent
+   {"O5(1)",   "Oh", "[1/3,2/3,1/3]", "Augmented Cube (=T1(1)) (Repeat)"},
+   {"O5(2)",   "Oh", "[2/3,2/3,2/3]", "Excavated Cube (=T1(2)) (Repeat)"},
    {"O5(3)",   "Oh", "[1/3,2/3,1/3]", "COMPOUND of 2 T1(3)"},
    {"O6(1)",   "Oh", "[2/3,1/4,1/4]", "Augmented Octahedron"},
    {"O6(2)",   "Oh", "[2/3,3/4,3/4]", "Excavated Octahedron"},
@@ -101,140 +103,142 @@ IsoDeltaItem iso_delta_item_list[] = {
    {"I9(1)",   "Ih", "[1/3,1/3,2/5]", "Augmented Dodecahedron"},
    {"I9(2)",   "Ih", "[1/3,1/3,2/5]", "Excavated Dodecahedron"},
    {"I9(3)",   "Ih", "[1/3,1/3,2/5]", "Relaxed Excavated Dual of Sidtid (UD30)"},
-   // Redundant 
-   //{"I9(4)",   "Ih", "[1/3,1/3,2/5]", "Relaxed Excavated Dual of Sidtid (UD30) (Repeat)"},
+   // redundant 
+   {"I9(4)",   "Ih", "[1/3,1/3,2/5]", "Relaxed Excavated Dual of Sidtid (UD30) (Repeat)"},
    {"I10(1)",  "Ih", "[4/5,4/5,4/5]", "Great Icosahedron or Gike (U53)"},
    {"I10(2)",  "Ih", "[1/5,1/5,4/5]", "Augmented Sissid (U34)"},
-   // Redundant 
-   //{"I10(3)",  "Ih", "[1/5,1/5,4/5]", "Augmented Sissid (U34) (Repeat)"},
+   // redundant 
+   {"I10(3)",  "Ih", "[1/5,1/5,4/5]", "Augmented Sissid (U34) (Repeat)"},
    {"I11(1)",  "Ih", "[2/5,2/5,2/5]", "Icosahedron"},
    {"I11(2)",  "Ih", "[2/5,3/5,3/5]", "Excavated Gad (U35)"},
 };
 
-#define phi ((1+sqrt(5))/2)
-#define iphi (1/phi)
-#define phi2 (phi*phi)
-#define term1 (sqrt(5.0/2+sqrt(5)/2))
-// = 1.90211303259030714... also sqrt((10+sqrt(20))/4) or sqrt(phi)*pow(5, 0.25)
-#define term2 sqrt(5.0/8+sqrt(5)/8)
-// = 0.95105651629515357... also sqrt((10+sqrt(20))/16) or 0.5*sqrt(0.5*(5+sqrt(5)))
-#define term3 sqrt(5.0/8-sqrt(5)/8)
-// = 0.58778525229247312... also sqrt((10-sqrt(20))/16) or 0.5*sqrt(0.5*(5-sqrt(5)))
 
 // notes added as to what changed from what was listed in the paper
+
+// values found to be formulas
+// 0.20710678118654752 = -(1-sqrt(2))/2
+// 0.237248933904040   = (1.0/6)*sqrt(21-6*sqrt(10))
+// 0.33079226912480375 = sqrt(3)/(sqrt(5)+3)
+// 0.5352331346596349  = sqrt(3)/(sqrt(5)+1)
+// 0.541196100146197   = sqrt((2-sqrt(2))/2)
+// 0.58778525229247312 = 0.5*sqrt(0.5*(5-sqrt(5)))
+// 0.84089641525371454 = sqrt(sqrt(2))
+// 0.95105651629515357 = 0.5*sqrt(0.5*(5+sqrt(5)))
+// 1.02062072615965754 = sqrt(25/24)
+// 1.05374551483176583 = (1.0/6)*sqrt(21+6*sqrt(10))
+// 1.11803398874989485 = sqrt(5)/2
+// 1.20710678118654752 = (1+sqrt(2))/2
+// 1.40125853844407354 = -sqrt(3)/(-sqrt(5)+1)
+// 1.90211303259030714 = sqrt(phi)*5^(1/4) = sqrt(0.5*(5+sqrt(5))) = sqrt(phi+2) = sqrt_phi_plus_2 (built in constant)
+
 IsoDeltaVector iso_delta_vector_list[] = {
-   {"T1(1)",   vec3d(1,-1,1)/sqrt(3), vec3d(1,0,0), vec3d(1,-1,-1)/sqrt(3),
-               sqrt(3)/2, 1.207106781186550, sqrt(3)/2},
-   {"T1(2)",   vec3d(1,-1,1)/sqrt(3), vec3d(-1,0,0), vec3d(1,-1,-1)/sqrt(3),
-               sqrt(3)/2, 0.207106781186547, sqrt(3)/2},
-   {"T1(3)",   vec3d(1,-1,1)/sqrt(3), vec3d(1,0,0), vec3d(1,-1,-1)/sqrt(3),
-               0.237248933904040, 1.118033988749890,1.053745514831770},
+   {"T1(1)",   vec3d(1,-1,1)/sqrt_3, vec3d(1,0,0), vec3d(1,-1,-1)/sqrt_3,
+               sqrt_3/2, (1+sqrt_2)/2, sqrt_3/2},
+   {"T1(2)",   vec3d(1,-1,1)/sqrt_3, vec3d(-1,0,0), vec3d(1,-1,-1)/sqrt_3,
+               sqrt_3/2, -(1-sqrt_2)/2, sqrt_3/2},
+   {"T1(3)",   vec3d(1,-1,1)/sqrt_3, vec3d(1,0,0), vec3d(1,-1,-1)/sqrt_3,
+               (1.0/6)*sqrt(21-6*sqrt(10)), sqrt(5)/2, (1.0/6)*sqrt(21+6*sqrt(10))},
    // B changed
-   {"T2(1)",   vec3d(1,-1,1)/sqrt(3), vec3d(1,-1,-1)/sqrt(3), vec3d(-1,-1,-1)/sqrt(3),
-               sqrt(6)/4, 1.020620726159660, sqrt(6)/4},
-   {"T2(2)",   vec3d(1,-1,1)/sqrt(3), vec3d(-1,1,1)/sqrt(3), vec3d(-1,-1,-1)/sqrt(3),
+   {"T2(1)",   vec3d(1,-1,1)/sqrt_3, vec3d(1,-1,-1)/sqrt_3, vec3d(-1,-1,-1)/sqrt_3,
+               sqrt(6)/4, sqrt(25.0/24), sqrt(6)/4},
+   {"T2(2)",   vec3d(1,-1,1)/sqrt_3, vec3d(-1,1,1)/sqrt_3, vec3d(-1,-1,-1)/sqrt_3,
                sqrt(6)/4, sqrt(6)/4, sqrt(6)/4},
-   {"O1",      vec3d(1,0,1)/sqrt(2), vec3d(1,0,-1)/sqrt(2), vec3d(0,1,0),
-               sqrt(2)/2, sqrt(2)/2, sqrt(2)/2},
+   {"O1",      vec3d(1,0,1)/sqrt_2, vec3d(1,0,-1)/sqrt_2, vec3d(0,1,0),
+               sqrt_2/2, sqrt_2/2, sqrt_2/2},
    // alpha changed
-   {"O2(1)",   vec3d(1,0,0), vec3d(1,0,1)/sqrt(2), vec3d(1,1,1)/sqrt(3),
-               1.080488239084420,0.118828664898468, 1.094667047615130},
-   {"O2(2)",   vec3d(1,0,0), vec3d(1,0,1)/sqrt(2), vec3d(1,1,1)/sqrt(3),
-               1.204738778767500, 1.375617671088820,0.515547971500924},
-   {"O3",      vec3d(1,0,1)/sqrt(2), vec3d(-1,0,0), vec3d(0,1,0),
-               0.541196100146197, 0.541196100146197, 0.840896415253715},
-   {"O4(1)",   vec3d(1,-1,1)/sqrt(3), vec3d(1,-1,-1)/sqrt(3), vec3d(-1,-1,-1)/sqrt(3),
-               sqrt(6)/4, 1.020620726159660, sqrt(6)/4},
+   {"O2(1)",   vec3d(1,0,0), vec3d(1,0,1)/sqrt_2, vec3d(1,1,1)/sqrt_3,
+               1.080488239084420, 0.118828664898468, 1.094667047615130},
+   {"O2(2)",   vec3d(1,0,0), vec3d(1,0,1)/sqrt_2, vec3d(1,1,1)/sqrt_3,
+               1.204738778767500, 1.375617671088820, 0.515547971500924},
+   {"O3",      vec3d(1,0,1)/sqrt_2, vec3d(-1,0,0), vec3d(0,1,0),
+               sqrt((2-sqrt_2)/2), sqrt((2-sqrt_2)/2), sqrt(sqrt_2)},
+   {"O4(1)",   vec3d(1,-1,1)/sqrt_3, vec3d(1,-1,-1)/sqrt_3, vec3d(-1,-1,-1)/sqrt_3,
+               sqrt(6)/4, sqrt(25.0/24), sqrt(6)/4},
    // B changed
-   {"O4(2)",   vec3d(-1,1,-1)/sqrt(3), vec3d(1,-1,-1)/sqrt(3), vec3d(1,1,1)/sqrt(3),
+   {"O4(2)",   vec3d(-1,1,-1)/sqrt_3, vec3d(1,-1,-1)/sqrt_3, vec3d(1,1,1)/sqrt_3,
                sqrt(6)/4, sqrt(6)/4, sqrt(6)/4},
-   {"O5(1)",   vec3d(1,-1,1)/sqrt(3), vec3d(1,0,0), vec3d(1,-1,-1)/sqrt(3),
-               sqrt(3)/2, 1.207106781186550, sqrt(3)/2},
-   {"O5(2)",   vec3d(1,-1,1)/sqrt(3), vec3d(-1,0,0), vec3d(1,-1,-1)/sqrt(3),
-               sqrt(3)/2, 0.207106781186547, sqrt(3)/2},
-   {"O5(3)",   vec3d(1,-1,1)/sqrt(3), vec3d(1,0,0), vec3d(1,-1,-1)/sqrt(3),
-               0.237248933904040, 1.118033988749890, 1.053745514831770},
-   {"O6(1)",   vec3d(1,-1,1)/sqrt(3), vec3d(1,0,0), vec3d(0,-1,0),
-               sqrt(6)/2, sqrt(2)/2, sqrt(2)/2},
-   {"O6(2)",   vec3d(-1,1,-1)/sqrt(3), vec3d(1,0,0), vec3d(0,-1,0),
-               sqrt(6)/6, sqrt(2)/2, sqrt(2)/2},
+   {"O5(1)",   vec3d(1,-1,1)/sqrt_3, vec3d(1,0,0), vec3d(1,-1,-1)/sqrt_3,
+               sqrt_3/2, (1+sqrt_2)/2, sqrt_3/2},
+   {"O5(2)",   vec3d(1,-1,1)/sqrt_3, vec3d(-1,0,0), vec3d(1,-1,-1)/sqrt_3,
+               sqrt_3/2, -(1-sqrt_2)/2, sqrt_3/2},
+   {"O5(3)",   vec3d(1,-1,1)/sqrt_3, vec3d(1,0,0), vec3d(1,-1,-1)/sqrt_3,
+               (1.0/6)*sqrt(21-6*sqrt(10)), sqrt(5)/2, (1.0/6)*sqrt(21+6*sqrt(10))},
+   // triangle flipped for algorithm: A<-->C, C<-->A, alpha<-->gamma, gamma<-->alpha
+   {"O6(1)",   vec3d(1,0,0), vec3d(0,-1,0), vec3d(1,-1,1)/sqrt(3),
+               sqrt(2)/2, sqrt(2)/2, sqrt(6)/2},
+   {"O6(2)",   vec3d(-1,1,-1)/sqrt_3, vec3d(1,0,0), vec3d(0,-1,0),
+               sqrt(6)/6, sqrt_2/2, sqrt_2/2},
    {"O7",      vec3d(1,0,0), vec3d(0,1,0), vec3d(0,0,1),
-               sqrt(2)/2, sqrt(2)/2, sqrt(2)/2},
+               sqrt_2/2, sqrt_2/2, sqrt_2/2},
    // alpha changed
-   {"I1(1)",   vec3d(phi,phi2,1)/(2*phi), vec3d(1,1,1)/sqrt(3), vec3d(0,phi,1)/term1,
+   {"I1(1)",   vec3d(phi,phi*phi,1)/(2*phi), vec3d(1,1,1)/sqrt_3, vec3d(0,phi,1)/sqrt_phi_plus_2,
                0.674181480291942, 1.600435268943570, 1.508572470741690},
-   {"I1(2)",   vec3d(phi,phi2,1)/(2*phi), vec3d(1,1,1)/sqrt(3), vec3d(0,phi,1)/term1,
+   {"I1(2)",   vec3d(phi,phi*phi,1)/(2*phi), vec3d(1,1,1)/sqrt_3, vec3d(0,phi,1)/sqrt_phi_plus_2,
                1.901892201462340, 1.042221422390510, 1.602608615469960},
    // the following six added to the table (not in the paper)
    // I2(1) thru I3(3) added by Jim McNeill
-   {"I2(1)",   vec3d(-phi,phi2,-1)/(2*phi), vec3d(-1,0,-phi)/term1, vec3d(0,phi,-1)/term1,
-               1.035310785747180, 1.017991958789870,0.041794129091506},
-   {"I2(2)",   vec3d(phi,phi2,1)/(2*phi), vec3d(-1,0,-phi)/term1, vec3d(0,-phi,-1)/term1,
+   {"I2(1)",   vec3d(-phi,phi*phi,-1)/(2*phi), vec3d(-1,0,-phi)/sqrt_phi_plus_2, vec3d(0,phi,-1)/sqrt_phi_plus_2,
+               1.035310785747180, 1.017991958789870, 0.041794129091506},
+   {"I2(2)",   vec3d(phi,phi*phi,1)/(2*phi), vec3d(-1,0,-phi)/sqrt_phi_plus_2, vec3d(0,-phi,-1)/sqrt_phi_plus_2,
                0.069590240312534, 0.961660565811817, 0.940133523007424},
-   {"I3(1)",   vec3d(-phi,phi2,1)/(2*phi), vec3d(1,1,1)/sqrt(3), vec3d(0,phi,-1)/term1,
-               1.067540004877190,0.454812301059250,0.979984198587005},
-   {"I3(2)",   vec3d(phi,-phi2,-1)/(2*phi), vec3d(1,1,1)/sqrt(3), vec3d(0,phi,-1)/term1,
+   {"I3(1)",   vec3d(-phi,phi*phi,1)/(2*phi), vec3d(1,1,1)/sqrt_3, vec3d(0,phi,-1)/sqrt_phi_plus_2,
+               1.067540004877190, 0.454812301059250, 0.979984198587005},
+   {"I3(2)",   vec3d(phi,-phi*phi,-1)/(2*phi), vec3d(1,1,1)/sqrt_3, vec3d(0,phi,-1)/sqrt_phi_plus_2,
                0.365481361740863, 0.809498075533857, 0.758298681854245},
-   {"I3(3)",   vec3d(-phi,phi2,1)/(2*phi), vec3d(1,1,1)/sqrt(3), vec3d(0,phi,-1)/term1,
-               1.037389492284540,0.123497623343534, 1.015782486189710},
+   {"I3(3)",   vec3d(-phi,phi*phi,1)/(2*phi), vec3d(1,1,1)/sqrt_3, vec3d(0,phi,-1)/sqrt_phi_plus_2,
+               1.037389492284540, 0.123497623343534, 1.015782486189710},
    // I3(4) result added from programmatic search by Adrian Rossiter
-   {"I3(4)",   vec3d(-phi,phi2,1)/(2*phi), vec3d(1,1,1)/sqrt(3), vec3d(0,-phi,1)/term1,
+   {"I3(4)",   vec3d(-phi,phi*phi,1)/(2*phi), vec3d(1,1,1)/sqrt_3, vec3d(0,-phi,1)/sqrt_phi_plus_2,
                0.840436103166278, 0.919239756651211, 0.257365254781315},
    // A, B changed
-   {"I4",      vec3d(phi,-phi2,-1)/(2*phi), vec3d(-1,-phi,phi2)/(2*phi), vec3d(phi2,1,phi)/(2*phi),
-               1/sqrt(2), 1/sqrt(2), 1/sqrt(2)},
+   {"I4",      vec3d(phi,-phi*phi,-1)/(2*phi), vec3d(-1,-phi,phi*phi)/(2*phi), vec3d(phi*phi,1,phi)/(2*phi),
+               1/sqrt_2, 1/sqrt_2, 1/sqrt_2},
    // C changed
-   {"I5(1)",   vec3d(1,1,1)/sqrt(3), vec3d(-1,0,-phi)/term1, vec3d(phi,-1,0)/term1,
+   {"I5(1)",   vec3d(1,1,1)/sqrt_3, vec3d(-1,0,-phi)/sqrt_phi_plus_2, vec3d(phi,-1,0)/sqrt_phi_plus_2,
                0.740118744863774, 0.305243296610152, 0.825499999909858},
    // alpha changed
-   {"I5(2)",   vec3d(1,1,1)/sqrt(3), vec3d(-1,0,-phi)/term1, vec3d(-phi,1,0)/term1,
+   {"I5(2)",   vec3d(1,1,1)/sqrt_3, vec3d(-1,0,-phi)/sqrt_phi_plus_2, vec3d(-phi,1,0)/sqrt_phi_plus_2,
                0.095586833624572, 0.922356501413017, 0.977651218274709},
-   {"I6(1)",   vec3d(1,1,1)/sqrt(3), vec3d(1,0,phi)/term1, vec3d(phi,1,0)/term1,
-               1.572257895003900,term2, term2},
-   {"I6(2)",   vec3d(1,1,1)/sqrt(3), vec3d(-1,0,-phi)/term1, vec3d(-phi,-1,0)/term1,
-               0.060735266851555, term2, term2},
+   {"I6(1)",   vec3d(1,1,1)/sqrt_3, vec3d(1,0,phi)/sqrt_phi_plus_2, vec3d(phi,1,0)/sqrt_phi_plus_2,
+               1.572257895003900, 0.5*sqrt_phi_plus_2, 0.5*sqrt_phi_plus_2},
+   {"I6(2)",   vec3d(1,1,1)/sqrt_3, vec3d(-1,0,-phi)/sqrt_phi_plus_2, vec3d(-phi,-1,0)/sqrt_phi_plus_2,
+               0.060735266851555, 0.5*sqrt_phi_plus_2, 0.5*sqrt_phi_plus_2},
    // C changed
-   {"I7(1)",   vec3d(1,1,1)/sqrt(3), vec3d(0,-phi,1)/term1, vec3d(-phi,1,0)/term1,
-               0.706232491219458, term3, term3},
-   {"I7(2)",   vec3d(1,1,1)/sqrt(3), vec3d(0,phi,-1)/term1, vec3d(phi,-1,0)/term1,
-               0.926760670635994, term3, term3},
-   {"I7(3)",   vec3d(1,1,1)/sqrt(3), vec3d(0,-phi,1)/term1, vec3d(phi,-1,0)/term1,
-               0.330792269124804, 0.883687468829836, 1.007795749176520},
+   {"I7(1)",   vec3d(1,1,1)/sqrt_3, vec3d(0,-phi,1)/sqrt_phi_plus_2, vec3d(-phi,1,0)/sqrt_phi_plus_2,
+               0.706232491219458, 0.5*sqrt(0.5*(5-sqrt(5))), 0.5*sqrt(0.5*(5-sqrt(5)))},
+   {"I7(2)",   vec3d(1,1,1)/sqrt_3, vec3d(0,phi,-1)/sqrt_phi_plus_2, vec3d(phi,-1,0)/sqrt_phi_plus_2,
+               0.926760670635994, 0.5*sqrt(0.5*(5-sqrt(5))), 0.5*sqrt(0.5*(5-sqrt(5)))},
+   {"I7(3)",   vec3d(1,1,1)/sqrt_3, vec3d(0,-phi,1)/sqrt_phi_plus_2, vec3d(phi,-1,0)/sqrt_phi_plus_2,
+               sqrt_3/(sqrt(5)+3), 0.883687468829836, 1.007795749176520},
    // C, beta changed
-   {"I8(1)",   vec3d(1,1,1)/sqrt(3), vec3d(0,-iphi,-phi)/sqrt(3), vec3d(phi,-1,0)/term1,
-               0.535233134659635, 0.535233134659635, term2},
+   {"I8(1)",   vec3d(1,1,1)/sqrt_3, vec3d(0,-1/phi,-phi)/sqrt_3, vec3d(phi,-1,0)/sqrt_phi_plus_2,
+               sqrt_3/(sqrt(5)+1), sqrt_3/(sqrt(5)+1), 0.5*sqrt_phi_plus_2},
    // B changed
-   {"I8(2)",   vec3d(1,1,1)/sqrt(3), vec3d(0,-iphi,-phi)/sqrt(3), vec3d(-phi,1,0)/term1,
-               0.535233134659635, 0.535233134659635, 0.750245100408926},
-   {"I9(1)",   vec3d(1,1,1)/sqrt(3), vec3d(1,0,phi)/term1, vec3d(phi,0,iphi)/sqrt(3),
-               1.401258538444070, 1.639247476530740, 1.401258538444070},
-   {"I9(2)",   vec3d(1,1,1)/sqrt(3), vec3d(1,0,phi)/term1, vec3d(phi,0,iphi)/sqrt(3),
-               1.401258538444070,term3, 1.401258538444070},
-   {"I9(3)",   vec3d(1,1,1)/sqrt(3), vec3d(1,0,phi)/term1, vec3d(phi,0,iphi)/sqrt(3),
+   {"I8(2)",   vec3d(1,1,1)/sqrt_3, vec3d(0,-1/phi,-phi)/sqrt_3, vec3d(-phi,1,0)/sqrt_phi_plus_2,
+               sqrt_3/(sqrt(5)+1), sqrt_3/(sqrt(5)+1), 0.750245100408926},
+   {"I9(1)",   vec3d(1,1,1)/sqrt_3, vec3d(1,0,phi)/sqrt_phi_plus_2, vec3d(phi,0,1/phi)/sqrt_3,
+               -sqrt_3/(-sqrt(5)+1), 1.639247476530740, -sqrt_3/(-sqrt(5)+1)},
+   {"I9(2)",   vec3d(1,1,1)/sqrt_3, vec3d(1,0,phi)/sqrt_phi_plus_2, vec3d(phi,0,1/phi)/sqrt_3,
+               -sqrt_3/(-sqrt(5)+1), 0.5*sqrt(0.5*(5-sqrt(5))), -sqrt_3/(-sqrt(5)+1)},
+   {"I9(3)",   vec3d(1,1,1)/sqrt_3, vec3d(1,0,phi)/sqrt_phi_plus_2, vec3d(phi,0,1/phi)/sqrt_3,
                1.056261606816530, 1.606723212103540, 1.497317965649610},
    // Redundant
-   //{"I9(4)",   vec3d(1,1,1)/sqrt(3), vec3d(1,0,phi)/term1, vec3d(phi,0,iphi)/sqrt(3),
-   //            1.497317965649610, 1.606723212103540, 1.056261606816530},
-   {"I10(1)",  vec3d(1,0,phi)/term1, vec3d(0,-phi,-1)/term1, vec3d(-phi,1,0)/term1,
-               term3, term3, term3},
+   {"I9(4)",   vec3d(1,1,1)/sqrt_3, vec3d(1,0,phi)/sqrt_phi_plus_2, vec3d(phi,0,1/phi)/sqrt_3,
+               1.497317965649610, 1.606723212103540, 1.056261606816530},
+   {"I10(1)",  vec3d(1,0,phi)/sqrt_phi_plus_2, vec3d(0,-phi,-1)/sqrt_phi_plus_2, vec3d(-phi,1,0)/sqrt_phi_plus_2,
+               0.5*sqrt(0.5*(5-sqrt(5))), 0.5*sqrt(0.5*(5-sqrt(5))), 0.5*sqrt(0.5*(5-sqrt(5)))},
    // C changed
-   {"I10(2)",  vec3d(1,0,phi)/term1, vec3d(0,-phi,-1)/term1, vec3d(phi,-1,0)/term1,
-               term3, term3, 1.113516364411610},
+   {"I10(2)",  vec3d(1,0,phi)/sqrt_phi_plus_2, vec3d(0,-phi,-1)/sqrt_phi_plus_2, vec3d(phi,-1,0)/sqrt_phi_plus_2,
+               0.5*sqrt(0.5*(5-sqrt(5))), 0.5*sqrt(0.5*(5-sqrt(5))), 1.113516364411610},
    // Redundant
-   //{"I10(3)",  vec3d(1,0,phi)/term1, vec3d(0,phi,1)/term1, vec3d(phi,-1,0)/term1,
-   //            1.113516364411610,term3, term3},
-   {"I11(1)",  vec3d(1,0,phi)/term1, vec3d(0,phi,1)/term1, vec3d(phi,1,0)/term1,
-               term2, term2, term2},
-   {"I11(2)",  vec3d(1,0,phi)/term1, vec3d(0,-phi,-1)/term1, vec3d(phi,1,0)/term1,
-               term2, 0.100405707943114, term2},
+   {"I10(3)",  vec3d(1,0,phi)/sqrt_phi_plus_2, vec3d(0,phi,1)/sqrt_phi_plus_2, vec3d(phi,-1,0)/sqrt_phi_plus_2,
+               1.113516364411610, 0.5*sqrt(0.5*(5-sqrt(5))), 0.5*sqrt(0.5*(5-sqrt(5)))},
+   {"I11(1)",  vec3d(1,0,phi)/sqrt_phi_plus_2, vec3d(0,phi,1)/sqrt_phi_plus_2, vec3d(phi,1,0)/sqrt_phi_plus_2,
+               0.5*sqrt_phi_plus_2, 0.5*sqrt_phi_plus_2, 0.5*sqrt_phi_plus_2},
+   {"I11(2)",  vec3d(1,0,phi)/sqrt_phi_plus_2, vec3d(0,-phi,-1)/sqrt_phi_plus_2, vec3d(phi,1,0)/sqrt_phi_plus_2,
+               0.5*sqrt_phi_plus_2, 0.100405707943114, 0.5*sqrt_phi_plus_2},
 };
-
-#undef phi
-#undef iphi
-#undef phi2
-#undef term1
-#undef term2
-#undef term3
 
 class id_poly
 {
@@ -278,7 +282,7 @@ void id_poly::list_polys(FILE *fp)
    for(int i=0; i<last_iso_delta; i++)
       list_poly(i, fp);
    fprintf(fp,"\n");
-   fprintf(fp,"36 Isohedral Deltahedra + 6 Compounds = 42 Total\n\n");
+   fprintf(fp,"34 Isohedral Deltahedra + 4 Repeats + 6 Compounds = 44 Total\n\n");
    fprintf(fp,"*  added to the table by Jim McNeill (http://www.orchidpalms.com/polyhedra)\n");
    fprintf(fp,"** added to the table by Adrian Rossiter (http://www.antiprism.com)\n");
 }
@@ -480,7 +484,7 @@ void id_opts::usage()
 "              i - 6 tetrahedra using -a angle (default: 45.0)\n"
 "                     Uniform Compound UC01. At 45.0 degrees is UC03\n"
 "              j - 12 tetrahedra using -a angle (default: 30.0)\n"
-"                     Uniform Compound UC02. At 45.0 degress is UC03\n"
+"                     Uniform Compound UC02. At 45.0 degrees is UC03\n"
 "              k - 2 dipyramids of n/d repeated k times, evenly spaced\n"
 "                     using -a angle (default: 1.0)\n"
 "                     relaxed dual of Uniform Compound Set UC20\n"
@@ -702,37 +706,310 @@ void id_opts::process_command_line(int argc, char **argv)
 
 void verbose_output(const vec3d &A, const vec3d &B, const vec3d &C, const double &alpha, const double &beta, const double &gamma)
 {
-   A.dump("\nVector A",stderr);
-   B.dump("Vector B",stderr);
-   C.dump("Vector C",stderr);
+   fprintf(stderr,"Schwarz triangle:\n");
+   fprintf(stderr,"A = (% .15lf,% .15lf,% .15lf )\n",   A[0],A[1],A[2]);
+   fprintf(stderr,"B = (% .15lf,% .15lf,% .15lf )\n",   B[0],B[1],B[2]);
+   fprintf(stderr,"C = (% .15lf,% .15lf,% .15lf )\n\n", C[0],C[1],C[2]);
 
-   fprintf(stderr,"\nalpha = %1.15f\n", alpha);
-   fprintf(stderr,"beta = %1.15f\n", beta);
-   fprintf(stderr,"gamma = %1.15f\n\n", gamma);
+   fprintf(stderr,"alpha = % .15lf\n",   alpha);
+   fprintf(stderr,"beta  = % .15lf\n",   beta);
+   fprintf(stderr,"gamma = % .15lf\n\n", gamma);
+
+   fprintf(stderr,"Deltahedra triangle:\n");
+   fprintf(stderr,"A = (% .15lf,% .15lf,% .15lf )\n",   A[0]*alpha,A[1]*alpha,A[2]*alpha);
+   fprintf(stderr,"B = (% .15lf,% .15lf,% .15lf )\n",   B[0]*beta ,B[1]*beta ,B[2]*beta);
+   fprintf(stderr,"C = (% .15lf,% .15lf,% .15lf )\n\n", C[0]*gamma,C[1]*gamma,C[2]*gamma);
 }
 
-void make_triangle(col_geom_v &geom, const vec3d &A, const vec3d &B, const vec3d &C, const double &alpha, const double &beta, const double &gamma)
+void make_triangle(geom_if &geom, const vec3d &A, const vec3d &B, const vec3d &C, col_val c)
 {
-   geom.add_vert(A*alpha);
-   geom.add_vert(B*beta);
-   geom.add_vert(C*gamma);
+   int sz = geom.verts().size();
 
-   vector<int> face;
-   face.push_back(0);
-   face.push_back(1);
-   face.push_back(2);
-   geom.add_face(face);
+   geom.add_vert(A);
+   geom.add_vert(B);
+   geom.add_vert(C);
+
+   vector<int> face(3);
+   for(unsigned int i=0; i<3; i++)
+      face[i] = sz++;
+
+   col_geom_v *cg = dynamic_cast<col_geom_v *>(&geom); 
+   if(cg)
+      cg->add_col_face(face,c);
+   else
+      geom.add_face(face);
 }
 
-void make_poly(col_geom_v &geom, const string &sym_type, const bool &triangle_only, const bool &verbose,
+// quartic formula by Adrian Rossiter
+int find_equ_tris(vec3d A, vec3d B, vec3d C, vector<double> &factors, const bool &verbose)
+{
+/*
+   A.dump("\nA");
+   B.dump("B");
+   C.dump("C");
+   // check for unit vectors
+   fprintf(stderr, "lens = %g, %g, %g\n\n", A.mag(), B.mag(), C.mag());
+*/
+
+   double AB = vdot(A,B);
+   double BC = vdot(B,C);
+   double CA = vdot(C,A);
+   double A2 = vdot(A,A);
+   double B2 = vdot(B,B);
+   double C2 = vdot(C,C);
+
+/*
+   fprintf(stderr,"AB = %.15lf\n",AB);
+   fprintf(stderr,"BC = %.15lf\n",BC);
+   fprintf(stderr,"CA = %.15lf\n",CA);
+   fprintf(stderr,"A2 = %.15lf\n",A2);
+   fprintf(stderr,"B2 = %.15lf\n",B2);
+   fprintf(stderr,"C2 = %.15lf\n\n",C2);
+*/
+
+   // C.C*(4*B.C*B.C - B.B*C.C) c^4
+   // -4*B.C*(2*B.C*C.A + A.B*C.C) c^3
+   // +2* (8*A.B*B.C*C.A + A.A*B.B*C.C) c^2
+   // -4*A.B*(2*A.B*C.A + B.C*A.A) c
+   // + A.A*(4*A.B*A.B - A.A*B.B) = 0
+
+   double coeffs[5];
+   coeffs[0] =    A2*(4*AB*AB - A2*B2);
+   coeffs[1] = -4*AB*(2*AB*CA + BC*A2);
+   coeffs[2] =     2*(8*AB*BC*CA + A2*B2*C2);
+   coeffs[3] = -4*BC*(2*BC*CA + AB*C2);
+   coeffs[4] =    C2*(4*BC*BC - B2*C2);
+
+   double sol[4] = {0,0,0,0};
+   int num_roots = quartic(coeffs, sol);
+   if (verbose)
+      fprintf(stderr,"\nquartic formula found %d roots\n\n",num_roots);
+
+   factors.clear();
+
+   double c = 1e100;
+   for(int i=0; i<num_roots; i++) {
+/* RK: since matching is used, don't reject any quartic solution
+      if(fabs(c-sol[i])<1e-10) {
+         if (verbose)
+            fprintf(stderr,"rejecting quartic solution: %.15lf\n\n",sol[i]);
+         continue;
+      }
+*/
+
+      c = sol[i];
+      if (verbose)
+         fprintf(stderr, "c = %.15lf\n", c);
+
+      // b = (A.B +/- sqrt(A.B*A.B + B.B*(C.C*c^2 - 2*C.A*c)) / B.B
+
+      double rt = AB*AB + B2*(C2*c*c-2*CA*c);
+      if (verbose)
+         fprintf(stderr, "   rt = %.15lf\n", rt);
+
+      // if root is 0 or negative continue
+      if(rt<-sqrt(epsilon)) {
+         if (verbose)
+            fprintf(stderr,"   rejecting negative root: %.15lf\n\n",rt);
+         continue;
+      }
+
+      rt = (rt > sqrt(epsilon)) ? sqrt(rt) : 0;
+
+      double b = (AB+rt)/B2;
+
+      int num_factors = factors.size();
+
+      // AB and AC should be almost the same length, if not reject
+      // RK: was 1e-3 (.001), but with reversing B and C method, we can reject almost all cases outside epsilon
+      if(fabs((b*B-A).mag()-(b*B-c*C).mag())<epsilon) {
+         double AB_len = (b*B-A).mag();
+         if (verbose)
+            fprintf(stderr, "   |AbB| = %.15lf, |AcC| = %.15lf, |bBcC| = %.15lf\n", 1.0, (c*C-A).mag()/AB_len, (c*C-b*B).mag()/AB_len);
+         factors.push_back(c);
+         factors.push_back(b);
+         if (verbose)
+            fprintf(stderr, "   b = %.15lf\n\n", factors.back());
+      }
+
+      if(rt != 0) {
+         b = (AB-rt)/B2;
+         // AB and AC should be almost the same length, if not reject
+         // RK: was 1e-3 (.001), but with reversing B and C method, we can reject almost all cases outside epsilon
+         if(fabs((b*B-A).mag()-(b*B-c*C).mag())<epsilon) {
+            double AB_len = (b*B-A).mag();
+            if (verbose)
+               fprintf(stderr, "   |AbB| = %.15lf, |AcC| = %.15lf, |bBcC| = %.15lf\n", 1.0, (c*C-A).mag()/AB_len, (c*C-b*B).mag()/AB_len);
+            factors.push_back(c);
+            factors.push_back(b);
+            if (verbose)
+               fprintf(stderr, "   b = %.15lf\n\n", b);
+         }
+      }
+      else
+         if (verbose)
+            fprintf(stderr, "   Double root\n\n");
+
+      if(factors.size()-num_factors==4) {
+         if (verbose)
+            fprintf(stderr, "   ***** DOUBLE VALUE for non-double root!!!! *****\n\n");
+         //factors.resize(num_factors);
+      }
+   }
+
+   if (verbose)
+      fprintf(stderr,"total of %d possible triangles\n\n",(int)factors.size()/2);
+
+   return num_roots;
+}
+
+// find closest match to alpha, beta and gamma values in the table
+// if found, use the formula derived values. If not found, table values unchanged
+bool refine_abg(/* const string &sym_type, */ bool reverse, const bool &verbose,
+                const vec3d &A, const vec3d &B, const vec3d &C,
+                double &alpha, double &beta, double &gamma)
+{
+   bool found = false;
+
+/* geom2 is for debug OFF files
+   // schwarz triangle and Shephards transformation
+   col_geom_v geom2;
+   make_triangle(geom2, A, B, C, col_val(0.0,0.0,1.0));
+   make_triangle(geom2, A*alpha, B*beta, C*gamma, col_val(1.0,1.0,0.0));
+   if (sym_type[0]=='D' || sym_type[0]=='I')
+      geom2.transform(mat3d::rot(0, M_PI/2, 0));
+   geom2.write("tri1.off");
+   geom2.clear_all();
+*/
+
+   vector<double> factors;
+   find_equ_tris(A, (reverse ? C : B), (reverse ? B : C), factors, verbose);
+
+/*
+   // schwarz triangle and calculated values
+   make_triangle(geom2, A, B, C, col_val(0.0,0.0,1.0));
+*/
+
+   for(unsigned int k=0; k<factors.size()/2; k++) {
+      double a = 1;
+      double b = factors[2*k+(reverse ? 0 : 1)];
+      double g = factors[2*k+(reverse ? 1 : 0)];
+
+      if (verbose) {
+         fprintf(stderr,"calculated from formula (%d):\n",k+1);
+         fprintf(stderr,"alpha: % .15lf\n",a);
+         fprintf(stderr,"beta:  % .15lf\n",b);
+         fprintf(stderr,"gamma: % .15lf\n\n",g);
+      }
+
+      col_geom_v triangle;
+      make_triangle(triangle, A*a, B*b, C*g, col_val(1.0,0.0,0.0));
+
+      // unit edges
+      geom_info info(triangle);
+      if (info.num_iedges() > 0) {
+         double val = info.iedge_lengths().sum/info.num_iedges();
+         triangle.transform(mat3d::scale(1/val));
+      }
+/*
+      geom2.append(triangle);
+*/
+
+      // unitized a,b,g
+      int i=0;
+      int j=0;
+
+      vec3d t = triangle.verts()[0];
+      for (i=0;i<3;i++)
+         if (double_ne(t[i],0,epsilon))
+            break;
+      for (j=0;j<3;j++)
+         if (double_ne(A[i],0,epsilon))
+            break;
+      a = t[i]/A[j];
+
+      t = triangle.verts()[1];
+      for (i=0;i<3;i++)
+         if (double_ne(t[i],0,epsilon))
+            break;
+      for (j=0;j<3;j++)
+         if (double_ne(B[j],0,epsilon))
+            break;
+      b = t[i]/B[j];
+
+      t = triangle.verts()[2];
+      for (i=0;i<3;i++)
+         if (double_ne(t[i],0,epsilon))
+            break;
+      for (j=0;j<3;j++)
+         if (double_ne(C[j],0,epsilon))
+            break;
+      g = t[i]/C[j];
+
+      if (verbose) {
+         fprintf(stderr,"unit edge values:\n");
+         fprintf(stderr,"alpha: % .15lf\n",  a);
+         fprintf(stderr,"beta:  % .15lf\n",  b);
+         fprintf(stderr,"gamma: % .15lf\n\n",g);
+      }
+
+      // hard code epsilon value since hard coded table values are only 15 places
+      // compare to table
+      double eps = 1e-12;
+      if (double_eq(alpha, a, eps) && double_eq(beta, b, eps) && double_eq(gamma, g, eps)) {
+         if (verbose)
+            fprintf(stderr, "***** found match!! *****\n\n");
+         found = true;
+
+         alpha = a;
+         beta  = b;
+         gamma = g;
+      }
+
+/*
+      // make polyhedron
+      col_geom_v poly;
+      if (sym_type[0]=='D' || sym_type[0]=='I')
+         triangle.transform(mat3d::rot(0, M_PI/2, 0));
+      sym_repeat(poly, triangle, sym_type);
+      sort_merge_elems(poly, "vef", epsilon);
+      char filename[80];
+      sprintf(filename,"triangle%d_poly.off",k+1);
+      poly.write(filename);
+*/
+   }
+
+/*
+   if (sym_type[0]=='D' || sym_type[0]=='I')
+      geom2.transform(mat3d::rot(0, M_PI/2, 0));
+   geom2.write("tri2.off");
+*/
+
+   return found;
+}
+
+void make_poly(geom_if &geom, const string &sym_type, const bool &triangle_only, const bool &verbose,
                const vec3d &A, const vec3d &B, const vec3d &C, const double &alpha, const double &beta, const double &gamma)
 {
+   double a = alpha;
+   double b = beta;
+   double g = gamma;
+
+   bool found = refine_abg(/* sym_type, */ false, verbose, A, B, C, a, b, g);
    if (verbose)
-      verbose_output(A, B, C, alpha, beta, gamma);
+      fprintf(stderr,"1st try: match %sfound\n\n",(found ? "" : "not "));
+   if (!found) {
+      found = refine_abg(/* sym_type, */ true, verbose, A, B, C, a, b, g);
+      if (verbose)
+         fprintf(stderr,"2nd try: match %sfound%s\n\n",(found ? "" : "not "),(found ? "" : " (using table values)"));
+   }
+
+   if (verbose)
+      verbose_output(A, B, C, a, b, g);
 
    // make poly called twice from dipyramid code, don't remake triangle
    if (geom.verts().size() == 0)
-      make_triangle(geom, A, B, C, alpha, beta, gamma);
+      make_triangle(geom, A*a, B*b, C*g, col_val());
 
    if (sym_type[0]=='D' || sym_type[0]=='I')
       geom.transform(mat3d::rot(0, M_PI/2, 0));
@@ -743,7 +1020,7 @@ void make_poly(col_geom_v &geom, const string &sym_type, const bool &triangle_on
    }
 }
 
-void make_delta_dipyramid(col_geom_v &geom, const int &n, const int &d, bool triangle_only = false, bool verbose = false)
+void make_delta_dipyramid(geom_if &geom, const int &n, const int &d, bool triangle_only = false, bool verbose = false)
 {
    char buf1[MSG_SZ];
    char buf2[MSG_SZ];
@@ -762,29 +1039,16 @@ void make_delta_dipyramid(col_geom_v &geom, const int &n, const int &d, bool tri
    double gamma = sqrt(1.0 - alpha*alpha);
 
    // force triangle_only, verbose to false
-   make_poly(geom, sym_type, true, false, A, B, C, alpha, beta, gamma);
+   make_poly(geom, sym_type, true, (triangle_only ? verbose : false), A, B, C, alpha, beta, gamma);
 
    if (!triangle_only)
       make_poly(geom, sym_type, false, verbose, A, B, C, alpha, beta, gamma);
-   else if (verbose)
+   else
+   if (verbose)
       verbose_output(A, B, C, alpha, beta, gamma);
 }
 
-/*
-void unit_tetrahedron(col_geom_v &geom)
-{
-   tetrahedron(geom);
-   geom.transform(mat3d::scale((1.0/4)*sqrt(2)));
-}
-
-void unit_octahedron(col_geom_v &geom)
-{
-   octahedron(geom);
-   geom.transform(mat3d::scale(1.0/sqrt(2)));
-}
-*/
-
-void tet_to_dihedral(col_geom_v &geom, const string &sym_from, const int &k, mat3d pos=mat3d())
+void tet_to_dihedral(geom_if &geom, const string &sym_from, const int &k, mat3d pos=mat3d())
 {
    char sym_to[MSG_SZ];
    sprintf(sym_to,"D%d%s",k,((k%4 == 0) ? "h" : "v"));
@@ -792,13 +1056,13 @@ void tet_to_dihedral(col_geom_v &geom, const string &sym_from, const int &k, mat
 }
 
 
-void case_a_star_tetrahedron(col_geom_v &geom, const int &k)
+void case_a_star_tetrahedron(geom_if &geom, const int &k)
 {
    geom.read_resource("u1");
    tet_to_dihedral(geom, "Td", 2*k);
 }
 
-void case_b_5_or_10_tetrahedra(col_geom_v &geom, double angle, const int &k)
+void case_b_5_or_10_tetrahedra(geom_if &geom, double angle, const int &k)
 {
    if (angle == INFINITY)
       angle = 0;
@@ -817,7 +1081,7 @@ void case_b_5_or_10_tetrahedra(col_geom_v &geom, double angle, const int &k)
    }
 }
 
-void case_c_2_dipyramids(col_geom_v &geom, double angle, const int &n, const int &d)
+void case_c_2_dipyramids(geom_if &geom, double angle, const int &n, const int &d)
 {
    if (angle == INFINITY) {
       angle = (M_PI/2)/n; // 90/n degrees
@@ -837,7 +1101,7 @@ void case_c_2_dipyramids(col_geom_v &geom, double angle, const int &n, const int
    transform_and_repeat(geom, sym_to, sym_from);
 }
 
-void case_d_6_octahedra(col_geom_v &geom, double angle)
+void case_d_6_octahedra(geom_if &geom, double angle)
 {
    if (angle == INFINITY)
       angle = (M_PI/8); // 22.5 degrees
@@ -849,7 +1113,7 @@ void case_d_6_octahedra(col_geom_v &geom, double angle)
    transform_and_repeat(geom, "T", "D2h");
 }
 
-void case_e_4_or_8_triangular_dipyramids(col_geom_v &geom, double angle, const int &k)
+void case_e_4_or_8_triangular_dipyramids(geom_if &geom, double angle, const int &k)
 {
    if (angle == INFINITY)
       angle = 0;
@@ -872,7 +1136,7 @@ void case_e_4_or_8_triangular_dipyramids(col_geom_v &geom, double angle, const i
    }
 }
 
-void case_f_6_or_12_pentagonal_dipyramids(col_geom_v &geom, double angle, const int &k)
+void case_f_6_or_12_pentagonal_dipyramids(geom_if &geom, double angle, const int &k)
 {
    if (angle == INFINITY)
       angle = 0;
@@ -901,7 +1165,7 @@ void case_f_6_or_12_pentagonal_dipyramids(col_geom_v &geom, double angle, const 
    }
 }
 
-void case_g_2_tetrahedra(col_geom_v &geom, double angle)
+void case_g_2_tetrahedra(geom_if &geom, double angle)
 {
    if (angle == INFINITY)
       angle = (M_PI/4); // 45 degrees
@@ -913,7 +1177,7 @@ void case_g_2_tetrahedra(col_geom_v &geom, double angle)
    tet_to_dihedral(geom, "S4", 2); // 2*k=4
 }
 
-void case_h_2k_tetrahedra(col_geom_v &geom, double angle, const int &k)
+void case_h_2k_tetrahedra(geom_if &geom, double angle, const int &k)
 {
    if (angle == INFINITY)
       angle = deg2rad(1.0);
@@ -922,7 +1186,7 @@ void case_h_2k_tetrahedra(col_geom_v &geom, double angle, const int &k)
    tet_to_dihedral(geom, "D2v", 2*k);
 }
 
-void case_i_6_tetrahedra(col_geom_v &geom, double angle)
+void case_i_6_tetrahedra(geom_if &geom, double angle)
 {
    if (angle == INFINITY)
       angle = (M_PI/4); // 45 degrees
@@ -932,7 +1196,7 @@ void case_i_6_tetrahedra(col_geom_v &geom, double angle)
    transform_and_repeat(geom, "T", "T", mat3d::rot(0,0,angle));
 }
 
-void case_j_12_tetrahedra(col_geom_v &geom, double angle)
+void case_j_12_tetrahedra(geom_if &geom, double angle)
 {
    if (angle == INFINITY)
       angle = (M_PI/6); // 30 degrees;
@@ -943,7 +1207,7 @@ void case_j_12_tetrahedra(col_geom_v &geom, double angle)
    transform_and_repeat(geom, "T", "Oh", mat3d::rot(0,0,angle));
 }
 
-void case_k_2k_dipyramids(col_geom_v &geom, double angle, const int &k, const int &n, const int &d)
+void case_k_2k_dipyramids(geom_if &geom, double angle, const int &k, const int &n, const int &d)
 {
    if (angle == INFINITY)
       angle = deg2rad(1.0);
@@ -960,7 +1224,7 @@ void case_k_2k_dipyramids(col_geom_v &geom, double angle, const int &k, const in
    transform_and_repeat(geom, sym_to, sym_from);
 }
 
-void case_l_k_dipyramids(col_geom_v &geom, const int &k, const int &n, const int &d)
+void case_l_k_dipyramids(geom_if &geom, const int &k, const int &n, const int &d)
 {
    fprintf(stderr,"Using: ");
    make_delta_dipyramid(geom, n, d);
@@ -973,7 +1237,7 @@ void case_l_k_dipyramids(col_geom_v &geom, const int &k, const int &n, const int
    transform_and_repeat(geom, sym_to, sym_from);
 }
 
-void case_m_10_or_20_triangular_dipyramids(col_geom_v &geom, double angle, const int &k)
+void case_m_10_or_20_triangular_dipyramids(geom_if &geom, double angle, const int &k)
 {
    if (angle == INFINITY)
       angle = 0;
@@ -982,24 +1246,23 @@ void case_m_10_or_20_triangular_dipyramids(col_geom_v &geom, double angle, const
    make_delta_dipyramid(geom, 3, 1);
 
    double phi = (1 + sqrt(5))/2;
-   double iphi = 1/phi;
 
    // to construct in one statement for Ih
    // transform_and_repeat(geom, (k == 1 ? "I" : "Ih"), "D3h",
-   //   mat3d::rot(vec3d(0,0,1), vec3d(iphi,0,phi)) * mat3d::rot(0,0,angle+M_PI/6));
+   //   mat3d::rot(vec3d(0,0,1), vec3d(1/phi,0,phi)) * mat3d::rot(0,0,angle+M_PI/6));
 
    if (k == 1)
       transform_and_repeat(geom, "I", "D3h",
-         mat3d::rot(vec3d(0,0,1), vec3d(iphi,0,phi)) * mat3d::rot(0,0,angle+M_PI/6));
+         mat3d::rot(vec3d(0,0,1), vec3d(1/phi,0,phi)) * mat3d::rot(0,0,angle+M_PI/6));
    else
    if (k == 2) {
       transform_and_repeat(geom, "D6h", "D3h");
       transform_and_repeat(geom, "I", "D6h",
-         mat3d::rot(vec3d(0,0,1), vec3d(iphi,0,phi)) * mat3d::rot(0,0,angle+M_PI/6));
+         mat3d::rot(vec3d(0,0,1), vec3d(1/phi,0,phi)) * mat3d::rot(0,0,angle+M_PI/6));
    }
 }
 
-void case_n_6_10_3_star_dipyramids(col_geom_v &geom, double angle)
+void case_n_6_10_3_star_dipyramids(geom_if &geom, double angle)
 {
    if (angle == INFINITY)
       angle = 0;
@@ -1013,7 +1276,7 @@ void case_n_6_10_3_star_dipyramids(col_geom_v &geom, double angle)
       mat3d::rot(vec3d(0,0,1), vec3d(0,1,phi)) * mat3d::rot(0,0,angle+M_PI/10));
 }
 
-void case_o_5_or_10_augmented_tetrahedra(col_geom_v &geom, double angle, const int &k)
+void case_o_5_or_10_augmented_tetrahedra(geom_if &geom, double angle, const int &k)
 {
    if (angle == INFINITY)
       angle = 0;
@@ -1030,7 +1293,7 @@ void case_o_5_or_10_augmented_tetrahedra(col_geom_v &geom, double angle, const i
    }
 }
 
-void case_p_5_augmented_octahedra(col_geom_v &geom, double angle)
+void case_p_5_augmented_octahedra(geom_if &geom, double angle)
 {
    if (angle == INFINITY)
       angle = 0;
@@ -1038,7 +1301,7 @@ void case_p_5_augmented_octahedra(col_geom_v &geom, double angle)
    transform_and_repeat(geom, "I", "Oh", mat3d::rot(0,angle,0));
 }
 
-void case_q_5_excavated_octahedra(col_geom_v &geom, double angle)
+void case_q_5_excavated_octahedra(geom_if &geom, double angle)
 {
    if (angle == INFINITY)
       angle = 0;
@@ -1183,31 +1446,37 @@ int main(int argc, char *argv[])
 
       id_polys.list_poly(sym_no);
 
-      string sym_type = id_polys.get_sym_type(sym_no);
-      make_poly(geom, sym_type, opts.triangle_only, opts.verbose,
-                id_polys.A(sym_no), id_polys.B(sym_no), id_polys.C(sym_no),
-                id_polys.alpha(sym_no), id_polys.beta(sym_no), id_polys.gamma(sym_no));
-
       // patch for 9 and 14. Made with make_poly they will have merged vertices between constituents
-      if (!opts.triangle_only && (sym_no+1==9 || sym_no+1==14)) {
+      // make parts and use transform_and_repeat on results
+      if (sym_no+1==9 || sym_no+1==14) {
          geom.clear_all();
          if (sym_no+1==9) {
-            make_delta_dipyramid(geom, 8, 3, false, false);
-            transform_and_repeat(geom, "Oh", "D8h");
+            make_delta_dipyramid(geom, 8, 3, opts.triangle_only, opts.verbose);
+            if (!opts.triangle_only)
+               transform_and_repeat(geom, "Oh", "D8h");
          }
          else
          if (sym_no+1==14) {
             sym_no = 2; // consituent of case 14, sent to make_poly
             string sym_type = id_polys.get_sym_type(sym_no);
-            make_poly(geom, sym_type, false, false,
+            make_poly(geom, sym_type, opts.triangle_only, opts.verbose,
                       id_polys.A(sym_no), id_polys.B(sym_no), id_polys.C(sym_no),
                       id_polys.alpha(sym_no), id_polys.beta(sym_no), id_polys.gamma(sym_no));
-            transform_and_repeat(geom, "Oh", "Td");
+            if (!opts.triangle_only)
+               transform_and_repeat(geom, "Oh", "Td");
          }
          geom.transform(mat3d::rot(0, M_PI/2, 0)); // as it did in make_poly for same color order as before
       }
+      // process all the rest as normal
+      else {
+         string sym_type = id_polys.get_sym_type(sym_no);
+         make_poly(geom, sym_type, opts.triangle_only, opts.verbose,
+                   id_polys.A(sym_no), id_polys.B(sym_no), id_polys.C(sym_no),
+                   id_polys.alpha(sym_no), id_polys.beta(sym_no), id_polys.gamma(sym_no));
+      }
    }
 
+   // orient for positive volume
    geom.orient();
 
    compound_coloring(geom, opts.coloring_method, opts.map, opts.face_opacity);

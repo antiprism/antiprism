@@ -207,12 +207,6 @@ void add_faces(geom_if &geom, int face_size, int face_count, int faces[])
    }
 }
 
-double phi()
-{
-   static double x = (1+sqrt(5))/2;
-   return x;
-}
-
 // u04 u05
 void octahedron_vertex_set(geom_if &geom)
 {
@@ -254,7 +248,7 @@ void rhombicuboctahedron_vertex_set(geom_if &geom)
 void icosahedron_vertex_set(geom_if &geom)
 {
    vector<vec3d> vlist;
-   vlist.push_back(vec3d(0,1,phi()));
+   vlist.push_back(vec3d(0,1,phi));
 
    calculate_coords(geom, vlist, EVEN, ALL);
 }
@@ -263,9 +257,9 @@ void icosahedron_vertex_set(geom_if &geom)
 void truncated_great_dodecahedron_vertex_set(geom_if &geom)
 {
    vector<vec3d> vlist;
-   vlist.push_back(vec3d(1/(phi()*phi()),0,2-(1/phi())));
-   vlist.push_back(vec3d(1,1/(phi()*phi()*phi()),1));
-   vlist.push_back(vec3d(1/phi(),1/(phi()*phi()),2/phi()));
+   vlist.push_back(vec3d(1/(phi*phi),0,2-(1/phi)));
+   vlist.push_back(vec3d(1,1/(phi*phi*phi),1));
+   vlist.push_back(vec3d(1/phi,1/(phi*phi),2/phi));
 
    calculate_coords(geom, vlist, ODD, ALL);
 }
@@ -274,9 +268,9 @@ void truncated_great_dodecahedron_vertex_set(geom_if &geom)
 void rhombidodecadodecahedron_vertex_set(geom_if &geom)
 {
    vector<vec3d> vlist;
-   vlist.push_back(vec3d(1/(phi()*phi()),0,phi()*phi()));
-   vlist.push_back(vec3d(1,1,(2*phi())-1));
-   vlist.push_back(vec3d(2,1/phi(),phi()));
+   vlist.push_back(vec3d(1/(phi*phi),0,phi*phi));
+   vlist.push_back(vec3d(1,1,(2*phi)-1));
+   vlist.push_back(vec3d(2,1/phi,phi));
 
    calculate_coords(geom, vlist, ODD, ALL);
 }
@@ -285,8 +279,8 @@ void rhombidodecadodecahedron_vertex_set(geom_if &geom)
 void icosidodecahedron_vertex_set(geom_if &geom)
 {
    vector<vec3d> vlist;
-   vlist.push_back(vec3d(0,0,phi()));
-   vlist.push_back(vec3d(0.5, phi()/2, (1+phi())/2));
+   vlist.push_back(vec3d(0,0,phi));
+   vlist.push_back(vec3d(0.5, phi/2, (1+phi)/2));
 
    calculate_coords(geom, vlist, ODD, ALL);
 }
@@ -295,9 +289,9 @@ void icosidodecahedron_vertex_set(geom_if &geom)
 void truncated_dodecahedron_vertex_set(geom_if &geom)
 {
    vector<vec3d> vlist;
-   vlist.push_back(vec3d(0,1/phi(),2+phi()));
-   vlist.push_back(vec3d(1/phi(),phi(),2*phi()));
-   vlist.push_back(vec3d(phi(),2,phi()*phi()));
+   vlist.push_back(vec3d(0,1/phi,2+phi));
+   vlist.push_back(vec3d(1/phi,phi,2*phi));
+   vlist.push_back(vec3d(phi,2,phi*phi));
 
    calculate_coords(geom, vlist, ODD, ALL);
 }
@@ -310,7 +304,7 @@ void dodecahedron_vertex_set(geom_if &geom)
    calculate_coords(geom, vlist, NONE, ALL);
 
    vlist.clear();
-   vlist.push_back(vec3d(0,1/phi(),phi()));
+   vlist.push_back(vec3d(0,1/phi,phi));
    calculate_coords(geom, vlist, ODD, ALL);
 }
 
@@ -318,9 +312,9 @@ void dodecahedron_vertex_set(geom_if &geom)
 void rhombicosidodecahedron_vertex_set(geom_if &geom)
 {
    vector<vec3d> vlist;
-   vlist.push_back(vec3d(1,1,phi()*phi()*phi()));
-   vlist.push_back(vec3d(phi(),2*phi(),phi()*phi()));
-   vlist.push_back(vec3d(0,phi()*phi(),2+phi()));
+   vlist.push_back(vec3d(1,1,phi*phi*phi));
+   vlist.push_back(vec3d(phi,2*phi,phi*phi));
+   vlist.push_back(vec3d(0,phi*phi,2+phi));
 
    calculate_coords(geom, vlist, ODD, ALL);
 }
@@ -329,9 +323,9 @@ void rhombicosidodecahedron_vertex_set(geom_if &geom)
 void small_icosicosidodecahedron_vertex_set(geom_if &geom)
 {
    vector<vec3d> vlist;
-   vlist.push_back(vec3d(0,phi(),2-(1/phi())));
-   vlist.push_back(vec3d(phi(),1/phi(),2/phi()));
-   vlist.push_back(vec3d(1/(phi()*phi()),1/phi(),2));
+   vlist.push_back(vec3d(0,phi,2-(1/phi)));
+   vlist.push_back(vec3d(phi,1/phi,2/phi));
+   vlist.push_back(vec3d(1/(phi*phi),1/phi,2));
 
    calculate_coords(geom, vlist, EVEN, ALL);
 }
@@ -340,9 +334,9 @@ void small_icosicosidodecahedron_vertex_set(geom_if &geom)
 void great_dirhombicosidodecahedron_vertex_set(geom_if &geom)
 {
    vector<vec3d> vlist;
-   vlist.push_back(vec3d(0,2/phi(),2/sqrt(phi())));
-   vlist.push_back(vec3d(-1+1/sqrt(phi()*phi()*phi()),1/(phi()*phi())-1/sqrt(phi()),1/phi()+sqrt(phi())));
-   vlist.push_back(vec3d(-1/phi()+sqrt(phi()),-1-1/sqrt(phi()*phi()*phi()),1/(phi()*phi())+1/sqrt(phi())));
+   vlist.push_back(vec3d(0,2/phi,2/sqrt(phi)));
+   vlist.push_back(vec3d(-1+1/sqrt(phi*phi*phi),1/(phi*phi)-1/sqrt(phi),1/phi+sqrt(phi)));
+   vlist.push_back(vec3d(-1/phi+sqrt(phi),-1-1/sqrt(phi*phi*phi),1/(phi*phi)+1/sqrt(phi)));
 
    calculate_coords(geom, vlist, ODD, ALL);
 }
@@ -783,9 +777,9 @@ void U24(geom_if &geom)
 void U25(geom_if &geom)
 {
    vector<vec3d> vlist;
-   vlist.push_back(vec3d(0,1,3*phi()));
-   vlist.push_back(vec3d(2,1+2*phi(),phi()));
-   vlist.push_back(vec3d(1,2+phi(),2*phi()));
+   vlist.push_back(vec3d(0,1,3*phi));
+   vlist.push_back(vec3d(2,1+2*phi,phi));
+   vlist.push_back(vec3d(1,2+phi,2*phi));
 
    calculate_coords(geom, vlist, EVEN, ALL);
 
@@ -870,11 +864,11 @@ void U27(geom_if &geom)
 void U28(geom_if &geom)
 {
    vector<vec3d> vlist;
-   vlist.push_back(vec3d(1/phi(),1/phi(),3+phi()));
-   vlist.push_back(vec3d(2/phi(),phi(),1+2*phi()));
-   vlist.push_back(vec3d(1/phi(),phi()*phi(),-1+3*phi()));
-   vlist.push_back(vec3d(-1+2*phi(),2,2+phi()));
-   vlist.push_back(vec3d(phi(),3,2*phi()));
+   vlist.push_back(vec3d(1/phi,1/phi,3+phi));
+   vlist.push_back(vec3d(2/phi,phi,1+2*phi));
+   vlist.push_back(vec3d(1/phi,phi*phi,-1+3*phi));
+   vlist.push_back(vec3d(-1+2*phi,2,2+phi));
+   vlist.push_back(vec3d(phi,3,2*phi));
 
    calculate_coords(geom, vlist, ODD, ALL);
 
@@ -917,17 +911,17 @@ void U28(geom_if &geom)
 void U29(geom_if &geom)
 {
    // the real solution to x**3-2x = Phi
-   double x = pow(phi()/2+0.5*sqrt(phi()-5/27.0), (1/3.0)) + pow(phi()/2-0.5*sqrt(phi()-5/27.0), (1/3.0));
+   double x = pow(phi/2+0.5*sqrt(phi-5/27.0), (1/3.0)) + pow(phi/2-0.5*sqrt(phi-5/27.0), (1/3.0));
 
    double a = x - 1/x;
-   double b = x*phi() + phi()*phi() + phi()/x;
+   double b = x*phi + phi*phi + phi/x;
 
    vector<vec3d> vlist;
    vlist.push_back(vec3d(2*a,2,2*b));
-   vlist.push_back(vec3d(a+b/phi()+phi(),-a*phi()+b+1/phi(),a/phi()+b*phi()-1));
-   vlist.push_back(vec3d(-a/phi()+b*phi()+1,-a+b/phi()-phi(),a*phi()+b-1/phi()));
-   vlist.push_back(vec3d(-a/phi()+b*phi()-1,a-b/phi()-phi(),a*phi()+b+1/phi()));
-   vlist.push_back(vec3d(a+b/phi()-phi(),a*phi()-b+1/phi(),a/phi()+b*phi()+1));
+   vlist.push_back(vec3d(a+b/phi+phi,-a*phi+b+1/phi,a/phi+b*phi-1));
+   vlist.push_back(vec3d(-a/phi+b*phi+1,-a+b/phi-phi,a*phi+b-1/phi));
+   vlist.push_back(vec3d(-a/phi+b*phi-1,a-b/phi-phi,a*phi+b+1/phi));
+   vlist.push_back(vec3d(a+b/phi-phi,a*phi-b+1/phi,a/phi+b*phi+1));
 
    calculate_coords(geom, vlist, ODD, ODD);
 
@@ -1016,9 +1010,9 @@ void U31(geom_if &geom)
 void U32(geom_if &geom)
 {
    vector<vec3d> vlist;
-   vlist.push_back(vec3d(0.5*(-1/phi()+sqrt(3*phi()-2)),0,0.5*(3+phi()*sqrt(3*phi()-2))));
-   vlist.push_back(vec3d(0.5*(1/phi()+sqrt(3*phi()-2)),1,0.5*(1+2/phi()+phi()*sqrt(3*phi()-2))));
-   vlist.push_back(vec3d(0.5*(phi()*phi()+sqrt(3*phi()-2)),1/phi(),0.5*(1+phi()*sqrt(3*phi()-2))));
+   vlist.push_back(vec3d(0.5*(-1/phi+sqrt(3*phi-2)),0,0.5*(3+phi*sqrt(3*phi-2))));
+   vlist.push_back(vec3d(0.5*(1/phi+sqrt(3*phi-2)),1,0.5*(1+2/phi+phi*sqrt(3*phi-2))));
+   vlist.push_back(vec3d(0.5*(phi*phi+sqrt(3*phi-2)),1/phi,0.5*(1+phi*sqrt(3*phi-2))));
 
    calculate_coords(geom, vlist, ODD, ALL);
 
@@ -1228,7 +1222,7 @@ void U40(geom_if &geom)
    // the greater positive real root of Phi*a**4-a**3+2a**2-a-1/Phi, or approximately 0.7964421
    double a = 0.7964421;
 
-   double coeffs[] = { -1/phi(), -1, 2, -1, phi() };
+   double coeffs[] = { -1/phi, -1, 2, -1, phi };
    double sol[4];
    quartic(coeffs, sol);
 
@@ -1239,14 +1233,14 @@ void U40(geom_if &geom)
    if (root != DBL_MIN)
       a = root;
 
-   double b = ((a*a)/phi()+phi())/(a*phi()-1/phi());
+   double b = ((a*a)/phi+phi)/(a*phi-1/phi);
 
    vector<vec3d> vlist;
    vlist.push_back(vec3d(2*a,2,2*b));
-   vlist.push_back(vec3d(a+b/phi()+phi(),-a*phi()+b+1/phi(),a/phi()+b*phi()-1));
-   vlist.push_back(vec3d(-a/phi()+b*phi()+1,-a+b/phi()-phi(),a*phi()+b-1/phi()));
-   vlist.push_back(vec3d(-a/phi()+b*phi()-1,a-b/phi()-phi(),a*phi()+b+1/phi()));
-   vlist.push_back(vec3d(a+b/phi()-phi(),a*phi()-b+1/phi(),a/phi()+b*phi()+1));
+   vlist.push_back(vec3d(a+b/phi+phi,-a*phi+b+1/phi,a/phi+b*phi-1));
+   vlist.push_back(vec3d(-a/phi+b*phi+1,-a+b/phi-phi,a*phi+b-1/phi));
+   vlist.push_back(vec3d(-a/phi+b*phi-1,a-b/phi-phi,a*phi+b+1/phi));
+   vlist.push_back(vec3d(a+b/phi-phi,a*phi-b+1/phi,a/phi+b*phi+1));
 
    calculate_coords(geom, vlist, ODD, EVEN);
 
@@ -1399,11 +1393,11 @@ void U44(geom_if &geom)
 void U45(geom_if &geom)
 {
    vector<vec3d> vlist;
-   vlist.push_back(vec3d(2-1/phi(),1,2+phi()));
-   vlist.push_back(vec3d(1,1/(phi()*phi()),3*phi()-1));
-   vlist.push_back(vec3d(2,2/phi(),2*phi()));
-   vlist.push_back(vec3d(3,1/(phi()*phi()),phi()*phi()));
-   vlist.push_back(vec3d(phi()*phi(),1,3*phi()-2));
+   vlist.push_back(vec3d(2-1/phi,1,2+phi));
+   vlist.push_back(vec3d(1,1/(phi*phi),3*phi-1));
+   vlist.push_back(vec3d(2,2/phi,2*phi));
+   vlist.push_back(vec3d(3,1/(phi*phi),phi*phi));
+   vlist.push_back(vec3d(phi*phi,1,3*phi-2));
 
    calculate_coords(geom, vlist, ODD, ALL);
 
@@ -1451,15 +1445,15 @@ void U46(geom_if &geom)
    double p = pow(0.5+1/6.0*sqrt(23/3.0), (1/3.0)) + pow(0.5-1/6.0*sqrt(23/3.0), (1/3.0));
 
    double a = p+1;
-   double b = phi()*phi()*p*p+phi()*phi()*p+phi();
-   double c = p*p+phi()*p;
+   double b = phi*phi*p*p+phi*phi*p+phi;
+   double c = p*p+phi*p;
 
    vector<vec3d> vlist;
    vlist.push_back(vec3d(2*a,2*c,2*b));
-   vlist.push_back(vec3d(a+b/phi()+c*phi(),-a*phi()+b+c/phi(),a/phi()+b*phi()-c));
-   vlist.push_back(vec3d(-a/phi()+b*phi()+c,-a+b/phi()-c*phi(),a*phi()+b-c/phi()));
-   vlist.push_back(vec3d(-a/phi()+b*phi()-c,a-b/phi()-c*phi(),a*phi()+b+c/phi()));
-   vlist.push_back(vec3d(a+b/phi()-c*phi(),a*phi()-b+c/phi(),a/phi()+b*phi()+c));
+   vlist.push_back(vec3d(a+b/phi+c*phi,-a*phi+b+c/phi,a/phi+b*phi-c));
+   vlist.push_back(vec3d(-a/phi+b*phi+c,-a+b/phi-c*phi,a*phi+b-c/phi));
+   vlist.push_back(vec3d(-a/phi+b*phi-c,a-b/phi-c*phi,a*phi+b+c/phi));
+   vlist.push_back(vec3d(a+b/phi-c*phi,a*phi-b+c/phi,a/phi+b*phi+c));
 
    calculate_coords(geom, vlist, ODD, EVEN);
 
@@ -1678,9 +1672,9 @@ void U54(geom_if &geom)
 void U55(geom_if &geom)
 {
    vector<vec3d> vlist;
-   vlist.push_back(vec3d(1,0,3/phi()));
-   vlist.push_back(vec3d(2,1/phi(),1/(phi()*phi()*phi())));
-   vlist.push_back(vec3d(1+1/(phi()*phi()),1,2/phi()));
+   vlist.push_back(vec3d(1,0,3/phi));
+   vlist.push_back(vec3d(2,1/phi,1/(phi*phi*phi)));
+   vlist.push_back(vec3d(1+1/(phi*phi),1,2/phi));
 
    calculate_coords(geom, vlist, EVEN, ALL);
 
@@ -1733,7 +1727,7 @@ void U57(geom_if &geom)
    double x = -1.5488772;
 
    double sol[3];
-   double coeffs_x[] = { 1/phi(), -2, 0, 1 };
+   double coeffs_x[] = { 1/phi, -2, 0, 1 };
    cubic(coeffs_x, sol);
 
    double root = DBL_MIN;
@@ -1744,14 +1738,14 @@ void U57(geom_if &geom)
       x = root;
 
    double a = x - 1/x;
-   double b = -x/phi() + 1/(phi()*phi()) - 1/(x*phi());
+   double b = -x/phi + 1/(phi*phi) - 1/(x*phi);
 
    vector<vec3d> vlist;
    vlist.push_back(vec3d(2*a,2,2*b));
-   vlist.push_back(vec3d(a-b*phi()-1/phi(),a/phi()+b-phi(),-a*phi()-b/phi()-1));
-   vlist.push_back(vec3d(a*phi()-b/phi()+1,-a-b*phi()+1/phi(),-a/phi()+b+phi()));
-   vlist.push_back(vec3d(a*phi()-b/phi()-1,a+b*phi()+1/phi(),-a/phi()+b-phi()));
-   vlist.push_back(vec3d(a-b*phi()+1/phi(),-a/phi()-b-phi(),-a*phi()-b/phi()+1));
+   vlist.push_back(vec3d(a-b*phi-1/phi,a/phi+b-phi,-a*phi-b/phi-1));
+   vlist.push_back(vec3d(a*phi-b/phi+1,-a-b*phi+1/phi,-a/phi+b+phi));
+   vlist.push_back(vec3d(a*phi-b/phi-1,a+b*phi+1/phi,-a/phi+b-phi));
+   vlist.push_back(vec3d(a-b*phi+1/phi,-a/phi-b-phi,-a*phi-b/phi+1));
 
    calculate_coords(geom, vlist, EVEN, EVEN);
 
@@ -1819,10 +1813,10 @@ void U59(geom_if &geom)
 {
    vector<vec3d> vlist;
    vlist.push_back(vec3d(1,1,3));
-   vlist.push_back(vec3d(1/phi(),1/(phi()*phi()),2*phi()));
-   vlist.push_back(vec3d(phi(),2/phi(),phi()*phi()));
-   vlist.push_back(vec3d(phi()*phi(),1/(phi()*phi()),2));
-   vlist.push_back(vec3d(2*phi()-1,1,2*phi()-1));
+   vlist.push_back(vec3d(1/phi,1/(phi*phi),2*phi));
+   vlist.push_back(vec3d(phi,2/phi,phi*phi));
+   vlist.push_back(vec3d(phi*phi,1/(phi*phi),2));
+   vlist.push_back(vec3d(2*phi-1,1,2*phi-1));
 
    calculate_coords(geom, vlist, ODD, ALL);
 
@@ -1870,7 +1864,7 @@ void U60(geom_if &geom)
    // the negative real root of Phi*a**4-a**3+2a**2-a-1/Phi, or approximately -0.3352090
    double a = -0.3352090;
 
-   double coeffs[] = { -1/phi(), -1, 2, -1, phi() };
+   double coeffs[] = { -1/phi, -1, 2, -1, phi };
    double sol[4];
    quartic(coeffs, sol);
 
@@ -1881,14 +1875,14 @@ void U60(geom_if &geom)
    if (root != DBL_MIN)
       a = root;
 
-   double b = ((a*a)/phi()+phi())/(a*phi()-1/phi());
+   double b = ((a*a)/phi+phi)/(a*phi-1/phi);
 
    vector<vec3d> vlist;
    vlist.push_back(vec3d(2*a,2,2*b));
-   vlist.push_back(vec3d(a+b/phi()+phi(),-a*phi()+b+1/phi(),a/phi()+b*phi()-1));
-   vlist.push_back(vec3d(-a/phi()+b*phi()+1,-a+b/phi()-phi(),a*phi()+b-1/phi()));
-   vlist.push_back(vec3d(-a/phi()+b*phi()-1,a-b/phi()-phi(),a*phi()+b+1/phi()));
-   vlist.push_back(vec3d(a+b/phi()-phi(),a*phi()-b+1/phi(),a/phi()+b*phi()+1));
+   vlist.push_back(vec3d(a+b/phi+phi,-a*phi+b+1/phi,a/phi+b*phi-1));
+   vlist.push_back(vec3d(-a/phi+b*phi+1,-a+b/phi-phi,a*phi+b-1/phi));
+   vlist.push_back(vec3d(-a/phi+b*phi-1,a-b/phi-phi,a*phi+b+1/phi));
+   vlist.push_back(vec3d(a+b/phi-phi,a*phi-b+1/phi,a/phi+b*phi+1));
 
    calculate_coords(geom, vlist, ODD, ODD);
 
@@ -2129,11 +2123,11 @@ void U67(geom_if &geom)
 void U68(geom_if &geom)
 {
    vector<vec3d> vlist;
-   vlist.push_back(vec3d(phi(),phi(),3-1/phi()));
-   vlist.push_back(vec3d(2*phi(),1/phi(),1-2/phi()));
-   vlist.push_back(vec3d(phi(),1/(phi()*phi()),1+3/phi()));
-   vlist.push_back(vec3d(1+2/phi(),2,2-1/phi()));
-   vlist.push_back(vec3d(1/phi(),3,2/phi()));
+   vlist.push_back(vec3d(phi,phi,3-1/phi));
+   vlist.push_back(vec3d(2*phi,1/phi,1-2/phi));
+   vlist.push_back(vec3d(phi,1/(phi*phi),1+3/phi));
+   vlist.push_back(vec3d(1+2/phi,2,2-1/phi));
+   vlist.push_back(vec3d(1/phi,3,2/phi));
 
    calculate_coords(geom, vlist, EVEN, ALL);
 
@@ -2179,7 +2173,7 @@ void U69(geom_if &geom)
    double x = 1.2224727;
 
    double sol[3];
-   double coeffs_x[] = { 1/phi(), -2, 0, 1 };
+   double coeffs_x[] = { 1/phi, -2, 0, 1 };
    cubic(coeffs_x, sol);
 
    double root = DBL_MIN;
@@ -2190,14 +2184,14 @@ void U69(geom_if &geom)
       x = root;
 
    double a = x - 1/x;
-   double b = -x/phi() + 1/(phi()*phi()) - 1/(x*phi());
+   double b = -x/phi + 1/(phi*phi) - 1/(x*phi);
 
    vector<vec3d> vlist;
    vlist.push_back(vec3d(2*a,2,2*b));
-   vlist.push_back(vec3d(a-b*phi()-1/phi(),a/phi()+b-phi(),-a*phi()-b/phi()-1));
-   vlist.push_back(vec3d(a*phi()-b/phi()+1,-a-b*phi()+1/phi(),-a/phi()+b+phi()));
-   vlist.push_back(vec3d(a*phi()-b/phi()-1,a+b*phi()+1/phi(),-a/phi()+b-phi()));
-   vlist.push_back(vec3d(a-b*phi()+1/phi(),-a/phi()-b-phi(),-a*phi()-b/phi()+1));
+   vlist.push_back(vec3d(a-b*phi-1/phi,a/phi+b-phi,-a*phi-b/phi-1));
+   vlist.push_back(vec3d(a*phi-b/phi+1,-a-b*phi+1/phi,-a/phi+b+phi));
+   vlist.push_back(vec3d(a*phi-b/phi-1,a+b*phi+1/phi,-a/phi+b-phi));
+   vlist.push_back(vec3d(a-b*phi+1/phi,-a/phi-b-phi,-a*phi-b/phi+1));
 
    calculate_coords(geom, vlist, EVEN, ODD);
 
@@ -2281,9 +2275,9 @@ void U71(geom_if &geom)
 void U72(geom_if &geom)
 {
    vector<vec3d> vlist;
-   vlist.push_back(vec3d(0.5*(-1/phi()-sqrt(3*phi()-2)),0,0.5*(3-phi()*sqrt(3*phi()-2))));
-   vlist.push_back(vec3d(0.5*(1/phi()-sqrt(3*phi()-2)),1,0.5*(1+2/phi()-phi()*sqrt(3*phi()-2))));
-   vlist.push_back(vec3d(0.5*(phi()*phi()-sqrt(3*phi()-2)),1/phi(),0.5*(1-phi()*sqrt(3*phi()-2))));
+   vlist.push_back(vec3d(0.5*(-1/phi-sqrt(3*phi-2)),0,0.5*(3-phi*sqrt(3*phi-2))));
+   vlist.push_back(vec3d(0.5*(1/phi-sqrt(3*phi-2)),1,0.5*(1+2/phi-phi*sqrt(3*phi-2))));
+   vlist.push_back(vec3d(0.5*(phi*phi-sqrt(3*phi-2)),1/phi,0.5*(1-phi*sqrt(3*phi-2))));
 
    calculate_coords(geom, vlist, ODD, ALL);
 
@@ -2361,7 +2355,7 @@ void U74(geom_if &geom)
    double x = 0.3264046;
 
    double sol[3];
-   double coeffs_x[] = { 1/phi(), -2, 0, 1 };
+   double coeffs_x[] = { 1/phi, -2, 0, 1 };
    cubic(coeffs_x, sol);
 
    double root = DBL_MAX;
@@ -2372,14 +2366,14 @@ void U74(geom_if &geom)
       x = root;
 
    double a = x - 1/x;
-   double b = -x/phi() + 1/(phi()*phi()) - 1/(x*phi());
+   double b = -x/phi + 1/(phi*phi) - 1/(x*phi);
 
    vector<vec3d> vlist;
    vlist.push_back(vec3d(2*a,2,2*b));
-   vlist.push_back(vec3d(a-b*phi()-1/phi(),a/phi()+b-phi(),-a*phi()-b/phi()-1));
-   vlist.push_back(vec3d(a*phi()-b/phi()+1,-a-b*phi()+1/phi(),-a/phi()+b+phi()));
-   vlist.push_back(vec3d(a*phi()-b/phi()-1,a+b*phi()+1/phi(),-a/phi()+b-phi()));
-   vlist.push_back(vec3d(a-b*phi()+1/phi(),-a/phi()-b-phi(),-a*phi()-b/phi()+1));
+   vlist.push_back(vec3d(a-b*phi-1/phi,a/phi+b-phi,-a*phi-b/phi-1));
+   vlist.push_back(vec3d(a*phi-b/phi+1,-a-b*phi+1/phi,-a/phi+b+phi));
+   vlist.push_back(vec3d(a*phi-b/phi-1,a+b*phi+1/phi,-a/phi+b-phi));
+   vlist.push_back(vec3d(a-b*phi+1/phi,-a/phi-b-phi,-a*phi-b/phi+1));
 
    calculate_coords(geom, vlist, EVEN, EVEN);
 
@@ -2484,7 +2478,7 @@ void U79(geom_if &geom)
 
 void U80(geom_if &geom)
 {
-   geom.read_resource("std_pri5/3");
+   geom.read_resource("std_ant5/3");
 }
 
 UniformItem uniform_item_list[] = {

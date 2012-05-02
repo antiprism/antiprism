@@ -40,8 +40,7 @@
 #include "coloring.h"
 
 using std::swap;
-   
-const double phi = (sqrt(5)+1)/2;
+
 
 void normalised_face_list(geom_if &geom)
 {
