@@ -429,20 +429,21 @@ bool sort_merge_elems(geom_if &geom, const string &merge_elems, vector<map<int, 
       }
    }
 
+   vm_no_cv.clear();
+   vm_with_cv.clear();
+
    unsigned int num_verts = geom.verts().size();
    unsigned int num_edges = geom.edges().size();
    unsigned int num_faces = geom.faces().size();
 
-   vm_no_cv.clear();
-   vm_with_cv.clear();
-
    sort_vertices(geom, vm_no_cv, vm_with_cv, merge_elems, (equiv_elems ? &(*equiv_elems)[0] : 0), blend_type, eps);
-   //if(chk_congruence && (*equiv_elems)[0].size()*2 != num_verts)
-   //   return false;
+   if(chk_congruence && (*equiv_elems)[0].size()*2 != num_verts)
+      return false;
 
    if(geom.edges().size())
       sort_faces(geom, vm_no_cv, vm_with_cv, merge_elems, 'e', (equiv_elems ? &(*equiv_elems)[1] : 0), blend_type);
-   if(chk_congruence && (*equiv_elems)[1].size()*2 != num_edges)
+   // if 'vef' is used with check_congruence() then process using this evaluation
+   if(strchr(merge_elems.c_str(), 'v') && chk_congruence && (*equiv_elems)[1].size()*2 != num_edges)
       return false;
    
    if(geom.faces().size())

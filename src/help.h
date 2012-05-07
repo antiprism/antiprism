@@ -1087,7 +1087,7 @@ const char *help_color_map =
 "===========\n"
 "OFF elements may be coloured by index numbers. Colour maps provide a\n"
 "way to convert these index numbers into colour values and are used\n"
-"in command options such as off_color -m, antiview -m and n_icons -M.\n"
+"in command options such as off_color -m, antiview -m and n_icons -m.\n"
 "\n"
 "The maps may use the Antiprism colour map format, Gimp Palette format\n"
 "or Fractint format. The Antiprism format has lines of the form\n"

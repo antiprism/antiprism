@@ -102,6 +102,7 @@ void pr_opts::usage()
 "  -M <elms> Sort and merge elements whose coordinates are the same to\n"
 "            the number of decimal places given by option -l, elems can\n"
 "            include: v - vertices, e - edges, f - faces,  a - all (vef),\n"
+"            V - process 'ef' first then remove all free vertices\n"
 "            b - bond (merge 've' and delete any face coincident with another),\n"
 "            s - sort without merging\n"
 "  -b <opt>  merge blend color. first=1, last=2, rgb=3, ryb=4 (default: 1)\n"
@@ -305,25 +306,36 @@ void pr_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'M':
-            if(strspn(optarg, "svefab") != strlen(optarg)) {
-               snprintf(errmsg, MSG_SZ, "elements to merge are %s must be v, e, f, a, b or s\n", optarg);
+            if(strspn(optarg, "svefabV") != strlen(optarg)) {
+               snprintf(errmsg, MSG_SZ, "elements to merge are %s must be v, e, f, a, V, b or s\n", optarg);
                error(errmsg, c);
             }
             if(strchr(optarg, 's') && strlen(optarg)>1) {
                error("s is for sorting only, cannot be used with v, e, or f", c);
             }
+            else
             if(strchr(optarg, 'a') && strlen(optarg)>1) {
                error("a includes vef, and must be used alone", c);
             }
+            else
             if(strchr(optarg, 'b') && strlen(optarg)>1) {
                error("b includes vef, and must be used alone", c);
             }
-            if(strspn(optarg, "ef") && !strchr(optarg, 'v')) {
-               warning("without v, some orphan vertices may result", c);
+            else
+            if(strchr(optarg, 'V') && strlen(optarg)>1) {
+               error("V includes vef, and must be used alone", c);
             }
+
+            if(strspn(optarg, "ef") && !strchr(optarg, 'v')) {
+               warning("using e and/or f with v, some orphan vertices may result", c);
+            }
+
             merge_elems=optarg;
             if(merge_elems == "a")
                merge_elems = "vef";
+            else
+            if(merge_elems == "V")
+               merge_elems = "Vef";
             break;
 
          case 'b':
