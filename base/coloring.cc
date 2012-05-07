@@ -837,20 +837,30 @@ col_val blend_HSX_centroid(const vector<col_val> &cols, int color_system_mode, d
    double alpha_max = -0.1;
 
    // check for unset, map index, or invisible
-   bool unset_found = false;
+   col_val map_found;
    bool invisible_found = false;
+   bool unset_found = false;
+
    int cols_sz = cols.size();
  
    vec4d sum(0.0, 0.0, 0.0, 0.0);
    for(unsigned int i=0; i<cols.size(); i++) {
-      if (!cols[i].is_set() || cols[i].is_idx()) {
-         unset_found = true;
+      // indexes, invisible or unset are not averaged in
+      if (cols[i].is_idx()) {
+         if (!map_found.is_set())
+            map_found = cols[i];
          cols_sz--;
          continue;
       }
       else
       if (cols[i].is_inv()) {
          invisible_found = true;
+         cols_sz--;
+         continue;
+      }
+      else
+      if (!cols[i].is_set()) {
+         unset_found = true;
          cols_sz--;
          continue;
       }
@@ -877,14 +887,16 @@ col_val blend_HSX_centroid(const vector<col_val> &cols, int color_system_mode, d
    }
 
    // if no colors are being averaged, all are a mix of unset, indexes, and/or invisible
+   // heirarchy: first map index, invisible, unset
    if (!cols_sz) {
-      // if any unset or indexes, return unset color (even if invisible encountered)
-      if (unset_found)
-         return(col_val());
+      if (map_found.is_set())
+         return(map_found);
       else
-      // all invisible so return invisible
       if (invisible_found)
          return(col_val(col_val::invisible));
+      else
+      if (unset_found)
+         return(col_val());
    }
 
    // average
@@ -938,20 +950,30 @@ col_val blend_RGB_centroid(const vector<col_val> &cols, int alpha_mode, bool ryb
    double alpha_max = -0.1;
 
    // check for unset, map index, or invisible
-   bool unset_found = false;
+   col_val map_found;
    bool invisible_found = false;
+   bool unset_found = false;
+
    int cols_sz = cols.size();
 
    vec4d col(0.0, 0.0, 0.0, 0.0);
    for(unsigned int i=0; i<cols.size(); i++) {
-      if (!cols[i].is_set() || cols[i].is_idx()) {
-         unset_found = true;
+     // indexes, invisible or unset are not averaged in
+      if (cols[i].is_idx()) {
+         if (!map_found.is_set())
+            map_found = cols[i];
          cols_sz--;
          continue;
       }
       else
       if (cols[i].is_inv()) {
          invisible_found = true;
+         cols_sz--;
+         continue;
+      }
+      else
+      if (!cols[i].is_set()) {
+         unset_found = true;
          cols_sz--;
          continue;
       }
@@ -972,14 +994,16 @@ col_val blend_RGB_centroid(const vector<col_val> &cols, int alpha_mode, bool ryb
    }
 
    // if no colors are being averaged, all are a mix of unset, indexes, and/or invisible
+   // heirarchy: first map index, invisible, unset
    if (!cols_sz) {
-       // if any unset or indexes, return unset color (even if invisible encountered)
-      if (unset_found)
-         return(col_val());
+      if (map_found.is_set())
+         return(map_found);
       else
-      // all invisible so return invisible
       if (invisible_found)
          return(col_val(col_val::invisible));
+      else
+      if (unset_found)
+         return(col_val());
    }
 
    col /= cols_sz;

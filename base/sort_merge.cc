@@ -36,6 +36,7 @@
 #include "transforms.h"
 #include "math_utils.h"
 #include "coloring.h"
+#include "info.h"
 
 using std::string;
 using std::vector;
@@ -114,7 +115,7 @@ bool cmp_faces(const facesSort &a, const facesSort &b)
 
 col_val average_color(const vector<col_val> &cols, const int &blend_type)
 {
-   if (blend_type == 1)
+   if (blend_type <= 1)
       return cols[0]; // first color
    else
    if (blend_type == 2)
@@ -132,34 +133,26 @@ col_val average_color(const vector<col_val> &cols, const int &blend_type)
 
 col_val average_face_color(const col_geom &cg, const vector<facesSort> &fs, const char &elem, const int &begin, const int &end, const int &blend_type)
 {
-   // if only one instance, return its own color
-   // if blend_type is 0 then do not continue with averaging. return the first color if more than one
-   if (!(end-begin) || !blend_type) {
+   // quick decision, if only one instance, return its own color
+   if (!(end-begin)) {
       if (elem=='f')
          return cg.get_f_col(fs[begin].face_no);
       else
          return cg.get_e_col(fs[begin].face_no);
    }
    
+   // collect colors
    vector<col_val> cols;  
-   bool unset_found = false;
    for(int i=begin;i<=end;i++) {
       col_val col;
       if(elem=='f')
          col = cg.get_f_col(fs[i].face_no);
       else
          col = cg.get_e_col(fs[i].face_no);
-
-      if (col.is_inv())
-         continue;
-      else
-      if (!col.is_set() || col.is_idx())
-         unset_found = true;
-      else
-         cols.push_back(col);
+      cols.push_back(col);
    }
    
-   return (cols.size() ? average_color(cols, blend_type) : ((unset_found) ? col_val() : col_val(col_val::invisible)));
+   return (cols.size() ? average_color(cols, blend_type) : col_val());
 }
 
 void sort_faces(geom_if &geom, const vector<vertexMap> &vm_no_cv, const vector<vertexMap> &vm_with_cv,
@@ -301,26 +294,18 @@ public:
 
 col_val average_vert_color(const col_geom &cg, const vector<vertSort> &vs, const int &begin, const int &end, const int &blend_type)
 {
-   // if only one instance, return its own color
-   // if blend_type is 0 then do not continue with averaging. return the first color if more than one
-   if (!(end-begin) || !blend_type)
+   // quick decision, if only one instance, return its own color
+   if (!(end-begin))
       return cg.get_v_col(vs[begin].vert_no);
 
+   // collect colors
    vector<col_val> cols;  
-   bool unset_found = false;
    for(int i=begin;i<=end;i++) {
       col_val col = cg.get_v_col(vs[i].vert_no);
-
-      if (col.is_inv())
-         continue;
-      else
-      if (!col.is_set() || col.is_idx())
-         unset_found = true;
-      else
-         cols.push_back(col);
+      cols.push_back(col);
    }
    
-   return (cols.size() ? average_color(cols, blend_type) : ((unset_found) ? col_val() : col_val(col_val::invisible)));
+   return (cols.size() ? average_color(cols, blend_type) : col_val());
 }
 
 void sort_vertices(geom_if &geom, vector<vertexMap> &vm_no_cv, vector<vertexMap > &vm_with_cv, 
@@ -416,14 +401,44 @@ bool sort_merge_elems(geom_if &geom, const string &merge_elems, vector<map<int, 
       equiv_elems->resize(3);
    }
 
+   vector<vertexMap> vm_no_cv, vm_with_cv;
+
+   // if 'Vef' is used, process pre-existing free vertices first
+   col_geom_v fv;
+   if ( strchr(merge_elems.c_str(), 'V') ){
+      col_geom *cg = dynamic_cast<col_geom *>(&geom);
+
+      vector<int> free_verts = geom.get_info().get_free_verts();
+      if (free_verts.size()) {
+         for(unsigned int i=0;i<free_verts.size();i++) {
+            int idx = free_verts[i];
+            col_val c = cg->get_v_col(idx);
+            fv.add_col_vert(geom.verts()[idx],c);
+         }
+
+         // temporarily remove them from the geom
+         geom.delete_verts(free_verts);
+
+         // merge free verts
+         unsigned int sz = fv.verts().size();
+         sort_vertices(fv, vm_no_cv, vm_with_cv, "v", (equiv_elems ? &(*equiv_elems)[0] : 0), blend_type, eps);
+
+         // if checking congruence and these don't reduce by half then no need to continue
+         if(chk_congruence && (*equiv_elems)[0].size()*2 != sz)
+            return false;
+      }
+   }
+
    unsigned int num_verts = geom.verts().size();
    unsigned int num_edges = geom.edges().size();
    unsigned int num_faces = geom.faces().size();
 
-   vector<vertexMap> vm_no_cv, vm_with_cv;
+   vm_no_cv.clear();
+   vm_with_cv.clear();
+
    sort_vertices(geom, vm_no_cv, vm_with_cv, merge_elems, (equiv_elems ? &(*equiv_elems)[0] : 0), blend_type, eps);
-   if(chk_congruence && (*equiv_elems)[0].size()*2 != num_verts)
-      return false;
+   //if(chk_congruence && (*equiv_elems)[0].size()*2 != num_verts)
+   //   return false;
 
    if(geom.edges().size())
       sort_faces(geom, vm_no_cv, vm_with_cv, merge_elems, 'e', (equiv_elems ? &(*equiv_elems)[1] : 0), blend_type);
@@ -434,6 +449,15 @@ bool sort_merge_elems(geom_if &geom, const string &merge_elems, vector<map<int, 
       sort_faces(geom, vm_no_cv, vm_with_cv, merge_elems, 'f', (equiv_elems ? &(*equiv_elems)[2] : 0), blend_type);
    if(chk_congruence && (*equiv_elems)[2].size()*2 != num_faces)
       return false;
+
+   // if 'Vef' is used
+   if ( strchr(merge_elems.c_str(), 'V') ) {
+      // check if only half of the vertices were orphaned
+      if(chk_congruence && geom.get_info().get_free_verts().size()*2 != num_verts)
+         return false;
+      // append merged free verts back into geom
+      geom.append(fv);
+   }
    
    return true;
 }
@@ -452,14 +476,14 @@ void sort_merge_elems(geom_if &geom, const string &merge_elems, const int &blend
 void sort_merge_elems(geom_if &geom, const string &merge_elems, double eps)
 {
    vector<map<int, set<int> > > *equiv_elems=0;
-   sort_merge_elems(geom, merge_elems, equiv_elems, false, 1, eps);
+   sort_merge_elems(geom, merge_elems, equiv_elems, false, 0, eps);
 }
 
 bool check_congruence(const geom_if &geom1, const geom_if &geom2, vector<map<int, set<int> > > *equiv_elems, double eps)
 {
    col_geom_v geom = geom1;
    geom.append(geom2);
-   int ret = sort_merge_elems(geom, "vef", equiv_elems, true, 0, eps);
+   int ret = sort_merge_elems(geom, "Vef", equiv_elems, true, 0, eps);
    /*
    for(int i=0; i<3; i++) {
       const char *elems[] = { "verts", "edges", "faces" };
