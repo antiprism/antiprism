@@ -887,16 +887,18 @@ col_val blend_HSX_centroid(const vector<col_val> &cols, int color_system_mode, d
    }
 
    // if no colors are being averaged, all are a mix of unset, indexes, and/or invisible
-   // heirarchy: first map index, invisible, unset
+   // heirarchy: first map index, unset, invisible
+   // note: invisible should be after unset, else an invisible element placed where an
+   //       unset one is will cause it to disappear
    if (!cols_sz) {
       if (map_found.is_set())
          return(map_found);
       else
-      if (invisible_found)
-         return(col_val(col_val::invisible));
-      else
       if (unset_found)
          return(col_val());
+      else
+      if (invisible_found)
+         return(col_val(col_val::invisible));
    }
 
    // average
@@ -994,16 +996,18 @@ col_val blend_RGB_centroid(const vector<col_val> &cols, int alpha_mode, bool ryb
    }
 
    // if no colors are being averaged, all are a mix of unset, indexes, and/or invisible
-   // heirarchy: first map index, invisible, unset
+   // heirarchy: first map index, unset, invisible
+   // note: invisible should be after unset, else an invisible element placed where an
+   //       unset one is will cause it to disappear
    if (!cols_sz) {
       if (map_found.is_set())
          return(map_found);
       else
-      if (invisible_found)
-         return(col_val(col_val::invisible));
-      else
       if (unset_found)
          return(col_val());
+      else
+      if (invisible_found)
+         return(col_val(col_val::invisible));
    }
 
    col /= cols_sz;
