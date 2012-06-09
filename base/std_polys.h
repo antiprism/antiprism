@@ -126,5 +126,32 @@ class j_poly
 
 };
 
-#endif // STD_POLYS_H  
+
+class wythoff_poly
+{
+   private:
+      vector<int> fracs;
+      vector<vec3d> verts;
+      int bar_pos;
+
+      bool read_symbol(const char *sym=0, char *errmsg=0);
+      vector<int> map_to_min_triangle();
+      bool assign_verts();
+
+
+   public:
+      wythoff_poly(const char *sym=0, char *errmsg=0);
+      bool make_poly(geom_if &geom, char *errmsg=0);
+      bool make_tri_poly(geom_if &geom);
+      bool make_tri(geom_if &geom);
+      bool is_set() { return bar_pos != -1; }
+
+      string to_str();
+      string get_tri_sym();
+};
+
+
+
+
+#endif // STD_POLYS_H
 

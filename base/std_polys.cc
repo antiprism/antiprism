@@ -1102,6 +1102,105 @@ int make_resource_pgon(geom_if &geom, string name, bool is_std, char *errmsg)
    return ret;
 }
 
+int make_resource_schwarz(geom_if &geom, string name, bool is_std,
+      char *errmsg=0)
+{
+   if(name.size()<(7+5) || name.substr(0,7)!="schwarz" ||
+         name.find('.')!=string::npos)
+      return -1; // not schwarz name (the "." indicates a likely local file)
+                 // so the name is not handled
+
+   if(name.find(':')!=string::npos || name.find('|')!=string::npos) {
+      if(errmsg)
+         snprintf(errmsg, MSG_SZ, "schwarz name: cannot contain bar character");
+      return 1; // fail
+   }
+
+   string symbol_str = name.substr(7);
+   for(unsigned int i=0; i<symbol_str.size(); i++) {
+      if(symbol_str[i] == '_')      // allow _ in place of space
+         symbol_str[i] = ' ';
+   }
+
+   bool as_poly = false;
+   if(symbol_str.size() && symbol_str[symbol_str.size()-1]=='p') {
+      as_poly = true;
+      symbol_str.resize(symbol_str.size()-1);
+   }
+
+   char errmsg2[MSG_SZ];
+   symbol_str += "|"; // add to make sure symbol will be valid for wythoff
+   wythoff_poly wyt(symbol_str.c_str(), errmsg2);
+   if(!wyt.is_set()) {
+      if(errmsg)
+         snprintf(errmsg, MSG_SZ, "schwarz name: invalid symbol: %s",
+               errmsg2);
+      return 1; // fail
+   }
+
+   if(as_poly)
+      wyt.make_tri_poly(geom);
+   else
+      wyt.make_tri(geom);
+
+   if(!is_std) {
+      col_geom_v *cg = dynamic_cast<col_geom_v *>(&geom); 
+      if(cg) {
+         res_coloring clrng(cg);
+         color_map *cmap = init_color_map("map_grey20:ivory");
+         clrng.add_cmap(cmap);
+         clrng.f_apply_cmap();
+      }
+   }
+
+   return 0; // name found
+}
+
+
+int make_resource_wythoff(geom_if &geom, string name, bool is_std,
+      char *errmsg=0)
+{
+   if(name.size()<(7+5) || name.substr(0,7)!="wythoff" ||
+         name.find('.')!=string::npos)
+      return -1; // not wythoff name (the "." indicates a likely local file)
+                 // so the name is not handled
+
+   string symbol_str = name.substr(7);
+   for(unsigned int i=0; i<symbol_str.size(); i++) {
+      if(symbol_str[i] == '_')     // allow _ in place of space
+         symbol_str[i] = ' ';
+      else if(symbol_str[i] == ':')     // allow : in place of |
+         symbol_str[i] = '|';
+   }
+
+   char errmsg2[MSG_SZ];
+   wythoff_poly wyt(symbol_str.c_str(), errmsg2);
+   if(!wyt.is_set()) {
+      if(errmsg)
+         snprintf(errmsg, MSG_SZ, "wythoff name: invalid symbol: %s",
+               errmsg2);
+      return 1; // fail
+   }
+
+   wyt.make_poly(geom, errmsg2);
+   if(*errmsg2)
+      fprintf(stderr, "warning: wythoff name: %s\n", errmsg2);
+
+   if(!is_std) {
+      double e_len = geom.edge_vec(geom.faces(0,0), geom.faces(0,1)).mag();
+      geom.transform(mat3d::scale(1/e_len));
+      col_geom_v *cg = dynamic_cast<col_geom_v *>(&geom); 
+      if(cg) {
+         res_coloring clrng(cg);
+         color_map *cmap = init_color_map("map_red:blue:yellow:ivory");
+         clrng.add_cmap(cmap);
+         clrng.f_apply_cmap();
+      }
+   }
+
+   return 0; // name found
+}
+
 
 bool make_resource_geom(geom_if &geom, string name, char *errmsg)
 {
@@ -1194,6 +1293,28 @@ bool make_resource_geom(geom_if &geom, string name, char *errmsg)
 
    if(!geom_ok) {
       int ret = make_resource_geodesic(geom, name, is_std, errmsg2);
+      if(ret==0)
+         geom_ok = true;
+      else if(ret > 0) {
+         if(errmsg)
+            strcpy(errmsg, errmsg2);
+         return false;
+      }
+   }
+
+   if(!geom_ok) {
+      int ret = make_resource_wythoff(geom, name, is_std, errmsg2);
+      if(ret==0)
+         geom_ok = true;
+      else if(ret > 0) {
+         if(errmsg)
+            strcpy(errmsg, errmsg2);
+         return false;
+      }
+   }
+
+   if(!geom_ok) {
+      int ret = make_resource_schwarz(geom, name, is_std, errmsg2);
       if(ret==0)
          geom_ok = true;
       else if(ret > 0) {

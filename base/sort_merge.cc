@@ -452,7 +452,7 @@ void sort_merge_elems(geom_if &geom, const string &merge_elems, const int &blend
 void sort_merge_elems(geom_if &geom, const string &merge_elems, double eps)
 {
    vector<map<int, set<int> > > *equiv_elems=0;
-   sort_merge_elems(geom, merge_elems, equiv_elems, false, 1, eps);
+   sort_merge_elems(geom, merge_elems, equiv_elems, false, 0, eps);
 }
 
 bool check_congruence(const geom_if &geom1, const geom_if &geom2, vector<map<int, set<int> > > *equiv_elems, double eps)
