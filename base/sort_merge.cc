@@ -384,6 +384,7 @@ void sort_vertices(geom_if &geom, vector<vertexMap> &vm_no_cv, vector<vertexMap 
    }
 }
 
+/* RK: sort_merge which attempt to find valid duplicate vertices when called with merge_elems = 'Vef'. saved for possible future use
 bool sort_merge_elems(geom_if &geom, const string &merge_elems, vector<map<int, set<int> > > *equiv_elems, bool chk_congruence, int blend_type, double eps)
 {
    // an empty geom cannot be processed
@@ -462,6 +463,46 @@ bool sort_merge_elems(geom_if &geom, const string &merge_elems, vector<map<int, 
    
    return true;
 }
+*/
+
+bool sort_merge_elems(geom_if &geom, const string &merge_elems, vector<map<int, set<int> > > *equiv_elems, bool chk_congruence, int blend_type, double eps)
+{
+   // an empty geom cannot be processed
+   if (!geom.verts().size())
+      return false;
+      
+   // Congruence check expects a polyhedron with elements occurring
+   // in coincident pairs, and exits early if this is not the case
+   vector<map<int, set<int> > > equiv_elems_tmp;
+   if(chk_congruence && !equiv_elems)
+      equiv_elems = &equiv_elems_tmp;
+
+   if(equiv_elems) {
+      equiv_elems->clear();
+      equiv_elems->resize(3);
+   }
+
+   unsigned int num_verts = geom.verts().size();
+   unsigned int num_edges = geom.edges().size();
+   unsigned int num_faces = geom.faces().size();
+
+   vector<vertexMap> vm_no_cv, vm_with_cv;
+   sort_vertices(geom, vm_no_cv, vm_with_cv, merge_elems, (equiv_elems ? &(*equiv_elems)[0] : 0), blend_type, eps);
+   if(chk_congruence && (*equiv_elems)[0].size()*2 != num_verts)
+      return false;
+
+   if(geom.edges().size())
+      sort_faces(geom, vm_no_cv, vm_with_cv, merge_elems, 'e', (equiv_elems ? &(*equiv_elems)[1] : 0), blend_type);
+   if(chk_congruence && (*equiv_elems)[1].size()*2 != num_edges)
+      return false;
+   
+   if(geom.faces().size())
+      sort_faces(geom, vm_no_cv, vm_with_cv, merge_elems, 'f', (equiv_elems ? &(*equiv_elems)[2] : 0), blend_type);
+   if(chk_congruence && (*equiv_elems)[2].size()*2 != num_faces)
+      return false;
+   
+   return true;
+}
 
 void sort_merge_elems(geom_if &geom, const string &merge_elems, vector<map<int, set<int> > > *equiv_elems, double eps)
 {
@@ -484,7 +525,7 @@ bool check_congruence(const geom_if &geom1, const geom_if &geom2, vector<map<int
 {
    col_geom_v geom = geom1;
    geom.append(geom2);
-   int ret = sort_merge_elems(geom, "Vef", equiv_elems, true, 0, eps);
+   int ret = sort_merge_elems(geom, "vef", equiv_elems, true, 0, eps);
    /*
    for(int i=0; i<3; i++) {
       const char *elems[] = { "verts", "edges", "faces" };
