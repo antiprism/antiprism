@@ -71,6 +71,8 @@ class lutil_opts: public prog_opts {
       int list_struts;
       col_val cent_col;
       bool trans_to_origin;
+      string R_merge_elems;
+      int blend_type;
 
       bool verbose;
       double epsilon;
@@ -100,6 +102,8 @@ class lutil_opts: public prog_opts {
                     list_radii(0),
                     list_struts(0),
                     trans_to_origin(false),
+                    R_merge_elems("vef"),
+                    blend_type(3),
                     verbose(false),
                     epsilon(0) {}
 
@@ -138,7 +142,11 @@ void lutil_opts::usage()
 "               c - cells only, i - cell(s) touching center only\n"
 "  -C <opt>  c - convex hull only, i - keep interior\n"
 "  -A        append the original lattice to the final product\n"
-"  -R <file> repeat off file at every vertex in lattice\n"
+"  -R <fi,s> repeat off file fi at every vertex in lattice. If optional s is\n"
+"            set, sort and merge elements whose coordinates are the same to\n"
+"            the number of decimal places given by option -l.  elems can\n"
+"            include: v - vertices, e - edges, f - faces,  a - all (vef)\n"
+"            n - no merging  (default 'a'. Colors blended as RGB)\n"
 "  -K        append cage of container of -k to final product\n"
 "  -Z <col>  add center vertex to final product in color col\n"
 "  -O        translate center of final product to origin\n"
@@ -540,9 +548,36 @@ void lutil_opts::process_command_line(int argc, char **argv)
             trans_to_origin = true;
             break;
             
-         case 'R':
-            rfile = optarg;
+         case 'R': {
+            vector<char *> parts;
+            int parts_sz = split_line(optarg, parts, ",");
+            if(parts_sz>2)
+               error("the argument has more than 2 parts", c);
+
+            rfile = parts[0];
+            if(parts_sz>1) {
+               if(strspn(parts[1], "vefan") != strlen(parts[1])) {
+                  snprintf(errmsg, MSG_SZ, "elements to merge are %s must be v, e, f, a or n\n", parts[1]);
+                  error(errmsg, c);
+               }
+               if(strchr(parts[1], 'a') && strlen(parts[1])>1) {
+                  error("a includes vef, and must be used alone", c);
+               }
+               if(strchr(parts[1], 'n') && strlen(parts[1])>1) {
+                  error("n must be used alone", c);
+               }
+               if(strspn(parts[1], "ef") && !strchr(parts[1], 'v')) {
+                  warning("without v, some orphan vertices may result", c);
+               }
+               R_merge_elems=parts[1];
+               if(R_merge_elems == "a")
+                  R_merge_elems = "vef";
+               else
+               if(R_merge_elems == "n")
+                  R_merge_elems = "";
+            }
             break;
+         }
 
          case 'Q':
             if(strlen(optarg)==1) {
@@ -719,7 +754,8 @@ void process_lattices(col_geom_v &geom, col_geom_v &container, const col_geom_v 
          geom2.append(rep);
       }
       geom = geom2;
-      sort_merge_elems(geom, "vef", opts.epsilon);
+      if(opts.R_merge_elems!="")
+         sort_merge_elems(geom, opts.R_merge_elems, opts.blend_type, opts.epsilon);
    }
 
    if (opts.list_radii) {

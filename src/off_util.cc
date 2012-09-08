@@ -100,7 +100,7 @@ void pr_opts::usage()
 "Options\n"
 "%s"
 "  -M <elms> Sort and merge elements whose coordinates are the same to\n"
-"            the number of decimal places given by option -l, elems can\n"
+"            the number of decimal places given by option -l.  elems can\n"
 "            include: v - vertices, e - edges, f - faces,  a - all (vef),\n"
 "            b - bond (merge 've' and delete any face coincident with another),\n"
 "            s - sort without merging\n"
