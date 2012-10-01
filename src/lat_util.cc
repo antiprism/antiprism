@@ -144,7 +144,7 @@ void lutil_opts::usage()
 "  -A        append the original lattice to the final product\n"
 "  -R <fi,s> repeat off file fi at every vertex in lattice. If optional s is\n"
 "            set, sort and merge elements whose coordinates are the same to\n"
-"            the number of decimal places given by option -l.  elems can\n"
+"            the number of decimal places given by option -l.  elements can\n"
 "            include: v - vertices, e - edges, f - faces,  a - all (vef)\n"
 "            n - no merging  (default 'a'. Colors blended as RGB)\n"
 "  -K        append cage of container of -k to final product\n"
