@@ -2884,9 +2884,21 @@ const anti_StrokeFont antiStrokeRoman = {"Roman",128,152.381f,chars};
 
 #if FOUND_GLU == 1
 
-#include <GL/gl.h>
-#include <GL/glu.h>
+#ifdef HAVE_CONFIG_H
+   #include "../config.h"
+#endif
 
+#ifdef HAVE_GL_GL_H
+   #include <GL/gl.h>
+#elif defined HAVE_OPENGL_GL_H
+   #include <OpenGL/gl.h>
+#endif
+
+#ifdef HAVE_GL_GLU_H
+   #include <GL/glu.h>
+#elif defined HAVE_OPENGL_GLU_H
+   #include <OpenGL/glu.h>
+#endif
 
 
 /*

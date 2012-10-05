@@ -26,9 +26,23 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#ifdef HAVE_CONFIG_H
+   #include "../config.h"
+#endif
+
+#ifdef HAVE_GL_GL_H
+   #include <GL/gl.h>
+#elif defined HAVE_OPENGL_GL_H
+   #include <OpenGL/gl.h>
+#endif
+
+#ifdef HAVE_GL_GLU_H
+   #include <GL/glu.h>
+#elif defined HAVE_OPENGL_GLU_H
+   #include <OpenGL/glu.h>
+#endif
+
 #include "gl_writer.h"
-#include <GL/gl.h>
-#include <GL/glu.h>
 
 void gl_writer::init(const scene &)
 {

@@ -132,13 +132,13 @@ if test ! x"$no_gl" = x"yes" ; then
       else
          if test $glut_type = $OPENGLUT ; then
             glut_type=$NO_GLUT
-            AC_CHECK_HEADER([GL/openglut.h],
+            AC_CHECK_HEADER([GL/openglut.h],     # must be in GL directory
                [AC_CHECK_LIB([openglut], [main],
                   [GLUT_LIBS="-lopenglut"; glut_type=$OPENGLUT]) ])
          else
             if test $glut_type = $FREEGLUT ; then
                glut_type=$NO_GLUT
-               AC_CHECK_HEADER([GL/freeglut.h],
+               AC_CHECK_HEADER([GL/freeglut.h],  # must be in GL directory
                   [AC_CHECK_LIB([freeglut], [main],
                      [GLUT_LIBS="-lfreeglut"; glut_type=$FREEGLUT]) ])
             fi
@@ -161,6 +161,12 @@ AC_DEFINE_UNQUOTED([FOUND_GLU], [$FOUND_GLU])
 AC_SUBST(FOUND_GLU)
 AC_SUBST(GLPROG_LIBS)
 AC_SUBST(GLPROG_CXXFLAGS)
+AC_SUBST(HAVE_OPENGL_GL_H)
+AC_SUBST(HAVE_GL_GL_H)
+AC_SUBST(HAVE_OPENGL_GLU_H)
+AC_SUBST(HAVE_GL_GLU_H)
+AC_SUBST(HAVE_GLUT_GLUT_H)
+AC_SUBST(HAVE_GL_GLUT_H)
 
 
 if test $glut_type = $NO_GLUT ; then

@@ -30,15 +30,24 @@
 #ifndef VW_GLUT_H
 #define VW_GLUT_H
 
-#include <GL/gl.h>
-#include <GL/glu.h>
-
-#include "../base/antiprism.h"
-#include "gl_writer.h"
-
 #ifdef HAVE_CONFIG_H
    #include "../config.h"
 #endif
+
+#ifdef HAVE_GL_GL_H
+   #include <GL/gl.h>
+#elif defined HAVE_OPENGL_GL_H
+   #include <OpenGL/gl.h>
+#endif
+
+#ifdef HAVE_GL_GLU_H
+   #include <GL/glu.h>
+#elif defined HAVE_OPENGL_GLU_H
+   #include <OpenGL/glu.h>
+#endif
+
+#include "../base/antiprism.h"
+#include "gl_writer.h"
 
 #define FOUND_NO_GLUT 0
 #define FOUND_GLUT 1
@@ -46,7 +55,11 @@
 #define FOUND_FREEGLUT 3
 
 #if GLUT_TYPE == FOUND_GLUT
-   #include <GL/glut.h>
+   #ifdef HAVE_GL_GLUT_H
+      #include <GL/glut.h>
+   #elif defined HAVE_GLUT_GLU_H
+      #include <GLUT/glut.h>
+   #endif
 #elif GLUT_TYPE == FOUND_OPENGLUT
    #include <GL/openglut.h>
 #elif GLUT_TYPE == FOUND_FREEGLUT
