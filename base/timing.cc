@@ -39,7 +39,13 @@
 #include <sys/time.h>
 int timer::get_time(struct time_val *tp)
 {
-   return gettimeofday((timeval *)tp, 0);
+   timeval tv;
+   int ret = gettimeofday(&tv, 0);
+   if(ret==0) {                    // success
+      tp->tv_sec  = tv.tv_sec;
+      tp->tv_usec = tv.tv_usec;
+   }
+   return ret;
 }
 
 #elif UTIMER == 2 // timeGetTimer
