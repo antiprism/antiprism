@@ -1219,19 +1219,21 @@ void U39(geom_if &geom)
 // snub dodecadodecahedron
 void U40(geom_if &geom)
 {
-   // the greater positive real root of Phi*a**4-a**3+2a**2-a-1/Phi, or approximately 0.7964421
-   double a = 0.7964421;
+   // the greater positive real root of Phi*a**4-a**3+2a**2-a-1/Phi, or approximately 0.796442103306065
+   // hard code value. compare roots out to 12 places for computed answer (future proof)
+   double a = 0.796442103306065;
 
    double coeffs[] = { -1/phi, -1, 2, -1, phi };
    double sol[4];
    quartic(coeffs, sol);
 
-   double root = DBL_MIN;
-   for(unsigned int i=0; i<4; i++)
-      if (sol[i] > 0 && sol[i] > root)
-         root = sol[i];
-   if (root != DBL_MIN)
-      a = root;
+   for(unsigned int i=0; i<4; i++) {
+      double eps = 1e-12;
+      if (double_eq(sol[i], a, eps)) {
+         a = sol[i];
+         break;
+      }
+   }
 
    double b = ((a*a)/phi+phi)/(a*phi-1/phi);
 
@@ -1441,7 +1443,8 @@ void U45(geom_if &geom)
 // snub icosidodecadodecahedron
 void U46(geom_if &geom)
 {
-   // the real solution to p**3=p+1, or approximately 1.3247180. p is called the plastic constant http://en.wikipedia.org/wiki/Plastic_constant
+   // the real solution to p**3=p+1, or approximately 1.324717957244746
+   // p is called the plastic constant http://en.wikipedia.org/wiki/Plastic_constant
    double p = pow(0.5+1/6.0*sqrt(23/3.0), (1/3.0)) + pow(0.5-1/6.0*sqrt(23/3.0), (1/3.0));
 
    double a = p+1;
@@ -1723,19 +1726,21 @@ void U56(geom_if &geom)
 // great snub icosidodecahedron
 void U57(geom_if &geom)
 {
-   // the negative real root of x**3-2x=-1/Phi, or approximately -1.5488772
-   double x = -1.5488772;
+   // the negative real root of x**3-2x=-1/Phi, or approximately -1.548877220974184
+   // hard code value. compare roots out to 12 places for computed answer (future proof)
+   double x = -1.548877220974184;
 
    double sol[3];
    double coeffs_x[] = { 1/phi, -2, 0, 1 };
    cubic(coeffs_x, sol);
 
-   double root = DBL_MIN;
-   for(unsigned int i=0; i<3; i++)
-      if (sol[i] < 0 && sol[i] > root)
-         root = sol[i];
-   if (root != DBL_MIN)
-      x = root;
+   for(unsigned int i=0; i<3; i++) {
+      double eps = 1e-12;
+      if (double_eq(sol[i], x, eps)) {
+         x = sol[i];
+         break;
+      }
+   }
 
    double a = x - 1/x;
    double b = -x/phi + 1/(phi*phi) - 1/(x*phi);
@@ -1861,19 +1866,21 @@ void U59(geom_if &geom)
 // inverted snub dodecadodecahedron
 void U60(geom_if &geom)
 {
-   // the negative real root of Phi*a**4-a**3+2a**2-a-1/Phi, or approximately -0.3352090
-   double a = -0.3352090;
+   // the negative real root of Phi*a**4-a**3+2a**2-a-1/Phi, or approximately -0.335208967907837
+   // hard code value. compare roots out to 12 places for computed answer (future proof)
+   double a = -0.335208967907837;
 
    double coeffs[] = { -1/phi, -1, 2, -1, phi };
    double sol[4];
    quartic(coeffs, sol);
 
-   double root = DBL_MIN;
-   for(unsigned int i=0; i<4; i++)
-      if (sol[i] < 0 && sol[i] > root)
-         root = sol[i];
-   if (root != DBL_MIN)
-      a = root;
+   for(unsigned int i=0; i<4; i++) {
+      double eps = 1e-12;
+      if (double_eq(sol[i], a, eps)) {
+         a = sol[i];
+         break;
+      }
+   }
 
    double b = ((a*a)/phi+phi)/(a*phi-1/phi);
 
@@ -2169,19 +2176,21 @@ void U68(geom_if &geom)
 // great inverted snub icosidodecahedron
 void U69(geom_if &geom)
 {
-   // the greater positive real solution to x**3-2x=-1/Phi, or approximately 1.2224727
-   double x = 1.2224727;
+   // the greater positive real solution to x**3-2x=-1/Phi, or approximately 1.222472666961002
+   // hard code value. compare roots out to 12 places for computed answer (future proof)
+   double x = 1.222472666961002;
 
    double sol[3];
    double coeffs_x[] = { 1/phi, -2, 0, 1 };
    cubic(coeffs_x, sol);
 
-   double root = DBL_MIN;
-   for(unsigned int i=0; i<3; i++)
-      if (sol[i] > 0 && sol[i] > root)
-         root = sol[i];
-   if (root != DBL_MIN)
-      x = root;
+   for(unsigned int i=0; i<3; i++) {
+      double eps = 1e-12;
+      if (double_eq(sol[i], x, eps)) {
+         x = sol[i];
+         break;
+      }
+   }
 
    double a = x - 1/x;
    double b = -x/phi + 1/(phi*phi) - 1/(x*phi);
@@ -2351,19 +2360,21 @@ void U73(geom_if &geom)
 // great retrosnub icosidodecahedron
 void U74(geom_if &geom)
 {
-   // the smaller positive real root of x**3-2x=-1/Phi, or approximately 0.3264046
-   double x = 0.3264046;
+   // the smaller positive real root of x**3-2x=-1/Phi, or approximately 0.326404554013182
+   // hard code value. compare roots out to 12 places for computed answer (future proof)
+   double x = 0.326404554013182;
 
    double sol[3];
    double coeffs_x[] = { 1/phi, -2, 0, 1 };
    cubic(coeffs_x, sol);
 
-   double root = DBL_MAX;
-   for(unsigned int i=0; i<3; i++)
-      if (sol[i] > 0 && sol[i] < root)
-         root = sol[i];
-   if (root != DBL_MAX)
-      x = root;
+   for(unsigned int i=0; i<3; i++) {
+      double eps = 1e-12;
+      if (double_eq(sol[i], x, eps)) {
+         x = sol[i];
+         break;
+      }
+   }
 
    double a = x - 1/x;
    double b = -x/phi + 1/(phi*phi) - 1/(x*phi);
