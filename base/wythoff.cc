@@ -111,7 +111,7 @@ wythoff_poly::wythoff_poly(const char *sym, char *errmsg)
    else if(!assign_verts()) {
       bar_pos = -1;
       if(errmsg)
-         sprintf(errmsg, "symbol for non-spherical construction (unsupported)");
+         sprintf(errmsg, "symbol for non-finite construction (unsupported)");
    }
 }
 
@@ -347,6 +347,13 @@ bool get_tri_verts(const vector<int> &norm_fracs, vector<vec3d> &norm_verts)
       }
    }
 
+   for(int i=0; i<3; i++) {     // find smallest fraction (largest angle)
+      double ang = angle_around_axis(norm_verts[(i+1)%3], norm_verts[(i+2)%3], norm_verts[i])/M_PI;
+      if(ang>1)
+         ang = 2-ang;
+      //fprintf(stderr, "fract[%d] = %d/%d (%g)\n", i, norm_fracs[2*i], norm_fracs[2*i+1], ang);
+   }
+
    return found;
 }
 
@@ -378,26 +385,25 @@ vec3d get_angle_bisector_norm(vec3d v0, vec3d v1, vec3d v2)
 }
 
 
-vec3d get_fermat_point(vec3d v0, vec3d v1, vec3d v2, char *msg=0)
+vec3d get_fermat_point(vec3d v0, vec3d v1, vec3d v2, bool degenerate, char *msg=0)
 {
    vec3d v[3];
    v[0] = v0;
    v[1] = v1;
    v[2] = v2;
-   vec3d  pt = (v0 + v1 + v2).unit();  // initialise to projected centroid
-   for(int n=0; n<5000; n++) {
+   vec3d  pt = (v0 + v1 + v2).unit();  // initialise to approx centroid
+   // Use a fixed large number of iterations with small change. Degenerates are
+   // sensitive and may produce different results with different params
+   int iters = degenerate ? 50000 : 1000;
+   double off_factor = degenerate ? 0.01 : 0.1;
+   for(int n=0; n<iters; n++) {
       vec3d offset = vec3d::zero;
       for(int i=0; i<3; i++)
          offset += (v[i].component(pt)-v[i]).unit();
-      offset = 0.001*offset;
-      pt += offset;
-      pt.to_unit();
+
+      pt = (pt + off_factor*offset).unit();
    }
 
-   v0.dump();
-   v1.dump();
-   v2.dump();
-   pt.dump("pt");
    if(msg) {
       *msg = '\0';
       double max_ang = 0.0;
@@ -411,6 +417,7 @@ vec3d get_fermat_point(vec3d v0, vec3d v1, vec3d v2, char *msg=0)
       if(max_ang > epsilon)
          sprintf(msg, "innacurate calculation of fermat point "
                "(angle difference %g)", max_ang);
+
    }
 
    return pt;
@@ -420,6 +427,13 @@ vec3d get_fermat_point(vec3d v0, vec3d v1, vec3d v2, char *msg=0)
 void add_faces(geom_if &geom, vec3d pt,
       int num, int denom, const vec3d &axis, col_val col, const sch_sym &sym)
 {
+   // avoid extra windings
+   int gr_fact = gcd(num, denom);
+   if(gr_fact%2==0) // even number of windings cancel out
+      return;
+   num /= gr_fact;
+   denom /= gr_fact;
+
    double ang = 2*M_PI*(double)denom/(double)num;
 
    double sides = num;
@@ -444,43 +458,61 @@ void add_faces(geom_if &geom, vec3d pt, int num, int denom,
    add_faces(geom, pt, num, denom, axes[idx], col_val(idx), sym);
 }
 
+
 bool wythoff_poly::make_poly(geom_if &geom, char *errmsg)
 {
    geom.clear_all();
    sch_sym sym(get_tri_sym());
    if(bar_pos==0) {
       int max_fract = 0;
-      for(int i=1; i<3; i++) {     // find smallest fraction (largest angle)
+      for(int i=0; i<3; i++) {     // find smallest fraction (largest angle)
+      double ang = angle_around_axis(verts[(i+1)%3], verts[(i+2)%3], verts[i])/M_PI;
+         if(ang>1)
+            ang = 2-ang;
          if( double(fracs[2*i])        /fracs[2*i+1] <=
              double(fracs[2*max_fract])/fracs[2*max_fract+1] )
             max_fract = i;
       }
-      vec3d pt;
-      if(double(fracs[2*max_fract])/fracs[2*max_fract+1] <= 1.5) { // >=120 degs
-         vec3d f_pt = -verts[max_fract]; // use vertex of largest angle
-         // reflecting in sides produces triangle with coincident vertex
-         // Use normal to great circle as circumcentre. However,
-         // if triangle is isoceles maybe the circumcentre should be
-         // the midpoint of f_pt and its the reflection in the opposite edge.
-         // the opposite edge centre
-         if( double(fracs[(2*max_fract+2)%6])/fracs[(2*max_fract+3)%6] ==
-             double(fracs[(2*max_fract+4)%6])/fracs[(2*max_fract+5)%6] ) {
-            pt = f_pt + mat3d::refl(vcross(verts[(max_fract+1)%3],
-                     verts[(max_fract+2)%3]))*f_pt;
+      vec3d f_pt; // Fermat point
+      vec3d pt;   // Final construction point
+
+      double ang = angle_around_axis(verts[(max_fract+1)%3], verts[(max_fract+2)%3], verts[max_fract])/M_PI;
+      if(ang>1)
+         ang = 2-ang;
+      bool degenerate = false;
+
+      // triangles with a 3/2 vertex are generally a problem, if there
+      // is only one of these then the solution (generally) lies at this
+      // vertex and requires special processing the case of
+      int cnt_3_2 = 0;
+      int pos_3_2 = 0;
+      for(int i=0; i<3; i++)
+         if(fracs[2*i]==3 && fracs[2*i+1]==2) {
+            cnt_3_2++;
+            pos_3_2 = i;
          }
-         else {
-            vec3d norm = vcross(verts[(max_fract+1)%3], verts[(max_fract+2)%3]);
-            // if f_pt is normal to great circle through opposite edge then
-            // is will fail!
-            norm.dump("norm");
-            pt = vcross(f_pt, norm); // circumcentre
-            //pt = f_pt + mat3d::refl(vcross(verts[(,max_fract+1)%3],
-            //         verts[(max_fract+2)%3]))*f_pt;
+      if(cnt_3_2 == 1)
+         degenerate = true;
+
+      // first check for non-dihedral isoscelese triangle with 3/2 apex
+      if(cnt_3_2==1 &&
+            fracs[(2*pos_3_2+2)%6]==fracs[(2*pos_3_2+4)%6] &&
+            fracs[(2*pos_3_2+3)%6]==fracs[(2*pos_3_2+5)%6] &&
+            fracs[(2*pos_3_2+2)%6]!=2 ) {
+         // |3/2 5/3 5/3 or |3/2 5/4 5/4 have a different construction point
+         if(fracs[(2*pos_3_2+2)%6]==5 &&
+               (fracs[(2*pos_3_2+3)%6]==3 || fracs[(2*pos_3_2+3)%6]==4)) {
+            pt = mat3d::refl(vcross(verts[(pos_3_2+2)%3], verts[pos_3_2])) *
+               verts[(pos_3_2+1)%3];
+         }
+         else { // take apex as Fermat point and use smallest circumcentre
+            pt = verts[(pos_3_2+1)%3] + verts[(pos_3_2+2)%3];
          }
       }
-      else {
-         // Calculate fermat point
-         vec3d f_pt = get_fermat_point(verts[0], verts[1], verts[2], errmsg);
+      else { // geeneral case
+         f_pt = get_fermat_point(verts[0], verts[1], verts[2],
+               degenerate, errmsg);
+
          // Reflect in sides of triangle
          vec3d u0 = mat3d::refl(vcross(verts[1], verts[2])) * f_pt;
          vec3d u1 = mat3d::refl(vcross(verts[2], verts[0])) * f_pt;
@@ -489,6 +521,7 @@ bool wythoff_poly::make_poly(geom_if &geom, char *errmsg)
       }
 
       pt.to_unit();
+
       add_faces(geom, pt, fracs[0], fracs[1], verts, 0, sym);
       add_faces(geom, pt, fracs[2], fracs[3], verts, 1, sym);
       add_faces(geom, pt, fracs[4], fracs[5], verts, 2, sym);
@@ -514,6 +547,8 @@ bool wythoff_poly::make_poly(geom_if &geom, char *errmsg)
 
       add_faces(geom, pt, fracs[0], fracs[1], verts, 0, sym);
       add_faces(geom, pt, fracs[2], fracs[3], verts, 1, sym);
+      // All hemis apart from 3/2 3 | 3 have duplicated faces
+      sort_merge_elems(geom, "vf", epsilon);
       add_faces(geom, pt, 2*fracs[4], fracs[5], verts, 2, sym);
    }
    else if(bar_pos==3) {

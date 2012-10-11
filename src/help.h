@@ -41,7 +41,7 @@ const char *help_help =
 "symmetry:     symmetry features and option arguments\n"
 "models:       builtin models\n"
 "   common_polys: common  polyhedra\n"
-"   uniform:      uniform polyhedra\n"
+"   uniform:      uniform polyhedra (including wythoff_ models)\n"
 "   ud:           uniform dual polyhedra\n"
 "   johnson:      johnson polyhedra\n"
 "   uc:           uniform compounds\n"
@@ -50,6 +50,7 @@ const char *help_help =
 "   std_polys:    polyhedra with usual coordinates\n"
 "   geodesic:     geodesic spheres\n"
 "   sym_models:   symmetry example models\n"
+"   schwarz:      Schwarz triangles\n"
 ;
 
 const char *help_models =
@@ -62,7 +63,7 @@ const char *help_models =
 "\n"
 "See the help topic for each model type for more details\n"
 "   common_polys: common  polyhedra\n"
-"   uniform:      uniform polyhedra\n"
+"   uniform:      uniform polyhedra (including wythoff_ models)\n"
 "   ud:           uniform dual polyhedra\n"
 "   johnson:      johnson polyhedra\n"
 "   uc:           uniform compounds\n"
@@ -70,6 +71,7 @@ const char *help_models =
 "   std_polys:    polyhedra with usual coordinates\n"
 "   geodesic:     geodesic spheres\n"
 "   sym_models:   symmetry example models\n"
+"   schwarz:      Schwarz triangles\n"
 ;
 
 const char *help_common_polys =
@@ -130,7 +132,16 @@ const char *help_uniform =
 "\n"
 "o   A U number e.g. u8\n"
 "\n"
-"o   u_ followed by a Wythoff Symbol e.g. \"u_2 4|3\"\n"
+"o   u_ followed by the specific Wythoff Symbol in the list below,\n"
+"    e.g. \"u_2 4|3\", which will be used as a lookup for the\n"
+"    corresponding uniform \n"
+"\n"
+"o   wythoff_ followed by a general Wythoff Symbol, where '_' and ':'\n"
+"    maybe used instead of ' ', and ':', e.g. wythoff_2_4:3. The model\n"
+"    is constructed directly from the symbol. Note that some degenerate\n"
+"    snub models may not be constructed correctly. The faces around each\n"
+"    triangle vertex are coloured, in order, red, blue, yellow, and snub\n"
+"    triangles are coloured white.\n"
 "\n"
 "o   u_ followed by a name (see the list below) Use '_' instead of\n"
 "    a space to avoid having to quote the model name. The beginning\n"
@@ -1575,5 +1586,20 @@ const char *help_bowers =
 "dap          ant10    decagonal antiprism\n"
 "stiddap      ant10/3  decagrammic antiprism\n"
 ;
+
+const char *help_schwarz =
+"Schwarz triangles\n"
+"=================\n"
+"A Schwarz triangle, aligned with with the corresponding minimal symmetry\n"
+"group, can be specified as follows:\n"
+"\n"
+"schwarz_ followed by the three fractions separated by spaces or '_'. The\n"
+"fractions are in the form used in the Wythoff symbol. If a triangle has\n"
+"an angle of PIn/d, its fraction is d/n, e.g. the Mobius triangle for\n"
+"octahedral symmetry has angles PI/2, PI/3 and PI/4 and is given by\n"
+"schwarz_2_3_4, a spherical tetrahedron face has angles of 2PI/3 and is\n"
+"given by schwarz_3/2_3/2_3/2\n"
+;
+
 
 #endif // HELP_H
