@@ -63,7 +63,12 @@ c \- convex hull only, i \- keep interior
 \fB\-A\fR
 append the original lattice to the final product
 .HP
-\fB\-R\fR <file> repeat off file at every vertex in lattice
+\fB\-R\fR <fi,s> repeat off file fi at every vertex in lattice. If optional s is
+.IP
+set, sort and merge elements whose coordinates are the same to
+the number of decimal places given by option \fB\-l\fR.  elements can
+include: v \- vertices, e \- edges, f \- faces,  a \- all (vef)
+n \- no merging  (default 'a'. Colors blended as RGB)
 .TP
 \fB\-K\fR
 append cage of container of \fB\-k\fR to final product

@@ -33,6 +33,9 @@ asterisk shows that it is a Platonic or Achimedian polyhedron. If an un-indented
 occurrence happens below an asterisked model, then it is a parent and an irregular
 type of the Achimedian above it. In all there are 36 unique convex hulls.
 
+(U40,U60 use different roots to same formula)
+(U57,U69,U74 use different roots of same formula)
+
 U01*  tetrahedron
 U05*  octahedron
 U04      tetrahemihexahedron
@@ -102,8 +105,8 @@ U45   icositruncated dodecadodecahedron
 U59   truncated dodecadodecahedron
 U68   great truncated icosidodecahedron
 U29*  snub dodecahedron
-U40   snub dodecadodecahedron
 U46   snub icosidodecadodecahedron
+U40   snub dodecadodecahedron
 U60   inverted snub dodecadodecahedron
 U57   great snub icosidodecahedron
 U69   great inverted snub icosidodecahedron
@@ -339,6 +342,65 @@ void great_dirhombicosidodecahedron_vertex_set(geom_if &geom)
    vlist.push_back(vec3d(-1/phi+sqrt(phi),-1-1/sqrt(phi*phi*phi),1/(phi*phi)+1/sqrt(phi)));
 
    calculate_coords(geom, vlist, ODD, ALL);
+}
+
+// u40 u60
+vector<vec3d> u40_u60_vertices(double approx_a)
+{
+   double a = approx_a;
+
+   double coeffs[] = { -1/phi, -1, 2, -1, phi };
+   double sol[4];
+   quartic(coeffs, sol);
+
+   for(unsigned int i=0; i<4; i++) {
+      double eps = 1e-12;
+      if (double_eq(sol[i], a, eps)) {
+         a = sol[i];
+         break;
+      }
+   }
+
+   double b = ((a*a)/phi+phi)/(a*phi-1/phi);
+
+   vector<vec3d> vlist;
+   vlist.push_back(vec3d(2*a,2,2*b));
+   vlist.push_back(vec3d(a+b/phi+phi,-a*phi+b+1/phi,a/phi+b*phi-1));
+   vlist.push_back(vec3d(-a/phi+b*phi+1,-a+b/phi-phi,a*phi+b-1/phi));
+   vlist.push_back(vec3d(-a/phi+b*phi-1,a-b/phi-phi,a*phi+b+1/phi));
+   vlist.push_back(vec3d(a+b/phi-phi,a*phi-b+1/phi,a/phi+b*phi+1));
+
+   return vlist;
+}
+
+// u57 u69 u74
+vector<vec3d> u57_u69_u74_vertices(double approx_x)
+{
+   double x = approx_x;
+
+   double sol[3];
+   double coeffs_x[] = { 1/phi, -2, 0, 1 };
+   cubic(coeffs_x, sol);
+
+   for(unsigned int i=0; i<3; i++) {
+      double eps = 1e-12;
+      if (double_eq(sol[i], x, eps)) {
+         x = sol[i];
+         break;
+      }
+   }
+
+   double a = x - 1/x;
+   double b = -x/phi + 1/(phi*phi) - 1/(x*phi);
+
+   vector<vec3d> vlist;
+   vlist.push_back(vec3d(2*a,2,2*b));
+   vlist.push_back(vec3d(a-b*phi-1/phi,a/phi+b-phi,-a*phi-b/phi-1));
+   vlist.push_back(vec3d(a*phi-b/phi+1,-a-b*phi+1/phi,-a/phi+b+phi));
+   vlist.push_back(vec3d(a*phi-b/phi-1,a+b*phi+1/phi,-a/phi+b-phi));
+   vlist.push_back(vec3d(a-b*phi+1/phi,-a/phi-b-phi,-a*phi-b/phi+1));
+
+   return vlist;
 }
 
 // tetrahedron
@@ -1219,28 +1281,9 @@ void U39(geom_if &geom)
 // snub dodecadodecahedron
 void U40(geom_if &geom)
 {
-   // the greater positive real root of Phi*a**4-a**3+2a**2-a-1/Phi, or approximately 0.7964421
-   double a = 0.7964421;
-
-   double coeffs[] = { -1/phi, -1, 2, -1, phi };
-   double sol[4];
-   quartic(coeffs, sol);
-
-   double root = DBL_MIN;
-   for(unsigned int i=0; i<4; i++)
-      if (sol[i] > 0 && sol[i] > root)
-         root = sol[i];
-   if (root != DBL_MIN)
-      a = root;
-
-   double b = ((a*a)/phi+phi)/(a*phi-1/phi);
-
-   vector<vec3d> vlist;
-   vlist.push_back(vec3d(2*a,2,2*b));
-   vlist.push_back(vec3d(a+b/phi+phi,-a*phi+b+1/phi,a/phi+b*phi-1));
-   vlist.push_back(vec3d(-a/phi+b*phi+1,-a+b/phi-phi,a*phi+b-1/phi));
-   vlist.push_back(vec3d(-a/phi+b*phi-1,a-b/phi-phi,a*phi+b+1/phi));
-   vlist.push_back(vec3d(a+b/phi-phi,a*phi-b+1/phi,a/phi+b*phi+1));
+   // the greater positive real root of Phi*a**4-a**3+2a**2-a-1/Phi, or approximately 0.796442103306065
+   // hard code value. compare roots out to 12 places for computed answer (future proof)
+   vector<vec3d> vlist = u40_u60_vertices(0.796442103306065);
 
    calculate_coords(geom, vlist, ODD, EVEN);
 
@@ -1441,7 +1484,8 @@ void U45(geom_if &geom)
 // snub icosidodecadodecahedron
 void U46(geom_if &geom)
 {
-   // the real solution to p**3=p+1, or approximately 1.3247180. p is called the plastic constant http://en.wikipedia.org/wiki/Plastic_constant
+   // the real solution to p**3=p+1, or approximately 1.324717957244746
+   // p is called the plastic constant http://en.wikipedia.org/wiki/Plastic_constant
    double p = pow(0.5+1/6.0*sqrt(23/3.0), (1/3.0)) + pow(0.5-1/6.0*sqrt(23/3.0), (1/3.0));
 
    double a = p+1;
@@ -1723,29 +1767,9 @@ void U56(geom_if &geom)
 // great snub icosidodecahedron
 void U57(geom_if &geom)
 {
-   // the negative real root of x**3-2x=-1/Phi, or approximately -1.5488772
-   double x = -1.5488772;
-
-   double sol[3];
-   double coeffs_x[] = { 1/phi, -2, 0, 1 };
-   cubic(coeffs_x, sol);
-
-   double root = DBL_MIN;
-   for(unsigned int i=0; i<3; i++)
-      if (sol[i] < 0 && sol[i] > root)
-         root = sol[i];
-   if (root != DBL_MIN)
-      x = root;
-
-   double a = x - 1/x;
-   double b = -x/phi + 1/(phi*phi) - 1/(x*phi);
-
-   vector<vec3d> vlist;
-   vlist.push_back(vec3d(2*a,2,2*b));
-   vlist.push_back(vec3d(a-b*phi-1/phi,a/phi+b-phi,-a*phi-b/phi-1));
-   vlist.push_back(vec3d(a*phi-b/phi+1,-a-b*phi+1/phi,-a/phi+b+phi));
-   vlist.push_back(vec3d(a*phi-b/phi-1,a+b*phi+1/phi,-a/phi+b-phi));
-   vlist.push_back(vec3d(a-b*phi+1/phi,-a/phi-b-phi,-a*phi-b/phi+1));
+   // the negative real root of x**3-2x=-1/Phi, or approximately -1.548877220974184
+   // hard code value. compare roots out to 12 places for computed answer (future proof)
+   vector<vec3d> vlist = u57_u69_u74_vertices(-1.548877220974184);
 
    calculate_coords(geom, vlist, EVEN, EVEN);
 
@@ -1861,28 +1885,9 @@ void U59(geom_if &geom)
 // inverted snub dodecadodecahedron
 void U60(geom_if &geom)
 {
-   // the negative real root of Phi*a**4-a**3+2a**2-a-1/Phi, or approximately -0.3352090
-   double a = -0.3352090;
-
-   double coeffs[] = { -1/phi, -1, 2, -1, phi };
-   double sol[4];
-   quartic(coeffs, sol);
-
-   double root = DBL_MIN;
-   for(unsigned int i=0; i<4; i++)
-      if (sol[i] < 0 && sol[i] > root)
-         root = sol[i];
-   if (root != DBL_MIN)
-      a = root;
-
-   double b = ((a*a)/phi+phi)/(a*phi-1/phi);
-
-   vector<vec3d> vlist;
-   vlist.push_back(vec3d(2*a,2,2*b));
-   vlist.push_back(vec3d(a+b/phi+phi,-a*phi+b+1/phi,a/phi+b*phi-1));
-   vlist.push_back(vec3d(-a/phi+b*phi+1,-a+b/phi-phi,a*phi+b-1/phi));
-   vlist.push_back(vec3d(-a/phi+b*phi-1,a-b/phi-phi,a*phi+b+1/phi));
-   vlist.push_back(vec3d(a+b/phi-phi,a*phi-b+1/phi,a/phi+b*phi+1));
+   // the negative real root of Phi*a**4-a**3+2a**2-a-1/Phi, or approximately -0.335208967907837
+   // hard code value. compare roots out to 12 places for computed answer (future proof)
+   vector<vec3d> vlist = u40_u60_vertices(-0.335208967907837);
 
    calculate_coords(geom, vlist, ODD, ODD);
 
@@ -2169,29 +2174,9 @@ void U68(geom_if &geom)
 // great inverted snub icosidodecahedron
 void U69(geom_if &geom)
 {
-   // the greater positive real solution to x**3-2x=-1/Phi, or approximately 1.2224727
-   double x = 1.2224727;
-
-   double sol[3];
-   double coeffs_x[] = { 1/phi, -2, 0, 1 };
-   cubic(coeffs_x, sol);
-
-   double root = DBL_MIN;
-   for(unsigned int i=0; i<3; i++)
-      if (sol[i] > 0 && sol[i] > root)
-         root = sol[i];
-   if (root != DBL_MIN)
-      x = root;
-
-   double a = x - 1/x;
-   double b = -x/phi + 1/(phi*phi) - 1/(x*phi);
-
-   vector<vec3d> vlist;
-   vlist.push_back(vec3d(2*a,2,2*b));
-   vlist.push_back(vec3d(a-b*phi-1/phi,a/phi+b-phi,-a*phi-b/phi-1));
-   vlist.push_back(vec3d(a*phi-b/phi+1,-a-b*phi+1/phi,-a/phi+b+phi));
-   vlist.push_back(vec3d(a*phi-b/phi-1,a+b*phi+1/phi,-a/phi+b-phi));
-   vlist.push_back(vec3d(a-b*phi+1/phi,-a/phi-b-phi,-a*phi-b/phi+1));
+   // the greater positive real solution to x**3-2x=-1/Phi, or approximately 1.222472666961002
+   // hard code value. compare roots out to 12 places for computed answer (future proof)
+   vector<vec3d> vlist = u57_u69_u74_vertices(1.222472666961002);
 
    calculate_coords(geom, vlist, EVEN, ODD);
 
@@ -2351,29 +2336,9 @@ void U73(geom_if &geom)
 // great retrosnub icosidodecahedron
 void U74(geom_if &geom)
 {
-   // the smaller positive real root of x**3-2x=-1/Phi, or approximately 0.3264046
-   double x = 0.3264046;
-
-   double sol[3];
-   double coeffs_x[] = { 1/phi, -2, 0, 1 };
-   cubic(coeffs_x, sol);
-
-   double root = DBL_MAX;
-   for(unsigned int i=0; i<3; i++)
-      if (sol[i] > 0 && sol[i] < root)
-         root = sol[i];
-   if (root != DBL_MAX)
-      x = root;
-
-   double a = x - 1/x;
-   double b = -x/phi + 1/(phi*phi) - 1/(x*phi);
-
-   vector<vec3d> vlist;
-   vlist.push_back(vec3d(2*a,2,2*b));
-   vlist.push_back(vec3d(a-b*phi-1/phi,a/phi+b-phi,-a*phi-b/phi-1));
-   vlist.push_back(vec3d(a*phi-b/phi+1,-a-b*phi+1/phi,-a/phi+b+phi));
-   vlist.push_back(vec3d(a*phi-b/phi-1,a+b*phi+1/phi,-a/phi+b-phi));
-   vlist.push_back(vec3d(a-b*phi+1/phi,-a/phi-b-phi,-a*phi-b/phi+1));
+   // the smaller positive real root of x**3-2x=-1/Phi, or approximately 0.326404554013182
+   // hard code value. compare roots out to 12 places for computed answer (future proof)
+   vector<vec3d> vlist = u57_u69_u74_vertices(0.326404554013182);
 
    calculate_coords(geom, vlist, EVEN, EVEN);
 

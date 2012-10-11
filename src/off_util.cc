@@ -77,7 +77,7 @@ class pr_opts: public prog_opts {
       pr_opts(): prog_opts("off_util"), orient(0),
                  triangulate_rule(0), skeleton(false),
                  sph_proj(false), trunc(false), edges_to_faces(false),
-                 geometry_only(false), close(false), blend_type(1),
+                 geometry_only(false), close(false), blend_type(3),
                  epsilon(0), sig_digits(DEF_SIG_DGTS),
                  unzip_frac(100.0), unzip_root(0), unzip_centre('x'),
                  unzip_z_align(false)
@@ -100,11 +100,11 @@ void pr_opts::usage()
 "Options\n"
 "%s"
 "  -M <elms> Sort and merge elements whose coordinates are the same to\n"
-"            the number of decimal places given by option -l, elems can\n"
+"            the number of decimal places given by option -l.  elems can\n"
 "            include: v - vertices, e - edges, f - faces,  a - all (vef),\n"
 "            b - bond (merge 've' and delete any face coincident with another),\n"
 "            s - sort without merging\n"
-"  -b <opt>  merge blend color. first=1, last=2, rgb=3, ryb=4 (default: 1)\n"
+"  -b <opt>  merge blend color. first=1, last=2, rgb=3, ryb=4 (default: 3)\n"
 "  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
 "  -O <opt>  orient the faces first (if possible) then for volume\n"
@@ -927,7 +927,7 @@ void process_file(col_geom_v &geom, pr_opts opts)
          geom.delete_faces(del_faces);
       }
       else
-         sort_merge_elems(geom, opts.merge_elems, opts.blend_type,opts.epsilon);
+         sort_merge_elems(geom, opts.merge_elems, opts.blend_type, opts.epsilon);
    }
 
    if(opts.orient) {

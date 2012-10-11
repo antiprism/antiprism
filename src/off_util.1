@@ -17,14 +17,18 @@ Options
 \fB\-\-version\fR version information
 .HP
 \fB\-M\fR <elms> Sort and merge elements whose coordinates are the same to
+.TP
+the number of decimal places given by option \fB\-l\fR.
+elems can
+.TP
+include: v \- vertices, e \- edges, f \- faces,
+a \- all (vef),
 .IP
-the number of decimal places given by option \fB\-l\fR, elems can
-include: v \- vertices, e \- edges, f \- faces,  a \- all (vef),
 b \- bond (merge 've' and delete any face coincident with another),
 s \- sort without merging
 .TP
 \fB\-b\fR <opt>
-merge blend color. first=1, last=2, rgb=3, ryb=4 (default: 1)
+merge blend color. first=1, last=2, rgb=3, ryb=4 (default: 3)
 .TP
 \fB\-l\fR <lim>
 minimum distance for unique vertex locations as negative exponent

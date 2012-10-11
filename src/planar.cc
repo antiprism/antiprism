@@ -256,14 +256,14 @@ void planar_opts::process_command_line(int argc, char **argv)
             if(id.substr(0,2)=="le")
                winding_rule_mode = 6;
 
-            int substr_start = 2;
-            // negative winding_rule_mode will trigger absolute value evaluation later
-            if(id.substr(2,1)=="a") {
-               winding_rule_mode = -winding_rule_mode;
-               substr_start = 3;
-            }
-
             if (winding_rule_mode != INT_MAX) {
+               int substr_start = 2;
+               // negative winding_rule_mode will trigger absolute value evaluation later
+               if((id.length() > 2) && (id.substr(2,1)=="a")) {
+                  winding_rule_mode = -winding_rule_mode;
+                  substr_start = 3;
+               }
+
                int tmp;
                char buff;
                if(sscanf((id.substr(substr_start)).c_str(), " %d %c", &tmp, &buff) != 1)
