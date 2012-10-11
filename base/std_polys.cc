@@ -1062,6 +1062,7 @@ int make_resource_pgon(geom_if &geom, string name, bool is_std, char *errmsg)
 
    polygon pgon(num_sides, step);
    polygon *poly;
+   bool has_edge2 = true;
    if(strcasecmp("pri", pnam)==0)
       poly = new prism(pgon);
    else if(strcasecmp("ant", pnam)==0)
@@ -1078,13 +1079,18 @@ int make_resource_pgon(geom_if &geom, string name, bool is_std, char *errmsg)
       poly = new gyrobicupola(pgon);
    else if(strcasecmp("snu", pnam)==0)
       poly = new snub_antiprism(pgon);
+   else if(strcasecmp("pol", pnam)==0) {
+      poly = new dihedron(pgon);
+      poly->set_subtype(1);
+      has_edge2 = false;
+   }
    else
       return -1;
 
    // check can have unit edge
    int ret;
    poly->set_edge(1);
-   if(!poly->set_edge2(1)) {
+   if(has_edge2 && !poly->set_edge2(1)) {
       if(errmsg)
          strcpy(errmsg, "polyhedron cannot have unit edges");
       ret = 1;
