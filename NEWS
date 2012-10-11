@@ -1,5 +1,21 @@
 NEWS for Antiprism: http://www.antiprism.com
 
+Version 0.22
+26-03-12 Adrian Rossiter <adrian@antiprism.com>
+         New Programs
+         Changes
+            Uniform polyhedra (U models) calculated by formula
+              rather than "kaleido" code (Roger Kaufman)
+            Standard uniform models use new U models, and many resource
+               models may be prefixed by std_ (Roger Kaufman).
+            New Wythoff construction models (wythoff_ ) and Schwarz
+               triangle models
+         Fixes
+            Some Johnson polyhedra not connected correctly
+            Other small fixes.
+
+
+
 Version 0.21
 26-03-12 Adrian Rossiter <adrian@antiprism.com>
          New Programs
