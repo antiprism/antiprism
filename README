@@ -1,15 +1,14 @@
 Antiprism
 =========
 
-Notes for Antiprism 0.21
+Notes for Antiprism 0.22
 ------------------------
 
-This is a minor release to provide fixes for problems found
-in 0.20 and to distribute a couple of new programs.
+This is a minor release. It includes higher precision resource
+models, bug fixes, and changes to allow building on O SX.
 
-Due to the extensive changes in the previous release, please
-continue to be on the lookout for bugs or other issues and
-report them to me at: adrian@antiprism.com
+Please be on the lookout for bugs or other issues and report
+them to me at: adrian@antiprism.com
 
 Adrian.
 
