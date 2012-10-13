@@ -29,6 +29,8 @@
 #ifndef GEOM_UTILS_H
 #define GEOM_UTILS_H
 
+#include "symmetry.h"
+
 void orient_face(vector<int> &face, int v0, int v1);
 
 void triangulate_basic(geom_if &geom, bool sq_diag=true, col_val inv=col_val(),
@@ -125,6 +127,12 @@ double isLeft(const vec3d &P0, const vec3d &P1, const vec3d &P2, const int &idx)
 bool wn_PnPoly(const geom_if &polygon, const vec3d &P, const int &idx, int &winding_number, double eps=epsilon);
 int get_winding_number(const geom_if &polygn, const vector<vec3d> &pnts, const xnormal &face_normal, bool find_direction=false, const double eps=epsilon);
 int find_polygon_denominator_signed(const geom_if &geom, const unsigned int &face_idx, double eps=epsilon);
+
+// Get vertex vectors for of a Schwarz triangle, and its corresponding symmetry
+bool get_schwarz_tri_verts(const vector<int> &fracs, vector<vec3d> &verts,
+      sch_sym *sym=0);
+
+
 
 #endif // GEOM_UTILS_H
 

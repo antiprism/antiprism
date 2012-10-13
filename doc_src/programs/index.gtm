@@ -63,6 +63,7 @@ Programs
 <LI><A HREF="zono.html">zono</A> - zonohedra
 <LI><A HREF="polygon.html">polygon</A> - polygon based polyhedra (prisms, pyramids, etc)
 <LI><A HREF="iso_delta.html">iso_delta</A> - isohedral deltahedra
+<LI><A HREF="kiteohedron.html">kiteohedron</A> - kite-faced polyhedra
 <LI><A HREF="conway.html">conway</A> - Conway Notation transformations
 <LI><A HREF="poly_kscope.html">poly_kscope</A> - polyhedral kaleidoscope
 <LI><A HREF="unitile2d.html">unitile2d</A> - makes uniform tilings on a surface

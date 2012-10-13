@@ -78,6 +78,7 @@ src/canonical
 src/conway
 src/n_icons
 src/iso_delta
+src/kiteohedron
 src/bravais
 src/waterman
 src/col_util

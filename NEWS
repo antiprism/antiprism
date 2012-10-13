@@ -3,6 +3,7 @@ NEWS for Antiprism: http://www.antiprism.com
 Version 0.22
 xx-10-12 Adrian Rossiter <adrian@antiprism.com>
          New Programs
+            kiteohedron: makes kite-faced polyhedra
          Changes
             Uniform polyhedra (U models) calculated by formula
               rather than "kaleido" code (Roger Kaufman)
@@ -16,6 +17,8 @@ xx-10-12 Adrian Rossiter <adrian@antiprism.com>
          Fixes
             Some Johnson polyhedra not connected correctly
             Some errors reading OFF files were not reported
+            Finds OpenGL headers on OS X
+            Portability of timing code
             Other small fixes.
 
 
