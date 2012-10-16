@@ -109,7 +109,7 @@ bool add_vert(geom_if &geom, vector<char *> vals, char *errmsg)
    char errmsg2[MSG_SZ];
    vec3d v;
    for(unsigned int i=0; (i<vals.size()&&i<3); i++) {
-      if(!(read_double(vals[i], &v[i], errmsg2))) {
+      if(!(read_double_noparse(vals[i], &v[i], errmsg2))) {
          sprintf(errmsg, "vertex coords: '%s' %s", vals[i], errmsg2);
          return false;
       }
@@ -247,7 +247,7 @@ bool off_file_read(FILE *ifile, geom_if &geom, char *errmsg)
 
    free(line); // finished with file format line
       
-   // read counts of coordss, polys (and edges)
+   // read counts of coords, polys (and edges)
    while((read_ret = read_off_line(ifile, &line))==0) {
       file_line_no++;
       if(sscanf(line, " %*s")!=EOF)

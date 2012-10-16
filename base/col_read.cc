@@ -123,7 +123,7 @@ bool col_val::read_decvals(char *str, char *errmsg)
 {
    unset();
    vector<double> vals;
-   if(!read_double_list(str, vals, errmsg))
+   if(!read_double_list_noparse(str, vals, errmsg))
       return false;
    return from_decvals(vals, errmsg);
 }
@@ -133,7 +133,7 @@ bool col_val::read_decvals(vector<char *> &vals, char *errmsg)
 {
    unset();
    vector<double> dvals;
-   if(!read_double_list(vals, dvals, errmsg))
+   if(!read_double_list_noparse(vals, dvals, errmsg))
       return false;
    return from_decvals(dvals, errmsg);
 }

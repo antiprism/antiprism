@@ -171,6 +171,17 @@ const char *basename2(const char *path);
  * \return The converted string. */
 string dots2underscores(string str);
 
+///Read a floating point number, which may be a mathematical expression, from a string.
+/**The string should only hold the floating point number or expression, but may
+ * have leading and trailing whitespace.
+ * \param str the string holding the floating point number or expressions.
+ * \param f used to return the floating point number.
+ * \param errmsg an array at least \c MSG_SZ chars long to
+ * return any error message.
+ * \return true if a valid floating point number was read, otherwise false
+ * and the error is detailed in \a errmsg. */
+bool read_double(const char *str, double *f, char *errmsg=0);
+
 ///Read a floating point number from a string.
 /**The string should only hold the floating point number, but may
  * have leading and trailing whitespace.
@@ -180,7 +191,8 @@ string dots2underscores(string str);
  * return any error message.
  * \return true if a valid floating point number was read, otherwise false
  * and the error is detailed in \a errmsg. */
-bool read_double(const char *str, double *f, char *errmsg=0);
+bool read_double_noparse(const char *str, double *f, char *errmsg=0);
+
 
 ///Read an integer from a string.
 /**The string should only hold the integer, but may
@@ -193,7 +205,7 @@ bool read_double(const char *str, double *f, char *errmsg=0);
  * and the error is detailed in \a errmsg. */
 bool read_int(const char *str, int *i, char *errmsg=0);
 
-///Read floating point numbers from a list of strings.
+///Read floating point numbers, which may be maththematical expressions, from a list of strings.
 /**The strings should only hold the floating point number, but may
  * have leading and trailing whitespace.
  * \param vals the strings holding the floating point numbers.
@@ -204,6 +216,34 @@ bool read_int(const char *str, int *i, char *errmsg=0);
  * and the error is detailed in \a errmsg. */
 bool read_double_list(vector<char *> &vals, vector<double> &nums,
       char *errmsg=0);
+
+///Read floating point numbers from a list of strings.
+/**The strings should only hold the floating point number, but may
+ * have leading and trailing whitespace.
+ * \param vals the strings holding the floating point numbers.
+ * \param nums used to return the floating point numbers.
+ * \param errmsg an array at least \c MSG_SZ chars long to
+ * return any error message.
+ * \return true if only valid floating point numbers were read, otherwise false
+ * and the error is detailed in \a errmsg. */
+bool read_double_list_noparse(vector<char *> &vals, vector<double> &nums,
+      char *errmsg=0);
+
+///Read floating point numbers, which may be mathematical expressions, listed in a single string.
+/**The numbers in the string should be comma separated, and may
+ * have leading and trailing whitespace.
+ * \param str the string holding the comma-separated floating point numbers.
+ * \param nums used to return the floating point numbers.
+ * \param errmsg an array at least \c MSG_SZ chars long to
+ * return any error message.
+ * \param len the maximum total of numbers that should be in \a str, or if
+ * it is \c 0 then there is no maximum.
+ * \param sep the characters that can separate the numbers.
+ * \return true if only valid floating point numbers were read, and no more
+ * than \a len (if \c len>0), otherwise false.
+ * and the error is detailed in \a errmsg. */
+bool read_double_list(char *str, vector<double> &nums, char *errmsg=0,
+      int len=0, const char *sep=",");
 
 ///Read floating point numbers listed in a single string.
 /**The numbers in the string should be comma separated, and may
@@ -218,7 +258,7 @@ bool read_double_list(vector<char *> &vals, vector<double> &nums,
  * \return true if only valid floating point numbers were read, and no more
  * than \a len (if \c len>0), otherwise false.
  * and the error is detailed in \a errmsg. */
-bool read_double_list(char *str, vector<double> &nums, char *errmsg=0,
+bool read_double_list_noparse(char *str, vector<double> &nums, char *errmsg=0,
       int len=0, const char *sep=",");
 
 ///Read integers from a list of strings.
