@@ -38,8 +38,7 @@ using std::string;
 using std::vector;
 using std::swap;
 
-static void frac_swap(vector<int> &fracs, vector<vec3d> &vecs,
-      int frac0, int frac1)
+void frac_swap(vector<int> &fracs, vector<vec3d> &vecs, int frac0, int frac1)
 {
    swap(fracs[2*frac0  ], fracs[2*frac1  ]);
    swap(fracs[2*frac0+1], fracs[2*frac1+1]);
@@ -47,7 +46,7 @@ static void frac_swap(vector<int> &fracs, vector<vec3d> &vecs,
 }
 
 
-static int frac_cmp(const int &n0, const int &d0, const int &n1, const int &d1)
+int frac_cmp(const int &n0, const int &d0, const int &n1, const int &d1)
 {
    if(n0 > n1)
       return 1;
@@ -64,7 +63,7 @@ static int frac_cmp(const int &n0, const int &d0, const int &n1, const int &d1)
 }
 
 
-static bool frac_less(const vector<int> &fracs, int frac0, int frac1)
+bool frac_less(const vector<int> &fracs, int frac0, int frac1)
 {
    const int f0 = 2*frac0;
    const int f1 = 2*frac1;
@@ -89,7 +88,7 @@ class frac_vect_less {
 };
 
 
-static void tri_normalise(vector<int> &fracs, vector<vec3d> &vecs)
+void tri_normalise(vector<int> &fracs, vector<vec3d> &vecs)
 {
    // bubble sort
    if(frac_less(fracs, 2, 1))
@@ -139,7 +138,8 @@ string wythoff_poly::to_str()
    return sym;
 }
 
-static string get_tri_symmetry(const vector<int> &fracs)
+
+string wythoff_poly::get_tri_sym()
 {
    vector<int> fs = fracs;
    vector<vec3d> tmp(6);
@@ -154,12 +154,6 @@ static string get_tri_symmetry(const vector<int> &fracs)
    else if(fs[4] == 3)
       sym = "T";
    return sym;
-}
-
-
-string wythoff_poly::get_tri_sym()
-{
-   return get_tri_symmetry(fracs);
 }
 
 
@@ -321,8 +315,7 @@ bool wythoff_poly::read_symbol(const char *sym, char *errmsg)
 }
 
 
-static bool get_tri_verts(const vector<int> &norm_fracs,
-      vector<vec3d> &norm_verts)
+bool get_tri_verts(const vector<int> &norm_fracs, vector<vec3d> &norm_verts)
 {
    norm_verts.resize(6);
    bool found = false;
@@ -365,42 +358,8 @@ static bool get_tri_verts(const vector<int> &norm_fracs,
 }
 
 
-static bool assign_vertices(const vector<int> &fracs, vector<vec3d> &verts)
-{
-   verts.resize(3);
-   vector<vec3d> v_map(3);
-   for(int i=0; i<3; i++)
-      v_map[i] = vec3d((double)i, 0.0, 0.0);
-
-   vector<int> norm_fracs = fracs;
-   tri_normalise(norm_fracs, v_map);
-   vector<vec3d> norm_verts;
-   bool ret = get_tri_verts(norm_fracs, norm_verts);
-   if(ret) {
-      for(int i=0; i<3; i++)
-         verts[(int)floor(v_map[i][0]+0.5)] = norm_verts[i];
-   }
-
-   return ret;
-}
-
-// export this function
-bool get_schwarz_tri_verts(const vector<int> &fracs, vector<vec3d> &verts,
-      sch_sym *sym)
-{
-   int ret = assign_vertices(fracs, verts);
-   if(ret && sym) {
-      *sym = sch_sym(get_tri_symmetry(fracs));
-   }
-   return ret;
-};
-
-
 bool wythoff_poly::assign_verts()
 {
-   return assign_vertices(fracs, verts);
-}
-/*
    verts.resize(3);
    vector<vec3d> v_map(3);
    for(int i=0; i<3; i++)
@@ -418,17 +377,15 @@ bool wythoff_poly::assign_verts()
    return ret;
 }
 
-*/
 
-static vec3d get_angle_bisector_norm(vec3d v0, vec3d v1, vec3d v2)
+vec3d get_angle_bisector_norm(vec3d v0, vec3d v1, vec3d v2)
 {
    double ang = angle_around_axis(v1, v2, v0);
    return mat3d::rot(v0, ang/2) * vcross(v0, v1);
 }
 
 
-static vec3d get_fermat_point(vec3d v0, vec3d v1, vec3d v2,
-      bool degenerate, char *msg=0)
+vec3d get_fermat_point(vec3d v0, vec3d v1, vec3d v2, bool degenerate, char *msg=0)
 {
    vec3d v[3];
    v[0] = v0;
@@ -467,7 +424,7 @@ static vec3d get_fermat_point(vec3d v0, vec3d v1, vec3d v2,
 }
 
 
-static void add_faces(geom_if &geom, vec3d pt,
+void add_faces(geom_if &geom, vec3d pt,
       int num, int denom, const vec3d &axis, col_val col, const sch_sym &sym)
 {
    // avoid extra windings
@@ -495,7 +452,7 @@ static void add_faces(geom_if &geom, vec3d pt,
    }
 }
 
-static void add_faces(geom_if &geom, vec3d pt, int num, int denom,
+void add_faces(geom_if &geom, vec3d pt, int num, int denom,
       const vector<vec3d> &axes, int idx, const sch_sym &sym)
 {
    add_faces(geom, pt, num, denom, axes[idx], col_val(idx), sym);
