@@ -5,10 +5,10 @@ Notes for Antiprism 0.22
 ------------------------
 
 This is a minor release. It includes higher precision resource
-models, bug fixes, and changes to allow building on O SX.
+models, bug fixes, and changes to allow building on OS X (untested).
 
-Please be on the lookout for bugs or other issues and report
-them to me at: adrian@antiprism.com
+Please look out for bugs or other issues, and report them to me
+at: adrian@antiprism.com
 
 Adrian.
 

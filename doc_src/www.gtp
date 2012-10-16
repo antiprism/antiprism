@@ -92,8 +92,8 @@ define OPT_O <DT><I>-o &lt;file&gt;</I><<BREAK>>\
         
         
 
-define REL_DATE 26 March 2012
-define VER 0.21
+define REL_DATE 18 October 2012
+define VER 0.22
 define VER_PRE antiprism-
 define ANTIPRISM_RELEASE <<VER_PRE>><<VER>>
 define ANTIPRISM_SOURCE_FILE <<ANTIPRISM_RELEASE>>.tar.gz
