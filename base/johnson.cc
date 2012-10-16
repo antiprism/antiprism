@@ -313,13 +313,13 @@ void J66(geom_if &geom) { bond(geom, J_tr_cube, J4, 10); }
 void J67(geom_if &geom) { bond(geom, J66, J4, 9); }
 
 // augmented truncated dodecahedron
-void J68(geom_if &geom) { bond(geom, J_tr_dodecahedron, J5, 25); }
+void J68(geom_if &geom) { bond(geom, J_tr_dodecahedron, J5, 25, 0, 1); }
 
 // parabiaugmented truncated dodecahedron
-void J69(geom_if &geom) { bond(geom, J68, J5, 23); }
+void J69(geom_if &geom) { bond(geom, J68, J5, 23, 0, 1); }
 
 // metabiaugmented truncated dodecahedron
-void J70(geom_if &geom) { bond(geom, J68, J5, 25); }
+void J70(geom_if &geom) { bond(geom, J68, J5, 25, 0, 1); }
 
 // triaugmented truncated dodecahedron
 void J71(geom_if &geom) { bond(geom, J70, J5, 24); }
