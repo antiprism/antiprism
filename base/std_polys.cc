@@ -1188,7 +1188,12 @@ int make_resource_wythoff(geom_if &geom, string name, bool is_std,
       return 1; // fail
    }
 
-   wyt.make_poly(geom, errmsg2);
+   if(!wyt.make_poly(geom, errmsg2))
+      if(errmsg) {
+         snprintf(errmsg, MSG_SZ, "wythoff name: invalid symbol: %s",
+               errmsg2);
+      return 1; // fail
+   }
    if(*errmsg2)
       fprintf(stderr, "warning: wythoff name: %s\n", errmsg2);
 

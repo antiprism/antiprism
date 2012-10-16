@@ -461,6 +461,8 @@ void add_faces(geom_if &geom, vec3d pt, int num, int denom,
 
 bool wythoff_poly::make_poly(geom_if &geom, char *errmsg)
 {
+   if(errmsg)
+      *errmsg = '\0';
    geom.clear_all();
    sch_sym sym(get_tri_sym());
    if(bar_pos==0) {
@@ -473,6 +475,15 @@ bool wythoff_poly::make_poly(geom_if &geom, char *errmsg)
              double(fracs[2*max_fract])/fracs[2*max_fract+1] )
             max_fract = i;
       }
+      // Check for invalid antiprism
+      if(2*fracs[2*max_fract]<3*fracs[2*max_fract+1] &&
+            fracs[(2*max_fract+2)%6]==2 && fracs[(2*max_fract+4)%6]==2 ) {
+         if(errmsg)
+            sprintf(errmsg, "symbol leads to nonconstructible antiprism");
+         return false;
+      }
+         
+
       vec3d f_pt; // Fermat point
       vec3d pt;   // Final construction point
 
@@ -494,6 +505,7 @@ bool wythoff_poly::make_poly(geom_if &geom, char *errmsg)
       if(cnt_3_2 == 1)
          degenerate = true;
 
+
       // first check for non-dihedral isoscelese triangle with 3/2 apex
       if(cnt_3_2==1 &&
             fracs[(2*pos_3_2+2)%6]==fracs[(2*pos_3_2+4)%6] &&
@@ -509,7 +521,7 @@ bool wythoff_poly::make_poly(geom_if &geom, char *errmsg)
             pt = verts[(pos_3_2+1)%3] + verts[(pos_3_2+2)%3];
          }
       }
-      else { // geeneral case
+      else { // general case
          f_pt = get_fermat_point(verts[0], verts[1], verts[2],
                degenerate, errmsg);
 

@@ -75,7 +75,7 @@ bool off_file_read(string file_name, geom_if &geom, char *errmsg)
          geom_ok = true;
       else {
          if(errmsg)
-            snprintf(errmsg, MSG_SZ-50, "could not open input"
+            snprintf(errmsg, MSG_SZ-50, "could not open input "
                   "file \'%s=%s\': %s", file_name.c_str(), alt_name.c_str(),
                   errmsg2);
       }
@@ -92,7 +92,7 @@ bool off_file_read(string file_name, geom_if &geom, char *errmsg)
          geom_ok = true;
       else {
          if(errmsg)
-            snprintf(errmsg, MSG_SZ-50, "could not open input"
+            snprintf(errmsg, MSG_SZ-50, "could not open input "
                   "file \'%s\': %s", file_name.c_str(), errmsg2);
       }
    }
