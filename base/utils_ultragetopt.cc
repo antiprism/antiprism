@@ -457,7 +457,7 @@ int ultra_getopt::handle_longopt(int longind, char *longarg, int noseparg,
    /* Handle assignment arguments */
    if (longarg && longopts[longind].has_arg == no_argument) {
       print_error(flags, errorarg, argv[0],
-            longarg-argv[ultraoptind]-1, argv[ultraoptind]);
+            (int)(longarg-argv[ultraoptind]-1), argv[ultraoptind]);
       /* TODO:  What is a good value to put in ultraoptopt? */
       /* Looks like GNU getopt() uses val */
       ultraoptopt = longopts[longind].val;
@@ -484,7 +484,7 @@ int ultra_getopt::handle_longopt(int longind, char *longarg, int noseparg,
             || (!(flags & UGO_HYPHENARG)
                && strchr(optleaders, argv[ultraoptind+1][0])))) {
       print_error(flags, errornoarg, argv[0],
-            strlen(argv[ultraoptind]), argv[ultraoptind]);
+            (int)strlen(argv[ultraoptind]), argv[ultraoptind]);
       ultraoptind++;
       if (flags & UGO_MISSINGCOLON)
          return ':';
@@ -606,10 +606,10 @@ int ultra_getopt::ultragetopt_tunable(int argc, char *const argv[],
       if (longind < 0) {
          if (longarg == NULL)
             print_error(flags, erroropt, argv[0],
-                  strlen(argv[ultraoptind]), argv[ultraoptind]);
+                  (int)strlen(argv[ultraoptind]), argv[ultraoptind]);
          else
             print_error(flags, erroropt, argv[0],
-                  longarg - argv[ultraoptind] - 1, argv[ultraoptind]);
+                  (int)(longarg - argv[ultraoptind] - 1), argv[ultraoptind]);
 
          /* TODO:  What is a good value for optopt in this case? */
          /*	      Looks like BSD uses 0 */

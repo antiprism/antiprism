@@ -9,5 +9,3 @@ libtess_la_SOURCES = dict.cc geom.cc memalloc.cc mesh.cc normal.cc \
 	mesh.h normal.h priorityq.h priorityq-heap.h priorityq-sort.h \
 	render.h sweep.h tess.h tessmono.h
 
-libtess_la_LDFLAGS = -no-undefined
-

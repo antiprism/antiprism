@@ -3593,11 +3593,11 @@ void qh_printvoronoi (FILE *fp, int format, facetT *facetlist, setT *facets, boo
     qh_printvdiagram()
     qh_eachvoronoi()
 */
-void qh_printvnorm (FILE *fp, vertexT *vertex, vertexT *vertexA, setT *centers, boolT unbounded) {
+void qh_printvnorm (FILE *fp, vertexT *vertex, vertexT *vertexA, setT *centers, boolT /*unbounded*/) {
   pointT *normal;
   realT offset;
   int k;
-  unbounded = 0;
+  //unbounded = 0; // Remove warning for setting but not using AR
   
   normal= qh_detvnorm (vertex, vertexA, centers, &offset);
   fprintf (fp, "%d %d %d ", 
@@ -3621,9 +3621,9 @@ void qh_printvnorm (FILE *fp, vertexT *vertex, vertexT *vertexA, setT *centers, 
   notes:
     the user may use a different function
 */
-void qh_printvridge (FILE *fp, vertexT *vertex, vertexT *vertexA, setT *centers, boolT unbounded) {
+void qh_printvridge (FILE *fp, vertexT *vertex, vertexT *vertexA, setT *centers, boolT /*unbounded*/) {
   facetT *facet, **facetp;
-  unbounded = 0;
+  //unbounded = 0; // Remove warning for setting but not using AR
 
   fprintf (fp, "%d %d %d", qh_setsize (centers)+2, 
        qh_pointid (vertex->point), qh_pointid (vertexA->point));
