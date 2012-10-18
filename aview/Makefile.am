@@ -19,7 +19,6 @@ libantiprism_dispgl_la_SOURCES=gl_writer.cc stipple.cc gl_stroke_font.cc \
 
 supdir = $(datadir)/$(PACKAGE)-$(VERSION)
 libantiprism_dispgl_la_CPPFLAGS = -DSUPDIR="\"$(supdir)\""
-libantiprism_dispgl_la_LDFLAGS = -no-undefined -version-info 0:0:0
 
 
 bin_PROGRAMS = antiview

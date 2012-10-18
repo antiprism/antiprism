@@ -57,7 +57,7 @@
 #if GLUT_TYPE == FOUND_GLUT
    #ifdef HAVE_GL_GLUT_H
       #include <GL/glut.h>
-   #elif defined HAVE_GLUT_GLU_H
+   #elif defined HAVE_GLUT_GLUT_H
       #include <GLUT/glut.h>
    #endif
 #elif GLUT_TYPE == FOUND_OPENGLUT
