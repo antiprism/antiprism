@@ -39,7 +39,7 @@ Tetrahedron kaleidocycle rotated 40 degrees from horizontal
 Ring of 16 icosahedra, each given a proper coloring, rotated 90 degrees,
 and displayed in antiview
 <PRE>
-   off_color -f P icosahedron | kcycle -i - -n 8 -a 90 0,1,10,11 | antiview -v 0.1
+   off_color -f P icosahedron | kcycle -i - -n 8 -a 90 10,11,9,4 | antiview -v 0.1
 </PRE>
 
 <H2><A NAME="notes">

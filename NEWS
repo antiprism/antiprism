@@ -5,6 +5,7 @@ Version 0.22
          New Programs
             None
          Changes
+            Resource models: element index numbers may have changed. 
             Uniform polyhedra (U models) calculated by formula
               rather than "kaleido" code (Roger Kaufman)
             Standard uniform models use new U models, many resource
