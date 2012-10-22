@@ -61,8 +61,10 @@ void gl_set_material(col_val col, bool trans, bool both_sides)
 {
    vec4d cv = col.get_vec4d();
    int sides = both_sides ? GL_FRONT_AND_BACK : GL_FRONT;
-   GLfloat f_specular[] = { cv[0]/2, cv[1]/2, cv[2]/2, 1.0 };
-   GLfloat f_diffuse[] = { cv[0], cv[1], cv[2], 1.0 };
+   GLfloat f_specular[] = { (GLfloat)cv[0]/2, (GLfloat)cv[1]/2,
+                            (GLfloat)cv[2]/2, 1.0 };
+   GLfloat f_diffuse[] =  { (GLfloat)cv[0], (GLfloat)cv[1],
+                            (GLfloat)cv[2], 1.0 };
    GLfloat f_shininess[] = { 100.0 };
    glMaterialfv(sides, GL_SPECULAR, f_specular);
    glMaterialfv(sides, GL_DIFFUSE, f_diffuse);

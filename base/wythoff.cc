@@ -436,7 +436,7 @@ void add_faces(geom_if &geom, vec3d pt,
 
    double ang = 2*M_PI*(double)denom/(double)num;
 
-   double sides = num;
+   int sides = num;
    if(sides>2) {
       col_geom_v face_geom, sym_face_geom;
       vector<int> face(sides);

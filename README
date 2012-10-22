@@ -7,7 +7,7 @@ Notes for Antiprism 0.22
 This is a minor release. It includes higher precision resource
 models, bug fixes, and changes to allow building on OS X (untested).
 
-Please look out for bugs or other issues, and report them to me
+Please look out for bugs, or other issues, and report them to me
 at: adrian@antiprism.com
 
 Adrian.
@@ -76,10 +76,17 @@ or --with-freeglut.
 
 Cygwin
 ------
-run configure with "--with-x=no" to avoid building against X, if
+Run configure with "--with-x=no" to avoid building against X, if
 it is installed. It should be possible to build native Windows
 binaries by cross-compiling using the tools provided by Cygwin;
 the -mno-cygwin option is not supported.
+
+Mac OS X
+--------
+Recent changes have been made to support building on OS X (with
+thanks to Ralph Sutherland), but these changes are currently
+untested. Any feedback regarding successful or failed builds
+would be appreciated. Run configure with "--with-x=no".
 
 
 Git Code Repository

@@ -629,7 +629,7 @@ void qh_printstatlevel (FILE *fp, int id, int start) {
     fprintf (fp, "%s\n", qhstat doc[id]);
     return;
   }
-  start= 0; /* not used */
+  // AR  start= 0; /* not used */
   if (qh_nostatistic(id) || !qhstat doc[id])
     return;
   qhstat printed[id]= True;

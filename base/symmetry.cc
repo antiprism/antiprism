@@ -900,9 +900,9 @@ static bool is_sym(const geom_if &test_geom, const geom_if &geom,
 static void set_equiv_elems_identity(const geom_if &geom,
       vector<vector<set<int> > > *equiv_sets)
 {
-   int cnts[3] = { geom.verts().size(),
-                   geom.edges().size(),
-                   geom.faces().size() };
+   int cnts[3] = { (int)geom.verts().size(),
+                   (int)geom.edges().size(),
+                   (int)geom.faces().size() };
    equiv_sets->clear();
    equiv_sets->resize(3);
    for(int i=0; i<3; i++) {
@@ -946,9 +946,9 @@ static int find_syms(const geom_if &geom, t_set &ts,
    const vector<vector<int> > *cons[] = {&v_cons, &r_cons};
    
    vector<map<int, set<int> > > equiv_elems(3);
-   int cnts[3] = { merged_geom.verts().size(),
-                   merged_geom.edges().size(),
-                   merged_geom.faces().size() };
+   int cnts[3] = { (int)merged_geom.verts().size(),
+                   (int)merged_geom.edges().size(),
+                   (int)merged_geom.faces().size() };
    vector<int> test_path, path;
    vector<int> test_v_code, v_code;
    find_path(test_path, test_v_code, *edges.begin(), v_cons);
@@ -1242,9 +1242,9 @@ void get_equiv_elems(const geom_if &geom, const t_set &ts,
    col_geom_v test_geom = merged_geom;
 
    vector<map<int, set<int> > > equiv_elems(3);
-   int cnts[3] = { merged_geom.verts().size(),
-                   merged_geom.edges().size(),
-                   merged_geom.faces().size() };
+   int cnts[3] = { (int)merged_geom.verts().size(),
+                   (int)merged_geom.edges().size(),
+                   (int)merged_geom.faces().size() };
 
    for(set<mat3d>::iterator si=ts.begin(); si!=ts.end(); si++) {
       col_geom_v trans_geom = merged_geom;
