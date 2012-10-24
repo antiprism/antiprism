@@ -26,6 +26,30 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+/* These notes are from this thread on the internet: http://snipurl.com/hh13
+
+   Norman Johnson says there are 17 simple Johnson solids (although he uses
+   the word elementary rather than simple).
+
+   (1-6, 63, 80, 83-86, 88-92).
+
+   However, as Paul Gailunas has pointed out, there are 11 more elementary
+   convex solids whose faces are regular polygons:
+   tetrahedron
+   dodecahedron
+   truncated tetrahedron
+   truncated cube
+   truncated dodecahedron
+   truncated icosahedron
+   rhombitruncated cuboctahedron
+   rhombitruncated icosidodecahedron
+   snub cube
+   snub dodecahedron
+   truncated octahedron
+
+   The cube's not in the above list because it's a prism.
+*/
+
 #include <ctype.h>
 
 #include "std_polys.h"
@@ -88,22 +112,22 @@ void J_antiprism10(geom_if &geom) { uni_pgon(geom, antiprism(10)); }
 // ------------------------------------------------------------------------
 
 
-// square pyramid
+// square pyramid (elementary)
 void J1(geom_if &geom) { uni_pgon(geom, pyramid(4)); }
 
-// pentagonal pyramid
+// pentagonal pyramid (elementary)
 void J2(geom_if &geom) { uni_pgon(geom, pyramid(5)); }
 
-// triangular cupola
+// triangular cupola (elementary)
 void J3(geom_if &geom) { uni_pgon(geom, cupola(3)); }
 
-// square cupola
+// square cupola (elementary)
 void J4(geom_if &geom) { uni_pgon(geom, cupola(4)); }
 
-// pentagonal cupola
+// pentagonal cupola (elementary)
 void J5(geom_if &geom) { uni_pgon(geom, cupola(5)); }
 
-// pentagonal rotunda
+// pentagonal rotunda (elementary)
 void J6(geom_if &geom)
 {
    J_icosidodecahedron(geom);
@@ -284,7 +308,7 @@ void J60(geom_if &geom) { bond(geom, J58, J2, 4); }
 // triaugmented dodecahedron
 void J61(geom_if &geom) { bond(geom, J60, J2, 1); }
 
-// tridiminished icosahedron
+// tridiminished icosahedron (elementary)
 void J63(geom_if &geom)
 {
    J_icosahedron(geom);
@@ -324,7 +348,7 @@ void J70(geom_if &geom) { bond(geom, J68, J5, 25, 0, 1); }
 // triaugmented truncated dodecahedron
 void J71(geom_if &geom) { bond(geom, J70, J5, 24); }
 
-// parabidiminished rhombicosidodecahedron
+// parabidiminished rhombicosidodecahedron (elementary)
 void J80(geom_if &geom)
 {
    J_rhombicosidodecahedron(geom);
@@ -345,7 +369,7 @@ void J72(geom_if &geom) { tbond(geom, J77, J5, 40); }
 // parabigyrate rhombicosidodecahedron
 void J73(geom_if &geom) { bond(geom, J77, J5, 40); }
 
-// tridiminished rhombicosidodecahedron
+// tridiminished rhombicosidodecahedron (elementary)
 void J83(geom_if &geom)
 {
    J_rhombicosidodecahedron(geom);
@@ -378,7 +402,7 @@ void J78(geom_if &geom) { bond(geom, J82, J5, 30); }
 // metabidiminished rhombicosidodecahedron
 void J81(geom_if &geom) { bond(geom, J83, J5, 31); }
 
-// snub disphenoid
+// snub disphenoid (elementary)
 void J84(geom_if &geom)
 {
    geom.read_resource("std_snu2");
@@ -409,7 +433,7 @@ void J84(geom_if &geom)
    */
 }
 
-// snub square antiprism
+// snub square antiprism (elementary)
 void J85(geom_if &geom)
 {
    geom.read_resource("std_snu4");
@@ -451,7 +475,7 @@ void J85(geom_if &geom)
 }
 
 
-// sphenocorona
+// sphenocorona (elementary)
 void J86(geom_if &geom)
 {
    // solution of the coordinate distance equations by Wolfram|Alpha
@@ -499,7 +523,7 @@ void J86(geom_if &geom)
 // augmented sphenocorona
 void J87(geom_if &geom) { bond(geom, J86, J1, 7); }
 
-// sphenomegacorona
+// sphenomegacorona (elementary)
 void J88(geom_if &geom)
 {
    // use coordinates for now
@@ -533,7 +557,7 @@ void J88(geom_if &geom)
    normalised_face_list(geom);
 }
 
-// hebesphenomegacorona
+// hebesphenomegacorona (elementary)
 void J89(geom_if &geom)
 {
    // use coordinates for now
@@ -569,7 +593,7 @@ void J89(geom_if &geom)
    normalised_face_list(geom);
 }
 
-// disphenocingulum
+// disphenocingulum (elementary)
 void J90(geom_if &geom)
 {
    // use coordinates for now
@@ -607,7 +631,7 @@ void J90(geom_if &geom)
    normalised_face_list(geom);
 }
 
-// bilunabirotunda
+// bilunabirotunda (elementary)
 void J91(geom_if &geom)
 {
    geom.clear_all();
@@ -628,7 +652,7 @@ void J91(geom_if &geom)
    normalised_face_list(geom);
 }
 
-// triangular hebesphenorotunda
+// triangular hebesphenorotunda (elementary)
 void J92(geom_if &geom)
 {
    // hexagon is base at height h2.
