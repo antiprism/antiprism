@@ -31,79 +31,113 @@ Usage
 Examples
 </A></H2>
 
-General member of series including deltoidal hexacontahedron.
+Specify a trapezohedron by its polygon fraction
 <PRE>
-   kiteohedron 5 3 2 | antiview
+   iso_kite 5 | antiview
+   iso_kite 3/2 | antiview
 </PRE>
 
-General member of series including deltoidal icositetrahedron. The third
-vertex of the triangle uses the default of 2
+General member of series including deltoidal hexacontahedron, can be
+specified as 3 fractions, 2 fractions (the third defaults to 2) or
+by the triangle name (see <i>iso_kite -h</i> for the list of names).
 <PRE>
-   kiteohedron 3 4 | antiview
+   iso_kite 5 3 2 | antiview
+   iso_kite 5 3 | antiview
+   iso_kite I1 | antiview
 </PRE>
+
+Get a list of all models, all models involving a 3 trapezohedron
+(parallelopiped), all models involving the (3 3 2) triangle series
+<PRE>
+   iso_kite
+   iso_kite -l list 3
+   iso_kite -l list 3 3
+</PRE>
+
+Make the second model in each of these lists
+<PRE>
+   iso_kite -l 2 | antiview
+   iso_kite -l 2 3 | antiview
+   iso_kite -l 2 3 3 | antiview
+</PRE>
+
 
 General member of series including deltoidal icositetrahedron. Set a
-height for the point along the first vertex (fixes the pivot)
+height for the point along the first vertex
 <PRE>
-   kiteohedron -l 2.5 3 4 | antiview
-</PRE>
-
-General member of series including deltoidal icositetrahedron. Set a
-height for the pivot, the midpoint of the line segment joining the kite's
-side vertices (fixes the vertex at A).
-<PRE>
-   kiteohedron -p 2.5 3 4 | antiview
+   iso_kite -A 2.5 3 4 | antiview
 </PRE>
 
 General member of series including deltoidal icositetrahedron. The vertex
 order is significant
 <PRE>
-   kiteohedron -l 2.5 4 3 | antiview
+   iso_kite -A 2.5 4 3 | antiview
 </PRE>
+
+Set a height for the C vertex, which is one of the kite's side vertices.
+<PRE>
+   iso_kite -C 2.5 3 4 | antiview
+</PRE>
+
+Set any two heights of a Schwarz triangle model or both A and B
+for a trapezohedron (although some height combinations will produce
+a degenerate or non-constructible model).
+<PRE>
+   iso_kite -A 1 -B 2 3 4 | antiview
+   iso_kite -A 1 -C 2 3 4 | antiview
+   iso_kite -B 2 -C 2 3 4 | antiview
+   iso_kite -A 1 -B 1 3 | antiview
+</PRE>
+
+Negative heights are allowed, or instead of using a negative height for, say, A,
+the B and C fractions could be replaced with their supplements
+<PRE>
+   iso_kite -A -2.5 5 3 2 | antiview
+   iso_kite -A 2.5 5 3/2 2 | antiview
+</PRE>
+
 
 Colour faces around vertices of type A (the first vertex, in this case
 with angle 4) in sets
 <PRE>
-   kiteohedron -c A -l 2.5 4 3 | antiview
+   iso_kite -c A -A 2.5 4 3 | antiview
 </PRE>
 
 Colour faces around vertices of type B (the second vertex, in this case
 with angle 3) in sets
 <PRE>
-   kiteohedron -c B -l 2.5 4 3 | antiview
+   iso_kite -c B -A 2.5 4 3 | antiview
 </PRE>
 
 Colour faces around vertices of type C (the third vertex, in this case
 with angle 3). With vertex C only half the faces around each vertex have
 the same colour
 <PRE>
-   kiteohedron -c C -l 2.5 4 3 | antiview
+   iso_kite -c C -A 2.5 4 3 | antiview
 </PRE>
 
-Output a single kite
+Colour by component
 <PRE>
-   kiteohedron -k -l 2.5 4 3 | antiview
+   iso_kite -c K -A 3 3 -l 5 | antiview
 </PRE>
 
-Negative heights are allowed
+For some trapezohedron compounds, the colouring component is a pair of
+trapezohedra
 <PRE>
-   kiteohedron -l -2.5 4 3 2 | antiview
+   iso_kite -c K -A 3 3 -l 6 | antiview
 </PRE>
 
-Instead of using a negative height, B and C could be replaced
-with their supplements
+
+The dual models can be attractive
 <PRE>
-   kiteohedron -l 2.5 4 3/2 2 | antiview
+   iso_kite -A 0.2 5/4 5/3 | pol_recip | antiview
 </PRE>
 
-The duals can be attractive
+Models with A or B as 2 will be degenerate, and have triangles for kites.
+These, and other, degenerate models cannot be used with the <i>-l</i>
+listing option
 <PRE>
-   kiteohedron -l 0.3 5/4 5/2 2 | pol_recip | antiview
-</PRE>
-
-Models with A or B as 2 will be degenerate, and have triangles for kites
-<PRE>
-   kiteohedron 3 2 4| antiview
+   iso_kite 3 2 4| antiview
 </PRE>
 
 

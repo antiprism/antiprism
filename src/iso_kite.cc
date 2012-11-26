@@ -214,9 +214,13 @@ void kt_opts::usage()
 "\n"
 "Options\n"
 "  -h        this help message\n"
-"  -l num    'list' will list all compounds of the base model, or all\n"
-"            models if base model not specified, a number will make the\n"
-"            the model with that number in the list\n"
+"  -l num    'list' will list all compounds of the specified base model, or\n"
+"            all models and compounds if no base model specified. The list\n"
+"            includes a model number and base model, and if a compound, the\n"
+"            alignment symmetry (possibly with realignment number) and final\n"
+"            symmetry (and possibly a final pre-realignment number).\n"
+"            Specifying a number will make the the model with that number\n"
+"            in the list.\n"
 "  -A ht     height of kite apex on OA (default 1.0 or calculated)\n"
 "  -B ht     height of kite apex on OB (only magnitude used if trapezohedron,\n""            default 1.0 or calculated)\n"
 "  -C ht     height of kite side vertex on OC (Schwarz triangle only,\n"
@@ -615,8 +619,8 @@ bool triangle_to_kite(const vector<vec3d> &tri_verts, vector<vec3d> &kite,
    else if(hts_set==4 || hts_set==5 )    // C default A || C and A
       ret = get_B(A, B, C, norm_AB);
    else if(hts_set==6) {                 // C and B
-      ret = get_B(B, A, C, norm_AB);              // switch A and B
-      C = mat3d::refl(norm_AB)*C;   // correct the kite orientation
+      ret = get_B(B, A, C, norm_AB);         // switch A and B
+      C = mat3d::refl(norm_AB)*C;            // correct the kite orientation
    }
 
    kite.resize(4);
@@ -628,7 +632,7 @@ bool triangle_to_kite(const vector<vec3d> &tri_verts, vector<vec3d> &kite,
    hts_used->resize(3);
    (*hts_used)[0] = vdot(kite[0], tri_verts[0]);
    (*hts_used)[1] = vdot(kite[2], tri_verts[1]);
-   (*hts_used)[2] = vdot(kite[1], tri_verts[2]);
+   (*hts_used)[2] = vdot((hts_set==6)?kite[3]:kite[1], tri_verts[2]);
 
    return ret;
 }
