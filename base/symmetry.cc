@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <set>
 #include <algorithm>
+#include <map>
 
 #include "utils.h"
 #include "math_utils.h"
@@ -649,27 +650,38 @@ sch_sym::sch_sym(const t_set &ts): sym_type(unknown), nfold(1), to_std(mat3d())
          }
 
          // vertical reflection
+
+         mat3d align_axis = mat3d::rot(axis, vec3d::Z);
+         if(sym_ax.get_sym_type()==sch_sym::S)
+            align_axis = mat3d::rot(vec3d::Z, M_PI/sym_ax.get_nfold()) *
+               align_axis;
+         vec3d closest_to_y;
          for(vector<vec3d>::iterator vi=refls.begin(); vi!=refls.end(); ++vi) {
             if(fabs(vdot(*vi, axis))<sym_eps) {
-               if(sym_ax.get_sym_type()==sch_sym::C) {
-                  sym_ax.set_sym_type(sch_sym::Cv);
-                  sym_ax.set_perp(mat3d::rot(axis, M_PI/2)*(*vi));
-               }
-               else if(sym_ax.get_sym_type()==sch_sym::Ch) {
-                  sym_ax.set_sym_type(sch_sym::Dh);
-                  sym_ax.set_perp(mat3d::rot(axis, M_PI/2+M_PI/nfold)*(*vi));
-               }
-               else {  // sch_sym::S
-                  sym_ax.set_sym_type(sch_sym::Dv);
-                  sym_ax.set_nfold(nfold/2);
-                  sym_ax.set_perp(mat3d::rot(axis,
-                           M_PI/2-0.5*M_PI/sym_ax.get_nfold())*(*vi));
-               }
-               break;
+               vec3d v = align_axis*(*vi);
+               if(!closest_to_y.is_set() || fabs(v[1]) > closest_to_y[1])
+                  closest_to_y = (1-2*(v[1]<0))*(*vi);
+            }
+         }
+         if(closest_to_y.is_set()) {
+            if(sym_ax.get_sym_type()==sch_sym::C) {
+               sym_ax.set_sym_type(sch_sym::Cv);
+               sym_ax.set_perp(mat3d::rot(axis, -M_PI/2)*closest_to_y);
+            }
+            else if(sym_ax.get_sym_type()==sch_sym::Ch) {
+               sym_ax.set_sym_type(sch_sym::Dh);
+               //sym_ax.set_perp(mat3d::rot(axis, M_PI/2+M_PI/nfold)*(*vi));
+               sym_ax.set_perp(mat3d::rot(axis, -M_PI/2)*closest_to_y);
+            }
+            else {  // sch_sym::S
+               sym_ax.set_sym_type(sch_sym::Dv);
+               sym_ax.set_nfold(nfold/2);
+               sym_ax.set_perp(mat3d::rot(axis,
+                        M_PI/2-0.5*M_PI/sym_ax.get_nfold())*closest_to_y);
             }
          }
 
-         // dihedral axis
+        // dihedral axis
          if(sym_ax.get_sym_type()!=sch_sym::Dv && sym_ax.get_sym_type()!=sch_sym::Dh) {
             for(vector<vec3d>::iterator vi=dihs.begin(); vi!=dihs.end(); ++vi) {
                if(fabs(vdot(*vi, axis))<sym_eps) {
@@ -1424,21 +1436,35 @@ sch_sym sch_sym::get_sub_sym(const sch_sym &sub_sym, int conj_type,char *errmsg)
       return sch_sym();
    }
    get_sub_syms();
-   int conj = -1;
    set<sch_sym>::const_iterator si = sub_syms.begin();
    same_sym_group cmp(sub_sym);
+
+   // To minimise realignment of first conjugate subgroup, order on magnitude
+   // of difference of to_std rotations applied to a general test vector
+   std::multimap<double, sch_sym> conj_syms; 
    while((si = find_if(si, sub_syms.end(), cmp))!=sub_syms.end()) {
-      ++conj;
-      if(conj==conj_type)
-         return *si;
+      const vec3d test_v(1.1,2.0,M_PI);  // not on any axis!
+      vec3d d = to_std*test_v - si->get_to_std()*test_v;
+      conj_syms.insert(std::make_pair(d.mag(), *si));
       ++si;
    }
-   if(conj<0 && errmsg)
+
+   if(conj_syms.size() && conj_type<(int)conj_syms.size()) { // valid
+      map<double, sch_sym>::iterator mi= conj_syms.begin();
+      int cnt = 0;
+      while(cnt++ != conj_type) {
+         fprintf(stderr, "mi->first = %g\n", mi->first);
+         mi++;
+      }
+      return mi->second;
+   }
+
+   if(!conj_syms.size() && errmsg)
       sprintf(errmsg, "%s is not a sub-symmetry of %s",
             sub_sym.get_symbol().c_str(), get_symbol().c_str());
-   else if(si==sub_syms.end() && errmsg)
+   else if(conj_type >= (int)conj_syms.size() && errmsg)
       sprintf(errmsg, "conjugation type too large for %s (last number: %d)",
-            sub_sym.get_symbol().c_str(), conj);
+            sub_sym.get_symbol().c_str(), conj_syms.size()-1);
 
    return sch_sym(sch_sym::unknown);
 }
@@ -1564,6 +1590,7 @@ const set<sch_sym> &sch_sym::get_sub_syms() const
             break;
 
          case Dh:
+            add_sub_axes(*this);
             sym.init(Cs, 0, to_std);     // horizontal mirror
             sub_syms.insert(sym);
             if(nfold%2==0) {       // nfold even: second axis and vert mirror
@@ -1572,8 +1599,9 @@ const set<sch_sym> &sch_sym::get_sub_syms() const
                sym.init(Cs, 0, mat3d::rot(vec3d::X, -M_PI/2) *
                                mat3d::rot(axis, -M_PI/nfold) * to_std);
                sub_syms.insert(sym);
-               sym.init(dih_type, 2, mat3d::rot(vec3d::Y, -M_PI/2) *
-                                     mat3d::rot(axis, -M_PI/nfold) * to_std);
+               //sym.init(dih_type, 2, mat3d::rot(vec3d::Y, -M_PI/2) *
+               //                      mat3d::rot(axis, -M_PI/nfold) * to_std);
+               sym.init(dih_type, 2, mat3d::rot(axis, -M_PI/nfold) * to_std);
                add_sub_axes(sym);
                if(nfold>2) {
                   sym.init(Dh, nfold/2, mat3d::rot(axis, -M_PI/nfold) * to_std);
@@ -1588,39 +1616,44 @@ const set<sch_sym> &sch_sym::get_sub_syms() const
             // vertical mirror through dihedral axis
             sym.init(Cs, 0, mat3d::rot(vec3d::X, -M_PI/2) * to_std);
             sub_syms.insert(sym);
-            sym.init(dih_type, 2, mat3d::rot(vec3d::Y, -M_PI/2) * to_std);
+            //sym.init(dih_type, 2, mat3d::rot(vec3d::Y, -M_PI/2) * to_std);
+            sym.init(dih_type, 2, to_std);
             add_sub_axes(sym);
-            add_sub_axes(*this);
             break;
 
          case Dv:
+            add_sub_axes(*this);
             // vertical mirror between dihedral axes
             sym.init(Cs, 0, mat3d::rot(axis, -M_PI/(2*nfold)) *
                             mat3d::rot(vec3d::X, M_PI/2) * to_std);
             sub_syms.insert(sym);
             dih_type = nfold%2 ? Ch : D;
-            sym.init(dih_type, 2, mat3d::rot(vec3d::Y, M_PI/2) * to_std);
+            //sym.init(dih_type, 2, mat3d::rot(vec3d::Y, M_PI/2) * to_std);
+            sym.init(dih_type, 2, to_std);
             add_sub_axes(sym);
-            sym.init(dih_type, 2, mat3d::rot(axis, M_PI/nfold) *
-                            mat3d::rot(vec3d::Y, M_PI/2) * to_std);
+            //not needed !!!
+            //sym.init(dih_type, 2, mat3d::rot(axis, M_PI/nfold) *
+            //                mat3d::rot(vec3d::Y, M_PI/2) * to_std);
+            //sym.init(dih_type, 2, mat3d::rot(axis, M_PI/nfold) * to_std);
             add_sub_axes(sym);
-            if(nfold%2 && nfold>2) {
-               sym.init(Dv, nfold/2, mat3d::rot(axis, M_PI/nfold) * to_std);
-               add_sub_axes(sym);
-            }
-            add_sub_axes(*this);
+            //if(nfold%2==0 && nfold>2) {
+            //   sym.init(Dv, nfold/2, mat3d::rot(axis, M_PI/nfold) * to_std);
+            //   add_sub_axes(sym);
+            //}
             break;
 
          case D:
             dih_type = nfold%2 ? C : D;
-            sym.init(dih_type, 2, mat3d::rot(vec3d::Y, M_PI/2) * to_std);
+            //sym.init(dih_type, 2, mat3d::rot(vec3d::Y, M_PI/2) * to_std);
+            sym.init(dih_type, 2, to_std);
             add_sub_axes(sym);
-            sym.init(dih_type, 2, mat3d::rot(axis, M_PI/nfold) *
-                            mat3d::rot(vec3d::Y, M_PI/2) * to_std);
+            //sym.init(dih_type, 2, mat3d::rot(axis, M_PI/nfold) *
+            //                mat3d::rot(vec3d::Y, M_PI/2) * to_std);
+            sym.init(dih_type, 2, mat3d::rot(axis, M_PI/nfold) * to_std);
             add_sub_axes(sym);
-            if(nfold%2 && nfold>2) {
+            if(nfold%2==0 && nfold>2) {
                sym.init(D, nfold/2, mat3d::rot(axis, M_PI/nfold) * to_std);
-               add_sub_axes(*this);
+               add_sub_axes(sym);
             }
             add_sub_axes(*this);
             break;

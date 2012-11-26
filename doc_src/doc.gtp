@@ -119,6 +119,7 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/zono.gtm 2 zono - zonohedra from OFF files
 ./doc/polygon.gtm 2 polygon - polygon based polyhedra
 ./doc/iso_delta.gtm 2 iso_delta - isohedral deltahedra
+./doc/iso_kite.gtm 2 iso_kite - isohedral kite-faced polyhedra
 ./doc/conway.gtm 2 conway - Conway Notation transformations
 ./doc/poly_kscope.gtm 2 poly_kscope - polyhedral kaleidoscope
 ./doc/unitile2d.gtm 2 unitile2d - make uniform tilings on a surface

@@ -125,6 +125,7 @@ mtimestamp $dd.$MM.$yyyy
 ./programs/zono.gtm 3 zono - zonohedra from OFF files
 ./programs/polygon.gtm 3 polygon - polygon based polyhedra
 ./programs/iso_delta.gtm 3 iso_delta - isohedral deltahedra
+./programs/iso_kite.gtm 3 iso_kite - isohedral kite-faced polyhedra
 ./programs/conway.gtm 3 conway - Conway Notation transformations
 ./programs/poly_kscope.gtm 3 poly_kscope - polyhedral kaleidoscope
 ./programs/unitile2d.gtm 3 unitile2d - makes uniform tilings on a surface

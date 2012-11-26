@@ -1,5 +1,14 @@
 NEWS for Antiprism: http://www.antiprism.com
 
+Version 0.23
+xx-xx-xx Adrian Rossiter <adrian@antiprism.com>
+         New Programs
+            iso_kite: isohedral kite-faced polyhedra
+         Changes
+            Symmetry: symmetry alignment should not realign an
+              aligned polyhedron
+         Fixes
+
 Version 0.22
 22-10-12 Adrian Rossiter <adrian@antiprism.com>
          New Programs

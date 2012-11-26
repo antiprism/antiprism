@@ -1,0 +1,119 @@
+#define HL_PROG class=curpage
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<H1><<TITLE_CURRENT>></H1>
+
+<<CONT_S_START>>
+<SMALL><A HREF="#usage">Usage</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#examples">Examples</A></SMALL>
+<<BARSPACE>>
+<SMALL><A HREF="#notes">Notes</A></SMALL>
+<<CONT_S_END>>
+
+
+<H2><A NAME="usage">
+Usage
+</A></H2>
+
+<PRE>
+<<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</PRE>
+
+
+<H2><A NAME="examples">
+Examples
+</A></H2>
+
+General member of series including deltoidal hexacontahedron.
+<PRE>
+   kiteohedron 5 3 2 | antiview
+</PRE>
+
+General member of series including deltoidal icositetrahedron. The third
+vertex of the triangle uses the default of 2
+<PRE>
+   kiteohedron 3 4 | antiview
+</PRE>
+
+General member of series including deltoidal icositetrahedron. Set a
+height for the point along the first vertex (fixes the pivot)
+<PRE>
+   kiteohedron -l 2.5 3 4 | antiview
+</PRE>
+
+General member of series including deltoidal icositetrahedron. Set a
+height for the pivot, the midpoint of the line segment joining the kite's
+side vertices (fixes the vertex at A).
+<PRE>
+   kiteohedron -p 2.5 3 4 | antiview
+</PRE>
+
+General member of series including deltoidal icositetrahedron. The vertex
+order is significant
+<PRE>
+   kiteohedron -l 2.5 4 3 | antiview
+</PRE>
+
+Colour faces around vertices of type A (the first vertex, in this case
+with angle 4) in sets
+<PRE>
+   kiteohedron -c A -l 2.5 4 3 | antiview
+</PRE>
+
+Colour faces around vertices of type B (the second vertex, in this case
+with angle 3) in sets
+<PRE>
+   kiteohedron -c B -l 2.5 4 3 | antiview
+</PRE>
+
+Colour faces around vertices of type C (the third vertex, in this case
+with angle 3). With vertex C only half the faces around each vertex have
+the same colour
+<PRE>
+   kiteohedron -c C -l 2.5 4 3 | antiview
+</PRE>
+
+Output a single kite
+<PRE>
+   kiteohedron -k -l 2.5 4 3 | antiview
+</PRE>
+
+Negative heights are allowed
+<PRE>
+   kiteohedron -l -2.5 4 3 2 | antiview
+</PRE>
+
+Instead of using a negative height, B and C could be replaced
+with their supplements
+<PRE>
+   kiteohedron -l 2.5 4 3/2 2 | antiview
+</PRE>
+
+The duals can be attractive
+<PRE>
+   kiteohedron -l 0.3 5/4 5/2 2 | pol_recip | antiview
+</PRE>
+
+Models with A or B as 2 will be degenerate, and have triangles for kites
+<PRE>
+   kiteohedron 3 2 4| antiview
+</PRE>
+
+
+<H2><A NAME="notes">
+Notes
+</A></H2>
+
+See the Wikipedia page on
+<A HREF="http://en.wikipedia.org/wiki/Schwarz_triangle">Schwarz triangles</A>
+for a description and list of triangles.
+
+
+#include "<<END>>"
