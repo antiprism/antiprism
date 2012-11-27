@@ -5,6 +5,8 @@ xx-xx-xx Adrian Rossiter <adrian@antiprism.com>
          New Programs
             iso_kite: isohedral kite-faced polyhedra
          Changes
+            floating point arguments can be mathematical expressions
+              (sqrt prefix removed, use sqrt() instead)
             Symmetry: symmetry alignment should not realign an
               aligned polyhedron
          Fixes

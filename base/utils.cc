@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2008, Adrian Rossiter
+   Copyright (c) 2003-2012, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
    
@@ -221,18 +221,74 @@ void prog_opts::version()
          prog_name(), VERSION);
 }
 
-/*
-void vers_line(FILE *ofile)
-{ 
-   string line = "--------   Antiprism ";
-   line += VERSION;
-   line += "  -  http://www.antiprism.com   --------";
-   fprintf(ofile, "%s\n", line.c_str());
-}
-*/
 
+#include "expreval/expreval.h"
+using namespace ExprEval;
+using namespace std;
 
 bool read_double(const char *str, double *f, char *errmsg)
+{
+   bool exp_good = true;
+   try {
+      ValueList vlist;
+      vlist.Add("rt2", sqrt(2), true);
+      vlist.Add("rt3", sqrt(3), true);
+      vlist.Add("rt5", sqrt(5), true);
+      vlist.Add("phi", (sqrt(5)+1)/2, true);
+      vlist.Add("pi", M_PI, true);
+
+      FunctionList flist;
+      flist.AddDefaultFunctions();
+
+      Expression e;
+      e.SetValueList(&vlist);
+      e.SetFunctionList(&flist);
+
+      e.Parse(str);
+      *f = e.Evaluate();
+   }
+   catch(Exception &e) {
+      if(errmsg) {
+         if(e.GetType()==Exception::Type_SyntaxException)
+            sprintf(errmsg, "math expression: incorrect syntax");
+         else if(e.GetType()==Exception::Type_NotFoundException)
+            sprintf(errmsg, "math expression: function not found");
+         else if(e.GetType()==Exception::Type_EmptyExpressionException)
+            sprintf(errmsg, "number or mathematical expression not given");
+         else if(e.GetType()==Exception::Type_MathException)
+            sprintf(errmsg, "math expression: a mathematical error occurred");
+         else if(e.GetType()==Exception::Type_DivideByZeroException)
+            sprintf(errmsg, "math expression: divied by zero occurred");
+         else if(e.GetType()==Exception::Type_NoValueListException)
+            sprintf(errmsg, "math expression: no value list (internal error)");
+         else if(e.GetType()==Exception::Type_NoFunctionListException)
+            sprintf(errmsg,
+                  "math expression: no function list (internal error)");
+         else if(e.GetType()==Exception::Type_UnknownTokenException)
+            sprintf(errmsg, "math expression: unknown token");
+         else if(e.GetType()==Exception::Type_InvalidArgumentCountException)
+            sprintf(errmsg,
+                  "math expression: wrong number of arguments to function");
+         else if(e.GetType()==Exception::Type_ConstantAssignException)
+            sprintf(errmsg, "math expression: assigned to constant");
+         else if(e.GetType()==Exception::Type_ConstantReferenceException)
+            sprintf(errmsg, "math expression: constant passed to function "
+                  "as a reference");
+         else if(e.GetType()==Exception::Type_UnmatchedParenthesisException)
+            sprintf(errmsg, "math expression: unmatched parenthesis");
+         else
+            sprintf(errmsg,
+                  "number or math expression: an unspecified error occurred");
+      }
+      exp_good = false;
+   }
+
+   return exp_good;
+}
+
+
+
+bool read_double_noparse(const char *str, double *f, char *errmsg)
 {
    bool to_sqrt;
    char buff;
@@ -407,161 +463,57 @@ bool read_idx_list(char *str, vector<int> &nums, int num_idxs,
       }
       v_str = strtok(NULL, ",");
    }
-     
-   return true;
-}
-
-
-/*
-bool read_double_list(char *str, vector<double> &nums, char *errmsg,
-      int len, const char *sep,
-      const vector<geom_if *> &geoms, const vector<mat3d> &trans);
-
-
-bool read_geom_val(char *val, vector<double> &nums, char *errmsg,
-      const vector<geom_if *> &geoms, const vector<mat3d> &trans)
-{
-   nums.clear();
-   
-   char buff;
-   char val_type;
-   unsigned int idx;
-   unsigned int geom_idx = 0;
-   if(sscanf(val, "%c%u %c", &val_type, &idx,  &buff)==2 ||
-      sscanf(val, "%c%u#%u %c", &val_type, &idx, &geom_idx, &buff)==3) {
-      if(geoms.size()==0) {
-         if(errmsg)
-            snprintf(errmsg, MSG_SZ, "no geometries available\n");
-         return false;
-      }
-      if(geom_idx>geoms.size()) {
-         if(errmsg)
-            snprintf(errmsg, MSG_SZ, "geometry number too large\n");
-         return false;
-      }
-
-      geom_if &geom = *geoms[geom_idx];
-      mat3d mat;
-      if(geom_idx<trans.size())
-         mat = trans[geom_idx];
-
-      //When adding new val_types: add to range check, add to switch,
-      //and make sure the value is transformed correctly by mat.
-      
-      // Check ranges up front
-      if(strchr("vV", val_type) && idx>=geom.verts().size()) {
-         if(errmsg)
-            snprintf(errmsg, MSG_SZ, "vertex index number too large\n");
-         return false;
-      }
-      else if(strchr("fFcn", val_type) && idx>=geom.faces().size()) {
-         if(errmsg)
-            snprintf(errmsg, MSG_SZ, "vertex index number too large\n");
-         return false;
-      }
-      if(strchr("eE", val_type) && idx>=geom.edges().size()) {
-         if(errmsg)
-            snprintf(errmsg, MSG_SZ, "vertex index number too large\n");
-         return false;
-      }
-
-      vec3d vec;
-      double num;
-      switch(val_type) {
-         case 'v':
-            vec = geom.verts(idx) * mat;
-            nums.push_back(vec[0]);
-            nums.push_back(vec[1]);
-            nums.push_back(vec[2]);
-            break;
-
-         case 'V':
-            vec = geom.verts(idx) * mat;
-            nums.push_back(vec.mag());
-            break;
-
-         case 'n': {
-            vector<vec3d> verts = geom.verts();
-            transform(verts, mat);
-            vec = nearest_point(vec3d::zero, verts, geom.faces(idx));
-            nums.push_back(vec[0]);
-            nums.push_back(vec[1]);
-            nums.push_back(vec[2]);
-            break;
-         }
-
-         case 'f':
-            vec = geom.face_cent(idx) * mat;
-            nums.push_back(vec.mag());
-            break;
-
-         default:
-            if(errmsg)
-               snprintf(errmsg, MSG_SZ, "unknown value specifier\n");
-            return false;
-      }
-           
-   }
-}
-
-
-bool read_double_list(char *str, vector<double> &nums, char *errmsg,
-      int len, const char *sep,
-      const vector<geom_if *> &geoms, const vector<mat3d> &trans)
-{
-   nums.clear();
-   double num;
-   char *num_str = strtok(str, sep);
-   int i=0;
-   while(num_str) {
-      i++;
-      if(!read_double(num_str, &num) ) {
-         if(errmsg)
-            snprintf(errmsg, MSG_SZ, "'%s' is not a number", num_str);
-         return false;
-      }
-      if(len && i>len) {
-         if(errmsg)
-            snprintf(errmsg, MSG_SZ, "more than %d numbers given", len);
-         return false;
-      }
-      nums.push_back(num);
-      num_str = strtok(NULL, sep);
-   }
 
    return true;
 }
-*/
 
 
-bool read_double_list(vector<char *> &vals, vector<double> &nums, char *errmsg)
+static bool read_double_list(vector<char *> &vals, vector<double> &nums,
+      char *errmsg, bool parse)
 {
+   char errmsg2[MSG_SZ];
    nums.clear();
    double num;
    for(unsigned int i=0; i<vals.size(); i++) {
-      if(!read_double(vals[i], &num) ) {
+      int ret = (parse) ? read_double(vals[i], &num, errmsg2)
+                        : read_double_noparse(vals[i], &num, errmsg2);
+      if(!ret ) {
          if(errmsg)
-            snprintf(errmsg, MSG_SZ, "'%s' is not a number", vals[i]);
+            snprintf(errmsg, MSG_SZ, "%s: '%s'", errmsg2, vals[i]);
          return false;
       }
       nums.push_back(num);
-   }     
+   }
    return true;
 }
 
-
-bool read_double_list(char *str, vector<double> &nums, char *errmsg, int len,
-      const char *sep)
+bool read_double_list(vector<char *> &vals, vector<double> &nums, char *errmsg)
 {
+   return read_double_list(vals, nums, errmsg, true);
+}
+
+bool read_double_list_noparse(vector<char *> &vals, vector<double> &nums,
+      char *errmsg)
+{
+   return read_double_list(vals, nums, errmsg, false);
+}
+
+
+static bool read_double_list(char *str, vector<double> &nums, char *errmsg,
+      int len, const char *sep, bool parse)
+{
+   char errmsg2[MSG_SZ];
    nums.clear();
    double num;
    char *num_str = strtok(str, sep);
    int i=0;
    while(num_str) {
       i++;
-      if(!read_double(num_str, &num) ) {
+      int ret = (parse) ? read_double(num_str, &num, errmsg2)
+                        : read_double_noparse(num_str, &num, errmsg2);
+      if(!ret ) {
          if(errmsg)
-            snprintf(errmsg, MSG_SZ, "'%s' is not a number", num_str);
+            snprintf(errmsg, MSG_SZ, "%s: '%s'", errmsg2, num_str);
          return false;
       }
       if(len && i>len) {
@@ -574,6 +526,18 @@ bool read_double_list(char *str, vector<double> &nums, char *errmsg, int len,
    }
 
    return true;
+}
+
+bool read_double_list(char *str, vector<double> &nums, char *errmsg,
+      int len, const char *sep)
+{
+   return read_double_list(str, nums, errmsg, len, sep, true);
+}
+
+bool read_double_list_noparse(char *str, vector<double> &nums, char *errmsg,
+      int len, const char *sep)
+{
+   return read_double_list(str, nums, errmsg, len, sep, false);
 }
 
 

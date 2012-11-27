@@ -180,6 +180,8 @@ const char *get_help(const char* name)
    help["col_val"] = help_color_val;
    help["col_names"] = help_color_names;
    help["col_map"] = help_color_map;
+   help["expressions"] = help_expreval;
+   help["expreval"] = help_expreval;
    help["symmetry"] = help_symmetry;
    help["bowers"] = help_bowers;
    help["schwarz"] = help_schwarz;
