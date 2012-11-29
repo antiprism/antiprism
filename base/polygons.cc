@@ -38,7 +38,7 @@
 
 polygon::polygon(int N, int M) :
    radius(1.0), radius2(NAN), height(NAN), height2(NAN),
-   twist_angle(NAN), subtype(0), max_subtype(0)
+   twist_angle(NAN), twist_angle2(NAN), subtype(0), max_subtype(0)
 {
    parts = gcd(N, M);
    num_sides = N/parts;
@@ -236,6 +236,33 @@ void antiprism::make_subscal_part(geom_if &geom)
 }
 
 
+void antiprism::make_crown_part(geom_if &geom)
+{
+   antiprism ant(*this);
+   ant.set_subtype(0);
+   ant.set_twist_angle(0);
+   ant.make_poly_part(geom);
+   geom.clear_faces();
+   int step2 = isnan(twist_angle2) ? 1 : int(floor(twist_angle2+0.5));
+
+   for(int i=0; i<num_sides; i++) {
+      geom.add_face((i+1-step2+num_sides)%num_sides,
+                    (i+1                )%num_sides    + num_sides,
+                    (i+1+step2          )%num_sides,
+                    (i                  )%num_sides    + num_sides,
+                    -1);
+      geom.add_face((i+1-step2+num_sides)%num_sides    + num_sides,
+                    (i+1                )%num_sides,
+                    (i+1+step2          )%num_sides    + num_sides,
+                    (i+2                )%num_sides,
+                    -1);
+      //geom.add_face(i,                         (i+1)%num_sides+num_sides,
+      //              (i+2)%num_sides,           i+num_sides,               -1);
+      //geom.add_face(i+num_sides,               (i+1)%num_sides,
+      //              (i+2)%num_sides+num_sides, (i+2)%num_sides, -1);
+   }
+}
+
 
 
 
@@ -247,6 +274,10 @@ void antiprism::make_poly_part(geom_if &geom)
    }
    else if(subtype==subtype_subdivided_scalenohedron) {
       make_subscal_part(geom);
+      return;
+   }
+   else if(subtype==subtype_crown) {
+      make_crown_part(geom);
       return;
    }
 
@@ -714,6 +745,50 @@ void snub_antiprism::make_poly_part(geom_if &geom)
 }
 
 
+bool crown_poly::set_height(double ht, char *msg)
+{
+   double twist_ang = isnan(twist_angle) ? 0.0 : twist_angle;
+   if(cos(twist_ang)==0) {
+      if(msg)
+         strcpy(msg, "height cannot be set for this twist angle");
+      return false;
+   }
+   height = ht / cos(twist_angle);     // use height to hold e2
+   return true;
+}
 
+bool crown_poly::set_edge2(double e2, char * /*msg*/)
+{
+   height = e2;
+   return true;
+}
+
+void crown_poly::make_poly_part(geom_if &geom)
+{
+   geom.clear_all();
+   double e2 = (!isnan(height)) ? height : radius;
+   double twist_ang = isnan(twist_angle) ? 0.0 : twist_angle;
+
+   geom_v pgon[2];
+   add_polygon(pgon[0]);
+   add_polygon(pgon[1]);
+   pgon[1].transform(mat3d::rot(0, 0, -angle()/2));
+   int num = 4*num_sides;
+   for(int i=0; i<2*num_sides; i++) {
+      int p_idx = i%2;
+      int v_idx = i/2;
+      vec3d v = mat3d::rot(pgon[p_idx].verts(v_idx), (1-2*p_idx)*twist_ang) *
+                                                          vec3d(0, 0, e2/2);
+      geom.add_vert(pgon[p_idx].verts(v_idx)+v);
+      geom.add_vert(pgon[p_idx].verts(v_idx)-v);
+      geom.add_face(2*i, 2*i+1, (2*(i+1))%num, (2*(i+1)+1)%num, -1);
+      geom.add_face((2*(i+0) +  p_idx)%num,
+                    (2*(i+1) + !p_idx)%num,
+                    (2*(i+3) +  p_idx)%num,
+                    (2*(i+2) + !p_idx)%num,
+                    -1);
+   }
+
+}
 
 

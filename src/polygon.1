@@ -22,6 +22,7 @@ subtypes: 1. trapezohedron, with this antiprism belt
 2. antihermaphrodite, with this antiprism base
 3. scalenohedron (\fB\-L\fR for apex height)
 4. subdivided_scalenohedron (\fB\-L\fR for apex height)
+5. crown
 .IP
 3. pyramid (angle: base separates, polygons twist to antihermaphrodite)
 .IP
@@ -64,6 +65,8 @@ subtypes: 1. inverted, triangle band inverted
 9. dihedron
 .IP
 subtypes: 1. polygon
+.IP
+10. crown polyhedron
 .PP
 num_sides is a number (N) optionally followed by / and a second
 number (N/D). N is the number of vertices spaced equally on a
@@ -101,6 +104,9 @@ a second height or length value
 .TP
 \fB\-a\fR <ang>
 twist angle (degrees)
+.TP
+\fB\-A\fR <ang>
+a second twist angle (degrees)
 .HP
 \fB\-o\fR <file> write output to file (default: write to standard output)
 .SH "SEE ALSO"

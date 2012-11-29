@@ -41,14 +41,15 @@ class polygon {
    protected:
       int num_sides;    ///< The number of sides of the polygon (n of {n/d})
       int step;         ///< The number of verts stepped by an side (m of {n/d})
-      int parts;          ///< The number of parts (polygon may be compound).
-      double radius;      ///< The polygon circumradius.
-      double radius2;     ///< A second radius.
-      double height;      ///< The primary height of a polyhedron.
-      double height2;     ///< A second height used for a polyhedron.
-      double twist_angle; ///< An angle to twist a polyhedron.
-      int subtype;        ///< The subtype of a %polygon based polyhedron.
-      int max_subtype;    ///< The highest number for a subtype
+      int parts;           ///< The number of parts (polygon may be compound).
+      double radius;       ///< The polygon circumradius.
+      double radius2;      ///< A second radius.
+      double height;       ///< The primary height of a polyhedron.
+      double height2;      ///< A second height used for a polyhedron.
+      double twist_angle;  ///< An angle to twist a polyhedron.
+      double twist_angle2; ///< A second angle to twist a polyhedron.
+      int subtype;         ///< The subtype of a %polygon based polyhedron.
+      int max_subtype;     ///< The highest number for a subtype
    
       void set_max_subtype(int max) { max_subtype = (max>0) ? max : 0; }
 
@@ -160,7 +161,17 @@ class polygon {
        * \return \c true if the polyhedron could be twisted, otherwise
        * \c false and \c msg contains the error messge. */
       virtual bool set_twist_angle(double ang=NAN, char *msg=0);
-      
+
+       ///Set the second twist angle of the %polygon based polyhedron.
+      /**Some polyhedra can be transformed by a second twist, controlled
+       * by this angle. NAN indicates that no twist should be considered.
+       * \param ang the angle of twist (default: NAN for no twist).
+       * \param msg a string with length at least \c MSG_SZ to hold
+       * the error message if the edge length was not valid.
+       * \return \c true if the polyhedron could be twisted, otherwise
+       * \c false and \c msg contains the error messge. */
+      virtual bool set_twist_angle2(double ang=NAN, char *msg=0);
+
       ///Make a part of (or a complete) polygon-based polyhedron
       /**Make a non-compound polyhedron, using \c num_sides and
        * \c step for {n/d}. If \c parts is greater than \c 1
@@ -225,26 +236,30 @@ class antiprism: public polygon {
       void make_trapezo_part(geom_if &geom);
       void make_scal_part(geom_if &geom);
       void make_subscal_part(geom_if &geom);
+      void make_crown_part(geom_if &geom);
 
    public:
       enum { subtype_trapezohedron=1,
              subtype_antihermaphrodite,
              subtype_scalenohedron,
-             subtype_subdivided_scalenohedron };
+             subtype_subdivided_scalenohedron,
+             subtype_crown };
       
       ///Constructor
       /**Base polygon in form {N/D} (with N/D not necessarily in lowest form.)
        * \param N number of sides to the (compound) polygon.
        * \param D the number of vertices stepped by an edge (default 1) */
       antiprism(int N, int D=1) : polygon(N, D)
-         { set_max_subtype(4); }
+         { set_max_subtype(5); }
 
       ///Constructor
       /**\param pgon %polygon to base the polyhedron on. */
-      antiprism(polygon &pgon) : polygon(pgon) { set_max_subtype(4); }
+      antiprism(polygon &pgon) : polygon(pgon) { set_max_subtype(5); }
 
       bool set_twist_angle(double ang=NAN, char * /*msg*/ =0)
          { twist_angle=ang; return true; }
+      bool set_twist_angle2(double ang2=NAN, char * /*msg*/ =0)
+         { twist_angle2=ang2; return true; }
       bool set_height(double ht, char *msg=0);
       bool set_edge2(double e2, char *msg=0);
       void make_poly_part(geom_if &geom);
@@ -389,6 +404,29 @@ class gyrobicupola: public cupola {
 };
 
 
+///Make a crown polyhedron
+class crown_poly: public polygon {
+   public:
+      ///Constructor
+      /**Base polygon in form {N/D} (with N/D not necessarily in lowest form.)
+       * \param N number of sides to the (compound) polygon.
+       * \param D the number of vertices stepped by an edge (default 1) */
+      crown_poly(int N, int D=1) : polygon(N, D)
+         { set_max_subtype(0); }
+
+      ///Constructor
+      /**\param pgon %polygon to base the polyhedron on. */
+      crown_poly(polygon &pgon) : polygon(pgon) { set_max_subtype(0); }
+
+      bool set_twist_angle(double ang=NAN, char * /*msg*/ =0)
+         { twist_angle=ang; return true; }
+      bool set_edge2(double e2, char *msg=0);
+      bool set_height(double e2, char *msg=0);
+      void make_poly_part(geom_if &geom);
+}; 
+
+
+
 
 ///Make a uniform model of a polygon-based polyhedron.
 /**The model has all its edges set to one and its faces are regular. For
@@ -429,6 +467,14 @@ inline bool polygon::set_twist_angle(double, char *msg)
 {
    if(msg)
       strcpy(msg, "twist angle cannot be set for this type of polyhedron");
+   return false;
+}
+
+inline bool polygon::set_twist_angle2(double, char *msg)
+{
+   if(msg)
+      strcpy(msg,
+            "second twist angle cannot be set for this type of polyhedron");
    return false;
 }
 

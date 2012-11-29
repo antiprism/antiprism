@@ -43,7 +43,7 @@ class pg_opts: public prog_opts {
    public:
       enum {t_prism=1, t_antiprism, t_pyramid,
          t_dipyramid, t_cupola, t_orthobicupola, t_gyrobicupola,
-         t_snub_antiprism, t_dihedron };
+         t_snub_antiprism, t_dihedron, t_crown };
       int type;
       string subtype_str;
       int subtype;
@@ -56,6 +56,7 @@ class pg_opts: public prog_opts {
       int num_sides;
       int step;
       double twist_ang;
+      double twist_ang2;
 
       string ofile;
       bool e_given;
@@ -64,7 +65,7 @@ class pg_opts: public prog_opts {
       pg_opts(): prog_opts("polygon"), type(t_prism), subtype(-1),
                  edge(NAN), radius(NAN), radius2(NAN),
                  height(NAN), height2(NAN), edge2(NAN), step(1),
-                 twist_ang(NAN),
+                 twist_ang(NAN), twist_ang2(NAN),
                  e_given(false), h_given(false)
                  {}
       void process_command_line(int argc, char **argv);
@@ -89,6 +90,7 @@ void pg_opts::usage()
 "                  2. antihermaphrodite, with this antiprism base\n"
 "                  3. scalenohedron (-L for apex height)\n"
 "                  4. subdivided_scalenohedron (-L for apex height)\n"
+"                  5. crown\n"
 "   3. pyramid (angle: base separates, polygons twist to antihermaphrodite)\n"
 "        subtypes: 1. antihermaphrodite, with this antiprism base\n"
 "                  2. elongated (-L for prism height)\n"
@@ -112,6 +114,7 @@ void pg_opts::usage()
 "        subtypes: 1. inverted, triangle band inverted\n"
 "   9. dihedron\n"
 "        subtypes: 1. polygon\n"
+" 10. crown polyhedron\n"
 "\n"
 "num_sides is a number (N) optionally followed by / and a second\n"
 "number (N/D). N is the number of vertices spaced equally on a\n"
@@ -130,6 +133,7 @@ void pg_opts::usage()
 "            (default: circumradius of polygon)\n"
 "  -L <hgt>  a second height or length value\n"
 "  -a <ang>  twist angle (degrees)\n"
+"  -A <ang>  a second twist angle (degrees)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
 "\n", prog_name(), help_ver_text);
@@ -143,7 +147,7 @@ void pg_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":he:E:r:R:l:L:s:o:a:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":he:E:r:R:l:L:s:o:a:A:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -204,6 +208,12 @@ void pg_opts::process_command_line(int argc, char **argv)
             twist_ang = deg2rad(twist_ang);
             break;
 
+         case 'A':
+            if(!read_double(optarg, &twist_ang2, errmsg))
+               error(errmsg, c);
+            twist_ang = deg2rad(twist_ang);
+            break;
+
          case 'o':
             ofile = optarg;
             break;
@@ -218,7 +228,7 @@ void pg_opts::process_command_line(int argc, char **argv)
 
    // Determine type
    string params = "|prism|antiprism|pyramid|dipyramid|cupola|orthobicupola"
-                   "|gyrobicupola|snub-antiprism|dihedron";
+                   "|gyrobicupola|snub-antiprism|dihedron|crown";
              
    string arg_id = get_arg_id(argv[optind], params.c_str(),
          argmatch_default | argmatch_add_id_maps, errmsg);
@@ -234,7 +244,7 @@ void pg_opts::process_command_line(int argc, char **argv)
          params += "|antiprism|trapezohedron";
       else if(type==t_antiprism)
          params += "|trapezohedron|antihermaphrodite|scalenohedron"
-                   "|subdivided_scalenohedron";
+                   "|subdivided_scalenohedron|crown";
       else if(type==t_pyramid)
          params += "|antihermaphrodite|elongated|gyroelongated";
       else if(type==t_dipyramid)
@@ -323,6 +333,9 @@ int main(int argc, char *argv[])
       case pg_opts::t_snub_antiprism:
          poly = new snub_antiprism(pgon);
          break;
+      case pg_opts::t_crown:
+         poly = new crown_poly(pgon);
+         break;
    }
 
    char errmsg[MSG_SZ];
@@ -343,13 +356,17 @@ int main(int argc, char *argv[])
          opts.error("cannot make a trapezohedron from a digonal dipyramid",
                "subtype or twist angle");
    }
-         
-    
+
    if(!isnan(opts.twist_ang)) {
       if(!poly->set_twist_angle(opts.twist_ang, errmsg))
          opts.error(errmsg, 'a');
    }
-   
+
+   if(!isnan(opts.twist_ang2)) {
+      if(!poly->set_twist_angle2(opts.twist_ang2, errmsg))
+         opts.error(errmsg, 'A');
+   }
+
    if(!isnan(opts.height)) {
       if(!poly->set_height(opts.height, errmsg))
          opts.error(errmsg, 'l');
