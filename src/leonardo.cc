@@ -170,17 +170,6 @@ void get_open_edges(const geom_if &geom, vector<vector<int> > &open_edges)
    }
 }
 
-
-vec3d lines_intersect(const vec3d &P0, const vec3d &P1, const vec3d &Q0, const vec3d &Q1)
-{
-   vec3d N1, N2;
-   if(!lines_nearest_points(P0, P1, Q0, Q1, N1, N2)) {
-      N1 = (P0+P1)/2.0;
-      N2 = (Q0+Q1)/2.0;
-   }
-   return (N1+N2)/2.0;
-}
-
 vec3d force_line_plane_intersect(vec3d Q, vec3d n, vec3d P0, vec3d P1)
 {
    vec3d pt = line_plane_intersect(Q, n, P0, P1);
@@ -241,9 +230,9 @@ bool leonardo_faces(geom_if &geom_out, const geom_if &geom, double width,
       int start = geom_out.verts().size();
       for(int j=0; j<f_sz; j++) {
          vec3d v0 = geom.verts(face[j]);
-         vec3d v1 = lines_intersect(
+         vec3d v1 = lines_intersection(
                   lines[0][(j-1+f_sz)%f_sz], lines[1][(j-1+f_sz)%f_sz],
-                  lines[0][j],               lines[1][j] );
+                  lines[0][j],               lines[1][j], 0 );
 
          // vertex above "original" vertex
          geom_out.add_vert(force_line_plane_intersect(

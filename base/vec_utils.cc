@@ -173,12 +173,21 @@ double angle_around_axis(const vec3d &v0, const vec3d &v1, const vec3d &axis)
 vec3d lines_intersection(const vec3d &P0, const vec3d &P1, const vec3d &Q0, const vec3d &Q1, double eps)
 {
    vec3d P, Q;
+   if(eps==0.0) {                  // always return an intersection point
+      if(!lines_nearest_points(P0, P1, Q0, Q1, P, Q)) {
+         P = (P0+P1)/2.0;
+         Q = (Q0+Q1)/2.0;
+      }
+      return (P+Q)/2.0;
+   }
+
    // lines might not be parallel and still miss so check if nearest points is not zero
    if(lines_nearest_points(P0, P1, Q0, Q1, P, Q, eps) && ((P-Q).mag() < eps))
       return (P+Q)/2.0;
    else
       return vec3d();
 }
+
 
 bool in_segment(const vec3d &P, const vec3d &Q0, const vec3d &Q1, double eps)
 {

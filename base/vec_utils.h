@@ -166,8 +166,20 @@ vec3d face_norm(const vector<vec3d> &verts, const vector<int> &face, bool allow_
  * \return angle, in range 0 <= ang < 2PI */
 double angle_around_axis(const vec3d &v0, const vec3d &v1, const vec3d &axis);
 
+///Get the point of intersection between two lines
+/**\param P0 a point on the first line.
+ * \param P1 another point on the first line.
+ * \param Q0 a point on the second line.
+ * \param Q1 another point on the second line.
+ * \param eps value for controlling the limit of precision. If eps is 0 then
+ *    always return an intersection point, even if lines are skew or parallel.
+ * \return The point of intersection (it will be unset if eps>0 and the point
+ * is not within distance eps from both lines*/
+vec3d lines_intersection(const vec3d &P0, const vec3d &P1,
+      const vec3d &Q0, const vec3d &Q1, double eps=epsilon);
+
+
 // RK - some commonly used line intersection functions
-vec3d lines_intersection(const vec3d &P0, const vec3d &P1, const vec3d &Q0, const vec3d &Q1, double eps=epsilon);
 bool in_segment(const vec3d &P, const vec3d &Q0, const vec3d &Q1, double eps=epsilon);
 vec3d lines_intersection_in_segments(const vec3d &P0, const vec3d &P1, const vec3d &Q0, const vec3d &Q1, double eps=epsilon);
 vec3d point_in_segment(const vec3d &P, const vec3d &Q0, const vec3d &Q1, double eps=epsilon);

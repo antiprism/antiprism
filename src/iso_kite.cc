@@ -500,8 +500,9 @@ void kt_opts::process_command_line(int argc, char **argv)
 
 bool get_B(const vec3d &A, vec3d &B, const vec3d &C, const vec3d &norm_AB)
 {
+   norm_AB.dump();
    vec3d pivot = (C + mat3d::refl(norm_AB)*C)/2;
-   B = lines_intersection(A, pivot, vec3d(0,0,0), B);
+   B = lines_intersection(A, pivot, vec3d(0,0,0), B, 0);
    for(int i=0; i<3; i++)
       if(isnan(B[i]))
          return false;
