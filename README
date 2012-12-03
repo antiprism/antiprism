@@ -1,11 +1,12 @@
 Antiprism
 =========
 
-Notes for Antiprism 0.22
-------------------------
+Notes for Antiprism 0.23.pre01
+------------------------------
 
-This is a minor release. It includes higher precision resource
-models, bug fixes, and changes to allow building on OS X (untested).
+This is a minor release. It includes some new models (isohedral
+kite-faced polyhedra, crown polyhedra) and evaluation of
+mathematical expressions for program arguments.
 
 Please look out for bugs, or other issues, and report them to me
 at: adrian@antiprism.com
