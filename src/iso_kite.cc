@@ -161,6 +161,7 @@ class kt_opts: public prog_opts
       int num_parts;
       int color_type;
       int list_idx;  // -1: ignore, 0: print list, >0: make model with index
+      bool kite_only;
       int verb;      // verbosity - 0:no report, 1:print report
 
 
@@ -172,6 +173,7 @@ class kt_opts: public prog_opts
                   num_parts(0),
                   color_type(-1),
                   list_idx(-1),
+                  kite_only(false),
                   verb(1)
                   { for(int i=0; i<3; i++) heights[i]=1.0; }
 
@@ -184,6 +186,9 @@ void kt_opts::usage()
    fprintf(stdout,
 "\n"
 "Usage: %s [options] model_args...\n"
+"\n"
+"Create all isohedral polyhedra and polyhedron compounds whose face type\n"
+"is a kite (or dart)\n"
 "\n"
 "Model_args can be a Schwarz triangle name (which can also be given as two\n"
 "or three fractions A, B, C (default 2) which specify the Schwarz triangle\n"
@@ -231,6 +236,8 @@ void kt_opts::usage()
 "            (colouring by value/index for upper/lower case) using a\n"
 "            different colour for each set (Schwarz models only), or Kk\n"
 "            to colour by base component (which may be compound)\n"
+"  -k        output a single kite (colours not applied)\n"
+"  -q        quiet, don't print final report\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
 "\n", prog_name());
@@ -395,7 +402,7 @@ void kt_opts::process_command_line(int argc, char **argv)
 
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hA:B:C:a:N:c:l:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hA:B:C:a:N:c:l:kqo:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -451,6 +458,14 @@ void kt_opts::process_command_line(int argc, char **argv)
             }
             break;
 
+         case 'k':
+            kite_only = true;
+            break;
+
+         case 'q':
+            verb = 0;
+            break;
+
          case 'o':
             ofile = optarg;
             break;
@@ -463,7 +478,7 @@ void kt_opts::process_command_line(int argc, char **argv)
    triangle.resize(6);
    num_fracs = argc-optind;
    if(num_fracs>3)
-      error(msg_str("must give less than 3 fractions (%d given)", num_fracs));
+      error(msg_str("cannot give more than 3 fractions (%d given)",num_fracs));
 
    if(num_fracs>0)
       model_name = argv[optind];
@@ -502,7 +517,11 @@ bool get_B(const vec3d &A, vec3d &B, const vec3d &C, const vec3d &norm_AB)
 {
    norm_AB.dump();
    vec3d pivot = (C + mat3d::refl(norm_AB)*C)/2;
-   B = lines_intersection(A, pivot, vec3d(0,0,0), B, 0);
+   if(vcross((A-pivot).unit(), B.unit()).mag()>epsilon)  // lines not parallel
+      B = lines_intersection(A, pivot, vec3d(0,0,0), B, 0);
+   else                                                  // lines parallel
+      B *= (A.mag()+C.mag())*10000; //large relative dist to represent infinity
+
    for(int i=0; i<3; i++)
       if(isnan(B[i]))
          return false;
@@ -1051,6 +1070,14 @@ int main(int argc, char *argv[])
       else
          opts.error(msg_str("list number too large (maximum %d)", list.size()),
                'l');
+   }
+
+   if(opts.kite_only) {
+      col_geom_v kite;
+      for(int i=0; i<4; i++)
+         kite.add_vert(out_geom.face_v(0, i));
+      kite.add_face(0, 1, 2, 3, -1);
+      out_geom = kite;
    }
 
    if(!out_geom.write(opts.ofile, errmsg))

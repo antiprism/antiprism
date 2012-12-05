@@ -6,6 +6,9 @@ iso_kite - isohedral kite-faced polyhedra
 .B iso_kite
 [\fIoptions\fR] \fImodel_args\fR...
 .SH DESCRIPTION
+Create all isohedral polyhedra and polyhedron compounds whose face type
+is a kite (or dart)
+.PP
 Model_args can be a Schwarz triangle name (which can also be given as two
 or three fractions A, B, C (default 2) which specify the Schwarz triangle
 vertices, where n/d corresponds to an angle PI*d/n), optionally followed by
@@ -84,6 +87,12 @@ colour the faces around each vertex of a type, from AaBbCc
 (colouring by value/index for upper/lower case) using a
 different colour for each set (Schwarz models only), or Kk
 to colour by base component (which may be compound)
+.TP
+\fB\-k\fR
+output a single kite (colours not applied)
+.TP
+\fB\-q\fR
+quiet, don't print final report
 .HP
 \fB\-o\fR <file> write output to file (default: write to standard output)
 .SH "SEE ALSO"
