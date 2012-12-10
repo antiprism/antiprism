@@ -29,6 +29,7 @@ namespace ExprEval
         {
             Type_Exception = 1,
             Type_NotFoundException,
+            Type_NotFoundVariableException,
             Type_AlreadyExistsException,
             Type_NullPointerException,
             Type_MathException,
@@ -69,6 +70,14 @@ namespace ExprEval
     {
     public:
         NotFoundException(const ::std::string &name);
+    };
+
+    // Not found exception (for vaiables)
+    //--------------------------------------------------------------------------
+    class NotFoundVariableException : public Exception
+    {
+    public:
+        NotFoundVariableException(const ::std::string &name);
     };
 
     // Already exists exception (function or value already exists)

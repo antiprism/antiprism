@@ -54,11 +54,19 @@ string::size_type Exception::GetEnd() const
     return m_end;
 }
 
-// Not found exception
+// Not found exception for functions
 //------------------------------------------------------------------------------
 NotFoundException::NotFoundException(const string &name)
 {
     m_type = Type_NotFoundException;
+    m_value = name;
+}
+
+// Not found exception for variables
+//------------------------------------------------------------------------------
+NotFoundVariableException::NotFoundVariableException(const string &name)
+{
+    m_type = Type_NotFoundVariableException;
     m_value = name;
 }
 

@@ -15,7 +15,6 @@
 #include "vallist.h"
 #include "funclist.h"
 #include "except.h"
-
 using namespace std;
 using namespace ExprEval;
 
@@ -803,9 +802,19 @@ void VariableNode::Parse(Parser &parser, Parser::size_type start, Parser::size_t
 
     if(vaddr == 0)
     {
+        //AR: reject expressions with undefined variables
+        //If it does not already exist, throw an error
+        NotFoundVariableException e(ident);
+
+        e.SetStart(parser[start].GetStart());
+        e.SetEnd(parser[start].GetEnd());
+        throw(e);
+
+        /*
         // If it does not already exist, try to create it
         vlist->Add(ident);
         vaddr = vlist->GetAddress(ident);
+        */
     }
 
     if(vaddr == 0)

@@ -253,6 +253,8 @@ bool read_double(const char *str, double *f, char *errmsg)
             sprintf(errmsg, "math expression: incorrect syntax");
          else if(e.GetType()==Exception::Type_NotFoundException)
             sprintf(errmsg, "math expression: function not found");
+         else if(e.GetType()==Exception::Type_NotFoundVariableException)
+            sprintf(errmsg, "math expression: undefined variable used");
          else if(e.GetType()==Exception::Type_EmptyExpressionException)
             sprintf(errmsg, "number or mathematical expression not given");
          else if(e.GetType()==Exception::Type_MathException)
