@@ -475,6 +475,11 @@ void kt_opts::process_command_line(int argc, char **argv)
       }
    }
 
+   if(kite_only && color_type>=0) {
+      color_type = -1;
+      warning("colouring ignored for single kite model", 'c');
+   }
+
    triangle.resize(6);
    num_fracs = argc-optind;
    if(num_fracs>3)
@@ -824,7 +829,7 @@ void print_base_model_report(const string &model_name,
 bool make_base_model(col_geom_v &geom, const vector<int> &fracs,
       int num_fracs, unsigned int heights_set, double heights[],
       char color_type, vector<double> *hts_used, string *sym_used,
-      char *errmsg)
+      bool kite_only, char *errmsg)
 {
    *errmsg = '\0';
    col_geom_v kite_geom;
@@ -870,7 +875,9 @@ bool make_base_model(col_geom_v &geom, const vector<int> &fracs,
       repeat_kite_with_color(geom, kite_geom, sym, fracs, color_type);
    else
       sym_repeat(geom, kite_geom, sym);
-   sort_merge_elems(geom, "v", epsilon);
+
+   if(!kite_only)    // avoid reordering faces if single kite is to be output
+      sort_merge_elems(geom, "v", epsilon);
    return true;
 }
 
@@ -880,8 +887,8 @@ bool make_base_model(col_geom_v &geom, const vector<int> &fracs,
 
 bool make_list_model(col_geom_v &geom, const string model_str,
       vector<string> &model_desc, unsigned int heights_set, double heights[],
-      int num_parts, double angle, char color_type, char *errmsg,
-      vector<string> &warnings, int verb)
+      int num_parts, double angle, char color_type, bool kite_only,
+      char *errmsg, vector<string> &warnings, int verb)
 {
    warnings.clear();
    string base_model = (model_str.size() && model_desc.size()<=1) ?
@@ -899,7 +906,7 @@ bool make_list_model(col_geom_v &geom, const string model_str,
    vector<double> hts_used;
    string sym_used;
    if(!make_base_model(base_geom, fracs, num_fracs, heights_set, heights,
-         color_type, &hts_used, &sym_used, errmsg))
+         color_type, &hts_used, &sym_used, kite_only, errmsg))
       return false;
    if(*errmsg)
       warnings.push_back(errmsg);
@@ -1039,7 +1046,7 @@ int main(int argc, char *argv[])
       string sym_used;
       if(!make_base_model(out_geom, opts.triangle, opts.num_fracs,
                opts.heights_set, opts.heights, opts.color_type,
-               &hts_used, &sym_used, errmsg))
+               &hts_used, &sym_used, opts.kite_only, errmsg))
            opts.error(errmsg);
         if(*errmsg)
            opts.warning(errmsg);
@@ -1062,7 +1069,7 @@ int main(int argc, char *argv[])
          vector<string> warnings;
          if(!make_list_model(out_geom, opts.model_name, list[opts.list_idx-1],
                   opts.heights_set, opts.heights, opts.num_parts, opts.angle,
-                  opts.color_type, errmsg, warnings, opts.verb))
+                  opts.color_type, opts.kite_only, errmsg, warnings, opts.verb))
             opts.error(errmsg);
          for(unsigned int i=0; i< warnings.size(); i++)
             opts.warning(warnings[i].c_str());
