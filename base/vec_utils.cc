@@ -174,7 +174,7 @@ vec3d lines_intersection(const vec3d &P0, const vec3d &P1, const vec3d &Q0, cons
 {
    vec3d P, Q;
    if(eps==0.0) {                  // always return an intersection point
-      if(!lines_nearest_points(P0, P1, Q0, Q1, P, Q)) {
+      if(!lines_nearest_points(P0, P1, Q0, Q1, P, Q, 0)) {
          P = (P0+P1)/2.0;
          Q = (Q0+Q1)/2.0;
       }
