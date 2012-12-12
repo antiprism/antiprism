@@ -776,6 +776,13 @@ int make_resource_uniform_compound(geom_if &geom, string name, bool is_std, char
 
 int make_resource_johnson(geom_if &geom, string name, bool is_std, char *errmsg=0)
 {
+   // If model name ands in _raw then don't symmetry align
+   bool sym_align = true;
+   if(name.size()>4 && name.substr(name.size()-4)=="_raw") {
+      name.resize(name.size()-4);
+      sym_align = false;
+   }
+
    if(name.size()<2 || !strchr("jJ", name[0]) || name.find('.')!=string::npos)
       return -1; // not johnson name (the "." indicates a likely local file)
                  // so the name is not handled
@@ -807,6 +814,9 @@ int make_resource_johnson(geom_if &geom, string name, bool is_std, char *errmsg=
 
    if (!is_std)
       set_resource_polygon_color(geom);
+
+   if(sym_align)
+      geom.sym_align();
 
    return 0; // name found
 }

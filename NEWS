@@ -9,6 +9,8 @@ xx-xx-xx Adrian Rossiter <adrian@antiprism.com>
               (sqrt prefix removed, use sqrt() instead)
             Symmetry: symmetry alignment should not realign an
               aligned polyhedron
+            Resource models: Johnson models are symmetry aligned
+              (append _raw for old alignment). 
          Fixes
 
 Version 0.22
