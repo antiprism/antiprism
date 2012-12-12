@@ -40,6 +40,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <math.h>
+
+#include "muparser/muParser.h"
 #include "utils.h"
 
 ///Whitespace characters
@@ -221,73 +223,93 @@ void prog_opts::version()
          prog_name(), VERSION);
 }
 
+using namespace mu;
 
-#include "expreval/expreval.h"
-using namespace ExprEval;
-using namespace std;
+class AntiParser : public Parser
+{
+   private:
+      double vars[10];
+   protected:
+      static double deg_sin(double a)  { return sin(deg2rad(a)); }
+      static double deg_cos(double a)  { return cos(deg2rad(a)); }
+      static double deg_tan(double a)  { return tan(deg2rad(a)); }
+      static double deg_asin(double x) { return rad2deg(asin(x)); }
+      static double deg_acos(double x) { return rad2deg(acos(x)); }
+      static double deg_atan(double x) { return rad2deg(atan(x)); }
+      static double deg_atan2(double x, double y)
+         { return rad2deg(atan2(x, y)); }
+      static double deg(double a)      { return rad2deg(a); }
+      static double rad(double a)      { return deg2rad(a); }
+   public:
+      AntiParser();
+};
+
+AntiParser::AntiParser() : Parser()
+{
+
+   for(int i=0; i<10; i++)
+      DefineVar(msg_str("var%d", i), &vars[i]);
+   SetArgSep(';');
+
+   // Replacement functions
+   DefineFun(_T("sin"), deg_sin);
+   DefineFun(_T("cos"), deg_cos);
+   DefineFun(_T("tan"), deg_tan);
+   DefineFun(_T("asin"), deg_asin);
+   DefineFun(_T("acos"), deg_acos);
+   DefineFun(_T("atan"), deg_atan);
+   DefineFun(_T("atan2"), deg_atan2);
+   //New functions
+   DefineFun(_T("deg"), deg);
+   DefineFun(_T("rad"), rad);
+
+   // Clear existing constants
+   ClearConst();
+
+   //New constants
+   DefineConst("rt2", sqrt(2));
+   DefineConst("rt3", sqrt(3));
+   DefineConst("rt5", sqrt(5));
+   DefineConst("phi", phi);
+   DefineConst("pi", M_PI);
+}
+
+
+
 
 bool read_double(const char *str, double *f, char *errmsg)
 {
+   char msg_type[] = "maths expression:";
    bool exp_good = true;
    try {
-      ValueList vlist;
-      vlist.Add("rt2", sqrt(2), true);
-      vlist.Add("rt3", sqrt(3), true);
-      vlist.Add("rt5", sqrt(5), true);
-      vlist.Add("phi", (sqrt(5)+1)/2, true);
-      vlist.Add("pi", M_PI, true);
+      AntiParser p;
 
-      FunctionList flist;
-      flist.AddDefaultFunctions();
+      p.SetExpr(str);
 
-      Expression e;
-      e.SetValueList(&vlist);
-      e.SetFunctionList(&flist);
+      *f = p.Eval();
 
-      e.Parse(str);
-      *f = e.Evaluate();
-   }
-   catch(Exception &e) {
-      if(errmsg) {
-         if(e.GetType()==Exception::Type_SyntaxException)
-            sprintf(errmsg, "math expression: incorrect syntax");
-         else if(e.GetType()==Exception::Type_NotFoundException)
-            sprintf(errmsg, "math expression: function not found");
-         else if(e.GetType()==Exception::Type_NotFoundVariableException)
-            sprintf(errmsg, "math expression: undefined variable used");
-         else if(e.GetType()==Exception::Type_EmptyExpressionException)
-            sprintf(errmsg, "number or mathematical expression not given");
-         else if(e.GetType()==Exception::Type_MathException)
-            sprintf(errmsg, "math expression: a mathematical error occurred");
-         else if(e.GetType()==Exception::Type_DivideByZeroException)
-            sprintf(errmsg, "math expression: divied by zero occurred");
-         else if(e.GetType()==Exception::Type_NoValueListException)
-            sprintf(errmsg, "math expression: no value list (internal error)");
-         else if(e.GetType()==Exception::Type_NoFunctionListException)
-            sprintf(errmsg,
-                  "math expression: no function list (internal error)");
-         else if(e.GetType()==Exception::Type_UnknownTokenException)
-            sprintf(errmsg, "math expression: unknown token");
-         else if(e.GetType()==Exception::Type_InvalidArgumentCountException)
-            sprintf(errmsg,
-                  "math expression: wrong number of arguments to function");
-         else if(e.GetType()==Exception::Type_ConstantAssignException)
-            sprintf(errmsg, "math expression: assigned to constant");
-         else if(e.GetType()==Exception::Type_ConstantReferenceException)
-            sprintf(errmsg, "math expression: constant passed to function "
-                  "as a reference");
-         else if(e.GetType()==Exception::Type_UnmatchedParenthesisException)
-            sprintf(errmsg, "math expression: unmatched parenthesis");
-         else
-            sprintf(errmsg,
-                  "number or math expression: an unspecified error occurred");
+      if(isnan(*f)) {
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ,
+                  "%s: result is not a number (domain error, etc)", msg_type);
+         exp_good = false;
       }
+      else if(isinf(*f)) {
+         if(errmsg)
+            snprintf(errmsg, MSG_SZ,
+                  "%s: result is not a finite number (division by zero, etc)",
+                  msg_type);
+         exp_good = false;
+      }
+   }
+   catch (Parser::exception_type &e) {
+      if(errmsg)
+         snprintf(errmsg, MSG_SZ, "%s: %s", msg_type, e.GetMsg().c_str());
       exp_good = false;
    }
 
    return exp_good;
 }
-
 
 
 bool read_double_noparse(const char *str, double *f, char *errmsg)

@@ -238,7 +238,7 @@ AC_CHECK_FUNCS([floor memset pow sqrt strchr strcspn strpbrk strrchr strspn strs
 
 AC_CONFIG_FILES([Makefile
                  aview/Makefile
-                 base/expreval/Makefile
+                 base/muparser/Makefile
                  base/tesselator/Makefile
                  base/Makefile
                  src/Makefile

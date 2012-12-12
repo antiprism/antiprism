@@ -30,7 +30,7 @@ libantiprism_la_SOURCES = off_read.cc off_write.cc crds_read.cc disp_poly.cc\
 supdir = $(datadir)/$(PACKAGE)-$(VERSION)
 libantiprism_la_CPPFLAGS = -DSUPDIR="\"$(supdir)\"" 
 libantiprism_la_LDFLAGS = -no-undefined -version-info 0:0:0
-libantiprism_la_LIBADD = tesselator/libtess.la expreval/libexpreval.la
+libantiprism_la_LIBADD = tesselator/libtess.la muparser/libmuparser.la
 
 
 pkginclude_HEADERS = \
