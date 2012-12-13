@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2007,2011 Roger Kaufman
+   Copyright (c) 2007,2012 Roger Kaufman
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -52,20 +52,19 @@ bool polygon_sort(vector<int> &polygon)
    polygon_sorted.push_back(*iter);
    
    // Find rest of polygon indexes
-   if ( iter < polygon.end() )
+   if (iter < polygon.end())
       polygon_sorted.insert(polygon_sorted.end(), (iter+1), polygon.end());
-   if ( iter > polygon.begin() )
+   if (iter > polygon.begin())
       polygon_sorted.insert(polygon_sorted.end(), polygon.begin(), iter);
 
    // reverse them if necessary
    iter = polygon_sorted.begin()+1;
-   if ( *iter > polygon_sorted.back() ) {
+   if (*iter > polygon_sorted.back()) {
       reverse(iter, polygon_sorted.end());
       reversed = true;
    }
 
-   polygon.clear();
-   polygon.assign(polygon_sorted.begin(), polygon_sorted.end());
+   polygon = polygon_sorted;
    return reversed;
 }
 
@@ -92,25 +91,34 @@ void remap_faces(vector<vector<int> > &faces, const vector<vertexMap> &vm)
 class facesSort
 {
 public:
-   vector<int> face;
-   vector<int> face_with_cv;
-   vector<int> equiv_faces;
-   col_val color;
    int face_no;
+   vector<int> face;
+   vector<int> face_all_verts;
+   col_val col;
+   col_val average_col;
    bool deleted;
    bool reversed;
-   facesSort(vector<int> f, int i, bool rev) :
-      face(f), face_no(i), reversed(rev) { deleted = false; }
-   facesSort(vector<int> f, vector<int> fcv, int i, bool rev) :
-      face(f), face_with_cv(fcv), face_no(i), reversed(rev) { deleted = false; }
+
+   // for congruence test
+   vector<int> equiv_faces;
+
+   facesSort(int i, vector<int> f, col_val c, bool rev) :
+      face_no(i), face(f), col(c), reversed(rev) { deleted = false; }
+   facesSort(int i, vector<int> f, vector<int> fcv, col_val c, bool rev) :
+      face_no(i), face(f), face_all_verts(fcv), col(c), reversed(rev) { deleted = false; }
 };
 
 bool cmp_faces(const facesSort &a, const facesSort &b)
 {
-   if ( a.face.size() != b.face.size() )
+   if (a.face.size() != b.face.size())
       return a.face.size() < b.face.size();
    else
       return a.face < b.face;
+}
+
+bool cmp_face_no(const facesSort &a, const facesSort &b)
+{
+   return a.face_no < b.face_no;
 }
 
 col_val average_color(const vector<col_val> &cols, const int &blend_type)
@@ -131,31 +139,31 @@ col_val average_color(const vector<col_val> &cols, const int &blend_type)
    return col_val();
 }
 
-col_val average_face_color(const col_geom &cg, const vector<facesSort> &fs, const char &elem, const int &begin, const int &end, const int &blend_type)
+col_val average_face_color(const vector<facesSort> &fs, const char &elem, const int &begin, const int &end, const int &blend_type)
 {
    // quick decision, if only one instance, return its own color
    if (!(end-begin)) {
       if (elem=='f')
-         return cg.get_f_col(fs[begin].face_no);
+         return fs[begin].col;
       else
-         return cg.get_e_col(fs[begin].face_no);
+         return fs[begin].col;
    }
    
    // collect colors
    vector<col_val> cols;  
    for(int i=begin;i<=end;i++) {
       col_val col;
-      if(elem=='f')
-         col = cg.get_f_col(fs[i].face_no);
+      if (elem=='f')
+         col = fs[i].col;
       else
-         col = cg.get_e_col(fs[i].face_no);
+         col = fs[i].col;
       cols.push_back(col);
    }
    
    return (cols.size() ? average_color(cols, blend_type) : col_val());
 }
 
-void sort_faces(geom_if &geom, const vector<vertexMap> &vm_no_cv, const vector<vertexMap> &vm_with_cv,
+void sort_faces(geom_if &geom, const vector<vertexMap> &vm_all_verts, const vector<vertexMap> &vm_merged_verts,
                 const string &delete_elems, const char &elem,
                 map<int, set<int> > *equiv_elems = 0,
                 int blend_type = 1)
@@ -163,108 +171,120 @@ void sort_faces(geom_if &geom, const vector<vertexMap> &vm_no_cv, const vector<v
    vector<vector<int> > &faces = (elem=='f') ? geom.raw_faces() : geom.raw_edges();
    col_geom *cg = dynamic_cast<col_geom *>(&geom);
 
-   vector<facesSort> fs;
-   vector<col_val> cols;
+   // sort only when 's' is set
+   bool sort_only = strchr(delete_elems.c_str(), 's');
+   bool merge_verts = strchr(delete_elems.c_str(), 'v');
 
-   // make a copy of unmapped faces with coincident vertices if necessary
-   vector<vector<int> > faces_with_cv;
-   if ( vm_with_cv.size() ) {
-      faces_with_cv = faces;
-      remap_faces(faces_with_cv, vm_with_cv);
+   vector<facesSort> fs;
+
+   // make a copy of faces with all vertices if necessary
+   vector<vector<int> > faces_all_verts;
+   if (!merge_verts) {
+      faces_all_verts = faces;
+      remap_faces(faces_all_verts, vm_all_verts);
    }
 
-   // use geom's face's and not a copy for no_cv
-   if ( vm_no_cv.size() )
-      remap_faces(faces, vm_no_cv);
+   // use geom's face's and not a copy for merged vertices
+   if (vm_merged_verts.size())
+      remap_faces(faces, vm_merged_verts);
 
    // load face sort vector
    for(unsigned int i=0;i<faces.size();i++) {
-      bool reversed;
-      reversed = polygon_sort(faces[i]);
-      if ( !faces_with_cv.size() )
-         fs.push_back(facesSort(faces[i],i, reversed));
+      col_val col;
+      if (cg) {
+         if (elem=='f')
+            col = cg->get_f_col(i);
+         else
+            col = cg->get_e_col(i);
+      }
+
+      // use the reverse flag from the faces with merged vertices
+      bool reversed = polygon_sort(faces[i]);
+      // if using faces with all verts mapped, use different declaration
+      if (!merge_verts) {
+         polygon_sort(faces_all_verts[i]);
+         fs.push_back(facesSort(i, faces[i], faces_all_verts[i], col, reversed));
+      }
       else
-      {
-         polygon_sort(faces_with_cv[i]);
-         fs.push_back(facesSort(faces[i],faces_with_cv[i],i, reversed));
-      }
+         fs.push_back(facesSort(i, faces[i], col, reversed));
    }
-   
-   // check to see we are actually deleting elements
-   // erase coincident elements if any
-   bool deleting_faces = ( (elem=='e' && strchr(delete_elems.c_str(), 'e')) || (elem=='f' && strchr(delete_elems.c_str(), 'f')) );
+   faces_all_verts.clear();
 
-   // don't need to find coinicident faces/edges if no map provided
-   if ( vm_no_cv.size() ) {
-      stable_sort(fs.begin(), fs.end(), cmp_faces);
-
-      if ( deleting_faces ) {
-         if(equiv_elems && fs.size())
-            fs[0].equiv_faces.push_back(fs[0].face_no);
-         int cur_undeleted = 0;  // the first face in a set of equivalent faces
-         unsigned int j = 0;
-         for(unsigned int i=0;i<fs.size()-1;i++) {
-            j=i+1;
-            if ( fs[i].face == fs[j].face )
-               fs[j].deleted = true;
-            else {
-               if(cg && !equiv_elems)
-                  fs[cur_undeleted].color = average_face_color(*cg, fs, elem, cur_undeleted, i, blend_type);
-               cur_undeleted = j;
-            }
-
-            if(equiv_elems)
-               fs[cur_undeleted].equiv_faces.push_back(fs[j].face_no);
-         }
-         if(cg && !equiv_elems)
-            fs[cur_undeleted].color = average_face_color(*cg, fs, elem, cur_undeleted, j, blend_type);
-      }
-   }
-
-   // if coincient vertices are included we need to use/re-sort by those faces
-   // but deleted flag will be preserved
-   if ( !strchr(delete_elems.c_str(), 'v') ) {
-      for(unsigned int i=0;i<fs.size();i++)
-         fs[i].face = fs[i].face_with_cv;
-      stable_sort(fs.begin(), fs.end(), cmp_faces);
-   }
-
-   // rewrite sorted face list, record colors for rebuilding color table
-   bool restore_orient = (strchr(delete_elems.c_str(), 's')==0);
+   // clear some memory
    faces.clear();
-   for(unsigned int i=0;i<fs.size();i++) {
-      if ( !fs[i].deleted ) {
-         if(cg && !equiv_elems) {
-            if (deleting_faces)
-               cols.push_back(fs[i].color);
-            else {
-               if(elem=='f')
-                  cols.push_back(cg->get_f_col(fs[i].face_no));
-               else
-                  cols.push_back(cg->get_e_col(fs[i].face_no));
-            }
+   if (cg) {
+      if (elem=='f')
+         cg->clear_f_cols();
+      else
+         cg->clear_e_cols();
+   }
+
+   // sort on faces with merged vertices
+   stable_sort(fs.begin(), fs.end(), cmp_faces);
+
+   // check to see we are actually deleting elements
+   // mark coincident faces for skipping if any
+   bool deleting_faces = ( (elem=='e' && strchr(delete_elems.c_str(), 'e')) || (elem=='f' && strchr(delete_elems.c_str(), 'f')) );
+   if (deleting_faces) {
+      if (equiv_elems)
+         fs[0].equiv_faces.push_back(fs[0].face_no);
+
+      int cur_undeleted = 0;  // the first face in a set of equivalent faces
+      unsigned int j = 0;
+      for(unsigned int i=0;i<fs.size()-1;i++) {
+         j=i+1;
+         if (fs[i].face == fs[j].face)
+            fs[j].deleted = true;
+         else {
+            if (!equiv_elems)
+               fs[cur_undeleted].average_col = average_face_color(fs, elem, cur_undeleted, i, blend_type);
+            cur_undeleted = j;
          }
 
-         if(restore_orient && fs[i].reversed)
+         if (equiv_elems)
+            fs[cur_undeleted].equiv_faces.push_back(fs[j].face_no);
+      }
+      if (!equiv_elems)
+         fs[cur_undeleted].average_col = average_face_color(fs, elem, cur_undeleted, j, blend_type);
+   }
+
+   // if all vertices use/re-sort by those faces
+   // but deleted flag will be preserved
+   if (!merge_verts) {
+      for(unsigned int i=0;i<fs.size();i++)
+         fs[i].face = fs[i].face_all_verts;
+      stable_sort(fs.begin(), fs.end(), cmp_faces);
+   }
+
+   // restore original sort of faces unless sort only or congruency check
+   if (!sort_only && !equiv_elems)
+      sort(fs.begin(), fs.end(), cmp_face_no);
+
+   // write out sorted faces and colors
+   for(unsigned i=0; i<fs.size(); i++) {
+      if (!fs[i].deleted) {
+        // restore orientation unless sort only
+        if (!sort_only && fs[i].reversed)
             reverse(fs[i].face.begin(), fs[i].face.end());
          faces.push_back(fs[i].face);
-         if(equiv_elems) {
-            (*equiv_elems)[faces.size()-1].insert(fs[i].equiv_faces.begin(), fs[i].equiv_faces.end());
-         }
-      }
-   }
 
-   // rebuild color table
-   if(cg && !equiv_elems) {
-      if(elem=='f') {
-         cg->clear_f_cols();
-         for(unsigned int i=0;i<cols.size();i++)
-            cg->set_f_col(i,cols[i]);
-      }
-      else {
-         cg->clear_e_cols();
-         for(unsigned int i=0;i<cols.size();i++)
-            cg->set_e_col(i,cols[i]);
+         if (equiv_elems)
+            (*equiv_elems)[faces.size()-1].insert(fs[i].equiv_faces.begin(), fs[i].equiv_faces.end());
+         else
+         if (cg) {
+            if (deleting_faces) {
+               if (elem=='f')
+                  cg->set_f_col(i,fs[i].average_col);
+               else
+                  cg->set_e_col(i,fs[i].average_col);
+            }
+            else {
+               if (elem=='f')
+                  cg->set_f_col(i,fs[i].col);
+               else
+                  cg->set_e_col(i,fs[i].col);
+            }
+         }
       }
    }
 }
@@ -272,11 +292,15 @@ void sort_faces(geom_if &geom, const vector<vertexMap> &vm_no_cv, const vector<v
 class vertSort
 {
 public:
-   vec3d vert;
-   col_val color;
    int vert_no;
+   vec3d vert;
+   col_val col;
+   col_val average_col;
    bool deleted;
-   vertSort(vec3d v, int i) : vert(v), vert_no(i) { deleted = false; }
+
+   int vert_no_new;
+
+   vertSort(int i, vec3d v, col_val c) : vert_no(i), vert(v), col(c) { deleted = false; }
 };
 
 bool cmp_verts(const vertSort &a, const vertSort &b, const double &eps)
@@ -292,192 +316,168 @@ public:
    bool operator() (const vertSort &a, const vertSort &b) { return cmp_verts(a, b, eps); }
 };
 
-col_val average_vert_color(const col_geom &cg, const vector<vertSort> &vs, const int &begin, const int &end, const int &blend_type)
+class vertSortPostMerge
+{
+public:
+   int vert_no;
+   vec3d vert;
+   col_val col;
+   int vert_new;
+   vertSortPostMerge(int i, vec3d v, col_val c, int n) :
+      vert_no(i), vert(v), col(c), vert_new(n) {}
+};
+
+bool cmp_vert_no(const vertSortPostMerge &a, const vertSortPostMerge &b)
+{
+   return a.vert_no < b.vert_no;
+}
+
+col_val average_vert_color(const vector<vertSort> &vs, const int &begin, const int &end, const int &blend_type)
 {
    // quick decision, if only one instance, return its own color
    if (!(end-begin))
-      return cg.get_v_col(vs[begin].vert_no);
+      return vs[begin].col;
 
    // collect colors
    vector<col_val> cols;  
-   for(int i=begin;i<=end;i++) {
-      col_val col = cg.get_v_col(vs[i].vert_no);
-      cols.push_back(col);
-   }
+   for(int i=begin;i<=end;i++)
+      cols.push_back(vs[i].col);
    
    return (cols.size() ? average_color(cols, blend_type) : col_val());
 }
 
-void sort_vertices(geom_if &geom, vector<vertexMap> &vm_no_cv, vector<vertexMap > &vm_with_cv, 
+void sort_vertices(geom_if &geom, vector<vertexMap> &vm_all_verts, vector<vertexMap > &vm_merged_verts, 
                    const string &delete_elems,
                    map<int, set<int> > *equiv_elems = 0,
-                   int blend_type = 1,  double eps = epsilon)
+                   int blend_type = 1, double eps = epsilon)
 {
    vector<vec3d> &verts = geom.raw_verts();
    col_geom *cg = dynamic_cast<col_geom *>(&geom);
 
-   vector<vertSort> vs;
-   vector<col_val> cols;
-
-   for(unsigned int i=0;i<verts.size();i++)
-      vs.push_back(vertSort(verts[i],i));
-   stable_sort(vs.begin(), vs.end(), vert_cmp(eps));
-
-   // build map from old to new vertices with coincident vertices included
-   // if v is specified we will not be using it
+   // sort only when 's' is set
+   bool sort_only = strchr(delete_elems.c_str(), 's');
    bool merge_verts = strchr(delete_elems.c_str(), 'v');
-   if ( !merge_verts ) {
-      for(unsigned int i=0;i<vs.size();i++)
-         vm_with_cv.push_back(vertexMap(vs[i].vert_no,i));
-      stable_sort(vm_with_cv.begin(), vm_with_cv.end(), cmp_vertexMap);
+
+   vector<vertSort> vs;
+
+   // load vertex sort vector
+   for(unsigned int i=0;i<verts.size();i++) {
+      col_val col;
+      if (cg)
+         col = cg->get_v_col(i);
+      vs.push_back(vertSort(i,verts[i],col));
    }
 
-   // build map for coincident vertices if any deletion is to be done in vef.
-   if ( strlen(delete_elems.c_str()) ) {
+   // clear some memory
+   verts.clear();
+   if (cg)
+      cg->clear_v_cols();
+
+   stable_sort(vs.begin(), vs.end(), vert_cmp(eps));
+
+   // if not merging vertices, build map from old to new vertices for all vertices
+   if (!merge_verts) {
+      for(unsigned int i=0;i<vs.size();i++)
+         vm_all_verts.push_back(vertexMap(vs[i].vert_no,i));
+      stable_sort(vm_all_verts.begin(), vm_all_verts.end(), cmp_vertexMap);
+   }
+
+   // if merging vertices, build map for merged vertices
+   // mark coincident vertices for skipping if any
+   // this is always done
+   if (true) {
       int v = 0;
       int cur_undeleted = 0;  // the first face in a set of equivalent verts
       unsigned int j = 0;
       for(unsigned int i=0;i<vs.size()-1;i++) {
          j=i+1;
-         vm_no_cv.push_back(vertexMap(vs[i].vert_no,v));
-         if(!compare(vs[i].vert, vs[j].vert, eps)) {
+
+         vm_merged_verts.push_back(vertexMap(vs[i].vert_no,v));
+
+         if (!compare(vs[i].vert, vs[j].vert, eps)) {
             // don't set delete flag if we will not be using it
-            if ( merge_verts )
+            if (merge_verts)
                vs[j].deleted = true;
          }
          else {
             v++;
-            if(cg && !equiv_elems)
-               vs[cur_undeleted].color = average_vert_color(*cg, vs, cur_undeleted, i, blend_type);
+            if (cg && !equiv_elems)
+               vs[cur_undeleted].average_col = average_vert_color(vs, cur_undeleted, i, blend_type);
             cur_undeleted = j;
          }
       }
-      if(cg && !equiv_elems)
-         vs[cur_undeleted].color = average_vert_color(*cg, vs, cur_undeleted, j, blend_type);
+      if (cg && !equiv_elems)
+         vs[cur_undeleted].average_col = average_vert_color(vs, cur_undeleted, j, blend_type);
 
-      vm_no_cv.push_back(vertexMap(vs.back().vert_no,v));
-      stable_sort(vm_no_cv.begin(), vm_no_cv.end(), cmp_vertexMap);
+      vm_merged_verts.push_back(vertexMap(vs.back().vert_no,v));
+
+      stable_sort(vm_merged_verts.begin(), vm_merged_verts.end(), cmp_vertexMap);
    }
 
-   // rewrite sorted vertex list, record colors for rebuilding color table
-   verts.clear();
+   // the vertices to be written out have to be put into a second structure
+   // so that no deleted vertices (if any) exist in the list
+   vector<vertSortPostMerge> vspm;
+
    for(unsigned int i=0;i<vs.size();i++) {
       if ( !vs[i].deleted ) {
+         col_val col;
          if(cg && !equiv_elems) {
             if (merge_verts)
-               cols.push_back(vs[i].color);
+               col = vs[i].average_col;
             else
-               cols.push_back(cg->get_v_col(vs[i].vert_no));
-         }
-         
-         verts.push_back(vs[i].vert);
-      }
-      if(equiv_elems)
-         (*equiv_elems)[verts.size()-1].insert(vs[i].vert_no);
-   }
-
-   // rebuild color table
-   if(cg && !equiv_elems) {
-      cg->clear_v_cols();
-      for(unsigned int i=0;i<cols.size();i++)
-         cg->set_v_col(i,cols[i]);
-   }
-}
-
-/* RK: sort_merge which attempt to find valid duplicate vertices when called with merge_elems = 'Vef'. saved for possible future use
-bool sort_merge_elems(geom_if &geom, const string &merge_elems, vector<map<int, set<int> > > *equiv_elems, bool chk_congruence, int blend_type, double eps)
-{
-   // an empty geom cannot be processed
-   if (!geom.verts().size())
-      return false;
-      
-   // Congruence check expects a polyhedron with elements occurring
-   // in coincident pairs, and exits early if this is not the case
-   vector<map<int, set<int> > > equiv_elems_tmp;
-   if(chk_congruence && !equiv_elems)
-      equiv_elems = &equiv_elems_tmp;
-
-   if(equiv_elems) {
-      equiv_elems->clear();
-      equiv_elems->resize(3);
-   }
-
-   vector<vertexMap> vm_no_cv, vm_with_cv;
-
-   // if 'Vef' is used, process pre-existing free vertices first
-   col_geom_v fv;
-   if ( strchr(merge_elems.c_str(), 'V') ){
-      col_geom *cg = dynamic_cast<col_geom *>(&geom);
-
-      vector<int> free_verts = geom.get_info().get_free_verts();
-      if (free_verts.size()) {
-         for(unsigned int i=0;i<free_verts.size();i++) {
-            int idx = free_verts[i];
-            col_val c = cg->get_v_col(idx);
-            fv.add_col_vert(geom.verts()[idx],c);
+               col = cg->get_v_col(vs[i].vert_no);
          }
 
-         // temporarily remove them from the geom
-         geom.delete_verts(free_verts);
-
-         // merge free verts
-         unsigned int sz = fv.verts().size();
-         sort_vertices(fv, vm_no_cv, vm_with_cv, "v", (equiv_elems ? &(*equiv_elems)[0] : 0), blend_type, eps);
-
-         // if checking congruence and these don't reduce by half then no need to continue
-         if(chk_congruence && (*equiv_elems)[0].size()*2 != sz)
-            return false;
+         vspm.push_back(vertSortPostMerge(vs[i].vert_no, vs[i].vert, col, (int)vspm.size()));
       }
+
+      if (equiv_elems)
+         (*equiv_elems)[vspm.size()-1].insert(vs[i].vert_no);
    }
 
-   vm_no_cv.clear();
-   vm_with_cv.clear();
+   // restore original sort of vertices unless sort only or congruency check
+   if (!sort_only && !equiv_elems) {
+      sort(vspm.begin(), vspm.end(), cmp_vert_no);
 
-   unsigned int num_verts = geom.verts().size();
-   unsigned int num_edges = geom.edges().size();
-   unsigned int num_faces = geom.faces().size();
+      // adjust the vertex maps
+      for(unsigned i=0; i<vm_merged_verts.size(); i++) {
+         for(unsigned j=0; j<vspm.size(); j++) {
+            if (vspm[j].vert_new == vm_merged_verts[i].new_vertex) {
+               vm_merged_verts[i].new_vertex = j;
+               break;
+            }
+         }
+      }
 
-   sort_vertices(geom, vm_no_cv, vm_with_cv, merge_elems, (equiv_elems ? &(*equiv_elems)[0] : 0), blend_type, eps);
-   // if 'vef' is used with check_congruence() then process using this evaluation
-   if(strchr(merge_elems.c_str(), 'v') && chk_congruence && (*equiv_elems)[0].size()*2 != num_verts)
-      return false;
-
-   if(geom.edges().size())
-      sort_faces(geom, vm_no_cv, vm_with_cv, merge_elems, 'e', (equiv_elems ? &(*equiv_elems)[1] : 0), blend_type);
-   if(chk_congruence && (*equiv_elems)[1].size()*2 != num_edges)
-      return false;
-   
-   if(geom.faces().size())
-      sort_faces(geom, vm_no_cv, vm_with_cv, merge_elems, 'f', (equiv_elems ? &(*equiv_elems)[2] : 0), blend_type);
-   if(chk_congruence && (*equiv_elems)[2].size()*2 != num_faces)
-      return false;
-
-   // if 'Vef' is used
-   if ( strchr(merge_elems.c_str(), 'V') ) {
-      // check if only half of the vertices were orphaned
-      if(chk_congruence && geom.get_info().get_free_verts().size()*2 != num_verts)
-         return false;
-      // append merged free verts back into geom
-      geom.append(fv);
+      for(unsigned i=0; i<vm_all_verts.size(); i++)
+         vm_all_verts[i].new_vertex = vm_all_verts[i].old_vertex;
    }
-   
-   return true;
+
+   // write out sorted vertices and colors
+   for(unsigned i=0; i<vspm.size(); i++) {
+      verts.push_back(vspm[i].vert);
+      if(cg && !equiv_elems)
+         cg->set_v_col(i,vspm[i].col);
+   }
 }
-*/
 
 bool sort_merge_elems(geom_if &geom, const string &merge_elems, vector<map<int, set<int> > > *equiv_elems, bool chk_congruence, int blend_type, double eps)
 {
    // an empty geom cannot be processed
    if (!geom.verts().size())
       return false;
+
+   // if there is nothing to merge return
+   if (!merge_elems.size())
+      return false;
       
    // Congruence check expects a polyhedron with elements occurring
    // in coincident pairs, and exits early if this is not the case
    vector<map<int, set<int> > > equiv_elems_tmp;
-   if(chk_congruence && !equiv_elems)
+   if (chk_congruence && !equiv_elems)
       equiv_elems = &equiv_elems_tmp;
 
-   if(equiv_elems) {
+   if (equiv_elems) {
       equiv_elems->clear();
       equiv_elems->resize(3);
    }
@@ -486,19 +486,19 @@ bool sort_merge_elems(geom_if &geom, const string &merge_elems, vector<map<int, 
    unsigned int num_edges = geom.edges().size();
    unsigned int num_faces = geom.faces().size();
 
-   vector<vertexMap> vm_no_cv, vm_with_cv;
-   sort_vertices(geom, vm_no_cv, vm_with_cv, merge_elems, (equiv_elems ? &(*equiv_elems)[0] : 0), blend_type, eps);
-   if(chk_congruence && (*equiv_elems)[0].size()*2 != num_verts)
+   vector<vertexMap> vm_all_verts, vm_merged_verts;
+   sort_vertices(geom, vm_all_verts, vm_merged_verts, merge_elems, (equiv_elems ? &(*equiv_elems)[0] : 0), blend_type, eps);
+   if (chk_congruence && (*equiv_elems)[0].size()*2 != num_verts)
       return false;
 
-   if(geom.edges().size())
-      sort_faces(geom, vm_no_cv, vm_with_cv, merge_elems, 'e', (equiv_elems ? &(*equiv_elems)[1] : 0), blend_type);
-   if(chk_congruence && (*equiv_elems)[1].size()*2 != num_edges)
+   if (geom.edges().size())
+      sort_faces(geom, vm_all_verts, vm_merged_verts, merge_elems, 'e', (equiv_elems ? &(*equiv_elems)[1] : 0), blend_type);
+   if (chk_congruence && (*equiv_elems)[1].size()*2 != num_edges)
       return false;
    
-   if(geom.faces().size())
-      sort_faces(geom, vm_no_cv, vm_with_cv, merge_elems, 'f', (equiv_elems ? &(*equiv_elems)[2] : 0), blend_type);
-   if(chk_congruence && (*equiv_elems)[2].size()*2 != num_faces)
+   if (geom.faces().size())
+      sort_faces(geom, vm_all_verts, vm_merged_verts, merge_elems, 'f', (equiv_elems ? &(*equiv_elems)[2] : 0), blend_type);
+   if (chk_congruence && (*equiv_elems)[2].size()*2 != num_faces)
       return false;
    
    return true;
@@ -559,13 +559,13 @@ void get_congruence_maps(const geom_if &geom, mat3d trans,
       map<int, set<int> >::iterator mi;
       for(mi=equiv_elems[i].begin(); mi!=equiv_elems[i].end(); ++mi) {
          int to = *mi->second.begin();
-         if(to>=cnts[i])
+         if (to>=cnts[i])
             to -= cnts[i];
          elem_maps[i][to] = to;
          set<int>::iterator si;
          for(si=mi->second.begin(); si!=mi->second.end(); ++si) {
             int from = (*si<cnts[i]) ? *si : *si-cnts[i];
-            if(to != from) {
+            if (to != from) {
                elem_maps[i][to] = from;
                break;
             }
