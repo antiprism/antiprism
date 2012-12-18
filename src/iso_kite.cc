@@ -1018,7 +1018,7 @@ bool make_list_model(col_geom_v &geom, const string model_str,
             (N_unneeded) ? "n/a" : msg_str("%d", num_parts).c_str());
       fprintf(stderr, "   angle:               %s\n",
             (angle_unneeded) ? "n/a" : msg_str("%-16.14g", ang).c_str());
-      fprintf(stderr, "   components:          %d", min_ts.size());
+      fprintf(stderr, "   components:          %d", (int)min_ts.size());
       int expected_num_comps = full_sym.get_trans().size() /
                                                part_sym.get_trans().size();
       if((int)min_ts.size()!=expected_num_comps)

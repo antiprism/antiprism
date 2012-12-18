@@ -1464,7 +1464,7 @@ sch_sym sch_sym::get_sub_sym(const sch_sym &sub_sym, int conj_type,char *errmsg)
             sub_sym.get_symbol().c_str(), get_symbol().c_str());
    else if(conj_type >= (int)conj_syms.size() && errmsg)
       sprintf(errmsg, "conjugation type too large for %s (last number: %d)",
-            sub_sym.get_symbol().c_str(), conj_syms.size()-1);
+            sub_sym.get_symbol().c_str(), (int)conj_syms.size()-1);
 
    return sch_sym(sch_sym::unknown);
 }

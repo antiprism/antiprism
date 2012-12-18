@@ -620,7 +620,7 @@ void qh_printstatistics (FILE *fp, const char *string) {
   notes:
     nop if id >= ZEND, printed, or same as initial value
 */
-void qh_printstatlevel (FILE *fp, int id, int start) {
+void qh_printstatlevel (FILE *fp, int id, int /*AR start*/) {
 #define NULLfield "       "
 
   if (id >= ZEND || qhstat printed[id])
