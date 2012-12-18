@@ -164,6 +164,7 @@ void sort_faces(geom_if &geom, const vector<vertexMap> &vm_all_verts, const vect
    // sort only when 's' is set
    bool sort_only = strchr(delete_elems.c_str(), 's');
    bool merge_verts = strchr(delete_elems.c_str(), 'v');
+   bool include_colors = (cg && !equiv_elems);
 
    vector<facesSort> fs;
 
@@ -181,7 +182,7 @@ void sort_faces(geom_if &geom, const vector<vertexMap> &vm_all_verts, const vect
    // load face sort vector
    for(unsigned int i=0;i<faces.size();i++) {
       col_val col;
-      if (cg) {
+      if (include_colors) {
          if (elem=='f')
             col = cg->get_f_col(i);
          else
@@ -262,7 +263,7 @@ void sort_faces(geom_if &geom, const vector<vertexMap> &vm_all_verts, const vect
             faces.push_back(fs[i].face);
             int f_idx = faces.size()-1;
 
-            if (cg) {
+            if (include_colors) {
                if (deleting_faces) {
                   if (elem=='f')
                      cg->set_f_col(f_idx,fs[i].average_col);
@@ -355,13 +356,14 @@ void sort_vertices(geom_if &geom, vector<vertexMap> &vm_all_verts, vector<vertex
    // sort only when 's' is set
    bool sort_only = strchr(delete_elems.c_str(), 's');
    bool merge_verts = strchr(delete_elems.c_str(), 'v');
+   bool include_colors = (cg && !equiv_elems);
 
    vector<vertSort> vs;
 
    // load vertex sort vector
    for(unsigned int i=0;i<verts.size();i++) {
       col_val col;
-      if (cg)
+      if (include_colors)
          col = cg->get_v_col(i);
       vs.push_back(vertSort(i,verts[i],col));
    }
@@ -397,12 +399,12 @@ void sort_vertices(geom_if &geom, vector<vertexMap> &vm_all_verts, vector<vertex
          }
          else {
             v++;
-            if (cg && !equiv_elems)
+            if (include_colors)
                vs[cur_undeleted].average_col = average_vert_color(vs, cur_undeleted, i, blend_type);
             cur_undeleted = j;
          }
       }
-      if (cg && !equiv_elems)
+      if (include_colors)
          vs[cur_undeleted].average_col = average_vert_color(vs, cur_undeleted, j, blend_type);
 
       vm_merged_verts.push_back(vertexMap(vs.back().vert_no,v));
@@ -417,7 +419,7 @@ void sort_vertices(geom_if &geom, vector<vertexMap> &vm_all_verts, vector<vertex
    for(unsigned int i=0;i<vs.size();i++) {
       if ( !vs[i].deleted ) {
          col_val col;
-         if(cg && !equiv_elems) {
+         if (include_colors) {
             if (merge_verts)
                col = vs[i].average_col;
             else
@@ -454,7 +456,7 @@ void sort_vertices(geom_if &geom, vector<vertexMap> &vm_all_verts, vector<vertex
       // write out sorted vertices and colors
       for(unsigned i=0; i<vspm.size(); i++) {
          verts.push_back(vspm[i].vert);
-         if(cg)
+         if (include_colors)
             cg->set_v_col(i,vspm[i].col);
       }
    }
