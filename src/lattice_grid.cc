@@ -269,9 +269,11 @@ void geom_spherical_clip(col_geom_v &geom, const double &radius, const vec3d &of
 
 void list_grid_radii(const string &file_name, const col_geom_v &geom, const vec3d &list_radii_center, int report_type, double eps)
 {
-   FILE *ofile = fopen(file_name.c_str(), "w");
+   FILE *ofile = stdout;  // write to stdout by default
+   if (file_name.length())
+      ofile = fopen(file_name.c_str(), "w");
    if(!ofile) {
-      fprintf(stderr, "could not output file \'%s\'", file_name.c_str());
+      fprintf(stderr, "could not output file \'%s\'\n", file_name.c_str());
       return;
    }
 
@@ -336,9 +338,11 @@ void list_grid_radii(const string &file_name, const col_geom_v &geom, const vec3
 
 void list_grid_struts(const string &file_name, const col_geom_v &geom, int report_type, double eps)
 {
-   FILE *ofile = fopen(file_name.c_str(), "w");
+   FILE *ofile = stdout;  // write to stdout by default
+   if (file_name.length())
+      ofile = fopen(file_name.c_str(), "w");
    if(!ofile) {
-      fprintf(stderr, "could not output file \'%s\'", file_name.c_str());
+      fprintf(stderr, "could not output file \'%s\'\n", file_name.c_str());
       return;
    }
 
