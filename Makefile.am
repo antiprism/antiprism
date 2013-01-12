@@ -23,8 +23,8 @@ distcleancheck_listfiles = \
         find -type f -exec sh -c 'test -f $(srcdir)/{} || echo {}' ';'
 
 
-supdir = $(datadir)/$(PACKAGE)-$(VERSION)
-docdir = $(datadir)/doc/$(PACKAGE)-$(VERSION)
+supdir = @datadir@/@PACKAGE@
+docdir = @docdir@
 doc_DATA = README README.git NEWS AUTHORS COPYING
 
 install-data-local:
