@@ -4,74 +4,68 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../aview/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
-
+<<EXAMPLES_START>>
 Display some polyhedra
-<PRE>
-   antiview poly1.off poly2.off poly3.off
-</PRE>
+<<CMDS_START>>
+antiview poly1.off poly2.off poly3.off
+<<CMDS_END>>
+
 Colour a polyhedron by polygon type and display it
-<PRE>
-   off_color -f N tr_cuboctahedron | antiview
-</PRE>
+<<CMDS_START>>
+off_color -f N tr_cuboctahedron | antiview
+<<CMDS_END>>
+
 Display a ball pack as balls
-<PRE>
-   packer 0.2 | antiview -v b
-</PRE>
+<<CMDS_START>>
+packer 0.2 | antiview -v b
+<<CMDS_END>>
+
 Draw an icosahedron without its faces
-<PRE>
-   antiview -x f icosahedron
-</PRE>
+<<CMDS_START>>
+antiview -x f icosahedron
+<<CMDS_END>>
+
 Display a proper coloured icosahedron without its vertex or edge elements
-<PRE>
-   off_color -f P icosahedron | antiview -x ve 
-</PRE>
+<<CMDS_START>>
+off_color -f P icosahedron | antiview -x ve 
+<<CMDS_END>>
+
 Display an icosahedron with thin vertex and edge elements
-<PRE>
-   antiview -v 0.01 -e 0.008 icosahedron
-</PRE>
+<<CMDS_START>>
+antiview -v 0.01 -e 0.008 icosahedron
+<<CMDS_END>>
+
 Display an icosahedron-based weave, excluding faces, and showing the
 edges in the face colour
-<PRE>
-   poly_weave icosahedron | off_color -f U -e F | antiview -v 0.1 -x f
-</PRE>
+<<CMDS_START>>
+poly_weave icosahedron | off_color -f U -e F | antiview -v 0.1 -x f
+<<CMDS_END>>
 
-<H2><A NAME="notes">
-Notes
-</A></H2>
+<<EXAMPLES_END>>
 
-Use <I>-v b</I> to draw ball packs.
-<P>
+
+<<NOTES_START>>
+Use <i>-v b</i> to draw ball packs.
+<p>
 There is a slicing plane just in front of the screen. When in slicing
 mode this plane can be moved forward and backwards. It may take a
 couple of forward drags with the mouse (or hold down the the up-arrow
 key for a few seconds) until this plane reaches the model and starts
 slicing into it.
-
+<<NOTES_END>>
 
 #include "<<END>>"

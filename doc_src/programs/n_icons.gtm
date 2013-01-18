@@ -4,99 +4,87 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
-
+<<EXAMPLES_START>>
 The Sphericon
-<PRE>
-   n_icons | antiview
-</PRE>
+<<CMDS_START>>
+n_icons | antiview
+<<CMDS_END>>
 
 The Dual of the Spherican
-<PRE>
-   n_icons -s | antiview
-</PRE>
+<<CMDS_START>>
+n_icons -s | antiview
+<<CMDS_END>>
 
 A Hybrid of the Sphericon and its Dual
-<PRE>
-   n_icons -H | antiview
-</PRE>
+<<CMDS_START>>
+n_icons -H | antiview
+<<CMDS_END>>
 
 The N-icon of 20 twisted 5 increments. The five surfaces are 
 colored with the default colors. No edges or vertices are shown.
-<PRE>
-   n_icons -n 20 -t 5 -f s | antiview
-</PRE>
+<<CMDS_START>>
+n_icons -n 20 -t 5 -f s | antiview
+<<CMDS_END>>
 
 Same as above but only using colors red, orange, and yellow.
-<PRE>
-   n_icons -n 20 -t 5 -f s -m map_red:orange:yellow% | antiview
-</PRE>
+<<CMDS_START>>
+n_icons -n 20 -t 5 -f s -m map_red:orange:yellow% | antiview
+<<CMDS_END>>
 
 Same as above but 50 percent transparent.
-<PRE>
-   n_icons -n 20 -t 5 -f s -m map_red:orange:yellow% -T 128 | antiview
-</PRE>
+<<CMDS_START>>
+n_icons -n 20 -t 5 -f s -m map_red:orange:yellow% -T 128 | antiview
+<<CMDS_END>>
 
 The N-icon of 30 twisted 5 increments. The faces are colored 
 white and the edges are the default colors.
-<PRE>
-   n_icons -n 30 -t 5 -f n -m map_white%,f -e s | antiview -e 0.1 -v 0.1
-</PRE>
+<<CMDS_START>>
+n_icons -n 30 -t 5 -f n -m map_white%,f -e s | antiview -e 0.1 -v 0.1
+<<CMDS_END>>
 
 The N-icon of 12/4 twisted 2 increments colored by compound.
-<PRE>
-   n_icons -n 12/4 -t 2 -f c | antiview
-</PRE>
+<<CMDS_START>>
+n_icons -n 12/4 -t 2 -f c | antiview
+<<CMDS_END>>
 
 The N-icon of 12/4 twisted 4 increments colored by compound. Shell model is created and 3/4 open to view interior.
-<PRE>
-   n_icons -n 12/4 -t 2 -f c -z 2 -M 36,27 | antiview
-</PRE>
+<<CMDS_START>>
+n_icons -n 12/4 -t 2 -f c -z 2 -M 36,27 | antiview
+<<CMDS_END>>
 
 The N-icon of 12/4 twisted 4 increments colored by compound. Star polygon model is created and 3/4 open to view interior.
-<PRE>
-   n_icons -n 12/4 -t 2 -f c -z 3 -M 36,27 | antiview
-</PRE>
+<<CMDS_START>>
+n_icons -n 12/4 -t 2 -f c -z 3 -M 36,27 | antiview
+<<CMDS_END>>
 
 The reporting subsystem is used. A list of even order N-icons with 
 twists between 3 and 30 and more than one surface are listed.
-<PRE>
-   n_icons -J n -K 3,30 -L
-</PRE>
+<<CMDS_START>>
+n_icons -J n -K 3,30 -L
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
-<H2><A NAME="notes">
-Notes
-</A></H2>
 
-<I>n_icons</I> was written by
-<A HREF="http://www.interocitors.com/polyhedra/">Roger Kaufman</A>.
+<<NOTES_START>>
+<i>n_icons</i> was written by
+<a href="http://www.interocitors.com/polyhedra/">Roger Kaufman</a>.
 For more details on the construction see Roger's
-<A HREF="http://www.interocitors.com/polyhedra/n_icons/index.html">
-N-icon study</A>.
+<a href="http://www.interocitors.com/polyhedra/n_icons/index.html">
+N-icon study</a>.
+<<NOTES_END>>
 
 #include "<<END>>"

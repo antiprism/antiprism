@@ -4,75 +4,61 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src_extra/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
-
+<<EXAMPLES_START>>
 Eden "in"
-<PRE>
-   dome_layer -r 0.9 -t eden geo_2_1_d | antiview -x f -v 0.02
-</PRE>
+<<CMDS_START>>
+dome_layer -r 0.9 -t eden geo_2_1_d | antiview -x f -v 0.02
+<<CMDS_END>>
 
 Eden "out"
-<PRE>
-   dome_layer -r 1.1 -t eden geo_2_1_d | antiview -x f -v 0.02
-</PRE>
+<<CMDS_START>>
+dome_layer -r 1.1 -t eden geo_2_1_d | antiview -x f -v 0.02
+<<CMDS_END>>
 
 Dual "in"
-<PRE>
-   dome_layer -r 0.9 -t dual geo_2_1_d | antiview -x f -v 0.02
-</PRE>
+<<CMDS_START>>
+dome_layer -r 0.9 -t dual geo_2_1_d | antiview -x f -v 0.02
+<<CMDS_END>>
 
 Dual "out"
-<PRE>
-   dome_layer -r 1.1 -t dual geo_2_1_d | antiview -x f -v 0.02
-</PRE>
+<<CMDS_START>>
+dome_layer -r 1.1 -t dual geo_2_1_d | antiview -x f -v 0.02
+<<CMDS_END>>
 
 Asm
-<PRE>
-   dome_layer -r 0.9 -t asm geo_2_1_d | antiview -x f -v 0.02
-</PRE>
+<<CMDS_START>>
+dome_layer -r 0.9 -t asm geo_2_1_d | antiview -x f -v 0.02
+<<CMDS_END>>
 
 "Honeycomb" "in"
-<PRE>
-   dome_layer -r 0.9 -t honeycomb geo_2_1_d | antiview -x f -v 0.02
-</PRE>
+<<CMDS_START>>
+dome_layer -r 0.9 -t honeycomb geo_2_1_d | antiview -x f -v 0.02
+<<CMDS_END>>
 
 "Honeycomb" "out"
-<PRE>
-   dome_layer -r 1.1 -t honeycomb geo_2_1_d | antiview -x f -v 0.02
-</PRE>
+<<CMDS_START>>
+dome_layer -r 1.1 -t honeycomb geo_2_1_d | antiview -x f -v 0.02
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
 
-<H2><A NAME="notes">
-Notes
-</A></H2>
-
+<<NOTES_START>>
 The source of the patterns was Tim Tyler's
-<A HREF="http://springie.com/gallery/">Springie Gallery</A>
-
+<a href="http://springie.com/gallery/">Springie Gallery</a>
+<<NOTES_END>>
 
 #include "<<END>>"

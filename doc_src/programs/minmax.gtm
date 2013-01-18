@@ -4,48 +4,37 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
-
+<<EXAMPLES_START>>
 Make a geometric representation of a polyhedron having only face data
-<PRE>
-   minmax -p u -n 100000 -o unscrambled.off scrambled.off
-</PRE>
-Run for a bit longer, don't need <I>-p u</I> this time
-<PRE>
+<<CMDS_START>>
+minmax -p u -n 100000 -o unscrambled.off scrambled.off
+<<CMDS_END>>
+
+Run for a bit longer, don't need <i>-p u</i> this time
+<<CMDS_START>>
    minmax -n 100000 -o unscrambled2.off unscrambled.off
-</PRE>
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
-<H2><A NAME="notes">
-Notes
-</A></H2>
 
+<<NOTES_START>>
 Doesn't always succeed. An option to keep the spherical polygons convex
 should improve it. The program shows the progress every 1000 iterations
 by printing the longest and shortest edge lengths.
+<<NOTES_END>>
 
 #include "<<END>>"

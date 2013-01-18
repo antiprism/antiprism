@@ -3,150 +3,135 @@
 #include "<<HEAD>>"
 #include "<<START>>"
 
+<<TITLE_HEAD>>
 
-<H1><<TITLE_CURRENT>></H1>
+<<TOP_LINKS>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
-
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
-
+<<EXAMPLES_START>>
 Specify a trapezohedron by its polygon fraction
-<PRE>
+<<CMDS_START>>
    iso_kite 5 | antiview
    iso_kite 3/2 | antiview
-</PRE>
+<<CMDS_END>>
 
 General member of series including deltoidal hexacontahedron, can be
 specified as 3 fractions, 2 fractions (the third defaults to 2) or
 by the triangle name (see <i>iso_kite -h</i> for the list of names).
-<PRE>
+<<CMDS_START>>
    iso_kite 5 3 2 | antiview
    iso_kite 5 3 | antiview
    iso_kite I1 | antiview
-</PRE>
+<<CMDS_END>>
 
 Get a list of all models, all models involving a 3 trapezohedron
 (parallelopiped), all models involving the (3 3 2) triangle series
-<PRE>
+<<CMDS_START>>
    iso_kite
    iso_kite -l list 3
    iso_kite -l list 3 3
-</PRE>
+<<CMDS_END>>
 
 Make the second model in each of these lists
-<PRE>
+<<CMDS_START>>
    iso_kite -l 2 | antiview
    iso_kite -l 2 3 | antiview
    iso_kite -l 2 3 3 | antiview
-</PRE>
+<<CMDS_END>>
 
 
 General member of series including deltoidal icositetrahedron. Set a
 height for the point along the first vertex
-<PRE>
+<<CMDS_START>>
    iso_kite -A 2.5 3 4 | antiview
-</PRE>
+<<CMDS_END>>
 
 General member of series including deltoidal icositetrahedron. The vertex
 order is significant
-<PRE>
+<<CMDS_START>>
    iso_kite -A 2.5 4 3 | antiview
-</PRE>
+<<CMDS_END>>
 
 Set a height for the C vertex, which is one of the kite's side vertices.
-<PRE>
+<<CMDS_START>>
    iso_kite -C 2.5 3 4 | antiview
-</PRE>
+<<CMDS_END>>
 
 Set any two heights of a Schwarz triangle model or both A and B
 for a trapezohedron (although some height combinations will produce
 a degenerate or non-constructible model).
-<PRE>
+<<CMDS_START>>
    iso_kite -A 1 -B 2 3 4 | antiview
    iso_kite -A 1 -C 2 3 4 | antiview
    iso_kite -B 2 -C 2 3 4 | antiview
    iso_kite -A 1 -B 1 3 | antiview
-</PRE>
+<<CMDS_END>>
 
 Negative heights are allowed, or instead of using a negative height for, say, A,
 the B and C fractions could be replaced with their supplements
-<PRE>
+<<CMDS_START>>
    iso_kite -A -2.5 5 3 2 | antiview
    iso_kite -A 2.5 5 3/2 2 | antiview
-</PRE>
+<<CMDS_END>>
 
 
 Colour faces around vertices of type A (the first vertex, in this case
 with angle 4) in sets
-<PRE>
+<<CMDS_START>>
    iso_kite -c A -A 2.5 4 3 | antiview
-</PRE>
+<<CMDS_END>>
 
 Colour faces around vertices of type B (the second vertex, in this case
 with angle 3) in sets
-<PRE>
+<<CMDS_START>>
    iso_kite -c B -A 2.5 4 3 | antiview
-</PRE>
+<<CMDS_END>>
 
 Colour faces around vertices of type C (the third vertex, in this case
 with angle 3). With vertex C only half the faces around each vertex have
 the same colour
-<PRE>
+<<CMDS_START>>
    iso_kite -c C -A 2.5 4 3 | antiview
-</PRE>
+<<CMDS_END>>
 
 Colour by component
-<PRE>
+<<CMDS_START>>
    iso_kite -c K -A 3 3 -l 5 | antiview
-</PRE>
+<<CMDS_END>>
 
 For some trapezohedron compounds, the colouring component is a pair of
 trapezohedra
-<PRE>
+<<CMDS_START>>
    iso_kite -c K -A 3 3 -l 6 | antiview
-</PRE>
+<<CMDS_END>>
 
 
 The dual models can be attractive
-<PRE>
+<<CMDS_START>>
    iso_kite -A 0.2 5/4 5/3 | pol_recip | antiview
-</PRE>
+<<CMDS_END>>
 
 Models with A or B as 2 will be degenerate, and have triangles for kites.
 These, and other, degenerate models cannot be used with the <i>-l</i>
 listing option
-<PRE>
+<<CMDS_START>>
    iso_kite 3 2 4| antiview
-</PRE>
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
 
-<H2><A NAME="notes">
-Notes
-</A></H2>
-
+<<NOTES_START>>
 See the Wikipedia page on
-<A HREF="http://en.wikipedia.org/wiki/Schwarz_triangle">Schwarz triangles</A>
+<a href="http://en.wikipedia.org/wiki/Schwarz_triangle">Schwarz triangles</a>
 for a description and list of triangles.
 
 

@@ -4,64 +4,51 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
-
+<<EXAMPLES_START>>
 Make a Root 10 Waterman polyhedron
-<PRE>
-    waterman -r 10,2 fcc | antiview
-</PRE>
-<P>
+<<CMDS_START>>
+waterman -r 10,2 fcc | antiview
+<<CMDS_END>>
+
 Make a Root 100 Waterman polyhedron, with symmetrically coloured faces
-<PRE>
-    waterman -r 100,2 fcc -F S | antiview
-</PRE>
-<P>
+<<CMDS_START>>
+waterman -r 100,2 fcc -F S | antiview
+<<CMDS_END>>
+
 Make a Root 100 Waterman polyhedron centred on an octahedron centre, with
 symmetrically coloured faces
-<PRE>
-    waterman -q 0.5,0.5,0.5 -r 100,2 fcc -F S | antiview
-</PRE>
+<<CMDS_START>>
+waterman -q 0.5,0.5,0.5 -r 100,2 fcc -F S | antiview
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
-   
-<H2><A NAME="notes">
-Notes
-</A></H2>
 
-<I>waterman</I> was written by
-<A HREF="http://www.interocitors.com/polyhedra/">Roger Kaufman</A>
+<<NOTES_START>>
+<i>waterman</i> was written by
+<a href="http://www.interocitors.com/polyhedra/">Roger Kaufman</a>
 (with contributions from Adrian Rossiter.)
-<P>
+<p>
 For more details about these polyhedra see 
-<A HREF="http://www.watermanpolyhedron.com/watermanpolyhedra1.html">
-Waterman Polyhedra</A>
+<a href="http://www.watermanpolyhedron.com/watermanpolyhedra1.html">
+Waterman Polyhedra</a>
 on Steve Waterman's site.
-<P>
+<p>
 The program uses an efficient algorithm that makes it suitable for
 calculating Waterman polyhedra up to root 1,000,000 and more.
+<<NOTES_END>>
 
 #include "<<END>>"

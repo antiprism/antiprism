@@ -4,58 +4,46 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
-
+<<EXAMPLES_START>>
 Make a snub cube
-<PRE>
-   repel -N 24 -l 15 | conv_hull -o snub_cube.off
-</PRE>
+<<CMDS_START>>
+repel -N 24 -l 15 | conv_hull -o snub_cube.off
+<<CMDS_END>>
+
 Make a snub cube in fewer iterations by not using adaptive shortening
-<PRE>
-   repel -N 24 -s 1 -l 15 | conv_hull -o snub_cube.off
-</PRE>
+<<CMDS_START>>
+repel -N 24 -s 1 -l 15 | conv_hull -o snub_cube.off
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
-<H2><A NAME="notes">
-Notes
-</A></H2>
 
+<<NOTES_START>>
 The default adaptive shortening of travel will not always be quickest.
-It is worth experimenting with specific values using option <I>-s</I>.
+It is worth experimenting with specific values using option <i>-s</i>.
 However, in the snub cube examples above the adaptive shortening gives
 better results, producing more accurate squares.
-<P>
+<p>
 The progress report includes the number of iterations, the greatest
 distance moved by a point, the shortening factor, and the sum of all
 the forces.
-<P>
+<p>
 If adaptive shortening is used then there is also a line of figures
 showing the number of times out of ten that the shortening factor
 was increased.
-
+<<NOTES_END>>
 
 #include "<<END>>"

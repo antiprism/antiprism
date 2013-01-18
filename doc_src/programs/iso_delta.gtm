@@ -4,57 +4,43 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
-
+<<EXAMPLES_START>>
 View polyhedron number 9 in the list
-<PRE>
-   iso_delta 9 | antiview
-</PRE>
+<<CMDS_START>>
+iso_delta 9 | antiview
+<<CMDS_END>>
 
 View 2 pairs of star-pentagon dipyramids at an angle of 3 degrees
-<PRE>
-   iso_delta -c k -n 5/2 -k 2 -a 3 | antiview
-</PRE>
+<<CMDS_START>>
+iso_delta -c k -n 5/2 -k 2 -a 3 | antiview
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
 
-<H2><A NAME="notes">
-Notes
-</A></H2>
-
-<I>iso_delta</I> was written by
-<A HREF="http://www.interocitors.com/polyhedra/">Roger Kaufman</A>.
-<P>
+<<NOTES_START>>
+<i>iso_delta</i> was written by
+<a href="http://www.interocitors.com/polyhedra/">Roger Kaufman</a>.
+<p>
 It is based on a paper by G. C. Shephard
-<I>Periodica Mathematica Hungarica, Volume 39, Numbers 1-3, 2000 ,
-pp. 83-106(24)</I>
+<i>Periodica Mathematica Hungarica, Volume 39, Numbers 1-3, 2000 ,
+pp. 83-106(24)</i>
 with enhancements by
-<A HREF="http://www.orchidpalms.com/polyhedra">Jim McNeill</A>
+<a href="http://www.orchidpalms.com/polyhedra">Jim McNeill</a>
 and Adrian Rossiter.
-
+<<NOTES_END>>
 
 #include "<<END>>"

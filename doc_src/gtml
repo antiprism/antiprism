@@ -697,7 +697,6 @@ sub GetPathToRoot
 sub ResolveIncludeFile
 {
     local ($name) = @_;
-
     $file = &GetValue("PATHNAME") . $name;
     $file =~ s/\/\//\//g;
     $file = $name if ( &GetValue("PATHNAME") eq "(((BLANK)))" );
@@ -1257,7 +1256,7 @@ sub ProcessProjectFile
         #
         # Included files.
         #
-        elsif ( /^include[ \t]/ )
+        elsif ( /^include[ \t]*/ )
         {
             chop;
             &Substitute();

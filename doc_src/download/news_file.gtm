@@ -7,12 +7,12 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<h1><<TITLE_CURRENT>></h1>
 
-<PRE>
+<pre>
 #entities ON
 #include "NEWS"
 #entities OFF
-</PRE>
+</pre>
 
 #include "<<END>>"

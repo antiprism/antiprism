@@ -4,72 +4,56 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
-
+<<EXAMPLES_START>>
 Distribute 200 points on a sphere 
-<PRE>
-   sph_saff 200 | antiview -v b
-</PRE>
+<<CMDS_START>>
+sph_saff 200 | antiview -v b
+<<CMDS_END>>
 
 Distribute 200 points on a sphere, start at the poles 
-<PRE>
-   sph_saff -p 200 | antiview -v b
-</PRE>
+<<CMDS_START>>
+sph_saff -p 200 | antiview -v b
+<<CMDS_END>>
 
 Distribute 200 points on a sphere, using a golden section offset
-<PRE>
-   sph_saff -a 222.49223595 200 | antiview -v b
-</PRE>
+<<CMDS_START>>
+sph_saff -a 222.49223595 200 | antiview -v b
+<<CMDS_END>>
 
 An attractive spiral
-<PRE>
-   sph_saff -a 65 500 | antiview -v b
-</PRE>
+<<CMDS_START>>
+sph_saff -a 65 500 | antiview -v b
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
 
-
-<H2><A NAME="notes">
-Notes
-</A></H2>
-
+<<NOTES_START>>
 An implementation of an
-<A HREF="http://www.math.niu.edu/~rusin/known-math/97/spherefaq">
+<a href="http://www.math.niu.edu/~rusin/known-math/97/spherefaq">
 "Easy method for a fairly good point distribution [Saff/Kuijlaars]"
-</A>
-<P> 
-<A HREF="http://www.ogre.nu/">Anton Sherwood</A> helped with
+</a>
+<p> 
+<a href="http://www.ogre.nu/">Anton Sherwood</a> helped with
 details of the algorithm. The angle offset option uses
 his method for
-<A HREF="http://www.ogre.nu/pack/pack.htm">spirals based on the
-golden ratio</A>.
-<P>
-The output can be run through <I>conv_hull</I> to create a polyhedron.
-
-
+<a href="http://www.ogre.nu/pack/pack.htm">spirals based on the
+golden ratio</a>.
+<p>
+The output can be run through <i>conv_hull</i> to create a polyhedron.
+<<NOTES_END>>
 
 #include "<<END>>"

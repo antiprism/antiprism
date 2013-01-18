@@ -4,84 +4,72 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
-
+<<EXAMPLES_START>>
 Create a .m file with LiveGraphics3D colouring to use as an example
-<PRE>
-   off_util snub_dodecahedron | off2m -t 0 -l > snub_dod.m
-</PRE>
+<<CMDS_START>>
+off_util snub_dodecahedron | off2m -t 0 -l > snub_dod.m
+<<CMDS_END>>
 
 Convert a LiveGraphics3D model to OFF format
-<PRE>
-   m2off snub_dod.m > snub_dod.off
-</PRE>
+<<CMDS_START>>
+m2off snub_dod.m > snub_dod.off
+<<CMDS_END>>
 
 Convert a LiveGraphics3D model to OFF format, colouring it similarly
 to the way LiveGraphics3D does, and view it
-<PRE>
-    m2off -C color.off snub_dod.m | off_color -f L -l color.off | antiview
-</PRE>
+<<CMDS_START>>
+m2off -C color.off snub_dod.m | off_color -f L -l color.off | antiview
+<<CMDS_END>>
 
 The next two examples use models from the 
-<A HREF="http://www.vis.uni-stuttgart.de/~kraus/LiveGraphics3D/examples/color_volumes.html">Color Volumes</A> page, which is one the
-<A HREF="http://www.vis.uni-stuttgart.de/~kraus/LiveGraphics3D/examples.html">LiveGraphics3D Examples</A> pages
-<P>
+<a href="http://www.vis.uni-stuttgart.de/~kraus/LiveGraphics3D/examples/color_volumes.html">Color Volumes</a> page, which is one the
+<a href="http://www.vis.uni-stuttgart.de/~kraus/LiveGraphics3D/examples.html">LiveGraphics3D Examples</a> pages
+<p>
 Convert a vertex only .m file, and view it
-<PRE>
-   m2off <A HREF="http://www.vis.uni-stuttgart.de/~kraus/LiveGraphics3D/examples/color_cylinder.m">color_cylinder.m</A> | antiview -v 0.14
-</PRE>
+<<CMDS_START>>
+m2off <a href="http://www.vis.uni-stuttgart.de/~kraus/LiveGraphics3D/examples/color_cylinder.m">color_cylinder.m</a> | antiview -v 0.14
+<<CMDS_END>>
 
 Show back face colors and start with the same viewpoint that
 LiveGraphics3D does
-<PRE>
-   m2off -b -v <A HREF="http://www.vis.uni-stuttgart.de/~kraus/LiveGraphics3D/examples/color_cube.m">color_cube.m</A> | antiview
-</PRE>
+<<CMDS_START>>
+m2off -b -v <a href="http://www.vis.uni-stuttgart.de/~kraus/LiveGraphics3D/examples/color_cube.m">color_cube.m</a> | antiview
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
 
-<H2><A NAME="notes">
-Notes
-</A></H2>
+<<NOTES_START>>
 The 'm' format is used by
-<A HREF="http://www.vis.uni-stuttgart.de/~kraus/LiveGraphics3D/">LiveGraphics3D </A>.
-<P>
+<a href="http://www.vis.uni-stuttgart.de/~kraus/LiveGraphics3D/">LiveGraphics3D </a>.
+<p>
 If faces in the .m file are displayed using LiveGraphics3D lighting
 it is possible that they may not also have particular colours
 assigned to them. In this case the colour used in the OFF file will
 be inherited from another element. It is likely that this will not be
 what is wanted, in which case the faces can be recoloured using
-<I>off_color</I>.
-<P>
+<i>off_color</i>.
+<p>
 Please,
-<A HREF="<<PATH_UP>>/about.html#contact">report any difficulties</A>
+<a href="<<PATH_UP>>/about.html#contact">report any difficulties</a>
 in converting .m files.
-<P>
+<p>
 
-<I>m2off</I> was written by
-<A HREF="http://www.interocitors.com/polyhedra/">Roger Kaufman</A>.
+<i>m2off</i> was written by
+<a href="http://www.interocitors.com/polyhedra/">Roger Kaufman</a>.
+<<NOTES_END>>
 
 #include "<<END>>"

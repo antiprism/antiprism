@@ -1,98 +1,13 @@
 define ANTIPRISM_DOC
 define OUTPUT_DIR ../
 
-define SPACE <<__PERL__(return " ";)>>
-define BREAK <<__PERL__(return "\n";)>>
-define QUOT <<__PERL__(return "\"";)>>
-
-define HL_HOME
-define HL_PROG
-define HL_EXAS
-define HL_ALB
-define HL_DOWN
-define HL_ABOUT
-
-define KEYWORDS polyhedron, polyhedra, sphere, 3d, vertex, ball, packing, OFF, model
-
-define __TOC_1_ITEM__(x,y) <LI><B><A HREF="x">y</A></B>
-define __TOC_2_ITEM__(x,y) <LI><A HREF="x">y</A>
-define __TOC_3_ITEM__(x,y) <LI><A HREF="x">y</A>
-define __TOC_4_ITEM__(x,y) <LI><A HREF="x">y</A>
-define __TOC_1__(x)        <UL>x<P></UL>
-define __TOC_2__(x)        <UL>x<P></UL>
-define __TOC_3__(x)        <UL>x</UL>
-define __TOC_4__(x)        <UL>x</UL>
-
-
+include "common_defs.inc"
 
 define PATH_UP ./
-
-define CGIDIR http://www.antiprism.com/cgi-bin/
-//define CGIDIR http://localhost/cgi-bin/
-
-define PROJECT_PAGE http://sourceforge.net/projects/antiprism
-define SITE_PAGE http://www.antiprism.com/
-
-define TITLE_SITE Antiprism - 
 
 define HEAD d_head.tpl
 define START d_start_frame.tpl
 define END d_end_frame.tpl
-
-define EMAIL adrian_r@teleline.es
-define EMAIL2 adrian_r@charlasfc.uklinux.net
-define WWWEMAIL www_admin@charlasfc.uklinux.net
-define AUTHOR Adrian Rossiter
-
-
-define CONT_START <CENTER><<BREAK>>\
-<TABLE CLASS=contbox WIDTH="80%" CELLPADDING="20" BORDER="0"><<BREAK>>\
-<TR><<BREAK>>\
-<TD>
-
-define CONT_END </TD><<BREAK>>\
-</TR><<BREAK>>\
-</TABLE><<BREAK>>\
-</CENTER><<BREAK>>\
-<<BREAK>>\
-<BR><<BREAK>><<BREAK>>
-
-define CONT_S_START <CENTER><<BREAK>>\
-<TABLE CLASS=contbox WIDTH="80%" CELLPADDING="2" BORDER="0"><<BREAK>>\
-<TR><<BREAK>>\
-<TD><<BREAK>>\
-<CENTER><<BREAK>>
-
-define CONT_S_END </CENTER><<BREAK>>\
-</TD><<BREAK>>\
-</TR><<BREAK>>\
-</TABLE><<BREAK>>\
-</CENTER><<BREAK>>\
-<<BREAK>>\
-<BR><<BREAK>><<BREAK>>
-
-define BARSPACE <SMALL>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;</SMALL>
-
-define ALPHA <B>Alpha</B>: development not completed, still being tested.
-
-define OPT_INP <DT><I>input_file</I><<BREAK>>\
-<DD>input file in OFF format, or if not given the program reads from stdin<<BREAK>>
-
-define OPT_INPS <DT><I>input_files</I><<BREAK>>\
-<DD>input files in OFF format, or if not given the program reads from standard input<<BREAK>>
-
-
-define OPT_H <DT><I>-h</I><<BREAK>>\
-<DD>program help<<BREAK>>
-
-define OPT_D <DT><I>-d &lt;dgts&gt;</I><<BREAK>>\
-<DD>number of significant digits for output (default 17) or if<<BREAK>>\
-    negative then the number of digits after the decimal point<<BREAK>>
-
-define OPT_O <DT><I>-o &lt;file&gt;</I><<BREAK>>\
-<DD>write output to file, if this option is not used<<BREAK>>\
-    the program writes to standard output<<BREAK>>
-    
 
 timestamp $dd/$MM/$yyyy
 mtimestamp $dd.$MM.$yyyy
@@ -100,8 +15,8 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/index.gtm 1 Programs and Documentation
 
 ./doc/antiview.gtm 2 antiview - interactive OFF file viewer
-./doc/off2pov.gtm 2 off2pov - convers an OFF file to POV format
-./doc/off2vrml.gtm 2 off2vrml - convert OFF files to VRML format
+./doc/off2pov.gtm 2 off2pov - convert an OFF file to POV format
+./doc/off2vrml.gtm 2 off2vrml - convert an OFF file to VRML format
 ./doc/off2m.gtm 2 off2m - convert an OFF file for LiveGraphics3D
 ./doc/off2crds.gtm 2 off2crds - convert an OFF file to a coordinate file
 ./doc/m2off.gtm 2 m2off - convert a LiveGraphics3D 'm' file to OFF format

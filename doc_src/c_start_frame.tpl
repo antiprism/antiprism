@@ -1,51 +1,51 @@
 <BODY>
-<TABLE WIDTH="100%" CELLSPACING=0 CELLPADDING=0 BORDER=0>
-<TR CLASS=surround>
-   <TD COLSPAN=3>
-      <TABLE CLASS=surround WIDTH="100%" BORDER=0 CELLSPACING=3>
-      <TR>
-      <TD WIDTH="95%">
-         <A HREF="<<PATH_UP>>index.html"><IMG SRC="<<PATH_UP>>css/images/logo_ant01.gif" ALT="Antiprism" BORDER=0 WIDTH=251 HEIGHT=55></A>
-      </TD>
-      <TD WIDTH="*" VALIGN="top">
+<table width="100%" cellspacing="0" cellpadding="0" border="0">
+<tr class="surround">
+   <td colspan="3">
+      <table class="surround" width="100%" border="0" cellspacing="3">
+      <tr>
+      <td width="95%">
+         <a href="<<PATH_UP>>index.html"><img src="<<PATH_UP>>css/images/logo_ant01.gif" alt="Antiprism" border="0" width="251" height="55"></a>
+      </td>
+      <td width="*" valign="top">
 #ifdef LINK_UP
-            <A HREF="<<LINK_UP>>"><IMG SRC="<<PATH_UP>>css/images/nav_up.gif" ALT="Up" BORDER=0 WIDTH=74 HEIGHT=19></A>
+            <a href="<<LINK_UP>>"><img src="<<PATH_UP>>css/images/nav_up.gif" alt="Up" border="0" width="74" height="19"></a>
 #else
-            <IMG SRC="<<PATH_UP>>css/images/space.gif" ALT="" BORDER=0 WIDTH=74 HEIGHT=19>
+            <img src="<<PATH_UP>>css/images/space.gif" alt="" border="0" width="74" height="19">
 #endif
-      </TD>
-      <TD WIDTH="*" VALIGN="top">
+      </td>
+      <td width="*" valign="top">
 #ifdef LINK_NEXT
-            <A HREF="<<LINK_NEXT>>"><IMG SRC="<<PATH_UP>>css/images/nav_next.gif" ALT="Next" BORDER=0 WIDTH=74 HEIGHT=19></A>
+            <a href="<<LINK_NEXT>>"><img src="<<PATH_UP>>css/images/nav_next.gif" alt="Next" border="0" width="74" height="19"></a>
 #else
-            <IMG SRC="<<PATH_UP>>css/images/space.gif" ALT="" BORDER=0 WIDTH=74 HEIGHT=19>
+            <img src="<<PATH_UP>>css/images/space.gif" alt="" border="0" width="74" height="19">
 #endif
-      </TD>
-      </TR>
-      </TABLE>
-   </TD>
-</TR>
-<TR CLASS=surround>
-<TD><IMG SRC="<<PATH_UP>>css/images/space.gif" WIDTH=1 HEIGHT=1 ALT=""></TD>
-<TD HEIGHT=8 WIDTH=8 CLASS=tlblur><IMG SRC="<<PATH_UP>>css/images/space.gif" WIDTH=8 HEIGHT=8 ALT=""></TD>
-<TD CLASS=tblur HEIGHT=8><IMG SRC="<<PATH_UP>>css/images/space.gif" WIDTH=8 HEIGHT=8 ALT=""></TD>
-</TR>
-<TR>
-   <TD CLASS=surround VALIGN=TOP>
-   <TABLE CLASS=surround BORDER=0 CELLSPACING=5>
-   <TR><TD <<HL_HOME>>><SMALL><B><A HREF="<<PATH_UP>>index.html">Home</A></B></SMALL></TD></TR>
-   <TR><TD <<HL_PROG>>><SMALL><B><A HREF="<<PATH_UP>>programs/index.html">Programs</A></B></SMALL></TD></TR>
-   <TR><TD <<HL_EXAS>>><SMALL><B><A HREF="<<PATH_UP>>examples/index.html">Examples</A></B></SMALL></TD></TR>
-   <TR><TD <<HL_ALB>>><SMALL><B><A HREF="<<PATH_UP>>album/index.html">Album</A></B></SMALL></TD></TR>
-   <TR><TD <<HL_DOWN>>><SMALL><B><A HREF="<<PATH_UP>>download/index.html">Download</A></B></SMALL></TD></TR>
-   <TR><TD><SMALL><B><A HREF="<<PROJECT_PAGE>>">Project</A></B></SMALL></TD></TR>
-   <TR><TD><SMALL><B><A HREF="http://tech.groups.yahoo.com/group/antiprism/">Forum</A></B></SMALL></TD></TR>
-   <TR><TD <<HL_ABOUT>>><SMALL><B><A HREF="<<PATH_UP>>about.html">About</A></B></SMALL></TD></TR>
-   </TABLE>
-   </TD>
-<TD VALIGN=TOP CLASS=lblur><IMG SRC="<<PATH_UP>>css/images/space.gif" WIDTH=8 HEIGHT=1 ALT=""></TD>
-<TD CLASS=page>
+      </td>
+      </tr>
+      </table>
+   </td>
+</tr>
+<tr class="surround">
+<td><img src="<<PATH_UP>>css/images/space.gif" width="1" height="1" alt=""></td>
+<td height="8" width="8" class="tlblur"><img src="<<PATH_UP>>css/images/space.gif" width="8" height="8" alt=""></td>
+<td class="tblur" height="8"><img src="<<PATH_UP>>css/images/space.gif" width="8" height="8" alt=""></td>
+</tr>
+<tr>
+   <td class="surround" valign="top">
+   <table class="surround" border="0" cellspacing="5">
+   <tr><td <<HL_HOME>>><small><b><a href="<<PATH_UP>>index.html">Home</a></b></small></td></tr>
+   <tr><td <<HL_PROG>>><small><b><a href="<<PATH_UP>>programs/index.html">Programs</a></b></small></td></tr>
+   <tr><td <<HL_EXAS>>><small><b><a href="<<PATH_UP>>examples/index.html">Examples</a></b></small></td></tr>
+   <tr><td <<HL_ALB>>><small><b><a href="<<PATH_UP>>album/index.html">Album</a></b></small></td></tr>
+   <tr><td <<HL_DOWN>>><small><b><a href="<<PATH_UP>>download/index.html">Download</a></b></small></td></tr>
+   <tr><td><small><b><a href="<<PROJECT_PAGE>>">Project</a></b></small></td></tr>
+   <tr><td><small><b><a href="http://tech.groups.yahoo.com/group/antiprism/">Forum</a></b></small></td></tr>
+   <tr><td <<HL_ABOUT>>><small><b><a href="<<PATH_UP>>about.html">About</a></b></small></td></tr>
+   </table>
+   </td>
+<td valign="top" class="lblur"><img src="<<PATH_UP>>css/images/space.gif" width="8" height="1" alt=""></td>
+<td class="page">
 
-<CENTER>
-<TABLE WIDTH="100%" BORDER="0"><TR><TD ALIGN=LEFT>
+<center>
+<table width="100%" border="0"><tr><td align="left">
 

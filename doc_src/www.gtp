@@ -1,104 +1,12 @@
 define OUTPUT_DIR /home/adrian/data/proj/antiprism/www/
-//define OUTPUT_DIR /home/adrian/data/proj/antiprism/doc/anti_gen/
 
-define SPACE <<__PERL__(return " ";)>>
-define BREAK <<__PERL__(return "\n";)>>
-
-define HL_HOME
-define HL_PROG
-define HL_EXAS
-define HL_ALB
-define HL_DOWN
-define HL_ABOUT
-
-define KEYWORDS polyhedron, polyhedra, sphere, 3d, vertex, ball, packing, OFF, model, geometry, lattice
-
-define __TOC_1_ITEM__(x,y) <LI><B><A HREF="x">y</A></B>
-define __TOC_2_ITEM__(x,y) <LI><A HREF="x">y</A>
-define __TOC_3_ITEM__(x,y) <LI><A HREF="x">y</A>
-define __TOC_4_ITEM__(x,y) <LI><A HREF="x">y</A>
-define __TOC_1__(x)        <UL>x<P></UL>
-define __TOC_2__(x)        <UL>x<P></UL>
-define __TOC_3__(x)        <UL>x</UL>
-define __TOC_4__(x)        <UL>x</UL>
-
-
+include "common_defs.inc"
 
 define PATH_UP ../
-
-define CGIDIR http://www.antiprism.com/cgi-bin/
-//define CGIDIR http://localhost/cgi-bin/
-
-define PROJECT_PAGE http://sourceforge.net/projects/antiprism
-
-define TITLE_SITE Antiprism - 
 
 define HEAD c_head.tpl
 define START c_start_frame.tpl
 define END c_end_frame.tpl
-
-define EMAIL adrian@antiprism.com
-//define EMAIL2 adrian_r@charlasfc.uklinux.net
-define WWWEMAIL www_admin@charlasfc.uklinux.net
-define AUTHOR Adrian Rossiter
-
-define CONT_START <CENTER><<BREAK>>\
-<TABLE CLASS=contbox WIDTH="80%" CELLPADDING="20" BORDER="0"><<BREAK>>\
-<TR><<BREAK>>\
-<TD>
-
-define CONT_END </TD><<BREAK>>\
-</TR><<BREAK>>\
-</TABLE><<BREAK>>\
-</CENTER><<BREAK>>\
-<<BREAK>>\
-<BR><<BREAK>><<BREAK>>
-
-define CONT_S_START <CENTER><<BREAK>>\
-<TABLE CLASS=contbox WIDTH="80%" CELLPADDING="2" BORDER="0"><<BREAK>>\
-<TR><<BREAK>>\
-<TD><<BREAK>>\
-<CENTER><<BREAK>>
-
-define CONT_S_END </CENTER><<BREAK>>\
-</TD><<BREAK>>\
-</TR><<BREAK>>\
-</TABLE><<BREAK>>\
-</CENTER><<BREAK>>\
-<<BREAK>>\
-<BR><<BREAK>><<BREAK>>
-
-define BARSPACE <SMALL>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;</SMALL>
-
-define ALPHA <B>Alpha</B>: development not completed, still being tested.
-
-define OPT_INP <DT><I>input_file</I><<BREAK>>\
-<DD>input file in OFF format, or if not given the program reads from standard input<<BREAK>>
-
-define OPT_INPS <DT><I>input_files</I><<BREAK>>\
-<DD>input files in OFF format, or if not given the program reads from standard input<<BREAK>>
-
-define OPT_H <DT><I>-h</I><<BREAK>>\
-<DD>program help<<BREAK>>
-
-define OPT_D <DT><I>-d &lt;dgts&gt;</I><<BREAK>>\
-<DD>number of significant digits for output (default 17) or if<<BREAK>>\
-    negative then the number of digits after the decimal point<<BREAK>>
-
-define OPT_O <DT><I>-o &lt;file&gt;</I><<BREAK>>\
-<DD>write output to file, if this option is not used<<BREAK>>\
-    the program writes to standard output<<BREAK>>
-    
-        
-        
-
-define REL_DATE 22 October 2012
-define VER 0.22
-define VER_PRE antiprism-
-define ANTIPRISM_RELEASE <<VER_PRE>><<VER>>
-define ANTIPRISM_SOURCE_FILE <<ANTIPRISM_RELEASE>>.tar.gz
-define ANTIPRISM_WIN_FILE <<ANTIPRISM_RELEASE>>_install.exe
-
 
 timestamp $dd/$MM/$yyyy
 mtimestamp $dd.$MM.$yyyy
@@ -106,12 +14,12 @@ mtimestamp $dd.$MM.$yyyy
 ./index.gtm 1 Polyhedron Modelling Software
 ./programs/index.gtm 2 Programs and Documentation
 ./programs/antiview.gtm 3 antiview - interactive OFF file viewer
-./programs/off2pov.gtm 3 off2pov - converts OFF files to POV format
-./programs/off2vrml.gtm 3 off2vrml - converts OFF files to VRML format
-./programs/off2m.gtm 3 off2m - converts an OFF file for LiveGraphics3D
-./programs/off2crds.gtm 3 off2crds - converts an OFF file to a coordinate file
-./programs/m2off.gtm 3 m2off - converts a LiveGraphics3D 'm' file to OFF format
-./programs/off_color.gtm 3 off_color - adds colours to an OFF file
+./programs/off2pov.gtm 3 off2pov - convert an OFF file to POV format
+./programs/off2vrml.gtm 3 off2vrml - convert an OFF file to VRML format
+./programs/off2m.gtm 3 off2m - convert an OFF file for LiveGraphics3D
+./programs/off2crds.gtm 3 off2crds - convert an OFF file to a coordinate file
+./programs/m2off.gtm 3 m2off - convert a LiveGraphics3D 'm' file to OFF format
+./programs/off_color.gtm 3 off_color - add colours to an OFF file
 ./programs/off_trans.gtm 3 off_trans - transformations (rotations etc) of OFF files
 ./programs/off_align.gtm 3 off_align - alignment of OFF files
 ./programs/off_util.gtm 3 off_util - utilities for OFF files
@@ -128,7 +36,7 @@ mtimestamp $dd.$MM.$yyyy
 ./programs/iso_kite.gtm 3 iso_kite - isohedral kite-faced polyhedra
 ./programs/conway.gtm 3 conway - Conway Notation transformations
 ./programs/poly_kscope.gtm 3 poly_kscope - polyhedral kaleidoscope
-./programs/unitile2d.gtm 3 unitile2d - makes uniform tilings on a surface
+./programs/unitile2d.gtm 3 unitile2d - make uniform tilings on a surface
 ./programs/string_art.gtm 3 string_art - string figures
 ./programs/lat_grid.gtm 3 lat_grid - lattices and grids with integer coordinates
 ./programs/bravais.gtm 3 bravais - Bravais lattices

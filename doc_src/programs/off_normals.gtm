@@ -4,56 +4,41 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
-
+<<EXAMPLES_START>>
 Show the normals with connectors to face centroids of a Rhombic Triacontahedron. Outward normals and connectors will be colored white
-<PRE>
-   off_normals rt -O white | antiview -v 0.075
-</PRE>
+<<CMDS_START>>
+off_normals rt -O white | antiview -v 0.075
+<<CMDS_END>>
 
 Show the normals of a Rhombic Triacontahedron which has been oriented for negative volume so normals now point inward
-<PRE>
-   planar -O n rt | off_normals -O white -d f | antiview -v 0.075 -x f
-</PRE>
+<<CMDS_START>>
+planar -O n rt | off_normals -O white -d f | antiview -v 0.075 -x f
+<<CMDS_END>>
 
 Show the edge normals of an icosidodecahedron
-<PRE>
-   off_normals icosidodecahedron -s e -O white | antiview -v 0.075
-</PRE>
+<<CMDS_START>>
+off_normals icosidodecahedron -s e -O white | antiview -v 0.075
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
 
-<H2><A NAME="notes">
-Notes
-</A></H2>
-
-<I>off_normals</I> was written by
-<A HREF="http://www.interocitors.com/polyhedra/">Roger Kaufman</A>.
-
-
+<<NOTES_START>>
+<i>off_normals</i> was written by
+<a href="http://www.interocitors.com/polyhedra/">Roger Kaufman</a>.
+<<NOTES_END>>
 
 #include "<<END>>"

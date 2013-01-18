@@ -4,57 +4,44 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
-
+<<EXAMPLES_START>>
 Octahedron stage of full jitterbug, include only the equilateral triangles
-<PRE>
-   jitterbug -f e 0.125 > jb_oct.off
-</PRE>
+<<CMDS_START>>
+jitterbug -f e 0.125 > jb_oct.off
+<<CMDS_END>>
 
 Icosahedron stage of icosahedron cycle jitterbug, in 3x3x3 lattice
-<PRE>
-   jitterbug -c i -l 3 0.75 > jb_ico.off
-</PRE>
+<<CMDS_START>>
+jitterbug -c i -l 3 0.75 > jb_ico.off
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
-<H2><A NAME="notes">
-Notes
-</A></H2>
 
+<<NOTES_START>>
 The models are based on R. Buckminster Fuller's
-<A HREF="http://www.rwgrayprojects.com/synergetics/s04/p6000.html#460.011">
-jitterbug transformation</A>.
-<P>
+<a href="http://www.rwgrayprojects.com/synergetics/s04/p6000.html#460.011">
+jitterbug transformation</a>.
+<p>
 The equilateral faces are given colour index 1, and the other faces
 have colour index 2. The faces can easily be given colour values
-using the <I>off_color</I> program. E.g.
-<PRE>
+using the <i>off_color</i> program. E.g.
+<<CMDS_START>>
    jitterbug -c i -l 3 0.75 | off_color -c 2 > jb_ico_col.off
-</PRE>
-
+<<CMDS_END>>
+<<NOTES_END>>
 
 #include "<<END>>"

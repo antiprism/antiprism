@@ -4,60 +4,47 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
-
+<<EXAMPLES_START>>
 Display a chunky figure-8 Klein bottle
-<PRE>
-   unitile2d -s K -R 1.5 6 | off_color -f N -s 5 | antiview
-</PRE>
+<<CMDS_START>>
+unitile2d -s K -R 1.5 6 | off_color -f N -s 5 | antiview
+<<CMDS_END>>
+
 Display the Roman surface, using a larger number of tiles
-<PRE>
-   unitile2d -s r -l 40 -w 40 9 | off_color -f N -s 2 | antiview
-</PRE>
+<<CMDS_START>>
+unitile2d -s r -l 40 -w 40 9 | off_color -f N -s 2 | antiview
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
-<H2><A NAME="notes">
-Notes
-</A></H2>
 
+<<NOTES_START>>
 This program is work in progress, and may change considerably in
 future releases.
-<P>
+<p>
 If a pattern doesn't mesh on a surface you may have to change options
 -l or -w slightly. Pattern 7 won't mesh on any non-orientable surface.
 Using values for option -T which are inappropriate for a particular
 surface may cause the tiling not to mesh.
-<P>
+<p>
 Some of the projective plane surfaces don't preserve the tiling as
 they map a line of the tiling rectangle onto a single point of the
 surface.
-<P>
+<p>
 Unused options are silently ignored.
-<P>
-
+<<NOTES_END>>
 
 #include "<<END>>"

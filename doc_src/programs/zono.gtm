@@ -4,47 +4,36 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
-
+<<EXAMPLES_START>>
 A medium sized polar zonohedron
-<PRE>
-   zono -P 50 -o polarzono.off
-</PRE>
+<<CMDS_START>>
+zono -P 50 -o polarzono.off
+<<CMDS_END>>
+
 A rhombic triacontaahedron
-<PRE>
-   zono -m v -o rh_tri.off icosahedron
-</PRE>
+<<CMDS_START>>
+zono -m v -o rh_tri.off icosahedron
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
-<H2><A NAME="notes">
-Notes
-</A></H2>
 
+<<NOTES_START>>
 An error calculating the convex hull probably indicates that the
 star was not three dimensional.
+<<NOTES_END>>
 
 #include "<<END>>"

@@ -5,54 +5,54 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<h1><<TITLE_CURRENT>></h1>
 
 <<CONT_S_START>>
-<SMALL><A HREF="#current">Current Release</A></SMALL>
+<small><a href="#current">Current Release</a></small>
 <<BARSPACE>>
-<SMALL><A HREF="#older">Older Code</A></SMALL>
+<small><a href="#older">Older Code</a></small>
 <<CONT_S_END>>
 
 
-<H2><A NAME="antiprism">
+<h2><a name="antiprism">
 Antiprism Programs
-</A></H2>
+</a></h2>
 
-<H3><A NAME="current">
+<h3><a name="current">
 Current Release
-</A></H3>
+</a></h3>
 
 The current version is
-<A HREF="https://sourceforge.net/projects/antiprism/files/antiprism"><<ANTIPRISM_RELEASE>></A>,
+<a href="https://sourceforge.net/projects/antiprism/files/antiprism"><<ANTIPRISM_RELEASE>></a>,
 released <<REL_DATE>>. Here are the
-<A HREF="readme_file.html">README</A>
+<a href="readme_file.html">README</a>
 and
-<A HREF="news_file.html">NEWS</A>
+<a href="news_file.html">NEWS</a>
 files.
-<P>
+<p>
 This is a beta release. The programs have not had wide use
 and probably contain a significant number of bugs. Please let me know
 if you come across any bugs, or anything not working as documented.
-<P>
+<p>
 I build the programs with the GNU tools on Linux and in the MSYS and
 Cygwin environments on Windows. I have received reports that Antiprism
 builds on FreeBSD and Mac OSX.
 
-<UL>
-<LI>Source code only - <A HREF="http://prdownloads.sourceforge.net/antiprism/<<ANTIPRISM_SOURCE_FILE>>?download"><<ANTIPRISM_SOURCE_FILE>></A> 
-<LI>Source code and Windows binaries - <A HREF="http://prdownloads.sourceforge.net/antiprism/<<ANTIPRISM_WIN_FILE>>?download"><<ANTIPRISM_WIN_FILE>></A>
-</UL>
+<ul>
+<li>Source code only - <a href="http://prdownloads.sourceforge.net/antiprism/<<ANTIPRISM_SOURCE_FILE>>?download"><<ANTIPRISM_SOURCE_FILE>></a> 
+<li>Source code and Windows binaries - <a href="http://prdownloads.sourceforge.net/antiprism/<<ANTIPRISM_WIN_FILE>>?download"><<ANTIPRISM_WIN_FILE>></a>
+</ul>
 
-The binaries have no external dependencies, but the <I>antiview</I>
+The binaries have no external dependencies, but the <i>antiview</i>
 viewer requires OpenGL. OpenGL and GLUT development libraries are
-required to build <I>antiview</I> from source.
+required to build <i>antiview</i> from source.
 
-<H3><A NAME="older">
+<h3><a name="older">
 Older Code
-</A></H3>
+</a></h3>
 
 Earlier versions of the code were released as
-<A HREF="http://packinon.sourceforge.net/download/">Packinon</A>,
+<a href="http://packinon.sourceforge.net/download/">Packinon</a>,
 which included a separate release of some Python programs.
 
 #include "<<END>>"

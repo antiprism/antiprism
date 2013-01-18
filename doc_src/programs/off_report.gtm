@@ -4,60 +4,45 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
-
+<<EXAMPLES_START>>
 Full report
 
-<PRE>
-   off_report -S A -C A poly.off
-</PRE>
+<<CMDS_START>>
+off_report -S A -C A poly.off
+<<CMDS_END>>
 
 Volume and area of a unit edged icosahedron
-
-<PRE>
+<<CMDS_START>>
    off_trans -s e icosahedron | off_report -S G
-</PRE>
+<<CMDS_END>>
 
 Report all angle information for a rhombic dodecahedron
-
-<PRE>
+<<CMDS_START>>
    pol_recip cuboctahedron | off_report -S Sa -C SD
-</PRE>
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
-<H2><A NAME="notes">
-Notes
-</A></H2>
 
+<<NOTES_START>>
 Use with caution! This program hasn't had extensive testing. It
 is very possible that some calculations
 may fail under particular conditions. Please, report any bugs.
-<P>
+<p>
 The options letters may change in future versions.
-
+<<NOTES_END>>
 
 #include "<<END>>"

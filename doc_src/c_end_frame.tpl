@@ -1,74 +1,74 @@
 
-<P><BR><P>
+<p><br><p>
 #ifdef LINK_NEXT
-<SMALL><I>
+<small><i>
 &nbsp;&nbsp;&nbsp;&nbsp;
 Next:
-<A HREF="<<LINK_NEXT>>"><<TITLE_NEXT>></A>
-</I></SMALL>
-<BR>
+<a href="<<LINK_NEXT>>"><<TITLE_NEXT>></a>
+</i></small>
+<br>
 #endif
 #ifdef LINK_UP
-<SMALL><I>
+<small><i>
 &nbsp;&nbsp;&nbsp;&nbsp;
 Up:
-<A HREF="<<LINK_UP>>"><<TITLE_UP>></A>
-</I></SMALL>
-<BR>
+<a href="<<LINK_UP>>"><<TITLE_UP>></a>
+</i></small>
+<br>
 #endif
 
 
-</TD></TR></TABLE>
-</CENTER>
-<BR><P>
+</td></tr></table>
+</center>
+<br><p>
 
 
-<CENTER>
-<SMALL><A HREF="<<PATH_UP>>index.html">Home</A></SMALL>
-<SMALL>&nbsp;&nbsp;|&nbsp;&nbsp;</SMALL>
-<SMALL><A HREF="<<PATH_UP>>programs/index.html">Programs</A></SMALL>
-<SMALL>&nbsp;&nbsp;|&nbsp;&nbsp;</SMALL>
-<SMALL><A HREF="<<PATH_UP>>examples/index.html">Examples</A></SMALL>
-<SMALL>&nbsp;&nbsp;|&nbsp;&nbsp;</SMALL>
-<SMALL><A HREF="<<PATH_UP>>album/index.html">Album</A></SMALL>
-<SMALL>&nbsp;&nbsp;|&nbsp;&nbsp;</SMALL>
-<SMALL><A HREF="<<PATH_UP>>download/index.html">Download</A></SMALL>
-<SMALL>&nbsp;&nbsp;|&nbsp;&nbsp;</SMALL>
-<SMALL><A HREF="<<PROJECT_PAGE>>">Project</A></SMALL>
-<SMALL>&nbsp;&nbsp;|&nbsp;&nbsp;</SMALL>
-<SMALL><A HREF="http://tech.groups.yahoo.com/group/antiprism/">Forum</A></SMALL>
-<SMALL>&nbsp;&nbsp;|&nbsp;&nbsp;</SMALL>
-<SMALL><A HREF="<<PATH_UP>>about.html">About</A></SMALL>
-</CENTER>
+<center>
+<small><a href="<<PATH_UP>>index.html">Home</a></small>
+<small>&nbsp;&nbsp;|&nbsp;&nbsp;</small>
+<small><a href="<<PATH_UP>>programs/index.html">Programs</a></small>
+<small>&nbsp;&nbsp;|&nbsp;&nbsp;</small>
+<small><a href="<<PATH_UP>>examples/index.html">Examples</a></small>
+<small>&nbsp;&nbsp;|&nbsp;&nbsp;</small>
+<small><a href="<<PATH_UP>>album/index.html">Album</a></small>
+<small>&nbsp;&nbsp;|&nbsp;&nbsp;</small>
+<small><a href="<<PATH_UP>>download/index.html">Download</a></small>
+<small>&nbsp;&nbsp;|&nbsp;&nbsp;</small>
+<small><a href="<<PROJECT_PAGE>>">Project</a></small>
+<small>&nbsp;&nbsp;|&nbsp;&nbsp;</small>
+<small><a href="http://tech.groups.yahoo.com/group/antiprism/">Forum</a></small>
+<small>&nbsp;&nbsp;|&nbsp;&nbsp;</small>
+<small><a href="<<PATH_UP>>about.html">About</a></small>
+</center>
 
-</TD>
-</TR>
+</td>
+</tr>
 
-<TR CLASS=surround>
-<TD><IMG SRC="<<PATH_UP>>css/images/space.gif" WIDTH=1 HEIGHT=1 ALT=""></TD>
-<TD HEIGHT=8 WIDTH=8 CLASS=blblur><IMG SRC="<<PATH_UP>>css/images/space.gif" WIDTH=8 HEIGHT=8 ALT=""></TD>
-<TD CLASS=bblur HEIGHT=8><IMG SRC="<<PATH_UP>>css/images/space.gif" WIDTH=8 HEIGHT=8 ALT=""></TD>
-</TR>
+<tr class="surround">
+<td><img src="<<PATH_UP>>css/images/space.gif" width="1" height="1" alt=""></td>
+<td height="8" width="8" CLASS="blblur"><img src="<<PATH_UP>>css/images/space.gif" width="8" height="8" alt=""></td>
+<td class="bblur" height="8"><img src="<<PATH_UP>>css/images/space.gif" width="8" height="8" alt=""></td>
+</tr>
 
-<TR CLASS=surround>
-   <TD COLSPAN=3>
-   <TABLE CLASS=surround WIDTH="100%">
-   <TR CLASS=surround>
-   <TD CLASS=surround>
-   <CENTER><SMALL>
-   <BR>
-   Contact: <A HREF="<<PATH_UP>>about.html#contact"><<EMAIL>></A>
+<tr class="surround">
+   <td colspan="3">
+   <table class="surround" width="100%">
+   <tr class="surround">
+   <td class="surround">
+   <center><small>
+   <br>
+   Contact: <a href="<<PATH_UP>>about.html#contact"><<EMAIL>></a>
    &nbsp;&nbsp;&nbsp;&nbsp;
     - 
    &nbsp;&nbsp;&nbsp;&nbsp;
    Modified <<MTIMESTAMP>>
-   </SMALL></CENTER>
-   </TD>
-   </TR>
-   </TABLE>
-   </TD>
-</TR>
-</TABLE>
+   </small></center>
+   </td>
+   </tr>
+   </table>
+   </td>
+</tr>
+</table>
 
-</BODY>
-</HTML>
+</body>
+</html>

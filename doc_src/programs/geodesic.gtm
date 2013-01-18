@@ -4,120 +4,110 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
+<<EXAMPLES_START>>
+A class ii icosahedral geodesic sphere with a pattern frequency of 4
+<<CMDS_START>>
+geodesic -c 2 -f 4 ico
+<<CMDS_END>>
 
-A Class II icosahedral geodesic sphere with a pattern frequency of 4
-<PRE>
-   geodesic -c 2 -f 4 ico
-</PRE>
-A Class II icosahedral geodesic sphere with a final step frequency of 4
-<PRE>
-   geodesic -c 2 -F 4 ico
-</PRE>
-A planar octahedron with a Class III 1,2 pattern repeated 3 times along
+A class ii icosahedral geodesic sphere with a final step frequency of 4
+<<CMDS_START>>
+geodesic -c 2 -f 4 ico
+<<CMDS_END>>
+
+A planar octahedron with a class iii 1,2 pattern repeated 3 times along
 an edge
-<PRE>
-   geodesic -M p -c 1,2 -f 3 oct
-</PRE>
+<<CMDS_START>>
+geodesic -m p -c 1,2 -f 3 oct
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
-<H2><A NAME="notes">
-Notes
-</A></H2>
 
-When an input file is specified the geodesic faces are coloured
+<<NOTES_START>>
+when an input file is specified the geodesic faces are coloured
 the same as the base polyhedron face they corespond to.
-<P>
-Geodesic faces may bridge across an edge of the base polyhedron.
-If the edge belongs to only one face, or is shared by faces with
+<p>
+geodesic faces may bridge across an edge of the base polyhedron.
+if the edge belongs to only one face, or is shared by faces with
 opposite orientations, the geodesic faces that bridge the edge
 will not be included in the output.
-<P>
-All the patterns may be specified by a pair of integers. If the
-integers are <I>a</I> and <I>b</I>,a triangular grid is laid out on
+<p>
+all the patterns may be specified by a pair of integers. if the
+integers are <i>a</i> and <i>b</i>,a triangular grid is laid out on
 the polyhedron face, having
-<I>(a&sup2;&nbsp;+&nbsp;ab&nbsp;+&nbsp;b&sup2;)/Highest&nbsp;Common&nbsp;Factor(a,&nbsp;b)</I>
-divisions. Taking the face edges in order it is posible, starting
-at a face vertex, to step <I>a</I> units in the direction of one edge, then
-<I>b</I> units in the direction of the following edge and, if lying on the
-face, this point will be a geodesic vertex. The process can be repeated
+<i>(a&sup2;&nbsp;+&nbsp;ab&nbsp;+&nbsp;b&sup2;)/highest&nbsp;common&nbsp;factor(a,&nbsp;b)</i>
+divisions. taking the face edges in order it is posible, starting
+at a face vertex, to step <i>a</i> units in the direction of one edge, then
+<i>b</i> units in the direction of the following edge and, if lying on the
+face, this point will be a geodesic vertex. the process can be repeated
 three times from this geodesic vertex, finding the original face vertex
-and up to two new geodesic vertices. The process is continued until all
+and up to two new geodesic vertices. the process is continued until all
 the geodesic vertices covering the face have been found.
-<P>
+<p>
 
-<TABLE BORDER=0 CELLSPACING="5">
-<TR>
-<TD ALIGN="CENTER"><B>0,6</B></TD>
-    <TD ALIGN="CENTER"><B>1,5</B></TD>
-    <TD ALIGN="CENTER"><B>2,4</B></TD>
-    <TD ALIGN="CENTER"><B>3,3</B></TD>
-    <TD ALIGN="CENTER"><B>4,2</B></TD>
-    <TD ALIGN="CENTER"><B>5,1</B></TD>
-    <TD ALIGN="CENTER"><B>6,0</B></TD>
-</TR>
-<TR>
-    <TD><IMG SRC="images/geo_T06.gif" ALT="" BORDER=0 WIDTH=70 HEIGHT=70></TD>
-    <TD><IMG SRC="images/geo_T15.gif" ALT="" BORDER=0 WIDTH=70 HEIGHT=70></TD>
-    <TD><IMG SRC="images/geo_T24.gif" ALT="" BORDER=0 WIDTH=70 HEIGHT=70></TD>
-    <TD><IMG SRC="images/geo_T33.gif" ALT="" BORDER=0 WIDTH=70 HEIGHT=70></TD>
-    <TD><IMG SRC="images/geo_T42.gif" ALT="" BORDER=0 WIDTH=70 HEIGHT=70></TD>
-    <TD><IMG SRC="images/geo_T51.gif" ALT="" BORDER=0 WIDTH=70 HEIGHT=70></TD>
-    <TD><IMG SRC="images/geo_T60.gif" ALT="" BORDER=0 WIDTH=70 HEIGHT=70></TD>
-</TR>
-<TR>
-    <TD ALIGN="CENTER"><I><SMALL>F6 Class I</SMALL></I></TD>
-    <TD ALIGN="CENTER"><I><SMALL>1x 1,5 Class III</SMALL></I></TD>
-    <TD ALIGN="CENTER"><I><SMALL>2x 1,2 Class III</SMALL></I></TD>
-    <TD ALIGN="CENTER"><I><SMALL>F6 Class II</SMALL></I></TD>
-    <TD ALIGN="CENTER"><I><SMALL>2x 2,1 Class III</SMALL></I></TD>
-    <TD ALIGN="CENTER"><I><SMALL>1x 5,1 Class III</SMALL></I></TD>
-    <TD ALIGN="CENTER"><I><SMALL>F6 Class I</SMALL></I></TD>
-</TR>
-</TABLE>
+<table border=0 cellspacing="5">
+<tr>
+<td align="center"><b>0,6</b></td>
+    <td align="center"><b>1,5</b></td>
+    <td align="center"><b>2,4</b></td>
+    <td align="center"><b>3,3</b></td>
+    <td align="center"><b>4,2</b></td>
+    <td align="center"><b>5,1</b></td>
+    <td align="center"><b>6,0</b></td>
+</tr>
+<tr>
+    <td><img src="images/geo_T06.gif" alt="" border=0 width=70 height=70></td>
+    <td><img src="images/geo_T15.gif" alt="" border=0 width=70 height=70></td>
+    <td><img src="images/geo_T24.gif" alt="" border=0 width=70 height=70></td>
+    <td><img src="images/geo_T33.gif" alt="" border=0 width=70 height=70></td>
+    <td><img src="images/geo_T42.gif" alt="" border=0 width=70 height=70></td>
+    <td><img src="images/geo_T51.gif" alt="" border=0 width=70 height=70></td>
+    <td><img src="images/geo_T60.gif" alt="" border=0 width=70 height=70></td>
+</tr>
+<tr>
+    <td align="center"><i><small>F6 Class I</small></i></td>
+    <td align="center"><i><small>1x 1,5 Class III</small></i></td>
+    <td align="center"><i><small>2x 1,2 Class III</small></i></td>
+    <td align="center"><i><small>F6 Class II</small></i></td>
+    <td align="center"><i><small>2x 2,1 Class III</small></i></td>
+    <td align="center"><i><small>1x 5,1 Class III</small></i></td>
+    <td align="center"><i><small>F6 Class I</small></i></td>
+</tr>
+</table>
     
-<P>
+<p>
 In terms of the general pattern, the Class I pattern is equivalent to
-<I>0,1</I> and the Class II pattern is equivalent to <I>1,1</I>.
-Any pattern <I>a,b</I> with <I>a,&nbsp;b&nbsp;&gt;&nbsp;0</I>
-and <I>a&nbsp;&ne;&nbsp;b</I>
-is a Class III pattern. Class III patterns are chieral, with <I>a,b</I>
-and <I>b,a</I> being mirror images of each other.
-<P>
+<i>0,1</i> and the Class II pattern is equivalent to <i>1,1</i>.
+Any pattern <i>a,b</i> with <i>a,&nbsp;b&nbsp;&gt;&nbsp;0</i>
+and <i>a&nbsp;&ne;&nbsp;b</i>
+is a Class III pattern. Class III patterns are chieral, with <i>a,b</i>
+and <i>b,a</i> being mirror images of each other.
+<p>
 A pattern given by a general integer pair has the property that if the
-pattern repeat frequency is <I>f</I> then it is possible to move between
-base vertices by moving <I>fa</I> vertices along one line of edges, then
-turning and moving <I>fb</I> along another line of edges. This establishes
-the relationship <I>F&nbsp;=&nbsp;f(a+b)</I> between the
-<I>-f</I> and <I>-F</I> options.
-<P>
+pattern repeat frequency is <i>f</i> then it is possible to move between
+base vertices by moving <i>fa</i> vertices along one line of edges, then
+turning and moving <i>fb</i> along another line of edges. This establishes
+the relationship <i>F&nbsp;=&nbsp;f(a+b)</i> between the
+<i>-f</i> and <i>-F</i> options.
+<p>
 For some patterns there will be geodesic vertices lying on the polyhedron
 edges between the face vertices. There will be
-<I>f x Highest&nbsp;Common&nbsp;Factor(a,&nbsp;b)</I>
+<i>f x Highest&nbsp;Common&nbsp;Factor(a,&nbsp;b)</i>
 steps between these geodesic vertices along each polyhedron edge.
-<P>
+<<NOTES_END>>
 
 #include "<<END>>"

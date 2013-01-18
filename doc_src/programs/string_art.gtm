@@ -4,55 +4,42 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
-
+<<EXAMPLES_START>>
 Nephroid
-<PRE>
-   string_art -c 180 -c 60 -o nephroid.off
-</PRE>
+<<CMDS_START>>
+string_art -c 180 -c 60 -o nephroid.off
+<<CMDS_END>>
 
 Astroid
-<PRE>
-   string_art -c 120 -S 1,0,0 -c 120 -S 0,1,0 -o astroid.off
-</PRE>
+<<CMDS_START>>
+string_art -c 120 -S 1,0,0 -c 120 -S 0,1,0 -o astroid.off
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
-<H2><A NAME="notes">
-Notes
-</A></H2>
 
+<<NOTES_START>>
 The elements can be placed anywhere in space. Attractive figures
 can be made by running strings between the edges of a polyhedron.
-The <I>poly_kscope</I> program can help with this. Example
+The <i>poly_kscope</i> program can help with this. Example
 stella octangula
 
-<PRE>
-   $ string_art -l 20 -T 1,0,1.414 -R 0,0,45 -l 20 -T -1,0,-1.414 -R 0,0,-45 | poly_kscope -s O > st_oct.off
-</PRE>
-
+<<CMDS_START>>
+string_art -l 20 -T 1,0,1.414 -R 0,0,45 -l 20 -T -1,0,-1.414 -R 0,0,-45 | poly_kscope -s O > st_oct.off
+<<CMDS_END>>
+<<NOTES_END>>
 
 #include "<<END>>"

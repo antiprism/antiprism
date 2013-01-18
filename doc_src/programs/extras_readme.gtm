@@ -4,12 +4,12 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<PRE>
+<pre class="prog_help">
 #entities ON
 #include "EXTRAS_README"
 #entities OFF
-</PRE>
+</pre>
 
 #include "<<END>>"

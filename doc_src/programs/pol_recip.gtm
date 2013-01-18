@@ -4,73 +4,60 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
+<<EXAMPLES_START>>
 Make a reciprocal pair. Make the dual of a cuboctahedron, a rhombic
 dodecahedron, and then make the dual of that. The final output is
 the same as the original cuboctahedron.
-<PRE>
-   pol_recip -o rh_dodec.off cuboct.off<BR>
-   pol_recip -o orig_cuboct.off rh_dodec.off
-</PRE>
+<<CMDS_START>>
+pol_recip -o rh_dodec.off cuboct.off<br>
+pol_recip -o orig_cuboct.off rh_dodec.off
+<<CMDS_END>>
 
 Make a cube whose vertices are the mid-points of an octahedron's faces
-<PRE>
-   pol_recip -o cube.off -R f octahedron.off
-</PRE>
+<<CMDS_START>>
+pol_recip -o cube.off -R f octahedron.off
+<<CMDS_END>>
 
 A polyhedron has a face made of vertices with indexes 0, 2, 4.
 Make a dual which has a vertex in the plane of this face
-<PRE>
-   pol_recip -o dual.off -R 0,2,4 poly.off
-</PRE>
+<<CMDS_START>>
+pol_recip -o dual.off -R 0,2,4 poly.off
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
 
-<H2><A NAME="notes">
-Notes
-</A></H2>
-
+<<NOTES_START>>
 A dual of a convex polyhedron is normally made with the centre of
 reciprocation at the polyhedron centre and the radius to just touch
 the edges.
-<P>
+<p>
 Some polyhedra have faces passing through their natural centre. This
 causes a problem when making a dual because the vertex which is dual
-to this face should be infinitely far away. <I>pol_recip</I> allows these
+to this face should be infinitely far away. <i>pol_recip</i> allows these
 vertices to be included by placing them at a specified (probably very large)
 distance normal to the face. Any programs dealing with these distant vertices
 (e.g. povray) can interpret these distant vertices accordingly.
-<P>
+<p>
 The default reciprocation centre and radius are found by the following
-algorithm. It aims to find a reciprocation sphere that is <I>balanced</I>,
+algorithm. It aims to find a reciprocation sphere that is <i>balanced</i>,
 in the sense that the polyhedron and its dual have the same relationship
 with the sphere.
 
-<PRE>
+<pre>
    centre = centroid of vertices of base polyhedron
    radius = average distance from centre to edges
    LOOP:
@@ -92,30 +79,30 @@ with the sphere.
 
       finish loop if change in centre and radius are small enough
 
-</PRE>
-<P>
-The aim is that this will be a <I>similar reciprocation</I> method.
+</pre>
+<p>
+The aim is that this will be a <i>similar reciprocation</i> method.
 That is to say
-<UL>
-<LI>It will be <I>reciprocal</I> - it will always reciprocate a polyhedron
+<ul>
+<li>It will be <i>reciprocal</i> - it will always reciprocate a polyhedron
     into the same polyhedron dual, and it will always reciprocate the dual
     into the original polyhedron
-<LI>It will <I>respect similarity</I> - similar polyhedra will have similar
+<li>It will <i>respect similarity</i> - similar polyhedra will have similar
     dual-pairs and similar duals
-</UL>
-<P>
+</ul>
+<p>
 The default method above tends to reciprocate in the midsphere, if
 it exists.
-<P>
+<p>
 The other available balanced reciprocation methods use the centroid
 of combined face near-points and vertex offsets, or the centroid
 of the near-points of all three elements combined. For all three
 cases the dual may be inverted in the reciprocation centre before
 the centroid calculation.
-<P>
-<I>-R e</I> may select a sphere suitable for self-duality.
-<P>
-<I>-R v</I> and <I>-R V</I> may always give the same results.
-
+<p>
+<i>-R e</i> may select a sphere suitable for self-duality.
+<p>
+<i>-R v</i> and <i>-R V</i> may always give the same results.
+<<NOTES_END>>
 
 #include "<<END>>"

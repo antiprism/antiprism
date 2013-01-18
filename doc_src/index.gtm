@@ -11,97 +11,97 @@
 #include "<<START>>"
 
 
-<H1 class="main_title"><IMG SRC="css/images/logo_ant02.gif" ALT="Antiprism" WIDTH="315" HEIGHT="100"></h1>
+<h1 class="main_title"><img src="css/images/logo_ant02.gif" alt="Antiprism" width="315" height="100"></h1>
 
 
-<CENTER>
-<TABLE WIDTH="70%">
-<TR><TD ALIGN=CENTER>
-<CENTER>
-<BIG><B>Antiprism Polyhedron Modelling Software</B></BIG>
-<BR>
-<I>Create, transform, analyse, and visualise polyhedra.</I>
-</CENTER>
-</TD></TR>
-</TABLE>
-</CENTER>
-<P>
+<center>
+<table width="70%">
+<tr><td align="center">
+<center>
+<BIG><b>Antiprism Polyhedron Modelling Software</b></BIG>
+<br>
+<i>Create, transform, analyse, and visualise polyhedra.</i>
+</center>
+</td></tr>
+</table>
+</center>
+<p>
 
-<CENTER>
-<SMALL><B><A HREF="<<PATH_UP>>about.html#updates">
-          What's new?</A>
-       </B>
+<center>
+<small><b><a href="<<PATH_UP>>about.html#updates">
+          What's new?</a>
+       </b>
        (<<TIMESTAMP>>)
-       </SMALL>
-</CENTER>
-<BR>
+       </small>
+</center>
+<br>
 
-<CENTER>
+<center>
 
-<CENTER>
-<IMG SRC="css/images/pols1.png" WIDTH="400" HEIGHT="80">
-</CENTER>
+<center>
+<img src="css/images/pols1.png" alt="" width="400" height="80">
+</center>
 
-<TABLE CLASS=tbl1 BORDER="0" CELLSPACING="1" CELLPADDING="20">
-<TR CLASS=tbl1>
-<TD>
+<table class="tbl1" border="0" cellspacing="1" cellpadding="20">
+<tr class="tbl1">
+<td>
 
-<UL>
-<LI><B><A HREF="<<PATH_UP>>programs/index.html">Programs</A></B>
+<ul>
+<li><b><a href="<<PATH_UP>>programs/index.html">Programs</a></b>
     and documentation
-<LI><B><A HREF="<<PATH_UP>>examples/index.html">Examples</A></B>
+<li><b><a href="<<PATH_UP>>examples/index.html">Examples</a></b>
     showing the programs at work
-<LI><B><A HREF="<<PATH_UP>>album/index.html">Album</A></B>
+<li><b><a href="<<PATH_UP>>album/index.html">Album</a></b>
     of images and animations made with the programs
-<LI><B><A HREF="<<PATH_UP>>download/index.html">Download</A></B>
+<li><b><a href="<<PATH_UP>>download/index.html">Download</a></b>
     programs and source code
-<LI><B><A HREF="<<PROJECT_PAGE>>">Project Page</A></B> at SourceForge
-<LI><B><A HREF="<<PATH_UP>>about.html">About the Site</A></B> with
-       <A HREF="<<PATH_UP>>about.html#map">site map</A> and
-       <A HREF="<<PATH_UP>>about.html#updates">latest updates</A>
-</UL>
-<P>
-</TD></TR>
-</TABLE>
-</CENTER>
+<li><b><a href="<<PROJECT_PAGE>>">Project Page</a></b> at SourceForge
+<li><b><a href="<<PATH_UP>>about.html">About the Site</a></b> with
+       <a href="<<PATH_UP>>about.html#map">site map</a> and
+       <a href="<<PATH_UP>>about.html#updates">latest updates</a>
+</ul>
+<p>
+</td></tr>
+</table>
+</center>
 
-<CENTER>
-<IMG SRC="css/images/pols2.png" WIDTH="400" HEIGHT="80">
-</CENTER>
-
-
-<CENTER>
-<TABLE WIDTH="80%" BORDER=0>
-<TR><TD ALIGN=CENTER>
+<center>
+<img src="css/images/pols2.png" alt="" width="400" height="80">
+</center>
 
 
-<SMALL>
+<center>
+<table width="80%" border=0>
+<tr><td align="center">
+
+
+<small>
 The Antiprism programs are open source and use the
-<A HREF="http://en.wikipedia.org/wiki/MIT_License">MIT License</A>,
+<a href="http://en.wikipedia.org/wiki/MIT_License">MIT License</a>,
 or similar permissive licences.
-</SMALL>
-<P>
-<SMALL>
+</small>
+<p>
+<small>
 The project is hosted at SourceForge, see the
-<A HREF="<<PROJECT_PAGE>>">Antiprism Project Page</A>.
+<a href="<<PROJECT_PAGE>>">Antiprism Project Page</a>.
 Package releases are available from the 
-<A HREF="http://sourceforge.net/project/showfiles.php?group_id=176443">Files Area</A>. Development can be followed through the
-<A HREF="https://sourceforge.net/scm/?type=git&group_id=176443">Git Repository</A>.
-</SMALL>
-<P>
-<SMALL>
+<a href="http://sourceforge.net/project/showfiles.php?group_id=176443">Files Area</a>. Development can be followed through the
+<a href="https://sourceforge.net/scm/?type=git&group_id=176443">Git Repository</a>.
+</small>
+<p>
+<small>
 The 
-<A HREF="http://tech.groups.yahoo.com/group/antiprism/">Antiprism List</A>
+<a href="http://tech.groups.yahoo.com/group/antiprism/">Antiprism List</a>
 can be used to ask for support, give feedback, or generally
 discuss the Antiprism programs.
-</SMALL>
+</small>
 
-</TD></TR>
-</TABLE>
-</CENTER>
-<P><BR>
-<CENTER>
-<IMG SRC="css/images/ico_sym.png" WIDTH="480" HEIGHT="120">
-</CENTER>
+</td></tr>
+</table>
+</center>
+<p><br>
+<center>
+<img src="css/images/ico_sym.png" alt="" width="480" height="120">
+</center>
 
 #include "<<END>>"

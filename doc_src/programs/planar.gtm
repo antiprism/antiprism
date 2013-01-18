@@ -4,86 +4,72 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
-
+<<EXAMPLES_START>>
 Display uniform compounds without flashing, compare the command
-below with <TT>antiview uc6</TT> .
-<PRE>
-   planar -d tile uc6 | antiview
-</PRE>
+below with <tt>antiview uc6</tt> .
+<<CMDS_START>>
+planar -d tile uc6 | antiview
+<<CMDS_END>>
 
 Make a compound of three triangular prisms, colour faces by part, then
 blend the result
-<PRE>
-   polygon pri 12/4 | off_color -f K | planar -d tile | antiview
-</PRE>
+<<CMDS_START>>
+polygon pri 12/4 | off_color -f K | planar -d tile | antiview
+<<CMDS_END>>
 
 Same as above, but this time merge the faces instead of tiling
-<PRE>
-   polygon pri 12/4 | off_color -f K | planar -d merge | antiview
-</PRE>
+<<CMDS_START>>
+polygon pri 12/4 | off_color -f K | planar -d merge | antiview
+<<CMDS_END>>
 
 Make a compound of four 5/2 star prisms, coloured by compound and blended using RGB. Edges are also blended
-<PRE>
-   planar -d tile -M rgb uc21_n5/2k4 -E e | antiview -v 0.01
-</PRE>
+<<CMDS_START>>
+planar -d tile -M rgb uc21_n5/2k4 -E e | antiview -v 0.01
+<<CMDS_END>>
 
 Same as above but edges and vertices are supressed in antiview
-<PRE>
-   planar -d tile -M rgb uc21_n5/2k4 | antiview -x ve
-</PRE>
+<<CMDS_START>>
+planar -d tile -M rgb uc21_n5/2k4 | antiview -x ve
+<<CMDS_END>>
 
 Same as above but modulo2 faces are made invisible
-<PRE>
-   planar -d tile -M rgb -p 2 uc21_n5/2k4 | antiview -x ve
-</PRE>
+<<CMDS_START>>
+planar -d tile -M rgb -p 2 uc21_n5/2k4 | antiview -x ve
+<<CMDS_END>>
 
 The faces of uniform compound 75 are colored by winding number
-<PRE>
-   planar -d tile -W -m map_white:red uc75 | antiview -x ve
-</PRE>
+<<CMDS_START>>
+planar -d tile -W -m map_white:red uc75 | antiview -x ve
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
-<H2><A NAME="notes">
-Notes
-</A></H2>
 
+<<NOTES_START>>
 Overlapping coplanar polygons of different colours are not generally
-handled well by display programs. In <I>antiview</I>, for example,
+handled well by display programs. In <i>antiview</i>, for example,
 the colour of the overlapping region may switch rapidly as a model
-is rotated, producing a flashing effect. The <I>planar</I> program
+is rotated, producing a flashing effect. The <i>planar</i> program
 provides a solution to this by replacing the regions of overlap with
 non-overlapping polygons. The new polygons may be coloured with a
 blend of the colours from the overlapping polygons.
-<P>
+<p>
 
-<I>planar</I> was written by
-<A HREF="http://www.interocitors.com/polyhedra/">Roger Kaufman</A>.
-<P>
-
+<i>planar</i> was written by
+<a href="http://www.interocitors.com/polyhedra/">Roger Kaufman</a>.
+<<NOTES_END>>
 
 #include "<<END>>"

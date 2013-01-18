@@ -4,69 +4,60 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
-
+<<EXAMPLES_START>>
 Display a ball pack as balls
-<PRE>
-   packer 2 10 |  off2vrml -xef -v b -o pack.wrl
-</PRE>
+<<CMDS_START>>
+packer 2 10 |  off2vrml -xef -v b -o pack.wrl
+<<CMDS_END>>
+
 Display an icosahedron without its faces
-<PRE>
-   off2vrml -x f -o icosa.wrl icosahedron
-</PRE>
+<<CMDS_START>>
+off2vrml -x f -o icosa.wrl icosahedron
+<<CMDS_END>>
+
 Display an icosahedron without its vertex or edge elements
-<PRE>
-   off2vrml -x ef -o icosa.wrl icosahedron
-</PRE>
+<<CMDS_START>>
+off2vrml -x ef -o icosa.wrl icosahedron
+<<CMDS_END>>
+
 Display an icosahedron with thin vertex and edge elements
-<PRE>
-   off2vrml -v 0.01 -e 0.008 -o icosa.wrl icosahedron
-</PRE>
+<<CMDS_START>>
+off2vrml -v 0.01 -e 0.008 -o icosa.wrl icosahedron
+<<CMDS_END>>
+
 Display a polyhedron with self-intersecting polygons, using
 transparent faces
-<PRE>
-   polygon -t anti 5/3 | off2vrml -F 0.3,0.6,0.8,0.5 -o anti.wrl
-</PRE>
+<<CMDS_START>>
+polygon -t anti 5/3 | off2vrml -F 0.3,0.6,0.8,0.5 -o anti.wrl
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
-<H2><A NAME="notes">
-Notes
-</A></H2>
 
+<<NOTES_START>>
 When viewing in the VRML browser the rotation centre will most likely
-be assigned to the Look At point. Rotations given with option <I>-R</I>
+be assigned to the Look At point. Rotations given with option <i>-R</i>
 happen prior to viewing and use the actual rotation centre.
-<P>
-Use <I>-v b</I> to draw ball packs.
-<P>
+<p>
+Use <i>-v b</i> to draw ball packs.
+<p>
 OFF files with a lot of elements will produce large VRML files that
 may be difficult to render on some machines. Excluding vertex and
 edge elements will greatly reduce the resources required to render
 the VRML file.
-
+<<NOTES_END>>
 
 #include "<<END>>"

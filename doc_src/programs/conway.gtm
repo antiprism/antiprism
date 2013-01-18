@@ -4,75 +4,72 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
-
+<<EXAMPLES_START>>
 A truncated octahedron
-<PRE>
-   conway tk4Y4 | antiview
-</PRE>
+<<CMDS_START>>
+conway tk4Y4 | antiview
+<<CMDS_END>>
 
 A Great rhombicuboctahedron with coloured faces
-<PRE>
-   conway -c m -f n dmO | antiview
-</PRE>
+<<CMDS_START>>
+conway -c m -f n dmO | antiview
+<<CMDS_END>>
 
 A snub geodesic sphere
-<PRE>
-   conway s geo_3 | antiview
-</PRE>
+<<CMDS_START>>
+conway s geo_3 | antiview
+<<CMDS_END>>
 
 A snub pentagrammic antiprism
-<PRE>
-   conway s ant5/2 | antiview
-</PRE>
+<<CMDS_START>>
+conway s ant5/2 | antiview
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
-<H2><A NAME="notes">
-Notes
-</A></H2>
 
-<I>conway</I> was written by
-<A HREF="http://www.interocitors.com/polyhedra/">Roger Kaufman</A>.
+<<NOTES_START>>
+<i>conway</i> was written by
+<a href="http://www.interocitors.com/polyhedra/">Roger Kaufman</a>.
 It uses algorithms by George W. Hart,
-<A HREF="http://www.georgehart.com/">http://www.georgehart.com/</A>.
-<P>
+<a href="http://www.georgehart.com/">http://www.georgehart.com/</a>.
+<p>
 The Conway Notation algorithms were adapted from the
 Javascript on George Hart's
-<A HREF="http://www.georgehart.com/virtual-polyhedra/conway_notation.html">
-Conway Notation</A> page.
-<P>
+<a href="http://www.georgehart.com/virtual-polyhedra/conway_notation.html">
+Conway Notation</a> page.
+<p>
 Canonicalization and planarization may not always converge on
 a convex polyhedron.
-<P>
+<p>
 George Hart has a page on
-<A HREF="http://www.georgehart.com/virtual-polyhedra/canonical.html">
-canonicalization</A>.
+<a href="http://www.georgehart.com/virtual-polyhedra/canonical.html">
+canonicalization</a>.
 The 'Mathematica' algorithms have been written to follow his
-<A HREF="http://library.wolfram.com/infocenter/Articles/2012/">
-Mathematica implementation</A>
+<a href="http://library.wolfram.com/infocenter/Articles/2012/">
+Mathematica implementation</a>
+<p>
+The following extended help for the program may be displayed with
+<i>conway -H</i>
+<pre class="prog_help">
+<<__SYSTEM__(../src/<<BASENAME>> -H > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</pre>
+<<NOTES_END>>
 
 #include "<<END>>"

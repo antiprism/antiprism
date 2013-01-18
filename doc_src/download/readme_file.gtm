@@ -6,12 +6,12 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<h1><<TITLE_CURRENT>></h1>
 
-<PRE>
+<pre>
 #entities ON
 #include "README"
 #entities OFF
-</PRE>
+</pre>
 
 #include "<<END>>"

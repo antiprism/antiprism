@@ -4,64 +4,52 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src_extra/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
-
+<<EXAMPLES_START>>
 Default, an in out pattern
-<PRE>
-   spidron dod | antiview -v 0.01
-</PRE>
+<<CMDS_START>>
+spidron dod | antiview -v 0.01
+<<CMDS_END>>
 
 Out only, to points
-<PRE>
-   spidron dod -a 60 -b 72 -p 1 | antiview -v 0.01
-</PRE>
+<<CMDS_START>>
+spidron dod -a 60 -b 72 -p 1 | antiview -v 0.01
+<<CMDS_END>>
 
 Out only, flaring out
-<PRE>
-   spidron dod -a 72 -b 60 -p 1 | antiview -v 0.1
-</PRE>
+<<CMDS_START>>
+spidron dod -a 72 -b 60 -p 1 | antiview -v 0.1
+<<CMDS_END>>
 
 Colour is taken from the base model edges
-<PRE>
-   off_color dod -e P -m map_red:orange:white | spidron -a 60 -b 72 -p 1 | antiview
-</PRE>
+<<CMDS_START>>
+off_color dod -e P -m map_red:orange:white | spidron -a 60 -b 72 -p 1 | antiview
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
-<H2><A NAME="notes">
-Notes
-</A></H2>
 
-The <I>spidron</I> program makes spidron pyramid-style models based on
+<<NOTES_START>>
+The <i>spidron</i> program makes spidron pyramid-style models based on
 D&aacute;niel Erd&eacute;ly's
-<A HREF="http://www.spidron.hu/main.html">Spidron</A>.
-<P>
+<a href="http://www.spidron.hu/main.html">Spidron</a>.
+<p>
 The program does not include the spidron-nest construction.
-<P>
+<p>
 Spidron units are coloured according to the colours of the corresponding
 edges on the base polyhedron.
+<<NOTES_END>>
 
 #include "<<END>>"

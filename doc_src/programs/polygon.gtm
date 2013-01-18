@@ -4,72 +4,59 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
-
+<<EXAMPLES_START>>
 A cube with edges of 2 units
-<PRE>
-   polygon -e 2 -l 2 pri 4 | antiview
-</PRE>
+<<CMDS_START>>
+polygon -e 2 -l 2 pri 4 | antiview
+<<CMDS_END>>
 
 A hexagonal based pyramid
-<PRE>
-   polygon pyr 6 | antiview
-</PRE>
+<<CMDS_START>>
+polygon pyr 6 | antiview
+<<CMDS_END>>
 
 A uniform pentagrammic antiprism
-<PRE>
-   polygon -e 1 -E 1 ant 5/2 | antiview
-</PRE>
+<<CMDS_START>>
+polygon -e 1 -E 1 ant 5/2 | antiview
+<<CMDS_END>>
 
 A uniform pentagrammic crossed antiprism
-<PRE>
-   polygon -e 1 -E 1 ant 5/3 | antiview
-</PRE>
+<<CMDS_START>>
+polygon -e 1 -E 1 ant 5/3 | antiview
+<<CMDS_END>>
 
 A uniform crossed gyroelongated pentagrammic dipyramid
-<PRE>
-   polygon -e 1 -E 1 -s gyro dip 5/3 | antiview
-</PRE>
+<<CMDS_START>>
+polygon -e 1 -E 1 -s gyro dip 5/3 | antiview
+<<CMDS_END>>
 
 A hexagonal trapezohedron
-<PRE>
-   polygon -s trap dip 6  | antiview
-</PRE>
+<<CMDS_START>>
+polygon -s trap dip 6  | antiview
+<<CMDS_END>>
 
 A twisted hexagonal trapezohedron
-<PRE>
-   polygon -s trap -a 45 dip 6  | antiview
-</PRE>
+<<CMDS_START>>
+polygon -s trap -a 45 dip 6  | antiview
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
 
-
-<H2><A NAME="notes">
-Notes
-</A></H2>
+<<NOTES_START>>
+<<NOTES_END>>
 
 #include "<<END>>"

@@ -1,0 +1,132 @@
+define REL_DATE 18 January 2013
+define VER 0.23.pre02
+define VER_PRE antiprism-
+define ANTIPRISM_RELEASE <<VER_PRE>><<VER>>
+define ANTIPRISM_SOURCE_FILE <<ANTIPRISM_RELEASE>>.tar.gz
+define ANTIPRISM_WIN_FILE <<ANTIPRISM_RELEASE>>_install.exe
+
+
+define SPACE <<__PERL__(return " ";)>>
+define BREAK <<__PERL__(return "\n";)>>
+define QUOT <<__PERL__(return "\"";)>>
+
+define HL_HOME
+define HL_PROG
+define HL_EXAS
+define HL_ALB
+define HL_DOWN
+define HL_ABOUT
+
+define KEYWORDS polyhedron, polyhedra, sphere, 3d, vertex, ball, packing, OFF, model, geometry, lattice
+
+define __TOC_1_ITEM__(x,y) <li><b><a href="x">y</a></b>
+define __TOC_2_ITEM__(x,y) <li><a href="x">y</a>
+define __TOC_3_ITEM__(x,y) <li><a href="x">y</a>
+define __TOC_4_ITEM__(x,y) <li><a href="x">y</a>
+define __TOC_1__(x)        <ul>x<p></ul>
+define __TOC_2__(x)        <ul>x<p></ul>
+define __TOC_3__(x)        <ul>x</ul>
+define __TOC_4__(x)        <ul>x</ul>
+
+define CGIDIR http://www.antiprism.com/cgi-bin/
+//define CGIDIR http://localhost/cgi-bin/
+
+define PROJECT_PAGE http://sourceforge.net/projects/antiprism
+define SITE_PAGE http://www.antiprism.com/
+
+define TITLE_SITE Antiprism - 
+
+define EMAIL adrian@antiprism.com
+define AUTHOR Adrian Rossiter
+
+define TITLE_HEAD <h1>\
+<!-- TITLE_START -->\
+<<TITLE_CURRENT>>\
+<!-- TITLE_END -->\
+</h1><<BREAK>>
+
+define USAGE_START <h2><a name="usage">\
+Usage\
+</a></h2><<BREAK>>\
+<!-- USAGE_START --><<BREAK>>
+
+define USAGE_END <!-- USAGE_END --><<BREAK>>
+
+
+define EXAMPLES_START <h2><a name="examples">\
+Examples\
+</a></h2><<BREAK>>\
+<!-- EXAMPLES_START --><<BREAK>>
+
+define EXAMPLES_END <!-- EXAMPLES_END -->
+
+define NOTES_START <h2><a name="notes">\
+Notes\
+</a></h2><<BREAK>>\
+<!-- NOTES_START --><<BREAK>>
+
+define NOTES_END <!-- NOTES_END --><<BREAK>>
+
+define CMDS_START <br /><pre class="cmds">
+define CMDS_END </pre><br /><br />
+
+define CONT_START <center><<BREAK>>\
+<table class="contbox" width="80%" cellpadding="20" border="0"><<BREAK>>\
+<tr><<BREAK>>\
+<td>
+
+define CONT_END </td><<BREAK>>\
+</tr><<BREAK>>\
+</table><<BREAK>>\
+</center><<BREAK>>\
+<<BREAK>>\
+<br><<BREAK>><<BREAK>>
+
+define CONT_S_START <center><<BREAK>>\
+<table class="contbox" width="80%" cellpadding="2" border="0"><<BREAK>>\
+<tr><<BREAK>>\
+<td><<BREAK>>\
+<center><<BREAK>>
+
+define CONT_S_END </center><<BREAK>>\
+</td><<BREAK>>\
+</tr><<BREAK>>\
+</table><<BREAK>>\
+</center><<BREAK>>\
+<<BREAK>>\
+<br><<BREAK>><<BREAK>>
+
+define BARSPACE <small>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;</small>
+
+define TOP_LINKS <<CONT_S_START>><<BREAK>>\
+<small><a href="#usage">Usage</a></small><<BREAK>>\
+<<BARSPACE>><<BREAK>>\
+<small><a href="#examples">Examples</a></small><<BREAK>>\
+<<BARSPACE>><<BREAK>>\
+<small><a href="#notes">Notes</a></small><<BREAK>>\
+<<CONT_S_END>><<BREAK>>
+
+define ALPHA <b>Alpha</b>: development not completed, still being tested.
+
+define OPT_INP <dt><i>input_file</i><<BREAK>>\
+<dd>input file in OFF format, or if not given the program reads from standard input<<BREAK>>
+
+define OPT_INPS <dt><i>input_files</i><<BREAK>>\
+<dd>input files in OFF format, or if not given the program reads from standard input<<BREAK>>
+
+define OPT_H <dt><i>-h</i><<BREAK>>\
+<dd>program help<<BREAK>>
+
+define OPT_D <dt><i>-d &lt;dgts&gt;</i><<BREAK>>\
+<dd>number of significant digits for output (default 17) or if<<BREAK>>\
+    negative then the number of digits after the decimal point<<BREAK>>
+
+define OPT_O <dt><i>-o &lt;file&gt;</i><<BREAK>>\
+<dd>write output to file, if this option is not used<<BREAK>>\
+    the program writes to standard output<<BREAK>>
+    
+        
+        
+
+
+

@@ -1,32 +1,24 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
-<HTML>
-<HEAD>
-<LINK REL=StyleSheet HREF="<<PATH_UP>>css/antiprism_web.css" TYPE="text/css">
-<LINK REL="icon" HREF="<<PATH_UP>>favicon.ico" TYPE="image/x-icon">
-<LINK REL="shortcut icon" HREF="<<PATH_UP>>favicon.ico" TYPE="image/x-icon">
-<LINK REL="Start" HREF="<<PATH_UP>>index.html">
-#ifdef LINK_NEXT
-<LINK REL="Next" HREF="<<LINK_NEXT>>">
-#endif
-#ifdef LINK_PREV
-<LINK REL="Prev" HREF="<<LINK_PREV>>">
-#endif
-<LINK REL="Contents" HREF="<<PATH_UP>>about.html#map">
+<html>
+<head>
+<link rel="stylesheet" href="<<PATH_UP>>css/antiprism_web.css" type="text/css">
+<link rel="icon" href="<<PATH_UP>>favicon.ico" type="image/x-icon">
+<link rel="shortcut icon" href="<<PATH_UP>>favicon.ico" type="image/x-icon">
 
-<META NAME="author" CONTENT="<<AUTHOR>>">
-<META HTTP-EQUIV="reply-to" CONTENT="<<EMAIL>>">
+<meta name="author" content="<<AUTHOR>>">
+<meta http-equiv="reply-to" content="<<EMAIL>>">
 
 #ifdef DESCRIPTION
-<META NAME="description" CONTENT="
+<meta name="description" content="
         <<DESCRIPTION>>
 ">
 #endif
 
-<META NAME="keywords" CONTENT="
+<meta name="keywords" content="
         <<KEYWORDS>>
 ">
  
-<TITLE><<TITLE_SITE>><<TITLE_CURRENT>></TITLE>
-</HEAD>
+<title><<TITLE_SITE>><<TITLE_CURRENT>></title>
+</head>
 
 

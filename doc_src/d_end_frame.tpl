@@ -1,24 +1,27 @@
 
-<P>
+<p>
 #ifdef LINK_UP
-<SMALL>
+<small>
 Up:
-<A HREF="<<LINK_UP>>"><<TITLE_UP>></A>
-<BR>
-</SMALL>
+<a href="<<LINK_UP>>"><<TITLE_UP>></a>
+<br>
+</small>
 #endif
 
 #ifdef LINK_NEXT
-<SMALL>
+<small>
 Next:
-<A HREF="<<LINK_NEXT>>"><<TITLE_NEXT>></A>
-</SMALL>
+<a href="<<LINK_NEXT>>"><<TITLE_NEXT>></a>
+</small>
 #endif
 
-<CENTER><SMALL>
-   Antiprism Documentation <<MTIMESTAMP>> -
-   <A HREF="<<SITE_PAGE>>"><<SITE_PAGE>></A>
-</SMALL></CENTER>
+<div class=footer>
+<small>
+   Antiprism Documentation -
+   <a href="<<SITE_PAGE>>"><<SITE_PAGE>></a> -
+   Generated <<MTIMESTAMP>>
+</small>
+</div>
 
-</BODY>
-</HTML>
+</body>
+</html>

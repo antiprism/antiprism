@@ -5,222 +5,222 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
 <<CONT_S_START>>
-<SMALL><A HREF="#resources">Resources</A></SMALL>
+<small><a href="#resources">Resources</a></small>
 <<BARSPACE>>
-<SMALL><A HREF="#access">Access</A></SMALL>
+<small><a href="#access">Access</a></small>
 <<BARSPACE>>
-<SMALL><A HREF="#models">Models</A></SMALL>
+<small><a href="#models">Models</a></small>
 <<BARSPACE>>
-<SMALL><A HREF="#cmaps">Colour Maps</A></SMALL>
+<small><a href="#cmaps">Colour Maps</a></small>
 <<BARSPACE>>
-<SMALL><A HREF="#lights">Lights</A></SMALL>
+<small><a href="#lights">Lights</a></small>
 <<BARSPACE>>
-<SMALL><A HREF="#incs">POV-Ray Incs</A></SMALL>
+<small><a href="#incs">POV-Ray Incs</a></small>
 <<CONT_S_END>>
 
-<H2><A NAME="resources">
+<h2><a name="resources">
 Antiprism Resources
-</A></H2>
+</a></h2>
 
 Antiprism includes a number of resources, which are either internal
 or external. Internal resources are accessed by name and are generated
 by Antiprism. External resources are support files distributed with
 Antiprism. They are actual files and can be accessed directly. They are
 useful as examples and as a starting point for creating new resources.
-<P>
+<p>
 Nearly all the resource files may be used, modified and redistributed
 without restriction (check the begining of each resource file for details.)
-<P>
+<p>
 Please,
-<A HREF="mailto:<<EMAIL>>">send me</A>
+<a href="mailto:<<EMAIL>>">send me</a>
 any resources that you create and would like to share with other
 Antiprism users.
 
-<H2><A NAME="usage">
+<h2><a name="usage">
 Accessing the Resources
-</A></H2>
+</a></h2>
 
 If Antiprism has been installed then the external resources
 are automatically available by their names. The resource names
 are case insensitive. If Antiprism is not installed then
-set the <TT>ANTTIPRISM_DATA</TT> environment variable to
-point to the <TT>share</TT> directory of the Antiprism distribution.
-<P>
+set the <tt>ANTTIPRISM_DATA</tt> environment variable to
+point to the <tt>share</tt> directory of the Antiprism distribution.
+<p>
 How to set this variable will depend on your system.
-<P>
-<UL>
-<LI>Example DOS command
-    <PRE>set ANTIPRISM_DATA="c:\some\dir\antiprism-0.xx\share"</PRE>
-<LI>Example bash command
-    <PRE>export ANTIPRISM_DATA="/home/user/antiprism-0.xx/share"</PRE>
-</UL>
+<p>
+<ul>
+<li>Example DOS command
+    <pre>set ANTIPRISM_DATA="c:\some\dir\antiprism-0.xx\share"</pre>
+<li>Example bash command
+    <pre>export ANTIPRISM_DATA="/home/user/antiprism-0.xx/share"</pre>
+</ul>
 
 Otherwise, the resource files are just ordinary files so simply
 give the full path to the resource you want to use.
-<P>
+<p>
 When you specify a filename the program will look for the file
 in three places in this order
-<OL>
-<LI>The current working directory
-<LI>The relevant directory in <TT>ANTTIPRISM_DATA</TT> (if set)
-<LI>The relevant directory in the installed data directory (if installed)
-</OL>
-A data directory may include a file called <TT>alt_names.txt</TT>. This
+<ol>
+<li>The current working directory
+<li>The relevant directory in <tt>ANTTIPRISM_DATA</tt> (if set)
+<li>The relevant directory in the installed data directory (if installed)
+</ol>
+A data directory may include a file called <tt>alt_names.txt</tt>. This
 contains a list of alternative names for the files in that particular
 data directory. The resource name is searched for in the alternative
 names if it does not refer to a file in the directory. The format is
-<TT>alt_name = file_name</TT>.
+<tt>alt_name = file_name</tt>.
 
-<H2><A NAME="models">
+<h2><a name="models">
 Models
-</A></H2>
+</a></h2>
 
-<B>Directory:</B> <TT>models</TT>
-<P>
+<b>Directory:</b> <tt>models</tt>
+<p>
 Internal model resources include
-<UL>
-<LI><I>Platonic, Archimedean and other Uniform polyhedra</I>
-    (see <TT>off_util -H uniform</TT>)
-<LI><I>Johnson polyhedra</I>
-    (see <TT>off_util -H johnson</TT>)
-<LI><I>Polygon-based polyhedra such as prisms, antiprisms,
+<ul>
+<li><i>Platonic, Archimedean and other Uniform polyhedra</i>
+    (see <tt>off_util -H uniform</tt>)
+<li><i>Johnson polyhedra</i>
+    (see <tt>off_util -H johnson</tt>)
+<li><i>Polygon-based polyhedra such as prisms, antiprisms,
 pyramids, dipyramids, cupolas, orthobicupolas, gyrobicupolas and
-snub-antiprisms</I>
-    (see <TT>off_util -H polygon</TT>)
-</UL>
-<P>
+snub-antiprisms</i>
+    (see <tt>off_util -H polygon</tt>)
+</ul>
+<p>
 The resource directory includes 
-<A HREF="http://members.aol.com/hedrondude/polyhedra12.html">
-Bower's short names</A> for the uniform polyhedra.
+<a href="http://members.aol.com/hedrondude/polyhedra12.html">
+Bower's short names</a> for the uniform polyhedra.
 
-<H2><A NAME="cmaps">
+<h2><a name="cmaps">
 Colour Maps
-</A></H2>
+</a></h2>
 
-<B>Directory:</B> <TT>col_maps</TT>
-<P>
+<b>Directory:</b> <tt>col_maps</tt>
+<p>
 OFF elements may be coloured by index numbers. Colour maps provide
 a way to convert these index numbers into colour values. As well as
 the Antiprism colour map format the progams also understand
-<I>Gimp Palette</I> format and <I>Fractint</I> colour maps. Colour
-maps are used by <I>off_color -m</I>,  <I>antiview -m</I> and
-<I>n_icons -M</I>.
+<i>Gimp Palette</i> format and <i>Fractint</i> colour maps. Colour
+maps are used by <i>off_color -m</i>,  <i>antiview -m</i> and
+<i>n_icons -M</i>.
 
-<DL>
-<DT><I>X11</I> (549 colours)
-<DD>Broad range of named colours from X11's rgb.txt. The names may also be used
+<dl>
+<dt><i>X11</i> (549 colours)
+<dd>Broad range of named colours from X11's rgb.txt. The names may also be used
     to specify colours on the command line.
-    <P>
-<DT><I>html</I> (140 colours)
-<DD>Broad range of colours. These are the colours that can be used by
+    <p>
+<dt><i>html</i> (140 colours)
+<dd>Broad range of colours. These are the colours that can be used by
     name in HTML.
-    <P>
-<DT><I>jumble</I> (100 colours)
-<DD>Broad range of colours, with adjacent colours not alike.
-    <P>
-<DT><I>5levels</I> (125 colours)
-<DD>The combinations of five levels each of red, green and blue
-    <P>
-<DT><I>ms</I> (48 colours)
-<DD>A color map based on the Micosoft color dialog.
-    <P>
-<DT><I>grey16, grey64, grey256</I> (16, 64, 256 colours)
-<DD>Grey scales running from black to white
-    <P>
-<DT><I>grey_wrap16, grey_wrap64, grey_wrap256</I> (16, 64, 256 colours)
-<DD>Grey scales running from black to white and back again.
-    <P>
-<DT><I>rainbow, rainbowg, rainbowc</I> (256 colours)
-<DD>Vivid rainbows that wrap. <I>rainbow</I> has the full range of colours,
-    <I>rainbowg</I> emphasises green and lacks cyan,
-    <I>rainbowc</I> emphasises cyan and lacks green.
-    <P>
-<DT><I>spectrum</I> (401 colours)
-<DD>Colours from the spectrum.
-    <P>
-<DT><I>iscc</I> (267 colours)
-<DD><A HREF="http://tx4.us/nbs-iscc.htm">NBS/ISCC color system centroids</A>
+    <p>
+<dt><i>jumble</i> (100 colours)
+<dd>Broad range of colours, with adjacent colours not alike.
+    <p>
+<dt><i>5levels</i> (125 colours)
+<dd>The combinations of five levels each of red, green and blue
+    <p>
+<dt><i>ms</i> (48 colours)
+<dd>A color map based on the Micosoft color dialog.
+    <p>
+<dt><i>grey16, grey64, grey256</i> (16, 64, 256 colours)
+<dd>Grey scales running from black to white
+    <p>
+<dt><i>grey_wrap16, grey_wrap64, grey_wrap256</i> (16, 64, 256 colours)
+<dd>Grey scales running from black to white and back again.
+    <p>
+<dt><i>rainbow, rainbowg, rainbowc</i> (256 colours)
+<dd>Vivid rainbows that wrap. <i>rainbow</i> has the full range of colours,
+    <i>rainbowg</i> emphasises green and lacks cyan,
+    <i>rainbowc</i> emphasises cyan and lacks green.
+    <p>
+<dt><i>spectrum</i> (401 colours)
+<dd>Colours from the spectrum.
+    <p>
+<dt><i>iscc</i> (267 colours)
+<dd><a href="http://tx4.us/nbs-iscc.htm">NBS/ISCC color system centroids</a>
      chart of named colours.
-    <P>
-<DT><I>vga</I> (267 colours)
-<DD>Original VGA named colours.
-</DL>
+    <p>
+<dt><i>vga</i> (267 colours)
+<dd>Original VGA named colours.
+</dl>
 
 More colour maps are available from
-<A HREF="http://www.iosart.com/firefox/colorzilla/palettes.html">
-Colorzilla Palettes</A>.
+<a href="http://www.iosart.com/firefox/colorzilla/palettes.html">
+Colorzilla Palettes</a>.
 
-<H2><A NAME="lights">
+<h2><a name="lights">
 Lights
-</A></H2>
+</a></h2>
 
-<B>Directory:</B> <TT>col_lights</TT>
-<P>
+<b>Directory:</b> <tt>col_lights</tt>
+<p>
 Lights are OFF files whose vertex elements are coloured. These
 colours are taken as lights in the direction of the vertices,
 and are used to colour the elements of other OFF files. Lights
-are used by <I>off_color -l</I>.
+are used by <i>off_color -l</i>.
 
-<DL>
-<DT><I>default</I>
-<DD>Red, green and blue opposite their complements on the vertices of
+<dl>
+<dt><i>default</i>
+<dd>Red, green and blue opposite their complements on the vertices of
     an octahedron. This makes a rainbow effect on a sphere, and is
-    the default lighting in <I>off_color</I>.
-    <P>
-<DT><I>lg3d</I>
-<DD>Lighting similar to LiveGraphics3D lighting effect.
-    <P>
-<DT><I>rgbw</I>
-<DD>Red, green, blue, and white on the vertices of a tetrahedron.
-    <P>
-<DT><I>pastel</I>
-<DD>Like <I>default</I> but using pastel colours for a softer rainbow
+    the default lighting in <i>off_color</i>.
+    <p>
+<dt><i>lg3d</i>
+<dd>Lighting similar to LiveGraphics3D lighting effect.
+    <p>
+<dt><i>rgbw</i>
+<dd>Red, green, blue, and white on the vertices of a tetrahedron.
+    <p>
+<dt><i>pastel</i>
+<dd>Like <i>default</i> but using pastel colours for a softer rainbow
     effect.
-</DL>
+</dl>
 
-<H2><A NAME="incs">
+<h2><a name="incs">
 POV-Ray Include Files
-</A></H2>
+</a></h2>
 
 Antiprism will convert OFF files to POV-Ray format. The POV-Ray file
 is written in such a way that much of the final presentation can be
 modified after the file is written. One way to override the defaults
 and preset values is with POV-Ray include files. POV-Ray include files
-are used by <I>off2pov</I>. See especially
-<A HREF="off2pov.html#struct">POV-Ray file structure</A>.
-<P>
+are used by <i>off2pov</i>. See especially
+<a href="off2pov.html#struct">POV-Ray file structure</a>.
+<p>
 Some include files have user configurable variables. These are
 described at the start of the file. They can be set in several ways -
-<UL>
-<LI>on the POV-Ray command line, if the variable holds a floating point e.g.
-    <PRE>povray Declare=some_val=1.0 file.pov</PRE>
+<ul>
+<li>on the POV-Ray command line, if the variable holds a floating point e.g.
+    <pre>povray Declare=some_val=1.0 file.pov</pre>
 
-<LI>in another include file, which is included earlier. It may be
+<li>in another include file, which is included earlier. It may be
     convenient to create the file on the command line e.g.
-    <PRE>echo "#declare some_tex=texture{T_Brass_4A}"&gt;default_pov.inc &amp;&amp; povray file.pov</PRE>
+    <pre>echo "#declare some_tex=texture{T_Brass_4A}"&gt;default_pov.inc &amp;&amp; povray file.pov</pre>
 
-<LI>in the include file itself, which should be copied elsewhere and the
+<li>in the include file itself, which should be copied elsewhere and the
     modifications applied to the copy.
-</UL>
+</ul>
 
-<DL>
-<DT><I>rot90.inc</I>
-<DD>faces are converted to a ring around the face normal at the centroid,
+<dl>
+<dt><i>rot90.inc</i>
+<dd>faces are converted to a ring around the face normal at the centroid,
     struts lead to the face's edge centres. Edges are convverted to a
     ring around the edge at the edge centre.
-</DL>
+</dl>
 
-<H2><A NAME="incs">
+<h2><a name="incs">
 Extras
-</A></H2>
+</a></h2>
 
 The extra resources are unsupported, and provided for interest only.
 They may be useful as examples. Programs or scripts may require
 modification before they will work. For further details see the
-<A HREF="extras_readme.html">Extras README</A> file.
+<a href="extras_readme.html">Extras README</a> file.
 
 
 

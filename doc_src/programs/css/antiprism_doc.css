@@ -3,6 +3,15 @@ body {
   color: black
 }
 
+.header { 
+  color: orange;
+  background: #602525;
+  padding: 2px;
+  border: 1px solid #602525;
+  overflow: auto;
+  width: 100%;
+}
+
 h1 {
   color: #D04040;
   border: thin solid black;
@@ -60,6 +69,26 @@ PRE {
   word-wrap: break-word;       /* Internet Explorer 5.5+ */
 }
 
+PRE.cmds {
+   font-weight: bold;
+   /*background: #fff0e0;*/
+   background: #fff8f8;
+   border-color: #d0d0d0;
+   display: inline-block;
+   border-style:solid;
+   border-width:0px;
+   padding: 1em 3em;
+}
+
+PRE.prog_help {
+   background: #fff8f8;
+   border-color: #d0d0d0;
+   display: inline-block;
+   border-style:solid;
+   border-width:1px;
+   padding: 1em 3em;
+}
+
 
 //UL LI {
 //  list-style-image: url(../images/bullet.gif)
@@ -92,13 +121,16 @@ PRE {
 }
 
 
-//.footbar, .footbar a:link, .footbar a:visited, .footbar a:active {
-//  color: #D0FFDF;
-//  background: #206060;
-//  background: #672A30;
-//  text-align: center;
-//  text-decoration: none
-//}
+.footer, .footer a:link, .footer a:visited, .footer a:active {
+  color: white;
+  background: #602525;
+  padding: 2px;
+  border: 1px solid #602525;
+  overflow: auto;
+  width: 100%;
+  text-align: center;
+  text-decoration: none
+}
 
 .curpage, .curpage a:link, .curpage a:visited, .curpage a:active {
   color: white;
@@ -136,6 +168,12 @@ PRE {
   margin-left: 15%;
   margin-right: 15%
 }
+
+.version_info {
+  font-size: small;
+  font-weight: bold;
+}
+
 
 .modified {
   font-size: small;

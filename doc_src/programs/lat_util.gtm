@@ -4,50 +4,36 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
-
+<<EXAMPLES_START>>
 Repeat a cube in a chequerboard pattern
-<PRE>
-   lat_grid fcc 3 | lat_util -R cube | antiview
-</PRE>
+<<CMDS_START>>
+lat_grid fcc 3 | lat_util -R cube | antiview
+<<CMDS_END>>
 
 Include points of a grid that are inside a truncated octahedron. Include the cage of the truncated octahedron. Add struts of 2. Make a convex hull of the included points and keep the interior points. Color the convex hull symetrically and make transparent.
-<PRE>
-   lat_grid fcc 3 | lat_util -s 2 -k tr_oct -K -C i -F S -T 128 | antiview
-</PRE>
+<<CMDS_START>>
+lat_grid fcc 3 | lat_util -s 2 -k tr_oct -K -C i -F S -T 128 | antiview
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
 
-<H2><A NAME="notes">
-Notes
-</A></H2>
-
-<I>lat_util</I> was written by
-<A HREF="http://www.interocitors.com/polyhedra/">Roger Kaufman</A>.
-
+<<NOTES_START>>
+<i>lat_util</i> was written by
+<a href="http://www.interocitors.com/polyhedra/">Roger Kaufman</a>.
+<<NOTES_END>>
 
 #include "<<END>>"

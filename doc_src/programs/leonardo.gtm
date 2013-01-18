@@ -4,107 +4,94 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
-
+<<EXAMPLES_START>>
 Leonardo da Vinci style rhombicuboctahedron
-<PRE>
-   leonardo std_rhombicuboctahedron | antiview -v 0.02
-</PRE>
+<<CMDS_START>>
+leonardo std_rhombicuboctahedron | antiview -v 0.02
+<<CMDS_END>>
 
 Leonardo da Vinci style rhombicuboctahedron, and hide edges that run
 from the outside of the faces to the holes
-<PRE>
-   leonardo -x std_rhombicuboctahedron | antiview -v 0.02
-</PRE>
+<<CMDS_START>>
+leonardo -x std_rhombicuboctahedron | antiview -v 0.02
+<<CMDS_END>>
 
 Leonardo da Vinci style rhombicuboctahedron, and thicken border and
 use the same value for height
-<PRE>
-   leonardo -w 0.3 std_rhombicuboctahedron | antiview -v 0.02
-</PRE>
+<<CMDS_START>>
+leonardo -w 0.3 std_rhombicuboctahedron | antiview -v 0.02
+<<CMDS_END>>
 
 Leonardo da Vinci style rhombicuboctahedron, and thicken border and
 use a smaller value for height
-<PRE>
-   leonardo -w 0.3 -l 0.05 std_rhombicuboctahedron | antiview -v 0.02
-</PRE>
+<<CMDS_START>>
+leonardo -w 0.3 -l 0.05 std_rhombicuboctahedron | antiview -v 0.02
+<<CMDS_END>>
 
 Models use the colours from the base faces by default. In this
 example a geodesic sphere dual has a proper colouring of its
 faces and is then converted to Leonardo da Vinci style model
-<PRE>
-   off_color -f P geo_3_d -m map_orange:purple:white | leonardo -x | antiview -v 0.01
-</PRE>
+<<CMDS_START>>
+off_color -f P geo_3_d -m map_orange:purple:white | leonardo -x | antiview -v 0.01
+<<CMDS_END>>
 
 Models can also use the colours from the base edges. In this
 example a geodesic sphere dual has a proper colouring of its
 edges and is then converted to Leonardo da Vinci style model using the
 edge colours
-<PRE>
-   off_color -e P geo_3_d -m map_orange:purple:white | leonardo -e | antiview -v 0.01
-</PRE>
+<<CMDS_START>>
+off_color -e P geo_3_d -m map_orange:purple:white | leonardo -e | antiview -v 0.01
+<<CMDS_END>>
 
 For non-orientable models, like the Mobius strip in this example, the
 original faces must have the height equally distributed on each side so
 that the units still meet correctly when the surface joins after being
 flipped over
-<PRE>
-   unitile2d -s m -w 29 -l 2 | off_color -f P -m map_darkblue:white | leonardo -m -w 0.15 | antiview -v 0.02
-</PRE>
+<<CMDS_START>>
+unitile2d -s m -w 29 -l 2 | off_color -f P -m map_darkblue:white | leonardo -m -w 0.15 | antiview -v 0.02
+<<CMDS_END>>
 
-To make an image of a wooden model, create a file called <I>wood_faces.inc</I>
+To make an image of a wooden model, create a file called <i>wood_faces.inc</i>
 that contains these two lines
-<PRE>
+<pre>
    #include "textures.inc"
    #declare face_tex = texture { DMFWood4 scale 0.4 translate &lt;3,2,4&gt; };
-</PRE>
+</pre>
 
 Now create the POV-Ray model with a command like this
-<PRE>
-   leonardo std_rhombicuboctahedron | off_trans -R 0,15,0 -R 15,0,0 | off2pov -i wood_faces.inc -x ev -B white &gt; wood_rhombicubo.pov
-</PRE>
+<<CMDS_START>>
+leonardo std_rhombicuboctahedron | off_trans -R 0,15,0 -R 15,0,0 | off2pov -i wood_faces.inc -x ev -B white &gt; wood_rhombicubo.pov
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
 
-<H2><A NAME="notes">
-Notes
-</A></H2>
-
-<A HREF="https://www.google.com/search?q=Leonardo da Vinci Polyhedra&amp;tbm=isch">Search for images</A>
+<<NOTES_START>>
+<a href="https://www.google.com/search?q=Leonardo da Vinci Polyhedra&amp;tbm=isch">Search for images</a>
 of Leonardo da Vinci's polyhedron illustrations.
-<P>
+<p>
 In an oriented model based on an Antiprism resource model the new units
 should generally have their outer side aligned with the original faces, and
 the units will meet well on the visible outer surface. In the opposite
 orientation the units will bind to the outside of the model, and will
 not generally meet so well on their outer visible surface. If units do
 not appear to be meeting well then try reorienting the model using
-<I>off_util -O</I>. In the case of using -m, for non-orientable models,
+<i>off_util -O</i>. In the case of using -m, for non-orientable models,
 neither of the new face unit surfaces coincide with the original faces
 and reorienting the model will not help.
+<<NOTES_END>>
 
 #include "<<END>>"

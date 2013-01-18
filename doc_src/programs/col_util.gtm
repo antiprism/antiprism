@@ -4,88 +4,75 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
-
+<<EXAMPLES_START>>
 RGB cube centroid of blue and yellow
-<PRE>
-   col_util -d plot -m map_blue:yellow | antiview -v 0.05
-</PRE>
+<<CMDS_START>>
+col_util -d plot -m map_blue:yellow | antiview -v 0.05
+<<CMDS_END>>
 
 HSV cylinder centroid of blue and yellow
-<PRE>
-   col_util -d plot -m map_blue:yellow -M 1 | antiview -v 0.05
-</PRE>
+<<CMDS_START>>
+col_util -d plot -m map_blue:yellow -M 1 | antiview -v 0.05
+<<CMDS_END>>
 
 Blend in RYB mode
-<PRE>
-   col_util -d plot -m map_blue:yellow -M 2 -p -y | antiview -v 0.05
-</PRE>
+<<CMDS_START>>
+col_util -d plot -m map_blue:yellow -M 2 -p -y | antiview -v 0.05
+<<CMDS_END>>
 
 Blend in RYB mode with different saturation modifiers
-<PRE>
-   col_util -d plot -m map_blue:yellow -M 2 -p -y -s 0.8,1.01,2,3 | antiview -v 0.05
-</PRE>
+<<CMDS_START>>
+col_util -d plot -m map_blue:yellow -M 2 -p -y -s 0.8,1.01,2,3 | antiview -v 0.05
+<<CMDS_END>>
 
 Compare additive and subtractive colouring
-<PRE>
-   col_util -d plot -m map_red:green:blue -M 2 -p -v 1,2,3,4 | antiview -v 0.05
-   col_util -d plot -m map_red:green:blue -M 2 -p -v 1,2,3,4 -c | antiview -v 0.05
-</PRE>
+<<CMDS_START>>
+col_util -d plot -m map_red:green:blue -M 2 -p -v 1,2,3,4 | antiview -v 0.05
+col_util -d plot -m map_red:green:blue -M 2 -p -v 1,2,3,4 -c | antiview -v 0.05
+<<CMDS_END>>
 
 Plot rainbow colour map in RGB cube
-<PRE>
-   col_util -m rainbow | antiview -v 0.03
-</PRE>
+<<CMDS_START>>
+col_util -m rainbow | antiview -v 0.03
+<<CMDS_END>>
 
 Plot rainbow colour map in HSL cylinder, hexagonal dipyramid, or
 heptagonal dipyramid
-<PRE>
-   col_util -m rainbow -M 2 -r 0 | antiview -v 0.03
-   col_util -m rainbow -M 2 -r 2 | antiview -v 0.03
-   col_util -m rainbow -M 2 -r 2 -S | antiview -v 0.03
-</PRE>
+<<CMDS_START>>
+col_util -m rainbow -M 2 -r 0 | antiview -v 0.03
+col_util -m rainbow -M 2 -r 2 | antiview -v 0.03
+col_util -m rainbow -M 2 -r 2 -S | antiview -v 0.03
+<<CMDS_END>>
 
 Display a color wheel of red green and blue
-<PRE>
-   col_util -d wheel -m map_red:green:blue | antiview
-</PRE>
+<<CMDS_START>>
+col_util -d wheel -m map_red:green:blue | antiview
+<<CMDS_END>>
 
 Display rainbow colour map as a grid
-<PRE>
-   col_util -d grid -m rainbow | antiview
-</PRE>
+<<CMDS_START>>
+col_util -d grid -m rainbow | antiview
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
 
-<H2><A NAME="notes">
-Notes
-</A></H2>
-
-<I>col_util</I> was written by
-<A HREF="http://www.interocitors.com/polyhedra/">Roger Kaufman</A>.
+<<NOTES_START>>
+<i>col_util</i> was written by
+<a href="http://www.interocitors.com/polyhedra/">Roger Kaufman</a>.
+<<NOTES_END>>
 
 #include "<<END>>"

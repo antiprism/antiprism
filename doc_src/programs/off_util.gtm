@@ -4,58 +4,44 @@
 #include "<<START>>"
 
 
-<H1><<TITLE_CURRENT>></H1>
+<<TITLE_HEAD>>
 
-<<CONT_S_START>>
-<SMALL><A HREF="#usage">Usage</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#examples">Examples</A></SMALL>
-<<BARSPACE>>
-<SMALL><A HREF="#notes">Notes</A></SMALL>
-<<CONT_S_END>>
+<<TOP_LINKS>>
 
-
-<H2><A NAME="usage">
-Usage
-</A></H2>
-
-<PRE>
+<<USAGE_START>>
+<pre class="prog_help">
 <<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF
-</PRE>
+</pre>
+<<USAGE_END>>
 
 
-<H2><A NAME="examples">
-Examples
-</A></H2>
-
+<<EXAMPLES_START>>
 Merge two file into a third
-<PRE>
-   off_util -o file3.off file1.off file2.off
-</PRE>
+<<CMDS_START>>
+off_util -o file3.off file1.off file2.off
+<<CMDS_END>>
+<<EXAMPLES_END>>
 
-<H2><A NAME="notes">
-Notes
-</A></H2>
 
-Option <I>-E</I> is like the <I>join</I> operation in Conway Notation.
-<P>
-The face sorting performed by option <I>-M</I> orients faces in
-a particular way. Option <I>-O</I> will generally reorient some
+<<NOTES_START>>
+Option <i>-E</i> is like the <i>join</i> operation in Conway Notation.
+<p>
+The face sorting performed by option <i>-M</i> orients faces in
+a particular way. Option <i>-O</i> will generally reorient some
 of the sorted faces, and this will always be true if the input
 is a polyhedron.
-<P>
-The coordinates of a file can be tidied up by running <I>off_util -d</I>
+<p>
+The coordinates of a file can be tidied up by running <i>off_util -d</i>
 twice, the first time with a negative number to truncate the coordinate
 at a number of decimals, the second time with a positive number to
 truncate the trailing zeros. For example, to tidy
-<I>pol_recip&nbsp;cubo&nbsp;|&nbsp;off_trans&nbsp;-s&nbsp;r</I>
-<PRE>
-   pol_recip cubo | off_trans -s r | off_util -d -1 | off_util -d 1
-</PRE>
-
-
+<i>pol_recip&nbsp;cubo&nbsp;|&nbsp;off_trans&nbsp;-s&nbsp;r</i>
+<<CMDS_START>>
+pol_recip cubo | off_trans -s r | off_util -d -1 | off_util -d 1
+<<CMDS_END>>
+<<NOTES_END>>
 
 #include "<<END>>"
