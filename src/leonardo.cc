@@ -337,7 +337,7 @@ int main(int argc, char *argv[])
    double width = (opts.width==opts.DEF_VAL) ? opts.def_width : opts.width;
    if(opts.width_is_perc)
       width *= min_dist_edge_to_face_cent(geom) / 100;
-   if(width<epsilon)
+   if(fabs(width)<epsilon)
       opts.warning("width is very small, if using default may need to set a value with -w");
 
    double height = (opts.height==opts.DEF_VAL) ? opts.def_height : opts.height;
@@ -350,7 +350,8 @@ int main(int argc, char *argv[])
             opts.hide_edges, opts.col_from_edges, errmsg))
       opts.error(errmsg);
 
-   geom_out.write();
+   if(!geom_out.write(opts.ofile, errmsg))
+      opts.error(errmsg);
 
    return 0;
 }
