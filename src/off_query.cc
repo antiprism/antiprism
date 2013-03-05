@@ -88,18 +88,20 @@ void oq_opts::usage()
 "       f - face index numbs        F - face angles\n"
 "       a - solid angle             n - neighbours\n"
 "       o - order                   g - vertex figure\n"
+"       K - colour\n"
 "   E - Edge:\n"
 "       v - vertex index nums       d - distance from centre\n"
 "       f - face index nums         D - direction\n"
 "       a - diheral angle           l - length\n"
-"       c - central angle\n"
+"       c - central angle           C - centroid\n"
+"       K - colour\n"
 "   F - Face:\n"
 "       v - vertex index nums       d - distance from centre\n"
 "       n - neighbours              A - area\n"
 "       N - normal                  C - centroid\n"
 "       a - angles                  l - lengths\n"
 "       s - number of sides         p - max nonplanar distance\n"
-"       P - perimeter\n"
+"       P - perimeter               K - colour\n"
 "\n"
 "Options\n"
 "%s"
@@ -329,6 +331,9 @@ void vertex_query(FILE *ofile, rep_printer &rep, oq_opts &opts)
          case 'G':
             query_items.push_back(&rep_printer::v_figure_orig);
             break;
+         case 'K':
+            query_items.push_back(&rep_printer::v_color);
+            break;
          default:
             opts.error(msg_str("unknown query letter '%c'", opts.query[i]),
                "V query");
@@ -376,6 +381,9 @@ void edge_query(FILE *ofile, rep_printer &rep, oq_opts &opts)
             break;
          case 'l':
             query_items.push_back(&rep_printer::e_length);
+            break;
+         case 'K':
+            query_items.push_back(&rep_printer::e_color);
             break;
          default:
             opts.error(msg_str("unknown query letter '%c'", opts.query[i]),
@@ -432,6 +440,9 @@ void face_query(FILE *ofile, rep_printer &rep, oq_opts &opts)
             break;
          case 'P':
             query_items.push_back(&rep_printer::f_perimeter);
+            break;
+         case 'K':
+            query_items.push_back(&rep_printer::f_color);
             break;
          default:
             char str[MSG_SZ];

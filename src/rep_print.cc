@@ -49,9 +49,24 @@ bool rep_printer::set_sub_symmetry(const string &sub_sym, char *errmsg)
 char *rep_printer::idx2s(char *buf, int idx, int elems_sz)
 { 
    if(idx<elems_sz)
-      snprintf(buf, MSG_SZ, "%d", idx);
+      sprintf(buf, "%d", idx);
    else 
-      snprintf(buf, MSG_SZ, "x%d", idx-elems_sz);
+      sprintf(buf, "x%d", idx-elems_sz);
+   return buf;
+}
+
+char *rep_printer::col2s(char *buf, col_val col)
+{
+   if(col.is_idx())
+      sprintf(buf, "%d", col.get_idx());
+   else if(col.is_val()) {
+      int len = sprintf(buf, "%d %d %d", col[0], col[1], col[2]);
+      if(col[3]<255)
+         sprintf(buf+len, " %d", col[3]);
+   }
+   else
+      *buf = '\0';
+
    return buf;
 }
 
@@ -619,6 +634,16 @@ void rep_printer::v_angles(int v_idx)
    }
 }
 
+void rep_printer::v_color(int v_idx)
+{
+   const col_geom *cg = dynamic_cast<const col_geom *>(&geom);
+   if(cg) {
+      char str[MSG_SZ];
+      fprintf(ofile, "%s", col2s(str, cg->get_v_col(v_idx)));
+   }
+}
+
+
 
 void rep_printer::e_index(int e_idx)
 {
@@ -692,6 +717,16 @@ void rep_printer::e_length(int e_idx)
    char str[MSG_SZ];
    fprintf(ofile, "%s", d2s(str, (v1-v0).mag()));
 }
+
+void rep_printer::e_color(int e_idx)
+{
+   const col_geom *cg = dynamic_cast<const col_geom *>(&geom);
+   if(cg) {
+      char str[MSG_SZ];
+      fprintf(ofile, "%s", col2s(str, cg->get_e_col(e_idx)));
+   }
+}
+
 
 
 void rep_printer::f_index(int f_idx)
@@ -785,6 +820,15 @@ void rep_printer::f_max_nonplanar(int f_idx)
 {
    char str[MSG_SZ];
    fprintf(ofile, "%s", d2s(str, get_f_max_nonplanars()[f_idx]));
+}
+
+void rep_printer::f_color(int f_idx)
+{
+   const col_geom *cg = dynamic_cast<const col_geom *>(&geom);
+   if(cg) {
+      char str[MSG_SZ];
+      fprintf(ofile, "%s", col2s(str, cg->get_f_col(f_idx)));
+   }
 }
 
 

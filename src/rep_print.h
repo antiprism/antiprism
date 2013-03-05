@@ -44,6 +44,7 @@ class rep_printer: public geom_info
          { return idx2s(buf, idx, num_edges()-extra_e_sz); }
       char *fidx2s(char *buf, int idx)
          { return idx2s(buf, idx, num_faces()-extra_f_sz); }
+      char *col2s(char *buf, col_val col);
      
       string sub_sym_str;
 
@@ -96,6 +97,7 @@ class rep_printer: public geom_info
       void v_order(int v_idx);
       void v_distance(int v_idx);
       void v_angles(int v_idx);
+      void v_color(int v_idx);
 
       void e_index(int e_idx);
       void e_vert_idxs(int e_idx);
@@ -106,6 +108,7 @@ class rep_printer: public geom_info
       void e_centroid(int e_idx);
       void e_direction(int e_idx);
       void e_length(int e_idx);
+      void e_color(int e_idx);
       
       void f_index(int f_idx);
       void f_vert_idxs(int v_idx);
@@ -119,6 +122,7 @@ class rep_printer: public geom_info
       void f_max_nonplanar(int f_idx);
       void f_centroid(int f_idx);
       void f_lengths(int f_idx);
+      void f_color(int f_idx);
 };
 
 
