@@ -53,17 +53,17 @@ class coloring: public color_map_multi
 
    protected:
 
-      ///Colour index for a unit vector by its y value
+      ///Colour index for a unit vector by its z-value
       /**Index numbers are assigned in the range of 0 up to the last
        * entry in the first colour map.
        * \param vec the unit vector
        * \param cent the centre of the geometry.
-       * \param height the height of the geometry.
+       * \param height the height of the geometry along the z-axis.
        * \param def_sz allocate index numbers upto def_sz if no map
        * has been set.
        * size of the first map if one is set.
        * \return The index. */
-      int y_gradient(vec3d vec, vec3d cent=vec3d(0,0,0), double height=2,
+      int z_gradient(vec3d vec, vec3d cent=vec3d(0,0,0), double height=2,
             int def_sz=256);
       
 

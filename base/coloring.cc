@@ -84,7 +84,7 @@ inline double fract(double rng[], double frac)
 }
 
 
-int coloring::y_gradient(vec3d vec, vec3d cent, double height, int def_sz)
+int coloring::z_gradient(vec3d vec, vec3d cent, double height, int def_sz)
 {
    int sz = def_sz;
    const vector<color_map *> &cmaps = get_cmaps();
@@ -95,7 +95,7 @@ int coloring::y_gradient(vec3d vec, vec3d cent, double height, int def_sz)
          sz = INT_MAX;
    }
 
-   return (int)floor(sz * (0.5*height+(vec-cent)[1])/(height+epsilon));
+   return (int)floor(sz * (0.5*height+(vec-cent)[2])/(height+epsilon));
 }
 
 
@@ -209,9 +209,9 @@ void coloring::v_position(bool apply_map)
 {
    bound_box bb(get_geom()->verts());
    vec3d cent = bb.get_centre();
-   double height = bb.get_max()[1] - bb.get_min()[1];
+   double height = bb.get_max()[2] - bb.get_min()[2];
    for(unsigned int i=0; i<get_geom()->verts().size(); i++) {
-      int idx = y_gradient(get_geom()->verts(i), cent, height);
+      int idx = z_gradient(get_geom()->verts(i), cent, height);
       if(apply_map)
          get_geom()->set_v_col(i, get_col(idx));
       else
@@ -395,7 +395,7 @@ void coloring::f_parts(bool apply_map)
 void coloring::f_normal(bool apply_map)
 {
    for(unsigned int i=0; i<get_geom()->faces().size(); i++) {
-      int idx = y_gradient(get_geom()->face_norm(i).unit());
+      int idx = z_gradient(get_geom()->face_norm(i).unit());
       if(apply_map)
          get_geom()->set_f_col(i, get_col(idx));
       else
@@ -408,9 +408,9 @@ void coloring::f_centroid(bool apply_map)
 {
    bound_box bb(get_geom()->verts());
    vec3d cent = bb.get_centre();
-   double height = bb.get_max()[1] - bb.get_min()[1];
+   double height = bb.get_max()[2] - bb.get_min()[2];
    for(unsigned int i=0; i<get_geom()->faces().size(); i++) {
-      int idx = y_gradient(get_geom()->face_cent(i), cent, height);
+      int idx = z_gradient(get_geom()->face_cent(i), cent, height);
       if(apply_map)
          get_geom()->set_f_col(i, get_col(idx));
       else
@@ -595,7 +595,7 @@ void coloring::e_direction(bool apply_map)
       if(v[1]<0)
          v = -v;
       v -= vec3d::Y;  // put v[1] in the range -1.0 to 1.0;
-      int idx = y_gradient(v);
+      int idx = z_gradient(v);
       if(apply_map)
          get_geom()->set_e_col(i, get_col(idx));
       else
@@ -607,9 +607,9 @@ void coloring::e_mid_point(bool apply_map)
 {
    bound_box bb(get_geom()->verts());
    vec3d cent = bb.get_centre();
-   double height = bb.get_max()[1] - bb.get_min()[1];
+   double height = bb.get_max()[2] - bb.get_min()[2];
    for(unsigned int i=0; i<get_geom()->edges().size(); i++) {
-      int idx = y_gradient(get_geom()->edge_cent(i), cent, height);
+      int idx = z_gradient(get_geom()->edge_cent(i), cent, height);
       if(apply_map)
          get_geom()->set_e_col(i, get_col(idx));
       else
