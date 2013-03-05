@@ -863,6 +863,7 @@ static void equiv_elems_to_sets(vector<vector<set<int> > > &equiv_sets,
                   equiv_sets[i].back().insert(
                       orig_equivs[i][*si2].begin(), orig_equivs[i][*si2].end());
       }
+      std::sort(equiv_sets[i].begin(), equiv_sets[i].end());
    }
 
 }
