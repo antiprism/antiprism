@@ -114,7 +114,7 @@ void pg_opts::usage()
 "        subtypes: 1. inverted, triangle band inverted\n"
 "   9. dihedron\n"
 "        subtypes: 1. polygon\n"
-" 10. crown polyhedron\n"
+" 10. crown polyhedron (-A integer to select a second polygon step)\n"
 "\n"
 "num_sides is a number (N) optionally followed by / and a second\n"
 "number (N/D). N is the number of vertices spaced equally on a\n"
