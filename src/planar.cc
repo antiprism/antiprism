@@ -59,7 +59,7 @@ class planar_opts: public prog_opts {
       int polygon_fill_type;
       int winding_rule;
       int winding_rule_mode;
-      bool color_by_winding_number;
+      char color_by_winding_number;
       bool winding_div2; // not implemented
       bool find_direction;
       bool verbose;
@@ -95,7 +95,7 @@ class planar_opts: public prog_opts {
                         polygon_fill_type(0),
                         winding_rule(INT_MAX),
                         winding_rule_mode(INT_MAX),
-                        color_by_winding_number(false),
+                        color_by_winding_number('\0'),
                         winding_div2(false), // not implemented
                         find_direction(false),
                         verbose(false),
@@ -195,7 +195,10 @@ void planar_opts::usage()
 "  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
 "  -Z <col>  color for areas found colorless by winding (default: invisible)\n"
 "               key word: b - force a color blend\n"
-"  -W        color by winding number, using maps (overrides option -f)\n"
+"  -W <opt>  color by winding number, using maps (overrides option -f)\n"
+"               w - use actual winding number\n"
+"               a - absolute value of winding number\n"
+"               n - negative of absolute value of winding number\n"
 "  -m <maps> color maps for faces to be tried in turn (default: compound)\n"
 "  -n <maps> maps for negative winding numbers (default: rng17_S0V0.5:0)\n"
 "               (map position zero not used. default is 16 gradients)\n"
@@ -215,7 +218,7 @@ void planar_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hd:p:w:zVO:HC:SIe:E:Db:M:s:t:v:u:a:cyf:T:m:Z:Wn:l:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hd:p:w:zVO:HC:SIe:E:Db:M:s:t:v:u:a:cyf:T:m:Z:W:n:l:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -414,7 +417,9 @@ void planar_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'W':
-            color_by_winding_number = true;
+            if(strspn(optarg, "wan") != strlen(optarg) || strlen(optarg)>1)
+               error(msg_str("color by winding number is '%s', must be w, a, or n", optarg), c);
+            color_by_winding_number = *optarg;
             break;
 
          case 'n':
@@ -457,7 +462,7 @@ void planar_opts::process_command_line(int argc, char **argv)
          warning("winding rule has no effect if tile of merge is not selected","w");
       if (color_by_winding_number) {
          warning("color by winding number has no effect if tile or merge is not selected","W");
-         color_by_winding_number = false;
+         color_by_winding_number = 0;
       }
    }
    else {
@@ -1667,7 +1672,7 @@ bool winding_rule_filter(int winding_rule_mode, int winding_rule, int winding_nu
 }
 
 void sample_colors(col_geom_v &sgeom, const col_geom_v &cgeom, const int &planar_merge_type, const vector<xnormal> &original_normals, const vector<int> &nonconvex_faces, const vec3d &center,
-   const int &polygon_fill_type, const int &winding_rule_mode, const int &winding_rule, const bool &color_by_winding_number, const bool &find_direction, const bool &winding_div2,
+   const int &polygon_fill_type, const int &winding_rule_mode, const int &winding_rule, const char &color_by_winding_number, const bool &find_direction, const bool &winding_div2,
    col_val &zero_density_color, const bool &zero_density_force_blend, const double &brightness_adj,
    const int &color_system_mode, const double &sat_power, const double &sat_threshold, const double &value_power, const double &value_advance, const int &alpha_mode, const bool &ryb_mode,
    int &winding_total_min, int &winding_total_max, const double &eps)
@@ -1788,11 +1793,19 @@ void sample_colors(col_geom_v &sgeom, const col_geom_v &cgeom, const int &planar
       col_val col;
 
       if (color_by_winding_number && sz) {
-         if (winding_total >= 0)
-            col.set_idx(winding_total);
+         int wtotal = winding_total;
+         // if absolute value of winding numbers (or their negative) are colored
+         if (color_by_winding_number != 'w') {
+            wtotal = abs(wtotal);
+            if (color_by_winding_number == 'n')
+               wtotal = -wtotal;
+         }
+
+         if (wtotal >= 0)
+            col.set_idx(wtotal);
          else
             // negative winding numbers are set up to near INT_MAX to be subtracted out later
-            col.set_idx(winding_total + INT_MAX);
+            col.set_idx(wtotal + INT_MAX);
       }
       else
       // if there is no hit, then that patch is of zero density color. if file_type 4 then all even numbered patches are also
@@ -1821,7 +1834,7 @@ void collect_original_normals(vector<xnormal> &original_normals, const vector<in
 
 void blend_overlapping_faces(col_geom_v &geom, const vector<vector<int> > &coplanar_faces_list, const vector<xnormal> &coplanar_normals, const fnormals &fnormals, const vec3d &center,
    const int &planar_merge_type, const int &polygon_fill_type,
-   const bool &hole_detection, const int &winding_rule_mode, const int &winding_rule, const bool &color_by_winding_number, const bool &find_direction, const bool &winding_div2, const bool &verbose,
+   const bool &hole_detection, const int &winding_rule_mode, const int &winding_rule, const char &color_by_winding_number, const bool &find_direction, const bool &winding_div2, const bool &verbose,
    col_val &zero_density_color, const bool &zero_density_force_blend, const double &brightness_adj,
    const int &color_system_mode, const double &sat_power, const double &sat_threshold, const double &value_power, const double &value_advance, const int &alpha_mode, const bool &ryb_mode, const double &eps)
 {
@@ -1905,7 +1918,7 @@ void blend_overlapping_faces(col_geom_v &geom, const vector<vector<int> > &copla
 }
 
 void planar_merge(col_geom_v &geom, const int &planar_merge_type, const int &polygon_fill_type, const bool &hole_detection, const vec3d &center,
-   const int &winding_rule_mode, const int &winding_rule, const bool &color_by_winding_number, const bool &find_direction, const bool &winding_div2, const bool &verbose,
+   const int &winding_rule_mode, const int &winding_rule, const char &color_by_winding_number, const bool &find_direction, const bool &winding_div2, const bool &verbose,
    col_val &zero_density_color, const bool &zero_density_force_blend, const double &brightness_adj,
    const int &color_system_mode, const double &sat_power, const double &sat_threshold, const double &value_power, const double &value_advance, const int &alpha_mode, const bool &ryb_mode, const double &eps)
 {
