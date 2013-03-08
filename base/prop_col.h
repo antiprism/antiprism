@@ -98,7 +98,7 @@ class prop_color
       int find_colors();
       int get_color(int i) { return BestColorClass[i]-1; }
 
-      friend struct Graph;
+      friend class Graph;
 };
 
 

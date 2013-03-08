@@ -109,7 +109,7 @@ extern "C" {
 
 
 #ifdef __cplusplus
-class localGLUtesselator;
+struct localGLUtesselator;
 #else
 typedef struct localGLUtesselator localGLUtesselator;
 #endif

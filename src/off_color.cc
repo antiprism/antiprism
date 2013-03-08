@@ -62,7 +62,7 @@ class color_proc_torange_hsv: public color_map_range
       ///Get the colour value for an index number.
       /**\param col the color.
        * \return The processed colour. */
-      col_val get_col(col_val col);
+      col_val get_proc_col(col_val col) const;
 };
 
 bool chk_range(vector<double> &v, char *errmsg)
@@ -166,13 +166,13 @@ bool color_proc_torange_hsv::init(const char *range_name, char *errmsg)
    return true;
 }
 
-inline double fract(vector<double> &rng, double frac)
+inline double fract(const vector<double> &rng, double frac)
 {
    return fmod(rng[0] + (rng[1]-rng[0])*frac, 1+epsilon);
 }
 
 
-col_val color_proc_torange_hsv::get_col(col_val col)
+col_val color_proc_torange_hsv::get_proc_col(col_val col) const
 {
    col_val c = col;
    if(col.is_val()) {
@@ -190,7 +190,7 @@ void color_proc_torange_hsv::proc_map(map<int, col_val> &elem_cols)
 {
    map<int, col_val>::iterator mi;
    for(mi=elem_cols.begin(); mi!=elem_cols.end(); ++mi)
-      mi->second = get_col(mi->second);
+      mi->second = get_proc_col(mi->second);
 }
 
 

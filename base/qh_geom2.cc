@@ -2080,7 +2080,7 @@ boolT qh_sharpnewfacets () {
 pointT *qh_voronoi_center (int dim, setT *points) {
   pointT *point, **pointp, *point0;
   pointT *center= (pointT*)qh_memalloc (qh center_size);
-  setT *simplex;
+  setT *simplex=0;
   int i, j, k, size= qh_setsize(points);
   coordT *gmcoord;
   realT *diffp, sum2, *sum2row, *sum2p, det, factor;

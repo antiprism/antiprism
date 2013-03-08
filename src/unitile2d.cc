@@ -46,7 +46,6 @@ class unitile: public col_geom_v
 {
    private:
       int pat;           // pattern id number
-      int alt;           // alternative orientation id number
       double x_end;
       double x_inc;
       double y_end;
@@ -69,15 +68,15 @@ class unitile: public col_geom_v
       void ut_4612();    // 11
 
       void set_polygon(int num_sides, double rot_ang=0);
-      void add_faces(double x_start, double y_start);
+      void add_polygon(double x_start, double y_start);
       void set_incs(double xinc, double yinc);
 
    public:
       enum {ut_open, ut_join, ut_join2, ut_twist, ut_twist2, ut_twist3};
       
-      unitile(int patt, int alte, double width, double height,
+      unitile(int patt, double width, double height,
             bool totile=true, mat3d trans=mat3d(), vec3d shr=vec3d(0,0,0)):
-            pat(patt), alt(alte), x_end(width), y_end(height),
+            pat(patt), x_end(width), y_end(height),
             to_tile(totile), trans_m(trans), shear(shr)
             {}
 
@@ -120,7 +119,7 @@ void unitile::set_polygon(int num_sides, double rot_ang)
 }
 
    
-void unitile::add_faces(double x_start, double y_start)
+void unitile::add_polygon(double x_start, double y_start)
 {
    vector<vec3d> &verts = *get_verts();
    vector<vector<int> > &faces = *get_faces();   
@@ -147,7 +146,7 @@ void unitile::ut_4444()
 {
    set_incs(1, 1);
    set_polygon(4, M_PI/4);
-   add_faces(0.5, 0.5);
+   add_polygon(0.5, 0.5);
 }     
 
 
@@ -156,47 +155,47 @@ void unitile::ut_333333()
    set_incs(sqrt(3), 1);
    //set_incs(1, 1);
    set_polygon(3, M_PI);
-   add_faces(0, 0);
-   add_faces(sqrt(3)/2, 0.5);
+   add_polygon(0, 0);
+   add_polygon(sqrt(3)/2, 0.5);
    set_polygon(3);
-   add_faces(sqrt(3)/3, 0);
-   add_faces(sqrt(3)*5/6, 0.5);
+   add_polygon(sqrt(3)/3, 0);
+   add_polygon(sqrt(3)*5/6, 0.5);
 }
 
 void unitile::ut_666()
 {
    set_incs(sqrt(3), 3);
    set_polygon(6, M_PI/6);
-   add_faces(0, 0);
-   add_faces(sqrt(3)/2, 1.5);
+   add_polygon(0, 0);
+   add_polygon(sqrt(3)/2, 1.5);
 }
 
 void unitile::ut_3636()
 {
    set_incs(sqrt(3)*2, 2);
    set_polygon(3);
-   add_faces(sqrt(3)*2/3, 0);
-   add_faces(sqrt(3)*5/3, 1);
+   add_polygon(sqrt(3)*2/3, 0);
+   add_polygon(sqrt(3)*5/3, 1);
    set_polygon(3, M_PI);
-   add_faces(sqrt(3)*1/3, 1);
-   add_faces(sqrt(3)*4/3, 0);
+   add_polygon(sqrt(3)*1/3, 1);
+   add_polygon(sqrt(3)*4/3, 0);
    set_polygon(6, M_PI/6);
-   add_faces(0, 0);
-   add_faces(sqrt(3), 1);
+   add_polygon(0, 0);
+   add_polygon(sqrt(3), 1);
 }
 
 void unitile::ut_33344()
 {
    set_incs(1, 2+sqrt(3));
    set_polygon(3, M_PI/2);
-   add_faces(0, 0.5+sqrt(3)/6);
-   add_faces(0.5, 1.5+sqrt(3)*2/3);
+   add_polygon(0, 0.5+sqrt(3)/6);
+   add_polygon(0.5, 1.5+sqrt(3)*2/3);
    set_polygon(3, -M_PI/2);
-   add_faces(0, 1.5+sqrt(3)*5/6);
-   add_faces(0.5, 0.5+sqrt(3)*1/3);
+   add_polygon(0, 1.5+sqrt(3)*5/6);
+   add_polygon(0.5, 0.5+sqrt(3)*1/3);
    set_polygon(4, M_PI/4);
-   add_faces(0, 0);
-   add_faces(0.5, 1+sqrt(3)/2);
+   add_polygon(0, 0);
+   add_polygon(0.5, 1+sqrt(3)/2);
 }
 
 void unitile::ut_33434()
@@ -204,24 +203,24 @@ void unitile::ut_33434()
    double l = 1 + sqrt(3);
    set_incs(l, l);
    set_polygon(4, -M_PI/12);
-   add_faces(l/4, l/4);
-   add_faces(3*l/4, 3*l/4);
+   add_polygon(l/4, l/4);
+   add_polygon(3*l/4, 3*l/4);
    set_polygon(4, M_PI/12);
-   add_faces(l/4, 3*l/4);
-   add_faces(3*l/4, l/4);
+   add_polygon(l/4, 3*l/4);
+   add_polygon(3*l/4, l/4);
    double d = 1/sqrt(12);
    set_polygon(3, 0);
-   add_faces(d, l/2);
-   add_faces(l/2+d, 0);
+   add_polygon(d, l/2);
+   add_polygon(l/2+d, 0);
    set_polygon(3, M_PI);
-   add_faces(l-d, l/2);
-   add_faces(l/2-d, 0);
+   add_polygon(l-d, l/2);
+   add_polygon(l/2-d, 0);
    set_polygon(3, M_PI/2);
-   add_faces(0, d);
-   add_faces(l/2, l/2+d);
+   add_polygon(0, d);
+   add_polygon(l/2, l/2+d);
    set_polygon(3, -M_PI/2);
-   add_faces(0, l-d);
-   add_faces(l/2, l/2-d);
+   add_polygon(0, l-d);
+   add_polygon(l/2, l/2-d);
 }
 
 void unitile::ut_33336()
@@ -229,8 +228,8 @@ void unitile::ut_33336()
    double rot = acos(5/(sqrt(7)*2));
    set_incs(sqrt(7), sqrt(21));
    set_polygon(6, rot);
-   add_faces(0, 0);
-   add_faces(sqrt(7)/2, sqrt(21)/2);
+   add_polygon(0, 0);
+   add_polygon(sqrt(7)/2, sqrt(21)/2);
    for(int i=0; i<6; i++) {
       double rot2 =  rot + M_PI/6 + i*M_PI/3;
       mat3d trans = 
@@ -238,14 +237,14 @@ void unitile::ut_33336()
          mat3d::transl(vec3d(sqrt(3)-1/sqrt(3),0,0));
       set_polygon(3, rot2);
       vec3d cent = trans * vec3d(0,0,0);
-      add_faces(cent[0], cent[1]);
-      add_faces(cent[0]+sqrt(7)/2, cent[1]+sqrt(21)/2);
+      add_polygon(cent[0], cent[1]);
+      add_polygon(cent[0]+sqrt(7)/2, cent[1]+sqrt(21)/2);
       if(i<3) {
          trans = trans * mat3d::transl(vec3d(0,1,0));
          cent = trans * vec3d(0,0,0);
          if(i==1)
-            add_faces(cent[0], cent[1]);
-         add_faces(cent[0]+sqrt(7)/2, cent[1]+sqrt(21)/2);
+            add_polygon(cent[0], cent[1]);
+         add_polygon(cent[0]+sqrt(7)/2, cent[1]+sqrt(21)/2);
       }
    }
 }
@@ -254,14 +253,14 @@ void unitile::ut_31212()
 {
    set_incs(2+sqrt(3), 3+sqrt(3)*2);
    set_polygon(12, M_PI/12);
-   add_faces(0, 0);
-   add_faces(1+sqrt(3)/2, 1.5+sqrt(3));
+   add_polygon(0, 0);
+   add_polygon(1+sqrt(3)/2, 1.5+sqrt(3));
    set_polygon(3, -M_PI/6);
-   add_faces(1+sqrt(3)/2, 2.5+sqrt(3)*5/3);
-   add_faces(0, 1+sqrt(3)*2/3);
+   add_polygon(1+sqrt(3)/2, 2.5+sqrt(3)*5/3);
+   add_polygon(0, 1+sqrt(3)*2/3);
    set_polygon(3, M_PI/6);
-   add_faces(1+sqrt(3)/2, 0.5+sqrt(3)/3);
-   add_faces(0, 2+sqrt(3)*4/3);
+   add_polygon(1+sqrt(3)/2, 0.5+sqrt(3)/3);
+   add_polygon(0, 2+sqrt(3)*4/3);
 }
 
 void unitile::ut_488()
@@ -269,54 +268,54 @@ void unitile::ut_488()
    double l = 1+sqrt(2);
    set_incs(l, l);
    set_polygon(4);
-   add_faces(l/2, l/2);
+   add_polygon(l/2, l/2);
    set_polygon(8, M_PI/8);
-   add_faces(0, 0);
+   add_polygon(0, 0);
 }
 
 void unitile::ut_3464()
 {
    set_incs(1+sqrt(3), 3+sqrt(3));
    set_polygon(3, M_PI/6);
-   add_faces(0, 1+sqrt(3)/3);
-   add_faces(0.5+sqrt(3)/2, 2.5+sqrt(3)*5/6);
+   add_polygon(0, 1+sqrt(3)/3);
+   add_polygon(0.5+sqrt(3)/2, 2.5+sqrt(3)*5/6);
    set_polygon(3, -M_PI/6);
-   add_faces(0, 2+sqrt(3)*2/3);
-   add_faces(0.5+sqrt(3)/2, 0.5+sqrt(3)/6);
+   add_polygon(0, 2+sqrt(3)*2/3);
+   add_polygon(0.5+sqrt(3)/2, 0.5+sqrt(3)/6);
    set_polygon(4, M_PI/12);
-   add_faces(0.25+sqrt(3)/4, 0.75+sqrt(3)/4);
-   add_faces(-0.25-sqrt(3)/4, 2.25+sqrt(3)*3/4);
+   add_polygon(0.25+sqrt(3)/4, 0.75+sqrt(3)/4);
+   add_polygon(-0.25-sqrt(3)/4, 2.25+sqrt(3)*3/4);
    set_polygon(4, -M_PI/12);
-   add_faces(-0.25-sqrt(3)/4, 0.75+sqrt(3)/4);
-   add_faces(0.25+sqrt(3)/4, 2.25+sqrt(3)*3/4);
+   add_polygon(-0.25-sqrt(3)/4, 0.75+sqrt(3)/4);
+   add_polygon(0.25+sqrt(3)/4, 2.25+sqrt(3)*3/4);
    set_polygon(4, M_PI/4);
-   add_faces(0.5+sqrt(3)/2, 0);
-   add_faces(0, 1.5+sqrt(3)/2);
+   add_polygon(0.5+sqrt(3)/2, 0);
+   add_polygon(0, 1.5+sqrt(3)/2);
    set_polygon(6, M_PI/6);
-   add_faces(0, 0);
-   add_faces(0.5+sqrt(3)/2, 1.5+sqrt(3)/2);
+   add_polygon(0, 0);
+   add_polygon(0.5+sqrt(3)/2, 1.5+sqrt(3)/2);
 }
 
 void unitile::ut_4612()
 {
    set_incs(3+sqrt(3), 3+sqrt(3)*3);
    set_polygon(4, M_PI/12);
-   add_faces(0.75+sqrt(3)/4, 0.75+sqrt(3)*3/4);
-   add_faces(2.25+sqrt(3)*3/4, 2.25+sqrt(3)*9/4);
+   add_polygon(0.75+sqrt(3)/4, 0.75+sqrt(3)*3/4);
+   add_polygon(2.25+sqrt(3)*3/4, 2.25+sqrt(3)*9/4);
    set_polygon(4, -M_PI/12);
-   add_faces(2.25+sqrt(3)*3/4, 0.75+sqrt(3)*3/4);
-   add_faces(0.75+sqrt(3)/4, 2.25+sqrt(3)*9/4);
+   add_polygon(2.25+sqrt(3)*3/4, 0.75+sqrt(3)*3/4);
+   add_polygon(0.75+sqrt(3)/4, 2.25+sqrt(3)*9/4);
    set_polygon(4, M_PI/4);
-   add_faces(1.5+sqrt(3)/2, 0);
-   add_faces(0, 1.5+sqrt(3)*3/2);
+   add_polygon(1.5+sqrt(3)/2, 0);
+   add_polygon(0, 1.5+sqrt(3)*3/2);
    set_polygon(6);
-   add_faces(0, 1+sqrt(3));
-   add_faces(0, 2+sqrt(3)*2);
-   add_faces(1.5+sqrt(3)/2, 2.5+sqrt(3)*5/2);
-   add_faces(1.5+sqrt(3)/2, 0.5+sqrt(3)/2);
+   add_polygon(0, 1+sqrt(3));
+   add_polygon(0, 2+sqrt(3)*2);
+   add_polygon(1.5+sqrt(3)/2, 2.5+sqrt(3)*5/2);
+   add_polygon(1.5+sqrt(3)/2, 0.5+sqrt(3)/2);
    set_polygon(12, M_PI/12);
-   add_faces(0, 0);
-   add_faces(1.5+sqrt(3)/2, 1.5+sqrt(3)*3/2);
+   add_polygon(0, 0);
+   add_polygon(1.5+sqrt(3)/2, 1.5+sqrt(3)*3/2);
 }
 
 
@@ -619,7 +618,6 @@ class ut_opts: public prog_opts {
    public:
       char surface;
       int pattern;
-      int alt;
       double width;
       double height;
       double to_tile;
@@ -633,7 +631,7 @@ class ut_opts: public prog_opts {
       string ofile;
 
       ut_opts(): prog_opts("unitile2d"),
-                 surface('p'), pattern(1), alt(0),
+                 surface('p'), pattern(1),
                  width(20), height(-1),
                  to_tile(true),
                  r(1), R(3), d(5),
@@ -817,7 +815,7 @@ int main(int argc, char *argv[])
    opts.process_command_line(argc, argv);
 
    char errmsg[MSG_SZ];
-   unitile ut(opts.pattern, opts.alt, opts.width, opts.height, opts.to_tile, opts.trans_m, opts.shear);
+   unitile ut(opts.pattern, opts.width, opts.height, opts.to_tile, opts.trans_m, opts.shear);
 
    switch(opts.surface) {
       case 'p':
