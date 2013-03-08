@@ -40,14 +40,15 @@ int cmp_face_angles(const vector<double> &f1, const vector<double> &f2, double m
 
 class ang_less {
    public:
-      bool operator() (const double &a, const double &b) {
+      bool operator() (const double &a, const double &b) const {
          return (cmp_angles(a, b) < 0);
       }
 };
 
 class ang_vect_less {
    public:
-      bool operator() (const vector<double> &f1, const vector<double> &f2) {
+      bool operator() (const vector<double> &f1,
+            const vector<double> &f2) const {
          if(f1.size() != f2.size())
             return (f1.size() < f2.size());
          return (cmp_face_angles(f1, f2) < 0);

@@ -32,7 +32,7 @@
 
 #include <ctype.h>
 #include <math.h>
-#include <limits.h>
+#include <limits>
 
 #include <string>
 #include <vector>
@@ -328,7 +328,8 @@ void waterman_opts::process_command_line(int argc, char **argv)
    if(max_num_decs<50) {
      double test_scale = pow(10, max_num_decs);
      //if((center.mag() + radius + 1)*test_scale > LONG_MAX/sqrt(3))
-     if((center.mag() + radius + 1)*test_scale > sqrt(LLONG_MAX)/sqrt(3))
+     if((center.mag() + radius + 1)*test_scale >
+           sqrt(std::numeric_limits<long long>::max())/sqrt(3))
         scale = 0; // don't use integer calculations
      else
         scale = (long)(test_scale + 0.5);

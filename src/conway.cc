@@ -181,7 +181,7 @@ string resolved_cn_string(const string &cn_string, const bool &use_truncate_algo
 {
    string resolve_string = cn_string;
 
-   int num_subst = 25;
+   const int num_subst = 25;
    string target[num_subst];
    string resolve[num_subst];
                                              // G. Hart Commentary
@@ -792,13 +792,6 @@ void unitize_edges(col_geom_v &geom)
 void centroid_to_origin(geom_if &geom)
 {
    geom.transform(mat3d::transl(-centroid(geom.verts())));
-}
-
-void project_onto_sphere(geom_if &geom)
-{
-   vector<vec3d> &verts = geom.raw_verts();
-   for(unsigned int i=0; i<verts.size(); i++)
-      verts[i].to_unit();
 }
 
 void cn_planarize(col_geom_v &geom, const char &planarization_method, const int &num_iters_planar, const double &eps, const bool &verbosity, const int &rep_count)

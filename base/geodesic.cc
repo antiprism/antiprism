@@ -250,7 +250,7 @@ void geodesic::make_geo(geom_if &geo)
    vector<vector<int> > &gfaces = *geo.get_faces();
    vector<vec3d> &gverts = *geo.get_verts();
    
-   col_geom *cg_b = dynamic_cast<const col_geom *>(&base);
+   const col_geom *cg_b = dynamic_cast<const col_geom *>(&base);
    col_geom *cg_g = dynamic_cast<col_geom *>(&geo);
    
    gverts = base.verts();

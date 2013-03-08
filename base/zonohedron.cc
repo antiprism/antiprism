@@ -49,7 +49,7 @@ using std::string;
 
 
 struct vec_less {
-   bool operator ()(const vec3d &v1, const vec3d &v2)
+   bool operator ()(const vec3d &v1, const vec3d &v2) const
    { return compare(v1, v2, 1e-10)<0; }
 };
 
