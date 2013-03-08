@@ -244,7 +244,7 @@ void planar_opts::process_command_line(int argc, char **argv)
             if(id.substr(0,2)=="eq")
                winding_rule_mode = 1;
             else
-            if(id.substr(0,2)=="ne")
+            if((id.substr(0,2)=="ne") && (id.substr(0,3)!="neg"))
                winding_rule_mode = 2;
             else
             if(id.substr(0,2)=="gt")
