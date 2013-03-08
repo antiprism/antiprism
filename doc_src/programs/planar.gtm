@@ -53,7 +53,7 @@ planar -d tile -M rgb -p 2 uc21_n5/2k4 | antiview -x ve
 
 The faces of uniform compound 75 are colored by winding number
 <<CMDS_START>>
-planar -d tile -W -m map_white:red uc75 | antiview -x ve
+planar -d tile -W w -m map_white:red uc75 | antiview -x ve
 <<CMDS_END>>
 <<EXAMPLES_END>>
 
