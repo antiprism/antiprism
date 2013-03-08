@@ -1,8 +1,8 @@
 Antiprism
 =========
 
-Notes for Antiprism 0.23.rc1
-------------------------------
+Notes for Antiprism 0.23
+------------------------
 
 This is a minor release. It includes some new models (isohedral
 kite-faced polyhedra, crown polyhedra) and evaluation of
@@ -77,10 +77,10 @@ or --with-freeglut.
 
 Cygwin
 ------
-Run configure with "--with-x=no" to avoid building against X, if
-it is installed. It should be possible to build native Windows
-binaries by cross-compiling using the tools provided by Cygwin;
-the -mno-cygwin option is not supported.
+Install the X development packages and run configure with
+"--with-x=yes". It should be possible to build native Windows
+binaries by cross-compiling using the tools provided by Cygwin,
+otherwise, use the MSYS build environment.
 
 Mac OS X
 --------

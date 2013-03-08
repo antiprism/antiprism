@@ -1,7 +1,7 @@
 NEWS for Antiprism: http://www.antiprism.com
 
 Version 0.23
-xx-03-13 Adrian Rossiter <adrian@antiprism.com>
+11-03-13 Adrian Rossiter <adrian@antiprism.com>
          New Programs
             iso_kite: isohedral kite-faced polyhedra
          Changes
@@ -11,6 +11,7 @@ xx-03-13 Adrian Rossiter <adrian@antiprism.com>
             off_query: report element colours
             off_color: GgCc colourings now use z-axis for height.
             polygon: new crown polyhdron types
+            planar: -W takes a colouring argumant
             Symmetry: symmetry alignment should not realign an
               aligned polyhedron, element orbits ordered by lowest
               index number
