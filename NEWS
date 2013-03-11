@@ -20,7 +20,8 @@ Version 0.23
             Build: install directories do not include version number
          Fixes
             leonardo: -o outputs to file 
-            Build: support 'configure --docdir' option
+            Build: support 'configure --docdir' option, fix errors
+              and warnings when building with clang
 
 Version 0.22
 22-10-12 Adrian Rossiter <adrian@antiprism.com>

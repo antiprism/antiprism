@@ -216,6 +216,7 @@ const char *alt_names[][2] = {
    {"snub_dodecahedron", "u29" },
    {"snub_dod", "u29" },
    {"sn_dod", "u29" },
+   {"sn_dodecahedron", "u29" },
    {"small_stellated_dodecahedron", "u34"},
    {"sm_st_dodecahedron", "u34"},
    {"sm_st_dod", "u34"},

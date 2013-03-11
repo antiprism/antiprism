@@ -1,5 +1,5 @@
-define REL_DATE 18 January 2013
-define VER 0.23.pre02
+define REL_DATE 11 March 2013
+define VER 0.23
 define VER_PRE antiprism-
 define ANTIPRISM_RELEASE <<VER_PRE>><<VER>>
 define ANTIPRISM_SOURCE_FILE <<ANTIPRISM_RELEASE>>.tar.gz
