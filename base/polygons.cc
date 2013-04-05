@@ -130,7 +130,6 @@ void prism::make_crown_part(geom_if &geom)
                     (i+1+step2          )%num_sides    + num_sides,
                     (i                  )%num_sides,
                     -1);
-      geom.write(stderr);
    }
 }
 
@@ -874,10 +873,10 @@ void crown_poly::make_crown(geom_if &geom)
 
 void crown_poly::make_poly(geom_if &geom)
 {
-   if(!isnan(twist_angle))
-         polygon::make_poly(geom);
-   else
+   if(!isnan(twist_angle2))
       make_crown(geom);
+   else
+      polygon::make_poly(geom);
 }
 
 
