@@ -14,6 +14,7 @@ given by (partial) name or number
 subtypes: 1. antiprism, from triangulating side faces
 .IP
 2. trapezohedron, with this antiprism\-ised belt
+3. crown (\fB\-A\fR integer to specify a second polygon step)
 .IP
 2. antiprism (angle: polygons twist)
 .IP
@@ -22,7 +23,7 @@ subtypes: 1. trapezohedron, with this antiprism belt
 2. antihermaphrodite, with this antiprism base
 3. scalenohedron (\fB\-L\fR for apex height)
 4. subdivided_scalenohedron (\fB\-L\fR for apex height)
-5. crown
+5. crown (\fB\-A\fR integer to specify a second polygon step)
 .IP
 3. pyramid (angle: base separates, polygons twist to antihermaphrodite)
 .IP
@@ -66,7 +67,9 @@ subtypes: 1. inverted, triangle band inverted
 .IP
 subtypes: 1. polygon
 .IP
-10. crown polyhedron (\fB\-A\fR integer to select a second polygon step)
+10. crown polyhedron (either \fB\-A\fR integer to specify a second polygon step,
+.IP
+or \fB\-a\fR angle to specify a twist
 .PP
 num_sides is a number (N) optionally followed by / and a second
 number (N/D). N is the number of vertices spaced equally on a

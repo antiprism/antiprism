@@ -107,6 +107,34 @@ void dihedron::make_poly_part(geom_if &geom)
    }
 }
 
+void prism::make_crown_part(geom_if &geom)
+{
+   prism pri(*this);
+   pri.set_subtype(0);
+   pri.set_twist_angle(NAN);
+   pri.make_poly_part(geom);
+   geom.clear_faces();
+   int step2 = isnan(twist_angle2) ? 1 : int(floor(twist_angle2+0.5));
+   step2 = ((step2%num_sides)+num_sides)%num_sides;
+
+   int N = num_sides;
+   for(int i=0; i<N; i++) {
+      geom.add_face((i-step2+num_sides)%num_sides,
+                    (i+1                )%num_sides    + num_sides,
+                    (i+1+step2          )%num_sides,
+                    (i                  )%num_sides    + num_sides,
+                    -1);
+
+      geom.add_face((i-step2+num_sides  )%num_sides    + num_sides,
+                    (i+1                )%num_sides,
+                    (i+1+step2          )%num_sides    + num_sides,
+                    (i                  )%num_sides,
+                    -1);
+      geom.write(stderr);
+   }
+}
+
+
 
 void prism::make_poly_part(geom_if &geom)
 {
@@ -121,6 +149,10 @@ void prism::make_poly_part(geom_if &geom)
       double twist_ang = isnan(twist_angle) ? 0.0 : twist_angle;
       ant.set_twist_angle(twist_ang-angle()/2);
       ant.make_poly(geom);
+      return;
+   }
+   else if(subtype==subtype_crown) {
+      make_crown_part(geom);
       return;
    }
 
@@ -244,6 +276,7 @@ void antiprism::make_crown_part(geom_if &geom)
    ant.make_poly_part(geom);
    geom.clear_faces();
    int step2 = isnan(twist_angle2) ? 1 : int(floor(twist_angle2+0.5));
+   step2 = ((step2%num_sides)+num_sides)%num_sides;
 
    for(int i=0; i<num_sides; i++) {
       geom.add_face((i+1-step2+num_sides)%num_sides,
@@ -256,10 +289,6 @@ void antiprism::make_crown_part(geom_if &geom)
                     (i+1+step2          )%num_sides    + num_sides,
                     (i+2                )%num_sides,
                     -1);
-      //geom.add_face(i,                         (i+1)%num_sides+num_sides,
-      //              (i+2)%num_sides,           i+num_sides,               -1);
-      //geom.add_face(i+num_sides,               (i+1)%num_sides,
-      //              (i+2)%num_sides+num_sides, (i+2)%num_sides, -1);
    }
 }
 
@@ -790,5 +819,67 @@ void crown_poly::make_poly_part(geom_if &geom)
    }
 
 }
+
+void crown_poly::make_crown(geom_if &geom)
+{
+   int N = num_sides*parts;
+   int step1 = (((step*parts)%N)+N)%N;
+   int step2 = isnan(twist_angle2) ? 1 : int(floor(twist_angle2+0.5));
+   bool is_prism = is_even(step1 + step2);
+
+   if(is_prism) {
+      prism pri(N);
+      pri.set_radius(radius);
+      pri.set_height(height);
+      pri.make_poly_part(geom);
+      geom.clear_faces();
+      int offset = (step2-step1)/2;
+      for(int i=0; i<N; i++) {
+         geom.add_face((i-offset       +N )%N,
+                       (i+step1           )%N  + N,
+                       (i+step1+offset +N )%N,
+                       (i                 )%N  + N,
+                       -1);
+
+         geom.add_face((i-offset       +N )%N  + N,
+                       (i+step1           )%N,
+                       (i+step1+offset +N )%N  + N,
+                       (i                 )%N,
+                       -1);
+      }
+   }
+   else {
+      antiprism ant(N);
+      ant.set_radius(radius);
+      ant.set_height(height);
+      ant.make_poly_part(geom);
+      geom.clear_faces();
+      bool odd1 = !is_even(step1);
+      bool odd2 = !is_even(step2);
+      for(int i=0; i<N; i++) {
+         geom.add_face((i          )%N,
+                       (i-1+(step2+odd2)/2+(step1+odd1)/2  +N)%N + N,
+                       (i+step2    )%N,
+                       (i-1+(step2+odd2)/2-(step1-odd1)/2  +N)%N + N,
+                       -1);
+         geom.add_face((i          )%N,
+                       (i-1+(step1+odd1)/2+(step2+odd2)/2  +N)%N + N,
+                       (i+step1    )%N,
+                       (i-1+(step1+odd1)/2-(step2-odd2)/2  +N)%N + N,
+                       -1);
+      }
+   }
+}
+
+
+void crown_poly::make_poly(geom_if &geom)
+{
+   if(!isnan(twist_angle))
+         polygon::make_poly(geom);
+   else
+      make_crown(geom);
+}
+
+
 
 

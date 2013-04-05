@@ -85,12 +85,13 @@ void pg_opts::usage()
 "   1. prism (angle: polygons twist, forming an antiprism)\n"
 "        subtypes: 1. antiprism, from triangulating side faces\n"
 "                  2. trapezohedron, with this antiprism-ised belt\n"
+"                  3. crown (-A integer to specify a second polygon step)\n"
 "   2. antiprism (angle: polygons twist)\n"
 "        subtypes: 1. trapezohedron, with this antiprism belt\n"
 "                  2. antihermaphrodite, with this antiprism base\n"
 "                  3. scalenohedron (-L for apex height)\n"
 "                  4. subdivided_scalenohedron (-L for apex height)\n"
-"                  5. crown\n"
+"                  5. crown (-A integer to specify a second polygon step)\n"
 "   3. pyramid (angle: base separates, polygons twist to antihermaphrodite)\n"
 "        subtypes: 1. antihermaphrodite, with this antiprism base\n"
 "                  2. elongated (-L for prism height)\n"
@@ -114,7 +115,8 @@ void pg_opts::usage()
 "        subtypes: 1. inverted, triangle band inverted\n"
 "   9. dihedron\n"
 "        subtypes: 1. polygon\n"
-" 10. crown polyhedron (-A integer to select a second polygon step)\n"
+"  10. crown polyhedron (either -A integer to specify a second polygon step,\n"
+"                            or -a angle to specify a twist\n"
 "\n"
 "num_sides is a number (N) optionally followed by / and a second\n"
 "number (N/D). N is the number of vertices spaced equally on a\n"
@@ -241,7 +243,7 @@ void pg_opts::process_command_line(int argc, char **argv)
    if(subtype_str != "") {
       params="0";
       if(type==t_prism)
-         params += "|antiprism|trapezohedron";
+         params += "|antiprism|trapezohedron|crown";
       else if(type==t_antiprism)
          params += "|trapezohedron|antihermaphrodite|scalenohedron"
                    "|subdivided_scalenohedron|crown";
@@ -343,11 +345,16 @@ int main(int argc, char *argv[])
       if(!poly->set_subtype(opts.subtype, errmsg))
          opts.error(errmsg, 's');
    }
-   
+
    if(opts.type==pg_opts::t_cupola && opts.subtype==3 &&
          ((poly->get_step()*poly->get_parts())%2) )
       opts.error("cannot make a cupoloid unless the specified polygon fraction (in lowest form) has an even denominator", "polygon type");
-         
+
+   if(opts.type==pg_opts::t_crown &&
+         !isnan(opts.twist_ang) && !isnan(opts.twist_ang2) )
+      opts.warning("value ignored, cannot set -a and -A for a crown polyhedron",
+         'a');
+
    if(poly->get_num_sides()==2 && (opts.subtype==1||!isnan(opts.twist_ang)) ) {
       if(opts.type==pg_opts::t_pyramid)
          opts.error("cannot make an antihermaphrodite from a digonal pyramid",

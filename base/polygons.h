@@ -208,23 +208,29 @@ class dihedron: public polygon {
 
 ///Make a %prism
 class prism: public polygon {
+   private:
+      void make_crown_part(geom_if &geom);
+
    public:
       enum { subtype_antiprism=1,
-             subtype_trapezohedron };
+             subtype_trapezohedron,
+             subtype_crown };
 
       ///Constructor
       /**Base polygon in form {N/D} (with N/D not necessarily in lowest form.)
        * \param N number of sides to the (compound) polygon.
        * \param D the number of vertices stepped by an edge (default 1) */
       prism(int N, int D=1) : polygon(N, D)
-         { set_max_subtype(2); }
+         { set_max_subtype(3); }
 
       ///Constructor
       /**\param pgon %polygon to base the polyhedron on. */
-      prism(polygon &pgon) : polygon(pgon) { set_max_subtype(2); }
+      prism(polygon &pgon) : polygon(pgon) { set_max_subtype(3); }
 
       bool set_twist_angle(double ang=NAN, char * /*msg*/ =0)
          { twist_angle=ang; return true; }
+      bool set_twist_angle2(double ang2=NAN, char * /*msg*/ =0)
+         { twist_angle2=ang2; return true; }
       bool set_edge2(double e2, char * /*msg*/ =0) { height=e2; return true; }
       void make_poly_part(geom_if &geom);
 }; 
@@ -406,6 +412,9 @@ class gyrobicupola: public cupola {
 
 ///Make a crown polyhedron
 class crown_poly: public polygon {
+   private:
+      void make_crown(geom_if &geom);
+
    public:
       ///Constructor
       /**Base polygon in form {N/D} (with N/D not necessarily in lowest form.)
@@ -420,9 +429,12 @@ class crown_poly: public polygon {
 
       bool set_twist_angle(double ang=NAN, char * /*msg*/ =0)
          { twist_angle=ang; return true; }
+      bool set_twist_angle2(double ang2=NAN, char * /*msg*/ =0)
+         { twist_angle2=ang2; return true; }
       bool set_edge2(double e2, char *msg=0);
       bool set_height(double e2, char *msg=0);
       void make_poly_part(geom_if &geom);
+      void make_poly(geom_if &geom);
 }; 
 
 
