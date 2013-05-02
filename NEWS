@@ -3,6 +3,7 @@ NEWS for Antiprism: http://www.antiprism.com
 Version 0.24
 xx-xx-13 Adrian Rossiter <adrian@antiprism.com>
          New Programs
+            to_nfold: change the rotational symmetry of a polyhedron
          Changes
          Fixes
 

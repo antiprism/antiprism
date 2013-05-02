@@ -37,6 +37,7 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/iso_kite.gtm 2 iso_kite - isohedral kite-faced polyhedra
 ./doc/conway.gtm 2 conway - Conway Notation transformations
 ./doc/poly_kscope.gtm 2 poly_kscope - polyhedral kaleidoscope
+./doc/to_nfold.gtm 2 to_nfold - change the rotational symmetry of a polyhedron
 ./doc/unitile2d.gtm 2 unitile2d - make uniform tilings on a surface
 ./doc/string_art.gtm 2 string_art - string figures
 ./doc/lat_grid.gtm 2 lat_grid - lattices and grids with integer coordinates

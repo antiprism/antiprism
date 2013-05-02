@@ -1,0 +1,74 @@
+#define HL_PROG class=curpage
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+<<TITLE_HEAD>>
+
+<<TOP_LINKS>>
+
+<<USAGE_START>>
+<pre class="prog_help">
+<<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</pre>
+<<USAGE_END>>
+
+
+<<EXAMPLES_START>>
+Increase rotational symmetry, e.g. pentagonal prism to hexagonal prism
+<<CMDS_START>>
+   to_nfold 6 pri5 | antiview
+<<CMDS_END>>
+
+Decrease rotational symmetry, e.g. pentagonal prism to triangular prism
+<<CMDS_START>>
+   to_nfold 3 pri5 | antiview
+<<CMDS_END>>
+
+Change rotational symmetry with a fraction, the denominator introduces a
+step, e.g. pentagonal prism to {7/2}-prism
+<<CMDS_START>>
+   to_nfold 7/2 pri5 | antiview
+<<CMDS_END>>
+
+Change the basic step of a model, e.g. pentagramic dipyramid to pentagonal
+pyramid (2*3 = 1 mod(5))
+<<CMDS_START>>
+   to_nfold 5/3 dip5/2 | antiview
+<<CMDS_END>>
+
+Open an edge, taken as a digon, e.g. convert snub disphenoid to (non-Johnson)
+snub square antiprism
+<<CMDS_START>>
+   to_nfold 4 j_snub_disphenoid | antiview
+<<CMDS_END>>
+
+Close a polygon down to a digon, e.g. convert snub square antiprism to
+(non-Johnson) snub disphenoid
+<<CMDS_START>>
+   to_nfold 2 j_snub_square_antiprism | antiview
+<<CMDS_END>>
+
+Convert a polyhedral torus
+<<CMDS_START>>
+   unitile2d -s t | off_trans -R 90,0,0 | to_nfold 11/2 | antiview
+<<CMDS_END>>
+
+
+<<EXAMPLES_END>>
+
+
+<<NOTES_START>>
+<p>Models with non-axial polygons that cross the model (e.g. a slanting
+polygon that is intersected by the axis) cannot be converted. They
+require a different handling, which is not currently implemeted.
+</p>
+<p>
+<i>to_nfold</i> is based on an 
+<a href="http://tech.groups.yahoo.com/group/antiprism/message/6997">idea by Bruce R. Gilson</a>.
+</p>
+
+#include "<<END>>"

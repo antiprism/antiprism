@@ -31,18 +31,17 @@ Programs
 
 <b>Conversion</b>
 <ul>
-<li><a href="off2pov.html">off2pov</a> - converts OFF files to POV format
-<li><a href="off2vrml.html">off2vrml</a> - converts OFF files to VRML format
-<li><a href="off2m.html">off2m</a> - converts an OFF file to LiveGraphics3D 'm' format
-<li><a href="off2crds.html">off2crds</a> - converts an OFF file to a coordinate file
-<li><a href="m2off.html">m2off</a> - converts a LiveGraphics3D 'm' file to OFF format
+<li><a href="off2pov.html">off2pov</a> - convert OFF files to POV format
+<li><a href="off2vrml.html">off2vrml</a> - convert OFF files to VRML format
+<li><a href="off2m.html">off2m</a> - convert an OFF file to LiveGraphics3D 'm' format
+<li><a href="off2crds.html">off2crds</a> - convert an OFF file to a coordinate file
+<li><a href="m2off.html">m2off</a> - convert a LiveGraphics3D 'm' file to OFF format
 </ul>
 
 <b>Manipulation</b>
 <ul>
-<li><a href="off_color.html">off_color</a> - adds colours to an OFF file
-<li><a href="off_trans.html">off_trans</a> -
-   transformations (rotations, translations, etc) of OFF files
+<li><a href="off_color.html">off_color</a> - add colours to an OFF file
+<li><a href="off_trans.html">off_trans</a> - transformations (rotations, translations, etc) of OFF files
 <li><a href="off_align.html">off_align</a> - alignment of OFF files 
 <li><a href="off_util.html">off_util</a> - utilities for OFF files (orientation, merging, etc)
 <li><a href="planar.html">planar</a> - convert overlapping coplanar polygons into non-overlapping tiles
@@ -50,7 +49,7 @@ Programs
 
 <b>Reporting</b>
 <ul>
-<li><a href="off_report.html">off_report</a> - report of global measures (e.g. area, volume, centroid), maxima, and counts
+<li><a href="off_report.html">off_report</a> - report global measures (e.g. area, volume, centroid), maxima, and counts
 <li><a href="off_query.html">off_query</a> - list element data
 <li><a href="off_normals.html">off_normals</a> - utility for working with normals
 </ul>
@@ -66,7 +65,8 @@ Programs
 <li><a href="iso_kite.html">iso_kite</a> - isohedral kiteohedra
 <li><a href="conway.html">conway</a> - Conway Notation transformations
 <li><a href="poly_kscope.html">poly_kscope</a> - polyhedral kaleidoscope
-<li><a href="unitile2d.html">unitile2d</a> - makes uniform tilings on a surface
+<li><a href="to_nfold.html">to_nfold</a> - change the rotational symmetry of a polyhedron
+<li><a href="unitile2d.html">unitile2d</a> - make uniform tilings on a surface
 <li><a href="string_art.html">string_art</a> - string figures
 <li><a href="lat_grid.html">lat_grid</a> - lattices and grids with integer coordinates
 <li><a href="bravais.html">bravais</a> - Bravais lattices
@@ -81,8 +81,7 @@ Programs
 <li><a href="sph_rings.html">sph_rings</a> - rings of points on a sphere
 <li><a href="sph_saff.html">sph_saff</a> - spiral points on a sphere (Saff and Kuiljaars)
 <li><a href="repel.html">repel</a> - equilibrium of points repelling on a sphere
-<li><a href="minmax.html">minmax</a> - minimise a spherical tesselation's
-      maximum edge length, turn face data only into a spherical tesselation
+<li><a href="minmax.html">minmax</a> - minimise a spherical tesselation's maximum edge length, turn face data only into a spherical tesselation
 <li><a href="col_util.html">col_util</a> - colour utilities, plots and blending
 </ul>
 
