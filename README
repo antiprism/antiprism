@@ -1,12 +1,10 @@
 Antiprism
 =========
 
-Notes for Antiprism 0.23
+Notes for Antiprism 0.24
 ------------------------
 
-This is a minor release. It includes some new models (isohedral
-kite-faced polyhedra, crown polyhedra) and evaluation of
-mathematical expressions for program arguments.
+This is a minor release. It includes...
 
 Please look out for bugs, or other issues, and report them to me
 at: adrian@antiprism.com
