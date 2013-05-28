@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2009, Adrian Rossiter
+   Copyright (c) 2003-2012, Adrian Rossiter
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -22,7 +22,7 @@
 
 /*
    Name: minmax.cc
-   Description: minimise the maximum edgelength on a sphere
+   Description: minimise the maximum edge length on a sphere
    Project: Antiprism - http://www.antiprism.com
 */
 
@@ -39,21 +39,43 @@ using std::string;
 using std::vector;
 
 
+class iter_params {
+   public:
+      int num_iters;
+      int num_iters_status;
+      int sig_digits;
+      FILE *rep_file;
+      iter_params(): num_iters(1000), num_iters_status(1000),
+                  sig_digits(16), rep_file(stderr)
+                  {}
+
+      double get_test_val() { return pow(10, -sig_digits); }
+      bool quiet() { return rep_file==0; }
+      bool check_status(int n) { return n==num_iters || n==1 ||
+         (num_iters_status>0 && n%num_iters_status==0); }
+      bool checking_status() { return num_iters_status>0; };
+      bool print_progress_dot(int n) {
+         if(!quiet() && num_iters_status>=0)
+            return (n%num_iters)%(num_iters_status/10)==0;
+         else
+            return false;
+      }
+};
 
 class mm_opts: public prog_opts
 {
    public:
-      int num_iters;
+      iter_params it_params;
       char algm;
       char placement;
       double shorten_by;
       double lengthen_by;
       vec4d ellipsoid;
-      
+
       string ifile;
       string ofile;
 
-      mm_opts(): prog_opts("minmax"), num_iters(1000), algm('v'),
+      mm_opts(): prog_opts("minmax"), algm('v'),
                  placement('n'), shorten_by(1.0), lengthen_by(0.0)
                  {}
 
@@ -75,12 +97,14 @@ void mm_opts::usage()
 "\n"
 "Options\n"
 "%s"
-"  -n <itrs> number of iterations (default 1000)\n" 
-"  -s <perc> percentage to shorten the maximum edge by (default 1)\n" 
-"  -l <perc> percentage to lengthen the minimum edge by (default 1)\n" 
+"  -n <itrs> number of iterations (default 1000)\n"
+"  -s <perc> percentage to shorten the maximum edge by (default 1)\n"
+"  -l <perc> percentage to lengthen the minimum edge by (default 1)\n"
 "  -a <alg>  length changing algorithm\n"
 "              v - shortest and longest edges attached to a vertex (default)\n"
 "              a - shortest and longest of all edges\n"
+"              u - make unit edge polyhedon (-l controls planarity,\n"
+"                  ignore -p, -E)\n"
 "  -p <mthd> method of placement onto a unit sphere:\n"
 "              n - project onto the sphere (default)\n"
 "              r - random placement\n"
@@ -89,23 +113,29 @@ void mm_opts::usage()
 "  -E <prms> use ellipsoid, three numbers separated by commas are the\n"
 "            axis lengths (for a superellipsoid an optional fourth number\n"
 "            gives the power)\n"
+"  -L <lim>  minimum change of distance/width_of_model to terminate, as \n"
+"               negative exponent (default: %d giving %.0e)\n"
+"  -z <n>    status checking and reporting every n iterations, -1 for no\n"
+"            status (default: 1000)\n"
+"  -q        quiet, do not print status messages\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
-"\n", prog_name(), help_ver_text);
+"\n", prog_name(), help_ver_text,
+   it_params.sig_digits, it_params.get_test_val() );
 }
 
 
-     
+
 void mm_opts::process_command_line(int argc, char **argv)
 {
    char errmsg[MSG_SZ];
    opterr = 0;
    char c;
    vector<double> nums;
-   
+
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hn:s:l:a:p:E:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hn:s:l:a:p:E:L:z:qo:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -115,10 +145,17 @@ void mm_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'n':
-            if(!read_int(optarg, &num_iters, errmsg))
+            if(!read_int(optarg, &it_params.num_iters, errmsg))
                error(errmsg, c);
-            if(num_iters < 0)
+            if(it_params.num_iters < 0)
                error("number of iterations must be greater than 0", c);
+            break;
+
+         case 'z':
+            if(!read_int(optarg, &it_params.num_iters_status, errmsg))
+               error(errmsg, c);
+            if(it_params.num_iters_status < -1)
+               error("number of iterations must be -1 or greater", c);
             break;
 
          case 's':
@@ -148,7 +185,7 @@ void mm_opts::process_command_line(int argc, char **argv)
             placement = *optarg;
             break;
 
-         case 'E': 
+         case 'E':
             if(!read_double_list(optarg, nums, errmsg))
                error(errmsg, c);
             if(nums.size()<3 || nums.size()>4)
@@ -159,6 +196,21 @@ void mm_opts::process_command_line(int argc, char **argv)
                error("superellipsoid power must be greater than zero", c);
             break;
 
+         case 'L':
+            if(!read_int(optarg, &it_params.sig_digits, errmsg))
+               error(errmsg, c);
+            if(it_params.sig_digits < 0) {
+               warning("termination limit is negative, and so ignored", c);
+            }
+            if(it_params.sig_digits > DEF_SIG_DGTS) {
+               warning("termination limit is very small, may not be attainable", c);
+            }
+            break;
+
+         case 'q':
+            it_params.rep_file = 0;
+            break;
+
          default:
             error("unknown command line error");
       }
@@ -166,7 +218,7 @@ void mm_opts::process_command_line(int argc, char **argv)
 
    if(argc-optind > 1)
       error("too many arguments");
-   
+
    if(argc-optind == 1)
       ifile=argv[optind];
 
@@ -193,11 +245,11 @@ void initial_placement(geom_if &geom, char placement, vec4d ellipsoid)
          for(unsigned int i=0; i<geom.get_verts()->size(); i++)
             to_ellipsoid((*geom.get_verts())[i], ellipsoid);
          break;
-      
+
       case 'u':
          for(unsigned int i=0; i<geom.get_verts()->size(); i++)
             (*geom.get_verts())[i] = vec3d(-1,0,0);
-        
+
          for(unsigned int i=0; i<face.size(); i++) {
             (*geom.get_verts())[face[i]] = vec3d(1,
                     0.01*cos(i*2*M_PI/face.size()),
@@ -205,7 +257,7 @@ void initial_placement(geom_if &geom, char placement, vec4d ellipsoid)
             (*geom.get_verts())[face[i]].to_unit();
          }
          break;
-         
+
       case 'r':
       {
          rand_gen rnd;
@@ -219,14 +271,14 @@ void initial_placement(geom_if &geom, char placement, vec4d ellipsoid)
    }
 }
 
-void minmax_a(geom_v &geom, double shorten_factor, double lengthen_factor,
-      int n=1000, vec4d ellipsoid=vec4d())
+void minmax_a(geom_v &geom, iter_params it_params, double shorten_factor,
+      double lengthen_factor, vec4d ellipsoid=vec4d())
 {
    vector<vec3d> &verts = *geom.get_verts();
    vector<vector<int> > &edges = *geom.get_edges();
    int max_edge=0, min_edge=0, p0, p1;
    double dist, max_dist=0, min_dist=1e100;
-   for(int cnt=0; cnt<n; cnt++) {
+   for(int cnt=1; cnt<=it_params.num_iters; cnt++) {
       max_dist = 0;
       min_dist = 1e100;
       for(unsigned int i=0; i<edges.size(); i++) {
@@ -255,77 +307,27 @@ void minmax_a(geom_v &geom, double shorten_factor, double lengthen_factor,
       to_ellipsoid(verts[p0], ellipsoid);
       verts[p1] += diff*lengthen_factor;
       to_ellipsoid(verts[p1], ellipsoid);
-      
-      if((cnt+1)%100 == 0)
-         fprintf(stderr, ".");
-      if((cnt+1)%1000 == 0)
-         fprintf(stderr, "\n%-15d %12.10g  (%12.10g) ", cnt+1, max_dist, min_dist);
+
+      if(!it_params.quiet() && it_params.check_status(cnt))
+         fprintf(it_params.rep_file, "\niter:%-15d max:%17.15f min:%17.15f ",
+               cnt, max_dist,min_dist);
+      else if(it_params.print_progress_dot(cnt))
+         fprintf(it_params.rep_file, ".");
    }
-   if(n%1000 != 0)
-      fprintf(stderr, "\n%-15d %12.10g  (%12.10g) ", n, max_dist, min_dist);
-   fprintf(stderr, "\n");
+   if(!it_params.quiet() && it_params.checking_status())
+      fprintf(it_params.rep_file,
+            "\nFinal:\niter:%-15d max:%17.15f min:%17.15f\n",
+            it_params.num_iters, max_dist, min_dist);
 }
 
-/*
-bool get_dist_sum(vector<vec3d> &verts, vec3d vert, vector<int> &eds, double &dist)
-{
-   bool valid = true;
-   dist = 0;
-   for(unsigned int i=0; i<eds.size(); i++) {
-      double inc = (vert - verts[eds[i]]).mag();
-      if(inc<1)
-         valid = false;
-      dist += inc;
-   }
 
-   return valid;
-}
-      
-void minmax_v(geom_v &geom, vector<vector<int> > &eds, double shorten_factor, double, int n=1000)
-{
-   vector<vec3d> &verts = *geom.get_verts();
-   double perim=24;
-   rand_gen rnd;
-   rnd.time_seed();
-   for(int cnt=0; cnt<n; cnt++) {
-      for(unsigned int v=0; v<verts.size(); v++) {
-         double cur_sum, test_sum;
-         get_dist_sum(verts, verts[v], eds[v], cur_sum);
-         for(int j=0; j<20;j++) {
-            vec3d test_vert =(verts[v] + vec3d::random(rnd)*shorten_factor).unit();
-            if( get_dist_sum(verts, test_vert, eds[v], test_sum) &&
-                test_sum<cur_sum ) {
-               cur_sum = test_sum;
-               verts[v] = test_vert;
-               break;
-            }
-         }
-      }
-     
-      perim = 0.0;
-      for(unsigned int v=0; v<verts.size(); v++) {
-         double sum;
-         get_dist_sum(verts, verts[v], eds[v], sum);
-         perim += sum;
-      }
-      if((cnt+1)%100 == 0)
-         fprintf(stderr, ".");
-      if((cnt+1)%1000 == 0)
-         fprintf(stderr, "\n%-15d  perim=%12.10g", cnt+1, perim);
-   }
-   if(n%1000 != 0)
-      fprintf(stderr, "\n%-15d  perim=%12.10g", n, perim);
-   fprintf(stderr, "\n");
-}
-*/
- 
-void minmax_v(geom_v &geom, vector<vector<int> > &eds, double shorten_factor,
-      double lengthen_factor, int n=1000, vec4d ellipsoid=vec4d())
+void minmax_v(geom_v &geom, iter_params it_params, vector<vector<int> > &eds,
+      double shorten_factor, double lengthen_factor, vec4d ellipsoid=vec4d())
 {
    vector<vec3d> &verts = *geom.get_verts();
    int max_edge=0, min_edge=0, p0, p1;
    double dist, max_dist=0, min_dist=1e100, g_max_dist=0, g_min_dist=1e100;
-   for(int cnt=0; cnt<n; cnt++) {
+   for(int cnt=1; cnt<=it_params.num_iters; cnt++) {
       g_max_dist = 0;
       g_min_dist = 1e100;
       for(unsigned int v=0; v<verts.size(); v++) {
@@ -349,7 +351,7 @@ void minmax_v(geom_v &geom, vector<vector<int> > &eds, double shorten_factor,
             if(dist < g_min_dist)
                g_min_dist = dist;
          }
-         
+
          p0 = v;
          p1 = eds[v][max_edge];
          vec3d diff = verts[p1] - verts[p0];
@@ -362,112 +364,122 @@ void minmax_v(geom_v &geom, vector<vector<int> > &eds, double shorten_factor,
          verts[p0] -= diff*lengthen_factor;
          to_ellipsoid(verts[p0], ellipsoid);
       }
-      
-      if((cnt+1)%100 == 0)
-         fprintf(stderr, ".");
-      if((cnt+1)%1000 == 0)
-         fprintf(stderr, "\n%-15d %12.10g  (%12.10g) ", cnt+1, g_max_dist, g_min_dist);
+
+      if(!it_params.quiet() && it_params.check_status(cnt))
+         fprintf(it_params.rep_file, "\niter:%-15d max:%17.15f min:%17.15f ",
+               cnt, g_max_dist, g_min_dist);
+      else if(it_params.print_progress_dot(cnt))
+         fprintf(it_params.rep_file, ".");
    }
-   if(n%1000 != 0)
-      fprintf(stderr, "\n%-15d %12.10g  (%12.10g) ", n, g_max_dist, g_min_dist);
-   fprintf(stderr, "\n");
+   if(!it_params.quiet() && it_params.checking_status())
+      fprintf(it_params.rep_file,
+            "\nFinal:\niter:%-15d max:%17.15f min:%17.15f\n",
+            it_params.num_iters, g_max_dist, g_min_dist);
 }
 
 
 
-void minmax_unit(geom_v &geom, vector<vector<int> > &eds, double shorten_factor, int n=1000)
+void minmax_unit(geom_if &geom, iter_params it_params, double shorten_factor,
+      double plane_factor)
 {
-   vector<vec3d> &verts = *geom.get_verts();
-   vector<vector<int> > diags (verts.size(), vector<int>());
-   vector<vector<int> > &faces = *geom.get_faces();
-   for(unsigned int i=0; i<faces.size(); i++) {
-      int fsz = faces[i].size();
-      for(int j=0; j<fsz/2; j++)  {
-         if(fsz==3)
-            continue;
-         //fprintf(stderr, "adding %d - %d\n", faces[i][j], faces[i][j+fsz/2]);
-         diags[faces[i][j]].push_back(faces[i][j+fsz/2]);
-         diags[faces[i][j+fsz/2]].push_back(faces[i][j]);
-      }
+   double test_val = it_params.get_test_val();
+   const double divergence_test2 = 1e30; // test vertex dist^2 for divergence
+   // do a scale to get edges close to 1
+   geom_info info(geom);
+   double scale = info.iedge_lengths().sum/info.num_iedges();
+   if (scale)
+      geom.transform(mat3d::scale(1/scale));
+
+   const vector<vec3d> &verts = geom.verts();
+   const vector<vector<int> > &faces = geom.faces();
+
+   double max_diff2=0;
+   vec3d origin(0,0,0);
+   vector<double> rads(faces.size());
+   for(unsigned int f=0; f<faces.size(); f++) {
+      int N = faces[f].size();
+      int D = abs(find_polygon_denominator_signed(geom, f, epsilon));
+      if(!D)
+         D = 1;
+      rads[f] = 0.5/sin(M_PI*D/N);  // circumradius of regular polygon
+      //fprintf(stderr, "{%d/%d} rad=%g\n", N, D, rads[f]);
    }
-         
-   double dist, max_dist=0, min_dist=1e100, g_max_dist=0, g_min_dist=1e100;
-   for(int cnt=0; cnt<n; cnt++) {
-      g_max_dist = 0;
-      g_min_dist = 1e100;
-      for(unsigned int v=0; v<verts.size(); v++) {
-         max_dist = 0;
-         min_dist = 1e100;
-         vec3d off_sum(0,0,0);
-         for(unsigned int i=0; i<eds[v].size(); i++) {
-            vec3d off = verts[v] - verts[eds[v][i]];
-            dist = off.mag();
-            off_sum += off.unit()*(1-dist)*shorten_factor;
-            
-            //fprintf(stderr, "dist=%g\n", dist);
-            if(dist > max_dist) {
-               max_dist = dist;
-            }
-            if(dist > g_max_dist)
-               g_max_dist = dist;
-            if(dist < min_dist) {
-               min_dist = dist;
-            }
-            if(dist < g_min_dist)
-               g_min_dist = dist;
-         }
-         
-         verts[v] += off_sum;
-         off_sum = vec3d(0,0,0);
-     
-         vector<vec3d> vs(verts.size(), vec3d(0,0,0));
-         for(unsigned int f=0; f<faces.size(); f++) {
-            if(faces[f].size()==3)
-               continue;
-            vec3d norm = face_norm(verts, faces[f]).unit();
-            vec3d f_cent = centroid(verts, faces[f]);
-            if(vdot(norm, f_cent)<0)
-               norm *= -1.0;
-            for(unsigned int v=0; v<faces[f].size(); v++)
-               vs[faces[f][v]] +=
-                  vdot(shorten_factor*norm, f_cent - verts[faces[f][v]]) *norm;
-         }
 
-         // adjust vertices post-loop
-         for(unsigned int i=0; i<vs.size(); i++)
-            verts[i] += vs[i];
 
-         for(unsigned int i=0; i<diags[v].size(); i++) {
-            vec3d off = verts[v] - verts[diags[v][i]];
-            dist = off.mag();
-            off_sum += off.unit()*(sqrt(2)-dist)*shorten_factor;
+   bool diverging = false;
+   int cnt=0;
+   for(cnt=1; cnt<=it_params.num_iters; cnt++) {
+      vector<vec3d> old_verts = verts;
 
-            if(dist > max_dist) {
-               max_dist = dist;
-            }
-            if(dist > g_max_dist)
-               g_max_dist = dist;
-            if(dist < min_dist) {
-               min_dist = dist;
-            }
-            if(dist < g_min_dist)
-               g_min_dist = dist;
+      // Vertx offsets for the iteration.
+      vector<vec3d> offsets(verts.size(), vec3d::zero);
+      for(unsigned int ff=cnt; ff<faces.size()+cnt; ff++) {
+         const unsigned int f = ff%faces.size();
+         const vector<int> &face = faces[f];
+         const unsigned int f_sz = face.size();
+         vec3d norm = geom.face_norm(f).unit();
+         vec3d f_cent = geom.face_cent(f);
+         if(vdot(norm, f_cent)<0)
+            norm *= -1.0;
+
+         for(unsigned int vv=cnt; vv<f_sz+cnt; vv++) {
+            unsigned int v = vv%f_sz;
+            //offset for unit edges
+            vector<int> edge = make_edge(face[v], face[(v+1)%f_sz]);
+            vec3d offset = (1-geom.edge_len(edge))*shorten_factor *
+                            geom.edge_vec(edge);
+            offsets[edge[0]] -= offset;
+            offsets[edge[1]] += offset;
+
+            //offset for planarity
+            offsets[face[v]] +=
+               vdot(plane_factor*norm, f_cent - verts[face[v]])*norm;
+
+            //offset for polygon radius
+            vec3d rad_vec = (verts[face[v]] - f_cent);
+            offsets[face[v]] += (rads[f]-rad_vec.mag())*shorten_factor*rad_vec;
          }
-      verts[v] += off_sum;
       }
 
-      
-      if((cnt+1)%100 == 0)
-         fprintf(stderr, ".");
-      if((cnt+1)%1000 == 0)
-         fprintf(stderr, "\n%-15d %12.10g  (%12.10g) ", cnt+1, g_max_dist, g_min_dist);
+      // adjust vertices post-loop
+      for(unsigned int i=0; i<offsets.size(); i++)
+         geom.raw_verts()[i] += offsets[i];
+
+      if(it_params.check_status(cnt)) {
+         max_diff2 = 0;
+         for(unsigned int i=0; i<offsets.size(); i++) {
+            double diff2 = offsets[i].mag2();
+            if(diff2>max_diff2)
+               max_diff2 = diff2;
+         }
+
+         double width = bound_box(verts).max_width();
+         if(sqrt(max_diff2)/width < test_val)
+            break;
+
+         if(!it_params.quiet())
+            fprintf(it_params.rep_file, "iter:%-15d max_diff:%17.15e\n",
+                  cnt, sqrt(max_diff2));
+         
+         // see if radius is expanding or contracting unreasonably
+         if (divergence_test2 > 0) {
+            diverging = false;
+            for(unsigned int i=0; i<offsets.size(); i++)
+               if(offsets[i].mag2()>divergence_test2) {
+                  diverging = true;
+                  break;
+               }
+         }
+      }
    }
-   if(n%1000 != 0)
-      fprintf(stderr, "\n%-15d %12.10g  (%12.10g) ", n, g_max_dist, g_min_dist);
-   fprintf(stderr, "\n");
+
+   if(!it_params.quiet() && diverging)
+      fprintf(it_params.rep_file,"Probably Diverging. Breaking out.\n");
+   if(!it_params.quiet() && it_params.checking_status() )
+      fprintf(it_params.rep_file, "\nfinal: iter:%-15d max_diff:%17.15e\n",
+            cnt, sqrt(max_diff2));
 }
 
- 
 
 int main(int argc, char *argv[])
 {
@@ -481,16 +493,16 @@ int main(int argc, char *argv[])
       opts.error(errmsg);
    if(*errmsg)
       opts.warning(errmsg);
-      
+
    if(!geom.get_edges()->size())
       geom.add_missing_impl_edges();
-   
+
    if(geom.get_edges()->size()) {
       if(opts.algm!='u')
          initial_placement(geom, opts.placement, opts.ellipsoid);
       if(opts.algm=='a')
-         minmax_a(geom, opts.shorten_by/200, opts.lengthen_by/200,
-               opts.num_iters, opts.ellipsoid);
+         minmax_a(geom, opts.it_params, opts.shorten_by/200,
+               opts.lengthen_by/200, opts.ellipsoid);
       else{
          vector<vector<int> > &edges = *geom.get_edges();
          vector<vector<int> > eds(geom.get_verts()->size());
@@ -499,10 +511,11 @@ int main(int argc, char *argv[])
             eds[edges[i][1]].push_back(edges[i][0]);
          }
          if(opts.algm=='v')
-            minmax_v(geom, eds, opts.shorten_by/200, opts.lengthen_by/200,
-               opts.num_iters, opts.ellipsoid);
+            minmax_v(geom, opts.it_params, eds, opts.shorten_by/200,
+                  opts.lengthen_by/200, opts.ellipsoid);
          else if(opts.algm=='u')
-            minmax_unit(geom, eds, opts.shorten_by/200, opts.num_iters);
+            minmax_unit(geom, opts.it_params,
+                  opts.shorten_by/200, opts.lengthen_by/200);
       }
    }
    else
@@ -513,5 +526,5 @@ int main(int argc, char *argv[])
 
    return 0;
 }
-   
+
 
