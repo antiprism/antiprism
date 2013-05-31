@@ -19,25 +19,63 @@
 
 
 <<EXAMPLES_START>>
-Make a reciprocal pair. Make the dual of a cuboctahedron, a rhombic
-dodecahedron, and then make the dual of that. The final output is
-the same as the original cuboctahedron.
+Make the dual of an octahedron, a cube.
 <<CMDS_START>>
-pol_recip -o rh_dodec.off cuboct.off<br>
-pol_recip -o orig_cuboct.off rh_dodec.off
+pol_recip oct | antiview
 <<CMDS_END>>
 
-Make a cube whose vertices are the mid-points of an octahedron's faces
+Make the dual pair of an octahedron and a cube.
 <<CMDS_START>>
-pol_recip -o cube.off -R f octahedron.off
+pol_recip -a oct | antiview
 <<CMDS_END>>
 
-A polyhedron has a face made of vertices with indexes 0, 2, 4.
-Make a dual which has a vertex in the plane of this face
+Make the dual pair of a cuboctahedron and rhombic dodecahedron,
+with the reciprocation radius touching the nearest faces (first
+command) and farthest faces (second command) causing a dual vertex
+to lie on faces at this distance
 <<CMDS_START>>
-pol_recip -o dual.off -R 0,2,4 poly.off
+pol_recip -r f cubo | antiview -x f cubo -
+pol_recip -r F cubo | antiview -x f cubo -
 <<CMDS_END>>
+
+Specify a face plane of a polyhedron by three of its index numbers, make
+a dual with a vertex that lies on this face plane, no matter where the
+reciprocation centre is
+<<CMDS_START>>
+pol_recip -c 0,0,0.4  -r 2,3,5 pyr5 | antiview -x f pyr5 -
+pol_recip -c 0,0,-0.4 -r 2,3,5 pyr5 | antiview -x f pyr5 -
+<<CMDS_END>>
+
+A canonical antihemaphrodite is self-dual, but not in the centroid
+(first command). The correct centre can be found as a midsphere centre
+(command 2) or an "edge-balanced" centre (command 3)
+<<CMDS_START>>
+polygon ant -s antih 4 | canonical | pol_recip -a | antiview
+polygon ant -s antih 4 | canonical | pol_recip -c M -n 1000 -a | antiview
+polygon ant -s antih 4 | canonical | pol_recip -c M -n 1000 -a | antiview
+<<CMDS_END>>
+
+When a polyhedron has a face plane passing through the reciprocation
+centre, this is dualised into a an ideal vertex at infinity. To maintain
+the visual symmetry of the dual, and emphasise that the vertex can be
+reached in two opposite directions, the vertex is placed far away (control
+distance with <i>-I</i>, and suppress this with <i>-x</i>). The first two
+commands show the dual as the reciprocation centre is above and below
+the base face of the triangular pyramid. Then on the plane (command 3),
+and again, but with the duplicated vertices surpressed (command 4)
+
+<<CMDS_START>>
+pol_recip -c 0,0,0.05   -r 0,1 -a pyr3 | antiview -R -90,0,0
+pol_recip -c 0,0,-0.05  -r 0,1 -a pyr3 | antiview -R -90,0,0
+pol_recip -c 0,0,0.00   -r 0,1 -a pyr3 | antiview -R -90,0,0
+pol_recip -c 0,0,0.00  -x -r 0,1 -a pyr3 | antiview -R -90,0,0
+<<CMDS_END>>
+
+
 <<EXAMPLES_END>>
+
+
+
 
 
 <<NOTES_START>>
@@ -100,9 +138,9 @@ of the near-points of all three elements combined. For all three
 cases the dual may be inverted in the reciprocation centre before
 the centroid calculation.
 <p>
-<i>-R e</i> may select a sphere suitable for self-duality.
+<i>-r e</i> may select a sphere suitable for self-duality.
 <p>
-<i>-R v</i> and <i>-R V</i> may always give the same results.
+<i>-r v</i> and <i>-r V</i> may always give the same results.
 <<NOTES_END>>
 
 #include "<<END>>"
