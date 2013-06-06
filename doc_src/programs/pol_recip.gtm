@@ -34,26 +34,35 @@ with the reciprocation radius touching the nearest faces (first
 command) and farthest faces (second command) causing a dual vertex
 to lie on faces at this distance
 <<CMDS_START>>
-pol_recip -r f cubo | antiview -x f cubo -
-pol_recip -r F cubo | antiview -x f cubo -
+pol_recip -a -r f cubo | off_color -r A0.4,f | antiview
+pol_recip -a -r F cubo | off_color -r A0.4,f | antiview
 <<CMDS_END>>
 
 Specify a face plane of a polyhedron by three of its index numbers, make
 a dual with a vertex that lies on this face plane, no matter where the
 reciprocation centre is
 <<CMDS_START>>
-pol_recip -c 0,0,0.4  -r 2,3,5 pyr5 | antiview -x f pyr5 -
-pol_recip -c 0,0,-0.4 -r 2,3,5 pyr5 | antiview -x f pyr5 -
+pol_recip -a -c 0,0,0.2  -r 2,3,5 pyr5 | off_color -r A0.4,f | antiview
+pol_recip -a -c 0,0,-0.4 -r 2,3,5 pyr5 | off_color -r A0.4,f | antiview
 <<CMDS_END>>
 
 A canonical antihemaphrodite is self-dual, but not in the centroid
 (first command). The correct centre can be found as a midsphere centre
-(command 2) or an "edge-balanced" centre (command 3)
+(second command)
 <<CMDS_START>>
 polygon ant -s antih 4 | canonical | pol_recip -a | antiview
-polygon ant -s antih 4 | canonical | pol_recip -c M -n 1000 -a | antiview
-polygon ant -s antih 4 | canonical | pol_recip -c M -n 1000 -a | antiview
+polygon ant -s antih 4 | canonical | pol_recip -a -c M -n 10000 | antiview
 <<CMDS_END>>
+
+Pyramids have a number interesting reciprocation centres, e.g. a
+default "mid-centre" (first command), an external "mid-center" (second
+command), a self-dual "edge-balanced" centre (third command)
+<<CMDS_START>>
+polygon -l 1.5 pyr 7 | off_color -f blue | pol_recip -c M -n 50000 -a | antiview
+polygon -l 1.5 pyr 7 | off_color -f blue | pol_recip -C 0,0,-1 -c M -n 50000 -a | antiview
+polygon -l 1.5 pyr 7 | off_color -f blue | pol_recip -c e -n 50000 -a | antiview
+<<CMDS_END>>
+
 
 When a polyhedron has a face plane passing through the reciprocation
 centre, this is dualised into a an ideal vertex at infinity. To maintain
