@@ -417,6 +417,7 @@ col_geom_v faces_to_geom(const col_geom_v &geom, const vector<int> &face_idxs)
 {
    col_geom_v fgeom;
    fgeom.add_verts(geom.verts());
+   fgeom.raw_vert_cols() = geom.vert_cols();
    for(unsigned int i=0; i<face_idxs.size(); i++) {
       unsigned int j = face_idxs[i];
       fgeom.add_col_face(geom.faces()[j],geom.get_f_col(j));
