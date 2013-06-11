@@ -643,7 +643,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
       }
       else {
          if (angle)
-            warning("angle is only valid in construction method 3","a");
+            error("angle is only valid in construction method 3","a");
 
          //feature: blend edge colors even if not method 3 compound
          //if (edge_coloring_method == 'c')
@@ -686,7 +686,8 @@ void ncon_opts::process_command_line(int argc, char **argv)
             add_poles = false;
          }
          
-         if (hybrid && symmetric_coloring)
+         // only in build method 1 it is possible for hybrids to be colored the same using symmetric coloring
+         if (hybrid && symmetric_coloring && build_method == 1)
             warning("symmetric coloring is the same an non-symmetric coloring for hybrids","S");
       }
 
@@ -731,11 +732,28 @@ void ncon_opts::process_command_line(int argc, char **argv)
       if (!face_sequential_colors)
          warning("face coloring t only has effect for build method 1","f");
 
-      if ((face_coloring_method == 's') && symmetric_coloring)
-         warning("symmetric coloring only has effect for build method 1","S");
+      // for the shell models, coloring must be set to symmetric
+      if (build_method == 2)
+         symmetric_coloring = true;
+
+      // for build method 3, bow ties are not painted right without symmetric coloring
+      if (build_method == 3) {
+         int mod_twist = twist%ncon_order;
+         if (hybrid && mod_twist == 0)
+            mod_twist = -1;
+         if (!hybrid && ((mod_twist*2 == ncon_order) || (mod_twist*4 == ncon_order)))
+            mod_twist = 0;
+
+         if (mod_twist == 0)
+            symmetric_coloring = true;
+      }
+
+      //if ((face_coloring_method == 's') && symmetric_coloring)
+      //   warning("symmetric coloring only has effect for build method 1","S");
    }
-      
-   if (!is_even(ncon_order) && symmetric_coloring)
+   
+   // only in build method 1 it is possible for odd order n_icons to be colored the same using symmetric coloring   
+   if (!is_even(ncon_order) && symmetric_coloring && build_method == 1)
       warning("symmetric coloring is the same an non-symmetric coloring for odd order n-icons","S");
 
    if((clrngs[2].get_cmaps()).size())
@@ -2124,13 +2142,35 @@ void build_surface_table(vector<surfaceTable *> &surface_table, const int &max_t
 */
 }
 
-void model_info(const col_geom_v &geom, const bool &info)
+void model_info(const col_geom_v &geom, const bool &info, const int &build_method, const int &ncon_order, const int &twist, const int &hybrid)
 {
    if (info) {
       unsigned long fsz = geom.faces().size();
       unsigned long vsz = geom.verts().size();
-      fprintf(stderr,"The graphical model shown has %lu faces, %lu vertices, and %lu edges\n",
+      fprintf(stderr,"The graphical model shown has %lu faces, %lu vertices, and %lu implicit edges\n",
          fsz,vsz,(fsz + vsz - 2));
+
+      int num_parts = geom.get_info().num_parts();
+
+      if (build_method == 2)
+         fprintf(stderr,"For build method 2, all shell models are non-compounds");
+      else
+      if (build_method == 3) {
+         if (num_parts > 1)
+            fprintf(stderr,"The model is a compound with %d parts\n",num_parts);
+         else
+            fprintf(stderr,"The model is not a compound\n");
+
+         int mod_twist = twist%ncon_order;
+         if (hybrid && mod_twist == 0)
+            mod_twist = -1;
+         if (!hybrid && (mod_twist*2 == ncon_order))
+            mod_twist = 0;
+
+         if (mod_twist == 0)
+            fprintf(stderr,"Note that an untwisted n_icons can have conflicting compound counts\n");
+      }
+
       fprintf(stderr,"\n");
    }
 }
@@ -3000,23 +3040,26 @@ void ncon_face_coloring(col_geom_v &geom, const vector<faceList *> &face_list, c
 
 vector<int> find_adjacent_face_idx_in_channel(const col_geom_v &geom, const int &build_method, const int &face_idx, const bool &prime)
 {
+   const vector<vector<int> > &faces = geom.faces();
+   const vector<vector<int> > &edges = geom.edges();
+
    vector<int> face_idx_ret;
    vector<vector<int> > adjacent_edges;
 
-   vector<int> face = geom.faces(face_idx);
+   vector<int> face = faces[face_idx];
    int sz = face.size();
    for (int i=0;i<sz;i++) {
       vector<int> edge(2);
       edge[0] = face[i];
       edge[1] = face[(i+1)%sz];
-      if (find_edge_in_edge_list(geom.edges(), edge) < 0) {
+      if (find_edge_in_edge_list(edges, edge) < 0) {
          adjacent_edges.push_back(edge);
       }
    }
 
    vector<int> adjacent_face_idx;   
    for (unsigned int i=0;i<adjacent_edges.size();i++) {
-      vector<int> face_idx_tmp = find_faces_with_edge(geom.faces(),adjacent_edges[i]);
+      vector<int> face_idx_tmp = find_faces_with_edge(faces,adjacent_edges[i]);
       for (unsigned int j=0;j<face_idx_tmp.size();j++) {
          if (face_idx_tmp[j] != face_idx)
             adjacent_face_idx.push_back(face_idx_tmp[j]);
@@ -3086,7 +3129,7 @@ int set_face_colors_by_adjacent_face(col_geom_v &geom, const int &build_method, 
 }
 
 int ncon_face_coloring_by_adjacent_face(col_geom_v &geom, const vector<faceList *> &face_list,
-                                        const color_map_multi &face_map, const int &face_opacity, const string &face_pattern,
+                                        const color_map_multi &face_map, const int &face_opacity, const string &face_pattern, const bool &symmetric_coloring,
                                         const vector<int> &longitudes, const int &ncon_order, const int &d, const bool &point_cut, const int &build_method, const bool &info, const int &flood_fill_stop)
 {
    int flood_fill_count = 0;
@@ -3104,29 +3147,47 @@ int ncon_face_coloring_by_adjacent_face(col_geom_v &geom, const vector<faceList 
    if (gcd(ncon_order,d) != 1)
       lats++;
 
+   int circuit_count = 0;
    int map_cnt = 0;
    for (int i=0;i<lats;i++) {
       bool faces_painted = false;
       vector<int> idx = find_face_by_lat_lon(face_list,i,longitudes.front()/2);
+
       if (face_opacity != -1)
          opq = face_pattern[map_cnt%face_pattern.size()] == '1' ? face_opacity : 255;
       col_val c = set_alpha(face_map.get_col(map_cnt),opq);
+
       for (unsigned int j=0;j<idx.size();j++) {
          if ((geom.get_f_col(idx[j])).is_set())
             continue;
          if (flood_fill_stop && (flood_fill_count >= flood_fill_stop))
             return 0;
+
          geom.set_f_col(idx[j],c);
          flood_fill_count++;
          ret = set_face_colors_by_adjacent_face(geom, build_method, idx[j], c, flood_fill_stop, flood_fill_count);
-         faces_painted = true;
+
+         if (!symmetric_coloring) {
+            map_cnt++;
+            if (face_opacity != -1)
+               opq = face_pattern[map_cnt%face_pattern.size()] == '1' ? face_opacity : 255;
+            c = set_alpha(face_map.get_col(map_cnt),opq);
+         }
+         else
+            faces_painted = true;
+
+         circuit_count++;
       }
-      if (faces_painted)
-         map_cnt++;
+      if (symmetric_coloring) {
+         if (faces_painted)
+            map_cnt++;
+      }
    }
 
-   if (!flood_fill_stop && info)
-      fprintf(stderr,"%d distinct face circuit%s painted\n",map_cnt,(map_cnt>1 ? "s were" : " was"));
+   if (!flood_fill_stop && info) {
+      int final_count = (symmetric_coloring) ? map_cnt : circuit_count;
+      fprintf(stderr,"%d distinct face circuit%s painted\n",final_count,(final_count>1 ? "s were" : " was"));
+   }
 
    return ret;
 }
@@ -3667,7 +3728,7 @@ int process_hybrid(col_geom_v &geom, ncon_opts &opts)
 
    opts.longitudes.back() = longitudes_back;
    if (opts.build_method > 1 && opts.face_coloring_method == 's')
-      ret = ncon_face_coloring_by_adjacent_face(geom, face_list, opts.face_map, opts.face_opacity, opts.face_pattern,
+      ret = ncon_face_coloring_by_adjacent_face(geom, face_list, opts.face_map, opts.face_opacity, opts.face_pattern, opts.symmetric_coloring,
                                                 opts.longitudes, opts.ncon_order, opts.d, opts.point_cut, opts.build_method, opts.info, opts.flood_fill_stop);
    else
    if (opts.face_coloring_method == 'c')
@@ -3730,7 +3791,7 @@ int process_normal(col_geom_v &geom, ncon_opts &opts)
    }
 
    if (opts.build_method > 1 && opts.face_coloring_method == 's')
-      ret = ncon_face_coloring_by_adjacent_face(geom, face_list, opts.face_map, opts.face_opacity, opts.face_pattern,
+      ret = ncon_face_coloring_by_adjacent_face(geom, face_list, opts.face_map, opts.face_opacity, opts.face_pattern, opts.symmetric_coloring,
                                                 opts.longitudes, opts.ncon_order, opts.d, opts.point_cut, opts.build_method, opts.info, opts.flood_fill_stop);
    else
    if (opts.face_coloring_method == 'c')
@@ -3799,7 +3860,7 @@ int ncon_subsystem(col_geom_v &geom, ncon_opts opts)
          ncon_info(opts.ncon_order, opts.point_cut, opts.twist, opts.hybrid, opts.info, surface_table, sd);
          surface_table.clear();
       }
-      model_info(geom, opts.info);
+      model_info(geom, opts.info, opts.build_method, opts.ncon_order, opts.twist, opts.hybrid);
    }
    
    // Color post-processing
