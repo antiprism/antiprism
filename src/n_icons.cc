@@ -939,6 +939,9 @@ void merge_halves(col_geom_v &geom, vector<polarOrb *> &polar_orbit, const doubl
 void build_prime_polygon(col_geom_v &geom, vector<int> &prime_polygon, vector<coordList *> &coordinates,
                          const vector<poleList *> &pole, const int &ncon_order, int d, bool point_cut, double angle, const double &eps)
 {
+   // for finding poles, the accuracy must be much looser
+   double epsilon_local = pow(10, -8);
+
    int num_polygons = gcd(ncon_order,d);
    int base_polygon = (num_polygons == 1) ? ncon_order : ncon_order/num_polygons;
 
@@ -962,12 +965,12 @@ void build_prime_polygon(col_geom_v &geom, vector<int> &prime_polygon, vector<co
    for (int i=0;i<ncon_order;i++) {
       prime_polygon.push_back(i);
       add_coord(geom, coordinates, vec3d(cos(deg2rad(angle))*radius, sin(deg2rad(angle))*radius, 0.0));
-      if (double_eq(fmod(angle_in_range(angle,eps),360.0),90.0,eps)) {
+      if (double_eq(fmod(angle_in_range(angle,eps),360.0),90.0,epsilon_local)) {
          pole[0]->idx = geom.verts().size()-1;
          pole[0]->lat = 0;
       }
       else
-      if (double_eq(fmod(angle_in_range(angle,eps),360.0),270.0,eps)) {
+      if (double_eq(fmod(angle_in_range(angle,eps),360.0),270.0,epsilon_local)) {
          pole[1]->idx = geom.verts().size()-1;
          pole[1]->lat = num_lats(ncon_order,point_cut);
       }
@@ -1178,7 +1181,7 @@ int apply_latitudes(const col_geom_v &geom, const vector<vector<int> > &original
 
       bool first_lat_used = true;
       for (unsigned int k=0;k<2;k++) {
-         int l = face_idx[k];;
+         int l = face_idx[k];
          int sz = split_face_indexes[l].size();
          for (int m=0;m<sz;m++) {
             int n = split_face_indexes[l][m];
@@ -2142,22 +2145,17 @@ void build_surface_table(vector<surfaceTable *> &surface_table, const int &max_t
 */
 }
 
-void model_info(const col_geom_v &geom, const bool &info, const int &build_method, const int &ncon_order, const int &twist, const int &hybrid)
+void model_info(const col_geom_v &geom, const bool &info, const int &build_method, const int &ncon_order, const int &d, const int &twist, const int &hybrid, const double &angle)
 {
    if (info) {
-      unsigned long fsz = geom.faces().size();
-      unsigned long vsz = geom.verts().size();
-      fprintf(stderr,"The graphical model shown has %lu faces, %lu vertices, and %lu implicit edges\n",
-         fsz,vsz,(fsz + vsz - 2));
-
       int num_parts = geom.get_info().num_parts();
 
       if (build_method == 2)
-         fprintf(stderr,"For build method 2, all shell models are non-compounds");
+         fprintf(stderr,"shell models are physically non-compounds (but can be painted as compounds)\n");
       else
       if (build_method == 3) {
          if (num_parts > 1)
-            fprintf(stderr,"The model is a compound with %d parts\n",num_parts);
+            fprintf(stderr,"%d compound parts were found\n",num_parts);
          else
             fprintf(stderr,"The model is not a compound\n");
 
@@ -2168,8 +2166,26 @@ void model_info(const col_geom_v &geom, const bool &info, const int &build_metho
             mod_twist = 0;
 
          if (mod_twist == 0)
-            fprintf(stderr,"Note that an untwisted n_icons can have conflicting compound counts\n");
+            fprintf(stderr,"Based on actual connectivity, untwisted n_icons can have conflicting compound counts\n");
       }
+
+      if (angle != 0) {
+         int actual_order = ncon_order*2;
+         int actual_d = d*2;
+         int actual_twist = twist*2;
+         if (hybrid) {
+            actual_twist = twist;
+            fprintf(stderr,"Using an angle, this Hybrid model is similar to N = %d/%d  twist = %d  Non-Hybrid side cut\n",actual_order,actual_d,actual_twist);
+         }
+         else {
+            fprintf(stderr,"Using an angle, this model is similar to N = %d/%d  twist = %d  side cut\n",actual_order,actual_d,actual_twist);
+         }
+      }
+
+      unsigned long fsz = geom.faces().size();
+      unsigned long vsz = geom.verts().size();
+      fprintf(stderr,"The graphical model shown has %lu faces, %lu vertices, and %lu implicit edges\n",
+         fsz,vsz,(fsz + vsz - 2));
 
       fprintf(stderr,"\n");
    }
@@ -2181,7 +2197,7 @@ void ncon_info(const int &ncon_order, const bool &point_cut, const int &twist, c
    int first, last, forms, chiral, nonchiral, unique;
 
    if (info) { 
-      fprintf(stderr,":2\n");
+      fprintf(stderr,"\n");
       fprintf(stderr,"This is %s n-icon of order %d twisted %d time%s\n",
          (hybrid ? "a hybrid" : (point_cut ? "point cut" : "side cut")),
          ncon_order,twist,((twist == 1) ? "" : "s"));
@@ -2649,7 +2665,7 @@ void ncon_edge_coloring(col_geom_v &geom, const vector<edgeList *> &edge_list, c
          if (pole[i]->idx > -1) {
             int lat = pole[i]->lat;
             int col_idx = edge_color_table[lat].second;
-            opq = edge_pattern[col_idx%edge_pattern.size()] == '1' ? edge_opacity : 255;;
+            opq = edge_pattern[col_idx%edge_pattern.size()] == '1' ? edge_opacity : 255;
             set_vert_color(geom,pole[i]->idx,edge_map.get_col(col_idx),opq);
          }
       }
@@ -2893,7 +2909,7 @@ void ncon_face_coloring(col_geom_v &geom, const vector<faceList *> &face_list, c
             set_face_color(geom,j,col_val(),face_opacity);
          }
          else {
-            int lat = face_list[i]->lat;;
+            int lat = face_list[i]->lat;
             opq = face_pattern[lat%face_pattern.size()] == '1' ? face_opacity : 255;
             set_face_color(geom,j,face_map.get_col(lat),opq);
          }
@@ -3186,7 +3202,7 @@ int ncon_face_coloring_by_adjacent_face(col_geom_v &geom, const vector<faceList 
 
    if (!flood_fill_stop && info) {
       int final_count = (symmetric_coloring) ? map_cnt : circuit_count;
-      fprintf(stderr,"%d distinct face circuit%s painted\n",final_count,(final_count>1 ? "s were" : " was"));
+      fprintf(stderr,"%d face circuit%s painted\n",final_count,(final_count>1 ? "s were" : " was"));
    }
 
    return ret;
@@ -3265,7 +3281,7 @@ int ncon_face_coloring_by_compound(col_geom_v &geom, const vector<faceList *> &f
       color_uncolored_faces(geom, face_map.get_col(0));
 
    if (!flood_fill_stop && info)
-      fprintf(stderr,"%d distinct compound part%s painted\n",map_cnt,(map_cnt>1 ? "s were" : " was"));
+      fprintf(stderr,"%d compound part%s painted\n",map_cnt,(map_cnt>1 ? "s were" : " was"));
 
    return ret;
 }
@@ -3641,7 +3657,7 @@ void add_triangles_to_close(col_geom_v &geom, const double &eps)
 
                // check for infinite loop
                if (face[0] == face_check[0] && face[1] == face_check[1] && face[2] == face_check[2]) {
-                  fprintf(stderr,"warning: face failed to form. %d %d %d\n",face[0], face[1], face[2]);
+                  fprintf(stderr,"warning: face %d %d %d failed. Polygon at limits of accuracy (method=3)\n",face[0], face[1], face[2]);
                   return;
                }
             }
@@ -3654,6 +3670,73 @@ void add_triangles_to_close(col_geom_v &geom, const double &eps)
 
       unmatched_edges = find_unmatched_edges(geom);
    }
+}
+
+void count_edge_circuits(const col_geom_v &geom)
+{
+   vector<vector<int> > edges;
+
+   for (unsigned int i=0;i<geom.edges().size();i++) {
+      if (!(geom.get_e_col(i)).is_inv()) {
+         edges.push_back(geom.edges(i));
+      }
+   }
+
+   vector<bool> used(edges.size());
+
+   int edge_circuits = 0;
+
+   for (unsigned int i=0;i<edges.size();i++) {
+      if (used[i])
+         continue;
+      used[i] = true;
+
+      int next_edge = i;
+      int v_reverse = edges[next_edge][0];
+      int v = edges[next_edge][1];
+      int end_point = 0;
+      vector<int> es = find_edges_with_vertex(edges, v);
+      for (unsigned int j=i+1;j<edges.size();j++) {
+         // find other edge than self
+         int e_idx;
+         vector<int> edge = edges[es[0]];
+         if ((int)es.size() == 1) {
+            e_idx = 0;
+            end_point++;
+         }
+         else {
+            e_idx = ((edge[0] == edges[next_edge][0] && edge[1] == edges[next_edge][1]) || (edge[0] == edges[next_edge][1] && edge[1] == edges[next_edge][0])) ? 1 : 0;
+         }
+
+         next_edge = es[e_idx];
+         // if used switch to other part
+         if (used[next_edge] && ((int)es.size() > 1))
+            next_edge = es[e_idx==1 ? 0 : 1];
+
+         if (used[next_edge]) {
+            if (is_even(end_point)) {
+               edge_circuits++;
+               break;
+            }
+            else {
+               v = v_reverse;
+               es = find_edges_with_vertex(edges, v);
+            }
+         }
+         else {
+            used[next_edge] = true;
+            // self edge
+            v = (edges[next_edge][0] == v) ? edges[next_edge][1] : edges[next_edge][0];
+            es = find_edges_with_vertex(edges, v);
+         }        
+      }
+   }
+
+   // there should always be at least one (only the 4/2 twist 0 method=2 is known to do this)
+   if (edge_circuits == 0)
+      edge_circuits = 1;
+
+   fprintf(stderr,"%d edge circuit%s detected\n",edge_circuits, (edge_circuits != 1) ? "s" : "");
 }
 
 int process_hybrid(col_geom_v &geom, ncon_opts &opts)
@@ -3738,6 +3821,10 @@ int process_hybrid(col_geom_v &geom, ncon_opts &opts)
    if (opts.edge_coloring_method == 'c')
       ncon_edge_coloring_from_faces(geom, opts.edge_opacity, pole);
 
+   // for hybrid star n_icons there is always only 1 edge circuit
+   if (opts.build_method > 1 && opts.info)
+      fprintf(stderr,"1 edge circuit detected\n");
+
    // allow for partial open model in hybrids
    if (!full)
       delete_unused_longitudes(geom, face_list, edge_list, opts.longitudes);
@@ -3769,7 +3856,7 @@ int process_normal(col_geom_v &geom, ncon_opts &opts)
    pole.push_back(new poleList);
    pole.push_back(new poleList);
 
-   build_globe(geom, coordinates, face_list, edge_list, pole, opts);;
+   build_globe(geom, coordinates, face_list, edge_list, pole, opts);
 
    // now we do the twisting
    // twist plane is now determined by points landing on z-plane
@@ -3800,6 +3887,9 @@ int process_normal(col_geom_v &geom, ncon_opts &opts)
 
    if (opts.edge_coloring_method == 'c')
       ncon_edge_coloring_from_faces(geom, opts.edge_opacity, pole);
+
+   if (opts.build_method > 1 && opts.info && opts.unused_edge_color.is_inv())
+      count_edge_circuits(geom);
 
    delete_unused_longitudes(geom, face_list, edge_list, opts.longitudes);
    check_to_clear_all_edges(geom, edge_list, opts.edge_coloring_method);
@@ -3851,7 +3941,7 @@ int ncon_subsystem(col_geom_v &geom, ncon_opts opts)
    if (opts.info) {
       vector<surfaceTable *> surface_table;
       if ((opts.d > 1 && (opts.ncon_order-opts.d > 1)) || (opts.build_method == 3 && opts.angle != 0.0)) {
-         fprintf(stderr,"face/edge circuit info not available for star n_icons or those with non-zero angles\n");
+         //fprintf(stderr,"face/edge circuit info not available for star n_icons or those with non-zero angles\n");
          if (opts.build_method == 2)
             fprintf(stderr,"shell model: outer radius = %.17lf  inner radius = %.17lf\n",opts.outer_radius,opts.inner_radius);
       }
@@ -3860,7 +3950,7 @@ int ncon_subsystem(col_geom_v &geom, ncon_opts opts)
          ncon_info(opts.ncon_order, opts.point_cut, opts.twist, opts.hybrid, opts.info, surface_table, sd);
          surface_table.clear();
       }
-      model_info(geom, opts.info, opts.build_method, opts.ncon_order, opts.twist, opts.hybrid);
+      model_info(geom, opts.info, opts.build_method, opts.ncon_order, opts.d, opts.twist, opts.hybrid, opts.angle);
    }
    
    // Color post-processing
