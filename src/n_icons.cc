@@ -2166,7 +2166,7 @@ void model_info(const col_geom_v &geom, const bool &info, const int &build_metho
             mod_twist = 0;
 
          if (mod_twist == 0)
-            fprintf(stderr,"Based on actual connectivity, untwisted n_icons can have conflicting compound counts\n");
+            fprintf(stderr,"Per actual connectivity, untwisted n_icons may have conflicting compound counts\n");
       }
 
       if (angle != 0) {
@@ -2174,11 +2174,11 @@ void model_info(const col_geom_v &geom, const bool &info, const int &build_metho
          int actual_d = d*2;
          int actual_twist = twist*2;
          if (hybrid) {
-            actual_twist = twist;
-            fprintf(stderr,"Using an angle, this Hybrid model is similar to N = %d/%d  twist = %d  Non-Hybrid side cut\n",actual_order,actual_d,actual_twist);
+            actual_twist -= 1;
+            fprintf(stderr,"With angle, this Hybrid is similar to N = %d/%d  twist = %d  side cut\n",actual_order,actual_d,actual_twist);
          }
          else {
-            fprintf(stderr,"Using an angle, this model is similar to N = %d/%d  twist = %d  side cut\n",actual_order,actual_d,actual_twist);
+            fprintf(stderr,"with angle, this model is similar to N = %d/%d  twist = %d  side cut\n",actual_order,actual_d,actual_twist);
          }
       }
 
@@ -3822,8 +3822,8 @@ int process_hybrid(col_geom_v &geom, ncon_opts &opts)
       ncon_edge_coloring_from_faces(geom, opts.edge_opacity, pole);
 
    // for hybrid star n_icons there is always only 1 edge circuit
-   if (opts.build_method > 1 && opts.info)
-      fprintf(stderr,"1 edge circuit detected\n");
+   if (opts.build_method > 1 && opts.info && opts.unused_edge_color.is_inv())
+      count_edge_circuits(geom);
 
    // allow for partial open model in hybrids
    if (!full)
