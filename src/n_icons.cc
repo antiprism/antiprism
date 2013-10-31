@@ -2145,50 +2145,51 @@ void build_surface_table(vector<surfaceTable *> &surface_table, const int &max_t
 */
 }
 
-void model_info(const col_geom_v &geom, const bool &info, const int &build_method, const int &ncon_order, const int &d, const int &twist, const int &hybrid, const double &angle)
+void model_info(const col_geom_v &geom, const ncon_opts &opts)
 {
-   if (info) {
-      int num_parts = geom.get_info().num_parts();
+   int num_parts = geom.get_info().num_parts();
 
-      if (build_method == 2)
-         fprintf(stderr,"shell models are physically non-compounds (but can be painted as compounds)\n");
+   if (opts.build_method == 2)
+      fprintf(stderr,"shell models are physically non-compounds (but can be painted as compounds)\n");
+   else
+   if (opts.build_method == 3) {
+      if (num_parts > 1)
+         fprintf(stderr,"%d compound parts were found\n",num_parts);
       else
-      if (build_method == 3) {
-         if (num_parts > 1)
-            fprintf(stderr,"%d compound parts were found\n",num_parts);
-         else
-            fprintf(stderr,"The model is not a compound\n");
+         fprintf(stderr,"The model is not a compound\n");
 
-         int mod_twist = twist%ncon_order;
-         if (hybrid && mod_twist == 0)
-            mod_twist = -1;
-         if (!hybrid && (mod_twist*2 == ncon_order))
-            mod_twist = 0;
+      int mod_twist = opts.twist%opts.ncon_order;
+      if (opts.hybrid && mod_twist == 0)
+         mod_twist = -1;
+      if (!opts.hybrid && (mod_twist*2 == opts.ncon_order))
+         mod_twist = 0;
 
-         if (mod_twist == 0)
-            fprintf(stderr,"Per actual connectivity, untwisted n_icons may have conflicting compound counts\n");
-      }
-
-      if (angle != 0) {
-         int actual_order = ncon_order*2;
-         int actual_d = d*2;
-         int actual_twist = twist*2;
-         if (hybrid) {
-            actual_twist -= 1;
-            fprintf(stderr,"With angle, this Hybrid is similar to N = %d/%d  twist = %d  side cut\n",actual_order,actual_d,actual_twist);
-         }
-         else {
-            fprintf(stderr,"with angle, this model is similar to N = %d/%d  twist = %d  side cut\n",actual_order,actual_d,actual_twist);
-         }
-      }
-
-      unsigned long fsz = geom.faces().size();
-      unsigned long vsz = geom.verts().size();
-      fprintf(stderr,"The graphical model shown has %lu faces, %lu vertices, and %lu implicit edges\n",
-         fsz,vsz,(fsz + vsz - 2));
-
-      fprintf(stderr,"\n");
+      if (mod_twist == 0)
+         fprintf(stderr,"Per actual connectivity, untwisted n_icons may have conflicting compound counts\n");
    }
+
+   if (opts.angle != 0) {
+      int actual_order = opts.ncon_order*2;
+      int actual_d = opts.d*2;
+      int actual_twist = opts.twist*2;
+      if (opts.hybrid) {
+         actual_twist -= 1;
+         fprintf(stderr,"With angle, this Hybrid is similar to N = %d/%d  twist = %d  side cut\n",actual_order,actual_d,actual_twist);
+      }
+      else {
+         fprintf(stderr,"with angle, this model is similar to N = %d/%d  twist = %d  side cut\n",actual_order,actual_d,actual_twist);
+      }
+   }
+
+   if (opts.build_method == 2)
+      fprintf(stderr,"shell model radii: outer = %.17lf  inner = %.17lf\n",opts.outer_radius,opts.inner_radius);
+
+   unsigned long fsz = geom.faces().size();
+   unsigned long vsz = geom.verts().size();
+   fprintf(stderr,"The graphical model shown has %lu faces, %lu vertices, and %lu implicit edges\n",
+      fsz,vsz,(fsz + vsz - 2));
+
+   fprintf(stderr,"\n");
 }
 
 // surface_table, sd will be changed
@@ -3942,15 +3943,13 @@ int ncon_subsystem(col_geom_v &geom, ncon_opts opts)
       vector<surfaceTable *> surface_table;
       if ((opts.d > 1 && (opts.ncon_order-opts.d > 1)) || (opts.build_method == 3 && opts.angle != 0.0)) {
          //fprintf(stderr,"face/edge circuit info not available for star n_icons or those with non-zero angles\n");
-         if (opts.build_method == 2)
-            fprintf(stderr,"shell model: outer radius = %.17lf  inner radius = %.17lf\n",opts.outer_radius,opts.inner_radius);
       }
       else {
          surfaceData sd;
          ncon_info(opts.ncon_order, opts.point_cut, opts.twist, opts.hybrid, opts.info, surface_table, sd);
          surface_table.clear();
       }
-      model_info(geom, opts.info, opts.build_method, opts.ncon_order, opts.d, opts.twist, opts.hybrid, opts.angle);
+      model_info(geom, opts);
    }
    
    // Color post-processing
