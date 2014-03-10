@@ -29,11 +29,6 @@ Colour a polyhedron by polygon type and display it
 off_color -f N tr_cuboctahedron | antiview
 <<CMDS_END>>
 
-Display a ball pack as balls
-<<CMDS_START>>
-packer 0.2 | antiview -v b
-<<CMDS_END>>
-
 Draw an icosahedron without its faces
 <<CMDS_START>>
 antiview -x f icosahedron
@@ -42,6 +37,11 @@ antiview -x f icosahedron
 Display a proper coloured icosahedron without its vertex or edge elements
 <<CMDS_START>>
 off_color -f P icosahedron | antiview -x ve 
+<<CMDS_END>>
+
+Display vertices like a ball pack (hiding face and edge elements)
+<<CMDS_START>>
+geodesic -f 3 -M p ico | antiview -x fe -v b
 <<CMDS_END>>
 
 Display an icosahedron with thin vertex and edge elements
