@@ -39,6 +39,12 @@ as bricks.
 When using <i>-F</i> the specified faces are deleted from the
 output. Faces in the base polyhderon that come after the bonding
 face will have their index numbers decreased by one in the output.
+<p>
+Options <i>-f</i> and <i>-F</i> must take an option argument. If the
+argument should be empty then give the argument as a comma <i>','</i>.
+This will indicate that the brick geometry is empty (use the base geometry
+for the brick) and all following parameters are defaults.
+
 <<NOTES_END>>
 
 #include "<<END>>"

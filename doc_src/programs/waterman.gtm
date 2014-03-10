@@ -21,18 +21,18 @@
 <<EXAMPLES_START>>
 Make a Root 10 Waterman polyhedron
 <<CMDS_START>>
-waterman -r 10,2 fcc | antiview
+waterman -r rt20 fcc | antiview
 <<CMDS_END>>
 
-Make a Root 100 Waterman polyhedron, with symmetrically coloured faces
+Make a Root 50 Waterman polyhedron, with symmetrically coloured faces
 <<CMDS_START>>
-waterman -r 100,2 fcc -F S | antiview
+waterman -r rt100 fcc -F S | antiview
 <<CMDS_END>>
 
-Make a Root 100 Waterman polyhedron centred on an octahedron centre, with
+Make a Root 50 Waterman polyhedron centred on an octahedron centre, with
 symmetrically coloured faces
 <<CMDS_START>>
-waterman -q 0.5,0.5,0.5 -r 100,2 fcc -F S | antiview
+waterman -q 0.5,0.5,0.5 -r rt100 fcc -F S | antiview
 <<CMDS_END>>
 <<EXAMPLES_END>>
 

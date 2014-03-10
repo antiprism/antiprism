@@ -448,7 +448,7 @@ void align_opts::usage()
 "\n"
 "Options\n"
 "%s"
-"  -v <arg>  align by vertices, iarg is a comma separated list of a brick\n"
+"  -v <arg>  align by vertices, arg is a comma separated list of a brick\n"
 "            geometry (if empty use base) optionally followed by 'r' (reverse\n"
 "            brick orientation) followed by two, four or six points given as\n"
 "            the vertex index number in the OFF files (starting at 0). The base\n"
