@@ -451,7 +451,7 @@ void o_col_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'E':
-            if(!strlen(optarg)==1 || !strchr("eiI", *optarg))
+            if(strlen(optarg)!=1 || !strchr("eiI", *optarg))
                error("edge type to color must be e, i or I");
             edge_type = *optarg;
             break;
