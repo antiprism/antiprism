@@ -75,6 +75,7 @@ void geom_info::reset()
    dual.clear_all();
    sym = sch_sym();
    efpairs.clear();
+   edge_parts.clear();
    face_angles.clear();
    vert_dihed.clear();
    dihedral_angles.clear();
@@ -663,6 +664,59 @@ void geom_info::find_e_lengths(map<double, int, ang_less> &e_lens,
       else
          ei->second += 1;
    }
+}
+
+// get indexes of edge parts
+static void get_edge_part(vector<int> &edge_part, const col_geom_v &geom,
+      const int &idx, const vector<vector<int> > &vcons, vector<bool> &seen)
+{
+   if(seen[idx])
+      return;
+   else
+      seen[idx] = true;
+
+   for(unsigned int i=0; i<vcons[idx].size(); i++) {
+      int next_idx = vcons[idx][i];
+      if(idx == next_idx)
+         continue;
+      vector<int> edge(2);
+      edge[0] = idx;
+      edge[1] = next_idx;
+      edge_part.push_back(find_edge_in_edge_list(geom.edges(), edge));
+      get_edge_part(edge_part, geom, next_idx, vcons, seen);
+   }
+}
+
+// get list of edge parts indexes
+void geom_info::find_edge_parts()
+{
+   vector<vector<int> > vcons(geom.verts().size(), vector<int>());
+
+   const vector<vector<int> > &edges = geom.edges();
+   for(unsigned int i=0; i<edges.size(); i++) {
+      vcons[edges[i][0]].push_back(edges[i][1]);
+      vcons[edges[i][1]].push_back(edges[i][0]);
+   }
+
+
+   vector<bool> seen(vcons.size(), false);
+   for(unsigned int i=0; i<vcons.size(); i++)
+      if(!seen[i]) {
+         vector<int> edge_part;
+
+         // find the edge parts by index list
+         get_edge_part(edge_part, geom, i, vcons, seen);
+
+         // if no edge part is produced it will be empty
+         if (edge_part.size()) {
+            // the lists may contain duplicates and must be unique
+            sort( edge_part.begin(), edge_part.end() );
+            vector<int>::iterator ep = unique(edge_part.begin(), edge_part.end());
+            edge_part.resize( ep - edge_part.begin() );
+
+            edge_parts.push_back(edge_part);
+         }
+      }
 }
 
 

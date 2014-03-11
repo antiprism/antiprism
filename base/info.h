@@ -143,6 +143,7 @@ class geom_info
 
       vector<vector<int> > impl_edges;
       map<vector<int>, vector<int> > efpairs;
+      vector<vector<int> > edge_parts;
       map<vector<double>, int, ang_vect_less> face_angles;
       map<vector<double>, int, ang_vect_less> vert_dihed;
       map<double, int, ang_less> dihedral_angles;
@@ -168,6 +169,7 @@ class geom_info
    
       void find_impl_edges() { geom.get_impl_edges(impl_edges); }
       void find_edge_face_pairs();
+      void find_edge_parts();
       void find_connectivity();
       void find_face_angles();
       void find_dihedral_angles();
@@ -220,6 +222,7 @@ class geom_info
       int num_iedges() { return get_impl_edges().size(); }
       int num_faces() { return geom.faces().size(); }
       int num_parts() { is_orientable(); return number_parts; }
+      int num_edge_parts() { find_edge_parts(); return edge_parts.size(); }
 
       bool is_known_genus();
       int genus();
@@ -278,6 +281,9 @@ class geom_info
       vector<double> &get_edge_dihedrals()
          { if(!dihedral_angles.size()) find_dihedral_angles();
             return edge_dihedrals; }
+      vector<vector<int> > &get_edge_parts()
+         { if(!edge_parts.size()) find_edge_parts();
+            return edge_parts; }
       map<double, int, ang_less> &get_dihedral_angles()
          { if(!dihedral_angles.size()) find_dihedral_angles();
             return dihedral_angles; }

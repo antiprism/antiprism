@@ -19,11 +19,119 @@
 
 
 <<EXAMPLES_START>>
-Merge two file into a third
+combine two files/models into a single file
 <<CMDS_START>>
-off_util -o file3.off file1.off file2.off
+off_util cube oct > cube_and_oct.off
+<<CMDS_END>>
+
+Combine two files/models into a single file, and merge all elements. The
+first off_util command uses a default average for colouring blended elements,
+and the second command simply uses the colour from the first of blended
+elements.
+<<CMDS_START>>
+off_color -f red cube > red_cube.off
+off_color -f yellow cube > yellow_cube.off
+off_util -M a red_cube.off yellow_cube.off | antiview
+off_util -M a,first red_cube.off yellow_cube.off | antiview
+<<CMDS_END>>
+
+Combine two files/models into a single file, and merge coincident vertices
+only
+<<CMDS_START>>
+off_util -M v std_cube std_cube | antiview -n vf
+<<CMDS_END>>
+
+Add elements to a model
+<<CMDS_START>>
+off_util -A v0,0,1:blue -A f8,0,2:yellow -A e8,4,6:green cube | antiview
+<<CMDS_END>>
+
+Add elements to an empty geometry, to create a model from scratch
+<<CMDS_START>>
+off_util -A v0,0,1:blue null | poly_kscope -s O | conv_hull | antiview
+<<CMDS_END>>
+
+
+Delete elements from a model. The following commands: delete vertex 0,
+delete face 1, delete faces 1 and 5, delete faces 1 to 3, delete faces
+2 and less and 4 and more (leaving face 3)
+<<CMDS_START>>
+off_util -D v0 cube | antiview
+off_util -D f1 cube | antiview
+off_util -D f1,5 cube | antiview
+off_util -D f1-3 cube | antiview
+off_util -D f-2,4- cube | antiview
+<<CMDS_END>>
+
+
+Orient the faces a model. The signed volume of the oriented model will be
+positive.
+<<CMDS_START>>
+off_util -O p cube | off_report
 <<CMDS_END>>
 <<EXAMPLES_END>>
+
+Triangulate a model, any new internal edges and vertices will be coloured
+invisible
+<<CMDS_START>>
+off_util -t tri tr_cube | antiview -n f
+off_util -t tri -g tr_cube | antiview -n f
+<<CMDS_END>>
+
+Reduce a model to an uncoloured mesh. Remove any edges or vertices not
+on faces. Applying this to the previous triangulated model
+<<CMDS_START>>
+off_util -t tri -g tr_cube | antiview -n f
+<<CMDS_END>>
+
+Remove particular elements, e.g. remove edges from the previous skeleton model
+<<CMDS_START>>
+off_util -s ico -x e | antiview
+<<CMDS_END>>
+
+Make an edge skeleton by replacing faces with their surrounding edges
+<<CMDS_START>>
+off_util -s ico | antiview
+<<CMDS_END>>
+
+Close a polyhedron. The first command deletes a cube vertex and closes the
+opening. The second deletes two non-coplanar adjacent faces and closes the
+opening with a non-planar face. The third command shows that if a vertex
+lies on more than one opening those openings cannot be closed.
+<<CMDS_START>>
+off_util -D v0 -c red cube | antiview
+off_util -D f0,1 -c none cube | antiview -t no_tri
+off_util -D f0,2 -c none oct | antiview -t no_tri
+<<CMDS_END>>
+
+Truncate all vertices, or all 4-way vertices, to 1/3 along the edges
+<<CMDS_START>>
+off_util -T 1/3 rd | antiview
+off_util -T 1/3,4 rd | antiview
+<<CMDS_END>>
+
+Project a model onto a unit sphere, the resulting polyhedron may
+have non-planar faces
+<<CMDS_START>>
+off_util -S rd | antiview
+<<CMDS_END>>
+
+Truncate the number of decimal places for coordinates in the output
+<<CMDS_START>>
+off_util -d 3 tet
+<<CMDS_END>>
+
+Make a net of a polyhedron (very basic)
+<<CMDS_START>>
+off_util -u 0,0,z ico | antiview
+<<CMDS_END>>
+
+
+
+
+
+
+
 
 
 <<NOTES_START>>

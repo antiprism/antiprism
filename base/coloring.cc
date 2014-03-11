@@ -545,46 +545,18 @@ void coloring::e_face_color()
 }
 
 
-void coloring::edge_color_and_branch(int idx, int part, bool apply_map,
-      vector<vector<int> > &vcons, vector<bool> &seen)
-{
-   if(seen[idx])
-      return;
-   else
-      seen[idx] = true;
-
-   for(unsigned int i=0; i<vcons[idx].size(); i++) {
-      int next_idx = vcons[idx][i];
-      if(idx == next_idx)
-         continue;
-      vector<int> edge(2);
-      edge[0] = idx;
-      edge[1] = next_idx;
-      int e_idx = get_geom()->add_edge(edge);
-      if(apply_map)
-         get_geom()->set_e_col(e_idx, get_col(part));
-      else
-         get_geom()->set_e_col(e_idx, part);
-      edge_color_and_branch(next_idx, part, apply_map, vcons, seen);
-   }
-}
-
-
-
 void coloring::e_parts(bool apply_map)
 {
-   vector<vector<int> > vcons(get_geom()->get_verts()->size(), vector<int>());
-   const vector<vector<int> > &edges = get_geom()->edges();
-   for(unsigned int i=0; i<edges.size(); i++) {
-      vcons[edges[i][0]].push_back(edges[i][1]);
-      vcons[edges[i][1]].push_back(edges[i][0]);
-   }
-
-   int part=0;
-   vector<bool> seen(vcons.size(), false);
-   for(unsigned int i=0; i<vcons.size(); i++)
-      if(!seen[i])
-         edge_color_and_branch(i, part++, apply_map, vcons, seen);
+   geom_info info(*get_geom());
+   const vector<vector<int> > parts = info.get_edge_parts();
+   for(unsigned int part_idx=0; part_idx<parts.size(); part_idx++)
+      for(unsigned int j=0; j<parts[part_idx].size(); j++) {
+         const int edge_idx = parts[part_idx][j];
+         if(apply_map)
+            get_geom()->set_e_col(edge_idx, get_col(part_idx));
+         else
+            get_geom()->set_e_col(edge_idx, part_idx);
+      }
 }
 
 
