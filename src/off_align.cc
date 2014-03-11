@@ -533,6 +533,26 @@ void align_opts::process_command_line(int argc, char **argv)
    if(argc-optind == 1)
       ifile=argv[optind];
 
+   // Cannot read more than one geometry from stdin
+   bool base_from_stdin = (ifile=="" || ifile=="-");
+   bool stdin_in_use = base_from_stdin;
+
+   for(unsigned int i=0; i<brick_args.size(); i++) {
+      const string &brick = brick_args[i].second;
+      if(brick[0]=='-' && (brick.size()==1 || brick[1]==',')) {
+         if(stdin_in_use) {
+            if(base_from_stdin)
+               error("cannot read both brick and base from standard input",
+                     brick_args[i].first);
+            else
+               error("cannot read more than one brick from standard input",
+                     brick_args[i].first);
+         }
+         else
+            stdin_in_use = true;
+      }
+   }
+
 }
 
 int main(int argc, char *argv[])
