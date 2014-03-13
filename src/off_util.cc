@@ -564,6 +564,7 @@ bool delete_elements(col_geom_v &geom, vector<string> del_elems, bool keep, stri
             elem_lists[0].push_back(face[j]);
       }
 
+/*
       // keep faces of vertices that are kept
       for(unsigned int i=0; i<elem_lists[0].size(); i++) {
          vector<int> face_idx = find_faces_with_vertex(geom.faces(), elem_lists[0][i]);
@@ -571,6 +572,7 @@ bool delete_elements(col_geom_v &geom, vector<string> del_elems, bool keep, stri
             elem_lists[2].push_back(face_idx[j]);
          }
       }
+*/
 
       // keep edge decorators of faces that are kept
       for(unsigned int i=0; i<elem_lists[2].size(); i++) {
