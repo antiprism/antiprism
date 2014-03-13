@@ -104,7 +104,7 @@ void filter(geom_if &geom, const char *elems)
          case 'E':
             clear_explicit_edges_by_type(geom, false);
             break;
-         case 'C':
+         case 'D':
             clear_explicit_edges_by_type(geom, true);
             break;
          case 'f':
@@ -114,6 +114,60 @@ void filter(geom_if &geom, const char *elems)
    }
 }
 
+// get indexes of edge parts
+void get_edge_part(vector<int> &edge_part, const col_geom_v &geom, const int &idx, const vector<vector<int> > &vcons, vector<bool> &seen)
+{
+   if(seen[idx])
+      return;
+   else
+      seen[idx] = true;
+
+   for(unsigned int i=0; i<vcons[idx].size(); i++) {
+      int next_idx = vcons[idx][i];
+      if(idx == next_idx)
+         continue;
+      vector<int> edge(2);
+      edge[0] = idx;
+      edge[1] = next_idx;
+      edge_part.push_back(find_edge_in_edge_list(geom.edges(), edge));
+      get_edge_part(edge_part, geom, next_idx, vcons, seen);
+   }
+}
+
+// get list of edge parts indexes
+vector<vector<int> > get_edge_parts(const col_geom_v &geom)
+{
+   vector<vector<int> > vcons(geom.verts().size(), vector<int>());
+
+   const vector<vector<int> > &edges = geom.edges();
+   for(unsigned int i=0; i<edges.size(); i++) {
+      vcons[edges[i][0]].push_back(edges[i][1]);
+      vcons[edges[i][1]].push_back(edges[i][0]);
+   }
+
+   vector<vector<int> > edge_parts;
+
+   vector<bool> seen(vcons.size(), false);
+   for(unsigned int i=0; i<vcons.size(); i++)
+      if(!seen[i]) {
+         vector<int> edge_part;
+
+         // find the edge parts by index list
+         get_edge_part(edge_part, geom, i, vcons, seen);
+
+         // if no edge part is produced it will be empty
+         if (edge_part.size()) {
+            // the lists may contain duplicates and must be unique
+            sort( edge_part.begin(), edge_part.end() );    
+            vector<int>::iterator ep = unique(edge_part.begin(), edge_part.end());
+            edge_part.resize( ep - edge_part.begin() );
+
+            edge_parts.push_back(edge_part);
+         }
+      }
+
+   return edge_parts;
+}
 
 bool get_del_element_list(geom_if &geom, const string &elem, vector<vector<int> > &elem_lists, char *errmsg)
 {
@@ -167,22 +221,456 @@ bool get_del_element_list(geom_if &geom, const string &elem, vector<vector<int> 
    return true;
 }
 
-bool delete_elements(col_geom_v &geom, vector<string> del_elems, char *errmsg)
+// vertex not used. future use?
+bool get_del_parts_list(vector<vector<int> > &edge_parts, vector<vector<int> > &face_parts, const string &elem, vector<vector<int> > &elem_lists, char *errmsg)
 {
-   vector<vector <int> > elem_lists(3);
+   *errmsg = '\0';
+   if(!elem.size())
+      return true;
+
+   auto_ptr<char> elem_str(copy_str(elem.c_str()));
+   if(!elem_str.get()) {
+      strcpy(errmsg, "could not allocate memory");
+      return false;
+   }
+
+   const char *elem_type_strs[] = {"vertex", "edge", "face"};
+   char elem_type_char = *elem_str;
+   int elem_type;
+   int elems_sz = 0;
+   if(elem_type_char=='V') {
+      elem_type = 0;
+      //elems_sz = parts[0].size();
+   }
+   else if(elem_type_char=='E') {
+      elem_type = 1;
+      elems_sz = edge_parts.size();
+   }
+   else if(elem_type_char=='F') {
+      elem_type = 2;
+      elems_sz = face_parts.size();
+   }
+   else {
+      strcpy(errmsg, msg_str("invalid element type '%c', "
+               "should be E, or F", elem_type_char).c_str());
+      return false;
+   }
+
+   if(elem_lists[elem_type].size()) {
+      strcpy(errmsg, msg_str("list for %s parts already given",
+               elem_type_strs[elem_type]).c_str());
+      return false;
+   }
+
+   char errmsg2[MSG_SZ];
+   if(!read_idx_list(elem_str.get()+1, elem_lists[elem_type], elems_sz,
+            false, errmsg2)) {
+      strcpy(errmsg, msg_str("list for %s parts: %s",
+               elem_type_strs[elem_type], errmsg2).c_str());
+      return false;
+   }
+
+   return true;
+}
+
+bool delete_elements(col_geom_v &geom, vector<string> del_elems, bool keep, string invert_del, char *errmsg)
+{
+   // if explicit edges do not exist, add them here so get_del_element_list will not fail
+   vector<vector<int> > added_edges;
+   vector<vector<int> > implicit_edges;
+   geom.get_impl_edges(implicit_edges);
+   for(unsigned int i=0; i<implicit_edges.size(); i++) {
+      if(find_edge_in_edge_list(geom.edges(), implicit_edges[i]) < 0)
+         added_edges.push_back(implicit_edges[i]);
+   }
+   implicit_edges.clear();
+   for(unsigned int i=0; i<added_edges.size(); i++)
+      geom.add_edge(added_edges[i]);
+
+   // get parts here
+   vector<vector<int> > edge_parts;
+   edge_parts = get_edge_parts(geom);
+
+   vector<vector<int> > face_parts;
+   geom.orient(&face_parts);
+   // end get parts here
+
+   vector<vector<int> > elem_lists(3);
    vector<string>::const_iterator vi;
    for(vi=del_elems.begin(); vi!=del_elems.end(); ++vi) {
-      if(!get_del_element_list(geom, *vi, elem_lists, errmsg))
+      string vi_str = *vi;
+      char elem_type_char = vi_str[0];
+//fprintf(stderr,"elem_type_char = %c\n",elem_type_char);
+      string str = "vefEF";
+      std::size_t found = str.find(elem_type_char);
+      if (found==std::string::npos) {
+         strcpy(errmsg, msg_str("invalid element type '%c', "
+                  "should be v, e, f, E or F", elem_type_char).c_str());
          return false;
+      }
+
+      char selection_type_char = vi_str[1];
+      str = "vef";
+      found = str.find(selection_type_char);
+      if (found==std::string::npos) {
+         str = "0123456789-";
+         found = str.find(selection_type_char);
+         if (found!=std::string::npos) {
+            selection_type_char = elem_type_char;
+         }
+         else {
+            strcpy(errmsg, msg_str("invalid selection type '%c', "
+                     "should be v, e, f", selection_type_char).c_str());
+            return false;
+         }
+      }
+      else {
+         vi_str = vi_str.substr(1);
+      }
+//fprintf(stderr,"selection_type_char = %c\n",selection_type_char);
+//fprintf(stderr,"vi_str = %s\n",vi_str.c_str());
+
+      vector<vector<int> > elem_lists_tmp(3);
+      if(elem_type_char == 'E' || elem_type_char == 'F') {
+         // process parts
+         if(elem_type_char == selection_type_char) {
+            // resolve part numbers
+            if(!get_del_parts_list(edge_parts, face_parts, vi_str, elem_lists_tmp, errmsg))
+               return false;
+
+            // at this point elem_lists contain part numbers
+            vector<int> elem_lists_resolved;
+            if (elem_type_char == 'E') {
+               for(unsigned int i=0; i<elem_lists_tmp[1].size(); i++) {
+                  int j = elem_lists_tmp[1][i];
+                  for(unsigned int k=0; k<edge_parts[j].size(); k++)
+                     elem_lists_resolved.push_back(edge_parts[j][k]);
+               }
+               elem_lists[1].insert(elem_lists[1].end(), elem_lists_resolved.begin(), elem_lists_resolved.end());
+            }
+            else if (elem_type_char == 'F') {
+               for(unsigned int i=0; i<elem_lists_tmp[2].size(); i++) {
+                  int j = elem_lists_tmp[2][i];
+                  for(unsigned int k=0; k<face_parts[j].size(); k++)
+                     elem_lists_resolved.push_back(face_parts[j][k]);
+               }
+               elem_lists[2].insert(elem_lists[2].end(), elem_lists_resolved.begin(), elem_lists_resolved.end());
+            }
+         }
+         // there is a selection type
+         else {
+            // resolve parts to elements
+            if(!get_del_element_list(geom, vi_str, elem_lists_tmp, errmsg))
+               return false;
+
+            vector<int> elem_lists_resolved;
+            if (elem_type_char == 'E') {
+               vector<bool> edge_part_found(edge_parts.size(), false);
+
+               if (selection_type_char == 'v') {
+                  // add elem_lists for edge parts based on vertex indexes
+                  for(unsigned int i=0; i<elem_lists_tmp[0].size(); i++) {
+                     for(unsigned int j=0; j<edge_parts.size(); j++) {
+                        if (edge_part_found[j])
+                           continue;
+                        for(unsigned int k=0; k<edge_parts[j].size(); k++) {
+                           if(vertex_exists_in_edge(geom.edges(edge_parts[j][k]), elem_lists_tmp[0][i])) {
+                              edge_part_found[j] = true;
+                              break;
+                           }
+                        }
+                     }
+                  }
+               } else if (selection_type_char == 'e') {
+                  // rebuild elem_lists based on edge parts
+                  for(unsigned int i=0; i<elem_lists_tmp[1].size(); i++) {
+                     for(unsigned int j=0; j<edge_parts.size(); j++) {
+                        if (edge_part_found[j])
+                           continue;
+                        for(unsigned int k=0; k<edge_parts[j].size(); k++) {
+                           if(edge_parts[j][k] == elem_lists_tmp[1][i]) {
+                              edge_part_found[j] = true;
+                              break;
+                           }
+                        }
+                     }
+                  }
+               } else if (selection_type_char == 'f') {
+                 // add elem_lists for edge parts based on face indexes
+                  for(unsigned int i=0; i<elem_lists_tmp[2].size(); i++) {
+                     for(unsigned int j=0; j<edge_parts.size(); j++) {
+                        if (edge_part_found[j])
+                           continue;
+                        for(unsigned int k=0; k<edge_parts[j].size(); k++) {
+                           if(vertex_exists_in_face(geom.edges(edge_parts[j][k]), elem_lists_tmp[2][i])) {
+                              edge_part_found[j] = true;
+                              break;
+                           }
+                        }
+                     }
+                  }
+               }
+
+               for(unsigned int i=0; i<edge_part_found.size(); i++)
+                  if (edge_part_found[i])
+                     elem_lists[1].insert(elem_lists[1].end(), edge_parts[i].begin(), edge_parts[i].end());
+            }
+            else if (elem_type_char == 'F') {
+               vector<bool> face_part_found(face_parts.size(), false);
+
+               if (selection_type_char == 'v') {
+                  // add elem_lists for face parts based on vertex indexes
+                  for(unsigned int i=0; i<elem_lists_tmp[0].size(); i++) {
+                     for(unsigned int j=0; j<face_parts.size(); j++) {
+                        if (face_part_found[j])
+                           continue;
+                        for(unsigned int k=0; k<face_parts[j].size(); k++) {
+                            if(vertex_exists_in_face(geom.faces(face_parts[j][k]), elem_lists_tmp[0][i])) {
+                              face_part_found[j] = true;
+                              break;
+                           }
+                        }
+                     }
+                  }
+               } else if (selection_type_char == 'e') {
+                  // add elem_lists for face parts based on edge indexes
+                  for(unsigned int i=0; i<elem_lists_tmp[1].size(); i++) {
+                     for(unsigned int j=0; j<face_parts.size(); j++) {
+                        if (face_part_found[j])
+                           continue;
+                        for(unsigned int k=0; k<face_parts[j].size(); k++) {
+                            if(edge_exists_in_face(geom.faces(face_parts[j][k]), geom.edges(elem_lists_tmp[1][i]))) {
+                              face_part_found[j] = true;
+                              break;
+                           }
+                        }
+                     }
+                  }
+               } else if (selection_type_char == 'f') {
+                  // rebuild elem_lists based on face parts
+                  for(unsigned int i=0; i<elem_lists_tmp[2].size(); i++) {
+                     for(unsigned int j=0; j<face_parts.size(); j++) {
+                        if (face_part_found[j])
+                           continue;
+                        for(unsigned int k=0; k<face_parts[j].size(); k++) {
+                           if(face_parts[j][k] == elem_lists_tmp[2][i]) {
+                              face_part_found[j] = true;
+                              break;
+                           }
+                        }
+                     }
+                  }
+               }
+
+               for(unsigned int i=0; i<face_part_found.size(); i++)
+                  if (face_part_found[i])
+                     elem_lists[2].insert(elem_lists[2].end(), face_parts[i].begin(), face_parts[i].end());
+            }
+         }
+      }
+      // process elements
+      else {
+         if(!get_del_element_list(geom, vi_str, elem_lists_tmp, errmsg))
+            return false;
+
+         // previous behaviour
+         if(elem_type_char == selection_type_char) {
+            for(unsigned int i=0; i<3; i++)
+               elem_lists[i].insert(elem_lists[i].end(), elem_lists_tmp[i].begin(), elem_lists_tmp[i].end());
+         }
+         // when different selection type is specified
+         else {
+            if (elem_type_char == 'v') {
+               if (selection_type_char == 'e') {
+                  for(unsigned int i=0; i<elem_lists_tmp[1].size(); i++) {
+                     vector<int> edge = geom.edges(elem_lists_tmp[1][i]);
+                     elem_lists[0].push_back(edge[0]);
+                     elem_lists[0].push_back(edge[1]);
+                  }
+               }
+               else
+               if (selection_type_char == 'f') {
+                  for(unsigned int i=0; i<elem_lists_tmp[2].size(); i++) {
+                     vector<int> face = geom.faces(elem_lists_tmp[2][i]);
+                     for(unsigned int j=0; j<face.size(); j++)
+                        elem_lists[0].push_back(face[j]);
+                  }
+               }
+            }
+            else
+            if (elem_type_char == 'e') {
+               if (selection_type_char == 'v') {
+                  for(unsigned int i=0; i<elem_lists_tmp[0].size(); i++) {
+                     for(unsigned int j=0; j<geom.edges().size(); j++) {
+                        if(vertex_exists_in_edge(geom.edges(j), elem_lists_tmp[0][i]))
+                           elem_lists[1].push_back(j);
+                     }
+                  }
+               }
+               else
+               if (selection_type_char == 'f') {
+                  for(unsigned int i=0; i<elem_lists_tmp[2].size(); i++) {
+                     vector<int> face = geom.faces(elem_lists_tmp[2][i]);
+                     for(unsigned int j=0; j<geom.edges().size(); j++) {
+                        vector<int> edge = geom.edges(j);
+                        if(edge_exists_in_face(face, edge))
+                           elem_lists[1].push_back(j);
+                     }
+                  }
+               }
+            }
+            else
+            if (elem_type_char == 'f') {
+               if (selection_type_char == 'v') {
+                  for(unsigned int i=0; i<elem_lists_tmp[0].size(); i++) {
+                     for(unsigned int j=0; j<geom.faces().size(); j++) {
+                        if(vertex_exists_in_edge(geom.faces(j), elem_lists_tmp[0][i]))
+                           elem_lists[2].push_back(j);
+                     }
+                  }
+               }
+               else
+               if (selection_type_char == 'e') {
+                 for(unsigned int i=0; i<elem_lists_tmp[1].size(); i++) {
+                     vector<int> edge = geom.edges(elem_lists_tmp[1][i]);
+                     for(unsigned int j=0; j<geom.faces().size(); j++) {
+                        vector<int> face = geom.faces(j);
+                        if(edge_exists_in_face(face, edge))
+                           elem_lists[2].push_back(j);
+                     }
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   // keep track if elements were explicitly listed
+   vector<bool> explicitly_chosen(3, false);
+   for(unsigned int i=0; i<3; i++)
+      explicitly_chosen[i] = ((int)elem_lists[i].size() ? true : false);
+
+   if(keep) {
+      // add in vertices to keep from edges and faces
+      for(unsigned int i=0; i<elem_lists[1].size(); i++) {
+         vector<int> edge = geom.edges(elem_lists[1][i]);
+         elem_lists[0].push_back(edge[0]);
+         elem_lists[0].push_back(edge[1]);
+      }
+
+      for(unsigned int i=0; i<elem_lists[2].size(); i++) {
+         vector<int> face = geom.faces(elem_lists[2][i]);
+         for(unsigned int j=0; j<face.size(); j++)
+            elem_lists[0].push_back(face[j]);
+      }
+
+      // keep faces of vertices that are kept
+      for(unsigned int i=0; i<elem_lists[0].size(); i++) {
+         vector<int> face_idx = find_faces_with_vertex(geom.faces(), elem_lists[0][i]);
+         for(unsigned int j=0; j<face_idx.size(); j++) {
+            elem_lists[2].push_back(face_idx[j]);
+         }
+      }
+
+      // keep edge decorators of faces that are kept
+      for(unsigned int i=0; i<elem_lists[2].size(); i++) {
+         vector<int> face = geom.faces(elem_lists[2][i]);
+         int sz = face.size();
+         for(unsigned int j=0; j<face.size(); j++) {
+            vector<int> edge = make_edge(face[j], face[(j+1)%sz]);
+            elem_lists[1].push_back(find_edge_in_edge_list(geom.edges(), edge));
+         }
+      }
+   }
+
+   // the lists may contain duplicates and must be unique
+   for(unsigned int i=0; i<3; i++) {
+      sort( elem_lists[i].begin(), elem_lists[i].end() );    
+      vector<int>::iterator el = unique(elem_lists[i].begin(), elem_lists[i].end());
+      elem_lists[i].resize( el - elem_lists[i].begin() );
+   }
+
+   vector<bool> invert_deletion(3, false);
+   vector<vector <int> > elem_lists_invert(3);
+
+   for(unsigned int i=0; i<3; i++) {
+      invert_deletion[i] = keep;
+
+/*
+      if ((i == 0 && strchr(invert_del.c_str(), 'v')) ||
+          (i == 1 && strchr(invert_del.c_str(), 'e')) ||
+          (i == 2 && strchr(invert_del.c_str(), 'f'))) {
+         invert_deletion[i] = !invert_deletion[i];
+      }
+*/
+      // patch for single element deletion
+      // invert deletion for whole model, not just specific element type
+      if ((strchr(invert_del.c_str(), 'v')) ||
+          (strchr(invert_del.c_str(), 'e')) ||
+          (strchr(invert_del.c_str(), 'f'))) {
+         invert_deletion[i] = !invert_deletion[i];
+      }
+
+
+      int sz = 0;
+      if (i == 0)
+         sz = (int)geom.verts().size();
+      else
+      if (i == 1)
+         sz = (int)geom.edges().size();
+      else
+      if (i == 2)
+         sz = (int)geom.faces().size();
+
+      // if the inverse is wanted, make a list of elements that were not chosen
+      if (invert_deletion[i]) {
+         for(int j=0; j<sz; j++) {
+            if (find(elem_lists[i].begin(), elem_lists[i].end(), j) == elem_lists[i].end())
+               elem_lists_invert[i].push_back(j);
+         }
+         elem_lists[i] = elem_lists_invert[i];
+      }
+
+      // implicitly selecting all elements?
+      if(!explicitly_chosen[i]) {
+         // if list is empty and -K then delete all of that element
+         if (!elem_lists[i].size() && keep) {
+            for(int j=0; j<sz; j++)
+               elem_lists[i].push_back(j);
+         }
+         else
+         // if list is full and -D then don't delete any of that element
+         if ((int)elem_lists[i].size() == sz && !keep) {
+            elem_lists[i].clear();
+         }
+      }
    }
 
    geom.delete_faces(elem_lists[2]);
    geom.delete_edges(elem_lists[1]);
-   geom.delete_verts(elem_lists[0]);
+   if (keep) {
+      if(explicitly_chosen[0])
+         geom.delete_verts(elem_lists[0]);
+      else
+         geom.delete_verts(geom.get_info().get_free_verts());
+   }
+   else
+      geom.delete_verts(elem_lists[0]);
+
+   // temporary added edges from the beginning are deleted here
+   // if keep then retain generated edges if some were selected
+   if (!explicitly_chosen[1]) {
+      vector<int> delete_added_edges;
+      for(unsigned int i=0; i<added_edges.size(); i++) {
+         int answer = find_edge_in_edge_list(geom.edges(), added_edges[i]);
+         if(answer >= 0)
+            delete_added_edges.push_back(answer);
+      }
+      geom.delete_edges(delete_added_edges);
+   }
    
    return true;
 }
-
 
 bool add_element(col_geom_v &geom, const string &elem, char *errmsg)
 {
@@ -369,13 +857,21 @@ void pr_opts::usage()
 "            order and can include v, e, f to remove OFF faces with one\n"
 "            vertex (vertices), two-vertices (edges) and three or more\n"
 "            vertices (faces), V to remove vertices that are not part\n"
-"            of any face or edge, E to remove two-vertex faces (edges) that\n"
-"            are also a face edge.\n"
-"  -D <list> delete a list of elements, list starts with element letter\n"
-"            (f,e, v, deleted in that order, only one list per element),\n"
-"            followed by an index number list, given as index ranges\n"
-"            separated by commas, range can be one number or two numbers\n"
-"            separated by a hyphen (default range numbers: 0 and largest index)\n"
+"            of any face or edge, E to remove two-vertex faces (edges)\n"
+"            that are not part of any face, D to remove two-vertex faces (edges)\n"
+"            that are also a face edge (decorators).\n"
+"  -D <list> delete a list of elements, list starts with element letter,\n"
+"            followed by an index number list, given as index ranges separated\n"
+"            by commas. range can be one number or two numbers separated by a\n"
+"            hyphen (default range numbers: 0 and largest index). Element\n"
+"            letters may also be F or E to delete compound parts by part number.\n"
+"            Index number list may be preceded by f, e, v, to find elements\n"
+"            based on connectivity to another element type. Compound parts may\n"
+"            also be found by element number. If model is missing explicit\n"
+"            edges, any listed edges are generated. Only elements specifically\n"
+"            specified are deleted. list can have suffix '%%' to invert results\n"
+"  -K <list> keep a list of elements using the same parameters as -D. Elements\n"
+"            connected to elements in list are also kept\n"
 "  -A <elem> add element, elem is element letter (v, e, f), followed by\n"
 "            element data, optionally followed by ':' and a colour. Data is\n"
 "               v: three comma separated coordinates\n"
@@ -455,7 +951,7 @@ void pr_opts::process_command_line(int argc, char **argv)
    handle_long_opts(argc, argv);
 
    bool trailing_option_l = false; // to warn if there is an -l after a -M
-   while( (c = getopt(argc, argv, ":hH:st:O:d:x:D:A:c:gT:ESM:l:u:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hH:st:O:d:x:D:K:A:c:gT:ESM:l:u:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -503,7 +999,6 @@ void pr_opts::process_command_line(int argc, char **argv)
    }
 
    int sig_compare = INT_MAX;
-   vector<string> del_elems;
    vector<string> add_elems;
 
    for(unsigned int i=0; i<args.size(); ++i) {
@@ -565,20 +1060,58 @@ void pr_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'x':
-            if(strspn(optarg, "vefVEC") != strlen(optarg)) {
-               snprintf(errmsg, MSG_SZ, "elements to hide are %s, can only include vefVEC\n", optarg);
+            if(strspn(optarg, "vefVED") != strlen(optarg)) {
+               snprintf(errmsg, MSG_SZ, "elements to hide are %s, can only include vefVED\n", optarg);
                error(errmsg, c);
             }
             filter(geom, optarg);
             break;
 
-
          case 'D':
-            del_elems.clear();
-            del_elems.push_back(optarg);
-            if(!delete_elements(geom, del_elems, errmsg))
+         {
+            bool invert = (optarg[strlen(optarg)-1] == '%') ? true : false;
+            vector<char *> entries;
+            split_line(optarg, entries, "%");
+            vector<string> del_elems;
+            del_elems.push_back(entries[0]);
+            string invert_del;
+            if (invert) {
+               if (entries[0][0] == 'f' || entries[0][0] == 'F')
+                  invert_del = 'f';
+               else
+               if (entries[0][0] == 'e' || entries[0][0] == 'E')
+                  invert_del = 'e';
+               else
+               if (entries[0][0] == 'v')
+                  invert_del = 'v';
+            }
+            if(!delete_elements(geom, del_elems, false, invert_del, errmsg))
                error(errmsg, c);
             break;
+         }
+
+         case 'K':
+         {
+            bool invert = (optarg[strlen(optarg)-1] == '%') ? true : false;
+            vector<char *> entries;
+            split_line(optarg, entries, "%");
+            vector<string> del_elems;
+            del_elems.push_back(entries[0]);
+            string invert_del;
+            if (invert) {
+               if (entries[0][0] == 'f' || entries[0][0] == 'F')
+                  invert_del = 'f';
+               else
+               if (entries[0][0] == 'e' || entries[0][0] == 'E')
+                  invert_del = 'e';
+               else
+               if (entries[0][0] == 'v')
+                  invert_del = 'v';
+            }
+            if(!delete_elements(geom, del_elems, true, invert_del, errmsg))
+               error(errmsg, c);
+            break;
+         }
 
          case 'A':
             add_elems.clear();
@@ -720,7 +1253,6 @@ void pr_opts::process_command_line(int argc, char **argv)
             error("unknown command line error");
       }
    }
-
 }
 
 int main(int argc, char *argv[])
