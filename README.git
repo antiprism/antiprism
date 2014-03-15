@@ -21,10 +21,13 @@ If changing any of the source files that include a main() function for
 a program, the man page for that program will be rebuilt. This requires
 help2man to be installed.
 
-Building the other documentation is optional. Doxygen (with Graphviz
-dot) and Perl, are required. Build the documentation with
+The release documentation may optionally (requires Perl) be built with
 
    make prepare_release
+
+The library documentation may, if required, be built with Doxygen. Run
+'doxygen' in the top level source directory. The documentation will
+be written into antiprism-VERSION_lib_doc.
 
 Follow the 'Building' section of the README to complete the build.
 
