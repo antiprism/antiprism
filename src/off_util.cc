@@ -733,7 +733,7 @@ bool delete_elements(col_geom_v &geom, vector<string> del_elems, bool keep, stri
          elem_lists[i] = elem_lists_invert[i];
       }
 
-      if (!multi) {
+      if (multi) {
          // RK: patch for single element deletion
          // since only one element type is chosen at a time this won't be happening
 
