@@ -681,6 +681,23 @@ bool delete_elements(col_geom_v &geom, vector<string> del_elems, bool keep, stri
                elem_lists[1].push_back(find_edge_in_edge_list(geom.edges(), edge));
             }
          }
+
+         // second pass if the face list is inverted
+         if (strchr(invert_del.c_str(), 'f')) {
+            for(unsigned int i=0; i<geom.faces().size(); i++) {
+               // for any face not found in elem_list[2]
+               // remove those edges from elem_list[1]
+               if (find(elem_lists[2].begin(), elem_lists[2].end(), i) == elem_lists[2].end()) {
+                  vector<int> face = geom.faces(i);
+                  int sz = face.size();
+                  for(unsigned int j=0; j<face.size(); j++) {
+                     vector<int> edge = make_edge(face[j], face[(j+1)%sz]);
+                     int answer = find_edge_in_edge_list(geom.edges(), edge);
+                     elem_lists[1].erase(remove(elem_lists[1].begin(), elem_lists[1].end(), answer), elem_lists[1].end());
+                  }
+               }
+            }
+         }
       }
    }
 
@@ -733,22 +750,18 @@ bool delete_elements(col_geom_v &geom, vector<string> del_elems, bool keep, stri
          elem_lists[i] = elem_lists_invert[i];
       }
 
-      if (multi || (!multi && invert_deletion[0])) {
-         // RK: patch for single element deletion
-         // since only one element type is chosen at a time this won't be happening
-
-         // implicitly selecting all elements?
-         if(!explicitly_chosen[i]) {
-            // if list is empty and -K then delete all of that element
-            if (!elem_lists[i].size() && keep) {
-               for(int j=0; j<sz; j++)
-                  elem_lists[i].push_back(j);
-            }
-            else
-            // if list is full and -D then don't delete any of that element
-            if ((int)elem_lists[i].size() == sz && !keep) {
-               elem_lists[i].clear();
-            }
+      // implicitly selecting all elements?
+      if(!explicitly_chosen[i]) {
+         // if list is empty and -K then delete all of that element
+         // RK: 'multi' is a patch for single element deletion
+         if (!elem_lists[i].size() && keep && multi) {
+            for(int j=0; j<sz; j++)
+               elem_lists[i].push_back(j);
+         }
+         else
+         // if list is full and -D then don't delete any of that element
+         if ((int)elem_lists[i].size() == sz && !keep) {
+            elem_lists[i].clear();
          }
       }
    }
