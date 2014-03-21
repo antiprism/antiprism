@@ -1194,6 +1194,8 @@ void pr_opts::process_command_line(int argc, char **argv)
             bool invert = (optarg[strlen(optarg)-1] == '%') ? true : false;
             vector<char *> entries;
             split_line(optarg, entries, "%");
+            if (entries.size() > 1)
+               error("extra characters found after %", c);
             vector<string> del_elems;
             del_elems.push_back(entries[0]);
             string invert_del;
@@ -1217,6 +1219,8 @@ void pr_opts::process_command_line(int argc, char **argv)
             bool invert = (optarg[strlen(optarg)-1] == '%') ? true : false;
             vector<char *> entries;
             split_line(optarg, entries, "%");
+            if (entries.size() > 1)
+               error("extra characters found after %", c);
             vector<string> del_elems;
             del_elems.push_back(entries[0]);
             string invert_del;
