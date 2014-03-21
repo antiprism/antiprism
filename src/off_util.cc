@@ -1192,9 +1192,12 @@ void pr_opts::process_command_line(int argc, char **argv)
          case 'D':
          {
             bool invert = (optarg[strlen(optarg)-1] == '%') ? true : false;
+            bool forward_error = ((strlen(optarg) > 1) && (optarg[strlen(optarg)-2] == '%')) ? true : false;
             vector<char *> entries;
             split_line(optarg, entries, "%");
-            if (entries.size() > 1)
+            if (!entries.size())
+               error("invalid argument", c);
+            if (entries.size() > 1 || forward_error)
                error("extra characters found after %", c);
             vector<string> del_elems;
             del_elems.push_back(entries[0]);
@@ -1217,9 +1220,12 @@ void pr_opts::process_command_line(int argc, char **argv)
          case 'K':
          {
             bool invert = (optarg[strlen(optarg)-1] == '%') ? true : false;
+            bool forward_error = ((strlen(optarg) > 1) && (optarg[strlen(optarg)-2] == '%')) ? true : false;
             vector<char *> entries;
             split_line(optarg, entries, "%");
-            if (entries.size() > 1)
+            if (!entries.size())
+               error("invalid argument", c);
+            if (entries.size() > 1 || forward_error)
                error("extra characters found after %", c);
             vector<string> del_elems;
             del_elems.push_back(entries[0]);
