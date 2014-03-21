@@ -54,14 +54,59 @@ off_util -A v0,0,1:blue null | poly_kscope -s O | conv_hull | antiview
 
 Delete elements from a model. The following commands: delete vertex 0,
 delete face 1, delete faces 1 and 5, delete faces 1 to 3, delete faces
-2 and less and 4 and more (leaving face 3)
+2 and less and 4 and more (leaving face 3), delete all faces ecept for
+faces 0 and 1.
 <<CMDS_START>>
 off_util -D v0 cube | antiview
 off_util -D f1 cube | antiview
 off_util -D f1,5 cube | antiview
 off_util -D f1-3 cube | antiview
 off_util -D f-2,4- cube | antiview
+off_util -D f0,1% cube | antiview
 <<CMDS_END>>
+
+Delete edge or face parts of a model. The following commands:
+delete edge part 0, delete face part 0
+<<CMDS_START>>
+off_util -D E0 uc4 | antiview
+off_util -D F0 uc4 | antiview
+<<CMDS_END>>
+
+Delete elements from a model which are connected to other elements. The
+following commands: delete faces connected to vertex 0, face parts
+connected to connected to vertex 1, vertices connected to face 3
+<<CMDS_START>>
+off_util -D fv0 cube | antiview
+off_util -D Fv1 uc4 | antiview
+off_util -D vf3 uc4 | antiview
+<<CMDS_END>>
+
+Keep elements from a model. <i>-K</i> is not exactly an opposite to
+<i>-D</i>, as when it keeps elements it also keeps "decorators",
+considered to be any coloured vertices or edges which lie on kept
+elements. The following commands: keep face 0, keep the edges attached
+to vertex 1, keep the faces attached to vertex 1, keep the edge part
+attached to vertex 1, keep the face part attached to vertex 1
+<<CMDS_START>>
+off_util -K f0 uc4 | antiview
+off_util -K ev1 uc4 | antiview
+off_util -K fv1 uc4 | antiview
+off_util -K Ev1 uc4 | antiview
+off_util -K Fv1 uc4 | antiview
+<<CMDS_END>>
+
+Keep elements from a model, inverting selection. When using % with <i>-K</i>,
+the elements that would have been kept are deleted instead. Decorators
+are kept, except where they are specificed by the option parameter. The
+following commands: invert keep of edge part 0 (the only thing deleted
+is the edges of edge part 0, the vertex decorators are retained as they
+are decorators for remaining faces), invert keep of face part 0 (face
+part 0 is deleted along with its decorators.)
+<<CMDS_START>>
+off_util -K E0% uc4 | antiview
+off_util -K F0% uc4 | antiview
+<<CMDS_END>>
+
 
 
 Orient the faces a model. The signed volume of the oriented model will be
