@@ -286,16 +286,32 @@ bool get_del_parts_list(vector<vector<int> > &edge_parts, vector<vector<int> > &
 bool delete_elements(col_geom_v &geom, vector<string> del_elems, bool keep, string invert_del, bool multi, char *errmsg)
 {
    // if explicit edges do not exist, add them here so get_del_element_list will not fail
-   vector<vector<int> > added_edges;
-   vector<vector<int> > implicit_edges;
-   geom.get_impl_edges(implicit_edges);
-   for(unsigned int i=0; i<implicit_edges.size(); i++) {
-      if(find_edge_in_edge_list(geom.edges(), implicit_edges[i]) < 0)
-         added_edges.push_back(implicit_edges[i]);
+   // but only when no explicit edges exist in the model
+   bool deleting_edges = false;
+   vector<string>::const_iterator vi;
+   for(vi=del_elems.begin(); vi!=del_elems.end(); ++vi) {
+      string vi_str = *vi;
+      char elem_type_char = vi_str[0];
+      string str = "eE";
+      std::size_t found = str.find(elem_type_char);
+      if (found!=std::string::npos) {
+         deleting_edges = true;
+         break;
+      }
    }
-   implicit_edges.clear();
-   for(unsigned int i=0; i<added_edges.size(); i++)
-      geom.add_edge(added_edges[i]);
+
+   if (deleting_edges && geom.edges().size() == 0) {
+      vector<vector<int> > added_edges;
+      vector<vector<int> > implicit_edges;
+      geom.get_impl_edges(implicit_edges);
+      for(unsigned int i=0; i<implicit_edges.size(); i++) {
+         if(find_edge_in_edge_list(geom.edges(), implicit_edges[i]) < 0)
+            added_edges.push_back(implicit_edges[i]);
+      }
+      implicit_edges.clear();
+      for(unsigned int i=0; i<added_edges.size(); i++)
+         geom.add_edge(added_edges[i]);
+   }
 
    // get parts here
    vector<vector<int> > edge_parts;
@@ -306,7 +322,6 @@ bool delete_elements(col_geom_v &geom, vector<string> del_elems, bool keep, stri
    // end get parts here
 
    vector<vector<int> > elem_lists(3);
-   vector<string>::const_iterator vi;
    for(vi=del_elems.begin(); vi!=del_elems.end(); ++vi) {
       string vi_str = *vi;
       char elem_type_char = vi_str[0];
@@ -777,18 +792,6 @@ bool delete_elements(col_geom_v &geom, vector<string> del_elems, bool keep, stri
    else
       geom.delete_verts(elem_lists[0]);
 
-   // temporary added edges from the beginning are deleted here
-   // if keep then retain generated edges if some were selected
-   if (!explicitly_chosen[1]) {
-      vector<int> delete_added_edges;
-      for(unsigned int i=0; i<added_edges.size(); i++) {
-         int answer = find_edge_in_edge_list(geom.edges(), added_edges[i]);
-         if(answer >= 0)
-            delete_added_edges.push_back(answer);
-      }
-      geom.delete_edges(delete_added_edges);
-   }
-   
    return true;
 }
 
@@ -987,10 +990,10 @@ void pr_opts::usage()
 "            letters may also be F or E to delete compound parts by part number.\n"
 "            Index number list may be preceded by f, e, v, E or F to find \n"
 "            elements based on connectivity to another element type or part.\n"
-"            Compound parts may also be found by element number. If model is\n"
-"            missing explicit edges, any listed edges are generated. Only\n"
-"            elements specifically specified are deleted. list can have a suffix\n"
-"            '%%' to invert results\n"
+"            Compound parts may also be found by element number. If list selects\n"
+"            edges and model has faces but no explicit edges, new uncolored edges\n"
+"            are created. Only elements specifically specified are deleted. list\n"
+"            can have a suffix '%%' to invert results\n"
 "  -K <list> keep a list of elements using the same parameters as -D. Only\n"
 "            elements specifically specified are kept along with their vertex\n"
 "            and edge decorators if present\n"
