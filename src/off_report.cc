@@ -178,7 +178,7 @@ void or_opts::process_command_line(int argc, char **argv)
          }
 
          case 'E':
-            if(!strlen(optarg)==1 || !strchr("eia", *optarg))
+            if(strlen(optarg)!=1 || !strchr("eia", *optarg))
                error("reporting edge type must be e, i or a");
             edge_type = *optarg;
             break;

@@ -3,6 +3,7 @@
 
 AC_PREREQ(2.61)
 AC_INIT(antiprism, 0.24.pre01, adrian@antiprism.com)
+AC_SUBST(RELEASE_DATE, ["11 August 2013"])
 AM_INIT_AUTOMAKE([1.9 foreign])
 
 AC_CONFIG_SRCDIR([base/antiprism.h])
@@ -237,12 +238,14 @@ AC_FUNC_STRTOD
 AC_CHECK_FUNCS([floor memset pow sqrt strchr strcspn strpbrk strrchr strspn strstr strtol])
 
 AC_CONFIG_FILES([Makefile
+                 Doxyfile
                  aview/Makefile
                  base/muparser/Makefile
                  base/tesselator/Makefile
                  base/Makefile
                  src/Makefile
                  src_extra/Makefile
+                 doc_src/common_defs.inc
                  ])
                  #python/Makefile
                  #python/distutils/setup.py

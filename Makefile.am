@@ -31,7 +31,7 @@ install-data-local:
 	if test -d $(srcdir)/doc ; then \
 	cd $(srcdir)/doc; \
 	$(mkinstalldirs) $(DESTDIR)$(docdir); \
-	for f in * css/* images/* lib_doc/html/* ; do \
+	for f in * css/* images/* ; do \
 	## Find the install directory name
 	d="`echo $$f | sed -e 's,[^/]*$$,,'`"; \
 	## Make the install directory.
@@ -58,7 +58,6 @@ uninstall-local:
 
 prepare_release:
 	cd doc_src && ./gtml doc.gtp && rm tmp.txt
-	doxygen
 	##cd python && doxygen && ./doxy2swig.py xml/index.xml antiprism_doc.i && rm -rf xml
 
 

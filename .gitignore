@@ -34,6 +34,9 @@ m4/ltversion.m4
 m4/lt~obsolete.m4
 m4/ltsugar.m4
 
+Doxyfile
+doc_src/common_defs.inc
+
 /doc/*
 
 src_extra/twist

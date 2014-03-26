@@ -878,7 +878,7 @@ bool add_element(col_geom_v &geom, const string &elem, char *errmsg)
             return false;
          }
          if(list_sz==2)
-            geom.add_col_face(idx_list, col);
+            geom.add_col_edge(idx_list, col);
          else {
             for(int i=0; i<list_sz; i++)
                geom.add_col_edge(

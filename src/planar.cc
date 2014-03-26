@@ -392,7 +392,7 @@ void planar_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'f':
-            if(!strlen(optarg)==1 || !strchr("npo", *optarg))
+            if(strlen(optarg)!=1 || !strchr("npo", *optarg))
                error("color method must be n, p or o");
             face_color_method = *optarg;
             break;
