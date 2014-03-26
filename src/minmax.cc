@@ -38,7 +38,6 @@
 using std::string;
 using std::vector;
 
-
 class iter_params {
    public:
       int num_iters;
@@ -70,13 +69,14 @@ class mm_opts: public prog_opts
       char placement;
       double shorten_by;
       double lengthen_by;
+      double shorten_rad_by;
       vec4d ellipsoid;
 
       string ifile;
       string ofile;
 
-      mm_opts(): prog_opts("minmax"), algm('v'),
-                 placement('n'), shorten_by(1.0), lengthen_by(0.0)
+      mm_opts(): prog_opts("minmax"), algm('v'), placement('n'),
+                 shorten_by(1.0), lengthen_by(0.0), shorten_rad_by(NAN)
                  {}
 
       void process_command_line(int argc, char **argv);
@@ -92,14 +92,18 @@ void mm_opts::usage()
 "\n"
 "Read a file in OFF format containing a graph of a polyhedron, with or\n"
 "without vertex coordinates, and try to create a spherical or ellipsoidal\n"
-"tesselation where the maximum edge is a minimum length. If input_file is\n"
-"not given the program reads from standard input.\n"
+"tesselation where the maximum edge is a minimum length, or try to make\n"
+"into a regular polyhedron. If input_file is not given the program reads\n"
+"from standard input.\n"
 "\n"
 "Options\n"
 "%s"
 "  -n <itrs> number of iterations (default 1000)\n"
-"  -s <perc> percentage to shorten the maximum edge by (default 1)\n"
-"  -l <perc> percentage to lengthen the minimum edge by (default 1)\n"
+"  -s <perc> percentage to shorten longest edges on iteration (default: 1)\n"
+"  -l <perc> percentage to lengthen shortest edges, or reduce distance off\n"
+"            face plane (-a u), on iteration (default: 1)\n"
+"  -k <perc> percentage to reduce polygon radius (-a u) on iteration\n"
+"            (default: value of -s)\n"
 "  -a <alg>  length changing algorithm\n"
 "              v - shortest and longest edges attached to a vertex (default)\n"
 "              a - shortest and longest of all edges\n"
@@ -135,7 +139,7 @@ void mm_opts::process_command_line(int argc, char **argv)
 
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hn:s:l:a:p:E:L:z:qo:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hn:s:l:k:a:p:E:L:z:qo:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -161,15 +165,23 @@ void mm_opts::process_command_line(int argc, char **argv)
          case 's':
             if(!read_double(optarg, &shorten_by, errmsg))
                error(errmsg, c);
-            if(shorten_by <= 0 || shorten_by >=100)
-               warning("not inside range 0 to 100", c);
+            if(shorten_by<0 || shorten_by>100)
+               warning("not in range 0 to 100", c);
             break;
 
          case 'l':
             if(!read_double(optarg, &lengthen_by, errmsg))
                error(errmsg, c);
-            if(shorten_by <= 0 || lengthen_by >=100) {
-               warning("not inside range 0 to 100", c);
+            if(lengthen_by<0 || lengthen_by>100) {
+               warning("not in range 0 to 100", c);
+            }
+            break;
+
+         case 'k':
+            if(!read_double(optarg, &shorten_rad_by, errmsg))
+               error(errmsg, c);
+            if(shorten_rad_by<0 || shorten_rad_by>100) {
+               warning("not in range 0 to 100", c);
             }
             break;
 
@@ -215,6 +227,11 @@ void mm_opts::process_command_line(int argc, char **argv)
             error("unknown command line error");
       }
    }
+
+   if(isnan(shorten_rad_by))
+      shorten_rad_by = shorten_by;
+   else if(algm != 'u')
+      warning("set, but not used for this algorithm", 'k');
 
    if(argc-optind > 1)
       error("too many arguments");
@@ -380,7 +397,7 @@ void minmax_v(geom_v &geom, iter_params it_params, vector<vector<int> > &eds,
 
 
 void minmax_unit(geom_if &geom, iter_params it_params, double shorten_factor,
-      double plane_factor)
+      double plane_factor, double radius_factor)
 {
    double test_val = it_params.get_test_val();
    const double divergence_test2 = 1e30; // test vertex dist^2 for divergence
@@ -437,7 +454,7 @@ void minmax_unit(geom_if &geom, iter_params it_params, double shorten_factor,
 
             //offset for polygon radius
             vec3d rad_vec = (verts[face[v]] - f_cent);
-            offsets[face[v]] += (rads[f]-rad_vec.mag())*shorten_factor*rad_vec;
+            offsets[face[v]] += (rads[f]-rad_vec.mag())*radius_factor*rad_vec;
          }
       }
 
@@ -514,8 +531,8 @@ int main(int argc, char *argv[])
             minmax_v(geom, opts.it_params, eds, opts.shorten_by/200,
                   opts.lengthen_by/200, opts.ellipsoid);
          else if(opts.algm=='u')
-            minmax_unit(geom, opts.it_params,
-                  opts.shorten_by/200, opts.lengthen_by/200);
+            minmax_unit(geom, opts.it_params, opts.shorten_by/200,
+                  opts.lengthen_by/200, opts.shorten_rad_by/200);
       }
    }
    else
