@@ -300,8 +300,8 @@ bool delete_elements(col_geom_v &geom, vector<string> del_elems, bool keep, stri
       }
    }
 
-   vector<vector<int> > added_edges;
    if (deleting_edges && geom.edges().size() == 0) {
+      vector<vector<int> > added_edges;
       vector<vector<int> > implicit_edges;
       geom.get_impl_edges(implicit_edges);
       for(unsigned int i=0; i<implicit_edges.size(); i++) {
