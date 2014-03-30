@@ -285,34 +285,6 @@ bool get_del_parts_list(vector<vector<int> > &edge_parts, vector<vector<int> > &
 // if multi is true, old behavior of more than one element type deleted collectively is still possible
 bool delete_elements(col_geom_v &geom, vector<string> del_elems, bool keep, string invert_del, bool multi, char *errmsg)
 {
-   // if explicit edges do not exist, add them here so get_del_element_list will not fail
-   // but only when no explicit edges exist in the model
-   bool deleting_edges = false;
-   vector<string>::const_iterator vi;
-   for(vi=del_elems.begin(); vi!=del_elems.end(); ++vi) {
-      string vi_str = *vi;
-      char elem_type_char = vi_str[0];
-      string str = "eE";
-      std::size_t found = str.find(elem_type_char);
-      if (found!=std::string::npos) {
-         deleting_edges = true;
-         break;
-      }
-   }
-
-   if (deleting_edges && geom.edges().size() == 0) {
-      vector<vector<int> > added_edges;
-      vector<vector<int> > implicit_edges;
-      geom.get_impl_edges(implicit_edges);
-      for(unsigned int i=0; i<implicit_edges.size(); i++) {
-         if(find_edge_in_edge_list(geom.edges(), implicit_edges[i]) < 0)
-            added_edges.push_back(implicit_edges[i]);
-      }
-      implicit_edges.clear();
-      for(unsigned int i=0; i<added_edges.size(); i++)
-         geom.add_edge(added_edges[i]);
-   }
-
    // get parts here
    vector<vector<int> > edge_parts;
    edge_parts = get_edge_parts(geom);
@@ -322,6 +294,7 @@ bool delete_elements(col_geom_v &geom, vector<string> del_elems, bool keep, stri
    // end get parts here
 
    vector<vector<int> > elem_lists(3);
+   vector<string>::const_iterator vi;
    for(vi=del_elems.begin(); vi!=del_elems.end(); ++vi) {
       string vi_str = *vi;
       char elem_type_char = vi_str[0];
@@ -983,6 +956,7 @@ void pr_opts::usage()
 "            of any face or edge, E to remove two-vertex faces (edges)\n"
 "            that are not part of any face, D to remove two-vertex faces (edges)\n"
 "            that are also a face edge (decorators).\n"
+"  -e        Fill in missing explicit edges\n"
 "  -D <list> delete a list of elements, list starts with element letter,\n"
 "            followed by an index number list, given as index ranges separated\n"
 "            by commas. range can be one number or two numbers separated by a\n"
@@ -990,10 +964,10 @@ void pr_opts::usage()
 "            letters may also be F or E to delete compound parts by part number.\n"
 "            Index number list may be preceded by f, e, v, E or F to find \n"
 "            elements based on connectivity to another element type or part.\n"
-"            Compound parts may also be found by element number. If list selects\n"
-"            edges and model has faces but no explicit edges, new uncolored edges\n"
-"            are created. Only elements specifically specified are deleted. list\n"
-"            can have a suffix '%%' to invert results\n"
+"            Compound parts may also be found by element number. Only elements\n"
+"            specifically specified are deleted. list can have a suffix '%%' to\n"
+"            invert results. e or E only act on explicit edges. If some explicit\n"
+"            edges are missing, use -e to fill them in\n"
 "  -K <list> keep a list of elements using the same parameters as -D. Only\n"
 "            elements specifically specified are kept along with their vertex\n"
 "            and edge decorators if present\n"
@@ -1076,7 +1050,7 @@ void pr_opts::process_command_line(int argc, char **argv)
    handle_long_opts(argc, argv);
 
    bool trailing_option_l = false; // to warn if there is an -l after a -M
-   while( (c = getopt(argc, argv, ":hH:st:O:d:x:D:K:A:c:gT:ESM:l:u:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hH:st:O:d:x:eD:K:A:c:gT:ESM:l:u:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -1190,6 +1164,10 @@ void pr_opts::process_command_line(int argc, char **argv)
                error(errmsg, c);
             }
             filter(geom, optarg);
+            break;
+
+         case 'e':
+            geom.add_missing_impl_edges();
             break;
 
          case 'D':
