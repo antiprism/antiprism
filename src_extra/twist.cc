@@ -272,15 +272,10 @@ int main(int argc, char *argv[])
    tw_opts opts;
    opts.process_command_line(argc, argv);
 
-   char errmsg[MSG_SZ];
    col_geom_v geom;
-   if(!geom.read(opts.ifile, errmsg))
-      opts.error(errmsg);
-   if(*errmsg)
-      opts.warning(errmsg);
-
+   geom_read_or_error(geom, opts.ifile, opts);
    geom.orient();
-   
+
    geom_v dual;
    get_dual(geom, dual, 1, opts.centre);
 
@@ -295,6 +290,7 @@ int main(int argc, char *argv[])
    }
    if(invalid_verts.size()) {
       string msg("removed invalid vertices (and associated faces) with indices - ");
+      char errmsg[MSG_SZ];
       for(unsigned int i=0; i<invalid_verts.size()-1; i++) {
          snprintf(errmsg, MSG_SZ, "%d,", invalid_verts[i]);
          msg += string(errmsg);
@@ -307,8 +303,7 @@ int main(int argc, char *argv[])
    geom_v twisted = twist(geom, dual, opts.twist_val, opts.centre,
          opts.struts_only);
 
-   if(!twisted.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+   geom_write_or_error(twisted, opts.ofile, opts);
 
    return 0;
 }

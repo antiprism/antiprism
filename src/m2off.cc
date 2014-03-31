@@ -531,8 +531,7 @@ int main(int argc, char *argv[])
    sort_merge_elems(geom, "vef", opts.epsilon);
    geom.orient();
 
-   if(!geom.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+   geom_write_or_error(geom, opts.ofile, opts);
 
    return 0;
 }

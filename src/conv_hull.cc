@@ -111,13 +111,10 @@ int main(int argc, char *argv[])
    ch_opts opts;
    opts.process_command_line(argc, argv);
 
-   char errmsg[MSG_SZ];
    col_geom_v geom;
-   if(!geom.read(opts.ifile, errmsg))
-      opts.error(errmsg);
-   if(*errmsg)
-      opts.warning(errmsg);
-      
+   geom_read_or_error(geom, opts.ifile, opts);
+
+   char errmsg[MSG_SZ];
    int ret = (opts.append_flg ? geom.add_hull(opts.qh_args, errmsg) : geom.set_hull(opts.qh_args, errmsg));
    
    if (ret < 0)
@@ -132,8 +129,7 @@ int main(int argc, char *argv[])
    if (ret == 2)
       opts.warning("result is a polygon");
 
-   if(!geom.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+   geom_write_or_error(geom, opts.ofile, opts);
 
    return ret;
 }

@@ -160,9 +160,7 @@ int main(int argc, char **argv)
    col_geom_v geom;
    make_saff(geom, opts.num_pts, deg2rad(opts.ang), opts.pts_at_poles);
 
-   char errmsg[MSG_SZ];
-   if(!geom.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+   geom_write_or_error(geom, opts.ofile, opts);
 
    return 0;
 }

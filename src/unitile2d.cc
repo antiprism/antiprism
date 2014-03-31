@@ -814,7 +814,6 @@ int main(int argc, char *argv[])
    ut_opts opts;
    opts.process_command_line(argc, argv);
 
-   char errmsg[MSG_SZ];
    unitile ut(opts.pattern, opts.width, opts.height, opts.to_tile, opts.trans_m, opts.shear);
 
    switch(opts.surface) {
@@ -862,9 +861,8 @@ int main(int argc, char *argv[])
          ut.proj4d(opts.rot4d_m);
          break;
    }
-   
-   if(!ut.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+
+   geom_write_or_error(ut, opts.ofile, opts);
 
    return 0;
 }

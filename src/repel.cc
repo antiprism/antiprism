@@ -297,25 +297,18 @@ int main(int argc, char *argv[])
    rep_opts opts;
    opts.process_command_line(argc, argv);
 
-   char errmsg[MSG_SZ] = "";
    col_geom_v geom;
    if(opts.num_pts>0)
       random_placement(geom, opts.num_pts);
-   else {
-      if(!geom.read(opts.ifile, errmsg))
-         opts.error(errmsg);
-      if(*errmsg)
-         opts.warning(errmsg);
-   }
-   
+   else
+      geom_read_or_error(geom, opts.ifile, opts);
 
    REPEL_FN fn[] = {rep_inv_dist1, rep_inv_dist2,
       rep_inv_dist3, rep_inv_dist05};
    repel(geom, fn[opts.rep_form-1], opts.shorten_by/100,
          opts.epsilon, opts.num_iters);
 
-   if(!geom.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+   geom_write_or_error(geom, opts.ofile, opts);
 
    return 0;
 }

@@ -630,15 +630,11 @@ int main(int argc, char *argv[])
    o_col_opts opts;
    opts.process_command_line(argc, argv);
 
-   char errmsg[MSG_SZ];
    col_geom_v geom;
-   if(!geom.read(opts.ifile, errmsg))
-   if(!geom)
-      opts.error(errmsg);
-   if(*errmsg)
-      opts.warning(errmsg);
+   geom_read_or_error(geom, opts.ifile, opts);
 
    // read lights
+   char errmsg[MSG_SZ];
    col_geom_v lights;
    if(opts.lfile!="") {
       if(!lights_read(opts.lfile, &lights, errmsg))
@@ -860,8 +856,7 @@ int main(int argc, char *argv[])
             geom.add_col_edge(ei->first, ei->second);
    }
 
-   if(!geom.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+   geom_write_or_error(geom, opts.ofile, opts);
 
    return 0;
 }

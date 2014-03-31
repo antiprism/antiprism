@@ -223,6 +223,28 @@ void prog_opts::version()
 }
 
 
+void geom_read_or_error(geom_if &geom, const string &name,
+      const prog_opts &opts)
+{
+   char errmsg[MSG_SZ];
+   if(!geom.read(name, errmsg))
+      opts.error(errmsg);
+   if(*errmsg)
+      opts.warning(errmsg);
+}
+
+void geom_write_or_error(const geom_if &geom, const string &name,
+      const prog_opts &opts, int sig_digits)
+{
+   char errmsg[MSG_SZ];
+   if(!geom.write(name, errmsg, sig_digits))
+      opts.error(errmsg);
+   if(!geom)
+      opts.warning("output geometry has no vertices (empty geometry)");
+}
+
+
+
 bool read_double_noparse(const char *str, double *f, char *errmsg)
 {
    bool to_sqrt;

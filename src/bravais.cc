@@ -1994,14 +1994,9 @@ int main(int argc, char **argv)
    }
 
    // read in container file if using. Check existance
-   char errmsg[MSG_SZ]="";
    col_geom_v container;
-   if(opts.cfile.length() > 0) {
-      if(!container.read(opts.cfile, errmsg))
-         opts.error(errmsg);
-      if(*errmsg)
-         opts.warning(errmsg);
-   }
+   if(opts.cfile.length() > 0)
+      geom_read_or_error(container, opts.cfile, opts);
 
    // list lookups are based on centering type "C"
    string centering_temp;
@@ -2058,9 +2053,8 @@ int main(int argc, char **argv)
    col_geom_v geom;
    do_bravais(geom, container, opts);
 
-   if (!opts.list_radii && !opts.list_struts)   
-      if(!geom.write(opts.ofile, errmsg))
-         opts.error(errmsg);
+   if (!opts.list_radii && !opts.list_struts)
+      geom_write_or_error(geom, opts.ofile, opts);
 
    return 0;  
 }

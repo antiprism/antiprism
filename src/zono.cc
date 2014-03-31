@@ -158,9 +158,8 @@ bool make_star_and_zono(geom_if &zono, zo_opts &opts, char *errmsg)
    zono.clear_all();
 
    col_geom_v geom;
-   if(!geom.read(opts.ifile, errmsg))
-      opts.error(errmsg);
-      
+   geom_read_or_error(geom, opts.ifile, opts);
+
    if(opts.centroid)
       opts.centre = centroid(*geom.get_verts());
    
@@ -198,9 +197,8 @@ int main(int argc, char **argv)
    else
       if(!make_star_and_zono(zono, opts, errmsg))
          opts.error(errmsg);
-   
-   if(!zono.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+
+   geom_write_or_error(zono, opts.ofile, opts);
 
    return 0;
    

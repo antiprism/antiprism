@@ -266,6 +266,18 @@ bool off_file_read(FILE *ifile, geom_if &geom, char *errmsg)
       return false;
    }
 
+   if(num_pts<0 || num_faces<0) {
+      if(errmsg)
+         snprintf(errmsg, MSG_SZ, "line %d: element counts: %s count is negative", file_line_no, (num_pts<0) ? "vertex" : "face");
+      return false;
+   }
+
+   if(num_pts==0 && num_faces!=0) {
+      if(errmsg)
+         snprintf(errmsg, MSG_SZ, "line %d: element counts: cannot have a positive face count if vertex count is zero", file_line_no);
+      return false;
+   }
+
    int data_line_no = 2; // non blank lines
   
    // Variables so that if all integer color values
@@ -348,7 +360,7 @@ bool off_file_read(FILE *ifile, geom_if &geom, char *errmsg)
    }
 
    if(errmsg && !bool(geom) && !*errmsg)  // no previous error message
-      strncpy(errmsg, "no coordinate data", MSG_SZ);
+      strncpy(errmsg, "no vertices (empty geometry)", MSG_SZ);
 
    return bool(geom);
 } 

@@ -800,12 +800,7 @@ void collect_cols(vector<col_val> &cols, col_util_opts &opts)
    // file
    if(opts.gfile.length()) {
       col_geom_v geom;
-      char errmsg[MSG_SZ];
-      if(!geom.read(opts.gfile, errmsg))
-         opts.error(errmsg);
-      if(*errmsg)
-         opts.warning(errmsg);
-      
+      geom_read_or_error(geom, opts.gfile, opts);
       collect_cols_from_geom(geom, cols, (opts.display_type==1 || opts.display_type==2));
    }
 
@@ -843,8 +838,7 @@ int main(int argc, char *argv[])
    opts.process_command_line(argc, argv);
    
    col_geom_v geom;
-   char errmsg[MSG_SZ];
-      
+
    vector<col_val> cols;
    collect_cols(cols, opts);
    
@@ -969,8 +963,7 @@ int main(int argc, char *argv[])
       if (opts.display_type == 3)
          color_grid(geom, cols);
 
-      if(!geom.write(opts.ofile, errmsg))
-         opts.error(errmsg);
+      geom_write_or_error(geom, opts.ofile, opts);
    }
       
    return 0;

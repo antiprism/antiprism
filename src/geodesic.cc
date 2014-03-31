@@ -200,20 +200,15 @@ int main(int argc, char **argv)
    opts.process_command_line(argc, argv);
 
    col_geom_v geom;
-   char errmsg[MSG_SZ];
-   if(!geom.read(opts.ifile, errmsg))
-      opts.error(errmsg);
-   if(*errmsg)
-      opts.warning(errmsg);
+   geom_read_or_error(geom, opts.ifile, opts);
 
    col_geom_v geo;
    if(opts.method=='s')
       geo.set_geodesic_sphere(geom, opts.m, opts.n, opts.centre);
    else if(opts.method=='p')
       geo.set_geodesic_planar(geom, opts.m, opts.n);
-   
-   if(!geo.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+
+   geom_write_or_error(geo, opts.ofile, opts);
 
    return 0;
 }

@@ -353,15 +353,11 @@ int main(int argc, char *argv[])
 {
    spid_opts opts;
    opts.process_command_line(argc, argv);
-   char errmsg[MSG_SZ];
-   col_geom_v geom;
-   if(!geom.read(opts.ifile, errmsg))
-      opts.error(errmsg);
-   if(*errmsg)
-      opts.warning(errmsg);
 
+   col_geom_v geom;
+   geom_read_or_error(geom, opts.ifile, opts);
    geom.add_missing_impl_edges();
-   
+
    vector<bool> fold(opts.pattern.size());
    for(unsigned int f=0; f<opts.pattern.size(); f++)
       fold[f] = opts.pattern[f]=='0';
@@ -369,9 +365,8 @@ int main(int argc, char *argv[])
    col_geom_v spid;
    make_spidron(spid, geom, opts.ang, opts.ang2, opts.unit_len, fold, opts.type);
 
-   if(!spid.write(opts.ofile, errmsg))
-      opts.error(errmsg);
-   
+   geom_write_or_error(spid, opts.ofile, opts);
+
    return 0;
 }
 

@@ -393,8 +393,7 @@ int main(int argc, char *argv[])
    if(!geom)
       opts.error("a polyhedron with these parameters could not be made");
 
-   if(!geom.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+   geom_write_or_error(geom, opts.ofile, opts);
 
    return 0;
 }

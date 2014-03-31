@@ -1292,14 +1292,10 @@ void view_opts::set_view_vals(scene &scen)
    scen = scen_defs;
    scen.add_camera(cam_defs);
  
-   char errmsg[MSG_SZ];
    for(unsigned int i=0; i<ifiles.size(); i++) {
       col_geom_v geom;
-      if(!geom.read(ifiles[i], errmsg))
-         error(errmsg);
-      if(*errmsg)
-         warning(errmsg);
-   
+      geom_read_or_error(geom, ifiles[i], *this);
+
       if((get_geom_defs().e().get_col()!=col_val(0,0,0,0)))
          geom.add_missing_impl_edges();
       

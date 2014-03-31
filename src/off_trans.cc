@@ -192,12 +192,8 @@ void trans_opts::process_command_line(int argc, char **argv)
    if(argc-optind == 1)
       ifile=argv[optind];
 
-   if(!geom.read(ifile, errmsg))
-      error(errmsg);
-   if(*errmsg)
-      warning(errmsg);
+   geom_read_or_error(geom, ifile, *this);
 
-   
    vector<double> nums;
    mat3d trans_m2;
    
@@ -439,16 +435,14 @@ void trans_opts::process_command_line(int argc, char **argv)
 
 int main(int argc, char *argv[])
 {
-   char errmsg[MSG_SZ];
    trans_opts opts;
    opts.process_command_line(argc, argv);
-    
+
    opts.geom.transform(opts.trans_m);
 
-   if(!opts.geom.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+   geom_write_or_error(opts.geom, opts.ofile, opts);
 
-    return 0;
+   return 0;
 }
 
 

@@ -791,38 +791,25 @@ int main(int argc, char *argv[])
       opts.ifiles.push_back("");
       
    // read in container file if using. Check existance
-   char errmsg[MSG_SZ]="";
    col_geom_v container;
-   if(opts.cfile.length()) {
-      if(!container.read(opts.cfile, errmsg))
-         opts.error(errmsg);
-      if(*errmsg)
-         opts.warning(errmsg);
-   }
-   
+   if(opts.cfile.length())
+      geom_read_or_error(container, opts.cfile, opts);
+
    col_geom_v repeater;
-   if(opts.rfile.length()) {
-      if(!repeater.read(opts.rfile, errmsg))
-         opts.error(errmsg);
-      if(*errmsg)
-         opts.warning(errmsg);
-   }
+   if(opts.rfile.length())
+      geom_read_or_error(repeater, opts.rfile, opts);
 
    col_geom_v geoms;
    for(unsigned int i=0; i<opts.ifiles.size(); i++) {
       col_geom_v geom;
-      if(!geom.read(opts.ifiles[i], errmsg))
-         opts.error(errmsg);
-      if(*errmsg)
-         opts.warning(errmsg);
+      geom_read_or_error(geom, opts.ifiles[i], opts);
       geoms.append(geom);
    }
    
    process_lattices(geoms, container, repeater, opts);
 
    if (!opts.list_radii && !opts.list_struts)
-      if(!geoms.write(opts.ofile, errmsg))
-         opts.error(errmsg);
-   
+      geom_write_or_error(geoms, opts.ofile, opts);
+
    return 0;
 }

@@ -546,20 +546,15 @@ int main(int argc, char *argv[])
    off_normals_opts opts;
    opts.process_command_line(argc, argv);
 
-   char errmsg[MSG_SZ];
    col_geom_v geom;
-   if(!geom.read(opts.ifile, errmsg))
-      opts.error(errmsg);
-   if(*errmsg)
-      opts.warning(errmsg);
-      
+   geom_read_or_error(geom, opts.ifile, opts);
+
    add_normals(geom, opts.unit_normals, opts.normal_type, opts.exclude_normals_elems, opts.force_normals_polarity,
                opts.elem_normal_vecs, opts.edge_length, opts.alternate_calculation,
                opts.outward_normal_col, opts.inward_normal_col, opts.hemispherical_normal_col, opts.edge_normal_col, opts.base_normal_col,
                opts.base_normal_method, opts.show_elems, opts.show_pointing, opts.average_pattern, opts.center, opts.epsilon);
 
-   if(!geom.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+   geom_write_or_error(geom, opts.ofile, opts);
 
    return 0;
 }

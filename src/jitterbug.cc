@@ -398,16 +398,13 @@ int main(int argc, char *argv[])
    jb_opts opts;
    opts.process_command_line(argc, argv);
 
-   char errmsg[MSG_SZ];
-
    double cyc_val = cycle_value(opts.stage, opts.cycle_type);
    col_geom_v jb, lat_jb;
    double scale = jb_make(jb, cyc_val, opts.faces);
    lattice_make(lat_jb, jb, cyc_val, scale, opts.lat_size, opts.fix_connect);
    lattice_trans(lat_jb, cyc_val, opts.tri_fix, opts.tri_top); 
-   
-   if(!lat_jb.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+
+   geom_write_or_error(lat_jb, opts.ofile, opts);
 
    return 0;
 }

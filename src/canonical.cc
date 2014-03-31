@@ -244,12 +244,8 @@ int main(int argc, char *argv[])
    cn_opts opts;
    opts.process_command_line(argc, argv);
 
-   char errmsg[MSG_SZ] = "";
    col_geom_v geom;
-   if(!geom.read(opts.ifile, errmsg))
-      opts.error(errmsg);
-   if(*errmsg)
-      opts.warning(errmsg);
+   geom_read_or_error(geom, opts.ifile, opts);
 
    if(opts.cent_type=='c' || opts.cent_type=='p' || opts.cent_type=='q' || opts.cent_type=='s')
       centroid_to_origin(geom);
@@ -269,8 +265,7 @@ int main(int argc, char *argv[])
       canonicalize_cn(geom, opts.num_iters, opts.method, opts.divergence_test, opts.rep_count, opts.epsilon);
    }
 
-   if(!geom.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+   geom_write_or_error(geom, opts.ofile, opts);
 
    return 0;
 }

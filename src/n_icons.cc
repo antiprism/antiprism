@@ -4120,15 +4120,12 @@ int main(int argc, char *argv[])
       surface_subsystem(opts);
    else {
       col_geom_v geom;
-      char errmsg[MSG_SZ];
-
       ret = ncon_subsystem(geom, opts);
-   
+
       // elements can be chosen to be eliminated completely
       filter(geom,opts.hide_elems.c_str());
 
-      if(!geom.write(opts.ofile, errmsg))
-         opts.error(errmsg);
+      geom_write_or_error(geom, opts.ofile, opts);
    }
 
    return ret;

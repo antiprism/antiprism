@@ -1112,13 +1112,8 @@ void pr_opts::process_command_line(int argc, char **argv)
    // Append all input files
    for(unsigned int i=0; i<ifiles.size(); i++) {
       col_geom_v geom_arg;
-      if(ifiles[i] != "null") {
-         *errmsg = '\0';
-         if(!geom_arg.read(ifiles[i], errmsg))
-            error(errmsg);
-         if(*errmsg)
-            warning(errmsg);
-      }
+      if(ifiles[i] != "null")
+         geom_read_or_error(geom_arg, ifiles[i], *this);
       geom.append(geom_arg);
    }
 
@@ -1401,8 +1396,7 @@ int main(int argc, char *argv[])
    pr_opts opts;
    opts.process_command_line(argc, argv);
 
-   if(!opts.geom.write(opts.ofile, errmsg, opts.sig_digits))
-      opts.error(errmsg);
+   geom_write_or_error(opts.geom, opts.ofile, opts, opts.sig_digits);
 
    return 0;
 }

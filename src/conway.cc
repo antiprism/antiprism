@@ -1444,16 +1444,10 @@ int main(int argc, char *argv[])
    opts.process_command_line(argc, argv);
 
    col_geom_v geom;
-   char errmsg[MSG_SZ];
-
    if (opts.operand)
       get_operand(geom, opts.operand, opts.poly_size);
-   else {
-      if(!geom.read(opts.ifile, errmsg))
-         opts.error(errmsg);
-      if(*errmsg)
-         opts.warning(errmsg);
-   }
+   else
+      geom_read_or_error(geom, opts.ifile, opts);
 
    // the program works better with oriented input, centroid at the origin
    geom.orient();
@@ -1473,8 +1467,7 @@ int main(int argc, char *argv[])
    // color vertices and edges
    geom.color_vef(opts.vert_col, opts.edge_col, col_val());
 
-   if(!geom.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+   geom_write_or_error(geom, opts.ofile, opts);
 
    verbose('$',0,opts.verbosity);
 

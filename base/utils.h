@@ -156,6 +156,24 @@ class prog_opts: public ultra_getopt
 
 };
 
+///Read a geometry from a name passed as a program argument
+/**Read geometry from a name, print any messages, and error out if necessary
+ * \param geom to hold the model geometry read
+ * \param name file name or resource name of the model
+ * \param opts program options */
+void geom_read_or_error(geom_if &geom, const string &name,
+      const prog_opts &opts);
+
+///Write a geometry to a file name passed as a program argument
+/**Write geometry to a file name, print any messages, and error out if necessary
+ * \param geom the model geometry
+ * \param name file name or resource name of the model
+ * \param opts program options
+ * \param sig_dgts the number of significant digits to write,
+ * or if negative then the number of digits after the decimal point. */
+void geom_write_or_error(const geom_if &geom, const string &name,
+      const prog_opts &opts, int sig_dgts=DEF_SIG_DGTS);
+
 
 //Text utilities
 

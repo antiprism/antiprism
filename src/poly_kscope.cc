@@ -384,21 +384,15 @@ int main(int argc, char *argv[])
    ksc_opts opts;
    opts.process_command_line(argc, argv);
 
-   char errmsg[MSG_SZ];
-
    col_geom_v geom;
-   if(!geom.read(opts.ifile, errmsg))
-      opts.error(errmsg);
-   if(*errmsg)
-      opts.warning(errmsg);
-
-
+   geom_read_or_error(geom, opts.ifile, opts);
 
    vector<vector<set<int> > > equivs;
    sch_sym part_sym;
    if(opts.consider_part_sym)
       part_sym.init(geom, &equivs);
 
+   char errmsg[MSG_SZ];
    if(opts.compound_print_list) {
       compound_print_list(part_sym, opts.sym);
       return 0;
@@ -422,8 +416,7 @@ int main(int argc, char *argv[])
    col_geom_v comp_geom;
    sym_repeat(comp_geom, geom, min_ts, opts.col_elems, opts.clrngs);
 
-   if(!comp_geom.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+   geom_write_or_error(comp_geom, opts.ofile, opts);
 
    return 0;
 }

@@ -562,8 +562,7 @@ int main(int argc, char *argv[])
    
    char errmsg[MSG_SZ];
    col_geom_v geom;
-   if(!geom.read(opts.ifile, errmsg))
-      opts.error(errmsg);
+   geom_read_or_error(geom, opts.ifile, opts);
 
    bond_base base(geom);
    if(opts.sym_str!="" && !base.set_sym(opts.sym_str.c_str(), errmsg))
@@ -580,8 +579,7 @@ int main(int argc, char *argv[])
    col_geom_v geom_out;
    if(!base.bond_all(geom_out, opts.out_type, errmsg))
       opts.error(errmsg, 'M');
-   if(!geom_out.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+   geom_write_or_error(geom_out, opts.ofile, opts);
 
    return 0;
 }

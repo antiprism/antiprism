@@ -382,12 +382,8 @@ int main(int argc, char *argv[])
    leo_opts opts;
    opts.process_command_line(argc, argv);
 
-   char errmsg[MSG_SZ];
    col_geom_v geom;
-   if(!geom.read(opts.ifile, errmsg))
-      opts.error(errmsg);
-   if(*errmsg)
-      opts.warning(errmsg);
+   geom_read_or_error(geom, opts.ifile, opts);
 
    double width = (opts.width==opts.DEF_VAL) ? opts.def_width : opts.width;
    if(opts.width_is_perc)
@@ -407,14 +403,14 @@ int main(int argc, char *argv[])
          centre = geom.centroid();
    }
 
+   char errmsg[MSG_SZ];
    col_geom_v geom_out;
    if(!leonardo_faces(geom_out, geom, width, height, centre,
             -height*0.5*opts.centre_height,
             opts.hide_edges, opts.col_from_edges, opts.panels, errmsg))
       opts.error(errmsg);
 
-   if(!geom_out.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+   geom_write_or_error(geom_out, opts.ofile, opts);
 
    return 0;
 }

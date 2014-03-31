@@ -1480,10 +1480,8 @@ int main(int argc, char *argv[])
    geom.orient();
 
    compound_coloring(geom, opts.coloring_method, opts.map, opts.face_opacity);
-   
-   char errmsg[MSG_SZ]="";
-   if(!geom.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+
+   geom_write_or_error(geom, opts.ofile, opts);
 
    return 0;
 }

@@ -170,10 +170,7 @@ void oq_opts::process_command_line(int argc, char **argv)
    if(argc-optind == 1)
       ifile=argv[optind];
 
-   if(!geom.read(ifile, errmsg))
-      error(errmsg);
-   if(*errmsg)
-      warning(errmsg);
+   geom_read_or_error(geom, ifile, *this);
 
    if(edge_type=='a')
       geom.add_missing_impl_edges();

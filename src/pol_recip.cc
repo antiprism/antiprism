@@ -529,13 +529,10 @@ int main(int argc, char *argv[])
    pr_opts opts;
    opts.process_command_line(argc, argv);
 
-   char errmsg[MSG_SZ];
    col_geom_v geom;
-   if(!geom.read(opts.ifile, errmsg))
-      opts.error(errmsg);
-   if(*errmsg)
-      opts.warning(errmsg);
+   geom_read_or_error(geom, opts.ifile, opts);
 
+   char errmsg[MSG_SZ];
    int e_cons = is_polyhedron(geom, errmsg);
    if(e_cons!=2)
       opts.error(errmsg, "input_file");
@@ -619,8 +616,7 @@ int main(int argc, char *argv[])
       geom.append(dual);
 
    const col_geom_v &geom_out = (opts.append) ? geom : dual;
-   if(!geom_out.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+   geom_write_or_error(geom_out, opts.ofile, opts);
 
    return 0;
 }

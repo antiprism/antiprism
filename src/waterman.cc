@@ -708,7 +708,6 @@ int main(int argc, char *argv[])
    opts.process_command_line(argc, argv);
 
    col_geom_v geom;
-   char errmsg[MSG_SZ]="";
 
    if (opts.verbose)
       fprintf(stderr,"calculating points\n");
@@ -720,6 +719,7 @@ int main(int argc, char *argv[])
       z_guess_waterman(geom, opts.lattice_type, opts.center, opts.radius, opts.scale, opts.verbose);
 
 
+   char errmsg[MSG_SZ]="";
    if (opts.convex_hull) {
       if (opts.verbose)
          fprintf(stderr,"performing convex hull\n");
@@ -750,8 +750,7 @@ int main(int argc, char *argv[])
    if (opts.verbose)
       fprintf(stderr,"writing output\n");
 
-   if(!geom.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+   geom_write_or_error(geom, opts.ofile, opts);
 
    if (opts.verbose)
       fprintf(stderr,"done!\n");

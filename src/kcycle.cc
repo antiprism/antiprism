@@ -224,22 +224,16 @@ int main(int argc, char *argv[])
    kc_opts opts;
    opts.process_command_line(argc, argv);
 
-   char errmsg[MSG_SZ];
    col_geom_v geom;
-   if(opts.ifile != "") {
-      if(!geom.read(opts.ifile, errmsg))
-         opts.error(errmsg);
-      if(*errmsg)
-         opts.warning(errmsg);
-   }
+   if(opts.ifile != "")
+      geom_read_or_error(geom, opts.ifile, opts);
    else
       geom.read_resource("std_tet");
 
    col_geom_v cycle;
    kcycle(geom, cycle, opts.num_prs, opts.edge_idxs, opts.angle);
 
-   if(!cycle.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+   geom_write_or_error(cycle, opts.ofile, opts);
 
    return 0;
 }

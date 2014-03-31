@@ -1087,8 +1087,7 @@ int main(int argc, char *argv[])
       out_geom = kite;
    }
 
-   if(!out_geom.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+   geom_write_or_error(out_geom, opts.ofile, opts);
 
    return 0;
 }

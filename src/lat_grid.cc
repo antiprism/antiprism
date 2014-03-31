@@ -218,9 +218,7 @@ int main(int argc, char **argv)
    if(opts.strut_len2>0)
       add_struts(geom, opts.strut_len2);
 
-   char errmsg[MSG_SZ];
-   if(!geom.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+   geom_write_or_error(geom, opts.ofile, opts);
 
    return 0;
 }

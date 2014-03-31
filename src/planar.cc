@@ -2494,13 +2494,10 @@ int main(int argc, char *argv[])
    planar_opts opts;
    opts.process_command_line(argc, argv);
 
-   char errmsg[MSG_SZ];
    col_geom_v geom;
-   if(!geom.read(opts.ifile, errmsg))
-      opts.error(errmsg);
-   if(*errmsg)
-      opts.warning(errmsg);
+   geom_read_or_error(geom, opts.ifile, opts);
 
+   char errmsg[MSG_SZ];
    if (opts.orient) {
       geom.orient(opts.orient, errmsg);
       if (*errmsg)
@@ -2587,8 +2584,7 @@ int main(int argc, char *argv[])
    if (opts.face_opacity != 255)
       apply_transparency(geom, opts.face_opacity);
 
-   if(!geom.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+   geom_write_or_error(geom, opts.ofile, opts);
 
    return 0;
 }

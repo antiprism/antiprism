@@ -283,13 +283,9 @@ int main(int argc, char *argv[])
    or_opts opts;
    opts.process_command_line(argc, argv);
 
-   char errmsg[MSG_SZ];
    col_geom_v geom;
-   if(!geom.read(opts.ifile, errmsg))
-      opts.error(errmsg);
-   if(*errmsg)
-      opts.warning(errmsg);
-   
+   geom_read_or_error(geom, opts.ifile, opts);
+
    if(opts.edge_type=='a')
       geom.add_missing_impl_edges();
    else if(opts.edge_type=='i') {
@@ -311,6 +307,7 @@ int main(int argc, char *argv[])
    rep.set_sig_dgts(opts.sig_digits);
    rep.set_center(opts.center);
 
+   char errmsg[MSG_SZ];
    if(opts.detect_symmetry && !rep.set_sub_symmetry(opts.sub_sym, errmsg))
       opts.error(("could not set subsymmetry: " + opts.sub_sym).c_str(), 'y');
 

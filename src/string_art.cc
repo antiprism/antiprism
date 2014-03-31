@@ -310,12 +310,10 @@ int main(int argc, char *argv[])
 {
    string_opts opts;
    opts.process_command_line(argc, argv);
-   char errmsg[MSG_SZ];
 
    opts.figure.make_figure();
 
-   if(!opts.figure.write(opts.ofile, errmsg))
-      opts.error(errmsg);
+   geom_write_or_error(opts.figure, opts.ofile, opts);
 
    return 0;
 }
