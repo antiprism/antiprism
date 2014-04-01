@@ -786,7 +786,7 @@ bool delete_elements(col_geom_v &geom, vector<string> del_elems, bool keep, stri
       geom.delete_verts(elem_lists[0]);
 
    if (explicit_edge_warning)
-      strcpy(errmsg, "warning: some deleted edges were implicit edges. use -e to create them first");
+      strcpy(errmsg, "some deleted edges were implicit edges. use -e to create them first");
 
    return true;
 }
