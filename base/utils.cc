@@ -344,7 +344,8 @@ static bool read_idx(char *str, int *idx, int num_idxs, char *errmsg)
          snprintf(errmsg, MSG_SZ, "'%s' is out of range (no elements of "
                "this type)", str);
       else
-         snprintf(errmsg, MSG_SZ, "'%s' is out of range (too large)", str);
+         snprintf(errmsg, MSG_SZ, "'%s' is out of range (last index is %d)",
+               str, num_idxs-1);
       return false;
    }
    return true;
