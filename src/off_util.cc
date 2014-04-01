@@ -285,6 +285,10 @@ bool get_del_parts_list(vector<vector<int> > &edge_parts, vector<vector<int> > &
 // if multi is true, old behavior of more than one element type deleted collectively is still possible
 bool delete_elements(col_geom_v &geom, vector<string> del_elems, bool keep, string invert_del, bool multi, char *errmsg)
 {
+   // preserve original edge list and complete a new one
+   vector<vector<int> > original_edges = geom.edges();
+   geom.add_missing_impl_edges();
+
    // get parts here
    vector<vector<int> > edge_parts;
    edge_parts = get_edge_parts(geom);
@@ -754,6 +758,22 @@ bool delete_elements(col_geom_v &geom, vector<string> del_elems, bool keep, stri
       }
    }
 
+   // also delete added edges
+   bool explicit_edge_warning = false;
+   if (!keep) {
+      for(unsigned int i=0; i<geom.edges().size(); i++) {
+         int answer = find_edge_in_edge_list(original_edges, geom.edges(i));
+         if (answer == -1) {
+            elem_lists[1].push_back(i);
+            explicit_edge_warning = true;
+         }
+      }
+
+      sort( elem_lists[1].begin(), elem_lists[1].end() );    
+      vector<int>::iterator el = unique(elem_lists[1].begin(), elem_lists[1].end());
+      elem_lists[1].resize( el - elem_lists[1].begin() );
+   }
+
    geom.delete_faces(elem_lists[2]);
    geom.delete_edges(elem_lists[1]);
    if (keep) {
@@ -764,6 +784,9 @@ bool delete_elements(col_geom_v &geom, vector<string> del_elems, bool keep, stri
    }
    else
       geom.delete_verts(elem_lists[0]);
+
+   if (explicit_edge_warning)
+      strcpy(errmsg, "some deleted edges were implicit edges. use -e to create them first");
 
    return true;
 }
@@ -970,7 +993,8 @@ void pr_opts::usage()
 "            edges are missing, use -e to fill them in\n"
 "  -K <list> keep a list of elements using the same parameters as -D. Only\n"
 "            elements specifically specified are kept along with their vertex\n"
-"            and edge decorators if present\n"
+"            and edge decorators if present. Implicit edges which are kept are\n"
+"            converted to explicit edges\n"
 "  -A <elem> add element, elem is element letter (v, e, f), followed by\n"
 "            element data, optionally followed by ':' and a colour. Data is\n"
 "               v: three comma separated coordinates\n"
@@ -1195,6 +1219,8 @@ void pr_opts::process_command_line(int argc, char **argv)
             }
             if(!delete_elements(geom, del_elems, false, invert_del, false, errmsg))
                error(errmsg, c);
+            if(*errmsg)
+               warning(errmsg);
             break;
          }
 
