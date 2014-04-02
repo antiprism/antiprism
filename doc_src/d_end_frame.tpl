@@ -19,7 +19,7 @@ Next:
 <small>
    Antiprism Documentation -
    <a href="<<SITE_PAGE>>"><<SITE_PAGE>></a> -
-   Generated <<MTIMESTAMP>>
+   Generated <<TIMESTAMP>>
 </small>
 </div>
 

@@ -19,6 +19,8 @@
 <small><a href="#lights">Lights</a></small>
 <<BARSPACE>>
 <small><a href="#incs">POV-Ray Incs</a></small>
+<<BARSPACE>>
+<small><a href="#extras">Extras</a></small>
 <<CONT_S_END>>
 
 <h2><a name="resources">
@@ -213,7 +215,7 @@ described at the start of the file. They can be set in several ways -
     ring around the edge at the edge centre.
 </dl>
 
-<h2><a name="incs">
+<h2><a name="extras">
 Extras
 </a></h2>
 

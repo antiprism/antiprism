@@ -1,16 +1,19 @@
 NEWS for Antiprism: http://www.antiprism.com
 
 Version 0.24
-xx-xx-13 Adrian Rossiter <adrian@antiprism.com>
+xx-xx-14 Adrian Rossiter <adrian@antiprism.com>
          New Programs
             to_nfold: change the rotational symmetry of a polyhedron
          Changes
             off_util: process options in command line order,
-              incorporate -b into -M, expand documentation.
+              incorporate -b into -M, expand -D and add -K to keep
+              elements (Roger Kaufman), expand documentation.
             minmax: new option -a u, make faces regular. Improve
               reporting.
+            leonardo: new options -c centre, -p panel faces
          Fixes
             off_util -u: natural unfolding for positive orientation
+            minor bug fixes
 
 Version 0.23
 11-03-13 Adrian Rossiter <adrian@antiprism.com>

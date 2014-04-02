@@ -85,10 +85,11 @@ off_util -D vF0 uc4 | antiview
 
 Use <i>-e</i> to convert implicit edges to explicit edges before a delete
 to preserve the edges that have all their supporting faces deleted
-<<CMDS_START>
+<<CMDS_START>>
 off_util -e -D fv0 cube | antiview
 pol_recip -a cube | off_util -e -D F0 | antiview
-<<CMDS_END>
+<<CMDS_END>>
+
 
 Keep elements from a model. <i>-K</i> is not exactly an opposite to
 <i>-D</i>, as when it keeps elements it also keeps "decorators",
