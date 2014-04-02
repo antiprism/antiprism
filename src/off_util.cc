@@ -764,8 +764,9 @@ bool delete_elements(col_geom_v &geom, vector<string> del_elems, bool keep, stri
       for(unsigned int i=0; i<geom.edges().size(); i++) {
          int answer = find_edge_in_edge_list(original_edges, geom.edges(i));
          if (answer == -1) {
+            if (find(elem_lists[1].begin(), elem_lists[1].end(), i) != elem_lists[1].end())
+               explicit_edge_warning = true;
             elem_lists[1].push_back(i);
-            explicit_edge_warning = true;
          }
       }
 
@@ -786,7 +787,7 @@ bool delete_elements(col_geom_v &geom, vector<string> del_elems, bool keep, stri
       geom.delete_verts(elem_lists[0]);
 
    if (explicit_edge_warning)
-      strcpy(errmsg, "some deleted edges were implicit edges. use -e to create them first");
+      strcpy(errmsg, "some deleted edges were implicit edges. use -e to make them explicit");
 
    return true;
 }
