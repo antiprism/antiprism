@@ -74,19 +74,31 @@ off_util -D F0 uc4 | antiview
 
 Delete elements from a model which are connected to other elements. The
 following commands: delete faces connected to vertex 0, face parts
-connected to connected to vertex 1, vertices connected to face 3
+to connected to vertex 1, vertices connected to face 3, vertices
+connected to face part 0
 <<CMDS_START>>
 off_util -D fv0 cube | antiview
 off_util -D Fv1 uc4 | antiview
 off_util -D vf3 uc4 | antiview
+off_util -D vF0 uc4 | antiview
 <<CMDS_END>>
+
+Use <i>-e</i> to convert implicit edges to explicit edges before a delete
+to preserve the edges that have all their supporting faces deleted
+<<CMDS_START>
+off_util -e -D fv0 cube | antiview
+pol_recip -a cube | off_util -e -D F0 | antiview
+<<CMDS_END>
 
 Keep elements from a model. <i>-K</i> is not exactly an opposite to
 <i>-D</i>, as when it keeps elements it also keeps "decorators",
 considered to be any coloured vertices or edges which lie on kept
-elements. The following commands: keep face 0, keep the edges attached
+elements. If it should keep implicit edges, these will be made explicit.
+The following commands: keep face 0, keep the edges attached
 to vertex 1, keep the faces attached to vertex 1, keep the edge part
-attached to vertex 1, keep the face part attached to vertex 1
+attached to vertex 1, keep the face part attached to vertex 1, keep
+the edges connected to face 1 of a cube (implicit edges converted to
+explicit edges)
 <<CMDS_START>>
 off_util -K f0 uc4 | antiview
 off_util -K ev1 uc4 | antiview
@@ -180,6 +192,50 @@ off_util -u 0,0,z ico | antiview
 
 
 <<NOTES_START>>
+
+<h3>Deleting Elements</h3>
+
+Delete and keep operations work in slightly different ways.
+<p>
+<b>Delete, <i>-D</i></b>
+<ul>
+<li>convert implicit edges to explicit</li>
+<li>find face and edge parts</li>
+<li>delete elements according to the index numbers displayed in <i>antiview</i></li>
+<li>delete any explicit edges that were originally implicit</li>
+</ul>
+
+<p>
+<b>Keep, <i>-K</i></b>
+<ul>
+<li>convert implicit edges to explicit</li>
+<li>find face and edge parts</li>
+<li>keep elements according to the index numbers displayed in <i>antiview</i></li>
+<li>keep all supporting vertices and any decorators (coloured vertices lying
+on an edge or coloured vertices and edges lying on a face)</li>
+<li>delete all elements not kept</li>
+</ul>
+
+When elements are deleted, this affects other elements as follows:
+<dl>
+<dt>Vertex deleted:</dt>
+<dd>Removes the vertex (index number) from any faces it is part of,
+reducing the number of vertices in these faces and causing deletion
+of any face with less than two vertices remaining. Deletes any edges
+that the vertex is part of.
+<dt>Edge deleted:</dt>
+<dd>No effect on faces or vertices. May leave free vertices not lying
+on any face or edge.</dd>
+<dt>Face deleted:</dt>
+<dd>No effect on vertices. May leave free vertices not lying on any face or
+edge. No effect on explicit edges. Implicit edges no longer exist, in any sense,
+when the last face they lie on is deleted.</dd>
+<dt>Edge or face part deleted</dt>
+<dd>An edge or face part is just a set of elements of the corresponding type.
+Deleting the part deletes the elements in this set.</dd>
+</dl>
+
+<h3>Other Notes</h3>
 Option <i>-E</i> is like the <i>join</i> operation in Conway Notation.
 <p>
 The face sorting performed by option <i>-M</i> orients faces in
