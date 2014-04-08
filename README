@@ -76,10 +76,14 @@ or --with-freeglut.
 
 Cygwin
 ------
-Install the X development packages and run configure with
-"--with-x=yes". It should be possible to build native Windows
-binaries by cross-compiling using the tools provided by Cygwin,
-otherwise, use the MSYS build environment.
+For a non-X version of Antiview (only tested on a system without
+X development packages installed), first build and install Freeglut
+from source, then set LDFLAGS="-L/usr/local/lib" when running the
+Antiprism configure script. For an X version of Antiview, install
+the X development packages and run configure with "--with-x=yes".
+It should be possible to build native Windows binaries by cross-
+compiling using the tools provided by Cygwin, otherwise, use the
+MSYS build environment.
 
 Mac OS X
 --------
