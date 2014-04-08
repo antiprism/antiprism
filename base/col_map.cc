@@ -151,33 +151,25 @@ static color_map* init_color_map_generated(const char *map_name, char *errmsg=0)
    else if(strcmp(name, "rnd")==0 ||
            strcmp(name, "rand")==0 ||
            strcmp(name, "random")==0  ) {
-      cmap = new color_map_range_rand_hsv();
+      if(!strpbrk(map_name+name_len+num_len, "RrGgBb"))
+         cmap = new color_map_range_rand_hsv();
+      else
+         cmap = new color_map_range_rand_rgb();
       if(cmap && !cmap->init(map_name+name_len, errmsg)) {
          delete cmap;
          cmap = 0;
-      }
-      if(!cmap) {
-         cmap = new color_map_range_rand_rgb();
-         if(cmap && !cmap->init(map_name+name_len, errmsg)) {
-            delete cmap;
-            cmap = 0;
-         }
       }
    }
 
    else if(strcmp(name, "rng")==0 ||
            strcmp(name, "range")==0 ) {
-      cmap = new color_map_range_hsv();
+      if(!strpbrk(map_name+name_len+num_len, "RrGgBb"))
+         cmap = new color_map_range_hsv();
+      else
+         cmap = new color_map_range_rgb();
       if(cmap && !cmap->init(map_name+name_len, errmsg)) {
          delete cmap;
          cmap = 0;
-      }
-      if(!cmap) {
-         cmap = new color_map_range_rgb();
-         if(cmap && !cmap->init(map_name+name_len, errmsg)) {
-            delete cmap;
-            cmap = 0;
-         }
       }
    }
 
@@ -536,21 +528,13 @@ bool color_map_range::init(const char *map_name, char *errmsg)
    if(*map_name != '_' && vals.size()<2) // A size was given but no comp ranges
          return true;
 
-   if(strspn(vals.back(), "HhSsVv") && strspn(vals.back(), "RrGgBb")) {
+   if(strpbrk(vals.back(), "HhSsVv") && strpbrk(vals.back(), "RrGgBb")) {
       if(errmsg)
-         sprintf(errmsg, "cannot include both RGB and HSV components");
+         sprintf(errmsg, "component letters include both 'HhSsVv' "
+               "and 'RrGgBb', can only include letters from one set\n");
       return false;
    }
-   size_t char_cnt;
-   bool is_hsv = (set_func==((void (col_val::*)(double, double, double, double))&col_val::set_hsva));
-   if( ( is_hsv && (char_cnt=strspn(vals.back(), "RrGgBb"))) ||
-       (!is_hsv && (char_cnt=strspn(vals.back(), "HhSsVv"))) ) {
-      if(errmsg)
-         sprintf(errmsg, "invalid component letter '%c'",
-               *(vals.back()+char_cnt-1));
-      return false;
-   }
-   
+
    int rng_len = strlen(vals.back());
    char rngs[MSG_SZ];
    char *q = rngs;
