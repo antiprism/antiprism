@@ -164,7 +164,7 @@ bool orient_geom(geom_if &geom, int option, char *errmsg)
    bool is_orientable = info.is_orientable();
    if (!is_orientable)
       if (errmsg)
-         strcpy(errmsg,"input file contains a non-orientable geometry");
+         strcpy(errmsg,"input file contains a non-orientable geometry, use 'flip' to reverse face orientations");
    // if model is not oriented, don't do a pre-orientation if we just want orient_reverse
    if (!info.is_oriented() && option != 4)
       geom.orient();
@@ -172,7 +172,7 @@ bool orient_geom(geom_if &geom, int option, char *errmsg)
    double vol = info.volume();
    if (is_orientable && vol == 0 && (option == 1 || option == 2))
       if (errmsg)
-         strcpy(errmsg,"volume is zero. use option 3 to reverse");
+         strcpy(errmsg,"volume is zero, use 'reverse' for alternative orientation");
    if ((vol < 0 && option == 1) || (vol > 0 && option == 2) ||
          option == 3 || option == 4)
       geom.orient_reverse();
