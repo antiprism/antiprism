@@ -2019,7 +2019,7 @@ bool sch_sym_autos::set_realignment(const char *realign, char *errmsg)
                   rot_cnt);
          else //(transl_cnt>0)
             msg += msg_str(", must give %d (translation) colon separated "
-                  "numbers", rot_cnt);
+                  "numbers", transl_cnt);
 
          strncpy(errmsg, msg.c_str(), MSG_SZ);
       }
