@@ -604,8 +604,15 @@ bool wythoff_poly::make_poly(geom_if &geom, char *errmsg)
    }
    else if(bar_pos==1) {
       vec3d pt = verts[0];
-      add_faces(geom, pt, fracs[2], fracs[3], verts, 1, sym);
-      add_faces(geom, pt, fracs[4], fracs[5], verts, 2, sym);
+      if(fracs[2]==2 && fracs[4]==2) { // P|2 2 is degenerate
+         geom.add_vert(pt);
+         geom.add_vert(-pt);
+         geom.add_face(0, 1, -1);      // add as face, for sizing by edge length
+      }
+      else {                           // usual construction
+         add_faces(geom, pt, fracs[2], fracs[3], verts, 1, sym);
+         add_faces(geom, pt, fracs[4], fracs[5], verts, 2, sym);
+      }
    }
    else if(bar_pos==2) {
       vec3d n0 = get_angle_bisector_norm(verts[2], verts[0], verts[1]);
