@@ -117,6 +117,13 @@ public:
    * \return The coset with \arg m. */
   Transformations lcoset(const Trans3d &t) const;
 
+  /// Form the left cosets for a given subgroup.
+  /**\param sub a subgroup of this transformation group to form the
+   * left cosets with.
+   * \param lcosets the left cosets.
+   * \return The number of cosets.*/
+  int lcosets(const Transformations sub, std::vector<Transformations> &lcosets) const;
+
   /// The minimum set of transformations that will generate one group of
   /// transformations from another
   /**\param tr_whole the target group of transformations.
@@ -155,6 +162,7 @@ public:
   /// Check if there are transformations in the set.
   /**\return \c true if set, otherwise \c false */
   bool is_set() const { return trans.size() > 0; }
+
 };
 
 /// Form direct product of two sets of transformations
@@ -193,6 +201,7 @@ Transformations &operator+=(Transformations &s, const Trans3d &m);
  * \param t0 first Transformations
  * \param t1 second Transformations
  * \return  -1, 0, or 1 to indicate t0 is less, equal or greater than t1 */
+
 int compare(const Transformations &t0, const Transformations &t1);
 
 /// Isometry type
@@ -255,6 +264,15 @@ public:
   /** Print the object data to \c stdout for debugging. */
   void dump() const;
 };
+
+///Compare two Transformationss for equality
+/**\param t0 first Transformations
+ * \param t1 second Transformations
+ * \return  \c true id \c t0 and \t t1 contain the same set of transformations,
+ * otherwise \c false.*/
+inline bool operator ==(const Transformations &t0, const Transformations &t1)
+{ return compare(t0, t1)==0; }
+
 
 /// Get sets of elements that are equivalent under a set of transformations
 /**\param geom the geometry.
@@ -645,6 +663,51 @@ public:
   /** Print the object data to \c stdout for debugging. */
   void dump() const;
 };
+
+/// Orbit of an element under some transformation group
+class orbit
+{
+   private:
+      int element;             // element to find the orbit of
+      Symmetry stab;            // stabilizer subgroup, fixes elem
+      std::map<int, Trans3d> elems;   // elements on the orbit, each mapped to a
+                               // transformation that carries the base
+                               // element onto it
+      void init_vert_orbit(const Geometry &geom, const Symmetry &sym);
+      void init_edge_orbit(const Geometry &geom, const Symmetry &sym);
+      void init_face_orbit(const Geometry &geom, const Symmetry &sym);
+
+   public:
+      const std::map<int, Trans3d> &get_elems()  const { return elems; }
+      const Symmetry get_stab() const { return stab; }
+
+      void init(const Geometry &geom, int elem, int elem_type,
+            const Symmetry &sym);
+
+};
+
+/// Get element equivalence transformations
+/** Partition the elements into sets of equivalents. The stabilizer of
+ * an element is a subgroup of a symmetry group consisting of all the
+ * transformations that map the element onto itself.
+ * \param geom the geometry
+ * \param idx the element index number
+ * \param elem_type type of element: ELEM_VERTS, ELEM_EDGES, ELEM_FACES
+ * \param sym the symmetry group
+ * \return The stabilizer group.*/
+Symmetry get_elem_stabilizer(const Geometry &geom, int idx, int elem_type,
+            const Symmetry &sym);
+
+
+/// Check if a set of transformations fixes an element
+/**An element is fixed if all the transformations map the element onto itself.
+ * \param geom the geometry
+ * \param idx the element index number
+ * \param elem_type type of element: ELEM_VERTS, ELEM_EDGES, ELEM_FACES
+ * \param sym the symmetry group
+ * \return \c true if the element was fixed, otherwise \c false.*/
+bool elem_fixed(const Geometry &geom, int idx, int elem_type,
+      const Symmetry &sym);
 
 } // namespace anti
 

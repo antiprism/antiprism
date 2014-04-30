@@ -117,6 +117,20 @@ Transformations &operator*=(Transformations &s1, const Transformations &s2)
   return s1.product_with(s2);
 }
 
+int Transformations::lcosets(Transformations sub, vector<Transformations> &lcosets) const
+{
+   lcosets.clear();
+   Transformations whole = *this;
+   sub += Trans3d();                       // must include unit!
+   while(whole.is_set()) {
+      Trans3d tr = *whole.trans.begin();   // select a transf from init list
+      lcosets.push_back(sub.lcoset(tr)); // find equivalent transformations
+      whole.subtract(lcosets.back());    // remove them
+   }
+   return lcosets.size();
+}
+
+
 Transformations operator+(const Transformations &s, const Trans3d &m)
 {
   return Transformations(s).add(m);
@@ -2021,5 +2035,255 @@ Status SymmetryAutos::set_realignment(const string &realign)
 
   return Status::ok();
 }
+
+//-----------------------------------------------------------------------
+// Stabilzers
+// copy a single face and only required vertices from one geometry to another
+
+/// Get vertex stabilizer
+/** The stabilizer of a vertex is a subgroup of a symmetry group
+ *  consisting of all the transformations that map the vertex onto itself.
+ * \param geom the geometry
+ * \param v_idx the vertex index number
+ * \param sym the symmetry group
+ * \return The stabilizer group.*/
+//Symmetry get_vert_stabilizer(const Geometry &geom, int v_idx, const Symmetry &sym);
+
+/// Get edge stabilizer
+/** The stabilizer of a edge is a subgroup of a symmetry group
+ *  consisting of all the transformations that map the edge onto itself.
+ * \param geom the geometry
+ * \param e_idx the edge index number
+ * \param sym the symmetry group
+ * \return The stabilizer group.*/
+//Symmetry get_edge_stabilizer(const Geometry &geom, int e_idx, const Symmetry &sym);
+
+/// Get face stabilizer
+/** The stabilizer of a face is a subgroup of a symmetry group
+ *  consisting of all the transformations that map the face onto itself.
+ * \param geom the geometry
+ * \param f_idx the face index number
+ * \param sym the symmetry group
+ * \return The stabilizer group.*/
+//Symmetry get_face_stabilizer(const Geometry &geom, int f_idx, const Symmetry &sym);
+
+/// Get vertex equivalence transformations
+/** Partition the vertices into sets of equivalent vertices. The stabilizer of a vertex is a subgroup of a symmetry group
+ *  consisting of all the transformations that map the vertex onto itself.
+ * \param geom the geometry
+ * \param v_idx the vertex index number
+ * \param sym the symmetry group
+ * \return The stabilizer group.*/
+//Symmetry get_vert_stabilizer(const Geometry &geom, int v_idx, const Symmetry &sym);
+
+
+
+
+
+static void copy_face_to_geom(const Geometry &geom, int f_idx, Geometry *o_geom)
+{
+   o_geom->clear_all();
+   const int f_sz = geom.faces(f_idx).size();
+   vector<int> f_new(f_sz);
+   map<int, int> v_orig2v_new;
+   for(int i=0; i<f_sz; i++) {
+      const int v_orig = geom.faces(f_idx, i);   // original index number
+      int v_new;                                 // new vertex number
+      map<int, int>::iterator mi = v_orig2v_new.find(geom.faces(f_idx, i));
+      if(mi == v_orig2v_new.end()) {
+         v_new = o_geom->verts().size();          // new map, use next integer
+         v_orig2v_new[v_orig] = v_new;           // add map
+         o_geom->add_vert(geom.verts(v_new));     // copy vertex, ignore colours
+      }
+      else
+         v_new = mi->second;                     // index previously mapped
+      f_new[i] = v_new;                          // use mapped vertex in face
+   }
+   o_geom->add_face(f_new);                      // (ignore colours)
+}
+
+static Symmetry get_elem_stabilizer(const Geometry &geom, const vector<int> &elem,
+      const Symmetry &sym)
+{
+   if(elem.size()==0)
+      return Symmetry();
+
+   const Transformations &ts = sym.get_trans();
+   Transformations stab_trans;
+   const int elem_sz = elem.size();
+   vector<Vec3d> trans_elem(elem_sz); // transformed element as cycle of coords
+   for(set<Trans3d>::iterator si=ts.get_trans().begin();
+         si!=ts.get_trans().end(); si++) {
+      for(int i=0; i<elem_sz; i++)
+         trans_elem[i] = (*si) * geom.verts(elem[i]);
+
+      // starting at each vertex, see if cycle is fully coincident
+      bool coincident = false;
+      for(int i=0; i<elem_sz; i++) {              // index
+         coincident = true;
+         for(int off=0; off<elem_sz; off++) {     // offset
+            if(compare(geom.verts(elem[i]), trans_elem[(i+off)%elem_sz],
+                     epsilon) != 0) {
+               coincident = false;
+               break;
+            }
+         }
+         if(coincident)
+            break;
+      }
+
+      if(coincident)               // element carried onto itself
+         stab_trans += *si;
+   }
+
+   Symmetry stab(stab_trans);
+   return stab;
+}
+
+
+static Symmetry get_face_stabilizer(const Geometry &geom, int f_idx,
+      const Symmetry &sym)
+{
+   Geometry f_geom, test_geom;
+   copy_face_to_geom(geom, f_idx, &f_geom);
+
+   Transformations stab_trans;
+   const Transformations &ts = sym.get_trans();
+   for(set<Trans3d>::iterator si=ts.get_trans().begin();
+         si!=ts.get_trans().end(); si++) {
+      test_geom = f_geom;
+      test_geom.transform(*si);
+      test_geom.append(f_geom);
+      merge_coincident_elements(test_geom, "f", epsilon);
+      if(test_geom.faces().size()==1)          // face carried onto itself
+         stab_trans += *si;
+   }
+
+   Symmetry stab(stab_trans);
+   return stab;
+}
+
+static Symmetry get_edge_stabilizer(const Geometry &geom, int e_idx, const Symmetry &sym)
+{
+   return get_elem_stabilizer(geom, geom.edges(e_idx), sym);
+}
+
+static Symmetry get_vert_stabilizer(const Geometry &geom, int v_idx, const Symmetry &sym)
+{
+   Transformations stab_trans;
+   const Transformations &ts = sym.get_trans();
+   for(set<Trans3d>::iterator si=ts.get_trans().begin();
+         si!=ts.get_trans().end(); si++) {
+      if(compare(geom.verts(v_idx), (*si) * geom.verts(v_idx), epsilon) == 0)
+         stab_trans += *si;
+   }
+
+   Symmetry stab(stab_trans);
+   return stab;
+}
+
+Symmetry get_elem_stabilizer(const Geometry &geom, int idx, int elem_type,
+            const Symmetry &sym)
+{
+   if(elem_type==ELEM_VERTS)
+      return get_vert_stabilizer(geom, idx, sym);
+   else if(elem_type==ELEM_EDGES)
+      return get_edge_stabilizer(geom, idx, sym);
+   else if(elem_type==ELEM_FACES)
+      return get_face_stabilizer(geom, idx, sym);
+   else   // called with invalid type
+      return Symmetry();
+}
+
+
+bool elem_fixed(const Geometry &geom, int idx, int elem_type, const Symmetry &sym)
+{
+   Symmetry stab = get_elem_stabilizer(geom, idx, elem_type, sym);
+   return stab.get_trans() == sym.get_trans();
+}
+
+
+// Initialise vertex orbit
+void orbit::init_vert_orbit(const Geometry &geom, const Symmetry &sym)
+{
+   elems.clear();
+   stab = get_vert_stabilizer(geom, element, sym);
+   //Symmetry new_stab(Symmetry::Cv, 3, stab.get_to_std());
+   //stab = new_stab;
+   fprintf(stderr, "stab=%s:", stab.get_symbol().c_str());
+   Transformations trans;   // will carry an element just once onto each orbit element
+   trans.min_set(sym.get_trans(), stab.get_trans());
+   fprintf(stderr, "trans.size()=%lu:", (unsigned long)trans.size());
+   const int num_repeats = trans.size();
+
+   Geometry merge_geom, part_geom;
+   part_geom.add_vert(geom.verts(element));
+   sym_repeat(merge_geom, part_geom, trans);
+   merge_geom.add_verts(geom.verts());       // no need for append
+
+   vector<map<int, set<int> > > equivs;
+   merge_coincident_elements(merge_geom, "v", &equivs);
+
+   // map first of any coincident vertices to its trans order number
+   vector<int> idxs_in_trans_order(num_repeats);
+   for(map<int, set<int> >::iterator mi=equivs[0].begin();
+         mi!=equivs[0].end(); ++mi) {
+      fprintf(stderr, "idx=%d: ", mi->first);
+      for(set<int>::iterator si = mi->second.begin();
+            si!=mi->second.end(); si++) {
+         fprintf(stderr, "%d  ", *si);
+      }
+      fprintf(stderr, "\n");
+   }
+
+   for(map<int, set<int> >::iterator mi=equivs[0].begin();
+         mi!=equivs[0].end(); ++mi) {
+      if(mi->second.size()<2) {          // Shouldn't happen!
+         fprintf(stderr, "orbit: missing map! ");
+         return;
+      }
+      set<int>::iterator si = mi->second.begin();
+      const int pos = *si;
+      const int idx = *(++si);
+      idxs_in_trans_order[pos] = idx - num_repeats;
+   }
+
+   int pos = 0;
+   for(set<Trans3d>::iterator si = trans.begin(); si!=trans.end(); si++) {
+      fprintf(stderr, "pos %d: idx %d\n", pos, idxs_in_trans_order[pos]);
+      si->dump();
+      elems[idxs_in_trans_order[pos]] = *si;
+      pos++;
+   }
+}
+
+
+// Initialise edge orbit
+void orbit::init_edge_orbit(const Geometry &geom, const Symmetry &sym)
+{
+   stab = get_edge_stabilizer(geom, element, sym);
+}
+
+// Initialise face orbit
+void orbit::init_face_orbit(const Geometry &geom, const Symmetry &sym)
+{
+   stab = get_face_stabilizer(geom, element, sym);
+}
+
+
+void orbit::init(const Geometry &geom, int elem, int elem_type,
+   const Symmetry &sym)
+{
+   stab = Symmetry();
+   element = elem;
+
+   if(elem_type==ELEM_VERTS)
+      init_vert_orbit(geom, sym);
+   else if(elem_type==ELEM_EDGES)
+      init_edge_orbit(geom, sym);
+   else if(elem_type==ELEM_FACES)
+      init_face_orbit(geom, sym);
+}
+
 
 } // namespace anti
