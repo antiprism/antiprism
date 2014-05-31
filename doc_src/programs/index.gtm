@@ -124,13 +124,15 @@ Links to Complementary Programs
 <li><a href="http://www.springie.com/">Springie</a>
     (by Tim Tyler)
     - 3D viewing and processing (Java)
+<li><a href="http://meshlab.sourceforge.net/">MeshLab</a>
+    - Converts from OFF to other formats, e.g. STL, 3DS, DXF
 <li><a href="http://www.qhull.org/">Qhull</a> -
     convex hulls and delaunay triangulation
 </ul>
 
 <b>Handling Antiprism Export Formats</b>
 <ul>
-<li><a href="http://www.javaview.de/">POV-ray</a>
+<li><a href="http://www.povray.org/">POV-Ray</a>
     - Persistence of Vision Raytracer using pov format
 <li><a href="http://www.web3d.org/x3d/vrml/tools/viewers_and_browsers/">VRML Viewers</a>
     - Links to VRML viewers

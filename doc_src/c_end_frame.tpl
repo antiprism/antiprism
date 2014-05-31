@@ -36,7 +36,7 @@ Up:
 <small>&nbsp;&nbsp;|&nbsp;&nbsp;</small>
 <small><a href="<<PROJECT_PAGE>>">Project</a></small>
 <small>&nbsp;&nbsp;|&nbsp;&nbsp;</small>
-<small><a href="http://tech.groups.yahoo.com/group/antiprism/">Forum</a></small>
+<small><a href="https://groups.google.com/forum/#!forum/antiprism">Forum</a></small>
 <small>&nbsp;&nbsp;|&nbsp;&nbsp;</small>
 <small><a href="<<PATH_UP>>about.html">About</a></small>
 </center>
