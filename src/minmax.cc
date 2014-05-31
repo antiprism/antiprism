@@ -187,7 +187,7 @@ void mm_opts::process_command_line(int argc, char **argv)
 
          case 'a':
             if(strlen(optarg) > 1 || !strchr("avu", *optarg))
-               error("method is '"+string(optarg)+"' must be a or v");
+               error("method is '"+string(optarg)+"' must be a, v or u");
             algm = *optarg;
             break;
 
