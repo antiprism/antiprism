@@ -230,12 +230,8 @@ AC_TYPE_SIZE_T
 AC_STRUCT_TM
 
 # Checks for library functions.
-AC_FUNC_ERROR_AT_LINE
-AC_FUNC_MALLOC
-AC_FUNC_MEMCMP
-AC_FUNC_REALLOC
 AC_FUNC_STRTOD
-AC_CHECK_FUNCS([floor memset pow sqrt strchr strcspn strpbrk strrchr strspn strstr strtol])
+AC_CHECK_FUNCS([floor memset modf pow sqrt strcasecmp strchr strcspn strncasecmp strpbrk strrchr strspn strstr strtol])
 
 AC_CONFIG_FILES([Makefile
                  Doxyfile
