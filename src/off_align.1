@@ -54,8 +54,20 @@ Brick is after base, bond vertices are merged, bond faces are
 removed
 .TP
 \fB\-M\fR <val>
-merge files. 0 (default) don't merge, 1 brick after
-base, 2 brick before base
+merge parts, select and order parts in the output, val may be:
+.TP
+default (0):
+any combined parts (\fB\-F\fR) followed by any brick
+parts (\fB\-v\fR, \fB\-f\fR)
+.TP
+brick (1):
+brick parts only
+.IP
+base_brick (2): base part, possibly combined (\fB\-F\fR). followed
+.IP
+any brick parts (\fB\-v\fR, \fB\-f\fR)
+.IP
+brick_base (3): brick parts (\fB\-v\fR, \fB\-f\fR), followed by base part
 .TP
 \fB\-y\fR <sub>
 repeat bricks according to symmetry of base. sub is symmetry

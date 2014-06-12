@@ -60,7 +60,7 @@ class bond_base
       bond_base(geom_if &bas): base(bas) {}
       bool set_sym(const char *sym_str, char *errmsg=0);
       bool add_brick(char type, const string &brick_str, char *errmsg=0);
-      bool bond_all(geom_if &geom_out, int bond_type, char *errmsg=0);
+      bool bond_all(geom_if &geom_out, int out_type, char *errmsg=0);
 };
 
 bool bond_base::set_sym(const char *sym_str, char *errmsg)
@@ -411,10 +411,7 @@ bool bond_base::bond_all(geom_if &geom_out, int out_type, char *errmsg)
    }
    else if(out_type==out_brick_base) {
       geom_out.append(brick_out);
-      if(has_merged_brick)
-         geom_out.append(base_out);
-      else
-         geom_out.append(base);
+      geom_out.append(base);
    }
    return true;
 }
@@ -472,8 +469,13 @@ void align_opts::usage()
 "            (default: 0), polygon alignment selection number (default: 0).\n"
 "            Brick is after base, bond vertices are merged, bond faces are\n"
 "            removed\n"
-"  -M <val>  merge files. 0 (default) don't merge, 1 brick after\n"
-"            base, 2 brick before base\n"
+"  -M <val>  merge parts, select and order parts in the output, val may be:\n"
+"               default (0):    any combined parts (-F) followed by any brick\n"
+"                               parts (-v, -f)\n"
+"               brick (1):      brick parts only\n"
+"               base_brick (2): base part, possibly combined (-F). followed\n"
+"                               any brick parts (-v, -f)\n"
+"               brick_base (3): brick parts (-v, -f), followed by base part\n"
 "  -y <sub>  repeat bricks according to symmetry of base. sub is symmetry\n"
 "            subgroup (Schoenflies notation) or 'full' optionally followed\n"
 "            by a ',' and conjugation type (integer)\n"
@@ -488,6 +490,7 @@ void align_opts::process_command_line(int argc, char **argv)
    char errmsg[MSG_SZ];
    opterr = 0;
    char c;
+   string arg_id;
    mat3d trans_m2;
    
    handle_long_opts(argc, argv);
@@ -504,11 +507,11 @@ void align_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'M':
-            if(!read_int(optarg, &out_type, errmsg))
-               error(errmsg, c);
-            if(out_type<0 || out_type>3)
-               error(msg_str("merge value is %d, must be 0, 1, 2 or 3",
-                        out_type), c);
+            arg_id = get_arg_id(optarg,"default|brick|all_base_brick|brick_base",
+                  argmatch_add_id_maps, errmsg);
+            if(arg_id=="")
+               error(errmsg);
+            out_type = atoi(arg_id.c_str());
             break;
             
          case 'y':
