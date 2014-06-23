@@ -460,24 +460,18 @@ void planar_opts::process_command_line(int argc, char **argv)
          warning("polygon fill has no effect if tile or merge is not selected","p");
       if (winding_rule != INT_MAX)
          warning("winding rule has no effect if tile of merge is not selected","w");
-      if (color_by_winding_number) {
-         warning("color by winding number has no effect if tile or merge is not selected","W");
-         color_by_winding_number = 0;
-      }
    }
    else {
       // set default polygon fill type here
       if (!polygon_fill_type)
          polygon_fill_type = 1;
+      // this is only true when tile/merge
+      if (polygon_fill_type != 1 && polygon_fill_type != 3)
+         error("when tile or merge, color by winding number polygon fill type must be 1 or 3","p");
       // when tiling or merging, must do sort_merge
       if (edge_blending && (edge_blending != 'b'))
          warning("when tile or merge, both edges and vertices are always blended","e");
       edge_blending = 'b';
-   }
-
-   if (color_by_winding_number) {
-      if (polygon_fill_type != 1 && polygon_fill_type != 3)
-         error("with color by winding number polygon fill type must be 1 or 3","p");
    }
 
    if (!map_file.size())
@@ -2489,6 +2483,29 @@ void apply_transparency(col_geom_v &geom, int face_opacity)
    }
 }
 
+void color_by_winding_number_raw(col_geom_v &geom, const char &color_by_winding_number, const double &eps)
+{
+   // get signed winding numbers
+   for(unsigned int i=0; i<geom.faces().size(); i++) {
+      int wtotal = find_polygon_denominator_signed(geom, i, eps);
+      
+      // if absolute value of winding numbers (or their negative) are colored
+      if (color_by_winding_number != 'w') {
+         wtotal = abs(wtotal);
+         if (color_by_winding_number == 'n')
+            wtotal = -wtotal;
+      }
+
+      col_val col;
+      if (wtotal >= 0)
+         col.set_idx(wtotal);
+      else
+         // negative winding numbers are set up to near INT_MAX to be subtracted out later
+         col.set_idx(wtotal + INT_MAX);
+      geom.set_f_col(i,col);
+   }
+}
+
 int main(int argc, char *argv[])
 {
    planar_opts opts;
@@ -2556,8 +2573,11 @@ int main(int argc, char *argv[])
       sort_merge_elems(geom, elems, 1, opts.epsilon);
 
    // resolve indexes of winding numbers to positive and negative color maps
-   if (opts.color_by_winding_number)
+   if (opts.color_by_winding_number) {
+      if (!opts.planar_merge_type)
+         color_by_winding_number_raw(geom, opts.color_by_winding_number, opts.epsilon);
       resolve_winding_number_indexes(geom, opts.map, opts.map_negative);
+   }
 
    // add vertices to 'stitch' faces with dangling edges due to tiling or merging
    if (opts.stitch_faces)
