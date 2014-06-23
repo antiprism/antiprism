@@ -284,6 +284,7 @@ bool bond_base::add_brick(char type, const string &brick_str, char *errmsg)
 
 bool bond_base::bond_all(geom_if &geom_out, int out_type, char *errmsg)
 {
+   *errmsg = '\0';
    geom_out.clear_all();
    double base_rad = bound_sphere(base.verts()).get_radius();
    // check for errors before making any transfromations
@@ -357,6 +358,10 @@ bool bond_base::bond_all(geom_if &geom_out, int out_type, char *errmsg)
                map<int, vector<int> >::iterator vi = face_params.find(f0_map);
                bool direct = iso_type(*si).is_direct();
                if(vi==face_params.end() || (!(vi->second)[2] && direct) ) {
+                  if(vi != face_params.end())
+                     strcpy(errmsg, "option -F: the same bond face was "
+                           "specified in more than one call to -F, only the "
+                           "last specified bond will be used");
                   int map_offset;
                   const int idx0 = base.faces(f0)[0];
                   for(map_offset=0; map_offset<f0_sz; map_offset++) {
@@ -366,7 +371,7 @@ bool bond_base::bond_all(geom_if &geom_out, int out_type, char *errmsg)
                   const int idx1 = base.faces(f0)[1];
                   bool rev = (elem_maps[0][idx1]!=
                         f0_mapface[(map_offset+1)%f0_sz]); 
-                  face_params[f0_map] = vector<int>(4);
+                  face_params[f0_map] = vector<int>(5);
                   face_params[f0_map][0] = f1;
                   face_params[f0_map][1] = map_offset;
                   face_params[f0_map][2] = merge_bricks.size()-1;
@@ -470,7 +475,7 @@ void align_opts::usage()
 "            Brick is after base, bond vertices are merged, bond faces are\n"
 "            removed\n"
 "  -M <val>  merge parts, select and order parts in the output, val may be:\n"
-"               default (0):    any combined parts (-F) followed by any brick\n"
+"               default (0):    any combined part (-F) followed by any brick\n"
 "                               parts (-v, -f)\n"
 "               brick (1):      brick parts only\n"
 "               base_brick (2): base part, possibly combined (-F). followed\n"
@@ -507,7 +512,7 @@ void align_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'M':
-            arg_id = get_arg_id(optarg,"default|brick|all_base_brick|brick_base",
+            arg_id = get_arg_id(optarg,"default|brick|base_brick|brick_base",
                   argmatch_add_id_maps, errmsg);
             if(arg_id=="")
                error(errmsg);
@@ -582,6 +587,8 @@ int main(int argc, char *argv[])
    col_geom_v geom_out;
    if(!base.bond_all(geom_out, opts.out_type, errmsg))
       opts.error(errmsg, 'M');
+   if(*errmsg)
+      opts.warning(errmsg);
    geom_write_or_error(geom_out, opts.ofile, opts);
 
    return 0;
