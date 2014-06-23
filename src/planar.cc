@@ -459,16 +459,19 @@ void planar_opts::process_command_line(int argc, char **argv)
       if (polygon_fill_type)
          warning("polygon fill has no effect if tile or merge is not selected","p");
       if (winding_rule != INT_MAX)
-         warning("winding rule has no effect if tile of merge is not selected","w");
+         warning("winding rule has no effect if tile or merge is not selected","w");
+      // zero density area cannot be colored with not tile or merge
+      if (color_by_winding_number && (!zero_density_color.is_inv() || zero_density_force_blend))
+         warning("zero density areas cannot be colored or blended if tile or merge is not selected","Z");
    }
    else {
       // set default polygon fill type here
       if (!polygon_fill_type)
          polygon_fill_type = 1;
       // this is only true when tile/merge
-      if (polygon_fill_type != 1 && polygon_fill_type != 3)
+      if (color_by_winding_number && polygon_fill_type != 1 && polygon_fill_type != 3)
          error("when tile or merge, color by winding number polygon fill type must be 1 or 3","p");
-      // when tiling or merging, must do sort_merge
+      // when tiling or merging, edges must be blended
       if (edge_blending && (edge_blending != 'b'))
          warning("when tile or merge, both edges and vertices are always blended","e");
       edge_blending = 'b';
