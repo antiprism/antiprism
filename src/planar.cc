@@ -1760,7 +1760,7 @@ void sample_colors(col_geom_v &sgeom, const col_geom_v &cgeom, const int &planar
       vector<vec3d> one_point;
       one_point.push_back(sgeom.face_cent(i));
       xnormal sface_normal(sgeom, i, center, eps);
-      int winding_number = get_winding_number(polygon, one_point, sface_normal, eps);
+      int winding_number = get_winding_number(polygon, one_point, sface_normal, true, eps);
       if ((winding_number < 0 && winding_total > 0) || (winding_number > 0 && winding_total < 0))
          reverse(sgeom.raw_faces()[i].begin(), sgeom.raw_faces()[i].end());
 
