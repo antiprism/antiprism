@@ -656,7 +656,7 @@ int find_polygon_denominator_signed(const geom_if &geom, const unsigned int &fac
    geom_v polygon = faces_to_geom(geom, sface_idxs);
 
    vector<vec3d> points; // empty points to trigger test triangles
-   int d = get_winding_number(polygon, points, face_normal, eps);
+   int d = get_winding_number(polygon, points, face_normal, false, eps);
 
    int fsz = (int)face.size();
    if (d < 0)
