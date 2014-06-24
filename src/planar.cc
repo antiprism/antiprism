@@ -1736,7 +1736,6 @@ void sample_colors(col_geom_v &sgeom, const col_geom_v &cgeom, const int &planar
                vector<vec3d> one_point;
                one_point.push_back(points[k]);
                int winding_number = get_winding_number(polygon, one_point, original_normal, find_direction && original_normal.is_hemispherical(), eps);
-               fprintf(stderr,"winding_number = %d\n",winding_number);
 
                // if merging, find largest magnitude of winding number
                // if they are -W and +W, chose the positive
