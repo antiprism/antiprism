@@ -184,7 +184,7 @@ void kcycle(col_geom_v geom, col_geom_v &cycle, int num_prs, vector<int> idxs, d
    double ang1 =  acos( safe_for_trig(
                         (vdot(e2, n2) - vdot(e1, n2)*vdot(e1, e2) ) /
                         (vcross(e1, n2).mag()*vcross(e1, e2).mag())   ));
-   int sign2 = vdot(e1, e2) > 0;
+   int sign2 = vdot(e1, e2) > -epsilon;
    double ang2 =  acos( safe_for_trig(
                         (- vdot(e1, n2)*vdot(e1, e2) ) /
                         (vcross(e1, n2).mag()*vcross(e1, e2).mag())   ));
