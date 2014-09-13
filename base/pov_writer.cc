@@ -90,6 +90,7 @@ void pov_writer::set_o_type(char otype)
 
 void pov_writer::scene_header(FILE *ofile, const scene &scen)
 {
+   fprintf(ofile, "#version 3.6;\n\n");
    fprintf(ofile, "#include \"colors.inc\"\n\n");
    fprintf(ofile, "// Scene Width - maximum distance between any 2 points\n"
                   "#declare SceneWidth = %g;\n\n",
