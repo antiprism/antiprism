@@ -18,23 +18,36 @@
 <<USAGE_END>>
 
 
+
+
 <<EXAMPLES_START>>
-Make a geometric representation of a polyhedron having only face data
+Turn an icosahedron 3-fold axis into a six-fold axis, and make the
+resulting faces regular
 <<CMDS_START>>
-minmax -p u -n 100000 -o unscrambled.off scrambled.off
+off_trans -y D3v ico | to_nfold 6 | minmax -a u -s 20 -l 20 -n 10000 | antiview
+<<CMDS_END>>
+
+Make a geometric representation of a polyhedron having only face data,
+in this case a geodesic sphere has all its coordinates set to the origin
+and is then laid out again on a sphere
+<<CMDS_START>>
+off_trans geo_3 -S 0 &gt; scrambled.off
+minmax -p u -n 100000 scrambled.off &gt; unscrambled.off
 <<CMDS_END>>
 
 Run for a bit longer, don't need <i>-p u</i> this time
 <<CMDS_START>>
-   minmax -n 100000 -o unscrambled2.off unscrambled.off
+minmax -n 100000 unscrambled.off &gt; unscrambled2.off
 <<CMDS_END>>
 <<EXAMPLES_END>>
 
 
 <<NOTES_START>>
-Doesn't always succeed. An option to keep the spherical polygons convex
-should improve it. The program shows the progress every 1000 iterations
-by printing the longest and shortest edge lengths.
+Doesn't always succeed. Experiment with the <i>-s</i>, <i>-l</i> and <i>k</i>
+options to improve convergence, but setting them too high may cause the model
+to scramble. Run the program for longer by increasing <i>-n</i>. The program
+shows the progress every 1000 iterations by printing the longest and
+shortest edge lengths.
 <<NOTES_END>>
 
 #include "<<END>>"

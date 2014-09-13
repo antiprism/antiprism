@@ -1439,6 +1439,7 @@ sch_sym sch_sym::get_sub_sym(const sch_sym &sub_sym, int conj_type,char *errmsg)
    get_sub_syms();
    set<sch_sym>::const_iterator si = sub_syms.begin();
    same_sym_group cmp(sub_sym);
+   fprintf(stderr, "here\n");
 
    // To minimise realignment of first conjugate subgroup, order on magnitude
    // of difference of to_std rotations applied to a general test vector
@@ -1453,10 +1454,8 @@ sch_sym sch_sym::get_sub_sym(const sch_sym &sub_sym, int conj_type,char *errmsg)
    if(conj_syms.size() && conj_type<(int)conj_syms.size()) { // valid
       map<double, sch_sym>::iterator mi= conj_syms.begin();
       int cnt = 0;
-      while(cnt++ != conj_type) {
-         fprintf(stderr, "mi->first = %g\n", mi->first);
+      while(cnt++ != conj_type)
          mi++;
-      }
       return mi->second;
    }
 
