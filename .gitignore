@@ -48,6 +48,7 @@ src/off2eig
 src/off2m
 src/off2vrml
 src/off2crds
+src/off2obj
 src/crds2off
 src/m2off
 src/off_color

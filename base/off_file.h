@@ -44,6 +44,11 @@ bool crds_write(string file_name,  const geom_if &geom, char *errmsg=0,
       const char *sep=" ", int sig_dgts=DEF_SIG_DGTS);
 void crds_write(FILE *ofile,  const geom_if &geom,
        const char *sep=" ", int sig_dgts=DEF_SIG_DGTS);
+       
+bool obj_write(string file_name,  const geom_if &geom, char *errmsg=0,
+      const char *sep=" ", int sig_dgts=DEF_SIG_DGTS);
+void obj_write(FILE *ofile,  const geom_if &geom,
+       const char *sep=" ", int sig_dgts=DEF_SIG_DGTS);
 
 bool off_file_read(string file_name, geom_if &geom, char *errmsg=0);
 bool off_file_read(FILE *ifile, geom_if &geom, char *errmsg=0);

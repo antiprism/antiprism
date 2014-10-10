@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2006-2009, Adrian Rossiter
+   Copyright (c) 2104, Roger Kaufman
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -21,7 +21,7 @@
 */
 
 /*
-   Name: off2crds.cc
+   Name: off2obj.cc
    Description: extract coordinates from an OFF file 
    Project: Antiprism - http://www.antiprism.com
 */
@@ -30,7 +30,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <ctype.h>
 
 #include <string>
@@ -38,37 +37,32 @@
 
 #include "../base/antiprism.h"
 
-
 using std::string;
 using std::vector;
 
 
-class o2c_opts: public prog_opts {
+class o2o_opts: public prog_opts {
    public:
       string sep;
       int sig_digits;
       string ifile;
       string ofile;
 
-      o2c_opts(): prog_opts("off2crds"), sep(" "), sig_digits(DEF_SIG_DGTS) {}
+      o2o_opts(): prog_opts("off2obj"), sep(" "), sig_digits(DEF_SIG_DGTS) {}
       void process_command_line(int argc, char **argv);
       void usage();
 };
 
-
-
-void o2c_opts::usage()
+void o2o_opts::usage()
 {
    fprintf(stdout,
 "\n"
 "Usage: %s [options] [input_file]\n"
 "\n"
-"Extract coordinates from a file in OFF format. If input_file is not given\n"
-"then input is read from standard input.\n"
+"Convert OFF to OBJ file format\n"
 "\n"
 "Options\n"
 "%s"
-"  -s <sep>  string to separate coordinates (default \" \")\n"
 "  -d <dgts> number of significant digits (default %d) or if negative\n"
 "            then the number of digits after the decimal point\n"
 "  -o <file> write output to file (default: write to standard output)\n"
@@ -76,8 +70,7 @@ void o2c_opts::usage()
 "\n", prog_name(), help_ver_text, DEF_SIG_DGTS);
 }
 
-
-void o2c_opts::process_command_line(int argc, char **argv)
+void o2o_opts::process_command_line(int argc, char **argv)
 {
    opterr = 0;
    char c;
@@ -85,15 +78,11 @@ void o2c_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hs:o:d:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":ho:d:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
       switch(c) {
-         case 's':
-            sep = optarg;
-            break;
-            
          case 'd':
             if(!read_int(optarg, &sig_digits, errmsg))
                error(errmsg, c);
@@ -116,20 +105,18 @@ void o2c_opts::process_command_line(int argc, char **argv)
    
 }
 
-
 int main(int argc, char *argv[])
 {
-   o2c_opts opts;
+   o2o_opts opts;
    opts.process_command_line(argc, argv);
 
    col_geom_v geom;
    geom_read_or_error(geom, opts.ifile, opts);
 
    char errmsg[MSG_SZ];
-   if(!geom.write_crds(opts.ofile, errmsg, opts.sep.c_str(), opts.sig_digits))
+   if(!geom.write_obj(opts.ofile, errmsg, opts.sep.c_str(), opts.sig_digits))
       opts.error(errmsg);
 
    return 0;
 }
-
 

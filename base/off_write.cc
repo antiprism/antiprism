@@ -79,6 +79,50 @@ bool crds_write(string file_name, const geom_if &geom, char *errmsg,
 }
 
 
+// RK - write OBJ file type for Meshlab and other
+void obj_write(FILE *ofile, const geom_if &geom, const char *sep, int sig_dgts)
+{
+   int offset = 1; // obj files start indexes from 1
+   
+   fprintf(ofile, "# File type: ASCII OBJ\n");
+   
+   char line[MSG_SZ];
+   for(unsigned int i=0; i<geom.verts().size(); i++)
+      fprintf(ofile, "v %s\n", vtostr(line, geom.verts(i), sep, sig_dgts));
+      
+   for(unsigned int i=0; i<geom.faces().size(); i++) {
+      fprintf(ofile, "f");
+      for(unsigned int j=0; j<geom.faces(i).size(); j++)
+         fprintf(ofile, " %d", geom.faces(i, j)+offset);
+      fprintf(ofile, "\n");
+   }
+   
+   for(unsigned int i=0; i<geom.edges().size(); i++)
+      fprintf(ofile, "f %d %d\n", geom.edges(i, 0)+offset, geom.edges(i, 1)+offset);
+   
+   const col_geom *cg = dynamic_cast<const col_geom *>(&geom);   
+   if(cg) {
+      map<int, col_val>::const_iterator mi;
+      for(mi=cg->vert_cols().begin(); mi!=cg->vert_cols().end(); mi++){
+         fprintf(ofile, "f %d\n", (mi->first)+offset);
+      }
+   }
+}   
+
+
+bool obj_write(string file_name, const geom_if &geom, char *errmsg,
+      const char *sep, int sig_dgts)
+{
+   FILE *ofile = file_open_w(file_name, errmsg);
+   if(!ofile)
+      return false;
+
+   obj_write(ofile, geom, sep, sig_dgts);
+   file_close_w(ofile);
+   return true;
+}
+
+
 bool off_file_write(string file_name, const geom_if &geom, char *errmsg,
       int sig_dgts)
 {
@@ -145,7 +189,7 @@ void off_polys_write(FILE *ofile, const geom_if &geom, int offset)
    if(cg) {
       map<int, col_val>::const_iterator mi;
       for(mi=cg->vert_cols().begin(); mi!=cg->vert_cols().end(); mi++){
-         fprintf(ofile, "1 %d %s\n", mi->first, off_col(col_str, mi->second));
+         fprintf(ofile, "1 %d %s\n", (mi->first)+offset, off_col(col_str, mi->second));
       }
    }
 }   

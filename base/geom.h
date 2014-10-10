@@ -556,6 +556,26 @@ class geom_if
        * or if negative then the number of digits after the decimal point. */
       virtual void write_crds(FILE *file, const char *sep=" ",
             int sig_dgts=DEF_SIG_DGTS) const;
+            
+      ///Write coordinates to a file
+      /**\param file_name the file name ("" for standard output.)
+       * \param errmsg an array at least \c MSG_SZ chars long to
+       * return any error message.
+       * \param sep a string to use as the seperator between coordinates.
+       * \param sig_dgts the number of significant digits to write,
+       * or if negative then the number of digits after the decimal point.
+       * \return true if the file could be written, otherwise false
+       * and the error is detailed in \a errmsg. */
+      virtual bool write_obj(string file_name="", char *errmsg=0,
+            const char *sep=" ", int sig_dgts=DEF_SIG_DGTS) const;
+
+      ///Write coordinates to a file stream
+      /**\param file the file stream.
+       * \param sep a string to use as the seperator between coordinates.
+       * \param sig_dgts the number of significant digits to write,
+       * or if negative then the number of digits after the decimal point. */
+      virtual void write_obj(FILE *file, const char *sep=" ",
+            int sig_dgts=DEF_SIG_DGTS) const;
 
       ///Check if geomtery is consistently oriented
       /**\return \c true if consistently oriented, otherwise \c false. */
