@@ -98,13 +98,13 @@ void obj_write(FILE *ofile, const geom_if &geom, const char *sep, int sig_dgts)
    }
    
    for(unsigned int i=0; i<geom.edges().size(); i++)
-      fprintf(ofile, "f %d %d\n", geom.edges(i, 0)+offset, geom.edges(i, 1)+offset);
+      fprintf(ofile, "l %d %d\n", geom.edges(i, 0)+offset, geom.edges(i, 1)+offset);
    
    const col_geom *cg = dynamic_cast<const col_geom *>(&geom);   
    if(cg) {
       map<int, col_val>::const_iterator mi;
       for(mi=cg->vert_cols().begin(); mi!=cg->vert_cols().end(); mi++){
-         fprintf(ofile, "f %d\n", (mi->first)+offset);
+         fprintf(ofile, "p %d\n", (mi->first)+offset);
       }
    }
 }   
