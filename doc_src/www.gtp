@@ -14,10 +14,11 @@ mtimestamp $dd.$MM.$yyyy
 ./index.gtm 1 Polyhedron Modelling Software
 ./programs/index.gtm 2 Programs and Documentation
 ./programs/antiview.gtm 3 antiview - interactive OFF file viewer
-./programs/off2pov.gtm 3 off2pov - convert an OFF file to POV format
-./programs/off2vrml.gtm 3 off2vrml - convert an OFF file to VRML format
-./programs/off2m.gtm 3 off2m - convert an OFF file for LiveGraphics3D
+./programs/off2pov.gtm 3 off2pov - convert OFF files to POV format
+./programs/off2vrml.gtm 3 off2vrml - convert OFF files to VRML format
+./programs/off2obj.gtm 3 off2obj - convert an OFF file to Wavefront OBJ format
 ./programs/off2crds.gtm 3 off2crds - convert an OFF file to a coordinate file
+./programs/off2m.gtm 3 off2m - convert an OFF file for LiveGraphics3D
 ./programs/m2off.gtm 3 m2off - convert a LiveGraphics3D 'm' file to OFF format
 ./programs/off_color.gtm 3 off_color - add colours to an OFF file
 ./programs/off_trans.gtm 3 off_trans - transformations (rotations etc) of OFF files

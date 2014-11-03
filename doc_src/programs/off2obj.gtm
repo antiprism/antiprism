@@ -1,0 +1,36 @@
+#define HL_PROG class=curpage
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<<TITLE_HEAD>>
+
+<<TOP_LINKS>>
+
+<<USAGE_START>>
+<pre class="prog_help">
+<<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</pre>
+<<USAGE_END>>
+
+
+<<EXAMPLES_START>>
+Coordinates of a cube's vertices
+<<CMDS_START>>
+off2crds -o cube_coords.txt cube
+<<CMDS_END>>
+<<EXAMPLES_END>>
+
+
+<<NOTES_START>>
+<a href="http://www.martinreddy.net/gfx/3d/OBJ.spec">Wavefront OBJ</a>
+is a fairly common text-based graphics format. It may be useful as
+an intermediate format for importing OFF files into programs that
+do not support OFF.
+<<NOTES_END>>
+
+#include "<<END>>"

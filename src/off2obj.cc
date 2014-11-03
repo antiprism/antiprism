@@ -59,7 +59,7 @@ void o2o_opts::usage()
 "\n"
 "Usage: %s [options] [input_file]\n"
 "\n"
-"Convert OFF to OBJ file format\n"
+"Convert an OFF file to Wavefront OBJ file format.\n"
 "\n"
 "Options\n"
 "%s"
