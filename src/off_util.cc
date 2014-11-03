@@ -1068,6 +1068,7 @@ void pr_opts::process_command_line(int argc, char **argv)
    char c;
    vector<char *> parts;
    col_geom_v adding;
+   col_val close_col;
    string arg_id;
 
    vector<pair<char, char *> > args;
@@ -1079,12 +1080,16 @@ void pr_opts::process_command_line(int argc, char **argv)
       if(common_opts(c, optopt))
          continue;
 
-      if(c=='l')
+      // Check colour parameter is valid on first pass in case it is omitted
+      if(c=='c') {
+         if(!close_col.read(optarg, errmsg))
+            error(errmsg, c);
+      }
+      else if(c=='l')
          trailing_option_l = true;
-      if(c=='M')
+      else if(c=='M')
          trailing_option_l = false;
-
-      if(c=='H') {
+      else if(c=='H') {
          const char *help_text = get_help(optarg);
          if(help_text) {
             fprintf(stdout, "\n%s\n", help_text);
@@ -1260,13 +1265,10 @@ void pr_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'c':
-         {
-            col_val close_col;
             if(!close_col.read(optarg, errmsg))
                error(errmsg, c);
             close_poly(geom, close_col);
             break;
-         }
 
          case 'S':
             project_onto_sphere(geom);
@@ -1392,7 +1394,6 @@ void pr_opts::process_command_line(int argc, char **argv)
 
 int main(int argc, char *argv[])
 {
-   char errmsg[MSG_SZ];
    pr_opts opts;
    opts.process_command_line(argc, argv);
 
