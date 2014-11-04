@@ -24,7 +24,7 @@
 Turn an icosahedron 3-fold axis into a six-fold axis, and make the
 resulting faces regular
 <<CMDS_START>>
-off_trans -y D3v ico | to_nfold 6 | minmax -a u -s 20 -l 20 -n 10000 | antiview
+off_trans -y D3v ico | to_nfold 6 | minmax -a u -s 20 -n 10000 | antiview
 <<CMDS_END>>
 
 Make a geometric representation of a polyhedron having only face data,
@@ -43,11 +43,13 @@ minmax -n 100000 unscrambled.off &gt; unscrambled2.off
 
 
 <<NOTES_START>>
-Doesn't always succeed. Experiment with the <i>-s</i>, <i>-l</i> and <i>k</i>
-options to improve convergence, but setting them too high may cause the model
-to scramble. Run the program for longer by increasing <i>-n</i>. The program
-shows the progress every 1000 iterations by printing the longest and
-shortest edge lengths.
+Doesn't always succeed. Experiment with option <i>-s</i>, <i>-l</i>,
+<i>k</i> and <i>-f</i> to improve convergence, but setting them too
+high may cause the model to scramble. Run the program for longer by
+increasing option <i>-n</i>. The program shows the progress every
+1000 iterations (change with option <i>-z</i>) by printing the
+longest and shortest edge lengths (<i>-a v/a</i>) or the maximum
+distance a vertex moved (<i>-a u</i>).
 <<NOTES_END>>
 
 #include "<<END>>"

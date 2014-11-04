@@ -22,13 +22,17 @@ Options
 .HP
 \fB\-s\fR <perc> percentage to shorten longest edges on iteration (default: 1)
 .HP
-\fB\-l\fR <perc> percentage to lengthen shortest edges, or reduce distance off
+\fB\-l\fR <perc> percentage to lengthen shortest edges (\fB\-a\fR a/v) on iteration
 .IP
-face plane (\fB\-a\fR u), on iteration (default: 1)
+(default: 1)
 .HP
 \fB\-k\fR <perc> percentage to reduce polygon radius (\fB\-a\fR u) on iteration
 .IP
 (default: value of \fB\-s\fR)
+.HP
+\fB\-f\fR <perc> percentage to reduce distance of vertex from face plane (\fB\-a\fR u)
+.IP
+on iteration (default: value of \fB\-s\fR)
 .TP
 \fB\-a\fR <alg>
 length changing algorithm

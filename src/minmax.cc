@@ -70,13 +70,15 @@ class mm_opts: public prog_opts
       double shorten_by;
       double lengthen_by;
       double shorten_rad_by;
+      double flatten_by;
       vec4d ellipsoid;
 
       string ifile;
       string ofile;
 
       mm_opts(): prog_opts("minmax"), algm('v'), placement('n'),
-                 shorten_by(1.0), lengthen_by(0.0), shorten_rad_by(NAN)
+                 shorten_by(1.0), lengthen_by(NAN), shorten_rad_by(NAN),
+                 flatten_by(NAN)
                  {}
 
       void process_command_line(int argc, char **argv);
@@ -100,10 +102,12 @@ void mm_opts::usage()
 "%s"
 "  -n <itrs> number of iterations (default 1000)\n"
 "  -s <perc> percentage to shorten longest edges on iteration (default: 1)\n"
-"  -l <perc> percentage to lengthen shortest edges, or reduce distance off\n"
-"            face plane (-a u), on iteration (default: 1)\n"
+"  -l <perc> percentage to lengthen shortest edges (-a a/v) on iteration \n"
+"            (default: 1)\n"
 "  -k <perc> percentage to reduce polygon radius (-a u) on iteration\n"
 "            (default: value of -s)\n"
+"  -f <perc> percentage to reduce distance of vertex from face plane (-a u)\n"
+"            on iteration (default: value of -s)\n"
 "  -a <alg>  length changing algorithm\n"
 "              v - shortest and longest edges attached to a vertex (default)\n"
 "              a - shortest and longest of all edges\n"
@@ -139,7 +143,7 @@ void mm_opts::process_command_line(int argc, char **argv)
 
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hn:s:l:k:a:p:E:L:z:qo:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hn:s:l:k:f:a:p:E:L:z:qo:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -181,6 +185,14 @@ void mm_opts::process_command_line(int argc, char **argv)
             if(!read_double(optarg, &shorten_rad_by, errmsg))
                error(errmsg, c);
             if(shorten_rad_by<0 || shorten_rad_by>100) {
+               warning("not in range 0 to 100", c);
+            }
+            break;
+
+         case 'f':
+            if(!read_double(optarg, &flatten_by, errmsg))
+               error(errmsg, c);
+            if(flatten_by<0 || flatten_by>100) {
                warning("not in range 0 to 100", c);
             }
             break;
@@ -228,10 +240,23 @@ void mm_opts::process_command_line(int argc, char **argv)
       }
    }
 
-   if(isnan(shorten_rad_by))
-      shorten_rad_by = shorten_by;
-   else if(algm != 'u')
-      warning("set, but not used for this algorithm", 'k');
+   if(algm == 'u') {
+      if(isnan(shorten_rad_by))
+         shorten_rad_by = shorten_by;
+      if(isnan(flatten_by))
+         flatten_by = shorten_by;
+      if(!isnan(lengthen_by))
+         warning("set, but not used for this algorithm", 'l');
+   }
+   else {   // algm ia v or a
+      if(isnan(shorten_rad_by))
+         lengthen_by = 0.0;
+      if(!isnan(shorten_rad_by))
+         warning("set, but not used for this algorithm", 'k');
+      if(!isnan(flatten_by))
+         warning("set, but not used for this algorithm", 'f');
+   }
+
 
    if(argc-optind > 1)
       error("too many arguments");
@@ -527,7 +552,7 @@ int main(int argc, char *argv[])
                   opts.lengthen_by/200, opts.ellipsoid);
          else if(opts.algm=='u')
             minmax_unit(geom, opts.it_params, opts.shorten_by/200,
-                  opts.lengthen_by/200, opts.shorten_rad_by/200);
+                  opts.flatten_by/200, opts.shorten_rad_by/200);
       }
    }
    else
