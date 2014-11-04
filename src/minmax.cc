@@ -103,7 +103,7 @@ void mm_opts::usage()
 "  -n <itrs> number of iterations (default 1000)\n"
 "  -s <perc> percentage to shorten longest edges on iteration (default: 1)\n"
 "  -l <perc> percentage to lengthen shortest edges (-a a/v) on iteration \n"
-"            (default: 1)\n"
+"            (default: 0.0)\n"
 "  -k <perc> percentage to reduce polygon radius (-a u) on iteration\n"
 "            (default: value of -s)\n"
 "  -f <perc> percentage to reduce distance of vertex from face plane (-a u)\n"
