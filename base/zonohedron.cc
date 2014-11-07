@@ -328,19 +328,5 @@ bool make_zono(geom_if &zono, const vector<vec3d> &star, char *errmsg)
 }
 */
 
-void make_polar_zono(geom_if &zono, int star_n, bool out_star)
-{
-   zono.clear_all();
-   geom_v star;
-   if(is_even(star_n))
-      uni_pgon(star, prism(star_n));
-   else
-      uni_pgon(star, antiprism(star_n));
-      
-   if(out_star)
-      zono = star;
-   else
-      zono.set_zono(star.get_star());
-}
 
 

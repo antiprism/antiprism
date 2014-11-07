@@ -4,10 +4,12 @@
 zono - zonohedra from OFF files
 .SH SYNOPSIS
 .B zono
-[\fIoptions\fR] [\fIinput_file\fR]
+[\fIoptions\fR] [\fIstar_file\fR]
 .SH DESCRIPTION
-Make a polar zonohedron, or a zonohedron based on the vectors from an
-OFF file. If input_file is not given the program reads from standard input
+Make a zonohedron or add zones to a convex seed polyhdron. The zones are
+created from a star of vectors, which can be based on a polyhdron (input
+model and option \fB\-m\fR) or initialised (option \fB\-P\fR) to make a polar zonohedron.
+If input_file is not given the program reads from standard input
 .PP
 Options
 .HP
@@ -27,8 +29,14 @@ e \- explicit edges are vectors
 \fB\-s\fR
 output the star (instead of the zonohedron)
 .TP
+\fB\-S\fR
+seed model to add zones to, must be convex
+.TP
 \fB\-u\fR
 make vectors unit length
+.TP
+\fB\-C\fR <col>
+colour for new zone faces
 .TP
 \fB\-P\fR <num>
 polar zonohedron with given number of vectors

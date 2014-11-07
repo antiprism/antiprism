@@ -19,21 +19,37 @@
 
 
 <<EXAMPLES_START>>
-A medium sized polar zonohedron
+A largish polar zonohedron
 <<CMDS_START>>
-zono -P 50 -o polarzono.off
+zono -P 50 | antiview
 <<CMDS_END>>
 
-A rhombic triacontaahedron
+Rhombic triacontaahedron
 <<CMDS_START>>
-zono -m v -o rh_tri.off icosahedron
+zono ico | antiview
+<<CMDS_END>>
+
+Non-Archimedean truncated octahedron
+<<CMDS_START>>
+zono -m i ico | antiview
+<<CMDS_END>>
+
+Archimedean truncated octahedron
+<<CMDS_START>>
+zono -m i -u ico | antiview
+<<CMDS_END>>
+
+Make a unit star from tetrahedron vertices and use to add red zones
+to a dodecahedron
+<<CMDS_START>>
+zono -S ico -u -C red tet | antiview
 <<CMDS_END>>
 <<EXAMPLES_END>>
 
 
 <<NOTES_START>>
-An error calculating the convex hull probably indicates that the
-star was not three dimensional.
+Option <i>-S</i> implements George Hart's
+<a href="http://www.georgehart.com/virtual-polyhedra/zonish_polyhedra.html">Zonish polyhedra</a>.
 <<NOTES_END>>
 
 #include "<<END>>"

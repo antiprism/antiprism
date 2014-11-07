@@ -38,8 +38,6 @@ void triangulate_basic(geom_if &geom, bool sq_diag=true, col_val inv=col_val(),
 
 double minimum_distance(const geom_if &geom, double sig_dist=0, char *errmsg=0);
 
-void make_polar_zono(geom_if &zono, int star_n, bool out_star);
-
 
 // RK - from off_util
 void make_edges_to_faces(geom_if &geom);
