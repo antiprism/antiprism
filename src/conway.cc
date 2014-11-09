@@ -1219,11 +1219,11 @@ void cn_join(col_geom_v &geom, const bool &use_truncate_algorithm, const char &p
 void cn_meta(col_geom_v &geom, const bool &use_truncate_algorithm, const char &planarization_method,
              const int &num_iters_planar, const double &eps, const bool &verbosity, const int &rep_count)
 {
-   verbose('k',0,verbosity);
-   cn_kis(geom,0);
-   cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity, rep_count);
    verbose('j',0,verbosity);
    cn_join(geom, use_truncate_algorithm, planarization_method, num_iters_planar, eps, verbosity, rep_count);
+   cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity, rep_count);
+   verbose('k',0,verbosity);
+   cn_kis(geom,0);
 }
 
 void cn_ortho(col_geom_v &geom, const bool &use_truncate_algorithm, const char &planarization_method,
@@ -1266,21 +1266,21 @@ void cn_bevel(col_geom_v &geom, const bool &use_truncate_algorithm, const char &
               const int &num_iters_planar, const double &eps, const bool &verbosity, const int &rep_count)
 {
    if (use_truncate_algorithm) {
-      verbose('#',0,verbosity);
-      cn_truncate_by_algorithm(geom, CN_ONE_THIRD, 0);
-   }
-   else {
-      verbose('t',0,verbosity);
-      cn_truncate(geom, 0, planarization_method, num_iters_planar, eps, verbosity, rep_count);
-   }
-   cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity, rep_count);
-   if (use_truncate_algorithm) {
       verbose('^', 0, verbosity);
       cn_truncate_by_algorithm(geom, CN_ONE_HALF, 0);
    }
    else {
       verbose('a',0,verbosity);
       cn_ambo(geom);
+   }
+   cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity, rep_count);
+   if (use_truncate_algorithm) {
+      verbose('#',0,verbosity);
+      cn_truncate_by_algorithm(geom, CN_ONE_THIRD, 0);
+   }
+   else {
+      verbose('t',0,verbosity);
+      cn_truncate(geom, 0, planarization_method, num_iters_planar, eps, verbosity, rep_count);
    }
 }
 
