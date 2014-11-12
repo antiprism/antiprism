@@ -12,6 +12,7 @@ xx-xx-14 Adrian Rossiter <adrian@antiprism.com>
             minmax: new option -a u, make faces regular. Improve
               reporting.
             leonardo: new options -c centre, -p panel faces
+            zono: new option -S zonish polyhedra
          Fixes
             off_util -u: natural unfolding for positive orientation
             minor bug fixes
