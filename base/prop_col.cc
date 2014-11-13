@@ -58,14 +58,11 @@ int prop_color::find_colors()
    visit_cnt.resize(num_node+1, 0);
    ColorAdj.resize(num_node, vector<int> (num_node+1, 0));
    set<pair<int, int> >::const_iterator si;
-   //printf("%d %d\n", num_node, adj.size());
    for(si=adj.begin(); si!=adj.end(); ++si) {
-      //printf("%d %d\n", si->first+1, si->second+1);
       
       ColorAdj[si->first][0]++;
       ColorAdj[si->second][0]++;
    }
-   //fflush(stdout);
    
    ColorCount.resize(num_node, 0);
    ColorClass.resize(num_node, 0);
@@ -112,6 +109,13 @@ int prop_color::find_colors()
       adj.clear();
       g.GraphColoring(parameter, colours);
    }
+
+   if((int)BestColorClass.size() < num_node) {
+      BestColorClass.resize(num_node);
+      for(int i=0; i<num_node; i++)
+         BestColorClass[i] = i+1;
+   }
+
    return 0;
 
 }
