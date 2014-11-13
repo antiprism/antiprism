@@ -66,7 +66,7 @@ class cn_opts: public prog_opts
                  plane_factor(20),
                  method('n'),
                  cent_type('\0'),
-                 num_iters_preplanar(-1),
+                 num_iters_preplanar(1000),
                  rep_count(50),
                  divergence_test(10),
                  epsilon(0)
@@ -114,7 +114,7 @@ void cn_opts::usage()
 "  -p <perc> percentage to scale the face planarity error (default: 20)\n" 
 "\n"
 "Pre-planarization Options (-C p and -C q)\n"
-"  -i <itrs> maximum number of pre-planarize iterations (default: no limit)\n"
+"  -i <itrs> maximum number of pre-planarize iterations (default: 1000)\n"
 "\n"
 "\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }

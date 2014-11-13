@@ -72,7 +72,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations, char 
    int num_val = 0;
    bool delayed_write = false;
 
-   string operators = "abcdegjkmoprstx";
+   string operators = "abcdegjkmoprstwx";
    string operands = "TCOIDPAY";
    string digits = "0123456789";
    string digits_allowed = "tkPAY";
@@ -305,8 +305,8 @@ class cn_opts: public prog_opts {
                  poly_size(0),
                  planarization_method('p'),
                  canonical_method('\0'),
-                 num_iters_planar(-1),
-                 num_iters_canonical(-1),
+                 num_iters_planar(1000),
+                 num_iters_canonical(1000),
                  rep_count(-1),
                  unitize(false),
                  verbosity(false),
@@ -421,6 +421,9 @@ void extended_help()
 "the six squares of the C, and eight triangles corresponding to the cube's eight\n"
 "vertices.\n"
 "\n"
+"w = whirl  Gyro followed by truncation of vertices centered on original faces.\n"
+"This create 2 new hexagons for every original edge"
+"\n"
 "x = null   Null operation. Nothing is changed. A planarize step is performed\n"
 "\n");
 }
@@ -458,11 +461,11 @@ void cn_opts::usage()
 "            n - conway notation version of canonicalization\n"
 "            m - mathematica version of canonicalization\n"
 "            or planarize final product with p, q or l above\n"
-"  -n <itrs> maximum number canonical iterations (default: no limit)\n"
+"  -n <itrs> maximum number canonical iterations (default: 1000)\n"
 "  -l <lim>  minimum distance change to terminate canonicalization, as negative\n"
 "               exponent (default: %d giving %.0e)\n"
-"  -i <itrs> maximum inter-step planarization iterations (default: no limit)\n"
-"               i = 0, no inter-step planarization\n"
+"  -i <itrs> maximum inter-step planarization iterations (default: 1000)\n"
+"               0 = no inter-step planarization\n"
 "  -z <n>    status reporting every n iterations, -1 for no status (default: -1)\n"
 "\n"
 "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
@@ -630,8 +633,8 @@ void cn_opts::process_command_line(int argc, char **argv)
    if (!strlen(cn_string.c_str()))
       error("no Conway Notation string given");
 
-   if(strspn(cn_string.c_str(), "abcdegjkmoprstxTCOIDPAY0123456789,") != strlen(cn_string.c_str()))
-      error("Conway Notation must consist of abcdegjkmoprstxTCOIDPAY0123456789");
+   if(strspn(cn_string.c_str(), "abcdegjkmoprstwxTCOIDPAY0123456789,") != strlen(cn_string.c_str()))
+      error("Conway Notation must consist of abcdegjkmoprstwxTCOIDPAY0123456789");
 
    if (int pos = validate_cn_string(cn_string, operations, operand, poly_size))
       error(msg_str("Unexpected character in position %d: %s", pos+1,
@@ -715,7 +718,7 @@ void verbose(const char &operation, const int &op_var, const bool &verbosity)
             fprintf(stderr,"ambo as truncate to edge midpoints by built in function\n");
             break;
          case 'c':
-            fprintf(stderr,"canonicalize operator\n");
+            fprintf(stderr,"chamfer\n");
             break;
          case 'd':
             fprintf(stderr,"dual\n");
@@ -733,6 +736,9 @@ void verbose(const char &operation, const int &op_var, const bool &verbosity)
             break;
          case 'r':
             fprintf(stderr,"reflect\n");
+            break;
+         case 'w':
+            fprintf(stderr,"whirl\n");
             break;
          case 'b':
             fprintf(stderr,"bevel as truncate, ambo:\n");
@@ -1003,12 +1009,6 @@ void cn_gyro(col_geom_v &geom)
 
    char buf1[MSG_SZ],buf2[MSG_SZ],buf3[MSG_SZ];
    unsigned int vert_num = 0;
-   for(unsigned int i=0;i<verts.size();i++) {
-      sprintf(buf1,"v%d",i);
-      verts_table[buf1] = vert_num++;
-      verts_new.push_back(verts[i]);
-   }
-
    vector<vec3d> centers;
    geom.face_cents(centers);
    for(unsigned int i=0;i<faces.size();i++) {
@@ -1017,6 +1017,12 @@ void cn_gyro(col_geom_v &geom)
       verts_new.push_back(centers[i].unit());
    }
    centers.clear();
+
+   for(unsigned int i=0;i<verts.size();i++) {
+      sprintf(buf1,"v%d",i);
+      verts_table[buf1] = vert_num++;
+      verts_new.push_back(verts[i]);
+   }
 
    for(unsigned int i=0;i<faces.size();i++) {
       int v1 = faces[i].at(faces[i].size()-2);
@@ -1172,6 +1178,28 @@ void cn_reflect(col_geom_v &geom)
 void cn_truncate_by_algorithm(col_geom_v &geom, const double &ratio, const int &n)
 {
    truncate_verts(geom, ratio, n);
+   geom.orient();
+}
+
+void cn_whirl(col_geom_v &geom, const char &planarization_method, 
+              const int &num_iters_planar, const double &eps, const bool &verbosity, const int &rep_count)
+{
+   int num_faces = geom.raw_faces().size();
+
+   verbose('g',0,verbosity);
+   cn_gyro(geom);
+   cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity, rep_count);
+   
+   project_onto_sphere(geom);
+   
+   verbose('#', 0, verbosity);
+   // only truncate on original face centers
+   vector<int> v_idxs;
+   for(int i=0;i<num_faces;i++)
+      v_idxs.push_back(i);
+
+   truncate_verts(geom, v_idxs, CN_ONE_HALF, 0);
+   
    geom.orient();
 }
 
@@ -1336,6 +1364,12 @@ void do_operations(col_geom_v &geom, const vector<ops *> &operations, const char
          case 'r':
             verbose(operations[i]->op, operations[i]->op_var, verbosity);
             cn_reflect(geom);
+            break;
+            
+         // whirl
+         case 'w':
+            verbose(operations[i]->op, operations[i]->op_var, verbosity);
+            cn_whirl(geom, planarization_method, num_iters_planar, eps, verbosity, rep_count);
             break;
 
          // null
