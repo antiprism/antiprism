@@ -634,7 +634,7 @@ class ut_opts: public prog_opts {
                  surface('p'), pattern(1),
                  width(20), height(-1),
                  to_tile(true),
-                 r(1), R(3), d(5),
+                 r(1), R(3), d(NAN),
                  shear(vec3d(0,0,0))
                  {}
       void process_command_line(int argc, char **argv);
@@ -681,7 +681,8 @@ void ut_opts::usage()
 "            rectangular tile\n"
 "  -r <rad>  'minor' radius of surface\n"
 "  -R <rad>  'major' radius of surface\n"
-"  -d <dist> distance (height of conic frustrum)\n"
+"  -d <dist> height of conic frustrum (-s C, default: 5.0) or parameter for\n"
+"            Roman to Boy's surface (-s R, default 0.0)\n"
 "  -T <tran> translate pattern, three numbers separated by commas which are\n"
 "            used as the x, y and z displacements\n"
 "  -S <X,Y>  \"shear\" the base rectangular tiling pattern by X units in the\n"
@@ -749,8 +750,6 @@ void ut_opts::process_command_line(int argc, char **argv)
          case 'd':
             if(!read_double(optarg, &d, errmsg))
                error(errmsg, c);
-            if(d<0)
-               warning("distance is negative", c);
             break;
             
          case 'T':
@@ -821,7 +820,7 @@ int main(int argc, char *argv[])
          ut.plane(unitile::ut_open, unitile::ut_open);
          break;
       case 'c':
-         ut.conic_frust(opts.r, opts.R, opts.d);
+         ut.conic_frust(opts.r, opts.R, isnan(opts.d) ? 5.0: opts.d);
          break;
       case 'm':
          ut.mobius(opts.r, opts.R);
@@ -846,7 +845,7 @@ int main(int argc, char *argv[])
          ut.roman_boy(1);
          break;
       case 'R':
-         ut.roman_boy(opts.d);
+         ut.roman_boy(isnan(opts.d) ? 0.0: opts.d);
          break;
       case 'w':
          ut.cross_cap2();
