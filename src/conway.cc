@@ -738,7 +738,7 @@ void verbose(const char &operation, const int &op_var, const bool &verbosity)
             fprintf(stderr,"reflect\n");
             break;
          case 'w':
-            fprintf(stderr,"whirl\n");
+            fprintf(stderr,"whirl as gyro, truncation of vertices centered on original faces:\n");
             break;
          case 'b':
             fprintf(stderr,"bevel as truncate, ambo:\n");
@@ -905,18 +905,18 @@ void build_new_faces(map<string, map<string, string> > &faces_table,
    map<string, string>::iterator ftm;
    string face_name;
    for(ft = faces_table.begin(); ft != faces_table.end(); ft++) {
-      for(ftm=ft->second.begin(); ftm!=ft->second.end(); ftm++) {
+      for(ftm = ft->second.begin(); ftm != ft->second.end(); ftm++) {
          if (face_name != ft->first) {
             face_name = ft->first;
             string v0 = faces_table[face_name][ftm->first];
             string v = v0;
-
             vector<int> face;
             do {
                face.push_back(verts_table[v]);
                v = faces_table[face_name][v];
             } while( v != v0 );
-            faces_new.push_back(face);
+            if (face.size() > 2) // make sure face is valid
+               faces_new.push_back(face);
             face.clear();
          }
       }
@@ -1189,8 +1189,6 @@ void cn_whirl(col_geom_v &geom, const char &planarization_method,
    verbose('g',0,verbosity);
    cn_gyro(geom);
    cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity, rep_count);
-   
-   project_onto_sphere(geom);
    
    verbose('#', 0, verbosity);
    // only truncate on original face centers
