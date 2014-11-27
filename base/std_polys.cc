@@ -38,8 +38,14 @@
 #include "utils.h"
 #include "info.h"
 #include "coloring.h"
+#include "transforms.h"
 
 using std::swap;
+
+///A basic function type that makes a model that has a normal form
+// (e.g. with unit edges) and a standard form (e.g with commonly used
+// coordinates)
+typedef void (*std_model_func) (geom_if &, bool is_std);
 
 
 void normalised_face_list(geom_if &geom)
@@ -48,76 +54,6 @@ void normalised_face_list(geom_if &geom)
    if(vdot(geom.face_norm(0), geom.face_cent(0))<0)
       geom.orient_reverse();
    sort(geom.raw_faces().begin(), geom.raw_faces().end());
-}
-
-
-static void rh_dodecahedron(geom_if &geom)
-{
-   geom.clear_all();
-   col_geom_v geom2;
-   geom2.read_resource("std_cube");
-   geom.add_verts(geom2.verts());
-   geom2.read_resource("std_oct");
-   geom2.transform(mat3d::scale(2));
-   geom.add_verts(geom2.verts());
-   geom.add_hull();
-   normalised_face_list(geom);
-}
-
-
-static void rh_triacontahedron(geom_if &geom)
-{
-   geom.clear_all();
-   col_geom_v geom2;
-   geom2.read_resource("std_ico");
-   geom.add_verts(geom2.verts());
-   geom2.read_resource("std_dod");
-   geom.add_verts(geom2.verts());
-   geom.add_hull();
-   normalised_face_list(geom);
-}
-
-
-static void rh_enneacontahedron(geom_if &geom)
-{
-   geom.clear_all();
-   col_geom_v geom2;
-   geom2.read_resource("std_dod");
-   geom2.transform(mat3d::scale(1/(2*phi*phi)));
-   geom.set_zono(geom2.verts());
-   normalised_face_list(geom);
-}
-
-
-int make_resource_std_poly(geom_if &geom, string name, char *errmsg=0)
-{
-   if(name.size()<5 || name.substr(0,4)!="std_" || name.find('.')!=string::npos)
-      return -1; // not std poly name (the "." indicates a likely local file)
-                 // so the name is not handled
-
-   map<string, model_func> models;
-   models["rhombic_dodecahedron"]        = rh_dodecahedron;
-   models["rh_dodecahedron"]             = rh_dodecahedron;
-   models["rh_dod"]                      = rh_dodecahedron;
-   models["rd"]                          = rh_dodecahedron;
-   models["rhombic_triacontahedron"]     = rh_triacontahedron;
-   models["rh_triacontahedron"]          = rh_triacontahedron;
-   models["rh_tri"]                      = rh_triacontahedron;
-   models["rt"]                          = rh_triacontahedron;
-   models["rhombic_enneacontahedron"]    = rh_enneacontahedron;
-   models["rh_enneacontahedron"]         = rh_enneacontahedron;
-   models["rh_ennea"]                    = rh_enneacontahedron;
-   models["re"]                          = rh_enneacontahedron;
-
-   map<string, model_func>::iterator mi = models.find(name.substr(4));
-   if(mi != models.end())
-      mi->second(geom);
-   else {
-      if(errmsg)
-         snprintf(errmsg, MSG_SZ, "invalid standard polyhedron name");
-      return 1; // fail
-   }
-   return 0; // name found
 }
 
 
@@ -149,6 +85,17 @@ void set_resource_polygon_color(geom_if &geom)
       clrng.add_cmap(cmap);
       clrng.f_avg_angle(true);
       clrng.v_avg_angle(true);
+   }
+}
+
+void set_resource_unique_color(geom_if &geom)
+{
+   if(col_geom_v *cg = dynamic_cast<col_geom_v *>(&geom)) {
+      coloring clrng(cg);
+      color_map *cmap = init_color_map("spread");
+      clrng.add_cmap(cmap);
+      clrng.f_unique(true);
+      clrng.v_unique(true);
    }
 }
 
@@ -232,10 +179,6 @@ const char *alt_names[][2] = {
    {"triakistetrahedron", "u2_d"},
    {"triakis_tetrahedron", "u2_d"},
    {"tri_tet", "u2_d"},
-   {"rhombic_dodecahedron", "u7_d"},
-   {"rh_dodecahedron", "u7_d"},
-   {"rh_dod", "u7_d"},
-   {"rd", "u7_d"},
    {"triakisoctahedron", "u9_d"},
    {"triakis_octahedron", "u9_d"},
    {"tri_oct", "u9_d"},
@@ -257,10 +200,6 @@ const char *alt_names[][2] = {
    {"disd_dod", "u11_d"},
    {"pentagonal_icositetrahedron", "u12_d"},
    {"pen_icosit", "u12_d"},
-   {"rhombic_triacontahedron", "u24_d"},
-   {"rh_triacontahedron", "u24_d"},
-   {"rh_tri", "u24_d"},
-   {"rt", "u24_d"},
    {"triakisicosahedron", "u26_d"},
    {"triakis_icosahedron", "u26_d"},
    {"tri_ico", "u26_d"},
@@ -1224,13 +1163,184 @@ int make_resource_wythoff(geom_if &geom, string name, bool is_std,
 }
 
 
+static void rh_dodecahedron(geom_if &geom, bool is_std=false)
+{
+   geom.clear_all();
+   if(is_std) {
+      col_geom_v geom2;
+      geom2.read_resource("std_cube");
+      geom.add_verts(geom2.verts());
+      geom2.read_resource("std_oct");
+      geom2.transform(mat3d::scale(2));
+      geom.add_verts(geom2.verts());
+      geom.add_hull();
+      normalised_face_list(geom);
+   }
+   else {
+          make_resource_uniform(geom, "U7", is_std);
+          make_resource_dual(geom, is_std);
+   }
+}
+
+
+static void rh_triacontahedron(geom_if &geom, bool is_std=false)
+{
+   if(is_std) {
+      geom.clear_all();
+      col_geom_v geom2;
+      geom2.read_resource("std_ico");
+      geom.add_verts(geom2.verts());
+      geom2.read_resource("std_dod");
+      geom.add_verts(geom2.verts());
+      geom.add_hull();
+      normalised_face_list(geom);
+   }
+   else {
+      make_resource_uniform(geom, "U24", is_std);
+      make_resource_dual(geom, is_std);
+   }
+}
+
+
+static void rh_enneacontahedron(geom_if &geom, bool is_std=false)
+{
+   geom.clear_all();
+   col_geom_v geom2;
+   geom2.read_resource("std_dod");
+   if(is_std)
+      geom2.transform(mat3d::scale(1/(2*phi*phi)));
+   else
+      geom2.transform(mat3d::scale(1/geom2.verts(0).mag()));
+   geom.set_zono(geom2.verts());
+   normalised_face_list(geom);
+   if(!is_std)
+      set_resource_polygon_color(geom);
+}
+
+static void rh_hexacontahedron(geom_if &geom, bool is_std=false)
+{
+   geom.clear_all();
+   col_geom_v geom_face;
+   geom_face.add_vert(vec3d(0, phi+1, 1));
+   geom_face.add_vert(vec3d(1/phi, phi, 1));
+   geom_face.add_vert(vec3d(0, 1/phi, 1));
+   geom_face.add_vert(vec3d(-1/phi, phi, 1));
+   geom_face.add_face(0, 1, 2, 3, -1);
+   if(!is_std)   // Make unit edges
+      geom_face.transform(mat3d::scale(1/geom_face.edge_vec(0, 1).mag()));
+   sym_repeat(geom, geom_face, sch_sym(sch_sym::I));
+   sort_merge_elems(geom, "vef", epsilon);
+   normalised_face_list(geom);
+   if(!is_std)
+      set_resource_polygon_color(geom);
+}
+
+// http://www.math.unm.edu/~vageli/papers/FLEX/Szilassi.pdf
+static void csaszar(geom_if &geom, bool is_std=false)
+{
+   double crds[2][7][3] = {
+      // Coordintes attributed to Csaszar
+      { {3, -3, 0}, {3, 3, 1}, {1, 2, 3}, {-1, -2, 3},
+        {-3, -3, 1}, {-3, 3, 0}, {0, 0, 15} },
+      // Coordinates C1
+      { {4*sqrt(15), 0, 0}, {0, 8, 4}, {-1, 2, 11}, {1, -2, 11},
+        {0, -8, 4}, {-4*sqrt(15), 0, 0}, {0, 0, 20}}
+   };
+   geom.clear_all();
+   for(int i=0; i<7; i++)
+      geom.add_vert(vec3d(crds[is_std][i]));
+
+   geom.add_face(0, 1, 5, -1);
+   geom.add_face(0, 3, 1, -1);
+   geom.add_face(4, 2, 1, -1);
+   geom.add_face(3, 0, 2, -1);
+   geom.add_face(1, 6, 5, -1);
+   geom.add_face(2, 6, 1, -1);
+   geom.add_face(0, 6, 2, -1);
+   geom.add_face(5, 4, 0, -1);
+   geom.add_face(5, 2, 4, -1);
+   geom.add_face(1, 3, 4, -1);
+   geom.add_face(2, 5, 3, -1);
+   geom.add_face(4, 6, 0, -1);
+   geom.add_face(3, 6, 4, -1);
+   geom.add_face(5, 6, 3, -1);
+
+   if(!is_std)
+      set_resource_unique_color(geom);
+}
+
+static void szilassi(geom_if &geom, bool is_std=false)
+{
+   double crds[14][3] = {
+      // Coordinates, Tom Ace http://www.minortriad.com/szilassi.html
+      {  0.0,-12.6, 12.0}, {  0.0, 12.6, 12.0}, { -7.0,  0.0, -2.0},
+      { -2.0,  5.0,  8.0}, {-12.0,  0.0,-12.0}, { -7.0, -2.5, -2.0},
+      {  2.0, -5.0,  8.0}, {  7.0,  0.0, -2.0}, { 12.0,  0.0,-12.0},
+      {  7.0,  2.5, -2.0}, {-3.75,-3.75,  3.0}, { 3.75, 3.75,  3.0},
+      { -4.5,  2.5, -2.0}, {  4.5, -2.5, -2.0},
+   };
+
+   geom.clear_all();
+   for(int i=0; i<14; i++)
+      geom.add_vert(vec3d(crds[i]));
+
+   geom.add_face(0, 2, 5, 4, 3, 1, -1);
+   geom.add_face(1, 7, 9, 8, 6, 0, -1);
+   geom.add_face(0, 6, 10, 11, 12, 2, -1);
+   geom.add_face(1, 3, 11, 10, 13, 7, -1);
+   geom.add_face(4, 5, 13, 10, 6, 8, -1);
+   geom.add_face(8, 9, 12, 11, 3, 4, -1);
+   geom.add_face(5, 2, 12, 9, 7, 13, -1);
+
+   if(!is_std)
+      set_resource_unique_color(geom);
+}
+
+
+int make_resource_misc_poly(geom_if &geom, string name, bool is_std,
+      char * /*errmsg=0*/)
+{
+   if(name.find('.')!=string::npos)
+      return -1; // not misc poly name (the "." indicates a likely local file)
+                 // so the name is not handled
+
+   map<string, std_model_func> models;
+   models["rhombic_dodecahedron"]        = rh_dodecahedron;
+   models["rh_dodecahedron"]             = rh_dodecahedron;
+   models["rh_dod"]                      = rh_dodecahedron;
+   models["rd"]                          = rh_dodecahedron;
+   models["rhombic_triacontahedron"]     = rh_triacontahedron;
+   models["rh_triacontahedron"]          = rh_triacontahedron;
+   models["rh_tri"]                      = rh_triacontahedron;
+   models["rt"]                          = rh_triacontahedron;
+   models["rhombic_enneacontahedron"]    = rh_enneacontahedron;
+   models["rh_enneacontahedron"]         = rh_enneacontahedron;
+   models["rh_ennea"]                    = rh_enneacontahedron;
+   models["re"]                          = rh_enneacontahedron;
+   models["rhombic_hexacontahedron"]     = rh_hexacontahedron;
+   models["rh_hexacontahedron"]          = rh_hexacontahedron;
+   models["rh_hex"]                      = rh_hexacontahedron;
+   models["szilassi"]                    = szilassi;
+   models["csaszar"]                     = csaszar;
+
+   map<string, std_model_func>::iterator mi = models.find(name);
+   if(mi != models.end()) {
+      mi->second(geom, is_std);
+      return 0; // name found
+   }
+
+   return -1; // not handled
+}
+
+
+
 bool make_resource_geom(geom_if &geom, string name, char *errmsg)
 {
    if(errmsg)
       *errmsg = '\0';
 
    geom.clear_all();
-   
+
    if(!name.size())
       return false;
 
@@ -1240,23 +1350,12 @@ bool make_resource_geom(geom_if &geom, string name, char *errmsg)
    char errmsg2[MSG_SZ];
    bool geom_ok = false;
 
-   // RK: now check for standard polys before any work is done on the name
-   // if found, then end here. if not fall through
-   if(!geom_ok) {
-      int ret = make_resource_std_poly(geom, name, errmsg2);
-      if(ret==0) {
-         if(make_dual)
-            make_resource_dual(geom, true);
-         return true;
-      }
-   }
-
    // RK: standard keyword "std_" now used for all built-in polyhedra
    // truncate "std_" but keep track of it
    bool is_std = (name.size()>3 && name.substr(0,4)=="std_");
    if (is_std)
       name = name.substr(4);
-   
+
    // Look for an internal alternative name
    char alt_name[MSG_SZ];
    to_resource_name(alt_name, name.c_str());
@@ -1268,7 +1367,13 @@ bool make_resource_geom(geom_if &geom, string name, char *errmsg)
          break;
       }
    }
-  
+
+   if(!geom_ok) {
+      int ret = make_resource_misc_poly(geom, name, is_std, errmsg2);
+      if(ret==0)
+         geom_ok = true;
+   }
+
    if(!geom_ok) {
       int ret = make_resource_pgon(geom, name, is_std, errmsg2);
       if(ret==0)

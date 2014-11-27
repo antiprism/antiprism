@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012, Adrian Rossiter
+   Copyright (c) 2012 - 2014, Adrian Rossiter
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -41,29 +41,30 @@ const char *help_help =
 "expressions:  mathematical expressions for floating point arguments\n"
 "symmetry:     symmetry features and option arguments\n"
 "models:       built in models\n"
-"   common_polys: common  polyhedra\n"
+"   common_polys: common polyhedra\n"
 "   uniform:      uniform polyhedra (including wythoff_ models)\n"
 "   ud:           uniform dual polyhedra\n"
 "   johnson:      johnson polyhedra\n"
 "   uc:           uniform compounds\n"
 "   bowers:       supported Bowers short name notations\n"
 "   polygon:      prisms, pyramids, antiprisms, etc\n"
-"   std_polys:    polyhedra with usual coordinates\n"
 "   geodesic:     geodesic spheres\n"
 "   sym_models:   symmetry example models\n"
 "   schwarz:      Schwarz triangles\n"
+"   std_polys:    some information on polyhedra with usual coordinates\n"
 ;
 
 const char *help_models =
 "Models\n"
 "======\n"
-"Antiprism includes a number of built in models. These may be used\n"
-"by any program that expects an OFF file, by passing the model name\n"
-"instead of a file name e.g. antiview u1. Adding _d to a resource model\n"
-"name will give the dual of the model\n"
+"Antiprism includes a number of built in models. These may be used by \n"
+"any program that expects an OFF file, by passing the model name instead\n"
+"of a file name e.g. antiview u1. Adding _d to a resource model name will\n"
+"give the dual of the model. Prefixing std_ to a resource name will give\n"
+"an uncoloured standard or usual representation of the polyhedron.\n"
 "\n"
 "See the help topic for each model type for more details\n"
-"   common_polys: common  polyhedra\n"
+"   common_polys: common polyhedra\n"
 "   uniform:      uniform polyhedra (including wythoff_ models)\n"
 "   ud:           uniform dual polyhedra\n"
 "   johnson:      johnson polyhedra\n"
@@ -73,14 +74,25 @@ const char *help_models =
 "   geodesic:     geodesic spheres\n"
 "   sym_models:   symmetry example models\n"
 "   schwarz:      Schwarz triangles\n"
+"   std_polys:    some information on polyhedra with usual coordinates\n"
 ;
 
 const char *help_common_polys =
 "Common Polyhedra\n"
 "================\n"
-"Common polyhedra are given by name only. Each name is a synonym\n"
-"for a particular model specifier\n"
+"Common polyhedra are given by name only. Some names have their own \n"
+"construction, while others are just a synonym for another resource \n"
+"model name\n"
 "\n"
+"   Constructed:\n"
+"     rhombic_dodecahedron, rd\n"
+"     rhombic_triacontahedron, rt\n"
+"     rhombic_enneacontahedron, re\n"
+"     rhombic_hexacontahedron, rh_hex\n"
+"     szilassi\n"
+"     csaszar\n"
+"\n"
+"   Synonyms:\n"
 "     tetrahedron, tet                          u1\n"
 "     truncated_tetrahedron, tr_tet             u2\n"
 "     octahedron, oct                           u5\n"
@@ -104,7 +116,6 @@ const char *help_common_polys =
 "     great_stellated_dodecahedron, gr_st_dod   u52\n"
 "     great_icosahedron, gr_ico                 u53\n"
 "     triakis_tetrahedron, tri_tet              u2_d\n"
-"     rhombic_dodecahedron, rd                  u7_d\n"
 "     triakis_octahedron, tri_oct               u9_d\n"
 "     tetrakis_hexahedron, tetr_hex             u8_d\n"
 "     disdyakis_hexahedron, disd_hex            u8_d\n"
@@ -113,7 +124,6 @@ const char *help_common_polys =
 "     hexakis_octahedron, hex_oct               u11_d\n"
 "     disdyakis_dodecahedron, disd_dod          u11_d\n"
 "     pentagonal_icositetrahedron, pen_icosit   u12_d\n"
-"     rhombic_triacontahedron, rt               u24_d\n"
 "     triakis_icosahedron, tri_ico              u26_d\n"
 "     pentakis_dodecahedron, pent_dod           u25_d\n"
 "     deltoidal_hexacontahedron, delt_hexac     u27_d\n"
