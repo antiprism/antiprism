@@ -19,17 +19,17 @@
 
 
 <<EXAMPLES_START>>
-A class ii icosahedral geodesic sphere with a pattern frequency of 4
+A Class II icosahedral geodesic sphere with a pattern frequency of 4
 <<CMDS_START>>
 geodesic -c 2 -f 4 ico
 <<CMDS_END>>
 
-A class ii icosahedral geodesic sphere with a final step frequency of 4
+A Class II icosahedral geodesic sphere with a final step frequency of 4
 <<CMDS_START>>
-geodesic -c 2 -f 4 ico
+geodesic -c 2 -F 4 ico
 <<CMDS_END>>
 
-A planar octahedron with a class iii 1,2 pattern repeated 3 times along
+A planar octahedron with a Class III 1,2 pattern repeated 3 times along
 an edge
 <<CMDS_START>>
 geodesic -m p -c 1,2 -f 3 oct
@@ -38,24 +38,24 @@ geodesic -m p -c 1,2 -f 3 oct
 
 
 <<NOTES_START>>
-when an input file is specified the geodesic faces are coloured
+When an input file is specified the geodesic faces are coloured
 the same as the base polyhedron face they corespond to.
 <p>
-geodesic faces may bridge across an edge of the base polyhedron.
-if the edge belongs to only one face, or is shared by faces with
+Geodesic faces may bridge across an edge of the base polyhedron.
+If the edge belongs to only one face, or is shared by faces with
 opposite orientations, the geodesic faces that bridge the edge
 will not be included in the output.
 <p>
-all the patterns may be specified by a pair of integers. if the
+All the patterns may be specified by a pair of integers. If the
 integers are <i>a</i> and <i>b</i>,a triangular grid is laid out on
 the polyhedron face, having
 <i>(a&sup2;&nbsp;+&nbsp;ab&nbsp;+&nbsp;b&sup2;)/highest&nbsp;common&nbsp;factor(a,&nbsp;b)</i>
-divisions. taking the face edges in order it is posible, starting
+divisions. Taking the face edges in order it is posible, starting
 at a face vertex, to step <i>a</i> units in the direction of one edge, then
 <i>b</i> units in the direction of the following edge and, if lying on the
-face, this point will be a geodesic vertex. the process can be repeated
+face, this point will be a geodesic vertex. The process can be repeated
 three times from this geodesic vertex, finding the original face vertex
-and up to two new geodesic vertices. the process is continued until all
+and up to two new geodesic vertices. The process is continued until all
 the geodesic vertices covering the face have been found.
 <p>
 
