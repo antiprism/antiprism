@@ -48,6 +48,7 @@ class leo_opts: public prog_opts
       bool hide_edges;
       bool col_from_edges;
       bool panels;
+      bool orient;
 
       string ifile;
       string ofile;
@@ -59,7 +60,8 @@ class leo_opts: public prog_opts
                  centre_height(false), centre_type('v'),
                  hide_edges(false),
                  col_from_edges(false),
-                 panels(false)
+                 panels(false),
+                 orient(true)
                  {}
 
       void process_command_line(int argc, char **argv);
@@ -92,6 +94,7 @@ void leo_opts::usage()
 "  -x        hide the edges that join the outside of a face to the hole\n"
 "  -e        take colours from the edge colours of the base polyhedron\n"
 "            (default: use face colours)\n"
+"  -k        keep orientation, don't try to orient the faces\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
 "\n", prog_name(), help_ver_text, def_width, def_height);
@@ -107,7 +110,7 @@ void leo_opts::process_command_line(int argc, char **argv)
 
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hw:l:c:pmxieo:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hw:l:c:pmxieko:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -158,6 +161,10 @@ void leo_opts::process_command_line(int argc, char **argv)
 
          case 'e':
             col_from_edges = true;
+            break;
+
+         case 'k':
+            orient = false;
             break;
 
          case 'o':
@@ -384,6 +391,25 @@ int main(int argc, char *argv[])
 
    col_geom_v geom;
    geom_read_or_error(geom, opts.ifile, opts);
+
+   // re-orient an orientable polyhedron to be positively oriented
+   if(opts.orient) {
+      geom_info info(geom);
+      if(!info.is_oriented() || info.volume()<-epsilon) {
+         if(!info.is_orientable()) {
+            if(!opts.centre_height)
+                opts.warning("non-orientable polyhedron, using option -m may "
+                      "improve results");
+         }
+         else {
+            opts.warning("re-orienting to have positive orientation, use "
+                  "option -k to keep original orientation");
+            geom.orient();
+            if(geom_info(geom).volume()<0) // inefficient
+               geom.orient_reverse();
+         }
+      }
+   }
 
    double width = (opts.width==opts.DEF_VAL) ? opts.def_width : opts.width;
    if(opts.width_is_perc)
