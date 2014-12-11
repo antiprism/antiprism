@@ -4,8 +4,10 @@ Antiprism
 Notes for Antiprism 0.24
 ------------------------
 
-This is a minor release. It includes a new program, to_nfold (to change
-the rotational symmetry of a polyhedron).
+The release includes two new programs: to_nfold changes the rotational
+symmetry of a polyhedron and off2obj converts OFF to Wavefront OBJ format.
+There are also new features, improvements, and bug fixes (see the NEWS
+file for more details).
 
 Please look out for bugs, or other issues, and report them to me
 at: adrian@antiprism.com

@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT(antiprism, 0.24.pre02, adrian@antiprism.com)
-AC_SUBST(RELEASE_DATE, ["2 April 2014"])
+AC_INIT(antiprism, 0.24.pre03, adrian@antiprism.com)
+AC_SUBST(RELEASE_DATE, ["11 December 2014"])
 AM_INIT_AUTOMAKE([1.9 foreign])
 
 AC_CONFIG_SRCDIR([base/antiprism.h])

@@ -11,10 +11,12 @@ xx-xx-14 Adrian Rossiter <adrian@antiprism.com>
               elements (Roger Kaufman), expand documentation.
             minmax: new option -a u, make faces regular. Improve
               reporting.
-            leonardo: new options -c centre, -p panel faces
+            leonardo: orient models, new options -c centre, -p panel faces,
+              -k don't orient
             zono: new option -S zonish polyhedra
          Fixes
             off_util -u: natural unfolding for positive orientation
+            off2pov: fix compatibility with POV-Ray 3.7
             minor bug fixes
 
 Version 0.23
