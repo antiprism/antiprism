@@ -15,17 +15,11 @@ Options
 .HP
 \fB\-\-version\fR version information
 .TP
-\fB\-t\fR <opt>
-normal type.  a \- added to element,  p \- positional  (default: a)
-.TP
 \fB\-u\fR
-unit normals  (raw normals otherwise)
+unit normals  (positional normals otherwise)
 .TP
 \fB\-e\fR
-connect to element centroid  (default for \fB\-t\fR a)
-.TP
-\fB\-m\fR <num>
-connector length adjust  (for \fB\-t\fR a, greater than zero, default: 1.0)
+connect to element centroid
 .TP
 \fB\-p\fR <opt>
 force polarity. o \- set all outward,  i \- set all inward
@@ -83,6 +77,7 @@ hemispherical normal vertex color  (default: gray50)
 normal vector color. connected to element centroid
 .IP
 default: color of normal vertex
+key word: r take random color
 .TP
 \fB\-B\fR <col>
 normal vector base color. color at element centroid
