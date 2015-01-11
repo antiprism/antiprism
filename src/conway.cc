@@ -1483,6 +1483,9 @@ int main(int argc, char *argv[])
 
    // the program works better with oriented input, centroid at the origin
    geom.orient();
+   if (!geom.is_oriented())
+      opts.warning("input file contains a non-orientable geometry. output is unpredictable");
+   
    centroid_to_origin(geom);
 
    do_operations(geom, opts.operations, opts.planarization_method, opts.num_iters_planar, opts.epsilon,
