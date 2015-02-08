@@ -48,6 +48,7 @@ src/off2eig
 src/off2m
 src/off2vrml
 src/off2obj
+src/obj2off
 src/off2crds
 src/off2obj
 src/crds2off
@@ -89,6 +90,7 @@ src/bravais
 src/waterman
 src/col_util
 src/planar
+src/symmetro
 aview/antiview
 python/antiprism.py
 python/antiprism.pyc

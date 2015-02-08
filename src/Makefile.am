@@ -17,7 +17,7 @@ noinst_LTLIBRARIES = liblattice_grid.la
 					 
 liblattice_grid_la_SOURCES = lattice_grid.cc lattice_grid.h
 
-bin_PROGRAMS = off2pov off2m off2vrml off2crds off2obj m2off \
+bin_PROGRAMS = off2pov off2m off2vrml off2crds off2obj obj2off m2off \
       off_color off_util off_trans off_align \
       poly_kscope polygon zono conv_hull pol_recip \
 		geodesic minmax sph_saff sph_rings \
@@ -25,9 +25,9 @@ bin_PROGRAMS = off2pov off2m off2vrml off2crds off2obj m2off \
 		kcycle string_art jitterbug unitile2d repel \
 		lat_grid lat_util canonical conway n_icons iso_delta \
 		bravais waterman col_util planar off_normals leonardo \
-		iso_kite to_nfold
+		iso_kite to_nfold symmetro
 
-dist_man1_MANS = off2pov.1 off2m.1 off2vrml.1 off2crds.1 off2obj.1 m2off.1 \
+dist_man1_MANS = off2pov.1 off2m.1 off2vrml.1 off2crds.1 off2obj.1 obj2off.1 m2off.1 \
       off_color.1 off_util.1 off_trans.1 off_align.1 \
       poly_kscope.1 polygon.1 zono.1 conv_hull.1 pol_recip.1 \
 		geodesic.1 minmax.1 sph_saff.1 sph_rings.1 \
@@ -35,11 +35,12 @@ dist_man1_MANS = off2pov.1 off2m.1 off2vrml.1 off2crds.1 off2obj.1 m2off.1 \
 		kcycle.1 string_art.1 jitterbug.1 unitile2d.1 repel.1 \
 		lat_grid.1 lat_util.1 canonical.1 conway.1 n_icons.1 iso_delta.1 \
 		bravais.1 waterman.1 col_util.1 planar.1 off_normals.1 leonardo.1 \
-		iso_kite.1 to_nfold.1
+		iso_kite.1 to_nfold.1 symmetro.1
 
 off2pov_SOURCES = off2pov.cc
 off2crds_SOURCES = off2crds.cc
 off2obj_SOURCES = off2obj.cc
+obj2off_SOURCES = obj2off.cc
 off2vrml_SOURCES = off2vrml.cc
 m2off_SOURCES = m2off.cc
 off2m_SOURCES = off2m.cc
@@ -83,4 +84,5 @@ off_normals_SOURCES = off_normals.cc
 leonardo_SOURCES = leonardo.cc
 iso_kite_SOURCES = iso_kite.cc
 to_nfold_SOURCES = to_nfold.cc
+symmetro_SOURCES = symmetro.cc
 
