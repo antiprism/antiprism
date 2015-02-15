@@ -91,12 +91,15 @@ void symmetro_opts::usage()
 "and George W. Hart (http://www.georgehart.com). Project information\n"
 "can be found at http://www.cgl.uwaterloo.ca/~csk/projects/symmetrohedra\n"
 "\n"
-"Symmetrohedra are created by placing equalateral polygons centered on\n"
+"Symmetrohedra are created by placing equilateral polygons centered on\n"
 "the symmetry axes of Icosahedral, Octahedral, or Tetrahedral symmetry.\n"
 "The number of sides of the polygons will be a multiple number of the\n"
 "axis reflection number. Axes are in order as 0, 1 and 2 corresponding\n"
 "to icosahedral {5,3,2}, octahedral {4,3,2}, or tetrahedral {3,3,2}\n"
-"The end result vertices are all 1 unit from the polyhedron center\n"
+"The end result vertices are all 1 unit from the polyhedron center. Note\n"
+"that when all three multipliers are used the solution will generally\n"
+"not yield polygons with equal edge length. The one exception is the\n"
+"truncated octahedron\n"
 "\n"
 "These types of polyhedra will either have all polygons touching on edge\n"
 "or all on vertices. In a case where a vertex meets an edge, a warning\n"
@@ -1289,9 +1292,15 @@ int main(int argc, char *argv[])
       s.setSym( 3, 3 );
    else
       opts.error("symmetry type not set",'s');
-      
-   for( int i=0; i<(int)opts.multipliers.size(); i++ )
+   
+   bool zero_found = false;   
+   for( int i=0; i<(int)opts.multipliers.size(); i++ ) {
+      if ( opts.multipliers[i] == 0 )
+         zero_found = true;
       s.setMult( i, opts.multipliers[i] );
+   }
+   if ( !zero_found )
+      opts.warning("when all three multipliers are used, polygons will not be of equal edge length",'m');
    
    // for edge on model or vertex on model
    if ( opts.rotation_method ) {
