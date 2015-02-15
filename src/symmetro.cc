@@ -51,8 +51,8 @@ class symmetro_opts: public prog_opts {
       vector<bool> theta;
       char rotation_method;
       vector<double> extra_rotation;
-      vector<int> ratio_direction;
-      double ratio;
+      vector<int> scale_direction;
+      double scale;
       int convex_hull;
       bool unitize;
       int patch;
@@ -66,8 +66,8 @@ class symmetro_opts: public prog_opts {
       symmetro_opts(): prog_opts("symmetro"),
                        sym(0),
                        reverse(false),
-                       rotation_method('\0'),
-                       ratio(0.0),
+                       rotation_method('v'),
+                       scale(0.0),
                        convex_hull(4),
                        unitize(false),
                        patch(0),
@@ -100,7 +100,7 @@ void symmetro_opts::usage()
 "\n"
 "These types of polyhedra will either have all polygons touching on edge\n"
 "or all on vertices. In a case where a vertex meets an edge, a warning\n"
-"will be displayed and the model will be generated. In this case, convex"
+"will be displayed and the model will be generated. In this case, convex\n"
 "hull will be suppressed. Try using -r to rotate the polygons to possible\n"
 "valid combinations. It is also possible to size polygons such that they\n"
 "intersect. If a collision is detected, convex hull will be suppressed\n" 
@@ -113,17 +113,16 @@ void symmetro_opts::usage()
 "  -m <vals> multipliers for axis polygons. Given as three integers\n"
 "               separated by commas. e.g. 2,3,0\n"
 "  -r <vals> which axis polygons are rotated to edge or on point. Up to\n"
-"               three values from 0, 1 and 2 seperated by commas. e.g. 0,1\n"
-"               key word: v - connect on vertex  e - connect on edge\n"
+"               three values from 0, 1 and 2 separated by commas. e.g. 0,1\n"
+"               or use v - connect on vertex  e - connect on edge  (default: v)\n"
 "  -q <vals> angles in degrees to add rotation. Given as three floating\n"
 "               point numbers separated by commas. e.g. 45,60,45\n"
-"  -S        scale multiplier for axis 'a' in -d\n"
-"  -d <a,b>  scale applied from axis a polygon applied to axis b polygon\n"
-"               e.g. 0,1  (default: calculated for unit edge length)\n"
+"  -S <a,b,s> scale s, applied from axis a polygon applied to axis b polygon\n"
+"               e.g. 0,1,0.5  (default: calculated for unit edge length)\n"
 "  -C <mode> convex hull. polygons=1, suppress=2, force=3, normal=4\n"
 "               (default: 4)\n"
-"  -u        make the edge lengths 1 unit (performed before convex hull)\n"
-"  -g <val>  edge=1, vertex=2  force meeting at edge or vertex to true. patch\n"
+"  -u        make the average edge length 1 unit (performed before convex hull)\n"
+//"  -g <val>  edge=1, vertex=2  force meeting at edge or vertex to true. patch\n"
 "  -V        verbose output\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
@@ -143,10 +142,11 @@ void symmetro_opts::process_command_line(int argc, char **argv)
    char errmsg[MSG_SZ];
    
    string id;
+   vector<double> scale_direction_tmp;
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hs:Rm:r:q:S:d:C:ug:x:y:z:w:Vo:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hs:Rm:r:q:S:C:ug:x:y:z:w:Vo:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -204,32 +204,39 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             if((int)extra_rotation.size() != 3)
                error("extra rotation values must be specified as three floating point numbers", c);
             break;
-            
-         case 'S': // ratio control
-            if(!read_double(optarg, &ratio, errmsg))
+           
+         case 'S': // scale direction and scale
+            if(!read_double_list(optarg, scale_direction_tmp, errmsg, 3))
                error(errmsg, c);
-            if ( ratio == 0.0 )
-               ratio = DBL_MIN;
-            break;
             
-         case 'd': // ratio direction
-            if(!read_int_list(optarg, ratio_direction, errmsg, true, 3))
-               error(errmsg, c);
-            if((int)ratio_direction.size() != 2)
-               error("ratio direction must be specified as two integers", c);
-            for( int i=0; i<(int)ratio_direction.size(); i++ ) {
-               if( ratio_direction[i] > 2 )
+            // place integer portions of possible doubles
+            for( int i=0; i<2; i++ ) {
+               double a = (int)floor(scale_direction_tmp[i]);
+               if ( scale_direction_tmp[i] - a > 0.0 )
+                  error(msg_str("axis numbers must be specified by an integer: '%g'", scale_direction_tmp[i]), c);
+               scale_direction.push_back((int)a);
+            }
+               
+            // pull out ratio
+            scale = scale_direction_tmp[2];
+            if ( scale == 0.0 )
+               scale = DBL_MIN;
+               
+            scale_direction_tmp.clear();
+               
+            for( int i=0; i<(int)scale_direction.size(); i++ ) {
+               if( scale_direction[i] > 2 )
                   error("ratio direction should be 0, 1 or 2", c);
-               for( int j=i+1; j<(int)ratio_direction.size(); j++ )
-                  if( ratio_direction[i] == ratio_direction[j] )
-                      error(msg_str("an axis number is specified more than once: '%d'", ratio_direction[j]), c);
+               for( int j=i+1; j<(int)scale_direction.size(); j++ )
+                  if( scale_direction[i] == scale_direction[j] )
+                      error(msg_str("an axis number is specified more than once: '%d'", scale_direction[j]), c);
             }      
             break;
             
          case 'C':
             id = get_arg_id(optarg, "polygons=1|suppress=2|force=3|normal=4", argmatch_add_id_maps, errmsg);
             if(id=="")
-               error(errmsg);
+               error(errmsg,c);
             convex_hull = atoi(id.c_str());
             break;
             
@@ -240,7 +247,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
          case 'g':
             id = get_arg_id(optarg, "edge=1|vertex=2", argmatch_add_id_maps, errmsg);
             if(id=="")
-               error(errmsg);
+               error(errmsg,c);
             patch = atoi(id.c_str()); 
             break;
             
@@ -290,6 +297,10 @@ public:
 		fill( scale, scale + 3, 0.0 );
 		fill( theta, theta + 3, 0.0 );
 		
+		// RK - added items
+		for( int i=0; i<3; i++ )
+		   sym_vec.push_back(vec3d(0.0,0.0,0.0));
+		
 		force_edge = false;
 		force_vertex = false;
 		
@@ -311,6 +322,11 @@ public:
 	   return ( scale[a] );
 	}
 	
+	double getTheta( const int &a )
+	{
+	   return ( theta[a] );
+	}
+	
 	void setPatch( const int &a )
 	{
 	   if ( a == 1 )
@@ -318,6 +334,51 @@ public:
 	   else
 	   if ( a == 2 )
 	      force_vertex = true;
+	}
+	
+   // RK - return polygon number of sides
+	int getN( const int &a ) {
+   	return ( getOrder( a ) * mult[ a ] );
+	}
+	
+	// RK - return angle_between_axes
+	double getAngleBetweenAxes( const int &axis1, const int &axis2 ) {
+	   return ( acos(vdot(sym_vec[axis1].unit(), sym_vec[axis2].unit())) );
+	}
+	
+	// RK - fill symvec here for angle_between_axes (used to be in makePolygons)
+	void fill_sym_vec( const bool &reverse ) {
+      // unit vectors on symmetry axes on centers of polygons
+      if ( ( p == 5 && q == 3 ) || ( p == 3 && q == 5 ) ) {
+         double a = sqrt((10.0-sqrt(20.0))/20.0);
+         double b = sqrt((10.0+sqrt(20.0))/20.0);
+         double c = sqrt((3.0-sqrt(5.0))/6.0);
+         double d = sqrt((3.0+sqrt(5.0))/6.0);
+         sym_vec[0] = vec3d( 0.0, a, b );
+         sym_vec[1] = vec3d( c, 0.0, d );
+         sym_vec[2] = vec3d( 0.0, 0.0, 1.0 );
+      }
+      else 
+      if ( ( p == 4 && q == 3 ) || ( p == 3 && q == 4 ) ) {
+         double a = sqrt(1.0/3.0);
+         double b = sqrt(0.5);
+         sym_vec[0] = vec3d( 0.0, 0.0, 1.0 );
+         sym_vec[1] = vec3d( a, a, a );
+         sym_vec[2] = vec3d( 0.0, b, b );
+      }
+      else
+      if ( p == 3 && q == 3 ) {
+         double a = sqrt(1.0/3.0);
+         sym_vec[0] = vec3d( a, a, a );
+         sym_vec[1] = vec3d( -a, a, a);
+         sym_vec[2] = vec3d( 0.0, 0.0, 1.0);
+      }
+      if ( reverse )
+         swap( sym_vec[0], sym_vec[1] );
+      
+      //for( int i=0; i<3; i++ )
+      //   fprintf(stderr,"%.17lf %.17lf %.17lf\n", sym_vec[i][0], sym_vec[i][1], sym_vec[i][2]);
+      //fprintf(stderr,"\n");
 	}
 	
 	// RK - wrapper for only one polygon
@@ -521,6 +582,9 @@ private:
 	
 	vec3d 	fund[3];
 	
+	// RK - added items
+   vector<vec3d> sym_vec;
+	
 	bool force_edge;
 	bool force_vertex;
 	bool old_tie;
@@ -583,7 +647,7 @@ double symmetro::getAlpha( const int &a, const int &b )
 	if( isVertexOn( a, b ) ) {
 		return 1.0;
 	} else {
-		double n = double( getOrder( a ) * mult[ a ] );
+		double n = double( getN( a ) );
 		return cos( M_PI / n );
 	}
 }
@@ -598,7 +662,7 @@ double symmetro::getLengthOn( const int &a, const int &b )
 	if( isVertexOn( a, b ) ) {
 		return scale[a];
 	} else {
-		double n = double( getOrder( a ) * mult[ a ] );
+		double n = double( getN( a ) );
 		/*
 		double al = sin( M_PI / n );
 		return atan( al * tan( scale[a] ) );
@@ -617,7 +681,7 @@ void symmetro::setLengthOn( const int &a, const int &b, const double &s )
 	if( isVertexOn( a, b ) ) {
 		scale[a] = s;
 	} else {
-		double n = double( getOrder( a ) * mult[ a ] );
+		double n = double( getN( a ) );
 		double al = cos( M_PI / n );
 		scale[a] = atan( tan( s ) / al );
 	}
@@ -635,8 +699,8 @@ void symmetro::tieTo( const int &a, const int &b )
 int symmetro::tie( const int &a, const int &b )
 {
 	double delta = getEdgeLength( a, b );
-	double na = double( getOrder( a ) * mult[a] );
-	double nb = double( getOrder( b ) * mult[b] );
+	double na = double( getN( a ) );
+	double nb = double( getN( b ) );
 
 	if( isEdgeOn( a, b ) && isEdgeOn( b, a ) ) {
 		double tpa = 1.0 / tan( M_PI / na );
@@ -801,7 +865,7 @@ void symmetro::debug()
    
    for( int i=0; i<3; i++ )
       if ( mult[i] )
-         fprintf(stderr,"axis %d polygon: %d-gon\n", i, getOrder(i)*mult[i]);
+         fprintf(stderr,"axis %d polygon: %d-gon\n", i, getN(i));
    fprintf(stderr,"\n");
 }
 
@@ -838,7 +902,7 @@ void symmetro::setTheta( const int &a, const bool &b )
 	if( !b ) {
 		theta[a] = 0.0;
 	} else {
-		int order = getOrder( a ) * mult[a];
+		int order = getN( a );
 
 		if( order > 0 ) {
 			theta[a] = M_PI / double(order);
@@ -989,43 +1053,10 @@ mat3d symmetro::match( const int &idx, const vec3d &pseg, const bool &reverse )
 // find the first 3 polygons. Antiprism takes it from there...
 vector<col_geom_v> symmetro::makePolygons( const bool &reverse )
 {
-   // unit vectors on symmetry axes on centers of polygons
-   vector<vec3d> sym_vec(3);
-   if ( ( p == 5 && q == 3 ) || ( p == 3 && q == 5 ) ) {
-      double a = sqrt((10.0-sqrt(20.0))/20.0);
-      double b = sqrt((10.0+sqrt(20.0))/20.0);
-      double c = sqrt((3.0-sqrt(5.0))/6.0);
-      double d = sqrt((3.0+sqrt(5.0))/6.0);
-      sym_vec[0] = vec3d( 0.0, a, b );
-      sym_vec[1] = vec3d( c, 0.0, d );
-      sym_vec[2] = vec3d( 0.0, 0.0, 1.0 );
-   }
-   else 
-   if ( ( p == 4 && q == 3 ) || ( p == 3 && q == 4 ) ) {
-      double a = sqrt(1.0/3.0);
-      double b = sqrt(0.5);
-      sym_vec[0] = vec3d( 0.0, 0.0, 1.0 );
-      sym_vec[1] = vec3d( a, a, a );
-      sym_vec[2] = vec3d( 0.0, b, b );
-   }
-   else
-   if ( p == 3 && q == 3 ) {
-      double a = sqrt(1.0/3.0);
-      sym_vec[0] = vec3d( a, a, a );
-      sym_vec[1] = vec3d( -a, a, a);
-      sym_vec[2] = vec3d( 0.0, 0.0, 1.0);
-   }
-   if ( reverse )
-      swap( sym_vec[0], sym_vec[1] );
-   
-//for( int i=0; i<3; i++ )
-//   fprintf(stderr,"%.17lf %.17lf %.17lf\n", sym_vec[i][0], sym_vec[i][1], sym_vec[i][2]);
-//fprintf(stderr,"\n");
-
    vector<col_geom_v> pgeom(3);
    
    for( int i=0; i<3; i++ ) {
-	   int n = getOrder( i ) * mult[i];
+	   int n = getN( i );
 	   // RK - added scale check. don't make polygon if scale is zero or nan
 	   if( n > 0 && ( scale[i] != 0.0 && !isnan(scale[i]) ) ) {
 	      // RK - tried to transform built in polygon but couldn't figure out the transforms
@@ -1046,7 +1077,7 @@ vector<col_geom_v> symmetro::makePolygons( const bool &reverse )
          pgeom[i].clear_all();
       }
    }
-	
+   
 	return pgeom;
 }
 
@@ -1235,7 +1266,7 @@ int main(int argc, char *argv[])
       }
    }
 
-   if ( fabs( opts.ratio ) > 0.0 && fabs( opts.ratio ) < epsilon )
+   if ( fabs( opts.scale ) > 0.0 && fabs( opts.scale ) < epsilon )
       scale_zero = true;
 
    // legacy code as object
@@ -1343,25 +1374,46 @@ int main(int argc, char *argv[])
    // does a propeller like operation
    for( int i=0; i<(int)opts.extra_rotation.size(); i++ )
       if ( s.getScale( i ) )
-         s.setTheta( i, deg2rad(opts.extra_rotation[i]) );
+         s.setTheta( i, s.getTheta( i ) + deg2rad(opts.extra_rotation[i]) );
+   
+   // calculate axes here      
+   s.fill_sym_vec( opts.reverse );
    
    // change ratio
-   if ( opts.ratio ) {
-      if ( (int)opts.ratio_direction.size() == 0 )
+   if ( opts.scale ) {
+      // edge scale math furnished by Adrian Rossiter
+      double angle_between_axes = s.getAngleBetweenAxes( opts.scale_direction[0], opts.scale_direction[1] );
+      if ( opts.verbose )
+         fprintf(stderr,"angle_between_axes = %.17lf\n",rad2deg(angle_between_axes));
+      
+      double p_ang0 = (2.0*M_PI/s.getN(opts.scale_direction[0]))/2.0;
+      double r0 = opts.scale*0.5/sin(p_ang0);
+      double p_ang1 = (2.0*M_PI/s.getN(opts.scale_direction[1]))/2.0;
+      double r1 = 0.5/sin(p_ang1);
+      double d = sqrt(r0*r0 + r1*r1 + 2.0*r0*r1*cos(angle_between_axes));
+      double a0 = acos((r1*r1 + d*d - r0*r0)/(2.0*r1*d));
+      double a1 = acos((r0*r0 + d*d - r1*r1)/(2.0*r0*d));
+   
+      if ( (int)opts.scale_direction.size() == 0 )
          opts.error("ratio direction not set",'d');
-      for( int i=0; i<(int)opts.ratio_direction.size(); i++ ) {
-         if ( s.getScale( opts.ratio_direction[i] ) == 0.0 )
-            opts.error(msg_str("scale of axis polygon '%d' is zero and cannot be used for scaling", opts.ratio_direction[i]), 'd');
+      for( int i=0; i<(int)opts.scale_direction.size(); i++ ) {
+         if ( s.getScale( opts.scale_direction[i] ) == 0.0 )
+            opts.error(msg_str("scale of axis polygon '%d' is zero and cannot be used for scaling", opts.scale_direction[i]), 'd');
       }
-
-      s.setScale( opts.ratio_direction[0], s.getScale( opts.ratio_direction[0] ) * opts.ratio  );
-
-      s.tieTo( opts.ratio_direction[1], opts.ratio_direction[0] );
+      if ( s.isEdgeOn( opts.scale_direction[0], opts.scale_direction[1] ) )
+         opts.error(msg_str("polygon '%d' and '%d' are not vertex connected", opts.scale_direction[0], opts.scale_direction[1]), 'd');
+         
+      s.setScale( opts.scale_direction[0], a0 );
+      s.setScale( opts.scale_direction[1], a1 );
+      
+      // old method only varies face center radii
+      //s.setScale( opts.scale_direction[0], s.getScale( opts.scale_direction[0] ) * opts.scale  );
+      //s.tieTo( opts.scale_direction[1], opts.scale_direction[0] );
 
       // scale third axis if present
       if ( num_multipliers == 3 ) {
          int third_axis = -1;
-         int sum = opts.ratio_direction[0] + opts.ratio_direction[1];
+         int sum = opts.scale_direction[0] + opts.scale_direction[1];
          if ( sum == 1 ) // 0,1
             third_axis = 2;
          else
@@ -1371,7 +1423,10 @@ int main(int argc, char *argv[])
          if ( sum == 3 ) // 1,2
             third_axis = 0;
          
-         s.tieTo( third_axis, opts.ratio_direction[1] );
+         if ( s.isEdgeOn( third_axis, opts.scale_direction[1] ) )
+            opts.error(msg_str("polygon '%d' and '%d' are not vertex connected", third_axis, opts.scale_direction[1]), 'd');
+         
+         s.tieTo( third_axis, opts.scale_direction[1] );
       }
    }
    

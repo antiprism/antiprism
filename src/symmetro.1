@@ -19,7 +19,8 @@ The end result vertices are all 1 unit from the polyhedron center
 .PP
 These types of polyhedra will either have all polygons touching on edge
 or all on vertices. In a case where a vertex meets an edge, a warning
-will be displayed and the model will be generated. In this case, convexhull will be suppressed. Try using \fB\-r\fR to rotate the polygons to possible
+will be displayed and the model will be generated. In this case, convex
+hull will be suppressed. Try using \fB\-r\fR to rotate the polygons to possible
 valid combinations. It is also possible to size polygons such that they
 intersect. If a collision is detected, convex hull will be suppressed
 .PP
@@ -42,20 +43,16 @@ separated by commas. e.g. 2,3,0
 .HP
 \fB\-r\fR <vals> which axis polygons are rotated to edge or on point. Up to
 .IP
-three values from 0, 1 and 2 seperated by commas. e.g. 0,1
-key word: v \- connect on vertex  e \- connect on edge
+three values from 0, 1 and 2 separated by commas. e.g. 0,1
+or use v \- connect on vertex  e \- connect on edge  (default: v)
 .HP
 \fB\-q\fR <vals> angles in degrees to add rotation. Given as three floating
 .IP
 point numbers separated by commas. e.g. 45,60,45
+.HP
+\fB\-S\fR <a,b,s> scale s, applied from axis a polygon applied to axis b polygon
 .TP
-\fB\-S\fR
-scale multiplier for axis 'a' in \fB\-d\fR
-.TP
-\fB\-d\fR <a,b>
-scale applied from axis a polygon applied to axis b polygon
-.TP
-e.g. 0,1
+e.g. 0,1,0.5
 (default: calculated for unit edge length)
 .HP
 \fB\-C\fR <mode> convex hull. polygons=1, suppress=2, force=3, normal=4
@@ -63,10 +60,7 @@ e.g. 0,1
 (default: 4)
 .TP
 \fB\-u\fR
-make the edge lengths 1 unit (performed before convex hull)
-.TP
-\fB\-g\fR <val>
-edge=1, vertex=2  force meeting at edge or vertex to true. patch
+make the average edge length 1 unit (performed before convex hull)
 .TP
 \fB\-V\fR
 verbose output
