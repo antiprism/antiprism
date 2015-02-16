@@ -536,6 +536,11 @@ bool cn_PnPoly(const geom_if &polygon, const vec3d &P, const int &idx, int &cros
 
 bool wn_PnPoly(const geom_if &polygon, const vec3d &P, const int &idx, int &winding_number, double eps)
 {
+   if ( !P.is_set() ) {
+      winding_number = 0;
+      return false;
+   }
+   
    const vector<vec3d> &verts = polygon.verts();
 
    int idx2 = (idx+2)%3;
