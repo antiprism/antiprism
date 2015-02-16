@@ -119,7 +119,7 @@ void symmetro_opts::usage()
 "               three values from 0, 1 and 2 separated by commas. e.g. 0,1\n"
 "               or use v - connect on vertex  e - connect on edge  (default: v)\n"
 "  -q <ang>  angles in degrees to add rotation. Angle applied to first 2\n"
-"               polygons in order. Not valid for 3 polygons or when scaling\n"
+"               polygons in order. Not valid for 3 polygons\n"
 "  -S <s,n,m> scale s, from axis n polygon applied to axis m polygon\n"
 "               if n and m are not specified, implies first 2 polygons in order\n"
 "               e.g. 0.5,0,1  (default: calculated for unit edge length)\n"
@@ -1122,14 +1122,8 @@ bool detect_collision( col_geom_v &geom )
    
    for( int i=0; i<(int)faces.size(); i++) {
       vector<int> face0 = faces[i];
-      // don't process digons
-      if ( face0.size() < 3 )
-         continue;
       for( int j=i+1; j<(int)faces.size(); j++) {
          vector<int> face1 = faces[j];
-         // don't process digons
-         if ( face1.size() < 3 )
-            continue;
 
          vec3d P, dir;
          if ( two_plane_intersect(  centroid(verts, face0), face_norm(verts, face0),
@@ -1471,8 +1465,6 @@ int main(int argc, char *argv[])
    
    // extra rotation
    if ( opts.extra_rotation ) {
-      if ( opts.scale )
-         opts.error("Extra rotation not valid when scale in use",'q');
       if ( num_multipliers != 2 )
          opts.error("Extra rotation only valid when 2 multipliers given",'q');
       vector<int> pos;
