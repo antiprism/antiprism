@@ -16,9 +16,8 @@ The number of sides of the polygons will be a multiple number of the
 axis reflection number. Axes are in order as 0, 1 and 2 corresponding
 to icosahedral {5,3,2}, octahedral {4,3,2}, or tetrahedral {3,3,2}
 The end result vertices are all 1 unit from the polyhedron center. Note
-that when all three multipliers are used the solution will generally
-not yield polygons with equal edge length. The one exception is the
-truncated octahedron
+that when all three multipliers are used there will generally be no
+solution. In general, it is better to specify only two multipliers
 .PP
 These types of polyhedra will either have all polygons touching on edge
 or all on vertices. In a case where a vertex meets an edge, a warning
@@ -48,15 +47,16 @@ separated by commas. e.g. 2,3,0
 .IP
 three values from 0, 1 and 2 separated by commas. e.g. 0,1
 or use v \- connect on vertex  e \- connect on edge  (default: v)
-.HP
-\fB\-q\fR <vals> angles in degrees to add rotation. Given as three floating
-.IP
-point numbers separated by commas. e.g. 45,60,45
-.HP
-\fB\-S\fR <a,b,s> scale s, applied from axis a polygon applied to axis b polygon
 .TP
-e.g. 0,1,0.5
-(default: calculated for unit edge length)
+\fB\-q\fR <ang>
+angles in degrees to add rotation. Angle applied to first 2
+.IP
+polygons in order. Not valid for 3 polygons or when scaling
+.HP
+\fB\-S\fR <s,n,m> scale s, from axis n polygon applied to axis m polygon
+.IP
+if n and m are not specified, implies first 2 polygons in order
+e.g. 0.5,0,1  (default: calculated for unit edge length)
 .HP
 \fB\-C\fR <mode> convex hull. polygons=1, suppress=2, force=3, normal=4
 .IP

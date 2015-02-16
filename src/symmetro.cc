@@ -50,7 +50,7 @@ class symmetro_opts: public prog_opts {
       vector<int> multipliers;
       vector<bool> theta;
       char rotation_method;
-      vector<double> extra_rotation;
+      double extra_rotation;
       vector<int> scale_direction;
       double scale;
       int convex_hull;
@@ -67,6 +67,7 @@ class symmetro_opts: public prog_opts {
                        sym(0),
                        reverse(false),
                        rotation_method('v'),
+                       extra_rotation(0.0),
                        scale(0.0),
                        convex_hull(4),
                        unitize(false),
@@ -97,9 +98,8 @@ void symmetro_opts::usage()
 "axis reflection number. Axes are in order as 0, 1 and 2 corresponding\n"
 "to icosahedral {5,3,2}, octahedral {4,3,2}, or tetrahedral {3,3,2}\n"
 "The end result vertices are all 1 unit from the polyhedron center. Note\n"
-"that when all three multipliers are used the solution will generally\n"
-"not yield polygons with equal edge length. The one exception is the\n"
-"truncated octahedron\n"
+"that when all three multipliers are used there will generally be no\n"
+"solution. In general, it is better to specify only two multipliers\n"
 "\n"
 "These types of polyhedra will either have all polygons touching on edge\n"
 "or all on vertices. In a case where a vertex meets an edge, a warning\n"
@@ -118,10 +118,11 @@ void symmetro_opts::usage()
 "  -r <vals> which axis polygons are rotated to edge or on point. Up to\n"
 "               three values from 0, 1 and 2 separated by commas. e.g. 0,1\n"
 "               or use v - connect on vertex  e - connect on edge  (default: v)\n"
-"  -q <vals> angles in degrees to add rotation. Given as three floating\n"
-"               point numbers separated by commas. e.g. 45,60,45\n"
-"  -S <a,b,s> scale s, applied from axis a polygon applied to axis b polygon\n"
-"               e.g. 0,1,0.5  (default: calculated for unit edge length)\n"
+"  -q <ang>  angles in degrees to add rotation. Angle applied to first 2\n"
+"               polygons in order. Not valid for 3 polygons or when scaling\n"
+"  -S <s,n,m> scale s, from axis n polygon applied to axis m polygon\n"
+"               if n and m are not specified, implies first 2 polygons in order\n"
+"               e.g. 0.5,0,1  (default: calculated for unit edge length)\n"
 "  -C <mode> convex hull. polygons=1, suppress=2, force=3, normal=4\n"
 "               (default: 4)\n"
 "  -u        make the average edge length 1 unit (performed before convex hull)\n"
@@ -145,7 +146,6 @@ void symmetro_opts::process_command_line(int argc, char **argv)
    char errmsg[MSG_SZ];
    
    string id;
-   vector<double> scale_direction_tmp;
    
    handle_long_opts(argc, argv);
 
@@ -187,6 +187,9 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             if(strchr("v", *optarg))
                rotation_method = *optarg;
             else {
+               // unset default rotation method
+               rotation_method = '\0';
+
                vector<int> theta_input;
                if(!read_int_list(optarg, theta_input, errmsg, true, 3))
                   error(errmsg, c);
@@ -202,39 +205,47 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             break;
             
          case 'q': // extra rotation to add to theta
-            if(!read_double_list(optarg, extra_rotation, errmsg, 3))
+            if(!read_double(optarg, &extra_rotation, errmsg))
                error(errmsg, c);
-            if((int)extra_rotation.size() != 3)
-               error("extra rotation values must be specified as three floating point numbers", c);
             break;
            
          case 'S': // scale direction and scale
+         {
+            vector<double> scale_direction_tmp;
             if(!read_double_list(optarg, scale_direction_tmp, errmsg, 3))
                error(errmsg, c);
-            
-            // place integer portions of possible doubles
-            for( int i=0; i<2; i++ ) {
-               double a = (int)floor(scale_direction_tmp[i]);
-               if ( scale_direction_tmp[i] - a > 0.0 )
-                  error(msg_str("axis numbers must be specified by an integer: '%g'", scale_direction_tmp[i]), c);
-               scale_direction.push_back((int)a);
-            }
                
             // pull out ratio
-            scale = scale_direction_tmp[2];
+            scale = scale_direction_tmp[0];
+            // if zero, make a minimum scale
             if ( scale == 0.0 )
-               scale = DBL_MIN;
-               
-            scale_direction_tmp.clear();
-               
-            for( int i=0; i<(int)scale_direction.size(); i++ ) {
-               if( scale_direction[i] > 2 )
-                  error("ratio direction should be 0, 1 or 2", c);
-               for( int j=i+1; j<(int)scale_direction.size(); j++ )
-                  if( scale_direction[i] == scale_direction[j] )
-                      error(msg_str("an axis number is specified more than once: '%d'", scale_direction[j]), c);
+               scale = epsilon;
+            
+            if ( scale_direction_tmp.size() == 2 ) {
+               error("scale takes 1 or 3 arguments",c);
+            }
+            else
+            if ( scale_direction_tmp.size() == 3 ) {           
+               // place integer portions of possible doubles
+               for( int i=0; i<2; i++ ) {
+                  int a = (int)floor(scale_direction_tmp[i+1]);
+                  //if ( scale_direction_tmp[i] - a > 0.0 )
+                  //   error(msg_str("axis numbers must be specified by an integer: '%g'", scale_direction_tmp[i+1]), c);
+                  scale_direction.push_back(a);
+               }
+                  
+               scale_direction_tmp.clear();
+                  
+               for( int i=0; i<(int)scale_direction.size(); i++ ) {
+                  if( scale_direction[i] > 2 )
+                     error("ratio direction should be 0, 1 or 2", c);
+                  for( int j=i+1; j<(int)scale_direction.size(); j++ )
+                     if( scale_direction[i] == scale_direction[j] )
+                         error(msg_str("an axis number is specified more than once: '%d'", scale_direction[j]), c);
+               }
             }      
             break;
+         }
             
          case 'C':
             id = get_arg_id(optarg, "polygons=1|suppress=2|force=3|normal=4", argmatch_add_id_maps, errmsg);
@@ -1111,12 +1122,21 @@ bool detect_collision( col_geom_v &geom )
    
    for( int i=0; i<(int)faces.size(); i++) {
       vector<int> face0 = faces[i];
-      for( int j=i; j<(int)faces.size(); j++) {
+      // don't process digons
+      if ( face0.size() < 3 )
+         continue;
+      for( int j=i+1; j<(int)faces.size(); j++) {
          vector<int> face1 = faces[j];
+         // don't process digons
+         if ( face1.size() < 3 )
+            continue;
+
          vec3d P, dir;
          if ( two_plane_intersect(  centroid(verts, face0), face_norm(verts, face0),
                                     centroid(verts, face1), face_norm(verts, face1),
                                     P, dir, epsilon ) ) {
+            if ( !P.is_set() )
+               continue;               
             // if two polygons intersect, see if intersection point is inside polygon
             vector<int> face_idxs;
             face_idxs.push_back(i);
@@ -1327,9 +1347,10 @@ int main(int argc, char *argv[])
                opts.theta[ axes[2] ] = true;
          }
       }
-   }   
+   }
    for( int i=0; i<(int)opts.theta.size(); i++ )
       s.setTheta( i, opts.theta[i] );
+      
    // RK - I think if used as a third multiplier, the 2-fold axis has greater than a square and edge on, this is alway true
    if ( !opts.patch && ( num_multipliers == 3 ) && ( opts.multipliers[2] * 2 > 4 ) ) {
       bool edge_on2 = s.isEdgeOn( axes[0], axes[2] ) && s.isEdgeOn( axes[2], axes[0] );
@@ -1380,16 +1401,25 @@ int main(int argc, char *argv[])
    else
       opts.error("automatic tie did not work"); // probably can't get here
    
-   // does a propeller like operation
-   for( int i=0; i<(int)opts.extra_rotation.size(); i++ )
-      if ( s.getScale( i ) )
-         s.setTheta( i, s.getTheta( i ) + deg2rad(opts.extra_rotation[i]) );
-   
    // calculate axes here      
    s.fill_sym_vec( opts.reverse );
    
    // change ratio
    if ( opts.scale ) {
+      if ( !opts.scale_direction.size() ) {
+         if ( opts.multipliers.size() == 1 )
+            opts.error("cannot scale when only one polygon is generated",'S');
+         int j = 0;
+         for( int i=0; i<(int)opts.multipliers.size(); i++ ) {
+            if ( j == 2 )
+               continue;
+            if ( opts.multipliers[i] ) {
+               opts.scale_direction.push_back(i);
+               j++;
+            }            
+         }
+      }   
+
       // edge scale math furnished by Adrian Rossiter
       double angle_between_axes = s.getAngleBetweenAxes( opts.scale_direction[0], opts.scale_direction[1] );
       if ( opts.verbose )
@@ -1407,10 +1437,10 @@ int main(int argc, char *argv[])
          opts.error("ratio direction not set",'d');
       for( int i=0; i<(int)opts.scale_direction.size(); i++ ) {
          if ( s.getScale( opts.scale_direction[i] ) == 0.0 )
-            opts.error(msg_str("scale of axis polygon '%d' is zero and cannot be used for scaling", opts.scale_direction[i]), 'd');
+            opts.error(msg_str("scale of axis polygon '%d' is zero and cannot be used for scaling", opts.scale_direction[i]), 'S');
       }
       if ( s.isEdgeOn( opts.scale_direction[0], opts.scale_direction[1] ) )
-         opts.error(msg_str("polygon '%d' and '%d' are not vertex connected", opts.scale_direction[0], opts.scale_direction[1]), 'd');
+         opts.error(msg_str("polygon '%d' and '%d' are not vertex connected", opts.scale_direction[0], opts.scale_direction[1]), 'S');
          
       s.setScale( opts.scale_direction[0], a0 );
       s.setScale( opts.scale_direction[1], a1 );
@@ -1437,6 +1467,24 @@ int main(int argc, char *argv[])
          
          s.tieTo( third_axis, opts.scale_direction[1] );
       }
+   }
+   
+   // extra rotation
+   if ( opts.extra_rotation ) {
+      if ( opts.scale )
+         opts.error("Extra rotation not valid when scale in use",'q');
+      if ( num_multipliers != 2 )
+         opts.error("Extra rotation only valid when 2 multipliers given",'q');
+      vector<int> pos;
+      for( int i=0; i<(int)opts.multipliers.size(); i++ ) {
+         if ( opts.multipliers[i] ) {
+            pos.push_back(i);
+         }            
+      }
+        
+      s.setTheta( pos[0], s.getTheta( pos[0] ) + deg2rad(opts.extra_rotation) );
+      double opposite_rotation = -((opts.extra_rotation*s.getOrder(pos[0]))/s.getOrder(pos[1]));
+      s.setTheta( pos[1], s.getTheta( pos[1] ) + deg2rad(opposite_rotation) );
    }
    
    vector<col_geom_v> pgeom = s.makePolygons( opts.reverse );
