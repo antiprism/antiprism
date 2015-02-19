@@ -536,7 +536,7 @@ bool cn_PnPoly(const geom_if &polygon, const vec3d &P, const int &idx, int &cros
 
 bool wn_PnPoly(const geom_if &polygon, const vec3d &P, const int &idx, int &winding_number, double eps)
 {
-   if ( !P.is_set() ) {
+   if ( !P.is_set() || !polygon.faces().size() ) {
       winding_number = 0;
       return false;
    }

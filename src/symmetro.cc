@@ -48,14 +48,12 @@ class symmetro_opts: public prog_opts {
       int sym;
       bool reverse;
       vector<int> multipliers;
-      vector<bool> theta;
-      char rotation_method;
+      int rotation_type;
       double extra_rotation;
       vector<int> scale_direction;
       double scale;
       int convex_hull;
       bool unitize;
-      int patch;
       col_val axis_0_color;
       col_val axis_1_color;
       col_val axis_2_color;
@@ -66,12 +64,11 @@ class symmetro_opts: public prog_opts {
       symmetro_opts(): prog_opts("symmetro"),
                        sym(0),
                        reverse(false),
-                       rotation_method('v'),
+                       rotation_type(1),
                        extra_rotation(0.0),
                        scale(0.0),
                        convex_hull(4),
                        unitize(false),
-                       patch(0),
                        axis_0_color(col_val(255,0,0,255)), // red
                        axis_1_color(col_val(0,0,255,255)), // blue
                        axis_2_color(col_val(0,100,0,255)), // darkgreen
@@ -97,16 +94,15 @@ void symmetro_opts::usage()
 "The number of sides of the polygons will be a multiple number of the\n"
 "axis reflection number. Axes are in order as 0, 1 and 2 corresponding\n"
 "to icosahedral {5,3,2}, octahedral {4,3,2}, or tetrahedral {3,3,2}\n"
-"The end result vertices are all 1 unit from the polyhedron center. Note\n"
+"The end result vertices are all 1 unit from the polyhedron center. Using\n"
+"three multipliers is only possible with vertex connnected models. Note\n"
 "that when all three multipliers are used there will generally be no\n"
-"solution. In general, it is better to specify only two multipliers\n"
+"unit edged solution. In general, it is better to specify only two multipliers\n"
 "\n"
 "These types of polyhedra will either have all polygons touching on edge\n"
-"or all on vertices. In a case where a vertex meets an edge, a warning\n"
-"will be displayed and the model will be generated. In this case, convex\n"
-"hull will be suppressed. Try using -r to rotate the polygons to possible\n"
-"valid combinations. It is also possible to size polygons such that they\n"
-"intersect. If a collision is detected, convex hull will be suppressed\n" 
+"or all on vertices. This is controlled by the -r option. It is also possible\n"
+"to size polygons such that they intersect. If a collision is detected, convex\n"
+"hull will be suppressed\n" 
 "\n"
 "Options\n"
 "%s"
@@ -115,18 +111,15 @@ void symmetro_opts::usage()
 "  -R        reverse p and q. e.g. {5,3,2} becomes {3,5,2}\n"
 "  -m <vals> multipliers for axis polygons. Given as three integers\n"
 "               separated by commas. e.g. 2,3,0\n"
-"  -r <vals> which axis polygons are rotated to edge or on point. Up to\n"
-"               three values from 0, 1 and 2 separated by commas. e.g. 0,1\n"
-"               or use v - connect on vertex  e - connect on edge  (default: v)\n"
-"  -q <ang>  angles in degrees to add rotation. Angle applied to first 2\n"
-"               polygons in order. Not valid for 3 polygons\n"
+"  -r <type> face rotation type: vertex=1, edge=2  (default: 1)\n"
+//"  -q <ang>  angles in degrees to add rotation. Angle applied to first 2\n"
+//"               polygons in order. Not valid for 3 polygons\n"
 "  -S <s,n,m> scale s, from axis n polygon applied to axis m polygon\n"
 "               if n and m are not specified, implies first 2 polygons in order\n"
-"               e.g. 0.5,0,1  (default: calculated for unit edge length)\n"
+"               e.g. 0.5,1,0  (default: calculated for unit edge length)\n"
 "  -C <mode> convex hull. polygons=1, suppress=2, force=3, normal=4\n"
 "               (default: 4)\n"
 "  -u        make the average edge length 1 unit (performed before convex hull)\n"
-//"  -g <val>  edge=1, vertex=2  force meeting at edge or vertex to true. patch\n"
 "  -V        verbose output\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
@@ -177,31 +170,11 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                warning("model will contain digons");
             break;
             
-         case 'r': // theta (rotate from side to point)
-            for( int i=0; i<3; i++ )
-               theta.push_back(false);
-               
-            if(strchr("e", *optarg))
-               rotation_method = *optarg;
-            else
-            if(strchr("v", *optarg))
-               rotation_method = *optarg;
-            else {
-               // unset default rotation method
-               rotation_method = '\0';
-
-               vector<int> theta_input;
-               if(!read_int_list(optarg, theta_input, errmsg, true, 3))
-                  error(errmsg, c);
-               for( int i=0; i<(int)theta_input.size(); i++ ) {
-                  if( theta_input[i] > 2 )
-                     error("axes specified for rotation should be 0, 1 or 2", c);
-                  for( int j=i+1; j<(int)theta_input.size(); j++ )
-                     if( theta_input[i] == theta_input[j] )
-                         error(msg_str("an axis number is specified more than once: '%d'", theta_input[j]), c);
-                  theta[ theta_input[i] ] = true;
-               }
-            }  
+         case 'r': // for theta (rotate from side to point)
+            id = get_arg_id(optarg, "vertex=1|edge=2", argmatch_add_id_maps, errmsg);
+            if(id=="")
+               error(errmsg);
+            rotation_type = atoi(id.c_str());
             break;
             
          case 'q': // extra rotation to add to theta
@@ -256,13 +229,6 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             
          case 'u':
             unitize = true;
-            break;
-            
-         case 'g':
-            id = get_arg_id(optarg, "edge=1|vertex=2", argmatch_add_id_maps, errmsg);
-            if(id=="")
-               error(errmsg,c);
-            patch = atoi(id.c_str()); 
             break;
             
          case 'x':
@@ -515,19 +481,16 @@ public:
 	}
 	
 	// RK - error checking wrapper for tie()
-	int tie3( const int &a, const int &b, const int &c, char *errmsg)
+	int tie3( const int &a, const int &b, const int &c)
 	{
 	   int ret = 0;
-	   if( isEdgeOn( a, b ) && isEdgeOn( b, a ) && isEdgeOn( a, c ) && isEdgeOn( c, a ) && isEdgeOn( b, c ) && isEdgeOn( c, b ) )
-	      ret = 1;
-	   else
 	   if( isVertexOn( a, b ) && isVertexOn( b, a ) && isVertexOn( a, c ) && isVertexOn( c, a ) && isVertexOn( b, c ) && isVertexOn( c, b ) )
 	      ret = 1;
+	   else
+	   if( isEdgeOn( a, b ) && isEdgeOn( b, a ) && isEdgeOn( a, c ) && isEdgeOn( c, a ) && isEdgeOn( b, c ) && isEdgeOn( c, b ) )
+	      ret = 2;
 	      
 	   tie();
-	   
-	   if (!ret)
-	      strcpy(errmsg, "to tie three polygons correctly, they must all meet at edges or vertices");
 	   
 	   return ret;
 	}
@@ -1087,7 +1050,7 @@ vector<col_geom_v> symmetro::makePolygons( const bool &reverse )
       }
       
       // epsilon size faces are because scale was set at 0
-      if ( fabs( scale[i] ) < epsilon ) {
+      if ( fabs( scale[i] ) <= epsilon ) {
          pgeom[i].clear_all();
       }
    }
@@ -1115,15 +1078,21 @@ bool is_point_on_polygon_edges(const geom_if &polygon, const vec3d &P, const dou
    return answer;
 }
 
-bool detect_collision( col_geom_v &geom )
+bool detect_collision( const col_geom_v &geom )
 {
    const vector<vector<int> > &faces = geom.faces();
    const vector<vec3d> &verts = geom.verts();
    
+   // don't test digons
    for( int i=0; i<(int)faces.size(); i++) {
       vector<int> face0 = faces[i];
+      // digons won't work in plane intersection
+      if ( face0.size() < 3 )
+         continue;
       for( int j=i+1; j<(int)faces.size(); j++) {
          vector<int> face1 = faces[j];
+         if ( face1.size() < 3 )
+            continue;
 
          vec3d P, dir;
          if ( two_plane_intersect(  centroid(verts, face0), face_norm(verts, face0),
@@ -1247,11 +1216,8 @@ int main(int argc, char *argv[])
 {
    symmetro_opts opts;
    opts.process_command_line(argc, argv);
-
-   char errmsg[MSG_SZ];
  
    // some pre-checking  
-   bool scale_zero = false;
    int num_multipliers = 0;
    int total_multiples = 0;
    vector<int> axes;
@@ -1265,14 +1231,9 @@ int main(int argc, char *argv[])
    if ( num_multipliers == 0 )
       opts.error("no multipliers specified",'m');
       
-   // theta must exist
-   if ( (int)opts.theta.size() == 0 )
-      for( int i=0; i<3; i++ )
-         opts.theta.push_back(false);
-
    // control reverse when generating only one polygon on axis 0 and 1
    if ( ( num_multipliers == 1 ) && ( total_multiples > 1 ) ) {
-      if ( opts.multipliers[ 2 ] && opts.sym == 2 && ( !(opts.theta[ 2 ] || opts.rotation_method == 'v') ) ) {
+      if ( opts.multipliers[ 2 ] && opts.sym == 2 && opts.rotation_type == 2 ) {
          opts.reverse = is_even( opts.multipliers[ 2 ] ) ? true : false;
       }
       else 
@@ -1282,9 +1243,6 @@ int main(int argc, char *argv[])
             opts.reverse = true;
       }
    }
-
-   if ( fabs( opts.scale ) > 0.0 && fabs( opts.scale ) < epsilon )
-      scale_zero = true;
 
    // legacy code as object
    symmetro s;
@@ -1317,48 +1275,33 @@ int main(int argc, char *argv[])
       opts.warning("when all three multipliers are used, polygons will not be of equal edge length",'m');
    
    // for edge on model or vertex on model
-   if ( opts.rotation_method ) {
-      if ( num_multipliers == 1 ) {
-         int place = opts.multipliers[ 0 ] ? 0 : ( opts.multipliers[ 1 ] ? 1 : 2 );
-         if (opts.rotation_method == 'e' )
-            opts.theta[ place ] = true;
-         // patch for octahedral, is reversed when even
-         if ( opts.sym == 2 && is_even( opts.multipliers[ 2 ] ) )
-            opts.theta[ 2 ] = !opts.theta[ 2 ];
-      }
-      else
-      if ( num_multipliers > 1 ) {
-         bool edge_on0 = s.isEdgeOn( axes[0], axes[1] );
-         bool edge_on1 = s.isEdgeOn( axes[1], axes[0] );
-         if ( ( opts.rotation_method == 'e' && !edge_on0 ) || ( opts.rotation_method == 'v' && edge_on0 ) )
-            opts.theta[ axes[0] ] = true;
-         if ( ( opts.rotation_method == 'e' && !edge_on1 ) || ( opts.rotation_method == 'v' && edge_on1 ) )
-            opts.theta[ axes[1] ] = true;
-         // only when 2-fold axis is used
-         if ( num_multipliers == 3 ) {
-            bool edge_on2 = s.isEdgeOn( axes[0], axes[2] );
-            if ( ( opts.rotation_method == 'e' && !edge_on2 ) || ( opts.rotation_method == 'v' && edge_on2 ) )
-               opts.theta[ axes[2] ] = true;
-         }
+   vector<bool> theta(3);
+   if ( num_multipliers == 1 ) {
+      int place = opts.multipliers[ 0 ] ? 0 : ( opts.multipliers[ 1 ] ? 1 : 2 );
+      if (opts.rotation_type == 2 )
+         theta[ place ] = true;
+      // patch for octahedral, is reversed when even
+      if ( opts.sym == 2 && is_even( opts.multipliers[ 2 ] ) )
+         theta[ 2 ] = !theta[ 2 ];
+   }
+   else
+   if ( num_multipliers > 1 ) {
+      bool edge_on0 = s.isEdgeOn( axes[0], axes[1] );
+      bool edge_on1 = s.isEdgeOn( axes[1], axes[0] );
+      if ( ( opts.rotation_type == 2 && !edge_on0 ) || ( opts.rotation_type == 1 && edge_on0 ) )
+         theta[ axes[0] ] = true;
+      if ( ( opts.rotation_type == 2 && !edge_on1 ) || ( opts.rotation_type == 1 && edge_on1 ) )
+         theta[ axes[1] ] = true;
+      // only when 2-fold axis is used
+      if ( num_multipliers == 3 ) {
+         bool edge_on2 = s.isEdgeOn( axes[0], axes[2] );
+         if ( ( opts.rotation_type == 2 && !edge_on2 ) || ( opts.rotation_type == 1 && edge_on2 ) )
+            theta[ axes[2] ] = true;
       }
    }
-   for( int i=0; i<(int)opts.theta.size(); i++ )
-      s.setTheta( i, opts.theta[i] );
-      
-   // RK - I think if used as a third multiplier, the 2-fold axis has greater than a square and edge on, this is alway true
-   if ( !opts.patch && ( num_multipliers == 3 ) && ( opts.multipliers[2] * 2 > 4 ) ) {
-      bool edge_on2 = s.isEdgeOn( axes[0], axes[2] ) && s.isEdgeOn( axes[2], axes[0] );
-      if ( edge_on2 && opts.convex_hull > 3 ) {
-         opts.warning("when axis 2 multiplier is greater than 2, model will not close");
-         opts.warning("convex hull is suppressed");
-         opts.convex_hull = 2;
-      }
-   }
-   
-   // can't set patch until here
-   if ( opts.patch )
-      s.setPatch( opts.patch );
-      
+   for( int i=0; i<(int)theta.size(); i++ )
+      s.setTheta( i, theta[i] );
+
    // do tie completely automatic based on multipliers
    vector<int> auto_tie;
    for( int i=0; i<(int)opts.multipliers.size(); i++ )
@@ -1366,26 +1309,17 @@ int main(int argc, char *argv[])
          auto_tie.push_back(i);
          
    if( (int)auto_tie.size() == 3 ) {
-      if ( !s.tie3( 0, 1, 2, errmsg ) ) {
-         opts.warning(errmsg);
-         if ( opts.convex_hull > 3 ) {
-            opts.warning("convex hull is suppressed");
-            opts.convex_hull = 2;
-         }
-      }
+      if ( opts.rotation_type == 2 )
+         opts.error("tying 3 edge connected polygons has no solution");
+         
+      int ret = s.tie3( 0, 1, 2 );
+      if ( ret == 0 || ret == 2 ) // probably can't be zero
+         opts.error("not all polygons meet on vertices");        
    }
    else
    if( (int)auto_tie.size() == 2 ) {
-      if ( !s.tie( auto_tie[0], auto_tie[1] ) ) {
-         // RK - catch if tie(a,b) failed. Try to tie all three
-         s.tie3( 0, 1, 2, errmsg ); // will be in error. just for unit vector solution
-         if ( !scale_zero ) { // silence warnings
-            opts.warning("tie(a,b) FAILED because edge meets a vertex. Trying tie(a,b,c)");
-            if ( opts.convex_hull > 3 ) {
-               opts.warning("convex hull is suppressed");
-               opts.convex_hull = 2;
-            }
-         }
+      if ( !s.tie( auto_tie[0], auto_tie[1] ) ) { // probably should not error
+         opts.error("not all polygons meet on vertices or edges"); 
       }
    }
    else
@@ -1434,7 +1368,7 @@ int main(int argc, char *argv[])
             opts.error(msg_str("scale of axis polygon '%d' is zero and cannot be used for scaling", opts.scale_direction[i]), 'S');
       }
       if ( s.isEdgeOn( opts.scale_direction[0], opts.scale_direction[1] ) )
-         opts.error(msg_str("polygon '%d' and '%d' are not vertex connected", opts.scale_direction[0], opts.scale_direction[1]), 'S');
+         opts.error(msg_str("polygon '%d' and '%d' are not vertex connected and cannot be used for scaling", opts.scale_direction[0], opts.scale_direction[1]), 'S');
          
       s.setScale( opts.scale_direction[0], a0 );
       s.setScale( opts.scale_direction[1], a1 );
@@ -1456,8 +1390,8 @@ int main(int argc, char *argv[])
          if ( sum == 3 ) // 1,2
             third_axis = 0;
          
-         if ( s.isEdgeOn( third_axis, opts.scale_direction[1] ) )
-            opts.error(msg_str("polygon '%d' and '%d' are not vertex connected", third_axis, opts.scale_direction[1]), 'd');
+         if ( s.isEdgeOn( third_axis, opts.scale_direction[1] ) ) // this cannot happen anymore
+            opts.error(msg_str("polygon '%d' and '%d' are not vertex connected and cannot be used for scaling", third_axis, opts.scale_direction[1]), 'S');
          
          s.tieTo( third_axis, opts.scale_direction[1] );
       }

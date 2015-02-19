@@ -15,16 +15,15 @@ the symmetry axes of Icosahedral, Octahedral, or Tetrahedral symmetry.
 The number of sides of the polygons will be a multiple number of the
 axis reflection number. Axes are in order as 0, 1 and 2 corresponding
 to icosahedral {5,3,2}, octahedral {4,3,2}, or tetrahedral {3,3,2}
-The end result vertices are all 1 unit from the polyhedron center. Note
+The end result vertices are all 1 unit from the polyhedron center. Using
+three multipliers is only possible with vertex connnected models. Note
 that when all three multipliers are used there will generally be no
-solution. In general, it is better to specify only two multipliers
+unit edged solution. In general, it is better to specify only two multipliers
 .PP
 These types of polyhedra will either have all polygons touching on edge
-or all on vertices. In a case where a vertex meets an edge, a warning
-will be displayed and the model will be generated. In this case, convex
-hull will be suppressed. Try using \fB\-r\fR to rotate the polygons to possible
-valid combinations. It is also possible to size polygons such that they
-intersect. If a collision is detected, convex hull will be suppressed
+or all on vertices. This is controlled by the \fB\-r\fR option. It is also possible
+to size polygons such that they intersect. If a collision is detected, convex
+hull will be suppressed
 .PP
 Options
 .HP
@@ -42,21 +41,14 @@ reverse p and q. e.g. {5,3,2} becomes {3,5,2}
 \fB\-m\fR <vals> multipliers for axis polygons. Given as three integers
 .IP
 separated by commas. e.g. 2,3,0
-.HP
-\fB\-r\fR <vals> which axis polygons are rotated to edge or on point. Up to
-.IP
-three values from 0, 1 and 2 separated by commas. e.g. 0,1
-or use v \- connect on vertex  e \- connect on edge  (default: v)
 .TP
-\fB\-q\fR <ang>
-angles in degrees to add rotation. Angle applied to first 2
-.IP
-polygons in order. Not valid for 3 polygons
+\fB\-r\fR <type> face rotation type: vertex=1, edge=2
+(default: 1)
 .HP
 \fB\-S\fR <s,n,m> scale s, from axis n polygon applied to axis m polygon
 .IP
 if n and m are not specified, implies first 2 polygons in order
-e.g. 0.5,0,1  (default: calculated for unit edge length)
+e.g. 0.5,1,0  (default: calculated for unit edge length)
 .HP
 \fB\-C\fR <mode> convex hull. polygons=1, suppress=2, force=3, normal=4
 .IP
