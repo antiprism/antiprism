@@ -1348,6 +1348,13 @@ int main(int argc, char *argv[])
          }
       }   
 
+      for( int i=0; i<(int)opts.scale_direction.size(); i++ ) {
+         if ( s.getScale( opts.scale_direction[i] ) == 0.0 )
+            opts.error(msg_str("scale of axis polygon '%d' is zero and cannot be used for scaling", opts.scale_direction[i]), 'S');
+      }
+      if ( s.isEdgeOn( opts.scale_direction[0], opts.scale_direction[1] ) )
+         opts.error(msg_str("polygon '%d' and '%d' are not vertex connected and cannot be used for scaling", opts.scale_direction[0], opts.scale_direction[1]), 'S');
+
       // edge scale math furnished by Adrian Rossiter
       double angle_between_axes = s.getAngleBetweenAxes( opts.scale_direction[0], opts.scale_direction[1] );
       if ( opts.verbose )
@@ -1360,16 +1367,7 @@ int main(int argc, char *argv[])
       double d = sqrt(r0*r0 + r1*r1 + 2.0*r0*r1*cos(angle_between_axes));
       double a0 = acos((r1*r1 + d*d - r0*r0)/(2.0*r1*d));
       double a1 = acos((r0*r0 + d*d - r1*r1)/(2.0*r0*d));
-   
-      if ( (int)opts.scale_direction.size() == 0 )
-         opts.error("ratio direction not set",'d');
-      for( int i=0; i<(int)opts.scale_direction.size(); i++ ) {
-         if ( s.getScale( opts.scale_direction[i] ) == 0.0 )
-            opts.error(msg_str("scale of axis polygon '%d' is zero and cannot be used for scaling", opts.scale_direction[i]), 'S');
-      }
-      if ( s.isEdgeOn( opts.scale_direction[0], opts.scale_direction[1] ) )
-         opts.error(msg_str("polygon '%d' and '%d' are not vertex connected and cannot be used for scaling", opts.scale_direction[0], opts.scale_direction[1]), 'S');
-         
+               
       s.setScale( opts.scale_direction[0], a0 );
       s.setScale( opts.scale_direction[1], a1 );
       
