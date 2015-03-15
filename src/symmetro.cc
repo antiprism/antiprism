@@ -47,6 +47,8 @@ class symmetro_opts: public prog_opts {
    public:
       int sym;
       vector<int> multipliers;
+      vector<int> n;
+      vector<int> d;
       double rotation;
       vector<int> scale_direction;
       double scale;
@@ -63,7 +65,7 @@ class symmetro_opts: public prog_opts {
                        sym(0),
                        rotation(0.0),
                        scale(0.0),
-                       convex_hull(4),
+                       convex_hull(0),
                        unitize(false),
                        axis_0_color(col_val(255,0,0,255)), // red
                        axis_1_color(col_val(0,0,255,255)), // blue
@@ -96,10 +98,14 @@ void symmetro_opts::usage()
 "\n"
 "Options\n"
 "%s"
-"  -s <type> symmetry type of Symmetrohedra. sets {p,q}\n"
-"               icosahedral {5,3}, octahedral {4,3}, or tetrahedral {3,3}\n"
+"  -s <type> symmetry type of Symmetrohedra. sets {p,q,2}\n"
+"               icosahedral {5,3,2}, octahedral {4,3,2}, or tetrahedral {3,3,2}\n"
 "  -m <vals> multipliers for axis polygons. Given as three integers\n"
 "               separated by commas. One multiplier must be 0. e.g. 2,3,0\n"
+"  -n <frac> Or enter values as three comma delimited n/d values. n much be a\n"
+"               multple of p. One value of n must be 0. e.g. 5/2,3/1,0\n"
+"               Convex hull is supressed if a value of d is greater than 1\n"
+"               note: -n and -m are mutually exclusive options\n"
 "  -r <val>  A value which is an amount of rotation given to polygons. A value\n"
 "               of zero turns polygons on vertex. A value of 1 turns them on edge\n"
 "               or give a face rotation type: vertex=0, edge=1  (default: 0)\n"
@@ -128,10 +134,11 @@ void symmetro_opts::process_command_line(int argc, char **argv)
    char errmsg[MSG_SZ];
    
    string id;
+   int m_or_n = 0;
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hs:m:r:S:C:ux:y:z:w:Vo:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hs:m:n:r:S:C:ux:y:z:w:Vo:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -153,7 +160,60 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             if( multipliers[2] == 1 )
                //error("multiplier for axis 2 cannot be 1", c);
                warning("model will contain digons");
+            m_or_n++;
             break;
+            
+         case 'n': {
+            char parse_key1[] = ",";
+            char parse_key2[] = "/";
+            
+            // memory pointers for strtok_r
+            char *tok_ptr1;
+            char *tok_ptr2;
+               
+            char *ptok1 = strtok_r(optarg,parse_key1,&tok_ptr1);
+            while( ptok1 != NULL ) {
+               int n_part;
+               int d_part;
+               
+               char *ptok2 = strtok_r(ptok1,parse_key2,&tok_ptr2);
+               int count = 0;
+               while( ptok2 != NULL ) {
+                  if ( count == 0 ) {
+                     if(!read_int(ptok2, &n_part, errmsg))
+                        error(errmsg, "n/d (n part)");
+                        
+                     if (n_part<0)
+                        error("n of n/d must be non-negative",'n');
+                     n.push_back(n_part);
+                  }
+                  else
+                  if (count == 1 ) {
+                     if(!read_int(ptok2, &d_part, errmsg))
+                        error(errmsg, "n/d (d part)");
+                        
+                     if (d_part<=0)
+                        error("d of n/d must be positive",'n');
+                     d.push_back(d_part);
+                  }
+                  
+                  ptok2 = strtok_r(NULL,parse_key2,&tok_ptr2);
+                  count++;
+               }
+               
+               // if there is no denominator then it is 1
+               if ( (int)n.size() > (int)d.size() )
+                  d.push_back(1);               
+                
+               ptok1 = strtok_r(NULL,parse_key1,&tok_ptr1);
+               count++;
+            }
+            
+            if( (int)n.size()!=3 )
+               error("specifying by fraction must be 3 comma delimited entries",'n');
+            m_or_n++;
+            break;
+         }
             
          case 'r': // rotate from side to point
             id = get_arg_id(optarg, "vertex=0|edge=1", argmatch_add_id_maps, errmsg);
@@ -252,6 +312,9 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             error("unknown command line error");
       }
    }
+   
+   if ( m_or_n > 1 )
+      error("option n cannot be used with option m",'n');
    
    if(argc-optind > 0)
       error("too many arguments");
@@ -391,8 +454,8 @@ vector<col_geom_v> symmetro::makePolygons( const symmetro_opts &opts )
       }            
    }
    
-   double r0 = scales[0] * circumradius( getN(axis[0]), 1.0 );
-   double r1 = scales[1] * circumradius( getN(axis[1]), 1.0 );
+   double r0 = scales[0] * circumradius( getN(axis[0]), opts.d[0] );
+   double r1 = scales[1] * circumradius( getN(axis[1]), opts.d[1] );
 
    double angle_between_axes = getAngleBetweenAxes( axis[0], axis[1] );
    if ( opts.verbose )
@@ -429,14 +492,15 @@ vector<col_geom_v> symmetro::makePolygons( const symmetro_opts &opts )
    for( int i=0; i<2; i++ ) {
       int j = axis[i];
 	   int n = getN(j);
+	   int d = opts.d[j];
 	   if( (n > 0) && (scales[i] > epsilon) ) {
          for( int idx = 0; idx < n; ++idx ) {
             if ( i == 0 ) {
-	            pgeom[j].add_vert( mat3d::rot(vec3d(0, 0, 1), idx * angle(n,1.0)) * P );
+	            pgeom[j].add_vert( mat3d::rot(vec3d(0, 0, 1), idx * angle(n,d)) * P );
 	         }
 	         else
 	         if ( i == 1 ) {
-	            pgeom[j].add_vert( rot_inv * mat3d::rot(vec3d(0, 0, 1), idx * angle(n,1.0)) * Q );
+	            pgeom[j].add_vert( rot_inv * mat3d::rot(vec3d(0, 0, 1), idx * angle(n,d)) * Q );
 	         }
          }
 
@@ -616,8 +680,51 @@ int main(int argc, char *argv[])
 {
    symmetro_opts opts;
    opts.process_command_line(argc, argv);
+   
+   symmetro s;
+   
+   if ( opts.sym == 1 )
+      s.setSym( 5, 3 );
+   else
+   if ( opts.sym == 2 )
+      s.setSym( 4, 3 );
+   else
+   if ( opts.sym == 3 )
+      s.setSym( 3, 3 );
+   else
+      opts.error("symmetry type not set",'s');
  
-   // some pre-checking  
+   // some pre-checking    
+   // d must be filled in any case
+   if ( !(int)opts.d.size() ) {
+      for( int i=0; i<3; i++ )
+         opts.d.push_back(1);
+   }
+ 
+   // if option -n was used, convert n/d to multipliers
+   if ( (int)opts.n.size() ) {
+      for( int i=0; i<3; i++ ) {
+         if ( opts.n[i]%s.getOrder(i) != 0 )
+            opts.error(msg_str("for argment '%d/%d', n is not a multiple of %d", opts.n[i], opts.d[i], s.getOrder(i)), 'n');
+         opts.multipliers.push_back(opts.n[i] / s.getOrder(i));
+      }
+   }
+   
+   // if convex_hull is not set
+   if ( !opts.convex_hull ) {
+      for( int i=0; i<3; i++ ) {
+         if ( opts.d[i] > 1 ) {
+            // supress convex hull
+            opts.convex_hull = 2;
+            opts.warning("star polygons detected so convex hull is supressed");
+            break;
+         }
+      }
+   }
+   // if still not set, convex hull is set to normal
+   if ( !opts.convex_hull )
+      opts.convex_hull = 4;
+   
    int num_multipliers = 0;
    for( int i=0; i<(int)opts.multipliers.size(); i++ ) {
       if ( opts.multipliers[i]>0 )
@@ -649,20 +756,6 @@ int main(int argc, char *argv[])
       
       opts.scale_direction.push_back(second_direction);
    }
-      
-   symmetro s;
-   
-   if ( opts.sym == 1 ) {
-      s.setSym( 5, 3 );
-   }
-   else
-   if ( opts.sym == 2 )
-      s.setSym( 4, 3 );
-   else
-   if ( opts.sym == 3 )
-      s.setSym( 3, 3 );
-   else
-      opts.error("symmetry type not set",'s');
    
    for( int i=0; i<(int)opts.multipliers.size(); i++ ) {
       s.setMult( i, opts.multipliers[i] );

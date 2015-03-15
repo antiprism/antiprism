@@ -25,13 +25,19 @@ Options
 .HP
 \fB\-\-version\fR version information
 .HP
-\fB\-s\fR <type> symmetry type of Symmetrohedra. sets {p,q}
+\fB\-s\fR <type> symmetry type of Symmetrohedra. sets {p,q,2}
 .IP
-icosahedral {5,3}, octahedral {4,3}, or tetrahedral {3,3}
+icosahedral {5,3,2}, octahedral {4,3,2}, or tetrahedral {3,3,2}
 .HP
 \fB\-m\fR <vals> multipliers for axis polygons. Given as three integers
 .IP
 separated by commas. One multiplier must be 0. e.g. 2,3,0
+.HP
+\fB\-n\fR <frac> Or enter values as three comma delimited n/d values. n much be a
+.IP
+multple of p. One value of n must be 0. e.g. 5/2,3/1,0
+Convex hull is supressed if a value of d is greater than 1
+note: \fB\-n\fR and \fB\-m\fR are mutually exclusive options
 .TP
 \fB\-r\fR <val>
 A value which is an amount of rotation given to polygons. A value
