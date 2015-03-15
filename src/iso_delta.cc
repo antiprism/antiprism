@@ -1147,8 +1147,6 @@ void case_f_6_or_12_pentagonal_dipyramids(geom_if &geom, double angle, const int
    else
    if (k == 3 || k == 4)
       make_delta_dipyramid(geom, 5, 2);
-      
-   double phi = (1 + sqrt(5))/2;
 
    // to construct in one statement for Ih
    // transform_and_repeat(geom, ((k == 1 || k == 3) ? "I" : "Ih"), "D5h",
@@ -1245,8 +1243,6 @@ void case_m_10_or_20_triangular_dipyramids(geom_if &geom, double angle, const in
    fprintf(stderr,"Using: ");
    make_delta_dipyramid(geom, 3, 1);
 
-   double phi = (1 + sqrt(5))/2;
-
    // to construct in one statement for Ih
    // transform_and_repeat(geom, (k == 1 ? "I" : "Ih"), "D3h",
    //   mat3d::rot(vec3d(0,0,1), vec3d(1/phi,0,phi)) * mat3d::rot(0,0,angle+M_PI/6));
@@ -1269,8 +1265,6 @@ void case_n_6_10_3_star_dipyramids(geom_if &geom, double angle)
 
    fprintf(stderr,"Using: ");
    make_delta_dipyramid(geom, 10, 3);
-
-   double phi = (1 + sqrt(5))/2;
 
    transform_and_repeat(geom, "I", "D10h",
       mat3d::rot(vec3d(0,0,1), vec3d(0,1,phi)) * mat3d::rot(0,0,angle+M_PI/10));
