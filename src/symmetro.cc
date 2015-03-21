@@ -49,6 +49,8 @@ class symmetro_opts: public prog_opts {
       vector<int> multipliers;
       vector<int> n;
       vector<int> d;
+      bool rotation_in_radians;
+      vector<int> rotation_axis;
       double rotation;
       vector<int> scale_direction;
       double scale;
@@ -63,6 +65,7 @@ class symmetro_opts: public prog_opts {
 
       symmetro_opts(): prog_opts("symmetro"),
                        sym(0),
+                       rotation_in_radians(true),
                        rotation(0.0),
                        scale(0.0),
                        convex_hull(0),
@@ -106,12 +109,12 @@ void symmetro_opts::usage()
 "               multple of p. One value of n must be 0. e.g. 5/2,3/1,0\n"
 "               Convex hull is supressed if a value of d is greater than 1\n"
 "               note: -n and -m are mutually exclusive options\n"
-"  -r <val>  A value which is an amount of rotation given to polygons. A value\n"
-"               of zero turns polygons on vertex. A value of 1 turns them on edge\n"
+"  -r <v,n>  A value v, which is an amount of rotation given to polygon. The\n"
+"               value is degrees. If radians is desired enter as 'rad(v)'\n"
 "               or give a face rotation type: vertex=0, edge=1  (default: 0)\n"
-"  -S <s,n,m> scale s, from axis n polygon applied to axis m polygon\n"
-"               if n and m are not specified, implies first 2 polygons in order\n"
-"               e.g. 0.5,1,0  (default: calculated for unit edge length)\n"
+"               applied to optional axis n. if not given, implies first axis\n"
+"  -S <s,n>  scale s of axis n polygon. if n is not specified, implies first axis\n"
+"               encountered e.g. 0.5,1 (default: calculated for unit edge length)\n"
 "  -C <mode> convex hull. polygons=1, suppress=2, force=3, normal=4\n"
 "               (default: 4)\n"
 "  -u        make the average edge length 1 unit (performed before convex hull)\n"
@@ -177,28 +180,28 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                int d_part;
                
                char *ptok2 = strtok_r(ptok1,parse_key2,&tok_ptr2);
-               int count = 0;
+               int count2 = 0;
                while( ptok2 != NULL ) {
-                  if ( count == 0 ) {
+                  if ( count2 == 0 ) {
                      if(!read_int(ptok2, &n_part, errmsg))
                         error(errmsg, "n/d (n part)");
                         
                      if (n_part<0)
-                        error("n of n/d must be non-negative",'n');
+                        error("n of n/d must be non-negative", c);
                      n.push_back(n_part);
                   }
                   else
-                  if (count == 1 ) {
+                  if ( count2 == 1 ) {
                      if(!read_int(ptok2, &d_part, errmsg))
                         error(errmsg, "n/d (d part)");
                         
                      if (d_part<=0)
-                        error("d of n/d must be positive",'n');
+                        error("d of n/d must be positive", c);
                      d.push_back(d_part);
                   }
                   
                   ptok2 = strtok_r(NULL,parse_key2,&tok_ptr2);
-                  count++;
+                  count2++;
                }
                
                // if there is no denominator then it is 1
@@ -206,34 +209,66 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                   d.push_back(1);               
                 
                ptok1 = strtok_r(NULL,parse_key1,&tok_ptr1);
-               count++;
+               count2++;
             }
             
             if( (int)n.size()!=3 )
-               error("specifying by fraction must be 3 comma delimited entries",'n');
+               error("specifying by fraction must be 3 comma delimited entries", c);
             m_or_n++;
             break;
          }
             
-         case 'r': // rotate from side to point
-            id = get_arg_id(optarg, "vertex=0|edge=1", argmatch_add_id_maps, errmsg);
-            if ( id == "0" )
-               rotation = 0.0;
-            else
-            if ( id == "1" )
-               rotation = 1.0;
-            else
-            {
-               //error(errmsg);
-               if(!read_double(optarg, &rotation, errmsg))
-                  error(errmsg, c);
+         case 'r': { // rotation
+            char parse_key1[] = ",";
+            
+            // memory pointers for strtok_r
+            char *tok_ptr1;
+            
+            char *ptok1 = strtok_r(optarg,parse_key1,&tok_ptr1);
+            int count1 = 0;
+            while( ptok1 != NULL ) {
+               if ( count1 == 0 ) {
+                  // see if it is built in amount
+                  id = get_arg_id(optarg, "vertex=0|edge=1", argmatch_add_id_maps, errmsg);
+                  if ( id == "0" )
+                     rotation = rad2deg(0.0);
+                  else
+                  if ( id == "1" )
+                     rotation = rad2deg(1.0);
+                  else {
+                     // find 'rad' in ptok1, else value is degrees
+                     char *pch = strstr (ptok1,"rad");
+                     rotation_in_radians = ( ( pch == NULL ) ? false : true );
+                     if(!read_double(ptok1, &rotation, errmsg))
+                        error(errmsg, "rotation value");
+                  }
+               }
+               else
+               if ( count1 == 1 ) {
+                  double d;
+                  if(!read_double(ptok1, &d, errmsg))
+                     error(errmsg, "rotation axis");
+                  int a = (int)floor(d);
+                  //if ( rotation_axis_tmp[1] - a > 0.0 )
+                  //   error(msg_str("axis numbers must be specified by an integer: '%g'", rotation_axis_tmp[i]), c);
+                  rotation_axis.push_back(a);
+                  
+                  if( rotation_axis[0] > 2 )
+                     error("ratio direction should be 0, 1 or 2", c);
+               }
+               
+               ptok1 = strtok_r(NULL,parse_key1,&tok_ptr1);
+               count1++;
             }
+            
+            
             break;
+         }
            
          case 'S': // scale direction and scale
          {
             vector<double> scale_direction_tmp;
-            if(!read_double_list(optarg, scale_direction_tmp, errmsg, 3))
+            if(!read_double_list(optarg, scale_direction_tmp, errmsg, 2))
                error(errmsg, c);
                
             // pull out ratio
@@ -243,28 +278,20 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             if ( scale == 0.0 )
                scale = epsilon/10.0;
             
-            if ( scale_direction_tmp.size() == 2 ) {
-               error("scale takes 1 or 3 arguments",c);
+            if ( scale_direction_tmp.size() > 2 ) {
+               error("scale takes 1 or 2 arguments",c);
             }
             else
-            if ( scale_direction_tmp.size() == 3 ) {           
-               // place integer portions of possible doubles
-               for( int i=0; i<2; i++ ) {
-                  int a = (int)floor(scale_direction_tmp[i+1]);
-                  //if ( scale_direction_tmp[i] - a > 0.0 )
-                  //   error(msg_str("axis numbers must be specified by an integer: '%g'", scale_direction_tmp[i+1]), c);
-                  scale_direction.push_back(a);
-               }
+            if ( scale_direction_tmp.size() == 2 ) {           
+               int a = (int)floor(scale_direction_tmp[1]);
+               //if ( scale_direction_tmp[1] - a > 0.0 )
+               //   error(msg_str("axis numbers must be specified by an integer: '%g'", scale_direction_tmp[i]), c);
+               scale_direction.push_back(a);
                   
                scale_direction_tmp.clear();
                   
-               for( int i=0; i<(int)scale_direction.size(); i++ ) {
-                  if( scale_direction[i] > 2 )
-                     error("ratio direction should be 0, 1 or 2", c);
-                  for( int j=i+1; j<(int)scale_direction.size(); j++ )
-                     if( scale_direction[i] == scale_direction[j] )
-                         error(msg_str("an axis number is specified more than once: '%d'", scale_direction[j]), c);
-               }
+               if( scale_direction[0] > 2 )
+                  error("ratio direction should be 0, 1 or 2", c);
             }      
             break;
          }
@@ -454,8 +481,11 @@ vector<col_geom_v> symmetro::makePolygons( const symmetro_opts &opts )
       }            
    }
    
-   double r0 = scales[0] * circumradius( getN(axis[0]), opts.d[0] );
-   double r1 = scales[1] * circumradius( getN(axis[1]), opts.d[1] );
+   if ( opts.rotation_axis[0] > opts.rotation_axis[1] )
+      reverse( axis.begin(), axis.end() );
+
+   double r0 = scales[0] * circumradius( getN(axis[0]), opts.d[axis[0]] );
+   double r1 = scales[1] * circumradius( getN(axis[1]), opts.d[axis[1]] );
 
    double angle_between_axes = getAngleBetweenAxes( axis[0], axis[1] );
    if ( opts.verbose )
@@ -463,8 +493,11 @@ vector<col_geom_v> symmetro::makePolygons( const symmetro_opts &opts )
    mat3d rot = mat3d::rot(vec3d(0, 1, 0), angle_between_axes);
    mat3d rot_inv = mat3d::rot(vec3d(0, 1, 0), -angle_between_axes);
 
-   double ang = opts.rotation;
-   ang = ang * (2.0*M_PI*1.0/getN(axis[0]))/2.0;
+   double ang = deg2rad( opts.rotation );
+   if ( opts.rotation_in_radians )
+      ang = ang * (2.0*M_PI*1.0/getN(axis[0]))/2.0;
+   if ( opts.verbose )
+      fprintf(stderr,"angle: radians = %.17lf degrees = %.17lf\n",ang,rad2deg(ang));
    
    vec3d V = mat3d::rot(vec3d(0, 0, 1), ang) * vec3d(r0, 0, 0);
    vec3d q = rot * V;
@@ -703,7 +736,7 @@ int main(int argc, char *argv[])
  
    // if option -n was used, convert n/d to multipliers
    if ( (int)opts.n.size() ) {
-      for( int i=0; i<3; i++ ) {
+      for( int i=0; i<(int)opts.n.size(); i++ ) {
          if ( opts.n[i]%s.getOrder(i) != 0 )
             opts.error(msg_str("for argment '%d/%d', n is not a multiple of %d", opts.n[i], opts.d[i], s.getOrder(i)), 'n');
          opts.multipliers.push_back(opts.n[i] / s.getOrder(i));
@@ -712,7 +745,7 @@ int main(int argc, char *argv[])
    
    // if convex_hull is not set
    if ( !opts.convex_hull ) {
-      for( int i=0; i<3; i++ ) {
+      for( int i=0; i<(int)opts.d.size(); i++ ) {
          if ( opts.d[i] > 1 ) {
             // supress convex hull
             opts.convex_hull = 2;
@@ -737,13 +770,13 @@ int main(int argc, char *argv[])
    // 1 polygon is done by scale to 0
    if ( num_multipliers == 1 )
    {
-      int second_direction = 0;
+      double second_dir = 0;
       bool done = false;
     
       opts.scale_direction.clear();  
-      for( int i=0; i<3; i++ ) {
+      for( int i=0; i<(int)opts.multipliers.size(); i++ ) {
          if ( opts.multipliers[i] != 0 )
-            second_direction = i;
+            second_dir = i;
          else {
             if (!done) {
                opts.multipliers[i] = 1;
@@ -754,13 +787,14 @@ int main(int argc, char *argv[])
          }
       }
       
-      opts.scale_direction.push_back(second_direction);
+      opts.scale_direction.push_back(second_dir);
    }
    
    for( int i=0; i<(int)opts.multipliers.size(); i++ ) {
       s.setMult( i, opts.multipliers[i] );
    }
    
+   // if empty, fill scale direction
    if ( !opts.scale_direction.size() ) {
       if ( opts.scale && opts.multipliers.size() == 1 )
          opts.error("cannot scale when only one polygon is generated",'S');
@@ -774,11 +808,57 @@ int main(int argc, char *argv[])
             j++;
          }            
       }
+   }
+   // otherwise must fill in second scale for makePolygons (used for reference)
+   else
+   if ( opts.scale_direction.size() == 1 ) {
+     for( int i=0; i<(int)opts.multipliers.size(); i++ ) {
+         if ( ( opts.multipliers[i] != 0 ) && ( opts.scale_direction[0] != i ) ) {
+            opts.scale_direction.push_back(i);
+            break;
+         }
+      }
    }   
 
    for( int i=0; i<(int)opts.scale_direction.size(); i++ ) {
       if ( opts.multipliers[opts.scale_direction[i]] == 0 )
          opts.error(msg_str("polygon '%d' is not generated so cannot be used for scaling", opts.scale_direction[i]), 'S');
+   }
+
+   // if empty, fill rotations   
+   if ( !opts.rotation_axis.size() ) {
+      int j = 0;
+      for( int i=0; i<(int)opts.multipliers.size(); i++ ) {
+         if ( j == 2 )
+            continue;
+         if ( opts.multipliers[i] ) {
+            opts.rotation_axis.push_back(i);
+            j++;
+         }            
+      }
+   }
+   // otherwise must fill in second rotation for makePolygons (used for reference)
+   else
+   if ( opts.rotation_axis.size() == 1 ) {
+     for( int i=0; i<(int)opts.multipliers.size(); i++ ) {
+         if ( ( opts.multipliers[i] != 0 ) && ( opts.rotation_axis[0] != i ) ) {
+            opts.rotation_axis.push_back(i);
+            break;
+         }
+      }
+   }
+   
+   // if only one polygon is 
+   if ( num_multipliers == 1 )
+   {
+      opts.rotation_axis.clear();
+      for( int i=0; i<(int)opts.scale_direction.size(); i++ )
+         opts.rotation_axis.push_back(opts.scale_direction[i]);
+   }
+   
+   for( int i=0; i<(int)opts.rotation_axis.size(); i++ ) {
+      if ( opts.multipliers[opts.rotation_axis[i]] == 0 )
+         opts.error(msg_str("polygon '%d' is not generated so cannot be used for rotation", opts.rotation_axis[i]), 'r');
    }
 
    // calculate axes here      

@@ -39,16 +39,17 @@ multple of p. One value of n must be 0. e.g. 5/2,3/1,0
 Convex hull is supressed if a value of d is greater than 1
 note: \fB\-n\fR and \fB\-m\fR are mutually exclusive options
 .TP
-\fB\-r\fR <val>
-A value which is an amount of rotation given to polygons. A value
+\fB\-r\fR <v,n>
+A value v, which is an amount of rotation given to polygon. The
 .IP
-of zero turns polygons on vertex. A value of 1 turns them on edge
+value is degrees. If radians is desired enter as 'rad(v)'
 or give a face rotation type: vertex=0, edge=1  (default: 0)
-.HP
-\fB\-S\fR <s,n,m> scale s, from axis n polygon applied to axis m polygon
+applied to optional axis n. if not given, implies first axis
+.TP
+\fB\-S\fR <s,n>
+scale s of axis n polygon. if n is not specified, implies first axis
 .IP
-if n and m are not specified, implies first 2 polygons in order
-e.g. 0.5,1,0  (default: calculated for unit edge length)
+encountered e.g. 0.5,1 (default: calculated for unit edge length)
 .HP
 \fB\-C\fR <mode> convex hull. polygons=1, suppress=2, force=3, normal=4
 .IP
