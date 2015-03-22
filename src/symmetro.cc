@@ -153,18 +153,26 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             sym = atoi(id.c_str());
             break;
             
-         case 'm': // multiplier
+         case 'm': { // multiplier
             if(!read_int_list(optarg, multipliers, errmsg, true, 3))
                error(errmsg, c);
             if( (int)multipliers.size() != 3 )
                error("multipliers must be specified as three integers", c);
-            if( multipliers[0]+multipliers[1]+multipliers[2] == 0 )
-               error("at least one multiplier must be positive", c);
+               
+            int num_multipliers = 0;
+            for( int i=0; i<(int)multipliers.size(); i++ ) {
+               if ( multipliers[i]>0 )
+                  num_multipliers++;
+            }
+            if ( num_multipliers != 2 )
+               error("two axis values must be specified and one must be 0",'m');
+               
             if( multipliers[2] == 1 )
-               //error("multiplier for axis 2 cannot be 1", c);
                warning("model will contain digons");
+               
             m_or_n++;
             break;
+         }
             
          case 'n': {
             char parse_key1[] = ",";
@@ -214,6 +222,18 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             
             if( (int)n.size()!=3 )
                error("specifying by fraction must be 3 comma delimited entries", c);
+               
+            int num_n = 0;
+            for( int i=0; i<(int)n.size(); i++ ) {
+               if ( n[i]>0 )
+                  num_n++;
+            }
+            if ( num_n != 2 )
+               error("two fraction values must be specified and one must be 0",'n');
+               
+            if( n[2] == 2 )
+               warning("model will contain digons");
+               
             m_or_n++;
             break;
          }
@@ -758,47 +778,8 @@ int main(int argc, char *argv[])
    if ( !opts.convex_hull )
       opts.convex_hull = 4;
    
-   int num_multipliers = 0;
-   for( int i=0; i<(int)opts.multipliers.size(); i++ ) {
-      if ( opts.multipliers[i]>0 )
-         num_multipliers++;
-   }
-   
-   if ( num_multipliers == 3 )
-      opts.error("one multiplier must be 0",'m');
-      
-   // 1 polygon is done by scale to 0
-   if ( num_multipliers == 1 )
-   {
-      double second_dir = 0;
-      bool done = false;
-    
-      opts.scale_direction.clear();  
-      for( int i=0; i<(int)opts.multipliers.size(); i++ ) {
-         if ( opts.multipliers[i] != 0 )
-            second_dir = i;
-         else {
-            if (!done) {
-               opts.multipliers[i] = 1;
-               opts.scale = epsilon/10.0;
-               opts.scale_direction.push_back(i);
-               done = true;
-            }
-         }
-      }
-      
-      opts.scale_direction.push_back(second_dir);
-   }
-   
-   for( int i=0; i<(int)opts.multipliers.size(); i++ ) {
-      s.setMult( i, opts.multipliers[i] );
-   }
-   
    // if empty, fill scale direction
    if ( !opts.scale_direction.size() ) {
-      if ( opts.scale && opts.multipliers.size() == 1 )
-         opts.error("cannot scale when only one polygon is generated",'S');
-
       int j = 0;
       for( int i=0; i<(int)opts.multipliers.size(); i++ ) {
          if ( j == 2 )
@@ -848,17 +829,14 @@ int main(int argc, char *argv[])
       }
    }
    
-   // if only one polygon is 
-   if ( num_multipliers == 1 )
-   {
-      opts.rotation_axis.clear();
-      for( int i=0; i<(int)opts.scale_direction.size(); i++ )
-         opts.rotation_axis.push_back(opts.scale_direction[i]);
-   }
-   
    for( int i=0; i<(int)opts.rotation_axis.size(); i++ ) {
       if ( opts.multipliers[opts.rotation_axis[i]] == 0 )
          opts.error(msg_str("polygon '%d' is not generated so cannot be used for rotation", opts.rotation_axis[i]), 'r');
+   }
+   
+   
+   for( int i=0; i<(int)opts.multipliers.size(); i++ ) {
+      s.setMult( i, opts.multipliers[i] );
    }
 
    // calculate axes here      
