@@ -29,6 +29,7 @@
 
 
 #include "vw_glut.h"
+#include "disp_poly_gl.h"
 
 
 extern glut_state glut_s;
@@ -44,6 +45,7 @@ void glut_state::make_menu()
    glutAddMenuEntry("Edge Nums 'M'", 'M');
    glutAddMenuEntry("Transparency 'T'", 'T');
    glutAddMenuEntry("Sym Elems 'Y'", 'Y');
+   glutAddMenuEntry("Orientation 'O'", 'O');
    
    glutCreateMenu(menu_cb);
    glutAddMenuEntry("Rotate  'r'", 'r');
@@ -101,6 +103,12 @@ static void toggle(char elem)
             else if(elem=='f')
                disp_p->f().set_show(!disp_p->f().get_show());
          }
+         if(disp_poly_gl *disp_p = dynamic_cast<disp_poly_gl *>(*disp) ) {
+              if(elem=='O')
+                 disp_p->set_show_orientation(
+                       !disp_p->get_show_orientation());
+         }
+
       }
    }
 }
@@ -184,6 +192,9 @@ void keyboard_cb(unsigned char key, int /*x*/, int /*y*/)
       case 'Y':
       case 'y':
          glut_s.change_sym_disp();
+         break;
+      case 'O':
+         toggle('O');
          break;
       case 'V':
       case 'v':

@@ -55,12 +55,11 @@
 extern unsigned char stippleMask[17][128];
 
 void gl_set_material(col_val col = vec3d(.5,.5,.5), bool trans=true,
-      bool both_sides=true);
+      int sides=GL_FRONT_AND_BACK);
  
-void gl_set_material(col_val col, bool trans, bool both_sides)
+void gl_set_material(col_val col, bool trans, int sides)
 {
    vec4d cv = col.get_vec4d();
-   int sides = both_sides ? GL_FRONT_AND_BACK : GL_FRONT;
    GLfloat f_specular[] = { (GLfloat)cv[0]/2, (GLfloat)cv[1]/2,
                             (GLfloat)cv[2]/2, 1.0 };
    GLfloat f_diffuse[] =  { (GLfloat)cv[0], (GLfloat)cv[1],
@@ -97,7 +96,7 @@ void disp_poly_gl::gl_verts(const scene &scen)
       if(col.is_inv())
          continue;
 
-      gl_set_material(col, get_elem_trans(), false);
+      gl_set_material(col, get_elem_trans(), GL_FRONT);
       glPushMatrix();
       glTranslated(verts[i][0], verts[i][1], verts[i][2]);
       glCallList(sph);
@@ -141,7 +140,7 @@ void disp_poly_gl::gl_edges(const scene &scen)
       if(col.is_inv())
          continue;
 
-      gl_set_material(col, get_elem_trans(), false);
+      gl_set_material(col, get_elem_trans(), GL_FRONT);
       glPushMatrix();
       edge_cyl_trans(verts[edges[i][0]], verts[edges[i][1]]);
       glCallList(cyl);
@@ -166,8 +165,14 @@ void disp_poly_gl::gl_faces(const scene &)
          col = get_def_f_col(); // use default
       if(col.is_inv())
          continue;
+      if(show_orientation) {
+         gl_set_material(col_val(1.0,1.0,1.0), get_elem_trans(), GL_FRONT);
+         gl_set_material(col_val(0.0,0.0,0.0), get_elem_trans(), GL_BACK);
+      }
+      else {
+         gl_set_material(col, get_elem_trans());
+      }
 
-      gl_set_material(col, get_elem_trans());
       glBegin(GL_POLYGON);
       vec3d norm = face_norm(verts,faces[i]);
       glNormal3dv(norm.get_v());
@@ -175,6 +180,10 @@ void disp_poly_gl::gl_faces(const scene &)
          glVertex3dv(verts[faces[i][j]].get_v());
       glEnd();
    }
+}
+
+disp_poly_gl::disp_poly_gl() : disp_poly(), show_orientation(false)
+{
 }
 
 void disp_poly_gl::gl_geom(const scene &scen)

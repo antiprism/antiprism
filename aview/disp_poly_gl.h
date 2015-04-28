@@ -34,14 +34,21 @@
 
 class disp_poly_gl : public virtual disp_poly
 {
+   private:
+      bool show_orientation;
+
    protected:
       void gl_verts(const scene &scen);
       void gl_edges(const scene &scen);
       void gl_faces(const scene &scen);
 
    public:
+      disp_poly_gl();
+
       geom_disp *clone() const { return new disp_poly_gl(*this); };
       void gl_geom(const scene &scen);
+      void set_show_orientation(bool show=true) { show_orientation = show; }
+      bool get_show_orientation() { return show_orientation; }
 };
 
 
