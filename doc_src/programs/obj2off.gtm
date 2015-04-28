@@ -19,9 +19,9 @@
 
 
 <<EXAMPLES_START>>
-Convert cube resource model to Wavefront OBJ format
+Convert a Wavefront OBJ file to OFF format
 <<CMDS_START>>
-off2obj cube &gt; cube.obj
+obj2off cube.obj &gt; cube.off
 <<CMDS_END>>
 <<EXAMPLES_END>>
 
@@ -29,7 +29,7 @@ off2obj cube &gt; cube.obj
 <<NOTES_START>>
 <a href="http://www.martinreddy.net/gfx/3d/OBJ.spec">Wavefront OBJ</a>
 is a fairly common text-based graphics format. It may be useful as
-an intermediate format for exporting OFF files from programs that
+an intermediate format for importing OFF files into programs that
 do not support OFF.
 <<NOTES_END>>
 

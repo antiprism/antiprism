@@ -4,7 +4,10 @@ Version 0.24
 xx-xx-14 Adrian Rossiter <adrian@antiprism.com>
          New Programs
             to_nfold: change the rotational symmetry of a polyhedron
-            off2obj (Roger Kaufman): convert OFF to Wavefront OBJ format
+            off2obj/obj2off : convert between OFF to Wavefront OBJ
+              format (Roger Kaufman)
+            symmetro: polyhedra with regular polygons at symmetry
+              axes (Roger Kaufman)
          Changes
             off_util: process options in command line order,
               incorporate -b into -M, expand -D and add -K to keep

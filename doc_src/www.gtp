@@ -17,6 +17,7 @@ mtimestamp $dd.$MM.$yyyy
 ./programs/off2pov.gtm 3 off2pov - convert OFF files to POV format
 ./programs/off2vrml.gtm 3 off2vrml - convert OFF files to VRML format
 ./programs/off2obj.gtm 3 off2obj - convert an OFF file to Wavefront OBJ format
+./programs/obj2off.gtm 3 obj2off - convert a Wavefront OBJ file to OFF format
 ./programs/off2crds.gtm 3 off2crds - convert an OFF file to a coordinate file
 ./programs/off2m.gtm 3 off2m - convert an OFF file for LiveGraphics3D
 ./programs/m2off.gtm 3 m2off - convert a LiveGraphics3D 'm' file to OFF format
@@ -43,6 +44,7 @@ mtimestamp $dd.$MM.$yyyy
 ./programs/lat_grid.gtm 3 lat_grid - lattices and grids with integer coordinates
 ./programs/bravais.gtm 3 bravais - Bravais lattices
 ./programs/lat_util.gtm 3 lat_util - lattice utilities
+./programs/symmetro.gtm 3 symmetro - polyhedra with regular polygons at symmetry axes
 ./programs/waterman.gtm 3 waterman - Waterman polyhedra
 ./programs/n_icons.gtm 3 n_icons - sphericon like polyhedra 
 ./programs/kcycle.gtm 3 kcycle - kaleidocycle rings of polyhedron

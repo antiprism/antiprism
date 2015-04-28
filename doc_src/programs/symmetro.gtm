@@ -1,0 +1,50 @@
+#define HL_PROG class=curpage
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<<TITLE_HEAD>>
+
+<<TOP_LINKS>>
+
+<<USAGE_START>>
+<pre class="prog_help">
+<<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</pre>
+<<USAGE_END>>
+
+
+<<EXAMPLES_START>>
+Make a truncated cuboctahedron
+<<CMDS_START>>
+symmetro -s o -m 2,2,0 -r e | antiview
+<<CMDS_END>>
+
+Like a rhombicuboctahedron, but scale the squares on the 4-fold axes by 2.
+<<CMDS_START>>
+symmetro -s o -m 1,1,0 -S 2  | antiview
+<<CMDS_END>>
+
+Make an approximate snub cube
+<<CMDS_START>>
+symmetro -s o -m 1,0,1 -r 28.53245 | antiview
+<<CMDS_END>>
+
+Make a 'twister' by suppressing the convex hull and varying the twist parameter
+<<CMDS_START>>
+symmetro -s t -C s -m 1,1,0 -r 15 | antiview
+<<CMDS_END>>
+
+<<EXAMPLES_END>>
+
+
+<<NOTES_START>>
+<i>symmetro</i> was written by
+<a href="http://www.interocitors.com/polyhedra/">Roger Kaufman</a>.
+<<NOTES_END>>
+
+#include "<<END>>"

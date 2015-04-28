@@ -19,6 +19,7 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/off2vrml.gtm 2 off2vrml - convert OFF files to VRML format
 ./doc/off2crds.gtm 2 off2crds - convert an OFF file to a coordinate file
 ./doc/off2obj.gtm 2 off2obj - convert an OFF file to Wavefront OBJ format
+./doc/obj2off.gtm 2 obj2off - convert a Wavefront OBJ file to OFF format
 ./doc/off2m.gtm 2 off2m - convert an OFF file for LiveGraphics3D
 ./doc/m2off.gtm 2 m2off - convert a LiveGraphics3D 'm' file to OFF format
 ./doc/off_color.gtm 2 off_color - add colours to an OFF file
@@ -44,6 +45,7 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/lat_grid.gtm 2 lat_grid - lattices and grids with integer coordinates
 ./doc/bravais.gtm 2 bravais - Bravais lattices
 ./doc/lat_util.gtm 2 lat_util - lattice utilities
+./doc/symmetro.gtm 2 symmetro - polyhedra with regular polygons at symmetry axes
 ./doc/waterman.gtm 2 waterman - Waterman polyhedra
 ./doc/n_icons.gtm 2 n_icons - sphericon like polyhedra 
 ./doc/kcycle.gtm 2 kcycle - kaleidocycle rings of polyhedron

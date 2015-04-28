@@ -35,6 +35,7 @@ Programs
 <li><a href="off2vrml.html">off2vrml</a> - convert OFF files to VRML format
 <li><a href="off2crds.html">off2crds</a> - convert an OFF file to a coordinate file
 <li><a href="off2obj.html">off2obj</a> - convert an OFF file to Wavefront OBJ format
+<li><a href="obj2off.html">off2obj</a> - convert a Wavefront OBJ file to OFF format
 <li><a href="off2m.html">off2m</a> - convert an OFF file to LiveGraphics3D 'm' format
 <li><a href="m2off.html">m2off</a> - convert a LiveGraphics3D 'm' file to OFF format
 </ul>
@@ -67,11 +68,12 @@ Programs
 <li><a href="conway.html">conway</a> - Conway Notation transformations
 <li><a href="poly_kscope.html">poly_kscope</a> - polyhedral kaleidoscope
 <li><a href="to_nfold.html">to_nfold</a> - change the rotational symmetry of a polyhedron
-<li><a href="unitile2d.html">unitile2d</a> - make uniform tilings on a surface
+<li><a href="unitile2d.html">unitile2d</a> - uniform tilings on a surface
 <li><a href="string_art.html">string_art</a> - string figures
 <li><a href="lat_grid.html">lat_grid</a> - lattices and grids with integer coordinates
 <li><a href="bravais.html">bravais</a> - Bravais lattices
 <li><a href="lat_util.html">lat_util</a> - lattice utilities
+<li><a href="symmetro.html">symmetro</a> - polyhedra with regular polygons at symmetry axes
 <li><a href="waterman.html">waterman</a> - Waterman polyhedra
 <li><a href="n_icons.html">n_icons</a> - sphericon like polyhedra 
 <li><a href="kcycle.html">kcycle</a> - kaleidocycle rings of polyhedron 
