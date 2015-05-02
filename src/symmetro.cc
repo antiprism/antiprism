@@ -234,11 +234,17 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                }
                else
                if ( i == 1 || i == 2 ) {
-                  mult += tokens[i] + ",";
+                  string tok = tokens[i];
+                  if ( tok.length() == 1 && tok[0] == '*' )
+                     tok = "0";
+                  mult += tok + ",";
                }
                else
                if ( i == 3 ) {
-                  mult += tokens[i];
+                  string tok = tokens[i];
+                  if ( tok.length() == 1 && tok[0] == '*' )
+                     tok = "0";
+                  mult += tok;
                   
                   // string to char * (not const) from StackOverflow
                   char *writable = new char[mult.size() + 1];
