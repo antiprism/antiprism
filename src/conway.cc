@@ -315,8 +315,8 @@ class cn_opts: public prog_opts {
                  face_opacity(255),
                  face_pattern("1"),
                  epsilon(0),
-                 vert_col(col_val(255,215,0)),
-                 edge_col(col_val(211,211,211))
+                 vert_col(col_val(255,215,0)),  // gold
+                 edge_col(col_val(211,211,211)) // lightgrey
              {}
 
       void process_command_line(int argc, char **argv);
@@ -469,8 +469,8 @@ void cn_opts::usage()
 "  -z <n>    status reporting every n iterations, -1 for no status (default: -1)\n"
 "\n"
 "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
-"  -V <col>  vertex color\n"
-"  -E <col>  edge color\n"
+"  -V <col>  vertex color (default: gold)\n"
+"  -E <col>  edge color   (default: lightgray)\n"
 "  -f <mthd> mthd is face coloring method using color in map\n"
 "               key word: none - sets no color (default: n)\n"
 "               n - color by number of sides\n"
