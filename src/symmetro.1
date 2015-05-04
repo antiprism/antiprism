@@ -11,8 +11,11 @@ on the symmetry axes of Icosahedral, Octahedral, Tetrahedral, or Dihedral
 symmetry. The sides of the polygons will be a multiple number of the axis
 reflection number.
 .PP
-It is possible to generate models such that the polygons intersect. If a collision
-is detected, convex hull will be suppressed
+It is possible to generate models such that the polygons intersect. If a
+.IP
+collision is detected, convex hull will be suppressed
+.PP
+options \fB\-k\fR, \fB\-t\fR, and \fB\-d\fR cannot be used together, but one needs to be specified
 .PP
 Options
 .HP
@@ -28,14 +31,14 @@ s: symmetry type of Symmetrohedra. sets {p,q,2}
 .IP
 I\-icosahedral {5,3,2} O\-octahedral {4,3,2} T\-tetrahedral {3,3,2}
 .IP
-l,m,n: multipliers for axis polygons. Given as three integers
+l,m,n: multipliers for axis polygons. Separated by commas, one
 .IP
-separated by commas. One multiplier must be 0. e.g. 2,3,0
+multiplier must be * or 0, the other two are positive integers
 .TP
 a: face rotation type: vertex=1, edge=0
 (default: 1)
 .IP
-example: \fB\-k\fR i,2,0,4,e
+example: \fB\-k\fR i,2,*,4,e
 .HP
 \fB\-t\fR <s[p,q],i,m1,m2> Twister notation. Generate twister models.
 .IP
@@ -56,44 +59,51 @@ O: [4, 4], [4, 3], [4, 2]x2, [3, 3], [3, 2]x2, [2, 2]x2
 I: [5, 5], [5, 3]x2, [5, 2]x3, [3, 3]x2, [3, 2]x4, [2, 2]x4
 DN:[N, q] q>1, [2,2]x(n/2 rounded down)
 .TP
-\fB\-a\fR <v,n>
-v in degrees of rotation given to polygon applied to optional axis n
+\fB\-d\fR <n/d>
+Twisters with S symmetry. n and d must be odd. denominator optional
+.TP
+\fB\-a\fR <a,n>
+a in degrees of rotation given to polygon applied to optional axis n
 .IP
-if n not given, implies first axis.
-radians may be entered as 'rad(v)'
+if n not given, implies first axis encountered
+radians may be entered as 'rad(a)'
 .TP
 \fB\-r\fR <r,n>
 ratio r of axis n polygon. if n is not specified, implies first axis
 .IP
 encountered e.g. 0.5,1 (default: calculated for unit edge length)
-.HP
+.TP
 \fB\-C\fR <mode> convex hull. polygons=1, suppress=2, force=3, normal=4
-.IP
 (default: 4)
 .TP
-\fB\-u\fR
-make the average edge length 1 unit (performed before convex hull)
-.TP
-\fB\-V\fR
+\fB\-v\fR
 verbose output
 .HP
 \fB\-o\fR <file> write output to file (default: write to standard output)
 .PP
 Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
+.TP
+\fB\-V\fR <col>
+vertex color (default: gold)
+.TP
+\fB\-E\fR <col>
+edge color   (default: lightgray)
+.HP
+\fB\-f\fR <mthd> mthd is face coloring method using color in map (default: a)
 .IP
-and for options below, key word: none \- sets no color
-.TP
-\fB\-x\fR <col>
-color for axis 0 polygons (default: red)
-.TP
-\fB\-y\fR <col>
-color for axis 1 polygons (default: blue)
-.TP
-\fB\-z\fR <col>
-color for axis 2 polygons (default: darkgreen)
-.TP
-\fB\-w\fR <col>
-color for polygons resulting from convex hull (default: yellow)
+key word: none \- sets no color
+a \- color by axis number
+n \- color by number of sides
+.HP
+\fB\-T\fR <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
+.HP
+\fB\-m\fR <maps> color maps for faces to be tried in turn (default: m1)
+.IP
+keyword m1: red,darkorange1,yellow,saddlebrown
+.IP
+note: position 4 color is for faces added by convex hull
+.IP
+keyword m2: approximating colors in the symmetrohedra pdf file
 .SH "SEE ALSO"
 The full documentation for
 .B symmetro:

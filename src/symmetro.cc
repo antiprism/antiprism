@@ -117,10 +117,10 @@ void symmetro_opts::usage()
 "            Project url: http://www.cgl.uwaterloo.ca/~csk/projects/symmetrohedra\n"
 "            s: symmetry type of Symmetrohedra. sets {p,q,2}\n"
 "               I-icosahedral {5,3,2} O-octahedral {4,3,2} T-tetrahedral {3,3,2}\n"
-"            l,m,n: multipliers for axis polygons. Given as three integers\n"
-"               separated by commas. One multiplier must be 0. e.g. 2,3,0\n"
+"            l,m,n: multipliers for axis polygons. Separated by commas, one\n"
+"               multiplier must be * or 0, the other two are positive integers\n"
 "            a: face rotation type: vertex=1, edge=0  (default: 1)\n"
-"            example: -k i,2,0,4,e\n"
+"            example: -k i,2,*,4,e\n"
 "  -t <s[p,q],i,m1,m2> Twister notation. Generate twister models.\n"
 "            s: symmetry. I-icosahedral, O-octahedral, T-tetrahedral, D-dihedral\n"
 "            p,q: rotational order of each of the two axes\n"
@@ -257,7 +257,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                   
                   // might not be able to happen
                   if( (int)multipliers.size() != 3 )
-                     error("multipliers must be specified as three integers", c);
+                     error("3 multipliers must be specified", c);
                      
                   for( int i=0; i<(int)multipliers.size(); i++ ) {
                      if ( multipliers[i]>0 )
@@ -267,7 +267,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                      error("at least one axis multiplier must be specified",c);
                   else
                   if ( num_multipliers == 3 )
-                     error("at least one axis multiplier must be zero",c);
+                     error("at least one axis multiplier must be * or zero",c);
                      
                   if( multipliers[2] == 1 )
                      warning("model will contain digons");
