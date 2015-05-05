@@ -103,10 +103,10 @@ void symmetro_opts::usage()
 "Symmetrohedra and Twisters are created by placing equilateral polygons centered\n"
 "on the symmetry axes of Icosahedral, Octahedral, Tetrahedral, or Dihedral\n"
 "symmetry. The sides of the polygons will be a multiple number of the axis\n"
-"reflection number.\n"
+"reflection number. Axes are numbered as 0, 1 and 2\n"
 "\n"
 "It is possible to generate models such that the polygons intersect. If a\n"
-" collision is detected, convex hull will be suppressed\n"
+"collision is detected, convex hull will be suppressed\n"
 "\n"
 "options -k, -t, and -d cannot be used together, but one needs to be specified\n" 
 "\n"
@@ -152,7 +152,7 @@ void symmetro_opts::usage()
 "               n - color by number of sides\n"
 "  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
 "  -m <maps> color maps for faces to be tried in turn (default: m1)\n"
-"               keyword m1: red,darkorange1,yellow,saddlebrown\n"
+"               keyword m1: red,blue,yellow,darkgreen\n"
 "                  note: position 4 color is for faces added by convex hull\n"
 "               keyword m2: approximating colors in the symmetrohedra pdf file\n"
 "\n"
@@ -757,11 +757,10 @@ void symmetro_opts::process_command_line(int argc, char **argv)
       color_map_map *col_map1 = new color_map_map;
       color_map_map *col_map2 = new color_map_map;
       if (map_file == "m1") {
-         col_map1->set_col(0, col_val(255,0,0));          // axis1 red
-         col_map1->set_col(1, col_val(255,127,0));        // axis2 darkoranage1
-         col_map1->set_col(2, col_val(255,255,0));        // axis3 yellow
-         //col_map1->set_col(3, col_val(0,100,0));  // convex hull darkgreen
-         col_map1->set_col(3, col_val(139,69,19));        // convex hull - saddlebrown
+         col_map1->set_col(0, col_val(255,0,0));      // axis1 red
+         col_map1->set_col(1, col_val(0,0,255));      // axis2 blue
+         col_map1->set_col(2, col_val(255,255,0));    // axis3 yellow
+         col_map1->set_col(3, col_val(0,100,0));      // convex hull darkgreen
          col_map1->set_wrap();
          map.add_cmap(col_map1);
       }
