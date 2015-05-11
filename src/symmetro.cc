@@ -45,6 +45,8 @@ using std::swap;
 
 class symmetro_opts: public prog_opts {
    public:
+      string ofile;
+      
       char sym;
       int sym_id_no;
       int p;
@@ -69,7 +71,7 @@ class symmetro_opts: public prog_opts {
       col_val edge_col;
       color_map_multi map;
       
-      string ofile;
+      double epsilon;
 
       symmetro_opts(): prog_opts("symmetro"),
                        sym('\0'),
@@ -86,8 +88,9 @@ class symmetro_opts: public prog_opts {
                        mode(0),
                        face_coloring_method('a'),
                        face_opacity(255),
-                       vert_col(col_val(255,215,0)),  // gold
-                       edge_col(col_val(211,211,211)) // lightgrey
+                       vert_col(col_val(255,215,0)),   // gold
+                       edge_col(col_val(211,211,211)), // lightgrey
+                       epsilon(0)
                        {}
       
       void process_command_line(int argc, char **argv);
@@ -142,6 +145,8 @@ void symmetro_opts::usage()
 "               encountered e.g. 0.5,1 (default: calculated for unit edge length)\n"
 "  -C <mode> convex hull. polygons=1, suppress=2, force=3, normal=4  (default: 4)\n"
 "  -v        verbose output\n"
+"  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
+"               (default: %d giving %.0e)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
 "  -V <col>  vertex color (default: gold)\n"
@@ -156,7 +161,7 @@ void symmetro_opts::usage()
 "                  note: position 4 color is for faces added by convex hull\n"
 "               keyword m2: approximating colors in the symmetrohedra pdf file\n"
 "\n"
-"\n", prog_name(), help_ver_text);
+"\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }
 
 // from StackOverflow
@@ -183,14 +188,14 @@ void symmetro_opts::process_command_line(int argc, char **argv)
    char c;
    char errmsg[MSG_SZ];
    
+   int sig_compare = INT_MAX;
    string id;
    string map_file;
-   
    vector<int> n;
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hk:t:m:d:a:r:C:vf:V:E:T:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hk:t:m:d:a:r:C:vf:V:E:T:l:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -719,6 +724,17 @@ void symmetro_opts::process_command_line(int argc, char **argv)
          case 'm':
             map_file = optarg;
             break;
+            
+         case 'l':
+            if(!read_int(optarg, &sig_compare, errmsg))
+               error(errmsg, c);
+            if(sig_compare < 0) {
+               warning("limit is negative, and so ignored", c);
+            }
+            if(sig_compare > DEF_SIG_DGTS) {
+               warning("limit is very small, may not be attainable", c);
+            }
+            break;
 
          case 'o':
             ofile = optarg;
@@ -783,6 +799,8 @@ void symmetro_opts::process_command_line(int argc, char **argv)
    else
    if(!map.init(map_file.c_str(), errmsg))
       error(errmsg, 'm');
+      
+   epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
 class symmetro
@@ -1206,10 +1224,12 @@ vector<col_geom_v> symmetro::CalcPolygons( const symmetro_opts &opts )
 	   // handle compound polygons
       double int_part;
       double fract_part = modf((double)n, &int_part);
+      // built in epsilon here
       bool compound = double_eq(fract_part, 0.0, epsilon) ? true : false;
       int parts = ( compound ) ? d : 1;
       double bump_ang = angle(n,d)/(double)parts;
 
+      // built in epsilon here
 	   if( (n > 0) && (ratios[i] > epsilon) ) {
 	   	double bump_angle = 0.0;
 	   	int vert_idx = 0;
@@ -1241,6 +1261,7 @@ vector<col_geom_v> symmetro::CalcPolygons( const symmetro_opts &opts )
       }
       
       // epsilon size faces are because ratio was set at 0
+      // built in epsilon here
       if ( fabs( ratios[i] ) <= epsilon ) {
          pgeom[j].clear_all();
       }
@@ -1269,7 +1290,8 @@ bool is_point_on_polygon_edges(const geom_if &polygon, const vec3d &P, const dou
    return answer;
 }
 
-bool detect_collision( const col_geom_v &geom )
+// use local epsilon
+bool detect_collision( const col_geom_v &geom, const symmetro_opts &opts)
 {
    const vector<vector<int> > &faces = geom.faces();
    const vector<vec3d> &verts = geom.verts();
@@ -1288,7 +1310,7 @@ bool detect_collision( const col_geom_v &geom )
          vec3d P, dir;
          if ( two_plane_intersect(  centroid(verts, face0), face_norm(verts, face0),
                                     centroid(verts, face1), face_norm(verts, face1),
-                                    P, dir, epsilon ) ) {
+                                    P, dir, opts.epsilon ) ) {
             if ( !P.is_set() )
                continue;               
             // if two polygons intersect, see if intersection point is inside polygon
@@ -1297,10 +1319,10 @@ bool detect_collision( const col_geom_v &geom )
             col_geom_v polygon = faces_to_geom(geom, face_idxs);
             int winding_number = 0;
             // get winding number, if not zero, point is on a polygon
-            wn_PnPoly( polygon, P, 2, winding_number, epsilon );
+            wn_PnPoly( polygon, P, 2, winding_number, opts.epsilon );
             // if point in on an edge set winding number back to zero
             if ( winding_number ) {
-               if ( is_point_on_polygon_edges( polygon, P, epsilon ) )
+               if ( is_point_on_polygon_edges( polygon, P, opts.epsilon ) )
                   winding_number = 0;
             }
             if ( winding_number ) {
@@ -1349,13 +1371,14 @@ col_geom_v build_geom(vector<col_geom_v> &pgeom, const symmetro_opts &opts)
       geom.append(pgeom[i]);
    }
    
+   // control sort_merge with local epsilon
    if ( opts.convex_hull > 1 )
-      sort_merge_elems(geom, "vf", epsilon);
+      sort_merge_elems(geom, "vf", opts.epsilon);
    
    // check for collisions
    bool collision = false;
    if ( opts.convex_hull > 2 )
-      collision = detect_collision( geom );
+      collision = detect_collision( geom, opts );
       if ( collision ) {
          opts.warning("collision detected. convex hull is suppressed", 'C');
    }
@@ -1369,7 +1392,8 @@ col_geom_v build_geom(vector<col_geom_v> &pgeom, const symmetro_opts &opts)
             opts.warning(errmsg, 'C');
 
       // merged faces will retain RGB color
-      sort_merge_elems(geom, "f", epsilon);
+      // control sort_merge with local epsilon
+      sort_merge_elems(geom, "f", opts.epsilon);
 
       // after sort merge, only new faces from convex hull will be uncolored
       coloring clrng(&geom);
@@ -1532,6 +1556,7 @@ int main(int argc, char *argv[])
          for( int j=0; j<2; j++ ) {
             if (i==j)
                continue;
+            // built in epsilon here
             if ( edge_length[i] > epsilon && edge_length[j] > epsilon )
                fprintf(stderr,"edge length ratio of polygon %d to %d = %.17lf\n", i, j, edge_length[i] / edge_length[j] );
          }
