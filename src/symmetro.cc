@@ -1385,7 +1385,7 @@ col_geom_v build_geom(vector<col_geom_v> &pgeom, const symmetro_opts &opts)
    
    if ( ( !collision && opts.convex_hull == 4 ) || ( opts.convex_hull == 3 ) ) {
       char errmsg[MSG_SZ];
-      int ret = geom.add_hull("",errmsg);
+      int ret = geom.set_hull("A1",errmsg);
       // probably never happen
       if(!ret)
          if (opts.verbose)
