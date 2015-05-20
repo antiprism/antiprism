@@ -50,16 +50,17 @@ axes having the same symmetry group and rotational orders
 m1,m2: an integer multiplier for each axis. i.e. m1*p and m2*q
 .IP
 also can be entered as m1/d, m2/d fractional values
-e.g. T[2,3],3,2  I[5,2]2,5/2,6  D7[7,3],1,2, D11[2,2]5,2,2
+e.g. T[3,2],1,2  I[5,2]2,1/2,3  D7[7,3],1,2  D11[2,2]5,2,2
 .IP
 Axis pairs are from the following
 T: [3, 3], [3, 2], [2, 2]
 O: [4, 4], [4, 3], [4, 2]x2, [3, 3], [3, 2]x2, [2, 2]x2
 I: [5, 5], [5, 3]x2, [5, 2]x3, [3, 3]x2, [3, 2]x4, [2, 2]x4
 DN:[N, q] q>1, [2,2]x(n/2 rounded down)
-.TP
-\fB\-d\fR <n/d>
-Twisters with S symmetry. n and d must be odd. denominator optional
+.HP
+\fB\-d\fR <n/d,D> Twisters with S symmetry. n and d must be odd. denominator optional
+.IP
+optional D substitutes a polygon of n/D in place of n/d
 .TP
 \fB\-a\fR <a,n>
 a in degrees of rotation given to polygon applied to optional axis n
@@ -74,6 +75,10 @@ encountered e.g. 0.5,1 (default: calculated for unit edge length)
 .TP
 \fB\-C\fR <mode> convex hull. polygons=1, suppress=2, force=3, normal=4
 (default: 4)
+.HP
+\fB\-q\fR <args> include frame elements in output
+.IP
+r \- rhombic tiling edges, a \- rotation axes (default: none)
 .TP
 \fB\-v\fR
 verbose output
@@ -86,6 +91,9 @@ minimum distance for unique vertex locations as negative exponent
 \fB\-o\fR <file> write output to file (default: write to standard output)
 .PP
 Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
+.TP
+\fB\-Q\fR <col>
+frame color  (default: skyblue3)
 .TP
 \fB\-V\fR <col>
 vertex color (default: gold)
