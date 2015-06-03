@@ -63,8 +63,8 @@ class symmetro_opts: public prog_opts {
       double ratio;
       int convex_hull;
       string frame_elems;
+      double offset;
       bool verbose;
-      int mode;
       
       vector<int> col_axis_idx;
       char face_coloring_method;
@@ -88,8 +88,8 @@ class symmetro_opts: public prog_opts {
                        add_pi(false),
                        ratio(0.0),
                        convex_hull(0),
+                       offset(0.0),
                        verbose(false),
-                       mode(0),
                        face_coloring_method('a'),
                        face_opacity(255),
                        vert_col(col_val(255,215,0)),     // gold
@@ -129,7 +129,7 @@ void symmetro_opts::usage()
 "               multiplier must be * or 0, the other two are positive integers\n"
 "            a: face rotation type: vertex=1, edge=0  (default: 1)\n"
 "            example: -k i,2,*,4,e\n"
-"  -t <s[p,q],i,m1,m2> Twister notation. Generate twister models.\n"
+"  -t <s[p,q]i,m1,m2> Twister notation. Generate twister models.\n"
 "            s: symmetry. I-icosahedral, O-octahedral, T-tetrahedral, D-dihedral\n"
 "            p,q: rotational order of each of the two axes\n"
 "            i: (default: 1): integer to select between non-equivalent pairs of\n"
@@ -152,6 +152,8 @@ void symmetro_opts::usage()
 "  -C <mode> convex hull. polygons=1, suppress=2, force=3, normal=4  (default: 4)\n"
 "  -q <args> include frame elements in output\n"
 "               r - rhombic tiling edges, a - rotation axes (default: none)\n"
+"  -O <dist> amount to offset the first polygon to avoid coplanarity with the\n"
+"               second polygon, for example 0.0001 (default: 0.0)\n"
 "  -v        verbose output\n"
 "  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
@@ -201,10 +203,11 @@ void symmetro_opts::process_command_line(int argc, char **argv)
    string id;
    string map_file;
    vector<int> n;
+   int mode = 0;
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hk:t:m:d:a:r:C:q:vf:Q:V:E:T:l:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hk:t:m:d:a:r:C:q:O:vf:Q:V:E:T:l:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -584,10 +587,6 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                count1++;
             }
             
-            // substitute D is used so default it to d
-            if ( substitute_d == 0 )
-               substitute_d = d[0];
-            
             // fill both n/d
             if ( (int)n.size() == 1 ) {
                n.push_back(n[0]);
@@ -716,6 +715,11 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             if(strspn(optarg, "ra") != strlen(optarg))
                error(msg_str("frame elements are '%s' must be from r and a", optarg), c);
             frame_elems=optarg;
+            break;
+            
+         case 'O':
+            if( !read_double(optarg, &offset, errmsg) )
+               error(errmsg, "offset value");
             break;
             
          case 'v':
@@ -863,6 +867,7 @@ public:
 	
    double angle( const int &n, const int &d );
    double circumradius( const int &n, const int &d );
+   void unitize_edges( col_geom_v &geom );
 
    vector<col_geom_v> CalcPolygons( const symmetro_opts &opts );
 	
@@ -1188,6 +1193,15 @@ double symmetro::circumradius( const int &n, const int &d )
    return ( edge_len / (2.0*sin(angle(n,d)/2.0)) );
 }
 
+void symmetro::unitize_edges( col_geom_v &geom )
+{
+   geom_info info(geom);
+   if (info.num_iedges() > 0) {
+      double val = info.iedge_lengths().sum/info.num_iedges();
+      geom.transform(mat3d::scale(1/val));
+   }
+}   
+
 vector<col_geom_v> symmetro::CalcPolygons( const symmetro_opts &opts )
 {
    vector<double> ratios(2);
@@ -1269,7 +1283,7 @@ vector<col_geom_v> symmetro::CalcPolygons( const symmetro_opts &opts )
       int parts = ( compound ) ? d : 1;
       double bump_ang = angle(n,d)/(double)parts;
       
-      int polygon_d = ( sym == 'S' ) ? opts.substitute_d : d;
+      int polygon_d = ( opts.substitute_d ) ? opts.substitute_d : d;
 
       // built in epsilon here
 	   if( (n > 0) && (ratios[i] > epsilon) ) {
@@ -1279,7 +1293,7 @@ vector<col_geom_v> symmetro::CalcPolygons( const symmetro_opts &opts )
 	      for( int p = 0; p < parts; p++ ) {   
             for( int idx = 0; idx < n; idx++ ) {
                if ( i == 0 ) {
-	               pgeom[j].add_vert( mat3d::rot(vec3d(0, 0, 1), (idx * angle(n,polygon_d)) + bump_angle) * P );
+	               pgeom[j].add_vert( mat3d::rot(vec3d(0, 0, 1), (idx * angle(n,polygon_d)) + bump_angle) * P + vec3d(0.0, 0.0, opts.offset) );
 	            }
 	            else
 	            if ( i == 1 ) {
@@ -1301,6 +1315,9 @@ vector<col_geom_v> symmetro::CalcPolygons( const symmetro_opts &opts )
             pgeom[j].transform( mat3d::rot(vec3d(0.0,0.0,180.0/((double)dihedral_n*2.0))) );
          }
       }
+      
+      if ( opts.substitute_d )
+         unitize_edges( pgeom[j] );
       
       // epsilon size faces are because ratio was set at 0
       // built in epsilon here
