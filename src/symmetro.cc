@@ -1527,7 +1527,7 @@ col_geom_v build_frame(vector<col_geom_v> &pgeom, const symmetro_opts &opts)
       
       if ( opts.sym == 'S' ) {
          //vec3d v2 = vec3d(v1[0],v1[1],-v1[2]) * mat3d::rot(0,0,deg2rad(180.0/opts.dihedral_n));
-         vec3d v2 = vec3d(v1[0],v1[1],-v1[2]) * mat3d::rot(0,0,(M_PI*double(opts.d[0])/double(opts.dihedral_n)));
+         vec3d v2 = vec3d(v1[0],v1[1],-v1[2]) * mat3d::rot(0,0,(M_PI*double(opts.d[0])/double(opts.dihedral_n)*(is_even(opts.dihedral_n) ? 2.0 : 1.0)));
          
          ax = vcross(v1, v2).unit();
          ang = angle_around_axis(v1, v2, ax);
@@ -1565,9 +1565,24 @@ col_geom_v build_frame(vector<col_geom_v> &pgeom, const symmetro_opts &opts)
       if ( opts.sym == 'D' )
          sym.init(sch_sym::D, opts.dihedral_n);
       else
-      if ( opts.sym == 'S' )
-         sym.init(sch_sym::S, opts.dihedral_n*2);
+      if ( opts.sym == 'S' ) {
+         if ( is_even(opts.d[0]) || is_even(opts.dihedral_n) )
+            // when d is even we will reflect on Z after sym_repeat
+            sym.init(sch_sym::C, opts.dihedral_n);
+         else
+            // normal behavior
+            sym.init(sch_sym::S, opts.dihedral_n*2);
+      }
+         
       sym_repeat(geom, geom, sym, ELEM_FACES);
+      
+      // when symmetry S and d is even then reflect on Z
+      if ( opts.sym == 'S' && ( is_even(opts.d[0]) || is_even(opts.dihedral_n) ) ) {
+         col_geom_v geom_refl;
+         geom_refl = geom;
+         geom_refl.transform(mat3d::refl(vec3d(0,0,1)));
+         geom.append(geom_refl);
+      }
    }
    
    //sort_merge_elems(geom, "ve", opts.epsilon);
