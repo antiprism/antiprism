@@ -1414,9 +1414,24 @@ col_geom_v build_geom(vector<col_geom_v> &pgeom, const symmetro_opts &opts)
          if ( opts.sym == 'D' )
             sym.init(sch_sym::D, opts.dihedral_n);
          else
-         if ( opts.sym == 'S' )
-            sym.init(sch_sym::S, opts.dihedral_n*2);
+         if ( opts.sym == 'S' ) {
+            if ( is_even(opts.d[0]) || is_even(opts.dihedral_n) )
+               // when d is even we will reflect on Z after sym_repeat
+               sym.init(sch_sym::C, opts.dihedral_n);
+            else
+               // normal behavior
+               sym.init(sch_sym::S, opts.dihedral_n*2);
+         }
+         
          sym_repeat(pgeom[i], pgeom[i], sym, ELEM_FACES);
+         
+         // when symmetry S and d is even then reflect on Z
+         if ( opts.sym == 'S' && ( is_even(opts.d[0]) || is_even(opts.dihedral_n) ) ) {
+            col_geom_v geom_refl;
+            geom_refl = pgeom[i];
+            geom_refl.transform(mat3d::refl(vec3d(0,0,1)));
+            pgeom[i].append(geom_refl);
+         }
       }
       
       if (opts.face_coloring_method == 'a') {
