@@ -594,7 +594,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             }
 
             if ( is_even(n[0]) )
-               warning("fractional numerator n should be odd", c);
+               warning("fractional numerator n should be odd, model will only connect correctly at certain twist angles", c);
                //error("fractional numerator n must be odd", c);
                
             if ( is_even(d[0]) )
