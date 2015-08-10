@@ -148,7 +148,7 @@ void symmetro_opts::usage()
 "                optional D substitutes a polygon of n/D in place of n/d\n"
 "  -c <n/d,D> C symmetry twisters. n or d must be even. denominator optional\n"
 "                optional D substitutes a polygon of n/D in place of n/d\n"
-"  -z        if C symmetry, optionally mirror on z axis\n"
+"  -z        optionally mirror on z axis (mostly for C symmetry)\n"
 "  -a <a,n>  a in degrees of rotation given to polygon applied to optional axis n\n"
 "               if n not given, implies first axis encountered\n"
 "               radians may be entered as 'rad(a)'\n"
