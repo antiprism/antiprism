@@ -55,6 +55,7 @@ class symmetro_opts: public prog_opts {
       vector<int> d;
       int dihedral_n;
       int substitute_d;
+      bool c_sym_mirror;
       vector<int> rotation_axis;
       double rotation_as_increment;
       double rotation;
@@ -83,6 +84,7 @@ class symmetro_opts: public prog_opts {
                        q(0),
                        dihedral_n(0),
                        substitute_d(0),
+                       c_sym_mirror(false),
                        rotation_as_increment(0.0),
                        rotation(0.0),
                        add_pi(false),
@@ -122,7 +124,7 @@ void symmetro_opts::usage()
 "%s"
 "  -k <s,l,m,n,a> Kaplan-Hart notation. Generate Symmetrohedra based on a study\n"
 "            by Craig S. Kaplan and George W. Hart (http://www.georgehart.com).\n"
-"            Project url: http://www.cgl.uwaterloo.ca/~csk/projects/symmetrohedra\n"
+"            Url: http://www.cgl.uwaterloo.ca/~csk/projects/symmetrohedra\n"
 "            s: symmetry type of Symmetrohedra. sets {p,q,2}\n"
 "               I-icosahedral {5,3,2} O-octahedral {4,3,2} T-tetrahedral {3,3,2}\n"
 "            l,m,n: multipliers for axis polygons. Separated by commas, one\n"
@@ -142,14 +144,17 @@ void symmetro_opts::usage()
 "                  O: [4, 4], [4, 3], [4, 2]x2, [3, 3], [3, 2]x2, [2, 2]x2\n"
 "                  I: [5, 5], [5, 3]x2, [5, 2]x3, [3, 3]x2, [3, 2]x4, [2, 2]x4\n"
 "                  DN:[N, q] q>1, [2,2]x(n/2 rounded down)\n"
-"  -d <n/d,D> Twisters with S symmetry. n and d must be odd. denominator optional\n"
+"  -s <n/d,D> S symmetry twisters. n and d must be odd. denominator optional\n"
 "                optional D substitutes a polygon of n/D in place of n/d\n"
+"  -c <n/d,D> C symmetry twisters. n or d must be even. denominator optional\n"
+"                optional D substitutes a polygon of n/D in place of n/d\n"
+"  -z        if C symmetry, optionally mirror on z axis\n"
 "  -a <a,n>  a in degrees of rotation given to polygon applied to optional axis n\n"
 "               if n not given, implies first axis encountered\n"
 "               radians may be entered as 'rad(a)'\n"
-"  -r <r,n>  ratio r of axis n polygon. if n is not specified, implies first axis\n"
-"               encountered e.g. 0.5,1 (default: calculated for unit edge length)\n"
-"  -C <mode> convex hull. polygons=1, suppress=2, force=3, normal=4  (default: 4)\n"
+"  -r <r,n>  ratio r of axis n polygon. if n is not specified implies first axis\n"
+"               encountered e.g 0.5,1 (default: calculated for unit edge length)\n"
+"  -C <mode> convex hull. polygons=1, suppress=2, force=3, normal=4 (default: 4)\n"
 "  -q <args> include frame elements in output\n"
 "               r - rhombic tiling edges, a - rotation axes (default: none)\n"
 "  -O <dist> amount to offset the first polygon to avoid coplanarity with the\n"
@@ -207,7 +212,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hk:t:m:d:a:r:C:q:O:vf:Q:V:E:T:l:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hk:t:m:s:c:za:r:C:q:O:vf:Q:V:E:T:l:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -215,7 +220,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
           // Kaplan-Hart notation
          case 'k': {
             if ( mode )
-               error("-k and -t cannot be used together", c);
+               error("-k, -t, -s, -c cannot be used together", c);
             mode = 1;
            
             char parse_key1[] = ",";
@@ -366,7 +371,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
          // twister notation
          case 't': {
             if ( mode )
-               error("-k and -t cannot be used together", c);
+               error("-k, -t, -s, -c cannot be used together", c);
             mode = 2;
                         
             char parse_key1[] = ",[]";
@@ -525,10 +530,10 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             break;
          }
          
-         // twister notation
-         case 'd': {
+         // S symmetry
+         case 's': {
             if ( mode )
-               error("-k, -t, -d cannot be used together", c);
+               error("-k, -t, -s, -c cannot be used together", c);
             mode = 3;
             
             char parse_key1[] = ",";
@@ -594,12 +599,10 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             }
 
             if ( is_even(n[0]) )
-               warning("fractional numerator n should be odd, model will only connect correctly at certain twist angles", c);
-               //error("fractional numerator n must be odd", c);
+               error("fractional numerator n must be odd", c);
                
             if ( is_even(d[0]) )
-               warning("d should be odd, model will only connect correctly at certain twist angles", c);
-               //error("fraction denominator d should be odd", c);
+               error("fraction denominator d should be odd", c);
                
             if ( (double)n[0]/(double)d[0] < 1.5 )
                error("polygon: the polygon fraction cannot be less than 3/2 (base rhombic tiling is not constructible)", c);
@@ -611,6 +614,94 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                              
             break;
          }
+         
+         // C symmetry
+         case 'c': {
+            if ( mode )
+               error("-k, -t, -s, -c cannot be used together", c);
+            mode = 4;
+            
+            char parse_key1[] = ",";
+            char parse_key2[] = "/";
+            
+            // memory pointers for strtok_r
+            char *tok_ptr1;
+            char *tok_ptr2;
+               
+            char *ptok1 = strtok_r(optarg,parse_key1,&tok_ptr1);
+            int count1 = 0;
+            while( ptok1 != NULL ) {
+               if ( count1 == 0 ) {
+                  int n_part;
+                  int d_part;
+                  
+                  char *ptok2 = strtok_r(ptok1,parse_key2,&tok_ptr2);
+                  int count2 = 0;
+                  while( ptok2 != NULL ) {
+                     if ( count2 == 0 ) {
+                        if(!read_int(ptok2, &n_part, errmsg))
+                           error(errmsg, "n/d (n part)");
+                           
+                        if (n_part<0)
+                           error("n of n/d must be non-negative", c);
+                        n.push_back(n_part);
+                     }
+                     else
+                     if ( count2 == 1 ) {
+                        if(!read_int(ptok2, &d_part, errmsg))
+                           error(errmsg, "n/d (d part)");
+                           
+                        if (d_part<=0)
+                           error("d of n/d must be positive", c);
+                        d.push_back(d_part);
+                     }
+                     
+                     ptok2 = strtok_r(NULL,parse_key2,&tok_ptr2);
+                     count2++;
+                  }
+                  
+                  // if there is no denominator then it is 1
+                  if ( (int)n.size() > (int)d.size() )
+                     d.push_back(1);               
+               }
+               else
+               if ( count1 == 1 ) {
+                  if (!read_int(ptok1, &substitute_d, errmsg))
+                     error(errmsg, "substitute D");
+                  
+                  if ( substitute_d < 1 || substitute_d > n[0] )
+                     error(msg_str("substitute D must be between 1 and %d", n[0]), c);
+               }
+               
+               ptok1 = strtok_r(NULL,parse_key1,&tok_ptr1);
+               count1++;
+            }
+            
+            // fill both n/d
+            if ( (int)n.size() == 1 ) {
+               n.push_back(n[0]);
+               d.push_back(d[0]);               
+            }
+
+            if ( !is_even(n[0]) && !is_even(d[0]) )
+               error("one of fractional numerator n or denominator must be even", c);
+               
+            if ( (double)n[0]/(double)d[0] < 1.5 )
+               error("polygon: the polygon fraction cannot be less than 3/2 (base rhombic tiling is not constructible)", c);
+               
+            warning("model will only connect correctly at certain twist angles", c);
+               
+            sym = 'C';
+            p = n[0];
+            q = n[1];
+            dihedral_n = n[0]; 
+                             
+            break;
+         }
+         
+         case 'z':
+            c_sym_mirror = true;
+            break;
           
          // rotation  
          case 'a': {
@@ -796,7 +887,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
       for( int i=0; i<(int)n.size(); i++ ) {
          multipliers.push_back(n[i]);
          // twister rhomb
-         if ( mode == 3 )
+         if ( mode == 3 || mode == 4 )
             multipliers[i] /= dihedral_n;
       }
    }
@@ -890,6 +981,9 @@ void symmetro::debug()
 {
    if ( sym == 'S')
       fprintf(stderr,"\nsymmetry = %c%d\n\n", sym, dihedral_n*2);
+   else
+   if ( sym == 'C')
+      fprintf(stderr,"\nsymmetry = %c%d\n\n", sym, dihedral_n);
    else
       fprintf(stderr,"\nsymmetry = %c[%d,%d]%d\n\n", sym, p, q, sym_id_no);
    
@@ -1159,7 +1253,7 @@ void symmetro::fill_sym_vec( const symmetro_opts &opts ) {
    }
    else
    // twister_rhomb
-   if ( sym == 'S' ) {
+   if ( sym == 'S' || sym == 'C' ) {
       if ( p == dihedral_n ) {
          double a = axis_angle( dihedral_n, opts.d[0] );
          sym_vec[0] = vec3d( 0.0, 0.0, 1.0 );
@@ -1221,7 +1315,7 @@ vector<col_geom_v> symmetro::CalcPolygons( const symmetro_opts &opts )
    double r0 = ratios[0] * circumradius( getN(axis[0]), opts.d[axis[0]] );
    double r1 = ratios[1] * circumradius( getN(axis[1]), opts.d[axis[1]] );
 
-   double angle_between_axes = ( sym != 'S' ) ? getAngleBetweenAxesSin( axis[0], axis[1] ) : axis_angle( getN(axis[0]), opts.d[axis[0]] );
+   double angle_between_axes = ( sym != 'S' && sym != 'C' ) ? getAngleBetweenAxesSin( axis[0], axis[1] ) : axis_angle( getN(axis[0]), opts.d[axis[0]] );
    if ( opts.verbose )
       fprintf(stderr,"\nangle between axes: radians = %.17lf degrees = %.17lf\n",angle_between_axes,rad2deg(angle_between_axes));
       
@@ -1252,7 +1346,7 @@ vector<col_geom_v> symmetro::CalcPolygons( const symmetro_opts &opts )
      disc = 0;
 
    double sign_flag = -1.0;
-   if ( sym == 'S' ) {
+   if ( sym == 'S' || sym == 'C' ) {
       // AR - The sign flag, which changes for the range 90 to 270 degrees, allows
       // the model to reverse, otherwise the model breaks apart in this range.
       double turn_angle_test_val = fabs(fmod(fabs(ang), 2.0*M_PI) - M_PI);
@@ -1311,7 +1405,7 @@ vector<col_geom_v> symmetro::CalcPolygons( const symmetro_opts &opts )
          }
 
 	      pgeom[j].transform( mat3d::alignment(vec3d(0, 0, 1), vec3d(1, 0, 0), sym_vec[axis[0]], sym_vec[axis[1]]) );
-	      if ( sym == 'S' ) {
+	      if ( sym == 'S' || sym == 'C' ) {
             pgeom[j].transform( mat3d::rot(vec3d(0.0,0.0,180.0/((double)dihedral_n*2.0))) );
          }
       }
@@ -1414,19 +1508,17 @@ col_geom_v build_geom(vector<col_geom_v> &pgeom, const symmetro_opts &opts)
          if ( opts.sym == 'D' )
             sym.init(sch_sym::D, opts.dihedral_n);
          else
-         if ( opts.sym == 'S' ) {
-            if ( is_even(opts.d[0]) || is_even(opts.dihedral_n) )
-               // when d is even we will reflect on Z after sym_repeat
-               sym.init(sch_sym::C, opts.dihedral_n);
-            else
-               // normal behavior
-               sym.init(sch_sym::S, opts.dihedral_n*2);
-         }
+         if ( opts.sym == 'S' )
+            sym.init(sch_sym::S, opts.dihedral_n*2);
+         else
+         if ( opts.sym == 'C' )
+            // reflect on Z after sym_repeat
+            sym.init(sch_sym::C, opts.dihedral_n);
          
          sym_repeat(pgeom[i], pgeom[i], sym, ELEM_FACES);
          
-         // when symmetry S and d is even then reflect on Z
-         if ( opts.sym == 'S' && ( is_even(opts.d[0]) || is_even(opts.dihedral_n) ) ) {
+         // when symmetry C reflect on Z
+         if ( opts.c_sym_mirror ) {
             col_geom_v geom_refl;
             geom_refl = pgeom[i];
             geom_refl.transform(mat3d::refl(vec3d(0,0,1)));
@@ -1525,7 +1617,7 @@ col_geom_v build_frame(vector<col_geom_v> &pgeom, const symmetro_opts &opts)
          geom.add_edge(make_edge(i,i+1));
       }
       
-      if ( opts.sym == 'S' ) {
+      if ( opts.sym == 'S' || opts.sym == 'C' ) {
          //vec3d v2 = vec3d(v1[0],v1[1],-v1[2]) * mat3d::rot(0,0,deg2rad(180.0/opts.dihedral_n));
          vec3d v2 = vec3d(v1[0],v1[1],-v1[2]) * mat3d::rot(0,0,(M_PI*double(opts.d[0])/double(opts.dihedral_n)*(is_even(opts.dihedral_n) ? 2.0 : 1.0)));
          
@@ -1565,19 +1657,17 @@ col_geom_v build_frame(vector<col_geom_v> &pgeom, const symmetro_opts &opts)
       if ( opts.sym == 'D' )
          sym.init(sch_sym::D, opts.dihedral_n);
       else
-      if ( opts.sym == 'S' ) {
-         if ( is_even(opts.d[0]) || is_even(opts.dihedral_n) )
-            // when d is even we will reflect on Z after sym_repeat
-            sym.init(sch_sym::C, opts.dihedral_n);
-         else
-            // normal behavior
-            sym.init(sch_sym::S, opts.dihedral_n*2);
-      }
+      if ( opts.sym == 'S' )
+         sym.init(sch_sym::S, opts.dihedral_n*2);
+      else
+      if ( opts.sym == 'C' )
+         // reflect on Z after sym_repeat
+         sym.init(sch_sym::C, opts.dihedral_n);
          
       sym_repeat(geom, geom, sym, ELEM_FACES);
       
-      // when symmetry S and d is even then reflect on Z
-      if ( opts.sym == 'S' && ( is_even(opts.d[0]) || is_even(opts.dihedral_n) ) ) {
+      // when symmetry C reflect on Z
+      if ( opts.c_sym_mirror ) {
          col_geom_v geom_refl;
          geom_refl = geom;
          geom_refl.transform(mat3d::refl(vec3d(0,0,1)));
