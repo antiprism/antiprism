@@ -27,7 +27,7 @@ libantiprism_la_SOURCES = off_read.cc off_write.cc crds_read.cc disp_poly.cc\
 	rand_gen.h scene.h symmetry.h transforms.h \
 	utils.h utils_ultragetopt.h vec3d.h vec4d.h vec_utils.h vrml_writer.h
 
-supdir = $(datadir)/$(PACKAGE)-$(VERSION)
+supdir = $(datadir)/$(PACKAGE)
 libantiprism_la_CPPFLAGS = -DSUPDIR="\"$(supdir)\"" 
 libantiprism_la_LDFLAGS = -no-undefined -version-info 0:0:0
 libantiprism_la_LIBADD = tesselator/libtess.la muparser/libmuparser.la
