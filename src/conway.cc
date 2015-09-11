@@ -1438,7 +1438,7 @@ void cn_face_coloring(col_geom_v &geom, const char &face_coloring_method, const 
    if (face_coloring_method == 'n') {
       const vector<vector<int> > &faces = geom.faces();
       for (unsigned int i=0;i<faces.size();i++) {
-         int fsz = faces[i].size() - 3;
+         int fsz = faces[i].size();
          col_val col = map.get_col(fsz);
          if (col.is_val()) {
             int opq = (face_pattern[fsz%face_pattern.size()] == '1') ? face_opacity : col[3];

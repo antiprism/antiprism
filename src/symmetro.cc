@@ -55,7 +55,7 @@ class symmetro_opts: public prog_opts {
       vector<int> d;
       int dihedral_n;
       int substitute_d;
-      bool c_sym_mirror;
+      string sym_mirror;
       vector<int> rotation_axis;
       double rotation_as_increment;
       double rotation;
@@ -66,6 +66,7 @@ class symmetro_opts: public prog_opts {
       string frame_elems;
       double offset;
       bool verbose;
+      char mode;
       
       vector<int> col_axis_idx;
       char face_coloring_method;
@@ -84,7 +85,6 @@ class symmetro_opts: public prog_opts {
                        q(0),
                        dihedral_n(0),
                        substitute_d(0),
-                       c_sym_mirror(false),
                        rotation_as_increment(0.0),
                        rotation(0.0),
                        add_pi(false),
@@ -92,6 +92,7 @@ class symmetro_opts: public prog_opts {
                        convex_hull(0),
                        offset(0.0),
                        verbose(false),
+                       mode('\0'),
                        face_coloring_method('a'),
                        face_opacity(255),
                        vert_col(col_val(255,215,0)),     // gold
@@ -144,16 +145,16 @@ void symmetro_opts::usage()
 "                  O: [4, 4], [4, 3], [4, 2]x2, [3, 3], [3, 2]x2, [2, 2]x2\n"
 "                  I: [5, 5], [5, 3]x2, [5, 2]x3, [3, 3]x2, [3, 2]x4, [2, 2]x4\n"
 "                  DN:[N, q] q>1, [2,2]x(n/2 rounded down)\n"
-"  -s <n/d,D> S symmetry twisters. n and d must be odd. denominator optional\n"
+"  -s <n/d,D,s> S symmetry twisters. denominator d optional (default: 1)\n"
 "                optional D substitutes a polygon of n/D in place of n/d\n"
-"  -c <n/d,D> C symmetry twisters. n or d must be even. denominator optional\n"
-"                optional D substitutes a polygon of n/D in place of n/d\n"
-"  -z        optionally mirror on z axis (mostly for C symmetry)\n"
-"  -a <a,n>  a in degrees of rotation given to polygon applied to optional axis n\n"
-"               if n not given, implies first axis encountered\n"
+"                optional s symmetry override. s - S symmetry, c - C symmetry\n"
+"  -M <opt>  mirroring. n - none (default), z - z plane (may create compound)\n"
+"  -a <a,n>  a in degrees of rotation given to polygon applied to optional\n"
+"               axis n. if n not given, implies first axis encountered\n"
 "               radians may be entered as 'rad(a)'\n"
 "  -r <r,n>  ratio r of axis n polygon. if n is not specified implies first axis\n"
 "               encountered e.g 0.5,1 (default: calculated for unit edge length)\n"
+"               not valid for -s or -c\n"
 "  -C <mode> convex hull. polygons=1, suppress=2, force=3, normal=4 (default: 4)\n"
 "  -q <args> include frame elements in output\n"
 "               r - rhombic tiling edges, a - rotation axes (default: none)\n"
@@ -208,11 +209,11 @@ void symmetro_opts::process_command_line(int argc, char **argv)
    string id;
    string map_file;
    vector<int> n;
-   int mode = 0;
+   string sym_override;
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hk:t:m:s:c:za:r:C:q:O:vf:Q:V:E:T:l:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hk:t:m:s:M:a:r:C:q:O:vf:Q:V:E:T:l:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -220,8 +221,8 @@ void symmetro_opts::process_command_line(int argc, char **argv)
           // Kaplan-Hart notation
          case 'k': {
             if ( mode )
-               error("-k, -t, -s, -c cannot be used together", c);
-            mode = 1;
+               error("-k, -t, -s cannot be used together", c);
+            mode = 'k';
            
             char parse_key1[] = ",";
             
@@ -292,7 +293,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                      error("at least one axis multiplier must be * or zero",c);
                      
                   if( multipliers[2] == 1 )
-                     warning("model will contain digons");
+                     warning("model will contain digons", c);
                   
                   int orders[3] = { 0,3,2 };
                   orders[0] = ( sym == 'T' ) ? 3 : ( ( sym == 'O' ) ? 4 : 5 );
@@ -340,7 +341,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                   // in the paper, edge connection is shown as 'e', vertex connection is shown a '1'
                   id = get_arg_id(tokens[i].c_str(), "edge=0|vertex=1", argmatch_add_id_maps, errmsg);
                   if(id=="")
-                     error(errmsg);
+                     error(errmsg, c);
                   if ( id == "0" )
                      rotation_as_increment = rad2deg(1.0);
                   else
@@ -371,8 +372,8 @@ void symmetro_opts::process_command_line(int argc, char **argv)
          // twister notation
          case 't': {
             if ( mode )
-               error("-k, -t, -s, -c cannot be used together", c);
-            mode = 2;
+               error("-k, -t, -s cannot be used together", c);
+            mode = 't';
                         
             char parse_key1[] = ",[]";
             
@@ -411,13 +412,13 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                      if ( tokens[i].length() < 2 )
                         error("No N found after D symmetry specifier", c);  
                      if (!read_int(tokens[i].c_str()+1, &dihedral_n, errmsg))
-                        error(errmsg, "dihedral symmetry N");
+                        error(errmsg, "dihedral symmetry N", c);
                   }
                }
                else
                if ( i == 1 ) {
                   if(!read_int(tokens[i].c_str(), &p, errmsg))
-                     error(errmsg, "axis 1");
+                     error(errmsg, "axis 1", c);
                   if ( p < 2 )
                      error("axis 1 rotational order number be greater than 1", c);
                   
@@ -427,7 +428,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                else
                if ( i == 2 ) {
                   if(!read_int(tokens[i].c_str(), &q, errmsg))
-                     error(errmsg, "axis 2");
+                     error(errmsg, "axis 2", c);
                   if ( q < 2 )
                      error("axis 2 rotational order number be greater than 1", c);
                      
@@ -437,7 +438,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                else
                if ( i == 3 ) {
                   if(!read_int(tokens[i].c_str(), &sym_id_no, errmsg))
-                     error(errmsg, "symmetry id number");
+                     error(errmsg, "symmetry id number", c);
                   if (sym_id_no<=0)
                      error("symmetry id number must be positive", c);
                }
@@ -446,7 +447,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                   if ( !strchr(tokens[i].c_str(),'/') ) {
                      int mult;
                      if(!read_int(tokens[i].c_str(), &mult, errmsg))
-                        error(errmsg, "multiplier");
+                        error(errmsg, "multiplier", c);
                      if (mult<=0)
                         error("multiplier must be positive", c);
                      multipliers.push_back(mult);
@@ -472,7 +473,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                      while( ptok2 != NULL ) {
                         if ( count2 == 0 ) {
                            if(!read_int(ptok2, &n_part, errmsg))
-                              error(errmsg, "n/d (n part)");
+                              error(errmsg, "n/d (n part)", c);
                               
                            if (n_part<=0)
                               error("n of n/d must be positive", c);
@@ -481,7 +482,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                         else
                         if ( count2 == 1 ) {
                            if(!read_int(ptok2, &d_part, errmsg))
-                              error(errmsg, "n/d (d part)");
+                              error(errmsg, "n/d (d part)", c);
                               
                            if (d_part<=0)
                               error("d of n/d must be positive", c);
@@ -502,7 +503,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             
             if ( (int)n.size() == 1 ) {
                if ( (int)multipliers.size() < 1 )
-                  error("in multipliers specification",c);
+                  error("in multipliers specification", c);
                   
                // goes on end
                if ( mult_tok_num == 4 ) {
@@ -533,8 +534,8 @@ void symmetro_opts::process_command_line(int argc, char **argv)
          // S symmetry
          case 's': {
             if ( mode )
-               error("-k, -t, -s, -c cannot be used together", c);
-            mode = 3;
+               error("-k, -t, -s cannot be used together", c);
+            mode = 's';
             
             char parse_key1[] = ",";
             char parse_key2[] = "/";
@@ -555,7 +556,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                   while( ptok2 != NULL ) {
                      if ( count2 == 0 ) {
                         if(!read_int(ptok2, &n_part, errmsg))
-                           error(errmsg, "n/d (n part)");
+                           error(errmsg, "n/d (n part)", c);
                            
                         if (n_part<0)
                            error("n of n/d must be non-negative", c);
@@ -564,7 +565,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                      else
                      if ( count2 == 1 ) {
                         if(!read_int(ptok2, &d_part, errmsg))
-                           error(errmsg, "n/d (d part)");
+                           error(errmsg, "n/d (d part)", c);
                            
                         if (d_part<=0)
                            error("d of n/d must be positive", c);
@@ -582,10 +583,16 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                else
                if ( count1 == 1 ) {
                   if (!read_int(ptok1, &substitute_d, errmsg))
-                     error(errmsg, "substitute D");
+                     error(errmsg, "substitute D", c);
                   
                   if ( substitute_d < 1 || substitute_d > n[0] )
                      error(msg_str("substitute D must be between 1 and %d", n[0]), c);
+               }
+               else
+               if ( count1 == 2 ) {
+                  if((strspn(ptok1, "sc") != strlen(ptok1)) || strlen(ptok1)>1)
+                     error(msg_str("symmetry override is '%s' must be from s and c", ptok1), c);
+                  sym_override=ptok1;
                }
                
                ptok1 = strtok_r(NULL,parse_key1,&tok_ptr1);
@@ -597,101 +604,18 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                n.push_back(n[0]);
                d.push_back(d[0]);               
             }
-
-            if ( is_even(n[0]) )
-               error("fractional numerator n must be odd", c);
-               
-            if ( is_even(d[0]) )
-               error("fraction denominator d should be odd", c);
                
             if ( (double)n[0]/(double)d[0] < 1.5 )
                error("polygon: the polygon fraction cannot be less than 3/2 (base rhombic tiling is not constructible)", c);
                
-            sym = 'S';
-            p = n[0];
-            q = n[1];
-            dihedral_n = n[0]; 
-                             
-            break;
-         }
-         
-         // C symmetry
-         case 'c': {
-            if ( mode )
-               error("-k, -t, -s, -c cannot be used together", c);
-            mode = 4;
-            
-            char parse_key1[] = ",";
-            char parse_key2[] = "/";
-            
-            // memory pointers for strtok_r
-            char *tok_ptr1;
-            char *tok_ptr2;
-               
-            char *ptok1 = strtok_r(optarg,parse_key1,&tok_ptr1);
-            int count1 = 0;
-            while( ptok1 != NULL ) {
-               if ( count1 == 0 ) {
-                  int n_part;
-                  int d_part;
-                  
-                  char *ptok2 = strtok_r(ptok1,parse_key2,&tok_ptr2);
-                  int count2 = 0;
-                  while( ptok2 != NULL ) {
-                     if ( count2 == 0 ) {
-                        if(!read_int(ptok2, &n_part, errmsg))
-                           error(errmsg, "n/d (n part)");
-                           
-                        if (n_part<0)
-                           error("n of n/d must be non-negative", c);
-                        n.push_back(n_part);
-                     }
-                     else
-                     if ( count2 == 1 ) {
-                        if(!read_int(ptok2, &d_part, errmsg))
-                           error(errmsg, "n/d (d part)");
-                           
-                        if (d_part<=0)
-                           error("d of n/d must be positive", c);
-                        d.push_back(d_part);
-                     }
-                     
-                     ptok2 = strtok_r(NULL,parse_key2,&tok_ptr2);
-                     count2++;
-                  }
-                  
-                  // if there is no denominator then it is 1
-                  if ( (int)n.size() > (int)d.size() )
-                     d.push_back(1);               
-               }
-               else
-               if ( count1 == 1 ) {
-                  if (!read_int(ptok1, &substitute_d, errmsg))
-                     error(errmsg, "substitute D");
-                  
-                  if ( substitute_d < 1 || substitute_d > n[0] )
-                     error(msg_str("substitute D must be between 1 and %d", n[0]), c);
-               }
-               
-               ptok1 = strtok_r(NULL,parse_key1,&tok_ptr1);
-               count1++;
-            }
-            
-            // fill both n/d
-            if ( (int)n.size() == 1 ) {
-               n.push_back(n[0]);
-               d.push_back(d[0]);               
-            }
-
             if ( !is_even(n[0]) && !is_even(d[0]) )
-               error("one of fractional numerator n or denominator must be even", c);
-               
-            if ( (double)n[0]/(double)d[0] < 1.5 )
-               error("polygon: the polygon fraction cannot be less than 3/2 (base rhombic tiling is not constructible)", c);
-               
-            warning("model will only connect correctly at certain twist angles", c);
-               
-            sym = 'C';
+               sym = 'S';
+            else {
+               sym = 'C';
+               if ( !sym_override.length() )
+                  warning("when n or d is even, defaults to C symmetry. Use 's' override to S symmetry", c);
+            }
+
             p = n[0];
             q = n[1];
             dihedral_n = n[0]; 
@@ -699,8 +623,10 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             break;
          }
          
-         case 'z':
-            c_sym_mirror = true;
+         case 'M':
+            if(strspn(optarg, "nz") != strlen(optarg) || strlen(optarg)>1)
+               error(msg_str("symmetry mirror %c must be n or z", optarg), c);
+            sym_mirror=optarg;
             break;
           
          // rotation  
@@ -723,7 +649,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                         num_part = 1.0;
                      else
                      if( !read_double(optarg, &num_part, errmsg) )
-                        error(errmsg, "rotation value");
+                        error(errmsg, "rotation value", c);
                         
                      rotation_as_increment += rad2deg(num_part);
                      if ( ex == 'x' )
@@ -735,7 +661,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                      bool rotation_as_inc = ( ( pch == NULL ) ? false : true );
                      double rot;
                      if(!read_double(ptok1, &rot, errmsg))
-                        error(errmsg, "rotation value");
+                        error(errmsg, "rotation value", c);
                      if ( rotation_as_inc )
                         rotation_as_increment += rot;
                      else
@@ -746,14 +672,14 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                if ( count1 == 1 ) {
                   double d;
                   if(!read_double(ptok1, &d, errmsg))
-                     error(errmsg, "rotation axis");
+                     error(errmsg, "rotation axis", c);
                   int a = (int)floor(d);
                   //if ( rotation_axis_tmp[1] - a > 0.0 )
                   //   error(msg_str("axis numbers must be specified by an integer: '%g'", rotation_axis_tmp[i]), c);
                   rotation_axis.push_back(a);
                   
                   if( rotation_axis[0] > 2 )
-                     error("ratio direction should be 0, 1 or 2", c);
+                     error("axis to apply ratio should be 0, 1 or 2", c);
                }
                
                ptok1 = strtok_r(NULL,parse_key1,&tok_ptr1);
@@ -778,7 +704,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                ratio = epsilon/10.0;
             
             if ( ratio_direction_tmp.size() > 2 ) {
-               error("ratio takes 1 or 2 arguments",c);
+               error("ratio takes 1 or 2 arguments", c);
             }
             else
             if ( ratio_direction_tmp.size() == 2 ) {           
@@ -798,7 +724,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
          case 'C':
             id = get_arg_id(optarg, "polygons=1|suppress=2|force=3|normal=4", argmatch_add_id_maps, errmsg);
             if(id=="")
-               error(errmsg,c);
+               error(errmsg, c);
             convex_hull = atoi(id.c_str());
             break;
             
@@ -810,7 +736,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             
          case 'O':
             if( !read_double(optarg, &offset, errmsg) )
-               error(errmsg, "offset value");
+               error(errmsg, "offset value", c);
             break;
             
          case 'v':
@@ -878,8 +804,8 @@ void symmetro_opts::process_command_line(int argc, char **argv)
    if(argc-optind > 0)
       error("too many arguments");
       
-   if (mode == 0)
-      error("one of -k, -t, -d must be specified");
+   if ( !mode )
+      error("one of -k, -t, -s must be specified");
       
    // if option -n was used, convert n to multipliers
    if ( (int)n.size() ) {
@@ -887,10 +813,19 @@ void symmetro_opts::process_command_line(int argc, char **argv)
       for( int i=0; i<(int)n.size(); i++ ) {
          multipliers.push_back(n[i]);
          // twister rhomb
-         if ( mode == 3 || mode == 4 )
+         if ( mode == 's' || mode == 'c' )
             multipliers[i] /= dihedral_n;
       }
    }
+   
+   if ( mode == 's' && ratio )
+      error("ratio cannot be used with -s", 'r');
+   
+   if ( mode == 's' && sym_override.length() )
+      sym = toupper(sym_override[0]);
+
+   if ( sym == 'C' && !sym_mirror.length() )
+      sym_mirror = "n";
    
    // d must be filled in any case
    for( int i=(int)d.size(); i<2; i++ )
@@ -960,6 +895,7 @@ public:
    double circumradius( const int &n, const int &d );
    void unitize_edges( col_geom_v &geom );
 
+   void substitute_polygon( col_geom_v &pgeom, const symmetro_opts &opts );
    vector<col_geom_v> CalcPolygons( const symmetro_opts &opts );
 	
 	~symmetro()
@@ -1249,7 +1185,7 @@ void symmetro::fill_sym_vec( const symmetro_opts &opts ) {
          sym_vec[1] = vec3d( 1.0, 0.0, 0.0 );
       }
       else
-         err_no = 1;
+         err_no = 2;
    }
    else
    // twister_rhomb
@@ -1260,7 +1196,8 @@ void symmetro::fill_sym_vec( const symmetro_opts &opts ) {
          sym_vec[1] = vec3d( sin(a), 0, cos(a) );
       }
       else
-         err_no = 1;
+         // should not be able to get here
+         err_no = 3;
    }
 
    // sym_vec will only not be set if no id_no was found
@@ -1272,6 +1209,9 @@ void symmetro::fill_sym_vec( const symmetro_opts &opts ) {
    else
    if ( err_no == 2 )
       opts.error(msg_str("invalid symmetry id no: %d", sym_id_no), 't');
+   else
+   if ( err_no == 3 )
+      opts.error(msg_str("unexpected error. p = %d, dihedral_n = %d", p, dihedral_n), '?');
    
    return;
 }
@@ -1294,7 +1234,52 @@ void symmetro::unitize_edges( col_geom_v &geom )
       double val = info.iedge_lengths().sum/info.num_iedges();
       geom.transform(mat3d::scale(1/val));
    }
-}   
+}
+
+void symmetro::substitute_polygon( col_geom_v &geom, const symmetro_opts &opts )
+{
+   // Make one convex regular polygon
+   char errmsg[MSG_SZ];
+   int ret = geom.set_hull("A1",errmsg);
+   // probably never happen
+   if(!ret)
+      if (opts.verbose)
+         opts.warning(errmsg, 'C');
+   
+   // if star polygon, rethread face
+   if ( opts.substitute_d > 1 ) {
+      // there will only be one face after convex hull
+      vector<int> face = geom.faces(0);
+      int n = face.size();
+      int d = opts.substitute_d;
+      
+      // handle compound polygons
+      double fract_part = fmod((double)n, (double)d);
+      // built in epsilon here
+      bool compound = double_eq(fract_part, 0.0, epsilon) ? true : false;
+      int parts = ( compound ) ? d : 1;
+
+      vector<vector<int> > faces_new;
+      
+      int stop = ( parts == 1 ) ? n : n/d;
+      int k = 0;
+      for( int i=0; i<parts; i++ ) {
+         vector<int> face_new;
+         int k2 = k;
+         for( int j=0; j<stop; j++ ) {
+            face_new.push_back(face[k2]);
+            k2 = (k2+d)%n;
+         }
+         faces_new.push_back(face_new);
+         k++;
+      }
+
+      // replace with new n/d face(s)
+      geom.clear_faces();
+      for( int i=0; i<(int)faces_new.size(); i++ )
+         geom.add_face( faces_new[i] );
+   }
+}
 
 vector<col_geom_v> symmetro::CalcPolygons( const symmetro_opts &opts )
 {
@@ -1370,28 +1355,25 @@ vector<col_geom_v> symmetro::CalcPolygons( const symmetro_opts &opts )
 	   int d = opts.d[j];
 	   
 	   // handle compound polygons
-      double int_part;
-      double fract_part = modf((double)n, &int_part);
+      double fract_part = fmod((double)n, (double)d);
       // built in epsilon here
       bool compound = double_eq(fract_part, 0.0, epsilon) ? true : false;
       int parts = ( compound ) ? d : 1;
       double bump_ang = angle(n,d)/(double)parts;
-      
-      int polygon_d = ( opts.substitute_d ) ? opts.substitute_d : d;
 
       // built in epsilon here
-	   if( (n > 0) && (ratios[i] > epsilon) ) {
+	   if( (n > 0) && (fabs(ratios[i]) > epsilon) ) {
 	   	double bump_angle = 0.0;
 	   	int vert_idx = 0;
 	   	
 	      for( int p = 0; p < parts; p++ ) {   
             for( int idx = 0; idx < n; idx++ ) {
                if ( i == 0 ) {
-	               pgeom[j].add_vert( mat3d::rot(vec3d(0, 0, 1), (idx * angle(n,polygon_d)) + bump_angle) * P + vec3d(0.0, 0.0, opts.offset) );
+	               pgeom[j].add_vert( mat3d::rot(vec3d(0, 0, 1), (idx * angle(n,d)) + bump_angle) * P + vec3d(0.0, 0.0, opts.offset) );
 	            }
 	            else
 	            if ( i == 1 ) {
-	               pgeom[j].add_vert( rot_inv * mat3d::rot(vec3d(0, 0, 1), (idx * angle(n,polygon_d)) + bump_angle) * Q );
+	               pgeom[j].add_vert( rot_inv * mat3d::rot(vec3d(0, 0, 1), (idx * angle(n,d)) + bump_angle) * Q );
 	            }
             }
             
@@ -1403,6 +1385,9 @@ vector<col_geom_v> symmetro::CalcPolygons( const symmetro_opts &opts )
             
             bump_angle += bump_ang;
          }
+         
+         if ( opts.substitute_d )
+            substitute_polygon( pgeom[j], opts );
 
 	      pgeom[j].transform( mat3d::alignment(vec3d(0, 0, 1), vec3d(1, 0, 0), sym_vec[axis[0]], sym_vec[axis[1]]) );
 	      if ( sym == 'S' || sym == 'C' ) {
@@ -1415,7 +1400,7 @@ vector<col_geom_v> symmetro::CalcPolygons( const symmetro_opts &opts )
       
       // epsilon size faces are because ratio was set at 0
       // built in epsilon here
-      if ( fabs( ratios[i] ) <= epsilon ) {
+      if ( fabs(ratios[i]) <= epsilon ) {
          pgeom[j].clear_all();
       }
    }
@@ -1518,7 +1503,7 @@ col_geom_v build_geom(vector<col_geom_v> &pgeom, const symmetro_opts &opts)
          sym_repeat(pgeom[i], pgeom[i], sym, ELEM_FACES);
          
          // when symmetry C reflect on Z
-         if ( opts.c_sym_mirror ) {
+         if ( opts.sym_mirror == "z" ) {
             col_geom_v geom_refl;
             geom_refl = pgeom[i];
             geom_refl.transform(mat3d::refl(vec3d(0,0,1)));
@@ -1543,7 +1528,7 @@ col_geom_v build_geom(vector<col_geom_v> &pgeom, const symmetro_opts &opts)
    
    // check for collisions
    bool collision = false;
-   if ( opts.convex_hull > 2 )
+   if ( opts.convex_hull == 4 )
       collision = detect_collision( geom, opts );
       if ( collision ) {
          opts.warning("collision detected. convex hull is suppressed", 'C');
@@ -1580,7 +1565,7 @@ col_geom_v build_geom(vector<col_geom_v> &pgeom, const symmetro_opts &opts)
    if (opts.face_coloring_method == 'n') {
       const vector<vector<int> > &faces = geom.faces();
       for (unsigned int i=0;i<faces.size();i++) {
-         int fsz = faces[i].size() - 3;
+         int fsz = faces[i].size();
          col_val col = opts.map.get_col(fsz);
          if (col.is_val())
             col = col_val(col[0],col[1],col[2],opts.face_opacity);
@@ -1667,7 +1652,7 @@ col_geom_v build_frame(vector<col_geom_v> &pgeom, const symmetro_opts &opts)
       sym_repeat(geom, geom, sym, ELEM_FACES);
       
       // when symmetry C reflect on Z
-      if ( opts.c_sym_mirror ) {
+      if ( opts.sym_mirror == "z" ) {
          col_geom_v geom_refl;
          geom_refl = geom;
          geom_refl.transform(mat3d::refl(vec3d(0,0,1)));
@@ -1714,9 +1699,16 @@ int main(int argc, char *argv[])
          if ( opts.d[i] > 1 ) {
             // supress convex hull
             opts.convex_hull = 2;
-            opts.warning("star polygons detected so convex hull is supressed", 'C');
+            if ( opts.substitute_d > 1 )
+               opts.warning("star polygons detected so convex hull is supressed", 'C');
             break;
          }
+      }
+      
+      // supress convex hull for digon only models
+      if ( opts.multipliers[0] == 0 && opts.multipliers[1] == 0 && opts.multipliers[2] == 1 ) {
+         opts.convex_hull = 2;
+         opts.warning("for models entirely of digons, convex hull is supressed", 'C');
       }
    }
    // if still not set, convex hull is set to normal
@@ -1726,7 +1718,7 @@ int main(int argc, char *argv[])
    // check ratio axis specifier for zero
    for( int i=0; i<(int)opts.ratio_direction.size(); i++ ) {
       if ( ( opts.ratio_direction[i] >= (int)opts.multipliers.size() ) || ( opts.multipliers[opts.ratio_direction[i]] == 0 ) )
-         opts.error(msg_str("polygon '%d' is not generated so cannot be used for scaling", opts.ratio_direction[i]), 'S');
+         opts.error(msg_str("polygon '%d' is not generated so cannot be used for scaling", opts.ratio_direction[i]), 'r');
    }
      
    // if empty, fill ratio direction
@@ -1758,8 +1750,11 @@ int main(int argc, char *argv[])
    
    // check rotation axis specifier for zero
    for( int i=0; i<(int)opts.rotation_axis.size(); i++ ) {
+      if ( opts.mode == 't' && opts.rotation_axis[i] == 2 )
+         opts.error("only 0 and 1 are valid for axis when using option -t", 'a');
+      else
       if ( ( opts.rotation_axis[i] >= (int)opts.multipliers.size() ) || ( opts.multipliers[opts.rotation_axis[i]] == 0 ) )
-         opts.error(msg_str("polygon '%d' is not generated so cannot be used for rotation", opts.rotation_axis[i]), 'r');
+         opts.error(msg_str("polygon on axis '%d' is not generated so cannot be used for rotation", opts.rotation_axis[i]), 'a');
    } 
 
    // if empty, fill rotations   
