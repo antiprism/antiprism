@@ -134,7 +134,7 @@ void symmetro_opts::usage()
 "            example: -k i,2,*,4,e\n"
 "  -t <s[p,q]i,m1,m2> Twister notation. Generate twister models.\n"
 "            s: symmetry. I-icosahedral, O-octahedral, T-tetrahedral, D-dihedral\n"
-"            p,q: rotational order of each of the two axes\n"
+"            p,q: rotational order of each of the two axes. may be swapped\n"
 "            i: (default: 1): integer to select between non-equivalent pairs of\n"
 "               axes having the same symmetry group and rotational orders\n"
 "            m1,m2: an integer multiplier for each axis. i.e. m1*p and m2*q\n"
@@ -147,14 +147,14 @@ void symmetro_opts::usage()
 "                  DN:[N, q] q>1, [2,2]x(n/2 rounded down)\n"
 "  -s <n/d,D,s> S symmetry twisters. denominator d optional (default: 1)\n"
 "                optional D substitutes a polygon of n/D in place of n/d\n"
-"                optional s symmetry override. s - S symmetry, c - C symmetry\n"
+"                optional s symmetry override. c - C symmetry\n"
 "  -M <opt>  mirroring. n - none (default), z - z plane (may create compound)\n"
 "  -a <a,n>  a in degrees of rotation given to polygon applied to optional\n"
 "               axis n. if n not given, implies first axis encountered\n"
 "               radians may be entered as 'rad(a)'\n"
 "  -r <r,n>  ratio r of axis n polygon. if n is not specified implies first axis\n"
 "               encountered e.g 0.5,1 (default: calculated for unit edge length)\n"
-"               not valid for -s or -c\n"
+"               not valid for -s\n"
 "  -C <mode> convex hull. polygons=1, suppress=2, force=3, normal=4 (default: 4)\n"
 "  -q <args> include frame elements in output\n"
 "               r - rhombic tiling edges, a - rotation axes (default: none)\n"
@@ -582,16 +582,22 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                }
                else
                if ( count1 == 1 ) {
-                  if (!read_int(ptok1, &substitute_d, errmsg))
-                     error(errmsg, "substitute D", c);
-                  
-                  if ( substitute_d < 1 || substitute_d > n[0] )
-                     error(msg_str("substitute D must be between 1 and %d", n[0]), c);
+                  if ( strlen(ptok1) == 1 && toupper(ptok1[0]) == 'C' ) {
+                     fprintf(stderr,"sym_override = %c\n",ptok1[0]);
+                     sym_override=ptok1;
+                  }
+                  else {
+                     if (!read_int(ptok1, &substitute_d, errmsg))
+                        error(errmsg, "substitute D", c);
+                     
+                     if ( substitute_d < 1 || substitute_d > n[0] )
+                        error(msg_str("substitute D must be between 1 and %d", n[0]), c);
+                  }
                }
                else
                if ( count1 == 2 ) {
-                  if((strspn(ptok1, "sc") != strlen(ptok1)) || strlen(ptok1)>1)
-                     error(msg_str("symmetry override is '%s' must be from s and c", ptok1), c);
+                  if((strspn(ptok1, "cC") != strlen(ptok1)) || strlen(ptok1)>1)
+                     error(msg_str("symmetry override is '%s' must be c", ptok1), c);
                   sym_override=ptok1;
                }
                
@@ -607,13 +613,15 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                
             if ( (double)n[0]/(double)d[0] < 1.5 )
                error("polygon: the polygon fraction cannot be less than 3/2 (base rhombic tiling is not constructible)", c);
-               
-            if ( !is_even(n[0]) && !is_even(d[0]) )
+            
+            if ( sym_override.length() )
+               sym = toupper(sym_override[0]);
+            else   
                sym = 'S';
-            else {
-               sym = 'C';
-               if ( !sym_override.length() )
-                  warning("when n or d is even, defaults to C symmetry. Use 's' override to S symmetry", c);
+            
+            if ( ( is_even(n[0]) || is_even(d[0]) ) && !sym_override.length() ) {
+               warning("when n or d is even, model will only connect correctly at certain twist angles", c);
+               warning("try override with C symmetry");
             }
 
             p = n[0];
@@ -813,19 +821,13 @@ void symmetro_opts::process_command_line(int argc, char **argv)
       for( int i=0; i<(int)n.size(); i++ ) {
          multipliers.push_back(n[i]);
          // twister rhomb
-         if ( mode == 's' || mode == 'c' )
+         if ( mode == 's' )
             multipliers[i] /= dihedral_n;
       }
    }
    
    if ( mode == 's' && ratio )
       error("ratio cannot be used with -s", 'r');
-   
-   if ( mode == 's' && sym_override.length() )
-      sym = toupper(sym_override[0]);
-
-   if ( sym == 'C' && !sym_mirror.length() )
-      sym_mirror = "n";
    
    // d must be filled in any case
    for( int i=(int)d.size(); i<2; i++ )
@@ -999,7 +1001,7 @@ void symmetro::fill_sym_vec( const symmetro_opts &opts ) {
          }
       }
       else
-      if ( p == 3 && q == 2 ) {
+      if ( ( p == 3 && q == 2 ) || ( p == 2 && q == 3 ) ) {
          if ( sym_id_no == 1 ) {
             sym_vec[0] = vec3d( 1.0, 1.0, 1.0 );
             sym_vec[1] = vec3d( 0.0, 0.0, 1.0 );
@@ -1024,14 +1026,14 @@ void symmetro::fill_sym_vec( const symmetro_opts &opts ) {
          }
       }
       else
-      if ( p == 4 && q == 3 ) {
+      if ( ( p == 4 && q == 3 ) || ( p == 3 && q == 4 ) ) {
          if ( sym_id_no == 1 ) {
             sym_vec[0] = vec3d( 0.0, 0.0, 1.0 );
             sym_vec[1] = vec3d( 1.0, 1.0, 1.0 );
          }
       }
       else
-      if ( p == 4 && q == 2 ) {
+      if ( ( p == 4 && q == 2 ) || ( p == 2 && q == 4 ) ) {
          if ( sym_id_no == 1 ) {
             sym_vec[0] = vec3d( 0.0, 0.0, 1.0 );
             sym_vec[1] = vec3d( 0.0, 1.0, 1.0 );
@@ -1050,7 +1052,7 @@ void symmetro::fill_sym_vec( const symmetro_opts &opts ) {
          }
       }
       else
-      if ( p == 3 && q == 2 ) {
+      if ( ( p == 3 && q == 2 ) || ( p == 2 && q == 3 ) ) {
          if ( sym_id_no == 1 ) {
             sym_vec[0] = vec3d( 1.0, 1.0, 1.0 );
             sym_vec[1] = vec3d( 0.0, -1.0, -1.0 );
@@ -1085,7 +1087,7 @@ void symmetro::fill_sym_vec( const symmetro_opts &opts ) {
          }
       }
       else      
-      if ( p == 5 && q == 3 ) {
+      if ( ( p == 5 && q == 3 ) || ( p == 3 && q == 5 ) ) {
          if ( sym_id_no == 1 ) {
             sym_vec[0] = vec3d( 0.0, 1.0, phi );
             sym_vec[1] = vec3d( 1.0, 1.0, 1.0 );
@@ -1097,7 +1099,7 @@ void symmetro::fill_sym_vec( const symmetro_opts &opts ) {
          }
       }
       else
-      if ( p == 5 && q == 2 ) {
+      if ( ( p == 5 && q == 2 ) || ( p == 2 && q == 5 ) ) {
          if ( sym_id_no == 1 ) {
             sym_vec[0] = vec3d( 0.0, 1.0, phi );
             sym_vec[1] = vec3d( 0.0, 0.0, -1.0 );
@@ -1126,7 +1128,7 @@ void symmetro::fill_sym_vec( const symmetro_opts &opts ) {
          }
       }
       else
-      if ( p == 3 && q == 2 ) {
+      if ( ( p == 3 && q == 2 ) || ( p == 2 && q == 3 ) ) {
          if ( sym_id_no == 1 ) {
             sym_vec[0] = vec3d( 1.0, 1.0, 1.0 );
             sym_vec[1] = vec3d( -1.0, -1.0/phi, -phi );
