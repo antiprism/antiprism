@@ -620,7 +620,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             
             if ( ( is_even(n[0]) || is_even(d[0]) ) && !sym_override.length() ) {
                warning("when n or d is even, model will only connect correctly at certain twist angles", c);
-               warning("try override with C symmetry");
+               warning("try override with C symmetry", c);
             }
 
             p = n[0];
