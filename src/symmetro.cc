@@ -583,7 +583,6 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                else
                if ( count1 == 1 ) {
                   if ( strlen(ptok1) == 1 && toupper(ptok1[0]) == 'C' ) {
-                     fprintf(stderr,"sym_override = %c\n",ptok1[0]);
                      sym_override=ptok1;
                   }
                   else {
