@@ -79,6 +79,40 @@ void clear_explicit_edges_by_type(geom_if &geom, bool part_of_face)
    geom.delete_edges(deleted_edges);
 }
 
+void delete_free_faces(geom_if &geom)
+{
+   const vector<vector<int> > &faces = geom.faces();
+   int fsz = faces.size();
+   vector<bool> found(fsz);
+
+   for( int i=0; i<fsz; i++ ) {
+      if (found[i])
+         continue;
+      // need to check for faces with lower index than i
+      for( int j=0; j<fsz; j++ ) {
+         if (i==j)
+            continue;
+         for( int k=0; k<(int)faces[i].size(); k++ ) {
+            if( vertex_exists_in_face(faces[j], faces[i][k]) ) {
+               found[i] = true;
+               found[j] = true;
+               break;
+            }
+         }
+         if (found[i])
+            break;
+      }
+   }
+   
+   vector<int> face_list;
+   for( int i=0; i<fsz; i++ )
+      if (!found[i])
+         face_list.push_back(i);
+
+   if ( face_list.size() )
+      geom.delete_faces(face_list);
+}
+
 void geometry_only(col_geom_v &geom)
 {
    geom.clear_v_cols();
@@ -109,6 +143,9 @@ void filter(geom_if &geom, const char *elems)
             break;
          case 'f':
             geom.clear_faces();
+            break;
+         case 'F':
+            delete_free_faces(geom);
             break;
       }
    }
@@ -1144,7 +1181,8 @@ void pr_opts::usage()
 "            vertices (faces), V to remove vertices that are not part\n"
 "            of any face or edge, E to remove two-vertex faces (edges)\n"
 "            that are not part of any face, D to remove two-vertex faces (edges)\n"
-"            that are also a face edge (decorators).\n"
+"            that are also a face edge (decorators), F to remove faces that\n"
+"            do not share a vertex with another face\n"
 "  -e        Fill in missing explicit edges\n"
 "  -D <list> delete a list of elements, list starts with element letter,\n"
 "            followed by an index number list, given as index ranges separated\n"
@@ -1352,8 +1390,8 @@ void pr_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'x':
-            if(strspn(optarg, "vefVED") != strlen(optarg)) {
-               snprintf(errmsg, MSG_SZ, "elements to hide are %s, can only include vefVED\n", optarg);
+            if(strspn(optarg, "vefVEFD") != strlen(optarg)) {
+               snprintf(errmsg, MSG_SZ, "elements to hide are %s, can only include vefVEFD\n", optarg);
                error(errmsg, c);
             }
             filter(geom, optarg);

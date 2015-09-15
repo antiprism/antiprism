@@ -42,7 +42,7 @@ example: \fB\-k\fR i,2,*,4,e
 \fB\-t\fR <s[p,q]i,m1,m2> Twister notation. Generate twister models.
 .IP
 s: symmetry. I\-icosahedral, O\-octahedral, T\-tetrahedral, D\-dihedral
-p,q: rotational order of each of the two axes
+p,q: rotational order of each of the two axes. may be swapped
 i: (default: 1): integer to select between non\-equivalent pairs of
 .IP
 axes having the same symmetry group and rotational orders
@@ -58,27 +58,25 @@ O: [4, 4], [4, 3], [4, 2]x2, [3, 3], [3, 2]x2, [2, 2]x2
 I: [5, 5], [5, 3]x2, [5, 2]x3, [3, 3]x2, [3, 2]x4, [2, 2]x4
 DN:[N, q] q>1, [2,2]x(n/2 rounded down)
 .HP
-\fB\-s\fR <n/d,D> S symmetry twisters. n and d must be odd. denominator optional
+\fB\-s\fR <n/d,D,s> S symmetry twisters. denominator d optional (default: 1)
 .IP
 optional D substitutes a polygon of n/D in place of n/d
-.HP
-\fB\-c\fR <n/d,D> C symmetry twisters. n or d must be even. denominator optional
-.IP
-optional D substitutes a polygon of n/D in place of n/d
+optional s symmetry override: c \- C symmetry
 .TP
-\fB\-z\fR
-optionally mirror on z axis (mostly for C symmetry)
+\fB\-M\fR <opt>
+mirroring. n \- none (default), z \- z plane (may create compound)
 .TP
 \fB\-a\fR <a,n>
-a in degrees of rotation given to polygon applied to optional axis n
+a in degrees of rotation given to polygon applied to optional
 .IP
-if n not given, implies first axis encountered
+axis n. if n not given, implies first axis encountered
 radians may be entered as 'rad(a)'
 .TP
 \fB\-r\fR <r,n>
 ratio r of axis n polygon. if n is not specified implies first axis
 .IP
 encountered e.g 0.5,1 (default: calculated for unit edge length)
+not valid for \fB\-s\fR
 .HP
 \fB\-C\fR <mode> convex hull. polygons=1, suppress=2, force=3, normal=4 (default: 4)
 .HP
@@ -89,6 +87,9 @@ r \- rhombic tiling edges, a \- rotation axes (default: none)
 \fB\-O\fR <dist> amount to offset the first polygon to avoid coplanarity with the
 .IP
 second polygon, for example 0.0001 (default: 0.0)
+.TP
+\fB\-x\fR
+remove any free faces that are produced
 .TP
 \fB\-v\fR
 verbose output

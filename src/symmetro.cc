@@ -65,6 +65,7 @@ class symmetro_opts: public prog_opts {
       int convex_hull;
       string frame_elems;
       double offset;
+      bool remove_free_faces;
       bool verbose;
       char mode;
       
@@ -91,6 +92,7 @@ class symmetro_opts: public prog_opts {
                        ratio(0.0),
                        convex_hull(0),
                        offset(0.0),
+                       remove_free_faces(false),
                        verbose(false),
                        mode('\0'),
                        face_coloring_method('a'),
@@ -147,7 +149,7 @@ void symmetro_opts::usage()
 "                  DN:[N, q] q>1, [2,2]x(n/2 rounded down)\n"
 "  -s <n/d,D,s> S symmetry twisters. denominator d optional (default: 1)\n"
 "                optional D substitutes a polygon of n/D in place of n/d\n"
-"                optional s symmetry override. c - C symmetry\n"
+"                optional s symmetry override: c - C symmetry\n"
 "  -M <opt>  mirroring. n - none (default), z - z plane (may create compound)\n"
 "  -a <a,n>  a in degrees of rotation given to polygon applied to optional\n"
 "               axis n. if n not given, implies first axis encountered\n"
@@ -160,6 +162,7 @@ void symmetro_opts::usage()
 "               r - rhombic tiling edges, a - rotation axes (default: none)\n"
 "  -O <dist> amount to offset the first polygon to avoid coplanarity with the\n"
 "               second polygon, for example 0.0001 (default: 0.0)\n"
+"  -x        remove any free faces that are produced\n"
 "  -v        verbose output\n"
 "  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
@@ -213,7 +216,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hk:t:m:s:M:a:r:C:q:O:vf:Q:V:E:T:l:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hk:t:m:s:M:a:r:C:q:O:xvf:Q:V:E:T:l:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -746,6 +749,10 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                error(errmsg, "offset value", c);
             break;
             
+         case 'x':
+            remove_free_faces = true;
+            break;
+            
          case 'v':
             verbose = true;
             break;
@@ -1015,6 +1022,9 @@ void symmetro::fill_sym_vec( const symmetro_opts &opts ) {
       }
       else
          err_no = 1;
+      
+      if (p<q)
+         swap(sym_vec[0], sym_vec[1]);
    }
    else
    if ( sym == 'O' ) {
@@ -1076,6 +1086,9 @@ void symmetro::fill_sym_vec( const symmetro_opts &opts ) {
       }
       else
          err_no = 1;
+         
+      if (p<q)
+         swap(sym_vec[0], sym_vec[1]);
    }
    else
    if ( sym == 'I' ) {
@@ -1172,6 +1185,9 @@ void symmetro::fill_sym_vec( const symmetro_opts &opts ) {
       }
       else
          err_no = 1;
+         
+      if (p<q)
+         swap(sym_vec[0], sym_vec[1]);
    }
    else
    if ( sym == 'D' ) {
@@ -1474,6 +1490,40 @@ bool detect_collision( const col_geom_v &geom, const symmetro_opts &opts)
    return false;
 }
 
+void delete_free_faces(geom_if &geom)
+{
+   const vector<vector<int> > &faces = geom.faces();
+   int fsz = faces.size();
+   vector<bool> found(fsz);
+
+   for( int i=0; i<fsz; i++ ) {
+      if (found[i])
+         continue;
+      // need to check for faces with lower index than i
+      for( int j=0; j<fsz; j++ ) {
+         if (i==j)
+            continue;
+         for( int k=0; k<(int)faces[i].size(); k++ ) {
+            if( vertex_exists_in_face(faces[j], faces[i][k]) ) {
+               found[i] = true;
+               found[j] = true;
+               break;
+            }
+         }
+         if (found[i])
+            break;
+      }
+   }
+   
+   vector<int> face_list;
+   for( int i=0; i<fsz; i++ )
+      if (!found[i])
+         face_list.push_back(i);
+
+   if ( face_list.size() )
+      geom.delete_faces(face_list);
+}
+
 col_geom_v build_geom(vector<col_geom_v> &pgeom, const symmetro_opts &opts)
 {
    col_geom_v geom;
@@ -1572,6 +1622,11 @@ col_geom_v build_geom(vector<col_geom_v> &pgeom, const symmetro_opts &opts)
             col = col_val(col[0],col[1],col[2],opts.face_opacity);
          geom.set_f_col(i,col);
       }
+   }
+   
+   if ( opts.remove_free_faces ) {
+      delete_free_faces(geom);
+      geom.delete_verts(geom.get_info().get_free_verts());
    }
    
    // color vertices and edges
