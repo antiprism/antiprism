@@ -1752,11 +1752,10 @@ int main(int argc, char *argv[])
    // if convex_hull is not set
    if ( !opts.convex_hull ) {
       for( int i=0; i<(int)opts.d.size(); i++ ) {
-         if ( opts.d[i] > 1 ) {
+         if ( opts.d[i] > 1 || opts.substitute_d > 1 ) {
             // supress convex hull
             opts.convex_hull = 2;
-            if ( opts.substitute_d > 1 )
-               opts.warning("star polygons detected so convex hull is supressed", 'C');
+            opts.warning("star polygons detected so convex hull is supressed", 'C');
             break;
          }
       }
@@ -1767,6 +1766,7 @@ int main(int argc, char *argv[])
          opts.warning("for models entirely of digons, convex hull is supressed", 'C');
       }
    }
+
    // if still not set, convex hull is set to normal
    if ( !opts.convex_hull )
       opts.convex_hull = 4;
