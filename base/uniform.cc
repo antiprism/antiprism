@@ -2611,7 +2611,8 @@ int uni_poly::lookup_sym_no(string sym, int is_dual)
          return -1; // not found
       }
    }
-
+   
+/* Coxeter numbers interfere with C symmetry symbols
    // is it a C number
    offset = (sym_norm[0]=='c'||sym_norm[0]=='C');
    if (offset) {
@@ -2628,6 +2629,7 @@ int uni_poly::lookup_sym_no(string sym, int is_dual)
          return -1; // not found
       }
    }
+*/
 
    // is it a W number
    offset = (sym_norm[0]=='w'||sym_norm[0]=='W');
