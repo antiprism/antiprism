@@ -980,9 +980,17 @@ void symmetro_opts::process_command_line(int argc, char **argv)
       multipliers.clear();
       for( int i=0; i<(int)n.size(); i++ ) {
          multipliers.push_back(n[i]);
-         // twister rhomb
-         if ( mode == 's' || mode == 'c' )
+         // mode=s or c
+         if ( mode == 's' )
             multipliers[i] /= p;
+         else
+         if ( mode == 'c' ) {
+            if ( i == 0 )
+               multipliers[i] /= p;
+            else
+            if ( i == 1 )
+               multipliers[i] /= q;
+         }
       }
    }
    
