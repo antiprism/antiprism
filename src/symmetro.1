@@ -53,30 +53,42 @@ also can be entered as m1/d, m2/d fractional values
 e.g. T[3,2],1,2  I[5,2]2,1/2,3  D7[7,3],1,2  D11[2,2]5,2,2
 .IP
 Axis pairs are from the following
-T: [3, 3], [3, 2], [2, 2]
-O: [4, 4], [4, 3], [4, 2]x2, [3, 3], [3, 2]x2, [2, 2]x2
-I: [5, 5], [5, 3]x2, [5, 2]x3, [3, 3]x2, [3, 2]x4, [2, 2]x4
-DN:[N, q] q>1, [2,2]x(n/2 rounded down)
+T: [3,3], [3,2], [2,2]
+O: [4,4], [4,3], [4,2]x2, [3,3], [3,2]x2, [2,2]x2
+I: [5,5], [5,3]x2, [5,2]x3, [3,3]x2, [3,2]x4, [2,2]x4
+Dn:[n,2], [2,2]x(n/2 rounded down)
 .HP
-\fB\-s\fR <n/d,D,s> S symmetry twisters. denominator d optional (default: 1)
+\fB\-s\fR <n/d:D>,s S symmetry twisters. denominator d optional (default: 1)
 .IP
 optional D substitutes a polygon of n/D in place of n/d
-optional s symmetry override: c \- C symmetry
+optional s: symmetry override c \- C symmetry
+.HP
+\fB\-c\fR <n1/d1:D1,n2/d2:D2,s,v> C symmetry twisters
+.IP
+optional d denominator (default: 1)
+optional D substitutes a polygon of n/D in place of n/d
+optional n2 can differ from n1. if not specified n2=n1, d2=d1
+optional s: symmetry: c \- C (default), h \- Ch, v \- Cv, s \- S
+optional v: vertex index of radial polygon to bring to z plane
+.IP
+(default: index of highest z value)
 .TP
 \fB\-M\fR <opt>
-mirroring. n \- none (default), z \- z plane (may create compound)
+mirroring (may create compound). Can be x, y or z (default: none)
 .TP
 \fB\-a\fR <a,n>
 a in degrees of rotation given to polygon applied to optional
-.IP
-axis n. if n not given, implies first axis encountered
+.TP
+axis n (default: 0)
 radians may be entered as 'rad(a)'
 .TP
 \fB\-r\fR <r,n>
-ratio r of axis n polygon. if n is not specified implies first axis
+set the edge length of the polygon on axis n (default: 0)
 .IP
-encountered e.g 0.5,1 (default: calculated for unit edge length)
-not valid for \fB\-s\fR
+to r. The default edge length is 1
+.TP
+\fB\-A\fR <a>
+a in degrees is angle between axes (default: calculated)
 .HP
 \fB\-C\fR <mode> convex hull. polygons=1, suppress=2, force=3, normal=4 (default: 4)
 .HP

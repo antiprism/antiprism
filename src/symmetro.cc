@@ -48,20 +48,22 @@ class symmetro_opts: public prog_opts {
       string ofile;
       
       char sym;
-      int sym_id_no;
       int p;
       int q;
+      int dihedral_n;
+      int sym_id_no;
       vector<int> multipliers;
       vector<int> d;
-      int dihedral_n;
-      int substitute_d;
-      string sym_mirror;
-      vector<int> rotation_axis;
-      double rotation_as_increment;
+      vector<int> d_substitute;
+      char sym_mirror;
+      int vert_z;
       double rotation;
+      double rotation_as_increment;
       bool add_pi;
-      vector<int> ratio_direction;
-      double ratio;
+      int rotation_axis;
+      double angle_between_axes;
+      vector<double> scale;
+      int scale_axis;
       int convex_hull;
       string frame_elems;
       double offset;
@@ -81,15 +83,18 @@ class symmetro_opts: public prog_opts {
 
       symmetro_opts(): prog_opts("symmetro"),
                        sym('\0'),
-                       sym_id_no(1),
                        p(0),
                        q(0),
                        dihedral_n(0),
-                       substitute_d(0),
-                       rotation_as_increment(0.0),
+                       sym_id_no(1),
+                       sym_mirror('\0'),
+                       vert_z(INT_MAX),
                        rotation(0.0),
+                       rotation_as_increment(0.0),
                        add_pi(false),
-                       ratio(0.0),
+                       rotation_axis(-1),
+                       angle_between_axes(DBL_MAX),
+                       scale_axis(-1),
                        convex_hull(0),
                        offset(0.0),
                        remove_free_faces(false),
@@ -143,20 +148,26 @@ void symmetro_opts::usage()
 "               also can be entered as m1/d, m2/d fractional values\n"
 "               e.g. T[3,2],1,2  I[5,2]2,1/2,3  D7[7,3],1,2  D11[2,2]5,2,2\n"
 "                  Axis pairs are from the following\n"
-"                  T: [3, 3], [3, 2], [2, 2]\n"
-"                  O: [4, 4], [4, 3], [4, 2]x2, [3, 3], [3, 2]x2, [2, 2]x2\n"
-"                  I: [5, 5], [5, 3]x2, [5, 2]x3, [3, 3]x2, [3, 2]x4, [2, 2]x4\n"
-"                  DN:[N, q] q>1, [2,2]x(n/2 rounded down)\n"
-"  -s <n/d,D,s> S symmetry twisters. denominator d optional (default: 1)\n"
-"                optional D substitutes a polygon of n/D in place of n/d\n"
-"                optional s symmetry override: c - C symmetry\n"
-"  -M <opt>  mirroring. n - none (default), z - z plane (may create compound)\n"
+"                  T: [3,3], [3,2], [2,2]\n"
+"                  O: [4,4], [4,3], [4,2]x2, [3,3], [3,2]x2, [2,2]x2\n"
+"                  I: [5,5], [5,3]x2, [5,2]x3, [3,3]x2, [3,2]x4, [2,2]x4\n"
+"                  Dn:[n,2], [2,2]x(n/2 rounded down)\n"
+"  -s <n/d:D>,s S symmetry twisters. denominator d optional (default: 1)\n"
+"               optional D substitutes a polygon of n/D in place of n/d\n"
+"               optional s: symmetry override c - C symmetry\n"
+"  -c <n1/d1:D1,n2/d2:D2,s,v> C symmetry twisters\n"
+"               optional d denominator (default: 1)\n"
+"               optional D substitutes a polygon of n/D in place of n/d\n"
+"               optional n2 can differ from n1. if not specified n2=n1, d2=d1\n"
+"               optional s: symmetry: c - C (default), h - Ch, v - Cv, s - S\n"
+"               optional v: vertex index of radial polygon to bring to z plane\n"
+"                  (default: index of highest z value)\n"
+"  -M <opt>  mirroring (may create compound). Can be x, y or z (default: none)\n"
 "  -a <a,n>  a in degrees of rotation given to polygon applied to optional\n"
-"               axis n. if n not given, implies first axis encountered\n"
-"               radians may be entered as 'rad(a)'\n"
-"  -r <r,n>  ratio r of axis n polygon. if n is not specified implies first axis\n"
-"               encountered e.g 0.5,1 (default: calculated for unit edge length)\n"
-"               not valid for -s\n"
+"               axis n (default: 0)  radians may be entered as 'rad(a)'\n"
+"  -r <r,n>  set the edge length of the polygon on axis n (default: 0)\n"
+"               to r. The default edge length is 1\n"
+"  -A <a>    a in degrees is angle between axes (default: calculated)\n"
 "  -C <mode> convex hull. polygons=1, suppress=2, force=3, normal=4 (default: 4)\n"
 "  -q <args> include frame elements in output\n"
 "               r - rhombic tiling edges, a - rotation axes (default: none)\n"
@@ -212,11 +223,14 @@ void symmetro_opts::process_command_line(int argc, char **argv)
    string id;
    string map_file;
    vector<int> n;
-   string sym_override;
    
    handle_long_opts(argc, argv);
+   
+   // scale array must exist
+   for( int i=0; i<3; i++ )
+      scale.push_back(DBL_MAX);
 
-   while( (c = getopt(argc, argv, ":hk:t:m:s:M:a:r:C:q:O:xvf:Q:V:E:T:l:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hk:t:m:s:c:M:a:r:A:C:q:O:xvf:Q:V:E:T:l:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -224,7 +238,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
           // Kaplan-Hart notation
          case 'k': {
             if ( mode )
-               error("-k, -t, -s cannot be used together", c);
+               error("-k, -t, -s, -c cannot be used together", c);
             mode = 'k';
            
             char parse_key1[] = ",";
@@ -375,7 +389,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
          // twister notation
          case 't': {
             if ( mode )
-               error("-k, -t, -s cannot be used together", c);
+               error("-k, -t, -s, -c cannot be used together", c);
             mode = 't';
                         
             char parse_key1[] = ",[]";
@@ -424,9 +438,6 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                      error(errmsg, "axis 1", c);
                   if ( p < 2 )
                      error("axis 1 rotational order number be greater than 1", c);
-                  
-                  if ( sym == 'D' && p != dihedral_n && p != 2 )
-                     error(msg_str("when symmetry is D, axis 1 rotational order must equal 2 or N (%d)", dihedral_n), c);
                }
                else
                if ( i == 2 ) {
@@ -434,9 +445,6 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                      error(errmsg, "axis 2", c);
                   if ( q < 2 )
                      error("axis 2 rotational order number be greater than 1", c);
-                     
-                  if ( sym == 'D' && q != 2 )
-                     error("when symmetry is D, axis 2 rotational order must equal 2", c);
                }
                else
                if ( i == 3 ) {
@@ -525,10 +533,13 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                
                //warning(msg_str("axis %d multiplier interpreted as %d/1",( mult_tok_num == 4 ? 2 : 1 ), multipliers[0]), c);
             }
-            
+
             if ( sym == 'D' ) {
-               if ( p != 2 && ( ( n.size() && n[0] != 1 ) || ( multipliers.size() && multipliers[0] != 1 ) ) )
-                  error("when symmetry is D, multiplier 1 must equal 1", c);
+               bool reversed = ( p < q ) ? true : false;
+               if ( ( !reversed && ( p != dihedral_n && p != 2 ) ) || ( reversed && ( q != dihedral_n && q != 2 ) ) )
+                  error(msg_str("when symmetry is D, axis %d rotational order must equal 2 or N (%d)", (reversed ? 2 : 1), dihedral_n), c);
+               if ( ( !reversed && q != 2 ) || ( reversed && p != 2 ) )
+                     error(msg_str("when symmetry is D, axis %d rotational order must equal 2", (reversed ? 2 : 1)), c); 
             }
          
             break;
@@ -537,11 +548,13 @@ void symmetro_opts::process_command_line(int argc, char **argv)
          // S symmetry
          case 's': {
             if ( mode )
-               error("-k, -t, -s cannot be used together", c);
+               error("-k, -t, -s, -c cannot be used together", c);
             mode = 's';
             
+            string sym_override;
+            
             char parse_key1[] = ",";
-            char parse_key2[] = "/";
+            char parse_key2[] = "/:";
             
             // memory pointers for strtok_r
             char *tok_ptr1;
@@ -553,6 +566,10 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                if ( count1 == 0 ) {
                   int n_part;
                   int d_part;
+                  int d_sub;
+                  
+                  bool found_slash = ( strchr(ptok1, '/') ) ? true : false;
+                  bool found_colon = ( strchr(ptok1, ':') ) ? true : false;
                   
                   char *ptok2 = strtok_r(ptok1,parse_key2,&tok_ptr2);
                   int count2 = 0;
@@ -561,8 +578,8 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                         if(!read_int(ptok2, &n_part, errmsg))
                            error(errmsg, "n/d (n part)", c);
                            
-                        if (n_part<0)
-                           error("n of n/d must be non-negative", c);
+                        if (n_part<2)
+                           error("n must be greater than 1", c);
                         n.push_back(n_part);
                      }
                      else
@@ -570,38 +587,50 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                         if(!read_int(ptok2, &d_part, errmsg))
                            error(errmsg, "n/d (d part)", c);
                            
-                        if (d_part<=0)
+                        if (d_part<=0 && found_slash)
                            error("d of n/d must be positive", c);
                         d.push_back(d_part);
+                     }
+                     else
+                     if ( count2 == 2 ) {
+                        if (!read_int(ptok2, &d_sub, errmsg))
+                           error(errmsg, "substitute D", c);
+                     
+                        if ( d_sub < 1 || d_sub >= n[count1] )
+                           error(msg_str("substitute D must be between 1 and %d", n[count1]-1), c);
+                           
+                        d_substitute.push_back(d_sub);
                      }
                      
                      ptok2 = strtok_r(NULL,parse_key2,&tok_ptr2);
                      count2++;
                   }
                   
+                  // if no slash, but colon exists d_substitute will be in the wrong place
+                  if (!found_slash && found_colon) {
+                     if ( d[count1] < 1 || d[count1] >= n[count1] )
+                        error(msg_str("substitute D must be between 1 and %d", n[count1]-1), c);
+                     d_substitute.push_back(d[count1]);
+                     d.clear();
+                  }
+                  
                   // if there is no denominator then it is 1
                   if ( (int)n.size() > (int)d.size() )
-                     d.push_back(1);               
+                     d.push_back(1);
+
+                  // if there is no d_substitute then it is 0
+                  if ( !d_substitute.size() )
+                     d_substitute.push_back(0);
                }
                else
                if ( count1 == 1 ) {
-                  if ( strlen(ptok1) == 1 && toupper(ptok1[0]) == 'C' ) {
-                     sym_override=ptok1;
-                  }
-                  else {
-                     if (!read_int(ptok1, &substitute_d, errmsg))
-                        error(errmsg, "substitute D", c);
-                     
-                     if ( substitute_d < 1 || substitute_d > n[0] )
-                        error(msg_str("substitute D must be between 1 and %d", n[0]), c);
-                  }
-               }
-               else
-               if ( count1 == 2 ) {
                   if((strspn(ptok1, "cC") != strlen(ptok1)) || strlen(ptok1)>1)
                      error(msg_str("symmetry override is '%s' must be c", ptok1), c);
                   sym_override=ptok1;
                }
+               else
+               if ( count1 > 0 )
+                  error("too many arguments", c);
                
                ptok1 = strtok_r(NULL,parse_key1,&tok_ptr1);
                count1++;
@@ -610,9 +639,10 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             // fill both n/d
             if ( (int)n.size() == 1 ) {
                n.push_back(n[0]);
-               d.push_back(d[0]);               
+               d.push_back(d[0]); 
+               d_substitute.push_back(d_substitute[0]);              
             }
-               
+ 
             if ( (double)n[0]/(double)d[0] < 1.5 )
                error("polygon: the polygon fraction cannot be less than 3/2 (base rhombic tiling is not constructible)", c);
             
@@ -623,20 +653,145 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             
             if ( ( is_even(n[0]) || is_even(d[0]) ) && !sym_override.length() ) {
                warning("when n or d is even, model will only connect correctly at certain twist angles", c);
-               warning("try override with C symmetry", c);
+               warning("try option -c", c);
             }
 
             p = n[0];
             q = n[1];
-            dihedral_n = n[0]; 
+                             
+            break;
+         }
+         
+         case 'c': {
+            if ( mode )
+               error("-k, -t, -s, -c cannot be used together", c);
+            mode = 'c';
+            
+            string sym_override;
+            
+            char parse_key1[] = ",";
+            char parse_key2[] = "/:";
+            
+            // memory pointers for strtok_r
+            char *tok_ptr1;
+            char *tok_ptr2;
+               
+            char *ptok1 = strtok_r(optarg,parse_key1,&tok_ptr1);
+            int count1 = 0;
+            while( ptok1 != NULL ) {
+               // if second n/d is not specified and symmetry given move straight to next term
+               if ( ( count1 == 1 ) && ( strspn(ptok1, "cCvVhHsSdD") == strlen(ptok1) ) )
+                  count1++;
+                  
+               if ( count1 == 0 || count1 == 1 ) {
+                  int n_part;
+                  int d_part;
+                  int d_sub;
+                  
+                  bool found_slash = ( strchr(ptok1, '/') ) ? true : false;
+                  bool found_colon = ( strchr(ptok1, ':') ) ? true : false;
+                  
+                  char *ptok2 = strtok_r(ptok1,parse_key2,&tok_ptr2);
+                  int count2 = 0;
+                  while( ptok2 != NULL ) {
+                     if ( count2 == 0 ) {
+                        if(!read_int(ptok2, &n_part, errmsg))
+                           error(errmsg, msg_str("n/d (n part) (term %d)",count1+1), c);
+                           
+                        if (n_part<2)
+                           error(msg_str("n of n/d must be greater than 1 (term %d)",count1+1), c);
+                        n.push_back(n_part);
+                     }
+                     else
+                     if ( count2 == 1 ) {
+                        if(!read_int(ptok2, &d_part, errmsg))
+                           error(errmsg, msg_str("n/d (d part) (term %d)",count1+1), c);
+                           
+                        if (d_part<=0 && found_slash)
+                           error(msg_str("d of n/d must be positive (term %d)",count1+1), c);
+                        d.push_back(d_part);
+                     }
+                     else
+                     if ( count2 == 2 ) {
+                        if (!read_int(ptok2, &d_sub, errmsg))
+                           error(errmsg, msg_str("substitute D (term %d)",count1+1), c);
+                     
+                        if ( d_sub < 1 || d_sub >= n[count1] )
+                           error(msg_str("substitute D must be between 1 and %d (term %d)", n[count1]-1, count1+1), c);
+                           
+                        d_substitute.push_back(d_sub);
+                     }
+                     
+                     ptok2 = strtok_r(NULL,parse_key2,&tok_ptr2);
+                     count2++;
+                  }
+                  
+                  // if no slash, but colon exists d_substitute will be in the wrong place
+                  if (!found_slash && found_colon) {
+                     if ( d[count1] < 1 || d[count1] >= n[count1] )
+                        error(msg_str("substitute D must be between 1 and %d", n[count1]-1), c);
+                     d_substitute.push_back(d[count1]);
+                     d.clear();
+                  }
+                  
+                  // if there is no denominator then it is 1
+                  if ( n.size() > d.size() )
+                     d.push_back(1);
+
+                  // if there is no d_substitute then it is 0
+                  if ( d.size() > d_substitute.size() )
+                     d_substitute.push_back(0);
+               }
+               else
+               if ( count1 == 2 ) {
+                  if((strspn(ptok1, "cCvVhHsSdD") != strlen(ptok1)) || strlen(ptok1)>1)
+                     error(msg_str("symmetry override is '%s' must be c", ptok1), c);
+                  sym_override=ptok1;
+               }
+               else
+               if ( count1 == 3 ) {
+                  if(!read_int(ptok1, &vert_z, errmsg))
+                     error(errmsg, "vert_z", c);
+               }
+               else
+               if ( count1 > 3 )
+                  error("too many arguments", c);
+               
+               ptok1 = strtok_r(NULL,parse_key1,&tok_ptr1);
+               count1++;
+            }
+            
+            // fill both n/d
+            if ( (int)n.size() < 2 ) {
+               n.push_back(n[0]);
+               d.push_back(d[0]);
+            }
+ 
+            if ( (double)n[0]/(double)d[0] < 1.5 )
+               error("the polygon fraction cannot be less than 3/2 (base rhombic tiling is not constructible)", c);
+            
+            if ( !sym_override.length() )
+               sym_override = "C";
+            sym = toupper(sym_override[0]);
+
+            if ( vert_z != INT_MAX )
+               if ( vert_z < 0 || vert_z >= n[1] )
+                  error(msg_str("vert z must be between 0 and %d", n[1]-1), c);
+
+            p = n[0];
+            q = n[1];
+            
+            // patch for fill_sym_vec
+            if ( sym == 'D' )
+               dihedral_n = p;
                              
             break;
          }
          
          case 'M':
-            if(strspn(optarg, "nz") != strlen(optarg) || strlen(optarg)>1)
-               error(msg_str("symmetry mirror %c must be n or z", optarg), c);
-            sym_mirror=optarg;
+            if(strspn(optarg, "xyz") != strlen(optarg) || strlen(optarg)>1)
+               error(msg_str("symmetry mirror %s must be x, y or z", optarg), c);
+            sym_mirror=optarg[0];
             break;
           
          // rotation  
@@ -680,16 +835,15 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                }
                else
                if ( count1 == 1 ) {
-                  double d;
-                  if(!read_double(ptok1, &d, errmsg))
+                  double rotation_axis_tmp;
+                  if(!read_double(ptok1, &rotation_axis_tmp, errmsg))
                      error(errmsg, "rotation axis", c);
-                  int a = (int)floor(d);
-                  //if ( rotation_axis_tmp[1] - a > 0.0 )
-                  //   error(msg_str("axis numbers must be specified by an integer: '%g'", rotation_axis_tmp[i]), c);
-                  rotation_axis.push_back(a);
+                  //if ( rotation_axis_tmp - a > 0.0 )
+                  //   error(msg_str("axis numbers must be specified by an integer: '%g'", rotation_axis_tmp), c);
+                  rotation_axis = (int)floor(rotation_axis_tmp);
                   
-                  if( rotation_axis[0] > 2 )
-                     error("axis to apply ratio should be 0, 1 or 2", c);
+                  if( rotation_axis < 0 || rotation_axis > 2 )
+                     error("axis to apply rotation should be 0, 1 or 2", c);
                }
                
                ptok1 = strtok_r(NULL,parse_key1,&tok_ptr1);
@@ -700,36 +854,36 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             break;
          }
            
-         case 'r': // ratio direction and ratio
+         // scale
+         case 'r':
          {
-            vector<double> ratio_direction_tmp;
-            if(!read_double_list(optarg, ratio_direction_tmp, errmsg, 2))
+            vector<double> scale_tmp;
+            if(!read_double_list(optarg, scale_tmp, errmsg, 2))
                error(errmsg, c);
-               
-            // pull out ratio
-            ratio = ratio_direction_tmp[0];
-            // if zero, make a minimum ratio
-            // a little lower than built in epsilon
-            if ( ratio == 0.0 )
-               ratio = epsilon/10.0;
             
-            if ( ratio_direction_tmp.size() > 2 ) {
-               error("ratio takes 1 or 2 arguments", c);
-            }
+            if ( scale_tmp.size() > 2 )
+               error("scale takes 1 or 2 arguments", c);
             else
-            if ( ratio_direction_tmp.size() == 2 ) {           
-               int a = (int)floor(ratio_direction_tmp[1]);
-               //if ( ratio_direction_tmp[1] - a > 0.0 )
-               //   error(msg_str("axis numbers must be specified by an integer: '%g'", ratio_direction_tmp[i]), c);
-               ratio_direction.push_back(a);
+            if ( scale_tmp.size() == 1 )
+               scale[0] = scale_tmp[0];
+            else
+            if ( scale_tmp.size() == 2 ) {           
+               scale_axis = (int)floor(scale_tmp[1]);
+               //if ( scale_tmp[1] - scale_axis > 0.0 )
+               //   error(msg_str("axis numbers must be specified by an integer: '%g'", scale_tmp[i]), c);
                   
-               ratio_direction_tmp.clear();
-                  
-               if( ratio_direction[0] > 2 )
-                  error("ratio direction should be 0, 1 or 2", c);
+               if( scale_axis < 0 || scale_axis > 2 )
+                  error("axis to apply scale should be 0, 1 or 2", c);
+               else
+                  scale[scale_axis] = scale_tmp[0];
             }      
             break;
          }
+         
+         case 'A':
+            if(!read_double(optarg, &angle_between_axes, errmsg))
+               error(errmsg, "angle between axes", c);
+            break;
             
          case 'C':
             id = get_arg_id(optarg, "polygons=1|suppress=2|force=3|normal=4", argmatch_add_id_maps, errmsg);
@@ -819,25 +973,43 @@ void symmetro_opts::process_command_line(int argc, char **argv)
       error("too many arguments");
       
    if ( !mode )
-      error("one of -k, -t, -s must be specified");
+      error("one of -k, -t, -s, -c must be specified");
       
    // if option -n was used, convert n to multipliers
    if ( (int)n.size() ) {
       multipliers.clear();
       for( int i=0; i<(int)n.size(); i++ ) {
          multipliers.push_back(n[i]);
-         // twister rhomb
+         // mode=s or c
          if ( mode == 's' )
-            multipliers[i] /= dihedral_n;
+            multipliers[i] /= p;
+         else
+         if ( mode == 'c' ) {
+            if ( i == 0 )
+               multipliers[i] /= p;
+            else
+            if ( i == 1 )
+               multipliers[i] /= q;
+         }
       }
    }
    
-   if ( mode == 's' && ratio )
-      error("ratio cannot be used with -s", 'r');
+   if ( mode == 's' || mode == 'c' ) {
+      for( int i=0; i<(int)scale.size(); i++ ) {
+         if ( scale[i] != DBL_MAX ) {
+            warning("some polygons will not meet when scale is used with -s or -c", 'r');
+            break;
+         }
+      }
+   }
    
    // d must be filled in any case
    for( int i=(int)d.size(); i<2; i++ )
       d.push_back(1);
+      
+   // d_substitute must be filled in any case
+   for( int i=(int)d_substitute.size(); i<2; i++ )
+      d_substitute.push_back(0);
       
    if (!map_file.size())
       map_file = "m1";
@@ -856,12 +1028,12 @@ void symmetro_opts::process_command_line(int argc, char **argv)
       else
       if (map_file == "m2") {
          // colors from PDF document measured from screen
-         col_map1->set_col(0, col_val(130,95,34));        // 3-sided faces
-         col_map1->set_col(1, col_val(99,117,88));        // 4-sided faces
-         col_map1->set_col(2, col_val(84,139,35));        // 5-sided faces
-         col_map1->set_col(3, col_val(96,109,28));        // 6-sided faces
-         col_map1->set_col(4, col_val(128,128,128));      // 7-sided faces
-         col_map1->set_col(5, col_val(118,97,85));        // 8-sided faces
+         col_map1->set_col(3, col_val(130,95,34));        // 3-sided faces
+         col_map1->set_col(4, col_val(99,117,88));        // 4-sided faces
+         col_map1->set_col(5, col_val(84,139,35));        // 5-sided faces
+         col_map1->set_col(6, col_val(96,109,28));        // 6-sided faces
+         col_map1->set_col(7, col_val(128,128,128));      // 7-sided faces
+         col_map1->set_col(8, col_val(118,97,85));        // 8-sided faces
          map.add_cmap(col_map1);
          
          col_map2->set_col(0, col_val(128,144,79));       // 9-sided faces and higher
@@ -884,55 +1056,73 @@ public:
 		for( int i=0; i<2; i++ ) {
 		   mult.push_back(0);
 		   sym_vec.push_back(vec3d());
+		   d.push_back(1);
+		   d_substitute.push_back(0);
+		   scale.push_back(1);
 	   }
 	}
 	
-	void debug();
-	void setSym( const char &s, const int &id_no, const int &psym, const int &qsym, const int &dih_n );
+	void debug( const char &mode );
+	
+	void setSym( const char &s, const int &psym, const int &qsym, const int &dih_n, const int &id_no );
 	void setMult( const int &a, const int &m );
-	int getMult( const int &a );
+	void setScale( const int &a, const double &s );
+	void setD( const int &a, const int &dee );
+	void setD_substitute( const int &a, const int &dee );
+
 	int getOrder( const int &a );
 	int getN( const int &a );
 	
    double axis_angle( const int &n, const int &d );
    //double getAngleBetweenAxes( const int &axis1, const int &axis2 );
 	double getAngleBetweenAxesSin( const int &axis1, const int &axis2 );
-	void fill_sym_vec( const symmetro_opts &opts );
+	void swap_vecs( vec3d &a, vec3d &b );
+	int fill_sym_vec( const char &mode, char *errmsg );
 	
    double angle( const int &n, const int &d );
    double circumradius( const int &n, const int &d );
    void unitize_edges( col_geom_v &geom );
 
-   void substitute_polygon( col_geom_v &pgeom, const symmetro_opts &opts );
-   vector<col_geom_v> CalcPolygons( const symmetro_opts &opts );
+   void substitute_polygon( col_geom_v &pgeom, const int &axis_no );
+   vector<col_geom_v> calc_polygons( const char &mode, const double &rotation, const double &rotation_as_increment, const bool &add_pi, const bool &reverse, const double &offset, const bool &verbose, double &angle_between_axes, char *errmsg );
 	
 	~symmetro()
 	{}
 	
 private:
    char  sym;
-   int   sym_id_no;
 	int   p;
 	int   q;
 	
 	int   dihedral_n;
+	int   sym_id_no;
 
 	vector<int> mult;
    vector<vec3d> sym_vec;
+   
+   vector<int> d;
+   vector<int> d_substitute;
+   
+   vector<double> scale;
 };
 
-void symmetro::debug()
+void symmetro::debug( const char &mode )
 {
-   if ( sym == 'S')
-      fprintf(stderr,"\nsymmetry = %c%d\n\n", sym, dihedral_n*2);
-   else
-   if ( sym == 'C')
-      fprintf(stderr,"\nsymmetry = %c%d\n\n", sym, dihedral_n);
-   else
-      fprintf(stderr,"\nsymmetry = %c[%d,%d]%d\n\n", sym, p, q, sym_id_no);
+   fprintf(stderr,"\n");
    
+   if ( strchr("kt", mode) ) {
+      char s[MSG_SZ];
+      sprintf(s,"%d",dihedral_n);
+      fprintf(stderr,"symmetry = %c%s[%d,%d]%d\n", sym, (sym == 'D' ? s : ""), p, q, sym_id_no);
+      fprintf(stderr,"\n");
+   }
+   
+   fprintf(stderr,"vector axis 0: %.17lf %.17lf %.17lf\n", sym_vec[0][0], sym_vec[0][1], sym_vec[0][2]);
+   fprintf(stderr,"vector axis 1: %.17lf %.17lf %.17lf\n", sym_vec[1][0], sym_vec[1][1], sym_vec[1][2]); 
+   fprintf(stderr,"\n");
+
    for( int i=0; i<2; i++ )
-      fprintf(stderr,"axis %d: mult = %d\n", i, mult[i]);
+      fprintf(stderr,"axis %d: mult = %d  scale = %.17lf\n", i, mult[i], scale[i]);
    fprintf(stderr,"\n");
    
    for( int i=0; i<2; i++ )
@@ -941,15 +1131,15 @@ void symmetro::debug()
    fprintf(stderr,"\n");
 }
 
-void symmetro::setSym( const char &s, const int &id_no, const int &psym, const int &qsym, const int &dih_n )
+void symmetro::setSym( const char &s, const int &psym, const int &qsym, const int &dih_n, const int &id_no )
 {
    sym = s;
-   sym_id_no = id_no;
    
    p = psym;
    q = qsym;
    
    dihedral_n = dih_n;
+   sym_id_no = id_no;
 }
 
 void symmetro::setMult( const int &a, const int &m )
@@ -957,9 +1147,19 @@ void symmetro::setMult( const int &a, const int &m )
 	mult[a] = m;
 }
 
-int symmetro::getMult( const int &a )
+void symmetro::setScale( const int &a, const double &s )
 {
-	return( mult[a] );
+	scale[a] = s;
+}
+
+void symmetro::setD( const int &a, const int &dee )
+{
+	d[a] = dee;
+}
+
+void symmetro::setD_substitute( const int &a, const int &dee )
+{
+	d_substitute[a] = dee;
 }
 
 int symmetro::getOrder( const int &a )
@@ -996,8 +1196,17 @@ double symmetro::getAngleBetweenAxesSin( const int &axis1, const int &axis2 ) {
    return ( asin(sin_angle_between_axes) );
 }
 
-void symmetro::fill_sym_vec( const symmetro_opts &opts ) {
-   int err_no = 0; // 1 - wrong p,q  2 - wrong sym_id_no
+void symmetro::swap_vecs( vec3d &a, vec3d &b ) {
+   a = -a;
+   b = -b;
+   swap( a, b );
+}
+
+int symmetro::fill_sym_vec( const char &mode, char *errmsg ) {
+   if(errmsg)
+      *errmsg='\0';
+      
+   int err_no = 0; // 1 - wrong p,q  2 - wrong sym_id_no  3 - wrong sym
    
    if ( sym == 'T' ) {
       if ( p == 3 && q == 3 ) { // K-H mode +120 degrees
@@ -1024,7 +1233,7 @@ void symmetro::fill_sym_vec( const symmetro_opts &opts ) {
          err_no = 1;
       
       if (p<q)
-         swap(sym_vec[0], sym_vec[1]);
+         swap_vecs( sym_vec[0], sym_vec[1] );
    }
    else
    if ( sym == 'O' ) {
@@ -1088,7 +1297,7 @@ void symmetro::fill_sym_vec( const symmetro_opts &opts ) {
          err_no = 1;
          
       if (p<q)
-         swap(sym_vec[0], sym_vec[1]);
+         swap_vecs( sym_vec[0], sym_vec[1] );
    }
    else
    if ( sym == 'I' ) {
@@ -1187,50 +1396,52 @@ void symmetro::fill_sym_vec( const symmetro_opts &opts ) {
          err_no = 1;
          
       if (p<q)
-         swap(sym_vec[0], sym_vec[1]);
+         swap_vecs( sym_vec[0], sym_vec[1] );
    }
    else
-   if ( sym == 'D' ) {
-      if ( p == 2 && sym_id_no <= (dihedral_n/2) ) {
+   if ( sym == 'D' && mode == 't' ) {
+      int p_tmp = (p<q) ? q : p;
+   
+      if ( p_tmp == 2 && ( sym_id_no <= (dihedral_n/2) ) ) {
          double a = sym_id_no*M_PI/dihedral_n;
          sym_vec[0] = vec3d( 1.0, 0.0, 0.0 );
          sym_vec[1] = vec3d( cos(a), sin(a), 0 );
       }
       else
-      if ( p == dihedral_n && sym_id_no == 1 ) {
+      if ( ( p_tmp == dihedral_n ) && ( sym_id_no == 1 ) ) {
          sym_vec[0] = vec3d( 0.0, 0.0, 1.0 );
          sym_vec[1] = vec3d( 1.0, 0.0, 0.0 );
       }
       else
          err_no = 2;
+      
+      if (p<q)
+         swap_vecs( sym_vec[0], sym_vec[1] );
    }
    else
-   // twister_rhomb
-   if ( sym == 'S' || sym == 'C' ) {
-      if ( p == dihedral_n ) {
-         double a = axis_angle( dihedral_n, opts.d[0] );
-         sym_vec[0] = vec3d( 0.0, 0.0, 1.0 );
-         sym_vec[1] = vec3d( sin(a), 0, cos(a) );
-      }
-      else
-         // should not be able to get here
-         err_no = 3;
+   // D symmetry of option -c included
+   if ( strchr("SCHVD", sym) ) {
+      double a = axis_angle( p, d[0] );
+      sym_vec[0] = vec3d( 0.0, 0.0, 1.0 );
+      sym_vec[1] = vec3d( sin(a), 0, cos(a) );
    }
+   else
+      err_no = 3;
 
    // sym_vec will only not be set if no id_no was found
    if ( !err_no )
       err_no = ( sym_vec[0].is_set() ) ? 0 : 2 ;
    
    if ( err_no == 1 )
-      opts.error(msg_str("invalid p,q values: %d,%d", p,q), 't'); 
+      snprintf(errmsg, MSG_SZ, "invalid p,q values: %d,%d", p, q );
    else
    if ( err_no == 2 )
-      opts.error(msg_str("invalid symmetry id no: %d", sym_id_no), 't');
+      snprintf(errmsg, MSG_SZ, "invalid symmetry id no: %d", sym_id_no );
    else
    if ( err_no == 3 )
-      opts.error(msg_str("unexpected error. p = %d, dihedral_n = %d", p, dihedral_n), '?');
+      snprintf(errmsg, MSG_SZ, "invalid symmetry: %c", sym );
    
-   return;
+   return err_no;
 }
 
 double symmetro::angle( const int &n, const int &d )
@@ -1253,32 +1464,26 @@ void symmetro::unitize_edges( col_geom_v &geom )
    }
 }
 
-void symmetro::substitute_polygon( col_geom_v &geom, const symmetro_opts &opts )
+void symmetro::substitute_polygon( col_geom_v &geom, const int &axis_no )
 {
    // Make one convex regular polygon
    char errmsg[MSG_SZ];
-   int ret = geom.set_hull("A1",errmsg);
-   // probably never happen
-   if(!ret)
-      if (opts.verbose)
-         opts.warning(errmsg, 'C');
+   geom.set_hull("A1",errmsg);
    
    // if star polygon, rethread face
-   if ( opts.substitute_d > 1 ) {
+   if ( d_substitute[axis_no] > 1 ) {
       // there will only be one face after convex hull
       vector<int> face = geom.faces(0);
       int n = face.size();
-      int d = opts.substitute_d;
+      int d = d_substitute[axis_no];
       
       // handle compound polygons
-      double fract_part = fmod((double)n, (double)d);
-      // built in epsilon here
-      bool compound = double_eq(fract_part, 0.0, epsilon) ? true : false;
-      int parts = ( compound ) ? d : 1;
+      int d_test = ( d<=n/2 ) ? d : n-d;
+      int parts = ( !(n%d_test) ) ? d_test : 1;
 
       vector<vector<int> > faces_new;
-      
-      int stop = ( parts == 1 ) ? n : n/d;
+
+      int stop = ( parts == 1 ) ? n : n/d_test;
       int k = 0;
       for( int i=0; i<parts; i++ ) {
          vector<int> face_new;
@@ -1298,38 +1503,41 @@ void symmetro::substitute_polygon( col_geom_v &geom, const symmetro_opts &opts )
    }
 }
 
-vector<col_geom_v> symmetro::CalcPolygons( const symmetro_opts &opts )
+// angle_between_axes in radians
+vector<col_geom_v> symmetro::calc_polygons( const char &mode, const double &rotation, const double &rotation_as_increment, const bool &add_pi, const bool &swap_axes, const double &offset, const bool &verbose, double &angle_between_axes, char *errmsg )
 {
-   vector<double> ratios(2);
-   ratios[0] = 1.0;
-   ratios[1] = 1.0;
-   if ( opts.ratio )
-      ratios[ ( opts.ratio_direction[0] <= opts.ratio_direction[1] ) ? 0 : 1] = opts.ratio;
+   if(errmsg)
+      *errmsg='\0';
+      
+   // there will be two polygons generated in seperate geoms
+   vector<col_geom_v> pgeom(2);
 
-   vector<int> axis;
-   axis.push_back(0);
-   axis.push_back(1);
-
-   if ( opts.rotation_axis[0] > opts.rotation_axis[1] ) {
+   // the two axes can be swapped if the angle is applied to the second axis
+   vector<int> axis(2);
+   axis[0] = 0;
+   axis[1] = 1;
+   if ( swap_axes )
       swap( axis[0], axis[1] );
-   }
 
-   double r0 = ratios[0] * circumradius( getN(axis[0]), opts.d[axis[0]] );
-   double r1 = ratios[1] * circumradius( getN(axis[1]), opts.d[axis[1]] );
+   double r0 = scale[0] * circumradius( getN(axis[0]), d[axis[0]] );
+   double r1 = scale[1] * circumradius( getN(axis[1]), d[axis[1]] );
 
-   double angle_between_axes = ( sym != 'S' && sym != 'C' ) ? getAngleBetweenAxesSin( axis[0], axis[1] ) : axis_angle( getN(axis[0]), opts.d[axis[0]] );
-   if ( opts.verbose )
+   if ( angle_between_axes != DBL_MAX )
+      angle_between_axes = deg2rad( angle_between_axes );
+   else
+      angle_between_axes = ( mode == 's' ) ? axis_angle( getN(axis[0]), d[axis[0]] ) : getAngleBetweenAxesSin( axis[0], axis[1] );
+   if ( verbose )
       fprintf(stderr,"\nangle between axes: radians = %.17lf degrees = %.17lf\n",angle_between_axes,rad2deg(angle_between_axes));
       
    mat3d rot = mat3d::rot(vec3d(0, 1, 0), angle_between_axes);
    mat3d rot_inv = mat3d::rot(vec3d(0, 1, 0), -angle_between_axes);
 
-   double ang = deg2rad( opts.rotation );
-   if ( opts.rotation_as_increment )
-      ang += deg2rad( opts.rotation_as_increment ) * angle(getN(axis[0]),opts.d[axis[0]])/2.0;
-   if ( opts.add_pi )
+   double ang = deg2rad( rotation );
+   if ( rotation_as_increment )
+      ang += deg2rad( rotation_as_increment ) * angle(getN(axis[0]),d[axis[0]])/2.0;
+   if ( add_pi )
       ang += M_PI;
-   if ( opts.verbose )
+   if ( verbose )
       fprintf(stderr,"turn angle: radians = %.17lf degrees = %.17lf\n",ang,rad2deg(ang));
    
    vec3d V = mat3d::rot(vec3d(0, 0, 1), ang) * vec3d(r0, 0, 0);
@@ -1341,14 +1549,17 @@ vector<col_geom_v> symmetro::CalcPolygons( const symmetro_opts &opts )
    double c = q[0]*q[0] + q[1]*q[1] - r1*r1;
 
    double disc = b*b - 4*a*c;
-   if (disc < -epsilon)
-     opts.error("model is not geometrically constructible");
+   if (disc < -epsilon) {
+     snprintf(errmsg, MSG_SZ, "model is not geometrically constructible" );
+     return pgeom;
+   }
    else
    if (disc < 0)
      disc = 0;
 
    double sign_flag = -1.0;
-   if ( sym == 'S' || sym == 'C' ) {
+   // modes s and c
+   if ( mode == 's' ) {
       // AR - The sign flag, which changes for the range 90 to 270 degrees, allows
       // the model to reverse, otherwise the model breaks apart in this range.
       double turn_angle_test_val = fabs(fmod(fabs(ang), 2.0*M_PI) - M_PI);
@@ -1363,34 +1574,28 @@ vector<col_geom_v> symmetro::CalcPolygons( const symmetro_opts &opts )
       sym_vec[axis[1]] *= -1.0;
    }
    
-   // there can only ever be 2
-   vector<col_geom_v> pgeom(2);
-   
    for( int i=0; i<(int)pgeom.size(); i++ ) {
       int j = axis[i];
 	   int n = getN(j);
-	   int d = opts.d[j];
 	   
 	   // handle compound polygons
-      double fract_part = fmod((double)n, (double)d);
-      // built in epsilon here
-      bool compound = double_eq(fract_part, 0.0, epsilon) ? true : false;
-      int parts = ( compound ) ? d : 1;
-      double bump_ang = angle(n,d)/(double)parts;
+      int d_test = ( d[j]<=n/2 ) ? d[j] : n-d[j];
+      int parts = ( !(n%d_test) ) ? d_test : 1;
+      double bump_ang = angle(n,d[j])/(double)parts;
 
       // built in epsilon here
-	   if( (n > 0) && (fabs(ratios[i]) > epsilon) ) {
+	   if( (n > 0) && scale[i] ) {
 	   	double bump_angle = 0.0;
 	   	int vert_idx = 0;
 	   	
-	      for( int p = 0; p < parts; p++ ) {   
+	      for( int k = 0; k < parts; k++ ) {   
             for( int idx = 0; idx < n; idx++ ) {
                if ( i == 0 ) {
-	               pgeom[j].add_vert( mat3d::rot(vec3d(0, 0, 1), (idx * angle(n,d)) + bump_angle) * P + vec3d(0.0, 0.0, opts.offset) );
+	               pgeom[j].add_vert( mat3d::rot(vec3d(0, 0, 1), (idx * angle(n,d[j])) + bump_angle) * P + vec3d(0.0, 0.0, offset) );
 	            }
 	            else
 	            if ( i == 1 ) {
-	               pgeom[j].add_vert( rot_inv * mat3d::rot(vec3d(0, 0, 1), (idx * angle(n,d)) + bump_angle) * Q );
+	               pgeom[j].add_vert( rot_inv * mat3d::rot(vec3d(0, 0, 1), (idx * angle(n,d[j])) + bump_angle) * Q );
 	            }
             }
             
@@ -1403,23 +1608,21 @@ vector<col_geom_v> symmetro::CalcPolygons( const symmetro_opts &opts )
             bump_angle += bump_ang;
          }
          
-         if ( opts.substitute_d )
-            substitute_polygon( pgeom[j], opts );
+         if ( d_substitute[i] )
+            substitute_polygon( pgeom[j], i );
 
 	      pgeom[j].transform( mat3d::alignment(vec3d(0, 0, 1), vec3d(1, 0, 0), sym_vec[axis[0]], sym_vec[axis[1]]) );
-	      if ( sym == 'S' || sym == 'C' ) {
-            pgeom[j].transform( mat3d::rot(vec3d(0.0,0.0,180.0/((double)dihedral_n*2.0))) );
-         }
+	      // this isn't strictly needed. turns model to line up with twister_rhomb.py
+	      //if ( mode == 's' )
+         //   pgeom[j].transform( mat3d::rot(vec3d(0.0,0.0,deg2rad(180.0/(double)p))) );
       }
       
-      if ( opts.substitute_d )
-         unitize_edges( pgeom[j] );
-      
-      // epsilon size faces are because ratio was set at 0
-      // built in epsilon here
-      if ( fabs(ratios[i]) <= epsilon ) {
+      if ( !scale[i] ) {
          pgeom[j].clear_all();
       }
+      else
+      if ( d_substitute[0] || d_substitute[1] )
+         unitize_edges( pgeom[j] );
    }
    
    return pgeom;   
@@ -1463,9 +1666,9 @@ bool detect_collision( const col_geom_v &geom, const symmetro_opts &opts)
             continue;
 
          vec3d P, dir;
-         if ( two_plane_intersect(  centroid(verts, face0), face_norm(verts, face0),
-                                    centroid(verts, face1), face_norm(verts, face1),
-                                    P, dir, opts.epsilon ) ) {
+         if ( two_plane_intersect( centroid(verts, face0), face_norm(verts, face0),
+                                   centroid(verts, face1), face_norm(verts, face1),
+                                   P, dir, opts.epsilon ) ) {
             if ( !P.is_set() )
                continue;               
             // if two polygons intersect, see if intersection point is inside polygon
@@ -1524,43 +1727,86 @@ void delete_free_faces(geom_if &geom)
       geom.delete_faces(face_list);
 }
 
+void sym_repeat(geom_if &geom, const symmetro_opts &opts)
+{
+   sch_sym sym; 
+   if ( opts.sym == 'T' )
+      sym.init(sch_sym::T);
+   else
+   if ( opts.sym == 'O' )
+      sym.init(sch_sym::O);
+   else
+   if ( opts.sym == 'I' )
+      sym.init(sch_sym::I);
+   else
+   if ( opts.sym == 'D' )
+      sym.init(sch_sym::D, ( opts.mode == 't' ) ? opts.dihedral_n : opts.p);
+   else
+   if ( opts.sym == 'S' )
+      sym.init(sch_sym::S, opts.p*2);
+   else
+   if ( opts.sym == 'C' )
+      sym.init(sch_sym::C, opts.p);
+   else
+   if ( opts.sym == 'V' )
+      sym.init(sch_sym::Cv, opts.p);
+   else
+   if ( opts.sym == 'H' )
+      sym.init(sch_sym::Ch, opts.p);
+
+   sym_repeat(geom, geom, sym, ELEM_FACES);
+
+   // reflection
+   if ( opts.sym_mirror ) {
+      double x = ( opts.sym_mirror == 'x' ) ? 1 : 0;
+      double y = ( opts.sym_mirror == 'y' ) ? 1 : 0;
+      double z = ( opts.sym_mirror == 'z' ) ? 1 : 0;
+
+      col_geom_v geom_refl;
+      geom_refl = geom;
+      geom_refl.transform(mat3d::refl(vec3d(x,y,z)));
+      geom.append(geom_refl);
+   }
+}
+
 col_geom_v build_geom(vector<col_geom_v> &pgeom, const symmetro_opts &opts)
 {
    col_geom_v geom;
    
-   for( int i=0; i<2; i++ ) {
-      // if not polygon, repeat for symmetry type
-      if ( opts.convex_hull > 1 ) {
-         sch_sym sym; 
-         if ( opts.sym == 'T' )
-            sym.init(sch_sym::T);
-         else
-         if ( opts.sym == 'O' )
-            sym.init(sch_sym::O);
-         else
-         if ( opts.sym == 'I' )
-            sym.init(sch_sym::I);
-         else
-         if ( opts.sym == 'D' )
-            sym.init(sch_sym::D, opts.dihedral_n);
-         else
-         if ( opts.sym == 'S' )
-            sym.init(sch_sym::S, opts.dihedral_n*2);
-         else
-         if ( opts.sym == 'C' )
-            // reflect on Z after sym_repeat
-            sym.init(sch_sym::C, opts.dihedral_n);
-         
-         sym_repeat(pgeom[i], pgeom[i], sym, ELEM_FACES);
-         
-         // when symmetry C reflect on Z
-         if ( opts.sym_mirror == "z" ) {
-            col_geom_v geom_refl;
-            geom_refl = pgeom[i];
-            geom_refl.transform(mat3d::refl(vec3d(0,0,1)));
-            pgeom[i].append(geom_refl);
+   // if option c, align to a z coordinate
+   if ( ( opts.mode == 'c' ) && pgeom[1].verts().size() ) {
+      vec3d P;
+      int vz = opts.vert_z;  
+      if ( vz != INT_MAX )
+         P = pgeom[1].verts(vz);
+      else {
+         // find greatest Z
+         vz = 0;
+         P = pgeom[1].verts(vz);
+         for( int i=1; i<(int)pgeom[1].verts().size(); i++ ) {
+            if ( pgeom[1].verts(i)[2] > P[2] ) {
+               vz = i;
+               P = pgeom[1].verts(vz);
+            }
          }
       }
+      
+      if (opts.verbose)
+         fprintf(stderr,"option -c: greatest Z vertex is %d\n", vz);
+      
+      for( int i=0; i<2; i++ ) {
+         vec3d P2 = vec3d(0,0,-P[2]);
+         pgeom[i].transform(mat3d::transl(P2));
+         // S symmetry will reflect as is
+         if ( opts.sym != 'S' )
+            pgeom[i].transform(mat3d::rot(0, 0, angle_around_axis(P, vec3d(1, 0, 0),  vec3d(0, 0, 1))));
+      }
+   }
+
+   for( int i=0; i<2; i++ ) {
+      // if not polygon, repeat for symmetry type
+      if ( opts.convex_hull > 1 )
+         sym_repeat(pgeom[i], opts);
       
       if (opts.face_coloring_method == 'a') {
          coloring clrng(&pgeom[i]);
@@ -1658,9 +1904,9 @@ col_geom_v build_frame(vector<col_geom_v> &pgeom, const symmetro_opts &opts)
          geom.add_edge(make_edge(i,i+1));
       }
       
-      if ( opts.sym == 'S' || opts.sym == 'C' ) {
-         //vec3d v2 = vec3d(v1[0],v1[1],-v1[2]) * mat3d::rot(0,0,deg2rad(180.0/opts.dihedral_n));
-         vec3d v2 = vec3d(v1[0],v1[1],-v1[2]) * mat3d::rot(0,0,(M_PI*double(opts.d[0])/double(opts.dihedral_n)*(is_even(opts.dihedral_n) ? 2.0 : 1.0)));
+      if ( strchr("SCHV", opts.sym) ) {
+         //vec3d v2 = vec3d(v1[0],v1[1],-v1[2]) * mat3d::rot(0,0,deg2rad(180.0/opts.p));
+         vec3d v2 = vec3d(v1[0],v1[1],-v1[2]) * mat3d::rot(0,0,(M_PI*double(opts.d[0])/double(opts.p)*(is_even(opts.p) ? 2.0 : 1.0)));
          
          ax = vcross(v1, v2).unit();
          ang = angle_around_axis(v1, v2, ax);
@@ -1684,37 +1930,8 @@ col_geom_v build_frame(vector<col_geom_v> &pgeom, const symmetro_opts &opts)
    }
    
    // if not polygon, repeat for symmetry type
-   if ( opts.convex_hull > 1 ) {
-      sch_sym sym; 
-      if ( opts.sym == 'T' )
-         sym.init(sch_sym::T);
-      else
-      if ( opts.sym == 'O' )
-         sym.init(sch_sym::O);
-      else
-      if ( opts.sym == 'I' )
-         sym.init(sch_sym::I);
-      else
-      if ( opts.sym == 'D' )
-         sym.init(sch_sym::D, opts.dihedral_n);
-      else
-      if ( opts.sym == 'S' )
-         sym.init(sch_sym::S, opts.dihedral_n*2);
-      else
-      if ( opts.sym == 'C' )
-         // reflect on Z after sym_repeat
-         sym.init(sch_sym::C, opts.dihedral_n);
-         
-      sym_repeat(geom, geom, sym, ELEM_FACES);
-      
-      // when symmetry C reflect on Z
-      if ( opts.sym_mirror == "z" ) {
-         col_geom_v geom_refl;
-         geom_refl = geom;
-         geom_refl.transform(mat3d::refl(vec3d(0,0,1)));
-         geom.append(geom_refl);
-      }
-   }
+   if ( opts.convex_hull > 1 )
+      sym_repeat(geom, opts);
    
    //sort_merge_elems(geom, "ve", opts.epsilon);
    
@@ -1727,32 +1944,63 @@ int main(int argc, char *argv[])
 {
    symmetro_opts opts;
    opts.process_command_line(argc, argv);
+   char errmsg[MSG_SZ];
    
    symmetro s;
-   s.setSym( opts.sym, opts.sym_id_no, opts.p, opts.q, opts.dihedral_n );
+   s.setSym( opts.sym, opts.p, opts.q, opts.dihedral_n, opts.sym_id_no );
    
-   // set multipliers in object
-   int j = 0;
+   // indexes will be 0,1 except in the case of mode=k when index 2 can be present
+   vector<int> idx;
    for( int i=0; i<(int)opts.multipliers.size(); i++ ) {
-      if ( opts.multipliers[i] ) {
-         opts.col_axis_idx.push_back(i);
-         s.setMult( j, opts.multipliers[i] );
-         j++;
-      }
+      if ( opts.multipliers[i] )
+         idx.push_back(i);
    }
-   // if only one multiplier, duplicate it
-   if ( j == 1 ) {
-      s.setMult( 1, s.getMult(0) );
-      opts.col_axis_idx.push_back(opts.col_axis_idx[0]);
-   } 
-
-   // fill symmetry axes here      
-   s.fill_sym_vec( opts );
+   // in mode=k there can happen only 1 index
+   if ( (int)idx.size() == 1 )
+      idx.push_back(idx[0]);
+      
+   // set multipliers, axis index for color, in object
+   for( int i=0; i<(int)idx.size(); i++ ) {
+      s.setMult( i, opts.multipliers[idx[i]] );
+      opts.col_axis_idx.push_back(idx[i]);
+   }
+   
+   // set d, d_substitute in object
+   for( int i=0; i<(int)opts.d.size(); i++ )
+      s.setD( i, opts.d[i] );
+   for( int i=0; i<(int)opts.d_substitute.size(); i++ )
+      s.setD_substitute( i, opts.d_substitute[i] );
+      
+   // scale will be DBL_MAX when not set
+   // if axis not specified and a scale is set, set default scale axis to first axis index
+   if ( opts.scale_axis == -1 && ( opts.scale[0] != DBL_MAX ) ) {
+      opts.scale_axis = idx[0];
+      swap( opts.scale[0], opts.scale[opts.scale_axis] );
+   }
+   for( int i=0; i<(int)opts.scale.size(); i++ ) {
+      if ( ( opts.scale[i] != DBL_MAX ) && ( i != idx[0] && i != idx[1] ) )
+         opts.error(msg_str("polygon '%d' is not generated so cannot be used for scaling", i), 'r');
+   }
+   for( int i=0; i<(int)idx.size(); i++ ) {
+      double r = ( opts.scale[idx[i]] == DBL_MAX ) ? 1 : opts.scale[idx[i]];
+      s.setScale( i, r );
+   }
+  
+   // if not specified, set default rotation axis to first axis index
+   if ( opts.rotation_axis == -1 )
+      opts.rotation_axis = idx[0];
+   // check rotation axis specifier for zero
+   if ( opts.mode != 'k' && opts.rotation_axis == 2 )
+      opts.error("only 0 and 1 are valid for axis when not using option -k", 'a');
+   else
+   if ( opts.rotation_axis != idx[0] && opts.rotation_axis != idx[1] )
+      opts.error(msg_str("polygon '%d' is not generated so cannot be used for rotation", opts.rotation_axis), 'a');
+   bool swap_axes = ( opts.rotation_axis == idx[1] );
    
    // if convex_hull is not set
    if ( !opts.convex_hull ) {
       for( int i=0; i<(int)opts.d.size(); i++ ) {
-         if ( opts.d[i] > 1 || opts.substitute_d > 1 ) {
+         if ( opts.d[i] > 1 || opts.d_substitute[i] > 1 ) {
             // supress convex hull
             opts.convex_hull = 2;
             opts.warning("star polygons detected so convex hull is supressed", 'C');
@@ -1763,87 +2011,25 @@ int main(int argc, char *argv[])
       // supress convex hull for digon only models
       if ( opts.multipliers[0] == 0 && opts.multipliers[1] == 0 && opts.multipliers[2] == 1 ) {
          opts.convex_hull = 2;
-         opts.warning("for models entirely of digons, convex hull is supressed", 'C');
+         opts.warning("model entirely of digons so convex hull is supressed", 'C');
       }
    }
-
    // if still not set, convex hull is set to normal
    if ( !opts.convex_hull )
       opts.convex_hull = 4;
+      
+   // ready to generate
 
-   // check ratio axis specifier for zero
-   for( int i=0; i<(int)opts.ratio_direction.size(); i++ ) {
-      if ( ( opts.ratio_direction[i] >= (int)opts.multipliers.size() ) || ( opts.multipliers[opts.ratio_direction[i]] == 0 ) )
-         opts.error(msg_str("polygon '%d' is not generated so cannot be used for scaling", opts.ratio_direction[i]), 'r');
-   }
-     
-   // if empty, fill ratio direction
-   if ( !opts.ratio_direction.size() ) {
-      int j = 0;
-      for( int i=0; i<(int)opts.multipliers.size(); i++ ) {
-         if ( j == 2 )
-            continue;
-         if ( opts.multipliers[i] ) {
-            opts.ratio_direction.push_back(i);
-            j++;
-         }            
-      }
-   }
-   
-   // must fill in second ratio direction for CalcPolygons (used for reference)
-   if ( opts.multipliers.size() == 1 ) {
-      opts.ratio_direction.push_back( opts.ratio_direction[0] );
-   }
-   else
-   if ( opts.ratio_direction.size() == 1 ) {
-     for( int i=0; i<(int)opts.multipliers.size(); i++ ) {
-         if ( ( opts.multipliers[i] != 0 ) && ( opts.ratio_direction[0] != i ) ) {
-            opts.ratio_direction.push_back(i);
-            break;
-         }
-      }
-   }   
-   
-   // check rotation axis specifier for zero
-   for( int i=0; i<(int)opts.rotation_axis.size(); i++ ) {
-      if ( opts.mode == 't' && opts.rotation_axis[i] == 2 )
-         opts.error("only 0 and 1 are valid for axis when using option -t", 'a');
-      else
-      if ( ( opts.rotation_axis[i] >= (int)opts.multipliers.size() ) || ( opts.multipliers[opts.rotation_axis[i]] == 0 ) )
-         opts.error(msg_str("polygon on axis '%d' is not generated so cannot be used for rotation", opts.rotation_axis[i]), 'a');
-   } 
-
-   // if empty, fill rotations   
-   if ( !opts.rotation_axis.size() ) {
-      int j = 0;
-      for( int i=0; i<(int)opts.multipliers.size(); i++ ) {
-         if ( j == 2 )
-            continue;
-         if ( opts.multipliers[i] ) {
-            opts.rotation_axis.push_back(i);
-            j++;
-         }            
-      }
-   }
-   
-   // must fill in second rotation for CalcPolygons (used for reference)
-   if ( opts.multipliers.size() == 1 ) {
-      opts.rotation_axis.push_back( opts.rotation_axis[0] );
-   }
-   else
-   if ( opts.rotation_axis.size() == 1 ) {
-     for( int i=0; i<(int)opts.multipliers.size(); i++ ) {
-         if ( opts.rotation_axis[0] != i ) {
-            opts.rotation_axis.push_back(i);
-            break;
-         }
-      }
-   }
-   
-   vector<col_geom_v> pgeom = s.CalcPolygons( opts );
+   // fill symmetry axes here      
+   if ( s.fill_sym_vec( opts.mode, errmsg ) )
+      opts.error(errmsg);
+            
+   vector<col_geom_v> pgeom = s.calc_polygons( opts.mode, opts.rotation, opts.rotation_as_increment, opts.add_pi, swap_axes, opts.offset, opts.verbose, opts.angle_between_axes, errmsg );
+   if ( *errmsg )
+      opts.error( errmsg );
    
    if ( opts.verbose ) {
-      s.debug();
+      s.debug( opts.mode );
       
       double edge_length[2];
       for( int i=0; i<(int)pgeom.size(); i++ ) {
