@@ -99,12 +99,14 @@ class glut_state
       double slice_scale;
       bool persp_proj;
       int sym_disp_type;
+      int transparency_disp_type;
       scene scen;
 
       glut_state(): cur_op(tr_rot), fps(50),
                     start_x(0), start_y(0), l_button(GLUT_UP),
                     trans_scale(0.005), slice_scale(0.003),
-                    persp_proj(true), sym_disp_type(0)
+                    persp_proj(true), sym_disp_type(0),
+                    transparency_disp_type(0)
                     {}
       void make_menu();
       void toggle_projection() { persp_proj=!persp_proj; }
@@ -118,6 +120,7 @@ class glut_state
       void save_camera() { saved_camera = scen.cur_camera(); }
       void restore_camera() { scen.cur_camera() = saved_camera; }
       void change_sym_disp();
+      void change_transparency_disp();
  };
 
 #endif // VW_GLUT_H

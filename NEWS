@@ -18,7 +18,8 @@ xx-xx-14 Adrian Rossiter <adrian@antiprism.com>
               -k don't orient
             zono: new option -S zonish polyhedra
             off_normals: options -t and -m removed
-            antiview: 'O' to show orientation.
+            antiview: 'O' to show orientation, 't' includes 50%
+              transparency
          Fixes
             off_util -u: natural unfolding for positive orientation
             off_align: fix crashes
