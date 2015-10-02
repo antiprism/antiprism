@@ -161,7 +161,7 @@ void symmetro_opts::usage()
 "               optional n2 can differ from n1. if not specified n2=n1, d2=d1\n"
 "               optional s: symmetry: c - C (default), h - Ch, v - Cv, d - D\n"
 "               optional v: vertex index of radial polygon to bring to z plane\n"
-"                  (default: index of highest z value)\n"
+"                  v of -1 is original position (default: index of largest z)\n"
 "  -M <opt>  mirroring (may create compound). Can be x, y or z (default: none)\n"
 "  -a <a,n>  a in degrees of rotation given to polygon applied to optional\n"
 "               axis n (default: 0)  radians may be entered as 'rad(a)'\n"
@@ -226,7 +226,15 @@ void symmetro_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
    
-   // scale array must exist
+   // initialize d
+   for( int i=0; i<2; i++ )
+      d.push_back(1);
+      
+   // initialize d_substitute
+   for( int i=0; i<2; i++ )
+      d_substitute.push_back(0);
+   
+   // initialize scale array
    for( int i=0; i<3; i++ )
       scale.push_back(DBL_MAX);
 
@@ -421,7 +429,6 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             if ( sz != 6 )
                error("incorrect format for Twister notation", c);
             
-            int mult_tok_num = 0;
             for( int i=0; i<sz; i++ ) {
                if ( i == 0 ) {
                   sym = toupper(tokens[i][0]);
@@ -468,8 +475,6 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                      multipliers.push_back(mult);
                   }
                   else {
-                     mult_tok_num = i;
-                     
                      char parse_key2[] = "/";
             
                      // memory pointer for strtok_r
@@ -501,7 +506,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                               
                            if (d_part<=0)
                               error("d of n/d must be positive", c);
-                           d.push_back(d_part);
+                           d[(i==4) ? 0 : 1] = d_part;
                         }
                         
                         ptok2 = strtok_r(NULL,parse_key2,&tok_ptr2);
@@ -511,31 +516,9 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                      
                      // if there is no denominator then it is 1
                      if ( (int)n.size() > (int)d.size() )
-                        d.push_back(1);
+                        d[(i==4) ? 0 : 1] = 1;
                   }
                }
-            }
-            
-            if ( (int)n.size() == 1 ) {
-               if ( (int)multipliers.size() < 1 )
-                  error("in multipliers specification", c);
-                  
-               // goes on end
-               if ( mult_tok_num == 4 ) {
-                  n.push_back(multipliers[0]);
-                  d.push_back(1);
-               }
-               // goes at beginning
-               else {
-                  vector<int>::iterator it;
-                  it = n.begin();
-                  n.insert(it,multipliers[0]);
-                  it = d.begin();
-                  d.insert(it,1);
-               }
-               multipliers.clear();
-               
-               //warning(msg_str("axis %d multiplier interpreted as %d/1",( mult_tok_num == 4 ? 2 : 1 ), multipliers[0]), c);
             }
 
             if ( sym == 'D' ) {
@@ -584,6 +567,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                            
                         if (n_part<2)
                            error("n must be greater than 1", c);
+
                         n.push_back(n_part);
                      }
                      else
@@ -593,7 +577,8 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                            
                         if (d_part<=0 && found_slash)
                            error("d of n/d must be positive", c);
-                        d.push_back(d_part);
+                           
+                        d[count1] = d_part;
                      }
                      else
                      if ( count2 == 2 ) {
@@ -602,8 +587,8 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                      
                         if ( d_sub < 1 || d_sub >= n[count1] )
                            error(msg_str("substitute D must be between 1 and %d", n[count1]-1), c);
-                           
-                        d_substitute.push_back(d_sub);
+                                                     
+                        d_substitute[count1] = d_sub;
                      }
                      
                      ptok2 = strtok_r(NULL,parse_key2,&tok_ptr2);
@@ -612,19 +597,11 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                   
                   // if no slash, but colon exists d_substitute will be in the wrong place
                   if (!found_slash && found_colon) {
-                     if ( d[count1] < 1 || d[count1] >= n[count1] )
+                     d_substitute[count1] = d[count1];
+                     d[count1] = 1;
+                     if ( d_substitute[count1] < 1 || d_substitute[count1] >= n[count1] )
                         error(msg_str("substitute D must be between 1 and %d", n[count1]-1), c);
-                     d_substitute.push_back(d[count1]);
-                     d.clear();
                   }
-                  
-                  // if there is no denominator then it is 1
-                  if ( (int)n.size() > (int)d.size() )
-                     d.push_back(1);
-
-                  // if there is no d_substitute then it is 0
-                  if ( !d_substitute.size() )
-                     d_substitute.push_back(0);
                }
                else
                if ( count1 == 1 ) {
@@ -643,8 +620,8 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             // fill both n/d
             if ( (int)n.size() == 1 ) {
                n.push_back(n[0]);
-               d.push_back(d[0]); 
-               d_substitute.push_back(d_substitute[0]);              
+               d[1] = d[0]; 
+               d_substitute[1] = d_substitute[0];              
             }
  
             if ( (double)n[0]/(double)d[0] < 1.5 )
@@ -655,10 +632,8 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             else   
                sym = 'S';
             
-            if ( ( is_even(n[0]) || is_even(d[0]) ) && !sym_override.length() ) {
-               warning("when n or d is even, model will only connect correctly at certain twist angles", c);
-               warning("try option -c", c);
-            }
+            if ( ( is_even(n[0]) || is_even(d[0]) ) && !sym_override.length() )
+               warning("when n or d is even, model will only connect correctly at certain twist angles. try option -c", c);
 
             p = n[0];
             q = n[1];
@@ -713,7 +688,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                            
                         if (d_part<=0 && found_slash)
                            error(msg_str("d of n/d must be positive (term %d)",count1+1), c);
-                        d.push_back(d_part);
+                        d[count1] = d_part;
                      }
                      else
                      if ( count2 == 2 ) {
@@ -723,7 +698,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                         if ( d_sub < 1 || d_sub >= n[count1] )
                            error(msg_str("substitute D must be between 1 and %d (term %d)", n[count1]-1, count1+1), c);
                            
-                        d_substitute.push_back(d_sub);
+                        d_substitute[count1] = d_sub;
                      }
                      
                      ptok2 = strtok_r(NULL,parse_key2,&tok_ptr2);
@@ -732,19 +707,11 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                   
                   // if no slash, but colon exists d_substitute will be in the wrong place
                   if (!found_slash && found_colon) {
-                     if ( d[count1] < 1 || d[count1] >= n[count1] )
+                     d_substitute[count1] = d[count1];
+                     d[count1] = 1;
+                     if ( d_substitute[count1] < 1 || d_substitute[count1] >= n[count1] )
                         error(msg_str("substitute D must be between 1 and %d", n[count1]-1), c);
-                     d_substitute.push_back(d[count1]);
-                     d.clear();
                   }
-                  
-                  // if there is no denominator then it is 1
-                  if ( n.size() > d.size() )
-                     d.push_back(1);
-
-                  // if there is no d_substitute then it is 0
-                  if ( d.size() > d_substitute.size() )
-                     d_substitute.push_back(0);
                }
                else
                if ( count1 == 2 ) {
@@ -768,9 +735,10 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             }
             
             // fill both n/d
-            if ( (int)n.size() < 2 ) {
+            if ( (int)n.size() == 1 ) {
                n.push_back(n[0]);
-               d.push_back(d[0]);
+               d[1] = d[0]; 
+               d_substitute[1] = d_substitute[0];              
             }
  
             if ( (double)n[0]/(double)d[0] < 1.5 )
@@ -781,7 +749,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             sym = toupper(sym_override[0]);
 
             if ( vert_z != INT_MAX )
-               if ( vert_z < 0 || vert_z >= n[1] )
+               if ( vert_z < -1 || vert_z >= n[1] )
                   error(msg_str("vert z must be between 0 and %d", n[1]-1), c);
 
             p = n[0];
@@ -981,7 +949,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
    if ( !mode )
       error("one of -k, -t, -s, -c must be specified");
       
-   // if option -n was used, convert n to multipliers
+   // convert n to multipliers
    if ( (int)n.size() ) {
       multipliers.clear();
       for( int i=0; i<(int)n.size(); i++ ) {
@@ -999,23 +967,6 @@ void symmetro_opts::process_command_line(int argc, char **argv)
          }
       }
    }
-   
-   if ( mode == 's' || mode == 'c' ) {
-      for( int i=0; i<(int)scale.size(); i++ ) {
-         if ( scale[i] != DBL_MAX ) {
-            warning("some polygons will not meet when scale is used with -s or -c", 'r');
-            break;
-         }
-      }
-   }
-   
-   // d must be filled in any case
-   for( int i=(int)d.size(); i<2; i++ )
-      d.push_back(1);
-      
-   // d_substitute must be filled in any case
-   for( int i=(int)d_substitute.size(); i<2; i++ )
-      d_substitute.push_back(0);
       
    if (!map_file.size())
       map_file = "m1";
@@ -1134,7 +1085,7 @@ void symmetro::debug( const char &mode )
       char s[MSG_SZ];
       s[0] = '\0';
       if ( d_substitute[i] && ( d_substitute[i] != d[i] ) )
-         sprintf(s,"(%d/%d-gon with D-subsitution)", getN(i),d_substitute[i]);
+         sprintf(s,"(then substituted with %d/%d-gon)", getN(i),d_substitute[i]);
       if ( mult[i] )
          fprintf(stderr,"axis %d polygon: %d/%d-gon %s\n", i, getN(i),d[i],s);
    }
@@ -1521,9 +1472,13 @@ vector<col_geom_v> symmetro::calc_polygons( const char &mode, const double &rota
       swap( axis[0], axis[1] );
    
    // if scale of axis 1 is negative, negate scale of axis 0
-   // if axis 0 was already negative, then both axis will act like they are positive   
-   double r0 = ( ( scale[1] < 0 ) ? -scale[0] : scale[0] ) * circumradius( getN(axis[0]), d[axis[0]] );
-   double r1 = scale[1] * circumradius( getN(axis[1]), d[axis[1]] );
+   scale[0] = ( scale[1] < 0 ) ? -scale[0] : scale[0];
+   
+   double r0 = scale[axis[0]] * circumradius( getN(axis[0]), d[axis[0]] );
+   double r1 = scale[axis[1]] * circumradius( getN(axis[1]), d[axis[1]] );
+   
+   // Preserve scale[0] value
+   scale[0] = ( scale[1] < 0 ) ? -scale[0] : scale[0];
 
    if ( angle_between_axes != DBL_MAX )
       angle_between_axes = deg2rad( angle_between_axes );
@@ -1587,7 +1542,7 @@ vector<col_geom_v> symmetro::calc_polygons( const char &mode, const double &rota
       double bump_ang = angle(n,d[j])/(double)parts;
 
       // built in epsilon here
-	   if( (n > 0) && scale[i] ) {
+	   if( (n > 0) && scale[j] ) {
 	   	double bump_angle = 0.0;
 	   	int vert_idx = 0;
 	   	
@@ -1620,7 +1575,7 @@ vector<col_geom_v> symmetro::calc_polygons( const char &mode, const double &rota
          //   pgeom[j].transform( mat3d::rot(vec3d(0.0,0.0,deg2rad(180.0/(double)p))) );
       }
       
-      if ( !scale[i] )
+      if ( !scale[j] )
          pgeom[j].clear_all();
    }
    
@@ -1773,30 +1728,48 @@ col_geom_v build_geom(vector<col_geom_v> &pgeom, const symmetro_opts &opts)
    col_geom_v geom;
    
    // if option c, align to a z coordinate
-   if ( ( opts.mode == 'c' ) && pgeom[1].verts().size() ) {
-      vec3d P;
-      int vz = opts.vert_z;  
-      if ( vz != INT_MAX )
-         P = pgeom[1].verts(vz);
-      else {
-         // find greatest Z
-         vz = 0;
-         P = pgeom[1].verts(vz);
-         for( int i=1; i<(int)pgeom[1].verts().size(); i++ ) {
-            if ( pgeom[1].verts(i)[2] > P[2] ) {
-               vz = i;
-               P = pgeom[1].verts(vz);
-            }
-         }
+   if ( opts.mode == 'c' ) {
+      if ( !pgeom[1].verts().size() ) {
+         if (opts.verbose)
+            fprintf(stderr,"option -c: radial polygon not found so model not moved on Z\n");
       }
-      
-      if (opts.verbose)
-         fprintf(stderr,"option -c: greatest Z vertex is %d\n", vz);
-      
-      for( int i=0; i<2; i++ ) {
-         vec3d P2 = vec3d(0,0,-P[2]);
-         pgeom[i].transform(mat3d::transl(P2));
-         pgeom[i].transform(mat3d::rot(0, 0, angle_around_axis(P, vec3d(1, 0, 0),  vec3d(0, 0, 1))));
+      else
+      if ( opts.vert_z == -1 ) {
+         if (opts.verbose)
+            fprintf(stderr,"option -c: model not moved on Z (supressed by user)\n");
+      }
+      else {
+         if (opts.verbose)
+            fprintf(stderr,"option -c: greatest Z ");
+            
+         vec3d P;
+         int vz = opts.vert_z;  
+         if ( vz != INT_MAX ) {
+            P = pgeom[1].verts(vz);
+            
+            if (opts.verbose)
+               fprintf(stderr,"explicitly set to %d\n",vz);
+         }
+         else {
+            // find greatest Z
+            vz = 0;
+            P = pgeom[1].verts(vz);
+            for( int i=1; i<(int)pgeom[1].verts().size(); i++ ) {
+               if ( pgeom[1].verts(i)[2] > P[2] ) {
+                  vz = i;
+                  P = pgeom[1].verts(vz);
+               }
+            }
+            
+            if (opts.verbose)
+               fprintf(stderr,"calculated to %d\n",vz);
+         }
+         
+         for( int i=0; i<2; i++ ) {
+            vec3d P2 = vec3d(0,0,-P[2]);
+            pgeom[i].transform(mat3d::transl(P2));
+            pgeom[i].transform(mat3d::rot(0, 0, angle_around_axis(P, vec3d(1, 0, 0),  vec3d(0, 0, 1))));
+         }
       }
    }
 
@@ -1993,6 +1966,21 @@ int main(int argc, char *argv[])
    for( int i=0; i<(int)opts.scale.size(); i++ ) {
       if ( ( opts.scale[i] != DBL_MAX ) && ( i != idx[0] && i != idx[1] ) )
          opts.error(msg_str("polygon '%d' is not generated so cannot be used for scaling", i), 'r');
+   }
+   int scale_neg_count = 0;
+   for( int i=0; i<(int)opts.scale.size(); i++ ) {
+      if ( opts.scale[i] < 0 )
+         scale_neg_count++;
+   }
+   if ( scale_neg_count > 1 )
+      opts.error("scale can only be negative on one axis", 'r');
+   if ( opts.mode == 's' || opts.mode == 'c' ) {
+      for( int i=0; i<(int)opts.scale.size(); i++ ) {
+         if ( opts.scale[i] != DBL_MAX ) {
+            opts.warning("some polygons will not meet when scale is used with -s or -c", 'r');
+            break;
+         }
+      }
    }
    for( int i=0; i<(int)idx.size(); i++ ) {
       double r = ( opts.scale[idx[i]] == DBL_MAX ) ? 1 : opts.scale[idx[i]];
