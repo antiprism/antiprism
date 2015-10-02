@@ -159,7 +159,7 @@ void symmetro_opts::usage()
 "               optional d denominator (default: 1)\n"
 "               optional D substitutes a polygon of n/D in place of n/d\n"
 "               optional n2 can differ from n1. if not specified n2=n1, d2=d1\n"
-"               optional s: symmetry: c - C (default), h - Ch, v - Cv, s - S\n"
+"               optional s: symmetry: c - C (default), h - Ch, v - Cv, d - D\n"
 "               optional v: vertex index of radial polygon to bring to z plane\n"
 "                  (default: index of highest z value)\n"
 "  -M <opt>  mirroring (may create compound). Can be x, y or z (default: none)\n"
@@ -371,6 +371,10 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             if ( num_multipliers == 1 && multipliers[2] ) {
                if ( id == "1" ) { // vertex connected
                   // rotate to coincident faces
+                  if ( sym == 'T' ) {
+                     rotation += 45.0; // 45.0 degrees
+                  }
+                  else
                   if ( sym == 'O' ) {
                      rotation += rad2deg(acos(1.0/3.0)/2.0); // 35.26438968275465431577 degrees
                   }
@@ -680,7 +684,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             int count1 = 0;
             while( ptok1 != NULL ) {
                // if second n/d is not specified and symmetry given move straight to next term
-               if ( ( count1 == 1 ) && ( strspn(ptok1, "cCvVhHsSdD") == strlen(ptok1) ) )
+               if ( ( count1 == 1 ) && ( strspn(ptok1, "cCvVhHdD") == strlen(ptok1) ) )
                   count1++;
                   
                if ( count1 == 0 || count1 == 1 ) {
@@ -744,9 +748,11 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                }
                else
                if ( count1 == 2 ) {
-                  if((strspn(ptok1, "cCvVhHsSdD") != strlen(ptok1)) || strlen(ptok1)>1)
-                     error(msg_str("symmetry override is '%s' must be c", ptok1), c);
-                  sym_override=ptok1;
+                  if(!read_int(ptok1, &vert_z, errmsg)) {
+                     if((strspn(ptok1, "cCvVhHdD") != strlen(ptok1)) || strlen(ptok1)>1)
+                        error(msg_str("symmetry override is '%s' must be c, v, h or d", ptok1), c);
+                     sym_override=ptok1;
+                  }
                }
                else
                if ( count1 == 3 ) {
@@ -1081,7 +1087,6 @@ public:
 	
    double angle( const int &n, const int &d );
    double circumradius( const int &n, const int &d );
-   void unitize_edges( col_geom_v &geom );
 
    void substitute_polygon( col_geom_v &pgeom, const int &axis_no );
    vector<col_geom_v> calc_polygons( const char &mode, const double &rotation, const double &rotation_as_increment, const bool &add_pi, const bool &reverse, const double &offset, const bool &verbose, double &angle_between_axes, char *errmsg );
@@ -1125,9 +1130,14 @@ void symmetro::debug( const char &mode )
       fprintf(stderr,"axis %d: mult = %d  scale = %.17lf\n", i, mult[i], scale[i]);
    fprintf(stderr,"\n");
    
-   for( int i=0; i<2; i++ )
+   for( int i=0; i<2; i++ ) {
+      char s[MSG_SZ];
+      s[0] = '\0';
+      if ( d_substitute[i] && ( d_substitute[i] != d[i] ) )
+         sprintf(s,"(%d/%d-gon with D-subsitution)", getN(i),d_substitute[i]);
       if ( mult[i] )
-         fprintf(stderr,"axis %d polygon: %d-gon\n", i, getN(i));
+         fprintf(stderr,"axis %d polygon: %d/%d-gon %s\n", i, getN(i),d[i],s);
+   }
    fprintf(stderr,"\n");
 }
 
@@ -1455,20 +1465,11 @@ double symmetro::circumradius( const int &n, const int &d )
    return ( edge_len / (2.0*sin(angle(n,d)/2.0)) );
 }
 
-void symmetro::unitize_edges( col_geom_v &geom )
-{
-   geom_info info(geom);
-   if (info.num_iedges() > 0) {
-      double val = info.iedge_lengths().sum/info.num_iedges();
-      geom.transform(mat3d::scale(1/val));
-   }
-}
-
 void symmetro::substitute_polygon( col_geom_v &geom, const int &axis_no )
 {
    // Make one convex regular polygon
    char errmsg[MSG_SZ];
-   geom.set_hull("A1",errmsg);
+   geom.set_hull("",errmsg);
    
    // if star polygon, rethread face
    if ( d_substitute[axis_no] > 1 ) {
@@ -1518,8 +1519,10 @@ vector<col_geom_v> symmetro::calc_polygons( const char &mode, const double &rota
    axis[1] = 1;
    if ( swap_axes )
       swap( axis[0], axis[1] );
-
-   double r0 = scale[0] * circumradius( getN(axis[0]), d[axis[0]] );
+   
+   // if scale of axis 1 is negative, negate scale of axis 0
+   // if axis 0 was already negative, then both axis will act like they are positive   
+   double r0 = ( ( scale[1] < 0 ) ? -scale[0] : scale[0] ) * circumradius( getN(axis[0]), d[axis[0]] );
    double r1 = scale[1] * circumradius( getN(axis[1]), d[axis[1]] );
 
    if ( angle_between_axes != DBL_MAX )
@@ -1538,7 +1541,7 @@ vector<col_geom_v> symmetro::calc_polygons( const char &mode, const double &rota
    if ( add_pi )
       ang += M_PI;
    if ( verbose )
-      fprintf(stderr,"turn angle: radians = %.17lf degrees = %.17lf\n",ang,rad2deg(ang));
+      fprintf(stderr,"turn angle: radians = %.17lf degrees = %.17lf on axis %d\n",ang,rad2deg(ang),axis[0]);
    
    vec3d V = mat3d::rot(vec3d(0, 0, 1), ang) * vec3d(r0, 0, 0);
    vec3d q = rot * V;
@@ -1608,8 +1611,8 @@ vector<col_geom_v> symmetro::calc_polygons( const char &mode, const double &rota
             bump_angle += bump_ang;
          }
          
-         if ( d_substitute[i] )
-            substitute_polygon( pgeom[j], i );
+         if ( d_substitute[j] )
+            substitute_polygon( pgeom[j], j );
 
 	      pgeom[j].transform( mat3d::alignment(vec3d(0, 0, 1), vec3d(1, 0, 0), sym_vec[axis[0]], sym_vec[axis[1]]) );
 	      // this isn't strictly needed. turns model to line up with twister_rhomb.py
@@ -1617,12 +1620,8 @@ vector<col_geom_v> symmetro::calc_polygons( const char &mode, const double &rota
          //   pgeom[j].transform( mat3d::rot(vec3d(0.0,0.0,deg2rad(180.0/(double)p))) );
       }
       
-      if ( !scale[i] ) {
+      if ( !scale[i] )
          pgeom[j].clear_all();
-      }
-      else
-      if ( d_substitute[0] || d_substitute[1] )
-         unitize_edges( pgeom[j] );
    }
    
    return pgeom;   
@@ -1797,9 +1796,7 @@ col_geom_v build_geom(vector<col_geom_v> &pgeom, const symmetro_opts &opts)
       for( int i=0; i<2; i++ ) {
          vec3d P2 = vec3d(0,0,-P[2]);
          pgeom[i].transform(mat3d::transl(P2));
-         // S symmetry will reflect as is
-         if ( opts.sym != 'S' )
-            pgeom[i].transform(mat3d::rot(0, 0, angle_around_axis(P, vec3d(1, 0, 0),  vec3d(0, 0, 1))));
+         pgeom[i].transform(mat3d::rot(0, 0, angle_around_axis(P, vec3d(1, 0, 0),  vec3d(0, 0, 1))));
       }
    }
 
@@ -1940,6 +1937,22 @@ col_geom_v build_frame(vector<col_geom_v> &pgeom, const symmetro_opts &opts)
    return geom;
 }
 
+/*
+void unitize_edges( vector<col_geom_v> &pgeom )
+{
+   vector<double> val(2);
+   for( int i=0; i<(int)pgeom.size(); i++ ) {
+      geom_info info(pgeom[i]);
+      if (info.num_iedges() > 0)
+         val[i] = info.iedge_lengths().sum/info.num_iedges();
+   }
+   
+   double val_avg = (val[0]+val[1])/2.0;
+   pgeom[0].transform(mat3d::scale(1/val_avg));
+   pgeom[1].transform(mat3d::scale(1/val_avg));
+}
+*/
+
 int main(int argc, char *argv[])
 {
    symmetro_opts opts;
@@ -1995,7 +2008,14 @@ int main(int argc, char *argv[])
    else
    if ( opts.rotation_axis != idx[0] && opts.rotation_axis != idx[1] )
       opts.error(msg_str("polygon '%d' is not generated so cannot be used for rotation", opts.rotation_axis), 'a');
-   bool swap_axes = ( opts.rotation_axis == idx[1] );
+   // swap axes if we are rotating the axis 1 polygon
+   // if -k and p == q then alway use axis 0
+   bool swap_axes = false;
+   if ( opts.mode == 'k' && opts.p == opts.q )
+      swap_axes = false;
+   else
+   if ( opts.rotation_axis == idx[1] )
+      swap_axes = true;
    
    // if convex_hull is not set
    if ( !opts.convex_hull ) {
@@ -2008,10 +2028,10 @@ int main(int argc, char *argv[])
          }
       }
       
-      // supress convex hull for digon only models
-      if ( opts.multipliers[0] == 0 && opts.multipliers[1] == 0 && opts.multipliers[2] == 1 ) {
+      // supress convex hull for models with digons
+      if ( ( opts.multipliers[0] * opts.p == 2 ) || ( opts.multipliers[1] * opts.q == 2 ) ) {
          opts.convex_hull = 2;
-         opts.warning("model entirely of digons so convex hull is supressed", 'C');
+         opts.warning("model contains digons so convex hull is supressed", 'C');
       }
    }
    // if still not set, convex hull is set to normal
@@ -2027,6 +2047,9 @@ int main(int argc, char *argv[])
    vector<col_geom_v> pgeom = s.calc_polygons( opts.mode, opts.rotation, opts.rotation_as_increment, opts.add_pi, swap_axes, opts.offset, opts.verbose, opts.angle_between_axes, errmsg );
    if ( *errmsg )
       opts.error( errmsg );
+      
+   //if ( opts.d_substitute[0] || opts.d_substitute[1] )
+   //   unitize_edges( pgeom );
    
    if ( opts.verbose ) {
       s.debug( opts.mode );
