@@ -87,6 +87,23 @@ void glut_state::change_sym_disp()
    }
 }
 
+void glut_state::change_transparency_disp()
+{
+   transparency_disp_type = (transparency_disp_type+1)%3;
+   vector<scene_geom>::const_iterator geo;
+   for(geo=glut_s.scen.get_geoms().begin();
+         geo!=glut_s.scen.get_geoms().end(); ++geo) {
+      vector<geom_disp *>::const_iterator disp;
+      for(disp=geo->get_disps().begin(); disp!=geo->get_disps().end();
+            ++disp) {
+         if(disp_poly_gl *disp_p = dynamic_cast<disp_poly_gl *>(*disp) ) {
+            disp_p->set_transparency_type(transparency_disp_type);
+         }
+      }
+   }
+}
+
+
 
 static void toggle(char elem)
 {
@@ -202,7 +219,7 @@ void keyboard_cb(unsigned char key, int /*x*/, int /*y*/)
          break;
       case 'T':
       case 't':
-         toggle('t');
+         glut_s.change_transparency_disp();
          break;
       case 'E':
       case 'e':

@@ -170,6 +170,11 @@ void disp_poly_gl::gl_faces(const scene &)
          gl_set_material(col_val(0.0,0.0,0.0), get_elem_trans(), GL_BACK);
       }
       else {
+         if(get_transparency_type() == trans_50pc)
+            col.set_rgba(col[0], col[1], col[2], 128);
+         else if(get_transparency_type() == trans_0pc)
+            col.set_rgba(col[0], col[1], col[2], 255);
+
          gl_set_material(col, get_elem_trans());
       }
 
@@ -182,7 +187,8 @@ void disp_poly_gl::gl_faces(const scene &)
    }
 }
 
-disp_poly_gl::disp_poly_gl() : disp_poly(), show_orientation(false)
+disp_poly_gl::disp_poly_gl() : disp_poly(), show_orientation(false),
+   transparency_type(0)
 {
 }
 

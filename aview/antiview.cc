@@ -89,7 +89,7 @@ void vw_opts::usage()
 "   n - show/hide vertex numbers, toggle display of vertex number labels\n"
 "   N - show/hide face numbers, toggle display of face number labels\n"
 "   m - show/hide edge numbers, toggle display of edge number labels\n"
-"   t - show/hide transparency, toggle display of any transparency\n"
+"   t - rotate through display of face transparency: model, 50%%, none\n"
 "   y - rotate through display of symmetry elements: axes; axes and\n"
 "       mirrors; axes, mirrors and rot-reflection planes; none\n"
 "   O - show/hide orientation, toggle colouring of the front side of \n"

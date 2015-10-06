@@ -581,8 +581,6 @@ const char *j_abbrevs[][2] = {
 
 int make_resource_uniform(geom_if &geom, string name, bool is_std, char *errmsg=0)
 {
-// Coxeter numbers interfere with C symmetry symbols
-   //if(name.size()<2 || !strchr("uUkKcCwW", name[0]) || name.find('.')!=string::npos)
    if(name.size()<2 || !strchr("uUkKwW", name[0]) || name.find('.')!=string::npos)
       return -1; // not uniform name (the "." indicates a likely local file)
                  // so the name is not handled
@@ -1462,6 +1460,11 @@ bool make_resource_geom(geom_if &geom, string name, char *errmsg)
             strcpy(errmsg, errmsg2);
          return false;
       }
+   }
+
+   if(!geom_ok) {
+      if(errmsg && !*errmsg)
+         strcpy(errmsg, "not found");
    }
 
    if(make_dual)
