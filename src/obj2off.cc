@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2014, Roger Kaufman
+   Copyright (c) 2014-2015, Roger Kaufman
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -138,7 +138,7 @@ void convert_obj_to_off(string &file_name, geom_if &geom, char *errmsg)
             *p = ' ';
       
       char *ptok = strtok(line,parse_key);
-      char key = *ptok;
+      char key = ptok ? *ptok : '\0';
       int idx;
       
       // only use x y z
