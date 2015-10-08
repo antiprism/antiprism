@@ -166,7 +166,7 @@ void symmetro_opts::usage()
 "  -a <a,n>  a in degrees of rotation given to polygon applied to optional\n"
 "               axis n (default: 0)  radians may be entered as 'rad(a)'\n"
 "  -r <r,n>  set the edge length of the polygon on axis n (default: 0)\n"
-"               to r. The default edge length is 1\n"
+"               to r. Must be non-negative. The default edge length is 1\n"
 "  -A <a>    a in degrees is angle between axes (default: calculated)\n"
 "  -C <mode> convex hull. polygons=1, suppress=2, force=3, normal=4 (default: 4)\n"
 "  -q <args> include frame elements in output\n"
@@ -850,7 +850,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                   error("axis to apply scale should be 0, 1 or 2", c);
                else
                   scale[scale_axis] = scale_tmp[0];
-            }      
+            }
             break;
          }
          
@@ -1471,14 +1471,8 @@ vector<col_geom_v> symmetro::calc_polygons( const char &mode, const double &rota
    if ( swap_axes )
       swap( axis[0], axis[1] );
    
-   // if scale of axis 1 is negative, negate scale of axis 0
-   scale[0] = ( scale[1] < 0 ) ? -scale[0] : scale[0];
-   
    double r0 = scale[axis[0]] * circumradius( getN(axis[0]), d[axis[0]] );
    double r1 = scale[axis[1]] * circumradius( getN(axis[1]), d[axis[1]] );
-   
-   // Preserve scale[0] value
-   scale[0] = ( scale[1] < 0 ) ? -scale[0] : scale[0];
 
    if ( angle_between_axes != DBL_MAX )
       angle_between_axes = deg2rad( angle_between_axes );
@@ -1967,17 +1961,14 @@ int main(int argc, char *argv[])
       if ( ( opts.scale[i] != DBL_MAX ) && ( i != idx[0] && i != idx[1] ) )
          opts.error(msg_str("polygon '%d' is not generated so cannot be used for scaling", i), 'r');
    }
-   int scale_neg_count = 0;
    for( int i=0; i<(int)opts.scale.size(); i++ ) {
       if ( opts.scale[i] < 0 )
-         scale_neg_count++;
+         opts.error("scale cannot be negative", 'r');
    }
-   if ( scale_neg_count > 1 )
-      opts.error("scale can only be negative on one axis", 'r');
    if ( opts.mode == 's' || opts.mode == 'c' ) {
       for( int i=0; i<(int)opts.scale.size(); i++ ) {
          if ( opts.scale[i] != DBL_MAX ) {
-            opts.warning("some polygons will not meet when scale is used with -s or -c", 'r');
+            opts.warning("some polygons may not meet when scale is used with -s or -c", 'r');
             break;
          }
       }
