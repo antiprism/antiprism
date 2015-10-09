@@ -37,7 +37,7 @@ class rep_printer: public geom_info
    private:
       int sig_dgts;
       char *d2s(char *buf, double d) { return dtostr(buf, d, sig_dgts); }
-      char *v2s(char *buf, vec3d v) { return vtostr(buf, v, " ", sig_dgts); }
+      char *v2s(char *buf, vec3d v);
       char *vidx2s(char *buf, int idx)
          { return idx2s(buf, idx, num_verts()-extra_v_sz); }
       char *eidx2s(char *buf, int idx)

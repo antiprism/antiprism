@@ -113,6 +113,19 @@ class f_distances: public elem_distances
       void set_values();
 };
 
+struct double_range_cnt
+{
+   int cnt;
+   double min;
+   double max;
+
+   double_range_cnt(): cnt(0), min(1e100), max(-1e100) {}
+   double_range_cnt update(double val)
+      { cnt++; if(val<min) min=val; if(val>max) max=val; return *this; }
+   double mid() const { return (min+max)/2; }  // middle of range
+   double rad() const { return (max-min)/2; }  // radius of range
+};
+
 
 
 class geom_info
@@ -136,6 +149,7 @@ class geom_info
       int num_angs;
       elem_lims area;
       double vol;
+      vec3d vol_cent;
       v_distances v_dsts;
       e_distances e_dsts;
       ie_distances ie_dsts;
@@ -146,11 +160,11 @@ class geom_info
       vector<vector<int> > edge_parts;
       map<vector<double>, int, ang_vect_less> face_angles;
       map<vector<double>, int, ang_vect_less> vert_dihed;
-      map<double, int, ang_less> dihedral_angles;
-      map<double, int, ang_less> e_lengths;
-      map<double, int, ang_less> ie_lengths;
-      map<double, int, ang_less> plane_angles;
-      map<double, int, ang_less> sol_angles;
+      map<double, double_range_cnt, ang_less> dihedral_angles;
+      map<double, double_range_cnt, ang_less> e_lengths;
+      map<double, double_range_cnt, ang_less> ie_lengths;
+      map<double, double_range_cnt, ang_less> plane_angles;
+      map<double, double_range_cnt, ang_less> sol_angles;
       vector<double> vertex_angles;
       map<pair<int, int>, double> vertex_plane_angs;
       vector<double> edge_dihedrals;
@@ -179,7 +193,7 @@ class geom_info
       void find_vert_norms(bool raw_orientation=false);
       void find_free_verts();
       void find_solid_angles();
-      void find_e_lengths(map<double, int, ang_less> &e_lens,
+      void find_e_lengths(map<double, double_range_cnt, ang_less> &e_lens,
          const vector<vector<int> > &edges, elem_lims &lens);
       void find_e_lengths();
       void find_f_areas();
@@ -206,7 +220,7 @@ class geom_info
 
       // elements
       double face_area(int f_no);
-      double face_vol(int f_no);
+      double face_vol(int f_no, vec3d *face_vol_cent);
       void face_angles_lengths(int f_no, vector<double> &angs,
             vector<double> *lens=0);
 
@@ -230,6 +244,8 @@ class geom_info
       elem_lims face_areas() { if(f_areas.size()==0) find_f_areas();
                            return area; }
       double volume() { if(f_areas.size()==0) find_f_areas(); return vol;}
+      vec3d volume_centroid()
+         { if(f_areas.size()==0) find_f_areas(); return vol_cent;}
       double isoperimetric_quotient()
          { return 36.0*M_PI*pow(volume(),2)/pow(face_areas().sum,3); }
 
@@ -267,7 +283,7 @@ class geom_info
          { if(!vert_figs.size()) find_vert_figs(); return vert_figs; }
       const vector<double> &get_vertex_angles()
          { if(!vertex_angles.size()) find_solid_angles(); return vertex_angles;}
-      map<double, int, ang_less> &get_solid_angles()
+      map<double, double_range_cnt, ang_less> &get_solid_angles()
          { if(!sol_angles.size()) find_solid_angles(); return sol_angles; }
       map<pair<int, int>, double> &get_vertex_plane_angs()
          { if(!vertex_plane_angs.size()) find_face_angles();
@@ -284,10 +300,10 @@ class geom_info
       vector<vector<int> > &get_edge_parts()
          { if(!edge_parts.size()) find_edge_parts();
             return edge_parts; }
-      map<double, int, ang_less> &get_dihedral_angles()
+      map<double, double_range_cnt, ang_less> &get_dihedral_angles()
          { if(!dihedral_angles.size()) find_dihedral_angles();
             return dihedral_angles; }
-      map<double, int, ang_less> &get_e_lengths()
+      map<double, double_range_cnt, ang_less> &get_e_lengths()
          { if(!e_lengths.size())
               find_e_lengths(e_lengths, geom.edges(), edge_len);
            return e_lengths; }
@@ -295,7 +311,7 @@ class geom_info
       //implicit edges
       vector<vector<int> > &get_impl_edges()
          { if(!impl_edges.size()) find_impl_edges(); return impl_edges; }
-      map<double, int, ang_less> &get_ie_lengths()
+      map<double, double_range_cnt, ang_less> &get_ie_lengths()
          { if(!ie_lengths.size())
               find_e_lengths(ie_lengths, get_impl_edges(), iedge_len);
            return ie_lengths; }

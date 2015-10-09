@@ -44,7 +44,17 @@ bool rep_printer::set_sub_symmetry(const string &sub_sym, char *errmsg)
       sub_sym_str = sub_sym;
    return valid;
 }
-   
+
+
+char *rep_printer::v2s(char *buf, vec3d v)
+{
+   if(v.is_set())
+      vtostr(buf, v, " ", sig_dgts);
+   else
+      strcpy(buf, "not valid");
+   return buf;
+}
+
 
 char *rep_printer::idx2s(char *buf, int idx, int elems_sz)
 { 
@@ -78,7 +88,14 @@ void rep_printer::general_sec()
    fprintf(ofile, "num_verts = %d\n", num_verts());
    fprintf(ofile, "num_faces = %d\n", num_faces());
    fprintf(ofile, "num_edges = %d\n", num_edges());
-   fprintf(ofile, "centroid = (%s)\n",v2s(s1, geom.centroid()));
+   fprintf(ofile, "vertex_centroid = (%s)\n",v2s(s1, geom.centroid()));
+   fprintf(ofile, "volume_centroid = ");
+   if(geom.is_oriented() && is_polyhedron())
+      fprintf(ofile, "(%s)", v2s(s1, volume_centroid()));
+   else
+      fprintf(ofile, "n/a (calculated value: (%s))",
+            v2s(s1, volume_centroid()));
+   fprintf(ofile, "\n");
 
    fprintf(ofile, "oriented = ");
    if(is_known_connectivity())
@@ -319,17 +336,24 @@ void rep_printer::symmetry()
 void rep_printer::vert_heights_cnts()
 {
    char s1[MSG_SZ];
+   char s2[MSG_SZ];
    fprintf(ofile, "[vert_heights_cnts]\n");
-   map<double, int, ang_less> v_heights;
+   map<double, double_range_cnt, ang_less>::iterator mi;
+   map<double, double_range_cnt, ang_less> v_heights;
    const vector<vec3d> &verts = geom.verts();
    unsigned int sz = verts.size();
-   for(unsigned int i=0; i<sz; i++)
-      v_heights[verts[i][2]]++;
+   for(unsigned int i=0; i<sz; i++) {
+      double val = verts[i][2];
+      mi = v_heights.find(val);
+      if(mi == v_heights.end())     // new range
+         v_heights[val] = double_range_cnt().update(val);
+      else                          // existing range
+         mi->second.update(val);
+   }
 
-   map<double, int, ang_less>::iterator hi;
-   for(hi=v_heights.begin(); hi!=v_heights.end(); ++hi)
-      fprintf(ofile, "%s = %d\n",
-            d2s(s1, hi->first), hi->second);
+   for(mi=v_heights.begin(); mi!=v_heights.end(); ++mi)
+      fprintf(ofile, "%s = %d\t(range +/- %s)\n", d2s(s1, mi->second.mid()),
+            mi->second.cnt, d2s(s2, mi->second.rad()));
    fprintf(ofile, "\n");
 }
 
@@ -337,12 +361,13 @@ void rep_printer::vert_heights_cnts()
 void rep_printer::edge_lengths_cnts()
 {
    char s1[MSG_SZ];
+   char s2[MSG_SZ];
    fprintf(ofile, "[edge_lengths_cnts]\n");
-   map<double, int, ang_less> edge_lengths = get_e_lengths();
-   map<double, int, ang_less>::iterator ei;
-   for(ei=edge_lengths.begin(); ei!=edge_lengths.end(); ++ei)
-      fprintf(ofile, "%s = %d\n",
-            d2s(s1, ei->first), ei->second);
+   map<double, double_range_cnt, ang_less> edge_lengths = get_e_lengths();
+   map<double, double_range_cnt, ang_less>::iterator mi;
+   for(mi=edge_lengths.begin(); mi!=edge_lengths.end(); ++mi)
+      fprintf(ofile, "%s = %d\t(range +/- %s)\n", d2s(s1, mi->second.mid()),
+            mi->second.cnt, d2s(s2, mi->second.rad()));
    fprintf(ofile, "\n");
 }
 
@@ -350,25 +375,27 @@ void rep_printer::edge_lengths_cnts()
 void rep_printer::dihedral_angles_cnts()
 {
    char s1[MSG_SZ];
+   char s2[MSG_SZ];
    fprintf(ofile, "[dihedral_angles_cnts]\n");
-   map<double, int, ang_less> &dihedrals = get_dihedral_angles();
-   map<double, int, ang_less>::iterator di;
-   for(di=dihedrals.begin(); di!=dihedrals.end(); ++di)
-      fprintf(ofile, "%s = %d\n",
-            d2s(s1, rad2deg(di->first)),
-            di->second);
+   map<double, double_range_cnt, ang_less> &dihedrals = get_dihedral_angles();
+   map<double, double_range_cnt, ang_less>::iterator mi;
+   for(mi=dihedrals.begin(); mi!=dihedrals.end(); ++mi)
+      fprintf(ofile, "%s = %d\t(range +/- %s)\n",
+            d2s(s1, rad2deg(mi->second.mid())), mi->second.cnt,
+            d2s(s2, rad2deg(mi->second.rad())));
    fprintf(ofile, "\n");
 }
 
 void rep_printer::solid_angles_cnts()
 {
    char s1[MSG_SZ];
+   char s2[MSG_SZ];
    fprintf(ofile, "[solid_angles_cnts]\n");
-   map<double, int, ang_less> &solid_angs = get_solid_angles();
-   map<double, int, ang_less>::iterator si;
-   for(si=solid_angs.begin(); si!=solid_angs.end(); ++si)
-      fprintf(ofile, "%s = %d\n",
-            d2s(s1, si->first), si->second);
+   map<double, double_range_cnt, ang_less> &solid_angs = get_solid_angles();
+   map<double, double_range_cnt, ang_less>::iterator mi;
+   for(mi=solid_angs.begin(); mi!=solid_angs.end(); ++mi)
+      fprintf(ofile, "%s = %d\t(range +/- %s)\n", d2s(s1, mi->second.mid()),
+            mi->second.cnt, d2s(s2, mi->second.rad()));
    fprintf(ofile, "\n");
 }
 

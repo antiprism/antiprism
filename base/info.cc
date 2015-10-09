@@ -85,6 +85,7 @@ void geom_info::reset()
    f_areas.clear();
    f_perimeters.clear();
    vert_cons.clear();
+   vert_cons_orig.clear();
    vert_norms.clear();
    found_free_verts = false;
    free_verts.clear();
@@ -153,6 +154,7 @@ void geom_info::find_f_areas()
    f_areas.resize(fsz);
    area.init();
    vol = 0;
+   vol_cent = vec3d(0, 0, 0);
    for(int i=0; i<fsz; i++) {
       f_areas[i] = face_area(i);
       if(f_areas[i]<area.min) {
@@ -164,8 +166,15 @@ void geom_info::find_f_areas()
          area.idx[elem_lims::IDX_MAX] = i;
       }
       area.sum += f_areas[i];
-      vol += face_vol(i);
+      vec3d f_vol_cent;
+      double f_vol = face_vol(i, &f_vol_cent);
+      vol += f_vol;
+      vol_cent += f_vol_cent * f_vol;
    }
+   if(!double_eq(vol, 0))
+      vol_cent /= vol;
+   else
+      vol_cent.unset();
 }
 
 void geom_info::find_f_perimeters()
@@ -182,15 +191,26 @@ void geom_info::find_f_perimeters()
 }
 
 
-double geom_info::face_vol(int f_no)
+double geom_info::face_vol(int f_no, vec3d *face_vol_cent)
 {
    double f_vol = 0;
+   vec3d f_vol_cent = vec3d(0, 0, 0);
    const vector<vec3d> &verts = geom.verts();
    const vector<int> &face = geom.faces(f_no);
    vec3d V = verts[0];
    vec3d v0 = verts[face[0]];
-   for(unsigned int i=1; i<face.size()-1; i++)
-      f_vol += vtriple(v0-V, verts[face[i]]-V, verts[face[i+1]]-V);
+   for(unsigned int i=1; i<face.size()-1; i++) {
+      const vec3d &v1 = verts[face[i]];
+      const vec3d &v2 = verts[face[i+1]];
+      double tet_vol = vtriple(v0-V, v1-V, v2-V);
+      f_vol_cent += tet_vol * (V + v0 + v1 + v2);  // /4 deferred
+      f_vol += tet_vol;                            // /6 deferred
+   }
+   if(!double_eq(f_vol, 0))
+      *face_vol_cent = (f_vol_cent/4) / f_vol;
+   else
+      *face_vol_cent = vec3d(0, 0, 0);
+
    return f_vol/6;
 }
 
@@ -237,7 +257,7 @@ void geom_info::find_face_angles()
    ang.init();
    num_angs = 0;
    map<vector<double>, int, ang_vect_less>::iterator fi;
-   map<double, int, ang_less>::iterator ai;
+   map<double, double_range_cnt, ang_less>::iterator ai;
    
    for(unsigned int i=0; i<geom.faces().size(); i++) {
       unsigned int fsz = geom.faces(i).size();
@@ -246,19 +266,20 @@ void geom_info::find_face_angles()
       f_min = f1;
       for(unsigned int offset=0; offset<fsz; offset++) {
          pair<int, int> vf_pr(geom.faces(i, offset), i);
-         vertex_plane_angs[vf_pr] = f1[offset];
-         ai = plane_angles.find(f1[offset]);
+         const double f_ang = f1[offset];
+         vertex_plane_angs[vf_pr] = f_ang;
+         ai = plane_angles.find(f_ang);
          if(ai==plane_angles.end())
-            plane_angles[f1[offset]]=1;
+            plane_angles[f_ang] = double_range_cnt().update(f_ang);
          else
-            ai->second += 1;
-         if(ang.max<f1[offset])
-            ang.max = f1[offset];
-         if(ang.min>f1[offset])
-            ang.min = f1[offset];
-         ang.sum += f1[offset];
+            ai->second.update(f_ang);
+         if(ang.max<f_ang)
+            ang.max = f_ang;
+         if(ang.min>f_ang)
+            ang.min = f_ang;
+         ang.sum += f_ang;
          num_angs++;
-         
+
          for(unsigned int k=0; k<fsz; k++)
             f2[(k+offset)%fsz] = f1[k];
          if(cmp_face_angles(f2, f_min) < 0)
@@ -283,7 +304,7 @@ void geom_info::find_dihedral_angles()
 
    dih_angles.init();
    map<vector<int>, vector<int> >::iterator ei; 
-   map<double, int, ang_less>::iterator di;
+   map<double, double_range_cnt, ang_less>::iterator di;
    double cos_a=1, sign=1;
    int e_idx=-1;
    for(ei=efpairs.begin(); ei!=efpairs.end(); ++ei) {
@@ -334,9 +355,9 @@ void geom_info::find_dihedral_angles()
       
       di = dihedral_angles.find(ang);
       if(di==dihedral_angles.end())
-         dihedral_angles[ang]=1;
+         dihedral_angles[ang] = double_range_cnt().update(ang);
       else
-         di->second += 1;
+         di->second.update(ang);
    }
 }
 
@@ -586,7 +607,7 @@ static double sph_tri_area(vec3d u0, vec3d u1, vec3d u2)
    vec3d u[3] = {u0, u1, u2};
    double ang, area=0;
    for(int i=0; i<3; i++) {
-      ang = acos(safe_for_trig(vdot(vcross(u[(i-1+3)%3], u[i]).unit(),
+      ang = acos(safe_for_trig(vdot(vcross(u[i], u[(i-1+3)%3]).unit(),
                        vcross(u[i], u[(i+1)%3]).unit()) ));
       if(sign<0)
          ang = 2*M_PI - ang;
@@ -597,19 +618,19 @@ static double sph_tri_area(vec3d u0, vec3d u1, vec3d u2)
 
 void geom_info::find_solid_angles()
 {
-   if(!vert_cons.size())
-      find_vert_cons();
+   if(!vert_cons_orig.size())
+      find_vert_cons_orig();
    
    vertex_angles = vector<double> (num_verts(), 0);
   
    so_angles.init();
-   map<double, int, ang_less>::iterator si;
-   for(unsigned int i=0; i<vert_cons.size(); i++) {
-      vector<vec3d> dirs(vert_cons[i].size());
-      for(unsigned int j=0; j<vert_cons[i].size(); j++)
-         dirs[j] = geom.verts(i) - geom.verts(vert_cons[i][j]);
+   map<double, double_range_cnt, ang_less>::iterator si;
+   for(unsigned int i=0; i<vert_cons_orig.size(); i++) {
+      vector<vec3d> dirs(vert_cons_orig[i].size());
+      for(unsigned int j=0; j<vert_cons_orig[i].size(); j++)
+         dirs[j] = geom.verts(i) - geom.verts(vert_cons_orig[i][j]);
 
-      for(unsigned int j=1; j<vert_cons[i].size()-1; j++)
+      for(unsigned int j=1; j<vert_cons_orig[i].size()-1; j++)
          vertex_angles[i] += sph_tri_area(dirs[0], dirs[j], dirs[j+1]);
 
       //if(!is_oriented()) {
@@ -632,19 +653,20 @@ void geom_info::find_solid_angles()
          so_angles.idx[elem_lims::IDX_MID] = i;
       }
       
-      si = sol_angles.find(vertex_angles[i]);
+      double s_ang = vertex_angles[i];
+      si = sol_angles.find(s_ang);
       if(si==sol_angles.end())
-         sol_angles[vertex_angles[i]]=1;
+         sol_angles[s_ang] = double_range_cnt().update(s_ang);
       else
-         si->second += 1;
+         si->second.update(s_ang);
    }
 }
    
-void geom_info::find_e_lengths(map<double, int, ang_less> &e_lens,
+void geom_info::find_e_lengths(map<double, double_range_cnt, ang_less> &e_lens,
       const vector<vector<int> > &edges, elem_lims &lens)
 {
    lens.init();
-   map<double, int, ang_less>::iterator ei;
+   map<double, double_range_cnt, ang_less>::iterator ei;
    for(unsigned int i=0; i<edges.size(); i++) {
       double dist = geom.edge_len(edges[i]);
       if(dist>lens.max) {
@@ -660,9 +682,9 @@ void geom_info::find_e_lengths(map<double, int, ang_less> &e_lens,
       lens.sum += dist; 
       ei = e_lens.find(dist);
       if(ei==e_lens.end())
-         e_lens[dist]=1;
+         e_lens[dist] = double_range_cnt().update(dist);
       else
-         ei->second += 1;
+         ei->second.update(dist);
    }
 }
 
