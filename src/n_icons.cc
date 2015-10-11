@@ -2504,7 +2504,7 @@ void ncon_info(const int &ncon_order, const bool &point_cut, const int &twist, c
 void color_uncolored_faces(col_geom_v &geom, col_val default_color)
 {
    for (unsigned int i=0;i<geom.faces().size();i++) {
-      if (!(geom.get_f_col(i)).is_set())
+      if (!(geom.get_f_col(i)).is_val())
          geom.set_f_col(i,default_color);
    }
 }
@@ -3106,7 +3106,7 @@ vector<int> find_adjacent_face_idx_in_channel(const col_geom_v &geom, const int 
 }
 
 // flood_fill_count is changed
-int set_face_colors_by_adjacent_face(col_geom_v &geom, const int &build_method, const int &start, const col_val &c, const int &flood_fill_stop, int &flood_fill_count)
+int set_face_colors_by_adjacent_face(col_geom_v &geom, const int &build_method, const int &start, const col_val &c, const int &opq, const int &flood_fill_stop, int &flood_fill_count)
 {
    if (flood_fill_stop && (flood_fill_count >= flood_fill_stop))
       return 0;
@@ -3118,7 +3118,7 @@ int set_face_colors_by_adjacent_face(col_geom_v &geom, const int &build_method, 
       for (unsigned int i=0;i<face_idx.size();i++) {
          if (flood_fill_stop && (flood_fill_count >= flood_fill_stop))
             return 0;
-         geom.set_f_col(face_idx[i],c);
+         set_face_color(geom, face_idx[i], c, opq);
          flood_fill_count++;
          if (i>0)
             stranded_faces.push_back(face_idx[i]);
@@ -3133,7 +3133,7 @@ int set_face_colors_by_adjacent_face(col_geom_v &geom, const int &build_method, 
          for (unsigned int i=0;i<face_idx.size();i++) {
             if (flood_fill_stop && (flood_fill_count >= flood_fill_stop))
                return 0;
-            geom.set_f_col(face_idx[i],c);
+            set_face_color(geom, face_idx[i], c, opq);
             flood_fill_count++;
             if (i>0)
                stranded_faces.push_back(face_idx[i]);
@@ -3172,7 +3172,7 @@ int ncon_face_coloring_by_adjacent_face(col_geom_v &geom, const vector<faceList 
 
       if (face_opacity != -1)
          opq = face_pattern[map_cnt%face_pattern.size()] == '1' ? face_opacity : 255;
-      col_val c = set_alpha(face_map.get_col(map_cnt),opq);
+      col_val c = face_map.get_col(map_cnt);
 
       for (unsigned int j=0;j<idx.size();j++) {
          if ((geom.get_f_col(idx[j])).is_set())
@@ -3180,9 +3180,9 @@ int ncon_face_coloring_by_adjacent_face(col_geom_v &geom, const vector<faceList 
          if (flood_fill_stop && (flood_fill_count >= flood_fill_stop))
             return 0;
 
-         geom.set_f_col(idx[j],c);
+         set_face_color(geom, idx[j], c, opq);
          flood_fill_count++;
-         ret = set_face_colors_by_adjacent_face(geom, build_method, idx[j], c, flood_fill_stop, flood_fill_count);
+         ret = set_face_colors_by_adjacent_face(geom, build_method, idx[j], c, opq, flood_fill_stop, flood_fill_count);
 
          if (!symmetric_coloring) {
             map_cnt++;
@@ -3263,14 +3263,14 @@ int ncon_face_coloring_by_compound(col_geom_v &geom, const vector<faceList *> &f
       int face_no = polygons.second;
       if (face_opacity != -1)
          opq = face_pattern[polygon_no%face_pattern.size()] == '1' ? face_opacity : 255;
-      col_val c = set_alpha(face_map.get_col(polygon_no),opq);
+      col_val c = face_map.get_col(polygon_no);
       if ((geom.get_f_col(face_no)).is_set())
          continue;
       if (flood_fill_stop && (flood_fill_count >= flood_fill_stop))
          return 0;
-      geom.set_f_col(face_no,c);
+      set_face_color(geom, face_no, c, opq);
       flood_fill_count++;
-      ret = set_face_colors_by_adjacent_face(geom, build_method, face_no, c, flood_fill_stop, flood_fill_count);
+      ret = set_face_colors_by_adjacent_face(geom, build_method, face_no, c, opq, flood_fill_stop, flood_fill_count);
 
       if (polygon_no != polygon_no_last)
          map_cnt++;
