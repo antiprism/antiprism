@@ -333,9 +333,11 @@ void o_col_opts::usage()
 "               s,S - symmetric colouring [,sub_group,conj_type] (see above)\n"
 "               k,K - sets of edges connected by edges\n"
 "               F   - colour with average adjoining face colour\n"
+"               d,D - colour by edge direction\n"
 "               g,G - gradient on z-coordinate of edge direction\n"
 "               c,C - gradient on z-coordinate of centroid\n"
 "               L   - lighting effect (see option -l)\n"
+"               l   - lighting effect on edge directions (see option -l)\n"
 "               M   - use colour map to convert existing colour index numbers\n"
 "                     into to values\n"
 "  -v <col>  colour the vertices according to:\n"
@@ -437,7 +439,7 @@ void o_col_opts::process_command_line(int argc, char **argv)
             }
             optarg_orig = optarg;
             split_line(optarg, parts, ",");
-            if(strlen(parts[0])==1 && strchr("uUpPsSkKFgGcCLM", *parts[0]))
+            if(strlen(parts[0])==1 && strchr("uUpPsSkKFgGcCLldDM", *parts[0]))
                e_col_op = *parts[0];
             else
                error("invalid colouring", c);
@@ -766,8 +768,12 @@ int main(int argc, char *argv[])
          ec.e_direction(op=='G');
       else if(strchr("Cc", op))
          ec.e_mid_point(op=='C');
+      else if(strchr("Dd", op))
+         ec.e_vector(op=='D');
       else if(strchr("L", op))
          ec.e_lights(lights);
+      else if(strchr("l", op))
+         ec.e_dir_lights(lights);
       else if(strchr("M", op))
          ec.e_apply_cmap();
 
