@@ -2528,7 +2528,7 @@ void color_uncolored_edges(col_geom_v &geom, const vector<edgeList *> &edge_list
 
    for (unsigned int i=0;i<2;i++) {
       if (pole[i]->idx > -1) {
-         if (!(geom.get_v_col(pole[i]->idx)).is_set())
+         if (!(geom.get_v_col(pole[i]->idx)).is_val())
             geom.set_v_col(pole[i]->idx,default_color);
       }
    }
