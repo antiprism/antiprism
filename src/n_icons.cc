@@ -2515,13 +2515,13 @@ void color_uncolored_edges(col_geom_v &geom, const vector<edgeList *> &edge_list
    
    for (unsigned int i=0;i<edge_list.size();i++) {
       int j = edge_list[i]->edge_no;
-      if (!(geom.get_e_col(j)).is_set()) {
+      if (!(geom.get_e_col(j)).is_val()) {
          geom.set_e_col(j,default_color);
          int v1 = edges[j][0];
          int v2 = edges[j][1];
-         if (!(geom.get_v_col(v1)).is_set())
+         if (!(geom.get_v_col(v1)).is_val())
             geom.set_v_col(v1,default_color);
-         if (!(geom.get_v_col(v2)).is_set())
+         if (!(geom.get_v_col(v2)).is_val())
             geom.set_v_col(v2,default_color);
       }
    }
