@@ -149,7 +149,10 @@ class ncon_opts: public prog_opts {
       bool double_sweep;
       bool angle_is_side_cut;
       int flood_fill_stop;
-      col_val default_color;
+      bool face_default_color_by_map;
+      bool edge_default_color_by_map;
+      col_val face_default_color;
+      col_val edge_default_color;
       double epsilon;
 
       color_map_multi face_map;
@@ -187,7 +190,10 @@ class ncon_opts: public prog_opts {
                    double_sweep(false),
                    angle_is_side_cut(false),
                    flood_fill_stop(0),
-                   default_color(col_val(192,192,192,255)),
+                   face_default_color_by_map(false),
+                   edge_default_color_by_map(false),
+                   face_default_color(col_val(192,192,192,255)), // darkgrey
+                   edge_default_color(col_val(192,192,192,255)), // darkgrey
                    epsilon(0),
                    split(false)
              {}
@@ -265,7 +271,9 @@ void ncon_opts::usage()
 "  -m <maps> color maps to be tried in turn. (default: map_red:darkorange1:\n"
 "               yellow:darkgreen:cyan:blue:magenta:white:grey:black%%) optionally\n"
 "               followed by elements to map from v, e or f (default: vef)\n"
-"  -D <col>  default color for uncolored elements (default: darkgrey)\n"
+"  -D <c,e>  default color c for uncolored elements e (default: darkgrey,ef)\n"
+"               key word: none - sets no color, m - defer to map\n"
+"               elements can include e or f for edges and faces (default: ef)\n"
 "  -X <int>  flood fill stop. used with circuit or compound coloring (-z 2 or 3)\n"
 "               use 0 (default) to flood fill entire model. if -X is not 0 then\n"
 "               return 1 from program if entire model has been colored\n"
@@ -509,11 +517,67 @@ void ncon_opts::process_command_line(int argc, char **argv)
         case 'Y':
             hide_indent = false;
             break;
-
+            
         case 'D':
-            if(!default_color.read(optarg, errmsg))
-               error(errmsg, c);
+        {
+            col_val default_color;
+            bool by_map = false;
+            
+            bool set_edge = true;
+            bool set_face = true;
+            
+            char parse_key1[] = ",";
+
+            // memory pointer for strtok_r
+            char *tok_ptr1;
+
+            char *ptok1 = strtok_r(optarg,parse_key1,&tok_ptr1);
+            int count1 = 0;
+            while( ptok1 != NULL ) {
+               // first argument is color
+               if ( count1 == 0 ) {
+                  // see if it is key word
+                  char m = optarg[strlen(optarg)-1];
+                  if ( m == 'm' )
+                     by_map = true;
+                  else
+                  if(!default_color.read(ptok1, errmsg))
+                     error(errmsg, c);
+               }
+               else
+               if ( count1 == 1 ) {
+                  set_edge = false;
+                  set_face = false;
+                  
+                  if(strspn(ptok1, "ef") != strlen(ptok1))
+                     error(msg_str("elements %s must be in e, f", optarg), c);
+                     
+                  if (strchr(ptok1, 'e') )
+                     set_edge = true;
+                  if (strchr(ptok1, 'f') )
+                     set_face = true;
+                  
+               }
+               
+               ptok1 = strtok_r(NULL,parse_key1,&tok_ptr1);
+               count1++;
+            }
+            
+            if ( set_edge ) {
+               if ( by_map )
+                  edge_default_color_by_map = true;
+               else
+                  edge_default_color = default_color;
+            }
+            if ( set_face ) {
+               if ( by_map )
+                  face_default_color_by_map = true;
+               else
+                  face_default_color = default_color;
+            }
+            
             break;
+        }
 
         case 'X':
             if(!read_int(optarg, &flood_fill_stop, errmsg))
@@ -2501,21 +2565,23 @@ void ncon_info(const int &ncon_order, const bool &point_cut, const int &twist, c
    }
 }
 
-void color_uncolored_faces(col_geom_v &geom, col_val default_color)
+void color_uncolored_faces(col_geom_v &geom, const col_val &default_color, const bool &by_map)
 {
    for (unsigned int i=0;i<geom.faces().size();i++) {
-      if (!(geom.get_f_col(i)).is_val())
+      bool t = ( by_map ? !(geom.get_f_col(i)).is_set() : !(geom.get_f_col(i)).is_val() );
+      if (t)
          geom.set_f_col(i,default_color);
    }
 }
 
-void color_uncolored_edges(col_geom_v &geom, const vector<edgeList *> &edge_list, const vector<poleList *> &pole, const col_val &default_color)
+void color_uncolored_edges(col_geom_v &geom, const vector<edgeList *> &edge_list, const vector<poleList *> &pole, const col_val &default_color, const bool &by_map)
 {
    const vector<vector<int> > &edges = geom.edges();
    
    for (unsigned int i=0;i<edge_list.size();i++) {
       int j = edge_list[i]->edge_no;
-      if (!(geom.get_e_col(j)).is_val()) {
+      bool t = ( by_map ? !(geom.get_e_col(i)).is_set() : !(geom.get_e_col(i)).is_val() );
+      if (t) {
          geom.set_e_col(j,default_color);
          int v1 = edges[j][0];
          int v2 = edges[j][1];
@@ -2528,7 +2594,8 @@ void color_uncolored_edges(col_geom_v &geom, const vector<edgeList *> &edge_list
 
    for (unsigned int i=0;i<2;i++) {
       if (pole[i]->idx > -1) {
-         if (!(geom.get_v_col(pole[i]->idx)).is_val())
+         bool t = ( by_map ? !(geom.get_v_col(pole[i]->idx)).is_set() : !(geom.get_v_col(pole[i]->idx)).is_val() );
+         if (t)
             geom.set_v_col(pole[i]->idx,default_color);
       }
    }
@@ -3279,7 +3346,7 @@ int ncon_face_coloring_by_compound(col_geom_v &geom, const vector<faceList *> &f
 
    // if build_method 1 then end caps will not be colored
    if (build_method == 1)
-      color_uncolored_faces(geom, face_map.get_col(0));
+      color_uncolored_faces(geom, face_map.get_col(0), false);
 
    if (!flood_fill_stop && info)
       fprintf(stderr,"%d compound part%s painted\n",map_cnt,(map_cnt>1 ? "s were" : " was"));
@@ -3474,15 +3541,15 @@ void ncon_coloring(col_geom_v &geom, const vector<faceList *> &face_list, const 
    if (opts.face_coloring_method && !(opts.build_method > 1 && opts.face_coloring_method == 's'))
       ncon_face_coloring(geom, face_list, opts.face_coloring_method,
                          opts.face_map, opts.face_opacity, opts.face_pattern,
-                         face_color_table, (hybrid_patch ? true: opts.point_cut), opts.hybrid, opts.default_color);
+                         face_color_table, (hybrid_patch ? true: opts.point_cut), opts.hybrid, opts.face_default_color);
 
    if (opts.edge_coloring_method)
       ncon_edge_coloring(geom, edge_list, pole, opts.edge_coloring_method,
                          opts.edge_map, opts.edge_opacity, opts.edge_pattern,
-                         edge_color_table, (hybrid_patch ? true: opts.point_cut), opts.hybrid, opts.default_color);
+                         edge_color_table, (hybrid_patch ? true: opts.point_cut), opts.hybrid, opts.edge_default_color);
 
    if (opts.edge_coloring_method)
-      color_uncolored_edges(geom, edge_list, pole, opts.default_color);
+      color_uncolored_edges(geom, edge_list, pole, opts.edge_default_color, opts.edge_default_color_by_map);
 }
       
 double hybrid_twist_angle(int n, int t, int build_method)
@@ -3961,10 +4028,10 @@ int ncon_subsystem(col_geom_v &geom, ncon_opts opts)
       unset_marked_edges(geom);
    else
       // vertices can get out of sync with their edges.
-      reassert_colored_edges(geom, opts.default_color);
+      reassert_colored_edges(geom, opts.edge_default_color);
    // some faces can remain uncolored
    if ( opts.face_coloring_method )
-      color_uncolored_faces(geom, opts.default_color);
+      color_uncolored_faces(geom, opts.face_default_color, opts.face_default_color_by_map);
 
    geom.orient();
 
