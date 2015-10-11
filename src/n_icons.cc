@@ -271,9 +271,9 @@ void ncon_opts::usage()
 "  -m <maps> color maps to be tried in turn. (default: map_red:darkorange1:\n"
 "               yellow:darkgreen:cyan:blue:magenta:white:grey:black%%) optionally\n"
 "               followed by elements to map from v, e or f (default: vef)\n"
-"  -D <c,e>  default color c for uncolored elements e (default: darkgrey,ef)\n"
-"               key word: none - sets no color, m - defer to map\n"
-"               elements can include e or f for edges and faces (default: ef)\n"
+"  -D <c,e>  default color c for uncolored elements e (default: darkgrey,EF)\n"
+"               key word: none - sets no color. elements e can include e or f\n"
+"               uppercase also replaces any map indexes with default color\n"
 "  -X <int>  flood fill stop. used with circuit or compound coloring (-z 2 or 3)\n"
 "               use 0 (default) to flood fill entire model. if -X is not 0 then\n"
 "               return 1 from program if entire model has been colored\n"
@@ -520,8 +520,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
             
         case 'D':
         {
-            col_val default_color;
-            bool by_map = false;
+            col_val tmp_color;
             
             bool set_edge = true;
             bool set_face = true;
@@ -536,12 +535,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
             while( ptok1 != NULL ) {
                // first argument is color
                if ( count1 == 0 ) {
-                  // see if it is key word
-                  char m = optarg[strlen(optarg)-1];
-                  if ( m == 'm' )
-                     by_map = true;
-                  else
-                  if(!default_color.read(ptok1, errmsg))
+                  if(!tmp_color.read(ptok1, errmsg))
                      error(errmsg, c);
                }
                else
@@ -549,13 +543,19 @@ void ncon_opts::process_command_line(int argc, char **argv)
                   set_edge = false;
                   set_face = false;
                   
-                  if(strspn(ptok1, "ef") != strlen(ptok1))
-                     error(msg_str("elements %s must be in e, f", optarg), c);
+                  if(strspn(ptok1, "eEfF") != strlen(ptok1))
+                     error(msg_str("elements %s must be in e, f, E, F", optarg), c);
                      
-                  if (strchr(ptok1, 'e') )
+                  if (strchr(ptok1, 'e') || strchr(ptok1, 'E')) {
                      set_edge = true;
-                  if (strchr(ptok1, 'f') )
+                     if (strchr(ptok1, 'e'))
+                        edge_default_color_by_map = true;
+                  }
+                  if (strchr(ptok1, 'f') || strchr(ptok1, 'F')) {
                      set_face = true;
+                     if (strchr(ptok1, 'f'))
+                        face_default_color_by_map = true;
+                  }
                   
                }
                
@@ -563,18 +563,10 @@ void ncon_opts::process_command_line(int argc, char **argv)
                count1++;
             }
             
-            if ( set_edge ) {
-               if ( by_map )
-                  edge_default_color_by_map = true;
-               else
-                  edge_default_color = default_color;
-            }
-            if ( set_face ) {
-               if ( by_map )
-                  face_default_color_by_map = true;
-               else
-                  face_default_color = default_color;
-            }
+            if ( set_edge )
+               edge_default_color = tmp_color;
+            if ( set_face )
+               face_default_color = tmp_color;
             
             break;
         }
