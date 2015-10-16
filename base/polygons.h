@@ -108,10 +108,15 @@ class polygon {
        * \param ht the height on the z-axis to place the polygon. */
       void add_polygon(geom_if &geom, double ht=0);
 
+      ///Repeat a polyhedron part to make a compound
+      /**\param geom a geometry to return the polyhedron compound.
+       * \param geom_part the part to repeat. */
+      void repeat_part(geom_if &geom, const geom_if &geom_part);
+
       ///Make a polygon based polyhedron.
       /**\param geom a geometry to return the polyhedron. */
       virtual void make_poly(geom_if &geom);
-     
+
       ///Set the height
       /**\param ht the height.
        * \param msg a string with length at least \c MSG_SZ to hold

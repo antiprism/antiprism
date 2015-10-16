@@ -98,36 +98,9 @@ const char *compounds[][4] = {
 };
 
 
-int read_fraction(const char *frac_str, int &num, int &denom, char *errmsg=0)
-{
-   if(errmsg)
-      *errmsg = '\0';
-
-   char frac_str_cpy[MSG_SZ];
-   strncpy(frac_str_cpy, frac_str, MSG_SZ);
-
-   char errmsg2[MSG_SZ];
-   denom=1;
-   char *p = strchr(frac_str_cpy, '/');
-   if(p!=0) {
-      *p++='\0';
-      if(!read_int(p, &denom, errmsg2)) {
-         if(errmsg)
-            sprintf(errmsg, "denominator, %s", errmsg2);
-         return false;
-      }
-   }
-   if(!read_int(frac_str_cpy, &num, errmsg2)) {
-      if(errmsg)
-         sprintf(errmsg, "numerator, %s", errmsg2);
-      return false;
-   }
-   return true;
-}
-
 int read_triangle_fraction(char *frac_str, int &num, int &denom, char *errmsg)
 {
-   if(!read_fraction(frac_str, num, denom, errmsg))
+   if(!read_fraction(frac_str, &num, &denom, errmsg))
       return false;
 
    if(num<2) {

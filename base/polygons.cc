@@ -76,17 +76,22 @@ void polygon::add_polygon(geom_if &geom, double ht)
    geom.add_face(face);
 }
 
+void polygon::repeat_part(geom_if &geom, const geom_if &geom_part)
+{
+   geom.append(geom_part);
+   for(int i=1; i<parts; i++) {
+      geom_v rep = geom_part;
+      rep.transform(mat3d::rot(vec3d::Z, 2*M_PI*i/parts/num_sides));
+      geom.append(rep);
+   }
+}
+
 void polygon::make_poly(geom_if &geom)
 {
    geom_v poly_unit;
    make_poly_part(poly_unit);
    poly_unit.orient();
-   geom.append(poly_unit);
-   for(int i=1; i<parts; i++) {
-      geom_v rep = poly_unit;
-      rep.transform(mat3d::rot(vec3d::Z, 2*M_PI*i/parts/num_sides));
-      geom.append(rep);
-   }
+   repeat_part(geom, poly_unit);
 }
 
 void polygon::dump()

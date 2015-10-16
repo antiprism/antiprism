@@ -211,7 +211,6 @@ bool read_double(const char *str, double *f, char *errmsg=0);
  * and the error is detailed in \a errmsg. */
 bool read_double_noparse(const char *str, double *f, char *errmsg=0);
 
-
 ///Read an integer from a string.
 /**The string should only hold the integer, but may
  * have leading and trailing whitespace.
@@ -222,6 +221,18 @@ bool read_double_noparse(const char *str, double *f, char *errmsg=0);
  * \return true if a valid integer was read, otherwise false
  * and the error is detailed in \a errmsg. */
 bool read_int(const char *str, int *i, char *errmsg=0);
+
+///Read a fraction from a string.
+/**The string should only hold an integer, or two integers seperated by '/',
+ * but may have leading and trailing whitespace.
+ * \param str the string holding the fraction.
+ * \param num used to return the numerator.
+ * \param denom used to return the denominator.
+ * \param errmsg an array at least \c MSG_SZ chars long to
+ * return any error message.
+ * \return true if a valid fraction was read, otherwise false
+ * and the error is detailed in \a errmsg. */
+bool read_fraction(const char *str, int *num, int *denom, char *errmsg=0);
 
 ///Read floating point numbers, which may be maththematical expressions, from a list of strings.
 /**The strings should only hold the floating point number, but may
@@ -326,7 +337,6 @@ bool read_int_list(char *str, vector<int> &nums, char *errmsg=0,
  * and the error is detailed in \a errmsg. */
 bool read_idx_list(char *str, vector<int> &nums, int num_idxs,
       bool allow_extra=false, char *errmsg=0);
-
 
 /// Read a line of arbitrary length
 /**The caller is responsible for freeing the memory allocated to line
