@@ -3114,10 +3114,10 @@ void ncon_face_coloring(col_geom_v &geom, const vector<faceList *> &face_list, c
    }
 }
 
-vector<int> find_adjacent_face_idx_in_channel(const col_geom_v &geom, const int &build_method, const int &face_idx, const bool &prime)
+vector<int> find_adjacent_face_idx_in_channel(const col_geom_v &geom, const int &build_method, const int &face_idx,
+                                              const vector<vector<int> > &bare_implicit_edges, map<vector<int>, vector<int> > &faces_by_edge, const bool &prime)
 {
    const vector<vector<int> > &faces = geom.faces();
-   const vector<vector<int> > &edges = geom.edges();
 
    vector<int> face_idx_ret;
    vector<vector<int> > adjacent_edges;
@@ -3128,14 +3128,14 @@ vector<int> find_adjacent_face_idx_in_channel(const col_geom_v &geom, const int 
       vector<int> edge(2);
       edge[0] = face[i];
       edge[1] = face[(i+1)%sz];
-      if (find_edge_in_edge_list(edges, edge) < 0) {
-         adjacent_edges.push_back(edge);
+      if (find_edge_in_edge_list(bare_implicit_edges, edge) > -1) {
+         adjacent_edges.push_back(make_edge(edge[0],edge[1]));
       }
    }
 
    vector<int> adjacent_face_idx;   
    for (unsigned int i=0;i<adjacent_edges.size();i++) {
-      vector<int> face_idx_tmp = find_faces_with_edge(faces,adjacent_edges[i]);
+      vector<int> face_idx_tmp = faces_by_edge[adjacent_edges[i]];
       for (unsigned int j=0;j<face_idx_tmp.size();j++) {
          if (face_idx_tmp[j] != face_idx)
             adjacent_face_idx.push_back(face_idx_tmp[j]);
@@ -3165,14 +3165,15 @@ vector<int> find_adjacent_face_idx_in_channel(const col_geom_v &geom, const int 
 }
 
 // flood_fill_count is changed
-int set_face_colors_by_adjacent_face(col_geom_v &geom, const int &build_method, const int &start, const col_val &c, const int &opq, const int &flood_fill_stop, int &flood_fill_count)
+int set_face_colors_by_adjacent_face(col_geom_v &geom, const int &build_method, const int &start, const col_val &c, const int &opq, const int &flood_fill_stop,
+                                     int &flood_fill_count, const vector<vector<int> > &bare_implicit_edges, map<vector<int>, vector<int> > &faces_by_edge)
 {
    if (flood_fill_stop && (flood_fill_count >= flood_fill_stop))
       return 0;
 
    vector<int> stranded_faces;
 
-   vector<int> face_idx = find_adjacent_face_idx_in_channel(geom, build_method, start, true);
+   vector<int> face_idx = find_adjacent_face_idx_in_channel(geom, build_method, start, bare_implicit_edges, faces_by_edge, true);
    while (face_idx.size()) {
       for (unsigned int i=0;i<face_idx.size();i++) {
          if (flood_fill_stop && (flood_fill_count >= flood_fill_stop))
@@ -3182,12 +3183,12 @@ int set_face_colors_by_adjacent_face(col_geom_v &geom, const int &build_method, 
          if (i>0)
             stranded_faces.push_back(face_idx[i]);
       }
-      face_idx = find_adjacent_face_idx_in_channel(geom, build_method, face_idx[0], false);
+      face_idx = find_adjacent_face_idx_in_channel(geom, build_method, face_idx[0], bare_implicit_edges, faces_by_edge, false);
    }
 
    // method 3 can cause stranded faces
    for (unsigned int i=0;i<stranded_faces.size();i++) {
-      face_idx = find_adjacent_face_idx_in_channel(geom, build_method, stranded_faces[i], false);
+      face_idx = find_adjacent_face_idx_in_channel(geom, build_method, stranded_faces[i], bare_implicit_edges, faces_by_edge, false);
       while (face_idx.size()) {
          for (unsigned int i=0;i<face_idx.size();i++) {
             if (flood_fill_stop && (flood_fill_count >= flood_fill_stop))
@@ -3197,16 +3198,40 @@ int set_face_colors_by_adjacent_face(col_geom_v &geom, const int &build_method, 
             if (i>0)
                stranded_faces.push_back(face_idx[i]);
          }
-         face_idx = find_adjacent_face_idx_in_channel(geom, build_method, face_idx[0], false);
+         face_idx = find_adjacent_face_idx_in_channel(geom, build_method, face_idx[0], bare_implicit_edges, faces_by_edge, false);
       }
    }
 
    return (flood_fill_stop ? 1 : 0);
 }
 
+void fill_bare_implicit_edges(const col_geom_v &geom, vector<vector<int> > &bare_implicit_edges)
+{
+   const vector<vector<int> > &edges = geom.edges();
+   vector<vector<int> > implicit_edges;
+   geom.get_impl_edges(implicit_edges);
+
+   for (int i=0;i<(int)implicit_edges.size();i++) {
+      if (find_edge_in_edge_list(edges, implicit_edges[i]) < 0)
+         bare_implicit_edges.push_back(implicit_edges[i]);
+   }
+}
+
+void fill_faces_by_edge(const col_geom_v &geom, map<vector<int>, vector<int> > &faces_by_edge)
+{
+   const vector<vector<int> > &faces = geom.faces();
+   
+   for (int i=0;i<(int)faces.size();i++) {
+      int sz = faces[i].size();
+      for (int j=0;j<sz;j++)
+         faces_by_edge[make_edge(faces[i][j],faces[i][(j+1)%sz])].push_back(i);
+   }
+}
+
 int ncon_face_coloring_by_adjacent_face(col_geom_v &geom, const vector<faceList *> &face_list,
                                         const color_map_multi &face_map, const int &face_opacity, const string &face_pattern, const bool &symmetric_coloring,
-                                        const vector<int> &longitudes, const int &ncon_order, const int &d, const bool &point_cut, const int &build_method, const bool &info, const int &flood_fill_stop)
+                                        const vector<int> &longitudes, const int &ncon_order, const int &d, const bool &point_cut, const int &build_method, const bool &info,
+                                        const int &flood_fill_stop)
 {
    int flood_fill_count = 0;
    int ret = 0;
@@ -3222,6 +3247,12 @@ int ncon_face_coloring_by_adjacent_face(col_geom_v &geom, const vector<faceList 
    // compounds need an extra latitude
    if (gcd(ncon_order,d) != 1)
       lats++;
+   
+   vector<vector<int> > bare_implicit_edges;   
+   fill_bare_implicit_edges(geom, bare_implicit_edges);
+
+   map<vector<int>, vector<int> > faces_by_edge;
+   fill_faces_by_edge(geom, faces_by_edge);
 
    int circuit_count = 0;
    int map_cnt = 0;
@@ -3241,7 +3272,7 @@ int ncon_face_coloring_by_adjacent_face(col_geom_v &geom, const vector<faceList 
 
          set_face_color(geom, idx[j], c, opq);
          flood_fill_count++;
-         ret = set_face_colors_by_adjacent_face(geom, build_method, idx[j], c, opq, flood_fill_stop, flood_fill_count);
+         ret = set_face_colors_by_adjacent_face(geom, build_method, idx[j], c, opq, flood_fill_stop, flood_fill_count, bare_implicit_edges, faces_by_edge);
 
          if (!symmetric_coloring) {
             map_cnt++;
@@ -3270,7 +3301,8 @@ int ncon_face_coloring_by_adjacent_face(col_geom_v &geom, const vector<faceList 
 
 int ncon_face_coloring_by_compound(col_geom_v &geom, const vector<faceList *> &face_list,
                                    const color_map_multi &face_map, const int &face_opacity, const string &face_pattern,
-                                   const vector<int> &longitudes, const int &ncon_order, const int &d, const bool &point_cut, const int &build_method, const bool &info, const int &flood_fill_stop)
+                                   const vector<int> &longitudes, const int &ncon_order, const int &d, const bool &point_cut, const int &build_method, const bool &info,
+                                   const int &flood_fill_stop)
 {
    int flood_fill_count = 0;
    int ret = 0;
@@ -3313,6 +3345,12 @@ int ncon_face_coloring_by_compound(col_geom_v &geom, const vector<faceList *> &f
    sort(polygon_table.begin(), polygon_table.end());
    vector <pair<int, int> >::iterator li = unique(polygon_table.begin(), polygon_table.end());
    polygon_table.erase(li, polygon_table.end());
+   
+   vector<vector<int> > bare_implicit_edges;   
+   fill_bare_implicit_edges(geom, bare_implicit_edges);
+   
+   map<vector<int>, vector<int> > faces_by_edge;
+   fill_faces_by_edge(geom, faces_by_edge);
 
    int map_cnt = 0;
    int polygon_no_last = -1;
@@ -3329,7 +3367,7 @@ int ncon_face_coloring_by_compound(col_geom_v &geom, const vector<faceList *> &f
          return 0;
       set_face_color(geom, face_no, c, opq);
       flood_fill_count++;
-      ret = set_face_colors_by_adjacent_face(geom, build_method, face_no, c, opq, flood_fill_stop, flood_fill_count);
+      ret = set_face_colors_by_adjacent_face(geom, build_method, face_no, c, opq, flood_fill_stop, flood_fill_count, bare_implicit_edges, faces_by_edge);
 
       if (polygon_no != polygon_no_last)
          map_cnt++;
