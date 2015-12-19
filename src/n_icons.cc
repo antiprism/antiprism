@@ -4424,7 +4424,7 @@ int process_hybrid(col_geom_v &geom, ncon_opts &opts)
    
    // in the case of hybrid and side cut
    // model needs to be rotated into position at side_cut angles
-   if ((opts.build_method == 3 && opts.angle_is_side_cut) || !opts.point_cut)
+   if (opts.build_method == 3 && opts.angle_is_side_cut)
       geom.transform(mat3d::rot(0,deg2rad(180.0),0) * mat3d::rot(0,0,deg2rad(twist_angle)));
 
    // clean up
