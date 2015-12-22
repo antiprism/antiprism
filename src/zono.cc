@@ -52,6 +52,7 @@ class zo_opts: public prog_opts{
       bool unit_len;
       col_val zone_col;
       int pol_num;
+      polygon pgon;
       bool non_polar_opt;
       string ifile;
       col_geom_v seed_geom;
@@ -60,7 +61,7 @@ class zo_opts: public prog_opts{
       zo_opts(): prog_opts("zono"), method('v'),
                  centre(vec3d(0, 0, 0)), centroid(false),
                  out_star(false), unit_len(false),
-                 pol_num(0), non_polar_opt(false) {}
+                 pol_num(0), pgon(2), non_polar_opt(false) {}
       void process_command_line(int argc, char **argv);
       void usage();
 };
@@ -89,7 +90,9 @@ void zo_opts::usage()
 "  -S        seed model to add zones to, must be convex\n"
 "  -u        make vectors unit length\n"
 "  -C <col>  colour for new zone faces\n"
-"  -P <num>  polar zonohedron with given number of vectors\n"
+"  -P <star> polar zonohedron from ordered star, can be an offset polygon\n"
+"            given as an integer or fraction (e.g. 5, 7/2) or 's' to use\n"
+"            star_file\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
 "\n", prog_name(), help_ver_text);
@@ -147,10 +150,21 @@ void zo_opts::process_command_line(int argc, char **argv)
             break;
 
          case 'P':
-            if(!read_int(optarg, &pol_num, errmsg))
-               error(errmsg, c);
-            if(pol_num < 2)
-               error("must be 2 or greater", c);
+            if(strcmp(optarg, "s")==0)
+               pol_num = -1;     // use star argument
+            else {
+               int pol_denom=0;
+               if(!read_fraction(optarg, &pol_num, &pol_denom, errmsg))
+                  error(errmsg, c);
+               if(pol_num < 2)
+                  error("number of sides must be 2 or greater", c);
+               if(pol_denom < 1)
+                  error("denominator must be 1 or greater", c);
+               if(pol_denom % pol_num == 0)
+                  error("denominator cannot be a multiple of the number of "
+                        "sides", c);
+               pgon = polygon(pol_num, pol_denom);
+            }
             break;
 
          case 'o':
@@ -162,8 +176,8 @@ void zo_opts::process_command_line(int argc, char **argv)
       }
    }
 
-   if(pol_num && (non_polar_opt||argc-optind))
-      error("option -P, is not compatible with options m, c or an input file");
+   if(pol_num>0 && (non_polar_opt||argc-optind))
+      error("option -P polygon parameter is not compatible with options m, c or an input file");
 
    if(argc-optind > 1)
       error("too many arguments");
@@ -233,19 +247,39 @@ bool make_zonohedron(geom_if &zono, const vector<vec3d> &star, char *errmsg)
       return zono.set_zono(star, errmsg);
 }
 
+int make_polar_zono(col_geom_v &zono, const vector<vec3d> &star, int D=1)
+{
+   int N = star.size();
+   zono.clear_all();
+   zono.add_verts(star);
+   for(int i=1; i<N-1; i++)
+      for(int j=0; j<N; j++)
+         zono.add_vert(zono.verts((i-1)*N+j) + star[(D*i+j)%N]);
+   zono.add_vert(zono.verts(N*(N-2))+star[N-D]);
+   zono.add_vert(vec3d(0,0,0));
+   for(int j=0; j<N; j++) {
+      zono.add_face(N*(N-1)+1, j, j+N, (j+D)%N, -1);
+      if(N>2)
+         zono.add_face(N*(N-1), N*(N-2)+j, N*(N-3)+(j+D)%N, N*(N-2)+(j+D)%N,-1);
+   }
+   for(int i=0; i<N-3; i++)
+      for(int j=0; j<N; j++) {
+         zono.add_face(i*N+(j+D)%N, (i+1)*N+j, (i+2)*N+j, (i+1)*N+(j+D)%N, -1);
+      }
+   return true;
+}
+
 
 int main(int argc, char **argv)
 {
    zo_opts opts;
    opts.process_command_line(argc, argv);
-   col_geom_v zono;
 
    vector<vec3d> star;
-   if(opts.pol_num) {
-      for(int n=0; n<opts.pol_num; n++) {
-         double ang = 2*M_PI*n/opts.pol_num;
-         star.push_back(vec3d(cos(ang), sin(ang), 1) * sqrt(0.5));
-      }
+   if(opts.pol_num>0) {
+      col_geom_v gstar;
+      opts.pgon.add_polygon(gstar, sqrt(0.5));
+      star = gstar.verts();
    }
    else {
       col_geom_v geom;
@@ -271,12 +305,18 @@ int main(int argc, char **argv)
    }
 
    char errmsg[MSG_SZ] = "";
+   col_geom_v zono;
    if(opts.out_star)
       zono.add_verts(star);
    else if(opts.seed_geom) {
       if(!make_zonohedron_with_seed(zono, star, opts.seed_geom,
                opts.zone_col, errmsg))
          opts.error(errmsg);
+   }
+   else if(opts.pol_num) {
+      col_geom_v zono_base;
+      make_polar_zono(zono_base, star);
+      opts.pgon.repeat_part(zono, zono_base);
    }
    else {
       if(!make_zonohedron(zono, star, errmsg))

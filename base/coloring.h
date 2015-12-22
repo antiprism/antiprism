@@ -281,10 +281,19 @@ class coloring: public color_map_multi
        * these index numbers using the colour maps */
       void e_mid_point(bool apply_map=true);
       
+      ///Colour each edge by its unsigned direction.*/
+      /**\param apply_map if false, colour with index numbers, if true, convert
+       * these index numbers using the colour maps */
+      void e_vector(bool apply_map=true);
+
       ///Colour each edge using a set of lights.
       /**\param lts a geometry holding coloured vertices to use as lights.*/
       void e_lights(col_geom_v lts);
       
+      ///Colour each edge by edge direction using a set of lights.
+      /**\param lts a geometry holding coloured vertices to use as lights.*/
+      void e_dir_lights(col_geom_v lts);
+
       ///Apply the colour map to turn edge index numbers into colour values.
       /**Uses the value set by \c handle_no_map() for converting index
        * numbers not in the map . The HSVA ranges are respected

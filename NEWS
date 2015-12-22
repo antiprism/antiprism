@@ -16,8 +16,9 @@ xx-xx-14 Adrian Rossiter <adrian@antiprism.com>
               reporting.
             leonardo: orient models, new options -c centre, -p panel faces,
               -k don't orient
-            zono: new option -S zonish polyhedra
+            zono: -P add nonconvex models, new option -S zonish polyhedra
             off_normals: options -t and -m removed
+            off_color: new edge direction colourings -e ldD
             antiview: 'O' to show orientation, 't' includes 50%
               transparency
          Fixes

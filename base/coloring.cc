@@ -84,6 +84,24 @@ inline double fract(double rng[], double frac)
 }
 
 
+vec3d get_unsigned(vec3d v)
+{
+   if(double_lt(v[2], 0))
+      v = -v;
+   else if(double_eq(v[2], 0)) {
+      if(double_lt(v[1], 0))
+         v = -v;
+      else if(double_eq(v[1], 0)) {
+         if(double_lt(v[0], 0))
+            v = -v;
+         else if(double_eq(v[0], 0))
+            v = vec3d::Z;
+      }
+   }
+   return v;
+}
+
+
 int coloring::z_gradient(vec3d vec, vec3d cent, double height, int def_sz)
 {
    int sz = def_sz;
@@ -564,9 +582,9 @@ void coloring::e_direction(bool apply_map)
 {
    for(unsigned int i=0; i<get_geom()->edges().size(); i++) {
       vec3d v = 2.0*(get_geom()->edge_vec(i)).unit();
-      if(v[1]<0)
+      if(v[2]<0)
          v = -v;
-      v -= vec3d::Y;  // put v[1] in the range -1.0 to 1.0;
+      v -= vec3d::Z;  // put v[2] in the range -1.0 to 1.0;
       int idx = z_gradient(v);
       if(apply_map)
          get_geom()->set_e_col(i, get_col(idx));
@@ -589,6 +607,30 @@ void coloring::e_mid_point(bool apply_map)
    }
 }
 
+struct vec_less {
+   bool operator() (const vec3d &v1, const vec3d &v2) {
+      return compare(v1, v2, epsilon)==-1;
+   }
+};
+
+void coloring::e_vector(bool apply_map)
+{
+   map<vec3d, vector<int>, vec_less > dirs;
+   for(unsigned int i=0; i<get_geom()->edges().size(); i++)
+      dirs[get_unsigned(get_geom()->edge_vec(i)).unit()].push_back(i);
+
+   int idx=0;
+   map<vec3d, vector<int>, vec_less>::const_iterator mi;
+   for(mi=dirs.begin(); mi!=dirs.end(); ++mi) {
+      for(unsigned int i=0; i<mi->second.size(); i++) {
+         if(apply_map)
+            get_geom()->set_e_col(mi->second[i], get_col(idx));
+         else
+            get_geom()->set_e_col(mi->second[i], idx);
+      }
+      idx++;
+   }
+}
 
 
 void coloring::e_lights(col_geom_v lts)
@@ -597,6 +639,24 @@ void coloring::e_lights(col_geom_v lts)
    vec3d cent = get_geom()->centroid();
    for(unsigned int i=0; i<get_geom()->edges().size(); i++)
       get_geom()->set_e_col(i, light(get_geom()->edge_nearpt(i,cent)-cent,lts));
+}
+
+
+void coloring::e_dir_lights(col_geom_v lts)
+{
+   if(lts.verts().size()==0) {
+      lts.add_col_vert(vec3d(0.57,0.0,0.3), vec3d(1,0,0));
+      lts.add_col_vert(vec3d(-0.57,0.0,-0.3), vec3d(1,0,0));
+      lts.add_col_vert(vec3d(-0.28,0.5,0.3), vec3d(0,1,0));
+      lts.add_col_vert(vec3d(0.28,0.5,-0.3), vec3d(0,1,0));
+      lts.add_col_vert(vec3d(-0.28,-0.5,0.3), vec3d(0,0,1));
+      lts.add_col_vert(vec3d(0.28,-0.5,-0.3), vec3d(0,0,1));
+   }
+   setup_lights(lts);
+
+   for(unsigned int i=0; i<get_geom()->edges().size(); i++)
+      get_geom()->set_e_col(i, light(
+               get_unsigned(get_geom()->edge_vec(i)),lts));
 }
 
 
