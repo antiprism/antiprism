@@ -1508,7 +1508,19 @@ void apply_latitudes(const col_geom_v &geom, const vector<vector<int> > &origina
    const vector<vector<int> > &faces = geom.faces();
    const vector<vector<int> > &edges = geom.edges();
    const vector<vec3d> &verts = geom.verts();
-   
+
+   // patch for if called with build method 2, just restore edge lats
+   if (opts.build_method == 2) {
+      for (unsigned int i=0;i<edge_list.size();i++) {
+         int lat = edge_list[i]->lat;
+         if (lat < -1) {
+            lat = (opts.hide_indent) ? -1 : abs(lat + 2);
+            edge_list[i]->lat = lat;
+         }
+      }
+      return;
+   }
+      
    // possible future use when not coloring compounds
    // if false give each latitude unique number, if true pair each layer split by angle
    bool double_sw = double_sweep;
@@ -4463,6 +4475,11 @@ void build_globe(col_geom_v &geom, vector<coordList *> &coordinates, vector<face
          lat_mode = 2;
    }
    
+   // if flood fill is going to be used, use old method (faster)
+   // but build_method can be 2
+   if (opts.face_coloring_method == 'f')
+      lat_mode = 2;
+   
    bool do_faces = !(!opts.face_coloring_method || !strchr("slbfc",opts.face_coloring_method));
    bool do_edges = !(!opts.edge_coloring_method || !strchr("slbf",opts.edge_coloring_method));
      
@@ -4476,10 +4493,11 @@ void build_globe(col_geom_v &geom, vector<coordList *> &coordinates, vector<face
       apply_latitudes(geom, split_face_indexes, face_list, edge_list, pole, double_sweep, opts);
    }
    else
-   if (lat_mode == 2) {   
+   if (lat_mode == 2) {
+      // slightly addapted for call using method 2
       apply_latitudes(geom, original_faces, split_face_indexes, face_list, edge_list, pole, double_sweep, opts);
       // old apply_latitudes needs to fix polygon numbers for compound coloring
-      if ((opts.face_coloring_method == 'c') && !double_sweep)
+      if ((opts.build_method == 3) && (opts.face_coloring_method == 'c') && !double_sweep)
          fix_polygon_numbers(face_list, opts);
    }
 
