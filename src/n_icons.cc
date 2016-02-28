@@ -239,8 +239,8 @@ void ncon_opts::usage()
 "  -f <mthd> mthd is face coloring method. The coloring is done before twist\n"
 "               key word: none - sets no color (default s, when d=1)\n"
 "               lower case outputs map indexes. upper case outputs color values\n"
-"               s - color circuits (when -z 1, or d=1)\n"
-"               f - color circuits with flood fill (-z 2,3 and d>1)\n"
+"               s - color circuits (when -z 1, or n/d is co-prime)\n"
+"               f - color circuits with flood fill (-z 2,3 and n/d not co-prime)\n"
 "               c - color by compound\n"
 "               a - color by compound, alternate method\n"
 "               l - color latitudinally\n"
@@ -1302,8 +1302,12 @@ void apply_latitudes(const col_geom_v &geom, vector<vector<int> > &split_face_in
          
       int part_number = 1;
       while (part_number) {   
+         // if south pole is included, colors are backward
+         //if ((part_number == 1) && ((pole[0]->lat > -1) || (pole[1]->lat > -1))) {
+         //   int v_idx = (pole[0]->lat > -1) ? pole[0]->idx : pole[1]->idx;
          if ((part_number == 1) && (pole[0]->lat > -1)) {
-            vector<int> faces_with_index = find_faces_with_vertex(faces, pole[0]->idx);
+            int v_idx = pole[0]->idx;
+            vector<int> faces_with_index = find_faces_with_vertex(faces, v_idx);
             for (unsigned int i=0;i<faces_with_index.size();i++) {
                int j = faces_with_index[i];
                face_list[j]->lat = lat-1;
@@ -1330,12 +1334,15 @@ void apply_latitudes(const col_geom_v &geom, vector<vector<int> > &split_face_in
                      first_level *= 2;
                }
                // if n is odd, use vertex number to find level
+               // first 'flat' level from the bottom
                else {
                   if (opts.d == 1)
                      first_level = 0;
                   else {
-                     first_level = n/2;
-                     first_level--;
+                     if (is_even(opts.d))
+                        first_level = (n/2) - (opts.d/2);
+                     else
+                        first_level = opts.d/2;
                   }
                }
             }
@@ -1388,6 +1395,7 @@ void apply_latitudes(const col_geom_v &geom, vector<vector<int> > &split_face_in
                face_list[k]->lat = para;
             }
          }
+//return;
          
          // loop to set rest of latitudes
          while(last_edges.size()) {
@@ -1434,6 +1442,7 @@ void apply_latitudes(const col_geom_v &geom, vector<vector<int> > &split_face_in
             }
             
             lat++;
+
             for (unsigned int i=0;i<next_edges.size();i++)
                edge_list[next_edges[i]]->lat = lat;
             last_edges = next_edges;
@@ -4479,6 +4488,9 @@ void build_globe(col_geom_v &geom, vector<coordList *> &coordinates, vector<face
    // but build_method can be 2
    if (opts.face_coloring_method == 'f')
       lat_mode = 2;
+      
+//lat_mode = 1;
+//fprintf(stderr,"lat_mode = %d\n",lat_mode);
    
    bool do_faces = !(!opts.face_coloring_method || !strchr("slbfc",opts.face_coloring_method));
    bool do_edges = !(!opts.edge_coloring_method || !strchr("slbf",opts.edge_coloring_method));
