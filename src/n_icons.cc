@@ -443,7 +443,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
                // place holder 'zero'
                face_coloring_method = '0';
             else
-            if(strspn(optarg, "sflmbnxyzoca") != strlen(optarg) || strlen(optarg)>1)
+            if(strspn(optarg, "sflmbnxyzocaS") != strlen(optarg) || strlen(optarg)>1)
                error(msg_str("invalid face coloring method '%c'", *optarg), c);
             else
                face_coloring_method = *optarg;
@@ -477,7 +477,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
             if(!strcmp(optarg,"Q"))
               edge_coloring_method = '\0';
             else
-            if(strspn(optarg, "sflmbnxyzoF") != strlen(optarg) || strlen(optarg)>1)
+            if(strspn(optarg, "sflmbnxyzoFS") != strlen(optarg) || strlen(optarg)>1)
                error(msg_str("invalid edge coloring method '%s'", optarg), c);
             else
                edge_coloring_method = *optarg;
@@ -5219,6 +5219,116 @@ void surface_subsystem(const ncon_opts &opts)
    }
 }
 
+// another coloring method by Adrian Rossiter
+struct ht_less {
+   static double get_eps() { return 1e-10; }
+   bool operator()(const double &h0, const double &h1) const
+      { return double_lt(h0, h1, get_eps()); }
+};
+
+void test_colouring(col_geom_v *geom, ncon_opts &opts)
+{
+   int D = opts.d;
+   int N = opts.ncon_order;
+   int twist = opts.twist;
+   if (opts.build_method == 2 && D != 1) {
+      N /= 2;
+      twist /= 2;
+   }
+
+   dihedron dih(N, D);
+   dih.set_edge(1.00);
+   col_geom_v pgon;
+   dih.make_poly(pgon);
+   pgon.add_missing_impl_edges();
+   if(!opts.point_cut || !is_even(N) || opts.hybrid)
+      pgon.transform(mat3d::rot(vec3d::Z, M_PI/N));
+
+   int Dih_num = N / gcd(2*twist-opts.hybrid, N);
+   vector<vector<set<int> > > sym_equivs;
+   get_equiv_elems(pgon, sch_sym(sch_sym::D, Dih_num).get_trans(), &sym_equivs);
+   coloring e_clrng(&pgon);
+   color_map *f_map = opts.face_map.clone();
+   e_clrng.add_cmap(f_map);
+   e_clrng.e_sets(sym_equivs[1]);
+
+   coloring v_clrng(&pgon);
+   color_map *e_map = opts.edge_map.clone();
+   v_clrng.add_cmap(e_map);
+   v_clrng.v_sets(sym_equivs[0]);
+
+   pgon.transform(mat3d::rot(vec3d::Z, (1-2*(D>1 && is_even(D%2)))*M_PI/2));
+   vec3d axes[2];
+   axes[0] = vec3d::Y;
+   axes[1] = mat3d::rot(vec3d::Z, -2*M_PI*(twist - 0.5*opts.hybrid)/N) * axes[0];
+
+   if (opts.face_coloring_method == 'S') {
+      // Find nearpoints of polygon edge lines, make unit, get height on each axis
+      map<double, col_val, ht_less> heights[2];
+      for(unsigned int i=0; i<pgon.edges().size(); i++) {
+         for(int ax=0; ax<2; ax++) {
+            double ht = vdot(pgon.edge_cent(i).unit(), axes[ax]);
+            heights[ax][ht] = pgon.get_e_col(i);
+         }
+      }
+      
+      geom->clear_f_cols();
+      for(unsigned int f=0; f<geom->faces().size(); f++) {
+         if(geom->faces(f).size()>2) {
+            int ax = geom->face_cent(f)[2]>=0.0; // z-coordinate determines axis
+            double hts[3];
+            for(int v_idx=0; v_idx<3; v_idx++)
+               hts[v_idx] = vdot(geom->face_v(f, v_idx), axes[ax]);
+            // try to select non-horizontal edge
+            int offset = double_eq(hts[0], hts[1], ht_less::get_eps());
+            double ht;
+            if(offset && double_eq(hts[1], hts[2], ht_less::get_eps()))
+               ht = hts[0]/fabs(hts[0]); // horizontal edge (on  horizontal face)
+            else {
+               // Find nearpoint of swept edge line, make unit, get height on axis
+               vec3d near_pt = nearest_point(vec3d(0, 0, 0), geom->face_v(f, offset), geom->face_v(f, offset+1));
+               ht = vdot(near_pt.unit(), axes[ax]);
+            }
+            map<double, col_val, ht_less>::iterator mi;
+            if((mi=heights[ax].find(ht)) != heights[ax].end())
+               geom->set_f_col(f, mi->second);
+         }
+      }
+   }
+
+   if (opts.edge_coloring_method == 'S') {
+      // Find nearpoints of polygon vertices, make unit, get height on each axis
+      map<double, col_val, ht_less> v_heights[2];
+      for(unsigned int i=0; i<pgon.verts().size(); i++) {
+         for(int ax=0; ax<2; ax++) {
+            double ht = vdot(pgon.verts(i).unit(), axes[ax]);
+            v_heights[ax][ht] = pgon.get_v_col(i);
+         }
+      }
+      
+      for(unsigned int e=0; e<geom->edges().size(); e++) {
+         int ax = geom->edge_cent(e)[2]>=0.0; // z-coordinate determines axis
+         double hts[2];
+         for(int v_idx=0; v_idx<2; v_idx++)
+            hts[v_idx] = vdot(geom->edge_v(e, v_idx), axes[ax]);
+         // select horizontal edges that don't intersect the axis
+         if(double_eq(hts[0], hts[1], ht_less::get_eps()) &&
+               !lines_intersection(geom->edge_v(e, 0), geom->edge_v(e, 1),
+                  vec3d(0,0,0), axes[ax], ht_less::get_eps()).is_set()) {
+            double ht = vdot(geom->edge_v(e, 0).unit(), axes[ax]);
+            map<double, col_val, ht_less>::iterator mi;
+            if((mi=v_heights[ax].find(ht)) != v_heights[ax].end()) {
+               geom->set_e_col(e, mi->second);
+               for(int v_idx=0; v_idx<2; v_idx++)
+                  geom->set_v_col(geom->edges(e)[v_idx], mi->second);
+            }
+         }
+      }
+   }
+
+   // geom->append(pgon); // append polygon
+} 
+
 int main(int argc, char *argv[])
 {
    int ret = 0;
@@ -5234,6 +5344,9 @@ int main(int argc, char *argv[])
 
       // elements can be chosen to be eliminated completely
       filter(geom,opts.hide_elems.c_str());
+      
+      if (opts.face_coloring_method == 'S' || opts.edge_coloring_method == 'S')
+         test_colouring(&geom, opts);
 
       geom_write_or_error(geom, opts.ofile, opts);
    }
