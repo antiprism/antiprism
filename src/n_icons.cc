@@ -1395,7 +1395,6 @@ void apply_latitudes(const col_geom_v &geom, vector<vector<int> > &split_face_in
                face_list[k]->lat = para;
             }
          }
-//return;
          
          // loop to set rest of latitudes
          while(last_edges.size()) {
@@ -1459,6 +1458,9 @@ void apply_latitudes(const col_geom_v &geom, vector<vector<int> > &split_face_in
                   break;
                }
             }
+            // comment out to have prime circuits of parts>1 upside down
+            if (found)
+               break;
          }
         
          if (early_ending)
@@ -4488,9 +4490,6 @@ void build_globe(col_geom_v &geom, vector<coordList *> &coordinates, vector<face
    // but build_method can be 2
    if (opts.face_coloring_method == 'f')
       lat_mode = 2;
-      
-//lat_mode = 1;
-//fprintf(stderr,"lat_mode = %d\n",lat_mode);
    
    bool do_faces = !(!opts.face_coloring_method || !strchr("slbfc",opts.face_coloring_method));
    bool do_edges = !(!opts.edge_coloring_method || !strchr("slbf",opts.edge_coloring_method));
