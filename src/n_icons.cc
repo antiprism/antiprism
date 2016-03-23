@@ -627,6 +627,9 @@ void ncon_opts::process_command_line(int argc, char **argv)
             build_method = 1;
          else
             build_method = 2;
+         
+         if ((build_method == 1) && (face_coloring_method == 'f'))
+            build_method = 2;
       }
 
       if (build_method == 1) {
@@ -798,6 +801,11 @@ void ncon_opts::process_command_line(int argc, char **argv)
    if (face_coloring_method == 'f') {
       if (build_method == 1)
          error("flood fill face coloring is for build method 2 or 3",'f');
+   }
+   else   
+   if (face_coloring_method == 'c') {
+      if (build_method == 1)
+         error("compound coloring is for build method 2 or 3",'f');
    }
       
    if (edge_coloring_method == 'f') {
@@ -4042,6 +4050,8 @@ int ncon_face_coloring_by_compound(col_geom_v &geom, const vector<faceList *> &f
    int sz = 0;
    int lat = 0;
    int lon = opts.longitudes.front()/2;
+   if (!opts.hybrid)
+      lon--;
    do {
       vector<int> idx = find_face_by_lat_lon(face_list,lat,lon);
       sz = idx.size();
