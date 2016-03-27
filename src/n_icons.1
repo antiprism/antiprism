@@ -74,10 +74,11 @@ Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
 .HP
 \fB\-f\fR <mthd> mthd is face coloring method. The coloring is done before twist
 .IP
-key word: none \- sets no color (default s, when d=1)
+key word: none \- sets no color
 lower case outputs map indexes. upper case outputs color values
-s \- color circuits (when \fB\-z\fR 1, or n/d is co\-prime)
-f \- color circuits with flood fill (\fB\-z\fR 2,3 and n/d not co\-prime)
+S \- color by symmetry (default)
+s \- color by circuits algorithm (n/d must be co\-prime)
+f \- color circuits with flood fill (\fB\-z\fR 2,3 any n/d)
 c \- color by compound
 a \- color by compound, alternate method
 l \- color latitudinally
@@ -139,6 +140,9 @@ flood fill stop. used with circuit or compound coloring (\fB\-f\fR f,c)
 .IP
 use 0 (default) to flood fill entire model. if \fB\-X\fR is not 0 then
 return 1 from program if entire model has been colored
+.TP
+\fB\-W\fR
+add symmetry polygon (for \fB\-f\fR S or \fB\-e\fR S are used)
 .PP
 Surface Count Reporting (options above igonored)
 .HP
