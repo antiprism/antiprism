@@ -52,7 +52,6 @@ class lutil_opts: public prog_opts {
       vector<double> strut_len;
       bool strip_faces;
       char color_edges_by_sqrt;
-      bool is_vertex_color;
       char container;
       bool append_container;
       double radius;
@@ -76,7 +75,6 @@ class lutil_opts: public prog_opts {
 
       bool verbose;
       double epsilon;
-      vector<col_val> remove_vertex_color_list;
       
       // 0 - lattice  1 - convex hull  2 - voronoi
       vector<col_val> vert_col;
@@ -86,7 +84,6 @@ class lutil_opts: public prog_opts {
       lutil_opts(): prog_opts("lat_util"),
                     strip_faces(true),
                     color_edges_by_sqrt('\0'),
-                    is_vertex_color(true),
                     container('c'),
                     append_container(false),
                     radius(0),
@@ -127,9 +124,6 @@ void lutil_opts::usage()
 "  -h        this help message\n"
 "  -I        verbose output\n"
 "  -z        suppress stripping of faces\n"
-"  -x <colr> remove every vertex of color colr\n"
-"               use multiple -x parameters for multiple colors\n"
-"  -X <colr> remove every vertex NOT of color colr\n"
 "  -c <type> container, c - cube (default), s - sphere (uses radius)\n"
 "  -k <file> container, convex hull of off file or built in model (uses radius)\n"
 "  -r <c,n>  radius. c is radius taken to optional root n. n = 2 is sqrt\n"
@@ -185,7 +179,6 @@ void lutil_opts::process_command_line(int argc, char **argv)
    int sig_compare = INT_MAX;
    vector<double> double_parms;
    col_val col_tmp;
-   int x_used = 0;
    
    vert_col.resize(3);
    edge_col.resize(3);
@@ -200,7 +193,7 @@ void lutil_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hIzx:X:c:k:r:q:s:D:C:AV:E:F:T:Z:KOR:Q:L:S:l:o:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hIzc:k:r:q:s:D:C:AV:E:F:T:Z:KOR:Q:L:S:l:o:")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -211,35 +204,6 @@ void lutil_opts::process_command_line(int argc, char **argv)
 
          case 'z':
             strip_faces = false;
-            break;
-            
-         case 'x':
-            if (!x_used)
-               x_used = 1;
-            else
-            if (x_used < 0)
-               error("cannot mix -x with -X",c);
-            is_vertex_color = true;
-            if(!col_tmp.read(optarg, errmsg))
-               error(errmsg, c);
-            remove_vertex_color_list.push_back(col_tmp);
-            break;
-
-         // if X is called more than once, only the last one is honored
-         case 'X':
-            if (!x_used)
-               x_used = -1;
-            else
-            if (x_used > 0)
-               error("cannot mix -X with -x",c);
-            is_vertex_color = false;
-            if(!col_tmp.read(optarg, errmsg))
-               error(errmsg, c);
-            if (remove_vertex_color_list.size()) {
-               warning("if more than one -X, only the last one is used");
-               remove_vertex_color_list.clear();
-            }
-            remove_vertex_color_list.push_back(col_tmp);
             break;
             
          case 'c':
@@ -655,24 +619,6 @@ void lutil_opts::process_command_line(int argc, char **argv)
    epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
-void remove_vertex_by_color(col_geom_v &geom, const col_val &remove_vertex_color, const bool &is_vertex_color)
-{
-   const vector<vec3d> &verts = geom.verts();
-
-   vector<int> del_verts;
-   for(unsigned int i=0; i<verts.size(); i++) {
-      if (( is_vertex_color && geom.get_v_col(i) == remove_vertex_color) ||
-          (!is_vertex_color && geom.get_v_col(i) != remove_vertex_color))
-         del_verts.push_back(i);
-   }
-
-   if (del_verts.size())
-      geom.delete_verts(del_verts);
-
-   if (!verts.size())
-      fprintf(stderr,"remove_vertex_by_color: warning: all vertices were removed!\n");
-}
-
 void make_skeleton(col_geom_v &geom, const bool &strip_faces)
 {
    geom.add_missing_impl_edges();
@@ -694,9 +640,6 @@ void process_lattices(col_geom_v &geom, col_geom_v &container, const col_geom_v 
       tgeom = geom;
    
    geom.color_vef(opts.vert_col[0], opts.edge_col[0], opts.face_col[0]);
-
-   for(unsigned int i=0; i<opts.remove_vertex_color_list.size(); i++)
-      remove_vertex_by_color(geom, opts.remove_vertex_color_list[i], opts.is_vertex_color);
 
    for(unsigned int i=0; i<opts.strut_len.size(); i++)
       add_color_struts(geom, opts.strut_len[i]*opts.strut_len[i], opts.edge_col[0]);
