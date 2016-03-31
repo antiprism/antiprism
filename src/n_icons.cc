@@ -1986,43 +1986,58 @@ void find_split_faces_shell_model(const col_geom_v &geom, const vector<faceList 
    } while(face_zs.size());
 }
 
-// for methods 1 and 2: first longitude of vertices to form globe
-// inner_radius, outer_radius set
-// point_cut_calc changed from side cut to point cut if build method 2 and d > 1
-void build_prime_meridian(col_geom_v &geom, vector<int> &prime_meridian, vector<coordList *> &coordinates,
-                          double &inner_radius, double &outer_radius, bool &point_cut_calc, const ncon_opts &opts)
+// if return_calc is true, it returns the calculated values of radius even if they are set before hand
+// inner_radius, outer_radius, arc, d are changed
+void calc_radii(double &inner_radius, double &outer_radius, double &arc, const int &N, int &d, const ncon_opts &opts, const bool &return_calc)
 {
-   int d = opts.d; // pass d as const
-   
    // if shell model is created opts.ncon_order needs to be divided by 2 to get the correct outer radius, except when d is 1
-   double arc = 360.0/(opts.ncon_order/((opts.build_method == 2 && d != 1) ? 2 : 1))*d;
+   arc = 360.0/(N/((opts.build_method == 2 && d != 1) ? 2 : 1))*d;
    // but this causes a problem for n/2n so make an exception
    if (opts.build_method == 2 && double_eq(arc,180.0,opts.epsilon))
-      arc = 360.0/opts.ncon_order*d;
+      arc = 360.0/N*d;
 
    double interior_angle = (180.0-arc)/2.0;
+   double inner_radius_calc = 0;
    double outer_radius_calc = sin(deg2rad(interior_angle))/sin(deg2rad(arc));
    if (outer_radius == FLT_MAX)
       outer_radius = outer_radius_calc;
 
    if (opts.build_method == 2) {
       // reculate arc and interior_angle;
-      arc = 360.0/opts.ncon_order;
+      arc = 360.0/N;
       interior_angle = (180.0-arc)/2.0;
       
-      if (inner_radius == FLT_MAX) {
-         int n = opts.ncon_order/((d != 1) ? 2 : 1);
-         if (2*d>n)
-            d = n-d;
-         // formula furnished by Adrian Rossiter
-         //r = R * cos(pi*m/n) / cos(pi*(m-1)/n)
-         inner_radius = (d == 1) ? outer_radius_calc : (outer_radius_calc * cos(M_PI*d/n) / cos(M_PI*(d-1)/n));
-      }
+      int n_calc = N/((d != 1) ? 2 : 1);
+      if (2*d>n_calc)
+         d = n_calc-d;
+      // formula furnished by Adrian Rossiter
+      //r = R * cos(pi*m/n) / cos(pi*(m-1)/n)
+      inner_radius_calc = (outer_radius_calc * cos(M_PI*d/n_calc) / cos(M_PI*(d-1)/n_calc));
+      if (inner_radius == FLT_MAX)
+         inner_radius = (d == 1) ? outer_radius_calc : inner_radius_calc;
    }
 
    // patch: inner radius cannot be exactly 0. Add a little
    if (double_eq(inner_radius,0.0,opts.epsilon))
       inner_radius += opts.epsilon*1000.0;
+
+   if (return_calc) {
+      outer_radius = outer_radius_calc;
+      inner_radius = inner_radius_calc;
+   }
+}
+
+// for methods 1 and 2: first longitude of vertices to form globe
+// inner_radius, outer_radius set
+// point_cut_calc changed from side cut to point cut if build method 2 and d > 1
+void build_prime_meridian(col_geom_v &geom, vector<int> &prime_meridian, vector<coordList *> &coordinates,
+                          double &inner_radius, double &outer_radius, bool &point_cut_calc, const ncon_opts &opts)
+{
+   int n = opts.ncon_order; // pass n and d as const
+   int d = opts.d;
+   double arc = 0;
+   
+   calc_radii(inner_radius, outer_radius, arc, n, d, opts, false);
 
    bool radii_swapped = false;
    double angle = -90.0;
@@ -4395,6 +4410,9 @@ void ncon_coloring(col_geom_v &geom, const vector<faceList *> &face_list, const 
 //fprintf(stderr,"point_cut_calc = %s (used for face_increment)\n",point_cut_calc ? "point" : "side");
 
    bool pc = (!opts.hide_indent || opts.double_sweep || opts.angle_is_side_cut) ? point_cut_calc : opts.point_cut;
+//fprintf(stderr,"point_cut_calc = %s\n",point_cut_calc ? "point" : "side");
+//pc = !pc;
+//fprintf(stderr,"pc = %s\n",pc ? "point" : "side");
 
    // increment rules for d = 1
    int face_increment = ((is_even(n) && pc) && !opts.hybrid) ? 1 : 0; 
@@ -5274,17 +5292,102 @@ col_geom_v build_gear_polygon(const ncon_opts &opts)
    return gear;
 }
 
+void pgon_post_process(col_geom_v &pgon, vector<vec3d> &axes, const int &N, const int &twist, const bool &hyb, const ncon_opts &opts)
+{
+   int Dih_num = N / gcd(2*twist-hyb, N);
+   vector<vector<set<int> > > sym_equivs;
+   get_equiv_elems(pgon, sch_sym(sch_sym::D, Dih_num).get_trans(), &sym_equivs);
+   
+   coloring e_clrng(&pgon);
+   color_map *f_map = opts.face_map.clone();
+   e_clrng.add_cmap(f_map);
+   e_clrng.e_sets(sym_equivs[1]);
+
+   coloring v_clrng(&pgon);
+   color_map *e_map = opts.edge_map.clone();
+   v_clrng.add_cmap(e_map);
+   v_clrng.v_sets(sym_equivs[0]);
+
+   //pgon.transform(mat3d::rot(vec3d::Z, (1-2*(D>1 && is_even(D%2)))*M_PI/2));
+   pgon.transform(mat3d::rot(vec3d::Z, M_PI/2));
+   axes[0] = vec3d::Y;
+   axes[1] = mat3d::rot(vec3d::Z, -2*M_PI*(twist - 0.5*hyb)/N) * axes[0];
+      
+//pgon.write("tmp.off");
+}
+
+// return true if good polygon was processed
+bool gen_edge_heights_edges(vector<map<double, col_val, ht_less> > &heights, const col_geom_v &pgon, const vector<vec3d> &axes, const ncon_opts &opts)
+{
+   // Find nearpoints of polygon edge lines, make unit, get height on each axis
+   int set_test = 0;
+   for(unsigned int i=0; i<pgon.edges().size(); i++) {
+      for(int ax=0; ax<2; ax++) {
+         //double ht = vdot(pgon.edge_cent(i).unit(), axes[ax]);
+         vec3d near_pt = nearest_point(vec3d(0, 0, 0), pgon.edge_v(i, 0), pgon.edge_v(i, 1));
+         double ht = vdot(near_pt.unit(), axes[ax]); 
+         col_val c = pgon.get_e_col(i);
+         if (opts.face_opacity != -1) {
+            int opq = opts.face_pattern[i%opts.face_pattern.size()] == '1' ? opts.face_opacity : 255;
+            c = set_alpha(c, opq);
+         }
+//heights[ax][ht].dump();
+//fprintf(stderr,"ax = %d ht = %g\n",ax,ht);
+         if (!heights[ax][ht].is_set())
+            set_test++;
+         heights[ax][ht] = c;
+      }
+   }
+   
+//if (set_test != (int)pgon.edges().size())
+//   fprintf(stderr,"duplicates found\n");
+   return(set_test == (int)pgon.edges().size());
+}
+
 void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
 {
-   int D = opts.d;
+   // note: N and D are not pre-doubled here for build_method 2
    int N = opts.ncon_order;
+   int D = opts.d;
    int twist = opts.twist;
    bool hyb = opts.hybrid;
+   bool pc = opts.point_cut;
    
    col_geom_v pgon;
+   vector<vec3d> axes(2);
+   vector<map<double, col_val, ht_less> > heights(2);
    
-   if (opts.build_method == 2 && (!opts.hide_indent || radius_set)) {
+   bool gear_polygon_used = false;
+   
+   if (opts.build_method == 2 && radius_set) {
+//fprintf(stderr,"gear polygon\n");
+      // if inner radius is greater then outer radius, point cut will change to a side cut and vice-versa
+      // this will be true even if the gear polygon is not used
+      if (double_gt(fabs(opts.inner_radius),fabs(opts.outer_radius),opts.epsilon))
+         pc = !pc;
+      
+      double num = (fabs(opts.outer_radius) > fabs(opts.inner_radius)) ? fabs(opts.outer_radius) : fabs(opts.inner_radius);
+      double den = (fabs(opts.outer_radius) < fabs(opts.inner_radius)) ? fabs(opts.outer_radius) : fabs(opts.inner_radius);
+      double ratio = num/den;
+//fprintf(stderr,"ratio = %g\n",ratio);
+      for(int i=1; i<=N/2; i++) {
+         double i_radius = 0;
+         double o_radius = 0;
+         double arc = 0;
+         calc_radii(i_radius, o_radius, arc, N*2, i, opts, true);
+         double rat = o_radius/i_radius;
+//fprintf(stderr,"8/%d: rat = %g\n",i,rat);
+         if (double_eq(rat,ratio,ht_less::get_eps())) {
+            if (D != i) {
+               D = i;
+               opts.warning(msg_str("radii cause D to change to %d", D),'R');
+            }
+            break;
+         }
+      }
+
       pgon = build_gear_polygon(opts);
+      
       if (D > 1) {
          N *= 2;
          twist *= 2;
@@ -5294,9 +5397,25 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
             twist--;
          }
       }
+      
+      pgon_post_process(pgon, axes, N, twist, hyb, opts);
+      
+      // test polygon, reject if parellel edges happen
+      if (gen_edge_heights_edges(heights, pgon, axes, opts))
+         gear_polygon_used = true;
+      else {
+         // restore everything
+         pgon.clear_all();
+         for(int ax=0; ax<2; ax++)
+            heights[ax].clear();
+         N = opts.ncon_order;
+         twist = opts.twist;
+         hyb = opts.hybrid;
+      }
    }
-   else {
-      bool pc = opts.point_cut;
+   
+   if (!pgon.verts().size()) {
+//fprintf(stderr,"regular polygon\n");
       if (opts.build_method == 3 && double_ne(opts.angle,0,opts.epsilon))
          pc = (angle_on_aligned_polygon(opts.angle,N,opts.epsilon) && !opts.angle_is_side_cut) ? true : false;    
       
@@ -5306,14 +5425,13 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
       dih.make_poly(pgon);
       pgon.add_missing_impl_edges();
       
-//fprintf(stderr,"opts.double_sweep = %s\n",opts.double_sweep ? "true" : "false");
       double rot_angle = 0;
       if(opts.double_sweep)
          rot_angle = deg2rad(opts.angle);
       else
       if(!pc || !is_even(N) || hyb)
          rot_angle = M_PI/N;
-//fprintf(stderr,"rot_angle = %g\n",rot_angle);
+
       pgon.transform(mat3d::rot(vec3d::Z, rot_angle));
       
       // if it is formed by double sweeping, mirror on Y
@@ -5335,30 +5453,23 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
          }
          pc = false;
       }
-   }
-//fprintf(stderr,"N = %d\n",N);
-   
-   int Dih_num = N / gcd(2*twist-hyb, N);
-   vector<vector<set<int> > > sym_equivs;
-   get_equiv_elems(pgon, sch_sym(sch_sym::D, Dih_num).get_trans(), &sym_equivs);
-   
-   coloring e_clrng(&pgon);
-   color_map *f_map = opts.face_map.clone();
-   e_clrng.add_cmap(f_map);
-   e_clrng.e_sets(sym_equivs[1]);
-
-   coloring v_clrng(&pgon);
-   color_map *e_map = opts.edge_map.clone();
-   v_clrng.add_cmap(e_map);
-   v_clrng.v_sets(sym_equivs[0]);
-
-   //pgon.transform(mat3d::rot(vec3d::Z, (1-2*(D>1 && is_even(D%2)))*M_PI/2));
-   pgon.transform(mat3d::rot(vec3d::Z, M_PI/2));
-   vec3d axes[2];
-   axes[0] = vec3d::Y;
-   axes[1] = mat3d::rot(vec3d::Z, -2*M_PI*(twist - 0.5*hyb)/N) * axes[0];
       
-//pgon.write("tmp.off");
+      // if method 2 and outer radius set
+      // and regular polygon was generated it needs to be rescaled
+      if (opts.build_method == 2 && radius_set) {
+         double i_radius = 0;
+         double o_radius = 0;
+         double arc = 0;
+         calc_radii(i_radius, o_radius, arc, N*2, D, opts, true);
+//fprintf(stderr,"opts.inner_radius = %.17lf i_radius = %.17lf\n",opts.inner_radius,i_radius);
+//fprintf(stderr,"opts.outer_radius = %.17lf o_radius = %.17lf\n",opts.outer_radius,o_radius);
+         double poly_radius = (fabs(opts.outer_radius) > fabs(opts.inner_radius)) ? fabs(opts.outer_radius) : fabs(opts.inner_radius);
+//fprintf(stderr,"poly_radius = %.17lf o_radius = %.17lf\n",poly_radius,o_radius);
+         pgon.transform(mat3d::scale(poly_radius/o_radius));
+      }
+   
+      pgon_post_process(pgon, axes, N, twist, hyb, opts);
+   }
 
 // count circuits from distinct colors in the polygon?
 /*
@@ -5370,21 +5481,12 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
    }
 */   
 
+   // color faces
    if (opts.face_coloring_method == 'S') {
       // Find nearpoints of polygon edge lines, make unit, get height on each axis
-      map<double, col_val, ht_less> heights[2];
-      for(unsigned int i=0; i<pgon.edges().size(); i++) {
-         for(int ax=0; ax<2; ax++) {
-            double ht = vdot(pgon.edge_cent(i).unit(), axes[ax]);
-            col_val c = pgon.get_e_col(i);
-            if (opts.face_opacity != -1) {
-               int opq = opts.face_pattern[i%opts.face_pattern.size()] == '1' ? opts.face_opacity : 255;
-               c = set_alpha(c, opq);
-            }
-            heights[ax][ht] = c;
-//fprintf(stderr,"heights[%d][%g] = c\n",ax,ht);
-         }
-      }
+      // if gear polygon was generated, heights will already be filled
+      if (!gear_polygon_used)
+         gen_edge_heights_edges(heights, pgon, axes, opts);
       
       for(unsigned int f=0; f<geom.faces().size(); f++) {
          if(geom.faces(f).size()>2) {
@@ -5392,31 +5494,45 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
             double hts[3];
             for(int v_idx=0; v_idx<3; v_idx++) {
                hts[v_idx] = vdot(geom.face_v(f, v_idx), axes[ax]);
-//fprintf(stderr,"hts[%d] = %g\n",v_idx,hts[v_idx]);
             }
             // try to select non-horizontal edge
             int offset = double_eq(hts[0], hts[1], ht_less::get_eps());
-//fprintf(stderr,"offset = %d\n",offset);
             double ht;
             if(offset && double_eq(hts[1], hts[2], ht_less::get_eps())) {
                ht = hts[0]/fabs(hts[0]); // horizontal edge (on  horizontal face)
-//fprintf(stderr,"in if = %g\n",ht);
             }
             else {
                // Find nearpoint of swept edge line, make unit, get height on axis
                vec3d near_pt = nearest_point(vec3d(0, 0, 0), geom.face_v(f, offset), geom.face_v(f, offset+1));
                ht = vdot(near_pt.unit(), axes[ax]);
-//fprintf(stderr,"in else = %g\n",ht);
             }
             map<double, col_val, ht_less>::iterator mi;
+//fprintf(stderr,"ax = %d ht = %g\n",ax,ht);
             if((mi=heights[ax].find(ht)) != heights[ax].end()) {
+//fprintf(stderr,"found\n");
                set_face_color(geom, f, mi->second);
             }
          }
       }
    }
 
+   // color edges
    if (opts.edge_coloring_method == 'S') {
+      if (opts.build_method == 2 && !opts.hide_indent && !gear_polygon_used) {
+         pgon = build_gear_polygon(opts);
+         if (D > 1) {
+            N *= 2;
+            twist *= 2;
+            // a hybrid becomes a normal of 2N with a twist of 2T-1
+            if (hyb) {
+               hyb = false;
+               twist--;
+            }
+         }
+         
+         pgon_post_process(pgon, axes, N, twist, hyb, opts);
+      }
+
       // Find nearpoints of polygon vertices, make unit, get height on each axis
       map<double, col_val, ht_less> v_heights[2];
       for(unsigned int i=0; i<pgon.verts().size(); i++) {
@@ -5465,6 +5581,12 @@ int main(int argc, char *argv[])
       surface_subsystem(opts);
    else {
       bool radius_set = (opts.inner_radius != FLT_MAX || opts.outer_radius != FLT_MAX) ? true : false;
+      //if (radius_set) {
+         //if (double_gt(opts.inner_radius,opts.outer_radius,opts.epsilon)) {
+         //   opts.point_cut = !opts.point_cut;
+         //fprintf(stderr,"reverse!\n");
+         //}
+      //}
       
       col_geom_v geom;
       ret = ncon_subsystem(geom, opts);
