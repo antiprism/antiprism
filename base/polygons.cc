@@ -497,7 +497,11 @@ void dipyramid::make_scal_part(geom_if &geom)
    pgon.add_polygon(pg);
    for(int i=0; i<num_sides; i++) {
       geom.add_vert(pg.verts(i));
-      geom.add_vert((rad2/inrad)*0.5*(pg.verts(i)+pg.verts((i+1)%num_sides)));
+      if(num_sides>2)
+         geom.add_vert((rad2/inrad)*
+               0.5*(pg.verts(i)+pg.verts((i+1)%num_sides)));
+      else
+         geom.add_vert(vec3d(0, (1-2*i)*rad2, 0));
    }
    int apex_idx1 = geom.add_vert(vec3d(0, 0, ht));
    int apex_idx2 = geom.add_vert(vec3d(0, 0,-ht));
