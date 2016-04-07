@@ -59,7 +59,11 @@
     On 64-bit machines, a pointer may be larger than an 'int'.  
     qh_meminit() checks that 'long' holds a 'void*'
 */
-typedef unsigned long ptr_intT;
+#if defined(_WIN32) && defined(_WIN64)
+   typedef unsigned long long ptr_intT;
+#else
+   typedef unsigned long ptr_intT;
+#endif
 
 /*-<a                             href="qh-mem.htm#TOC"
   >--------------------------------</a><a name="qhmemT">-</a>

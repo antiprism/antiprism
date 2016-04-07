@@ -133,21 +133,21 @@
 
 #ifdef ULTRAGETOPT_NO_OPTIONASSIGN
 static const char *const unixassigners = "";
-static const char *const dosassigners = ":";
+//static const char *const dosassigners = ":";
 #elif defined(ULTRAGETOPT_OPTIONSPACE)
 static const char *const unixassigners = "= ";
-static const char *const dosassigners = ":= ";
+//static const char *const dosassigners = ":= ";
 #else
 static const char *const unixassigners = "=";
-static const char *const dosassigners = ":=";
+//static const char *const dosassigners = ":=";
 #endif
 
 #ifdef ULTRAGETOPT_DOS_DASH
 static const char *const unixleaders = "-";
-static const char *const dosleaders = "/-";
+//static const char *const dosleaders = "/-";
 #else
 static const char *const unixleaders = "-";
-static const char *const dosleaders = "/";
+//static const char *const dosleaders = "/";
 #endif
 
 /* Flags for all variants of ultragetopt*() */

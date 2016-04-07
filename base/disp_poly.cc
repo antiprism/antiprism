@@ -73,7 +73,7 @@ col_val disp_poly::get_def_f_col()
 
 void disp_poly::geom_changed()
 {
-   if(!sc_geom || &(sc_geom->get_geom()) == 0)  // no geometry set
+   if(!sc_geom)  // no geometry set
       return;
    disp_geom = sc_geom->get_geom();
    vector<int> face_map;
