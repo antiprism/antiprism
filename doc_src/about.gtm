@@ -74,6 +74,15 @@ file for changes in the Antiprism releases.
 </tr>
 
 <tr class="tbl1" valign="top">
+<td>10/04/2016</td>
+<td>
+Site updated to point to the
+<a href="https://github.com/antiprism/antiprism">Antiprism Repository</a>
+at Github as the development page.
+</td>
+</tr>
+
+<tr class="tbl1" valign="top">
 <td>11/03/2013</td>
 <td>
 Antiprism 0.23 released. Program documentation updated.

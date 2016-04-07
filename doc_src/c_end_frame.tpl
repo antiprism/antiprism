@@ -34,7 +34,7 @@ Up:
 <small>&nbsp;&nbsp;|&nbsp;&nbsp;</small>
 <small><a href="<<PATH_UP>>download/index.html">Download</a></small>
 <small>&nbsp;&nbsp;|&nbsp;&nbsp;</small>
-<small><a href="<<PROJECT_PAGE>>">Project</a></small>
+<small><a href="<<PROJECT_PAGE>>">Development</a></small>
 <small>&nbsp;&nbsp;|&nbsp;&nbsp;</small>
 <small><a href="https://groups.google.com/forum/#!forum/antiprism">Forum</a></small>
 <small>&nbsp;&nbsp;|&nbsp;&nbsp;</small>

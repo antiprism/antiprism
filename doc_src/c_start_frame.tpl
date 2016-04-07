@@ -38,7 +38,7 @@
    <tr><td <<HL_EXAS>>><small><b><a href="<<PATH_UP>>examples/index.html">Examples</a></b></small></td></tr>
    <tr><td <<HL_ALB>>><small><b><a href="<<PATH_UP>>album/index.html">Album</a></b></small></td></tr>
    <tr><td <<HL_DOWN>>><small><b><a href="<<PATH_UP>>download/index.html">Download</a></b></small></td></tr>
-   <tr><td><small><b><a href="<<PROJECT_PAGE>>">Project</a></b></small></td></tr>
+   <tr><td><small><b><a href="<<PROJECT_PAGE>>">Development</a></b></small></td></tr>
    <tr><td><small><b><a href="https://groups.google.com/forum/#!forum/antiprism">Forum</a></b></small></td></tr>
    <tr><td <<HL_ABOUT>>><small><b><a href="<<PATH_UP>>about.html">About</a></b></small></td></tr>
    </table>

@@ -10,7 +10,7 @@
 <<CONT_S_START>>
 <small><a href="#current">Current Release</a></small>
 <<BARSPACE>>
-<small><a href="#older">Older Code</a></small>
+<small><a href="#antiprism_python">Antiprism Python</a></small>
 <<CONT_S_END>>
 
 
@@ -22,9 +22,8 @@ Antiprism Programs
 Current Release
 </a></h3>
 
-The current version is
-<a href="https://sourceforge.net/projects/antiprism/files/antiprism"><<ANTIPRISM_RELEASE>></a>,
-released <<REL_DATE>>. Here are the
+The current version is <<ANTIPRISM_RELEASE>>, released <<REL_DATE>>.
+Here are the
 <a href="readme_file.html">README</a>
 and
 <a href="news_file.html">NEWS</a>
@@ -34,25 +33,30 @@ This is a beta release. The programs have not had wide use
 and probably contain a significant number of bugs. Please let me know
 if you come across any bugs, or anything not working as documented.
 <p>
-I build the programs with the GNU tools on Linux and in the MSYS and
+I build the programs with the GNU tools on Linux, and in the MSYS and
 Cygwin environments on Windows. I have received reports that Antiprism
 builds on FreeBSD and Mac OSX.
 
 <ul>
-<li>Source code only - <a href="http://prdownloads.sourceforge.net/antiprism/<<ANTIPRISM_SOURCE_FILE>>?download"><<ANTIPRISM_SOURCE_FILE>></a> 
-<li>Source code and Windows binaries - <a href="http://prdownloads.sourceforge.net/antiprism/<<ANTIPRISM_WIN_FILE>>?download"><<ANTIPRISM_WIN_FILE>></a>
+<li>Source code only - <a href="http://www.antiprism.com/files/<<ANTIPRISM_SOURCE_FILE>>"><<ANTIPRISM_SOURCE_FILE>></a> 
+<li>Source code and Windows binaries - <a href="http://www.antiprism.com/files/<<ANTIPRISM_WIN_FILE>>"><<ANTIPRISM_WIN_FILE>></a>
 </ul>
 
 The binaries have no external dependencies, but the <i>antiview</i>
 viewer requires OpenGL. OpenGL and GLUT development libraries are
 required to build <i>antiview</i> from source.
 
-<h3><a name="older">
-Older Code
+<h3><a name="antiprism_python">
+Antiprism Python
 </a></h3>
 
-Earlier versions of the code were released as
-<a href="http://packinon.sourceforge.net/download/">Packinon</a>,
-which included a separate release of some Python programs.
+Antiprism Python is a separate package of useful modelling programs written
+in Python. See the
+<a href="https://github.com/antiprism/antiprism_python/blob/master/README.md">Antiprism Python README</a>,
+for details and program descriptions. The package can be downloaded as a
+<a href="https://github.com/antiprism/antiprism_python/archive/master.zip">ZIP file</a>
+or using the
+<a href="https://github.com/antiprism/antiprism_python">Git Repository</a>.
+
 
 #include "<<END>>"

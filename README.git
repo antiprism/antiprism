@@ -3,7 +3,7 @@ Git Code Repository
 
 The Git repository contains the latest development code
 
-   https://sourceforge.net/scm/?type=git&group_id=176443
+   https://github.com/antiprism/antiprism
 
 A suitable build environment is required to build the programs. This
 includes things like: C++ compiler, linker, make, suitable shell, etc. 
@@ -30,6 +30,3 @@ The library documentation may, if required, be built with Doxygen. Run
 be written into antiprism-VERSION_lib_doc.
 
 Follow the 'Building' section of the README to complete the build.
-
-
-

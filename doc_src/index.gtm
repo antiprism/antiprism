@@ -55,7 +55,6 @@
     of images and animations made with the programs
 <li><b><a href="<<PATH_UP>>download/index.html">Download</a></b>
     programs and source code
-<li><b><a href="<<PROJECT_PAGE>>">Project Page</a></b> at SourceForge
 <li><b><a href="<<PATH_UP>>about.html">About the Site</a></b> with
        <a href="<<PATH_UP>>about.html#map">site map</a> and
        <a href="<<PATH_UP>>about.html#updates">latest updates</a>
@@ -78,15 +77,8 @@
 <small>
 The Antiprism programs are open source and use the
 <a href="http://en.wikipedia.org/wiki/MIT_License">MIT License</a>,
-or similar permissive licences.
-</small>
-<p>
-<small>
-The project is hosted at SourceForge, see the
-<a href="<<PROJECT_PAGE>>">Antiprism Project Page</a>.
-Package releases are available from the 
-<a href="http://sourceforge.net/project/showfiles.php?group_id=176443">Files Area</a>. Development can be followed through the
-<a href="https://sourceforge.net/scm/?type=git&group_id=176443">Git Repository</a>.
+or similar permissive licences. Development can be followed through the
+<a href="https://github.com/antiprism/antiprism">Antiprism Git Repository</a>.
 </small>
 <p>
 <small>

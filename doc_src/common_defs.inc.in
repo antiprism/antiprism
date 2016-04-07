@@ -31,7 +31,7 @@ define __TOC_4__(x)        <ul>x</ul>
 define CGIDIR http://www.antiprism.com/cgi-bin/
 //define CGIDIR http://localhost/cgi-bin/
 
-define PROJECT_PAGE http://sourceforge.net/projects/antiprism
+define PROJECT_PAGE https://github.com/antiprism/antiprism
 define SITE_PAGE http://www.antiprism.com/
 
 define TITLE_SITE Antiprism - 
