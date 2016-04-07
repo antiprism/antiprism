@@ -1833,6 +1833,7 @@ void form_angular_model(col_geom_v &geom, const vector<int> &prime_meridian,
 }
 
 // for method 2: to hide uneeded edges
+// note that function used to reverse indented based on manual inner and outer radii
 void mark_indented_edges_invisible(const vector<edgeList *> &edge_list, const vector<poleList *> &pole,
                                    const bool &radius_reverse, const ncon_opts &opts)
 {
@@ -1920,7 +1921,11 @@ void find_split_faces_shell_model(const col_geom_v &geom, const vector<faceList 
 
    int lat = 0;
    if (opts.d != 1) {
-      vector<pair<int,int> > lat_pairs = get_lat_pairs(n,opts.d,opts.point_cut);
+      // if radii were inverted, point_cut will have been reversed but not what function is expecting
+      bool pc = opts.point_cut;
+      if (double_gt(fabs(opts.inner_radius),fabs(opts.outer_radius),opts.epsilon))
+         pc = !pc;
+      vector<pair<int,int> > lat_pairs = get_lat_pairs(n,opts.d,pc);
    
       for (unsigned int i=0;i<lat_pairs.size();i++) {
          for (unsigned int j=0;j<face_list.size();j++) {
@@ -4410,8 +4415,11 @@ void ncon_coloring(col_geom_v &geom, const vector<faceList *> &face_list, const 
 //fprintf(stderr,"point_cut_calc = %s (used for face_increment)\n",point_cut_calc ? "point" : "side");
 
    bool pc = (!opts.hide_indent || opts.double_sweep || opts.angle_is_side_cut) ? point_cut_calc : opts.point_cut;
-//fprintf(stderr,"point_cut_calc = %s\n",point_cut_calc ? "point" : "side");
-//pc = !pc;
+   
+   if (opts.build_method == 2 && opts.hide_indent) {
+      if (double_gt(fabs(opts.inner_radius),fabs(opts.outer_radius),opts.epsilon))
+         pc = !pc;
+   }
 //fprintf(stderr,"pc = %s\n",pc ? "point" : "side");
 
    // increment rules for d = 1
@@ -4514,7 +4522,8 @@ void build_globe(col_geom_v &geom, vector<coordList *> &coordinates, vector<face
 
       add_caps(geom, coordinates, face_list, pole, caps, point_cut_calc, opts);
       if (opts.build_method == 2 && opts.d != 1)
-         mark_indented_edges_invisible(edge_list, pole, (inner_radius > outer_radius), opts);
+         // note that function used to reverse indented based on manual inner and outer radii
+         mark_indented_edges_invisible(edge_list, pole, (double_gt(fabs(opts.inner_radius),fabs(opts.outer_radius),opts.epsilon)), opts);
       find_split_faces_shell_model(geom, face_list, edge_list, pole, split_face_indexes, opts);
    }
 
@@ -4817,9 +4826,9 @@ int process_hybrid(col_geom_v &geom, ncon_opts &opts)
    // double sweep is set in build_globe()
 
    // build side cut half first
-   bool point_cut_save = opts.point_cut;
    double inner_radius_save = opts.inner_radius;
    double outer_radius_save = opts.outer_radius;
+   bool point_cut_save = opts.point_cut;
    opts.point_cut = (opts.build_method == 3 && opts.angle_is_side_cut) ? true : false;
    opts.longitudes.back() = opts.longitudes.front()/2;
    bool second_half = false;
@@ -4845,7 +4854,7 @@ int process_hybrid(col_geom_v &geom, ncon_opts &opts)
 
    opts.inner_radius = inner_radius_save;
    opts.outer_radius = outer_radius_save;
-   opts.point_cut = (opts.build_method == 3 && opts.angle_is_side_cut) ? false : true;
+   opts.point_cut = !opts.point_cut;
    opts.longitudes.back() = opts.longitudes.front()/2;
    second_half = true;
    build_globe(geom, coordinates, face_list, edge_list, pole, caps, opts.inner_radius, opts.outer_radius, opts.double_sweep, second_half, opts);
@@ -5351,21 +5360,21 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
    int D = opts.d;
    int twist = opts.twist;
    bool hyb = opts.hybrid;
-   bool pc = opts.point_cut;
    
+   bool pc = opts.point_cut;
+   // if inner radius is greater then outer radius, point cut will change to a side cut and vice-versa
+   // this will be true even if the gear polygon is not used
+   if ((opts.build_method == 2) && double_gt(fabs(opts.inner_radius),fabs(opts.outer_radius),opts.epsilon))
+      pc = !pc;
+  
    col_geom_v pgon;
    vector<vec3d> axes(2);
    vector<map<double, col_val, ht_less> > heights(2);
    
    bool gear_polygon_used = false;
    
-   if (opts.build_method == 2 && radius_set) {
+   if ((opts.build_method == 2) && radius_set) {
 //fprintf(stderr,"gear polygon\n");
-      // if inner radius is greater then outer radius, point cut will change to a side cut and vice-versa
-      // this will be true even if the gear polygon is not used
-      if (double_gt(fabs(opts.inner_radius),fabs(opts.outer_radius),opts.epsilon))
-         pc = !pc;
-      
       double num = (fabs(opts.outer_radius) > fabs(opts.inner_radius)) ? fabs(opts.outer_radius) : fabs(opts.inner_radius);
       double den = (fabs(opts.outer_radius) < fabs(opts.inner_radius)) ? fabs(opts.outer_radius) : fabs(opts.inner_radius);
       double ratio = num/den;
@@ -5399,6 +5408,7 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
       }
       
       pgon_post_process(pgon, axes, N, twist, hyb, opts);
+//pgon.write("tmp.off");
       
       // test polygon, reject if parellel edges happen
       if (gen_edge_heights_edges(heights, pgon, axes, opts))
@@ -5416,9 +5426,6 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
    
    if (!pgon.verts().size()) {
 //fprintf(stderr,"regular polygon\n");
-      if (opts.build_method == 3 && double_ne(opts.angle,0,opts.epsilon))
-         pc = (angle_on_aligned_polygon(opts.angle,N,opts.epsilon) && !opts.angle_is_side_cut) ? true : false;    
-      
       // create polygon
       dihedron dih(N, D);
       dih.set_edge(1.00);
@@ -5426,37 +5433,50 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
       pgon.add_missing_impl_edges();
       
       double rot_angle = 0;
-      if(opts.double_sweep)
+      if((opts.build_method == 3) && double_ne(opts.angle,0,opts.epsilon)) {
          rot_angle = deg2rad(opts.angle);
+         if (hyb)
+            rot_angle += M_PI/N;
+      }
       else
-      if(!pc || !is_even(N) || hyb)
+      if(!pc || !is_even(N) || hyb) {
          rot_angle = M_PI/N;
+      }
 
       pgon.transform(mat3d::rot(vec3d::Z, rot_angle));
       
-      // if it is formed by double sweeping, mirror on Y
-      if (opts.double_sweep) {
-         col_geom_v pgon_refl;
-         pgon_refl = pgon;
-         pgon_refl.transform(mat3d::refl(vec3d(0,1,0)));
-         pgon.append(pgon_refl);
+      if (opts.build_method == 3) {
+         // if it is formed by double sweeping, mirror on Y
+         if (opts.double_sweep) {
+            col_geom_v pgon_refl;
+            pgon_refl = pgon;
+            pgon_refl.transform(mat3d::refl(vec3d(0,1,0)));
+            pgon.append(pgon_refl);
+            
+            if (!is_even(N))
+               pgon.transform(mat3d::refl(vec3d(1,0,0)));
 
-         // when angle is used
-         // a normal becomes a normal side cut of 2N/2D with a twist of 2T
-         // a hybrid becomes a normal side cut of 2N/2D with a twist of 2T-1
-         N *= 2;
-         D *= 2;
-         twist *= 2;
-         if (hyb) {
-            hyb = false;
-            twist--;
+            // when angle is used
+            // a normal becomes a normal side cut of 2N/2D with a twist of 2T
+            // a hybrid becomes a normal side cut of 2N/2D with a twist of 2T-1
+            N *= 2;
+            D *= 2;
+            twist *= 2;
+            if (hyb) {
+               hyb = false;
+               twist--;
+            }
+            pc = false;
          }
-         pc = false;
+         else
+         // sometimes an odd with angle, but not double_sweep can be upside down
+         if (!is_even(N) && double_ne(opts.angle,0,opts.epsilon) && (angle_on_aligned_polygon(opts.angle,N,opts.epsilon)))
+            pgon.transform(mat3d::refl(vec3d(1,0,0)));
       }
       
       // if method 2 and outer radius set
       // and regular polygon was generated it needs to be rescaled
-      if (opts.build_method == 2 && radius_set) {
+      if ((opts.build_method == 2) && radius_set) {
          double i_radius = 0;
          double o_radius = 0;
          double arc = 0;
@@ -5580,22 +5600,27 @@ int main(int argc, char *argv[])
    if (opts.ncon_surf.length())
       surface_subsystem(opts);
    else {
+      // the best way to do side cut with method 3 is angle
+      if (opts.build_method == 3 && opts.hybrid && !opts.point_cut) {
+         opts.angle = 180.0/opts.ncon_order;
+         opts.angle_is_side_cut = true;
+      }
+      
       bool radius_set = (opts.inner_radius != FLT_MAX || opts.outer_radius != FLT_MAX) ? true : false;
-      //if (radius_set) {
-         //if (double_gt(opts.inner_radius,opts.outer_radius,opts.epsilon)) {
-         //   opts.point_cut = !opts.point_cut;
-         //fprintf(stderr,"reverse!\n");
-         //}
-      //}
       
       col_geom_v geom;
       ret = ncon_subsystem(geom, opts);
-
-      // elements can be chosen to be eliminated completely
-      filter(geom,opts.hide_elems.c_str());
+      
+      // if inner radius is greater then outer radius, point cut will change to a side cut and vice-versa
+      // note: inner and outer radii may not be completely defined until after construction
+      if (double_gt(fabs(opts.inner_radius),fabs(opts.outer_radius),opts.epsilon))
+         opts.warning(msg_str("manual change in radii changed model to %s cut",(!opts.point_cut ? "point" : "side")));
       
       if (opts.face_coloring_method == 'S' || opts.edge_coloring_method == 'S')
          color_by_symmetry(geom, radius_set, opts);
+         
+      // elements can be chosen to be eliminated completely
+      filter(geom,opts.hide_elems.c_str());
 
       geom_write_or_error(geom, opts.ofile, opts);
    }
