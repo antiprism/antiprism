@@ -654,15 +654,11 @@ void ncon_opts::process_command_line(int argc, char **argv)
       }
 
       if (build_method == 2) {
-         if (inner_radius != FLT_MAX && d==1) {
-            error("inner radius cannot be set when d=1","r");
-            inner_radius = FLT_MAX;
-         }
+         if (inner_radius != FLT_MAX && d==1 && hybrid)
+            error("inner radius cannot be set when d=1 and hybrid","r");
 
-         if (outer_radius != FLT_MAX && d==1) {
-            error("outer radius cannot be set when d=1","R");
-            outer_radius = FLT_MAX;
-         }
+         if (outer_radius != FLT_MAX && d==1 && hybrid)
+            error("outer radius cannot be set when d=1 and hybrid","R");
          
          if (strchr(closure.c_str(), 'h')) {
             warning("closure of h not valid in construction method 2","c");
@@ -829,10 +825,24 @@ void ncon_opts::process_command_line(int argc, char **argv)
       if (build_method == 1)
          error("compound coloring is for build method 2 or 3",'f');
    }
+   else   
+   if (face_coloring_method == 'S') {
+      if (build_method == 2 && d == 1) {
+         if (double_ne(inner_radius,outer_radius,epsilon))
+            error("face coloring method 'S' will not work when radii are not equal",'f');
+      }
+   }
       
    if (edge_coloring_method == 'f') {
       if (build_method == 1)
          error("flood fill edge coloring is for build method 2 or 3",'e');
+   }
+   else   
+   if (edge_coloring_method == 'S') {
+      if (build_method == 2 && d == 1) {
+         if (double_ne(inner_radius,outer_radius,epsilon))
+            error("edge coloring method 'S' will not work when radii are not equal",'e');
+      }
    }
 
    if (((face_coloring_method != 's') && (edge_coloring_method != 's') &&
@@ -1067,7 +1077,7 @@ void build_prime_polygon(col_geom_v &geom, vector<int> &prime_meridian, vector<c
    double interior_angle = (180.0-arc)/2.0;
    double radius = sin(deg2rad(interior_angle))/sin(deg2rad(arc));
    
-   // patch for n/2n
+   // patch for 2N/N
    if (double_eq(arc,180.0,opts.epsilon))
       radius = sin(deg2rad(90.0))/sin(deg2rad(90.0));
 
@@ -2013,7 +2023,7 @@ void calc_radii(double &inner_radius, double &outer_radius, double &arc, const i
 {
    // if shell model is created opts.ncon_order needs to be divided by 2 to get the correct outer radius, except when d is 1
    arc = 360.0/(N/((opts.build_method == 2 && d != 1) ? 2 : 1))*d;
-   // but this causes a problem for n/2n so make an exception (always 360/4 = 90)
+   // but this causes a problem for 2N/N so make an exception (always 360/4 = 90)
    if (opts.build_method == 2 && double_eq(arc,180.0,opts.epsilon))
       arc = 360.0/N*d;
 
@@ -2044,7 +2054,7 @@ void calc_radii(double &inner_radius, double &outer_radius, double &arc, const i
 
    if (return_calc) {
       outer_radius = outer_radius_calc;
-      inner_radius = inner_radius_calc;
+      inner_radius = (d == 1) ? outer_radius_calc : inner_radius_calc;
    }
 }
 
@@ -4453,7 +4463,11 @@ void ncon_coloring(col_geom_v &geom, const vector<faceList *> &face_list, const 
 
    bool pc = (!opts.hide_indent || opts.double_sweep || opts.angle_is_side_cut) ? point_cut_calc : opts.point_cut;
    
-   if (opts.build_method == 2 && opts.hide_indent) {
+   bool hi = opts.hide_indent;
+   if (opts.build_method == 2 && opts.d == 1)
+      hi = false;
+   
+   if (opts.build_method == 2 && hi) {
       if (opts.radius_inversion)
          pc = !pc;
    }
@@ -4475,7 +4489,7 @@ void ncon_coloring(col_geom_v &geom, const vector<faceList *> &face_list, const 
    
    // when not hiding indent of method 2, edges of hybrid
    // are actually not a hybrid but a normal point cut of n*2 with a twist of t*2-1
-   if ((opts.build_method == 2 && opts.d != 1) && !opts.hide_indent) {
+   if ((opts.build_method == 2 && opts.d != 1) && !hi) {
       n *= 2;
       t *= 2;
       if (opts.hybrid) {
@@ -4513,7 +4527,7 @@ void ncon_coloring(col_geom_v &geom, const vector<faceList *> &face_list, const 
       mark_edge_circuits(geom, edge_list);
  
    // hide indented edges of method 2
-   if ((opts.build_method == 2 && opts.d != 1) && opts.hide_indent)
+   if ((opts.build_method == 2 && opts.d != 1) && hi)
       set_indented_edges_invisible(geom, edge_list, pole);
 }
       
@@ -5529,7 +5543,7 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
       if (hyb)
          rot_angle += M_PI/N;
          
-      // patch. 2N/D and side cut
+      // patch. 2N/N and side cut
       if (digons && !pc)
          rot_angle = M_PI/N;
    }
@@ -5547,15 +5561,16 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
 
    // find inner and outer radius for regular polygon
    if (opts.build_method == 2) {
-      calc_radii(i_radius, o_radius, arc, N*2, D, opts, true);
+      int N2 = (D==1) ? N : N*2;
+      calc_radii(i_radius, o_radius, arc, N2, D, opts, true);
       
-      // patch for 2N/D or D is 1
+      // patch for 2N/N or D is 1
       if (digons || D == 1)
          radius_set = true;
    }
    
    if (opts.build_method == 3) {
-      // N/2N polygons need polygon resized
+      // 2N/N polygons need polygon resized
       if (digons)
          pgon.transform(mat3d::scale(2.0));
    
@@ -5590,7 +5605,7 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
    // if method 2
    // regular polygon that was generated it needs to be rescaled to overlay
    if (opts.build_method == 2) {
-      // N/2N polygons need polygon resized
+      // 2N/N polygons need polygon resized
       if (digons)
          pgon.transform(mat3d::scale(o_radius/0.5));
          
@@ -5618,7 +5633,7 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
    // and set radii if they were manually changed   
    if ((opts.build_method == 2) && radius_set) {
       gear_polygon_used = true;
-      
+
       col_geom_v gpgon = build_gear_polygon(pc,o_radius,i_radius,poly_scale,opts);
       
       if (D > 1) {
@@ -5777,7 +5792,7 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
    // take colors from attached edge
    if ((opts.build_method == 3) && digons) {
       if (!opts.edge_coloring_method)
-         opts.warning("digons in method 3 are taken from edge coloring. none was specified");
+         opts.warning("digons in method 3 are taken from edge coloring. none was specified",'e');
       else {
          for(unsigned int i=0;i<geom.faces().size();i++) {
             vector<int> face = geom.faces(i);
