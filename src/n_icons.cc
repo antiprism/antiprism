@@ -654,11 +654,21 @@ void ncon_opts::process_command_line(int argc, char **argv)
       }
 
       if (build_method == 2) {
-         if (inner_radius != FLT_MAX && d==1 && hybrid)
-            error("inner radius cannot be set when d=1 and hybrid","r");
+         if (d==1 && (inner_radius != FLT_MAX)) {
+            if (hybrid)
+               error("for method 2 and d=1, inner radius cannot be set for a hybrid","R");
+            else
+            if (!(is_even(ncon_order) && is_even(twist)))
+               error("for method 2, inner radius cannot be set when d=1, N is odd, or twist is odd",'r');
+         }
 
-         if (outer_radius != FLT_MAX && d==1 && hybrid)
-            error("outer radius cannot be set when d=1 and hybrid","R");
+         if (d==1 && (outer_radius != FLT_MAX)) {
+            if (hybrid)
+               error("for method 2 and d=1, outer radius cannot be set for a hybrid","R");
+            else
+            if (!(is_even(ncon_order) && is_even(twist)))
+               error("for method 2, outer radius cannot be set when d=1, N is odd, or twist is odd",'R');
+         }
          
          if (strchr(closure.c_str(), 'h')) {
             warning("closure of h not valid in construction method 2","c");
@@ -819,6 +829,8 @@ void ncon_opts::process_command_line(int argc, char **argv)
    if (face_coloring_method == 'f') {
       if (build_method == 1)
          error("flood fill face coloring is for build method 2 or 3",'f');
+      if (build_method == 3 && (ncon_order == 2*d)) 
+         error("flood fill will not work in build method 3 and 2N/N polygons",'f');
    }
    else   
    if (face_coloring_method == 'c') {
@@ -828,6 +840,8 @@ void ncon_opts::process_command_line(int argc, char **argv)
    else   
    if (face_coloring_method == 'S') {
       if (build_method == 2 && d == 1) {
+         if (outer_radius != FLT_MAX && inner_radius == FLT_MAX)
+            inner_radius = outer_radius;
          if (double_ne(inner_radius,outer_radius,epsilon))
             error("face coloring method 'S' will not work when radii are not equal",'f');
       }
@@ -840,6 +854,8 @@ void ncon_opts::process_command_line(int argc, char **argv)
    else   
    if (edge_coloring_method == 'S') {
       if (build_method == 2 && d == 1) {
+         if (outer_radius != FLT_MAX && inner_radius == FLT_MAX)
+            inner_radius = outer_radius;
          if (double_ne(inner_radius,outer_radius,epsilon))
             error("edge coloring method 'S' will not work when radii are not equal",'e');
       }
@@ -882,6 +898,10 @@ void ncon_opts::process_command_line(int argc, char **argv)
       if ((ncon_order == 2*d) && pc)
          error("when polygon 2N/N and point cut, method 3 cannot be used",'a');
    }
+
+   // method 2: can't let d > n/2, causes problems
+   if ((build_method == 2) && (d > ncon_order/2))
+      d = ncon_order-d;
 
    // for build method 2, multiply n and twist by 2
    // if d == 1, radii will equal
@@ -2048,9 +2068,11 @@ void calc_radii(double &inner_radius, double &outer_radius, double &arc, const i
          inner_radius = (d == 1) ? outer_radius_calc : inner_radius_calc;
    }
 
-   // patch: inner radius cannot be exactly 0
+   // patch: radii cannot be exactly 0
    if (double_eq(inner_radius,0.0,opts.epsilon))
       inner_radius += 1e-4;
+   if (double_eq(outer_radius,0.0,opts.epsilon))
+      outer_radius += 1e-4;
 
    if (return_calc) {
       outer_radius = outer_radius_calc;
@@ -2518,22 +2540,45 @@ void close_latitudinal(col_geom_v &geom, vector<faceList *> &face_list, const ve
    }
 }
 
+bool cmp_angle(const pair<pair<double, double>, int> &a, const pair<pair<double, double>, int> &b, const double &eps)
+{
+   pair<double, double> ar_a = a.first;
+   pair<double, double> ar_b = b.first;
+   bool ret = double_eq(ar_a.first,ar_b.first,eps);
+   if (ret)
+      ret = double_lt(ar_a.second,ar_b.second,eps);
+   else
+      ret = double_lt(ar_a.first,ar_b.first,eps);
+   return ret;
+}
+
+class angle_cmp
+{
+public:
+   double eps;
+   angle_cmp(double ep): eps(ep) {}
+   bool operator() (const pair<pair<double, double>, int> &a, const pair<pair<double, double>, int> &b) { return cmp_angle(a, b, eps); }
+};
+
 // untangle polar orbit
-void sort_polar_orbit(col_geom_v &geom, vector<polarOrb *> &polar_orbit)
+void sort_polar_orbit(col_geom_v &geom, vector<polarOrb *> &polar_orbit, const double &eps)
 {
    const vector<vec3d> &verts = geom.verts();
 
    vec3d v0 = verts[polar_orbit[0]->coord_no];
    int sz = polar_orbit.size();
-   vector<pair<double, int> > angles(sz);
+   vector<pair<pair<double, double>, int> > angles(sz);
    for(int i=0; i<sz; i++) {
       int j = polar_orbit[i]->coord_no;
       angles[i].second = j;
-      angles[i].first = rad2deg(angle_around_axis(v0,verts[j],vec3d(0,0,1)));
+      pair<double, double> angle_and_radius;
+      angle_and_radius.first = angle_in_range(rad2deg(angle_around_axis(v0,verts[j],vec3d(0,0,1))),eps);
+      angle_and_radius.second = verts[j].mag();
+      angles[i].first = angle_and_radius;
    }
    
    // sort on angles
-   sort( angles.begin(), angles.end() );
+   sort( angles.begin(), angles.end(), angle_cmp(eps) );
 
    for (int i=0; i<sz; i++)
       polar_orbit[i]->coord_no = angles[i].second;
@@ -2555,7 +2600,7 @@ void find_polar_orbit(col_geom_v &geom, vector<polarOrb *> &polar_orbit, const i
    }
 
    // update for n/m models. works for all, so do it this way now
-   sort_polar_orbit(geom, polar_orbit);
+   sort_polar_orbit(geom, polar_orbit, eps);
 }
 
 void ncon_twist(col_geom_v &geom, const vector<polarOrb *> &polar_orbit,
@@ -5536,8 +5581,12 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
    dih.set_edge(1.00);
    dih.make_poly(pgon);
    pgon.add_missing_impl_edges();
-   
+  
    double rot_angle = 0;
+   // special case for not rotating a hybrid
+   if((opts.build_method > 1) && (hyb && !pc))
+      rot_angle = 0;
+   else
    if((opts.build_method == 3) && double_ne(opts.angle,0,opts.epsilon)) {
       rot_angle = deg2rad(opts.angle);
       if (hyb)
@@ -5549,8 +5598,7 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
    }
    else
    if(!pc || !is_even(N) || hyb)
-      // special case for not rotating a hybrid
-      rot_angle = (hyb && !pc) ? 0 : M_PI/N;
+      rot_angle = M_PI/N;
    
    pgon.transform(mat3d::rot(vec3d::Z, rot_angle));
 
@@ -5647,7 +5695,7 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
       }
       
       pgon_post_process(gpgon, axes, N, twist, hyb, opts);
-     
+    
       transfer_colors(gpgon, pgon, digons, opts);
       
       // if radius was set then build correctly shaped polygon and take its vertices
@@ -5665,6 +5713,10 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
 
       pgon = gpgon;
    }
+   
+   // special case, if twisted half way, turn upside down
+   if ((opts.mod_twist != 0) && (N/twist == 2))
+      pgon.transform(mat3d::refl(vec3d(0,1,0)));
 
    // color faces
    if (opts.face_coloring_method == 'S') {
@@ -5709,6 +5761,10 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
          }
          
          pgon_post_process(pgon, axes, N, twist, hyb, opts);
+         
+         // special case, if twisted half way, turn upside down
+         if ((opts.mod_twist != 0) && (N/twist == 2))
+            pgon.transform(mat3d::refl(vec3d(0,1,0)));
       }
       
       // Find nearpoints of polygon vertices, make unit, get height on each axis
@@ -5756,7 +5812,7 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
       bool pc_p = pc;
       if ((opts.build_method == 2) && (!pc && !is_even(opts.ncon_order)))
          pc_p = true;
-      if (!twist && pc_p) {
+      if ((!twist || (N/twist == 2)) && pc_p) {
          // find poles of symmetry polygon
          int north = -1;
          double y_north = -FLT_MAX;
@@ -5790,7 +5846,7 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
    
    // for method 3 and digons, faces have trouble getting colored
    // take colors from attached edge
-   if ((opts.build_method == 3) && digons) {
+   if ((opts.build_method == 3) && (opts.face_coloring_method == 'S') && digons) {
       if (!opts.edge_coloring_method)
          opts.warning("digons in method 3 are taken from edge coloring. none was specified",'e');
       else {
