@@ -76,7 +76,7 @@ Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
 .IP
 key word: none \- sets no color
 lower case outputs map indexes. upper case outputs color values
-S \- color by symmetry (default)
+S \- color by symmetry polygon (default)
 s \- color by circuits algorithm (n/d must be co\-prime)
 f \- color circuits with flood fill (\fB\-z\fR 2,3 any n/d)
 c \- color by compound
@@ -91,7 +91,7 @@ z \- first two colors based on sign of z (z is the twist plane)
 o \- use first eight colors per xyz octants
 .TP
 \fB\-S\fR
-color circuits symmetrically for coloring method s,f (even n)
+color circuits symmetrically for coloring method s,f,S (even n)
 .HP
 \fB\-T\fR <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
 .HP
@@ -142,7 +142,7 @@ use 0 (default) to flood fill entire model. if \fB\-X\fR is not 0 then
 return 1 from program if entire model has been colored
 .TP
 \fB\-W\fR
-add symmetry polygon (for \fB\-f\fR S or \fB\-e\fR S are used)
+add symmetry polygon (for \fB\-f\fR S or \fB\-e\fR S)
 .PP
 Surface Count Reporting (options above igonored)
 .HP

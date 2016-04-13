@@ -246,7 +246,7 @@ void ncon_opts::usage()
 "  -f <mthd> mthd is face coloring method. The coloring is done before twist\n"
 "               key word: none - sets no color\n"
 "               lower case outputs map indexes. upper case outputs color values\n"
-"               S - color by symmetry (default)\n"
+"               S - color by symmetry polygon (default)\n"
 "               s - color by circuits algorithm (n/d must be co-prime)\n"
 "               f - color circuits with flood fill (-z 2,3 any n/d)\n"
 "               c - color by compound\n"
@@ -259,7 +259,7 @@ void ncon_opts::usage()
 "               y - first two colors based on sign of y\n"
 "               z - first two colors based on sign of z (z is the twist plane)\n"
 "               o - use first eight colors per xyz octants\n"
-"  -S        color circuits symmetrically for coloring method s,f (even n)\n"
+"  -S        color circuits symmetrically for coloring method s,f,S (even n)\n"
 "  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
 "  -O <strg> face transparency pattern string. valid values\n"
 "               0 -T value suppressed, 1 -T value applied  (default: '1')\n"
@@ -283,7 +283,7 @@ void ncon_opts::usage()
 "  -X <int>  flood fill stop. used with circuit or compound coloring (-f f,c)\n"
 "               use 0 (default) to flood fill entire model. if -X is not 0 then\n"
 "               return 1 from program if entire model has been colored\n"
-"  -W        add symmetry polygon (for -f S or -e S are used)\n"
+"  -W        add symmetry polygon (for -f S or -e S)\n"
 "\nSurface Count Reporting (options above igonored)\n"
 "  -J <type> list n-icons with more than one surface. Valid values for type\n"
 "               n = point cut even order n_icons\n"
@@ -821,9 +821,9 @@ void ncon_opts::process_command_line(int argc, char **argv)
    // if n/d is co-prime (and d>1) angle must be 0
    if (face_coloring_method == 's') {
       if (gcd(ncon_order,d) != 1)
-         error("circuit coloring only works n and d must be co-prime. Use 'f' for flood fill",'f');
+         error("circuit coloring only works n and d must be co-prime. Use 'S' or 'f'",'f');
       if (d>1 && (gcd(ncon_order,d) == 1) && double_ne(angle,0.0,epsilon))
-         error("When n/d is co-prime, angle must be 0. Use 'f' for flood fill",'f');
+         error("When n/d is co-prime, angle must be 0. Use 'S' or 'f'",'f');
    }
    else   
    if (face_coloring_method == 'f') {
@@ -861,9 +861,8 @@ void ncon_opts::process_command_line(int argc, char **argv)
       }
    }
 
-   if (((face_coloring_method != 's') && (edge_coloring_method != 's') &&
-        (face_coloring_method != 'f') && (edge_coloring_method != 'f')) && symmetric_coloring)
-      error("symmetric coloring is only for coloring methods s or f","S");
+   if (symmetric_coloring && (!strchr("sfS",face_coloring_method) && !strchr("sfS",edge_coloring_method)))
+      error("symmetric coloring is only for coloring methods s,f and S","S");
    
    // only for odd order n_icons to be colored the same using symmetric coloring   
    if (!is_even(ncon_order) && symmetric_coloring)
@@ -5465,7 +5464,9 @@ void transfer_colors(col_geom_v &gpgon, const col_geom_v &pgon, const bool &digo
 
 void pgon_post_process(col_geom_v &pgon, vector<vec3d> &axes, const int &N, const int &twist, const bool &hyb, const ncon_opts &opts)
 {
-   int Dih_num = N / gcd(2*twist-hyb, N);
+   int t_mult = opts.symmetric_coloring ? 1 : 2;
+   
+   int Dih_num = N / gcd(t_mult*twist-hyb, N);
    vector<vector<set<int> > > sym_equivs;
    get_equiv_elems(pgon, sch_sym(sch_sym::D, Dih_num).get_trans(), &sym_equivs);
    
