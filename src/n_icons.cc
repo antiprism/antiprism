@@ -146,8 +146,6 @@ class ncon_opts: public prog_opts {
       bool long_form;
       bool filter_case2;
       int flood_fill_stop;
-      bool face_default_color_by_map;
-      bool edge_default_color_by_map;
       col_val face_default_color;
       col_val edge_default_color;
       double epsilon;
@@ -191,8 +189,6 @@ class ncon_opts: public prog_opts {
                    long_form(false),
                    filter_case2(false),
                    flood_fill_stop(0),
-                   face_default_color_by_map(false),
-                   edge_default_color_by_map(false),
                    face_default_color(col_val(192,192,192,255)), // darkgrey
                    edge_default_color(col_val(192,192,192,255)), // darkgrey
                    epsilon(0),
@@ -276,9 +272,8 @@ void ncon_opts::usage()
 "  -m <maps> color maps to be tried in turn. (default: map_red:darkorange1:\n"
 "               yellow:darkgreen:cyan:blue:magenta:white:grey:black%%) optionally\n"
 "               followed by elements to map from v, e or f (default: vef)\n"
-"  -D <c,e>  default color c for uncolored elements e (default: darkgrey,EF)\n"
+"  -D <c,e>  default color c for uncolored elements e (default: darkgrey,ef)\n"
 "               key word: none - sets no color. elements e can include e or f\n"
-"               uppercase also replaces any map indexes with default color\n"
 "  -X <int>  flood fill stop. used with circuit or compound coloring (-f f,c)\n"
 "               use 0 (default) to flood fill entire model. if -X is not 0 then\n"
 "               return 1 from program if entire model has been colored\n"
@@ -540,20 +535,14 @@ void ncon_opts::process_command_line(int argc, char **argv)
                   set_edge = false;
                   set_face = false;
                   
-                  if(strspn(ptok1, "eEfF") != strlen(ptok1))
-                     error(msg_str("elements %s must be in e, f, E, F", optarg), c);
+                  if(strspn(ptok1, "ef") != strlen(ptok1))
+                     error(msg_str("elements %s must be in e, f", optarg), c);
                      
-                  if (strchr(ptok1, 'e') || strchr(ptok1, 'E')) {
+                  if (strchr(ptok1, 'e'))
                      set_edge = true;
-                     if (strchr(ptok1, 'e'))
-                        edge_default_color_by_map = true;
-                  }
-                  if (strchr(ptok1, 'f') || strchr(ptok1, 'F')) {
+
+                  if (strchr(ptok1, 'f'))
                      set_face = true;
-                     if (strchr(ptok1, 'f'))
-                        face_default_color_by_map = true;
-                  }
-                  
                }
                
                ptok1 = strtok_r(NULL,parse_key1,&tok_ptr1);
@@ -3094,8 +3083,7 @@ void ncon_info(const int &ncon_order, const bool &point_cut, const int &twist, c
 void color_uncolored_faces(col_geom_v &geom, const ncon_opts &opts)
 {
    for (unsigned int i=0;i<geom.faces().size();i++) {
-      bool t = ( opts.face_default_color_by_map ? !(geom.get_f_col(i)).is_set() : !(geom.get_f_col(i)).is_val() );
-      if (t)
+      if (!(geom.get_f_col(i)).is_set())
          geom.set_f_col(i,opts.face_default_color);
    }
 }
@@ -3106,24 +3094,12 @@ void color_uncolored_edges(col_geom_v &geom, const ncon_opts &opts)
    const vector<vec3d> &verts = geom.verts();
    
    for (unsigned int i=0;i<edges.size();i++) {
-      if (opts.edge_coloring_method == 'S') {
-         col_val c = geom.get_e_col(i);
-         if (c.is_idx() && c == INT_MAX)
-            continue;
-      }
-      bool t = ( opts.edge_default_color_by_map ? !(geom.get_e_col(i)).is_set() : !(geom.get_e_col(i)).is_val() );
-      if (t)
+      if (!(geom.get_e_col(i)).is_set())
          geom.set_e_col(i,opts.edge_default_color);
    }
    
    for (unsigned int i=0;i<verts.size();i++) {
-      if (opts.edge_coloring_method == 'S') {
-         col_val c = geom.get_v_col(i);
-         if (c.is_idx() && c == INT_MAX)
-            continue;
-      }
-      bool t = ( opts.edge_default_color_by_map ? !(geom.get_v_col(i)).is_set() : !(geom.get_v_col(i)).is_val() );
-      if (t)
+      if (!(geom.get_v_col(i)).is_set())
          geom.set_v_col(i,opts.edge_default_color);
    }
 }
@@ -4319,47 +4295,33 @@ void find_poles(col_geom_v &geom, int &north, int &south, const ncon_opts &opts)
 
 void ncon_edge_coloring_from_faces(col_geom_v &geom, const ncon_opts &opts)
 {
-   const vector<vector<int> > &faces = geom.faces();
-   const vector<vector<int> > &edges = geom.edges();
-
-   for (unsigned int i=0;i<edges.size();i++) {
-      col_val c = geom.get_e_col(i);
-      //if (c.is_idx() && c == INT_MAX)
-      //   continue;
-      if (c.is_inv())
-         continue;
-      vector<int> face_idx = find_faces_with_edge(faces,edges[i]);
-      vector<col_val> cols;
-      for (unsigned int j=0;j<face_idx.size();j++)
-         cols.push_back(geom.get_f_col(face_idx[j]));
-      c = ncon_average_edge_color(cols);
-      if (!c.is_inv()) {
-         c = set_alpha(c,255); // don't use opacity of faces
-         set_edge_color(geom,i,c,opts.edge_opacity);
-      }
+   // save invisible edges
+   vector<int> inv_edges;
+   for (unsigned int i=0;i<geom.edges().size();i++) {
+      if ((geom.get_e_col(i)).is_inv())
+         inv_edges.push_back(i);
    }
-
-   vector<int> poles(2);
-   find_poles(geom,poles[0],poles[1],opts);
-   for (unsigned int i=0;i<poles.size();i++) {
-      if (poles[i] != -1) {
-         int j = poles[i];
-         col_val c = geom.get_v_col(j);
-         //if (c.is_idx() && c == INT_MAX)
-         //   continue;
-         if (c.is_inv())
-            continue;
-         vector<int> face_idx = find_faces_with_vertex(faces,j);
-         vector<col_val> cols;
-         for (unsigned int k=0;k<face_idx.size();k++)
-            cols.push_back(geom.get_f_col(face_idx[k]));
-         c = ncon_average_edge_color(cols);
-         if (!c.is_inv()) {
-            c = set_alpha(c,255); // don't use opacity of faces
-            set_vert_color(geom,j,c,opts.edge_opacity);
-         }
-      }
+   
+   // save invisible verts
+   vector<int> inv_verts;
+   for (unsigned int i=0;i<geom.verts().size();i++) {
+      if ((geom.get_v_col(i)).is_inv())
+         inv_verts.push_back(i);
    }
+   
+   coloring clrng;
+   clrng.add_cmap(opts.face_map.clone());
+   clrng.set_geom(&geom);
+   clrng.e_face_color();
+   clrng.v_face_color();
+   
+   // restore invisible edges
+   for (unsigned int i=0;i<inv_edges.size();i++)
+      geom.set_e_col(inv_edges[i],col_val::invisible);
+      
+   // restore invisible verts
+   for (unsigned int i=0;i<inv_verts.size();i++)
+      geom.set_v_col(inv_verts[i],col_val::invisible);
 }
 
 // mark edge circuits for methods 2 and 3 color by adjacent edge
@@ -5587,7 +5549,7 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
          pgon_post_process(pgon, axes, N, twist, hyb, opts);
          
          // special case, if twisted half way, turn upside down
-         if ((opts.mod_twist != 0) && (N/twist == 2))
+         if ((opts.mod_twist != 0) && is_even(opts.ncon_order) && (N/twist == 2))
             pgon.transform(mat3d::refl(vec3d(0,1,0)));
       }
       
@@ -5739,15 +5701,15 @@ int ncon_subsystem(col_geom_v &geom, ncon_opts &opts)
    
    if (opts.face_coloring_method == 'S' || opts.edge_coloring_method == 'S')
       color_by_symmetry(geom, radius_set, opts);
-      
+
    if (opts.edge_coloring_method == 'F')
       ncon_edge_coloring_from_faces(geom, opts);
-   
+
    // Color post-processing
    // process the uninvolved edges of the n_icon
    if (opts.unused_edge_color.is_set())
       color_unused_edges(geom, opts.unused_edge_color);
-      
+
    if (opts.edge_set_no_color)
       // now is the point that edges which are supposed to be unset can be done
       unset_marked_edges(geom);
