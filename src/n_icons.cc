@@ -245,7 +245,6 @@ void ncon_opts::usage()
 "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
 "  -f <mthd> mthd is face coloring method. The coloring is done before twist\n"
 "               key word: none - sets no color\n"
-"               lower case outputs map indexes. upper case outputs color values\n"
 "               S - color by symmetry polygon (default)\n"
 "               s - color by circuits algorithm (n/d must be co-prime)\n"
 "               f - color circuits with flood fill (-z 2,3 any n/d)\n"
@@ -1592,18 +1591,6 @@ void apply_latitudes(const col_geom_v &geom, const vector<vector<int> > &origina
    const vector<vector<int> > &faces = geom.faces();
    const vector<vector<int> > &edges = geom.edges();
    const vector<vec3d> &verts = geom.verts();
-
-   // patch for if called with build method 2, just restore edge lats
-   if (opts.build_method == 2) {
-      for (unsigned int i=0;i<edge_list.size();i++) {
-         int lat = edge_list[i]->lat;
-         if (lat < -1) {
-            lat = (opts.hide_indent) ? -1 : abs(lat + 2);
-            edge_list[i]->lat = lat;
-         }
-      }
-      return;
-   }
       
    // possible future use when not coloring compounds
    // if false give each latitude unique number, if true pair each layer split by angle
@@ -1910,6 +1897,17 @@ void mark_indented_edges_invisible(const vector<edgeList *> &edge_list, const ve
             set_invisible = (set_invisible) ? false : true;
          if (set_invisible)
             pole[i]->lat = -1;
+      }
+   }
+}
+
+void restore_indented_edges(const vector<edgeList *> &edge_list, const ncon_opts &opts)
+{
+   for (unsigned int i=0;i<edge_list.size();i++) {
+      int lat = edge_list[i]->lat;
+      if (lat < -1) {
+         lat = (opts.hide_indent) ? -1 : abs(lat + 2);
+         edge_list[i]->lat = lat;
       }
    }
 }
@@ -4240,71 +4238,6 @@ int ncon_face_coloring_by_compound(col_geom_v &geom, const vector<faceList *> &f
    return ret;
 }
 
-/* unused function to line a face with edges of color col
-void add_edges_to_face(col_geom_v &geom, vector<int> face, col_val col)
-{
-   int sz = face.size();
-   for (int i=0;i<sz;i++)
-      geom.add_col_edge(make_edge(face[i],face[(i+1)%sz]),col);
-}
-*/
-
-// average edge colors with simple RGB
-col_val ncon_average_edge_color(const vector<col_val> &cols)
-{
-   /* average RGB colors */
-   vec4d col(0.0, 0.0, 0.0, 0.0);
-
-   int j = 0;
-   for(unsigned int i=0; i<cols.size(); i++) {
-      if (cols[i].is_set() && !cols[i].is_idx() && !cols[i].is_inv()) {
-         col += cols[i].get_vec4d();
-         j++;
-      }
-   }
-
-   if (j)
-      col /= j;
-   return col;
-}
-
-void ncon_edge_coloring_from_faces(col_geom_v &geom, const vector<poleList *> &pole, const ncon_opts &opts)
-{
-   const vector<vector<int> > &faces = geom.faces();
-   const vector<vector<int> > &edges = geom.edges();
-
-   for (unsigned int i=0;i<edges.size();i++) {
-      if ((geom.get_e_col(i)).is_inv())
-         continue;
-      vector<int> face_idx = find_faces_with_edge(faces,edges[i]);
-      vector<col_val> cols;
-      for (unsigned int j=0;j<face_idx.size();j++)
-         cols.push_back(geom.get_f_col(face_idx[j]));
-      col_val c = ncon_average_edge_color(cols);
-      if (!c.is_inv()) {
-         c = set_alpha(c,255); // don't use opacity of faces
-         set_edge_color(geom,i,c,opts.edge_opacity);
-      }
-   }
-
-   for (unsigned int i=0;i<pole.size();i++) {
-      if (pole[i]->idx != -1) {
-         int j = pole[i]->idx;
-         if ((geom.get_v_col(j)).is_inv())
-            continue;
-         vector<int> face_idx = find_faces_with_vertex(faces,j);
-         vector<col_val> cols;
-         for (unsigned int k=0;k<face_idx.size();k++)
-            cols.push_back(geom.get_f_col(face_idx[k]));
-         col_val c = ncon_average_edge_color(cols);
-         if (!c.is_inv()) {
-            c = set_alpha(c,255); // don't use opacity of faces
-            set_vert_color(geom,j,c,opts.edge_opacity);
-         }
-      }
-   }
-}
-
 void ncon_alternate_compound_coloring(col_geom_v &geom, const ncon_opts &opts)
 {
    int opq = 255;
@@ -4336,13 +4269,107 @@ void ncon_alternate_compound_coloring(col_geom_v &geom, const ncon_opts &opts)
    }
 }
 
+/* unused function to line a face with edges of color col
+void add_edges_to_face(col_geom_v &geom, vector<int> face, col_val col)
+{
+   int sz = face.size();
+   for (int i=0;i<sz;i++)
+      geom.add_col_edge(make_edge(face[i],face[(i+1)%sz]),col);
+}
+*/
+
+// average edge colors with simple RGB
+col_val ncon_average_edge_color(const vector<col_val> &cols)
+{
+   /* average RGB colors */
+   vec4d col(0.0, 0.0, 0.0, 0.0);
+
+   int j = 0;
+   for(unsigned int i=0; i<cols.size(); i++) {
+      if (cols[i].is_set() && !cols[i].is_idx() && !cols[i].is_inv()) {
+         col += cols[i].get_vec4d();
+         j++;
+      }
+   }
+
+   if (j)
+      col /= j;
+   return col;
+}
+
+// find poles by Y value. Set north and south if found
+void find_poles(col_geom_v &geom, int &north, int &south, const ncon_opts &opts)
+{
+   // find poles
+   north = -1;
+   double y_north = -FLT_MAX;
+   south = -1;
+   double y_south =  FLT_MAX;
+   for(unsigned int i=0; i<geom.verts().size(); i++) {
+      if (double_gt(geom.verts(i)[1],y_north,opts.epsilon)) {
+         y_north = geom.verts(i)[1];
+         north = i;
+      }
+      if (double_lt(geom.verts(i)[1],y_south,opts.epsilon)) {
+         y_south = geom.verts(i)[1];
+         south = i;
+      }
+   }
+}
+
+void ncon_edge_coloring_from_faces(col_geom_v &geom, const ncon_opts &opts)
+{
+   const vector<vector<int> > &faces = geom.faces();
+   const vector<vector<int> > &edges = geom.edges();
+
+   for (unsigned int i=0;i<edges.size();i++) {
+      col_val c = geom.get_e_col(i);
+      //if (c.is_idx() && c == INT_MAX)
+      //   continue;
+      if (c.is_inv())
+         continue;
+      vector<int> face_idx = find_faces_with_edge(faces,edges[i]);
+      vector<col_val> cols;
+      for (unsigned int j=0;j<face_idx.size();j++)
+         cols.push_back(geom.get_f_col(face_idx[j]));
+      c = ncon_average_edge_color(cols);
+      if (!c.is_inv()) {
+         c = set_alpha(c,255); // don't use opacity of faces
+         set_edge_color(geom,i,c,opts.edge_opacity);
+      }
+   }
+
+   vector<int> poles(2);
+   find_poles(geom,poles[0],poles[1],opts);
+   for (unsigned int i=0;i<poles.size();i++) {
+      if (poles[i] != -1) {
+         int j = poles[i];
+         col_val c = geom.get_v_col(j);
+         //if (c.is_idx() && c == INT_MAX)
+         //   continue;
+         if (c.is_inv())
+            continue;
+         vector<int> face_idx = find_faces_with_vertex(faces,j);
+         vector<col_val> cols;
+         for (unsigned int k=0;k<face_idx.size();k++)
+            cols.push_back(geom.get_f_col(face_idx[k]));
+         c = ncon_average_edge_color(cols);
+         if (!c.is_inv()) {
+            c = set_alpha(c,255); // don't use opacity of faces
+            set_vert_color(geom,j,c,opts.edge_opacity);
+         }
+      }
+   }
+}
+
 // mark edge circuits for methods 2 and 3 color by adjacent edge
 // also for method 1, color by symmetry
 void mark_edge_circuits(col_geom_v &geom, const vector<edgeList *> &edge_list)
 {
    for (unsigned int i=0;i<edge_list.size();i++) {
       int j = edge_list[i]->edge_no;
-      set_edge_color(geom,j,INT_MAX,255);
+      if (!geom.get_e_col(j).is_inv())
+         set_edge_color(geom,j,INT_MAX,255);
    }
 }
 
@@ -4565,14 +4592,14 @@ void ncon_coloring(col_geom_v &geom, const vector<faceList *> &face_list, const 
    if (opts.edge_coloring_method && !(opts.build_method > 1 && strchr("fS",opts.edge_coloring_method)))
       ncon_edge_coloring(geom, edge_list, pole, edge_color_table, point_cut_calc, opts);
 
+   // hide indented edges of method 2
+   if ((opts.build_method == 2 && opts.d != 1) && hi)
+      set_indented_edges_invisible(geom, edge_list, pole);
+
    // mark edge circuits for methods 2 and 3 flood fill, or color by symmetry
    if ((opts.build_method > 1 && strchr("fS",opts.edge_coloring_method)) ||
        (opts.build_method == 1 && strchr("S",opts.edge_coloring_method)))
       mark_edge_circuits(geom, edge_list);
- 
-   // hide indented edges of method 2
-   if ((opts.build_method == 2 && opts.d != 1) && hi)
-      set_indented_edges_invisible(geom, edge_list, pole);
 }
       
 // inner_radius and outer_radius is calculated within
@@ -4655,6 +4682,10 @@ void build_globe(col_geom_v &geom, vector<coordList *> &coordinates, vector<face
    // if not these then there is no need to set
    if ( !do_faces && !do_edges )
       lat_mode = 0;
+      
+   if (lat_mode != 1)
+      if (opts.build_method == 2)
+         restore_indented_edges(edge_list,opts);
 
    if (lat_mode == 1) {
       // new 'sequential' apply_latitudes compatible with both methods 2 and 3
@@ -4662,11 +4693,12 @@ void build_globe(col_geom_v &geom, vector<coordList *> &coordinates, vector<face
    }
    else
    if (lat_mode == 2) {
-      // slightly addapted for call using method 2
-      apply_latitudes(geom, original_faces, split_face_indexes, face_list, edge_list, pole, opts);
-      // old apply_latitudes needs to fix polygon numbers for compound coloring
-      if ((opts.build_method == 3) && (opts.face_coloring_method == 'c') && !double_sweep)
-         fix_polygon_numbers(face_list, opts);
+      if (opts.build_method == 3) {
+         apply_latitudes(geom, original_faces, split_face_indexes, face_list, edge_list, pole, opts);
+         // old apply_latitudes needs to fix polygon numbers for compound coloring
+         if ((opts.face_coloring_method == 'c') && !double_sweep)
+            fix_polygon_numbers(face_list, opts);
+      }
    }
 
    // sending opts.point_cut
@@ -5007,9 +5039,6 @@ int process_hybrid(col_geom_v &geom, ncon_opts &opts)
       restore_flood_longitude_edges(geom, edge_list, opts);
       ncon_edge_coloring_by_adjacent_edge(geom, edge_list, pole, opts);
    }
-   else
-   if (opts.edge_coloring_method == 'F')
-      ncon_edge_coloring_from_faces(geom, pole, opts);
    
    // if not a full model, added triangles no longer needed   
    if (added_triangles.size() && !full_model(opts.longitudes))
@@ -5093,9 +5122,6 @@ int process_normal(col_geom_v &geom, ncon_opts &opts)
 
    if (opts.build_method > 1 && opts.edge_coloring_method == 'f')
       ncon_edge_coloring_by_adjacent_edge(geom, edge_list, pole, opts);
-   else
-   if (opts.edge_coloring_method == 'F')
-      ncon_edge_coloring_from_faces(geom, pole, opts);
       
    // if not a full model, added triangles no longer needed   
    if (added_triangles.size() && !full_model(opts.longitudes))
@@ -5159,209 +5185,6 @@ void filter(col_geom_v &geom, const char *elems)
             geom.clear_faces();
             break;
       }
-   }
-}
-
-int ncon_subsystem(col_geom_v &geom, ncon_opts &opts)
-{
-   int ret = 0;
-
-   bool point_cut_save = opts.point_cut;
-   
-   if (opts.info)
-      fprintf(stderr,"========================================\n");
-
-   if (opts.hybrid)
-      ret = process_hybrid(geom, opts);
-   else
-      ret = process_normal(geom, opts);
-
-   // restore for possible reporting
-   if (opts.build_method == 2 && opts.d != 1) {
-      opts.ncon_order /= 2;
-      opts.twist /= 2;
-   }
-   
-   opts.point_cut = point_cut_save;
-
-   if (opts.info) {
-      model_info(geom, opts);
-      
-      vector<surfaceTable *> surface_table;
-      if ((opts.d > 1 && (opts.ncon_order-opts.d > 1)) || (opts.build_method == 3 && opts.angle != 0.0)) {
-         //fprintf(stderr,"face/edge circuit info not available for star n_icons or those with non-zero angles\n");
-      }
-      else {
-         surfaceData sd;
-         ncon_info(opts.ncon_order, opts.point_cut, opts.twist, opts.hybrid, opts.info, surface_table, sd);
-         surface_table.clear();
-      }
-   }
-   
-   // Color post-processing
-   // process the uninvolved edges of the n_icon
-   if (opts.unused_edge_color.is_set())
-      color_unused_edges(geom, opts.unused_edge_color);
-      
-   if (opts.edge_set_no_color && opts.edge_coloring_method != 'S')
-      // now is the point that edges which are supposed to be unset can be done
-      unset_marked_edges(geom);
-   else
-      // when partial model, some vertices can't be rotated, so out of sync with their edges
-      // when method 2 or 3, front vertices can get back color because of order of edges in list
-      // faster to just recolor all vertices
-      reassert_colored_verts(geom, opts.edge_default_color, opts.unused_edge_color);
-     
-   // some edges can remain uncolored
-   if ( opts.edge_coloring_method )
-      color_uncolored_edges(geom, opts);
-
-   // some faces can remain uncolored
-   if ( opts.face_coloring_method )
-      color_uncolored_faces(geom, opts);
-
-   geom.orient();
-
-   return ret;
-}
-
-void surface_subsystem(const ncon_opts &opts)
-{
-   vector<surfaceTable *> surface_table;
-   surfaceData sd;
-
-   char form = opts.ncon_surf[0];
-
-   fprintf(stderr,"\n");
-
-   if (!opts.filter_case2)
-      fprintf(stderr,"Note: case 2 n-icons are depicted with {curly brackets}\n");
-
-   if ((form != 'o') && (form != 'i'))
-      fprintf(stderr,"Note: non-chiral n-icons are depicted with [square brackets]\n");
-
-   if (form == 's')
-      fprintf(stderr,"Note: all even order side cut n-icons have at least two surfaces\n");
-   else
-   if (form == 'i')
-      fprintf(stderr,"Note: only hybrids such that N/2 is even are shown\n");
-   else
-   if (form == 'j')
-      fprintf(stderr,"Note: only hybrids such that N/2 is odd are shown\n");
-   else
-   if (form == 'k')
-      fprintf(stderr,"Note: only hybrids such that N/4 is even are shown\n");
-   else
-   if (form == 'l')
-      fprintf(stderr,"Note: only hybrids such that N/4 is odd are shown\n");
-
-   fprintf(stderr,"\n");
-   
-   vector<int> ncon_range = opts.ncon_range;
-
-   int inc = 2;
-   if (form == 'o') {
-      if (is_even(ncon_range.front()))
-         ncon_range.front()++;
-   }
-   else {
-      if (!is_even(ncon_range.front()))
-         ncon_range.front()++;
-   }
-
-   if ((form == 'i') || (form == 'j')) {
-      if (((form == 'i') && !is_even(ncon_range.front()/2)) ||
-          ((form == 'j') &&  is_even(ncon_range.front()/2)))
-            ncon_range.front()+=2;
-
-      inc += 2;
-      form = 'h';
-   }
-   else
-   if ((form == 'k') || (form == 'l')) {
-      if (((form == 'k') && !is_even(ncon_range.front()/4)) ||
-          ((form == 'l') &&  is_even(ncon_range.front()/4)))
-            ncon_range.front()+=4;
-
-      inc += 6;
-      form = 'h';
-   }
-
-   if (opts.long_form) {
-      fprintf(stderr,"                       Surfaces                       Edges\n");
-      fprintf(stderr,"                       ------------------------------ ------------------------\n");
-      fprintf(stderr,"%s  %s          %s %s %s %s %s\n\n",
-         "Order","n-icon","Total","Continuous","Discontinuous","Continuous","Discontinuous");
-   }
-
-   int last = 0;
-   for (int ncon_order=ncon_range.front(); ncon_order<=ncon_range.back(); ncon_order+=inc) {
-      if (is_even(ncon_order)) {
-         if (form == 'h')
-            last = (int)floor((double)(ncon_order+2)/4);
-         else
-            last = (int)floor((double)ncon_order/4);
-      }
-      else
-         last = (int)floor((double)ncon_order/2);
-
-      bool point_cut = false;
-      bool hybrid = false;
-      bool info = false;
-
-      if (form == 'n' || form == 'o' )
-         point_cut = true;
-      else
-      if (form == 's')
-         point_cut = false;
-      else
-      if (form == 'h')
-         hybrid = true;
-
-      bool none = true;
-
-      if (opts.long_form)
-         fprintf(stderr,"%-5d: ",ncon_order);
-      else
-         fprintf(stderr,"%d: ",ncon_order);
-
-      for (int twist=2;twist<=last;twist++) {
-         ncon_info(ncon_order, point_cut, twist, hybrid, info, surface_table, sd);
-
-         if ((!is_even(ncon_order) && sd.total_surfaces > 1) ||
-            (form != 's' && sd.total_surfaces > 1) || (form == 's' && sd.total_surfaces > 2)) {
-            if (!sd.ncon_case2 || (sd.ncon_case2 && !opts.filter_case2)) {
-               if (!none) {
-                  if (opts.long_form)
-                     fprintf(stderr,"%-5d: ",ncon_order);
-                  else
-                     fprintf(stderr,", ");
-               }
-               char buffer[MSG_SZ];
-               if (sd.nonchiral)
-                  sprintf(buffer,"[%d+%d]",ncon_order,twist);
-               else
-               if (sd.ncon_case2)
-                  sprintf(buffer,"{%d+%d}",ncon_order,twist);
-               else
-                  sprintf(buffer,"(%d+%d)",ncon_order,twist);
-               if (opts.long_form)
-                     fprintf(stderr,"%-15s %5d %10d %13d %10d %13d\n",
-                        buffer, sd.total_surfaces, sd.c_surfaces, sd.d_surfaces, sd.c_edges, sd.d_edges);
-               else
-                  fprintf(stderr,"%s",buffer);
-               none = false;
-            }
-         }
-      }
-      surface_table.clear();
-
-      if (none) {
-         fprintf(stderr,"none");
-         if (opts.long_form)
-            fprintf(stderr,"\n");
-      }
-      fprintf(stderr,"\n");
    }
 }
 
@@ -5716,7 +5539,7 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
    }
    
    // special case, if twisted half way, turn upside down
-   if ((opts.mod_twist != 0) && (N/twist == 2))
+   if ((opts.mod_twist != 0) && is_even(opts.ncon_order) && (N/twist == 2))
       pgon.transform(mat3d::refl(vec3d(0,1,0)));
 
    // color faces
@@ -5814,32 +5637,25 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
       if ((opts.build_method == 2) && (!pc && !is_even(opts.ncon_order)))
          pc_p = true;
       if ((!twist || (N/twist == 2)) && pc_p) {
-         // find poles of symmetry polygon
          int north = -1;
-         double y_north = -FLT_MAX;
          int south = -1;
-         double y_south =  FLT_MAX;
-         for(unsigned int i=0; i<pgon.verts().size(); i++) {
-            if (double_gt(pgon.verts(i)[1],y_north,opts.epsilon)) {
-               y_north = pgon.verts(i)[1];
-               north = i;
-            }
-            if (double_lt(pgon.verts(i)[1],y_south,opts.epsilon)) {
-               y_south = pgon.verts(i)[1];
-               south = i;
-            }
-         }
+         find_poles(pgon,north,south,opts);
+         
          // congruent points on model take those colors
-         for(unsigned int i=0; i<geom.verts().size(); i++) {
-            if (!compare(geom.verts(i),pgon.verts(north),opts.epsilon)) {
-               geom.set_v_col(i,pgon.get_v_col(north));
-               break;
+         if (north != -1) {
+            for(unsigned int i=0; i<geom.verts().size(); i++) {
+               if (!compare(geom.verts(i),pgon.verts(north),opts.epsilon)) {
+                  geom.set_v_col(i,pgon.get_v_col(north));
+                  break;
+               }
             }
          }
-         for(unsigned int i=0; i<geom.verts().size(); i++) {
-            if (!compare(geom.verts(i),pgon.verts(south),opts.epsilon)) {
-               geom.set_v_col(i,pgon.get_v_col(south));
-               break;
+         if (south != -1) {
+            for(unsigned int i=0; i<geom.verts().size(); i++) {
+               if (!compare(geom.verts(i),pgon.verts(south),opts.epsilon)) {
+                  geom.set_v_col(i,pgon.get_v_col(south));
+                  break;
+               }
             }
          }
       }
@@ -5870,6 +5686,231 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
    // optionally append polygon
    if (opts.add_symmetry_polygon)
       geom.append(pgon);
+}
+
+int ncon_subsystem(col_geom_v &geom, ncon_opts &opts)
+{
+   int ret = 0;
+
+   bool point_cut_save = opts.point_cut;
+   
+   // the best way to do side cut with method 3 is angle
+   if (opts.build_method == 3 && opts.hybrid && !opts.point_cut) {
+      opts.angle = 180.0/opts.ncon_order;
+      opts.angle_is_side_cut = true;
+   }
+   
+   bool radius_set = (opts.inner_radius != FLT_MAX || opts.outer_radius != FLT_MAX) ? true : false;
+
+   if (opts.info)
+      fprintf(stderr,"========================================\n");
+
+   if (opts.hybrid)
+      ret = process_hybrid(geom, opts);
+   else
+      ret = process_normal(geom, opts);
+
+   // restore for possible reporting
+   if (opts.build_method == 2 && opts.d != 1) {
+      opts.ncon_order /= 2;
+      opts.twist /= 2;
+   }
+   
+   opts.point_cut = point_cut_save;
+
+   if (opts.info) {
+      model_info(geom, opts);
+      
+      vector<surfaceTable *> surface_table;
+      if ((opts.d > 1 && (opts.ncon_order-opts.d > 1)) || (opts.build_method == 3 && opts.angle != 0.0)) {
+         //fprintf(stderr,"face/edge circuit info not available for star n_icons or those with non-zero angles\n");
+      }
+      else {
+         surfaceData sd;
+         ncon_info(opts.ncon_order, opts.point_cut, opts.twist, opts.hybrid, opts.info, surface_table, sd);
+         surface_table.clear();
+      }
+   }
+   
+   // if inner radius is greater than outer radius, point cut will change to a side cut and vice-versa
+   // note: inner and outer radii may not be completely defined until after construction
+   if (opts.radius_inversion)
+      opts.warning(msg_str("manual change in radii changed model to %s cut",(!opts.point_cut ? "point" : "side")));
+   
+   if (opts.face_coloring_method == 'S' || opts.edge_coloring_method == 'S')
+      color_by_symmetry(geom, radius_set, opts);
+      
+   if (opts.edge_coloring_method == 'F')
+      ncon_edge_coloring_from_faces(geom, opts);
+   
+   // Color post-processing
+   // process the uninvolved edges of the n_icon
+   if (opts.unused_edge_color.is_set())
+      color_unused_edges(geom, opts.unused_edge_color);
+      
+   if (opts.edge_set_no_color)
+      // now is the point that edges which are supposed to be unset can be done
+      unset_marked_edges(geom);
+   else
+      // when partial model, some vertices can't be rotated, so out of sync with their edges
+      // when method 2 or 3, front vertices can get back color because of order of edges in list
+      // faster to just recolor all vertices
+      reassert_colored_verts(geom, opts.edge_default_color, opts.unused_edge_color);
+     
+   // some edges can remain uncolored
+   if ( opts.edge_coloring_method )
+      color_uncolored_edges(geom, opts);
+
+   // some faces can remain uncolored
+   if ( opts.face_coloring_method )
+      color_uncolored_faces(geom, opts);
+
+   geom.orient();
+   
+   // elements can be chosen to be eliminated completely
+   filter(geom,opts.hide_elems.c_str());
+
+   return ret;
+}
+
+void surface_subsystem(const ncon_opts &opts)
+{
+   vector<surfaceTable *> surface_table;
+   surfaceData sd;
+
+   char form = opts.ncon_surf[0];
+
+   fprintf(stderr,"\n");
+
+   if (!opts.filter_case2)
+      fprintf(stderr,"Note: case 2 n-icons are depicted with {curly brackets}\n");
+
+   if ((form != 'o') && (form != 'i'))
+      fprintf(stderr,"Note: non-chiral n-icons are depicted with [square brackets]\n");
+
+   if (form == 's')
+      fprintf(stderr,"Note: all even order side cut n-icons have at least two surfaces\n");
+   else
+   if (form == 'i')
+      fprintf(stderr,"Note: only hybrids such that N/2 is even are shown\n");
+   else
+   if (form == 'j')
+      fprintf(stderr,"Note: only hybrids such that N/2 is odd are shown\n");
+   else
+   if (form == 'k')
+      fprintf(stderr,"Note: only hybrids such that N/4 is even are shown\n");
+   else
+   if (form == 'l')
+      fprintf(stderr,"Note: only hybrids such that N/4 is odd are shown\n");
+
+   fprintf(stderr,"\n");
+   
+   vector<int> ncon_range = opts.ncon_range;
+
+   int inc = 2;
+   if (form == 'o') {
+      if (is_even(ncon_range.front()))
+         ncon_range.front()++;
+   }
+   else {
+      if (!is_even(ncon_range.front()))
+         ncon_range.front()++;
+   }
+
+   if ((form == 'i') || (form == 'j')) {
+      if (((form == 'i') && !is_even(ncon_range.front()/2)) ||
+          ((form == 'j') &&  is_even(ncon_range.front()/2)))
+            ncon_range.front()+=2;
+
+      inc += 2;
+      form = 'h';
+   }
+   else
+   if ((form == 'k') || (form == 'l')) {
+      if (((form == 'k') && !is_even(ncon_range.front()/4)) ||
+          ((form == 'l') &&  is_even(ncon_range.front()/4)))
+            ncon_range.front()+=4;
+
+      inc += 6;
+      form = 'h';
+   }
+
+   if (opts.long_form) {
+      fprintf(stderr,"                       Surfaces                       Edges\n");
+      fprintf(stderr,"                       ------------------------------ ------------------------\n");
+      fprintf(stderr,"%s  %s          %s %s %s %s %s\n\n",
+         "Order","n-icon","Total","Continuous","Discontinuous","Continuous","Discontinuous");
+   }
+
+   int last = 0;
+   for (int ncon_order=ncon_range.front(); ncon_order<=ncon_range.back(); ncon_order+=inc) {
+      if (is_even(ncon_order)) {
+         if (form == 'h')
+            last = (int)floor((double)(ncon_order+2)/4);
+         else
+            last = (int)floor((double)ncon_order/4);
+      }
+      else
+         last = (int)floor((double)ncon_order/2);
+
+      bool point_cut = false;
+      bool hybrid = false;
+      bool info = false;
+
+      if (form == 'n' || form == 'o' )
+         point_cut = true;
+      else
+      if (form == 's')
+         point_cut = false;
+      else
+      if (form == 'h')
+         hybrid = true;
+
+      bool none = true;
+
+      if (opts.long_form)
+         fprintf(stderr,"%-5d: ",ncon_order);
+      else
+         fprintf(stderr,"%d: ",ncon_order);
+
+      for (int twist=2;twist<=last;twist++) {
+         ncon_info(ncon_order, point_cut, twist, hybrid, info, surface_table, sd);
+
+         if ((!is_even(ncon_order) && sd.total_surfaces > 1) ||
+            (form != 's' && sd.total_surfaces > 1) || (form == 's' && sd.total_surfaces > 2)) {
+            if (!sd.ncon_case2 || (sd.ncon_case2 && !opts.filter_case2)) {
+               if (!none) {
+                  if (opts.long_form)
+                     fprintf(stderr,"%-5d: ",ncon_order);
+                  else
+                     fprintf(stderr,", ");
+               }
+               char buffer[MSG_SZ];
+               if (sd.nonchiral)
+                  sprintf(buffer,"[%d+%d]",ncon_order,twist);
+               else
+               if (sd.ncon_case2)
+                  sprintf(buffer,"{%d+%d}",ncon_order,twist);
+               else
+                  sprintf(buffer,"(%d+%d)",ncon_order,twist);
+               if (opts.long_form)
+                     fprintf(stderr,"%-15s %5d %10d %13d %10d %13d\n",
+                        buffer, sd.total_surfaces, sd.c_surfaces, sd.d_surfaces, sd.c_edges, sd.d_edges);
+               else
+                  fprintf(stderr,"%s",buffer);
+               none = false;
+            }
+         }
+      }
+      surface_table.clear();
+
+      if (none) {
+         fprintf(stderr,"none");
+         if (opts.long_form)
+            fprintf(stderr,"\n");
+      }
+      fprintf(stderr,"\n");
+   }
 } 
 
 int main(int argc, char *argv[])
@@ -5882,27 +5923,8 @@ int main(int argc, char *argv[])
    if (opts.ncon_surf.length())
       surface_subsystem(opts);
    else {
-      // the best way to do side cut with method 3 is angle
-      if (opts.build_method == 3 && opts.hybrid && !opts.point_cut) {
-         opts.angle = 180.0/opts.ncon_order;
-         opts.angle_is_side_cut = true;
-      }
-      
-      bool radius_set = (opts.inner_radius != FLT_MAX || opts.outer_radius != FLT_MAX) ? true : false;
-      
       col_geom_v geom;
       ret = ncon_subsystem(geom, opts);
-      
-      // if inner radius is greater then outer radius, point cut will change to a side cut and vice-versa
-      // note: inner and outer radii may not be completely defined until after construction
-      if (opts.radius_inversion)
-         opts.warning(msg_str("manual change in radii changed model to %s cut",(!opts.point_cut ? "point" : "side")));
-      
-      if (opts.face_coloring_method == 'S' || opts.edge_coloring_method == 'S')
-         color_by_symmetry(geom, radius_set, opts);
-         
-      // elements can be chosen to be eliminated completely
-      filter(geom,opts.hide_elems.c_str());
 
       geom_write_or_error(geom, opts.ofile, opts);
    }
