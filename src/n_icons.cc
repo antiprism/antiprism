@@ -2672,6 +2672,11 @@ void ncon_twist(col_geom_v &geom, const vector<polarOrb *> &polar_orbit,
       for (unsigned int j=0;j<edges[i].size();j++)
          if ( edges[i][j] < 0 )
             edges[i][j] = abs( edges[i][j] );
+            
+   // edges may have been made to be out of numerical order
+   for (unsigned int i=0; i<edges.size(); i++)
+      if (edges[i][0] > edges[i][1])
+         swap(edges[i][0],edges[i][1]);
 }
 
 // surfaces, case2, case1_twist are changed
@@ -4308,7 +4313,7 @@ void ncon_edge_coloring_from_faces(col_geom_v &geom, const ncon_opts &opts)
       if ((geom.get_v_col(i)).is_inv())
          inv_verts.push_back(i);
    }
-   
+
    coloring clrng;
    clrng.add_cmap(opts.face_map.clone());
    clrng.set_geom(&geom);
