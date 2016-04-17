@@ -646,8 +646,8 @@ void ncon_opts::process_command_line(int argc, char **argv)
             if (hybrid)
                error("for method 2 and d=1, inner radius cannot be set for a hybrid","R");
             else
-            if (!(is_even(ncon_order) && is_even(twist)))
-               error("for method 2, inner radius cannot be set when d=1, N is odd, or twist is odd",'r');
+            if (!((is_even(ncon_order) && point_cut) && is_even(twist)))
+               error("for method 2, inner radius cannot be set when d=1, N is odd, side cut, or twist is odd",'r');
          }
 
          if (d==1 && (outer_radius != FLT_MAX)) {
@@ -658,7 +658,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
                error("for method 2 and d=1, only outer radius can be set for a hybrid","R");
             else
             if (!(is_even(ncon_order) && is_even(twist)))
-               error("for method 2, only outer radius can be set when d=1, N is odd, or twist is odd",'R');
+               error("for method 2, only outer radius can be set when d=1, N is odd, side cut, or twist is odd",'R');
          }
          
          if (strchr(closure.c_str(), 'h')) {
@@ -828,28 +828,10 @@ void ncon_opts::process_command_line(int argc, char **argv)
       if (build_method == 1)
          error("compound coloring is for build method 2 or 3",'f');
    }
-   else   
-   if (face_coloring_method == 'S') {
-      if (build_method == 2 && d == 1) {
-         if (outer_radius != FLT_MAX && inner_radius == FLT_MAX)
-            inner_radius = outer_radius;
-         if (double_ne(inner_radius,outer_radius,epsilon))
-            error("face coloring method 'S' will not work when radii are not equal",'f');
-      }
-   }
       
    if (edge_coloring_method == 'f') {
       if (build_method == 1)
          error("flood fill edge coloring is for build method 2 or 3",'e');
-   }
-   else   
-   if (edge_coloring_method == 'S') {
-      if (build_method == 2 && d == 1) {
-         if (outer_radius != FLT_MAX && inner_radius == FLT_MAX)
-            inner_radius = outer_radius;
-         if (double_ne(inner_radius,outer_radius,epsilon))
-            error("edge coloring method 'S' will not work when radii are not equal",'e');
-      }
    }
 
    if (symmetric_coloring && (!strchr("sfS",face_coloring_method) && !strchr("sfS",edge_coloring_method)))
@@ -5336,7 +5318,7 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
 
    // if build_method 2, and radius set is such a way that it corresponds to another D
    // then change to that D and use normal radius
-   if ((opts.build_method == 2) && radius_set) {
+   if ((opts.build_method == 2 && D>1) && radius_set) {
       double i_radius = opts.inner_radius;
       double o_radius = opts.outer_radius;
       // inner and outer radius must be both positive or negative
@@ -5497,6 +5479,9 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
          double o_radius = opts.outer_radius;
          double i_radius = opts.inner_radius;
          if (opts.radius_inversion)
+            swap(o_radius,i_radius);
+         // for D==1 sometimes a swap is needed
+         if (D==1 && ((!is_even(N/2) && !opts.radius_inversion) || (is_even(N/2) && opts.radius_inversion)))
             swap(o_radius,i_radius);
          col_geom_v rpgon = build_gear_polygon(pc,o_radius,i_radius,1.0,opts);
          pgon_post_process(rpgon, axes, N, twist, hyb, opts); 
@@ -5687,6 +5672,14 @@ int ncon_subsystem(col_geom_v &geom, ncon_opts &opts)
    }
    
    opts.point_cut = point_cut_save;
+   
+   // if inner radius is greater than outer radius, point cut will change to a side cut and vice-versa
+   // note: inner and outer radii may not be completely defined until after construction
+   if (opts.radius_inversion) {
+      // change point_cut for possible reporting in model_info()
+      opts.point_cut = !opts.point_cut;
+      opts.warning(msg_str("manual change in radii changed model to %s cut",(opts.point_cut ? "point" : "side")));
+   }
 
    if (opts.info) {
       model_info(geom, opts);
@@ -5700,12 +5693,7 @@ int ncon_subsystem(col_geom_v &geom, ncon_opts &opts)
          ncon_info(opts.ncon_order, opts.point_cut, opts.twist, opts.hybrid, opts.info, surface_table, sd);
          surface_table.clear();
       }
-   }
-   
-   // if inner radius is greater than outer radius, point cut will change to a side cut and vice-versa
-   // note: inner and outer radii may not be completely defined until after construction
-   if (opts.radius_inversion)
-      opts.warning(msg_str("manual change in radii changed model to %s cut",(!opts.point_cut ? "point" : "side")));
+   }     
    
    if (opts.face_coloring_method == 'S' || opts.edge_coloring_method == 'S')
       color_by_symmetry(geom, radius_set, opts);
