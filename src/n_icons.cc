@@ -651,11 +651,14 @@ void ncon_opts::process_command_line(int argc, char **argv)
          }
 
          if (d==1 && (outer_radius != FLT_MAX)) {
+            if (inner_radius == FLT_MAX)
+               inner_radius = outer_radius;
+            else
             if (hybrid)
-               error("for method 2 and d=1, outer radius cannot be set for a hybrid","R");
+               error("for method 2 and d=1, only outer radius can be set for a hybrid","R");
             else
             if (!(is_even(ncon_order) && is_even(twist)))
-               error("for method 2, outer radius cannot be set when d=1, N is odd, or twist is odd",'R');
+               error("for method 2, only outer radius can be set when d=1, N is odd, or twist is odd",'R');
          }
          
          if (strchr(closure.c_str(), 'h')) {
