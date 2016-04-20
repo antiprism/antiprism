@@ -73,10 +73,14 @@ double angle_in_range(double angle, const double &eps)
    return angle;
 }
 
-// is edge parallel with the Y axis?
-bool angle_on_aligned_polygon(double angle, const double &n, const double &eps)
+// angle is either point cut or side cut
+bool angle_on_aligned_polygon(const double &angle, const double &n, const double &eps)
 {
-   return double_eq(fmod(angle_in_range(angle,eps),180.0/n),0.0,eps);
+   double ang = angle_in_range(angle,eps);
+   bool ret = double_eq(ang,180.0,eps);
+   if (!ret)
+      ret = double_eq(fmod(ang,180.0/n),0.0,eps);
+   return ret;
 }
 
 color_map_map * alloc_default_map()
@@ -642,23 +646,25 @@ void ncon_opts::process_command_line(int argc, char **argv)
       }
 
       if (build_method == 2) {
-         if (d==1 && (inner_radius != FLT_MAX)) {
-            if (hybrid)
-               error("for method 2 and d=1, inner radius cannot be set for a hybrid","R");
+         if (d==1) {
+            if (inner_radius != FLT_MAX) {
+               if (hybrid) {
+                  if (is_even(twist))
+                     error("for method 2 and d=1, hybrid, inner radius cannot be set when twist is even",'r');
+               }
+               else
+               if (!is_even(ncon_order))
+                  error("for method 2 and d=1, inner radius cannot be set when N is odd",'r');
+               else
+               if (!point_cut)
+                  error("for method 2 and d=1, inner radius cannot be set when side cut",'r');
+               else
+               if (!is_even(twist))
+                  error("for method 2 and d=1, inner radius cannot be set when twist is odd",'r');
+            }
             else
-            if (!((is_even(ncon_order) && point_cut) && is_even(twist)))
-               error("for method 2, inner radius cannot be set when d=1, N is odd, side cut, or twist is odd",'r');
-         }
-
-         if (d==1 && (outer_radius != FLT_MAX)) {
-            if (inner_radius == FLT_MAX)
+            if (outer_radius != FLT_MAX)
                inner_radius = outer_radius;
-            else
-            if (hybrid)
-               error("for method 2 and d=1, only outer radius can be set for a hybrid","R");
-            else
-            if (!(is_even(ncon_order) && is_even(twist)))
-               error("for method 2, only outer radius can be set when d=1, N is odd, side cut, or twist is odd",'R');
          }
          
          if (strchr(closure.c_str(), 'h')) {
@@ -4886,6 +4892,9 @@ void restore_flood_longitude_faces(col_geom_v &geom, vector<faceList *> &face_li
 int process_hybrid(col_geom_v &geom, ncon_opts &opts)
 {
    int ret = 0;
+   
+   // hybrids which are really point cuts with radii swapped on opposite side
+   bool special_hybrids = ((opts.build_method == 2) && (opts.d == 1) && opts.inner_radius != FLT_MAX);
 
    // retain longitudes settings
    bool full = full_model(opts.longitudes);
@@ -4914,9 +4923,11 @@ int process_hybrid(col_geom_v &geom, ncon_opts &opts)
    double outer_radius_save = opts.outer_radius;
    bool point_cut_save = opts.point_cut;
    opts.point_cut = (opts.build_method == 3 && opts.angle_is_side_cut) ? true : false;
+   opts.point_cut = (opts.build_method == 2 && opts.d == 1 && special_hybrids) ? true : false;
    opts.longitudes.back() = opts.longitudes.front()/2;
    bool second_half = false;
    build_globe(geom_d, coordinates, face_list, edge_list, pole, caps, opts.inner_radius, opts.outer_radius, opts.radius_inversion, opts.double_sweep, second_half, opts);
+   bool radius_inversion_save = opts.radius_inversion;
 
    // delete half the model
    if (opts.build_method == 3)
@@ -4939,6 +4950,10 @@ int process_hybrid(col_geom_v &geom, ncon_opts &opts)
    opts.inner_radius = inner_radius_save;
    opts.outer_radius = outer_radius_save;
    opts.point_cut = !opts.point_cut;
+   if (opts.build_method == 2 && opts.d == 1 && special_hybrids) {
+      opts.point_cut = true;
+      swap(opts.inner_radius,opts.outer_radius);
+   }
    opts.longitudes.back() = opts.longitudes.front()/2;
    second_half = true;
    build_globe(geom, coordinates, face_list, edge_list, pole, caps, opts.inner_radius, opts.outer_radius, opts.radius_inversion, opts.double_sweep, second_half, opts);
@@ -4952,6 +4967,12 @@ int process_hybrid(col_geom_v &geom, ncon_opts &opts)
    // we can do the twist by transforming just one part.
    // negative angle because z reflection
    double twist_angle = hybrid_twist_angle(opts.ncon_order, opts.d, opts.twist, opts.build_method);
+   if (opts.build_method == 2 && opts.d == 1 && special_hybrids) {
+      twist_angle = (360.0/opts.ncon_order) * opts.twist;
+      // swap these back for later use
+      swap(opts.inner_radius,opts.outer_radius);
+      opts.radius_inversion = radius_inversion_save;
+   }
    geom.transform(mat3d::rot(0, 0, deg2rad(-twist_angle)));
    // methods 1 and 2 need reflection
    if (opts.build_method < 3)
@@ -5147,41 +5168,31 @@ struct ht_less {
       { return double_lt(h0, h1, get_eps()); }
 };
 
-col_geom_v build_gear_polygon(const bool &pc, const double &o_radius, const double &i_radius, const double &poly_scale, const ncon_opts &opts)
+col_geom_v build_gear_polygon(const int &N, const int &D, const double &o_radius, const double &i_radius, const double &poly_scale, const double &eps)
 {
    col_geom_v gear;
    
-   int N = opts.ncon_order;
-   double arc = 180.0/N;
+   int N2 = N;
+   double arc = 180.0/N2;
+   double angle = 0.0;
    
-   double angle = 0.0;   
-   if(!pc || !is_even(N) || opts.hybrid)
-      angle += arc;
-   
-   if (opts.d > 1)
-      N *= 2;
+   if (D > 1)
+      N2 *= 2;
    else
       arc *= 2.0;
    
    vector<int> face;
-   for (int i=0;i<N;i++) {
+   for (int i=0;i<N2;i++) {
       double radius = (is_even(i)) ? o_radius : i_radius;
       gear.add_vert(vec3d(cos(deg2rad(angle))*radius, sin(deg2rad(angle))*radius, 0));
-      gear.add_edge(make_edge(i,(i+1)%N));
+      gear.add_edge(make_edge(i,(i+1)%N2));
       face.push_back(i);
       angle += arc;
    }
    gear.add_face(face);
    
-   if (double_ne(poly_scale,1.0,opts.epsilon))
+   if (double_ne(poly_scale,1.0,eps))
       gear.transform(mat3d::scale(poly_scale));
-   
-   // when radii are inverted, a flip on the X axis is needed   
-   if (!is_even(N/2) && !pc)
-      gear.transform(mat3d::refl(vec3d(1,0,0)));
-   else
-   if ((opts.build_method == 2) && opts.hybrid && !pc)
-      gear.transform(mat3d::rot(vec3d::Z, M_PI/(N/2)));
    
    return gear;
 }
@@ -5302,6 +5313,38 @@ void lookup_edge_color(col_geom_v &geom, const int &e, const vector<vec3d> &axes
    }
 }
 
+void rotate_polygon(col_geom_v &pgon, const int &N, const bool &pc, const bool &hyb, const ncon_opts &opts)
+{
+   // rotate polygons
+   double rot_angle = 0;
+   if((opts.build_method == 3) && double_ne(opts.angle,0,opts.epsilon)) {
+      rot_angle = deg2rad(opts.angle);
+      if (hyb && pc)
+         rot_angle += M_PI/N;
+   }
+   else
+   if(!is_even(N) || !pc || hyb)
+      rot_angle = M_PI/N;
+
+   pgon.transform(mat3d::rot(vec3d::Z, rot_angle));
+
+   // odds are flipped under these rules
+   bool is_flipped = false;
+   if (!is_even(N)) {
+      // method 3 these angles will cause an upward flip
+      if ((opts.build_method == 3) && double_ne(opts.angle,0,opts.epsilon) && (angle_on_aligned_polygon(opts.angle,N,opts.epsilon)))
+         is_flipped = true;
+   }
+   else
+   // special special hybrids and their kin when N/2 is odd
+   if ((opts.build_method == 2) && !is_even(N/2) && (opts.d == 1) && (opts.inner_radius != FLT_MAX))
+      is_flipped = true;
+
+   // note: the polygon is still on its side
+   if (is_flipped)
+      pgon.transform(mat3d::refl(vec3d(1,0,0)));
+}
+
 void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
 {
    // note: N and D are not pre-doubled here for build_method 2
@@ -5311,10 +5354,19 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
    bool hyb = opts.hybrid;
    
    bool pc = opts.point_cut;
-   // if inner radius is greater then outer radius, point cut will change to a side cut and vice-versa
-   // this will be true even if the gear polygon is not used
    if ((opts.build_method == 2) && opts.radius_inversion)
       pc = !pc;
+
+   // when D=1, and radii are not equal, hybrids are really point cuts
+   if ((opts.build_method == 2) && (D==1)) {
+      if (double_ne(opts.outer_radius,opts.inner_radius,opts.epsilon)) {
+         pc = true;
+         if (hyb)
+            hyb = false;
+      }
+   }
+   if ((opts.build_method == 3) && opts.angle_is_side_cut)
+      pc = false;
 
    // if build_method 2, and radius set is such a way that it corresponds to another D
    // then change to that D and use normal radius
@@ -5338,6 +5390,8 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
                   D = i;
                   opts.warning(msg_str("radii cause D to change to %d", D),'R');
                   radius_set = false;
+                  if (D==1)
+                     N *= 2;
                }
                break;
             }
@@ -5357,42 +5411,16 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
    dih.set_edge(1.00);
    dih.make_poly(pgon);
    pgon.add_missing_impl_edges();
-  
-   double rot_angle = 0;
-   // special case for not rotating a hybrid
-   if((opts.build_method > 1) && (hyb && !pc))
-      rot_angle = 0;
-   else
-   if((opts.build_method == 3) && double_ne(opts.angle,0,opts.epsilon)) {
-      rot_angle = deg2rad(opts.angle);
-      if (hyb)
-         rot_angle += M_PI/N;
-         
-      // patch. 2N/N and side cut
-      if (digons && !pc)
-         rot_angle = M_PI/N;
-   }
-   else
-   if(!pc || !is_even(N) || hyb)
-      rot_angle = M_PI/N;
    
-   pgon.transform(mat3d::rot(vec3d::Z, rot_angle));
+   rotate_polygon(pgon, N, pc, hyb, opts);
 
+   // scale polygon
    double poly_scale = 1.0;
    double i_radius = 0;
    double o_radius = 0;
    double arc = 0;
 
-   // find inner and outer radius for regular polygon
-   if (opts.build_method == 2) {
-      int N2 = (D==1) ? N : N*2;
-      calc_radii(i_radius, o_radius, arc, N2, D, opts, true);
-      
-      // patch for 2N/N or D is 1
-      if (digons || D == 1)
-         radius_set = true;
-   }
-   
+   // method 3: reflect on Y axis when angled
    if (opts.build_method == 3) {
       // 2N/N polygons need polygon resized
       if (digons)
@@ -5405,6 +5433,7 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
          pgon_refl.transform(mat3d::refl(vec3d(0,1,0)));
          pgon.append(pgon_refl);
          
+         // this flip is needed
          if (!is_even(N))
             pgon.transform(mat3d::refl(vec3d(1,0,0)));
 
@@ -5420,15 +5449,18 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
          }
          pc = false;
       }
-      else
-      // sometimes an odd with angle, but not double_sweep can be upside down
-      if (!is_even(N) && double_ne(opts.angle,0,opts.epsilon) && (angle_on_aligned_polygon(opts.angle,N,opts.epsilon)))
-         pgon.transform(mat3d::refl(vec3d(1,0,0)));
    }
-   else
-   // if method 2
-   // regular polygon that was generated it needs to be rescaled to overlay
+
+   // find inner and outer radius for regular polygon
    if (opts.build_method == 2) {
+      int N2 = (D==1) ? N : N*2;
+      calc_radii(i_radius, o_radius, arc, N2, D, opts, true);
+
+      // patch for 2N/N or D is 1
+      if (digons || D == 1)
+         radius_set = true;
+
+      // regular polygon that was generated it needs to be rescaled to overlay
       // 2N/N polygons need polygon resized
       if (digons)
          pgon.transform(mat3d::scale(o_radius/0.5));
@@ -5436,30 +5468,26 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
       poly_scale = (double_gt(fabs(opts.outer_radius),fabs(opts.inner_radius),opts.epsilon) ? fabs(opts.outer_radius) : fabs(opts.inner_radius))/o_radius;
       if (double_ne(poly_scale,1.0,opts.epsilon))
          pgon.transform(mat3d::scale(poly_scale));
-      
-      // logic for catching flipping of negative N for method 2
-      if (!is_even(N) && !pc)
-         pgon.transform(mat3d::refl(vec3d(1,0,0)));
    }
 
    pgon_post_process(pgon, axes, N, twist, hyb, opts);
-  
-   /* test code for trying gear polygon with method 3 digons (note: gave same result)
-   if (((opts.build_method == 2) && radius_set) || digons) {
-      if ((opts.build_method == 3) && digons) {
-         o_radius = 1.0;
-         i_radius = 0.0;
-         poly_scale = 1.0;
-      }
-   */
 
    // if build method 2, build gear polygon and transfer colors and replace pgon
    // and set radii if they were manually changed   
    if ((opts.build_method == 2) && radius_set) {
       gear_polygon_used = true;
 
-      col_geom_v gpgon = build_gear_polygon(pc,o_radius,i_radius,poly_scale,opts);
+      // build gear polygon proper
+      col_geom_v rpgon = build_gear_polygon(N,D,opts.outer_radius,opts.inner_radius,1.0,opts.epsilon);
+
+      rotate_polygon(rpgon, N, pc, hyb, opts);
+      pgon_post_process(rpgon, axes, N, twist, hyb, opts);
       
+      // build gear polygon as regular polygon
+      col_geom_v gpgon = build_gear_polygon(N,D,o_radius,i_radius,poly_scale,opts.epsilon);
+
+      rotate_polygon(gpgon, N, pc, hyb, opts);
+
       if (D > 1) {
          N *= 2;
          twist *= 2;
@@ -5471,30 +5499,22 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
       }
       
       pgon_post_process(gpgon, axes, N, twist, hyb, opts);
-    
+
+      // transfer colors to the gear polygon
       transfer_colors(gpgon, pgon, digons, opts);
-      
-      // if radius was set then build correctly shaped polygon and take its vertices
-      if (radius_set) {
-         double o_radius = opts.outer_radius;
-         double i_radius = opts.inner_radius;
-         if (opts.radius_inversion)
-            swap(o_radius,i_radius);
-         // for D==1 sometimes a swap is needed
-         if (D==1 && ((!is_even(N/2) && !opts.radius_inversion) || (is_even(N/2) && opts.radius_inversion)))
-            swap(o_radius,i_radius);
-         col_geom_v rpgon = build_gear_polygon(pc,o_radius,i_radius,1.0,opts);
-         pgon_post_process(rpgon, axes, N, twist, hyb, opts); 
-         vector<vec3d> &verts = gpgon.raw_verts();
-         for(unsigned int i=0; i<rpgon.verts().size(); i++)
-            verts[i] = rpgon.verts(i);
-      }
+
+      // take proper gear polygons vertices
+      vector<vec3d> &verts = gpgon.raw_verts();
+      for(unsigned int i=0; i<rpgon.verts().size(); i++)
+         verts[i] = rpgon.verts(i);
 
       pgon = gpgon;
    }
-   
-   // special case, if twisted half way, turn upside down
-   if ((opts.mod_twist != 0) && is_even(opts.ncon_order) && (N/twist == 2))
+
+   // special case, if twisted half way, turn upside down (post coloring)
+   // use original N as it may have been doubled
+   // catch hybrid case if special hybrids
+   if (is_even(opts.ncon_order) && (opts.mod_twist != 0) && (N/twist == 2) && !opts.hybrid)
       pgon.transform(mat3d::refl(vec3d(0,1,0)));
 
    // color faces
@@ -5527,8 +5547,11 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
    // color edges
    if (opts.edge_coloring_method == 'S') {
       if (opts.build_method == 2 && !opts.hide_indent && !gear_polygon_used) {
-         pgon = build_gear_polygon(pc,o_radius,i_radius,poly_scale,opts);
+         // build gear polygon proper
+         pgon = build_gear_polygon(N,D,opts.outer_radius,opts.inner_radius,1.0,opts.epsilon);
          
+         rotate_polygon(pgon, N, pc, hyb, opts);
+
          if (D > 1) {
             N *= 2;
             twist *= 2;
@@ -5541,8 +5564,10 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
          
          pgon_post_process(pgon, axes, N, twist, hyb, opts);
          
-         // special case, if twisted half way, turn upside down
-         if ((opts.mod_twist != 0) && is_even(opts.ncon_order) && (N/twist == 2))
+         // special case, if twisted half way, turn upside down (post coloring)
+         // use original N as it may have been doubled
+         // catch hybrid case if special hybrids
+         if (is_even(opts.ncon_order) && (opts.mod_twist != 0) && (N/twist == 2) && !opts.hybrid)
             pgon.transform(mat3d::refl(vec3d(0,1,0)));
       }
       
@@ -5655,7 +5680,7 @@ int ncon_subsystem(col_geom_v &geom, ncon_opts &opts)
       opts.angle_is_side_cut = true;
    }
    
-   bool radius_set = (opts.inner_radius != FLT_MAX || opts.outer_radius != FLT_MAX) ? true : false;
+   bool radius_set = ((opts.build_method == 2) && (opts.inner_radius != FLT_MAX || opts.outer_radius != FLT_MAX)) ? true : false;
 
    if (opts.info)
       fprintf(stderr,"========================================\n");
