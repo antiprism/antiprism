@@ -5611,7 +5611,9 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
    
       // try to color poles. in method 2 a model can be forced upside down
       bool pc_p = pc;
-      if ((opts.build_method == 2) && (!pc && !is_even(opts.ncon_order)))
+      if ((opts.build_method == 2) && (!is_even(opts.ncon_order/2) && !pc))
+         pc_p = true;
+      if ((opts.build_method == 3) && (!is_even(opts.ncon_order) && double_eq(angle_in_range(opts.angle,opts.epsilon),180.0,opts.epsilon)))
          pc_p = true;
       if ((!twist || (N/twist == 2)) && pc_p) {
          int north = -1;
