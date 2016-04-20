@@ -5358,12 +5358,9 @@ void color_by_symmetry(col_geom_v &geom, bool &radius_set, ncon_opts &opts)
       pc = !pc;
 
    // when D=1, and radii are not equal, hybrids are really point cuts
-   if ((opts.build_method == 2) && (D==1)) {
-      if (double_ne(opts.outer_radius,opts.inner_radius,opts.epsilon)) {
-         pc = true;
-         if (hyb)
-            hyb = false;
-      }
+   if ((opts.build_method == 2) && (D==1) && radius_set && hyb) {
+      pc = true;
+      hyb = false;
    }
    if ((opts.build_method == 3) && opts.angle_is_side_cut)
       pc = false;
