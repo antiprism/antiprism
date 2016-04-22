@@ -181,7 +181,7 @@ class ncon_opts: public prog_opts {
                    twist(1),
                    info(false),
                    add_symmetry_polygon(false),
-                   face_coloring_method('\0'),
+                   face_coloring_method('S'),
                    face_opacity(-1),
                    face_pattern("1"),
                    edge_coloring_method('\0'),
@@ -228,7 +228,7 @@ void ncon_opts::usage()
 "  -z <mthd> construction method\n"
 "               1 - n/d must be co-prime. bow-ties can occur (default for d=1)\n"
 "               2 - n/d compounds allowed. shell model (default for d>1)\n"
-"               3 - n/d compounds allowed. No bow-ties\n"
+"               3 - n/d compounds allowed. No bow-ties (default if angle not 0)\n"
 "  -M <m,m2> longitudes of model of m sides with optional m2 of m sides showing\n"
 "               m may be odd, 3 or greater if twist is 0 (default: 36,36)\n"
 "  -A        place a north and south pole in top and bottom if they exist\n"
@@ -628,11 +628,21 @@ void ncon_opts::process_command_line(int argc, char **argv)
 
       // default build methods (old)
       if (!build_method) {
+         // when n/1, build method 1, otherwise build method 2
          if (d == 1 || (ncon_order-d) == 1)
             build_method = 1;
          else
             build_method = 2;
+
+         // radii setting only valid with method 2
+         if (inner_radius != FLT_MAX || outer_radius != FLT_MAX)
+            build_method = 2;
          
+         // angle is only valid with method 3
+         if (angle)
+            build_method = 3;
+         
+         // if flood fill or color by compound, need method 2 (or 3)
          if ((build_method == 1) && strchr("fc",face_coloring_method))
             build_method = 2;
       }
