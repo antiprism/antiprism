@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.61)
 AC_INIT(antiprism, 0.24.pre05, adrian@antiprism.com)
-AC_SUBST(RELEASE_DATE, ["1 May 2014"])
+AC_SUBST(RELEASE_DATE, ["1 May 2016"])
 AM_INIT_AUTOMAKE([1.9 foreign])
 
 AC_CONFIG_SRCDIR([base/antiprism.h])
@@ -215,7 +215,16 @@ AC_DEFINE_UNQUOTED([USLEEP], [$usleep])
 USLEEP=$usleep
 AC_SUBST(USLEEP)
 
-# Python binding
+# Install type, neded for Debian package
+AC_ARG_ENABLE(debian,
+   [  --enable-debian    Install compatible with debian packaging],
+   [case "${enableval}" in
+       yes) debian=true ;;
+       no)  debian=false ;;
+       *) AC_MSG_ERROR(bad value ${enableval} for --enable-debug) ;;
+    esac],
+    [debian=false])
+AM_CONDITIONAL(DEBIAN_INSTALL, test x$debian = xtrue)
 
 
 # Checks for header files.

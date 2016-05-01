@@ -10,7 +10,7 @@ if BUILD_PY_MOD
 # SUBDIRS += python
 endif
 
-EXTRA_DIST = bootstrap pad_file.xml README.git Doxyfile doc doc_src share
+EXTRA_DIST = bootstrap pad_file.xml README.git Doxyfile doc doc_src share debian
 
 #             python/antiprism.i python/antiprism_doc.i \
 #				 python/antiprism_wrap.cc python/antiprism.py \
@@ -25,7 +25,13 @@ distcleancheck_listfiles = \
 
 supdir = @datadir@/@PACKAGE@
 docdir = @docdir@
-doc_DATA = README README.git NEWS AUTHORS COPYING
+
+doc_data_common = README README.git NEWS AUTHORS
+if DEBIAN_INSTALL
+doc_DATA = $(doc_data_common)
+else
+doc_DATA = $(doc_data_common) COPYING
+endif
 
 install-data-local:
 	if test -d $(srcdir)/doc ; then \

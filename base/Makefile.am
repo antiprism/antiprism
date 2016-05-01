@@ -1,5 +1,8 @@
-
+if DEBIAN_INSTALL
+pkglib_LTLIBRARIES = libantiprism.la
+else
 lib_LTLIBRARIES = libantiprism.la
+endif
 
 libantiprism_la_SOURCES = off_read.cc off_write.cc crds_read.cc disp_poly.cc\
    geom.cc geom_utils.cc col_geom.cc col_map.cc col_val.cc dual.cc vec3d.cc mat3d.cc \
@@ -32,7 +35,9 @@ libantiprism_la_CPPFLAGS = -DSUPDIR="\"$(supdir)\""
 libantiprism_la_LDFLAGS = -no-undefined -version-info 0:0:0
 libantiprism_la_LIBADD = tesselator/libtess.la muparser/libmuparser.la
 
-
+if DEBIAN_INSTALL
+pkginclude_HEADERS =
+else
 pkginclude_HEADERS = \
 	antiprism.h \
 	bbox.h \
@@ -63,4 +68,4 @@ pkginclude_HEADERS = \
 	vec_utils.h \
 	vrml_writer.h
 	
-
+endif
