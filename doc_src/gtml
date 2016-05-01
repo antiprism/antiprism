@@ -1564,7 +1564,9 @@ sub ProcessSourceFile
     #
     # Process source files only if asked.
     #
-    if ( defined(@fileToProcess) && ! (&Member($name, @fileToProcess)) )
+    # Adrian Rossiter, error on defined(@array)
+    # if ( defined(@fileToProcess) && ! (&Member($name, @fileToProcess)) )
+    if ( @fileToProcess && ! (&Member($name, @fileToProcess)) )
     {
         return;
     }
