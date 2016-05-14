@@ -540,7 +540,8 @@ int ultra_getopt::ultragetopt_tunable(int argc, char *const argv[],
 #endif
 
    /* Sanity check (These are specified verbatim in SUS) */
-   if (ultraoptind > argc
+   /* AR: changed > to >= to allow for argv with trailing valid options */
+   if (ultraoptind >= argc
          || argv[ultraoptind] == NULL)
       return -1;
 
