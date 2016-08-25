@@ -118,7 +118,7 @@ void ksc_opts::process_command_line(int argc, char **argv)
 {
    char errmsg[MSG_SZ];
    opterr = 0;
-   char c;
+   int c;
    col_geom_v sgeom;
    vector<char *> parts;
    vector<double> nums;

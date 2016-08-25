@@ -516,7 +516,7 @@ void id_opts::usage()
 void id_opts::process_command_line(int argc, char **argv)
 {
    opterr = 0;
-   char c;
+   int c;
    char errmsg[MSG_SZ];
 
    bool s_is_set = false;

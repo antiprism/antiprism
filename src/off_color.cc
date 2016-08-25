@@ -383,7 +383,7 @@ void o_col_opts::process_command_line(int argc, char **argv)
    vector<char *> parts;
    string optarg_orig;
    bool prev_char_was_not;
-   char c;
+   int c;
    
    handle_long_opts(argc, argv);
 

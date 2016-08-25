@@ -73,7 +73,7 @@ void ch_opts::usage()
 void ch_opts::process_command_line(int argc, char **argv)
 {
    opterr = 0;
-   char c;
+   int c;
    
    handle_long_opts(argc, argv);
 

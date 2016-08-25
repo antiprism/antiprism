@@ -139,7 +139,7 @@ void oq_opts::process_command_line(int argc, char **argv)
 {
    char errmsg[MSG_SZ];
    opterr = 0;
-   char c;
+   int c;
    vector<pair<char, char *> > args;
    
    handle_long_opts(argc, argv);

@@ -1271,7 +1271,7 @@ void pr_opts::process_command_line(int argc, char **argv)
 {
    char errmsg[MSG_SZ];
    opterr = 0;
-   char c;
+   int c;
    vector<char *> parts;
    col_geom_v adding;
    col_val close_col;

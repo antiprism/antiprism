@@ -124,7 +124,7 @@ void o2m_opts::usage()
 void o2m_opts::process_command_line(int argc, char **argv)
 {
    opterr = 0;
-   char c;
+   int c;
    char errmsg[MSG_SZ];
    
    handle_long_opts(argc, argv);

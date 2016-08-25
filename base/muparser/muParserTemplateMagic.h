@@ -139,7 +139,7 @@ namespace mu
     static TYPE Pow(TYPE v1, TYPE v2) { return (TYPE)std::pow((double)v1, (double)v2); } \
   };
 
-  MAKE_MATH_DUMMY(char)
+  MAKE_MATH_DUMMY(signed char)
   MAKE_MATH_DUMMY(short)
   MAKE_MATH_DUMMY(int)
   MAKE_MATH_DUMMY(long)

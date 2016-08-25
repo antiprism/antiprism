@@ -95,7 +95,7 @@ void rep_opts::process_command_line(int argc, char **argv)
 {
    char errmsg[MSG_SZ];
    opterr = 0;
-   char c;
+   int c;
 
    int sig_compare = INT_MAX;
    

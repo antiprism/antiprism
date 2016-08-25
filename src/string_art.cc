@@ -179,7 +179,7 @@ void string_opts::process_command_line(int argc, char **argv)
 {
    char errmsg[MSG_SZ];
    opterr = 0;
-   char c;
+   int c;
    vector<double> nums;
    vector<vec3d> coords;
    art_elem *elem = 0;

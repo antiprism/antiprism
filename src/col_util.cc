@@ -161,7 +161,7 @@ void col_util_opts::usage()
 void col_util_opts::process_command_line(int argc, char **argv)
 {
    opterr = 0;
-   char c;
+   int c;
    char errmsg[MSG_SZ];
    
    vector<double> double_parms;

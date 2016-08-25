@@ -150,7 +150,7 @@ void waterman_opts::usage()
 void waterman_opts::process_command_line(int argc, char **argv)
 {
    opterr = 0;
-   char c;
+   int c;
    char errmsg[MSG_SZ];
 
    int sig_compare = INT_MAX;

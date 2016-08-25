@@ -138,7 +138,7 @@ void mm_opts::process_command_line(int argc, char **argv)
 {
    char errmsg[MSG_SZ];
    opterr = 0;
-   char c;
+   int c;
    vector<double> nums;
 
    handle_long_opts(argc, argv);

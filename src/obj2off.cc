@@ -75,7 +75,7 @@ void obj2off_opts::usage()
 void obj2off_opts::process_command_line(int argc, char **argv)
 {
    opterr = 0;
-   char c;
+   int c;
    char errmsg[MSG_SZ];
    
    handle_long_opts(argc, argv);

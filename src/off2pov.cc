@@ -103,7 +103,7 @@ void o2p_opts::process_command_line(int argc, char **argv)
    char errmsg[MSG_SZ];
    vector<string> warnings;
    opterr = 0;
-   char c;
+   int c;
   
    handle_long_opts(argc, argv);
 
