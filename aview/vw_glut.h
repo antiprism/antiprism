@@ -53,6 +53,7 @@
 #define FOUND_GLUT 1
 #define FOUND_OPENGLUT 2
 #define FOUND_FREEGLUT 3
+#define FOUND_FLTKGLUT 4
 
 #if GLUT_TYPE == FOUND_GLUT
    #ifdef HAVE_GL_GLUT_H
@@ -64,6 +65,8 @@
    #include <GL/openglut.h>
 #elif GLUT_TYPE == FOUND_FREEGLUT
   #include <GL/freeglut.h>
+#elif GLUT_TYPE == FOUND_FLTKGLUT
+  #include <FL/glut.H>
 #else
    #error "No GLUT library has been specified"
 #endif

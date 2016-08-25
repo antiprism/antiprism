@@ -4,6 +4,7 @@
 AC_PREREQ(2.61)
 AC_INIT(antiprism, 0.24.pre05, adrian@antiprism.com)
 AC_SUBST(RELEASE_DATE, ["1 May 2016"])
+AC_CANONICAL_TARGET  # For m4/fltk.m4
 AM_INIT_AUTOMAKE([1.9 foreign])
 
 AC_CONFIG_SRCDIR([base/antiprism.h])
@@ -95,6 +96,7 @@ NO_GLUT=0
 GLUT=1
 OPENGLUT=2
 FREEGLUT=3
+FLTKGLUT=4
 
 AC_PATH_X
 if test x"$no_x" = x"yes" ; then
@@ -114,7 +116,11 @@ AC_ARG_WITH(
    [glut_type=$OPENGLUT],
    [AC_ARG_WITH([freeglut],
          [AS_HELP_STRING([--with-freeglut], [build using Freeglut])],
-         [glut_type=$FREEGLUT])]
+         [glut_type=$FREEGLUT],
+         [AC_ARG_WITH([fltkglut],
+            [AS_HELP_STRING([--with-fltkglut], [build using FLTK GLUT])],
+            [glut_type=$FLTKGLUT])]
+         )]
 )
 
 FOUND_GLU=0
@@ -142,6 +148,17 @@ if test ! x"$no_gl" = x"yes" ; then
                AC_CHECK_HEADER([GL/freeglut.h],  # must be in GL directory
                   [AC_CHECK_LIB([freeglut], [main],
                      [GLUT_LIBS="-lfreeglut"; glut_type=$FREEGLUT]) ])
+            else
+               if test $glut_type = $FLTKGLUT ; then
+                  AM_PATH_FLTK(1.3.3)
+                  glut_type=$NO_GLUT
+                  if test ! CXXFLAGS = "" ; then
+                     CXXFLAGS="$CXXFLAGS $FLTK_CXXFLAGS"
+                     LIBS="$LIBS $FLTK_LIBS"
+                     LDFLAGS="$LDFLAGS $FLTK_LDFLAGS"
+                     glut_type=$FLTKGLUT
+                  fi
+               fi
             fi
          fi
       fi

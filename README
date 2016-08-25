@@ -74,7 +74,8 @@ If building against a locally installed GLUT package, ensure that
 the headers are in a GL subdirectory. If building against OpenGLUT
 or Freeglut but using their own names for headers and libraries
 (rather than the usual GLUT names) run configure with --with-openglut
-or --with-freeglut.
+or --with-freeglut. To build against FLTK with GLUT compatibility, run
+configure with --with-fltkglut.
 
 Cygwin
 ------
