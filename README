@@ -9,7 +9,7 @@ symmetry of a polyhedron and off2obj (Roger Kaufman) converts OFF to
 Wavefront OBJ format. There are also new features, improvements, and bug
 fixes. See the NEWS file for more details.
 
-Please look out for bugs, or other issues, and report them to me
+Please look out for bugs and other issues, and report them to me at
 at: adrian@antiprism.com
 
 Adrian.
@@ -46,18 +46,19 @@ set to the path of the 'data' directory in the install directory.
 Building
 --------
 
-These are instructions for building from source. They aren't
-needed to run the Windows executables.
+These are instructions for building from a source tarball (see
+README.git for building fron the Antiprism Git Repository). They
+are not needed to run the Windows executables.
 
-Antiprism uses the autotools build system. The programs can be
+Antiprism uses the Autotools build system. The programs can be
 built with
 
    ./configure
    make
 
-and installed with (as superuser)
+and installed with
 
-   make install-strip
+   sudo make install-strip
 
 See the INSTALL file for more details.
 
@@ -90,7 +91,7 @@ MSYS build environment.
 
 Mac OS X
 --------
-Recent changes have been made to support building on OS X (with
+Changes have been made to support building on OS X (with
 thanks to Ralph Sutherland), but these changes are currently
 untested. Any feedback regarding successful or failed builds
 would be appreciated. Run configure with "--with-x=no".
@@ -106,8 +107,11 @@ The Git repository contains the latest development code
 See README.git for further details.
 
 
-Note to developers
+Note to Developers
 ------------------
+
+README.git contains information for developers.
+
 All the Antiprism source code is supplied under a permissive licence.
 
 The aim of using permissive licensing is to promote the development of
@@ -120,6 +124,3 @@ be incorporated back into the Antiprism project, like bug fixes,
 optimisations or new features, then please contribute your changes
 for inclusion back into Antiprism under a permissive (preferably
 MIT) licence.
-
-
-

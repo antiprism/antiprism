@@ -1,32 +1,59 @@
-Git Code Repository
--------------------
+Antiprism Git Repository
+========================
 
-The Git repository contains the latest development code
+The Antiprism Git repository contains the latest development code
 
    https://github.com/antiprism/antiprism
 
 A suitable build environment is required to build the programs. This
 includes things like: C++ compiler, linker, make, suitable shell, etc. 
-On Debian-based systems these can be installed through the
-build_essential package.
-
 Autoconf 2.61, Automake 1.9 and Libtool 2.2.6 (or later versions)
-are required to create the configure script. Create it by running
+are required to create the configure script.
+
+On Debian-based systems these can be installed with
+
+   sudo apt-get install build-essential autoconf libtool
+
+Create 'configure' by running
 
    ./bootstrap
 
+Follow the 'Building' section of the README to complete the build.
+
 This is sufficient for simply tracking the development code.
+
+
+Changing Program Code
+---------------------
 
 If changing any of the source files that include a main() function for
 a program, the man page for that program will be rebuilt. This requires
 help2man to be installed.
 
-The release documentation may optionally (requires Perl) be built with
+On Debian-based systems this can be installed with
+
+   sudo apt-get install help2man
+
+
+Release Documentation
+---------------------
+
+The release documentation may optionally be built with
 
    make prepare_release
 
-The library documentation may, if required, be built with Doxygen. Run
-'doxygen' in the top level source directory. The documentation will
-be written into antiprism-VERSION_lib_doc.
 
-Follow the 'Building' section of the README to complete the build.
+Library Documentation
+---------------------
+
+The library documentation may, if required, be built with Doxygen.
+
+On Debian-based system the relevant packages can be installed with
+
+   sudo apt-get install doxygen graphviz
+
+In the top level directory, run
+
+   doxygen
+   
+The documentation will be written into antiprism-VERSION_lib_doc.
