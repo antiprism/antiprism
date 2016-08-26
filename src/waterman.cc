@@ -43,7 +43,7 @@
 
 using std::string;
 using std::vector;
-
+using std::abs;
 
 int get_num_decs(const char *str)
 {

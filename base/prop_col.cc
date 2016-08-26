@@ -519,7 +519,7 @@ Graph::Graph(prop_color &pr_col): prop(pr_col)
          delete help;
       }
    }
-   delete arrayE;
+   delete[] arrayE;
    RANDOM_1 = ((rand() >> 1) << 1) + 1;
    RANDOM_2 = ((rand() >> 1) << 1) + 1;
    LENGTH_RANDOM = 10 * VERTICES;
@@ -773,8 +773,8 @@ void Graph::GraphColoring (long *parameter, long& current_color) {
          }
 */
    }
-   delete MIS; delete FREES; delete DEL; delete SQUARES;
-   delete SINGLES; delete CUBES; delete GRAPH;
+   delete[] MIS; delete[] FREES; delete[] DEL; delete[] SQUARES;
+   delete[] SINGLES; delete[] CUBES; delete[] GRAPH;
 }
 
 float Graph::LocalSearch(Edge *BEST_MIS,
@@ -897,9 +897,9 @@ float Graph::LocalSearch(Edge *BEST_MIS,
          }
       } while (counter < parameter[2]);
    } while (improvement == _YES);
-   delete MIS;
-   delete FREES;
-   delete DEL;
+   delete[] MIS;
+   delete[] FREES;
+   delete[] DEL;
    return (best_cost);
 }
 
