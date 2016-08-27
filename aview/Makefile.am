@@ -24,7 +24,8 @@ dist_man1_MANS = antiview.1
 antiview_SOURCES = antiview.cc vw_glut.cc \
                    vw_glut.h
 antiview_LDADD = $(GLUT_LIBS) $(LDADD)
-antiview_CXXFLAGS = $(GLUT_CFLAGS)
+antiview_CXXFLAGS = $(GLUT_CFLAGS) $(GLUT_CXXFLAGS)
+antiview_LDFLAGS = $(GLUT_LDFLAGS)
 
 
 

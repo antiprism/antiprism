@@ -21,6 +21,7 @@ xx-xx-14 Adrian Rossiter <adrian@antiprism.com>
             off_color: new edge direction colourings -e ldD
             antiview: 'O' to show orientation, 't' includes 50%
               transparency
+            build: support FLTK GLUT
          Fixes
             off_util -u: natural unfolding for positive orientation
             off_align: fix crashes

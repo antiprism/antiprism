@@ -150,12 +150,12 @@ if test ! x"$no_gl" = x"yes" ; then
                      [GLUT_LIBS="-lfreeglut"; glut_type=$FREEGLUT]) ])
             else
                if test $glut_type = $FLTKGLUT ; then
-                  AM_PATH_FLTK(1.3.3)
+                  AM_PATH_FLTK(1.3)
                   glut_type=$NO_GLUT
                   if test ! CXXFLAGS = "" ; then
-                     CXXFLAGS="$CXXFLAGS $FLTK_CXXFLAGS"
-                     LIBS="$LIBS $FLTK_LIBS"
-                     LDFLAGS="$LDFLAGS $FLTK_LDFLAGS"
+                     GLUT_CXXFLAGS="$FLTK_CXXFLAGS"
+                     GLUT_LDFLAGS= "$FLTK_LDFLAGS"
+                     GLUT_LIBS="$FLTK_LIBS"
                      glut_type=$FLTKGLUT
                   fi
                fi
@@ -211,6 +211,8 @@ fi
 
 AC_SUBST(GLUT_LIBS)
 AC_SUBST(GLUT_CFLAGS)
+AC_SUBST(GLUT_CXXFLAGS)
+AC_SUBST(GLUT_LDLAGS)
 
 AH_TEMPLATE([GLUT_TYPE], [The GLUT library that will used 1=GLUT, 2=OpenGLUT])
 AC_DEFINE_UNQUOTED([GLUT_TYPE], [$glut_type])
