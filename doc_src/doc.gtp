@@ -18,6 +18,7 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/off2pov.gtm 2 off2pov - convert OFF files to POV format
 ./doc/off2vrml.gtm 2 off2vrml - convert OFF files to VRML format
 ./doc/off2crds.gtm 2 off2crds - convert an OFF file to a coordinate file
+./doc/off2dae.gtm 2 off2dae - convert an OFF file to Collada (DAE) format
 ./doc/off2obj.gtm 2 off2obj - convert an OFF file to Wavefront OBJ format
 ./doc/obj2off.gtm 2 obj2off - convert a Wavefront OBJ file to OFF format
 ./doc/off2m.gtm 2 off2m - convert an OFF file for LiveGraphics3D

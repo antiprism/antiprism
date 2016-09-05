@@ -47,10 +47,10 @@ src/off2pov
 src/off2eig
 src/off2m
 src/off2vrml
+src/off2dae
 src/off2obj
 src/obj2off
 src/off2crds
-src/off2obj
 src/crds2off
 src/m2off
 src/off_color

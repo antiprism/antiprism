@@ -91,6 +91,7 @@ class disp_poly : public virtual geom_disp
       vector<string> &get_includes() { return includes; }
       const vector<string> &get_includes() const { return includes; }
  
+      col_geom_v &get_disp_geom() { return disp_geom; }
       geom_disp *clone() const { return new disp_poly(*this); }
       void geom_changed();
       int animate();

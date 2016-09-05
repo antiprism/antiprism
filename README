@@ -5,9 +5,10 @@ Notes for Antiprism 0.24
 ------------------------
 
 The release includes two new programs: to_nfold changes the rotational
-symmetry of a polyhedron and off2obj (Roger Kaufman) converts OFF to
-Wavefront OBJ format. There are also new features, improvements, and bug
-fixes. See the NEWS file for more details.
+symmetry of a polyhedron; off2obj (Roger Kaufman) converts OFF to
+Wavefront OBJ format; off2dae converts OFF to Collada (DAE) format.
+There are also new features, improvements, and bug fixes. See the NEWS
+file for more details.
 
 Please look out for bugs and other issues, and report them to me at
 at: adrian@antiprism.com
