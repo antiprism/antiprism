@@ -1,7 +1,7 @@
 NEWS for Antiprism: http://www.antiprism.com
 
 Version 0.24
-xx-xx-14 Adrian Rossiter <adrian@antiprism.com>
+xx-xx-16 Adrian Rossiter <adrian@antiprism.com>
          New Programs
             to_nfold: change the rotational symmetry of a polyhedron
             off2obj/obj2off: convert between OFF to Wavefront OBJ

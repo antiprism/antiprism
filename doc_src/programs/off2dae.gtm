@@ -1,0 +1,71 @@
+#define HL_PROG class=curpage
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<<TITLE_HEAD>>
+
+<<TOP_LINKS>>
+
+<<USAGE_START>>
+<pre class="prog_help">
+<<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</pre>
+<<USAGE_END>>
+
+
+<<EXAMPLES_START>>
+Display icosahedron vertices as a ball pack
+<<CMDS_START>>
+off2dae -x ef -v b ico &gt; ico_pack.dae
+<<CMDS_END>>
+
+Display an icosahedron without its faces
+<<CMDS_START>>
+off2dae -x f ico &gt; ico_frame.dae
+<<CMDS_END>>
+
+Display an icosahedron without its vertex or edge elements
+<<CMDS_START>>
+off2dae -x ve ico &gt; ico_faces.dae
+<<CMDS_END>>
+
+Display an icosahedron with thin vertex and edge elements
+<<CMDS_START>>
+off2dae -v 0.01 -e 0.008 ico &gt; ico_thin_elems.dae
+<<CMDS_END>>
+
+Set default vertex colour, for uncoloured vertices, to red
+<<CMDS_START>>
+off2dae -V red std_ico &gt; ico_red_verts.dae
+<<CMDS_END>>
+
+Increase smooth level to 5. This will make vertex and edge elements have
+more polygons and so look smoother.
+<<CMDS_START>>
+off2dae -K 5 ico &gt; ico_smoother_elems.dae
+<<CMDS_END>>
+<<EXAMPLES_END>>
+
+
+<<NOTES_START>>
+The Collada format is large in scope, and programs that import it generally
+only support a subset of its features. For an input file to be imported
+correctly into a program it must therefore use a specific subset. The
+off2dae output has been designed to be compatible with Sketchup
+and Blender.
+<p>
+Sketchup will not import the surface smoothing that is applied to
+vertex spheres and edge cylinders. If the elements of am model look
+too "polyhedral" in Sketchup there are two solutions: use option
+<i>-K 5</i> (or higher) so the element models have more polygons;
+import the vertex and edge elements together with option <i>-x f</i>
+and use edge smoothing in Sketchup, then import the faces with option
+<i>-x ev</i>.
+<<NOTES_END>>
+
+#include "<<END>>"

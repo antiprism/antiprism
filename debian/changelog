@@ -1,5 +1,5 @@
-antiprism (0.24.pre05-1ubuntu1) xenial; urgency=medium
+antiprism (0.23.99+05) xenial; urgency=low
 
-  * Initial release
+  * See source repository commit log
 
  -- Adrian Rossiter <adrian@antiprism.com>  Sun, 1 May 2016 12:00:00 +0200
