@@ -37,8 +37,6 @@ Programs
 <li><a href="off2dae.html">off2dae</a> - convert an OFF file to Collada (DAE) format
 <li><a href="off2obj.html">off2obj</a> - convert an OFF file to Wavefront OBJ format
 <li><a href="obj2off.html">obj2off</a> - convert a Wavefront OBJ file to OFF format
-<li><a href="off2m.html">off2m</a> - convert an OFF file to LiveGraphics3D 'm' format
-<li><a href="m2off.html">m2off</a> - convert a LiveGraphics3D 'm' file to OFF format
 </ul>
 
 <b>Manipulation</b>
@@ -99,6 +97,8 @@ provided for interest only
 <li><a href="dome_layer.html">dome_layer</a> - dome strut arrangements
 <li><a href="twist.html">twist</a> - twist the edges of a polyhedron
 <li><a href="spidron.html">spidron</a> - spidronise a polyhedron
+<li><a href="off2m.html">off2m</a> - convert an OFF file to LiveGraphics3D 'm' format
+<li><a href="m2off.html">m2off</a> - convert a LiveGraphics3D 'm' file to OFF format
 <li><a href="off2txt.html">off2txt</a> - convert an OFF file to Hedron format
 </ul>
 

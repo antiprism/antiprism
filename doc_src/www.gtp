@@ -20,8 +20,6 @@ mtimestamp $dd.$MM.$yyyy
 ./programs/off2obj.gtm 3 off2obj - convert an OFF file to Wavefront OBJ format
 ./programs/obj2off.gtm 3 obj2off - convert a Wavefront OBJ file to OFF format
 ./programs/off2crds.gtm 3 off2crds - convert an OFF file to a coordinate file
-./programs/off2m.gtm 3 off2m - convert an OFF file for LiveGraphics3D
-./programs/m2off.gtm 3 m2off - convert a LiveGraphics3D 'm' file to OFF format
 ./programs/off_color.gtm 3 off_color - add colours to an OFF file
 ./programs/off_trans.gtm 3 off_trans - transformations (rotations etc) of OFF files
 ./programs/off_align.gtm 3 off_align - alignment of OFF files
@@ -62,6 +60,8 @@ mtimestamp $dd.$MM.$yyyy
 ./programs/dome_layer.gtm 3 UNSUPPORTED: dome_layer - dome strut arrangements
 ./programs/twist.gtm 3 UNSUPPORTED: twist - twist the edges of a polyhedron
 ./programs/spidron.gtm 3 UNSUPPORTED: spidron - spidronise a polyhedron
+./programs/off2m.gtm 3 UNSUPPORTED: off2m - convert an OFF file for LiveGraphics3D
+./programs/m2off.gtm 3 UNSUPPORTED: m2off - convert a LiveGraphics3D 'm' file to OFF format
 ./programs/off2txt.gtm 3 UNSUPPORTED: off2txt - convert an OFF file to Hedron format
 
 ./programs/resources.gtm 3 Antiprism Resource Files

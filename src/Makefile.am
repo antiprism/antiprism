@@ -17,7 +17,7 @@ noinst_LTLIBRARIES = liblattice_grid.la
 					 
 liblattice_grid_la_SOURCES = lattice_grid.cc lattice_grid.h
 
-bin_PROGRAMS = off2pov off2m off2vrml off2crds off2obj obj2off m2off off2dae \
+bin_PROGRAMS = off2pov off2vrml off2crds off2obj obj2off off2dae \
 		off_color off_util off_trans off_align \
 		poly_kscope polygon zono conv_hull pol_recip \
 		geodesic minmax sph_saff sph_rings \
@@ -27,8 +27,8 @@ bin_PROGRAMS = off2pov off2m off2vrml off2crds off2obj obj2off m2off off2dae \
 		bravais waterman col_util planar off_normals leonardo \
 		iso_kite to_nfold symmetro
 
-dist_man1_MANS = off2pov.1 off2m.1 off2vrml.1 off2crds.1 off2obj.1 \
-		obj2off.1 m2off.1 off2dae.1 \
+dist_man1_MANS = off2pov.1 off2vrml.1 off2crds.1 off2obj.1 \
+		obj2off.1 off2dae.1 \
 		off_color.1 off_util.1 off_trans.1 off_align.1 \
       poly_kscope.1 polygon.1 zono.1 conv_hull.1 pol_recip.1 \
 		geodesic.1 minmax.1 sph_saff.1 sph_rings.1 \
@@ -43,8 +43,6 @@ off2crds_SOURCES = off2crds.cc
 off2obj_SOURCES = off2obj.cc
 obj2off_SOURCES = obj2off.cc
 off2vrml_SOURCES = off2vrml.cc
-m2off_SOURCES = m2off.cc
-off2m_SOURCES = off2m.cc
 off2dae_SOURCES = off2dae.cc
 off_color_SOURCES = off_color.cc
 off_util_SOURCES = off_util.cc help.h

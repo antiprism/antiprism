@@ -41,18 +41,18 @@ doc_src/common_defs.inc
 
 src_extra/twist
 src_extra/spidron
-src_extra/off2txt
 src_extra/dome_layer
+src_extra/off2m
+src_extra/m2off
+src_extra/off2txt
 src/off2pov
 src/off2eig
-src/off2m
 src/off2vrml
 src/off2dae
 src/off2obj
 src/obj2off
 src/off2crds
 src/crds2off
-src/m2off
 src/off_color
 src/off_util
 src/off_trans
