@@ -39,7 +39,7 @@ Dual "out"
 dome_layer -r 1.1 -t dual geo_2_1_d | antiview -x f -v 0.02
 <<CMDS_END>>
 
-Asm
+ASM
 <<CMDS_START>>
 dome_layer -r 0.9 -t asm geo_2_1_d | antiview -x f -v 0.02
 <<CMDS_END>>
@@ -56,9 +56,19 @@ dome_layer -r 1.1 -t honeycomb geo_2_1_d | antiview -x f -v 0.02
 <<EXAMPLES_END>>
 
 
+Prism tensegrity sphere, colour "struts" red and all "strings" white
+<<CMDS_START>>
+dome_layer -t prism -r 1.3 -i geo_2_1_d | off_color -e M -m map_red:white:white:white | antiview -v 0.02
+<<CMDS_END>>
+<<EXAMPLES_END>>
+
+
 <<NOTES_START>>
-The source of the patterns was Tim Tyler's
-<a href="http://springie.com/gallery/">Springie Gallery</a>
+The source of the Eden, Dual ASM and honeycomb patterns was Tim Tyler's
+<a href="http://springie.com/gallery/">Springie Gallery</a>. The prism
+tensegrity pattern is based on a model held by Fuller in a photograph
+and discussed on the
+<a href="https://groups.google.com/d/msg/geodesichelp/_CDJfvNFOrA/NZsqGclmAwAJ">Geodesic Help Group</a>.
 <<NOTES_END>>
 
 #include "<<END>>"

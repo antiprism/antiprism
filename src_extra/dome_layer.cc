@@ -77,6 +77,7 @@ void dome_opts::usage()
 "               eden:      base vertices to edge centre vertices\n"
 "               asm:       base vertices to inner base, vertices to cell centres\n"
 "               honeycomb: base vertices to dual of 'kis' form\n"
+"               prism:     repeat base and connect faces as prism tensegrities\n"
 "  -i        write colours as index numbers (struts 0-4, faces 10)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
@@ -105,7 +106,7 @@ void dome_opts::process_command_line(int argc, char **argv)
          case 't':
             type = to_resource_name(name, optarg);
             if(type!="eden" && type!="dual" && type!="asm" &&
-                  type != "honeycomb")
+                  type != "honeycomb" && type !="prism")
                error("unknown layering type", c);
             break;
 
@@ -304,6 +305,28 @@ void make_dome_honeycomb(const col_geom_v &geom, col_geom_v &dome, double radius
    }
 }
 
+void make_dome_prism(const col_geom_v &geom, col_geom_v &dome, double radius)
+{
+   for(unsigned int f_idx=0; f_idx<geom.faces().size(); f_idx++) {
+      int orig_vsz = dome.verts().size();
+      const vector<int> &face = geom.faces(f_idx);
+      const int fsz = face.size();
+      for(unsigned int i=0; i<face.size(); i++) {
+         dome.add_vert(geom.edge_cent(make_edge(face[i],
+                     face[(i+1)%fsz])).unit());
+         dome.add_vert(geom.edge_cent(make_edge(face[(i+2)%fsz],
+                     face[(i+2+1)%fsz])).unit()*radius);
+         int vsz = dome.verts().size();
+         dome.add_col_edge(vsz-2, vsz-1, 0);
+
+         dome.add_col_edge(orig_vsz+(2*i), orig_vsz+(2*i+2)%(2*fsz), 1);
+         dome.add_col_edge(orig_vsz+(2*i+1), orig_vsz+(2*i+3)%(2*fsz), 2);
+         dome.add_col_edge(orig_vsz+(2*i), orig_vsz+(2*i+2*fsz-1)%(2*fsz), 3);
+      }
+
+   }
+}
+
 void set_color_values(col_geom_v &geom)
 {
    color_map_map *cmap = new color_map_map;
@@ -336,6 +359,8 @@ int main(int argc, char *argv[])
       make_dome_asm(geom, dome, opts.radius);
    else if(opts.type=="honeycomb")
       make_dome_honeycomb(geom, dome, opts.radius);
+   else if(opts.type=="prism")
+      make_dome_prism(geom, dome, opts.radius);
 
    if(opts.use_col_values)
       set_color_values(dome);
