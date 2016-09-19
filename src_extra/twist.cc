@@ -78,7 +78,7 @@ void tw_opts::usage()
 "%s"
 "  -c <cent> centre to twist about, in form \"x_val,y_val,z_val\"\n"
 "            (default, \"0,0,0\")\n"
-"  -t val    twist edges and amount between polyhedron (0.0) and dual (1.0)\n"
+"  -t val    twist edges an amount between polyhedron (0.0) and dual (1.0)\n"
 "  -s        output struts only\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
@@ -116,7 +116,7 @@ void tw_opts::process_command_line(int argc, char **argv)
    
    handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hc:o:t:s:")) != -1 ) {
+   while( (c = getopt(argc, argv, ":hc:o:t:s")) != -1 ) {
       if(common_opts(c, optopt))
          continue;
 
@@ -133,8 +133,6 @@ void tw_opts::process_command_line(int argc, char **argv)
          case 't':
             if(!read_double(optarg, &twist_val, errmsg))
                error(errmsg, c);
-            if(twist_val < 0.0 || twist_val > 1.0)
-               error("value of twist must be between 0.0 and 1.0", c);
             break;
 
          case 's':
@@ -158,14 +156,14 @@ void tw_opts::process_command_line(int argc, char **argv)
 
 
 
-geom_v twist(geom_if &poly, geom_if &dual, double twist_val, vec3d centre,
+col_geom_v twist(geom_if &poly, geom_if &dual, double twist_val, vec3d centre,
       bool struts_only)
 {
    
    map<vector<int>, vector<int> > edges;
    poly.get_edge_face_pairs(edges, true);
    map<vector<int>, vector<int> >::iterator mi, mi_next;
-   geom_v twist;
+   col_geom_v twist;
    vector<vec3d> &pverts = *poly.get_verts();
    vector<vector<int> > &pfaces = *poly.get_faces();
    vector<vec3d> &dverts = *dual.get_verts();
@@ -228,10 +226,7 @@ geom_v twist(geom_if &poly, geom_if &dual, double twist_val, vec3d centre,
          vec3d v = line_plane_intersect(centre,
                mi_tw2->second.first, mi_tw2->second.second,
                mi_tw->second.first, mi_tw->second.second, &where);
-         if(where<3&&i)
-            tv_map.push_back(mi_tw->first[0]);
-         else
-            tv_map.push_back(mi_tw->first[1]);
+         tv_map.push_back(mi_tw->first[i]);
          tverts.push_back(v);
          tfaces.back().push_back(tverts.size()-1);
       }
@@ -243,14 +238,19 @@ geom_v twist(geom_if &poly, geom_if &dual, double twist_val, vec3d centre,
       v1 = centre + (v1 - centre)*ratio;
    }
 
-   if(!struts_only) {
+   if(struts_only) {
+      for(unsigned int i=0; i<tfaces.size(); i++)
+            twist.add_col_edge(make_edge(tfaces[i][0], tfaces[i][1]), 0);
+      twist.clear_faces();
+   }
+   else {
       for(unsigned int i=0; i<tfaces.size(); i++) {
          vector<int> edge(2);
          edge[0] = tv_map[tfaces[i][0]];
          edge[1] = tv_map[tfaces[i][1]];
          if(edge[1]<edge[0])
             swap(edge[1], edge[0]);
-         //fprintf(stderr, "edge = (%d, %d) v.size = %d\n", edge[0], edge[1], edge.size());
+         //fprintf(stderr, "edge = (%d, %d) edge.size = %d\n", edge[0], edge[1], (int)edge.size());
          vector<int> v_idxs = attach_edges.find(edge)->second;
          vec3d P0 = tverts[tfaces[i][0]];
          vec3d edge_vec = tverts[tfaces[i][1]] - P0;
@@ -259,6 +259,10 @@ geom_v twist(geom_if &poly, geom_if &dual, double twist_val, vec3d centre,
             swap(v_idxs[0], v_idxs[1]);
          tfaces[i].push_back(v_idxs[0]);
          tfaces[i].push_back(v_idxs[1]);
+
+         for(int j=0; j<4; j++)
+            twist.add_col_edge(make_edge(tfaces[i][j], tfaces[i][(j+1)%4]),
+                  col_val(bool(j)));
       }
    }
 
@@ -300,7 +304,7 @@ int main(int argc, char *argv[])
       opts.warning(msg);
    }
 
-   geom_v twisted = twist(geom, dual, opts.twist_val, opts.centre,
+   col_geom_v twisted = twist(geom, dual, opts.twist_val, opts.centre,
          opts.struts_only);
 
    geom_write_or_error(twisted, opts.ofile, opts);
