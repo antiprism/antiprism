@@ -36,10 +36,6 @@
 
 #include "vec4d.h"
 
-#ifndef NAN
-#define NAN (0.0F/0.0F)
-#endif
-
 vec4d vec4d::X(1, 0, 0, 0);
 vec4d vec4d::Y(0, 1, 0, 0);
 vec4d vec4d::Z(0, 0, 1, 0);

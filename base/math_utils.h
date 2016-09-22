@@ -35,6 +35,10 @@
 
 #include "const.h"
 
+#ifndef NAN
+#define NAN (0.0F/0.0F)
+#endif
+
 ///Get the Greatest Common Divisor.
 /**\param m the first number.
  * \param n the second number.

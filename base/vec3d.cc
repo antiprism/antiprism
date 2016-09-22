@@ -36,10 +36,6 @@
 
 #include "vec3d.h"
 
-#ifndef NAN
-#define NAN (0.0F/0.0F)
-#endif
-
 vec3d vec3d::X(1, 0, 0);
 vec3d vec3d::Y(0, 1, 0);
 vec3d vec3d::Z(0, 0, 1);
