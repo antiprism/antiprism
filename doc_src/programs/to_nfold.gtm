@@ -62,10 +62,57 @@ Convert a polyhedral torus
 
 
 <<NOTES_START>>
-<p>Models with non-axial polygons that cross the model (e.g. a slanting
-polygon that is intersected by the axis) cannot be converted. They
-require a different handling, which is not currently implemeted.
+
+<h3>Algorithm</h3>
+
+<p>
+First the cyclic symmetry of the model, <i>C<sub>n_from</sub></i>, is found.
+An arbitrary sector of angular width <i>2&pi; / n_from</i> is considered, and
+this sector is scaled by rotation to have angular width
+<i>2&pi; &middot; d_to / n_to</i>.
+This determines the new vertex positions unambiguously.
 </p>
+<p>
+The faces are determined by considering each set of faces which are equivalent
+under <i>C<sub>n_from</sub></i> symmetry, and then choosing a minimal chain
+of edges that will repeat by this symmtry to recreate the edges of this
+set of faces. The chain is transformed, edge by edge, to match the
+final symmetry and step. It is then
+repeated by the final symmetry into one or more circuits, which are
+the final faces.
+</p>
+<p>
+To transform each edge, the original central angle is considered
+positive if the symmetry axis lies in the sweep of this edge and the last,
+otherwise negative, but if the edge intersects the symmetry axis (180
+degree edge) then its sign is ambiguous. In this case, if the sum of
+angles with the adjoining edges is positive then the sign is taken as
+negative, and vice versa. If the sum is zero, then the sign is chosen,
+arbitrarily.
+</p>
+
+<h3>Issues</h3>
+<ul>
+<li>If a model has faces that meet at a 180 degree edge
+    in the base model then they may not meet in the final model.</li>
+<li>Some polygons may have a face that shares the axial symmetry but
+    will not divide into valid edge chains, e.g. a rectangular bow-tie
+    quadrilateral has 4 edges and 2-fold symmetry, but a chain of two
+    of its edges cannot be repeated by 2-fold symmetry to recreate the
+    original bow tie.</li>
+<li>Some models have an axial fractional polygon, or a form that can
+    be identified with one (e.g. a polyhedral tube might follow the
+    path of pentagram edges). The step of a polygon tends to be
+    preserved when applying <i>to_nfold</i>, and it may be that the
+    apparent final model step will divide the final <i>n_to</i>. Such
+    models are not constructible, and will lead to a broken final model,
+    likely with edges from a vertex onto itself,
+    e.g. <tt>to_nfold&nbsp;3&nbsp;pri7/3</tt>.
+<li>Faces that slant and are intersected by the axis may lead to
+    skew polygons that wrap the axis several times. This may not
+    be the desired result, however, it is correct for the
+    algorithm. e.g. <tt>to_nfold&nbsp;7&nbsp;ant5/3</tt>.
+</ul>
 <p>
 <i>to_nfold</i> is based on an 
 <a href="http://tech.groups.yahoo.com/group/antiprism/message/6997">idea by Bruce R. Gilson</a>.
