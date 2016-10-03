@@ -1594,67 +1594,72 @@ const set<sch_sym> &sch_sym::get_sub_syms() const
             sub_syms.insert(sym);
             if(nfold%2==0) {       // nfold even: second axis and vert mirror
                dih_type = Dh;
-               // vertical mirror through dihedral axis
-               sym.init(Cs, 0, mat3d::rot(vec3d::X, -M_PI/2) *
-                               mat3d::rot(axis, -M_PI/nfold) * to_std);
-               sub_syms.insert(sym);
-               //sym.init(dih_type, 2, mat3d::rot(vec3d::Y, -M_PI/2) *
-               //                      mat3d::rot(axis, -M_PI/nfold) * to_std);
-               sym.init(dih_type, 2, mat3d::rot(axis, -M_PI/nfold) * to_std);
-               add_sub_axes(sym);
+               // do this first to prefer main axis D groups
                if(nfold>2) {
-                  sym.init(Dh, nfold/2, mat3d::rot(axis, -M_PI/nfold) * to_std);
+                  sym.init(Dh, nfold/2, mat3d::rot(axis, M_PI/nfold) *to_std);
                   add_sub_axes(sym);
-                  sym.init(Dv, nfold/2, mat3d::rot(axis, -M_PI/nfold) * to_std);
+                  sym.init(Dv, nfold/2, mat3d::rot(axis, M_PI/nfold) *to_std);
                   add_sub_axes(sym);
                }
+               // vertical mirror through dihedral axis
+               sym.init(Cs, 0, mat3d::rot(vec3d::X, M_PI/2) *
+                               mat3d::rot(axis, M_PI/nfold) * to_std);
+               sub_syms.insert(sym);
+               // dihedral axis
+               sym.init(dih_type, 2, mat3d::rot(vec3d::Y, M_PI/2) *
+                                     mat3d::rot(axis, M_PI/nfold) * to_std);
+               add_sub_axes(sym);
             }
             else
                dih_type = Cv;
 
             // vertical mirror through dihedral axis
-            sym.init(Cs, 0, mat3d::rot(vec3d::X, -M_PI/2) * to_std);
+            sym.init(Cs, 0, mat3d::rot(vec3d::X, M_PI/2) * to_std);
             sub_syms.insert(sym);
-            //sym.init(dih_type, 2, mat3d::rot(vec3d::Y, -M_PI/2) * to_std);
-            sym.init(dih_type, 2, to_std);
+
+            sym.init(dih_type, 2, mat3d::rot(vec3d::Y, M_PI/2) * to_std);
             add_sub_axes(sym);
             break;
 
          case Dv:
             add_sub_axes(*this);
             // vertical mirror between dihedral axes
-            sym.init(Cs, 0, mat3d::rot(axis, -M_PI/(2*nfold)) *
+            sym.init(Cs, 0, mat3d::rot(axis, M_PI/(2*nfold)) *
                             mat3d::rot(vec3d::X, M_PI/2) * to_std);
             sub_syms.insert(sym);
-            dih_type = nfold%2 ? Ch : D;
-            //sym.init(dih_type, 2, mat3d::rot(vec3d::Y, M_PI/2) * to_std);
-            sym.init(dih_type, 2, to_std);
+            if(nfold%2==0) {
+               dih_type = D;
+               if(nfold>2) {
+                  sym.init(Dv, nfold/2, mat3d::rot(axis, M_PI/nfold) *to_std);
+                  add_sub_axes(sym);
+                  // do this first to prefer main axis D groups
+                  sym.init(D, 2, mat3d::rot(axis, M_PI/nfold) *to_std);
+                  add_sub_axes(sym);
+               }
+               sym.init(dih_type, 2, mat3d::rot(vec3d::Y, M_PI/2) *
+                                     mat3d::rot(axis, M_PI/nfold) * to_std);
+               add_sub_axes(sym);
+            }
+            else
+               dih_type = Ch;
+            sym.init(dih_type, 2, mat3d::rot(vec3d::Y, M_PI/2) * to_std);
             add_sub_axes(sym);
-            //not needed !!!
-            //sym.init(dih_type, 2, mat3d::rot(axis, M_PI/nfold) *
-            //                mat3d::rot(vec3d::Y, M_PI/2) * to_std);
-            //sym.init(dih_type, 2, mat3d::rot(axis, M_PI/nfold) * to_std);
-            add_sub_axes(sym);
-            //if(nfold%2==0 && nfold>2) {
-            //   sym.init(Dv, nfold/2, mat3d::rot(axis, M_PI/nfold) * to_std);
-            //   add_sub_axes(sym);
-            //}
             break;
 
          case D:
-            dih_type = nfold%2 ? C : D;
-            //sym.init(dih_type, 2, mat3d::rot(vec3d::Y, M_PI/2) * to_std);
-            sym.init(dih_type, 2, to_std);
-            add_sub_axes(sym);
-            //sym.init(dih_type, 2, mat3d::rot(axis, M_PI/nfold) *
-            //                mat3d::rot(vec3d::Y, M_PI/2) * to_std);
-            sym.init(dih_type, 2, mat3d::rot(axis, M_PI/nfold) * to_std);
-            add_sub_axes(sym);
+            add_sub_axes(*this);
             if(nfold%2==0 && nfold>2) {
                sym.init(D, nfold/2, mat3d::rot(axis, M_PI/nfold) * to_std);
                add_sub_axes(sym);
             }
-            add_sub_axes(*this);
+            dih_type = (nfold%2==0) ? D : C;
+
+            sym.init(dih_type, 2, mat3d::rot(vec3d::Y, M_PI/2) *
+                                  mat3d::rot(axis, M_PI/nfold) * to_std);
+            add_sub_axes(sym);
+            sym.get_to_std().dump();
+            sym.init(dih_type, 2, mat3d::rot(vec3d::Y, M_PI/2) * to_std);
+            add_sub_axes(sym);
             break;
 
          case S:
