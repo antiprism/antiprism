@@ -291,9 +291,9 @@ float rand31dc::ranf(void)
 */
 
 
-/// @endcond
-
 
 
 #endif // RAND_GEN_H
+
+/// @endcond
 

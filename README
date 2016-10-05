@@ -4,11 +4,11 @@ Antiprism
 Notes for Antiprism 0.24
 ------------------------
 
-The release includes two new programs: to_nfold changes the rotational
-symmetry of a polyhedron; off2obj (Roger Kaufman) converts OFF to
-Wavefront OBJ format; off2dae converts OFF to Collada (DAE) format.
-There are also new features, improvements, and bug fixes. See the NEWS
-file for more details.
+The release includes new programs: to_nfold changes the rotational
+symmetry of a polyhedron; symmetro (Roger Kaufman) makes symmetrohedra
+and twisters; off2obj (Roger Kaufman) converts OFF to Wavefront OBJ format;
+off2dae converts OFF to Collada (DAE) format. There are also new features,
+improvements, and bug fixes. See the NEWS file for more details.
 
 Please look out for bugs and other issues, and report them to me at
 at: adrian@antiprism.com
@@ -32,10 +32,18 @@ and probably contain a number of bugs. Please let me know
 if you come across any bugs, or anything not working as
 documented.
 
-There are two release files.
+Antiprism is available as source code
 
-   antiprism-0.xx.tar.gz       - source code
-   antiprism-0.xx_install.exe  - Windows installer
+   http://www.antiprism.com/files/antiprism-0.24.tar.gz
+
+Ubuntu packages
+
+   https://launchpad.net/~antiprism/+archive/ubuntu/ppa
+
+Windows 64-bit and 32-bit installers
+
+   http://www.antiprism.com/files/antiprism-0.24_w64_install.exe
+   http://www.antiprism.com/files/antiprism-0.24_w32_install.exe
 
 In Windows, the DOS Box started from the Antiprism Shell menu
 item is configured and ready to run the Antiprism programs.

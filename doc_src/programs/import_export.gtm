@@ -1,0 +1,90 @@
+#define HL_PROG class=curpage
+
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<<TITLE_HEAD>>
+
+<<CONT_S_START>>
+<small><a href="#import">Import</a></small>
+<<BARSPACE>>
+<small><a href="#export">Export</a></small>
+<<CONT_S_END>>
+
+<h2><a name="import">
+Import
+</a></h2>
+<h3>OFF, Coordinates</h3>
+The Antiprism programs natively read OFF format. They will also accept lists of coordinates, given as three numbers per line separated by spaces or commas, each line representing a point.
+
+<h3>OBJ</h3>
+The Antiprism obj2off program will convert Wavefront OBJ format to OFF.
+
+<a href="http://meshlab.sourceforge.net/">Meshlab</a>
+will convert from OBJ to OFF.
+
+<h3>Other formats</h3>
+<a href="http://meshlab.sourceforge.net/">Meshlab</a>
+will convert from the following formats to OFF: PLY, STL, 3DS, OBJ, DAE (COLLADA), PTX, V3D, PTS, APTS, XYZ, GTS, TRI, ASC, X3D, X3DV, VRML, ALN
+
+
+<h2><a name="export">
+Export
+</a></h2>
+
+<h3>Preparing for export</h3>
+The following commands are useful to prepare an OFF file for export, either to exclude data that you don't want to export or to accommodate the program you are exporting to.
+
+Geometry only: remove all face elements with less than three vertices, and all colours
+<<CMDS_START>>
+off_util -g cube &gt; geometry_only_cube.off
+<<CMDS_END>>
+
+Coloured mesh: remove all face elements with less than three vertices, and all vertices that are not part of a face
+<<CMDS_START>>
+off_util -x veV cube &gt; coloured_mesh_cube.off
+<<CMDS_END>>
+
+Meshlab ready: Meshlab will not read OFF files containing face elements with one or two faces, which are common in Antiprism as they are used for colouring vertices and edges. The minimal command to strip these elements (and no others) is
+<<CMDS_START>>
+off_util -x ve cube &gt; meshlab_ready_cube.off
+<<CMDS_END>>
+
+Triangulated: split polygons into triangles
+<<CMDS_START>>
+off_util -t tri cube &gt; triangulated_cube.off
+<<CMDS_END>>
+<h3>OFF</h3>
+The Antiprism programs natively write OFF format.
+
+<h3>Coordinates</h3>
+The Antiprism <a href="off2crds.html">off2crds</a> program will convert from OFF to a list of coordinates (three numbers per line).
+
+<h3>OBJ</h3>
+The Antiprism <a href="off2obj.html">off2obj</a> program will convert from OFF to Wavefront OBJ format.
+
+<a href="http://meshlab.sourceforge.net/">Meshlab</a>
+will convert from OFF to OBJ, but the OBJ file will be triangulated.
+
+<h3>DAE (COLLADA)</h3>
+The Antiprism <a href="off2dae.html">off2dae</a> program will convert from OFF to DAE (COLLADA) format. The output is suitable for import into Sketchup and Blender.
+
+<h3>VRML</h3>
+The Antiprism <a href="off2vrml.html">off2vrml</a> program will convert from OFF to VRML.
+
+<a href="http://meshlab.sourceforge.net/">Meshlab</a>
+will convert from OFF to VRML.
+
+<h3>POV</h3>
+The Antiprism <a href="off2pov.html">off2pov</a> program will convert from OFF to POV-Ray POV format.
+
+<h3>Other formats</h3>
+<a href="http://assimp.sourceforge.net/">Assimp</a>
+Assimp will convert from OFF to the following additional formats: STL, PLY
+<p>
+<a href="http://meshlab.sourceforge.net/">Meshlab</a>
+will convert from OFF to the following additional formats: STL, PLY, 3DS, DXF, GTS, U3D, IDTF, X3D.
+
+#include "<<END>>"

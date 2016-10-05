@@ -66,6 +66,7 @@ mtimestamp $dd.$MM.$yyyy
 
 ./programs/resources.gtm 3 Antiprism Resource Files
 ./programs/extras_readme.gtm 4 Antiprism Resources - Extras
+./programs/import_export.gtm 3 Import and Export
 ./programs/named_cols.gtm 3 Named Colours in Antiprism
 ./programs/edges.gtm 3 Using edges in Antiprism
 ./programs/off_format.gtm 3 OFF format description

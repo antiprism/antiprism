@@ -523,7 +523,7 @@ void wv_opts::usage()
 "\n"
 "Options\n"
 "%s"
-"  -p <pat>  weave pattern (default 'VEF'), a series of one or more paths.\n"
+"  -p <pat>  weave pattern (default 'FEV'), a series of one or more paths.\n"
 "            A path is:\n"
 "               C,L - path of intermediate points is curve (default),line\n"
 "                     (affects following paths, set as first char of pattern)\n"

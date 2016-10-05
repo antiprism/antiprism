@@ -33,18 +33,39 @@ This is a beta release. The programs have not had wide use
 and probably contain a significant number of bugs. Please let me know
 if you come across any bugs, or anything not working as documented.
 <p>
-I build the programs with the GNU tools on Linux, and in the MSYS and
-Cygwin environments on Windows. I have received reports that Antiprism
-builds on FreeBSD and Mac OSX.
+Antiprism builds on a wide variety of Unix-like systems including:
+Ubuntu, MSYS/MinGW (Windows), Cygwin (Windows), FreeBSD, Mac OSX and Raspbian.
 
+<h3>Ubuntu</h3>
+
+Ubuntu packages are available through the 
+<a href="https://launchpad.net/~antiprism/+archive/ubuntu/ppa">Antiprism PPA</a>
+
+Add the repository and install with
+<<CMDS_START>>
+sudo add-apt-repository ppa:antiprism/ppa
+sudo apt-get update
+sudo apt-get install antiprism
+<<CMDS_END>>
+
+<h3>Windows</h3>
+
+Download and run either the 64-bit and 32-bit installer
 <ul>
-<li>Source code only - <a href="http://www.antiprism.com/files/<<ANTIPRISM_SOURCE_FILE>>"><<ANTIPRISM_SOURCE_FILE>></a> 
-<li>Source code and Windows binaries - <a href="http://www.antiprism.com/files/<<ANTIPRISM_WIN_FILE>>"><<ANTIPRISM_WIN_FILE>></a>
+<li><a href="http://www.antiprism.com/files/<<ANTIPRISM_WIN64_FILE>>"><<ANTIPRISM_WIN64_FILE>></a>
+<li><a href="http://www.antiprism.com/files/<<ANTIPRISM_WIN32_FILE>>"><<ANTIPRISM_WIN32_FILE>></a>
 </ul>
 
-The binaries have no external dependencies, but the <i>antiview</i>
-viewer requires OpenGL. OpenGL and GLUT development libraries are
-required to build <i>antiview</i> from source.
+If you are using <i>Bash on Windows</i>, you can install into this
+environment using the
+<a href="https://launchpad.net/~antiprism/+archive/ubuntu/ppa">Antiprism PPA</a>
+
+<h3>Source Code</h3>
+
+<a href="http://www.antiprism.com/files/<<ANTIPRISM_SOURCE_FILE>>"><<ANTIPRISM_SOURCE_FILE>></a> 
+<p>
+OpenGL and GLUT development libraries are required to build <i>antiview</i>.
+
 
 <h3><a name="antiprism_python">
 Antiprism Python

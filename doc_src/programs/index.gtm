@@ -108,6 +108,7 @@ General Documentation
 
 <ul>
 <li><a href="resources.html">Antiprism Resource Files</a>
+<li><a href="import_export.html">Importing and Exporting Models</a>
 <li><a href="named_cols.html">Named Colours in Antiprism</a>
 <li><a href="edges.html">Using edges in Antiprism</a>
 <li><a href="off_format.html">OFF format description</a>
@@ -138,7 +139,7 @@ Links to Complementary Programs
 <ul>
 <li><a href="http://www.povray.org/">POV-Ray</a>
     - Persistence of Vision Raytracer using pov format
-<li><a href="http://www.web3d.org/x3d/vrml/tools/viewers_and_browsers/">VRML Viewers</a>
+<li><a href="http://www.web3d.org/x3d-resources/vrml/tools/viewers_and_browsers/">VRML Viewers</a>
     - Links to VRML viewers
 <li><a href="http://www.vis.uni-stuttgart.de/~kraus/LiveGraphics3D/">LiveGraphics3D</a>
     - Java applet for 3D viewing using Mathematica format

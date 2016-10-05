@@ -5,8 +5,8 @@ Maintainer: Adrian Rossiter <adrian@antiprism.com>
 Build-Depends: debhelper (>= 9), dh-autoreconf (>= 4), autotools-dev, freeglut3-dev (>= 2.6), libc6-dev (>= 2.13), libglu1-mesa-dev (>= 7.11), libx11-dev (>= 2), linux-libc-dev (>= 3), mesa-common-dev (>= 7.11), x11proto-core-dev (>= 7.0.22) 
 Standards-Version: 3.9.7
 Homepage: http://www.antiprism.com
-#Vcs-Git: git://git.debian.org/collab-maint/antiprism.git
-#Vcs-Browser: http://git.debian.org/?p=collab-maint/antiprism.git;a=summary
+Vcs-Git: https://github.com/antiprism/antiprism.git
+Vcs-Browser: https://github.com/antiprism/antiprism
 
 Package: antiprism
 Architecture: any
