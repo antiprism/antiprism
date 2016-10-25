@@ -19,24 +19,113 @@
 
 
 <<EXAMPLES_START>>
-Make a truncated cuboctahedron
+Make a Cuboctahedron (U7)
 <<CMDS_START>>
-symmetro -s o -m 2,2,0 -r e | antiview
+symmetro -k o,1,1,0,e | antiview
+symmetro -t O[3,3],1,1 | antiview
 <<CMDS_END>>
 
-Like a rhombicuboctahedron, but scale the squares on the 4-fold axes by 2.
+Like a Rhombicuboctahedron, but scale the squares on the 4-fold axes by 2.
 <<CMDS_START>>
-symmetro -s o -m 1,1,0 -S 2  | antiview
+symmetro -k o,1,1,0 -r 2  | antiview
+symmetro -t O[4,3],1,1 -r 2 | antiview
 <<CMDS_END>>
 
-Make an approximate snub cube
+Make an approximate Snub Cube (U12)
 <<CMDS_START>>
-symmetro -s o -m 1,0,1 -r 28.53245 | antiview
+symmetro -k o,1,0,1 -a 28.53243959961367 | antiview
+symmetro -t O[4,2],1,1 -a 28.53243959961367 -C f | antiview
 <<CMDS_END>>
 
 Make a 'twister' by suppressing the convex hull and varying the twist parameter
 <<CMDS_START>>
-symmetro -s t -C s -m 1,1,0 -r 15 | antiview
+symmetro -k t,1,1,0 -C s -a 15 | antiview
+symmetro -t T[3,3],1,1 -C s -a 15 | antiview
+<<CMDS_END>>
+
+Make an Small Stellated Dodecahedron (U34)
+<<CMDS_START>>
+symmetro -s 5:2 -a 2e | antiview -v 0.03
+<<CMDS_END>>
+
+Make an Icosidodecahedron (U24)
+<<CMDS_START>>
+symmetro -c 5,5,d | antiview
+<<CMDS_END>>
+
+Make an Pentagonal Orthobirotunda (Johnson Solid J34)
+<<CMDS_START>>
+symmetro -c 5,5,h | antiview
+<<CMDS_END>>
+
+Bowtie models from Kaplan-Hart paper Figure 3 in order of appearance
+<<CMDS_START>>
+symmetro -k t,2,3,*,e | antiview
+symmetro -k o,2,3,*,e | antiview
+symmetro -k o,3,2,*,e | antiview
+symmetro -k i,2,3,*,e | antiview
+symmetro -k i,3,2,*,e | antiview
+symmetro -k t,1,2,*,v | antiview
+symmetro -k o,1,2,*,v | antiview
+symmetro -k o,2,1,*,v | antiview
+symmetro -k i,1,2,*,v | antiview
+symmetro -k i,2,1,*,v | antiview
+<<CMDS_END>>
+
+Jamnitzer models from Kaplan-Hart paper Figure 7 in order of appearance
+<<CMDS_START>>
+symmetro -k o,2,2,0,v -r 1.06680419358835388 -f n -m m2 | antiview
+symmetro -k o,3,3,0,v -r 1.04966777114351 -f n -m m2 | antiview -v 0.03
+symmetro -k i,2,2,0,v -r 1.09818547139510914 -f n -m m2 | antiview -v 0.03
+symmetro -k i,3,3,0,v -r 1.0726110096817 -f n -m m2 | antiview -v 0.05
+<<CMDS_END>>
+
+LCM models from Kaplan-Hart paper Figure 8 in order of appearance
+<<CMDS_START>>
+symmetro -k t,2,0,3,e -f n -m m2 | antiview
+symmetro -k t,2,0,3,v -f n -m m2 | antiview
+symmetro -k o,1,0,2,v -f n -m m2 | antiview
+symmetro -k o,3,4,*,e -f n -m m2 | antiview
+symmetro -k o,3,4,*,v -f n -m m2 | antiview
+symmetro -k o,*,2,3,e -f n -m m2 | antiview
+symmetro -k o,*,2,3,v -f n -m m2 | antiview
+symmetro -k i,3,5,*,e -f n -m m2 | antiview
+symmetro -k i,3,5,*,v -f n -m m2 | antiview
+symmetro -k i,2,*,5,e -f n -m m2 | antiview
+symmetro -k i,2,*,5,v -f n -m m2 | antiview
+symmetro -k i,*,2,3,e -f n -m m2 | antiview
+symmetro -k i,*,2,3,v -f n -m m2 | antiview
+<<CMDS_END>>
+
+Near miss models from Kaplan-Hart paper Figure 9 in order of appearance
+<<CMDS_START>>
+symmetro -k o,*,3,*,e -f n -m m2 | antiview
+symmetro -k i,1,2,*,v -f n -m m2 -r 1.07046626932,1 | antiview
+symmetro -k i,2,*,3,e -f n -m m2 | antiview
+<<CMDS_END>>
+
+Appealing models from Kaplan-Hart paper Figure 10 in order of appearance
+<<CMDS_START>>
+symmetro -k i,2,2,*,1 -f n -m m2 -r 2.03614784182,1 | antiview -v 0.03
+symmetro -k i,2,1,*,1 -f n -m m2 -r 1.9021130325885 | antiview -v 0.03
+symmetro -k i,2,2,*,1 -f n -m m2 | antiview -v 0.05
+symmetro -k i,4,3,*,e -f n -m m2 | antiview -v 0.07
+symmetro -k i,2,3,*,1 -f n -m m2 | antiview -v 0.05
+symmetro -k i,2,3,*,1 -f n -m m2 -r 1.583841856265,1 | antiview -v 0.05
+symmetro -k i,2,4,*,e -f n -m m2 | antiview -v 0.07
+symmetro -k i,2,4,*,1 -f n -m m2 -r 1.05398768021455,1 | antiview -v 0.07
+symmetro -k i,3,1,*,1 -f n -m m2 | antiview -v 0.07
+symmetro -k i,3,2,*,1 -f n -m m2 | antiview -v 0.07
+symmetro -k i,*,2,2,1 -f n -m m2 | antiview -v 0.07
+symmetro -k i,*,1,4,e -f n -m m2 | antiview -v 0.06
+symmetro -k i,3,4,*,v -f n -m m2 -r 1.5665309813,1 -l 8 | antiview -v 0.03
+symmetro -k i,3,4,*,e -f n -m m2 | antiview -v 0.06
+symmetro -k i,3,5,0,v -f n -m m2 -r 1.3159206178527,1 | antiview -v 0.03 
+symmetro -k i,4,2,*,e -f n -m m2 | antiview -v 0.06
+symmetro -k i,*,1,4,1 -f n -m m2 | antiview -v 0.06
+symmetro -k i,1,*,2,1 -f n -m m2 | antiview -v 0.06
+symmetro -k i,1,*,3,e -f n -m m2 | antiview -v 0.06
+symmetro -k i,2,*,3,1 -f n -m m2 | antiview -v 0.06
 <<CMDS_END>>
 
 <<EXAMPLES_END>>

@@ -126,7 +126,7 @@ void symmetro_opts::usage()
 "It is possible to generate models such that the polygons intersect. If a\n"
 "collision is detected, convex hull will be suppressed\n"
 "\n"
-"options -k, -t, and -d cannot be used together, but one needs to be specified\n" 
+"options -k, -t, -s and -c cannot be used together but one needs to be specified\n" 
 "\n"
 "Options\n"
 "%s"
