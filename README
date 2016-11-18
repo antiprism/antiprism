@@ -1,8 +1,8 @@
 Antiprism
 =========
 
-Notes for Antiprism 0.24
-------------------------
+Notes for Antiprism 0.24.1
+--------------------------
 
 The release includes new programs: to_nfold changes the rotational
 symmetry of a polyhedron; symmetro (Roger Kaufman) makes symmetrohedra
@@ -34,7 +34,7 @@ documented.
 
 Antiprism is available as source code
 
-   http://www.antiprism.com/files/antiprism-0.24.tar.gz
+   http://www.antiprism.com/files/antiprism-0.24.1.tar.gz
 
 Ubuntu packages
 
@@ -42,8 +42,8 @@ Ubuntu packages
 
 Windows 64-bit and 32-bit installers
 
-   http://www.antiprism.com/files/antiprism-0.24_w64_install.exe
-   http://www.antiprism.com/files/antiprism-0.24_w32_install.exe
+   http://www.antiprism.com/files/antiprism-0.24.1_w64_install.exe
+   http://www.antiprism.com/files/antiprism-0.24.1_w32_install.exe
 
 In Windows, the DOS Box started from the Antiprism Shell menu
 item is configured and ready to run the Antiprism programs.
