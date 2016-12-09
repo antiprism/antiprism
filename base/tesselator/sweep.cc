@@ -252,6 +252,7 @@ static localGLboolean IsWindingInside( localGLUtesselator *tess, int n )
   }
   /*LINTED*/
   assert( FALSE );
+  return false;
   /*NOTREACHED*/
 }
 
@@ -1173,7 +1174,7 @@ static void InitEdgeDict( localGLUtesselator *tess )
 static void DoneEdgeDict( localGLUtesselator *tess )
 {
   ActiveRegion *reg;
-  int fixedEdges = 0;
+  // AR: int fixedEdges = 0;
 
   /* __localGL_DICTLISTKEY */ /* __localGL_DICTLISTMIN */
   while( (reg = (ActiveRegion *)dictKey( dictMin( tess->dict ))) != NULL ) {
@@ -1184,7 +1185,7 @@ static void DoneEdgeDict( localGLUtesselator *tess )
      */
     if( ! reg->sentinel ) {
       assert( reg->fixUpperEdge );
-      assert( ++fixedEdges == 1 );
+      // AR: assert( ++fixedEdges == 1 );
     }
     assert( reg->windingNumber == 0 );
     DeleteRegion( tess, reg );

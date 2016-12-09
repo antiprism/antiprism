@@ -1,5 +1,7 @@
 /*
-   Copyright (c) 2003, Adrian Rossiter
+   Copyright (c) 2003-2016, Adrian Rossiter
+
+   Antiprism - http://www.antiprism.com
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -26,90 +28,91 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include <vector>
+
 #ifdef HAVE_CONFIG_H
-   #include "../config.h"
+#include "../config.h"
 #endif
 
 #ifdef HAVE_GL_GL_H
-   #include <GL/gl.h>
+#include <GL/gl.h>
 #elif defined HAVE_OPENGL_GL_H
-   #include <OpenGL/gl.h>
+#include <OpenGL/gl.h>
 #endif
 
 #ifdef HAVE_GL_GLU_H
-   #include <GL/glu.h>
+#include <GL/glu.h>
 #elif defined HAVE_OPENGL_GLU_H
-   #include <OpenGL/glu.h>
+#include <OpenGL/glu.h>
 #endif
 
 #include "gl_writer.h"
 
-void gl_writer::init(const scene &)
-{
-   GLfloat light_position[] = { -100.0, 200.0, 1000.0, 0.0 };
-   GLfloat light_scene_ambient[] = { 0.3, 0.3, 0.3, 1.0 }; 
-   glClearColor (0.0, 0.0, 0.0, 0.0);
-   glClearDepth(1);
-   glShadeModel(GL_SMOOTH);
-   glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-   glLightModelfv(GL_LIGHT_MODEL_AMBIENT, light_scene_ambient);
+using std::vector;
 
-   glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-   //glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
-   glEnable(GL_LIGHTING);
-   glEnable(GL_LIGHT0);
-   //glEnable(GL_COLOR_MATERIAL);
-   //glEnable(GL_POLYGON_OFFSET_FILL);   // remove overlap
-   glEnable(GL_POLYGON_STIPPLE);   // for transparency
-   glEnable(GL_NORMALIZE);
-   glEnable(GL_DEPTH_TEST);
+using namespace anti;
+
+void gl_writer::init(const Scene &)
+{
+  GLfloat light_position[] = {-100.0, 200.0, 1000.0, 0.0};
+  GLfloat light_scene_ambient[] = {0.3, 0.3, 0.3, 1.0};
+  glClearColor(0.0, 0.0, 0.0, 0.0);
+  glClearDepth(1);
+  glShadeModel(GL_SMOOTH);
+  glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+  glLightModelfv(GL_LIGHT_MODEL_AMBIENT, light_scene_ambient);
+
+  glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+  // glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+  glEnable(GL_LIGHTING);
+  glEnable(GL_LIGHT0);
+  // glEnable(GL_COLOR_MATERIAL);
+  // glEnable(GL_POLYGON_OFFSET_FILL);   // remove overlap
+  glEnable(GL_POLYGON_STIPPLE); // for transparency
+  glEnable(GL_NORMALIZE);
+  glEnable(GL_DEPTH_TEST);
 }
 
-void gl_writer::geometry_objects(const scene &scen)
+void gl_writer::geometry_objects(const Scene &scen)
 {
-   vector<scene_geom>::const_iterator geo;
-   for(geo=scen.get_geoms().begin(); geo!=scen.get_geoms().end(); ++geo) {
-      vector<geom_disp *>::const_iterator disp;
-      for(disp=geo->get_disps().begin(); disp!=geo->get_disps().end(); ++disp)
-         (*disp)->gl_geom(scen);
-      if(geo->get_label())
-         geo->get_label()->gl_geom(scen);
-      if(geo->get_sym())
-         geo->get_sym()->gl_geom(scen);
-   }
-      
+  vector<SceneGeometry>::const_iterator geo;
+  for (geo = scen.get_geoms().begin(); geo != scen.get_geoms().end(); ++geo) {
+    vector<GeometryDisplay *>::const_iterator disp;
+    for (disp = geo->get_disps().begin(); disp != geo->get_disps().end();
+         ++disp)
+      (*disp)->gl_geom(scen);
+    if (geo->get_label())
+      geo->get_label()->gl_geom(scen);
+    if (geo->get_sym())
+      geo->get_sym()->gl_geom(scen);
+  }
 }
 
-void gl_writer::cur_camera(const camera &cam)
+void gl_writer::cur_camera(const Camera &cam)
 {
-   glLoadIdentity();
-   // adjust distance to give the same view as in other export formats
-   glTranslatef( 0.0, 0.0, -1.57*cam.get_distance() );
-   vec3d lookat = cam.get_lookat();
-   glTranslated( -lookat[0], -lookat[1], -lookat[2] );
-   vec3d centre = cam.get_centre();
-   glTranslated( centre[0], centre[1], centre[2] );
-   double rot[16];
-   to_gl_matrix(rot, cam.get_rotation()*cam.get_spin_rot());
-   
-   glMultMatrixd(rot);
-   glTranslated( -centre[0], -centre[1], -centre[2] );
+  glLoadIdentity();
+  // adjust distance to give the same view as in other export formats
+  glTranslatef(0.0, 0.0, -1.57 * cam.get_distance());
+  Vec3d lookat = cam.get_lookat();
+  glTranslated(-lookat[0], -lookat[1], -lookat[2]);
+  Vec3d centre = cam.get_centre();
+  glTranslated(centre[0], centre[1], centre[2]);
+  double rot[16];
+  to_gl_matrix(rot, cam.get_rotation() * cam.get_spin_rot());
+
+  glMultMatrixd(rot);
+  glTranslated(-centre[0], -centre[1], -centre[2]);
 }
 
-   
-void gl_writer::write(const scene &scen)
+void gl_writer::write(const Scene &scen)
 {
-   vec3d bg = scen.get_bg_col().get_vec3d();
-   glClearColor( bg[0], bg[1], bg[2], 1 );
-   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+  Vec3d bg = scen.get_bg_col().get_Vec3d();
+  glClearColor(bg[0], bg[1], bg[2], 1);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-   cur_camera(scen.cur_camera());
-   
-   glPushMatrix();
-   geometry_objects(scen);
-   glPopMatrix();
+  cur_camera(scen.cur_camera());
+
+  glPushMatrix();
+  geometry_objects(scen);
+  glPopMatrix();
 }
-
-
-
-

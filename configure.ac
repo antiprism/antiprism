@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT(antiprism, 0.24.1, adrian@antiprism.com)
-AC_SUBST(RELEASE_DATE, ["11 November 2016"])
+AC_INIT(antiprism, 0.24.99+01, adrian@antiprism.com)
+AC_SUBST(RELEASE_DATE, ["9 October 2016"])
 AC_CANONICAL_TARGET  # For m4/fltk.m4
 AM_INIT_AUTOMAKE([1.9 foreign])
 
@@ -17,59 +17,54 @@ AC_PROG_CC
 AC_PROG_CPP
 
 AC_LANG([C++])
+AX_CXX_COMPILE_STDCXX(11)
 
 LT_INIT([win32-dll])
 
 # Check whether Python module should be built
-#AC_ARG_ENABLE( python,
-#   [  --disable-python        exclude mod_python and support for metric modules written in python],
-#   [ if test x"$enableval" != xyes; then enable_python="no"; fi ], [ enable_python="yes" ] )
+enable_module = "no"
+AC_ARG_ENABLE( module,
+   [  --enable-module         enable Python module source package],
+   [ if test x"$enableval" = x"yes"; then enable_module="yes"; fi ],
+   [ enable_module="no" ] )
 
-#AM_PATH_PYTHON(2.3, [], [enable_python="no"])
-      
+#AM_PATH_PYTHON(3.5, [], [enable_module="no"])
+AX_PYTHON
+
 AM_CONDITIONAL(BUILD_PY_MOD, false)
 AM_CONDITIONAL(USE_SWIG, false)
 
+AX_SWIG_PYTHON
+
 #enable_python="disabled" #disable python for this release
-if test x"$enable_python" = x"yes" ;
+if test x"$enable_module" = x"yes" ;
 then
    AM_CONDITIONAL(BUILD_PY_MOD, true)
-   echo "will build Python Module";
-# Check whether Python module wrapper will be regenerated with swig
-   AC_PROG_SWIG(1.3.21)
-   SWIG_ENABLE_CXX
-   SWIG_PYTHON
-   if test "$SWIG_LIB" ; then
-      AM_CONDITIONAL(USE_SWIG, true)
-      echo "SWIG is available to rebuild the Python module interface"
-   else
-      echo
+   echo "will prepare the Python Module";
+   # Check whether Python module wrapper will be regenerated with swig
+   AX_PKG_SWIG([3.0.0], [
+      if test "$SWIG_LIB" ; then
+         AM_CONDITIONAL(USE_SWIG, true)
+         echo "SWIG is available to rebuild the Python module interface"
+      else
+         echo
+         echo "*********************************************"
+         echo "   SWIG is not available. It is not needed to build and "
+         echo "   install this package. However, if the library source is "
+         echo "   modified then the changes will not be included in the "
+         echo "   Python module."
+         echo "*********************************************"
+         echo
+      fi ],
+   [  echo
       echo "*********************************************"
-      echo "   SWIG is not available. It is not needed to build and "
-      echo "   install this package. However, if the library source is "
-      echo "   modified then the changes will not be included in the "
-      echo "   Python module."
+      echo "   the Python module will not be built"
+      echo "   either configure was run with --disable-python"
+      echo "   or a Python development package is not installed (or found)"
       echo "*********************************************"
       echo
-   fi
-#else
-#   echo
-#   echo "*********************************************"
-#   echo "   the Python module will not be built"
-#   echo "   either configure was run with --disable-python"
-#   echo "   or a Python development package is not installed (or found)"
-#   echo "*********************************************"
-#   echo
+   ])
 fi
-
-# Add -fno-strict-aliasing to CFLAGS if accepted
-ALIASING_FLAG=
-if $CC -fno-strict-aliasing -S -o /dev/null -xc /dev/null >/dev/null 2>&1;
-then
-   ALIASING_FLAG="-fno-strict-aliasing"
-   CPPFLAGS="$ALIASING_FLAG $CPPFLAGS"
-fi
-AC_SUBST(ALIASING_FLAG)
 
 
 AC_CHECK_FUNC([gettimeofday], [utimer=1], [utimer=0])
@@ -266,11 +261,13 @@ AC_CONFIG_FILES([Makefile
                  aview/Makefile
                  base/muparser/Makefile
                  base/tesselator/Makefile
+                 base/qhull/Makefile
                  base/Makefile
                  src/Makefile
                  src_extra/Makefile
                  doc_src/common_defs.inc
+                 python/Makefile
+                 python/distutils/MANIFEST
+                 python/distutils/setup.py
                  ])
-                 #python/Makefile
-                 #python/distutils/setup.py
 AC_OUTPUT

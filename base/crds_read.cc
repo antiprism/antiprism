@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2008, Adrian Rossiter
+   Copyright (c) 2003-2016, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -26,71 +26,67 @@
    \brief Read and write OFF and coordinate files
 */
 
-
-#include <stdio.h>
-#include <stdlib.h>
 #include <ctype.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include <algorithm>
 #include <vector>
 
+#include "private_off_file.h"
 #include "utils.h"
-#include "off_file.h"
 
 using std::vector;
+using std::string;
 
-
-
-bool crds_file_read(string file_name, geom_if &geom, char *errmsg)
-{   
-   FILE *ifile;
-   if(file_name == "" || file_name == "-") {
-      ifile = stdin;
-      file_name = "stdin";
-   }
-   else {
-      ifile = fopen(file_name.c_str(), "r");
-      if(!ifile) {
-         if(errmsg)
-            snprintf(errmsg, MSG_SZ, "could not open input file \'%s\'", file_name.c_str());
-         return false;
-      }
-   }
-
-   crds_file_read(ifile, geom);   
-
-   if(file_name!="")
-      fclose(ifile);
-
-   return true;
-}
-
-
-void crds_file_read(FILE *ifile, geom_if &geom, char *first_line)
+bool crds_file_read(string file_name, Geometry &geom, char *errmsg)
 {
-   int read_ret=0;
-   char *line=first_line;
-   if(!line)
-      read_ret = read_off_line(ifile, &line);
-   
-   while(read_ret==0) {
-      char *l=line;
-      while(*l) {
-         if(*l==',' || isspace(*l))
-            *l=' ';
-         l++;
-      }
-         
-      double cs[4];
-      int num = sscanf(line, "%lf %lf %lf %lf", &cs[0], &cs[1], &cs[2], &cs[3]);
-      if(num==3)
-         geom.add_vert(vec3d(cs[0], cs[1], cs[2]));
-        
-      free(line);
-      read_ret = read_off_line(ifile, &line);
-   }
-   free(line);
+  FILE *ifile;
+  if (file_name == "" || file_name == "-") {
+    ifile = stdin;
+    file_name = "stdin";
+  }
+  else {
+    ifile = fopen(file_name.c_str(), "r");
+    if (!ifile) {
+      if (errmsg)
+        snprintf(errmsg, MSG_SZ, "could not open input file \'%s\'",
+                 file_name.c_str());
+      return false;
+    }
+  }
+
+  crds_file_read(ifile, geom);
+
+  if (file_name != "")
+    fclose(ifile);
+
+  return true;
 }
 
+void crds_file_read(FILE *ifile, Geometry &geom, char *first_line)
+{
+  int read_ret = 0;
+  char *line = first_line;
+  if (!line)
+    read_ret = read_off_line(ifile, &line);
 
+  while (read_ret == 0) {
+    char *l = line;
+    while (*l) {
+      if (*l == ',' || isspace(*l))
+        *l = ' ';
+      l++;
+    }
+
+    double cs[4];
+    int num = sscanf(line, "%lf %lf %lf %lf", &cs[0], &cs[1], &cs[2], &cs[3]);
+    if (num == 3)
+      geom.add_vert(Vec3d(cs[0], cs[1], cs[2]));
+
+    free(line);
+    read_ret = read_off_line(ifile, &line);
+  }
+  free(line);
+}

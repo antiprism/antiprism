@@ -1,6 +1,8 @@
 /*
    Copyright (c) 2003-2009, Adrian Rossiter
 
+   Antiprism - http://www.antiprism.com
+
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
    to deal in the Software without restriction, including without limitation
@@ -26,290 +28,281 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <string.h>
-#include <math.h>
-#include <ctype.h>
-#include <string>
-#include <vector>
-#include <map>
 #include <algorithm>
+#include <ctype.h>
+#include <map>
+#include <math.h>
+#include <string.h>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "../base/antiprism.h"
 #include "../base/vec_utils.h"
 
 using std::string;
 using std::vector;
+using std::map;
+using std::pair;
 using std::swap;
 
+using namespace anti;
 
+class tw_opts : public ProgramOpts {
+private:
+public:
+  bool read_centroid_verts(char *optarg, char *errmsg);
+  Vec3d centre;
+  vector<int> centroid_verts;
+  double twist_val;
+  bool struts_only;
 
-class tw_opts: public prog_opts
-{
-   private:
-   
-   public:
-      bool read_centroid_verts(char *optarg, char *errmsg);
-      vec3d centre;
-      vector<int> centroid_verts;
-      double twist_val;
-      bool struts_only;
+  string ifile;
+  string ofile;
 
-      string ifile;
-      string ofile;
+  tw_opts()
+      : ProgramOpts("twist"), centre(Vec3d(0, 0, 0)), twist_val(-1),
+        struts_only(false)
+  {
+  }
 
-      tw_opts(): prog_opts("twist"), centre(vec3d(0, 0, 0)), twist_val(-1),
-                 struts_only(false)
-                 {}
-
-      void process_command_line(int argc, char **argv);
-      void usage();
+  void process_command_line(int argc, char **argv);
+  void usage();
 };
 
 void tw_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] [input_file]\n"
-"\n"
-"Read a file in OFF format and twist the edges.\n"
-"If input_file is not given the program reads from standard input.\n"
-"\n"
-"Options\n"
-"%s"
-"  -c <cent> centre to twist about, in form \"x_val,y_val,z_val\"\n"
-"            (default, \"0,0,0\")\n"
-"  -t val    twist edges an amount between polyhedron (0.0) and dual (1.0)\n"
-"  -s        output struts only\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"\n", prog_name(), help_ver_text);
+  fprintf(
+      stdout,
+      "\n"
+      "Usage: %s [options] [input_file]\n"
+      "\n"
+      "Read a file in OFF format and twist the edges.\n"
+      "If input_file is not given the program reads from standard input.\n"
+      "\n"
+      "Options\n"
+      "%s"
+      "  -c <cent> centre to twist about, in form \"x_val,y_val,z_val\"\n"
+      "            (default, \"0,0,0\")\n"
+      "  -t val    twist edges an amount between polyhedron (0.0) and dual "
+      "(1.0)\n"
+      "  -s        output struts only\n"
+      "  -o <file> write output to file (default: write to standard output)\n"
+      "\n"
+      "\n",
+      prog_name(), help_ver_text);
 }
-
 
 bool tw_opts::read_centroid_verts(char *optarg, char *errmsg)
 {
-   //vector<int> vecs;
-   int vec_idx;
-   char *v_str = strtok(optarg, ",");
-   int i=0;
-   while(v_str) {
-      i++;
-      if(!read_int(v_str, &vec_idx, errmsg) || vec_idx < 0) {
-         snprintf(errmsg, MSG_SZ,
+  // vector<int> vecs;
+  int vec_idx;
+  char *v_str = strtok(optarg, ",");
+  int i = 0;
+  while (v_str) {
+    i++;
+    if (!read_int(v_str, &vec_idx) || vec_idx < 0) {
+      snprintf(errmsg, MSG_SZ,
                "vertex index %d, '%s' is not a positive integer", i, v_str);
-         return false;
-      }
-      centroid_verts.push_back(vec_idx);
-      v_str = strtok(NULL, ",");
-   }
-     
-   return true;
+      return false;
+    }
+    centroid_verts.push_back(vec_idx);
+    v_str = strtok(NULL, ",");
+  }
+
+  return true;
 }
 
-
-     
 void tw_opts::process_command_line(int argc, char **argv)
 {
-   char errmsg[MSG_SZ];
-   opterr = 0;
-   int c;
-   
-   handle_long_opts(argc, argv);
+  opterr = 0;
+  int c;
 
-   while( (c = getopt(argc, argv, ":hc:o:t:s")) != -1 ) {
-      if(common_opts(c, optopt))
-         continue;
+  handle_long_opts(argc, argv);
 
-      switch(c) {
-         case 'c':
-            if(!centre.read(optarg, errmsg))
-               error(errmsg, c);
-            break;
-            
-         case 'o':
-            ofile = optarg;
-            break;
+  while ((c = getopt(argc, argv, ":hc:o:t:s")) != -1) {
+    if (common_opts(c, optopt))
+      continue;
 
-         case 't':
-            if(!read_double(optarg, &twist_val, errmsg))
-               error(errmsg, c);
-            break;
+    switch (c) {
+    case 'c':
+      print_status_or_exit(centre.read(optarg), c);
+      break;
 
-         case 's':
-            struts_only = true;
-            break;
+    case 'o':
+      ofile = optarg;
+      break;
 
-         default:
-            error("unknown command line error");
-      }
-   }
+    case 't':
+      print_status_or_exit(read_double(optarg, &twist_val), c);
+      break;
 
-   if(argc-optind > 1) {
-      error("too many arguments");
-      exit(1);
-   }
-   
-   if(argc-optind == 1)
-      ifile=argv[optind];
+    case 's':
+      struts_only = true;
+      break;
 
+    default:
+      error("unknown command line error");
+    }
+  }
+
+  if (argc - optind > 1) {
+    error("too many arguments");
+    exit(1);
+  }
+
+  if (argc - optind == 1)
+    ifile = argv[optind];
 }
 
-
-
-col_geom_v twist(geom_if &poly, geom_if &dual, double twist_val, vec3d centre,
-      bool struts_only)
+Geometry twist(Geometry &poly, Geometry &dual, double twist_val, Vec3d centre,
+               bool struts_only)
 {
-   
-   map<vector<int>, vector<int> > edges;
-   poly.get_edge_face_pairs(edges, true);
-   map<vector<int>, vector<int> >::iterator mi, mi_next;
-   col_geom_v twist;
-   vector<vec3d> &pverts = *poly.get_verts();
-   vector<vector<int> > &pfaces = *poly.get_faces();
-   vector<vec3d> &dverts = *dual.get_verts();
-   vector<vec3d> &tverts = *twist.get_verts();
-   vector<vector<int> > &tfaces = *twist.get_faces();
-   
-   vec3d v0, v1, vm; // strut ends and middle
-   double ratio;
-   vec3d v0p, v1p, v0d, v1d; // vertices at ends 1 and 2 in poly and dual
-   map<vector<int>, vector<int> > attach_edges;
-   vector<int> tv_map;
-   map<vector<int>, pair<vec3d, vec3d> > twist_edges;
-   map<vector<int>, pair<vec3d, vec3d> >::iterator mi_tw, mi_tw2;
-   for(mi=edges.begin(); mi!=edges.end(); mi++) {
-      v0p = pverts[mi->first[0]];
-      v1p = pverts[mi->first[1]];
-      v0d = dverts[mi->second[1]];
-      v1d = dverts[mi->second[0]];
-      // don't need this
-      //ratio = (v1p - v0p).mag() / (v1d - v0d).mag();
-      //v0d = centre + (v0d - centre)*ratio;
-      //v1d = centre + (v1d - centre)*ratio;
-      vec3d norm = vcross(v1p-v0p, v1d-v0d);
-      mat3d trans = mat3d::transl(-0.5*(v0p+v1p));
-      trans = mat3d::rot(norm, twist_val*M_PI/2) * trans;
-      trans = mat3d::transl(0.5*(v0p+v1p)) * trans;
-      trans = mat3d::transl((v0d+v1d-v0p-v1p)*0.5*twist_val) * trans;
 
-      
-      v0 = trans*v0p;
-      v1 = trans*v1p;
-      
-      //v0 = v0p + (v0d - v0p)*twist_val;
-      //v1 = v1p + (v1d - v1p)*twist_val;
+  map<vector<int>, vector<int>> edges;
+  poly.get_edge_face_pairs(edges, true);
+  map<vector<int>, vector<int>>::iterator mi, mi_next;
+  Geometry twist;
 
-      twist_edges[mi->first] = pair<vec3d, vec3d>(v0, v1);
-      vector<int> ve = mi->first;
-      if(ve[1]<ve[0])
-         swap(ve[1], ve[0]);
-      attach_edges[ve] = vector<int>();
-   }
-   
-   double edge_len = (v1p - v0p).mag();
-   vector<int>::iterator vi;
-   for(mi_tw=twist_edges.begin(); mi_tw!=twist_edges.end(); mi_tw++) {
-      mi = edges.find(mi_tw->first);
-      tfaces.push_back(vector<int>());
-      for(int i=0; i<2; i++) {
-         vector<int> e_next(2);
-         e_next[0] = mi_tw->first[(i+1)%2];
-         vector<int> face = pfaces[mi->second[i]];
-         vi = find(face.begin(), face.end(), e_next[0]);
-         e_next[1] = ++vi!=face.end() ? *vi : face.front();
-         //fprintf(stderr, "twist_edge/next (%d, %d)/(%d, %d)\n", mi_tw->first[0], mi_tw->first[1], e_next[0], e_next[1]);
-         if(e_next[1]<e_next[0])
-            swap(e_next[1], e_next[0]);
-         mi_tw2 = twist_edges.find(e_next);
-         attach_edges[e_next].push_back(tverts.size());
-         int where;
-         vec3d v = line_plane_intersect(centre,
-               mi_tw2->second.first, mi_tw2->second.second,
-               mi_tw->second.first, mi_tw->second.second, &where);
-         tv_map.push_back(mi_tw->first[i]);
-         tverts.push_back(v);
-         tfaces.back().push_back(tverts.size()-1);
-      }
-     
-      vec3d &v0 = *(tverts.end()-2);
-      vec3d &v1 = *(tverts.end()-1);
-      ratio = edge_len / (v1 - v0).mag();
-      v0 = centre + (v0 - centre)*ratio;
-      v1 = centre + (v1 - centre)*ratio;
-   }
+  Vec3d v0, v1, vm; // strut ends and middle
+  double ratio;
+  Vec3d v0p, v1p, v0d, v1d; // vertices at ends 1 and 2 in poly and dual
+  map<vector<int>, vector<int>> attach_edges;
+  vector<int> tv_map;
+  map<vector<int>, pair<Vec3d, Vec3d>> twist_edges;
+  map<vector<int>, pair<Vec3d, Vec3d>>::iterator mi_tw, mi_tw2;
+  for (mi = edges.begin(); mi != edges.end(); mi++) {
+    v0p = poly.verts(mi->first[0]);
+    v1p = poly.verts(mi->first[1]);
+    v0d = dual.verts(mi->second[1]);
+    v1d = dual.verts(mi->second[0]);
+    // don't need this
+    // ratio = (v1p - v0p).len() / (v1d - v0d).len();
+    // v0d = centre + (v0d - centre)*ratio;
+    // v1d = centre + (v1d - centre)*ratio;
+    Vec3d norm = vcross(v1p - v0p, v1d - v0d);
+    Trans3d trans = Trans3d::transl(-0.5 * (v0p + v1p));
+    trans = Trans3d::rot(norm, twist_val * M_PI / 2) * trans;
+    trans = Trans3d::transl(0.5 * (v0p + v1p)) * trans;
+    trans = Trans3d::transl((v0d + v1d - v0p - v1p) * 0.5 * twist_val) * trans;
 
-   if(struts_only) {
-      for(unsigned int i=0; i<tfaces.size(); i++)
-            twist.add_col_edge(make_edge(tfaces[i][0], tfaces[i][1]), 0);
-      twist.clear_faces();
-   }
-   else {
-      for(unsigned int i=0; i<tfaces.size(); i++) {
-         vector<int> edge(2);
-         edge[0] = tv_map[tfaces[i][0]];
-         edge[1] = tv_map[tfaces[i][1]];
-         if(edge[1]<edge[0])
-            swap(edge[1], edge[0]);
-         //fprintf(stderr, "edge = (%d, %d) edge.size = %d\n", edge[0], edge[1], (int)edge.size());
-         vector<int> v_idxs = attach_edges.find(edge)->second;
-         vec3d P0 = tverts[tfaces[i][0]];
-         vec3d edge_vec = tverts[tfaces[i][1]] - P0;
-         if(vdot(edge_vec, tverts[v_idxs[0]] - P0) <
-               vdot(edge_vec, tverts[v_idxs[1]] - P0) )
-            swap(v_idxs[0], v_idxs[1]);
-         tfaces[i].push_back(v_idxs[0]);
-         tfaces[i].push_back(v_idxs[1]);
+    v0 = trans * v0p;
+    v1 = trans * v1p;
 
-         for(int j=0; j<4; j++)
-            twist.add_col_edge(make_edge(tfaces[i][j], tfaces[i][(j+1)%4]),
-                  col_val(bool(j)));
-      }
-   }
+    // v0 = v0p + (v0d - v0p)*twist_val;
+    // v1 = v1p + (v1d - v1p)*twist_val;
 
-   return twist;
+    twist_edges[mi->first] = pair<Vec3d, Vec3d>(v0, v1);
+    vector<int> ve = mi->first;
+    if (ve[1] < ve[0])
+      swap(ve[1], ve[0]);
+    attach_edges[ve] = vector<int>();
+  }
+
+  double edge_len = (v1p - v0p).len();
+  vector<int>::const_iterator vi;
+  for (mi_tw = twist_edges.begin(); mi_tw != twist_edges.end(); mi_tw++) {
+    mi = edges.find(mi_tw->first);
+    twist.add_face(vector<int>());
+    for (int i = 0; i < 2; i++) {
+      vector<int> e_next(2);
+      e_next[0] = mi_tw->first[(i + 1) % 2];
+      const vector<int> &face = poly.faces(mi->second[i]);
+      vi = find(face.begin(), face.end(), e_next[0]);
+      e_next[1] = ++vi != face.end() ? *vi : face.front();
+      // fprintf(stderr, "twist_edge/next (%d, %d)/(%d, %d)\n", mi_tw->first[0],
+      // mi_tw->first[1], e_next[0], e_next[1]);
+      if (e_next[1] < e_next[0])
+        swap(e_next[1], e_next[0]);
+      mi_tw2 = twist_edges.find(e_next);
+      attach_edges[e_next].push_back(twist.verts().size());
+      int where;
+      Vec3d v = line_plane_intersect(centre, mi_tw2->second.first,
+                                     mi_tw2->second.second, mi_tw->second.first,
+                                     mi_tw->second.second, &where);
+      tv_map.push_back(mi_tw->first[i]);
+      twist.add_vert(v);
+      twist.faces(twist.faces().size() - 1).push_back(twist.verts().size() - 1);
+    }
+
+    Vec3d &v0 = twist.verts(twist.verts().size() - 2);
+    Vec3d &v1 = twist.verts(twist.verts().size() - 1);
+    ratio = edge_len / (v1 - v0).len();
+    v0 = centre + (v0 - centre) * ratio;
+    v1 = centre + (v1 - centre) * ratio;
+  }
+
+  if (struts_only) {
+    for (unsigned int i = 0; i < twist.faces().size(); i++)
+      twist.add_edge(make_edge(twist.faces(i, 0), twist.faces(i, 1)), 0);
+    twist.clear(FACES);
+  }
+  else {
+    for (unsigned int i = 0; i < twist.faces().size(); i++) {
+      vector<int> edge(2);
+      edge[0] = tv_map[twist.faces(i, 0)];
+      edge[1] = tv_map[twist.faces(i, 1)];
+      if (edge[1] < edge[0])
+        swap(edge[1], edge[0]);
+      // fprintf(stderr, "edge = (%d, %d) edge.size = %d\n", edge[0], edge[1],
+      // (int)edge.size());
+      vector<int> v_idxs = attach_edges.find(edge)->second;
+      Vec3d P0 = twist.face_v(i, 0);
+      Vec3d edge_vec = twist.face_v(i, 1) - P0;
+      if (vdot(edge_vec, twist.verts(v_idxs[0]) - P0) <
+          vdot(edge_vec, twist.verts(v_idxs[1]) - P0))
+        swap(v_idxs[0], v_idxs[1]);
+      twist.faces(i).push_back(v_idxs[0]);
+      twist.faces(i).push_back(v_idxs[1]);
+
+      for (int j = 0; j < 4; j++)
+        twist.add_edge(
+            make_edge(twist.faces(i, j), twist.faces(i, (j + 1) % 4)),
+            Color(bool(j)));
+    }
+  }
+
+  return twist;
 }
-
-
 
 int main(int argc, char *argv[])
 {
-   tw_opts opts;
-   opts.process_command_line(argc, argv);
+  tw_opts opts;
+  opts.process_command_line(argc, argv);
 
-   col_geom_v geom;
-   geom_read_or_error(geom, opts.ifile, opts);
-   geom.orient();
+  Geometry geom;
+  opts.read_or_error(geom, opts.ifile);
+  geom.orient();
 
-   geom_v dual;
-   get_dual(geom, dual, 1, opts.centre);
+  Geometry dual;
+  get_dual(&dual, geom, 1, opts.centre);
 
-   vector<int> invalid_verts;
-   for(unsigned int i=0; i<dual.get_verts()->size(); i++) {
-      if(!(*dual.get_verts())[i].is_set()) {
-         dual.delete_vert(i);
-         int idx = invalid_verts.size()+i;
-         invalid_verts.push_back(idx);
-         i--;
-      }
-   }
-   if(invalid_verts.size()) {
-      string msg("removed invalid vertices (and associated faces) with indices - ");
-      char errmsg[MSG_SZ];
-      for(unsigned int i=0; i<invalid_verts.size()-1; i++) {
-         snprintf(errmsg, MSG_SZ, "%d,", invalid_verts[i]);
-         msg += string(errmsg);
-      }
-      snprintf(errmsg, MSG_SZ, "%d", invalid_verts.back());
+  vector<int> invalid_verts;
+  for (unsigned int i = 0; i < dual.verts().size(); i++) {
+    if (!dual.verts(i).is_set()) {
+      dual.del(VERTS, i);
+      int idx = invalid_verts.size() + i;
+      invalid_verts.push_back(idx);
+      i--;
+    }
+  }
+  if (invalid_verts.size()) {
+    string msg(
+        "removed invalid vertices (and associated faces) with indices - ");
+    char errmsg[MSG_SZ];
+    for (unsigned int i = 0; i < invalid_verts.size() - 1; i++) {
+      snprintf(errmsg, MSG_SZ, "%d,", invalid_verts[i]);
       msg += string(errmsg);
-      opts.warning(msg);
-   }
+    }
+    snprintf(errmsg, MSG_SZ, "%d", invalid_verts.back());
+    msg += string(errmsg);
+    opts.warning(msg);
+  }
 
-   col_geom_v twisted = twist(geom, dual, opts.twist_val, opts.centre,
-         opts.struts_only);
+  Geometry twisted =
+      twist(geom, dual, opts.twist_val, opts.centre, opts.struts_only);
 
-   geom_write_or_error(twisted, opts.ofile, opts);
+  opts.write_or_error(twisted, opts.ofile);
 
-   return 0;
+  return 0;
 }
-   
-

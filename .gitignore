@@ -28,6 +28,7 @@ stamp-h1
 *.libs
 *.exe
 *~
+*.swp
 
 m4/libtool.m4
 m4/ltoptions.m4
@@ -39,6 +40,7 @@ Doxyfile
 doc_src/common_defs.inc
 
 /doc/*
+*lib_docs/*
 
 src_extra/twist
 src_extra/spidron

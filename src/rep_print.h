@@ -1,5 +1,7 @@
 /*
-   Copyright (c) 2003, Adrian Rossiter
+   Copyright (c) 2003-2016, Adrian Rossiter
+
+   Antiprism - http://www.antiprism.com
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -22,7 +24,7 @@
 
 /*
    Name: rep_print.h
-   Description: information from OFF file - print functions 
+   Description: information from OFF file - print functions
    Project: Antiprism - http://www.antiprism.com
 */
 
@@ -30,103 +32,113 @@
 #define REP_PRINT_H
 
 #include <stdio.h>
+#include <string>
+#include <vector>
+
 #include "../base/antiprism.h"
 
-class rep_printer: public geom_info
-{
-   private:
-      int sig_dgts;
-      char *d2s(char *buf, double d) { return dtostr(buf, d, sig_dgts); }
-      char *v2s(char *buf, vec3d v);
-      char *vidx2s(char *buf, int idx)
-         { return idx2s(buf, idx, num_verts()-extra_v_sz); }
-      char *eidx2s(char *buf, int idx)
-         { return idx2s(buf, idx, num_edges()-extra_e_sz); }
-      char *fidx2s(char *buf, int idx)
-         { return idx2s(buf, idx, num_faces()-extra_f_sz); }
-      char *col2s(char *buf, col_val col);
-     
-      string sub_sym_str;
+class rep_printer : public anti::GeometryInfo {
+private:
+  int sig_dgts;
+  char *d2s(char *buf, double d) { return anti::dtostr(buf, d, sig_dgts); }
+  char *v2s(char *buf, anti::Vec3d v);
+  char *vidx2s(char *buf, int idx)
+  {
+    return idx2s(buf, idx, num_verts() - extra_v_sz);
+  }
+  char *eidx2s(char *buf, int idx)
+  {
+    return idx2s(buf, idx, num_edges() - extra_e_sz);
+  }
+  char *fidx2s(char *buf, int idx)
+  {
+    return idx2s(buf, idx, num_faces() - extra_f_sz);
+  }
+  char *col2s(char *buf, anti::Color col);
 
-      char *idx2s(char *buf, int idx, int extra_sz);
-      int extra_v_sz;
-      int extra_e_sz;
-      int extra_f_sz;
-      FILE *ofile;
+  std::string sub_sym_str;
 
-      void face_winding_cnts(const vector<int> winding_numbers, const bool &unsign);
-      void vertex_figure_winding_cnts();
+  char *idx2s(char *buf, int idx, int extra_sz);
+  int extra_v_sz;
+  int extra_e_sz;
+  int extra_f_sz;
+  FILE *ofile;
 
-   public:
-      rep_printer(geom_if &geom, FILE *outfile=stdout) :
-         geom_info(geom), extra_v_sz(0), extra_e_sz(0), extra_f_sz(0), 
-         ofile(outfile)
-         { set_sig_dgts(); }
-      
-      void set_sig_dgts(int dgts=8) { sig_dgts=dgts; }
-      bool set_sub_symmetry(const string &sub_sym, char *errmsg);
+  void face_winding_cnts(const std::vector<int> winding_numbers,
+                         const bool &signing);
+  void vertex_figure_winding_cnts();
 
-      void extra_elems_added(int v_sz, int e_sz, int f_sz)
-         { extra_v_sz += v_sz; extra_e_sz += e_sz; extra_f_sz += f_sz; }
-      
-      void general_sec();
-      void faces_sec();
-      void edges_sec();
-      void angles_sec();
-      void solid_angles_sec();
-      void distances_sec();
-      void symmetry();
+public:
+  rep_printer(anti::Geometry &geom, FILE *outfile = stdout)
+      : anti::GeometryInfo(geom), extra_v_sz(0), extra_e_sz(0), extra_f_sz(0),
+        ofile(outfile)
+  {
+    set_sig_dgts();
+  }
 
-      void face_sides_cnts();
-      void vert_order_cnts();
-      void vert_heights_cnts();
-      void solid_angles_cnts();
-      void face_angles_cnts();
-      void windings();
-      void edge_lengths_cnts();
-      void dihedral_angles_cnts();
-      void sym_orbit_cnts();
+  void set_sig_dgts(int dgts = 8) { sig_dgts = dgts; }
+  anti::Status set_sub_symmetry(const std::string &sub_sym);
 
-      void v_index(int v_idx);
-      void v_coords(int v_idx);
-      void v_neighbours(int v_idx);
-      void v_figure_orig(int v_idx);
-      void v_figure(int v_idx);
-      void v_face_idxs(int v_idx);
-      void v_solid_angle(int v_idx);
-      void v_order(int v_idx);
-      void v_distance(int v_idx);
-      void v_angles(int v_idx);
-      void v_color(int v_idx);
+  void extra_elems_added(int v_sz, int e_sz, int f_sz)
+  {
+    extra_v_sz += v_sz;
+    extra_e_sz += e_sz;
+    extra_f_sz += f_sz;
+  }
 
-      void e_index(int e_idx);
-      void e_vert_idxs(int e_idx);
-      void e_face_idxs(int e_idx);
-      void e_dihedral_angle(int e_idx);
-      void e_central_angle(int e_idx);
-      void e_distance(int e_idx);
-      void e_centroid(int e_idx);
-      void e_direction(int e_idx);
-      void e_length(int e_idx);
-      void e_color(int e_idx);
-      
-      void f_index(int f_idx);
-      void f_vert_idxs(int v_idx);
-      void f_neighbours(int v_idx);
-      void f_normal(int f_idx);
-      void f_angles(int f_idx);
-      void f_sides(int f_idx);
-      void f_distance(int f_idx);
-      void f_area(int f_idx);
-      void f_perimeter(int f_idx);
-      void f_max_nonplanar(int f_idx);
-      void f_centroid(int f_idx);
-      void f_lengths(int f_idx);
-      void f_color(int f_idx);
+  void general_sec();
+  void faces_sec();
+  void edges_sec();
+  void angles_sec();
+  void solid_angles_sec();
+  void distances_sec();
+  void symmetry();
+
+  void face_sides_cnts();
+  void vert_order_cnts();
+  void vert_heights_cnts();
+  void solid_angles_cnts();
+  void face_angles_cnts();
+  void windings();
+  void edge_lengths_cnts();
+  void dihedral_angles_cnts();
+  void sym_orbit_cnts();
+
+  void v_index(int v_idx);
+  void v_coords(int v_idx);
+  void v_neighbours(int v_idx);
+  void v_figure(int v_idx);
+  void v_face_idxs(int v_idx);
+  void v_solid_angle(int v_idx);
+  void v_order(int v_idx);
+  void v_distance(int v_idx);
+  void v_angles(int v_idx);
+  void v_color(int v_idx);
+
+  void e_index(int e_idx);
+  void e_vert_idxs(int e_idx);
+  void e_face_idxs(int e_idx);
+  void e_dihedral_angle(int e_idx);
+  void e_central_angle(int e_idx);
+  void e_distance(int e_idx);
+  void e_centroid(int e_idx);
+  void e_direction(int e_idx);
+  void e_length(int e_idx);
+  void e_color(int e_idx);
+
+  void f_index(int f_idx);
+  void f_vert_idxs(int f_idx);
+  void f_neighbours(int f_idx);
+  void f_normal(int f_idx);
+  void f_angles(int f_idx);
+  void f_sides(int f_idx);
+  void f_distance(int f_idx);
+  void f_area(int f_idx);
+  void f_perimeter(int f_idx);
+  void f_max_nonplanar(int f_idx);
+  void f_centroid(int f_idx);
+  void f_lengths(int f_idx);
+  void f_color(int f_idx);
 };
 
-
-
-
 #endif // REP_PRINT_H
-

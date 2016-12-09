@@ -25,43 +25,36 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef  GL_STROKE_FONT_H
-#define  GL_STROKE_FONT_H
-
+#ifndef GL_STROKE_FONT_H
+#define GL_STROKE_FONT_H
 
 /* The stroke font structures */
 
 typedef struct taganti_StrokeVertex anti_StrokeVertex;
-struct taganti_StrokeVertex
-{
-    float         X, Y;
+struct taganti_StrokeVertex {
+  float X, Y;
 };
 
 typedef struct taganti_StrokeStrip anti_StrokeStrip;
-struct taganti_StrokeStrip
-{
-    int             Number;
-    const anti_StrokeVertex* Vertices;
+struct taganti_StrokeStrip {
+  int Number;
+  const anti_StrokeVertex *Vertices;
 };
 
 typedef struct taganti_StrokeChar anti_StrokeChar;
-struct taganti_StrokeChar
-{
-    float         Right;
-    int             Number;
-    const anti_StrokeStrip* Strips;
+struct taganti_StrokeChar {
+  float Right;
+  int Number;
+  const anti_StrokeStrip *Strips;
 };
 
 typedef struct taganti_StrokeFont anti_StrokeFont;
-struct taganti_StrokeFont
-{
-    const char*     Name;                       /* The source font name      */
-    int             Quantity;                   /* Number of chars in font   */
-    float         Height;                     /* Height of the characters  */
-    const anti_StrokeChar** Characters;          /* The characters mapping    */
+struct taganti_StrokeFont {
+  const char *Name;                   /* The source font name      */
+  int Quantity;                       /* Number of chars in font   */
+  float Height;                       /* Height of the characters  */
+  const anti_StrokeChar **Characters; /* The characters mapping    */
 };
-
-
 
 extern const anti_StrokeFont antiStrokeRoman;
 extern const anti_StrokeFont antiStrokeMonoRoman;
@@ -69,15 +62,12 @@ extern const anti_StrokeFont antiStrokeMonoRoman;
 /*
  * Those pointers will be used by following definitions:
  */
-#define  ANTI_STROKE_ROMAN               (&antiStrokeRoman)
-#define  ANTI_STROKE_MONO_ROMAN          (&antiStrokeMonoRoman)
+#define ANTI_STROKE_ROMAN (&antiStrokeRoman)
+#define ANTI_STROKE_MONO_ROMAN (&antiStrokeMonoRoman)
 
-void antiStrokeCharacter(const anti_StrokeFont* font, int character );
-int antiStrokeWidth(const anti_StrokeFont* font, int character );
-int antiStrokeLength(const anti_StrokeFont* font, const unsigned char* string );
-float antiStrokeHeight(const anti_StrokeFont* fontID);
-
-
+void antiStrokeCharacter(const anti_StrokeFont *font, int character);
+int antiStrokeWidth(const anti_StrokeFont *font, int character);
+int antiStrokeLength(const anti_StrokeFont *font, const unsigned char *string);
+float antiStrokeHeight(const anti_StrokeFont *fontID);
 
 #endif // GL_STROKE_FONT_H
-

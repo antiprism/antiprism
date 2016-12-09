@@ -1,0 +1,12 @@
+VERS_0_0_0 {
+global:
+    extern "C++" {
+        anti::*;
+    };
+    /* g++ version mangling prefixes for 'typeinfo' */
+    _ZTI*; _ZTF*; _ZTS*;
+    /* g++ version mangling prefixes for 'vtable' */
+    _ZTT*; _ZTV*; _ZTv*;
+local:
+    *;
+};

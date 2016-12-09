@@ -1,5 +1,7 @@
 /*
-   Copyright (c) 2003, Adrian Rossiter
+   Copyright (c) 2003-2016, Adrian Rossiter
+
+   Antiprism - http://www.antiprism.com
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -26,19 +28,19 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-
 #include "vec_utils.h"
 
+namespace anti {
 
-vec3d centroid(const vector<vec3d> &pts, const vector<int> &idxs)
+Vec3d centroid(const std::vector<Vec3d> &pts, const std::vector<int> &idxs)
 {
-   bool all_pts = (idxs.size() == 0);
-   int num_pts = all_pts ? pts.size() : idxs.size(); 
-   vec3d centroid(0, 0, 0);
-   for(int i=0; i<num_pts; i++)
-      centroid += pts[all_pts ? i : idxs[i]];
-   centroid /= num_pts;
-   return centroid;
+  bool all_pts = (idxs.size() == 0);
+  int num_pts = all_pts ? pts.size() : idxs.size();
+  Vec3d centroid(0, 0, 0);
+  for (int i = 0; i < num_pts; i++)
+    centroid += pts[all_pts ? i : idxs[i]];
+  centroid /= num_pts;
+  return centroid;
 }
 
-
+} // namespace anti

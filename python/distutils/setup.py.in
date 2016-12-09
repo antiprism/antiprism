@@ -3,19 +3,6 @@
 from distutils.core import setup, Extension
 import glob
 
-#------------ Build Options-------------------
-
-# If using Cygwin GCC: may be set to '-mno-cygwin' to build a module
-# that is not dependant on the Cygwin environment
-#no_cygwin_option = '-mno-cygwin'
-no_cygwin_option = ''
-
-#------------ End of Options -----------------0
-
-
-
-
-
 # Make a list of the library string, stripping the -l from each library.
 libs = [lib[2:] for lib in '@LIBS@'.split()]
 
@@ -23,15 +10,12 @@ libs = [lib[2:] for lib in '@LIBS@'.split()]
 # directory and the library source in ../../base
 source_files = ['antiprism_wrap.cc']
 source_files.extend(glob.glob('lib_src/*.cc'))
+source_files.extend(glob.glob('lib_src/muparser/*.cc'))
+source_files.extend(glob.glob('lib_src/qhull/*.cc'))
+source_files.extend(glob.glob('lib_src/tesselator/*.cc'))
 
 ext_comp_args=[]
 ext_link_args=[]
-
-
-if len(no_cygwin_option.strip()):
-   ext_comp_args.append(no_cygwin_option)
-   ext_link_args.append(no_cygwin_option)
-
 
 setup(
    name='@PACKAGE_NAME@',

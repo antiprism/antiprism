@@ -1,6 +1,6 @@
 /*
-   Copyright (c) 2003-2011, Adrian Rossiter
-   
+   Copyright (c) 2003-2016, Adrian Rossiter
+
    Antiprism - http://www.antiprism.com
 
    Permission is hereby granted, free of charge, to any person obtaining a
@@ -22,100 +22,91 @@
   IN THE SOFTWARE.
 */
 
-/* \file vec4d.cc
+/* \file Vec4d.cc
  *  \brief Vectors for 4D geometry
  *
  *  A vector class with common vector operations.
  */
 
-
-#include <stdlib.h>
+#include <cmath>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <math.h>
 
+#include "utils.h"
 #include "vec4d.h"
 
-vec4d vec4d::X(1, 0, 0, 0);
-vec4d vec4d::Y(0, 1, 0, 0);
-vec4d vec4d::Z(0, 0, 1, 0);
-vec4d vec4d::W(0, 0, 0, 1);
-vec4d vec4d::zero(0, 0, 0, 0);
+namespace anti {
 
+Vec4d Vec4d::X(1, 0, 0, 0);
+Vec4d Vec4d::Y(0, 1, 0, 0);
+Vec4d Vec4d::Z(0, 0, 1, 0);
+Vec4d Vec4d::W(0, 0, 0, 1);
+Vec4d Vec4d::zero(0, 0, 0, 0);
 
-bool vec4d::read(const char *str, char *errmsg)
+Status Vec4d::read(const char *str)
 {
-   int i;
-   double f[4];
-   char buff;
-   char buff2;
-   if( sscanf(str, " %lf , %lf , %lf , %lf %c", f, f+1, f+2, f+3, &buff) != 4 &&
-         sscanf(str, " %lf %lf %lf %lf %c", f, f+1, f+2, f+3, &buff2) != 4 ) {
-      if(errmsg)
-         strcpy(errmsg, "didn't find four numbers");
-      return false;
-   }
+  int i;
+  double f[4];
+  char buff;
+  char buff2;
+  if (sscanf(str, " %lf , %lf , %lf , %lf %c", f, f + 1, f + 2, f + 3, &buff) !=
+          4 &&
+      sscanf(str, " %lf %lf %lf %lf %c", f, f + 1, f + 2, f + 3, &buff2) != 4)
+    return Status::error("didn't find four numbers");
 
-   for(i=0; i<4; i++) {
-      if(isinf(f[i])) {
-         if(errmsg) {
-            const char *pos[] = {"first", "second", "third", "fourth"};
-            sprintf(errmsg, "%s number too large\n", pos[i]);
-         }
-         return false;
-      }
-   }
+  for (i = 0; i < 4; i++) {
+    if (std::isinf(f[i])) {
+      const char *pos[] = {"first", "second", "third", "fourth"};
+      return Status::error(msg_str("%s number too large\n", pos[i]));
+    }
+  }
 
-   v[0] = f[0];
-   v[1] = f[1];
-   v[2] = f[2];
-   v[3] = f[3];
+  v[0] = f[0];
+  v[1] = f[1];
+  v[2] = f[2];
+  v[3] = f[3];
 
-   return true;
+  return Status::ok();
 }
 
-
-void vec4d::dump(const char *var, FILE *file) const
+void Vec4d::dump(const char *var, FILE *file) const
 {
-   if(var)
-      fprintf(file, "%s=", var);
-   if(is_set())  // ihas been set
-      fprintf(file, "(%f,%f,%f,%f)\n", v[0], v[1], v[2], v[3]);
-   else
-      fprintf(file, "(not set)\n");
+  if (var)
+    fprintf(file, "%s=", var);
+  if (is_set()) // ihas been set
+    fprintf(file, "(%f,%f,%f,%f)\n", v[0], v[1], v[2], v[3]);
+  else
+    fprintf(file, "(not set)\n");
 }
 
 // make vector unusable
-void vec4d::unset()
-{
-   v[0]=NAN;
-}
-
+void Vec4d::unset() { v[0] = NAN; }
 
 inline double det2(double a11, double a12, double a21, double a22)
 {
-   return a11*a22 - a12*a21;
+  return a11 * a22 - a12 * a21;
 }
 
-
-inline double det3(double a11, double a12, double a13,
-                   double a21, double a22, double a23,
-                   double a31, double a32, double a33)
+inline double det3(double a11, double a12, double a13, double a21, double a22,
+                   double a23, double a31, double a32, double a33)
 {
-   return +a11*det2(a22, a23, a32, a33)
-          -a12*det2(a21, a23, a31, a33)
-          +a13*det2(a21, a22, a31, a32);
+  return +a11 * det2(a22, a23, a32, a33) - a12 * det2(a21, a23, a31, a33) +
+         a13 * det2(a21, a22, a31, a32);
 }
 
-
-vec4d vcross(const vec4d &v1, const vec4d &v2, const vec4d &v3)
+Vec4d vcross(const Vec4d &vec1, const Vec4d &vec2, const Vec4d &vec3)
 {
-	vec4d vprod;
-   vprod[0] =  det3(v1[1],v1[2],v1[3], v2[1],v2[2],v2[3], v3[1],v3[2],v3[3]);
-	vprod[1] = -det3(v1[0],v1[2],v1[3], v2[0],v2[2],v2[3], v3[0],v3[2],v3[3]);
-	vprod[2] =  det3(v1[0],v1[1],v1[3], v2[0],v2[1],v2[3], v3[0],v3[1],v3[3]);
-	vprod[3] = -det3(v1[0],v1[1],v1[2], v2[0],v2[1],v2[2], v3[0],v3[1],v3[2]);
-	return vprod;
+  Vec4d vprod;
+  vprod[0] = det3(vec1[1], vec1[2], vec1[3], vec2[1], vec2[2], vec2[3], vec3[1],
+                  vec3[2], vec3[3]);
+  vprod[1] = -det3(vec1[0], vec1[2], vec1[3], vec2[0], vec2[2], vec2[3],
+                   vec3[0], vec3[2], vec3[3]);
+  vprod[2] = det3(vec1[0], vec1[1], vec1[3], vec2[0], vec2[1], vec2[3], vec3[0],
+                  vec3[1], vec3[3]);
+  vprod[3] = -det3(vec1[0], vec1[1], vec1[2], vec2[0], vec2[1], vec2[2],
+                   vec3[0], vec3[1], vec3[2]);
+  return vprod;
 }
 
-
+} // namespace anti

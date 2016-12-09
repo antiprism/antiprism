@@ -1,5 +1,7 @@
 /*
-   Copyright (c) 2003-2009, Adrian Rossiter
+   Copyright (c) 2003-2016, Adrian Rossiter
+
+   Antiprism - http://www.antiprism.com
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -26,599 +28,591 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <string.h>
-#include <math.h>
+#include <algorithm>
 #include <ctype.h>
+#include <map>
+#include <math.h>
+#include <string.h>
 #include <string>
 #include <vector>
-#include <map>
-#include <algorithm>
 
 #include "../base/antiprism.h"
 
 using std::string;
 using std::vector;
+using std::map;
 using std::swap;
 
+using namespace anti;
 
-class pr_opts: public prog_opts
-{
-   private:
-   
-   public:
-      vector<int> space_verts;
-      double recip_rad;
-      double init_rad;
-      char recip_rad_type;
-      vec3d centre;
-      vec3d init_cent;
-      char recip_cent_type;
-      char init_cent_type;
-      bool invert;
-      double inf;
-      double extra_ideal_elems;
-      int num_iters;
-      double epsilon;
-      bool append;
+class pr_opts : public ProgramOpts {
+private:
+public:
+  vector<int> space_verts;
+  double recip_rad;
+  double init_rad;
+  char recip_rad_type;
+  Vec3d centre;
+  Vec3d init_cent;
+  char recip_cent_type;
+  char init_cent_type;
+  bool invert;
+  double inf;
+  double extra_ideal_elems;
+  int num_iters;
+  double epsilon;
+  bool append;
 
-      string ifile;
-      string ofile;
+  string ifile;
+  string ofile;
 
-      pr_opts(): prog_opts("pol_recip"),
-                 recip_rad(0), init_rad(0), recip_rad_type('x'),
-                 recip_cent_type('x'), init_cent_type('x'),
-                 invert(false), inf(1e15), extra_ideal_elems(true),
-                 num_iters(100), epsilon(0), append(false)
-                 {}
+  pr_opts()
+      : ProgramOpts("pol_recip"), recip_rad(0), init_rad(0),
+        recip_rad_type('x'), recip_cent_type('x'), init_cent_type('x'),
+        invert(false), inf(1e15), extra_ideal_elems(true), num_iters(100),
+        epsilon(0), append(false)
+  {
+  }
 
-      void process_command_line(int argc, char **argv);
-      void usage();
+  void process_command_line(int argc, char **argv);
+  void usage();
 };
 
 void pr_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] [input_file]\n"
-"\n"
-"Read a file in OFF format and make a polar reciprocal from the face\n"
-"planes. If input_file is not given the program reads from standard input.\n"
-"\n"
-"Options\n"
-"%s"
-"  -c <cent> reciprocation centre (default: C)\n"
-"              X,Y,Z - centre with these coordinates\n"
-"              C - vertex centroid,    M - mid-sphere (approximate)\n"
-"              e - edge balanced,      E - edge balanced with inversion\n"
-"              v - vert/face balanced, V - vert/face balanced with inversion\n"
-"              a - v/f/e balanced      A - v/f/e balanced with inversion\n"
-"  -C <init> initial value for a centre calculation, in form 'X,Y,Z',\n"
-"            or C to use centroid (default), M to calculate approx mid-sphere\n"
-"  -r <rad>  reciprocation radius (default: calculated)\n"
-"              radius value - use this value as the radius\n"
-"              v - nearest vertex distance, V - furthest vertex distance\n"
-"              e - nearest edge distance,   E - furthest edge distance\n"
-"              f - nearest face distance,   F - furthest face distance\n"
-"              X - topological dual using face centroids for dual vertices\n"  
-"            or a comma separated list of vertex indices (starting from 0)\n"
-"            and the distance is to the space containing those vertices\n"
-"  -R <rad>  initial value for a radius calculation (default: calculated)\n"
-"  -i        transform dual by reflecting in centre point\n"
-"  -I <dist> maximum distance to project any normal or infinite dual vertex\n"
-"            (default: %.0e), if 0 then use actual distances and delete\n"
-"            infinite points\n"
-"  -x        exclude extra elements added to duals with ideal vertices\n"
-"  -n <itrs> maximum number of iterations (default: 10000)\n"
-"  -l <lim>  minimum distance change to terminate, as negative exponent\n"
-"               (default: %d giving %.0e)\n"
-"  -a        append dual to original polyhedron\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"\n", prog_name(), help_ver_text, inf, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
+  fprintf(
+      stdout,
+      "\n"
+      "Usage: %s [options] [input_file]\n"
+      "\n"
+      "Read a file in OFF format and make a polar reciprocal from the face\n"
+      "planes. If input_file is not given the program reads from standard "
+      "input.\n"
+      "\n"
+      "Options\n"
+      "%s"
+      "  -c <cent> reciprocation centre (default: C)\n"
+      "              X,Y,Z - centre with these coordinates\n"
+      "              C - vertex centroid,    M - mid-sphere (approximate)\n"
+      "              e - edge balanced,      E - edge balanced with inversion\n"
+      "              v - vert/face balanced, V - vert/face balanced with "
+      "inversion\n"
+      "              a - v/f/e balanced      A - v/f/e balanced with "
+      "inversion\n"
+      "  -C <init> initial value for a centre calculation, in form 'X,Y,Z',\n"
+      "            or C to use centroid (default), M to calculate approx "
+      "mid-sphere\n"
+      "  -r <rad>  reciprocation radius (default: calculated)\n"
+      "              radius value - use this value as the radius\n"
+      "              v - nearest vertex distance, V - furthest vertex "
+      "distance\n"
+      "              e - nearest edge distance,   E - furthest edge distance\n"
+      "              f - nearest face distance,   F - furthest face distance\n"
+      "              X - topological dual using face centroids for dual "
+      "vertices\n"
+      "            or a comma separated list of vertex indices (starting from "
+      "0)\n"
+      "            and the distance is to the space containing those vertices\n"
+      "  -R <rad>  initial value for a radius calculation (default: "
+      "calculated)\n"
+      "  -i        transform dual by reflecting in centre point\n"
+      "  -I <dist> maximum distance to project any normal or infinite dual "
+      "vertex\n"
+      "            (default: %.0e), if 0 then use actual distances and delete\n"
+      "            infinite points\n"
+      "  -x        exclude extra elements added to duals with ideal vertices\n"
+      "  -n <itrs> maximum number of iterations (default: 10000)\n"
+      "  -l <lim>  minimum distance change to terminate, as negative exponent\n"
+      "               (default: %d giving %.0e)\n"
+      "  -a        append dual to original polyhedron\n"
+      "  -o <file> write output to file (default: write to standard output)\n"
+      "\n"
+      "\n",
+      prog_name(), help_ver_text, inf, int(-log(::epsilon) / log(10) + 0.5),
+      ::epsilon);
 }
 
-
-
-     
 void pr_opts::process_command_line(int argc, char **argv)
 {
-   char errmsg[MSG_SZ];
-   opterr = 0;
-   int c;
+  opterr = 0;
+  int c;
 
-   int sig_compare = INT_MAX;
-   
-   handle_long_opts(argc, argv);
+  int sig_compare = INT_MAX;
 
-   while( (c = getopt(argc, argv, ":hc:C:r:R:xao:n:l:iI:")) != -1 ) {
-      if(common_opts(c, optopt))
-         continue;
+  handle_long_opts(argc, argv);
 
-      switch(c) {
-         case 'C':
-            if(strlen(optarg)==1 && strchr("CM", *optarg))
-               init_cent_type = *optarg;
-            else if(init_cent.read(optarg, errmsg))
-               init_cent_type = 'c';
-            else
-               error("initial centre must be three coordinates, C, or M", c);
-            break;
-            
-         case 'c':
-            if(strlen(optarg)==1 && strchr("CMeEvVaA", *optarg))
-               recip_cent_type = *optarg;
-            else if(centre.read(optarg, errmsg)) 
-               recip_cent_type = 'c';
-            else
-               error("centre type must be three coordinates, C,M,e,E,v,V,a, or A", c);
-            break;
+  while ((c = getopt(argc, argv, ":hc:C:r:R:xao:n:l:iI:")) != -1) {
+    if (common_opts(c, optopt))
+      continue;
 
-         case 'R':
-            if(!read_double(optarg, &init_rad, errmsg))
-               error(errmsg, c);
-            if(fabs(init_rad) < epsilon)
-               warning("radius is very small (the reciprocal will be very large)", c);
-            else if(init_rad < 0)
-               warning("radius is negative", c);
-            break;
+    switch (c) {
+    case 'C':
+      if (strlen(optarg) == 1 && strchr("CM", *optarg))
+        init_cent_type = *optarg;
+      else if (init_cent.read(optarg))
+        init_cent_type = 'c';
+      else
+        error("initial centre must be three coordinates, C, or M", c);
+      break;
 
-         case 'r':
-            if(strlen(optarg)==1 && strchr("VvEeFfX", *optarg)) {
-               recip_rad_type = *optarg;
-            }
-            else if(read_double(optarg, &recip_rad, errmsg)) {
-               if(fabs(recip_rad) < epsilon)
-                  warning("radius is very small (the reciprocal will be very large)", c);
-               else if(recip_rad < 0)
-                  warning("radius is negative", c);
-               recip_rad_type = 'r';
-            }
-            else if(read_int_list(optarg, space_verts, errmsg, true))
-               recip_rad_type='S';
-            else
-               error("radius must be a radius value, or r,V,v,E,e,F,f,X or a list of index numbers", c);
-            break;
+    case 'c':
+      if (strlen(optarg) == 1 && strchr("CMeEvVaA", *optarg))
+        recip_cent_type = *optarg;
+      else if (centre.read(optarg))
+        recip_cent_type = 'c';
+      else
+        error("centre type must be three coordinates, C,M,e,E,v,V,a, or A", c);
+      break;
 
-         case 'i':
-            invert = true;
-            break;
+    case 'R':
+      print_status_or_exit(read_double(optarg, &init_rad), c);
+      if (fabs(init_rad) < epsilon)
+        warning("radius is very small (the reciprocal will be very large)", c);
+      else if (init_rad < 0)
+        warning("radius is negative", c);
+      break;
 
-         case 'x':
-            extra_ideal_elems = false;
-            break;
-         
-         case 'a':
-            append = true;
-            break;
-         
-         case 'o':
-            ofile = optarg;
-            break;
-         
-         case 'I':
-            if(!read_double(optarg, &inf, errmsg))
-               error(errmsg, c);
-            if(inf < 0.0)
-               error("distance must be positive, or 0 to disable", c);
-            break;
-         
-         case 'n':
-            if(!read_int(optarg, &num_iters, errmsg))
-               error(errmsg, c);
-            if(num_iters < 0)
-               error("number of iterations must be greater than 0", c);
-            break;
-
-         case 'l':
-            if(!read_int(optarg, &sig_compare, errmsg))
-               error(errmsg, c);
-            if(sig_compare < 0) {
-               warning("limit is negative, and so ignored", c);
-            }
-            if(sig_compare > DEF_SIG_DGTS) {
-               warning("limit is very small, may not be attainable", c);
-            }
-            break;
-
-         default:
-            error("unknown command line error");
+    case 'r':
+      if (strlen(optarg) == 1 && strchr("VvEeFfX", *optarg)) {
+        recip_rad_type = *optarg;
       }
-   }
+      else if (read_double(optarg, &recip_rad)) {
+        if (fabs(recip_rad) < epsilon)
+          warning("radius is very small (the reciprocal will be very large)",
+                  c);
+        else if (recip_rad < 0)
+          warning("radius is negative", c);
+        recip_rad_type = 'r';
+      }
+      else if (read_int_list(optarg, space_verts, true))
+        recip_rad_type = 'S';
+      else
+        error("radius must be a radius value, or r,V,v,E,e,F,f,X or a list of "
+              "index numbers",
+              c);
+      break;
 
-   if(argc-optind > 1) {
-      error("too many arguments");
-      exit(1);
-   }
-   
-   if(argc-optind == 1)
-      ifile=argv[optind];
+    case 'i':
+      invert = true;
+      break;
 
-   epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
+    case 'x':
+      extra_ideal_elems = false;
+      break;
+
+    case 'a':
+      append = true;
+      break;
+
+    case 'o':
+      ofile = optarg;
+      break;
+
+    case 'I':
+      print_status_or_exit(read_double(optarg, &inf), c);
+      if (inf < 0.0)
+        error("distance must be positive, or 0 to disable", c);
+      break;
+
+    case 'n':
+      print_status_or_exit(read_int(optarg, &num_iters), c);
+      if (num_iters < 0)
+        error("number of iterations must be greater than 0", c);
+      break;
+
+    case 'l':
+      print_status_or_exit(read_int(optarg, &sig_compare), c);
+      if (sig_compare < 0) {
+        warning("limit is negative, and so ignored", c);
+      }
+      if (sig_compare > DEF_SIG_DGTS) {
+        warning("limit is very small, may not be attainable", c);
+      }
+      break;
+
+    default:
+      error("unknown command line error");
+    }
+  }
+
+  if (argc - optind > 1) {
+    error("too many arguments");
+    exit(1);
+  }
+
+  if (argc - optind == 1)
+    ifile = argv[optind];
+
+  epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
-int find_mid_centre(geom_if &geom, double &rad, vec3d &cent, int n, const double &eps)
+int find_mid_centre(Geometry &geom, double &rad, Vec3d &cent, int n,
+                    const double &eps)
 {
-   vector<vector<int> > g_edges;
-   geom.get_impl_edges(g_edges);
-   int e_sz = g_edges.size();
-   if(!cent.is_set())
-      cent = centroid(*geom.get_verts());
-   if(fabs(rad)<epsilon) {
-      geom_info rep(geom);
-      rep.set_center(cent);
-      rad = rep.impl_edge_dists().sum/e_sz;
-   }
-   vec3d cur_cent = cent;
-   double cur_rad = rad;
-   double cent_test=-1, rad_test=-1;
-   int cnt;
-   for(cnt=0; cnt<n; cnt++) {
-      vec3d c_diff(0,0,0);
-      double rad_sum_g=0;
-      for(int e=0; e<e_sz; ++e) {
-         vec3d Pg = nearest_point(cur_cent, *geom.get_verts(), g_edges[e]);
-         double r = (Pg-cur_cent).mag();
-         rad_sum_g += r;
-         c_diff += (1-r/cur_rad)*(Pg-cur_cent);
+  vector<vector<int>> g_edges;
+  geom.get_impl_edges(g_edges);
+  int e_sz = g_edges.size();
+  if (!cent.is_set())
+    cent = geom.centroid();
+  if (fabs(rad) < epsilon) {
+    GeometryInfo rep(geom);
+    rep.set_center(cent);
+    rad = rep.iedge_dist_lims().sum / e_sz;
+  }
+  Vec3d cur_cent = cent;
+  double cur_rad = rad;
+  double cent_test = -1, rad_test = -1;
+  int cnt;
+  for (cnt = 0; cnt < n; cnt++) {
+    Vec3d c_diff(0, 0, 0);
+    double rad_sum_g = 0;
+    for (int e = 0; e < e_sz; ++e) {
+      Vec3d Pg = nearest_point(cur_cent, geom.verts(), g_edges[e]);
+      double r = (Pg - cur_cent).len();
+      rad_sum_g += r;
+      c_diff += (1 - r / cur_rad) * (Pg - cur_cent);
+    }
+    c_diff = c_diff / (double)e_sz;
+    cur_cent = cent;
+    cent = cur_cent - c_diff / (double)e_sz;
+    cur_rad = rad;
+    rad = rad_sum_g / e_sz;
+    cent_test = (cur_cent - cent).len() / rad;
+    rad_test = (cur_rad - rad) / rad;
+    // cent.dump("cent");
+    // fprintf(stderr, "rad=%g, delt_rad=%g,delta_cent=%g\n", rad, cur_rad-rad,
+    //      (cur_cent-cent).len());
+    if (fabs(cent_test) < eps && fabs(rad_test) < eps)
+      break;
+  }
+  char str[MSG_SZ];
+  fprintf(stderr, "[n=%d, limit=%sachieved, r_test=%g, c_test=%g]\n"
+                  "centre=(%s), radius=%.16g\n",
+          cnt, cnt == n ? "not " : "", cent_test, rad_test,
+          vtostr(str, cent, " "), rad);
+  return 1;
+}
+
+int find_can_centre(Geometry &geom, char type, double &rad, Vec3d &cent,
+                    bool invert, int n, const double &eps)
+{
+  bool use_e = false;
+  bool use_vf = false;
+  if (type == 'e')
+    use_e = true;
+  else if (type == 'v')
+    use_vf = true;
+  else {
+    use_e = true;
+    use_vf = true;
+  }
+
+  vector<vector<int>> g_edges, d_edges;
+  geom.get_impl_edges(g_edges);
+  int e_sz = g_edges.size();
+  if (!cent.is_set())
+    cent = geom.centroid();
+  if (fabs(rad) < epsilon) {
+    GeometryInfo rep(geom);
+    rep.set_center(cent);
+    rad = (1 - 2 * (rad < 0)) * rep.iedge_dist_lims().sum / e_sz;
+  }
+  Geometry dual;
+  get_dual(&dual, geom, rad, cent);
+  if (invert)
+    dual.transform(Trans3d::transl(cent) * Trans3d::inversion() *
+                   Trans3d::transl(-cent));
+  dual.get_impl_edges(d_edges);
+  Vec3d cur_cent = cent;
+  double cur_rad = rad;
+  double cent_test = -1, rad_test = -1;
+  int cnt;
+  for (cnt = 0; cnt < n; cnt++) {
+    Vec3d cent_calc(0, 0, 0);
+    double rad_g = 0, rad_d = 0;
+    if (use_e) {
+      Vec3d e_sum_g(0, 0, 0);
+      Vec3d e_sum_d(0, 0, 0);
+      double rad_sum_g = 0, rad_sum_d = 0;
+      for (int e = 0; e < e_sz; ++e) {
+        Vec3d Pg = nearest_point(cur_cent, geom.verts(), g_edges[e]);
+        rad_sum_g += (Pg - cur_cent).len();
+        e_sum_g += Pg;
+        Vec3d Pd = nearest_point(cur_cent, dual.verts(), d_edges[e]);
+        rad_sum_d += (Pd - cur_cent).len();
+        e_sum_d += Pd;
       }
-      c_diff = c_diff/(double)e_sz;
-      cur_cent = cent;
-      cent = cur_cent - c_diff/(double)e_sz;
+      cent_calc += (e_sum_g + e_sum_d) / (2.0 * e_sz);
+      rad_g += rad_sum_g;
+      rad_d += rad_sum_d;
+    }
+    if (use_vf) {
+      const vector<Vec3d> &g_verts = geom.verts();
+      const vector<Vec3d> &d_verts = dual.verts();
+      int v_sz = g_verts.size();
+      int f_sz = geom.faces().size();
+      Vec3d f_sum_g(0, 0, 0);
+      Vec3d v_sum_d(0, 0, 0);
+      Vec3d v_sum_g(0, 0, 0);
+      Vec3d f_sum_d(0, 0, 0);
+      double v_rad_sum_g = 0, v_rad_sum_d = 0;
+      double f_rad_sum_g = 0, f_rad_sum_d = 0;
+      for (int f = 0; f < f_sz; ++f) {
+        Vec3d Pg = nearest_point(cur_cent, geom.verts(), geom.faces(f));
+        f_rad_sum_g += (Pg - cur_cent).len();
+        f_sum_g += Pg;
+        Vec3d Pd = d_verts[f];
+        v_rad_sum_d += (Pd - cur_cent).len();
+        v_sum_d += Pd;
+      }
+
+      for (int v = 0; v < v_sz; ++v) {
+        Vec3d Pg = g_verts[v];
+        v_rad_sum_g += (Pg - cur_cent).len();
+        v_sum_g += Pg;
+        Vec3d Pd = nearest_point(cur_cent, dual.verts(), dual.faces(v));
+        f_rad_sum_d += (Pd - cur_cent).len();
+        f_sum_d += Pd;
+      }
+
+      Vec3d vf_avg_g = (v_sum_g + f_sum_g) / double(v_sz + f_sz);
+      Vec3d vf_avg_d = (v_sum_d + f_sum_d) / double(v_sz + f_sz);
+      Vec3d vf_cent = (vf_avg_g + vf_avg_d) / 2.0;
+      cent_calc += vf_cent;
+      rad_g += v_rad_sum_g * f_rad_sum_g;
+      rad_d += v_rad_sum_d * f_rad_sum_d;
+    }
+    if (use_e && use_vf) {
+      cent_calc /= 2.0;
+    }
+
+    if (is_even(cnt)) {
       cur_rad = rad;
-      rad = rad_sum_g/e_sz;
-      cent_test = (cur_cent - cent).mag()/rad;
-      rad_test = (cur_rad - rad)/rad;
-      //cent.dump("cent");
-      //fprintf(stderr, "rad=%g, delt_rad=%g,delta_cent=%g\n", rad, cur_rad-rad,
-      //      (cur_cent-cent).mag());
-      if(fabs(cent_test)<eps && fabs(rad_test)<eps)
-         break;
-   }
-   char str[MSG_SZ];
-   fprintf(stderr, "[n=%d, limit=%sachieved, r_test=%g, c_test=%g]\n"
-         "centre=(%s), radius=%.16g\n",
-         cnt, cnt==n?"not ":"", cent_test, rad_test,
-         vtostr(str, cent, " "), rad);
-   return 1;
+      // rad = sqrt(rad_g/rad_d)*cur_rad;
+      rad = 0.5 * cur_rad + 0.5 * sqrt(rad_g / rad_d) * cur_rad;
+    }
+    else {
+      cur_cent = cent;
+      cent = 0.5 * cur_cent + 0.5 * cent_calc;
+    }
+
+    cent_test = (cur_cent - cent).len() / rad;
+    rad_test = (cur_rad - rad) / rad;
+    // cent.dump("cent");
+    // fprintf(stderr, "rad=%g, delt_rad=%g,delta_cent=%g\n", rad, cur_rad-rad,
+    //      (cur_cent-cent).len());
+    if (fabs(cent_test) < eps && fabs(rad_test) < eps)
+      break;
+    get_pol_recip_verts(&dual, geom, rad, cur_cent);
+    if (invert)
+      dual.transform(Trans3d::transl(cur_cent) * Trans3d::inversion() *
+                     Trans3d::transl(-cur_cent));
+  }
+  char str[MSG_SZ];
+  fprintf(stderr, "[n=%d, limit=%sachieved, r_test=%g, c_test=%g]\n"
+                  "centre=(%s), radius=%.16g%s\n",
+          cnt, cnt == n ? "not " : "", cent_test, rad_test,
+          vtostr(str, cent, " "), rad, (invert) ? "i" : "");
+  // if(rad<0) {
+  //   Trans3d inv = Trans3d::transl(cent) *
+  //               Trans3d::inversion() *
+  //               Trans3d::transl(-cent);
+  //   geom.transform(inv);
+  //}
+
+  return 1;
 }
- 
-int find_can_centre(geom_if &geom, char type, double &rad, vec3d &cent, bool invert, int n, const double &eps)
+
+void find_recip_centre(Geometry &geom, char type, double &rad, Vec3d &cent,
+                       bool invert, int n, const double &eps)
 {
-   bool use_e = false;
-   bool use_vf = false;
-   if(type=='e')
-      use_e = true;
-   else if(type=='v')
-      use_vf = true;
-   else {
-      use_e = true;
-      use_vf = true;
-   }
-      
-   vector<vector<int> > g_edges, d_edges;
-   geom.get_impl_edges(g_edges);
-   int e_sz = g_edges.size();
-   if(!cent.is_set())
-      cent = centroid(*geom.get_verts());
-   if(fabs(rad)<epsilon) {
-      geom_info rep(geom);
-      rep.set_center(cent);
-      rad = (1-2*(rad<0))*rep.impl_edge_dists().sum/e_sz;
-   }
-   geom_v dual;
-   get_dual(geom, dual, rad, cent);
-   if(invert)
-      dual.transform(
-            mat3d::transl(cent)*mat3d::inversion()*mat3d::transl(-cent));
-   dual.get_impl_edges(d_edges);
-   vec3d cur_cent = cent;
-   double cur_rad = rad;
-   double cent_test=-1, rad_test=-1;
-   int cnt;
-   for(cnt=0; cnt<n; cnt++) {
-      vec3d cent_calc(0,0,0);
-      double rad_g=0, rad_d=0;
-      if(use_e) {
-         vec3d e_sum_g(0,0,0);
-         vec3d e_sum_d(0,0,0);
-         double rad_sum_g=0, rad_sum_d=0;
-         for(int e=0; e<e_sz; ++e) {
-            vec3d Pg = nearest_point(cur_cent, *geom.get_verts(), g_edges[e]);
-            rad_sum_g += (Pg-cur_cent).mag();
-            e_sum_g += Pg;
-            vec3d Pd = nearest_point(cur_cent, *dual.get_verts(), d_edges[e]);
-            rad_sum_d += (Pd-cur_cent).mag();
-            e_sum_d += Pd;
-         }
-         cent_calc += (e_sum_g+e_sum_d) / (2.0*e_sz);
-         rad_g += rad_sum_g;
-         rad_d += rad_sum_d;
-      }
-      if(use_vf) {
-         vector<vec3d> &g_verts = *geom.get_verts();
-         vector<vec3d> &d_verts = *dual.get_verts();
-         int v_sz = g_verts.size();
-         vector<vector<int> > &g_faces = *geom.get_faces();
-         vector<vector<int> > &d_faces = *dual.get_faces();
-         int f_sz = g_faces.size();
-         vec3d f_sum_g(0,0,0);
-         vec3d v_sum_d(0,0,0);
-         vec3d v_sum_g(0,0,0);
-         vec3d f_sum_d(0,0,0);
-         double v_rad_sum_g=0, v_rad_sum_d=0;
-         double f_rad_sum_g=0, f_rad_sum_d=0;
-         for(int f=0; f<f_sz; ++f) {
-            vec3d Pg = nearest_point(cur_cent, *geom.get_verts(), g_faces[f]);
-            f_rad_sum_g += (Pg-cur_cent).mag();
-            f_sum_g += Pg;
-            vec3d Pd = d_verts[f];
-            v_rad_sum_d += (Pd-cur_cent).mag();
-            v_sum_d += Pd;
-         }
-      
-         for(int v=0; v<v_sz; ++v) {
-            vec3d Pg = g_verts[v];
-            v_rad_sum_g += (Pg-cur_cent).mag();
-            v_sum_g += Pg;
-            vec3d Pd = nearest_point(cur_cent, *dual.get_verts(), d_faces[v]);
-            f_rad_sum_d += (Pd-cur_cent).mag();
-            f_sum_d += Pd;
-         }
-      
-         vec3d vf_avg_g = (v_sum_g + f_sum_g)/double(v_sz+f_sz);
-         vec3d vf_avg_d = (v_sum_d + f_sum_d)/double(v_sz+f_sz);
-         vec3d vf_cent = (vf_avg_g + vf_avg_d)/2.0;
-         cent_calc += vf_cent;
-         rad_g += v_rad_sum_g * f_rad_sum_g;
-         rad_d += v_rad_sum_d * f_rad_sum_d;
-      }
-      if(use_e && use_vf) {
-         cent_calc /= 2.0;
-      }
- 
-         
-      if(is_even(cnt)) {
-         cur_rad = rad;
-         //rad = sqrt(rad_g/rad_d)*cur_rad;
-         rad = 0.5*cur_rad + 0.5*sqrt(rad_g/rad_d)*cur_rad;
-      }
-      else {
-         cur_cent = cent;
-         cent = 0.5*cur_cent + 0.5*cent_calc;
-      }
-      
-      cent_test = (cur_cent - cent).mag()/rad;
-      rad_test = (cur_rad - rad)/rad;
-      //cent.dump("cent");
-      //fprintf(stderr, "rad=%g, delt_rad=%g,delta_cent=%g\n", rad, cur_rad-rad,
-      //      (cur_cent-cent).mag());
-      if(fabs(cent_test)<eps && fabs(rad_test)<eps)
-         break;
-      get_pol_recip_verts(geom, dual, rad, cur_cent);
-      if(invert)
-         dual.transform(mat3d::transl(cur_cent)*
-               mat3d::inversion()*mat3d::transl(-cur_cent));
-   }
-   char str[MSG_SZ];
-   fprintf(stderr, "[n=%d, limit=%sachieved, r_test=%g, c_test=%g]\n"
-         "centre=(%s), radius=%.16g%s\n",
-         cnt, cnt==n?"not ":"", cent_test, rad_test,
-         vtostr(str, cent, " "), rad, (invert)?"i":"");
-   //if(rad<0) {
-   //   mat3d inv = mat3d::transl(cent) *
-   //               mat3d::inversion() *
-   //               mat3d::transl(-cent);
-   //   geom.transform(inv);
-   //}
-
-return 1;
+  if (fabs(rad) < epsilon)
+    rad = epsilon / 2.0;
+  switch (type) {
+  case 'x': // fefault is C
+  case 'C':
+    cent = geom.centroid();
+    break;
+  case 'M':
+    find_mid_centre(geom, rad, cent, n, eps);
+    break;
+  case 'e':
+    find_can_centre(geom, 'e', rad, cent, invert, n, eps);
+    break;
+  case 'E':
+    rad = -rad;
+    find_can_centre(geom, 'e', rad, cent, invert, n, eps);
+    break;
+  case 'v':
+    find_can_centre(geom, 'v', rad, cent, invert, n, eps);
+    break;
+  case 'V':
+    rad = -rad;
+    find_can_centre(geom, 'v', rad, cent, invert, n, eps);
+    break;
+  case 'a':
+    find_can_centre(geom, 'a', rad, cent, invert, n, eps);
+    break;
+  case 'A':
+    rad = -rad;
+    find_can_centre(geom, 'a', rad, cent, invert, n, eps);
+    break;
+  }
 }
 
-
-void find_recip_centre(geom_if &geom, char type, double &rad, vec3d &cent, bool invert, int n, const double &eps)
+double find_recip_rad(Geometry &geom, char type, Vec3d cent,
+                      vector<int> vidxs = vector<int>())
 {
-   if(fabs(rad)<epsilon)
-      rad = epsilon/2.0;
-   switch(type) {
-      case 'x': // fefault is C
-      case 'C':
-         cent = centroid(*geom.get_verts());
-         break;
-      case 'M':
-         find_mid_centre(geom, rad, cent, n, eps);
-         break;
-      case 'e':
-         find_can_centre(geom, 'e', rad, cent, invert, n, eps);
-         break;
-      case 'E':
-         rad = -rad;
-         find_can_centre(geom, 'e', rad, cent, invert, n, eps);
-         break;
-      case 'v':
-         find_can_centre(geom, 'v', rad, cent, invert, n, eps);
-         break;
-      case 'V':
-         rad = -rad;
-         find_can_centre(geom, 'v', rad, cent, invert, n, eps);
-         break;
-      case 'a':
-         find_can_centre(geom, 'a', rad, cent, invert, n, eps);
-         break;
-      case 'A':
-         rad = -rad;
-         find_can_centre(geom, 'a', rad, cent, invert, n, eps);
-         break;
-   }   
+  double rad = 1;
+  GeometryInfo rep(geom);
+  rep.set_center(cent);
+  switch (type) {
+  case 'v':
+    rad = rep.vert_dist_lims().min;
+    break;
+  case 'V':
+    rad = rep.vert_dist_lims().max;
+    break;
+  case 'e':
+    rad = rep.iedge_dist_lims().min;
+    break;
+  case 'E':
+    rad = rep.iedge_dist_lims().max;
+    break;
+  case 'f':
+    rad = rep.face_dist_lims().min;
+    break;
+  case 'F':
+    rad = rep.face_dist_lims().max;
+    break;
+  case 'S':
+    rad = (nearest_point(cent, geom.verts(), vidxs) - cent).len();
+    break;
+  case 'X':
+    rad = 1;
+    break;
+  }
+  return rad;
 }
 
-double find_recip_rad(geom_if &geom, char type, vec3d cent,
-      vector<int> vidxs=vector<int>())
+bool is_polyhedron(const Geometry &geom, char *errmsg = nullptr)
 {
-   double rad = 1;
-   geom_info rep(geom);
-   rep.set_center(cent);
-   switch(type) {
-      case 'v':
-         rad = rep.vert_dists().min;
-         break;
-      case 'V':
-         rad = rep.vert_dists().max;
-         break;
-      case 'e':
-         rad = rep.impl_edge_dists().min;
-         break;
-      case 'E':
-         rad = rep.impl_edge_dists().max;
-         break;
-      case 'f':
-         rad = rep.face_dists().min;
-         break;
-      case 'F':
-         rad = rep.face_dists().max;
-         break;
-      case 'S':
-         rad = (nearest_point(cent, *geom.get_verts(), vidxs) - cent).mag();
-         break;
-      case 'X':
-         rad = 1;
-         break;
-   }
-   return rad;
+  GeometryInfo info(geom);
+  if (!info.num_faces()) {
+    if (errmsg)
+      strcpy_msg(errmsg, "not a polyhedron, has no faces");
+    return false;
+  }
+
+  if (!info.is_closed()) {
+    if (errmsg)
+      strcpy_msg(errmsg, "not a polyhedron, is not closed");
+    return false;
+  }
+
+  if (!info.is_known_connectivity()) {
+    if (errmsg)
+      strcpy_msg(errmsg, "unknown whether a polyhedron, ambiguous "
+                         "connectivity");
+    return false;
+  }
+
+  return true; // each edge shared by exactly 2 faces
 }
-
-
-int is_polyhedron(geom_if &geom, char *errmsg=0)
-{
-   map<pair<int, int>, int> edge_cnts;
-   map<pair<int, int>, int>::iterator ei;
-   vector<vector<int> > &faces = *geom.get_faces();
-   if(!faces.size()) {
-      if(errmsg)
-         strcpy(errmsg, "not a polyhedron, has no faces");
-      return 0;
-   }
-   pair<int, int> edge;
-   for(unsigned int i=0; i<faces.size(); ++i) {
-      for(unsigned int j=0; j<faces[i].size(); ++j) {
-         edge.first=faces[i][j];
-         edge.second=faces[i][(j+1)%faces[i].size()];
-         if(edge.first > edge.second)
-            swap(edge.first, edge.second);
-         ei = edge_cnts.find(edge);
-         if(ei==edge_cnts.end())
-            edge_cnts[edge] = 1;
-         else
-            ei->second++;
-      }
-   }
-
-   for(ei=edge_cnts.begin(); ei!=edge_cnts.end(); ++ei) {
-      if(ei->second!=2) {
-         if(errmsg)
-            sprintf(errmsg, "not a polyhedron, has an edge joined by"
-                  " %d face(s)", ei->second);
-         return ei->second;
-      }
-   }
-   return 2;                        // each edge shared by exactly 2 faces
-}
-
 
 int main(int argc, char *argv[])
 {
-   pr_opts opts;
-   opts.process_command_line(argc, argv);
+  pr_opts opts;
+  opts.process_command_line(argc, argv);
 
-   col_geom_v geom;
-   geom_read_or_error(geom, opts.ifile, opts);
+  Geometry geom;
+  opts.read_or_error(geom, opts.ifile);
 
-   char errmsg[MSG_SZ];
-   int e_cons = is_polyhedron(geom, errmsg);
-   if(e_cons!=2)
-      opts.error(errmsg, "input_file");
+  char errmsg[MSG_SZ];
+  if (!is_polyhedron(geom, errmsg))
+    opts.error(errmsg, "input_file");
 
-   // Set up init_centre   
-   double tmp_rad = 0;
-   if(opts.init_cent_type=='C')
-      opts.init_cent = centroid(*geom.get_verts());
-   else if(opts.init_cent_type=='M')
-      find_mid_centre(geom, tmp_rad, opts.init_cent, opts.num_iters, opts.epsilon);
+  // Set up init_centre
+  double tmp_rad = 0;
+  if (opts.init_cent_type == 'C')
+    opts.init_cent = geom.centroid();
+  else if (opts.init_cent_type == 'M')
+    find_mid_centre(geom, tmp_rad, opts.init_cent, opts.num_iters,
+                    opts.epsilon);
 
-   if(strchr("CMx", opts.recip_cent_type) && opts.recip_rad_type=='x') 
-      opts.recip_rad_type='e';
-   
+  if (strchr("CMx", opts.recip_cent_type) && opts.recip_rad_type == 'x')
+    opts.recip_rad_type = 'e';
 
-   vec3d centre;
-   if(opts.recip_cent_type=='c') {
-      centre = opts.centre;
-      opts.init_rad = 1.0;
-   }
-   else {
-      centre = opts.init_cent;
-      find_recip_centre(geom, opts.recip_cent_type, opts.init_rad, centre,
-            opts.invert, opts.num_iters, opts.epsilon);
-   }
-   
-   double radius;
-   if(opts.recip_rad_type=='r')
-      radius = opts.recip_rad;
-   else if(opts.recip_rad_type=='x')
-      radius = opts.init_rad;
-   else
-      radius = find_recip_rad(geom, opts.recip_rad_type, centre,
-            opts.space_verts);
+  Vec3d centre;
+  if (opts.recip_cent_type == 'c') {
+    centre = opts.centre;
+    opts.init_rad = 1.0;
+  }
+  else {
+    centre = opts.init_cent;
+    find_recip_centre(geom, opts.recip_cent_type, opts.init_rad, centre,
+                      opts.invert, opts.num_iters, opts.epsilon);
+  }
 
-   //fprintf(stderr, "radius=%g\n", radius);
-   //centre.dump("cent");
-   col_geom_v dual;
-   get_dual(geom, dual, radius, centre, 1.01*opts.inf);
-   if(opts.invert)
-      dual.transform(
-            mat3d::transl(centre)*mat3d::inversion()*mat3d::transl(-centre));
+  double radius;
+  if (opts.recip_rad_type == 'r')
+    radius = opts.recip_rad;
+  else if (opts.recip_rad_type == 'x')
+    radius = opts.init_rad;
+  else
+    radius =
+        find_recip_rad(geom, opts.recip_rad_type, centre, opts.space_verts);
 
-   
-   vector<int> invalid_verts;
-   for(unsigned int i=0; i<dual.get_verts()->size(); i++) {
-      if(!(*dual.get_verts())[i].is_set()) {
-         dual.delete_vert(i);
-         int idx = invalid_verts.size()+i;
-         invalid_verts.push_back(idx);
-         i--;
-      }
-   }
-   if(invalid_verts.size()) {
-      string msg("removed invalid vertices (and associated faces) with indices - ");
-      for(unsigned int i=0; i<invalid_verts.size()-1; i++) {
-         snprintf(errmsg, MSG_SZ, "%d,", invalid_verts[i]);
-         msg += string(errmsg);
-      }
-      snprintf(errmsg, MSG_SZ, "%d", invalid_verts.back());
+  // fprintf(stderr, "radius=%g\n", radius);
+  // centre.dump("cent");
+  Geometry dual;
+  get_dual(&dual, geom, radius, centre, 1.01 * opts.inf);
+  if (opts.invert)
+    dual.transform(Trans3d::transl(centre) * Trans3d::inversion() *
+                   Trans3d::transl(-centre));
+
+  vector<int> invalid_verts;
+  for (unsigned int i = 0; i < dual.verts().size(); i++) {
+    if (!dual.verts(i).is_set()) {
+      dual.del(VERTS, (int)i);
+      int idx = invalid_verts.size() + i;
+      invalid_verts.push_back(idx);
+      i--;
+    }
+  }
+  if (invalid_verts.size()) {
+    string msg(
+        "removed invalid vertices (and associated faces) with indices - ");
+    for (unsigned int i = 0; i < invalid_verts.size() - 1; i++) {
+      snprintf(errmsg, MSG_SZ, "%d,", invalid_verts[i]);
       msg += string(errmsg);
-      opts.warning(msg);
-   }
+    }
+    snprintf(errmsg, MSG_SZ, "%d", invalid_verts.back());
+    msg += string(errmsg);
+    opts.warning(msg);
+  }
 
-   if(opts.recip_rad_type=='X')
-      geom.face_cents(dual.raw_verts());
+  if (opts.recip_rad_type == 'X')
+    geom.face_cents(dual.raw_verts());
 
-   if(opts.extra_ideal_elems)
-      add_extra_ideal_elems(dual, centre, 1.005*opts.inf);
+  if (opts.extra_ideal_elems)
+    add_extra_ideal_elems(&dual, centre, 1.005 * opts.inf);
 
-   map<int, col_val>::const_iterator mi;
-   for(mi=dual.face_cols().begin(); mi!=dual.face_cols().end(); ++mi)
-      if(mi->second.is_inv()) {
-         opts.warning("dual includes invisible faces (base model included "
-               "invisible vertices)");
-         break;
-      }
+  map<int, Color>::const_iterator mi;
+  for (mi = dual.colors(FACES).get_properties().begin();
+       mi != dual.colors(FACES).get_properties().end(); ++mi)
+    if (mi->second.is_inv()) {
+      opts.warning("dual includes invisible faces (base model included "
+                   "invisible vertices)");
+      break;
+    }
 
-   dual.orient();
-   if(opts.append)
-      geom.append(dual);
+  dual.orient();
+  if (opts.append)
+    geom.append(dual);
 
-   const col_geom_v &geom_out = (opts.append) ? geom : dual;
-   geom_write_or_error(geom_out, opts.ofile, opts);
+  const Geometry &geom_out = (opts.append) ? geom : dual;
+  opts.write_or_error(geom_out, opts.ofile);
 
-   return 0;
+  return 0;
 }
-   
-

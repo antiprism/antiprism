@@ -1,5 +1,7 @@
 /*
-   Copyright (c) 2008-2009, Roger Kaufman
+   Copyright (c) 2008-2016, Roger Kaufman
+
+   Antiprism - http://www.antiprism.com
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -26,9 +28,9 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <limits.h>
 
 #include <ctype.h>
 
@@ -41,718 +43,734 @@
 using std::string;
 using std::vector;
 
+using namespace anti;
 
-class lutil_opts: public prog_opts {
-   public:
-      vector<string> ifiles;
-      string ofile;
-      string cfile;
-      string rfile;
+class lutil_opts : public ProgramOpts {
+public:
+  vector<string> ifiles;
+  string ofile;
+  string cfile;
+  string rfile;
 
-      vector<double> strut_len;
-      bool strip_faces;
-      char color_edges_by_sqrt;
-      char container;
-      bool append_container;
-      double radius;
-      char radius_default;
-      vec3d offset;
-      bool voronoi_cells;
-      bool voronoi_central_cell;
-      bool convex_hull;
-      bool add_hull;
-      bool append_lattice;
-      char color_method;
-      int face_opacity;
-      vec3d list_radii_center;
-      char list_radii_original_center;
-      int list_radii;
-      int list_struts;
-      col_val cent_col;
-      bool trans_to_origin;
-      string R_merge_elems;
-      int blend_type;
+  vector<double> strut_len;
+  bool strip_faces;
+  char color_edges_by_sqrt;
+  char container;
+  bool append_container;
+  double radius;
+  char radius_default;
+  Vec3d offset;
+  bool voronoi_cells;
+  bool voronoi_central_cell;
+  bool convex_hull;
+  bool add_hull;
+  bool append_lattice;
+  char color_method;
+  int face_opacity;
+  Vec3d list_radii_center;
+  char list_radii_original_center;
+  int list_radii;
+  int list_struts;
+  Color cent_col;
+  bool trans_to_origin;
+  string R_merge_elems;
+  int blend_type;
 
-      bool verbose;
-      double epsilon;
-      
-      // 0 - lattice  1 - convex hull  2 - voronoi
-      vector<col_val> vert_col;
-      vector<col_val> edge_col;
-      vector<col_val> face_col;
+  bool verbose;
+  double epsilon;
 
-      lutil_opts(): prog_opts("lat_util"),
-                    strip_faces(true),
-                    color_edges_by_sqrt('\0'),
-                    container('c'),
-                    append_container(false),
-                    radius(0),
-                    radius_default('s'),
-                    voronoi_cells(false),
-                    voronoi_central_cell(false),
-                    convex_hull(false),
-                    add_hull(false),
-                    append_lattice(false),
-                    color_method('\0'),
-                    face_opacity(-1),
-                    list_radii_original_center('\0'),
-                    list_radii(0),
-                    list_struts(0),
-                    trans_to_origin(false),
-                    R_merge_elems("vef"),
-                    blend_type(3),
-                    verbose(false),
-                    epsilon(0) {}
+  // 0 - lattice  1 - convex hull  2 - voronoi
+  vector<Color> vert_col;
+  vector<Color> edge_col;
+  vector<Color> face_col;
 
-      void process_command_line(int argc, char **argv);
-      void usage();
+  lutil_opts()
+      : ProgramOpts("lat_util"), strip_faces(true), color_edges_by_sqrt('\0'),
+        container('c'), append_container(false), radius(0), radius_default('s'),
+        voronoi_cells(false), voronoi_central_cell(false), convex_hull(false),
+        add_hull(false), append_lattice(false), color_method('\0'),
+        face_opacity(-1), list_radii_original_center('\0'), list_radii(0),
+        list_struts(0), trans_to_origin(false), R_merge_elems("vef"),
+        blend_type(3), verbose(false), epsilon(0)
+  {
+  }
+
+  void process_command_line(int argc, char **argv);
+  void usage();
 };
 
 void lutil_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] [input_files]\n"
-"\n"
-"Read one or more files in OFF format, combine them into a single file and\n"
-"process it. Operations take place in the order listed below. input_files is the\n"
-"list of files to process. If they don't exist, explicit edges are created.\n"
-"If the input possesses faces they are stripped by default.\n"
-"\n"
-"Options\n"
-"%s"
-"  -h        this help message\n"
-"  -I        verbose output\n"
-"  -z        suppress stripping of faces\n"
-"  -c <type> container, c - cube (default), s - sphere (uses radius)\n"
-"  -k <file> container, convex hull of off file or built in model (uses radius)\n"
-"  -r <c,n>  radius. c is radius taken to optional root n. n = 2 is sqrt\n"
-"               or  l - max insphere radius, s - min insphere radius (default)\n"
-"               or  k - take radius from container specified by -k\n"
-"  -q <vecs> center offset, in form \"a_val,b_val,c_val\" (default: none)\n"
-"  -s <s,n>  create struts. s is strut length taken to optional root n\n"
-"               use multiple -s parameters for multiple struts\n"
-"  -D <opt>  Voronoi (a.k.a Dirichlet) cells (Brillouin zones for duals)\n"
-"               c - cells only, i - cell(s) touching center only\n"
-"  -C <opt>  c - convex hull only, i - keep interior\n"
-"  -A        append the original lattice to the final product\n"
-"  -R <fi,s> repeat off file fi at every vertex in lattice. If optional s is\n"
-"            set, sort and merge elements whose coordinates are the same to\n"
-"            the number of decimal places given by option -l.  elements can\n"
-"            include: v - vertices, e - edges, f - faces,  a - all (vef)\n"
-"            n - no merging  (default 'a'. Colors blended as RGB)\n"
-"  -K        append cage of container of -k to final product\n"
-"  -Z <col>  add center vertex to final product in color col\n"
-"  -O        translate center of final product to origin\n"
-"  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
-"               (default: %d giving %.0e)\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\nListing Options\n"
-"  -Q <vecs> center for radius calculations in -L (default: centroid)\n"
-"               c - original center, o - original center + offset in -q\n"
-"  -L <opt>  list unique radial distances of points (to standard output)\n"
-"               f - full report, v - values only\n"
-"  -S <opt>  list every possible strut value (to standard output)\n"
-"               f - full report, v - values only\n"
-"\nColoring Options (run 'off_util -H color' for help on color formats)\n"
-"  -V <col>  vertex color, (optional) elements, (optional) transparency\n"
-"               elements to color are l - lattice, c - convex hull, v - voronoi\n"
-"                  (default elements: lcv)\n"
-"               transparency. valid range from 0 (invisible) to 255 (opaque)\n"
-"  -E <col>  edge color (for struts, convex hulls, and voronoi)\n"
-"               lower case outputs map indexes. upper case outputs color values\n"
-"               key word: r,R for color edges by root value of final product\n"
-"  -F <col>  face color (for convex hulls and voronoi)\n"
-"               key word: s,S color by symmetry using face normals\n"
-"               key word: c,C color by symmetry using face normals (chiral)\n"
-"  -T <tran> face transparency for color by symmetry. valid range from 0 to 255\n"
-"\n"
-"\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
+  fprintf(
+      stdout,
+      "\n"
+      "Usage: %s [options] [input_files]\n"
+      "\n"
+      "Read one or more files in OFF format, combine them into a single file "
+      "and\n"
+      "process it. Operations take place in the order listed below. "
+      "input_files is the\n"
+      "list of files to process. If they don't exist, explicit edges are "
+      "created.\n"
+      "If the input possesses faces they are stripped by default.\n"
+      "\n"
+      "Options\n"
+      "%s"
+      "  -h        this help message\n"
+      "  -I        verbose output\n"
+      "  -z        suppress stripping of faces\n"
+      "  -c <type> container, c - cube (default), s - sphere (uses radius)\n"
+      "  -k <file> container, convex hull of off file or built in model (uses "
+      "radius)\n"
+      "  -r <c,n>  radius. c is radius taken to optional root n. n = 2 is "
+      "sqrt\n"
+      "               or  l - max insphere radius, s - min insphere radius "
+      "(default)\n"
+      "               or  k - take radius from container specified by -k\n"
+      "  -q <vecs> center offset, in form \"a_val,b_val,c_val\" (default: "
+      "none)\n"
+      "  -s <s,n>  create struts. s is strut length taken to optional root n\n"
+      "               use multiple -s parameters for multiple struts\n"
+      "  -D <opt>  Voronoi (a.k.a Dirichlet) cells (Brillouin zones for "
+      "duals)\n"
+      "               c - cells only, i - cell(s) touching center only\n"
+      "  -C <opt>  c - convex hull only, i - keep interior\n"
+      "  -A        append the original lattice to the final product\n"
+      "  -R <fi,s> repeat off file fi at every vertex in lattice. If optional "
+      "s is\n"
+      "            set, sort and merge elements whose coordinates are the same "
+      "to\n"
+      "            the number of decimal places given by option -l.  elements "
+      "can\n"
+      "            include: v - vertices, e - edges, f - faces,  a - all "
+      "(vef)\n"
+      "            n - no merging  (default 'a'. Colors blended as RGB)\n"
+      "  -K        append cage of container of -k to final product\n"
+      "  -Z <col>  add center vertex to final product in color col\n"
+      "  -O        translate center of final product to origin\n"
+      "  -l <lim>  minimum distance for unique vertex locations as negative "
+      "exponent\n"
+      "               (default: %d giving %.0e)\n"
+      "  -o <file> write output to file (default: write to standard output)\n"
+      "\nListing Options\n"
+      "  -Q <vecs> center for radius calculations in -L (default: centroid)\n"
+      "               c - original center, o - original center + offset in -q\n"
+      "  -L <opt>  list unique radial distances of points (to standard "
+      "output)\n"
+      "               f - full report, v - values only\n"
+      "  -S <opt>  list every possible strut value (to standard output)\n"
+      "               f - full report, v - values only\n"
+      "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
+      "  -V <col>  vertex color, (optional) elements, (optional) transparency\n"
+      "               elements to color are l - lattice, c - convex hull, v - "
+      "voronoi\n"
+      "                  (default elements: lcv)\n"
+      "               transparency. valid range from 0 (invisible) to 255 "
+      "(opaque)\n"
+      "  -E <col>  edge color (for struts, convex hulls, and voronoi)\n"
+      "               lower case outputs map indexes. upper case outputs color "
+      "values\n"
+      "               key word: r,R for color edges by root value of final "
+      "product\n"
+      "  -F <col>  face color (for convex hulls and voronoi)\n"
+      "               key word: s,S color by symmetry using face normals\n"
+      "               key word: c,C color by symmetry using face normals "
+      "(chiral)\n"
+      "  -T <tran> face transparency for color by symmetry. valid range from 0 "
+      "to 255\n"
+      "\n"
+      "\n",
+      prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
+      ::epsilon);
 }
 
 void lutil_opts::process_command_line(int argc, char **argv)
 {
-   opterr = 0;
-   int c;
-   char errmsg[MSG_SZ];
+  opterr = 0;
+  int c;
+  char errmsg[MSG_SZ];
 
-   int sig_compare = INT_MAX;
-   vector<double> double_parms;
-   col_val col_tmp;
-   
-   vert_col.resize(3);
-   edge_col.resize(3);
-   face_col.resize(3);
-   
-   // set some default colors
-   // 0 - lattice  1 - convex hull  2 - voronoi
-   // voronoi cells  vcol = gold; ecol = lightgrey; fcol = transparent yellow
-   vert_col[2] = col_val(255,215,0);
-   edge_col[2] = col_val(211,211,211);
-   face_col[2] = col_val(255,255,0,128);
-   
-   handle_long_opts(argc, argv);
+  int sig_compare = INT_MAX;
+  vector<double> double_parms;
+  Color col_tmp;
 
-   while( (c = getopt(argc, argv, ":hIzc:k:r:q:s:D:C:AV:E:F:T:Z:KOR:Q:L:S:l:o:")) != -1 ) {
-      if(common_opts(c, optopt))
-         continue;
+  vert_col.resize(3);
+  edge_col.resize(3);
+  face_col.resize(3);
 
-      switch(c) {
-         case 'I':
-            verbose = true;
-            break;
+  // set some default colors
+  // 0 - lattice  1 - convex hull  2 - voronoi
+  // voronoi cells  vcol = gold; ecol = lightgrey; fcol = transparent yellow
+  vert_col[2] = Color(255, 215, 0);
+  edge_col[2] = Color(211, 211, 211);
+  face_col[2] = Color(255, 255, 0, 128);
 
-         case 'z':
-            strip_faces = false;
-            break;
-            
-         case 'c':
-            if(strlen(optarg) > 1 || !strchr("cs", *optarg))
-               error("method is '"+string(optarg)+"' must be c or s", c);
-            container = *optarg;
-            break;
+  handle_long_opts(argc, argv);
 
-         case 'k':
-            cfile = optarg;
-            break;
-            
-         case 'r':
-            if(strlen(optarg) == 1 && strchr("lsk", *optarg))
-               radius_default = *optarg;
-            else {
-               if(!read_double_list(optarg, double_parms, errmsg, 2))
-                  error(errmsg, c);
-               radius = double_parms[0];
-               if(double_parms.size() == 2) {
-                  if(double_parms[1] == 0)
-                     error("root for radius must be non-zero", c);
-                  radius = pow(radius, 1/double_parms[1]);
-               }
-               if(radius <= 0)
-                  error("radius cannot be negative or zero", "s", c);
-            }
-            break;
-            
-         case 'q':
-            if(!offset.read(optarg, errmsg))
-               error(errmsg, c);
-            break;
+  while ((c = getopt(argc, argv,
+                     ":hIzc:k:r:q:s:D:C:AV:E:F:T:Z:KOR:Q:L:S:l:o:")) != -1) {
+    if (common_opts(c, optopt))
+      continue;
 
-         case 's': {
-            double strut_tmp;
-            if(!read_double_list(optarg, double_parms, errmsg, 2))
-               error(errmsg, c);
-            strut_tmp = double_parms[0];
-            if(double_parms.size() == 2)
-               strut_tmp = pow(strut_tmp, 1/double_parms[1]);
-            if(strut_tmp <= 0)
-               error("strut lengths cannot be negative", "s");
-            strut_len.push_back(strut_tmp);
-            break;
-         }
+    switch (c) {
+    case 'I':
+      verbose = true;
+      break;
 
-         case 'D':
-            if(strlen(optarg) > 1 || !strchr("ci", *optarg))
-               error("Voronoi cells arg is '"+string(optarg)+"' must be c, i", c);
-            voronoi_cells = true;
-            if(strchr("i", *optarg))
-               voronoi_central_cell = true;
-            break;
+    case 'z':
+      strip_faces = false;
+      break;
 
-         case 'C':
-            if(strlen(optarg) > 1 || !strchr("ci", *optarg))
-               error("convex hull arg is '"+string(optarg)+"' must be c, i", c);
-            convex_hull = true;
-            if(strchr("i", *optarg))
-               add_hull = true;
-            break;
-            
-         case 'A':
-            append_lattice = true;
-            break;
-            
-         case 'V': {
-            vector<char *> parts;
-            int parts_sz = split_line(optarg, parts, ",");
-            if(parts_sz>6)
-               error("the argument has more than 6 parts", c);
-            
-            col_val col;
-            bool valid_color = false;
-            int next_parms_idx = 1;
+    case 'c':
+      if (strlen(optarg) > 1 || !strchr("cs", *optarg))
+        error("method is '" + string(optarg) + "' must be c or s", c);
+      container = *optarg;
+      break;
 
-            if (parts_sz >= 3) {
-               char parts_test[MSG_SZ];
-               parts_test[0] = '\0';
-               strcat(parts_test,parts[0]);
-               strcat(parts_test,",");
-               strcat(parts_test,parts[1]);
-               strcat(parts_test,",");
-               strcat(parts_test,parts[2]);
-               if(col.read(parts_test, errmsg)) {
-                  valid_color = true;
-                  next_parms_idx = 3;
-               }
-               col_val col_save = col;
-               if (parts_sz >=4) {
-                  strcat(parts_test,",");
-                  strcat(parts_test,parts[3]);
-                  if(col.read(parts_test, errmsg)) {
-                     valid_color = true;
-                     next_parms_idx = 4;
-                  }
-                  else
-                     col = col_save;
-               }
-            }
-            
-            if (!valid_color) {
-               if(!col.read(parts[0], errmsg))
-                  error(errmsg, c);
-            }
+    case 'k':
+      cfile = optarg;
+      break;
 
-            unsigned int conv_elems = 15;
-            if(parts_sz>next_parms_idx) {
-               if(strspn(parts[next_parms_idx], "lcvh") !=
-                                              strlen(parts[next_parms_idx]))
-                  error(msg_str("elements to map are '%s' must be from "
-                           "l, c, v or h", parts[next_parms_idx]), c);
-               conv_elems = 8*(strchr(parts[next_parms_idx], 'h')!=0) +
-                            4*(strchr(parts[next_parms_idx], 'v')!=0) +
-                            2*(strchr(parts[next_parms_idx], 'c')!=0) +
-                            1*(strchr(parts[next_parms_idx], 'l')!=0);
-            }
-            
-            int opq = col[3];
-            if(parts_sz>next_parms_idx+1)
-               opq = atoi(parts[next_parms_idx+1]);
-               
-            if (opq < 0 || opq > 255)
-               error("transparency value must be between 0 and 255", c);
-
-            for(int i=0; i<3; i++) {
-              if(conv_elems & (1<<i)) {
-                  if (!col.is_set())
-                     vert_col[i] = col_val();
-                  else
-                     vert_col[i] = col_val(col[0],col[1],col[2],opq);
-               }
-            }
-            break;
-         }
-         
-         case 'E': {
-            vector<char *> parts;
-            int parts_sz = split_line(optarg, parts, ",");
-            if(parts_sz>6)
-               error("the argument has more than 6 parts", c);
-               
-            if (!strcasecmp(parts[0],"r")) {
-               color_edges_by_sqrt = parts[0][0];
-               break;
-            }
-            
-            col_val col;
-            bool valid_color = false;
-            int next_parms_idx = 1;
-
-            if (parts_sz >= 3) {
-               char parts_test[MSG_SZ];
-               parts_test[0] = '\0';
-               strcat(parts_test,parts[0]);
-               strcat(parts_test,",");
-               strcat(parts_test,parts[1]);
-               strcat(parts_test,",");
-               strcat(parts_test,parts[2]);
-               if(col.read(parts_test, errmsg)) {
-                  valid_color = true;
-                  next_parms_idx = 3;
-               }
-               col_val col_save = col;
-               if (parts_sz >=4) {
-                  strcat(parts_test,",");
-                  strcat(parts_test,parts[3]);
-                  if(col.read(parts_test, errmsg)) {
-                     valid_color = true;
-                     next_parms_idx = 4;
-                  }
-                  else
-                     col = col_save;
-               }
-            }
-            
-            if (!valid_color) {
-               if(!col.read(parts[0], errmsg))
-                  error(errmsg, c);
-            }
-
-            unsigned int conv_elems = 15;
-            if(parts_sz>next_parms_idx) {
-               if(strspn(parts[next_parms_idx], "lcvh") != 
-                                            strlen(parts[next_parms_idx]))
-                  error(msg_str("elements to map are '%s' must be from "
-                           "l, c, v, h", parts[next_parms_idx]), c);
-               conv_elems = 8*(strchr(parts[next_parms_idx], 'h')!=0) +
-                            4*(strchr(parts[next_parms_idx], 'v')!=0) +
-                            2*(strchr(parts[next_parms_idx], 'c')!=0) +
-                            1*(strchr(parts[next_parms_idx], 'l')!=0);
-            }
-            
-            int opq = col[3];
-            if(parts_sz>next_parms_idx+1)
-               opq = atoi(parts[next_parms_idx+1]);
-               
-            if (opq < 0 || opq > 255)
-               error("tranparency value must be between 0 and 255", c);
-
-            for(int i=0; i<3; i++) {
-              if(conv_elems & (1<<i)) {
-                  if (!col.is_set())
-                     edge_col[i] = col_val();
-                  else
-                     edge_col[i] = col_val(col[0],col[1],col[2],opq);
-               }
-            }
-            break;
-         }
-         
-         case 'F': {
-            vector<char *> parts;
-            int parts_sz = split_line(optarg, parts, ",");
-            if(parts_sz>6)
-               error("the argument has more than 6 parts", c);
-               
-            if ((!strcasecmp(parts[0],"s")) || (!strcasecmp(parts[0],"c"))) {
-               color_method = parts[0][0];
-               break;
-            }
-            
-            col_val col;
-            bool valid_color = false;
-            int next_parms_idx = 1;
-
-            if (parts_sz >= 3) {
-               char parts_test[MSG_SZ];
-               parts_test[0] = '\0';
-               strcat(parts_test,parts[0]);
-               strcat(parts_test,",");
-               strcat(parts_test,parts[1]);
-               strcat(parts_test,",");
-               strcat(parts_test,parts[2]);
-               if(col.read(parts_test, errmsg)) {
-                  valid_color = true;
-                  next_parms_idx = 3;
-               }
-               col_val col_save = col;
-               if (parts_sz >=4) {
-                  strcat(parts_test,",");
-                  strcat(parts_test,parts[3]);
-                  if(col.read(parts_test, errmsg)) {
-                     valid_color = true;
-                     next_parms_idx = 4;
-                  }
-                  else
-                     col = col_save;
-               }
-            }
-            
-            if (!valid_color) {
-               if(!col.read(parts[0], errmsg))
-                  error(errmsg, c);
-            }
-
-            unsigned int conv_elems = 15;
-            if(parts_sz>next_parms_idx) {
-               if(strspn(parts[next_parms_idx], "lcvh") != 
-                                           strlen(parts[next_parms_idx]))
-                  error(msg_str("elements to map are '%s' must be from "
-                           "l, c, v, h", parts[next_parms_idx]), c);
-               conv_elems = 8*(strchr(parts[next_parms_idx], 'h')!=0) +
-                            4*(strchr(parts[next_parms_idx], 'v')!=0) +
-                            2*(strchr(parts[next_parms_idx], 'c')!=0) +
-                            1*(strchr(parts[next_parms_idx], 'l')!=0);
-            }
-            
-            int opq = col[3];
-            if(parts_sz>next_parms_idx+1)
-               opq = atoi(parts[next_parms_idx+1]);
-               
-            if (opq < 0 || opq > 255)
-               error("transparency value must be between 0 and 255", c);
-
-            for(int i=0; i<3; i++) {
-              if(conv_elems & (1<<i)) {
-                  if (!col.is_set())
-                     face_col[i] = col_val();
-                  else
-                     face_col[i] = col_val(col[0],col[1],col[2],opq);
-               }
-            }
-            break;
-         }
-         
-         case 'T':
-            if(!read_int(optarg, &face_opacity, errmsg))
-               error(errmsg, c);
-            if(face_opacity < 0 || face_opacity > 255) {
-               error("face transparency must be between 0 and 255", c);
-            }
-            break;
-         
-         case 'Z':
-            if(!cent_col.read(optarg, errmsg))
-               error(errmsg, c);
-            break;
-            
-         case 'K':
-            append_container = true;
-            break;
-
-         case 'O':
-            trans_to_origin = true;
-            break;
-            
-         case 'R': {
-            vector<char *> parts;
-            int parts_sz = split_line(optarg, parts, ",");
-            if(parts_sz>2)
-               error("the argument has more than 2 parts", c);
-
-            rfile = parts[0];
-            if(parts_sz>1) {
-               if(strspn(parts[1], "vefan") != strlen(parts[1])) {
-                  snprintf(errmsg, MSG_SZ, "elements to merge are %s must be v, e, f, a or n\n", parts[1]);
-                  error(errmsg, c);
-               }
-               if(strchr(parts[1], 'a') && strlen(parts[1])>1) {
-                  error("a includes vef, and must be used alone", c);
-               }
-               if(strchr(parts[1], 'n') && strlen(parts[1])>1) {
-                  error("n must be used alone", c);
-               }
-               if(strspn(parts[1], "ef") && !strchr(parts[1], 'v')) {
-                  warning("without v, some orphan vertices may result", c);
-               }
-               R_merge_elems=parts[1];
-               if(R_merge_elems == "a")
-                  R_merge_elems = "vef";
-               else
-               if(R_merge_elems == "n")
-                  R_merge_elems = "";
-            }
-            break;
-         }
-
-         case 'Q':
-            if(strlen(optarg)==1) {
-               if(strchr("co", *optarg))
-                  list_radii_original_center = *optarg;
-               else
-                  error("invalid option", c);
-            }
-            else
-            if(!list_radii_center.read(optarg, errmsg))
-               error(errmsg, c);
-            break;
-
-         case 'L':
-            if(strlen(optarg) > 1 || !strchr("fv", *optarg))
-               error("list radii arg is '"+string(optarg)+"' must be f or v", c);
-            if(strchr("f", *optarg))
-               list_radii = 1;
-            else
-            if(strchr("v", *optarg))
-               list_radii = 2;
-            break;
-
-         case 'S':
-            if(strlen(optarg) > 1 || !strchr("fv", *optarg))
-               error("list struts arg is '"+string(optarg)+"' must be f or v", c);
-            if(strchr("f", *optarg))
-               list_struts = 1;
-            else
-            if(strchr("v", *optarg))
-               list_struts = 2;
-            break;
-            
-         case 'l':
-            if(!read_int(optarg, &sig_compare, errmsg))
-               error(errmsg, c);
-            if(sig_compare < 0) {
-               warning("limit is negative, and so ignored", c);
-            }
-            if(sig_compare > DEF_SIG_DGTS) {
-               warning("limit is very small, may not be attainable", c);
-            }
-            break;
-            
-         case 'o':
-            ofile = optarg;
-            break;
-
-         default:
-            error("unknown command line error");
-      }
-   }
-
-   while(argc-optind)
-      ifiles.push_back(string(argv[optind++]));
-
-   if (container == 's' && cfile.length())
-      error("-c and -k cannot be specified together");
-
-   if (append_container && !cfile.length())
-      error("container can only be appended if one is provided with -k", 'K');
-
-   if (radius_default == 'k' && !cfile.length())
-      error("-r k can only be used if -k container is specified",'r');
-      
-   if (container == 'c' && !cfile.length() && (radius != 0 || offset.is_set()))
-      warning("cubic container in use. Radius and offset ignored");
-      
-   //if ((container == 's' || (cfile.length() && !radius_default)) && !radius)
-   //   error("radius not set");
-
-   if (list_radii && list_struts)
-      error("cannot list radii and struts at the same time");
-   
-   epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
-}
-
-void make_skeleton(col_geom_v &geom, const bool &strip_faces)
-{
-   geom.add_missing_impl_edges();
-   if (strip_faces)
-      geom.clear_faces();
-}
-
-void process_lattices(col_geom_v &geom, col_geom_v &container, const col_geom_v &repeater, lutil_opts &opts)
-{
-   // add explicit edges and remove faces if necessary
-   make_skeleton(geom, opts.strip_faces);
-
-   // save original center
-   vec3d original_center = centroid(geom.verts());
-   
-   // save lattice in case if adding back in end
-   col_geom_v tgeom;
-   if (opts.append_lattice)
-      tgeom = geom;
-   
-   geom.color_vef(opts.vert_col[0], opts.edge_col[0], opts.face_col[0]);
-
-   for(unsigned int i=0; i<opts.strut_len.size(); i++)
-      add_color_struts(geom, opts.strut_len[i]*opts.strut_len[i], opts.edge_col[0]);
-      
-   if (!opts.radius && opts.radius_default != 'k')
-      opts.radius = lattice_radius(geom, opts.radius_default);
-
-   // scoop
-   if(opts.cfile.length())
-      geom_container_clip(geom, container, (opts.radius_default == 'k') ? lattice_radius(container,opts.radius_default) : opts.radius, opts.offset, opts.verbose, opts.epsilon);
-   else
-   if (opts.container == 's')
-      geom_spherical_clip(geom, opts.radius, opts.offset, opts.verbose, opts.epsilon);
-
-   if(opts.voronoi_cells) {
-      col_geom_v vgeom;
-      if (get_voronoi_geom(geom, vgeom, opts.voronoi_central_cell, false, opts.epsilon)) {
-         vgeom.color_vef(opts.vert_col[2], opts.edge_col[2], opts.face_col[2]);
-         geom = vgeom;
-      }
-   }
-
-   if (opts.convex_hull) {
-      char errmsg[MSG_SZ]="";
-      int ret = (opts.add_hull ? geom.add_hull("",errmsg) : geom.set_hull("",errmsg));
-      if(ret < 0)
-         fprintf(stderr,"%s\n",errmsg);
+    case 'r':
+      if (strlen(optarg) == 1 && strchr("lsk", *optarg))
+        radius_default = *optarg;
       else {
-         geom.orient();
-         if (opts.verbose)
-            convex_hull_report(geom, opts.add_hull);
-         geom.color_vef(opts.vert_col[1], opts.edge_col[1], opts.face_col[1]);
+        print_status_or_exit(read_double_list(optarg, double_parms, 2), c);
+        radius = double_parms[0];
+        if (double_parms.size() == 2) {
+          if (double_parms[1] == 0)
+            error("root for radius must be non-zero", c);
+          radius = pow(radius, 1 / double_parms[1]);
+        }
+        if (radius <= 0)
+          error("radius cannot be negative or zero", "s", c);
       }
-   }
-   
-   if (opts.append_lattice) {
-      geom.append(tgeom);
-      tgeom.clear_all();
-   }
-   
-   // face color by symmetry normals
-   if (opts.color_method)
-      color_by_symmetry_normals(geom, opts.color_method, opts.face_opacity, opts.epsilon);
-   
-   // if color by sqrt was used, override all edges of all structure
-   if (opts.color_edges_by_sqrt)
-      color_edges_by_sqrt(geom, opts.color_edges_by_sqrt);
+      break;
 
-   // place geom at every vertex in lattice
-   if(opts.rfile.length()) {
-      col_geom_v geom2;
-      for(unsigned int i=0; i<geom.verts().size(); i++) {
-         col_geom_v rep = repeater;
-         rep.transform(mat3d::transl((geom.verts())[i]));
-         geom2.append(rep);
+    case 'q':
+      print_status_or_exit(offset.read(optarg), c);
+      break;
+
+    case 's': {
+      double strut_tmp;
+      print_status_or_exit(read_double_list(optarg, double_parms, 2), c);
+      strut_tmp = double_parms[0];
+      if (double_parms.size() == 2)
+        strut_tmp = pow(strut_tmp, 1 / double_parms[1]);
+      if (strut_tmp <= 0)
+        error("strut lengths cannot be negative", "s");
+      strut_len.push_back(strut_tmp);
+      break;
+    }
+
+    case 'D':
+      if (strlen(optarg) > 1 || !strchr("ci", *optarg))
+        error("Voronoi cells arg is '" + string(optarg) + "' must be c, i", c);
+      voronoi_cells = true;
+      if (strchr("i", *optarg))
+        voronoi_central_cell = true;
+      break;
+
+    case 'C':
+      if (strlen(optarg) > 1 || !strchr("ci", *optarg))
+        error("convex hull arg is '" + string(optarg) + "' must be c, i", c);
+      convex_hull = true;
+      if (strchr("i", *optarg))
+        add_hull = true;
+      break;
+
+    case 'A':
+      append_lattice = true;
+      break;
+
+    case 'V': {
+      vector<char *> parts;
+      int parts_sz = split_line(optarg, parts, ",");
+      if (parts_sz > 6)
+        error("the argument has more than 6 parts", c);
+
+      Color col;
+      bool valid_color = false;
+      int next_parms_idx = 1;
+
+      if (parts_sz >= 3) {
+        char parts_test[MSG_SZ];
+        parts_test[0] = '\0';
+        strcat_msg(parts_test, parts[0]);
+        strcat_msg(parts_test, ",");
+        strcat_msg(parts_test, parts[1]);
+        strcat_msg(parts_test, ",");
+        strcat_msg(parts_test, parts[2]);
+        if (col.read(parts_test)) {
+          valid_color = true;
+          next_parms_idx = 3;
+        }
+        Color col_save = col;
+        if (parts_sz >= 4) {
+          strcat_msg(parts_test, ",");
+          strcat_msg(parts_test, parts[3]);
+          if (col.read(parts_test)) {
+            valid_color = true;
+            next_parms_idx = 4;
+          }
+          else
+            col = col_save;
+        }
       }
-      geom = geom2;
-      if(opts.R_merge_elems!="")
-         sort_merge_elems(geom, opts.R_merge_elems, opts.blend_type, opts.epsilon);
-   }
 
-   if (opts.list_radii) {
-      if (opts.list_radii_original_center) {
-         opts.list_radii_center = original_center;
-         if (opts.list_radii_original_center == 'o')
-            opts.list_radii_center += opts.offset;
+      if (!valid_color)
+        print_status_or_exit(col.read(parts[0]), c);
+
+      unsigned int conv_elems = 15;
+      if (parts_sz > next_parms_idx) {
+        if (strspn(parts[next_parms_idx], "lcvh") !=
+            strlen(parts[next_parms_idx]))
+          error(msg_str("elements to map are '%s' must be from "
+                        "l, c, v or h",
+                        parts[next_parms_idx]),
+                c);
+        conv_elems = 8 * (strchr(parts[next_parms_idx], 'h') != nullptr) +
+                     4 * (strchr(parts[next_parms_idx], 'v') != nullptr) +
+                     2 * (strchr(parts[next_parms_idx], 'c') != nullptr) +
+                     1 * (strchr(parts[next_parms_idx], 'l') != nullptr);
       }
-      list_grid_radii(opts.ofile, geom, opts.list_radii_center, opts.list_radii, opts.epsilon);
-   }
-   else
-   if (opts.list_struts)
-      list_grid_struts(opts.ofile, geom, opts.list_struts, opts.epsilon);
-   
-   if (opts.append_container) {
-      container.add_missing_impl_edges();
-      container.clear_faces();
-      geom.append(container);
-   }
 
-   if (opts.cent_col.is_set())
-      color_centroid(geom, opts.cent_col, opts.epsilon);
+      int opq = col[3];
+      if (parts_sz > next_parms_idx + 1)
+        opq = atoi(parts[next_parms_idx + 1]);
 
-   if (opts.trans_to_origin)
-      geom.transform(mat3d::transl(-centroid(geom.verts())));
+      if (opq < 0 || opq > 255)
+        error("transparency value must be between 0 and 255", c);
+
+      for (int i = 0; i < 3; i++) {
+        if (conv_elems & (1 << i)) {
+          if (!col.is_set())
+            vert_col[i] = Color();
+          else
+            vert_col[i] = Color(col[0], col[1], col[2], opq);
+        }
+      }
+      break;
+    }
+
+    case 'E': {
+      vector<char *> parts;
+      int parts_sz = split_line(optarg, parts, ",");
+      if (parts_sz > 6)
+        error("the argument has more than 6 parts", c);
+
+      if (!strcasecmp(parts[0], "r")) {
+        color_edges_by_sqrt = parts[0][0];
+        break;
+      }
+
+      Color col;
+      bool valid_color = false;
+      int next_parms_idx = 1;
+
+      if (parts_sz >= 3) {
+        char parts_test[MSG_SZ];
+        parts_test[0] = '\0';
+        strcat_msg(parts_test, parts[0]);
+        strcat_msg(parts_test, ",");
+        strcat_msg(parts_test, parts[1]);
+        strcat_msg(parts_test, ",");
+        strcat_msg(parts_test, parts[2]);
+        if (col.read(parts_test)) {
+          valid_color = true;
+          next_parms_idx = 3;
+        }
+        Color col_save = col;
+        if (parts_sz >= 4) {
+          strcat_msg(parts_test, ",");
+          strcat_msg(parts_test, parts[3]);
+          if (col.read(parts_test)) {
+            valid_color = true;
+            next_parms_idx = 4;
+          }
+          else
+            col = col_save;
+        }
+      }
+
+      if (!valid_color)
+        print_status_or_exit(col.read(parts[0]), c);
+
+      unsigned int conv_elems = 15;
+      if (parts_sz > next_parms_idx) {
+        if (strspn(parts[next_parms_idx], "lcvh") !=
+            strlen(parts[next_parms_idx]))
+          error(msg_str("elements to map are '%s' must be from "
+                        "l, c, v, h",
+                        parts[next_parms_idx]),
+                c);
+        conv_elems = 8 * (strchr(parts[next_parms_idx], 'h') != nullptr) +
+                     4 * (strchr(parts[next_parms_idx], 'v') != nullptr) +
+                     2 * (strchr(parts[next_parms_idx], 'c') != nullptr) +
+                     1 * (strchr(parts[next_parms_idx], 'l') != nullptr);
+      }
+
+      int opq = col[3];
+      if (parts_sz > next_parms_idx + 1)
+        opq = atoi(parts[next_parms_idx + 1]);
+
+      if (opq < 0 || opq > 255)
+        error("tranparency value must be between 0 and 255", c);
+
+      for (int i = 0; i < 3; i++) {
+        if (conv_elems & (1 << i)) {
+          if (!col.is_set())
+            edge_col[i] = Color();
+          else
+            edge_col[i] = Color(col[0], col[1], col[2], opq);
+        }
+      }
+      break;
+    }
+
+    case 'F': {
+      vector<char *> parts;
+      int parts_sz = split_line(optarg, parts, ",");
+      if (parts_sz > 6)
+        error("the argument has more than 6 parts", c);
+
+      if ((!strcasecmp(parts[0], "s")) || (!strcasecmp(parts[0], "c"))) {
+        color_method = parts[0][0];
+        break;
+      }
+
+      Color col;
+      bool valid_color = false;
+      int next_parms_idx = 1;
+
+      if (parts_sz >= 3) {
+        char parts_test[MSG_SZ];
+        parts_test[0] = '\0';
+        strcat_msg(parts_test, parts[0]);
+        strcat_msg(parts_test, ",");
+        strcat_msg(parts_test, parts[1]);
+        strcat_msg(parts_test, ",");
+        strcat_msg(parts_test, parts[2]);
+        if (col.read(parts_test)) {
+          valid_color = true;
+          next_parms_idx = 3;
+        }
+        Color col_save = col;
+        if (parts_sz >= 4) {
+          strcat_msg(parts_test, ",");
+          strcat_msg(parts_test, parts[3]);
+          if (col.read(parts_test)) {
+            valid_color = true;
+            next_parms_idx = 4;
+          }
+          else
+            col = col_save;
+        }
+      }
+
+      if (!valid_color)
+        print_status_or_exit(col.read(parts[0]), c);
+
+      unsigned int conv_elems = 15;
+      if (parts_sz > next_parms_idx) {
+        if (strspn(parts[next_parms_idx], "lcvh") !=
+            strlen(parts[next_parms_idx]))
+          error(msg_str("elements to map are '%s' must be from "
+                        "l, c, v, h",
+                        parts[next_parms_idx]),
+                c);
+        conv_elems = 8 * (strchr(parts[next_parms_idx], 'h') != nullptr) +
+                     4 * (strchr(parts[next_parms_idx], 'v') != nullptr) +
+                     2 * (strchr(parts[next_parms_idx], 'c') != nullptr) +
+                     1 * (strchr(parts[next_parms_idx], 'l') != nullptr);
+      }
+
+      int opq = col[3];
+      if (parts_sz > next_parms_idx + 1)
+        opq = atoi(parts[next_parms_idx + 1]);
+
+      if (opq < 0 || opq > 255)
+        error("transparency value must be between 0 and 255", c);
+
+      for (int i = 0; i < 3; i++) {
+        if (conv_elems & (1 << i)) {
+          if (!col.is_set())
+            face_col[i] = Color();
+          else
+            face_col[i] = Color(col[0], col[1], col[2], opq);
+        }
+      }
+      break;
+    }
+
+    case 'T':
+      print_status_or_exit(read_int(optarg, &face_opacity), c);
+      if (face_opacity < 0 || face_opacity > 255) {
+        error("face transparency must be between 0 and 255", c);
+      }
+      break;
+
+    case 'Z':
+      print_status_or_exit(cent_col.read(optarg), c);
+      break;
+
+    case 'K':
+      append_container = true;
+      break;
+
+    case 'O':
+      trans_to_origin = true;
+      break;
+
+    case 'R': {
+      vector<char *> parts;
+      int parts_sz = split_line(optarg, parts, ",");
+      if (parts_sz > 2)
+        error("the argument has more than 2 parts", c);
+
+      rfile = parts[0];
+      if (parts_sz > 1) {
+        if (strspn(parts[1], "vefan") != strlen(parts[1])) {
+          snprintf(errmsg, MSG_SZ,
+                   "elements to merge are %s must be v, e, f, a or n\n",
+                   parts[1]);
+          error(errmsg, c);
+        }
+        if (strchr(parts[1], 'a') && strlen(parts[1]) > 1) {
+          error("a includes vef, and must be used alone", c);
+        }
+        if (strchr(parts[1], 'n') && strlen(parts[1]) > 1) {
+          error("n must be used alone", c);
+        }
+        if (strspn(parts[1], "ef") && !strchr(parts[1], 'v')) {
+          warning("without v, some orphan vertices may result", c);
+        }
+        R_merge_elems = parts[1];
+        if (R_merge_elems == "a")
+          R_merge_elems = "vef";
+        else if (R_merge_elems == "n")
+          R_merge_elems = "";
+      }
+      break;
+    }
+
+    case 'Q':
+      if (strlen(optarg) == 1) {
+        if (strchr("co", *optarg))
+          list_radii_original_center = *optarg;
+        else
+          error("invalid option", c);
+      }
+      else
+        print_status_or_exit(list_radii_center.read(optarg), c);
+      break;
+
+    case 'L':
+      if (strlen(optarg) > 1 || !strchr("fv", *optarg))
+        error("list radii arg is '" + string(optarg) + "' must be f or v", c);
+      if (strchr("f", *optarg))
+        list_radii = 1;
+      else if (strchr("v", *optarg))
+        list_radii = 2;
+      break;
+
+    case 'S':
+      if (strlen(optarg) > 1 || !strchr("fv", *optarg))
+        error("list struts arg is '" + string(optarg) + "' must be f or v", c);
+      if (strchr("f", *optarg))
+        list_struts = 1;
+      else if (strchr("v", *optarg))
+        list_struts = 2;
+      break;
+
+    case 'l':
+      print_status_or_exit(read_int(optarg, &sig_compare), c);
+      if (sig_compare < 0) {
+        warning("limit is negative, and so ignored", c);
+      }
+      if (sig_compare > DEF_SIG_DGTS) {
+        warning("limit is very small, may not be attainable", c);
+      }
+      break;
+
+    case 'o':
+      ofile = optarg;
+      break;
+
+    default:
+      error("unknown command line error");
+    }
+  }
+
+  while (argc - optind)
+    ifiles.push_back(string(argv[optind++]));
+
+  if (container == 's' && cfile.length())
+    error("-c and -k cannot be specified together");
+
+  if (append_container && !cfile.length())
+    error("container can only be appended if one is provided with -k", 'K');
+
+  if (radius_default == 'k' && !cfile.length())
+    error("-r k can only be used if -k container is specified", 'r');
+
+  if (container == 'c' && !cfile.length() && (radius != 0 || offset.is_set()))
+    warning("cubic container in use. Radius and offset ignored");
+
+  // if ((container == 's' || (cfile.length() && !radius_default)) && !radius)
+  //   error("radius not set");
+
+  if (list_radii && list_struts)
+    error("cannot list radii and struts at the same time");
+
+  epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
+}
+
+void make_skeleton(Geometry &geom, const bool &strip_faces)
+{
+  geom.add_missing_impl_edges();
+  if (strip_faces)
+    geom.clear(FACES);
+}
+
+void process_lattices(Geometry &geom, Geometry &container,
+                      const Geometry &repeater, lutil_opts &opts)
+{
+  // add explicit edges and remove faces if necessary
+  make_skeleton(geom, opts.strip_faces);
+
+  // save original center
+  Vec3d original_center = centroid(geom.verts());
+
+  // save lattice in case if adding back in end
+  Geometry tgeom;
+  if (opts.append_lattice)
+    tgeom = geom;
+
+  Coloring(&geom).vef_one_col(opts.vert_col[0], opts.edge_col[0],
+                              opts.face_col[0]);
+
+  for (unsigned int i = 0; i < opts.strut_len.size(); i++)
+    add_color_struts(geom, opts.strut_len[i] * opts.strut_len[i],
+                     opts.edge_col[0]);
+
+  if (!opts.radius && opts.radius_default != 'k')
+    opts.radius = lattice_radius(geom, opts.radius_default);
+
+  // scoop
+  if (opts.cfile.length())
+    geom_container_clip(geom, container,
+                        (opts.radius_default == 'k')
+                            ? lattice_radius(container, opts.radius_default)
+                            : opts.radius,
+                        opts.offset, opts.verbose, opts.epsilon);
+  else if (opts.container == 's')
+    geom_spherical_clip(geom, opts.radius, opts.offset, opts.verbose,
+                        opts.epsilon);
+
+  if (opts.voronoi_cells) {
+    Geometry vgeom;
+    if (get_voronoi_geom(geom, vgeom, opts.voronoi_central_cell, false,
+                         opts.epsilon)) {
+      Coloring(&vgeom).vef_one_col(opts.vert_col[2], opts.edge_col[2],
+                                   opts.face_col[2]);
+      geom = vgeom;
+    }
+  }
+
+  if (opts.convex_hull) {
+    Status stat = (opts.add_hull) ? geom.add_hull() : geom.set_hull();
+    if (stat.is_error())
+      fprintf(stderr, "%s\n", stat.c_msg());
+    else {
+      geom.orient();
+      if (opts.verbose)
+        convex_hull_report(geom, opts.add_hull);
+      Coloring(&geom).vef_one_col(opts.vert_col[1], opts.edge_col[1],
+                                  opts.face_col[1]);
+    }
+  }
+
+  if (opts.append_lattice) {
+    geom.append(tgeom);
+    tgeom.clear_all();
+  }
+
+  // face color by symmetry normals
+  if (opts.color_method)
+    color_by_symmetry_normals(geom, opts.color_method, opts.face_opacity,
+                              opts.epsilon);
+
+  // if color by sqrt was used, override all edges of all structure
+  if (opts.color_edges_by_sqrt)
+    color_edges_by_sqrt(geom, opts.color_edges_by_sqrt);
+
+  // place geom at every vertex in lattice
+  if (opts.rfile.length()) {
+    Geometry geom2;
+    for (const auto &i : geom.verts()) {
+      Geometry rep = repeater;
+      rep.transform(Trans3d::transl(i));
+      geom2.append(rep);
+    }
+    geom = geom2;
+    if (opts.R_merge_elems != "")
+      merge_coincident_elements(&geom, opts.R_merge_elems, opts.blend_type,
+                                opts.epsilon);
+  }
+
+  if (opts.list_radii) {
+    if (opts.list_radii_original_center) {
+      opts.list_radii_center = original_center;
+      if (opts.list_radii_original_center == 'o')
+        opts.list_radii_center += opts.offset;
+    }
+    list_grid_radii(opts.ofile, geom, opts.list_radii_center, opts.list_radii,
+                    opts.epsilon);
+  }
+  else if (opts.list_struts)
+    list_grid_struts(opts.ofile, geom, opts.list_struts, opts.epsilon);
+
+  if (opts.append_container) {
+    container.add_missing_impl_edges();
+    container.clear(FACES);
+    geom.append(container);
+  }
+
+  if (opts.cent_col.is_set())
+    color_centroid(geom, opts.cent_col, opts.epsilon);
+
+  if (opts.trans_to_origin)
+    geom.transform(Trans3d::transl(-centroid(geom.verts())));
 }
 
 int main(int argc, char *argv[])
 {
-   lutil_opts opts;
-   opts.process_command_line(argc, argv);
-   if(!opts.ifiles.size())
-      opts.ifiles.push_back("");
-      
-   // read in container file if using. Check existance
-   col_geom_v container;
-   if(opts.cfile.length())
-      geom_read_or_error(container, opts.cfile, opts);
+  lutil_opts opts;
+  opts.process_command_line(argc, argv);
+  if (!opts.ifiles.size())
+    opts.ifiles.push_back("");
 
-   col_geom_v repeater;
-   if(opts.rfile.length())
-      geom_read_or_error(repeater, opts.rfile, opts);
+  // read in container file if using. Check existance
+  Geometry container;
+  if (opts.cfile.length())
+    opts.read_or_error(container, opts.cfile);
 
-   col_geom_v geoms;
-   for(unsigned int i=0; i<opts.ifiles.size(); i++) {
-      col_geom_v geom;
-      geom_read_or_error(geom, opts.ifiles[i], opts);
-      geoms.append(geom);
-   }
-   
-   process_lattices(geoms, container, repeater, opts);
+  Geometry repeater;
+  if (opts.rfile.length())
+    opts.read_or_error(repeater, opts.rfile);
 
-   if (!opts.list_radii && !opts.list_struts)
-      geom_write_or_error(geoms, opts.ofile, opts);
+  Geometry geoms;
+  for (unsigned int i = 0; i < opts.ifiles.size(); i++) {
+    Geometry geom;
+    opts.read_or_error(geom, opts.ifiles[i]);
+    geoms.append(geom);
+  }
 
-   return 0;
+  process_lattices(geoms, container, repeater, opts);
+
+  if (!opts.list_radii && !opts.list_struts)
+    opts.write_or_error(geoms, opts.ofile);
+
+  return 0;
 }

@@ -93,11 +93,10 @@ License:
  .
                       -------------------
  .
- Changes from Qhull 2003.1 source made by Adrian Rossiter in June 2007
- to incorporate Qhull library code into Antiprism.
+ Changes from Qhull 2015.2 source made by Adrian Rossiter in Oct 2016
+ to incorporate Qhull library code into Antiprism:
  .
- All files except library source files have been removed. Minor changes
- made for a clean build as C++.
+ Only libqhull_r source used. Minor changes made for a clean build as C++.
 
 
 Files: base/utils_ultragetopt.*

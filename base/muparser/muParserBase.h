@@ -110,7 +110,7 @@ private:
     int GetNumResults() const;
 
     void SetExpr(const string_type &a_sExpr);
-    void SetVarFactory(facfun_type a_pFactory, void *pUserData = NULL);
+    void SetVarFactory(facfun_type a_pFactory, void *pUserData = nullptr);
 
     void SetDecSep(char_type cDecSep);
     void SetThousandsSep(char_type cThousandsSep = 0);
@@ -282,7 +282,7 @@ private:
     mutable stringbuf_type  m_vStringBuf; ///< String buffer, used for storing string function arguments
     stringbuf_type  m_vStringVarBuf;
 
-    std::auto_ptr<token_reader_type> m_pTokenReader; ///< Managed pointer to the token reader object.
+    std::unique_ptr<token_reader_type> m_pTokenReader; ///< Managed pointer to the token reader object.
 
     funmap_type  m_FunDef;         ///< Map of function names and pointers.
     funmap_type  m_PostOprtDef;    ///< Postfix operator callbacks

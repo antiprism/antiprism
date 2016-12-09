@@ -69,7 +69,7 @@ namespace mu
       TString m_strTok;   ///< Token string
       TString m_strVal;   ///< Value for string variables
       value_type m_fVal;  ///< the value 
-      std::auto_ptr<ParserCallback> m_pCallback;
+      std::unique_ptr<ParserCallback> m_pCallback;
 
   public:
 
@@ -83,7 +83,7 @@ namespace mu
       ParserToken()
         :m_iCode(cmUNKNOWN)
         ,m_iType(tpVOID)
-        ,m_pTok(0)
+        ,m_pTok(nullptr)
         ,m_iIdx(-1)
         ,m_strTok()
         ,m_pCallback()
@@ -332,7 +332,7 @@ namespace mu
       */
       generic_fun_type GetFuncAddr() const
       {
-        return (m_pCallback.get()) ? (generic_fun_type)m_pCallback->GetAddr() : 0;
+        return (m_pCallback.get()) ? (generic_fun_type)m_pCallback->GetAddr() : nullptr;
       }
 
       //------------------------------------------------------------------------------

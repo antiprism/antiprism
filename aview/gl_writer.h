@@ -1,5 +1,7 @@
 /*
-   Copyright (c) 2003, Adrian Rossiter
+   Copyright (c) 2003-2016, Adrian Rossiter
+
+   Antiprism - http://www.antiprism.com
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -26,42 +28,45 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-
 #ifndef GL_WRITER_H
 #define GL_WRITER_H
 
 #include "../base/antiprism.h"
 #include "gl_stroke_font.h"
 
+using namespace anti;
+
 // conversion functions
-inline void to_gl_matrix(double *gl_m, mat3d m)
-{ m.transpose(); for(int i=0; i<16; i++) gl_m[i] = m[i]; }
-
-inline void from_gl_matrix(double *gl_m, mat3d &m)
-{  for(int i=0; i<16; i++) m[i] = gl_m[i]; m.transpose();}
-
-
-class gl_writer
+inline void to_gl_matrix(double *gl_m, Trans3d m)
 {
-   private:
-      double text_size;
-      col_val text_colour;
-      
-      void cur_camera(const camera &cam);
-      void geometry_objects(const scene &scen);
+  m.transpose();
+  for (int i = 0; i < 16; i++)
+    gl_m[i] = m[i];
+}
 
-   public:
-      gl_writer(): text_size(1.0), text_colour(col_val(10,10,10))
-                  {}
-      
-      void set_text_size(double size) { text_size = size; }
-      void set_text_colour(vec3d col) { text_colour = col; }
-     
-      void init(const scene &scen);
-      void write(const scene &scen);
+inline void from_gl_matrix(double *gl_m, Trans3d &m)
+{
+  for (int i = 0; i < 16; i++)
+    m[i] = gl_m[i];
+  m.transpose();
+}
+
+class gl_writer {
+private:
+  double text_size;
+  Color text_colour;
+
+  void cur_camera(const Camera &cam);
+  void geometry_objects(const Scene &scen);
+
+public:
+  gl_writer() : text_size(1.0), text_colour(Color(10, 10, 10)) {}
+
+  void set_text_size(double size) { text_size = size; }
+  void set_text_colour(Vec3d col) { text_colour = col; }
+
+  void init(const Scene &scen);
+  void write(const Scene &scen);
 };
 
-
 #endif // GL_WRITER_H
-
-

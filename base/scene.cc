@@ -1,8 +1,8 @@
 /*
-   Copyright (c) 2008, Adrian Rossiter
+   Copyright (c) 2008-2016, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
-   
+
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
    to deal in the Software without restriction, including without limitation
@@ -26,460 +26,424 @@
    Scene classes for a camera and geometry.
 */
 
+#include <string>
+#include <vector>
 
+#include "private_misc.h"
 #include "scene.h"
 #include "utils.h"
 #include "vec_utils.h"
-#include "geom_utils.h"
 
+using std::string;
+using std::vector;
 
-// -------------------------------------------------------------- 
-// geom_disp
+namespace anti {
 
-double geom_disp::get_vert_rad() const
+// --------------------------------------------------------------
+// GeometryDisplay
+
+double GeometryDisplay::get_vert_rad() const
 {
-   if(sc_geom && v().get_size()==rad_default)
-      return sc_geom->get_v_ball_rad()/20;
-   else if(sc_geom && v().get_size()==rad_ball)
-      return sc_geom->get_v_ball_rad();
-   else
-      return v().get_size();
+  if (sc_geom && elem(VERTS).get_size() == rad_default)
+    return sc_geom->get_v_ball_rad() / 20;
+  else if (sc_geom && elem(VERTS).get_size() == rad_ball)
+    return sc_geom->get_v_ball_rad();
+  else
+    return elem(VERTS).get_size();
 }
 
-double geom_disp::get_edge_rad() const
+double GeometryDisplay::get_edge_rad() const
 {
-   if(e().get_size()==rad_default)
-      return get_vert_rad()/1.5;
-   else
-      return e().get_size();
+  if (elem(EDGES).get_size() == rad_default)
+    return get_vert_rad() / 1.5;
+  else
+    return elem(EDGES).get_size();
 }
 
-
-vec3d geom_disp::get_label_pos(const vec3d &point, double elem_sz)
+Vec3d GeometryDisplay::get_label_pos(const Vec3d &point, double elem_sz)
 {
-   vec3d off_set(point - sc_geom->get_centre());
-   if(off_set.mag2()<1e-20)
-      off_set = vec3d(0,0,1e-10);
-   off_set *= 1.07 + elem_sz/off_set.mag();
-   return sc_geom->get_centre() + off_set;
+  Vec3d off_set(point - sc_geom->get_centre());
+  if (off_set.len2() < 1e-20)
+    off_set = Vec3d(0, 0, 1e-10);
+  off_set *= 1.07 + elem_sz / off_set.len();
+  return sc_geom->get_centre() + off_set;
 }
 
-vec3d geom_disp::get_v_label_pos(int idx)
+Vec3d GeometryDisplay::get_v_label_pos(int idx)
 {
-   return get_label_pos(sc_geom->get_geom().verts(idx), v().get_size());
+  return get_label_pos(sc_geom->get_geom().verts(idx), elem(VERTS).get_size());
 }
 
-vec3d geom_disp::get_e_label_pos(int idx)
+Vec3d GeometryDisplay::get_e_label_pos(int idx)
 {
-   return get_label_pos(sc_geom->get_geom().edge_cent(idx), e().get_size());
+  return get_label_pos(sc_geom->get_geom().edge_cent(idx),
+                       elem(EDGES).get_size());
 }
 
-
-vec3d geom_disp::get_f_label_pos(int idx)
+Vec3d GeometryDisplay::get_f_label_pos(int idx)
 {
-   // use edge radius for face
-   return get_label_pos(sc_geom->get_geom().face_cent(idx), e().get_size());
+  // use edge radius for face
+  return get_label_pos(sc_geom->get_geom().face_cent(idx),
+                       elem(EDGES).get_size());
 }
 
-
-geom_disp_label::geom_disp_label() :
-   label_light(false), label_invert(false)
-{ 
-   v().set_show(0);
-   e().set_show(0);
-   f().set_show(0);
+GeometryDisplayLabel::GeometryDisplayLabel()
+    : label_light(false), label_invert(false)
+{
+  elem(VERTS).set_show(0);
+  elem(EDGES).set_show(0);
+  elem(FACES).set_show(0);
 }
 
-
-col_val geom_disp_label::get_label_col(col_val col) const
+Color GeometryDisplayLabel::get_label_col(Color col) const
 {
-   col_val lab_col = col;
-   if(label_invert)
-      lab_col.set_complement();
-   if(label_light)
-      lab_col.set_brightness(0.5-label_invert);
-   return lab_col;
-}
- 
-
-// -------------------------------------------------------------- 
-// scene_geom
-
-scene_geom::scene_geom(const geom_if &geo): label(0), sym(0)
-{
-   set_geom(geo);
+  Color lab_col = col;
+  if (label_invert)
+    lab_col.set_complement();
+  if (label_light)
+    lab_col.set_brightness(0.5 - label_invert);
+  return lab_col;
 }
 
-scene_geom::~scene_geom()
+// --------------------------------------------------------------
+// SceneGeometry
+
+SceneGeometry::SceneGeometry(const Geometry &geo) : label(nullptr), sym(nullptr)
 {
-   for(unsigned int i=0; i<disps.size(); i++)
-      delete disps[i];
-   delete label;
-   delete sym;
+  set_geom(geo);
 }
 
-
-scene_geom::scene_geom(const scene_geom &sc_geo): scene_item(sc_geo),
-   bound_sph(sc_geo.bound_sph), width(sc_geo.width), centre(sc_geo.centre),
-   v_ball_rad(sc_geo.v_ball_rad), geom(sc_geo.geom), label(0), sym(0)
+SceneGeometry::~SceneGeometry()
 {
-   for(unsigned int i=0; i<sc_geo.disps.size(); i++)
-      add_disp(*sc_geo.disps[i]);
-   if(sc_geo.label)
+  for (auto &disp : disps)
+    delete disp;
+  delete label;
+  delete sym;
+}
+
+SceneGeometry::SceneGeometry(const SceneGeometry &sc_geo)
+    : SceneItem(sc_geo), bound_sph(sc_geo.bound_sph), width(sc_geo.width),
+      centre(sc_geo.centre), v_ball_rad(sc_geo.v_ball_rad), geom(sc_geo.geom),
+      label(nullptr), sym(nullptr)
+{
+  for (auto disp : sc_geo.disps)
+    add_disp(*disp);
+  if (sc_geo.label)
+    set_label(*sc_geo.label);
+  if (sc_geo.sym)
+    set_sym(*sc_geo.sym);
+}
+
+SceneGeometry &SceneGeometry::operator=(const SceneGeometry &sc_geo)
+{
+  if (this != &sc_geo) {
+    this->SceneItem::operator=(sc_geo);
+
+    bound_sph = sc_geo.bound_sph;
+    width = sc_geo.width;
+    centre = sc_geo.centre;
+    v_ball_rad = sc_geo.v_ball_rad;
+    geom = sc_geo.geom;
+    for (auto disp : sc_geo.disps)
+      add_disp(*disp);
+    if (sc_geo.label)
       set_label(*sc_geo.label);
-   if(sc_geo.sym)
+    else {
+      delete label;
+      label = nullptr;
+    }
+    if (sc_geo.sym)
       set_sym(*sc_geo.sym);
+    else {
+      delete sym;
+      sym = nullptr;
+    }
+  }
+  return *this;
 }
 
-
-scene_geom &scene_geom::operator=(const scene_geom &sc_geo)
+void SceneGeometry::geom_changed()
 {
-   if(this!=&sc_geo) {
-      this->scene_item::operator =(sc_geo);
+  bound_sph = BoundSphere(geom.verts(), (scen) ? scen->get_inf_dist() : -1);
+  width = 2 * bound_sph.get_radius();
+  centre = bound_sph.get_centre();
+  v_ball_rad = get_min_vert_to_vert_dist(geom.verts(), width / 1000) / 2.0;
 
-      bound_sph = sc_geo.bound_sph;
-      width = sc_geo.width;
-      centre = sc_geo.centre;
-      v_ball_rad = sc_geo.v_ball_rad;
-      geom = sc_geo.geom;
-      for(unsigned int i=0; i<sc_geo.disps.size(); i++)
-         add_disp(*sc_geo.disps[i]);
-      if(sc_geo.label)
-         set_label(*sc_geo.label);
-      else {
-         delete label;
-         label=0;
-      }
-      if(sc_geo.sym)
-         set_sym(*sc_geo.sym);
-      else {
-         delete sym;
-         sym=0;
-      }
+  for (auto &disp : disps)
+    disp->geom_changed();
 
-   }
-   return *this;
+  if (label)
+    label->geom_changed();
+
+  if (sym)
+    sym->geom_changed();
 }
 
-
-void scene_geom::geom_changed()
+void SceneGeometry::set_geom(const Geometry &geo)
 {
-   bound_sph = bound_sphere(geom.verts(),
-            (scen) ? scen->get_inf_dist() : -1);
-   width = 2*bound_sph.get_radius();
-   centre = bound_sph.get_centre();
-   v_ball_rad = minimum_distance(geom, width/1000)/2.0;
-
-   for(unsigned int i=0; i<disps.size(); i++)
-      disps[i]->geom_changed();
-
-   if(label)
-      label->geom_changed();
-
-   if(sym)
-      sym->geom_changed();
+  geom = geo;
+  geom_changed();
 }
 
-
-void scene_geom::set_geom(const geom_if &geo)
-{ 
-   geom=geo;
-   geom_changed();
-}
-
-
-void scene_geom::add_disp(geom_disp &disp)
-{ 
-   disps.push_back(disp.clone());
-   disps.back()->set_scene_geom(this);
-   disps.back()->geom_changed();
-}
-
-
-bool scene_geom::delete_disp(int idx)
+void SceneGeometry::add_disp(GeometryDisplay &disp)
 {
-   if(idx<0 || idx>=(int)disps.size())
-      return false;
-   delete disps[idx];
-   disps.erase(disps.begin()+idx);
-   return true;
+  disps.push_back(disp.clone());
+  disps.back()->set_scene_geom(this);
+  disps.back()->geom_changed();
 }
 
-geom_disp_label *scene_geom::get_label() const
+bool SceneGeometry::delete_disp(int idx)
 {
-   return label;
+  if (idx < 0 || idx >= (int)disps.size())
+    return false;
+  delete disps[idx];
+  disps.erase(disps.begin() + idx);
+  return true;
 }
 
+GeometryDisplayLabel *SceneGeometry::get_label() const { return label; }
 
-void scene_geom::set_label(const geom_disp_label &lab)
-{ 
-   delete label;
-   label = dynamic_cast<geom_disp_label *>(lab.clone());
-   label->set_scene_geom(this);
-}
-
-geom_disp *scene_geom::get_sym() const
+void SceneGeometry::set_label(const GeometryDisplayLabel &lab)
 {
-   return sym;
+  delete label;
+  label = dynamic_cast<GeometryDisplayLabel *>(lab.clone());
+  label->set_scene_geom(this);
 }
 
+GeometryDisplay *SceneGeometry::get_sym() const { return sym; }
 
-void scene_geom::set_sym(const geom_disp &sy)
-{ 
-   delete sym;
-   sym = dynamic_cast<geom_disp *>(sy.clone());
-   sym->set_scene_geom(this);
-}
-
-
-vec3d scene_geom::get_v_label_pos(int idx) const
+void SceneGeometry::set_sym(const GeometryDisplay &sy)
 {
-   if(disps.size())
-      return(disps[0]->get_v_label_pos(idx));
-   else
-      return geom.verts(idx);
+  delete sym;
+  sym = dynamic_cast<GeometryDisplay *>(sy.clone());
+  sym->set_scene_geom(this);
 }
 
-
-vec3d scene_geom::get_e_label_pos(int idx) const
+Vec3d SceneGeometry::get_v_label_pos(int idx) const
 {
-   if(disps.size())
-      return(disps[0]->get_e_label_pos(idx));
-   else
-      return geom.edge_cent(idx);
+  if (disps.size())
+    return (disps[0]->get_v_label_pos(idx));
+  else
+    return geom.verts(idx);
 }
 
-vec3d scene_geom::get_f_label_pos(int idx) const
+Vec3d SceneGeometry::get_e_label_pos(int idx) const
 {
-   if(disps.size())
-      return(disps[0]->get_f_label_pos(idx));
-   else
-      return geom.face_cent(idx);
-} 
+  if (disps.size())
+    return (disps[0]->get_e_label_pos(idx));
+  else
+    return geom.edge_cent(idx);
+}
 
-int scene_geom::animate()
+Vec3d SceneGeometry::get_f_label_pos(int idx) const
 {
-   int num_changes = 0;
-   for(unsigned int i=0; i<disps.size(); i++)
-      num_changes += disps[i]->animate();
-   return num_changes;
+  if (disps.size())
+    return (disps[0]->get_f_label_pos(idx));
+  else
+    return geom.face_cent(idx);
 }
 
-
-
-// ------------------------------------------------------------------- 
-// camera
-
-camera::camera(): distance(0), width(0), spin_inc(0)
+int SceneGeometry::animate()
 {
-   set_rotation();
-   set_persp();
-   set_cut_dist();
-   stop_spinning();
+  int num_changes = 0;
+  for (auto &disp : disps)
+    num_changes += disp->animate();
+  return num_changes;
 }
 
-double camera::get_width() const
-{ 
-   double w = width;
-   if(width==0 && scen) {
-      w = scen->get_width();
-      if(scen->get_bound_sph().get_cut_off_cnt())  // add width when inf verts
-         w *= 2;
-   }
+// -------------------------------------------------------------------
+// Camera
 
-   return w>epsilon? w : epsilon;
-}
-
-
-vec3d camera::get_centre() const
-{ 
-   if(centre.is_set())
-      return centre;
-   else if (scen)
-      return scen->get_bound_sph().get_centre();
-   else
-      return vec3d(0,0,0);
-}
-
-void camera::set_cut_dist(double dist)
+Camera::Camera() : distance(0), width(0), spin_inc(0)
 {
-   cut_dist = dist;
+  set_rotation();
+  set_persp();
+  set_cut_dist();
+  stop_spinning();
 }
 
-double camera::get_cut_dist() const
+double Camera::get_width() const
 {
-   double width = scen ? scen->get_bound_sph().get_width() : 1.0;
-   return (cut_dist>=0.1*width) ? cut_dist : 0.1*width;
+  double w = width;
+  if (width == 0 && scen) {
+    w = scen->get_width();
+    if (scen->get_bound_sph().get_cut_off_cnt()) // add width when inf verts
+      w *= 2;
+  }
+
+  return w > epsilon ? w : epsilon;
 }
 
-double camera::get_text_sz(vec3d pos) const
+Vec3d Camera::get_centre() const
 {
-   double dist;
-   if(persp)
-      dist = 2*get_distance() - (label_rot*pos)[2] + get_lookat()[2];
-   else
-      dist = 2*scen->get_width();
-   return dist/60;
+  if (centre.is_set())
+    return centre;
+  else if (scen)
+    return scen->get_bound_sph().get_centre();
+  else
+    return Vec3d(0, 0, 0);
 }
 
-void camera::set_label_rot()
+void Camera::set_cut_dist(double dist) { cut_dist = dist; }
+
+double Camera::get_cut_dist() const
 {
-   if(scen)
-      label_rot = mat3d::transl(scen->get_centre()) *
-                  get_rotation() *
-                  mat3d::transl(-scen->get_centre());
+  double width = scen ? scen->get_bound_sph().get_width() : 1.0;
+  return (cut_dist >= 0.1 * width) ? cut_dist : 0.1 * width;
 }
 
-int camera::animate()
+double Camera::get_text_sz(Vec3d pos) const
 {
-   int num_changes = 0;
-   if(is_spinning()) {
-      inc_spin_rot();
-      num_changes += 1;
-   }
-
-   return num_changes;
+  double dist;
+  if (persp)
+    dist = 2 * get_distance() - (label_rot * pos)[2] + get_lookat()[2];
+  else
+    dist = 2 * scen->get_width();
+  return dist / 60;
 }
 
-// ------------------------------------------------------------------- 
-// scene
-
-scene::scene()
+void Camera::set_label_rot()
 {
-   set_bg_col();
-   set_inf_dist(DEF_CAMERA_INF_DIST);
-   add_camera();
-   cur_camera().set_name("default");
+  if (scen)
+    label_rot = Trans3d::transl(scen->get_centre()) * get_rotation() *
+                Trans3d::transl(-scen->get_centre());
 }
 
-scene::scene(const scene &scen): scene_item(scen)
+int Camera::animate()
 {
-   anim_timer = scen.anim_timer;
-   cycle_rate = scen.cycle_rate;
-   bg_col = scen.bg_col;
-   inf_dist = scen.inf_dist;
-   bound_sph = scen.bound_sph;
+  int num_changes = 0;
+  if (is_spinning()) {
+    inc_spin_rot();
+    num_changes += 1;
+  }
 
-   geoms = scen.geoms;
-   for(unsigned int i=0; i<geoms.size(); i++)
-      geoms[i].set_scene(this);
-      
-   cur_cam_num = scen.cur_cam_num;
-   cams = scen.cams;
-   for(unsigned int i=0; i<cams.size(); i++)
-      cams[i].set_scene(this);
+  return num_changes;
 }
 
+// -------------------------------------------------------------------
+// Scene
 
-scene &scene::operator=(const scene &scen)
+Scene::Scene()
 {
-   if(this != &scen) {
-      anim_timer = scen.anim_timer;
-      cycle_rate = scen.cycle_rate;
-      bg_col = scen.bg_col;
-      inf_dist = scen.inf_dist;
-      bound_sph = scen.bound_sph;
-      
-      geoms = scen.geoms;
-      for(unsigned int i=0; i<geoms.size(); i++)
-         geoms[i].set_scene(this);
-
-      cur_cam_num = scen.cur_cam_num;
-      cams = scen.cams;
-      for(unsigned int i=0; i<cams.size(); i++)
-         cams[i].set_scene(this);
-   }
-   return *this;
+  set_bg_col();
+  set_inf_dist(DEF_CAMERA_INF_DIST);
+  add_camera();
+  cur_camera().set_name("default");
 }
 
-
-void scene::add_geom(const scene_geom sc_geom)
+Scene::Scene(const Scene &scen) : SceneItem(scen)
 {
-   geoms.push_back(sc_geom);
-   geoms.back().set_scene(this);
-   bound_sph.add_b_sphere(geoms.back().get_bound_sph());
+  anim_timer = scen.anim_timer;
+  cycle_rate = scen.cycle_rate;
+  bg_col = scen.bg_col;
+  inf_dist = scen.inf_dist;
+  bound_sph = scen.bound_sph;
+
+  geoms = scen.geoms;
+  for (auto &geom : geoms)
+    geom.set_scene(this);
+
+  cur_cam_num = scen.cur_cam_num;
+  cams = scen.cams;
+  for (auto &cam : cams)
+    cam.set_scene(this);
 }
 
-
-void scene::add_geom(const geom_if &geom)
-{ 
-   geoms.push_back(scene_geom(geom));
-   geoms.back().set_scene(this);
-   bound_sph.add_b_sphere(geoms.back().get_bound_sph());
-}
-
-
-bool scene::delete_geom(int idx)
+Scene &Scene::operator=(const Scene &scen)
 {
-   if(idx<0 || idx>=(int)geoms.size())
-      return false;
-   geoms.erase(geoms.begin()+idx);
+  if (this != &scen) {
+    anim_timer = scen.anim_timer;
+    cycle_rate = scen.cycle_rate;
+    bg_col = scen.bg_col;
+    inf_dist = scen.inf_dist;
+    bound_sph = scen.bound_sph;
 
-   bound_sph = bound_sphere();
-   bound_sph.set_cut_off(inf_dist);
-   vector<scene_geom>::iterator vi;
-   for(vi=geoms.begin(); vi!=geoms.end(); ++vi)
-      bound_sph.add_b_sphere(vi->get_bound_sph());
-   return true;
+    geoms = scen.geoms;
+    for (auto &geom : geoms)
+      geom.set_scene(this);
+
+    cur_cam_num = scen.cur_cam_num;
+    cams = scen.cams;
+    for (auto &cam : cams)
+      cam.set_scene(this);
+  }
+  return *this;
 }
 
-const camera &scene::cur_camera() const
+void Scene::add_geom(const SceneGeometry sc_geom)
 {
-   return cams[cur_cam_num];
+  geoms.push_back(sc_geom);
+  geoms.back().set_scene(this);
+  bound_sph.add_b_sphere(geoms.back().get_bound_sph());
 }
 
-camera &scene::cur_camera()
+void Scene::add_geom(const Geometry &geom)
 {
-   return cams[cur_cam_num];
+  geoms.push_back(SceneGeometry(geom));
+  geoms.back().set_scene(this);
+  bound_sph.add_b_sphere(geoms.back().get_bound_sph());
 }
 
-string scene::get_camera_name(int idx) const
+bool Scene::delete_geom(int idx)
 {
-   char str[MSG_SZ];
-   snprintf(str, MSG_SZ, "%s_camera_%d", cams[idx].get_name().c_str(), idx);
-   return str;
+  if (idx < 0 || idx >= (int)geoms.size())
+    return false;
+  geoms.erase(geoms.begin() + idx);
+
+  bound_sph = BoundSphere();
+  bound_sph.set_cut_off(inf_dist);
+  vector<SceneGeometry>::iterator vi;
+  for (vi = geoms.begin(); vi != geoms.end(); ++vi)
+    bound_sph.add_b_sphere(vi->get_bound_sph());
+  return true;
 }
 
-void scene::add_camera(const camera &cam)
+const Camera &Scene::cur_camera() const { return cams[cur_cam_num]; }
+
+Camera &Scene::cur_camera() { return cams[cur_cam_num]; }
+
+string Scene::get_camera_name(int idx) const
 {
-   cams.push_back(cam);
-   cams.back().set_scene(this);
-   cur_cam_num = cams.size()-1;
+  char str[MSG_SZ];
+  snprintf(str, MSG_SZ, "%s_camera_%d", cams[idx].get_name().c_str(), idx);
+  return str;
 }
 
-bool scene::delete_camera(int idx)
+void Scene::add_camera(const Camera &cam)
 {
-   if(idx<0 || idx>=(int)cams.size())
-      return false; // camera out of range
-   if(cams.size()==1)
-      return false; // can't remove last camera
-   // Adjust current camera number back if beyond idx
-   if(cur_cam_num>0 && cur_cam_num > idx)
-      cur_cam_num--;
-   cams.erase(cams.begin()+idx);
-   return true;
+  cams.push_back(cam);
+  cams.back().set_scene(this);
+  cur_cam_num = cams.size() - 1;
 }
-  
-        
-int scene::animate()
+
+bool Scene::delete_camera(int idx)
 {
-   int num_changes = 0;
-   if(anim_timer.finished()) {
-      vector<camera>::iterator cam;
-      for(cam=cams.begin(); cam!=cams.end(); ++cam)
-         num_changes += cam->animate();
-      
-      vector<scene_geom>::iterator sc_geo;
-      for(sc_geo=geoms.begin(); sc_geo!=geoms.end(); ++sc_geo)
-         num_changes += sc_geo->animate();
-      
-   }
-   anim_timer.inc_timer(1.0/cycle_rate);
+  if (idx < 0 || idx >= (int)cams.size())
+    return false; // camera out of range
+  if (cams.size() == 1)
+    return false; // can't remove last camera
+  // Adjust current camera number back if beyond idx
+  if (cur_cam_num > 0 && cur_cam_num > idx)
+    cur_cam_num--;
+  cams.erase(cams.begin() + idx);
+  return true;
+}
 
-   return num_changes;
-} 
+int Scene::animate()
+{
+  int num_changes = 0;
+  if (anim_timer.finished()) {
+    vector<Camera>::iterator cam;
+    for (cam = cams.begin(); cam != cams.end(); ++cam)
+      num_changes += cam->animate();
 
- 
+    vector<SceneGeometry>::iterator sc_geo;
+    for (sc_geo = geoms.begin(); sc_geo != geoms.end(); ++sc_geo)
+      num_changes += sc_geo->animate();
+  }
+  anim_timer.inc_timer(1.0 / cycle_rate);
 
+  return num_changes;
+}
 
-
+} // namespace anti

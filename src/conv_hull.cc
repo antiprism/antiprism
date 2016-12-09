@@ -1,5 +1,7 @@
 /*
-   Copyright (c) 2003-2009, Adrian Rossiter
+   Copyright (c) 2003-2016, Adrian Rossiter
+
+   Antiprism - http://www.antiprism.com
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -22,13 +24,13 @@
 
 /*
    Name: conv_hull.cc
-   Description: convex hulls (wrapper for qhull) 
+   Description: convex hulls (wrapper for qhull)
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
 
 #include <string>
 
@@ -36,100 +38,98 @@
 
 using std::string;
 
+using namespace anti;
 
-class ch_opts: public prog_opts {
-   public:
-      bool append_flg;
-      string ifile;
-      string ofile;
-      string qh_args;
+class ch_opts : public ProgramOpts {
+public:
+  bool append_flg;
+  string ifile;
+  string ofile;
+  string qh_args;
 
-      ch_opts(): prog_opts("conv_hull"),
-                 append_flg(false) {}
-      void process_command_line(int argc, char **argv);
-      void usage();
+  ch_opts() : ProgramOpts("conv_hull"), append_flg(false) {}
+  void process_command_line(int argc, char **argv);
+  void usage();
 };
-
 
 void ch_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] [input_file]\n"
-"\n"
-"Read a file in OFF format and make a convex hull (using Qhull). If\n"
-"input_file is not given the program reads from standard input.\n"
-"\n"
-"Options\n"
-"%s"
-"  -a        append the convex hull to the input file\n"
-"  -Q <args> additional arguments to pass to qhull (unsupported, may not\n"
-"            work, check output)\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"\n", prog_name(), help_ver_text);
+  fprintf(
+      stdout,
+      "\n"
+      "Usage: %s [options] [input_file]\n"
+      "\n"
+      "Read a file in OFF format and make a convex hull (using Qhull). If\n"
+      "input_file is not given the program reads from standard input.\n"
+      "\n"
+      "Options\n"
+      "%s"
+      "  -a        append the convex hull to the input file\n"
+      "  -Q <args> additional arguments to pass to qhull (unsupported, may "
+      "not\n"
+      "            work, check output)\n"
+      "  -o <file> write output to file (default: write to standard output)\n"
+      "\n"
+      "\n",
+      prog_name(), help_ver_text);
 }
 
 void ch_opts::process_command_line(int argc, char **argv)
 {
-   opterr = 0;
-   int c;
-   
-   handle_long_opts(argc, argv);
+  opterr = 0;
+  int c;
 
-   while( (c = getopt(argc, argv, ":haQ:o:")) != -1 ) {
-      if(common_opts(c, optopt))
-         continue;
+  handle_long_opts(argc, argv);
 
-      switch(c) {
-         case 'a':
-            append_flg = true;
-            break;
-         
-         case 'o':
-            ofile = optarg;
-            break;
+  while ((c = getopt(argc, argv, ":haQ:o:")) != -1) {
+    if (common_opts(c, optopt))
+      continue;
 
-         case 'Q':
-            qh_args = optarg;
-            break;
+    switch (c) {
+    case 'a':
+      append_flg = true;
+      break;
 
-         default:
-            error("unknown command line error");
-      }
-   }
-   
-   if(argc-optind > 1)
-      error("too many arguments");
-   
-   if(argc-optind == 1)
-      ifile=argv[optind];
+    case 'o':
+      ofile = optarg;
+      break;
+
+    case 'Q':
+      qh_args = optarg;
+      break;
+
+    default:
+      error("unknown command line error");
+    }
+  }
+
+  if (argc - optind > 1)
+    error("too many arguments");
+
+  if (argc - optind == 1)
+    ifile = argv[optind];
 }
 
 int main(int argc, char *argv[])
 {
-   ch_opts opts;
-   opts.process_command_line(argc, argv);
+  ch_opts opts;
+  opts.process_command_line(argc, argv);
 
-   col_geom_v geom;
-   geom_read_or_error(geom, opts.ifile, opts);
+  Geometry geom;
+  opts.read_or_error(geom, opts.ifile);
 
-   char errmsg[MSG_SZ];
-   int ret = (opts.append_flg ? geom.add_hull(opts.qh_args, errmsg) : geom.set_hull(opts.qh_args, errmsg));
-   
-   if (ret < 0)
-      opts.error(errmsg);
-   else
-   if (ret == 0)
-      opts.warning("result is a point");
-   else
-   if (ret == 1)
-      opts.warning("result is a line");
-   else
-   if (ret == 2)
-      opts.warning("result is a polygon");
+  int dimension;
+  Status stat = (opts.append_flg) ? geom.add_hull(opts.qh_args, &dimension)
+                                  : geom.set_hull(opts.qh_args, &dimension);
 
-   geom_write_or_error(geom, opts.ofile, opts);
+  if (stat.is_error())
+    opts.error(stat.msg());
 
-   return ret;
+  const char *dimension_desc[] = {"point", "line segment", "polygon"};
+  if (dimension < 3)
+    opts.warning(msg_str("result is a %s", dimension_desc[dimension]));
+
+  opts.write_or_error(geom, opts.ofile);
+
+  return dimension;
 }

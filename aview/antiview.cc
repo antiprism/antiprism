@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2006-2009, Adrian Rossiter
+   Copyright (c) 2006-2016, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -26,166 +26,165 @@
    \brief antiview - command line OFF file viewer
 */
 
-
-
+#include <string>
 #include <unistd.h>
+#include <vector>
 
 #include "../base/antiprism.h"
+#include "displaypoly_gl.h"
 #include "vw_glut.h"
-#include "disp_poly_gl.h"
 
+using std::string;
+using std::vector;
+
+using namespace anti;
 
 glut_state glut_s;
 
+class vw_opts : public ViewOpts {
+public:
+  vw_opts() : ViewOpts("antiview") {}
 
-class vw_opts: public view_opts {
-   public:
-      vw_opts(): view_opts("antiview") {}
-
-      void process_command_line(int argc, char **argv);
-      void usage();
+  void process_command_line(int argc, char **argv);
+  void usage();
 };
-
-
-
 
 void vw_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] input_file\n"
-"\n"
-"View a file in OFF format. If input file isn't given read from\n"
-"standard input\n"
-"\n"
-"Options\n"
-"%s"
-"%s"
-"  -w <wdth> width of sphere containing points (default: calculated)\n"
-"  -I <dist> maximum distance from origin for viewable points\n"
-"            (default: ignored)\n"
-"  Scene options\n"
-"%s"
-"\n"
-"Viewing\n"
-"There are four main viewing control modes - rotation (default), drag,\n"
-"zoom, slice. Select a mode with the following keys, or right-click on\n"
-"the window and select from the menu.\n"
-"\n"
-"Click and drag on the window with the mouse to move the model, or use the\n"
-"arrow keys. The zoom and slice are controlled by forward and backward\n"
-"dragging, or the up and down arrow keys.\n"
-"\n"
-"Menu Items\n"
-"   r - rotate, turn the model about its centre\n"
-"   d - drag, drag the model around the screen\n"
-"   z - zoom, Zoom in or out\n"
-"   s - spin control, set or stop the model spinning\n"
-"   S - slice, slice into the model.\n"
-"   P - projection, toggle display between perspective and orthogonal\n"
-"   v - show/hide vertices, toggle display of vertex spheres\n"
-"   e - show/hide edges, toggle display of edge rods\n"
-"   f - show/hide faces, toggle display of faces\n"
-"   n - show/hide vertex numbers, toggle display of vertex number labels\n"
-"   N - show/hide face numbers, toggle display of face number labels\n"
-"   m - show/hide edge numbers, toggle display of edge number labels\n"
-"   t - rotate through display of face transparency: model, 50%%, none\n"
-"   y - rotate through display of symmetry elements: axes; axes and\n"
-"       mirrors; axes, mirrors and rot-reflection planes; none\n"
-"   O - show/hide orientation, toggle colouring of the front side of \n"
-"       faces white and the back side black\n"
-"   r - reset, reset to the initial viewing options \n"
-"   Q - Quit\n"
-"\n"
-"Other Keys\n"
-"   J/j - increase/decrease vertex and edge size\n"
-"   K/k - increase/decrease vertex size\n"
-"   L/l - increase/decrease edge Size\n"
-"   c - toggle label colours between light and dark\n"
-"   C - Invert label colours\n"
-"\n"
-"\n", prog_name(), help_ver_text, help_view_text, help_scene_text);
+  fprintf(
+      stdout,
+      "\n"
+      "Usage: %s [options] input_file\n"
+      "\n"
+      "View a file in OFF format. If input file isn't given read from\n"
+      "standard input\n"
+      "\n"
+      "Options\n"
+      "%s"
+      "%s"
+      "  -w <wdth> width of sphere containing points (default: calculated)\n"
+      "  -I <dist> maximum distance from origin for viewable points\n"
+      "            (default: ignored)\n"
+      "  Scene options\n"
+      "%s"
+      "\n"
+      "Viewing\n"
+      "There are four main viewing control modes - rotation (default), drag,\n"
+      "zoom, slice. Select a mode with the following keys, or right-click on\n"
+      "the window and select from the menu.\n"
+      "\n"
+      "Click and drag on the window with the mouse to move the model, or use "
+      "the\n"
+      "arrow keys. The zoom and slice are controlled by forward and backward\n"
+      "dragging, or the up and down arrow keys.\n"
+      "\n"
+      "Menu Items\n"
+      "   r - rotate, turn the model about its centre\n"
+      "   d - drag, drag the model around the screen\n"
+      "   z - zoom, Zoom in or out\n"
+      "   s - spin control, set or stop the model spinning\n"
+      "   S - slice, slice into the model.\n"
+      "   P - projection, toggle display between perspective and orthogonal\n"
+      "   v - show/hide vertices, toggle display of vertex spheres\n"
+      "   e - show/hide edges, toggle display of edge rods\n"
+      "   f - show/hide faces, toggle display of faces\n"
+      "   n - show/hide vertex numbers, toggle display of vertex number "
+      "labels\n"
+      "   N - show/hide face numbers, toggle display of face number labels\n"
+      "   m - show/hide edge numbers, toggle display of edge number labels\n"
+      "   t - rotate through display of face transparency: model, 50%%, none\n"
+      "   y - rotate through display of symmetry elements: axes; axes and\n"
+      "       mirrors; axes, mirrors and rot-reflection planes; none\n"
+      "   O - show/hide orientation, toggle colouring of the front side of \n"
+      "       faces white and the back side black\n"
+      "   r - reset, reset to the initial viewing options \n"
+      "   Q - Quit\n"
+      "\n"
+      "Other Keys\n"
+      "   J/j - increase/decrease vertex and edge size\n"
+      "   K/k - increase/decrease vertex size\n"
+      "   L/l - increase/decrease edge Size\n"
+      "   c - toggle label colours between light and dark\n"
+      "   C - Invert label colours\n"
+      "\n"
+      "\n",
+      prog_name(), help_ver_text, help_view_text, help_scene_text);
 }
-
 
 void vw_opts::process_command_line(int argc, char **argv)
 {
-   char errmsg[MSG_SZ];
-   vector<string> warnings;
-   opterr = 0;
-   int c;
+  Status stat;
+  opterr = 0;
+  int c;
 
-   handle_long_opts(argc, argv);
-   
-   while((c = getopt(argc, argv, ":hv:e:iV:E:F:w:m:x:n:s:t:I:D:C:L:R:B:")) != -1) {
-      if(common_opts(c, optopt))
-         continue;
+  handle_long_opts(argc, argv);
 
-      switch(c) {  // Keep switch for consistency/maintainability
-         default:
-            if(read_disp_option(c, optarg, errmsg, warnings)) {
-               if(*errmsg)
-                  error(errmsg, c);
-               for(unsigned int i=0; i<warnings.size(); i++)
-                  warning(warnings[i], c);
-            }
-            else 
-               error("unknown command line error");
+  while ((c = getopt(argc, argv, ":hv:e:iV:E:F:w:m:x:n:s:t:I:D:C:L:R:B:")) !=
+         -1) {
+    if (common_opts(c, optopt))
+      continue;
+
+    switch (c) { // Keep switch for consistency/maintainability
+    default:
+      if (!(stat = read_disp_option(c, optarg))) {
+        if (stat.is_warning())
+          warning(stat.msg(), c);
+        else
+          error(stat.msg(), c);
       }
-   }
-   
-   if(argc-optind >= 1)
-      while(argc-optind >= 1)
-         ifiles.push_back(argv[optind++]);
-   else
-      ifiles.push_back("");
-      
-         
+    }
+  }
+
+  if (argc - optind >= 1)
+    while (argc - optind >= 1)
+      ifiles.push_back(argv[optind++]);
+  else
+    ifiles.push_back("");
 }
 
-
-vec3d neg_z(vec3d v) { v[2] *= -1; return v;}
-
-
-
-int main(int argc, char* argv[])
-{   
-   // Check if a -geometry argument was given
-   bool geometry_arg = false;
-   for(int i=1; i<argc; i++)
-      if(strcmp(argv[i], "-geometry")==0) {
-         geometry_arg = true;
-         break;
-      }
-   
-   glutInit(&argc, argv);
-   glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-   
-   if(!geometry_arg) {
-      glutInitWindowSize (600, 500); 
-      glutInitWindowPosition (100, 50);
-   }
-   glutCreateWindow("Antiview");
-   glutDisplayFunc(display_cb); 
-   glutIdleFunc(glut_idle_cb);
-   glutReshapeFunc(reshape_cb);
-   glutMouseFunc(mouse_cb);
-   glutKeyboardFunc(keyboard_cb);
-   glutSpecialFunc(special_cb);
-   glutMotionFunc(motion_cb);
-   
-   vw_opts opts;
-   opts.set_geom_defs(disp_poly_gl());
-   opts.set_num_label_defs(disp_num_labels_gl());
-   opts.set_sym_defs(disp_sym_gl());
-   opts.process_command_line(argc, argv);
-   opts.set_view_vals(glut_s.scen);
-
-   glut_s.save_camera();
-   glut_s.init();
-   glut_s.make_menu();
-
-   glutMainLoop();
-   return 0;
+Vec3d neg_z(Vec3d v)
+{
+  v[2] *= -1;
+  return v;
 }
 
+int main(int argc, char *argv[])
+{
+  // Check if a -geometry argument was given
+  bool geometry_arg = false;
+  for (int i = 1; i < argc; i++)
+    if (strcmp(argv[i], "-geometry") == 0) {
+      geometry_arg = true;
+      break;
+    }
+
+  glutInit(&argc, argv);
+  glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+
+  if (!geometry_arg) {
+    glutInitWindowSize(600, 500);
+    glutInitWindowPosition(100, 50);
+  }
+  glutCreateWindow("Antiview");
+  glutDisplayFunc(display_cb);
+  glutIdleFunc(glut_idle_cb);
+  glutReshapeFunc(reshape_cb);
+  glutMouseFunc(mouse_cb);
+  glutKeyboardFunc(keyboard_cb);
+  glutSpecialFunc(special_cb);
+  glutMotionFunc(motion_cb);
+
+  vw_opts opts;
+  opts.set_geom_defs(DisplayPoly_gl());
+  opts.set_num_label_defs(DisplayNumLabels_gl());
+  opts.set_sym_defs(DisplaySymmetry_gl());
+  opts.process_command_line(argc, argv);
+  opts.set_view_vals(glut_s.scen);
+
+  glut_s.save_camera();
+  glut_s.init();
+  glut_s.make_menu();
+
+  glutMainLoop();
+  return 0;
+}

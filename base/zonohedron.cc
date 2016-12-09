@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003, Adrian Rossiter
+   Copyright (c) 2003-2016, Adrian Rossiter
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -31,302 +31,260 @@
 
 #include <algorithm>
 #include <functional>
-#include <vector>
 #include <map>
+#include <set>
 #include <string>
+#include <vector>
 
-#include "geom.h"
-#include "info.h"
+#include "geometry.h"
+#include "geometryinfo.h"
+#include "polygon.h"
+#include "private_misc.h"
 #include "utils.h"
-#include "polygons.h"
 
 using std::vector;
+using std::set;
 using std::map;
 using std::pair;
 using std::swap;
 using std::logical_not;
 using std::string;
 
+namespace anti {
 
 struct vec_less {
-   bool operator ()(const vec3d &v1, const vec3d &v2) const
-   { return compare(v1, v2, 1e-10)<0; }
+  bool operator()(const Vec3d &v1, const Vec3d &v2)
+  {
+    return compare(v1, v2, epsilon) == -1; // may need to be larger for Qhull
+  }
 };
 
-
 // Normalised direction of the line of a vector
-vec3d normalised_dir(const vec3d v) {
-   if(v[0]<-epsilon)
+Vec3d normalised_dir(const Vec3d v)
+{
+  if (v[0] < -epsilon)
+    return -v;
+  else if (v[0] < epsilon) {
+    if (v[1] < -epsilon)
       return -v;
-   else if(v[0]<epsilon) {
-      if(v[1]<-epsilon)
-         return -v;
-      else if(v[1]<epsilon) {
-         if(v[2]<-epsilon)
-            return -v;
-      }
-   }
-   return v;
+    else if (v[1] < epsilon) {
+      if (v[2] < -epsilon)
+        return -v;
+    }
+  }
+  return v;
 }
 
-
-void get_star(const geom_if &geom, vector<vec3d> &star, char type,
-      vec3d centre)
+vector<Vec3d> get_star(const Geometry &geom, char type, Vec3d centre)
 {
-   star.clear();
-   const vector<vec3d> &verts = geom.verts();
-   switch(type) {
-      case 'v':      // vertices
-         for(unsigned int i=0; i<verts.size(); i++) {
-            vec3d v = verts[i] - centre;
-            if(v.mag2()>epsilon*epsilon)
-               star.push_back(v);
-         }
-         break;
-      case 'a':      // any vector between two vertices
-         for(unsigned int i=0; i<verts.size(); i++)
-            for(unsigned int j=i+1; j<verts.size(); j++)
-               star.push_back(geom.edge_vec(i,j));
-         break;
-      case 'e':      // explicit edge vectors
-         for(unsigned int i=0; i<geom.edges().size(); i++)
-            star.push_back(geom.edge_vec(i));
-         break;
-      case 'i': {    // implict edge vectors
-         geom_info info(geom);
-         const vector<vector<int> > edges = info.get_impl_edges();
-         for(unsigned int i=0; i<edges.size(); i++)
-            star.push_back(geom.edge_vec(edges[i]));
-         break;
-      }
-   }
+  vector<Vec3d> star;
+  const vector<Vec3d> &verts = geom.verts();
+  switch (type) {
+  case 'v': // vertices
+    for (const auto &vert : verts) {
+      Vec3d v = vert - centre;
+      if (v.len2() > epsilon * epsilon)
+        star.push_back(v);
+    }
+    break;
+  case 'a': // any vector between two vertices
+    for (unsigned int i = 0; i < verts.size(); i++)
+      for (unsigned int j = i + 1; j < verts.size(); j++)
+        star.push_back(geom.edge_vec(i, j));
+    break;
+  case 'e': // explicit edge vectors
+    for (unsigned int i = 0; i < geom.edges().size(); i++)
+      star.push_back(geom.edge_vec(i));
+    break;
+  case 'i': { // implict edge vectors
+    GeometryInfo info(geom);
+    const vector<vector<int>> edges = info.get_impl_edges();
+    for (const auto &edge : edges)
+      star.push_back(geom.edge_vec(edge));
+    break;
+  }
+  }
+  return star;
 }
 
-
-void make_zono_1d(geom_if &zono, const vector<vec3d> &star)
+void make_zonohedron_1d(Geometry *zono, const vector<Vec3d> &star)
 {
-   zono.clear_all();
-   if(!star.size())
-      return;
-   vector<vec3d> &verts = *zono.get_verts();
-   vec3d pos = vec3d(0, 0, 0);
-   vec3d neg = vec3d(0, 0, 0);
-   for(unsigned int i=0; i<star.size(); i++) {
-      double cos_a = vdot(star[0], star[i]);
-      if(cos_a > 0)
-         pos += star[i];
-      else
-         neg += star[i];
-   }
-   verts.push_back(pos);
-   verts.push_back(neg);
+  zono->clear_all();
+  if (!star.size())
+    return;
+  Vec3d pos = Vec3d(0, 0, 0);
+  Vec3d neg = Vec3d(0, 0, 0);
+  for (unsigned int i = 0; i < star.size(); i++) {
+    double cos_a = vdot(star[0], star[i]);
+    if (cos_a > 0)
+      pos += star[i];
+    else
+      neg += star[i];
+  }
+  zono->add_vert(pos);
+  zono->add_vert(neg);
 }
 
-
-void make_zono_2d(geom_if &zono, const vector<vec3d> &star, vec3d fnorm)
+void make_zonohedron_2d(Geometry *zono, const vector<Vec3d> &star, Vec3d fnorm)
 {
-   zono.clear_all();
-   map<vec3d, set<int>, vec_less> stars;
-   for(unsigned int i=0; i<star.size(); i++)
-      stars[normalised_dir(star[i]).unit()].insert(i);
+  zono->clear_all();
+  map<Vec3d, set<int>, vec_less> stars;
+  for (unsigned int i = 0; i < star.size(); i++)
+    stars[normalised_dir(star[i]).unit()].insert(i);
 
-   vector<vec3d> &verts = *zono.get_verts();
-   map<vec3d, set<int> >::iterator mi;
-   for(mi=stars.begin(); mi!=stars.end(); ++mi) {
-      vector<vec3d> z_face_star;
-      vec3d pos = vec3d(0, 0, 0);
-      vec3d neg = vec3d(0, 0, 0);
-      const vec3d &norm = vcross(mi->first, fnorm).unit();
-      for(int i=0; i<(int)star.size(); i++) {
-         if(mi->second.find(i) != mi->second.end())
-            z_face_star.push_back(star[i]);
-         else {
-            double cos_a = vdot(norm, star[i]);
-            if(cos_a > 0)
-               pos += star[i];
-            else
-               neg += star[i];
-         }
+  map<Vec3d, set<int>>::iterator mi;
+  for (mi = stars.begin(); mi != stars.end(); ++mi) {
+    vector<Vec3d> z_face_star;
+    Vec3d pos = Vec3d(0, 0, 0);
+    Vec3d neg = Vec3d(0, 0, 0);
+    const Vec3d &norm = vcross(mi->first, fnorm).unit();
+    for (int i = 0; i < (int)star.size(); i++) {
+      if (mi->second.find(i) != mi->second.end())
+        z_face_star.push_back(star[i]);
+      else {
+        double cos_a = vdot(norm, star[i]);
+        if (cos_a > 0)
+          pos += star[i];
+        else
+          neg += star[i];
       }
-      geom_v zono_face;
-      make_zono_1d(zono_face, z_face_star);
-      vector<vec3d> &zf_verts = *zono_face.get_verts();
-      for(unsigned int k=0; k<zf_verts.size(); k++) {
-         verts.push_back(pos + zf_verts[k]);
-         verts.push_back(neg + zf_verts[k]);
-      }
-   }
-
+    }
+    Geometry zono_face;
+    make_zonohedron_1d(&zono_face, z_face_star);
+    for (unsigned int k = 0; k < zono_face.verts().size(); k++) {
+      zono->add_vert(pos + zono_face.verts(k));
+      zono->add_vert(neg + zono_face.verts(k));
+    }
+  }
 }
 
-
-bool make_zono(geom_if &zono, const vector<vec3d> &star, char *errmsg)
+Status make_zonohedron(Geometry *geom, const vector<Vec3d> &star)
 {
-   zono.clear_all();
-   
-   vector<double> star_mags(star.size());
-   for(unsigned int i=0; i< star.size(); i++)
-      star_mags[i] = star[i].mag();
+  geom->clear_all();
 
-   map<vec3d, set<int>, vec_less > stars2d;
-   for(unsigned int i=0; i<star.size()-1; i++)
-      for(unsigned int j=i+1; j<star.size(); j++) {
-         vec3d n = vcross(star[i], star[j])/(star_mags[i]*star_mags[j]);
-         if(n.mag2()>epsilon*epsilon) {
-            vec3d norm = normalised_dir(n).unit();
-            stars2d[norm].insert(i);
-            stars2d[norm].insert(j);
-         }
+  vector<double> star_mags(star.size());
+  for (unsigned int i = 0; i < star.size(); i++)
+    star_mags[i] = star[i].len();
+
+  map<Vec3d, set<int>, vec_less> stars2d;
+  if (star.size()) {
+    for (unsigned int i = 0; i < star.size() - 1; i++)
+      for (unsigned int j = i + 1; j < star.size(); j++) {
+        Vec3d n = vcross(star[i], star[j]) / (star_mags[i] * star_mags[j]);
+        if (n.len2() > epsilon * epsilon) {
+          Vec3d norm = normalised_dir(n).unit();
+          stars2d[norm].insert(i);
+          stars2d[norm].insert(j);
+        }
+      }
+  }
+
+  if (stars2d.size()) {
+    map<Vec3d, set<int>>::iterator mi;
+    for (mi = stars2d.begin(); mi != stars2d.end(); ++mi) {
+      vector<Vec3d> z_face_star;
+      Vec3d pos = Vec3d(0, 0, 0);
+      Vec3d neg = Vec3d(0, 0, 0);
+      const Vec3d &norm = mi->first;
+      for (int i = 0; i < (int)star.size(); i++) {
+        if (mi->second.find(i) != mi->second.end())
+          z_face_star.push_back(star[i]);
+        else {
+          double cos_a = vdot(norm, star[i]);
+          if (cos_a > 0)
+            pos += star[i];
+          else
+            neg += star[i];
+        }
       }
 
-   vector<vec3d> &verts = *zono.get_verts();
-   map<vec3d, set<int> >::iterator mi;
-   for(mi=stars2d.begin(); mi!=stars2d.end(); ++mi) {
-      vector<vec3d> z_face_star;
-      vec3d pos = vec3d(0, 0, 0);
-      vec3d neg = vec3d(0, 0, 0);
-      const vec3d &norm = mi->first;
-      for(int i=0; i<(int)star.size(); i++) {
-         if(mi->second.find(i) != mi->second.end())
-            z_face_star.push_back(star[i]);
-         else {
-            double cos_a = vdot(norm, star[i]);
-            if(cos_a > 0)
-               pos += star[i];
-            else
-               neg += star[i];
-         }
+      Geometry zono_face;
+      make_zonohedron_2d(&zono_face, z_face_star, norm);
+      for (unsigned int k = 0; k < zono_face.verts().size(); k++) {
+        geom->add_vert(pos + zono_face.verts(k));
+        geom->add_vert(neg + zono_face.verts(k));
       }
-      
-      geom_v zono_face;
-      make_zono_2d(zono_face, z_face_star, norm);
-      vector<vec3d> &zf_verts = *zono_face.get_verts();
-      for(unsigned int k=0; k<zf_verts.size(); k++) {
-         verts.push_back(pos + zf_verts[k]);
-         verts.push_back(neg + zf_verts[k]);
-      }
-   }
-   
-   int ret = zono.set_hull("A0.9999999", errmsg);
-   return (ret < 0 ? false : true);
+    }
+  }
+  else {
+    make_zonohedron_1d(geom, star);
+  }
+
+  if (geom->is_set())
+    return geom->set_hull("A0.9999999");
+  else {
+    geom->add_vert(Vec3d::zero);
+    return Status::ok();
+  }
 }
 
-
-/*
-
-void make_zono_1d(geom_if &zono, const vector<vec3d> &star)
+Status make_zonohedrified_polyhedron(Geometry *geom, const Geometry &seed,
+                                     const vector<Vec3d> &star, Color col)
 {
-   zono.clear_all();
-   vector<double> star_mags(star.size());
-   for(unsigned int i=0; i< star.size(); i++)
-      star_mags[i] = star[i].mag();
-   
-   vector<vec3d> &verts = *zono.get_verts();
-   for(unsigned int i=0; i<star.size(); i++) {
-      vec3d pos = vec3d(0, 0, 0);
-      vec3d neg = vec3d(0, 0, 0);
-      for(unsigned int k=0; k<star.size(); k++) {
-         double cos_a = vdot(star[0], star[k])/star_mags[k];
-         if(cos_a > 0)
-            pos += star[k];
-         else
-            neg += star[k];
-      }
-      
-      //if(pos==vec3d(0, 0, 0))
-      //   continue;
-      verts.push_back(pos);
-      verts.push_back(neg);
-   }
+  geom->clear_all();
+  geom->append(seed);
+
+  // Store original face colours by normal
+  std::map<Vec3d, Color, vec_less> orig_cols;
+  for (unsigned int i = 0; i < geom->faces().size(); i++)
+    orig_cols[geom->face_norm(i).to_unit()] = geom->colors(FACES).get(i);
+
+  for (const auto &i : star) {
+    int v_sz = geom->verts().size();
+    geom->raw_verts().resize(v_sz * 2);
+    for (int j = 0; j < v_sz; j++) {
+      geom->raw_verts()[j + v_sz] = geom->verts(j) + i;
+    }
+    Status stat = geom->set_hull("");
+    if (!stat)
+      return stat;
+  }
+
+  // Restore original face colours by normal
+  for (unsigned int i = 0; i < geom->faces().size(); i++) {
+    auto mi = orig_cols.find(geom->face_norm(i).to_unit());
+    geom->colors(FACES).set(i, (mi != orig_cols.end()) ? mi->second : col);
+  }
+
+  return Status::ok();
 }
 
-void make_zono_2d(geom_if &zono, const vector<vec3d> &star, vec3d fnorm)
+Status make_polar_zonohedron(Geometry *geom, const vector<Vec3d> &star,
+                             int step)
 {
-   zono.clear_all();
-   vector<double> star_mags(star.size());
-   for(unsigned int i=0; i< star.size(); i++)
-      star_mags[i] = star[i].mag();
-  
-   vector<bool> seen(star.size(), false);
-   vector<vec3d> &verts = *zono.get_verts();
-   for(unsigned int i=0; i<star.size(); i++) {
-      if(seen[i])
-         continue;
-      vec3d pos = vec3d(0, 0, 0);
-      vec3d neg = vec3d(0, 0, 0);
-      vec3d norm = vcross(fnorm, star[i]).unit();
-      vector<vec3d> perp;
-      for(unsigned int k=i; k<star.size(); k++) {
-         double cos_a = vdot(norm, star[k])/star_mags[k];
-         //if(fabs(cos_a) < epsilon && star[k] != vec3d(0, 0, 0))
-         if(fabs(cos_a) < epsilon) {
-            seen[k] = true;
-            perp.push_back(star[k]);
-         }
-         else if(cos_a > 0)
-            pos += star[k];
-         else
-            neg += star[k];
+  geom->clear_all();
+  int N = star.size();
+  int D = step;
+  int num_parts = gcd(N, D);
+  int P = N / num_parts;
+  for (int p = 0; p < num_parts; p++) {
+    int V = geom->verts().size();
+    vector<Vec3d> star_part;
+    for (int i = 0; i < P; i++)
+      star_part.push_back(star[(p + i * D) % N]);
+
+    geom->add_verts(star_part);
+    for (int i = 1; i < P - 1; i++)
+      for (int j = 0; j < P; j++)
+        geom->add_vert(geom->verts(V + (i - 1) * P + j) +
+                       star_part[(i + j) % P]);
+    geom->add_vert(geom->verts(V + P * (P - 2)) + star_part[P - 1]);
+    geom->add_vert(Vec3d(0, 0, 0));
+    for (int j = 0; j < P; j++) {
+      geom->add_face(V + P * (P - 1) + 1, V + j, V + j + P, V + (j + 1) % P,
+                     -1);
+      if (P > 2)
+        geom->add_face(V + P * (P - 1), V + P * (P - 2) + j,
+                       V + P * (P - 3) + (j + 1) % P,
+                       V + P * (P - 2) + (j + 1) % P, -1);
+    }
+    for (int i = 0; i < P - 3; i++)
+      for (int j = 0; j < P; j++) {
+        geom->add_face(V + i * P + (j + 1) % P, V + (i + 1) * P + j,
+                       V + (i + 2) * P + j, V + (i + 1) * P + (j + 1) % P, -1);
       }
-      
-      //verts.push_back(pos);
-      //verts.push_back(neg);
-      if(perp.size()) {
-         geom_v zono_face;
-         make_zono_1d(zono_face, perp);
-         vector<vec3d> &zf_verts = *zono_face.get_verts();
-         for(unsigned int k=0; k<zf_verts.size(); k++) {
-            verts.push_back(pos + zf_verts[k]);
-            verts.push_back(neg + zf_verts[k]);
-         }
-      }
-   }
+  }
+  return Status::ok();
 }
 
-
-bool make_zono(geom_if &zono, const vector<vec3d> &star, char *errmsg)
-{
-   zono.clear_all();
-   vector<double> star_mags(star.size());
-   for(unsigned int i=0; i< star.size(); i++)
-      star_mags[i] = star[i].mag();
-   
-   vector<vec3d> &verts = *zono.get_verts();
-   for(unsigned int i=0; i<star.size()-1; i++) {
-      for(unsigned int j=i+1; j<star.size(); j++) {
-         //fprintf(stderr, "face no. %d\n", i*(star.size()-1)+j - (j>i) );
-         vec3d pos = vec3d(0, 0, 0);
-         vec3d neg = vec3d(0, 0, 0);
-         vec3d norm = vcross(star[i], star[j]).unit();
-         vector<vec3d> perp;
-         for(unsigned int k=0; k<star.size(); k++) {
-            double cos_a = vdot(norm, star[k])/star_mags[k];
-            //if(fabs(cos_a) < epsilon && star[k] != vec3d(0, 0, 0))
-            if(fabs(cos_a) < epsilon)
-               perp.push_back(star[k]);
-            else if(cos_a > 0)
-               pos += star[k];
-            else
-               neg += star[k];
-         }
-      
-         //verts.push_back(pos);
-         //verts.push_back(neg);
-         if(perp.size()) {
-            geom_v zono_face;
-            make_zono_2d(zono_face, perp, norm);
-            vector<vec3d> &zf_verts = *zono_face.get_verts();
-            for(unsigned int k=0; k<zf_verts.size(); k++) {
-               verts.push_back(pos + zf_verts[k]);
-               verts.push_back(neg + zf_verts[k]);
-            }
-         }
-      }
-   }
-   
-   return 1; //zono.set_hull("A0.9999999", errmsg);
-}
-*/
-
-
-
+} // namespace anti

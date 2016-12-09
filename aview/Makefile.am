@@ -14,8 +14,8 @@ LDADD = libantiprism_dispgl.la $(top_builddir)/base/libantiprism.la
 
 noinst_LTLIBRARIES = libantiprism_dispgl.la
 libantiprism_dispgl_la_SOURCES=gl_writer.cc stipple.cc gl_stroke_font.cc \
-	disp_poly_gl.cc \
-	gl_stroke_font.h gl_writer.h disp_poly_gl.h
+	displaypoly_gl.cc \
+	gl_stroke_font.h gl_writer.h displaypoly_gl.h
 
 bin_PROGRAMS = antiview
 

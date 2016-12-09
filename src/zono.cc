@@ -1,5 +1,7 @@
 /*
-   Copyright (c) 2003-2014, Adrian Rossiter
+   Copyright (c) 2003-2016, Adrian Rossiter
+
+   Antiprism - http://www.antiprism.com
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -26,308 +28,224 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-
-
+#include <ctype.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
-#include <ctype.h>
 
+#include <algorithm>
 #include <string>
 #include <vector>
-#include <algorithm>
 
 #include "../base/antiprism.h"
 
 using std::string;
 using std::vector;
 
+using namespace ::anti;
 
-class zo_opts: public prog_opts{
-   public:
-      char method;
-      vec3d centre;
-      bool centroid;
-      bool out_star;
-      bool unit_len;
-      col_val zone_col;
-      int pol_num;
-      polygon pgon;
-      bool non_polar_opt;
-      string ifile;
-      col_geom_v seed_geom;
-      string ofile;
+class zo_opts : public ProgramOpts {
+public:
+  char method;
+  Vec3d centre;
+  bool centroid;
+  bool out_star;
+  bool unit_len;
+  Color zone_col;
+  int pol_num;
+  Polygon pgon;
+  bool non_polar_opt;
+  string ifile;
+  Geometry seed_geom;
+  string ofile;
 
-      zo_opts(): prog_opts("zono"), method('v'),
-                 centre(vec3d(0, 0, 0)), centroid(false),
-                 out_star(false), unit_len(false),
-                 pol_num(0), pgon(2), non_polar_opt(false) {}
-      void process_command_line(int argc, char **argv);
-      void usage();
+  zo_opts()
+      : ProgramOpts("zono"), method('v'), centre(Vec3d(0, 0, 0)),
+        centroid(false), out_star(false), unit_len(false), pol_num(0), pgon(2),
+        non_polar_opt(false)
+  {
+  }
+  void process_command_line(int argc, char **argv);
+  void usage();
 };
-
 
 void zo_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] [star_file] \n"
-"\n"
-"Make a zonohedron or add zones to a convex seed polyhdron. The zones are\n"
-"created from a star of vectors, which can be based on a polyhdron (input\n"
-"model and option -m) or initialised (option -P) to make a polar zonohedron.\n"
-"If input_file is not given the program reads from standard input\n"
-"\n"
-"Options\n"
-"%s"
-"  -m <mthd> method to create star from input, can be\n"
-"               v - centre to vertices are vectors (default)\n"
-"               a - all vertex to vertex are vectors\n"
-"               i - implicit edges (face sides) are vectors\n"
-"               e - explicit edges are vectors\n"
-"  -c <cent> centre of points for method v, C for centroid (default: 0,0,0)\n"
-"  -s        output the star (instead of the zonohedron)\n"
-"  -S        seed model to add zones to, must be convex\n"
-"  -u        make vectors unit length\n"
-"  -C <col>  colour for new zone faces\n"
-"  -P <star> polar zonohedron from ordered star, can be an offset polygon\n"
-"            given as an integer or fraction (e.g. 5, 7/2) or 's' to use\n"
-"            star_file\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"\n", prog_name(), help_ver_text);
+  fprintf(
+      stdout,
+      "\n"
+      "Usage: %s [options] [star_file] \n"
+      "\n"
+      "Make a zonohedron or add zones to a convex seed polyhdron. The zones "
+      "are\n"
+      "created from a star of vectors, which can be based on a polyhdron "
+      "(input\n"
+      "model and option -m) or initialised (option -P) to make a polar "
+      "zonohedron.\n"
+      "If input_file is not given the program reads from standard input\n"
+      "\n"
+      "Options\n"
+      "%s"
+      "  -m <mthd> method to create star from input, can be\n"
+      "               v - centre to vertices are vectors (default)\n"
+      "               a - all vertex to vertex are vectors\n"
+      "               i - implicit edges (face sides) are vectors\n"
+      "               e - explicit edges are vectors\n"
+      "  -c <cent> centre of points for method v, C for centroid (default: "
+      "0,0,0)\n"
+      "  -s        output the star (instead of the zonohedron)\n"
+      "  -S        seed model to add zones to, must be convex\n"
+      "  -u        make vectors unit length\n"
+      "  -C <col>  colour for new zone faces\n"
+      "  -P <star> polar zonohedron from ordered star, can be an offset "
+      "polygon\n"
+      "            given as an integer or fraction (e.g. 5, 7/2) or 's' to "
+      "use\n"
+      "            star_file\n"
+      "  -o <file> write output to file (default: write to standard output)\n"
+      "\n"
+      "\n",
+      prog_name(), help_ver_text);
 }
 
 void zo_opts::process_command_line(int argc, char **argv)
 {
-   char errmsg[MSG_SZ];
-   opterr = 0;
-   int c;
+  opterr = 0;
+  int c;
 
-   handle_long_opts(argc, argv);
+  handle_long_opts(argc, argv);
 
-   while( (c = getopt(argc, argv, ":hm:c:S:suC:P:o:")) != -1 ) {
-      if(common_opts(c, optopt))
-         continue;
+  while ((c = getopt(argc, argv, ":hm:c:S:suC:P:o:")) != -1) {
+    if (common_opts(c, optopt))
+      continue;
 
-      switch(c) {
-         case 'm':
-            if(!(strlen(optarg)==1 && strchr("vaei", *optarg)))
-               error("unknown method '"+string(optarg)+"'", c);
-            method = *optarg;
-            non_polar_opt = true;
-            break;
+    switch (c) {
+    case 'm':
+      if (!(strlen(optarg) == 1 && strchr("vaei", *optarg)))
+        error("unknown method '" + string(optarg) + "'", c);
+      method = *optarg;
+      non_polar_opt = true;
+      break;
 
-         case 'c':
-            if((strlen(optarg)==1 && strchr("Cc", *optarg)))
-               centroid = true;
-            else if(!centre.read(optarg))
-               error("invalid centre '"+string(optarg)+"'", c);
-            non_polar_opt = true;
-            break;
+    case 'c':
+      if ((strlen(optarg) == 1 && strchr("Cc", *optarg)))
+        centroid = true;
+      else if (!centre.read(optarg))
+        error("invalid centre '" + string(optarg) + "'", c);
+      non_polar_opt = true;
+      break;
 
-         case 's':
-            out_star = true;
-            break;
+    case 's':
+      out_star = true;
+      break;
 
-         case 'S':
-         {
-            geom_read_or_error(seed_geom, optarg, *this);
-            col_geom_v convex_chk = seed_geom;
-            convex_chk.set_hull();
-            if(!check_congruence(seed_geom, convex_chk))
-               error("seed geometry is not convex", c);
-            break;
-         }
+    case 'S': {
+      read_or_error(seed_geom, optarg);
+      Geometry convex_chk = seed_geom;
+      convex_chk.set_hull();
+      if (!check_congruence(seed_geom, convex_chk))
+        error("seed geometry is not convex", c);
+      break;
+    }
 
-         case 'u':
-            unit_len = true;
-            break;
+    case 'u':
+      unit_len = true;
+      break;
 
-         case 'C':
-            if(!zone_col.read(optarg, errmsg))
-               error(errmsg, c);
-            break;
+    case 'C':
+      print_status_or_exit(zone_col.read(optarg));
+      break;
 
-         case 'P':
-            if(strcmp(optarg, "s")==0)
-               pol_num = -1;     // use star argument
-            else {
-               int pol_denom=0;
-               if(!read_fraction(optarg, &pol_num, &pol_denom, errmsg))
-                  error(errmsg, c);
-               if(pol_num < 2)
-                  error("number of sides must be 2 or greater", c);
-               if(pol_denom < 1)
-                  error("denominator must be 1 or greater", c);
-               if(pol_denom % pol_num == 0)
-                  error("denominator cannot be a multiple of the number of "
-                        "sides", c);
-               pgon = polygon(pol_num, pol_denom);
-            }
-            break;
-
-         case 'o':
-            ofile = optarg;
-            break;
-
-         default:
-            error("unknown command line error");
+    case 'P':
+      if (strcmp(optarg, "s") == 0)
+        pol_num = -1; // use star argument
+      else {
+        int pol_denom = 0;
+        print_status_or_exit(read_fraction(optarg, &pol_num, &pol_denom), c);
+        if (pol_num < 2)
+          error("number of sides must be 2 or greater", c);
+        if (pol_denom < 1)
+          error("denominator must be 1 or greater", c);
+        if (pol_denom % pol_num == 0)
+          error("denominator cannot be a multiple of the number of "
+                "sides",
+                c);
+        pgon = Polygon(pol_num, pol_denom);
       }
-   }
+      break;
 
-   if(pol_num>0 && (non_polar_opt||argc-optind))
-      error("option -P polygon parameter is not compatible with options m, c or an input file");
+    case 'o':
+      ofile = optarg;
+      break;
 
-   if(argc-optind > 1)
-      error("too many arguments");
+    default:
+      error("unknown command line error");
+    }
+  }
 
-   if(argc-optind == 1)
-      ifile=argv[optind];
+  if (pol_num > 0 && (non_polar_opt || argc - optind))
+    error("option -P polygon parameter is not compatible with options m, c or "
+          "an input file");
+
+  if (argc - optind > 1)
+    error("too many arguments");
+
+  if (argc - optind == 1)
+    ifile = argv[optind];
 }
-
-
-struct vec_less {
-   bool operator() (const vec3d &v1, const vec3d &v2) {
-      return compare(v1, v2, epsilon)==-1;
-   }
-};
-
-
-bool make_zonohedron_with_seed(geom_if &zono, const vector<vec3d> &star,
-      const geom_if &seed, col_val col, char *errmsg)
-{
-   zono.clear_all();
-   zono.append(seed);
-
-   // Store original face colours by normal
-   map<vec3d, col_val, vec_less> orig_cols;
-   col_geom *cg = dynamic_cast<col_geom *>(&zono);
-   if(cg) {
-      for(unsigned int i=0; i<zono.faces().size(); i++) {
-         orig_cols[zono.face_norm(i).to_unit()] = cg->get_f_col(i);
-      }
-   }
-
-   for(unsigned int i=0; i<star.size(); i++) {
-      int v_sz = zono.verts().size();
-      zono.raw_verts().resize(v_sz*2);
-      for(int j=0; j<v_sz; j++) {
-         zono.raw_verts()[j+v_sz] = zono.verts(j) + star[i];
-      }
-      if(!zono.set_hull("", errmsg))
-         return false;
-   }
-
-   // Restore original face colours by normal
-   if(cg) {
-      for(unsigned int i=0; i<zono.faces().size(); i++) {
-         map<vec3d, col_val, vec_less>::iterator mi =
-               orig_cols.find(zono.face_norm(i).to_unit());
-         cg->set_f_col(i, (mi != orig_cols.end()) ? mi->second : col);
-      }
-   }
-
-   return true;
-}
-
-
-
-bool make_zonohedron(geom_if &zono, const vector<vec3d> &star, char *errmsg)
-{
-   zono.clear_all();
-
-   if(star.size()<2) {
-      snprintf(errmsg, MSG_SZ, "star contains %lu vectors, needs at least 2",
-            (unsigned long)star.size());
-      return false;
-   }
-
-   else
-      return zono.set_zono(star, errmsg);
-}
-
-int make_polar_zono(col_geom_v &zono, const vector<vec3d> &star, int D=1)
-{
-   int N = star.size();
-   zono.clear_all();
-   zono.add_verts(star);
-   for(int i=1; i<N-1; i++)
-      for(int j=0; j<N; j++)
-         zono.add_vert(zono.verts((i-1)*N+j) + star[(D*i+j)%N]);
-   zono.add_vert(zono.verts(N*(N-2))+star[N-D]);
-   zono.add_vert(vec3d(0,0,0));
-   for(int j=0; j<N; j++) {
-      zono.add_face(N*(N-1)+1, j, j+N, (j+D)%N, -1);
-      if(N>2)
-         zono.add_face(N*(N-1), N*(N-2)+j, N*(N-3)+(j+D)%N, N*(N-2)+(j+D)%N,-1);
-   }
-   for(int i=0; i<N-3; i++)
-      for(int j=0; j<N; j++) {
-         zono.add_face(i*N+(j+D)%N, (i+1)*N+j, (i+2)*N+j, (i+1)*N+(j+D)%N, -1);
-      }
-   return true;
-}
-
 
 int main(int argc, char **argv)
 {
-   zo_opts opts;
-   opts.process_command_line(argc, argv);
+  zo_opts opts;
+  opts.process_command_line(argc, argv);
 
-   vector<vec3d> star;
-   if(opts.pol_num>0) {
-      col_geom_v gstar;
-      opts.pgon.add_polygon(gstar, sqrt(0.5));
-      star = gstar.verts();
-   }
-   else {
-      col_geom_v geom;
-      geom_read_or_error(geom, opts.ifile, opts);
+  vector<Vec3d> star;
+  if (opts.pol_num > 0) {
+    Geometry gstar;
+    opts.pgon.add_polygon(gstar, sqrt(0.5));
+    star = gstar.verts();
+  }
+  else {
+    Geometry geom;
+    opts.read_or_error(geom, opts.ifile);
 
-      if(opts.centroid)
-         opts.centre = centroid(*geom.get_verts());
+    if (opts.centroid)
+      opts.centre = geom.centroid();
 
-      star = geom.get_star(opts.method, opts.centre);
-   }
+    star = get_star(geom, opts.method, opts.centre);
+  }
 
-   // Set star vectors to unit, and remove any parallel vectors
-   if(opts.unit_len) {
-      for(unsigned int i=0; i<star.size(); i++)
-         star[i].to_unit();
-      int star_final_sz = star.size();
-      for(int i=0; i<star_final_sz; i++)
-         for(int j=i+1; j<star_final_sz; j++) {
-            if(vcross(star[i], star[j]).mag()<epsilon)
-               std::swap(star[j], star[--star_final_sz]);
-         }
-      star.resize(star_final_sz);
-   }
+  // Set star vectors to unit, and remove any parallel vectors
+  if (opts.unit_len) {
+    for (auto &i : star)
+      i.to_unit();
+    int star_final_sz = star.size();
+    for (int i = 0; i < star_final_sz; i++)
+      for (int j = i + 1; j < star_final_sz; j++) {
+        if (vcross(star[i], star[j]).len() < epsilon)
+          std::swap(star[j], star[--star_final_sz]);
+      }
+    star.resize(star_final_sz);
+  }
 
-   char errmsg[MSG_SZ] = "";
-   col_geom_v zono;
-   if(opts.out_star)
-      zono.add_verts(star);
-   else if(opts.seed_geom) {
-      if(!make_zonohedron_with_seed(zono, star, opts.seed_geom,
-               opts.zone_col, errmsg))
-         opts.error(errmsg);
-   }
-   else if(opts.pol_num) {
-      col_geom_v zono_base;
-      make_polar_zono(zono_base, star);
-      opts.pgon.repeat_part(zono, zono_base);
-   }
-   else {
-      if(!make_zonohedron(zono, star, errmsg))
-         opts.error(errmsg);
-      if(opts.zone_col.is_set())
-         coloring(&zono).f_one_col(opts.zone_col);
-   }
+  Geometry zono;
+  if (opts.out_star)
+    zono.add_verts(star);
+  else if (opts.seed_geom.is_set())
+    opts.print_status_or_exit(make_zonohedrified_polyhedron(
+        &zono, opts.seed_geom, star, opts.zone_col));
+  else if (opts.pol_num) {
+    Geometry zono_base;
+    make_polar_zonohedron(&zono_base, star);
+    opts.pgon.repeat_part(zono, zono_base);
+  }
+  else {
+    opts.print_status_or_exit(make_zonohedron(&zono, star));
+    if (opts.zone_col.is_set())
+      Coloring(&zono).f_one_col(opts.zone_col);
+  }
 
-   geom_write_or_error(zono, opts.ofile, opts);
+  opts.write_or_error(zono, opts.ofile);
 
-   return 0;
+  return 0;
 }
-
-

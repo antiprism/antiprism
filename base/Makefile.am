@@ -4,68 +4,67 @@ else
 lib_LTLIBRARIES = libantiprism.la
 endif
 
-libantiprism_la_SOURCES = off_read.cc off_write.cc crds_read.cc disp_poly.cc\
-   geom.cc geom_utils.cc col_geom.cc col_map.cc col_val.cc dual.cc vec3d.cc mat3d.cc \
-   vec4d.cc mat4d.cc vec_utils.cc vec_utils_norm.cc vec_utils_cent.cc \
-	utils.cc utils_parser.cc utils_ultragetopt.cc math_utils.cc c_hull.cc \
-	triangulate.cc symmetry.cc sort_merge.cc bbox.cc col_read.cc info.cc \
-   coloring.cc prop_col.cc named_cols.cc geodesic.cc zonohedron.cc \
+libantiprism_la_SOURCES = \
+	off_read.cc off_write.cc crds_read.cc displaypoly.cc\
+	geometry.cc geometryutils.cc colormap.cc color.cc dual.cc \
+	programopts.cc status.cc vec3d.cc trans3d.cc \
+	vec4d.cc trans4d.cc vec_utils.cc vec_utils_norm.cc vec_utils_cent.cc \
+	utils.cc utils_parser.cc getopt.cc mathutils.cc \
+	normal.cc c_hull.cc triangulate.cc \
+	symmetry.cc sort_merge.cc boundbox.cc geometryinfo.cc \
+	coloring.cc prop_col.cc named_cols.cc geodesic.cc zonohedron.cc \
 	johnson.cc uniform.cc std_polys.cc skilling.cc \
-	timing.cc polygons.cc pov_writer.cc scene.cc \
-	canonic.cc trans.cc faces.cc vrml_writer.cc wythoff.cc \
-   \
-   qh_user.cc qh_global.cc qh_stat.cc qh_io.cc \
-   qh_geom2.cc qh_poly2.cc qh_merge.cc qh_qhull.cc \
-	qh_geom.cc qh_poly.cc qh_qset.cc qh_mem.cc \
-   \
-	antiprism.h bbox.h col_map.h const.h disp_poly.h\
-	geodesic.h geom.h geom_utils.h \
-	col_val.h col_geom.h info.h mat3d.h mat4d.h math_utils.h named_cols.h \
-   off_file.h pov_writer.h coloring.h prop_col.h timing.h \
-	polygons.h std_polys.h schwarz_triangles.h \
-   \
-	qh_geom.h qh_io.h qh_mem.h qh_merge.h qh_poly.h qh_qhull_a.h \
-	qh_qhull.h qh_qset.h qh_stat.h qh_user.h \
+	timer.cc polygon.cc povwriter.cc scene.cc \
+	canonic.cc trans.cc faces.cc vrmlwriter.cc wythoff.cc \
 	\
-	rand_gen.h scene.h symmetry.h transforms.h \
-	utils.h utils_ultragetopt.h vec3d.h vec4d.h vec_utils.h vrml_writer.h
+	antiprism.h boundbox.h elemprops.h colormap.h coloring.h color.h \
+	const.h displaypoly.h geometry.h geometryutils.h geometryinfo.h \
+	trans3d.h trans4d.h mathutils.h normal.h polygon.h povwriter.h \
+	programopts.h random.h scene.h status.h symmetry.h timer.h utils.h \
+	getopt.h vec3d.h vec4d.h vec_utils.h vrmlwriter.h \
+	\
+	private_geodesic.h private_misc.h private_named_cols.h \
+	private_off_file.h private_prop_col.h private_std_polys.h
 
 supdir = $(datadir)/$(PACKAGE)
 libantiprism_la_CPPFLAGS = -DSUPDIR="\"$(supdir)\"" 
-libantiprism_la_LDFLAGS = -no-undefined -version-info 0:0:0
-libantiprism_la_LIBADD = tesselator/libtess.la muparser/libmuparser.la
+libantiprism_la_LDFLAGS = -no-undefined -version-info 0:0:0 \
+   -Wl,--version-script,'$(top_srcdir)/vers_script.txt'
+libantiprism_la_LIBADD = tesselator/libtess.la qhull/libqhull.la \
+	muparser/libmuparser.la
 
 if DEBIAN_INSTALL
 pkginclude_HEADERS =
 else
 pkginclude_HEADERS = \
 	antiprism.h \
-	bbox.h \
-	col_geom.h \
-	col_map.h \
+	boundbox.h \
+	colormap.h \
+	color.h \
 	coloring.h \
-	col_val.h \
 	const.h \
-	disp_poly.h \
-	geom.h \
-	geom_utils.h \
-	info.h \
-	mat3d.h \
-	mat4d.h \
-	math_utils.h \
-	off_file.h \
-	polygons.h \
-	pov_writer.h \
-	rand_gen.h \
+	displaypoly.h \
+	geometry.h \
+	geometryutils.h \
+	geometryinfo.h \
+	mathutils.h \
+	normal.h \
+	polygon.h \
+	povwriter.h \
+	programopts.h \
+	elemprops.h \
+	random.h \
 	scene.h \
+	status.h \
 	symmetry.h \
-	timing.h \
-	transforms.h \
+	timer.h \
+	trans3d.h \
+	trans4d.h \
 	utils.h \
-	utils_ultragetopt.h \
+	getopt.h \
 	vec3d.h \
 	vec4d.h \
 	vec_utils.h \
-	vrml_writer.h
+	vrmlwriter.h
 	
 endif
