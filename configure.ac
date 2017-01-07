@@ -28,17 +28,16 @@ AC_ARG_ENABLE( module,
    [ if test x"$enableval" = x"yes"; then enable_module="yes"; fi ],
    [ enable_module="no" ] )
 
-#AM_PATH_PYTHON(3.5, [], [enable_module="no"])
-AX_PYTHON
-
 AM_CONDITIONAL(BUILD_PY_MOD, false)
 AM_CONDITIONAL(USE_SWIG, false)
-
-AX_SWIG_PYTHON
 
 #enable_python="disabled" #disable python for this release
 if test x"$enable_module" = x"yes" ;
 then
+   #AM_PATH_PYTHON(3.5, [], [enable_module="no"])
+   AX_PYTHON
+   AX_SWIG_PYTHON
+
    AM_CONDITIONAL(BUILD_PY_MOD, true)
    echo "will prepare the Python Module";
    # Check whether Python module wrapper will be regenerated with swig
