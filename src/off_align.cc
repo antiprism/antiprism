@@ -203,7 +203,7 @@ bool bond_base::add_brick(char type, const string &brick_str, char *errmsg)
   }
   else if (type == 'f' || type == 'F') {
     brick.align_type = (type == 'f') ? align_faces : align_faces_merge;
-    if (brick.bond.size() < 3) {
+    if (brick.bond.size() > 3) {
       if (errmsg)
         snprintf(errmsg, MSG_SZ,
                  "up to three arguments can be given (%lu were given)",
