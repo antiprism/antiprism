@@ -491,7 +491,7 @@ void Geodesic::grid_to_tris(vector<int> indx, vector<vector<int>> &new_tris,
       p0_idx = index_map(i, j, indx);
       p1_idx = index_map(i + 1, j + 1, indx);
       if (p0_idx != noindex && p1_idx != noindex) {
-        if (0 && tri_test(i, j, 1, 0)) {
+        if (tri_test(i, j, 1, 0)) {
           p2_idx = index_map(i + 1, j, indx);
           if (p2_idx != noindex) {
             new_tris.push_back(make_tri(p0_idx, p1_idx, p2_idx));
