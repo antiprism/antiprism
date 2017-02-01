@@ -44,8 +44,6 @@ using std::map;
 
 using namespace anti;
 
-using namespace anti;
-
 class pg_opts : public ProgramOpts {
 public:
   Polygon pgon;

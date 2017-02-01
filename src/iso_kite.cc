@@ -41,8 +41,6 @@ using std::map;
 
 using namespace anti;
 
-using namespace anti;
-
 const char *base_models[] = {"T1",  "T2",  "O1",  "O2",  "O2B", "I1",
                              "I2",  "I3",  "I4",  "I4B", "I5",  "I5B",
                              "I6",  "I6B", "I6C", "I7",  "I7B", "I8",

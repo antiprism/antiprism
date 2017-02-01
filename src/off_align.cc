@@ -48,8 +48,6 @@ using std::pair;
 
 using namespace anti;
 
-using namespace anti;
-
 struct bond_brick {
   Geometry geom;
   int align_type;
