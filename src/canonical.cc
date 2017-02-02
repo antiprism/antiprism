@@ -33,6 +33,7 @@
 */
 
 #include <ctype.h>
+#include <float.h>
 #include <limits.h>
 #include <math.h>
 #include <stdlib.h>
@@ -227,21 +228,6 @@ void cn_opts::process_command_line(int argc, char **argv)
   epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
-// RK - average radius rather than maximum has more reliability than max
-void unitize_radius(Geometry &geom)
-{
-  GeometryInfo info(geom);
-  info.set_center(geom.centroid());
-  //geom.transform(Trans3d::scale(1 / info.vert_dist_lims().max));
-  double avg = info.vert_dist_lims().sum / info.num_verts();
-  geom.transform(Trans3d::scale(1 / avg));
-}
-
-void centroid_to_origin2(Geometry &geom)
-{
-  geom.transform(Trans3d::transl(-centroid(geom.verts())));
-}
-
 // return true if maximum vertex radius is radius_range_percent (0.0 to ...)
 // greater than minimum vertex radius
 bool radius_range_test(const Geometry &geom, const double &radius_range_percent)
@@ -344,6 +330,21 @@ Vec3d edge_nearpoints_centroid2(const Geometry &geom, const Vec3d &cent)
   return e_cent / double(e_sz);
 }
 
+// RK - average radius rather than maximum has more reliability than max
+void unitize_radius(Geometry &geom)
+{
+  GeometryInfo info(geom);
+  info.set_center(geom.centroid());
+  //geom.transform(Trans3d::scale(1 / info.vert_dist_lims().max));
+  double avg = info.vert_dist_lims().sum / info.num_verts();
+  geom.transform(Trans3d::scale(1 / avg));
+}
+
+void centroid_to_origin2(Geometry &geom)
+{
+  geom.transform(Trans3d::transl(-centroid(geom.verts())));
+}
+
 // Implementation of George Hart's planarization and canonicalization algorithms
 // http://www.georgehart.com/virtual-polyhedra/conway_notation.html
 void canonicalize_cn2(Geometry &base, const int &num_iters, const char &canonical_method, const double &radius_range_percent,
@@ -439,18 +440,17 @@ void canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &p
   geom.get_impl_edges(edges);
 
   double max_diff2 = 0;
-  Vec3d origin(0, 0, 0);
   unsigned int cnt;
   for (cnt = 0; cnt < (unsigned int)num_iters;) {
     vector<Vec3d> verts_last = verts;
 
-    // RK - the model will possibly become non-convex early in the loops
+    // RK - the model will possibly become non-convex early in the loops.
     // if it contorts too badly, the model will implode. Having the model
     // at a radius of near 1 minimizes this problem
     if (!planar_only) {
       vector<Vec3d> near_pts;
       for (auto &edge : edges) {
-        Vec3d P = geom.edge_nearpt(edge, origin);
+        Vec3d P = geom.edge_nearpt(edge, Vec3d(0, 0, 0));
         near_pts.push_back(P);
 // RK - these 4 lines cause the near points to be applied in a 2nd loop
 // but this causes more problems. The solution is to have the input model
@@ -474,6 +474,7 @@ void canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &p
     for (auto &v : vs)
       v = Vec3d(0, 0, 0);
 
+    // progressively advances starting face each iteration
     for (unsigned int ff = cnt; ff < faces.size() + cnt; ff++) {
       int f = ff % faces.size();
       if (faces[f].size() == 3)
@@ -523,8 +524,8 @@ void planar_info(Geometry &geom)
 {
   GeometryInfo rep(geom);
 
-  double max_nonplanar = 0.0;
-  double sum_nonplanar = 0.0;
+  double max_nonplanar = 0;
+  double sum_nonplanar = 0;
   int sz = geom.faces().size();
   for (int i = 0; i < sz; i++) {
     double nonplanar = rep.get_f_max_nonplanars()[i];
@@ -538,12 +539,46 @@ void planar_info(Geometry &geom)
   fprintf(stderr, "\n");
 }
 
-void midradius_info(Geometry &geom)
+// RK - find nearpoints radius, sets range minimum and maximum
+double edge_nearpoints_radius(const Geometry &geom, double &min, double &max)
 {
+  min = DBL_MAX;
+  max = DBL_MIN;
+
   vector<vector<int>> edges;
   geom.get_impl_edges(edges);
-  fprintf(stderr,"midradius = %g\n",geom.edge_nearpt(edges[0], geom.centroid()).len2());
+  int e_sz = edges.size();
+  double nearpt_radius = 0;
+  for (int e = 0; e < e_sz; ++e) {
+    double len = geom.edge_nearpt(edges[e], geom.centroid()).len2();
+    nearpt_radius += len;
+    if (len < min)
+      min = len;
+    if (len > max)
+      max = len;
+  }
+  return nearpt_radius / double(e_sz);
 }
+
+void midradius_info(Geometry &geom)
+{
+  double min = 0;
+  double max = 0;
+  double radius = edge_nearpoints_radius(geom, min, max);
+  fprintf(stderr,"midradius = %.17g (range: %.15g to %.15g)\n",radius, min, max);
+}
+
+/*
+void add_tangent_points(const Geometry &geom)
+{
+  Geometry dual;
+  get_dual(&dual, geom, 1, Vec3d(0, 0, 0));
+
+  int sz = geom.faces().size();
+  for (int i = 0; i < sz; i++) {
+  }
+}
+*/
 
 int main(int argc, char *argv[])
 {
@@ -630,8 +665,8 @@ int main(int argc, char *argv[])
     // RK - print midradius before we move it
     midradius_info(geom);
 
-    // RK - if successful, the midcenter can be the origin
-    centroid_to_origin2(geom);
+    // RK - questioning to do this?
+    //centroid_to_origin2(geom);
   }
 
   opts.write_or_error(geom, opts.stderr);
