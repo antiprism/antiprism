@@ -62,14 +62,24 @@ public:
   double mm_plane_factor;
   int rep_count;
   double radius_range_percent;
+  string output_parts;
 
   double epsilon;
+
+  Color ipoints_col;
+  Color base_nearpts_col;
+  Color dual_nearpts_col;
+  Color base_edge_col;
+  Color dual_edge_col;
 
   cn_opts()
       : ProgramOpts("canonical"), edge_distribution('\0'),
         planarize_method('\0'), num_iters_planar(10000), canonical_method('m'),
         num_iters_canonical(-1), mm_edge_factor(50), mm_plane_factor(20),
-        rep_count(1000), radius_range_percent(80), epsilon(0)
+        rep_count(1000), radius_range_percent(80), output_parts("b"), epsilon(0),
+        ipoints_col(Color(255, 255, 0)), base_nearpts_col(Color(255, 0, 0)),
+        dual_nearpts_col(Color(0.0, 0.39216, 0.0)), base_edge_col(Color()),
+        dual_edge_col(Color())
   {
   }
 
@@ -109,9 +119,11 @@ void cn_opts::usage()
 "               n - conway notation base/dual version\n"
 "               x - none\n"
 "  -n <itrs> maximum number of iterations (default: no limit)\n"
+"  -O <args> output b - base, d - dual, i - intersection points (default: b)\n"
+"               n - base edge near points, m - dual edge near points\n"
 "  -d <val>  radius test. precent difference between minumum and maximum radius\n"
-"               checks if polyhedron is collapsing. 0 for no test (default 10)\n"
-"  -z <n>    status reporting every n lines. -1 for no status. (default 1000)\n"
+"               checks if polyhedron is collapsing. 0 for no test (default: 10)\n"
+"  -z <n>    status reporting every n lines. -1 for no status. (default: 1000)\n"
 "  -l <lim>  minimum distance change to terminate, as negative exponent\n"
 "               (default: %d giving %.0e)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
@@ -119,6 +131,13 @@ void cn_opts::usage()
 "Mathematica Canonicalize Options (-M m and -M l)\n"
 "  -E <perc> percentage to scale the edge tangency error (default: 50)\n" 
 "  -P <perc> percentage to scale the face planarity error (default: 20)\n" 
+"\n"
+"Coloring Options (run 'off_util -H color' for help on color formats)\n"
+"  -I <col>  intersection points color   (default: yellow)\n"
+"  -N <col>  base edge near points color (default: red)\n"
+"  -M <col>  dual edge near points color (default: darkgreen)\n"
+"  -B <col>  base edge color (default: none)\n"
+"  -D <col>  dual edge color (default: none)\n"
 "\n"
 "\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }
@@ -129,13 +148,13 @@ void cn_opts::process_command_line(int argc, char **argv)
   opterr = 0;
   int c;
 
-  string arg_id;
+  bool O_is_set = false;
 
   int sig_compare = INT_MAX;
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":he:p:i:c:E:P:n:d:z:l:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":he:p:i:c:n:O:E:P:d:z:I:N:M:B:D:l:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -175,6 +194,14 @@ void cn_opts::process_command_line(int argc, char **argv)
         error("number of iterations must be 0 or greater", c);
       break;
 
+    case 'O':
+      if (strspn(optarg, "bdinm") != strlen(optarg))
+        error(msg_str("output parts are '%s' must be from "
+                      "b, d, i, n and m", optarg), c);
+      output_parts = optarg;
+      O_is_set = true;
+      break;
+
     case 'E':
       print_status_or_exit(read_double(optarg, &mm_edge_factor), c);
       if (mm_edge_factor <= 0 || mm_edge_factor >= 100)
@@ -200,6 +227,26 @@ void cn_opts::process_command_line(int argc, char **argv)
         error("number of iterations must be -1 or greater", c);
       break;
 
+    case 'I':
+      print_status_or_exit(ipoints_col.read(optarg), c);
+      break;
+
+    case 'N':
+      print_status_or_exit(base_nearpts_col.read(optarg), c);
+      break;
+
+    case 'M':
+      print_status_or_exit(dual_nearpts_col.read(optarg), c);
+      break;
+
+    case 'B':
+      print_status_or_exit(base_edge_col.read(optarg), c);
+      break;
+
+    case 'D':
+      print_status_or_exit(dual_edge_col.read(optarg), c);
+      break;
+
     case 'l':
       print_status_or_exit(read_int(optarg, &sig_compare), c);
       if (sig_compare < 0) {
@@ -218,6 +265,9 @@ void cn_opts::process_command_line(int argc, char **argv)
       error("unknown command line error");
     }
   }
+
+  if (O_is_set && canonical_method == 'x')
+    warning("output parts only has effect in canonicalization", 'O'); 
 
   if (argc - optind > 1)
     error("too many arguments");
@@ -325,7 +375,7 @@ Vec3d edge_nearpoints_centroid2(const Geometry &geom, const Vec3d &cent)
   geom.get_impl_edges(edges);
   int e_sz = edges.size();
   Vec3d e_cent(0, 0, 0);
-  for (int e = 0; e < e_sz; ++e)
+  for (int e = 0; e < e_sz; e++)
     e_cent += geom.edge_nearpt(edges[e], cent);
   return e_cent / double(e_sz);
 }
@@ -549,8 +599,8 @@ double edge_nearpoints_radius(const Geometry &geom, double &min, double &max)
   geom.get_impl_edges(edges);
   int e_sz = edges.size();
   double nearpt_radius = 0;
-  for (int e = 0; e < e_sz; ++e) {
-    double len = geom.edge_nearpt(edges[e], geom.centroid()).len2();
+  for (int e = 0; e < e_sz; e++) {
+    double len = geom.edge_nearpt(edges[e], Vec3d(0, 0, 0)).len2();
     nearpt_radius += len;
     if (len < min)
       min = len;
@@ -566,19 +616,113 @@ void midradius_info(Geometry &geom)
   double max = 0;
   double radius = edge_nearpoints_radius(geom, min, max);
   fprintf(stderr,"midradius = %.17g (range: %.15g to %.15g)\n",radius, min, max);
+  fprintf(stderr,"midcenter is the origin\n");
 }
 
-/*
-void add_tangent_points(const Geometry &geom)
+void generate_points(const Geometry &base, const Geometry &dual, vector<Vec3d> &ip,
+                    vector<Vec3d> &base_nearpts, vector<Vec3d> &dual_nearpts,
+                    const cn_opts &opts)
 {
-  Geometry dual;
-  get_dual(&dual, geom, 1, Vec3d(0, 0, 0));
+  vector<vector<int>> base_edges;
+  vector<vector<int>> dual_edges;
 
-  int sz = geom.faces().size();
-  for (int i = 0; i < sz; i++) {
+  if ((opts.output_parts.find("i") != string::npos) ||
+      (opts.output_parts.find("n") != string::npos))
+    base.get_impl_edges(base_edges);
+
+  if ((opts.output_parts.find("i") != string::npos) ||
+      (opts.output_parts.find("m") != string::npos))
+    dual.get_impl_edges(dual_edges);
+
+  if (opts.output_parts.find("i") != string::npos) {
+    for (unsigned int i = 0; i < base_edges.size(); i++) {
+      Vec3d b0 = base.verts(base_edges[i][0]);
+      Vec3d b1 = base.verts(base_edges[i][1]);
+      for (unsigned int j = 0; j < dual_edges.size(); j++) {
+        Vec3d d0 = dual.verts(dual_edges[j][0]);
+        Vec3d d1 = dual.verts(dual_edges[j][1]);
+        // does base edge intersect with dual edge
+        // use local epsilon
+        double epsilon_local = 1e-12;
+        Vec3d intersection_point = segments_intersection(b0, b1, d0, d1, epsilon_local);
+        if (intersection_point.is_set()) {
+          ip.push_back(intersection_point);
+          break;
+        }
+      }
+    }
+
+    if (ip.size() != base_edges.size())
+      fprintf(stderr,"Warning: only %d out of %d intersection points found. try more precision\n",
+              (int)ip.size(), (int)base_edges.size());
+  }
+
+  if (opts.output_parts.find("n") != string::npos) {
+    for (unsigned int e = 0; e < base_edges.size(); e++)
+      base_nearpts.push_back(base.edge_nearpt(base_edges[e], Vec3d(0, 0, 0)));
+  }
+
+  if (opts.output_parts.find("m") != string::npos) {
+    for (unsigned int e = 0; e < dual_edges.size(); e++)
+      dual_nearpts.push_back(dual.edge_nearpt(dual_edges[e], Vec3d(0, 0, 0)));
   }
 }
-*/
+
+void set_edge_colors(Geometry &geom, const Color &col)
+{
+  if (col.is_set()) {
+    geom.add_missing_impl_edges();
+    Coloring clrng(&geom);
+    clrng.e_one_col(col);
+  }
+}
+
+void construct_model(Geometry &base, const cn_opts &opts) {
+  Geometry dual;
+
+  // need to generate dual? also needed for tangent points
+  if ((opts.output_parts.find("d") != string::npos) ||
+      (opts.output_parts.find("i") != string::npos) ||
+      (opts.output_parts.find("m") != string::npos))
+    get_dual(&dual, base, 1, Vec3d(0, 0, 0));
+
+  // need to generate before possible erasure of base
+  vector<Vec3d> ip;
+  vector<Vec3d> base_nearpts;
+  vector<Vec3d> dual_nearpts;
+  if ((opts.output_parts.find("i") != string::npos) ||
+      (opts.output_parts.find("n") != string::npos) ||
+      (opts.output_parts.find("m") != string::npos))
+    generate_points(base, dual, ip, base_nearpts, dual_nearpts, opts);
+
+  // clear base if not using
+  if (opts.output_parts.find("b") == string::npos)
+    base.clear_all();
+  // set edge colors here
+  else
+    set_edge_colors(base, opts.base_edge_col);
+
+  if (opts.output_parts.find("d") != string::npos) {
+    // set edge colors here
+    set_edge_colors(dual, opts.dual_edge_col);
+    base.append(dual);
+  }
+
+  if (opts.output_parts.find("i") != string::npos) {
+    for (unsigned int i = 0; i < ip.size(); i++)
+      base.add_vert(ip[i], opts.ipoints_col);
+  }
+
+  if (opts.output_parts.find("n") != string::npos) {
+    for (unsigned int i = 0; i < base_nearpts.size(); i++)
+      base.add_vert(base_nearpts[i], opts.base_nearpts_col);
+  }
+
+  if (opts.output_parts.find("m") != string::npos) {
+    for (unsigned int i = 0; i < dual_nearpts.size(); i++)
+      base.add_vert(dual_nearpts[i], opts.dual_nearpts_col);
+  }
+}
 
 int main(int argc, char *argv[])
 {
@@ -662,11 +806,11 @@ int main(int argc, char *argv[])
     // RK - report planarity
     planar_info(geom);
 
-    // RK - print midradius before we move it
+    // RK - print midradius info
     midradius_info(geom);
 
-    // RK - questioning to do this?
-    //centroid_to_origin2(geom);
+    // RK - parts to output
+    construct_model(geom, opts);
   }
 
   opts.write_or_error(geom, opts.stderr);
