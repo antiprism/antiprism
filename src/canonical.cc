@@ -60,6 +60,7 @@ public:
   int num_iters_canonical;
   double mm_edge_factor;
   double mm_plane_factor;
+  bool mm_alternate_loop;
   int rep_count;
   double radius_range_percent;
   string output_parts;
@@ -76,8 +77,9 @@ public:
       : ProgramOpts("canonical"), edge_distribution('\0'),
         planarize_method('\0'), num_iters_planar(10000), canonical_method('m'),
         num_iters_canonical(-1), mm_edge_factor(50), mm_plane_factor(20),
-        rep_count(1000), radius_range_percent(80), output_parts("b"), epsilon(0),
-        ipoints_col(Color(255, 255, 0)), base_nearpts_col(Color(255, 0, 0)),
+        mm_alternate_loop(false), rep_count(1000), radius_range_percent(80),
+        output_parts("b"), epsilon(0), ipoints_col(Color(255, 255, 0)),
+        base_nearpts_col(Color(255, 0, 0)),
         dual_nearpts_col(Color(0.0, 0.39216, 0.0)), base_edge_col(Color()),
         dual_edge_col(Color())
   {
@@ -130,9 +132,10 @@ void cn_opts::usage()
 "\n"
 "Mathematica Canonicalize Options (-M m and -M l)\n"
 "  -E <perc> percentage to scale the edge tangency error (default: 50)\n" 
-"  -P <perc> percentage to scale the face planarity error (default: 20)\n" 
+"  -P <perc> percentage to scale the face planarity error (default: 20)\n"
+"  -A        alterate algorithm. try if imbalance in result\n" 
 "\n"
-"Coloring Options (run 'off_util -H color' for help on color formats)\n"
+"Coloring Options (run 'off_util -H color' for help on color formats) (-c only)\n"
 "  -I <col>  intersection points color   (default: yellow)\n"
 "  -N <col>  base edge near points color (default: red)\n"
 "  -M <col>  dual edge near points color (default: darkgreen)\n"
@@ -154,7 +157,7 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":he:p:i:c:n:O:E:P:d:z:I:N:M:B:D:l:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":he:p:i:c:n:O:E:P:Ad:z:I:N:M:B:D:l:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -215,6 +218,10 @@ void cn_opts::process_command_line(int argc, char **argv)
       }
       break;
 
+    case 'A':
+      mm_alternate_loop = true;
+      break;
+
     case 'd':
       print_status_or_exit(read_double(optarg, &radius_range_percent), c);
       if (radius_range_percent < 0)
@@ -267,7 +274,10 @@ void cn_opts::process_command_line(int argc, char **argv)
   }
 
   if (O_is_set && canonical_method == 'x')
-    warning("output parts only has effect in canonicalization", 'O'); 
+    warning("output parts only has effect in canonicalization", 'O');
+
+  if (mm_alternate_loop && canonical_method != 'm')
+    warning("alternate form only has effect in mathematica canonicalization", 'A');  
 
   if (argc - optind > 1)
     error("too many arguments");
@@ -479,9 +489,11 @@ void canonicalize_cn2(Geometry &base, const int &num_iters, const char &canonica
 // http://library.wolfram.com/infocenter/Articles/2012/
 void canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &plane_factor,
                      const int &num_iters, const double &radius_range_percent, const int &rep_count,
-                     const bool &planar_only, const double &eps)
+                     const bool &mm_alternate_loop, const bool &planar_only, const double &eps)
 {
-  // RK - functions better when the input polyhedron has a radius near 1
+  // RK - the model will possibly become non-convex early in the loops.
+  // if it contorts too badly, the model will implode. Having the model
+  // at a radius of near 1 minimizes this problem
   unitize_radius(geom);
 
   const vector<Vec3d> &verts = geom.verts();
@@ -494,25 +506,47 @@ void canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &p
   for (cnt = 0; cnt < (unsigned int)num_iters;) {
     vector<Vec3d> verts_last = verts;
 
-    // RK - the model will possibly become non-convex early in the loops.
-    // if it contorts too badly, the model will implode. Having the model
-    // at a radius of near 1 minimizes this problem
     if (!planar_only) {
       vector<Vec3d> near_pts;
-      for (auto &edge : edges) {
-        Vec3d P = geom.edge_nearpt(edge, Vec3d(0, 0, 0));
-        near_pts.push_back(P);
-// RK - these 4 lines cause the near points to be applied in a 2nd loop
-// but this causes more problems. The solution is to have the input model
-// have an input radius of near 1
-//      }
-//      int p_cnt = 0;
-//      for (auto &edge : edges) {
-//        Vec3d P = near_pts[p_cnt++];
-        Vec3d offset = edge_factor * (P.len() - 1) * P;
-        geom.verts(edge[0]) -= offset;
-        geom.verts(edge[1]) -= offset;
+      if (!mm_alternate_loop) {
+        for (auto &edge : edges) {
+          Vec3d P = geom.edge_nearpt(edge, Vec3d(0, 0, 0));
+          near_pts.push_back(P);
+          Vec3d offset = edge_factor * (P.len() - 1) * P;
+          geom.verts(edge[0]) -= offset;
+          geom.verts(edge[1]) -= offset;
+        }
       }
+      // RK - alternate form causes the near points to be applied in a 2nd loop
+      // most often not needed unless the model is off balance
+      else {
+        for (auto &edge : edges) {
+          Vec3d P = geom.edge_nearpt(edge, Vec3d(0, 0, 0));
+          near_pts.push_back(P);
+        // RK - these 4 lines cause the near points to be applied in a 2nd loop
+        }
+        int p_cnt = 0;
+        for (auto &edge : edges) {
+          Vec3d P = near_pts[p_cnt++];
+          Vec3d offset = edge_factor * (P.len() - 1) * P;
+          geom.verts(edge[0]) -= offset;
+          geom.verts(edge[1]) -= offset;
+        }
+      }
+
+/*
+      // RK - revolving loop. didn't solve the imbalance problem
+      else {
+        for (unsigned int ee = cnt; ee < edges.size() + cnt; ee++) {
+          int e = ee % edges.size();
+          Vec3d P = geom.edge_nearpt(edges[e], Vec3d(0, 0, 0));
+          near_pts.push_back(P);
+          Vec3d offset = edge_factor * (P.len() - 1) * P;
+          geom.verts(edges[e][0]) -= offset;
+          geom.verts(edges[e][1]) -= offset;
+        }
+      }
+*/
 
       Vec3d cent_near_pts = centroid(near_pts);
       for (unsigned int i = 0; i < verts.size(); i++)
@@ -780,7 +814,7 @@ int main(int argc, char *argv[])
       bool planarize_only = true;
       canonicalize_mm2(geom, opts.mm_edge_factor / 100, opts.mm_plane_factor / 100,
                      opts.num_iters_planar, opts.radius_range_percent / 100, opts.rep_count,
-                     planarize_only, opts.epsilon);
+                     opts.mm_alternate_loop, planarize_only, opts.epsilon);
     }
     else {
       canonicalize_cn2(geom, opts.num_iters_planar, opts.planarize_method,
@@ -797,7 +831,7 @@ int main(int argc, char *argv[])
       bool planarize_only = false;
       canonicalize_mm2(geom, opts.mm_edge_factor / 100, opts.mm_plane_factor / 100,
                      opts.num_iters_canonical, opts.radius_range_percent / 100, opts.rep_count,
-                     planarize_only, opts.epsilon);
+                     opts.mm_alternate_loop, planarize_only, opts.epsilon);
     }
     else
       canonicalize_cn2(geom, opts.num_iters_canonical, opts.canonical_method,

@@ -45,14 +45,18 @@ n \- conway notation base/dual version
 x \- none
 .HP
 \fB\-n\fR <itrs> maximum number of iterations (default: no limit)
+.HP
+\fB\-O\fR <args> output b \- base, d \- dual, i \- intersection points (default: b)
+.IP
+n \- base edge near points, m \- dual edge near points
 .TP
 \fB\-d\fR <val>
 radius test. precent difference between minumum and maximum radius
 .IP
-checks if polyhedron is collapsing. 0 for no test (default 10)
+checks if polyhedron is collapsing. 0 for no test (default: 10)
 .TP
 \fB\-z\fR <n>
-status reporting every n lines. \fB\-1\fR for no status. (default 1000)
+status reporting every n lines. \fB\-1\fR for no status. (default: 1000)
 .TP
 \fB\-l\fR <lim>
 minimum distance change to terminate, as negative exponent
@@ -66,6 +70,26 @@ Mathematica Canonicalize Options (\fB\-M\fR m and \fB\-M\fR l)
 \fB\-E\fR <perc> percentage to scale the edge tangency error (default: 50)
 .HP
 \fB\-P\fR <perc> percentage to scale the face planarity error (default: 20)
+.TP
+\fB\-A\fR
+alterate algorithm. try if imbalance in result
+.PP
+Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats) (\fB\-c\fR only)
+.TP
+\fB\-I\fR <col>
+intersection points color   (default: yellow)
+.TP
+\fB\-N\fR <col>
+base edge near points color (default: red)
+.TP
+\fB\-M\fR <col>
+dual edge near points color (default: darkgreen)
+.TP
+\fB\-B\fR <col>
+base edge color (default: none)
+.TP
+\fB\-D\fR <col>
+dual edge color (default: none)
 .SH "SEE ALSO"
 The full documentation for
 .B canonical
