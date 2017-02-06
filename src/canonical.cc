@@ -53,6 +53,7 @@ public:
   string ifile;
   string stderr;
 
+  char centering;
   char edge_distribution;
   char planarize_method;
   int num_iters_planar;
@@ -74,8 +75,8 @@ public:
   Color dual_edge_col;
 
   cn_opts()
-      : ProgramOpts("canonical"), edge_distribution('\0'),
-        planarize_method('\0'), num_iters_planar(10000), canonical_method('m'),
+      : ProgramOpts("canonical"), centering('c'), edge_distribution('\0'),
+        planarize_method('\0'), num_iters_planar(-1), canonical_method('m'),
         num_iters_canonical(-1), mm_edge_factor(50), mm_plane_factor(20),
         mm_alternate_loop(false), rep_count(1000), radius_range_percent(80),
         output_parts("b"), epsilon(0), ipoints_col(Color(255, 255, 0)),
@@ -105,6 +106,9 @@ void cn_opts::usage()
 "\n"
 "Options\n"
 "%s"
+"  -C <opt>  initial centering\n"
+"               c - vertex centroid (default)\n"
+"               x - none\n"
 "  -e <opt>  edge distribution\n"
 "               s - project vertices onto a sphere\n"
 "               a - (another method to be implimented?)\n"
@@ -114,11 +118,10 @@ void cn_opts::usage()
 "               q - face centroids (magnitude)\n"
 "               f - face centroids\n"
 "               m - mathematica planarize\n"
-"               x - none\n"
-"  -i <itrs> maximum number of planarize iterations (default: 10000)\n"
+"  -i <itrs> maximum number of planarize iterations (default: no limit)\n"
 "  -c <opt>  canonicalization\n"
 "               m - mathematica version (default)\n"
-"               n - conway notation base/dual version\n"
+"               b - base/dual version\n"
 "               x - none\n"
 "  -n <itrs> maximum number of iterations (default: no limit)\n"
 "  -O <args> output b - base, d - dual, i - intersection points (default: b)\n"
@@ -130,12 +133,12 @@ void cn_opts::usage()
 "               (default: %d giving %.0e)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
-"Mathematica Canonicalize Options (-M m and -M l)\n"
+"Mathematica Canonicalize Options (-c m and -p m)\n"
 "  -E <perc> percentage to scale the edge tangency error (default: 50)\n" 
 "  -P <perc> percentage to scale the face planarity error (default: 20)\n"
-"  -A        alterate algorithm. try if imbalance in result\n" 
+"  -A        alterate algorithm. try if imbalance in result (-c m only)\n" 
 "\n"
-"Coloring Options (run 'off_util -H color' for help on color formats) (-c only)\n"
+"Coloring Options (run 'off_util -H color' for help on color formats)\n"
 "  -I <col>  intersection points color   (default: yellow)\n"
 "  -N <col>  base edge near points color (default: red)\n"
 "  -M <col>  dual edge near points color (default: darkgreen)\n"
@@ -151,17 +154,22 @@ void cn_opts::process_command_line(int argc, char **argv)
   opterr = 0;
   int c;
 
-  bool O_is_set = false;
-
   int sig_compare = INT_MAX;
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":he:p:i:c:n:O:E:P:Ad:z:I:N:M:B:D:l:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hC:e:p:i:c:n:O:E:P:Ad:z:I:N:M:B:D:l:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
     switch (c) {
+    case 'C':
+      if (strlen(optarg) == 1 && strchr("cx", int(*optarg)))
+        centering = *optarg;
+      else
+        error("centering method type must be c, x", c);
+      break;
+
     case 'e':
       if (strlen(optarg) == 1 && strchr("sax", int(*optarg)))
         edge_distribution = *optarg;
@@ -185,10 +193,10 @@ void cn_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'c':
-      if (strlen(optarg) == 1 && strchr("mnx", int(*optarg)))
+      if (strlen(optarg) == 1 && strchr("mbx", int(*optarg)))
         canonical_method = *optarg;
       else
-        error("canonical method type must be m, n, x", c);
+        error("canonical method type must be m, b, x", c);
       break;
 
     case 'n':
@@ -202,7 +210,6 @@ void cn_opts::process_command_line(int argc, char **argv)
         error(msg_str("output parts are '%s' must be from "
                       "b, d, i, n and m", optarg), c);
       output_parts = optarg;
-      O_is_set = true;
       break;
 
     case 'E':
@@ -272,9 +279,6 @@ void cn_opts::process_command_line(int argc, char **argv)
       error("unknown command line error");
     }
   }
-
-  if (O_is_set && canonical_method == 'x')
-    warning("output parts only has effect in canonicalization", 'O');
 
   if (mm_alternate_loop && canonical_method != 'm')
     warning("alternate form only has effect in mathematica canonicalization", 'A');  
@@ -379,7 +383,8 @@ vector<Vec3d> reciprocalC_len2(const Geometry &geom)
 
 // Addition to algorithm by Adrian Rossiter
 // Finds the correct centroid for the canonical
-Vec3d edge_nearpoints_centroid2(const Geometry &geom, const Vec3d &cent)
+/* Not currently used
+Vec3d edge_nearpoints_centroid(const Geometry &geom, const Vec3d &cent)
 {
   vector<vector<int>> edges;
   geom.get_impl_edges(edges);
@@ -389,30 +394,21 @@ Vec3d edge_nearpoints_centroid2(const Geometry &geom, const Vec3d &cent)
     e_cent += geom.edge_nearpt(edges[e], cent);
   return e_cent / double(e_sz);
 }
-
-// RK - average radius rather than maximum has more reliability than max
-void unitize_radius(Geometry &geom)
-{
-  GeometryInfo info(geom);
-  info.set_center(geom.centroid());
-  //geom.transform(Trans3d::scale(1 / info.vert_dist_lims().max));
-  double avg = info.vert_dist_lims().sum / info.num_verts();
-  geom.transform(Trans3d::scale(1 / avg));
-}
-
-void centroid_to_origin2(Geometry &geom)
-{
-  geom.transform(Trans3d::transl(-centroid(geom.verts())));
-}
+*/ 
 
 // Implementation of George Hart's planarization and canonicalization algorithms
 // http://www.georgehart.com/virtual-polyhedra/conway_notation.html
-void canonicalize_cn2(Geometry &base, const int &num_iters, const char &canonical_method, const double &radius_range_percent,
-                     const int &rep_count, const double &eps)
+void canonicalize_cn2(Geometry &base, const int &num_iters, const char &canonical_method,
+                     const double &radius_range_percent, const int &rep_count, const double &eps)
 {
+  // need this if edge_nearpoints_centroid used
+  //Vec3d center = base.centroid();
+
   Geometry dual;
+  // the dual's initial vertex locations are immediately overwritten
   get_dual(&dual, base, 0);
   dual.clear_cols();
+
   const vector<Vec3d> &base_verts = base.verts();
   const vector<Vec3d> &dual_verts = dual.verts();
 
@@ -423,11 +419,12 @@ void canonicalize_cn2(Geometry &base, const int &num_iters, const char &canonica
 
     switch (canonical_method) {
     // base/dual canonicalize method
-    case 'n': {
+    case 'b': {
       dual.raw_verts() = reciprocalN2(base);
       base.raw_verts() = reciprocalN2(dual);
-      Vec3d e_cent = edge_nearpoints_centroid2(base, Vec3d(0, 0, 0));
-      base.transform(Trans3d::transl(-0.1 * e_cent));
+      // not currently used
+      //Vec3d e_cent = edge_nearpoints_centroid(base, center);
+      //base.transform(Trans3d::transl(-0.1 * e_cent));
       break;
     }
 
@@ -487,15 +484,13 @@ void canonicalize_cn2(Geometry &base, const int &num_iters, const char &canonica
 
 // Implementation of George Hart's canonicalization algorithm
 // http://library.wolfram.com/infocenter/Articles/2012/
+// RK - the model will possibly become non-convex early in the loops.
+// if it contorts too badly, the model will implode. Having the model
+// at a radius of near 1 minimizes this problem
 void canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &plane_factor,
                      const int &num_iters, const double &radius_range_percent, const int &rep_count,
-                     const bool &mm_alternate_loop, const bool &planar_only, const double &eps)
+                     const bool &planar_only, const bool &alternate_loop, const double &eps)
 {
-  // RK - the model will possibly become non-convex early in the loops.
-  // if it contorts too badly, the model will implode. Having the model
-  // at a radius of near 1 minimizes this problem
-  unitize_radius(geom);
-
   const vector<Vec3d> &verts = geom.verts();
   const vector<vector<int>> &faces = geom.faces();
   vector<vector<int>> edges;
@@ -508,7 +503,7 @@ void canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &p
 
     if (!planar_only) {
       vector<Vec3d> near_pts;
-      if (!mm_alternate_loop) {
+      if (!alternate_loop) {
         for (auto &edge : edges) {
           Vec3d P = geom.edge_nearpt(edge, Vec3d(0, 0, 0));
           near_pts.push_back(P);
@@ -533,7 +528,6 @@ void canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &p
           geom.verts(edge[1]) -= offset;
         }
       }
-
 /*
       // RK - revolving loop. didn't solve the imbalance problem
       else {
@@ -604,7 +598,7 @@ void canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &p
   }
 }
 
-void planar_info(Geometry &geom)
+void planarity_info(Geometry &geom)
 {
   GeometryInfo rep(geom);
 
@@ -686,9 +680,13 @@ void generate_points(const Geometry &base, const Geometry &dual, vector<Vec3d> &
       }
     }
 
-    if (ip.size() != base_edges.size())
-      fprintf(stderr,"Warning: only %d out of %d intersection points found. try more precision\n",
-              (int)ip.size(), (int)base_edges.size());
+    if (ip.size() != base_edges.size()) {
+      if (opts.canonical_method != 'x')
+        fprintf(stderr,"Warning: only %d out of %d intersection points found. try more precision\n",
+                (int)ip.size(), (int)base_edges.size());
+      else
+        fprintf(stderr,"Warning: only canonical models have intersection points\n");
+    }
   }
 
   if (opts.output_parts.find("n") != string::npos) {
@@ -758,6 +756,16 @@ void construct_model(Geometry &base, const cn_opts &opts) {
   }
 }
 
+// RK - average radius rather than maximum has more reliability than max
+void unitize_radius(Geometry &geom)
+{
+  GeometryInfo info(geom);
+  info.set_center(geom.centroid());
+  //geom.transform(Trans3d::scale(1 / info.vert_dist_lims().max));
+  double avg = info.vert_dist_lims().sum / info.num_verts();
+  geom.transform(Trans3d::scale(1 / avg));
+}
+
 int main(int argc, char *argv[])
 {
   cn_opts opts;
@@ -771,10 +779,11 @@ int main(int argc, char *argv[])
     Geometry geom;
     opts.read_or_error(geom, str);
 
-    bool planarize_only = false;
-    canonicalize_mm2(geom, opts.mm_edge_factor / 100, opts.mm_plane_factor / 100,
-                     opts.num_iters_canonical, opts.radius_range_percent / 100, opts.rep_count,
-                     planarize_only, opts.epsilon);
+    geom.transform(Trans3d::transl(-centroid(geom.verts())));
+
+    //bool planarize_only = false;
+    canonicalize_cn2(geom, opts.num_iters_canonical, 'c',
+                    opts.radius_range_percent / 100, opts.rep_count, opts.epsilon);
 
     str += ".off";
     opts.write_or_error(geom, str);
@@ -785,10 +794,19 @@ int main(int argc, char *argv[])
   Geometry geom;
   opts.read_or_error(geom, opts.ifile);
 
-  // RK - the functions expect the model to be centered on the origin
-  centroid_to_origin2(geom);
-
   fprintf(stderr,"\n");
+  fprintf(stderr,"centering: ");;
+  if (opts.centering == 'c') {
+    fprintf(stderr, "(vertex centroid to origin)\n");
+    geom.transform(Trans3d::transl(-centroid(geom.verts())));
+  }
+  else
+  if (opts.centering == 'x')
+    fprintf(stderr, "(model not moved)\n");
+
+  // the result will have edge near points of 1
+  unitize_radius(geom);
+
   if (opts.edge_distribution && opts.edge_distribution != 'x') {
     fprintf(stderr, "edge distribution: (project onto sphere)\n");
     if (opts.edge_distribution == 's')
@@ -813,8 +831,8 @@ int main(int argc, char *argv[])
     if (opts.planarize_method == 'm') {
       bool planarize_only = true;
       canonicalize_mm2(geom, opts.mm_edge_factor / 100, opts.mm_plane_factor / 100,
-                     opts.num_iters_planar, opts.radius_range_percent / 100, opts.rep_count,
-                     opts.mm_alternate_loop, planarize_only, opts.epsilon);
+                      opts.num_iters_planar, opts.radius_range_percent / 100, opts.rep_count,
+                      planarize_only, opts.mm_alternate_loop, opts.epsilon);
     }
     else {
       canonicalize_cn2(geom, opts.num_iters_planar, opts.planarize_method,
@@ -822,7 +840,7 @@ int main(int argc, char *argv[])
     }
 
     // RK - report planarity
-    planar_info(geom);
+    planarity_info(geom);
   }
 
   if (opts.canonical_method && opts.canonical_method != 'x') {
@@ -830,22 +848,22 @@ int main(int argc, char *argv[])
     if (opts.canonical_method == 'm') {
       bool planarize_only = false;
       canonicalize_mm2(geom, opts.mm_edge_factor / 100, opts.mm_plane_factor / 100,
-                     opts.num_iters_canonical, opts.radius_range_percent / 100, opts.rep_count,
-                     opts.mm_alternate_loop, planarize_only, opts.epsilon);
+                      opts.num_iters_canonical, opts.radius_range_percent / 100, opts.rep_count,
+                      planarize_only, opts.mm_alternate_loop, opts.epsilon);
     }
     else
       canonicalize_cn2(geom, opts.num_iters_canonical, opts.canonical_method,
                       opts.radius_range_percent / 100, opts.rep_count, opts.epsilon);
 
     // RK - report planarity
-    planar_info(geom);
+    planarity_info(geom);
 
     // RK - print midradius info
     midradius_info(geom);
-
-    // RK - parts to output
-    construct_model(geom, opts);
   }
+
+  // RK - parts to output
+  construct_model(geom, opts);
 
   opts.write_or_error(geom, opts.stderr);
 
