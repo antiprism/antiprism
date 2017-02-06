@@ -593,6 +593,7 @@ void J86(Geometry &geom)
 // augmented sphenocorona
 void J87(Geometry &geom) { bond(geom, J86, J1, 7); }
 
+// clang-format off
 // sphenomegacorona (elementary)
 void J88(Geometry &geom)
 {
@@ -705,6 +706,7 @@ void J90(Geometry &geom)
   geom.add_hull();
   normalised_face_list(geom);
 }
+// clang-format on
 
 // bilunabirotunda (elementary)
 void J91(Geometry &geom)

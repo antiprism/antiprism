@@ -6,6 +6,7 @@ canonical - canonicalize a polyhedon
 .B canonical
 [\fI\,options\/\fR] [\fI\,input_file\/\fR]
 .SH DESCRIPTION
+(BETA)
 Read a polyhedron from a file in OFF format. Canonicalize or planarize it.
 Uses algorithms by George W. Hart, http://www.georgehart.com/
 http://www.georgehart.com/virtual\-polyhedra/conway_notation.html
@@ -17,47 +18,78 @@ Options
 \fB\-h\fR,\-\-help this help message (run 'off_util \fB\-H\fR help' for general help)
 .HP
 \fB\-\-version\fR version information
+.TP
+\fB\-e\fR <opt>
+edge distribution
+.IP
+s \- project vertices onto a sphere
+a \- (another method to be implimented?)
+x \- none
+.TP
+\fB\-p\fR <opt>
+planarization (done before canoncalization)
+.IP
+p \- face centroids (magnitude squared)
+q \- face centroids (magnitude)
+f \- face centroids
+m \- mathematica planarize
+x \- none
+.HP
+\fB\-i\fR <itrs> maximum number of planarize iterations (default: 10000)
+.TP
+\fB\-c\fR <opt>
+canonicalization
+.IP
+m \- mathematica version (default)
+n \- conway notation base/dual version
+x \- none
 .HP
 \fB\-n\fR <itrs> maximum number of iterations (default: no limit)
+.HP
+\fB\-O\fR <args> output b \- base, d \- dual, i \- intersection points (default: b)
+.IP
+n \- base edge near points, m \- dual edge near points
+.TP
+\fB\-d\fR <val>
+radius test. precent difference between minumum and maximum radius
+.IP
+checks if polyhedron is collapsing. 0 for no test (default: 10)
+.TP
+\fB\-z\fR <n>
+status reporting every n lines. \fB\-1\fR for no status. (default: 1000)
 .TP
 \fB\-l\fR <lim>
 minimum distance change to terminate, as negative exponent
 .IP
 (default: 12 giving 1e\-12)
-.TP
-\fB\-d\fR <int>
-divergence test. 0 for no test. (default 10)
-.HP
-\fB\-M\fR <mthd> canonicalizing method,
-.IP
-m \- mathematica version of canonicalization (default)
-n \- conway notation version of canonicalization
-l \- mathematica planarize portion only
-p \- conway notation planarize (face centroids reciprocal)
-q \- conway notation planarize (face centroids magnitude reciprocal)
-x \- face centroids only (no reciprocal) planarize method
-.HP
-\fB\-C\fR <cent> initial 'centering'
-.IP
-x \- none, c \- centroid (\fB\-M\fR p and \fB\-M\fR l default)
-s \- centroid and project vertices onto a sphere (\fB\-M\fR m default)
-p \- centroid and pre\-planarized (\fB\-M\fR n default)
-q \- centroid and pre\-planarized with magnitude reciprocal
-.TP
-\fB\-z\fR <n>
-status reporting every n lines. \fB\-1\fR for no status. (default 50)
 .HP
 \fB\-o\fR <file> write output to file (default: write to standard output)
 .PP
 Mathematica Canonicalize Options (\fB\-M\fR m and \fB\-M\fR l)
 .HP
-\fB\-e\fR <perc> percentage to scale the edge tangency error (default: 50)
+\fB\-E\fR <perc> percentage to scale the edge tangency error (default: 50)
 .HP
-\fB\-p\fR <perc> percentage to scale the face planarity error (default: 20)
+\fB\-P\fR <perc> percentage to scale the face planarity error (default: 20)
+.TP
+\fB\-A\fR
+alterate algorithm. try if imbalance in result
 .PP
-Pre\-planarization Options (\fB\-C\fR p and \fB\-C\fR q)
-.HP
-\fB\-i\fR <itrs> maximum number of pre\-planarize iterations (default: 1000)
+Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats) (\fB\-c\fR only)
+.TP
+\fB\-I\fR <col>
+intersection points color   (default: yellow)
+.TP
+\fB\-N\fR <col>
+base edge near points color (default: red)
+.TP
+\fB\-M\fR <col>
+dual edge near points color (default: darkgreen)
+.TP
+\fB\-B\fR <col>
+base edge color (default: none)
+.TP
+\fB\-D\fR <col>
+dual edge color (default: none)
 .SH "SEE ALSO"
 The full documentation for
 .B canonical
