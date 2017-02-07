@@ -618,23 +618,32 @@ void planarity_info(Geometry &geom)
 }
 
 // RK - find nearpoints radius, sets range minimum and maximum
-double edge_nearpoints_radius(const Geometry &geom, double &min, double &max)
+double edge_nearpoints_radius(const Geometry &geom, double &min, double &max, Vec3d &center)
 {
   min = DBL_MAX;
   max = DBL_MIN;
 
   vector<vector<int>> edges;
   geom.get_impl_edges(edges);
-  int e_sz = edges.size();
+
+  vector<Vec3d> near_pts;
+
   double nearpt_radius = 0;
+  int e_sz = edges.size();
   for (int e = 0; e < e_sz; e++) {
-    double len = geom.edge_nearpt(edges[e], Vec3d(0, 0, 0)).len2();
+    Vec3d P = geom.edge_nearpt(edges[e], Vec3d(0, 0, 0));
+    near_pts.push_back(P);
+
+    double len = P.len2();
     nearpt_radius += len;
     if (len < min)
       min = len;
     if (len > max)
       max = len;
   }
+
+  center = centroid(near_pts);
+
   return nearpt_radius / double(e_sz);
 }
 
@@ -642,9 +651,11 @@ void midradius_info(Geometry &geom)
 {
   double min = 0;
   double max = 0;
-  double radius = edge_nearpoints_radius(geom, min, max);
+  Vec3d center;
+  double radius = edge_nearpoints_radius(geom, min, max, center);
   fprintf(stderr,"midradius = %.17g (range: %.15g to %.15g)\n",radius, min, max);
   fprintf(stderr,"midcenter is the origin\n");
+  center.dump("near points centroid ");
 }
 
 void generate_points(const Geometry &base, const Geometry &dual, vector<Vec3d> &ip,
