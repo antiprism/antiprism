@@ -1155,9 +1155,8 @@ void DisplaySymmetry::disp_changed()
     if (ax->get_nfold() == 2 && (sym.get_sym_type() == Symmetry::D ||
                                  sym.get_sym_type() == Symmetry::Dv ||
                                  sym.get_sym_type() == Symmetry::Dh))
-      trans *= Trans3d::alignment(
-          Vec3d::Z, Vec3d::X, ax->get_axis(),
-          Trans3d::inverse(sym.get_to_std()) * Vec3d::Z - cent);
+      trans *= Trans3d::alignment(Vec3d::Z, Vec3d::X, ax->get_axis(),
+                                  sym.get_to_std().inverse() * Vec3d::Z - cent);
     else if (ax->get_perp().is_set())
       trans *= Trans3d::alignment(Vec3d::Z, Vec3d::X, ax->get_axis(),
                                   ax->get_perp());

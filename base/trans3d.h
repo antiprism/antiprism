@@ -40,11 +40,13 @@ namespace anti {
 /** A 4x4 matrix generally multiplying left to right on a column vector. */
 class Trans3d {
 private:
-  static inline double det2(const double &a11, const double &a12,
-                            const double &a21, const double &a22)
-  {
-    return a11 * a22 - a12 * a21;
-  }
+  /*
+ static inline double det2(const double &a11, const double &a12,
+                           const double &a21, const double &a22)
+ {
+   return a11 * a22 - a12 * a21;
+ }
+ */
 
   double m[16];
 
@@ -107,10 +109,10 @@ public:
   /**\return  A reference to this transformation set to its inverse. */
   Trans3d &set_inverse();
 
-  /// Get the inverse.
+  /// Get the inverse (.
   /**\param trans the transformation to get the inverse of.
-   * \return  The inverse of \p trans. */
-  static Trans3d inverse(const Trans3d &trans);
+   * \return  The inverse of the matrix. */
+  Trans3d inverse() const;
 
   /// Determinant
   /**\return The determinant of the transformation matrix. */
@@ -364,12 +366,26 @@ public:
  *  transformation matrix). */
 Vec3d operator*(const Trans3d &trans, const Vec3d &vec);
 
+/// Transform a column vector.
+/**\param trans the transformation.
+ * \param vec the column vector.
+ * \return The transformed vector (left-multiplied by the
+ *  transformation matrix). */
+Vec4d operator*(const Trans3d &trans, const Vec4d &vec);
+
 /// Transform a row vector.
 /**\param vec the column vector.
  * \param trans the transformation matrix.
  * \return The transformed vector (right-multiplied by the
  *  transformation matrix). */
 Vec3d operator*(const Vec3d &vec, const Trans3d &trans);
+
+/// Transform a row vector.
+/**\param vec the column vector.
+ * \param trans the transformation matrix.
+ * \return The transformed vector (right-multiplied by the
+ *  transformation matrix). */
+Vec4d operator*(const Vec4d &vec, const Trans3d &trans);
 
 /// Compose two transformations
 /**\param trans1 the first transformation.
@@ -592,22 +608,22 @@ inline Trans3d &Trans3d::transpose()
   return *this;
 }
 
-inline Trans3d Trans3d::inverse(const Trans3d &trans)
+inline Trans3d Trans3d::inverse() const
 {
-  Trans3d inv = trans;
+  Trans3d inv = *this;
   return inv.set_inverse();
-}
-
-inline double Trans3d::det() const
-{
-  return +m[0] * det2(m[5], m[6], m[9], m[10]) -
-         m[1] * det2(m[4], m[6], m[8], m[10]) +
-         m[2] * det2(m[4], m[5], m[8], m[9]);
 }
 
 inline Vec3d Trans3d::get_transl() const { return Vec3d(m[3], m[7], m[11]); }
 
 inline Vec3d operator*(const Vec3d &vec, const Trans3d &trans)
+{
+  Trans3d m_ret = trans;
+  m_ret.transpose();
+  return m_ret * vec;
+}
+
+inline Vec4d operator*(const Vec4d &vec, const Trans3d &trans)
 {
   Trans3d m_ret = trans;
   m_ret.transpose();

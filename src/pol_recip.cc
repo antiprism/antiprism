@@ -82,52 +82,46 @@ void pr_opts::usage()
 {
   fprintf(
       stdout,
-      "\n"
-      "Usage: %s [options] [input_file]\n"
-      "\n"
-      "Read a file in OFF format and make a polar reciprocal from the face\n"
-      "planes. If input_file is not given the program reads from standard "
-      "input.\n"
-      "\n"
-      "Options\n"
-      "%s"
-      "  -c <cent> reciprocation centre (default: C)\n"
-      "              X,Y,Z - centre with these coordinates\n"
-      "              C - vertex centroid,    M - mid-sphere (approximate)\n"
-      "              e - edge balanced,      E - edge balanced with inversion\n"
-      "              v - vert/face balanced, V - vert/face balanced with "
-      "inversion\n"
-      "              a - v/f/e balanced      A - v/f/e balanced with "
-      "inversion\n"
-      "  -C <init> initial value for a centre calculation, in form 'X,Y,Z',\n"
-      "            or C to use centroid (default), M to calculate approx "
-      "mid-sphere\n"
-      "  -r <rad>  reciprocation radius (default: calculated)\n"
-      "              radius value - use this value as the radius\n"
-      "              v - nearest vertex distance, V - furthest vertex "
-      "distance\n"
-      "              e - nearest edge distance,   E - furthest edge distance\n"
-      "              f - nearest face distance,   F - furthest face distance\n"
-      "              X - topological dual using face centroids for dual "
-      "vertices\n"
-      "            or a comma separated list of vertex indices (starting from "
-      "0)\n"
-      "            and the distance is to the space containing those vertices\n"
-      "  -R <rad>  initial value for a radius calculation (default: "
-      "calculated)\n"
-      "  -i        transform dual by reflecting in centre point\n"
-      "  -I <dist> maximum distance to project any normal or infinite dual "
-      "vertex\n"
-      "            (default: %.0e), if 0 then use actual distances and delete\n"
-      "            infinite points\n"
-      "  -x        exclude extra elements added to duals with ideal vertices\n"
-      "  -n <itrs> maximum number of iterations (default: 10000)\n"
-      "  -l <lim>  minimum distance change to terminate, as negative exponent\n"
-      "               (default: %d giving %.0e)\n"
-      "  -a        append dual to original polyhedron\n"
-      "  -o <file> write output to file (default: write to standard output)\n"
-      "\n"
-      "\n",
+      // clang-format off
+"\n"
+"Usage: %s [options] [input_file]\n"
+"\n"
+"Read a file in OFF format and make a polar reciprocal from the face\n"
+"planes. If input_file is not given the program reads from standard input.\n"
+"\n"
+"Options\n"
+"%s"
+"  -c <cent> reciprocation centre (default: C)\n"
+"              X,Y,Z - centre with these coordinates\n"
+"              C - vertex centroid,    M - mid-sphere (approximate)\n"
+"              R - circumcentre (avg)\n"
+"              e - edge balanced,      E - edge balanced with inversion\n"
+"              v - vert/face balanced, V - vert/face balanced with inversion\n"
+"              a - v/f/e balanced      A - v/f/e balanced with inversion\n"
+"  -C <init> initial value for a centre calculation, in form 'X,Y,Z',\n"
+"            or C to use centroid (default), M to calculate approx mid-sphere\n"
+"  -r <rad>  reciprocation radius (default: calculated)\n"
+"              radius value - use this value as the radius\n"
+"              v - nearest vertex distance, V - furthest vertex distance\n"
+"              e - nearest edge distance,   E - furthest edge distance\n"
+"              f - nearest face distance,   F - furthest face distance\n"
+"              X - topological dual using face centroids for dual vertices\n"
+"            or a comma separated list of vertex indices (starting from 0)\n"
+"            and the distance is to the space containing those vertices\n"
+"  -R <rad>  initial value for a radius calculation (default: calculated)\n"
+"  -i        transform dual by reflecting in centre point\n"
+"  -I <dist> maximum distance to project any normal or infinite dual vertex\n"
+"            (default: %.0e), if 0 then use actual distances and delete\n"
+"            infinite points\n"
+"  -x        exclude extra elements added to duals with ideal vertices\n"
+"  -n <itrs> maximum number of iterations (default: 10000)\n"
+"  -l <lim>  minimum distance change to terminate, as negative exponent\n"
+"               (default: %d giving %.0e)\n"
+"  -a        append dual to original polyhedron\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+"\n"
+"\n",
+      // clang-format on
       prog_name(), help_ver_text, inf, int(-log(::epsilon) / log(10) + 0.5),
       ::epsilon);
 }
@@ -156,12 +150,13 @@ void pr_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'c':
-      if (strlen(optarg) == 1 && strchr("CMeEvVaA", *optarg))
+      if (strlen(optarg) == 1 && strchr("CRMeEvVaA", *optarg))
         recip_cent_type = *optarg;
       else if (centre.read(optarg))
         recip_cent_type = 'c';
       else
-        error("centre type must be three coordinates, C,M,e,E,v,V,a, or A", c);
+        error("centre type must be three coordinates, or letter from CRMeEvVaA",
+              c);
       break;
 
     case 'R':
@@ -413,25 +408,103 @@ int find_can_centre(Geometry &geom, char type, double &rad, Vec3d &cent,
                   "centre=(%s), radius=%.16g%s\n",
           cnt, cnt == n ? "not " : "", cent_test, rad_test,
           vtostr(str, cent, " "), rad, (invert) ? "i" : "");
-  // if(rad<0) {
-  //   Trans3d inv = Trans3d::transl(cent) *
-  //               Trans3d::inversion() *
-  //               Trans3d::transl(-cent);
-  //   geom.transform(inv);
   //}
 
   return 1;
 }
 
+Vec3d find_circumcenter(const Geometry &geom)
+{
+  auto vec = Vec4d::zero;
+  auto mat = Trans3d::zero();
+  mat[0] = geom.verts().size();
+  for (const auto &v : geom.verts()) {
+    mat[1] += v[0];
+    mat[2] += v[1];
+    mat[3] += v[2];
+
+    mat[4] += v[0];
+    mat[5] += v[0] * v[0];
+    mat[6] += v[0] * v[1];
+    mat[7] += v[0] * v[2];
+
+    mat[8] += v[1];
+    mat[9] += v[1] * v[0];
+    mat[10] += v[1] * v[1];
+    mat[11] += v[1] * v[2];
+
+    mat[12] += v[2];
+    mat[13] += v[2] * v[0];
+    mat[14] += v[2] * v[1];
+    mat[15] += v[2] * v[2];
+
+    double len = v.len2();
+    vec[0] += len;
+    vec[1] += len * v[0];
+    vec[2] += len * v[1];
+    vec[3] += len * v[2];
+  }
+
+  auto res = mat.inverse() * vec;
+  Vec3d cent;
+  cent[0] = res[1] / 2;
+  cent[1] = res[2] / 2;
+  cent[2] = res[3] / 2;
+  double rad = sqrt(cent.len2() + res[0]);
+  char str[MSG_SZ];
+  fprintf(stderr, "Circumsphere: centre=(%s), radius=%.16g\n",
+          vtostr(str, cent, " "), rad);
+  return cent;
+}
+
+/*
+Finds least squares intersection point of edge lines, not midcentre!
+Vec3d find_NOTmidcenter(const Geometry &geom)
+{
+  auto vec = Vec3d::zero;
+  auto mat = Trans3d::zero();
+  mat[15] = 1; // going to use 3x3 matrix, not row 4 or column 4
+  map<vector<int>, vector<int>> e2f;
+  geom.get_edge_face_pairs(e2f);
+  for (const auto &edge : e2f) {
+    Vec3d P = geom.verts(edge.first[0]);
+    Vec3d v = geom.edge_vec(edge.first).unit();
+    mat[0] += v[0] * v[0] - 1;
+    mat[1] += v[0] * v[1];
+    mat[2] += v[0] * v[2];
+
+    mat[4] += v[1] * v[0];
+    mat[5] += v[1] * v[1] - 1;
+    mat[6] += v[1] * v[2];
+
+    mat[8] += v[2] * v[0];
+    mat[9] += v[2] * v[1];
+    mat[10] += v[2] * v[2] - 1;
+
+    vec[0] += vdot(P, Vec3d(v[0] * v[0] - 1, v[0] * v[1],     v[0] * v[2]));
+    vec[1] += vdot(P, Vec3d(v[1] * v[0],     v[1] * v[1] - 1, v[1] * v[2]));
+    vec[2] += vdot(P, Vec3d(v[2] * v[0],     v[2] * v[1],     v[2] * v[2] - 1));
+  }
+  auto cent = mat.inverse() * vec;
+  char str[MSG_SZ];
+  fprintf(stderr, "Midcentre: centre=(%s)\n", vtostr(str, cent, " "));
+  return cent;
+}
+*/
+
 void find_recip_centre(Geometry &geom, char type, double &rad, Vec3d &cent,
-                       bool invert, int n, const double &eps)
+                       int n, const double &eps)
 {
   if (fabs(rad) < epsilon)
     rad = epsilon / 2.0;
+  bool invert = strchr("EVA", type);
   switch (type) {
-  case 'x': // fefault is C
+  case 'x': // default is C
   case 'C':
     cent = geom.centroid();
+    break;
+  case 'R':
+    cent = find_circumcenter(geom);
     break;
   case 'M':
     find_mid_centre(geom, rad, cent, n, eps);
@@ -495,6 +568,29 @@ double find_recip_rad(Geometry &geom, char type, Vec3d cent,
   return rad;
 }
 
+
+bool strip_free_elements(Geometry &geom)
+{
+  vector<vector<int>> implicit_edges;
+  geom.get_impl_edges(implicit_edges);
+
+  vector<int> free_edges;
+  for (unsigned int e_idx=0; e_idx<geom.edges().size(); e_idx++) {
+    if(find_edge_in_edge_list(implicit_edges, geom.edges(e_idx)) == -1)
+      free_edges.push_back(e_idx);
+  }
+  if(free_edges.size())
+     geom.del(EDGES, free_edges);
+
+  GeometryInfo info(geom);
+  auto free_verts = geom.get_info().get_free_verts();
+  if(free_verts.size())
+      geom.del(VERTS, free_verts);
+
+  return free_edges.size() || free_verts.size();
+}
+
+
 bool is_polyhedron(const Geometry &geom, char *errmsg = nullptr)
 {
   GeometryInfo info(geom);
@@ -532,6 +628,10 @@ int main(int argc, char *argv[])
   if (!is_polyhedron(geom, errmsg))
     opts.error(errmsg, "input_file");
 
+  if (strip_free_elements(geom))
+    opts.warning("stripped vertices or edges which were not part of any face",
+                 "input_file");
+
   // Set up init_centre
   double tmp_rad = 0;
   if (opts.init_cent_type == 'C')
@@ -540,8 +640,12 @@ int main(int argc, char *argv[])
     find_mid_centre(geom, tmp_rad, opts.init_cent, opts.num_iters,
                     opts.epsilon);
 
-  if (strchr("CMx", opts.recip_cent_type) && opts.recip_rad_type == 'x')
-    opts.recip_rad_type = 'e';
+  if (opts.recip_rad_type == 'x') {
+    if (strchr("CMx", opts.recip_cent_type))
+      opts.recip_rad_type = 'e';
+    else if (strchr("R", opts.recip_cent_type))
+      opts.recip_rad_type = 'v';
+  }
 
   Vec3d centre;
   if (opts.recip_cent_type == 'c') {
@@ -551,7 +655,7 @@ int main(int argc, char *argv[])
   else {
     centre = opts.init_cent;
     find_recip_centre(geom, opts.recip_cent_type, opts.init_rad, centre,
-                      opts.invert, opts.num_iters, opts.epsilon);
+                      opts.num_iters, opts.epsilon);
   }
 
   double radius;
@@ -563,8 +667,6 @@ int main(int argc, char *argv[])
     radius =
         find_recip_rad(geom, opts.recip_rad_type, centre, opts.space_verts);
 
-  // fprintf(stderr, "radius=%g\n", radius);
-  // centre.dump("cent");
   Geometry dual;
   get_dual(&dual, geom, radius, centre, 1.01 * opts.inf);
   if (opts.invert)
@@ -598,10 +700,8 @@ int main(int argc, char *argv[])
   if (opts.extra_ideal_elems)
     add_extra_ideal_elems(&dual, centre, 1.005 * opts.inf);
 
-  map<int, Color>::const_iterator mi;
-  for (mi = dual.colors(FACES).get_properties().begin();
-       mi != dual.colors(FACES).get_properties().end(); ++mi)
-    if (mi->second.is_inv()) {
+  for (const auto &kv : dual.colors(FACES).get_properties())
+    if (kv.second.is_inv()) {
       opts.warning("dual includes invisible faces (base model included "
                    "invisible vertices)");
       break;

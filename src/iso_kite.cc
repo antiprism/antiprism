@@ -990,9 +990,9 @@ bool make_list_model(Geometry &geom, const string model_str,
     angle_unneeded = true;
   }
 
-  Trans3d trans = Trans3d::inverse(
-      final_sym.get_autos().get_realignment() *
-      final_sym.get_to_std()); // to_std not needed, but leave for reference
+  Trans3d trans =
+      (final_sym.get_autos().get_realignment() * final_sym.get_to_std())
+          .inverse(); // to_std not needed, but leave for reference
   base_geom.transform(trans);
 
   Symmetry base_sym(base_geom);
@@ -1000,7 +1000,7 @@ bool make_list_model(Geometry &geom, const string model_str,
     int conj_type = atoi(model_desc[3].c_str());
     Symmetry sym;
     base_sym.get_sub_sym(part_sym, &sym, conj_type);
-    Trans3d trans = Trans3d::inverse(sym.get_to_std()) * base_sym.get_to_std();
+    Trans3d trans = sym.get_to_std().inverse() * base_sym.get_to_std();
     base_geom.transform(trans);
   }
 

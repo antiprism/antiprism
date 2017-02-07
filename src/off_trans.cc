@@ -386,9 +386,10 @@ void trans_opts::process_command_line(int argc, char **argv)
           !(stat = final_sym.get_autos().set_realignment(parts[3])))
         error(msg_str("sub-symmetry realignment: %s", stat.c_msg()), c);
 
-      trans_m = Trans3d::inverse(final_sym.get_autos().get_realignment() *
-                                 final_sym.get_to_std()) *
-                trans_m;
+      trans_m =
+          (final_sym.get_autos().get_realignment() * final_sym.get_to_std())
+              .inverse() *
+          trans_m;
       break;
     }
 

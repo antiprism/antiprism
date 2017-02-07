@@ -243,4 +243,41 @@ int quartic(double coeffs[5], double sol[4], double sol_i[4])
   return Nsol;
 }
 
+// Edward Popko http://paulbourke.net/miscellaneous/determinant/determinant.c
+double determinant(const double *mat, int n)
+{
+  double det = 0;
+
+  if (n < 1)
+    det = NAN;
+
+  else if (n == 1)
+    det = mat[0];
+
+  else if (n == 2)
+    det = mat[0] * mat[3] - mat[2] * mat[1];
+
+  else {
+    det = 0;
+    for (int col1 = 0; col1 < n; col1++) {
+      double *mat2 = new double[(n - 1) * (n - 1)];
+
+      for (int i = 1; i < n; i++) {
+        int col2 = 0;
+        for (int j = 0; j < n; j++) {
+          if (j == col1)
+            continue; // don't copy the minor column element
+
+          mat2[(i - 1) * (n - 1) + col2] = mat[i * n + j];
+          col2++;
+        }
+      }
+
+      det += pow(-1.0, col1 + 2) * mat[col1] * determinant(mat2, n - 1);
+      delete[] mat2;
+    }
+  }
+  return det;
+}
+
 } // namespace anti

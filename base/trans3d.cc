@@ -64,6 +64,8 @@ int compare(const Trans3d &trans1, const Trans3d &trans2, double eps)
   return 0;
 }
 
+double Trans3d::det() const { return determinant(m, 4); }
+
 Trans3d &Trans3d::set_rot(Vec3d axis, double angle)
 {
   to_zero();
@@ -154,7 +156,7 @@ Trans3d &Trans3d::set_trans_by_angles(double yz_ang, double zx_ang,
 Trans3d &Trans3d::set_inverse()
 {
   Trans3d inv;
-  double determ = det();
+  double determ = determinant(m, 4);
   if (fabs(determ) > epsilon) {
     // http://www.euclideanspace.com/maths/algebra/matrix/functions
     // /inverse/fourD/index.htm
@@ -225,13 +227,21 @@ Trans3d &Trans3d::operator*=(const Trans3d &trans)
 
 Vec3d operator*(const Trans3d &trans, const Vec3d &vec)
 {
-  Vec3d new_v(0, 0, 0);
+  auto new_v = Vec3d::zero;
   for (int i = 0; i < 12; i++) {
     if (i % 4 != 3)
       new_v[i / 4] += trans[i] * vec[i % 4];
     else
       new_v[i / 4] += trans[i];
   }
+  return new_v;
+}
+
+Vec4d operator*(const Trans3d &trans, const Vec4d &vec)
+{
+  auto new_v = Vec4d::zero;
+  for (int i = 0; i < 16; i++)
+    new_v[i / 4] += trans[i] * vec[i % 4];
   return new_v;
 }
 

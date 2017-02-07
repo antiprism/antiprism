@@ -282,15 +282,14 @@ void get_final_fixed(Transformations &fixed, const compound_list_item &item,
   Transformations part_fixed;
   part_fixed.get_trans().insert(sub.get_autos().get_fixed().begin(),
                                 sub.get_autos().get_fixed().end());
-  part_fixed.conjugate(Trans3d::inverse(sub.get_to_std()));
+  part_fixed.conjugate(sub.get_to_std().inverse());
   Transformations part_final;
   part_final.min_set(part_fixed, part_sym.get_trans());
 
   Symmetry comp_sub;
   comp_sym.get_sub_sym(Symmetry(item.sub), &comp_sub, item.type_comp);
   Transformations comp_fixed = comp_sym.get_trans();
-  comp_fixed.conjugate(Trans3d::inverse(sub.get_to_std()) *
-                       comp_sub.get_to_std());
+  comp_fixed.conjugate(sub.get_to_std().inverse() * comp_sub.get_to_std());
 
   fixed.min_set(part_final, comp_fixed);
   fixed.conjugate(sub.get_to_std());
@@ -365,7 +364,7 @@ Status compound_get_component_trans(Trans3d &trans, Symmetry part_sym,
   if (!(stat = part_sub_sym.get_autos().set_realignment(realignment)))
     return Status::error(msg_str("sub-symmetry realignment: %s", stat.c_msg()));
 
-  trans = Trans3d::inverse(comp_sub_sym.get_to_std()) *
+  trans = comp_sub_sym.get_to_std().inverse() *
           part_sub_sym.get_autos().get_realignment() *
           part_sub_sym.get_to_std();
 

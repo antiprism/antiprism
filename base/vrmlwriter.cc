@@ -101,7 +101,7 @@ void VrmlWriter::cameras(FILE *ofile, Scene &scen)
   for (int i = scen.get_cameras().size() - 1; i >= 0; --i) {
     const Camera &cam = scen.get_cameras()[i];
     double offset = cam.get_distance() * cam.get_persp();
-    Trans3d inv_rot = Trans3d::inverse(cam.get_rotation());
+    Trans3d inv_rot = cam.get_rotation().inverse();
     Vec3d cam_pos = inv_rot * Vec3d(0, 0, offset);
 
     Isometry ax_ang(inv_rot);

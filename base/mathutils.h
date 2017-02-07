@@ -92,6 +92,12 @@ int quartic(double coeffs[5], double sol[4], double sol_i[4] = nullptr);
  * \return The number of real solutions. */
 int cubic(double coeffs[4], double sol[3]);
 
+/// Determinant of a matrix
+/**\param mat the (n*n) matrix coefficients (left to right, top to bottom)
+ * \param n the number of rows/columns
+ * \return the determinant, or NAN if the matrix is singular. */
+double determinant(const double *mat, int n);
+
 /// Compare two doubles for <, =, >
 /**\param d1 first number
  * \param d2 second number

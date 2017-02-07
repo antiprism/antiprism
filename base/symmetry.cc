@@ -74,7 +74,7 @@ Transformations &Transformations::product_with(const Transformations &s)
 Transformations &Transformations::conjugate(const Trans3d &t)
 {
   set<Trans3d> conj;
-  Trans3d inv = Trans3d::inverse(t);
+  Trans3d inv = t.inverse();
   for (const auto &tran : trans)
     conj.insert(t * tran * inv);
   trans = conj;
@@ -1189,7 +1189,7 @@ Transformations &Symmetry::get_trans(Transformations &ts) const
     }
   }
 
-  ts.conjugate(Trans3d::inverse(to_std));
+  ts.conjugate(to_std.inverse());
   return ts;
 }
 
