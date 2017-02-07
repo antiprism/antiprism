@@ -383,7 +383,6 @@ vector<Vec3d> reciprocalC_len2(const Geometry &geom)
 
 // Addition to algorithm by Adrian Rossiter
 // Finds the correct centroid for the canonical
-/* Not currently used
 Vec3d edge_nearpoints_centroid(const Geometry &geom, const Vec3d &cent)
 {
   vector<vector<int>> edges;
@@ -394,16 +393,14 @@ Vec3d edge_nearpoints_centroid(const Geometry &geom, const Vec3d &cent)
     e_cent += geom.edge_nearpt(edges[e], cent);
   return e_cent / double(e_sz);
 }
-*/ 
+
 
 // Implementation of George Hart's planarization and canonicalization algorithms
 // http://www.georgehart.com/virtual-polyhedra/conway_notation.html
 void canonicalize_cn2(Geometry &base, const int &num_iters, const char &canonical_method,
-                     const double &radius_range_percent, const int &rep_count, const double &eps)
+                     const double &radius_range_percent, const int &rep_count, 
+                     const char &centering, const double &eps)
 {
-  // need this if edge_nearpoints_centroid used
-  //Vec3d center = base.centroid();
-
   Geometry dual;
   // the dual's initial vertex locations are immediately overwritten
   get_dual(&dual, base, 0);
@@ -422,9 +419,10 @@ void canonicalize_cn2(Geometry &base, const int &num_iters, const char &canonica
     case 'b': {
       dual.raw_verts() = reciprocalN2(base);
       base.raw_verts() = reciprocalN2(dual);
-      // not currently used
-      //Vec3d e_cent = edge_nearpoints_centroid(base, center);
-      //base.transform(Trans3d::transl(-0.1 * e_cent));
+      if (centering != 'x') {
+        Vec3d e_cent = edge_nearpoints_centroid(base, Vec3d(0, 0, 0));
+        base.transform(Trans3d::transl(-0.1 * e_cent));
+      }
       break;
     }
 
@@ -655,7 +653,14 @@ void midradius_info(Geometry &geom)
   double radius = edge_nearpoints_radius(geom, min, max, center);
   fprintf(stderr,"midradius = %.17g (range: %.15g to %.15g)\n",radius, min, max);
   fprintf(stderr,"midcenter is the origin\n");
-  center.dump("near points centroid ");
+  fprintf(stderr,"near point centroid = (%.17g,%.17g,%.17g)\n",center[0], center[1], center[2]);
+  double epsilon_local = 1e-12;
+  if (double_ne(center[0], 0.0, epsilon_local) ||
+      double_ne(center[1], 0.0, epsilon_local) ||
+      double_ne(center[2], 0.0, epsilon_local))
+    fprintf(stderr,"warning: not canonical, edge tangency model only\n");
+  else
+    fprintf(stderr,"the result is canonical\n");
 }
 
 void generate_points(const Geometry &base, const Geometry &dual, vector<Vec3d> &ip,
@@ -847,7 +852,7 @@ int main(int argc, char *argv[])
     }
     else {
       canonicalize_cn2(geom, opts.num_iters_planar, opts.planarize_method,
-                      opts.radius_range_percent / 100, opts.rep_count, opts.epsilon);
+                      opts.radius_range_percent / 100, opts.rep_count, opts.centering, opts.epsilon);
     }
 
     // RK - report planarity
@@ -864,7 +869,7 @@ int main(int argc, char *argv[])
     }
     else
       canonicalize_cn2(geom, opts.num_iters_canonical, opts.canonical_method,
-                      opts.radius_range_percent / 100, opts.rep_count, opts.epsilon);
+                      opts.radius_range_percent / 100, opts.rep_count, opts.centering, opts.epsilon);
 
     // RK - report planarity
     planarity_info(geom);
