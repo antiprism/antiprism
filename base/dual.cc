@@ -113,6 +113,8 @@ int orient_geom(Geometry &geom, vector<vector<int>> *parts)
   vector<int> orig_e_verts(2);
   vector<int> e_faces(2);
   for (unsigned int i = 0; i < geom.faces().size(); i++) {
+    if (geom.faces(i).size() < 3)
+      cur_idx[i] = done; // don't process degenerate faces
     if (cur_idx[i] == done)
       continue;
     int cur_fidx = i;
@@ -310,7 +312,7 @@ void get_dual(Geometry *dual, const Geometry &geom, double recip_rad,
   }
 
   for (unsigned int i = 0; i < d_faces.size(); ++i)
-    if (d_faces.size() >= 3)
+    if (d_faces[i].size() >= 3)
       dual->add_face(d_faces[i]);
 }
 
