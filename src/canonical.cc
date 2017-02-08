@@ -114,7 +114,6 @@ void cn_opts::usage()
 "  -e <opt>  edge distribution\n"
 "               s - project vertices onto a sphere\n"
 "               a - (another method to be implimented?)\n"
-"               x - none\n"
 "  -p <opt>  planarization (done before canoncalization. default: none)\n"
 "               p - face centroids (magnitude squared)\n"
 "               q - face centroids (magnitude)\n"
@@ -128,7 +127,8 @@ void cn_opts::usage()
 "  -n <itrs> maximum number of canonical iterations (default: no limit)\n"
 "  -O <args> output b - base, d - dual, i - intersection points (default: b)\n"
 "               n - base edge near points, m - dual edge near points\n"
-"               u - unit sphere centered on the origin\n"
+"               p - base near points centeroid, q - dual near points centroid\n"
+"               u - unit sphere centered on the origin, o - origin point\n"
 "  -d <perc> radius test. precent difference between minumum and maximum radius\n"
 "               checks if polyhedron is collapsing. 0 for no test (default: 10)\n"
 "  -z <n>    status reporting every n lines. -1 for no status. (default: 1000)\n"
@@ -142,9 +142,9 @@ void cn_opts::usage()
 "  -A        alterate algorithm. try if imbalance in result (-c m only)\n" 
 "\n"
 "Coloring Options (run 'off_util -H color' for help on color formats)\n"
-"  -I <col>  intersection points color   (default: yellow)\n"
-"  -N <col>  base edge near points color (default: red)\n"
-"  -M <col>  dual edge near points color (default: darkgreen)\n"
+"  -I <col>  intersection points and/or origin color (default: yellow)\n"
+"  -N <col>  base edge near points and/or centroid color (default: red)\n"
+"  -M <col>  dual edge near points and/or centroid color (default: darkgreen)\n"
 "  -B <col>  base edge color (default: none)\n"
 "  -D <col>  dual edge color (default: none)\n"
 "  -U <col>  unit sphere color (default: white)\n"
@@ -176,17 +176,17 @@ void cn_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'e':
-      if (strlen(optarg) == 1 && strchr("sax", int(*optarg)))
+      if (strlen(optarg) == 1 && strchr("sa", int(*optarg)))
         edge_distribution = *optarg;
       else
-        error("edge_distribution method type must be s, a, x", c);
+        error("edge_distribution method type must be s, a", c);
       break;
 
     case 'p':
-      if (strlen(optarg) == 1 && strchr("pqfmx", int(*optarg)))
+      if (strlen(optarg) == 1 && strchr("pqfm", int(*optarg)))
         planarize_method = *optarg;
       else
-        error("planarize method type must be p, q, f, m, x", c);
+        error("planarize method type must be p, q, f, m", c);
       break;
 
     case 'i':
@@ -211,9 +211,9 @@ void cn_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'O':
-      if (strspn(optarg, "bdinmu") != strlen(optarg))
+      if (strspn(optarg, "bdinmopqu") != strlen(optarg))
         error(msg_str("output parts are '%s' must be any or all from "
-                      "b, d, i, n, m, u", optarg), c);
+                      "b, d, i, n, m, o, p, q, u", optarg), c);
       output_parts = optarg;
       break;
 
@@ -674,7 +674,7 @@ void midradius_info(Geometry &geom)
   if (double_ne(center[0], 0.0, epsilon_local) ||
       double_ne(center[1], 0.0, epsilon_local) ||
       double_ne(center[2], 0.0, epsilon_local))
-    fprintf(stderr,"warning: not canonical, edge tangency model only\n");
+    fprintf(stderr,"Warning: the result is NOT canonical. edge tangency only\n");
   else
     fprintf(stderr,"the result is canonical\n");
 }
@@ -687,11 +687,13 @@ void generate_points(const Geometry &base, const Geometry &dual, vector<Vec3d> &
   vector<vector<int>> dual_edges;
 
   if ((opts.output_parts.find("i") != string::npos) ||
-      (opts.output_parts.find("n") != string::npos))
+      (opts.output_parts.find("n") != string::npos) ||
+      (opts.output_parts.find("p") != string::npos))
     base.get_impl_edges(base_edges);
 
   if ((opts.output_parts.find("i") != string::npos) ||
-      (opts.output_parts.find("m") != string::npos))
+      (opts.output_parts.find("m") != string::npos) ||
+      (opts.output_parts.find("q") != string::npos))
     dual.get_impl_edges(dual_edges);
 
   if (opts.output_parts.find("i") != string::npos) {
@@ -721,12 +723,14 @@ void generate_points(const Geometry &base, const Geometry &dual, vector<Vec3d> &
     }
   }
 
-  if (opts.output_parts.find("n") != string::npos) {
+  if ((opts.output_parts.find("n") != string::npos) ||
+      (opts.output_parts.find("p") != string::npos)) {
     for (unsigned int e = 0; e < base_edges.size(); e++)
       base_nearpts.push_back(base.edge_nearpt(base_edges[e], Vec3d(0, 0, 0)));
   }
 
-  if (opts.output_parts.find("m") != string::npos) {
+  if ((opts.output_parts.find("m") != string::npos) ||
+      (opts.output_parts.find("q") != string::npos)) {
     for (unsigned int e = 0; e < dual_edges.size(); e++)
       dual_nearpts.push_back(dual.edge_nearpt(dual_edges[e], Vec3d(0, 0, 0)));
   }
@@ -757,7 +761,8 @@ void construct_model(Geometry &base, const cn_opts &opts) {
   // need to generate dual? also needed for tangent points
   if ((opts.output_parts.find("d") != string::npos) ||
       (opts.output_parts.find("i") != string::npos) ||
-      (opts.output_parts.find("m") != string::npos))
+      (opts.output_parts.find("m") != string::npos) ||
+      (opts.output_parts.find("q") != string::npos))
     get_dual(&dual, base, 1, Vec3d(0, 0, 0));
 
   // need to generate before possible erasure of base
@@ -766,7 +771,9 @@ void construct_model(Geometry &base, const cn_opts &opts) {
   vector<Vec3d> dual_nearpts;
   if ((opts.output_parts.find("i") != string::npos) ||
       (opts.output_parts.find("n") != string::npos) ||
-      (opts.output_parts.find("m") != string::npos))
+      (opts.output_parts.find("m") != string::npos) ||
+      (opts.output_parts.find("p") != string::npos) ||
+      (opts.output_parts.find("q") != string::npos))
     generate_points(base, dual, ip, base_nearpts, dual_nearpts, opts);
 
   // clear base if not using
@@ -801,7 +808,22 @@ void construct_model(Geometry &base, const cn_opts &opts) {
       base.add_vert(dual_nearpts[i], opts.dual_nearpts_col);
   }
 
-  // apply opacity to base and dual faces
+  // add base near points centroid
+  if (opts.output_parts.find("p") != string::npos) {
+    base.add_vert(centroid(base_nearpts), opts.base_nearpts_col);
+  }
+
+  // add dual near points centroid
+  if (opts.output_parts.find("q") != string::npos) {
+    base.add_vert(centroid(dual_nearpts), opts.dual_nearpts_col);
+  }
+
+  // add origin point
+  if (opts.output_parts.find("o") != string::npos) {
+    base.add_vert(Vec3d(0, 0, 0), opts.ipoints_col);
+  }
+
+  // apply opacity to faces of base and dual
   if (opts.face_opacity > -1) {
     for (int i = 0; i < (int)base.faces().size(); i++) {
       Color col = base.colors(FACES).get(i);
@@ -864,13 +886,13 @@ int main(int argc, char *argv[])
   // the result will have edge near points of 1
   unitize_radius(geom);
 
-  if (opts.edge_distribution && opts.edge_distribution != 'x') {
+  if (opts.edge_distribution) {
     fprintf(stderr, "edge distribution: (project onto sphere)\n");
     if (opts.edge_distribution == 's')
       project_onto_sphere(&geom);
   }
 
-  if (opts.planarize_method && opts.planarize_method != 'x') {
+  if (opts.planarize_method) {
     string planarize_str;
     if (opts.planarize_method == 'p')
       planarize_str = "face centroids magnitude squared";
