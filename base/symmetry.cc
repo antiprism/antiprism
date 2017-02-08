@@ -1649,7 +1649,6 @@ const set<Symmetry> &Symmetry::get_sub_syms() const
       sym.init(dih_type, 2, Trans3d::rot(Vec3d::Y, M_PI / 2) *
                                 Trans3d::rot(axis, M_PI / nfold) * to_std);
       add_sub_axes(sym);
-      sym.get_to_std().dump();
       sym.init(dih_type, 2, Trans3d::rot(Vec3d::Y, M_PI / 2) * to_std);
       add_sub_axes(sym);
       break;

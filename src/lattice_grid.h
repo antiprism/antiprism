@@ -35,8 +35,6 @@
 
 #include "../base/antiprism.h"
 
-using namespace anti;
-
 typedef bool (*COORD_TEST_F)(int, int, int);
 
 bool sc_test(int x, int y, int z);                 // dist2 = 1, 2, 3

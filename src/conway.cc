@@ -52,8 +52,6 @@ using std::set;
 
 using namespace anti;
 
-using namespace anti;
-
 #define CN_ONE_THIRD 1 / 3.0
 #define CN_ONE_HALF 0.5
 
