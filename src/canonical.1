@@ -33,7 +33,7 @@ a \- (another method to be implimented?)
 x \- none
 .TP
 \fB\-p\fR <opt>
-planarization (done before canoncalization)
+planarization (done before canoncalization. default: none)
 .IP
 p \- face centroids (magnitude squared)
 q \- face centroids (magnitude)
@@ -49,14 +49,14 @@ m \- mathematica version (default)
 b \- base/dual version
 x \- none
 .HP
-\fB\-n\fR <itrs> maximum number of iterations (default: no limit)
+\fB\-n\fR <itrs> maximum number of canonical iterations (default: no limit)
 .HP
 \fB\-O\fR <args> output b \- base, d \- dual, i \- intersection points (default: b)
 .IP
 n \- base edge near points, m \- dual edge near points
-.TP
-\fB\-d\fR <val>
-radius test. precent difference between minumum and maximum radius
+u \- unit sphere centered on the origin
+.HP
+\fB\-d\fR <perc> radius test. precent difference between minumum and maximum radius
 .IP
 checks if polyhedron is collapsing. 0 for no test (default: 10)
 .TP
@@ -95,6 +95,11 @@ base edge color (default: none)
 .TP
 \fB\-D\fR <col>
 dual edge color (default: none)
+.TP
+\fB\-U\fR <col>
+unit sphere color (default: white)
+.HP
+\fB\-T\fR <tran> base/dual transparency. range from 0 (invisible) to 255 (opaque)
 .SH "SEE ALSO"
 The full documentation for
 .B canonical
