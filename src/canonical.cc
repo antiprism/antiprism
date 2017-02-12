@@ -54,7 +54,7 @@ public:
   string stderr;
 
   char centering;
-  char starting_radius;
+  char initial_radius;
   char edge_distribution;
   char planarize_method;
   int num_iters_planar;
@@ -78,7 +78,7 @@ public:
   Color sphere_col;
 
   cn_opts()
-      : ProgramOpts("canonical"), centering('n'), starting_radius('n'), edge_distribution('\0'),
+      : ProgramOpts("canonical"), centering('v'), initial_radius('v'), edge_distribution('\0'),
         planarize_method('\0'), num_iters_planar(-1), canonical_method('m'),
         num_iters_canonical(-1), mm_edge_factor(50), mm_plane_factor(20),
         mm_alternate_loop(false), rep_count(1000), radius_range_percent(80),
@@ -110,11 +110,12 @@ void cn_opts::usage()
 "Options\n"
 "%s"
 "  -C <opt>  initial centering\n"
-"               n - edge near points centroid (default)\n"
-"               c - vertex centroid\n"
+"               v - vertex centroid (default)\n"
+"               n - edge near points centroid\n"
 "               x - not moved\n"
-"  -r <opt>     n - average edge near points radius = 1 (default)\n"
-"               c - average vertex radius = 1\n"
+"  -r <opt>  initial radius\n"
+"               v - average vertex radius = 1 (default)\n"
+"               n - average edge near points radius = 1\n"
 "               x - not changed\n"
 "  -e <opt>  edge distribution\n"
 "               s - project vertices onto a sphere\n"
@@ -177,17 +178,17 @@ void cn_opts::process_command_line(int argc, char **argv)
 
     switch (c) {
     case 'C':
-      if (strlen(optarg) == 1 && strchr("ncx", int(*optarg)))
+      if (strlen(optarg) == 1 && strchr("vnx", int(*optarg)))
         centering = *optarg;
       else
-        error("centering method type must be n, c, x", c);
+        error("centering method type must be v, n, x", c);
       break;
 
     case 'r':
-      if (strlen(optarg) == 1 && strchr("ncx", int(*optarg)))
-        starting_radius = *optarg;
+      if (strlen(optarg) == 1 && strchr("vnx", int(*optarg)))
+        initial_radius = *optarg;
       else
-        error("starting radius type must be n, c, x", c);
+        error("starting radius type must be v, n, x", c);
       break;
 
     case 'e':
@@ -999,30 +1000,29 @@ int main(int argc, char *argv[])
   opts.read_or_error(geom, opts.ifile);
 
   fprintf(stderr,"\n");
-  fprintf(stderr,"centering: ");;
+  fprintf(stderr,"centering: ");
+  if (opts.centering == 'v') {
+    fprintf(stderr, "(vertex centroid to origin)\n");
+    geom.transform(Trans3d::transl(-centroid(geom.verts())));
+  }
+  else
   if (opts.centering == 'n') {
     fprintf(stderr, "(edge near points centroid to origin)\n");
     geom.transform(Trans3d::transl(-edge_nearpoints_centroid(geom, Vec3d(0, 0, 0))));
   }
   else
-  if (opts.centering == 'c') {
-    fprintf(stderr, "(vertex centroid to origin)\n");
-    geom.transform(Trans3d::transl(-centroid(geom.verts())));
-  }
-  else
   if (opts.centering == 'x')
     fprintf(stderr, "(model not moved)\n");
 
-  fprintf(stderr,"\n");
-  fprintf(stderr,"starting radius: ");;
-  if (opts.starting_radius == 'n') {
-    fprintf(stderr, "(average edge near points)\n");
-    unitize_nearpoints_radius(geom);
-  }
-  else
-  if (opts.centering == 'c') {
+  fprintf(stderr,"starting radius: ");
+  if (opts.centering == 'v') {
     fprintf(stderr, "(average vertex)\n");
     unitize_vertex_radius(geom);
+  }
+  else
+  if (opts.initial_radius == 'n') {
+    fprintf(stderr, "(average edge near points)\n");
+    unitize_nearpoints_radius(geom);
   }
   else
   if (opts.centering == 'x')
