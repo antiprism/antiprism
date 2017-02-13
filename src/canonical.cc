@@ -506,7 +506,7 @@ bool canonicalize_bd2(Geometry &base, const int &num_iters, const char &canonica
   const vector<Vec3d> &base_verts = base.verts();
   const vector<Vec3d> &dual_verts = dual.verts();
 
-  double max_diff = 0;
+  double max_diff2 = 0;
   unsigned int cnt;
   for (cnt = 0; cnt < (unsigned int)num_iters;) {
     vector<Vec3d> base_verts_last = base_verts;
@@ -566,20 +566,21 @@ fprintf(stderr,"%d: converged\n",cnt);
       break;
     }
 
-    max_diff = 0;
+    // len2() for difference value to minimize internal sqrt() calls
+    max_diff2 = 0;
     for (unsigned int i = 0; i < base_verts.size(); i++) {
-      double diff = (base_verts[i] - base_verts_last[i]).len();
-      if (diff > max_diff)
-        max_diff = diff;
+      double diff2 = (base_verts[i] - base_verts_last[i]).len2();
+      if (diff2 > max_diff2)
+        max_diff2 = diff2;
     }
 
     // increment count here for reporting
     cnt++;
 
     if ((rep_count > 0) && (cnt%rep_count == 0))
-      fprintf(stderr, "%-15d max_diff=%.17g\n", cnt, max_diff);
+      fprintf(stderr, "%-15d max_diff=%.17g\n", cnt, sqrt(max_diff2));
 
-    if (max_diff < eps) {
+    if (sqrt(max_diff2) < eps) {
       completed = true;
       break;
     }
@@ -592,7 +593,7 @@ fprintf(stderr,"%d: converged\n",cnt);
   }
 
   if (rep_count > -1) {
-    fprintf(stderr, "\n%-15d final max_diff=%.17g\n", cnt, max_diff);
+    fprintf(stderr, "\n%-15d final max_diff=%.17g\n", cnt, sqrt(max_diff2));
     fprintf(stderr, "\n");
   }
 
@@ -615,7 +616,7 @@ bool canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &p
   vector<vector<int>> edges;
   geom.get_impl_edges(edges);
 
-  double max_diff = 0;
+  double max_diff2 = 0;
   unsigned int cnt;
   for (cnt = 0; cnt < (unsigned int)num_iters;) {
     vector<Vec3d> verts_last = verts;
@@ -688,20 +689,21 @@ bool canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &p
     for (unsigned int i = 0; i < vs.size(); i++)
       geom.verts(i) += vs[i];
 
-    max_diff = 0;
+    // len2() for difference value to minimize internal sqrt() calls
+    max_diff2 = 0;
     for (unsigned int i = 0; i < verts.size(); i++) {
-      double diff = (verts[i] - verts_last[i]).len();
-      if (diff > max_diff)
-        max_diff = diff;
+      double diff2 = (verts[i] - verts_last[i]).len2();
+      if (diff2 > max_diff2)
+        max_diff2 = diff2;
     }
 
     // increment count here for reporting
     cnt++;
 
     if ((rep_count > 0) && (cnt%rep_count == 0))
-      fprintf(stderr, "%-15d max_diff=%.17g\n", cnt, max_diff);
+      fprintf(stderr, "%-15d max_diff=%.17g\n", cnt, sqrt(max_diff2));
 
-    if (max_diff < eps) {
+    if (sqrt(max_diff2) < eps) {
       completed = true;
       break;
     }
@@ -714,7 +716,7 @@ bool canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &p
   }
 
   if (rep_count > -1) {
-    fprintf(stderr, "\n%-15d final max_diff=%.17g\n", cnt, max_diff);
+    fprintf(stderr, "\n%-15d final max_diff=%.17g\n", cnt, sqrt(max_diff2));
     fprintf(stderr, "\n");
   }
 
