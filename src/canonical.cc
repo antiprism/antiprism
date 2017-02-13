@@ -134,7 +134,7 @@ void cn_opts::usage()
 "  -O <args> output b - base, d - dual, i - intersection points (default: b)\n"
 "               n - base edge near points, m - dual edge near points\n"
 "               p - base near points centeroid, q - dual near points centroid\n"
-"               u - unit sphere centered on the origin, o - origin point\n"
+"               u - minimum tangent sphere, U - maximum, o - origin point\n"
 "  -d <perc> radius test. precent difference between minumum and maximum radius\n"
 "               checks if polyhedron is collapsing. 0 for no test (default: 10)\n"
 "  -z <n>    status reporting every n lines. -1 for no status. (default: 1000)\n"
@@ -208,9 +208,9 @@ void cn_opts::process_command_line(int argc, char **argv)
 
     case 'i':
       print_status_or_exit(read_int(optarg, &num_iters_planar), c);
-      if (num_iters_planar <= 0)
+      if (num_iters_planar < 0)
         error(
-            "number of iterations for preplanarization must be greater than 0",
+            "number of iterations for preplanarization must be 0 or greater",
             c);
       break;
 
@@ -225,13 +225,13 @@ void cn_opts::process_command_line(int argc, char **argv)
     case 'n':
       print_status_or_exit(read_int(optarg, &num_iters_canonical), c);
       if (num_iters_canonical < 0)
-        error("number of iterations must be 0 or greater", c);
+        error("number of iterations for canonical must be 0 or greater", c);
       break;
 
     case 'O':
-      if (strspn(optarg, "bdinmopqu") != strlen(optarg))
+      if (strspn(optarg, "bdinmopquU") != strlen(optarg))
         error(msg_str("output parts are '%s' must be any or all from "
-                      "b, d, i, n, m, o, p, q, u", optarg), c);
+                      "b, d, i, n, m, o, p, q, u, U", optarg), c);
       output_parts = optarg;
       break;
 
@@ -936,11 +936,22 @@ void construct_model(Geometry &base, const cn_opts &opts) {
   }
 
   // add unit sphere on origin
-  if (opts.output_parts.find("u") != string::npos) {
+  if ((opts.output_parts.find("u") != string::npos) ||
+      (opts.output_parts.find("U") != string::npos)) {
     Geometry sgeom;
     sgeom.read_resource("geo_4_4");
     sgeom.transform(Trans3d::transl(-centroid(sgeom.verts())));
     unitize_vertex_radius(sgeom);
+
+    double min = 0;
+    double max = 0;
+    Vec3d center;
+    edge_nearpoints_radius(base, min, max, center);
+    if (opts.output_parts.find("u") != string::npos)
+      sgeom.transform(Trans3d::scale(min));
+    else
+      sgeom.transform(Trans3d::scale(max));
+
     Coloring(&sgeom).vef_one_col(Color::invisible, Color::invisible, opts.sphere_col);
     base.append(sgeom);
   }
