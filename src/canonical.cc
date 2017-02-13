@@ -457,7 +457,7 @@ vector<Vec3d> reciprocalN2(const Geometry &geom)
 }
 
 // reciprocate on face centers dividing by magnitude squared
-vector<Vec3d> reciprocalC2(const Geometry &geom)
+vector<Vec3d> reciprocalC_len22(const Geometry &geom)
 {
   vector<Vec3d> centers;
   geom.face_cents(centers);
@@ -484,8 +484,8 @@ Vec3d edge_nearpoints_centroid(const Geometry &geom, const Vec3d &cent)
   geom.get_impl_edges(edges);
   int e_sz = edges.size();
   Vec3d e_cent(0, 0, 0);
-  for (int e = 0; e < e_sz; e++)
-    e_cent += geom.edge_nearpt(edges[e], cent);
+  for (auto &edge : edges)
+    e_cent += geom.edge_nearpt(edge, cent);
   return e_cent / double(e_sz);
 }
 
@@ -506,7 +506,7 @@ bool canonicalize_bd2(Geometry &base, const int &num_iters, const char &canonica
   const vector<Vec3d> &base_verts = base.verts();
   const vector<Vec3d> &dual_verts = dual.verts();
 
-  double max_diff2 = 0;
+  double max_diff = 0;
   unsigned int cnt;
   for (cnt = 0; cnt < (unsigned int)num_iters;) {
     vector<Vec3d> base_verts_last = base_verts;
@@ -544,9 +544,9 @@ fprintf(stderr,"%d: converged\n",cnt);
     // adjust vertices with side effect of planarization. len2() version
     case 'p':
       // move centroid to origin for balance
-      dual.raw_verts() = reciprocalC2(base);
+      dual.raw_verts() = reciprocalC_len22(base);
       base.transform(Trans3d::transl(-centroid(dual_verts)));
-      base.raw_verts() = reciprocalC2(dual);
+      base.raw_verts() = reciprocalC_len22(dual);
       base.transform(Trans3d::transl(-centroid(base_verts)));
       break;
 
@@ -566,20 +566,20 @@ fprintf(stderr,"%d: converged\n",cnt);
       break;
     }
 
-    max_diff2 = 0;
+    max_diff = 0;
     for (unsigned int i = 0; i < base_verts.size(); i++) {
-      double diff2 = (base_verts[i] - base_verts_last[i]).len2();
-      if (diff2 > max_diff2)
-        max_diff2 = diff2;
+      double diff = (base_verts[i] - base_verts_last[i]).len();
+      if (diff > max_diff)
+        max_diff = diff;
     }
 
     // increment count here for reporting
     cnt++;
 
     if ((rep_count > 0) && (cnt%rep_count == 0))
-      fprintf(stderr, "%-15d max_diff=%.17g\n", cnt, sqrt(max_diff2));
+      fprintf(stderr, "%-15d max_diff=%.17g\n", cnt, max_diff);
 
-    if (sqrt(max_diff2) < eps) {
+    if (max_diff < eps) {
       completed = true;
       break;
     }
@@ -592,7 +592,7 @@ fprintf(stderr,"%d: converged\n",cnt);
   }
 
   if (rep_count > -1) {
-    fprintf(stderr, "\n%-15d final max_diff=%.17g\n", cnt, sqrt(max_diff2));
+    fprintf(stderr, "\n%-15d final max_diff=%.17g\n", cnt, max_diff);
     fprintf(stderr, "\n");
   }
 
@@ -615,7 +615,7 @@ bool canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &p
   vector<vector<int>> edges;
   geom.get_impl_edges(edges);
 
-  double max_diff2 = 0;
+  double max_diff = 0;
   unsigned int cnt;
   for (cnt = 0; cnt < (unsigned int)num_iters;) {
     vector<Vec3d> verts_last = verts;
@@ -688,20 +688,20 @@ bool canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &p
     for (unsigned int i = 0; i < vs.size(); i++)
       geom.verts(i) += vs[i];
 
-    max_diff2 = 0;
+    max_diff = 0;
     for (unsigned int i = 0; i < verts.size(); i++) {
-      double diff2 = (verts[i] - verts_last[i]).len2();
-      if (diff2 > max_diff2)
-        max_diff2 = diff2;
+      double diff = (verts[i] - verts_last[i]).len();
+      if (diff > max_diff)
+        max_diff = diff;
     }
 
     // increment count here for reporting
     cnt++;
 
     if ((rep_count > 0) && (cnt%rep_count == 0))
-      fprintf(stderr, "%-15d max_diff=%.17g\n", cnt, sqrt(max_diff2));
+      fprintf(stderr, "%-15d max_diff=%.17g\n", cnt, max_diff);
 
-    if (sqrt(max_diff2) < eps) {
+    if (max_diff < eps) {
       completed = true;
       break;
     }
@@ -714,7 +714,7 @@ bool canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &p
   }
 
   if (rep_count > -1) {
-    fprintf(stderr, "\n%-15d final max_diff=%12.10g\n", cnt, sqrt(max_diff2));
+    fprintf(stderr, "\n%-15d final max_diff=%.17g\n", cnt, max_diff);
     fprintf(stderr, "\n");
   }
 
@@ -753,16 +753,16 @@ double edge_nearpoints_radius(const Geometry &geom, double &min, double &max, Ve
 
   double nearpt_radius = 0;
   int e_sz = edges.size();
-  for (int e = 0; e < e_sz; e++) {
-    Vec3d P = geom.edge_nearpt(edges[e], Vec3d(0, 0, 0));
+  for (auto &edge : edges) {
+    Vec3d P = geom.edge_nearpt(edge, Vec3d(0, 0, 0));
     near_pts.push_back(P);
 
-    double len = P.len2();
-    nearpt_radius += len;
-    if (len < min)
-      min = len;
-    if (len > max)
-      max = len;
+    double l = P.len();
+    nearpt_radius += l;
+    if (l < min)
+      min = l;
+    if (l > max)
+      max = l;
   }
 
   center = centroid(near_pts);
@@ -812,22 +812,21 @@ void unitize_vertex_radius(Geometry &geom)
 }
 
 
-void generate_points(const Geometry &base, const Geometry &dual, vector<Vec3d> &ip,
+void generate_points(const Geometry &base, const Geometry &dual, vector<Vec3d> &ips,
                     vector<Vec3d> &base_nearpts, vector<Vec3d> &dual_nearpts,
                     const cn_opts &opts)
 {
   vector<vector<int>> base_edges;
   vector<vector<int>> dual_edges;
 
-  if ((opts.output_parts.find("i") != string::npos) ||
-      (opts.output_parts.find("n") != string::npos) ||
-      (opts.output_parts.find("p") != string::npos))
-    base.get_impl_edges(base_edges);
+  base.get_impl_edges(base_edges);
+  dual.get_impl_edges(dual_edges);
 
-  if ((opts.output_parts.find("i") != string::npos) ||
-      (opts.output_parts.find("m") != string::npos) ||
-      (opts.output_parts.find("q") != string::npos))
-    dual.get_impl_edges(dual_edges);
+  for (auto &base_edge : base_edges)
+    base_nearpts.push_back(base.edge_nearpt(base_edge, Vec3d(0, 0, 0)));
+
+  for (auto &dual_edge : dual_edges)
+    dual_nearpts.push_back(dual.edge_nearpt(dual_edge, Vec3d(0, 0, 0)));
 
   if (opts.output_parts.find("i") != string::npos) {
     for (unsigned int i = 0; i < base_edges.size(); i++) {
@@ -841,31 +840,19 @@ void generate_points(const Geometry &base, const Geometry &dual, vector<Vec3d> &
         double epsilon_local = 1e-12;
         Vec3d intersection_point = segments_intersection(b0, b1, d0, d1, epsilon_local);
         if (intersection_point.is_set()) {
-          ip.push_back(intersection_point);
+          ips.push_back(intersection_point);
           break;
         }
       }
     }
 
-    if (ip.size() != base_edges.size()) {
+    if (ips.size() != base_edges.size()) {
       if (opts.canonical_method != 'x')
         fprintf(stderr,"Warning: only %d out of %d intersection points found. try more precision\n",
-                (int)ip.size(), (int)base_edges.size());
+                (int)ips.size(), (int)base_edges.size());
       else
         fprintf(stderr,"Warning: only canonical models have intersection points\n");
     }
-  }
-
-  if ((opts.output_parts.find("n") != string::npos) ||
-      (opts.output_parts.find("p") != string::npos)) {
-    for (unsigned int e = 0; e < base_edges.size(); e++)
-      base_nearpts.push_back(base.edge_nearpt(base_edges[e], Vec3d(0, 0, 0)));
-  }
-
-  if ((opts.output_parts.find("m") != string::npos) ||
-      (opts.output_parts.find("q") != string::npos)) {
-    for (unsigned int e = 0; e < dual_edges.size(); e++)
-      dual_nearpts.push_back(dual.edge_nearpt(dual_edges[e], Vec3d(0, 0, 0)));
   }
 }
 
@@ -881,23 +868,12 @@ void set_edge_colors(Geometry &geom, const Color &col)
 void construct_model(Geometry &base, const cn_opts &opts) {
   Geometry dual;
 
-  // need to generate dual? also needed for tangent points
-  if ((opts.output_parts.find("d") != string::npos) ||
-      (opts.output_parts.find("i") != string::npos) ||
-      (opts.output_parts.find("m") != string::npos) ||
-      (opts.output_parts.find("q") != string::npos))
-    get_dual(&dual, base, 1, Vec3d(0, 0, 0));
+  get_dual(&dual, base, 1, Vec3d(0, 0, 0));
 
-  // need to generate before possible erasure of base
-  vector<Vec3d> ip;
+  vector<Vec3d> ips;
   vector<Vec3d> base_nearpts;
   vector<Vec3d> dual_nearpts;
-  if ((opts.output_parts.find("i") != string::npos) ||
-      (opts.output_parts.find("n") != string::npos) ||
-      (opts.output_parts.find("m") != string::npos) ||
-      (opts.output_parts.find("p") != string::npos) ||
-      (opts.output_parts.find("q") != string::npos))
-    generate_points(base, dual, ip, base_nearpts, dual_nearpts, opts);
+  generate_points(base, dual, ips, base_nearpts, dual_nearpts, opts);
 
   // clear base if not using
   if (opts.output_parts.find("b") == string::npos)
@@ -915,20 +891,20 @@ void construct_model(Geometry &base, const cn_opts &opts) {
 
   // add intersection points
   if (opts.output_parts.find("i") != string::npos) {
-    for (unsigned int i = 0; i < ip.size(); i++)
-      base.add_vert(ip[i], opts.ipoints_col);
+    for (auto &ip : ips)
+      base.add_vert(ip, opts.ipoints_col);
   }
 
   // add base near points
   if (opts.output_parts.find("n") != string::npos) {
-    for (unsigned int i = 0; i < base_nearpts.size(); i++)
-      base.add_vert(base_nearpts[i], opts.base_nearpts_col);
+    for (auto &base_nearpt : base_nearpts)
+      base.add_vert(base_nearpt, opts.base_nearpts_col);
   }
 
   // add dual near points
   if (opts.output_parts.find("m") != string::npos) {
-    for (unsigned int i = 0; i < dual_nearpts.size(); i++)
-      base.add_vert(dual_nearpts[i], opts.dual_nearpts_col);
+    for (auto &dual_nearpt : dual_nearpts)
+      base.add_vert(dual_nearpt, opts.dual_nearpts_col);
   }
 
   // add base near points centroid
