@@ -419,17 +419,13 @@ vector<Vec3d> reciprocalN2(const Geometry &geom)
 // make array of vertices reciprocal to given planes (face normals)
 vector<Vec3d> reciprocalN2(const Geometry &geom)
 {
-  const vector<vector<int>> &faces = geom.faces();
-  const vector<Vec3d> &verts = geom.verts();
-
   vector<Vec3d> normals;
 
-  for (unsigned int i = 0; i < faces.size(); i++) {
+  for (auto &face : geom.faces()) {
     // calculate face normal in antiprism
-    Vec3d face_normal = face_norm(verts, faces[i]).unit();
-    Vec3d face_centroid = anti::centroid(verts, faces[i]);
+    Vec3d face_normal = face_norm(geom.verts(), face).unit();
+    Vec3d face_centroid = anti::centroid(geom.verts(), face);
 
-    vector<int> face = faces[i];
     unsigned int sz = face.size();
     double avgEdgeDist = 0;
     for (unsigned int j = 0; j < sz; j++) {
@@ -440,14 +436,23 @@ vector<Vec3d> reciprocalN2(const Geometry &geom)
     }
     avgEdgeDist /= sz;
 
+    // the face normal height set to intersect face at v
     // reciprocal call replace below:
     // Vec3d ans = reciprocal(normal * vdot(centroid,normal));
     Vec3d v = face_normal * vdot(face_centroid, face_normal);
+
+    // RK - 2017-02-13
+    // Note that v can drift past another normal
+    // this causes a non-convexity in the next reciprocal
+    // no solution has been found for this problem
+
+    // adjust v to the reciprocal value
     Vec3d ans = v;
     // prevent division by zero
     if (v[0] != 0 || v[1] != 0 || v[2] != 0)
       ans = v * 1.0 / v.len2();
-    // edge correction
+
+    // edge correction (of v based on all edges of the face)
     ans *= (1 + avgEdgeDist) / 2;
 
     normals.push_back(ans);
@@ -503,13 +508,10 @@ bool canonicalize_bd2(Geometry &base, const int &num_iters, const char &canonica
   get_dual(&dual, base, 1);
   dual.clear_cols();
 
-  const vector<Vec3d> &base_verts = base.verts();
-  const vector<Vec3d> &dual_verts = dual.verts();
-
   double max_diff2 = 0;
   unsigned int cnt;
   for (cnt = 0; cnt < (unsigned int)num_iters;) {
-    vector<Vec3d> base_verts_last = base_verts;
+    vector<Vec3d> base_verts_last = base.verts();
 
     switch (canonical_method) {
     // base/dual canonicalize method
@@ -545,18 +547,16 @@ fprintf(stderr,"%d: converged\n",cnt);
     case 'p':
       // move centroid to origin for balance
       dual.raw_verts() = reciprocalC_len22(base);
-      base.transform(Trans3d::transl(-centroid(dual_verts)));
+      base.transform(Trans3d::transl(-centroid(dual.verts())));
       base.raw_verts() = reciprocalC_len22(dual);
-      base.transform(Trans3d::transl(-centroid(base_verts)));
       break;
 
     // adjust vertices with side effect of planarization. len() version
     case 'q':
       // move centroid to origin for balance
       dual.raw_verts() = reciprocalC_len2(base);
-      base.transform(Trans3d::transl(-centroid(dual_verts)));
+      base.transform(Trans3d::transl(-centroid(dual.verts())));
       base.raw_verts() = reciprocalC_len2(dual);
-      base.transform(Trans3d::transl(-centroid(base_verts)));
       break;
 
     // adjust vertices with side effect of planarization. face centroids version
@@ -568,8 +568,8 @@ fprintf(stderr,"%d: converged\n",cnt);
 
     // len2() for difference value to minimize internal sqrt() calls
     max_diff2 = 0;
-    for (unsigned int i = 0; i < base_verts.size(); i++) {
-      double diff2 = (base_verts[i] - base_verts_last[i]).len2();
+    for (unsigned int i = 0; i < base.verts().size(); i++) {
+      double diff2 = (base.verts(i) - base_verts_last[i]).len2();
       if (diff2 > max_diff2)
         max_diff2 = diff2;
     }
@@ -611,8 +611,8 @@ bool canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &p
 {
   bool completed = false;
 
-  const vector<Vec3d> &verts = geom.verts();
-  const vector<vector<int>> &faces = geom.faces();
+  vector<Vec3d> &verts = geom.raw_verts();
+
   vector<vector<int>> edges;
   geom.get_impl_edges(edges);
 
@@ -628,8 +628,8 @@ bool canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &p
           Vec3d P = geom.edge_nearpt(edge, Vec3d(0, 0, 0));
           near_pts.push_back(P);
           Vec3d offset = edge_factor * (P.len() - 1) * P;
-          geom.verts(edge[0]) -= offset;
-          geom.verts(edge[1]) -= offset;
+          verts[edge[0]] -= offset;
+          verts[edge[1]] -= offset;
         }
       }
       // RK - alternate form causes the near points to be applied in a 2nd loop
@@ -644,8 +644,8 @@ bool canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &p
         for (auto &edge : edges) {
           Vec3d P = near_pts[p_cnt++];
           Vec3d offset = edge_factor * (P.len() - 1) * P;
-          geom.verts(edge[0]) -= offset;
-          geom.verts(edge[1]) -= offset;
+          verts[edge[0]] -= offset;
+          verts[edge[1]] -= offset;
         }
       }
 /*
@@ -656,15 +656,15 @@ bool canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &p
           Vec3d P = geom.edge_nearpt(edges[e], Vec3d(0, 0, 0));
           near_pts.push_back(P);
           Vec3d offset = edge_factor * (P.len() - 1) * P;
-          geom.verts(edges[e][0]) -= offset;
-          geom.verts(edges[e][1]) -= offset;
+          verts[edges[e][0]] -= offset;
+          verts[edges[e][1]] -= offset;
         }
       }
 */
 
       Vec3d cent_near_pts = centroid(near_pts);
       for (unsigned int i = 0; i < verts.size(); i++)
-        geom.verts(i) -= cent_near_pts;
+        verts[i] -= cent_near_pts;
     }
 
     // Make a copy of verts. zero out.
@@ -673,21 +673,21 @@ bool canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &p
       v = Vec3d(0, 0, 0);
 
     // progressively advances starting face each iteration
-    for (unsigned int ff = cnt; ff < faces.size() + cnt; ff++) {
-      int f = ff % faces.size();
-      if (faces[f].size() == 3)
+    for (unsigned int ff = cnt; ff < geom.faces().size() + cnt; ff++) {
+      int f = ff % geom.faces().size();
+      if (geom.faces(f).size() == 3)
         continue;
       Vec3d norm = geom.face_norm(f).unit();
       Vec3d f_cent = geom.face_cent(f);
       if (vdot(norm, f_cent) < 0)
         norm *= -1.0;
-      for (int v : faces[f])
+      for (int v : geom.faces(f))
         vs[v] += vdot(plane_factor * norm, f_cent - verts[v]) * norm;
     }
 
     // adjust vertices post-loop
     for (unsigned int i = 0; i < vs.size(); i++)
-      geom.verts(i) += vs[i];
+      verts[i] += vs[i];
 
     // len2() for difference value to minimize internal sqrt() calls
     max_diff2 = 0;
