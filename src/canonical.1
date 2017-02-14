@@ -22,15 +22,22 @@ Options
 \fB\-C\fR <opt>
 initial centering
 .IP
-c \- vertex centroid (default)
-x \- none
+v \- vertex centroid (default)
+n \- edge near points centroid
+x \- not moved
+.TP
+\fB\-r\fR <opt>
+initial radius
+.IP
+v \- average vertex radius = 1 (default)
+n \- average edge near points radius = 1
+x \- not changed
 .TP
 \fB\-e\fR <opt>
 edge distribution
 .IP
 s \- project vertices onto a sphere
 a \- (another method to be implimented?)
-x \- none
 .TP
 \fB\-p\fR <opt>
 planarization (done before canoncalization. default: none)
@@ -47,14 +54,15 @@ canonicalization
 .IP
 m \- mathematica version (default)
 b \- base/dual version
-x \- none
+x \- none (default, if \fB\-p\fR is set)
 .HP
 \fB\-n\fR <itrs> maximum number of canonical iterations (default: no limit)
 .HP
 \fB\-O\fR <args> output b \- base, d \- dual, i \- intersection points (default: b)
 .IP
 n \- base edge near points, m \- dual edge near points
-u \- unit sphere centered on the origin
+p \- base near points centeroid, q \- dual near points centroid
+u \- minimum tangent sphere, U \- maximum, o \- origin point
 .HP
 \fB\-d\fR <perc> radius test. precent difference between minumum and maximum radius
 .IP
@@ -82,13 +90,13 @@ alterate algorithm. try if imbalance in result (\fB\-c\fR m only)
 Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
 .TP
 \fB\-I\fR <col>
-intersection points color   (default: yellow)
+intersection points and/or origin color (default: yellow)
 .TP
 \fB\-N\fR <col>
-base edge near points color (default: red)
+base edge near points and/or centroid color (default: red)
 .TP
 \fB\-M\fR <col>
-dual edge near points color (default: darkgreen)
+dual edge near points and/or centroid color (default: darkgreen)
 .TP
 \fB\-B\fR <col>
 base edge color (default: none)

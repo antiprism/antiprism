@@ -54,6 +54,7 @@ public:
   string stderr;
 
   char centering;
+  char initial_radius;
   char edge_distribution;
   char planarize_method;
   int num_iters_planar;
@@ -77,7 +78,7 @@ public:
   Color sphere_col;
 
   cn_opts()
-      : ProgramOpts("canonical"), centering('c'), edge_distribution('\0'),
+      : ProgramOpts("canonical"), centering('v'), initial_radius('v'), edge_distribution('\0'),
         planarize_method('\0'), num_iters_planar(-1), canonical_method('m'),
         num_iters_canonical(-1), mm_edge_factor(50), mm_plane_factor(20),
         mm_alternate_loop(false), rep_count(1000), radius_range_percent(80),
@@ -109,12 +110,16 @@ void cn_opts::usage()
 "Options\n"
 "%s"
 "  -C <opt>  initial centering\n"
-"               c - vertex centroid (default)\n"
-"               x - none\n"
+"               v - vertex centroid (default)\n"
+"               n - edge near points centroid\n"
+"               x - not moved\n"
+"  -r <opt>  initial radius\n"
+"               v - average vertex radius = 1 (default)\n"
+"               n - average edge near points radius = 1\n"
+"               x - not changed\n"
 "  -e <opt>  edge distribution\n"
 "               s - project vertices onto a sphere\n"
 "               a - (another method to be implimented?)\n"
-"               x - none\n"
 "  -p <opt>  planarization (done before canoncalization. default: none)\n"
 "               p - face centroids (magnitude squared)\n"
 "               q - face centroids (magnitude)\n"
@@ -124,11 +129,12 @@ void cn_opts::usage()
 "  -c <opt>  canonicalization\n"
 "               m - mathematica version (default)\n"
 "               b - base/dual version\n"
-"               x - none\n"
+"               x - none (default, if -p is set)\n"
 "  -n <itrs> maximum number of canonical iterations (default: no limit)\n"
 "  -O <args> output b - base, d - dual, i - intersection points (default: b)\n"
 "               n - base edge near points, m - dual edge near points\n"
-"               u - unit sphere centered on the origin\n"
+"               p - base near points centeroid, q - dual near points centroid\n"
+"               u - minimum tangent sphere, U - maximum, o - origin point\n"
 "  -d <perc> radius test. precent difference between minumum and maximum radius\n"
 "               checks if polyhedron is collapsing. 0 for no test (default: 10)\n"
 "  -z <n>    status reporting every n lines. -1 for no status. (default: 1000)\n"
@@ -142,9 +148,9 @@ void cn_opts::usage()
 "  -A        alterate algorithm. try if imbalance in result (-c m only)\n" 
 "\n"
 "Coloring Options (run 'off_util -H color' for help on color formats)\n"
-"  -I <col>  intersection points color   (default: yellow)\n"
-"  -N <col>  base edge near points color (default: red)\n"
-"  -M <col>  dual edge near points color (default: darkgreen)\n"
+"  -I <col>  intersection points and/or origin color (default: yellow)\n"
+"  -N <col>  base edge near points and/or centroid color (default: red)\n"
+"  -M <col>  dual edge near points and/or centroid color (default: darkgreen)\n"
 "  -B <col>  base edge color (default: none)\n"
 "  -D <col>  dual edge color (default: none)\n"
 "  -U <col>  unit sphere color (default: white)\n"
@@ -159,45 +165,57 @@ void cn_opts::process_command_line(int argc, char **argv)
   opterr = 0;
   int c;
 
+  bool p_set = false;
+  bool c_set = false;
+
   int sig_compare = INT_MAX;
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hC:e:p:i:c:n:O:E:P:Ad:z:I:N:M:B:D:U:T:l:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hC:r:e:p:i:c:n:O:E:P:Ad:z:I:N:M:B:D:U:T:l:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
     switch (c) {
     case 'C':
-      if (strlen(optarg) == 1 && strchr("cx", int(*optarg)))
+      if (strlen(optarg) == 1 && strchr("vnx", int(*optarg)))
         centering = *optarg;
       else
-        error("centering method type must be c, x", c);
+        error("centering method type must be v, n, x", c);
+      break;
+
+    case 'r':
+      if (strlen(optarg) == 1 && strchr("vnx", int(*optarg)))
+        initial_radius = *optarg;
+      else
+        error("starting radius type must be v, n, x", c);
       break;
 
     case 'e':
-      if (strlen(optarg) == 1 && strchr("sax", int(*optarg)))
+      if (strlen(optarg) == 1 && strchr("sa", int(*optarg)))
         edge_distribution = *optarg;
       else
-        error("edge_distribution method type must be s, a, x", c);
+        error("edge_distribution method type must be s, a", c);
       break;
 
     case 'p':
-      if (strlen(optarg) == 1 && strchr("pqfmx", int(*optarg)))
+      p_set = true;
+      if (strlen(optarg) == 1 && strchr("pqfm", int(*optarg)))
         planarize_method = *optarg;
       else
-        error("planarize method type must be p, q, f, m, x", c);
+        error("planarize method type must be p, q, f, m", c);
       break;
 
     case 'i':
       print_status_or_exit(read_int(optarg, &num_iters_planar), c);
-      if (num_iters_planar <= 0)
+      if (num_iters_planar < 0)
         error(
-            "number of iterations for preplanarization must be greater than 0",
+            "number of iterations for preplanarization must be 0 or greater",
             c);
       break;
 
     case 'c':
+      c_set = true;
       if (strlen(optarg) == 1 && strchr("mbx", int(*optarg)))
         canonical_method = *optarg;
       else
@@ -207,13 +225,13 @@ void cn_opts::process_command_line(int argc, char **argv)
     case 'n':
       print_status_or_exit(read_int(optarg, &num_iters_canonical), c);
       if (num_iters_canonical < 0)
-        error("number of iterations must be 0 or greater", c);
+        error("number of iterations for canonical must be 0 or greater", c);
       break;
 
     case 'O':
-      if (strspn(optarg, "bdinmu") != strlen(optarg))
+      if (strspn(optarg, "bdinmopquU") != strlen(optarg))
         error(msg_str("output parts are '%s' must be any or all from "
-                      "b, d, i, n, m, u", optarg), c);
+                      "b, d, i, n, m, o, p, q, u, U", optarg), c);
       output_parts = optarg;
       break;
 
@@ -296,6 +314,10 @@ void cn_opts::process_command_line(int argc, char **argv)
     }
   }
 
+  // if planarizing only do not canonicalize
+  if (p_set && !c_set)
+    canonical_method = 'x';
+
   if (mm_alternate_loop && canonical_method != 'm')
     warning("alternate form only has effect in mathematica canonicalization", 'A');  
 
@@ -324,6 +346,8 @@ bool radius_range_test(const Geometry &geom, const double &radius_range_percent)
 
 // reciprocalN() is from the Hart's Conway Notation web page
 // make array of vertices reciprocal to given planes (face normals)
+// RK - save of verbatim port code
+/*
 vector<Vec3d> reciprocalN2(const Geometry &geom)
 {
   const vector<vector<int>> &faces = geom.faces();
@@ -376,9 +400,69 @@ vector<Vec3d> reciprocalN2(const Geometry &geom)
 
   return normals;
 }
+*/
+
+/* RK - tangentPoint() can be replaced by edge_nearpt()
+      // tangentPoint() was from Hart's Conway Notation web page
+      // point where line v1...v2 tangent to an origin sphere
+      // avgEdgeDist += tangentPoint(verts[v1], verts[v2]).len();
+      // avgEdgeDist += (verts[v1] - ((vdot(d,verts[v1])/d.len2()) * d)).len();
+      Vec3d d = verts[v2] - verts[v1];
+      double vdt = 0;
+      // prevent division by zero
+      if (d[0] != 0 || d[1] != 0 || d[2] != 0)
+        vdt = vdot(d, verts[v1]) / d.len2();
+      avgEdgeDist += (verts[v1] - (vdt * d)).len();
+*/
+
+// reciprocalN() is from the Hart's Conway Notation web page
+// make array of vertices reciprocal to given planes (face normals)
+vector<Vec3d> reciprocalN2(const Geometry &geom)
+{
+  vector<Vec3d> normals;
+
+  for (auto &face : geom.faces()) {
+    // calculate face normal in antiprism
+    Vec3d face_normal = face_norm(geom.verts(), face).unit();
+    Vec3d face_centroid = anti::centroid(geom.verts(), face);
+
+    unsigned int sz = face.size();
+    double avgEdgeDist = 0;
+    for (unsigned int j = 0; j < sz; j++) {
+      int v1 = face[j];
+      int v2 = face[(j+1)%sz];
+
+      avgEdgeDist += geom.edge_nearpt(make_edge(v1,v2), Vec3d(0, 0, 0)).len();
+    }
+    avgEdgeDist /= sz;
+
+    // the face normal height set to intersect face at v
+    // reciprocal call replace below:
+    // Vec3d ans = reciprocal(normal * vdot(centroid,normal));
+    Vec3d v = face_normal * vdot(face_centroid, face_normal);
+
+    // RK - 2017-02-13
+    // Note that v can drift past another normal
+    // this causes a non-convexity in the next reciprocal
+    // no solution has been found for this problem
+
+    // adjust v to the reciprocal value
+    Vec3d ans = v;
+    // prevent division by zero
+    if (v[0] != 0 || v[1] != 0 || v[2] != 0)
+      ans = v * 1.0 / v.len2();
+
+    // edge correction (of v based on all edges of the face)
+    ans *= (1 + avgEdgeDist) / 2;
+
+    normals.push_back(ans);
+  }
+
+  return normals;
+}
 
 // reciprocate on face centers dividing by magnitude squared
-vector<Vec3d> reciprocalC2(const Geometry &geom)
+vector<Vec3d> reciprocalC_len22(const Geometry &geom)
 {
   vector<Vec3d> centers;
   geom.face_cents(centers);
@@ -405,30 +489,29 @@ Vec3d edge_nearpoints_centroid(const Geometry &geom, const Vec3d &cent)
   geom.get_impl_edges(edges);
   int e_sz = edges.size();
   Vec3d e_cent(0, 0, 0);
-  for (int e = 0; e < e_sz; e++)
-    e_cent += geom.edge_nearpt(edges[e], cent);
+  for (auto &edge : edges)
+    e_cent += geom.edge_nearpt(edge, cent);
   return e_cent / double(e_sz);
 }
 
 
 // Implementation of George Hart's planarization and canonicalization algorithms
 // http://www.georgehart.com/virtual-polyhedra/conway_notation.html
-void canonicalize_cn2(Geometry &base, const int &num_iters, const char &canonical_method,
+bool canonicalize_bd2(Geometry &base, const int &num_iters, const char &canonical_method,
                      const double &radius_range_percent, const int &rep_count, 
                      const char &centering, const double &eps)
 {
+  bool completed = false;
+
   Geometry dual;
   // the dual's initial vertex locations are immediately overwritten
-  get_dual(&dual, base, 0);
+  get_dual(&dual, base, 1);
   dual.clear_cols();
-
-  const vector<Vec3d> &base_verts = base.verts();
-  const vector<Vec3d> &dual_verts = dual.verts();
 
   double max_diff2 = 0;
   unsigned int cnt;
   for (cnt = 0; cnt < (unsigned int)num_iters;) {
-    vector<Vec3d> base_verts_last = base_verts;
+    vector<Vec3d> base_verts_last = base.verts();
 
     switch (canonical_method) {
     // base/dual canonicalize method
@@ -441,23 +524,39 @@ void canonicalize_cn2(Geometry &base, const int &num_iters, const char &canonica
       }
       break;
     }
+/*
+    case 'b': {
+      dual.raw_verts() = reciprocalN2(base);
+      Vec3d d_cent = edge_nearpoints_centroid(dual, Vec3d(0, 0, 0));
+      base.raw_verts() = reciprocalN2(dual);
+      Vec3d e_cent = edge_nearpoints_centroid(base, Vec3d(0, 0, 0));
+double diff = (e_cent - d_cent).len2();
+if (diff < eps) {
+fprintf(stderr,"%d: converged\n",cnt);
+}
+//fprintf(stderr,"true\n");
+//fprintf(stderr,"%d: e_cent = (%.17g,%.17g,%.17g) len = %.17lf\n",cnt, e_cent[0], e_cent[1], e_cent[2], e_cent.len());
+//if (e_cent.len() < eps)
+//fprintf(stderr,"true\n");
+      base.transform(Trans3d::transl(-0.1 * e_cent));
+      break;
+    }
+*/
 
     // adjust vertices with side effect of planarization. len2() version
     case 'p':
       // move centroid to origin for balance
-      dual.raw_verts() = reciprocalC2(base);
-      base.transform(Trans3d::transl(-centroid(dual_verts)));
-      base.raw_verts() = reciprocalC2(dual);
-      base.transform(Trans3d::transl(-centroid(base_verts)));
+      dual.raw_verts() = reciprocalC_len22(base);
+      base.transform(Trans3d::transl(-centroid(dual.verts())));
+      base.raw_verts() = reciprocalC_len22(dual);
       break;
 
     // adjust vertices with side effect of planarization. len() version
     case 'q':
       // move centroid to origin for balance
       dual.raw_verts() = reciprocalC_len2(base);
-      base.transform(Trans3d::transl(-centroid(dual_verts)));
+      base.transform(Trans3d::transl(-centroid(dual.verts())));
       base.raw_verts() = reciprocalC_len2(dual);
-      base.transform(Trans3d::transl(-centroid(base_verts)));
       break;
 
     // adjust vertices with side effect of planarization. face centroids version
@@ -467,9 +566,10 @@ void canonicalize_cn2(Geometry &base, const int &num_iters, const char &canonica
       break;
     }
 
+    // len2() for difference value to minimize internal sqrt() calls
     max_diff2 = 0;
-    for (unsigned int i = 0; i < base_verts.size(); i++) {
-      double diff2 = (base_verts[i] - base_verts_last[i]).len2();
+    for (unsigned int i = 0; i < base.verts().size(); i++) {
+      double diff2 = (base.verts(i) - base_verts_last[i]).len2();
       if (diff2 > max_diff2)
         max_diff2 = diff2;
     }
@@ -480,8 +580,10 @@ void canonicalize_cn2(Geometry &base, const int &num_iters, const char &canonica
     if ((rep_count > 0) && (cnt%rep_count == 0))
       fprintf(stderr, "%-15d max_diff=%.17g\n", cnt, sqrt(max_diff2));
 
-    if (sqrt(max_diff2) < eps)
+    if (sqrt(max_diff2) < eps) {
+      completed = true;
       break;
+    }
 
     // if minimum and maximum radius are differing, the polyhedron is crumpling
     if (radius_range_percent && radius_range_test(base, radius_range_percent)) {
@@ -494,6 +596,8 @@ void canonicalize_cn2(Geometry &base, const int &num_iters, const char &canonica
     fprintf(stderr, "\n%-15d final max_diff=%.17g\n", cnt, sqrt(max_diff2));
     fprintf(stderr, "\n");
   }
+
+  return completed;
 }
 
 // Implementation of George Hart's canonicalization algorithm
@@ -501,12 +605,14 @@ void canonicalize_cn2(Geometry &base, const int &num_iters, const char &canonica
 // RK - the model will possibly become non-convex early in the loops.
 // if it contorts too badly, the model will implode. Having the model
 // at a radius of near 1 minimizes this problem
-void canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &plane_factor,
+bool canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &plane_factor,
                      const int &num_iters, const double &radius_range_percent, const int &rep_count,
                      const bool &planar_only, const bool &alternate_loop, const double &eps)
 {
-  const vector<Vec3d> &verts = geom.verts();
-  const vector<vector<int>> &faces = geom.faces();
+  bool completed = false;
+
+  vector<Vec3d> &verts = geom.raw_verts();
+
   vector<vector<int>> edges;
   geom.get_impl_edges(edges);
 
@@ -522,8 +628,8 @@ void canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &p
           Vec3d P = geom.edge_nearpt(edge, Vec3d(0, 0, 0));
           near_pts.push_back(P);
           Vec3d offset = edge_factor * (P.len() - 1) * P;
-          geom.verts(edge[0]) -= offset;
-          geom.verts(edge[1]) -= offset;
+          verts[edge[0]] -= offset;
+          verts[edge[1]] -= offset;
         }
       }
       // RK - alternate form causes the near points to be applied in a 2nd loop
@@ -538,8 +644,8 @@ void canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &p
         for (auto &edge : edges) {
           Vec3d P = near_pts[p_cnt++];
           Vec3d offset = edge_factor * (P.len() - 1) * P;
-          geom.verts(edge[0]) -= offset;
-          geom.verts(edge[1]) -= offset;
+          verts[edge[0]] -= offset;
+          verts[edge[1]] -= offset;
         }
       }
 /*
@@ -550,15 +656,15 @@ void canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &p
           Vec3d P = geom.edge_nearpt(edges[e], Vec3d(0, 0, 0));
           near_pts.push_back(P);
           Vec3d offset = edge_factor * (P.len() - 1) * P;
-          geom.verts(edges[e][0]) -= offset;
-          geom.verts(edges[e][1]) -= offset;
+          verts[edges[e][0]] -= offset;
+          verts[edges[e][1]] -= offset;
         }
       }
 */
 
       Vec3d cent_near_pts = centroid(near_pts);
       for (unsigned int i = 0; i < verts.size(); i++)
-        geom.verts(i) -= cent_near_pts;
+        verts[i] -= cent_near_pts;
     }
 
     // Make a copy of verts. zero out.
@@ -567,22 +673,23 @@ void canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &p
       v = Vec3d(0, 0, 0);
 
     // progressively advances starting face each iteration
-    for (unsigned int ff = cnt; ff < faces.size() + cnt; ff++) {
-      int f = ff % faces.size();
-      if (faces[f].size() == 3)
+    for (unsigned int ff = cnt; ff < geom.faces().size() + cnt; ff++) {
+      int f = ff % geom.faces().size();
+      if (geom.faces(f).size() == 3)
         continue;
       Vec3d norm = geom.face_norm(f).unit();
       Vec3d f_cent = geom.face_cent(f);
       if (vdot(norm, f_cent) < 0)
         norm *= -1.0;
-      for (int v : faces[f])
+      for (int v : geom.faces(f))
         vs[v] += vdot(plane_factor * norm, f_cent - verts[v]) * norm;
     }
 
     // adjust vertices post-loop
     for (unsigned int i = 0; i < vs.size(); i++)
-      geom.verts(i) += vs[i];
+      verts[i] += vs[i];
 
+    // len2() for difference value to minimize internal sqrt() calls
     max_diff2 = 0;
     for (unsigned int i = 0; i < verts.size(); i++) {
       double diff2 = (verts[i] - verts_last[i]).len2();
@@ -596,8 +703,10 @@ void canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &p
     if ((rep_count > 0) && (cnt%rep_count == 0))
       fprintf(stderr, "%-15d max_diff=%.17g\n", cnt, sqrt(max_diff2));
 
-    if (sqrt(max_diff2) < eps)
+    if (sqrt(max_diff2) < eps) {
+      completed = true;
       break;
+    }
 
     // if minimum and maximum radius are differing, the polyhedron is crumpling
     if (radius_range_percent && radius_range_test(geom, radius_range_percent)) {
@@ -607,9 +716,11 @@ void canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &p
   }
 
   if (rep_count > -1) {
-    fprintf(stderr, "\n%-15d final max_diff=%12.10g\n", cnt, sqrt(max_diff2));
+    fprintf(stderr, "\n%-15d final max_diff=%.17g\n", cnt, sqrt(max_diff2));
     fprintf(stderr, "\n");
   }
+
+  return completed;
 }
 
 void planarity_info(Geometry &geom)
@@ -644,16 +755,16 @@ double edge_nearpoints_radius(const Geometry &geom, double &min, double &max, Ve
 
   double nearpt_radius = 0;
   int e_sz = edges.size();
-  for (int e = 0; e < e_sz; e++) {
-    Vec3d P = geom.edge_nearpt(edges[e], Vec3d(0, 0, 0));
+  for (auto &edge : edges) {
+    Vec3d P = geom.edge_nearpt(edge, Vec3d(0, 0, 0));
     near_pts.push_back(P);
 
-    double len = P.len2();
-    nearpt_radius += len;
-    if (len < min)
-      min = len;
-    if (len > max)
-      max = len;
+    double l = P.len();
+    nearpt_radius += l;
+    if (l < min)
+      min = l;
+    if (l > max)
+      max = l;
   }
 
   center = centroid(near_pts);
@@ -661,7 +772,7 @@ double edge_nearpoints_radius(const Geometry &geom, double &min, double &max, Ve
   return nearpt_radius / double(e_sz);
 }
 
-void midradius_info(Geometry &geom)
+void midradius_info(Geometry &geom, const bool &completed)
 {
   double min = 0;
   double max = 0;
@@ -670,29 +781,54 @@ void midradius_info(Geometry &geom)
   fprintf(stderr,"midradius = %.17g (range: %.15g to %.15g)\n",radius, min, max);
   fprintf(stderr,"midcenter is the origin\n");
   fprintf(stderr,"near point centroid = (%.17g,%.17g,%.17g)\n",center[0], center[1], center[2]);
-  double epsilon_local = 1e-12;
+  double epsilon_local = 1e-8;
+  if (!completed)
+    fprintf(stderr,"Warning: the calculation did not complete\n"); 
+  else
   if (double_ne(center[0], 0.0, epsilon_local) ||
       double_ne(center[1], 0.0, epsilon_local) ||
       double_ne(center[2], 0.0, epsilon_local))
-    fprintf(stderr,"warning: not canonical, edge tangency model only\n");
+    fprintf(stderr,"Warning: the result is NOT canonical. edge tangency only\n");
   else
     fprintf(stderr,"the result is canonical\n");
 }
 
-void generate_points(const Geometry &base, const Geometry &dual, vector<Vec3d> &ip,
+// RK - average of edge near points radius
+void unitize_nearpoints_radius(Geometry &geom)
+{
+  double min = 0;
+  double max = 0;
+  Vec3d center;
+  double avg = edge_nearpoints_radius(geom, min, max, center);
+  geom.transform(Trans3d::scale(1 / avg));
+}
+
+// RK - average radius rather than maximum has more reliability than max
+void unitize_vertex_radius(Geometry &geom)
+{
+  GeometryInfo info(geom);
+  info.set_center(geom.centroid());
+  //geom.transform(Trans3d::scale(1 / info.vert_dist_lims().max));
+  double avg = info.vert_dist_lims().sum / info.num_verts();
+  geom.transform(Trans3d::scale(1 / avg));
+}
+
+
+void generate_points(const Geometry &base, const Geometry &dual, vector<Vec3d> &ips,
                     vector<Vec3d> &base_nearpts, vector<Vec3d> &dual_nearpts,
                     const cn_opts &opts)
 {
   vector<vector<int>> base_edges;
   vector<vector<int>> dual_edges;
 
-  if ((opts.output_parts.find("i") != string::npos) ||
-      (opts.output_parts.find("n") != string::npos))
-    base.get_impl_edges(base_edges);
+  base.get_impl_edges(base_edges);
+  dual.get_impl_edges(dual_edges);
 
-  if ((opts.output_parts.find("i") != string::npos) ||
-      (opts.output_parts.find("m") != string::npos))
-    dual.get_impl_edges(dual_edges);
+  for (auto &base_edge : base_edges)
+    base_nearpts.push_back(base.edge_nearpt(base_edge, Vec3d(0, 0, 0)));
+
+  for (auto &dual_edge : dual_edges)
+    dual_nearpts.push_back(dual.edge_nearpt(dual_edge, Vec3d(0, 0, 0)));
 
   if (opts.output_parts.find("i") != string::npos) {
     for (unsigned int i = 0; i < base_edges.size(); i++) {
@@ -706,29 +842,19 @@ void generate_points(const Geometry &base, const Geometry &dual, vector<Vec3d> &
         double epsilon_local = 1e-12;
         Vec3d intersection_point = segments_intersection(b0, b1, d0, d1, epsilon_local);
         if (intersection_point.is_set()) {
-          ip.push_back(intersection_point);
+          ips.push_back(intersection_point);
           break;
         }
       }
     }
 
-    if (ip.size() != base_edges.size()) {
+    if (ips.size() != base_edges.size()) {
       if (opts.canonical_method != 'x')
         fprintf(stderr,"Warning: only %d out of %d intersection points found. try more precision\n",
-                (int)ip.size(), (int)base_edges.size());
+                (int)ips.size(), (int)base_edges.size());
       else
         fprintf(stderr,"Warning: only canonical models have intersection points\n");
     }
-  }
-
-  if (opts.output_parts.find("n") != string::npos) {
-    for (unsigned int e = 0; e < base_edges.size(); e++)
-      base_nearpts.push_back(base.edge_nearpt(base_edges[e], Vec3d(0, 0, 0)));
-  }
-
-  if (opts.output_parts.find("m") != string::npos) {
-    for (unsigned int e = 0; e < dual_edges.size(); e++)
-      dual_nearpts.push_back(dual.edge_nearpt(dual_edges[e], Vec3d(0, 0, 0)));
   }
 }
 
@@ -741,33 +867,15 @@ void set_edge_colors(Geometry &geom, const Color &col)
   }
 }
 
-// RK - average radius rather than maximum has more reliability than max
-void unitize_radius(Geometry &geom)
-{
-  GeometryInfo info(geom);
-  info.set_center(geom.centroid());
-  //geom.transform(Trans3d::scale(1 / info.vert_dist_lims().max));
-  double avg = info.vert_dist_lims().sum / info.num_verts();
-  geom.transform(Trans3d::scale(1 / avg));
-}
-
 void construct_model(Geometry &base, const cn_opts &opts) {
   Geometry dual;
 
-  // need to generate dual? also needed for tangent points
-  if ((opts.output_parts.find("d") != string::npos) ||
-      (opts.output_parts.find("i") != string::npos) ||
-      (opts.output_parts.find("m") != string::npos))
-    get_dual(&dual, base, 1, Vec3d(0, 0, 0));
+  get_dual(&dual, base, 1, Vec3d(0, 0, 0));
 
-  // need to generate before possible erasure of base
-  vector<Vec3d> ip;
+  vector<Vec3d> ips;
   vector<Vec3d> base_nearpts;
   vector<Vec3d> dual_nearpts;
-  if ((opts.output_parts.find("i") != string::npos) ||
-      (opts.output_parts.find("n") != string::npos) ||
-      (opts.output_parts.find("m") != string::npos))
-    generate_points(base, dual, ip, base_nearpts, dual_nearpts, opts);
+  generate_points(base, dual, ips, base_nearpts, dual_nearpts, opts);
 
   // clear base if not using
   if (opts.output_parts.find("b") == string::npos)
@@ -785,23 +893,38 @@ void construct_model(Geometry &base, const cn_opts &opts) {
 
   // add intersection points
   if (opts.output_parts.find("i") != string::npos) {
-    for (unsigned int i = 0; i < ip.size(); i++)
-      base.add_vert(ip[i], opts.ipoints_col);
+    for (auto &ip : ips)
+      base.add_vert(ip, opts.ipoints_col);
   }
 
   // add base near points
   if (opts.output_parts.find("n") != string::npos) {
-    for (unsigned int i = 0; i < base_nearpts.size(); i++)
-      base.add_vert(base_nearpts[i], opts.base_nearpts_col);
+    for (auto &base_nearpt : base_nearpts)
+      base.add_vert(base_nearpt, opts.base_nearpts_col);
   }
 
   // add dual near points
   if (opts.output_parts.find("m") != string::npos) {
-    for (unsigned int i = 0; i < dual_nearpts.size(); i++)
-      base.add_vert(dual_nearpts[i], opts.dual_nearpts_col);
+    for (auto &dual_nearpt : dual_nearpts)
+      base.add_vert(dual_nearpt, opts.dual_nearpts_col);
   }
 
-  // apply opacity to base and dual faces
+  // add base near points centroid
+  if (opts.output_parts.find("p") != string::npos) {
+    base.add_vert(centroid(base_nearpts), opts.base_nearpts_col);
+  }
+
+  // add dual near points centroid
+  if (opts.output_parts.find("q") != string::npos) {
+    base.add_vert(centroid(dual_nearpts), opts.dual_nearpts_col);
+  }
+
+  // add origin point
+  if (opts.output_parts.find("o") != string::npos) {
+    base.add_vert(Vec3d(0, 0, 0), opts.ipoints_col);
+  }
+
+  // apply opacity to faces of base and dual
   if (opts.face_opacity > -1) {
     for (int i = 0; i < (int)base.faces().size(); i++) {
       Color col = base.colors(FACES).get(i);
@@ -813,11 +936,22 @@ void construct_model(Geometry &base, const cn_opts &opts) {
   }
 
   // add unit sphere on origin
-  if (opts.output_parts.find("u") != string::npos) {
+  if ((opts.output_parts.find("u") != string::npos) ||
+      (opts.output_parts.find("U") != string::npos)) {
     Geometry sgeom;
     sgeom.read_resource("geo_4_4");
     sgeom.transform(Trans3d::transl(-centroid(sgeom.verts())));
-    unitize_radius(sgeom);
+    unitize_vertex_radius(sgeom);
+
+    double min = 0;
+    double max = 0;
+    Vec3d center;
+    edge_nearpoints_radius(base, min, max, center);
+    if (opts.output_parts.find("u") != string::npos)
+      sgeom.transform(Trans3d::scale(min));
+    else
+      sgeom.transform(Trans3d::scale(max));
+
     Coloring(&sgeom).vef_one_col(Color::invisible, Color::invisible, opts.sphere_col);
     base.append(sgeom);
   }
@@ -836,11 +970,14 @@ int main(int argc, char *argv[])
     Geometry geom;
     opts.read_or_error(geom, str);
 
-    geom.transform(Trans3d::transl(-centroid(geom.verts())));
+    //geom.transform(Trans3d::transl(-centroid(geom.verts())));
+    geom.transform(Trans3d::transl(-edge_nearpoints_centroid(geom, Vec3d(0, 0, 0))));
+
+    unitize_nearpoints_radius(geom);
 
     //bool planarize_only = false;
-    canonicalize_cn2(geom, opts.num_iters_canonical, 'c',
-                    opts.radius_range_percent / 100, opts.rep_count, opts.epsilon);
+    canonicalize_bd2(geom, opts.num_iters_canonical, 'b',
+                    opts.radius_range_percent / 100, opts.rep_count, opts.centering, opts.epsilon);
 
     str += ".off";
     opts.write_or_error(geom, str);
@@ -852,25 +989,42 @@ int main(int argc, char *argv[])
   opts.read_or_error(geom, opts.ifile);
 
   fprintf(stderr,"\n");
-  fprintf(stderr,"centering: ");;
-  if (opts.centering == 'c') {
+  fprintf(stderr,"centering: ");
+  if (opts.centering == 'v') {
     fprintf(stderr, "(vertex centroid to origin)\n");
     geom.transform(Trans3d::transl(-centroid(geom.verts())));
+  }
+  else
+  if (opts.centering == 'n') {
+    fprintf(stderr, "(edge near points centroid to origin)\n");
+    geom.transform(Trans3d::transl(-edge_nearpoints_centroid(geom, Vec3d(0, 0, 0))));
   }
   else
   if (opts.centering == 'x')
     fprintf(stderr, "(model not moved)\n");
 
-  // the result will have edge near points of 1
-  unitize_radius(geom);
+  fprintf(stderr,"starting radius: ");
+  if (opts.centering == 'v') {
+    fprintf(stderr, "(average vertex)\n");
+    unitize_vertex_radius(geom);
+  }
+  else
+  if (opts.initial_radius == 'n') {
+    fprintf(stderr, "(average edge near points)\n");
+    unitize_nearpoints_radius(geom);
+  }
+  else
+  if (opts.centering == 'x')
+    fprintf(stderr, "(radius not changed)\n");
 
-  if (opts.edge_distribution && opts.edge_distribution != 'x') {
+  if (opts.edge_distribution) {
     fprintf(stderr, "edge distribution: (project onto sphere)\n");
     if (opts.edge_distribution == 's')
       project_onto_sphere(&geom);
   }
 
-  if (opts.planarize_method && opts.planarize_method != 'x') {
+  bool completed = false;
+  if (opts.planarize_method) {
     string planarize_str;
     if (opts.planarize_method == 'p')
       planarize_str = "face centroids magnitude squared";
@@ -887,13 +1041,13 @@ int main(int argc, char *argv[])
 
     if (opts.planarize_method == 'm') {
       bool planarize_only = true;
-      canonicalize_mm2(geom, opts.mm_edge_factor / 100, opts.mm_plane_factor / 100,
-                      opts.num_iters_planar, opts.radius_range_percent / 100, opts.rep_count,
-                      planarize_only, opts.mm_alternate_loop, opts.epsilon);
+      completed = canonicalize_mm2(geom, opts.mm_edge_factor / 100, opts.mm_plane_factor / 100,
+                                  opts.num_iters_planar, opts.radius_range_percent / 100, opts.rep_count,
+                                  planarize_only, opts.mm_alternate_loop, opts.epsilon);
     }
     else {
-      canonicalize_cn2(geom, opts.num_iters_planar, opts.planarize_method,
-                      opts.radius_range_percent / 100, opts.rep_count, opts.centering, opts.epsilon);
+      completed = canonicalize_bd2(geom, opts.num_iters_planar, opts.planarize_method,
+                                  opts.radius_range_percent / 100, opts.rep_count, opts.centering, opts.epsilon);
     }
 
     // RK - report planarity
@@ -904,19 +1058,19 @@ int main(int argc, char *argv[])
     fprintf(stderr, "canonicalize: (%s method)\n",((opts.canonical_method == 'm') ? "mathematica" : "base/dual"));
     if (opts.canonical_method == 'm') {
       bool planarize_only = false;
-      canonicalize_mm2(geom, opts.mm_edge_factor / 100, opts.mm_plane_factor / 100,
-                      opts.num_iters_canonical, opts.radius_range_percent / 100, opts.rep_count,
-                      planarize_only, opts.mm_alternate_loop, opts.epsilon);
+      completed = canonicalize_mm2(geom, opts.mm_edge_factor / 100, opts.mm_plane_factor / 100,
+                                  opts.num_iters_canonical, opts.radius_range_percent / 100, opts.rep_count,
+                                  planarize_only, opts.mm_alternate_loop, opts.epsilon);
     }
     else
-      canonicalize_cn2(geom, opts.num_iters_canonical, opts.canonical_method,
-                      opts.radius_range_percent / 100, opts.rep_count, opts.centering, opts.epsilon);
+      completed = canonicalize_bd2(geom, opts.num_iters_canonical, opts.canonical_method,
+                                  opts.radius_range_percent / 100, opts.rep_count, opts.centering, opts.epsilon);
 
     // RK - report planarity
     planarity_info(geom);
 
     // RK - print midradius info
-    midradius_info(geom);
+    midradius_info(geom, completed);
   }
 
   // RK - parts to output
