@@ -117,7 +117,7 @@ void cn_opts::usage()
 "               v - average vertex radius = 1 (default)\n"
 "               n - average edge near points radius = 1\n"
 "               x - not changed\n"
-"  -e <opt>  edge distribution\n"
+"  -e <opt>  edge distribution (default : none)\n"
 "               s - project vertices onto a sphere\n"
 "               a - (another method to be implimented?)\n"
 "  -p <opt>  planarization (done before canoncalization. default: none)\n"
@@ -402,11 +402,7 @@ vector<Vec3d> reciprocalN2(const Geometry &geom)
 }
 */
 
-/* RK - tangentPoint() can be replaced by edge_nearpt()
-      // tangentPoint() was from Hart's Conway Notation web page
-      // point where line v1...v2 tangent to an origin sphere
-      // avgEdgeDist += tangentPoint(verts[v1], verts[v2]).len();
-      // avgEdgeDist += (verts[v1] - ((vdot(d,verts[v1])/d.len2()) * d)).len();
+/* RK - save of simplified tangent code
       Vec3d d = verts[v2] - verts[v1];
       double vdt = 0;
       // prevent division by zero
@@ -417,6 +413,7 @@ vector<Vec3d> reciprocalN2(const Geometry &geom)
 
 // reciprocalN() is from the Hart's Conway Notation web page
 // make array of vertices reciprocal to given planes (face normals)
+// RK - has accuracy issues and will have trouble with -l 16
 vector<Vec3d> reciprocalN2(const Geometry &geom)
 {
   vector<Vec3d> normals;
@@ -437,14 +434,7 @@ vector<Vec3d> reciprocalN2(const Geometry &geom)
     avgEdgeDist /= sz;
 
     // the face normal height set to intersect face at v
-    // reciprocal call replace below:
-    // Vec3d ans = reciprocal(normal * vdot(centroid,normal));
     Vec3d v = face_normal * vdot(face_centroid, face_normal);
-
-    // RK - 2017-02-13
-    // Note that v can drift past another normal
-    // this causes a non-convexity in the next reciprocal
-    // no solution has been found for this problem
 
     // adjust v to the reciprocal value
     Vec3d ans = v;
@@ -482,7 +472,7 @@ vector<Vec3d> reciprocalC_len2(const Geometry &geom)
 }
 
 // Addition to algorithm by Adrian Rossiter
-// Finds the correct centroid for the canonical
+// Finds the correct centroid for base/dual canonical
 Vec3d edge_nearpoints_centroid(const Geometry &geom, const Vec3d &cent)
 {
   vector<vector<int>> edges;
@@ -524,24 +514,6 @@ bool canonicalize_bd2(Geometry &base, const int &num_iters, const char &canonica
       }
       break;
     }
-/*
-    case 'b': {
-      dual.raw_verts() = reciprocalN2(base);
-      Vec3d d_cent = edge_nearpoints_centroid(dual, Vec3d(0, 0, 0));
-      base.raw_verts() = reciprocalN2(dual);
-      Vec3d e_cent = edge_nearpoints_centroid(base, Vec3d(0, 0, 0));
-double diff = (e_cent - d_cent).len2();
-if (diff < eps) {
-fprintf(stderr,"%d: converged\n",cnt);
-}
-//fprintf(stderr,"true\n");
-//fprintf(stderr,"%d: e_cent = (%.17g,%.17g,%.17g) len = %.17lf\n",cnt, e_cent[0], e_cent[1], e_cent[2], e_cent.len());
-//if (e_cent.len() < eps)
-//fprintf(stderr,"true\n");
-      base.transform(Trans3d::transl(-0.1 * e_cent));
-      break;
-    }
-*/
 
     // adjust vertices with side effect of planarization. len2() version
     case 'p':
@@ -603,8 +575,8 @@ fprintf(stderr,"%d: converged\n",cnt);
 // Implementation of George Hart's canonicalization algorithm
 // http://library.wolfram.com/infocenter/Articles/2012/
 // RK - the model will possibly become non-convex early in the loops.
-// if it contorts too badly, the model will implode. Having the model
-// at a radius of near 1 minimizes this problem
+// if it contorts too badly, the model will implode. Having the input
+// model at a radius of near 1 minimizes this problem
 bool canonicalize_mm2(Geometry &geom, const double &edge_factor, const double &plane_factor,
                      const int &num_iters, const double &radius_range_percent, const int &rep_count,
                      const bool &planar_only, const bool &alternate_loop, const double &eps)
@@ -869,7 +841,6 @@ void set_edge_colors(Geometry &geom, const Color &col)
 
 void construct_model(Geometry &base, const cn_opts &opts) {
   Geometry dual;
-
   get_dual(&dual, base, 1, Vec3d(0, 0, 0));
 
   vector<Vec3d> ips;
@@ -970,17 +941,26 @@ int main(int argc, char *argv[])
     Geometry geom;
     opts.read_or_error(geom, str);
 
-    //geom.transform(Trans3d::transl(-centroid(geom.verts())));
-    geom.transform(Trans3d::transl(-edge_nearpoints_centroid(geom, Vec3d(0, 0, 0))));
+    geom.transform(Trans3d::transl(-centroid(geom.verts())));
+    //geom.transform(Trans3d::transl(-edge_nearpoints_centroid(geom, Vec3d(0, 0, 0))));
 
-    unitize_nearpoints_radius(geom);
+    unitize_vertex_radius(geom);
+    //unitize_nearpoints_radius(geom);
 
+    bool completed = false;
     //bool planarize_only = false;
-    canonicalize_bd2(geom, opts.num_iters_canonical, 'b',
-                    opts.radius_range_percent / 100, opts.rep_count, opts.centering, opts.epsilon);
+    //completed = canonicalize_mm2(geom, opts.mm_edge_factor / 100, opts.mm_plane_factor / 100,
+    //                            opts.num_iters_canonical, opts.radius_range_percent / 100, opts.rep_count,
+    //                            planarize_only, opts.mm_alternate_loop, opts.epsilon);
+
+    completed = canonicalize_bd2(geom, opts.num_iters_canonical, 'b',
+                                opts.radius_range_percent / 100, opts.rep_count, opts.centering, opts.epsilon);
 
     str += ".off";
     opts.write_or_error(geom, str);
+
+    planarity_info(geom);
+    midradius_info(geom, completed);
   }
   exit(0);
 */
@@ -1063,8 +1043,10 @@ int main(int argc, char *argv[])
                                   planarize_only, opts.mm_alternate_loop, opts.epsilon);
     }
     else
+    if (opts.canonical_method == 'b') {
       completed = canonicalize_bd2(geom, opts.num_iters_canonical, opts.canonical_method,
                                   opts.radius_range_percent / 100, opts.rep_count, opts.centering, opts.epsilon);
+    }
 
     // RK - report planarity
     planarity_info(geom);
