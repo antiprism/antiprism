@@ -380,7 +380,7 @@ void minmax_v(Geometry &geom, iter_params it_params, vector<vector<int>> &eds,
     for (unsigned int v = 0; v < geom.verts().size(); v++) {
       if (eds[v].size() == 0)
         continue;
-      max_dist = 0;
+      max_dist = -1;
       min_dist = 1e100;
       for (unsigned int i = 0; i < eds[v].size(); i++) {
         dist = (geom.verts(v) - geom.verts(eds[v][i])).len2();
