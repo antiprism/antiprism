@@ -53,7 +53,7 @@ using std::string;
 namespace anti {
 
 struct vec_less {
-  bool operator()(const Vec3d &v1, const Vec3d &v2)
+  bool operator()(const Vec3d &v1, const Vec3d &v2) const
   {
     return compare(v1, v2, epsilon) == -1; // may need to be larger for Qhull
   }

@@ -2664,7 +2664,7 @@ public:
   double eps;
   angle_cmp(double ep) : eps(ep) {}
   bool operator()(const pair<pair<double, double>, int> &a,
-                  const pair<pair<double, double>, int> &b)
+                  const pair<pair<double, double>, int> &b) const
   {
     return cmp_angle(a, b, eps);
   }

@@ -773,7 +773,10 @@ bool cmp_col(const Color &a, const Color &b)
 class col_cmp {
 public:
   col_cmp() = default;
-  bool operator()(const Color &a, const Color &b) { return cmp_col(a, b); }
+  bool operator()(const Color &a, const Color &b) const
+  {
+    return cmp_col(a, b);
+  }
 };
 
 void collect_col(vector<Color> &cols, const Color &col, bool no_indexes)

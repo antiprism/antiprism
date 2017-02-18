@@ -320,7 +320,7 @@ class vert_cmp {
 public:
   double eps;
   vert_cmp(double ep) : eps(ep) {}
-  bool operator()(const vertSort &a, const vertSort &b)
+  bool operator()(const vertSort &a, const vertSort &b) const
   {
     return cmp_verts(a, b, eps);
   }

@@ -561,7 +561,7 @@ void Coloring::e_mid_point(bool apply_map)
 }
 
 struct vec_less {
-  bool operator()(const Vec3d &v1, const Vec3d &v2)
+  bool operator()(const Vec3d &v1, const Vec3d &v2) const
   {
     return compare(v1, v2, epsilon) == -1;
   }

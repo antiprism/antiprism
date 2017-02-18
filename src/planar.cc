@@ -524,7 +524,7 @@ class vert_cmp {
 public:
   double eps;
   vert_cmp(double ep) : eps(ep) {}
-  bool operator()(const pair<Vec3d, int> &a, const pair<Vec3d, int> &b)
+  bool operator()(const pair<Vec3d, int> &a, const pair<Vec3d, int> &b) const
   {
     return cmp_verts(a, b, eps);
   }

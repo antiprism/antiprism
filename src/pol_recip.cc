@@ -568,28 +568,26 @@ double find_recip_rad(Geometry &geom, char type, Vec3d cent,
   return rad;
 }
 
-
 bool strip_free_elements(Geometry &geom)
 {
   vector<vector<int>> implicit_edges;
   geom.get_impl_edges(implicit_edges);
 
   vector<int> free_edges;
-  for (unsigned int e_idx=0; e_idx<geom.edges().size(); e_idx++) {
-    if(find_edge_in_edge_list(implicit_edges, geom.edges(e_idx)) == -1)
+  for (unsigned int e_idx = 0; e_idx < geom.edges().size(); e_idx++) {
+    if (find_edge_in_edge_list(implicit_edges, geom.edges(e_idx)) == -1)
       free_edges.push_back(e_idx);
   }
-  if(free_edges.size())
-     geom.del(EDGES, free_edges);
+  if (free_edges.size())
+    geom.del(EDGES, free_edges);
 
   GeometryInfo info(geom);
   auto free_verts = geom.get_info().get_free_verts();
-  if(free_verts.size())
-      geom.del(VERTS, free_verts);
+  if (free_verts.size())
+    geom.del(VERTS, free_verts);
 
   return free_edges.size() || free_verts.size();
 }
-
 
 bool is_polyhedron(const Geometry &geom, char *errmsg = nullptr)
 {

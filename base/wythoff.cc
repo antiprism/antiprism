@@ -345,7 +345,7 @@ static bool frac_less(const vector<int> &fracs, int frac0, int frac1)
 
 class frac_vect_less {
 public:
-  bool operator()(const vector<int> &f0, const vector<int> &f1)
+  bool operator()(const vector<int> &f0, const vector<int> &f1) const
   {
     if (f0.size() != f1.size())
       return (f0.size() < f1.size());

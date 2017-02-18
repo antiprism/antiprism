@@ -233,7 +233,7 @@ void get_pol_recip_verts(Geometry *dual, const Geometry &geom, double recip_rad,
 
 class zero_sz {
 public:
-  bool operator()(const vector<int> &f) { return f.size() == 0; }
+  bool operator()(const vector<int> &f) const { return f.size() == 0; }
 };
 
 void get_dual(Geometry *dual, const Geometry &geom, double recip_rad,
