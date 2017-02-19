@@ -6,7 +6,6 @@ canonical - canonicalize a polyhedon
 .B canonical
 [\fI\,options\/\fR] [\fI\,input_file\/\fR]
 .SH DESCRIPTION
-(BETA)
 Read a polyhedron from a file in OFF format. Canonicalize or planarize it.
 Uses algorithms by George W. Hart, http://www.georgehart.com/
 http://www.georgehart.com/virtual\-polyhedra/conway_notation.html
@@ -19,25 +18,24 @@ Options
 .HP
 \fB\-\-version\fR version information
 .TP
-\fB\-C\fR <opt>
-initial centering
-.IP
-v \- vertex centroid (default)
-n \- edge near points centroid
-x \- not moved
-.TP
-\fB\-r\fR <opt>
-initial radius
-.IP
-v \- average vertex radius = 1 (default)
-n \- average edge near points radius = 1
-x \- not changed
-.TP
 \fB\-e\fR <opt>
 edge distribution (default : none)
 .IP
 s \- project vertices onto a sphere
-a \- (another method to be implimented?)
+.TP
+\fB\-r\fR <opt>
+initial radius
+.IP
+n \- average edge near points radius = 1 (default)
+v \- average vertex radius = 1
+x \- not changed
+.TP
+\fB\-C\fR <opt>
+initial centering
+.IP
+n \- edge near points centroid (default)
+v \- vertex centroid
+x \- not moved
 .TP
 \fB\-p\fR <opt>
 planarization (done before canoncalization. default: none)
@@ -53,7 +51,8 @@ m \- mathematica planarize
 canonicalization
 .IP
 m \- mathematica version (default)
-b \- base/dual version
+b \- base/dual version (reciprocate on face normals)
+e \- edge midpoint convergence (BETA)
 x \- none (default, if \fB\-p\fR is set)
 .HP
 \fB\-n\fR <itrs> maximum number of canonical iterations (default: no limit)
@@ -66,7 +65,7 @@ u \- minimum tangent sphere, U \- maximum, o \- origin point
 .HP
 \fB\-d\fR <perc> radius test. precent difference between minumum and maximum radius
 .IP
-checks if polyhedron is collapsing. 0 for no test (default: 10)
+checks if polyhedron is collapsing. 0 for no test (default: 80)
 .TP
 \fB\-z\fR <n>
 status reporting every n lines. \fB\-1\fR for no status. (default: 1000)

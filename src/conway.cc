@@ -307,9 +307,7 @@ public:
   char operand;
   int poly_size;
   char planarization_method;
-  char canonical_method;
   int num_iters_planar;
-  int num_iters_canonical;
   int rep_count;
   bool unitize;
   bool verbosity;
@@ -330,8 +328,8 @@ public:
   cn_opts()
       : ProgramOpts("conway"), cn_string(""), resolve_defeat(false),
         reverse_defeat(false), operand('\0'), poly_size(0),
-        planarization_method('p'), canonical_method('\0'),
-        num_iters_planar(1000), num_iters_canonical(1000), rep_count(-1),
+        planarization_method('p'),
+        num_iters_planar(1000), rep_count(-1),
         unitize(false), verbosity(false), use_truncate_algorithm(false),
         face_Coloring_method('n'), face_opacity(255), face_pattern("1"),
         epsilon(0), vert_col(Color(255, 215, 0)), // gold
@@ -343,242 +341,164 @@ public:
   void usage();
 };
 
+// clang-format off
 void extended_help()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "The following is a description of Conway Notation edited from the "
-      "Conway\n"
-      "Notation web page by George W. Hart (http://www.georgehart.com)\n"
-      "More detailed information and examples can be found at\n"
-      "http://www.georgehart.com/virtual-polyhedra/conway_notation.html\n"
-      "and at\n"
-      "http://en.wikipedia.org/wiki/Conway_polyhedron_notation\n"
-      "\n"
-      "Basics: In this notation, one specifies a \"seed\" polyhedron with a "
-      "capital\n"
-      "letter. Operations to perform on any polyhedron are specified with "
-      "lower-case\n"
-      "letters preceding it. This program contains a small set of seeds and "
-      "operators\n"
-      "from which an infinite number of derived polyhedra can be generated.\n"
-      "Note: This C++ port of Conway Notation can also operate on OFF files "
-      "from\n"
-      "standard input if the seed polyhedron is not specified.\n"
-      "\n"
-      "Seeds: The platonic solids are denoted T, O, C, I, and D, according to "
-      "their\n"
-      "first letter. Other polyhedra which are implemented here include "
-      "prisms, Pn,\n"
-      "antiprisms, An, and pyramids, Yn, where n is a number (3 or greater) "
-      "which you\n"
-      "specify to indicate the size of the base you want, e.g., Y3=T, P4=C, "
-      "and A3=O.\n"
-      "\n"
-      "Operations: Currently, abcdegjkmoprst are defined. They are motivated "
-      "by the\n"
-      "operations needed to create the Archimedean solids and their duals from "
-      "the\n"
-      "platonic solids.  Try each on a cube:\n"
-      "\n"
-      "a = ambo   The ambo operation can be thought of as truncating to the "
-      "edge\n"
-      "midpoints.  It produces a polyhedron, aX, with one vertex for each edge "
-      "of X.\n"
-      "There is one face for each face of X and one face for each vertex of "
-      "X.\n"
-      "Notice that for any X, the vertices of aX are all 4-fold, and that "
-      "aX=adX.\n"
-      "If two mutually dual polyhedra are in \"dual position,\" with all edges "
-      "tangent\n"
-      "to a common sphere, the ambo of either is their intersection.  For "
-      "example\n"
-      "aC=aO is the cuboctahedron.\n"
-      "Note: ambo is also known as \"rectifying\" the polyhedron, or "
-      "rectification\n"
-      "\n"
-      "b = bevel  The bevel operation can be defined by bX=taX.  bC is the "
-      "truncated\n"
-      "cuboctahedron.\n"
-      "Note: bevel is also known as \"omnitruncating\" the polyhedron, or "
-      "omnitruncation\n"
-      "\n"
-      "c = chamfer   New hexagonal faces are added in place of edges.\n"
-      "\n"
-      "d = dual   The dual of a polyhedron has a vertex for each face, and a "
-      "face for\n"
-      "each vertex, of the original polyhedron, e.g., dC=O.  Duality is an "
-      "operation\n"
-      "of order two, meaning for any polyhedron X, ddX=X, e.g., ddC=dO=C.\n"
-      "\n"
-      "e = expand This is Mrs. Stott's expansion operation.  Each face of X "
-      "is\n"
-      "separated from all its neighbors and reconnected with a new 4-sided "
-      "face,\n"
-      "corresponding to an edge of X.  An n-gon is then added to connect the "
-      "4-sided\n"
-      "faces at each n-fold vertex.  For example, eC is the "
-      "rhombicuboctahedron.  It\n"
-      "turns out that eX=aaX and so eX=edX.\n"
-      "Note: expand is also known as \"cantellating\" the polyhedron, or "
-      "cantellation\n"
-      "\n"
-      "g = gyro   The dual operation to s is g. gX=dsdX=dsX, with all 5-sided "
-      "faces.\n"
-      "The gyrocube, gC=gO=\"pentagonal icositetrahedron,\" is dual to the "
-      "snub cube.\n"
-      "g is like k but with the new edges connecting the face centers to the "
-      "1/3\n"
-      "points on the edges rather than the vertices.\n"
-      "\n"
-      "j = join   The join operator is dual to ambo, so jX=dadX=daX.  jX is "
-      "like kX\n"
-      "without the original edges of X.  It produces a polyhedron with one "
-      "4-sided\n"
-      "face for each edge of X.  For example, jC=jO is the rhombic "
-      "dodecahedron.\n"
-      "\n"
-      "k = kis    All faces are processed or kn = just n-sided faces are "
-      "processed\n"
-      "The kis operation divides each n-sided face into n triangles.  A new "
-      "vertex is\n"
-      "added in the center of each face, e.g., the kiscube, kC, has 24 "
-      "triangular\n"
-      "faces.  The k operator is dual to t, meaning kX=dtdX.\n"
-      "\n"
-      "m = meta   Dual to b, mX=dbX=kjX.  mC has 48 triangular faces.  m is "
-      "like k\n"
-      "and o combined; new edges connect new vertices at the face centers to "
-      "the old\n"
-      "vertices and new vertices at the edge midpoints.  mX=mdX.  mC is the\n"
-      "\"hexakis octahedron.\"\n"
-      "\n"
-      "o = ortho  Dual to e, oX=deX=jjX.  oC is the trapezoidal "
-      "icositetrahedron, with\n"
-      "24 kite-shaped faces.  oX has the effect of putting new vertices in the "
-      "middle\n"
-      "of each face of X and connecting them, with new edges, to the edge "
-      "midpoints of\n"
-      "X.\n"
-      "\n"
-      "p = propellor    Makes each n-gon face into a \"propellor\" of an "
-      "n-gon\n"
-      "surrounded by n quadrilaterals, e.g., pT is the tetrahedrally "
-      "stellated\n"
-      "icosahedron. Try pkD and pt6kT. p is a self-dual operation, i.e., "
-      "dpdX=pX and\n"
-      "dpX=pdX, and p also commutes with a and j, i.e., paX=apX. (This and the "
-      "next\n"
-      "are extensions were added by George Hart and not specified by Conway)\n"
-      "\n"
-      "r = reflect   Changes a left-handed solid to right handed, or vice "
-      "versa, but\n"
-      "has no effect on a reflexible solid. So rC=C, but compare sC and rsC.\n"
-      "\n"
-      "s = snub   The snub operation produces the snub cube, sC, from C.  It "
-      "can be\n"
-      "thought of as eC followed by the operation of slicing each of the new "
-      "4-fold\n"
-      "faces along a diagonal into two triangles.  With a consistent "
-      "handedness to\n"
-      "these cuts, all the vertices of sX are 5-fold.  Note that sX=sdX.\n"
-      "\n"
-      "t = truncate  All faces are processed or tn = just n-sided faces are "
-      "processed\n"
-      "Truncating a polyhedron cuts off each vertex, producing a new n-sided "
-      "face for\n"
-      "each n-fold vertex.  The faces of the original polyhedron still appear, "
-      "but\n"
-      "have twice as many sides, e.g., the tC has six octagonal sides "
-      "corresponding to\n"
-      "the six squares of the C, and eight triangles corresponding to the "
-      "cube's eight\n"
-      "vertices.\n"
-      "\n"
-      "w = whirl  Gyro followed by truncation of vertices centered on original "
-      "faces.\n"
-      "This create 2 new hexagons for every original edge"
-      "\n"
-      "x = null   Null operation. Nothing is changed. A planarize step is "
-      "performed\n"
-      "\n");
+   fprintf(stdout,
+"\n"
+"The following is a description of Conway Notation edited from the Conway\n"
+"Notation web page by George W. Hart (http://www.georgehart.com)\n"
+"More detailed information and examples can be found at\n"
+"http://www.georgehart.com/virtual-polyhedra/conway_notation.html\n"
+"and at\n"
+"http://en.wikipedia.org/wiki/Conway_polyhedron_notation\n"
+"\n"
+"Basics: In this notation, one specifies a \"seed\" polyhedron with a capital\n"
+"letter. Operations to perform on any polyhedron are specified with lower-case\n"
+"letters preceding it. This program contains a small set of seeds and operators\n"
+"from which an infinite number of derived polyhedra can be generated.\n"
+"Note: This C++ port of Conway Notation can also operate on OFF files from\n"
+"standard input if the seed polyhedron is not specified.\n"
+"\n"
+"Seeds: The platonic solids are denoted T, O, C, I, and D, according to their\n"
+"first letter. Other polyhedra which are implemented here include prisms, Pn,\n"
+"antiprisms, An, and pyramids, Yn, where n is a number (3 or greater) which you\n"
+"specify to indicate the size of the base you want, e.g., Y3=T, P4=C, and A3=O.\n"
+"\n"
+"Operations: Currently, abcdegjkmoprst are defined. They are motivated by the\n"
+"operations needed to create the Archimedean solids and their duals from the\n"
+"platonic solids.  Try each on a cube:\n"
+"\n"
+"a = ambo   The ambo operation can be thought of as truncating to the edge\n"
+"midpoints.  It produces a polyhedron, aX, with one vertex for each edge of X.\n"
+"There is one face for each face of X and one face for each vertex of X.\n"
+"Notice that for any X, the vertices of aX are all 4-fold, and that aX=adX.\n"
+"If two mutually dual polyhedra are in \"dual position,\" with all edges tangent\n"
+"to a common sphere, the ambo of either is their intersection.  For example\n"
+"aC=aO is the cuboctahedron.\n"
+"Note: ambo is also known as \"rectifying\" the polyhedron, or rectification\n"
+"\n"
+"b = bevel  The bevel operation can be defined by bX=taX.  bC is the truncated\n"
+"cuboctahedron.\n"
+"Note: bevel is also known as \"omnitruncating\" the polyhedron, or omnitruncation\n"
+"\n"
+"c = chamfer   New hexagonal faces are added in place of edges.\n"
+"\n"
+"d = dual   The dual of a polyhedron has a vertex for each face, and a face for\n"
+"each vertex, of the original polyhedron, e.g., dC=O.  Duality is an operation\n"
+"of order two, meaning for any polyhedron X, ddX=X, e.g., ddC=dO=C.\n" 
+"\n"
+"e = expand This is Mrs. Stott's expansion operation.  Each face of X is\n"
+"separated from all its neighbors and reconnected with a new 4-sided face,\n"
+"corresponding to an edge of X.  An n-gon is then added to connect the 4-sided\n"
+"faces at each n-fold vertex.  For example, eC is the rhombicuboctahedron.  It\n"
+"turns out that eX=aaX and so eX=edX.\n"
+"Note: expand is also known as \"cantellating\" the polyhedron, or cantellation\n"
+"\n"
+"g = gyro   The dual operation to s is g. gX=dsdX=dsX, with all 5-sided faces.\n"
+"The gyrocube, gC=gO=\"pentagonal icositetrahedron,\" is dual to the snub cube.\n"
+"g is like k but with the new edges connecting the face centers to the 1/3\n"
+"points on the edges rather than the vertices.\n"
+"\n"
+"j = join   The join operator is dual to ambo, so jX=dadX=daX.  jX is like kX\n"
+"without the original edges of X.  It produces a polyhedron with one 4-sided\n"
+"face for each edge of X.  For example, jC=jO is the rhombic dodecahedron.\n"
+"\n"
+"k = kis    All faces are processed or kn = just n-sided faces are processed\n"
+"The kis operation divides each n-sided face into n triangles.  A new vertex is\n"
+"added in the center of each face, e.g., the kiscube, kC, has 24 triangular\n"
+"faces.  The k operator is dual to t, meaning kX=dtdX.\n"
+"\n"
+"m = meta   Dual to b, mX=dbX=kjX.  mC has 48 triangular faces.  m is like k\n"
+"and o combined; new edges connect new vertices at the face centers to the old\n"
+"vertices and new vertices at the edge midpoints.  mX=mdX.  mC is the\n"
+"\"hexakis octahedron.\"\n"
+"\n"
+"o = ortho  Dual to e, oX=deX=jjX.  oC is the trapezoidal icositetrahedron, with\n"
+"24 kite-shaped faces.  oX has the effect of putting new vertices in the middle\n"
+"of each face of X and connecting them, with new edges, to the edge midpoints of\n"
+"X.\n"
+"\n"
+"p = propellor    Makes each n-gon face into a \"propellor\" of an n-gon\n"
+"surrounded by n quadrilaterals, e.g., pT is the tetrahedrally stellated\n"
+"icosahedron. Try pkD and pt6kT. p is a self-dual operation, i.e., dpdX=pX and\n"
+"dpX=pdX, and p also commutes with a and j, i.e., paX=apX. (This and the next\n"
+"are extensions were added by George Hart and not specified by Conway)\n"
+"\n"
+"r = reflect   Changes a left-handed solid to right handed, or vice versa, but\n"
+"has no effect on a reflexible solid. So rC=C, but compare sC and rsC.\n"
+"\n"
+"s = snub   The snub operation produces the snub cube, sC, from C.  It can be\n"
+"thought of as eC followed by the operation of slicing each of the new 4-fold\n"
+"faces along a diagonal into two triangles.  With a consistent handedness to\n"
+"these cuts, all the vertices of sX are 5-fold.  Note that sX=sdX.\n"
+"\n"
+"t = truncate  All faces are processed or tn = just n-sided faces are processed\n"
+"Truncating a polyhedron cuts off each vertex, producing a new n-sided face for\n"
+"each n-fold vertex.  The faces of the original polyhedron still appear, but\n"
+"have twice as many sides, e.g., the tC has six octagonal sides corresponding to\n"
+"the six squares of the C, and eight triangles corresponding to the cube's eight\n"
+"vertices.\n"
+"\n"
+"w = whirl  Gyro followed by truncation of vertices centered on original faces.\n"
+"This create 2 new hexagons for every original edge\n"
+"\n"
+"x = null   Null operation. Nothing is changed. A planarize step is performed\n"
+"\n");
 }
 
 void cn_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options] [Conway Notation string] [input_file]\n"
-      "\n"
-      "Conway Notation uses algorithms by George W. Hart "
-      "(http://www.georgehart.com)\n"
-      "http://www.georgehart.com/virtual-polyhedra/conway_notation.html\n"
-      "\n"
-      "Read a polyhedron from a file in OFF format.\n"
-      "If input_file is not given and no seed polyhedron is given in the "
-      "notation\n"
-      "string then the program reads from standard input.\n"
-      "\n"
-      "Options\n"
-      "%s"
-      "  -H        Conway Notation detailed help. seeds and operator "
-      "descriptions\n"
-      "  -d        don't simplify Conway Notation string\n"
-      "  -r        execute operations in reverse order (left to right)\n"
-      "  -t        use truncate algorithm instead of simplifying to \"dkd\"\n"
-      "              also used in ambo as a truncation of 1/2\n"
-      "  -u        make final product be averge unit edge length\n"
-      "  -v        verbose output\n"
-      "  -o <file> write output to file (default: write to standard output)\n"
-      "\n"
-      "Canonicalization and Planarization options\n"
-      "  -p <mthd> inter-step planarization method\n"
-      "            p - conway notation planarize (face centroids reciprocal) "
-      "(default)\n"
-      "            q - conway notation planarize (face centroids magnitude "
-      "reciprocal)\n"
-      "            l - mathematica version of planarize\n"
-      "  -c <mthd> canonicalize final product using:\n"
-      "            n - conway notation version of canonicalization\n"
-      "            m - mathematica version of canonicalization\n"
-      "            or planarize final product with p, q or l above\n"
-      "  -n <itrs> maximum number canonical iterations (default: 1000)\n"
-      "  -l <lim>  minimum distance change to terminate canonicalization, as "
-      "negative\n"
-      "               exponent (default: %d giving %.0e)\n"
-      "  -i <itrs> maximum inter-step planarization iterations (default: "
-      "1000)\n"
-      "               0 = no inter-step planarization\n"
-      "  -z <n>    status reporting every n iterations, -1 for no status "
-      "(default: -1)\n"
-      "\n"
-      "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
-      "  -V <col>  vertex color (default: gold)\n"
-      "  -E <col>  edge color   (default: lightgray)\n"
-      "  -f <mthd> mthd is face Coloring method using color in map\n"
-      "               key word: none - sets no color (default: n)\n"
-      "               n - color by number of sides\n"
-      "               s - symmetric Coloring\n"
-      "  -T <tran> face transparency. valid range from 0 (invisible) to 255 "
-      "(opaque)\n"
-      "  -O <strg> face transparency pattern string. valid values\n"
-      "               0 - map color alpha value, 1 -T alpha applied (default: "
-      "'1')\n"
-      "  -m <maps> color maps for faces to be tried in turn (default: m1)\n"
-      "               keyword m1: "
-      "red,darkorange1,yellow,darkgreen,cyan,blue,magenta,\n"
-      "                           white,grey,black\n"
-      "               keyword m2: "
-      "red,blue,green,yellow,brown,magenta,purple,grue,\n"
-      "                           gray,orange (from George Hart\'s original "
-      "applet)\n"
-      "\n"
-      "\n",
-      prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
-      ::epsilon);
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] [Conway Notation string] [input_file]\n"
+"\n"
+"Conway Notation uses algorithms by George W. Hart (http://www.georgehart.com)\n"
+"http://www.georgehart.com/virtual-polyhedra/conway_notation.html\n"
+"\n"
+"Read a polyhedron from a file in OFF format.\n"
+"If input_file is not given and no seed polyhedron is given in the notation\n"
+"string then the program reads from standard input.\n"
+"\n"
+"Options\n"
+"%s"
+"  -H        Conway Notation detailed help. seeds and operator descriptions\n"
+"  -d        don't simplify Conway Notation string\n"
+"  -r        execute operations in reverse order (left to right)\n"
+"  -t        use truncate algorithm instead of simplifying to \"dkd\"\n"
+"              also used in ambo as a truncation of 1/2\n"
+"  -u        make final product be averge unit edge length\n"
+"  -v        verbose output\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+"\n"
+"Planarization options (use canonical program to canonicalize output)\n"
+"  -p <mthd> inter-step planarization method\n"
+"            p - face centroids (magnitude squared) (default)\n"
+"            m - mathematica planarize\n"
+"  -i <itrs> maximum inter-step planarization iterations (default: 1000)\n"
+"  -z <n>    status reporting every n iterations, -1 for no status (default: -1)\n"
+"  -l <lim>  minimum distance change to terminate canonicalization, as negative\n"
+"               exponent (default: %d giving %.0e)\n"
+"\n"
+"\nColoring Options (run 'off_util -H color' for help on color formats)\n"
+"  -V <col>  vertex color (default: gold)\n"
+"  -E <col>  edge color   (default: lightgray)\n"
+"  -f <mthd> mthd is face coloring method using color in map (default: n)\n"
+"               key word: none - sets no color\n"
+"               n - color by number of sides\n"
+"               s - symmetric coloring\n"
+"  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
+"  -O <strg> face transparency pattern string. valid values\n"
+"               0 - map color alpha value, 1 -T alpha applied (default: '1')\n"
+"  -m <maps> color maps for faces to be tried in turn (default: m1)\n"
+"               keyword m1: red,darkorange1,yellow,darkgreen,cyan,blue,magenta,\n"
+"                           white,grey,black\n"
+"               keyword m2: red,blue,green,yellow,brown,magenta,purple,grue,\n"
+"                           gray,orange (from George Hart\'s original applet)\n"
+"\n"
+"\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }
+// clang-format on
 
 void cn_opts::process_command_line(int argc, char **argv)
 {
@@ -591,7 +511,7 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hHdrtuvp:c:n:l:i:z:f:V:E:T:O:m:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hHdrtuvp:l:i:z:f:V:E:T:O:m:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -621,23 +541,10 @@ void cn_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'p':
-      if (strlen(optarg) == 1 && strchr("pql", int(*optarg)))
+      if (strlen(optarg) == 1 && strchr("pm", int(*optarg)))
         planarization_method = *optarg;
       else
-        error("planarize method type must be p, q or l", c);
-      break;
-
-    case 'c':
-      if (strlen(optarg) == 1 && strchr("nmpql", int(*optarg)))
-        canonical_method = *optarg;
-      else
-        error("canonical method type must be n, m, p, q or l", c);
-      break;
-
-    case 'n':
-      print_status_or_exit(read_int(optarg, &num_iters_canonical), c);
-      if (num_iters_canonical <= 0)
-        error("number of canonical iterations must be greater than 0", c);
+        error("planarize method type must be p or m", c);
       break;
 
     case 'l':
@@ -660,7 +567,7 @@ void cn_opts::process_command_line(int argc, char **argv)
     case 'z':
       print_status_or_exit(read_int(optarg, &rep_count), c);
       if (rep_count < -1)
-        error("number of iterations must be -1 or greater", c);
+        error("number of planar report iterations must be -1 or greater", c);
       break;
 
     case 'f':
@@ -894,45 +801,14 @@ void cn_planarize(Geometry &geom, const char &planarization_method,
                   const int &num_iters_planar, const double &eps,
                   const bool &verbosity, const int &rep_count)
 {
-  int divergence_test = 10;
-
   if (num_iters_planar != 0) {
     verbose('_', 0, verbosity);
-    if (planarization_method == 'p' || planarization_method == 'q')
-      canonicalize_cn(&geom, num_iters_planar, planarization_method,
-                      divergence_test, rep_count, eps);
+    if (planarization_method == 'p')
+      planarize_bd(geom, num_iters_planar, rep_count, eps);
     else
-      canonicalize_mm(&geom, 50 / 100.0, 20 / 100.0, num_iters_planar,
-                      divergence_test, rep_count, true, eps);
+    if (planarization_method == 'm')
+      planarize_mm(geom, num_iters_planar, rep_count, eps);
   }
-}
-
-void canonicalize(Geometry &geom, const char &canonical_method,
-                  const int &num_iters_canonical, const double &eps,
-                  const bool &verbosity, const int &rep_count)
-{
-  int divergence_test = 10;
-
-  if (canonical_method == 'n') {
-    verbose('@', 0, verbosity);
-    centroid_to_origin(geom);
-    canonicalize_cn(&geom, num_iters_canonical, canonical_method,
-                    divergence_test, rep_count, eps);
-  }
-  else if (canonical_method == 'm') {
-    verbose('@', 0, verbosity);
-
-    // -C s options from canonical.cc found to be helpful with old canonical
-    centroid_to_origin(geom);
-    project_onto_sphere(&geom);
-
-    canonicalize_mm(&geom, 50 / 100.0, 20 / 100.0, num_iters_canonical,
-                    divergence_test, rep_count, false, eps);
-  }
-  else if (canonical_method)
-    // final planarization
-    cn_planarize(geom, canonical_method, num_iters_canonical, eps, verbosity,
-                 rep_count);
 }
 
 void get_operand(Geometry &geom, const char &operand, const int &poly_size)
@@ -1623,8 +1499,6 @@ int main(int argc, char *argv[])
   do_operations(geom, opts.operations, opts.planarization_method,
                 opts.num_iters_planar, opts.epsilon,
                 opts.use_truncate_algorithm, opts.verbosity, opts.rep_count);
-  canonicalize(geom, opts.canonical_method, opts.num_iters_canonical,
-               opts.epsilon, opts.verbosity, opts.rep_count);
 
   if (opts.unitize)
     unitize_edges(geom);

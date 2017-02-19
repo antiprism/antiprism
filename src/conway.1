@@ -41,33 +41,22 @@ verbose output
 .HP
 \fB\-o\fR <file> write output to file (default: write to standard output)
 .PP
-Canonicalization and Planarization options
+Planarization options (use canonical program to canonicalize output)
 .HP
 \fB\-p\fR <mthd> inter\-step planarization method
 .IP
-p \- conway notation planarize (face centroids reciprocal) (default)
-q \- conway notation planarize (face centroids magnitude reciprocal)
-l \- mathematica version of planarize
+p \- face centroids (magnitude squared) (default)
+m \- mathematica planarize
 .HP
-\fB\-c\fR <mthd> canonicalize final product using:
-.IP
-n \- conway notation version of canonicalization
-m \- mathematica version of canonicalization
-or planarize final product with p, q or l above
-.HP
-\fB\-n\fR <itrs> maximum number canonical iterations (default: 1000)
+\fB\-i\fR <itrs> maximum inter\-step planarization iterations (default: 1000)
+.TP
+\fB\-z\fR <n>
+status reporting every n iterations, \fB\-1\fR for no status (default: \fB\-1\fR)
 .TP
 \fB\-l\fR <lim>
 minimum distance change to terminate canonicalization, as negative
 .IP
 exponent (default: 12 giving 1e\-12)
-.HP
-\fB\-i\fR <itrs> maximum inter\-step planarization iterations (default: 1000)
-.IP
-0 = no inter\-step planarization
-.TP
-\fB\-z\fR <n>
-status reporting every n iterations, \fB\-1\fR for no status (default: \fB\-1\fR)
 .PP
 Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
 .TP
@@ -77,11 +66,11 @@ vertex color (default: gold)
 \fB\-E\fR <col>
 edge color   (default: lightgray)
 .HP
-\fB\-f\fR <mthd> mthd is face Coloring method using color in map
+\fB\-f\fR <mthd> mthd is face coloring method using color in map (default: n)
 .IP
-key word: none \- sets no color (default: n)
+key word: none \- sets no color
 n \- color by number of sides
-s \- symmetric Coloring
+s \- symmetric coloring
 .HP
 \fB\-T\fR <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
 .HP
