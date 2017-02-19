@@ -28,8 +28,11 @@ libantiprism_la_SOURCES = \
 
 supdir = $(datadir)/$(PACKAGE)
 libantiprism_la_CPPFLAGS = -DSUPDIR="\"$(supdir)\"" 
-libantiprism_la_LDFLAGS = -no-undefined -version-info 0:0:0 \
+libantiprism_la_LDFLAGS = -no-undefined -version-info 0:0:0
+if HAVE_LD_VERSION_SCRIPT
+libantiprism_la_LDFLAGS += \
    -Wl,--version-script,'$(top_srcdir)/vers_script.txt'
+endif
 libantiprism_la_LIBADD = tesselator/libtess.la qhull/libqhull.la \
 	muparser/libmuparser.la
 

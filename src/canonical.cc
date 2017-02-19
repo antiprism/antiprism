@@ -51,7 +51,7 @@ using namespace anti;
 class cn_opts : public ProgramOpts {
 public:
   string ifile;
-  string stderr;
+  string ofile;
 
   char centering;
   char initial_radius;
@@ -306,7 +306,7 @@ void cn_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'o':
-      stderr = optarg;
+      ofile = optarg;
       break;
 
     default:
@@ -1058,7 +1058,7 @@ int main(int argc, char *argv[])
   // RK - parts to output
   construct_model(geom, opts);
 
-  opts.write_or_error(geom, opts.stderr);
+  opts.write_or_error(geom, opts.ofile);
 
   return 0;
 }

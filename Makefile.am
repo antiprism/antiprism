@@ -10,7 +10,7 @@ if BUILD_PY_MOD
 SUBDIRS += python
 endif
 
-EXTRA_DIST = bootstrap pad_file.xml README.git Doxyfile \
+EXTRA_DIST = bootstrap pad_file.xml README.git Doxyfile vers_script.txt \
 				 doc doc_src share debian \
              python/antiprism.i python/antiprism_doc.i \
 				 python/antiprism_wrap.cc python/antiprism.py \

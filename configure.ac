@@ -19,6 +19,7 @@ AC_PROG_CPP
 AC_LANG([C++])
 AX_CXX_COMPILE_STDCXX(11)
 
+gl_LD_VERSION_SCRIPT
 LT_INIT([win32-dll])
 
 # Check whether Python module should be built
