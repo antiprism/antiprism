@@ -278,31 +278,54 @@ void get_congruence_maps(const Geometry &geom, Trans3d trans,
  * *\param geom geometry to canonicalise.
  * \param edge_factor small number to scale edge adjustments.
  * \param plane_factor small number to scale plane adjustments.
- * \param n maximumn number of iterations.
- * \param divergence_test if the model width scales by this much then assume
- *  the algorithm is diverging, and terminate.
+ * \param num_iters maximumn number of iterations.
+ * \param radius_range_percent if the model outer radius increases this
+ *  much over the inner radius then it is growing too much, terminate.
  * \param rep_count report on propgress after this many iterations.
  * \param planar_only planarise only.
+ * \param alternate_loop alternate loop.
  * \param eps a small number, coordinates differing by less than eps are
  *  the same. */
-void canonicalize_mm(Geometry *geom, double edge_factor, double plane_factor,
-                     int n, int divergence_test, int rep_count,
-                     bool planar_only, double eps = epsilon);
+bool canonicalize_mm(Geometry &geom, double edge_factor, double plane_factor,
+                    int num_iters, double radius_range_percent, int rep_count,
+                    bool planar_only, bool alternate_loop, double eps = epsilon);
+
+/// an abbreviated wrapper for planarize with mathematica
+/**\param geom geometry to planarize.
+ * \param num_iters maximumn number of iterations.
+ * \param rep_count report on propgress after this many iterations.
+ * \param eps a small number, coordinates differing by less than eps are
+ *  the same. */
+bool planarize_mm(Geometry &geom, int num_iters, int rep_count = -1,
+                 double eps = epsilon);
+
+Vec3d edge_nearpoints_centroid(Geometry &geom, Vec3d cent);
 
 /// Canonicalize (George Hart "Conway Notation" algorithm)
 /**See http://www.georgehart.com/virtual-polyhedra/conway_notation.html
  * \param geom geometry to canonicalise.
- * \param method 'n': base/dual canonicalize method, 'p': adjust vertices with
+ * \param method 'b': base/dual canonicalize method, 'p': adjust vertices with
  * side effect of planarization (len2() version), 'q': adjust vertices with
- * side effect of planarization (len() version), case 'x': use face centres.
- * \param n maximumn number of iterations.
- * \param divergence_test if the model width scales by this much then assume
- *  *  the algorithm is diverging, and terminate.
+ * side effect of planarization (len() version), case 'f': use face centres.
+ * \param num_iters maximumn number of iterations.
+ * \param radius_range_percent if the model outer radius increases this
+ *  much over the inner radius then it is growing too much, terminate.
+ * \param rep_count report on propgress after this many iterations.
+ * \param centering passed from canonical program, when centering is not used
+ * \param eps a small number, coordinates differing by less than eps are
+ *  the same. */
+bool canonicalize_bd(Geometry &base, int num_iters, char canonical_method,
+                    double radius_range_percent, int rep_count, 
+                    char centering, double eps = epsilon);
+
+/// an abbreviated wrapper for planarize with the base/dual method
+/**\param geom geometry to planarize.
+ * \param num_iters maximumn number of iterations.
  * \param rep_count report on propgress after this many iterations.
  * \param eps a small number, coordinates differing by less than eps are
  *  the same. */
-void canonicalize_cn(Geometry *geom, int n, char method, int divergence_test,
-                     int rep_count, double eps = epsilon);
+bool planarize_bd(Geometry &geom, int num_iters, int rep_count = -1,
+                 double eps = epsilon);
 
 /// Close polyhedron (basic)
 /**Each hole (open circuit of edges) is converted to a face with colour col
