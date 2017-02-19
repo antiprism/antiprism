@@ -79,14 +79,15 @@ public:
   Color sphere_col;
 
   cn_opts()
-      : ProgramOpts("canonical"), centering('n'), initial_radius('n'), edge_distribution('\0'),
-        planarize_method('\0'), num_iters_planar(-1), canonical_method('m'),
-        num_iters_canonical(-1), mm_edge_factor(50), mm_plane_factor(20),
-        mm_alternate_loop(false), rep_count(1000), radius_range_percent(80),
-        output_parts("b"), face_opacity(-1), epsilon(0), ipoints_col(Color(255, 255, 0)),
+      : ProgramOpts("canonical"), centering('n'), initial_radius('n'),
+        edge_distribution('\0'), planarize_method('\0'), num_iters_planar(-1),
+        canonical_method('m'), num_iters_canonical(-1), mm_edge_factor(50),
+        mm_plane_factor(20), mm_alternate_loop(false), rep_count(1000),
+        radius_range_percent(80), output_parts("b"), face_opacity(-1),
+        epsilon(0), ipoints_col(Color(255, 255, 0)),
         base_nearpts_col(Color(255, 0, 0)),
         dual_nearpts_col(Color(0.0, 0.39216, 0.0)), base_edge_col(Color()),
-        dual_edge_col(Color()),sphere_col(Color(255, 255, 255))
+        dual_edge_col(Color()), sphere_col(Color(255, 255, 255))
   {
   }
 

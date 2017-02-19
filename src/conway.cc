@@ -328,8 +328,7 @@ public:
   cn_opts()
       : ProgramOpts("conway"), cn_string(""), resolve_defeat(false),
         reverse_defeat(false), operand('\0'), poly_size(0),
-        planarization_method('p'),
-        num_iters_planar(1000), rep_count(-1),
+        planarization_method('p'), num_iters_planar(1000), rep_count(-1),
         unitize(false), verbosity(false), use_truncate_algorithm(false),
         face_Coloring_method('n'), face_opacity(255), face_pattern("1"),
         epsilon(0), vert_col(Color(255, 215, 0)), // gold
@@ -805,8 +804,7 @@ void cn_planarize(Geometry &geom, const char &planarization_method,
     verbose('_', 0, verbosity);
     if (planarization_method == 'p')
       planarize_bd(geom, num_iters_planar, rep_count, eps);
-    else
-    if (planarization_method == 'm')
+    else if (planarization_method == 'm')
       planarize_mm(geom, num_iters_planar, rep_count, eps);
   }
 }
