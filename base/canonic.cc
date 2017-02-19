@@ -49,16 +49,18 @@ namespace anti {
 
 // return true if maximum vertex radius is radius_range_percent (0.0 to ...)
 // greater than minimum vertex radius
-bool canonical_radius_range_test(const Geometry &geom, double radius_range_percent)
+bool canonical_radius_range_test(const Geometry &geom,
+                                 double radius_range_percent)
 {
   GeometryInfo rep(geom);
   rep.set_center(geom.centroid());
 
   double min = rep.vert_dist_lims().min;
   double max = rep.vert_dist_lims().max;
-    
+
   // min and max should always be positive, max should always be larger
-  return (((max-min)/((max+min)/2.0)) > radius_range_percent) ? true : false;
+  return (((max - min) / ((max + min) / 2.0)) > radius_range_percent) ? true
+                                                                      : false;
 }
 
 // Implementation of George Hart's canonicalization algorithm
@@ -67,8 +69,8 @@ bool canonical_radius_range_test(const Geometry &geom, double radius_range_perce
 // if it contorts too badly, the model will implode. Having the input
 // model at a radius of near 1 minimizes this problem
 bool canonicalize_mm(Geometry &geom, double edge_factor, double plane_factor,
-                    int num_iters, double radius_range_percent, int rep_count,
-                    bool planar_only, bool alternate_loop, double eps)
+                     int num_iters, double radius_range_percent, int rep_count,
+                     bool planar_only, bool alternate_loop, double eps)
 {
   bool completed = false;
 
@@ -99,7 +101,8 @@ bool canonicalize_mm(Geometry &geom, double edge_factor, double plane_factor,
         for (auto &edge : edges) {
           Vec3d P = geom.edge_nearpt(edge, Vec3d(0, 0, 0));
           near_pts.push_back(P);
-        // RK - these 4 lines cause the near points to be applied in a 2nd loop
+          // RK - these 4 lines cause the near points to be applied in a 2nd
+          // loop
         }
         int p_cnt = 0;
         for (auto &edge : edges) {
@@ -109,19 +112,19 @@ bool canonicalize_mm(Geometry &geom, double edge_factor, double plane_factor,
           verts[edge[1]] -= offset;
         }
       }
-/*
-      // RK - revolving loop. didn't solve the imbalance problem
-      else {
-        for (unsigned int ee = cnt; ee < edges.size() + cnt; ee++) {
-          int e = ee % edges.size();
-          Vec3d P = geom.edge_nearpt(edges[e], Vec3d(0, 0, 0));
-          near_pts.push_back(P);
-          Vec3d offset = edge_factor * (P.len() - 1) * P;
-          verts[edges[e][0]] -= offset;
-          verts[edges[e][1]] -= offset;
-        }
-      }
-*/
+      /*
+            // RK - revolving loop. didn't solve the imbalance problem
+            else {
+              for (unsigned int ee = cnt; ee < edges.size() + cnt; ee++) {
+                int e = ee % edges.size();
+                Vec3d P = geom.edge_nearpt(edges[e], Vec3d(0, 0, 0));
+                near_pts.push_back(P);
+                Vec3d offset = edge_factor * (P.len() - 1) * P;
+                verts[edges[e][0]] -= offset;
+                verts[edges[e][1]] -= offset;
+              }
+            }
+      */
 
       Vec3d cent_near_pts = centroid(near_pts);
       for (unsigned int i = 0; i < verts.size(); i++)
@@ -161,7 +164,7 @@ bool canonicalize_mm(Geometry &geom, double edge_factor, double plane_factor,
     // increment count here for reporting
     cnt++;
 
-    if ((rep_count > 0) && (cnt%rep_count == 0))
+    if ((rep_count > 0) && (cnt % rep_count == 0))
       fprintf(stderr, "%-15d max_diff=%.17g\n", cnt, sqrt(max_diff2));
 
     if (sqrt(max_diff2) < eps) {
@@ -170,8 +173,10 @@ bool canonicalize_mm(Geometry &geom, double edge_factor, double plane_factor,
     }
 
     // if minimum and maximum radius are differing, the polyhedron is crumpling
-    if (radius_range_percent && canonical_radius_range_test(geom, radius_range_percent)) {
-      fprintf(stderr, "\nbreaking out: radius range detected. try increasing -d\n");
+    if (radius_range_percent &&
+        canonical_radius_range_test(geom, radius_range_percent)) {
+      fprintf(stderr,
+              "\nbreaking out: radius range detected. try increasing -d\n");
       break;
     }
   }
@@ -189,9 +194,8 @@ bool planarize_mm(Geometry &geom, int num_iters, int rep_count, double eps)
 {
   bool alternate_loop = false;
   bool planarize_only = true;
-  return canonicalize_mm(geom, 0.3, 0.5,
-                        num_iters, DBL_MAX, rep_count,
-                        planarize_only, alternate_loop, eps);
+  return canonicalize_mm(geom, 0.3, 0.5, num_iters, DBL_MAX, rep_count,
+                         planarize_only, alternate_loop, eps);
 }
 
 // reciprocalN() is from the Hart's Conway Notation web page
@@ -275,7 +279,8 @@ vector<Vec3d> reciprocalN(const Geometry &geom)
   // len2() for length squared to minimize internal sqrt() calls
   map<vector<int>, double> geom_nearpts_len2;
   for (auto &geom_edge : geom_edges)
-    geom_nearpts_len2[geom_edge] = geom.edge_nearpt(geom_edge, Vec3d(0, 0, 0)).len2();
+    geom_nearpts_len2[geom_edge] =
+        geom.edge_nearpt(geom_edge, Vec3d(0, 0, 0)).len2();
 
   for (auto &face : geom.faces()) {
     // calculate face normal in antiprism
@@ -286,12 +291,12 @@ vector<Vec3d> reciprocalN(const Geometry &geom)
     double avgEdgeDist = 0;
     for (unsigned int j = 0; j < sz; j++) {
       int v1 = face[j];
-      int v2 = face[(j+1)%sz];
+      int v2 = face[(j + 1) % sz];
 
-      avgEdgeDist += geom_nearpts_len2[make_edge(v1,v2)];
+      avgEdgeDist += geom_nearpts_len2[make_edge(v1, v2)];
     }
     // RK - sqrt of length squared here
-    avgEdgeDist = sqrt(avgEdgeDist/sz);
+    avgEdgeDist = sqrt(avgEdgeDist / sz);
 
     // the face normal height set to intersect face at v
     Vec3d v = face_normal * vdot(face_centroid, face_normal);
@@ -347,8 +352,8 @@ Vec3d edge_nearpoints_centroid(Geometry &geom, Vec3d cent)
 // Implementation of George Hart's planarization and canonicalization algorithms
 // http://www.georgehart.com/virtual-polyhedra/conway_notation.html
 bool canonicalize_bd(Geometry &base, int num_iters, char canonical_method,
-                    double radius_range_percent, int rep_count, 
-                    char centering, double eps)
+                     double radius_range_percent, int rep_count, char centering,
+                     double eps)
 {
   bool completed = false;
 
@@ -408,7 +413,7 @@ bool canonicalize_bd(Geometry &base, int num_iters, char canonical_method,
     // increment count here for reporting
     cnt++;
 
-    if ((rep_count > 0) && (cnt%rep_count == 0))
+    if ((rep_count > 0) && (cnt % rep_count == 0))
       fprintf(stderr, "%-15d max_diff=%.17g\n", cnt, sqrt(max_diff2));
 
     if (sqrt(max_diff2) < eps) {
@@ -417,8 +422,10 @@ bool canonicalize_bd(Geometry &base, int num_iters, char canonical_method,
     }
 
     // if minimum and maximum radius are differing, the polyhedron is crumpling
-    if (radius_range_percent && canonical_radius_range_test(base, radius_range_percent)) {
-      fprintf(stderr, "\nbreaking out: radius range detected. try increasing -d\n");
+    if (radius_range_percent &&
+        canonical_radius_range_test(base, radius_range_percent)) {
+      fprintf(stderr,
+              "\nbreaking out: radius range detected. try increasing -d\n");
       break;
     }
   }
@@ -434,8 +441,7 @@ bool canonicalize_bd(Geometry &base, int num_iters, char canonical_method,
 // RK - wrapper for basic planarization with base/dual algorithm
 bool planarize_bd(Geometry &geom, int num_iters, int rep_count, double eps)
 {
-  return canonicalize_bd(geom, num_iters, 'p',
-                        0.8, rep_count, 'x', eps);
+  return canonicalize_bd(geom, num_iters, 'p', 0.8, rep_count, 'x', eps);
 }
 
 } // namespace anti
