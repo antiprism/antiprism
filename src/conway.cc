@@ -474,9 +474,10 @@ void cn_opts::usage()
 "  -p <mthd> inter-step planarization method\n"
 "            p - face centroids (magnitude squared) (default)\n"
 "            m - mathematica planarize\n"
+"            c - mathematica canonicalize\n"
 "  -i <itrs> maximum inter-step planarization iterations (default: 1000)\n"
 "  -z <n>    status reporting every n iterations, -1 for no status (default: -1)\n"
-"  -l <lim>  minimum distance change to terminate canonicalization, as negative\n"
+"  -l <lim>  minimum distance change to terminate planarization, as negative\n"
 "               exponent (default: %d giving %.0e)\n"
 "\n"
 "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
@@ -540,10 +541,10 @@ void cn_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'p':
-      if (strlen(optarg) == 1 && strchr("pm", int(*optarg)))
+      if (strlen(optarg) == 1 && strchr("pmc", int(*optarg)))
         planarization_method = *optarg;
       else
-        error("planarize method type must be p or m", c);
+        error("planarize method type must be p, m or c", c);
       break;
 
     case 'l':
@@ -796,6 +797,18 @@ void centroid_to_origin(Geometry &geom)
   geom.transform(Trans3d::transl(-centroid(geom.verts())));
 }
 
+/*
+// RK - average radius rather than maximum has more reliability than max
+void unitize_vertex_radius(Geometry &geom)
+{
+  GeometryInfo info(geom);
+  info.set_center(geom.centroid());
+  //geom.transform(Trans3d::scale(1 / info.vert_dist_lims().max));
+  double avg = info.vert_dist_lims().sum / info.num_verts();
+  geom.transform(Trans3d::scale(1 / avg));
+}
+*/
+
 void cn_planarize(Geometry &geom, const char &planarization_method,
                   const int &num_iters_planar, const double &eps,
                   const bool &verbosity, const int &rep_count)
@@ -806,6 +819,11 @@ void cn_planarize(Geometry &geom, const char &planarization_method,
       planarize_bd(geom, num_iters_planar, rep_count, eps);
     else if (planarization_method == 'm')
       planarize_mm(geom, num_iters_planar, rep_count, eps);
+    else if (planarization_method == 'c') {
+      //unitize_vertex_radius(geom);
+      //geom.transform(Trans3d::transl(-centroid(geom.verts())));
+      canonicalize_mm(geom, num_iters_planar, rep_count, eps);
+    }
   }
 }
 
@@ -1431,7 +1449,6 @@ void do_operations(Geometry &geom, const vector<ops *> &operations,
 
     cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity,
                  rep_count);
-    //      unitize_edges(geom);
   }
 }
 

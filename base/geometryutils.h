@@ -291,6 +291,16 @@ bool canonicalize_mm(Geometry &geom, double edge_factor, double plane_factor,
                      bool planar_only, bool alternate_loop,
                      double eps = epsilon);
 
+/// an abbreviated wrapper for canonicalization with mathematica
+/**\param geom geometry to planarize.
+ * \param num_iters maximumn number of iterations.
+ * \param rep_count report on propgress after this many iterations.
+ * \param eps a small number, coordinates differing by less than eps are
+ *  the same. */
+bool canonicalize_mm(Geometry &geom, int num_iters, int rep_count = -1,
+                    double eps = epsilon);
+
+
 /// an abbreviated wrapper for planarize with mathematica
 /**\param geom geometry to planarize.
  * \param num_iters maximumn number of iterations.
@@ -318,6 +328,15 @@ Vec3d edge_nearpoints_centroid(Geometry &geom, Vec3d cent);
 bool canonicalize_bd(Geometry &base, int num_iters, char canonical_method,
                      double radius_range_percent, int rep_count, char centering,
                      double eps = epsilon);
+
+/// an abbreviated wrapper for canonicalization with the base/dual method
+/**\param geom geometry to planarize.
+ * \param num_iters maximumn number of iterations.
+ * \param rep_count report on propgress after this many iterations.
+ * \param eps a small number, coordinates differing by less than eps are
+ *  the same. */
+bool canonicalize_bd(Geometry &geom, int num_iters, int rep_count = -1,
+                    double eps = epsilon);
 
 /// an abbreviated wrapper for planarize with the base/dual method
 /**\param geom geometry to planarize.

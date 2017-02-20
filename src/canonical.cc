@@ -418,7 +418,7 @@ bool canonicalize_conv(Geometry &base, const int &num_iters, const double &radiu
   map<vector<int>, vector<int>> ef_pairs;
   base.get_edge_face_pairs(ef_pairs, false);
 
-  const vector<Vec3d> &verts = base.verts();
+  const vector<Vec3d> &verts = dual.verts();
 
   double max_diff2 = 0;
   unsigned int cnt;
@@ -426,40 +426,19 @@ bool canonicalize_conv(Geometry &base, const int &num_iters, const double &radiu
     vector<Vec3d> verts_last = verts;
 
     for(auto const &entry : ef_pairs) {
-      // recenter
-      base.transform(Trans3d::transl(-edge_nearpoints_centroid(base, Vec3d(0, 0, 0))));
-      dual.transform(Trans3d::transl(-edge_nearpoints_centroid(dual, Vec3d(0, 0, 0))));
-
-      // move edge near points back to 1
-      unitize_nearpoints_radius(base);
-      unitize_nearpoints_radius(dual);
-
-      // get edge near points of the base
-      map<vector<int>, Vec3d> base_near_pts;
-      for (auto &base_edge : base_edges)
-        //base_near_pts[base_edge] = (base.verts()[base_edge[0]]+base.verts()[base_edge[1]])/2;
-        base_near_pts[base_edge] = base.edge_nearpt(base_edge, Vec3d(0, 0, 0));
-
-      // get dual near points of the base
-      map<vector<int>, Vec3d> dual_near_pts;
-      for (auto &dual_edge : dual_edges)
-        //dual_near_pts[dual_edge] = (dual.verts()[dual_edge[0]]+dual.verts()[dual_edge[1]])/2;
-        dual_near_pts[dual_edge] = dual.edge_nearpt(dual_edge, Vec3d(0, 0, 0));
-
       vector<int> base_edge = entry.first;
       vector<int> dual_edge = entry.second;
       //fprintf(stderr,"(%d, %d) -> (%d, %d)\n", base_edge[0], base_edge[1], dual_edge[0], dual_edge[1]);
 
-      // move the edge near points towards each other
-      Vec3d dist = (base_near_pts[base_edge] - dual_near_pts[dual_edge])/4;
-      // assume base is smaller than the dual. if not reverse direction
-      if (base_near_pts[base_edge].len() > dual_near_pts[dual_edge].len())
-        dist = -dist;
+      Vec3d P = lines_intersection(base.verts()[base_edge[0]], base.verts()[base_edge[1]],
+                                   dual.verts()[dual_edge[0]], dual.verts()[dual_edge[1]], 0);
+      if (!P.is_set())
+        continue;
 
-      base.raw_verts()[base_edge[0]] += dist;
-      base.raw_verts()[base_edge[1]] += dist;
-      dual.raw_verts()[dual_edge[0]] -= dist;
-      dual.raw_verts()[dual_edge[1]] -= dist;
+      Vec3d np = nearest_point(P, dual.verts()[dual_edge[0]], dual.verts()[dual_edge[1]]);
+      Vec3d offset = (P.len() - np.len()) * P;
+      dual.raw_verts()[dual_edge[0]] += offset;
+      dual.raw_verts()[dual_edge[1]] += offset;
     }
 
     // len2() for difference value to minimize internal sqrt() calls
@@ -492,6 +471,9 @@ bool canonicalize_conv(Geometry &base, const int &num_iters, const double &radiu
     fprintf(stderr, "\n%-15d final max_diff=%.17g\n", cnt, sqrt(max_diff2));
     fprintf(stderr, "\n");
   }
+
+  // in this instance, we must use the internal dual
+  base.append(dual);
 
   return completed;
 }
