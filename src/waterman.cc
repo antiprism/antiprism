@@ -29,11 +29,9 @@
 */
 
 #include <stdio.h>
-#include <stdlib.h>
-
 #include <ctype.h>
 #include <limits>
-#include <math.h>
+#include <cmath>
 
 #include <algorithm>
 #include <string>
@@ -44,7 +42,6 @@
 
 using std::string;
 using std::vector;
-
 using std::abs;
 
 using namespace anti;
