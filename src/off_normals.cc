@@ -34,6 +34,7 @@
 #include <ctype.h>
 
 #include <algorithm>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -284,6 +285,7 @@ void add_normals(
   FaceNormals x_normals(geom, center, eps);
 
   if (strchr(show_elems.c_str(), 'f')) {
+    std::unique_ptr<ColorMap> cmap(init_ColorMap("rnd")); // colormap for -E r
     for (unsigned int i = 0; i < x_normals.size(); i++) {
       Normal x_normal = x_normals[i];
 
@@ -356,11 +358,8 @@ void add_normals(
           // get edge color
           Color ecol;
           int sz = ngeom.verts().size();
-          if (edge_normal_method == 'r') {
-            ColorMapRangeRandHsv cmap;
-            // e_Coloring clrg(&ngeom);
-            ecol = cmap.get_col(sz - 1);
-          }
+          if (edge_normal_method == 'r')
+            ecol = cmap->get_col(sz - 1);
           else
             ecol = (edge_normal_col.is_set()) ? edge_normal_col : col;
           // edge from face centroid to normal

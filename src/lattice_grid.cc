@@ -35,6 +35,7 @@
 #include <math.h>
 
 #include <algorithm>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -534,13 +535,10 @@ void color_by_symmetry_normals(Geometry &geom, const char &color_method,
   const vector<vector<int>> &faces = geom.faces();
   const vector<Vec3d> &verts = geom.verts();
 
-  ColorMapRangeRandHsv cmap;
-  cmap.init("");
-  // f_Coloring clrg(&geom);
-
-  // transparency
+  string map_name = "rnd";
   if (face_opacity != -1)
-    cmap.set_range(3, vector<double>(1, (double)face_opacity / 255));
+    map_name += msg_str("_A%g", (double)face_opacity / 255);
+  std::unique_ptr<ColorMap> cmap(init_ColorMap(map_name.c_str()));
 
   for (unsigned int i = 0; i < faces.size(); i++) {
     Vec3d norm = face_norm(verts, faces[i]).unit();
@@ -552,7 +550,7 @@ void color_by_symmetry_normals(Geometry &geom, const char &color_method,
     long idx = (long)(norm[0] * 1000000) + (long)(norm[1] * 10000) +
                (long)norm[2] * 100;
     if (color_method == 'S' || color_method == 'C')
-      geom.colors(FACES).set(i, cmap.get_col(idx));
+      geom.colors(FACES).set(i, cmap->get_col(idx));
     else
       geom.colors(FACES).set(i, idx);
   }
