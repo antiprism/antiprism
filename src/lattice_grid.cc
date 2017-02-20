@@ -535,6 +535,7 @@ void color_by_symmetry_normals(Geometry &geom, const char &color_method,
   const vector<Vec3d> &verts = geom.verts();
 
   ColorMapRangeRandHsv cmap;
+  cmap.init("");
   // f_Coloring clrg(&geom);
 
   // transparency
