@@ -538,7 +538,7 @@ void color_by_symmetry_normals(Geometry &geom, const char &color_method,
   string map_name = "rnd";
   if (face_opacity != -1)
     map_name += msg_str("_A%g", (double)face_opacity / 255);
-  std::unique_ptr<ColorMap> cmap(init_ColorMap(map_name.c_str()));
+  std::unique_ptr<ColorMap> cmap(colormap_from_name(map_name.c_str()));
 
   for (unsigned int i = 0; i < faces.size(); i++) {
     Vec3d norm = face_norm(verts, faces[i]).unit();
@@ -560,13 +560,13 @@ void color_edges_by_sqrt(Geometry &geom, const char &color_method)
 {
   geom.add_missing_impl_edges();
 
-  ColorMapRangeRandHsv cmap;
+  std::unique_ptr<ColorMap> cmap(colormap_from_name("rnd"));
   // e_Coloring clrg(&geom);
   for (unsigned int i = 0; i < geom.edges().size(); i++) {
     // geom.colors(EDGES).set(i, int(floor(pow(geom.edge_len(i),2)+0.5)));
     int idx = int(floor(pow(geom.edge_len(i), 2) + 0.5));
     if (color_method == 'R')
-      geom.colors(EDGES).set(i, cmap.get_col(idx));
+      geom.colors(EDGES).set(i, cmap->get_col(idx));
     // geom.colors(EDGES).set(i,clrg.idx_to_rand_val(idx));
     else
       geom.colors(EDGES).set(i, idx);

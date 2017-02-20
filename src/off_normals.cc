@@ -285,7 +285,7 @@ void add_normals(
   FaceNormals x_normals(geom, center, eps);
 
   if (strchr(show_elems.c_str(), 'f')) {
-    std::unique_ptr<ColorMap> cmap(init_ColorMap("rnd")); // colormap for -E r
+    std::unique_ptr<ColorMap> cmap(colormap_from_name("rnd")); // for -E r
     for (unsigned int i = 0; i < x_normals.size(); i++) {
       Normal x_normal = x_normals[i];
 

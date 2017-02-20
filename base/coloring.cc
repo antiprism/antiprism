@@ -659,7 +659,7 @@ Status read_colorings(Coloring clrngs[], const char *line)
   Status stat;
   for (int i = 0; i < parts_sz; i++) {
     Status stat2;
-    ColorMap *col_map = init_ColorMap(parts[i], &stat2);
+    ColorMap *col_map = colormap_from_name(parts[i], &stat2);
     double cps;
     if (get_cycle_rate(parts[i], &cps)) {
       clrng.set_cycle_msecs((int)(1000 / cps));
