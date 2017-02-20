@@ -270,9 +270,6 @@ public:
 /// A colour map using values in an RGBA range
 class ColorMapRangeRgb : public ColorMapRange {
 public:
-  /// Destructor
-  ~ColorMapRangeRgb() = default;
-
   /// Initialise from a string
   /**\param map_name the map name.
    * \return status, evaluates to \c true if the map could be initialised
@@ -287,7 +284,7 @@ public:
 };
 
 /// A colour map using random values in a range
-class ColorMapRange_rand : public ColorMapRange {
+class ColorMapRangeRand : public ColorMapRange {
 public:
   /// Get the colour value for an index number.
   /**\param idx the index.
@@ -298,21 +295,12 @@ public:
   /**\return a pointer to the dynamically allocated copy,
    *  which must be freed by the caller with \c delete, 0 indicates
    *  that the clone failed. */
-  ColorMap *clone() const { return new ColorMapRange_rand(*this); }
+  ColorMap *clone() const { return new ColorMapRangeRand(*this); }
 };
 
 /// A colour map using random values in an HSVA range
-class ColorMapRangeRandHsv : public ColorMapRange_rand {
+class ColorMapRangeRandHsv : public ColorMapRangeRand {
 public:
-  /// Initialise from a string
-  /**\param name the map name.
-   * \param errmsg an array at least \c MSG_SZ chars long to
-   * return any error message. */
-  ColorMapRangeRandHsv(const char *name = "")
-  {
-    ColorMapRangeRandHsv::init(name);
-  }
-
   /// Initialise from a string
   /**\param map_name the map name.
    * \return status, evaluates to \c true if the map could be initialised
@@ -327,7 +315,7 @@ public:
 };
 
 /// A colour map using random values in an RGBA range
-class ColorMapRangeRandRgb : public ColorMapRange_rand {
+class ColorMapRangeRandRgb : public ColorMapRangeRand {
 public:
   /// Initialise from a string
   /**\param map_name the map name.

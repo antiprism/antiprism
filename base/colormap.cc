@@ -634,7 +634,7 @@ Status ColorMapRangeRandRgb::init(const char *map_name)
   return ColorMapRange::init(map_name);
 }
 
-Color ColorMapRange_rand::get_col(int idx) const
+Color ColorMapRangeRand::get_col(int idx) const
 {
   Color col;
   idx = get_effective_index(idx);
