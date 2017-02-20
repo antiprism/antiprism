@@ -305,6 +305,15 @@ public:
 class ColorMapRangeRandHsv : public ColorMapRange_rand {
 public:
   /// Initialise from a string
+  /**\param name the map name.
+   * \param errmsg an array at least \c MSG_SZ chars long to
+   * return any error message. */
+  ColorMapRangeRandHsv(const char *name = "")
+  {
+    ColorMapRangeRandHsv::init(name);
+  }
+
+  /// Initialise from a string
   /**\param map_name the map name.
    * \return status, evaluates to \c true if the map could be initialised
    *  (possibly with warnings) otherwise \c false. */
