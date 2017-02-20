@@ -189,6 +189,15 @@ bool canonicalize_mm(Geometry &geom, double edge_factor, double plane_factor,
   return completed;
 }
 
+// RK - wrapper for basic canonicalization with mathematical algorithm
+bool canonicalize_mm(Geometry &geom, int num_iters, int rep_count, double eps)
+{
+  bool alternate_loop = false;
+  bool planarize_only = false;
+  return canonicalize_mm(geom, 0.3, 0.5, num_iters, DBL_MAX, rep_count,
+                         planarize_only, alternate_loop, eps);
+}
+
 // RK - wrapper for basic planarization with mathematical algorithm
 bool planarize_mm(Geometry &geom, int num_iters, int rep_count, double eps)
 {
@@ -436,6 +445,12 @@ bool canonicalize_bd(Geometry &base, int num_iters, char canonical_method,
   }
 
   return completed;
+}
+
+// RK - wrapper for basic canonicalization with base/dual algorithm
+bool canonicalize_bd(Geometry &geom, int num_iters, int rep_count, double eps)
+{
+  return canonicalize_bd(geom, num_iters, 'b', 0.8, rep_count, 'x', eps);
 }
 
 // RK - wrapper for basic planarization with base/dual algorithm
