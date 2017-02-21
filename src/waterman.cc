@@ -28,12 +28,12 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <stdio.h>
+#include <algorithm>
+#include <cmath>
+#include <cstdlib> // avoid ambiguities with std::abs(long) on OSX
 #include <ctype.h>
 #include <limits>
-#include <cmath>
-
-#include <algorithm>
+#include <stdio.h>
 #include <string>
 #include <vector>
 
@@ -42,7 +42,6 @@
 
 using std::string;
 using std::vector;
-using std::abs;
 
 using namespace anti;
 
@@ -518,6 +517,9 @@ void refine_z_vals(long &z_near, long &z_far, const long &x, const long &y,
   z_far = z_fr;
 }
 
+// Separate function to contain protability problems with abs(long)
+long long_abs(long val) { return std::abs((long)val); }
+
 void sphere_ray_waterman(Geometry &geom, const int &lattice_type,
                          const bool &origin_based, const Vec3d &center,
                          const double &radius, const double &R_squared,
@@ -584,20 +586,23 @@ void sphere_ray_waterman(Geometry &geom, const int &lattice_type,
       if (lattice_type != 0) { // lattice type is not equal to SC (type = 0)
         // if z_near is not on the lattice then find if a point 1 layer deeper
         // is on the lattice
-        if (!valid_point(lattice_type, abs(x), abs(y), abs(z_near))) {
+        if (!valid_point(lattice_type, long_abs(x), long_abs(y),
+                         long_abs(z_near))) {
           // if it is a tangent point, there is no valid deeper coordinate. It
           // was on "zero" already.
           // if bcc and z_near-1 is invalid then there is no valid z point
           // (z_far+1 will be invalid as well)
           if (z_near == z_far ||
               (lattice_type == 2 &&
-               !valid_point(lattice_type, abs(x), abs(y), abs(z_near - 1))))
+               !valid_point(lattice_type, long_abs(x), long_abs(y),
+                            long_abs(z_near - 1))))
             continue;
           else
             z_near--;
         }
         // if still in the loop, z_far is only advanced if on invalid point
-        if (!valid_point(lattice_type, abs(x), abs(y), abs(z_far)))
+        if (!valid_point(lattice_type, long_abs(x), long_abs(y),
+                         long_abs(z_far)))
           z_far++;
       }
 
@@ -681,8 +686,8 @@ void z_guess_waterman(Geometry &geom, const int &lattice_type,
       else {
         // if we are on a bcc "tunnel" skip this x,y
         if (lattice_type == 2 &&
-            !valid_point(lattice_type, abs(x), abs(y), 0) &&
-            !valid_point(lattice_type, abs(x), abs(y), 1))
+            !valid_point(lattice_type, long_abs(x), long_abs(y), 0) &&
+            !valid_point(lattice_type, long_abs(x), long_abs(y), 1))
           continue;
 
         long z_near2 = z_near;
@@ -692,7 +697,7 @@ void z_guess_waterman(Geometry &geom, const int &lattice_type,
 
         if (z_near2 != z_near) {
           total_errors++;
-          // total_amount+=abs(z_near2-z_near);
+          // total_amount+=long_abs(z_near2-z_near);
           // if (verbose)
           //   fprintf(stderr, "(%ld, %ld) z_near %ld -> %s\n", x, y, z_near,
           //          (z_near2!=LONG_MAX) ? itostr(z_near2).c_str() :
@@ -702,7 +707,7 @@ void z_guess_waterman(Geometry &geom, const int &lattice_type,
 
         if (z_far2 != z_far) {
           total_errors++;
-          // total_amount+=abs(z_far2-z_far);
+          // total_amount+=long_abs(z_far2-z_far);
           // if (verbose)
           //   fprintf(stderr, "(%ld, %ld) z_far %ld -> %s\n", x, y, z_far,
           //          (z_far2!=LONG_MAX) ? itostr(z_far2).c_str() : "invalid");

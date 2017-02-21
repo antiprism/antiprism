@@ -52,8 +52,9 @@ using std::pair;
 using namespace anti;
 
 /// Colour processing using an HSVA range
-class color_proc_torange_hsv : public ColorMapRange {
+class color_proc_torange_hsv {
 protected:
+  std::vector<double> ranges[4];
   Status check_and_add_range(int idx, const char *rngs);
 
 public:
@@ -64,7 +65,7 @@ public:
   /** \param elem_cols element colours to process */
   void proc_map(map<int, Color> &elem_cols);
 
-  /// Get the colour value for an index number.
+  /// Process the colour value
   /**\param col the color.
    * \return The processed colour. */
   Color get_proc_col(Color col) const;
@@ -114,7 +115,6 @@ Status color_proc_torange_hsv::check_and_add_range(int idx, const char *rngs)
 
 Status color_proc_torange_hsv::init(const char *range_name)
 {
-  set_func = &Color::set_hsva;
   for (auto &range : ranges)
     range.clear();
   ranges[0].push_back(0);
@@ -707,9 +707,9 @@ int main(int argc, char *argv[])
     ColorMap *cmap = nullptr;
     if (fc.get_cmaps().size() == 0) {
       if (strchr("GgCc", op))
-        cmap = init_ColorMap("range");
+        cmap = colormap_from_name("range");
       else
-        cmap = init_ColorMap("spread");
+        cmap = colormap_from_name("spread");
     }
     if (cmap)
       fc.add_cmap(cmap);
@@ -746,9 +746,9 @@ int main(int argc, char *argv[])
     ColorMap *cmap = nullptr;
     if (ec.get_cmaps().size() == 0) {
       if (strchr("GgCc", op))
-        cmap = init_ColorMap("range");
+        cmap = colormap_from_name("range");
       else
-        cmap = init_ColorMap("spread");
+        cmap = colormap_from_name("spread");
     }
     if (cmap)
       ec.add_cmap(cmap);
@@ -783,9 +783,9 @@ int main(int argc, char *argv[])
     ColorMap *cmap = nullptr;
     if (vc.get_cmaps().size() == 0) {
       if (strchr("Cc", op))
-        cmap = init_ColorMap("range");
+        cmap = colormap_from_name("range");
       else
-        cmap = init_ColorMap("spread");
+        cmap = colormap_from_name("spread");
     }
     if (cmap)
       vc.add_cmap(cmap);

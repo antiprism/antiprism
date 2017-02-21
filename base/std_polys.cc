@@ -88,7 +88,7 @@ string expand_abbrevs(const string &name, const char *abbrevs[][2], size_t last)
 static void set_resource_polygon_color(Geometry &geom)
 {
   Coloring clrng(&geom);
-  ColorMap *cmap = init_ColorMap("uniform");
+  ColorMap *cmap = colormap_from_name("uniform");
   clrng.add_cmap(cmap);
   clrng.f_avg_angle(true);
   clrng.v_avg_angle(true);
@@ -97,7 +97,7 @@ static void set_resource_polygon_color(Geometry &geom)
 void set_resource_unique_color(Geometry &geom)
 {
   Coloring clrng(&geom);
-  ColorMap *cmap = init_ColorMap("spread");
+  ColorMap *cmap = colormap_from_name("spread");
   clrng.add_cmap(cmap);
   clrng.f_unique(true);
   clrng.v_unique(true);
@@ -686,7 +686,7 @@ int make_resource_uniform_compound(Geometry &geom, string name, bool is_std,
 
   if (!is_std) {
     Coloring clrng(&geom);
-    ColorMap *cmap = init_ColorMap("compound");
+    ColorMap *cmap = colormap_from_name("compound");
     clrng.add_cmap(cmap);
 
     clrng.v_apply_cmap();
@@ -854,8 +854,8 @@ int make_resource_geodesic(Geometry &geom, string name, bool is_std,
 
   if (!is_std) {
     res_Coloring clrng(&geom);
-    ColorMap *cmap =
-        init_ColorMap("rng256_R1:0.7:1:0.5:1G1:0.4:1:0.3:1B1:0.2:1:0.7:1%");
+    ColorMap *cmap = colormap_from_name(
+        "rng256_R1:0.7:1:0.5:1G1:0.4:1:0.3:1B1:0.2:1:0.7:1%");
     clrng.add_cmap(cmap);
     clrng.f_all_angles(true);
   }
@@ -1087,7 +1087,7 @@ int make_resource_schwarz(Geometry &geom, string name, bool is_std,
 
   if (!is_std) {
     res_Coloring clrng(&geom);
-    ColorMap *cmap = init_ColorMap("map_grey20:ivory");
+    ColorMap *cmap = colormap_from_name("map_grey20:ivory");
     clrng.add_cmap(cmap);
     clrng.f_apply_cmap();
   }
@@ -1133,7 +1133,7 @@ static int make_resource_wythoff(Geometry &geom, string name, bool is_std,
     double e_len = geom.edge_vec(geom.faces(0, 0), geom.faces(0, 1)).len();
     geom.transform(Trans3d::scale(1 / e_len));
     res_Coloring clrng(&geom);
-    ColorMap *cmap = init_ColorMap("map_red:blue:yellow:ivory");
+    ColorMap *cmap = colormap_from_name("map_red:blue:yellow:ivory");
     clrng.add_cmap(cmap);
     clrng.f_apply_cmap();
   }

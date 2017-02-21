@@ -147,210 +147,6 @@ public:
   void cycle_colors();
 };
 
-/// A colour map that remaps index numbers
-class ColorMapRemap : public ColorMap {
-public:
-  /// Get a copy of the map
-  /**\return a pointer to the dynamically allocated copy,
-   *  which must be freed by the caller with \c delete, 0 indicates
-   *  that the clone failed. */
-  ColorMap *clone() const { return new ColorMapRemap(*this); }
-
-  /// Get the colour value for an index number.
-  /**\param idx the index.
-   * \return The colour. */
-  virtual Color get_col(int idx) const { return get_effective_index(idx); }
-};
-
-/// A colour map that maps index numbers to shuffled packs of numbers
-class ColorMapDeal : public ColorMap {
-private:
-  int map_sz;
-  int pack_sz;
-  std::vector<int> map_vals;
-  Random rnd;
-
-public:
-  /// Initialise from a string
-  /**\param map_name the map name.
-   * \return status, evaluates to \c true if the map could be initialised
-   *  (possibly with warnings) otherwise \c false. */
-  virtual Status init(const char *map_name);
-
-  /// Get a copy of the map
-  /**\return a pointer to the dynamically allocated copy,
-   *  which must be freed by the caller with \c delete, 0 indicates
-   *  that the clone failed. */
-  ColorMap *clone() const { return new ColorMapDeal(*this); }
-
-  /// The effective size of the map
-  /** The effective size of a map is one greater than the highest
-   *  index number in the map. It is the size of the smallest
-   *  map (sequential, starting at 0) that will include all
-   *  the entries of the map.
-   * \return The effective size */
-  virtual int effective_size() const { return map_vals.size(); };
-
-  /// Get the colour value for an index number.
-  /**\param idx the index.
-   * \return The colour. */
-  virtual Color get_col(int idx) const;
-
-  /// Shuffle the mapping
-  void shuffle();
-};
-
-/// A colour map using a range
-class ColorMapRange : public ColorMap {
-private:
-  int map_sz;
-
-protected:
-  std::vector<double> ranges[4];
-  void (Color::*set_func)(double, double, double, double);
-
-public:
-  /// Initialise from a string
-  /**\param map_name the map name.
-   * \return status, evaluates to \c true if the map could be initialised
-   *  (possibly with warnings) otherwise \c false. */
-  virtual Status init(const char *map_name);
-
-  /// Get a copy of the map
-  /**\return a pointer to the dynamically allocated copy,
-   *  which must be freed by the caller with \c delete, 0 indicates
-   *  that the clone failed. */
-  ColorMap *clone() const { return new ColorMapRange(*this); }
-
-  /// Set a range
-  /**\param idx the index number of the component (0-3 for RGBA or HSVA)
-   * \param range the range to set.
-   * \return \c true if the range was valid, else \c false and the
-   *  range was not changed. */
-  virtual bool set_range(int idx, std::vector<double> range);
-
-  /// Get the colour value for an index number.
-  /**\param idx the index.
-   * \return The colour. */
-  virtual Color get_col(int idx) const;
-
-  /// Set the map size
-  /**\param sz the number of entries in the map. */
-  void set_map_sz(int sz) { map_sz = sz; }
-
-  /// Get the map size
-  /**\return the number of entries in the map. */
-  int get_map_sz() const { return map_sz; }
-
-  /// The effective size of the map
-  /** The effective size of a map is one greater than the highest
-   *  index number in the map. It is the size of the smallest
-   *  map (sequential, starting at 0) that will include all
-   *  the entries of the map.
-   * \return The effective size */
-  virtual int effective_size() const { return map_sz; };
-};
-
-/// A colour map using values in an HSVA range
-class ColorMapRangeHsv : public ColorMapRange {
-public:
-  /// Initialise from a string
-  /**\param map_name the map name.
-   * \return status, evaluates to \c true if the map could be initialised
-   *  (possibly with warnings) otherwise \c false. */
-  virtual Status init(const char *map_name);
-
-  /// Get a copy of the map
-  /**\return a pointer to the dynamically allocated copy,
-   *  which must be freed by the caller with \c delete, 0 indicates
-   *  that the clone failed. */
-  ColorMap *clone() const { return new ColorMapRangeHsv(*this); }
-};
-
-/// A colour map using values in an RGBA range
-class ColorMapRangeRgb : public ColorMapRange {
-public:
-  /// Initialise from a string
-  /**\param map_name the map name.
-   * \return status, evaluates to \c true if the map could be initialised
-   *  (possibly with warnings) otherwise \c false. */
-  virtual Status init(const char *map_name);
-
-  /// Get a copy of the map
-  /**\return a pointer to the dynamically allocated copy,
-   *  which must be freed by the caller with \c delete, 0 indicates
-   *  that the clone failed. */
-  ColorMap *clone() const { return new ColorMapRangeRgb(*this); }
-};
-
-/// A colour map using random values in a range
-class ColorMapRangeRand : public ColorMapRange {
-public:
-  /// Get the colour value for an index number.
-  /**\param idx the index.
-   * \return The colour. */
-  virtual Color get_col(int idx) const;
-
-  /// Get a copy of the map
-  /**\return a pointer to the dynamically allocated copy,
-   *  which must be freed by the caller with \c delete, 0 indicates
-   *  that the clone failed. */
-  ColorMap *clone() const { return new ColorMapRangeRand(*this); }
-};
-
-/// A colour map using random values in an HSVA range
-class ColorMapRangeRandHsv : public ColorMapRangeRand {
-public:
-  /// Initialise from a string
-  /**\param map_name the map name.
-   * \return status, evaluates to \c true if the map could be initialised
-   *  (possibly with warnings) otherwise \c false. */
-  virtual Status init(const char *map_name);
-
-  /// Get a copy of the map
-  /**\return a pointer to the dynamically allocated copy,
-   *  which must be freed by the caller with \c delete, 0 indicates
-   *  that the clone failed. */
-  ColorMap *clone() const { return new ColorMapRangeRandHsv(*this); }
-};
-
-/// A colour map using random values in an RGBA range
-class ColorMapRangeRandRgb : public ColorMapRangeRand {
-public:
-  /// Initialise from a string
-  /**\param map_name the map name.
-   * \return status, evaluates to \c true if the map could be initialised
-   *  (possibly with warnings) otherwise \c false. */
-  virtual Status init(const char *map_name);
-
-  /// Get a copy of the map
-  /**\return a pointer to the dynamically allocated copy,
-   *  which must be freed by the caller with \c delete, 0 indicates
-   *  that the clone failed. */
-  ColorMap *clone() const { return new ColorMapRangeRandRgb(*this); }
-};
-
-/// A colour map with a good spread of colours
-class ColorMapSpread : public ColorMapRange {
-public:
-  /// Initialise from a string
-  /**\param map_name the map name.
-   * \return status, evaluates to \c true if the map could be initialised
-   *  (possibly with warnings) otherwise \c false. */
-  virtual Status init(const char *map_name);
-
-  /// Get a copy of the map
-  /**\return a pointer to the dynamically allocated copy,
-   *  which must be freed by the caller with \c delete, 0 indicates
-   *  that the clone failed. */
-  ColorMap *clone() const { return new ColorMapSpread(*this); }
-
-  /// Get the colour value for an index number.
-  /**\param idx the index.
-   * \return The colour. */
-  virtual Color get_col(int idx) const;
-};
-
 /// A colour map with the mappings held in a map
 class ColorMapMap : public ColorMap {
 private:
@@ -494,7 +290,7 @@ public:
 
   /// Add a colour map.
   /** The ColorMap must be dynamically allocated, using \c new directly
-   *  or through, for example, \c init_ColorMap(name). The calling
+   *  or through, for example, \c colormap_from_name(name). The calling
    *  program must not delete it. The \c ColorMapMulti object will
    *  delete the added map when it is no longer needed
    * \param col_map the colour map.
@@ -524,9 +320,9 @@ public:
  * \param stat status, evaluates to \c true if the map could be initialised
  *  (possibly with warnings) otherwise \c false
  * \return a pointer to the dynamically allocated map which must
- *  be freed by the caller with \c delete, if is returned for an
+ *  be freed by the caller with \c delete, \c nullptr is returned for an
  *  invalid map name and the error is detailed in \a stat. */
-ColorMap *init_ColorMap(const char *map_name, Status *stat = nullptr);
+ColorMap *colormap_from_name(const char *map_name, Status *stat = nullptr);
 
 // -------------------------------------------------------------------
 // inline functions

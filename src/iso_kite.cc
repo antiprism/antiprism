@@ -688,7 +688,7 @@ void repeat_kite_with_color(Geometry &out_geom, Geometry kite_geom,
   sym_repeat(&vert_kites_geom, kite_geom, c_sym);
   Coloring clrngs[3];
   if (is_even(color_type)) // value letter is followed by index letter
-    clrngs[FACES].add_cmap(init_ColorMap("spread"));
+    clrngs[FACES].add_cmap(colormap_from_name("spread"));
 
   Transformations min_ts;
   min_ts.min_set(sym.get_trans(), c_sym.get_trans());
@@ -928,7 +928,7 @@ bool make_list_model(Geometry &geom, const string model_str,
 
   Coloring clrngs[3];
   if (is_even(color_type)) // value letter is followed by index letter
-    clrngs[FACES].add_cmap(init_ColorMap("spread"));
+    clrngs[FACES].add_cmap(colormap_from_name("spread"));
 
   if (model_desc.size() == 1) {
     geom = base_geom;

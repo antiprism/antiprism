@@ -57,6 +57,8 @@ ColorMap &ColorMap::operator=(const ColorMap &cmap)
    return *this;
 }
 */
+
+//-----------------------------------------------------------------------
 Status ColorMap::init(const char *params)
 {
   wrap = 0;
@@ -125,213 +127,6 @@ Status ColorMap::init_strip(char *map_name)
   return Status::ok();
 }
 
-static ColorMap *init_ColorMap_generated(const char *map_name, Status *stat)
-{
-  char name[MSG_SZ];
-  strcpy_msg(name, map_name);
-  size_t name_len = strspn(name, "abcdefghijklmnopqrstuvwxyz");
-  name[name_len] = '\0';
-
-  size_t num_len = strspn(map_name + name_len, "0123456789");
-  bool extra_chars = *(map_name + name_len + num_len) != '\0';
-  int map_size = -1;
-  if (num_len)
-    map_size = atoi(string(map_name + name_len, num_len).c_str());
-
-  // fprintf(stderr, "map_size=%d, extra_chars=%d (%c)\n", map_size,
-  // extra_chars, *(map_name+name_len+num_len));
-
-  ColorMap *cmap = nullptr;
-
-  if (*map_name == '\0' || strcmp(name, "null") == 0) { // A null map
-    cmap = new ColorMapMap();
-  }
-
-  else if (strcmp(name, "rnd") == 0 || strcmp(name, "rand") == 0 ||
-           strcmp(name, "random") == 0) {
-    if (!strpbrk(map_name + name_len + num_len, "RrGgBb"))
-      cmap = new ColorMapRangeRandHsv();
-    else
-      cmap = new ColorMapRangeRandRgb();
-    if (cmap && !(*stat = cmap->init(map_name + name_len))) {
-      delete cmap;
-      cmap = nullptr;
-    }
-  }
-
-  else if (strcmp(name, "rng") == 0 || strcmp(name, "range") == 0) {
-    if (!strpbrk(map_name + name_len + num_len, "RrGgBb"))
-      cmap = new ColorMapRangeHsv();
-    else
-      cmap = new ColorMapRangeRgb();
-    if (cmap && !(*stat = cmap->init(map_name + name_len))) {
-      delete cmap;
-      cmap = nullptr;
-    }
-  }
-
-  else if (strcmp(name, "spread") == 0) {
-    cmap = new ColorMapSpread();
-    if (cmap && !(*stat = cmap->init(map_name + name_len))) {
-      delete cmap;
-      cmap = nullptr;
-    }
-  }
-
-  else if (strcmp(name, "grey") == 0 || strcmp(name, "greyw") == 0 ||
-           strcmp(name, "gray") == 0 || strcmp(name, "grayw") == 0) {
-    if (strspn(map_name + name_len, "0123456789-+*%") ==
-        strlen(map_name + name_len)) {
-      bool wrp = (name[strlen(name) - 1] == 'w');
-      char grey_name[MSG_SZ];
-      size_t num_dgts = strspn(map_name + name_len, "0123456789");
-      strncpy(grey_name, map_name + name_len, num_dgts);
-      snprintf(grey_name + num_dgts, MSG_SZ - num_dgts - 1, "_H0S0V0:1%s%s",
-               wrp ? ":0" : "", map_name + name_len + num_dgts);
-      cmap = new ColorMapRangeHsv();
-      if (cmap && !(*stat = cmap->init(grey_name))) {
-        delete cmap;
-        cmap = nullptr;
-      }
-    }
-  }
-
-  else if (strcmp(name, "uniform") == 0) {
-
-    auto *multi = new ColorMapMulti;
-    auto *overrides = new ColorMapMap;
-    ColorMap *spread_map = init_ColorMap("spread+53*12");
-
-    if (multi && overrides && spread_map &&
-        (*stat = multi->read_params(map_name))) {
-
-      overrides->set_col(60, Color(0.9, 0.45, 0.0)); // triangle
-      overrides->set_col(36, Color(0.7, 0.1, 0.2));  // pentagram
-      multi->add_cmap(overrides);
-      multi->add_cmap(spread_map);
-      if (map_size >= 0)
-        multi->set_map_sz(map_size);
-      cmap = multi;
-    }
-    else {
-      if (extra_chars)
-        stat->set_error(msg_str("uniform map: trailing characters '%s'",
-                                map_name + name_len + num_len));
-      delete cmap;
-      delete overrides;
-      delete spread_map;
-      cmap = nullptr;
-    }
-  }
-
-  else if (strcmp(name, "compound") == 0) {
-    auto *multi = new ColorMapMulti();
-    auto *overrides = new ColorMapMap;
-    ColorMap *spread_map = init_ColorMap("spread+2");
-    if (multi && overrides && spread_map &&
-        (*stat = multi->read_params(map_name))) {
-      // RK - for blending colors, make each two colors blend to different color
-      // than adjacent ones
-      // use nicer color values for green and orange
-      overrides->set_col(0, Color(1.0, 1.0, 0.0));     // yellow
-      overrides->set_col(1, Color(1.0, 0.0, 0.0));     // red
-      overrides->set_col(2, Color(0.0, 0.39216, 0.0)); // darkgreen (X11)
-      overrides->set_col(3, Color(0.0, 0.0, 1.0));     // blue
-      overrides->set_col(4, Color(1.0, 0.0, 1.0));     // magnenta
-      overrides->set_col(5, Color(0.0, 1.0, 1.0));     // cyan
-      overrides->set_col(6, Color(1.0, 0.49804, 0.0)); // darkorange1 (X11)
-      multi->add_cmap(overrides);
-      multi->add_cmap(spread_map);
-      if (map_size >= 0)
-        multi->set_map_sz(map_size);
-      cmap = multi;
-    }
-    else {
-      delete cmap;
-      delete overrides;
-      delete spread_map;
-      cmap = nullptr;
-    }
-  }
-
-  else if (strcmp(name, "remap") == 0) {
-    auto *cmr = new ColorMapRemap;
-    if (cmr && (*stat = cmr->init(map_name)))
-      cmap = cmr;
-  }
-
-  else if (strcmp(name, "deal") == 0) {
-    auto *cmr = new ColorMapDeal;
-    if (cmr && (*stat = cmr->init(map_name + name_len)))
-      cmap = cmr;
-  }
-
-  else if (strcmp(name, "map") == 0 && map_name[name_len] == '_') {
-    auto *cmm = new ColorMapMap;
-    if (cmm) {
-      if ((*stat = cmm->init_from_line(map_name + name_len + 1)))
-        cmap = cmm;
-      else
-        delete cmm;
-    }
-  }
-  else if (!stat->is_error()) {
-    stat->set_error("name not found");
-  }
-
-  return cmap;
-}
-
-ColorMap *init_ColorMap(const char *map_name, Status *stat)
-{
-  ColorMap *cmap = nullptr;
-
-  char name[MSG_SZ];
-  strcpy_msg(name, map_name);
-  size_t name_len = strcspn(name, "+*%");
-  name[name_len] = '\0';
-
-  char errmsg2[MSG_SZ];
-  Status stat2;
-  *errmsg2 = '\0';
-  string alt_name;
-  FILE *cfile = open_sup_file(name, "/col_maps/", &alt_name);
-  if (alt_name != "") { // an alt name found before a file with the name
-    cmap = new ColorMapMulti;
-    if (cmap) {
-      if (!(stat2 = cmap->init(alt_name.c_str())) || // init first
-          !(stat2 = cmap->read_params(map_name))) {  // then read shft-stp-wrp
-        if (stat)
-          stat->set_error(msg_str("could not open colour map file '%s=%s': %s",
-                                  map_name, alt_name.c_str(), stat2.c_msg()));
-        delete cmap;
-        cmap = nullptr;
-      }
-    }
-  }
-  else if (cfile) {
-    cmap = new ColorMapMap();
-    if (cmap && !(stat2 = cmap->init(map_name))) {
-      delete cmap;
-      cmap = nullptr;
-    }
-    if (stat)
-      *stat = stat2;
-  }
-  else {
-    cmap = init_ColorMap_generated(map_name, &stat2);
-    if (stat) {
-      if (cmap)
-        *stat = stat2;
-      else
-        stat->set_error(msg_str("could not open colour map file \'%s\': %s",
-                                map_name, stat2.c_msg()));
-    }
-  }
-
-  return cmap;
-}
-
 void ColorMap::set_wrap(int wrp)
 {
   if (wrp < 0)
@@ -352,6 +147,61 @@ ColorMap *ColorMapMap::get_condensed() const
 
   return colmap;
 }
+
+//-----------------------------------------------------------------------
+
+/// A colour map that remaps index numbers
+class ColorMapRemap : public ColorMap {
+public:
+  /// Get a copy of the map
+  /**\return a pointer to the dynamically allocated copy,
+   *  which must be freed by the caller with \c delete, 0 indicates
+   *  that the clone failed. */
+  ColorMap *clone() const { return new ColorMapRemap(*this); }
+
+  /// Get the colour value for an index number.
+  /**\param idx the index.
+   * \return The colour. */
+  virtual Color get_col(int idx) const { return get_effective_index(idx); }
+};
+
+/// A colour map that maps index numbers to shuffled packs of numbers
+class ColorMapDeal : public ColorMap {
+private:
+  int map_sz;
+  int pack_sz;
+  std::vector<int> map_vals;
+  Random rnd;
+
+public:
+  /// Initialise from a string
+  /**\param map_name the map name.
+   * \return status, evaluates to \c true if the map could be initialised
+   *  (possibly with warnings) otherwise \c false. */
+  virtual Status init(const char *map_name);
+
+  /// Get a copy of the map
+  /**\return a pointer to the dynamically allocated copy,
+   *  which must be freed by the caller with \c delete, 0 indicates
+   *  that the clone failed. */
+  ColorMap *clone() const { return new ColorMapDeal(*this); }
+
+  /// The effective size of the map
+  /** The effective size of a map is one greater than the highest
+   *  index number in the map. It is the size of the smallest
+   *  map (sequential, starting at 0) that will include all
+   *  the entries of the map.
+   * \return The effective size */
+  virtual int effective_size() const { return map_vals.size(); };
+
+  /// Get the colour value for an index number.
+  /**\param idx the index.
+   * \return The colour. */
+  virtual Color get_col(int idx) const;
+
+  /// Shuffle the mapping
+  void shuffle();
+};
 
 Status ColorMapDeal::init(const char *map_name)
 {
@@ -420,8 +270,58 @@ Color ColorMapDeal::get_col(int idx) const
     return Color();
 }
 
-//-------------------------------------------------------------------
-// ColorMapRange
+//-----------------------------------------------------------------------
+
+/// A colour map using a range
+class ColorMapRange : public ColorMap {
+private:
+  int map_sz;
+
+protected:
+  std::vector<double> ranges[4];
+  void (Color::*set_func)(double, double, double, double);
+
+public:
+  /// Initialise from a string
+  /**\param map_name the map name.
+   * \return status, evaluates to \c true if the map could be initialised
+   *  (possibly with warnings) otherwise \c false. */
+  virtual Status init(const char *map_name);
+
+  /// Get a copy of the map
+  /**\return a pointer to the dynamically allocated copy,
+   *  which must be freed by the caller with \c delete, 0 indicates
+   *  that the clone failed. */
+  ColorMap *clone() const { return new ColorMapRange(*this); }
+
+  /// Set a range
+  /**\param idx the index number of the component (0-3 for RGBA or HSVA)
+   * \param range the range to set.
+   * \return \c true if the range was valid, else \c false and the
+   *  range was not changed. */
+  virtual bool set_range(int idx, std::vector<double> range);
+
+  /// Get the colour value for an index number.
+  /**\param idx the index.
+   * \return The colour. */
+  virtual Color get_col(int idx) const;
+
+  /// Set the map size
+  /**\param sz the number of entries in the map. */
+  void set_map_sz(int sz) { map_sz = sz; }
+
+  /// Get the map size
+  /**\return the number of entries in the map. */
+  int get_map_sz() const { return map_sz; }
+
+  /// The effective size of the map
+  /** The effective size of a map is one greater than the highest
+   *  index number in the map. It is the size of the smallest
+   *  map (sequential, starting at 0) that will include all
+   *  the entries of the map.
+   * \return The effective size */
+  virtual int effective_size() const { return map_sz; };
+};
 
 static double interpolate(int num, int map_sz, vector<double> vals)
 {
@@ -563,6 +463,24 @@ bool ColorMapRange::set_range(int idx, vector<double> range)
   return true;
 }
 
+//-----------------------------------------------------------------------
+
+/// A colour map using values in an HSVA range
+class ColorMapRangeHsv : public ColorMapRange {
+public:
+  /// Initialise from a string
+  /**\param map_name the map name.
+   * \return status, evaluates to \c true if the map could be initialised
+   *  (possibly with warnings) otherwise \c false. */
+  virtual Status init(const char *map_name);
+
+  /// Get a copy of the map
+  /**\return a pointer to the dynamically allocated copy,
+   *  which must be freed by the caller with \c delete, 0 indicates
+   *  that the clone failed. */
+  ColorMap *clone() const { return new ColorMapRangeHsv(*this); }
+};
+
 Status ColorMapRangeHsv::init(const char *map_name)
 {
   set_func = &Color::set_hsva;
@@ -589,6 +507,24 @@ static double rand_in_range(vector<double> rng, int seed)
     return rng[0];
 }
 
+//-----------------------------------------------------------------------
+
+/// A colour map using values in an RGBA range
+class ColorMapRangeRgb : public ColorMapRange {
+public:
+  /// Initialise from a string
+  /**\param map_name the map name.
+   * \return status, evaluates to \c true if the map could be initialised
+   *  (possibly with warnings) otherwise \c false. */
+  virtual Status init(const char *map_name);
+
+  /// Get a copy of the map
+  /**\return a pointer to the dynamically allocated copy,
+   *  which must be freed by the caller with \c delete, 0 indicates
+   *  that the clone failed. */
+  ColorMap *clone() const { return new ColorMapRangeRgb(*this); }
+};
+
 Status ColorMapRangeRgb::init(const char *map_name)
 {
   set_func = &Color::set_rgba;
@@ -603,6 +539,52 @@ Status ColorMapRangeRgb::init(const char *map_name)
 
   return ColorMapRange::init(map_name);
 }
+
+//-----------------------------------------------------------------------
+
+/// A colour map using random values in a range
+class ColorMapRangeRand : public ColorMapRange {
+public:
+  /// Get the colour value for an index number.
+  /**\param idx the index.
+   * \return The colour. */
+  virtual Color get_col(int idx) const;
+
+  /// Get a copy of the map
+  /**\return a pointer to the dynamically allocated copy,
+   *  which must be freed by the caller with \c delete, 0 indicates
+   *  that the clone failed. */
+  ColorMap *clone() const { return new ColorMapRangeRand(*this); }
+};
+
+Color ColorMapRangeRand::get_col(int idx) const
+{
+  Color col;
+  idx = get_effective_index(idx);
+  if (get_wrap() || idx < get_map_sz())
+    (col.*set_func)(
+        rand_in_range(ranges[0], idx * 1), rand_in_range(ranges[1], idx * 2),
+        rand_in_range(ranges[2], idx * 3), rand_in_range(ranges[3], idx * 4));
+  return col;
+}
+
+//-----------------------------------------------------------------------
+
+/// A colour map using random values in an HSVA range
+class ColorMapRangeRandHsv : public ColorMapRangeRand {
+public:
+  /// Initialise from a string
+  /**\param map_name the map name.
+   * \return status, evaluates to \c true if the map could be initialised
+   *  (possibly with warnings) otherwise \c false. */
+  virtual Status init(const char *map_name);
+
+  /// Get a copy of the map
+  /**\return a pointer to the dynamically allocated copy,
+   *  which must be freed by the caller with \c delete, 0 indicates
+   *  that the clone failed. */
+  ColorMap *clone() const { return new ColorMapRangeRandHsv(*this); }
+};
 
 Status ColorMapRangeRandHsv::init(const char *map_name)
 {
@@ -619,6 +601,24 @@ Status ColorMapRangeRandHsv::init(const char *map_name)
   return ColorMapRange::init(map_name);
 }
 
+//-----------------------------------------------------------------------
+
+/// A colour map using random values in an RGBA range
+class ColorMapRangeRandRgb : public ColorMapRangeRand {
+public:
+  /// Initialise from a string
+  /**\param map_name the map name.
+   * \return status, evaluates to \c true if the map could be initialised
+   *  (possibly with warnings) otherwise \c false. */
+  virtual Status init(const char *map_name);
+
+  /// Get a copy of the map
+  /**\return a pointer to the dynamically allocated copy,
+   *  which must be freed by the caller with \c delete, 0 indicates
+   *  that the clone failed. */
+  ColorMap *clone() const { return new ColorMapRangeRandRgb(*this); }
+};
+
 Status ColorMapRangeRandRgb::init(const char *map_name)
 {
   set_func = &Color::set_rgba;
@@ -634,16 +634,28 @@ Status ColorMapRangeRandRgb::init(const char *map_name)
   return ColorMapRange::init(map_name);
 }
 
-Color ColorMapRangeRand::get_col(int idx) const
-{
-  Color col;
-  idx = get_effective_index(idx);
-  if (get_wrap() || idx < get_map_sz())
-    (col.*set_func)(
-        rand_in_range(ranges[0], idx * 1), rand_in_range(ranges[1], idx * 2),
-        rand_in_range(ranges[2], idx * 3), rand_in_range(ranges[3], idx * 4));
-  return col;
-}
+//-----------------------------------------------------------------------
+
+/// A colour map with a good spread of colours
+class ColorMapSpread : public ColorMapRange {
+public:
+  /// Initialise from a string
+  /**\param map_name the map name.
+   * \return status, evaluates to \c true if the map could be initialised
+   *  (possibly with warnings) otherwise \c false. */
+  virtual Status init(const char *map_name);
+
+  /// Get a copy of the map
+  /**\return a pointer to the dynamically allocated copy,
+   *  which must be freed by the caller with \c delete, 0 indicates
+   *  that the clone failed. */
+  ColorMap *clone() const { return new ColorMapSpread(*this); }
+
+  /// Get the colour value for an index number.
+  /**\param idx the index.
+   * \return The colour. */
+  virtual Color get_col(int idx) const;
+};
 
 Status ColorMapSpread::init(const char *map_name)
 {
@@ -699,7 +711,8 @@ Color ColorMapSpread::get_col(int idx) const
   return col;
 }
 
-//-------------------------------------------------------------------
+//-----------------------------------------------------------------------
+
 // ColorMapMap
 
 static bool parse_gimp_file(FILE *cfile, map<int, Color> *cmap,
@@ -1007,7 +1020,8 @@ void ColorMapMap::read_named_colors()
   }
 }
 
-//-------------------------------------------------------------------
+//-----------------------------------------------------------------------
+
 // ColorMapMulti
 
 Status ColorMapMulti::init(const char *map_name)
@@ -1025,7 +1039,7 @@ Status ColorMapMulti::init(const char *map_name)
   int parts_sz = split_line(names, parts, ",");
   // TODO: AR: Check this as new code
   for (int i = 0; i < parts_sz; i++) {
-    ColorMap *col_map = init_ColorMap(parts[i], &stat);
+    ColorMap *col_map = colormap_from_name(parts[i], &stat);
     string msg = stat.msg();
     if (col_map) {
       add_cmap(col_map);
@@ -1123,6 +1137,216 @@ Color ColorMapMulti::get_col(int idx) const
   }
 
   return col.is_set() ? col : Color(idx);
+}
+
+//-----------------------------------------------------------------------
+
+static ColorMap *colormap_from_name_generated(const char *map_name,
+                                              Status *stat)
+{
+  char name[MSG_SZ];
+  strcpy_msg(name, map_name);
+  size_t name_len = strspn(name, "abcdefghijklmnopqrstuvwxyz");
+  name[name_len] = '\0';
+
+  size_t num_len = strspn(map_name + name_len, "0123456789");
+  bool extra_chars = *(map_name + name_len + num_len) != '\0';
+  int map_size = -1;
+  if (num_len)
+    map_size = atoi(string(map_name + name_len, num_len).c_str());
+
+  // fprintf(stderr, "map_size=%d, extra_chars=%d (%c)\n", map_size,
+  // extra_chars, *(map_name+name_len+num_len));
+
+  ColorMap *cmap = nullptr;
+
+  if (*map_name == '\0' || strcmp(name, "null") == 0) { // A null map
+    cmap = new ColorMapMap();
+  }
+
+  else if (strcmp(name, "rnd") == 0 || strcmp(name, "rand") == 0 ||
+           strcmp(name, "random") == 0) {
+    if (!strpbrk(map_name + name_len + num_len, "RrGgBb"))
+      cmap = new ColorMapRangeRandHsv();
+    else
+      cmap = new ColorMapRangeRandRgb();
+    if (cmap && !(*stat = cmap->init(map_name + name_len))) {
+      delete cmap;
+      cmap = nullptr;
+    }
+  }
+
+  else if (strcmp(name, "rng") == 0 || strcmp(name, "range") == 0) {
+    if (!strpbrk(map_name + name_len + num_len, "RrGgBb"))
+      cmap = new ColorMapRangeHsv();
+    else
+      cmap = new ColorMapRangeRgb();
+    if (cmap && !(*stat = cmap->init(map_name + name_len))) {
+      delete cmap;
+      cmap = nullptr;
+    }
+  }
+
+  else if (strcmp(name, "spread") == 0) {
+    cmap = new ColorMapSpread();
+    if (cmap && !(*stat = cmap->init(map_name + name_len))) {
+      delete cmap;
+      cmap = nullptr;
+    }
+  }
+
+  else if (strcmp(name, "grey") == 0 || strcmp(name, "greyw") == 0 ||
+           strcmp(name, "gray") == 0 || strcmp(name, "grayw") == 0) {
+    if (strspn(map_name + name_len, "0123456789-+*%") ==
+        strlen(map_name + name_len)) {
+      bool wrp = (name[strlen(name) - 1] == 'w');
+      char grey_name[MSG_SZ];
+      size_t num_dgts = strspn(map_name + name_len, "0123456789");
+      strncpy(grey_name, map_name + name_len, num_dgts);
+      snprintf(grey_name + num_dgts, MSG_SZ - num_dgts - 1, "_H0S0V0:1%s%s",
+               wrp ? ":0" : "", map_name + name_len + num_dgts);
+      cmap = new ColorMapRangeHsv();
+      if (cmap && !(*stat = cmap->init(grey_name))) {
+        delete cmap;
+        cmap = nullptr;
+      }
+    }
+  }
+
+  else if (strcmp(name, "uniform") == 0) {
+
+    auto *multi = new ColorMapMulti;
+    auto *overrides = new ColorMapMap;
+    ColorMap *spread_map = colormap_from_name("spread+53*12");
+
+    if (multi && overrides && spread_map &&
+        (*stat = multi->read_params(map_name))) {
+
+      overrides->set_col(60, Color(0.9, 0.45, 0.0)); // triangle
+      overrides->set_col(36, Color(0.7, 0.1, 0.2));  // pentagram
+      multi->add_cmap(overrides);
+      multi->add_cmap(spread_map);
+      if (map_size >= 0)
+        multi->set_map_sz(map_size);
+      cmap = multi;
+    }
+    else {
+      if (extra_chars)
+        stat->set_error(msg_str("uniform map: trailing characters '%s'",
+                                map_name + name_len + num_len));
+      delete cmap;
+      delete overrides;
+      delete spread_map;
+      cmap = nullptr;
+    }
+  }
+
+  else if (strcmp(name, "compound") == 0) {
+    auto *multi = new ColorMapMulti();
+    auto *overrides = new ColorMapMap;
+    ColorMap *spread_map = colormap_from_name("spread+2");
+    if (multi && overrides && spread_map &&
+        (*stat = multi->read_params(map_name))) {
+      // RK - for blending colors, make each two colors blend to different color
+      // than adjacent ones
+      // use nicer color values for green and orange
+      overrides->set_col(0, Color(1.0, 1.0, 0.0));     // yellow
+      overrides->set_col(1, Color(1.0, 0.0, 0.0));     // red
+      overrides->set_col(2, Color(0.0, 0.39216, 0.0)); // darkgreen (X11)
+      overrides->set_col(3, Color(0.0, 0.0, 1.0));     // blue
+      overrides->set_col(4, Color(1.0, 0.0, 1.0));     // magnenta
+      overrides->set_col(5, Color(0.0, 1.0, 1.0));     // cyan
+      overrides->set_col(6, Color(1.0, 0.49804, 0.0)); // darkorange1 (X11)
+      multi->add_cmap(overrides);
+      multi->add_cmap(spread_map);
+      if (map_size >= 0)
+        multi->set_map_sz(map_size);
+      cmap = multi;
+    }
+    else {
+      delete cmap;
+      delete overrides;
+      delete spread_map;
+      cmap = nullptr;
+    }
+  }
+
+  else if (strcmp(name, "remap") == 0) {
+    auto *cmr = new ColorMapRemap;
+    if (cmr && (*stat = cmr->init(map_name)))
+      cmap = cmr;
+  }
+
+  else if (strcmp(name, "deal") == 0) {
+    auto *cmr = new ColorMapDeal;
+    if (cmr && (*stat = cmr->init(map_name + name_len)))
+      cmap = cmr;
+  }
+
+  else if (strcmp(name, "map") == 0 && map_name[name_len] == '_') {
+    auto *cmm = new ColorMapMap;
+    if (cmm) {
+      if ((*stat = cmm->init_from_line(map_name + name_len + 1)))
+        cmap = cmm;
+      else
+        delete cmm;
+    }
+  }
+  else if (!stat->is_error()) {
+    stat->set_error("name not found");
+  }
+
+  return cmap;
+}
+
+ColorMap *colormap_from_name(const char *map_name, Status *stat)
+{
+  ColorMap *cmap = nullptr;
+
+  char name[MSG_SZ];
+  strcpy_msg(name, map_name);
+  size_t name_len = strcspn(name, "+*%");
+  name[name_len] = '\0';
+
+  char errmsg2[MSG_SZ];
+  Status stat2;
+  *errmsg2 = '\0';
+  string alt_name;
+  FILE *cfile = open_sup_file(name, "/col_maps/", &alt_name);
+  if (alt_name != "") { // an alt name found before a file with the name
+    cmap = new ColorMapMulti;
+    if (cmap) {
+      if (!(stat2 = cmap->init(alt_name.c_str())) || // init first
+          !(stat2 = cmap->read_params(map_name))) {  // then read shft-stp-wrp
+        if (stat)
+          stat->set_error(msg_str("could not open colour map file '%s=%s': %s",
+                                  map_name, alt_name.c_str(), stat2.c_msg()));
+        delete cmap;
+        cmap = nullptr;
+      }
+    }
+  }
+  else if (cfile) {
+    cmap = new ColorMapMap();
+    if (cmap && !(stat2 = cmap->init(map_name))) {
+      delete cmap;
+      cmap = nullptr;
+    }
+    if (stat)
+      *stat = stat2;
+  }
+  else {
+    cmap = colormap_from_name_generated(map_name, &stat2);
+    if (stat) {
+      if (cmap)
+        *stat = stat2;
+      else
+        stat->set_error(msg_str("could not open colour map file \'%s\': %s",
+                                map_name, stat2.c_msg()));
+    }
+  }
+
+  return cmap;
 }
 
 /*
