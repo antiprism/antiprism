@@ -28,12 +28,12 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include <algorithm>
 #include <cmath>
+#include <cstdlib> // avoid ambiguities with std::abs(long) on OSX
 #include <ctype.h>
 #include <limits>
 #include <stdio.h>
-
-#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -517,10 +517,8 @@ void refine_z_vals(long &z_near, long &z_far, const long &x, const long &y,
   z_far = z_fr;
 }
 
-long long_abs(long val)
-{
-  return std::abs((long)val); // cast to avoid ambiguous call on OSX homebrew
-}
+// Separate function to contain protability problems with abs(long)
+long long_abs(long val) { return std::abs((long)val); }
 
 void sphere_ray_waterman(Geometry &geom, const int &lattice_type,
                          const bool &origin_based, const Vec3d &center,
