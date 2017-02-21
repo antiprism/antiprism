@@ -438,7 +438,7 @@ void trans_opts::process_command_line(int argc, char **argv)
         error(errmsg, 's');
       if (*errmsg)
         warning(errmsg, 's');
-      trans_m = trans_m * Trans3d::scale(1 / scale);
+      trans_m = Trans3d::scale(1 / scale) * trans_m;
       break;
     }
 
