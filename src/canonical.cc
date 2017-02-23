@@ -79,7 +79,7 @@ public:
   Color sphere_col;
 
   cn_opts()
-      : ProgramOpts("canonical"), centering('n'), initial_radius('n'),
+      : ProgramOpts("canonical"), centering('e'), initial_radius('e'),
         edge_distribution('\0'), planarize_method('\0'), num_iters_planar(-1),
         canonical_method('m'), num_iters_canonical(-1), mm_edge_factor(50),
         mm_plane_factor(20), mm_alternate_loop(false), rep_count(1000),
@@ -113,11 +113,11 @@ void cn_opts::usage()
 "  -e <opt>  edge distribution (default : none)\n"
 "               s - project vertices onto a sphere\n"
 "  -r <opt>  initial radius\n"
-"               n - average edge near points radius = 1 (default)\n"
+"               e - average edge near points radius = 1 (default)\n"
 "               v - average vertex radius = 1\n"
 "               x - not changed\n"
 "  -C <opt>  initial centering\n"
-"               n - edge near points centroid (default)\n"
+"               e - edge near points centroid (default)\n"
 "               v - vertex centroid\n"
 "               x - not moved\n"
 "  -p <opt>  planarization (done before canoncalization. default: none)\n"
@@ -186,17 +186,17 @@ void cn_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'r':
-      if (strlen(optarg) == 1 && strchr("nvx", int(*optarg)))
+      if (strlen(optarg) == 1 && strchr("evx", int(*optarg)))
         initial_radius = *optarg;
       else
-        error("starting radius type must be n, v, x", c);
+        error("starting radius type must be e, v, x", c);
       break;
 
     case 'C':
-      if (strlen(optarg) == 1 && strchr("nvx", int(*optarg)))
+      if (strlen(optarg) == 1 && strchr("evx", int(*optarg)))
         centering = *optarg;
       else
-        error("centering method type must be n, v, x", c);
+        error("centering method type must be e, v, x", c);
       break;
 
     case 'p':
@@ -383,7 +383,7 @@ void unitize_vertex_radius(Geometry &geom)
 
 // return true if maximum vertex radius is radius_range_percent (0.0 to ...)
 // greater than minimum vertex radius
-bool canonical_radius_range_test_local(const Geometry &geom, double radius_range_percent)
+bool canonical_radius_range_test_local(const Geometry &geom, const double radius_range_percent)
 {
   GeometryInfo rep(geom);
   rep.set_center(geom.centroid());
@@ -395,9 +395,20 @@ bool canonical_radius_range_test_local(const Geometry &geom, double radius_range
   return (((max-min)/((max+min)/2.0)) > radius_range_percent) ? true : false;
 }
 
+void move_line_to_point(Vec3d &P, Vec3d &Q, Vec3d X)
+{
+  Vec3d Y = X + (Q-P);
+  Vec3d V = P + X;
+  Vec3d P2 = lines_intersection(P, V, X, Y, 0);
+  if (P2.is_set()) {
+    Q += P2 - P;
+    P = P2;
+  }
+}
+
 // RK - edge near points of base and dual converge
-bool canonicalize_conv(Geometry &base, const int &num_iters, const double &radius_range_percent,
-                      const int &rep_count, const double &eps)
+bool canonicalize_conv(Geometry &base, const int num_iters, const double radius_range_percent,
+                      const int rep_count, const double eps)
 {
   bool completed = false;
 
@@ -418,7 +429,7 @@ bool canonicalize_conv(Geometry &base, const int &num_iters, const double &radiu
   map<vector<int>, vector<int>> ef_pairs;
   base.get_edge_face_pairs(ef_pairs, false);
 
-  const vector<Vec3d> &verts = dual.verts();
+  const vector<Vec3d> &verts = base.verts();
 
   double max_diff2 = 0;
   unsigned int cnt;
@@ -430,15 +441,19 @@ bool canonicalize_conv(Geometry &base, const int &num_iters, const double &radiu
       vector<int> dual_edge = entry.second;
       //fprintf(stderr,"(%d, %d) -> (%d, %d)\n", base_edge[0], base_edge[1], dual_edge[0], dual_edge[1]);
 
-      Vec3d P = lines_intersection(base.verts()[base_edge[0]], base.verts()[base_edge[1]],
-                                   dual.verts()[dual_edge[0]], dual.verts()[dual_edge[1]], 0);
-      if (!P.is_set())
-        continue;
+      // nearest point between base and dual edges
+      //Vec3d P = lines_intersection(base.verts()[base_edge[0]], base.verts()[base_edge[1]],
+      //                             dual.verts()[dual_edge[0]], dual.verts()[dual_edge[1]], 0);
 
-      Vec3d np = nearest_point(P, dual.verts()[dual_edge[0]], dual.verts()[dual_edge[1]]);
-      Vec3d offset = (P.len() - np.len()) * P;
-      dual.raw_verts()[dual_edge[0]] += offset;
-      dual.raw_verts()[dual_edge[1]] += offset;
+      // edge near points are changing
+      Vec3d base_near_pt = base.edge_nearpt(base_edge, Vec3d(0, 0, 0));
+      Vec3d dual_near_pt = dual.edge_nearpt(dual_edge, Vec3d(0, 0, 0));
+
+      // find nearest point between edge near points
+      Vec3d P = (base_near_pt + dual_near_pt)/2;
+
+      move_line_to_point(base.raw_verts()[base_edge[0]], base.raw_verts()[base_edge[1]], P);
+      move_line_to_point(dual.raw_verts()[dual_edge[0]], dual.raw_verts()[dual_edge[1]], P);
     }
 
     // len2() for difference value to minimize internal sqrt() calls
@@ -472,8 +487,8 @@ bool canonicalize_conv(Geometry &base, const int &num_iters, const double &radiu
     fprintf(stderr, "\n");
   }
 
-  // in this instance, we must use the internal dual
-  base.append(dual);
+  // fix radius
+  unitize_nearpoints_radius(base);
 
   return completed;
 }
@@ -497,7 +512,7 @@ void planarity_info(Geometry &geom)
   fprintf(stderr, "\n");
 }
 
-void midradius_info(Geometry &geom, const bool &completed)
+void midradius_info(Geometry &geom, const bool completed)
 {
   double min = 0;
   double max = 0;
@@ -563,7 +578,7 @@ void generate_points(const Geometry &base, const Geometry &dual, vector<Vec3d> &
   }
 }
 
-void set_edge_colors(Geometry &geom, const Color &col)
+void set_edge_colors(Geometry &geom, const Color col)
 {
   if (col.is_set()) {
     geom.add_missing_impl_edges();
@@ -671,28 +686,28 @@ int main(int argc, char *argv[])
 
   fprintf(stderr,"\n");
   fprintf(stderr,"starting radius: ");
+  if (opts.initial_radius == 'e') {
+    fprintf(stderr, "(average edge near points)\n");
+    unitize_nearpoints_radius(geom);
+  }
+  else
   if (opts.centering == 'v') {
     fprintf(stderr, "(average vertex)\n");
     unitize_vertex_radius(geom);
-  }
-  else
-  if (opts.initial_radius == 'n') {
-    fprintf(stderr, "(average edge near points)\n");
-    unitize_nearpoints_radius(geom);
   }
   else
   if (opts.centering == 'x')
     fprintf(stderr, "(radius not changed)\n");
 
   fprintf(stderr,"centering: ");
+  if (opts.centering == 'e') {
+    fprintf(stderr, "(edge near points centroid to origin)\n");
+    geom.transform(Trans3d::transl(-edge_nearpoints_centroid(geom, Vec3d(0, 0, 0))));
+  }
+  else
   if (opts.centering == 'v') {
     fprintf(stderr, "(vertex centroid to origin)\n");
     geom.transform(Trans3d::transl(-centroid(geom.verts())));
-  }
-  else
-  if (opts.centering == 'n') {
-    fprintf(stderr, "(edge near points centroid to origin)\n");
-    geom.transform(Trans3d::transl(-edge_nearpoints_centroid(geom, Vec3d(0, 0, 0))));
   }
   else
   if (opts.centering == 'x')
