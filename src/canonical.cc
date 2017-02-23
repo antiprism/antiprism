@@ -406,28 +406,14 @@ void move_line_to_point(Vec3d &P, Vec3d &Q, Vec3d X)
   }
 }
 
-// RK - edge near points of base and dual converge
-bool canonicalize_conv(Geometry &base, const int num_iters, const double radius_range_percent,
+// RK - edge near points of base seek 1
+bool canonicalize_unit(Geometry &base, const int num_iters, const double radius_range_percent,
                       const int rep_count, const double eps)
 {
   bool completed = false;
 
-  Geometry dual;
-  get_dual(&dual, base, 1, Vec3d(0, 0, 0));
-
-  // standardize dual
-  unitize_nearpoints_radius(dual);
-  dual.transform(Trans3d::transl(-edge_nearpoints_centroid(dual, Vec3d(0, 0, 0))));
-
   vector<vector<int>> base_edges;
   base.get_impl_edges(base_edges);
-
-  vector<vector<int>> dual_edges;
-  dual.get_impl_edges(dual_edges);
-
-  // get base/dual edge mapping as ordered pairs
-  map<vector<int>, vector<int>> ef_pairs;
-  base.get_edge_face_pairs(ef_pairs, false);
 
   const vector<Vec3d> &verts = base.verts();
 
@@ -436,24 +422,17 @@ bool canonicalize_conv(Geometry &base, const int num_iters, const double radius_
   for (cnt = 0; cnt < (unsigned int)num_iters;) {
     vector<Vec3d> verts_last = verts;
 
-    for(auto const &entry : ef_pairs) {
-      vector<int> base_edge = entry.first;
-      vector<int> dual_edge = entry.second;
-      //fprintf(stderr,"(%d, %d) -> (%d, %d)\n", base_edge[0], base_edge[1], dual_edge[0], dual_edge[1]);
-
-      // nearest point between base and dual edges
-      //Vec3d P = lines_intersection(base.verts()[base_edge[0]], base.verts()[base_edge[1]],
-      //                             dual.verts()[dual_edge[0]], dual.verts()[dual_edge[1]], 0);
-
+    for (auto &base_edge : base_edges) {
       // edge near points are changing
       Vec3d base_near_pt = base.edge_nearpt(base_edge, Vec3d(0, 0, 0));
-      Vec3d dual_near_pt = dual.edge_nearpt(dual_edge, Vec3d(0, 0, 0));
 
-      // find nearest point between edge near points
-      Vec3d P = (base_near_pt + dual_near_pt)/2;
+      if (double_eq(base_near_pt.len(), 1.0, eps))
+        continue;
+
+      // make base near point unit
+      Vec3d P = base_near_pt.unit();
 
       move_line_to_point(base.raw_verts()[base_edge[0]], base.raw_verts()[base_edge[1]], P);
-      move_line_to_point(dual.raw_verts()[dual_edge[0]], dual.raw_verts()[dual_edge[1]], P);
     }
 
     // len2() for difference value to minimize internal sqrt() calls
@@ -486,9 +465,6 @@ bool canonicalize_conv(Geometry &base, const int num_iters, const double radius_
     fprintf(stderr, "\n%-15d final max_diff=%.17g\n", cnt, sqrt(max_diff2));
     fprintf(stderr, "\n");
   }
-
-  // fix radius
-  unitize_nearpoints_radius(base);
 
   return completed;
 }
@@ -774,7 +750,7 @@ int main(int argc, char *argv[])
     }
     else
     if (opts.canonical_method == 'e') {
-      completed = canonicalize_conv(geom, opts.num_iters_canonical, opts.radius_range_percent / 100,
+      completed = canonicalize_unit(geom, opts.num_iters_canonical, opts.radius_range_percent / 100,
                                     opts.rep_count, opts.epsilon);
     }
 
