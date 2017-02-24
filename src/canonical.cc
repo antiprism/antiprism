@@ -45,7 +45,6 @@
 
 using std::string;
 using std::vector;
-using std::map;
 
 using namespace anti;
 
@@ -125,11 +124,12 @@ void cn_opts::usage()
 "               q - face centroids (magnitude)\n"
 "               f - face centroids\n"
 "               m - mathematica planarize\n"
+"               a - antiprism planarize (BETA)\n"
 "  -i <itrs> maximum number of planarize iterations (default: no limit)\n"
 "  -c <opt>  canonicalization\n"
 "               m - mathematica version (default)\n"
 "               b - base/dual version (reciprocate on face normals)\n"
-"               e - edge midpoint convergence (BETA)\n"
+"               a - antiprism version (BETA)\n"
 "               x - none (default, if -p is set)\n"
 "  -n <itrs> maximum number of canonical iterations (default: no limit)\n"
 "  -O <args> output b - base, d - dual, i - intersection points (default: b)\n"
@@ -201,10 +201,10 @@ void cn_opts::process_command_line(int argc, char **argv)
 
     case 'p':
       p_set = true;
-      if (strlen(optarg) == 1 && strchr("pqfm", int(*optarg)))
+      if (strlen(optarg) == 1 && strchr("pqfma", int(*optarg)))
         planarize_method = *optarg;
       else
-        error("planarize method type must be p, q, f, m", c);
+        error("planarize method type must be p, q, f, m, a", c);
       break;
 
     case 'i':
@@ -217,10 +217,10 @@ void cn_opts::process_command_line(int argc, char **argv)
 
     case 'c':
       c_set = true;
-      if (strlen(optarg) == 1 && strchr("mbex", int(*optarg)))
+      if (strlen(optarg) == 1 && strchr("mbax", int(*optarg)))
         canonical_method = *optarg;
       else
-        error("canonical method type must be m, b, e, x", c);
+        error("canonical method type must be m, b, a, x", c);
       break;
 
     case 'n':
@@ -395,7 +395,7 @@ bool canonical_radius_range_test_local(const Geometry &geom, const double radius
   return (((max-min)/((max+min)/2.0)) > radius_range_percent) ? true : false;
 }
 
-void move_line_to_point(Vec3d &P, Vec3d &Q, Vec3d X)
+void move_line_to_point(Vec3d &P, Vec3d &Q, const Vec3d X)
 {
   Vec3d Y = X + (Q-P);
   Vec3d V = P + X;
@@ -406,33 +406,74 @@ void move_line_to_point(Vec3d &P, Vec3d &Q, Vec3d X)
   }
 }
 
+// plane a single face aligned to the z axis
+void plane_face(Geometry &polygon)
+{
+  Vec3d face_normal = polygon.face_norm(0).unit();
+  Vec3d face_centroid = polygon.face_cent(0);
+  // make sure face_normal points outward
+  if (vdot(face_normal, face_centroid) < 0)
+    face_normal *= -1.0;
+
+  // rotate face to z axis
+  Trans3d trans = Trans3d::rot(face_normal + face_centroid, Vec3d(0, 0, 1));
+  polygon.transform(trans);
+
+  // refresh face centroid
+  face_centroid = polygon.face_cent(0);
+
+  // set z of all vertices to height of face centroid
+  for (auto &vert : polygon.raw_verts())
+    vert[2] = face_centroid[2];    
+
+  // rotate face back to original position
+  polygon.transform(trans.set_inverse());
+}
+
 // RK - edge near points of base seek 1
-bool canonicalize_unit(Geometry &base, const int num_iters, const double radius_range_percent,
-                      const int rep_count, const double eps)
+bool canonicalize_unit(Geometry &geom, const int num_iters, const double radius_range_percent,
+                      const int rep_count, bool planar_only, const double eps)
 {
   bool completed = false;
 
-  vector<vector<int>> base_edges;
-  base.get_impl_edges(base_edges);
+  vector<vector<int>> edges;
+  geom.get_impl_edges(edges);
 
-  const vector<Vec3d> &verts = base.verts();
+  vector<Vec3d> &verts = geom.raw_verts();
 
   double max_diff2 = 0;
   unsigned int cnt;
   for (cnt = 0; cnt < (unsigned int)num_iters;) {
     vector<Vec3d> verts_last = verts;
 
-    for (auto &base_edge : base_edges) {
-      // edge near points are changing
-      Vec3d base_near_pt = base.edge_nearpt(base_edge, Vec3d(0, 0, 0));
+    if (!planar_only) {
+      for (auto &edge : edges) {
+        Vec3d unit_near_pt = geom.edge_nearpt(edge, Vec3d(0, 0, 0)).unit();
+        move_line_to_point(verts[edge[0]], verts[edge[1]], unit_near_pt);
+      }
+    }
 
-      if (double_eq(base_near_pt.len(), 1.0, eps))
-        continue;
+    // re-center for drift
+    geom.transform(Trans3d::transl(-edge_nearpoints_centroid(geom, Vec3d(0, 0, 0))));
 
-      // make base near point unit
-      Vec3d P = base_near_pt.unit();
+    //for (unsigned int f = 0; f < geom.faces().size(); f++) {
+    for (unsigned int ff = cnt; ff < geom.faces().size() + cnt; ff++) {
+      int f = ff % geom.faces().size();
+      // give polygon its own geom. face index needs to reside in vector
+      vector<int> face_idxs(1);
+      face_idxs[0] = f;
+      Geometry polygon = faces_to_geom(geom, face_idxs);
+      plane_face(polygon);
 
-      move_line_to_point(base.raw_verts()[base_edge[0]], base.raw_verts()[base_edge[1]], P);
+      // map vertices back into original geom
+      // the numerical order of vertex list in polygon geom is preserved
+      vector<int> v_idx;
+      for (int v : geom.faces(f))
+        v_idx.push_back(v);
+      sort(v_idx.begin(), v_idx.end());
+      int j = 0;
+      for (int v : v_idx)
+        verts[v] = polygon.verts(j++);
     }
 
     // len2() for difference value to minimize internal sqrt() calls
@@ -455,7 +496,7 @@ bool canonicalize_unit(Geometry &base, const int num_iters, const double radius_
     }
 
     // if minimum and maximum radius are differing, the polyhedron is crumpling
-    if (radius_range_percent && canonical_radius_range_test_local(base, radius_range_percent)) {
+    if (radius_range_percent && canonical_radius_range_test_local(geom, radius_range_percent)) {
       fprintf(stderr, "\nbreaking out: radius range detected. try increasing -d\n");
       break;
     }
@@ -709,6 +750,9 @@ int main(int argc, char *argv[])
     else
     if (opts.planarize_method == 'm')
       planarize_str = "mathematica";
+    else
+    if (opts.planarize_method == 'a')
+      planarize_str = "mathematica";
     fprintf(stderr, "planarize: (%s method)\n",planarize_str.c_str());
 
     if (opts.planarize_method == 'm') {
@@ -717,9 +761,15 @@ int main(int argc, char *argv[])
                                  opts.num_iters_planar, opts.radius_range_percent / 100, opts.rep_count,
                                  planarize_only, opts.mm_alternate_loop, opts.epsilon);
     }
-    else {
+    if (opts.planarize_method == 'b') {
       completed = canonicalize_bd(geom, opts.num_iters_planar, opts.planarize_method,
                                  opts.radius_range_percent / 100, opts.rep_count, opts.centering, opts.epsilon);
+    }
+    else
+    if (opts.planarize_method == 'a') {
+      bool planarize_only = true;
+      completed = canonicalize_unit(geom, opts.num_iters_canonical, opts.radius_range_percent / 100,
+                                    opts.rep_count, planarize_only, opts.epsilon);
     }
 
     // RK - report planarity
@@ -734,8 +784,8 @@ int main(int argc, char *argv[])
     if (opts.canonical_method == 'b')
       canonicalize_str = "base/dual";
     else
-    if (opts.canonical_method == 'e')
-      canonicalize_str = "edge near points convergence";
+    if (opts.canonical_method == 'a')
+      canonicalize_str = "antiprism";
     fprintf(stderr, "canonicalize: (%s method)\n",canonicalize_str.c_str());
     if (opts.canonical_method == 'm') {
       bool planarize_only = false;
@@ -749,9 +799,10 @@ int main(int argc, char *argv[])
                                  opts.radius_range_percent / 100, opts.rep_count, opts.centering, opts.epsilon);
     }
     else
-    if (opts.canonical_method == 'e') {
+    if (opts.canonical_method == 'a') {
+      bool planarize_only = false;
       completed = canonicalize_unit(geom, opts.num_iters_canonical, opts.radius_range_percent / 100,
-                                    opts.rep_count, opts.epsilon);
+                                    opts.rep_count, planarize_only, opts.epsilon);
     }
 
     // RK - report planarity
