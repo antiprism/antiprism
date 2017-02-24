@@ -752,7 +752,7 @@ int main(int argc, char *argv[])
       planarize_str = "mathematica";
     else
     if (opts.planarize_method == 'a')
-      planarize_str = "mathematica";
+      planarize_str = "antiprism";
     fprintf(stderr, "planarize: (%s method)\n",planarize_str.c_str());
 
     if (opts.planarize_method == 'm') {
