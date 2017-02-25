@@ -48,9 +48,9 @@ using std::map;
 namespace anti {
 
 // return true if maximum vertex radius is radius_range_percent (0.0 to ...)
-// greater than minimum vertex radius
+// greater than minimum vertex radius (visible for canonical.cc)
 bool canonical_radius_range_test(const Geometry &geom,
-                                 double radius_range_percent)
+                                 const double radius_range_percent)
 {
   GeometryInfo rep(geom);
   rep.set_center(geom.centroid());
@@ -68,9 +68,11 @@ bool canonical_radius_range_test(const Geometry &geom,
 // RK - the model will possibly become non-convex early in the loops.
 // if it contorts too badly, the model will implode. Having the input
 // model at a radius of near 1 minimizes this problem
-bool canonicalize_mm(Geometry &geom, double edge_factor, double plane_factor,
-                     int num_iters, double radius_range_percent, int rep_count,
-                     bool planar_only, bool alternate_loop, double eps)
+bool canonicalize_mm(Geometry &geom, const double edge_factor,
+                     const double plane_factor, const int num_iters,
+                     const double radius_range_percent, const int rep_count,
+                     const bool planar_only, const bool alternate_loop,
+                     const double eps)
 {
   bool completed = false;
 
@@ -126,6 +128,7 @@ bool canonicalize_mm(Geometry &geom, double edge_factor, double plane_factor,
             }
       */
 
+      // re-center for drift
       Vec3d cent_near_pts = centroid(near_pts);
       for (unsigned int i = 0; i < verts.size(); i++)
         verts[i] -= cent_near_pts;
@@ -141,12 +144,14 @@ bool canonicalize_mm(Geometry &geom, double edge_factor, double plane_factor,
       int f = ff % geom.faces().size();
       if (geom.faces(f).size() == 3)
         continue;
-      Vec3d norm = geom.face_norm(f).unit();
-      Vec3d f_cent = geom.face_cent(f);
-      if (vdot(norm, f_cent) < 0)
-        norm *= -1.0;
+      Vec3d face_normal = geom.face_norm(f).unit();
+      Vec3d face_centroid = geom.face_cent(f);
+      // make sure face_normal points outward
+      if (vdot(face_normal, face_centroid) < 0)
+        face_normal *= -1.0;
       for (int v : geom.faces(f))
-        vs[v] += vdot(plane_factor * norm, f_cent - verts[v]) * norm;
+        vs[v] += vdot(plane_factor * face_normal, face_centroid - verts[v]) *
+                 face_normal;
     }
 
     // adjust vertices post-loop
@@ -190,7 +195,8 @@ bool canonicalize_mm(Geometry &geom, double edge_factor, double plane_factor,
 }
 
 // RK - wrapper for basic canonicalization with mathematical algorithm
-bool canonicalize_mm(Geometry &geom, int num_iters, int rep_count, double eps)
+bool canonicalize_mm(Geometry &geom, const int num_iters, const int rep_count,
+                     const double eps)
 {
   bool alternate_loop = false;
   bool planarize_only = false;
@@ -199,7 +205,8 @@ bool canonicalize_mm(Geometry &geom, int num_iters, int rep_count, double eps)
 }
 
 // RK - wrapper for basic planarization with mathematical algorithm
-bool planarize_mm(Geometry &geom, int num_iters, int rep_count, double eps)
+bool planarize_mm(Geometry &geom, const int num_iters, const int rep_count,
+                  const double eps)
 {
   bool alternate_loop = false;
   bool planarize_only = true;
@@ -346,8 +353,8 @@ vector<Vec3d> reciprocalC_len(const Geometry &geom)
 }
 
 // Addition to algorithm by Adrian Rossiter
-// Finds the correct centroid for base/dual canonical
-Vec3d edge_nearpoints_centroid(Geometry &geom, Vec3d cent)
+// Finds the edge near points centroid
+Vec3d edge_nearpoints_centroid(Geometry &geom, const Vec3d cent)
 {
   vector<vector<int>> edges;
   geom.get_impl_edges(edges);
@@ -360,9 +367,10 @@ Vec3d edge_nearpoints_centroid(Geometry &geom, Vec3d cent)
 
 // Implementation of George Hart's planarization and canonicalization algorithms
 // http://www.georgehart.com/virtual-polyhedra/conway_notation.html
-bool canonicalize_bd(Geometry &base, int num_iters, char canonical_method,
-                     double radius_range_percent, int rep_count, char centering,
-                     double eps)
+bool canonicalize_bd(Geometry &base, const int num_iters,
+                     const char canonical_method,
+                     const double radius_range_percent, const int rep_count,
+                     const char centering, const double eps)
 {
   bool completed = false;
 
@@ -448,13 +456,15 @@ bool canonicalize_bd(Geometry &base, int num_iters, char canonical_method,
 }
 
 // RK - wrapper for basic canonicalization with base/dual algorithm
-bool canonicalize_bd(Geometry &geom, int num_iters, int rep_count, double eps)
+bool canonicalize_bd(Geometry &geom, const int num_iters, const int rep_count,
+                     const double eps)
 {
   return canonicalize_bd(geom, num_iters, 'b', 0.8, rep_count, 'x', eps);
 }
 
 // RK - wrapper for basic planarization with base/dual algorithm
-bool planarize_bd(Geometry &geom, int num_iters, int rep_count, double eps)
+bool planarize_bd(Geometry &geom, const int num_iters, const int rep_count,
+                  const double eps)
 {
   return canonicalize_bd(geom, num_iters, 'p', 0.8, rep_count, 'x', eps);
 }

@@ -273,9 +273,16 @@ void get_congruence_maps(const Geometry &geom, Trans3d trans,
                          std::vector<std::vector<int>> &elem_maps,
                          double eps = epsilon);
 
+/// return true if maximum vertex radius is radius_range_percent (0.0 to ...)
+/**greater than minimum vertex radius (visible for canonical.cc)
+ * \param geom geometry to measure.
+ * \param radius_range_percent limit to maximum radius over minimum radius */
+bool canonical_radius_range_test(const Geometry &geom,
+                                 const double radius_range_percent);
+
 /// Canonicalize (George Hart "Mathematica" algorithm)
 /**See http://library.wolfram.com/infocenter/Articles/2012/
- * *\param geom geometry to canonicalise.
+ * \param geom geometry to canonicalise.
  * \param edge_factor small number to scale edge adjustments.
  * \param plane_factor small number to scale plane adjustments.
  * \param num_iters maximumn number of iterations.
@@ -286,10 +293,11 @@ void get_congruence_maps(const Geometry &geom, Trans3d trans,
  * \param alternate_loop alternate loop.
  * \param eps a small number, coordinates differing by less than eps are
  *  the same. */
-bool canonicalize_mm(Geometry &geom, double edge_factor, double plane_factor,
-                     int num_iters, double radius_range_percent, int rep_count,
-                     bool planar_only, bool alternate_loop,
-                     double eps = epsilon);
+bool canonicalize_mm(Geometry &geom, const double edge_factor,
+                     const double plane_factor, const int num_iters,
+                     const double radius_range_percent, const int rep_count,
+                     const bool planar_only, const bool alternate_loop,
+                     const double eps = epsilon);
 
 /// an abbreviated wrapper for canonicalization with mathematica
 /**\param geom geometry to planarize.
@@ -297,9 +305,8 @@ bool canonicalize_mm(Geometry &geom, double edge_factor, double plane_factor,
  * \param rep_count report on propgress after this many iterations.
  * \param eps a small number, coordinates differing by less than eps are
  *  the same. */
-bool canonicalize_mm(Geometry &geom, int num_iters, int rep_count = -1,
-                    double eps = epsilon);
-
+bool canonicalize_mm(Geometry &geom, const int num_iters,
+                     const int rep_count = -1, const double eps = epsilon);
 
 /// an abbreviated wrapper for planarize with mathematica
 /**\param geom geometry to planarize.
@@ -307,10 +314,14 @@ bool canonicalize_mm(Geometry &geom, int num_iters, int rep_count = -1,
  * \param rep_count report on propgress after this many iterations.
  * \param eps a small number, coordinates differing by less than eps are
  *  the same. */
-bool planarize_mm(Geometry &geom, int num_iters, int rep_count = -1,
-                  double eps = epsilon);
+bool planarize_mm(Geometry &geom, const int num_iters, const int rep_count = -1,
+                  const double eps = epsilon);
 
-Vec3d edge_nearpoints_centroid(Geometry &geom, Vec3d cent);
+/// returns the edge near points centroid
+/**\param geom geometry to measure
+ * \input centroid for reference */
+Vec3d edge_nearpoints_centroid(Geometry &geom,
+                               const Vec3d cent = Vec3d(0, 0, 0));
 
 /// Canonicalize (George Hart "Conway Notation" algorithm)
 /**See http://www.georgehart.com/virtual-polyhedra/conway_notation.html
@@ -325,9 +336,10 @@ Vec3d edge_nearpoints_centroid(Geometry &geom, Vec3d cent);
  * \param centering passed from canonical program, when centering is not used
  * \param eps a small number, coordinates differing by less than eps are
  *  the same. */
-bool canonicalize_bd(Geometry &base, int num_iters, char canonical_method,
-                     double radius_range_percent, int rep_count, char centering,
-                     double eps = epsilon);
+bool canonicalize_bd(Geometry &base, const int num_iters,
+                     const char canonical_method,
+                     const double radius_range_percent, const int rep_count,
+                     const char centering, const double eps = epsilon);
 
 /// an abbreviated wrapper for canonicalization with the base/dual method
 /**\param geom geometry to planarize.
@@ -335,8 +347,8 @@ bool canonicalize_bd(Geometry &base, int num_iters, char canonical_method,
  * \param rep_count report on propgress after this many iterations.
  * \param eps a small number, coordinates differing by less than eps are
  *  the same. */
-bool canonicalize_bd(Geometry &geom, int num_iters, int rep_count = -1,
-                    double eps = epsilon);
+bool canonicalize_bd(Geometry &geom, const int num_iters,
+                     const int rep_count = -1, const double eps = epsilon);
 
 /// an abbreviated wrapper for planarize with the base/dual method
 /**\param geom geometry to planarize.
@@ -344,8 +356,8 @@ bool canonicalize_bd(Geometry &geom, int num_iters, int rep_count = -1,
  * \param rep_count report on propgress after this many iterations.
  * \param eps a small number, coordinates differing by less than eps are
  *  the same. */
-bool planarize_bd(Geometry &geom, int num_iters, int rep_count = -1,
-                  double eps = epsilon);
+bool planarize_bd(Geometry &geom, const int num_iters, const int rep_count = -1,
+                  const double eps = epsilon);
 
 /// Close polyhedron (basic)
 /**Each hole (open circuit of edges) is converted to a face with colour col

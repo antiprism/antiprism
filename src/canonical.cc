@@ -124,12 +124,12 @@ void cn_opts::usage()
 "               q - face centroids (magnitude)\n"
 "               f - face centroids\n"
 "               m - mathematica planarize\n"
-"               a - antiprism planarize (BETA)\n"
+"               a - antiprism planarize (BETA, i set to 100000)\n"
 "  -i <itrs> maximum number of planarize iterations (default: no limit)\n"
 "  -c <opt>  canonicalization\n"
 "               m - mathematica version (default)\n"
 "               b - base/dual version (reciprocate on face normals)\n"
-"               a - antiprism version (BETA)\n"
+"               a - antiprism version (BETA, n set to 100000)\n"
 "               x - none (default, if -p is set)\n"
 "  -n <itrs> maximum number of canonical iterations (default: no limit)\n"
 "  -O <args> output b - base, d - dual, i - intersection points (default: b)\n"
@@ -168,6 +168,8 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   bool p_set = false;
   bool c_set = false;
+  bool i_set = false;
+  bool n_set = false;
 
   int sig_compare = INT_MAX;
 
@@ -208,6 +210,7 @@ void cn_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'i':
+      i_set = true;
       print_status_or_exit(read_int(optarg, &num_iters_planar), c);
       if (num_iters_planar < 0)
         error(
@@ -224,6 +227,7 @@ void cn_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'n':
+      n_set = true;
       print_status_or_exit(read_int(optarg, &num_iters_canonical), c);
       if (num_iters_canonical < 0)
         error("number of iterations for canonical must be 0 or greater", c);
@@ -320,7 +324,19 @@ void cn_opts::process_command_line(int argc, char **argv)
     canonical_method = 'x';
 
   if (mm_alternate_loop && canonical_method != 'm')
-    warning("alternate form only has effect in mathematica canonicalization", 'A');  
+    warning("alternate form only has effect in mathematica canonicalization", 'A');
+
+  // RK - method in Beta. make sure it terminates
+  if (planarize_method == 'a' && !i_set) {
+    num_iters_planar = 100000;
+    warning("antiprism planar method in Beta. Setting i = 100000", 'i');
+  } 
+
+  // RK - method in Beta. make sure it terminates
+  if (canonical_method == 'a' && !n_set) {
+    num_iters_canonical = 100000;
+    warning("antiprism canonical method in Beta. Setting n = 100000", 'n');
+  }  
 
   if (argc - optind > 1)
     error("too many arguments");
@@ -381,20 +397,6 @@ void unitize_vertex_radius(Geometry &geom)
   geom.transform(Trans3d::scale(1 / avg));
 }
 
-// return true if maximum vertex radius is radius_range_percent (0.0 to ...)
-// greater than minimum vertex radius
-bool canonical_radius_range_test_local(const Geometry &geom, const double radius_range_percent)
-{
-  GeometryInfo rep(geom);
-  rep.set_center(geom.centroid());
-
-  double min = rep.vert_dist_lims().min;
-  double max = rep.vert_dist_lims().max;
-    
-  // min and max should always be positive, max should always be larger
-  return (((max-min)/((max+min)/2.0)) > radius_range_percent) ? true : false;
-}
-
 void move_line_to_point(Vec3d &P, Vec3d &Q, const Vec3d X)
 {
   Vec3d Y = X + (Q-P);
@@ -432,7 +434,7 @@ void plane_face(Geometry &polygon)
 
 // RK - edge near points of base seek 1
 bool canonicalize_unit(Geometry &geom, const int num_iters, const double radius_range_percent,
-                      const int rep_count, bool planar_only, const double eps)
+                      const int rep_count, const char centering, const bool planar_only, const double eps)
 {
   bool completed = false;
 
@@ -448,13 +450,18 @@ bool canonicalize_unit(Geometry &geom, const int num_iters, const double radius_
 
     if (!planar_only) {
       for (auto &edge : edges) {
-        Vec3d unit_near_pt = geom.edge_nearpt(edge, Vec3d(0, 0, 0)).unit();
-        move_line_to_point(verts[edge[0]], verts[edge[1]], unit_near_pt);
+        // unit near point
+        Vec3d P = geom.edge_nearpt(edge, Vec3d(0, 0, 0)).unit();
+        move_line_to_point(verts[edge[0]], verts[edge[1]], P);
       }
     }
 
     // re-center for drift
-    geom.transform(Trans3d::transl(-edge_nearpoints_centroid(geom, Vec3d(0, 0, 0))));
+    if (centering == 'e')
+      geom.transform(Trans3d::transl(-edge_nearpoints_centroid(geom, Vec3d(0, 0, 0))));
+    else
+    if (centering == 'v')
+      geom.transform(Trans3d::transl(-centroid(geom.verts())));
 
     //for (unsigned int f = 0; f < geom.faces().size(); f++) {
     for (unsigned int ff = cnt; ff < geom.faces().size() + cnt; ff++) {
@@ -496,7 +503,7 @@ bool canonicalize_unit(Geometry &geom, const int num_iters, const double radius_
     }
 
     // if minimum and maximum radius are differing, the polyhedron is crumpling
-    if (radius_range_percent && canonical_radius_range_test_local(geom, radius_range_percent)) {
+    if (radius_range_percent && canonical_radius_range_test(geom, radius_range_percent)) {
       fprintf(stderr, "\nbreaking out: radius range detected. try increasing -d\n");
       break;
     }
@@ -701,6 +708,12 @@ int main(int argc, char *argv[])
   Geometry geom;
   opts.read_or_error(geom, opts.ifile);
 
+  if (opts.edge_distribution) {
+    fprintf(stderr, "edge distribution: (project onto sphere)\n");
+    if (opts.edge_distribution == 's')
+      project_onto_sphere(&geom);
+  }
+
   fprintf(stderr,"\n");
   fprintf(stderr,"starting radius: ");
   if (opts.initial_radius == 'e') {
@@ -729,12 +742,6 @@ int main(int argc, char *argv[])
   else
   if (opts.centering == 'x')
     fprintf(stderr, "(model not moved)\n");
-
-  if (opts.edge_distribution) {
-    fprintf(stderr, "edge distribution: (project onto sphere)\n");
-    if (opts.edge_distribution == 's')
-      project_onto_sphere(&geom);
-  }
 
   bool completed = false;
   if (opts.planarize_method) {
@@ -768,8 +775,8 @@ int main(int argc, char *argv[])
     else
     if (opts.planarize_method == 'a') {
       bool planarize_only = true;
-      completed = canonicalize_unit(geom, opts.num_iters_canonical, opts.radius_range_percent / 100,
-                                    opts.rep_count, planarize_only, opts.epsilon);
+      completed = canonicalize_unit(geom, opts.num_iters_planar, opts.radius_range_percent / 100,
+                                    opts.rep_count, opts.centering, planarize_only, opts.epsilon);
     }
 
     // RK - report planarity
@@ -802,7 +809,7 @@ int main(int argc, char *argv[])
     if (opts.canonical_method == 'a') {
       bool planarize_only = false;
       completed = canonicalize_unit(geom, opts.num_iters_canonical, opts.radius_range_percent / 100,
-                                    opts.rep_count, planarize_only, opts.epsilon);
+                                    opts.rep_count, opts.centering, planarize_only, opts.epsilon);
     }
 
     // RK - report planarity
