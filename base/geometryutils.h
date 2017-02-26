@@ -235,7 +235,7 @@ void merge_coincident_elements(
  * \param eps a small number, coordinates differing by less than eps are
  *  the same. */
 void merge_coincident_elements(Geometry *geom, const std::string &merge_elems,
-                               const int &blend_type, double eps = epsilon);
+                               const int blend_type, double eps = epsilon);
 
 /// Merge coincident elements
 /**\param geom geometry with elements to be merged

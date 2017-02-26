@@ -1029,7 +1029,7 @@ void GeometryInfo::find_e_lengths(
 
 // get indexes of edge parts
 static void get_edge_part(vector<int> &edge_part, const Geometry &geom,
-                          const int &idx, const vector<vector<int>> &vcons,
+                          const int idx, const vector<vector<int>> &vcons,
                           vector<bool> &seen)
 {
   if (seen[idx])

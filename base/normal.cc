@@ -37,7 +37,7 @@ using std::vector;
 namespace anti {
 
 // face normal
-Normal::Normal(const Geometry &geom, const int &face_idx, Vec3d C, double eps)
+Normal::Normal(const Geometry &geom, const int face_idx, Vec3d C, double eps)
 {
   const vector<int> &face = geom.faces()[face_idx];
   const vector<Vec3d> &verts = geom.verts();
@@ -57,7 +57,7 @@ Normal::Normal(const Geometry &geom, const int &face_idx, Vec3d C, double eps)
 }
 
 // edge and vertex normals which have already been calculated from FaceNormals
-Normal::Normal(const Geometry &geom, const Vec3d &norm, const int &v_idx,
+Normal::Normal(const Geometry &geom, const Vec3d &norm, const int v_idx,
                Vec3d C, double eps)
 {
   const vector<Vec3d> &verts = geom.verts();

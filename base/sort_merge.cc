@@ -132,7 +132,7 @@ bool cmp_face_no(const facesSort &a, const facesSort &b)
   return a.face_no < b.face_no;
 }
 
-Color average_color(const vector<Color> &cols, const int &blend_type)
+Color average_color(const vector<Color> &cols, const int blend_type)
 {
   if (blend_type <= 1)
     return cols[0]; // first color
@@ -147,8 +147,8 @@ Color average_color(const vector<Color> &cols, const int &blend_type)
   return Color();
 }
 
-Color average_face_color(const vector<facesSort> &fs, const int &begin,
-                         const int &end, const int &blend_type)
+Color average_face_color(const vector<facesSort> &fs, const int begin,
+                         const int end, const int blend_type)
 {
   // quick decision, if only one instance, return its own color
   if (!(end - begin))
@@ -343,8 +343,8 @@ bool cmp_vert_no(const vertSortPostMerge &a, const vertSortPostMerge &b)
   return a.vert_no < b.vert_no;
 }
 
-Color average_vert_color(const vector<vertSort> &vs, const int &begin,
-                         const int &end, const int &blend_type)
+Color average_vert_color(const vector<vertSort> &vs, const int begin,
+                         const int end, const int blend_type)
 {
   // quick decision, if only one instance, return its own color
   if (!(end - begin))
@@ -548,7 +548,7 @@ void merge_coincident_elements(Geometry *geom, const string &merge_elems,
 }
 
 void merge_coincident_elements(Geometry *geom, const string &merge_elems,
-                               const int &blend_type, double eps)
+                               const int blend_type, double eps)
 {
   vector<map<int, set<int>>> *equiv_elems = nullptr;
   sort_merge_elems(*geom, merge_elems, equiv_elems, false, blend_type, eps);

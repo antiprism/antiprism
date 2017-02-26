@@ -70,8 +70,8 @@ void project_onto_sphere(Geometry *geom, Vec3d centre, double radius)
 // RK - test points versus hull functions
 
 bool test_points_vs_hull(const vector<Vec3d> &P, const Geometry &hull,
-                         const bool &inside, const bool &surface,
-                         const bool &outside, const double &eps)
+                         const bool inside, const bool surface,
+                         const bool outside, const double &eps)
 {
   const vector<Vec3d> &verts = hull.verts();
   const vector<vector<int>> &faces = hull.faces();
@@ -295,7 +295,7 @@ Geometry faces_to_geom(const Geometry &geom, const vector<int> &face_idxs)
 // RK - this works with wn_PnPoly better if a double is passed back
 
 static double isLeft(const Vec3d &P0, const Vec3d &P1, const Vec3d &P2,
-                     const int &idx)
+                     const int idx)
 {
   int idx1 = (idx + 1) % 3;
   int idx2 = (idx + 2) % 3;
@@ -328,7 +328,7 @@ static double isLeft(const Vec3d &P0, const Vec3d &P1, const Vec3d &P2,
 /* RK - Not currently used. none of the tests consider epsilon; if used
 recommend using functions
 
-bool cn_PnPoly(const Geometry &polygon, const Vec3d &P, const int &idx, int
+bool cn_PnPoly(const Geometry &polygon, const Vec3d &P, const int idx, int
 &crossing_number, double eps)
 {
    const vector<Vec3d> &verts = polygon.verts();
@@ -385,7 +385,7 @@ intersect
 // RK - there is proof that there are mistakes when epsilon is not considered
 // RK - wn is n time too large. winding_number = wn/n
 
-static bool wn_PnPoly(const Geometry &polygon, const Vec3d &P, const int &idx,
+static bool wn_PnPoly(const Geometry &polygon, const Vec3d &P, const int idx,
                       int &winding_number, double eps)
 {
   winding_number = 0;

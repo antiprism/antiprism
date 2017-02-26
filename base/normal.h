@@ -46,12 +46,12 @@ public:
 
   /// Constructor
   /**Face normal. */
-  Normal(const Geometry &geom, const int &face_idx, Vec3d C = Vec3d(),
+  Normal(const Geometry &geom, const int face_idx, Vec3d C = Vec3d(),
          double eps = epsilon);
 
   /// Constructor
   /**For precalculated normals. */
-  Normal(const Geometry &geom, const Vec3d &norm, const int &v_idx,
+  Normal(const Geometry &geom, const Vec3d &norm, const int v_idx,
          Vec3d C = Vec3d(), double eps = epsilon);
 
   /// Check if set
