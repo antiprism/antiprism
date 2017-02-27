@@ -204,7 +204,7 @@ void sph_lat_grid::make_lattice(Geometry &geom)
 
 // for lattice code only
 
-double lattice_radius(const Geometry &geom, const char &radius_type)
+double lattice_radius(const Geometry &geom, const char radius_type)
 {
   Geometry tgeom = geom;
 
@@ -242,8 +242,8 @@ static inline vector<Vec3d> as_vector(const Vec3d &v)
 }
 
 void geom_container_clip(Geometry &geom, Geometry &container,
-                         const double &radius, const Vec3d &offset,
-                         bool &verbose, double eps)
+                         const double radius, const Vec3d &offset,
+                         const bool verbose, const double eps)
 {
   // container has to be convex and 3 dimensional
   Status stat = container.set_hull();
@@ -290,8 +290,9 @@ void geom_container_clip(Geometry &geom, Geometry &container,
         "bravais_container_clip: warning: all vertices were clipped out!\n");
 }
 
-void geom_spherical_clip(Geometry &geom, const double &radius,
-                         const Vec3d &offset, bool &verbose, double eps)
+void geom_spherical_clip(Geometry &geom, const double radius,
+                         const Vec3d &offset, const bool verbose,
+                         const double eps)
 {
   const vector<Vec3d> &verts = geom.verts();
   Vec3d cent = centroid(verts);
@@ -320,7 +321,7 @@ void geom_spherical_clip(Geometry &geom, const double &radius,
 
 void list_grid_radii(const string &file_name, const Geometry &geom,
                      const Vec3d &list_radii_center, int report_type,
-                     double eps)
+                     const double eps)
 {
   FILE *ofile = stdout; // write to stdout by default
   if (file_name.length())
@@ -391,7 +392,7 @@ void list_grid_radii(const string &file_name, const Geometry &geom,
 }
 
 void list_grid_struts(const string &file_name, const Geometry &geom,
-                      int report_type, double eps)
+                      int report_type, const double eps)
 {
   FILE *ofile = stdout; // write to stdout by default
   if (file_name.length())
@@ -451,8 +452,8 @@ void list_grid_struts(const string &file_name, const Geometry &geom,
     fprintf(ofile, "Total occurrences = %d\n\n", occur_total);
 }
 
-void add_color_struts(Geometry &geom, const double &len2, Color &edge_col,
-                      double eps)
+void add_color_struts(Geometry &geom, const double len2, Color &edge_col,
+                      const double eps)
 {
   const vector<Vec3d> &verts = geom.verts();
 
@@ -463,7 +464,7 @@ void add_color_struts(Geometry &geom, const double &len2, Color &edge_col,
     }
 }
 
-void color_centroid(Geometry &geom, Color &cent_col, double eps)
+void color_centroid(Geometry &geom, Color &cent_col, const double eps)
 {
   const vector<Vec3d> &verts = geom.verts();
   Vec3d cent = centroid(verts);
@@ -478,7 +479,7 @@ void color_centroid(Geometry &geom, Color &cent_col, double eps)
 // color functions
 
 // Rotational octahedral by Adrian Rossiter
-Vec3d sort_Vec3d_chiral(const Vec3d &v, double eps)
+Vec3d sort_Vec3d_chiral(const Vec3d &v, const double eps)
 {
   Vec3d c = v;
   // Rotate into positive octant
@@ -529,8 +530,8 @@ Vec3d sort_Vec3d(Vec3d &v)
   return (Vec3d(c[0], c[1], c[2]));
 }
 
-void color_by_symmetry_normals(Geometry &geom, const char &color_method,
-                               const int &face_opacity, double eps)
+void color_by_symmetry_normals(Geometry &geom, const char color_method,
+                               const int face_opacity, const double eps)
 {
   const vector<vector<int>> &faces = geom.faces();
   const vector<Vec3d> &verts = geom.verts();
@@ -556,7 +557,7 @@ void color_by_symmetry_normals(Geometry &geom, const char &color_method,
   }
 }
 
-void color_edges_by_sqrt(Geometry &geom, const char &color_method)
+void color_edges_by_sqrt(Geometry &geom, const char color_method)
 {
   geom.add_missing_impl_edges();
 
@@ -575,7 +576,7 @@ void color_edges_by_sqrt(Geometry &geom, const char &color_method)
 
 // convex hull and voronoi wrappers
 
-void convex_hull_report(const Geometry &geom, const bool &add_hull)
+void convex_hull_report(const Geometry &geom, const bool add_hull)
 {
   GeometryInfo rep(geom);
   fprintf(stderr, "\n");
@@ -599,8 +600,8 @@ void convex_hull_report(const Geometry &geom, const bool &add_hull)
   fprintf(stderr, "\n");
 }
 
-int get_voronoi_geom(Geometry &geom, Geometry &vgeom, const bool &central_cells,
-                     const bool &one_cell_only, double eps)
+int get_voronoi_geom(Geometry &geom, Geometry &vgeom, const bool central_cells,
+                     const bool one_cell_only, const double eps)
 {
   // do this in case compound lattice was sent. Simultaneous points cause
   // problems for Voronoi Cells

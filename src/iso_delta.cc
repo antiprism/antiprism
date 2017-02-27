@@ -70,64 +70,57 @@ struct IsoDeltaVector {
   double gamma;
 };
 
+// clang-format off
 IsoDeltaItem iso_delta_item_list[] = {
-    {"T1(1)", "Oh", "[1/3,2/3,1/3]", "Augmented Cube (=O5(1))"},
-    {"T1(2)", "Oh", "[2/3,2/3,2/3]", "Excavated Cube (=O5(2))"},
-    {"T1(3)", "Td", "[1/3,2/3,1/3]", "Additonal Isomer of T1(1) (Mobius)"},
-    {"T2(1)", "Td", "[1/3,1/3,2/3]", "Augmented Tetrahedron"},
-    {"T2(2)", "Td", "[2/3,1/3,1/3]", "Tetrahedron"},
-    {"O1", "Oh", "[1/2,1/2,2/3]", "COMPOUND of 3 Octahedra (UD08)"},
-    {"O2(1)", "Oh", "[1/2,1/3,1/4]",
-     "Relaxed Excavated Rhombic Dodecahedron (Mobius)"},
-    {"O2(2)", "Oh", "[1/2,1/3,1/4]",
-     "Relaxed Augmented Rhombic Dodecahedron (Mobius)"},
-    {"O3", "Oh", "[1/2,1/4,2/4]", "COMPOUND of 3 8/3 Star Bipyramids"},
-    {"O4(1)", "Oh", "[1/3,1/3,2/3]",
-     "COMPOUND of 2 Augmented Tetrahedra T2(1) (UC54_d)"},
-    {"O4(2)", "Oh", "[2/3,1/3,1/3]",
-     "COMPOUND of 2 Tetrahedra (Stella Octangula UC04)"},
-    // next 2 redundent
-    {"O5(1)", "Oh", "[1/3,2/3,1/3]", "Augmented Cube (=T1(1)) (Repeat)"},
-    {"O5(2)", "Oh", "[2/3,2/3,2/3]", "Excavated Cube (=T1(2)) (Repeat)"},
-    {"O5(3)", "Oh", "[1/3,2/3,1/3]", "COMPOUND of 2 T1(3)"},
-    {"O6(1)", "Oh", "[2/3,1/4,1/4]", "Augmented Octahedron"},
-    {"O6(2)", "Oh", "[2/3,3/4,3/4]", "Excavated Octahedron"},
-    {"O7", "Oh", "[2/4,2/4,2/4]", "Octahedron"},
-    {"I1(1)", "Ih", "[1/2,1/3,1/5]",
-     "Relaxed Excavated Rhombic Triacontahedron (Mobius)"},
-    {"I1(2)", "Ih", "[1/2,1/3,1/5]",
-     "Relaxed Augmented Rhombic Triacontahedron (Mobius)"},
-    {"I2(1)", "Ih", "[1/2,2/5,4/5]", "Relaxed Augmented Did (U36) *"},
-    {"I2(2)", "Ih", "[1/2,3/5,4/5]", "Relaxed Excavated Did (U36) *"},
-    {"I3(1)", "Ih", "[1/2,1/3,2/5]", "Relaxed Augmented Gid (U54) *"},
-    {"I3(2)", "Ih", "[1/2,1/3,2/5]", "Relaxed Excavated Gid (U54) *"},
-    {"I3(3)", "Ih", "[1/2,2/3,3/5]", "Relaxed Dual of Gaquatid (UD73) *"},
-    {"I3(4)", "Ih", "[1/2,2/3,2/5]",
-     "Additional Isomer of Augmented RT I1(2) **"},
-    {"I4", "Ih", "[1/2,1/2,1/2]", "COMPOUND of 5 Octahedra (UC17)"},
-    {"I5(1)", "Ih", "[2/3,3/5,4/5]", "Relaxed Augmented Dual of Ditdid (UD41)"},
-    {"I5(2)", "Ih", "[1/3,2/5,4/5]", "Relaxed Excavated Dual of Ditdid (UD41)"},
-    {"I6(1)", "Ih", "[2/3,1/5,1/5]", "Augmented Icosahedron"},
-    {"I6(2)", "Ih", "[2/3,4/5,4/5]", "Excavated Icosahedron"},
-    {"I7(1)", "Ih", "[1/3,2/5,3/5]", "Excavated Gike (U53)"},
-    {"I7(2)", "Ih", "[2/3,2/5,3/5]", "Augmented Gike (U53)"},
-    {"I7(3)", "Ih", "[1/3,2/5,3/5]",
-     "Additional Isomer of Augmented Icosahedron I6(1)"},
-    {"I8(1)", "Ih", "[1/3,1/3,4/5]", "Augmented Gissid (U52)"},
-    {"I8(2)", "Ih", "[1/3,1/3,4/5]", "Excavated Gissid (U52)"},
-    {"I9(1)", "Ih", "[1/3,1/3,2/5]", "Augmented Dodecahedron"},
-    {"I9(2)", "Ih", "[1/3,1/3,2/5]", "Excavated Dodecahedron"},
-    {"I9(3)", "Ih", "[1/3,1/3,2/5]", "Relaxed Excavated Dual of Sidtid (UD30)"},
-    // redundant
-    {"I9(4)", "Ih", "[1/3,1/3,2/5]",
-     "Relaxed Excavated Dual of Sidtid (UD30) (Repeat)"},
-    {"I10(1)", "Ih", "[4/5,4/5,4/5]", "Great Icosahedron or Gike (U53)"},
-    {"I10(2)", "Ih", "[1/5,1/5,4/5]", "Augmented Sissid (U34)"},
-    // redundant
-    {"I10(3)", "Ih", "[1/5,1/5,4/5]", "Augmented Sissid (U34) (Repeat)"},
-    {"I11(1)", "Ih", "[2/5,2/5,2/5]", "Icosahedron"},
-    {"I11(2)", "Ih", "[2/5,3/5,3/5]", "Excavated Gad (U35)"},
+   {"T1(1)",   "Oh", "[1/3,2/3,1/3]", "Augmented Cube (=O5(1))"},
+   {"T1(2)",   "Oh", "[2/3,2/3,2/3]", "Excavated Cube (=O5(2))"},
+   {"T1(3)",   "Td", "[1/3,2/3,1/3]", "Additonal Isomer of T1(1) (Mobius)"},
+   {"T2(1)",   "Td", "[1/3,1/3,2/3]", "Augmented Tetrahedron"},
+   {"T2(2)",   "Td", "[2/3,1/3,1/3]", "Tetrahedron"},
+   {"O1",      "Oh", "[1/2,1/2,2/3]", "COMPOUND of 3 Octahedra (UD08)"},
+   {"O2(1)",   "Oh", "[1/2,1/3,1/4]", "Relaxed Excavated Rhombic Dodecahedron (Mobius)"},
+   {"O2(2)",   "Oh", "[1/2,1/3,1/4]", "Relaxed Augmented Rhombic Dodecahedron (Mobius)"},
+   {"O3",      "Oh", "[1/2,1/4,2/4]", "COMPOUND of 3 8/3 Star Bipyramids"},
+   {"O4(1)",   "Oh", "[1/3,1/3,2/3]", "COMPOUND of 2 Augmented Tetrahedra T2(1) (UC54_d)"},
+   {"O4(2)",   "Oh", "[2/3,1/3,1/3]", "COMPOUND of 2 Tetrahedra (Stella Octangula UC04)"},
+   // next 2 redundent
+   {"O5(1)",   "Oh", "[1/3,2/3,1/3]", "Augmented Cube (=T1(1)) (Repeat)"},
+   {"O5(2)",   "Oh", "[2/3,2/3,2/3]", "Excavated Cube (=T1(2)) (Repeat)"},
+   {"O5(3)",   "Oh", "[1/3,2/3,1/3]", "COMPOUND of 2 T1(3)"},
+   {"O6(1)",   "Oh", "[2/3,1/4,1/4]", "Augmented Octahedron"},
+   {"O6(2)",   "Oh", "[2/3,3/4,3/4]", "Excavated Octahedron"},
+   {"O7",      "Oh", "[2/4,2/4,2/4]", "Octahedron"},
+   {"I1(1)",   "Ih", "[1/2,1/3,1/5]", "Relaxed Excavated Rhombic Triacontahedron (Mobius)"},
+   {"I1(2)",   "Ih", "[1/2,1/3,1/5]", "Relaxed Augmented Rhombic Triacontahedron (Mobius)"},
+   {"I2(1)",   "Ih", "[1/2,2/5,4/5]", "Relaxed Augmented Did (U36) *"},
+   {"I2(2)",   "Ih", "[1/2,3/5,4/5]", "Relaxed Excavated Did (U36) *"},
+   {"I3(1)",   "Ih", "[1/2,1/3,2/5]", "Relaxed Augmented Gid (U54) *"},
+   {"I3(2)",   "Ih", "[1/2,1/3,2/5]", "Relaxed Excavated Gid (U54) *"},
+   {"I3(3)",   "Ih", "[1/2,2/3,3/5]", "Relaxed Dual of Gaquatid (UD73) *"},
+   {"I3(4)",   "Ih", "[1/2,2/3,2/5]", "Additional Isomer of Augmented RT I1(2) **"},
+   {"I4",      "Ih", "[1/2,1/2,1/2]", "COMPOUND of 5 Octahedra (UC17)"},
+   {"I5(1)",   "Ih", "[2/3,3/5,4/5]", "Relaxed Augmented Dual of Ditdid (UD41)"},
+   {"I5(2)",   "Ih", "[1/3,2/5,4/5]", "Relaxed Excavated Dual of Ditdid (UD41)"},
+   {"I6(1)",   "Ih", "[2/3,1/5,1/5]", "Augmented Icosahedron"},
+   {"I6(2)",   "Ih", "[2/3,4/5,4/5]", "Excavated Icosahedron"},
+   {"I7(1)",   "Ih", "[1/3,2/5,3/5]", "Excavated Gike (U53)"},
+   {"I7(2)",   "Ih", "[2/3,2/5,3/5]", "Augmented Gike (U53)"},
+   {"I7(3)",   "Ih", "[1/3,2/5,3/5]", "Additional Isomer of Augmented Icosahedron I6(1)"},
+   {"I8(1)",   "Ih", "[1/3,1/3,4/5]", "Augmented Gissid (U52)"},
+   {"I8(2)",   "Ih", "[1/3,1/3,4/5]", "Excavated Gissid (U52)"},
+   {"I9(1)",   "Ih", "[1/3,1/3,2/5]", "Augmented Dodecahedron"},
+   {"I9(2)",   "Ih", "[1/3,1/3,2/5]", "Excavated Dodecahedron"},
+   {"I9(3)",   "Ih", "[1/3,1/3,2/5]", "Relaxed Excavated Dual of Sidtid (UD30)"},
+   // redundant 
+   {"I9(4)",   "Ih", "[1/3,1/3,2/5]", "Relaxed Excavated Dual of Sidtid (UD30) (Repeat)"},
+   {"I10(1)",  "Ih", "[4/5,4/5,4/5]", "Great Icosahedron or Gike (U53)"},
+   {"I10(2)",  "Ih", "[1/5,1/5,4/5]", "Augmented Sissid (U34)"},
+   // redundant 
+   {"I10(3)",  "Ih", "[1/5,1/5,4/5]", "Augmented Sissid (U34) (Repeat)"},
+   {"I11(1)",  "Ih", "[2/5,2/5,2/5]", "Icosahedron"},
+   {"I11(2)",  "Ih", "[2/5,3/5,3/5]", "Excavated Gad (U35)"},
 };
+
 
 // notes added as to what changed from what was listed in the paper
 
@@ -145,149 +138,116 @@ IsoDeltaItem iso_delta_item_list[] = {
 // 1.11803398874989485 = sqrt(5)/2
 // 1.20710678118654752 = (1+sqrt(2))/2
 // 1.40125853844407354 = -sqrt(3)/(-sqrt(5)+1)
-// 1.90211303259030714 = sqrt(phi)*5^(1/4) = sqrt(0.5*(5+sqrt(5))) = sqrt(phi+2)
-// = sqrt_phi_plus_2 (built in constant)
+// 1.90211303259030714 = sqrt(phi)*5^(1/4) = sqrt(0.5*(5+sqrt(5))) = sqrt(phi+2) = sqrt_phi_plus_2 (built in constant)
 
 IsoDeltaVector iso_delta_vector_list[] = {
-    {"T1(1)", Vec3d(1, -1, 1) / sqrt_3, Vec3d(1, 0, 0),
-     Vec3d(1, -1, -1) / sqrt_3, sqrt_3 / 2, (1 + sqrt_2) / 2, sqrt_3 / 2},
-    {"T1(2)", Vec3d(1, -1, 1) / sqrt_3, Vec3d(-1, 0, 0),
-     Vec3d(1, -1, -1) / sqrt_3, sqrt_3 / 2, -(1 - sqrt_2) / 2, sqrt_3 / 2},
-    {"T1(3)", Vec3d(1, -1, 1) / sqrt_3, Vec3d(1, 0, 0),
-     Vec3d(1, -1, -1) / sqrt_3, (1.0 / 6) * sqrt(21 - 6 * sqrt(10)),
-     sqrt(5) / 2, (1.0 / 6) * sqrt(21 + 6 * sqrt(10))},
-    // B changed
-    {"T2(1)", Vec3d(1, -1, 1) / sqrt_3, Vec3d(1, -1, -1) / sqrt_3,
-     Vec3d(-1, -1, -1) / sqrt_3, sqrt(6) / 4, sqrt(25.0 / 24), sqrt(6) / 4},
-    {"T2(2)", Vec3d(1, -1, 1) / sqrt_3, Vec3d(-1, 1, 1) / sqrt_3,
-     Vec3d(-1, -1, -1) / sqrt_3, sqrt(6) / 4, sqrt(6) / 4, sqrt(6) / 4},
-    {"O1", Vec3d(1, 0, 1) / sqrt_2, Vec3d(1, 0, -1) / sqrt_2, Vec3d(0, 1, 0),
-     sqrt_2 / 2, sqrt_2 / 2, sqrt_2 / 2},
-    // alpha changed
-    {"O2(1)", Vec3d(1, 0, 0), Vec3d(1, 0, 1) / sqrt_2, Vec3d(1, 1, 1) / sqrt_3,
-     1.080488239084420, 0.118828664898468, 1.094667047615130},
-    {"O2(2)", Vec3d(1, 0, 0), Vec3d(1, 0, 1) / sqrt_2, Vec3d(1, 1, 1) / sqrt_3,
-     1.204738778767500, 1.375617671088820, 0.515547971500924},
-    {"O3", Vec3d(1, 0, 1) / sqrt_2, Vec3d(-1, 0, 0), Vec3d(0, 1, 0),
-     sqrt((2 - sqrt_2) / 2), sqrt((2 - sqrt_2) / 2), sqrt(sqrt_2)},
-    {"O4(1)", Vec3d(1, -1, 1) / sqrt_3, Vec3d(1, -1, -1) / sqrt_3,
-     Vec3d(-1, -1, -1) / sqrt_3, sqrt(6) / 4, sqrt(25.0 / 24), sqrt(6) / 4},
-    // B changed
-    {"O4(2)", Vec3d(-1, 1, -1) / sqrt_3, Vec3d(1, -1, -1) / sqrt_3,
-     Vec3d(1, 1, 1) / sqrt_3, sqrt(6) / 4, sqrt(6) / 4, sqrt(6) / 4},
-    {"O5(1)", Vec3d(1, -1, 1) / sqrt_3, Vec3d(1, 0, 0),
-     Vec3d(1, -1, -1) / sqrt_3, sqrt_3 / 2, (1 + sqrt_2) / 2, sqrt_3 / 2},
-    {"O5(2)", Vec3d(1, -1, 1) / sqrt_3, Vec3d(-1, 0, 0),
-     Vec3d(1, -1, -1) / sqrt_3, sqrt_3 / 2, -(1 - sqrt_2) / 2, sqrt_3 / 2},
-    {"O5(3)", Vec3d(1, -1, 1) / sqrt_3, Vec3d(1, 0, 0),
-     Vec3d(1, -1, -1) / sqrt_3, (1.0 / 6) * sqrt(21 - 6 * sqrt(10)),
-     sqrt(5) / 2, (1.0 / 6) * sqrt(21 + 6 * sqrt(10))},
-    // triangle flipped for algorithm: A<-->C, C<-->A, alpha<-->gamma,
-    // gamma<-->alpha
-    {"O6(1)", Vec3d(1, 0, 0), Vec3d(0, -1, 0), Vec3d(1, -1, 1) / sqrt(3),
-     sqrt(2) / 2, sqrt(2) / 2, sqrt(6) / 2},
-    {"O6(2)", Vec3d(-1, 1, -1) / sqrt_3, Vec3d(1, 0, 0), Vec3d(0, -1, 0),
-     sqrt(6) / 6, sqrt_2 / 2, sqrt_2 / 2},
-    {"O7", Vec3d(1, 0, 0), Vec3d(0, 1, 0), Vec3d(0, 0, 1), sqrt_2 / 2,
-     sqrt_2 / 2, sqrt_2 / 2},
-    // alpha changed
-    {"I1(1)", Vec3d(phi, phi *phi, 1) / (2 * phi), Vec3d(1, 1, 1) / sqrt_3,
-     Vec3d(0, phi, 1) / sqrt_phi_plus_2, 0.674181480291942, 1.600435268943570,
-     1.508572470741690},
-    {"I1(2)", Vec3d(phi, phi *phi, 1) / (2 * phi), Vec3d(1, 1, 1) / sqrt_3,
-     Vec3d(0, phi, 1) / sqrt_phi_plus_2, 1.901892201462340, 1.042221422390510,
-     1.602608615469960},
-    // the following six added to the table (not in the paper)
-    // I2(1) thru I3(3) added by Jim McNeill
-    {"I2(1)", Vec3d(-phi, phi *phi, -1) / (2 * phi),
-     Vec3d(-1, 0, -phi) / sqrt_phi_plus_2, Vec3d(0, phi, -1) / sqrt_phi_plus_2,
-     1.035310785747180, 1.017991958789870, 0.041794129091506},
-    {"I2(2)", Vec3d(phi, phi *phi, 1) / (2 * phi),
-     Vec3d(-1, 0, -phi) / sqrt_phi_plus_2, Vec3d(0, -phi, -1) / sqrt_phi_plus_2,
-     0.069590240312534, 0.961660565811817, 0.940133523007424},
-    {"I3(1)", Vec3d(-phi, phi *phi, 1) / (2 * phi), Vec3d(1, 1, 1) / sqrt_3,
-     Vec3d(0, phi, -1) / sqrt_phi_plus_2, 1.067540004877190, 0.454812301059250,
-     0.979984198587005},
-    {"I3(2)", Vec3d(phi, -phi *phi, -1) / (2 * phi), Vec3d(1, 1, 1) / sqrt_3,
-     Vec3d(0, phi, -1) / sqrt_phi_plus_2, 0.365481361740863, 0.809498075533857,
-     0.758298681854245},
-    {"I3(3)", Vec3d(-phi, phi *phi, 1) / (2 * phi), Vec3d(1, 1, 1) / sqrt_3,
-     Vec3d(0, phi, -1) / sqrt_phi_plus_2, 1.037389492284540, 0.123497623343534,
-     1.015782486189710},
-    // I3(4) result added from programmatic search by Adrian Rossiter
-    {"I3(4)", Vec3d(-phi, phi *phi, 1) / (2 * phi), Vec3d(1, 1, 1) / sqrt_3,
-     Vec3d(0, -phi, 1) / sqrt_phi_plus_2, 0.840436103166278, 0.919239756651211,
-     0.257365254781315},
-    // A, B changed
-    {"I4", Vec3d(phi, -phi *phi, -1) / (2 * phi),
-     Vec3d(-1, -phi, phi *phi) / (2 * phi), Vec3d(phi *phi, 1, phi) / (2 * phi),
-     1 / sqrt_2, 1 / sqrt_2, 1 / sqrt_2},
-    // C changed
-    {"I5(1)", Vec3d(1, 1, 1) / sqrt_3, Vec3d(-1, 0, -phi) / sqrt_phi_plus_2,
-     Vec3d(phi, -1, 0) / sqrt_phi_plus_2, 0.740118744863774, 0.305243296610152,
-     0.825499999909858},
-    // alpha changed
-    {"I5(2)", Vec3d(1, 1, 1) / sqrt_3, Vec3d(-1, 0, -phi) / sqrt_phi_plus_2,
-     Vec3d(-phi, 1, 0) / sqrt_phi_plus_2, 0.095586833624572, 0.922356501413017,
-     0.977651218274709},
-    {"I6(1)", Vec3d(1, 1, 1) / sqrt_3, Vec3d(1, 0, phi) / sqrt_phi_plus_2,
-     Vec3d(phi, 1, 0) / sqrt_phi_plus_2, 1.572257895003900,
-     0.5 * sqrt_phi_plus_2, 0.5 * sqrt_phi_plus_2},
-    {"I6(2)", Vec3d(1, 1, 1) / sqrt_3, Vec3d(-1, 0, -phi) / sqrt_phi_plus_2,
-     Vec3d(-phi, -1, 0) / sqrt_phi_plus_2, 0.060735266851555,
-     0.5 * sqrt_phi_plus_2, 0.5 * sqrt_phi_plus_2},
-    // C changed
-    {"I7(1)", Vec3d(1, 1, 1) / sqrt_3, Vec3d(0, -phi, 1) / sqrt_phi_plus_2,
-     Vec3d(-phi, 1, 0) / sqrt_phi_plus_2, 0.706232491219458,
-     0.5 * sqrt(0.5 * (5 - sqrt(5))), 0.5 * sqrt(0.5 * (5 - sqrt(5)))},
-    {"I7(2)", Vec3d(1, 1, 1) / sqrt_3, Vec3d(0, phi, -1) / sqrt_phi_plus_2,
-     Vec3d(phi, -1, 0) / sqrt_phi_plus_2, 0.926760670635994,
-     0.5 * sqrt(0.5 * (5 - sqrt(5))), 0.5 * sqrt(0.5 * (5 - sqrt(5)))},
-    {"I7(3)", Vec3d(1, 1, 1) / sqrt_3, Vec3d(0, -phi, 1) / sqrt_phi_plus_2,
-     Vec3d(phi, -1, 0) / sqrt_phi_plus_2, sqrt_3 / (sqrt(5) + 3),
-     0.883687468829836, 1.007795749176520},
-    // C, beta changed
-    {"I8(1)", Vec3d(1, 1, 1) / sqrt_3, Vec3d(0, -1 / phi, -phi) / sqrt_3,
-     Vec3d(phi, -1, 0) / sqrt_phi_plus_2, sqrt_3 / (sqrt(5) + 1),
-     sqrt_3 / (sqrt(5) + 1), 0.5 * sqrt_phi_plus_2},
-    // B changed
-    {"I8(2)", Vec3d(1, 1, 1) / sqrt_3, Vec3d(0, -1 / phi, -phi) / sqrt_3,
-     Vec3d(-phi, 1, 0) / sqrt_phi_plus_2, sqrt_3 / (sqrt(5) + 1),
-     sqrt_3 / (sqrt(5) + 1), 0.750245100408926},
-    {"I9(1)", Vec3d(1, 1, 1) / sqrt_3, Vec3d(1, 0, phi) / sqrt_phi_plus_2,
-     Vec3d(phi, 0, 1 / phi) / sqrt_3, -sqrt_3 / (-sqrt(5) + 1),
-     1.639247476530740, -sqrt_3 / (-sqrt(5) + 1)},
-    {"I9(2)", Vec3d(1, 1, 1) / sqrt_3, Vec3d(1, 0, phi) / sqrt_phi_plus_2,
-     Vec3d(phi, 0, 1 / phi) / sqrt_3, -sqrt_3 / (-sqrt(5) + 1),
-     0.5 * sqrt(0.5 * (5 - sqrt(5))), -sqrt_3 / (-sqrt(5) + 1)},
-    {"I9(3)", Vec3d(1, 1, 1) / sqrt_3, Vec3d(1, 0, phi) / sqrt_phi_plus_2,
-     Vec3d(phi, 0, 1 / phi) / sqrt_3, 1.056261606816530, 1.606723212103540,
-     1.497317965649610},
-    // Redundant
-    {"I9(4)", Vec3d(1, 1, 1) / sqrt_3, Vec3d(1, 0, phi) / sqrt_phi_plus_2,
-     Vec3d(phi, 0, 1 / phi) / sqrt_3, 1.497317965649610, 1.606723212103540,
-     1.056261606816530},
-    {"I10(1)", Vec3d(1, 0, phi) / sqrt_phi_plus_2,
-     Vec3d(0, -phi, -1) / sqrt_phi_plus_2, Vec3d(-phi, 1, 0) / sqrt_phi_plus_2,
-     0.5 * sqrt(0.5 * (5 - sqrt(5))), 0.5 * sqrt(0.5 * (5 - sqrt(5))),
-     0.5 * sqrt(0.5 * (5 - sqrt(5)))},
-    // C changed
-    {"I10(2)", Vec3d(1, 0, phi) / sqrt_phi_plus_2,
-     Vec3d(0, -phi, -1) / sqrt_phi_plus_2, Vec3d(phi, -1, 0) / sqrt_phi_plus_2,
-     0.5 * sqrt(0.5 * (5 - sqrt(5))), 0.5 * sqrt(0.5 * (5 - sqrt(5))),
-     1.113516364411610},
-    // Redundant
-    {"I10(3)", Vec3d(1, 0, phi) / sqrt_phi_plus_2,
-     Vec3d(0, phi, 1) / sqrt_phi_plus_2, Vec3d(phi, -1, 0) / sqrt_phi_plus_2,
-     1.113516364411610, 0.5 * sqrt(0.5 * (5 - sqrt(5))),
-     0.5 * sqrt(0.5 * (5 - sqrt(5)))},
-    {"I11(1)", Vec3d(1, 0, phi) / sqrt_phi_plus_2,
-     Vec3d(0, phi, 1) / sqrt_phi_plus_2, Vec3d(phi, 1, 0) / sqrt_phi_plus_2,
-     0.5 * sqrt_phi_plus_2, 0.5 * sqrt_phi_plus_2, 0.5 * sqrt_phi_plus_2},
-    {"I11(2)", Vec3d(1, 0, phi) / sqrt_phi_plus_2,
-     Vec3d(0, -phi, -1) / sqrt_phi_plus_2, Vec3d(phi, 1, 0) / sqrt_phi_plus_2,
-     0.5 * sqrt_phi_plus_2, 0.100405707943114, 0.5 * sqrt_phi_plus_2},
+   {"T1(1)",   Vec3d(1,-1,1)/sqrt_3, Vec3d(1,0,0), Vec3d(1,-1,-1)/sqrt_3,
+               sqrt_3/2, (1+sqrt_2)/2, sqrt_3/2},
+   {"T1(2)",   Vec3d(1,-1,1)/sqrt_3, Vec3d(-1,0,0), Vec3d(1,-1,-1)/sqrt_3,
+               sqrt_3/2, -(1-sqrt_2)/2, sqrt_3/2},
+   {"T1(3)",   Vec3d(1,-1,1)/sqrt_3, Vec3d(1,0,0), Vec3d(1,-1,-1)/sqrt_3,
+               (1.0/6)*sqrt(21-6*sqrt(10)), sqrt(5)/2, (1.0/6)*sqrt(21+6*sqrt(10))},
+   // B changed
+   {"T2(1)",   Vec3d(1,-1,1)/sqrt_3, Vec3d(1,-1,-1)/sqrt_3, Vec3d(-1,-1,-1)/sqrt_3,
+               sqrt(6)/4, sqrt(25.0/24), sqrt(6)/4},
+   {"T2(2)",   Vec3d(1,-1,1)/sqrt_3, Vec3d(-1,1,1)/sqrt_3, Vec3d(-1,-1,-1)/sqrt_3,
+               sqrt(6)/4, sqrt(6)/4, sqrt(6)/4},
+   {"O1",      Vec3d(1,0,1)/sqrt_2, Vec3d(1,0,-1)/sqrt_2, Vec3d(0,1,0),
+               sqrt_2/2, sqrt_2/2, sqrt_2/2},
+   // alpha changed
+   {"O2(1)",   Vec3d(1,0,0), Vec3d(1,0,1)/sqrt_2, Vec3d(1,1,1)/sqrt_3,
+               1.080488239084420, 0.118828664898468, 1.094667047615130},
+   {"O2(2)",   Vec3d(1,0,0), Vec3d(1,0,1)/sqrt_2, Vec3d(1,1,1)/sqrt_3,
+               1.204738778767500, 1.375617671088820, 0.515547971500924},
+   {"O3",      Vec3d(1,0,1)/sqrt_2, Vec3d(-1,0,0), Vec3d(0,1,0),
+               sqrt((2-sqrt_2)/2), sqrt((2-sqrt_2)/2), sqrt(sqrt_2)},
+   {"O4(1)",   Vec3d(1,-1,1)/sqrt_3, Vec3d(1,-1,-1)/sqrt_3, Vec3d(-1,-1,-1)/sqrt_3,
+               sqrt(6)/4, sqrt(25.0/24), sqrt(6)/4},
+   // B changed
+   {"O4(2)",   Vec3d(-1,1,-1)/sqrt_3, Vec3d(1,-1,-1)/sqrt_3, Vec3d(1,1,1)/sqrt_3,
+               sqrt(6)/4, sqrt(6)/4, sqrt(6)/4},
+   {"O5(1)",   Vec3d(1,-1,1)/sqrt_3, Vec3d(1,0,0), Vec3d(1,-1,-1)/sqrt_3,
+               sqrt_3/2, (1+sqrt_2)/2, sqrt_3/2},
+   {"O5(2)",   Vec3d(1,-1,1)/sqrt_3, Vec3d(-1,0,0), Vec3d(1,-1,-1)/sqrt_3,
+               sqrt_3/2, -(1-sqrt_2)/2, sqrt_3/2},
+   {"O5(3)",   Vec3d(1,-1,1)/sqrt_3, Vec3d(1,0,0), Vec3d(1,-1,-1)/sqrt_3,
+               (1.0/6)*sqrt(21-6*sqrt(10)), sqrt(5)/2, (1.0/6)*sqrt(21+6*sqrt(10))},
+   // triangle flipped for algorithm: A<-->C, C<-->A, alpha<-->gamma, gamma<-->alpha
+   {"O6(1)",   Vec3d(1,0,0), Vec3d(0,-1,0), Vec3d(1,-1,1)/sqrt(3),
+               sqrt(2)/2, sqrt(2)/2, sqrt(6)/2},
+   {"O6(2)",   Vec3d(-1,1,-1)/sqrt_3, Vec3d(1,0,0), Vec3d(0,-1,0),
+               sqrt(6)/6, sqrt_2/2, sqrt_2/2},
+   {"O7",      Vec3d(1,0,0), Vec3d(0,1,0), Vec3d(0,0,1),
+               sqrt_2/2, sqrt_2/2, sqrt_2/2},
+   // alpha changed
+   {"I1(1)",   Vec3d(phi,phi*phi,1)/(2*phi), Vec3d(1,1,1)/sqrt_3, Vec3d(0,phi,1)/sqrt_phi_plus_2,
+               0.674181480291942, 1.600435268943570, 1.508572470741690},
+   {"I1(2)",   Vec3d(phi,phi*phi,1)/(2*phi), Vec3d(1,1,1)/sqrt_3, Vec3d(0,phi,1)/sqrt_phi_plus_2,
+               1.901892201462340, 1.042221422390510, 1.602608615469960},
+   // the following six added to the table (not in the paper)
+   // I2(1) thru I3(3) added by Jim McNeill
+   {"I2(1)",   Vec3d(-phi,phi*phi,-1)/(2*phi), Vec3d(-1,0,-phi)/sqrt_phi_plus_2, Vec3d(0,phi,-1)/sqrt_phi_plus_2,
+               1.035310785747180, 1.017991958789870, 0.041794129091506},
+   {"I2(2)",   Vec3d(phi,phi*phi,1)/(2*phi), Vec3d(-1,0,-phi)/sqrt_phi_plus_2, Vec3d(0,-phi,-1)/sqrt_phi_plus_2,
+               0.069590240312534, 0.961660565811817, 0.940133523007424},
+   {"I3(1)",   Vec3d(-phi,phi*phi,1)/(2*phi), Vec3d(1,1,1)/sqrt_3, Vec3d(0,phi,-1)/sqrt_phi_plus_2,
+               1.067540004877190, 0.454812301059250, 0.979984198587005},
+   {"I3(2)",   Vec3d(phi,-phi*phi,-1)/(2*phi), Vec3d(1,1,1)/sqrt_3, Vec3d(0,phi,-1)/sqrt_phi_plus_2,
+               0.365481361740863, 0.809498075533857, 0.758298681854245},
+   {"I3(3)",   Vec3d(-phi,phi*phi,1)/(2*phi), Vec3d(1,1,1)/sqrt_3, Vec3d(0,phi,-1)/sqrt_phi_plus_2,
+               1.037389492284540, 0.123497623343534, 1.015782486189710},
+   // I3(4) result added from programmatic search by Adrian Rossiter
+   {"I3(4)",   Vec3d(-phi,phi*phi,1)/(2*phi), Vec3d(1,1,1)/sqrt_3, Vec3d(0,-phi,1)/sqrt_phi_plus_2,
+               0.840436103166278, 0.919239756651211, 0.257365254781315},
+   // A, B changed
+   {"I4",      Vec3d(phi,-phi*phi,-1)/(2*phi), Vec3d(-1,-phi,phi*phi)/(2*phi), Vec3d(phi*phi,1,phi)/(2*phi),
+               1/sqrt_2, 1/sqrt_2, 1/sqrt_2},
+   // C changed
+   {"I5(1)",   Vec3d(1,1,1)/sqrt_3, Vec3d(-1,0,-phi)/sqrt_phi_plus_2, Vec3d(phi,-1,0)/sqrt_phi_plus_2,
+               0.740118744863774, 0.305243296610152, 0.825499999909858},
+   // alpha changed
+   {"I5(2)",   Vec3d(1,1,1)/sqrt_3, Vec3d(-1,0,-phi)/sqrt_phi_plus_2, Vec3d(-phi,1,0)/sqrt_phi_plus_2,
+               0.095586833624572, 0.922356501413017, 0.977651218274709},
+   {"I6(1)",   Vec3d(1,1,1)/sqrt_3, Vec3d(1,0,phi)/sqrt_phi_plus_2, Vec3d(phi,1,0)/sqrt_phi_plus_2,
+               1.572257895003900, 0.5*sqrt_phi_plus_2, 0.5*sqrt_phi_plus_2},
+   {"I6(2)",   Vec3d(1,1,1)/sqrt_3, Vec3d(-1,0,-phi)/sqrt_phi_plus_2, Vec3d(-phi,-1,0)/sqrt_phi_plus_2,
+               0.060735266851555, 0.5*sqrt_phi_plus_2, 0.5*sqrt_phi_plus_2},
+   // C changed
+   {"I7(1)",   Vec3d(1,1,1)/sqrt_3, Vec3d(0,-phi,1)/sqrt_phi_plus_2, Vec3d(-phi,1,0)/sqrt_phi_plus_2,
+               0.706232491219458, 0.5*sqrt(0.5*(5-sqrt(5))), 0.5*sqrt(0.5*(5-sqrt(5)))},
+   {"I7(2)",   Vec3d(1,1,1)/sqrt_3, Vec3d(0,phi,-1)/sqrt_phi_plus_2, Vec3d(phi,-1,0)/sqrt_phi_plus_2,
+               0.926760670635994, 0.5*sqrt(0.5*(5-sqrt(5))), 0.5*sqrt(0.5*(5-sqrt(5)))},
+   {"I7(3)",   Vec3d(1,1,1)/sqrt_3, Vec3d(0,-phi,1)/sqrt_phi_plus_2, Vec3d(phi,-1,0)/sqrt_phi_plus_2,
+               sqrt_3/(sqrt(5)+3), 0.883687468829836, 1.007795749176520},
+   // C, beta changed
+   {"I8(1)",   Vec3d(1,1,1)/sqrt_3, Vec3d(0,-1/phi,-phi)/sqrt_3, Vec3d(phi,-1,0)/sqrt_phi_plus_2,
+               sqrt_3/(sqrt(5)+1), sqrt_3/(sqrt(5)+1), 0.5*sqrt_phi_plus_2},
+   // B changed
+   {"I8(2)",   Vec3d(1,1,1)/sqrt_3, Vec3d(0,-1/phi,-phi)/sqrt_3, Vec3d(-phi,1,0)/sqrt_phi_plus_2,
+               sqrt_3/(sqrt(5)+1), sqrt_3/(sqrt(5)+1), 0.750245100408926},
+   {"I9(1)",   Vec3d(1,1,1)/sqrt_3, Vec3d(1,0,phi)/sqrt_phi_plus_2, Vec3d(phi,0,1/phi)/sqrt_3,
+               -sqrt_3/(-sqrt(5)+1), 1.639247476530740, -sqrt_3/(-sqrt(5)+1)},
+   {"I9(2)",   Vec3d(1,1,1)/sqrt_3, Vec3d(1,0,phi)/sqrt_phi_plus_2, Vec3d(phi,0,1/phi)/sqrt_3,
+               -sqrt_3/(-sqrt(5)+1), 0.5*sqrt(0.5*(5-sqrt(5))), -sqrt_3/(-sqrt(5)+1)},
+   {"I9(3)",   Vec3d(1,1,1)/sqrt_3, Vec3d(1,0,phi)/sqrt_phi_plus_2, Vec3d(phi,0,1/phi)/sqrt_3,
+               1.056261606816530, 1.606723212103540, 1.497317965649610},
+   // Redundant
+   {"I9(4)",   Vec3d(1,1,1)/sqrt_3, Vec3d(1,0,phi)/sqrt_phi_plus_2, Vec3d(phi,0,1/phi)/sqrt_3,
+               1.497317965649610, 1.606723212103540, 1.056261606816530},
+   {"I10(1)",  Vec3d(1,0,phi)/sqrt_phi_plus_2, Vec3d(0,-phi,-1)/sqrt_phi_plus_2, Vec3d(-phi,1,0)/sqrt_phi_plus_2,
+               0.5*sqrt(0.5*(5-sqrt(5))), 0.5*sqrt(0.5*(5-sqrt(5))), 0.5*sqrt(0.5*(5-sqrt(5)))},
+   // C changed
+   {"I10(2)",  Vec3d(1,0,phi)/sqrt_phi_plus_2, Vec3d(0,-phi,-1)/sqrt_phi_plus_2, Vec3d(phi,-1,0)/sqrt_phi_plus_2,
+               0.5*sqrt(0.5*(5-sqrt(5))), 0.5*sqrt(0.5*(5-sqrt(5))), 1.113516364411610},
+   // Redundant
+   {"I10(3)",  Vec3d(1,0,phi)/sqrt_phi_plus_2, Vec3d(0,phi,1)/sqrt_phi_plus_2, Vec3d(phi,-1,0)/sqrt_phi_plus_2,
+               1.113516364411610, 0.5*sqrt(0.5*(5-sqrt(5))), 0.5*sqrt(0.5*(5-sqrt(5)))},
+   {"I11(1)",  Vec3d(1,0,phi)/sqrt_phi_plus_2, Vec3d(0,phi,1)/sqrt_phi_plus_2, Vec3d(phi,1,0)/sqrt_phi_plus_2,
+               0.5*sqrt_phi_plus_2, 0.5*sqrt_phi_plus_2, 0.5*sqrt_phi_plus_2},
+   {"I11(2)",  Vec3d(1,0,phi)/sqrt_phi_plus_2, Vec3d(0,-phi,-1)/sqrt_phi_plus_2, Vec3d(phi,1,0)/sqrt_phi_plus_2,
+               0.5*sqrt_phi_plus_2, 0.100405707943114, 0.5*sqrt_phi_plus_2},
 };
+// clang-format on
 
 class id_poly {
 private:
@@ -452,110 +412,97 @@ public:
   void usage();
 };
 
+// clang-format off
 void id_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options] polyhedron\n"
-      "\n"
-      "Make Isohedral Deltahedra in OFF format. The polyhedron may be "
-      "specified\n"
-      "by its list number, or the (start of the) name of the polyhedron.\n"
-      "Additional examples can be generated using -d or -c paramters.\n"
-      "Based on a paper by G. C. Shephard\n"
-      "Periodica Mathematica Hungarica, Volume 39, Numbers 1-3, 2000 , pp. "
-      "83-106(24).\n"
-      "with enhancements by Jim McNeill "
-      "(http://www.orchidpalms.com/polyhedra)\n"
-      "and Adrian Rossiter (http://www.antiprism.com)\n"
-      "\n"
-      "Options\n"
-      "%s"
-      "  -l        display the list of Isohedral Deltahedra 1 thru 42\n"
-      "  -t        generate triangle only (Isohedral Deltahedra 1 to 42 and "
-      "option -d)\n"
-      "  -v        verbose output (Isohedral Deltahedra 1 thru 42 and option "
-      "-d)\n"
-      "  -o <file> write output to file (default: write to standard output)\n"
-      // undocumented switch
-      //"  -w        allow angle on b,e,f,m,n,o,p,q creates bi-hedral forms\n"
-      "\nIsohedral Deltahedra Options\n"
-      "  -a <ang>  angle\n"
-      "  -n <n/d>  n/d (d is optional)\n"
-      "              note: for option -d and compound cases c, g, h:\n"
-      "              n and d must be such that (2 < n/d < 6)\n"
-      "  -k <int>  in special cases, for specifying number of constituents\n"
-      "  -s <int>  in special cases, for subtypes (default: 1)\n"
-      "\nIsohedral Deltahedra Special Cases\n"
-      "  -d        dipyramid of n/d using -n n/d (infinite set)\n"
-      "  -c <type> compound cases (a thru f from Shephard's paper)\n"
-      "              a - tetrahedron repeated k times, evenly spaced\n"
-      "                     when k=1 tetrahedron, when k=2 Stella Octangula\n"
-      "                     Uniform Compound Set UC23 when n/d is 2/1\n"
-      "              b - 5 or 10 tetrahedra\n"
-      "                     s=1 icosahedral, s=2 with horizontal reflection\n"
-      "                     Uniform Compounds UC05 and UC06\n"
-      "              c - 2 dipyramids of n/d using -a angle (default: "
-      "calculated)\n"
-      "                     relaxed dual of Uniform Compound Set UC20 and k=1\n"
-      "              d - 6 octahedra using -a angle (default: 22.5)\n"
-      "                     At 45.0 degrees is 3 Octahedra\n"
-      "                     dual of Uniform Compound Set UC07\n"
-      "              e - 4 or 8 triangular dipyramids\n"
-      "                     s=1 octahedral, s=2 with horizontal reflection\n"
-      "                     relaxed duals of Uniform Compounds UC30 & UC31\n"
-      "              f - 6 or 12 5/1 pentagonal or 5/2 star dipyramids\n"
-      "                     5/1: s=1 icosahedral, s=2 with horizontal "
-      "reflection\n"
-      "                          relaxed duals of Uniform Compounds UC34 & "
-      "UC35\n"
-      "                     5/2: s=3 icosahedral, s=4 with horizontal "
-      "reflection\n"
-      "                          relaxed duals of Uniform Compounds UC36 & "
-      "UC37\n"
-      "\n         additional cases:\n"
-      "              g - 2 tetrahedra using -a angle (default: 45.0)\n"
-      "                     At 45.0 degrees is Uniform Compound UC04\n"
-      "                     Uniform Compound Set UC23 when n/d is 2/1 and k=1\n"
-      "              h - 2 tetrahedra repeated k times, evenly spaced\n"
-      "                     using -a angle (default: 1.0)\n"
-      "                     Uniform Compound Set UC23 when n/d is 2/1 for any "
-      "k\n"
-      "              i - 6 tetrahedra using -a angle (default: 45.0)\n"
-      "                     Uniform Compound UC01. At 45.0 degrees is UC03\n"
-      "              j - 12 tetrahedra using -a angle (default: 30.0)\n"
-      "                     Uniform Compound UC02. At 45.0 degrees is UC03\n"
-      "              k - 2 dipyramids of n/d repeated k times, evenly spaced\n"
-      "                     using -a angle (default: 1.0)\n"
-      "                     relaxed dual of Uniform Compound Set UC20\n"
-      "              l - k dipyramids of n/d using -n n/d, evenly spaced\n"
-      "                     relaxed dual of Uniform Compound Set UC21\n"
-      "              m - 10 or 20 triangular dipyramids\n"
-      "                     s=1 icosahedral, s=2 with horizontal reflection\n"
-      "                     relaxed duals of Uniform Compounds UC32 & UC33\n"
-      "              n - 6 10/3 star dipyramids\n"
-      "                     relaxed dual of Uniform Compounds UC41\n"
-      "              o - 5 or 10 Augmented Tetrahedra T2(1)\n"
-      "                     s=1 icosahedral, s=2 with horizontal reflection\n"
-      "                     relaxed duals of Uniform Compounds UC55 & UC56\n"
-      "              p - 5 Augmented Octahedra O6(1)\n"
-      "                     relaxed dual of Uniform Compounds UC57\n"
-      "              q - 5 Excavated Octahedra O6(2)\n"
-      "                     relaxed dual of Uniform Compounds UC58\n"
-      "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
-      "  -f <opt> compound Coloring\n"
-      "              key word: none - sets no color (default: c)\n"
-      "              c - unique Coloring for each constituent\n"
-      "              s - symmetric colouring (should always be one color)\n"
-      "  -T <tran> face transparency. valid range from 0 (invisible) to 255 "
-      "(opaque)\n"
-      "  -m <maps> color maps for all elements to be tried in turn (default: "
-      "compound)\n"
-      "\n"
-      "\n",
-      prog_name(), help_ver_text);
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] polyhedron\n"
+"\n"
+"Make Isohedral Deltahedra in OFF format. The polyhedron may be specified\n"
+"by its list number, or the (start of the) name of the polyhedron.\n"
+"Additional examples can be generated using -d or -c paramters.\n"
+"Based on a paper by G. C. Shephard\n"
+"Periodica Mathematica Hungarica, Volume 39, Numbers 1-3, 2000 , pp. 83-106(24).\n"
+"with enhancements by Jim McNeill (http://www.orchidpalms.com/polyhedra)\n"
+"and Adrian Rossiter (http://www.antiprism.com)\n"
+"\n"
+"Options\n"
+"%s"
+"  -l        display the list of Isohedral Deltahedra 1 thru 42\n"
+"  -t        generate triangle only (Isohedral Deltahedra 1 to 42 and option -d)\n"
+"  -v        verbose output (Isohedral Deltahedra 1 thru 42 and option -d)\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+// undocumented switch
+//"  -w        allow angle on b,e,f,m,n,o,p,q creates bi-hedral forms\n"
+"\nIsohedral Deltahedra Options\n"
+"  -a <ang>  angle\n"
+"  -n <n/d>  n/d (d is optional)\n"
+"              note: for option -d and compound cases c, g, h:\n"
+"              n and d must be such that (2 < n/d < 6)\n"
+"  -k <int>  in special cases, for specifying number of constituents\n"
+"  -s <int>  in special cases, for subtypes (default: 1)\n"
+"\nIsohedral Deltahedra Special Cases\n"
+"  -d        dipyramid of n/d using -n n/d (infinite set)\n"
+"  -c <type> compound cases (a thru f from Shephard's paper)\n"
+"              a - tetrahedron repeated k times, evenly spaced\n"
+"                     when k=1 tetrahedron, when k=2 Stella Octangula\n"
+"                     Uniform Compound Set UC23 when n/d is 2/1\n"
+"              b - 5 or 10 tetrahedra\n"
+"                     s=1 icosahedral, s=2 with horizontal reflection\n"
+"                     Uniform Compounds UC05 and UC06\n"
+"              c - 2 dipyramids of n/d using -a angle (default: calculated)\n"
+"                     relaxed dual of Uniform Compound Set UC20 and k=1\n"
+"              d - 6 octahedra using -a angle (default: 22.5)\n"
+"                     At 45.0 degrees is 3 Octahedra\n"
+"                     dual of Uniform Compound Set UC07\n"
+"              e - 4 or 8 triangular dipyramids\n"
+"                     s=1 octahedral, s=2 with horizontal reflection\n"
+"                     relaxed duals of Uniform Compounds UC30 & UC31\n"
+"              f - 6 or 12 5/1 pentagonal or 5/2 star dipyramids\n"
+"                     5/1: s=1 icosahedral, s=2 with horizontal reflection\n"
+"                          relaxed duals of Uniform Compounds UC34 & UC35\n"
+"                     5/2: s=3 icosahedral, s=4 with horizontal reflection\n"
+"                          relaxed duals of Uniform Compounds UC36 & UC37\n"
+"\n         additional cases:\n"
+"              g - 2 tetrahedra using -a angle (default: 45.0)\n"
+"                     At 45.0 degrees is Uniform Compound UC04\n"
+"                     Uniform Compound Set UC23 when n/d is 2/1 and k=1\n"
+"              h - 2 tetrahedra repeated k times, evenly spaced\n"
+"                     using -a angle (default: 1.0)\n"
+"                     Uniform Compound Set UC23 when n/d is 2/1 for any k\n"
+"              i - 6 tetrahedra using -a angle (default: 45.0)\n"
+"                     Uniform Compound UC01. At 45.0 degrees is UC03\n"
+"              j - 12 tetrahedra using -a angle (default: 30.0)\n"
+"                     Uniform Compound UC02. At 45.0 degrees is UC03\n"
+"              k - 2 dipyramids of n/d repeated k times, evenly spaced\n"
+"                     using -a angle (default: 1.0)\n"
+"                     relaxed dual of Uniform Compound Set UC20\n"
+"              l - k dipyramids of n/d using -n n/d, evenly spaced\n"
+"                     relaxed dual of Uniform Compound Set UC21\n"
+"              m - 10 or 20 triangular dipyramids\n"
+"                     s=1 icosahedral, s=2 with horizontal reflection\n"
+"                     relaxed duals of Uniform Compounds UC32 & UC33\n"
+"              n - 6 10/3 star dipyramids\n"
+"                     relaxed dual of Uniform Compounds UC41\n"
+"              o - 5 or 10 Augmented Tetrahedra T2(1)\n"
+"                     s=1 icosahedral, s=2 with horizontal reflection\n"
+"                     relaxed duals of Uniform Compounds UC55 & UC56\n"
+"              p - 5 Augmented Octahedra O6(1)\n"
+"                     relaxed dual of Uniform Compounds UC57\n"
+"              q - 5 Excavated Octahedra O6(2)\n"
+"                     relaxed dual of Uniform Compounds UC58\n"
+"\nColoring Options (run 'off_util -H color' for help on color formats)\n"
+"  -f <opt> compound coloring\n"
+"              key word: none - sets no color (default: c)\n"
+"              c - unique coloring for each constituent\n"
+"              s - symmetric coloring (should always be one color)\n"
+"  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
+"  -m <maps> color maps for all elements to be tried in turn (default: compound)\n"
+"\n"
+"\n", prog_name(), help_ver_text);
 }
+// clang-format on
 
 void id_opts::process_command_line(int argc, char **argv)
 {
@@ -738,8 +685,7 @@ void id_opts::process_command_line(int argc, char **argv)
 }
 
 void verbose_output(const Vec3d &A, const Vec3d &B, const Vec3d &C,
-                    const double &alpha, const double &beta,
-                    const double &gamma)
+                    const double alpha, const double beta, const double gamma)
 {
   fprintf(stderr, "Schwarz triangle:\n");
   fprintf(stderr, "A = (% .15lf,% .15lf,% .15lf )\n", A[0], A[1], A[2]);
@@ -777,7 +723,7 @@ void make_triangle(Geometry &geom, const Vec3d &A, const Vec3d &B,
 
 // quartic formula by Adrian Rossiter
 int find_equ_tris(Vec3d A, Vec3d B, Vec3d C, vector<double> &factors,
-                  const bool &verbose)
+                  const bool verbose)
 {
   /*
      A.dump("\nA");
@@ -909,7 +855,7 @@ int find_equ_tris(Vec3d A, Vec3d B, Vec3d C, vector<double> &factors,
 // find closest match to alpha, beta and gamma values in the table
 // if found, use the formula derived values. If not found, table values
 // unchanged
-bool refine_abg(/* const string &sym_type, */ bool reverse, const bool &verbose,
+bool refine_abg(/* const string &sym_type, */ bool reverse, const bool verbose,
                 const Vec3d &A, const Vec3d &B, const Vec3d &C, double &alpha,
                 double &beta, double &gamma)
 {
@@ -1033,10 +979,10 @@ bool refine_abg(/* const string &sym_type, */ bool reverse, const bool &verbose,
   return found;
 }
 
-void make_poly(Geometry &geom, const string &sym_type,
-               const bool &triangle_only, const bool &verbose, const Vec3d &A,
-               const Vec3d &B, const Vec3d &C, const double &alpha,
-               const double &beta, const double &gamma)
+void make_poly(Geometry &geom, const string &sym_type, const bool triangle_only,
+               const bool verbose, const Vec3d &A, const Vec3d &B,
+               const Vec3d &C, const double alpha, const double beta,
+               const double gamma)
 {
   double a = alpha;
   double b = beta;
@@ -1068,7 +1014,7 @@ void make_poly(Geometry &geom, const string &sym_type,
   }
 }
 
-void make_delta_dipyramid(Geometry &geom, const int &n, const int &d,
+void make_delta_dipyramid(Geometry &geom, const int n, const int d,
                           bool triangle_only = false, bool verbose = false)
 {
   char buf1[MSG_SZ];
@@ -1098,7 +1044,7 @@ void make_delta_dipyramid(Geometry &geom, const int &n, const int &d,
     verbose_output(A, B, C, alpha, beta, gamma);
 }
 
-void tet_to_dihedral(Geometry &geom, const string &sym_from, const int &k,
+void tet_to_dihedral(Geometry &geom, const string &sym_from, const int k,
                      Trans3d pos = Trans3d())
 {
   char sym_to[MSG_SZ];
@@ -1106,13 +1052,13 @@ void tet_to_dihedral(Geometry &geom, const string &sym_from, const int &k,
   transform_and_repeat(&geom, sym_to, sym_from, pos);
 }
 
-void case_a_star_tetrahedron(Geometry &geom, const int &k)
+void case_a_star_tetrahedron(Geometry &geom, const int k)
 {
   geom.read_resource("u1");
   tet_to_dihedral(geom, "Td", 2 * k);
 }
 
-void case_b_5_or_10_tetrahedra(Geometry &geom, double angle, const int &k)
+void case_b_5_or_10_tetrahedra(Geometry &geom, double angle, const int k)
 {
   if (angle == INFINITY)
     angle = 0;
@@ -1131,8 +1077,7 @@ void case_b_5_or_10_tetrahedra(Geometry &geom, double angle, const int &k)
   }
 }
 
-void case_c_2_dipyramids(Geometry &geom, double angle, const int &n,
-                         const int &d)
+void case_c_2_dipyramids(Geometry &geom, double angle, const int n, const int d)
 {
   if (angle == INFINITY) {
     angle = (M_PI / 2) / n; // 90/n degrees
@@ -1165,7 +1110,7 @@ void case_d_6_octahedra(Geometry &geom, double angle)
 }
 
 void case_e_4_or_8_triangular_dipyramids(Geometry &geom, double angle,
-                                         const int &k)
+                                         const int k)
 {
   if (angle == INFINITY)
     angle = 0;
@@ -1191,7 +1136,7 @@ void case_e_4_or_8_triangular_dipyramids(Geometry &geom, double angle,
 }
 
 void case_f_6_or_12_pentagonal_dipyramids(Geometry &geom, double angle,
-                                          const int &k)
+                                          const int k)
 {
   if (angle == INFINITY)
     angle = 0;
@@ -1231,7 +1176,7 @@ void case_g_2_tetrahedra(Geometry &geom, double angle)
   tet_to_dihedral(geom, "S4", 2); // 2*k=4
 }
 
-void case_h_2k_tetrahedra(Geometry &geom, double angle, const int &k)
+void case_h_2k_tetrahedra(Geometry &geom, double angle, const int k)
 {
   if (angle == INFINITY)
     angle = deg2rad(1.0);
@@ -1261,8 +1206,8 @@ void case_j_12_tetrahedra(Geometry &geom, double angle)
   transform_and_repeat(&geom, "T", "Oh", Trans3d::rot(0, 0, angle));
 }
 
-void case_k_2k_dipyramids(Geometry &geom, double angle, const int &k,
-                          const int &n, const int &d)
+void case_k_2k_dipyramids(Geometry &geom, double angle, const int k,
+                          const int n, const int d)
 {
   if (angle == INFINITY)
     angle = deg2rad(1.0);
@@ -1280,8 +1225,7 @@ void case_k_2k_dipyramids(Geometry &geom, double angle, const int &k,
   transform_and_repeat(&geom, sym_to, sym_from);
 }
 
-void case_l_k_dipyramids(Geometry &geom, const int &k, const int &n,
-                         const int &d)
+void case_l_k_dipyramids(Geometry &geom, const int k, const int n, const int d)
 {
   fprintf(stderr, "Using: ");
   make_delta_dipyramid(geom, n, d);
@@ -1295,7 +1239,7 @@ void case_l_k_dipyramids(Geometry &geom, const int &k, const int &n,
 }
 
 void case_m_10_or_20_triangular_dipyramids(Geometry &geom, double angle,
-                                           const int &k)
+                                           const int k)
 {
   if (angle == INFINITY)
     angle = 0;
@@ -1334,7 +1278,7 @@ void case_n_6_10_3_star_dipyramids(Geometry &geom, double angle)
 }
 
 void case_o_5_or_10_augmented_tetrahedra(Geometry &geom, double angle,
-                                         const int &k)
+                                         const int k)
 {
   if (angle == INFINITY)
     angle = 0;
@@ -1367,8 +1311,8 @@ void case_q_5_excavated_octahedra(Geometry &geom, double angle)
   transform_and_repeat(&geom, "I", "Oh", Trans3d::rot(0, angle, 0));
 }
 
-void compound_Coloring(Geometry &geom, const char &Coloring_method,
-                       const ColorMapMulti &map, const int &face_opacity)
+void compound_Coloring(Geometry &geom, const char Coloring_method,
+                       const ColorMapMulti &map, const int face_opacity)
 {
   // color by sub-symmetry  as map indexes happened by default in sym_repeat()
   if (!Coloring_method) {

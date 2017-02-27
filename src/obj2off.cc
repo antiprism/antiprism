@@ -56,27 +56,25 @@ public:
   void usage();
 };
 
+// clang-format off
 void obj2off_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options] [input_file]\n"
-      "\n"
-      "Convert files in OBJ format to OFF format. Only v, e and f statements "
-      "are\n"
-      "processed. If input_file is not given the program reads from standard "
-      "input.\n"
-      "\n"
-      "Options\n"
-      "%s"
-      "  -d <dgts> number of significant digits (default %d) or if negative\n"
-      "            then the number of digits after the decimal point\n"
-      "  -o <file> write output to file (default: write to standard output)\n"
-      "\n"
-      "\n",
-      prog_name(), help_ver_text, DEF_SIG_DGTS);
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] [input_file]\n"
+"\n"
+"Convert files in OBJ format to OFF format. Only v, e and f statements are\n"
+"processed. If input_file is not given the program reads from standard input.\n"
+"\n"
+"Options\n"
+"%s"
+"  -d <dgts> number of significant digits (default %d) or if negative\n"
+"            then the number of digits after the decimal point\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+"\n"
+"\n",prog_name(), help_ver_text, DEF_SIG_DGTS);
 }
+// clang-format on
 
 void obj2off_opts::process_command_line(int argc, char **argv)
 {

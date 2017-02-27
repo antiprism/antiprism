@@ -397,7 +397,8 @@ void unitize_vertex_radius(Geometry &geom)
   geom.transform(Trans3d::scale(1 / avg));
 }
 
-void move_line_to_point(Vec3d &P, Vec3d &Q, const Vec3d X)
+// P and Q are modified
+void move_line_to_point(Vec3d &P, Vec3d &Q, const Vec3d &X)
 {
   Vec3d Y = X + (Q-P);
   Vec3d V = P + X;

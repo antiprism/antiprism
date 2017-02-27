@@ -65,7 +65,7 @@ private:
   FILE *ofile;
 
   void face_winding_cnts(const std::vector<int> winding_numbers,
-                         const bool &signing);
+                         const bool signing);
   void vertex_figure_winding_cnts();
 
 public:

@@ -145,6 +145,7 @@ public:
   void usage();
 };
 
+// clang-format on
 void extended_help()
 {
   fprintf(
@@ -393,6 +394,7 @@ void brav_opts::usage()
       prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
       ::epsilon);
 }
+// clang-format off
 
 void brav_opts::process_command_line(int argc, char **argv)
 {
@@ -1120,7 +1122,7 @@ double bravais_volume(string crystal_system, const vector<double> &vecs,
 }
 
 // return random angle
-double bravais_random_angle(Random &ran, const double &max_angle)
+double bravais_random_angle(Random &ran, const double max_angle)
 {
   return ran.ran_in_range_exclude_end(0.001,
                                       max_angle); // avoid 0 and max_angle
@@ -1138,7 +1140,7 @@ void sort_three(double &x, double &y, double &z, vector<double> v)
 
 int bravais_check(string &crystal_system, string &centering,
                   vector<double> &vecs, vector<double> &angles,
-                  const int &strictness, bool verbose)
+                  const int strictness, bool verbose)
 {
   // strictness = 0 any change in crystal system allowed
   // strictness = 1 only upgrades in crystal system allowed
@@ -1563,7 +1565,7 @@ void bravais_cell_struts(Geometry &geom, const Color &edge_col)
 }
 
 void bravais_cell(Geometry &geom, const string &centering,
-                  const bool &cell_struts, const Color &vert_col,
+                  const bool cell_struts, const Color &vert_col,
                   const Color &edge_col)
 {
   if (centering == "p")
@@ -1589,7 +1591,7 @@ void bravais_cell(Geometry &geom, const string &centering,
 }
 
 void bravais_scale(Geometry &geom, const vector<double> &vecs,
-                   const bool &inverse)
+                   const bool inverse)
 {
   // divide by 2 since original scale is 2
   Trans3d m = Trans3d::scale(vecs[0] / 2, vecs[1] / 2, vecs[2] / 2);
@@ -1601,7 +1603,7 @@ void bravais_scale(Geometry &geom, const vector<double> &vecs,
 
 // applies angles alpha,beta and gamma without changing scale
 void bravais_warp(Geometry &geom, const vector<double> &angles,
-                  const bool &inverse)
+                  const bool inverse)
 {
   double yz = deg2rad(angles[0]); // alpha
   double zx = deg2rad(angles[1]); // beta
@@ -1616,7 +1618,7 @@ void bravais_warp(Geometry &geom, const vector<double> &angles,
 
 // vecs is not changed
 double bravais_radius(const vector<int> &grid, vector<double> vecs,
-                      const vector<double> &angles, const char &radius_default)
+                      const vector<double> &angles, const char radius_default)
 {
   Geometry tgeom;
   tgeom.read_resource("std_cube");
@@ -1631,7 +1633,7 @@ double bravais_radius(const vector<int> &grid, vector<double> vecs,
   return lattice_radius(tgeom, radius_default);
 }
 
-double bravais_auto_grid_size(const double &radius, const vector<double> &vecs,
+double bravais_auto_grid_size(const double radius, const vector<double> &vecs,
                               const vector<double> &angles)
 {
   vector<int> grid(3);
@@ -1672,7 +1674,7 @@ void geom_to_grid_translate(Geometry &geom, Geometry tgeom,
 }
 
 void geom_to_grid(Geometry &geom, const vector<int> &grid,
-                  const vector<double> &cell_size, const double &eps)
+                  const vector<double> &cell_size, const double eps)
 {
   Geometry tgeom = geom;
   geom.clear_all();
@@ -1709,7 +1711,7 @@ void bravais_eighth_cell_grid(Geometry &geom)
     geom.del(VERTS, del_verts);
 }
 
-Trans3d r_lattice_trans_mat(const bool &inverse)
+Trans3d r_lattice_trans_mat(const bool inverse)
 {
   Trans3d trans_m;
   // transformation matrix by Adrian Rossiter
@@ -1742,7 +1744,7 @@ Trans3d r_lattice_trans_mat(const bool &inverse)
 
 void r_lattice_overlay(Geometry &geom, const vector<int> &grid,
                        const vector<double> &cell_size, const Color &vert_col,
-                       const Color &edge_col, const double &eps)
+                       const Color &edge_col, const double eps)
 {
   Geometry hgeom;
 
@@ -1764,7 +1766,7 @@ void r_lattice_overlay(Geometry &geom, const vector<int> &grid,
   geom.append(hgeom);
 }
 
-void bravais_grid_type(vector<int> &grid, const char &auto_grid_type)
+void bravais_grid_type(vector<int> &grid, const char auto_grid_type)
 {
   string pattern; // 0 - even 1 - odd
   if (auto_grid_type == 'p')
@@ -1813,7 +1815,7 @@ double tetrahedral_volume(const Vec3d &a0, const Vec3d &a1, const Vec3d &a2,
 
 void bravais_dual(Geometry &geom, const vector<Vec3d> &primitive_vectors,
                   const vector<int> &prim_vec_idxs, const vector<double> &vecs,
-                  const vector<double> &angles, const double &eps)
+                  const vector<double> &angles, const double eps)
 {
   Geometry tgeom;
 

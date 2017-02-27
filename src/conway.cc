@@ -175,7 +175,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
 }
 
 string resolved_cn_string(const string &cn_string,
-                          const bool &use_truncate_algorithm)
+                          const bool use_truncate_algorithm)
 {
   string resolve_string = cn_string;
 
@@ -700,7 +700,7 @@ void cn_opts::process_command_line(int argc, char **argv)
   epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
-void verbose(const char &operation, const int &op_var, const bool &verbosity)
+void verbose(const char operation, const int op_var, const bool verbosity)
 {
   if (verbosity) {
     char buf[MSG_SZ];
@@ -809,9 +809,9 @@ void unitize_vertex_radius(Geometry &geom)
 }
 */
 
-void cn_planarize(Geometry &geom, const char &planarization_method,
-                  const int &num_iters_planar, const double &eps,
-                  const bool &verbosity, const int &rep_count)
+void cn_planarize(Geometry &geom, const char planarization_method,
+                  const int num_iters_planar, const double eps,
+                  const bool verbosity, const int rep_count)
 {
   if (num_iters_planar != 0) {
     verbose('_', 0, verbosity);
@@ -820,14 +820,14 @@ void cn_planarize(Geometry &geom, const char &planarization_method,
     else if (planarization_method == 'm')
       planarize_mm(geom, num_iters_planar, rep_count, eps);
     else if (planarization_method == 'c') {
-      //unitize_vertex_radius(geom);
-      //geom.transform(Trans3d::transl(-centroid(geom.verts())));
+      // unitize_vertex_radius(geom);
+      // geom.transform(Trans3d::transl(-centroid(geom.verts())));
       canonicalize_mm(geom, num_iters_planar, rep_count, eps);
     }
   }
 }
 
-void get_operand(Geometry &geom, const char &operand, const int &poly_size)
+void get_operand(Geometry &geom, const char operand, const int poly_size)
 {
   string uniforms = "TCOID";
 
@@ -1055,7 +1055,7 @@ void cn_gyro(Geometry &geom)
   geom.orient();
 }
 
-void cn_kis(Geometry &geom, const int &n)
+void cn_kis(Geometry &geom, const int n)
 {
   vector<vector<int>> &faces = geom.raw_faces();
   vector<Vec3d> &verts = geom.raw_verts();
@@ -1160,15 +1160,15 @@ void cn_propellor(Geometry &geom)
 
 void cn_reflect(Geometry &geom) { geom.transform(Trans3d::inversion()); }
 
-void cn_truncate_by_algorithm(Geometry &geom, const double &ratio, const int &n)
+void cn_truncate_by_algorithm(Geometry &geom, const double ratio, const int n)
 {
   truncate_verts(&geom, ratio, n);
   geom.orient();
 }
 
-void cn_whirl(Geometry &geom, const char &planarization_method,
-              const int &num_iters_planar, const double &eps,
-              const bool &verbosity, const int &rep_count)
+void cn_whirl(Geometry &geom, const char planarization_method,
+              const int num_iters_planar, const double eps,
+              const bool verbosity, const int rep_count)
 {
   int num_faces = geom.raw_faces().size();
 
@@ -1188,9 +1188,9 @@ void cn_whirl(Geometry &geom, const char &planarization_method,
   geom.orient();
 }
 
-void cn_expand(Geometry &geom, const bool &use_truncate_algorithm,
-               const char &planarization_method, const int &num_iters_planar,
-               const double &eps, const bool &verbosity, const int &rep_count)
+void cn_expand(Geometry &geom, const bool use_truncate_algorithm,
+               const char planarization_method, const int num_iters_planar,
+               const double eps, const bool verbosity, const int rep_count)
 {
   if (use_truncate_algorithm) {
     verbose('^', 0, verbosity);
@@ -1212,9 +1212,9 @@ void cn_expand(Geometry &geom, const bool &use_truncate_algorithm,
   }
 }
 
-void cn_join(Geometry &geom, const bool &use_truncate_algorithm,
-             const char &planarization_method, const int &num_iters_planar,
-             const double &eps, const bool &verbosity, const int &rep_count)
+void cn_join(Geometry &geom, const bool use_truncate_algorithm,
+             const char planarization_method, const int num_iters_planar,
+             const double eps, const bool verbosity, const int rep_count)
 {
   //   verbose('d',0,verbosity);
   //   cn_dual(geom);
@@ -1234,9 +1234,9 @@ void cn_join(Geometry &geom, const bool &use_truncate_algorithm,
   cn_dual(geom);
 }
 
-void cn_meta(Geometry &geom, const bool &use_truncate_algorithm,
-             const char &planarization_method, const int &num_iters_planar,
-             const double &eps, const bool &verbosity, const int &rep_count)
+void cn_meta(Geometry &geom, const bool use_truncate_algorithm,
+             const char planarization_method, const int num_iters_planar,
+             const double eps, const bool verbosity, const int rep_count)
 {
   verbose('j', 0, verbosity);
   cn_join(geom, use_truncate_algorithm, planarization_method, num_iters_planar,
@@ -1247,9 +1247,9 @@ void cn_meta(Geometry &geom, const bool &use_truncate_algorithm,
   cn_kis(geom, 0);
 }
 
-void cn_ortho(Geometry &geom, const bool &use_truncate_algorithm,
-              const char &planarization_method, const int &num_iters_planar,
-              const double &eps, const bool &verbosity, const int &rep_count)
+void cn_ortho(Geometry &geom, const bool use_truncate_algorithm,
+              const char planarization_method, const int num_iters_planar,
+              const double eps, const bool verbosity, const int rep_count)
 {
   verbose('j', 0, verbosity);
   cn_join(geom, use_truncate_algorithm, planarization_method, num_iters_planar,
@@ -1261,9 +1261,9 @@ void cn_ortho(Geometry &geom, const bool &use_truncate_algorithm,
           eps, verbosity, rep_count);
 }
 
-void cn_truncate(Geometry &geom, const int &n, const char &planarization_method,
-                 const int &num_iters_planar, const double &eps,
-                 const bool &verbosity, const int &rep_count)
+void cn_truncate(Geometry &geom, const int n, const char planarization_method,
+                 const int num_iters_planar, const double eps,
+                 const bool verbosity, const int rep_count)
 {
   verbose('d', 0, verbosity);
   cn_dual(geom);
@@ -1277,9 +1277,9 @@ void cn_truncate(Geometry &geom, const int &n, const char &planarization_method,
   cn_dual(geom);
 }
 
-void cn_snub(Geometry &geom, const char &planarization_method,
-             const int &num_iters_planar, const double &eps,
-             const bool &verbosity, const int &rep_count)
+void cn_snub(Geometry &geom, const char planarization_method,
+             const int num_iters_planar, const double eps, const bool verbosity,
+             const int rep_count)
 {
   //   verbose('d',0,verbosity);
   //   cn_dual(geom);
@@ -1293,9 +1293,9 @@ void cn_snub(Geometry &geom, const char &planarization_method,
   cn_dual(geom);
 }
 
-void cn_bevel(Geometry &geom, const bool &use_truncate_algorithm,
-              const char &planarization_method, const int &num_iters_planar,
-              const double &eps, const bool &verbosity, const int &rep_count)
+void cn_bevel(Geometry &geom, const bool use_truncate_algorithm,
+              const char planarization_method, const int num_iters_planar,
+              const double eps, const bool verbosity, const int rep_count)
 {
   if (use_truncate_algorithm) {
     verbose('^', 0, verbosity);
@@ -1319,10 +1319,9 @@ void cn_bevel(Geometry &geom, const bool &use_truncate_algorithm,
 }
 
 void do_operations(Geometry &geom, const vector<ops *> &operations,
-                   const char &planarization_method,
-                   const int &num_iters_planar, const double &eps,
-                   const bool &use_truncate_algorithm, const bool &verbosity,
-                   const int &rep_count)
+                   const char planarization_method, const int num_iters_planar,
+                   const double eps, const bool use_truncate_algorithm,
+                   const bool verbosity, const int rep_count)
 {
   for (auto operation : operations) {
     switch (operation->op) {
@@ -1452,8 +1451,8 @@ void do_operations(Geometry &geom, const vector<ops *> &operations,
   }
 }
 
-void cn_face_Coloring(Geometry &geom, const char &face_Coloring_method,
-                      const ColorMapMulti &map, const int &face_opacity,
+void cn_face_Coloring(Geometry &geom, const char face_Coloring_method,
+                      const ColorMapMulti &map, const int face_opacity,
                       const string &face_pattern)
 {
   if (face_Coloring_method == 'n') {

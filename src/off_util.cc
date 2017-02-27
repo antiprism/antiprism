@@ -160,7 +160,7 @@ void filter(Geometry &geom, const char *elems)
 }
 
 // get indexes of edge parts
-void get_edge_part(vector<int> &edge_part, const Geometry &geom, const int &idx,
+void get_edge_part(vector<int> &edge_part, const Geometry &geom, const int idx,
                    const vector<vector<int>> &vcons, vector<bool> &seen)
 {
   if (seen[idx])
@@ -280,7 +280,7 @@ void resolve_face_sides_to_faces(Geometry &geom, vector<int> &elem_list)
 }
 
 void resolve_color_to_elem(Geometry &geom, const Color &c,
-                           const char &selection_type_char,
+                           const char selection_type_char,
                            vector<vector<int>> &elem_lists)
 {
   int elem_type = 0;

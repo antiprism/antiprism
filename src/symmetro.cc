@@ -41,7 +41,6 @@
 
 using std::string;
 using std::vector;
-using std::fill;
 using std::swap;
 
 using namespace anti;
@@ -1007,32 +1006,32 @@ public:
     }
   }
 
-  void debug(const char &mode);
+  void debug(const char mode);
 
-  void setSym(const char &s, const int &psym, const int &qsym, const int &dih_n,
-              const int &id_no);
-  void setMult(const int &a, const int &m);
-  void setScale(const int &a, const double &s);
-  void setD(const int &a, const int &dee);
-  void setD_substitute(const int &a, const int &dee);
+  void setSym(const char s, const int psym, const int qsym, const int dih_n,
+              const int id_no);
+  void setMult(const int a, const int m);
+  void setScale(const int a, const double s);
+  void setD(const int a, const int dee);
+  void setD_substitute(const int a, const int dee);
 
-  int getOrder(const int &a);
-  int getN(const int &a);
+  int getOrder(const int a);
+  int getN(const int a);
 
-  double axis_angle(const int &n, const int &d);
-  // double getAngleBetweenAxes( const int &axis1, const int &axis2 );
-  double getAngleBetweenAxesSin(const int &axis1, const int &axis2);
+  double axis_angle(const int n, const int d);
+  // double getAngleBetweenAxes( const int axis1, const int axis2 );
+  double getAngleBetweenAxesSin(const int axis1, const int axis2);
   void swap_vecs(Vec3d &a, Vec3d &b);
-  int fill_sym_vec(const char &mode, char *errmsg);
+  int fill_sym_vec(const char mode, char *errmsg);
 
-  double angle(const int &n, const int &d);
-  double circumradius(const int &n, const int &d);
+  double angle(const int n, const int d);
+  double circumradius(const int n, const int d);
 
-  void substitute_polygon(Geometry &geom, const int &axis_no);
-  vector<Geometry> calc_polygons(const char &mode, const double &rotation,
-                                 const double &rotation_as_increment,
-                                 const bool &add_pi, const bool &swap_axes,
-                                 const double &offset, const bool &verbose,
+  void substitute_polygon(Geometry &geom, const int axis_no);
+  vector<Geometry> calc_polygons(const char mode, const double rotation,
+                                 const double rotation_as_increment,
+                                 const bool add_pi, const bool swap_axes,
+                                 const double offset, const bool verbose,
                                  double &angle_between_axes, char *errmsg);
 
   ~symmetro() = default;
@@ -1054,7 +1053,7 @@ private:
   vector<double> scale;
 };
 
-void symmetro::debug(const char &mode)
+void symmetro::debug(const char mode)
 {
   fprintf(stderr, "\n");
 
@@ -1088,8 +1087,8 @@ void symmetro::debug(const char &mode)
   fprintf(stderr, "\n");
 }
 
-void symmetro::setSym(const char &s, const int &psym, const int &qsym,
-                      const int &dih_n, const int &id_no)
+void symmetro::setSym(const char s, const int psym, const int qsym,
+                      const int dih_n, const int id_no)
 {
   sym = s;
 
@@ -1100,18 +1099,18 @@ void symmetro::setSym(const char &s, const int &psym, const int &qsym,
   sym_id_no = id_no;
 }
 
-void symmetro::setMult(const int &a, const int &m) { mult[a] = m; }
+void symmetro::setMult(const int a, const int m) { mult[a] = m; }
 
-void symmetro::setScale(const int &a, const double &s) { scale[a] = s; }
+void symmetro::setScale(const int a, const double s) { scale[a] = s; }
 
-void symmetro::setD(const int &a, const int &dee) { d[a] = dee; }
+void symmetro::setD(const int a, const int dee) { d[a] = dee; }
 
-void symmetro::setD_substitute(const int &a, const int &dee)
+void symmetro::setD_substitute(const int a, const int dee)
 {
   d_substitute[a] = dee;
 }
 
-int symmetro::getOrder(const int &a)
+int symmetro::getOrder(const int a)
 {
   switch (a) {
   case 0:
@@ -1123,20 +1122,20 @@ int symmetro::getOrder(const int &a)
   }
 }
 
-int symmetro::getN(const int &a) { return (getOrder(a) * mult[a]); }
+int symmetro::getN(const int a) { return (getOrder(a) * mult[a]); }
 
-double symmetro::axis_angle(const int &n, const int &d)
+double symmetro::axis_angle(const int n, const int d)
 {
   double nn = double(n);
   double dd = double(d);
   return (acos(1.0 / tan(M_PI * dd / nn) / tan(M_PI * (nn - dd) / (2.0 * nn))));
 }
 
-// double symmetro::getAngleBetweenAxes( const int &axis1, const int &axis2 ) {
+// double symmetro::getAngleBetweenAxes( const int axis1, const int axis2 ) {
 //   return ( acos(vdot(sym_vec[axis1].unit(), sym_vec[axis2].unit())) );
 //}
 
-double symmetro::getAngleBetweenAxesSin(const int &axis1, const int &axis2)
+double symmetro::getAngleBetweenAxesSin(const int axis1, const int axis2)
 {
   double sin_angle_between_axes =
       vcross(sym_vec[axis1].unit(), sym_vec[axis2].unit()).len();
@@ -1154,7 +1153,7 @@ void symmetro::swap_vecs(Vec3d &a, Vec3d &b)
   swap(a, b);
 }
 
-int symmetro::fill_sym_vec(const char &mode, char *errmsg)
+int symmetro::fill_sym_vec(const char mode, char *errmsg)
 {
   if (errmsg)
     *errmsg = '\0';
@@ -1366,18 +1365,18 @@ int symmetro::fill_sym_vec(const char &mode, char *errmsg)
   return err_no;
 }
 
-double symmetro::angle(const int &n, const int &d)
+double symmetro::angle(const int n, const int d)
 {
   return ((2.0 * M_PI * double(d) / double(n)));
 }
 
-double symmetro::circumradius(const int &n, const int &d)
+double symmetro::circumradius(const int n, const int d)
 {
   double edge_len = 1.0;
   return (edge_len / (2.0 * sin(angle(n, d) / 2.0)));
 }
 
-void symmetro::substitute_polygon(Geometry &geom, const int &axis_no)
+void symmetro::substitute_polygon(Geometry &geom, const int axis_no)
 {
   // Make one convex regular polygon
   geom.set_hull("");
@@ -1415,13 +1414,11 @@ void symmetro::substitute_polygon(Geometry &geom, const int &axis_no)
   }
 }
 
-// angle_between_axes in radians
-vector<Geometry>
-symmetro::calc_polygons(const char &mode, const double &rotation,
-                        const double &rotation_as_increment, const bool &add_pi,
-                        const bool &swap_axes, const double &offset,
-                        const bool &verbose, double &angle_between_axes,
-                        char *errmsg)
+// angle_between_axes in radians, is modified
+vector<Geometry> symmetro::calc_polygons(
+    const char mode, const double rotation, const double rotation_as_increment,
+    const bool add_pi, const bool swap_axes, const double offset,
+    const bool verbose, double &angle_between_axes, char *errmsg)
 {
   if (errmsg)
     *errmsg = '\0';
@@ -1556,7 +1553,7 @@ symmetro::calc_polygons(const char &mode, const double &rotation,
 }
 
 bool is_point_on_polygon_edges(const Geometry &polygon, const Vec3d &P,
-                               const double &eps)
+                               const double eps)
 {
   const vector<int> &face = polygon.faces()[0];
   const vector<Vec3d> &verts = polygon.verts();

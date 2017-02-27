@@ -64,7 +64,7 @@ bool full_model(const vector<int> &longitudes)
 }
 
 // returns angle in range of 0 to 359.999...
-double angle_in_range(double angle, const double &eps)
+double angle_in_range(double angle, const double eps)
 {
   while (angle < 0.0)
     angle += 360.0;
@@ -78,8 +78,8 @@ double angle_in_range(double angle, const double &eps)
 }
 
 // angle is either point cut or side cut
-bool angle_on_aligned_polygon(const double &angle, const double &n,
-                              const double &eps)
+bool angle_on_aligned_polygon(const double angle, const double n,
+                              const double eps)
 {
   double ang = angle_in_range(angle, eps);
   bool ret = double_eq(ang, 180.0, eps);
@@ -192,128 +192,99 @@ public:
   void usage();
 };
 
+// clang-format off
 void ncon_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options]\n"
-      "\n"
-      "Creates Sphericon like Polyhedra. Also known as Streptohedra\n"
-      "\n"
-      "Options\n"
-      "%s"
-      "  -n <n/d>  n-icon of order n. n must be 3 or greater (default: 4)\n"
-      "               use d to make star n-icon. d less than n\n"
-      "  -t <twst> number of twists. Can be negative, positive or 0 (default: "
-      "1)\n"
-      "  -s        side-cut of even order n-icon (default is point-cut)\n"
-      "  -H        hybrid of even order n-icon\n"
-      "  -a        angle (-z 3 only)\n"
-      "  -r        override inner radius (-z 2 only)\n"
-      "  -R        override outer radius (-z 2 only)\n"
-      "  -z <mthd> construction method\n"
-      "               1 - n/d must be co-prime. bow-ties can occur (default "
-      "for d=1)\n"
-      "               2 - n/d compounds allowed. shell model (default for "
-      "d>1)\n"
-      "               3 - n/d compounds allowed. No bow-ties (default if angle "
-      "not 0)\n"
-      "  -M <m,m2> longitudes of model of m sides with optional m2 of m sides "
-      "showing\n"
-      "               m may be odd, 3 or greater if twist is 0 (default: "
-      "36,36)\n"
-      "  -A        place a north and south pole in top and bottom if they "
-      "exist\n"
-      "                only valid if m2<m. Not valid with -c h (-z 1 only)\n"
-      "  -c <clse> close open model if m2<m. Valid values h or v (-z 1,2)\n"
-      "               h = horizontal closure, v = vertical closure\n"
-      "  -x <elms> v, e and f to remove OFF faces with one vertex (vertices),\n"
-      "               two-vertices (edges) and three or more vertices (faces)\n"
-      "               E - if face is invisble, associated edge is made "
-      "invisible\n"
-      "  -I        information on current n-icon\n"
-      "  -l <lim>  minimum distance for unique vertex locations as negative "
-      "exponent\n"
-      "               (default: %d giving %.0e)\n"
-      "  -o <file> write output to file (default: write to standard output)\n"
-      "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
-      "  -f <mthd> mthd is face Coloring method. The Coloring is done before "
-      "twist\n"
-      "               key word: none - sets no color\n"
-      "               S - color by symmetry polygon (default)\n"
-      "               s - color by circuits algorithm (n/d must be co-prime)\n"
-      "               f - color circuits with flood fill (-z 2,3 any n/d)\n"
-      "               c - color by compound\n"
-      "               a - color by compound, alternate method\n"
-      "               l - color latitudinally\n"
-      "               m - color longitudinally\n"
-      "               b - checkerboard with first two colors in face color "
-      "list\n"
-      "               n - use each color in succession\n"
-      "               x - first two colors based on sign of x\n"
-      "               y - first two colors based on sign of y\n"
-      "               z - first two colors based on sign of z (z is the twist "
-      "plane)\n"
-      "               o - use first eight colors per xyz octants\n"
-      "  -S        color circuits symmetrically for Coloring method s,f,S "
-      "(even n)\n"
-      "  -T <tran> face transparency. valid range from 0 (invisible) to 255 "
-      "(opaque)\n"
-      "  -O <strg> face transparency pattern string. valid values\n"
-      "               0 -T value suppressed, 1 -T value applied  (default: "
-      "'1')\n"
-      "  -e <mthd> mthd is edge Coloring method. The Coloring is done before "
-      "twist\n"
-      "               key word: none - sets no color\n"
-      "               key word: Q - defer Coloring all edges to option Q  "
-      "(default)\n"
-      "                  or use the same letter options specified in -f, "
-      "except c,a\n"
-      "               F - color edges with average adjoining face color\n"
-      "  -U <tran> edge transparency. valid range from 0 (invisible) to 255 "
-      "(opaque)\n"
-      "  -P <strg> edge transparency pattern string. valid values\n"
-      "               0 -U value suppressed, 1 -U value applied  (default: "
-      "'1')\n"
-      "  -Q <col>  color given to uncolored edges and vertices of final model\n"
-      "               key word: none - sets no color (default: invisible)\n"
-      "  -Y        for n/d shells, when showing edges, show indented edges\n"
-      "  -m <maps> color maps to be tried in turn. (default: "
-      "map_red:darkorange1:\n"
-      "               yellow:darkgreen:cyan:blue:magenta:white:grey:black%%) "
-      "optionally\n"
-      "               followed by elements to map from v, e or f (default: "
-      "vef)\n"
-      "  -D <c,e>  default color c for uncolored elements e (default: "
-      "darkgrey,ef)\n"
-      "               key word: none - sets no color. elements e can include e "
-      "or f\n"
-      "  -X <int>  flood fill stop. used with circuit or compound Coloring (-f "
-      "f,c)\n"
-      "               use 0 (default) to flood fill entire model. if -X is not "
-      "0 then\n"
-      "               return 1 from program if entire model has been colored\n"
-      "  -W        add symmetry polygon (for -f S or -e S)\n"
-      "\nSurface Count Reporting (options above igonored)\n"
-      "  -J <type> list n-icons with more than one surface. Valid values for "
-      "type\n"
-      "               n = point cut even order n_icons\n"
-      "               s = side cut even order n-icons (surfaces > 2)\n"
-      "               o = odd order n_icons\n"
-      "               h = hybrids (all)\n"
-      "               i = hybrids (where N/2 is even)\n"
-      "               j = hybrids (where N/2 is odd)\n"
-      "               k = hybrids (where N/4 is even)\n"
-      "               l = hybrids (where N/4 is odd)\n"
-      "  -K <k,k2> range of n-icons to list for multiple surfaces\n"
-      "  -L        long form report\n"
-      "  -Z        filter out case 2 types\n"
-      "\n"
-      "\n",
-      prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
-      ::epsilon);
+   fprintf(stdout,
+"\n"
+"Usage: %s [options]\n"
+"\n"
+"Creates Sphericon like Polyhedra. Also known as Streptohedra\n"
+"\n"
+"Options\n"
+"%s"
+"  -n <n/d>  n-icon of order n. n must be 3 or greater (default: 4)\n"
+"               use d to make star n-icon. d less than n\n"
+"  -t <twst> number of twists. Can be negative, positive or 0 (default: 1)\n"
+"  -s        side-cut of even order n-icon (default is point-cut)\n"
+"  -H        hybrid of even order n-icon\n"
+"  -a        angle (-z 3 only)\n"
+"  -r        override inner radius (-z 2 only)\n"
+"  -R        override outer radius (-z 2 only)\n"
+"  -z <mthd> construction method\n"
+"               1 - n/d must be co-prime. bow-ties can occur (default for d=1)\n"
+"               2 - n/d compounds allowed. shell model (default for d>1)\n"
+"               3 - n/d compounds allowed. No bow-ties (default if angle not 0)\n"
+"  -M <m,m2> longitudes of model of m sides with optional m2 of m sides showing\n"
+"               m may be odd, 3 or greater if twist is 0 (default: 36,36)\n"
+"  -A        place a north and south pole in top and bottom if they exist\n"
+"                only valid if m2<m. Not valid with -c h (-z 1 only)\n"
+"  -c <clse> close open model if m2<m. Valid values h or v (-z 1,2)\n"
+"               h = horizontal closure, v = vertical closure\n"   
+"  -x <elms> v, e and f to remove OFF faces with one vertex (vertices),\n"
+"               two-vertices (edges) and three or more vertices (faces)\n"
+"               E - if face is invisble, associated edge is made invisible\n"
+"  -I        information on current n-icon\n"  
+"  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
+"               (default: %d giving %.0e)\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+"\nColoring Options (run 'off_util -H color' for help on color formats)\n"
+"  -f <mthd> mthd is face coloring method. The coloring is done before twist\n"
+"               key word: none - sets no color\n"
+"               S - color by symmetry polygon (default)\n"
+"               s - color by circuits algorithm (n/d must be co-prime)\n"
+"               f - color circuits with flood fill (-z 2,3 any n/d)\n"
+"               c - color by compound\n"
+"               a - color by compound, alternate method\n"
+"               l - color latitudinally\n"
+"               m - color longitudinally\n"
+"               b - checkerboard with first two colors in face color list\n"
+"               n - use each color in succession\n"
+"               x - first two colors based on sign of x\n"
+"               y - first two colors based on sign of y\n"
+"               z - first two colors based on sign of z (z is the twist plane)\n"
+"               o - use first eight colors per xyz octants\n"
+"  -S        color circuits symmetrically for coloring method s,f,S (even n)\n"
+"  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
+"  -O <strg> face transparency pattern string. valid values\n"
+"               0 -T value suppressed, 1 -T value applied  (default: '1')\n"
+"  -e <mthd> mthd is edge coloring method. The coloring is done before twist\n"
+"               key word: none - sets no color\n"
+"               key word: Q - defer coloring all edges to option Q  (default)\n"
+"                  or use the same letter options specified in -f, except c,a\n"
+"               F - color edges with average adjoining face color\n"
+"  -U <tran> edge transparency. valid range from 0 (invisible) to 255 (opaque)\n"
+"  -P <strg> edge transparency pattern string. valid values\n"
+"               0 -U value suppressed, 1 -U value applied  (default: '1')\n"
+"  -Q <col>  color given to uncolored edges and vertices of final model\n"
+"               key word: none - sets no color (default: invisible)\n"
+"  -Y        for n/d shells, when showing edges, show indented edges\n"
+"  -m <maps> color maps to be tried in turn. (default: map_red:darkorange1:\n"
+"               yellow:darkgreen:cyan:blue:magenta:white:grey:black%%) optionally\n"
+"               followed by elements to map from v, e or f (default: vef)\n"
+"  -D <c,e>  default color c for uncolored elements e (default: darkgrey,ef)\n"
+"               key word: none - sets no color. elements e can include e or f\n"
+"  -X <int>  flood fill stop. used with circuit or compound coloring (-f f,c)\n"
+"               use 0 (default) to flood fill entire model. if -X is not 0 then\n"
+"               return 1 from program if entire model has been colored\n"
+"  -W        add symmetry polygon (for -f S or -e S)\n"
+"\nSurface Count Reporting (options above igonored)\n"
+"  -J <type> list n-icons with more than one surface. Valid values for type\n"
+"               n = point cut even order n_icons\n"
+"               s = side cut even order n-icons (surfaces > 2)\n"
+"               o = odd order n_icons\n"
+"               h = hybrids (all)\n"
+"               i = hybrids (where N/2 is even)\n"
+"               j = hybrids (where N/2 is odd)\n"
+"               k = hybrids (where N/4 is even)\n"
+"               l = hybrids (where N/4 is odd)\n"
+"  -K <k,k2> range of n-icons to list for multiple surfaces\n"
+"  -L        long form report\n"
+"  -Z        filter out case 2 types\n"
+"\n"
+"\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }
+// clang-format on
 
 void ncon_opts::process_command_line(int argc, char **argv)
 {
@@ -924,7 +895,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
   mod_twist = abs(twist % ncon_order);
 }
 
-int longitudinal_faces(const int &ncon_order, const bool &point_cut)
+int longitudinal_faces(const int ncon_order, const bool point_cut)
 {
   int lf = (int)floor((double)ncon_order / 2);
   if (is_even(ncon_order) && !point_cut)
@@ -932,7 +903,7 @@ int longitudinal_faces(const int &ncon_order, const bool &point_cut)
   return (lf);
 }
 
-int num_lats(const int &ncon_order, const bool &point_cut)
+int num_lats(const int ncon_order, const bool point_cut)
 {
   int lats = 0;
   if (is_even(ncon_order) && point_cut)
@@ -977,14 +948,14 @@ void clear_coord(vector<coordList *> &coordinates)
 }
 
 void add_face(Geometry &geom, vector<faceList *> &face_list,
-              const vector<int> &face, const int &lat, const int &lon)
+              const vector<int> &face, const int lat, const int lon)
 {
   face_list.push_back(new faceList(geom.add_face(face), lat, lon, 0));
 }
 
 void add_face(Geometry &geom, vector<faceList *> &face_list,
-              const vector<int> &face, const int &lat, const int &lon,
-              const int &polygon_no)
+              const vector<int> &face, const int lat, const int lon,
+              const int polygon_no)
 {
   face_list.push_back(new faceList(geom.add_face(face), lat, lon, polygon_no));
 }
@@ -1020,7 +991,7 @@ void delete_face_list_items(vector<faceList *> &face_list,
 // pass edge by value from make_edge()
 // only add_edge_raw can be used else edge count is not correct for n_icons
 void add_edge(Geometry &geom, vector<edgeList *> &edge_list,
-              const vector<int> &edge, const int &lat, const int &lon)
+              const vector<int> &edge, const int lat, const int lon)
 {
   edge_list.push_back(new edgeList(geom.add_edge_raw(edge), lat, lon));
 }
@@ -1074,7 +1045,7 @@ void remap_elems(vector<vector<int>> &elems,
 }
 
 void merge_halves(Geometry &geom, vector<polarOrb *> &polar_orbit,
-                  const double &eps)
+                  const double eps)
 {
   const vector<Vec3d> &verts = geom.verts();
 
@@ -1153,7 +1124,7 @@ void build_prime_polygon(Geometry &geom, vector<int> &prime_meridian,
 
 // reverse polygon indexes of a polygon mirrored on Y
 void reverse_poly_indexes_on_y(Geometry &geom, vector<int> &polygon,
-                               const double &eps)
+                               const double eps)
 {
   const vector<Vec3d> &verts = geom.verts();
   vector<bool> swapped(polygon.size());
@@ -1180,7 +1151,7 @@ void reverse_poly_indexes_on_y(Geometry &geom, vector<int> &polygon,
 // bypass is for testing. rotation will not work if true
 vector<vector<int>> split_bow_ties(Geometry &geom,
                                    vector<coordList *> &coordinates,
-                                   const vector<int> &face, const double &eps)
+                                   const vector<int> &face, const double eps)
 {
   bool bypass = false;
 
@@ -1235,7 +1206,7 @@ vector<vector<int>> split_bow_ties(Geometry &geom,
 }
 
 vector<int> find_face_by_lat_lon(const vector<faceList *> &face_list,
-                                 const int &lat, const int &lon)
+                                 const int lat, const int lon)
 {
   vector<int> idx;
   for (unsigned int i = 0; i < face_list.size(); i++) {
@@ -1246,7 +1217,7 @@ vector<int> find_face_by_lat_lon(const vector<faceList *> &face_list,
 }
 
 vector<int> find_edge_by_lat_lon(const vector<edgeList *> &edge_list,
-                                 const int &lat, const int &lon)
+                                 const int lat, const int lon)
 {
   vector<int> idx;
   for (unsigned int i = 0; i < edge_list.size(); i++) {
@@ -1257,8 +1228,8 @@ vector<int> find_edge_by_lat_lon(const vector<edgeList *> &edge_list,
 }
 
 bool add_edge_wrapper(Geometry &geom, vector<edgeList *> &edge_list,
-                      const vector<int> &edge, const int &lat,
-                      const int &lon_front, const int &lon_back)
+                      const vector<int> &edge, const int lat,
+                      const int lon_front, const int lon_back)
 {
   const vector<Vec3d> &verts = geom.verts();
 
@@ -1788,7 +1759,7 @@ void form_angular_model(Geometry &geom, const vector<int> &prime_meridian,
                         const vector<poleList *> &pole,
                         vector<vector<int>> &original_faces,
                         vector<vector<int>> &split_face_indexes,
-                        const int &polygons_total, const ncon_opts &opts)
+                        const int polygons_total, const ncon_opts &opts)
 {
   const vector<Vec3d> &verts = geom.verts();
 
@@ -1922,7 +1893,7 @@ void form_angular_model(Geometry &geom, const vector<int> &prime_meridian,
 // radii
 void mark_indented_edges_invisible(const vector<edgeList *> &edge_list,
                                    const vector<poleList *> &pole,
-                                   const bool &radius_reverse,
+                                   const bool radius_reverse,
                                    const ncon_opts &opts)
 {
   // for method 2 we used n/2
@@ -1972,7 +1943,7 @@ void restore_indented_edges(const vector<edgeList *> &edge_list,
 // for method 2
 // note: it is called with n and not 2n
 // d is a copy
-vector<pair<int, int>> get_lat_pairs(const int &n, int d, const bool &point_cut)
+vector<pair<int, int>> get_lat_pairs(const int n, int d, const bool point_cut)
 {
   vector<pair<int, int>> lat_pairs;
   pair<int, int> lats;
@@ -2098,8 +2069,8 @@ void find_split_faces_shell_model(const Geometry &geom,
 // they are set before hand
 // inner_radius, outer_radius, arc, d are changed
 void calc_radii(double &inner_radius, double &outer_radius, double &arc,
-                const int &N, int &d, const ncon_opts &opts,
-                const bool &return_calc)
+                const int N, int &d, const ncon_opts &opts,
+                const bool return_calc)
 {
   // if shell model is created opts.ncon_order needs to be divided by 2 to get
   // the correct outer radius, except when d is 1
@@ -2221,8 +2192,8 @@ vector<int> calc_polygon_numbers(int n, int d, bool point_cut)
 // methods 1 and 2
 void form_globe(Geometry &geom, const vector<int> &prime_meridian,
                 vector<coordList *> &coordinates, vector<faceList *> &face_list,
-                vector<edgeList *> &edge_list, const bool &point_cut_calc,
-                const bool &second_half, const ncon_opts &opts)
+                vector<edgeList *> &edge_list, const bool point_cut_calc,
+                const bool second_half, const ncon_opts &opts)
 {
   const vector<vector<int>> &faces = geom.faces();
   const vector<Vec3d> &verts = geom.verts();
@@ -2400,7 +2371,7 @@ void form_globe(Geometry &geom, const vector<int> &prime_meridian,
 // caps indexes are retained
 void add_caps(Geometry &geom, vector<coordList *> &coordinates,
               vector<faceList *> &face_list, const vector<poleList *> &pole,
-              vector<int> &caps, const bool &point_cut_calc,
+              vector<int> &caps, const bool point_cut_calc,
               const ncon_opts &opts)
 {
   const vector<vector<int>> &faces = geom.faces();
@@ -2647,7 +2618,7 @@ void close_latitudinal(Geometry &geom, vector<faceList *> &face_list,
 }
 
 bool cmp_angle(const pair<pair<double, double>, int> &a,
-               const pair<pair<double, double>, int> &b, const double &eps)
+               const pair<pair<double, double>, int> &b, const double eps)
 {
   pair<double, double> ar_a = a.first;
   pair<double, double> ar_b = b.first;
@@ -2672,7 +2643,7 @@ public:
 
 // untangle polar orbit
 void sort_polar_orbit(Geometry &geom, vector<polarOrb *> &polar_orbit,
-                      const double &eps)
+                      const double eps)
 {
   const vector<Vec3d> &verts = geom.verts();
 
@@ -2697,7 +2668,7 @@ void sort_polar_orbit(Geometry &geom, vector<polarOrb *> &polar_orbit,
 }
 
 void find_polar_orbit(Geometry &geom, vector<polarOrb *> &polar_orbit,
-                      const int &build_method, const double &eps)
+                      const int build_method, const double eps)
 {
   vector<Vec3d> &verts = geom.raw_verts();
   int sz = verts.size();
@@ -2720,8 +2691,8 @@ void find_polar_orbit(Geometry &geom, vector<polarOrb *> &polar_orbit,
 void ncon_twist(Geometry &geom, const vector<polarOrb *> &polar_orbit,
                 const vector<coordList *> &coordinates,
                 const vector<faceList *> &face_list,
-                const vector<edgeList *> &edge_list, const int &ncon_order,
-                const int &twist, const vector<int> &longitudes)
+                const vector<edgeList *> &edge_list, const int ncon_order,
+                const int twist, const vector<int> &longitudes)
 {
   // this function wasn't designed for twist 0
   if (twist == 0)
@@ -2810,7 +2781,7 @@ void ncon_twist(Geometry &geom, const vector<polarOrb *> &polar_orbit,
 
 // surfaces, case2, case1_twist are changed
 void find_surface_count(const vector<surfaceTable *> &surface_table,
-                        const int &twist, int &surfaces, bool &case2,
+                        const int twist, int &surfaces, bool &case2,
                         int &case1_twist)
 {
   surfaces = 0;
@@ -2828,8 +2799,8 @@ void find_surface_count(const vector<surfaceTable *> &surface_table,
 
 // ncon_order, point_cut, hybrid are not from opts
 void build_surface_table(vector<surfaceTable *> &surface_table,
-                         const int &max_twist, const int &ncon_order,
-                         const bool &point_cut, const bool &hybrid)
+                         const int max_twist, const int ncon_order,
+                         const bool point_cut, const bool hybrid)
 {
   // coding idea furnished by Adrian Rossiter
   int axis_edges = 0;
@@ -2921,8 +2892,8 @@ void model_info(const Geometry &geom, const ncon_opts &opts)
 
 // surface_table, sd will be changed
 // ncon_order, point_cut, twist, hybrid, info are not from opts
-void ncon_info(const int &ncon_order, const bool &point_cut, const int &twist,
-               const bool &hybrid, const bool &info,
+void ncon_info(const int ncon_order, const bool point_cut, const int twist,
+               const bool hybrid, const bool info,
                vector<surfaceTable *> &surface_table, surfaceData &sd)
 {
   int first, last, forms, chiral, nonchiral, unique;
@@ -3357,7 +3328,7 @@ void unset_marked_edges(Geometry &geom)
   }
 }
 
-Color set_alpha(const Color &c, const int &a)
+Color set_alpha(const Color &c, const int a)
 {
   return Color(c[0], c[1], c[2], a);
 }
@@ -3367,32 +3338,32 @@ Color set_alpha(const Color &c, const int &a)
 // color is invisible
 // -T or -U have not been set
 // c is not changed
-void set_vert_color(Geometry &geom, const int &i, Color c,
-                    const int &opacity = -1)
+void set_vert_color(Geometry &geom, const int i, Color c,
+                    const int opacity = -1)
 {
   if (c.is_val() && !c.is_inv() && opacity != -1)
     c = set_alpha(c, opacity);
   geom.colors(VERTS).set(i, c);
 }
 
-void set_edge_col(Geometry &geom, const int &i, Color c,
-                  const int &opacity = -1)
+void set_edge_col(Geometry &geom, const int i, Color c,
+                  const int opacity = -1)
 {
   if (c.is_val() && !c.is_inv() && opacity != -1)
     c = set_alpha(c, opacity);
   geom.colors(EDGES).set(i, c);
 }
 
-void set_face_color(Geometry &geom, const int &i, Color c,
-                    const int &opacity = -1)
+void set_face_color(Geometry &geom, const int i, Color c,
+                    const int opacity = -1)
 {
   if (c.is_val() && !c.is_inv() && opacity != -1)
     c = set_alpha(c, opacity);
   geom.colors(FACES).set(i, c);
 }
 
-void set_edge_and_verts_col(Geometry &geom, const int &i, Color c,
-                            const int &opacity = -1)
+void set_edge_and_verts_col(Geometry &geom, const int i, Color c,
+                            const int opacity = -1)
 {
   set_edge_col(geom, i, c, opacity);
 
@@ -3400,8 +3371,8 @@ void set_edge_and_verts_col(Geometry &geom, const int &i, Color c,
   set_vert_color(geom, geom.edges()[i][1], c, opacity);
 }
 
-void set_edge_color(Geometry &geom, const int &i, Color c,
-                    const int &opacity = -1)
+void set_edge_color(Geometry &geom, const int i, Color c,
+                    const int opacity = -1)
 {
   set_edge_and_verts_col(geom, i, c, opacity);
 }
@@ -3410,7 +3381,7 @@ void set_edge_color(Geometry &geom, const int &i, Color c,
 void ncon_edge_Coloring(Geometry &geom, const vector<edgeList *> &edge_list,
                         const vector<poleList *> &pole,
                         map<int, pair<int, int>> &edge_color_table,
-                        const bool &point_cut_calc, const ncon_opts &opts)
+                        const bool point_cut_calc, const ncon_opts &opts)
 {
   const vector<vector<int>> &edges = geom.edges();
   const vector<Vec3d> &verts = geom.verts();
@@ -3679,7 +3650,7 @@ void ncon_edge_Coloring(Geometry &geom, const vector<edgeList *> &edge_list,
 
 void ncon_face_Coloring(Geometry &geom, const vector<faceList *> &face_list,
                         map<int, pair<int, int>> &face_color_table,
-                        const bool &point_cut_calc, const ncon_opts &opts)
+                        const bool point_cut_calc, const ncon_opts &opts)
 {
   const vector<vector<int>> &faces = geom.faces();
   const vector<Vec3d> &verts = geom.verts();
@@ -3878,9 +3849,9 @@ void ncon_face_Coloring(Geometry &geom, const vector<faceList *> &face_list,
 }
 
 vector<int> find_adjacent_face_idx_in_channel(
-    const Geometry &geom, const int &face_idx,
+    const Geometry &geom, const int face_idx,
     const vector<vector<int>> &bare_implicit_edges,
-    map<vector<int>, vector<int>> &faces_by_edge, const bool &prime)
+    map<vector<int>, vector<int>> &faces_by_edge, const bool prime)
 {
   const vector<vector<int>> &faces = geom.faces();
 
@@ -3922,8 +3893,8 @@ vector<int> find_adjacent_face_idx_in_channel(
 
 // flood_fill_count is changed
 int set_face_colors_by_adjacent_face(
-    Geometry &geom, const int &start, const Color &c, const int &opq,
-    const int &flood_fill_stop, int &flood_fill_count,
+    Geometry &geom, const int start, const Color &c, const int opq,
+    const int flood_fill_stop, int &flood_fill_count,
     const vector<vector<int>> &bare_implicit_edges,
     map<vector<int>, vector<int>> &faces_by_edge)
 {
@@ -4646,8 +4617,8 @@ void make_sequential_map(map<int, pair<int, int>> &color_table)
 }
 
 // coding idea for circuit Coloring furnished by Adrian Rossiter
-void build_circuit_table(const int &ncon_order, const int &twist,
-                         const bool &hybrid, const bool &symmetric_Coloring,
+void build_circuit_table(const int ncon_order, const int twist,
+                         const bool hybrid, const bool symmetric_Coloring,
                          map<int, int> &circuit_table)
 {
   // use a double size polygon
@@ -4670,9 +4641,9 @@ void build_circuit_table(const int &ncon_order, const int &twist,
 }
 
 void build_color_table(map<int, pair<int, int>> &color_table,
-                       const int &ncon_order, const int &twist,
-                       const bool &hybrid, const bool &symmetric_Coloring,
-                       const int &increment)
+                       const int ncon_order, const int twist,
+                       const bool hybrid, const bool symmetric_Coloring,
+                       const int increment)
 {
   bool debug = false;
 
@@ -4740,8 +4711,8 @@ void build_color_table(map<int, pair<int, int>> &color_table,
 // point_cut is not that of opts
 void ncon_Coloring(Geometry &geom, const vector<faceList *> &face_list,
                    const vector<edgeList *> &edge_list,
-                   const vector<poleList *> &pole, const bool &point_cut_calc,
-                   const int &lat_mode, const ncon_opts &opts)
+                   const vector<poleList *> &pole, const bool point_cut_calc,
+                   const int lat_mode, const ncon_opts &opts)
 {
   map<int, pair<int, int>> edge_color_table;
   map<int, pair<int, int>> face_color_table;
@@ -4861,7 +4832,7 @@ void build_globe(Geometry &geom, vector<coordList *> &coordinates,
                  vector<poleList *> &pole, vector<int> &caps,
                  double &inner_radius, double &outer_radius,
                  bool &radius_inversion, bool &double_sweep,
-                 const bool &second_half, const ncon_opts &opts)
+                 const bool second_half, const ncon_opts &opts)
 {
   // point cut is changed so save a copy
   bool point_cut_calc = opts.point_cut;
@@ -4979,8 +4950,8 @@ void build_globe(Geometry &geom, vector<coordList *> &coordinates,
   return;
 }
 
-double hybrid_twist_angle(const int &ncon_order, const int &d, const int &tw,
-                          const int &build_method)
+double hybrid_twist_angle(const int ncon_order, const int d, const int tw,
+                          const int build_method)
 {
   int n = ncon_order;
   int t = tw;
@@ -5005,7 +4976,7 @@ double hybrid_twist_angle(const int &ncon_order, const int &d, const int &tw,
 // if partial model, delete appropriate elements
 void delete_unused_longitudes(Geometry &geom, vector<faceList *> &face_list,
                               vector<edgeList *> &edge_list,
-                              const vector<int> &caps, const bool &opposite,
+                              const vector<int> &caps, const bool opposite,
                               const ncon_opts &opts)
 {
   if (full_model(opts.longitudes))
@@ -5078,8 +5049,8 @@ void delete_unused_edges(Geometry &geom, vector<edgeList *> &edge_list,
   }
 }
 
-bool triangle_zero_area(const Geometry &geom, const int &idx1, const int &idx2,
-                        const int &idx3, const double &eps)
+bool triangle_zero_area(const Geometry &geom, const int idx1, const int idx2,
+                        const int idx3, const double eps)
 {
   const vector<Vec3d> &verts = geom.verts();
   Vec3d xprod = vcross(verts[idx1] - verts[idx2], verts[idx1] - verts[idx3]);
@@ -5088,7 +5059,7 @@ bool triangle_zero_area(const Geometry &geom, const int &idx1, const int &idx2,
 }
 
 void add_triangles_to_close(Geometry &geom, vector<int> &added_triangles,
-                            const double &eps)
+                            const double eps)
 {
   vector<int> face(3);
   vector<int> face_check(3);
@@ -5509,15 +5480,15 @@ void filter(Geometry &geom, const char *elems)
 // another Coloring method by Adrian Rossiter
 struct ht_less {
   static double get_eps() { return 1e-10; }
-  bool operator()(const double &h0, const double &h1) const
+  bool operator()(const double h0, const double h1) const
   {
     return double_lt(h0, h1, get_eps());
   }
 };
 
-Geometry build_gear_polygon(const int &N, const int &D, const double &o_radius,
-                            const double &i_radius, const double &poly_scale,
-                            const double &eps)
+Geometry build_gear_polygon(const int N, const int D, const double o_radius,
+                            const double i_radius, const double poly_scale,
+                            const double eps)
 {
   Geometry gear;
 
@@ -5548,7 +5519,7 @@ Geometry build_gear_polygon(const int &N, const int &D, const double &o_radius,
 }
 
 // transfer colors of the regular polygon to the gear polygon
-void transfer_colors(Geometry &gpgon, const Geometry &pgon, const bool &digons,
+void transfer_colors(Geometry &gpgon, const Geometry &pgon, const bool digons,
                      ncon_opts &opts)
 {
   map<int, int> v_map;
@@ -5600,8 +5571,8 @@ void transfer_colors(Geometry &gpgon, const Geometry &pgon, const bool &digons,
   }
 }
 
-void pgon_post_process(Geometry &pgon, vector<Vec3d> &axes, const int &N,
-                       const int &twist, const bool &hyb, const ncon_opts &opts)
+void pgon_post_process(Geometry &pgon, vector<Vec3d> &axes, const int N,
+                       const int twist, const bool hyb, const ncon_opts &opts)
 {
   int t_mult = opts.symmetric_Coloring ? 1 : 2;
 
@@ -5627,9 +5598,9 @@ void pgon_post_process(Geometry &pgon, vector<Vec3d> &axes, const int &N,
       Trans3d::rot(Vec3d::Z, -2 * M_PI * (twist - 0.5 * hyb) / N) * axes[0];
 }
 
-void lookup_face_color(Geometry &geom, const int &f, const vector<Vec3d> &axes,
+void lookup_face_color(Geometry &geom, const int f, const vector<Vec3d> &axes,
                        vector<map<double, Color, ht_less>> &heights,
-                       const bool &other_axis)
+                       const bool other_axis)
 {
   int ax = double_ge(geom.face_cent(f)[2], 0.0,
                      ht_less::get_eps()); // z-coordinate determines axis
@@ -5654,9 +5625,9 @@ void lookup_face_color(Geometry &geom, const int &f, const vector<Vec3d> &axes,
     set_face_color(geom, f, mi->second);
 }
 
-void lookup_edge_color(Geometry &geom, const int &e, const vector<Vec3d> &axes,
+void lookup_edge_color(Geometry &geom, const int e, const vector<Vec3d> &axes,
                        vector<map<double, Color, ht_less>> &heights,
-                       const bool &other_axis)
+                       const bool other_axis)
 {
   int ax = geom.edge_cent(e)[2] >= 0.0; // z-coordinate determines axis
   if (other_axis)
@@ -5677,8 +5648,8 @@ void lookup_edge_color(Geometry &geom, const int &e, const vector<Vec3d> &axes,
   }
 }
 
-void rotate_polygon(Geometry &pgon, const int &N, const bool &pc,
-                    const bool &hyb, const ncon_opts &opts)
+void rotate_polygon(Geometry &pgon, const int N, const bool pc,
+                    const bool hyb, const ncon_opts &opts)
 {
   // rotate polygons
   double rot_angle = 0;

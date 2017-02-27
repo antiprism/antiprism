@@ -89,58 +89,51 @@ public:
   void usage();
 };
 
+// clang-format off
 void off_normals_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options] [input_file]\n"
-      "\n"
-      "Display normals of faces, implicit edges, and vertices\n"
-      "If input_file is not given the program reads from standard input.\n"
-      "\n"
-      "Options\n"
-      "%s"
-      "  -u        unit normals  (positional normals otherwise)\n"
-      "  -e        connect to element centroid\n"
-      "  -p <opt>  force polarity. o - set all outward,  i - set all inward\n"
-      "               r - reverse both inward and outward\n"
-      "  -i <elms> include normals. The element string can include o, i and h\n"
-      "               to show, respectively, outward, inward and "
-      "hemispherical\n"
-      "               note: exlusion occurs before -p  (default: oih)\n"
-      "  -s <elms> include elements. The element string can include v, e and "
-      "f\n"
-      "               to show, respectively, vertices, edges and faces  "
-      "(default: f)\n"
-      "  -d <opt>  delete elements.  f - delete faces of unincluded normals\n"
-      "               a - delete all of original model\n"
-      "  -c <opts> average pattern string for edge and vertex normals. Done "
-      "before -p\n"
-      "               r - raw,  o - outward,  i - inward,  u - unit  (default: "
-      "r)\n"
-      "  -a        alternate calculation for vertex normals\n"
-      "  -C <xyz>  center of model, in form 'X,Y,Z'  (default: centroid)\n"
-      "  -l <lim>  minimum distance for unique vertex locations as negative "
-      "exponent\n"
-      "               (default: %d giving %.0e)\n"
-      "  -o <file> write output to file  (default: write to standard output)\n"
-      "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
-      "  -O <col>  outward normal vertex color\n"
-      "  -I <col>  inward normal vertex color\n"
-      "               default: vertex color is negative of outward col\n"
-      "  -H <col>  hemispherical normal vertex color  (default: gray50)\n"
-      "  -E <col>  normal vector color. connected to element centroid\n"
-      "               default: color of normal vertex\n"
-      "               key word: r take random color\n"
-      "  -B <col>  normal vector base color. color at element centroid\n"
-      "               key word: b take color of element (default)\n"
-      "               key word: n take color of normal vertex\n"
-      "\n"
-      "\n",
-      prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
-      ::epsilon);
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] [input_file]\n"
+"\n"
+"Display normals of faces, implicit edges, and vertices\n"
+"If input_file is not given the program reads from standard input.\n"
+"\n"
+"Options\n"
+"%s"
+"  -u        unit normals  (positional normals otherwise)\n"
+"  -e        connect to element centroid\n"
+"  -p <opt>  force polarity. o - set all outward,  i - set all inward\n"
+"               r - reverse both inward and outward\n"
+"  -i <elms> include normals. The element string can include o, i and h\n"
+"               to show, respectively, outward, inward and hemispherical\n"
+"               note: exlusion occurs before -p  (default: oih)\n"
+"  -s <elms> include elements. The element string can include v, e and f\n"
+"               to show, respectively, vertices, edges and faces  (default: f)\n"
+"  -d <opt>  delete elements.  f - delete faces of unincluded normals\n"
+"               a - delete all of original model\n"
+"  -c <opts> average pattern string for edge and vertex normals. Done before -p\n"
+"               r - raw,  o - outward,  i - inward,  u - unit  (default: r)\n"
+"  -a        alternate calculation for vertex normals\n"
+"  -C <xyz>  center of model, in form 'X,Y,Z'  (default: centroid)\n"
+"  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
+"               (default: %d giving %.0e)\n"
+"  -o <file> write output to file  (default: write to standard output)\n"
+"\nColoring Options (run 'off_util -H color' for help on color formats)\n"
+"  -O <col>  outward normal vertex color\n"
+"  -I <col>  inward normal vertex color\n"
+"               default: vertex color is negative of outward col\n"
+"  -H <col>  hemispherical normal vertex color  (default: gray50)\n"
+"  -E <col>  normal vector color. connected to element centroid\n"
+"               default: color of normal vertex\n"
+"               key word: r take random color\n"
+"  -B <col>  normal vector base color. color at element centroid\n"
+"               key word: b take color of element (default)\n"
+"               key word: n take color of normal vertex\n"
+"\n"
+"\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5),::epsilon);
 }
+// clang-format on
 
 void off_normals_opts::process_command_line(int argc, char **argv)
 {
@@ -260,20 +253,12 @@ void off_normals_opts::process_command_line(int argc, char **argv)
   epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
-void add_normals(
-    Geometry &geom, const bool &unit_normals, const char &exclude_normals_elems,
-    const char &force_normals_polarity, const bool &elem_normal_vecs,
-    bool &alternate_calculation, const Color &outward_normal_col,
-    const Color &inward_normal_col, const Color &hemispherical_normal_col,
-    const Color &edge_normal_col, const Color &base_normal_col,
-    const char &edge_normal_method, const char &base_normal_method,
-    const string &show_elems, const string &show_pointing,
-    const string &average_pattern, const Vec3d &center, const double &eps)
+void add_normals(Geometry &geom, const off_normals_opts &opts)
 {
-  Color outward_col = outward_normal_col;
-  Color inward_col = inward_normal_col;
-  if (!inward_col.is_set() && outward_normal_col.is_set()) {
-    inward_col = outward_normal_col;
+  Color outward_col = opts.outward_normal_col;
+  Color inward_col = opts.inward_normal_col;
+  if (!inward_col.is_set() && opts.outward_normal_col.is_set()) {
+    inward_col = opts.outward_normal_col;
     inward_col.set_complement();
   }
 
@@ -282,9 +267,9 @@ void add_normals(
   Geometry ngeom;
   vector<int> deleted_faces;
 
-  FaceNormals x_normals(geom, center, eps);
+  FaceNormals x_normals(geom, opts.center, opts.epsilon);
 
-  if (strchr(show_elems.c_str(), 'f')) {
+  if (strchr(opts.show_elems.c_str(), 'f')) {
     std::unique_ptr<ColorMap> cmap(colormap_from_name("rnd")); // for -E r
     for (unsigned int i = 0; i < x_normals.size(); i++) {
       Normal x_normal = x_normals[i];
@@ -293,20 +278,20 @@ void add_normals(
 
       Vec3d normal;
       if (x_normal.is_hemispherical()) {
-        if (strchr(show_pointing.c_str(), 'h')) {
+        if (strchr(opts.show_pointing.c_str(), 'h')) {
           plotted = true;
 
           normal = x_normal.raw();
-          col = hemispherical_normal_col;
+          col = opts.hemispherical_normal_col;
         }
       }
       else {
         if (x_normal.is_inward()) { // normal points inward
-          if (strchr(show_pointing.c_str(), 'i')) {
+          if (strchr(opts.show_pointing.c_str(), 'i')) {
             plotted = true;
 
-            if ((force_normals_polarity == 'o') ||
-                (force_normals_polarity == 'r')) { // force it outwards
+            if ((opts.force_normals_polarity == 'o') ||
+                (opts.force_normals_polarity == 'r')) { // force it outwards
               normal = x_normal.outward();
               col = outward_col;
             }
@@ -318,11 +303,11 @@ void add_normals(
         }
 
         if (x_normal.is_outward()) { // normal points outward
-          if (strchr(show_pointing.c_str(), 'o')) {
+          if (strchr(opts.show_pointing.c_str(), 'o')) {
             plotted = true;
 
-            if ((force_normals_polarity == 'i') ||
-                (force_normals_polarity == 'r')) { // force it inwards
+            if ((opts.force_normals_polarity == 'i') ||
+                (opts.force_normals_polarity == 'r')) { // force it inwards
               normal = x_normal.inward();
               col = inward_col;
             }
@@ -340,16 +325,16 @@ void add_normals(
         if (!normal.is_set())
           normal = x_normal.raw();
 
-        if (unit_normals)
+        if (opts.unit_normals)
           normal = normal.unit();
 
         ngeom.add_vert(normal, col);
 
-        if (elem_normal_vecs) {
+        if (opts.elem_normal_vecs) {
           // get base color
-          Color bcol = (base_normal_col.is_set())
-                           ? base_normal_col
-                           : ((base_normal_method == 'b')
+          Color bcol = (opts.base_normal_col.is_set())
+                           ? opts.base_normal_col
+                           : ((opts.base_normal_method == 'b')
                                   ? geom.colors(FACES).get((int)i)
                                   : col);
           // add point at centroid
@@ -358,10 +343,10 @@ void add_normals(
           // get edge color
           Color ecol;
           int sz = ngeom.verts().size();
-          if (edge_normal_method == 'r')
+          if (opts.edge_normal_method == 'r')
             ecol = cmap->get_col(sz - 1);
           else
-            ecol = (edge_normal_col.is_set()) ? edge_normal_col : col;
+            ecol = (opts.edge_normal_col.is_set()) ? opts.edge_normal_col : col;
           // edge from face centroid to normal
           ngeom.add_edge(make_edge(sz - 1, sz - 2), ecol);
         }
@@ -369,27 +354,27 @@ void add_normals(
     }
   }
 
-  if (strchr(show_elems.c_str(), 'e')) {
+  if (strchr(opts.show_elems.c_str(), 'e')) {
     vector<vector<int>> implicit_edges;
     geom.get_impl_edges(implicit_edges);
 
     for (auto edge : implicit_edges) {
       Normal x_normal =
-          x_normals.edge_normal(edge[0], edge[1], average_pattern);
+          x_normals.edge_normal(edge[0], edge[1], opts.average_pattern);
 
       if (x_normal.is_hemispherical()) {
-        if (!strchr(show_pointing.c_str(), 'h')) {
+        if (!strchr(opts.show_pointing.c_str(), 'h')) {
           continue;
         }
       }
 
       Vec3d normal;
       if (x_normal.is_inward()) { // normal points inward
-        if (!strchr(show_pointing.c_str(), 'i')) {
+        if (!strchr(opts.show_pointing.c_str(), 'i')) {
           continue;
         }
-        if ((force_normals_polarity == 'o') ||
-            (force_normals_polarity == 'r')) { // force it outwards
+        if ((opts.force_normals_polarity == 'o') ||
+            (opts.force_normals_polarity == 'r')) { // force it outwards
           normal = x_normal.outward();
           col = outward_col;
         }
@@ -400,11 +385,11 @@ void add_normals(
       }
 
       if (x_normal.is_outward()) { // normal points outward
-        if (!strchr(show_pointing.c_str(), 'o')) {
+        if (!strchr(opts.show_pointing.c_str(), 'o')) {
           continue;
         }
-        if ((force_normals_polarity == 'i') ||
-            (force_normals_polarity == 'r')) { // force it inwards
+        if ((opts.force_normals_polarity == 'i') ||
+            (opts.force_normals_polarity == 'r')) { // force it inwards
           normal = x_normal.inward();
           col = inward_col;
         }
@@ -417,23 +402,24 @@ void add_normals(
       if (!normal.is_set())
         normal = x_normal.raw();
 
-      if (unit_normals)
+      if (opts.unit_normals)
         normal = normal.unit();
 
       ngeom.add_vert(normal, col);
 
-      if (elem_normal_vecs) {
+      if (opts.elem_normal_vecs) {
         // get base color for edge. might not explicitly be colored
         int e_idx = find_edge_in_edge_list(geom.edges(), edge);
         Color expl_col = (e_idx > -1) ? geom.colors(EDGES).get(e_idx) : Color();
 
-        Color bcol = (base_normal_col.is_set())
-                         ? base_normal_col
-                         : ((base_normal_method == 'b') ? expl_col : col);
+        Color bcol = (opts.base_normal_col.is_set())
+                         ? opts.base_normal_col
+                         : ((opts.base_normal_method == 'b') ? expl_col : col);
         // add point at centroid
         ngeom.add_vert(centroid(geom.verts(), edge), bcol);
         // get edge color
-        Color ecol = (edge_normal_col.is_set()) ? edge_normal_col : col;
+        Color ecol =
+            (opts.edge_normal_col.is_set()) ? opts.edge_normal_col : col;
         // edge from face centroid to normal
         ngeom.add_edge(
             make_edge(ngeom.verts().size() - 1, ngeom.verts().size() - 2),
@@ -442,7 +428,7 @@ void add_normals(
     }
   }
 
-  if (strchr(show_elems.c_str(), 'v')) {
+  if (strchr(opts.show_elems.c_str(), 'v')) {
     const vector<Vec3d> &verts = geom.verts();
 
     // in case this is needed for alternate vertex normal calculation
@@ -451,24 +437,24 @@ void add_normals(
 
     for (unsigned int i = 0; i < verts.size(); i++) {
       Normal x_normal;
-      if (alternate_calculation)
-        x_normal = Normal(geom, v_norms[i], i, center, eps);
+      if (opts.alternate_calculation)
+        x_normal = Normal(geom, v_norms[i], i, opts.center, opts.epsilon);
       else
-        x_normal = x_normals.vert_normal(i, average_pattern);
+        x_normal = x_normals.vert_normal(i, opts.average_pattern);
 
       if (x_normal.is_hemispherical()) {
-        if (!strchr(show_pointing.c_str(), 'h')) {
+        if (!strchr(opts.show_pointing.c_str(), 'h')) {
           continue;
         }
       }
 
       Vec3d normal;
       if (x_normal.is_inward()) { // normal points inward
-        if (!strchr(show_pointing.c_str(), 'i')) {
+        if (!strchr(opts.show_pointing.c_str(), 'i')) {
           continue;
         }
-        if ((force_normals_polarity == 'o') ||
-            (force_normals_polarity == 'r')) { // force it outwards
+        if ((opts.force_normals_polarity == 'o') ||
+            (opts.force_normals_polarity == 'r')) { // force it outwards
           normal = x_normal.outward();
           col = outward_col;
         }
@@ -479,11 +465,11 @@ void add_normals(
       }
 
       if (x_normal.is_outward()) { // normal points outward
-        if (!strchr(show_pointing.c_str(), 'o')) {
+        if (!strchr(opts.show_pointing.c_str(), 'o')) {
           continue;
         }
-        if ((force_normals_polarity == 'i') ||
-            (force_normals_polarity == 'r')) { // force it inwards
+        if ((opts.force_normals_polarity == 'i') ||
+            (opts.force_normals_polarity == 'r')) { // force it inwards
           normal = x_normal.inward();
           col = inward_col;
         }
@@ -496,22 +482,23 @@ void add_normals(
       if (!normal.is_set())
         normal = x_normal.raw();
 
-      if (unit_normals)
+      if (opts.unit_normals)
         normal = normal.unit();
 
       ngeom.add_vert(normal, col);
 
-      if (elem_normal_vecs) {
+      if (opts.elem_normal_vecs) {
         // get base color
-        Color bcol =
-            (base_normal_col.is_set())
-                ? base_normal_col
-                : ((base_normal_method == 'b') ? geom.colors(VERTS).get((int)i)
-                                               : col);
+        Color bcol = (opts.base_normal_col.is_set())
+                         ? opts.base_normal_col
+                         : ((opts.base_normal_method == 'b')
+                                ? geom.colors(VERTS).get((int)i)
+                                : col);
         // add point at centroid
         ngeom.add_vert(verts[i], bcol);
         // get edge color
-        Color ecol = (edge_normal_col.is_set()) ? edge_normal_col : col;
+        Color ecol =
+            (opts.edge_normal_col.is_set()) ? opts.edge_normal_col : col;
         // edge from face centroid to normal
         ngeom.add_edge(
             make_edge(ngeom.verts().size() - 1, ngeom.verts().size() - 2),
@@ -520,9 +507,9 @@ void add_normals(
     }
   }
 
-  if (exclude_normals_elems == 'f')
+  if (opts.exclude_normals_elems == 'f')
     geom.del(FACES, deleted_faces);
-  else if (exclude_normals_elems == 'a')
+  else if (opts.exclude_normals_elems == 'a')
     geom.clear_all();
   geom.append(ngeom);
 }
@@ -551,14 +538,7 @@ int main(int argc, char *argv[])
   Geometry geom;
   opts.read_or_error(geom, opts.ifile);
 
-  add_normals(geom, opts.unit_normals, opts.exclude_normals_elems,
-              opts.force_normals_polarity, opts.elem_normal_vecs,
-              opts.alternate_calculation, opts.outward_normal_col,
-              opts.inward_normal_col, opts.hemispherical_normal_col,
-              opts.edge_normal_col, opts.base_normal_col,
-              opts.edge_normal_method, opts.base_normal_method, opts.show_elems,
-              opts.show_pointing, opts.average_pattern, opts.center,
-              opts.epsilon);
+  add_normals(geom, opts);
 
   opts.write_or_error(geom, opts.ofile);
 

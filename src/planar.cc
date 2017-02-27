@@ -110,111 +110,87 @@ public:
   void usage();
 };
 
+// clang-format off
 void planar_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options] [input_file]\n"
-      "\n"
-      "Read a file in OFF format and convert overlapping coplanar polygons "
-      "into\n"
-      "non-overlapping polygon tiles. If input_file is not given the program \n"
-      "reads from standard input.\n"
-      "\n"
-      "Options\n"
-      "%s"
-      "  -d <opt>  blend overlapping (tile) or adjacent (merge) planar faces\n"
-      "               tile=1, merge=2 (default: none)\n"
-      "  -p <opt>  polygon fill algorithm.  angular=1, modulo2=2 (pnpoly)\n"
-      "               triangulation=3, even_overlap=4, alt_modulo2=5 (default: "
-      "1)\n"
-      "  -w <opt>  winding rule, include face parts according to winding "
-      "number\n"
-      "               odd, even, positive, negative, nonzero, zero (default: "
-      "none)\n"
-      "               zodd, zeven, zpositive, znegative (includes zero)\n"
-      "               or symbol proceeding integer: eq, ne, gt, ge, lt, le  "
-      "meaning\n"
-      "               equal, not equal, greater than, greater than or equal, "
-      "less\n"
-      "               than, less than or equal. use 'a' for absolute value  "
-      "e.g. gea2\n"
-      "  -z        use direction of normals for hemispherical winding numbers\n"
-      "  -V        verbose output (of minimum and maximum winding numbers)\n"
-      "  -H        turn off hole detection\n"
-      "  -S        stitch seams created by tiling or merging\n"
-      "  -I        rid faces of extra in-line vertices\n"
-      "  -e <opt>  blend existing explicit edges and/or vertices using blend "
-      "options\n"
-      "               e - edges, v - vertices, b - both (-d forces b, "
-      "otherwise none)\n"
-      "  -E <opt>  remove explicit edges, blend new ones using face colors "
-      "(sets -S)\n"
-      "               e - edges only, v - also blend vertices (default: none)\n"
-      "               V - also blend invisible vertices, s - strip edges and "
-      "vertices\n"
-      "  -D        delete invisible faces created by winding rule\n"
-      "  -O <opt>  orient the faces first (if possible) then for volume\n"
-      "               positive=1, negative=2, reverse=3, or use flip=4\n"
-      "               which reverses the orientation of the model as it was "
-      "input\n"
-      "  -C <xyz>  center of model, in form 'X,Y,Z' (default: centroid)\n"
-      "  -l <lim>  minimum distance for unique vertex locations as negative "
-      "exponent\n"
-      "               (default: %d giving %.0e)\n"
-      "  -o <file> write output to file (default: write to standard output)\n"
-      "\nColor Blending Options (for option -d)\n"
-      "  -M <mode> color blending mode. HSV=1, HSL=2, RGB=3 (default: 3)\n"
-      "  -s <sat>  HSV/HSL saturation curve. Greather than 0 (default: 1)\n"
-      "               1.0 - no curve. lower than 1.0 makes blends more pastel\n"
-      "  -t <val>  HSV/HSL threshold to use average saturation (default: 1)\n"
-      "               between 0.0 (all averaging) and 1.0 (no averaging)\n"
-      "  -v <val>  HSV/HSL value curve (default: 0)\n"
-      "               simulates subtractive Coloring for blending 3 or more "
-      "colors\n"
-      "               RGB: Red+Green+Blue = White   Cyan+Magenta+Yellow = "
-      "Black\n"
-      "               RYB: Red+Yellow+Blue = Black  Green+Magenta+Orange = "
-      "White\n"
-      "               1.0 - no curve. lower than 1.0 number makes blends "
-      "lighter\n"
-      "               0.0 - use average value instead\n"
-      "  -u <val>  HSV/HSL value advance. Rotates meaning of white and black\n"
-      "               valid values 0.0 to 120.0 degrees (default: 0)\n"
-      "  -a <int>  alpha for blend. average=1, minimum=2, maximum=3 (default: "
-      "3)\n"
-      "  -y        RYB mode. Blend colors as in Red-Yellow-Blue color wheel\n"
-      "  -c        CMY mode. Complementary colors.  "
-      "RGB->(RYB/GMO)->CMY->blend\n"
-      "  -b <val>  brightness adjustment for areas of blended colors\n"
-      "               valid values -1.0 to +1.0 (default: no adjustment)\n"
-      "               negative for darker, positive for lighter\n"
-      "               at 0, an area with 2 blended colors will not change\n"
-      "               but areas with 3 or more will become slightly darker\n"
-      "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
-      "  -f <opt>  take face colors from map (processed before -d)\n"
-      "               n - unique color for faces with same normals\n"
-      "               p - unique color for faces on same planes only\n"
-      "               o - unique color for faces on same and opposite normals\n"
-      "  -T <tran> face transparency. valid range from 0 (invisible) to 255 "
-      "(opaque)\n"
-      "  -Z <col>  color for areas found colorless by winding (default: "
-      "invisible)\n"
-      "               key word: b - force a color blend\n"
-      "  -W <opt>  color by winding number, using maps (overrides option -f)\n"
-      "               w - use actual winding number\n"
-      "               a - absolute value of winding number\n"
-      "               n - negative of absolute value of winding number\n"
-      "  -m <maps> color maps for faces to be tried in turn (default: "
-      "compound)\n"
-      "  -n <maps> maps for negative winding numbers (default: "
-      "rng17_S0V0.5:0)\n"
-      "               (map position zero not used. default is 16 gradients)\n"
-      "\n",
-      prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
-      ::epsilon);
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] [input_file]\n"
+"\n"
+"Read a file in OFF format and convert overlapping coplanar polygons into\n"
+"non-overlapping polygon tiles. If input_file is not given the program \n"
+"reads from standard input.\n"
+"\n"
+"Options\n"
+"%s"
+"  -d <opt>  blend overlapping (tile) or adjacent (merge) planar faces\n"  
+"               tile=1, merge=2 (default: none)\n"
+"  -p <opt>  polygon fill algorithm.  angular=1, modulo2=2 (pnpoly)\n"
+"               triangulation=3, even_overlap=4, alt_modulo2=5 (default: 1)\n"
+"  -w <opt>  winding rule, include face parts according to winding number\n"
+"               odd, even, positive, negative, nonzero, zero (default: none)\n"
+"               zodd, zeven, zpositive, znegative (includes zero)\n"
+"               or symbol proceeding integer: eq, ne, gt, ge, lt, le  meaning\n"
+"               equal, not equal, greater than, greater than or equal, less\n"
+"               than, less than or equal. use 'a' for absolute value  e.g. gea2\n"
+"  -z        use direction of normals for hemispherical winding numbers\n"
+"  -V        verbose output (of minimum and maximum winding numbers)\n"
+"  -H        turn off hole detection\n"
+"  -S        stitch seams created by tiling or merging\n"
+"  -I        rid faces of extra in-line vertices\n"
+"  -e <opt>  blend existing explicit edges and/or vertices using blend options\n"
+"               e - edges, v - vertices, b - both (-d forces b, otherwise none)\n"
+"  -E <opt>  remove explicit edges, blend new ones using face colors (sets -S)\n"
+"               e - edges only, v - also blend vertices (default: none)\n"
+"               V - also blend invisible vertices, s - strip edges and vertices\n"
+"  -D        delete invisible faces created by winding rule\n"
+"  -O <opt>  orient the faces first (if possible) then for volume\n"
+"               positive=1, negative=2, reverse=3, or use flip=4\n"
+"               which reverses the orientation of the model as it was input\n"
+"  -C <xyz>  center of model, in form 'X,Y,Z' (default: centroid)\n"
+"  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
+"               (default: %d giving %.0e)\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+"\nColor Blending Options (for option -d)\n"
+"  -M <mode> color blending mode. HSV=1, HSL=2, RGB=3 (default: 3)\n"
+"  -s <sat>  HSV/HSL saturation curve. Greather than 0 (default: 1)\n"
+"               1.0 - no curve. lower than 1.0 makes blends more pastel\n"
+"  -t <val>  HSV/HSL threshold to use average saturation (default: 1)\n"
+"               between 0.0 (all averaging) and 1.0 (no averaging)\n"
+"  -v <val>  HSV/HSL value curve (default: 0)\n"
+"               simulates subtractive coloring for blending 3 or more colors\n"
+"               RGB: Red+Green+Blue = White   Cyan+Magenta+Yellow = Black\n"
+"               RYB: Red+Yellow+Blue = Black  Green+Magenta+Orange = White\n"
+"               1.0 - no curve. lower than 1.0 number makes blends lighter\n"
+"               0.0 - use average value instead\n"
+"  -u <val>  HSV/HSL value advance. Rotates meaning of white and black\n"
+"               valid values 0.0 to 120.0 degrees (default: 0)\n"
+"  -a <int>  alpha for blend. average=1, minimum=2, maximum=3 (default: 3)\n"
+"  -y        RYB mode. Blend colors as in Red-Yellow-Blue color wheel\n"
+"  -c        CMY mode. Complementary colors.  RGB->(RYB/GMO)->CMY->blend\n"
+"  -b <val>  brightness adjustment for areas of blended colors\n"
+"               valid values -1.0 to +1.0 (default: no adjustment)\n"
+"               negative for darker, positive for lighter\n"
+"               at 0, an area with 2 blended colors will not change\n"
+"               but areas with 3 or more will become slightly darker\n"
+"\nColoring Options (run 'off_util -H color' for help on color formats)\n"
+"  -f <opt>  take face colors from map (processed before -d)\n"
+"               n - unique color for faces with same normals\n"
+"               p - unique color for faces on same planes only\n"
+"               o - unique color for faces on same and opposite normals\n"
+"  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
+"  -Z <col>  color for areas found colorless by winding (default: invisible)\n"
+"               key word: b - force a color blend\n"
+"  -W <opt>  color by winding number, using maps (overrides option -f)\n"
+"               w - use actual winding number\n"
+"               a - absolute value of winding number\n"
+"               n - negative of absolute value of winding number\n"
+"  -m <maps> color maps for faces to be tried in turn (default: compound)\n"
+"  -n <maps> maps for negative winding numbers (default: rng17_S0V0.5:0)\n"
+"               (map position zero not used. default is 16 gradients)\n"
+"\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }
+// clang-format on
 
 void planar_opts::process_command_line(int argc, char **argv)
 {
@@ -515,7 +491,7 @@ void planar_opts::process_command_line(int argc, char **argv)
 }
 
 bool cmp_verts(const pair<Vec3d, int> &a, const pair<Vec3d, int> &b,
-               const double &eps)
+               const double eps)
 {
   return (compare(a.first, b.first, eps) < 0);
 }
@@ -535,8 +511,7 @@ public:
 vector<vector<int>> on_same_plane_filter(const Geometry &geom,
                                          const Vec3d &normal,
                                          const vector<int> &coplanar_faces,
-                                         const bool &filtered,
-                                         const double &eps)
+                                         const bool filtered, const double eps)
 {
   const vector<vector<int>> &faces = geom.faces();
   const vector<Vec3d> &verts = geom.verts();
@@ -580,10 +555,10 @@ void build_coplanar_faces_list(const Geometry &geom,
                                vector<vector<int>> &coplanar_faces_list,
                                vector<Normal> &coplanar_normals,
                                const FaceNormals &FaceNormals,
-                               const bool &point_outward,
-                               const bool &fold_normals,
-                               const bool &fold_normals_hemispherical,
-                               const bool &filtered, const double &eps)
+                               const bool point_outward,
+                               const bool fold_normals,
+                               const bool fold_normals_hemispherical,
+                               const bool filtered, const double eps)
 {
   // seperate out hemispherical because they often get mixed in
   vector<pair<Vec3d, int>> hemispherical_table;
@@ -725,7 +700,7 @@ void project_using_normal(const Vec3d &normal, int &idx, int &sign)
 // if intersection point does not exist, insert a new one. Otherwise only return
 // the index of the existing one
 int vertex_into_geom(Geometry &geom, const Vec3d &P, Color vcol,
-                     const double &eps)
+                     const double eps)
 {
   int v_idx = find_vert_by_coords(geom, P, eps);
   if (v_idx == -1) {
@@ -740,7 +715,7 @@ int vertex_into_geom(Geometry &geom, const Vec3d &P, Color vcol,
 // true if new edge created
 // check if edge1 and edge2 indexes are equal. If so do not allow an edge length
 // of 0 to occur
-bool edge_into_geom(Geometry &geom, const int &v_idx1, const int &v_idx2,
+bool edge_into_geom(Geometry &geom, const int v_idx1, const int v_idx2,
                     Color ecol)
 {
   // no edge length 0 allowed
@@ -775,7 +750,7 @@ Geometry free_edges_into_geom(const Geometry &geom)
 }
 
 bool is_point_on_polygon_edges(const Geometry &polygon, const Vec3d &P,
-                               const double &eps)
+                               const double eps)
 {
   const vector<int> &face = polygon.faces()[0];
   const vector<Vec3d> &verts = polygon.verts();
@@ -795,8 +770,8 @@ bool is_point_on_polygon_edges(const Geometry &polygon, const Vec3d &P,
   return answer;
 }
 
-bool is_point_in_bbox_2D(const Geometry &geom, const Vec3d &P, const int &idx,
-                         const double &eps)
+bool is_point_in_bbox_2D(const Geometry &geom, const Vec3d &P, const int idx,
+                         const double eps)
 {
   BoundBox bb(geom.verts());
   Vec3d min = bb.get_min();
@@ -814,8 +789,8 @@ bool is_point_in_bbox_2D(const Geometry &geom, const Vec3d &P, const int &idx,
 }
 
 // furshished by Adrian Rossiter
-int side_of_line(const Vec3d &P, const Vec3d &A, const Vec3d &B,
-                 const int &idx1, const int &idx2, const double &eps)
+int side_of_line(const Vec3d &P, const Vec3d &A, const Vec3d &B, const int idx1,
+                 const int idx2, const double eps)
 {
   double a = B[idx1] - A[idx1];
   double b = B[idx2] - A[idx2];
@@ -838,8 +813,8 @@ int side_of_line(const Vec3d &P, const Vec3d &A, const Vec3d &B,
 // edge is between -eps and eps. '>-eps' will include edge. >-eps same as >=0
 bool is_point_inside_triangle_or_edge(const Vec3d &P, const Vec3d &A,
                                       const Vec3d &B, const Vec3d &C,
-                                      const int &idx1, const int &idx2,
-                                      const int &sign, const double &eps)
+                                      const int idx1, const int idx2,
+                                      const int sign, const double eps)
 {
   return (side_of_line(P, A, B, idx1, idx2, eps) * sign > -eps &&
           side_of_line(P, B, C, idx1, idx2, eps) * sign > -eps &&
@@ -849,8 +824,8 @@ bool is_point_inside_triangle_or_edge(const Vec3d &P, const Vec3d &A,
 // polygon sent to this function MUST be triangulated
 // includes edges and vertices as inside (bounds are considered inside points)
 bool InsidePolygon_triangulated(const Geometry &polygon, const Vec3d &P,
-                                const int &idx, const int &sign,
-                                const bool &include_edges, const double &eps)
+                                const int idx, const int sign,
+                                const bool include_edges, const double eps)
 {
   const vector<vector<int>> &faces = polygon.faces();
   const vector<Vec3d> &verts = polygon.verts();
@@ -903,7 +878,7 @@ bool InsidePolygon_triangulated(const Geometry &polygon, const Vec3d &P,
 //  bound   |   value that will be returned only if (p) lies on the bound or
 //  vertex
 bool InsidePolygon_solution1(const Geometry &polygon, const Vec3d &P,
-                             bool &bound, const int &idx, const double &eps)
+                             bool &bound, const int idx, const double eps)
 {
   const vector<Vec3d> &verts = polygon.verts();
 
@@ -1035,8 +1010,8 @@ bool InsidePolygon_solution1(const Geometry &polygon, const Vec3d &P,
 
 // wrapper
 bool InsidePolygon_solution1(const Geometry &polygon, const Vec3d &P,
-                             const int &idx, const bool &include_edges,
-                             const double &eps)
+                             const int idx, const bool include_edges,
+                             const double eps)
 {
   bool bound = false;
   bool answer = InsidePolygon_solution1(polygon, P, bound, idx, eps);
@@ -1058,8 +1033,8 @@ bool InsidePolygon_solution1(const Geometry &polygon, const Vec3d &P,
 // by Randolph Franklin, it returns 1 for interior points and 0 for exterior
 // points
 
-bool pnpoly(const Geometry &polygon, const Vec3d &P, const int &idx,
-            const double &eps)
+bool pnpoly(const Geometry &polygon, const Vec3d &P, const int idx,
+            const double eps)
 {
   const vector<Vec3d> &verts = polygon.verts();
 
@@ -1094,8 +1069,8 @@ bool pnpoly(const Geometry &polygon, const Vec3d &P, const int &idx,
 }
 
 // wrapper
-bool pnpoly(const Geometry &polygon, const Vec3d &P, const int &idx,
-            const bool &include_edges, const double &eps)
+bool pnpoly(const Geometry &polygon, const Vec3d &P, const int idx,
+            const bool include_edges, const double eps)
 {
   bool answer = pnpoly(polygon, P, idx, eps);
 
@@ -1116,8 +1091,8 @@ bool pnpoly(const Geometry &polygon, const Vec3d &P, const int &idx,
 // The angle is from vector 1 to vector 2, positive anticlockwise
 // The result is between -pi -> pi
 
-double Angle2D(const double &x1, const double &y1, const double &x2,
-               const double &y2, const double &eps)
+double Angle2D(const double x1, const double y1, const double x2,
+               const double y2, const double eps)
 {
   double dtheta, theta1, theta2;
 
@@ -1147,7 +1122,7 @@ double Angle2D(const double &x1, const double &y1, const double &x2,
 // practice in many CAD packages.
 
 bool InsidePolygon_solution2(const Geometry &polygon, const Vec3d &P,
-                             const int &idx, const double &eps)
+                             const int idx, const double eps)
 {
   const vector<Vec3d> &verts = polygon.verts();
 
@@ -1178,8 +1153,8 @@ bool InsidePolygon_solution2(const Geometry &polygon, const Vec3d &P,
 
 // wrapper
 bool InsidePolygon_solution2(const Geometry &polygon, const Vec3d &P,
-                             const int &idx, const bool &include_edges,
-                             const double &eps)
+                             const int idx, const bool include_edges,
+                             const double eps)
 {
   bool answer = InsidePolygon_solution2(polygon, P, idx, eps);
 
@@ -1198,9 +1173,9 @@ bool InsidePolygon_solution2(const Geometry &polygon, const Vec3d &P,
 // vertices
 // the normal is expected to be a unit normal
 bool is_point_inside_polygon(const Geometry &polygon, const Vec3d &P,
-                             const Vec3d &normal, const bool &include_edges,
-                             const bool &on_same_plane_check,
-                             const int &polygon_fill_type, const double &eps)
+                             const Vec3d &normal, const bool include_edges,
+                             const bool on_same_plane_check,
+                             const int polygon_fill_type, const double eps)
 {
   // quick check to see if P is actually on the polygon
   // funished by Adrian Rossiter; is there any distance from P to the unit
@@ -1233,7 +1208,7 @@ bool is_point_inside_polygon(const Geometry &polygon, const Vec3d &P,
 }
 
 int intersection_is_end_point(const Vec3d &intersection_point, const Vec3d &P0,
-                              const Vec3d &P1, const double &eps)
+                              const Vec3d &P1, const double eps)
 {
   int which_one = 0;
   if (!compare(intersection_point, P0, eps))
@@ -1244,7 +1219,7 @@ int intersection_is_end_point(const Vec3d &intersection_point, const Vec3d &P0,
 }
 
 // anywhere a vertex is on an edge, split that edge
-bool mesh_verts(Geometry &geom, const double &eps)
+bool mesh_verts(Geometry &geom, const double eps)
 {
   const vector<Vec3d> &verts = geom.verts();
   const vector<vector<int>> &edges = geom.edges();
@@ -1300,8 +1275,8 @@ bool mesh_verts(Geometry &geom, const double &eps)
 }
 
 // of geom, is face i inside face j
-bool is_face_inside_face(const Geometry &geom, const int &i, const int &j,
-                         const double &eps)
+bool is_face_inside_face(const Geometry &geom, const int i, const int j,
+                         const double eps)
 {
   const vector<vector<int>> &faces = geom.faces();
   const vector<Vec3d> &verts = geom.verts();
@@ -1325,7 +1300,7 @@ bool is_face_inside_face(const Geometry &geom, const int &i, const int &j,
 }
 
 void check_for_holes(Geometry &geom, vector<pair<int, int>> &polygon_hierarchy,
-                     const double &eps)
+                     const double eps)
 {
   const vector<vector<int>> &faces = geom.faces();
 
@@ -1383,7 +1358,7 @@ void add_hole_connectors(Geometry &geom, const vector<vector<int>> &connectors)
 // mark hole connectors for later edge processing. use color index of INT_MAX
 void mark_hole_connectors(Geometry &geom,
                           const vector<pair<Vec3d, Vec3d>> &connectors_verts,
-                          const double &eps)
+                          const double eps)
 {
   const vector<Vec3d> &verts = geom.verts();
   const vector<vector<int>> &edges = geom.edges();
@@ -1406,7 +1381,7 @@ void mark_hole_connectors(Geometry &geom,
 }
 
 // input seperate networks of overlapping edges and merge them into one network
-bool mesh_edges(Geometry &geom, const double &eps)
+bool mesh_edges(Geometry &geom, const double eps)
 {
   const vector<Vec3d> &verts = geom.verts();
   const vector<vector<int>> &edges = geom.edges();
@@ -1523,8 +1498,7 @@ void make_skeleton(Geometry &geom)
 }
 
 // find connections from a vertex v_idx
-void find_connections(const Geometry &geom, vector<int> &vcons,
-                      const int &v_idx)
+void find_connections(const Geometry &geom, vector<int> &vcons, const int v_idx)
 {
   const vector<vector<int>> &edges = geom.edges();
 
@@ -1539,7 +1513,7 @@ void find_connections(const Geometry &geom, vector<int> &vcons,
 
 void build_angle_map(const Geometry &geom,
                      map<pair<int, int>, double> &angle_map,
-                     const Vec3d &normal, const double &eps)
+                     const Vec3d &normal, const double eps)
 {
   const vector<Vec3d> &verts = geom.verts();
 
@@ -1664,7 +1638,7 @@ void construct_faces(Geometry &geom, map<pair<int, int>, int> &turn_map)
   }
 }
 
-void analyze_faces(Geometry &geom, const int &planar_merge_type,
+void analyze_faces(Geometry &geom, const int planar_merge_type,
                    vector<int> &nonconvex_faces,
                    map<pair<int, int>, double> &angle_map)
 {
@@ -1708,9 +1682,9 @@ void analyze_faces(Geometry &geom, const int &planar_merge_type,
   geom.del(FACES, deleted_faces);
 }
 
-void fill_in_faces(Geometry &geom, const int &planar_merge_type,
+void fill_in_faces(Geometry &geom, const int planar_merge_type,
                    vector<int> &nonconvex_faces, const Vec3d &normal,
-                   const double &eps)
+                   const double eps)
 {
   map<pair<int, int>, double> angle_map;
   map<pair<int, int>, int> turn_map;
@@ -1720,19 +1694,17 @@ void fill_in_faces(Geometry &geom, const int &planar_merge_type,
   analyze_faces(geom, planar_merge_type, nonconvex_faces, angle_map);
 }
 
-Color average_color(const vector<Color> &cols, const int &color_system_mode,
-                    const double &sat_power, const double &sat_threshold,
-                    const double &value_power, const double &value_advance,
-                    const int &alpha_mode, const bool &ryb_mode)
+Color average_color(const vector<Color> &cols, const planar_opts &opts)
 {
   Color avg_col;
 
-  if (color_system_mode < 3)
+  if (opts.color_system_mode < 3)
     avg_col = col_blend::blend_HSX_centroid(
-        cols, color_system_mode, sat_power, sat_threshold, value_power,
-        value_advance, alpha_mode, ryb_mode);
-  else if (color_system_mode == 3) {
-    avg_col = col_blend::blend_RGB_centroid(cols, alpha_mode, ryb_mode);
+        cols, opts.color_system_mode, opts.sat_power, opts.sat_threshold,
+        opts.value_power, opts.value_advance, opts.alpha_mode, opts.ryb_mode);
+  else if (opts.color_system_mode == 3) {
+    avg_col =
+        col_blend::blend_RGB_centroid(cols, opts.alpha_mode, opts.ryb_mode);
   }
 
   return avg_col;
@@ -1806,18 +1778,11 @@ bool winding_rule_filter(int winding_rule_mode, int winding_rule,
   return answer;
 }
 
-void sample_colors(
-    Geometry &sgeom, const Geometry &cgeom, const int &planar_merge_type,
-    const vector<Normal> &original_normals, const vector<int> &nonconvex_faces,
-    const Vec3d &center, const int &polygon_fill_type,
-    const int &winding_rule_mode, const int &winding_rule,
-    const char &color_by_winding_number, const bool &find_direction,
-    const bool &winding_div2, Color &zero_density_color,
-    const bool &zero_density_force_blend, const double &brightness_adj,
-    const int &color_system_mode, const double &sat_power,
-    const double &sat_threshold, const double &value_power,
-    const double &value_advance, const int &alpha_mode, const bool &ryb_mode,
-    int &winding_total_min, int &winding_total_max, const double &eps)
+// winding_total_min, winding_total_max are changed
+void sample_colors(Geometry &sgeom, const Geometry &cgeom,
+                   const vector<Normal> &original_normals,
+                   const vector<int> &nonconvex_faces, int &winding_total_min,
+                   int &winding_total_max, const planar_opts &opts)
 {
   const vector<vector<int>> &sfaces = sgeom.faces();
   const vector<vector<int>> &cfaces = cgeom.faces();
@@ -1826,13 +1791,12 @@ void sample_colors(
   Color average_color_all_faces;
   for (unsigned int i = 0; i < cfaces.size(); i++)
     cols.push_back(cgeom.colors(FACES).get(i));
-  average_color_all_faces =
-      average_color(cols, color_system_mode, sat_power, sat_threshold,
-                    value_power, value_advance, alpha_mode, ryb_mode);
+  average_color_all_faces = average_color(cols, opts);
   cols.clear();
 
-  if (zero_density_force_blend)
-    zero_density_color = average_color_all_faces;
+  Color zero_density_col = opts.zero_density_color;
+  if (opts.zero_density_force_blend)
+    zero_density_col = average_color_all_faces;
 
   for (unsigned int i = 0; i < sfaces.size(); i++) {
     vector<Vec3d> points;
@@ -1855,7 +1819,7 @@ void sample_colors(
       else {
         // when merging and it is a nonconvex face, then have to sample all the
         // centroids. else only sample one of them
-        int sz = (planar_merge_type == 1) ? 1 : spolygon.faces().size();
+        int sz = (opts.planar_merge_type == 1) ? 1 : spolygon.faces().size();
         for (int k = 0; k < sz; k++)
           points.push_back(spolygon.face_cent(k));
       }
@@ -1872,7 +1836,7 @@ void sample_colors(
 
       Geometry tpolygon; // needed for triangulation method. the sample
                          // polygon needs to be triangulated
-      if (polygon_fill_type == 3) {
+      if (opts.polygon_fill_type == 3) {
         tpolygon = polygon;
         tpolygon.triangulate();
       }
@@ -1884,18 +1848,19 @@ void sample_colors(
       // otherwise k will begin and end at 0
       for (auto &point : points) {
         bool answer = is_point_inside_polygon(
-            (polygon_fill_type == 3 ? tpolygon : polygon), point, normal, true,
-            false, polygon_fill_type, eps);
+            (opts.polygon_fill_type == 3 ? tpolygon : polygon), point, normal,
+            true, false, opts.polygon_fill_type, opts.epsilon);
         if (answer) {
           vector<Vec3d> one_point;
           one_point.push_back(point);
           int winding_number = get_winding_number_polygon(
               polygon, one_point, original_normal,
-              find_direction && original_normal.is_hemispherical(), eps);
+              opts.find_direction && original_normal.is_hemispherical(),
+              opts.epsilon);
 
           // if merging, find largest magnitude of winding number
           // if they are -W and +W, chose the positive
-          if (planar_merge_type == 2) {
+          if (opts.planar_merge_type == 2) {
             if ((abs(winding_number) > abs(winding_total)) ||
                 ((winding_number > 0) && (winding_number == -winding_total)))
               winding_total = winding_number;
@@ -1916,15 +1881,15 @@ void sample_colors(
     Geometry polygon = faces_to_geom(sgeom, face_idxs);
     vector<Vec3d> one_point;
     one_point.push_back(sgeom.face_cent(i));
-    Normal sface_normal(sgeom, i, center, eps);
+    Normal sface_normal(sgeom, i, opts.center, opts.epsilon);
     int winding_number = get_winding_number_polygon(
         polygon, one_point, sface_normal,
-        find_direction && sface_normal.is_hemispherical(), eps);
+        opts.find_direction && sface_normal.is_hemispherical(), opts.epsilon);
     if ((winding_number < 0 && winding_total > 0) ||
         (winding_number > 0 && winding_total < 0))
       reverse(sgeom.raw_faces()[i].begin(), sgeom.raw_faces()[i].end());
 
-    if (winding_div2)
+    if (opts.winding_div2)
       winding_total = (winding_total + 1) / 2;
 
     if (winding_total < winding_total_min)
@@ -1932,18 +1897,18 @@ void sample_colors(
     if (winding_total > winding_total_max)
       winding_total_max = winding_total;
 
-    if ((winding_rule != INT_MAX)) {
+    if ((opts.winding_rule != INT_MAX)) {
       // if cols.size() is not zero then there were hits
       if (cols.size()) {
-        if (!winding_rule_filter(winding_rule_mode, winding_rule,
+        if (!winding_rule_filter(opts.winding_rule_mode, opts.winding_rule,
                                  winding_total))
           cols.clear();
       }
       // the magic. if there are no hits
       // if winding rule is less than 5 then zero is included so color it
       // average
-      else if ((winding_rule_mode == 0 && winding_rule > 5) ||
-               (winding_rule_mode > 0 && winding_rule == 0))
+      else if ((opts.winding_rule_mode == 0 && opts.winding_rule > 5) ||
+               (opts.winding_rule_mode > 0 && opts.winding_rule == 0))
         cols.push_back(average_color_all_faces);
     }
 
@@ -1951,12 +1916,12 @@ void sample_colors(
 
     Color col;
 
-    if (color_by_winding_number && sz) {
+    if (opts.color_by_winding_number && sz) {
       int wtotal = winding_total;
       // if absolute value of winding numbers (or their negative) are colored
-      if (color_by_winding_number != 'w') {
+      if (opts.color_by_winding_number != 'w') {
         wtotal = abs(wtotal);
-        if (color_by_winding_number == 'n')
+        if (opts.color_by_winding_number == 'n')
           wtotal = -wtotal;
       }
 
@@ -1970,17 +1935,17 @@ void sample_colors(
     else
         // if there is no hit, then that patch is of zero density color. if
         // file_type 4 then all even numbered patches are also
-        if (!sz || (polygon_fill_type == 4 && !(sz % 2)))
-      col = Color(zero_density_color);
+        if (!sz || (opts.polygon_fill_type == 4 && !(sz % 2)))
+      col = Color(zero_density_col);
     else
-      col = average_color(cols, color_system_mode, sat_power, sat_threshold,
-                          value_power, value_advance, alpha_mode, ryb_mode);
+      col = average_color(cols, opts);
 
-    if ((brightness_adj > -2.0) && col.is_set() && !col.is_inv() && (sz > 1)) {
+    if ((opts.brightness_adj > -2.0) && col.is_set() && !col.is_inv() &&
+        (sz > 1)) {
       // add 0.5 to brightness so it is in the range of -0.5 to 1.5
       // if sz = 2, 1.0/2 = 0.5 so when -B is 0, a patch with 2 colors blended
       // will not be changed
-      double brightness = (1.0 / sz) + (brightness_adj + 0.5);
+      double brightness = (1.0 / sz) + (opts.brightness_adj + 0.5);
       col.set_brightness(-1.0 + brightness);
     }
 
@@ -1997,19 +1962,11 @@ void collect_original_normals(vector<Normal> &original_normals,
     original_normals.push_back(FaceNormals[i]);
 }
 
-void blend_overlapping_faces(
-    Geometry &geom, const vector<vector<int>> &coplanar_faces_list,
-    const vector<Normal> &coplanar_normals, const FaceNormals &FaceNormals,
-    const Vec3d &center, const int &planar_merge_type,
-    const int &polygon_fill_type, const bool &hole_detection,
-    const int &winding_rule_mode, const int &winding_rule,
-    const char &color_by_winding_number, const bool &find_direction,
-    const bool &winding_div2, const bool &verbose, Color &zero_density_color,
-    const bool &zero_density_force_blend, const double &brightness_adj,
-    const int &color_system_mode, const double &sat_power,
-    const double &sat_threshold, const double &value_power,
-    const double &value_advance, const int &alpha_mode, const bool &ryb_mode,
-    const double &eps)
+void blend_overlapping_faces(Geometry &geom,
+                             const vector<vector<int>> &coplanar_faces_list,
+                             const vector<Normal> &coplanar_normals,
+                             const FaceNormals &FaceNormals,
+                             const planar_opts &opts)
 {
   Geometry bgeom;
   vector<int> deleted_faces;
@@ -2025,9 +1982,9 @@ void blend_overlapping_faces(
     // check here for polygons within polygons
     vector<vector<int>> connectors;
     vector<pair<Vec3d, Vec3d>> connectors_verts;
-    if (hole_detection) {
+    if (opts.hole_detection) {
       vector<pair<int, int>> polygon_hierarchy;
-      check_for_holes(sgeom, polygon_hierarchy, eps);
+      check_for_holes(sgeom, polygon_hierarchy, opts.epsilon);
       if (polygon_hierarchy.size())
         make_hole_connectors(sgeom, connectors, connectors_verts,
                              polygon_hierarchy);
@@ -2044,23 +2001,23 @@ void blend_overlapping_faces(
     connectors.clear();
 
     // duplicate vertices and edges can cause problems
-    merge_coincident_elements(&sgeom, "ve", 0, eps);
+    merge_coincident_elements(&sgeom, "ve", 0, opts.epsilon);
 
     // sort merge can destill more duplicate indexes
     delete_duplicate_index_edges(sgeom);
 
-    mesh_verts(sgeom, eps);
-    mesh_edges(sgeom, eps);
+    mesh_verts(sgeom, opts.epsilon);
+    mesh_edges(sgeom, opts.epsilon);
 
     // have to use vertex location for marking because indexes have been
     // scrambled
     if (connectors_verts.size())
-      mark_hole_connectors(sgeom, connectors_verts, eps);
+      mark_hole_connectors(sgeom, connectors_verts, opts.epsilon);
     connectors_verts.clear();
 
     vector<int> nonconvex_faces;
-    fill_in_faces(sgeom, planar_merge_type, nonconvex_faces,
-                  coplanar_normals[i].outward().unit(), eps);
+    fill_in_faces(sgeom, opts.planar_merge_type, nonconvex_faces,
+                  coplanar_normals[i].outward().unit(), opts.epsilon);
 
     // original normals are needed for sampling colors
     vector<Normal> original_normals;
@@ -2069,13 +2026,8 @@ void blend_overlapping_faces(
 
     int winding_total_min = INT_MAX;
     int winding_total_max = INT_MIN;
-    sample_colors(sgeom, cgeom, planar_merge_type, original_normals,
-                  nonconvex_faces, center, polygon_fill_type, winding_rule_mode,
-                  winding_rule, color_by_winding_number, find_direction,
-                  winding_div2, zero_density_color, zero_density_force_blend,
-                  brightness_adj, color_system_mode, sat_power, sat_threshold,
-                  value_power, value_advance, alpha_mode, ryb_mode,
-                  winding_total_min, winding_total_max, eps);
+    sample_colors(sgeom, cgeom, original_normals, nonconvex_faces,
+                  winding_total_min, winding_total_max, opts);
 
     if (winding_total_min < winding_number_min)
       winding_number_min = winding_total_min;
@@ -2092,26 +2044,15 @@ void blend_overlapping_faces(
   geom.del(FACES, deleted_faces);
   geom.append(bgeom);
 
-  if (verbose) {
+  if (opts.verbose) {
     fprintf(stderr, "minimum winding number = %d\n", winding_number_min);
     fprintf(stderr, "maximum winding number = %d\n", winding_number_max);
   }
 }
 
-void planar_merge(Geometry &geom, const int &planar_merge_type,
-                  const int &polygon_fill_type, const bool &hole_detection,
-                  const Vec3d &center, const int &winding_rule_mode,
-                  const int &winding_rule, const char &color_by_winding_number,
-                  const bool &find_direction, const bool &winding_div2,
-                  const bool &verbose, Color &zero_density_color,
-                  const bool &zero_density_force_blend,
-                  const double &brightness_adj, const int &color_system_mode,
-                  const double &sat_power, const double &sat_threshold,
-                  const double &value_power, const double &value_advance,
-                  const int &alpha_mode, const bool &ryb_mode,
-                  const double &eps)
+void planar_merge(Geometry &geom, const planar_opts &opts)
 {
-  FaceNormals face_normals(geom, center, eps);
+  FaceNormals face_normals(geom, opts.center, opts.epsilon);
 
   vector<vector<int>> coplanar_faces_list;
   vector<Normal> coplanar_normals;
@@ -2122,39 +2063,33 @@ void planar_merge(Geometry &geom, const int &planar_merge_type,
   bool filtered = true;
   build_coplanar_faces_list(geom, coplanar_faces_list, coplanar_normals,
                             face_normals, point_outward, fold_normals,
-                            fold_normals_hemispherical, filtered, eps);
+                            fold_normals_hemispherical, filtered, opts.epsilon);
 
-  blend_overlapping_faces(
-      geom, coplanar_faces_list, coplanar_normals, face_normals, center,
-      planar_merge_type, polygon_fill_type, hole_detection, winding_rule_mode,
-      winding_rule, color_by_winding_number, find_direction, winding_div2,
-      verbose, zero_density_color, zero_density_force_blend, brightness_adj,
-      color_system_mode, sat_power, sat_threshold, value_power, value_advance,
-      alpha_mode, ryb_mode, eps);
+  blend_overlapping_faces(geom, coplanar_faces_list, coplanar_normals,
+                          face_normals, opts);
 }
 
-void color_by_plane(Geometry &geom, const char &face_color_method,
-                    const ColorMapMulti &map, const Vec3d &center,
-                    const double &eps)
+void color_by_plane(Geometry &geom, const planar_opts &opts)
 {
-  FaceNormals FaceNormals(geom, center, eps);
+  FaceNormals FaceNormals(geom, opts.center, opts.epsilon);
 
   vector<vector<int>> coplanar_faces_list;
   vector<Normal> coplanar_normals;
 
   // bool point_outward = true; // always do this
-  bool point_outward = (face_color_method == 'n') ? false : true;
-  bool fold_normals_hemispherical = (face_color_method == 'n') ? false : true;
-  bool filtered = (face_color_method == 'p') ? true : false;
-  bool fold_normals = (face_color_method == 'o') ? true : false;
+  bool point_outward = (opts.face_color_method == 'n') ? false : true;
+  bool fold_normals_hemispherical =
+      (opts.face_color_method == 'n') ? false : true;
+  bool filtered = (opts.face_color_method == 'p') ? true : false;
+  bool fold_normals = (opts.face_color_method == 'o') ? true : false;
   build_coplanar_faces_list(geom, coplanar_faces_list, coplanar_normals,
                             FaceNormals, point_outward, fold_normals,
-                            fold_normals_hemispherical, filtered, eps);
+                            fold_normals_hemispherical, filtered, opts.epsilon);
 
   for (unsigned int i = 0; i < coplanar_faces_list.size(); i++) {
     for (unsigned int j = 0; j < coplanar_faces_list[i].size(); j++) {
       int k = coplanar_faces_list[i][j];
-      Color col = map.get_col(i);
+      Color col = opts.map.get_col(i);
       geom.colors(FACES).set(k, col);
     }
   }
@@ -2163,7 +2098,7 @@ void color_by_plane(Geometry &geom, const char &face_color_method,
 void build_colinear_edge_list(const Geometry &geom,
                               const vector<vector<int>> &edges,
                               vector<vector<int>> &colinear_edge_list,
-                              const double &eps)
+                              const double eps)
 {
   Random rnd;
   rnd.time_seed();
@@ -2203,7 +2138,7 @@ void build_colinear_edge_list(const Geometry &geom,
 
 vector<int> find_end_points_vertex(const Geometry &geom,
                                    const vector<int> &vert_indexes,
-                                   const double &eps)
+                                   const double eps)
 {
   const vector<Vec3d> &verts = geom.verts();
 
@@ -2246,8 +2181,7 @@ vector<int> find_end_points_vertex(const Geometry &geom,
 void collect_ordered_vert_indexes(const Geometry &geom,
                                   const vector<vector<int>> &edges,
                                   const vector<int> &colinear_edges,
-                                  vector<int> &colinear_verts,
-                                  const double &eps)
+                                  vector<int> &colinear_verts, const double eps)
 {
   const vector<Vec3d> &verts = geom.verts();
 
@@ -2284,7 +2218,7 @@ void collect_ordered_vert_indexes(const Geometry &geom,
 
 void build_colinear_vertex_list(const Geometry &geom,
                                 vector<vector<int>> &colinear_vertex_list,
-                                const double &eps)
+                                const double eps)
 {
   vector<vector<int>> implicit_edges;
   geom.get_impl_edges(implicit_edges);
@@ -2303,8 +2237,8 @@ void build_colinear_vertex_list(const Geometry &geom,
 // inserts added_vertices into face[face_idx] between start_v_idx and end_v_idx.
 // if end_v_idx comes before start_v_idx, reverse added_vertices
 void insert_verts_into_face(Geometry &geom, vector<int> &added_vertices,
-                            const int &face_idx, const int &start_v_idx,
-                            const int &end_v_idx)
+                            const int face_idx, const int start_v_idx,
+                            const int end_v_idx)
 {
   vector<vector<int>> &faces = geom.raw_faces();
   auto iter1 =
@@ -2329,7 +2263,7 @@ void insert_verts_into_face(Geometry &geom, vector<int> &added_vertices,
 // adds vertices to faces on seams where there is a mismatch in vertices from
 // other face's edges
 // may close the polyhedron
-void stitch_faces_on_seams(Geometry &geom, const double &eps)
+void stitch_faces_on_seams(Geometry &geom, const double eps)
 {
   const vector<vector<int>> &faces = geom.faces();
   const vector<Vec3d> &verts = geom.verts();
@@ -2370,7 +2304,7 @@ void stitch_faces_on_seams(Geometry &geom, const double &eps)
   }
 }
 
-void remove_in_line_vertices(Geometry &geom, const double &eps)
+void remove_in_line_vertices(Geometry &geom, const double eps)
 {
   const vector<Vec3d> &verts = geom.verts();
 
@@ -2401,8 +2335,8 @@ void remove_in_line_vertices(Geometry &geom, const double &eps)
   geom.del(VERTS, deleted_verts);
 }
 
-bool compare_edge_verts(Geometry &geom, const int &i, const int &j,
-                        const double &eps)
+bool compare_edge_verts(Geometry &geom, const int i, const int j,
+                        const double eps)
 {
   const vector<vector<int>> &edges = geom.edges();
   const vector<Vec3d> &verts = geom.verts();
@@ -2418,11 +2352,8 @@ bool compare_edge_verts(Geometry &geom, const int &i, const int &j,
 
 // set first color to the blend
 // for sort_merge to reduce to first color for edges and/or verts
-string pre_edge_blend(Geometry &geom, const char &edge_blending,
-                      const int &color_system_mode, const double &sat_power,
-                      const double &sat_threshold, const double &value_power,
-                      const double &value_advance, const int &alpha_mode,
-                      const bool &ryb_mode, const double &eps)
+string pre_edge_blend(Geometry &geom, const char edge_blending,
+                      const planar_opts &opts)
 {
   const vector<vector<int>> &edges = geom.edges();
   const vector<Vec3d> &verts = geom.verts();
@@ -2440,14 +2371,12 @@ string pre_edge_blend(Geometry &geom, const char &edge_blending,
       for (int j = i + 1; j < sz; j++) {
         if (used[j])
           continue;
-        if (compare_edge_verts(geom, i, j, eps)) {
+        if (compare_edge_verts(geom, i, j, opts.epsilon)) {
           cols.push_back(geom.colors(EDGES).get(j));
           used[j] = true;
         }
       }
-      Color col =
-          average_color(cols, color_system_mode, sat_power, sat_threshold,
-                        value_power, value_advance, alpha_mode, ryb_mode);
+      Color col = average_color(cols, opts);
       geom.colors(EDGES).set(i, col);
     }
 
@@ -2465,14 +2394,12 @@ string pre_edge_blend(Geometry &geom, const char &edge_blending,
       for (int j = i + 1; j < sz; j++) {
         if (used[j])
           continue;
-        if (!compare(verts[i], verts[j], eps)) {
+        if (!compare(verts[i], verts[j], opts.epsilon)) {
           cols.push_back(geom.colors(VERTS).get(j));
           used[j] = true;
         }
       }
-      Color col =
-          average_color(cols, color_system_mode, sat_power, sat_threshold,
-                        value_power, value_advance, alpha_mode, ryb_mode);
+      Color col = average_color(cols, opts);
       geom.colors(VERTS).set(i, col);
     }
 
@@ -2484,12 +2411,8 @@ string pre_edge_blend(Geometry &geom, const char &edge_blending,
 
 // similar to edge_blending, but wait till planar_merge to get new invisible
 // edgelets to color blend
-string post_edge_blend(Geometry &geom, const char &edge_blending,
-                       const int &original_edges_size,
-                       const int &color_system_mode, const double &sat_power,
-                       const double &sat_threshold, const double &value_power,
-                       const double &value_advance, const int &alpha_mode,
-                       const bool &ryb_mode, const double &eps)
+string post_edge_blend(Geometry &geom, const int original_edges_size,
+                       const planar_opts &opts)
 {
   const vector<vector<int>> &edges = geom.edges();
   const vector<Vec3d> &verts = geom.verts();
@@ -2508,7 +2431,7 @@ string post_edge_blend(Geometry &geom, const char &edge_blending,
   if (true) {
     // if (edge_blending == 'e' || edge_blending == 'b') {
     vector<vector<int>> colinear_edge_list;
-    build_colinear_edge_list(geom, edges, colinear_edge_list, eps);
+    build_colinear_edge_list(geom, edges, colinear_edge_list, opts.epsilon);
 
     for (auto &i : colinear_edge_list) {
       vector<int> original_edge_idx;
@@ -2532,18 +2455,17 @@ string post_edge_blend(Geometry &geom, const char &edge_blending,
         for (int original_edge : original_edge_idx) {
           Vec3d v1 = verts[edges[original_edge][0]];
           Vec3d v2 = verts[edges[original_edge][1]];
-          if ((point_in_segment(P1, v1, v2, eps)).is_set() &&
-              (point_in_segment(P2, v1, v2, eps)).is_set()) {
+          if ((point_in_segment(P1, v1, v2, opts.epsilon)).is_set() &&
+              (point_in_segment(P2, v1, v2, opts.epsilon)).is_set()) {
             col = geom.colors(EDGES).get(original_edge);
             cols.push_back(col);
           }
         }
 
-        if (edge_blending == 'v')
+        if (opts.edge_blending == 'v')
           col = cols[0];
         else
-          col = average_color(cols, color_system_mode, sat_power, sat_threshold,
-                              value_power, value_advance, alpha_mode, ryb_mode);
+          col = average_color(cols, opts);
         geom.colors(EDGES).set(added_edge, col);
       }
     }
@@ -2558,21 +2480,15 @@ string post_edge_blend(Geometry &geom, const char &edge_blending,
   }
 
   // for verts, the same processing as before merging can be done
-  if (edge_blending == 'v' || edge_blending == 'b') {
-    pre_edge_blend(geom, 'v', color_system_mode, sat_power, sat_threshold,
-                   value_power, value_advance, alpha_mode, ryb_mode, eps);
+  if (opts.edge_blending == 'v' || opts.edge_blending == 'b') {
+    pre_edge_blend(geom, 'v', opts);
     elems += 'v';
   }
 
   return elems;
 }
 
-void special_edge_process(Geometry &geom, const char &special_edge_processing,
-                          const int &color_system_mode, const double &sat_power,
-                          const double &sat_threshold,
-                          const double &value_power,
-                          const double &value_advance, const int &alpha_mode,
-                          const bool &ryb_mode)
+void special_edge_process(Geometry &geom, const planar_opts &opts)
 {
   const vector<vector<int>> &faces = geom.faces();
   const vector<vector<int>> &edges = geom.edges();
@@ -2598,7 +2514,7 @@ void special_edge_process(Geometry &geom, const char &special_edge_processing,
   geom.del(VERTS, geom.get_info().get_free_verts());
 
   // if stripping only
-  if (special_edge_processing == 's')
+  if (opts.special_edge_processing == 's')
     return;
 
   geom.add_missing_impl_edges();
@@ -2612,17 +2528,17 @@ void special_edge_process(Geometry &geom, const char &special_edge_processing,
     vector<Color> cols;
     for (int j : face_idx)
       cols.push_back(geom.colors(FACES).get(j));
-    col = average_color(cols, color_system_mode, sat_power, sat_threshold,
-                        value_power, value_advance, alpha_mode, ryb_mode);
+    col = average_color(cols, opts);
     geom.colors(EDGES).set(i, col);
     cols.clear();
   }
 
-  if (special_edge_processing == 'v' || special_edge_processing == 'V') {
+  if (opts.special_edge_processing == 'v' ||
+      opts.special_edge_processing == 'V') {
     for (unsigned int i = 0; i < verts.size(); i++) {
       Color col;
       // invisible vertices were the new ones for the tiles. skip them
-      if (special_edge_processing == 'v') {
+      if (opts.special_edge_processing == 'v') {
         col = geom.colors(VERTS).get(i);
         if (col.is_inv())
           continue;
@@ -2635,15 +2551,14 @@ void special_edge_process(Geometry &geom, const char &special_edge_processing,
           continue;
         cols.push_back(col);
       }
-      col = average_color(cols, color_system_mode, sat_power, sat_threshold,
-                          value_power, value_advance, alpha_mode, ryb_mode);
+      col = average_color(cols, opts);
       geom.colors(VERTS).set(i, col);
       cols.clear();
     }
   }
 }
 
-void delete_invisible_faces(Geometry &geom, const bool &hole_detection)
+void delete_invisible_faces(Geometry &geom, const bool hole_detection)
 {
   const vector<vector<int>> &faces = geom.faces();
   const vector<vector<int>> &edges = geom.edges();
@@ -2705,8 +2620,7 @@ void resolve_winding_number_indexes(Geometry &geom, const ColorMapMulti &map,
   }
 }
 
-void do_cmy_mode(Geometry &geom, const bool &ryb_mode,
-                 const char &edge_blending)
+void do_cmy_mode(Geometry &geom, const bool ryb_mode, const char edge_blending)
 {
   const vector<vector<int>> &faces = geom.faces();
   const vector<vector<int>> &edges = geom.edges();
@@ -2736,8 +2650,8 @@ void apply_transparency(Geometry &geom, int face_opacity)
 }
 
 void color_by_winding_number_raw(Geometry &geom,
-                                 const char &color_by_winding_number,
-                                 const double &eps)
+                                 const char color_by_winding_number,
+                                 const double eps)
 {
   const vector<vector<int>> &faces = geom.faces();
 
@@ -2790,10 +2704,7 @@ int main(int argc, char *argv[])
   // not much control over this feature
   Geometry egeom = free_edges_into_geom(geom);
   if (egeom.verts().size()) {
-    string elems =
-        pre_edge_blend(egeom, 'b', opts.color_system_mode, opts.sat_power,
-                       opts.sat_threshold, opts.value_power, opts.value_advance,
-                       opts.alpha_mode, opts.ryb_mode, opts.epsilon);
+    string elems = pre_edge_blend(egeom, 'b', opts);
     merge_coincident_elements(&egeom, elems, 1, opts.epsilon);
   }
 
@@ -2802,16 +2713,12 @@ int main(int argc, char *argv[])
 
   // blend edges using blending parameters without doing merging
   if (opts.edge_blending && !opts.planar_merge_type) {
-    string elems = pre_edge_blend(
-        geom, opts.edge_blending, opts.color_system_mode, opts.sat_power,
-        opts.sat_threshold, opts.value_power, opts.value_advance,
-        opts.alpha_mode, opts.ryb_mode, opts.epsilon);
+    string elems = pre_edge_blend(geom, opts.edge_blending, opts);
     merge_coincident_elements(&geom, elems, 1, opts.epsilon);
   }
 
   if (opts.face_color_method)
-    color_by_plane(geom, opts.face_color_method, opts.map, opts.center,
-                   opts.epsilon);
+    color_by_plane(geom, opts);
 
   int original_edges_size = 0;
   if (opts.planar_merge_type) {
@@ -2819,22 +2726,12 @@ int main(int argc, char *argv[])
     geom.add_missing_impl_edges();
     original_edges_size = geom.edges().size();
 
-    planar_merge(geom, opts.planar_merge_type, opts.polygon_fill_type,
-                 opts.hole_detection, opts.center, opts.winding_rule_mode,
-                 opts.winding_rule, opts.color_by_winding_number,
-                 opts.find_direction, opts.winding_div2, opts.verbose,
-                 opts.zero_density_color, opts.zero_density_force_blend,
-                 opts.brightness_adj, opts.color_system_mode, opts.sat_power,
-                 opts.sat_threshold, opts.value_power, opts.value_advance,
-                 opts.alpha_mode, opts.ryb_mode, opts.epsilon);
+    planar_merge(geom, opts);
   }
 
   string elems;
   if (opts.edge_blending && opts.planar_merge_type) {
-    elems = post_edge_blend(
-        geom, opts.edge_blending, original_edges_size, opts.color_system_mode,
-        opts.sat_power, opts.sat_threshold, opts.value_power,
-        opts.value_advance, opts.alpha_mode, opts.ryb_mode, opts.epsilon);
+    elems = post_edge_blend(geom, original_edges_size, opts);
     // add free edges back
     geom.append(egeom);
   }
@@ -2856,10 +2753,7 @@ int main(int argc, char *argv[])
     stitch_faces_on_seams(geom, opts.epsilon);
 
   if (opts.special_edge_processing) {
-    special_edge_process(geom, opts.special_edge_processing,
-                         opts.color_system_mode, opts.sat_power,
-                         opts.sat_threshold, opts.value_power,
-                         opts.value_advance, opts.alpha_mode, opts.ryb_mode);
+    special_edge_process(geom, opts);
     // add free edges back
     geom.append(egeom);
   }

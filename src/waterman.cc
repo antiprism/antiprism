@@ -58,7 +58,7 @@ int get_num_decs(const char *str)
   return num_decs;
 }
 
-int get_max_num_decs(const char *str, const int &num_parts)
+int get_max_num_decs(const char *str, const int num_parts)
 {
   char str_copy[MSG_SZ];
   strncpy(str_copy, str, MSG_SZ);
@@ -92,14 +92,14 @@ public:
   Color edge_col;
   Color face_col;
   char color_method;
-  int face_opaqueness;
+  int face_opacity;
   double epsilon;
 
   waterman_opts()
       : ProgramOpts("waterman"), lattice_type(-1), radius(0), R_squared(0),
         origin_based(true), method(1), verbose(false), scale(0),
         tester_defeat(false), convex_hull(true), add_hull(false),
-        color_method('\0'), face_opaqueness(-1), epsilon(0)
+        color_method('\0'), face_opacity(-1), epsilon(0)
   {
   }
 
@@ -107,48 +107,39 @@ public:
   void usage();
 };
 
+// clang-format off
 void waterman_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options] lattice\n"
-      "\n"
-      "Use sphere-ray intersection for producing waterman polyhedra. Lattice "
-      "can be\n"
-      "SC, FCC, or BCC\n"
-      "\n"
-      "Options\n"
-      "%s"
-      "  -r <r,n>  clip radius. r is radius taken to optional root n. n = 2 is "
-      "sqrt\n"
-      "  -q <cent> center of lattice, in form \"x_val,y_val,z_val\" (default: "
-      "origin)\n"
-      "  -m <mthd> 1 - sphere-ray intersection  2 - z guess (default: 1)\n"
-      "  -C <opt>  c - convex hull only, i - keep interior, s - supress "
-      "(default: c)\n"
-      "  -t        defeat computational error testing for sphere-ray method\n"
-      "  -v        verbose output (on computational errors)\n"
-      "  -l <lim>  minimum distance for unique vertex locations as negative "
-      "exponent\n"
-      "               (default: %d giving %.0e)\n"
-      "  -o <file> write output to file (default: write to standard output)\n"
-      "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
-      "  -V <col>  vertex color\n"
-      "  -E <col>  edge color (if convex hull)\n"
-      "  -F <col>  face color (if convex hull)\n"
-      "               lower case outputs map indexes. upper case outputs color "
-      "values\n"
-      "               key word: s,S color by symmetry using face normals\n"
-      "               key word: c,C color by symmetry using face normals "
-      "(chiral)\n"
-      "  -T <tran> face transparency. valid range from 0 (invisible) to 255 "
-      "(opaque)\n"
-      "\n"
-      "\n",
-      prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
-      ::epsilon);
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] lattice\n"
+"\n"
+"Use sphere-ray intersection for producing waterman polyhedra. Lattice can be\n"
+"SC, FCC, or BCC\n"
+"\n"
+"Options\n"
+"%s"
+"  -r <r,n>  clip radius. r is radius taken to optional root n. n = 2 is sqrt\n"
+"  -q <cent> center of lattice, in form \"x_val,y_val,z_val\" (default: origin)\n"
+"  -m <mthd> 1 - sphere-ray intersection  2 - z guess (default: 1)\n"
+"  -C <opt>  c - convex hull only, i - keep interior, s - supress (default: c)\n"
+"  -t        defeat computational error testing for sphere-ray method\n"
+"  -v        verbose output (on computational errors)\n"
+"  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
+"               (default: %d giving %.0e)\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+"\nColoring Options (run 'off_util -H color' for help on color formats)\n"
+"  -V <col>  vertex color\n"
+"  -E <col>  edge color (if convex hull)\n"
+"  -F <col>  face color (if convex hull)\n"
+"               lower case outputs map indexes. upper case outputs color values\n"
+"               key word: s,S color by symmetry using face normals\n"
+"               key word: c,C color by symmetry using face normals (chiral)\n"
+"  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
+"\n"
+"\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }
+// clang-format on
 
 void waterman_opts::process_command_line(int argc, char **argv)
 {
@@ -258,8 +249,8 @@ void waterman_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'T':
-      print_status_or_exit(read_int(optarg, &face_opaqueness), c);
-      if (face_opaqueness < 0 || face_opaqueness > 255) {
+      print_status_or_exit(read_int(optarg, &face_opacity), c);
+      if (face_opacity < 0 || face_opacity > 255) {
         error("face transparency must be between 0 and 255", c);
       }
       break;
@@ -299,11 +290,11 @@ void waterman_opts::process_command_line(int argc, char **argv)
   if (!center.is_set())
     center = Vec3d(0, 0, 0);
 
-  if (face_opaqueness != -1) {
+  if (face_opacity != -1) {
     if (!face_col.is_set())
-      face_col = Color(255, 255, 255, face_opaqueness);
-    else
-      face_col = Color(face_col[0], face_col[1], face_col[2], face_opaqueness);
+      face_col = Color(255, 255, 255, face_opacity);
+    else if (face_col.is_val())
+      face_col = Color(face_col[0], face_col[1], face_col[2], face_opacity);
 
     if (color_method == 's' || color_method == 'c')
       warning("when writing indexes transparency setting ignored", "T");
@@ -344,13 +335,14 @@ void waterman_opts::process_command_line(int argc, char **argv)
 // true  ray strikes sphere
 //    ray tangent to sphere, z_near == z_far
 //    ray passes through two points of sphere, z_near != z_far
+// z_near and z_far are modified
 bool sphere_ray_z_intersect_points(
-    long &z_near, long &z_far, const double &x0,
-    const double &y0,         // ray's xy (dz = 0)
-    const bool &origin_based, // if true, then cx, cy, cz all equal 0
-    const double &cx, const double &cy, const double &cz, // center
-    const double &R_squared,                              // radius squared
-    const double &eps)
+    long &z_near, long &z_far, const double x0,
+    const double y0,          // ray's xy (dz = 0)
+    const bool origin_based, // if true, then cx, cy, cz all equal 0
+    const double cx, const double cy, const double cz, // center
+    const double R_squared,                            // radius squared
+    const double eps)
 {
   // original formulas taken from
   // http://www.ccs.neu.edu/home/fell/CSU540/programs/RayTracingFormulas.htm
@@ -408,16 +400,16 @@ bool sphere_ray_z_intersect_points(
 }
 
 // combine lattice test for fcc(type = 1) and bcc(type = 2)
-bool valid_point(const int &lattice_type, const long &x, const long &y,
-                 const long &z)
+bool valid_point(const int lattice_type, const long x, const long y,
+                 const long z)
 {
   return lattice_type == 1
              ? (x + y + z) % 2 == 0
              : (x % 2 && y % 2 && z % 2) || !(x % 2 || y % 2 || z % 2);
 }
 
-bool inside_exact(const long &z, const long &z_cent,
-                  const long long &xy_contribution, const long long &i_R2)
+bool inside_exact(const long z, const long z_cent,
+                  const long long xy_contribution, const long long i_R2)
 {
   // fprintf(stderr,"z = %ld, z_cent = %ld   xy_c = %I64d, (z-z_cent)^2 = %I64d,
   // i_R2 = %I64d\n",z,z_cent,xy_contribution,(long
@@ -426,9 +418,10 @@ bool inside_exact(const long &z, const long &z_cent,
 }
 
 // tester code furnished by Adrian Rossiter
-void refine_z_vals(long &z_near, long &z_far, const long &x, const long &y,
-                   const int &lattice_type, const long &scale,
-                   const vector<long> &i_center, const long long &i_R2)
+// z_near and z_far are modified
+void refine_z_vals(long &z_near, long &z_far, const long x, const long y,
+                   const int lattice_type, const long scale,
+                   const vector<long> i_center, const long long i_R2)
 {
   long long xy_contribution =
       ((long long)x * scale - i_center[0]) * (x * scale - i_center[0]) +
@@ -520,11 +513,11 @@ void refine_z_vals(long &z_near, long &z_far, const long &x, const long &y,
 // Separate function to contain protability problems with abs(long)
 long long_abs(long val) { return std::abs((long)val); }
 
-void sphere_ray_waterman(Geometry &geom, const int &lattice_type,
-                         const bool &origin_based, const Vec3d &center,
-                         const double &radius, const double &R_squared,
-                         const long &scale, const bool &verbose,
-                         const bool &tester_defeat, const double &eps)
+void sphere_ray_waterman(Geometry &geom, const int lattice_type,
+                         const bool origin_based, const Vec3d &center,
+                         const double radius, const double R_squared,
+                         const long scale, const bool verbose,
+                         const bool tester_defeat, const double eps)
 {
   vector<Vec3d> &verts = geom.raw_verts();
 
@@ -648,9 +641,9 @@ void sphere_ray_waterman(Geometry &geom, const int &lattice_type,
     fprintf(stderr, "Total number of false misses: %ld\n", total_misses);
 }
 
-void z_guess_waterman(Geometry &geom, const int &lattice_type,
-                      const Vec3d &center, const double &radius,
-                      const long &scale, const bool &verbose)
+void z_guess_waterman(Geometry &geom, const int lattice_type,
+                      const Vec3d &center, const double radius,
+                      const long scale, const bool verbose)
 {
   vector<Vec3d> &verts = geom.raw_verts();
 
@@ -767,7 +760,7 @@ int main(int argc, char *argv[])
         convex_hull_report(geom, opts.add_hull);
 
       if (opts.color_method)
-        color_by_symmetry_normals(geom, opts.color_method, opts.face_opaqueness,
+        color_by_symmetry_normals(geom, opts.color_method, opts.face_opacity,
                                   opts.epsilon);
       else
         Coloring(&geom).vef_one_col(opts.vert_col, opts.edge_col,

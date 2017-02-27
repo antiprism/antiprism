@@ -446,7 +446,7 @@ void rep_printer::face_angles_cnts()
 }
 
 void rep_printer::face_winding_cnts(const vector<int> winding_numbers,
-                                    const bool &signing)
+                                    const bool signing)
 {
   map<pair<int, int>, int>::iterator mi;
   map<pair<int, int>, int> cnts;

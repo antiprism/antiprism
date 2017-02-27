@@ -53,31 +53,31 @@ bool hcp_diamond_test(int x, int y, int z);        // dist2 = 27
 void add_struts(anti::Geometry &geom, int len2);
 
 // for lattice code only
-double lattice_radius(const anti::Geometry &, const char &);
-void geom_container_clip(anti::Geometry &, anti::Geometry &, const double &,
-                         const anti::Vec3d &, bool &verbose,
+double lattice_radius(const anti::Geometry &, const char);
+void geom_container_clip(anti::Geometry &, anti::Geometry &, const double,
+                         const anti::Vec3d &, const bool,
                          double eps = anti::epsilon);
-void geom_spherical_clip(anti::Geometry &, const double &, const anti::Vec3d &,
-                         bool &verbose, double eps = anti::epsilon);
+void geom_spherical_clip(anti::Geometry &, const double, const anti::Vec3d &,
+                         const bool, double eps = anti::epsilon);
 void list_grid_radii(const std::string &, const anti::Geometry &,
                      const anti::Vec3d &, int report_type = 1,
                      double eps = anti::epsilon);
 void list_grid_struts(const std::string &, const anti::Geometry &,
                       int report_type = 1, double eps = anti::epsilon);
-void add_color_struts(anti::Geometry &, const double &, anti::Color &,
+void add_color_struts(anti::Geometry &, const double, anti::Color &,
                       double eps = anti::epsilon);
 void color_centroid(anti::Geometry &, anti::Color &,
                     double eps = anti::epsilon);
 
 // color functions for lattice programs
-void color_by_symmetry_normals(anti::Geometry &, const char &, const int &,
+void color_by_symmetry_normals(anti::Geometry &, const char, const int,
                                double eps = anti::epsilon);
-void color_edges_by_sqrt(anti::Geometry &, const char &);
+void color_edges_by_sqrt(anti::Geometry &, const char);
 
 // convex hull and voronoi wrappers
-void convex_hull_report(const anti::Geometry &, const bool &);
-int get_voronoi_geom(anti::Geometry &, anti::Geometry &, const bool &,
-                     const bool &, double eps = anti::epsilon);
+void convex_hull_report(const anti::Geometry &, const bool);
+int get_voronoi_geom(anti::Geometry &, anti::Geometry &, const bool, const bool,
+                     double eps = anti::epsilon);
 
 class int_lat_grid {
 protected:
