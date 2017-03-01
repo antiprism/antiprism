@@ -86,88 +86,97 @@ public:
 
   /// Set the colour with an index number
   /**\param idx a positive index number (default value \c -2
-   *  indicates that no colour is set) */
-  void set_idx(int idx = -2);
+   *  indicates that no colour is set)
+   * \return \c true if valid index, else \c false */
+  bool set_index(int idx = -2);
 
   /// Set the colour with integer RGBA values.
   /** Using out of range values will leave the colour unset.
    * \param red red value in range \c 0 - \c 255
    * \param green green value in range \c 0 - \c 255
    * \param blue blue value in range \c 0 - \c 255
-   * \param alpha alpha value in range \c 0 (clear) - \c 255 (opaque) */
-  void set_rgba(int red, int green, int blue, int alpha = 255);
+   * \param alpha alpha value in range \c 0 (clear) - \c 255 (opaque)
+   * \return \c true if valid RGBA values, else \c false */
+  bool set_rgba(int red, int green, int blue, int alpha = 255);
 
   /// Set the colour with floating point RGBA values.
   /** Using out of range values will leave the colour unset.
    * \param red red value in range \c 0.0 - \c 1.0
    * \param green green value in range \c 0.0 - \c 1.0
    * \param blue blue value in range \c 0.0 - \c 1.0
-   * \param alpha alpha value in range \c 0.0 (clear) - \c 1.0 (opaque) */
-  void set_rgba(double red, double green, double blue, double alpha = 1.0);
+   * \param alpha alpha value in range \c 0.0 (clear) - \c 1.0 (opaque)
+   * \return \c true if valid RGBA values, else \c false */
+  bool set_rgba(double red, double green, double blue, double alpha = 1.0);
 
   /// Set the colour with floating point HSVA values.
   /** Using out of range values will leave the colour unset.
    * \param hue hue in range \c 0.0 - \c 1.0
    * \param sat saturation in range \c 0.0 - \c 1.0
    * \param val value in range \c 0.0 - \c 1.0
-   * \param alpha alpha value in range \c 0.0 (clear) - \c 1.0 (opaque) */
-  void set_hsva(double hue, double sat, double val, double alpha = 1.0);
+   * \param alpha alpha value in range \c 0.0 (clear) - \c 1.0 (opaque)
+   * \return \c true if valid HSVA values, else \c false */
+  bool set_hsva(double hue, double sat, double val, double alpha = 1.0);
 
   /// Set the colour with floating point HSVA values.
   /** The HSVA values are in the range 0.0-1.0. Using out of range
    *  values will leave the colour unset.
-   * \param hsva the HSVA values.*/
-  void set_hsva(const Vec4d &hsva);
+   * \param hsva the HSVA values.
+   * \return \c true if valid HSVA values, else \c false */
+  bool set_hsva(const Vec4d &hsva);
 
   /// Set the colour with floating point hsla values.
   /** Using out of range values will leave the colour unset.
    * \param hue hue in range \c 0.0 - \c 1.0
    * \param sat saturation in range \c 0.0 - \c 1.0
    * \param light lightness in range \c 0.0 - \c 1.0
-   * \param alpha alpha value in range \c 0.0 (clear) - \c 1.0 (opaque) */
-  void set_hsla(double hue, double sat, double light, double alpha = 1.0);
+   * \param alpha alpha value in range \c 0.0 (clear) - \c 1.0 (opaque)
+   * \return \c true if valid HSLA values, else \c false */
+  bool set_hsla(double hue, double sat, double light, double alpha = 1.0);
 
   /// Set the colour with floating point hsla values.
   /** The hsla values are in the range 0.0-1.0. Using out of range
    *  values will leave the colour unset.
-   * \param hsla the HSLA values.*/
-  void set_hsla(const Vec4d &hsla);
+   * \param hsla the HSLA values.
+   * \return \c true if valid HSLA values, else \c false */
+  bool set_hsla(const Vec4d &hsla);
 
   /// Set the colour to its complement, or the complement of another colour
   /**\param col the colour to take the complement from, or use current
-   *  colour if \a col is unset (default). If \c col is an index the
-   *  final colour will be unset */
-  void set_complement(Color col = Color());
+   *  colour if \a col is unset (default). If the base colour is not a
+   *  colour value the final colour will be unset.
+   * \return \c true if the color was a valid color value, else \c false */
+  bool set_complement(Color col = Color());
 
   /// Set the colour brightness, or from brightening another colour
   /**\param brt_val the value to brighten in the range -1.0 to 1.0.
    *  Positive values brighten towards white and negative values
    *  darken towards black
    * \param col the colour as the base to brighten, or use current
-   *  colour if \a col is unset (default). If \c col is an index the
-   *  final colour will be unset */
-  void set_brightness(double brt_val, Color col = Color());
+   *  colour if \a col is unset (default). If the base colour is not a
+   *  colour value the final colour will be unset.
+   * \return \c true if the color was a valid color value, else \c false */
+  bool set_brightness(double brt_val, Color col = Color());
 
   /// Get the index number
   /**\return The index number. */
-  int get_idx() const;
+  int get_index() const;
 
   /// Get the transparency in integer format
   /**\return The transparency in the range \c 0 (opaque) - \c 255 (clear).*/
-  int get_trans() const;
+  int get_transparency() const;
 
   /// Get the transparency in floating point format
   /**\return The transparency in the range
    *  \c 0.0 (opaque) - \c 1.0 (clear).*/
-  double get_transd() const;
+  double get_transparency_d() const;
 
   /// Get the RGB values
   /**\return The RGB values as components in range \c 0.0 to \c 1.0. */
-  Vec3d get_Vec3d() const;
+  Vec3d get_vec3d() const;
 
   /// Get the RGBA values
   /**\return The RGBA values as components in range \c 0.0 to \c 1.0. */
-  Vec4d get_Vec4d() const;
+  Vec4d get_vec4d() const;
 
   /// Get the RGBA values as a long integer
   /**\return The RGBA values converted to a long using 2^12R+2^8G+2^4G+A */
@@ -194,23 +203,22 @@ public:
   /// Check whether a colour is held as RGBA
   /**\return \c true if the colour holds an RGB value,
    *  otherwise \c false. */
-  bool is_val() const;
+  bool is_value() const;
+
+  /// Check whether a colour is held as RGBA and is not the invisible value
+  /**\return \c true if the colour holds an RGB value an is not the invisible
+   *  value, otherwise \c false. */
+  bool is_visible_value() const;
 
   /// Check whether a colour is held as an index number
   /**\return \c true if the colour holds an index number,
    *  otherwise \c false. */
-  bool is_idx() const;
-
-  /// Check whether a colour has the default unset colour state
-  /** The opposite of \c is_set()
-   * \return \c true if the colour has not been set to a valid value,
-   *  otherwise \c false. */
-  bool is_def() const;
+  bool is_index() const;
 
   /// Check whether a colour is invisible
   /**\return \c true if the colour holds the invisible colour value,
    *  otherwise \c false. */
-  bool is_inv() const;
+  bool is_invisible() const;
 
   /// Check for equality
   /**\param c the colour to compare with for equality
@@ -416,7 +424,7 @@ Color blend_RGB_centroid(const std::vector<Color> &cols, int alpha_mode = 3,
 // ----------------------------------------------------------------------
 // inline functions
 
-inline Color::Color(int idx) { set_idx(idx); }
+inline Color::Color(int idx) { set_index(idx); }
 
 inline Color::Color(int red, int green, int blue, int alpha)
 {
@@ -432,53 +440,58 @@ inline Color::Color(Vec3d col) { set_rgba(col[0], col[1], col[2]); }
 
 inline Color::Color(Vec4d col) { set_rgba(col[0], col[1], col[2], col[3]); }
 
-inline void Color::unset() { set_idx(); }
+inline void Color::unset() { set_index(); }
 
-inline void Color::set_idx(int idx)
+inline bool Color::set_index(int idx)
 {
   for (auto &comp : rgba)
     comp = 0;
   index = (idx < 0) ? -2 : idx;
+  return is_set();
 }
 
-inline void Color::set_rgba(int red, int green, int blue, int alpha)
+inline bool Color::set_rgba(int red, int green, int blue, int alpha)
 {
   rgba[0] = red;
   rgba[1] = green;
   rgba[2] = blue;
   rgba[3] = alpha;
   index = -2 + in_range(red, green, blue, alpha);
+  return is_set();
 }
 
-inline void Color::set_rgba(double red, double green, double blue, double alpha)
+inline bool Color::set_rgba(double red, double green, double blue, double alpha)
 {
-  set_rgba(f2i(red), f2i(green), f2i(blue), f2i(alpha));
+  return set_rgba(f2i(red), f2i(green), f2i(blue), f2i(alpha));
 }
 
-inline bool Color::is_val() const { return index == -1; }
+inline bool Color::is_value() const { return index == -1; }
 
-inline bool Color::is_idx() const { return index >= 0; }
+inline bool Color::is_visible_value() const
+{
+  return is_value() && !is_invisible();
+}
 
-inline bool Color::is_def() const { return !is_set(); }
+inline bool Color::is_index() const { return index >= 0; }
 
-inline bool Color::is_inv() const { return *this == invisible; }
+inline bool Color::is_invisible() const { return *this == invisible; }
 
-inline bool Color::is_set() const { return (is_val() || is_idx()); }
+inline bool Color::is_set() const { return index > -2; } // is_val()||is_idx()
 
 inline bool Color::operator!=(Color c) const { return !(*this == c); }
 
-inline int Color::get_idx() const { return is_idx() ? index : -2; }
+inline int Color::get_index() const { return is_index() ? index : -2; }
 
-inline int Color::get_trans() const { return 255 - rgba[3]; }
+inline int Color::get_transparency() const { return 255 - rgba[3]; }
 
-inline double Color::get_transd() const { return 1 - i2f(rgba[3]); }
+inline double Color::get_transparency_d() const { return 1 - i2f(rgba[3]); }
 
-inline Vec3d Color::get_Vec3d() const
+inline Vec3d Color::get_vec3d() const
 {
   return Vec3d(i2f(rgba[0]), i2f(rgba[1]), i2f(rgba[2]));
 }
 
-inline Vec4d Color::get_Vec4d() const
+inline Vec4d Color::get_vec4d() const
 {
   return Vec4d(i2f(rgba[0]), i2f(rgba[1]), i2f(rgba[2]), i2f(rgba[3]));
 }

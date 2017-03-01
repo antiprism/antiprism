@@ -207,7 +207,7 @@ void repel(Geometry &geom, REPEL_FN rep_fn, double shorten_factor, double limit,
   vector<int> wts(v_sz);
   for (int i = 0; i < v_sz; i++) {
     Color col = geom.colors(VERTS).get(i);
-    wts[i] = col.is_idx() ? col.get_idx() : 1;
+    wts[i] = col.is_index() ? col.get_index() : 1;
   }
   vector<Vec3d> offsets(v_sz);
   double dist2, max_dist2 = 0;

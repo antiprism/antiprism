@@ -74,9 +74,9 @@ char *rep_printer::idx2s(char *buf, int idx, int extra_sz)
 
 char *rep_printer::col2s(char *buf, Color col)
 {
-  if (col.is_idx())
-    sprintf(buf, "%d", col.get_idx());
-  else if (col.is_val()) {
+  if (col.is_index())
+    sprintf(buf, "%d", col.get_index());
+  else if (col.is_value()) {
     int len = sprintf(buf, "%d %d %d", col[0], col[1], col[2]);
     if (col[3] < 255)
       sprintf(buf + len, " %d", col[3]);

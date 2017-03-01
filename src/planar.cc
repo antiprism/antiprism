@@ -457,7 +457,7 @@ void planar_opts::process_command_line(int argc, char **argv)
               "w");
     // zero density area cannot be colored with not tile or merge
     if (color_by_winding_number &&
-        (!zero_density_color.is_inv() || zero_density_force_blend))
+        (!zero_density_color.is_invisible() || zero_density_force_blend))
       warning("zero density areas cannot be colored or blended if tile or "
               "merge is not selected",
               "Z");
@@ -1373,7 +1373,7 @@ void mark_hole_connectors(Geometry &geom,
       if ((point_in_segment(P1, v1, v2, eps)).is_set() &&
           (point_in_segment(P2, v1, v2, eps)).is_set()) {
         Color ecol;
-        ecol.set_idx(INT_MAX);
+        ecol.set_index(INT_MAX);
         geom.colors(EDGES).set(j, ecol);
       }
     }
@@ -1926,11 +1926,11 @@ void sample_colors(Geometry &sgeom, const Geometry &cgeom,
       }
 
       if (wtotal >= 0)
-        col.set_idx(wtotal);
+        col.set_index(wtotal);
       else
         // negative winding numbers are set up to near INT_MAX to be subtracted
         // out later
-        col.set_idx(wtotal + INT_MAX);
+        col.set_index(wtotal + INT_MAX);
     }
     else
         // if there is no hit, then that patch is of zero density color. if
@@ -1940,7 +1940,7 @@ void sample_colors(Geometry &sgeom, const Geometry &cgeom,
     else
       col = average_color(cols, opts);
 
-    if ((opts.brightness_adj > -2.0) && col.is_set() && !col.is_inv() &&
+    if ((opts.brightness_adj > -2.0) && col.is_set() && !col.is_invisible() &&
         (sz > 1)) {
       // add 0.5 to brightness so it is in the range of -0.5 to 1.5
       // if sz = 2, 1.0/2 = 0.5 so when -B is 0, a patch with 2 colors blended
@@ -2445,7 +2445,7 @@ string post_edge_blend(Geometry &geom, const int original_edges_size,
 
       for (int added_edge : added_edge_idx) {
         Color col = geom.colors(EDGES).get(added_edge);
-        if (col.is_idx() && col == INT_MAX)
+        if (col.is_index() && col == INT_MAX)
           continue;
 
         Vec3d P1 = verts[edges[added_edge][0]];
@@ -2499,14 +2499,14 @@ void special_edge_process(Geometry &geom, const planar_opts &opts)
   vector<int> deleted_edges;
   for (unsigned int i = 0; i < edges.size(); i++) {
     Color col = geom.colors(EDGES).get(i);
-    if (!(col.is_idx() && col == INT_MAX))
+    if (!(col.is_index() && col == INT_MAX))
       deleted_edges.push_back(i);
   }
   geom.del(EDGES, deleted_edges);
 
   for (unsigned int i = 0; i < verts.size(); i++) {
     Color col = geom.colors(VERTS).get(i);
-    if (!col.is_inv())
+    if (!col.is_invisible())
       geom.colors(VERTS).set(i, Color());
   }
 
@@ -2522,7 +2522,7 @@ void special_edge_process(Geometry &geom, const planar_opts &opts)
   // special_edge_processing == 'e' will do at least this
   for (unsigned int i = 0; i < edges.size(); i++) {
     Color col = geom.colors(EDGES).get(i);
-    if (col.is_idx() && col == INT_MAX)
+    if (col.is_index() && col == INT_MAX)
       continue;
     vector<int> face_idx = find_faces_with_edge(faces, edges[i]);
     vector<Color> cols;
@@ -2540,14 +2540,14 @@ void special_edge_process(Geometry &geom, const planar_opts &opts)
       // invisible vertices were the new ones for the tiles. skip them
       if (opts.special_edge_processing == 'v') {
         col = geom.colors(VERTS).get(i);
-        if (col.is_inv())
+        if (col.is_invisible())
           continue;
       }
       vector<int> edge_idx = find_edges_with_vertex(edges, i);
       vector<Color> cols;
       for (int j : edge_idx) {
         Color col = geom.colors(EDGES).get(j);
-        if (col.is_idx() && col == INT_MAX)
+        if (col.is_index() && col == INT_MAX)
           continue;
         cols.push_back(col);
       }
@@ -2570,7 +2570,7 @@ void delete_invisible_faces(Geometry &geom, const bool hole_detection)
   vector<int> deleted_elems;
   for (unsigned int i = 0; i < faces.size(); i++) {
     Color col = geom.colors(FACES).get(i);
-    if (col.is_inv())
+    if (col.is_invisible())
       deleted_elems.push_back(i);
   }
   geom.del(FACES, deleted_elems);
@@ -2579,7 +2579,7 @@ void delete_invisible_faces(Geometry &geom, const bool hole_detection)
   if (hole_detection) {
     for (unsigned int i = 0; i < edges.size(); i++) {
       Color col = geom.colors(EDGES).get(i);
-      if (!(col.is_idx() && col == INT_MAX))
+      if (!(col.is_index() && col == INT_MAX))
         continue;
       if (!find_faces_with_edge(faces, edges[i]).size())
         deleted_elems.push_back(i);
@@ -2595,7 +2595,7 @@ void make_hole_connectors_invisible(Geometry &geom)
 
   for (unsigned int i = 0; i < edges.size(); i++) {
     Color col = geom.colors(EDGES).get(i);
-    if (col.is_idx() && col == INT_MAX)
+    if (col.is_index() && col == INT_MAX)
       geom.colors(EDGES).set(i, Color::invisible);
   }
 }
@@ -2607,8 +2607,8 @@ void resolve_winding_number_indexes(Geometry &geom, const ColorMapMulti &map,
 
   for (unsigned int i = 0; i < faces.size(); i++) {
     Color col = geom.colors(FACES).get(i);
-    if (col.is_idx()) {
-      int c_idx = col.get_idx();
+    if (col.is_index()) {
+      int c_idx = col.get_index();
       if (c_idx > INT_MAX / 2)
         c_idx -= INT_MAX;
 
@@ -2643,7 +2643,7 @@ void apply_transparency(Geometry &geom, int face_opacity)
 {
   for (unsigned int i = 0; i < geom.faces().size(); i++) {
     Color col = geom.colors(FACES).get(i);
-    if (col.is_val() && !col.is_inv())
+    if (col.is_value() && !col.is_invisible())
       col = Color(col[0], col[1], col[2], face_opacity);
     geom.colors(FACES).set(i, col);
   }
@@ -2672,11 +2672,11 @@ void color_by_winding_number_raw(Geometry &geom,
 
     Color col;
     if (wtotal >= 0)
-      col.set_idx(wtotal);
+      col.set_index(wtotal);
     else
       // negative winding numbers are set up to near INT_MAX to be subtracted
       // out later
-      col.set_idx(wtotal + INT_MAX);
+      col.set_index(wtotal + INT_MAX);
     geom.colors(FACES).set(i, col);
   }
 }

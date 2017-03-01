@@ -1748,7 +1748,7 @@ Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
     if (opts.face_Coloring_method == 'a') {
       Coloring clrng(&pgeom[i]);
       Color col = opts.map.get_col(opts.col_axis_idx[i]);
-      if (col.is_val())
+      if (col.is_value())
         col = Color(col[0], col[1], col[2], opts.face_opacity);
       clrng.f_one_col(col);
     }
@@ -1789,7 +1789,7 @@ Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
       Color col = geom.colors(FACES).get(i);
       if (!col.is_set()) {
         col = convex_hull_color;
-        if (col.is_val())
+        if (col.is_value())
           col = Color(col[0], col[1], col[2], opts.face_opacity);
         geom.colors(FACES).set(i, col);
       }
@@ -1801,7 +1801,7 @@ Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
     for (unsigned int i = 0; i < faces.size(); i++) {
       int fsz = faces[i].size();
       Color col = opts.map.get_col(fsz);
-      if (col.is_val())
+      if (col.is_value())
         col = Color(col[0], col[1], col[2], opts.face_opacity);
       geom.colors(FACES).set(i, col);
     }

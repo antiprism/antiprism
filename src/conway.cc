@@ -1460,7 +1460,7 @@ void cn_face_Coloring(Geometry &geom, const char face_Coloring_method,
     for (unsigned int i = 0; i < faces.size(); i++) {
       int fsz = faces[i].size();
       Color col = map.get_col(fsz);
-      if (col.is_val()) {
+      if (col.is_value()) {
         int opq = (face_pattern[fsz % face_pattern.size()] == '1')
                       ? face_opacity
                       : col[3];
@@ -1483,7 +1483,7 @@ void cn_face_Coloring(Geometry &geom, const char face_Coloring_method,
     if (face_opacity != 255) {
       for (unsigned int i = 0; i < geom.faces().size(); i++) {
         Color col = geom.colors(FACES).get(i);
-        if (col.is_val())
+        if (col.is_value())
           col = Color(col[0], col[1], col[2], face_opacity);
         geom.colors(FACES).set(i, col);
       }

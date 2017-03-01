@@ -106,7 +106,7 @@ void gl_writer::cur_camera(const Camera &cam)
 
 void gl_writer::write(const Scene &scen)
 {
-  Vec3d bg = scen.get_bg_col().get_Vec3d();
+  Vec3d bg = scen.get_bg_col().get_vec3d();
   glClearColor(bg[0], bg[1], bg[2], 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

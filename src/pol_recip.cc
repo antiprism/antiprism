@@ -696,7 +696,7 @@ int main(int argc, char *argv[])
     add_extra_ideal_elems(&dual, centre, 1.005 * opts.inf);
 
   for (const auto &kv : dual.colors(FACES).get_properties())
-    if (kv.second.is_inv()) {
+    if (kv.second.is_invisible()) {
       opts.warning("dual includes invisible faces (base model included "
                    "invisible vertices)");
       break;

@@ -293,11 +293,11 @@ void m_parse(string &m_txt, Geometry &geom, Geometry &geom_cv,
         }
 
         if (color_case == 2) {
-          Vec3d hsv = current_col.get_Vec3d();
+          Vec3d hsv = current_col.get_vec3d();
           current_col.set_hsva(hsv[0], hsv[1], hsv[2]);
         }
         else if (color_case == 3) {
-          Vec3d col = current_col.get_Vec3d();
+          Vec3d col = current_col.get_vec3d();
           col[0] = 1 - col[0];
           col[1] = 1 - col[1];
           col[2] = 1 - col[2];
@@ -412,11 +412,11 @@ void m_parse(string &m_txt, Geometry &geom, Geometry &geom_cv,
           }
 
           if (color_case == 2) {
-            Vec3d hsv = current_col.get_Vec3d();
+            Vec3d hsv = current_col.get_vec3d();
             current_col.set_hsva(hsv[0], hsv[1], hsv[2]);
           }
           else if (color_case == 3) {
-            Vec3d col = current_col.get_Vec3d();
+            Vec3d col = current_col.get_vec3d();
             col[0] = 1 - col[0];
             col[1] = 1 - col[1];
             col[2] = 1 - col[2];

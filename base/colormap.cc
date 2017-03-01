@@ -279,7 +279,7 @@ private:
 
 protected:
   std::vector<double> ranges[4];
-  void (Color::*set_func)(double, double, double, double);
+  bool (Color::*set_func)(double, double, double, double);
 
 public:
   /// Initialise from a string
@@ -1129,10 +1129,10 @@ Color ColorMapMulti::get_col(int idx) const
   if (cur_idx < effective_size()) {
     for (auto cmap : cmaps) {
       col = cmap->get_col(cur_idx);
-      if (col.is_val())
+      if (col.is_value())
         break;
-      if (col.is_idx())
-        cur_idx = col.get_idx();
+      if (col.is_index())
+        cur_idx = col.get_index();
     }
   }
 
@@ -1349,40 +1349,157 @@ ColorMap *colormap_from_name(const char *map_name, Status *stat)
   return cmap;
 }
 
-/*
-Status color_proc_torange::init(const char *map_name, char *errmsg)
+//-----------------------------------------------------------------------
+// ColorValuesToRangeHsva
+
+static Status chk_range(vector<double> &v)
 {
-   char name[MSG_SZ];
-   strncpy(name, map_name, MSG_SZ-1);
-   name[MSG_SZ-1] = '\0';
+  if (v.size() == 1) {
+    if (v[0] < -epsilon || v[0] > 1 + epsilon)
+      return Status::error(
+          msg_str("value, %g, is not in rage 0.0 to 1.0", v[0]));
 
-   vector<char *> vals;
-   split_line(name, vals, "_");
-   if(vals.size() > 4)
-      return false;
+    v.push_back(v[0]);
+  }
+  else if (v.size() == 2) {
+    if (v[0] < -epsilon || v[0] > 1 + epsilon)
+      return Status::error(
+          msg_str("first value, %g, is not in rage 0.0 to 1.0", v[0]));
 
-   // lists of values for each of the four components
-   for(unsigned int i=0; i<vals.size(); i++) {
-      if(!read_double_list(vals[i], ranges[i], errmsg, 0, ":"))
-         return false;
-      for(unsigned int j=0; j<ranges[i].size(); j++)
-         if(ranges[i][j]<0) {
-            if(errmsg)
-               sprintf(errmsg, "component %d contains a negative value", i+1);
-            return false;
-         }
-      if(ranges[i].size()>2) {
-         if(errmsg)
-            sprintf(errmsg, "component %d contains a negative value", i+1);
-         return false;
-      }
-      if(ranges[i].size()==1)
-         ranges[i].push_back(ranges[i][0]);
-   }
+    if (v[1] < -epsilon || v[1] > 1 + epsilon)
+      return Status::error(
+          msg_str("second value, %g, is not in rage 0.0 to 1.0", v[1]));
+  }
+  else
+    return Status::error(msg_str("range has %lu values, must have 1 or 2",
+                                 (unsigned long)v.size()));
 
-   return true;
+  if (v[0] > v[1] + epsilon)
+    v[1]++;
+
+  return Status::ok();
 }
 
-*/
+Status ColorValuesToRangeHsva::add_range(int idx, const char *rngs)
+{
+  char str[MSG_SZ];
+  strncpy(str, rngs, MSG_SZ);
+  str[MSG_SZ - 1] = '\0';
+  Status stat = read_double_list(str, ranges[idx], 2, ":");
+  if (stat.is_error())
+    return stat;
+  if (!(stat = chk_range(ranges[idx])))
+    return stat;
+
+  return Status::ok();
+}
+
+ColorValuesToRangeHsva::ColorValuesToRangeHsva(const string &range_name,
+                                               const Color &def_col)
+{
+  init(range_name, def_col);
+}
+
+Status ColorValuesToRangeHsva::init(const string &range_name,
+                                    const Color &def_col)
+{
+  for (auto &range : ranges)
+    range.clear();
+  ranges[0].push_back(0);
+  ranges[0].push_back(1);
+  ranges[1].push_back(0);
+  ranges[1].push_back(1);
+  ranges[2].push_back(0);
+  ranges[2].push_back(1);
+  ranges[3].push_back(0);
+  ranges[3].push_back(1);
+
+  Status stat;
+  int name_len = range_name.size();
+  char name[MSG_SZ];
+  strcpy_msg(name, range_name.c_str());
+  char rngs[MSG_SZ];
+  char *q = rngs;
+  int cur_idx = -1;
+  char cur_comp = 'X';
+  for (const char *p = name; p - name < name_len + 1; p++) {
+    if (strchr("HhSsVvAa", *p) || cur_idx < 0 || *p == '\0') {
+      *q = '\0';
+      if (cur_idx >= 0 && !(stat = add_range(cur_idx, rngs)))
+        return Status::error(
+            msg_str("component '%c': %s", cur_comp, stat.c_msg()));
+      if (strchr("Hh", *p))
+        cur_idx = 0;
+      else if (strchr("Ss", *p))
+        cur_idx = 1;
+      else if (strchr("Vv", *p))
+        cur_idx = 2;
+      else if (strchr("Aa", *p))
+        cur_idx = 3;
+      else
+        return Status::error(msg_str("invalid component letter '%c'", *p));
+
+      cur_comp = *p;
+      q = rngs;
+    }
+    else if (!(isdigit(*p) || *p == '.' || *p == ':'))
+      return Status::error(
+          msg_str("invalid component letter '%c'", (cur_idx < 0) ? *rngs : *p));
+    else if (!isspace(*p)) {
+      *q++ = *p;
+    }
+  }
+
+  set_default_color(def_col);
+
+  return Status::ok();
+}
+
+static inline double fract(const vector<double> &rng, double frac)
+{
+  return fmod(rng[0] + (rng[1] - rng[0]) * frac, 1 + epsilon);
+}
+
+Color ColorValuesToRangeHsva::get_col(Color col)
+{
+  Color c = col;
+  if (col.is_visible_value()) {
+    Vec4d hsva_orig = col.get_hsva();
+    Vec4d hsva(fract(ranges[0], hsva_orig[0]), fract(ranges[1], hsva_orig[1]),
+               fract(ranges[2], hsva_orig[2]), fract(ranges[3], hsva_orig[3]));
+    c.set_hsva(hsva);
+  }
+  return c;
+}
+
+void ColorValuesToRangeHsva::apply(map<int, Color> &elem_cols)
+{
+  map<int, Color>::iterator mi;
+  for (mi = elem_cols.begin(); mi != elem_cols.end(); ++mi)
+    mi->second = get_col(mi->second);
+}
+
+void ColorValuesToRangeHsva::apply(Geometry &geom, int elem_type)
+{
+  if(default_color.is_set()) {
+    int num_elems;
+    if (elem_type == VERTS)
+      num_elems = geom.verts().size();
+    else if (elem_type == EDGES)
+      num_elems = geom.edges().size();
+    else // (elem_type == FACES)
+      num_elems = geom.faces().size();
+
+    for (int i=0; i<num_elems; i++) {
+      auto col = geom.colors(elem_type).get(i);
+      if(!col.is_set())
+        col = default_color;
+      geom.colors(elem_type).set(i, get_col(col));
+    }
+  }
+  else {
+    apply(geom.colors(elem_type).get_properties());
+  }
+}
 
 } // namespace anti

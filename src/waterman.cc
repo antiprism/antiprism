@@ -293,7 +293,7 @@ void waterman_opts::process_command_line(int argc, char **argv)
   if (face_opacity != -1) {
     if (!face_col.is_set())
       face_col = Color(255, 255, 255, face_opacity);
-    else if (face_col.is_val())
+    else if (face_col.is_value())
       face_col = Color(face_col[0], face_col[1], face_col[2], face_opacity);
 
     if (color_method == 's' || color_method == 'c')

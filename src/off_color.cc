@@ -51,142 +51,6 @@ using std::pair;
 
 using namespace anti;
 
-/// Colour processing using an HSVA range
-class color_proc_torange_hsv {
-protected:
-  std::vector<double> ranges[4];
-  Status check_and_add_range(int idx, const char *rngs);
-
-public:
-  /// Initialise from a string
-  Status init(const char *range_name);
-
-  /// Apply processing to the colour values of a geometry
-  /** \param elem_cols element colours to process */
-  void proc_map(map<int, Color> &elem_cols);
-
-  /// Process the colour value
-  /**\param col the color.
-   * \return The processed colour. */
-  Color get_proc_col(Color col) const;
-};
-
-Status chk_range(vector<double> &v)
-{
-  if (v.size() == 1) {
-    if (v[0] < -epsilon || v[0] > 1 + epsilon)
-      return Status::error(
-          msg_str("value, %g, is not in rage 0.0 to 1.0", v[0]));
-
-    v.push_back(v[0]);
-  }
-  else if (v.size() == 2) {
-    if (v[0] < -epsilon || v[0] > 1 + epsilon)
-      return Status::error(
-          msg_str("first value, %g, is not in rage 0.0 to 1.0", v[0]));
-
-    if (v[1] < -epsilon || v[1] > 1 + epsilon)
-      return Status::error(
-          msg_str("second value, %g, is not in rage 0.0 to 1.0", v[1]));
-  }
-  else
-    return Status::error(msg_str("range has %lu values, must have 1 or 2",
-                                 (unsigned long)v.size()));
-
-  if (v[0] > v[1] + epsilon)
-    v[1]++;
-
-  return Status::ok();
-}
-
-Status color_proc_torange_hsv::check_and_add_range(int idx, const char *rngs)
-{
-  char str[MSG_SZ];
-  strncpy(str, rngs, MSG_SZ);
-  str[MSG_SZ - 1] = '\0';
-  Status stat = read_double_list(str, ranges[idx], 2, ":");
-  if (stat.is_error())
-    return stat;
-  if (!(stat = chk_range(ranges[idx])))
-    return stat;
-
-  return Status::ok();
-}
-
-Status color_proc_torange_hsv::init(const char *range_name)
-{
-  for (auto &range : ranges)
-    range.clear();
-  ranges[0].push_back(0);
-  ranges[0].push_back(1);
-  ranges[1].push_back(0);
-  ranges[1].push_back(1);
-  ranges[2].push_back(0);
-  ranges[2].push_back(1);
-  ranges[3].push_back(0);
-  ranges[3].push_back(1);
-
-  Status stat;
-  int name_len = strlen(range_name);
-  char rngs[MSG_SZ];
-  char *q = rngs;
-  int cur_idx = -1;
-  char cur_comp = 'X';
-  for (const char *p = range_name; p - range_name < name_len + 1; p++) {
-    if (strchr("HhSsVvAa", *p) || cur_idx < 0 || *p == '\0') {
-      *q = '\0';
-      if (cur_idx >= 0 && !(stat = check_and_add_range(cur_idx, rngs)))
-        return Status::error(
-            msg_str("component '%c': %s", cur_comp, stat.c_msg()));
-      if (strchr("Hh", *p))
-        cur_idx = 0;
-      else if (strchr("Ss", *p))
-        cur_idx = 1;
-      else if (strchr("Vv", *p))
-        cur_idx = 2;
-      else if (strchr("Aa", *p))
-        cur_idx = 3;
-      else
-        return Status::error(msg_str("invalid component letter '%c'", *p));
-
-      cur_comp = *p;
-      q = rngs;
-    }
-    else if (!(isdigit(*p) || *p == '.' || *p == ':'))
-      return Status::error(
-          msg_str("invalid component letter '%c'", (cur_idx < 0) ? *rngs : *p));
-    else if (!isspace(*p)) {
-      *q++ = *p;
-    }
-  }
-
-  return Status::ok();
-}
-
-inline double fract(const vector<double> &rng, double frac)
-{
-  return fmod(rng[0] + (rng[1] - rng[0]) * frac, 1 + epsilon);
-}
-
-Color color_proc_torange_hsv::get_proc_col(Color col) const
-{
-  Color c = col;
-  if (col.is_val()) {
-    Vec4d hsva_orig = col.get_hsva();
-    Vec4d hsva(fract(ranges[0], hsva_orig[0]), fract(ranges[1], hsva_orig[1]),
-               fract(ranges[2], hsva_orig[2]), fract(ranges[3], hsva_orig[3]));
-    c.set_hsva(hsva);
-  }
-  return c;
-}
-
-void color_proc_torange_hsv::proc_map(map<int, Color> &elem_cols)
-{
-  map<int, Color>::iterator mi;
-  for (mi = elem_cols.begin(); mi != elem_cols.end(); ++mi)
-    mi->second = get_proc_col(mi->second);
-}
-
 void color_vals_to_idxs(Geometry &geom, char elems = ELEM_ALL,
                         ColorMapMap *cmap = nullptr)
 {
@@ -204,11 +68,11 @@ void color_vals_to_idxs(Geometry &geom, char elems = ELEM_ALL,
       map<int, Color>::const_iterator mi;
       for (mi = elem_cols[i]->begin(); mi != elem_cols[i]->end(); ++mi) {
         const Color &col = mi->second;
-        if (col.is_idx()) {
-          if (col.get_idx() > first_idx)
-            first_idx = col.get_idx() + 1;
+        if (col.is_index()) {
+          if (col.get_index() > first_idx)
+            first_idx = col.get_index() + 1;
         }
-        else if (col.is_val()) {
+        else if (col.is_value()) {
           map<Color, vector<vector<int>>>::iterator v2i_it;
           v2i_it = val2idxs.find(col);
           if (v2i_it == val2idxs.end()) {
@@ -261,7 +125,7 @@ public:
   Coloring clrngs[3];
 
   char range_elems;
-  color_proc_torange_hsv col_procs[3];
+  ColorValuesToRangeHsva col_procs[3];
   char v2i_elems;
 
   string lfile;
@@ -460,7 +324,7 @@ void o_col_opts::process_command_line(int argc, char **argv)
 
     case 'r': {
       char r_elems;
-      color_proc_torange_hsv col_proc;
+      ColorValuesToRangeHsva col_proc;
       if (split_line(optarg, parts, ",") > 2)
         error("too many comma separated parts", c);
       print_status_or_exit(col_proc.init(parts[0]), c);
@@ -557,7 +421,7 @@ bool lights_read(const string &fname, Geometry *lights, char *errmsg)
     return false;
   bool no_color = false;
   for (unsigned int i = 0; i < lights->verts().size(); i++) {
-    if (!lights->colors(VERTS).get(i).is_val()) {
+    if (!lights->colors(VERTS).get(i).is_value()) {
       lights->colors(VERTS).set(i, Color(0.5, 0.5, 0.5));
       no_color = true;
     }
@@ -570,9 +434,9 @@ bool lights_read(const string &fname, Geometry *lights, char *errmsg)
 
 inline unsigned int col_type(const Color &col)
 {
-  return CV_UNSET * col.is_def() + CV_INDEX * col.is_idx() +
-         CV_VALUE * (col.is_val() && !col.is_inv()) +
-         CV_INVISIBLE * col.is_inv();
+  return CV_UNSET * !col.is_set() + CV_INDEX * col.is_index() +
+         CV_VALUE * (col.is_value() && !col.is_invisible()) +
+         CV_INVISIBLE * col.is_invisible();
 }
 
 void restore_orig_cols(Geometry &geom, Geometry &restore_geom,
@@ -806,11 +670,11 @@ int main(int argc, char *argv[])
 
   // value to value mappings
   if (opts.range_elems & (ELEM_VERTS))
-    opts.col_procs[0].proc_map(geom.colors(VERTS).get_properties());
+    opts.col_procs[0].apply(geom.colors(VERTS).get_properties());
   if (opts.range_elems & (ELEM_EDGES))
-    opts.col_procs[1].proc_map(geom.colors(EDGES).get_properties());
+    opts.col_procs[1].apply(geom.colors(EDGES).get_properties());
   if (opts.range_elems & (ELEM_FACES))
-    opts.col_procs[2].proc_map(geom.colors(FACES).get_properties());
+    opts.col_procs[2].apply(geom.colors(FACES).get_properties());
 
   // Average colour values from adjoining elements after converting
   // index numbers

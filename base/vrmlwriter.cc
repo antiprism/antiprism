@@ -53,7 +53,7 @@ string vrml_vec(double x, double y, double z, int sig_digits)
 
 string vrml_col(const Color &col)
 {
-  Vec4d cv = col.get_Vec4d();
+  Vec4d cv = col.get_vec4d();
   char buf[256];
   snprintf(buf, 256, "%.4f %.4f %.4f", cv[0], cv[1], cv[2]);
   // if(col.get_trans())

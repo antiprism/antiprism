@@ -143,13 +143,13 @@ bool off_file_write(string file_name, const vector<const Geometry *> &geoms,
 
 char *off_col(char *str, Color col)
 {
-  if (col.is_idx())
-    snprintf(str, MSG_SZ - 1, " %d", col.get_idx());
-  else if (col.is_val()) {
-    if (col.get_trans())
-      vtostr(str, col.get_Vec4d(), " ", -5);
+  if (col.is_index())
+    snprintf(str, MSG_SZ - 1, " %d", col.get_index());
+  else if (col.is_value()) {
+    if (col.get_transparency())
+      vtostr(str, col.get_vec4d(), " ", -5);
     else
-      vtostr(str, col.get_Vec3d(), " ", -5);
+      vtostr(str, col.get_vec3d(), " ", -5);
   }
   else
     *str = '\0';

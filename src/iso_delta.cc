@@ -1346,7 +1346,7 @@ void compound_Coloring(Geometry &geom, const char Coloring_method,
     if (face_opacity != 255) {
       for (unsigned int i = 0; i < geom.faces().size(); i++) {
         Color col = geom.colors(FACES).get(i);
-        if (col.is_val())
+        if (col.is_value())
           col = Color(col[0], col[1], col[2], face_opacity);
         geom.colors(FACES).set(i, col);
       }

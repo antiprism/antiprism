@@ -72,8 +72,8 @@ void Coloring::set_all_idx_to_val(map<int, Color> &cols)
 {
   map<int, Color>::iterator mi;
   for (mi = cols.begin(); mi != cols.end(); mi++)
-    if (mi->second.is_idx())
-      mi->second = get_col(mi->second.get_idx());
+    if (mi->second.is_index())
+      mi->second = get_col(mi->second.get_index());
 }
 
 inline double fract(double rng[], double frac)
@@ -134,7 +134,7 @@ Color Coloring::light(Vec3d vec, Geometry &lts)
   double dot;
   for (unsigned int l = 0; l < lts.verts().size(); l++)
     if ((dot = vdot(vec, lts.verts(l))) > 0)
-      col_sum += dot * lts.colors(VERTS).get(l).get_Vec3d();
+      col_sum += dot * lts.colors(VERTS).get(l).get_vec3d();
 
   for (int j = 0; j < 3; j++)
     if (col_sum[j] > 1)
@@ -256,12 +256,12 @@ void Coloring::face_edge_color(const vector<vector<int>> &elems,
     int first_idx = -1;
     for (int j : v_elems[i]) {
       Color ecol = cols.get(j);
-      if (ecol.is_val()) {
-        col += ecol.get_Vec4d();
+      if (ecol.is_value()) {
+        col += ecol.get_vec4d();
         val_cnt++;
       }
-      else if (first_idx == -1 && ecol.is_idx())
-        first_idx = ecol.get_idx();
+      else if (first_idx == -1 && ecol.is_index())
+        first_idx = ecol.get_index();
     }
     if (val_cnt)
       get_geom()->colors(VERTS).set(i, Color(col / double(val_cnt)));
@@ -503,12 +503,12 @@ void Coloring::e_face_color()
     int first_idx = -1;
     for (int j : efaces[i]) {
       Color fcol = get_geom()->colors(FACES).get(j);
-      if (fcol.is_val()) {
-        col += fcol.get_Vec4d();
+      if (fcol.is_value()) {
+        col += fcol.get_vec4d();
         val_cnt++;
       }
-      else if (first_idx == -1 && fcol.is_idx())
-        first_idx = fcol.get_idx();
+      else if (first_idx == -1 && fcol.is_index())
+        first_idx = fcol.get_index();
     }
     if (val_cnt)
       get_geom()->colors(EDGES).set(i, Color(col / double(val_cnt)));

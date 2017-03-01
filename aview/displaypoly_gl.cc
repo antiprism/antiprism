@@ -61,7 +61,7 @@ void gl_set_material(Color col = Vec3d(.5, .5, .5), bool trans = true,
 
 void gl_set_material(Color col, bool trans, int sides)
 {
-  Vec4d cv = col.get_Vec4d();
+  Vec4d cv = col.get_vec4d();
   GLfloat f_specular[] = {(GLfloat)cv[0] / 2, (GLfloat)cv[1] / 2,
                           (GLfloat)cv[2] / 2, 1.0};
   GLfloat f_diffuse[] = {(GLfloat)cv[0], (GLfloat)cv[1], (GLfloat)cv[2], 1.0};
@@ -88,11 +88,11 @@ void DisplayPoly_gl::gl_verts(const Scene &scen)
   const vector<Vec3d> &verts = disp_geom.verts();
   for (unsigned int i = 0; i < verts.size(); i++) {
     Color col = disp_geom.colors(VERTS).get((int)i);
-    if (col.is_idx())
-      col = clrng(VERTS).get_col(col.get_idx());
-    if (!col.is_val())
+    if (col.is_index())
+      col = clrng(VERTS).get_col(col.get_index());
+    if (!col.is_value())
       col = def_col(VERTS); // use default
-    if (col.is_inv())
+    if (col.is_invisible())
       continue;
 
     gl_set_material(col, get_elem_trans(), GL_FRONT);
@@ -131,11 +131,11 @@ void DisplayPoly_gl::gl_edges(const Scene &scen)
   const vector<vector<int>> &edges = disp_geom.edges();
   for (unsigned int i = 0; i < edges.size(); i++) {
     Color col = disp_geom.colors(EDGES).get((int)i);
-    if (col.is_idx())
-      col = clrng(EDGES).get_col(col.get_idx());
-    if (!col.is_val())
+    if (col.is_index())
+      col = clrng(EDGES).get_col(col.get_index());
+    if (!col.is_value())
       col = def_col(EDGES); // use default
-    if (col.is_inv())
+    if (col.is_invisible())
       continue;
 
     gl_set_material(col, get_elem_trans(), GL_FRONT);
@@ -156,11 +156,11 @@ void DisplayPoly_gl::gl_faces(const Scene &)
     if (faces[i].size() < 3)
       continue;
     Color col = disp_geom.colors(FACES).get((int)i);
-    if (col.is_idx())
-      col = clrng(FACES).get_col(col.get_idx());
-    if (!col.is_val())
+    if (col.is_index())
+      col = clrng(FACES).get_col(col.get_index());
+    if (!col.is_value())
       col = def_col(FACES); // use default
-    if (col.is_inv())
+    if (col.is_invisible())
       continue;
     if (show_orientation) {
       gl_set_material(Color(1.0, 1.0, 1.0), get_elem_trans(), GL_FRONT);
@@ -273,7 +273,7 @@ void DisplayNumLabels_gl::gl_verts(const Scene &scen)
   char label[64];
   const vector<Vec3d> &verts = geom.verts();
   for (unsigned int i = 0; i < verts.size(); i++) {
-    if (geom.colors(VERTS).get((int)i).is_inv())
+    if (geom.colors(VERTS).get((int)i).is_invisible())
       continue;
     sprintf(label, "%u", i);
     gl_write_label(label, sc_geom->get_v_label_pos(i), scen.cur_camera());
@@ -287,7 +287,7 @@ void DisplayNumLabels_gl::gl_edges(const Scene &scen)
   char label[64];
   const vector<vector<int>> &edges = geom.edges();
   for (unsigned int i = 0; i < edges.size(); i++) {
-    if (geom.colors(EDGES).get((int)i).is_inv())
+    if (geom.colors(EDGES).get((int)i).is_invisible())
       continue;
     sprintf(label, "%u", i);
     gl_write_label(label, sc_geom->get_e_label_pos(i), scen.cur_camera());
@@ -301,7 +301,7 @@ void DisplayNumLabels_gl::gl_faces(const Scene &scen)
   char label[64];
   const vector<vector<int>> &faces = geom.faces();
   for (unsigned int i = 0; i < faces.size(); i++) {
-    if (geom.colors(FACES).get((int)i).is_inv())
+    if (geom.colors(FACES).get((int)i).is_invisible())
       continue;
     sprintf(label, "%u", i);
     gl_write_label(label, sc_geom->get_f_label_pos(i), scen.cur_camera());

@@ -48,9 +48,9 @@ bool Color::operator==(Color c) const
 {
   if (!is_set() && !c.is_set())
     return true;
-  if (is_idx() && c.is_idx() && get_idx() == c.get_idx())
+  if (is_index() && c.is_index() && get_index() == c.get_index())
     return true;
-  if (is_val() && c.is_val() && memcmp(rgba, c.rgba, 4) == 0)
+  if (is_value() && c.is_value() && memcmp(rgba, c.rgba, 4) == 0)
     return true;
   return false;
 }
@@ -60,8 +60,8 @@ bool operator<(const Color &c1, const Color &c2)
   if (!c1.is_set())
     return c2.is_set();
 
-  if (c1.is_idx())
-    return c2.is_val() || c1.get_idx() < c2.get_idx();
+  if (c1.is_index())
+    return c2.is_value() || c1.get_index() < c2.get_index();
 
   return c1.get_long() < c2.get_long();
 }
@@ -72,29 +72,31 @@ void Color::dump(const char *var, FILE *file) const
     fprintf(file, "%s=", var);
   if (!is_set())
     fprintf(file, "(not set)\n");
-  else if (is_inv())
+  else if (is_invisible())
     fprintf(file, "invisible\n");
-  else if (is_idx())
-    fprintf(file, "%d (index)\n", get_idx());
+  else if (is_index())
+    fprintf(file, "%d (index)\n", get_index());
   else
     fprintf(file, "(%d,%d,%d,%d)\n", rgba[0], rgba[1], rgba[2], rgba[3]);
 }
 
-void Color::set_complement(Color col)
+bool Color::set_complement(Color col)
 {
   const Color &base_col = col.is_set() ? col : *this;
-  if (base_col.is_val()) {
+  if (base_col.is_value()) {
     for (int i = 0; i < 3; i++)
       rgba[i] = ~base_col.rgba[i];
   }
   else
     unset();
+
+  return is_set();
 }
 
-void Color::set_brightness(double brt_val, Color col)
+bool Color::set_brightness(double brt_val, Color col)
 {
   const Color &base_col = col.is_set() ? col : *this;
-  if (base_col.is_val()) {
+  if (base_col.is_value()) {
     if (brt_val > 1.0)
       brt_val = 1.0;
     else if (brt_val < -1.0)
@@ -110,6 +112,8 @@ void Color::set_brightness(double brt_val, Color col)
   }
   else
     unset();
+
+  return is_set();
 }
 
 // The following RGB / HSV functions are taken from
@@ -231,7 +235,7 @@ static void HSVtoRGB(double *r, double *g, double *b, double h, double s,
   }
 }
 
-void Color::set_hsva(double hue, double sat, double val, double alpha)
+bool Color::set_hsva(double hue, double sat, double val, double alpha)
 {
   double *hsva[] = {&hue, &sat, &val, &alpha};
   for (int i = 1; i < 4; i++) { // skip i=0 as hue can wrap
@@ -243,18 +247,18 @@ void Color::set_hsva(double hue, double sat, double val, double alpha)
 
   double r, g, b;
   HSVtoRGB(&r, &g, &b, hue, sat, val);
-  set_rgba(r, g, b, alpha);
+  return set_rgba(r, g, b, alpha);
 }
 
-void Color::set_hsva(const Vec4d &hsva)
+bool Color::set_hsva(const Vec4d &hsva)
 {
-  set_hsva(hsva[0], hsva[1], hsva[2], hsva[3]);
+  return set_hsva(hsva[0], hsva[1], hsva[2], hsva[3]);
 }
 
 Vec4d Color::get_hsva() const
 {
   Vec4d hsva;
-  Vec4d rgba_d = get_Vec4d();
+  Vec4d rgba_d = get_vec4d();
   RGBtoHSV(rgba_d[0], rgba_d[1], rgba_d[2], &hsva[0], &hsva[1], &hsva[2]);
   hsva[3] = rgba_d[3];
   return hsva;
@@ -356,7 +360,7 @@ static Color HSL2RGB(Vec4d c1)
   return (Color(c2[0], c2[1], c2[2], c1[3]));
 }
 
-void Color::set_hsla(double hue, double sat, double light, double alpha)
+bool Color::set_hsla(double hue, double sat, double light, double alpha)
 {
   double *hsla[] = {&hue, &sat, &light, &alpha};
   for (int i = 1; i < 4; i++) {
@@ -367,11 +371,12 @@ void Color::set_hsla(double hue, double sat, double light, double alpha)
   }
 
   *this = HSL2RGB(Vec4d(*hsla[0], *hsla[1], *hsla[2], *hsla[3]));
+  return is_set();
 }
 
-void Color::set_hsla(const Vec4d &hsla)
+bool Color::set_hsla(const Vec4d &hsla)
 {
-  set_hsla(hsla[0], hsla[1], hsla[2], hsla[3]);
+  return set_hsla(hsla[0], hsla[1], hsla[2], hsla[3]);
 }
 
 Vec4d Color::get_hsla() const { return RGB2HSL(*this); }
@@ -587,7 +592,7 @@ Status Color::read_colorname(char *str, bool as_index)
     for (unsigned int i = 0; *named_colors[i].name; i++) {
       if (strcmp(str, named_colors[i].name) == 0) {
         if (as_index)
-          set_idx(i);
+          set_index(i);
         else {
           set_rgba(named_colors[i].r, named_colors[i].g, named_colors[i].b);
           break;
@@ -703,7 +708,7 @@ double ryb_to_hsx(double angle)
 
 Color rgb_complement(const Color &col, bool ryb_mode)
 {
-  if (!col.is_val() || col.is_inv())
+  if (!col.is_value() || col.is_invisible())
     return col;
 
   // only need hue so algorithm doesn't matter
@@ -778,13 +783,13 @@ Color blend_HSX_centroid(const vector<Color> &cols, int color_system_mode,
   Vec4d sum(0.0, 0.0, 0.0, 0.0);
   for (auto col : cols) {
     // indexes, invisible or unset are not averaged in
-    if (col.is_idx()) {
+    if (col.is_index()) {
       if (!map_found.is_set())
         map_found = col;
       cols_sz--;
       continue;
     }
-    else if (col.is_inv()) {
+    else if (col.is_invisible()) {
       invisible_found = true;
       cols_sz--;
       continue;
@@ -905,13 +910,13 @@ Color blend_RGB_centroid(const vector<Color> &cols, int alpha_mode,
   Vec4d col(0.0, 0.0, 0.0, 0.0);
   for (auto i : cols) {
     // indexes, invisible or unset are not averaged in
-    if (i.is_idx()) {
+    if (i.is_index()) {
       if (!map_found.is_set())
         map_found = i;
       cols_sz--;
       continue;
     }
-    else if (i.is_inv()) {
+    else if (i.is_invisible()) {
       invisible_found = true;
       cols_sz--;
       continue;
@@ -930,11 +935,11 @@ Color blend_RGB_centroid(const vector<Color> &cols, int alpha_mode,
       rcol.set_hsva(hsxa);
     }
 
-    double A = 1.0 - rcol.get_transd();
+    double A = 1.0 - rcol.get_transparency_d();
     alpha_min = (A < alpha_min) ? A : alpha_min;
     alpha_max = (A > alpha_max) ? A : alpha_max;
 
-    col += rcol.get_Vec4d();
+    col += rcol.get_vec4d();
   }
 
   // if no colors are being averaged, all are a mix of unset, indexes, and/or
@@ -960,7 +965,7 @@ Color blend_RGB_centroid(const vector<Color> &cols, int alpha_mode,
     Vec4d hsxa = rcol.get_hsva();
     hsxa[0] = ryb_to_hsx(rad2deg(2 * M_PI * hsxa[0])) / 360.0;
     rcol.set_hsva(hsxa);
-    col = rcol.get_Vec4d();
+    col = rcol.get_vec4d();
   }
 
   if (alpha_mode > 1)

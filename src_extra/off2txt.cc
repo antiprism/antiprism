@@ -270,7 +270,7 @@ void print_hedron_txt(FILE *ofile, Geometry &geom, const int &sig_digits,
 
     if (estimate_colors) {
       Color col = geom.colors(FACES).get((int)i);
-      if (col.is_val())
+      if (col.is_value())
         fprintf(ofile, "%s", estimated_color(col).c_str());
     }
 

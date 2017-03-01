@@ -560,7 +560,7 @@ Color plot_hsx_point(Geometry &geom, Color &col, int color_system_mode,
                      int chroma_level, bool ryb_mode, bool seven_mode,
                      double brightness_adj)
 {
-  if (!col.is_val())
+  if (!col.is_value())
     return col;
 
   if (brightness_adj)
@@ -653,7 +653,7 @@ Geometry make_cube()
 Color plot_rgb_point(Geometry &geom, Color &col, bool ryb_mode,
                      double brightness_adj)
 {
-  if (!col.is_val())
+  if (!col.is_value())
     return col;
 
   if (brightness_adj)
@@ -720,7 +720,7 @@ void color_grid(Geometry &geom, const vector<Color> &cols)
   for (int i = 0; i < dim; i++) {
     for (int j = 0; j < dim; j++) {
       Geometry tgeom = sgeom;
-      if (k < cols_sz && cols[k].is_idx()) {
+      if (k < cols_sz && cols[k].is_index()) {
         tgeom.add_vert(Vec3d(0.5, 0.45, 0.0), Color(0.0, 0.0, 0.0));
         tgeom.add_vert(Vec3d(0.5, 0.55, 0.0), Color(1.0, 1.0, 1.0));
         tgeom.add_edge(make_edge(4, 5), Color(0.5, 0.5, 0.5));
@@ -728,7 +728,7 @@ void color_grid(Geometry &geom, const vector<Color> &cols)
       tgeom.transform(Trans3d::transl(Vec3d(i, j, 0)));
       Color c =
           (k >= cols_sz ? Color(Color::invisible)
-                        : (cols[k].is_idx() ? cols[k].get_idx() : cols[k]));
+                        : (cols[k].is_index() ? cols[k].get_index() : cols[k]));
       k++;
       tgeom.colors(FACES).set(0, c);
       geom.append(tgeom);
@@ -768,7 +768,7 @@ void collect_col(vector<Color> &cols, const Color &col, bool no_indexes)
 {
   if (!col.is_set())
     return;
-  else if (no_indexes && col.is_idx())
+  else if (no_indexes && col.is_index())
     return;
   cols.push_back(col);
 }
@@ -831,7 +831,7 @@ void collect_cols(vector<Color> &cols, col_util_opts &opts)
   // grid may have indexes
   if (opts.display_type == 3) {
     for (auto &col : cols) {
-      if (col.is_idx()) {
+      if (col.is_index()) {
         opts.warning("color indexes detected. unmapped cells will result");
         break;
       }
@@ -872,8 +872,8 @@ int main(int argc, char *argv[])
     }
     for (unsigned int i = 0; i < cols.size(); i++) {
       if (opts.map_type == 3) {
-        if (cols[i].is_val()) {
-          Vec4d c = cols[i].get_Vec4d();
+        if (cols[i].is_value()) {
+          Vec4d c = cols[i].get_vec4d();
           fprintf(ofile, "%g%s %g%s %g%s %g%s\n", c[0],
                   (c[0] == 1.0 || c[0] == 0.0) ? ".0" : "", c[1],
                   (c[1] == 1.0 || c[1] == 0.0) ? ".0" : "", c[2],
@@ -888,11 +888,11 @@ int main(int argc, char *argv[])
         buffer[0] = '\0';
         if (cols[i][3] != 255)
           sprintf(buffer, "%3d", cols[i][3]);
-        if (cols[i].is_val())
+        if (cols[i].is_value())
           fprintf(ofile, "%3d %3d %3d %s\n", cols[i][0], cols[i][1], cols[i][2],
                   buffer);
         else
-          fprintf(ofile, "%3d\n", cols[i].get_idx());
+          fprintf(ofile, "%3d\n", cols[i].get_index());
       }
     }
     if (opts.ofile != "")

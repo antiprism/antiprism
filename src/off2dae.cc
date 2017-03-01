@@ -219,11 +219,11 @@ void Collada_writer::add_col2elems(DisplayPoly &disp,
     const vector<Vec3d> &vs = disp.get_disp_geom().verts();
     for (unsigned int i = 0; i < vs.size(); i++) {
       Color col = disp.get_disp_geom().colors(VERTS).get((int)i);
-      if (col.is_idx())
-        col = disp.clrng(VERTS).get_col(col.get_idx());
-      if (!col.is_val())
+      if (col.is_index())
+        col = disp.clrng(VERTS).get_col(col.get_index());
+      if (!col.is_value())
         col = disp.def_col(VERTS); // use default
-      if (col.is_val() && !col.is_inv())
+      if (col.is_value() && !col.is_invisible())
         col2elems[0][col].push_back(i);
     }
   }
@@ -231,11 +231,11 @@ void Collada_writer::add_col2elems(DisplayPoly &disp,
     const vector<vector<int>> &es = disp.get_disp_geom().edges();
     for (unsigned int i = 0; i < es.size(); i++) {
       Color col = disp.get_disp_geom().colors(EDGES).get((int)i);
-      if (col.is_idx())
-        col = disp.clrng(EDGES).get_col(col.get_idx());
-      if (!col.is_val())
+      if (col.is_index())
+        col = disp.clrng(EDGES).get_col(col.get_index());
+      if (!col.is_value())
         col = disp.def_col(EDGES); // use default
-      if (col.is_val() && !col.is_inv())
+      if (col.is_value() && !col.is_invisible())
         col2elems[1][col].push_back(i);
     }
   }
@@ -245,11 +245,11 @@ void Collada_writer::add_col2elems(DisplayPoly &disp,
       if (fs[i].size() < 3) // skip degenerate polygons
         continue;
       Color col = disp.get_disp_geom().colors(FACES).get((int)i);
-      if (col.is_idx())
-        col = disp.clrng(FACES).get_col(col.get_idx());
-      if (!col.is_val())
+      if (col.is_index())
+        col = disp.clrng(FACES).get_col(col.get_index());
+      if (!col.is_value())
         col = disp.def_col(FACES); // use default
-      if (col.is_val() && !col.is_inv())
+      if (col.is_value() && !col.is_invisible())
         col2elems[2][col].push_back(i);
     }
   }
@@ -325,7 +325,7 @@ void Collada_writer::print_effect(const Color &col, const string &col_str)
   print_open(XML_elem("technique").add_attr("sid", "common"));
   print_open("phong");
 
-  Vec4d cv = col.get_Vec4d();
+  Vec4d cv = col.get_vec4d();
   in_line();
   print_open("diffuse");
   print_open("color");
@@ -589,11 +589,11 @@ void Collada_writer::print_library_visual_scene_verts(DisplayPoly &disp,
   const Geometry &dgeom = disp.get_disp_geom();
   for (unsigned int i = 0; i < dgeom.verts().size(); i++) {
     Color col = disp.get_disp_geom().colors(VERTS).get((int)i);
-    if (col.is_idx())
-      col = disp.clrng(VERTS).get_col(col.get_idx());
-    if (!col.is_val())
+    if (col.is_index())
+      col = disp.clrng(VERTS).get_col(col.get_index());
+    if (!col.is_value())
       col = disp.def_col(VERTS); // use default
-    if (col.is_val() && !col.is_inv()) {
+    if (col.is_value() && !col.is_invisible()) {
       print_open("node");
 
       print_open_close("translate", format_vec(dgeom.verts(i), 8));
@@ -622,11 +622,11 @@ void Collada_writer::print_library_visual_scene_edges(DisplayPoly &disp,
   const Geometry &dgeom = disp.get_disp_geom();
   for (unsigned int i = 0; i < dgeom.edges().size(); i++) {
     Color col = disp.get_disp_geom().colors(EDGES).get((int)i);
-    if (col.is_idx())
-      col = disp.clrng(EDGES).get_col(col.get_idx());
-    if (!col.is_val())
+    if (col.is_index())
+      col = disp.clrng(EDGES).get_col(col.get_index());
+    if (!col.is_value())
       col = disp.def_col(EDGES); // use default
-    if (col.is_val() && !col.is_inv()) {
+    if (col.is_value() && !col.is_invisible()) {
       print_open("node");
 
       Vec3d mid = dgeom.edge_cent(i);

@@ -155,19 +155,19 @@ void o2m_opts::process_command_line(int argc, char **argv)
 
     case 'F':
       print_status_or_exit(face_col.read(optarg), c);
-      if (face_col.is_inv())
+      if (face_col.is_invisible())
         error("face color may not be invisible", c);
       break;
 
     case 'E':
       print_status_or_exit(edge_col.read(optarg), c);
-      if (edge_col.is_inv())
+      if (edge_col.is_invisible())
         error("edge color may not be invisible", c);
       break;
 
     case 'V':
       print_status_or_exit(vert_col.read(optarg), c);
-      if (vert_col.is_inv())
+      if (vert_col.is_invisible())
         error("vert color may not be invisible", c);
       break;
 
@@ -208,7 +208,7 @@ void o2m_opts::process_command_line(int argc, char **argv)
 string RGBtxt(const Color &col)
 {
   char buf[128];
-  Vec3d cv = col.get_Vec3d();
+  Vec3d cv = col.get_vec3d();
   snprintf(buf, 128, "RGBColor[%g, %g, %g]", cv[0], cv[1], cv[2]);
   return buf;
 }
@@ -239,8 +239,8 @@ int get_last_visible(const Geometry &geom, const int &elem_type,
                                 : (elem_type == 2 ? geom.colors(EDGES).get(i)
                                                   : geom.colors(FACES).get(i)));
 
-    col = col.is_val() ? col : def_col;
-    if (!col.is_inv()) {
+    col = col.is_value() ? col : def_col;
+    if (!col.is_invisible()) {
       last = i;
       break;
     }
@@ -263,8 +263,8 @@ int print_m_solid(FILE *ofile, const Geometry &geom, const int &sig_digits,
     fprintf(ofile, "{");
 
     Color fcol = geom.colors(FACES).get(i);
-    fcol = fcol.is_val() ? fcol : face_col;
-    if (fcol.is_inv())
+    fcol = fcol.is_value() ? fcol : face_col;
+    if (fcol.is_invisible())
       continue;
     string RGB = RGBtxt(fcol);
     fprintf(ofile, "FaceForm[ %s, %s ],\n", RGB.c_str(), RGB.c_str());
@@ -311,8 +311,8 @@ int print_m_frame(FILE *ofile, const Geometry &geom, const int &sig_digits,
 
   for (int i = 0; i <= last; i++) {
     Color ecol = geom.colors(EDGES).get(i);
-    ecol = ecol.is_val() ? ecol : edge_col;
-    if (ecol.is_inv())
+    ecol = ecol.is_value() ? ecol : edge_col;
+    if (ecol.is_invisible())
       continue;
     print_m_frame_edge(ofile, verts[edges[i][0]], verts[edges[i][1]],
                        sig_digits, edge_size, ecol);
@@ -336,8 +336,8 @@ int print_m_points(FILE *ofile, const Geometry &geom, const int &sig_digits,
 
   for (int i = 0; i <= last; i++) {
     Color vcol = geom.colors(VERTS).get(i);
-    vcol = vcol.is_val() ? vcol : vert_col;
-    if (vcol.is_inv())
+    vcol = vcol.is_value() ? vcol : vert_col;
+    if (vcol.is_invisible())
       continue;
     fprintf(ofile, "{");
     if (vcol.is_set())
@@ -394,7 +394,7 @@ int main(int argc, char *argv[])
   Geometry geom;
   opts.read_or_error(geom, opts.ifile);
 
-  if (!opts.edge_col.is_inv())
+  if (!opts.edge_col.is_invisible())
     geom.add_missing_impl_edges();
 
   if (opts.f_dtype == 1)

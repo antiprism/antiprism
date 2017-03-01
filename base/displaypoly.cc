@@ -57,13 +57,13 @@ DisplayPoly::DisplayPoly()
 Color DisplayPoly::def_col(int type)
 {
   Color col = elem(type).get_col();
-  if (col.is_idx())
-    col = clrng(type).get_col(col.get_idx());
+  if (col.is_index())
+    col = clrng(type).get_col(col.get_index());
 
   Color def_cols[]{Color(1.0, 0.5, 0.0), Color(0.8, 0.6, 0.8),
                    Color(0.8, 0.9, 0.9)};
 
-  return col.is_val() ? col : def_cols[type];
+  return col.is_value() ? col : def_cols[type];
 }
 
 void DisplayPoly::geom_changed()
@@ -179,7 +179,7 @@ void DisplayPoly::vrml_protos(FILE *ofile)
                  "   }\n"
                  "}\n",
           dots2underscores(sc_geom->get_name()).c_str(), vrml_col(vcol).c_str(),
-          vcol.get_transd(), get_vert_rad());
+          vcol.get_transparency_d(), get_vert_rad());
 
   Color ecol = def_col(EDGES);
   fprintf(ofile, "\n"
@@ -212,7 +212,7 @@ void DisplayPoly::vrml_protos(FILE *ofile)
                  "   }\n"
                  "}\n",
           dots2underscores(sc_geom->get_name()).c_str(), vrml_col(ecol).c_str(),
-          ecol.get_transd(), get_edge_rad());
+          ecol.get_transparency_d(), get_edge_rad());
 
   Color fcol = def_col(FACES);
   fprintf(ofile, "\n"
@@ -239,7 +239,7 @@ void DisplayPoly::vrml_protos(FILE *ofile)
                  "  }\n"
                  "}\n",
           dots2underscores(sc_geom->get_name()).c_str(), vrml_col(fcol).c_str(),
-          fcol.get_transd());
+          fcol.get_transparency_d());
 
   fprintf(ofile, "\n"
                  "PROTO F_%s [\n"
@@ -268,7 +268,7 @@ void DisplayPoly::vrml_protos(FILE *ofile)
                  "}\n",
           dots2underscores(sc_geom->get_name()).c_str(),
           /*vrml_col(fcol).c_str(),*/
-          fcol.get_transd());
+          fcol.get_transparency_d());
 }
 
 void DisplayPoly::vrml_coords(FILE *ofile, int sig_digits)
@@ -298,17 +298,17 @@ void DisplayPoly::vrml_verts(FILE *ofile, int sig_digits)
 
   const vector<Vec3d> &vs = disp_geom.verts();
   for (unsigned int i = 0; i < sc_geom->get_geom().verts().size(); i++) {
-    if (disp_geom.colors(VERTS).get(i).is_inv())
+    if (disp_geom.colors(VERTS).get(i).is_invisible())
       continue;
     fprintf(ofile, "V_%s { C %s ",
             dots2underscores(sc_geom->get_name()).c_str(),
             vrml_vec(vs[i], sig_digits).c_str());
     Color col = disp_geom.colors(VERTS).get(i);
-    if (col.is_idx())
-      col = clrng(FACES).get_col(col.get_idx());
-    if (col.is_val())
+    if (col.is_index())
+      col = clrng(FACES).get_col(col.get_index());
+    if (col.is_value())
       fprintf(ofile, "clr %s trn %.4f", vrml_col(col).c_str(),
-              col.get_transd());
+              col.get_transparency_d());
     fprintf(ofile, "}\n");
   }
 
@@ -343,7 +343,7 @@ void DisplayPoly::vrml_edges(FILE *ofile)
   const vector<Vec3d> &vs = disp_geom.verts();
   const vector<vector<int>> &es = disp_geom.edges();
   for (unsigned int i = 0; i < es.size(); i++) {
-    if (disp_geom.colors(EDGES).get((int)i).is_inv())
+    if (disp_geom.colors(EDGES).get((int)i).is_invisible())
       continue;
     Vec3d mid = (vs[es[i][0]] + vs[es[i][1]]) / 2.0;
     Vec3d dir = vs[es[i][0]] - vs[es[i][1]];
@@ -357,11 +357,11 @@ void DisplayPoly::vrml_edges(FILE *ofile)
             vrml_vec(axis, 8 /*sig_digits*/).c_str(), ang, ht);
 
     Color col = disp_geom.colors(EDGES).get((int)i);
-    if (col.is_idx())
-      col = clrng(EDGES).get_col(col.get_idx());
-    if (col.is_val())
+    if (col.is_index())
+      col = clrng(EDGES).get_col(col.get_index());
+    if (col.is_value())
       fprintf(ofile, "clr %s trn %.4f", vrml_col(col).c_str(),
-              col.get_transd());
+              col.get_transparency_d());
     fprintf(ofile, "}\n");
   }
 
@@ -385,7 +385,7 @@ void DisplayPoly::vrml_edges_l(FILE *ofile)
 
   const vector<vector<int>> &es = disp_geom.edges();
   for (unsigned int i = 0; i < es.size(); i++) {
-    if (!disp_geom.colors(EDGES).get((int)i).is_inv()) {
+    if (!disp_geom.colors(EDGES).get((int)i).is_invisible()) {
       fprintf(ofile, "%d %d -1  ", es[i][0], es[i][1]);
       if (!(i % 6))
         fprintf(ofile, "\n");
@@ -410,11 +410,11 @@ void DisplayPoly::vrml_faces(FILE *ofile)
     int alpha = -1;
 
     Color col = disp_geom.colors(FACES).get((int)i);
-    if (col.is_idx())
-      col = clrng(FACES).get_col(col.get_idx());
-    if (col.is_inv())
+    if (col.is_index())
+      col = clrng(FACES).get_col(col.get_index());
+    if (col.is_invisible())
       continue;
-    if (col.is_val())
+    if (col.is_value())
       alpha = col[3];
     f_alpha[alpha].push_back(i);
   }
@@ -441,8 +441,8 @@ void DisplayPoly::vrml_faces(FILE *ofile)
         if (fs[idx].size() < 3) // skip degenerate polygons
           continue;
         Color col = disp_geom.colors(FACES).get((int)idx);
-        if (col.is_idx())
-          col = clrng(FACES).get_col(col.get_idx());
+        if (col.is_index())
+          col = clrng(FACES).get_col(col.get_index());
         fprintf(ofile, "%s, ", vrml_col(col).c_str());
         if (!((++f_cnt) % 3))
           fprintf(ofile, "\n\t");
@@ -589,8 +589,8 @@ void DisplayPoly::pov_vert_arrays(FILE *ofile, int sig_digits)
                  "#declare v_cols = array [num_verts]\n");
   for (unsigned int i = 0; i < vs.size(); i++) {
     Color col = disp_geom.colors(VERTS).get((int)i);
-    if (col.is_idx())
-      col = clrng(VERTS).get_col(col.get_idx());
+    if (col.is_index())
+      col = clrng(VERTS).get_col(col.get_index());
     if (col.is_set())
       fprintf(ofile, "#declare v_cols[%d]=%s;\n", i, pov_col(col).c_str());
   }
@@ -617,8 +617,8 @@ void DisplayPoly::pov_edge_arrays(FILE *ofile)
                  "#declare e_cols = array [num_edges]\n");
   for (unsigned int i = 0; i < es.size(); i++) {
     Color col = disp_geom.colors(EDGES).get((int)i);
-    if (col.is_idx())
-      col = clrng(EDGES).get_col(col.get_idx());
+    if (col.is_index())
+      col = clrng(EDGES).get_col(col.get_index());
     if (col.is_set())
       fprintf(ofile, "#declare e_cols[%d]=%s;\n", i, pov_col(col).c_str());
   }
@@ -654,8 +654,8 @@ void DisplayPoly::pov_face_arrays(FILE *ofile)
                  "#declare f_cols = array [num_faces]\n");
   for (unsigned int i = 0; i < fs.size(); i++) {
     Color col = disp_geom.colors(FACES).get((int)i);
-    if (col.is_idx())
-      col = clrng(FACES).get_col(col.get_idx());
+    if (col.is_index())
+      col = clrng(FACES).get_col(col.get_index());
     if (col.is_set())
       fprintf(ofile, "#declare f_cols[%d]=%s;\n", i, pov_col(col).c_str());
   }
@@ -909,7 +909,7 @@ void DisplayNumLabels::vrml_verts(FILE *ofile)
   fprintf(ofile, "# Vertex number labels\n");
   int v_sz = geom.verts().size();
   for (int i = 0; i < v_sz; i++) {
-    if (geom.colors(VERTS).get((int)i).is_inv())
+    if (geom.colors(VERTS).get((int)i).is_invisible())
       continue;
     fprintf(ofile, "VLAB { txt \"%d\" pos %s }\n", i,
             vrml_vec(sc_geom->get_v_label_pos(i), 4).c_str());
@@ -923,7 +923,7 @@ void DisplayNumLabels::vrml_edges(FILE *ofile)
   fprintf(ofile, "# Edge number labels\n");
   int e_sz = geom.edges().size();
   for (int i = 0; i < e_sz; i++) {
-    if (geom.colors(EDGES).get((int)i).is_inv())
+    if (geom.colors(EDGES).get((int)i).is_invisible())
       continue;
     fprintf(ofile, "ELAB { txt \"%d\" pos %s }\n", i,
             vrml_vec(sc_geom->get_e_label_pos(i), 4).c_str());
@@ -937,7 +937,7 @@ void DisplayNumLabels::vrml_faces(FILE *ofile)
   fprintf(ofile, "# Face number labels\n");
   int f_sz = geom.faces().size();
   for (int i = 0; i < f_sz; i++) {
-    if (geom.colors(FACES).get((int)i).is_inv())
+    if (geom.colors(FACES).get((int)i).is_invisible())
       continue;
     fprintf(ofile, "FLAB { txt \"%d\" pos %s }\n", i,
             vrml_vec(sc_geom->get_f_label_pos(i), 4).c_str());

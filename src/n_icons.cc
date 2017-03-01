@@ -3291,7 +3291,7 @@ void reassert_colored_verts(Geometry &geom, const Color &default_color,
     Color c = geom.colors(EDGES).get(i);
     // if its index or it is a value and is completely opaque and not the unused
     // edge color
-    if (c.is_set() && (c.is_idx() || !c.get_trans()) &&
+    if (c.is_set() && (c.is_index() || !c.get_transparency()) &&
         c != unused_edge_color) {
       int v1 = edges[i][0];
       int v2 = edges[i][1];
@@ -3314,7 +3314,7 @@ void unset_marked_edges(Geometry &geom)
   // vector<int> deleted_edges;
   for (unsigned int i = 0; i < edges.size(); i++) {
     Color c = geom.colors(EDGES).get(i);
-    if (c.is_idx() && c == INT_MAX) {
+    if (c.is_index() && c == INT_MAX) {
       geom.colors(EDGES).set(i, Color());
       // deleted_edges.push_back(i);
     }
@@ -3322,7 +3322,7 @@ void unset_marked_edges(Geometry &geom)
 
   for (unsigned int i = 0; i < verts.size(); i++) {
     Color c = geom.colors(VERTS).get(i);
-    if (c.is_idx() && c == INT_MAX) {
+    if (c.is_index() && c == INT_MAX) {
       geom.colors(VERTS).set(i, Color());
     }
   }
@@ -3341,7 +3341,7 @@ Color set_alpha(const Color &c, const int a)
 void set_vert_color(Geometry &geom, const int i, Color c,
                     const int opacity = -1)
 {
-  if (c.is_val() && !c.is_inv() && opacity != -1)
+  if (c.is_value() && !c.is_invisible() && opacity != -1)
     c = set_alpha(c, opacity);
   geom.colors(VERTS).set(i, c);
 }
@@ -3349,7 +3349,7 @@ void set_vert_color(Geometry &geom, const int i, Color c,
 void set_edge_col(Geometry &geom, const int i, Color c,
                   const int opacity = -1)
 {
-  if (c.is_val() && !c.is_inv() && opacity != -1)
+  if (c.is_value() && !c.is_invisible() && opacity != -1)
     c = set_alpha(c, opacity);
   geom.colors(EDGES).set(i, c);
 }
@@ -3357,7 +3357,7 @@ void set_edge_col(Geometry &geom, const int i, Color c,
 void set_face_color(Geometry &geom, const int i, Color c,
                     const int opacity = -1)
 {
-  if (c.is_val() && !c.is_inv() && opacity != -1)
+  if (c.is_value() && !c.is_invisible() && opacity != -1)
     c = set_alpha(c, opacity);
   geom.colors(FACES).set(i, c);
 }
@@ -4030,7 +4030,7 @@ int ncon_face_Coloring_by_adjacent_face(Geometry &geom,
         sz = idx.size();
         if (sz) {
           int f_idx = face_list[idx[0]]->face_no;
-          int k = geom.colors(FACES).get(f_idx).get_idx();
+          int k = geom.colors(FACES).get(f_idx).get_index();
           fprintf(stderr, "%d ", k);
         }
         lat++;
@@ -4106,8 +4106,8 @@ int ncon_face_Coloring_by_adjacent_face(Geometry &geom,
   // resolve map indexes
   for (unsigned int i = 0; i < geom.faces().size(); i++) {
     Color c_idx = geom.colors(FACES).get(i);
-    if (c_idx.is_idx()) {
-      int idx = c_idx.get_idx();
+    if (c_idx.is_index()) {
+      int idx = c_idx.get_index();
       idx = color_table[idx];
       Color c = opts.face_map.get_col(idx);
       int opq = 255;
@@ -4149,7 +4149,7 @@ void ncon_edge_Coloring_by_adjacent_edge(Geometry &geom,
     for (unsigned int i = 0; i < geom.edges().size(); i++) {
       Color c = geom.colors(EDGES).get(i);
       // need to include invisible edges or crash
-      if ((c.is_idx() && c == INT_MAX) || c.is_inv()) {
+      if ((c.is_index() && c == INT_MAX) || c.is_invisible()) {
         edges.push_back(geom.edges(i));
         edge_no.push_back(i);
       }
@@ -4159,7 +4159,7 @@ void ncon_edge_Coloring_by_adjacent_edge(Geometry &geom,
   // unset colors
   for (unsigned int i = 0; i < geom.edges().size(); i++) {
     Color c = geom.colors(EDGES).get(i);
-    if (c.is_idx() && c == INT_MAX)
+    if (c.is_index() && c == INT_MAX)
       set_edge_color(geom, i, Color(), 255);
   }
 
@@ -4317,7 +4317,7 @@ void ncon_edge_Coloring_by_adjacent_edge(Geometry &geom,
         int sz = idx.size();
         if (sz) {
           int e_idx = edge_list[idx[0]]->edge_no;
-          int k = geom.colors(EDGES).get(e_idx).get_idx();
+          int k = geom.colors(EDGES).get(e_idx).get_index();
           fprintf(stderr, "%d ", k);
         }
         lat++;
@@ -4329,8 +4329,8 @@ void ncon_edge_Coloring_by_adjacent_edge(Geometry &geom,
   // resolve map indexes
   for (unsigned int i = 0; i < edges.size(); i++) {
     Color c_idx = geom.colors(EDGES).get(edge_no[i]);
-    if (c_idx.is_idx()) {
-      int idx = c_idx.get_idx();
+    if (c_idx.is_index()) {
+      int idx = c_idx.get_index();
       idx = color_table[idx];
       Color c = opts.edge_map.get_col(idx);
       int opq = 255;
@@ -4457,8 +4457,8 @@ void ncon_alternate_compound_Coloring(Geometry &geom, const ncon_opts &opts)
   int part_count = -1;
   for (int i = 0; i < (int)geom.faces().size(); i++) {
     Color c = geom.colors(FACES).get(i);
-    if (c.is_idx()) {
-      int idx = c.get_idx();
+    if (c.is_index()) {
+      int idx = c.get_index();
       if (idx > part_count)
         part_count = idx;
 
@@ -4495,8 +4495,8 @@ Color ncon_average_edge_color(const vector<Color> &cols)
 
   int j = 0;
   for (auto i : cols) {
-    if (i.is_set() && !i.is_idx() && !i.is_inv()) {
-      col += i.get_Vec4d();
+    if (i.is_set() && !i.is_index() && !i.is_invisible()) {
+      col += i.get_vec4d();
       j++;
     }
   }
@@ -4531,14 +4531,14 @@ void ncon_edge_Coloring_from_faces(Geometry &geom, const ncon_opts &opts)
   // save invisible edges
   vector<int> inv_edges;
   for (unsigned int i = 0; i < geom.edges().size(); i++) {
-    if ((geom.colors(EDGES).get(i)).is_inv())
+    if ((geom.colors(EDGES).get(i)).is_invisible())
       inv_edges.push_back(i);
   }
 
   // save invisible verts
   vector<int> inv_verts;
   for (unsigned int i = 0; i < geom.verts().size(); i++) {
-    if ((geom.colors(VERTS).get(i)).is_inv())
+    if ((geom.colors(VERTS).get(i)).is_invisible())
       inv_verts.push_back(i);
   }
 
@@ -4563,7 +4563,7 @@ void mark_edge_circuits(Geometry &geom, const vector<edgeList *> &edge_list)
 {
   for (auto i : edge_list) {
     int j = i->edge_no;
-    if (!geom.colors(EDGES).get(j).is_inv())
+    if (!geom.colors(EDGES).get(j).is_invisible())
       set_edge_color(geom, j, INT_MAX, 255);
   }
 }
@@ -5151,8 +5151,8 @@ void restore_flood_longitude_edges(Geometry &geom,
 
   for (int i = 0; i < (int)edges.size(); i++) {
     Color c = geom.colors(EDGES).get(i);
-    int j = c.get_idx();
-    if (j != INT_MAX && !c.is_inv()) {
+    int j = c.get_index();
+    if (j != INT_MAX && !c.is_invisible()) {
       edge_list.push_back(new edgeList(i, j, opts.longitudes.front() / 2 - 1));
       geom.colors(EDGES).set(i, INT_MAX);
     }
@@ -5182,8 +5182,8 @@ void restore_flood_longitude_faces(Geometry &geom,
   const vector<vector<int>> &faces = geom.faces();
 
   for (int i = 0; i < (int)faces.size(); i++) {
-    if (geom.colors(FACES).get(i).is_idx()) {
-      int j = geom.colors(FACES).get(i).get_idx();
+    if (geom.colors(FACES).get(i).is_index()) {
+      int j = geom.colors(FACES).get(i).get_index();
       face_list.push_back(
           new faceList(i, j, opts.longitudes.front() / 2 - 1, 0));
       geom.colors(FACES).set(i, Color());
@@ -5445,14 +5445,14 @@ void ncon_make_inv_edges_of_inv_faces(Geometry &geom)
   const vector<vector<int>> &edges = geom.edges();
 
   for (unsigned int i = 0; i < edges.size(); i++) {
-    if ((geom.colors(EDGES).get(i)).is_inv())
+    if ((geom.colors(EDGES).get(i)).is_invisible())
       continue;
     vector<int> face_idx = find_faces_with_edge(faces, edges[i]);
     vector<Color> cols;
     for (int j : face_idx)
       cols.push_back(geom.colors(FACES).get(j));
     Color c = ncon_average_edge_color(cols);
-    if (c.is_inv())
+    if (c.is_invisible())
       set_edge_color(geom, i, Color::invisible, 255);
   }
 }
@@ -5943,18 +5943,18 @@ void color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
     for (unsigned int e = 0; e < geom.edges().size(); e++) {
       // marked edges are the ones to be colored
       Color c = geom.colors(EDGES).get(e);
-      if (c.is_idx() && c == INT_MAX) {
+      if (c.is_index() && c == INT_MAX) {
         lookup_edge_color(geom, e, axes, heights, false);
         c = geom.colors(EDGES).get(e);
         // if, because negative radii, the edge center is shifted onto the wrong
         // axis
         // no color will be found for look up, try the other axis
-        if (c.is_idx() && c == INT_MAX) {
+        if (c.is_index() && c == INT_MAX) {
           // not found? try again
           lookup_edge_color(geom, e, axes, heights, true);
           c = geom.colors(EDGES).get(e);
           // if still not found, give up and make it invisible
-          if (c.is_idx() && c == INT_MAX)
+          if (c.is_index() && c == INT_MAX)
             set_edge_color(geom, e, Color::invisible, 255);
         }
       }
@@ -5963,7 +5963,7 @@ void color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
     // occasionally some vertices can be missed
     for (unsigned int i = 0; i < geom.verts().size(); i++) {
       Color c = geom.colors(VERTS).get(i);
-      if (c.is_idx() && c == INT_MAX)
+      if (c.is_index() && c == INT_MAX)
         geom.colors(VERTS).set(i, Color::invisible);
     }
 
@@ -6017,7 +6017,7 @@ void color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
           vector<int> edge = make_edge(face[j], face[(j + 1) % sz]);
           int edge_no = find_edge_in_edge_list(geom.edges(), edge);
           Color c = geom.colors(EDGES).get(edge_no);
-          if ((edge_no != -1) && !c.is_inv()) {
+          if ((edge_no != -1) && !c.is_invisible()) {
             geom.colors(FACES).set(i, c);
             break;
           }

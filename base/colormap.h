@@ -32,6 +32,7 @@
 #include "color.h"
 #include "random.h"
 #include "status.h"
+#include "geometry.h"
 #include <limits.h>
 #include <map>
 #include <vector>
@@ -323,6 +324,47 @@ public:
  *  be freed by the caller with \c delete, \c nullptr is returned for an
  *  invalid map name and the error is detailed in \a stat. */
 ColorMap *colormap_from_name(const char *map_name, Status *stat = nullptr);
+
+
+/// Colour value map to an HSVA range
+class ColorValuesToRangeHsva {
+protected:
+  Color default_color;
+  std::vector<double> ranges[4];
+  Status add_range(int idx, const char *rngs);
+
+public:
+  /// Constructor
+  /**\param range_name string with ranges.
+   * \param def_col default colour for unset colours (processed like others). */
+  ColorValuesToRangeHsva(const std::string &range_name = "",
+                         const Color &def_col = Color());
+
+  /// Initialise
+  /**\param range_name string with ranges
+   * \param def_col default colour for unset colours (processed like others)
+   * \return status, evaluates to \c true if the value map could be initialised
+   *  (possibly with warnings) otherwise \c false. */
+  Status init(const std::string &range_name, const Color &def_col = Color());
+
+  /// Set the default colour
+  /**\param def_col default colour for unset colours (processed like others).*/
+  void set_default_color(const Color &def_col) { default_color = def_col; }
+
+  /// Apply processing to the colour values of a geometry
+  /**\param geom geometry to map colours for.
+   * \param elem_type element type to map colours for. */
+  void apply(anti::Geometry &geom, int elem_type);
+
+  /// Apply processing to colour values in a map
+  /**\param elem_cols element type to map colours for. */
+  void apply(std::map<int, Color> &elem_cols);
+
+  /// Get the processed colour
+  /**\param col the color.
+   * \return The processed colour. */
+  virtual Color get_col(Color col);
+};
 
 // -------------------------------------------------------------------
 // inline functions

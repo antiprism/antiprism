@@ -240,7 +240,7 @@ void clear_def_edges(Geometry &geom)
   vector<int> del_edges;
   int e_sz = geom.edges().size();
   for (int i = 0; i < e_sz; i++) {
-    if (geom.colors(EDGES).get(i).is_def())
+    if (!geom.colors(EDGES).get(i).is_set())
       del_edges.push_back(i);
   }
   geom.del(EDGES, del_edges);

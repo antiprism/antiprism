@@ -57,12 +57,12 @@ string pov_col(const Color &col)
 {
   char buf[MSG_SZ];
   *buf = '\0';
-  if (col.is_val()) {
-    Vec4d cv = col.get_Vec4d();
+  if (col.is_value()) {
+    Vec4d cv = col.get_vec4d();
     snprintf(buf, MSG_SZ, "<%g, %g, %g, %g>", cv[0], cv[1], cv[2], 1 - cv[3]);
   }
-  if (col.is_idx())
-    snprintf(buf, MSG_SZ, "<%d, -1, 0, 0>", col.get_idx());
+  if (col.is_index())
+    snprintf(buf, MSG_SZ, "<%d, -1, 0, 0>", col.get_index());
   return buf;
 }
 
