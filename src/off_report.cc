@@ -70,44 +70,42 @@ public:
   void usage();
 };
 
+// clang-format off
 void or_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options] [input_file]\n"
-      "\n"
-      "Read a file in OFF format and generate a report\n"
-      "\n"
-      "Options\n"
-      "%s"
-      "  -c <cent> centre of shape in form 'X,Y,Z', or C to use\n"
-      "            centroid (default, '0,0,0')\n"
-      "  -S <secs> Print values by sections, given as a list of letters\n"
-      "            A - all                     G - general\n"
-      "            F - faces                   E - edges\n"
-      "            S - solid Angles            a - plane angles\n"
-      "            D - distances (min/max)     s - symmetry\n"
-      "  -C <vals> Print counts of values, given as a list of letters\n"
-      "            A - All                     F - faces type by angles\n"
-      "            E - edge lengths            w - windings\n"
-      "            S - solid angles            D - dihedral angles\n"
-      "            s - face sides              o - vertex orders\n"
-      "            h - vertex heights (z-crds) O - symmetry orbits\n"
-      "  -k        keep orientation, don't try to orient the faces\n"
-      "  -y        subsymmetry for orbits: symmetry subgroup (Schoenflies "
-      "notation)\n"
-      "            optionally followed by a comma and conjugation type "
-      "(integer)\n"
-      "  -E <type> edges for report, e - explicit edges, i - implicit edges\n"
-      "            a - explicit and implicit (default)\n"
-      "  -o <file> write output to file (default: write to standard output)\n"
-      "  -d <dgts> number of significant digits (default 17) or if negative\n"
-      "            then the number of digits after the decimal point\n"
-      "\n"
-      "\n",
-      prog_name(), help_ver_text);
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] [input_file]\n"
+"\n"
+"Read a file in OFF format and generate a report\n"
+"\n"
+"Options\n"
+"%s"
+"  -c <cent> centre of shape in form 'X,Y,Z', or C to use\n"
+"            centroid (default, '0,0,0')\n"
+"  -S <secs> Print values by sections, given as a list of letters\n"
+"            A - all                     G - general\n"
+"            F - faces                   E - edges\n"
+"            S - solid Angles            a - plane angles\n"
+"            D - distances (min/max)     s - symmetry\n"
+"  -C <vals> Print counts of values, given as a list of letters\n"
+"            A - All                     F - faces type by angles\n"
+"            E - edge lengths            w - windings\n"
+"            S - solid angles            D - dihedral angles\n"
+"            s - face sides              o - vertex orders\n"
+"            h - vertex heights (z-crds) O - symmetry orbits\n"
+"  -k        keep orientation, don't try to orient the faces\n"
+"  -y        subsymmetry for orbits: symmetry subgroup (Schoenflies notation)\n"
+"            optionally followed by a comma and conjugation type (integer)\n"
+"  -E <type> edges for report, e - explicit edges, i - implicit edges\n"
+"            a - explicit and implicit (default)\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+"  -d <dgts> number of significant digits (default 17) or if negative\n"
+"            then the number of digits after the decimal point\n"
+"\n"
+"\n", prog_name(), help_ver_text);
 }
+// clang-format on
 
 void or_opts::process_command_line(int argc, char **argv)
 {

@@ -64,36 +64,34 @@ public:
   void usage();
 };
 
+// clang-format off
 void rep_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options] [input_file]\n"
-      "\n"
-      "An equilibrium position is found for a set of points which repel each\n"
-      "other. The initial coordinates are read from input_file if given (or\n"
-      "from standard input), otherwise use -N to generate a random set.\n"
-      "\n"
-      "Options\n"
-      "%s"
-      "  -N <num>  initialise with a number of randomly placed points\n"
-      "  -n <itrs> maximum number of iterations (default: no limit)\n"
-      "  -s <perc> percentage to shorten the travel distance (default: "
-      "adaptive)\n"
-      "  -l <lim>  minimum distance change to terminate, as negative exponent\n"
-      "               (default: %d giving %.0e)\n"
-      "  -r <rep>  repelling formula\n"
-      "              1 - inverse of distance\n"
-      "              2 - inverse square of distance (default)\n"
-      "              3 - inverse cube of distance\n"
-      "              4 - inverse square root of distance\n"
-      "  -o <file> write output to file (default: write to standard output)\n"
-      "\n"
-      "\n",
-      prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
-      ::epsilon);
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] [input_file]\n"
+"\n"
+"An equilibrium position is found for a set of points which repel each\n"
+"other. The initial coordinates are read from input_file if given (or\n"
+"from standard input), otherwise use -N to generate a random set.\n"
+"\n"
+"Options\n"
+"%s"
+"  -N <num>  initialise with a number of randomly placed points\n"
+"  -n <itrs> maximum number of iterations (default: no limit)\n" 
+"  -s <perc> percentage to shorten the travel distance (default: adaptive)\n" 
+"  -l <lim>  minimum distance change to terminate, as negative exponent\n"
+"               (default: %d giving %.0e)\n"
+"  -r <rep>  repelling formula\n"
+"              1 - inverse of distance\n"
+"              2 - inverse square of distance (default)\n"
+"              3 - inverse cube of distance\n"
+"              4 - inverse square root of distance\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+"\n"
+"\n", prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }
+// clang-format on
 
 void rep_opts::process_command_line(int argc, char **argv)
 {

@@ -41,68 +41,71 @@ using std::map;
 
 using namespace anti;
 
-const char *base_models[] = {"T1",  "T2",  "O1",  "O2",  "O2B", "I1",
-                             "I2",  "I3",  "I4",  "I4B", "I5",  "I5B",
-                             "I6",  "I6B", "I6C", "I7",  "I7B", "I8",
-                             "I8B", "I9",  "I9B", "I10", "n/d", "end"};
+// clang-format off
+const char *base_models[] = { "T1", "T2", "O1", "O2", "O2B", "I1", "I2", "I3",
+   "I4", "I4B", "I5", "I5B", "I6", "I6B", "I6C", "I7", "I7B", "I8", "I8B",
+   "I9", "I9B", "I10", "n/d", "end" };
 
 const char *compounds[][4] = {
-    {"T1", "Oh", "Td", ""}, // excluding A=B uc4
-    {"T1", "I", "T", ""},   // excluding A=B, which are Th uc5
-    {"T1", "Ih", "T", ""},  // excluding A=B, which are Th uc6
-    {"T2", "Oh", "Td", ""}, // excluding A=B uc4
-    {"T2", "I", "T", ""},   // excluding A=B, which are Th uc5
-    {"T2", "Ih", "T", ""},  // excluding A=B, which are Th uc6
+   { "T1"   , "Oh", "Td",    ""},      //excluding A=B uc4
+   { "T1"   , "I" , "T" ,    ""},      //excluding A=B, which are Th uc5
+   { "T1"   , "Ih", "T" ,    ""},      //excluding A=B, which are Th uc6
+   { "T2"   , "Oh", "Td",    ""},      //excluding A=B uc4
+   { "T2"   , "I" , "T" ,    ""},      //excluding A=B, which are Th uc5
+   { "T2"   , "Ih", "T" ,    ""},      //excluding A=B, which are Th uc6
 
-    {"O1", "Ih", "Th", ""},  // uc17
-    {"O2B", "Ih", "Th", ""}, // uc17
+   { "O1"   , "Ih", "Th",    ""},      // uc17
+   { "O2B"  , "Ih", "Th",    ""},      // uc17
 
-    {"3", "Th", "S6", ""},     // uc10
-    {"3", "Oh", "S6", ""},     // uc11
-    {"3", "Oh", "D3v", ""},    // uc12
-    {"3", "Oh", "D3v,1", ""},  // uc12
-    {"6/2", "Oh", "D3v", "1"}, // uc38
+   { "3"    , "Th", "S6",    ""},      //uc10
+   { "3"    , "Oh", "S6",    ""},      // uc11
+   { "3"    , "Oh", "D3v",   ""},      // uc12
+   { "3"    , "Oh", "D3v,1", ""},      // uc12
+   { "6/2"  , "Oh", "D3v",   "1"},     // uc38
 
-    {"3", "Ih", "S6", ""},     // uc13
-    {"3", "Ih", "D3v,1", ""},  // uc15
-    {"3", "Ih", "D3v", ""},    // uc16
-    {"6/2", "Ih", "D3v", "1"}, // uc39
+   { "3"    , "Ih", "S6",    ""},      // uc13
+   { "3"    , "Ih", "D3v,1", ""},      // uc15
+   { "3"    , "Ih", "D3v",   ""},      // uc16
+   { "6/2"  , "Ih", "D3v",   "1"},     // uc39
 
-    {"3/2", "O", "D3", ""},  // uc30
-    {"3/2", "Oh", "D3", ""}, // uc31
-    {"3/2", "I", "D3", ""},  // uc32
-    {"3/2", "Ih", "D3", ""}, // uc33
+   { "3/2"  , "O" , "D3",    ""},      // uc30
+   { "3/2"  , "Oh", "D3",    ""},      // uc31
+   { "3/2"  , "I" , "D3",    ""},      // uc32
+   { "3/2"  , "Ih", "D3",    ""},      // uc33
 
-    {"4", "O", "D4", ""},  // uc42
-    {"4", "Oh", "D4", ""}, // uc43
+   { "4"    , "O" , "D4",    ""},      // uc42
+   { "4"    , "Oh", "D4",    ""},      // uc43
 
-    {"4/3", "O", "D4", ""},  // uc42
-    {"4/3", "Oh", "D4", ""}, // uc43
+   { "4/3"  , "O" , "D4",    ""},      // uc42
+   { "4/3"  , "Oh", "D4",    ""},      // uc43
 
-    {"5", "Ih", "S10", ""},     // uc26
-    {"5", "Ih", "D5v", ""},     // uc27
-    {"5", "Ih", "D5v,1", ""},   // uc27
-    {"10/2", "Ih", "D5v", "1"}, // uc40
 
-    {"5/2", "I", "D5", ""},  // uc44
-    {"5/2", "Ih", "D5", ""}, // uc45
+   { "5"    , "Ih", "S10",   ""},      // uc26
+   { "5"    , "Ih", "D5v",   ""},      // uc27
+   { "5"    , "Ih", "D5v,1", ""},      // uc27
+   { "10/2" , "Ih", "D5v",   "1"},     // uc40
 
-    {"5/3", "Ih", "S10", ""},   // uc28
-    {"5/3", "Ih", "D5v", ""},   // uc29
-    {"5/3", "Ih", "D5v,1", ""}, // uc29
-    {"10/6", "Ih", "D5v", "1"}, // uc41
+   { "5/2"  , "I" , "D5",    ""},      // uc44
+   { "5/2"  , "Ih", "D5",    ""},      // uc45
 
-    {"5/4", "I", "D5", ""},  // uc44
-    {"5/4", "Ih", "D5", ""}, // uc45
+   { "5/3"  , "Ih", "S10",   ""},      // uc28
+   { "5/3"  , "Ih", "D5v",   ""},      // uc29
+   { "5/3"  , "Ih", "D5v,1", ""},      // uc29
+   { "10/6" , "Ih", "D5v",   "1"},     // uc41
 
-    {"n/d_odd", "DN_odd*nv", "S2n", ""},  // uc22
-    {"n/d_odd", "DN_even*nh", "S2n", ""}, // uc22
-    {"n/d_odd", "DN_odd*nv", "Dnv", ""},  // uc23
-    {"n/d_odd", "DN_even*nh", "Dnv", ""}, // uc23
-    {"n/d_even", "DN*nh", "Cnh", ""},     // uc24
-    {"n/d_even", "DN*nh", "Dnh", ""},     // uc25
-    {"end", "end", "end", "end"}          // end
+   { "5/4"  , "I" , "D5",    ""},      // uc44
+   { "5/4"  , "Ih", "D5",    ""},      // uc45
+
+
+   { "n/d_odd" , "DN_odd*nv" , "S2n", ""},    // uc22
+   { "n/d_odd" , "DN_even*nh", "S2n", ""},    // uc22
+   { "n/d_odd" , "DN_odd*nv" , "Dnv", ""},    // uc23
+   { "n/d_odd" , "DN_even*nh", "Dnv", ""},    // uc23
+   { "n/d_even", "DN*nh"     , "Cnh", ""},    // uc24
+   { "n/d_even", "DN*nh"     , "Dnh", ""},    // uc25
+   { "end"     ,  "end"      , "end", "end"}  // end
 };
+// clang-format on
 
 Status read_fraction(const char *frac_str, int &num, int &denom)
 {
@@ -172,91 +175,70 @@ public:
   void usage();
 };
 
+// clang-format off
 void kt_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options] model_args...\n"
-      "\n"
-      "Create all isohedral polyhedra and polyhedron compounds whose face "
-      "type\n"
-      "is a kite (or dart)\n"
-      "\n"
-      "Model_args can be a Schwarz triangle name (which can also be given as "
-      "two\n"
-      "or three fractions A, B, C (default 2) which specify the Schwarz "
-      "triangle\n"
-      "vertices, where n/d corresponds to an angle PI*d/n), optionally "
-      "followed by\n"
-      "a permutation letter from AaBbCc, to rotate the fraction A, B, or C to "
-      "the\n"
-      "front (and if lowercase then follow by swapping the last two "
-      "fractions)\n"
-      "  T1:  (3 3 2)         T2:  (3 3 3/2)\n"
-      "  O1:  (4 3 2)         O2:  (4/3 4 3)\n"
-      "  I1:  (5 3 2)         I2:  (5/2 3 2)\n"
-      "  I3:  (5/2 5 2)       I4:  (5/2 3 3)\n"
-      "  I5:  (5/4 3 3)       I6:  (5/3 5 3)\n"
-      "  I7:  (5/4 5 3)       I8:  (5/3 5/2 3)\n"
-      "  I9:  (5/4 5 5)       I10: (5/2 5/2 5/2)\n"
-      "If model_args is a single fraction then make a trapezohedron (with B "
-      "and C\n"
-      "as antiprism vertices).\n"
-      "The kite has vertices along A, C, B, and C reflected in AB. The height "
-      "of up\n"
-      "to two vertices may be given, and the third is calculated (B and C "
-      "have\n"
-      "the same height in a trapezohedron). If less than two heights are "
-      "given\n"
-      "the calculated vertex will be B, if not specified, otherwise A. The "
-      "kite\n"
-      "is repeated with the symmetry corresponding to the base Schwarz "
-      "triangle,\n"
-      "or trapezohedron model.\n"
-      "Notes: the tetrahedral triangles T1 and T2 both produce a model with\n"
-      "octahedral symmetry when height A=-B (cube and rhombic dodecahedron,\n"
-      "respectively). These models do not form an octahedral compound, and "
-      "have\n"
-      "common symmetry subgroup of Th in the icosahedral compounds. The 3\n"
-      "trapezohedron also has octahedral symmetry at height A=+/-B (cube), "
-      "and\n"
-      "likewise has a common symmetry subgroup of Th in icosahedral "
-      "compounds.\n"
-      "\n"
-      "Options\n"
-      "  -h        this help message\n"
-      "  -l num    'list' will list all compounds of the specified base model, "
-      "or\n"
-      "            all models and compounds if no base model specified. The "
-      "list\n"
-      "            includes a model number and base model, and if a compound, "
-      "the\n"
-      "            alignment symmetry (possibly with realignment number) and "
-      "final\n"
-      "            symmetry (and possibly a final pre-realignment number).\n"
-      "            Specifying a number will make the the model with that "
-      "number\n"
-      "            in the list.\n"
-      "  -A ht     height of kite apex on OA (default 1.0 or calculated)\n"
-      "  -B ht     height of kite apex on OB (only magnitude used if "
-      "trapezohedron,\n"
-      "            default 1.0 or calculated)\n"
-      "  -C ht     height of kite side vertex on OC (Schwarz triangle only,\n"
-      "            default 1.0 or calculated)\n"
-      "  -a ang    angle, for compounds where this is a parameter\n"
-      "  -N parts  number of parts, for compounds where this is a parameter\n"
-      "  -c type   colour the faces around each vertex of a type, from AaBbCc\n"
-      "            (colouring by value/index for upper/lower case) using a\n"
-      "            different colour for each set (Schwarz models only), or Kk\n"
-      "            to colour by base component (which may be compound)\n"
-      "  -k        output a single kite (colours not applied)\n"
-      "  -q        quiet, don't print final report\n"
-      "  -o <file> write output to file (default: write to standard output)\n"
-      "\n"
-      "\n",
-      prog_name());
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] model_args...\n"
+"\n"
+"Create all isohedral polyhedra and polyhedron compounds whose face type\n"
+"is a kite (or dart)\n"
+"\n"
+"Model_args can be a Schwarz triangle name (which can also be given as two\n"
+"or three fractions A, B, C (default 2) which specify the Schwarz triangle\n"
+"vertices, where n/d corresponds to an angle PI*d/n), optionally followed by\n"
+"a permutation letter from AaBbCc, to rotate the fraction A, B, or C to the\n"
+"front (and if lowercase then follow by swapping the last two fractions)\n"
+"  T1:  (3 3 2)         T2:  (3 3 3/2)\n"
+"  O1:  (4 3 2)         O2:  (4/3 4 3)\n"
+"  I1:  (5 3 2)         I2:  (5/2 3 2)\n"
+"  I3:  (5/2 5 2)       I4:  (5/2 3 3)\n"
+"  I5:  (5/4 3 3)       I6:  (5/3 5 3)\n"
+"  I7:  (5/4 5 3)       I8:  (5/3 5/2 3)\n"
+"  I9:  (5/4 5 5)       I10: (5/2 5/2 5/2)\n"
+"If model_args is a single fraction then make a trapezohedron (with B and C\n"
+"as antiprism vertices).\n"
+"The kite has vertices along A, C, B, and C reflected in AB. The height of up\n"
+"to two vertices may be given, and the third is calculated (B and C have\n"
+"the same height in a trapezohedron). If less than two heights are given\n"
+"the calculated vertex will be B, if not specified, otherwise A. The kite\n"
+"is repeated with the symmetry corresponding to the base Schwarz triangle,\n"
+"or trapezohedron model.\n"
+"Notes: the tetrahedral triangles T1 and T2 both produce a model with\n"
+"octahedral symmetry when height A=-B (cube and rhombic dodecahedron,\n"
+"respectively). These models do not form an octahedral compound, and have\n"
+"common symmetry subgroup of Th in the icosahedral compounds. The 3\n"
+"trapezohedron also has octahedral symmetry at height A=+/-B (cube), and\n"
+"likewise has a common symmetry subgroup of Th in icosahedral compounds.\n"
+"\n"
+"Options\n"
+"  -h        this help message\n"
+"  -l num    'list' will list all compounds of the specified base model, or\n"
+"            all models and compounds if no base model specified. The list\n"
+"            includes a model number and base model, and if a compound, the\n"
+"            alignment symmetry (possibly with realignment number) and final\n"
+"            symmetry (and possibly a final pre-realignment number).\n"
+"            Specifying a number will make the the model with that number\n"
+"            in the list.\n"
+"  -A ht     height of kite apex on OA (default 1.0 or calculated)\n"
+"  -B ht     height of kite apex on OB (only magnitude used if trapezohedron,\n"
+"            default 1.0 or calculated)\n"
+"  -C ht     height of kite side vertex on OC (Schwarz triangle only,\n"
+"            default 1.0 or calculated)\n"
+"  -a ang    angle, for compounds where this is a parameter\n"
+"  -N parts  number of parts, for compounds where this is a parameter\n"
+"  -c type   colour the faces around each vertex of a type, from AaBbCc\n"
+"            (colouring by value/index for upper/lower case) using a\n"
+"            different colour for each set (Schwarz models only), or Kk\n"
+"            to colour by base component (which may be compound)\n"
+"  -k        output a single kite (colours not applied)\n"
+"  -q        quiet, don't print final report\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+"\n"
+"\n", prog_name());
 }
+// clang-format on
 
 void kt_opts::read_vert_height(int idx, char c)
 {

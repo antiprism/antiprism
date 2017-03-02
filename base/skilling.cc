@@ -271,6 +271,7 @@ static void build_uniform_compound(Geometry &geom, int uc_case, int uc_num,
 // M_PI/3  = 60 degrees
 // M_PI/2  = 90 degrees
 
+// clang-format off
 UCItem uc_item_list[] = {
     {1, "u1", "S4", "T", -1, "UC1", "6 tetrahedra rotational"},
     {1, "u1", "S4", "T", -1, "UC2", "12 tetrahedra rotational"},
@@ -299,10 +300,8 @@ UCItem uc_item_list[] = {
     {5, "ant", "D", "D", -1, "UC25", "k n even d gonal antiprisms"},
     {6, "ant5", "D5h", "I", -1, "UC26", "12 pentagonal antiprisms rotational"},
     {7, "ant5", "D5h", "I", 0, "UC27", "6 pentagonal antiprisms"},
-    {6, "ant5/3", "D5h", "I", -1, "UC28",
-     "12 pentagrammic crossed antiprisms rotational"},
-    {7, "ant5/3", "D5h", "I", M_PI / 5, "UC29",
-     "6 pentagrammic crossed antiprisms"},
+    {6, "ant5/3", "D5h", "I", -1, "UC28", "12 pentagrammic crossed antiprisms rotational"},
+    {7, "ant5/3", "D5h", "I", M_PI / 5, "UC29", "6 pentagrammic crossed antiprisms"},
     {3, "pri3", "D3h", "O", M_PI / 12, "UC30", "4 triangular prisms"},
     {3, "pri3", "D3h", "O", M_PI / 12, "UC31", "8 triangular prisms"},
     {8, "pri3", "D3h", "I", M_PI / 6, "UC32", "10 triangular prisms"},
@@ -350,6 +349,7 @@ UCItem uc_item_list[] = {
     {0, "u60", "I", "Ih", -1, "UC74", "2 inverted snub dodecadodecahedra"},
     {0, "u46", "I", "Ih", -1, "UC75", "2 snub icosidodecadodecahedra"},
 };
+// clang-format on
 
 UniformCompound::UniformCompound()
 {

@@ -69,44 +69,38 @@ public:
   void usage();
 };
 
+// clang-format off
 void zo_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options] [star_file] \n"
-      "\n"
-      "Make a zonohedron or add zones to a convex seed polyhdron. The zones "
-      "are\n"
-      "created from a star of vectors, which can be based on a polyhdron "
-      "(input\n"
-      "model and option -m) or initialised (option -P) to make a polar "
-      "zonohedron.\n"
-      "If input_file is not given the program reads from standard input\n"
-      "\n"
-      "Options\n"
-      "%s"
-      "  -m <mthd> method to create star from input, can be\n"
-      "               v - centre to vertices are vectors (default)\n"
-      "               a - all vertex to vertex are vectors\n"
-      "               i - implicit edges (face sides) are vectors\n"
-      "               e - explicit edges are vectors\n"
-      "  -c <cent> centre of points for method v, C for centroid (default: "
-      "0,0,0)\n"
-      "  -s        output the star (instead of the zonohedron)\n"
-      "  -S        seed model to add zones to, must be convex\n"
-      "  -u        make vectors unit length\n"
-      "  -C <col>  colour for new zone faces\n"
-      "  -P <star> polar zonohedron from ordered star, can be an offset "
-      "polygon\n"
-      "            given as an integer or fraction (e.g. 5, 7/2) or 's' to "
-      "use\n"
-      "            star_file\n"
-      "  -o <file> write output to file (default: write to standard output)\n"
-      "\n"
-      "\n",
-      prog_name(), help_ver_text);
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] [star_file] \n"
+"\n"
+"Make a zonohedron or add zones to a convex seed polyhdron. The zones are\n"
+"created from a star of vectors, which can be based on a polyhdron (input\n"
+"model and option -m) or initialised (option -P) to make a polar zonohedron.\n"
+"If input_file is not given the program reads from standard input\n"
+"\n"
+"Options\n"
+"%s"
+"  -m <mthd> method to create star from input, can be\n"
+"               v - centre to vertices are vectors (default)\n"
+"               a - all vertex to vertex are vectors\n"
+"               i - implicit edges (face sides) are vectors\n"
+"               e - explicit edges are vectors\n"
+"  -c <cent> centre of points for method v, C for centroid (default: 0,0,0)\n"
+"  -s        output the star (instead of the zonohedron)\n"
+"  -S        seed model to add zones to, must be convex\n"
+"  -u        make vectors unit length\n"
+"  -C <col>  colour for new zone faces\n"
+"  -P <star> polar zonohedron from ordered star, can be an offset polygon\n"
+"            given as an integer or fraction (e.g. 5, 7/2) or 's' to use\n"
+"            star_file\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+"\n"
+"\n", prog_name(), help_ver_text);
 }
+// clang-format on
 
 void zo_opts::process_command_line(int argc, char **argv)
 {

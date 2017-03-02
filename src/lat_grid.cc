@@ -62,48 +62,44 @@ public:
   void usage();
 };
 
+// clang-format off
 void lg_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options] [lat_type [outer_width [inner_width]]]\n"
-      "\n"
-      "Make a lattice or grid with integer coordinates. Lattice types "
-      "(default: sc)\n"
-      "are followed by name and then and valid strut arguments (squares of "
-      "length,\n"
-      "first is square of the radius of balls packed at the vertex positions)\n"
-      "  sc                 - Simple Cubic                         (1, 2, 3)\n"
-      "  fcc                - Face Centred Cubic                   (2, 4, 6, "
-      "12)\n"
-      "  bcc                - Body Centred Cubic                   (3, 4, 8)\n"
-      "  hcp                - Hexagonal Close Packing              (18)\n"
-      "  rh_dodec           - Rhombic Dodecahedra                  (3, 8)\n"
-      "  cubo_oct           - Cuboctahedron / Octahedron           (2)\n"
-      "  tr_oct             - Truncated Octahedron                 (2)\n"
-      "  tr_tet_tet         - Truncated Tetrahedron / Tetrahedron  (2)\n"
-      "  tr_tet_tr_oct_cubo - Truncated Tetrahedron / \n"
-      "                       Truncated Octahedron / Cuboctahedron (4)\n"
-      "  diamond            - Diamond                              (3)\n"
-      "  hcp_diamond        - HCP Diamond                          (27)\n"
-      "  k_4                - K_4 Crystal                          (2)\n"
-      ""
-      "Inner and outer widths are the sizes of the inner and outer "
-      "containers.\n"
-      "For cubes, these are the length of a side, for spheres these are the\n"
-      "squares of the radii.\n"
-      "\n"
-      "Options\n"
-      "%s"
-      "  -C <cent> centre of lattice, in form \"x_val,y_val,z_val\"\n"
-      "  -c <type> container, c - cube (default), s - sphere\n"
-      "  -s <len2> create struts, the value is the square of the strut length\n"
-      "  -o <file> write output to file (default: write to standard output)\n"
-      "\n"
-      "\n",
-      prog_name(), help_ver_text);
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] [lat_type [outer_width [inner_width]]]\n"
+"\n"
+"Make a lattice or grid with integer coordinates. Lattice types (default: sc)\n"
+"are followed by name and then and valid strut arguments (squares of length,\n"
+"first is square of the radius of balls packed at the vertex positions)\n"
+"  sc                 - Simple Cubic                         (1, 2, 3)\n"
+"  fcc                - Face Centred Cubic                   (2, 4, 6, 12)\n"
+"  bcc                - Body Centred Cubic                   (3, 4, 8)\n"
+"  hcp                - Hexagonal Close Packing              (18)\n"
+"  rh_dodec           - Rhombic Dodecahedra                  (3, 8)\n" 
+"  cubo_oct           - Cuboctahedron / Octahedron           (2)\n"
+"  tr_oct             - Truncated Octahedron                 (2)\n"
+"  tr_tet_tet         - Truncated Tetrahedron / Tetrahedron  (2)\n"
+"  tr_tet_tr_oct_cubo - Truncated Tetrahedron / \n"
+"                       Truncated Octahedron / Cuboctahedron (4)\n"
+"  diamond            - Diamond                              (3)\n"
+"  hcp_diamond        - HCP Diamond                          (27)\n"
+"  k_4                - K_4 Crystal                          (2)\n"
+""
+"Inner and outer widths are the sizes of the inner and outer containers.\n"
+"For cubes, these are the length of a side, for spheres these are the\n"
+"squares of the radii.\n"
+"\n"
+"Options\n"
+"%s"
+"  -C <cent> centre of lattice, in form \"x_val,y_val,z_val\"\n"
+"  -c <type> container, c - cube (default), s - sphere\n"
+"  -s <len2> create struts, the value is the square of the strut length\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+"\n"
+"\n", prog_name(), help_ver_text);
 }
+// clang-format on
 
 void lg_opts::process_command_line(int argc, char **argv)
 {

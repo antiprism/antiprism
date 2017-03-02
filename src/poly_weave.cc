@@ -509,54 +509,43 @@ public:
   void usage();
 };
 
+// clang-format off
 void wv_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options] [input_file]\n"
-      "\n"
-      "Read a file in OFF format and make a weave following a specified "
-      "pattern.\n"
-      "The polyhedron faces are divided by a 'meta' operation into triangles\n"
-      "each having vertices which are a vertex V, edge centre E and face "
-      "centre F.\n"
-      "A start point is positioned on one of these triangles, the next point "
-      "is\n"
-      "found by using the pattern to step between triangles, leading to a "
-      "circuit.\n"
-      "Intermediate points may be added along the steps to help with the "
-      "weave.\n"
-      "If input_file is not given the program reads from standard input.\n"
-      "\n"
-      "Options\n"
-      "%s"
-      "  -p <pat>  weave pattern (default 'FEV'), a series of one or more "
-      "paths.\n"
-      "            A path is:\n"
-      "               C,L - path of intermediate points is curve "
-      "(default),line\n"
-      "                     (affects following paths, set as first char of "
-      "pattern)\n"
-      "               Barycentric coords V,E,F of initial point (default "
-      "0,1,0)\n"
-      "               Optional intermediate points on the path - ':' followed\n"
-      "                  by 0 to 3 coordinates for 'up' (def: 0), 'side' (def: "
-      "0),\n"
-      "                  'along' (def: equal spacing)\n"
-      "               Series of letters to step between triangles\n"
-      "                  V,E,F - step two triangles rotating about V,E,F\n"
-      "                  R     - R reverse direction of following rotations\n"
-      "                  v,e,f - step over side opposite V,E,F\n"
-      "               t followed by l,r,b (def: tl), start circuits from "
-      "'left',\n"
-      "                  'right', both triangles\n"
-      "  -a        add the 'meta'-transformed base\n"
-      "  -o <file> write output to file (default: write to standard output)\n"
-      "\n"
-      "\n",
-      prog_name(), help_ver_text);
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] [input_file]\n"
+"\n"
+"Read a file in OFF format and make a weave following a specified pattern.\n"
+"The polyhedron faces are divided by a 'meta' operation into triangles\n"
+"each having vertices which are a vertex V, edge centre E and face centre F.\n"
+"A start point is positioned on one of these triangles, the next point is\n"
+"found by using the pattern to step between triangles, leading to a circuit.\n"
+"Intermediate points may be added along the steps to help with the weave.\n"
+"If input_file is not given the program reads from standard input.\n"
+"\n"
+"Options\n"
+"%s"
+"  -p <pat>  weave pattern (default 'FEV'), a series of one or more paths.\n"
+"            A path is:\n"
+"               C,L - path of intermediate points is curve (default),line\n"
+"                     (affects following paths, set as first char of pattern)\n"
+"               Barycentric coords V,E,F of initial point (default 0,1,0)\n"
+"               Optional intermediate points on the path - ':' followed\n"
+"                  by 0 to 3 coordinates for 'up' (def: 0), 'side' (def: 0),\n"
+"                  'along' (def: equal spacing)\n"
+"               Series of letters to step between triangles\n"
+"                  V,E,F - step two triangles rotating about V,E,F\n"
+"                  R     - R reverse direction of following rotations\n"
+"                  v,e,f - step over side opposite V,E,F\n"
+"               t followed by l,r,b (def: tl), start circuits from 'left',\n"
+"                  'right', both triangles\n"
+"  -a        add the 'meta'-transformed base\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+"\n"
+"\n", prog_name(), help_ver_text);
 }
+// clang-format on
 
 void wv_opts::process_command_line(int argc, char **argv)
 {

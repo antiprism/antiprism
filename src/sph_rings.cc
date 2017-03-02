@@ -56,27 +56,27 @@ public:
   void usage();
 };
 
+// clang-format off
 void sphc_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options] num_rings num_divs\n"
-      "\n"
-      "Distribute points on rings a sphere. num_rings is the number of\n"
-      "rings between the poles. num_divs is the number of points on each\n"
-      "ring, or if not given then it is as many points as will fit in each\n"
-      "ring at least a bands width apart.\n"
-      "\n"
-      "Options\n"
-      "%s"
-      "  -s        stagger placement of balls between cirles\n"
-      "  -x        don't place points at the two poles\n"
-      "  -o <file> write output to file (default: write to standard output)\n"
-      "\n"
-      "\n",
-      prog_name(), help_ver_text);
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] num_rings num_divs\n"
+"\n"
+"Distribute points on rings a sphere. num_rings is the number of\n"
+"rings between the poles. num_divs is the number of points on each\n"
+"ring, or if not given then it is as many points as will fit in each\n"
+"ring at least a bands width apart.\n"
+"\n"
+"Options\n"
+"%s"
+"  -s        stagger placement of balls between cirles\n"
+"  -x        don't place points at the two poles\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+"\n"
+"\n", prog_name(), help_ver_text);
 }
+// clang-format on
 
 void sphc_opts::process_command_line(int argc, char **argv)
 {

@@ -62,34 +62,32 @@ public:
   void usage();
 };
 
+// clang-format off
 void dome_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options] [input_file]\n"
-      "\n"
-      "Read a dome polyhedron in OFF format, project onto unit sphere and add\n"
-      "additional layering. If input_file is not given the program reads from\n"
-      "standard input.\n"
-      "\n"
-      "Options\n"
-      "%s"
-      "  -r <rad>  radius of sphere for second layer vertices (default: 0.85)\n"
-      "  -t <type> layer type (default: dual)\n"
-      "               dual:      base vertices to dual vertices\n"
-      "               eden:      base vertices to edge centre vertices\n"
-      "               asm:       base vertices to inner base, vertices to cell "
-      "centres\n"
-      "               honeycomb: base vertices to dual of 'kis' form\n"
-      "               prism:     repeat base and connect faces as prism "
-      "tensegrities\n"
-      "  -i        write colours as index numbers (struts 0-4, faces 10)\n"
-      "  -o <file> write output to file (default: write to standard output)\n"
-      "\n"
-      "\n",
-      prog_name(), help_ver_text);
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] [input_file]\n"
+"\n"
+"Read a dome polyhedron in OFF format, project onto unit sphere and add\n"
+"additional layering. If input_file is not given the program reads from\n"
+"standard input.\n"
+"\n"
+"Options\n"
+"%s"
+"  -r <rad>  radius of sphere for second layer vertices (default: 0.85)\n"
+"  -t <type> layer type (default: dual)\n"
+"               dual:      base vertices to dual vertices\n"
+"               eden:      base vertices to edge centre vertices\n"
+"               asm:       base vertices to inner base, vertices to cell centres\n"
+"               honeycomb: base vertices to dual of 'kis' form\n"
+"               prism:     repeat base and connect faces as prism tensegrities\n"
+"  -i        write colours as index numbers (struts 0-4, faces 10)\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+"\n"
+"\n", prog_name(), help_ver_text);
 }
+// clang-format on
 
 void dome_opts::process_command_line(int argc, char **argv)
 {

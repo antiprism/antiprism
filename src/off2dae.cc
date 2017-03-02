@@ -733,52 +733,44 @@ public:
 // --------------------------------------------------------------------------
 // Options implementation
 
+// clang-format off
 void o2d_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options] [input_file]\n"
-      "\n"
-      "Convert an OFF file to Collada DAE file format\n"
-      "\n"
-      "Options\n"
-      "%s"
-      "  -v <rad>  radius of vertex spheres, or 'b' to have radius of balls\n"
-      "            of the maximum size without overlap (default: ball_rad/15)\n"
-      "  -e <rad>  radius of edge cylinders (default: vertex_rad/1.5)\n"
-      "  -V <col>  default vertex colour, in form 'R,G,B,A' (3 or 4 values\n"
-      "            0.0-1.0, or 0-255) or hex 'xFFFFFF' (default: 1.0,0.5,0.0)\n"
-      "  -E <col>  default edge colour, in form 'R,G,B,A' (3 or 4 values\n"
-      "            0.0-1.0, or 0-255) or hex 'xFFFFFF', 'x' to hide implicit "
-      "edges\n"
-      "            (default: 0.8,0.6,0.8)\n"
-      "  -F <col>  default face colour, in form 'R,G,B,A' (3 or 4 values\n"
-      "            0.0-1.0, or 0-255) or hex 'xFFFFFF' (default: 0.8,0.9,0.9)\n"
-      "  -x <elms> hide elements. The element string can include v, e and f\n"
-      "            to hide vertices, edges and faces\n"
-      "  -t <disp> select face parts to display according to winding number "
-      "from:\n"
-      "            odd, nonzero (default), positive, negative, "
-      "no_triangulation\n"
-      "            (use native polygon display)\n"
-      "  -m <maps> a comma separated list of colour maps used to transform "
-      "colour\n"
-      "            indexes, a part consisting of letters from v, e, f, selects "
-      "\n"
-      "            the element types to apply the map list to (default "
-      "'vef').\n"
-      "  -K <lvl>  a positive integer to specify the level of smoothing (using "
-      "more\n"
-      "            polygons) of the vertex spheres and edge cylinders "
-      "(default: %d)\n"
-      "  -d <dgts> number of significant digits (default %d) or if negative\n"
-      "            then the number of digits after the decimal point\n"
-      "  -o <file> write output to file (default: write to standard output)\n"
-      "\n"
-      "\n",
-      prog_name(), help_ver_text, smooth_lvl, DEF_SIG_DGTS);
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] [input_file]\n"
+"\n"
+"Convert an OFF file to Collada DAE file format\n"
+"\n"
+"Options\n"
+"%s"
+"  -v <rad>  radius of vertex spheres, or 'b' to have radius of balls\n"
+"            of the maximum size without overlap (default: ball_rad/15)\n"
+"  -e <rad>  radius of edge cylinders (default: vertex_rad/1.5)\n"
+"  -V <col>  default vertex colour, in form 'R,G,B,A' (3 or 4 values\n"
+"            0.0-1.0, or 0-255) or hex 'xFFFFFF' (default: 1.0,0.5,0.0)\n"
+"  -E <col>  default edge colour, in form 'R,G,B,A' (3 or 4 values\n"
+"            0.0-1.0, or 0-255) or hex 'xFFFFFF', 'x' to hide implicit edges\n"
+"            (default: 0.8,0.6,0.8)\n"
+"  -F <col>  default face colour, in form 'R,G,B,A' (3 or 4 values\n"
+"            0.0-1.0, or 0-255) or hex 'xFFFFFF' (default: 0.8,0.9,0.9)\n"
+"  -x <elms> hide elements. The element string can include v, e and f\n"
+"            to hide vertices, edges and faces\n"
+"  -t <disp> select face parts to display according to winding number from:\n"
+"            odd, nonzero (default), positive, negative, no_triangulation\n"
+"            (use native polygon display)\n"
+"  -m <maps> a comma separated list of colour maps used to transform colour\n"
+"            indexes, a part consisting of letters from v, e, f, selects \n"
+"            the element types to apply the map list to (default 'vef').\n"
+"  -K <lvl>  a positive integer to specify the level of smoothing (using more\n"
+"            polygons) of the vertex spheres and edge cylinders (default: %d)\n"
+"  -d <dgts> number of significant digits (default %d) or if negative\n"
+"            then the number of digits after the decimal point\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+"\n"
+"\n", prog_name(), help_ver_text, smooth_lvl, DEF_SIG_DGTS);
 }
+// clang-format on
 
 void o2d_opts::process_command_line(int argc, char **argv)
 {

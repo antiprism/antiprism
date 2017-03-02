@@ -67,34 +67,32 @@ public:
   void usage();
 };
 
+// clang-format off
 void o2t_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options] [input_file]\n"
-      "\n"
-      "Convert files in OFF format Hedron text file format. If\n"
-      "input_file is not given the program reads from standard input.\n"
-      "\n"
-      "Options\n"
-      "%s"
-      "  -c        estimates colors from OFF file\n"
-      "  -r        detect rhombi. D parameter added if found\n"
-      "  -p        detect star polygons\n"
-      "  -x        exclude coordinates\n"
-      "  -t        force all faces transparent\n"
-      "  -l <lim>  minimum distance for unique vertex locations as negative "
-      "exponent\n"
-      "               (default: %d giving %.0e)\n"
-      "  -d <dgts> number of significant digits (default %d) or if negative\n"
-      "            then the number of digits after the decimal point\n"
-      "  -o <file> file name for output (otherwise prints to stdout)\n"
-      "\n"
-      "\n",
-      prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
-      ::epsilon, DEF_SIG_DGTS);
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] [input_file]\n"
+"\n"
+"Convert files in OFF format Hedron text file format. If\n"
+"input_file is not given the program reads from standard input.\n"
+"\n"
+"Options\n"
+"%s"
+"  -c        estimates colors from OFF file\n"
+"  -r        detect rhombi. D parameter added if found\n"
+"  -p        detect star polygons\n"
+"  -x        exclude coordinates\n"
+"  -t        force all faces transparent\n"
+"  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
+"               (default: %d giving %.0e)\n"
+"  -d <dgts> number of significant digits (default %d) or if negative\n"
+"            then the number of digits after the decimal point\n"
+"  -o <file> file name for output (otherwise prints to stdout)\n"
+"\n"
+"\n", prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5),::epsilon, DEF_SIG_DGTS);
 }
+// clang-format on
 
 void o2t_opts::process_command_line(int argc, char **argv)
 {

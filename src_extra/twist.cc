@@ -70,28 +70,27 @@ public:
   void usage();
 };
 
+// clang-format off
 void tw_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options] [input_file]\n"
-      "\n"
-      "Read a file in OFF format and twist the edges.\n"
-      "If input_file is not given the program reads from standard input.\n"
-      "\n"
-      "Options\n"
-      "%s"
-      "  -c <cent> centre to twist about, in form \"x_val,y_val,z_val\"\n"
-      "            (default, \"0,0,0\")\n"
-      "  -t val    twist edges an amount between polyhedron (0.0) and dual "
-      "(1.0)\n"
-      "  -s        output struts only\n"
-      "  -o <file> write output to file (default: write to standard output)\n"
-      "\n"
-      "\n",
-      prog_name(), help_ver_text);
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] [input_file]\n"
+"\n"
+"Read a file in OFF format and twist the edges.\n"
+"If input_file is not given the program reads from standard input.\n"
+"\n"
+"Options\n"
+"%s"
+"  -c <cent> centre to twist about, in form \"x_val,y_val,z_val\"\n"
+"            (default, \"0,0,0\")\n"
+"  -t val    twist edges an amount between polyhedron (0.0) and dual (1.0)\n"
+"  -s        output struts only\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+"\n"
+"\n", prog_name(), help_ver_text);
 }
+// clang-format on
 
 bool tw_opts::read_centroid_verts(char *optarg, char *errmsg)
 {

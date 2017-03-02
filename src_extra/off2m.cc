@@ -75,49 +75,46 @@ public:
   void usage();
 };
 
+// clang-format off
 void o2m_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options] [input_file]\n"
-      "\n"
-      "Convert files in OFF format to 'm' format for display in "
-      "LiveGraphics3D. If\n"
-      "input_file is not given the program reads from standard input.\n"
-      "\n"
-      "Options\n"
-      "%s"
-      "  -v <size> vertex sphere size (default: 0.02 of bounding box "
-      "diagonal)\n"
-      "  -e <size> frame model edge thickness size (default: 0.01 of bounding\n"
-      "            box diagonal if vertex sphere is 0, else vertex_rad/1.5)\n"
-      "  -x <elms> hide elements. The element string can include v, e and f\n"
-      "            to hide vertices, edges and faces\n"
-      "  -o <file> write output to file (default: write to standard output)\n"
-      "\n"
-      "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
-      "Note: transparency (alpha) is ignored. color name \"invisible\" not "
-      "allowed\n"
-      "\n"
-      "  -V <col>  vertex color (default: 1.0,0.5,0.0)\n"
-      "  -E <col>  edge color (default: 0.8,0.6,0.8)\n"
-      "  -F <col>  face color (default: 0.8,0.8,0.9)\n"
-      "  -l        let LiveGraphics3D do the Coloring itself\n"
-      "\n"
-      "Scene options\n"
-      "  -Y <view> specify the Live3D ViewPoint in form 'X,Y,Z'\n"
-      "  -B <col>  background color (default: 0.9,0.9,0.9)\n"
-      "\n"
-      "Precision options\n"
-      "  -d <dgts> number of significant digits (default %d) or if negative\n"
-      "            then the number of digits after the decimal point\n"
-      "  -t <type> display type for faces 0 - polygons, 1 - triangulate\n"
-      "               polygons (default)\n"
-      "\n"
-      "\n",
-      prog_name(), help_ver_text, DEF_SIG_DGTS);
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] [input_file]\n"
+"\n"
+"Convert files in OFF format to 'm' format for display in LiveGraphics3D. If\n"
+"input_file is not given the program reads from standard input.\n"
+"\n"
+"Options\n"
+"%s"
+"  -v <size> vertex sphere size (default: 0.02 of bounding box diagonal)\n"
+"  -e <size> frame model edge thickness size (default: 0.01 of bounding\n"
+"            box diagonal if vertex sphere is 0, else vertex_rad/1.5)\n"
+"  -x <elms> hide elements. The element string can include v, e and f\n"
+"            to hide vertices, edges and faces\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+"\n"
+"\nColoring Options (run 'off_util -H color' for help on color formats)\n"
+"Note: transparency (alpha) is ignored. color name \"invisible\" not allowed\n"
+"\n"
+"  -V <col>  vertex color (default: 1.0,0.5,0.0)\n"
+"  -E <col>  edge color (default: 0.8,0.6,0.8)\n"
+"  -F <col>  face color (default: 0.8,0.8,0.9)\n"
+"  -l        let LiveGraphics3D do the coloring itself\n"
+"\n"
+"Scene options\n"
+"  -Y <view> specify the Live3D ViewPoint in form 'X,Y,Z'\n"
+"  -B <col>  background color (default: 0.9,0.9,0.9)\n"
+"\n"
+"Precision options\n"
+"  -d <dgts> number of significant digits (default %d) or if negative\n"
+"            then the number of digits after the decimal point\n"
+"  -t <type> display type for faces 0 - polygons, 1 - triangulate\n"
+"               polygons (default)\n"
+"\n"
+"\n", prog_name(), help_ver_text, DEF_SIG_DGTS);
 }
+// clang-format on
 
 void o2m_opts::process_command_line(int argc, char **argv)
 {

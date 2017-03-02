@@ -55,27 +55,26 @@ public:
   void usage();
 };
 
+// clang-format off
 void o2c_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options] [input_file]\n"
-      "\n"
-      "Extract coordinates from a file in OFF format. If input_file is not "
-      "given\n"
-      "then input is read from standard input.\n"
-      "\n"
-      "Options\n"
-      "%s"
-      "  -s <sep>  string to separate coordinates (default \" \")\n"
-      "  -d <dgts> number of significant digits (default %d) or if negative\n"
-      "            then the number of digits after the decimal point\n"
-      "  -o <file> write output to file (default: write to standard output)\n"
-      "\n"
-      "\n",
-      prog_name(), help_ver_text, DEF_SIG_DGTS);
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] [input_file]\n"
+"\n"
+"Extract coordinates from a file in OFF format. If input_file is not given\n"
+"then input is read from standard input.\n"
+"\n"
+"Options\n"
+"%s"
+"  -s <sep>  string to separate coordinates (default \" \")\n"
+"  -d <dgts> number of significant digits (default %d) or if negative\n"
+"            then the number of digits after the decimal point\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+"\n"
+"\n", prog_name(), help_ver_text, DEF_SIG_DGTS);
 }
+// clang-format on
 
 void o2c_opts::process_command_line(int argc, char **argv)
 {

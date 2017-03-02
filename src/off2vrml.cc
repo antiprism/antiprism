@@ -50,33 +50,32 @@ public:
   void usage();
 };
 
+// clang-format off
 void o2v_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options] input_files\n"
-      "\n"
-      "Convert files in OFF format to VRML format. If input_files are not\n"
-      "given the program reads from standard input.\n"
-      "\n"
-      "Options\n"
-      "%s"
-      "%s"
-      "  -l        use lines for edges, points for vertices, in default "
-      "colours\n"
-      "  -o <file> write output to file (default: write to standard output)\n"
-      "\n"
-      "  Scene options\n"
-      "%s"
-      "\n"
-      "  Precision options\n"
-      "%s"
-      "\n"
-      "\n",
-      prog_name(), help_ver_text, help_view_text, help_scene_text,
-      help_prec_text);
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] input_files\n"
+"\n"
+"Convert files in OFF format to VRML format. If input_files are not\n"
+"given the program reads from standard input.\n"
+"\n"
+"Options\n"
+"%s"
+"%s"
+"  -l        use lines for edges, points for vertices, in default colours\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+"\n"
+"  Scene options\n"
+"%s"
+"\n"
+"  Precision options\n"
+"%s"
+"\n"
+"\n", prog_name(), help_ver_text, help_view_text,
+      help_scene_text, help_prec_text);
 }
+// clang-format on
 
 void o2v_opts::process_command_line(int argc, char **argv)
 {

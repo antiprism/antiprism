@@ -66,33 +66,31 @@ public:
   void usage();
 };
 
+// clang-format off
 void m2off_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options] [input_file]\n"
-      "\n"
-      "Convert files in 'm' format, used by LiveGraphics3D, to OFF format. If\n"
-      "input_file is not given the program reads from standard input.\n"
-      "\n"
-      "Options\n"
-      "%s"
-      "  -x <elms> hide elements. The element string can include v, e and f\n"
-      "               to hide, respectively, vertices, edges and faces\n"
-      "  -l <lim>  minimum distance for unique vertex locations as negative "
-      "exponent\n"
-      "               (default: %d giving %.0e)\n"
-      "  -b        use back face colors instead of front ones, if available\n"
-      "  -o <file> write output to file (default: write to standard output)\n"
-      "\nScene Options\n"
-      "  -v        turn model to LiveGraphics3D viewpoint\n"
-      "  -C <file> dump color lights into OFF file\n"
-      "\n"
-      "\n",
-      prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
-      ::epsilon);
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] [input_file]\n"
+"\n"
+"Convert files in 'm' format, used by LiveGraphics3D, to OFF format. If\n"
+"input_file is not given the program reads from standard input.\n"
+"\n"
+"Options\n"
+"%s"
+"  -x <elms> hide elements. The element string can include v, e and f\n"
+"               to hide, respectively, vertices, edges and faces\n"
+"  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
+"               (default: %d giving %.0e)\n"
+"  -b        use back face colors instead of front ones, if available\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+"\nScene Options\n"
+"  -v        turn model to LiveGraphics3D viewpoint\n"
+"  -C <file> dump color lights into OFF file\n"
+"\n"
+"\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }
+// clang-format on
 
 void m2off_opts::process_command_line(int argc, char **argv)
 {

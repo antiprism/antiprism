@@ -53,27 +53,27 @@ public:
   void usage();
 };
 
+// clang-format off
 void saff_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options] num_points\n"
-      "\n"
-      "Distribute a number of points on a sphere using the algorithm\n"
-      "from \"Distributing many points on a sphere\" by E.B. Saff and\n"
-      "A.B.J. Kuijlaars, Mathematical Intelligencer 19.1 (1997) 5--11.\n"
-      "\n"
-      "Options\n"
-      "%s"
-      "  -a <ang>  increment each point placement by a fixed angle instead of\n"
-      "            using Saff and Kuiljaars' placement method\n"
-      "  -p        place points at the two poles\n"
-      "  -o <file> write output to file (default: write to standard output)\n"
-      "\n"
-      "\n",
-      prog_name(), help_ver_text);
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] num_points\n"
+"\n"
+"Distribute a number of points on a sphere using the algorithm\n"
+"from \"Distributing many points on a sphere\" by E.B. Saff and\n"
+"A.B.J. Kuijlaars, Mathematical Intelligencer 19.1 (1997) 5--11.\n"
+"\n"
+"Options\n"
+"%s"
+"  -a <ang>  increment each point placement by a fixed angle instead of\n"
+"            using Saff and Kuiljaars' placement method\n"
+"  -p        place points at the two poles\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+"\n"
+"\n", prog_name(), help_ver_text);
 }
+// clang-format on
 
 void saff_opts::process_command_line(int argc, char **argv)
 {

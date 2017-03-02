@@ -63,34 +63,29 @@ public:
   void usage();
 };
 
+// clang-format off
 void nfold_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options] fraction [input_file]\n"
-      "\n"
-      "Generalise an axial model by changing its rotational symmetry. Read a "
-      "model,\n"
-      "in OFF format, with an m-fold rotational axis on the z-axis, and create "
-      "a\n"
-      "new model, generally non-planar, with the same relative connections, "
-      "but\n"
-      "with an n-fold axis instead. fraction is given as n, or n/d (n and d\n"
-      "integers). Vertices of a face originally separated by x/m of a turn "
-      "around\n"
-      "the z-axis will be separated by xd/n of a turn in the final model. If\n"
-      "input_file is not given the program reads from standard input. %s is "
-      "based \n"
-      "on an idea by Bruce R. Gilson.\n"
-      "\n"
-      "Options\n"
-      "%s"
-      "  -o <file> write output to file (default: write to standard output)\n"
-      "\n"
-      "\n",
-      prog_name(), prog_name(), help_ver_text);
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] fraction [input_file]\n"
+"\n"
+"Generalise an axial model by changing its rotational symmetry. Read a model,\n"
+"in OFF format, with an m-fold rotational axis on the z-axis, and create a\n"
+"new model, generally non-planar, with the same relative connections, but\n"
+"with an n-fold axis instead. fraction is given as n, or n/d (n and d\n"
+"integers). Vertices of a face originally separated by x/m of a turn around\n"
+"the z-axis will be separated by xd/n of a turn in the final model. If\n"
+"input_file is not given the program reads from standard input. %s is based \n"
+"on an idea by Bruce R. Gilson.\n"
+"\n"
+"Options\n"
+"%s"
+"  -o <file> write output to file (default: write to standard output)\n"
+"\n"
+"\n", prog_name(), prog_name(), help_ver_text);
 }
+// clang-format on
 
 void nfold_opts::process_command_line(int argc, char **argv)
 {

@@ -82,53 +82,42 @@ public:
   void usage();
 };
 
+// clang-format off
 void ksc_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options] [input_file]\n"
-      "\n"
-      "A polyhedral kaleidoscope. Read a file in OFF format and repeat it\n"
-      "in a symmetric arrangement like a kaleidoscope. If input_file is\n"
-      "not given the program reads from standard input.\n"
-      "\n"
-      "Options\n"
-      "%s"
-      "  -s <sym>  (required) symmetry type for kaleidoscope, up to three "
-      "comma\n"
-      "            separated parts: main symmetry (Schoenflies notation) or "
-      "file name,\n"
-      "            subgroup (Schoenflies notation), and conjugation type "
-      "(integer)\n"
-      "  -y <arg>  make a compound by aligning the component to match a "
-      "subsymmetry\n"
-      "            with the kaleidoscope. Argument is either 'list' (to print "
-      "the\n"
-      "            list of the compounds to standard output) or a number from "
-      "the\n"
-      "            list optionally followed by a comma and realignment (colon\n"
-      "            separated list of an integer then decimal numbers)\n"
-      "  -c <elms> color elements with a different index number for each part. "
-      "The\n"
-      "            element string can include v, e and f to color, "
-      "respectively,\n"
-      "            vertices, edges and faces\n"
-      "  -m <maps> a comma separated list of colour maps used to transform "
-      "colour\n"
-      "            indexes (default: rand), a part consisting of letters from\n"
-      "            v, e, f, selects the element types to apply the map list "
-      "to\n"
-      "            (default 'vef'). The 'compound' map should give useful "
-      "results.\n"
-      "  -I        ignore shared symmetries, full kaleidoscopic repetition of\n"
-      "            component\n"
-      "  -Q        print information about compound\n"
-      "  -o <file> write output to file (default: write to standard output)\n"
-      "\n"
-      "\n",
-      prog_name(), help_ver_text);
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] [input_file]\n"
+"\n"
+"A polyhedral kaleidoscope. Read a file in OFF format and repeat it\n"
+"in a symmetric arrangement like a kaleidoscope. If input_file is\n"
+"not given the program reads from standard input.\n"
+"\n"
+"Options\n"
+"%s"
+"  -s <sym>  (required) symmetry type for kaleidoscope, up to three comma\n"
+"            separated parts: main symmetry (Schoenflies notation) or file name,\n"
+"            subgroup (Schoenflies notation), and conjugation type (integer)\n"
+"  -y <arg>  make a compound by aligning the component to match a subsymmetry\n"
+"            with the kaleidoscope. Argument is either 'list' (to print the\n"
+"            list of the compounds to standard output) or a number from the\n"
+"            list optionally followed by a comma and realignment (colon\n"
+"            separated list of an integer then decimal numbers)\n"
+"  -c <elms> color elements with a different index number for each part. The\n"
+"            element string can include v, e and f to color, respectively,\n"
+"            vertices, edges and faces\n"
+"  -m <maps> a comma separated list of colour maps used to transform colour\n"
+"            indexes (default: rand), a part consisting of letters from\n"
+"            v, e, f, selects the element types to apply the map list to\n"
+"            (default 'vef'). The 'compound' map should give useful results.\n"
+"  -I        ignore shared symmetries, full kaleidoscopic repetition of\n"
+"            component\n"
+"  -Q        print information about compound\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+"\n"
+"\n", prog_name(), help_ver_text);
 }
+// clang-format on
 
 void ksc_opts::process_command_line(int argc, char **argv)
 {

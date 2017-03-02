@@ -78,11 +78,10 @@ public:
   void usage();
 };
 
+// clang-format off
 void pr_opts::usage()
 {
-  fprintf(
-      stdout,
-      // clang-format off
+   fprintf(stdout,
 "\n"
 "Usage: %s [options] [input_file]\n"
 "\n"
@@ -105,7 +104,7 @@ void pr_opts::usage()
 "              v - nearest vertex distance, V - furthest vertex distance\n"
 "              e - nearest edge distance,   E - furthest edge distance\n"
 "              f - nearest face distance,   F - furthest face distance\n"
-"              X - topological dual using face centroids for dual vertices\n"
+"              X - topological dual using face centroids for dual vertices\n"  
 "            or a comma separated list of vertex indices (starting from 0)\n"
 "            and the distance is to the space containing those vertices\n"
 "  -R <rad>  initial value for a radius calculation (default: calculated)\n"
@@ -120,11 +119,9 @@ void pr_opts::usage()
 "  -a        append dual to original polyhedron\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
-"\n",
-      // clang-format on
-      prog_name(), help_ver_text, inf, int(-log(::epsilon) / log(10) + 0.5),
-      ::epsilon);
+"\n", prog_name(), help_ver_text, inf, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }
+// clang-format on
 
 void pr_opts::process_command_line(int argc, char **argv)
 {

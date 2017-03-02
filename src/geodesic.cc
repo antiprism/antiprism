@@ -63,50 +63,43 @@ public:
   void usage();
 };
 
+// clang-format off
 void geo_opts::usage()
 {
-  fprintf(
-      stdout,
-      "\n"
-      "Usage: %s [options] [input_file]\n"
-      "\n"
-      "Read a file in OFF format and make a higher frequency, plane-faced\n"
-      "polyhedron or geodesic sphere. If input_file is not given the program\n"
-      "reads from standard input\n"
+   fprintf(stdout,
+"\n"
+"Usage: %s [options] [input_file]\n"
+"\n"
+"Read a file in OFF format and make a higher frequency, plane-faced\n"
+"polyhedron or geodesic sphere. If input_file is not given the program\n"
+"reads from standard input\n"
 
-      "\n"
-      "Options\n"
-      "%s"
-      "  -f <freq> pattern frequency, a positive integer (default: 1) giving "
-      "the\n"
-      "            number of repeats of the specified pattern along an edge\n"
-      "  -F <freq> final step frequency, minimum number of edges to move "
-      "between\n"
-      "            base vertices in the geodesic model. For a pattern m,n the\n"
-      "            step frequency is pattern_frequency/(m+n)\n"
-      "  -c <clss> face division pattern,  1 (Class I, default), 2 (Class II), "
-      "or\n"
-      "            two numbers separated by a comma to determine the pattern\n"
-      "            (Class III, but n,0 or 0,n is Class I, and n,n is Class "
-      "II)\n"
-      "  -M <mthd> Method of applying the frequency pattern:\n"
-      "            s - geodesic sphere (default). The pattern grid is formed\n"
-      "                from divisions along each edge that make an equal "
-      "angle\n"
-      "                at the centre. The geodesic vertices are centred at "
-      "the\n"
-      "                origin and projected on to a unit sphere.\n"
-      "            p - planar. The pattern grid is formed from equal length\n"
-      "                divisions along each edge, the new vertices lie on the\n"
-      "                surface of the original polyhedron.\n"
-      "  -C <cent> centre of points, in form \"x_val,y_val,z_val\" (default: "
-      "0,0,0)\n"
-      "            used for geodesic spheres\n"
-      "  -o <file> write output to file (default: write to standard output)\n"
-      "\n"
-      "\n",
-      prog_name(), help_ver_text);
+"\n"
+"Options\n"
+"%s"
+"  -f <freq> pattern frequency, a positive integer (default: 1) giving the\n"
+"            number of repeats of the specified pattern along an edge\n"
+"  -F <freq> final step frequency, minimum number of edges to move between\n"
+"            base vertices in the geodesic model. For a pattern m,n the\n"
+"            step frequency is pattern_frequency/(m+n)\n"
+"  -c <clss> face division pattern,  1 (Class I, default), 2 (Class II), or\n"
+"            two numbers separated by a comma to determine the pattern\n"
+"            (Class III, but n,0 or 0,n is Class I, and n,n is Class II)\n"
+"  -M <mthd> Method of applying the frequency pattern:\n"
+"            s - geodesic sphere (default). The pattern grid is formed\n"
+"                from divisions along each edge that make an equal angle\n"
+"                at the centre. The geodesic vertices are centred at the\n"
+"                origin and projected on to a unit sphere.\n"
+"            p - planar. The pattern grid is formed from equal length\n"
+"                divisions along each edge, the new vertices lie on the\n"
+"                surface of the original polyhedron.\n"
+"  -C <cent> centre of points, in form \"x_val,y_val,z_val\" (default: 0,0,0)\n"
+"            used for geodesic spheres\n"
+"  -o <file> write output to file (default: write to standard output)\n"
+"\n"
+"\n", prog_name(), help_ver_text);
 }
+// clang-format on
 
 void geo_opts::process_command_line(int argc, char **argv)
 {
