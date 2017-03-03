@@ -387,7 +387,7 @@ void sort_vertices(Geometry &geom, vector<vertexMap> &vm_all_verts,
   for (unsigned int i = 0; i < verts.size(); i++) {
     Color col;
     if (include_colors)
-      geom.colors(VERTS).get(i);
+      col = geom.colors(VERTS).get(i);
     vs.push_back(vertSort(i, verts[i], col));
   }
 
