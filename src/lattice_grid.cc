@@ -204,6 +204,106 @@ void sph_lat_grid::make_lattice(Geometry &geom)
 
 // for lattice code only
 
+// parse special color entry strings for bravais and lat_util
+//
+// 1 arg  - color name/index
+// 2 args - color name/index, transparency
+// 2 args - color name/index, assignment
+// 3 args - color name/index, transparency, assignment
+// 3 args - color r,g,b
+// 4 args - color r,g,b, transparency
+// 4 args - color r,g,b, assignment
+// 5 args - color r,g,b, transparency, assignment
+// vcol is a vector size 4 of pre-allocated colors
+void parse_color_string(ProgramOpts *opts, char *optarg, const char c,
+                        vector<Color> &vcol)
+{
+  vector<char *> parts;
+  int parts_sz = split_line(optarg, parts, ",");
+  if (parts_sz > 5)
+    opts->error("the argument has more than 5 parts", c);
+
+  Color col;
+  bool valid_color = false;
+  int next_parms_idx = 1;
+
+  // see if entry is r,g,b
+  char parts_test[MSG_SZ];
+  if (parts_sz >= 3) {
+    parts_test[0] = '\0';
+    strcat_msg(parts_test, parts[0]);
+    strcat_msg(parts_test, ",");
+    strcat_msg(parts_test, parts[1]);
+    strcat_msg(parts_test, ",");
+    strcat_msg(parts_test, parts[2]);
+    if (col.read(parts_test)) {
+      if (col.is_set())
+        valid_color = true;
+      next_parms_idx = 3;
+    }
+  }
+
+  // check to see if it was a color name
+  if (!valid_color) {
+    if (col.read(parts[0])) {
+      if (col.is_set())
+        valid_color = true;
+      next_parms_idx = 1;
+    }
+  }
+
+  if (!valid_color)
+    opts->print_status_or_exit(col.read(parts[0]), c);
+
+  // add transparency
+  if (parts_sz > next_parms_idx) {
+    // if the next part isn't an assignment
+    if (strspn(parts[next_parms_idx], "lcvh") !=
+        strlen(parts[next_parms_idx])) {
+      int opacity = 255;
+      opts->print_status_or_exit(read_int(parts[next_parms_idx], &opacity), c);
+      if (opacity < 0 || opacity > 255)
+        opts->error(
+            msg_str("transparency is '%d' and must be between 0 and 255",
+                    opacity),
+            c);
+      if (col.is_visible_value())
+        col = Color(col[0], col[1], col[2], opacity);
+      else
+        opts->warning("transparency has no effect on map indexes or invisible",
+                      c);
+      next_parms_idx++;
+    }
+  }
+
+  unsigned int conv_elems = 15;
+  if (parts_sz > next_parms_idx) {
+    if (strspn(parts[next_parms_idx], "lcvh") != strlen(parts[next_parms_idx]))
+      opts->error(msg_str("elements to map are '%s' must be from "
+                          "l, c, v, h",
+                          parts[next_parms_idx]),
+                  c);
+    conv_elems = 8 * (strchr(parts[next_parms_idx], 'h') != nullptr) +
+                 4 * (strchr(parts[next_parms_idx], 'v') != nullptr) +
+                 2 * (strchr(parts[next_parms_idx], 'c') != nullptr) +
+                 1 * (strchr(parts[next_parms_idx], 'l') != nullptr);
+    next_parms_idx++;
+  }
+
+  for (int i = 0; i < 4; i++) {
+    if (conv_elems & (1 << i)) {
+      // current color can be unset
+      if (!col.is_set())
+        vcol[i] = Color();
+      else
+        vcol[i] = col;
+    }
+  }
+
+  if (parts_sz > next_parms_idx)
+    opts->error("extraneous input",c);
+}
+
 double lattice_radius(const Geometry &geom, const char radius_type)
 {
   Geometry tgeom = geom;
@@ -537,7 +637,7 @@ void color_by_symmetry_normals(Geometry &geom, const char color_method,
   const vector<Vec3d> &verts = geom.verts();
 
   string map_name = "rnd";
-  if (face_opacity != -1)
+  if (face_opacity > -1)
     map_name += msg_str("_A%g", (double)face_opacity / 255);
   std::unique_ptr<ColorMap> cmap(colormap_from_name(map_name.c_str()));
 
@@ -562,7 +662,7 @@ void color_edges_by_sqrt(Geometry &geom, const char color_method)
   geom.add_missing_impl_edges();
 
   std::unique_ptr<ColorMap> cmap(colormap_from_name("rnd"));
-  // e_Coloring clrg(&geom);
+  // e_coloring clrg(&geom);
   for (unsigned int i = 0; i < geom.edges().size(); i++) {
     // geom.colors(EDGES).set(i, int(floor(pow(geom.edge_len(i),2)+0.5)));
     int idx = int(floor(pow(geom.edge_len(i), 2) + 0.5));

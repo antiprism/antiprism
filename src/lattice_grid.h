@@ -32,8 +32,11 @@
 #define LATTICE_GRID_H
 
 #include <string>
+#include <vector>
 
 #include "../base/antiprism.h"
+
+using std::vector;
 
 typedef bool (*COORD_TEST_F)(int, int, int);
 
@@ -53,6 +56,9 @@ bool hcp_diamond_test(int x, int y, int z);        // dist2 = 27
 void add_struts(anti::Geometry &geom, int len2);
 
 // for lattice code only
+void parse_color_string(anti::ProgramOpts *, char *, const char,
+                        vector<anti::Color> &);
+
 double lattice_radius(const anti::Geometry &, const char);
 void geom_container_clip(anti::Geometry &, anti::Geometry &, const double,
                          const anti::Vec3d &, const bool,

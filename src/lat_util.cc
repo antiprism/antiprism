@@ -147,10 +147,10 @@ void lutil_opts::usage()
 "  -S <opt>  list every possible strut value (to standard output)\n"
 "               f - full report, v - values only\n"
 "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
-"  -V <col>  vertex color, (optional) elements, (optional) transparency\n"
+"  -V <col>  vertex color, (optional) transparency, (optional) elements\n"
+"               transparency. valid range from 0 (invisible) to 255 (opaque)\n"
 "               elements to color are l - lattice, c - convex hull, v - voronoi\n"
 "                  (default elements: lcv)\n"
-"               transparency. valid range from 0 (invisible) to 255 (opaque)\n"
 "  -E <col>  edge color (for struts, convex hulls, and voronoi)\n"
 "               lower case outputs map indexes. upper case outputs color values\n"
 "               key word: r,R for color edges by root value of final product\n"
@@ -262,223 +262,39 @@ void lutil_opts::process_command_line(int argc, char **argv)
       append_lattice = true;
       break;
 
-    case 'V': {
-      vector<char *> parts;
-      int parts_sz = split_line(optarg, parts, ",");
-      if (parts_sz > 6)
-        error("the argument has more than 6 parts", c);
-
-      Color col;
-      bool valid_color = false;
-      int next_parms_idx = 1;
-
-      if (parts_sz >= 3) {
-        char parts_test[MSG_SZ];
-        parts_test[0] = '\0';
-        strcat_msg(parts_test, parts[0]);
-        strcat_msg(parts_test, ",");
-        strcat_msg(parts_test, parts[1]);
-        strcat_msg(parts_test, ",");
-        strcat_msg(parts_test, parts[2]);
-        if (col.read(parts_test)) {
-          valid_color = true;
-          next_parms_idx = 3;
-        }
-        Color col_save = col;
-        if (parts_sz >= 4) {
-          strcat_msg(parts_test, ",");
-          strcat_msg(parts_test, parts[3]);
-          if (col.read(parts_test)) {
-            valid_color = true;
-            next_parms_idx = 4;
-          }
-          else
-            col = col_save;
-        }
-      }
-
-      if (!valid_color)
-        print_status_or_exit(col.read(parts[0]), c);
-
-      unsigned int conv_elems = 15;
-      if (parts_sz > next_parms_idx) {
-        if (strspn(parts[next_parms_idx], "lcvh") !=
-            strlen(parts[next_parms_idx]))
-          error(msg_str("elements to map are '%s' must be from "
-                        "l, c, v or h",
-                        parts[next_parms_idx]),
-                c);
-        conv_elems = 8 * (strchr(parts[next_parms_idx], 'h') != nullptr) +
-                     4 * (strchr(parts[next_parms_idx], 'v') != nullptr) +
-                     2 * (strchr(parts[next_parms_idx], 'c') != nullptr) +
-                     1 * (strchr(parts[next_parms_idx], 'l') != nullptr);
-      }
-
-      int opq = col[3];
-      if (parts_sz > next_parms_idx + 1)
-        opq = atoi(parts[next_parms_idx + 1]);
-
-      if (opq < 0 || opq > 255)
-        error("transparency value must be between 0 and 255", c);
-
-      for (int i = 0; i < 3; i++) {
-        if (conv_elems & (1 << i)) {
-          if (!col.is_set())
-            vert_col[i] = Color();
-          else
-            vert_col[i] = Color(col[0], col[1], col[2], opq);
-        }
-      }
+    case 'V':
+      parse_color_string(this, optarg, c, vert_col);
       break;
-    }
 
     case 'E': {
+      // make a copy of optarg so original isn't split yet
+      char *optarg_copy = (char *)malloc(strlen(optarg) + 1);
+      strcpy(optarg_copy, optarg);
       vector<char *> parts;
-      int parts_sz = split_line(optarg, parts, ",");
-      if (parts_sz > 6)
-        error("the argument has more than 6 parts", c);
+      split_line(optarg_copy, parts, ",");
 
-      if (!strcasecmp(parts[0], "r")) {
+      if (!strcasecmp(parts[0], "r"))
         color_edges_by_sqrt = parts[0][0];
-        break;
-      }
+      else
+        parse_color_string(this, optarg, c, edge_col);
 
-      Color col;
-      bool valid_color = false;
-      int next_parms_idx = 1;
-
-      if (parts_sz >= 3) {
-        char parts_test[MSG_SZ];
-        parts_test[0] = '\0';
-        strcat_msg(parts_test, parts[0]);
-        strcat_msg(parts_test, ",");
-        strcat_msg(parts_test, parts[1]);
-        strcat_msg(parts_test, ",");
-        strcat_msg(parts_test, parts[2]);
-        if (col.read(parts_test)) {
-          valid_color = true;
-          next_parms_idx = 3;
-        }
-        Color col_save = col;
-        if (parts_sz >= 4) {
-          strcat_msg(parts_test, ",");
-          strcat_msg(parts_test, parts[3]);
-          if (col.read(parts_test)) {
-            valid_color = true;
-            next_parms_idx = 4;
-          }
-          else
-            col = col_save;
-        }
-      }
-
-      if (!valid_color)
-        print_status_or_exit(col.read(parts[0]), c);
-
-      unsigned int conv_elems = 15;
-      if (parts_sz > next_parms_idx) {
-        if (strspn(parts[next_parms_idx], "lcvh") !=
-            strlen(parts[next_parms_idx]))
-          error(msg_str("elements to map are '%s' must be from "
-                        "l, c, v, h",
-                        parts[next_parms_idx]),
-                c);
-        conv_elems = 8 * (strchr(parts[next_parms_idx], 'h') != nullptr) +
-                     4 * (strchr(parts[next_parms_idx], 'v') != nullptr) +
-                     2 * (strchr(parts[next_parms_idx], 'c') != nullptr) +
-                     1 * (strchr(parts[next_parms_idx], 'l') != nullptr);
-      }
-
-      int opq = col[3];
-      if (parts_sz > next_parms_idx + 1)
-        opq = atoi(parts[next_parms_idx + 1]);
-
-      if (opq < 0 || opq > 255)
-        error("tranparency value must be between 0 and 255", c);
-
-      for (int i = 0; i < 3; i++) {
-        if (conv_elems & (1 << i)) {
-          if (!col.is_set())
-            edge_col[i] = Color();
-          else
-            edge_col[i] = Color(col[0], col[1], col[2], opq);
-        }
-      }
+      free(optarg_copy);
       break;
     }
 
     case 'F': {
+      // make a copy of optarg so original isn't split yet
+      char *optarg_copy = (char *)malloc(strlen(optarg) + 1);
+      strcpy(optarg_copy, optarg);
       vector<char *> parts;
-      int parts_sz = split_line(optarg, parts, ",");
-      if (parts_sz > 6)
-        error("the argument has more than 6 parts", c);
+      split_line(optarg_copy, parts, ",");
 
-      if ((!strcasecmp(parts[0], "s")) || (!strcasecmp(parts[0], "c"))) {
+      if ((!strcasecmp(parts[0], "s")) || (!strcasecmp(parts[0], "c")))
         color_method = parts[0][0];
-        break;
-      }
+      else
+        parse_color_string(this, optarg, c, face_col);
 
-      Color col;
-      bool valid_color = false;
-      int next_parms_idx = 1;
-
-      if (parts_sz >= 3) {
-        char parts_test[MSG_SZ];
-        parts_test[0] = '\0';
-        strcat_msg(parts_test, parts[0]);
-        strcat_msg(parts_test, ",");
-        strcat_msg(parts_test, parts[1]);
-        strcat_msg(parts_test, ",");
-        strcat_msg(parts_test, parts[2]);
-        if (col.read(parts_test)) {
-          valid_color = true;
-          next_parms_idx = 3;
-        }
-        Color col_save = col;
-        if (parts_sz >= 4) {
-          strcat_msg(parts_test, ",");
-          strcat_msg(parts_test, parts[3]);
-          if (col.read(parts_test)) {
-            valid_color = true;
-            next_parms_idx = 4;
-          }
-          else
-            col = col_save;
-        }
-      }
-
-      if (!valid_color)
-        print_status_or_exit(col.read(parts[0]), c);
-
-      unsigned int conv_elems = 15;
-      if (parts_sz > next_parms_idx) {
-        if (strspn(parts[next_parms_idx], "lcvh") !=
-            strlen(parts[next_parms_idx]))
-          error(msg_str("elements to map are '%s' must be from "
-                        "l, c, v, h",
-                        parts[next_parms_idx]),
-                c);
-        conv_elems = 8 * (strchr(parts[next_parms_idx], 'h') != nullptr) +
-                     4 * (strchr(parts[next_parms_idx], 'v') != nullptr) +
-                     2 * (strchr(parts[next_parms_idx], 'c') != nullptr) +
-                     1 * (strchr(parts[next_parms_idx], 'l') != nullptr);
-      }
-
-      int opq = col[3];
-      if (parts_sz > next_parms_idx + 1)
-        opq = atoi(parts[next_parms_idx + 1]);
-
-      if (opq < 0 || opq > 255)
-        error("transparency value must be between 0 and 255", c);
-
-      for (int i = 0; i < 3; i++) {
-        if (conv_elems & (1 << i)) {
-          if (!col.is_set())
-            face_col[i] = Color();
-          else
-            face_col[i] = Color(col[0], col[1], col[2], opq);
-        }
-      }
+      free(optarg_copy);
       break;
     }
 
