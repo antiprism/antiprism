@@ -318,11 +318,9 @@ void Coloring::f_proper(bool apply_map)
 {
   ProperColor prop(get_geom()->faces().size());
 
-  map<vector<int>, vector<int>> ef_prs;
-  get_geom()->get_edge_face_pairs(ef_prs, false);
-  map<vector<int>, vector<int>>::const_iterator mi;
-  for (mi = ef_prs.begin(); mi != ef_prs.end(); ++mi) {
-    const vector<int> &f_idxs = mi->second;
+  auto ef_prs = get_geom()->get_edge_face_pairs(false);
+  for (const auto &kp : ef_prs) {
+    const auto &f_idxs = kp.second;
     for (unsigned int i = 0; i < f_idxs.size(); ++i)
       for (unsigned int j = i + 1; j < f_idxs.size(); ++j)
         prop.set_adj(f_idxs[i], f_idxs[j]);
@@ -451,8 +449,7 @@ void Coloring::e_unique(bool apply_map)
 
 void Coloring::e_proper(bool apply_map)
 {
-  map<vector<int>, vector<int>> edges;
-  get_geom()->get_edge_face_pairs(edges, false);
+  auto edges = get_geom()->get_edge_face_pairs(false);
   map<vector<int>, vector<int>>::iterator mi;
   int idx = 0;
   for (mi = edges.begin(); mi != edges.end(); ++mi)

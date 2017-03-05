@@ -53,8 +53,7 @@ void make_edges_to_faces(Geometry *geom)
   for (auto &f : geom->faces())
     geom->add_vert(geom->face_cent(f));
 
-  map<vector<int>, vector<int>> edges;
-  geom->get_edge_face_pairs(edges, false);
+  auto edges = geom->get_edge_face_pairs(false);
   geom->clear(FACES);
 
   for (auto &mv : edges) {

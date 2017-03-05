@@ -55,8 +55,7 @@ void make_meta(const Geometry &geom, Geometry &meta)
 
   Color light(1.0, 0.8, 0.6, 0.5);
   Color dark(0.1, 0.3, 0.6, 0.5);
-  map<vector<int>, vector<int>> ef_pairs;
-  geom.get_edge_face_pairs(ef_pairs);
+  auto ef_pairs = geom.get_edge_face_pairs();
   for (auto &ef_pair : ef_pairs) {
     // The edge and face pair make a quadrilateral
     // Add the centre to this quadrilateral
@@ -363,8 +362,7 @@ public:
 
 bool weave::find_nbrs()
 {
-  map<vector<int>, vector<int>> ef_pairs;
-  meta.get_edge_face_pairs(ef_pairs, false);
+  auto ef_pairs = meta.get_edge_face_pairs(false);
 
   // Find the neighbour face opposite each VEF vertex
   nbrs.resize(meta.faces().size(), vector<int>(3));

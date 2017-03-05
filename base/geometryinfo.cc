@@ -501,9 +501,9 @@ bool GeometryInfo::is_orientable()
 void GeometryInfo::find_edge_face_pairs()
 {
   if (is_oriented())
-    geom.get_edge_face_pairs(efpairs, true);
+    efpairs = geom.get_edge_face_pairs(true);
   else
-    geom.get_edge_face_pairs(efpairs, false);
+    efpairs = geom.get_edge_face_pairs(false);
 }
 
 void GeometryInfo::find_connectivity()
@@ -511,7 +511,7 @@ void GeometryInfo::find_connectivity()
   // get a copy of edge face pairs with all faces around an edge
   map<vector<int>, vector<int>> tmp_efpairs;
   if (is_oriented())
-    geom.get_edge_face_pairs(tmp_efpairs, false);
+    tmp_efpairs = geom.get_edge_face_pairs(false);
   else if (efpairs.size() == 0)
     find_edge_face_pairs();
 
@@ -803,8 +803,7 @@ void GeometryInfo::find_vert_figs()
 {
   vert_figs.resize(num_verts());
   get_vert_cons();
-  map<vector<int>, vector<int>> ef_pairs;
-  geom.get_edge_face_pairs(ef_pairs, false);
+  auto ef_pairs = geom.get_edge_face_pairs(false);
 
   // find set of faces that each vertex belongs to
   const int v_sz = geom.verts().size();

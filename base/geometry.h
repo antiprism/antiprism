@@ -588,12 +588,11 @@ public:
   void get_impl_edges(std::vector<std::vector<int>> &edgs) const;
 
   /// Get faces lying on each side of an edge for all edges
-  /**\param edge2facepr return map of edges to face pairs
-   * \param oriented the geometry is oriented and the first face in
-   *  the face pair has the vertices of the edge pair in order */
-  void
-  get_edge_face_pairs(std::map<std::vector<int>, std::vector<int>> &edge2facepr,
-                      bool oriented = true) const;
+  /**\param oriented the geometry is oriented and the first face in
+   *  the face pair has the vertices of the edge pair in order.
+   * \return edge2facepr return map of edges to face pairs.*/
+  std::map<std::vector<int>, std::vector<int>>
+  get_edge_face_pairs(bool oriented = true) const;
 };
 
 /// Make a face from vertex index numbers

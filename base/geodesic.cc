@@ -228,7 +228,7 @@ void Geodesic::init()
     edge_idx[base.edges(i)] = i;
 
   // fprintf(stderr, "edges.size()=%d\n", edges.size());
-  base.get_edge_face_pairs(edge_faces);
+  edge_faces = base.get_edge_face_pairs();
   map<vector<int>, vector<int>>::iterator mi;
 
   F = freq / (m * m + m * n + n * n);

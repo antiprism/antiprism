@@ -192,8 +192,7 @@ void leo_opts::process_command_line(int argc, char **argv)
 void get_open_edges(const Geometry &geom, vector<vector<int>> &open_edges)
 {
   open_edges.clear();
-  map<vector<int>, vector<int>> efpairs;
-  geom.get_edge_face_pairs(efpairs, false);
+  auto efpairs = geom.get_edge_face_pairs(false);
 
   map<vector<int>, vector<int>>::const_iterator ei;
   for (ei = efpairs.begin(); ei != efpairs.end(); ++ei) {

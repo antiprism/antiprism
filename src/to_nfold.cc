@@ -608,13 +608,11 @@ int cyc_geom::make_geom(Geometry *o_geom, int to_n, int to_d)
     for (auto si = f_equivs[i].begin(); si != f_equivs[i].end(); ++si)
       f2equiv[*si] = i;
 
-  map<vector<int>, vector<int>> e2f;
-  geom->get_edge_face_pairs(e2f, false);
-  map<vector<int>, vector<int>>::iterator mi;
-  for (mi = e2f.begin(); mi != e2f.end(); ++mi) {
-    if (is_axial_edge(mi->first, *geom, eps) && mi->second.size() == 2 &&
-        f2equiv[mi->second[0]] == f2equiv[mi->second[1]]) {
-      cyc_chain cyc_c(*geom, mi->first, 1, eps);
+  auto e2f = geom->get_edge_face_pairs(false);
+  for (const auto &kp : e2f) {
+    if (is_axial_edge(kp.first, *geom, eps) && kp.second.size() == 2 &&
+        f2equiv[kp.second[0]] == f2equiv[kp.second[1]]) {
+      cyc_chain cyc_c(*geom, kp.first, 1, eps);
       chains.push_back(cyc_c);
     }
   }

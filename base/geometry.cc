@@ -474,10 +474,10 @@ bool Geometry::is_oriented() const
   return true;
 }
 
-void Geometry::get_edge_face_pairs(map<vector<int>, vector<int>> &edge2facepr,
-                                   bool oriented) const
+std::map<std::vector<int>, std::vector<int>>
+Geometry::get_edge_face_pairs(bool oriented) const
 {
-  map<vector<int>, vector<int>>::iterator mi;
+  map<vector<int>, vector<int>> edge2facepr;
   vector<int> vrts(2);
   for (unsigned int i = 0; i < faces().size(); ++i) {
     for (unsigned int j = 0; j < faces(i).size(); ++j) {
@@ -489,8 +489,7 @@ void Geometry::get_edge_face_pairs(map<vector<int>, vector<int>> &edge2facepr,
         face_pos = 1;
       }
       if (oriented) {
-        mi = edge2facepr.find(vrts);
-        if (mi == edge2facepr.end()) {
+        if (edge2facepr.find(vrts) == edge2facepr.end()) {
           edge2facepr[vrts].resize(2);
           edge2facepr[vrts][(face_pos + 1) % 2] = -1;
         }
@@ -500,6 +499,7 @@ void Geometry::get_edge_face_pairs(map<vector<int>, vector<int>> &edge2facepr,
         edge2facepr[vrts].push_back(i);
     }
   }
+  return edge2facepr;
 }
 
 void Geometry::verts_merge(map<int, int> &vmap)

@@ -157,9 +157,7 @@ void tw_opts::process_command_line(int argc, char **argv)
 Geometry twist(Geometry &poly, Geometry &dual, double twist_val, Vec3d centre,
                bool struts_only)
 {
-
-  map<vector<int>, vector<int>> edges;
-  poly.get_edge_face_pairs(edges, true);
+  auto edges = poly.get_edge_face_pairs(true);
   map<vector<int>, vector<int>>::iterator mi, mi_next;
   Geometry twist;
 

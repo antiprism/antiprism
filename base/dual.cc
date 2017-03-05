@@ -105,8 +105,7 @@ int orient_geom(Geometry &geom, vector<vector<int>> *parts)
 {
   int part_num = 0;
   const int done = -1;
-  map<vector<int>, vector<int>> edges;
-  geom.get_edge_face_pairs(edges, false);
+  auto edges = geom.get_edge_face_pairs(false);
   vector<int> cur_idx(geom.faces().size(), 0);
   vector<int> prev_face(geom.faces().size(), 0);
   vector<int> e_verts(2);
