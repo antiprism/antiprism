@@ -140,6 +140,18 @@ public:
    * \return \c true if valid HSLA values, else \c false */
   bool set_hsla(const Vec4d &hsla);
 
+  /// Set the alpha component of a color value
+  /**\param alpha the alpha value in range 0 - 255.
+   * \return \c true if the color was a valid color value and alpha
+   * was valid, else \c false .*/
+  bool set_alpha(int alpha);
+
+  /// Set the alpha component of a color value
+  /**\param alpha the alpha value in range 0.0 - 1.0.
+   * \return \c true if the color was a valid color value and alpha
+   * was valid, else \c false .*/
+  bool set_alpha(double alpha);
+
   /// Set the colour to its complement, or the complement of another colour
   /**\param col the colour to take the complement from, or use current
    *  colour if \a col is unset (default). If the base colour is not a
@@ -479,6 +491,18 @@ inline bool Color::is_invisible() const { return *this == invisible; }
 inline bool Color::is_set() const { return index > -2; } // is_val()||is_idx()
 
 inline bool Color::operator!=(Color c) const { return !(*this == c); }
+
+inline bool Color::set_alpha(int alpha)
+{
+  bool valid = false;
+  if (is_visible_value() && check(alpha)) {
+    rgba[3] = alpha;
+    valid = true;
+  }
+  return valid;
+}
+
+inline bool Color::set_alpha(double alpha) { return set_alpha(f2i(alpha)); }
 
 inline int Color::get_index() const { return is_index() ? index : -2; }
 
