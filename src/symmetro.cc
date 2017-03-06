@@ -74,10 +74,12 @@ public:
   char mode;
 
   vector<int> col_axis_idx;
-  char face_Coloring_method;
+  char face_coloring_method;
   int face_opacity;
+  bool color_digons;
   Color vert_col;
   Color edge_col;
+  Color digon_col;
   Color frame_col;
   ColorMapMulti map;
 
@@ -89,7 +91,7 @@ public:
         rotation_as_increment(0.0), add_pi(false), rotation_axis(-1),
         angle_between_axes(DBL_MAX), scale_axis(-1), convex_hull(0),
         offset(0.0), remove_free_faces(false), verbose(false), mode('\0'),
-        face_Coloring_method('a'), face_opacity(255),
+        face_coloring_method('a'), face_opacity(-1), color_digons(false),
         vert_col(Color(255, 215, 0)),    // gold
         edge_col(Color(211, 211, 211)),  // lightgrey
         frame_col(Color(135, 206, 235)), // skyblue3
@@ -169,13 +171,14 @@ void symmetro_opts::usage()
 "               (default: %d giving %.0e)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
-"  -Q <col>  frame color  (default: skyblue3)\n"
 "  -V <col>  vertex color (default: gold)\n"
 "  -E <col>  edge color   (default: lightgray)\n"
+"  -D        don't cover digons with edge color\n"
+"  -Q <col>  frame color  (default: skyblue3)\n"
 "  -f <mthd> mthd is face coloring method using color in map (default: a)\n"
 "               key word: none - sets no color\n"
 "               a - color by axis number\n"
-"               n - color by number of sides\n"
+"               n - color by number of sides (map start from digons (sides 2))\n"
 "  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
 "  -m <maps> color maps for faces to be tried in turn (default: m1)\n"
 "               keyword m1: red,blue,yellow,darkgreen\n"
@@ -229,7 +232,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
     scale.push_back(DBL_MAX);
 
   while ((c = getopt(argc, argv,
-                     ":hk:t:m:s:c:M:a:r:A:C:q:O:xvf:Q:V:E:T:l:o:")) != -1) {
+                     ":hk:t:m:s:c:M:a:r:A:C:q:O:xvf:Q:V:E:DT:l:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -884,11 +887,11 @@ void symmetro_opts::process_command_line(int argc, char **argv)
 
     case 'f':
       if (!strcasecmp(optarg, "none"))
-        face_Coloring_method = '\0';
+        face_coloring_method = '\0';
       else if (strspn(optarg, "an") != strlen(optarg) || strlen(optarg) > 1)
         error(msg_str("invalid face Coloring method '%s'", optarg), c);
       else {
-        face_Coloring_method = *optarg;
+        face_coloring_method = *optarg;
       }
       break;
 
@@ -902,6 +905,10 @@ void symmetro_opts::process_command_line(int argc, char **argv)
 
     case 'E':
       print_status_or_exit(edge_col.read(optarg));
+      break;
+
+    case 'D':
+      color_digons = true;
       break;
 
     case 'T':
@@ -961,31 +968,29 @@ void symmetro_opts::process_command_line(int argc, char **argv)
     map_file = "m1";
 
   if (map_file == "m1" || map_file == "m2") {
+    auto *col_map = new ColorMapMap;
     if (map_file == "m1") {
-      auto *col_map1 = new ColorMapMap;
-      col_map1->set_col(0, Color(255, 0, 0));   // axis1 red
-      col_map1->set_col(1, Color(0, 0, 255));   // axis2 blue
-      col_map1->set_col(2, Color(255, 255, 0)); // axis3 yellow
-      col_map1->set_col(3, Color(0, 100, 0));   // convex hull darkgreen
-      col_map1->set_wrap();
-      map.add_cmap(col_map1);
+      col_map->set_col(0, Color(255, 0, 0));   // axis1 red
+      col_map->set_col(1, Color(0, 0, 255));   // axis2 blue
+      col_map->set_col(2, Color(255, 255, 0)); // axis3 yellow
+      col_map->set_col(3, Color(0, 100, 0));   // convex hull darkgreen
     }
     else if (map_file == "m2") {
       // colors from PDF document measured from screen
-      auto *col_map1 = new ColorMapMap;
-      col_map1->set_col(3, Color(130, 95, 34));   // 3-sided faces
-      col_map1->set_col(4, Color(99, 117, 88));   // 4-sided faces
-      col_map1->set_col(5, Color(84, 139, 35));   // 5-sided faces
-      col_map1->set_col(6, Color(96, 109, 28));   // 6-sided faces
-      col_map1->set_col(7, Color(128, 128, 128)); // 7-sided faces
-      col_map1->set_col(8, Color(118, 97, 85));   // 8-sided faces
-      map.add_cmap(col_map1);
+      auto *col_map0 = new ColorMapMap;
+      col_map0->set_col(0, Color(130, 95, 34));   // 3-sided faces
+      col_map0->set_col(1, Color(99, 117, 88));   // 4-sided faces
+      col_map0->set_col(2, Color(84, 139, 35));   // 5-sided faces
+      col_map0->set_col(3, Color(96, 109, 28));   // 6-sided faces
+      col_map0->set_col(4, Color(128, 128, 128)); // 7-sided faces
+      col_map0->set_col(5, Color(118, 97, 85));   // 8-sided faces
+      map.add_cmap(col_map0);
 
-      auto *col_map2 = new ColorMapMap;
-      col_map2->set_col(0, Color(128, 144, 79)); // 9-sided faces and higher
-      col_map2->set_wrap();
-      map.add_cmap(col_map2);
+      // all polygons with higher sides have the same shade
+      col_map->set_col(0, Color(128, 144, 79)); // 9-sided faces and higher
     }
+    col_map->set_wrap();
+    map.add_cmap(col_map);
   }
   else
     print_status_or_exit(map.init(map_file.c_str()), 'm');
@@ -1573,7 +1578,6 @@ bool is_point_on_polygon_edges(const Geometry &polygon, const Vec3d &P,
   return answer;
 }
 
-// use local epsilon
 bool detect_collision(const Geometry &geom, const symmetro_opts &opts)
 {
   const vector<vector<int>> &faces = geom.faces();
@@ -1740,23 +1744,29 @@ Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
     }
   }
 
+  bool trans_warn = false;
   for (int i = 0; i < 2; i++) {
     // if not polygon, repeat for symmetry type
     if (opts.convex_hull > 1)
       sym_repeat(pgeom[i], opts);
 
-    if (opts.face_Coloring_method == 'a') {
+    if (opts.face_coloring_method == 'a') {
       Coloring clrng(&pgeom[i]);
       Color col = opts.map.get_col(opts.col_axis_idx[i]);
-      if (col.is_value())
-        col = Color(col[0], col[1], col[2], opts.face_opacity);
+      if (opts.face_opacity > -1) {
+        // face color can only be made transparent if not index and not
+        // invisible
+        if (col.is_visible_value())
+          col = Color(col[0], col[1], col[2], opts.face_opacity);
+        else
+          trans_warn = true;
+      }
       clrng.f_one_col(col);
     }
 
     geom.append(pgeom[i]);
   }
 
-  // control sort_merge with local epsilon
   if (opts.convex_hull > 1)
     merge_coincident_elements(&geom, "vf", opts.epsilon);
 
@@ -1776,44 +1786,87 @@ Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
         opts.warning(stat.msg(), 'C');
 
     // merged faces will retain RGB color
-    // control sort_merge with local epsilon
     merge_coincident_elements(&geom, "f", opts.epsilon);
 
     // after sort merge, only new faces from convex hull will be uncolored
-    Coloring clrng(&geom);
-    Color convex_hull_color;
-    if (opts.face_Coloring_method == 'a')
-      convex_hull_color = opts.map.get_col(3);
-
-    for (int i = 0; i < (int)geom.faces().size(); i++) {
-      Color col = geom.colors(FACES).get(i);
-      if (!col.is_set()) {
-        col = convex_hull_color;
-        if (col.is_value())
-          col = Color(col[0], col[1], col[2], opts.face_opacity);
-        geom.colors(FACES).set(i, col);
+    if (opts.face_coloring_method == 'a') {
+      Coloring clrng(&geom);
+      for (int i = 0; i < (int)geom.faces().size(); i++) {
+        Color col = geom.colors(FACES).get(i);
+        if (!col.is_set()) {
+          // convex hull color is map position 3
+          col = opts.map.get_col(3);
+          if (opts.face_opacity > -1) {
+            // face color can only be made transparent if not index and not
+            // invisible
+            if (col.is_visible_value())
+              col = Color(col[0], col[1], col[2], opts.face_opacity);
+            else
+              trans_warn = true;
+          }
+          geom.colors(FACES).set(i, col);
+        }
       }
     }
   }
 
-  if (opts.face_Coloring_method == 'n') {
-    const vector<vector<int>> &faces = geom.faces();
-    for (unsigned int i = 0; i < faces.size(); i++) {
-      int fsz = faces[i].size();
-      Color col = opts.map.get_col(fsz);
-      if (col.is_value())
-        col = Color(col[0], col[1], col[2], opts.face_opacity);
+  if (opts.face_coloring_method == 'n') {
+    for (unsigned int i = 0; i < geom.faces().size(); i++) {
+      int fsz = geom.faces(i).size();
+      Color col;
+      // start coloring with digons
+      col = opts.map.get_col(fsz - 2);
+      if (opts.face_opacity > -1) {
+        if (col.is_visible_value())
+          col = Color(col[0], col[1], col[2], opts.face_opacity);
+        else
+          trans_warn = true;
+      }
       geom.colors(FACES).set(i, col);
     }
   }
+  else
+      // if transparency is set, check if face coloring is none
+      if (!opts.face_coloring_method) {
+    if (opts.face_opacity > -1) {
+      if (geom.colors(FACES).get_properties().size() < geom.faces().size())
+        opts.warning("unset faces cannot be made transparent", 'T');
+    }
+  }
+
+  if (trans_warn)
+    opts.warning("some faces could not be made transparent", 'T');
 
   if (opts.remove_free_faces) {
     delete_free_faces(geom);
     geom.del(VERTS, geom.get_info().get_free_verts());
   }
 
-  // color vertices and edges
-  Coloring(&geom).vef_one_col(opts.vert_col, opts.edge_col, Color());
+  // if coloring edges, check for digons
+  if (opts.edge_col.is_set()) {
+    geom.add_missing_impl_edges();
+
+    if (opts.color_digons) {
+      // if a digon is already where an edge is then
+      // delete that edge. Don't cover up digon
+      vector<int> del_edges;
+      for (unsigned int i = 0; i < geom.faces().size(); i++) {
+        int fsz = geom.faces(i).size();
+        if (fsz == 2) {
+          vector<int> edge = make_edge(geom.faces(i)[0], geom.faces(i)[1]);
+          int edge_no = find_edge_in_edge_list(geom.edges(), edge);
+          if (edge_no > -1)
+            del_edges.push_back(edge_no);
+        }
+      }
+      geom.del(EDGES, del_edges);
+    }
+
+    Coloring(&geom).e_one_col(opts.edge_col);
+  }
+
+  // color vertices
+  Coloring(&geom).v_one_col(opts.vert_col);
 
   geom.orient();
 
