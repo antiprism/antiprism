@@ -79,7 +79,6 @@ public:
   bool color_digons;
   Color vert_col;
   Color edge_col;
-  Color digon_col;
   Color frame_col;
   ColorMapMulti map;
 
