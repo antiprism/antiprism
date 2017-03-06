@@ -307,8 +307,8 @@ void motion_cb(int x, int y)
     case glut_state::tr_rot: { // scale to window size
       x_inc = fmod(x_inc, 360) * M_PI / 180;
       y_inc = fmod(y_inc, 360) * M_PI / 180;
-      cam.inc_rotation(Trans3d::rot(Vec3d(-y_inc, x_inc, 0.0),
-                                    sqrt(x_inc * x_inc + y_inc * y_inc)));
+      cam.inc_rotation(Trans3d::rotate(Vec3d(-y_inc, x_inc, 0.0),
+                                       sqrt(x_inc * x_inc + y_inc * y_inc)));
       break;
     }
     case glut_state::tr_xy:

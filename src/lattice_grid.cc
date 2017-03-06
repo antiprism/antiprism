@@ -301,7 +301,7 @@ void parse_color_string(ProgramOpts *opts, char *optarg, const char c,
   }
 
   if (parts_sz > next_parms_idx)
-    opts->error("extraneous input",c);
+    opts->error("extraneous input", c);
 }
 
 double lattice_radius(const Geometry &geom, const char radius_type)
@@ -371,7 +371,7 @@ void geom_container_clip(Geometry &geom, Geometry &container,
 
   // translate container to center of grid
   Vec3d container_cent = centroid(container.verts());
-  trans_m = Trans3d::transl(-container_cent + grid_cent);
+  trans_m = Trans3d::translate(-container_cent + grid_cent);
   container.transform(trans_m);
 
   vector<int> del_verts;

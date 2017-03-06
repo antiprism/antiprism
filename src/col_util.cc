@@ -512,14 +512,14 @@ Geometry make_hsx_container(int chroma_level, int color_system_mode,
   if (chroma_level == 2) {
     make_chroma2_container(geom, (seven_mode ? 7 : 6), color_system_mode,
                            show_container);
-    geom.transform(Trans3d::transl(
+    geom.transform(Trans3d::translate(
         color_system_mode == 2 ? Vec3d(0.0, 0.0, 0.5) : Vec3d(0.0, 0.0, 1.0)));
   }
   else {
     geom = make_unit_circle(60);
-    geom.transform(Trans3d::transl((color_system_mode == 1 || !chroma_level)
-                                       ? Vec3d(0.0, 0.0, 1.0)
-                                       : Vec3d(0.0, 0.0, 0.5)));
+    geom.transform(Trans3d::translate((color_system_mode == 1 || !chroma_level)
+                                          ? Vec3d(0.0, 0.0, 1.0)
+                                          : Vec3d(0.0, 0.0, 0.5)));
     if (!chroma_level)
       geom.append(make_unit_circle(60));
   }
@@ -725,7 +725,7 @@ void color_grid(Geometry &geom, const vector<Color> &cols)
         tgeom.add_vert(Vec3d(0.5, 0.55, 0.0), Color(1.0, 1.0, 1.0));
         tgeom.add_edge(make_edge(4, 5), Color(0.5, 0.5, 0.5));
       }
-      tgeom.transform(Trans3d::transl(Vec3d(i, j, 0)));
+      tgeom.transform(Trans3d::translate(Vec3d(i, j, 0)));
       Color c =
           (k >= cols_sz ? Color(Color::invisible)
                         : (cols[k].is_index() ? cols[k].get_index() : cols[k]));
@@ -736,7 +736,7 @@ void color_grid(Geometry &geom, const vector<Color> &cols)
     }
   }
   merge_coincident_elements(&geom, "ve", epsilon);
-  geom.transform(Trans3d::rot(Vec3d(0.0, 0.0, deg2rad(-90.0))));
+  geom.transform(Trans3d::rotate(Vec3d(0.0, 0.0, deg2rad(-90.0))));
 }
 
 bool cmp_col(const Color &a, const Color &b)
@@ -952,8 +952,8 @@ int main(int argc, char *argv[])
       // view for cube
       if (opts.color_system_mode == 3) {
         if (opts.upright_view != 2) {
-          geom.transform(Trans3d::rot(deg2rad(45), 0, 0));
-          geom.transform(Trans3d::rot(0, -asin(1 / sqrt(3)), 0));
+          geom.transform(Trans3d::rotate(deg2rad(45), 0, 0));
+          geom.transform(Trans3d::rotate(0, -asin(1 / sqrt(3)), 0));
         }
       }
 
@@ -974,7 +974,7 @@ int main(int argc, char *argv[])
 
       // view upright for all models if option 1
       if (opts.upright_view == 1)
-        geom.transform(Trans3d::rot(deg2rad(-90), 0, 0));
+        geom.transform(Trans3d::rotate(deg2rad(-90), 0, 0));
     }
     else if (opts.display_type == 2)
       color_wheel(geom, cols, opts.color_system_mode, opts.sat_powers,

@@ -312,8 +312,8 @@ int find_can_centre(Geometry &geom, char type, double &rad, Vec3d &cent,
   Geometry dual;
   get_dual(&dual, geom, rad, cent);
   if (invert)
-    dual.transform(Trans3d::transl(cent) * Trans3d::inversion() *
-                   Trans3d::transl(-cent));
+    dual.transform(Trans3d::translate(cent) * Trans3d::inversion() *
+                   Trans3d::translate(-cent));
   dual.get_impl_edges(d_edges);
   Vec3d cur_cent = cent;
   double cur_rad = rad;
@@ -397,8 +397,8 @@ int find_can_centre(Geometry &geom, char type, double &rad, Vec3d &cent,
       break;
     get_pol_recip_verts(&dual, geom, rad, cur_cent);
     if (invert)
-      dual.transform(Trans3d::transl(cur_cent) * Trans3d::inversion() *
-                     Trans3d::transl(-cur_cent));
+      dual.transform(Trans3d::translate(cur_cent) * Trans3d::inversion() *
+                     Trans3d::translate(-cur_cent));
   }
   char str[MSG_SZ];
   fprintf(stderr, "[n=%d, limit=%sachieved, r_test=%g, c_test=%g]\n"
@@ -665,8 +665,8 @@ int main(int argc, char *argv[])
   Geometry dual;
   get_dual(&dual, geom, radius, centre, 1.01 * opts.inf);
   if (opts.invert)
-    dual.transform(Trans3d::transl(centre) * Trans3d::inversion() *
-                   Trans3d::transl(-centre));
+    dual.transform(Trans3d::translate(centre) * Trans3d::inversion() *
+                   Trans3d::translate(-centre));
 
   vector<int> invalid_verts;
   for (unsigned int i = 0; i < dual.verts().size(); i++) {

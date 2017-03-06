@@ -513,7 +513,7 @@ void kt_opts::process_command_line(int argc, char **argv)
 bool get_B(const Vec3d &A, Vec3d &B, const Vec3d &C, const Vec3d &norm_AB)
 {
   norm_AB.dump();
-  Vec3d pivot = (C + Trans3d::refl(norm_AB) * C) / 2;
+  Vec3d pivot = (C + Trans3d::reflection(norm_AB) * C) / 2;
   if (vcross((A - pivot).unit(), B.unit()).len() >
       epsilon) // lines not parallel
     B = lines_intersection(A, pivot, Vec3d(0, 0, 0), B, 0);
@@ -602,7 +602,7 @@ bool fraction_to_trap_kite(vector<int> tri, Symmetry &sym, vector<Vec3d> &kite,
   kite[0] = verts[A_idx];
   kite[1] = verts[C_idx];
   kite[2] = verts[B_idx];
-  kite[3] = Trans3d::refl(vcross(Vec3d::Z, verts[B_idx])) * verts[C_idx];
+  kite[3] = Trans3d::reflection(vcross(Vec3d::Z, verts[B_idx])) * verts[C_idx];
 
   hts_used->resize(3);
   (*hts_used)[0] = kite[0][2];
@@ -637,16 +637,16 @@ bool triangle_to_kite(const vector<Vec3d> &tri_verts, vector<Vec3d> &kite,
     ret = get_C(A, B, C);
   else if (hts_set == 4 || hts_set == 5) // C default A || C and A
     ret = get_B(A, B, C, norm_AB);
-  else if (hts_set == 6) {          // C and B
-    ret = get_B(B, A, C, norm_AB);  // switch A and B
-    C = Trans3d::refl(norm_AB) * C; // correct the kite orientation
+  else if (hts_set == 6) {                // C and B
+    ret = get_B(B, A, C, norm_AB);        // switch A and B
+    C = Trans3d::reflection(norm_AB) * C; // correct the kite orientation
   }
 
   kite.resize(4);
   kite[0] = A;
   kite[1] = C;
   kite[2] = B;
-  kite[3] = Trans3d::refl(norm_AB) * C;
+  kite[3] = Trans3d::reflection(norm_AB) * C;
 
   hts_used->resize(3);
   (*hts_used)[0] = vdot(kite[0], tri_verts[0]);
@@ -664,7 +664,7 @@ void repeat_kite_with_color(Geometry &out_geom, Geometry kite_geom,
   int v_map[] = {0, 2, 1}; // B is at 3 and C is at 2
   Vec3d axis = kite_geom.verts(v_map[vert_no]);
   Symmetry c_sym;
-  c_sym.init(Symmetry::C, fracs[2 * vert_no], Trans3d::rot(axis, Vec3d::Z));
+  c_sym.init(Symmetry::C, fracs[2 * vert_no], Trans3d::rotate(axis, Vec3d::Z));
 
   Geometry vert_kites_geom;
   sym_repeat(&vert_kites_geom, kite_geom, c_sym);

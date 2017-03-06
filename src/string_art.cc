@@ -245,14 +245,14 @@ void string_opts::process_command_line(int argc, char **argv)
     case 'R':
       print_status_or_exit(read_double_list(optarg, nums), c);
       if (nums.size() == 3)
-        trans_m2 =
-            Trans3d::rot(deg2rad(nums[0]), deg2rad(nums[1]), deg2rad(nums[2]));
+        trans_m2 = Trans3d::rotate(deg2rad(nums[0]), deg2rad(nums[1]),
+                                   deg2rad(nums[2]));
       else if (nums.size() == 4)
         trans_m2 =
-            Trans3d::rot(Vec3d(nums[0], nums[1], nums[2]), deg2rad(nums[3]));
+            Trans3d::rotate(Vec3d(nums[0], nums[1], nums[2]), deg2rad(nums[3]));
       else if (nums.size() == 6)
-        trans_m2 = Trans3d::rot(Vec3d(nums[0], nums[1], nums[2]),
-                                Vec3d(nums[3], nums[4], nums[5]));
+        trans_m2 = Trans3d::rotate(Vec3d(nums[0], nums[1], nums[2]),
+                                   Vec3d(nums[3], nums[4], nums[5]));
       else
         error(msg_str("must give three, four or six numbers "
                       "(%lu were given)",
@@ -282,7 +282,7 @@ void string_opts::process_command_line(int argc, char **argv)
         error(msg_str("must give exactly three numbers (%lu were given)",
                       (unsigned long)nums.size()),
               c);
-      trans_m2 = Trans3d::transl(Vec3d(nums[0], nums[1], nums[2]));
+      trans_m2 = Trans3d::translate(Vec3d(nums[0], nums[1], nums[2]));
       trans_m = trans_m2 * trans_m;
       break;
 
@@ -293,7 +293,7 @@ void string_opts::process_command_line(int argc, char **argv)
                       (unsigned long)nums.size()),
               c);
 
-      trans_m2 = Trans3d::refl(Vec3d(nums[0], nums[1], nums[2]));
+      trans_m2 = Trans3d::reflection(Vec3d(nums[0], nums[1], nums[2]));
       trans_m = trans_m2 * trans_m;
       break;
 

@@ -794,7 +794,7 @@ void unitize_edges(Geometry &geom)
 
 void centroid_to_origin(Geometry &geom)
 {
-  geom.transform(Trans3d::transl(-centroid(geom.verts())));
+  geom.transform(Trans3d::translate(-centroid(geom.verts())));
 }
 
 /*

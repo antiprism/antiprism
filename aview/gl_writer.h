@@ -37,18 +37,11 @@
 using namespace anti;
 
 // conversion functions
-inline void to_gl_matrix(double *gl_m, Trans3d m)
+inline void to_gl_matrix(double *gl_m, const Trans3d &trans)
 {
-  m.transpose();
+  Trans3d m = trans.transpose();
   for (int i = 0; i < 16; i++)
     gl_m[i] = m[i];
-}
-
-inline void from_gl_matrix(double *gl_m, Trans3d &m)
-{
-  for (int i = 0; i < 16; i++)
-    m[i] = gl_m[i];
-  m.transpose();
 }
 
 class gl_writer {

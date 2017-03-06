@@ -1450,8 +1450,8 @@ vector<Geometry> symmetro::calc_polygons(
     fprintf(stderr, "\nangle between axes: radians = %.17lf degrees = %.17lf\n",
             angle_between_axes, rad2deg(angle_between_axes));
 
-  Trans3d rot = Trans3d::rot(Vec3d(0, 1, 0), angle_between_axes);
-  Trans3d rot_inv = Trans3d::rot(Vec3d(0, 1, 0), -angle_between_axes);
+  Trans3d rot = Trans3d::rotate(Vec3d(0, 1, 0), angle_between_axes);
+  Trans3d rot_inv = Trans3d::rotate(Vec3d(0, 1, 0), -angle_between_axes);
 
   double ang = deg2rad(rotation);
   if (rotation_as_increment)
@@ -1464,7 +1464,7 @@ vector<Geometry> symmetro::calc_polygons(
             "turn angle: radians = %.17lf degrees = %.17lf on axis %d\n", ang,
             rad2deg(ang), axis[0]);
 
-  Vec3d V = Trans3d::rot(Vec3d(0, 0, 1), ang) * Vec3d(r0, 0, 0);
+  Vec3d V = Trans3d::rotate(Vec3d(0, 0, 1), ang) * Vec3d(r0, 0, 0);
   Vec3d q = rot * V;
   Vec3d u = rot * Vec3d(0, 0, 1);
 
@@ -1515,15 +1515,15 @@ vector<Geometry> symmetro::calc_polygons(
         for (int idx = 0; idx < n; idx++) {
           if (i == 0) {
             pgeom[j].add_vert(
-                Trans3d::rot(Vec3d(0, 0, 1),
-                             (idx * angle(n, d[j])) + bump_angle) *
+                Trans3d::rotate(Vec3d(0, 0, 1),
+                                (idx * angle(n, d[j])) + bump_angle) *
                     P +
                 Vec3d(0.0, 0.0, offset));
           }
           else if (i == 1) {
             pgeom[j].add_vert(
-                rot_inv * Trans3d::rot(Vec3d(0, 0, 1),
-                                       (idx * angle(n, d[j])) + bump_angle) *
+                rot_inv * Trans3d::rotate(Vec3d(0, 0, 1),
+                                          (idx * angle(n, d[j])) + bump_angle) *
                 Q);
           }
         }
@@ -1540,13 +1540,13 @@ vector<Geometry> symmetro::calc_polygons(
       if (d_substitute[j])
         substitute_polygon(pgeom[j], j);
 
-      pgeom[j].transform(Trans3d::alignment(
-          Vec3d(0, 0, 1), Vec3d(1, 0, 0), sym_vec[axis[0]], sym_vec[axis[1]]));
+      pgeom[j].transform(Trans3d::align(Vec3d(0, 0, 1), Vec3d(1, 0, 0),
+                                        sym_vec[axis[0]], sym_vec[axis[1]]));
       // this isn't strictly needed. turns model to line up with
       // twister_rhomb.py
       // if ( mode == 's' )
       //   pgeom[j].transform(
-      //   Trans3d::rot(Vec3d(0.0,0.0,deg2rad(180.0/(double)p))) );
+      //   Trans3d::rotate(Vec3d(0.0,0.0,deg2rad(180.0/(double)p))) );
     }
 
     if (!scale[j])
@@ -1685,7 +1685,7 @@ void sym_repeat(Geometry &geom, const symmetro_opts &opts)
 
     Geometry geom_refl;
     geom_refl = geom;
-    geom_refl.transform(Trans3d::refl(Vec3d(x, y, z)));
+    geom_refl.transform(Trans3d::reflection(Vec3d(x, y, z)));
     geom.append(geom_refl);
   }
 }
@@ -1736,8 +1736,8 @@ Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
 
       for (int i = 0; i < 2; i++) {
         Vec3d P2 = Vec3d(0, 0, -P[2]);
-        pgeom[i].transform(Trans3d::transl(P2));
-        pgeom[i].transform(Trans3d::rot(
+        pgeom[i].transform(Trans3d::translate(P2));
+        pgeom[i].transform(Trans3d::rotate(
             0, 0, angle_around_axis(P, Vec3d(1, 0, 0), Vec3d(0, 0, 1))));
       }
     }
@@ -1884,7 +1884,7 @@ Geometry build_frame(vector<Geometry> &pgeom, const symmetro_opts &opts)
 
   Vec3d ax = vcross(v0, v1).unit();
   double ang = angle_around_axis(v0, v1, ax);
-  Trans3d mat = Trans3d::rot(ax, -ang / num_segs);
+  Trans3d mat = Trans3d::rotate(ax, -ang / num_segs);
 
   if (strchr(opts.frame_elems.c_str(), 'r')) {
     geom.add_vert(v0);
@@ -1895,14 +1895,15 @@ Geometry build_frame(vector<Geometry> &pgeom, const symmetro_opts &opts)
 
     if (strchr("SCHV", opts.sym)) {
       // Vec3d v2 = Vec3d(v1[0],v1[1],-v1[2]) *
-      // Trans3d::rot(0,0,deg2rad(180.0/opts.p));
-      Vec3d v2 = Vec3d(v1[0], v1[1], -v1[2]) *
-                 Trans3d::rot(0, 0, (M_PI * double(opts.d[0]) / double(opts.p) *
-                                     (is_even(opts.p) ? 2.0 : 1.0)));
+      // Trans3d::rotate(0,0,deg2rad(180.0/opts.p));
+      Vec3d v2 =
+          Vec3d(v1[0], v1[1], -v1[2]) *
+          Trans3d::rotate(0, 0, (M_PI * double(opts.d[0]) / double(opts.p) *
+                                 (is_even(opts.p) ? 2.0 : 1.0)));
 
       ax = vcross(v1, v2).unit();
       ang = angle_around_axis(v1, v2, ax);
-      mat = Trans3d::rot(ax, -ang / num_segs);
+      mat = Trans3d::rotate(ax, -ang / num_segs);
 
       for (int i = num_segs; i < num_segs * 2; i++) {
         geom.add_vert(geom.verts(i) * mat);

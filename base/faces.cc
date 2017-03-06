@@ -127,7 +127,7 @@ bool face_bond(Geometry *base, Geometry *brick, int base_f_idx, int brick_f_idx,
     bpts.push_back(brick->face_v_mod(brick_f_idx, off + flip_sign * i));
   }
 
-  brick->transform(Trans3d::alignment(bpts, pts));
+  brick->transform(Trans3d::align(bpts, pts));
 
   if (merge) {
     map<int, int> vmap;

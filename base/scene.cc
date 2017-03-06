@@ -305,8 +305,8 @@ double Camera::get_text_sz(Vec3d pos) const
 void Camera::set_label_rot()
 {
   if (scen)
-    label_rot = Trans3d::transl(scen->get_centre()) * get_rotation() *
-                Trans3d::transl(-scen->get_centre());
+    label_rot = Trans3d::translate(scen->get_centre()) * get_rotation() *
+                Trans3d::translate(-scen->get_centre());
 }
 
 int Camera::animate()

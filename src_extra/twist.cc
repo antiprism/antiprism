@@ -178,10 +178,11 @@ Geometry twist(Geometry &poly, Geometry &dual, double twist_val, Vec3d centre,
     // v0d = centre + (v0d - centre)*ratio;
     // v1d = centre + (v1d - centre)*ratio;
     Vec3d norm = vcross(v1p - v0p, v1d - v0d);
-    Trans3d trans = Trans3d::transl(-0.5 * (v0p + v1p));
-    trans = Trans3d::rot(norm, twist_val * M_PI / 2) * trans;
-    trans = Trans3d::transl(0.5 * (v0p + v1p)) * trans;
-    trans = Trans3d::transl((v0d + v1d - v0p - v1p) * 0.5 * twist_val) * trans;
+    Trans3d trans = Trans3d::translate(-0.5 * (v0p + v1p));
+    trans = Trans3d::rotate(norm, twist_val * M_PI / 2) * trans;
+    trans = Trans3d::translate(0.5 * (v0p + v1p)) * trans;
+    trans =
+        Trans3d::translate((v0d + v1d - v0p - v1p) * 0.5 * twist_val) * trans;
 
     v0 = trans * v0p;
     v1 = trans * v1p;

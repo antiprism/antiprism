@@ -564,8 +564,8 @@ static bool get_tri_verts(const vector<int> &norm_fracs,
   if (norm_fracs[2] == 2) { // Dihedral
     found = true;
     norm_verts[0] = Vec3d::X;
-    norm_verts[1] = Trans3d::rot(Vec3d::Z, M_PI * (double)norm_fracs[5] /
-                                               (double)norm_fracs[4]) *
+    norm_verts[1] = Trans3d::rotate(Vec3d::Z, M_PI * (double)norm_fracs[5] /
+                                                  (double)norm_fracs[4]) *
                     Vec3d::X;
     norm_verts[2] = Vec3d::Z;
   }
@@ -635,7 +635,7 @@ bool Wythoff::assign_verts() { return assign_vertices(fracs, verts); }
 static Vec3d get_angle_bisector_norm(Vec3d v0, Vec3d v1, Vec3d v2)
 {
   double ang = angle_around_axis(v1, v2, v0);
-  return Trans3d::rot(v0, ang / 2) * vcross(v0, v1);
+  return Trans3d::rotate(v0, ang / 2) * vcross(v0, v1);
 }
 
 static Vec3d get_fermat_point(Vec3d v0, Vec3d v1, Vec3d v2, bool degenerate,
@@ -694,7 +694,7 @@ static void add_faces(Geometry &geom, Vec3d pt, int num, int denom,
     Geometry face_geom, sym_face_geom;
     vector<int> face(sides);
     for (int i = 0; i < sides; i++) {
-      face_geom.add_vert(Trans3d::rot(axis, ang * i) * pt);
+      face_geom.add_vert(Trans3d::rotate(axis, ang * i) * pt);
       face[i] = i;
     }
 
@@ -760,7 +760,8 @@ bool Wythoff::make_poly(Geometry &geom, char *errmsg)
       if (fracs[(2 * pos_3_2 + 2) % 6] == 5 &&
           (fracs[(2 * pos_3_2 + 3) % 6] == 3 ||
            fracs[(2 * pos_3_2 + 3) % 6] == 4)) {
-        pt = Trans3d::refl(vcross(verts[(pos_3_2 + 2) % 3], verts[pos_3_2])) *
+        pt = Trans3d::reflection(
+                 vcross(verts[(pos_3_2 + 2) % 3], verts[pos_3_2])) *
              verts[(pos_3_2 + 1) % 3];
       }
       else { // take apex as Fermat point and use smallest circumcentre
@@ -771,9 +772,9 @@ bool Wythoff::make_poly(Geometry &geom, char *errmsg)
       f_pt = get_fermat_point(verts[0], verts[1], verts[2], degenerate, errmsg);
 
       // Reflect in sides of triangle
-      Vec3d u0 = Trans3d::refl(vcross(verts[1], verts[2])) * f_pt;
-      Vec3d u1 = Trans3d::refl(vcross(verts[2], verts[0])) * f_pt;
-      Vec3d u2 = Trans3d::refl(vcross(verts[0], verts[1])) * f_pt;
+      Vec3d u0 = Trans3d::reflection(vcross(verts[1], verts[2])) * f_pt;
+      Vec3d u1 = Trans3d::reflection(vcross(verts[2], verts[0])) * f_pt;
+      Vec3d u2 = Trans3d::reflection(vcross(verts[0], verts[1])) * f_pt;
       pt = vcross(u0 - u1, u1 - u2); // circumcentre
     }
 
@@ -786,11 +787,11 @@ bool Wythoff::make_poly(Geometry &geom, char *errmsg)
     // Add snub triangle faces
     int dir = 1 - 2 * (vtriple(verts[0], verts[1], verts[2]) > 0);
     Vec3d tri_cent = pt;
-    tri_cent += Trans3d::rot(verts[0], dir * 2 * M_PI * (double)fracs[1] /
-                                           (double)fracs[0]) *
+    tri_cent += Trans3d::rotate(verts[0], dir * 2 * M_PI * (double)fracs[1] /
+                                              (double)fracs[0]) *
                 pt;
-    tri_cent += Trans3d::rot(verts[1], -dir * 2 * M_PI * (double)fracs[3] /
-                                           (double)fracs[2]) *
+    tri_cent += Trans3d::rotate(verts[1], -dir * 2 * M_PI * (double)fracs[3] /
+                                              (double)fracs[2]) *
                 pt;
     add_faces(geom, pt, 3, 2, tri_cent, Color(3), sym);
   }
@@ -858,7 +859,7 @@ bool Wythoff::make_tri_poly(Geometry &geom)
     geom.append(geom_tri);
     Vec3d norm =
         (sym.get_sym_type() == Symmetry::T) ? Vec3d(1, 1, 0) : Vec3d::Z;
-    geom_tri.transform(Trans3d::refl(norm));
+    geom_tri.transform(Trans3d::reflection(norm));
     clrng.f_one_col(1);
     geom.append(geom_tri);
     merge_coincident_elements(&geom, "v", epsilon);

@@ -338,7 +338,7 @@ void waterman_opts::process_command_line(int argc, char **argv)
 // z_near and z_far are modified
 bool sphere_ray_z_intersect_points(
     long &z_near, long &z_far, const double x0,
-    const double y0,          // ray's xy (dz = 0)
+    const double y0,         // ray's xy (dz = 0)
     const bool origin_based, // if true, then cx, cy, cz all equal 0
     const double cx, const double cy, const double cz, // center
     const double R_squared,                            // radius squared

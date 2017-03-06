@@ -210,19 +210,19 @@ void trans_opts::process_command_line(int argc, char **argv)
     case 'R':
       print_status_or_exit(read_double_list(optarg, nums), c);
       if (nums.size() == 3)
-        trans_m2 =
-            Trans3d::rot(deg2rad(nums[0]), deg2rad(nums[1]), deg2rad(nums[2]));
+        trans_m2 = Trans3d::rotate(deg2rad(nums[0]), deg2rad(nums[1]),
+                                   deg2rad(nums[2]));
       else if (nums.size() == 4)
         trans_m2 =
-            Trans3d::rot(Vec3d(nums[0], nums[1], nums[2]), deg2rad(nums[3]));
+            Trans3d::rotate(Vec3d(nums[0], nums[1], nums[2]), deg2rad(nums[3]));
       else if (nums.size() == 6)
-        trans_m2 = Trans3d::rot(Vec3d(nums[0], nums[1], nums[2]),
-                                Vec3d(nums[3], nums[4], nums[5]));
+        trans_m2 = Trans3d::rotate(Vec3d(nums[0], nums[1], nums[2]),
+                                   Vec3d(nums[3], nums[4], nums[5]));
       else if (nums.size() == 12)
-        trans_m2 = Trans3d::alignment(Vec3d(nums[0], nums[1], nums[2]),
-                                      Vec3d(nums[3], nums[4], nums[5]),
-                                      Vec3d(nums[6], nums[7], nums[8]),
-                                      Vec3d(nums[9], nums[10], nums[11]));
+        trans_m2 = Trans3d::align(Vec3d(nums[0], nums[1], nums[2]),
+                                  Vec3d(nums[3], nums[4], nums[5]),
+                                  Vec3d(nums[6], nums[7], nums[8]),
+                                  Vec3d(nums[9], nums[10], nums[11]));
       else
         error(msg_str("must give 3, 4, 6 of 12 numbers (%lu were given)",
                       (unsigned long)nums.size()),
@@ -253,7 +253,7 @@ void trans_opts::process_command_line(int argc, char **argv)
                       "given)",
                       (unsigned long)nums.size()),
               c);
-      trans_m2 = Trans3d::transl(Vec3d(nums[0], nums[1], nums[2]));
+      trans_m2 = Trans3d::translate(Vec3d(nums[0], nums[1], nums[2]));
       trans_m = trans_m2 * trans_m;
       break;
 
@@ -265,7 +265,7 @@ void trans_opts::process_command_line(int argc, char **argv)
                       (unsigned long)nums.size()),
               c);
 
-      trans_m2 = Trans3d::refl(Vec3d(nums[0], nums[1], nums[2]));
+      trans_m2 = Trans3d::reflection(Vec3d(nums[0], nums[1], nums[2]));
       trans_m = trans_m2 * trans_m;
       break;
 
@@ -276,12 +276,12 @@ void trans_opts::process_command_line(int argc, char **argv)
     case 'A':
       print_status_or_exit(read_double_list(optarg, nums), c);
       if (nums.size() == 18)
-        trans_m2 = Trans3d::alignment(Vec3d(nums[0], nums[1], nums[2]),
-                                      Vec3d(nums[3], nums[4], nums[5]),
-                                      Vec3d(nums[6], nums[7], nums[8]),
-                                      Vec3d(nums[9], nums[10], nums[11]),
-                                      Vec3d(nums[12], nums[13], nums[14]),
-                                      Vec3d(nums[15], nums[16], nums[17]));
+        trans_m2 = Trans3d::align(Vec3d(nums[0], nums[1], nums[2]),
+                                  Vec3d(nums[3], nums[4], nums[5]),
+                                  Vec3d(nums[6], nums[7], nums[8]),
+                                  Vec3d(nums[9], nums[10], nums[11]),
+                                  Vec3d(nums[12], nums[13], nums[14]),
+                                  Vec3d(nums[15], nums[16], nums[17]));
       else
         error(msg_str("must give 18 numbers (%lu were given)",
                       (unsigned long)nums.size()),
@@ -297,8 +297,8 @@ void trans_opts::process_command_line(int argc, char **argv)
                       (unsigned long)nums.size()),
               c);
       bool valid;
-      trans_m2 = Trans3d::trans_by_angles(deg2rad(nums[0]), deg2rad(nums[1]),
-                                          deg2rad(nums[2]), &valid);
+      trans_m2 = Trans3d::angles_between_axes(
+          deg2rad(nums[0]), deg2rad(nums[1]), deg2rad(nums[2]), &valid);
       if (!valid)
         error("the sum of any two angles must be greater than the third", c);
 
@@ -332,7 +332,7 @@ void trans_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'C':
-      trans_m = Trans3d::transl(-(trans_m * geom.centroid())) * trans_m;
+      trans_m = Trans3d::translate(-(trans_m * geom.centroid())) * trans_m;
       break;
 
     case 'Y': {
@@ -423,7 +423,7 @@ void trans_opts::process_command_line(int argc, char **argv)
     }
 
     case 'i':
-      trans_m.set_inverse();
+      trans_m = trans_m.inverse();
       break;
 
     case 'o':

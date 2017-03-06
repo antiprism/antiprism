@@ -312,7 +312,7 @@ bool bond_base::bond_all(Geometry &geom_out, int out_type, char *errmsg)
         for (auto &i : pts[1])
           i = scl * i;
       }
-      brick.geom.transform(Trans3d::alignment(pts[1], pts[0]));
+      brick.geom.transform(Trans3d::align(pts[1], pts[0]));
       brick_out.append(brick.geom);
     }
     else if (brick.align_type == align_faces ||

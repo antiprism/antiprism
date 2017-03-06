@@ -1481,7 +1481,7 @@ void ColorValuesToRangeHsva::apply(map<int, Color> &elem_cols)
 
 void ColorValuesToRangeHsva::apply(Geometry &geom, int elem_type)
 {
-  if(default_color.is_set()) {
+  if (default_color.is_set()) {
     int num_elems;
     if (elem_type == VERTS)
       num_elems = geom.verts().size();
@@ -1490,9 +1490,9 @@ void ColorValuesToRangeHsva::apply(Geometry &geom, int elem_type)
     else // (elem_type == FACES)
       num_elems = geom.faces().size();
 
-    for (int i=0; i<num_elems; i++) {
+    for (int i = 0; i < num_elems; i++) {
       auto col = geom.colors(elem_type).get(i);
-      if(!col.is_set())
+      if (!col.is_set())
         col = default_color;
       geom.colors(elem_type).set(i, get_col(col));
     }

@@ -274,7 +274,7 @@ void Polygon::repeat_part(Geometry &geom, const Geometry &part)
   geom.append(part);
   for (int i = 1; i < parts; i++) {
     Geometry rep = part;
-    rep.transform(Trans3d::rot(Vec3d::Z, 2 * M_PI * i / parts / num_sides));
+    rep.transform(Trans3d::rotate(Vec3d::Z, 2 * M_PI * i / parts / num_sides));
     geom.append(rep);
   }
 }
@@ -533,9 +533,9 @@ Status Polygon::make_antiprism_part(Geometry &geom)
   Geometry pgon, pgon2;
   add_polygon(pgon);
   double twist_ang = value_is_set(twist_angle[0]) ? twist_angle[0] : 0.0;
-  pgon.transform(Trans3d::rot(Vec3d::Z, angle() / 4 - twist_ang / 2));
+  pgon.transform(Trans3d::rotate(Vec3d::Z, angle() / 4 - twist_ang / 2));
   add_polygon(pgon2);
-  pgon2.transform(Trans3d::rot(Vec3d::Z, -angle() / 4 + twist_ang / 2));
+  pgon2.transform(Trans3d::rotate(Vec3d::Z, -angle() / 4 + twist_ang / 2));
   if (extra_verts) {
     double apex_ht = 0.5 * ht;
     if (num_sides != 2)
@@ -850,7 +850,7 @@ Status Polygon::make_cupola_part(Geometry &geom)
   if (subtype == sub_cupola_cuploid)
     cup_geom.clear(FACES);
 
-  cup_geom.transform(Trans3d::rot(Vec3d::Z, -angle() / 4));
+  cup_geom.transform(Trans3d::rotate(Vec3d::Z, -angle() / 4));
 
   int v_sz = cup_geom.verts().size();
   add_polygon(cup_geom, ht);
@@ -1029,7 +1029,7 @@ Status Polygon::make_snub_antiprism_part(Geometry &geom)
   face_bond(&geom, &geom2, geom.faces().size() - 1, geom2.faces().size() - 1,
             1);
   // align dihedral axis with x-axis
-  geom.transform(Trans3d::rot(Vec3d::Z, M_PI * step / (2.0 * num_sides)));
+  geom.transform(Trans3d::rotate(Vec3d::Z, M_PI * step / (2.0 * num_sides)));
 
   return Status::ok();
 }
@@ -1056,13 +1056,13 @@ Status Polygon::make_crown_part(Geometry &geom)
   Geometry pgon[2];
   add_polygon(pgon[0]);
   add_polygon(pgon[1]);
-  pgon[1].transform(Trans3d::rot(0, 0, -angle() / 2));
+  pgon[1].transform(Trans3d::rotate(0, 0, -angle() / 2));
   int num = 4 * num_sides;
   for (int i = 0; i < 2 * num_sides; i++) {
     int p_idx = i % 2;
     int v_idx = i / 2;
     Vec3d v =
-        Trans3d::rot(pgon[p_idx].verts(v_idx), (1 - 2 * p_idx) * twist_ang) *
+        Trans3d::rotate(pgon[p_idx].verts(v_idx), (1 - 2 * p_idx) * twist_ang) *
         Vec3d(0, 0, e2 / 2);
     geom.add_vert(pgon[p_idx].verts(v_idx) + v);
     geom.add_vert(pgon[p_idx].verts(v_idx) - v);

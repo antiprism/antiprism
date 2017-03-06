@@ -391,7 +391,7 @@ bool canonicalize_bd(Geometry &base, const int num_iters,
       base.raw_verts() = reciprocalN(dual);
       if (centering != 'x') {
         Vec3d e_cent = edge_nearpoints_centroid(base, Vec3d(0, 0, 0));
-        base.transform(Trans3d::transl(-0.1 * e_cent));
+        base.transform(Trans3d::translate(-0.1 * e_cent));
       }
       break;
     }
@@ -400,7 +400,7 @@ bool canonicalize_bd(Geometry &base, const int num_iters,
     case 'p':
       // move centroid to origin for balance
       dual.raw_verts() = reciprocalC_len2(base);
-      base.transform(Trans3d::transl(-centroid(dual.verts())));
+      base.transform(Trans3d::translate(-centroid(dual.verts())));
       base.raw_verts() = reciprocalC_len2(dual);
       break;
 
@@ -408,7 +408,7 @@ bool canonicalize_bd(Geometry &base, const int num_iters,
     case 'q':
       // move centroid to origin for balance
       dual.raw_verts() = reciprocalC_len(base);
-      base.transform(Trans3d::transl(-centroid(dual.verts())));
+      base.transform(Trans3d::translate(-centroid(dual.verts())));
       base.raw_verts() = reciprocalC_len(dual);
       break;
 

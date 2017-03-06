@@ -182,7 +182,10 @@ private:
   /// Set up mirror transformation group.
   /**\param norm The normal for the mirror.
    *\return reference to this object with the transformations set. */
-  sch_gen &refl(const Vec3d &norm) { return unit() + Trans3d::refl(norm); }
+  sch_gen &refl(const Vec3d &norm)
+  {
+    return unit() + Trans3d::reflection(norm);
+  }
 
 public:
   /// Constructor
@@ -214,7 +217,7 @@ public:
    *\return reference to this object with the transformations set. */
   sch_gen &v_refl(int n)
   {
-    return refl(Trans3d::rot(Vec3d::Z, -0.5 * M_PI / n) * Vec3d::Y);
+    return refl(Trans3d::rotate(Vec3d::Z, -0.5 * M_PI / n) * Vec3d::Y);
   }
 
   /// Set up dihedral symmetry transformation group.
@@ -223,7 +226,7 @@ public:
   sch_gen &C2()
   {
     C(2);
-    conjugate(Trans3d::rot(Vec3d::Z, Vec3d::X));
+    conjugate(Trans3d::rotate(Vec3d::Z, Vec3d::X));
     return *this;
   }
 
@@ -281,9 +284,9 @@ public:
    *\return reference to this object with the transformations set. */
   sch_gen &S(int n)
   {
-    return C(n / 2) *
-           (sch_gen().unit() +
-            Trans3d::refl(Vec3d::Z) * Trans3d::rot(Vec3d::Z, 2 * M_PI / n));
+    return C(n / 2) * (sch_gen().unit() +
+                       Trans3d::reflection(Vec3d::Z) *
+                           Trans3d::rotate(Vec3d::Z, 2 * M_PI / n));
   }
 
   /// Set up T symmetry transformation group.
@@ -291,7 +294,7 @@ public:
    *\return reference to this object with the transformations set. */
   sch_gen &T()
   {
-    return D(2) * (sch_gen().C(3).conjugate(Trans3d::rot(Vec3d::Z, A3)));
+    return D(2) * (sch_gen().C(3).conjugate(Trans3d::rotate(Vec3d::Z, A3)));
   }
 
   /// Set up Td symmetry transformation group.
@@ -309,7 +312,7 @@ public:
    *\return reference to this object with the transformations set. */
   sch_gen &O()
   {
-    return T() * (sch_gen().unit() + Trans3d::rot(Vec3d::X, M_PI / 2));
+    return T() * (sch_gen().unit() + Trans3d::rotate(Vec3d::X, M_PI / 2));
   }
 
   /// Set up Oh symmetry transformation group.
@@ -326,7 +329,7 @@ public:
    *\return reference to this object with the transformations set. */
   sch_gen &I()
   {
-    return T() * sch_gen().C(5).conjugate(Trans3d::rot(Vec3d::Z, A5));
+    return T() * sch_gen().C(5).conjugate(Trans3d::rotate(Vec3d::Z, A5));
   }
 
   /// Set up Ih symmetry transformation group.
@@ -340,7 +343,7 @@ sch_gen &sch_gen::C(int n)
   clear();
   unit();
   for (int i = 1; i < n; i++)
-    add(Trans3d::rot(Vec3d::Z, 2 * M_PI * i / n));
+    add(Trans3d::rotate(Vec3d::Z, 2 * M_PI * i / n));
   return *this;
 }
 
@@ -392,8 +395,8 @@ Isometry &Isometry::init(Trans3d m)
     return *this;
   }
 
-  transl = m.get_transl();
-  m[3] = m[7] = m[11] = 0; // zero translation column
+  transl = Vec3d(m[3], m[7], m[11]); // translation column
+  m[3] = m[7] = m[11] = 0;           // zero translation column
   double det = m.det();
   if (det < 0)
     m *= Trans3d::inversion();
@@ -518,8 +521,7 @@ void Symmetry::find_full_sym_type(const set<SymmetryAxis> &full_sym)
         break;
       }
     sym_type = ax.get_sym_type();
-    to_std =
-        Trans3d::alignment(ax.get_axis(), ax.get_perp(), Vec3d::Z, Vec3d::X);
+    to_std = Trans3d::align(ax.get_axis(), ax.get_perp(), Vec3d::Z, Vec3d::X);
   }
 
   // principal axis
@@ -527,10 +529,10 @@ void Symmetry::find_full_sym_type(const set<SymmetryAxis> &full_sym)
     sym_type = max_fold1.get_sym_type();
     Vec3d perp = max_fold1.get_perp();
     if (perp.is_set())
-      to_std = Trans3d::alignment(max_fold1.get_axis(), max_fold1.get_perp(),
-                                  Vec3d::Z, Vec3d::X);
+      to_std = Trans3d::align(max_fold1.get_axis(), max_fold1.get_perp(),
+                              Vec3d::Z, Vec3d::X);
     else
-      to_std = Trans3d::rot(max_fold1.get_axis(), Vec3d::Z);
+      to_std = Trans3d::rotate(max_fold1.get_axis(), Vec3d::Z);
   }
 
   // tetrahedral
@@ -542,12 +544,12 @@ void Symmetry::find_full_sym_type(const set<SymmetryAxis> &full_sym)
     else
       sym_type = Symmetry::T;
 
-    Vec3d A3b = Trans3d::rot(Vec3d::Z, M_PI) * A3;
+    Vec3d A3b = Trans3d::rotate(Vec3d::Z, M_PI) * A3;
     if (vdot(max_fold1.get_axis(), max_fold2.get_axis()) > 0)
       A3b *= -1;
 
     to_std =
-        Trans3d::alignment(max_fold1.get_axis(), max_fold2.get_axis(), A3, A3b);
+        Trans3d::align(max_fold1.get_axis(), max_fold2.get_axis(), A3, A3b);
   }
 
   // octahedral
@@ -557,8 +559,8 @@ void Symmetry::find_full_sym_type(const set<SymmetryAxis> &full_sym)
     else
       sym_type = Symmetry::O;
 
-    to_std = Trans3d::alignment(max_fold1.get_axis(), max_fold2.get_axis(),
-                                Vec3d::Z, Vec3d::X);
+    to_std = Trans3d::align(max_fold1.get_axis(), max_fold2.get_axis(),
+                            Vec3d::Z, Vec3d::X);
   }
 
   // icosahedral
@@ -568,12 +570,12 @@ void Symmetry::find_full_sym_type(const set<SymmetryAxis> &full_sym)
     else
       sym_type = Symmetry::I;
 
-    Vec3d A5b = Trans3d::rot(A3, 2 * M_PI / 3) * A5;
+    Vec3d A5b = Trans3d::rotate(A3, 2 * M_PI / 3) * A5;
     if (vdot(max_fold1.get_axis(), max_fold2.get_axis()) < 0)
       A5b *= -1;
 
     to_std =
-        Trans3d::alignment(max_fold1.get_axis(), max_fold2.get_axis(), A5, A5b);
+        Trans3d::align(max_fold1.get_axis(), max_fold2.get_axis(), A5, A5b);
   }
 
   // unknown symmetry
@@ -602,7 +604,7 @@ Symmetry::Symmetry(const Transformations &ts)
     fixed_pt += Vec3d(t[3], t[7], t[11]);
   fixed_pt /= ts.size(); // centroid of points where origin is sent
 
-  Trans3d transl = Trans3d::transl(-fixed_pt);
+  Trans3d transl = Trans3d::translate(-fixed_pt);
   Transformations o_ts = ts;
   o_ts.conjugate(transl);
 
@@ -637,7 +639,7 @@ Symmetry::Symmetry(const Transformations &ts)
   else if (v2ax.size() == 1 && v2ax.begin()->second.size() == 1 &&
            v2ax.begin()->second[0].get_sym_type() == Symmetry::Cs) { // one refl
     axes.clear();
-    to_std = Trans3d::rot(v2ax.begin()->second[0].get_axis(), Vec3d::Z);
+    to_std = Trans3d::rotate(v2ax.begin()->second[0].get_axis(), Vec3d::Z);
     sym_type = Symmetry::Cs;
   }
   else { // remaining possibilities have rotational axis
@@ -673,10 +675,10 @@ Symmetry::Symmetry(const Transformations &ts)
 
       // vertical reflection
 
-      Trans3d align_axis = Trans3d::rot(axis, Vec3d::Z);
+      Trans3d align_axis = Trans3d::rotate(axis, Vec3d::Z);
       if (sym_ax.get_sym_type() == Symmetry::S)
         align_axis =
-            Trans3d::rot(Vec3d::Z, M_PI / sym_ax.get_nfold()) * align_axis;
+            Trans3d::rotate(Vec3d::Z, M_PI / sym_ax.get_nfold()) * align_axis;
       Vec3d closest_to_y;
       for (auto &refl : refls) {
         if (fabs(vdot(refl, axis)) < sym_eps) {
@@ -688,18 +690,19 @@ Symmetry::Symmetry(const Transformations &ts)
       if (closest_to_y.is_set()) {
         if (sym_ax.get_sym_type() == Symmetry::C) {
           sym_ax.set_sym_type(Symmetry::Cv);
-          sym_ax.set_perp(Trans3d::rot(axis, -M_PI / 2) * closest_to_y);
+          sym_ax.set_perp(Trans3d::rotate(axis, -M_PI / 2) * closest_to_y);
         }
         else if (sym_ax.get_sym_type() == Symmetry::Ch) {
           sym_ax.set_sym_type(Symmetry::Dh);
-          // sym_ax.set_perp(Trans3d::rot(axis, M_PI/2+M_PI/nfold)*(*vi));
-          sym_ax.set_perp(Trans3d::rot(axis, -M_PI / 2) * closest_to_y);
+          // sym_ax.set_perp(Trans3d::rotate(axis, M_PI/2+M_PI/nfold)*(*vi));
+          sym_ax.set_perp(Trans3d::rotate(axis, -M_PI / 2) * closest_to_y);
         }
         else { // Symmetry::S
           sym_ax.set_sym_type(Symmetry::Dv);
           sym_ax.set_nfold(nfold / 2);
           sym_ax.set_perp(
-              Trans3d::rot(axis, M_PI / 2 - 0.5 * M_PI / sym_ax.get_nfold()) *
+              Trans3d::rotate(axis,
+                              M_PI / 2 - 0.5 * M_PI / sym_ax.get_nfold()) *
               closest_to_y);
         }
       }
@@ -716,7 +719,7 @@ Symmetry::Symmetry(const Transformations &ts)
             else { // sym==Symmetry::Cv
               sym_ax.set_sym_type(Symmetry::Dv);
               sym_ax.set_perp(
-                  Trans3d::rot(axis, -0.5 * M_PI / sym_ax.get_nfold()) *
+                  Trans3d::rotate(axis, -0.5 * M_PI / sym_ax.get_nfold()) *
                   (sym_ax.get_perp()));
             }
             break;
@@ -924,7 +927,7 @@ static bool is_sym(const Geometry &test_geom, const Geometry &geom,
 
   if (orient)
     transform(pts, Trans3d::inversion());
-  trans = Trans3d::alignment(t_pts, pts);
+  trans = Trans3d::align(t_pts, pts);
   if (orient)
     trans = Trans3d::inversion() * trans;
   Geometry s_geom = geom;
@@ -1137,9 +1140,9 @@ void Symmetry::init(const SymmetryAxis &sym_axis, const Vec3d &cent)
 
   sym_type = sym_axis.get_sym_type();
   nfold = sym_axis.get_nfold();
-  to_std = Trans3d::transl(cent) * Trans3d::alignment(Vec3d::X, Vec3d::Z,
-                                                      sym_axis.get_axis(),
-                                                      sym_axis.get_perp());
+  to_std = Trans3d::translate(cent) * Trans3d::align(Vec3d::X, Vec3d::Z,
+                                                     sym_axis.get_axis(),
+                                                     sym_axis.get_perp());
 }
 
 string Symmetry::get_symbol() const
@@ -1288,7 +1291,8 @@ void Symmetry::add_sub_axes(const Symmetry &sub) const
       sub_syms.insert(sub_ax);
       if (fold % 2 == 0) {
         sub_ax.set_sym_type(Cv);
-        sub_ax.set_to_std(Trans3d::rot(0, 0, M_PI / (fold)) * sub.get_to_std());
+        sub_ax.set_to_std(Trans3d::rotate(0, 0, M_PI / (fold)) *
+                          sub.get_to_std());
         sub_syms.insert(sub_ax);
       }
       break;
@@ -1313,11 +1317,11 @@ void Symmetry::add_sub_axes(const Symmetry &sub) const
       sub_ax.set_sym_type(C);
       sub_syms.insert(sub_ax);
       sub_ax.set_sym_type(Cv);
-      sub_ax.set_to_std(Trans3d::rot(0, 0, M_PI / (2 * nfold)) *
+      sub_ax.set_to_std(Trans3d::rotate(0, 0, M_PI / (2 * nfold)) *
                         sub.get_to_std());
       sub_syms.insert(sub_ax);
       if (nfold % 2 == 0) {
-        sub_ax.set_to_std(Trans3d::rot(0, 0, -M_PI / (2 * nfold)) *
+        sub_ax.set_to_std(Trans3d::rotate(0, 0, -M_PI / (2 * nfold)) *
                           sub.get_to_std());
         sub_syms.insert(sub_ax);
       }
@@ -1482,13 +1486,13 @@ const set<Symmetry> &Symmetry::get_sub_syms() const
       sym.sym_type = Cs;
       sub_syms.insert(sym);
       sym.init(Dv, 5,
-               Trans3d::alignment(A5, Vec3d::Z, axis,
-                                  Trans3d::rot(axis, M_PI / 10) * Vec3d::X) *
+               Trans3d::align(A5, Vec3d::Z, axis,
+                              Trans3d::rotate(axis, M_PI / 10) * Vec3d::X) *
                    to_std);
       add_sub_axes(sym);
       sym.init(Dv, 3,
-               Trans3d::alignment(A3, A5, axis,
-                                  Trans3d::rot(axis, M_PI / 6) * Vec3d::X) *
+               Trans3d::align(A3, A5, axis,
+                              Trans3d::rotate(axis, M_PI / 6) * Vec3d::X) *
                    to_std);
       add_sub_axes(sym);
       sym.init(Dh, 2, to_std);
@@ -1499,13 +1503,13 @@ const set<Symmetry> &Symmetry::get_sub_syms() const
       sym.sym_type = T;
       sub_syms.insert(sym);
       sym.init(D, 5,
-               Trans3d::alignment(A5, Vec3d::Z, axis,
-                                  Trans3d::rot(axis, M_PI / 10) * Vec3d::X) *
+               Trans3d::align(A5, Vec3d::Z, axis,
+                              Trans3d::rotate(axis, M_PI / 10) * Vec3d::X) *
                    to_std);
       add_sub_axes(sym);
       sym.init(D, 3,
-               Trans3d::alignment(A3, A5, axis,
-                                  Trans3d::rot(axis, M_PI / 6) * Vec3d::X) *
+               Trans3d::align(A3, A5, axis,
+                              Trans3d::rotate(axis, M_PI / 6) * Vec3d::X) *
                    to_std);
       add_sub_axes(sym);
       sym.init(D, 2, to_std);
@@ -1525,14 +1529,13 @@ const set<Symmetry> &Symmetry::get_sub_syms() const
       sub_syms.insert(sym);
       sym.sym_type = Cs;
       sub_syms.insert(sym);
-      sym.init(Cs, 0, Trans3d::rot(Vec3d(0, 1, 1), axis) * to_std);
+      sym.init(Cs, 0, Trans3d::rotate(Vec3d(0, 1, 1), axis) * to_std);
       add_sub_axes(sym);
       sym.init(Dh, 4, to_std);
       add_sub_axes(sym);
-      sym.init(Dv, 3,
-               Trans3d::alignment(A3, Vec3d(1, -1, 0), axis, perp) * to_std);
+      sym.init(Dv, 3, Trans3d::align(A3, Vec3d(1, -1, 0), axis, perp) * to_std);
       add_sub_axes(sym);
-      sym.init(Dh, 2, Trans3d::rot(Vec3d(0, 1, 1), axis) * to_std);
+      sym.init(Dh, 2, Trans3d::rotate(Vec3d(0, 1, 1), axis) * to_std);
       add_sub_axes(sym);
       break;
 
@@ -1541,10 +1544,9 @@ const set<Symmetry> &Symmetry::get_sub_syms() const
       sub_syms.insert(sym);
       sym.init(D, 4, to_std);
       add_sub_axes(sym);
-      sym.init(D, 3,
-               Trans3d::alignment(A3, Vec3d(1, -1, 0), axis, perp) * to_std);
+      sym.init(D, 3, Trans3d::align(A3, Vec3d(1, -1, 0), axis, perp) * to_std);
       add_sub_axes(sym);
-      sym.init(D, 2, Trans3d::rot(Vec3d(0, 1, 1), axis) * to_std);
+      sym.init(D, 2, Trans3d::rotate(Vec3d(0, 1, 1), axis) * to_std);
       add_sub_axes(sym);
       break;
 
@@ -1555,7 +1557,7 @@ const set<Symmetry> &Symmetry::get_sub_syms() const
       sub_syms.insert(sym);
       sym.sym_type = Cs;
       sub_syms.insert(sym);
-      sym.init(S, 6, Trans3d::rot(A3, axis) * to_std);
+      sym.init(S, 6, Trans3d::rotate(A3, axis) * to_std);
       add_sub_axes(sym);
       sym.init(Dh, 2, to_std);
       add_sub_axes(sym);
@@ -1564,17 +1566,17 @@ const set<Symmetry> &Symmetry::get_sub_syms() const
     case Td:
       sym.sym_type = T;
       sub_syms.insert(sym);
-      sym.init(Cs, 0, Trans3d::rot(Vec3d(0, 1, 1), axis) * to_std);
+      sym.init(Cs, 0, Trans3d::rotate(Vec3d(0, 1, 1), axis) * to_std);
       sub_syms.insert(sym);
       sym.init(Cv, 3,
-               Trans3d::alignment(A3, Vec3d(1, -1, -1), axis, perp) * to_std);
+               Trans3d::align(A3, Vec3d(1, -1, -1), axis, perp) * to_std);
       add_sub_axes(sym);
       sym.init(Dv, 2, to_std);
       add_sub_axes(sym);
       break;
 
     case T:
-      sym.init(C, 3, Trans3d::rot(A3, axis) * to_std);
+      sym.init(C, 3, Trans3d::rotate(A3, axis) * to_std);
       add_sub_axes(sym);
       sym.init(D, 2, to_std);
       add_sub_axes(sym);
@@ -1588,68 +1590,68 @@ const set<Symmetry> &Symmetry::get_sub_syms() const
         dih_type = Dh;
         // do this first to prefer main axis D groups
         if (nfold > 2) {
-          sym.init(Dh, nfold / 2, Trans3d::rot(axis, M_PI / nfold) * to_std);
+          sym.init(Dh, nfold / 2, Trans3d::rotate(axis, M_PI / nfold) * to_std);
           add_sub_axes(sym);
-          sym.init(Dv, nfold / 2, Trans3d::rot(axis, M_PI / nfold) * to_std);
+          sym.init(Dv, nfold / 2, Trans3d::rotate(axis, M_PI / nfold) * to_std);
           add_sub_axes(sym);
         }
         // vertical mirror through dihedral axis
-        sym.init(Cs, 0, Trans3d::rot(Vec3d::X, M_PI / 2) *
-                            Trans3d::rot(axis, M_PI / nfold) * to_std);
+        sym.init(Cs, 0, Trans3d::rotate(Vec3d::X, M_PI / 2) *
+                            Trans3d::rotate(axis, M_PI / nfold) * to_std);
         sub_syms.insert(sym);
         // dihedral axis
-        sym.init(dih_type, 2, Trans3d::rot(Vec3d::Y, M_PI / 2) *
-                                  Trans3d::rot(axis, M_PI / nfold) * to_std);
+        sym.init(dih_type, 2, Trans3d::rotate(Vec3d::Y, M_PI / 2) *
+                                  Trans3d::rotate(axis, M_PI / nfold) * to_std);
         add_sub_axes(sym);
       }
       else
         dih_type = Cv;
 
       // vertical mirror through dihedral axis
-      sym.init(Cs, 0, Trans3d::rot(Vec3d::X, M_PI / 2) * to_std);
+      sym.init(Cs, 0, Trans3d::rotate(Vec3d::X, M_PI / 2) * to_std);
       sub_syms.insert(sym);
 
-      sym.init(dih_type, 2, Trans3d::rot(Vec3d::Y, M_PI / 2) * to_std);
+      sym.init(dih_type, 2, Trans3d::rotate(Vec3d::Y, M_PI / 2) * to_std);
       add_sub_axes(sym);
       break;
 
     case Dv:
       add_sub_axes(*this);
       // vertical mirror between dihedral axes
-      sym.init(Cs, 0, Trans3d::rot(axis, M_PI / (2 * nfold)) *
-                          Trans3d::rot(Vec3d::X, M_PI / 2) * to_std);
+      sym.init(Cs, 0, Trans3d::rotate(axis, M_PI / (2 * nfold)) *
+                          Trans3d::rotate(Vec3d::X, M_PI / 2) * to_std);
       sub_syms.insert(sym);
       if (nfold % 2 == 0) {
         dih_type = D;
         if (nfold > 2) {
-          sym.init(Dv, nfold / 2, Trans3d::rot(axis, M_PI / nfold) * to_std);
+          sym.init(Dv, nfold / 2, Trans3d::rotate(axis, M_PI / nfold) * to_std);
           add_sub_axes(sym);
           // do this first to prefer main axis D groups
-          sym.init(D, 2, Trans3d::rot(axis, M_PI / nfold) * to_std);
+          sym.init(D, 2, Trans3d::rotate(axis, M_PI / nfold) * to_std);
           add_sub_axes(sym);
         }
-        sym.init(dih_type, 2, Trans3d::rot(Vec3d::Y, M_PI / 2) *
-                                  Trans3d::rot(axis, M_PI / nfold) * to_std);
+        sym.init(dih_type, 2, Trans3d::rotate(Vec3d::Y, M_PI / 2) *
+                                  Trans3d::rotate(axis, M_PI / nfold) * to_std);
         add_sub_axes(sym);
       }
       else
         dih_type = Ch;
-      sym.init(dih_type, 2, Trans3d::rot(Vec3d::Y, M_PI / 2) * to_std);
+      sym.init(dih_type, 2, Trans3d::rotate(Vec3d::Y, M_PI / 2) * to_std);
       add_sub_axes(sym);
       break;
 
     case D:
       add_sub_axes(*this);
       if (nfold % 2 == 0 && nfold > 2) {
-        sym.init(D, nfold / 2, Trans3d::rot(axis, M_PI / nfold) * to_std);
+        sym.init(D, nfold / 2, Trans3d::rotate(axis, M_PI / nfold) * to_std);
         add_sub_axes(sym);
       }
       dih_type = (nfold % 2 == 0) ? D : C;
 
-      sym.init(dih_type, 2, Trans3d::rot(Vec3d::Y, M_PI / 2) *
-                                Trans3d::rot(axis, M_PI / nfold) * to_std);
+      sym.init(dih_type, 2, Trans3d::rotate(Vec3d::Y, M_PI / 2) *
+                                Trans3d::rotate(axis, M_PI / nfold) * to_std);
       add_sub_axes(sym);
-      sym.init(dih_type, 2, Trans3d::rot(Vec3d::Y, M_PI / 2) * to_std);
+      sym.init(dih_type, 2, Trans3d::rotate(Vec3d::Y, M_PI / 2) * to_std);
       add_sub_axes(sym);
       break;
 
@@ -1665,16 +1667,16 @@ const set<Symmetry> &Symmetry::get_sub_syms() const
 
     case Cv:
       if (nfold % 2 == 0) { // nfold even: add second vertical mirror
-        sym.init(Cs, 0, Trans3d::rot(axis, M_PI / nfold) *
-                            Trans3d::rot(Vec3d::X, M_PI / 2) * to_std);
+        sym.init(Cs, 0, Trans3d::rotate(axis, M_PI / nfold) *
+                            Trans3d::rotate(Vec3d::X, M_PI / 2) * to_std);
         sub_syms.insert(sym);
         if (nfold > 2) {
-          sym.init(Cv, nfold / 2, Trans3d::rot(axis, M_PI / nfold) * to_std);
+          sym.init(Cv, nfold / 2, Trans3d::rotate(axis, M_PI / nfold) * to_std);
           sub_syms.insert(sym);
         }
       }
       // vertical mirror
-      sym.init(Cs, 0, Trans3d::rot(Vec3d::X, M_PI / 2) * to_std);
+      sym.init(Cs, 0, Trans3d::rotate(Vec3d::X, M_PI / 2) * to_std);
       sub_syms.insert(sym);
       add_sub_axes(*this);
       break;
@@ -1749,22 +1751,22 @@ SymmetryAutos::SymmetryAutos(const Symmetry &sym)
   if (type == Symmetry::Td || type == Symmetry::T || type == Symmetry::S ||
       type == Symmetry::Ch || type == Symmetry::Cv || type == Symmetry::C) {
     fixed.push_back(vector<Trans3d>(2));
-    fixed.back()[1] = Trans3d::rot(M_PI, 0, 0); // flip "principal" axis
+    fixed.back()[1] = Trans3d::rotate(M_PI, 0, 0); // flip "principal" axis
   }
 
   if (type == Symmetry::Dh || type == Symmetry::Dv || type == Symmetry::D ||
       type == Symmetry::Cv) {
     fixed.push_back(vector<Trans3d>(2));
     fixed.back()[1] =
-        Trans3d::rot(0, 0, M_PI / nfold); // rotate base vert to edge
+        Trans3d::rotate(0, 0, M_PI / nfold); // rotate base vert to edge
   }
 
   if ((type == Symmetry::Dh || type == Symmetry::D) && nfold == 2) {
     fixed.push_back(vector<Trans3d>(3));
     fixed.back()[1] =
-        Trans3d::rot(Vec3d(1, 1, 1), 2 * M_PI / 3); // rotate D2 axes
+        Trans3d::rotate(Vec3d(1, 1, 1), 2 * M_PI / 3); // rotate D2 axes
     fixed.back()[2] =
-        Trans3d::rot(Vec3d(1, 1, 1), -2 * M_PI / 3); // rotate D2 axes
+        Trans3d::rotate(Vec3d(1, 1, 1), -2 * M_PI / 3); // rotate D2 axes
   }
 
   // find all combinations of transformations involving one member
@@ -1929,16 +1931,16 @@ Trans3d SymmetryAutos::get_realignment() const
     trans = fixed_trans[fixed_type];
 
   if (free_vars & FREE_ROT_PRINCIPAL)
-    trans = Trans3d::rot(Vec3d::Z, rot[0]) * trans;
+    trans = Trans3d::rotate(Vec3d::Z, rot[0]) * trans;
   else if (free_vars & FREE_ROT_FULL)
-    trans = Trans3d::rot(rot[0], rot[1], rot[2]) * trans;
+    trans = Trans3d::rotate(rot[0], rot[1], rot[2]) * trans;
 
   if (free_vars & FREE_TRANSL_PRINCIPAL) // z-axis
-    trans = Trans3d::transl(Vec3d(0, 0, transl[0])) * trans;
+    trans = Trans3d::translate(Vec3d(0, 0, transl[0])) * trans;
   else if (free_vars & FREE_TRANSL_PLANE) // xy-plane
-    trans = Trans3d::transl(Vec3d(transl[0], transl[1], 0)) * trans;
+    trans = Trans3d::translate(Vec3d(transl[0], transl[1], 0)) * trans;
   else if (free_vars & FREE_TRANSL_SPACE)
-    trans = Trans3d::transl(Vec3d(transl[0], transl[1], transl[2])) * trans;
+    trans = Trans3d::translate(Vec3d(transl[0], transl[1], transl[2])) * trans;
 
   return trans;
 }

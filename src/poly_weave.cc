@@ -130,8 +130,8 @@ static Vec3d get_control_point(Vec3d P, Vec3d Q, Vec3d P_up)
   Vec3d along = Q - P;
   Vec3d axis = vcross(along, P_up);
   double turn_ang = angle_around_axis(along, P_up, axis) - M_PI / 2;
-  Trans3d trans =
-      Trans3d::transl(P) * Trans3d::rot(axis, turn_ang) * Trans3d::transl(-P);
+  Trans3d trans = Trans3d::translate(P) * Trans3d::rotate(axis, turn_ang) *
+                  Trans3d::translate(-P);
   Vec3d pt = (2 * P + Q) / 3; // point 1/3 along, chosen experimentally
   return trans * pt;
 }

@@ -1821,9 +1821,9 @@ int unzip_tree::flatten(const Geometry &geom, Geometry &net_geom,
         Vec3d axis = net_geom.edge_vec(join_edge).unit();
         double ang = angle_around_axis(norm_stack.top(), norm, axis);
         ang *= (fract - 1);
-        Trans3d rot = Trans3d::rot(axis, ang);
+        Trans3d rot = Trans3d::rotate(axis, ang);
         Vec3d offset = net_geom.verts(join_edge[0]);
-        trans = Trans3d::transl(offset) * rot * Trans3d::transl(-offset);
+        trans = Trans3d::translate(offset) * rot * Trans3d::translate(-offset);
 
         for (int i : face) {
           if (i != join_edge[0] && i != join_edge[1])
@@ -1890,7 +1890,7 @@ int unzip_poly(Geometry &geom, int root, double fract, char centring,
   }
 
   if (unzip_z_align)
-    geom.transform(Trans3d::rot(geom.face_norm(root), Vec3d::Z));
+    geom.transform(Trans3d::rotate(geom.face_norm(root), Vec3d::Z));
 
   unzip_tree tree;
   tree.init_basic(geom, root);
@@ -1900,7 +1900,7 @@ int unzip_poly(Geometry &geom, int root, double fract, char centring,
   if (centring == 'f') {
     vector<Vec3d> f_cents;
     net_geom.face_cents(f_cents);
-    net_geom.transform(Trans3d::transl(-centroid(f_cents)));
+    net_geom.transform(Trans3d::translate(-centroid(f_cents)));
   }
 
   geom = net_geom;

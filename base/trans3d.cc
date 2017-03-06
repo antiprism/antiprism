@@ -66,36 +66,35 @@ int compare(const Trans3d &trans1, const Trans3d &trans2, double eps)
 
 double Trans3d::det() const { return determinant(m, 4); }
 
-Trans3d &Trans3d::set_rot(Vec3d axis, double angle)
+Trans3d Trans3d::rotate(Vec3d axis, double angle)
 {
-  to_zero();
-  m[15] = 1;
+  Trans3d trans; // unit matrix.
   axis.to_unit();
   double c = cos(angle);
   double s = sin(angle);
   double t = 1.0 - c;
-  m[0] = c + axis[0] * axis[0] * t;
-  m[5] = c + axis[1] * axis[1] * t;
-  m[10] = c + axis[2] * axis[2] * t;
+  trans[0] = c + axis[0] * axis[0] * t;
+  trans[5] = c + axis[1] * axis[1] * t;
+  trans[10] = c + axis[2] * axis[2] * t;
 
   double tmp1 = axis[0] * axis[1] * t;
   double tmp2 = axis[2] * s;
-  m[4] = tmp1 + tmp2;
-  m[1] = tmp1 - tmp2;
+  trans[4] = tmp1 + tmp2;
+  trans[1] = tmp1 - tmp2;
 
   tmp1 = axis[0] * axis[2] * t;
   tmp2 = axis[1] * s;
-  m[8] = tmp1 - tmp2;
-  m[2] = tmp1 + tmp2;
+  trans[8] = tmp1 - tmp2;
+  trans[2] = tmp1 + tmp2;
 
   tmp1 = axis[1] * axis[2] * t;
   tmp2 = axis[0] * s;
-  m[9] = tmp1 + tmp2;
-  m[6] = tmp1 - tmp2;
-  return *this;
+  trans[9] = tmp1 + tmp2;
+  trans[6] = tmp1 - tmp2;
+  return trans;
 }
 
-Trans3d &Trans3d::set_rot(Vec3d v_from, Vec3d v_to)
+Trans3d Trans3d::rotate(Vec3d v_from, Vec3d v_to)
 {
   v_from.to_unit();
   v_to.to_unit();
@@ -106,29 +105,30 @@ Trans3d &Trans3d::set_rot(Vec3d v_from, Vec3d v_to)
     axis = vcross(v_from, Vec3d(1.2135, 2.09865, 3.23784)); // fix this
   }
 
-  return set_rot(axis, acos(cos_a));
+  return rotate(axis, acos(cos_a));
 }
 
-Trans3d &Trans3d::set_refl(Vec3d norm)
+Trans3d Trans3d::reflection(Vec3d norm)
 {
+  Trans3d trans;
   norm.to_unit();
-  double x = norm[0];
-  double y = norm[1];
-  double z = norm[2];
-  m[0] = -x * x + y * y + z * z;
-  m[1] = -2 * x * y;
-  m[2] = -2 * x * z;
-  m[4] = -2 * y * x;
-  m[5] = x * x - y * y + z * z;
-  m[6] = -2 * y * z;
-  m[8] = -2 * z * x;
-  m[9] = -2 * z * y;
-  m[10] = x * x + y * y - z * z;
-  return *this;
+  const double x = norm[0];
+  const double y = norm[1];
+  const double z = norm[2];
+  trans[0] = -x * x + y * y + z * z;
+  trans[1] = -2 * x * y;
+  trans[2] = -2 * x * z;
+  trans[4] = -2 * y * x;
+  trans[5] = x * x - y * y + z * z;
+  trans[6] = -2 * y * z;
+  trans[8] = -2 * z * x;
+  trans[9] = -2 * z * y;
+  trans[10] = x * x + y * y - z * z;
+  return trans;
 }
 
-Trans3d &Trans3d::set_trans_by_angles(double yz_ang, double zx_ang,
-                                      double xy_ang, bool *valid)
+Trans3d Trans3d::angles_between_axes(double yz_ang, double zx_ang,
+                                     double xy_ang, bool *valid)
 {
   double sq = 1 - cos(xy_ang) * cos(xy_ang) - cos(yz_ang) * cos(yz_ang) -
               cos(zx_ang) * cos(zx_ang) +
@@ -136,8 +136,7 @@ Trans3d &Trans3d::set_trans_by_angles(double yz_ang, double zx_ang,
   if (sq < -epsilon) {
     if (valid)
       *valid = false;
-    to_zero();
-    return *this;
+    return zero();
   }
   else if (sq < 0)
     sq = 0;
@@ -149,74 +148,61 @@ Trans3d &Trans3d::set_trans_by_angles(double yz_ang, double zx_ang,
   Vec3d new_z(cos(zx_ang),
               -cos(zx_ang) / tan(xy_ang) + cos(yz_ang) / sin(xy_ang),
               sqrt(sq) / sin(xy_ang));
-  set_cols(new_x, new_y, new_z);
-  return *this;
+  return Trans3d(new_x, new_y, new_z).transpose();
 }
 
-Trans3d &Trans3d::set_inverse()
+Trans3d Trans3d::inverse() const
 {
   Trans3d inv;
   double determ = determinant(m, 4);
   if (fabs(determ) > epsilon) {
     // http://www.euclideanspace.com/maths/algebra/matrix/functions
     // /inverse/fourD/index.htm
-    inv.m[0] = m[6] * m[11] * m[13] - m[7] * m[10] * m[13] +
-               m[7] * m[9] * m[14] - m[5] * m[11] * m[14] -
-               m[6] * m[9] * m[15] + m[5] * m[10] * m[15];
-    inv.m[1] = m[3] * m[10] * m[13] - m[2] * m[11] * m[13] -
-               m[3] * m[9] * m[14] + m[1] * m[11] * m[14] +
-               m[2] * m[9] * m[15] - m[1] * m[10] * m[15];
-    inv.m[2] = m[2] * m[7] * m[13] - m[3] * m[6] * m[13] + m[3] * m[5] * m[14] -
-               m[1] * m[7] * m[14] - m[2] * m[5] * m[15] + m[1] * m[6] * m[15];
-    inv.m[3] = m[3] * m[6] * m[9] - m[2] * m[7] * m[9] - m[3] * m[5] * m[10] +
-               m[1] * m[7] * m[10] + m[2] * m[5] * m[11] - m[1] * m[6] * m[11];
-    inv.m[4] = m[7] * m[10] * m[12] - m[6] * m[11] * m[12] -
-               m[7] * m[8] * m[14] + m[4] * m[11] * m[14] +
-               m[6] * m[8] * m[15] - m[4] * m[10] * m[15];
-    inv.m[5] = m[2] * m[11] * m[12] - m[3] * m[10] * m[12] +
-               m[3] * m[8] * m[14] - m[0] * m[11] * m[14] -
-               m[2] * m[8] * m[15] + m[0] * m[10] * m[15];
-    inv.m[6] = m[3] * m[6] * m[12] - m[2] * m[7] * m[12] - m[3] * m[4] * m[14] +
-               m[0] * m[7] * m[14] + m[2] * m[4] * m[15] - m[0] * m[6] * m[15];
-    inv.m[7] = m[2] * m[7] * m[8] - m[3] * m[6] * m[8] + m[3] * m[4] * m[10] -
-               m[0] * m[7] * m[10] - m[2] * m[4] * m[11] + m[0] * m[6] * m[11];
-    inv.m[8] = m[5] * m[11] * m[12] - m[7] * m[9] * m[12] +
-               m[7] * m[8] * m[13] - m[4] * m[11] * m[13] -
-               m[5] * m[8] * m[15] + m[4] * m[9] * m[15];
-    inv.m[9] = m[3] * m[9] * m[12] - m[1] * m[11] * m[12] -
-               m[3] * m[8] * m[13] + m[0] * m[11] * m[13] +
-               m[1] * m[8] * m[15] - m[0] * m[9] * m[15];
-    inv.m[10] = m[1] * m[7] * m[12] - m[3] * m[5] * m[12] +
-                m[3] * m[4] * m[13] - m[0] * m[7] * m[13] -
-                m[1] * m[4] * m[15] + m[0] * m[5] * m[15];
-    inv.m[11] = m[3] * m[5] * m[8] - m[1] * m[7] * m[8] - m[3] * m[4] * m[9] +
-                m[0] * m[7] * m[9] + m[1] * m[4] * m[11] - m[0] * m[5] * m[11];
-    inv.m[12] = m[6] * m[9] * m[12] - m[5] * m[10] * m[12] -
-                m[6] * m[8] * m[13] + m[4] * m[10] * m[13] +
-                m[5] * m[8] * m[14] - m[4] * m[9] * m[14];
-    inv.m[13] = m[1] * m[10] * m[12] - m[2] * m[9] * m[12] +
-                m[2] * m[8] * m[13] - m[0] * m[10] * m[13] -
-                m[1] * m[8] * m[14] + m[0] * m[9] * m[14];
-    inv.m[14] = m[2] * m[5] * m[12] - m[1] * m[6] * m[12] -
-                m[2] * m[4] * m[13] + m[0] * m[6] * m[13] +
-                m[1] * m[4] * m[14] - m[0] * m[5] * m[14];
-    inv.m[15] = m[1] * m[6] * m[8] - m[2] * m[5] * m[8] + m[2] * m[4] * m[9] -
-                m[0] * m[6] * m[9] - m[1] * m[4] * m[10] + m[0] * m[5] * m[10];
+    inv[0] = m[6] * m[11] * m[13] - m[7] * m[10] * m[13] + m[7] * m[9] * m[14] -
+             m[5] * m[11] * m[14] - m[6] * m[9] * m[15] + m[5] * m[10] * m[15];
+    inv[1] = m[3] * m[10] * m[13] - m[2] * m[11] * m[13] - m[3] * m[9] * m[14] +
+             m[1] * m[11] * m[14] + m[2] * m[9] * m[15] - m[1] * m[10] * m[15];
+    inv[2] = m[2] * m[7] * m[13] - m[3] * m[6] * m[13] + m[3] * m[5] * m[14] -
+             m[1] * m[7] * m[14] - m[2] * m[5] * m[15] + m[1] * m[6] * m[15];
+    inv[3] = m[3] * m[6] * m[9] - m[2] * m[7] * m[9] - m[3] * m[5] * m[10] +
+             m[1] * m[7] * m[10] + m[2] * m[5] * m[11] - m[1] * m[6] * m[11];
+    inv[4] = m[7] * m[10] * m[12] - m[6] * m[11] * m[12] - m[7] * m[8] * m[14] +
+             m[4] * m[11] * m[14] + m[6] * m[8] * m[15] - m[4] * m[10] * m[15];
+    inv[5] = m[2] * m[11] * m[12] - m[3] * m[10] * m[12] + m[3] * m[8] * m[14] -
+             m[0] * m[11] * m[14] - m[2] * m[8] * m[15] + m[0] * m[10] * m[15];
+    inv[6] = m[3] * m[6] * m[12] - m[2] * m[7] * m[12] - m[3] * m[4] * m[14] +
+             m[0] * m[7] * m[14] + m[2] * m[4] * m[15] - m[0] * m[6] * m[15];
+    inv[7] = m[2] * m[7] * m[8] - m[3] * m[6] * m[8] + m[3] * m[4] * m[10] -
+             m[0] * m[7] * m[10] - m[2] * m[4] * m[11] + m[0] * m[6] * m[11];
+    inv[8] = m[5] * m[11] * m[12] - m[7] * m[9] * m[12] + m[7] * m[8] * m[13] -
+             m[4] * m[11] * m[13] - m[5] * m[8] * m[15] + m[4] * m[9] * m[15];
+    inv[9] = m[3] * m[9] * m[12] - m[1] * m[11] * m[12] - m[3] * m[8] * m[13] +
+             m[0] * m[11] * m[13] + m[1] * m[8] * m[15] - m[0] * m[9] * m[15];
+    inv[10] = m[1] * m[7] * m[12] - m[3] * m[5] * m[12] + m[3] * m[4] * m[13] -
+              m[0] * m[7] * m[13] - m[1] * m[4] * m[15] + m[0] * m[5] * m[15];
+    inv[11] = m[3] * m[5] * m[8] - m[1] * m[7] * m[8] - m[3] * m[4] * m[9] +
+              m[0] * m[7] * m[9] + m[1] * m[4] * m[11] - m[0] * m[5] * m[11];
+    inv[12] = m[6] * m[9] * m[12] - m[5] * m[10] * m[12] - m[6] * m[8] * m[13] +
+              m[4] * m[10] * m[13] + m[5] * m[8] * m[14] - m[4] * m[9] * m[14];
+    inv[13] = m[1] * m[10] * m[12] - m[2] * m[9] * m[12] + m[2] * m[8] * m[13] -
+              m[0] * m[10] * m[13] - m[1] * m[8] * m[14] + m[0] * m[9] * m[14];
+    inv[14] = m[2] * m[5] * m[12] - m[1] * m[6] * m[12] - m[2] * m[4] * m[13] +
+              m[0] * m[6] * m[13] + m[1] * m[4] * m[14] - m[0] * m[5] * m[14];
+    inv[15] = m[1] * m[6] * m[8] - m[2] * m[5] * m[8] + m[2] * m[4] * m[9] -
+              m[0] * m[6] * m[9] - m[1] * m[4] * m[10] + m[0] * m[5] * m[10];
 
-    for (double &i : inv.m)
-      i /= determ;
-    *this = inv;
+    for (double &val : inv.m)
+      val /= determ;
   }
   else // det very small
-    to_zero();
+    inv = zero();
 
-  return *this;
+  return inv;
 }
 
 Trans3d &Trans3d::operator*=(const Trans3d &trans)
 {
-  Trans3d new_m;
-  new_m.to_zero();
+  Trans3d new_m = zero();
   for (int i = 0; i < 16; i++)
     for (int j = 0; j < 4; j++)
       new_m[i] += m[(i / 4) * 4 + j] * trans[(j)*4 + (i % 4)];
@@ -315,22 +301,23 @@ void Trans3d::dump(const char *var, FILE *file) const
   fprintf(file, "\n");
 }
 
-Trans3d &Trans3d::set_alignment(vector<Vec3d> from, vector<Vec3d> to)
+Trans3d Trans3d::align(vector<Vec3d> from, vector<Vec3d> to)
 {
-  const Trans3d r = Trans3d::rot(0.1, 0, 0) * Trans3d::rot(0, 0.2, 0) *
-                    Trans3d::rot(0, 0, 0.3);
-  const Trans3d inv_r = Trans3d::rot(0, 0, -0.3) * Trans3d::rot(0, -0.2, 0) *
-                        Trans3d::rot(-0.1, 0, 0);
+  const Trans3d r = Trans3d::rotate(0.1, 0, 0) * Trans3d::rotate(0, 0.2, 0) *
+                    Trans3d::rotate(0, 0, 0.3);
+  const Trans3d inv_r = Trans3d::rotate(0, 0, -0.3) *
+                        Trans3d::rotate(0, -0.2, 0) *
+                        Trans3d::rotate(-0.1, 0, 0);
 
   if (to.size() > 1)
     transform(to, r);
 
-  Trans3d trans = Trans3d::transl(to[0] - from[0]);
+  Trans3d trans = Trans3d::translate(to[0] - from[0]);
 
   if (to.size() > 1) {
-    trans = Trans3d::transl(to[0]) *
-            Trans3d::rot(from[1] - from[0], to[1] - to[0]) *
-            Trans3d::transl(-to[0]) * trans;
+    trans = Trans3d::translate(to[0]) *
+            Trans3d::rotate(from[1] - from[0], to[1] - to[0]) *
+            Trans3d::translate(-to[0]) * trans;
   }
 
   if (to.size() > 2) {
@@ -342,16 +329,15 @@ Trans3d &Trans3d::set_alignment(vector<Vec3d> from, vector<Vec3d> to)
     // Maybe test form norm size here
     norm1.to_unit();
     norm2.to_unit();
-    trans = Trans3d::transl(to[0]) * Trans3d::rot(norm1, norm2) *
-            Trans3d::transl(-to[0]) * trans;
+    trans = Trans3d::translate(to[0]) * Trans3d::rotate(norm1, norm2) *
+            Trans3d::translate(-to[0]) * trans;
   }
 
-  *this = (to.size() > 1) ? inv_r * trans : trans;
-  return *this;
+  return (to.size() > 1) ? inv_r * trans : trans;
 }
 
-Trans3d &Trans3d::set_alignment(Vec3d from1, Vec3d from2, Vec3d from3,
-                                Vec3d to1, Vec3d to2, Vec3d to3)
+Trans3d Trans3d::align(Vec3d from1, Vec3d from2, Vec3d from3, Vec3d to1,
+                       Vec3d to2, Vec3d to3)
 {
   vector<Vec3d> from(3);
   from[0] = from1;
@@ -361,20 +347,21 @@ Trans3d &Trans3d::set_alignment(Vec3d from1, Vec3d from2, Vec3d from3,
   to[0] = to1;
   to[1] = to2;
   to[2] = to3;
-  return set_alignment(from, to);
+  return align(from, to);
 }
 
-Trans3d &Trans3d::set_alignment(Vec3d from1, Vec3d from2, Vec3d to1, Vec3d to2)
+Trans3d Trans3d::align(Vec3d from1, Vec3d from2, Vec3d to1, Vec3d to2)
 {
 
-  const Trans3d r = Trans3d::rot(0.1, 0, 0) * Trans3d::rot(0, 0.2, 0) *
-                    Trans3d::rot(0, 0, 0.3);
-  const Trans3d inv_r = Trans3d::rot(0, 0, -0.3) * Trans3d::rot(0, -0.2, 0) *
-                        Trans3d::rot(-0.1, 0, 0);
+  const Trans3d r = Trans3d::rotate(0.1, 0, 0) * Trans3d::rotate(0, 0.2, 0) *
+                    Trans3d::rotate(0, 0, 0.3);
+  const Trans3d inv_r = Trans3d::rotate(0, 0, -0.3) *
+                        Trans3d::rotate(0, -0.2, 0) *
+                        Trans3d::rotate(-0.1, 0, 0);
   to1 = r * to1;
   to2 = r * to2;
 
-  Trans3d trans = Trans3d::rot(from1, to1);
+  Trans3d trans = Trans3d::rotate(from1, to1);
   from1 = trans * from1;
   from2 = trans * from2;
 
@@ -389,13 +376,11 @@ Trans3d &Trans3d::set_alignment(Vec3d from1, Vec3d from2, Vec3d to1, Vec3d to2)
   if (vtriple(to1, norm1, norm2) < 0)
     ang *= -1;
 
-  // trans = Trans3d::rot(to1, acos(vdot(norm1, norm2))) * trans;
+  // trans = Trans3d::rotate(to1, acos(vdot(norm1, norm2))) * trans;
   //*this = inv_r*trans;
 
-  trans = Trans3d::rot(to1, ang) * trans;
-  *this = inv_r * trans;
-  //*this = Trans3d::rot(to1, ang) * trans;
-  return *this;
+  trans = Trans3d::rotate(to1, ang) * trans;
+  return inv_r * trans;
 }
 
 } // namespace anti

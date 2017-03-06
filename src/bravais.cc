@@ -1329,10 +1329,7 @@ void bravais_scale(Geometry &geom, const vector<double> &vecs,
 {
   // divide by 2 since original scale is 2
   Trans3d m = Trans3d::scale(vecs[0] / 2, vecs[1] / 2, vecs[2] / 2);
-  if (inverse)
-    m.set_inverse();
-
-  geom.transform(m);
+  geom.transform((inverse) ? m.inverse() : m);
 }
 
 // applies angles alpha,beta and gamma without changing scale
@@ -1343,11 +1340,8 @@ void bravais_warp(Geometry &geom, const vector<double> &angles,
   double zx = deg2rad(angles[1]); // beta
   double xy = deg2rad(angles[2]); // gamma
 
-  Trans3d m = Trans3d::trans_by_angles(yz, zx, xy);
-  if (inverse)
-    m.set_inverse();
-
-  geom.transform(m);
+  Trans3d m = Trans3d::angles_between_axes(yz, zx, xy);
+  geom.transform((inverse) ? m.inverse() : m);
 }
 
 // vecs is not changed
@@ -1418,7 +1412,7 @@ void geom_to_grid(Geometry &geom, const vector<int> &grid,
       for (int z = 0; z < grid[2]; z++) {
         geom_to_grid_translate(
             geom, tgeom,
-            Trans3d::transl(
+            Trans3d::translate(
                 Vec3d(cell_size[0] * x, cell_size[1] * y, cell_size[2] * z)));
       }
     }
@@ -1470,10 +1464,7 @@ Trans3d r_lattice_trans_mat(const bool inverse)
   trans_m[8]=one_third; trans_m[9]=one_third;  trans_m[10]=one_third;
   */
 
-  if (inverse)
-    trans_m.set_inverse();
-
-  return trans_m;
+  return (inverse) ? trans_m.inverse() : trans_m;
 }
 
 void r_lattice_overlay(Geometry &geom, const vector<int> &grid,
@@ -1494,8 +1485,8 @@ void r_lattice_overlay(Geometry &geom, const vector<int> &grid,
     adjust += Vec3d(0, 1, 0);
   if (!is_even(grid[0]))
     adjust += Vec3d(0, 0, 1);
-  hgeom.transform(Trans3d::transl(-centroid(hgeom.verts()) +
-                                  centroid(geom.verts()) - adjust));
+  hgeom.transform(Trans3d::translate(-centroid(hgeom.verts()) +
+                                     centroid(geom.verts()) - adjust));
 
   geom.append(hgeom);
 }
@@ -1602,9 +1593,7 @@ void bravais_dual(Geometry &geom, const vector<Vec3d> &primitive_vectors,
   Vec3d b2 = vcross(a3, a1) / det;
   Vec3d b3 = vcross(a1, a2) / det;
 
-  Trans3d m;
-  m = Trans3d(b1, b2, b3);
-  m.transpose();
+  Trans3d m = Trans3d(b1, b2, b3).transpose();
 
   // if the dual lattice is desired to always have the spacing of the original
   // uncomment the code below and and at restore scale
@@ -1718,7 +1707,7 @@ void do_bravais(Geometry &geom, Geometry &container, brav_opts &opts)
     bravais_eighth_cell_grid(geom);
   else
     // translate grid into the positive realm
-    geom.transform(Trans3d::transl(Vec3d(1, 1, 1)));
+    geom.transform(Trans3d::translate(Vec3d(1, 1, 1)));
 
   if (opts.verbose) {
     fprintf(stderr, "info: grid size is %d x %d x %d", opts.grid[0],
@@ -1744,8 +1733,8 @@ void do_bravais(Geometry &geom, Geometry &container, brav_opts &opts)
     bravais_warp(geom, angles, false);
 
     // rotate into place
-    geom.transform(Trans3d::rot(acos(1.0 / 3.0) / 2.0, 0, 0));
-    geom.transform(Trans3d::rot(0, 0, -45.0 * (M_PI / 180.0)));
+    geom.transform(Trans3d::rotate(acos(1.0 / 3.0) / 2.0, 0, 0));
+    geom.transform(Trans3d::rotate(0, 0, -45.0 * (M_PI / 180.0)));
 
     if (opts.cell_struts)
       add_color_struts(geom, 1.0, opts.edge_col[0]);
@@ -1832,7 +1821,7 @@ void do_bravais(Geometry &geom, Geometry &container, brav_opts &opts)
                               opts.epsilon);
 
   if (opts.trans_to_origin)
-    geom.transform(Trans3d::transl(-centroid(geom.verts())));
+    geom.transform(Trans3d::translate(-centroid(geom.verts())));
 
   if (opts.list_radii) {
     if (opts.list_radii_original_center) {

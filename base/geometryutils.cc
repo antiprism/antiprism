@@ -490,7 +490,7 @@ int get_winding_number_polygon(const Geometry &polygon,
   }
 
   // rotate polygon to face forward
-  Trans3d trans = Trans3d::rot(norm + pgon.face_cent(0), Vec3d(0, 0, z));
+  Trans3d trans = Trans3d::rotate(norm + pgon.face_cent(0), Vec3d(0, 0, z));
   pgon.transform(trans);
 
   // also rotate points per matrix

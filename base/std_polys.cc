@@ -895,7 +895,7 @@ static void get_arrow(Geometry &geom, const Symmetry &sym)
   geom.colors(FACES).set(geom.add_face(3, 4, 8, 7, -1), Color(0.9, 0.9, 0.7));
   geom.colors(FACES).set(geom.add_face(4, 0, 5, 8, -1), Color(0.9, 0.9, 0.7));
 
-  Trans3d trans = Trans3d::transl(Vec3d(0.1, 0.2, 0.4));
+  Trans3d trans = Trans3d::translate(Vec3d(0.1, 0.2, 0.4));
   int fold = sym.get_nfold();
 
   switch (sym.get_sym_type()) {
@@ -907,47 +907,47 @@ static void get_arrow(Geometry &geom, const Symmetry &sym)
   case Symmetry::C:
   case Symmetry::Ch:
   case Symmetry::S:
-    trans = Trans3d::rot(Vec3d::Z, -M_PI / 2) *
-            Trans3d::transl(Vec3d(-1.6, -0.2, 0.0)) * trans;
+    trans = Trans3d::rotate(Vec3d::Z, -M_PI / 2) *
+            Trans3d::translate(Vec3d(-1.6, -0.2, 0.0)) * trans;
     if (fold > 1)
-      trans = Trans3d::transl(Vec3d(1.6 / sin(M_PI / fold), 0, 0)) * trans;
+      trans = Trans3d::translate(Vec3d(1.6 / sin(M_PI / fold), 0, 0)) * trans;
     break;
 
   case Symmetry::Cv:
   case Symmetry::D:
   case Symmetry::Dh:
-    trans = Trans3d::rot(Vec3d::Z, -M_PI / 2) * trans;
+    trans = Trans3d::rotate(Vec3d::Z, -M_PI / 2) * trans;
     if (fold > 1)
-      trans = Trans3d::transl(Vec3d(3.2 / tan(M_PI / fold), 0, 0)) * trans;
+      trans = Trans3d::translate(Vec3d(3.2 / tan(M_PI / fold), 0, 0)) * trans;
     break;
 
   case Symmetry::Dv:
     if (fold > 1)
-      trans = Trans3d::rot(Vec3d::Z, 0.5 * M_PI / fold) *
-              Trans3d::transl(Vec3d(3.2 / tan(M_PI / fold), 0, 0)) *
-              Trans3d::rot(Vec3d::Z, -M_PI / 2) * trans;
+      trans = Trans3d::rotate(Vec3d::Z, 0.5 * M_PI / fold) *
+              Trans3d::translate(Vec3d(3.2 / tan(M_PI / fold), 0, 0)) *
+              Trans3d::rotate(Vec3d::Z, -M_PI / 2) * trans;
     break;
 
   case Symmetry::T:
   case Symmetry::Td:
   case Symmetry::Th:
-    trans = Trans3d::alignment(Vec3d::Z, Vec3d::X, Vec3d(1, 1, 1),
-                               Vec3d(0, -1, 1)) *
-            Trans3d::transl(Vec3d(0, 0.5, 3)) *
-            Trans3d::rot(Vec3d::Z, M_PI / 2) * trans;
+    trans =
+        Trans3d::align(Vec3d::Z, Vec3d::X, Vec3d(1, 1, 1), Vec3d(0, -1, 1)) *
+        Trans3d::translate(Vec3d(0, 0.5, 3)) *
+        Trans3d::rotate(Vec3d::Z, M_PI / 2) * trans;
     break;
 
   case Symmetry::O:
   case Symmetry::Oh:
     // trans = Trans3d::transl(Vec3d(0, 3, 4)) * trans;
-    trans = Trans3d::transl(Vec3d(1, 0, 4)) * trans;
+    trans = Trans3d::translate(Vec3d(1, 0, 4)) * trans;
     break;
 
   case Symmetry::I:
   case Symmetry::Ih:
-    trans = Trans3d::rot(Vec3d::Z, Vec3d(0, 1, 1.618)) *
-            Trans3d::transl(Vec3d(0, 1, 5.5)) *
-            Trans3d::rot(Vec3d::Z, M_PI / 2) * trans;
+    trans = Trans3d::rotate(Vec3d::Z, Vec3d(0, 1, 1.618)) *
+            Trans3d::translate(Vec3d(0, 1, 5.5)) *
+            Trans3d::rotate(Vec3d::Z, M_PI / 2) * trans;
     break;
   }
 

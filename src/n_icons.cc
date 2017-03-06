@@ -1792,7 +1792,7 @@ void form_angular_model(Geometry &geom, const vector<int> &prime_meridian,
         else {
           // Rotate Point Counter-Clockwise about Y Axis (looking down through Y
           // Axis)
-          Vec3d v = Trans3d::rot(0, deg2rad(arc * i), 0) * verts[m];
+          Vec3d v = Trans3d::rotate(0, deg2rad(arc * i), 0) * verts[m];
           add_coord(geom, coordinates, v);
           meridian.push_back(verts.size() - 1);
         }
@@ -2087,9 +2087,9 @@ void calc_radii(double &inner_radius, double &outer_radius, double &arc,
 
   if (opts.build_method == 2) {
     // reculate arc and interior_angle;
-    arc = 360.0/N;
-    interior_angle = (180.0-arc)/2.0;
-      
+    arc = 360.0 / N;
+    interior_angle = (180.0 - arc) / 2.0;
+
     int n_calc = N / ((d != 1) ? 2 : 1);
     if (2 * d > n_calc)
       d = n_calc - d;
@@ -2157,7 +2157,7 @@ void build_prime_meridian(Geometry &geom, vector<int> &prime_meridian,
   // swap radii back for future reference
   if (radii_swapped)
     swap(outer_radius, inner_radius);
-geom.write("n_icons.off");
+  geom.write("n_icons.off");
 }
 
 // methods 1 and 2: calculate polygon numbers
@@ -2241,8 +2241,8 @@ void form_globe(Geometry &geom, const vector<int> &prime_meridian,
         if ((i != opts.longitudes.front()) && (i != longitudes_back + 1)) {
           // Rotate Point Counter-Clockwise about Y Axis (looking down through Y
           // Axis)
-          Vec3d v =
-              Trans3d::rot(0, deg2rad(arc * i), 0) * verts[prime_meridian[j]];
+          Vec3d v = Trans3d::rotate(0, deg2rad(arc * i), 0) *
+                    verts[prime_meridian[j]];
           add_coord(geom, coordinates, v);
         }
         if ((i == ((opts.longitudes.front() / 2) + 1)) &&
@@ -2708,7 +2708,7 @@ void ncon_twist(Geometry &geom, const vector<polarOrb *> &polar_orbit,
   vector<Vec3d> &verts = geom.raw_verts();
 
   double arc = (360.0 / ncon_order) * twist * (+1);
-  Trans3d rot = Trans3d::rot(0, 0, deg2rad(-arc));
+  Trans3d rot = Trans3d::rotate(0, 0, deg2rad(-arc));
 
   for (unsigned int i = 0; i < face_list.size(); i++) {
     if (face_list[i]->rotate) {
@@ -3355,8 +3355,7 @@ void set_vert_color(Geometry &geom, const int i, Color c,
   geom.colors(VERTS).set(i, c);
 }
 
-void set_edge_col(Geometry &geom, const int i, Color c,
-                  const int opacity = -1)
+void set_edge_col(Geometry &geom, const int i, Color c, const int opacity = -1)
 {
   if (opacity > -1)
     c = set_alpha(c, opacity);
@@ -4650,9 +4649,8 @@ void build_circuit_table(const int ncon_order, const int twist,
 }
 
 void build_color_table(map<int, pair<int, int>> &color_table,
-                       const int ncon_order, const int twist,
-                       const bool hybrid, const bool symmetric_coloring,
-                       const int increment)
+                       const int ncon_order, const int twist, const bool hybrid,
+                       const bool symmetric_coloring, const int increment)
 {
   bool debug = false;
 
@@ -5293,10 +5291,10 @@ int process_hybrid(Geometry &geom, ncon_opts &opts)
     swap(opts.inner_radius, opts.outer_radius);
     opts.radius_inversion = radius_inversion_save;
   }
-  geom.transform(Trans3d::rot(0, 0, deg2rad(-twist_angle)));
+  geom.transform(Trans3d::rotate(0, 0, deg2rad(-twist_angle)));
   // methods 1 and 2 need reflection
   if (opts.build_method < 3)
-    geom.transform(Trans3d::refl(Vec3d(0, 0, 1)));
+    geom.transform(Trans3d::reflection(Vec3d(0, 0, 1)));
 
   // merge the two halves and merge the vertices
   geom.append(geom_d);
@@ -5344,8 +5342,8 @@ int process_hybrid(Geometry &geom, ncon_opts &opts)
   // in the case of hybrid and side cut
   // model needs to be rotated into position at side_cut angles
   if (opts.build_method == 3 && opts.angle_is_side_cut)
-    geom.transform(Trans3d::rot(0, deg2rad(180.0), 0) *
-                   Trans3d::rot(0, 0, deg2rad(twist_angle)));
+    geom.transform(Trans3d::rotate(0, deg2rad(180.0), 0) *
+                   Trans3d::rotate(0, 0, deg2rad(twist_angle)));
 
   // clean up
   clear_coord(coordinates);
@@ -5600,11 +5598,12 @@ void pgon_post_process(Geometry &pgon, vector<Vec3d> &axes, const int N,
   v_clrng.add_cmap(e_map);
   v_clrng.v_sets(sym_equivs[0]);
 
-  // pgon.transform(Trans3d::rot(Vec3d::Z, (1-2*(D>1 && is_even(D%2)))*M_PI/2));
-  pgon.transform(Trans3d::rot(Vec3d::Z, M_PI / 2));
+  // pgon.transform(Trans3d::rotate(Vec3d::Z, (1-2*(D>1 &&
+  // is_even(D%2)))*M_PI/2));
+  pgon.transform(Trans3d::rotate(Vec3d::Z, M_PI / 2));
   axes[0] = Vec3d::Y;
   axes[1] =
-      Trans3d::rot(Vec3d::Z, -2 * M_PI * (twist - 0.5 * hyb) / N) * axes[0];
+      Trans3d::rotate(Vec3d::Z, -2 * M_PI * (twist - 0.5 * hyb) / N) * axes[0];
 }
 
 void lookup_face_color(Geometry &geom, const int f, const vector<Vec3d> &axes,
@@ -5657,8 +5656,8 @@ void lookup_edge_color(Geometry &geom, const int e, const vector<Vec3d> &axes,
   }
 }
 
-void rotate_polygon(Geometry &pgon, const int N, const bool pc,
-                    const bool hyb, const ncon_opts &opts)
+void rotate_polygon(Geometry &pgon, const int N, const bool pc, const bool hyb,
+                    const ncon_opts &opts)
 {
   // rotate polygons
   double rot_angle = 0;
@@ -5670,7 +5669,7 @@ void rotate_polygon(Geometry &pgon, const int N, const bool pc,
   else if (!is_even(N) || !pc || hyb)
     rot_angle = M_PI / N;
 
-  pgon.transform(Trans3d::rot(Vec3d::Z, rot_angle));
+  pgon.transform(Trans3d::rotate(Vec3d::Z, rot_angle));
 
   // odds are flipped under these rules
   bool is_flipped = false;
@@ -5688,7 +5687,7 @@ void rotate_polygon(Geometry &pgon, const int N, const bool pc,
 
   // note: the polygon is still on its side
   if (is_flipped)
-    pgon.transform(Trans3d::refl(Vec3d(1, 0, 0)));
+    pgon.transform(Trans3d::reflection(Vec3d(1, 0, 0)));
 }
 
 void color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
@@ -5778,12 +5777,12 @@ void color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
     if (opts.double_sweep) {
       Geometry pgon_refl;
       pgon_refl = pgon;
-      pgon_refl.transform(Trans3d::refl(Vec3d(0, 1, 0)));
+      pgon_refl.transform(Trans3d::reflection(Vec3d(0, 1, 0)));
       pgon.append(pgon_refl);
 
       // this flip is needed
       if (!is_even(N))
-        pgon.transform(Trans3d::refl(Vec3d(1, 0, 0)));
+        pgon.transform(Trans3d::reflection(Vec3d(1, 0, 0)));
 
       // when angle is used
       // a normal becomes a normal side cut of 2N/2D with a twist of 2T
@@ -5870,7 +5869,7 @@ void color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
   // catch hybrid case if special hybrids
   if (is_even(opts.ncon_order) && (opts.mod_twist != 0) && (N / twist == 2) &&
       !opts.hybrid)
-    pgon.transform(Trans3d::refl(Vec3d(0, 1, 0)));
+    pgon.transform(Trans3d::reflection(Vec3d(0, 1, 0)));
 
   // color faces
   if (opts.face_coloring_method == 'S') {
@@ -5929,7 +5928,7 @@ void color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
       // catch hybrid case if special hybrids
       if (is_even(opts.ncon_order) && (opts.mod_twist != 0) &&
           (N / twist == 2) && !opts.hybrid)
-        pgon.transform(Trans3d::refl(Vec3d(0, 1, 0)));
+        pgon.transform(Trans3d::reflection(Vec3d(0, 1, 0)));
     }
 
     // Find nearpoints of polygon vertices, make unit, get height on each axis

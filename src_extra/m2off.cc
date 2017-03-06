@@ -460,8 +460,8 @@ void live3D_check_values(Geometry &lights_geom, Vec3d &view_point,
 void live3D_derotate(Geometry &geom, const double &angle,
                      const Vec3d &view_point)
 {
-  Trans3d trans = Trans3d::rot(0, 0, -angle);
-  trans = Trans3d::rot(Vec3d(0, 0, 1), view_point) * trans;
+  Trans3d trans = Trans3d::rotate(0, 0, -angle);
+  trans = Trans3d::rotate(Vec3d(0, 0, 1), view_point) * trans;
   geom.transform(trans);
 }
 
@@ -469,10 +469,10 @@ void live3D_viewpoint(Geometry &geom, const bool &live3D_do_viewpoint,
                       double &angle, const Vec3d &view_point,
                       const Vec3d &view_vertical)
 {
-  Trans3d trans = Trans3d::rot(view_point, Vec3d(0, 0, 1));
+  Trans3d trans = Trans3d::rotate(view_point, Vec3d(0, 0, 1));
   Vec3d rotated_view_vertical = trans * view_vertical;
   angle = atan2(rotated_view_vertical[0], rotated_view_vertical[1]);
-  trans = Trans3d::rot(0, 0, angle) * trans;
+  trans = Trans3d::rotate(0, 0, angle) * trans;
   if (live3D_do_viewpoint)
     geom.transform(trans);
 }

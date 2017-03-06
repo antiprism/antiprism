@@ -419,7 +419,7 @@ void plane_face(Geometry &polygon)
     face_normal *= -1.0;
 
   // rotate face to z axis
-  Trans3d trans = Trans3d::rot(face_normal + face_centroid, Vec3d(0, 0, 1));
+  Trans3d trans = Trans3d::rotate(face_normal + face_centroid, Vec3d(0, 0, 1));
   polygon.transform(trans);
 
   // refresh face centroid
@@ -430,7 +430,7 @@ void plane_face(Geometry &polygon)
     vert[2] = face_centroid[2];    
 
   // rotate face back to original position
-  polygon.transform(trans.set_inverse());
+  polygon.transform(trans.inverse());
 }
 
 // RK - edge near points of base seek 1
@@ -459,10 +459,10 @@ bool canonicalize_unit(Geometry &geom, const int num_iters, const double radius_
 
     // re-center for drift
     if (centering == 'e')
-      geom.transform(Trans3d::transl(-edge_nearpoints_centroid(geom, Vec3d(0, 0, 0))));
+      geom.transform(Trans3d::translate(-edge_nearpoints_centroid(geom, Vec3d(0, 0, 0))));
     else
     if (centering == 'v')
-      geom.transform(Trans3d::transl(-centroid(geom.verts())));
+      geom.transform(Trans3d::translate(-centroid(geom.verts())));
 
     //for (unsigned int f = 0; f < geom.faces().size(); f++) {
     for (unsigned int ff = cnt; ff < geom.faces().size() + cnt; ff++) {
@@ -684,7 +684,7 @@ void construct_model(Geometry &base, const cn_opts &opts) {
       (opts.output_parts.find("U") != string::npos)) {
     Geometry sgeom;
     sgeom.read_resource("geo_4_4");
-    sgeom.transform(Trans3d::transl(-centroid(sgeom.verts())));
+    sgeom.transform(Trans3d::translate(-centroid(sgeom.verts())));
     unitize_vertex_radius(sgeom);
 
     double min = 0;
@@ -733,12 +733,12 @@ int main(int argc, char *argv[])
   fprintf(stderr,"centering: ");
   if (opts.centering == 'e') {
     fprintf(stderr, "(edge near points centroid to origin)\n");
-    geom.transform(Trans3d::transl(-edge_nearpoints_centroid(geom, Vec3d(0, 0, 0))));
+    geom.transform(Trans3d::translate(-edge_nearpoints_centroid(geom, Vec3d(0, 0, 0))));
   }
   else
   if (opts.centering == 'v') {
     fprintf(stderr, "(vertex centroid to origin)\n");
-    geom.transform(Trans3d::transl(-centroid(geom.verts())));
+    geom.transform(Trans3d::translate(-centroid(geom.verts())));
   }
   else
   if (opts.centering == 'x')

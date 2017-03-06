@@ -109,7 +109,7 @@ static void edge_cyl_trans(Vec3d p1, Vec3d p2)
 {
   Vec3d p1to2 = p2 - p1;
   glTranslated(p1[0], p1[1], p1[2]);
-  Trans3d rot = Trans3d::rot(Vec3d(0, 0, 1), p1to2);
+  Trans3d rot = Trans3d::rotate(Vec3d(0, 0, 1), p1to2);
   glMultMatrixd(rot.transpose().get_m());
   glScaled(1, 1, p1to2.len());
 }

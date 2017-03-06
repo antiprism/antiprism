@@ -30,9 +30,9 @@
 #define COLORMAP_H
 
 #include "color.h"
+#include "geometry.h"
 #include "random.h"
 #include "status.h"
-#include "geometry.h"
 #include <limits.h>
 #include <map>
 #include <vector>
@@ -324,7 +324,6 @@ public:
  *  be freed by the caller with \c delete, \c nullptr is returned for an
  *  invalid map name and the error is detailed in \a stat. */
 ColorMap *colormap_from_name(const char *map_name, Status *stat = nullptr);
-
 
 /// Colour value map to an HSVA range
 class ColorValuesToRangeHsva {

@@ -143,12 +143,12 @@ static void build_uniform_compound(Geometry &geom, int uc_case, int uc_num,
       if (uc_num == 3)
         sym_from = "Oh";
     }
-    transform_and_repeat(&geom, sym_to, sym_from, Trans3d::rot(0, 0, angle));
+    transform_and_repeat(&geom, sym_to, sym_from, Trans3d::rotate(0, 0, angle));
   }
   else
       // UC07 6 cubes rotational
       if (uc_case == 2) {
-    geom.transform(Trans3d::rot(0, 0, angle));
+    geom.transform(Trans3d::rotate(0, 0, angle));
     transform_and_repeat(&geom, "D2", sym_from);
     transform_and_repeat(&geom, sym_to, "D2");
   }
@@ -173,8 +173,8 @@ static void build_uniform_compound(Geometry &geom, int uc_case, int uc_num,
     else if (uc_num == 31)
       transform_and_repeat(&geom, "D3v", "D3h");
     transform_and_repeat(&geom, sym_to_local, sym_from,
-                         Trans3d::rot(Vec3d(0, 0, 1), Vec3d(1, 1, 1)) *
-                             Trans3d::rot(0, 0, angle));
+                         Trans3d::rotate(Vec3d(0, 0, 1), Vec3d(1, 1, 1)) *
+                             Trans3d::rotate(0, 0, angle));
     if (uc_num == 11 || uc_num == 13 || uc_num == 14)
       transform_and_repeat(&geom, sym_to, "T");
   }
@@ -185,15 +185,16 @@ static void build_uniform_compound(Geometry &geom, int uc_case, int uc_num,
       if (uc_case == 4) {
     if (uc_num == 19)
       geom.transform(
-          Trans3d::rot(Vec3d(0, 0, 1), Vec3d(0.5, 1 / sqrt(12), 1 / sqrt(6))) *
-          Trans3d::rot(0, 0, -M_PI / 12)); // -15 degrees, placement of
-                                           // tetrahemihexahedra like a
-                                           // 3-antiprism
+          Trans3d::rotate(Vec3d(0, 0, 1),
+                          Vec3d(0.5, 1 / sqrt(12), 1 / sqrt(6))) *
+          Trans3d::rotate(0, 0, -M_PI / 12)); // -15 degrees, placement of
+                                              // tetrahemihexahedra like a
+                                              // 3-antiprism
     transform_and_repeat(&geom, sym_to, sym_from,
-                         Trans3d::alignment(Vec3d(0, 0, 1), Vec3d(1, 0, 0),
-                                            Vec3d(1, 1, 1),
-                                            Vec3d(-phi, -1, phi + 1)) *
-                             Trans3d::rot(0, 0, angle));
+                         Trans3d::align(Vec3d(0, 0, 1), Vec3d(1, 0, 0),
+                                        Vec3d(1, 1, 1),
+                                        Vec3d(-phi, -1, phi + 1)) *
+                             Trans3d::rotate(0, 0, angle));
   }
   else
       // UC20 2k n d gonal prisms rotational
@@ -205,7 +206,7 @@ static void build_uniform_compound(Geometry &geom, int uc_case, int uc_num,
       if (uc_case == 5) {
     if (uc_num == 20 || uc_num == 22 || uc_num == 24)
       transform_and_repeat(&geom, sym_from, sym_from,
-                           Trans3d::rot(0, 0, angle)); // variable
+                           Trans3d::rotate(0, 0, angle)); // variable
     transform_and_repeat(&geom, sym_to, sym_from);
   }
   else
@@ -215,10 +216,10 @@ static void build_uniform_compound(Geometry &geom, int uc_case, int uc_num,
     angle += (uc_num == 26) ? M_PI / 5 : 0; // UC26 needs 36 degrees to
                                             // correspond to the 0 degree point
                                             // of UC28
-    geom.transform(Trans3d::rot(0, 0, angle));
+    geom.transform(Trans3d::rotate(0, 0, angle));
     transform_and_repeat(&geom, "D10h", sym_from);
     transform_and_repeat(&geom, sym_to, "D10h",
-                         Trans3d::rot(Vec3d(0, 0, 1), Vec3d(0, 1, phi)));
+                         Trans3d::rotate(Vec3d(0, 0, 1), Vec3d(0, 1, phi)));
   }
   else
       // UC27 6 pentagonal antiprisms (angle = 0)
@@ -237,8 +238,8 @@ static void build_uniform_compound(Geometry &geom, int uc_case, int uc_num,
       sym_from = "D10h";
     }
     transform_and_repeat(&geom, sym_to, sym_from,
-                         Trans3d::rot(Vec3d(0, 0, 1), Vec3d(0, 1, phi)) *
-                             Trans3d::rot(0, 0, angle));
+                         Trans3d::rotate(Vec3d(0, 0, 1), Vec3d(0, 1, phi)) *
+                             Trans3d::rotate(0, 0, angle));
   }
   else
       // UC32 10 triangular prisms
@@ -249,9 +250,10 @@ static void build_uniform_compound(Geometry &geom, int uc_case, int uc_num,
       transform_and_repeat(&geom, "D6h", sym_from);
       sym_from = "D6h";
     }
-    transform_and_repeat(&geom, sym_to, sym_from,
-                         Trans3d::rot(Vec3d(0, 0, 1), Vec3d(1 / phi, 0, phi)) *
-                             Trans3d::rot(0, 0, angle));
+    transform_and_repeat(
+        &geom, sym_to, sym_from,
+        Trans3d::rotate(Vec3d(0, 0, 1), Vec3d(1 / phi, 0, phi)) *
+            Trans3d::rotate(0, 0, angle));
   }
   else
       // UC08 3 cubes
@@ -260,7 +262,7 @@ static void build_uniform_compound(Geometry &geom, int uc_case, int uc_num,
       // UC51 5 small stellated dodecahedra
       // UC53 5 great icosahedra
       if (uc_case == 9) {
-    transform_and_repeat(&geom, sym_to, sym_from, Trans3d::rot(angle, 0, 0));
+    transform_and_repeat(&geom, sym_to, sym_from, Trans3d::rotate(angle, 0, 0));
   }
 }
 

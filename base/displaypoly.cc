@@ -1091,7 +1091,8 @@ void axis_cap(Geometry &geom, const SymmetryAxis &sym, Color col)
   }
 
   if (typ == Symmetry::Ch || typ == Symmetry::Dh)
-    add_ring(geom, 0.8, 1.1, 12, alt_col, Trans3d::transl(Vec3d(0, 0, -0.1)));
+    add_ring(geom, 0.8, 1.1, 12, alt_col,
+             Trans3d::translate(Vec3d(0, 0, -0.1)));
 }
 
 void add_axis_elem(Geometry &geom, const SymmetryAxis &sym, float rad,
@@ -1128,10 +1129,10 @@ void add_axis_elem(Geometry &geom, const SymmetryAxis &sym, float rad,
   axis_cap(cap, sym, col);
   cap.transform(Trans3d::scale(rad * 0.06));
   cap2 = cap;
-  cap.transform(trans * Trans3d::transl(Vec3d(0, 0, ht)));
+  cap.transform(trans * Trans3d::translate(Vec3d(0, 0, ht)));
   // cap2.transform(trans * Trans3d::transl(Vec3d(0,0,-ht)));
   cap2.transform(trans * Trans3d::inversion() *
-                 Trans3d::transl(Vec3d(0, 0, ht)));
+                 Trans3d::translate(Vec3d(0, 0, ht)));
   geom.append(cap);
   geom.append(cap2);
 }
@@ -1151,17 +1152,17 @@ void DisplaySymmetry::disp_changed()
   const set<SymmetryAxis> &axes = sym.get_axes();
   set<SymmetryAxis>::const_iterator ax;
   for (ax = axes.begin(); ax != axes.end(); ++ax) {
-    Trans3d trans = Trans3d::transl(cent);
+    Trans3d trans = Trans3d::translate(cent);
     if (ax->get_nfold() == 2 && (sym.get_sym_type() == Symmetry::D ||
                                  sym.get_sym_type() == Symmetry::Dv ||
                                  sym.get_sym_type() == Symmetry::Dh))
-      trans *= Trans3d::alignment(Vec3d::Z, Vec3d::X, ax->get_axis(),
-                                  sym.get_to_std().inverse() * Vec3d::Z - cent);
+      trans *= Trans3d::align(Vec3d::Z, Vec3d::X, ax->get_axis(),
+                              sym.get_to_std().inverse() * Vec3d::Z - cent);
     else if (ax->get_perp().is_set())
-      trans *= Trans3d::alignment(Vec3d::Z, Vec3d::X, ax->get_axis(),
-                                  ax->get_perp());
+      trans *=
+          Trans3d::align(Vec3d::Z, Vec3d::X, ax->get_axis(), ax->get_perp());
     else
-      trans *= Trans3d::rot(Vec3d::Z, ax->get_axis());
+      trans *= Trans3d::rotate(Vec3d::Z, ax->get_axis());
     int sym_type = ax->get_sym_type();
     if (show_rotrefls &&
         (sym_type == Symmetry::S || sym_type == Symmetry::Dv)) {
@@ -1178,7 +1179,7 @@ void DisplaySymmetry::disp_changed()
     set<Vec3d>::const_iterator mir;
     for (mir = mirrors.begin(); mir != mirrors.end(); ++mir) {
       Trans3d trans =
-          Trans3d::transl(cent) * turn * Trans3d::rot(Vec3d::Z, *mir);
+          Trans3d::translate(cent) * turn * Trans3d::rotate(Vec3d::Z, *mir);
       add_mirror_elem(disp_geom, 1.05 * sc_geom->get_width() / 2, trans);
     }
   }
@@ -1459,7 +1460,7 @@ Status ViewOpts::read_disp_option(char opt, char *optarg)
 
   case 'R':
     if ((stat = vec.read(optarg)))
-      cam_defs.set_rotation(Trans3d::rot((vec)*deg2rad()));
+      cam_defs.set_rotation(Trans3d::rotate((vec)*deg2rad()));
     break;
 
   case 'P':

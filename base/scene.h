@@ -500,7 +500,7 @@ public:
   /**\return The rotation on each update. */
   Trans3d get_spin_rot() const
   {
-    return is_spinning() ? Trans3d::rot(spin_axis, spin_rot) : Trans3d();
+    return is_spinning() ? Trans3d::rotate(spin_axis, spin_rot) : Trans3d();
   }
 
   /// Increment the spin rotation angle

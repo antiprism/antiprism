@@ -165,7 +165,7 @@ void kcycle(Geometry geom, Geometry &cycle, int num_prs, vector<int> idxs,
   Vec3d P[] = {verts[idxs[0]], verts[idxs[1]], verts[idxs[2]], verts[idxs[3]]};
   Vec3d e1(cos(angle), sin(angle), 0); // direction of first edge
 
-  Trans3d trans1 = Trans3d::rot(P[1] - P[0], e1) * Trans3d::transl(-P[0]);
+  Trans3d trans1 = Trans3d::rotate(P[1] - P[0], e1) * Trans3d::translate(-P[0]);
   for (auto &i : P)
     i = trans1 * i;
 
@@ -186,7 +186,7 @@ void kcycle(Geometry geom, Geometry &cycle, int num_prs, vector<int> idxs,
                          (vcross(e1, n2).len() * vcross(e1, e2).len())));
   double ang = (2 * sign1 - 1) * ang1 - (2 * sign2 - 1) * ang2;
 
-  Trans3d trans2 = Trans3d::rot(e1, ang);
+  Trans3d trans2 = Trans3d::rotate(e1, ang);
   for (auto &i : P)
     i = trans2 * i;
 
@@ -195,17 +195,17 @@ void kcycle(Geometry geom, Geometry &cycle, int num_prs, vector<int> idxs,
   Vec3d perp = N1 - N0;
   double dist = -perp[0] - perp[2] / tan(wedge_angle);
 
-  Trans3d trans3 = Trans3d::transl(Vec3d(dist, 0, 0) - N0) * trans2 * trans1;
+  Trans3d trans3 = Trans3d::translate(Vec3d(dist, 0, 0) - N0) * trans2 * trans1;
 
   // align for symmetry exp
-  trans3 = Trans3d::rot(Vec3d(0, 1, 0), Vec3d(0, 0, 1)) *
-           Trans3d::rot(Vec3d(0, 1, 0), M_PI / num_prs) * trans3;
+  trans3 = Trans3d::rotate(Vec3d(0, 1, 0), Vec3d(0, 0, 1)) *
+           Trans3d::rotate(Vec3d(0, 1, 0), M_PI / num_prs) * trans3;
   for (unsigned int i = 0; i < verts.size(); i++)
     geom.verts(i) = trans3 * geom.verts(i);
 
   // align centroid with z=0
   Vec3d cent = centroid(verts);
-  Trans3d trans_c = Trans3d::transl(Vec3d(0, 0, -cent[2]));
+  Trans3d trans_c = Trans3d::translate(Vec3d(0, 0, -cent[2]));
   for (unsigned int i = 0; i < verts.size(); i++)
     geom.verts(i) = trans_c * geom.verts(i);
 

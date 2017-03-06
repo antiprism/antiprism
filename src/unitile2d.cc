@@ -234,14 +234,14 @@ void unitile::ut_33336()
   add_polygon(sqrt(7) / 2, sqrt(21) / 2);
   for (int i = 0; i < 6; i++) {
     double rot2 = rot + M_PI / 6 + i * M_PI / 3;
-    Trans3d trans = Trans3d::rot(0, 0, rot2) *
-                    Trans3d::transl(Vec3d(sqrt(3) - 1 / sqrt(3), 0, 0));
+    Trans3d trans = Trans3d::rotate(0, 0, rot2) *
+                    Trans3d::translate(Vec3d(sqrt(3) - 1 / sqrt(3), 0, 0));
     set_polygon(3, rot2);
     Vec3d cent = trans * Vec3d(0, 0, 0);
     add_polygon(cent[0], cent[1]);
     add_polygon(cent[0] + sqrt(7) / 2, cent[1] + sqrt(21) / 2);
     if (i < 3) {
-      trans = trans * Trans3d::transl(Vec3d(0, 1, 0));
+      trans = trans * Trans3d::translate(Vec3d(0, 1, 0));
       cent = trans * Vec3d(0, 0, 0);
       if (i == 1)
         add_polygon(cent[0], cent[1]);
@@ -749,7 +749,7 @@ void ut_opts::process_command_line(int argc, char **argv)
         error(msg_str("must give exactly three numbers (%lu were given)",
                       (unsigned long)nums.size()),
               c);
-      trans_m = Trans3d::transl(Vec3d(nums[0], nums[1], nums[2]));
+      trans_m = Trans3d::translate(Vec3d(nums[0], nums[1], nums[2]));
       break;
 
     case 'S':
@@ -770,8 +770,10 @@ void ut_opts::process_command_line(int argc, char **argv)
                       "(%lu were given)",
                       (unsigned long)nums.size()),
               c);
+      for (auto &num : nums)
+        num = deg2rad(num);
       rot4d_m =
-          Trans4d::rot(nums[0], nums[1], nums[2], nums[3], nums[4], nums[5]);
+          Trans4d::rotate(nums[0], nums[1], nums[2], nums[3], nums[4], nums[5]);
       break;
 
     case 'o':

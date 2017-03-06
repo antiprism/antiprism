@@ -216,7 +216,7 @@ void J5(Geometry &geom)
 void J6(Geometry &geom)
 {
   J_icosidodecahedron(geom);
-  geom.transform(Trans3d::rot(geom.face_cent(29), Vec3d(0, 1, 0)));
+  geom.transform(Trans3d::rotate(geom.face_cent(29), Vec3d(0, 1, 0)));
   vector<int> del_verts;
   for (unsigned int i = 0; i < geom.verts().size(); i++)
     if (geom.verts(i)[1] < -epsilon)

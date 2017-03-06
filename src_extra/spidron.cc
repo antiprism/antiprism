@@ -177,8 +177,8 @@ int add_spidron_unit(Geometry &spid, double ang, double ang2, Vec3d &cent,
   Vec3d norm = vcross(v1 - v0, cent - v0).unit();
   Vec3d perp = (cent - mid).unit();
   Vec3d P = mid + perp * delta_x + norm * delta_y;
-  Trans3d trans = Trans3d::transl(cent) * Trans3d::rot(norm, theta * 2) *
-                  Trans3d::transl(-cent);
+  Trans3d trans = Trans3d::translate(cent) * Trans3d::rotate(norm, theta * 2) *
+                  Trans3d::translate(-cent);
   Vec3d Q = trans * P;
 
   /*
@@ -267,8 +267,8 @@ int add_spidron_unit2(Geometry &spid, double ang, double ang2, Vec3d &cent,
   spid.faces(f).push_back(v0idx + 3);
   spid.faces(f).push_back(v0idx + 2);
 
-  Trans3d trans = Trans3d::transl(cent) * Trans3d::rot(norm, theta * 4) *
-                  Trans3d::transl(-cent);
+  Trans3d trans = Trans3d::translate(cent) * Trans3d::rotate(norm, theta * 4) *
+                  Trans3d::translate(-cent);
   Vec3d P2 = trans * P;
   Vec3d V0 = (P - Q).unit();
   Vec3d V1 = (P2 - Q).unit();

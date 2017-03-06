@@ -367,7 +367,7 @@ void lattice_make(Geometry &lat_jb, Geometry &jb, double cycle_val,
         if (fix_connect)
           scl *= get_r_scale(cycle_val);
 
-        jb_elem.transform(Trans3d::transl(Vec3d(i * scl, j * scl, k * scl)));
+        jb_elem.transform(Trans3d::translate(Vec3d(i * scl, j * scl, k * scl)));
         lat_jb.append(jb_elem);
       }
 }
@@ -376,10 +376,10 @@ void lattice_trans(Geometry &lat_jb, double cyc_val, bool tri_fix, bool tri_top)
 {
   Trans3d trans;
   if (tri_fix)
-    trans = Trans3d::rot(Vec3d(1, 1, 1), get_tri_ang(cyc_val)) * trans;
+    trans = Trans3d::rotate(Vec3d(1, 1, 1), get_tri_ang(cyc_val)) * trans;
   if (tri_top)
-    trans = Trans3d::rot(Vec3d(1, 0, 0), Vec3d(1, 0, 1)) *
-            Trans3d::rot(Vec3d(1, 1, 1), Vec3d(0, 1, 0)) * trans;
+    trans = Trans3d::rotate(Vec3d(1, 0, 0), Vec3d(1, 0, 1)) *
+            Trans3d::rotate(Vec3d(1, 1, 1), Vec3d(0, 1, 0)) * trans;
 
   lat_jb.transform(trans);
 }

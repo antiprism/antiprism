@@ -505,7 +505,7 @@ void process_lattices(Geometry &geom, Geometry &container,
     Geometry geom2;
     for (const auto &i : geom.verts()) {
       Geometry rep = repeater;
-      rep.transform(Trans3d::transl(i));
+      rep.transform(Trans3d::translate(i));
       geom2.append(rep);
     }
     geom = geom2;
@@ -536,7 +536,7 @@ void process_lattices(Geometry &geom, Geometry &container,
     color_centroid(geom, opts.cent_col, opts.epsilon);
 
   if (opts.trans_to_origin)
-    geom.transform(Trans3d::transl(-centroid(geom.verts())));
+    geom.transform(Trans3d::translate(-centroid(geom.verts())));
 }
 
 int main(int argc, char *argv[])
