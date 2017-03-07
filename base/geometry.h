@@ -292,8 +292,9 @@ public:
 
   /// Add missing implicit edges
   /** Add implicit edges (edges of faces) to the edge list if they are
-   *  not already included */
-  virtual void add_missing_impl_edges();
+   *  not already included.
+   * \param col colour for the edges (default: no colour set). */
+  virtual void add_missing_impl_edges(const Color &col = Color());
 
   //-------------------------------------------
   // Transformations

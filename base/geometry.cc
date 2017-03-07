@@ -573,7 +573,7 @@ void Geometry::face_angles_lengths(int f_idx, vector<double> *angles,
       angs[j] = 2 * M_PI - angs[j];
 }
 
-void Geometry::add_missing_impl_edges()
+void Geometry::add_missing_impl_edges(const Color &col)
 {
   // save original edges and colours
   vector<vector<int>> e_edges = edges();
@@ -581,6 +581,10 @@ void Geometry::add_missing_impl_edges()
 
   clear(EDGES);
   get_impl_edges(raw_edges());
+  if (col.is_set()) {
+    for (unsigned int i = 0; i < edges().size(); i++)
+      colors(EDGES).set(i, col);
+  }
 
   // restore original edges and colours
   for (unsigned int e = 0; e < e_edges.size(); ++e)
