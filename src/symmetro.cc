@@ -1675,7 +1675,7 @@ void sym_repeat(Geometry &geom, const symmetro_opts &opts)
   else if (opts.sym == 'H')
     sym.init(Symmetry::Ch, opts.p);
 
-  sym_repeat(&geom, geom, sym, ELEM_FACES);
+  sym_repeat(geom, geom, sym, ELEM_FACES);
 
   // reflection
   if (opts.sym_mirror) {
@@ -1767,7 +1767,7 @@ Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
   }
 
   if (opts.convex_hull > 1)
-    merge_coincident_elements(&geom, "vf", opts.epsilon);
+    merge_coincident_elements(geom, "vf", opts.epsilon);
 
   // check for collisions
   bool collision = false;
@@ -1785,7 +1785,7 @@ Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
         opts.warning(stat.msg(), 'C');
 
     // merged faces will retain RGB color
-    merge_coincident_elements(&geom, "f", opts.epsilon);
+    merge_coincident_elements(geom, "f", opts.epsilon);
 
     // after sort merge, only new faces from convex hull will be uncolored
     if (opts.face_coloring_method == 'a') {

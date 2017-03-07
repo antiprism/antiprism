@@ -667,7 +667,7 @@ void repeat_kite_with_color(Geometry &out_geom, Geometry kite_geom,
   c_sym.init(Symmetry::C, fracs[2 * vert_no], Trans3d::rotate(axis, Vec3d::Z));
 
   Geometry vert_kites_geom;
-  sym_repeat(&vert_kites_geom, kite_geom, c_sym);
+  sym_repeat(vert_kites_geom, kite_geom, c_sym);
   Coloring clrngs[3];
   if (is_even(color_type)) // value letter is followed by index letter
     clrngs[FACES].add_cmap(colormap_from_name("spread"));
@@ -676,7 +676,7 @@ void repeat_kite_with_color(Geometry &out_geom, Geometry kite_geom,
   min_ts.min_set(sym.get_trans(), c_sym.get_trans());
 
   Geometry comp_geom;
-  sym_repeat(&out_geom, vert_kites_geom, min_ts, ELEM_FACES, clrngs);
+  sym_repeat(out_geom, vert_kites_geom, min_ts, ELEM_FACES, clrngs);
 }
 
 // Flip the triangle to completes the lune opposite vertex
@@ -874,10 +874,10 @@ bool make_base_model(Geometry &geom, const vector<int> &fracs, int num_fracs,
       (is_schwarz && color_type > 1 && color_type < 6)) // Schwarz BbCc
     repeat_kite_with_color(geom, kite_geom, sym, fracs, color_type);
   else
-    sym_repeat(&geom, kite_geom, sym);
+    sym_repeat(geom, kite_geom, sym);
 
   if (!kite_only) // avoid reordering faces if single kite is to be output
-    merge_coincident_elements(&geom, "v", epsilon);
+    merge_coincident_elements(geom, "v", epsilon);
   return true;
 }
 
@@ -990,10 +990,10 @@ bool make_list_model(Geometry &geom, const string model_str,
   min_ts.min_set(full_sym.get_trans(), base_sym.get_trans());
 
   if (color_type == 6 || color_type == 6) { // Kk
-    sym_repeat(&geom, base_geom, min_ts, ELEM_FACES, clrngs);
+    sym_repeat(geom, base_geom, min_ts, ELEM_FACES, clrngs);
   }
   else
-    sym_repeat(&geom, base_geom, min_ts);
+    sym_repeat(geom, base_geom, min_ts);
 
   if (verb) {
     print_base_model_report(base_model, orig_base_model, hts_used,

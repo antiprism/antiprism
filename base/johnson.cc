@@ -79,7 +79,7 @@ void bond(Geometry &geom, model_func base, model_func brick, int f = 0,
   Geometry geom2;
   brick(geom2);
   geom2.clear_cols();
-  face_bond(&geom, &geom2, f, b_f, off);
+  face_bond(geom, geom2, f, b_f, off);
 }
 
 // face bond two J_polyhedra, with a fixed twist
@@ -222,7 +222,7 @@ void J6(Geometry &geom)
     if (geom.verts(i)[1] < -epsilon)
       del_verts.push_back(i);
   geom.del(VERTS, del_verts);
-  close_poly_basic(&geom);
+  close_poly_basic(geom);
   swap(geom.faces(0), geom.faces(16)); // large face to 0, the def bonding face
 }
 
@@ -397,11 +397,11 @@ void J63(Geometry &geom)
   J_icosahedron(geom);
   // largest first to avoid remapping
   geom.del(VERTS, 8);
-  close_poly_basic(&geom);
+  close_poly_basic(geom);
   geom.del(VERTS, 7);
-  close_poly_basic(&geom);
+  close_poly_basic(geom);
   geom.del(VERTS, 6);
-  close_poly_basic(&geom);
+  close_poly_basic(geom);
 }
 
 // metabidiminished icosahedron
@@ -440,7 +440,7 @@ void J80(Geometry &geom)
   for (int &del : dels)
     del_verts.push_back(del);
   geom.del(VERTS, del_verts);
-  close_poly_basic(&geom);
+  close_poly_basic(geom);
 }
 
 // paragyrate diminished rhombicosidodecahedron
@@ -461,7 +461,7 @@ void J83(Geometry &geom)
   for (int &del : dels)
     del_verts.push_back(del);
   geom.del(VERTS, del_verts);
-  close_poly_basic(&geom);
+  close_poly_basic(geom);
 }
 
 // gyrate bidiminished rhombicosidodecahedron

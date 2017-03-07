@@ -209,7 +209,7 @@ void make_dome_dual(const Geometry &geom, Geometry &dome, double radius)
   proj_onto_sphere(dome);
 
   Geometry dual;
-  get_dual(&dual, dome);
+  get_dual(dual, dome);
   dome.face_cents(dual.raw_verts());
   proj_onto_sphere(dual, radius);
 
@@ -237,7 +237,7 @@ void make_dome_asm(const Geometry &geom, Geometry &dome, double radius)
   proj_onto_sphere(dome);
 
   Geometry dual;
-  get_dual(&dual, dome);
+  get_dual(dual, dome);
   dome.face_cents(dual.raw_verts());
   proj_onto_sphere(dual, sqrt(radius));
   dual.clear(FACES);
@@ -276,10 +276,10 @@ void make_dome_honeycomb(const Geometry &geom, Geometry &dome, double radius)
   proj_onto_sphere(dome);
 
   Geometry dual;
-  get_dual(&dual, dome);
+  get_dual(dual, dome);
   dome.face_cents(dual.raw_verts());
   proj_onto_sphere(dual);
-  truncate_verts(&dual, 1 / 3.0);
+  truncate_verts(dual, 1 / 3.0);
   proj_onto_sphere(dual, radius);
 
   dome.add_missing_impl_edges();

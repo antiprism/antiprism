@@ -701,8 +701,8 @@ static void add_faces(Geometry &geom, Vec3d pt, int num, int denom,
     face_geom.add_face(face, col);
   else
     face_geom.add_edge(face, col);
-  sym_repeat(&sym_face_geom, face_geom, sym);
-  merge_coincident_elements(&sym_face_geom, "vf", epsilon);
+  sym_repeat(sym_face_geom, face_geom, sym);
+  merge_coincident_elements(sym_face_geom, "vf", epsilon);
   geom.append(sym_face_geom);
 }
 
@@ -816,7 +816,7 @@ bool Wythoff::make_poly(Geometry &geom, char *errmsg)
     add_faces(geom, pt, fracs[0], fracs[1], verts, 0, sym);
     add_faces(geom, pt, fracs[2], fracs[3], verts, 1, sym);
     // All hemis apart from 3/2 3 | 3 have duplicated faces
-    merge_coincident_elements(&geom, "vf", epsilon);
+    merge_coincident_elements(geom, "vf", epsilon);
     add_faces(geom, pt, 2 * fracs[4], fracs[5], verts, 2, sym);
   }
   else if (bar_pos == 3) {
@@ -831,7 +831,7 @@ bool Wythoff::make_poly(Geometry &geom, char *errmsg)
   else
     return false;
 
-  merge_coincident_elements(&geom, "v", epsilon);
+  merge_coincident_elements(geom, "v", epsilon);
   return true;
 }
 
@@ -854,7 +854,7 @@ bool Wythoff::make_tri_poly(Geometry &geom)
     make_tri(tri);
 
     Geometry geom_tri;
-    sym_repeat(&geom_tri, tri, sym);
+    sym_repeat(geom_tri, tri, sym);
     Coloring clrng(&geom_tri);
     clrng.f_one_col(0);
     geom.append(geom_tri);
@@ -863,7 +863,7 @@ bool Wythoff::make_tri_poly(Geometry &geom)
     geom_tri.transform(Trans3d::reflection(norm));
     clrng.f_one_col(1);
     geom.append(geom_tri);
-    merge_coincident_elements(&geom, "v", epsilon);
+    merge_coincident_elements(geom, "v", epsilon);
   }
   return is_set();
 }

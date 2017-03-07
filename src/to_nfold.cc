@@ -632,7 +632,7 @@ int main(int argc, char *argv[])
 
   Geometry geom;
   opts.read_or_error(geom, opts.ifile);
-  merge_coincident_elements(&geom, "vef", 0, eps);
+  merge_coincident_elements(geom, "vef", 0, eps);
 
   cyc_geom cyc(eps);
   if (!cyc.set_geom(&geom))
@@ -651,7 +651,7 @@ int main(int argc, char *argv[])
   for (auto &msg : msgs)
     opts.warning(msg, "output geometry");
 
-  merge_coincident_elements(&o_geom, "vef", 0, eps);
+  merge_coincident_elements(o_geom, "vef", 0, eps);
   opts.write_or_error(o_geom, opts.ofile);
 
   return 0;

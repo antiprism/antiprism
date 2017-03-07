@@ -47,16 +47,16 @@ using std::string;
 namespace anti {
 
 // close a polyhedron, no more than two open edges per vertex
-bool close_poly_basic(Geometry *geom)
+bool close_poly_basic(Geometry &geom, const Color &col)
 {
   map<vector<int>, int> edges;
   map<vector<int>, int>::iterator mi, mi2;
   vector<int> edge(2);
   vector<int> r_edge(2);
-  for (unsigned int i = 0; i < geom->faces().size(); ++i)
-    for (unsigned int j = 0; j < geom->faces(i).size(); ++j) {
-      edge[0] = geom->faces(i, j);
-      edge[1] = geom->faces_mod(i, j + 1);
+  for (unsigned int i = 0; i < geom.faces().size(); ++i)
+    for (unsigned int j = 0; j < geom.faces(i).size(); ++j) {
+      edge[0] = geom.faces(i, j);
+      edge[1] = geom.faces_mod(i, j + 1);
       mi = edges.find(edge);
       if (mi != edges.end())
         mi->second++;
@@ -112,36 +112,36 @@ bool close_poly_basic(Geometry *geom)
         break;
       face.push_back(curr);
     }
-    geom->add_face(face);
+    geom.add_face(face, col);
   }
   return true;
 }
 
-bool face_bond(Geometry *base, Geometry *brick, int base_f_idx, int brick_f_idx,
+bool face_bond(Geometry &base, Geometry &brick, int base_f_idx, int brick_f_idx,
                int off, bool merge, bool flip)
 {
   int flip_sign = flip ? 1 : -1;
   vector<Vec3d> pts, bpts;
-  for (unsigned int i = 0; i < base->faces(base_f_idx).size() && i < 3; i++) {
-    pts.push_back(base->face_v_mod(base_f_idx, i));
-    bpts.push_back(brick->face_v_mod(brick_f_idx, off + flip_sign * i));
+  for (unsigned int i = 0; i < base.faces(base_f_idx).size() && i < 3; i++) {
+    pts.push_back(base.face_v_mod(base_f_idx, i));
+    bpts.push_back(brick.face_v_mod(brick_f_idx, off + flip_sign * i));
   }
 
-  brick->transform(Trans3d::align(bpts, pts));
+  brick.transform(Trans3d::align(bpts, pts));
 
   if (merge) {
     map<int, int> vmap;
-    for (unsigned int i = 0; i < brick->faces(brick_f_idx).size(); i++)
-      vmap[brick->faces_mod(brick_f_idx, off + flip_sign * i) +
-           base->verts().size()] = base->faces_mod(base_f_idx, i);
+    for (unsigned int i = 0; i < brick.faces(brick_f_idx).size(); i++)
+      vmap[brick.faces_mod(brick_f_idx, off + flip_sign * i) +
+           base.verts().size()] = base.faces_mod(base_f_idx, i);
 
     vector<int> del_faces(1);
     del_faces[0] = base_f_idx;
-    base->del(FACES, del_faces);
+    base.del(FACES, del_faces);
     del_faces[0] = brick_f_idx;
-    brick->del(FACES, del_faces);
-    base->append(*brick);
-    base->verts_merge(vmap);
+    brick.del(FACES, del_faces);
+    base.append(brick);
+    base.verts_merge(vmap);
   }
 
   return true;

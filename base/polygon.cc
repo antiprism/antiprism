@@ -644,7 +644,7 @@ Status Polygon::make_pyramid_part(Geometry &geom)
     if (stat.is_error())
       return stat;
     if (num_sides > 2)
-      face_bond(&geom, &pyr);
+      face_bond(geom, pyr);
     else {
       geom.del(FACES, vector<int>(1, 0));
       int apex = geom.add_vert(Vec3d(0, 0, pri.get_height(0) / 2 + ht));
@@ -667,7 +667,7 @@ Status Polygon::make_pyramid_part(Geometry &geom)
     }
 
     if (num_sides > 2)
-      face_bond(&geom, &pyr);
+      face_bond(geom, pyr);
     else {
       geom.del(FACES, vector<int>(1, 0));
       int apex = geom.add_vert(Vec3d(0, 0, ant.get_height(0) / 2 + ht));
@@ -781,7 +781,7 @@ Status Polygon::make_dipyramid_part(Geometry &geom)
     if (stat.is_error())
       return stat;
     if (num_sides > 2)
-      face_bond(&geom, &pyr_geom);
+      face_bond(geom, pyr_geom);
     else {
       geom.del(FACES, vector<int>(1, 0));
       int off = (subtype == sub_default) ? 0 : 2;
@@ -876,7 +876,7 @@ Status Polygon::make_cupola_part(Geometry &geom)
     pri.make_prism_part(geom);
     if (even)
       prism_wrap(geom, 2);
-    face_bond(&geom, &cup_geom);
+    face_bond(geom, cup_geom);
   }
   else if (subtype == sub_cupola_gyroelongated) {
     Polygon ant(large);
@@ -887,7 +887,7 @@ Status Polygon::make_cupola_part(Geometry &geom)
     ant.make_antiprism_part(geom);
     if (even)
       prism_wrap(geom, 2);
-    face_bond(&geom, &cup_geom);
+    face_bond(geom, cup_geom);
   }
 
   return Status::ok();
@@ -908,7 +908,7 @@ Status Polygon::make_orthobicupola_part(Geometry &geom)
   cup.set_twist_angle(0, NAN);
   Geometry cup_geom;
   cup.make_cupola_part(cup_geom);
-  face_bond(&geom, &cup_geom, 0, 0, (subtype == sub_default)); // var'n in bases
+  face_bond(geom, cup_geom, 0, 0, (subtype == sub_default)); // var'n in bases
 
   return Status::ok();
 }
@@ -927,7 +927,7 @@ Status Polygon::make_gyrobicupola_part(Geometry &geom)
   cup.set_subtype(sub_default);
   Geometry cup_geom;
   cup.make_cupola_part(cup_geom);
-  face_bond(&geom, &cup_geom, 0, 0, (subtype != 0)); // variation in bases
+  face_bond(geom, cup_geom, 0, 0, (subtype != 0)); // variation in bases
 
   return Status::ok();
 }
@@ -1026,8 +1026,7 @@ Status Polygon::make_snub_antiprism_part(Geometry &geom)
   }
   geom.add_face(bond_face);
   Geometry geom2 = geom;
-  face_bond(&geom, &geom2, geom.faces().size() - 1, geom2.faces().size() - 1,
-            1);
+  face_bond(geom, geom2, geom.faces().size() - 1, geom2.faces().size() - 1, 1);
   // align dihedral axis with x-axis
   geom.transform(Trans3d::rotate(Vec3d::Z, M_PI * step / (2.0 * num_sides)));
 

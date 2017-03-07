@@ -958,7 +958,7 @@ static int find_syms(const Geometry &geom, Transformations &ts,
 
   Geometry merged_geom = geom;
   vector<map<int, set<int>>> orig_equivs;
-  merge_coincident_elements(&merged_geom, "vef", &orig_equivs, epsilon);
+  merge_coincident_elements(merged_geom, "vef", &orig_equivs, epsilon);
   Geometry test_geom = merged_geom;
 
   GeometryInfo inf(merged_geom);
@@ -1251,7 +1251,7 @@ void get_equiv_elems(const Geometry &geom, const Transformations &ts,
 
   Geometry merged_geom = geom;
   vector<map<int, set<int>>> orig_equivs;
-  merge_coincident_elements(&merged_geom, "vef", &orig_equivs, epsilon);
+  merge_coincident_elements(merged_geom, "vef", &orig_equivs, epsilon);
   Geometry test_geom = merged_geom;
 
   vector<map<int, set<int>>> equiv_elems(3);

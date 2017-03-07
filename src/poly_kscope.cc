@@ -412,7 +412,7 @@ int main(int argc, char *argv[])
     print_report(stderr, opts.sym, part_sym, min_ts.size());
 
   Geometry comp_geom;
-  sym_repeat(&comp_geom, geom, min_ts, opts.col_elems, opts.clrngs);
+  sym_repeat(comp_geom, geom, min_ts, opts.col_elems, opts.clrngs);
 
   opts.write_or_error(comp_geom, opts.ofile);
 

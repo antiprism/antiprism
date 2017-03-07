@@ -1418,7 +1418,7 @@ void geom_to_grid(Geometry &geom, const vector<int> &grid,
     }
   }
 
-  merge_coincident_elements(&geom, "vef", eps);
+  merge_coincident_elements(geom, "vef", eps);
 }
 
 void bravais_eighth_cell_grid(Geometry &geom)

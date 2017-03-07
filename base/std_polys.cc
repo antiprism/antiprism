@@ -111,8 +111,8 @@ static void make_resource_dual(Geometry &geom, bool is_std = false)
   double rad = info.iedge_dist_lims().sum / info.num_iedges();
   Geometry dual;
   const double inf = 1200;
-  get_dual(&dual, geom, rad, cent, inf);
-  add_extra_ideal_elems(&dual, cent, 0.95 * inf); // limit closer than inf
+  get_dual(dual, geom, rad, cent, inf);
+  add_extra_ideal_elems(dual, cent, 0.95 * inf); // limit closer than inf
   geom.clear_all();
   geom.append(dual);
   if (!is_std)
@@ -846,7 +846,7 @@ int make_resource_geodesic(Geometry &geom, string name, bool is_std,
     return 1; // fail
   }
 
-  if (!make_geodesic_sphere(&geom, base, nums[0], nums[1])) {
+  if (!make_geodesic_sphere(geom, base, nums[0], nums[1])) {
     if (errmsg)
       snprintf(errmsg, MSG_SZ, "geodesic division: invalid division");
     return 1; // fail
@@ -971,7 +971,7 @@ int make_resource_sym(Geometry &geom, string name, char *errmsg = nullptr)
 
   Geometry arrow;
   get_arrow(arrow, sym);
-  sym_repeat(&geom, arrow, sym.get_trans());
+  sym_repeat(geom, arrow, sym.get_trans());
   return 0;
 }
 
@@ -1194,7 +1194,7 @@ static void rh_enneacontahedron(Geometry &geom, bool is_std = false)
     geom2.transform(Trans3d::scale(1 / (2 * phi * phi)));
   else
     geom2.transform(Trans3d::scale(1 / geom2.verts(0).len()));
-  make_zonohedron(&geom, geom2.verts());
+  make_zonohedron(geom, geom2.verts());
   normalised_face_list(geom);
   if (!is_std)
     set_resource_polygon_color(geom);
@@ -1211,8 +1211,8 @@ static void rh_hexacontahedron(Geometry &geom, bool is_std = false)
   geom_face.add_face(0, 1, 2, 3, -1);
   if (!is_std) // Make unit edges
     geom_face.transform(Trans3d::scale(1 / geom_face.edge_vec(0, 1).len()));
-  sym_repeat(&geom, geom_face, Symmetry(Symmetry::I));
-  merge_coincident_elements(&geom, "vef", epsilon);
+  sym_repeat(geom, geom_face, Symmetry(Symmetry::I));
+  merge_coincident_elements(geom, "vef", epsilon);
   normalised_face_list(geom);
   if (!is_std)
     set_resource_polygon_color(geom);

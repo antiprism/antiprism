@@ -614,7 +614,7 @@ void set_edge_colors(Geometry &geom, const Color col)
 
 void construct_model(Geometry &base, const cn_opts &opts) {
   Geometry dual;
-  get_dual(&dual, base, 1, Vec3d(0, 0, 0));
+  get_dual(dual, base, 1, Vec3d(0, 0, 0));
 
   vector<Vec3d> ips;
   vector<Vec3d> base_nearpts;
@@ -712,7 +712,7 @@ int main(int argc, char *argv[])
   if (opts.edge_distribution) {
     fprintf(stderr, "edge distribution: (project onto sphere)\n");
     if (opts.edge_distribution == 's')
-      project_onto_sphere(&geom);
+      project_onto_sphere(geom);
   }
 
   fprintf(stderr,"\n");

@@ -536,7 +536,7 @@ int main(int argc, char *argv[])
     opts.error(errmsg);
 
   // sort/merge all and orient faces
-  merge_coincident_elements(&geom, "vef", opts.epsilon);
+  merge_coincident_elements(geom, "vef", opts.epsilon);
   geom.orient();
 
   opts.write_or_error(geom, opts.ofile);

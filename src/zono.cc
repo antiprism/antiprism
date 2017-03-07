@@ -227,14 +227,14 @@ int main(int argc, char **argv)
     zono.add_verts(star);
   else if (opts.seed_geom.is_set())
     opts.print_status_or_exit(make_zonohedrified_polyhedron(
-        &zono, opts.seed_geom, star, opts.zone_col));
+        zono, opts.seed_geom, star, opts.zone_col));
   else if (opts.pol_num) {
     Geometry zono_base;
-    make_polar_zonohedron(&zono_base, star);
+    make_polar_zonohedron(zono_base, star);
     opts.pgon.repeat_part(zono, zono_base);
   }
   else {
-    opts.print_status_or_exit(make_zonohedron(&zono, star));
+    opts.print_status_or_exit(make_zonohedron(zono, star));
     if (opts.zone_col.is_set())
       Coloring(&zono).f_one_col(opts.zone_col);
   }

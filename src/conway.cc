@@ -963,16 +963,16 @@ void cn_chamfer(Geometry &geom)
 
   // make all edges a face
   // this is a join operation but retains the original vertex indexes
-  make_edges_to_faces(&geom);
+  make_edges_to_faces(geom);
 
-  project_onto_sphere(&geom);
+  project_onto_sphere(geom);
 
   // truncate only on the new vertices
   vector<int> v_idxs;
   for (unsigned int i = sz; i < verts.size(); i++)
     v_idxs.push_back(i);
 
-  truncate_verts(&geom, v_idxs, CN_ONE_HALF);
+  truncate_verts(geom, v_idxs, CN_ONE_HALF);
 
   geom.orient();
 }
@@ -981,7 +981,7 @@ void cn_dual(Geometry &geom)
 {
   Geometry dual;
   centroid_to_origin(geom);
-  get_dual(&dual, geom, 1, Vec3d(0, 0, 0));
+  get_dual(dual, geom, 1, Vec3d(0, 0, 0));
   geom = dual;
   geom.orient();
 }
@@ -1162,7 +1162,7 @@ void cn_reflect(Geometry &geom) { geom.transform(Trans3d::inversion()); }
 
 void cn_truncate_by_algorithm(Geometry &geom, const double ratio, const int n)
 {
-  truncate_verts(&geom, ratio, n);
+  truncate_verts(geom, ratio, n);
   geom.orient();
 }
 
@@ -1183,7 +1183,7 @@ void cn_whirl(Geometry &geom, const char planarization_method,
   for (int i = 0; i < num_faces; i++)
     v_idxs.push_back(i);
 
-  truncate_verts(&geom, v_idxs, CN_ONE_HALF, nullptr);
+  truncate_verts(geom, v_idxs, CN_ONE_HALF, nullptr);
 
   geom.orient();
 }

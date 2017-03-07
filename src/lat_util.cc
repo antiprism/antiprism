@@ -510,7 +510,7 @@ void process_lattices(Geometry &geom, Geometry &container,
     }
     geom = geom2;
     if (opts.R_merge_elems != "")
-      merge_coincident_elements(&geom, opts.R_merge_elems, opts.blend_type,
+      merge_coincident_elements(geom, opts.R_merge_elems, opts.blend_type,
                                 opts.epsilon);
   }
 

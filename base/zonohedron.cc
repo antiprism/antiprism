@@ -107,9 +107,9 @@ vector<Vec3d> get_star(const Geometry &geom, char type, Vec3d centre)
   return star;
 }
 
-void make_zonohedron_1d(Geometry *zono, const vector<Vec3d> &star)
+void make_zonohedron_1d(Geometry &zono, const vector<Vec3d> &star)
 {
-  zono->clear_all();
+  zono.clear_all();
   if (!star.size())
     return;
   Vec3d pos = Vec3d(0, 0, 0);
@@ -121,13 +121,13 @@ void make_zonohedron_1d(Geometry *zono, const vector<Vec3d> &star)
     else
       neg += star[i];
   }
-  zono->add_vert(pos);
-  zono->add_vert(neg);
+  zono.add_vert(pos);
+  zono.add_vert(neg);
 }
 
-void make_zonohedron_2d(Geometry *zono, const vector<Vec3d> &star, Vec3d fnorm)
+void make_zonohedron_2d(Geometry &zono, const vector<Vec3d> &star, Vec3d fnorm)
 {
-  zono->clear_all();
+  zono.clear_all();
   map<Vec3d, set<int>, vec_less> stars;
   for (unsigned int i = 0; i < star.size(); i++)
     stars[normalised_dir(star[i]).unit()].insert(i);
@@ -150,17 +150,17 @@ void make_zonohedron_2d(Geometry *zono, const vector<Vec3d> &star, Vec3d fnorm)
       }
     }
     Geometry zono_face;
-    make_zonohedron_1d(&zono_face, z_face_star);
+    make_zonohedron_1d(zono_face, z_face_star);
     for (unsigned int k = 0; k < zono_face.verts().size(); k++) {
-      zono->add_vert(pos + zono_face.verts(k));
-      zono->add_vert(neg + zono_face.verts(k));
+      zono.add_vert(pos + zono_face.verts(k));
+      zono.add_vert(neg + zono_face.verts(k));
     }
   }
 }
 
-Status make_zonohedron(Geometry *geom, const vector<Vec3d> &star)
+Status make_zonohedron(Geometry &geom, const vector<Vec3d> &star)
 {
-  geom->clear_all();
+  geom.clear_all();
 
   vector<double> star_mags(star.size());
   for (unsigned int i = 0; i < star.size(); i++)
@@ -199,10 +199,10 @@ Status make_zonohedron(Geometry *geom, const vector<Vec3d> &star)
       }
 
       Geometry zono_face;
-      make_zonohedron_2d(&zono_face, z_face_star, norm);
+      make_zonohedron_2d(zono_face, z_face_star, norm);
       for (unsigned int k = 0; k < zono_face.verts().size(); k++) {
-        geom->add_vert(pos + zono_face.verts(k));
-        geom->add_vert(neg + zono_face.verts(k));
+        geom.add_vert(pos + zono_face.verts(k));
+        geom.add_vert(neg + zono_face.verts(k));
       }
     }
   }
@@ -210,78 +210,76 @@ Status make_zonohedron(Geometry *geom, const vector<Vec3d> &star)
     make_zonohedron_1d(geom, star);
   }
 
-  if (geom->is_set())
-    return geom->set_hull("A0.9999999");
+  if (geom.is_set())
+    return geom.set_hull("A0.9999999");
   else {
-    geom->add_vert(Vec3d::zero);
+    geom.add_vert(Vec3d::zero);
     return Status::ok();
   }
 }
 
-Status make_zonohedrified_polyhedron(Geometry *geom, const Geometry &seed,
+Status make_zonohedrified_polyhedron(Geometry &geom, const Geometry &seed,
                                      const vector<Vec3d> &star, Color col)
 {
-  geom->clear_all();
-  geom->append(seed);
+  geom.clear_all();
+  geom.append(seed);
 
   // Store original face colours by normal
   std::map<Vec3d, Color, vec_less> orig_cols;
-  for (unsigned int i = 0; i < geom->faces().size(); i++)
-    orig_cols[geom->face_norm(i).to_unit()] = geom->colors(FACES).get(i);
+  for (unsigned int i = 0; i < geom.faces().size(); i++)
+    orig_cols[geom.face_norm(i).to_unit()] = geom.colors(FACES).get(i);
 
   for (const auto &i : star) {
-    int v_sz = geom->verts().size();
-    geom->raw_verts().resize(v_sz * 2);
+    int v_sz = geom.verts().size();
+    geom.raw_verts().resize(v_sz * 2);
     for (int j = 0; j < v_sz; j++) {
-      geom->raw_verts()[j + v_sz] = geom->verts(j) + i;
+      geom.raw_verts()[j + v_sz] = geom.verts(j) + i;
     }
-    Status stat = geom->set_hull("");
+    Status stat = geom.set_hull("");
     if (!stat)
       return stat;
   }
 
   // Restore original face colours by normal
-  for (unsigned int i = 0; i < geom->faces().size(); i++) {
-    auto mi = orig_cols.find(geom->face_norm(i).to_unit());
-    geom->colors(FACES).set(i, (mi != orig_cols.end()) ? mi->second : col);
+  for (unsigned int i = 0; i < geom.faces().size(); i++) {
+    auto mi = orig_cols.find(geom.face_norm(i).to_unit());
+    geom.colors(FACES).set(i, (mi != orig_cols.end()) ? mi->second : col);
   }
 
   return Status::ok();
 }
 
-Status make_polar_zonohedron(Geometry *geom, const vector<Vec3d> &star,
+Status make_polar_zonohedron(Geometry &geom, const vector<Vec3d> &star,
                              int step)
 {
-  geom->clear_all();
+  geom.clear_all();
   int N = star.size();
   int D = step;
   int num_parts = gcd(N, D);
   int P = N / num_parts;
   for (int p = 0; p < num_parts; p++) {
-    int V = geom->verts().size();
+    int V = geom.verts().size();
     vector<Vec3d> star_part;
     for (int i = 0; i < P; i++)
       star_part.push_back(star[(p + i * D) % N]);
 
-    geom->add_verts(star_part);
+    geom.add_verts(star_part);
     for (int i = 1; i < P - 1; i++)
       for (int j = 0; j < P; j++)
-        geom->add_vert(geom->verts(V + (i - 1) * P + j) +
-                       star_part[(i + j) % P]);
-    geom->add_vert(geom->verts(V + P * (P - 2)) + star_part[P - 1]);
-    geom->add_vert(Vec3d(0, 0, 0));
+        geom.add_vert(geom.verts(V + (i - 1) * P + j) + star_part[(i + j) % P]);
+    geom.add_vert(geom.verts(V + P * (P - 2)) + star_part[P - 1]);
+    geom.add_vert(Vec3d(0, 0, 0));
     for (int j = 0; j < P; j++) {
-      geom->add_face(V + P * (P - 1) + 1, V + j, V + j + P, V + (j + 1) % P,
-                     -1);
+      geom.add_face(V + P * (P - 1) + 1, V + j, V + j + P, V + (j + 1) % P, -1);
       if (P > 2)
-        geom->add_face(V + P * (P - 1), V + P * (P - 2) + j,
-                       V + P * (P - 3) + (j + 1) % P,
-                       V + P * (P - 2) + (j + 1) % P, -1);
+        geom.add_face(V + P * (P - 1), V + P * (P - 2) + j,
+                      V + P * (P - 3) + (j + 1) % P,
+                      V + P * (P - 2) + (j + 1) % P, -1);
     }
     for (int i = 0; i < P - 3; i++)
       for (int j = 0; j < P; j++) {
-        geom->add_face(V + i * P + (j + 1) % P, V + (i + 1) * P + j,
-                       V + (i + 2) * P + j, V + (i + 1) * P + (j + 1) % P, -1);
+        geom.add_face(V + i * P + (j + 1) % P, V + (i + 1) * P + j,
+                      V + (i + 2) * P + j, V + (i + 1) * P + (j + 1) % P, -1);
       }
   }
   return Status::ok();

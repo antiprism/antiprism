@@ -705,7 +705,7 @@ int get_voronoi_geom(Geometry &geom, Geometry &vgeom, const bool central_cells,
 {
   // do this in case compound lattice was sent. Simultaneous points cause
   // problems for Voronoi Cells
-  merge_coincident_elements(&geom, "vef", eps);
+  merge_coincident_elements(geom, "vef", eps);
 
   // store convex hull of lattice as speed up to is_geom_inside_hull()
   // has to be 3 dimensional

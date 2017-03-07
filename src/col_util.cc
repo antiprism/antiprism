@@ -735,7 +735,7 @@ void color_grid(Geometry &geom, const vector<Color> &cols)
       tgeom.clear_all();
     }
   }
-  merge_coincident_elements(&geom, "ve", epsilon);
+  merge_coincident_elements(geom, "ve", epsilon);
   geom.transform(Trans3d::rotate(Vec3d(0.0, 0.0, deg2rad(-90.0))));
 }
 

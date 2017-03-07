@@ -68,7 +68,7 @@ std::vector<Vec3d> get_star(const Geometry &geom, char type = 'v',
  * \return status, which evaluates to true if the zonohedron could be
  *  calculated (possibly with warnings), otherwise \c false to indicate
  *  an error. */
-Status make_zonohedron(Geometry *geom, const std::vector<Vec3d> &star);
+Status make_zonohedron(Geometry &geom, const std::vector<Vec3d> &star);
 
 /// Make a zonohedrified polyhedron from a seed polyhedron and a star
 /**\param geom to return the zonohedrified polyhedron
@@ -78,7 +78,7 @@ Status make_zonohedron(Geometry *geom, const std::vector<Vec3d> &star);
  * \return status, which evaluates to true if the zonohedron could be
  *  calculated (possibly with warnings), otherwise \c false to indicate
  *  an error. */
-Status make_zonohedrified_polyhedron(Geometry *geom, const Geometry &seed,
+Status make_zonohedrified_polyhedron(Geometry &geom, const Geometry &seed,
                                      const std::vector<Vec3d> &star, Color col);
 
 /// Make a polar zonohedron from an ordered star
@@ -88,7 +88,7 @@ Status make_zonohedrified_polyhedron(Geometry *geom, const Geometry &seed,
  * \return status, which evaluates to true if the zonohedron could be
  *  calculated (possibly with warnings), otherwise \c false to indicate
  *  an error. */
-Status make_polar_zonohedron(Geometry *geom, const std::vector<Vec3d> &star,
+Status make_polar_zonohedron(Geometry &geom, const std::vector<Vec3d> &star,
                              int step = 1);
 
 /// Set planar geodesic division.
@@ -99,7 +99,7 @@ Status make_polar_zonohedron(Geometry *geom, const std::vector<Vec3d> &star,
  * \param m the first pattern specifier.
  * \param n the second pattern specifier.
  * \return \c true if the pattern was valid, otherwise \c false. */
-bool make_geodesic_planar(Geometry *geom, const Geometry &base, int m,
+bool make_geodesic_planar(Geometry &geom, const Geometry &base, int m,
                           int n = 0);
 
 /// Set spherical geodesic division.
@@ -111,14 +111,14 @@ bool make_geodesic_planar(Geometry *geom, const Geometry &base, int m,
  * \param n the second pattern specifier.
  * \param cent the centre of projection.
  * \return \c true if the pattern was valid, otherwise \c false. */
-bool make_geodesic_sphere(Geometry *geom, const Geometry &base, int m,
+bool make_geodesic_sphere(Geometry &geom, const Geometry &base, int m,
                           int n = 0, Vec3d cent = Vec3d(0, 0, 0));
 
 /// Project the vertices onto a sphere
 /**\param geom whose vertices will be projected
  * \param centre the centre of the sphere.
  * \param radius the radius of the sphere. */
-void project_onto_sphere(Geometry *geom, Vec3d centre = Vec3d(0, 0, 0),
+void project_onto_sphere(Geometry &geom, Vec3d centre = Vec3d(0, 0, 0),
                          double radius = 1.0);
 
 /// Combine face circuits into a single face by bridging between the circuits
@@ -139,7 +139,7 @@ make_face_from_contours(const std::vector<std::vector<int>> &contours,
  *   order position of the transformation that produced them.
  * \param clrngs an array of three Colorings applied, correspondingly, to the
  *  index coloured vertices, edges and faces.*/
-void sym_repeat(Geometry *geom, const Geometry &part, const Transformations &ts,
+void sym_repeat(Geometry &geom, const Geometry &part, const Transformations &ts,
                 char col_part_elems = ELEM_NONE, Coloring *clrngs = nullptr);
 
 /// Repeat a part by a set of symmetry transformations
@@ -152,7 +152,7 @@ void sym_repeat(Geometry *geom, const Geometry &part, const Transformations &ts,
  * \param clrngs an array of three Colorings applied, correspondingly, to the
  *  index coloured vertices, edges and faces.
  * \return \c true if the symmetry group was valid, otherwise \c false. */
-bool sym_repeat(Geometry *geom, const Geometry &part, const Symmetry &sym,
+bool sym_repeat(Geometry &geom, const Geometry &part, const Symmetry &sym,
                 char col_part_elems = ELEM_NONE, Coloring *clrngs = nullptr);
 
 /// Repeat a part by a set of symmetry transformations
@@ -160,7 +160,7 @@ bool sym_repeat(Geometry *geom, const Geometry &part, const Symmetry &sym,
  * \param sym_to target symmetry.
  * \param sym_from initial symmetry.
  * \param pos to realign sym_from. */
-void transform_and_repeat(Geometry *geom, std::string sym_to,
+void transform_and_repeat(Geometry &geom, std::string sym_to,
                           std::string sym_from, Trans3d pos = Trans3d());
 
 /// Convert the face planes to vertices by polar reciprocation
@@ -169,7 +169,7 @@ void transform_and_repeat(Geometry *geom, std::string sym_to,
  * \param recip_rad radius of reciprocation sphere.
  * \param centre centre of reciprocation sphere.
  * \param inf maximum distance a vertex will be placed. */
-void get_pol_recip_verts(Geometry *dual, const Geometry &geom, double recip_rad,
+void get_pol_recip_verts(Geometry &dual, const Geometry &geom, double recip_rad,
                          Vec3d centre, double inf = 1e15);
 
 /// Convert the face planes to vertices by polar reciprocation in sphere
@@ -178,7 +178,7 @@ void get_pol_recip_verts(Geometry *dual, const Geometry &geom, double recip_rad,
  * \param recip_rad radius of reciprocation sphere.
  * \param centre centre of reciprocation sphere.
  * \param inf maximum distance a vertex will be placed. */
-void get_dual(Geometry *dual, const Geometry &geom, double recip_rad = 0,
+void get_dual(Geometry &dual, const Geometry &geom, double recip_rad = 0,
               Vec3d centre = Vec3d(0, 0, 0), double inf = 1e20);
 
 /// Add extra elements when an element joined to an ideal point.
@@ -189,19 +189,19 @@ void get_dual(Geometry *dual, const Geometry &geom, double recip_rad = 0,
  * \param geom input geometry, generally containing a dual.
  * \param centre centre of original reciprocation sphere.
  * \param inf distance at which a point is considered to be ideal. */
-void add_extra_ideal_elems(Geometry *geom, Vec3d centre, double inf);
+void add_extra_ideal_elems(Geometry &geom, Vec3d centre, double inf);
 
 /// Make a geometry with a face for each edge in the original
 /**Like the Conway 'join' operation.
  * \param geom geometry with edges to convert into faces.*/
-void make_edges_to_faces(Geometry *geom);
+void make_edges_to_faces(Geometry &geom);
 
 /// Truncate specified vertices
 /**\param geom geometry to truncate
  * \param v_idxs index numbers of vertices to truncate.
  * \param ratio truncation points divide edges in this ratio.
  * \param info use if passed, otherwise a local one will be used. */
-void truncate_verts(Geometry *geom, std::vector<int> &v_idxs, double ratio,
+void truncate_verts(Geometry &geom, std::vector<int> &v_idxs, double ratio,
                     GeometryInfo *info = nullptr);
 
 /// Truncate vertices
@@ -209,7 +209,7 @@ void truncate_verts(Geometry *geom, std::vector<int> &v_idxs, double ratio,
  * \param ratio truncation points divide edges in this ratio.
  * \param order if positive, truncate only vertices with this vertex order.
  * \param info use if passed, otherwise a local one will be used. */
-void truncate_verts(Geometry *geom, double ratio, int order = 0,
+void truncate_verts(Geometry &geom, double ratio, int order = 0,
                     GeometryInfo *info = nullptr);
 
 /// Merge coincident elements
@@ -222,7 +222,7 @@ void truncate_verts(Geometry *geom, double ratio, int order = 0,
  * \param eps a small number, coordinates differing by less than eps are
  *  the same. */
 void merge_coincident_elements(
-    Geometry *geom, const std::string &merge_elems,
+    Geometry &geom, const std::string &merge_elems,
     std::vector<std::map<int, std::set<int>>> *equiv_elems,
     double eps = epsilon);
 
@@ -234,7 +234,7 @@ void merge_coincident_elements(
     2:last color, 3: RGB average, 4:RYB mode.
  * \param eps a small number, coordinates differing by less than eps are
  *  the same. */
-void merge_coincident_elements(Geometry *geom, const std::string &merge_elems,
+void merge_coincident_elements(Geometry &geom, const std::string &merge_elems,
                                const int blend_type, double eps = epsilon);
 
 /// Merge coincident elements
@@ -243,7 +243,7 @@ void merge_coincident_elements(Geometry *geom, const std::string &merge_elems,
  *  the element types to be merged. An empty string will sort the elements.
  * \param eps a small number, coordinates differing by less than eps are
  *  the same. */
-void merge_coincident_elements(Geometry *geom, const std::string &merge_elems,
+void merge_coincident_elements(Geometry &geom, const std::string &merge_elems,
                                double eps = epsilon);
 
 /// Check congruence of coincident polyhedra
@@ -363,8 +363,9 @@ bool planarize_bd(Geometry &geom, const int num_iters, const int rep_count = -1,
 /**Each hole (open circuit of edges) is converted to a face with colour col
  * holes having a vertex with more than two open edges are not filled
  * \param geom geometry to close.
+ * \param col colour for the new faces (default: no colour set).
  * \return \c true if all holes could be closed, otherwise \c false. */
-bool close_poly_basic(Geometry *geom);
+bool close_poly_basic(Geometry &geom, const Color &col = Color());
 
 /// Bond polyhedra at a face
 /**\param base base geometry
@@ -377,7 +378,7 @@ bool close_poly_basic(Geometry *geom);
  * \param flip if \c true bond brick face with reverse orientation, otherwise
  *  \c false original orientation.
  * \return \c true if operation succeeded, otherwise \c false. */
-bool face_bond(Geometry *base, Geometry *brick, int base_f_idx = 0,
+bool face_bond(Geometry &base, Geometry &brick, int base_f_idx = 0,
                int brick_f_idx = 0, int off = 0, bool merge = true,
                bool flip = false);
 

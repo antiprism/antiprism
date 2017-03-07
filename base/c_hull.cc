@@ -310,14 +310,14 @@ static int dimension_safe_make_hull(Geometry &geom, bool append, string qh_args,
     // if dimension is 0, if append is false, reduce to one point
     if (dimension == 0) {
       if (!append)
-        merge_coincident_elements(&geom, "v", epsilon);
+        merge_coincident_elements(geom, "v", epsilon);
     }
     // what should be left will be the line or polygon
     // if 1 dimensional, add one edge between the two points
     // a point may be double at the end so the vertices have to be sorted so
     // first and last are the end points for the edge connection
     else if (dimension == 1) {
-      merge_coincident_elements(&geom, "s", epsilon);
+      merge_coincident_elements(geom, "s", epsilon);
       // if not append, make sure all that exist is the first and last point
       if (!append) {
         vector<Vec3d> verts = geom.verts();

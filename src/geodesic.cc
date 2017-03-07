@@ -209,9 +209,9 @@ int main(int argc, char **argv)
 
   Geometry geo;
   if (opts.method == 's')
-    make_geodesic_sphere(&geo, geom, opts.m, opts.n, opts.centre);
+    make_geodesic_sphere(geo, geom, opts.m, opts.n, opts.centre);
   else if (opts.method == 'p')
-    make_geodesic_planar(&geo, geom, opts.m, opts.n);
+    make_geodesic_planar(geo, geom, opts.m, opts.n);
 
   opts.write_or_error(geo, opts.ofile);
 

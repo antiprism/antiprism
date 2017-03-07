@@ -47,14 +47,14 @@ using std::string;
 
 namespace anti {
 
-void make_edges_to_faces(Geometry *geom)
+void make_edges_to_faces(Geometry &geom)
 {
-  int orig_v_sz = geom->verts().size();
-  for (auto &f : geom->faces())
-    geom->add_vert(geom->face_cent(f));
+  int orig_v_sz = geom.verts().size();
+  for (auto &f : geom.faces())
+    geom.add_vert(geom.face_cent(f));
 
-  auto edges = geom->get_edge_face_pairs(false);
-  geom->clear(FACES);
+  auto edges = geom.get_edge_face_pairs(false);
+  geom.clear(FACES);
 
   for (auto &mv : edges) {
     vector<int> face(4);
@@ -62,21 +62,21 @@ void make_edges_to_faces(Geometry *geom)
     face[1] = mv.second[0] + orig_v_sz;
     face[2] = mv.first[1];
     face[3] = mv.second[1] + orig_v_sz;
-    geom->add_face(face);
+    geom.add_face(face);
   }
 }
 
 // truncate vertices specified by index number
-void truncate_verts(Geometry *geom, vector<int> &v_idxs, double ratio,
+void truncate_verts(Geometry &geom, vector<int> &v_idxs, double ratio,
                     GeometryInfo *info)
 {
-  GeometryInfo tmp_info(*geom);
+  GeometryInfo tmp_info(geom);
   if (!info)
     info = &tmp_info;
 
   bool merge = (ratio == 0.5);
   map<vector<int>, vector<int>> e_to_vs; // vertex pairs to merge
-  const vector<Vec3d> &verts = geom->verts();
+  const vector<Vec3d> &verts = geom.verts();
   map<vector<int>, vector<int>> v3maps;
   for (int idx : v_idxs) {
     vector<int> cons;
@@ -84,7 +84,7 @@ void truncate_verts(Geometry *geom, vector<int> &v_idxs, double ratio,
     int orig_vsz = verts.size();
     vector<int> tface;
     for (unsigned int j = 0; j < cons.size(); j++) {
-      geom->add_vert(verts[idx] + ratio * (verts[cons[j]] - verts[idx]));
+      geom.add_vert(verts[idx] + ratio * (verts[cons[j]] - verts[idx]));
       tface.push_back(orig_vsz + j);
       // set up maps for faces conversion of old index to new index pair
       vector<int> v3(3);
@@ -98,17 +98,17 @@ void truncate_verts(Geometry *geom, vector<int> &v_idxs, double ratio,
       if (merge)
         e_to_vs[make_edge(v3[0], v3[1])].push_back(orig_vsz + j);
     }
-    geom->add_face(tface);
+    geom.add_face(tface);
   }
 
-  for (unsigned int i = 0; i < geom->faces().size(); i++) {
+  for (unsigned int i = 0; i < geom.faces().size(); i++) {
     vector<int> tface;
-    const int fsz = geom->faces(i).size();
+    const int fsz = geom.faces(i).size();
     vector<vector<int>> v3s(fsz, vector<int>(3));
     for (int j = 0; j < fsz; j++) {
-      v3s[j][0] = geom->faces(i, j);
-      v3s[j][1] = geom->faces_mod(i, (j + 1));
-      v3s[j][2] = geom->faces_mod(i, (j + 2));
+      v3s[j][0] = geom.faces(i, j);
+      v3s[j][1] = geom.faces_mod(i, (j + 1));
+      v3s[j][2] = geom.faces_mod(i, (j + 2));
     }
     for (auto &v3 : v3s) {
       map<vector<int>, vector<int>>::iterator mi;
@@ -126,7 +126,7 @@ void truncate_verts(Geometry *geom, vector<int> &v_idxs, double ratio,
           tface.push_back(v3[1]);
       }
     }
-    geom->raw_faces()[i] = tface;
+    geom.raw_faces()[i] = tface;
   }
 
   if (merge) {
@@ -136,15 +136,15 @@ void truncate_verts(Geometry *geom, vector<int> &v_idxs, double ratio,
       if (mi->second.size() == 2) // two vertices on an edge
         idx_map[mi->second[1]] = mi->second[0];
     }
-    geom->verts_merge(idx_map);
+    geom.verts_merge(idx_map);
   }
-  geom->del(VERTS, v_idxs);
+  geom.del(VERTS, v_idxs);
 }
 
 // truncate vertices with vertex order (default order = 0, truncate all)
-void truncate_verts(Geometry *geom, double ratio, int order, GeometryInfo *info)
+void truncate_verts(Geometry &geom, double ratio, int order, GeometryInfo *info)
 {
-  GeometryInfo tmp_info(*geom);
+  GeometryInfo tmp_info(geom);
   if (!info)
     info = &tmp_info;
 

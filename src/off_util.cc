@@ -1172,16 +1172,6 @@ bool add_elements(Geometry &geom, vector<string> add_elems, char *errmsg)
   return true;
 }
 
-void close_poly(Geometry &geom, Color col)
-{
-  int orig_faces_sz = geom.faces().size();
-  close_poly_basic(&geom);
-  if (col.is_set()) {
-    for (unsigned int i = orig_faces_sz; i < geom.faces().size(); i++)
-      geom.colors(FACES).set(i, col);
-  }
-}
-
 class pr_opts : public ProgramOpts {
 public:
   Geometry geom;
@@ -1415,12 +1405,12 @@ void pr_opts::process_command_line(int argc, char **argv)
           error("truncation vertex order is not positive", c);
       }
 
-      truncate_verts(&geom, trunc_ratio, trunc_v_ord);
+      truncate_verts(geom, trunc_ratio, trunc_v_ord);
       break;
     }
 
     case 'E':
-      make_edges_to_faces(&geom);
+      make_edges_to_faces(geom);
       break;
 
     case 's':
@@ -1521,11 +1511,11 @@ void pr_opts::process_command_line(int argc, char **argv)
 
     case 'c':
       print_status_or_exit(close_col.read(optarg), c);
-      close_poly(geom, close_col);
+      close_poly_basic(geom, close_col);
       break;
 
     case 'S':
-      project_onto_sphere(&geom);
+      project_onto_sphere(geom);
       break;
 
     case 'M': {
@@ -1569,7 +1559,7 @@ void pr_opts::process_command_line(int argc, char **argv)
       double epsilon =
           (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
       if (*elems == 'b') {
-        merge_coincident_elements(&geom, "ve", blend_type, epsilon);
+        merge_coincident_elements(geom, "ve", blend_type, epsilon);
         Geometry tmp = geom;
         vector<map<int, set<int>>> equiv_elems;
         check_congruence(geom, tmp, &equiv_elems, epsilon);
@@ -1588,7 +1578,7 @@ void pr_opts::process_command_line(int argc, char **argv)
         geom.del(FACES, del_faces);
       }
       else
-        merge_coincident_elements(&geom, elems, blend_type, epsilon);
+        merge_coincident_elements(geom, elems, blend_type, epsilon);
       break;
     }
 
@@ -1704,7 +1694,7 @@ int unzip_tree::init_basic(Geometry &geom, int first_face)
   root = first_face;
 
   Geometry dual;
-  get_dual(&dual, geom);
+  get_dual(dual, geom);
   GeometryInfo info(dual);
   const vector<vector<int>> &f_cons = info.get_vert_cons();
   vector<tree_face> face_list;

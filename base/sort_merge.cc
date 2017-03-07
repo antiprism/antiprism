@@ -540,25 +540,25 @@ bool sort_merge_elems(Geometry &geom, const string &merge_elems,
   return true;
 }
 
-void merge_coincident_elements(Geometry *geom, const string &merge_elems,
+void merge_coincident_elements(Geometry &geom, const string &merge_elems,
                                vector<map<int, set<int>>> *equiv_elems,
                                double eps)
 {
-  sort_merge_elems(*geom, merge_elems, equiv_elems, false, 0, eps);
+  sort_merge_elems(geom, merge_elems, equiv_elems, false, 0, eps);
 }
 
-void merge_coincident_elements(Geometry *geom, const string &merge_elems,
+void merge_coincident_elements(Geometry &geom, const string &merge_elems,
                                const int blend_type, double eps)
 {
   vector<map<int, set<int>>> *equiv_elems = nullptr;
-  sort_merge_elems(*geom, merge_elems, equiv_elems, false, blend_type, eps);
+  sort_merge_elems(geom, merge_elems, equiv_elems, false, blend_type, eps);
 }
 
-void merge_coincident_elements(Geometry *geom, const string &merge_elems,
+void merge_coincident_elements(Geometry &geom, const string &merge_elems,
                                double eps)
 {
   vector<map<int, set<int>>> *equiv_elems = nullptr;
-  sort_merge_elems(*geom, merge_elems, equiv_elems, false, 0, eps);
+  sort_merge_elems(geom, merge_elems, equiv_elems, false, 0, eps);
 }
 
 bool check_congruence(const Geometry &geom1, const Geometry &geom2,

@@ -1009,8 +1009,8 @@ void make_poly(Geometry &geom, const string &sym_type, const bool triangle_only,
     geom.transform(Trans3d::rotate(0, M_PI / 2, 0));
 
   if (!triangle_only) {
-    sym_repeat(&geom, geom, sym_type);
-    merge_coincident_elements(&geom, "vef", epsilon);
+    sym_repeat(geom, geom, sym_type);
+    merge_coincident_elements(geom, "vef", epsilon);
   }
 }
 
@@ -1049,7 +1049,7 @@ void tet_to_dihedral(Geometry &geom, const string &sym_from, const int k,
 {
   char sym_to[MSG_SZ];
   sprintf(sym_to, "D%d%s", k, ((k % 4 == 0) ? "h" : "v"));
-  transform_and_repeat(&geom, sym_to, sym_from, pos);
+  transform_and_repeat(geom, sym_to, sym_from, pos);
 }
 
 void case_a_star_tetrahedron(Geometry &geom, const int k)
@@ -1070,10 +1070,10 @@ void case_b_5_or_10_tetrahedra(Geometry &geom, double angle, const int k)
   // Trans3d::rotate(0,angle,0));
 
   if (k == 1)
-    transform_and_repeat(&geom, "I", "Td", Trans3d::rotate(0, angle, 0));
+    transform_and_repeat(geom, "I", "Td", Trans3d::rotate(0, angle, 0));
   else if (k == 2) {
-    transform_and_repeat(&geom, "Oh", "Td", Trans3d::rotate(0, angle, 0));
-    transform_and_repeat(&geom, "I", "Oh");
+    transform_and_repeat(geom, "Oh", "Td", Trans3d::rotate(0, angle, 0));
+    transform_and_repeat(geom, "I", "Oh");
   }
 }
 
@@ -1094,7 +1094,7 @@ void case_c_2_dipyramids(Geometry &geom, double angle, const int n, const int d)
 
   // advance angle so that angle = 0 is coincident constituents
   geom.transform(Trans3d::rotate(0, 0, angle + M_PI / (2 * n)));
-  transform_and_repeat(&geom, sym_to, sym_from);
+  transform_and_repeat(geom, sym_to, sym_from);
 }
 
 void case_d_6_octahedra(Geometry &geom, double angle)
@@ -1105,8 +1105,8 @@ void case_d_6_octahedra(Geometry &geom, double angle)
   geom.read_resource("u5");
 
   // at 0 degrees, produced 3 coincident octahedra
-  transform_and_repeat(&geom, "D2h", "Oh", Trans3d::rotate(0, 0, angle));
-  transform_and_repeat(&geom, "T", "D2h");
+  transform_and_repeat(geom, "D2h", "Oh", Trans3d::rotate(0, 0, angle));
+  transform_and_repeat(geom, "T", "D2h");
 }
 
 void case_e_4_or_8_triangular_dipyramids(Geometry &geom, double angle,
@@ -1124,12 +1124,12 @@ void case_e_4_or_8_triangular_dipyramids(Geometry &geom, double angle,
   //    Trans3d::rotate(0,0,angle+M_PI/12));
 
   if (k == 1)
-    transform_and_repeat(&geom, "O", "D3h",
+    transform_and_repeat(geom, "O", "D3h",
                          Trans3d::rotate(Vec3d(0, 0, 1), Vec3d(1, 1, 1)) *
                              Trans3d::rotate(0, 0, angle + M_PI / 12));
   else if (k == 2) {
-    transform_and_repeat(&geom, "D6h", "D3h");
-    transform_and_repeat(&geom, "O", "D6h",
+    transform_and_repeat(geom, "D6h", "D3h");
+    transform_and_repeat(geom, "O", "D6h",
                          Trans3d::rotate(Vec3d(0, 0, 1), Vec3d(1, 1, 1)) *
                              Trans3d::rotate(0, 0, angle + M_PI / 12));
   }
@@ -1153,12 +1153,12 @@ void case_f_6_or_12_pentagonal_dipyramids(Geometry &geom, double angle,
   //    Trans3d::rotate(0,0,angle+M_PI/5));
 
   if (k == 1 || k == 3)
-    transform_and_repeat(&geom, "I", "D5h",
+    transform_and_repeat(geom, "I", "D5h",
                          Trans3d::rotate(Vec3d(0, 0, 1), Vec3d(0, 1, phi)) *
                              Trans3d::rotate(0, 0, angle + M_PI / 5));
   else if (k == 2 || k == 4) {
-    transform_and_repeat(&geom, "D10h", "D5h");
-    transform_and_repeat(&geom, "I", "D10h",
+    transform_and_repeat(geom, "D10h", "D5h");
+    transform_and_repeat(geom, "I", "D10h",
                          Trans3d::rotate(Vec3d(0, 0, 1), Vec3d(0, 1, phi)) *
                              Trans3d::rotate(0, 0, angle + M_PI / 5));
   }
@@ -1192,7 +1192,7 @@ void case_i_6_tetrahedra(Geometry &geom, double angle)
 
   geom.read_resource("u1");
 
-  transform_and_repeat(&geom, "T", "T", Trans3d::rotate(0, 0, angle));
+  transform_and_repeat(geom, "T", "T", Trans3d::rotate(0, 0, angle));
 }
 
 void case_j_12_tetrahedra(Geometry &geom, double angle)
@@ -1202,8 +1202,8 @@ void case_j_12_tetrahedra(Geometry &geom, double angle)
 
   geom.read_resource("u1");
 
-  transform_and_repeat(&geom, "S2", "T");
-  transform_and_repeat(&geom, "T", "Oh", Trans3d::rotate(0, 0, angle));
+  transform_and_repeat(geom, "S2", "T");
+  transform_and_repeat(geom, "T", "Oh", Trans3d::rotate(0, 0, angle));
 }
 
 void case_k_2k_dipyramids(Geometry &geom, double angle, const int k,
@@ -1220,9 +1220,9 @@ void case_k_2k_dipyramids(Geometry &geom, double angle, const int k,
   char sym_to[MSG_SZ];
   sprintf(sym_to, "D%dh", k * n);
 
-  transform_and_repeat(&geom, sym_from, sym_from,
+  transform_and_repeat(geom, sym_from, sym_from,
                        Trans3d::rotate(0, 0, angle + M_PI));
-  transform_and_repeat(&geom, sym_to, sym_from);
+  transform_and_repeat(geom, sym_to, sym_from);
 }
 
 void case_l_k_dipyramids(Geometry &geom, const int k, const int n, const int d)
@@ -1235,7 +1235,7 @@ void case_l_k_dipyramids(Geometry &geom, const int k, const int n, const int d)
   char sym_to[MSG_SZ];
   sprintf(sym_to, "D%dh", k * n);
 
-  transform_and_repeat(&geom, sym_to, sym_from);
+  transform_and_repeat(geom, sym_to, sym_from);
 }
 
 void case_m_10_or_20_triangular_dipyramids(Geometry &geom, double angle,
@@ -1254,13 +1254,13 @@ void case_m_10_or_20_triangular_dipyramids(Geometry &geom, double angle,
 
   if (k == 1)
     transform_and_repeat(
-        &geom, "I", "D3h",
+        geom, "I", "D3h",
         Trans3d::rotate(Vec3d(0, 0, 1), Vec3d(1 / phi, 0, phi)) *
             Trans3d::rotate(0, 0, angle + M_PI / 6));
   else if (k == 2) {
-    transform_and_repeat(&geom, "D6h", "D3h");
+    transform_and_repeat(geom, "D6h", "D3h");
     transform_and_repeat(
-        &geom, "I", "D6h",
+        geom, "I", "D6h",
         Trans3d::rotate(Vec3d(0, 0, 1), Vec3d(1 / phi, 0, phi)) *
             Trans3d::rotate(0, 0, angle + M_PI / 6));
   }
@@ -1274,7 +1274,7 @@ void case_n_6_10_3_star_dipyramids(Geometry &geom, double angle)
   fprintf(stderr, "Using: ");
   make_delta_dipyramid(geom, 10, 3);
 
-  transform_and_repeat(&geom, "I", "D10h",
+  transform_and_repeat(geom, "I", "D10h",
                        Trans3d::rotate(Vec3d(0, 0, 1), Vec3d(0, 1, phi)) *
                            Trans3d::rotate(0, 0, angle + M_PI / 10));
 }
@@ -1290,10 +1290,10 @@ void case_o_5_or_10_augmented_tetrahedra(Geometry &geom, double angle,
   // Trans3d::rotate(0,angle,0));
 
   if (k == 1)
-    transform_and_repeat(&geom, "I", "Td", Trans3d::rotate(0, angle, 0));
+    transform_and_repeat(geom, "I", "Td", Trans3d::rotate(0, angle, 0));
   else if (k == 2) {
-    transform_and_repeat(&geom, "Oh", "Td", Trans3d::rotate(0, angle, 0));
-    transform_and_repeat(&geom, "I", "Oh");
+    transform_and_repeat(geom, "Oh", "Td", Trans3d::rotate(0, angle, 0));
+    transform_and_repeat(geom, "I", "Oh");
   }
 }
 
@@ -1302,7 +1302,7 @@ void case_p_5_augmented_octahedra(Geometry &geom, double angle)
   if (angle == INFINITY)
     angle = 0;
 
-  transform_and_repeat(&geom, "I", "Oh", Trans3d::rotate(0, angle, 0));
+  transform_and_repeat(geom, "I", "Oh", Trans3d::rotate(0, angle, 0));
 }
 
 void case_q_5_excavated_octahedra(Geometry &geom, double angle)
@@ -1310,7 +1310,7 @@ void case_q_5_excavated_octahedra(Geometry &geom, double angle)
   if (angle == INFINITY)
     angle = 0;
 
-  transform_and_repeat(&geom, "I", "Oh", Trans3d::rotate(0, angle, 0));
+  transform_and_repeat(geom, "I", "Oh", Trans3d::rotate(0, angle, 0));
 }
 
 void compound_Coloring(Geometry &geom, const char Coloring_method,
@@ -1442,7 +1442,7 @@ int main(int argc, char *argv[])
       if (sym_no + 1 == 9) {
         make_delta_dipyramid(geom, 8, 3, opts.triangle_only, opts.verbose);
         if (!opts.triangle_only)
-          transform_and_repeat(&geom, "Oh", "D8h");
+          transform_and_repeat(geom, "Oh", "D8h");
       }
       else if (sym_no + 1 == 14) {
         sym_no = 2; // consituent of case 14, sent to make_poly
@@ -1452,7 +1452,7 @@ int main(int argc, char *argv[])
                   id_polys.alpha(sym_no), id_polys.beta(sym_no),
                   id_polys.gamma(sym_no));
         if (!opts.triangle_only)
-          transform_and_repeat(&geom, "Oh", "Td");
+          transform_and_repeat(geom, "Oh", "Td");
       }
       geom.transform(Trans3d::rotate(
           0, M_PI / 2,

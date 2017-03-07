@@ -273,7 +273,7 @@ int main(int argc, char *argv[])
   geom.orient();
 
   Geometry dual;
-  get_dual(&dual, geom, 1, opts.centre);
+  get_dual(dual, geom, 1, opts.centre);
 
   vector<int> invalid_verts;
   for (unsigned int i = 0; i < dual.verts().size(); i++) {

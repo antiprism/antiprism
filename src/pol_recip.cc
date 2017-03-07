@@ -310,7 +310,7 @@ int find_can_centre(Geometry &geom, char type, double &rad, Vec3d &cent,
     rad = (1 - 2 * (rad < 0)) * rep.iedge_dist_lims().sum / e_sz;
   }
   Geometry dual;
-  get_dual(&dual, geom, rad, cent);
+  get_dual(dual, geom, rad, cent);
   if (invert)
     dual.transform(Trans3d::translate(cent) * Trans3d::inversion() *
                    Trans3d::translate(-cent));
@@ -395,7 +395,7 @@ int find_can_centre(Geometry &geom, char type, double &rad, Vec3d &cent,
     //      (cur_cent-cent).len());
     if (fabs(cent_test) < eps && fabs(rad_test) < eps)
       break;
-    get_pol_recip_verts(&dual, geom, rad, cur_cent);
+    get_pol_recip_verts(dual, geom, rad, cur_cent);
     if (invert)
       dual.transform(Trans3d::translate(cur_cent) * Trans3d::inversion() *
                      Trans3d::translate(-cur_cent));
@@ -663,7 +663,7 @@ int main(int argc, char *argv[])
         find_recip_rad(geom, opts.recip_rad_type, centre, opts.space_verts);
 
   Geometry dual;
-  get_dual(&dual, geom, radius, centre, 1.01 * opts.inf);
+  get_dual(dual, geom, radius, centre, 1.01 * opts.inf);
   if (opts.invert)
     dual.transform(Trans3d::translate(centre) * Trans3d::inversion() *
                    Trans3d::translate(-centre));
@@ -693,7 +693,7 @@ int main(int argc, char *argv[])
     geom.face_cents(dual.raw_verts());
 
   if (opts.extra_ideal_elems)
-    add_extra_ideal_elems(&dual, centre, 1.005 * opts.inf);
+    add_extra_ideal_elems(dual, centre, 1.005 * opts.inf);
 
   for (const auto &kv : dual.colors(FACES).get_properties())
     if (kv.second.is_invisible()) {

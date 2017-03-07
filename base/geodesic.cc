@@ -254,7 +254,7 @@ void Geodesic::make_geo(Geometry &geo)
   geo.colors(VERTS) = base.colors(VERTS);
 
   if (method == 's')
-    project_onto_sphere(&geo, centre);
+    project_onto_sphere(geo, centre);
 
   int num_verts =
       base.faces().size() * (F * F * (m * m + m * n + n * n) - F * 3 + 2) / 2 +

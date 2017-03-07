@@ -381,7 +381,7 @@ void unitile::plane(int lr_join, int tb_join)
       vert[1] = fmod(vert[1] + y_end, y_end - epsilon);
     }
   }
-  merge_coincident_elements(this, "v", 1e-5);
+  merge_coincident_elements(*this, "v", 1e-5);
 
   transform(trans_m);
 }

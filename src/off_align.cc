@@ -326,7 +326,7 @@ bool bond_base::bond_all(Geometry &geom_out, int out_type, char *errmsg)
       brick.geom.transform(Trans3d::scale(e0 / e1));
 
       if (bi->align_type == align_faces) {
-        face_bond(&base, &brick.geom, f0, f1, 0, false, true);
+        face_bond(base, brick.geom, f0, f1, 0, false, true);
         brick_out.append(brick.geom);
       }
       else {
@@ -390,12 +390,12 @@ bool bond_base::bond_all(Geometry &geom_out, int out_type, char *errmsg)
         bgeom.transform(Trans3d::inversion());
       if (mi->second[4]) // reverse was set
         bgeom.orient_reverse();
-      face_bond(&base_out, &bgeom, mi->first, mi->second[0], 0, true, true);
+      face_bond(base_out, bgeom, mi->first, mi->second[0], 0, true, true);
     }
   }
 
   if (sym.is_set())
-    sym_repeat(&brick_out, brick_out, sym);
+    sym_repeat(brick_out, brick_out, sym);
 
   if (out_type == out_default) {
     if (has_merged_brick)

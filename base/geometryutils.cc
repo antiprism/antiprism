@@ -42,28 +42,28 @@ using std::vector;
 
 namespace anti {
 
-bool make_geodesic_planar(Geometry *geom, const Geometry &base, int m, int n)
+bool make_geodesic_planar(Geometry &geom, const Geometry &base, int m, int n)
 {
   if (m < 0 || n < 0 || (m == 0 && n == 0))
     return false; // invalid pattern
   Geodesic geod(base, m, n, 'p');
-  geod.make_geo(*geom);
+  geod.make_geo(geom);
   return true; // valid pattern
 }
 
-bool make_geodesic_sphere(Geometry *geom, const Geometry &base, int m, int n,
+bool make_geodesic_sphere(Geometry &geom, const Geometry &base, int m, int n,
                           Vec3d cent)
 {
   if (m < 0 || n < 0 || (m == 0 && n == 0))
     return false; // invalid pattern
   Geodesic geod(base, m, n, 's', cent);
-  geod.make_geo(*geom);
+  geod.make_geo(geom);
   return true; // valid pattern
 }
 
-void project_onto_sphere(Geometry *geom, Vec3d centre, double radius)
+void project_onto_sphere(Geometry &geom, Vec3d centre, double radius)
 {
-  for (Vec3d &v : geom->raw_verts())
+  for (Vec3d &v : geom.raw_verts())
     v = (v - centre).with_len(radius);
 }
 

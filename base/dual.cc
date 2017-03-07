@@ -50,7 +50,7 @@ using std::string;
 
 namespace anti {
 
-void sym_repeat(Geometry *geom, const Geometry &part, const Transformations &ts,
+void sym_repeat(Geometry &geom, const Geometry &part, const Transformations &ts,
                 char col_part_elems, Coloring *clrngs)
 {
   Coloring tmp_clrngs[3];
@@ -58,7 +58,7 @@ void sym_repeat(Geometry *geom, const Geometry &part, const Transformations &ts,
     clrngs = tmp_clrngs;
 
   Geometry symmetry_unit = part;
-  geom->clear_all();
+  geom.clear_all();
   Transformations::const_iterator si;
   int idx = 0;
   for (si = ts.begin(); si != ts.end(); si++, idx++) {
@@ -75,11 +75,11 @@ void sym_repeat(Geometry *geom, const Geometry &part, const Transformations &ts,
     }
     if (col_part_elems & ELEM_FACES)
       clrngs[2].f_one_col(clrngs[FACES].get_col(idx));
-    geom->append(sym_unit);
+    geom.append(sym_unit);
   }
 }
 
-bool sym_repeat(Geometry *geom, const Geometry &part, const Symmetry &sym,
+bool sym_repeat(Geometry &geom, const Geometry &part, const Symmetry &sym,
                 char col_part_elems, Coloring *clrngs)
 {
   Transformations ts;
@@ -190,7 +190,7 @@ void orient_reverse(Geometry &geom)
     reverse(geom.raw_faces()[i].begin(), geom.raw_faces()[i].end());
 }
 
-void get_pol_recip_verts(Geometry *dual, const Geometry &geom, double recip_rad,
+void get_pol_recip_verts(Geometry &dual, const Geometry &geom, double recip_rad,
                          Vec3d centre, double inf)
 {
   const double min_lim = 1e-15;
@@ -203,10 +203,10 @@ void get_pol_recip_verts(Geometry *dual, const Geometry &geom, double recip_rad,
   map<pair<int, int>, pair<int, int>> edges;
   map<pair<int, int>, pair<int, int>>::iterator mi;
   pair<int, int> edge;
-  dual->clear(VERTS);
+  dual.clear(VERTS);
   for (const auto &face : faces) {
     if (recip_rad == 0) { // all dual vertices = centre
-      dual->add_vert(centre);
+      dual.add_vert(centre);
       continue;
     }
 
@@ -220,7 +220,7 @@ void get_pol_recip_verts(Geometry *dual, const Geometry &geom, double recip_rad,
             double dist = r_sign * recip_rad * recip_rad / face_dist;
             if (fabs(face_dist) < min_lim || fabs(dist) > inf)
               dist = r_sign * inf * (1 - 2 * (face_dist < 0)) / vert.len();
-            dual->add_vert(vert * dist + centre);
+            dual.add_vert(vert * dist + centre);
             v1 = v2 = v3 = face.size(); // to move on to next face
             break;
           }
@@ -235,7 +235,7 @@ public:
   bool operator()(const vector<int> &f) const { return f.size() == 0; }
 };
 
-void get_dual(Geometry *dual, const Geometry &geom, double recip_rad,
+void get_dual(Geometry &dual, const Geometry &geom, double recip_rad,
               Vec3d centre, double inf)
 {
   get_pol_recip_verts(dual, geom, recip_rad, centre, inf);
@@ -289,10 +289,10 @@ void get_dual(Geometry *dual, const Geometry &geom, double recip_rad,
       d_face.erase(vi - 1, d_face.end());
   }
 
-  dual->clear(EDGES);
+  dual.clear(EDGES);
   const vector<vector<int>> &g_edges = geom.edges();
-  dual->colors(FACES) = geom.colors(VERTS);
-  dual->colors(VERTS) = geom.colors(FACES);
+  dual.colors(FACES) = geom.colors(VERTS);
+  dual.colors(VERTS) = geom.colors(FACES);
   vector<int> g_edge(2);
   vector<int> d_edge(2);
   for (mi = edges.begin(); mi != edges.end(); mi++) {
@@ -305,39 +305,39 @@ void get_dual(Geometry *dual, const Geometry &geom, double recip_rad,
     ei = find(g_edges.begin(), g_edges.end(), g_edge);
     if (ei != g_edges.end()) {
       gidx = ei - g_edges.begin();
-      didx = dual->add_edge(d_edge);
-      dual->colors(EDGES).set(didx, geom.colors(EDGES).get(gidx));
+      didx = dual.add_edge(d_edge);
+      dual.colors(EDGES).set(didx, geom.colors(EDGES).get(gidx));
     }
   }
 
   for (unsigned int i = 0; i < d_faces.size(); ++i)
     if (d_faces[i].size() >= 3)
-      dual->add_face(d_faces[i]);
+      dual.add_face(d_faces[i]);
 }
 
-void add_extra_ideal_elems(Geometry *geom, Vec3d centre, double inf)
+void add_extra_ideal_elems(Geometry &geom, Vec3d centre, double inf)
 {
   map<int, int> ideals;
   double inf2 = inf * inf;
-  int sz = geom->verts().size();
+  int sz = geom.verts().size();
   for (int i = 0; i < sz; i++) {
-    Vec3d v = geom->verts(i) - centre;
+    Vec3d v = geom.verts(i) - centre;
     if (v.len2() > inf2) {
       v = v.with_len(inf);
-      geom->verts(i) = centre + v;
-      ideals[i] = geom->verts().size();
-      int idx = geom->add_vert(centre - v);
-      geom->colors(VERTS).set(idx, geom->colors(VERTS).get(i));
+      geom.verts(i) = centre + v;
+      ideals[i] = geom.verts().size();
+      int idx = geom.add_vert(centre - v);
+      geom.colors(VERTS).set(idx, geom.colors(VERTS).get(i));
     }
   }
 
   map<int, int>::const_iterator mi;
-  sz = geom->faces().size();
+  sz = geom.faces().size();
   for (int i = 0; i < sz; i++) {
     vector<vector<int>> alt_faces;
-    alt_faces.push_back(geom->faces(i));
-    for (unsigned int j = 0; j < geom->faces(i).size(); j++) {
-      mi = ideals.find(geom->faces(i, j));
+    alt_faces.push_back(geom.faces(i));
+    for (unsigned int j = 0; j < geom.faces(i).size(); j++) {
+      mi = ideals.find(geom.faces(i, j));
       if (mi != ideals.end()) {
         unsigned int af_sz = alt_faces.size();
         for (unsigned int k = 0; k < af_sz; k++) {
@@ -347,16 +347,16 @@ void add_extra_ideal_elems(Geometry *geom, Vec3d centre, double inf)
       }
     }
     for (unsigned int k = 1; k < alt_faces.size(); k++)
-      geom->raw_faces()[i].insert(geom->raw_faces()[i].end(),
-                                  alt_faces[k].begin(), alt_faces[k].end());
+      geom.raw_faces()[i].insert(geom.raw_faces()[i].end(),
+                                 alt_faces[k].begin(), alt_faces[k].end());
   }
 
-  sz = geom->edges().size();
+  sz = geom.edges().size();
   for (int i = 0; i < sz; i++) {
     vector<vector<int>> alt_edges;
-    alt_edges.push_back(geom->edges(i));
-    for (unsigned int j = 0; j < geom->edges(i).size(); j++) {
-      mi = ideals.find(geom->edges(i, j));
+    alt_edges.push_back(geom.edges(i));
+    for (unsigned int j = 0; j < geom.edges(i).size(); j++) {
+      mi = ideals.find(geom.edges(i, j));
       if (mi != ideals.end()) {
         unsigned int ae_sz = alt_edges.size();
         for (unsigned int k = 0; k < ae_sz; k++) {
@@ -366,19 +366,19 @@ void add_extra_ideal_elems(Geometry *geom, Vec3d centre, double inf)
       }
     }
     for (unsigned int k = 1; k < alt_edges.size(); k++) {
-      int idx = geom->add_edge(alt_edges[k]);
-      geom->colors(EDGES).set(idx, geom->colors(EDGES).get(i));
+      int idx = geom.add_edge(alt_edges[k]);
+      geom.colors(EDGES).set(idx, geom.colors(EDGES).get(i));
     }
   }
 }
 
-void transform_and_repeat(Geometry *geom, string sym_to, string sym_from,
+void transform_and_repeat(Geometry &geom, string sym_to, string sym_from,
                           Trans3d pos)
 {
   Transformations ts;
   ts.min_set(Symmetry(sym_to).get_trans(), Symmetry(sym_from).get_trans(), pos);
-  geom->transform(pos);
-  sym_repeat(geom, *geom, ts, ELEM_VERTS | ELEM_EDGES | ELEM_FACES);
+  geom.transform(pos);
+  sym_repeat(geom, geom, ts, ELEM_VERTS | ELEM_EDGES | ELEM_FACES);
 }
 
 } // namespace anti

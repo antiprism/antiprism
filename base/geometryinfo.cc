@@ -434,7 +434,7 @@ const vector<double> &GeometryInfo::get_f_max_nonplanars()
 const Geometry &GeometryInfo::get_dual()
 {
   if (!dual.faces().size())
-    anti::get_dual(&dual, geom);
+    anti::get_dual(dual, geom);
   return dual;
 }
 
@@ -843,7 +843,7 @@ void GeometryInfo::find_vert_figs()
     }
     if (figure_good) {
       unsigned int num_tris = g_fig.faces().size();
-      close_poly_basic(&g_fig);
+      close_poly_basic(g_fig);
       for (unsigned int f_idx = num_tris; f_idx < g_fig.faces().size(); f_idx++)
         vert_figs[i].push_back(g_fig.faces(f_idx));
       map<vector<int>, int>::const_iterator ei;
@@ -1108,7 +1108,7 @@ int GeometryInfo::genus()
     if (num_parts() == 1 && is_known_connectivity()) {
       int euler_char = num_verts() - num_edges() + num_faces();
       Geometry geom2 = geom;
-      if (close_poly_basic(&geom2)) {
+      if (close_poly_basic(geom2)) {
         int num_boundaries = geom2.faces().size() - num_faces();
         genus_val = 2 - num_boundaries - euler_char;
         if (is_orientable())

@@ -210,7 +210,7 @@ void kcycle(Geometry geom, Geometry &cycle, int num_prs, vector<int> idxs,
     geom.verts(i) = trans_c * geom.verts(i);
 
   // make the cycle
-  sym_repeat(&cycle, geom, Symmetry(Symmetry::Cv, num_prs));
+  sym_repeat(cycle, geom, Symmetry(Symmetry::Cv, num_prs));
 }
 
 int main(int argc, char *argv[])

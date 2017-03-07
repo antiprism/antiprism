@@ -376,7 +376,7 @@ bool canonicalize_bd(Geometry &base, const int num_iters,
 
   Geometry dual;
   // the dual's initial vertex locations are immediately overwritten
-  get_dual(&dual, base, 1);
+  get_dual(dual, base, 1);
   dual.clear_cols();
 
   double max_diff2 = 0;

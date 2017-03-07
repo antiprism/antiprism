@@ -2001,7 +2001,7 @@ void blend_overlapping_faces(Geometry &geom,
     connectors.clear();
 
     // duplicate vertices and edges can cause problems
-    merge_coincident_elements(&sgeom, "ve", 0, opts.epsilon);
+    merge_coincident_elements(sgeom, "ve", 0, opts.epsilon);
 
     // sort merge can destill more duplicate indexes
     delete_duplicate_index_edges(sgeom);
@@ -2705,7 +2705,7 @@ int main(int argc, char *argv[])
   Geometry egeom = free_edges_into_geom(geom);
   if (egeom.verts().size()) {
     string elems = pre_edge_blend(egeom, 'b', opts);
-    merge_coincident_elements(&egeom, elems, 1, opts.epsilon);
+    merge_coincident_elements(egeom, elems, 1, opts.epsilon);
   }
 
   if (opts.cmy_mode)
@@ -2714,7 +2714,7 @@ int main(int argc, char *argv[])
   // blend edges using blending parameters without doing merging
   if (opts.edge_blending && !opts.planar_merge_type) {
     string elems = pre_edge_blend(geom, opts.edge_blending, opts);
-    merge_coincident_elements(&geom, elems, 1, opts.epsilon);
+    merge_coincident_elements(geom, elems, 1, opts.epsilon);
   }
 
   if (opts.face_color_method)
@@ -2738,7 +2738,7 @@ int main(int argc, char *argv[])
 
   // delay sort_merge so multiple edgelets still exist for post_edge_blend
   if (opts.planar_merge_type && elems != "")
-    merge_coincident_elements(&geom, elems, 1, opts.epsilon);
+    merge_coincident_elements(geom, elems, 1, opts.epsilon);
 
   // resolve indexes of winding numbers to positive and negative color maps
   if (opts.color_by_winding_number) {
