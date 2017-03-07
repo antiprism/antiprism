@@ -267,9 +267,7 @@ void parse_color_string(ProgramOpts *opts, char *optarg, const char c,
             msg_str("transparency is '%d' and must be between 0 and 255",
                     opacity),
             c);
-      if (col.is_visible_value())
-        col = Color(col[0], col[1], col[2], opacity);
-      else
+      if (!col.set_alpha(opacity))
         opts->warning("transparency has no effect on map indexes or invisible",
                       c);
       next_parms_idx++;

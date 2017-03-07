@@ -89,7 +89,7 @@ public:
         sym_id_no(1), sym_mirror('\0'), vert_z(INT_MAX), rotation(0.0),
         rotation_as_increment(0.0), add_pi(false), rotation_axis(-1),
         angle_between_axes(DBL_MAX), scale_axis(-1), convex_hull(0),
-        offset(0.0), remove_free_faces(false), verbose(false), mode('\0'),
+        offset(0), remove_free_faces(false), verbose(false), mode('\0'),
         face_coloring_method('a'), face_opacity(-1), color_digons(false),
         vert_col(Color(255, 215, 0)),    // gold
         edge_col(Color(211, 211, 211)),  // lightgrey
@@ -1743,7 +1743,7 @@ Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
     }
   }
 
-  bool trans_warn = false;
+  bool trans_success = true;
   for (int i = 0; i < 2; i++) {
     // if not polygon, repeat for symmetry type
     if (opts.convex_hull > 1)
@@ -1752,13 +1752,11 @@ Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
     if (opts.face_coloring_method == 'a') {
       Coloring clrng(&pgeom[i]);
       Color col = opts.map.get_col(opts.col_axis_idx[i]);
+      // face color can only be made transparent if not index and not
+      // invisible
       if (opts.face_opacity > -1) {
-        // face color can only be made transparent if not index and not
-        // invisible
-        if (col.is_visible_value())
-          col = Color(col[0], col[1], col[2], opts.face_opacity);
-        else
-          trans_warn = true;
+        if (!col.set_alpha(opts.face_opacity))
+          trans_success = false;
       }
       clrng.f_one_col(col);
     }
@@ -1795,13 +1793,11 @@ Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
         if (!col.is_set()) {
           // convex hull color is map position 3
           col = opts.map.get_col(3);
+          // face color can only be made transparent if not index and not
+          // invisible
           if (opts.face_opacity > -1) {
-            // face color can only be made transparent if not index and not
-            // invisible
-            if (col.is_visible_value())
-              col = Color(col[0], col[1], col[2], opts.face_opacity);
-            else
-              trans_warn = true;
+            if (!col.set_alpha(opts.face_opacity))
+              trans_success = false;
           }
           geom.colors(FACES).set(i, col);
         }
@@ -1816,10 +1812,8 @@ Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
       // start coloring with digons
       col = opts.map.get_col(fsz - 2);
       if (opts.face_opacity > -1) {
-        if (col.is_visible_value())
-          col = Color(col[0], col[1], col[2], opts.face_opacity);
-        else
-          trans_warn = true;
+        if (!col.set_alpha(opts.face_opacity))
+          trans_success = false;
       }
       geom.colors(FACES).set(i, col);
     }
@@ -1833,7 +1827,7 @@ Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
     }
   }
 
-  if (trans_warn)
+  if (!trans_success)
     opts.warning("some faces could not be made transparent", 'T');
 
   if (opts.remove_free_faces) {

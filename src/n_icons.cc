@@ -175,7 +175,7 @@ public:
   ncon_opts()
       : ProgramOpts("n_icons"), ncon_order(4), d(1), build_method(0),
         hide_indent(true), inner_radius(FLT_MAX), outer_radius(FLT_MAX),
-        angle(0.0), point_cut(true), hybrid(false), add_poles(false), twist(1),
+        angle(0), point_cut(true), hybrid(false), add_poles(false), twist(1),
         info(false), add_symmetry_polygon(false), face_coloring_method('S'),
         face_opacity(-1), face_pattern("1"), edge_coloring_method('\0'),
         edge_opacity(-1), edge_pattern("1"), edge_set_no_color(false),
@@ -2157,7 +2157,6 @@ void build_prime_meridian(Geometry &geom, vector<int> &prime_meridian,
   // swap radii back for future reference
   if (radii_swapped)
     swap(outer_radius, inner_radius);
-  geom.write("n_icons.off");
 }
 
 // methods 1 and 2: calculate polygon numbers
@@ -3334,12 +3333,13 @@ void unset_marked_edges(Geometry &geom)
 }
 
 // if map index or invisible, alpha cannot be changed
-Color set_alpha(const Color &c, const int a)
+Color set_opacity(Color &c, const int a)
 {
-  if (c.is_visible_value())
-    return Color(c[0], c[1], c[2], a);
-  else
-    return c;
+  // in n_icons, if fail just return the input
+  Color c_bak = c;
+  if (!c.set_alpha(a))
+    c = c_bak;
+  return c;
 }
 
 // safe transparency setting. don't allow alpha set if
@@ -3351,14 +3351,14 @@ void set_vert_color(Geometry &geom, const int i, Color c,
                     const int opacity = -1)
 {
   if (opacity > -1)
-    c = set_alpha(c, opacity);
+    c = set_opacity(c, opacity);
   geom.colors(VERTS).set(i, c);
 }
 
 void set_edge_col(Geometry &geom, const int i, Color c, const int opacity = -1)
 {
   if (opacity > -1)
-    c = set_alpha(c, opacity);
+    c = set_opacity(c, opacity);
   geom.colors(EDGES).set(i, c);
 }
 
@@ -3366,7 +3366,7 @@ void set_face_color(Geometry &geom, const int i, Color c,
                     const int opacity = -1)
 {
   if (opacity > -1)
-    c = set_alpha(c, opacity);
+    c = set_opacity(c, opacity);
   geom.colors(FACES).set(i, c);
 }
 
@@ -4377,7 +4377,7 @@ int ncon_face_coloring_by_compound(Geometry &geom,
         if (opts.face_opacity > -1)
            opq = opts.face_pattern[polygon_no%opts.face_pattern.size()] == '1' ?
      opts.face_opacity : 255;
-        Color c = set_alpha(opts.face_map.get_col(polygon_no),opq);
+        Color c = set_opacity(opts.face_map.get_col(polygon_no),opq);
         geom.colors(FACES).set(face_no,c);
      }
      return ret;
@@ -5884,7 +5884,7 @@ void color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
           int opq = opts.face_pattern[i % opts.face_pattern.size()] == '1'
                         ? opts.face_opacity
                         : 255;
-          c = set_alpha(c, opq);
+          c = set_opacity(c, opq);
         }
         heights[ax][ht] = c;
       }
@@ -5942,7 +5942,7 @@ void color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
           int opq = opts.edge_pattern[i % opts.edge_pattern.size()] == '1'
                         ? opts.edge_opacity
                         : 255;
-          c = set_alpha(c, opq);
+          c = set_opacity(c, opq);
         }
         heights[ax][ht] = c;
       }
