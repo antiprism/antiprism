@@ -84,8 +84,8 @@ IsoDeltaItem iso_delta_item_list[] = {
    {"O4(1)",   "Oh", "[1/3,1/3,2/3]", "COMPOUND of 2 Augmented Tetrahedra T2(1) (UC54_d)"},
    {"O4(2)",   "Oh", "[2/3,1/3,1/3]", "COMPOUND of 2 Tetrahedra (Stella Octangula UC04)"},
    // next 2 redundent
-   {"O5(1)",   "Oh", "[1/3,2/3,1/3]", "Augmented Cube (=T1(1)) (Repeat)"},
-   {"O5(2)",   "Oh", "[2/3,2/3,2/3]", "Excavated Cube (=T1(2)) (Repeat)"},
+   {"O5(1)",   "Oh", "[1/3,2/3,1/3]", "Augmented Cube (=T1(1)) (Repeat of 1)"},
+   {"O5(2)",   "Oh", "[2/3,2/3,2/3]", "Excavated Cube (=T1(2)) (Repeat of 2)"},
    {"O5(3)",   "Oh", "[1/3,2/3,1/3]", "COMPOUND of 2 T1(3)"},
    {"O6(1)",   "Oh", "[2/3,1/4,1/4]", "Augmented Octahedron"},
    {"O6(2)",   "Oh", "[2/3,3/4,3/4]", "Excavated Octahedron"},
@@ -112,11 +112,11 @@ IsoDeltaItem iso_delta_item_list[] = {
    {"I9(2)",   "Ih", "[1/3,1/3,2/5]", "Excavated Dodecahedron"},
    {"I9(3)",   "Ih", "[1/3,1/3,2/5]", "Relaxed Excavated Dual of Sidtid (UD30)"},
    // redundant 
-   {"I9(4)",   "Ih", "[1/3,1/3,2/5]", "Relaxed Excavated Dual of Sidtid (UD30) (Repeat)"},
+   {"I9(4)",   "Ih", "[1/3,1/3,2/5]", "Relaxed Excavated Dual of Sidtid (UD30) (Repeat of 38)"},
    {"I10(1)",  "Ih", "[4/5,4/5,4/5]", "Great Icosahedron or Gike (U53)"},
    {"I10(2)",  "Ih", "[1/5,1/5,4/5]", "Augmented Sissid (U34)"},
    // redundant 
-   {"I10(3)",  "Ih", "[1/5,1/5,4/5]", "Augmented Sissid (U34) (Repeat)"},
+   {"I10(3)",  "Ih", "[1/5,1/5,4/5]", "Augmented Sissid (U34) (Repeat 41)"},
    {"I11(1)",  "Ih", "[2/5,2/5,2/5]", "Icosahedron"},
    {"I11(2)",  "Ih", "[2/5,3/5,3/5]", "Excavated Gad (U35)"},
 };
@@ -394,7 +394,7 @@ public:
   int d;
   int k;
   int s;
-  char Coloring_method;
+  char coloring_method;
   int face_opacity;
 
   ColorMapMulti map;
@@ -403,8 +403,8 @@ public:
   id_opts()
       : ProgramOpts("iso_delta"), list_polys(false), make_dipyramid(false),
         triangle_only(false), verbose(false), allow_angles(false),
-        angle(INFINITY), n(0), d(1), k(0), s(1), Coloring_method('c'),
-        face_opacity(255)
+        angle(INFINITY), n(0), d(1), k(0), s(1), coloring_method('c'),
+        face_opacity(-1)
   {
   }
 
@@ -430,8 +430,8 @@ void id_opts::usage()
 "Options\n"
 "%s"
 "  -l        display the list of Isohedral Deltahedra 1 thru 42\n"
-"  -t        generate triangle only (Isohedral Deltahedra 1 to 42 and option -d)\n"
-"  -v        verbose output (Isohedral Deltahedra 1 thru 42 and option -d)\n"
+"  -t        generate triangle only (Isohedral Deltahedra 1 to 44 and option -d)\n"
+"  -v        verbose output (Isohedral Deltahedra 1 thru 44 and option -d)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 // undocumented switch
 //"  -w        allow angle on b,e,f,m,n,o,p,q creates bi-hedral forms\n"
@@ -464,7 +464,7 @@ void id_opts::usage()
 "                          relaxed duals of Uniform Compounds UC34 & UC35\n"
 "                     5/2: s=3 icosahedral, s=4 with horizontal reflection\n"
 "                          relaxed duals of Uniform Compounds UC36 & UC37\n"
-"\n         additional cases:\n"
+"\n          additional cases:\n"
 "              g - 2 tetrahedra using -a angle (default: 45.0)\n"
 "                     At 45.0 degrees is Uniform Compound UC04\n"
 "                     Uniform Compound Set UC23 when n/d is 2/1 and k=1\n"
@@ -493,9 +493,9 @@ void id_opts::usage()
 "              q - 5 Excavated Octahedra O6(2)\n"
 "                     relaxed dual of Uniform Compounds UC58\n"
 "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
-"  -f <opt> compound coloring\n"
-"              key word: none - sets no color (default: c)\n"
-"              c - unique coloring for each constituent\n"
+"  -f <mthd> mthd is face coloring method using color in map (default: c)\n"
+"              key word: none - sets no color\n"
+"              c - unique coloring for each compound constituent\n"
 "              s - symmetric coloring (should always be one color)\n"
 "  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
 "  -m <maps> color maps for all elements to be tried in turn (default: compound)\n"
@@ -585,11 +585,11 @@ void id_opts::process_command_line(int argc, char **argv)
 
     case 'f':
       if (!strcasecmp(optarg, "none"))
-        Coloring_method = '\0';
+        coloring_method = '\0';
       else if (strspn(optarg, "cs") != strlen(optarg) || strlen(optarg) > 1)
         error(msg_str("invalid Coloring method '%s'", optarg), c);
       else
-        Coloring_method = *optarg;
+        coloring_method = *optarg;
       break;
 
     case 'T':
@@ -615,15 +615,18 @@ void id_opts::process_command_line(int argc, char **argv)
   if (case_type == "c" || case_type == "k" || case_type == "l" ||
       make_dipyramid) {
     if (n <= 0)
-      error("n must be greater than 0");
+      error("n must be greater than 0", 'n');
 
     if (d >= n)
       error("d must be less than number of sides", "n/d (d part)");
-    if (((double)n / d <= 2.0) || ((double)n / d >= 6.0))
-      error("2 < n/d < 6 is enforced");
+    double decimal = (double)n / d;
+    // report fractional value
+    fprintf(stderr, "n/d: %d/%d = %.17lf\n", n, d, decimal);
+    if ((decimal <= 2.0) || (decimal >= 6.0))
+      error("2 < n/d < 6 is enforced", 'n');
   }
   else if (n != 0)
-    warning("n/d is ignored");
+    warning("n/d is ignored", 'n');
 
   if ((case_type == "a" || case_type == "l" || make_dipyramid) ||
       (!allow_angles &&
@@ -631,7 +634,7 @@ void id_opts::process_command_line(int argc, char **argv)
         case_type == "m" || case_type == "n" || case_type == "o" ||
         case_type == "p" || case_type == "q"))) {
     if (angle != INFINITY) {
-      warning("-a angle is ignored");
+      warning("-a angle is ignored", 'a');
       angle = INFINITY;
     }
   }
@@ -640,32 +643,23 @@ void id_opts::process_command_line(int argc, char **argv)
   if (case_type == "a" || case_type == "h" || case_type == "k" ||
       case_type == "l") {
     if (k <= 0)
-      error("k must be greater then 0");
+      error("k must be greater then 0", 'c');
   }
   else if (k != 0)
-    warning("k is ignored");
+    warning("k is ignored", 'c');
 
   // check s
   if (case_type == "b" || case_type == "e" || case_type == "m" ||
       case_type == "o") {
     if (s != 1 && s != 2)
-      error("s must 1 or 2");
+      error("s must 1 or 2", 's');
   }
   else if (case_type == "f") {
     if (s < 1 || s > 4)
-      error("s must 1, 2, 3 or 4");
+      error("s must 1, 2, 3 or 4", 's');
   }
   else if (s_is_set)
-    warning("s is ignored");
-
-  // if one from the table or -d then force color by constituent
-  if (!case_type.length() &&
-      (Coloring_method == 'T' || Coloring_method == 't')) {
-    if (Coloring_method == 'T')
-      Coloring_method = 'C';
-    else if (Coloring_method == 't')
-      Coloring_method = 'c';
-  }
+    warning("s is ignored", 's');
 
   if (argc == optind && !list_polys && !case_type.length() && !make_dipyramid)
     error("no polyhedron specified", "polyhedron");
@@ -677,7 +671,7 @@ void id_opts::process_command_line(int argc, char **argv)
   }
 
   if (poly.length() != 0 && (case_type.length() || make_dipyramid))
-    warning("polyhedron specifier ignored if using -c or -d");
+    warning("polyhedron specifier ignored if using -c or -d", "polyhedron");
 
   if (!map_file.size())
     map_file = "compound";
@@ -1313,11 +1307,11 @@ void case_q_5_excavated_octahedra(Geometry &geom, double angle)
   transform_and_repeat(geom, "I", "Oh", Trans3d::rotate(0, angle, 0));
 }
 
-void compound_Coloring(Geometry &geom, const char Coloring_method,
+void compound_coloring(Geometry &geom, const char coloring_method,
                        const ColorMapMulti &map, const int face_opacity)
 {
-  // color by sub-symmetry  as map indexes happened by default in sym_repeat()
-  if (!Coloring_method) {
+  // color by sub-symmetry as map indexes happened by default in sym_repeat()
+  if (!coloring_method) {
     // no color, strip colors
     geom.colors(FACES).clear();
     geom.clear(EDGES);
@@ -1328,31 +1322,40 @@ void compound_Coloring(Geometry &geom, const char Coloring_method,
     clrng.add_cmap(map.clone());
     clrng.set_geom(&geom);
 
-    if (Coloring_method == 'c') {
+    if (coloring_method == 'c') {
       // color by constituents
       clrng.f_parts(true);
     }
-    else if (Coloring_method == 's') {
+    else if (coloring_method == 's') {
       Symmetry sym;
       vector<vector<set<int>>> sym_equivs;
       sym.init(geom, &sym_equivs);
       clrng.f_sets(sym_equivs[2], true);
     }
 
-    // blend edges
+    // blend edges from faces
     geom.add_missing_impl_edges();
     clrng.e_face_color();
     clrng.v_face_color();
 
     // transparency
-    if (face_opacity != 255) {
-      for (unsigned int i = 0; i < geom.faces().size(); i++) {
-        Color col = geom.colors(FACES).get(i);
-        if (col.is_value())
-          col = Color(col[0], col[1], col[2], face_opacity);
-        geom.colors(FACES).set(i, col);
+    if (face_opacity > -1) {
+      ColorValuesToRangeHsva valmap(msg_str("A%g", (double)face_opacity / 255));
+      valmap.apply(geom, FACES);
+
+      for (const auto &kp : geom.colors(FACES).get_properties()) {
+        if (kp.second.is_index()) {
+          fprintf(stderr, "warning: map indexes cannot be made transparent\n");
+          break;
+        }
       }
     }
+  }
+
+  // check if some faces are not set for transparency warning
+  if (face_opacity > -1) {
+    if (geom.colors(FACES).get_properties().size() < geom.faces().size())
+      fprintf(stderr, "warning: unset faces cannot be made transparent\n");
   }
 }
 
@@ -1471,7 +1474,7 @@ int main(int argc, char *argv[])
   // orient for positive volume
   geom.orient();
 
-  compound_Coloring(geom, opts.Coloring_method, opts.map, opts.face_opacity);
+  compound_coloring(geom, opts.coloring_method, opts.map, opts.face_opacity);
 
   opts.write_or_error(geom, opts.ofile);
 

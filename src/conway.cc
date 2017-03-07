@@ -312,7 +312,7 @@ public:
   bool unitize;
   bool verbosity;
   bool use_truncate_algorithm;
-  char face_Coloring_method;
+  char face_coloring_method;
   int face_opacity;
   string face_pattern;
 
@@ -330,7 +330,7 @@ public:
         reverse_defeat(false), operand('\0'), poly_size(0),
         planarization_method('p'), num_iters_planar(1000), rep_count(-1),
         unitize(false), verbosity(false), use_truncate_algorithm(false),
-        face_Coloring_method('n'), face_opacity(255), face_pattern("1"),
+        face_coloring_method('n'), face_opacity(-1), face_pattern("1"),
         epsilon(0), vert_col(Color(255, 215, 0)), // gold
         edge_col(Color(211, 211, 211))            // lightgrey
   {
@@ -488,7 +488,7 @@ void cn_opts::usage()
 "               n - color by number of sides\n"
 "               s - symmetric coloring\n"
 "  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
-"  -O <strg> face transparency pattern string. valid values\n"
+"  -O <strg> face transparency pattern string (-f n only). valid values\n"
 "               0 - map color alpha value, 1 -T alpha applied (default: '1')\n"
 "  -m <maps> color maps for faces to be tried in turn (default: m1)\n"
 "               keyword m1: red,darkorange1,yellow,darkgreen,cyan,blue,magenta,\n"
@@ -572,11 +572,11 @@ void cn_opts::process_command_line(int argc, char **argv)
 
     case 'f':
       if (!strcasecmp(optarg, "none"))
-        face_Coloring_method = '\0';
+        face_coloring_method = '\0';
       else if (strspn(optarg, "ns") != strlen(optarg) || strlen(optarg) > 1)
         error(msg_str("invalid face Coloring method '%s'", optarg), c);
       else {
-        face_Coloring_method = *optarg;
+        face_coloring_method = *optarg;
       }
       break;
 
@@ -680,16 +680,21 @@ void cn_opts::process_command_line(int argc, char **argv)
       col_map->set_col(9, Color(0.0, 0.0, 0.0));     // 12-sided faces black
     }
     else if (map_file == "m2") {
-      col_map->set_col(0, Color(0.9, 0.3, 0.3));   // 3-sided faces red
-      col_map->set_col(1, Color(0.4, 0.4, 1.0));   // 4-sided faces blue
-      col_map->set_col(2, Color(0.4, 0.4, 1.0));   // 5-sided faces green
-      col_map->set_col(3, Color(0.9, 0.9, 0.2));   // 6-sided faces yellow
-      col_map->set_col(4, Color(0.5, 0.25, 0.25)); // 7-sided faces brown
-      col_map->set_col(5, Color(0.8, 0.2, 0.8));   // 8-sided faces magenta
-      col_map->set_col(6, Color(0.5, 0.2, 0.8));   // 9-sided faces purple
-      col_map->set_col(7, Color(0.1, 0.9, 0.9));   // 10-sided faces grue
-      col_map->set_col(8, Color(0.5, 0.5, 0.5));   // 11-sided faces gray
-      col_map->set_col(9, Color(1.0, 0.6, 0.1));   // 12-sided faces orange
+      auto *col_map0 = new ColorMapMap;
+      col_map0->set_col(0, Color(0.9, 0.3, 0.3));   // 3-sided faces red
+      col_map0->set_col(1, Color(0.4, 0.4, 1.0));   // 4-sided faces blue
+      col_map0->set_col(2, Color(0.2, 0.9, 0.3));   // 5-sided faces green
+      col_map0->set_col(3, Color(0.9, 0.9, 0.2));   // 6-sided faces yellow
+      col_map0->set_col(4, Color(0.5, 0.25, 0.25)); // 7-sided faces brown
+      col_map0->set_col(5, Color(0.8, 0.2, 0.8));   // 8-sided faces magenta
+      col_map0->set_col(6, Color(0.5, 0.2, 0.8));   // 9-sided faces purple
+      col_map0->set_col(7, Color(0.1, 0.9, 0.9));   // 10-sided faces grue
+      col_map0->set_col(8, Color(0.5, 0.5, 0.5));   // 11-sided faces gray
+      col_map0->set_col(9, Color(1.0, 0.6, 0.1));   // 12-sided faces orange
+      map.add_cmap(col_map0);
+
+      // George Hart had all higher faces at grey
+      col_map->set_col(0, Color(0.5, 0.5, 0.5)); // 13-sided faces and higher
     }
     col_map->set_wrap();
     map.add_cmap(col_map);
@@ -1451,25 +1456,30 @@ void do_operations(Geometry &geom, const vector<ops *> &operations,
   }
 }
 
-void cn_face_Coloring(Geometry &geom, const char face_Coloring_method,
+void cn_face_coloring(Geometry &geom, const char face_coloring_method,
                       const ColorMapMulti &map, const int face_opacity,
                       const string &face_pattern)
 {
-  if (face_Coloring_method == 'n') {
+  if (face_coloring_method == 'n') {
+    bool trans_success = true;
     const vector<vector<int>> &faces = geom.faces();
     for (unsigned int i = 0; i < faces.size(); i++) {
       int fsz = faces[i].size();
-      Color col = map.get_col(fsz);
-      if (col.is_value()) {
+      Color col = map.get_col(fsz - 3);
+      if (face_opacity > -1) {
         int opq = (face_pattern[fsz % face_pattern.size()] == '1')
                       ? face_opacity
                       : col[3];
-        col = Color(col[0], col[1], col[2], opq);
+        // map colors always are set but can be map index or invisible
+        if (!col.set_alpha(opq))
+          trans_success = false;
       }
       geom.colors(FACES).set(i, col);
     }
+    if (!trans_success)
+      fprintf(stderr, "warning: some faces could not be made transparent\n");
   }
-  else if (face_Coloring_method == 's') {
+  else if (face_coloring_method == 's') {
     Symmetry sym;
     vector<vector<set<int>>> sym_equivs;
     sym.init(geom, &sym_equivs);
@@ -1479,15 +1489,23 @@ void cn_face_Coloring(Geometry &geom, const char face_Coloring_method,
     clrng.set_geom(&geom);
     clrng.f_sets(sym_equivs[2], true);
 
-    // transparency
-    if (face_opacity != 255) {
-      for (unsigned int i = 0; i < geom.faces().size(); i++) {
-        Color col = geom.colors(FACES).get(i);
-        if (col.is_value())
-          col = Color(col[0], col[1], col[2], face_opacity);
-        geom.colors(FACES).set(i, col);
+    if (face_opacity > -1) {
+      ColorValuesToRangeHsva valmap(msg_str("A%g", (double)face_opacity / 255));
+      valmap.apply(geom, FACES);
+
+      for (const auto &kp : geom.colors(FACES).get_properties()) {
+        if (kp.second.is_index()) {
+          fprintf(stderr, "warning: map indexes cannot be made transparent\n");
+          break;
+        }
       }
     }
+  }
+
+  // check if some faces are not set for transparency warning
+  if (face_opacity > -1) {
+    if (geom.colors(FACES).get_properties().size() < geom.faces().size())
+      fprintf(stderr, "warning: unset faces cannot be made transparent\n");
   }
 }
 
@@ -1517,9 +1535,8 @@ int main(int argc, char *argv[])
   if (opts.unitize)
     unitize_edges(geom);
 
-  if (opts.face_Coloring_method)
-    cn_face_Coloring(geom, opts.face_Coloring_method, opts.map,
-                     opts.face_opacity, opts.face_pattern);
+  cn_face_coloring(geom, opts.face_coloring_method, opts.map, opts.face_opacity,
+                   opts.face_pattern);
 
   // color vertices and edges
   Coloring(&geom).vef_one_col(opts.vert_col, opts.edge_col, Color());

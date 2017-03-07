@@ -130,8 +130,8 @@ void waterman_opts::usage()
 "  -o <file> write output to file (default: write to standard output)\n"
 "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
 "  -V <col>  vertex color\n"
-"  -E <col>  edge color (if convex hull)\n"
-"  -F <col>  face color (if convex hull)\n"
+"  -E <col>  edge color (for convex hull, default: none)\n"
+"  -F <col>  face color (for convex hull, default: none)\n"
 "               lower case outputs map indexes. upper case outputs color values\n"
 "               key word: s,S color by symmetry using face normals\n"
 "               key word: c,C color by symmetry using face normals (chiral)\n"
@@ -290,11 +290,14 @@ void waterman_opts::process_command_line(int argc, char **argv)
   if (!center.is_set())
     center = Vec3d(0, 0, 0);
 
-  if (face_opacity != -1) {
+  if (face_opacity > -1) {
+    // if no face color is set but there is transparency set, use white
     if (!face_col.is_set())
-      face_col = Color(255, 255, 255, face_opacity);
-    else if (face_col.is_value())
-      face_col = Color(face_col[0], face_col[1], face_col[2], face_opacity);
+      face_col = Color(255, 255, 255);
+
+    // face color can only be made transparent if not index and not invisible
+    if (!face_col.set_alpha(face_opacity))
+      warning("transparency has no effect on map indexes or invisible", "T");
 
     if (color_method == 's' || color_method == 'c')
       warning("when writing indexes transparency setting ignored", "T");
@@ -763,16 +766,18 @@ int main(int argc, char *argv[])
         color_by_symmetry_normals(geom, opts.color_method, opts.face_opacity,
                                   opts.epsilon);
       else
-        Coloring(&geom).vef_one_col(opts.vert_col, opts.edge_col,
-                                    opts.face_col);
+        Coloring(&geom).f_one_col(opts.face_col);
+
+      if (opts.edge_col.is_set()) {
+        geom.add_missing_impl_edges();
+        Coloring(&geom).e_one_col(opts.edge_col);
+      }
     }
   }
 
   // color vertices no matter what
-  if (opts.vert_col.is_set()) {
-    Coloring vc(&geom);
-    vc.v_one_col(opts.vert_col);
-  }
+  if (opts.vert_col.is_set())
+    Coloring(&geom).v_one_col(opts.vert_col);
 
   if (opts.verbose)
     fprintf(stderr, "writing output\n");

@@ -102,7 +102,7 @@ public:
         zero_density_force_blend(false), brightness_adj(-2.0),
         color_system_mode(3), cmy_mode(false), ryb_mode(false), sat_power(0.0),
         value_power(0.0), sat_threshold(1.0), value_advance(0.0), alpha_mode(3),
-        face_opacity(255), epsilon(0)
+        face_opacity(-1), epsilon(0)
   {
   }
 
@@ -2641,11 +2641,20 @@ void do_cmy_mode(Geometry &geom, const bool ryb_mode, const char edge_blending)
 
 void apply_transparency(Geometry &geom, int face_opacity)
 {
-  for (unsigned int i = 0; i < geom.faces().size(); i++) {
-    Color col = geom.colors(FACES).get(i);
-    if (col.is_value() && !col.is_invisible())
-      col = Color(col[0], col[1], col[2], face_opacity);
-    geom.colors(FACES).set(i, col);
+  if (face_opacity > -1) {
+    ColorValuesToRangeHsva valmap(msg_str("A%g", (double)face_opacity / 255));
+    valmap.apply(geom, FACES);
+
+    for (const auto &kp : geom.colors(FACES).get_properties()) {
+      if (kp.second.is_index()) {
+        fprintf(stderr, "warning: map indexes cannot be made transparent\n");
+        break;
+      }
+    }
+
+    // check if some faces are not set
+    if (geom.colors(FACES).get_properties().size() < geom.faces().size())
+      fprintf(stderr, "warning: unset faces cannot be made transparent\n");
   }
 }
 
@@ -2769,8 +2778,7 @@ int main(int argc, char *argv[])
     make_hole_connectors_invisible(geom);
 
   // transparency
-  if (opts.face_opacity != 255)
-    apply_transparency(geom, opts.face_opacity);
+  apply_transparency(geom, opts.face_opacity);
 
   opts.write_or_error(geom, opts.ofile);
 

@@ -67,6 +67,7 @@ public:
   double radius_range_percent;
   string output_parts;
   int face_opacity;
+  double offset;
 
   double epsilon;
 
@@ -83,7 +84,7 @@ public:
         canonical_method('m'), num_iters_canonical(-1), mm_edge_factor(50),
         mm_plane_factor(20), mm_alternate_loop(false), rep_count(1000),
         radius_range_percent(80), output_parts("b"), face_opacity(-1),
-        epsilon(0), ipoints_col(Color(255, 255, 0)),
+        offset(0), epsilon(0), ipoints_col(Color(255, 255, 0)),
         base_nearpts_col(Color(255, 0, 0)),
         dual_nearpts_col(Color(0.0, 0.39216, 0.0)), base_edge_col(Color()),
         dual_edge_col(Color()), sphere_col(Color(255, 255, 255))
@@ -124,18 +125,20 @@ void cn_opts::usage()
 "               q - face centroids (magnitude)\n"
 "               f - face centroids\n"
 "               m - mathematica planarize\n"
-"               a - antiprism planarize (BETA, i set to 100000)\n"
+"               a - antiprism planarize (i set to 10000)\n"
 "  -i <itrs> maximum number of planarize iterations (default: no limit)\n"
 "  -c <opt>  canonicalization\n"
 "               m - mathematica version (default)\n"
 "               b - base/dual version (reciprocate on face normals)\n"
-"               a - antiprism version (BETA, n set to 100000)\n"
+//"               a - antiprism version (BETA, n set to 10000)\n"
 "               x - none (default, if -p is set)\n"
 "  -n <itrs> maximum number of canonical iterations (default: no limit)\n"
 "  -O <args> output b - base, d - dual, i - intersection points (default: b)\n"
 "               n - base edge near points, m - dual edge near points\n"
 "               p - base near points centeroid, q - dual near points centroid\n"
 "               u - minimum tangent sphere, U - maximum, o - origin point\n"
+"               s - base circles, S - rings, t -dual circles, T -rings\n"
+"  -q <dist> offset for circles to avoid coplanarity e.g 0.0001 (default: 0.0)\n"
 "  -d <perc> radius test. precent difference between minumum and maximum radius\n"
 "               checks if polyhedron is collapsing. 0 for no test (default: 80)\n"
 "  -z <n>    status reporting every n lines. -1 for no status. (default: 1000)\n"
@@ -152,8 +155,8 @@ void cn_opts::usage()
 "  -I <col>  intersection points and/or origin color (default: yellow)\n"
 "  -N <col>  base edge near points and/or centroid color (default: red)\n"
 "  -M <col>  dual edge near points and/or centroid color (default: darkgreen)\n"
-"  -B <col>  base edge color (default: none)\n"
-"  -D <col>  dual edge color (default: none)\n"
+"  -B <col>  base edge color (default: unchanged)\n"
+"  -D <col>  dual edge color (default: unchanged)\n"
 "  -U <col>  unit sphere color (default: white)\n"
 "  -T <tran> base/dual transparency. range from 0 (invisible) to 255 (opaque)\n"
 "\n"
@@ -175,7 +178,7 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hC:r:e:p:i:c:n:O:E:P:Ad:z:I:N:M:B:D:U:T:l:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hC:r:e:p:i:c:n:O:q:E:P:Ad:z:I:N:M:B:D:U:T:l:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -234,10 +237,14 @@ void cn_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'O':
-      if (strspn(optarg, "bdinmopquU") != strlen(optarg))
+      if (strspn(optarg, "bdinmopqsStTuU") != strlen(optarg))
         error(msg_str("output parts are '%s' must be any or all from "
-                      "b, d, i, n, m, o, p, q, u, U", optarg), c);
+                      "b, d, i, n, m, o, p, q, s, S, t, T, u, U", optarg), c);
       output_parts = optarg;
+      break;
+
+    case 'q':
+      print_status_or_exit(read_double(optarg, &offset), c);
       break;
 
     case 'E':
@@ -328,14 +335,14 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   // RK - method in Beta. make sure it terminates
   if (planarize_method == 'a' && !i_set) {
-    num_iters_planar = 100000;
-    warning("antiprism planar method in Beta. Setting i = 100000", 'i');
+    num_iters_planar = 10000;
+    warning("antiprism planar method in Beta. Setting i = 10000", 'i');
   } 
 
   // RK - method in Beta. make sure it terminates
   if (canonical_method == 'a' && !n_set) {
-    num_iters_canonical = 100000;
-    warning("antiprism canonical method in Beta. Setting n = 100000", 'n');
+    num_iters_canonical = 10000;
+    warning("antiprism canonical method in Beta. Setting n = 10000", 'n');
   }  
 
   if (argc - optind > 1)
@@ -455,14 +462,14 @@ bool canonicalize_unit(Geometry &geom, const int num_iters, const double radius_
         Vec3d P = geom.edge_nearpt(edge, Vec3d(0, 0, 0)).unit();
         move_line_to_point(verts[edge[0]], verts[edge[1]], P);
       }
-    }
 
-    // re-center for drift
-    if (centering == 'e')
-      geom.transform(Trans3d::translate(-edge_nearpoints_centroid(geom, Vec3d(0, 0, 0))));
-    else
-    if (centering == 'v')
-      geom.transform(Trans3d::translate(-centroid(geom.verts())));
+      // re-center for drift
+      if (centering == 'e')
+        geom.transform(Trans3d::translate(-edge_nearpoints_centroid(geom, Vec3d(0, 0, 0))));
+      else
+      if (centering == 'v')
+        geom.transform(Trans3d::translate(-centroid(geom.verts())));
+    }
 
     //for (unsigned int f = 0; f < geom.faces().size(); f++) {
     for (unsigned int ff = cnt; ff < geom.faces().size() + cnt; ff++) {
@@ -612,6 +619,73 @@ void set_edge_colors(Geometry &geom, const Color col)
   }
 }
 
+Vec3d face_edge_nearpoints_centroid(const Geometry &geom, double &radius, const int face_no)
+{
+  vector<Vec3d> near_pts;
+  
+  unsigned int fsz = geom.faces(face_no).size();
+  for (unsigned int i = 0; i < fsz; i++) {
+    int v1 = geom.faces(face_no)[i];
+    int v2 = geom.faces(face_no)[(i + 1) % fsz];
+
+    Vec3d P = geom.edge_nearpt(make_edge(v1,v2), Vec3d(0, 0, 0));
+    near_pts.push_back(P);
+  }
+
+  Vec3d face_edge_nearpt_centroid = centroid(near_pts);
+//  face_edge_nearpt_centroid = geom.face_cent(face_no);
+
+  // get the minimum radius
+  double min = DBL_MAX;
+  for (unsigned int i = 0; i < fsz; i++) {
+    double l = (face_edge_nearpt_centroid - near_pts[i]).len();
+    if (l < min)
+      min = l;
+  }
+  radius = min;
+
+  return face_edge_nearpt_centroid;
+}
+
+Geometry make_circle(int polygon_size, double radius, const Color &circle_color, bool filled)
+{
+  Geometry circle;
+  double arc = deg2rad(360.0 / (double)polygon_size);
+
+  double angle = 0.0;
+  for (int i = 0; i < polygon_size; i++) {
+    circle.add_vert(Vec3d(cos(angle), sin(angle), 0.0), Color::invisible);
+    circle.add_edge(make_edge(i, (i + 1) % polygon_size), (filled ? Color::invisible : circle_color));
+    angle += arc;
+  }
+
+  circle.transform(Trans3d::scale(radius));
+
+  if (filled) {
+    vector<int> face;
+    for (int i = 0; i < polygon_size; i++)
+      face.push_back(i);
+    circle.add_face(face, circle_color);
+  }
+
+  return (circle);
+}
+
+Geometry circles(const Geometry &geom, const Color &circle_color, bool filled, double offset)
+{
+  Geometry circles;
+  for (unsigned int i = 0; i < geom.faces().size(); i++) {
+    double radius = 0;
+    Vec3d fe_centroid = face_edge_nearpoints_centroid(geom, radius, i);
+    Geometry circle = make_circle(60, radius, circle_color, filled);
+    double depth = fe_centroid.len() + offset;
+    circle.transform(Trans3d::translate(Vec3d(0, 0, depth)));
+    circle.transform(Trans3d::rotate(Vec3d(0, 0, 1), fe_centroid));
+    circles.append(circle);
+  }
+  return circles;
+}
+
 void construct_model(Geometry &base, const cn_opts &opts) {
   Geometry dual;
   get_dual(dual, base, 1, Vec3d(0, 0, 0));
@@ -620,6 +694,22 @@ void construct_model(Geometry &base, const cn_opts &opts) {
   vector<Vec3d> base_nearpts;
   vector<Vec3d> dual_nearpts;
   generate_points(base, dual, ips, base_nearpts, dual_nearpts, opts);
+
+  // base circles
+  Geometry base_circles;
+  if ((opts.output_parts.find("s") != string::npos) ||
+      (opts.output_parts.find("S") != string::npos)) {
+    bool filled = (opts.output_parts.find("s") != string::npos) ? true : false;
+    base_circles = circles(base, opts.base_nearpts_col, filled, opts.offset);
+  }
+
+  // dual circles
+  Geometry dual_circles;
+  if ((opts.output_parts.find("t") != string::npos) ||
+      (opts.output_parts.find("T") != string::npos)) {
+    bool filled = (opts.output_parts.find("t") != string::npos) ? true : false;
+    dual_circles = circles(dual, opts.dual_nearpts_col, filled, opts.offset);
+  }
 
   // clear base if not using
   if (opts.output_parts.find("b") == string::npos)
@@ -670,12 +760,14 @@ void construct_model(Geometry &base, const cn_opts &opts) {
 
   // apply opacity to faces of base and dual
   if (opts.face_opacity > -1) {
-    for (int i = 0; i < (int)base.faces().size(); i++) {
-      Color col = base.colors(FACES).get(i);
-      if (col.is_set()) {
-        col = Color(col[0], col[1], col[2], opts.face_opacity);
-        base.colors(FACES).set(i, col);
-      } 
+    ColorValuesToRangeHsva valmap(msg_str("A%g", (double)opts.face_opacity/255), Color(255, 255, 255));
+    valmap.apply(base, FACES);
+
+    for (const auto & kp : base.colors(FACES).get_properties()) {
+      if (kp.second.is_index()) {
+        opts.warning("map indexes cannot be made transparent",'T');
+        break;
+      }
     }
   }
 
@@ -699,6 +791,12 @@ void construct_model(Geometry &base, const cn_opts &opts) {
     Coloring(&sgeom).vef_one_col(Color::invisible, Color::invisible, opts.sphere_col);
     base.append(sgeom);
   }
+
+  if (base_circles.verts().size())
+    base.append(base_circles);
+
+  if (dual_circles.verts().size())
+    base.append(dual_circles);
 }
 
 int main(int argc, char *argv[])
