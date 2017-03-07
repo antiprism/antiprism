@@ -769,8 +769,7 @@ int main(int argc, char *argv[])
         Coloring(&geom).f_one_col(opts.face_col);
 
       if (opts.edge_col.is_set()) {
-        geom.add_missing_impl_edges();
-        Coloring(&geom).e_one_col(opts.edge_col);
+        geom.add_missing_impl_edges(opts.edge_col);
       }
     }
   }

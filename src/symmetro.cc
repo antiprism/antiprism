@@ -88,8 +88,8 @@ public:
       : ProgramOpts("symmetro"), sym('\0'), p(0), q(0), dihedral_n(0),
         sym_id_no(1), sym_mirror('\0'), vert_z(INT_MAX), rotation(0.0),
         rotation_as_increment(0.0), add_pi(false), rotation_axis(-1),
-        angle_between_axes(DBL_MAX), scale_axis(-1), convex_hull(0),
-        offset(0), remove_free_faces(false), verbose(false), mode('\0'),
+        angle_between_axes(DBL_MAX), scale_axis(-1), convex_hull(0), offset(0),
+        remove_free_faces(false), verbose(false), mode('\0'),
         face_coloring_method('a'), face_opacity(-1), color_digons(false),
         vert_col(Color(255, 215, 0)),    // gold
         edge_col(Color(211, 211, 211)),  // lightgrey
@@ -1836,27 +1836,22 @@ Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
   }
 
   // if coloring edges, check for digons
-  if (opts.edge_col.is_set()) {
-    geom.add_missing_impl_edges();
-
-    if (opts.color_digons) {
-      // if a digon is already where an edge is then
-      // delete that edge. Don't cover up digon
-      vector<int> del_edges;
-      for (unsigned int i = 0; i < geom.faces().size(); i++) {
-        int fsz = geom.faces(i).size();
-        if (fsz == 2) {
-          vector<int> edge = make_edge(geom.faces(i)[0], geom.faces(i)[1]);
-          int edge_no = find_edge_in_edge_list(geom.edges(), edge);
-          if (edge_no > -1)
-            del_edges.push_back(edge_no);
-        }
+  if (opts.color_digons) {
+    vector<int> del_faces;
+    for (unsigned int i = 0; i < geom.faces().size(); i++) {
+      int fsz = geom.faces(i).size();
+      if (fsz == 2) {
+        vector<int> edge = make_edge(geom.faces(i)[0], geom.faces(i)[1]);
+        Color col = geom.colors(FACES).get(i);
+        geom.add_edge(edge, col);
+        del_faces.push_back(i);
       }
-      geom.del(EDGES, del_edges);
     }
-
-    Coloring(&geom).e_one_col(opts.edge_col);
+    geom.del(FACES, del_faces);
   }
+
+  // color added edges
+  geom.add_missing_impl_edges(opts.edge_col);
 
   // color vertices
   Coloring(&geom).v_one_col(opts.vert_col);

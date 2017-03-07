@@ -612,11 +612,8 @@ void generate_points(const Geometry &base, const Geometry &dual, vector<Vec3d> &
 
 void set_edge_colors(Geometry &geom, const Color col)
 {
-  if (col.is_set()) {
-    geom.add_missing_impl_edges();
-    Coloring clrng(&geom);
-    clrng.e_one_col(col);
-  }
+  if (col.is_set())
+    geom.add_missing_impl_edges(col);
 }
 
 Vec3d face_edge_nearpoints_centroid(const Geometry &geom, double &radius, const int face_no)
