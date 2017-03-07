@@ -1136,6 +1136,11 @@ static int make_resource_wythoff(Geometry &geom, string name, bool is_std,
     ColorMap *cmap = colormap_from_name("map_red:blue:yellow:ivory");
     clrng.add_cmap(cmap);
     clrng.f_apply_cmap();
+    clrng.e_apply_cmap();
+  }
+  else {
+    geom.clear_cols();
+    geom.clear(EDGES);
   }
 
   return 0; // name found

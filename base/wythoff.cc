@@ -690,19 +690,20 @@ static void add_faces(Geometry &geom, Vec3d pt, int num, int denom,
   double ang = 2 * M_PI * (double)denom / (double)num;
 
   int sides = num;
-  if (sides > 2) {
-    Geometry face_geom, sym_face_geom;
-    vector<int> face(sides);
-    for (int i = 0; i < sides; i++) {
-      face_geom.add_vert(Trans3d::rotate(axis, ang * i) * pt);
-      face[i] = i;
-    }
-
-    face_geom.add_face(face, col);
-    sym_repeat(&sym_face_geom, face_geom, sym);
-    merge_coincident_elements(&sym_face_geom, "vf", epsilon);
-    geom.append(sym_face_geom);
+  Geometry face_geom, sym_face_geom;
+  vector<int> face(sides);
+  for (int i = 0; i < sides; i++) {
+    face_geom.add_vert(Trans3d::rotate(axis, ang * i) * pt);
+    face[i] = i;
   }
+
+  if(sides>2)
+    face_geom.add_face(face, col);
+  else
+    face_geom.add_edge(face, col);
+  sym_repeat(&sym_face_geom, face_geom, sym);
+  merge_coincident_elements(&sym_face_geom, "vf", epsilon);
+  geom.append(sym_face_geom);
 }
 
 static void add_faces(Geometry &geom, Vec3d pt, int num, int denom,
