@@ -646,13 +646,30 @@ Vec3d face_edge_nearpoints_centroid(const Geometry &geom, double &radius, const 
 }
 */
 
-// RK - we can get the radius from just one near point
+// get the minimum incircle radius. for canonicalized they are all equal
 double incircle_radius(const Geometry &geom, Vec3d &center, const int face_no)
 {
-  int v1 = geom.faces(face_no)[0];
-  int v2 = geom.faces(face_no)[1];
-  Vec3d P = geom.edge_nearpt(make_edge(v1,v2), Vec3d(0, 0, 0));
-  return (center - P).len();
+  vector<Vec3d> near_pts;
+  
+  // get the near points to measure length from center
+  unsigned int fsz = geom.faces(face_no).size();
+  for (unsigned int i = 0; i < fsz; i++) {
+    int v1 = geom.faces(face_no)[i];
+    int v2 = geom.faces(face_no)[(i + 1) % fsz];
+
+    Vec3d P = geom.edge_nearpt(make_edge(v1,v2), Vec3d(0, 0, 0));
+    near_pts.push_back(P);
+  }
+
+  // get the minimum radius
+  double radius = DBL_MAX;
+  for (unsigned int i = 0; i < fsz; i++) {
+    double l = (center - near_pts[i]).len();
+    if (l < radius)
+      radius = l;
+  }
+
+  return radius;
 }
 
 Geometry make_incircle(int polygon_size, double radius, const Color &incircle_color, bool filled)
