@@ -26,7 +26,7 @@ off_util cube | off_trans -S 1,2,3 | canonical | antiview
 
 Make a geodesic sphere, canonicalize it, and add it to it reciprocal
 <<CMDS_START>>
-geodesic -c 2 ico | canonical | pol_recip -a | antiview
+geodesic -c 2 ico | canonical -O bd | antiview
 <<CMDS_END>>
 <<EXAMPLES_END>>
 

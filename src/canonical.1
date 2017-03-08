@@ -44,7 +44,7 @@ p \- face centroids (magnitude squared)
 q \- face centroids (magnitude)
 f \- face centroids
 m \- mathematica planarize
-a \- antiprism planarize (i set to 10000)
+a \- sand and fill planarize (BETA, i set to 10000)
 .HP
 \fB\-i\fR <itrs> maximum number of planarize iterations (default: no limit)
 .TP
@@ -53,6 +53,7 @@ canonicalization
 .IP
 m \- mathematica version (default)
 b \- base/dual version (reciprocate on face normals)
+a \- moving edge version (BETA, n set to 10000)
 x \- none (default, if \fB\-p\fR is set)
 .HP
 \fB\-n\fR <itrs> maximum number of canonical iterations (default: no limit)
@@ -62,9 +63,9 @@ x \- none (default, if \fB\-p\fR is set)
 n \- base edge near points, m \- dual edge near points
 p \- base near points centeroid, q \- dual near points centroid
 u \- minimum tangent sphere, U \- maximum, o \- origin point
-s \- base circles, S \- rings, t \fB\-dual\fR circles, T \fB\-rings\fR
+s \- base incircles, S \- rings, t \fB\-dual\fR incircles, T \fB\-rings\fR
 .HP
-\fB\-q\fR <dist> offset for circles to avoid coplanarity e.g 0.0001 (default: 0.0)
+\fB\-q\fR <dist> offset for incircles to avoid coplanarity e.g 0.0001 (default: 0.0)
 .HP
 \fB\-d\fR <perc> radius test. precent difference between minumum and maximum radius
 .IP
@@ -95,10 +96,10 @@ Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
 intersection points and/or origin color (default: yellow)
 .TP
 \fB\-N\fR <col>
-base edge near points and/or centroid color (default: red)
+base near points, centroid, incircles color (default: red)
 .TP
 \fB\-M\fR <col>
-dual edge near points and/or centroid color (default: darkgreen)
+dual near points, centroid, incircles color (default: darkgreen)
 .TP
 \fB\-B\fR <col>
 base edge color (default: unchanged)

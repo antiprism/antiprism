@@ -125,20 +125,20 @@ void cn_opts::usage()
 "               q - face centroids (magnitude)\n"
 "               f - face centroids\n"
 "               m - mathematica planarize\n"
-"               a - antiprism planarize (i set to 10000)\n"
+"               a - sand and fill planarize (BETA, i set to 10000)\n"
 "  -i <itrs> maximum number of planarize iterations (default: no limit)\n"
 "  -c <opt>  canonicalization\n"
 "               m - mathematica version (default)\n"
 "               b - base/dual version (reciprocate on face normals)\n"
-//"               a - antiprism version (BETA, n set to 10000)\n"
+"               a - moving edge version (BETA, n set to 10000)\n"
 "               x - none (default, if -p is set)\n"
 "  -n <itrs> maximum number of canonical iterations (default: no limit)\n"
 "  -O <args> output b - base, d - dual, i - intersection points (default: b)\n"
 "               n - base edge near points, m - dual edge near points\n"
 "               p - base near points centeroid, q - dual near points centroid\n"
 "               u - minimum tangent sphere, U - maximum, o - origin point\n"
-"               s - base circles, S - rings, t -dual circles, T -rings\n"
-"  -q <dist> offset for circles to avoid coplanarity e.g 0.0001 (default: 0.0)\n"
+"               s - base incircles, S - rings, t -dual incircles, T -rings\n"
+"  -q <dist> offset for incircles to avoid coplanarity e.g 0.0001 (default: 0.0)\n"
 "  -d <perc> radius test. precent difference between minumum and maximum radius\n"
 "               checks if polyhedron is collapsing. 0 for no test (default: 80)\n"
 "  -z <n>    status reporting every n lines. -1 for no status. (default: 1000)\n"
@@ -153,8 +153,8 @@ void cn_opts::usage()
 "\n"
 "Coloring Options (run 'off_util -H color' for help on color formats)\n"
 "  -I <col>  intersection points and/or origin color (default: yellow)\n"
-"  -N <col>  base edge near points and/or centroid color (default: red)\n"
-"  -M <col>  dual edge near points and/or centroid color (default: darkgreen)\n"
+"  -N <col>  base near points, centroid, incircles color (default: red)\n"
+"  -M <col>  dual near points, centroid, incircles color (default: darkgreen)\n"
 "  -B <col>  base edge color (default: unchanged)\n"
 "  -D <col>  dual edge color (default: unchanged)\n"
 "  -U <col>  unit sphere color (default: white)\n"
@@ -616,6 +616,7 @@ void set_edge_colors(Geometry &geom, const Color col)
     geom.add_missing_impl_edges(col);
 }
 
+/*
 Vec3d face_edge_nearpoints_centroid(const Geometry &geom, double &radius, const int face_no)
 {
   vector<Vec3d> near_pts;
@@ -643,44 +644,63 @@ Vec3d face_edge_nearpoints_centroid(const Geometry &geom, double &radius, const 
 
   return face_edge_nearpt_centroid;
 }
+*/
 
-Geometry make_circle(int polygon_size, double radius, const Color &circle_color, bool filled)
+// RK - we can get the radius from just one near point
+double incircle_radius(const Geometry &geom, Vec3d &center, const int face_no)
 {
-  Geometry circle;
+  int v1 = geom.faces(face_no)[0];
+  int v2 = geom.faces(face_no)[1];
+  Vec3d P = geom.edge_nearpt(make_edge(v1,v2), Vec3d(0, 0, 0));
+  return (center - P).len();
+}
+
+Geometry make_incircle(int polygon_size, double radius, const Color &incircle_color, bool filled)
+{
+  Geometry incircle;
   double arc = deg2rad(360.0 / (double)polygon_size);
 
   double angle = 0.0;
   for (int i = 0; i < polygon_size; i++) {
-    circle.add_vert(Vec3d(cos(angle), sin(angle), 0.0), Color::invisible);
-    circle.add_edge(make_edge(i, (i + 1) % polygon_size), (filled ? Color::invisible : circle_color));
+    incircle.add_vert(Vec3d(cos(angle), sin(angle), 0.0), Color::invisible);
+    incircle.add_edge(make_edge(i, (i + 1) % polygon_size), (filled ? Color::invisible : incircle_color));
     angle += arc;
   }
-
-  circle.transform(Trans3d::scale(radius));
 
   if (filled) {
     vector<int> face;
     for (int i = 0; i < polygon_size; i++)
       face.push_back(i);
-    circle.add_face(face, circle_color);
+    incircle.add_face(face, incircle_color);
   }
 
-  return (circle);
+  incircle.transform(Trans3d::scale(radius));
+
+  return (incircle);
 }
 
-Geometry circles(const Geometry &geom, const Color &circle_color, bool filled, double offset)
+Geometry incircles(const Geometry &geom, const Color &incircle_color, bool filled, double offset)
 {
-  Geometry circles;
+  Geometry incircles;
   for (unsigned int i = 0; i < geom.faces().size(); i++) {
-    double radius = 0;
-    Vec3d fe_centroid = face_edge_nearpoints_centroid(geom, radius, i);
-    Geometry circle = make_circle(60, radius, circle_color, filled);
-    double depth = fe_centroid.len() + offset;
-    circle.transform(Trans3d::translate(Vec3d(0, 0, depth)));
-    circle.transform(Trans3d::rotate(Vec3d(0, 0, 1), fe_centroid));
-    circles.append(circle);
+    // find incircle rotation place
+    Vec3d face_centroid = anti::centroid(geom.verts(), geom.faces(i));
+    Vec3d face_normal = face_norm(geom.verts(), geom.faces(i)).unit();
+    Vec3d center = face_normal * vdot(face_centroid, face_normal);
+
+    // find radius of incircle, and make incircle
+    double radius = incircle_radius(geom, center, i);
+    Geometry incircle = make_incircle(60, radius, incircle_color, filled);
+
+    // set depth of incircle
+    double depth = center.len() + offset;
+    incircle.transform(Trans3d::translate(Vec3d(0, 0, depth)));
+
+    // rotate incircle into place
+    incircle.transform(Trans3d::rotate(Vec3d(0, 0, 1), center));
+    incircles.append(incircle);
   }
-  return circles;
+  return incircles;
 }
 
 void construct_model(Geometry &base, const cn_opts &opts) {
@@ -692,20 +712,20 @@ void construct_model(Geometry &base, const cn_opts &opts) {
   vector<Vec3d> dual_nearpts;
   generate_points(base, dual, ips, base_nearpts, dual_nearpts, opts);
 
-  // base circles
-  Geometry base_circles;
+  // base incircles
+  Geometry base_incircles;
   if ((opts.output_parts.find("s") != string::npos) ||
       (opts.output_parts.find("S") != string::npos)) {
     bool filled = (opts.output_parts.find("s") != string::npos) ? true : false;
-    base_circles = circles(base, opts.base_nearpts_col, filled, opts.offset);
+    base_incircles = incircles(base, opts.base_nearpts_col, filled, opts.offset);
   }
 
-  // dual circles
-  Geometry dual_circles;
+  // dual incircles
+  Geometry dual_incircles;
   if ((opts.output_parts.find("t") != string::npos) ||
       (opts.output_parts.find("T") != string::npos)) {
     bool filled = (opts.output_parts.find("t") != string::npos) ? true : false;
-    dual_circles = circles(dual, opts.dual_nearpts_col, filled, opts.offset);
+    dual_incircles = incircles(dual, opts.dual_nearpts_col, filled, opts.offset);
   }
 
   // clear base if not using
@@ -789,11 +809,11 @@ void construct_model(Geometry &base, const cn_opts &opts) {
     base.append(sgeom);
   }
 
-  if (base_circles.verts().size())
-    base.append(base_circles);
+  if (base_incircles.verts().size())
+    base.append(base_incircles);
 
-  if (dual_circles.verts().size())
-    base.append(dual_circles);
+  if (dual_incircles.verts().size())
+    base.append(dual_incircles);
 }
 
 int main(int argc, char *argv[])
