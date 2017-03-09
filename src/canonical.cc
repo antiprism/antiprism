@@ -426,7 +426,7 @@ void plane_face(Geometry &polygon)
     face_normal *= -1.0;
 
   // rotate face to z axis
-  Trans3d trans = Trans3d::rotate(face_normal + face_centroid, Vec3d(0, 0, 1));
+  Trans3d trans = Trans3d::rotate(face_normal, Vec3d(0, 0, 1));
   polygon.transform(trans);
 
   // refresh face centroid
