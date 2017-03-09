@@ -877,7 +877,7 @@ int main(int argc, char *argv[])
       planarize_str = "mathematica";
     else
     if (opts.planarize_method == 'a')
-      planarize_str = "antiprism";
+      planarize_str = "sand and fill";
     fprintf(stderr, "planarize: (%s method)\n",planarize_str.c_str());
 
     if (opts.planarize_method == 'm') {
@@ -910,7 +910,7 @@ int main(int argc, char *argv[])
       canonicalize_str = "base/dual";
     else
     if (opts.canonical_method == 'a')
-      canonicalize_str = "antiprism";
+      canonicalize_str = "moving edge";
     fprintf(stderr, "canonicalize: (%s method)\n",canonicalize_str.c_str());
     if (opts.canonical_method == 'm') {
       bool planarize_only = false;
