@@ -646,6 +646,28 @@ Vec3d face_edge_nearpoints_centroid(const Geometry &geom, double &radius, const 
 }
 */
 
+Geometry unit_circle(int polygon_size, const Color &incircle_color, bool filled)
+{
+  Geometry incircle;
+  double arc = deg2rad(360.0 / (double)polygon_size);
+
+  double angle = 0.0;
+  for (int i = 0; i < polygon_size; i++) {
+    incircle.add_vert(Vec3d(cos(angle), sin(angle), 0.0), Color::invisible);
+    incircle.add_edge(make_edge(i, (i + 1) % polygon_size), (filled ? Color::invisible : incircle_color));
+    angle += arc;
+  }
+
+  if (filled) {
+    vector<int> face;
+    for (int i = 0; i < polygon_size; i++)
+      face.push_back(i);
+    incircle.add_face(face, incircle_color);
+  }
+
+  return (incircle);
+}
+
 // get the minimum incircle radius. for canonicalized they are all equal
 double incircle_radius(const Geometry &geom, Vec3d &center, const int face_no)
 {
@@ -672,42 +694,21 @@ double incircle_radius(const Geometry &geom, Vec3d &center, const int face_no)
   return radius;
 }
 
-Geometry make_incircle(int polygon_size, double radius, const Color &incircle_color, bool filled)
-{
-  Geometry incircle;
-  double arc = deg2rad(360.0 / (double)polygon_size);
-
-  double angle = 0.0;
-  for (int i = 0; i < polygon_size; i++) {
-    incircle.add_vert(Vec3d(cos(angle), sin(angle), 0.0), Color::invisible);
-    incircle.add_edge(make_edge(i, (i + 1) % polygon_size), (filled ? Color::invisible : incircle_color));
-    angle += arc;
-  }
-
-  if (filled) {
-    vector<int> face;
-    for (int i = 0; i < polygon_size; i++)
-      face.push_back(i);
-    incircle.add_face(face, incircle_color);
-  }
-
-  incircle.transform(Trans3d::scale(radius));
-
-  return (incircle);
-}
-
 Geometry incircles(const Geometry &geom, const Color &incircle_color, bool filled, double offset)
 {
   Geometry incircles;
+  Geometry circle = unit_circle(60, incircle_color, filled);
+
   for (unsigned int i = 0; i < geom.faces().size(); i++) {
     // find incircle rotation place
     Vec3d face_centroid = anti::centroid(geom.verts(), geom.faces(i));
     Vec3d face_normal = face_norm(geom.verts(), geom.faces(i)).unit();
     Vec3d center = face_normal * vdot(face_centroid, face_normal);
 
-    // find radius of incircle, and make incircle
+    // find radius of incircle, and make incircle of radius
+    Geometry incircle = circle;
     double radius = incircle_radius(geom, center, i);
-    Geometry incircle = make_incircle(60, radius, incircle_color, filled);
+    incircle.transform(Trans3d::scale(radius));
 
     // set depth of incircle
     double depth = center.len() + offset;
