@@ -409,6 +409,11 @@ void plane_face(Geometry &polygon)
   if (vdot(face_normal, face_centroid) < 0)
     face_normal *= -1.0;
 
+  // this gives the same results
+  //for (auto &vert : polygon.raw_verts())
+  //  vert += vdot(1.0 * face_normal, face_centroid - vert) * face_normal; 
+  //return;
+
   // rotate face to z axis
   Trans3d trans = Trans3d::rotate(face_normal, Vec3d(0, 0, 1));
   polygon.transform(trans);
@@ -418,7 +423,7 @@ void plane_face(Geometry &polygon)
 
   // set z of all vertices to height of face centroid
   for (auto &vert : polygon.raw_verts())
-    vert[2] = face_centroid[2];    
+    vert[2] = face_centroid[2];
 
   // rotate face back to original position
   polygon.transform(trans.inverse());

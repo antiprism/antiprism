@@ -149,6 +149,8 @@ bool canonicalize_mm(Geometry &geom, const double edge_factor,
       // make sure face_normal points outward
       if (vdot(face_normal, face_centroid) < 0)
         face_normal *= -1.0;
+      // place a planar vertex over or under verts[v]
+      // adds or subtracts it to get to the planar verts[v]
       for (int v : geom.faces(f))
         vs[v] += vdot(plane_factor * face_normal, face_centroid - verts[v]) *
                  face_normal;
