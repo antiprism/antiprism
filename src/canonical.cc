@@ -125,12 +125,12 @@ void cn_opts::usage()
 "               q - face centroids (magnitude)\n"
 "               f - face centroids\n"
 "               m - mathematica planarize\n"
-"               a - sand and fill planarize (BETA, i set to 10000)\n"
+"               a - sand and fill planarize\n"
 "  -i <itrs> maximum number of planarize iterations (default: no limit)\n"
 "  -c <opt>  canonicalization\n"
 "               m - mathematica version (default)\n"
 "               b - base/dual version (reciprocate on face normals)\n"
-"               a - moving edge version (BETA, n set to 10000)\n"
+"               a - moving edge version\n"
 "               x - none (default, if -p is set)\n"
 "  -n <itrs> maximum number of canonical iterations (default: no limit)\n"
 "  -O <args> output b - base, d - dual, i - intersection points (default: b)\n"
@@ -171,8 +171,6 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   bool p_set = false;
   bool c_set = false;
-  bool i_set = false;
-  bool n_set = false;
 
   int sig_compare = INT_MAX;
 
@@ -213,7 +211,6 @@ void cn_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'i':
-      i_set = true;
       print_status_or_exit(read_int(optarg, &num_iters_planar), c);
       if (num_iters_planar < 0)
         error(
@@ -230,7 +227,6 @@ void cn_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'n':
-      n_set = true;
       print_status_or_exit(read_int(optarg, &num_iters_canonical), c);
       if (num_iters_canonical < 0)
         error("number of iterations for canonical must be 0 or greater", c);
@@ -332,18 +328,6 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   if (mm_alternate_loop && canonical_method != 'm')
     warning("alternate form only has effect in mathematica canonicalization", 'A');
-
-  // RK - method in Beta. make sure it terminates
-  if (planarize_method == 'a' && !i_set) {
-    num_iters_planar = 10000;
-    warning("antiprism planar method in Beta. Setting i = 10000", 'i');
-  } 
-
-  // RK - method in Beta. make sure it terminates
-  if (canonical_method == 'a' && !n_set) {
-    num_iters_canonical = 10000;
-    warning("antiprism canonical method in Beta. Setting n = 10000", 'n');
-  }  
 
   if (argc - optind > 1)
     error("too many arguments");
