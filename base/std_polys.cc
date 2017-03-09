@@ -1450,12 +1450,16 @@ bool make_resource_geom(Geometry &geom, string name, char *errmsg)
     }
   }
 
+  // Catch any failure to make a valid geometry
+  if (!geom.is_set())
+    geom_ok = false;
+
   if (!geom_ok) {
     if (errmsg && !*errmsg)
-      strcpy_msg(errmsg, "not found");
+      strcpy_msg(errmsg, "not found (or invalid)");
   }
 
-  if (make_dual)
+  if (geom_ok && make_dual)
     make_resource_dual(geom, is_std);
 
   return geom_ok;
