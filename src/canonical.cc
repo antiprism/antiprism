@@ -409,9 +409,9 @@ void plane_face(Geometry &polygon)
   if (vdot(face_normal, face_centroid) < 0)
     face_normal *= -1.0;
 
-  // this gives the same results
+  // this gives the same results (from the mathematica algorithm)
   //for (auto &vert : polygon.raw_verts())
-  //  vert += vdot(1.0 * face_normal, face_centroid - vert) * face_normal; 
+  //  vert += vdot(face_normal, face_centroid - vert) * face_normal; 
   //return;
 
   // rotate face to z axis
@@ -463,6 +463,7 @@ bool canonicalize_unit(Geometry &geom, const int num_iters, const double radius_
     //for (unsigned int f = 0; f < geom.faces().size(); f++) {
     for (unsigned int ff = cnt; ff < geom.faces().size() + cnt; ff++) {
       int f = ff % geom.faces().size();
+/*
       // give polygon its own geom. face index needs to reside in vector
       vector<int> face_idxs(1);
       face_idxs[0] = f;
@@ -478,6 +479,18 @@ bool canonicalize_unit(Geometry &geom, const int num_iters, const double radius_
       int j = 0;
       for (int v : v_idx)
         verts[v] = polygon.verts(j++);
+*/
+      // RK - this does formulaically what the above does by brute force
+      Vec3d face_normal = geom.face_norm(f).unit();
+      Vec3d face_centroid = geom.face_cent(f);
+      // make sure face_normal points outward
+      if (vdot(face_normal, face_centroid) < 0)
+        face_normal *= -1.0;
+      // place a planar vertex over or under verts[v]
+      // adds or subtracts it to get to the planar verts[v]
+      for (int v : geom.faces(f))
+        verts[v] += vdot(face_normal, face_centroid - verts[v]) *
+                    face_normal;
     }
 
     // len2() for difference value to minimize internal sqrt() calls

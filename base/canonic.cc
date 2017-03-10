@@ -134,7 +134,10 @@ bool canonicalize_mm(Geometry &geom, const double edge_factor,
         verts[i] -= cent_near_pts;
     }
 
-    // Make a copy of verts. zero out.
+    // Make a copy of verts into vs and zero out
+    // Accumulate vertex changes instead of altering vertices in place
+    // This can help relieve when a vertex is pushed towards one plane
+    // and away from another
     vector<Vec3d> vs = verts;
     for (auto &v : vs)
       v = Vec3d(0, 0, 0);
