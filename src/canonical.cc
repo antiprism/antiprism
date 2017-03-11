@@ -904,16 +904,16 @@ int main(int argc, char *argv[])
                                  opts.num_iters_planar, opts.radius_range_percent / 100, opts.rep_count,
                                  planarize_only, opts.mm_alternate_loop, opts.epsilon);
     }
-    if (opts.planarize_method == 'b') {
-      completed = canonicalize_bd(geom, opts.num_iters_planar, opts.planarize_method,
-                                 opts.radius_range_percent / 100, opts.rep_count, opts.centering, opts.epsilon);
-    }
     else
     if (opts.planarize_method == 'a') {
       bool planarize_only = true;
       completed = canonicalize_unit(geom, opts.num_iters_planar, opts.radius_range_percent / 100,
                                     opts.rep_count, opts.centering, planarize_only, opts.epsilon);
     }
+    // cases p, q, f
+    else
+      completed = canonicalize_bd(geom, opts.num_iters_planar, opts.planarize_method,
+                                 opts.radius_range_percent / 100, opts.rep_count, opts.centering, opts.epsilon);
 
     // RK - report planarity
     planarity_info(geom);

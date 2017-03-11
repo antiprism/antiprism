@@ -223,7 +223,7 @@ bool planarize_mm(Geometry &geom, const int num_iters, const int rep_count,
 // make array of vertices reciprocal to given planes (face normals)
 // RK - save of verbatim port code
 /*
-vector<Vec3d> reciprocalN(const Geometry &geom)
+vector<Vec3d> reciprocalN_old(const Geometry &geom)
 {
   const vector<vector<int>> &faces = geom.faces();
   const vector<Vec3d> &verts = geom.verts();
@@ -293,19 +293,11 @@ vector<Vec3d> reciprocalN(const Geometry &geom)
 {
   vector<Vec3d> normals;
 
-  vector<vector<int>> geom_edges;
-  geom.get_impl_edges(geom_edges);
-
-  // RK - calculate length only once per edge
-  // len2() for length squared to minimize internal sqrt() calls
-  map<vector<int>, double> geom_nearpts_len2;
-  for (auto &geom_edge : geom_edges)
-    geom_nearpts_len2[geom_edge] =
-        geom.edge_nearpt(geom_edge, Vec3d(0, 0, 0)).len2();
-
   for (auto &face : geom.faces()) {
-    // calculate face normal in antiprism
-    Vec3d face_normal = face_norm(geom.verts(), face).unit();
+    // RK - while calculating face normal in antiprism would
+    // seem to be a speed up, it is not and has a different value
+    // Vec3d face_normal = face_norm(geom.verts(), face).unit();
+    Vec3d face_normal(0, 0, 0);
     Vec3d face_centroid = anti::centroid(geom.verts(), face);
 
     unsigned int sz = face.size();
@@ -313,11 +305,19 @@ vector<Vec3d> reciprocalN(const Geometry &geom)
     for (unsigned int j = 0; j < sz; j++) {
       int v1 = face[j];
       int v2 = face[(j + 1) % sz];
+      int v3 = face[(j + 2) % sz];
+      face_normal += vcross(geom.verts()[v3] - geom.verts()[v2],
+                            geom.verts()[v2] - geom.verts()[v1]);
 
-      avgEdgeDist += geom_nearpts_len2[make_edge(v1, v2)];
+      // avgEdgeDist += geom_nearpts_len2[make_edge(v1, v2)];
+      avgEdgeDist += geom.edge_nearpt(make_edge(v1, v2), Vec3d(0, 0, 0)).len2();
     }
     // RK - sqrt of length squared here
     avgEdgeDist = sqrt(avgEdgeDist / sz);
+
+    // unit normal in place uses to_unit()
+    //face_normal = -1.0 * face_normal.unit();
+    face_normal.to_unit();
 
     // the face normal height set to intersect face at v
     Vec3d v = face_normal * vdot(face_centroid, face_normal);
@@ -407,6 +407,7 @@ bool canonicalize_bd(Geometry &base, const int num_iters,
       dual.raw_verts() = reciprocalC_len2(base);
       base.transform(Trans3d::translate(-centroid(dual.verts())));
       base.raw_verts() = reciprocalC_len2(dual);
+      base.transform(Trans3d::translate(-centroid(base.verts())));
       break;
 
     // adjust vertices with side effect of planarization. len() version
@@ -415,6 +416,7 @@ bool canonicalize_bd(Geometry &base, const int num_iters,
       dual.raw_verts() = reciprocalC_len(base);
       base.transform(Trans3d::translate(-centroid(dual.verts())));
       base.raw_verts() = reciprocalC_len(dual);
+      base.transform(Trans3d::translate(-centroid(base.verts())));
       break;
 
     // adjust vertices with side effect of planarization. face centroids version
