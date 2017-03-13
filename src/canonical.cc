@@ -734,16 +734,14 @@ void construct_model(Geometry &base, const cn_opts &opts) {
 
   // base incircles
   Geometry base_incircles;
-  if ((opts.output_parts.find("s") != string::npos) ||
-      (opts.output_parts.find("S") != string::npos)) {
+  if (opts.output_parts.find_first_of("sS") != string::npos) {
     bool filled = (opts.output_parts.find("s") != string::npos) ? true : false;
     base_incircles = incircles(base, opts.base_nearpts_col, filled, opts.offset);
   }
 
   // dual incircles
   Geometry dual_incircles;
-  if ((opts.output_parts.find("t") != string::npos) ||
-      (opts.output_parts.find("T") != string::npos)) {
+  if (opts.output_parts.find_first_of("tT") != string::npos) {
     bool filled = (opts.output_parts.find("t") != string::npos) ? true : false;
     dual_incircles = incircles(dual, opts.dual_nearpts_col, filled, opts.offset);
   }
@@ -809,8 +807,7 @@ void construct_model(Geometry &base, const cn_opts &opts) {
   }
 
   // add unit sphere on origin
-  if ((opts.output_parts.find("u") != string::npos) ||
-      (opts.output_parts.find("U") != string::npos)) {
+  if (opts.output_parts.find_first_of("uU") != string::npos) {
     Geometry sgeom;
     sgeom.read_resource("geo_4_4");
     sgeom.transform(Trans3d::translate(-centroid(sgeom.verts())));
