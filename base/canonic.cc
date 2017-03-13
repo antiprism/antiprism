@@ -286,6 +286,49 @@ vector<Vec3d> reciprocalN_old(const Geometry &geom)
       avgEdgeDist += (verts[v1] - (vdt * d)).len();
 */
 
+/*
+// RK - Gives the same answer as the built in face_norm().unit()
+// even when nonplanar and measuring all edges
+Vec3d face_norm_newell(Geometry &geom, int f_idx)
+{
+  const vector<Vec3d> &v = geom.verts();
+
+  Vec3d face_normal(0, 0, 0);
+
+  vector<int> face = geom.faces(f_idx);
+  unsigned int sz = face.size();
+  for (unsigned int i = 0; i < sz; i++) {
+    int v1 = face[i];
+    int v2 = face[(i + 1) % sz];
+
+    face_normal[0] += (v[v1][1] - v[v2][1]) * (v[v1][2] + v[v2][2]);
+    face_normal[1] += (v[v1][2] - v[v2][2]) * (v[v1][0] + v[v2][0]);
+    face_normal[2] += (v[v1][0] - v[v2][0]) * (v[v1][1] + v[v2][1]);
+  }
+
+  return face_normal.to_unit();
+}
+*/
+
+// return the unit normal of all perimeter triangles
+Vec3d face_norm_nonplanar(const Geometry &geom, const int f_idx)
+{
+  Vec3d face_normal(0, 0, 0);
+
+  vector<int> face = geom.faces(f_idx);
+  unsigned int sz = face.size();
+  for (unsigned int i = 0; i < sz; i++) {
+    int v1 = face[i];
+    int v2 = face[(i + 1) % sz];
+    int v3 = face[(i + 2) % sz];
+
+    face_normal += vcross(geom.verts()[v1] - geom.verts()[v2],
+                          geom.verts()[v2] - geom.verts()[v3]);
+  }
+
+  return face_normal.to_unit();
+}
+
 // reciprocalN() is from the Hart's Conway Notation web page
 // make array of vertices reciprocal to given planes (face normals)
 // RK - has accuracy issues and will have trouble with -l 16
@@ -293,11 +336,13 @@ vector<Vec3d> reciprocalN(const Geometry &geom)
 {
   vector<Vec3d> normals;
 
-  for (auto &face : geom.faces()) {
+  for (unsigned int i = 0; i < geom.faces().size(); i++) {
+    vector<int> face = geom.faces(i);
+
     // RK - while calculating face normal in antiprism would
     // seem to be a speed up, it is not and has a different value
     // Vec3d face_normal = face_norm(geom.verts(), face).unit();
-    Vec3d face_normal(0, 0, 0);
+    Vec3d face_normal = face_norm_nonplanar(geom, i);
     Vec3d face_centroid = anti::centroid(geom.verts(), face);
 
     unsigned int sz = face.size();
@@ -305,19 +350,12 @@ vector<Vec3d> reciprocalN(const Geometry &geom)
     for (unsigned int j = 0; j < sz; j++) {
       int v1 = face[j];
       int v2 = face[(j + 1) % sz];
-      int v3 = face[(j + 2) % sz];
-      face_normal += vcross(geom.verts()[v3] - geom.verts()[v2],
-                            geom.verts()[v2] - geom.verts()[v1]);
 
-      // avgEdgeDist += geom_nearpts_len2[make_edge(v1, v2)];
       avgEdgeDist += geom.edge_nearpt(make_edge(v1, v2), Vec3d(0, 0, 0)).len2();
     }
+
     // RK - sqrt of length squared here
     avgEdgeDist = sqrt(avgEdgeDist / sz);
-
-    // unit normal in place uses to_unit()
-    //face_normal = -1.0 * face_normal.unit();
-    face_normal.to_unit();
 
     // the face normal height set to intersect face at v
     Vec3d v = face_normal * vdot(face_centroid, face_normal);

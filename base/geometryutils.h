@@ -273,6 +273,11 @@ void get_congruence_maps(const Geometry &geom, Trans3d trans,
                          std::vector<std::vector<int>> &elem_maps,
                          double eps = epsilon);
 
+/// return the unit normal of all perimeter triangles
+/**\param geom geometry.
+ * \param f_idx the face index number. */
+Vec3d face_norm_nonplanar(const Geometry &geom, const int f_idx);
+
 /// return true if maximum vertex radius is radius_range_percent (0.0 to ...)
 /**greater than minimum vertex radius (visible for canonical.cc)
  * \param geom geometry to measure.

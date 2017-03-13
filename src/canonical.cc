@@ -62,7 +62,7 @@ public:
   int num_iters_canonical;
   double mm_edge_factor;
   double mm_plane_factor;
-  bool mm_alternate_loop;
+  bool alternate_algorithm;
   int rep_count;
   double radius_range_percent;
   string output_parts;
@@ -82,7 +82,7 @@ public:
       : ProgramOpts("canonical"), centering('e'), initial_radius('e'),
         edge_distribution('\0'), planarize_method('\0'), num_iters_planar(-1),
         canonical_method('m'), num_iters_canonical(-1), mm_edge_factor(50),
-        mm_plane_factor(20), mm_alternate_loop(false), rep_count(1000),
+        mm_plane_factor(20), alternate_algorithm(false), rep_count(1000),
         radius_range_percent(80), output_parts("b"), face_opacity(-1),
         offset(0), epsilon(0), ipoints_col(Color(255, 255, 0)),
         base_nearpts_col(Color(255, 0, 0)),
@@ -257,7 +257,7 @@ void cn_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'A':
-      mm_alternate_loop = true;
+      alternate_algorithm = true;
       break;
 
     case 'd':
@@ -326,7 +326,7 @@ void cn_opts::process_command_line(int argc, char **argv)
   if (p_set && !c_set)
     canonical_method = 'x';
 
-  if (mm_alternate_loop && canonical_method != 'm')
+  if (alternate_algorithm && canonical_method != 'm')
     warning("alternate form only has effect in mathematica canonicalization", 'A');
 
   if (argc - optind > 1)
@@ -431,7 +431,7 @@ void plane_face(Geometry &polygon)
 
 // RK - edge near points of base seek 1
 bool canonicalize_unit(Geometry &geom, const int num_iters, const double radius_range_percent,
-                      const int rep_count, const char centering, const bool planar_only, const double eps)
+                      const int rep_count, const char centering, const bool alternate_algorithm, const bool planar_only, const double eps)
 {
   bool completed = false;
 
@@ -481,7 +481,7 @@ bool canonicalize_unit(Geometry &geom, const int num_iters, const double radius_
         verts[v] = polygon.verts(j++);
 */
       // RK - this does formulaically what the above does by brute force
-      Vec3d face_normal = geom.face_norm(f).unit();
+      Vec3d face_normal = (alternate_algorithm) ? face_norm_nonplanar(geom,f) : geom.face_norm(f).unit();
       Vec3d face_centroid = geom.face_cent(f);
       // make sure face_normal points outward
       if (vdot(face_normal, face_centroid) < 0)
@@ -902,13 +902,13 @@ int main(int argc, char *argv[])
       bool planarize_only = true;
       completed = canonicalize_mm(geom, opts.mm_edge_factor / 100, opts.mm_plane_factor / 100,
                                  opts.num_iters_planar, opts.radius_range_percent / 100, opts.rep_count,
-                                 planarize_only, opts.mm_alternate_loop, opts.epsilon);
+                                 planarize_only, opts.alternate_algorithm, opts.epsilon);
     }
     else
     if (opts.planarize_method == 'a') {
       bool planarize_only = true;
       completed = canonicalize_unit(geom, opts.num_iters_planar, opts.radius_range_percent / 100,
-                                    opts.rep_count, opts.centering, planarize_only, opts.epsilon);
+                                    opts.rep_count, opts.centering, opts.alternate_algorithm, planarize_only, opts.epsilon);
     }
     // cases p, q, f
     else
@@ -934,7 +934,7 @@ int main(int argc, char *argv[])
       bool planarize_only = false;
       completed = canonicalize_mm(geom, opts.mm_edge_factor / 100, opts.mm_plane_factor / 100,
                                  opts.num_iters_canonical, opts.radius_range_percent / 100, opts.rep_count,
-                                 planarize_only, opts.mm_alternate_loop, opts.epsilon);
+                                 planarize_only, opts.alternate_algorithm, opts.epsilon);
     }
     else
     if (opts.canonical_method == 'b') {
@@ -945,7 +945,7 @@ int main(int argc, char *argv[])
     if (opts.canonical_method == 'a') {
       bool planarize_only = false;
       completed = canonicalize_unit(geom, opts.num_iters_canonical, opts.radius_range_percent / 100,
-                                    opts.rep_count, opts.centering, planarize_only, opts.epsilon);
+                                    opts.rep_count, opts.centering, opts.alternate_algorithm, planarize_only, opts.epsilon);
     }
 
     // RK - report planarity
