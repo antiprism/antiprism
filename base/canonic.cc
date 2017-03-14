@@ -289,13 +289,12 @@ vector<Vec3d> reciprocalN_old(const Geometry &geom)
 /*
 // RK - Gives the same answer as the built in face_norm().unit()
 // even when nonplanar and measuring all edges
-Vec3d face_norm_newell(Geometry &geom, int f_idx)
+Vec3d face_norm_newell(const Geometry &geom, vector<int> &face)
 {
   const vector<Vec3d> &v = geom.verts();
 
   Vec3d face_normal(0, 0, 0);
 
-  vector<int> face = geom.faces(f_idx);
   unsigned int sz = face.size();
   for (unsigned int i = 0; i < sz; i++) {
     int v1 = face[i];
@@ -308,14 +307,20 @@ Vec3d face_norm_newell(Geometry &geom, int f_idx)
 
   return face_normal.to_unit();
 }
+
+// return the unit normal of all perimeter triangles
+Vec3d face_norm_newell(const Geometry &geom, const int f_idx)
+{
+  vector<int> face = geom.faces(f_idx);
+  return face_norm_newell(geom, face);
+}
 */
 
 // return the unit normal of all perimeter triangles
-Vec3d face_norm_nonplanar(const Geometry &geom, const int f_idx)
+Vec3d face_norm_nonplanar(const Geometry &geom, const vector<int> &face)
 {
   Vec3d face_normal(0, 0, 0);
 
-  vector<int> face = geom.faces(f_idx);
   unsigned int sz = face.size();
   for (unsigned int i = 0; i < sz; i++) {
     int v1 = face[i];
@@ -329,6 +334,13 @@ Vec3d face_norm_nonplanar(const Geometry &geom, const int f_idx)
   return face_normal.to_unit();
 }
 
+// return the unit normal of all perimeter triangles
+Vec3d face_norm_nonplanar(const Geometry &geom, const int f_idx)
+{
+  vector<int> face = geom.faces(f_idx);
+  return face_norm_nonplanar(geom, face);
+}
+
 // reciprocalN() is from the Hart's Conway Notation web page
 // make array of vertices reciprocal to given planes (face normals)
 // RK - has accuracy issues and will have trouble with -l 16
@@ -336,15 +348,14 @@ vector<Vec3d> reciprocalN(const Geometry &geom)
 {
   vector<Vec3d> normals;
 
-  for (unsigned int i = 0; i < geom.faces().size(); i++) {
-    vector<int> face = geom.faces(i);
-
+  for (const auto &face : geom.faces()) {
     // RK - while calculating face normal in antiprism would
     // seem to be a speed up, it is not and has a different value
     // Vec3d face_normal = face_norm(geom.verts(), face).unit();
-    Vec3d face_normal = face_norm_nonplanar(geom, i);
+    Vec3d face_normal = face_norm_nonplanar(geom, face);
     Vec3d face_centroid = anti::centroid(geom.verts(), face);
 
+    // RK - find the average lenth of the edge near points
     unsigned int sz = face.size();
     double avgEdgeDist = 0;
     for (unsigned int j = 0; j < sz; j++) {

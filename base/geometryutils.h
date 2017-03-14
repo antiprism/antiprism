@@ -275,6 +275,11 @@ void get_congruence_maps(const Geometry &geom, Trans3d trans,
 
 /// return the unit normal of all perimeter triangles
 /**\param geom geometry.
+ * \param face contains the vertex index numbers in the face. */
+Vec3d face_norm_nonplanar(const Geometry &geom, const std::vector<int> &face);
+
+/// return the unit normal of all perimeter triangles
+/**\param geom geometry.
  * \param f_idx the face index number. */
 Vec3d face_norm_nonplanar(const Geometry &geom, const int f_idx);
 
