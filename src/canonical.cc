@@ -614,8 +614,11 @@ void generate_points(const Geometry &base, const Geometry &dual, vector<Vec3d> &
 
 void set_edge_colors(Geometry &geom, const Color col)
 {
-  if (col.is_set())
-    geom.add_missing_impl_edges(col);
+  // it is possible unset faces already exist
+  if (col.is_set()) {
+    geom.add_missing_impl_edges();
+    Coloring(&geom).e_one_col(col);
+  }
 }
 
 /*
