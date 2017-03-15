@@ -276,12 +276,39 @@ void get_congruence_maps(const Geometry &geom, Trans3d trans,
 /// return the unit normal of all perimeter triangles
 /**\param geom geometry.
  * \param face contains the vertex index numbers in the face. */
-Vec3d face_norm_nonplanar(const Geometry &geom, const std::vector<int> &face);
+Vec3d face_norm_nonplanar_triangles(const Geometry &geom,
+                                    const std::vector<int> &face);
 
 /// return the unit normal of all perimeter triangles
 /**\param geom geometry.
  * \param f_idx the face index number. */
-Vec3d face_norm_nonplanar(const Geometry &geom, const int f_idx);
+Vec3d face_norm_nonplanar_triangles(const Geometry &geom, const int f_idx);
+
+/// return the unit normal of all quads in polygon
+/**\param geom geometry.
+ * \param face contains the vertex index numbers in the face. */
+Vec3d face_norm_nonplanar_quads(const Geometry &geom,
+                                const std::vector<int> &face);
+
+/// return the unit normal of all quads in polygon
+/**\param geom geometry.
+ * \param f_idx the face index number.
+ * \param normal_type n - Newell t - triangular q - quads */
+Vec3d face_norm_nonplanar_quads(const Geometry &geom, const int f_idx);
+
+/// select normal by type. Newell, triangles, or quads
+/**\param geom geometry.
+ * \param face contains the vertex index numbers in the face.
+ * \param normal_type: n - Newell, t - triangular, q - quads */
+Vec3d face_normal_by_type(const Geometry &geom, const std::vector<int> &face,
+                          const char normal_type);
+
+/// select normal by type. Newell, triangles, or quads
+/**\param geom geometry.
+ * \param f_idx the face index number.
+ * \param normal_type: n - Newell, t - triangular, q - quads */
+Vec3d face_normal_by_type(const Geometry &geom, const int f_idx,
+                          const char normal_type);
 
 /// return true if maximum vertex radius is radius_range_percent (0.0 to ...)
 /**greater than minimum vertex radius (visible for canonical.cc)
@@ -299,15 +326,16 @@ bool canonical_radius_range_test(const Geometry &geom,
  * \param radius_range_percent if the model outer radius increases this
  *  much over the inner radius then it is growing too much, terminate.
  * \param rep_count report on propgress after this many iterations.
+ * \param alternate_loop use alternate loop.
  * \param planar_only planarise only.
- * \param alternate_loop alternate loop.
+ * \param normal_type: n - Newell, t -triangles, q - quads (default n)
  * \param eps a small number, coordinates differing by less than eps are
  *  the same. */
 bool canonicalize_mm(Geometry &geom, const double edge_factor,
                      const double plane_factor, const int num_iters,
                      const double radius_range_percent, const int rep_count,
-                     const bool planar_only, const bool alternate_loop,
-                     const double eps = epsilon);
+                     const bool alternate_loop, const bool planar_only,
+                     const char normal_type = 'n', const double eps = epsilon);
 
 /// an abbreviated wrapper for canonicalization with mathematica
 /**\param geom geometry to planarize.
@@ -344,12 +372,14 @@ Vec3d edge_nearpoints_centroid(Geometry &geom,
  *  much over the inner radius then it is growing too much, terminate.
  * \param rep_count report on propgress after this many iterations.
  * \param centering passed from canonical program, when centering is not used
+ * \param normal_type: n - Newell, t -triangles, q - quads (default n)
  * \param eps a small number, coordinates differing by less than eps are
  *  the same. */
 bool canonicalize_bd(Geometry &base, const int num_iters,
                      const char canonical_method,
                      const double radius_range_percent, const int rep_count,
-                     const char centering, const double eps = epsilon);
+                     const char centering, const char normal_type = 'n',
+                     const double eps = epsilon);
 
 /// an abbreviated wrapper for canonicalization with the base/dual method
 /**\param geom geometry to planarize.

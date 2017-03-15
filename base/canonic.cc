@@ -71,8 +71,8 @@ bool canonical_radius_range_test(const Geometry &geom,
 bool canonicalize_mm(Geometry &geom, const double edge_factor,
                      const double plane_factor, const int num_iters,
                      const double radius_range_percent, const int rep_count,
-                     const bool planar_only, const bool alternate_loop,
-                     const double eps)
+                     const bool alternate_loop, const bool planar_only,
+                     const char normal_type, const double eps)
 {
   bool completed = false;
 
@@ -147,7 +147,7 @@ bool canonicalize_mm(Geometry &geom, const double edge_factor,
       int f = ff % geom.faces().size();
       if (geom.faces(f).size() == 3)
         continue;
-      Vec3d face_normal = geom.face_norm(f).unit();
+      Vec3d face_normal = face_normal_by_type(geom, f, normal_type).unit();
       Vec3d face_centroid = geom.face_cent(f);
       // make sure face_normal points outward
       if (vdot(face_normal, face_centroid) < 0)
@@ -203,20 +203,22 @@ bool canonicalize_mm(Geometry &geom, const double edge_factor,
 bool canonicalize_mm(Geometry &geom, const int num_iters, const int rep_count,
                      const double eps)
 {
+  char normal_type = 'n';
   bool alternate_loop = false;
   bool planarize_only = false;
   return canonicalize_mm(geom, 0.3, 0.5, num_iters, DBL_MAX, rep_count,
-                         planarize_only, alternate_loop, eps);
+                         alternate_loop, planarize_only, normal_type, eps);
 }
 
 // RK - wrapper for basic planarization with mathematical algorithm
 bool planarize_mm(Geometry &geom, const int num_iters, const int rep_count,
                   const double eps)
 {
+  char normal_type = 'n';
   bool alternate_loop = false;
   bool planarize_only = true;
   return canonicalize_mm(geom, 0.3, 0.5, num_iters, DBL_MAX, rep_count,
-                         planarize_only, alternate_loop, eps);
+                         alternate_loop, planarize_only, normal_type, eps);
 }
 
 // reciprocalN() is from the Hart's Conway Notation web page
@@ -316,44 +318,99 @@ Vec3d face_norm_newell(const Geometry &geom, const int f_idx)
 }
 */
 
-// return the unit normal of all perimeter triangles
-Vec3d face_norm_nonplanar(const Geometry &geom, const vector<int> &face)
+// return the normal of all perimeter triangles
+Vec3d face_norm_nonplanar_triangles(const Geometry &geom,
+                                    const vector<int> &face)
 {
   Vec3d face_normal(0, 0, 0);
 
   unsigned int sz = face.size();
   for (unsigned int i = 0; i < sz; i++) {
-    int v1 = face[i];
-    int v2 = face[(i + 1) % sz];
-    int v3 = face[(i + 2) % sz];
+    int v0 = face[i];
+    int v1 = face[(i + 1) % sz];
+    int v2 = face[(i + 2) % sz];
 
-    face_normal += vcross(geom.verts()[v1] - geom.verts()[v2],
-                          geom.verts()[v2] - geom.verts()[v3]);
+    face_normal += vcross(geom.verts()[v0] - geom.verts()[v1],
+                          geom.verts()[v1] - geom.verts()[v2]);
   }
 
-  return face_normal.to_unit();
+  return face_normal;
 }
 
-// return the unit normal of all perimeter triangles
-Vec3d face_norm_nonplanar(const Geometry &geom, const int f_idx)
+// return the normal of all perimeter triangles
+Vec3d face_norm_nonplanar_triangles(const Geometry &geom, const int f_idx)
 {
   vector<int> face = geom.faces(f_idx);
-  return face_norm_nonplanar(geom, face);
+  return face_norm_nonplanar_triangles(geom, face);
+}
+
+// return the normal of all quads in polygon
+Vec3d face_norm_nonplanar_quads(const Geometry &geom, const vector<int> &face)
+{
+  Vec3d face_normal(0, 0, 0);
+
+  unsigned int sz = face.size();
+  for (unsigned int i = 0; i < sz; i++) {
+    int v0 = face[i];
+    int v1 = face[(i + 1) % sz];
+    int v2 = face[(i + 2) % sz];
+    int v3 = face[(i + 3) % sz];
+
+    face_normal += vcross(geom.verts()[v0] - geom.verts()[v2],
+                          geom.verts()[v1] - geom.verts()[v3]);
+  }
+
+  return face_normal;
+}
+
+// return the normal of quads in polygon
+Vec3d face_norm_nonplanar_quads(const Geometry &geom, const int f_idx)
+{
+  vector<int> face = geom.faces(f_idx);
+  return face_norm_nonplanar_quads(geom, face);
+}
+
+// select normal by type. Newell, triangles, or quads
+Vec3d face_normal_by_type(const Geometry &geom, const vector<int> &face,
+                          const char normal_type)
+{
+  Vec3d face_normal;
+
+  if (normal_type == 'n')
+    face_normal = geom.face_norm(face);
+  else if (normal_type == 't')
+    face_normal = face_norm_nonplanar_triangles(geom, face);
+  else if (normal_type == 'q')
+    face_normal = face_norm_nonplanar_quads(geom, face);
+  else
+    fprintf(stderr, "error: face_normal_by_type: expected type n, t, or q\n");
+
+  return face_normal;
+}
+
+// select normal by type. Newell, triangles, or quads
+Vec3d face_normal_by_type(const Geometry &geom, const int f_idx,
+                          const char normal_type)
+{
+  vector<int> face = geom.faces(f_idx);
+  return face_normal_by_type(geom, face, normal_type);
 }
 
 // reciprocalN() is from the Hart's Conway Notation web page
 // make array of vertices reciprocal to given planes (face normals)
 // RK - has accuracy issues and will have trouble with -l 16
-vector<Vec3d> reciprocalN(const Geometry &geom)
+vector<Vec3d> reciprocalN(const Geometry &geom, const char normal_type)
 {
   vector<Vec3d> normals;
 
   for (const auto &face : geom.faces()) {
-    // RK - while calculating face normal in antiprism would
-    // seem to be a speed up, it is not and has a different value
-    // Vec3d face_normal = face_norm(geom.verts(), face).unit();
-    Vec3d face_normal = face_norm_nonplanar(geom, face);
+    // RK - the algoritm was written to use triangles for measuring
+    // non-planar faces. Now method can be chosen
+    Vec3d face_normal = face_normal_by_type(geom, face, normal_type).unit();
     Vec3d face_centroid = anti::centroid(geom.verts(), face);
+    // make sure face_normal points outward
+    if (vdot(face_normal, face_centroid) < 0)
+      face_normal *= -1.0;
 
     // RK - find the average lenth of the edge near points
     unsigned int sz = face.size();
@@ -424,7 +481,8 @@ Vec3d edge_nearpoints_centroid(Geometry &geom, const Vec3d cent)
 bool canonicalize_bd(Geometry &base, const int num_iters,
                      const char canonical_method,
                      const double radius_range_percent, const int rep_count,
-                     const char centering, const double eps)
+                     const char centering, const char normal_type,
+                     const double eps)
 {
   bool completed = false;
 
@@ -441,8 +499,8 @@ bool canonicalize_bd(Geometry &base, const int num_iters,
     switch (canonical_method) {
     // base/dual canonicalize method
     case 'b': {
-      dual.raw_verts() = reciprocalN(base);
-      base.raw_verts() = reciprocalN(dual);
+      dual.raw_verts() = reciprocalN(base, normal_type);
+      base.raw_verts() = reciprocalN(dual, normal_type);
       if (centering != 'x') {
         Vec3d e_cent = edge_nearpoints_centroid(base, Vec3d(0, 0, 0));
         base.transform(Trans3d::translate(-0.1 * e_cent));
@@ -515,14 +573,20 @@ bool canonicalize_bd(Geometry &base, const int num_iters,
 bool canonicalize_bd(Geometry &geom, const int num_iters, const int rep_count,
                      const double eps)
 {
-  return canonicalize_bd(geom, num_iters, 'b', 0.8, rep_count, 'x', eps);
+  char centering = 'x';
+  char normal_type = 'n';
+  return canonicalize_bd(geom, num_iters, 'b', 0.8, rep_count, centering,
+                         normal_type, eps);
 }
 
 // RK - wrapper for basic planarization with base/dual algorithm
 bool planarize_bd(Geometry &geom, const int num_iters, const int rep_count,
                   const double eps)
 {
-  return canonicalize_bd(geom, num_iters, 'p', 0.8, rep_count, 'x', eps);
+  char centering = 'x';
+  char normal_type = 'n';
+  return canonicalize_bd(geom, num_iters, 'p', 0.8, rep_count, centering,
+                         normal_type, eps);
 }
 
 } // namespace anti

@@ -68,6 +68,7 @@ public:
   string output_parts;
   int face_opacity;
   double offset;
+  char normal_type;
 
   double epsilon;
 
@@ -84,8 +85,8 @@ public:
         canonical_method('m'), num_iters_canonical(-1), mm_edge_factor(50),
         mm_plane_factor(20), alternate_algorithm(false), rep_count(1000),
         radius_range_percent(80), output_parts("b"), face_opacity(-1),
-        offset(0), epsilon(0), ipoints_col(Color(255, 255, 0)),
-        base_nearpts_col(Color(255, 0, 0)),
+        offset(0), normal_type('n'), epsilon(0),
+        ipoints_col(Color(255, 255, 0)), base_nearpts_col(Color(255, 0, 0)),
         dual_nearpts_col(Color(0.0, 0.39216, 0.0)), base_edge_col(Color()),
         dual_edge_col(Color()), sphere_col(Color(255, 255, 255))
   {
@@ -139,6 +140,7 @@ void cn_opts::usage()
 "               u - minimum tangent sphere, U - maximum, o - origin point\n"
 "               s - base incircles, S - rings, t -dual incircles, T -rings\n"
 "  -q <dist> offset for incircles to avoid coplanarity e.g 0.0001 (default: 0.0)\n"
+"  -x <opt>  Normals: n - Newell's, t - triangles, q - quads (default: Newell's)\n"
 "  -d <perc> radius test. precent difference between minumum and maximum radius\n"
 "               checks if polyhedron is collapsing. 0 for no test (default: 80)\n"
 "  -z <n>    status reporting every n lines. -1 for no status. (default: 1000)\n"
@@ -176,7 +178,7 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hC:r:e:p:i:c:n:O:q:E:P:Ad:z:I:N:M:B:D:U:T:l:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hC:r:e:p:i:c:n:O:q:E:P:Ad:x:z:I:N:M:B:D:U:T:l:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -241,6 +243,13 @@ void cn_opts::process_command_line(int argc, char **argv)
 
     case 'q':
       print_status_or_exit(read_double(optarg, &offset), c);
+      break;
+
+    case 'x':
+      if (strlen(optarg) == 1 && strchr("ntq", int(*optarg)))
+        normal_type = *optarg;
+      else
+        error("normal type must be n, t, q", c);
       break;
 
     case 'E':
@@ -431,7 +440,8 @@ void plane_face(Geometry &polygon)
 
 // RK - edge near points of base seek 1
 bool canonicalize_unit(Geometry &geom, const int num_iters, const double radius_range_percent,
-                      const int rep_count, const char centering, const bool alternate_algorithm, const bool planar_only, const double eps)
+                      const int rep_count, const char centering, 
+                      const char normal_type, const bool planar_only, const double eps)
 {
   bool completed = false;
 
@@ -481,7 +491,7 @@ bool canonicalize_unit(Geometry &geom, const int num_iters, const double radius_
         verts[v] = polygon.verts(j++);
 */
       // RK - this does formulaically what the above does by brute force
-      Vec3d face_normal = (alternate_algorithm) ? face_norm_nonplanar(geom,f) : geom.face_norm(f).unit();
+      Vec3d face_normal = face_normal_by_type(geom, f, normal_type).unit();
       Vec3d face_centroid = geom.face_cent(f);
       // make sure face_normal points outward
       if (vdot(face_normal, face_centroid) < 0)
@@ -879,6 +889,16 @@ int main(int argc, char *argv[])
   if (opts.centering == 'x')
     fprintf(stderr, "(model not moved)\n");
 
+  fprintf(stderr,"normals: ");
+  if (opts.normal_type == 'n')
+    fprintf(stderr,"Newell's method\n");
+  else
+  if (opts.normal_type == 't')
+    fprintf(stderr,"Triangles method\n");
+  else
+  if (opts.normal_type == 'q')
+    fprintf(stderr,"Quads method\n");
+
   bool completed = false;
   if (opts.planarize_method) {
     string planarize_str;
@@ -902,18 +922,18 @@ int main(int argc, char *argv[])
       bool planarize_only = true;
       completed = canonicalize_mm(geom, opts.mm_edge_factor / 100, opts.mm_plane_factor / 100,
                                  opts.num_iters_planar, opts.radius_range_percent / 100, opts.rep_count,
-                                 planarize_only, opts.alternate_algorithm, opts.epsilon);
+                                 opts.alternate_algorithm, planarize_only, opts.normal_type, opts.epsilon);
     }
     else
     if (opts.planarize_method == 'a') {
       bool planarize_only = true;
       completed = canonicalize_unit(geom, opts.num_iters_planar, opts.radius_range_percent / 100,
-                                    opts.rep_count, opts.centering, opts.alternate_algorithm, planarize_only, opts.epsilon);
+                                    opts.rep_count, opts.centering, opts.normal_type, planarize_only, opts.epsilon);
     }
     // cases p, q, f
     else
       completed = canonicalize_bd(geom, opts.num_iters_planar, opts.planarize_method,
-                                 opts.radius_range_percent / 100, opts.rep_count, opts.centering, opts.epsilon);
+                                 opts.radius_range_percent / 100, opts.rep_count, opts.centering, opts.normal_type, opts.epsilon);
 
     // RK - report planarity
     planarity_info(geom);
@@ -934,18 +954,18 @@ int main(int argc, char *argv[])
       bool planarize_only = false;
       completed = canonicalize_mm(geom, opts.mm_edge_factor / 100, opts.mm_plane_factor / 100,
                                  opts.num_iters_canonical, opts.radius_range_percent / 100, opts.rep_count,
-                                 planarize_only, opts.alternate_algorithm, opts.epsilon);
+                                 opts.alternate_algorithm, planarize_only, opts.normal_type, opts.epsilon);
     }
     else
     if (opts.canonical_method == 'b') {
       completed = canonicalize_bd(geom, opts.num_iters_canonical, opts.canonical_method,
-                                 opts.radius_range_percent / 100, opts.rep_count, opts.centering, opts.epsilon);
+                                 opts.radius_range_percent / 100, opts.rep_count, opts.centering, opts.normal_type, opts.epsilon);
     }
     else
     if (opts.canonical_method == 'a') {
       bool planarize_only = false;
       completed = canonicalize_unit(geom, opts.num_iters_canonical, opts.radius_range_percent / 100,
-                                    opts.rep_count, opts.centering, opts.alternate_algorithm, planarize_only, opts.epsilon);
+                                    opts.rep_count, opts.centering, opts.normal_type, planarize_only, opts.epsilon);
     }
 
     // RK - report planarity
