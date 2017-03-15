@@ -137,2643 +137,2406 @@ using namespace anti;
 #define ODD 1
 #define EVEN 2
 
+// clang-format off
 namespace {
 
 // same as rotational permutations
 vector<Vec3d> even_permutations(Vec3d v)
 {
-  vector<Vec3d> vlist;
-  for (unsigned int i = 0; i < 3; i++)
-    vlist.push_back(Vec3d(v[i], v[(i + 1) % 3], v[(i + 2) % 3]));
-  return vlist;
+   vector<Vec3d> vlist;
+   for(unsigned int i=0;i<3;i++)
+      vlist.push_back(Vec3d(v[i],v[(i+1)%3],v[(i+2)%3]));
+   return vlist;
 }
 
 vector<Vec3d> odd_permutations(Vec3d v)
 {
-  vector<Vec3d> vlist;
-  for (unsigned int i = 0; i < 3; i++)
-    vlist.push_back(Vec3d(v[i], v[(i + 2) % 3], v[(i + 1) % 3]));
-  return vlist;
+   vector<Vec3d> vlist;
+   for(unsigned int i=0;i<3;i++)
+      vlist.push_back(Vec3d(v[i],v[(i+2)%3],v[(i+1)%3]));
+   return vlist;
 }
 
 vector<Vec3d> do_permutations(Vec3d v, int permute_type)
 {
-  if (permute_type == EVEN)
-    return even_permutations(v);
-  else if (permute_type == ODD)
-    return odd_permutations(v);
-  else { // NONE - no permutations, just return input inserted into vector array
-    vector<Vec3d> vlist;
-    vlist.push_back(v);
-    return vlist;
-  }
+   if (permute_type == EVEN)
+      return even_permutations(v);
+   else
+   if (permute_type == ODD)
+      return odd_permutations(v);
+   else { // NONE - no permutations, just return input inserted into vector array
+      vector<Vec3d> vlist;
+      vlist.push_back(v);
+      return vlist;
+   }
 }
 
 vector<Vec3d> plus_minus_coords(Vec3d v, int constraint)
 {
   vector<Vec3d> vlist;
-  for (int i = 1; i >= -1; i -= 2)
-    for (int j = 1; j >= -1; j -= 2)
-      for (int k = 1; k >= -1; k -= 2) {
-        // don't create negative zeros
-        if ((i == -1 && v[0] == 0) || (j == -1 && v[1] == 0) ||
-            (k == -1 && v[2] == 0))
-          continue;
-        if ((constraint == ALL) || (constraint == EVEN && i * j * k == -1) ||
-            (constraint == ODD && i * j * k == 1))
-          vlist.push_back(Vec3d(v[0] * i, v[1] * j, v[2] * k));
-      }
-  return vlist;
+   for(int i=1;i>=-1;i-=2)
+      for(int j=1;j>=-1;j-=2)
+         for(int k=1;k>=-1;k-=2) {
+            // don't create negative zeros
+            if ((i==-1 && v[0] == 0) || (j==-1 && v[1] == 0) || (k==-1 && v[2] == 0)) continue;
+            if ((constraint == ALL) ||
+                (constraint == EVEN && i*j*k == -1) ||
+                (constraint == ODD && i*j*k == 1))
+               vlist.push_back(Vec3d(v[0]*i,v[1]*j,v[2]*k));
+            }
+   return vlist;
 }
 
 void add_verts(Geometry &geom, vector<Vec3d> &verts_to_add)
 {
-  for (auto &i : verts_to_add)
-    geom.add_vert(i);
+   for(unsigned int i=0;i<verts_to_add.size();i++)
+      geom.add_vert(verts_to_add[i]);
 }
 
-void calculate_coords(Geometry &geom, vector<Vec3d> &vlist, int permute_type,
-                      int plus_minus_type)
+void calculate_coords(Geometry &geom, vector<Vec3d> &vlist, int permute_type, int plus_minus_type)
 {
-  for (auto &i : vlist) {
-    vector<Vec3d> plist = do_permutations(i, permute_type);
-    for (auto &j : plist) {
-      vector<Vec3d> vlist = plus_minus_coords(j, plus_minus_type);
-      add_verts(geom, vlist);
-    }
-  }
+   for(unsigned int i=0;i<vlist.size();i++) {
+      vector<Vec3d> plist = do_permutations(vlist[i],permute_type);
+      for(unsigned int j=0;j<plist.size();j++) {
+         vector<Vec3d> vlist = plus_minus_coords(plist[j],plus_minus_type);
+         add_verts(geom, vlist);
+      }
+   }
 }
 
 void add_faces(Geometry &geom, int face_size, int face_count, int faces[])
 {
-  vector<int> face(face_size);
-  for (int i = 0; i < face_count; i++) {
-    for (int j = 0; j < face_size; j++)
-      face[j] = faces[face_size * i + j];
-    geom.add_face(face);
-  }
+   vector<int> face(face_size);
+   for(int i=0; i<face_count; i++) {
+      for(int j=0; j<face_size; j++)
+         face[j] = faces[face_size*i + j];
+      geom.add_face(face);
+   }
 }
 
 // u04 u05
 void octahedron_vertex_set(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(1, 0, 0));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(1,0,0));
 
-  calculate_coords(geom, vlist, EVEN, ALL);
+   calculate_coords(geom, vlist, EVEN, ALL);
 }
 
 // u07 u03 u15
 void cuboctahedron_vertex_set(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(1, 1, 0));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(1,1,0));
 
-  calculate_coords(geom, vlist, EVEN, ALL);
+   calculate_coords(geom, vlist, EVEN, ALL);
 }
 
 // u09 u14 u17 u21
 void truncated_cube_vertex_set(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(sqrt(2) - 1, 1, 1));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(sqrt(2)-1,1,1));
 
-  calculate_coords(geom, vlist, EVEN, ALL);
+   calculate_coords(geom, vlist, EVEN, ALL);
 }
 
 // u10 u13 u18 u19
 void rhombicuboctahedron_vertex_set(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(1, 1, 1 + sqrt(2)));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(1,1,1+sqrt(2)));
 
-  calculate_coords(geom, vlist, EVEN, EVEN);
-  calculate_coords(geom, vlist, ODD, ODD);
+   calculate_coords(geom, vlist, EVEN, EVEN);
+   calculate_coords(geom, vlist, ODD, ODD);
 }
 
 // u22 u34 u35 u53
 void icosahedron_vertex_set(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(0, 1, phi));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(0,1,phi));
 
-  calculate_coords(geom, vlist, EVEN, ALL);
+   calculate_coords(geom, vlist, EVEN, ALL);
 }
 
 // u37 u61 u67 u73
 void truncated_great_dodecahedron_vertex_set(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(1 / (phi * phi), 0, 2 - (1 / phi)));
-  vlist.push_back(Vec3d(1, 1 / (phi * phi * phi), 1));
-  vlist.push_back(Vec3d(1 / phi, 1 / (phi * phi), 2 / phi));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(1/(phi*phi),0,2-(1/phi)));
+   vlist.push_back(Vec3d(1,1/(phi*phi*phi),1));
+   vlist.push_back(Vec3d(1/phi,1/(phi*phi),2/phi));
 
-  calculate_coords(geom, vlist, ODD, ALL);
+   calculate_coords(geom, vlist, ODD, ALL);
 }
 
 // u38 u44 u56
 void rhombidodecadodecahedron_vertex_set(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(1 / (phi * phi), 0, phi * phi));
-  vlist.push_back(Vec3d(1, 1, (2 * phi) - 1));
-  vlist.push_back(Vec3d(2, 1 / phi, phi));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(1/(phi*phi),0,phi*phi));
+   vlist.push_back(Vec3d(1,1,(2*phi)-1));
+   vlist.push_back(Vec3d(2,1/phi,phi));
 
-  calculate_coords(geom, vlist, ODD, ALL);
+   calculate_coords(geom, vlist, ODD, ALL);
 }
 
 // u24 u49 u51 u54 u70 u71 u36 u62 u65
 void icosidodecahedron_vertex_set(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(0, 0, phi));
-  vlist.push_back(Vec3d(0.5, phi / 2, (1 + phi) / 2));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(0,0,phi));
+   vlist.push_back(Vec3d(0.5, phi/2, (1+phi)/2));
 
-  calculate_coords(geom, vlist, ODD, ALL);
+   calculate_coords(geom, vlist, ODD, ALL);
 }
 
 // u26 u42 u48 u63
 void truncated_dodecahedron_vertex_set(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(0, 1 / phi, 2 + phi));
-  vlist.push_back(Vec3d(1 / phi, phi, 2 * phi));
-  vlist.push_back(Vec3d(phi, 2, phi * phi));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(0,1/phi,2+phi));
+   vlist.push_back(Vec3d(1/phi,phi,2*phi));
+   vlist.push_back(Vec3d(phi,2,phi*phi));
 
-  calculate_coords(geom, vlist, ODD, ALL);
+   calculate_coords(geom, vlist, ODD, ALL);
 }
 
 // u23 u52 u30 u41 u47
 void dodecahedron_vertex_set(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(1, 1, 1));
-  calculate_coords(geom, vlist, NONE, ALL);
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(1,1,1));
+   calculate_coords(geom, vlist, NONE, ALL);
 
-  vlist.clear();
-  vlist.push_back(Vec3d(0, 1 / phi, phi));
-  calculate_coords(geom, vlist, ODD, ALL);
+   vlist.clear();
+   vlist.push_back(Vec3d(0,1/phi,phi));
+   calculate_coords(geom, vlist, ODD, ALL);
 }
 
 // u27 u33 u39 u58
 void rhombicosidodecahedron_vertex_set(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(1, 1, phi * phi * phi));
-  vlist.push_back(Vec3d(phi, 2 * phi, phi * phi));
-  vlist.push_back(Vec3d(0, phi * phi, 2 + phi));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(1,1,phi*phi*phi));
+   vlist.push_back(Vec3d(phi,2*phi,phi*phi));
+   vlist.push_back(Vec3d(0,phi*phi,2+phi));
 
-  calculate_coords(geom, vlist, ODD, ALL);
+   calculate_coords(geom, vlist, ODD, ALL);
 }
 
 // u31 u43 u50 u66
 void small_icosicosidodecahedron_vertex_set(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(0, phi, 2 - (1 / phi)));
-  vlist.push_back(Vec3d(phi, 1 / phi, 2 / phi));
-  vlist.push_back(Vec3d(1 / (phi * phi), 1 / phi, 2));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(0,phi,2-(1/phi)));
+   vlist.push_back(Vec3d(phi,1/phi,2/phi));
+   vlist.push_back(Vec3d(1/(phi*phi),1/phi,2));
 
-  calculate_coords(geom, vlist, EVEN, ALL);
+   calculate_coords(geom, vlist, EVEN, ALL);
 }
 
 // u75 u64 "skilling's figure"
 void great_dirhombicosidodecahedron_vertex_set(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(0, 2 / phi, 2 / sqrt(phi)));
-  vlist.push_back(Vec3d(-1 + 1 / sqrt(phi * phi * phi),
-                        1 / (phi * phi) - 1 / sqrt(phi), 1 / phi + sqrt(phi)));
-  vlist.push_back(Vec3d(-1 / phi + sqrt(phi), -1 - 1 / sqrt(phi * phi * phi),
-                        1 / (phi * phi) + 1 / sqrt(phi)));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(0,2/phi,2/sqrt(phi)));
+   vlist.push_back(Vec3d(-1+1/sqrt(phi*phi*phi),1/(phi*phi)-1/sqrt(phi),1/phi+sqrt(phi)));
+   vlist.push_back(Vec3d(-1/phi+sqrt(phi),-1-1/sqrt(phi*phi*phi),1/(phi*phi)+1/sqrt(phi)));
 
-  calculate_coords(geom, vlist, ODD, ALL);
+   calculate_coords(geom, vlist, ODD, ALL);
 }
 
 // u40 u60
 vector<Vec3d> u40_u60_vertices(double approx_a)
 {
-  double a = approx_a;
+   double a = approx_a;
 
-  double coeffs[] = {-1 / phi, -1, 2, -1, phi};
-  double sol[4];
-  quartic(coeffs, sol);
+   double coeffs[] = { -1/phi, -1, 2, -1, phi };
+   double sol[4];
+   quartic(coeffs, sol);
 
-  for (double i : sol) {
-    double eps = 1e-12;
-    if (double_eq(i, a, eps)) {
-      a = i;
-      break;
-    }
-  }
+   for(unsigned int i=0; i<4; i++) {
+      double eps = 1e-12;
+      if (double_eq(sol[i], a, eps)) {
+         a = sol[i];
+         break;
+      }
+   }
 
-  double b = ((a * a) / phi + phi) / (a * phi - 1 / phi);
+   double b = ((a*a)/phi+phi)/(a*phi-1/phi);
 
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(2 * a, 2, 2 * b));
-  vlist.push_back(
-      Vec3d(a + b / phi + phi, -a * phi + b + 1 / phi, a / phi + b * phi - 1));
-  vlist.push_back(
-      Vec3d(-a / phi + b * phi + 1, -a + b / phi - phi, a * phi + b - 1 / phi));
-  vlist.push_back(
-      Vec3d(-a / phi + b * phi - 1, a - b / phi - phi, a * phi + b + 1 / phi));
-  vlist.push_back(
-      Vec3d(a + b / phi - phi, a * phi - b + 1 / phi, a / phi + b * phi + 1));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(2*a,2,2*b));
+   vlist.push_back(Vec3d(a+b/phi+phi,-a*phi+b+1/phi,a/phi+b*phi-1));
+   vlist.push_back(Vec3d(-a/phi+b*phi+1,-a+b/phi-phi,a*phi+b-1/phi));
+   vlist.push_back(Vec3d(-a/phi+b*phi-1,a-b/phi-phi,a*phi+b+1/phi));
+   vlist.push_back(Vec3d(a+b/phi-phi,a*phi-b+1/phi,a/phi+b*phi+1));
 
-  return vlist;
+   return vlist;
 }
 
 // u57 u69 u74
 vector<Vec3d> u57_u69_u74_vertices(double approx_x)
 {
-  double x = approx_x;
+   double x = approx_x;
 
-  double sol[3];
-  double coeffs_x[] = {1 / phi, -2, 0, 1};
-  cubic(coeffs_x, sol);
+   double sol[3];
+   double coeffs_x[] = { 1/phi, -2, 0, 1 };
+   cubic(coeffs_x, sol);
 
-  for (double i : sol) {
-    double eps = 1e-12;
-    if (double_eq(i, x, eps)) {
-      x = i;
-      break;
-    }
-  }
+   for(unsigned int i=0; i<3; i++) {
+      double eps = 1e-12;
+      if (double_eq(sol[i], x, eps)) {
+         x = sol[i];
+         break;
+      }
+   }
 
-  double a = x - 1 / x;
-  double b = -x / phi + 1 / (phi * phi) - 1 / (x * phi);
+   double a = x - 1/x;
+   double b = -x/phi + 1/(phi*phi) - 1/(x*phi);
 
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(2 * a, 2, 2 * b));
-  vlist.push_back(
-      Vec3d(a - b * phi - 1 / phi, a / phi + b - phi, -a * phi - b / phi - 1));
-  vlist.push_back(
-      Vec3d(a * phi - b / phi + 1, -a - b * phi + 1 / phi, -a / phi + b + phi));
-  vlist.push_back(
-      Vec3d(a * phi - b / phi - 1, a + b * phi + 1 / phi, -a / phi + b - phi));
-  vlist.push_back(
-      Vec3d(a - b * phi + 1 / phi, -a / phi - b - phi, -a * phi - b / phi + 1));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(2*a,2,2*b));
+   vlist.push_back(Vec3d(a-b*phi-1/phi,a/phi+b-phi,-a*phi-b/phi-1));
+   vlist.push_back(Vec3d(a*phi-b/phi+1,-a-b*phi+1/phi,-a/phi+b+phi));
+   vlist.push_back(Vec3d(a*phi-b/phi-1,a+b*phi+1/phi,-a/phi+b-phi));
+   vlist.push_back(Vec3d(a-b*phi+1/phi,-a/phi-b-phi,-a*phi-b/phi+1));
 
-  return vlist;
+   return vlist;
 }
 
 // tetrahedron
 void U1(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(1, 1, 1));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(1,1,1));
 
-  calculate_coords(geom, vlist, NONE, ODD);
+   calculate_coords(geom, vlist, NONE, ODD);
 
-  int faces3[] = {
-      3, 1, 0, 2, 0, 1, 3, 0, 2, 2, 1, 3,
-  };
-  add_faces(geom, 3, 4, faces3);
+   int faces3[] = { 3,1,0, 2,0,1, 3,0,2, 2,1,3,
+                    };
+   add_faces(geom, 3, 4, faces3);
 }
 
 // truncated tetrahedron
 void U2(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(1, 1, 3));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(1,1,3));
 
-  calculate_coords(geom, vlist, EVEN, EVEN);
+   calculate_coords(geom, vlist, EVEN, EVEN);
 
-  int faces3[] = {
-      0, 4, 8, 2, 6, 10, 3, 7, 11, 9, 1, 5,
-  };
-  add_faces(geom, 3, 4, faces3);
+   int faces3[] = { 0,4,8, 2,6,10, 3,7,11, 9,1,5,
+                    };
+   add_faces(geom, 3, 4, faces3);
 
-  int faces6[] = {
-      0, 3, 11, 10, 6, 4, 7, 5, 1, 2, 10, 11,
-      9, 5, 7,  3,  0, 8, 9, 8, 4, 6, 2,  1,
-  };
-  add_faces(geom, 6, 4, faces6);
+   int faces6[] = { 0,3,11,10,6,4, 7,5,1,2,10,11, 9,5,7,3,0,8,
+                    9,8,4,6,2,1, };
+   add_faces(geom, 6, 4, faces6);
 }
 
 // octahemioctahedron
 void U3(Geometry &geom)
 {
-  cuboctahedron_vertex_set(geom);
+   cuboctahedron_vertex_set(geom);
 
-  int faces3[] = {
-      0, 4, 8, 1, 4, 10, 3, 6, 10, 5,  11, 1,
-      8, 2, 6, 9, 0, 5,  9, 2, 7,  11, 3,  7,
-  };
-  add_faces(geom, 3, 8, faces3);
+   int faces3[] = { 0,4,8, 1,4,10, 3,6,10, 5,11,1,
+                    8,2,6, 9,0,5, 9,2,7, 11,3,7,
+                    };
+   add_faces(geom, 3, 8, faces3);
 
-  int faces6[] = {
-      0, 9, 7,  3, 10, 4, 5,  0, 8, 6, 3, 11,
-      5, 1, 10, 6, 2,  9, 11, 7, 2, 8, 4, 1,
-  };
-  add_faces(geom, 6, 4, faces6);
+   int faces6[] = { 0,9,7,3,10,4, 5,0,8,6,3,11, 5,1,10,6,2,9,
+                    11,7,2,8,4,1, };
+   add_faces(geom, 6, 4, faces6);
 }
 
 // tetrahemihexahedron
 void U4(Geometry &geom)
 {
-  octahedron_vertex_set(geom);
+   octahedron_vertex_set(geom);
 
-  int faces3[] = {
-      2, 5, 0, 3, 1, 5, 4, 0, 3, 4, 2, 1,
-  };
-  add_faces(geom, 3, 4, faces3);
+   int faces3[] = { 2,5,0, 3,1,5, 4,0,3, 4,2,1,
+                    };
+   add_faces(geom, 3, 4, faces3);
 
-  int faces4[] = {
-      0, 4, 1, 5, 3, 0, 2, 1, 3, 5, 2, 4,
-  };
-  add_faces(geom, 4, 3, faces4);
+   int faces4[] = { 0,4,1,5, 3,0,2,1, 3,5,2,4, };
+   add_faces(geom, 4, 3, faces4);
 }
 
 //   octahedron
 void U5(Geometry &geom)
 {
-  octahedron_vertex_set(geom);
+   octahedron_vertex_set(geom);
 
-  int faces3[] = {
-      0, 2, 5, 0, 4, 2, 1, 3, 5, 1, 4, 3, 2, 4, 1, 3, 4, 0, 5, 2, 1, 5, 3, 0,
-  };
-  add_faces(geom, 3, 8, faces3);
+   int faces3[] = { 0,2,5, 0,4,2, 1,3,5, 1,4,3,
+                    2,4,1, 3,4,0, 5,2,1, 5,3,0,
+                    };
+   add_faces(geom, 3, 8, faces3);
 }
 
 // cube
 void U6(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(1, 1, 1));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(1,1,1));
 
-  calculate_coords(geom, vlist, NONE, ALL);
+   calculate_coords(geom, vlist, NONE, ALL);
 
-  int faces4[] = {
-      1, 5, 4, 0, 2, 0, 4, 6, 3, 1, 0, 2, 5, 1, 3, 7, 6, 4, 5, 7, 7, 3, 2, 6,
-  };
-  add_faces(geom, 4, 6, faces4);
+   int faces4[] = { 1,5,4,0, 2,0,4,6, 3,1,0,2, 5,1,3,7,
+                    6,4,5,7, 7,3,2,6, };
+   add_faces(geom, 4, 6, faces4);
 }
 
 //   cuboctahedron
 void U7(Geometry &geom)
 {
-  cuboctahedron_vertex_set(geom);
+   cuboctahedron_vertex_set(geom);
 
-  int faces3[] = {
-      0, 5, 9, 1, 4,  10, 2, 9, 7, 3,  10, 6,
-      6, 8, 2, 7, 11, 3,  8, 4, 0, 11, 5,  1,
-  };
-  add_faces(geom, 3, 8, faces3);
+   int faces3[] = { 0,5,9, 1,4,10, 2,9,7, 3,10,6,
+                    6,8,2, 7,11,3, 8,4,0, 11,5,1,
+                    };
+   add_faces(geom, 3, 8, faces3);
 
-  int faces4[] = {
-      2, 7, 3, 6, 4,  1, 5,  0, 7,  9, 5, 11,
-      8, 0, 9, 2, 10, 3, 11, 1, 10, 4, 8, 6,
-  };
-  add_faces(geom, 4, 6, faces4);
+   int faces4[] = { 2,7,3,6, 4,1,5,0, 7,9,5,11, 8,0,9,2,
+                    10,3,11,1, 10,4,8,6, };
+   add_faces(geom, 4, 6, faces4);
 }
 
 // truncated octahedron
 void U8(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(0, 1, 2));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(0,1,2));
 
-  calculate_coords(geom, vlist, EVEN, ALL);
-  calculate_coords(geom, vlist, ODD, ALL);
+   calculate_coords(geom, vlist, EVEN, ALL);
+   calculate_coords(geom, vlist, ODD, ALL);
 
-  int faces4[] = {
-      2,  16, 0,  18, 5,  14, 7,  15, 6,  12, 4,  13,
-      11, 23, 10, 22, 19, 1,  17, 3,  20, 8,  21, 9,
-  };
-  add_faces(geom, 4, 6, faces4);
+   int faces4[] = { 2,16,0,18, 5,14,7,15, 6,12,4,13, 11,23,10,22,
+                    19,1,17,3, 20,8,21,9, };
+   add_faces(geom, 4, 6, faces4);
 
-  int faces6[] = {
-      2,  18, 10, 23, 7,  14, 3,  15, 7,  23, 11, 19, 5,  21, 8,  16,
-      2,  14, 9,  17, 1,  13, 4,  20, 12, 0,  16, 8,  20, 4,  12, 6,
-      22, 10, 18, 0,  13, 1,  19, 11, 22, 6,  15, 3,  17, 9,  21, 5,
-  };
-  add_faces(geom, 6, 8, faces6);
+   int faces6[] = { 2,18,10,23,7,14, 3,15,7,23,11,19, 5,21,8,16,2,14,
+                    9,17,1,13,4,20, 12,0,16,8,20,4, 12,6,22,10,18,0,
+                    13,1,19,11,22,6, 15,3,17,9,21,5, };
+   add_faces(geom, 6, 8, faces6);
 }
 
 // truncated cube
 void U9(Geometry &geom)
 {
-  truncated_cube_vertex_set(geom);
+   truncated_cube_vertex_set(geom);
 
-  int faces3[] = {
-      1, 9, 17, 3,  19, 11, 6,  22, 14, 7,  15, 23,
-      8, 0, 16, 10, 18, 2,  12, 20, 4,  21, 13, 5,
-  };
-  add_faces(geom, 3, 8, faces3);
+   int faces3[] = { 1,9,17, 3,19,11, 6,22,14, 7,15,23,
+                    8,0,16, 10,18,2, 12,20,4, 21,13,5,
+                    };
+   add_faces(geom, 3, 8, faces3);
 
-  int faces8[] = {
-      1,  17, 19, 3,  7,  23, 21, 5,  2,  6, 14, 15, 7,  3,  11, 10,
-      4,  0,  8,  9,  1,  5,  13, 12, 9,  8, 16, 18, 10, 11, 19, 17,
-      13, 21, 23, 15, 14, 22, 20, 12, 16, 0, 4,  20, 22, 6,  2,  18,
-  };
-  add_faces(geom, 8, 6, faces8);
+   int faces8[] = { 1,17,19,3,7,23,21,5, 2,6,14,15,7,3,11,10,
+                    4,0,8,9,1,5,13,12, 9,8,16,18,10,11,19,17,
+                    13,21,23,15,14,22,20,12, 16,0,4,20,22,6,2,18,
+                    };
+   add_faces(geom, 8, 6, faces8);
 }
 
 // rhombicuboctahedron
 void U10(Geometry &geom)
 {
-  rhombicuboctahedron_vertex_set(geom);
+   rhombicuboctahedron_vertex_set(geom);
 
-  int faces3[] = {
-      3,  7,  11, 8,  0,  4,  9,  1,  5,  10, 2,  6,
-      12, 16, 20, 17, 21, 13, 18, 22, 14, 23, 15, 19,
-  };
-  add_faces(geom, 3, 8, faces3);
+   int faces3[] = { 3,7,11, 8,0,4, 9,1,5, 10,2,6,
+                    12,16,20, 17,21,13, 18,22,14, 23,15,19,
+                    };
+   add_faces(geom, 3, 8, faces3);
 
-  int faces4[] = {
-      0,  18, 14, 4,  2,  19, 1,  16, 4,  12, 20, 8,  6,  12, 4,  14, 10, 23,
-      19, 2,  11, 22, 18, 3,  11, 23, 10, 22, 12, 6,  2,  16, 13, 7,  3,  17,
-      15, 5,  1,  19, 15, 7,  13, 5,  16, 1,  9,  20, 17, 0,  8,  21, 18, 0,
-      17, 3,  20, 9,  21, 8,  21, 9,  5,  13, 22, 10, 6,  14, 23, 11, 7,  15,
-  };
-  add_faces(geom, 4, 18, faces4);
+   int faces4[] = { 0,18,14,4, 2,19,1,16, 4,12,20,8, 6,12,4,14,
+                    10,23,19,2, 11,22,18,3, 11,23,10,22, 12,6,2,16,
+                    13,7,3,17, 15,5,1,19, 15,7,13,5, 16,1,9,20,
+                    17,0,8,21, 18,0,17,3, 20,9,21,8, 21,9,5,13,
+                    22,10,6,14, 23,11,7,15, };
+   add_faces(geom, 4, 18, faces4);
 }
 
 // truncated cuboctahedron
 void U11(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(1, 1 + sqrt(2), 1 + 2 * sqrt(2)));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(1,1+sqrt(2),1+2*sqrt(2)));
 
-  calculate_coords(geom, vlist, EVEN, ALL);
-  calculate_coords(geom, vlist, ODD, ALL);
+   calculate_coords(geom, vlist, EVEN, ALL);
+   calculate_coords(geom, vlist, ODD, ALL);
 
-  int faces4[] = {
-      0,  24, 28, 4,  23, 21, 37, 39, 25, 1,  5,  29, 30, 26, 2,  6,
-      31, 7,  3,  27, 33, 17, 19, 35, 34, 18, 16, 32, 38, 36, 20, 22,
-      41, 9,  8,  40, 43, 42, 10, 11, 44, 12, 13, 45, 46, 47, 15, 14,
-  };
-  add_faces(geom, 4, 12, faces4);
+   int faces4[] = { 0,24,28,4, 23,21,37,39, 25,1,5,29, 30,26,2,6,
+                    31,7,3,27, 33,17,19,35, 34,18,16,32, 38,36,20,22,
+                    41,9,8,40, 43,42,10,11, 44,12,13,45, 46,47,15,14,
+                    };
+   add_faces(geom, 4, 12, faces4);
 
-  int faces6[] = {
-      5,  37, 21, 45, 13, 29, 10, 42, 18, 34, 2,  26, 11, 27, 3,  35,
-      19, 43, 14, 30, 6,  38, 22, 46, 15, 47, 23, 39, 7,  31, 17, 33,
-      1,  25, 9,  41, 40, 8,  24, 0,  32, 16, 44, 20, 36, 4,  28, 12,
-  };
-  add_faces(geom, 6, 8, faces6);
+   int faces6[] = { 5,37,21,45,13,29, 10,42,18,34,2,26, 11,27,3,35,19,43,
+                    14,30,6,38,22,46, 15,47,23,39,7,31, 17,33,1,25,9,41,
+                    40,8,24,0,32,16, 44,20,36,4,28,12, };
+   add_faces(geom, 6, 8, faces6);
 
-  int faces8[] = {
-      1,  33, 35, 3,  7,  39, 37, 5,  6,  2,  34, 32, 0,  4,  36, 38,
-      9,  25, 29, 13, 12, 28, 24, 8,  11, 10, 26, 30, 14, 15, 31, 27,
-      42, 43, 19, 17, 41, 40, 16, 18, 46, 22, 20, 44, 45, 21, 23, 47,
-  };
-  add_faces(geom, 8, 6, faces8);
+   int faces8[] = { 1,33,35,3,7,39,37,5, 6,2,34,32,0,4,36,38,
+                    9,25,29,13,12,28,24,8, 11,10,26,30,14,15,31,27,
+                    42,43,19,17,41,40,16,18, 46,22,20,44,45,21,23,47,
+                    };
+   add_faces(geom, 8, 6, faces8);
 }
-
+ 
 // snub cube
 void U12(Geometry &geom)
 {
-  // tribonocci_constant
-  double t = 3 / (pow(17 + sqrt(297), (1 / 3.0)) -
-                  pow(-17 + sqrt(297), (1 / 3.0)) - 1);
+   //tribonocci_constant
+   double t = 3/(pow(17+sqrt(297), (1/3.0)) - pow(-17+sqrt(297), (1/3.0)) -1);
 
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(t, 1 / t, 1));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(t,1/t,1));
 
-  calculate_coords(geom, vlist, EVEN, EVEN);
-  calculate_coords(geom, vlist, ODD, ODD);
+   calculate_coords(geom, vlist, EVEN, EVEN);
+   calculate_coords(geom, vlist, ODD, ODD);
 
-  int faces3[] = {
-      0,  8,  12, 0,  13, 21, 0,  21, 4,  1,  5,  9,  2,  6,  10, 2,
-      10, 14, 2,  23, 6,  4,  8,  0,  4,  22, 18, 5,  1,  20, 5,  23,
-      19, 7,  3,  22, 7,  11, 3,  7,  21, 17, 9,  5,  19, 9,  13, 1,
-      10, 6,  16, 11, 19, 15, 12, 8,  16, 12, 20, 1,  14, 10, 18, 14,
-      22, 3,  15, 3,  11, 15, 19, 23, 15, 23, 2,  16, 6,  20, 16, 20,
-      12, 17, 11, 7,  17, 13, 9,  17, 21, 13, 18, 8,  4,  18, 22, 14,
-  };
-  add_faces(geom, 3, 32, faces3);
+   int faces3[] = { 0,8,12, 0,13,21, 0,21,4, 1,5,9,
+                    2,6,10, 2,10,14, 2,23,6, 4,8,0,
+                    4,22,18, 5,1,20, 5,23,19, 7,3,22,
+                    7,11,3, 7,21,17, 9,5,19, 9,13,1,
+                    10,6,16, 11,19,15, 12,8,16, 12,20,1,
+                    14,10,18, 14,22,3, 15,3,11, 15,19,23,
+                    15,23,2, 16,6,20, 16,20,12, 17,11,7,
+                    17,13,9, 17,21,13, 18,8,4, 18,22,14,
+                    };
+   add_faces(geom, 3, 32, faces3);
 
-  int faces4[] = {
-      1, 13, 0, 12, 2, 14, 3,  15, 4,  21, 7,  22,
-      6, 23, 5, 20, 8, 18, 10, 16, 19, 11, 17, 9,
-  };
-  add_faces(geom, 4, 6, faces4);
+   int faces4[] = { 1,13,0,12, 2,14,3,15, 4,21,7,22, 6,23,5,20,
+                    8,18,10,16, 19,11,17,9, };
+   add_faces(geom, 4, 6, faces4);
 }
 
 // small cubicuboctahedron
 void U13(Geometry &geom)
 {
-  rhombicuboctahedron_vertex_set(geom);
+   rhombicuboctahedron_vertex_set(geom);
 
-  int faces3[] = {
-      6,  2,  10, 7,  3,  11, 8,  4,  0,  9,  5,  1,
-      14, 22, 18, 15, 23, 19, 20, 16, 12, 21, 17, 13,
-  };
-  add_faces(geom, 3, 8, faces3);
+   int faces3[] = { 6,2,10, 7,3,11, 8,4,0, 9,5,1,
+                    14,22,18, 15,23,19, 20,16,12, 21,17,13,
+                    };
+   add_faces(geom, 3, 8, faces3);
 
-  int faces4[] = {
-      1,  16, 2,  19, 5,  15, 7,  13, 12, 4,  14, 6,
-      17, 3,  18, 0,  21, 8,  20, 9,  23, 10, 22, 11,
-  };
-  add_faces(geom, 4, 6, faces4);
+   int faces4[] = { 1,16,2,19, 5,15,7,13, 12,4,14,6, 17,3,18,0,
+                    21,8,20,9, 23,10,22,11, };
+   add_faces(geom, 4, 6, faces4);
 
-  int faces8[] = {
-      5,  13, 17, 0,  4,  12, 16, 1,  9,  1,  19, 23, 11, 3,  17, 21,
-      9,  20, 12, 6,  10, 23, 15, 5,  15, 19, 2,  6,  14, 18, 3,  7,
-      20, 8,  0,  18, 22, 10, 2,  16, 21, 13, 7,  11, 22, 14, 4,  8,
-  };
-  add_faces(geom, 8, 6, faces8);
+   int faces8[] = { 5,13,17,0,4,12,16,1, 9,1,19,23,11,3,17,21,
+                    9,20,12,6,10,23,15,5, 15,19,2,6,14,18,3,7,
+                    20,8,0,18,22,10,2,16, 21,13,7,11,22,14,4,8,
+                    };
+   add_faces(geom, 8, 6, faces8);
 }
 
 // great cubicuboctahedron
 void U14(Geometry &geom)
 {
-  truncated_cube_vertex_set(geom);
+   truncated_cube_vertex_set(geom);
 
-  int faces3[] = {
-      8,  19, 5,  10, 7, 17, 12, 1,  23, 14, 21, 3,
-      16, 6,  11, 18, 9, 4,  20, 15, 2,  22, 0,  13,
-  };
-  add_faces(geom, 3, 8, faces3);
+   int faces3[] = { 8,19,5, 10,7,17, 12,1,23, 14,21,3,
+                    16,6,11, 18,9,4, 20,15,2, 22,0,13,
+                    };
+   add_faces(geom, 3, 8, faces3);
 
-  int faces4[] = {
-      1,  0,  2,  3, 5,  7,  6,  4,  9,  11, 15, 13,
-      12, 14, 10, 8, 17, 21, 20, 16, 19, 18, 22, 23,
-  };
-  add_faces(geom, 4, 6, faces4);
+   int faces4[] = { 1,0,2,3, 5,7,6,4, 9,11,15,13, 12,14,10,8,
+                    17,21,20,16, 19,18,22,23, };
+   add_faces(geom, 4, 6, faces4);
 
-  int faces8[] = {
-      8,  5,  4, 9,  13, 0,  1, 12, 8,  10, 17, 16, 11, 9,  18, 19,
-      10, 14, 3, 2,  15, 11, 6, 7,  12, 23, 22, 13, 15, 20, 21, 14,
-      18, 4,  6, 16, 20, 2,  0, 22, 19, 23, 1,  3,  21, 17, 7,  5,
-  };
-  add_faces(geom, 8, 6, faces8);
+   int faces8[] = { 8,5,4,9,13,0,1,12, 8,10,17,16,11,9,18,19,
+                    10,14,3,2,15,11,6,7, 12,23,22,13,15,20,21,14,
+                    18,4,6,16,20,2,0,22, 19,23,1,3,21,17,7,5,
+                    };
+   add_faces(geom, 8, 6, faces8);
 }
 
 // cubohemioctahedron
 void U15(Geometry &geom)
 {
-  cuboctahedron_vertex_set(geom);
+   cuboctahedron_vertex_set(geom);
 
-  int faces4[] = {
-      0, 4, 1, 5,  0,  8, 2,  9, 2,  6, 3, 7,
-      5, 9, 7, 11, 10, 3, 11, 1, 10, 4, 8, 6,
-  };
-  add_faces(geom, 4, 6, faces4);
+   int faces4[] = { 0,4,1,5, 0,8,2,9, 2,6,3,7, 5,9,7,11,
+                    10,3,11,1, 10,4,8,6, };
+   add_faces(geom, 4, 6, faces4);
 
-  int faces6[] = {
-      5, 1, 10, 6, 2, 9, 5,  11, 3, 6, 8, 0,
-      7, 3, 10, 4, 0, 9, 11, 7,  2, 8, 4, 1,
-  };
-  add_faces(geom, 6, 4, faces6);
+   int faces6[] = { 5,1,10,6,2,9, 5,11,3,6,8,0, 7,3,10,4,0,9,
+                    11,7,2,8,4,1, };
+   add_faces(geom, 6, 4, faces6);
 }
 
 // cubitruncated cuboctahedron
 void U16(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(sqrt(2) - 1, 1, sqrt(2) + 1));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(sqrt(2)-1,1,sqrt(2)+1));
 
-  calculate_coords(geom, vlist, EVEN, ALL);
-  calculate_coords(geom, vlist, ODD, ALL);
+   calculate_coords(geom, vlist, EVEN, ALL);
+   calculate_coords(geom, vlist, ODD, ALL);
 
-  int faces6[] = {
-      12, 25, 1,  39, 23, 44, 14, 46, 21, 37, 3,  27, 16, 32, 6,  30,
-      11, 43, 18, 41, 9,  28, 4,  34, 36, 20, 47, 15, 26, 2,  38, 0,
-      24, 13, 45, 22, 40, 19, 35, 5,  29, 8,  42, 10, 31, 7,  33, 17,
-  };
-  add_faces(geom, 6, 8, faces6);
+   int faces6[] = { 12,25,1,39,23,44, 14,46,21,37,3,27, 16,32,6,30,11,43,
+                    18,41,9,28,4,34, 36,20,47,15,26,2, 38,0,24,13,45,22,
+                    40,19,35,5,29,8, 42,10,31,7,33,17, };
+   add_faces(geom, 6, 8, faces6);
 
-  int faces8[] = {
-      8,  12, 44, 46, 14, 10, 42, 40, 8,  29, 28, 9,  13, 24, 25, 12,
-      10, 14, 27, 26, 15, 11, 30, 31, 17, 33, 37, 21, 20, 36, 32, 16,
-      19, 18, 34, 38, 22, 23, 39, 35, 25, 24, 0,  2,  26, 27, 3,  1,
-      29, 5,  7,  31, 30, 6,  4,  28, 34, 4,  6,  32, 36, 2,  0,  38,
-      35, 39, 1,  3,  37, 33, 7,  5,  40, 42, 17, 16, 43, 41, 18, 19,
-      41, 43, 11, 15, 47, 45, 13, 9,  44, 23, 22, 45, 47, 20, 21, 46,
-  };
-  add_faces(geom, 8, 12, faces8);
+   int faces8[] = { 8,12,44,46,14,10,42,40, 8,29,28,9,13,24,25,12,
+                    10,14,27,26,15,11,30,31, 17,33,37,21,20,36,32,16,
+                    19,18,34,38,22,23,39,35, 25,24,0,2,26,27,3,1,
+                    29,5,7,31,30,6,4,28, 34,4,6,32,36,2,0,38,
+                    35,39,1,3,37,33,7,5, 40,42,17,16,43,41,18,19,
+                    41,43,11,15,47,45,13,9, 44,23,22,45,47,20,21,46,
+                    };
+   add_faces(geom, 8, 12, faces8);
 }
 
 // great rhombicuboctahedron
 void U17(Geometry &geom)
 {
-  truncated_cube_vertex_set(geom);
+   truncated_cube_vertex_set(geom);
 
-  int faces3[] = {
-      4,  9,  18, 6,  16, 11, 8,  5, 19, 10, 17, 7,
-      12, 23, 1,  14, 3,  21, 20, 2, 15, 22, 13, 0,
-  };
-  add_faces(geom, 3, 8, faces3);
+   int faces3[] = { 4,9,18, 6,16,11, 8,5,19, 10,17,7,
+                    12,23,1, 14,3,21, 20,2,15, 22,13,0,
+                    };
+   add_faces(geom, 3, 8, faces3);
 
-  int faces4[] = {
-      0,  13, 15, 2,  1,  0,  2,  3,  4,  6,  11, 9,  5,  4,  18, 19, 5,  7,
-      6,  4,  7,  17, 16, 6,  8,  10, 7,  5,  8,  19, 23, 12, 9,  11, 15, 13,
-      10, 14, 21, 17, 12, 1,  3,  14, 12, 14, 10, 8,  16, 20, 15, 11, 17, 21,
-      20, 16, 18, 9,  13, 22, 19, 18, 22, 23, 21, 3,  2,  20, 23, 22, 0,  1,
-  };
-  add_faces(geom, 4, 18, faces4);
+   int faces4[] = { 0,13,15,2, 1,0,2,3, 4,6,11,9, 5,4,18,19,
+                    5,7,6,4, 7,17,16,6, 8,10,7,5, 8,19,23,12,
+                    9,11,15,13, 10,14,21,17, 12,1,3,14, 12,14,10,8,
+                    16,20,15,11, 17,21,20,16, 18,9,13,22, 19,18,22,23,
+                    21,3,2,20, 23,22,0,1, };
+   add_faces(geom, 4, 18, faces4);
 }
 
 // small rhombihexahedron
 void U18(Geometry &geom)
 {
-  rhombicuboctahedron_vertex_set(geom);
+   rhombicuboctahedron_vertex_set(geom);
 
-  int faces4[] = {
-      5,  9, 21, 13, 6,  2,  16, 12, 7,  3,  17, 13, 10, 23, 19, 2,
-      12, 4, 8,  20, 14, 4,  0,  18, 15, 5,  1,  19, 17, 21, 8,  0,
-      20, 9, 1,  16, 22, 14, 6,  10, 22, 18, 3,  11, 23, 15, 7,  11,
-  };
-  add_faces(geom, 4, 12, faces4);
+   int faces4[] = { 5,9,21,13, 6,2,16,12, 7,3,17,13, 10,23,19,2,
+                    12,4,8,20, 14,4,0,18, 15,5,1,19, 17,21,8,0,
+                    20,9,1,16, 22,14,6,10, 22,18,3,11, 23,15,7,11,
+                    };
+   add_faces(geom, 4, 12, faces4);
 
-  int faces8[] = {
-      6,  14, 18, 3,  7,  15, 19, 2,  10, 2,  16, 20, 8,  0,  18, 22,
-      10, 6,  12, 20, 9,  5,  15, 23, 12, 16, 1,  5,  13, 17, 0,  4,
-      22, 11, 7,  13, 21, 8,  4,  14, 23, 11, 3,  17, 21, 9,  1,  19,
-  };
-  add_faces(geom, 8, 6, faces8);
+   int faces8[] = { 6,14,18,3,7,15,19,2, 10,2,16,20,8,0,18,22,
+                    10,6,12,20,9,5,15,23, 12,16,1,5,13,17,0,4,
+                    22,11,7,13,21,8,4,14, 23,11,3,17,21,9,1,19,
+                    };
+   add_faces(geom, 8, 6, faces8);
 }
 
 // stellated truncated hexahedron
 void U19(Geometry &geom)
 {
-  rhombicuboctahedron_vertex_set(geom);
+   rhombicuboctahedron_vertex_set(geom);
 
-  int faces3[] = {
-      0,  5,  10, 4,  11, 1,  6,  9,  3,  8,  2,  7,
-      12, 17, 23, 20, 15, 18, 21, 14, 19, 22, 13, 16,
-  };
-  add_faces(geom, 3, 8, faces3);
+   int faces3[] = { 0,5,10, 4,11,1, 6,9,3, 8,2,7,
+                    12,17,23, 20,15,18, 21,14,19, 22,13,16,
+                    };
+   add_faces(geom, 3, 8, faces3);
 
-  int faces8[] = {
-      2,  18, 15, 6,  3,  19, 14, 7,  10, 5,  12, 23, 9,  6,  15, 20,
-      11, 21, 19, 3,  9,  23, 17, 1,  13, 22, 8,  7,  14, 21, 11, 4,
-      16, 0,  10, 20, 18, 2,  8,  22, 16, 13, 4,  1,  17, 12, 5,  0,
-  };
-  add_faces(geom, 8, 6, faces8);
+   int faces8[] = { 2,18,15,6,3,19,14,7, 10,5,12,23,9,6,15,20,
+                    11,21,19,3,9,23,17,1, 13,22,8,7,14,21,11,4,
+                    16,0,10,20,18,2,8,22, 16,13,4,1,17,12,5,0,
+                    };
+   add_faces(geom, 8, 6, faces8);
 }
 
 // great truncated cuboctahedron
 void U20(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(1, 1 - sqrt(2), 1 - 2 * sqrt(2)));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(1,1-sqrt(2),1-2*sqrt(2)));
 
-  calculate_coords(geom, vlist, EVEN, ALL);
-  calculate_coords(geom, vlist, ODD, ALL);
+   calculate_coords(geom, vlist, EVEN, ALL);
+   calculate_coords(geom, vlist, ODD, ALL);
 
-  int faces4[] = {
-      5,  29, 25, 1,  7,  3,  27, 31, 11, 43, 42, 10, 15, 14, 46, 47,
-      18, 16, 32, 34, 22, 38, 36, 20, 28, 4,  0,  24, 30, 26, 2,  6,
-      35, 33, 17, 19, 39, 23, 21, 37, 41, 9,  8,  40, 45, 44, 12, 13,
-  };
-  add_faces(geom, 4, 12, faces4);
+   int faces4[] = { 5,29,25,1, 7,3,27,31, 11,43,42,10, 15,14,46,47,
+                    18,16,32,34, 22,38,36,20, 28,4,0,24, 30,26,2,6,
+                    35,33,17,19, 39,23,21,37, 41,9,8,40, 45,44,12,13,
+                    };
+   add_faces(geom, 4, 12, faces4);
 
-  int faces6[] = {
-      3,  35, 19, 43, 11, 27, 10, 42, 18, 34, 2,  26, 14, 30, 6,  38,
-      22, 46, 31, 15, 47, 23, 39, 7,  33, 1,  25, 9,  41, 17, 37, 21,
-      45, 13, 29, 5,  40, 8,  24, 0,  32, 16, 44, 20, 36, 4,  28, 12,
-  };
-  add_faces(geom, 6, 8, faces6);
+   int faces6[] = { 3,35,19,43,11,27, 10,42,18,34,2,26, 14,30,6,38,22,46,
+                    31,15,47,23,39,7, 33,1,25,9,41,17, 37,21,45,13,29,5,
+                    40,8,24,0,32,16, 44,20,36,4,28,12, };
+   add_faces(geom, 6, 8, faces6);
 
-  int faces8[] = {
-      6,  2,  34, 32, 0,  4,  36, 38, 7,  39, 37, 5,  1,  33, 35, 3,
-      19, 17, 41, 40, 16, 18, 42, 43, 23, 47, 46, 22, 20, 44, 45, 21,
-      29, 13, 12, 28, 24, 8,  9,  25, 31, 27, 11, 10, 26, 30, 14, 15,
-  };
-  add_faces(geom, 8, 6, faces8);
+   int faces8[] = { 6,2,34,32,0,4,36,38, 7,39,37,5,1,33,35,3,
+                    19,17,41,40,16,18,42,43, 23,47,46,22,20,44,45,21,
+                    29,13,12,28,24,8,9,25, 31,27,11,10,26,30,14,15,
+                    };
+   add_faces(geom, 8, 6, faces8);
 }
 
 // great rhombihexahedron
 void U21(Geometry &geom)
 {
-  truncated_cube_vertex_set(geom);
+   truncated_cube_vertex_set(geom);
 
-  int faces4[] = {
-      6,  11, 9,  4,  7,  17, 16, 6,  8,  10, 7,  5,  10, 17, 21, 14,
-      11, 15, 20, 16, 12, 1,  3,  14, 13, 15, 2,  0,  18, 22, 13, 9,
-      19, 5,  4,  18, 19, 8,  12, 23, 3,  2,  20, 21, 23, 22, 0,  1,
-  };
-  add_faces(geom, 4, 12, faces4);
+   int faces4[] = { 6,11,9,4, 7,17,16,6, 8,10,7,5, 10,17,21,14,
+                    11,15,20,16, 12,1,3,14, 13,15,2,0, 18,22,13,9,
+                    19,5,4,18, 19,8,12,23, 3,2,20,21, 23,22,0,1,
+                    };
+   add_faces(geom, 4, 12, faces4);
 
-  int faces8[] = {
-      8,  5,  4, 9,  13, 0,  1, 12, 10, 14, 3,  2,  15, 11, 6,  7,
-      18, 4,  6, 16, 20, 2,  0, 22, 18, 9,  11, 16, 17, 10, 8,  19,
-      19, 23, 1, 3,  21, 17, 7, 5,  23, 12, 14, 21, 20, 15, 13, 22,
-  };
-  add_faces(geom, 8, 6, faces8);
+   int faces8[] = { 8,5,4,9,13,0,1,12, 10,14,3,2,15,11,6,7,
+                    18,4,6,16,20,2,0,22, 18,9,11,16,17,10,8,19,
+                    19,23,1,3,21,17,7,5, 23,12,14,21,20,15,13,22,
+                    };
+   add_faces(geom, 8, 6, faces8);
 }
 
 // icosahedron
 void U22(Geometry &geom)
 {
-  icosahedron_vertex_set(geom);
+   icosahedron_vertex_set(geom);
 
-  int faces3[] = {
-      1, 3, 11, 2, 0, 10, 2,  5, 8,  3, 7, 11, 4, 1,  6,  5, 2, 7,  5, 3,
-      9, 6, 0,  4, 7, 2,  10, 7, 3,  5, 8, 0,  2, 8,  4,  0, 8, 5,  9, 9,
-      1, 4, 9,  3, 1, 9,  4,  8, 10, 0, 6, 10, 6, 11, 11, 6, 1, 11, 7, 10,
-  };
-  add_faces(geom, 3, 20, faces3);
+   int faces3[] = { 1,3,11, 2,0,10, 2,5,8, 3,7,11,
+                    4,1,6, 5,2,7, 5,3,9, 6,0,4,
+                    7,2,10, 7,3,5, 8,0,2, 8,4,0,
+                    8,5,9, 9,1,4, 9,3,1, 9,4,8,
+                    10,0,6, 10,6,11, 11,6,1, 11,7,10,
+                    };
+   add_faces(geom, 3, 20, faces3);
 }
 
 // dodecahedron
 void U23(Geometry &geom)
 {
-  dodecahedron_vertex_set(geom);
+   dodecahedron_vertex_set(geom);
 
-  int faces5[] = {
-      1,  13, 15, 5,  9,  4,  18, 19, 6,  14, 5,  18, 4,  8,  9,
-      6,  10, 2,  12, 14, 9,  8,  0,  16, 1,  10, 6,  19, 7,  11,
-      11, 3,  17, 2,  10, 11, 7,  15, 13, 3,  12, 0,  8,  4,  14,
-      15, 7,  19, 18, 5,  16, 17, 3,  13, 1,  17, 16, 0,  12, 2,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 1,13,15,5,9, 4,18,19,6,14, 5,18,4,8,9,
+                    6,10,2,12,14, 9,8,0,16,1, 10,6,19,7,11,
+                    11,3,17,2,10, 11,7,15,13,3, 12,0,8,4,14,
+                    15,7,19,18,5, 16,17,3,13,1, 17,16,0,12,2,
+                    };
+   add_faces(geom, 5, 12, faces5);
 }
 
 // icosidodecahedron
 void U24(Geometry &geom)
 {
-  icosidodecahedron_vertex_set(geom);
+   icosidodecahedron_vertex_set(geom);
 
-  int faces3[] = {
-      0,  10, 6,  1,  8,  12, 2,  18, 20, 3,  15, 17, 4,  24, 25,
-      5,  26, 27, 5,  29, 28, 6,  14, 22, 7,  11, 0,  9,  17, 25,
-      11, 19, 27, 12, 20, 28, 13, 9,  1,  16, 14, 2,  21, 19, 3,
-      23, 15, 7,  23, 22, 4,  24, 16, 8,  26, 18, 10, 29, 21, 13,
-  };
-  add_faces(geom, 3, 20, faces3);
+   int faces3[] = { 0,10,6, 1,8,12, 2,18,20, 3,15,17,
+                    4,24,25, 5,26,27, 5,29,28, 6,14,22,
+                    7,11,0, 9,17,25, 11,19,27, 12,20,28,
+                    13,9,1, 16,14,2, 21,19,3, 23,15,7,
+                    23,22,4, 24,16,8, 26,18,10, 29,21,13,
+                    };
+   add_faces(geom, 3, 20, faces3);
 
-  int faces5[] = {
-      5,  28, 20, 18, 26, 11, 7,  15, 3,  19, 12, 8,  16, 2,  20,
-      14, 16, 24, 4,  22, 17, 15, 23, 4,  25, 18, 2,  14, 6,  10,
-      21, 3,  17, 9,  13, 23, 7,  0,  6,  22, 24, 8,  1,  9,  25,
-      26, 10, 0,  11, 27, 27, 19, 21, 29, 5,  29, 13, 1,  12, 28,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 5,28,20,18,26, 11,7,15,3,19, 12,8,16,2,20,
+                    14,16,24,4,22, 17,15,23,4,25, 18,2,14,6,10,
+                    21,3,17,9,13, 23,7,0,6,22, 24,8,1,9,25,
+                    26,10,0,11,27, 27,19,21,29,5, 29,13,1,12,28,
+                    };
+   add_faces(geom, 5, 12, faces5);
 }
 
 // truncated icosahedron
 void U25(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(0, 1, 3 * phi));
-  vlist.push_back(Vec3d(2, 1 + 2 * phi, phi));
-  vlist.push_back(Vec3d(1, 2 + phi, 2 * phi));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(0,1,3*phi));
+   vlist.push_back(Vec3d(2,1+2*phi,phi));
+   vlist.push_back(Vec3d(1,2+phi,2*phi));
 
-  calculate_coords(geom, vlist, EVEN, ALL);
+   calculate_coords(geom, vlist, EVEN, ALL);
 
-  int faces5[] = {
-      11, 25, 57, 59, 27, 22, 8,  20, 52, 54, 23, 55, 53, 21, 9,
-      26, 58, 56, 24, 10, 29, 1,  33, 41, 37, 30, 2,  34, 42, 38,
-      36, 40, 32, 0,  28, 43, 35, 3,  31, 39, 44, 45, 13, 4,  12,
-      47, 46, 14, 5,  15, 49, 48, 16, 6,  17, 51, 19, 7,  18, 50,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 11,25,57,59,27, 22,8,20,52,54, 23,55,53,21,9,
+                    26,58,56,24,10, 29,1,33,41,37, 30,2,34,42,38,
+                    36,40,32,0,28, 43,35,3,31,39, 44,45,13,4,12,
+                    47,46,14,5,15, 49,48,16,6,17, 51,19,7,18,50,
+                    };
+   add_faces(geom, 5, 12, faces5);
 
-  int faces6[] = {
-      5,  14, 38, 42, 18, 7,  6,  4,  13, 37, 41, 17, 7,  19, 43, 39, 15, 5,
-      10, 24, 48, 49, 25, 11, 20, 8,  9,  21, 45, 44, 22, 46, 47, 23, 9,  8,
-      23, 47, 15, 39, 31, 55, 26, 10, 11, 27, 51, 50, 28, 0,  2,  30, 54, 52,
-      28, 52, 20, 44, 12, 36, 29, 37, 13, 45, 21, 53, 32, 40, 16, 48, 24, 56,
-      35, 59, 57, 33, 1,  3,  40, 36, 12, 4,  6,  16, 41, 33, 57, 25, 49, 17,
-      43, 19, 51, 27, 59, 35, 50, 18, 42, 34, 58, 26, 53, 55, 31, 3,  1,  29,
-      54, 30, 38, 14, 46, 22, 56, 58, 34, 2,  0,  32,
-  };
-  add_faces(geom, 6, 20, faces6);
+   int faces6[] = { 5,14,38,42,18,7, 6,4,13,37,41,17, 7,19,43,39,15,5,
+                    10,24,48,49,25,11, 20,8,9,21,45,44, 22,46,47,23,9,8,
+                    23,47,15,39,31,55, 26,10,11,27,51,50, 28,0,2,30,54,52,
+                    28,52,20,44,12,36, 29,37,13,45,21,53, 32,40,16,48,24,56,
+                    35,59,57,33,1,3, 40,36,12,4,6,16, 41,33,57,25,49,17,
+                    43,19,51,27,59,35, 50,18,42,34,58,26, 53,55,31,3,1,29,
+                    54,30,38,14,46,22, 56,58,34,2,0,32, };
+   add_faces(geom, 6, 20, faces6);
 }
 
 // truncated dodecahedron
 void U26(Geometry &geom)
 {
-  truncated_dodecahedron_vertex_set(geom);
+   truncated_dodecahedron_vertex_set(geom);
 
-  int faces3[] = {
-      4,  22, 20, 5,  21, 23, 11, 35, 34, 16, 12, 0,  17, 1,  13,
-      18, 2,  14, 19, 15, 3,  24, 26, 6,  25, 7,  27, 29, 28, 8,
-      30, 31, 9,  32, 33, 10, 36, 44, 52, 37, 53, 45, 38, 54, 46,
-      39, 47, 55, 56, 48, 40, 57, 41, 49, 58, 42, 50, 59, 51, 43,
-  };
-  add_faces(geom, 3, 20, faces3);
+   int faces3[] = { 4,22,20, 5,21,23, 11,35,34, 16,12,0,
+                    17,1,13, 18,2,14, 19,15,3, 24,26,6,
+                    25,7,27, 29,28,8, 30,31,9, 32,33,10,
+                    36,44,52, 37,53,45, 38,54,46, 39,47,55,
+                    56,48,40, 57,41,49, 58,42,50, 59,51,43,
+                    };
+   add_faces(geom, 3, 20, faces3);
 
-  int faces10[] = {
-      1,  0,  12, 36, 52, 28, 29, 53, 37, 13, 10, 11, 34, 58, 50, 26, 24, 48,
-      56, 32, 10, 33, 57, 49, 25, 27, 51, 59, 35, 11, 14, 2,  3,  15, 39, 55,
-      31, 30, 54, 38, 22, 46, 54, 30, 9,  8,  28, 52, 44, 20, 33, 32, 56, 40,
-      16, 0,  1,  17, 41, 57, 34, 35, 59, 43, 19, 3,  2,  18, 42, 58, 41, 17,
-      13, 37, 45, 21, 5,  7,  25, 49, 43, 51, 27, 7,  5,  23, 47, 39, 15, 19,
-      48, 24, 6,  4,  20, 44, 36, 12, 16, 40, 50, 42, 18, 14, 38, 46, 22, 4,
-      6,  26, 53, 29, 8,  9,  31, 55, 47, 23, 21, 45,
-  };
-  add_faces(geom, 10, 12, faces10);
+   int faces10[] = { 1,0,12,36,52,28,29,53,37,13,
+                    10,11,34,58,50,26,24,48,56,32,
+                    10,33,57,49,25,27,51,59,35,11,
+                    14,2,3,15,39,55,31,30,54,38,
+                    22,46,54,30,9,8,28,52,44,20,
+                    33,32,56,40,16,0,1,17,41,57,
+                    34,35,59,43,19,3,2,18,42,58,
+                    41,17,13,37,45,21,5,7,25,49,
+                    43,51,27,7,5,23,47,39,15,19,
+                    48,24,6,4,20,44,36,12,16,40,
+                    50,42,18,14,38,46,22,4,6,26,
+                    53,29,8,9,31,55,47,23,21,45,
+                    };
+   add_faces(geom, 10, 12, faces10);
 }
 
 // rhombicosidodecahedron
 void U27(Geometry &geom)
 {
-  rhombicosidodecahedron_vertex_set(geom);
+   rhombicosidodecahedron_vertex_set(geom);
 
-  int faces3[] = {
-      1,  49, 5,  3,  7,  51, 12, 54, 14, 13, 15, 55, 16, 17, 56,
-      18, 57, 19, 20, 58, 21, 22, 23, 59, 28, 44, 36, 30, 38, 46,
-      32, 40, 24, 34, 26, 42, 41, 33, 25, 43, 27, 35, 45, 29, 37,
-      47, 39, 31, 48, 0,  4,  50, 6,  2,  52, 8,  10, 53, 11, 9,
-  };
-  add_faces(geom, 3, 20, faces3);
+   int faces3[] = { 1,49,5, 3,7,51, 12,54,14, 13,15,55,
+                    16,17,56, 18,57,19, 20,58,21, 22,23,59,
+                    28,44,36, 30,38,46, 32,40,24, 34,26,42,
+                    41,33,25, 43,27,35, 45,29,37, 47,39,31,
+                    48,0,4, 50,6,2, 52,8,10, 53,11,9,
+                    };
+   add_faces(geom, 3, 20, faces3);
 
-  int faces4[] = {
-      0,  1,  5,  4,  2,  6,  7,  3,  5,  49, 29, 45, 7,  47, 31, 51, 8,  12,
-      14, 10, 9,  11, 15, 13, 12, 28, 36, 54, 14, 54, 38, 30, 16, 18, 19, 17,
-      20, 21, 23, 22, 24, 40, 0,  48, 26, 50, 2,  42, 29, 13, 55, 37, 31, 39,
-      55, 15, 32, 16, 56, 40, 33, 53, 9,  25, 34, 42, 57, 18, 35, 27, 11, 53,
-      36, 44, 58, 20, 38, 22, 59, 46, 41, 25, 49, 1,  43, 3,  51, 27, 48, 4,
-      44, 28, 50, 30, 46, 6,  52, 10, 26, 34, 52, 32, 24, 8,  56, 17, 33, 41,
-      57, 43, 35, 19, 58, 45, 37, 21, 59, 23, 39, 47,
-  };
-  add_faces(geom, 4, 30, faces4);
+   int faces4[] = { 0,1,5,4, 2,6,7,3, 5,49,29,45, 7,47,31,51,
+                    8,12,14,10, 9,11,15,13, 12,28,36,54, 14,54,38,30,
+                    16,18,19,17, 20,21,23,22, 24,40,0,48, 26,50,2,42,
+                    29,13,55,37, 31,39,55,15, 32,16,56,40, 33,53,9,25,
+                    34,42,57,18, 35,27,11,53, 36,44,58,20, 38,22,59,46,
+                    41,25,49,1, 43,3,51,27, 48,4,44,28, 50,30,46,6,
+                    52,10,26,34, 52,32,24,8, 56,17,33,41, 57,43,35,19,
+                    58,45,37,21, 59,23,39,47, };
+   add_faces(geom, 4, 30, faces4);
 
-  int faces5[] = {
-      4,  5,  45, 58, 44, 6,  46, 59, 47, 7,  8,  24, 48, 28, 12,
-      10, 14, 30, 50, 26, 17, 19, 35, 53, 33, 21, 37, 55, 39, 23,
-      25, 9,  13, 29, 49, 27, 51, 31, 15, 11, 34, 18, 16, 32, 52,
-      40, 56, 41, 1,  0,  42, 2,  3,  43, 57, 54, 36, 20, 22, 38,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 4,5,45,58,44, 6,46,59,47,7, 8,24,48,28,12,
+                    10,14,30,50,26, 17,19,35,53,33, 21,37,55,39,23,
+                    25,9,13,29,49, 27,51,31,15,11, 34,18,16,32,52,
+                    40,56,41,1,0, 42,2,3,43,57, 54,36,20,22,38,
+                    };
+   add_faces(geom, 5, 12, faces5);
 }
 
 // truncated icosidodecahedron
 void U28(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(1 / phi, 1 / phi, 3 + phi));
-  vlist.push_back(Vec3d(2 / phi, phi, 1 + 2 * phi));
-  vlist.push_back(Vec3d(1 / phi, phi * phi, -1 + 3 * phi));
-  vlist.push_back(Vec3d(-1 + 2 * phi, 2, 2 + phi));
-  vlist.push_back(Vec3d(phi, 3, 2 * phi));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(1/phi,1/phi,3+phi));
+   vlist.push_back(Vec3d(2/phi,phi,1+2*phi));
+   vlist.push_back(Vec3d(1/phi,phi*phi,-1+3*phi));
+   vlist.push_back(Vec3d(-1+2*phi,2,2+phi));
+   vlist.push_back(Vec3d(phi,3,2*phi));
 
-  calculate_coords(geom, vlist, ODD, ALL);
+   calculate_coords(geom, vlist, ODD, ALL);
 
-  int faces4[] = {
-      0,   1,   5,  4,   2,   6,   7,  3,   8,   12, 14,  10,  9,  11,  15,
-      13,  16,  18, 19,  17,  20,  21, 23,  22,  29, 53,  101, 77, 31,  79,
-      103, 55,  36, 84,  108, 60,  38, 62,  110, 86, 52,  28,  76, 100, 54,
-      102, 78,  30, 56,  104, 80,  32, 58,  34,  82, 106, 65,  41, 89,  113,
-      67,  115, 91, 43,  69,  117, 93, 45,  71,  47, 95,  119, 73, 97,  49,
-      25,  75,  27, 51,  99,  85,  37, 61,  109, 87, 111, 63,  39, 88,  40,
-      64,  112, 90, 114, 66,  42,  92, 116, 68,  44, 94,  46,  70, 118, 96,
-      72,  24,  48, 98,  50,  26,  74, 105, 57,  33, 81,  107, 83, 35,  59,
-  };
-  add_faces(geom, 4, 30, faces4);
+   int faces4[] = { 0,1,5,4, 2,6,7,3, 8,12,14,10, 9,11,15,13,
+                    16,18,19,17, 20,21,23,22, 29,53,101,77, 31,79,103,55,
+                    36,84,108,60, 38,62,110,86, 52,28,76,100, 54,102,78,30,
+                    56,104,80,32, 58,34,82,106, 65,41,89,113, 67,115,91,43,
+                    69,117,93,45, 71,47,95,119, 73,97,49,25, 75,27,51,99,
+                    85,37,61,109, 87,111,63,39, 88,40,64,112, 90,114,66,42,
+                    92,116,68,44, 94,46,70,118, 96,72,24,48, 98,50,26,74,
+                    105,57,33,81, 107,83,35,59, };
+   add_faces(geom, 4, 30, faces4);
 
-  int faces6[] = {
-      1,   25,  49,  53,  29,  5,   3,   7,  31,  55,  51,  27, 12,  36,  60,
-      62,  38,  14,  13,  15,  39,  63,  61, 37,  40,  16,  17, 41,  65,  64,
-      42,  66,  67,  43,  19,  18,  44,  68, 69,  45,  21,  20, 46,  22,  23,
-      47,  71,  70,  48,  24,  0,   4,   28, 52,  50,  54,  30, 6,   2,   26,
-      56,  32,  8,   10,  34,  58,  57,  59, 35,  11,  9,   33, 77,  101, 85,
-      109, 93,  117, 79,  119, 95,  111, 87, 103, 84,  100, 76, 116, 92,  108,
-      86,  110, 94,  118, 78,  102, 104, 88, 112, 72,  96,  80, 106, 82,  98,
-      74,  114, 90,  113, 89,  105, 81,  97, 73,  115, 75,  99, 83,  107, 91,
-  };
-  add_faces(geom, 6, 20, faces6);
+   int faces6[] = { 1,25,49,53,29,5, 3,7,31,55,51,27, 12,36,60,62,38,14,
+                    13,15,39,63,61,37, 40,16,17,41,65,64, 42,66,67,43,19,18,
+                    44,68,69,45,21,20, 46,22,23,47,71,70, 48,24,0,4,28,52,
+                    50,54,30,6,2,26, 56,32,8,10,34,58, 57,59,35,11,9,33,
+                    77,101,85,109,93,117, 79,119,95,111,87,103, 84,100,76,116,92,108,
+                    86,110,94,118,78,102, 104,88,112,72,96,80, 106,82,98,74,114,90,
+                    113,89,105,81,97,73, 115,75,99,83,107,91, };
+   add_faces(geom, 6, 20, faces6);
 
-  int faces10[] = {
-      17,  19,  43,  91,  107, 59,  57, 105, 89,  41, 21,  45,  93,  109, 61,
-      63,  111, 95,  47,  23,  28,  4,  5,   29,  77, 117, 69,  68,  116, 76,
-      30,  78,  118, 70,  71,  119, 79, 31,  7,   6,  32,  80,  96,  48,  52,
-      100, 84,  36,  12,  8,   34,  10, 14,  38,  86, 102, 54,  50,  98,  82,
-      58,  106, 90,  42,  18,  16,  40, 88,  104, 56, 60,  108, 92,  44,  20,
-      22,  46,  94,  110, 62,  97,  81, 33,  9,   13, 37,  85,  101, 53,  49,
-      99,  51,  55,  103, 87,  39,  15, 11,  35,  83, 112, 64,  65,  113, 73,
-      25,  1,   0,   24,  72,  114, 74, 26,  2,   3,  27,  75,  115, 67,  66,
-  };
-  add_faces(geom, 10, 12, faces10);
+   int faces10[] = { 17,19,43,91,107,59,57,105,89,41,
+                    21,45,93,109,61,63,111,95,47,23,
+                    28,4,5,29,77,117,69,68,116,76,
+                    30,78,118,70,71,119,79,31,7,6,
+                    32,80,96,48,52,100,84,36,12,8,
+                    34,10,14,38,86,102,54,50,98,82,
+                    58,106,90,42,18,16,40,88,104,56,
+                    60,108,92,44,20,22,46,94,110,62,
+                    97,81,33,9,13,37,85,101,53,49,
+                    99,51,55,103,87,39,15,11,35,83,
+                    112,64,65,113,73,25,1,0,24,72,
+                    114,74,26,2,3,27,75,115,67,66,
+                    };
+   add_faces(geom, 10, 12, faces10);
 }
 
 // snub dodecahedron
 void U29(Geometry &geom)
 {
-  // the real solution to x**3-2x = Phi
-  double x = pow(phi / 2 + 0.5 * sqrt(phi - 5 / 27.0), (1 / 3.0)) +
-             pow(phi / 2 - 0.5 * sqrt(phi - 5 / 27.0), (1 / 3.0));
+   // the real solution to x**3-2x = Phi
+   double x = pow(phi/2+0.5*sqrt(phi-5/27.0), (1/3.0)) + pow(phi/2-0.5*sqrt(phi-5/27.0), (1/3.0));
 
-  double a = x - 1 / x;
-  double b = x * phi + phi * phi + phi / x;
+   double a = x - 1/x;
+   double b = x*phi + phi*phi + phi/x;
 
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(2 * a, 2, 2 * b));
-  vlist.push_back(
-      Vec3d(a + b / phi + phi, -a * phi + b + 1 / phi, a / phi + b * phi - 1));
-  vlist.push_back(
-      Vec3d(-a / phi + b * phi + 1, -a + b / phi - phi, a * phi + b - 1 / phi));
-  vlist.push_back(
-      Vec3d(-a / phi + b * phi - 1, a - b / phi - phi, a * phi + b + 1 / phi));
-  vlist.push_back(
-      Vec3d(a + b / phi - phi, a * phi - b + 1 / phi, a / phi + b * phi + 1));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(2*a,2,2*b));
+   vlist.push_back(Vec3d(a+b/phi+phi,-a*phi+b+1/phi,a/phi+b*phi-1));
+   vlist.push_back(Vec3d(-a/phi+b*phi+1,-a+b/phi-phi,a*phi+b-1/phi));
+   vlist.push_back(Vec3d(-a/phi+b*phi-1,a-b/phi-phi,a*phi+b+1/phi));
+   vlist.push_back(Vec3d(a+b/phi-phi,a*phi-b+1/phi,a/phi+b*phi+1));
 
-  calculate_coords(geom, vlist, ODD, ODD);
+   calculate_coords(geom, vlist, ODD, ODD);
 
-  int faces3[] = {
-      0,  28, 12, 1,  49, 3,  2,  0,  48, 2,  50, 0,  3,  31, 15, 3,  49, 31,
-      4,  32, 16, 5,  33, 17, 5,  54, 33, 6,  54, 5,  7,  4,  52, 7,  55, 4,
-      9,  8,  56, 10, 59, 26, 11, 59, 10, 12, 16, 20, 12, 20, 24, 13, 21, 25,
-      14, 2,  30, 15, 19, 23, 15, 31, 19, 16, 32, 20, 17, 21, 13, 18, 14, 30,
-      19, 7,  35, 21, 9,  25, 22, 10, 26, 22, 14, 18, 22, 26, 14, 23, 19, 35,
-      24, 20, 8,  25, 9,  56, 25, 56, 37, 26, 59, 38, 27, 15, 23, 27, 23, 11,
-      28, 16, 12, 29, 1,  51, 29, 13, 1,  29, 17, 13, 30, 2,  48, 30, 48, 42,
-      33, 21, 17, 34, 6,  53, 34, 18, 6,  34, 22, 18, 35, 7,  52, 35, 52, 47,
-      36, 24, 57, 37, 44, 43, 38, 40, 50, 38, 47, 40, 39, 27, 58, 40, 28, 50,
-      41, 29, 51, 41, 51, 39, 42, 36, 45, 43, 44, 55, 44, 32, 55, 45, 36, 57,
-      46, 34, 53, 46, 39, 58, 46, 41, 39, 46, 53, 41, 47, 52, 40, 48, 36, 42,
-      49, 37, 43, 49, 43, 31, 50, 28, 0,  51, 1,  3,  53, 6,  5,  54, 42, 45,
-      54, 45, 33, 55, 32, 4,  56, 44, 37, 57, 8,  9,  57, 24, 8,  58, 11, 10,
-      58, 27, 11, 59, 47, 38,
-  };
-  add_faces(geom, 3, 80, faces3);
+   int faces3[] = { 0,28,12, 1,49,3, 2,0,48, 2,50,0,
+                    3,31,15, 3,49,31, 4,32,16, 5,33,17,
+                    5,54,33, 6,54,5, 7,4,52, 7,55,4,
+                    9,8,56, 10,59,26, 11,59,10, 12,16,20,
+                    12,20,24, 13,21,25, 14,2,30, 15,19,23,
+                    15,31,19, 16,32,20, 17,21,13, 18,14,30,
+                    19,7,35, 21,9,25, 22,10,26, 22,14,18,
+                    22,26,14, 23,19,35, 24,20,8, 25,9,56,
+                    25,56,37, 26,59,38, 27,15,23, 27,23,11,
+                    28,16,12, 29,1,51, 29,13,1, 29,17,13,
+                    30,2,48, 30,48,42, 33,21,17, 34,6,53,
+                    34,18,6, 34,22,18, 35,7,52, 35,52,47,
+                    36,24,57, 37,44,43, 38,40,50, 38,47,40,
+                    39,27,58, 40,28,50, 41,29,51, 41,51,39,
+                    42,36,45, 43,44,55, 44,32,55, 45,36,57,
+                    46,34,53, 46,39,58, 46,41,39, 46,53,41,
+                    47,52,40, 48,36,42, 49,37,43, 49,43,31,
+                    50,28,0, 51,1,3, 53,6,5, 54,42,45,
+                    54,45,33, 55,32,4, 56,44,37, 57,8,9,
+                    57,24,8, 58,11,10, 58,27,11, 59,47,38,
+                    };
+   add_faces(geom, 3, 80, faces3);
 
-  int faces5[] = {
-      11, 23, 35, 47, 59, 13, 25, 37, 49, 1,  18, 30, 42, 54, 6,
-      26, 38, 50, 2,  14, 31, 43, 55, 7,  19, 33, 45, 57, 9,  21,
-      39, 51, 3,  15, 27, 40, 52, 4,  16, 28, 48, 0,  12, 24, 36,
-      53, 5,  17, 29, 41, 56, 8,  20, 32, 44, 58, 10, 22, 34, 46,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 11,23,35,47,59, 13,25,37,49,1, 18,30,42,54,6,
+                    26,38,50,2,14, 31,43,55,7,19, 33,45,57,9,21,
+                    39,51,3,15,27, 40,52,4,16,28, 48,0,12,24,36,
+                    53,5,17,29,41, 56,8,20,32,44, 58,10,22,34,46,
+                    };
+   add_faces(geom, 5, 12, faces5);
 }
 
 // small ditrigonal icosidodecahedron
 void U30(Geometry &geom)
 {
-  dodecahedron_vertex_set(geom);
+   dodecahedron_vertex_set(geom);
 
-  int faces3[] = {
-      0, 9, 4,  1, 0, 17, 1,  5,  8,  2,  0, 14, 2,  6,  11, 3,  10, 7,  3,  16,
-      2, 5, 19, 4, 7, 5,  13, 7,  6,  18, 8, 18, 14, 10, 14, 19, 10, 17, 12, 12,
-      4, 6, 15, 1, 3, 15, 11, 19, 15, 18, 9, 16, 8,  12, 16, 13, 9,  17, 11, 13,
-  };
-  add_faces(geom, 3, 20, faces3);
+   int faces3[] = { 0,9,4, 1,0,17, 1,5,8, 2,0,14,
+                    2,6,11, 3,10,7, 3,16,2, 5,19,4,
+                    7,5,13, 7,6,18, 8,18,14, 10,14,19,
+                    10,17,12, 12,4,6, 15,1,3, 15,11,19,
+                    15,18,9, 16,8,12, 16,13,9, 17,11,13,
+                    };
+   add_faces(geom, 3, 20, faces3);
 
-  int faces5[] = {
-      0, 4,  12, 8,  14, 1,  8,  16, 9,  0,  1,  15, 9,  13, 5,
-      2, 14, 10, 12, 6,  3,  1,  17, 13, 16, 3,  2,  11, 17, 10,
-      3, 7,  13, 11, 15, 6,  4,  19, 14, 18, 7,  18, 15, 19, 5,
-      8, 5,  4,  9,  18, 10, 19, 11, 6,  7,  16, 12, 17, 0,  2,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 0,4,12,8,14, 1,8,16,9,0, 1,15,9,13,5,
+                    2,14,10,12,6, 3,1,17,13,16, 3,2,11,17,10,
+                    3,7,13,11,15, 6,4,19,14,18, 7,18,15,19,5,
+                    8,5,4,9,18, 10,19,11,6,7, 16,12,17,0,2,
+                    };
+   add_faces(geom, 5, 12, faces5);
 }
 
 // small icosicosidodecahedron
 void U31(Geometry &geom)
 {
-  small_icosicosidodecahedron_vertex_set(geom);
+   small_icosicosidodecahedron_vertex_set(geom);
 
-  int faces3[] = {
-      2,  50, 46, 4,  52, 53, 10, 42, 40, 11, 41, 43, 18, 34, 26,
-      19, 27, 35, 22, 30, 14, 23, 15, 31, 28, 20, 12, 29, 13, 21,
-      32, 16, 24, 33, 25, 17, 36, 38, 8,  37, 9,  39, 48, 0,  44,
-      49, 45, 1,  51, 3,  47, 55, 54, 5,  57, 56, 6,  58, 59, 7,
-  };
-  add_faces(geom, 3, 20, faces3);
+   int faces3[] = { 2,50,46, 4,52,53, 10,42,40, 11,41,43,
+                    18,34,26, 19,27,35, 22,30,14, 23,15,31,
+                    28,20,12, 29,13,21, 32,16,24, 33,25,17,
+                    36,38,8, 37,9,39, 48,0,44, 49,45,1,
+                    51,3,47, 55,54,5, 57,56,6, 58,59,7,
+                    };
+   add_faces(geom, 3, 20, faces3);
 
-  int faces5[] = {
-      0,  40, 20, 24, 36, 1,  37, 25, 21, 41, 6,  48, 33, 32, 49,
-      27, 39, 3,  43, 23, 30, 47, 5,  46, 31, 34, 35, 50, 7,  51,
-      42, 2,  38, 26, 22, 44, 4,  45, 28, 29, 52, 8,  54, 12, 14,
-      53, 15, 13, 55, 9,  56, 18, 16, 58, 10, 57, 11, 59, 17, 19,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 0,40,20,24,36, 1,37,25,21,41, 6,48,33,32,49,
+                    27,39,3,43,23, 30,47,5,46,31, 34,35,50,7,51,
+                    42,2,38,26,22, 44,4,45,28,29, 52,8,54,12,14,
+                    53,15,13,55,9, 56,18,16,58,10, 57,11,59,17,19,
+                    };
+   add_faces(geom, 5, 12, faces5);
 
-  int faces6[] = {
-      1,  45, 4,  53, 9,  37, 2,  46, 5,  54, 8,  38, 6,  49, 1,  41, 11, 57,
-      6,  56, 10, 40, 0,  48, 10, 58, 7,  50, 2,  42, 11, 43, 3,  51, 7,  59,
-      18, 26, 38, 36, 24, 16, 19, 17, 25, 37, 39, 27, 27, 23, 31, 46, 50, 35,
-      29, 28, 12, 54, 55, 13, 33, 17, 59, 58, 16, 32, 34, 51, 47, 30, 22, 26,
-      39, 9,  55, 5,  47, 3,  41, 21, 13, 15, 23, 43, 42, 22, 14, 12, 20, 40,
-      44, 0,  36, 8,  52, 4,  48, 44, 29, 21, 25, 33, 49, 32, 24, 20, 28, 45,
-      53, 52, 14, 30, 31, 15, 56, 57, 19, 35, 34, 18,
-  };
-  add_faces(geom, 6, 20, faces6);
+   int faces6[] = { 1,45,4,53,9,37, 2,46,5,54,8,38, 6,49,1,41,11,57,
+                    6,56,10,40,0,48, 10,58,7,50,2,42, 11,43,3,51,7,59,
+                    18,26,38,36,24,16, 19,17,25,37,39,27, 27,23,31,46,50,35,
+                    29,28,12,54,55,13, 33,17,59,58,16,32, 34,51,47,30,22,26,
+                    39,9,55,5,47,3, 41,21,13,15,23,43, 42,22,14,12,20,40,
+                    44,0,36,8,52,4, 48,44,29,21,25,33, 49,32,24,20,28,45,
+                    53,52,14,30,31,15, 56,57,19,35,34,18, };
+   add_faces(geom, 6, 20, faces6);
 }
 
 void U32(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(0.5 * (-1 / phi + sqrt(3 * phi - 2)), 0,
-                        0.5 * (3 + phi * sqrt(3 * phi - 2))));
-  vlist.push_back(Vec3d(0.5 * (1 / phi + sqrt(3 * phi - 2)), 1,
-                        0.5 * (1 + 2 / phi + phi * sqrt(3 * phi - 2))));
-  vlist.push_back(Vec3d(0.5 * (phi * phi + sqrt(3 * phi - 2)), 1 / phi,
-                        0.5 * (1 + phi * sqrt(3 * phi - 2))));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(0.5*(-1/phi+sqrt(3*phi-2)),0,0.5*(3+phi*sqrt(3*phi-2))));
+   vlist.push_back(Vec3d(0.5*(1/phi+sqrt(3*phi-2)),1,0.5*(1+2/phi+phi*sqrt(3*phi-2))));
+   vlist.push_back(Vec3d(0.5*(phi*phi+sqrt(3*phi-2)),1/phi,0.5*(1+phi*sqrt(3*phi-2))));
 
-  calculate_coords(geom, vlist, ODD, ALL);
+   calculate_coords(geom, vlist, ODD, ALL);
 
-  int faces3[] = {
-      1,  19, 47, 1,  47, 39, 2,  49, 41, 3,  15, 14, 3,  43, 51, 3,  51, 15,
-      4,  22, 52, 4,  26, 22, 4,  52, 44, 5,  27, 57, 6,  46, 54, 6,  58, 50,
-      7,  51, 59, 8,  29, 36, 8,  31, 29, 8,  36, 52, 9,  39, 55, 10, 35, 42,
-      11, 59, 43, 12, 2,  48, 12, 13, 2,  12, 28, 37, 13, 21, 49, 13, 29, 21,
-      13, 36, 29, 13, 49, 2,  15, 23, 31, 15, 51, 23, 16, 0,  17, 16, 41, 32,
-      17, 25, 33, 18, 19, 1,  19, 27, 47, 20, 6,  54, 20, 12, 48, 20, 24, 6,
-      20, 54, 28, 21, 7,  25, 21, 55, 7,  23, 27, 5,  24, 16, 32, 24, 32, 58,
-      24, 44, 16, 24, 58, 6,  25, 7,  59, 28, 9,  37, 28, 12, 20, 28, 30, 9,
-      29, 55, 21, 30, 14, 39, 30, 22, 14, 30, 39, 9,  30, 52, 22, 32, 11, 34,
-      32, 41, 11, 33, 25, 59, 33, 35, 10, 34, 11, 43, 34, 18, 26, 34, 43, 18,
-      35, 27, 19, 37, 9,  53, 37, 45, 0,  37, 53, 45, 38, 15, 31, 38, 31, 8,
-      39, 47, 55, 40, 10, 56, 40, 17, 33, 40, 33, 10, 41, 57, 11, 42, 35, 19,
-      44, 0,  16, 44, 36, 0,  44, 52, 36, 45, 17, 0,  45, 25, 17, 46, 1,  38,
-      46, 18, 1,  46, 26, 18, 48, 2,  40, 48, 40, 56, 48, 56, 4,  49, 5,  57,
-      49, 57, 41, 50, 3,  14, 50, 14, 22, 50, 42, 3,  53, 5,  45, 53, 23, 5,
-      53, 31, 23, 54, 38, 8,  54, 46, 38, 55, 47, 7,  56, 26, 4,  56, 34, 26,
-      57, 27, 35, 58, 10, 42, 58, 42, 50, 59, 51, 43,
-  };
-  add_faces(geom, 3, 100, faces3);
+   int faces3[] = { 1,19,47, 1,47,39, 2,49,41, 3,15,14,
+                    3,43,51, 3,51,15, 4,22,52, 4,26,22,
+                    4,52,44, 5,27,57, 6,46,54, 6,58,50,
+                    7,51,59, 8,29,36, 8,31,29, 8,36,52,
+                    9,39,55, 10,35,42, 11,59,43, 12,2,48,
+                    12,13,2, 12,28,37, 13,21,49, 13,29,21,
+                    13,36,29, 13,49,2, 15,23,31, 15,51,23,
+                    16,0,17, 16,41,32, 17,25,33, 18,19,1,
+                    19,27,47, 20,6,54, 20,12,48, 20,24,6,
+                    20,54,28, 21,7,25, 21,55,7, 23,27,5,
+                    24,16,32, 24,32,58, 24,44,16, 24,58,6,
+                    25,7,59, 28,9,37, 28,12,20, 28,30,9,
+                    29,55,21, 30,14,39, 30,22,14, 30,39,9,
+                    30,52,22, 32,11,34, 32,41,11, 33,25,59,
+                    33,35,10, 34,11,43, 34,18,26, 34,43,18,
+                    35,27,19, 37,9,53, 37,45,0, 37,53,45,
+                    38,15,31, 38,31,8, 39,47,55, 40,10,56,
+                    40,17,33, 40,33,10, 41,57,11, 42,35,19,
+                    44,0,16, 44,36,0, 44,52,36, 45,17,0,
+                    45,25,17, 46,1,38, 46,18,1, 46,26,18,
+                    48,2,40, 48,40,56, 48,56,4, 49,5,57,
+                    49,57,41, 50,3,14, 50,14,22, 50,42,3,
+                    53,5,45, 53,23,5, 53,31,23, 54,38,8,
+                    54,46,38, 55,47,7, 56,26,4, 56,34,26,
+                    57,27,35, 58,10,42, 58,42,50, 59,51,43,
+                    };
+   add_faces(geom, 3, 100, faces3);
 
-  int faces5[] = {
-      2,  41, 16, 17, 40, 6,  50, 22, 26, 46, 9,  55, 29, 31, 53,
-      12, 37, 0,  36, 13, 20, 48, 4,  44, 24, 23, 51, 7,  47, 27,
-      33, 59, 11, 57, 35, 38, 1,  39, 14, 15, 42, 19, 18, 43, 3,
-      45, 5,  49, 21, 25, 54, 8,  52, 30, 28, 56, 10, 58, 32, 34,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 2,41,16,17,40, 6,50,22,26,46, 9,55,29,31,53,
+                    12,37,0,36,13, 20,48,4,44,24, 23,51,7,47,27,
+                    33,59,11,57,35, 38,1,39,14,15, 42,19,18,43,3,
+                    45,5,49,21,25, 54,8,52,30,28, 56,10,58,32,34,
+                    };
+   add_faces(geom, 5, 12, faces5);
 }
 
 void U33(Geometry &geom)
 {
-  rhombicosidodecahedron_vertex_set(geom);
+   rhombicosidodecahedron_vertex_set(geom);
 
-  int faces3[] = {
-      0,  48, 4,  1,  5,  49, 3,  51, 7,  13, 55, 15, 14, 54, 12,
-      16, 56, 17, 18, 19, 57, 20, 21, 58, 22, 59, 23, 28, 36, 44,
-      30, 46, 38, 32, 24, 40, 34, 42, 26, 35, 27, 43, 41, 25, 33,
-      45, 37, 29, 47, 31, 39, 50, 2,  6,  52, 10, 8,  53, 9,  11,
-  };
-  add_faces(geom, 3, 20, faces3);
+   int faces3[] = { 0,48,4, 1,5,49, 3,51,7, 13,55,15,
+                    14,54,12, 16,56,17, 18,19,57, 20,21,58,
+                    22,59,23, 28,36,44, 30,46,38, 32,24,40,
+                    34,42,26, 35,27,43, 41,25,33, 45,37,29,
+                    47,31,39, 50,2,6, 52,10,8, 53,9,11,
+                    };
+   add_faces(geom, 3, 20, faces3);
 
-  int faces5[] = {
-      4,  5,  45, 58, 44, 6,  46, 59, 47, 7,  8,  24, 48, 28, 12,
-      10, 14, 30, 50, 26, 17, 19, 35, 53, 33, 23, 21, 37, 55, 39,
-      25, 9,  13, 29, 49, 27, 51, 31, 15, 11, 34, 18, 16, 32, 52,
-      40, 56, 41, 1,  0,  42, 2,  3,  43, 57, 54, 36, 20, 22, 38,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 4,5,45,58,44, 6,46,59,47,7, 8,24,48,28,12,
+                    10,14,30,50,26, 17,19,35,53,33, 23,21,37,55,39,
+                    25,9,13,29,49, 27,51,31,15,11, 34,18,16,32,52,
+                    40,56,41,1,0, 42,2,3,43,57, 54,36,20,22,38,
+                    };
+   add_faces(geom, 5, 12, faces5);
 
-  int faces10[] = {
-      0,  1,  49, 29, 37, 21, 20, 36, 28, 48, 10, 26, 42, 57, 19, 17, 56, 40,
-      24, 8,  14, 12, 28, 44, 58, 21, 23, 59, 46, 30, 16, 18, 57, 43, 27, 11,
-      9,  25, 41, 56, 22, 20, 58, 45, 29, 13, 15, 31, 47, 59, 32, 16, 17, 33,
-      25, 49, 5,  4,  48, 24, 34, 26, 50, 6,  7,  51, 27, 35, 19, 18, 35, 43,
-      3,  7,  47, 39, 55, 13, 9,  53, 41, 33, 53, 11, 15, 55, 37, 45, 5,  1,
-      50, 30, 38, 22, 23, 39, 31, 51, 3,  2,  52, 8,  12, 54, 38, 46, 6,  2,
-      42, 34, 52, 32, 40, 0,  4,  44, 36, 54, 14, 10,
-  };
-  add_faces(geom, 10, 12, faces10);
+   int faces10[] = { 0,1,49,29,37,21,20,36,28,48,
+                    10,26,42,57,19,17,56,40,24,8,
+                    14,12,28,44,58,21,23,59,46,30,
+                    16,18,57,43,27,11,9,25,41,56,
+                    22,20,58,45,29,13,15,31,47,59,
+                    32,16,17,33,25,49,5,4,48,24,
+                    34,26,50,6,7,51,27,35,19,18,
+                    35,43,3,7,47,39,55,13,9,53,
+                    41,33,53,11,15,55,37,45,5,1,
+                    50,30,38,22,23,39,31,51,3,2,
+                    52,8,12,54,38,46,6,2,42,34,
+                    52,32,40,0,4,44,36,54,14,10,
+                    };
+   add_faces(geom, 10, 12, faces10);
 }
 
 // small stellated dodecahedron
 void U34(Geometry &geom)
 {
-  icosahedron_vertex_set(geom);
+   icosahedron_vertex_set(geom);
 
-  int faces5[] = {
-      0, 1, 10, 4, 11, 0, 5,  4, 2, 9,  0, 7,  8, 10, 5, 0,  9, 6, 8,  1,
-      5, 1, 8,  3, 4,  5, 10, 3, 2, 11, 7, 1,  5, 11, 9, 7,  6, 3, 10, 1,
-      7, 9, 2,  3, 8,  8, 6,  2, 4, 10, 9, 11, 4, 3,  6, 11, 2, 6, 7,  0,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 0,1,10,4,11, 0,5,4,2,9, 0,7,8,10,5,
+                    0,9,6,8,1, 5,1,8,3,4, 5,10,3,2,11,
+                    7,1,5,11,9, 7,6,3,10,1, 7,9,2,3,8,
+                    8,6,2,4,10, 9,11,4,3,6, 11,2,6,7,0,
+                    };
+   add_faces(geom, 5, 12, faces5);
 }
 
 // great dodecahedron
 void U35(Geometry &geom)
 {
-  icosahedron_vertex_set(geom);
+   icosahedron_vertex_set(geom);
 
-  int faces5[] = {
-      0, 4, 1, 11, 10, 0, 6, 11, 7, 2, 0,  8, 9,  1, 6, 0,  10, 7, 5, 8,
-      1, 9, 5, 7,  11, 2, 5, 9,  4, 0, 4,  6, 10, 2, 8, 4,  8,  5, 3, 1,
-      4, 9, 3, 11, 6,  8, 2, 7,  3, 9, 10, 6, 1,  3, 7, 10, 11, 3, 5, 2,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 0,4,1,11,10, 0,6,11,7,2, 0,8,9,1,6,
+                    0,10,7,5,8, 1,9,5,7,11, 2,5,9,4,0,
+                    4,6,10,2,8, 4,8,5,3,1, 4,9,3,11,6,
+                    8,2,7,3,9, 10,6,1,3,7, 10,11,3,5,2,
+                    };
+   add_faces(geom, 5, 12, faces5);
 }
 
 // great dodecadodecahedron
 void U36(Geometry &geom)
 {
-  icosidodecahedron_vertex_set(geom);
+   icosidodecahedron_vertex_set(geom);
 
-  int faces5[] = {
-      1,  24, 14, 18, 28, 1,  28, 13, 12, 29, 2,  6,  18, 14, 10, 2,  10, 27,
-      29, 12, 4,  16, 12, 13, 17, 8,  2,  12, 16, 20, 8,  20, 5,  21, 9,  9,
-      3,  7,  22, 24, 9,  21, 17, 13, 3,  11, 26, 0,  27, 10, 15, 11, 10, 14,
-      4,  15, 19, 7,  3,  11, 19, 5,  18, 6,  7,  20, 16, 22, 0,  26, 20, 26,
-      28, 18, 5,  23, 0,  22, 7,  6,  23, 6,  2,  8,  25, 23, 17, 21, 27, 0,
-      24, 22, 16, 4,  14, 25, 1,  29, 19, 15, 25, 8,  9,  24, 1,  25, 15, 4,
-      17, 23, 28, 26, 11, 3,  13, 29, 27, 21, 5,  19,
-  };
-  add_faces(geom, 5, 24, faces5);
+   int faces5[] = { 1,24,14,18,28, 1,28,13,12,29, 2,6,18,14,10,
+                    2,10,27,29,12, 4,16,12,13,17, 8,2,12,16,20,
+                    8,20,5,21,9, 9,3,7,22,24, 9,21,17,13,3,
+                    11,26,0,27,10, 15,11,10,14,4, 15,19,7,3,11,
+                    19,5,18,6,7, 20,16,22,0,26, 20,26,28,18,5,
+                    23,0,22,7,6, 23,6,2,8,25, 23,17,21,27,0,
+                    24,22,16,4,14, 25,1,29,19,15, 25,8,9,24,1,
+                    25,15,4,17,23, 28,26,11,3,13, 29,27,21,5,19,
+                    };
+   add_faces(geom, 5, 24, faces5);
 }
 
 // truncated great dodecahedron
 void U37(Geometry &geom)
 {
-  truncated_great_dodecahedron_vertex_set(geom);
+   truncated_great_dodecahedron_vertex_set(geom);
 
-  int faces5[] = {
-      2,  17, 40, 41, 16, 8,  28, 54, 52, 30, 9,  31, 53, 55, 29,
-      12, 37, 36, 13, 0,  14, 1,  15, 38, 39, 21, 5,  25, 45, 49,
-      34, 56, 58, 32, 10, 42, 19, 3,  18, 43, 44, 24, 4,  20, 48,
-      46, 50, 22, 6,  26, 47, 27, 7,  23, 51, 59, 57, 35, 11, 33,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 2,17,40,41,16, 8,28,54,52,30, 9,31,53,55,29,
+                    12,37,36,13,0, 14,1,15,38,39, 21,5,25,45,49,
+                    34,56,58,32,10, 42,19,3,18,43, 44,24,4,20,48,
+                    46,50,22,6,26, 47,27,7,23,51, 59,57,35,11,33,
+                    };
+   add_faces(geom, 5, 12, faces5);
 
-  int faces10[] = {
-      0,  13, 53, 31, 47, 51, 35, 57, 17, 2,  6,  22, 38, 15, 55, 53, 13, 36,
-      20, 4,  8,  9,  29, 45, 25, 41, 40, 24, 44, 28, 26, 6,  4,  24, 40, 17,
-      57, 59, 19, 42, 29, 55, 15, 1,  3,  19, 59, 33, 49, 45, 30, 46, 26, 42,
-      43, 27, 47, 31, 9,  8,  30, 52, 12, 0,  2,  16, 56, 34, 50, 46, 37, 21,
-      49, 33, 11, 10, 32, 48, 20, 36, 43, 18, 58, 56, 16, 41, 25, 5,  7,  27,
-      50, 34, 10, 11, 35, 51, 23, 39, 38, 22, 52, 54, 14, 39, 23, 7,  5,  21,
-      37, 12, 54, 28, 44, 48, 32, 58, 18, 3,  1,  14,
-  };
-  add_faces(geom, 10, 12, faces10);
+   int faces10[] = { 0,13,53,31,47,51,35,57,17,2,
+                    6,22,38,15,55,53,13,36,20,4,
+                    8,9,29,45,25,41,40,24,44,28,
+                    26,6,4,24,40,17,57,59,19,42,
+                    29,55,15,1,3,19,59,33,49,45,
+                    30,46,26,42,43,27,47,31,9,8,
+                    30,52,12,0,2,16,56,34,50,46,
+                    37,21,49,33,11,10,32,48,20,36,
+                    43,18,58,56,16,41,25,5,7,27,
+                    50,34,10,11,35,51,23,39,38,22,
+                    52,54,14,39,23,7,5,21,37,12,
+                    54,28,44,48,32,58,18,3,1,14,
+                    };
+   add_faces(geom, 10, 12, faces10);
 }
 
 // rhombidodecadodecahedron
 void U38(Geometry &geom)
 {
-  rhombidodecadodecahedron_vertex_set(geom);
+   rhombidodecadodecahedron_vertex_set(geom);
 
-  int faces4[] = {
-      0,  48, 20, 36, 1,  38, 22, 50, 4,  48, 32, 58, 6,  56, 34, 50, 8,  37,
-      12, 52, 8,  54, 14, 39, 12, 13, 17, 16, 13, 36, 9,  53, 14, 18, 19, 15,
-      15, 55, 9,  38, 16, 41, 10, 56, 17, 57, 11, 40, 18, 58, 10, 43, 19, 42,
-      11, 59, 20, 24, 26, 22, 21, 23, 27, 25, 25, 41, 2,  45, 27, 47, 3,  43,
-      29, 55, 5,  45, 30, 31, 29, 28, 31, 47, 7,  53, 33, 35, 34, 32, 37, 21,
-      49, 0,  39, 1,  51, 23, 44, 2,  40, 24, 46, 26, 42, 3,  49, 5,  59, 33,
-      51, 35, 57, 7,  52, 6,  46, 30, 54, 28, 44, 4,
-  };
-  add_faces(geom, 4, 30, faces4);
+   int faces4[] = { 0,48,20,36, 1,38,22,50, 4,48,32,58, 6,56,34,50,
+                    8,37,12,52, 8,54,14,39, 12,13,17,16, 13,36,9,53,
+                    14,18,19,15, 15,55,9,38, 16,41,10,56, 17,57,11,40,
+                    18,58,10,43, 19,42,11,59, 20,24,26,22, 21,23,27,25,
+                    25,41,2,45, 27,47,3,43, 29,55,5,45, 30,31,29,28,
+                    31,47,7,53, 33,35,34,32, 37,21,49,0, 39,1,51,23,
+                    44,2,40,24, 46,26,42,3, 49,5,59,33, 51,35,57,7,
+                    52,6,46,30, 54,28,44,4, };
+   add_faces(geom, 4, 30, faces4);
 
-  int faces5[] = {
-      0,  49, 33, 32, 48, 1,  50, 34, 35, 51, 4,  44, 24, 20, 48, 6,  50, 22,
-      26, 46, 8,  52, 30, 28, 54, 13, 53, 7,  57, 17, 15, 19, 59, 5,  55, 16,
-      17, 40, 2,  41, 18, 43, 3,  42, 19, 21, 25, 45, 5,  49, 23, 51, 7,  47,
-      27, 25, 27, 43, 10, 41, 26, 24, 40, 11, 42, 28, 29, 45, 2,  44, 30, 46,
-      3,  47, 31, 31, 53, 9,  55, 29, 33, 59, 11, 57, 35, 36, 20, 22, 38, 9,
-      37, 0,  36, 13, 12, 39, 14, 15, 38, 1,  39, 23, 21, 37, 8,  52, 12, 16,
-      56, 6,  54, 4,  58, 18, 14, 56, 10, 58, 32, 34,
-  };
-  add_faces(geom, 5, 24, faces5);
+   int faces5[] = { 0,49,33,32,48, 1,50,34,35,51, 4,44,24,20,48,
+                    6,50,22,26,46, 8,52,30,28,54, 13,53,7,57,17,
+                    15,19,59,5,55, 16,17,40,2,41, 18,43,3,42,19,
+                    21,25,45,5,49, 23,51,7,47,27, 25,27,43,10,41,
+                    26,24,40,11,42, 28,29,45,2,44, 30,46,3,47,31,
+                    31,53,9,55,29, 33,59,11,57,35, 36,20,22,38,9,
+                    37,0,36,13,12, 39,14,15,38,1, 39,23,21,37,8,
+                    52,12,16,56,6, 54,4,58,18,14, 56,10,58,32,34,
+                    };
+   add_faces(geom, 5, 24, faces5);
 }
 
 // small rhombidodecahedron
 void U39(Geometry &geom)
 {
-  rhombicosidodecahedron_vertex_set(geom);
+   rhombicosidodecahedron_vertex_set(geom);
 
-  int faces4[] = {
-      4,  5,  1,  0,  41, 25, 49, 1,  2,  3,  7,  6,  3,  51, 27, 43, 4,  44,
-      28, 48, 7,  47, 31, 51, 8,  12, 14, 10, 52, 32, 24, 8,  9,  11, 15, 13,
-      28, 36, 54, 12, 30, 38, 54, 14, 15, 55, 39, 31, 56, 41, 33, 17, 16, 17,
-      19, 18, 19, 35, 43, 57, 21, 37, 45, 58, 22, 59, 46, 38, 23, 21, 20, 22,
-      29, 37, 55, 13, 53, 9,  25, 33, 42, 57, 18, 34, 53, 11, 27, 35, 36, 44,
-      58, 20, 0,  48, 24, 40, 32, 16, 56, 40, 49, 29, 45, 5,  50, 2,  42, 26,
-      6,  46, 30, 50, 34, 26, 10, 52, 59, 47, 39, 23,
-  };
-  add_faces(geom, 4, 30, faces4);
+   int faces4[] = { 4,5,1,0, 41,25,49,1, 2,3,7,6, 3,51,27,43,
+                    4,44,28,48, 7,47,31,51, 8,12,14,10, 52,32,24,8,
+                    9,11,15,13, 28,36,54,12, 30,38,54,14, 15,55,39,31,
+                    56,41,33,17, 16,17,19,18, 19,35,43,57, 21,37,45,58,
+                    22,59,46,38, 23,21,20,22, 29,37,55,13, 53,9,25,33,
+                    42,57,18,34, 53,11,27,35, 36,44,58,20, 0,48,24,40,
+                    32,16,56,40, 49,29,45,5, 50,2,42,26, 6,46,30,50,
+                    34,26,10,52, 59,47,39,23, };
+   add_faces(geom, 4, 30, faces4);
 
-  int faces10[] = {
-      1,  49, 29, 37, 21, 20, 36, 28, 48, 0,  12, 28, 44, 58, 21, 23, 59, 46,
-      30, 14, 16, 17, 33, 25, 49, 5,  4,  48, 24, 32, 20, 58, 45, 29, 13, 15,
-      31, 47, 59, 22, 26, 42, 57, 19, 17, 56, 40, 24, 8,  10, 30, 38, 22, 23,
-      39, 31, 51, 3,  2,  50, 41, 1,  5,  45, 37, 55, 15, 11, 53, 33, 18, 19,
-      35, 27, 51, 7,  6,  50, 26, 34, 35, 53, 9,  13, 55, 39, 47, 7,  3,  43,
-      10, 14, 54, 36, 44, 4,  0,  40, 32, 52, 8,  12, 54, 38, 46, 6,  2,  42,
-      34, 52, 16, 18, 57, 43, 27, 11, 9,  25, 41, 56,
-  };
-  add_faces(geom, 10, 12, faces10);
+   int faces10[] = { 1,49,29,37,21,20,36,28,48,0,
+                    12,28,44,58,21,23,59,46,30,14,
+                    16,17,33,25,49,5,4,48,24,32,
+                    20,58,45,29,13,15,31,47,59,22,
+                    26,42,57,19,17,56,40,24,8,10,
+                    30,38,22,23,39,31,51,3,2,50,
+                    41,1,5,45,37,55,15,11,53,33,
+                    18,19,35,27,51,7,6,50,26,34,
+                    35,53,9,13,55,39,47,7,3,43,
+                    10,14,54,36,44,4,0,40,32,52,
+                    8,12,54,38,46,6,2,42,34,52,
+                    16,18,57,43,27,11,9,25,41,56,
+                    };
+   add_faces(geom, 10, 12, faces10);
 }
 
 // snub dodecadodecahedron
 void U40(Geometry &geom)
 {
-  // the greater positive real root of Phi*a**4-a**3+2a**2-a-1/Phi, or
-  // approximately 0.796442103306065
-  // hard code value. compare roots out to 12 places for computed answer (future
-  // proof)
-  vector<Vec3d> vlist = u40_u60_vertices(0.796442103306065);
+   // the greater positive real root of Phi*a**4-a**3+2a**2-a-1/Phi, or approximately 0.796442103306065
+   // hard code value. compare roots out to 12 places for computed answer (future proof)
+   vector<Vec3d> vlist = u40_u60_vertices(0.796442103306065);
 
-  calculate_coords(geom, vlist, ODD, EVEN);
+   calculate_coords(geom, vlist, ODD, EVEN);
 
-  int faces3[] = {
-      0,  2,  36, 0,  38, 2,  1,  25, 21, 1,  39, 3,  2,  26, 22, 3,  27, 23,
-      5,  6,  41, 5,  42, 6,  6,  30, 14, 8,  9,  44, 8,  45, 9,  9,  33, 17,
-      13, 5,  29, 13, 29, 49, 16, 40, 50, 18, 10, 34, 18, 34, 54, 19, 11, 35,
-      20, 0,  24, 20, 44, 55, 21, 45, 54, 22, 26, 58, 24, 48, 42, 25, 57, 21,
-      27, 59, 23, 28, 12, 4,  29, 53, 46, 31, 15, 7,  31, 51, 15, 32, 16, 8,
-      32, 52, 16, 35, 59, 38, 36, 33, 57, 36, 57, 12, 37, 1,  3,  38, 59, 14,
-      39, 34, 58, 39, 58, 15, 40, 4,  7,  40, 26, 50, 41, 27, 51, 41, 51, 17,
-      43, 7,  4,  44, 31, 55, 45, 30, 54, 46, 10, 11, 47, 11, 10, 48, 12, 28,
-      48, 18, 42, 49, 19, 43, 49, 43, 25, 50, 14, 30, 52, 23, 47, 52, 47, 28,
-      53, 17, 33, 53, 22, 46, 55, 19, 35, 56, 13, 37, 56, 20, 24, 56, 37, 32,
-  };
-  add_faces(geom, 3, 60, faces3);
+   int faces3[] = { 0,2,36, 0,38,2, 1,25,21, 1,39,3,
+                    2,26,22, 3,27,23, 5,6,41, 5,42,6,
+                    6,30,14, 8,9,44, 8,45,9, 9,33,17,
+                    13,5,29, 13,29,49, 16,40,50, 18,10,34,
+                    18,34,54, 19,11,35, 20,0,24, 20,44,55,
+                    21,45,54, 22,26,58, 24,48,42, 25,57,21,
+                    27,59,23, 28,12,4, 29,53,46, 31,15,7,
+                    31,51,15, 32,16,8, 32,52,16, 35,59,38,
+                    36,33,57, 36,57,12, 37,1,3, 38,59,14,
+                    39,34,58, 39,58,15, 40,4,7, 40,26,50,
+                    41,27,51, 41,51,17, 43,7,4, 44,31,55,
+                    45,30,54, 46,10,11, 47,11,10, 48,12,28,
+                    48,18,42, 49,19,43, 49,43,25, 50,14,30,
+                    52,23,47, 52,47,28, 53,17,33, 53,22,46,
+                    55,19,35, 56,13,37, 56,20,24, 56,37,32,
+                    };
+   add_faces(geom, 3, 60, faces3);
 
-  int faces5[] = {
-      1,  21, 54, 34, 39, 3,  39, 15, 51, 27, 5,  41, 17, 53, 29, 6,  14, 59,
-      27, 41, 13, 49, 25, 1,  37, 16, 50, 30, 45, 8,  20, 55, 35, 38, 0,  21,
-      57, 33, 9,  45, 23, 59, 35, 11, 47, 24, 0,  36, 12, 48, 24, 42, 5,  13,
-      56, 29, 46, 11, 19, 49, 37, 3,  23, 52, 32, 40, 7,  15, 58, 26, 42, 18,
-      54, 30, 6,  43, 4,  12, 57, 25, 44, 9,  17, 51, 31, 46, 22, 58, 34, 10,
-      48, 28, 47, 10, 18, 50, 26, 2,  38, 14, 52, 28, 4,  40, 16, 53, 33, 36,
-      2,  22, 55, 31, 7,  43, 19, 56, 32, 8,  44, 20,
-  };
-  add_faces(geom, 5, 24, faces5);
+   int faces5[] = { 1,21,54,34,39, 3,39,15,51,27, 5,41,17,53,29,
+                    6,14,59,27,41, 13,49,25,1,37, 16,50,30,45,8,
+                    20,55,35,38,0, 21,57,33,9,45, 23,59,35,11,47,
+                    24,0,36,12,48, 24,42,5,13,56, 29,46,11,19,49,
+                    37,3,23,52,32, 40,7,15,58,26, 42,18,54,30,6,
+                    43,4,12,57,25, 44,9,17,51,31, 46,22,58,34,10,
+                    48,28,47,10,18, 50,26,2,38,14, 52,28,4,40,16,
+                    53,33,36,2,22, 55,31,7,43,19, 56,32,8,44,20,
+                    };
+   add_faces(geom, 5, 24, faces5);
 }
 
 // ditrigonal dodecadodecahedron
 void U41(Geometry &geom)
 {
-  dodecahedron_vertex_set(geom);
+   dodecahedron_vertex_set(geom);
 
-  int faces5[] = {
-      3,  10, 14, 8,  1,  16, 12, 17, 0,  2,  0,  9,  15, 11, 2,  6,  18, 9,
-      16, 2,  15, 18, 14, 2,  3,  16, 8,  18, 7,  3,  2,  11, 17, 10, 3,  7,
-      13, 11, 15, 3,  1,  17, 13, 16, 3,  11, 13, 9,  4,  6,  6,  12, 16, 13,
-      7,  18, 8,  5,  4,  9,  19, 11, 6,  7,  10, 7,  5,  8,  12, 10, 12, 6,
-      2,  14, 10, 17, 1,  5,  19, 10, 8,  14, 0,  4,  12, 9,  13, 5,  1,  15,
-      19, 5,  7,  18, 15, 1,  0,  14, 19, 15, 9,  0,  1,  8,  16, 11, 19, 4,
-      0,  17, 12, 4,  5,  13, 17, 14, 18, 6,  4,  19,
-  };
-  add_faces(geom, 5, 24, faces5);
+   int faces5[] = { 3,10,14,8,1, 16,12,17,0,2, 0,9,15,11,2,
+                    6,18,9,16,2, 15,18,14,2,3, 16,8,18,7,3,
+                    2,11,17,10,3, 7,13,11,15,3, 1,17,13,16,3,
+                    11,13,9,4,6, 6,12,16,13,7, 18,8,5,4,9,
+                    19,11,6,7,10, 7,5,8,12,10, 12,6,2,14,10,
+                    17,1,5,19,10, 8,14,0,4,12, 9,13,5,1,15,
+                    19,5,7,18,15, 1,0,14,19,15, 9,0,1,8,16,
+                    11,19,4,0,17, 12,4,5,13,17, 14,18,6,4,19,
+                    };
+   add_faces(geom, 5, 24, faces5);
 }
 
 // great ditrigonal dodecicosidodecahedron
 void U42(Geometry &geom)
 {
-  truncated_dodecahedron_vertex_set(geom);
+   truncated_dodecahedron_vertex_set(geom);
 
-  int faces3[] = {
-      0,  37, 41, 1,  40, 36, 7,  45, 47, 8,  54, 55, 10, 59, 58,
-      22, 14, 30, 23, 31, 15, 26, 34, 18, 27, 19, 35, 28, 12, 20,
-      29, 21, 13, 32, 24, 16, 33, 17, 25, 42, 3,  38, 43, 39, 2,
-      46, 44, 6,  50, 4,  48, 51, 49, 5,  52, 9,  53, 56, 57, 11,
-  };
-  add_faces(geom, 3, 20, faces3);
+   int faces3[] = { 0,37,41, 1,40,36, 7,45,47, 8,54,55,
+                    10,59,58, 22,14,30, 23,31,15, 26,34,18,
+                    27,19,35, 28,12,20, 29,21,13, 32,24,16,
+                    33,17,25, 42,3,38, 43,39,2, 46,44,6,
+                    50,4,48, 51,49,5, 52,9,53, 56,57,11,
+                    };
+   add_faces(geom, 3, 20, faces3);
 
-  int faces5[] = {
-      11, 51, 15, 14, 50, 18, 19, 47, 9,  46, 24, 58, 2,  54, 20,
-      25, 21, 55, 3,  59, 26, 22, 52, 0,  56, 35, 42, 6,  40, 33,
-      36, 4,  38, 31, 29, 37, 28, 30, 39, 5,  41, 7,  43, 34, 32,
-      45, 17, 16, 44, 8,  48, 12, 13, 49, 10, 57, 1,  53, 23, 27,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 11,51,15,14,50, 18,19,47,9,46, 24,58,2,54,20,
+                    25,21,55,3,59, 26,22,52,0,56, 35,42,6,40,33,
+                    36,4,38,31,29, 37,28,30,39,5, 41,7,43,34,32,
+                    45,17,16,44,8, 48,12,13,49,10, 57,1,53,23,27,
+                    };
+   add_faces(geom, 5, 12, faces5);
 
-  int faces10[] = {
-      0,  52, 53, 1,  36, 29, 13, 12, 28, 37, 9,  47, 45, 8,  55, 21, 29, 31,
-      23, 53, 14, 15, 31, 38, 3,  55, 54, 2,  39, 30, 18, 34, 43, 2,  58, 59,
-      3,  42, 35, 19, 26, 18, 46, 6,  42, 38, 4,  50, 14, 22, 27, 23, 15, 51,
-      5,  39, 43, 7,  47, 19, 40, 6,  44, 16, 24, 20, 12, 48, 4,  36, 41, 37,
-      5,  49, 13, 21, 25, 17, 45, 7,  52, 22, 30, 28, 20, 54, 8,  44, 46, 9,
-      56, 0,  41, 32, 16, 17, 33, 40, 1,  57, 56, 11, 50, 48, 10, 58, 24, 32,
-      34, 26, 57, 27, 35, 33, 25, 59, 10, 49, 51, 11,
-  };
-  add_faces(geom, 10, 12, faces10);
+   int faces10[] = { 0,52,53,1,36,29,13,12,28,37,
+                    9,47,45,8,55,21,29,31,23,53,
+                    14,15,31,38,3,55,54,2,39,30,
+                    18,34,43,2,58,59,3,42,35,19,
+                    26,18,46,6,42,38,4,50,14,22,
+                    27,23,15,51,5,39,43,7,47,19,
+                    40,6,44,16,24,20,12,48,4,36,
+                    41,37,5,49,13,21,25,17,45,7,
+                    52,22,30,28,20,54,8,44,46,9,
+                    56,0,41,32,16,17,33,40,1,57,
+                    56,11,50,48,10,58,24,32,34,26,
+                    57,27,35,33,25,59,10,49,51,11,
+                    };
+   add_faces(geom, 10, 12, faces10);
 }
 
 // small stellated dodecahedron
 void U43(Geometry &geom)
 {
-  small_icosicosidodecahedron_vertex_set(geom);
+   small_icosicosidodecahedron_vertex_set(geom);
 
-  int faces3[] = {
-      2,  50, 46, 4,  52, 53, 10, 42, 40, 11, 41, 43, 18, 34, 26,
-      19, 27, 35, 22, 30, 14, 23, 15, 31, 28, 20, 12, 29, 13, 21,
-      32, 16, 24, 33, 25, 17, 36, 38, 8,  37, 9,  39, 48, 0,  44,
-      49, 45, 1,  51, 3,  47, 55, 54, 5,  57, 56, 6,  58, 59, 7,
-  };
-  add_faces(geom, 3, 20, faces3);
+   int faces3[] = { 2,50,46, 4,52,53, 10,42,40, 11,41,43,
+                    18,34,26, 19,27,35, 22,30,14, 23,15,31,
+                    28,20,12, 29,13,21, 32,16,24, 33,25,17,
+                    36,38,8, 37,9,39, 48,0,44, 49,45,1,
+                    51,3,47, 55,54,5, 57,56,6, 58,59,7,
+                    };
+   add_faces(geom, 3, 20, faces3);
 
-  int faces5[] = {
-      0,  36, 24, 20, 40, 1,  41, 21, 25, 37, 6,  49, 32, 33, 48,
-      9,  55, 13, 15, 53, 26, 38, 2,  42, 22, 34, 51, 7,  50, 35,
-      43, 3,  39, 27, 23, 45, 4,  44, 29, 28, 47, 30, 31, 46, 5,
-      52, 14, 12, 54, 8,  56, 10, 58, 16, 18, 57, 19, 17, 59, 11,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 0,36,24,20,40, 1,41,21,25,37, 6,49,32,33,48,
+                    9,55,13,15,53, 26,38,2,42,22, 34,51,7,50,35,
+                    43,3,39,27,23, 45,4,44,29,28, 47,30,31,46,5,
+                    52,14,12,54,8, 56,10,58,16,18, 57,19,17,59,11,
+                    };
+   add_faces(geom, 5, 12, faces5);
 
-  int faces10[] = {
-      1,  45, 28, 12, 14, 30, 47, 3,  43, 41, 6,  48, 44, 4,  53, 15, 23, 27,
-      19, 57, 6,  56, 18, 26, 22, 14, 52, 4,  45, 49, 10, 40, 20, 28, 29, 21,
-      41, 11, 59, 58, 16, 58, 7,  51, 47, 5,  54, 12, 20, 24, 25, 21, 13, 55,
-      5,  46, 50, 7,  59, 17, 32, 24, 36, 8,  54, 55, 9,  37, 25, 33, 34, 35,
-      27, 39, 9,  53, 52, 8,  38, 26, 44, 0,  40, 42, 2,  46, 31, 15, 13, 29,
-      48, 33, 17, 19, 35, 50, 2,  38, 36, 0,  49, 1,  37, 39, 3,  51, 34, 18,
-      16, 32, 56, 57, 11, 43, 23, 31, 30, 22, 42, 10,
-  };
-  add_faces(geom, 10, 12, faces10);
+   int faces10[] = { 1,45,28,12,14,30,47,3,43,41,
+                    6,48,44,4,53,15,23,27,19,57,
+                    6,56,18,26,22,14,52,4,45,49,
+                    10,40,20,28,29,21,41,11,59,58,
+                    16,58,7,51,47,5,54,12,20,24,
+                    25,21,13,55,5,46,50,7,59,17,
+                    32,24,36,8,54,55,9,37,25,33,
+                    34,35,27,39,9,53,52,8,38,26,
+                    44,0,40,42,2,46,31,15,13,29,
+                    48,33,17,19,35,50,2,38,36,0,
+                    49,1,37,39,3,51,34,18,16,32,
+                    56,57,11,43,23,31,30,22,42,10,
+                    };
+   add_faces(geom, 10, 12, faces10);
 }
 
 // icosidodecadodecahedron
 void U44(Geometry &geom)
 {
-  rhombidodecadodecahedron_vertex_set(geom);
+   rhombidodecadodecahedron_vertex_set(geom);
 
-  int faces5[] = {
-      0,  49, 33, 32, 48, 1,  50, 34, 35, 51, 4,  48, 20, 24, 44, 6,  46, 26,
-      22, 50, 8,  54, 28, 30, 52, 13, 53, 7,  57, 17, 15, 19, 59, 5,  55, 16,
-      41, 2,  40, 17, 18, 19, 42, 3,  43, 21, 49, 5,  45, 25, 23, 27, 47, 7,
-      51, 24, 40, 11, 42, 26, 25, 27, 43, 10, 41, 28, 29, 45, 2,  44, 29, 55,
-      9,  53, 31, 30, 46, 3,  47, 31, 33, 35, 57, 11, 59, 36, 20, 22, 38, 9,
-      37, 12, 13, 36, 0,  39, 1,  38, 15, 14, 39, 23, 21, 37, 8,  52, 12, 16,
-      56, 6,  54, 4,  58, 18, 14, 58, 10, 56, 34, 32,
-  };
-  add_faces(geom, 5, 24, faces5);
+   int faces5[] = { 0,49,33,32,48, 1,50,34,35,51, 4,48,20,24,44,
+                    6,46,26,22,50, 8,54,28,30,52, 13,53,7,57,17,
+                    15,19,59,5,55, 16,41,2,40,17, 18,19,42,3,43,
+                    21,49,5,45,25, 23,27,47,7,51, 24,40,11,42,26,
+                    25,27,43,10,41, 28,29,45,2,44, 29,55,9,53,31,
+                    30,46,3,47,31, 33,35,57,11,59, 36,20,22,38,9,
+                    37,12,13,36,0, 39,1,38,15,14, 39,23,21,37,8,
+                    52,12,16,56,6, 54,4,58,18,14, 58,10,56,34,32,
+                    };
+   add_faces(geom, 5, 24, faces5);
 
-  int faces6[] = {
-      0,  36, 9,  55, 5,  49, 1,  51, 7,  53, 9,  38, 3,  42, 11, 57, 7,  47,
-      4,  44, 2,  41, 10, 58, 5,  59, 11, 40, 2,  45, 6,  56, 10, 43, 3,  46,
-      8,  37, 0,  48, 4,  54, 8,  52, 6,  50, 1,  39, 15, 38, 22, 26, 42, 19,
-      16, 17, 57, 35, 34, 56, 18, 58, 32, 33, 59, 19, 21, 23, 51, 35, 33, 49,
-      25, 45, 29, 31, 47, 27, 28, 44, 24, 26, 46, 30, 36, 13, 17, 40, 24, 20,
-      37, 21, 25, 41, 16, 12, 39, 14, 18, 43, 27, 23, 48, 32, 34, 50, 22, 20,
-      52, 30, 31, 53, 13, 12, 54, 14, 15, 55, 29, 28,
-  };
-  add_faces(geom, 6, 20, faces6);
+   int faces6[] = { 0,36,9,55,5,49, 1,51,7,53,9,38, 3,42,11,57,7,47,
+                    4,44,2,41,10,58, 5,59,11,40,2,45, 6,56,10,43,3,46,
+                    8,37,0,48,4,54, 8,52,6,50,1,39, 15,38,22,26,42,19,
+                    16,17,57,35,34,56, 18,58,32,33,59,19, 21,23,51,35,33,49,
+                    25,45,29,31,47,27, 28,44,24,26,46,30, 36,13,17,40,24,20,
+                    37,21,25,41,16,12, 39,14,18,43,27,23, 48,32,34,50,22,20,
+                    52,30,31,53,13,12, 54,14,15,55,29,28, };
+   add_faces(geom, 6, 20, faces6);
 }
 
 // icositruncated dodecadodecahedron
 void U45(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(2 - 1 / phi, 1, 2 + phi));
-  vlist.push_back(Vec3d(1, 1 / (phi * phi), 3 * phi - 1));
-  vlist.push_back(Vec3d(2, 2 / phi, 2 * phi));
-  vlist.push_back(Vec3d(3, 1 / (phi * phi), phi * phi));
-  vlist.push_back(Vec3d(phi * phi, 1, 3 * phi - 2));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(2-1/phi,1,2+phi));
+   vlist.push_back(Vec3d(1,1/(phi*phi),3*phi-1));
+   vlist.push_back(Vec3d(2,2/phi,2*phi));
+   vlist.push_back(Vec3d(3,1/(phi*phi),phi*phi));
+   vlist.push_back(Vec3d(phi*phi,1,3*phi-2));
 
-  calculate_coords(geom, vlist, ODD, ALL);
+   calculate_coords(geom, vlist, ODD, ALL);
 
-  int faces6[] = {
-      14,  94,  22,  78,  6,   86, 16,  72,  0,  80,  8,   88,  24,  49,  105,
-      109, 53,  28,  25,  29,  52, 108, 104, 48, 33,  35,  63,  119, 117, 61,
-      40,  66,  98,  99,  67,  41, 51,  26,  30, 55,  111, 107, 62,  34,  32,
-      60,  116, 118, 64,  42,  43, 65,  97,  96, 73,  17,  89,  9,   81,  1,
-      84,  4,   76,  20,  92,  12, 85,  13,  93, 21,  77,  5,   87,  7,   79,
-      23,  95,  15,  90,  10,  82, 2,   74,  18, 91,  19,  75,  3,   83,  11,
-      100, 101, 69,  47,  46,  68, 102, 70,  44, 45,  71,  103, 110, 54,  31,
-      27,  50,  106, 114, 112, 56, 36,  38,  58, 115, 59,  39,  37,  57,  113,
-  };
-  add_faces(geom, 6, 20, faces6);
+   int faces6[] = { 14,94,22,78,6,86, 16,72,0,80,8,88, 24,49,105,109,53,28,
+                    25,29,52,108,104,48, 33,35,63,119,117,61, 40,66,98,99,67,41,
+                    51,26,30,55,111,107, 62,34,32,60,116,118, 64,42,43,65,97,96,
+                    73,17,89,9,81,1, 84,4,76,20,92,12, 85,13,93,21,77,5,
+                    87,7,79,23,95,15, 90,10,82,2,74,18, 91,19,75,3,83,11,
+                    100,101,69,47,46,68, 102,70,44,45,71,103, 110,54,31,27,50,106,
+                    114,112,56,36,38,58, 115,59,39,37,57,113, };
+   add_faces(geom, 6, 20, faces6);
 
-  int faces10[] = {
-      0,   1,   81,  61,  117, 45,  44,  116, 60,  80,  6,   78,  55,  30,  102,
-      103, 31,  54,  79,  7,   10,  14,  86,  58,  38,  110, 106, 34,  62,  82,
-      18,  74,  51,  107, 35,  33,  105, 49,  72,  16,  28,  53,  76,  4,   5,
-      77,  52,  29,  101, 100, 38,  36,  108, 52,  77,  21,  23,  79,  54,  110,
-      42,  114, 58,  86,  6,   7,   87,  59,  115, 43,  43,  115, 113, 41,  67,
-      89,  17,  19,  91,  65,  48,  104, 32,  34,  106, 50,  75,  19,  17,  73,
-      53,  109, 37,  39,  111, 55,  78,  22,  20,  76,  56,  84,  12,  8,   80,
-      60,  32,  104, 108, 36,  59,  87,  15,  11,  83,  63,  35,  107, 111, 39,
-      64,  90,  18,  16,  88,  66,  40,  112, 114, 42,  67,  99,  27,  31,  103,
-      71,  93,  13,  9,   89,  69,  95,  23,  21,  93,  71,  45,  117, 119, 47,
-      74,  2,   3,   75,  50,  27,  99,  98,  26,  51,  82,  62,  118, 46,  47,
-      119, 63,  83,  3,   2,   88,  8,   12,  92,  70,  102, 30,  26,  98,  66,
-      94,  68,  46,  118, 116, 44,  70,  92,  20,  22,  96,  24,  28,  100, 68,
-      94,  14,  10,  90,  64,  96,  97,  25,  48,  73,  1,   0,   72,  49,  24,
-      97,  65,  91,  11,  15,  95,  69,  101, 29,  25,  105, 33,  61,  81,  9,
-      13,  85,  57,  37,  109, 112, 40,  41,  113, 57,  85,  5,   4,   84,  56,
-  };
-  add_faces(geom, 10, 24, faces10);
+   int faces10[] = { 0,1,81,61,117,45,44,116,60,80,
+                    6,78,55,30,102,103,31,54,79,7,
+                    10,14,86,58,38,110,106,34,62,82,
+                    18,74,51,107,35,33,105,49,72,16,
+                    28,53,76,4,5,77,52,29,101,100,
+                    38,36,108,52,77,21,23,79,54,110,
+                    42,114,58,86,6,7,87,59,115,43,
+                    43,115,113,41,67,89,17,19,91,65,
+                    48,104,32,34,106,50,75,19,17,73,
+                    53,109,37,39,111,55,78,22,20,76,
+                    56,84,12,8,80,60,32,104,108,36,
+                    59,87,15,11,83,63,35,107,111,39,
+                    64,90,18,16,88,66,40,112,114,42,
+                    67,99,27,31,103,71,93,13,9,89,
+                    69,95,23,21,93,71,45,117,119,47,
+                    74,2,3,75,50,27,99,98,26,51,
+                    82,62,118,46,47,119,63,83,3,2,
+                    88,8,12,92,70,102,30,26,98,66,
+                    94,68,46,118,116,44,70,92,20,22,
+                    96,24,28,100,68,94,14,10,90,64,
+                    96,97,25,48,73,1,0,72,49,24,
+                    97,65,91,11,15,95,69,101,29,25,
+                    105,33,61,81,9,13,85,57,37,109,
+                    112,40,41,113,57,85,5,4,84,56,
+                    };
+   add_faces(geom, 10, 24, faces10);
 }
 
 // snub icosidodecadodecahedron
 void U46(Geometry &geom)
 {
-  // the real solution to p**3=p+1, or approximately 1.324717957244746
-  // p is called the plastic constant
-  // http://en.wikipedia.org/wiki/Plastic_constant
-  double p = pow(0.5 + 1 / 6.0 * sqrt(23 / 3.0), (1 / 3.0)) +
-             pow(0.5 - 1 / 6.0 * sqrt(23 / 3.0), (1 / 3.0));
+   // the real solution to p**3=p+1, or approximately 1.324717957244746
+   // p is called the plastic constant http://en.wikipedia.org/wiki/Plastic_constant
+   double p = pow(0.5+1/6.0*sqrt(23/3.0), (1/3.0)) + pow(0.5-1/6.0*sqrt(23/3.0), (1/3.0));
 
-  double a = p + 1;
-  double b = phi * phi * p * p + phi * phi * p + phi;
-  double c = p * p + phi * p;
+   double a = p+1;
+   double b = phi*phi*p*p+phi*phi*p+phi;
+   double c = p*p+phi*p;
 
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(2 * a, 2 * c, 2 * b));
-  vlist.push_back(Vec3d(a + b / phi + c * phi, -a * phi + b + c / phi,
-                        a / phi + b * phi - c));
-  vlist.push_back(Vec3d(-a / phi + b * phi + c, -a + b / phi - c * phi,
-                        a * phi + b - c / phi));
-  vlist.push_back(Vec3d(-a / phi + b * phi - c, a - b / phi - c * phi,
-                        a * phi + b + c / phi));
-  vlist.push_back(Vec3d(a + b / phi - c * phi, a * phi - b + c / phi,
-                        a / phi + b * phi + c));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(2*a,2*c,2*b));
+   vlist.push_back(Vec3d(a+b/phi+c*phi,-a*phi+b+c/phi,a/phi+b*phi-c));
+   vlist.push_back(Vec3d(-a/phi+b*phi+c,-a+b/phi-c*phi,a*phi+b-c/phi));
+   vlist.push_back(Vec3d(-a/phi+b*phi-c,a-b/phi-c*phi,a*phi+b+c/phi));
+   vlist.push_back(Vec3d(a+b/phi-c*phi,a*phi-b+c/phi,a/phi+b*phi+c));
 
-  calculate_coords(geom, vlist, ODD, EVEN);
+   calculate_coords(geom, vlist, ODD, EVEN);
 
-  int faces3[] = {
-      0,  4,  40, 1,  9,  5,  1,  31, 25, 1,  37, 9,  2,  38, 10, 3,  7,  43,
-      4,  35, 28, 5,  9,  45, 5,  34, 29, 6,  2,  10, 6,  10, 46, 8,  4,  0,
-      8,  25, 32, 8,  44, 4,  10, 27, 34, 11, 7,  3,  12, 45, 56, 12, 48, 45,
-      12, 56, 32, 13, 51, 37, 16, 52, 38, 17, 39, 49, 17, 49, 25, 17, 53, 39,
-      18, 50, 26, 18, 53, 42, 20, 43, 52, 22, 58, 41, 22, 59, 46, 23, 55, 31,
-      24, 16, 48, 25, 31, 32, 26, 2,  28, 26, 28, 35, 26, 35, 11, 28, 20, 52,
-      29, 27, 3,  29, 34, 27, 30, 6,  33, 30, 24, 0,  30, 33, 24, 32, 31, 7,
-      33, 9,  24, 33, 13, 57, 36, 8,  0,  36, 12, 50, 36, 50, 18, 37, 19, 55,
-      39, 11, 3,  39, 15, 49, 40, 16, 55, 40, 55, 23, 41, 1,  5,  42, 2,  6,
-      42, 21, 57, 43, 19, 52, 44, 20, 57, 44, 57, 13, 45, 21, 56, 46, 15, 51,
-      47, 7,  11, 48, 16, 38, 48, 38, 14, 49, 44, 13, 50, 47, 14, 51, 19, 37,
-      51, 27, 19, 53, 21, 42, 53, 29, 21, 54, 22, 41, 54, 30, 22, 54, 36, 18,
-      54, 41, 17, 56, 43, 20, 58, 14, 47, 58, 34, 14, 58, 47, 23, 59, 15, 46,
-      59, 35, 15, 59, 40, 23,
-  };
-  add_faces(geom, 3, 80, faces3);
+   int faces3[] = { 0,4,40, 1,9,5, 1,31,25, 1,37,9,
+                    2,38,10, 3,7,43, 4,35,28, 5,9,45,
+                    5,34,29, 6,2,10, 6,10,46, 8,4,0,
+                    8,25,32, 8,44,4, 10,27,34, 11,7,3,
+                    12,45,56, 12,48,45, 12,56,32, 13,51,37,
+                    16,52,38, 17,39,49, 17,49,25, 17,53,39,
+                    18,50,26, 18,53,42, 20,43,52, 22,58,41,
+                    22,59,46, 23,55,31, 24,16,48, 25,31,32,
+                    26,2,28, 26,28,35, 26,35,11, 28,20,52,
+                    29,27,3, 29,34,27, 30,6,33, 30,24,0,
+                    30,33,24, 32,31,7, 33,9,24, 33,13,57,
+                    36,8,0, 36,12,50, 36,50,18, 37,19,55,
+                    39,11,3, 39,15,49, 40,16,55, 40,55,23,
+                    41,1,5, 42,2,6, 42,21,57, 43,19,52,
+                    44,20,57, 44,57,13, 45,21,56, 46,15,51,
+                    47,7,11, 48,16,38, 48,38,14, 49,44,13,
+                    50,47,14, 51,19,37, 51,27,19, 53,21,42,
+                    53,29,21, 54,22,41, 54,30,22, 54,36,18,
+                    54,41,17, 56,43,20, 58,14,47, 58,34,14,
+                    58,47,23, 59,15,46, 59,35,15, 59,40,23,
+                    };
+   add_faces(geom, 3, 80, faces3);
 
-  int faces5[] = {
-      1,  25, 49, 13, 37, 4,  28, 52, 16, 40, 5,  45, 48, 14, 34, 6,  46, 51,
-      13, 33, 8,  32, 56, 20, 44, 10, 38, 52, 19, 27, 12, 32, 7,  47, 50, 17,
-      25, 8,  36, 54, 18, 26, 11, 39, 53, 22, 46, 10, 34, 58, 24, 9,  37, 55,
-      16, 30, 0,  40, 59, 22, 31, 55, 19, 43, 7,  33, 57, 21, 45, 9,  36, 0,
-      24, 48, 12, 39, 3,  27, 51, 15, 41, 5,  29, 53, 17, 41, 58, 23, 31, 1,
-      42, 57, 20, 28, 2,  49, 15, 35, 4,  44, 50, 14, 38, 2,  26, 54, 18, 42,
-      6,  30, 56, 21, 29, 3,  43, 59, 23, 47, 11, 35,
-  };
-  add_faces(geom, 5, 24, faces5);
+   int faces5[] = { 1,25,49,13,37, 4,28,52,16,40, 5,45,48,14,34,
+                    6,46,51,13,33, 8,32,56,20,44, 10,38,52,19,27,
+                    12,32,7,47,50, 17,25,8,36,54, 18,26,11,39,53,
+                    22,46,10,34,58, 24,9,37,55,16, 30,0,40,59,22,
+                    31,55,19,43,7, 33,57,21,45,9, 36,0,24,48,12,
+                    39,3,27,51,15, 41,5,29,53,17, 41,58,23,31,1,
+                    42,57,20,28,2, 49,15,35,4,44, 50,14,38,2,26,
+                    54,18,42,6,30, 56,21,29,3,43, 59,23,47,11,35,
+                    };
+   add_faces(geom, 5, 24, faces5);
 }
 
 // great ditrigonal icosidodecahedron
 void U47(Geometry &geom)
 {
-  dodecahedron_vertex_set(geom);
+   dodecahedron_vertex_set(geom);
 
-  int faces3[] = {
-      1,  0,  17, 1,  5,  8,  2,  0,  14, 2,  6,  11, 3,  10, 7,
-      3,  15, 1,  3,  16, 2,  7,  5,  13, 7,  6,  18, 9,  4,  0,
-      10, 14, 19, 10, 17, 12, 12, 4,  6,  14, 8,  18, 15, 11, 19,
-      15, 18, 9,  16, 8,  12, 16, 13, 9,  17, 11, 13, 19, 4,  5,
-  };
-  add_faces(geom, 3, 20, faces3);
+   int faces3[] = { 1,0,17, 1,5,8, 2,0,14, 2,6,11,
+                    3,10,7, 3,15,1, 3,16,2, 7,5,13,
+                    7,6,18, 9,4,0, 10,14,19, 10,17,12,
+                    12,4,6, 14,8,18, 15,11,19, 15,18,9,
+                    16,8,12, 16,13,9, 17,11,13, 19,4,5,
+                    };
+   add_faces(geom, 3, 20, faces3);
 
-  int faces5[] = {
-      1,  8,  14, 10, 3,  2,  11, 15, 9,  0,  3,  2,  14, 18, 15,
-      3,  7,  18, 8,  16, 6,  4,  9,  13, 11, 7,  13, 16, 12, 6,
-      10, 12, 8,  5,  7,  10, 19, 5,  1,  17, 12, 17, 13, 5,  4,
-      15, 19, 14, 0,  1,  16, 9,  18, 6,  2,  17, 0,  4,  19, 11,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 1,8,14,10,3, 2,11,15,9,0, 3,2,14,18,15,
+                    3,7,18,8,16, 6,4,9,13,11, 7,13,16,12,6,
+                    10,12,8,5,7, 10,19,5,1,17, 12,17,13,5,4,
+                    15,19,14,0,1, 16,9,18,6,2, 17,0,4,19,11,
+                    };
+   add_faces(geom, 5, 12, faces5);
 }
 
 // great icosicosidodecahedron
 void U48(Geometry &geom)
 {
-  truncated_dodecahedron_vertex_set(geom);
+   truncated_dodecahedron_vertex_set(geom);
 
-  int faces3[] = {
-      0,  41, 37, 1,  36, 40, 7,  47, 45, 10, 58, 59, 13, 21, 29,
-      15, 31, 23, 22, 30, 14, 26, 18, 34, 27, 35, 19, 28, 20, 12,
-      32, 16, 24, 33, 25, 17, 38, 3,  42, 43, 2,  39, 46, 6,  44,
-      50, 48, 4,  51, 5,  49, 52, 53, 9,  54, 8,  55, 56, 11, 57,
-  };
-  add_faces(geom, 3, 20, faces3);
+   int faces3[] = { 0,41,37, 1,36,40, 7,47,45, 10,58,59,
+                    13,21,29, 15,31,23, 22,30,14, 26,18,34,
+                    27,35,19, 28,20,12, 32,16,24, 33,25,17,
+                    38,3,42, 43,2,39, 46,6,44, 50,48,4,
+                    51,5,49, 52,53,9, 54,8,55, 56,11,57,
+                    };
+   add_faces(geom, 3, 20, faces3);
 
-  int faces5[] = {
-      4,  38, 31, 29, 36, 11, 51, 15, 14, 50, 18, 19, 47, 9,  46,
-      20, 24, 58, 2,  54, 26, 22, 52, 0,  56, 35, 42, 6,  40, 33,
-      37, 28, 30, 39, 5,  41, 7,  43, 34, 32, 45, 17, 16, 44, 8,
-      48, 12, 13, 49, 10, 57, 1,  53, 23, 27, 59, 25, 21, 55, 3,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 4,38,31,29,36, 11,51,15,14,50, 18,19,47,9,46,
+                    20,24,58,2,54, 26,22,52,0,56, 35,42,6,40,33,
+                    37,28,30,39,5, 41,7,43,34,32, 45,17,16,44,8,
+                    48,12,13,49,10, 57,1,53,23,27, 59,25,21,55,3,
+                    };
+   add_faces(geom, 5, 12, faces5);
 
-  int faces6[] = {
-      0,  52, 9,  47, 7,  41, 1,  40, 6,  46, 9,  53, 5,  39, 2,  58, 10, 49,
-      7,  45, 8,  54, 2,  43, 11, 50, 4,  36, 1,  57, 12, 20, 54, 55, 21, 13,
-      24, 16, 17, 25, 59, 58, 26, 34, 43, 39, 30, 22, 27, 23, 31, 38, 42, 35,
-      34, 18, 46, 44, 16, 32, 35, 33, 17, 45, 47, 19, 36, 29, 21, 25, 33, 40,
-      37, 41, 32, 24, 20, 28, 42, 3,  55, 8,  44, 6,  48, 10, 59, 3,  38, 4,
-      50, 14, 30, 28, 12, 48, 51, 49, 13, 29, 31, 15, 52, 22, 14, 15, 23, 53,
-      56, 0,  37, 5,  51, 11, 56, 57, 27, 19, 18, 26,
-  };
-  add_faces(geom, 6, 20, faces6);
+   int faces6[] = { 0,52,9,47,7,41, 1,40,6,46,9,53, 5,39,2,58,10,49,
+                    7,45,8,54,2,43, 11,50,4,36,1,57, 12,20,54,55,21,13,
+                    24,16,17,25,59,58, 26,34,43,39,30,22, 27,23,31,38,42,35,
+                    34,18,46,44,16,32, 35,33,17,45,47,19, 36,29,21,25,33,40,
+                    37,41,32,24,20,28, 42,3,55,8,44,6, 48,10,59,3,38,4,
+                    50,14,30,28,12,48, 51,49,13,29,31,15, 52,22,14,15,23,53,
+                    56,0,37,5,51,11, 56,57,27,19,18,26, };
+   add_faces(geom, 6, 20, faces6);
 }
 
 // small icosihemidodecahedron
 void U49(Geometry &geom)
 {
-  icosidodecahedron_vertex_set(geom);
+   icosidodecahedron_vertex_set(geom);
 
-  int faces3[] = {
-      1,  9,  13, 5,  27, 26, 10, 0,  6,  7,  23, 15, 8,  16, 24,
-      26, 18, 10, 11, 7,  0,  12, 1,  8,  16, 14, 2,  3,  15, 17,
-      9,  25, 17, 19, 21, 3,  18, 2,  20, 6,  14, 22, 23, 4,  22,
-      24, 25, 4,  27, 11, 19, 28, 20, 12, 29, 13, 21, 29, 28, 5,
-  };
-  add_faces(geom, 3, 20, faces3);
+   int faces3[] = { 1,9,13, 5,27,26, 10,0,6, 7,23,15,
+                    8,16,24, 26,18,10, 11,7,0, 12,1,8,
+                    16,14,2, 3,15,17, 9,25,17, 19,21,3,
+                    18,2,20, 6,14,22, 23,4,22, 24,25,4,
+                    27,11,19, 28,20,12, 29,13,21, 29,28,5,
+                    };
+   add_faces(geom, 3, 20, faces3);
 
-  int faces10[] = {
-      5,  26, 10, 6,  22, 4,  25, 9,  13, 29, 5,  28, 12, 8,  24,
-      4,  23, 7,  11, 27, 12, 20, 18, 10, 0,  7,  15, 17, 9,  1,
-      19, 11, 0,  6,  14, 16, 8,  1,  13, 21, 27, 19, 3,  17, 25,
-      24, 16, 2,  18, 26, 28, 29, 21, 3,  15, 23, 22, 14, 2,  20,
-  };
-  add_faces(geom, 10, 6, faces10);
+   int faces10[] = { 5,26,10,6,22,4,25,9,13,29,
+                    5,28,12,8,24,4,23,7,11,27,
+                    12,20,18,10,0,7,15,17,9,1,
+                    19,11,0,6,14,16,8,1,13,21,
+                    27,19,3,17,25,24,16,2,18,26,
+                    28,29,21,3,15,23,22,14,2,20,
+                    };
+   add_faces(geom, 10, 6, faces10);
+
 }
 
 // small dodecicosahedron
 void U50(Geometry &geom)
 {
-  small_icosicosidodecahedron_vertex_set(geom);
+   small_icosicosidodecahedron_vertex_set(geom);
 
-  int faces6[] = {
-      44, 4,  52, 8,  36, 0,  1,  37, 9,  53, 4,  45, 57, 11, 41, 1,  49, 6,
-      39, 3,  47, 5,  55, 9,  43, 3,  51, 7,  59, 11, 32, 33, 17, 59, 58, 16,
-      18, 16, 24, 36, 38, 26, 18, 34, 35, 19, 57, 56, 41, 43, 23, 15, 13, 21,
-      27, 39, 37, 25, 17, 19, 29, 13, 55, 54, 12, 28, 51, 47, 30, 22, 26, 34,
-      8,  54, 5,  46, 2,  38, 20, 12, 14, 22, 42, 40, 10, 58, 7,  50, 2,  42,
-      6,  56, 10, 40, 0,  48, 33, 25, 21, 29, 44, 48, 32, 24, 20, 28, 45, 49,
-      35, 27, 23, 31, 46, 50, 52, 14, 30, 31, 15, 53,
-  };
-  add_faces(geom, 6, 20, faces6);
+   int faces6[] = { 44,4,52,8,36,0, 1,37,9,53,4,45, 57,11,41,1,49,6,
+                    39,3,47,5,55,9, 43,3,51,7,59,11, 32,33,17,59,58,16,
+                    18,16,24,36,38,26, 18,34,35,19,57,56, 41,43,23,15,13,21,
+                    27,39,37,25,17,19, 29,13,55,54,12,28, 51,47,30,22,26,34,
+                    8,54,5,46,2,38, 20,12,14,22,42,40, 10,58,7,50,2,42,
+                    6,56,10,40,0,48, 33,25,21,29,44,48, 32,24,20,28,45,49,
+                    35,27,23,31,46,50, 52,14,30,31,15,53, };
+   add_faces(geom, 6, 20, faces6);
 
-  int faces10[] = {
-      40, 42, 2,  46, 31, 15, 13, 29, 44, 0,  49, 45, 4,  52, 14, 22, 26, 18,
-      56, 6,  48, 44, 4,  53, 15, 23, 27, 19, 57, 6,  25, 21, 13, 55, 5,  46,
-      50, 7,  59, 17, 16, 58, 7,  51, 47, 5,  54, 12, 20, 24, 26, 38, 8,  52,
-      53, 9,  39, 27, 35, 34, 33, 25, 37, 9,  55, 54, 8,  36, 24, 32, 1,  45,
-      28, 12, 14, 30, 47, 3,  43, 41, 0,  36, 38, 2,  50, 35, 19, 17, 33, 48,
-      49, 32, 16, 18, 34, 51, 3,  39, 37, 1,  56, 10, 42, 22, 30, 31, 23, 43,
-      11, 57, 58, 59, 11, 41, 21, 29, 28, 20, 40, 10,
-  };
-  add_faces(geom, 10, 12, faces10);
+   int faces10[] = { 40,42,2,46,31,15,13,29,44,0,
+                    49,45,4,52,14,22,26,18,56,6,
+                    48,44,4,53,15,23,27,19,57,6,
+                    25,21,13,55,5,46,50,7,59,17,
+                    16,58,7,51,47,5,54,12,20,24,
+                    26,38,8,52,53,9,39,27,35,34,
+                    33,25,37,9,55,54,8,36,24,32,
+                    1,45,28,12,14,30,47,3,43,41,
+                    0,36,38,2,50,35,19,17,33,48,
+                    49,32,16,18,34,51,3,39,37,1,
+                    56,10,42,22,30,31,23,43,11,57,
+                    58,59,11,41,21,29,28,20,40,10,
+                    };
+   add_faces(geom, 10, 12, faces10);
 }
 
 // small dodecahemidodecahedron
 void U51(Geometry &geom)
 {
-  icosidodecahedron_vertex_set(geom);
+   icosidodecahedron_vertex_set(geom);
 
-  int faces5[] = {
-      4,  23, 15, 17, 25, 5,  29, 21, 19, 27, 7,  0,  6,  22, 23,
-      7,  15, 3,  19, 11, 10, 18, 2,  14, 6,  10, 26, 27, 11, 0,
-      12, 28, 29, 13, 1,  16, 2,  20, 12, 8,  17, 3,  21, 13, 9,
-      18, 26, 5,  28, 20, 22, 14, 16, 24, 4,  24, 8,  1,  9,  25,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 4,23,15,17,25, 5,29,21,19,27, 7,0,6,22,23,
+                    7,15,3,19,11, 10,18,2,14,6, 10,26,27,11,0,
+                    12,28,29,13,1, 16,2,20,12,8, 17,3,21,13,9,
+                    18,26,5,28,20, 22,14,16,24,4, 24,8,1,9,25,
+                    };
+   add_faces(geom, 5, 12, faces5);
 
-  int faces10[] = {
-      14, 6,  0,  11, 19, 21, 13, 1,  8,  16, 15, 17, 9,  1,  12,
-      20, 18, 10, 0,  7,  22, 14, 2,  20, 28, 29, 21, 3,  15, 23,
-      24, 8,  12, 28, 5,  27, 11, 7,  23, 4,  24, 25, 17, 3,  19,
-      27, 26, 18, 2,  16, 25, 9,  13, 29, 5,  26, 10, 6,  22, 4,
-  };
-  add_faces(geom, 10, 6, faces10);
+   int faces10[] = { 14,6,0,11,19,21,13,1,8,16,
+                    15,17,9,1,12,20,18,10,0,7,
+                    22,14,2,20,28,29,21,3,15,23,
+                    24,8,12,28,5,27,11,7,23,4,
+                    24,25,17,3,19,27,26,18,2,16,
+                    25,9,13,29,5,26,10,6,22,4,
+                    };
+   add_faces(geom, 10, 6, faces10);
 }
 
 // great stellated dodecahedron
 void U52(Geometry &geom)
 {
-  dodecahedron_vertex_set(geom);
+   dodecahedron_vertex_set(geom);
 
-  int faces5[] = {
-      0,  19, 17, 4,  11, 2,  9,  6,  16, 18, 4,  17, 5,  12, 13,
-      10, 8,  7,  12, 5,  11, 4,  13, 6,  9,  14, 1,  19, 0,  15,
-      14, 3,  8,  10, 1,  15, 0,  11, 9,  2,  15, 2,  18, 3,  14,
-      16, 6,  13, 12, 7,  18, 16, 7,  8,  3,  19, 1,  10, 5,  17,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 0,19,17,4,11, 2,9,6,16,18, 4,17,5,12,13,
+                    10,8,7,12,5, 11,4,13,6,9, 14,1,19,0,15,
+                    14,3,8,10,1, 15,0,11,9,2, 15,2,18,3,14,
+                    16,6,13,12,7, 18,16,7,8,3, 19,1,10,5,17,
+                    };
+   add_faces(geom, 5, 12, faces5);
+
 }
 
 // great icosahedron
 void U53(Geometry &geom)
 {
-  icosahedron_vertex_set(geom);
+   icosahedron_vertex_set(geom);
 
-  int faces3[] = {
-      0, 5, 1, 0,  7, 9, 0,  9, 11, 0, 11, 5, 1, 7, 0,  1, 10, 8,  2, 3,
-      4, 4, 3, 10, 5, 4, 10, 5, 10, 1, 6,  3, 2, 6, 8,  3, 7,  1,  8, 7,
-      6, 9, 7, 8,  6, 8, 10, 3, 9,  2, 11, 9, 6, 2, 11, 2, 4,  11, 4, 5,
-  };
-  add_faces(geom, 3, 20, faces3);
+   int faces3[] = { 0,5,1, 0,7,9, 0,9,11, 0,11,5,
+                    1,7,0, 1,10,8, 2,3,4, 4,3,10,
+                    5,4,10, 5,10,1, 6,3,2, 6,8,3,
+                    7,1,8, 7,6,9, 7,8,6, 8,10,3,
+                    9,2,11, 9,6,2, 11,2,4, 11,4,5,
+                    };
+   add_faces(geom, 3, 20, faces3);
 }
 
 // great icosidodecahedron
 void U54(Geometry &geom)
 {
-  icosidodecahedron_vertex_set(geom);
+   icosidodecahedron_vertex_set(geom);
 
-  int faces3[] = {
-      0,  21, 20, 1,  18, 19, 4,  10, 12, 6,  5,  8,  7,  9,  5,
-      10, 15, 29, 11, 28, 14, 12, 27, 17, 13, 11, 4,  13, 16, 26,
-      14, 1,  15, 17, 0,  16, 22, 20, 9,  23, 8,  21, 24, 7,  18,
-      25, 19, 6,  26, 22, 3,  27, 2,  23, 28, 3,  24, 29, 25, 2,
-  };
-  add_faces(geom, 3, 20, faces3);
+   int faces3[] = { 0,21,20, 1,18,19, 4,10,12, 6,5,8,
+                    7,9,5, 10,15,29, 11,28,14, 12,27,17,
+                    13,11,4, 13,16,26, 14,1,15, 17,0,16,
+                    22,20,9, 23,8,21, 24,7,18, 25,19,6,
+                    26,22,3, 27,2,23, 28,3,24, 29,25,2,
+                    };
+   add_faces(geom, 3, 20, faces3);
 
-  int faces5[] = {
-      3,  22, 9,  7,  24, 4,  11, 14, 15, 10, 4,  12, 17, 16, 13,
-      10, 29, 2,  27, 12, 11, 13, 26, 3,  28, 14, 28, 24, 18, 1,
-      17, 27, 23, 21, 0,  19, 18, 7,  5,  6,  20, 21, 8,  5,  9,
-      25, 6,  8,  23, 2,  26, 16, 0,  20, 22, 29, 15, 1,  19, 25,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 3,22,9,7,24, 4,11,14,15,10, 4,12,17,16,13,
+                    10,29,2,27,12, 11,13,26,3,28, 14,28,24,18,1,
+                    17,27,23,21,0, 19,18,7,5,6, 20,21,8,5,9,
+                    25,6,8,23,2, 26,16,0,20,22, 29,15,1,19,25,
+                    };
+   add_faces(geom, 5, 12, faces5);
 }
 
 // truncated great icosahedron
 void U55(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(1, 0, 3 / phi));
-  vlist.push_back(Vec3d(2, 1 / phi, 1 / (phi * phi * phi)));
-  vlist.push_back(Vec3d(1 + 1 / (phi * phi), 1, 2 / phi));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(1,0,3/phi));
+   vlist.push_back(Vec3d(2,1/phi,1/(phi*phi*phi)));
+   vlist.push_back(Vec3d(1+1/(phi*phi),1,2/phi));
 
-  calculate_coords(geom, vlist, EVEN, ALL);
+   calculate_coords(geom, vlist, EVEN, ALL);
 
-  int faces5[] = {
-      2,  16, 42, 40, 18, 3,  19, 41, 43, 17, 11, 35, 58, 59, 34,
-      24, 44, 48, 20, 4,  25, 5,  21, 49, 45, 26, 6,  22, 50, 46,
-      27, 47, 51, 23, 7,  32, 57, 56, 33, 10, 36, 38, 12, 0,  14,
-      37, 15, 1,  13, 39, 52, 53, 28, 8,  29, 55, 54, 31, 9,  30,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 2,16,42,40,18, 3,19,41,43,17, 11,35,58,59,34,
+                    24,44,48,20,4, 25,5,21,49,45, 26,6,22,50,46,
+                    27,47,51,23,7, 32,57,56,33,10, 36,38,12,0,14,
+                    37,15,1,13,39, 52,53,28,8,29, 55,54,31,9,30,
+                    };
+   add_faces(geom, 5, 12, faces5);
 
-  int faces6[] = {
-      1,  3,  17, 48, 44, 13, 5,  4,  20, 54, 55, 21, 6,  7,  23, 53, 52, 22,
-      10, 11, 34, 38, 36, 32, 10, 33, 37, 39, 35, 11, 12, 45, 49, 16, 2,  0,
-      14, 0,  2,  18, 51, 47, 15, 46, 50, 19, 3,  1,  17, 43, 31, 54, 20, 48,
-      21, 55, 30, 42, 16, 49, 23, 51, 18, 40, 28, 53, 28, 40, 42, 30, 9,  8,
-      32, 36, 14, 47, 27, 57, 33, 56, 26, 46, 15, 37, 34, 59, 25, 45, 12, 38,
-      35, 39, 13, 44, 24, 58, 43, 41, 29, 8,  9,  31, 50, 22, 52, 29, 41, 19,
-      56, 57, 27, 7,  6,  26, 59, 58, 24, 4,  5,  25,
-  };
-  add_faces(geom, 6, 20, faces6);
+   int faces6[] = { 1,3,17,48,44,13, 5,4,20,54,55,21, 6,7,23,53,52,22,
+                    10,11,34,38,36,32, 10,33,37,39,35,11, 12,45,49,16,2,0,
+                    14,0,2,18,51,47, 15,46,50,19,3,1, 17,43,31,54,20,48,
+                    21,55,30,42,16,49, 23,51,18,40,28,53, 28,40,42,30,9,8,
+                    32,36,14,47,27,57, 33,56,26,46,15,37, 34,59,25,45,12,38,
+                    35,39,13,44,24,58, 43,41,29,8,9,31, 50,22,52,29,41,19,
+                    56,57,27,7,6,26, 59,58,24,4,5,25, };
+   add_faces(geom, 6, 20, faces6);
 }
 
 // rhombicosahedron
 void U56(Geometry &geom)
 {
-  rhombidodecadodecahedron_vertex_set(geom);
+   rhombidodecadodecahedron_vertex_set(geom);
 
-  int faces4[] = {
-      48, 20, 36, 0,  1,  51, 23, 39, 58, 32, 48, 4,  56, 34, 50, 6,  7,  57,
-      35, 51, 39, 14, 54, 8,  12, 13, 17, 16, 13, 53, 9,  36, 18, 19, 15, 14,
-      38, 9,  55, 15, 23, 27, 25, 21, 22, 26, 24, 20, 45, 2,  41, 25, 26, 42,
-      3,  46, 27, 43, 3,  47, 28, 30, 31, 29, 55, 5,  45, 29, 31, 47, 7,  53,
-      32, 34, 35, 33, 0,  49, 21, 37, 16, 56, 10, 41, 18, 58, 10, 43, 44, 2,
-      40, 24, 5,  59, 33, 49, 1,  38, 22, 50, 30, 46, 6,  52, 8,  37, 12, 52,
-      28, 44, 4,  54, 57, 11, 40, 17, 59, 11, 42, 19,
-  };
-  add_faces(geom, 4, 30, faces4);
+   int faces4[] = { 48,20,36,0, 1,51,23,39, 58,32,48,4, 56,34,50,6,
+                    7,57,35,51, 39,14,54,8, 12,13,17,16, 13,53,9,36,
+                    18,19,15,14, 38,9,55,15, 23,27,25,21, 22,26,24,20,
+                    45,2,41,25, 26,42,3,46, 27,43,3,47, 28,30,31,29,
+                    55,5,45,29, 31,47,7,53, 32,34,35,33, 0,49,21,37,
+                    16,56,10,41, 18,58,10,43, 44,2,40,24, 5,59,33,49,
+                    1,38,22,50, 30,46,6,52, 8,37,12,52, 28,44,4,54,
+                    57,11,40,17, 59,11,42,19, };
+   add_faces(geom, 4, 30, faces4);
 
-  int faces6[] = {
-      36, 9,  55, 5,  49, 0,  44, 2,  41, 10, 58, 4,  46, 3,  43, 10, 56, 6,
-      54, 4,  48, 0,  37, 8,  52, 6,  50, 1,  39, 8,  58, 32, 33, 59, 19, 18,
-      19, 42, 26, 22, 38, 15, 20, 24, 40, 17, 13, 36, 49, 33, 35, 51, 23, 21,
-      27, 47, 31, 29, 45, 25, 28, 44, 24, 26, 46, 30, 21, 25, 41, 16, 12, 37,
-      38, 9,  53, 7,  51, 1,  23, 27, 43, 18, 14, 39, 5,  59, 11, 40, 2,  45,
-      47, 3,  42, 11, 57, 7,  32, 34, 50, 22, 20, 48, 12, 13, 53, 31, 30, 52,
-      14, 15, 55, 29, 28, 54, 16, 17, 57, 35, 34, 56,
-  };
-  add_faces(geom, 6, 20, faces6);
+   int faces6[] = { 36,9,55,5,49,0, 44,2,41,10,58,4, 46,3,43,10,56,6,
+                    54,4,48,0,37,8, 52,6,50,1,39,8, 58,32,33,59,19,18,
+                    19,42,26,22,38,15, 20,24,40,17,13,36, 49,33,35,51,23,21,
+                    27,47,31,29,45,25, 28,44,24,26,46,30, 21,25,41,16,12,37,
+                    38,9,53,7,51,1, 23,27,43,18,14,39, 5,59,11,40,2,45,
+                    47,3,42,11,57,7, 32,34,50,22,20,48, 12,13,53,31,30,52,
+                    14,15,55,29,28,54, 16,17,57,35,34,56, };
+   add_faces(geom, 6, 20, faces6);
 }
 
 // great snub icosidodecahedron
 void U57(Geometry &geom)
 {
-  // the negative real root of x**3-2x=-1/Phi, or approximately
-  // -1.548877220974184
-  // hard code value. compare roots out to 12 places for computed answer (future
-  // proof)
-  vector<Vec3d> vlist = u57_u69_u74_vertices(-1.548877220974184);
+   // the negative real root of x**3-2x=-1/Phi, or approximately -1.548877220974184
+   // hard code value. compare roots out to 12 places for computed answer (future proof)
+   vector<Vec3d> vlist = u57_u69_u74_vertices(-1.548877220974184);
 
-  calculate_coords(geom, vlist, EVEN, EVEN);
+   calculate_coords(geom, vlist, EVEN, EVEN);
 
-  int faces3[] = {
-      0,  3,  48, 1,  13, 29, 1,  29, 50, 1,  50, 2,  2,  30, 49, 4,  16, 32,
-      5,  7,  53, 5,  55, 7,  6,  52, 4,  7,  19, 35, 8,  20, 24, 8,  24, 57,
-      8,  57, 9,  10, 11, 58, 11, 23, 27, 11, 27, 58, 13, 17, 29, 13, 21, 17,
-      14, 22, 18, 14, 26, 22, 15, 31, 3,  16, 12, 20, 16, 28, 12, 17, 33, 5,
-      18, 22, 34, 18, 34, 6,  19, 31, 15, 20, 12, 24, 21, 33, 17, 23, 15, 27,
-      23, 19, 15, 24, 36, 57, 25, 9,  21, 25, 21, 13, 26, 10, 22, 26, 38, 59,
-      26, 59, 10, 28, 0,  12, 28, 51, 0,  29, 41, 50, 30, 2,  14, 30, 14, 18,
-      32, 16, 20, 33, 45, 55, 33, 55, 5,  34, 46, 52, 34, 52, 6,  35, 19, 23,
-      36, 43, 45, 36, 48, 43, 37, 44, 56, 37, 56, 25, 38, 47, 59, 39, 51, 40,
-      40, 51, 28, 41, 47, 38, 41, 53, 47, 42, 44, 37, 42, 54, 44, 45, 43, 55,
-      46, 39, 40, 46, 40, 52, 46, 58, 39, 48, 3,  31, 48, 31, 43, 49, 1,  2,
-      49, 30, 42, 49, 42, 37, 50, 41, 38, 51, 3,  0,  53, 7,  35, 53, 35, 47,
-      54, 4,  32, 54, 6,  4,  54, 32, 44, 56, 8,  9,  56, 9,  25, 57, 36, 45,
-      58, 27, 39, 59, 11, 10,
-  };
-  add_faces(geom, 3, 80, faces3);
+   int faces3[] = { 0,3,48, 1,13,29, 1,29,50, 1,50,2,
+                    2,30,49, 4,16,32, 5,7,53, 5,55,7,
+                    6,52,4, 7,19,35, 8,20,24, 8,24,57,
+                    8,57,9, 10,11,58, 11,23,27, 11,27,58,
+                    13,17,29, 13,21,17, 14,22,18, 14,26,22,
+                    15,31,3, 16,12,20, 16,28,12, 17,33,5,
+                    18,22,34, 18,34,6, 19,31,15, 20,12,24,
+                    21,33,17, 23,15,27, 23,19,15, 24,36,57,
+                    25,9,21, 25,21,13, 26,10,22, 26,38,59,
+                    26,59,10, 28,0,12, 28,51,0, 29,41,50,
+                    30,2,14, 30,14,18, 32,16,20, 33,45,55,
+                    33,55,5, 34,46,52, 34,52,6, 35,19,23,
+                    36,43,45, 36,48,43, 37,44,56, 37,56,25,
+                    38,47,59, 39,51,40, 40,51,28, 41,47,38,
+                    41,53,47, 42,44,37, 42,54,44, 45,43,55,
+                    46,39,40, 46,40,52, 46,58,39, 48,3,31,
+                    48,31,43, 49,1,2, 49,30,42, 49,42,37,
+                    50,41,38, 51,3,0, 53,7,35, 53,35,47,
+                    54,4,32, 54,6,4, 54,32,44, 56,8,9,
+                    56,9,25, 57,36,45, 58,27,39, 59,11,10,
+                    };
+   add_faces(geom, 3, 80, faces3);
 
-  int faces5[] = {
-      2,  50, 38, 26, 14, 4,  52, 40, 28, 16, 9,  57, 45, 33, 21,
-      22, 10, 58, 46, 34, 24, 12, 0,  48, 36, 29, 17, 5,  53, 41,
-      30, 18, 6,  54, 42, 39, 27, 15, 3,  51, 44, 32, 20, 8,  56,
-      49, 37, 25, 13, 1,  55, 43, 31, 19, 7,  59, 47, 35, 23, 11,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 2,50,38,26,14, 4,52,40,28,16, 9,57,45,33,21,
+                    22,10,58,46,34, 24,12,0,48,36, 29,17,5,53,41,
+                    30,18,6,54,42, 39,27,15,3,51, 44,32,20,8,56,
+                    49,37,25,13,1, 55,43,31,19,7, 59,47,35,23,11,
+                    };
+   add_faces(geom, 5, 12, faces5);
 }
 
 // small stellated truncated dodecahedron
 void U58(Geometry &geom)
 {
-  rhombicosidodecahedron_vertex_set(geom);
+   rhombicosidodecahedron_vertex_set(geom);
 
-  int faces5[] = {
-      0,  52, 2,  31, 29, 6,  54, 4,  25, 27, 12, 34, 35, 13, 58,
-      14, 59, 15, 33, 32, 21, 49, 17, 42, 46, 23, 44, 40, 19, 51,
-      30, 3,  53, 1,  28, 37, 11, 57, 10, 36, 39, 38, 8,  56, 9,
-      41, 45, 22, 50, 18, 48, 20, 47, 43, 16, 55, 7,  26, 24, 5,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 0,52,2,31,29, 6,54,4,25,27, 12,34,35,13,58,
+                    14,59,15,33,32, 21,49,17,42,46, 23,44,40,19,51,
+                    30,3,53,1,28, 37,11,57,10,36, 39,38,8,56,9,
+                    41,45,22,50,18, 48,20,47,43,16, 55,7,26,24,5,
+                    };
+   add_faces(geom, 5, 12, faces5);
 
-  int faces10[] = {
-      1,  53, 55, 5,  33, 15, 45, 41, 11, 37, 11, 41, 18, 27, 25, 16, 43, 9,
-      56, 57, 28, 1,  37, 36, 0,  29, 20, 48, 49, 21, 28, 21, 46, 12, 58, 59,
-      14, 44, 23, 30, 30, 23, 51, 50, 22, 31, 2,  38, 39, 3,  36, 10, 40, 44,
-      14, 32, 4,  54, 52, 0,  42, 17, 24, 26, 19, 40, 10, 57, 56, 8,  46, 42,
-      8,  38, 2,  52, 54, 6,  34, 12, 49, 48, 16, 25, 4,  32, 33, 5,  24, 17,
-      51, 19, 26, 7,  35, 34, 6,  27, 18, 50, 53, 3,  39, 9,  43, 47, 13, 35,
-      7,  55, 58, 13, 47, 20, 29, 31, 22, 45, 15, 59,
-  };
-  add_faces(geom, 10, 12, faces10);
+   int faces10[] = { 1,53,55,5,33,15,45,41,11,37,
+                    11,41,18,27,25,16,43,9,56,57,
+                    28,1,37,36,0,29,20,48,49,21,
+                    28,21,46,12,58,59,14,44,23,30,
+                    30,23,51,50,22,31,2,38,39,3,
+                    36,10,40,44,14,32,4,54,52,0,
+                    42,17,24,26,19,40,10,57,56,8,
+                    46,42,8,38,2,52,54,6,34,12,
+                    49,48,16,25,4,32,33,5,24,17,
+                    51,19,26,7,35,34,6,27,18,50,
+                    53,3,39,9,43,47,13,35,7,55,
+                    58,13,47,20,29,31,22,45,15,59,
+                    };
+   add_faces(geom, 10, 12, faces10);
 }
 
 // truncated dodecadodecahedron
 void U59(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(1, 1, 3));
-  vlist.push_back(Vec3d(1 / phi, 1 / (phi * phi), 2 * phi));
-  vlist.push_back(Vec3d(phi, 2 / phi, phi * phi));
-  vlist.push_back(Vec3d(phi * phi, 1 / (phi * phi), 2));
-  vlist.push_back(Vec3d(2 * phi - 1, 1, 2 * phi - 1));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(1,1,3));
+   vlist.push_back(Vec3d(1/phi,1/(phi*phi),2*phi));
+   vlist.push_back(Vec3d(phi,2/phi,phi*phi));
+   vlist.push_back(Vec3d(phi*phi,1/(phi*phi),2));
+   vlist.push_back(Vec3d(2*phi-1,1,2*phi-1));
 
-  calculate_coords(geom, vlist, ODD, ALL);
+   calculate_coords(geom, vlist, ODD, ALL);
 
-  int faces4[] = {
-      1,   5,  4,   0,   3,   2,   6,   7,   10, 8,   12,  14,  13, 9,   11,
-      15,  16, 18,  19,  17,  20,  21,  23,  22, 25,  97,  57,  85, 27,  87,
-      59,  99, 29,  81,  61,  101, 37,  95,  69, 109, 40,  73,  48, 112, 43,
-      74,  51, 115, 44,  116, 52,  77,  55,  78, 47,  119, 58,  86, 26,  98,
-      60,  80, 28,  100, 62,  102, 30,  82,  66, 88,  34,  106, 72, 41,  113,
-      49,  76, 53,  117, 45,  89,  67,  107, 35, 90,  64,  104, 32, 91,  33,
-      105, 65, 96,  24,  84,  56,  103, 63,  83, 31,  108, 68,  94, 36,  110,
-      38,  92, 70,  111, 71,  93,  39,  114, 50, 75,  42,  118, 46, 79,  54,
-  };
-  add_faces(geom, 4, 30, faces4);
+   int faces4[] = { 1,5,4,0, 3,2,6,7, 10,8,12,14, 13,9,11,15,
+                    16,18,19,17, 20,21,23,22, 25,97,57,85, 27,87,59,99,
+                    29,81,61,101, 37,95,69,109, 40,73,48,112, 43,74,51,115,
+                    44,116,52,77, 55,78,47,119, 58,86,26,98, 60,80,28,100,
+                    62,102,30,82, 66,88,34,106, 72,41,113,49, 76,53,117,45,
+                    89,67,107,35, 90,64,104,32, 91,33,105,65, 96,24,84,56,
+                    103,63,83,31, 108,68,94,36, 110,38,92,70, 111,71,93,39,
+                    114,50,75,42, 118,46,79,54, };
+   add_faces(geom, 4, 30, faces4);
 
-  int faces10[] = {
-      0,   4,   76,  45,  71,  111, 107, 67,  41,  72,  5,   77,  52,  29,  101,
-      100, 28,  53,  76,  4,   17,  19,  91,  65,  43,  115, 113, 41,  67,  89,
-      18,  90,  32,  60,  100, 101, 61,  33,  91,  19,  21,  93,  71,  45,  117,
-      119, 47,  69,  95,  23,  32,  104, 108, 36,  56,  84,  12,  8,   80,  60,
-      35,  107, 111, 39,  59,  87,  15,  11,  83,  63,  38,  58,  98,  99,  59,
-      39,  93,  21,  20,  92,  42,  75,  3,   7,   79,  46,  68,  108, 104, 64,
-      50,  27,  99,  98,  26,  51,  74,  2,   3,   75,  65,  105, 109, 69,  47,
-      78,  6,   2,   74,  43,  66,  40,  112, 114, 42,  64,  90,  18,  16,  88,
-      70,  92,  20,  22,  94,  68,  46,  118, 116, 44,  73,  1,   0,   72,  49,
-      24,  96,  97,  25,  48,  82,  30,  55,  119, 117, 53,  28,  80,  8,   10,
-      85,  57,  37,  109, 105, 33,  61,  81,  9,   13,  86,  14,  12,  84,  24,
-      49,  113, 115, 51,  26,  88,  16,  17,  89,  35,  63,  103, 102, 62,  34,
-      97,  96,  56,  36,  94,  22,  23,  95,  37,  57,  102, 103, 31,  54,  79,
-      7,   6,   78,  55,  30,  106, 34,  62,  82,  10,  14,  86,  58,  38,  110,
-      106, 110, 70,  44,  77,  5,   1,   73,  40,  66,  112, 48,  25,  85,  13,
-      15,  87,  27,  50,  114, 116, 118, 54,  31,  83,  11,  9,   81,  29,  52,
-  };
-  add_faces(geom, 10, 24, faces10);
+   int faces10[] = { 0,4,76,45,71,111,107,67,41,72,
+                    5,77,52,29,101,100,28,53,76,4,
+                    17,19,91,65,43,115,113,41,67,89,
+                    18,90,32,60,100,101,61,33,91,19,
+                    21,93,71,45,117,119,47,69,95,23,
+                    32,104,108,36,56,84,12,8,80,60,
+                    35,107,111,39,59,87,15,11,83,63,
+                    38,58,98,99,59,39,93,21,20,92,
+                    42,75,3,7,79,46,68,108,104,64,
+                    50,27,99,98,26,51,74,2,3,75,
+                    65,105,109,69,47,78,6,2,74,43,
+                    66,40,112,114,42,64,90,18,16,88,
+                    70,92,20,22,94,68,46,118,116,44,
+                    73,1,0,72,49,24,96,97,25,48,
+                    82,30,55,119,117,53,28,80,8,10,
+                    85,57,37,109,105,33,61,81,9,13,
+                    86,14,12,84,24,49,113,115,51,26,
+                    88,16,17,89,35,63,103,102,62,34,
+                    97,96,56,36,94,22,23,95,37,57,
+                    102,103,31,54,79,7,6,78,55,30,
+                    106,34,62,82,10,14,86,58,38,110,
+                    106,110,70,44,77,5,1,73,40,66,
+                    112,48,25,85,13,15,87,27,50,114,
+                    116,118,54,31,83,11,9,81,29,52,
+                    };
+   add_faces(geom, 10, 24, faces10);
 }
 
 // inverted snub dodecadodecahedron
 void U60(Geometry &geom)
 {
-  // the negative real root of Phi*a**4-a**3+2a**2-a-1/Phi, or approximately
-  // -0.335208967907837
-  // hard code value. compare roots out to 12 places for computed answer (future
-  // proof)
-  vector<Vec3d> vlist = u40_u60_vertices(-0.335208967907837);
+   // the negative real root of Phi*a**4-a**3+2a**2-a-1/Phi, or approximately -0.335208967907837
+   // hard code value. compare roots out to 12 places for computed answer (future proof)
+   vector<Vec3d> vlist = u40_u60_vertices(-0.335208967907837);
 
-  calculate_coords(geom, vlist, ODD, ODD);
+   calculate_coords(geom, vlist, ODD, ODD);
 
-  int faces3[] = {
-      0,  20, 24, 0,  36, 2,  2,  22, 26, 3,  1,  37, 3,  39, 1,  5,  13, 29,
-      6,  5,  41, 6,  42, 5,  10, 18, 34, 11, 10, 46, 11, 47, 10, 12, 28, 4,
-      14, 30, 6,  14, 50, 30, 16, 32, 8,  16, 52, 32, 19, 49, 43, 20, 55, 44,
-      20, 56, 24, 22, 53, 46, 22, 58, 26, 23, 52, 47, 24, 42, 48, 25, 1,  21,
-      26, 40, 50, 27, 3,  23, 27, 41, 51, 30, 45, 54, 31, 7,  15, 33, 9,  17,
-      33, 17, 53, 35, 11, 19, 35, 19, 55, 36, 12, 57, 36, 57, 33, 38, 0,  2,
-      38, 14, 59, 38, 59, 35, 40, 7,  4,  41, 17, 51, 42, 18, 48, 43, 4,  7,
-      44, 9,  8,  45, 8,  9,  45, 21, 54, 48, 28, 12, 49, 25, 43, 49, 29, 13,
-      50, 40, 16, 51, 31, 15, 52, 28, 47, 53, 29, 46, 54, 34, 18, 55, 31, 44,
-      56, 32, 37, 56, 37, 13, 57, 25, 21, 58, 34, 39, 58, 39, 15, 59, 27, 23,
-  };
-  add_faces(geom, 3, 60, faces3);
+   int faces3[] = { 0,20,24, 0,36,2, 2,22,26, 3,1,37,
+                    3,39,1, 5,13,29, 6,5,41, 6,42,5,
+                    10,18,34, 11,10,46, 11,47,10, 12,28,4,
+                    14,30,6, 14,50,30, 16,32,8, 16,52,32,
+                    19,49,43, 20,55,44, 20,56,24, 22,53,46,
+                    22,58,26, 23,52,47, 24,42,48, 25,1,21,
+                    26,40,50, 27,3,23, 27,41,51, 30,45,54,
+                    31,7,15, 33,9,17, 33,17,53, 35,11,19,
+                    35,19,55, 36,12,57, 36,57,33, 38,0,2,
+                    38,14,59, 38,59,35, 40,7,4, 41,17,51,
+                    42,18,48, 43,4,7, 44,9,8, 45,8,9,
+                    45,21,54, 48,28,12, 49,25,43, 49,29,13,
+                    50,40,16, 51,31,15, 52,28,47, 53,29,46,
+                    54,34,18, 55,31,44, 56,32,37, 56,37,13,
+                    57,25,21, 58,34,39, 58,39,15, 59,27,23,
+                    };
+   add_faces(geom, 3, 60, faces3);
 
-  int faces5[] = {
-      0,  24, 48, 12, 36, 2,  36, 33, 53, 22, 11, 46, 29, 49, 19, 12, 4,  43,
-      25, 57, 14, 6,  41, 27, 59, 19, 43, 7,  31, 55, 20, 44, 8,  32, 56, 22,
-      46, 10, 34, 58, 23, 3,  37, 32, 52, 24, 56, 13, 5,  42, 26, 58, 15, 7,
-      40, 27, 51, 15, 39, 3,  30, 54, 18, 42, 6,  35, 55, 20, 0,  38, 38, 2,
-      26, 50, 14, 40, 4,  28, 52, 16, 44, 31, 51, 17, 9,  48, 18, 10, 47, 28,
-      49, 13, 37, 1,  25, 50, 16, 8,  45, 30, 53, 17, 41, 5,  29, 54, 21, 1,
-      39, 34, 57, 21, 45, 9,  33, 59, 23, 47, 11, 35,
-  };
-  add_faces(geom, 5, 24, faces5);
+   int faces5[] = { 0,24,48,12,36, 2,36,33,53,22, 11,46,29,49,19,
+                    12,4,43,25,57, 14,6,41,27,59, 19,43,7,31,55,
+                    20,44,8,32,56, 22,46,10,34,58, 23,3,37,32,52,
+                    24,56,13,5,42, 26,58,15,7,40, 27,51,15,39,3,
+                    30,54,18,42,6, 35,55,20,0,38, 38,2,26,50,14,
+                    40,4,28,52,16, 44,31,51,17,9, 48,18,10,47,28,
+                    49,13,37,1,25, 50,16,8,45,30, 53,17,41,5,29,
+                    54,21,1,39,34, 57,21,45,9,33, 59,23,47,11,35,
+                    };
+   add_faces(geom, 5, 24, faces5);
 }
 
 // great dodecicosidodecahedron
 void U61(Geometry &geom)
 {
-  truncated_great_dodecahedron_vertex_set(geom);
+   truncated_great_dodecahedron_vertex_set(geom);
 
-  int faces3[] = {
-      6,  19, 15, 9,  27, 25, 11, 21, 23, 16, 12, 5,  17, 4,  13,
-      18, 7,  14, 22, 20, 10, 26, 8,  24, 29, 28, 1,  31, 0,  30,
-      33, 3,  32, 35, 34, 2,  41, 58, 44, 42, 57, 47, 46, 56, 43,
-      50, 39, 52, 53, 38, 51, 54, 37, 48, 55, 49, 36, 59, 40, 45,
-  };
-  add_faces(geom, 3, 20, faces3);
+   int faces3[] = { 6,19,15, 9,27,25, 11,21,23, 16,12,5,
+                    17,4,13, 18,7,14, 22,20,10, 26,8,24,
+                    29,28,1, 31,0,30, 33,3,32, 35,34,2,
+                    41,58,44, 42,57,47, 46,56,43, 50,39,52,
+                    53,38,51, 54,37,48, 55,49,36, 59,40,45,
+                    };
+   add_faces(geom, 3, 20, faces3);
 
-  int faces5[] = {
-      1,  58, 27, 26, 59, 10, 49, 19, 17, 51, 14, 12, 46, 9,  44,
-      21, 20, 53, 2,  52, 32, 28, 40, 6,  36, 34, 38, 4,  42, 30,
-      37, 7,  41, 29, 33, 39, 35, 31, 43, 5,  45, 8,  47, 13, 15,
-      48, 11, 50, 16, 18, 54, 3,  55, 22, 23, 56, 0,  57, 24, 25,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 1,58,27,26,59, 10,49,19,17,51, 14,12,46,9,44,
+                    21,20,53,2,52, 32,28,40,6,36, 34,38,4,42,30,
+                    37,7,41,29,33, 39,35,31,43,5, 45,8,47,13,15,
+                    48,11,50,16,18, 54,3,55,22,23, 56,0,57,24,25,
+                    };
+   add_faces(geom, 5, 12, faces5);
 
-  int faces10[] = {
-      11, 23, 22, 10, 51, 38, 34, 35, 39, 50, 18, 16, 5,  43, 56, 25, 27, 58,
-      41, 7,  22, 55, 36, 6,  15, 13, 4,  38, 53, 20, 29, 41, 44, 9,  25, 24,
-      8,  45, 40, 28, 33, 29, 1,  59, 45, 15, 19, 49, 55, 3,  35, 2,  53, 51,
-      17, 13, 47, 57, 0,  31, 37, 54, 23, 21, 52, 39, 5,  12, 14, 7,  46, 43,
-      31, 30, 42, 47, 8,  26, 27, 9,  48, 18, 14, 44, 58, 1,  28, 32, 3,  54,
-      48, 37, 33, 32, 36, 49, 10, 20, 21, 11, 50, 52, 2,  34, 30, 0,  56, 46,
-      12, 16, 59, 26, 24, 57, 42, 4,  17, 19, 6,  40,
-  };
-  add_faces(geom, 10, 12, faces10);
+   int faces10[] = { 11,23,22,10,51,38,34,35,39,50,
+                    18,16,5,43,56,25,27,58,41,7,
+                    22,55,36,6,15,13,4,38,53,20,
+                    29,41,44,9,25,24,8,45,40,28,
+                    33,29,1,59,45,15,19,49,55,3,
+                    35,2,53,51,17,13,47,57,0,31,
+                    37,54,23,21,52,39,5,12,14,7,
+                    46,43,31,30,42,47,8,26,27,9,
+                    48,18,14,44,58,1,28,32,3,54,
+                    48,37,33,32,36,49,10,20,21,11,
+                    50,52,2,34,30,0,56,46,12,16,
+                    59,26,24,57,42,4,17,19,6,40,
+                    };
+   add_faces(geom, 10, 12, faces10);
 }
 
 // small dodecahemicosahedron
 void U62(Geometry &geom)
 {
-  icosidodecahedron_vertex_set(geom);
+   icosidodecahedron_vertex_set(geom);
 
-  int faces5[] = {
-      0,  22, 7,  6,  23, 0,  27, 10, 11, 26, 29, 12, 13, 28, 1,
-      2,  10, 14, 18, 6,  8,  2,  12, 16, 20, 14, 4,  16, 22, 24,
-      15, 4,  17, 23, 25, 15, 11, 3,  7,  19, 13, 3,  9,  21, 17,
-      25, 1,  24, 9,  8,  18, 5,  20, 26, 28, 27, 21, 5,  19, 29,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 0,22,7,6,23, 0,27,10,11,26, 29,12,13,28,1,
+                    2,10,14,18,6, 8,2,12,16,20, 14,4,16,22,24,
+                    15,4,17,23,25, 15,11,3,7,19, 13,3,9,21,17,
+                    25,1,24,9,8, 18,5,20,26,28, 27,21,5,19,29,
+                    };
+   add_faces(geom, 5, 12, faces5);
 
-  int faces6[] = {
-      24, 22, 0,  27, 29, 1,  7,  3,  13, 12, 2,  6,  8,  9,  3,
-      11, 10, 2,  15, 19, 5,  20, 16, 4,  17, 4,  14, 18, 5,  21,
-      19, 7,  22, 16, 12, 29, 6,  18, 28, 13, 17, 23, 24, 14, 10,
-      27, 21, 9,  25, 8,  20, 26, 11, 15, 25, 23, 0,  26, 28, 1,
-  };
-  add_faces(geom, 6, 10, faces6);
+   int faces6[] = { 24,22,0,27,29,1, 7,3,13,12,2,6, 8,9,3,11,10,2,
+                    15,19,5,20,16,4, 17,4,14,18,5,21, 19,7,22,16,12,29,
+                    6,18,28,13,17,23, 24,14,10,27,21,9, 25,8,20,26,11,15,
+                    25,23,0,26,28,1, };
+   add_faces(geom, 6, 10, faces6);
 }
 
 // great dodecicosahedron
 void U63(Geometry &geom)
 {
-  truncated_dodecahedron_vertex_set(geom);
+   truncated_dodecahedron_vertex_set(geom);
 
-  int faces6[] = {
-      52, 9,  47, 7,  41, 0,  1,  53, 9,  46, 6,  40, 7,  45, 8,  54, 2,  43,
-      12, 13, 21, 55, 54, 20, 16, 17, 25, 59, 58, 24, 22, 30, 39, 43, 34, 26,
-      27, 23, 31, 38, 42, 35, 18, 46, 44, 16, 32, 34, 36, 40, 33, 25, 21, 29,
-      38, 3,  59, 10, 48, 4,  39, 2,  58, 10, 49, 5,  41, 32, 24, 20, 28, 37,
-      6,  42, 3,  55, 8,  44, 19, 35, 33, 17, 45, 47, 51, 15, 31, 29, 13, 49,
-      11, 57, 1,  36, 4,  50, 48, 12, 28, 30, 14, 50, 53, 23, 15, 14, 22, 52,
-      11, 51, 5,  37, 0,  56, 57, 27, 19, 18, 26, 56,
-  };
-  add_faces(geom, 6, 20, faces6);
+   int faces6[] = { 52,9,47,7,41,0, 1,53,9,46,6,40, 7,45,8,54,2,43,
+                    12,13,21,55,54,20, 16,17,25,59,58,24, 22,30,39,43,34,26,
+                    27,23,31,38,42,35, 18,46,44,16,32,34, 36,40,33,25,21,29,
+                    38,3,59,10,48,4, 39,2,58,10,49,5, 41,32,24,20,28,37,
+                    6,42,3,55,8,44, 19,35,33,17,45,47, 51,15,31,29,13,49,
+                    11,57,1,36,4,50, 48,12,28,30,14,50, 53,23,15,14,22,52,
+                    11,51,5,37,0,56, 57,27,19,18,26,56, };
+   add_faces(geom, 6, 20, faces6);
 
-  int faces10[] = {
-      37, 28, 12, 13, 29, 36, 1,  53, 52, 0,  5,  49, 13, 21, 25, 17, 45, 7,
-      41, 37, 9,  47, 45, 8,  55, 21, 29, 31, 23, 53, 30, 39, 2,  54, 55, 3,
-      38, 31, 15, 14, 15, 23, 27, 19, 47, 7,  43, 39, 5,  51, 26, 22, 14, 50,
-      4,  38, 42, 6,  46, 18, 18, 34, 43, 2,  58, 59, 3,  42, 35, 19, 22, 30,
-      28, 20, 54, 8,  44, 46, 9,  52, 4,  36, 40, 6,  44, 16, 24, 20, 12, 48,
-      26, 34, 32, 24, 58, 10, 48, 50, 11, 56, 56, 0,  41, 32, 16, 17, 33, 40,
-      1,  57, 11, 51, 49, 10, 59, 25, 33, 35, 27, 57,
-  };
-  add_faces(geom, 10, 12, faces10);
+   int faces10[] = { 37,28,12,13,29,36,1,53,52,0,
+                    5,49,13,21,25,17,45,7,41,37,
+                    9,47,45,8,55,21,29,31,23,53,
+                    30,39,2,54,55,3,38,31,15,14,
+                    15,23,27,19,47,7,43,39,5,51,
+                    26,22,14,50,4,38,42,6,46,18,
+                    18,34,43,2,58,59,3,42,35,19,
+                    22,30,28,20,54,8,44,46,9,52,
+                    4,36,40,6,44,16,24,20,12,48,
+                    26,34,32,24,58,10,48,50,11,56,
+                    56,0,41,32,16,17,33,40,1,57,
+                    11,51,49,10,59,25,33,35,27,57,
+                    };
+   add_faces(geom, 10, 12, faces10);
 }
 
 // great snub dodecicosidodecahedron
 void U64(Geometry &geom)
 {
-  great_dirhombicosidodecahedron_vertex_set(geom);
+   great_dirhombicosidodecahedron_vertex_set(geom);
 
-  int faces3[] = {
-      1,  31, 38, 1,  35, 37, 1,  38, 32, 3,  29, 43, 4,  15, 51, 4,  51, 16,
-      5,  12, 48, 5,  19, 47, 5,  48, 19, 6,  19, 48, 7,  16, 51, 8,  25, 59,
-      8,  59, 22, 9,  27, 54, 10, 27, 57, 10, 54, 27, 11, 22, 59, 13, 7,  46,
-      13, 46, 4,  14, 23, 28, 16, 25, 34, 17, 23, 35, 17, 24, 28, 17, 28, 23,
-      18, 46, 7,  20, 54, 10, 21, 33, 12, 22, 34, 15, 23, 53, 11, 24, 11, 53,
-      24, 53, 8,  24, 58, 11, 26, 12, 33, 26, 30, 12, 26, 33, 19, 29, 15, 25,
-      30, 3,  40, 30, 39, 3,  30, 40, 0,  31, 13, 20, 31, 18, 27, 31, 20, 18,
-      32, 18, 20, 32, 38, 2,  33, 40, 3,  34, 25, 15, 35, 2,  37, 35, 42, 2,
-      36, 0,  29, 37, 2,  28, 37, 52, 49, 41, 1,  32, 41, 55, 45, 41, 56, 50,
-      42, 49, 52, 42, 52, 46, 42, 59, 49, 43, 0,  34, 43, 29, 0,  44, 4,  16,
-      45, 5,  14, 45, 6,  17, 45, 14, 6,  47, 36, 53, 47, 43, 58, 47, 58, 36,
-      48, 36, 58, 49, 7,  13, 50, 6,  14, 50, 55, 41, 52, 8,  22, 54, 44, 39,
-      55, 9,  21, 55, 50, 38, 56, 9,  26, 56, 10, 21, 56, 21, 9,  57, 39, 44,
-      57, 44, 40, 57, 51, 39,
-  };
-  add_faces(geom, 3, 80, faces3);
+   int faces3[] = { 1,31,38, 1,35,37, 1,38,32, 3,29,43,
+                    4,15,51, 4,51,16, 5,12,48, 5,19,47,
+                    5,48,19, 6,19,48, 7,16,51, 8,25,59,
+                    8,59,22, 9,27,54, 10,27,57, 10,54,27,
+                    11,22,59, 13,7,46, 13,46,4, 14,23,28,
+                    16,25,34, 17,23,35, 17,24,28, 17,28,23,
+                    18,46,7, 20,54,10, 21,33,12, 22,34,15,
+                    23,53,11, 24,11,53, 24,53,8, 24,58,11,
+                    26,12,33, 26,30,12, 26,33,19, 29,15,25,
+                    30,3,40, 30,39,3, 30,40,0, 31,13,20,
+                    31,18,27, 31,20,18, 32,18,20, 32,38,2,
+                    33,40,3, 34,25,15, 35,2,37, 35,42,2,
+                    36,0,29, 37,2,28, 37,52,49, 41,1,32,
+                    41,55,45, 41,56,50, 42,49,52, 42,52,46,
+                    42,59,49, 43,0,34, 43,29,0, 44,4,16,
+                    45,5,14, 45,6,17, 45,14,6, 47,36,53,
+                    47,43,58, 47,58,36, 48,36,58, 49,7,13,
+                    50,6,14, 50,55,41, 52,8,22, 54,44,39,
+                    55,9,21, 55,50,38, 56,9,26, 56,10,21,
+                    56,21,9, 57,39,44, 57,44,40, 57,51,39,
+                    };
+   add_faces(geom, 3, 80, faces3);
 
-  int faces5[] = {
-      1,  37, 49, 13, 31, 5,  47, 53, 23, 14, 6,  48, 58, 24, 17, 9,  54, 39,
-      30, 26, 12, 30, 0,  36, 48, 18, 7,  51, 57, 27, 20, 13, 4,  44, 54, 21,
-      10, 57, 40, 33, 32, 2,  42, 46, 18, 33, 3,  43, 47, 19, 35, 23, 11, 59,
-      42, 36, 29, 25, 8,  53, 37, 28, 24, 8,  52, 39, 51, 15, 29, 3,  41, 32,
-      20, 10, 56, 41, 45, 17, 35, 1,  44, 16, 34, 0,  40, 49, 59, 25, 16, 7,
-      50, 14, 28, 2,  38, 52, 22, 15, 4,  46, 55, 21, 12, 5,  45, 55, 38, 31,
-      27, 9,  56, 26, 19, 6,  50, 58, 43, 34, 22, 11,
-  };
-  add_faces(geom, 5, 24, faces5);
+   int faces5[] = { 1,37,49,13,31, 5,47,53,23,14, 6,48,58,24,17,
+                    9,54,39,30,26, 12,30,0,36,48, 18,7,51,57,27,
+                    20,13,4,44,54, 21,10,57,40,33, 32,2,42,46,18,
+                    33,3,43,47,19, 35,23,11,59,42, 36,29,25,8,53,
+                    37,28,24,8,52, 39,51,15,29,3, 41,32,20,10,56,
+                    41,45,17,35,1, 44,16,34,0,40, 49,59,25,16,7,
+                    50,14,28,2,38, 52,22,15,4,46, 55,21,12,5,45,
+                    55,38,31,27,9, 56,26,19,6,50, 58,43,34,22,11,
+                    };
+   add_faces(geom, 5, 24, faces5);
 }
 
 // great dodecahemicosahedron
 void U65(Geometry &geom)
 {
-  icosidodecahedron_vertex_set(geom);
+   icosidodecahedron_vertex_set(geom);
 
-  int faces5[] = {
-      28, 18, 14, 24, 1,  10, 27, 29, 12, 2,  4,  17, 13, 12, 16,
-      19, 5,  18, 6,  7,  3,  13, 28, 26, 11, 4,  14, 10, 11, 15,
-      8,  9,  21, 5,  20, 20, 16, 22, 0,  26, 17, 21, 27, 0,  23,
-      25, 8,  2,  6,  23, 24, 22, 7,  3,  9,  1,  29, 19, 15, 25,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 28,18,14,24,1, 10,27,29,12,2, 4,17,13,12,16,
+                    19,5,18,6,7, 3,13,28,26,11, 4,14,10,11,15,
+                    8,9,21,5,20, 20,16,22,0,26, 17,21,27,0,23,
+                    25,8,2,6,23, 24,22,7,3,9, 1,29,19,15,25,
+                    };
+   add_faces(geom, 5, 12, faces5);
 
-  int faces6[] = {
-      24, 22, 0,  27, 29, 1,  12, 13, 3,  7,  6,  2,  9,  3,  11,
-      10, 2,  8,  15, 4,  16, 20, 5,  19, 4,  14, 18, 5,  21, 17,
-      19, 7,  22, 16, 12, 29, 21, 27, 10, 14, 24, 9,  6,  18, 28,
-      13, 17, 23, 23, 0,  26, 28, 1,  25, 15, 11, 26, 20, 8,  25,
-  };
-  add_faces(geom, 6, 10, faces6);
+   int faces6[] = { 24,22,0,27,29,1, 12,13,3,7,6,2, 9,3,11,10,2,8,
+                    15,4,16,20,5,19, 4,14,18,5,21,17, 19,7,22,16,12,29,
+                    21,27,10,14,24,9, 6,18,28,13,17,23, 23,0,26,28,1,25,
+                    15,11,26,20,8,25, };
+   add_faces(geom, 6, 10, faces6);
 }
 
 // great stellated truncated dodecahedron
 void U66(Geometry &geom)
 {
-  small_icosicosidodecahedron_vertex_set(geom);
+   small_icosicosidodecahedron_vertex_set(geom);
 
-  int faces3[] = {
-      0,  13, 17, 1,  16, 12, 8,  32, 34, 10, 30, 28, 15, 2,  19,
-      18, 3,  14, 21, 20, 5,  23, 4,  22, 25, 7,  24, 27, 26, 6,
-      31, 11, 29, 35, 33, 9,  37, 54, 51, 44, 57, 42, 46, 40, 59,
-      48, 38, 53, 50, 55, 36, 52, 39, 49, 56, 45, 43, 58, 41, 47,
-  };
-  add_faces(geom, 3, 20, faces3);
+   int faces3[] = { 0,13,17, 1,16,12, 8,32,34, 10,30,28,
+                    15,2,19, 18,3,14, 21,20,5, 23,4,22,
+                    25,7,24, 27,26,6, 31,11,29, 35,33,9,
+                    37,54,51, 44,57,42, 46,40,59, 48,38,53,
+                    50,55,36, 52,39,49, 56,45,43, 58,41,47,
+                    };
+   add_faces(geom, 3, 20, faces3);
 
-  int faces10[] = {
-      2,  15, 44, 42, 31, 29, 40, 46, 13, 0,  6,  26, 52, 49, 18, 14, 45, 56,
-      22, 4,  9,  33, 36, 55, 25, 24, 54, 37, 32, 8,  13, 46, 59, 21, 5,  7,
-      25, 55, 50, 17, 19, 2,  0,  17, 50, 36, 33, 35, 38, 48, 19, 48, 53, 27,
-      6,  4,  23, 57, 44, 15, 20, 58, 47, 12, 16, 51, 54, 24, 7,  5,  40, 29,
-      11, 10, 28, 41, 58, 20, 21, 59, 45, 14, 3,  1,  12, 47, 41, 28, 30, 43,
-      49, 39, 34, 32, 37, 51, 16, 1,  3,  18, 53, 38, 35, 9,  8,  34, 39, 52,
-      26, 27, 57, 23, 22, 56, 43, 30, 10, 11, 31, 42,
-  };
-  add_faces(geom, 10, 12, faces10);
+   int faces10[] = { 2,15,44,42,31,29,40,46,13,0,
+                    6,26,52,49,18,14,45,56,22,4,
+                    9,33,36,55,25,24,54,37,32,8,
+                    13,46,59,21,5,7,25,55,50,17,
+                    19,2,0,17,50,36,33,35,38,48,
+                    19,48,53,27,6,4,23,57,44,15,
+                    20,58,47,12,16,51,54,24,7,5,
+                    40,29,11,10,28,41,58,20,21,59,
+                    45,14,3,1,12,47,41,28,30,43,
+                    49,39,34,32,37,51,16,1,3,18,
+                    53,38,35,9,8,34,39,52,26,27,
+                    57,23,22,56,43,30,10,11,31,42,
+                    };
+   add_faces(geom, 10, 12, faces10);
 }
 
 // great rhombicosidodecahedron
 void U67(Geometry &geom)
 {
-  truncated_great_dodecahedron_vertex_set(geom);
+   truncated_great_dodecahedron_vertex_set(geom);
 
-  int faces3[] = {
-      2,  35, 34, 6,  19, 15, 9,  27, 25, 11, 21, 23, 16, 12, 5,
-      17, 4,  13, 18, 7,  14, 22, 20, 10, 26, 8,  24, 29, 28, 1,
-      31, 0,  30, 33, 3,  32, 40, 45, 59, 41, 58, 44, 46, 56, 43,
-      50, 39, 52, 53, 38, 51, 54, 37, 48, 55, 49, 36, 57, 47, 42,
-  };
-  add_faces(geom, 3, 20, faces3);
+   int faces3[] = { 2,35,34, 6,19,15, 9,27,25, 11,21,23,
+                    16,12,5, 17,4,13, 18,7,14, 22,20,10,
+                    26,8,24, 29,28,1, 31,0,30, 33,3,32,
+                    40,45,59, 41,58,44, 46,56,43, 50,39,52,
+                    53,38,51, 54,37,48, 55,49,36, 57,47,42,
+                    };
+   add_faces(geom, 3, 20, faces3);
 
-  int faces4[] = {
-      0,  57, 42, 30, 2,  34, 38, 53, 3,  55, 36, 32, 4,  42, 47, 13, 7,  41,
-      44, 14, 11, 50, 52, 21, 12, 46, 43, 5,  16, 5,  39, 50, 18, 14, 12, 16,
-      19, 17, 13, 15, 20, 53, 51, 10, 22, 10, 49, 55, 23, 21, 20, 22, 24, 8,
-      47, 57, 27, 26, 24, 25, 28, 40, 59, 1,  33, 32, 28, 29, 35, 31, 30, 34,
-      36, 49, 19, 6,  37, 54, 3,  33, 40, 6,  15, 45, 41, 29, 1,  58, 43, 56,
-      0,  31, 44, 58, 27, 9,  46, 9,  25, 56, 48, 11, 23, 54, 48, 37, 7,  18,
-      51, 38, 4,  17, 52, 39, 35, 2,  59, 45, 8,  26,
-  };
-  add_faces(geom, 4, 30, faces4);
+   int faces4[] = { 0,57,42,30, 2,34,38,53, 3,55,36,32, 4,42,47,13,
+                    7,41,44,14, 11,50,52,21, 12,46,43,5, 16,5,39,50,
+                    18,14,12,16, 19,17,13,15, 20,53,51,10, 22,10,49,55,
+                    23,21,20,22, 24,8,47,57, 27,26,24,25, 28,40,59,1,
+                    33,32,28,29, 35,31,30,34, 36,49,19,6, 37,54,3,33,
+                    40,6,15,45, 41,29,1,58, 43,56,0,31, 44,58,27,9,
+                    46,9,25,56, 48,11,23,54, 48,37,7,18, 51,38,4,17,
+                    52,39,35,2, 59,45,8,26, };
+   add_faces(geom, 4, 30, faces4);
 
-  int faces5[] = {
-      5,  43, 31, 35, 39, 10, 51, 17, 19, 49, 14, 44, 9,  46, 12,
-      21, 52, 2,  53, 20, 32, 36, 6,  40, 28, 34, 30, 42, 4,  38,
-      37, 33, 29, 41, 7,  45, 15, 13, 47, 8,  48, 18, 16, 50, 11,
-      54, 23, 22, 55, 3,  56, 25, 24, 57, 0,  58, 1,  59, 26, 27,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 5,43,31,35,39, 10,51,17,19,49, 14,44,9,46,12,
+                    21,52,2,53,20, 32,36,6,40,28, 34,30,42,4,38,
+                    37,33,29,41,7, 45,15,13,47,8, 48,18,16,50,11,
+                    54,23,22,55,3, 56,25,24,57,0, 58,1,59,26,27,
+                    };
+   add_faces(geom, 5, 12, faces5);
 }
 
 void U68(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(phi, phi, 3 - 1 / phi));
-  vlist.push_back(Vec3d(2 * phi, 1 / phi, 1 - 2 / phi));
-  vlist.push_back(Vec3d(phi, 1 / (phi * phi), 1 + 3 / phi));
-  vlist.push_back(Vec3d(1 + 2 / phi, 2, 2 - 1 / phi));
-  vlist.push_back(Vec3d(1 / phi, 3, 2 / phi));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(phi,phi,3-1/phi));
+   vlist.push_back(Vec3d(2*phi,1/phi,1-2/phi));
+   vlist.push_back(Vec3d(phi,1/(phi*phi),1+3/phi));
+   vlist.push_back(Vec3d(1+2/phi,2,2-1/phi));
+   vlist.push_back(Vec3d(1/phi,3,2/phi));
 
-  calculate_coords(geom, vlist, EVEN, ALL);
+   calculate_coords(geom, vlist, EVEN, ALL);
 
-  int faces4[] = {
-      0,   4,   6,   2,   1,   3,   7,   5,   8,   9,   13,  12,  10,  14,  15,
-      11,  16,  18,  19,  17,  20,  21,  23,  22,  36,  58,  106, 80,  37,  81,
-      107, 59,  38,  82,  104, 56,  39,  57,  105, 83,  44,  65,  113, 93,  45,
-      92,  112, 64,  46,  95,  115, 67,  47,  66,  114, 94,  52,  100, 77,  31,
-      53,  30,  76,  101, 54,  29,  79,  102, 55,  103, 78,  28,  72,  26,  49,
-      97,  73,  96,  48,  27,  74,  99,  51,  24,  75,  25,  50,  98,  108, 86,
-      34,  60,  109, 61,  35,  87,  110, 62,  32,  84,  111, 85,  33,  63,  116,
-      88,  41,  68,  117, 69,  40,  89,  118, 70,  43,  90,  119, 91,  42,  71,
-  };
-  add_faces(geom, 4, 30, faces4);
+   int faces4[] = { 0,4,6,2, 1,3,7,5, 8,9,13,12, 10,14,15,11,
+                    16,18,19,17, 20,21,23,22, 36,58,106,80, 37,81,107,59,
+                    38,82,104,56, 39,57,105,83, 44,65,113,93, 45,92,112,64,
+                    46,95,115,67, 47,66,114,94, 52,100,77,31, 53,30,76,101,
+                    54,29,79,102, 55,103,78,28, 72,26,49,97, 73,96,48,27,
+                    74,99,51,24, 75,25,50,98, 108,86,34,60, 109,61,35,87,
+                    110,62,32,84, 111,85,33,63, 116,88,41,68, 117,69,40,89,
+                    118,70,43,90, 119,91,42,71, };
+   add_faces(geom, 4, 30, faces4);
 
-  int faces6[] = {
-      12, 13,  37,  59,  58,  36,  14,  38,  56,  57,  39,  15,  21,  45,  64,
-      66, 47,  23,  22,  46,  67,  65,  44,  20,  24,  51,  55,  28,  4,   0,
-      25, 1,   5,   29,  54,  50,  26,  2,   6,   30,  53,  49,  27,  48,  52,
-      31, 7,   3,   60,  34,  10,  11,  35,  61,  62,  63,  33,  9,   8,   32,
-      68, 41,  17,  19,  43,  70,  69,  71,  42,  18,  16,  40,  92,  109, 87,
-      99, 74,  112, 93,  113, 75,  98,  86,  108, 94,  114, 72,  97,  85,  111,
-      95, 110, 84,  96,  73,  115, 100, 80,  106, 91,  119, 77,  101, 76,  118,
-      90, 107, 81,  102, 79,  117, 89,  104, 82,  103, 83,  105, 88,  116, 78,
-  };
-  add_faces(geom, 6, 20, faces6);
+   int faces6[] = { 12,13,37,59,58,36, 14,38,56,57,39,15, 21,45,64,66,47,23,
+                    22,46,67,65,44,20, 24,51,55,28,4,0, 25,1,5,29,54,50,
+                    26,2,6,30,53,49, 27,48,52,31,7,3, 60,34,10,11,35,61,
+                    62,63,33,9,8,32, 68,41,17,19,43,70, 69,71,42,18,16,40,
+                    92,109,87,99,74,112, 93,113,75,98,86,108, 94,114,72,97,85,111,
+                    95,110,84,96,73,115, 100,80,106,91,119,77, 101,76,118,90,107,81,
+                    102,79,117,89,104,82, 103,83,105,88,116,78, };
+   add_faces(geom, 6, 20, faces6);
 
-  int faces10[] = {
-      4,  28,  78,  116, 68,  70, 118, 76,  30,  6,  5,  7,   31,  77, 119,
-      71, 69,  117, 79,  29,  20, 44,  93,  108, 60, 61, 109, 92,  45, 21,
-      22, 23,  47,  94,  111, 63, 62,  110, 95,  46, 56, 104, 89,  40, 16,
-      17, 41,  88,  105, 57,  58, 59,  107, 90,  43, 19, 18,  42,  91, 106,
-      64, 112, 74,  24,  0,   2,  26,  72,  114, 66, 65, 67,  115, 73, 27,
-      3,  1,   25,  75,  113, 84, 32,  8,   12,  36, 80, 100, 52,  48, 96,
-      85, 97,  49,  53,  101, 81, 37,  13,  9,   33, 86, 98,  50,  54, 102,
-      82, 38,  14,  10,  34,  87, 35,  11,  15,  39, 83, 103, 55,  51, 99,
-  };
-  add_faces(geom, 10, 12, faces10);
+   int faces10[] = { 4,28,78,116,68,70,118,76,30,6,
+                    5,7,31,77,119,71,69,117,79,29,
+                    20,44,93,108,60,61,109,92,45,21,
+                    22,23,47,94,111,63,62,110,95,46,
+                    56,104,89,40,16,17,41,88,105,57,
+                    58,59,107,90,43,19,18,42,91,106,
+                    64,112,74,24,0,2,26,72,114,66,
+                    65,67,115,73,27,3,1,25,75,113,
+                    84,32,8,12,36,80,100,52,48,96,
+                    85,97,49,53,101,81,37,13,9,33,
+                    86,98,50,54,102,82,38,14,10,34,
+                    87,35,11,15,39,83,103,55,51,99,
+                    };
+   add_faces(geom, 10, 12, faces10);
 }
 
 // great inverted snub icosidodecahedron
 void U69(Geometry &geom)
 {
-  // the greater positive real solution to x**3-2x=-1/Phi, or approximately
-  // 1.222472666961002
-  // hard code value. compare roots out to 12 places for computed answer (future
-  // proof)
-  vector<Vec3d> vlist = u57_u69_u74_vertices(1.222472666961002);
+   // the greater positive real solution to x**3-2x=-1/Phi, or approximately 1.222472666961002
+   // hard code value. compare roots out to 12 places for computed answer (future proof)
+   vector<Vec3d> vlist = u57_u69_u74_vertices(1.222472666961002);
 
-  calculate_coords(geom, vlist, EVEN, ODD);
+   calculate_coords(geom, vlist, EVEN, ODD);
 
-  int faces3[] = {
-      0,  3,  51, 0,  51, 28, 1,  2,  50, 1,  50, 29, 4,  52, 6,  5,  7,  55,
-      5,  53, 7,  6,  34, 18, 6,  52, 34, 7,  35, 19, 8,  24, 20, 8,  57, 24,
-      9,  56, 25, 9,  57, 8,  10, 58, 11, 11, 27, 23, 11, 58, 27, 12, 0,  28,
-      12, 28, 16, 13, 1,  29, 13, 17, 21, 13, 29, 17, 14, 22, 26, 17, 5,  33,
-      18, 22, 14, 18, 34, 22, 19, 15, 31, 19, 23, 15, 20, 12, 16, 20, 16, 32,
-      21, 17, 33, 22, 10, 26, 23, 27, 15, 24, 12, 20, 25, 13, 21, 25, 21, 9,
-      25, 56, 37, 26, 10, 59, 28, 51, 40, 29, 50, 41, 30, 14, 2,  30, 18, 14,
-      31, 15, 3,  32, 4,  54, 32, 16, 4,  33, 5,  55, 33, 55, 45, 35, 23, 19,
-      36, 43, 48, 37, 42, 49, 37, 44, 42, 38, 26, 59, 38, 59, 47, 39, 27, 58,
-      40, 39, 46, 41, 38, 47, 41, 47, 53, 42, 30, 49, 43, 31, 48, 44, 32, 54,
-      44, 54, 42, 45, 43, 36, 46, 39, 58, 47, 35, 53, 48, 3,  0,  48, 31, 3,
-      49, 2,  1,  49, 30, 2,  50, 38, 41, 51, 39, 40, 52, 40, 46, 52, 46, 34,
-      53, 35, 7,  54, 4,  6,  55, 43, 45, 56, 9,  8,  56, 44, 37, 57, 36, 24,
-      57, 45, 36, 59, 10, 11,
-  };
-  add_faces(geom, 3, 80, faces3);
+   int faces3[] = { 0,3,51, 0,51,28, 1,2,50, 1,50,29,
+                    4,52,6, 5,7,55, 5,53,7, 6,34,18,
+                    6,52,34, 7,35,19, 8,24,20, 8,57,24,
+                    9,56,25, 9,57,8, 10,58,11, 11,27,23,
+                    11,58,27, 12,0,28, 12,28,16, 13,1,29,
+                    13,17,21, 13,29,17, 14,22,26, 17,5,33,
+                    18,22,14, 18,34,22, 19,15,31, 19,23,15,
+                    20,12,16, 20,16,32, 21,17,33, 22,10,26,
+                    23,27,15, 24,12,20, 25,13,21, 25,21,9,
+                    25,56,37, 26,10,59, 28,51,40, 29,50,41,
+                    30,14,2, 30,18,14, 31,15,3, 32,4,54,
+                    32,16,4, 33,5,55, 33,55,45, 35,23,19,
+                    36,43,48, 37,42,49, 37,44,42, 38,26,59,
+                    38,59,47, 39,27,58, 40,39,46, 41,38,47,
+                    41,47,53, 42,30,49, 43,31,48, 44,32,54,
+                    44,54,42, 45,43,36, 46,39,58, 47,35,53,
+                    48,3,0, 48,31,3, 49,2,1, 49,30,2,
+                    50,38,41, 51,39,40, 52,40,46, 52,46,34,
+                    53,35,7, 54,4,6, 55,43,45, 56,9,8,
+                    56,44,37, 57,36,24, 57,45,36, 59,10,11,
+                    };
+   add_faces(geom, 3, 80, faces3);
 
-  int faces5[] = {
-      2,  14, 26, 38, 50, 3,  15, 27, 39, 51, 16, 28, 40, 52, 4,
-      21, 33, 45, 57, 9,  24, 36, 48, 0,  12, 25, 37, 49, 1,  13,
-      29, 41, 53, 5,  17, 34, 46, 58, 10, 22, 42, 54, 6,  18, 30,
-      47, 59, 11, 23, 35, 55, 7,  19, 31, 43, 56, 8,  20, 32, 44,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 2,14,26,38,50, 3,15,27,39,51, 16,28,40,52,4,
+                    21,33,45,57,9, 24,36,48,0,12, 25,37,49,1,13,
+                    29,41,53,5,17, 34,46,58,10,22, 42,54,6,18,30,
+                    47,59,11,23,35, 55,7,19,31,43, 56,8,20,32,44,
+                    };
+   add_faces(geom, 5, 12, faces5);
 }
 
 // great dodecahemidodecahedron
 void U70(Geometry &geom)
 {
-  icosidodecahedron_vertex_set(geom);
+   icosidodecahedron_vertex_set(geom);
 
-  int faces5[] = {
-      29, 10, 12, 27, 2,  28, 11, 13, 26, 3,  6,  19, 18, 7,  5,
-      8,  6,  25, 2,  23, 5,  8,  21, 20, 9,  9,  22, 3,  24, 7,
-      4,  13, 16, 17, 12, 15, 10, 4,  11, 14, 22, 26, 16, 0,  20,
-      24, 28, 14, 1,  18, 29, 15, 1,  19, 25, 27, 17, 0,  21, 23,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 29,10,12,27,2, 28,11,13,26,3, 6,19,18,7,5,
+                    8,6,25,2,23, 5,8,21,20,9, 9,22,3,24,7,
+                    4,13,16,17,12, 15,10,4,11,14, 22,26,16,0,20,
+                    24,28,14,1,18, 29,15,1,19,25, 27,17,0,21,23,
+                    };
+   add_faces(geom, 5, 12, faces5);
 
-  int faces10[] = {
-      9,  22, 26, 13, 4,  10, 29, 25, 6,  5,  7,  24, 28, 11, 4,
-      12, 27, 23, 8,  5,  8,  21, 0,  16, 13, 11, 14, 1,  19, 6,
-      18, 1,  15, 10, 12, 17, 0,  20, 9,  7,  19, 25, 2,  27, 17,
-      16, 26, 3,  24, 18, 23, 2,  29, 15, 14, 28, 3,  22, 20, 21,
-  };
-  add_faces(geom, 10, 6, faces10);
+   int faces10[] = { 9,22,26,13,4,10,29,25,6,5,
+                    7,24,28,11,4,12,27,23,8,5,
+                    8,21,0,16,13,11,14,1,19,6,
+                    18,1,15,10,12,17,0,20,9,7,
+                    19,25,2,27,17,16,26,3,24,18,
+                    23,2,29,15,14,28,3,22,20,21,
+                    };
+   add_faces(geom, 10, 6, faces10);
 }
 
 // great icosihemidodecahedron
 void U71(Geometry &geom)
 {
-  icosidodecahedron_vertex_set(geom);
+   icosidodecahedron_vertex_set(geom);
 
-  int faces3[] = {
-      26, 22, 3,  10, 12, 4,  6,  19, 25, 5,  9,  7,  6,  5,  8,
-      28, 14, 11, 17, 27, 12, 4,  11, 13, 16, 26, 13, 14, 1,  15,
-      0,  16, 17, 1,  19, 18, 20, 9,  22, 20, 21, 0,  21, 8,  23,
-      7,  18, 24, 25, 2,  29, 2,  23, 27, 24, 3,  28, 29, 15, 10,
-  };
-  add_faces(geom, 3, 20, faces3);
+   int faces3[] = { 26,22,3, 10,12,4, 6,19,25, 5,9,7,
+                    6,5,8, 28,14,11, 17,27,12, 4,11,13,
+                    16,26,13, 14,1,15, 0,16,17, 1,19,18,
+                    20,9,22, 20,21,0, 21,8,23, 7,18,24,
+                    25,2,29, 2,23,27, 24,3,28, 29,15,10,
+                    };
+   add_faces(geom, 3, 20, faces3);
 
-  int faces10[] = {
-      13, 26, 22, 9,  5,  6,  25, 29, 10, 4,  12, 27, 23, 8,  5,
-      7,  24, 28, 11, 4,  14, 1,  19, 6,  8,  21, 0,  16, 13, 11,
-      10, 15, 1,  18, 7,  9,  20, 0,  17, 12, 16, 26, 3,  24, 18,
-      19, 25, 2,  27, 17, 3,  22, 20, 21, 23, 2,  29, 15, 14, 28,
-  };
-  add_faces(geom, 10, 6, faces10);
+   int faces10[] = { 13,26,22,9,5,6,25,29,10,4,
+                    12,27,23,8,5,7,24,28,11,4,
+                    14,1,19,6,8,21,0,16,13,11,
+                    10,15,1,18,7,9,20,0,17,12,
+                    16,26,3,24,18,19,25,2,27,17,
+                    3,22,20,21,23,2,29,15,14,28,
+                    };
+   add_faces(geom, 10, 6, faces10);
 }
 
 // small retrosnub icosicosidodecahedron
 void U72(Geometry &geom)
 {
-  vector<Vec3d> vlist;
-  vlist.push_back(Vec3d(0.5 * (-1 / phi - sqrt(3 * phi - 2)), 0,
-                        0.5 * (3 - phi * sqrt(3 * phi - 2))));
-  vlist.push_back(Vec3d(0.5 * (1 / phi - sqrt(3 * phi - 2)), 1,
-                        0.5 * (1 + 2 / phi - phi * sqrt(3 * phi - 2))));
-  vlist.push_back(Vec3d(0.5 * (phi * phi - sqrt(3 * phi - 2)), 1 / phi,
-                        0.5 * (1 - phi * sqrt(3 * phi - 2))));
+   vector<Vec3d> vlist;
+   vlist.push_back(Vec3d(0.5*(-1/phi-sqrt(3*phi-2)),0,0.5*(3-phi*sqrt(3*phi-2))));
+   vlist.push_back(Vec3d(0.5*(1/phi-sqrt(3*phi-2)),1,0.5*(1+2/phi-phi*sqrt(3*phi-2))));
+   vlist.push_back(Vec3d(0.5*(phi*phi-sqrt(3*phi-2)),1/phi,0.5*(1-phi*sqrt(3*phi-2))));
 
-  calculate_coords(geom, vlist, ODD, ALL);
+   calculate_coords(geom, vlist, ODD, ALL);
 
-  int faces3[] = {
-      17, 16, 0,  45, 17, 0,  44, 36, 0,  16, 44, 0,  37, 45, 0,  46, 18, 1,
-      18, 19, 1,  26, 22, 4,  56, 26, 4,  48, 56, 4,  53, 23, 5,  23, 27, 5,
-      57, 49, 5,  27, 57, 5,  58, 50, 6,  38, 31, 8,  54, 38, 8,  28, 30, 9,
-      30, 39, 9,  39, 55, 9,  35, 42, 10, 59, 43, 11, 48, 20, 12, 2,  48, 12,
-      49, 2,  13, 2,  12, 13, 29, 21, 13, 21, 49, 13, 50, 3,  14, 14, 3,  15,
-      3,  51, 15, 32, 24, 16, 41, 32, 16, 45, 25, 17, 25, 33, 17, 33, 40, 17,
-      55, 7,  21, 50, 14, 22, 15, 51, 23, 58, 6,  24, 6,  20, 24, 32, 58, 24,
-      21, 7,  25, 7,  59, 25, 34, 18, 26, 56, 34, 26, 18, 46, 26, 47, 19, 27,
-      12, 20, 28, 20, 54, 28, 55, 21, 29, 8,  31, 29, 22, 14, 30, 14, 39, 30,
-      38, 15, 31, 15, 23, 31, 41, 11, 32, 11, 34, 32, 35, 10, 33, 25, 59, 33,
-      43, 18, 34, 11, 43, 34, 27, 19, 35, 19, 42, 35, 52, 8,  36, 29, 13, 36,
-      8,  29, 36, 44, 52, 36, 28, 9,  37, 12, 28, 37, 9,  53, 37, 46, 1,  38,
-      54, 46, 38, 1,  47, 39, 48, 2,  40, 33, 10, 40, 56, 48, 40, 10, 56, 40,
-      57, 11, 41, 2,  49, 41, 49, 57, 41, 51, 3,  43, 16, 24, 44, 4,  52, 44,
-      53, 5,  45, 37, 53, 45, 1,  19, 47, 42, 3,  50, 4,  22, 52, 22, 30, 52,
-      31, 23, 53, 20, 6,  54, 6,  46, 54, 47, 7,  55, 39, 47, 55, 27, 35, 57,
-      10, 42, 58, 42, 50, 58, 51, 43, 59, 7,  51, 59,
-  };
-  add_faces(geom, 3, 100, faces3);
+   int faces3[] = { 17,16,0, 45,17,0, 44,36,0, 16,44,0,
+                    37,45,0, 46,18,1, 18,19,1, 26,22,4,
+                    56,26,4, 48,56,4, 53,23,5, 23,27,5,
+                    57,49,5, 27,57,5, 58,50,6, 38,31,8,
+                    54,38,8, 28,30,9, 30,39,9, 39,55,9,
+                    35,42,10, 59,43,11, 48,20,12, 2,48,12,
+                    49,2,13, 2,12,13, 29,21,13, 21,49,13,
+                    50,3,14, 14,3,15, 3,51,15, 32,24,16,
+                    41,32,16, 45,25,17, 25,33,17, 33,40,17,
+                    55,7,21, 50,14,22, 15,51,23, 58,6,24,
+                    6,20,24, 32,58,24, 21,7,25, 7,59,25,
+                    34,18,26, 56,34,26, 18,46,26, 47,19,27,
+                    12,20,28, 20,54,28, 55,21,29, 8,31,29,
+                    22,14,30, 14,39,30, 38,15,31, 15,23,31,
+                    41,11,32, 11,34,32, 35,10,33, 25,59,33,
+                    43,18,34, 11,43,34, 27,19,35, 19,42,35,
+                    52,8,36, 29,13,36, 8,29,36, 44,52,36,
+                    28,9,37, 12,28,37, 9,53,37, 46,1,38,
+                    54,46,38, 1,47,39, 48,2,40, 33,10,40,
+                    56,48,40, 10,56,40, 57,11,41, 2,49,41,
+                    49,57,41, 51,3,43, 16,24,44, 4,52,44,
+                    53,5,45, 37,53,45, 1,19,47, 42,3,50,
+                    4,22,52, 22,30,52, 31,23,53, 20,6,54,
+                    6,46,54, 47,7,55, 39,47,55, 27,35,57,
+                    10,42,58, 42,50,58, 51,43,59, 7,51,59,
+                    };
+   add_faces(geom, 3, 100, faces3);
 
-  int faces5[] = {
-      47, 27, 23, 51, 7,  52, 30, 28, 54, 8,  17, 40, 2,  41, 16,
-      43, 3,  42, 19, 18, 26, 46, 6,  50, 22, 31, 53, 9,  55, 29,
-      34, 56, 10, 58, 32, 59, 11, 57, 35, 33, 0,  36, 13, 12, 37,
-      1,  39, 14, 15, 38, 24, 20, 48, 4,  44, 5,  49, 21, 25, 45,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 47,27,23,51,7, 52,30,28,54,8, 17,40,2,41,16,
+                    43,3,42,19,18, 26,46,6,50,22, 31,53,9,55,29,
+                    34,56,10,58,32, 59,11,57,35,33, 0,36,13,12,37,
+                    1,39,14,15,38, 24,20,48,4,44, 5,49,21,25,45,
+                    };
+   add_faces(geom, 5, 12, faces5);
 }
 
 // great rhombidodecahedron
 void U73(Geometry &geom)
 {
-  truncated_great_dodecahedron_vertex_set(geom);
+   truncated_great_dodecahedron_vertex_set(geom);
 
-  int faces4[] = {
-      57, 42, 30, 0,  55, 36, 32, 3,  42, 47, 13, 4,  7,  14, 44, 41, 22, 55,
-      49, 10, 21, 52, 50, 11, 12, 46, 43, 5,  50, 39, 5,  16, 14, 12, 16, 18,
-      15, 13, 17, 19, 10, 51, 53, 20, 23, 21, 20, 22, 57, 47, 8,  24, 25, 24,
-      26, 27, 28, 1,  59, 40, 29, 28, 32, 33, 31, 30, 34, 35, 6,  19, 49, 36,
-      54, 3,  33, 37, 38, 4,  17, 51, 52, 2,  35, 39, 31, 0,  56, 43, 45, 8,
-      26, 59, 40, 6,  15, 45, 46, 56, 25, 9,  18, 7,  37, 48, 11, 23, 54, 48,
-      2,  34, 38, 53, 41, 29, 1,  58, 58, 27, 9,  44,
-  };
-  add_faces(geom, 4, 30, faces4);
+   int faces4[] = { 57,42,30,0, 55,36,32,3, 42,47,13,4, 7,14,44,41,
+                    22,55,49,10, 21,52,50,11, 12,46,43,5, 50,39,5,16,
+                    14,12,16,18, 15,13,17,19, 10,51,53,20, 23,21,20,22,
+                    57,47,8,24, 25,24,26,27, 28,1,59,40, 29,28,32,33,
+                    31,30,34,35, 6,19,49,36, 54,3,33,37, 38,4,17,51,
+                    52,2,35,39, 31,0,56,43, 45,8,26,59, 40,6,15,45,
+                    46,56,25,9, 18,7,37,48, 11,23,54,48, 2,34,38,53,
+                    41,29,1,58, 58,27,9,44, };
+   add_faces(geom, 4, 30, faces4);
 
-  int faces10[] = {
-      48, 37, 33, 32, 36, 49, 10, 20, 21, 11, 50, 39, 35, 34, 38, 51, 10, 22,
-      23, 11, 12, 46, 56, 0,  30, 34, 2,  52, 50, 16, 16, 5,  43, 56, 25, 27,
-      58, 41, 7,  18, 41, 44, 9,  25, 24, 8,  45, 40, 28, 29, 3,  55, 49, 19,
-      15, 45, 59, 1,  29, 33, 2,  53, 51, 17, 13, 47, 57, 0,  31, 35, 37, 54,
-      23, 21, 52, 39, 5,  12, 14, 7,  40, 59, 26, 24, 57, 42, 4,  17, 19, 6,
-      46, 9,  27, 26, 8,  47, 42, 30, 31, 43, 54, 3,  32, 28, 1,  58, 44, 14,
-      18, 48, 22, 20, 53, 38, 4,  13, 15, 6,  36, 55,
-  };
-  add_faces(geom, 10, 12, faces10);
+   int faces10[] = { 48,37,33,32,36,49,10,20,21,11,
+                    50,39,35,34,38,51,10,22,23,11,
+                    12,46,56,0,30,34,2,52,50,16,
+                    16,5,43,56,25,27,58,41,7,18,
+                    41,44,9,25,24,8,45,40,28,29,
+                    3,55,49,19,15,45,59,1,29,33,
+                    2,53,51,17,13,47,57,0,31,35,
+                    37,54,23,21,52,39,5,12,14,7,
+                    40,59,26,24,57,42,4,17,19,6,
+                    46,9,27,26,8,47,42,30,31,43,
+                    54,3,32,28,1,58,44,14,18,48,
+                    22,20,53,38,4,13,15,6,36,55,
+                    };
+   add_faces(geom, 10, 12, faces10);
 }
 
 // great retrosnub icosidodecahedron
 void U74(Geometry &geom)
 {
-  // the smaller positive real root of x**3-2x=-1/Phi, or approximately
-  // 0.326404554013182
-  // hard code value. compare roots out to 12 places for computed answer (future
-  // proof)
-  vector<Vec3d> vlist = u57_u69_u74_vertices(0.326404554013182);
+   // the smaller positive real root of x**3-2x=-1/Phi, or approximately 0.326404554013182
+   // hard code value. compare roots out to 12 places for computed answer (future proof)
+   vector<Vec3d> vlist = u57_u69_u74_vertices(0.326404554013182);
 
-  calculate_coords(geom, vlist, EVEN, EVEN);
+   calculate_coords(geom, vlist, EVEN, EVEN);
 
-  int faces3[] = {
-      12, 28, 0,  2,  49, 1,  14, 30, 2,  30, 49, 2,  48, 0,  3,  0,  51, 3,
-      17, 33, 5,  33, 55, 5,  53, 5,  7,  19, 35, 7,  35, 53, 7,  56, 8,  9,
-      25, 56, 9,  58, 10, 11, 27, 58, 11, 20, 16, 12, 29, 1,  13, 22, 18, 14,
-      31, 3,  15, 32, 4,  16, 29, 13, 17, 13, 21, 17, 34, 6,  18, 31, 15, 19,
-      15, 23, 19, 32, 16, 20, 25, 9,  21, 13, 25, 21, 34, 18, 22, 27, 11, 23,
-      15, 27, 23, 20, 12, 24, 8,  20, 24, 37, 56, 25, 22, 14, 26, 10, 22, 26,
-      39, 58, 27, 12, 16, 28, 50, 1,  29, 14, 18, 30, 48, 3,  31, 43, 48, 31,
-      54, 4,  32, 17, 21, 33, 52, 6,  34, 19, 23, 35, 57, 24, 36, 49, 42, 37,
-      42, 44, 37, 59, 26, 38, 51, 40, 39, 40, 46, 39, 50, 29, 41, 47, 38, 41,
-      38, 50, 41, 45, 36, 43, 36, 48, 43, 54, 32, 44, 42, 54, 44, 57, 36, 45,
-      52, 34, 46, 40, 52, 46, 59, 38, 47, 30, 42, 49, 2,  1,  50, 0,  28, 51,
-      28, 40, 51, 4,  6,  52, 47, 41, 53, 35, 47, 53, 6,  4,  54, 7,  5,  55,
-      45, 43, 55, 33, 45, 55, 37, 44, 56, 9,  8,  57, 8,  24, 57, 39, 46, 58,
-      11, 10, 59, 10, 26, 59,
-  };
-  add_faces(geom, 3, 80, faces3);
+   int faces3[] = { 12,28,0, 2,49,1, 14,30,2, 30,49,2,
+                    48,0,3, 0,51,3, 17,33,5, 33,55,5,
+                    53,5,7, 19,35,7, 35,53,7, 56,8,9,
+                    25,56,9, 58,10,11, 27,58,11, 20,16,12,
+                    29,1,13, 22,18,14, 31,3,15, 32,4,16,
+                    29,13,17, 13,21,17, 34,6,18, 31,15,19,
+                    15,23,19, 32,16,20, 25,9,21, 13,25,21,
+                    34,18,22, 27,11,23, 15,27,23, 20,12,24,
+                    8,20,24, 37,56,25, 22,14,26, 10,22,26,
+                    39,58,27, 12,16,28, 50,1,29, 14,18,30,
+                    48,3,31, 43,48,31, 54,4,32, 17,21,33,
+                    52,6,34, 19,23,35, 57,24,36, 49,42,37,
+                    42,44,37, 59,26,38, 51,40,39, 40,46,39,
+                    50,29,41, 47,38,41, 38,50,41, 45,36,43,
+                    36,48,43, 54,32,44, 42,54,44, 57,36,45,
+                    52,34,46, 40,52,46, 59,38,47, 30,42,49,
+                    2,1,50, 0,28,51, 28,40,51, 4,6,52,
+                    47,41,53, 35,47,53, 6,4,54, 7,5,55,
+                    45,43,55, 33,45,55, 37,44,56, 9,8,57,
+                    8,24,57, 39,46,58, 11,10,59, 10,26,59,
+                    };
+   add_faces(geom, 3, 80, faces3);
 
-  int faces5[] = {
-      53, 41, 29, 17, 5,  55, 43, 31, 19, 7,  56, 44, 32, 20, 8,
-      58, 46, 34, 22, 10, 1,  49, 37, 25, 13, 3,  51, 39, 27, 15,
-      18, 6,  54, 42, 30, 21, 9,  57, 45, 33, 23, 11, 59, 47, 35,
-      28, 16, 4,  52, 40, 36, 24, 12, 0,  48, 38, 26, 14, 2,  50,
-  };
-  add_faces(geom, 5, 12, faces5);
+   int faces5[] = { 53,41,29,17,5, 55,43,31,19,7, 56,44,32,20,8,
+                    58,46,34,22,10, 1,49,37,25,13, 3,51,39,27,15,
+                    18,6,54,42,30, 21,9,57,45,33, 23,11,59,47,35,
+                    28,16,4,52,40, 36,24,12,0,48, 38,26,14,2,50,
+                    };
+   add_faces(geom, 5, 12, faces5);
 }
 
 // great dirhombicosidodecahedron
 void U75(Geometry &geom)
 {
-  great_dirhombicosidodecahedron_vertex_set(geom);
+   great_dirhombicosidodecahedron_vertex_set(geom);
 
-  int faces3[] = {
-      5,  19, 48, 6,  12, 47, 6,  14, 45, 8,  22, 59, 9,  20, 57, 10, 27, 54,
-      11, 25, 52, 13, 46, 7,  14, 24, 35, 17, 23, 28, 18, 49, 4,  21, 30, 19,
-      23, 58, 8,  24, 53, 11, 26, 33, 12, 28, 42, 1,  29, 16, 22, 30, 40, 3,
-      31, 18, 20, 32, 13, 27, 33, 39, 0,  34, 15, 25, 35, 37, 2,  36, 3,  34,
-      37, 59, 46, 38, 1,  32, 41, 2,  31, 41, 55, 50, 42, 52, 49, 43, 0,  29,
-      44, 7,  15, 47, 36, 58, 48, 43, 53, 50, 5,  17, 51, 4,  16, 54, 51, 40,
-      55, 10, 26, 56, 9,  21, 56, 45, 38, 57, 44, 39,
-  };
-  add_faces(geom, 3, 40, faces3);
+   int faces3[] = { 5,19,48, 6,12,47, 6,14,45, 8,22,59,
+                    9,20,57, 10,27,54, 11,25,52, 13,46,7,
+                    14,24,35, 17,23,28, 18,49,4, 21,30,19,
+                    23,58,8, 24,53,11, 26,33,12, 28,42,1,
+                    29,16,22, 30,40,3, 31,18,20, 32,13,27,
+                    33,39,0, 34,15,25, 35,37,2, 36,3,34,
+                    37,59,46, 38,1,32, 41,2,31, 41,55,50,
+                    42,52,49, 43,0,29, 44,7,15, 47,36,58,
+                    48,43,53, 50,5,17, 51,4,16, 54,51,40,
+                    55,10,26, 56,9,21, 56,45,38, 57,44,39,
+                    };
+   add_faces(geom, 3, 40, faces3);
 
-  int faces4[] = {
-      2,  32, 1,  31, 2,  37, 1,  42, 3,  29, 0,  34, 4,  15, 7,  16, 6,  17,
-      5,  14, 6,  19, 5,  12, 6,  47, 5,  48, 9,  26, 10, 21, 9,  27, 10, 20,
-      9,  57, 10, 54, 11, 22, 8,  25, 11, 52, 8,  59, 17, 24, 14, 23, 17, 28,
-      14, 35, 18, 4,  13, 7,  18, 46, 13, 49, 19, 30, 12, 33, 19, 47, 12, 48,
-      22, 16, 25, 15, 22, 52, 25, 59, 24, 11, 23, 8,  24, 28, 23, 35, 24, 58,
-      23, 53, 26, 12, 21, 19, 26, 30, 21, 33, 27, 13, 20, 18, 27, 57, 20, 54,
-      28, 1,  35, 2,  28, 37, 35, 42, 29, 15, 34, 16, 29, 22, 34, 25, 30, 3,
-      33, 0,  30, 39, 33, 40, 32, 18, 31, 13, 32, 27, 31, 20, 37, 46, 42, 49,
-      37, 52, 42, 59, 38, 2,  41, 1,  38, 32, 41, 31, 39, 3,  40, 0,  43, 3,
-      36, 0,  43, 29, 36, 34, 43, 58, 36, 53, 46, 4,  49, 7,  47, 43, 48, 36,
-      47, 58, 48, 53, 50, 6,  45, 5,  50, 17, 45, 14, 50, 38, 45, 41, 50, 55,
-      45, 56, 51, 7,  44, 4,  51, 16, 44, 15, 51, 39, 44, 40, 52, 46, 59, 49,
-      55, 9,  56, 10, 55, 26, 56, 21, 55, 41, 56, 38, 57, 39, 54, 40, 57, 51,
-      54, 44, 58, 11, 53, 8,
-  };
-  add_faces(geom, 4, 60, faces4);
+   int faces4[] = { 2,32,1,31, 2,37,1,42, 3,29,0,34, 4,15,7,16,
+                    6,17,5,14, 6,19,5,12, 6,47,5,48, 9,26,10,21,
+                    9,27,10,20, 9,57,10,54, 11,22,8,25, 11,52,8,59,
+                    17,24,14,23, 17,28,14,35, 18,4,13,7, 18,46,13,49,
+                    19,30,12,33, 19,47,12,48, 22,16,25,15, 22,52,25,59,
+                    24,11,23,8, 24,28,23,35, 24,58,23,53, 26,12,21,19,
+                    26,30,21,33, 27,13,20,18, 27,57,20,54, 28,1,35,2,
+                    28,37,35,42, 29,15,34,16, 29,22,34,25, 30,3,33,0,
+                    30,39,33,40, 32,18,31,13, 32,27,31,20, 37,46,42,49,
+                    37,52,42,59, 38,2,41,1, 38,32,41,31, 39,3,40,0,
+                    43,3,36,0, 43,29,36,34, 43,58,36,53, 46,4,49,7,
+                    47,43,48,36, 47,58,48,53, 50,6,45,5, 50,17,45,14,
+                    50,38,45,41, 50,55,45,56, 51,7,44,4, 51,16,44,15,
+                    51,39,44,40, 52,46,59,49, 55,9,56,10, 55,26,56,21,
+                    55,41,56,38, 57,39,54,40, 57,51,54,44, 58,11,53,8,
+                    };
+   add_faces(geom, 4, 60, faces4);
 
-  int faces5[] = {
-      1,  37, 49, 13, 31, 2,  42, 46, 18, 32, 5,  47, 53, 23, 14, 6,  48, 58,
-      24, 17, 9,  54, 39, 30, 26, 10, 57, 40, 33, 21, 12, 30, 0,  36, 48, 17,
-      35, 1,  41, 45, 19, 33, 3,  43, 47, 20, 13, 4,  44, 54, 22, 15, 4,  46,
-      52, 23, 11, 59, 42, 35, 24, 8,  52, 37, 28, 25, 16, 7,  49, 59, 27, 18,
-      7,  51, 57, 36, 29, 25, 8,  53, 43, 34, 22, 11, 58, 44, 16, 34, 0,  40,
-      50, 14, 28, 2,  38, 50, 56, 26, 19, 6,  51, 15, 29, 3,  39, 55, 21, 12,
-      5,  45, 55, 38, 31, 27, 9,  56, 41, 32, 20, 10,
-  };
-  add_faces(geom, 5, 24, faces5);
+   int faces5[] = { 1,37,49,13,31, 2,42,46,18,32, 5,47,53,23,14,
+                    6,48,58,24,17, 9,54,39,30,26, 10,57,40,33,21,
+                    12,30,0,36,48, 17,35,1,41,45, 19,33,3,43,47,
+                    20,13,4,44,54, 22,15,4,46,52, 23,11,59,42,35,
+                    24,8,52,37,28, 25,16,7,49,59, 27,18,7,51,57,
+                    36,29,25,8,53, 43,34,22,11,58, 44,16,34,0,40,
+                    50,14,28,2,38, 50,56,26,19,6, 51,15,29,3,39,
+                    55,21,12,5,45, 55,38,31,27,9, 56,41,32,20,10,
+                    };
+   add_faces(geom, 5, 24, faces5);
 }
 
-void U76(Geometry &geom) { geom.read_resource("std_pri5"); }
+void U76(Geometry &geom)
+{
+   geom.read_resource("std_pri5");
+}
 
-void U77(Geometry &geom) { geom.read_resource("std_ant5"); }
+void U77(Geometry &geom)
+{
+   geom.read_resource("std_ant5");
+}
 
-void U78(Geometry &geom) { geom.read_resource("std_pri5/2"); }
+void U78(Geometry &geom)
+{
+   geom.read_resource("std_pri5/2");
+}
 
-void U79(Geometry &geom) { geom.read_resource("std_ant5/2"); }
+void U79(Geometry &geom)
+{
+   geom.read_resource("std_ant5/2");
+}
 
-void U80(Geometry &geom) { geom.read_resource("std_ant5/3"); }
+void U80(Geometry &geom)
+{
+   geom.read_resource("std_ant5/3");
+}
 
+// Table of Uniforms by U number
+// U number (Meader Index), Wythoff Symbol, Kaleido Number, Coxeter Number, Wenninger Number, Name, Dual Name
 UniformItem uniform_item_list[] = {
-    {
-        U1, "3|2 3", 6, 15, 1, "tetrahedron", "tetrahedron",
-    },
-    {
-        U2, "2 3|3", 7, 16, 6, "truncated tetrahedron", "triakistetrahedron",
-    },
-    {
-        U3, "3/2 3|3", 8, 37, 68, "octahemioctahedron", "octahemioctacron",
-    },
-    {
-        U4, "3/2 3|2", 9, 36, 67, "tetrahemihexahedron", "tetrahemihexacron",
-    },
-    {
-        U5, "4|2 3", 10, 17, 2, "octahedron", "cube",
-    },
-    {
-        U6, "3|2 4", 11, 18, 3, "cube", "octahedron",
-    },
-    {
-        U7, "2|3 4", 12, 19, 11, "cuboctahedron", "rhombic dodecahedron",
-    },
-    {
-        U8, "2 4|3", 13, 20, 7, "truncated octahedron", "tetrakishexahedron",
-    },
-    {
-        U9, "2 3|4", 14, 21, 8, "truncated cube", "triakisoctahedron",
-    },
-    {
-        U10, "3 4|2", 15, 22, 13, "rhombicuboctahedron",
-        "deltoidal icositetrahedron",
-    },
-    {
-        U11, "2 3 4|", 16, 23, 15, "truncated cuboctahedron",
-        "disdyakisdodecahedron",
-    },
-    {
-        U12, "|2 3 4", 17, 24, 17, "snub cube", "pentagonal icositetrahedron",
-    },
-    {
-        U13, "3/2 4|4", 18, 38, 69, "small cubicuboctahedron",
-        "small hexacronic icositetrahedron",
-    },
-    {
-        U14, "3 4|4/3", 19, 50, 77, "great cubicuboctahedron",
-        "great hexacronic icositetrahedron",
-    },
-    {
-        U15, "4/3 4|3", 20, 51, 78, "cubohemioctahedron", "hexahemioctacron",
-    },
-    {
-        U16, "4/3 3 4|", 21, 52, 79, "cubitruncated cuboctahedron",
-        "tetradyakishexahedron",
-    },
-    {
-        U17, "3/2 4|2", 22, 59, 85, "great rhombicuboctahedron",
-        "great deltoidal icositetrahedron",
-    },
-    {
-        U18, "3/2 2 4|", 23, 60, 86, "small rhombihexahedron",
-        "small rhombihexacron",
-    },
-    {
-        U19, "2 3|4/3", 24, 66, 92, "stellated truncated hexahedron",
-        "great triakisoctahedron",
-    },
-    {
-        U20, "4/3 2 3|", 25, 67, 93, "great truncated cuboctahedron",
-        "great disdyakisdodecahedron",
-    },
-    {
-        U21, "4/3 3/2 2|", 26, 82, 103, "great rhombihexahedron",
-        "great rhombihexacron",
-    },
-    {
-        U22, "5|2 3", 27, 25, 4, "icosahedron", "dodecahedron",
-    },
-    {
-        U23, "3|2 5", 28, 26, 5, "dodecahedron", "icosahedron",
-    },
-    {
-        U24, "2|3 5", 29, 28, 12, "icosidodecahedron",
-        "rhombic triacontahedron",
-    },
-    {
-        U25, "2 5|3", 30, 27, 9, "truncated icosahedron",
-        "pentakisdodecahedron",
-    },
-    {
-        U26, "2 3|5", 31, 29, 10, "truncated dodecahedron",
-        "triakisicosahedron",
-    },
-    {
-        U27, "3 5|2", 32, 30, 14, "rhombicosidodecahedron",
-        "deltoidal hexecontahedron",
-    },
-    {
-        U28, "2 3 5|", 33, 31, 16, "truncated icosidodecahedron",
-        "disdyakistriacontahedron",
-    },
-    {
-        U29, "|2 3 5", 34, 32, 18, "snub dodecahedron",
-        "pentagonal hexecontahedron",
-    },
-    {
-        U30, "3|5/2 3", 35, 39, 70, "small ditrigonal icosidodecahedron",
-        "small triambic icosahedron",
-    },
-    {
-        U31, "5/2 3|3", 36, 40, 71, "small icosicosidodecahedron",
-        "small icosacronic hexecontahedron",
-    },
-    {
-        U32, "|5/2 3 3", 37, 41, 110, "small snub icosicosidodecahedron",
-        "small hexagonal hexecontahedron",
-    },
-    {
-        U33, "3/2 5|5", 38, 42, 72, "small dodecicosidodecahedron",
-        "small dodecacronic hexecontahedron",
-    },
-    {
-        U34, "5|2 5/2", 39, 43, 20, "small stellated dodecahedron",
-        "great dodecahedron",
-    },
-    {
-        U35, "5/2|2 5", 40, 44, 21, "great dodecahedron",
-        "small stellated dodecahedron",
-    },
-    {
-        U36, "2|5/2 5", 41, 45, 73, "great dodecadodecahedron",
-        "medial rhombic triacontahedron",
-    },
-    {
-        U37, "2 5/2|5", 42, 47, 75, "truncated great dodecahedron",
-        "small stellapentakisdodecahedron",
-    },
-    {
-        U38, "5/2 5|2", 43, 48, 76, "rhombidodecadodecahedron",
-        "medial deltoidal hexecontahedron",
-    },
-    {
-        U39, "2 5/2 5|", 44, 46, 74, "small rhombidodecahedron",
-        "small rhombidodecacron",
-    },
-    {
-        U40, "|2 5/2 5", 45, 49, 111, "snub dodecadodecahedron",
-        "medial pentagonal hexecontahedron",
-    },
-    {
-        U41, "3|5/3 5", 46, 53, 80, "ditrigonal dodecadodecahedron",
-        "medial triambic icosahedron",
-    },
-    {
-        U42, "3 5|5/3", 47, 54, 81, "great ditrigonal dodecicosidodecahedron",
-        "great ditrigonal dodecacronic hexecontahedron",
-    },
-    {
-        U43, "5/3 3|5", 48, 55, 82, "small ditrigonal dodecicosidodecahedron",
-        "small ditrigonal dodecacronic hexecontahedron",
-    },
-    {
-        U44, "5/3 5|3", 49, 56, 83, "icosidodecadodecahedron",
-        "medial icosacronic hexecontahedron",
-    },
-    {
-        U45, "5/3 3 5|", 50, 57, 84, "icositruncated dodecadodecahedron",
-        "tridyakisicosahedron",
-    },
-    {
-        U46, "|5/3 3 5", 51, 58, 112, "snub icosidodecadodecahedron",
-        "medial hexagonal hexecontahedron",
-    },
-    {
-        U47, "3/2|3 5", 52, 61, 87, "great ditrigonal icosidodecahedron",
-        "great triambic icosahedron",
-    },
-    {
-        U48, "3/2 5|3", 53, 62, 88, "great icosicosidodecahedron",
-        "great icosacronic hexecontahedron",
-    },
-    {
-        U49, "3/2 3|5", 54, 63, 89, "small icosihemidodecahedron",
-        "small icosihemidodecacron",
-    },
-    {
-        U50, "3/2 3 5|", 55, 64, 90, "small dodecicosahedron",
-        "small dodecicosacron",
-    },
-    {
-        U51, "5/4 5|5", 56, 65, 91, "small dodecahemidodecahedron",
-        "small dodecahemidodecacron",
-    },
-    {
-        U52, "3|2 5/2", 57, 68, 22, "great stellated dodecahedron",
-        "great icosahedron",
-    },
-    {
-        U53, "5/2|2 3", 58, 69, 41, "great icosahedron",
-        "great stellated dodecahedron",
-    },
-    {
-        U54, "2|5/2 3", 59, 70, 94, "great icosidodecahedron",
-        "great rhombic triacontahedron",
-    },
-    {
-        U55, "2 5/2|3", 60, 71, 95, "great truncated icosahedron",
-        "great stellapentakisdodecahedron",
-    },
-    {
-        U56, "2 5/2 3|", 61, 72, 96, "rhombicosahedron", "rhombicosacron",
-    },
-    {
-        U57, "|2 5/2 3", 62, 88, 116, "great snub icosidodecahedron",
-        "great pentagonal hexecontahedron",
-    },
-    {
-        U58, "2 5|5/3", 63, 74, 97, "small stellated truncated dodecahedron",
-        "great pentakisdodekahedron",
-    },
-    {
-        U59, "5/3 2 5|", 64, 75, 98, "truncated dodecadodecahedron",
-        "medial disdyakistriacontahedron",
-    },
-    {
-        U60, "|5/3 2 5", 65, 76, 114, "inverted snub dodecadodecahedron",
-        "medial inverted pentagonal hexecontahedron",
-    },
-    {
-        U61, "5/2 3|5/3", 66, 77, 99, "great dodecicosidodecahedron",
-        "great dodecacronic hexecontahedron",
-    },
-    {
-        U62, "5/3 5/2|3", 67, 78, 100, "small dodecahemicosahedron",
-        "small dodecahemicosacron",
-    },
-    {
-        U63, "5/3 5/2 3|", 68, 79, 101, "great dodecicosahedron",
-        "great dodecicosacron",
-    },
-    {
-        U64, "|5/3 5/2 3", 69, 80, 115, "great snub dodecicosidodecahedron",
-        "great hexagonal hexecontahedron",
-    },
-    {
-        U65, "5/4 5|3", 70, 81, 102, "great dodecahemicosahedron",
-        "great dodecahemicosacron",
-    },
-    {
-        U66, "2 3|5/3", 71, 83, 104, "great stellated truncated dodecahedron",
-        "great triakisicosahedron",
-    },
-    {
-        U67, "5/3 3|2", 72, 84, 105, "great rhombicosidodecahedron",
-        "great deltoidal hexecontahedron",
-    },
-    {
-        U68, "5/3 2 3|", 73, 87, 108, "great truncated icosidodecahedron",
-        "great disdyakistriacontahedron",
-    },
-    {
-        U69, "|5/3 2 3", 74, 73, 113, "great inverted snub icosidodecahedron",
-        "great inverted pentagonal hexecontahedron",
-    },
-    {
-        U70, "5/3 5/2|5/3", 75, 86, 107, "great dodecahemidodecahedron",
-        "great dodecahemidodecacron",
-    },
-    {
-        U71, "3/2 3|5/3", 76, 85, 106, "great icosihemidodecahedron",
-        "great icosihemidodecacron",
-    },
-    {
-        U72, "|3/2 3/2 5/2", 77, 91, 118,
-        "small retrosnub icosicosidodecahedron",
-        "small hexagrammic hexecontahedron",
-    },
-    {
-        U73, "3/2 5/3 2|", 78, 89, 109, "great rhombidodecahedron",
-        "great rhombidodecacron",
-    },
-    {
-        U74, "|3/2 5/3 2", 79, 90, 117, "great retrosnub icosidodecahedron",
-        "great pentagrammic hexecontahedron",
-    },
-    {
-        U75, "3/2 5/3 3 5/2", 80, 92, 119, "great dirhombicosidodecahedron",
-        "great dirhombicosidodecacron",
-    },
-    {
-        U76, "2 5|2", 1, 0, 0, "pentagonal prism", "pentagonal dipyramid",
-    },
-    {
-        U77, "|2 2 5", 2, 0, 0, "pentagonal antiprism",
-        "pentagonal deltohedron",
-    },
-    {
-        U78, "2 5/2|2", 3, 0, 0, "pentagrammic prism", "pentagrammic dipyramid",
-    },
-    {
-        U79, "|2 2 5/2", 4, 0, 0, "pentagrammic antiprism",
-        "pentagrammic deltohedron",
-    },
-    {
-        U80, "|2 2 5/3", 5, 0, 0, "pentagrammic crossed antiprism",
-        "pentagrammic concave deltohedron",
-    },
+   { U1,  "3|2 3",           6,  15,   1, "tetrahedron",                             "tetrahedron", },
+   { U2,  "2 3|3",           7,  16,   6, "truncated tetrahedron",                   "triakistetrahedron", },
+   { U3,  "3/2 3|3",         8,  37,  68, "octahemioctahedron",                      "octahemioctacron", },
+   { U4,  "3/2 3|2",         9,  36,  67, "tetrahemihexahedron",                     "tetrahemihexacron", },
+   { U5,  "4|2 3",          10,  17,   2, "octahedron",                              "cube", },
+   { U6,  "3|2 4",          11,  18,   3, "cube",                                    "octahedron", },
+   { U7,  "2|3 4",          12,  19,  11, "cuboctahedron",                           "rhombic dodecahedron", },
+   { U8,  "2 4|3",          13,  20,   7, "truncated octahedron",                    "tetrakishexahedron", },
+   { U9,  "2 3|4",          14,  21,   8, "truncated cube",                          "triakisoctahedron", },
+   { U10, "3 4|2",          15,  22,  13, "rhombicuboctahedron",                     "deltoidal icositetrahedron", },
+   { U11, "2 3 4|",         16,  23,  15, "truncated cuboctahedron",                 "disdyakisdodecahedron", },
+   { U12, "|2 3 4",         17,  24,  17, "snub cube",                               "pentagonal icositetrahedron", },
+   { U13, "3/2 4|4",        18,  38,  69, "small cubicuboctahedron",                 "small hexacronic icositetrahedron", },
+   { U14, "3 4|4/3",        19,  50,  77, "great cubicuboctahedron",                 "great hexacronic icositetrahedron", },
+   { U15, "4/3 4|3",        20,  51,  78, "cubohemioctahedron",                      "hexahemioctacron", },
+   { U16, "4/3 3 4|",       21,  52,  79, "cubitruncated cuboctahedron",             "tetradyakishexahedron", },
+   { U17, "3/2 4|2",        22,  59,  85, "great rhombicuboctahedron",               "great deltoidal icositetrahedron", },
+   { U18, "3/2 2 4|",       23,  60,  86, "small rhombihexahedron",                  "small rhombihexacron", },
+   { U19, "2 3|4/3",        24,  66,  92, "stellated truncated hexahedron",          "great triakisoctahedron", },
+   { U20, "4/3 2 3|",       25,  67,  93, "great truncated cuboctahedron",           "great disdyakisdodecahedron", },
+   { U21, "4/3 3/2 2|",     26,  82, 103, "great rhombihexahedron",                  "great rhombihexacron", },
+   { U22, "5|2 3",          27,  25,   4, "icosahedron",                             "dodecahedron", },
+   { U23, "3|2 5",          28,  26,   5, "dodecahedron",                            "icosahedron", },
+   { U24, "2|3 5",          29,  28,  12, "icosidodecahedron",                       "rhombic triacontahedron", },
+   { U25, "2 5|3",          30,  27,   9, "truncated icosahedron",                   "pentakisdodecahedron", },
+   { U26, "2 3|5",          31,  29,  10, "truncated dodecahedron",                  "triakisicosahedron", },
+   { U27, "3 5|2",          32,  30,  14, "rhombicosidodecahedron",                  "deltoidal hexecontahedron", },
+   { U28, "2 3 5|",         33,  31,  16, "truncated icosidodecahedron",             "disdyakistriacontahedron", },
+   { U29, "|2 3 5",         34,  32,  18, "snub dodecahedron",                       "pentagonal hexecontahedron", },
+   { U30, "3|5/2 3",        35,  39,  70, "small ditrigonal icosidodecahedron",      "small triambic icosahedron", },
+   { U31, "5/2 3|3",        36,  40,  71, "small icosicosidodecahedron",             "small icosacronic hexecontahedron", },
+   { U32, "|5/2 3 3",       37,  41, 110, "small snub icosicosidodecahedron",        "small hexagonal hexecontahedron", },
+   { U33, "3/2 5|5",        38,  42,  72, "small dodecicosidodecahedron",            "small dodecacronic hexecontahedron", },
+   { U34, "5|2 5/2",        39,  43,  20, "small stellated dodecahedron",            "great dodecahedron", },
+   { U35, "5/2|2 5",        40,  44,  21, "great dodecahedron",                      "small stellated dodecahedron", },
+   { U36, "2|5/2 5",        41,  45,  73, "great dodecadodecahedron",                "medial rhombic triacontahedron", },
+   { U37, "2 5/2|5",        42,  47,  75, "truncated great dodecahedron",            "small stellapentakisdodecahedron", },
+   { U38, "5/2 5|2",        43,  48,  76, "rhombidodecadodecahedron",                "medial deltoidal hexecontahedron", },
+   { U39, "2 5/2 5|",       44,  46,  74, "small rhombidodecahedron",                "small rhombidodecacron", },
+   { U40, "|2 5/2 5",       45,  49, 111, "snub dodecadodecahedron",                 "medial pentagonal hexecontahedron", },
+   { U41, "3|5/3 5",        46,  53,  80, "ditrigonal dodecadodecahedron",           "medial triambic icosahedron", },
+   { U42, "3 5|5/3",        47,  54,  81, "great ditrigonal dodecicosidodecahedron", "great ditrigonal dodecacronic hexecontahedron", },
+   { U43, "5/3 3|5",        48,  55,  82, "small ditrigonal dodecicosidodecahedron", "small ditrigonal dodecacronic hexecontahedron", },
+   { U44, "5/3 5|3",        49,  56,  83, "icosidodecadodecahedron",                 "medial icosacronic hexecontahedron", },
+   { U45, "5/3 3 5|",       50,  57,  84, "icositruncated dodecadodecahedron",       "tridyakisicosahedron", },
+   { U46, "|5/3 3 5",       51,  58, 112, "snub icosidodecadodecahedron",            "medial hexagonal hexecontahedron", },
+   { U47, "3/2|3 5",        52,  61,  87, "great ditrigonal icosidodecahedron",      "great triambic icosahedron", },
+   { U48, "3/2 5|3",        53,  62,  88, "great icosicosidodecahedron",             "great icosacronic hexecontahedron", },
+   { U49, "3/2 3|5",        54,  63,  89, "small icosihemidodecahedron",             "small icosihemidodecacron", },
+   { U50, "3/2 3 5|",       55,  64,  90, "small dodecicosahedron",                  "small dodecicosacron", },
+   { U51, "5/4 5|5",        56,  65,  91, "small dodecahemidodecahedron",            "small dodecahemidodecacron", },
+   { U52, "3|2 5/2",        57,  68,  22, "great stellated dodecahedron",            "great icosahedron", },
+   { U53, "5/2|2 3",        58,  69,  41, "great icosahedron",                       "great stellated dodecahedron", },
+   { U54, "2|5/2 3",        59,  70,  94, "great icosidodecahedron",                 "great rhombic triacontahedron", },
+   { U55, "2 5/2|3",        60,  71,  95, "great truncated icosahedron",             "great stellapentakisdodecahedron", },
+   { U56, "2 5/2 3|",       61,  72,  96, "rhombicosahedron",                        "rhombicosacron", },
+   { U57, "|2 5/2 3",       62,  88, 116, "great snub icosidodecahedron",            "great pentagonal hexecontahedron", },
+   { U58, "2 5|5/3",        63,  74,  97, "small stellated truncated dodecahedron",  "great pentakisdodekahedron", },
+   { U59, "5/3 2 5|",       64,  75,  98, "truncated dodecadodecahedron",            "medial disdyakistriacontahedron", },
+   { U60, "|5/3 2 5",       65,  76, 114, "inverted snub dodecadodecahedron",        "medial inverted pentagonal hexecontahedron", },
+   { U61, "5/2 3|5/3",      66,  77,  99, "great dodecicosidodecahedron",            "great dodecacronic hexecontahedron", },
+   { U62, "5/3 5/2|3",      67,  78, 100, "small dodecahemicosahedron",              "small dodecahemicosacron", },
+   { U63, "5/3 5/2 3|",     68,  79, 101, "great dodecicosahedron",                  "great dodecicosacron", },
+   { U64, "|5/3 5/2 3",     69,  80, 115, "great snub dodecicosidodecahedron",       "great hexagonal hexecontahedron", },
+   { U65, "5/4 5|3",        70,  81, 102, "great dodecahemicosahedron",              "great dodecahemicosacron", },
+   { U66, "2 3|5/3",        71,  83, 104, "great stellated truncated dodecahedron",  "great triakisicosahedron", },
+   { U67, "5/3 3|2",        72,  84, 105, "great rhombicosidodecahedron",            "great deltoidal hexecontahedron", },
+   { U68, "5/3 2 3|",       73,  87, 108, "great truncated icosidodecahedron",       "great disdyakistriacontahedron", },
+   { U69, "|5/3 2 3",       74,  73, 113, "great inverted snub icosidodecahedron",   "great inverted pentagonal hexecontahedron", },
+   { U70, "5/3 5/2|5/3",    75,  86, 107, "great dodecahemidodecahedron",            "great dodecahemidodecacron", },
+   { U71, "3/2 3|5/3",      76,  85, 106, "great icosihemidodecahedron",             "great icosihemidodecacron", },
+   { U72, "|3/2 3/2 5/2",   77,  91, 118, "small retrosnub icosicosidodecahedron",   "small hexagrammic hexecontahedron", },
+   { U73, "3/2 5/3 2|",     78,  89, 109, "great rhombidodecahedron",                "great rhombidodecacron", },
+   { U74, "|3/2 5/3 2",     79,  90, 117, "great retrosnub icosidodecahedron",       "great pentagrammic hexecontahedron", },
+   { U75, "3/2 5/3 3 5/2",  80,  92, 119, "great dirhombicosidodecahedron",          "great dirhombicosidodecacron", },
+   { U76, "2 5|2",           1,   0,   0, "pentagonal prism",                        "pentagonal dipyramid", },
+   { U77, "|2 2 5",          2,   0,   0, "pentagonal antiprism",                    "pentagonal deltohedron", },
+   { U78, "2 5/2|2",         3,   0,   0, "pentagrammic prism",                      "pentagrammic dipyramid", },
+   { U79, "|2 2 5/2",        4,   0,   0, "pentagrammic antiprism",                  "pentagrammic deltohedron", },
+   { U80, "|2 2 5/3",        5,   0,   0, "pentagrammic crossed antiprism",          "pentagrammic concave deltohedron", },
 };
 
 }; // anonymouse namespace
+// clang-format on
 
 Uniform::Uniform()
 {
