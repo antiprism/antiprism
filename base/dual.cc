@@ -90,15 +90,19 @@ bool sym_repeat(Geometry &geom, const Geometry &part, const Symmetry &sym,
   return true;
 }
 
+// If a face does not contain vertex v0 followed, in cyclic order, by v1
+// then the face will be reversed
 void orient_face(vector<int> &face, int v0, int v1)
 {
+  bool found = false;
   for (unsigned int i = 0; i < face.size(); i++) {
-    if (face[i] == v0) {
-      if (face[(i + 1) % face.size()] != v1)
-        reverse(face.begin(), face.end());
-      break;
+    if (face[i] == v0 && face[(i + 1) % face.size()] == v1) {
+       found = true;
+       break;
     }
   }
+  if (!found)
+     reverse(face.begin(), face.end());
 }
 
 int orient_geom(Geometry &geom, vector<vector<int>> *parts)
