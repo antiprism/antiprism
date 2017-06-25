@@ -1,0 +1,46 @@
+#define HL_PROG class=curpage
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<<TITLE_HEAD>>
+
+<<TOP_LINKS>>
+
+<<USAGE_START>>
+<pre class="prog_help">
+<<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</pre>
+<<USAGE_END>>
+
+
+<<EXAMPLES_START>>
+Display the stellation diagram for the icosahedron in I symmetry
+<<CMDS_START>>
+stellate ico -f 0 -s I | antiview
+<<CMDS_END>>
+
+Create a torroid stellation from the icosahedron. off_trans is used
+to position the icosahedron in D5 symmetry. Then face 18 is used from
+stellation diagram for icosahedron face 0. Faces 4 and 47 are used from
+stellation diagram for icosahedron face 3. -s D5v specifies which
+sub-symmetry to use.
+<<CMDS_START>>
+off_trans -y D5 ico | stellate -f 0,18 -f 3,4,47 -s D5v | antiview
+<<CMDS_END>>
+<<EXAMPLES_END>>
+
+
+<<NOTES_START>>
+<i>stellate</i> was written by
+<a href="http://www.interocitors.com/polyhedra/">Roger Kaufman</a>.
+<p>
+It offers a way to generate stellation diagrams and build off of
+these to generate stellations.
+<<NOTES_END>>
+
+#include "<<END>>"

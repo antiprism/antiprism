@@ -28,12 +28,13 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <algorithm>
-#include <map>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
 #include <vector>
+#include <algorithm>
+#include <map>
+#include <set>
 
 #include "coloring.h"
 #include "geometryinfo.h"
@@ -45,8 +46,8 @@
 
 using std::string;
 using std::vector;
-using std::swap;
 using std::map;
+using std::set;
 
 using namespace ::anti;
 
@@ -119,6 +120,7 @@ static void make_resource_dual(Geometry &geom, bool is_std = false)
     set_resource_polygon_color(geom);
 }
 
+// clang-format off
 const char *alt_names[][2] = {
     {"tet", "u1"},
     {"tetrahedron", "u1"},
@@ -221,14 +223,6 @@ const char *alt_names[][2] = {
     {"disd_tri", "u28_d"},
     {"pentagonal_hexacontahedron", "u29_d"},
     {"pen_hexac", "u29_d"},
-
-    // Wenninger Numbers which are not Uniforms
-    {"w19", "uc4"},
-    {"w23", "uc17"},
-    {"w24", "uc5"},
-    {"w25", "uc6"},
-    {"w26", "u30_d"},
-    {"w34", "u47_d"},
 
     // Bowers short names for Uniforms
     {"tet", "u1"},
@@ -508,59 +502,79 @@ const char *alt_names[][2] = {
     {"thawro", "j92"},
 };
 
-const char *u_abbrevs[][2] = {{"tr", "truncated"},
-                              {"sm", "small"},
-                              {"gr", "great"},
-                              {"st", "stellated"},
-                              {"sn", "snub"},
-                              {"tet", "tetrahedron"},
-                              {"ico", "icosahedron"},
-                              {"icosa", "icosahedron"},
-                              {"dod", "dodecahedron"},
-                              {"oct", "octahedron"},
-                              {"cubo", "cuboctahedron"},
-                              {"icosid", "icosidodecahedron"}};
+const char *u_abbrevs[][2] = {
+   {"tr",     "truncated"},
+   {"sm",     "small"},
+   {"gr",     "great"},
+   {"st",     "stellated"},
+   {"sn",     "snub"},
+   {"tet",    "tetrahedron"},
+   {"ico",    "icosahedron"},
+   {"icosa",  "icosahedron"},
+   {"dod",    "dodecahedron"},
+   {"oct",    "octahedron"},
+   {"cubo",   "cuboctahedron"},
+   {"icosid", "icosidodecahedron"}
+};
 
-const char *ud_abbrevs[][2] = {{"sm", "small"},
-                               {"gr", "great"},
-                               {"st", "stellated"},
-                               {"inv", "inverted"},
-                               {"delt", "deltoidal"},
-                               {"pen", "pentagonal"},
-                               {"med", "medial"},
-                               {"triam", "triambic"},
-                               {"ditrig", "ditrigonal"},
-                               {"tri", "triakis"},
-                               {"tetr", "tetrakis"},
-                               {"pent", "pentakis"},
-                               {"hex", "hexakis"},
-                               {"disd", "disdyakis"},
-                               {"tet", "tetrahedron"},
-                               {"ico", "icosahedron"},
-                               {"icosa", "icosahedron"},
-                               {"dod", "dodecahedron"},
-                               {"oct", "octahedron"},
-                               {"cubo", "cuboctahedron"},
-                               {"hexa", "hexahedron"},
-                               {"hexec", "hexecontahedron"},
-                               {"icositet", "icositetrahedron"}};
+const char *ud_abbrevs[][2] = {
+   {"sm",      "small"},
+   {"gr",      "great"},
+   {"st",      "stellated"},
+   {"inv",     "inverted"},
+   {"delt",    "deltoidal"},
+   {"pen",     "pentagonal"},
+   {"med",     "medial"},
+   {"triam",   "triambic"},
+   {"ditrig",  "ditrigonal"},
+   {"tri",     "triakis"},
+   {"tetr",    "tetrakis"},
+   {"pent",    "pentakis"},
+   {"hex",     "hexakis"},
+   {"disd",    "disdyakis"},
+   {"tet",     "tetrahedron"},
+   {"ico",     "icosahedron"},
+   {"icosa",   "icosahedron"},
+   {"dod",     "dodecahedron"},
+   {"oct",     "octahedron"},
+   {"cubo",    "cuboctahedron"},
+   {"hexa",    "hexahedron"},
+   {"hexec",   "hexecontahedron"},
+   {"icositet","icositetrahedron"}
+};
 
 const char *uc_abbrevs[][2] = {
-    {"tr", "truncated"},      {"sm", "small"},
-    {"gr", "great"},          {"st", "stellated"},
-    {"sn", "snub"},           {"tet", "tetrahedra"},
-    {"ico", "icosahedra"},    {"icosa", "icosahedra"},
-    {"dod", "dodecahedra"},   {"oct", "octahedra"},
-    {"cubo", "cuboctahedra"}, {"icosid", "icosidodecahedra"},
-    {"pri", "prisms"},        {"ant", "antiprisms"},
-    {"rot", "rotational"}};
+   {"tr",     "truncated"},
+   {"sm",     "small"},
+   {"gr",     "great"},
+   {"st",     "stellated"},
+   {"sn",     "snub"},
+   {"tet",    "tetrahedra"},
+   {"ico",    "icosahedra"},
+   {"icosa",  "icosahedra"},
+   {"dod",    "dodecahedra"},
+   {"oct",    "octahedra"},
+   {"cubo",   "cuboctahedra"},
+   {"icosid", "icosidodecahedra"},
+   {"pri",    "prisms"},
+   {"ant",    "antiprisms"},
+   {"rot",    "rotational"}
+};
 
 const char *j_abbrevs[][2] = {
-    {"tri", "triangular"},   {"sq", "square"},       {"squ", "square"},
-    {"pe", "pentagonal"},    {"pen", "pentagonal"},  {"el", "elongated"},
-    {"ge", "gyroelongated"}, {"tr", "truncated"},    {"au", "augmented"},
-    {"ba", "biaugmenbted"},  {"ta", "triaugmented"},
+   {"tri", "triangular"},
+   {"sq",  "square"},
+   {"squ", "square"},
+   {"pe",  "pentagonal"},
+   {"pen", "pentagonal"},
+   {"el",  "elongated"},
+   {"ge",  "gyroelongated"},
+   {"tr",  "truncated"},
+   {"au",  "augmented"},
+   {"ba",  "biaugmenbted"},
+   {"ta",  "triaugmented"},
 };
+// clang-format on
 
 int make_resource_uniform(Geometry &geom, string name, bool is_std,
                           char *errmsg = nullptr)
@@ -574,6 +588,10 @@ int make_resource_uniform(Geometry &geom, string name, bool is_std,
   Uniform uni;
   int sym_no;
   if (read_int(name.c_str() + 1 + is_dual, &sym_no)) {
+    // bypass for wenninger stellations, found in next section
+    if (strchr("wW", name[0]) && (sym_no == 19 || (sym_no >= 23 && sym_no <= 40) || (sym_no >= 42 && sym_no <= 66)))
+      return -1;
+
     // Uniform, Kaleido, Coxeter, or Wenninger number
     if (is_dual)
       name.erase(1, 1);
@@ -611,6 +629,65 @@ int make_resource_uniform(Geometry &geom, string name, bool is_std,
     double e_len = geom.edge_vec(geom.faces(0, 0), geom.faces(0, 1)).len();
     geom.transform(Trans3d::scale(1 / e_len));
     set_resource_polygon_color(geom);
+  }
+
+  // this is here if 'd' was the second character
+  if (is_dual)
+    make_resource_dual(geom, is_std);
+
+  return 0; // name found
+}
+
+int make_resource_wenninger(Geometry &geom, string name, bool is_std,
+                            char *errmsg = nullptr) {
+  if (name.size() < 2 || !strchr("wW", name[0]) ||
+      name.find('.') != string::npos)
+    return -1; // not wenninger name (the "." indicates a likely local file)
+               // so the name is not handled
+
+  bool is_dual = strchr("dD", name[1]);
+  Wenninger wenn;
+  int sym_no;
+  if (read_int(name.c_str() + 1, &sym_no)) {
+    if (is_dual)
+      name.erase(1, 1);
+    sym_no--;
+    if (sym_no < 0 || !wenn.test_valid(sym_no)) {
+      if (errmsg)
+        snprintf(errmsg, MSG_SZ, "wenninger stellation number out of range");
+      return 1; // fail
+    }
+  } else
+    return -1; // not integer
+
+  wenn.get_poly(geom, sym_no);
+
+  // if is_std, have to strip built in color
+  if (is_std) {
+    geom.colors(VERTS).clear();
+    geom.colors(EDGES).clear();
+    geom.colors(FACES).clear();
+  }
+  // color by symmetry or compound looks better
+  else {
+    Coloring clrng(&geom);
+    ColorMap *cmap = colormap_from_name("compound");
+    clrng.add_cmap(cmap);
+
+    GeometryInfo info(geom);
+    if (info.num_parts() > 1)
+      // color by compound
+      clrng.f_parts(true);
+    else {
+      // color by symmetry
+      Symmetry sym;
+      vector<vector<set<int>>> sym_equivs;
+      sym.init(geom, &sym_equivs);
+      clrng.f_sets(sym_equivs[2], true);
+    }
+
+    // edges can be confusing. set them to invisible
+    Coloring(&geom).vef_one_col(Color::invisible, Color::invisible, Color());
   }
 
   // this is here if 'd' was the second character
@@ -700,7 +777,7 @@ int make_resource_uniform_compound(Geometry &geom, string name, bool is_std,
 int make_resource_johnson(Geometry &geom, string name, bool is_std,
                           char *errmsg = nullptr)
 {
-  // If model name ands in _raw then don't symmetry align
+  // If model name ends in _raw then don't symmetry align
   bool sym_align = true;
   if (name.size() > 4 && name.substr(name.size() - 4) == "_raw") {
     name.resize(name.size() - 4);
@@ -1218,6 +1295,7 @@ static void rh_hexacontahedron(Geometry &geom, bool is_std = false)
     set_resource_polygon_color(geom);
 }
 
+// clang-format off
 // http://www.math.unm.edu/~vageli/papers/FLEX/Szilassi.pdf
 static void csaszar(Geometry &geom, bool is_std = false)
 {
@@ -1264,11 +1342,20 @@ static void szilassi(Geometry &geom, bool is_std = false)
 {
   double crds[14][3] = {
       // Coordinates, Tom Ace http://www.minortriad.com/szilassi.html
-      {0.0, -12.6, 12.0}, {0.0, 12.6, 12.0},   {-7.0, 0.0, -2.0},
-      {-2.0, 5.0, 8.0},   {-12.0, 0.0, -12.0}, {-7.0, -2.5, -2.0},
-      {2.0, -5.0, 8.0},   {7.0, 0.0, -2.0},    {12.0, 0.0, -12.0},
-      {7.0, 2.5, -2.0},   {-3.75, -3.75, 3.0}, {3.75, 3.75, 3.0},
-      {-4.5, 2.5, -2.0},  {4.5, -2.5, -2.0},
+      {0.0, -12.6, 12.0},
+      {0.0, 12.6, 12.0},
+      {-7.0, 0.0, -2.0},
+      {-2.0, 5.0, 8.0},
+      {-12.0, 0.0, -12.0},
+      {-7.0, -2.5, -2.0},
+      {2.0, -5.0, 8.0},
+      {7.0, 0.0, -2.0},
+      {12.0, 0.0, -12.0},
+      {7.0, 2.5, -2.0},
+      {-3.75, -3.75, 3.0},
+      {3.75, 3.75, 3.0},
+      {-4.5, 2.5, -2.0},
+      {4.5, -2.5, -2.0},
   };
 
   geom.clear_all();
@@ -1294,24 +1381,24 @@ int make_resource_misc_poly(Geometry &geom, string name, bool is_std,
     return -1; // not misc poly name (the "." indicates a likely local file)
                // so the name is not handled
 
-  map<string, std_model_func> models;
-  models["rhombic_dodecahedron"] = rh_dodecahedron;
-  models["rh_dodecahedron"] = rh_dodecahedron;
-  models["rh_dod"] = rh_dodecahedron;
-  models["rd"] = rh_dodecahedron;
-  models["rhombic_triacontahedron"] = rh_triacontahedron;
-  models["rh_triacontahedron"] = rh_triacontahedron;
-  models["rh_tri"] = rh_triacontahedron;
-  models["rt"] = rh_triacontahedron;
-  models["rhombic_enneacontahedron"] = rh_enneacontahedron;
-  models["rh_enneacontahedron"] = rh_enneacontahedron;
-  models["rh_ennea"] = rh_enneacontahedron;
-  models["re"] = rh_enneacontahedron;
-  models["rhombic_hexacontahedron"] = rh_hexacontahedron;
-  models["rh_hexacontahedron"] = rh_hexacontahedron;
-  models["rh_hex"] = rh_hexacontahedron;
-  models["szilassi"] = szilassi;
-  models["csaszar"] = csaszar;
+   map<string, std_model_func> models;
+   models["rhombic_dodecahedron"]        = rh_dodecahedron;
+   models["rh_dodecahedron"]             = rh_dodecahedron;
+   models["rh_dod"]                      = rh_dodecahedron;
+   models["rd"]                          = rh_dodecahedron;
+   models["rhombic_triacontahedron"]     = rh_triacontahedron;
+   models["rh_triacontahedron"]          = rh_triacontahedron;
+   models["rh_tri"]                      = rh_triacontahedron;
+   models["rt"]                          = rh_triacontahedron;
+   models["rhombic_enneacontahedron"]    = rh_enneacontahedron;
+   models["rh_enneacontahedron"]         = rh_enneacontahedron;
+   models["rh_ennea"]                    = rh_enneacontahedron;
+   models["re"]                          = rh_enneacontahedron;
+   models["rhombic_hexacontahedron"]     = rh_hexacontahedron;
+   models["rh_hexacontahedron"]          = rh_hexacontahedron;
+   models["rh_hex"]                      = rh_hexacontahedron;
+   models["szilassi"]                    = szilassi;
+   models["csaszar"]                     = csaszar;
 
   auto mi = models.find(name);
   if (mi != models.end()) {
@@ -1321,6 +1408,7 @@ int make_resource_misc_poly(Geometry &geom, string name, bool is_std,
 
   return -1; // not handled
 }
+// clang-format on
 
 bool make_resource_geom(Geometry &geom, string name, char *errmsg)
 {
@@ -1375,6 +1463,17 @@ bool make_resource_geom(Geometry &geom, string name, char *errmsg)
 
   if (!geom_ok) {
     int ret = make_resource_uniform(geom, name, is_std, errmsg2);
+    if (ret == 0)
+      geom_ok = true;
+    else if (ret > 0) {
+      if (errmsg)
+        strcpy_msg(errmsg, errmsg2);
+      return false;
+    }
+  }
+
+  if (!geom_ok) {
+    int ret = make_resource_wenninger(geom, name, is_std, errmsg2);
     if (ret == 0)
       geom_ok = true;
     else if (ret > 0) {

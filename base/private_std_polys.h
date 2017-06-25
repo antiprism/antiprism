@@ -137,4 +137,25 @@ public:
   std::string get_tri_sym();
 };
 
+struct WenningerItem {
+  int number;
+  const char *poly;
+  const char *diagram_str1;
+  const char *diagram_str2;
+  const char *diagram_str3;
+  const char *diagram_str4;
+  const char *sub_sym;
+  bool remove_inline_verts;
+};
+
+class Wenninger {
+private:
+  WenningerItem *Wenninger_items;
+
+public:
+  Wenninger();
+  int get_poly(anti::Geometry &geom, int sym);
+  bool test_valid(int idx);
+};
+
 #endif // PRIVATE_STD_POLYS_H

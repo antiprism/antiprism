@@ -1,0 +1,42 @@
+#define HL_PROG class=curpage
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<<TITLE_HEAD>>
+
+<<TOP_LINKS>>
+
+<<USAGE_START>>
+<pre class="prog_help">
+<<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</pre>
+<<USAGE_END>>
+
+
+<<EXAMPLES_START>>
+View stellation number 9 in the list
+<<CMDS_START>>
+miller m9 | antiview
+<<CMDS_END>>
+
+View the E shell with face and edge connectivity by color
+<<CMDS_START>>
+miller m_E -F C -E C -V e | antiview -v 0.05
+<<CMDS_END>>
+<<EXAMPLES_END>>
+
+
+<<NOTES_START>>
+<i>miller</i> was written by
+<a href="http://www.interocitors.com/polyhedra/">Roger Kaufman</a>.
+<p>
+It is based on Miller's 59 stellations of the icosahedron. But
+it also adds further discoveries and possibilities.
+<<NOTES_END>>
+
+#include "<<END>>"

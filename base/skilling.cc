@@ -30,8 +30,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <ctype.h>
-
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -48,20 +46,15 @@ using std::vector;
 
 using namespace anti;
 
-// oct_case = 0 // UC19 20 Tetrahemihexahedra 45.6696674755810220... degrees
-// (using 0 degrees as starting point)
-// oct_case = 1 // UC14 20 Octahedra -23.430911382616046... degrees (using UC10
-// which starts at -45 degrees) (negate the returned angle)
-//                 case 1 not currently used. Instead use oct_case = 2 and add
-//                 45.6696674755810220... = 67.908423568545970 degrees
-// oct_case = 2 // UC15 10 Octahedra  22.238756092964941... degrees (using UC10
-// white starts at -45 degrees)
-//              // UC16 10 Octahedra  82.238756092964941... degrees (use
-//              oct_case = 2 and add 60 degrees)
-//                 note: information only. UC15 and UC16 are generated with 0
-//                 and 60 degrees using the same tranformation used by 20
-//                 Tetrahemihexahedra
+// clang-format off
+// oct_case = 0 // UC19 20 Tetrahemihexahedra 45.6696674755810220... degrees (using 0 degrees as starting point)
+// oct_case = 1 // UC14 20 Octahedra -23.430911382616046... degrees (using UC10 which starts at -45 degrees) (negate the returned angle)
+//                 case 1 not currently used. Instead use oct_case = 2 and add 45.6696674755810220... = 67.908423568545970 degrees
+// oct_case = 2 // UC15 10 Octahedra  22.238756092964941... degrees (using UC10 white starts at -45 degrees)
+//              // UC16 10 Octahedra  82.238756092964941... degrees (use oct_case = 2 and add 60 degrees)
+//                 note: information only. UC15 and UC16 are generated with 0 and 60 degrees using the same tranformation used by 20 Tetrahemihexahedra
 // returns radians
+// clang-format on
 static double octahedra_angle(int oct_case)
 {
   double a = 1 / (phi * phi) - 1 / sqrt(phi);
@@ -131,13 +124,12 @@ static void build_uniform_compound(Geometry &geom, int uc_case, int uc_num,
     }
     transform_and_repeat(geom, sym_to, sym_from);
   }
-  else
-      // UC01 6 tetrahedra rotational
-      // UC02 12 tetrahedra rotational
-      // UC03 6 tetrahedra
-      // RK - for UC02 & UC03, generate this model actually as 6 stella
-      // octangula
-      if (uc_case == 1) {
+  else if (uc_case == 1) {
+    // UC01 6 tetrahedra rotational
+    // UC02 12 tetrahedra rotational
+    // UC03 6 tetrahedra
+    // RK - for UC02 & UC03, generate this model actually as 6 stella
+    // octangula
     if (uc_num == 2 || uc_num == 3) {
       transform_and_repeat(geom, "S2", sym_from);
       if (uc_num == 3)
@@ -145,23 +137,21 @@ static void build_uniform_compound(Geometry &geom, int uc_case, int uc_num,
     }
     transform_and_repeat(geom, sym_to, sym_from, Trans3d::rotate(0, 0, angle));
   }
-  else
-      // UC07 6 cubes rotational
-      if (uc_case == 2) {
+  else if (uc_case == 2) {
+    // UC07 6 cubes rotational
     geom.transform(Trans3d::rotate(0, 0, angle));
     transform_and_repeat(geom, "D2", sym_from);
     transform_and_repeat(geom, sym_to, "D2");
   }
-  else
-      // UC10 4 octahedra rotational
-      // UC11 8 octahedra rotational
-      // UC12 4 octahedra
-      // UC13 20 octahedra rotational
-      // UC14 20 octahedra
-      // UC30 4 triangular prisms
-      // UC31 8 triangular prisms
-      // UC38 4 hexagonal prisms
-      if (uc_case == 3) {
+  else if (uc_case == 3) {
+    // UC10 4 octahedra rotational
+    // UC11 8 octahedra rotational
+    // UC12 4 octahedra
+    // UC13 20 octahedra rotational
+    // UC14 20 octahedra
+    // UC30 4 triangular prisms
+    // UC31 8 triangular prisms
+    // UC38 4 hexagonal prisms
     string sym_to_local = sym_to;
     if (uc_num == 10 || uc_num == 11 || uc_num == 13 || uc_num == 14) {
       angle -= M_PI / 4; // variable (subtract 45 degrees so 0 causes
@@ -178,11 +168,10 @@ static void build_uniform_compound(Geometry &geom, int uc_case, int uc_num,
     if (uc_num == 11 || uc_num == 13 || uc_num == 14)
       transform_and_repeat(geom, sym_to, "T");
   }
-  else
-      // UC15 10 octahedra 1 (0 degrees)
-      // UC16 10 octahedra 2 (60 degrees)
-      // UC19 20 tetrahemihexahedra
-      if (uc_case == 4) {
+  else if (uc_case == 4) {
+    // UC15 10 octahedra 1 (0 degrees)
+    // UC16 10 octahedra 2 (60 degrees)
+    // UC19 20 tetrahemihexahedra
     if (uc_num == 19)
       geom.transform(
           Trans3d::rotate(Vec3d(0, 0, 1),
@@ -196,23 +185,21 @@ static void build_uniform_compound(Geometry &geom, int uc_case, int uc_num,
                                         Vec3d(-phi, -1, phi + 1)) *
                              Trans3d::rotate(0, 0, angle));
   }
-  else
-      // UC20 2k n d gonal prisms rotational
-      // UC21 k n d gonal prisms
-      // UC22 2k n odd d gonal antiprisms rotational
-      // UC23 k n odd d gonal antiprisms
-      // UC24 2k n even d gonal antiprisms rotational
-      // UC25 k n even d gonal antiprisms
-      if (uc_case == 5) {
+  else if (uc_case == 5) {
+    // UC20 2k n d gonal prisms rotational
+    // UC21 k n d gonal prisms
+    // UC22 2k n odd d gonal antiprisms rotational
+    // UC23 k n odd d gonal antiprisms
+    // UC24 2k n even d gonal antiprisms rotational
+    // UC25 k n even d gonal antiprisms
     if (uc_num == 20 || uc_num == 22 || uc_num == 24)
       transform_and_repeat(geom, sym_from, sym_from,
                            Trans3d::rotate(0, 0, angle)); // variable
     transform_and_repeat(geom, sym_to, sym_from);
   }
-  else
-      // UC26 12 pentagonal antiprisms rotational
-      // UC28 12 pentagrammic crossed antiprisms rotational
-      if (uc_case == 6) {
+  else if (uc_case == 6) {
+    // UC26 12 pentagonal antiprisms rotational
+    // UC28 12 pentagrammic crossed antiprisms rotational
     angle += (uc_num == 26) ? M_PI / 5 : 0; // UC26 needs 36 degrees to
                                             // correspond to the 0 degree point
                                             // of UC28
@@ -221,18 +208,17 @@ static void build_uniform_compound(Geometry &geom, int uc_case, int uc_num,
     transform_and_repeat(geom, sym_to, "D10h",
                          Trans3d::rotate(Vec3d(0, 0, 1), Vec3d(0, 1, phi)));
   }
-  else
-      // UC27 6 pentagonal antiprisms (angle = 0)
-      // UC29 6 pentagrammic crossed antiprisms
-      // UC34 6 pentagonal prisms
-      // UC35 12 pentagonal prisms
-      // UC36 6 pentagrammic prisms
-      // UC37 12 pentagrammic prisms
-      // UC40 6 decagonal prisms
-      // UC41 6 decagrammic prisms
-      // UC44 6 pentagrammic antiprisms
-      // UC45 12 pentagrammic antiprisms
-      if (uc_case == 7) {
+  else if (uc_case == 7) {
+    // UC27 6 pentagonal antiprisms (angle = 0)
+    // UC29 6 pentagrammic crossed antiprisms
+    // UC34 6 pentagonal prisms
+    // UC35 12 pentagonal prisms
+    // UC36 6 pentagrammic prisms
+    // UC37 12 pentagrammic prisms
+    // UC40 6 decagonal prisms
+    // UC41 6 decagrammic prisms
+    // UC44 6 pentagrammic antiprisms
+    // UC45 12 pentagrammic antiprisms
     if (uc_num == 35 || uc_num == 37 || uc_num == 45) {
       transform_and_repeat(geom, "D10h", sym_from);
       sym_from = "D10h";
@@ -241,11 +227,10 @@ static void build_uniform_compound(Geometry &geom, int uc_case, int uc_num,
                          Trans3d::rotate(Vec3d(0, 0, 1), Vec3d(0, 1, phi)) *
                              Trans3d::rotate(0, 0, angle));
   }
-  else
-      // UC32 10 triangular prisms
-      // UC33 20 triangular prisms
-      // UC39 10 hexagonal prisms
-      if (uc_case == 8) {
+  else if (uc_case == 8) {
+    // UC32 10 triangular prisms
+    // UC33 20 triangular prisms
+    // UC39 10 hexagonal prisms
     if (uc_num == 33) {
       transform_and_repeat(geom, "D6h", sym_from);
       sym_from = "D6h";
@@ -255,13 +240,12 @@ static void build_uniform_compound(Geometry &geom, int uc_case, int uc_num,
         Trans3d::rotate(Vec3d(0, 0, 1), Vec3d(1 / phi, 0, phi)) *
             Trans3d::rotate(0, 0, angle));
   }
-  else
-      // UC08 3 cubes
-      // UC47 5 icosahedra
-      // UC49 5 great dodecahedra
-      // UC51 5 small stellated dodecahedra
-      // UC53 5 great icosahedra
-      if (uc_case == 9) {
+  else if (uc_case == 9) {
+    // UC08 3 cubes
+    // UC47 5 icosahedra
+    // UC49 5 great dodecahedra
+    // UC51 5 small stellated dodecahedra
+    // UC53 5 great icosahedra
     transform_and_repeat(geom, sym_to, sym_from, Trans3d::rotate(angle, 0, 0));
   }
 }
@@ -275,81 +259,81 @@ static void build_uniform_compound(Geometry &geom, int uc_case, int uc_num,
 
 // clang-format off
 UCItem uc_item_list[] = {
-    {1, "u1", "S4", "T", -1, "UC1", "6 tetrahedra rotational"},
-    {1, "u1", "S4", "T", -1, "UC2", "12 tetrahedra rotational"},
-    {1, "u1", "S4", "T", M_PI / 4, "UC3", "6 tetrahedra"},
-    {0, "u1", "Td", "Oh", -1, "UC4", "2 tetrahedra"},
-    {0, "u1", "Td", "I", -1, "UC5", "5 tetrahedra"},
-    {0, "u1", "Td", "I", -1, "UC6", "10 tetrahedra"},
-    {2, "u6", "S4", "T", -1, "UC7", "6 cubes rotational"},
-    {9, "u6", "Oh", "T", M_PI / 4, "UC8", "3 cubes"},
-    {0, "u6", "Oh", "I", -1, "UC9", "5 cubes"},
-    {3, "ant3", "D3v", "T", -1, "UC10", "4 octahedra rotational"},
-    {3, "ant3", "D3v", "O", -1, "UC11", "8 octahedra rotational"},
-    {3, "ant3", "D3v", "T", M_PI / 12, "UC12", "4 octahedra"},
-    {3, "ant3", "D3v", "I", -1, "UC13", "20 octahedra rotational"},
-    {3, "ant3", "D3v", "I", -1, "UC14", "20 octahedra"},
-    {4, "ant3", "D3v", "I", 0, "UC15", "10 octahedra 1"},
-    {4, "ant3", "D3v", "I", M_PI / 3, "UC16", "10 octahedra 2"},
-    {0, "u5", "Oh", "I", -1, "UC17", "5 octahedra"},
-    {0, "u4", "Oh", "I", -1, "UC18", "5 tetrahemihexahedra"},
-    {4, "u4", "D3v", "I", -1, "UC19", "20 tetrahemihexahedra"},
-    {5, "pri", "D", "D", -1, "UC20", "2k n d gonal prisms rotational"},
-    {5, "pri", "D", "D", -1, "UC21", "k n d gonal prisms"},
-    {5, "ant", "D", "D", -1, "UC22", "2k n odd d gonal antiprisms rotational"},
-    {5, "ant", "D", "D", -1, "UC23", "k n odd d gonal antiprisms"},
-    {5, "ant", "D", "D", -1, "UC24", "2k n even d gonal antiprisms rotational"},
-    {5, "ant", "D", "D", -1, "UC25", "k n even d gonal antiprisms"},
-    {6, "ant5", "D5h", "I", -1, "UC26", "12 pentagonal antiprisms rotational"},
-    {7, "ant5", "D5h", "I", 0, "UC27", "6 pentagonal antiprisms"},
-    {6, "ant5/3", "D5h", "I", -1, "UC28", "12 pentagrammic crossed antiprisms rotational"},
-    {7, "ant5/3", "D5h", "I", M_PI / 5, "UC29", "6 pentagrammic crossed antiprisms"},
-    {3, "pri3", "D3h", "O", M_PI / 12, "UC30", "4 triangular prisms"},
-    {3, "pri3", "D3h", "O", M_PI / 12, "UC31", "8 triangular prisms"},
-    {8, "pri3", "D3h", "I", M_PI / 6, "UC32", "10 triangular prisms"},
-    {8, "pri3", "D3h", "I", M_PI / 6, "UC33", "20 triangular prisms"},
-    {7, "pri5", "D5h", "I", M_PI / 5, "UC34", "6 pentagonal prisms"},
-    {7, "pri5", "D5h", "I", M_PI / 5, "UC35", "12 pentagonal prisms"},
-    {7, "pri5/2", "D5h", "I", M_PI / 5, "UC36", "6 pentagrammic prisms"},
-    {7, "pri5/2", "D5h", "I", M_PI / 5, "UC37", "12 pentagrammic prisms"},
-    {3, "pri6", "D6h", "O", M_PI / 12, "UC38", "4 hexagonal prisms"},
-    {8, "pri6", "D6h", "I", M_PI / 6, "UC39", "10 hexagonal prisms"},
-    {7, "pri10", "D10h", "I", M_PI / 5, "UC40", "6 decagonal prisms"},
-    {7, "pri10/3", "D10h", "I", M_PI / 5, "UC41", "6 decagrammic prisms"},
-    {0, "ant4", "D4h", "T", -1, "UC42", "3 square antiprisms"},
-    {0, "ant4", "D4h", "T", -1, "UC43", "6 square antiprisms"},
-    {7, "ant5/2", "D5h", "I", M_PI / 5, "UC44", "6 pentagrammic antiprisms"},
-    {7, "ant5/2", "D5h", "I", M_PI / 5, "UC45", "12 pentagrammic antiprisms"},
-    {0, "u22", "Ih", "O", -1, "UC46", "2 icosahedra"},
-    {9, "u22", "Th", "I", M_PI / 2, "UC47", "5 icosahedra"},
-    {0, "u35", "Ih", "O", -1, "UC48", "2 great dodecahedra"},
-    {9, "u35", "Th", "I", M_PI / 2, "UC49", "5 great dodecahedra"},
-    {0, "u34", "Ih", "O", -1, "UC50", "2 small stellated dodecahedra"},
-    {9, "u34", "Th", "I", M_PI / 2, "UC51", "5 small stellated dodecahedra"},
-    {0, "u53", "Ih", "O", -1, "UC52", "2 great icosahedra"},
-    {9, "u53", "Th", "I", M_PI / 2, "UC53", "5 great icosahedra"},
-    {0, "u2", "Td", "Oh", -1, "UC54", "2 truncated tetrahedra"},
-    {0, "u2", "Td", "I", -1, "UC55", "5 truncated tetrahedra"},
-    {0, "u2", "Td", "I", -1, "UC56", "10 truncated tetrahedra"},
-    {0, "u9", "Td", "I", -1, "UC57", "5 truncated cubes"},
-    {0, "u19", "Td", "I", -1, "UC58", "5 stellated truncated hexahedra"},
-    {0, "u7", "Td", "I", -1, "UC59", "5 cuboctahedra"},
-    {0, "u15", "Td", "I", -1, "UC60", "5 cubohemioctahedra"},
-    {0, "u3", "Td", "I", -1, "UC61", "5 octahemioctahedra"},
-    {0, "u10", "Td", "I", -1, "UC62", "5 rhombicuboctahedra"},
-    {0, "u18", "Td", "I", -1, "UC63", "5 small rhombihexahedra"},
-    {0, "u13", "Td", "I", -1, "UC64", "5 small cubicuboctahedra"},
-    {0, "u14", "Td", "I", -1, "UC65", "5 great cubicuboctahedra"},
-    {0, "u21", "Td", "I", -1, "UC66", "5 great rhombihexahedra"},
-    {0, "u17", "Td", "I", -1, "UC67", "5 great rhombicuboctahedra"},
-    {0, "u12", "I", "Ih", -1, "UC68", "2 snub cubes"},
-    {0, "u29", "I", "Ih", -1, "UC69", "2 snub dodecahedra"},
-    {0, "u57", "I", "Ih", -1, "UC70", "2 great snub icosidodecahedra"},
-    {0, "u69", "I", "Ih", -1, "UC71", "2 great inverted snub icosidodecahedra"},
-    {0, "u74", "I", "Ih", -1, "UC72", "2 great retrosnub icosidodecahedra"},
-    {0, "u40", "I", "Ih", -1, "UC73", "2 snub dodecadodecahedra"},
-    {0, "u60", "I", "Ih", -1, "UC74", "2 inverted snub dodecadodecahedra"},
-    {0, "u46", "I", "Ih", -1, "UC75", "2 snub icosidodecadodecahedra"},
+   { 1,   "u1",       "S4",    "T",     -1,      "UC1",   "6 tetrahedra rotational"},
+   { 1,   "u1",       "S4",    "T",     -1,      "UC2",   "12 tetrahedra rotational"},
+   { 1,   "u1",       "S4",    "T",     M_PI/4,  "UC3",   "6 tetrahedra"},
+   { 0,   "u1",       "Td",    "Oh",    -1,      "UC4",   "2 tetrahedra"},
+   { 0,   "u1",       "Td",    "I",     -1,      "UC5",   "5 tetrahedra"},
+   { 0,   "u1",       "Td",    "I",     -1,      "UC6",   "10 tetrahedra"},
+   { 2,   "u6",       "S4",    "T",     -1,      "UC7",   "6 cubes rotational"},
+   { 9,   "u6",       "Oh",    "T",     M_PI/4,  "UC8",   "3 cubes"},
+   { 0,   "u6",       "Oh",    "I",     -1,      "UC9",   "5 cubes"},
+   { 3,   "ant3",     "D3v",   "T",     -1,      "UC10",  "4 octahedra rotational"},
+   { 3,   "ant3",     "D3v",   "O",     -1,      "UC11",  "8 octahedra rotational"},
+   { 3,   "ant3",     "D3v",   "T",     M_PI/12, "UC12",  "4 octahedra"},
+   { 3,   "ant3",     "D3v",   "I",     -1,      "UC13",  "20 octahedra rotational"},
+   { 3,   "ant3",     "D3v",   "I",     -1,      "UC14",  "20 octahedra"},
+   { 4,   "ant3",     "D3v",   "I",      0,      "UC15",  "10 octahedra 1"},
+   { 4,   "ant3",     "D3v",   "I",     M_PI/3,  "UC16",  "10 octahedra 2"},
+   { 0,   "u5",       "Oh",    "I",     -1,      "UC17",  "5 octahedra"},
+   { 0,   "u4",       "Oh",    "I",     -1,      "UC18",  "5 tetrahemihexahedra"},
+   { 4,   "u4",       "D3v",   "I",     -1,      "UC19",  "20 tetrahemihexahedra"},
+   { 5,   "pri",      "D",     "D",     -1,      "UC20",  "2k n d gonal prisms rotational"},
+   { 5,   "pri",      "D",     "D",     -1,      "UC21",  "k n d gonal prisms"},
+   { 5,   "ant",      "D",     "D",     -1,      "UC22",  "2k n odd d gonal antiprisms rotational"},
+   { 5,   "ant",      "D",     "D",     -1,      "UC23",  "k n odd d gonal antiprisms"},
+   { 5,   "ant",      "D",     "D",     -1,      "UC24",  "2k n even d gonal antiprisms rotational"},
+   { 5,   "ant",      "D",     "D",     -1,      "UC25",  "k n even d gonal antiprisms"},
+   { 6,   "ant5",     "D5h",   "I",     -1,      "UC26",  "12 pentagonal antiprisms rotational"},
+   { 7,   "ant5",     "D5h",   "I",      0,      "UC27",  "6 pentagonal antiprisms"},
+   { 6,   "ant5/3",   "D5h",   "I",     -1,      "UC28",  "12 pentagrammic crossed antiprisms rotational"},
+   { 7,   "ant5/3",   "D5h",   "I",     M_PI/5,  "UC29",  "6 pentagrammic crossed antiprisms"},
+   { 3,   "pri3",     "D3h",   "O",     M_PI/12, "UC30",  "4 triangular prisms"},
+   { 3,   "pri3",     "D3h",   "O",     M_PI/12, "UC31",  "8 triangular prisms"},
+   { 8,   "pri3",     "D3h",   "I",     M_PI/6,  "UC32",  "10 triangular prisms"},
+   { 8,   "pri3",     "D3h",   "I",     M_PI/6,  "UC33",  "20 triangular prisms"},
+   { 7,   "pri5",     "D5h",   "I",     M_PI/5,  "UC34",  "6 pentagonal prisms"},
+   { 7,   "pri5",     "D5h",   "I",     M_PI/5,  "UC35",  "12 pentagonal prisms"},
+   { 7,   "pri5/2",   "D5h",   "I",     M_PI/5,  "UC36",  "6 pentagrammic prisms"},
+   { 7,   "pri5/2",   "D5h",   "I",     M_PI/5,  "UC37",  "12 pentagrammic prisms"},
+   { 3,   "pri6",     "D6h",   "O",     M_PI/12, "UC38",  "4 hexagonal prisms"},
+   { 8,   "pri6",     "D6h",   "I",     M_PI/6,  "UC39",  "10 hexagonal prisms"},
+   { 7,   "pri10",    "D10h",  "I",     M_PI/5,  "UC40",  "6 decagonal prisms"},
+   { 7,   "pri10/3",  "D10h",  "I",     M_PI/5,  "UC41",  "6 decagrammic prisms"},
+   { 0,   "ant4",     "D4h",   "T",     -1,      "UC42",  "3 square antiprisms"},
+   { 0,   "ant4",     "D4h",   "T",     -1,      "UC43",  "6 square antiprisms"},
+   { 7,   "ant5/2",   "D5h",   "I",     M_PI/5,  "UC44",  "6 pentagrammic antiprisms"},
+   { 7,   "ant5/2",   "D5h",   "I",     M_PI/5,  "UC45",  "12 pentagrammic antiprisms"},
+   { 0,   "u22",      "Ih",    "O",     -1,      "UC46",  "2 icosahedra"},
+   { 9,   "u22",      "Th",    "I",     M_PI/2,  "UC47",  "5 icosahedra"},
+   { 0,   "u35",      "Ih",    "O",     -1,      "UC48",  "2 great dodecahedra"},
+   { 9,   "u35",      "Th",    "I",     M_PI/2,  "UC49",  "5 great dodecahedra"},
+   { 0,   "u34",      "Ih",    "O",     -1,      "UC50",  "2 small stellated dodecahedra"},
+   { 9,   "u34",      "Th",    "I",     M_PI/2,  "UC51",  "5 small stellated dodecahedra"},
+   { 0,   "u53",      "Ih",    "O",     -1,      "UC52",  "2 great icosahedra"},
+   { 9,   "u53",      "Th",    "I",     M_PI/2,  "UC53",  "5 great icosahedra"},
+   { 0,   "u2",       "Td",    "Oh",    -1,      "UC54",  "2 truncated tetrahedra"},
+   { 0,   "u2",       "Td",    "I",     -1,      "UC55",  "5 truncated tetrahedra"},
+   { 0,   "u2",       "Td",    "I",     -1,      "UC56",  "10 truncated tetrahedra"},
+   { 0,   "u9",       "Td",    "I",     -1,      "UC57",  "5 truncated cubes"},
+   { 0,   "u19",      "Td",    "I",     -1,      "UC58",  "5 stellated truncated hexahedra"},
+   { 0,   "u7",       "Td",    "I",     -1,      "UC59",  "5 cuboctahedra"},
+   { 0,   "u15",      "Td",    "I",     -1,      "UC60",  "5 cubohemioctahedra"},
+   { 0,   "u3",       "Td",    "I",     -1,      "UC61",  "5 octahemioctahedra"},
+   { 0,   "u10",      "Td",    "I",     -1,      "UC62",  "5 rhombicuboctahedra"},
+   { 0,   "u18",      "Td",    "I",     -1,      "UC63",  "5 small rhombihexahedra"},
+   { 0,   "u13",      "Td",    "I",     -1,      "UC64",  "5 small cubicuboctahedra"},
+   { 0,   "u14",      "Td",    "I",     -1,      "UC65",  "5 great cubicuboctahedra"},
+   { 0,   "u21",      "Td",    "I",     -1,      "UC66",  "5 great rhombihexahedra"},
+   { 0,   "u17",      "Td",    "I",     -1,      "UC67",  "5 great rhombicuboctahedra"},
+   { 0,   "u12",      "I",     "Ih",    -1,      "UC68",  "2 snub cubes"},
+   { 0,   "u29",      "I",     "Ih",    -1,      "UC69",  "2 snub dodecahedra"},
+   { 0,   "u57",      "I",     "Ih",    -1,      "UC70",  "2 great snub icosidodecahedra"},
+   { 0,   "u69",      "I",     "Ih",    -1,      "UC71",  "2 great inverted snub icosidodecahedra"},
+   { 0,   "u74",      "I",     "Ih",    -1,      "UC72",  "2 great retrosnub icosidodecahedra"},
+   { 0,   "u40",      "I",     "Ih",    -1,      "UC73",  "2 snub dodecadodecahedra"},
+   { 0,   "u60",      "I",     "Ih",    -1,      "UC74",  "2 inverted snub dodecadodecahedra"},
+   { 0,   "u46",      "I",     "Ih",    -1,      "UC75",  "2 snub icosidodecadodecahedra"},
 };
 // clang-format on
 

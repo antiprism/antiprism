@@ -94,6 +94,8 @@ src/waterman
 src/col_util
 src/planar
 src/symmetro
+src/stellate
+src/miller
 aview/antiview
 python/antiprism.py
 python/antiprism.pyc

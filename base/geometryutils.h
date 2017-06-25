@@ -495,45 +495,6 @@ int find_edge_in_edge_list(const std::vector<std::vector<int>> &edges,
  * \return the unmatched edges. */
 std::vector<std::vector<int>> find_unmatched_edges(const Geometry &geom);
 
-/// Make a geometry from a specified set of faces
-/**\param geom the geometry.
- * \param face_idxs the index numbers of the faces to use
- * \return A geometry made of those faces. */
-Geometry faces_to_geom(const Geometry &geom, const std::vector<int> &face_idxs);
-
-/// Get winding number of a point in a polygon
-/**\param polygon geometry containing the polygon
- * \param point point to test
- * \param eps a small number, coordinates differing by less than eps are
- *  the same.
- * \return The winding number. */
-int get_winding_number(const Geometry &polygon, const Vec3d &point,
-                       double eps = epsilon);
-
-/// Get largest winding number of any point in a polygon
-/**\param polygon geometry containing the polygon
- * \param points if not empty, test just these points
- * \param face_normal the face normal
- * \param find_direction \c true find suitable z-orientation for normal,
- *  \c false don't reorient
- * \param eps a small number, coordinates differing by less than eps are
- *  the same.
- * \return The winding number. */
-int get_winding_number_polygon(const Geometry &polygon,
-                               const std::vector<Vec3d> &points,
-                               const Normal &face_normal,
-                               bool find_direction = false,
-                               const double eps = epsilon);
-
-/// Find the (signed) denominator of a wound polygon
-/**\param geom the geometry.
- * \param face_idx face index.
- * \param eps a small number, coordinates differing by less than eps are
- *  the same.
- * \return The signed olygon denominator. */
-int find_polygon_denominator_signed(const Geometry &geom, int face_idx,
-                                    double eps = epsilon);
-
 } // namespace anti
 
 #endif // GEOMETRYUTILS_H

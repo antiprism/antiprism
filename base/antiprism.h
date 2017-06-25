@@ -73,5 +73,6 @@
 #include "vec4d.h"
 #include "vec_utils.h"
 #include "vrmlwriter.h"
+#include "planar.h"
 
 #endif // ANTIPRISM_H
