@@ -118,7 +118,8 @@ Geometry make_stellation_diagram(Geometry &geom, int f_idx,
 void split_pinched_faces(Geometry &geom, double eps = epsilon);
 
 /// return lists of index for full stellation diagram
-/// Note: index lists first position is reference to the map of stellation diagrams
+/// Note: index lists first position is reference to the map of stellation
+/// diagrams
 /**\param diagrams a map of stellation diagrams.
  * \param idx_lists the partial lists.
  * \param remove_multiples if true any duplicates in lists are removed */
@@ -127,20 +128,28 @@ vector<vector<int>> lists_full(map<int, Geometry> &diagrams,
                                bool remove_multiples = true);
 
 /// return lists which have been standardized
-/// Note: index lists first position is reference to the map of stellation diagrams
+/// Note: index lists first position is reference to the map of stellation
+/// diagrams
 /**\param geom the geometry.
+ * \param sym_string the symmetry symbol.
  * \param diagrams a map of stellation diagrams.
  * \param idx_lists the partial lists.
  * \param idx_lists_full the full lists (from lists_full)
  * \param remove_multiples if true any duplicates in lists are removed */
 vector<vector<int>> lists_resolved(const Geometry &geom,
+                                   const string &sym_string,
                                    map<int, Geometry> &diagrams,
                                    const vector<vector<int>> &idx_lists,
                                    const vector<vector<int>> &idx_lists_full,
                                    bool remove_multiples = true);
 
+/// take fully connected compound and produce unconnected model
+/**\param geom the geometry. */
+void rebuild_compound(Geometry &geom);
+
 /// make a stellation
-/// Note: index lists first position is reference to the map of stellation diagrams
+/// Note: index lists first position is reference to the map of stellation
+/// diagrams
 /**\param geom the geometry.
  * \param diagrams a map of stellation diagrams.
  * \param idx_lists the index lists used
@@ -148,9 +157,11 @@ vector<vector<int>> lists_resolved(const Geometry &geom,
  * \param merge_faces try to make full faces from adjacent facelets
  * \param remove_inline_verts remove vertices which are on a line between
  *        two other vertices (if merge_faces is true)
- * \param split_pinched split faces with revisited vertices (if merge_faces is true)
+ * \param split_pinched split faces with revisited vertices (if merge_faces is
+ * true)
  * \param resolve_faces to standard
- * \param remove_multiples if true any duplicates in lists are removed (if resolved_faces is true)
+ * \param remove_multiples if true any duplicates in lists are removed (if
+ * resolved_faces is true)
  * \param map_string color map for coloring from diagrams
  * \param eps value for contolling the limit of precision. */
 Geometry make_stellation(const Geometry &geom, map<int, Geometry> &diagrams,

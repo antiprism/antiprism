@@ -56,6 +56,7 @@ public:
   bool split_pinched;
   bool resolve_faces;
   bool remove_multiples;
+  bool rebuild_compound_model;
 
   string output_parts;
   bool move_to_front;
@@ -77,12 +78,14 @@ public:
   stellate_opts()
       : ProgramOpts("stellate"), merge_faces(true),
         remove_inline_vertices(true), split_pinched(true), resolve_faces(false),
-        remove_multiples(false), output_parts("s"), move_to_front(false),
+        remove_multiples(false), rebuild_compound_model(false), output_parts("s"), move_to_front(false),
         projection_width(500), vertex_coloring_method('\0'),
         edge_coloring_method('\0'), face_coloring_method('d'),
         vertex_color(Color::invisible), edge_color(Color::invisible),
         face_color(Color()), map_string("compound"), face_opacity(-1),
-        epsilon(0) {}
+        epsilon(0)
+  {
+  }
   void process_command_line(int argc, char **argv);
   void usage();
 };
@@ -107,11 +110,12 @@ void stellate_opts::usage()
 "  -S        do not split pinched faces (if not -M)\n"
 "  -R        resolve stellation facelets\n"
 "  -D        remove multiples occurrences (sets -R)\n"
+"  -r        rebuild compound model to separate vertices\n"
 "  -O <args> output s - stellation, d - diagram, i - input model (default: s)\n"
 "               D - diagram faces used highlighted, S - with symmetry\n"
 "               R - resolved faces used for stellation (when using D or S)\n"
 "               F - highlighted faces only (when using D, S or R)\n"
-"  -z        move first diagram to front (takes it out of symmetry alignment)\n"
+"  -z        move first diagram to face front (out of symmetry alignment)\n"
 "  -w <int>  width to project stellation diagram (default: 500)\n"
 "  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
@@ -133,7 +137,8 @@ void stellate_opts::usage()
 }
 // clang-format on
 
-void stellate_opts::process_command_line(int argc, char **argv) {
+void stellate_opts::process_command_line(int argc, char **argv)
+{
   opterr = 0;
   int c;
 
@@ -141,7 +146,7 @@ void stellate_opts::process_command_line(int argc, char **argv) {
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hf:s:MISRDzw:O:V:E:F:T:m:l:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hf:s:MISRDrzw:O:V:E:F:T:m:l:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -174,6 +179,10 @@ void stellate_opts::process_command_line(int argc, char **argv) {
     case 'D':
       remove_multiples = true;
       resolve_faces = true;
+      break;
+
+    case 'r':
+      rebuild_compound_model = true;
       break;
 
     case 'z':
@@ -259,7 +268,8 @@ void stellate_opts::process_command_line(int argc, char **argv) {
   epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
-void apply_transparency(Geometry &geom, int face_opacity) {
+void apply_transparency(Geometry &geom, int face_opacity)
+{
   if (face_opacity > -1) {
     ColorValuesToRangeHsva valmap(msg_str("A%g", (double)face_opacity / 255));
     valmap.apply(geom, FACES);
@@ -281,7 +291,8 @@ void color_stellation(Geometry &stellation, char face_coloring_method,
                       char edge_coloring_method, char vertex_coloring_method,
                       const Color &face_color, const Color &edge_color,
                       const Color &vertex_color, int face_opacity,
-                      const string &map_string) {
+                      const string &map_string)
+{
   // set color map
   Coloring clrng(&stellation);
   ColorMap *cmap = colormap_from_name(map_string.c_str());
@@ -298,7 +309,8 @@ void color_stellation(Geometry &stellation, char face_coloring_method,
       vector<vector<set<int>>> sym_equivs;
       sym.init(stellation, &sym_equivs);
       clrng.f_sets(sym_equivs[2], true);
-    } else if (face_coloring_method == 'c')
+    }
+    else if (face_coloring_method == 'c')
       clrng.f_parts(true);
     else if (face_coloring_method == 'C') {
       for (unsigned int i = 0; i < stellation.faces().size(); i++) {
@@ -321,7 +333,8 @@ void color_stellation(Geometry &stellation, char face_coloring_method,
         }
         stellation.colors(FACES).set(i, cmap->get_col(connection_count));
       }
-    } else
+    }
+    else
       // use color selected
       clrng.f_one_col(face_color);
   }
@@ -335,7 +348,8 @@ void color_stellation(Geometry &stellation, char face_coloring_method,
         stellation.colors(EDGES).clear();
       else
         clrng.e_face_color();
-    } else if (edge_coloring_method == 'C') {
+    }
+    else if (edge_coloring_method == 'C') {
       auto efpairs = stellation.get_edge_face_pairs(false);
       for (const auto &edge : stellation.edges()) {
         vector<int> faces = efpairs[edge];
@@ -343,7 +357,8 @@ void color_stellation(Geometry &stellation, char face_coloring_method,
         if (i > -1)
           stellation.colors(EDGES).set(i, cmap->get_col(faces.size()));
       }
-    } else
+    }
+    else
       // use color selected
       clrng.e_one_col(edge_color);
   }
@@ -353,7 +368,8 @@ void color_stellation(Geometry &stellation, char face_coloring_method,
   if (vertex_coloring_method == 'e') {
     // vertices take color from edges
     clrng.v_edge_color();
-  } else
+  }
+  else
     // use color selected
     clrng.v_one_col(vertex_color);
 
@@ -365,15 +381,16 @@ void color_stellation(Geometry &stellation, char face_coloring_method,
 // idx_lists still contains stellation face number in position 0
 Geometry construct_model(Geometry &geom, map<int, Geometry> &diagrams,
                          vector<vector<int>> &idx_lists,
-                         const stellate_opts &opts) {
+                         const stellate_opts &opts)
+{
   Geometry model;
   Geometry stellation;
 
   // construct the stellation, before coloring diagrams...
   // make_stellation needs diagrams to have color indexes
+  string geom_sym_symbol = opts.sym_str;
   if (opts.output_parts.find("s") != string::npos) {
     // set the symmetry
-    string geom_sym_symbol = opts.sym_str;
     if (!geom_sym_symbol.length()) {
       Symmetry geom_full_sym(geom);
       geom_sym_symbol = geom_full_sym.get_symbol().c_str();
@@ -383,14 +400,20 @@ Geometry construct_model(Geometry &geom, map<int, Geometry> &diagrams,
         geom, diagrams, idx_lists, geom_sym_symbol, opts.merge_faces,
         opts.remove_inline_vertices, opts.split_pinched, opts.resolve_faces,
         opts.remove_multiples, opts.map_string, opts.epsilon);
+
+    if (opts.rebuild_compound_model) {
+      rebuild_compound(stellation);
+      stellation.add_missing_impl_edges();
+    }
   }
 
   // need to execute before coloring diagrams
   // these functions need diagrams to have color indexes
   vector<vector<int>> idx_lists_full =
       lists_full(diagrams, idx_lists, opts.remove_multiples);
-  vector<vector<int>> idx_lists_resolved = lists_resolved(
-      geom, diagrams, idx_lists, idx_lists_full, opts.remove_multiples);
+  vector<vector<int>> idx_lists_resolved =
+      lists_resolved(geom, geom_sym_symbol, diagrams, idx_lists, idx_lists_full,
+                     opts.remove_multiples);
 
   // color diagrams
   for (auto const &key1 : diagrams) {
@@ -507,7 +530,8 @@ Geometry construct_model(Geometry &geom, map<int, Geometry> &diagrams,
   return model;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
   stellate_opts opts;
   opts.process_command_line(argc, argv);
 

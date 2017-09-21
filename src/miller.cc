@@ -51,6 +51,8 @@ public:
 
   string output_parts;
   bool merge_faces;
+  bool rebuild_compound_model;
+  bool list_polys;
 
   char vertex_coloring_method;
   char edge_coloring_method;
@@ -63,11 +65,16 @@ public:
   string map_string;
   int face_opacity;
 
+  double epsilon;
+
   miller_opts()
-      : ProgramOpts("miller"), output_parts("s"), merge_faces(true), vertex_coloring_method('\0'),
-        edge_coloring_method('\0'), face_coloring_method('d'),
-        vertex_color(Color::invisible), edge_color(Color::invisible),
-        face_color(Color()), map_string("compound"), face_opacity(-1) {}
+      : ProgramOpts("miller"), output_parts("s"), merge_faces(false), rebuild_compound_model(false), list_polys(false),
+        vertex_coloring_method('\0'), edge_coloring_method('\0'),
+        face_coloring_method('d'), vertex_color(Color::invisible),
+        edge_color(Color::invisible), face_color(Color()),
+        map_string("compound"), face_opacity(-1), epsilon(0)
+  {
+  }
   void process_command_line(int argc, char **argv);
   void usage();
 };
@@ -86,8 +93,12 @@ void miller_opts::usage()
 "\n"
 "Options\n"
 "%s"
-"  -M        do not merge stellation facelets\n"
+"  -L        list models only\n"
+"  -M        merge stellation facelets\n"
+"  -r        rebuild compound model to separate vertices\n"
 "  -O <args> output s - stellation, d - diagram (default: s)\n"
+"  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
+"               (default: %d giving %.0e)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
 "  -F <opt>  face coloring method. d - from diagram, s - symmetry\n"
@@ -102,23 +113,34 @@ void miller_opts::usage()
 "  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
 "  -m <maps> color maps. stellation diagram or face symmetry (default: compound)\n"
 "\n"
-"\n", prog_name(), help_ver_text);
+"\n", prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }
 // clang-format on
 
-void miller_opts::process_command_line(int argc, char **argv) {
+void miller_opts::process_command_line(int argc, char **argv)
+{
   opterr = 0;
   int c;
 
+  int sig_compare = INT_MAX;
+
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hMO:V:E:F:T:m:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hLMrO:V:E:F:T:m:l:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
     switch (c) {
+    case 'L':
+      list_polys = true;
+      break;
+
     case 'M':
-      merge_faces = false;
+      merge_faces = true;
+      break;
+
+    case 'r':
+      rebuild_compound_model = true;
       break;
 
     case 'O':
@@ -162,6 +184,16 @@ void miller_opts::process_command_line(int argc, char **argv) {
       map_string = optarg;
       break;
 
+    case 'l':
+      print_status_or_exit(read_int(optarg, &sig_compare), c);
+      if (sig_compare < 0) {
+        warning("limit is negative, and so ignored", c);
+      }
+      if (sig_compare > DEF_SIG_DGTS) {
+        warning("limit is very small, may not be attainable", c);
+      }
+      break;
+
     case 'o':
       ofile = optarg;
       break;
@@ -176,10 +208,13 @@ void miller_opts::process_command_line(int argc, char **argv) {
 
   if (argc - optind == 1)
     ifile = argv[optind];
+
+  epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
 // copy of code from stellate.cc
-void apply_transparency(Geometry &geom, int face_opacity) {
+void apply_transparency(Geometry &geom, int face_opacity)
+{
   if (face_opacity > -1) {
     ColorValuesToRangeHsva valmap(msg_str("A%g", (double)face_opacity / 255));
     valmap.apply(geom, FACES);
@@ -200,8 +235,10 @@ void apply_transparency(Geometry &geom, int face_opacity) {
 // copy of code from stellate.cc
 void color_stellation(Geometry &stellation, char face_coloring_method,
                       char edge_coloring_method, char vertex_coloring_method,
-                      const Color &face_color, const Color &edge_color, const Color &vertex_color,
-                      int face_opacity, const string &map_string) {
+                      const Color &face_color, const Color &edge_color,
+                      const Color &vertex_color, int face_opacity,
+                      const string &map_string)
+{
   // set color map
   Coloring clrng(&stellation);
   ColorMap *cmap = colormap_from_name(map_string.c_str());
@@ -218,7 +255,8 @@ void color_stellation(Geometry &stellation, char face_coloring_method,
       vector<vector<set<int>>> sym_equivs;
       sym.init(stellation, &sym_equivs);
       clrng.f_sets(sym_equivs[2], true);
-    } else if (face_coloring_method == 'c')
+    }
+    else if (face_coloring_method == 'c')
       clrng.f_parts(true);
     else if (face_coloring_method == 'C') {
       for (unsigned int i = 0; i < stellation.faces().size(); i++) {
@@ -241,7 +279,8 @@ void color_stellation(Geometry &stellation, char face_coloring_method,
         }
         stellation.colors(FACES).set(i, cmap->get_col(connection_count));
       }
-    } else
+    }
+    else
       // use color selected
       clrng.f_one_col(face_color);
   }
@@ -255,7 +294,8 @@ void color_stellation(Geometry &stellation, char face_coloring_method,
         stellation.colors(EDGES).clear();
       else
         clrng.e_face_color();
-    } else if (edge_coloring_method == 'C') {
+    }
+    else if (edge_coloring_method == 'C') {
       auto efpairs = stellation.get_edge_face_pairs(false);
       for (const auto &edge : stellation.edges()) {
         vector<int> faces = efpairs[edge];
@@ -263,7 +303,8 @@ void color_stellation(Geometry &stellation, char face_coloring_method,
         if (i > -1)
           stellation.colors(EDGES).set(i, cmap->get_col(faces.size()));
       }
-    } else
+    }
+    else
       // use color selected
       clrng.e_one_col(edge_color);
   }
@@ -273,7 +314,8 @@ void color_stellation(Geometry &stellation, char face_coloring_method,
   if (vertex_coloring_method == 'e') {
     // vertices take color from edges
     clrng.v_edge_color();
-  } else
+  }
+  else
     // use color selected
     clrng.v_one_col(vertex_color);
 
@@ -299,6 +341,7 @@ public:
   int get_poly(anti::Geometry &geom, int sym, string cell_str, string sym_str,
                map<int, Geometry> &diagrams, miller_opts &opts);
   int get_last_M() { return last_M; }
+  void list_polys();
 };
 
 // Millers 59 Stellations of the Icosahedron
@@ -408,14 +451,37 @@ MillerItem miller_item_list[] = {
 };
 // clang-format on
 
-Miller::Miller() {
+void Miller::list_polys()
+{
+  int l = get_last_M();
+  for (int i = 0; i < l; i++) {
+    int j = i + 1;
+    if (j == 1)
+      fprintf(stderr,"Full Symmetry\n");
+    else
+    if (j == 33)
+      fprintf(stderr,"\nEnantiomeric\n");
+    else
+    if (j == 60)
+      fprintf(stderr,"\nLost Stellations\n");
+    else
+    if (j == 70)
+      fprintf(stderr,"\nCandidate Lost Stellations\n");
+
+    fprintf(stderr,"%2d) %-10s %-2s\n", j, Miller_items[i].cell_string, Miller_items[i].sub_sym);
+  }
+}
+
+Miller::Miller()
+{
   Miller_items = miller_item_list;
   last_M = sizeof(miller_item_list) / sizeof(miller_item_list[0]);
 }
 
 // if cell string will not decode, return empty result string
 // f1 left handed form represented by f3
-vector<string> decode_cell_string(string cell_str) {
+vector<string> decode_cell_string(string cell_str)
+{
   // clang-format off
   map<string, string> cell;
   cell["A"]  = "0,18";             // Ih
@@ -557,13 +623,8 @@ int Miller::get_poly(Geometry &geom, int sym, string cell_str, string sym_str, m
   bool resolve_faces = true;
   bool remove_multiples = true;
 
-  // these models only work if faces are not merged
-  int number = Miller_items[sym].number;
-  if (number == 17 || number == 24 || number == 40 || number == 41)
-    merge_faces = false;
-
   geom = make_stellation(geom, diagrams, idx_lists, sym_str, merge_faces, remove_inline_verts,
-                         split_pinched, resolve_faces, remove_multiples);
+                         split_pinched, resolve_faces, remove_multiples, opts.map_string, opts.epsilon);
 
   vector<vector<int>> idx_lists_full =
       lists_full(diagrams, idx_lists, remove_multiples);
@@ -644,6 +705,9 @@ int make_resource_miller(Geometry &geom, string name, bool is_std, miller_opts &
   if (ret < 1)
     return 1; // fail
 
+  if (opts.rebuild_compound_model)
+    rebuild_compound(geom);
+
   // if is_std, have to strip built in color
   if (is_std) {
     geom.colors(VERTS).clear();
@@ -711,6 +775,12 @@ int main(int argc, char *argv[])
 {
   miller_opts opts;
   opts.process_command_line(argc, argv);
+
+  if (opts.list_polys) {
+    Miller mill;
+    mill.list_polys();
+    exit(0);
+  }
 
   Geometry geom;
   if (try_miller(geom, opts))

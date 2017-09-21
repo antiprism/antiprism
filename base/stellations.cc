@@ -35,9 +35,9 @@
 #include <string>
 #include <vector>
 
+#include "planar.h"
 #include "private_std_polys.h"
 #include "utils.h"
-#include "planar.h"
 
 using std::string;
 using std::vector;
@@ -108,7 +108,8 @@ WenningerItem wenninger_item_list[] = {
 Wenninger::Wenninger() { Wenninger_items = wenninger_item_list; }
 
 // idx changed locally
-bool Wenninger::test_valid(int idx) {
+bool Wenninger::test_valid(int idx)
+{
   // Wenninger number range has gaps
   idx++;
   return (idx == 19 || (idx >= 23 && idx <= 40) || (idx >= 42 && idx <= 66))
@@ -117,7 +118,8 @@ bool Wenninger::test_valid(int idx) {
 }
 
 // sym changed locally
-int Wenninger::get_poly(Geometry &geom, int sym) {
+int Wenninger::get_poly(Geometry &geom, int sym)
+{
   // Wenninger number range has gaps, reset to table indexes
   sym++;
   if (sym == 19)

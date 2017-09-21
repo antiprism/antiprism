@@ -51,8 +51,8 @@ namespace anti {
 // From planar.cc
 
 // find connections from a vertex v_idx
-void find_connections(const Geometry &geom, vector<int> &vcons,
-                      const int v_idx) {
+void find_connections(const Geometry &geom, vector<int> &vcons, const int v_idx)
+{
   const vector<vector<int>> &edges = geom.edges();
 
   vcons.clear();
@@ -65,7 +65,8 @@ void find_connections(const Geometry &geom, vector<int> &vcons,
 }
 
 // idx will be the dimension not included so that 3D -> 2D projection occurs
-void project_using_normal(const Vec3d &normal, int &idx, int &sign) {
+void project_using_normal(const Vec3d &normal, int &idx, int &sign)
+{
   vector<pair<double, int>> normal_info(3);
 
   for (unsigned int i = 0; i < 3; i++) {
@@ -95,7 +96,8 @@ Geometry faces_to_geom(const Geometry &geom, const vector<int> &face_idxs)
 // if intersection point does not exist, insert a new one. Otherwise only return
 // the index of the existing one
 int vertex_into_geom(Geometry &geom, const Vec3d &P, Color vcol,
-                     const double eps) {
+                     const double eps)
+{
   int v_idx = find_vert_by_coords(geom, P, eps);
   if (v_idx == -1) {
     geom.add_vert(P, vcol);
@@ -110,7 +112,8 @@ int vertex_into_geom(Geometry &geom, const Vec3d &P, Color vcol,
 // check if edge1 and edge2 indexes are equal. If so do not allow an edge length
 // of 0 to occur
 bool edge_into_geom(Geometry &geom, const int v_idx1, const int v_idx2,
-                    Color ecol) {
+                    Color ecol)
+{
   // no edge length 0 allowed
   if (v_idx1 == v_idx2)
     return false;
@@ -125,7 +128,8 @@ bool edge_into_geom(Geometry &geom, const int v_idx1, const int v_idx2,
 }
 
 // input seperate networks of overlapping edges and merge them into one network
-bool mesh_edges(Geometry &geom, const double eps) {
+bool mesh_edges(Geometry &geom, const double eps)
+{
   const vector<Vec3d> &verts = geom.verts();
   const vector<vector<int>> &edges = geom.edges();
 
@@ -222,7 +226,8 @@ bool mesh_edges(Geometry &geom, const double eps) {
 
 void build_angle_map(const Geometry &geom,
                      map<pair<int, int>, double> &angle_map,
-                     const Vec3d &normal, const double eps) {
+                     const Vec3d &normal, const double eps)
+{
   const vector<Vec3d> &verts = geom.verts();
 
   int idx;
@@ -252,7 +257,8 @@ void build_angle_map(const Geometry &geom,
 }
 
 void build_turn_map(const Geometry &geom, map<pair<int, int>, int> &turn_map,
-                    map<pair<int, int>, double> &angle_map) {
+                    map<pair<int, int>, double> &angle_map)
+{
   const vector<vector<int>> &edges = geom.edges();
 
   for (const auto &edge : edges) {
@@ -286,7 +292,8 @@ void build_turn_map(const Geometry &geom, map<pair<int, int>, int> &turn_map,
 void get_first_unvisited_triad(const Geometry &geom, int &first_unvisited,
                                map<pair<int, int>, bool> &visited,
                                map<pair<int, int>, int> &turn_map,
-                               vector<int> &face) {
+                               vector<int> &face)
+{
   const vector<vector<int>> &edges = geom.edges();
 
   face.clear();
@@ -313,7 +320,8 @@ void get_first_unvisited_triad(const Geometry &geom, int &first_unvisited,
   return;
 }
 
-void construct_faces(Geometry &geom, map<pair<int, int>, int> &turn_map) {
+void construct_faces(Geometry &geom, map<pair<int, int>, int> &turn_map)
+{
   map<pair<int, int>, bool> visited;
 
   int first_unvisited = 0;
@@ -345,7 +353,8 @@ void construct_faces(Geometry &geom, map<pair<int, int>, int> &turn_map) {
 
 void analyze_faces(Geometry &geom, const int planar_merge_type,
                    vector<int> &nonconvex_faces,
-                   map<pair<int, int>, double> &angle_map) {
+                   map<pair<int, int>, double> &angle_map)
+{
   const vector<vector<int>> &faces = geom.faces();
   vector<int> deleted_faces;
   int deleted_faces_count = 0; // should be only one
@@ -379,7 +388,8 @@ void analyze_faces(Geometry &geom, const int planar_merge_type,
         (sum < 0 && planar_merge_type == 2)) {
       deleted_faces.push_back(i);
       deleted_faces_count++;
-    } else if (!all_negative_turns)
+    }
+    else if (!all_negative_turns)
       nonconvex_faces.push_back(i - deleted_faces_count);
   }
   geom.del(FACES, deleted_faces);
@@ -387,7 +397,8 @@ void analyze_faces(Geometry &geom, const int planar_merge_type,
 
 void fill_in_faces(Geometry &geom, const int planar_merge_type,
                    vector<int> &nonconvex_faces, const Vec3d &normal,
-                   double eps) {
+                   double eps)
+{
   map<pair<int, int>, double> angle_map;
   map<pair<int, int>, int> turn_map;
   build_angle_map(geom, angle_map, normal, eps);
@@ -461,9 +472,51 @@ Vec3d calc_stellation_point(Geometry &geom, int f_idx, const double eps)
 }
 */
 
+// own copy of sym_string
+void color_stellation_diagram(Geometry &diagram, const Geometry &geom,
+                              string sym_string, bool force_chiral)
+{
+  // color diagram by symmetry (using map indexes)
+  Symmetry diagram_full_sym(diagram);
+  Symmetry diagram_sub_sym = diagram_full_sym;
+
+  vector<vector<set<int>>> sym_equivs;
+  diagram_sub_sym.init(diagram, &sym_equivs);
+
+  // sub symmetry specified?
+  string geom_sym_symbol = sym_string;
+  if (!geom_sym_symbol.length()) {
+    Symmetry geom_full_sym(geom);
+    geom_sym_symbol = geom_full_sym.get_symbol().c_str();
+  }
+
+  // check for horizontal symmetry
+  if (geom_sym_symbol.find("h") == string::npos || force_chiral) {
+    string diagram_sym_symbol = diagram_full_sym.get_symbol().c_str();
+    // fprintf(stderr, "diagram_sym_symbol = %s\n", diagram_sym_symbol.c_str());
+    // if not vertical symmetry, will change to chiral for diagram
+    replace(diagram_sym_symbol.begin(), diagram_sym_symbol.end(), 'D', 'C');
+    // if it has vertical symmetry, change to bi-lateral for diagram
+    if (geom_sym_symbol.find("v") != string::npos)
+      diagram_sym_symbol = "C2v";
+    // fprintf(stderr, "diagram_sym_symbol = %s\n", diagram_sym_symbol.c_str());
+    diagram_full_sym.get_sub_sym(diagram_sym_symbol, &diagram_sub_sym);
+  }
+
+  // color by sub symmetry
+  get_equiv_elems(diagram, diagram_sub_sym.get_trans(), &sym_equivs);
+
+  // remap uses indexes which will be resolved per program
+  Coloring clrng(&diagram);
+  ColorMap *cmap = colormap_from_name("remap");
+  clrng.add_cmap(cmap);
+  clrng.f_sets(sym_equivs[2], true);
+}
+
 // facelets have unresolved color map numbers
 Geometry make_stellation_diagram(Geometry &geom, int f_idx, string sym_string,
-                                 int projection_width, const double eps) {
+                                 int projection_width, const double eps)
+{
   const vector<vector<int>> &faces = geom.faces();
   const vector<Vec3d> &verts = geom.verts();
 
@@ -541,45 +594,13 @@ Geometry make_stellation_diagram(Geometry &geom, int f_idx, string sym_string,
   fill_in_faces(diagram, planar_merge_type, nonconvex_faces, face0_normal, eps);
 
   // color diagram by symmetry (using map indexes)
-  Symmetry diagram_full_sym(diagram);
-  Symmetry diagram_sub_sym = diagram_full_sym;
-
-  vector<vector<set<int>>> sym_equivs;
-  diagram_sub_sym.init(diagram, &sym_equivs);
-
-  // sub symmetry specified?
-  string geom_sym_symbol = sym_string;
-  if (!geom_sym_symbol.length()) {
-    Symmetry geom_full_sym(geom);
-    geom_sym_symbol = geom_full_sym.get_symbol().c_str();
-  }
-
-  // check for horizontal symmetry
-  if (geom_sym_symbol.find("h") == string::npos) {
-    string diagram_sym_symbol = diagram_full_sym.get_symbol().c_str();
-    // fprintf(stderr, "diagram_sym_symbol = %s\n", diagram_sym_symbol.c_str());
-    // if not vertical symmetry, will change to chiral for diagram
-    replace(diagram_sym_symbol.begin(), diagram_sym_symbol.end(), 'D', 'C');
-    // if it has vertical symmetry, change to bi-lateral for diagram
-    if (geom_sym_symbol.find("v") != string::npos)
-      diagram_sym_symbol = "C2v";
-    // fprintf(stderr, "diagram_sym_symbol = %s\n", diagram_sym_symbol.c_str());
-    diagram_full_sym.get_sub_sym(diagram_sym_symbol, &diagram_sub_sym);
-  }
-
-  // color by sub symmetry
-  get_equiv_elems(diagram, diagram_sub_sym.get_trans(), &sym_equivs);
-
-  // remap uses indexes which will be resolved per program
-  Coloring clrng(&diagram);
-  ColorMap *cmap = colormap_from_name("remap");
-  clrng.add_cmap(cmap);
-  clrng.f_sets(sym_equivs[2], true);
+  color_stellation_diagram(diagram, geom, sym_string, false);
 
   return diagram;
 }
 
-void split_pinched_faces(Geometry &geom, double eps) {
+void split_pinched_faces(Geometry &geom, double eps)
+{
   vector<vector<int>> &faces = geom.raw_faces();
 
   // have to keep looping in case faces pinched more than once
@@ -642,7 +663,8 @@ void split_pinched_faces(Geometry &geom, double eps) {
 // use diagrams face color indexes to determine inclusion
 vector<vector<int>> lists_full(map<int, Geometry> &diagrams,
                                const vector<vector<int>> &idx_lists,
-                               bool remove_multiples) {
+                               bool remove_multiples)
+{
   vector<vector<int>> idx_lists_full;
   map<int, vector<int>> lists;
 
@@ -708,10 +730,17 @@ vector<vector<int>> lists_full(map<int, Geometry> &diagrams,
 // use diagrams and full lists and face color indexes to determine minimal
 // resolved faces
 vector<vector<int>> lists_resolved(const Geometry &geom,
+                                   const string &sym_string,
                                    map<int, Geometry> &diagrams,
                                    const vector<vector<int>> &idx_lists,
                                    const vector<vector<int>> &idx_lists_full,
-                                   bool remove_multiples) {
+                                   bool remove_multiples)
+{
+
+  // make chiral colored diagrams so left and right indexes are different
+  for (unsigned int i = 0; i < diagrams.size(); i++)
+    color_stellation_diagram(diagrams[i], geom, sym_string, true);
+
   map<pair<int, int>, int> resolved_faces;
   for (unsigned int i = 0; i < idx_lists_full.size(); i++) {
     // position 0 is stellation face index
@@ -777,14 +806,39 @@ vector<vector<int>> lists_resolved(const Geometry &geom,
       idx_lists_resolved.push_back(resolved_list);
   }
 
+  // restore diagrams color
+  for (unsigned int i = 0; i < diagrams.size(); i++)
+    color_stellation_diagram(diagrams[i], geom, sym_string, false);
+
   return idx_lists_resolved;
 }
 
 // face_index is changed
-Geometry faces_to_geom_for_stel(const Geometry &geom, vector<int> face_idxs) {
+Geometry faces_to_geom_for_stel(const Geometry &geom, vector<int> face_idxs)
+{
   // the index list now contains only the diagram's face numbers
   face_idxs.erase(face_idxs.begin());
   return (faces_to_geom(geom, face_idxs));
+}
+
+// take fully connected compound and produce unconnected model
+void rebuild_compound(Geometry &geom)
+{
+  Geometry compound;
+
+  GeometryInfo info(geom);
+  if (info.num_parts() > 1) {
+    vector<vector<int>> face_parts;
+    geom.orient(&face_parts);
+
+    for (unsigned int i = 0; i < face_parts.size(); i++) {
+      Geometry constituent = faces_to_geom(geom, face_parts[i]);
+      constituent.del(VERTS, constituent.get_info().get_free_verts());
+      compound.append(constituent);
+    }
+
+    geom = compound;
+  }
 }
 
 // index lists contains stellation face number in position 0
@@ -793,15 +847,16 @@ Geometry make_stellation(const Geometry &geom, map<int, Geometry> &diagrams,
                          const string &sym_string, bool merge_faces,
                          bool remove_inline_verts, bool split_pinched,
                          bool resolve_faces, bool remove_multiples,
-                         string map_string, double eps) {
+                         string map_string, double eps)
+{
   Geometry stellation_full;
 
   vector<vector<int>> lists = idx_lists;
   if (resolve_faces) {
     vector<vector<int>> idx_lists_full =
         lists_full(diagrams, idx_lists, remove_multiples);
-    lists = lists_resolved(geom, diagrams, idx_lists, idx_lists_full,
-                           remove_multiples);
+    lists = lists_resolved(geom, sym_string, diagrams, idx_lists,
+                           idx_lists_full, remove_multiples);
   }
 
   for (unsigned int i = 0; i < lists.size(); i++) {
@@ -1175,6 +1230,5 @@ int find_polygon_denominator_signed(const Geometry &geom, int face_idx,
 
   return d;
 }
-
 
 } // namespace anti
