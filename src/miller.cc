@@ -70,7 +70,7 @@ public:
   miller_opts()
       : ProgramOpts("miller"), output_parts("s"), merge_faces(false), rebuild_compound_model(false), list_polys(false),
         vertex_coloring_method('\0'), edge_coloring_method('\0'),
-        face_coloring_method('d'), vertex_color(Color::invisible),
+        face_coloring_method('\0'), vertex_color(Color::invisible),
         edge_color(Color::invisible), face_color(Color()),
         map_string("compound"), face_opacity(-1), epsilon(0)
   {
@@ -169,8 +169,10 @@ void miller_opts::process_command_line(int argc, char **argv)
     case 'F':
       if (strlen(optarg) == 1 && strchr("dscC", int(*optarg)))
         face_coloring_method = *optarg;
-      else
+      else {
         print_status_or_exit(face_color.read(optarg), c);
+        face_coloring_method = 'x';
+      }
       break;
 
     case 'T':
@@ -285,7 +287,7 @@ void color_stellation(Geometry &stellation, char face_coloring_method,
       clrng.f_one_col(face_color);
   }
 
-  // edges taking face coloring from stellation diagram faces is the default
+  // edges built in color is invisible is the default
   if (!(face_coloring_method == 'd' && edge_coloring_method == 'f')) {
     // edges take color from faces (if faces none, clear edges)
     if (edge_coloring_method == 'f') {
@@ -714,7 +716,7 @@ int make_resource_miller(Geometry &geom, string name, bool is_std, miller_opts &
     geom.colors(EDGES).clear();
     geom.colors(FACES).clear();
   }
-  else {
+  else if (!opts.face_coloring_method) {
     Coloring clrng(&geom);
     ColorMap *cmap = colormap_from_name("compound");
     clrng.add_cmap(cmap);
@@ -731,12 +733,14 @@ int make_resource_miller(Geometry &geom, string name, bool is_std, miller_opts &
     // edges can be confusing. set them to invisible
     Coloring(&geom).vef_one_col(Color::invisible, Color::invisible, Color());
 
-    // if coloring was specified
-    color_stellation(geom, opts.face_coloring_method,
-                     opts.edge_coloring_method, opts.vertex_coloring_method,
-                     opts.face_color, opts.edge_color, opts.vertex_color,
-                     opts.face_opacity, opts.map_string);
+    // patch to keep color_stellation from firing
+    opts.face_coloring_method = 'd';
   }
+
+  color_stellation(geom, opts.face_coloring_method,
+                   opts.edge_coloring_method, opts.vertex_coloring_method,
+                   opts.face_color, opts.edge_color, opts.vertex_color,
+                   opts.face_opacity, opts.map_string);
 
   // if only diagram is being output, clear geom
   if (opts.output_parts.find_first_of("s") == string::npos)

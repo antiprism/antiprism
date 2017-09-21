@@ -221,8 +221,10 @@ void stellate_opts::process_command_line(int argc, char **argv)
     case 'F':
       if (strlen(optarg) == 1 && strchr("dscC", int(*optarg)))
         face_coloring_method = *optarg;
-      else
+      else {
         print_status_or_exit(face_color.read(optarg), c);
+        face_coloring_method = 'x';
+      }
       break;
 
     case 'T':
@@ -254,10 +256,6 @@ void stellate_opts::process_command_line(int argc, char **argv)
       error("unknown command line error");
     }
   }
-
-  // patch to get face color to set
-  if (face_color.is_set())
-    face_coloring_method = 'x';
 
   if (argc - optind > 1)
     error("too many arguments");
@@ -339,7 +337,7 @@ void color_stellation(Geometry &stellation, char face_coloring_method,
       clrng.f_one_col(face_color);
   }
 
-  // edges taking face coloring from stellation diagram faces is the default
+  // edges built in color is invisible is the default
   if (!(face_coloring_method == 'd' && edge_coloring_method == 'f')) {
     // edges take color from faces (if faces none, clear edges)
     if (edge_coloring_method == 'f') {
