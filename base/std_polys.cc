@@ -28,13 +28,13 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include <algorithm>
+#include <map>
+#include <set>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
 #include <vector>
-#include <algorithm>
-#include <map>
-#include <set>
 
 #include "coloring.h"
 #include "geometryinfo.h"
@@ -589,7 +589,9 @@ int make_resource_uniform(Geometry &geom, string name, bool is_std,
   int sym_no;
   if (read_int(name.c_str() + 1 + is_dual, &sym_no)) {
     // bypass for wenninger stellations, found in next section
-    if (strchr("wW", name[0]) && (sym_no == 19 || (sym_no >= 23 && sym_no <= 40) || (sym_no >= 42 && sym_no <= 66)))
+    if (strchr("wW", name[0]) &&
+        (sym_no == 19 || (sym_no >= 23 && sym_no <= 40) ||
+         (sym_no >= 42 && sym_no <= 66)))
       return -1;
 
     // Uniform, Kaleido, Coxeter, or Wenninger number
@@ -639,7 +641,8 @@ int make_resource_uniform(Geometry &geom, string name, bool is_std,
 }
 
 int make_resource_wenninger(Geometry &geom, string name, bool is_std,
-                            char *errmsg = nullptr) {
+                            char *errmsg = nullptr)
+{
   if (name.size() < 2 || !strchr("wW", name[0]) ||
       name.find('.') != string::npos)
     return -1; // not wenninger name (the "." indicates a likely local file)
@@ -657,7 +660,8 @@ int make_resource_wenninger(Geometry &geom, string name, bool is_std,
         snprintf(errmsg, MSG_SZ, "wenninger stellation number out of range");
       return 1; // fail
     }
-  } else
+  }
+  else
     return -1; // not integer
 
   wenn.get_poly(geom, sym_no);

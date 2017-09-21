@@ -97,12 +97,12 @@ void orient_face(vector<int> &face, int v0, int v1)
   bool found = false;
   for (unsigned int i = 0; i < face.size(); i++) {
     if (face[i] == v0 && face[(i + 1) % face.size()] == v1) {
-       found = true;
-       break;
+      found = true;
+      break;
     }
   }
   if (!found)
-     reverse(face.begin(), face.end());
+    reverse(face.begin(), face.end());
 }
 
 int orient_geom(Geometry &geom, vector<vector<int>> *parts)

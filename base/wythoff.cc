@@ -697,7 +697,7 @@ static void add_faces(Geometry &geom, Vec3d pt, int num, int denom,
     face[i] = i;
   }
 
-  if(sides>2)
+  if (sides > 2)
     face_geom.add_face(face, col);
   else
     face_geom.add_edge(face, col);

@@ -59,6 +59,7 @@
 #include "getopt.h"
 #include "mathutils.h"
 #include "normal.h"
+#include "planar.h"
 #include "polygon.h"
 #include "povwriter.h"
 #include "random.h"
@@ -73,6 +74,5 @@
 #include "vec4d.h"
 #include "vec_utils.h"
 #include "vrmlwriter.h"
-#include "planar.h"
 
 #endif // ANTIPRISM_H
