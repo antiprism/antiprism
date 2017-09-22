@@ -131,6 +131,7 @@ void GeometryInfo::reset()
   f_perimeters.clear();
   vert_cons.clear();
   vert_cons_orig.clear();
+  face_cons.clear();
   vert_norms.clear();
   found_free_verts = false;
   free_verts.clear();
@@ -309,6 +310,13 @@ const vector<vector<int>> &GeometryInfo::get_vert_cons()
   if (!vert_cons.size())
     find_vert_cons();
   return vert_cons;
+}
+
+const vector<vector<vector<int>>> &GeometryInfo::get_face_cons()
+{
+  if (!face_cons.size())
+    find_face_cons();
+  return face_cons;
 }
 
 const vector<vector<vector<int>>> &GeometryInfo::get_vert_figs()
@@ -797,6 +805,25 @@ void GeometryInfo::find_vert_cons()
     vert_cons[e[1]].push_back(e[0]);
   }
   return;
+}
+
+void GeometryInfo::find_face_cons()
+{
+  face_cons.resize(num_faces(), vector<vector<int>>());
+  auto e2fs = geom.get_edge_face_pairs(false);
+  for (unsigned int f_idx = 0; f_idx < geom.faces().size(); f_idx++) {
+    for (unsigned int v = 0; v < geom.faces(f_idx).size(); v++) {
+      face_cons[f_idx].push_back(vector<int>());
+      auto ei = e2fs.find(
+          make_edge(geom.faces(f_idx, v), geom.faces_mod(f_idx, v + 1)));
+      if(ei != e2fs.end()) { // test, but shouldn't fail
+        for(int i : ei->second) {
+          if(i != (int)f_idx)
+            face_cons[f_idx][v].push_back(i);
+        }
+      }
+    }
+  }
 }
 
 void GeometryInfo::find_vert_figs()

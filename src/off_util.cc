@@ -1693,10 +1693,20 @@ int unzip_tree::init_basic(Geometry &geom, int first_face)
   tree.clear();
   root = first_face;
 
-  Geometry dual;
-  get_dual(dual, geom);
-  GeometryInfo info(dual);
-  const vector<vector<int>> &f_cons = info.get_vert_cons();
+  GeometryInfo info(geom);
+  const auto &f_cons_all = info.get_face_cons();
+  vector<vector<int>> f_cons(f_cons_all.size());
+  for(unsigned int f=0; f < f_cons_all.size(); f++) {
+    f_cons[f].resize(f_cons_all[f].size());
+    for(unsigned int v=0; v < f_cons_all[f].size(); v++) {
+       // Don't handle more than 2 faces meeting at an edge
+       if(f_cons_all[f][v].size() > 1)
+         return -1;
+
+       f_cons[f][v] = (f_cons_all[f][v].size()) ? f_cons_all[f][v][0] : -1;
+     }
+  }
+
   vector<tree_face> face_list;
   vector<bool> seen(geom.faces().size(), false);
 
@@ -1862,10 +1872,9 @@ int unzip_poly(Geometry &geom, int root, double fract, char centring,
                bool unzip_z_align, char *errmsg)
 {
   GeometryInfo info(geom);
-  if (!info.is_polyhedron()) {
+  if (!info.is_polyhedron())
     strcpy_msg(errmsg, "input not a polyhedron (temporary restriction)");
-    return 0;
-  }
+
   if (info.num_parts() > 1) {
     strcpy_msg(errmsg, "input not connected (temporary restriction)");
     return 0;

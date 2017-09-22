@@ -7,6 +7,8 @@ xx-xx-18 Adrian Rossiter <adrian@antiprism.com>
             miller: Miller's stellations of the icosahedron (Roger Kaufman)
          Changes
          Fixes
+            poly_weave: input can be non-closed surface
+            off_util: -u input can be non-closed surface
 
 Version 0.24.1
 18-11-16 Adrian Rossiter <adrian@antiprism.com>

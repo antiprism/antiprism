@@ -157,6 +157,7 @@ private:
   std::vector<double> f_max_nonplanars;
   std::vector<std::vector<int>> vert_cons;
   std::vector<std::vector<int>> vert_cons_orig;
+  std::vector<std::vector<std::vector<int>>> face_cons;
   std::vector<std::vector<std::vector<int>>> vert_figs;
   std::vector<Vec3d> vert_norms;
   bool vert_norms_local_orient;
@@ -173,6 +174,7 @@ private:
   void find_dihedral_angles();
   void find_vert_cons();
   void find_vert_cons_orig();
+  void find_face_cons();
   void find_vert_figs();
   void find_vert_norms(bool local_orient = false);
   void find_free_verts();
@@ -490,6 +492,11 @@ public:
    *  the plane of the face.
    * \return The face non-planarity values.*/
   const std::vector<double> &get_f_max_nonplanars();
+
+  /// Get face connections
+  /**Get, for each face, the faces connected to it across an edge.
+   * \return The faces connected to each face.*/
+  const std::vector<std::vector<std::vector<int>>> &get_face_cons();
 
   /// Get a dual
   /**\return A dual.*/
