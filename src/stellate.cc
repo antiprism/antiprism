@@ -337,29 +337,26 @@ void color_stellation(Geometry &stellation, char face_coloring_method,
       clrng.f_one_col(face_color);
   }
 
-  // edges built in color is invisible is the default
-  if (!(face_coloring_method == 'd' && edge_coloring_method == 'f')) {
-    // edges take color from faces (if faces none, clear edges)
-    if (edge_coloring_method == 'f') {
-      // if face colors is none
-      if (!face_coloring_method)
-        stellation.colors(EDGES).clear();
-      else
-        clrng.e_face_color();
-    }
-    else if (edge_coloring_method == 'C') {
-      auto efpairs = stellation.get_edge_face_pairs(false);
-      for (const auto &edge : stellation.edges()) {
-        vector<int> faces = efpairs[edge];
-        int i = find_edge_in_edge_list(stellation.edges(), edge);
-        if (i > -1)
-          stellation.colors(EDGES).set(i, cmap->get_col(faces.size()));
-      }
-    }
+  // if edges take color from faces (if faces none, clear edges)
+  if (edge_coloring_method == 'f') {
+    // if face colors is none
+    if (!face_coloring_method)
+      stellation.colors(EDGES).clear();
     else
-      // use color selected
-      clrng.e_one_col(edge_color);
+      clrng.e_face_color();
   }
+  else if (edge_coloring_method == 'C') {
+    auto efpairs = stellation.get_edge_face_pairs(false);
+    for (const auto &edge : stellation.edges()) {
+      vector<int> faces = efpairs[edge];
+      int i = find_edge_in_edge_list(stellation.edges(), edge);
+      if (i > -1)
+        stellation.colors(EDGES).set(i, cmap->get_col(faces.size()));
+    }
+  }
+  else
+    // use color selected
+    clrng.e_one_col(edge_color);
 
   // vertices taking edge coloring from stellation is the default
   // if not using default, sample colors again
