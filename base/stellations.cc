@@ -23,7 +23,7 @@
 */
 
 /*
-   Name: stel.cc
+   Name: stellations.cc
    Description: stellations added for Wenninger numbers
    Project: Antiprism - http://www.antiprism.com
 */
