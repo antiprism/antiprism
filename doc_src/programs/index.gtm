@@ -62,6 +62,8 @@ Programs
 <li><a href="geodesic.html">geodesic</a> - geodesic spheres
 <li><a href="zono.html">zono</a> - zonohedra
 <li><a href="polygon.html">polygon</a> - polygon based polyhedra (prisms, pyramids, etc)
+<li><a href="stellate.html">stellate</a> - polyhedron stellations
+<li><a href="miller.html">miller</a> - Miller's stellations of the icosahedron
 <li><a href="iso_delta.html">iso_delta</a> - isohedral deltahedra
 <li><a href="iso_kite.html">iso_kite</a> - isohedral kiteohedra
 <li><a href="conway.html">conway</a> - Conway Notation transformations

@@ -33,6 +33,8 @@ mtimestamp $dd.$MM.$yyyy
 ./programs/geodesic.gtm 3 geodesic - geodesic spheres
 ./programs/zono.gtm 3 zono - zonohedra from OFF files
 ./programs/polygon.gtm 3 polygon - polygon based polyhedra
+./programs/stellate.gtm 3 stellate - polyhedron stellations
+./programs/miller.gtm 3 miller - Miller's stellations of the icosahedron
 ./programs/iso_delta.gtm 3 iso_delta - isohedral deltahedra
 ./programs/iso_kite.gtm 3 iso_kite - isohedral kite-faced polyhedra
 ./programs/conway.gtm 3 conway - Conway Notation transformations

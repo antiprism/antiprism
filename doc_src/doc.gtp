@@ -34,6 +34,8 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/geodesic.gtm 2 geodesic - geodesic spheres
 ./doc/zono.gtm 2 zono - zonohedra from OFF files
 ./doc/polygon.gtm 2 polygon - polygon based polyhedra
+./doc/stellate.gtm 2 stellate - polyhedron stellations
+./doc/miller.gtm 2 miller - Miller's stellations of the icosahedron
 ./doc/iso_delta.gtm 2 iso_delta - isohedral deltahedra
 ./doc/iso_kite.gtm 2 iso_kite - isohedral kite-faced polyhedra
 ./doc/conway.gtm 2 conway - Conway Notation transformations

@@ -1,13 +1,12 @@
 Antiprism
 =========
 
-Notes for Antiprism 0.24.1
---------------------------
+Notes for Antiprism 0.25 (under development)
+------------------------
 
-The release includes new programs: to_nfold changes the rotational
-symmetry of a polyhedron; symmetro (Roger Kaufman) makes symmetrohedra
-and twisters; off2obj (Roger Kaufman) converts OFF to Wavefront OBJ format;
-off2dae converts OFF to Collada (DAE) format. There are also new features,
+The release includes new programs: stellate (Roger Kaufman) constructs
+polyhedron stellations, miller (Roger Kaufman) generates Miller's
+stellations of the icosahedron. There are also new features,
 improvements, and bug fixes. See the NEWS file for more details.
 
 Please look out for bugs and other issues, and report them to me at
