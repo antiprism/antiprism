@@ -33,7 +33,10 @@ Optional intermediate points on the path \- ':' followed
 by 0 to 3 coordinates for 'up' (def: 0), 'side' (def: 0),
 \&'along' (def: equal spacing)
 .IP
-Series of letters to step between triangles
+Series of characters to step between triangles
+.TP
+\-
+\- stay on the same triangle
 .IP
 V,E,F \- step two triangles rotating about V,E,F
 R     \- R reverse direction of following rotations
@@ -45,6 +48,9 @@ t followed by l,r,b (def: tl), start circuits from 'left',
 .TP
 \fB\-a\fR
 add the 'meta'\-transformed base
+.TP
+\fB\-f\fR <ht>
+lift the face centres by this height
 .HP
 \fB\-o\fR <file> write output to file (default: write to standard output)
 .SH "SEE ALSO"

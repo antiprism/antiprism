@@ -31,11 +31,13 @@
 #include "../base/antiprism.h"
 #include <algorithm>
 #include <functional>
+#include <memory>
 #include <map>
 #include <math.h>
 #include <string.h>
 #include <string>
 #include <vector>
+#include <regex>
 
 using std::string;
 using std::vector;
@@ -45,13 +47,17 @@ using std::not_equal_to;
 
 using namespace anti;
 
-void make_meta(const Geometry &geom, Geometry &meta)
+void make_meta(const Geometry &geom, Geometry &meta, double face_ht=0.0)
 {
   meta.clear_all();
   meta.add_verts(geom.verts());
   int f_start = meta.verts().size();
-  for (unsigned int f = 0; f < geom.faces().size(); f++)
-    meta.add_vert(geom.face_cent(f));
+  for (unsigned int f = 0; f < geom.faces().size(); f++) {
+    Vec3d face_pt = geom.face_cent(f);
+    if(face_ht)
+      face_pt += geom.face_norm(f).with_len(face_ht);
+    meta.add_vert(face_pt);
+  }
 
   Color light(1.0, 0.8, 0.6, 0.5);
   Color dark(0.1, 0.3, 0.6, 0.5);
@@ -62,18 +68,18 @@ void make_meta(const Geometry &geom, Geometry &meta)
     int e_idx = meta.add_vert(geom.edge_cent(ef_pair.first));
     // Add four triangles
     int idx;
-    idx =
-        meta.add_face(ef_pair.first[0], e_idx, ef_pair.second[0] + f_start, -1);
-    meta.colors(FACES).set(idx, light);
-    idx =
-        meta.add_face(ef_pair.first[0], e_idx, ef_pair.second[1] + f_start, -1);
-    meta.colors(FACES).set(idx, dark);
-    idx =
-        meta.add_face(ef_pair.first[1], e_idx, ef_pair.second[1] + f_start, -1);
-    meta.colors(FACES).set(idx, light);
-    idx =
-        meta.add_face(ef_pair.first[1], e_idx, ef_pair.second[0] + f_start, -1);
-    meta.colors(FACES).set(idx, dark);
+    if(ef_pair.second[0] >= 0) {
+      idx = meta.add_face(ef_pair.first[0], e_idx, ef_pair.second[0] + f_start, -1);
+      meta.colors(FACES).set(idx, light);
+      idx = meta.add_face(ef_pair.first[1], e_idx, ef_pair.second[0] + f_start, -1);
+      meta.colors(FACES).set(idx, dark);
+    }
+    if(ef_pair.second[1] >= 0) {
+      idx = meta.add_face(ef_pair.first[1], e_idx, ef_pair.second[1] + f_start, -1);
+      meta.colors(FACES).set(idx, light);
+      idx = meta.add_face(ef_pair.first[0], e_idx, ef_pair.second[1] + f_start, -1);
+      meta.colors(FACES).set(idx, dark);
+    }
   }
   meta.add_missing_impl_edges();
   Coloring(&meta).e_one_col(Color::invisible);
@@ -207,7 +213,7 @@ Status weave_pattern::set_pattern(const string &pat)
 {
   ops.clear();
   paths.clear();
-  start_faces = 5;                   // 'left'/'dark' faces
+  start_faces = 1;                   // 'left'/'dark' faces
   int path_type = weave_path::CURVE; // path points to follow a curve
 
   bool reverse = false;
@@ -216,7 +222,7 @@ Status weave_pattern::set_pattern(const string &pat)
   while (pos < pat_sz) {
     int len;
     // path points
-    bool add_default_point = !paths.size() && strchr("vefVEF", pat[pos]);
+    bool add_default_point = !paths.size() && strchr("vefVEF_", pat[pos]);
     if ((len = strspn(pat.substr(pos).c_str(), "0123456789.,-+:")) ||
         add_default_point) {
       ops.push_back(P);
@@ -241,7 +247,7 @@ Status weave_pattern::set_pattern(const string &pat)
                                      "followed by l, r or b\n",
                                      pat[pos]));
       start_faces =
-          5 * (tris == 'l' || tris == 'b') + 10 * (tris == 'r' || tris == 'b');
+          1 * (tris == 'l' || tris == 'b') + 2 * (tris == 'r' || tris == 'b');
       len = 2;
     }
 
@@ -292,6 +298,8 @@ Status weave_pattern::set_pattern(const string &pat)
         ops.push_back(V);
       }
     }
+    else if ('_' == pat[pos])
+        ;
     else {
       return Status::error(
           msg_str("invalid character '%c' in position %d", pat[pos], pos + 1));
@@ -305,6 +313,7 @@ Status weave_pattern::set_pattern(const string &pat)
 
   return Status::ok();
 }
+
 
 /*
 string weave_pattern::get_pattern() const
@@ -326,11 +335,11 @@ string weave_pattern::get_pattern() const
       }
    }
    ret += "t";
-   if(start_faces==5)
+   if(start_faces==1)
       ret += 'l';
-   if(start_faces==10)
+   if(start_faces==2)
       ret += 'r';
-   if(start_faces==15)
+   if(start_faces==3)
       ret += 'b';
 
    return ret;
@@ -352,7 +361,7 @@ private:
   const vector<weave_pattern> &get_pats() const { return pats; }
 
 public:
-  bool set_geom(const Geometry &geom);
+  bool set_geom(const Geometry &geom, double face_ht=0.0);
   void add_pattern(const weave_pattern &pattern) { pats.push_back(pattern); }
   Status add_pattern(const string &pat);
   void make_weave(Geometry &wv) const;
@@ -376,8 +385,12 @@ bool weave::find_nbrs()
       auto ef_i = ef_pairs.find(e);
       if (ef_i == ef_pairs.end())
         return false;
-      nbrs[f][i] =
+      else if (ef_i->second.size() != 2)
+        nbrs[f][i] = -1;  // only allow connection for two faces at an edge
+      else {
+        nbrs[f][i] =
           (ef_i->second[0] != (int)f) ? ef_i->second[0] : ef_i->second[1];
+      }
     }
   return true;
 }
@@ -424,10 +437,12 @@ void weave::add_circuit(Geometry &wv, int start_idx, const weave_pattern &pat,
       }
       else {
         idx = nbrs[idx][pat.get_op()]; // move to next triangle
+        if (idx<0) { // abandon: circuit tried to cross an open edge
+          wv.raw_verts().resize(start_v_sz); // remove any added verts
+          return;
+        }
       }
       pat.next_op();
-      // if(idx==start_idx && prev_pt.size())   // circuit complete
-      //   finish = true;
     }
     if (finish)
       break;
@@ -450,9 +465,9 @@ static void reverse_odd_faces(Geometry &geom)
       reverse(geom.faces(i).begin(), geom.faces(i).end());
 }
 
-bool weave::set_geom(const Geometry &geom)
+bool weave::set_geom(const Geometry &geom, double face_ht)
 {
-  make_meta(geom, meta);
+  make_meta(geom, meta, face_ht);
   find_nbrs();
   reverse_odd_faces(meta);
   vert_norms = meta.get_info().get_vert_norms();
@@ -470,6 +485,19 @@ Status weave::add_pattern(const string &pat)
   return stat;
 }
 
+bool valid_start_face(int f, int start_faces)
+{
+  int is_left = f%2;
+  if(start_faces == 3)
+    return true;
+  else if(start_faces == 2 && is_left)
+    return true;
+  else if(start_faces == 1 && !is_left)
+    return true;
+  else
+    return false;
+}
+
 void weave::make_weave(Geometry &wv) const
 {
   // for(unsigned int i=0; i<nbrs.size(); i++)
@@ -483,7 +511,7 @@ void weave::make_weave(Geometry &wv) const
     vector<bool> seen(faces_sz, false);
     unsigned char start_faces = pat.get_start_faces();
     for (int i = 0; i < faces_sz; i++) {
-      if (!seen[i] && (start_faces & (1 << (i % 4))))
+      if (!seen[i] && valid_start_face(i, start_faces))
         add_circuit(wv, i, pat, seen);
     }
   }
@@ -493,13 +521,15 @@ class wv_opts : public ProgramOpts {
 private:
 public:
   bool add_meta;
+  double face_ht;
   weave wv;
   bool use_default_pattern;
   string ifile;
   string ofile;
 
   wv_opts()
-      : ProgramOpts("poly_weave"), add_meta(false), use_default_pattern(true)
+      : ProgramOpts("poly_weave"), add_meta(false), face_ht(0.0),
+      use_default_pattern(true)
   {
   }
 
@@ -532,13 +562,15 @@ void wv_opts::usage()
 "               Optional intermediate points on the path - ':' followed\n"
 "                  by 0 to 3 coordinates for 'up' (def: 0), 'side' (def: 0),\n"
 "                  'along' (def: equal spacing)\n"
-"               Series of letters to step between triangles\n"
+"               Series of characters to step between triangles\n"
+"                  -     - stay on the same triangle\n"
 "                  V,E,F - step two triangles rotating about V,E,F\n"
 "                  R     - R reverse direction of following rotations\n"
 "                  v,e,f - step over side opposite V,E,F\n"
 "               t followed by l,r,b (def: tl), start circuits from 'left',\n"
 "                  'right', both triangles\n"
 "  -a        add the 'meta'-transformed base\n"
+"  -f <ht>   lift the face centres by this height\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
 "\n", prog_name(), help_ver_text);
@@ -552,7 +584,7 @@ void wv_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":ho:p:a")) != -1) {
+  while ((c = getopt(argc, argv, ":ho:p:f:a")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -564,6 +596,10 @@ void wv_opts::process_command_line(int argc, char **argv)
 
     case 'a':
       add_meta = true;
+      break;
+
+    case 'f':
+      print_status_or_exit(read_double(optarg, &face_ht), 'f');
       break;
 
     case 'o':
@@ -596,8 +632,6 @@ int main(int argc, char *argv[])
   opts.read_or_error(geom, opts.ifile);
 
   GeometryInfo info(geom);
-  if (!info.is_polyhedron())
-    opts.error("base geometry is not a polyhedron");
   if (!info.is_orientable())
     opts.error("base polyhedron is not orientable");
   if (!info.is_oriented()) {
@@ -607,7 +641,7 @@ int main(int argc, char *argv[])
 
   weave &wv = opts.wv;
 
-  wv.set_geom(geom);
+  wv.set_geom(geom, opts.face_ht);
   Geometry wv_geom;
   wv.make_weave(wv_geom);
   if (opts.add_meta)
