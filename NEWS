@@ -5,7 +5,9 @@ xx-xx-18 Adrian Rossiter <adrian@antiprism.com>
          New Programs
             stellate: polyhedron stellations (Roger Kaufman)
             miller: Miller's stellations of the icosahedron (Roger Kaufman)
+            wythoff: Wythoff-style tilings on various surfaces
          Changes
+            poly_weave: moved to unsupported programs
          Fixes
             poly_weave: input can be non-closed surface
             off_util: -u input can be non-closed surface

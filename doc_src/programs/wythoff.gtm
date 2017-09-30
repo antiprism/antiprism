@@ -1,0 +1,66 @@
+#define HL_PROG class=curpage
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<<TITLE_HEAD>>
+
+<<TOP_LINKS>>
+
+<<USAGE_START>>
+<pre class="prog_help">
+<<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</pre>
+<<USAGE_END>>
+
+
+<<EXAMPLES_START>>
+List the Conway operators for loys of examples of the constructive notation
+<<CMDS_START>>
+wythoff -c list
+<<CMDS_END>>
+
+Wythoff equivalents to |pqr, p|qr, pq|r, pqr|, for (2 3 5). The base model
+<i>schwarz_2_3_5p</i> is already the 'meta' triangle tiling so use
+<i>option -M</i>.
+<<CMDS_START>>
+wythoff -M -p [VEF]0V,0E,0F,0V0E0F schwarz_2_3_5p | antiview
+wythoff -M -p [V]0E,0F schwarz_2_3_5p | antiview
+wythoff -M -p [VE]0V,0E,0v0e schwarz_2_3_5p | antiview
+wythoff -M -p [VEF]0v0e,0e0f,0f0v schwarz_2_3_5p | antiview
+<<CMDS_END>>
+
+By default a polyhedron is processed by the Conway 'meta' operation
+before applying the constructive notation. Here is the equivalent
+of applying Conway notation 'ambo' to a cube
+<<CMDS_START>>
+wythoff -p [E]0V,0F cube | antiview
+<<CMDS_END>>
+
+A unitle2d triangle-tiled torus is a 'meta' tiling that doesn't
+correspond to a polyhedron, here the snub operation is applied
+<<CMDS_START>>
+unitile2d -s t -w 8 -l 24 2 | wythoff  -c s -M | antiview
+<<CMDS_END>>
+
+<<NOTES_START>>
+<i>wythoff</i> expands the ideas behind the Wythoff symbol to create
+a specified tiling pattern from any suitable triangular tiling.
+<p>
+Triangle tilings are created, by default, from the input model
+by the Conway 'meta' operation. This is made from all triangles that join
+a face centre to one of its vertices and a neighbouring edge centre.
+Alternatively, with <i>option -M</i> the input will be considered
+to be a suitable triangle tiling, and must be 2-colourable and
+all the vertices of even order.
+<p>
+The output tiling will not necesarily be planar, or have equal edge lengths.
+The output of 'spherical' tilings can be processed with the <i>canonical</i>
+program.
+<<NOTES_END>>
+
+#include "<<END>>"

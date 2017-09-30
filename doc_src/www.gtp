@@ -38,6 +38,7 @@ mtimestamp $dd.$MM.$yyyy
 ./programs/iso_delta.gtm 3 iso_delta - isohedral deltahedra
 ./programs/iso_kite.gtm 3 iso_kite - isohedral kite-faced polyhedra
 ./programs/conway.gtm 3 conway - Conway Notation transformations
+./programs/wythoff.gtm 3 wythoff - Wythoff-style constructions
 ./programs/poly_kscope.gtm 3 poly_kscope - polyhedral kaleidoscope
 ./programs/to_nfold.gtm 3 to_nfold - change the rotational symmetry of a polyhedron
 ./programs/unitile2d.gtm 3 unitile2d - make uniform tilings on a surface
@@ -51,7 +52,6 @@ mtimestamp $dd.$MM.$yyyy
 ./programs/kcycle.gtm 3 kcycle - kaleidocycle rings of polyhedron
 ./programs/jitterbug.gtm 3 jitterbug - jitterbug transformation
 ./programs/leonardo.gtm 3 leonardo - Leonardo da Vinci style models
-./programs/poly_weave.gtm 3 poly_weave - weave based on a polyhedron
 ./programs/canonical.gtm 3 canonical - canonicalize a polyhedon
 ./programs/sph_rings.gtm 3 sph_rings - rings of points on a sphere
 ./programs/sph_saff.gtm 3 sph_saff - spiral points on a sphere (Saff and Kuiljaars)
@@ -60,6 +60,7 @@ mtimestamp $dd.$MM.$yyyy
 ./programs/col_util.gtm 3 col_util - colour utilities including plots and blends
 
 ./programs/dome_layer.gtm 3 UNSUPPORTED: dome_layer - dome strut arrangements
+./programs/poly_weave.gtm 3 UNSUPPORTED poly_weave - weave based on a polyhedron
 ./programs/twist.gtm 3 UNSUPPORTED: twist - twist the edges of a polyhedron
 ./programs/spidron.gtm 3 UNSUPPORTED: spidron - spidronise a polyhedron
 ./programs/off2m.gtm 3 UNSUPPORTED: off2m - convert an OFF file for LiveGraphics3D

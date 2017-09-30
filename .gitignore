@@ -45,6 +45,7 @@ doc_src/common_defs.inc
 src_extra/twist
 src_extra/spidron
 src_extra/dome_layer
+src_extra/poly_weave
 src_extra/off2m
 src_extra/m2off
 src_extra/off2txt
@@ -72,7 +73,6 @@ src/geodesic
 src/minmax
 src/sph_saff
 src/sph_rings
-src/poly_weave
 src/off_report
 src/off_query
 src/off_normals
@@ -86,6 +86,7 @@ src/lat_grid
 src/lat_util
 src/canonical
 src/conway
+src/wythoff
 src/n_icons
 src/iso_delta
 src/iso_kite

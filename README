@@ -6,8 +6,9 @@ Notes for Antiprism 0.25 (under development)
 
 The release includes new programs: stellate (Roger Kaufman) constructs
 polyhedron stellations, miller (Roger Kaufman) generates Miller's
-stellations of the icosahedron. There are also new features,
-improvements, and bug fixes. See the NEWS file for more details.
+stellations of the icosahedron, wythoff makes Wythoff-style tilings
+on surfaces. There are also new features, improvements, and bug fixes.
+See the NEWS file for more details.
 
 Please look out for bugs and other issues, and report them to me at
 at: adrian@antiprism.com

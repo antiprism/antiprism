@@ -39,6 +39,7 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/iso_delta.gtm 2 iso_delta - isohedral deltahedra
 ./doc/iso_kite.gtm 2 iso_kite - isohedral kite-faced polyhedra
 ./doc/conway.gtm 2 conway - Conway Notation transformations
+./doc/wythoff.gtm 2 wythoff - Wythoff-style constructions
 ./doc/poly_kscope.gtm 2 poly_kscope - polyhedral kaleidoscope
 ./doc/to_nfold.gtm 2 to_nfold - change the rotational symmetry of a polyhedron
 ./doc/unitile2d.gtm 2 unitile2d - make uniform tilings on a surface
@@ -52,7 +53,6 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/kcycle.gtm 2 kcycle - kaleidocycle rings of polyhedron
 ./doc/leonardo.gtm 2 leonardo - Leonardo da Vinci style models
 ./doc/jitterbug.gtm 2 jitterbug - jitterbug transformation
-./doc/poly_weave.gtm 2 poly_weave - weave based on a polyhedron
 ./doc/canonical.gtm 2 canonical - canonicalize a polyhedon
 ./doc/sph_rings.gtm 2 sph_rings - rings of points on a sphere
 ./doc/sph_saff.gtm 2 sph_saff - spiral points on a sphere (Saff and Kuiljaars)
@@ -63,6 +63,7 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/dome_layer.gtm 2 UNSUPPORTED: dome_layer - dome strut arrangements
 ./doc/twist.gtm 2 UNSUPPORTED: twist - twist the edges of a polyhedron
 ./doc/spidron.gtm 2 UNSUPPORTED: spidron - spidronise a polyhedron
+./doc/poly_weave.gtm 2 UNSUPPORTED poly_weave - weave based on a polyhedron
 ./doc/off2m.gtm 2 UNSUPPORTED: off2m - convert an OFF file for LiveGraphics3D
 ./doc/m2off.gtm 2 UNSUPPORTED: m2off - convert a LiveGraphics3D 'm' file to OFF format
 ./doc/off2txt.gtm 2 UNSUPPORTED: off2txt - convert an OFF file to Hedron format
