@@ -525,10 +525,11 @@ void kaleido_opts::usage()
 {
    fprintf(stdout,
 "\n"
+"Usage: %s [options] [Symbol]\n"
+"\n"
 "Antiprism port of Kaleido that lists Uniform information, or outputs models\n"
 "Kaleidoscopic Construction of Uniform Polyhedra, $Revision: 3.27 $\n"
 "Copyright \302\251 1991-2002 Dr. Zvi Har'El <rl@math.technion.ac.il>\n"
-"Usage: %s [options] [Symbol]\n"
 "\n"
 "Symbol may be a number Meader index (e.g u75), Kaleido index (e.g k75)\n"
 "Coxeter index (e.g c75), Wenninger index (e.g w75). There are 80 models\n"
