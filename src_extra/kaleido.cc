@@ -63,7 +63,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../../antiprism_rk/base/antiprism.h"
+#include "../base/antiprism.h"
 
 using namespace anti;
 
@@ -757,11 +757,11 @@ void frac(double x) {
   }
 }
 
-void printfrac(double x) {
+void printfrac(double x, FILE *fp) {
   frac(x);
-  printf("%ld", frax.n);
+  fprintf(fp, "%ld", frax.n);
   if (frax.d != 1)
-    printf("/%ld", frax.d);
+    fprintf(fp, "/%ld", frax.d);
 }
 
 char *sprintfrac(double x) {
@@ -1285,13 +1285,14 @@ int newton(Polyhedron *P, int need_approx, FILE *fp) {
       delta -= P->m[j] * P->gamma[j];
     }
     if (need_approx)
-      printf("(%g)\n", delta);
+      fprintf(fp, "(%g)\n", delta);
     if (fabs(delta) < 11 * DBL_EPSILON)
       return 1;
     /* On a RS/6000, fabs(delta)/DBL_EPSILON may occilate between 8 and
      * 10. Reported by David W. Sanderson <dws@ssec.wisc.edu> */
     for (j = 0; j < P->N; j++)
       sigma += P->m[j] * tan(P->gamma[j]);
+    // sigma can be zero resulting in P->gamma[0] = infinity
     P->gamma[0] += delta * tan(P->gamma[0]) / sigma;
     // previously Err() had a return statement (return 0)
     if (P->gamma[0] < 0 || P->gamma[0] > M_PI)
@@ -1669,7 +1670,7 @@ int printit(Polyhedron *P, int need_coordinates, int just_list, int digits,
     if (j)
       putchar('+');
     fprintf(fp, "%d{", P->Fi[j]);
-    printfrac(P->n[j]);
+    printfrac(P->n[j], fp);
     putchar('}');
   }
   /*
@@ -1744,7 +1745,7 @@ int printit(Polyhedron *P, int need_coordinates, int just_list, int digits,
     fprintf(fp, "f%-3d (%*.*f,%*.*f,%*.*f) {", i + 1, digits + 3, digits,
             P->f[i].x, digits + 3, digits, P->f[i].y, digits + 3, digits,
             P->f[i].z);
-    printfrac(P->n[P->ftype[i]]);
+    printfrac(P->n[P->ftype[i]], fp);
     putchar('}');
     if (P->hemi && !P->ftype[i])
       putchar('*');
