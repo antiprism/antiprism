@@ -41,14 +41,17 @@ of applying Conway notation 'ambo' to a cube
 wythoff -p [E]0V,0F cube | antiview
 <<CMDS_END>>
 
-A unitle2d triangle-tiled torus is a 'meta' tiling that doesn't
-correspond to a polyhedron, here the snub operation is applied
+If the base polyhedron is already like a meta tiling, i.e. 2-colourable
+triangle faces and even order vertices, then it may be used as-is by
+specifying <i>-M</i>. For example, the following unitle2d triangle-tiled
+torus is like a 'meta' tiling, but does not correspond to a polyhedron,
+and the snub operation is applied to it
 <<CMDS_START>>
 unitile2d -s t -w 8 -l 24 2 | wythoff  -c s -M | antiview
 <<CMDS_END>>
 
 <<NOTES_START>>
-<i>wythoff</i> expands the ideas behind the Wythoff symbol to create
+<i>wythoff</i> expands on the ideas behind the Wythoff symbol to create
 a specified tiling pattern from any suitable triangular tiling.
 <p>
 Triangle tilings are created, by default, from the input model
@@ -61,6 +64,44 @@ all the vertices of even order.
 The output tiling will not necesarily be planar, or have equal edge lengths.
 The output of 'spherical' tilings can be processed with the <i>canonical</i>
 program.
+<p>
+In the final model, vertices are coloured according to which elements
+are involved in the pattern coordinates: V=0/red, E=1/green, F=2/blue,
+VE=3/yellow, EF=4/cyan, FE=5/magenta, VEF=6/grey. Faces are coloured
+according to their corresponding position in the pattern.
+
+<h4>Comparison with corresponding Conway notation operators</h4>
+
+Conway notation is applied to polyhedra, where vertices, edges and faces
+are clearly distinguishable. Constructive notation is applied to triangle
+tilings, derived from polyhedra by the Conway <i>meta</i> operation, and in
+these triangle tilings the three "element" types are equivalent.
+<p>
+Some Conway operators produce an edge with the same centre as an original
+edge. A corresponding constructive notation operation must produce a
+digon for this edge, because it is a polygon that wraps the element, and
+not just the edge of an adjoining face.
+<p>
+As a consequence, the Conway seed corresponds to a constructive notation
+'seed' operator which, when applied to a polyhedron, generates the original
+polyhedron, but with digons along the edges.
+<p>
+As element types on the base tiling are equivalent, constructive notation
+operations that can be transformed into each other by permuting the element
+types can also be considered equivalent. Some equivalent Conway notation
+operators expressed in constructive notation are: seed/dual/ambo,
+truncate/zip/expand, kis/needle/subdivide. Some operators
+are symmetric with respect to the element types, for example snub, meta
+and bevel.
+
+<h4>Replacement for twist program</h4>
+
+The <i>twist</i> program created a model connected like a twisted
+struct zig-zag tensegrity. The <i>wythoff</i> program can create
+equivalently connected models with the following pattern.
+<<CMDS_START>>
+wythoff -p [V4E2F8]0feEV0fe0E0V ico | antiview 
+<<CMDS_END>>
 <<NOTES_END>>
 
 #include "<<END>>"

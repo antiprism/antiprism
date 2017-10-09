@@ -646,20 +646,6 @@ public:
   void dump() const;
 };
 
-/// Get vertex points of a Schwarz triangle, and its symmetry group
-/**\param fracs six integers, taken in pairs as the angle fractions.
- * \param verts the three vertices of the triangle.
- * \param sym to return the symmetry group.
- * \return \c true if the triangle is valid, therwise \c false. */
-bool get_schwarz_tri_verts(const std::vector<int> &fracs,
-                           std::vector<Vec3d> &verts, Symmetry *sym = nullptr);
-
-/// Get angle fractions for a Schwarz triangle by index number
-/**\param tri_idx ranges from 0 - 43 (see base/wythoff.cc for the list).
- * \param fracs six integers, taken in pairs as the angle fractions.
- * \return \c true if the triangle index is valid, therwise \c false. */
-bool get_schwarz_tri_fracs(int tri_idx, std::vector<int> &fracs);
-
 } // namespace anti
 
 #endif // SYMMETRY_H

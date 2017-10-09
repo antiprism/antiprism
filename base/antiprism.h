@@ -66,6 +66,7 @@
 #include "scene.h"
 #include "status.h"
 #include "symmetry.h"
+#include "tiling.h"
 #include "timer.h"
 #include "trans3d.h"
 #include "trans4d.h"
