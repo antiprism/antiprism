@@ -501,9 +501,9 @@ public:
   string ofile;
 
   string symbol;
+  int just_list;
   int need_coordinates;
   int need_approx;
-  int just_list;
   int model;
   int base;
   double azimuth;
@@ -512,8 +512,8 @@ public:
   int sig_digits;
 
   kaleido_opts()
-      : ProgramOpts("kaleido"), symbol(""), need_coordinates(0), need_approx(0),
-        just_list(0), model(1), base(1), azimuth(AZ), elevation(EL), freeze(0),
+      : ProgramOpts("kaleido"), symbol(""), just_list(0), need_coordinates(0), need_approx(0),
+        model(1), base(1), azimuth(AZ), elevation(EL), freeze(0),
         sig_digits(DEF_SIG_DGTS) {}
 
   void process_command_line(int argc, char **argv);
@@ -634,6 +634,10 @@ void kaleido_opts::process_command_line(int argc, char **argv) {
   else if (argc - optind == 1)
     symbol = argv[optind];
 
+  // just_list suppresses need_coordinates. override.
+  if (just_list && need_coordinates)
+    just_list = false;
+
   // original code had significant digits at 6 for listings
   if (just_list || need_coordinates || need_approx) {
     if (!sig_digits_set) {
@@ -648,7 +652,9 @@ void kaleido_opts::process_command_line(int argc, char **argv) {
 
 // from various libraries
 
-// more() becomes a noop
+// RK - putchar() replace with fprintf(fp);
+
+// RK - more() becomes a noop
 void more() {}
 
 // RK - rewrote Err()
@@ -757,6 +763,7 @@ void frac(double x) {
   }
 }
 
+// RK - add fp for file support
 void printfrac(double x, FILE *fp) {
   frac(x);
   fprintf(fp, "%ld", frax.n);
@@ -1648,7 +1655,7 @@ int printit(Polyhedron *P, int need_coordinates, int just_list, int digits,
   if (P->index != -1 && uniform_list[P->index].Coxeter)
     fprintf(fp, " [%d,%d]", uniform_list[P->index].Coxeter,
             uniform_list[P->index].Wenninger);
-  putchar('\n');
+  fprintf(fp, "\n");
   if (just_list)
     return 1;
   /*
@@ -1668,10 +1675,10 @@ int printit(Polyhedron *P, int need_coordinates, int just_list, int digits,
   fprintf(fp, "\n\tV=%d, E=%d, F=%d=", P->V, P->E, P->F);
   for (j = 0; j < P->N; j++) {
     if (j)
-      putchar('+');
+      fprintf(fp, "+");
     fprintf(fp, "%d{", P->Fi[j]);
     printfrac(P->n[j], fp);
-    putchar('}');
+    fprintf(fp, "}");
   }
   /*
    * Print solution.
@@ -1710,10 +1717,10 @@ int printit(Polyhedron *P, int need_coordinates, int just_list, int digits,
       fprintf(fp, "%*s", digits + 3, "infinity");
     else
       fprintf(fp, "%*.*f", digits + 3, digits, sqrt(1 - cosc * cosc) / cosc);
-    putchar('\n');
+    fprintf(fp, "\n");
     free(t);
   }
-  putchar('\n');
+  fprintf(fp, "\n");
   more();
   if (!need_coordinates)
     return 1;
@@ -1730,7 +1737,7 @@ int printit(Polyhedron *P, int need_coordinates, int just_list, int digits,
     fprintf(fp, "\n%*s", 3 * digits + 20, "");
     for (j = 0; j < P->M; j++)
       fprintf(fp, " f%-3d", P->incid[j][i] + 1);
-    putchar('\n');
+    fprintf(fp, "\n");
     if (!((i + 1) % (more_lines / 2)))
       more();
   }
@@ -1746,16 +1753,16 @@ int printit(Polyhedron *P, int need_coordinates, int just_list, int digits,
             P->f[i].x, digits + 3, digits, P->f[i].y, digits + 3, digits,
             P->f[i].z);
     printfrac(P->n[P->ftype[i]], fp);
-    putchar('}');
+    fprintf(fp, "}");
     if (P->hemi && !P->ftype[i])
-      putchar('*');
-    putchar('\n');
+      fprintf(fp, "*");
+    fprintf(fp, "\n");
     if (!((i + 1) % more_lines))
       more();
   }
   if (P->F % more_lines)
     more();
-  putchar('\n');
+  fprintf(fp, "\n");
   return 1;
 }
 
@@ -2656,8 +2663,6 @@ int main(int argc, char *argv[]) {
       }
       printit(P, opts.need_coordinates, opts.just_list, opts.sig_digits,
               more_lines, uniform, ofile);
-      if (opts.ofile != "")
-        fclose(ofile);
     } else {
       // not used
       char *prefix = 0;
