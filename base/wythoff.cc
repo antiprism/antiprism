@@ -682,8 +682,6 @@ static void add_faces(Geometry &geom, Vec3d pt, int num, int denom,
 {
   // avoid extra windings
   int gr_fact = gcd(num, denom);
-  if (gr_fact % 2 == 0) // even number of windings cancel out
-    return;
   num /= gr_fact;
   denom /= gr_fact;
 
@@ -850,20 +848,42 @@ bool Wythoff::make_tri_poly(Geometry &geom)
   geom.clear_all();
   if (is_set()) {
     Symmetry sym(get_tri_sym());
-    Geometry tri;
-    make_tri(tri);
 
-    Geometry geom_tri;
-    sym_repeat(geom_tri, tri, sym);
-    Coloring clrng(&geom_tri);
-    clrng.f_one_col(0);
-    geom.append(geom_tri);
-    Vec3d norm =
-        (sym.get_sym_type() == Symmetry::T) ? Vec3d(1, 1, 0) : Vec3d::Z;
-    geom_tri.transform(Trans3d::reflection(norm));
-    clrng.f_one_col(1);
-    geom.append(geom_tri);
-    merge_coincident_elements(geom, "v", epsilon);
+    if(sym.get_sym_type() == Symmetry::D) {
+      // N/D with D even is double wrapped surface and cannot be merged. Use
+      // specific construction rather than symmetry repeat with merge
+      int N, D;
+      for(int i=0; i<3; i++) {
+        N = fracs[2*i];
+        D = fracs[2*i+1];
+        if(N!=2 || D!=1)
+          break;
+      };
+      geom.clear_all();
+      geom.add_vert(Vec3d::Z);
+      geom.add_vert(-Vec3d::Z);
+      for(int i=0; i<2*N; i++) {
+        double ang = i * M_PI * D / N;
+        geom.add_vert(Vec3d(cos(ang), sin(ang), 0));
+        geom.add_face({2+i, 2+(i+1)%(2*N), 0}, Color(i%2));
+        geom.add_face({1, 2+(i+1)%(2*N), 2+i}, Color((i+1)%2));
+      }
+    }
+    else {
+      Geometry tri;
+      make_tri(tri);
+      Geometry geom_tri;
+      sym_repeat(geom_tri, tri, sym);
+      Coloring clrng(&geom_tri);
+      clrng.f_one_col(0);
+      geom.append(geom_tri);
+      Vec3d norm =
+          (sym.get_sym_type() == Symmetry::T) ? Vec3d(1, 1, 0) : Vec3d::Z;
+      geom_tri.transform(Trans3d::reflection(norm));
+      clrng.f_one_col(1);
+      geom.append(geom_tri);
+      merge_coincident_elements(geom, "v", epsilon);
+    }
   }
   return is_set();
 }
