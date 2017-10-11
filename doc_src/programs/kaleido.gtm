@@ -1,0 +1,40 @@
+#define HL_PROG class=curpage
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<<TITLE_HEAD>>
+
+<<TOP_LINKS>>
+
+<<USAGE_START>>
+<pre class="prog_help">
+<<__SYSTEM__(../src_extra/<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</pre>
+<<USAGE_END>>
+
+
+<<EXAMPLES_START>>
+Make a tetrahedron
+<<CMDS_START>>
+kaleido U1 | antiview
+<<CMDS_END>>
+
+Make a 7/2 antiprism
+<<CMDS_START>>
+kaleido "|2 2 7/2" | antiview
+<<CMDS_END>>
+<<EXAMPLES_END>>
+
+
+<<NOTES_START>>
+<a href="http://www.math.technion.ac.il/S/rl/kaleido/">Kaleido</a>
+uniform polyhedron generator (Zvi Har'El), adapted by
+<a href="http://www.interocitors.com/polyhedra/">Roger Kaufman</a>.
+<<NOTES_END>>
+
+#include "<<END>>"
