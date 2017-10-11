@@ -65,6 +65,10 @@
 
 #include "../base/antiprism.h"
 
+using std::vector;
+using std::swap;
+using std::set;
+
 using namespace anti;
 
 // definitions and structures used to be in kaleido.h
@@ -129,11 +133,15 @@ using namespace anti;
 
 #define GR_DIRH_IDX 74
 
-typedef struct { double x, y, z; } Vector;
+typedef struct {
+  double x, y, z;
+} Vector;
 
 Vector x, y, z;
 
-typedef struct { long n, d; } Fraction;
+typedef struct {
+  long n, d;
+} Fraction;
 
 Fraction frax;
 
@@ -491,7 +499,8 @@ Uniform uniform_list[] = {
 };
 // clang-format on
 
-int get_uniform_list(Uniform **uniform) {
+int get_uniform_list(Uniform **uniform)
+{
   *uniform = uniform_list;
   return sizeof(uniform_list) / sizeof(uniform_list[0]);
 }
@@ -512,9 +521,11 @@ public:
   int sig_digits;
 
   kaleido_opts()
-      : ProgramOpts("kaleido"), symbol(""), just_list(0), need_coordinates(0), need_approx(0),
-        model(1), base(1), azimuth(AZ), elevation(EL), freeze(0),
-        sig_digits(DEF_SIG_DGTS) {}
+      : ProgramOpts("kaleido"), symbol(""), just_list(0), need_coordinates(0),
+        need_approx(0), model(1), base(1), azimuth(AZ), elevation(EL),
+        freeze(0), sig_digits(DEF_SIG_DGTS)
+  {
+  }
 
   void process_command_line(int argc, char **argv);
   void usage();
@@ -558,7 +569,8 @@ void kaleido_opts::usage()
 }
 // clang-format on
 
-void kaleido_opts::process_command_line(int argc, char **argv) {
+void kaleido_opts::process_command_line(int argc, char **argv)
+{
   char c;
   char errmsg[MSG_SZ];
   bool sig_digits_set = false;
@@ -644,7 +656,8 @@ void kaleido_opts::process_command_line(int argc, char **argv) {
       sig_digits = 6;
       warning("for listings, default significant digits is 6");
     }
-  } else {
+  }
+  else {
     if (symbol == "0")
       error("can only output one model at at time\n", 'w');
   }
@@ -658,7 +671,8 @@ void kaleido_opts::process_command_line(int argc, char **argv) {
 void more() {}
 
 // RK - rewrote Err()
-void Err(const char *errmsg) {
+void Err(const char *errmsg)
+{
   fprintf(stderr, "kaleido: error: %s\n", errmsg);
   exit(0);
 }
@@ -667,21 +681,24 @@ int mod(int i, int j) { return (i %= j) >= 0 ? i : j < 0 ? i - j : i + j; }
 
 double dot(Vector a, Vector b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
 
-Vector scale(double k, Vector a) {
+Vector scale(double k, Vector a)
+{
   a.x *= k;
   a.y *= k;
   a.z *= k;
   return a;
 }
 
-Vector diff(Vector a, Vector b) {
+Vector diff(Vector a, Vector b)
+{
   a.x -= b.x;
   a.y -= b.y;
   a.z -= b.z;
   return a;
 }
 
-Vector cross(Vector a, Vector b) {
+Vector cross(Vector a, Vector b)
+{
   Vector p;
   p.x = a.y * b.z - a.z * b.y;
   p.y = a.z * b.x - a.x * b.z;
@@ -689,28 +706,32 @@ Vector cross(Vector a, Vector b) {
   return p;
 }
 
-Vector sum(Vector a, Vector b) {
+Vector sum(Vector a, Vector b)
+{
   a.x += b.x;
   a.y += b.y;
   a.z += b.z;
   return a;
 }
 
-Vector sum3(Vector a, Vector b, Vector c) {
+Vector sum3(Vector a, Vector b, Vector c)
+{
   a.x += b.x + c.x;
   a.y += b.y + c.y;
   a.z += b.z + c.z;
   return a;
 }
 
-Vector rotate(Vector vertex, Vector axis, double angle) {
+Vector rotate(Vector vertex, Vector axis, double angle)
+{
   Vector p;
   p = scale(dot(axis, vertex), axis);
   return sum3(p, scale(cos(angle), diff(vertex, p)),
               scale(sin(angle), cross(axis, vertex)));
 }
 
-int same(Vector a, Vector b, double epsilon) {
+int same(Vector a, Vector b, double epsilon)
+{
   return fabs(a.x - b.x) < epsilon && fabs(a.y - b.y) < epsilon &&
          fabs(a.z - b.z) < epsilon;
 }
@@ -726,7 +747,8 @@ int same(Vector a, Vector b, double epsilon) {
  * and
  * dot(p,p) = 1.
  */
-Vector pole(double r, Vector a, Vector b, Vector c) {
+Vector pole(double r, Vector a, Vector b, Vector c)
+{
   Vector p;
   double k;
   p = cross(diff(b, a), diff(c, a));
@@ -740,7 +762,8 @@ Vector pole(double r, Vector a, Vector b, Vector c) {
 /*
  * Find the numerator and the denominator using the Euclidean algorithm.
  */
-void frac(double x) {
+void frac(double x)
+{
   static Fraction zero = {0, 1}, inf = {1, 0};
   Fraction r;
   double s = x;
@@ -764,25 +787,29 @@ void frac(double x) {
 }
 
 // RK - add fp for file support
-void printfrac(double x, FILE *fp) {
+void printfrac(double x, FILE *fp)
+{
   frac(x);
   fprintf(fp, "%ld", frax.n);
   if (frax.d != 1)
     fprintf(fp, "/%ld", frax.d);
 }
 
-char *sprintfrac(double x) {
+char *sprintfrac(double x)
+{
   char *s;
   frac(x);
   if (!frax.d) {
     Malloc(s, sizeof("infinity"), char);
     strcpy(s, "infinity");
-  } else if (frax.d == 1) {
+  }
+  else if (frax.d == 1) {
     char n[MAXDIGITS + 1];
     sprintf(n, "%ld", frax.n);
     Malloc(s, strlen(n) + 1, char);
     strcpy(s, n);
-  } else {
+  }
+  else {
     char n[MAXDIGITS + 1], d[MAXDIGITS + 1];
     sprintf(n, "%ld", frax.n);
     sprintf(d, "%ld", frax.d);
@@ -792,7 +819,8 @@ char *sprintfrac(double x) {
   return s;
 }
 
-Polyhedron *polyalloc() {
+Polyhedron *polyalloc()
+{
   Polyhedron *P;
   Calloc(P, 1, Polyhedron);
   P->index = -1;
@@ -801,7 +829,8 @@ Polyhedron *polyalloc() {
   return P;
 }
 
-void *matalloc(int rows, int row_size) {
+void *matalloc(int rows, int row_size)
+{
   void **mat;
   int i = 0;
   if (!(mat = (void **)malloc(rows * sizeof(void *))))
@@ -818,7 +847,8 @@ void *matalloc(int rows, int row_size) {
 
 // RK - allow Kaleido, Maeder, Coxeter, or Wenninger indexes
 // return #(meader number)
-int process_index(char *sym) {
+int process_index(char *sym)
+{
   int ret = 1;
   char c;
 
@@ -833,7 +863,8 @@ int process_index(char *sym) {
   if (c == '#') {
     if (idx < 1 || idx > 80)
       ret = 0;
-  } else if (c == 'k' || c == 'K') {
+  }
+  else if (c == 'k' || c == 'K') {
     // kaleido has prisms at the begining of the list
     if (idx < 1 || idx > 80)
       ret = 0;
@@ -843,13 +874,15 @@ int process_index(char *sym) {
         idx += 80;
       sprintf(--sym, "#%d", idx);
     }
-  } else if (c == 'u' || c == 'U') {
+  }
+  else if (c == 'u' || c == 'U') {
     // already in Maeder order
     if (idx < 1 || idx > 80)
       ret = 0;
     else
       sprintf(--sym, "#%d", idx);
-  } else if (c == 'c' || c == 'C') {
+  }
+  else if (c == 'c' || c == 'C') {
     // Coxeter number
     Uniform *uniform;
     int last_uniform = get_uniform_list(&uniform);
@@ -865,7 +898,8 @@ int process_index(char *sym) {
       sprintf(--sym, "#%d", i + 1);
     else
       ret = 0;
-  } else if (c == 'w' || c == 'W') {
+  }
+  else if (c == 'w' || c == 'W') {
     // Wenninger number
     Uniform *uniform;
     int last_uniform = get_uniform_list(&uniform);
@@ -890,7 +924,8 @@ int process_index(char *sym) {
   return ret;
 }
 
-int unpacksym(char *sym, Polyhedron *P, Uniform *uniform, int last_uniform) {
+int unpacksym(char *sym, Polyhedron *P, Uniform *uniform, int last_uniform)
+{
   int i = 0, n, d, bars = 0;
   char c;
 
@@ -924,7 +959,8 @@ int unpacksym(char *sym, Polyhedron *P, Uniform *uniform, int last_uniform) {
     char wyth[256];
     strncpy(wyth, uniform[P->index = n - 1].Wythoff, 256);
     sym = wyth;
-  } else
+  }
+  else
     sym--;
   for (;;) {
     while ((c = *sym++) && isspace(c))
@@ -989,7 +1025,8 @@ int unpacksym(char *sym, Polyhedron *P, Uniform *uniform, int last_uniform) {
  * number of triangle edges, and V = Vp+ Vq+ Vr, with Vp = g/(2*np) being the
  * number of vertices with angle pi/p (np is the numerator of p).
  */
-int moebius(Polyhedron *P) {
+int moebius(Polyhedron *P)
+{
   int twos = 0, j, len = 1;
   /*
    * Arrange Wythoff symbol in a presentable form. In the same time check the
@@ -1003,7 +1040,8 @@ int moebius(Polyhedron *P) {
   if (P->index == GR_DIRH_IDX) {
     Malloc(P->polyform, ++len, char);
     strcpy(P->polyform, "|");
-  } else
+  }
+  else
     Calloc(P->polyform, len, char);
   for (j = 0; j < 4; j++) {
     if (P->p[j]) {
@@ -1012,7 +1050,8 @@ int moebius(Polyhedron *P) {
       if (j && P->p[j - 1]) {
         Realloc(P->polyform, len += strlen(s) + 1, char);
         strcat(P->polyform, " ");
-      } else
+      }
+      else
         Realloc(P->polyform, len += strlen(s), char);
       strcat(P->polyform, s);
       free(s);
@@ -1022,11 +1061,14 @@ int moebius(Polyhedron *P) {
           if (P->K == 4)
             break;
           P->K = k;
-        } else if (k < P->K && k == 4)
+        }
+        else if (k < P->K && k == 4)
           break;
-      } else
+      }
+      else
         twos++;
-    } else {
+    }
+    else {
       Realloc(P->polyform, ++len, char);
       strcat(P->polyform, "|");
     }
@@ -1040,7 +1082,8 @@ int moebius(Polyhedron *P) {
   if (twos >= 2) { /* dihedral */
     P->g = 4 * P->K;
     P->K = 2;
-  } else {
+  }
+  else {
     if (P->K > 5)
       Err("numerator too large");
     P->g = 24 * P->K / (6 - P->K);
@@ -1077,7 +1120,8 @@ int moebius(Polyhedron *P) {
  * with one even denominator have a crossed parallelogram as a vertex figure,
  * and thus are one-sided as well.
  */
-int decompose(Polyhedron *P) {
+int decompose(Polyhedron *P)
+{
   int j, J, *s, *t;
   if (!P->p[1]) { /* p|q r */
     P->N = 2;
@@ -1095,7 +1139,8 @@ int decompose(Polyhedron *P) {
       *s++ = 0;
       *s++ = 1;
     }
-  } else if (!P->p[2]) { /* p q|r */
+  }
+  else if (!P->p[2]) { /* p q|r */
     P->N = 3;
     P->M = 4;
     P->V = P->g / 2;
@@ -1123,7 +1168,8 @@ int decompose(Polyhedron *P) {
         P->chi /= 2;
       }
     }
-  } else if (!P->p[3]) { /* p q r| */
+  }
+  else if (!P->p[3]) { /* p q r| */
     P->M = P->N = 3;
     P->V = P->g;
     Malloc(P->n, P->N, double);
@@ -1138,9 +1184,10 @@ int decompose(Polyhedron *P) {
           P->chi -= P->g / numerator(P->p[j]) / 2;
           P->onesided = 1;
           P->D = 0;
-        } else { /* for p = q we get a double 2 2r|p */
-                 /* noted by Roman Maeder <maeder@inf.ethz.ch> for 4 4 3/2| */
-                 /* Euler characteristic is still wrong */
+        }
+        else { /* for p = q we get a double 2 2r|p */
+               /* noted by Roman Maeder <maeder@inf.ethz.ch> for 4 4 3/2| */
+               /* Euler characteristic is still wrong */
           P->D /= 2;
         }
         P->V /= 2;
@@ -1149,7 +1196,8 @@ int decompose(Polyhedron *P) {
       P->m[j] = 1;
       *s++ = j;
     }
-  } else { /* |p q r - snub polyhedron */
+  }
+  else { /* |p q r - snub polyhedron */
     P->N = 4;
     P->M = 6;
     P->V = P->g / 2; /* Only "white" triangles carry a vertex */
@@ -1264,7 +1312,8 @@ int decompose(Polyhedron *P) {
 // RK: mods
 // local function so we can have the -x option
 // only write to *ofile from opts
-int newton(Polyhedron *P, int need_approx, FILE *fp) {
+int newton(Polyhedron *P, int need_approx, FILE *fp)
+{
   /*
    * First, we find initial approximations.
    */
@@ -1317,7 +1366,8 @@ int newton(Polyhedron *P, int need_approx, FILE *fp) {
  * Postprocess pqr| where r has an even denominator (cf. Coxeter &al. Sec.9).
  * Remove the {2r} and add a retrograde {2p} and retrograde {2q}.
  */
-int exceptions(Polyhedron *P) {
+int exceptions(Polyhedron *P)
+{
   int j;
   if (P->even != -1) {
     P->M = P->N = 4;
@@ -1386,7 +1436,8 @@ int exceptions(Polyhedron *P) {
  * implies gamma[j] cannot be obtuse.  Also, compute chi for the only
  * non-Wythoffian polyhedron.
  */
-int count(Polyhedron *P) {
+int count(Polyhedron *P)
+{
   int j, temp;
   Malloc(P->Fi, P->N, int);
   for (j = 0; j < P->N; j++) {
@@ -1404,7 +1455,8 @@ int count(Polyhedron *P) {
 /*
  * Generate a printable vertex configuration symbol.
  */
-int configuration(Polyhedron *P) {
+int configuration(Polyhedron *P)
+{
   int j, len = 2;
   for (j = 0; j < P->M; j++) {
     char *s;
@@ -1413,7 +1465,8 @@ int configuration(Polyhedron *P) {
     if (!j) {
       Malloc(P->config, len, char);
       strcpy(P->config, "(");
-    } else {
+    }
+    else {
       Realloc(P->config, len, char);
       strcat(P->config, ".");
     }
@@ -1442,7 +1495,8 @@ int configuration(Polyhedron *P) {
  * end to signify clockwise rotations. The firstrot[] array is not needed for
  * display thus it is freed after being used for face computations below.
  */
-int vertices(Polyhedron *P) {
+int vertices(Polyhedron *P)
+{
   int i, newV = 2;
   double cosa;
   Malloc(P->v, P->V, Vector);
@@ -1462,7 +1516,8 @@ int vertices(Polyhedron *P) {
     P->firstrot[1] = 0;
     P->adj[0][1] = -1; /* start the other side */
     P->adj[P->M - 1][1] = 0;
-  } else {
+  }
+  else {
     P->firstrot[1] = P->snub[P->M - 1] ? 0 : P->M - 1;
     P->adj[0][1] = 0;
   }
@@ -1473,7 +1528,8 @@ int vertices(Polyhedron *P) {
       one = -1;
       start = P->M - 2;
       limit = -1;
-    } else {
+    }
+    else {
       one = 1;
       start = 1;
       limit = P->M;
@@ -1499,10 +1555,12 @@ int vertices(Polyhedron *P) {
           if (one > 0) {
             P->adj[0][J] = -1;
             P->adj[P->M - 1][J] = i;
-          } else {
+          }
+          else {
             P->adj[0][J] = i;
           }
-        } else {
+        }
+        else {
           P->firstrot[J] =
               !P->snub[last] ? last : !P->snub[k] ? (k + 1) % P->M : k;
           P->adj[0][J] = i;
@@ -1522,7 +1580,8 @@ int vertices(Polyhedron *P) {
  * and the two faces meeting at an edge can be identified as the side face
  * (n[1] or n[2]) and the diagonal face (n[0] or n[3]).
  */
-int faces(Polyhedron *P) {
+int faces(Polyhedron *P)
+{
   int i, newF = 0;
   Malloc(P->f, P->F, Vector);
   Malloc(P->ftype, P->F, int);
@@ -1565,7 +1624,8 @@ int faces(Polyhedron *P) {
           P->incid[J][i0] = newF;
           if (++J >= P->M)
             J = 0;
-        } else {
+        }
+        else {
           if (--J < 0)
             J = P->M - 1;
           P->incid[J][i0] = newF;
@@ -1578,7 +1638,8 @@ int faces(Polyhedron *P) {
   return 1;
 }
 
-Polyhedron *kaleido(char *sym, Uniform *uniform, int last_uniform) {
+Polyhedron *kaleido(char *sym, Uniform *uniform, int last_uniform)
+{
   Polyhedron *P;
   /*
    * Allocate a Polyhedron structure P.
@@ -1641,7 +1702,8 @@ Polyhedron *kaleido(char *sym, Uniform *uniform, int last_uniform) {
 // 'static char *' becomes 'static const char *' (deprication)
 // only write to *ofile from opts
 int printit(Polyhedron *P, int need_coordinates, int just_list, int digits,
-            int more_lines, Uniform *uniform_list, FILE *fp) {
+            int more_lines, Uniform *uniform_list, FILE *fp)
+{
   int j, i;
   double cosa;
   static const char *group[] = {"di", "tetra", "octa", "icosa"};
@@ -1690,7 +1752,8 @@ int printit(Polyhedron *P, int need_coordinates, int just_list, int digits,
     if (i < 6)
       i = 6;
     free(s);
-  } else
+  }
+  else
     i = 6;
   fprintf(fp, "\n%*s%6s%*s%*s%*s%*s%*s%*s%*s%*s\n", i, "", "alpha", digits + 3,
           "gamma", digits + 1, "a", digits + 1, "b", digits + 1, "c",
@@ -1769,7 +1832,8 @@ int printit(Polyhedron *P, int need_coordinates, int just_list, int digits,
 /*
  * rotate the standard frame
  */
-void rotframe(double azimuth, double elevation, double angle) {
+void rotframe(double azimuth, double elevation, double angle)
+{
   static Vector X = {1, 0, 0}, Y = {0, 1, 0}, Z = {0, 0, 1};
   Vector axis;
 
@@ -1782,14 +1846,16 @@ void rotframe(double azimuth, double elevation, double angle) {
 /*
  * rotate an array of n Vectors
  */
-void rotarray(Vector *newvec, Vector *old, int n) {
+void rotarray(Vector *newvec, Vector *old, int n)
+{
   while (n--) {
     *newvec++ = sum3(scale(old->x, x), scale(old->y, y), scale(old->z, z));
     old++;
   }
 }
 
-void printvec(FILE *fp, Vector v, int digits) {
+void printvec(FILE *fp, Vector v, int digits)
+{
   fprintf(fp, "\t\t\t\t%*.*f %*.*f %*.*f,\n", digits + 3, digits, v.x,
           digits + 3, digits, v.y, digits + 3, digits, v.z);
 }
@@ -1802,7 +1868,8 @@ void printvec(FILE *fp, Vector v, int digits) {
  * All othe polygons (which occur in kaleido only if a Whythoff formula is
  * entered) are colored pink (its RGB value is taken from X11's rgb.txt).
  */
-void rgbcolor(FILE *fp, int n) {
+void rgbcolor(FILE *fp, int n)
+{
   double R, G, B;
   switch (n) {
   case 3: /* red */
@@ -1853,7 +1920,8 @@ void rgbcolor(FILE *fp, int n) {
 // fixed if statements per clang warning
 int vrmodel(Polyhedron *P, Vector *v, int V, Vector *f, int F, char *name,
             const char *star, char *prefix, int digits, double azimuth,
-            double elevation, double freeze, FILE *fp) {
+            double elevation, double freeze, FILE *fp)
+{
   int i, j, l, ll, ii, facelets;
   int *hit = 0;
   int k = 0;
@@ -1982,7 +2050,8 @@ int vrmodel(Polyhedron *P, Vector *v, int V, Vector *f, int F, char *name,
       else
         h = P->minr / dot(f[i], f[i]);
       printvec(fp, scale(h, f[i]), digits);
-    } else if (*star && P->even != -1) {
+    }
+    else if (*star && P->even != -1) {
       /* find the self-intersection of a crossed parallelogram.
        * hit is set if v0v1 intersects v2v3*/
       Vector v0, v1, v2, v3, c0, c1, p;
@@ -1999,7 +2068,8 @@ int vrmodel(Polyhedron *P, Vector *v, int V, Vector *f, int F, char *name,
       printvec(fp, p, digits);
       p = cross(diff(p, v2), diff(p, v3));
       hit[i] = (dot(p, p) < 1e-6);
-    } else if (*star && P->hemi && P->index != last_uniform - 1) {
+    }
+    else if (*star && P->hemi && P->index != last_uniform - 1) {
       /* find the terminal points of the truncation and the
        * self-intersections.
        *  v23       v0       v21
@@ -2038,7 +2108,8 @@ int vrmodel(Polyhedron *P, Vector *v, int V, Vector *f, int F, char *name,
       printvec(fp, v03, digits);
       printvec(fp, v21, digits);
       printvec(fp, v0321, digits);
-    } else if (*star && P->index == last_uniform - 1) {
+    }
+    else if (*star && P->index == last_uniform - 1) {
       /* find the terminal points of the truncation and the
        * self-intersections.
        *  v23       v0       v21
@@ -2128,24 +2199,28 @@ int vrmodel(Polyhedron *P, Vector *v, int V, Vector *f, int F, char *name,
         }
         fprintf(fp, "%d,%d,%d,-1,", P->incid[j][i], P->incid[0][i], ii++);
         facelets++;
-      } else if (P->even != -1) {
+      }
+      else if (P->even != -1) {
         if (hit[i]) {
           fprintf(fp, "%d,%d,%d,-1,%d,%d,%d,-1,", P->incid[3][i],
                   P->incid[0][i], ii, P->incid[1][i], P->incid[2][i], ii);
-        } else {
+        }
+        else {
           fprintf(fp, "%d,%d,%d,-1,%d,%d,%d,-1,", P->incid[0][i],
                   P->incid[1][i], ii, P->incid[2][i], P->incid[3][i], ii);
         }
         ii++;
         facelets += 2;
-      } else if (P->hemi && P->index != last_uniform - 1) {
+      }
+      else if (P->hemi && P->index != last_uniform - 1) {
         j = !P->ftype[P->incid[0][i]];
         fprintf(fp, "%d,%d,%d,-1,%d,%d,%d,%d,-1,%d,%d,%d,-1,", ii, ii + 1,
                 ii + 2, P->incid[j][i], ii + 2, P->incid[j + 2][i], ii + 5,
                 ii + 3, ii + 4, ii + 5);
         ii += 6;
         facelets += 3;
-      } else if (P->index == last_uniform - 1) {
+      }
+      else if (P->index == last_uniform - 1) {
         for (j = 0; j < 8; j++)
           if (P->ftype[P->incid[j][i]] == 3)
             break;
@@ -2157,13 +2232,15 @@ int vrmodel(Polyhedron *P, Vector *v, int V, Vector *f, int F, char *name,
                 P->incid[(j + 6) % 8][i], ii + 11, ii + 9, ii + 10, ii + 11);
         ii += 12;
         facelets += 6;
-      } else {
+      }
+      else {
         for (j = 0; j < P->M; j++)
           fprintf(fp, "%d,", P->incid[j][i]);
         fprintf(fp, "-1,");
         facelets++;
       }
-    } else {
+    }
+    else {
       int split =
           (frac(P->n[P->ftype[i]]), frax.d != 1 && frax.d != frax.n - 1);
       for (j = 0; j < V; j++) {
@@ -2193,7 +2270,8 @@ int vrmodel(Polyhedron *P, Vector *v, int V, Vector *f, int F, char *name,
       if (!split) {
         fprintf(fp, "-1,");
         facelets++;
-      } else {
+      }
+      else {
         fprintf(fp, "%d,%d,%d,-1,", ll, j, ii++);
         facelets++;
       }
@@ -2214,7 +2292,8 @@ int vrmodel(Polyhedron *P, Vector *v, int V, Vector *f, int F, char *name,
       else
         for (j = 0; j < frax.n; j++)
           fprintf(fp, "%d,", P->ftype[i]);
-  } else {
+  }
+  else {
     for (i = 0; i < facelets; i++)
       fprintf(fp, "0,");
   }
@@ -2234,376 +2313,89 @@ int vrmodel(Polyhedron *P, Vector *v, int V, Vector *f, int F, char *name,
   return 1;
 }
 
-// RK - below, converted vrml code for producing OFF files
+// end original Kaleido code
 
-Color face_color(int n) {
-  Color c;
+// RK - from unipoly ported form antiprism 19.1 by Adrian Rossiter
+int get_poly(Geometry &geom, Polyhedron *poly)
+{
+  vector<Vec3d> &verts = geom.raw_verts();
+  // vector<vector<int> > &edges = raw_edges();
+  vector<vector<int>> &faces = geom.raw_faces();
 
-  switch (n) {
-  case 3: /* red */
-    c = Color(255, 0, 0);
-    break;
-  case 4: /* green */
-    c = Color(0, 255, 0);
-    break;
-  case 5: /* blue */
-    c = Color(0, 0, 255);
-    break;
-  case 6: /* yellow */
-    c = Color(255, 255, 0);
-    break;
-  case 8: /* magenta */
-    c = Color(255, 0, 255);
-    break;
-  case 10: /* cyan */
-    c = Color(0, 255, 255);
-    break;
-  default: /* pink */
-    c = Color(1.0, 192.0 / 255.0, 203.0 / 255.0);
-    break;
-  }
+  faces.resize(poly->F);
+  vector<int> edges;
+  for (int i = 0; i < poly->V; i++) {
+    verts.push_back(Vec3d(poly->v[i].x, poly->v[i].y, poly->v[i].z));
 
-  return c;
-}
-
-void add_vec(Geometry &geom, Vector v) { geom.add_vert(Vec3d(v.x, v.y, v.z)); }
-
-void parse_face(Geometry &geom, char *s) {
-  vector<int> face;
-
-  char parse_key[] = ",";
-  char *ptok = strtok(s, parse_key);
-  while (ptok != nullptr) {
-    int idx;
-    sscanf(ptok, "%d", &idx);
-    if (idx != -1)
-      face.push_back(idx);
-    else {
-      Color c = face_color((int)face.size());
-      geom.add_face(face, c);
-      face.clear();
+    for (int j = 0; j < poly->M; j++) {
+      faces[poly->incid[j][i]].push_back(i);
+      if (i < poly->adj[j][i]) {
+        edges.push_back(i);
+        edges.push_back(poly->adj[j][i]);
+      }
     }
-    ptok = strtok(nullptr, parse_key);
   }
 
-  // clear s
-  s[0] = '\0';
-}
+  for (unsigned int i = 0; i < faces.size(); i++) {
+    set<int> vs;
+    for (unsigned int j = 0; j < faces[i].size(); j++)
+      vs.insert(faces[i][j]);
 
-int offmodel(Polyhedron *P, Vector *v, int V, Vector *f, int F, char *name,
-             const char *star, char *prefix, int digits, double azimuth,
-             double elevation, double freeze, Geometry &geom) {
-  int i, j, l, ll, ii, facelets;
-  int *hit = 0;
-  int k = 0;
-  Vector *temp;
+    vector<int> lns;
+    for (unsigned int j = 0; j < edges.size(); j += 2)
+      if (vs.find(edges[j]) != vs.end() && vs.find(edges[j + 1]) != vs.end()) {
+        lns.push_back(edges[j]);
+        lns.push_back(edges[j + 1]);
+      }
 
-  // RK - Last uniform has changed to Maeder index
-  int last_uniform = 75;
-
-  // rid compiler warning for unused variable
-  name = name;
-  prefix = prefix;
-  digits = digits;
-
-  /*
-   * Rotate polyhedron
-   */
-  rotframe(azimuth, elevation, freeze);
-
-  Malloc(temp, V, Vector) rotarray(temp, v, V);
-  v = temp;
-  Malloc(temp, F, Vector) rotarray(temp, f, F);
-  f = temp;
-
-  /*
-   * Vertex list
-   */
-  for (i = 0; i < V; i++)
-    add_vec(geom, v[i]);
-
-  /*
-   * Auxiliary vertices (needed because current VRML browsers cannot handle
-   * non-simple polygons, i.e., ploygons with self intersections):
-   * Each non-simple face is assigned an auxiliary vertex. By connecting it to
-   * the rest of the vertices the face is triangulated. The circum-center is
-   * used
-   * for the regular star faces of uniform polyhedra. The in-center is used for
-   * the pentagram (#79) and hexagram (#77) of the high-density snub duals, and
-   * for the pentagrams (#40, #58) and hexagram (#52) of the stellated duals
-   * with
-   * configuration (....)/2. Finally, the self-intersection of the crossed
-   * parallelogram is used for duals with form p q r| with an even denominator.
-   *
-   * This method do not work for the hemi-duals, whose faces are not star-shaped
-   * and have two self-intersections each.
-   * Thus, for each face we need six auxiliary vertices: The self intersections
-   * and the terminal points of the truncations of the infinite edges. The ideal
-   * vertices are listed, but are not used by the face-list.
-   * Note that the face of the last dual (#80) is octagonal, and constists of
-   * two
-   * quadrilaterals of the infinite type.
-   */
-
-  /* auxiliary vertices */
-  if (*star && P->even != -1)
-    Malloc(hit, F, int);
-  for (i = 0; i < F; i++)
-    if ((!*star &&
-         (frac(P->n[P->ftype[i]]), frax.d != 1 && frax.d != frax.n - 1)) ||
-        (*star && ((P->K == 5 && P->D > 30) || denominator(P->m[0]) != 1))) {
-      /* find the center of the face */
-      double h;
-      if (!*star && P->hemi && !P->ftype[i])
-        h = 0;
-      else
-        h = P->minr / dot(f[i], f[i]);
-      add_vec(geom, scale(h, f[i]));
-    } else if (*star && P->even != -1) {
-      /* find the self-intersection of a crossed parallelogram.
-       * hit is set if v0v1 intersects v2v3*/
-      Vector v0, v1, v2, v3, c0, c1, p;
-      double d0, d1;
-      v0 = v[P->incid[0][i]];
-      v1 = v[P->incid[1][i]];
-      v2 = v[P->incid[2][i]];
-      v3 = v[P->incid[3][i]];
-      d0 = sqrt(dot(diff(v0, v2), diff(v0, v2)));
-      d1 = sqrt(dot(diff(v1, v3), diff(v1, v3)));
-      c0 = scale(d1, sum(v0, v2));
-      c1 = scale(d0, sum(v1, v3));
-      p = scale(0.5 / (d0 + d1), sum(c0, c1));
-      add_vec(geom, p);
-      p = cross(diff(p, v2), diff(p, v3));
-      hit[i] = (dot(p, p) < 1e-6);
-    } else if (*star && P->hemi && P->index != last_uniform - 1) {
-      /* find the terminal points of the truncation and the
-       * self-intersections.
-       *  v23       v0       v21
-       *  |  \     /  \     /  |
-       *  |   v0123    v0321   |
-       *  |  /     \  /     \  |
-       *  v01       v2       v03
-       */
-      Vector v0, v1, v2, v3, v01, v03, v21, v23, v0123, v0321;
-      Vector u;
-      double t = 1.5; /* truncation adjustment factor */
-      j = !P->ftype[P->incid[0][i]];
-      v0 = v[P->incid[j][i]];     /* real vertex */
-      v1 = v[P->incid[j + 1][i]]; /* ideal vertex (unit vector) */
-      v2 = v[P->incid[j + 2][i]]; /* real */
-                                  /* ideal */
-      v3 = v[P->incid[(j + 3) % 4][i]];
-      /* compute intersections
-       * this uses the following linear algebra:
-       * v0123 = v0 + a v1 = v2 + b v3
-       * v0 x v3 + a (v1 x v3) = v2 x v3
-       * a (v1 x v3) = (v2 - v0) x v3
-       * a (v1 x v3) . (v1 x v3) = (v2 - v0) x v3 . (v1 x v3)
-       */
-      u = cross(v1, v3);
-      v0123 = sum(v0, scale(dot(cross(diff(v2, v0), v3), u) / dot(u, u), v1));
-      v0321 = sum(v0, scale(dot(cross(diff(v0, v2), v1), u) / dot(u, u), v3));
-      /* compute truncations */
-      v01 = sum(v0, scale(t, diff(v0123, v0)));
-      v23 = sum(v2, scale(t, diff(v0123, v2)));
-      v03 = sum(v0, scale(t, diff(v0321, v0)));
-      v21 = sum(v2, scale(t, diff(v0321, v2)));
-      add_vec(geom, v01);
-      add_vec(geom, v23);
-      add_vec(geom, v0123);
-      add_vec(geom, v03);
-      add_vec(geom, v21);
-      add_vec(geom, v0321);
-    } else if (*star && P->index == last_uniform - 1) {
-      /* find the terminal points of the truncation and the
-       * self-intersections.
-       *  v23       v0       v21
-       *  |  \     /  \     /  |
-       *  |   v0123    v0721   |
-       *  |  /     \  /     \  |
-       *  v01       v2       v07
-       *
-       *  v65       v4       v67
-       *  |  \     /  \     /  |
-       *  |   v4365    v4567   |
-       *  |  /     \  /     \  |
-       *  v43       v6       v45
-       */
-      Vector v0, v1, v2, v3, v4, v5, v6, v7, v01, v07, v21, v23;
-      Vector v43, v45, v65, v67, v0123, v0721, v4365, v4567;
-      double t = 1.5; /* truncation adjustment factor */
-      Vector u;
-      for (j = 0; j < 8; j++)
-        if (P->ftype[P->incid[j][i]] == 3)
+    int num_edges = faces[i].size();
+    faces[i].clear();
+    faces[i].push_back(lns[0]);
+    int pt = lns[1];
+    for (int j = 1; j < num_edges; j++) {
+      faces[i].push_back(pt);
+      for (int k = j; k < num_edges; k++) {
+        if (lns[k * 2] == pt) {
+          pt = lns[k * 2 + 1];
+          swap(lns[j * 2], lns[k * 2 + 1]);
+          swap(lns[j * 2 + 1], lns[k * 2]);
           break;
-      v0 = v[P->incid[j][i]]; /* real {5/3} */
-                              /* ideal */
-      v1 = v[P->incid[(j + 1) % 8][i]];
-      /* real {3} */
-      v2 = v[P->incid[(j + 2) % 8][i]];
-      /* ideal */
-      v3 = v[P->incid[(j + 3) % 8][i]];
-      /* real {5/2} */
-      v4 = v[P->incid[(j + 4) % 8][i]];
-      /* ideal */
-      v5 = v[P->incid[(j + 5) % 8][i]];
-      /* real {3/2} */
-      v6 = v[P->incid[(j + 6) % 8][i]];
-      /* ideal */
-      v7 = v[P->incid[(j + 7) % 8][i]];
-      /* compute intersections */
-      u = cross(v1, v3);
-      v0123 = sum(v0, scale(dot(cross(diff(v2, v0), v3), u) / dot(u, u), v1));
-      u = cross(v7, v1);
-      v0721 = sum(v0, scale(dot(cross(diff(v2, v0), v1), u) / dot(u, u), v7));
-      u = cross(v5, v7);
-      v4567 = sum(v4, scale(dot(cross(diff(v6, v4), v7), u) / dot(u, u), v5));
-      u = cross(v3, v5);
-      v4365 = sum(v4, scale(dot(cross(diff(v6, v4), v5), u) / dot(u, u), v3));
-      /* compute truncations */
-      v01 = sum(v0, scale(t, diff(v0123, v0)));
-      v23 = sum(v2, scale(t, diff(v0123, v2)));
-      v07 = sum(v0, scale(t, diff(v0721, v0)));
-      v21 = sum(v2, scale(t, diff(v0721, v2)));
-      v45 = sum(v4, scale(t, diff(v4567, v4)));
-      v67 = sum(v6, scale(t, diff(v4567, v6)));
-      v43 = sum(v4, scale(t, diff(v4365, v4)));
-      v65 = sum(v6, scale(t, diff(v4365, v6)));
-      add_vec(geom, v01);
-      add_vec(geom, v23);
-      add_vec(geom, v0123);
-      add_vec(geom, v07);
-      add_vec(geom, v21);
-      add_vec(geom, v0721);
-      add_vec(geom, v45);
-      add_vec(geom, v67);
-      add_vec(geom, v4567);
-      add_vec(geom, v43);
-      add_vec(geom, v65);
-      add_vec(geom, v4365);
-    }
-
-  // print faces to string
-  char s[256];
-
-  /*
-   * Face list:
-   * Each face is printed in a separate line, by listing the indices of its
-   * vertices. In the non-simple case, the polygon is represented by the
-   * triangulation, each triangle consists of two polyhedron vertices and one
-   * auxiliary vertex.
-   */
-  ii = V;
-  facelets = 0;
-  for (i = 0; i < F; i++) {
-    if (*star) {
-      if ((P->K == 5 && P->D > 30) || denominator(P->m[0]) != 1) {
-        for (j = 0; j < P->M - 1; j++) {
-          sprintf(s, "%d,%d,%d,-1,", P->incid[j][i], P->incid[j + 1][i], ii);
-          parse_face(geom, s);
-          facelets++;
         }
-        sprintf(s, "%d,%d,%d,-1,", P->incid[j][i], P->incid[0][i], ii++);
-        parse_face(geom, s);
-        facelets++;
-      } else if (P->even != -1) {
-        if (hit[i]) {
-          sprintf(s, "%d,%d,%d,-1,%d,%d,%d,-1,", P->incid[3][i], P->incid[0][i],
-                  ii, P->incid[1][i], P->incid[2][i], ii);
-          parse_face(geom, s);
-        } else {
-          sprintf(s, "%d,%d,%d,-1,%d,%d,%d,-1,", P->incid[0][i], P->incid[1][i],
-                  ii, P->incid[2][i], P->incid[3][i], ii);
-          parse_face(geom, s);
-        }
-        ii++;
-        facelets += 2;
-      } else if (P->hemi && P->index != last_uniform - 1) {
-        j = !P->ftype[P->incid[0][i]];
-        sprintf(s, "%d,%d,%d,-1,%d,%d,%d,%d,-1,%d,%d,%d,-1,", ii, ii + 1,
-                ii + 2, P->incid[j][i], ii + 2, P->incid[j + 2][i], ii + 5,
-                ii + 3, ii + 4, ii + 5);
-        parse_face(geom, s);
-        ii += 6;
-        facelets += 3;
-      } else if (P->index == last_uniform - 1) {
-        for (j = 0; j < 8; j++)
-          if (P->ftype[P->incid[j][i]] == 3)
-            break;
-        sprintf(s, "%d,%d,%d,-1,%d,%d,%d,%d,-1,%d,%d,%d,-1,", ii, ii + 1,
-                ii + 2, P->incid[j][i], ii + 2, P->incid[(j + 2) % 8][i],
-                ii + 5, ii + 3, ii + 4, ii + 5);
-        parse_face(geom, s);
-        sprintf(s, "%d,%d,%d,-1,%d,%d,%d,%d,-1,%d,%d,%d,-1,", ii + 6, ii + 7,
-                ii + 8, P->incid[(j + 4) % 8][i], ii + 8,
-                P->incid[(j + 6) % 8][i], ii + 11, ii + 9, ii + 10, ii + 11);
-        parse_face(geom, s);
-        ii += 12;
-        facelets += 6;
-      } else {
-        for (j = 0; j < P->M; j++)
-          sprintf(s + strlen(s), "%d,", P->incid[j][i]);
-        sprintf(s + strlen(s), "-1,");
-        parse_face(geom, s);
-        facelets++;
-      }
-    } else {
-      int split =
-          (frac(P->n[P->ftype[i]]), frax.d != 1 && frax.d != frax.n - 1);
-      for (j = 0; j < V; j++) {
-        for (k = 0; k < P->M; k++)
-          if (P->incid[k][j] == i)
-            break;
-        if (k != P->M)
+        else if (lns[k * 2 + 1] == pt) {
+          pt = lns[k * 2];
+          swap(lns[j * 2], lns[k * 2]);
+          swap(lns[j * 2 + 1], lns[k * 2 + 1]);
           break;
-      }
-      if (!split)
-        sprintf(s + strlen(s), "%d,", j);
-      ll = j;
-      for (l = P->adj[k][j]; l != j; l = P->adj[k][l]) {
-        for (k = 0; k < P->M; k++)
-          if (P->incid[k][l] == i)
-            break;
-        if (P->adj[k][l] == ll)
-          k = mod(k + 1, P->M);
-        if (!split)
-          sprintf(s + strlen(s), "%d,", l);
-        else {
-          sprintf(s + strlen(s), "%d,%d,%d,-1,", ll, l, ii);
-          parse_face(geom, s);
-          facelets++;
         }
-        ll = l;
-      }
-      if (!split) {
-        sprintf(s + strlen(s), "-1,");
-        parse_face(geom, s);
-        facelets++;
-      } else {
-        sprintf(s + strlen(s), "%d,%d,%d,-1,", ll, j, ii++);
-        parse_face(geom, s);
-        facelets++;
       }
     }
   }
+  geom.orient();
 
-  // Face color indices done in parse_face
-  // trianglated faces, so make edges invisible
-  Coloring(&geom).vef_one_col(Color::invisible, Color::invisible, Color());
-
-  if (*star && P->even != -1)
-    free(hit);
-  free(v);
-  free(f);
-
-  // fprintf(stderr, "%s: written on %s\n", name, fn);
-  if (P->index != -1)
-    fprintf(stderr, "%s\n", name);
   return 1;
 }
 
-int main(int argc, char *argv[]) {
+// color faces by N sides
+void color_off(Geometry &geom)
+{
+  auto *col_map = new ColorMapMap;
+  col_map->set_col(3, Color(255, 0, 0));    // red
+  col_map->set_col(4, Color(0, 255, 0));    // green
+  col_map->set_col(5, Color(0, 0, 255));    // blue
+  col_map->set_col(6, Color(255, 255, 0));  // yellow
+  col_map->set_col(8, Color(255, 0, 255));  // magenta
+  col_map->set_col(10, Color(0, 255, 255)); // cyan
+
+  const vector<vector<int>> &faces = geom.faces();
+  for (unsigned int i = 0; i < faces.size(); i++) {
+    int fsz = faces[i].size();
+    Color col = col_map->get_col(fsz);
+    geom.colors(FACES).set(i, col);
+  }
+}
+
+int main(int argc, char *argv[])
+{
   kaleido_opts opts;
   opts.process_command_line(argc, argv);
 
@@ -2628,7 +2420,8 @@ int main(int argc, char *argv[]) {
   if (opts.symbol == "0") {
     first = 1;
     last = last_uniform;
-  } else {
+  }
+  else {
     sprintf(sym, "%s", opts.symbol.c_str());
     P = kaleido(sym, uniform, last_uniform);
     if (P->index != -1) {
@@ -2663,23 +2456,41 @@ int main(int argc, char *argv[]) {
       }
       printit(P, opts.need_coordinates, opts.just_list, opts.sig_digits,
               more_lines, uniform, ofile);
-    } else {
-      // not used
-      char *prefix = 0;
-      char *Prefix = 0;
-
+    }
+    else {
+      // off model
       if (opts.model == 1) {
         Geometry geom;
-        if (opts.base == 1)
-          offmodel(P, P->v, P->V, P->f, P->F, P->name, "", prefix,
-                   opts.sig_digits, opts.azimuth, opts.elevation, opts.freeze,
-                   geom);
-        else if (opts.base == 2)
-          offmodel(P, P->f, P->F, P->v, P->V, P->dual_name, "*", Prefix,
-                   opts.sig_digits, opts.azimuth, opts.elevation, opts.freeze,
-                   geom);
+        get_poly(geom, P);
+
+        if (opts.base == 2) {
+          // center on origin
+          geom.transform(Trans3d::translate(-centroid(geom.verts())));
+          Vec3d cent = centroid(geom.verts());
+
+          // from std_polys.cc
+          GeometryInfo info(geom);
+          info.set_center(cent);
+          double rad = info.iedge_dist_lims().sum / info.num_iedges();
+          Geometry dual;
+          const double inf = 1200;
+          get_dual(dual, geom, rad, cent, inf);
+
+          geom = dual;
+          geom.orient();
+        }
+
+        // color faces by N sides
+        color_off(geom);
+
         opts.write_or_error(geom, opts.ofile, opts.sig_digits);
-      } else if (opts.model == 2) {
+      }
+      // vrml model with original Kaleido code
+      else if (opts.model == 2) {
+        // not used
+        char *prefix = 0;
+        char *Prefix = 0;
+
         if (opts.base == 1)
           vrmodel(P, P->v, P->V, P->f, P->F, P->name, "", prefix,
                   opts.sig_digits, opts.azimuth, opts.elevation, opts.freeze,
