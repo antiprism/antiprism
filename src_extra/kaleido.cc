@@ -677,6 +677,14 @@ void Err(const char *errmsg)
   exit(0);
 }
 
+void printErrorMessage(int error_number, string func_name)
+{
+  char buffer[256];
+  snprintf(buffer, sizeof(buffer), "(%s) errno: %d %s", func_name.c_str(),
+           error_number, strerror(error_number));
+  Err(buffer);
+}
+
 int mod(int i, int j) { return (i %= j) >= 0 ? i : j < 0 ? i - j : i + j; }
 
 double dot(Vector a, Vector b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
@@ -1357,8 +1365,10 @@ int newton(Polyhedron *P, int need_approx, FILE *fp)
     cosa = cos(M_PI / P->n[0]) / sin(P->gamma[0]);
     for (j = 1; j < P->N; j++)
       P->gamma[j] = asin(cos(M_PI / P->n[j]) / cosa);
+    // RK - output error message
     if (errno)
-      Err(0);
+      // Err(0);
+      printErrorMessage(errno, "newton");
   }
 }
 
@@ -1915,12 +1925,13 @@ void rgbcolor(FILE *fp, int n)
 // message lines 0 and 2 put in as strings
 // k, *hit not initialized
 // char *star add const per compiler warning
+// prefix no longer used, removed
 // pass last_uniform from main (added)
 // only write to *ofile from opts
 // fixed if statements per clang warning
 int vrmodel(Polyhedron *P, Vector *v, int V, Vector *f, int F, char *name,
-            const char *star, char *prefix, int digits, double azimuth,
-            double elevation, double freeze, FILE *fp)
+            const char *star, int digits, double azimuth, double elevation,
+            double freeze, FILE *fp)
 {
   int i, j, l, ll, ii, facelets;
   int *hit = 0;
@@ -1929,9 +1940,6 @@ int vrmodel(Polyhedron *P, Vector *v, int V, Vector *f, int F, char *name,
 
   // RK - Last uniform has changed to Maeder index
   int last_uniform = 75;
-
-  // rid compiler warning for unused variable
-  prefix = prefix;
 
   // RK: last remaining part of original usage message
   string kaleido_message0 =
@@ -1955,6 +1963,7 @@ int vrmodel(Polyhedron *P, Vector *v, int V, Vector *f, int F, char *name,
      if (!fp)
         Err(0);
   */
+
   /*
    * Rotate polyhedron
    */
@@ -2424,6 +2433,8 @@ int main(int argc, char *argv[])
   else {
     sprintf(sym, "%s", opts.symbol.c_str());
     P = kaleido(sym, uniform, last_uniform);
+    if (P == NULL)
+      Err("kaleido function failed");
     if (P->index != -1) {
       first = P->index + 1;
       last = first;
@@ -2475,7 +2486,8 @@ int main(int argc, char *argv[])
           Geometry dual;
           const double inf = 1200;
           get_dual(dual, geom, rad, cent, inf);
-          add_extra_ideal_elems(dual, cent, 0.95 * inf); // limit closer than inf
+          add_extra_ideal_elems(dual, cent,
+                                0.95 * inf); // limit closer than inf
 
           geom = dual;
           geom.orient();
@@ -2488,18 +2500,12 @@ int main(int argc, char *argv[])
       }
       // vrml model with original Kaleido code
       else if (opts.model == 2) {
-        // not used
-        char *prefix = 0;
-        char *Prefix = 0;
-
         if (opts.base == 1)
-          vrmodel(P, P->v, P->V, P->f, P->F, P->name, "", prefix,
-                  opts.sig_digits, opts.azimuth, opts.elevation, opts.freeze,
-                  ofile);
+          vrmodel(P, P->v, P->V, P->f, P->F, P->name, "", opts.sig_digits,
+                  opts.azimuth, opts.elevation, opts.freeze, ofile);
         else if (opts.base == 2)
-          vrmodel(P, P->f, P->F, P->v, P->V, P->dual_name, "*", Prefix,
-                  opts.sig_digits, opts.azimuth, opts.elevation, opts.freeze,
-                  ofile);
+          vrmodel(P, P->f, P->F, P->v, P->V, P->dual_name, "*", opts.sig_digits,
+                  opts.azimuth, opts.elevation, opts.freeze, ofile);
       }
     }
   }
