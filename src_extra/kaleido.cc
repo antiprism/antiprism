@@ -2475,6 +2475,7 @@ int main(int argc, char *argv[])
           Geometry dual;
           const double inf = 1200;
           get_dual(dual, geom, rad, cent, inf);
+          add_extra_ideal_elems(dual, cent, 0.95 * inf); // limit closer than inf
 
           geom = dual;
           geom.orient();
