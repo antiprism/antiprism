@@ -78,44 +78,188 @@ bool crds_write(string file_name, const Geometry &geom, char *errmsg,
   return true;
 }
 
+// RK - color sorting functions
+bool cmp_col(const Color &a, const Color &b)
+{
+  bool ret = false;
+
+  Vec4d hsva_a = a.get_hsva();
+  Vec4d hsva_b = b.get_hsva();
+  for (unsigned int i = 0; i < 4; i++) {
+    if (hsva_a[i] != hsva_b[i]) {
+      ret = (hsva_a[i] < hsva_b[i]);
+      break;
+    }
+  }
+
+  return ret;
+}
+
+class col_cmp {
+public:
+  col_cmp() = default;
+  bool operator()(const Color &a, const Color &b) const
+  {
+    return cmp_col(a, b);
+  }
+};
+
+void write_mtl_color(FILE *mfile, Color c)
+{
+  fprintf(mfile, "newmtl color_%02x%02x%02x%02x\n", c[0], c[1], c[2], c[3]);
+  fprintf(mfile, "Kd %g %g %g\n", c[0] / 255.0, c[1] / 255.0, c[2] / 255.0);
+  fprintf(mfile, "illum 2\n");
+  fprintf(mfile, "\n");
+}
+
+void write_mtl_file(FILE *mfile, vector<Color> &cols)
+{
+  // add default colors to mtl file
+  fprintf(mfile, "newmtl color_vert_default\n");
+  fprintf(mfile, "Kd 1.0 0.5 0.0\n");
+  fprintf(mfile, "illum 2\n");
+  fprintf(mfile, "\n");
+  fprintf(mfile, "newmtl color_edge_default\n");
+  fprintf(mfile, "Kd 0.8 0.6 0.8\n");
+  fprintf(mfile, "illum 2\n");
+  fprintf(mfile, "\n");
+  fprintf(mfile, "newmtl color_face_default\n");
+  fprintf(mfile, "Kd 0.8 0.9 0.9\n");
+  fprintf(mfile, "illum 2\n");
+  fprintf(mfile, "\n");
+
+  // sort and find unique colors
+  sort(cols.begin(), cols.end(), col_cmp());
+  auto ci = unique(cols.begin(), cols.end());
+  cols.resize(ci - cols.begin());
+
+  for (auto &col : cols)
+    write_mtl_color(mfile, col);
+}
+
 // RK - write OBJ file type for Meshlab and other
-void obj_write(FILE *ofile, const Geometry &geom, const char *sep, int sig_dgts)
+void obj_write(FILE *ofile, FILE *mfile, string mtl_file, const Geometry &geom,
+               const char *sep, int sig_dgts)
 {
   int offset = 1; // obj files start indexes from 1
 
+  vector<Color> cols;
+
   fprintf(ofile, "# File type: ASCII OBJ\n");
 
+  // materials file reference as string
+  if (mfile)
+    fprintf(ofile, "mtllib %s\n", mtl_file.c_str());
+
+  // v entries
   char line[MSG_SZ];
   for (unsigned int i = 0; i < geom.verts().size(); i++)
     fprintf(ofile, "v %s\n", vtostr(line, geom.verts(i), sep, sig_dgts));
 
+  Color last_color = Color();
+
+  // f entries
   for (unsigned int i = 0; i < geom.faces().size(); i++) {
+    // if materials, color logic
+    if (mfile) {
+      Color c = geom.colors(FACES).get(i);
+      if (c.is_value() && !c.is_invisible()) {
+        c.set_alpha(255); // future transparency possible?
+        cols.push_back(c);
+      }
+      // first color might be unset
+      if (c != last_color || i == 0) {
+        if (c.is_value() && !c.is_invisible())
+          fprintf(ofile, "usemtl color_%02x%02x%02x%02x\n", c[0], c[1], c[2],
+                  c[3]);
+        else
+          fprintf(ofile, "usemtl color_face_default\n");
+      }
+      last_color = c;
+    }
     fprintf(ofile, "f");
     for (unsigned int j = 0; j < geom.faces(i).size(); j++)
       fprintf(ofile, " %d", geom.faces(i, j) + offset);
     fprintf(ofile, "\n");
   }
 
-  for (unsigned int i = 0; i < geom.edges().size(); i++)
+  last_color = Color();
+
+  // l entries
+  for (unsigned int i = 0; i < geom.edges().size(); i++) {
+    // if materials, color logic
+    if (mfile) {
+      Color c = geom.colors(EDGES).get(i);
+      if (c.is_value() && !c.is_invisible()) {
+        c.set_alpha(255); // future transparency possible?
+        cols.push_back(c);
+      }
+      // first color might be unset
+      if (c != last_color || i == 0) {
+        if (c.is_value() && !c.is_invisible())
+          fprintf(ofile, "usemtl color_%02x%02x%02x%02x\n", c[0], c[1], c[2],
+                  c[3]);
+        else
+          fprintf(ofile, "usemtl color_edge_default\n");
+      }
+      last_color = c;
+    }
     fprintf(ofile, "l %d %d\n", geom.edges(i, 0) + offset,
             geom.edges(i, 1) + offset);
+  }
 
+  last_color = Color();
+
+  // p entries
+  bool first = true;
   map<int, Color>::const_iterator mi;
   for (mi = geom.colors(VERTS).get_properties().begin();
        mi != geom.colors(VERTS).get_properties().end(); mi++) {
-    fprintf(ofile, "p %d\n", (mi->first) + offset);
+    int i = mi->first;
+    // if materials, color logic
+    if (mfile) {
+      Color c = geom.colors(VERTS).get(i);
+      if (c.is_value() && !c.is_invisible()) {
+        c.set_alpha(255); // future transparency possible?
+        cols.push_back(c);
+      }
+      // first color might be unset
+      if (c != last_color || first) {
+        if (c.is_value() && !c.is_invisible())
+          fprintf(ofile, "usemtl color_%02x%02x%02x%02x\n", c[0], c[1], c[2],
+                  c[3]);
+        else
+          fprintf(ofile, "usemtl color_vert_default\n");
+        first = false;
+      }
+      last_color = c;
+    }
+    fprintf(ofile, "p %d\n", i + offset);
   }
+
+  if (mfile)
+    write_mtl_file(mfile, cols);
 }
 
-bool obj_write(string file_name, const Geometry &geom, char *errmsg,
-               const char *sep, int sig_dgts)
+bool obj_write(string file_name, string mtl_file, const Geometry &geom,
+               char *errmsg, const char *sep, int sig_dgts)
 {
   FILE *ofile = file_open_w(file_name, errmsg);
   if (!ofile)
     return false;
 
-  obj_write(ofile, geom, sep, sig_dgts);
+  FILE *mfile = nullptr;
+  if (mtl_file.length()) {
+    mfile = file_open_w(mtl_file, errmsg);
+    if (!mfile)
+      return false;
+  }
+
+  obj_write(ofile, mfile, mtl_file, geom, sep, sig_dgts);
   file_close_w(ofile);
+
+  if (mfile)
+    file_close_w(mfile);
   return true;
 }
 

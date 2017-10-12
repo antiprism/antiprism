@@ -35,7 +35,7 @@
 #include <string>
 #include <vector>
 
-#include "../base/antiprism.h"
+#include "../../antiprism_rk/base/antiprism.h"
 
 using std::string;
 using std::vector;
@@ -44,10 +44,12 @@ using namespace anti;
 
 class o2o_opts : public ProgramOpts {
 public:
-  string sep;
-  int sig_digits;
   string ifile;
   string ofile;
+
+  string mtl_file;
+  string sep;
+  int sig_digits;
 
   o2o_opts() : ProgramOpts("off2obj"), sep(" "), sig_digits(DEF_SIG_DGTS) {}
   void process_command_line(int argc, char **argv);
@@ -65,6 +67,7 @@ void o2o_opts::usage()
 "\n"
 "Options\n"
 "%s"
+"  -m <file> generate mtl file. file name is hardcoded into obj file\n"
 "  -d <dgts> number of significant digits (default %d) or if negative\n"
 "            then the number of digits after the decimal point\n"
 "  -o <file> write output to file (default: write to standard output)\n"
@@ -80,11 +83,15 @@ void o2o_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":ho:d:")) != -1) {
+  while ((c = getopt(argc, argv, ":hm:o:d:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
     switch (c) {
+    case 'm':
+      mtl_file = optarg;
+      break;
+
     case 'd':
       print_status_or_exit(read_int(optarg, &sig_digits), c);
       break;
@@ -113,8 +120,8 @@ int main(int argc, char *argv[])
   Geometry geom;
   opts.read_or_error(geom, opts.ifile);
 
-  opts.print_status_or_exit(
-      geom.write_obj(opts.ofile, opts.sep.c_str(), opts.sig_digits));
+  opts.print_status_or_exit(geom.write_obj(opts.ofile, opts.mtl_file,
+                                           opts.sep.c_str(), opts.sig_digits));
 
   return 0;
 }

@@ -419,21 +419,22 @@ void Geometry::write_crds(FILE *file, const char *sep, int sig_dgts) const
   crds_write(file, *this, sep, sig_dgts);
 }
 
-Status Geometry::write_obj(string file_name, const char *sep,
+Status Geometry::write_obj(string file_name, string mtl_file, const char *sep,
                            int sig_dgts) const
 {
   Status stat;
   char errmsg[MSG_SZ];
-  if (!obj_write(file_name, *this, errmsg, sep, sig_dgts))
+  if (!obj_write(file_name, mtl_file, *this, errmsg, sep, sig_dgts))
     stat.set_error(errmsg);
   else if (*errmsg)
     stat.set_warning(errmsg);
   return stat;
 }
 
-void Geometry::write_obj(FILE *file, const char *sep, int sig_dgts) const
+void Geometry::write_obj(FILE *file, FILE *mfile, string mtl_file,
+                         const char *sep, int sig_dgts) const
 {
-  return obj_write(file, *this, sep, sig_dgts);
+  obj_write(file, mfile, mtl_file, *this, sep, sig_dgts);
 }
 
 GeometryInfo Geometry::get_info() const { return GeometryInfo(*this); }

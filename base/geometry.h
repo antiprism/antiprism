@@ -559,20 +559,25 @@ public:
 
   /// Write coordinates to a file
   /**\param file_name the file name ("" for standard output.)
+   * \param mtl_file is the materials file if specified.
    * \param sep a string to use as the seperator between coordinates.
    * \param sig_dgts the number of significant digits to write,
    * or if negative then the number of digits after the decimal point.
    * \return status, which evaluates to \c true if the file could be written
    *  (possibly with warnings), otherwise \c false to indicate an error. */
-  virtual Status write_obj(std::string file_name = "", const char *sep = " ",
+  virtual Status write_obj(std::string file_name = "",
+                           std::string mtl_file = "", const char *sep = " ",
                            int sig_dgts = DEF_SIG_DGTS) const;
 
   /// Write coordinates to a file stream
   /**\param file the file stream.
+   * \param file stream for materials file.
+   * \param mtl_file is the materials file.
    * \param sep a string to use as the seperator between coordinates.
    * \param sig_dgts the number of significant digits to write,
    * or if negative then the number of digits after the decimal point. */
-  virtual void write_obj(FILE *file, const char *sep = " ",
+  virtual void write_obj(FILE *file, FILE *mfile, std::string mtl_file = "",
+                         const char *sep = " ",
                          int sig_dgts = DEF_SIG_DGTS) const;
 
   /// Check if geomtery is consistently oriented

@@ -47,10 +47,11 @@ bool crds_write(std::string file_name, const anti::Geometry &geom,
 void crds_write(FILE *ofile, const anti::Geometry &geom, const char *sep = " ",
                 int sig_dgts = DEF_SIG_DGTS);
 
-bool obj_write(std::string file_name, const Geometry &geom,
-               char *errmsg = nullptr, const char *sep = " ",
-               int sig_dgts = DEF_SIG_DGTS);
-void obj_write(FILE *ofile, const Geometry &geom, const char *sep = " ",
+bool obj_write(std::string file_name, std::string mtl_file,
+               const Geometry &geom, char *errmsg = nullptr,
+               const char *sep = " ", int sig_dgts = DEF_SIG_DGTS);
+void obj_write(FILE *ofile, FILE *mfile, std::string mtl_file,
+               const Geometry &geom, const char *sep = " ",
                int sig_dgts = DEF_SIG_DGTS);
 
 bool off_file_read(std::string file_name, anti::Geometry &geom,
