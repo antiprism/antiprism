@@ -35,7 +35,7 @@
 #include <string>
 #include <vector>
 
-#include "../../antiprism_rk/base/antiprism.h"
+#include "../base/antiprism.h"
 
 using std::string;
 using std::vector;
