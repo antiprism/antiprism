@@ -211,11 +211,10 @@ void obj_write(FILE *ofile, FILE *mfile, string mtl_file, const Geometry &geom,
   last_color = Color();
 
   // p entries
-  map<int, Color> vert_cols = geom.colors(VERTS).get_properties();
   for (unsigned int i = 0; i < geom.verts().size(); i++) {
     // if materials, color logic
     if (mfile) {
-      Color c = vert_cols[i];
+      Color c = geom.colors(VERTS).get(i);
       if (c.is_value() && !c.is_invisible()) {
         c.set_alpha(255); // future transparency possible?
         cols.push_back(c);
