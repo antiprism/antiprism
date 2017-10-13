@@ -211,26 +211,21 @@ void obj_write(FILE *ofile, FILE *mfile, string mtl_file, const Geometry &geom,
   last_color = Color();
 
   // p entries
-  bool first = true;
-  map<int, Color>::const_iterator mi;
-  for (mi = geom.colors(VERTS).get_properties().begin();
-       mi != geom.colors(VERTS).get_properties().end(); mi++) {
-    int i = mi->first;
+  map<int, Color> vert_cols = geom.colors(VERTS).get_properties();
+  for (unsigned int i = 0; i < geom.verts().size(); i++) {
     // if materials, color logic
     if (mfile) {
-      Color c = geom.colors(VERTS).get(i);
+      Color c = vert_cols[i];
       if (c.is_value() && !c.is_invisible()) {
         c.set_alpha(255); // future transparency possible?
         cols.push_back(c);
       }
       // first color might be unset
-      if (c != last_color || first) {
+      if (c != last_color || i == 0) {
         if (c.is_value() && !c.is_invisible())
-          fprintf(ofile, "usemtl color_%02x%02x%02x%02x\n", c[0], c[1], c[2],
-                  c[3]);
+          fprintf(ofile, "usemtl color_%02x%02x%02x%02x\n", c[0], c[1], c[2], c[3]);
         else
           fprintf(ofile, "usemtl color_vert_default\n");
-        first = false;
       }
       last_color = c;
     }
