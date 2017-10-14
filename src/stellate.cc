@@ -78,12 +78,12 @@ public:
   stellate_opts()
       : ProgramOpts("stellate"), merge_faces(true),
         remove_inline_vertices(true), split_pinched(true), resolve_faces(false),
-        remove_multiples(false), rebuild_compound_model(false), output_parts("s"), move_to_front(false),
-        projection_width(500), vertex_coloring_method('\0'),
-        edge_coloring_method('\0'), face_coloring_method('d'),
-        vertex_color(Color::invisible), edge_color(Color::invisible),
-        face_color(Color()), map_string("compound"), face_opacity(-1),
-        epsilon(0)
+        remove_multiples(false), rebuild_compound_model(false),
+        output_parts("s"), move_to_front(false), projection_width(500),
+        vertex_coloring_method('\0'), edge_coloring_method('\0'),
+        face_coloring_method('d'), vertex_color(Color::invisible),
+        edge_color(Color::invisible), face_color(Color()),
+        map_string("compound"), face_opacity(-1), epsilon(0)
   {
   }
   void process_command_line(int argc, char **argv);

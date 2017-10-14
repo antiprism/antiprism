@@ -816,9 +816,9 @@ void GeometryInfo::find_face_cons()
       face_cons[f_idx].push_back(vector<int>());
       auto ei = e2fs.find(
           make_edge(geom.faces(f_idx, v), geom.faces_mod(f_idx, v + 1)));
-      if(ei != e2fs.end()) { // test, but shouldn't fail
-        for(int i : ei->second) {
-          if(i != (int)f_idx)
+      if (ei != e2fs.end()) { // test, but shouldn't fail
+        for (int i : ei->second) {
+          if (i != (int)f_idx)
             face_cons[f_idx][v].push_back(i);
         }
       }

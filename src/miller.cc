@@ -68,7 +68,8 @@ public:
   double epsilon;
 
   miller_opts()
-      : ProgramOpts("miller"), output_parts("s"), merge_faces(false), rebuild_compound_model(false), list_polys(false),
+      : ProgramOpts("miller"), output_parts("s"), merge_faces(false),
+        rebuild_compound_model(false), list_polys(false),
         vertex_coloring_method('\0'), edge_coloring_method('\0'),
         face_coloring_method('\0'), vertex_color(Color::invisible),
         edge_color(Color::invisible), face_color(Color()),
@@ -456,18 +457,16 @@ void Miller::list_polys()
   for (int i = 0; i < l; i++) {
     int j = i + 1;
     if (j == 1)
-      fprintf(stderr,"Full Symmetry\n");
-    else
-    if (j == 33)
-      fprintf(stderr,"\nEnantiomeric\n");
-    else
-    if (j == 60)
-      fprintf(stderr,"\nLost Stellations\n");
-    else
-    if (j == 70)
-      fprintf(stderr,"\nCandidate Lost Stellations\n");
+      fprintf(stderr, "Full Symmetry\n");
+    else if (j == 33)
+      fprintf(stderr, "\nEnantiomeric\n");
+    else if (j == 60)
+      fprintf(stderr, "\nLost Stellations\n");
+    else if (j == 70)
+      fprintf(stderr, "\nCandidate Lost Stellations\n");
 
-    fprintf(stderr,"%2d) %-10s %-2s\n", j, Miller_items[i].cell_string, Miller_items[i].sub_sym);
+    fprintf(stderr, "%2d) %-10s %-2s\n", j, Miller_items[i].cell_string,
+            Miller_items[i].sub_sym);
   }
 }
 

@@ -31,13 +31,13 @@
 #include "../base/antiprism.h"
 #include <algorithm>
 #include <functional>
-#include <memory>
 #include <map>
 #include <math.h>
+#include <memory>
+#include <regex>
 #include <string.h>
 #include <string>
 #include <vector>
-#include <regex>
 
 using std::string;
 using std::vector;
@@ -47,14 +47,14 @@ using std::not_equal_to;
 
 using namespace anti;
 
-void make_meta(const Geometry &geom, Geometry &meta, double face_ht=0.0)
+void make_meta(const Geometry &geom, Geometry &meta, double face_ht = 0.0)
 {
   meta.clear_all();
   meta.add_verts(geom.verts());
   int f_start = meta.verts().size();
   for (unsigned int f = 0; f < geom.faces().size(); f++) {
     Vec3d face_pt = geom.face_cent(f);
-    if(face_ht)
+    if (face_ht)
       face_pt += geom.face_norm(f).with_len(face_ht);
     meta.add_vert(face_pt);
   }
@@ -68,16 +68,20 @@ void make_meta(const Geometry &geom, Geometry &meta, double face_ht=0.0)
     int e_idx = meta.add_vert(geom.edge_cent(ef_pair.first));
     // Add four triangles
     int idx;
-    if(ef_pair.second[0] >= 0) {
-      idx = meta.add_face(ef_pair.first[0], e_idx, ef_pair.second[0] + f_start, -1);
+    if (ef_pair.second[0] >= 0) {
+      idx = meta.add_face(ef_pair.first[0], e_idx, ef_pair.second[0] + f_start,
+                          -1);
       meta.colors(FACES).set(idx, light);
-      idx = meta.add_face(ef_pair.first[1], e_idx, ef_pair.second[0] + f_start, -1);
+      idx = meta.add_face(ef_pair.first[1], e_idx, ef_pair.second[0] + f_start,
+                          -1);
       meta.colors(FACES).set(idx, dark);
     }
-    if(ef_pair.second[1] >= 0) {
-      idx = meta.add_face(ef_pair.first[1], e_idx, ef_pair.second[1] + f_start, -1);
+    if (ef_pair.second[1] >= 0) {
+      idx = meta.add_face(ef_pair.first[1], e_idx, ef_pair.second[1] + f_start,
+                          -1);
       meta.colors(FACES).set(idx, light);
-      idx = meta.add_face(ef_pair.first[0], e_idx, ef_pair.second[1] + f_start, -1);
+      idx = meta.add_face(ef_pair.first[0], e_idx, ef_pair.second[1] + f_start,
+                          -1);
       meta.colors(FACES).set(idx, dark);
     }
   }
@@ -299,7 +303,7 @@ Status weave_pattern::set_pattern(const string &pat)
       }
     }
     else if ('_' == pat[pos])
-        ;
+      ;
     else {
       return Status::error(
           msg_str("invalid character '%c' in position %d", pat[pos], pos + 1));
@@ -313,7 +317,6 @@ Status weave_pattern::set_pattern(const string &pat)
 
   return Status::ok();
 }
-
 
 /*
 string weave_pattern::get_pattern() const
@@ -361,7 +364,7 @@ private:
   const vector<weave_pattern> &get_pats() const { return pats; }
 
 public:
-  bool set_geom(const Geometry &geom, double face_ht=0.0);
+  bool set_geom(const Geometry &geom, double face_ht = 0.0);
   void add_pattern(const weave_pattern &pattern) { pats.push_back(pattern); }
   Status add_pattern(const string &pat);
   void make_weave(Geometry &wv) const;
@@ -386,10 +389,10 @@ bool weave::find_nbrs()
       if (ef_i == ef_pairs.end())
         return false;
       else if (ef_i->second.size() != 2)
-        nbrs[f][i] = -1;  // only allow connection for two faces at an edge
+        nbrs[f][i] = -1; // only allow connection for two faces at an edge
       else {
         nbrs[f][i] =
-          (ef_i->second[0] != (int)f) ? ef_i->second[0] : ef_i->second[1];
+            (ef_i->second[0] != (int)f) ? ef_i->second[0] : ef_i->second[1];
       }
     }
   return true;
@@ -437,7 +440,7 @@ void weave::add_circuit(Geometry &wv, int start_idx, const weave_pattern &pat,
       }
       else {
         idx = nbrs[idx][pat.get_op()]; // move to next triangle
-        if (idx<0) { // abandon: circuit tried to cross an open edge
+        if (idx < 0) { // abandon: circuit tried to cross an open edge
           wv.raw_verts().resize(start_v_sz); // remove any added verts
           return;
         }
@@ -487,12 +490,12 @@ Status weave::add_pattern(const string &pat)
 
 bool valid_start_face(int f, int start_faces)
 {
-  int is_left = f%2;
-  if(start_faces == 3)
+  int is_left = f % 2;
+  if (start_faces == 3)
     return true;
-  else if(start_faces == 2 && is_left)
+  else if (start_faces == 2 && is_left)
     return true;
-  else if(start_faces == 1 && !is_left)
+  else if (start_faces == 1 && !is_left)
     return true;
   else
     return false;
@@ -529,7 +532,7 @@ public:
 
   wv_opts()
       : ProgramOpts("poly_weave"), add_meta(false), face_ht(0.0),
-      use_default_pattern(true)
+        use_default_pattern(true)
   {
   }
 

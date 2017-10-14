@@ -29,10 +29,10 @@
 */
 
 #include <algorithm>
-#include <functional>
-#include <memory>
 #include <cctype>
+#include <functional>
 #include <math.h>
+#include <memory>
 #include <string.h>
 #include <string>
 #include <vector>
@@ -59,7 +59,7 @@ public:
 
   wy_opts()
       : ProgramOpts("wythoff"), input_is_meta(false), add_meta(false),
-      face_ht(0.0), color_with_value(true), quiet(false)
+        face_ht(0.0), color_with_value(true), quiet(false)
   {
   }
 
@@ -133,7 +133,7 @@ void wy_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'c':
-      if(string(optarg) == "list") {
+      if (string(optarg) == "list") {
         tiling.print_conway_list();
         exit(0);
       }
@@ -144,7 +144,7 @@ void wy_opts::process_command_line(int argc, char **argv)
       relabel = optarg;
       break;
 
-      case 'a':
+    case 'a':
       add_meta = true;
       break;
 
@@ -190,15 +190,13 @@ void color_meta(Geometry &meta)
 {
   const Color light(1.0, 0.8, 0.6, 0.5);
   const Color dark(0.1, 0.3, 0.6, 0.5);
-  for(int i = 0; i < (int)meta.faces().size(); i++)
-    meta.colors(FACES).set(i, (i%2) ? light : dark);
+  for (int i = 0; i < (int)meta.faces().size(); i++)
+    meta.colors(FACES).set(i, (i % 2) ? light : dark);
   meta.add_missing_impl_edges();
   Coloring clrng(&meta);
   clrng.e_one_col(Color::invisible);
   clrng.v_one_col(Color::invisible);
 }
-
-
 
 int main(int argc, char *argv[])
 {
@@ -217,7 +215,7 @@ int main(int argc, char *argv[])
   }
 
   Tiling &tiling = opts.tiling;
-  if(opts.relabel != "")
+  if (opts.relabel != "")
     opts.print_status_or_exit(tiling.relabel_pattern(opts.relabel), 'm');
 
   Status stat = tiling.set_geom(geom, opts.input_is_meta, opts.face_ht);
@@ -227,11 +225,11 @@ int main(int argc, char *argv[])
   vector<int> tile_counts;
   opts.print_status_or_exit(tiling.make_tiling(ogeom, &tile_counts));
 
-  if(!opts.quiet) {
+  if (!opts.quiet) {
     fprintf(stderr, "\n");
     fprintf(stderr, "Tiling pattern: %s\n", tiling.pattern_string().c_str());
     fprintf(stderr, "Tile Counts:\n");
-    for(unsigned int i=0; i<tile_counts.size(); i++)
+    for (unsigned int i = 0; i < tile_counts.size(); i++)
       fprintf(stderr, "  %-4u: %d\n", i, tile_counts[i]);
     fprintf(stderr, "\n");
   }
@@ -249,7 +247,7 @@ int main(int argc, char *argv[])
 
   if (opts.add_meta) {
     Geometry meta = tiling.get_meta();
-    if(opts.color_with_value)
+    if (opts.color_with_value)
       color_meta(meta);
     ogeom.append(meta);
   }
@@ -258,4 +256,3 @@ int main(int argc, char *argv[])
 
   return 0;
 }
-

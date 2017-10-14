@@ -31,16 +31,16 @@
 
 #include "status.h"
 
-#include <vector>
-#include <utility>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace anti {
 
 class Tile {
 private:
-  std::vector<int> idxs;     // index numbers of points visited
-  std::vector<int> ops;      // operations between visiting points
+  std::vector<int> idxs; // index numbers of points visited
+  std::vector<int> ops;  // operations between visiting points
   char start_faces;
 
   mutable std::vector<int>::const_iterator ops_i;
@@ -61,7 +61,6 @@ public:
   std::vector<int> check_index_range(int num_points) const;
   std::string tile_string();
 };
-
 
 class Tiling {
 private:
@@ -86,18 +85,20 @@ private:
   const std::vector<Tile> &get_pat_paths() const { return pat_paths; }
 
 public:
-  Tiling(): one_of_each_tile(false) {}
-  Status set_geom(const Geometry &geom, bool is_meta=false, double face_ht=0.0);
+  Tiling() : one_of_each_tile(false) {}
+  Status set_geom(const Geometry &geom, bool is_meta = false,
+                  double face_ht = 0.0);
   Status add_tile(const std::string &pat);
-  Status make_tiling(Geometry &geom, std::vector<int> *tile_counts = nullptr) const;
+  Status make_tiling(Geometry &geom,
+                     std::vector<int> *tile_counts = nullptr) const;
   Status read_pattern(const std::string &pat);
   Status relabel_pattern(const std::string &relabel);
   Status read_conway(const std::string &op);
   const Geometry &get_meta() const { return meta; }
-  void set_one_of_each_tile(bool val=true) { one_of_each_tile = val; };
+  void set_one_of_each_tile(bool val = true) { one_of_each_tile = val; };
 
   std::string pattern_string();
-  void print_conway_list(FILE *ofile=stdout);
+  void print_conway_list(FILE *ofile = stdout);
 };
 
 /// Make a tiling of a base model using Wythoff constructive notation
@@ -114,8 +115,8 @@ public:
  * \return status, which evaluates to \c true if the geometry and
  *  pattern were valid, otherwise \c false to indicate an error. */
 Status wythoff_make_tiling(Geometry &tiled_geom, const Geometry &base_geom,
-    const std::string &pat, bool pat_is_conway_op=false);
-
+                           const std::string &pat,
+                           bool pat_is_conway_op = false);
 
 /// Get vertex points of a Schwarz triangle, and its symmetry group
 /**\param fracs six integers, taken in pairs as the angle fractions.
@@ -134,4 +135,3 @@ bool get_schwarz_tri_fracs(int tri_idx, std::vector<int> &fracs);
 }; // namespace anti
 
 #endif // TILING_H
-

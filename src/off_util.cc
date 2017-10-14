@@ -1696,15 +1696,15 @@ int unzip_tree::init_basic(Geometry &geom, int first_face)
   GeometryInfo info(geom);
   const auto &f_cons_all = info.get_face_cons();
   vector<vector<int>> f_cons(f_cons_all.size());
-  for(unsigned int f=0; f < f_cons_all.size(); f++) {
+  for (unsigned int f = 0; f < f_cons_all.size(); f++) {
     f_cons[f].resize(f_cons_all[f].size());
-    for(unsigned int v=0; v < f_cons_all[f].size(); v++) {
-       // Don't handle more than 2 faces meeting at an edge
-       if(f_cons_all[f][v].size() > 1)
-         return -1;
+    for (unsigned int v = 0; v < f_cons_all[f].size(); v++) {
+      // Don't handle more than 2 faces meeting at an edge
+      if (f_cons_all[f][v].size() > 1)
+        return -1;
 
-       f_cons[f][v] = (f_cons_all[f][v].size()) ? f_cons_all[f][v][0] : -1;
-     }
+      f_cons[f][v] = (f_cons_all[f][v].size()) ? f_cons_all[f][v][0] : -1;
+    }
   }
 
   vector<tree_face> face_list;

@@ -222,7 +222,8 @@ void obj_write(FILE *ofile, FILE *mfile, string mtl_file, const Geometry &geom,
       // first color might be unset
       if (c != last_color || i == 0) {
         if (c.is_value() && !c.is_invisible())
-          fprintf(ofile, "usemtl color_%02x%02x%02x%02x\n", c[0], c[1], c[2], c[3]);
+          fprintf(ofile, "usemtl color_%02x%02x%02x%02x\n", c[0], c[1], c[2],
+                  c[3]);
         else
           fprintf(ofile, "usemtl color_vert_default\n");
       }
