@@ -22,51 +22,6 @@ AX_CXX_COMPILE_STDCXX(11)
 gl_LD_VERSION_SCRIPT
 LT_INIT([win32-dll])
 
-# Check whether Python module should be built
-enable_module = "no"
-AC_ARG_ENABLE( module,
-   [  --enable-module         enable Python module source package],
-   [ if test x"$enableval" = x"yes"; then enable_module="yes"; fi ],
-   [ enable_module="no" ] )
-
-AM_CONDITIONAL(BUILD_PY_MOD, false)
-AM_CONDITIONAL(USE_SWIG, false)
-
-#enable_python="disabled" #disable python for this release
-if test x"$enable_module" = x"yes" ;
-then
-   #AM_PATH_PYTHON(3.5, [], [enable_module="no"])
-   AX_PYTHON
-   AX_SWIG_PYTHON
-
-   AM_CONDITIONAL(BUILD_PY_MOD, true)
-   echo "will prepare the Python Module";
-   # Check whether Python module wrapper will be regenerated with swig
-   AX_PKG_SWIG([3.0.0], [
-      if test "$SWIG_LIB" ; then
-         AM_CONDITIONAL(USE_SWIG, true)
-         echo "SWIG is available to rebuild the Python module interface"
-      else
-         echo
-         echo "*********************************************"
-         echo "   SWIG is not available. It is not needed to build and "
-         echo "   install this package. However, if the library source is "
-         echo "   modified then the changes will not be included in the "
-         echo "   Python module."
-         echo "*********************************************"
-         echo
-      fi ],
-   [  echo
-      echo "*********************************************"
-      echo "   the Python module will not be built"
-      echo "   either configure was run with --disable-python"
-      echo "   or a Python development package is not installed (or found)"
-      echo "*********************************************"
-      echo
-   ])
-fi
-
-
 AC_CHECK_FUNC([gettimeofday], [utimer=1], [utimer=0])
 if test $utimer = 0 ; then
    AC_MSG_CHECKING([for timeGetTime in winmm])
@@ -266,8 +221,5 @@ AC_CONFIG_FILES([Makefile
                  src/Makefile
                  src_extra/Makefile
                  doc_src/common_defs.inc
-                 python/Makefile
-                 python/distutils/MANIFEST
-                 python/distutils/setup.py
                  ])
 AC_OUTPUT
