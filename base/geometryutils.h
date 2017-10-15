@@ -293,7 +293,7 @@ Vec3d face_norm_nonplanar_quads(const Geometry &geom,
 /// return the unit normal of all quads in polygon
 /**\param geom geometry.
  * \param f_idx the face index number.
- * \param normal_type n - Newell t - triangular q - quads */
+ * \return unit normal */
 Vec3d face_norm_nonplanar_quads(const Geometry &geom, const int f_idx);
 
 /// select normal by type. Newell, triangles, or quads
@@ -351,20 +351,22 @@ bool canonicalize_mm(Geometry &geom, const int num_iters,
  * \param num_iters maximumn number of iterations.
  * \param rep_count report on propgress after this many iterations.
  * \param eps a small number, coordinates differing by less than eps are
- *  the same. */
+ *  the same.
+ * \return \c true if success, otherwise \c false */
 bool planarize_mm(Geometry &geom, const int num_iters, const int rep_count = -1,
                   const double eps = epsilon);
 
 /// returns the edge near points centroid
 /**\param geom geometry to measure
- * \input centroid for reference */
+ * \param cent centre from which to calculate nearpoints on edges
+ * \return the centroid of the nearpoints. */
 Vec3d edge_nearpoints_centroid(Geometry &geom,
                                const Vec3d cent = Vec3d(0, 0, 0));
 
 /// Canonicalize (George Hart "Conway Notation" algorithm)
 /**See http://www.georgehart.com/virtual-polyhedra/conway_notation.html
- * \param geom geometry to canonicalise.
- * \param method 'b': base/dual canonicalize method, 'p': adjust vertices with
+ * \param base geometry to canonicalise.
+ * \param canonical_method - 'b': base/dual, 'p': adjust vertices with
  * side effect of planarization (len2() version), 'q': adjust vertices with
  * side effect of planarization (len() version), case 'f': use face centres.
  * \param num_iters maximumn number of iterations.
@@ -374,7 +376,8 @@ Vec3d edge_nearpoints_centroid(Geometry &geom,
  * \param centering passed from canonical program, when centering is not used
  * \param normal_type: n - Newell, t -triangles, q - quads (default n)
  * \param eps a small number, coordinates differing by less than eps are
- *  the same. */
+ *  the same.
+ * \return \c true if success, otherwise \c false */
 bool canonicalize_bd(Geometry &base, const int num_iters,
                      const char canonical_method,
                      const double radius_range_percent, const int rep_count,

@@ -1203,7 +1203,7 @@ bool Tiling::find_nbrs()
   return true;
 }
 
-inline Vec3d Tiling::point_on_face(int f_idx, const Vec3d &crds) const
+static Vec3d point_on_face(const Geometry &meta, int f_idx, const Vec3d &crds)
 {
   // point coordinates
   Vec3d P = crds[Tile::V] * meta.face_v(f_idx, Tile::V) +
@@ -1306,7 +1306,7 @@ Status Tiling::set_geom(const Geometry &geom, bool is_meta, double face_ht)
   }
 
   reverse_odd_faces(meta);
-  vert_norms = meta.get_info().get_vert_norms();
+  // vert_norms = meta.get_info().get_vert_norms();
   reverse_odd_faces(meta);
   return Status::ok();
 }
@@ -1363,7 +1363,7 @@ Status Tiling::make_tiling(Geometry &geom, vector<int> *tile_counts) const
     Vec3d crds = pt.first;
     crds /= crds[0] + crds[1] + crds[2];
     for (auto &m : index_order[incl])
-      geom.add_vert(point_on_face(m.second.second, crds), pt.second);
+      geom.add_vert(point_on_face(meta, m.second.second, crds), pt.second);
   }
 
   int faces_sz = meta.faces().size();
@@ -1396,11 +1396,6 @@ Status Tiling::make_tiling(Geometry &geom, vector<int> *tile_counts) const
 
   geom.del(VERTS, geom.get_info().get_free_verts());
   return Status::ok();
-}
-
-int Tiling::get_vert_idx(int tri, const std::pair<Vec3d, Color> &point) const
-{
-  return tri * point.second.get_index();
 }
 
 static void color_point(std::pair<Vec3d, Color> &point)
