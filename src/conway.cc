@@ -73,7 +73,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
   int num_val = 0;
   bool delayed_write = false;
 
-  string operators = "abcdegjkmoprstw";
+  string operators = "abcdegjkmopqrstw";
   string operands = "TCOIDPAY";
   string digits = "0123456789";
   string digits_allowed = "tkPAY";
@@ -476,7 +476,7 @@ void cn_opts::usage()
 "%s"
 "  -H        Conway Notation detailed help. seeds and operator descriptions\n"
 "  -s        apply Conway Notation string substitutions\n"
-"..-g        use George Hart algorithms (sets -s)\n"
+"  -g        use George Hart algorithms (sets -s)\n"
 "  -r        execute operations in reverse order (left to right)\n"
 "  -u        make final product be averge unit edge length\n"
 "  -v        verbose output\n"
@@ -640,9 +640,9 @@ void cn_opts::process_command_line(int argc, char **argv)
   if (!strlen(cn_string.c_str()))
     error("no Conway Notation string given");
 
-  if (strspn(cn_string.c_str(), "abcdegjkmoprstwxTCOIDPAY0123456789,") !=
+  if (strspn(cn_string.c_str(), "abcdegjkmopqrstwTCOIDPAY0123456789,") !=
       strlen(cn_string.c_str()))
-    error("Conway Notation must consist of abcdegjkmoprstwxTCOIDPAY0123456789");
+    error("Conway Notation must consist of abcdegjkmopqrstwTCOIDPAY0123456789");
 
   if (int pos = validate_cn_string(cn_string, operations, operand, poly_size))
     error(msg_str("Unexpected character in position %d: %s", pos + 1,
@@ -722,7 +722,7 @@ void verbose(const char operation, const int op_var, const cn_opts &opts)
 {
   string hart_string;
   if (opts.hart_mode)
-    hart_string = "(hart)";
+    hart_string = "(GHart)";
 
   if (opts.verbosity) {
     char buf[MSG_SZ];
@@ -1205,10 +1205,12 @@ void do_operations(Geometry &geom, const cn_opts &opts)
     string wythoff_op;
     wythoff_op.push_back(operation->op);
 
-    // reflection is univeral
-    if (operation->op == 'r')
-      cn_reflect(geom);
-    else if (opts.hart_mode) {
+    bool hart_operation_done = false;
+
+    // reflection is universal
+    if (opts.hart_mode || operation->op == 'r') {
+      hart_operation_done = true;
+
       switch (operation->op) {
       // ambo
       case 'a':
@@ -1240,21 +1242,29 @@ void do_operations(Geometry &geom, const cn_opts &opts)
         hart_propellor(geom);
         break;
 
+      // reflect
+      case 'r':
+        cn_reflect(geom);
+        break;
+
       // whirl
       case 'w':
         hart_whirl(geom, opts);
         break;
 
       default:
-        fprintf(stderr, "unexpected operator: '%c'\n", operation->op);
+        hart_operation_done = false;
       }
     }
+
     // wythoff mode
-    else {
+    if (!hart_operation_done) {
       if (operation->op == 't' && operation->op_var > 1)
         cn_truncate_by_algorithm(geom, CN_ONE_THIRD, operation->op_var);
       else
-        wythoff_make_tiling(geom, geom, wythoff_op, true);
+        opts.print_status_or_exit(
+            wythoff_make_tiling(geom, geom, wythoff_op, true));
+      geom.orient();
     }
 
     // planarize after each step
