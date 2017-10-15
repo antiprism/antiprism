@@ -73,7 +73,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
   int num_val = 0;
   bool delayed_write = false;
 
-  string operators = "abcdegjkmoprstwx";
+  string operators = "abcdegjkmoprstw";
   string operands = "TCOIDPAY";
   string digits = "0123456789";
   string digits_allowed = "tkPAY";
@@ -174,111 +174,126 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
   return 0;
 }
 
-string resolved_cn_string(const string &cn_string,
-                          const bool use_truncate_algorithm)
+// G. Hart Commentary
+// P4 --> C    (C is prism)
+// A3 --> O    (O is antiprism)
+// Y3 --> T    (T is pyramid)
+// e  --> aa   (abbr. for explode)
+// b  --> ta   (abbr. for bevel)
+// o  --> jj   (abbr. for ortho)
+// m  --> kj   (abbr. for meta)
+// t(n) --> dk(n)d  (dual operations) (see special case)
+// j  --> dad  (dual operations)
+// s  --> dgd  (dual operations)
+// dd --> null (order 2)
+// ad --> a    (a_ = ad_)
+// gd --> g    (g_ = gd_)
+// aY --> A    (interesting fact)
+// dT --> T    (self-dual)
+// gT --> D    (symm change)
+// aT --> O    (symm change)
+// dC --> O    (dual pair)
+// dO --> C    (dual pair)
+// dI --> D    (dual pair)
+// dD --> I    (dual pair)
+// aO --> aC   (for uniqueness)
+// aI --> aD   (for uniqueness)
+// gO --> gC   (for uniqueness)
+// gI --> gD   (for uniqueness)
+
+struct ResolveItem {
+  const char *target;
+  const char *resolve;
+};
+
+// clang-format off
+ResolveItem resolve_item_list[] = {
+    {  "P4", "C",   },
+    {  "A3", "O",   },
+    {  "Y3", "T",   },
+    {  "e",  "aa",  },
+    {  "b",  "ta",  },
+    {  "o",  "jj",  },
+    {  "m",  "kj",  },
+    {  "t",  "dk",  },
+    {  "j",  "dad", },
+    {  "s",  "dgd", },
+    {  "dd", "",    },
+    {  "ad", "a",   },
+    {  "gd", "g",   },
+    {  "aY", "A",   },
+    {  "dT", "T",   },
+    {  "gT", "D",   },
+    {  "aT", "O",   },
+    {  "dC", "O",   },
+    {  "dO", "C",   },
+    {  "dI", "D",   },
+    {  "dD", "I",   },
+    {  "aO", "aC",  },
+    {  "aI", "aD",  },
+    {  "gO", "gC",  },
+    {  "gI", "gD",  },
+};
+// clang-format on
+
+string resolved_cn_string(const string &cn_string)
 {
   string resolve_string = cn_string;
 
-  const int num_subst = 25;
-  string target[num_subst];
-  string resolve[num_subst];
-  // G. Hart Commentary
-  target[0] = "P4";
-  resolve[0] = "C"; // P4 --> C   (C is prism)
-  target[1] = "A3";
-  resolve[1] = "O"; // A3 --> O   (O is antiprism)
-  target[2] = "Y3";
-  resolve[2] = "T"; // Y3 --> T   (T is pyramid)
-  target[3] = "e";
-  resolve[3] = "aa"; // e --> aa   (abbr. for explode)
-  target[4] = "b";
-  resolve[4] = "ta"; // b --> ta   (abbr. for bevel)
-  target[5] = "o";
-  resolve[5] = "jj"; // o --> jj   (abbr. for ortho)
-  target[6] = "m";
-  resolve[6] = "kj"; // m --> kj   (abbr. for meta)
-  target[7] = "t";
-  resolve[7] = "dk"; // t(n) --> dk(n)d  (dual operations) (see special case)
-  target[8] = "j";
-  resolve[8] = "dad"; // j --> dad  (dual operations)
-  target[9] = "s";
-  resolve[9] = "dgd"; // s --> dgd  (dual operations)
-  target[10] = "dd";
-  resolve[10] = ""; // dd --> null  (order 2)
-  target[11] = "ad";
-  resolve[11] = "a"; // ad --> a   (a_ = ad_)
-  target[12] = "gd";
-  resolve[12] = "g"; // gd --> g   (g_ = gd_)
-  target[13] = "aY";
-  resolve[13] = "A"; // aY --> A   (interesting fact)
-  target[14] = "dT";
-  resolve[14] = "T"; // dT --> T   (self-dual)
-  target[15] = "gT";
-  resolve[15] = "D"; // gT --> D   (symm change)
-  target[16] = "aT";
-  resolve[16] = "O"; // aT --> O   (symm change)
-  target[17] = "dC";
-  resolve[17] = "O"; // dC --> O   (dual pair)
-  target[18] = "dO";
-  resolve[18] = "C"; // dO --> C   (dual pair)
-  target[19] = "dI";
-  resolve[19] = "D"; // dI --> D   (dual pair)
-  target[20] = "dD";
-  resolve[20] = "I"; // dD --> I   (dual pair)
-  target[21] = "aO";
-  resolve[21] = "aC"; // aO --> aC  (for uniqueness)
-  target[22] = "aI";
-  resolve[22] = "aD"; // aI --> aD  (for uniqueness)
-  target[23] = "gO";
-  resolve[23] = "gC"; // gO --> gC  (for uniqueness)
-  target[24] = "gI";
-  resolve[24] = "gD"; // gI --> gD  (for uniqueness)
+  int num_subst = sizeof(resolve_item_list) / sizeof(resolve_item_list[0]);
+
+  string target;
+  string resolve;
 
   // first 3 targets are positional
   if (resolve_string.length() > 1) {
     string tmp = resolve_string.substr(resolve_string.length() - 2, 2);
     for (unsigned int i = 0; i < 3; i++) {
-      if (tmp == target[i])
-        resolve_string.replace(resolve_string.length() - 2, target[i].length(),
-                               resolve[i]);
+      target = resolve_item_list[i].target;
+      resolve = resolve_item_list[i].resolve;
+      if (tmp == target)
+        resolve_string.replace(resolve_string.length() - 2, target.length(),
+                               resolve);
     }
   }
 
   // 4 to 6
   for (unsigned int i = 3; i < 7; i++) {
-    for (size_t pos = resolve_string.find_first_of(target[i], 0);
-         pos != string::npos;
-         pos = resolve_string.find_first_of(target[i], 0)) {
-      resolve_string.replace(pos, target[i].length(), resolve[i]);
+    target = resolve_item_list[i].target;
+    resolve = resolve_item_list[i].resolve;
+    for (size_t pos = resolve_string.find_first_of(target, 0);
+         pos != string::npos; pos = resolve_string.find_first_of(target, 0)) {
+      resolve_string.replace(pos, target.length(), resolve);
     }
   }
 
   // 7 is special case
-  if (!use_truncate_algorithm) {
-    for (size_t pos = resolve_string.find_first_of(target[7], 0);
-         pos != string::npos;
-         pos = resolve_string.find_first_of(target[7], 0)) {
-      resolve_string.replace(pos, target[7].length(), resolve[7]);
-      size_t pos2 = resolve_string.find_first_not_of("0123456789", pos + 2);
-      if (pos2 != string::npos)
-        resolve_string.insert(pos2, "d");
-      else
-        resolve_string.append("d");
-    }
+  target = resolve_item_list[7].target;
+  resolve = resolve_item_list[7].resolve;
+  for (size_t pos = resolve_string.find_first_of(target, 0);
+       pos != string::npos; pos = resolve_string.find_first_of(target, 0)) {
+    resolve_string.replace(pos, target.length(), resolve);
+    size_t pos2 = resolve_string.find_first_not_of("0123456789", pos + 2);
+    if (pos2 != string::npos)
+      resolve_string.insert(pos2, "d");
+    else
+      resolve_string.append("d");
   }
 
   // 8 to end. Because of length greater than 1 of the target, string.find and
   // replace cannot be used
   for (int i = 8; i < num_subst; i++) {
+    target = resolve_item_list[i].target;
+    resolve = resolve_item_list[i].resolve;
     int j = 0;
-    int stop = resolve_string.length() - target[i].length() + 1;
+    int stop = resolve_string.length() - target.length() + 1;
     while (j <= stop) {
-      string tmp = resolve_string.substr(j, target[i].length());
-      if (tmp == target[i]) {
-        resolve_string.replace(j, target[i].length(), resolve[i]);
+      string tmp = resolve_string.substr(j, target.length());
+      if (tmp == target) {
+        resolve_string.replace(j, target.length(), resolve);
         j = -1; // we have to begin looking from the begining once again, ok if
                 // we modify stop
-        stop = resolve_string.length() - target[i].length() + 1;
+        stop = resolve_string.length() - target.length() + 1;
       }
       j++;
     }
@@ -302,8 +317,9 @@ public:
   string ofile;
 
   string cn_string;
-  bool resolve_defeat;
-  bool reverse_defeat;
+  bool resolve_ops;
+  bool hart_mode;
+  bool reverse_ops;
   char operand;
   int poly_size;
   char planarization_method;
@@ -311,7 +327,6 @@ public:
   int rep_count;
   bool unitize;
   bool verbosity;
-  bool use_truncate_algorithm;
   char face_coloring_method;
   int face_opacity;
   string face_pattern;
@@ -326,13 +341,13 @@ public:
   vector<ops *> operations;
 
   cn_opts()
-      : ProgramOpts("conway"), cn_string(""), resolve_defeat(false),
-        reverse_defeat(false), operand('\0'), poly_size(0),
+      : ProgramOpts("conway"), cn_string(""), resolve_ops(false),
+        hart_mode(false), reverse_ops(false), operand('\0'), poly_size(0),
         planarization_method('p'), num_iters_planar(1000), rep_count(-1),
-        unitize(false), verbosity(false), use_truncate_algorithm(false),
-        face_coloring_method('n'), face_opacity(-1), face_pattern("1"),
-        epsilon(0), vert_col(Color(255, 215, 0)), // gold
-        edge_col(Color(211, 211, 211))            // lightgrey
+        unitize(false), verbosity(false), face_coloring_method('n'),
+        face_opacity(-1), face_pattern("1"), epsilon(0),
+        vert_col(Color(255, 215, 0)),  // gold
+        edge_col(Color(211, 211, 211)) // lightgrey
   {
   }
 
@@ -381,7 +396,7 @@ void extended_help()
 "cuboctahedron.\n"
 "Note: bevel is also known as \"omnitruncating\" the polyhedron, or omnitruncation\n"
 "\n"
-"c = chamfer   New hexagonal faces are added in place of edges.\n"
+"c = chamfer   New hexagonal faces are added in place of edges (added)\n"
 "\n"
 "d = dual   The dual of a polyhedron has a vertex for each face, and a face for\n"
 "each vertex, of the original polyhedron, e.g., dC=O.  Duality is an operation\n"
@@ -440,9 +455,7 @@ void extended_help()
 "vertices.\n"
 "\n"
 "w = whirl  Gyro followed by truncation of vertices centered on original faces.\n"
-"This create 2 new hexagons for every original edge\n"
-"\n"
-"x = null   Null operation. Nothing is changed. A planarize step is performed\n"
+"This create 2 new hexagons for every original edge (added)\n"
 "\n");
 }
 
@@ -462,10 +475,9 @@ void cn_opts::usage()
 "Options\n"
 "%s"
 "  -H        Conway Notation detailed help. seeds and operator descriptions\n"
-"  -d        don't simplify Conway Notation string\n"
+"  -s        apply Conway Notation string substitutions\n"
+"..-g        use George Hart algorithms (sets -s)\n"
 "  -r        execute operations in reverse order (left to right)\n"
-"  -t        use truncate algorithm instead of simplifying to \"dkd\"\n"
-"              also used in ambo as a truncation of 1/2\n"
 "  -u        make final product be averge unit edge length\n"
 "  -v        verbose output\n"
 "  -o <file> write output to file (default: write to standard output)\n"
@@ -511,7 +523,7 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hHdrtuvp:l:i:z:f:V:E:T:O:m:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hHsgruvp:l:i:z:f:V:E:T:O:m:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -520,16 +532,17 @@ void cn_opts::process_command_line(int argc, char **argv)
       extended_help();
       exit(0);
 
-    case 'd':
-      resolve_defeat = true;
+    case 's':
+      resolve_ops = true;
+      break;
+
+    case 'g':
+      hart_mode = true;
+      resolve_ops = true;
       break;
 
     case 'r':
-      reverse_defeat = true;
-      break;
-
-    case 't':
-      use_truncate_algorithm = true;
+      reverse_ops = true;
       break;
 
     case 'u':
@@ -635,8 +648,8 @@ void cn_opts::process_command_line(int argc, char **argv)
     error(msg_str("Unexpected character in position %d: %s", pos + 1,
                   cn_string.c_str()));
 
-  if (!resolve_defeat) {
-    cn_string = resolved_cn_string(cn_string, use_truncate_algorithm);
+  if (resolve_ops) {
+    cn_string = resolved_cn_string(cn_string);
 
     for (auto &operation : operations)
       delete operation;
@@ -658,7 +671,7 @@ void cn_opts::process_command_line(int argc, char **argv)
   }
 
   // operations are done in reverse order (unless defeated)
-  if (!reverse_defeat)
+  if (!reverse_ops)
     sort(operations.begin(), operations.end(), cmp_ops);
 
   if (!map_file.size())
@@ -705,85 +718,73 @@ void cn_opts::process_command_line(int argc, char **argv)
   epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
-void verbose(const char operation, const int op_var, const bool verbosity)
+void verbose(const char operation, const int op_var, const cn_opts &opts)
 {
-  if (verbosity) {
+  string hart_string;
+  if (opts.hart_mode)
+    hart_string = "(hart)";
+
+  if (opts.verbosity) {
     char buf[MSG_SZ];
     buf[0] = '\0';
     switch (operation) {
     case 'a':
-      fprintf(stderr, "ambo\n");
+      fprintf(stderr, "ambo %s\n", hart_string.c_str());
       break;
-    case '^':
-      fprintf(stderr,
-              "ambo as truncate to edge midpoints by built in function\n");
+    case 'b':
+      fprintf(stderr, "bevel\n");
       break;
     case 'c':
-      fprintf(stderr, "chamfer\n");
+      fprintf(stderr, "chamfer %s\n", hart_string.c_str());
       break;
     case 'd':
-      fprintf(stderr, "dual\n");
+      fprintf(stderr, "dual %s\n", hart_string.c_str());
+      break;
+    case 'e':
+      fprintf(stderr, "expand\n");
       break;
     case 'g':
-      fprintf(stderr, "gyro\n");
+      fprintf(stderr, "gyro %s\n", hart_string.c_str());
+      break;
+    case 'j':
+      fprintf(stderr, "join\n");
       break;
     case 'k':
       if (op_var)
         sprintf(buf, "(%d)", op_var);
-      fprintf(stderr, "kis%s\n", buf);
+      fprintf(stderr, "kis%s %s\n", buf, hart_string.c_str());
+      break;
+    case 'm':
+      fprintf(stderr, "meta\n");
+      break;
+    case 'o':
+      fprintf(stderr, "ortho\n");
       break;
     case 'p':
-      fprintf(stderr, "propellor\n");
+      fprintf(stderr, "propellor %s\n", hart_string.c_str());
       break;
     case 'r':
       fprintf(stderr, "reflect\n");
       break;
-    case 'w':
-      fprintf(stderr, "whirl as gyro, truncation of vertices centered on "
-                      "original faces:\n");
-      break;
-    case 'b':
-      fprintf(stderr, "bevel as truncate, ambo:\n");
-      break;
-    case 'e':
-      fprintf(stderr, "expand as ambo, ambo:\n");
-      break;
-    case 'j':
-      fprintf(stderr, "join as ambo, dual:\n");
-      break;
-    case 'm':
-      fprintf(stderr, "meta as dual, kis, join:\n");
-      break;
-    case 'o':
-      fprintf(stderr, "ortho as join, join:\n");
-      break;
     case 's':
-      fprintf(stderr, "snub as gyro, dual:\n");
+      fprintf(stderr, "snub\n");
       break;
     case 't':
-      if (op_var)
-        sprintf(buf, "(%d)", op_var);
-      fprintf(stderr, "truncate as dual, kis%s, dual:\n", buf);
+      if (op_var > 1)
+        sprintf(buf, "(%d) (function)", op_var);
+      fprintf(stderr, "truncate%s\n", buf);
       break;
-    case '#':
-      if (op_var)
-        sprintf(buf, "(%d)", op_var);
-      fprintf(stderr, "truncate%s by built in function\n", buf);
-      break;
-    case 'x':
-      fprintf(stderr, "null operation\n");
+    case 'w':
+      fprintf(stderr, "whirl %s\n", hart_string.c_str());
       break;
     case '_':
       fprintf(stderr, "planarizing ...\n");
-      break;
-    case '@':
-      fprintf(stderr, "canonicalizing ...\n");
       break;
     case '$':
       fprintf(stderr, "done.\n");
       break;
     default:
-      fprintf(stderr, "unexpected operator to verbose: '%c'\n", operation);
+      fprintf(stderr, "unexpected: '%c'\n", operation);
     }
   }
 }
@@ -814,20 +815,20 @@ void unitize_vertex_radius(Geometry &geom)
 }
 */
 
-void cn_planarize(Geometry &geom, const char planarization_method,
-                  const int num_iters_planar, const double eps,
-                  const bool verbosity, const int rep_count)
+void cn_planarize(Geometry &geom, const cn_opts &opts)
 {
-  if (num_iters_planar != 0) {
-    verbose('_', 0, verbosity);
-    if (planarization_method == 'p')
-      planarize_bd(geom, num_iters_planar, rep_count, eps);
-    else if (planarization_method == 'm')
-      planarize_mm(geom, num_iters_planar, rep_count, eps);
-    else if (planarization_method == 'c') {
+  if (opts.num_iters_planar != 0) {
+    verbose('_', 0, opts);
+    if (opts.planarization_method == 'p')
+      planarize_bd(geom, opts.num_iters_planar, opts.rep_count, opts.epsilon);
+    else if (opts.planarization_method == 'm')
+      planarize_mm(geom, opts.num_iters_planar, opts.rep_count, opts.epsilon);
+    else if (opts.planarization_method == 'c') {
+      // RK - need?
       // unitize_vertex_radius(geom);
-      // geom.transform(Trans3d::transl(-centroid(geom.verts())));
-      canonicalize_mm(geom, num_iters_planar, rep_count, eps);
+      // geom.transform(Trans3d::translate(-centroid(geom.verts())));
+      canonicalize_mm(geom, opts.num_iters_planar, opts.rep_count,
+                      opts.epsilon);
     }
   }
 }
@@ -890,6 +891,7 @@ void get_operand(Geometry &geom, const char operand, const int poly_size)
   }
 }
 
+// RK - for hart code
 void build_new_faces(map<string, map<string, string>> &faces_table,
                      map<string, int> verts_table,
                      vector<vector<int>> &faces_new)
@@ -916,7 +918,8 @@ void build_new_faces(map<string, map<string, string>> &faces_table,
   }
 }
 
-void cn_ambo(Geometry &geom)
+// hart_ code ported from George Hart java
+void hart_ambo(Geometry &geom)
 {
   vector<vector<int>> &faces = geom.raw_faces();
   vector<Vec3d> &verts = geom.raw_verts();
@@ -961,37 +964,7 @@ void cn_ambo(Geometry &geom)
   geom.orient();
 }
 
-void cn_chamfer(Geometry &geom)
-{
-  vector<Vec3d> &verts = geom.raw_verts();
-  int sz = verts.size();
-
-  // make all edges a face
-  // this is a join operation but retains the original vertex indexes
-  make_edges_to_faces(geom);
-
-  project_onto_sphere(geom);
-
-  // truncate only on the new vertices
-  vector<int> v_idxs;
-  for (unsigned int i = sz; i < verts.size(); i++)
-    v_idxs.push_back(i);
-
-  truncate_verts(geom, v_idxs, CN_ONE_HALF);
-
-  geom.orient();
-}
-
-void cn_dual(Geometry &geom)
-{
-  Geometry dual;
-  centroid_to_origin(geom);
-  get_dual(dual, geom, 1, Vec3d(0, 0, 0));
-  geom = dual;
-  geom.orient();
-}
-
-void cn_gyro(Geometry &geom)
+void hart_gyro(Geometry &geom)
 {
   vector<vector<int>> &faces = geom.raw_faces();
   vector<Vec3d> &verts = geom.raw_verts();
@@ -1060,7 +1033,7 @@ void cn_gyro(Geometry &geom)
   geom.orient();
 }
 
-void cn_kis(Geometry &geom, const int n)
+void hart_kisN(Geometry &geom, const int n)
 {
   vector<vector<int>> &faces = geom.raw_faces();
   vector<Vec3d> &verts = geom.raw_verts();
@@ -1102,7 +1075,7 @@ void cn_kis(Geometry &geom, const int n)
   geom.orient();
 }
 
-void cn_propellor(Geometry &geom)
+void hart_propellor(Geometry &geom)
 {
   vector<vector<int>> &faces = geom.raw_faces();
   vector<Vec3d> &verts = geom.raw_verts();
@@ -1163,26 +1136,38 @@ void cn_propellor(Geometry &geom)
   geom.orient();
 }
 
-void cn_reflect(Geometry &geom) { geom.transform(Trans3d::inversion()); }
-
-void cn_truncate_by_algorithm(Geometry &geom, const double ratio, const int n)
+// chamfer for hart code
+void hart_chamfer(Geometry &geom)
 {
-  truncate_verts(geom, ratio, n);
+  vector<Vec3d> &verts = geom.raw_verts();
+  int sz = verts.size();
+
+  // make all edges a face
+  // this is a join operation but retains the original vertex indexes
+  make_edges_to_faces(geom);
+
+  project_onto_sphere(geom);
+
+  // truncate only on the new vertices
+  vector<int> v_idxs;
+  for (unsigned int i = sz; i < verts.size(); i++)
+    v_idxs.push_back(i);
+
+  truncate_verts(geom, v_idxs, CN_ONE_HALF);
+
   geom.orient();
 }
 
-void cn_whirl(Geometry &geom, const char planarization_method,
-              const int num_iters_planar, const double eps,
-              const bool verbosity, const int rep_count)
+// chamfer for whirl code
+void hart_whirl(Geometry &geom, const cn_opts &opts)
 {
   int num_faces = geom.raw_faces().size();
 
-  verbose('g', 0, verbosity);
-  cn_gyro(geom);
-  cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity,
-               rep_count);
+  verbose('g', 0, opts);
+  hart_gyro(geom);
 
-  verbose('#', 0, verbosity);
+  cn_planarize(geom, opts);
+
   // only truncate on original face centers
   vector<int> v_idxs;
   for (int i = 0; i < num_faces; i++)
@@ -1193,282 +1178,101 @@ void cn_whirl(Geometry &geom, const char planarization_method,
   geom.orient();
 }
 
-void cn_expand(Geometry &geom, const bool use_truncate_algorithm,
-               const char planarization_method, const int num_iters_planar,
-               const double eps, const bool verbosity, const int rep_count)
+// functions which can use Antiprism built in features
+void hart_dual(Geometry &geom)
 {
-  if (use_truncate_algorithm) {
-    verbose('^', 0, verbosity);
-    cn_truncate_by_algorithm(geom, CN_ONE_HALF, 0);
-  }
-  else {
-    verbose('a', 0, verbosity);
-    cn_ambo(geom);
-  }
-  cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity,
-               rep_count);
-  if (use_truncate_algorithm) {
-    verbose('^', 0, verbosity);
-    cn_truncate_by_algorithm(geom, CN_ONE_HALF, 0);
-  }
-  else {
-    verbose('a', 0, verbosity);
-    cn_ambo(geom);
-  }
+  Geometry dual;
+  centroid_to_origin(geom);
+  get_dual(dual, geom, 1, Vec3d(0, 0, 0));
+  geom = dual;
+  geom.orient();
 }
 
-void cn_join(Geometry &geom, const bool use_truncate_algorithm,
-             const char planarization_method, const int num_iters_planar,
-             const double eps, const bool verbosity, const int rep_count)
+void cn_reflect(Geometry &geom) { geom.transform(Trans3d::inversion()); }
+
+void cn_truncate_by_algorithm(Geometry &geom, const double ratio, const int n)
 {
-  //   verbose('d',0,verbosity);
-  //   cn_dual(geom);
-  //   cn_planarize(geom, planarization_method, num_iters_planar, eps,
-  //   verbosity, rep_count);
-  if (use_truncate_algorithm) {
-    verbose('^', 0, verbosity);
-    cn_truncate_by_algorithm(geom, CN_ONE_HALF, 0);
-  }
-  else {
-    verbose('a', 0, verbosity);
-    cn_ambo(geom);
-  }
-  cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity,
-               rep_count);
-  verbose('d', 0, verbosity);
-  cn_dual(geom);
+  truncate_verts(geom, ratio, n);
+  geom.orient();
 }
 
-void cn_meta(Geometry &geom, const bool use_truncate_algorithm,
-             const char planarization_method, const int num_iters_planar,
-             const double eps, const bool verbosity, const int rep_count)
+void do_operations(Geometry &geom, const cn_opts &opts)
 {
-  verbose('j', 0, verbosity);
-  cn_join(geom, use_truncate_algorithm, planarization_method, num_iters_planar,
-          eps, verbosity, rep_count);
-  cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity,
-               rep_count);
-  verbose('k', 0, verbosity);
-  cn_kis(geom, 0);
-}
+  for (auto operation : opts.operations) {
+    verbose(operation->op, operation->op_var, opts);
 
-void cn_ortho(Geometry &geom, const bool use_truncate_algorithm,
-              const char planarization_method, const int num_iters_planar,
-              const double eps, const bool verbosity, const int rep_count)
-{
-  verbose('j', 0, verbosity);
-  cn_join(geom, use_truncate_algorithm, planarization_method, num_iters_planar,
-          eps, verbosity, rep_count);
-  cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity,
-               rep_count);
-  verbose('j', 0, verbosity);
-  cn_join(geom, use_truncate_algorithm, planarization_method, num_iters_planar,
-          eps, verbosity, rep_count);
-}
+    // wythoff call requires a string
+    string wythoff_op;
+    wythoff_op.push_back(operation->op);
 
-void cn_truncate(Geometry &geom, const int n, const char planarization_method,
-                 const int num_iters_planar, const double eps,
-                 const bool verbosity, const int rep_count)
-{
-  verbose('d', 0, verbosity);
-  cn_dual(geom);
-  cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity,
-               rep_count);
-  verbose('k', n, verbosity);
-  cn_kis(geom, n);
-  cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity,
-               rep_count);
-  verbose('d', 0, verbosity);
-  cn_dual(geom);
-}
-
-void cn_snub(Geometry &geom, const char planarization_method,
-             const int num_iters_planar, const double eps, const bool verbosity,
-             const int rep_count)
-{
-  //   verbose('d',0,verbosity);
-  //   cn_dual(geom);
-  //   cn_planarize(geom, planarization_method, num_iters_planar, eps,
-  //   verbosity, rep_count);
-  verbose('g', 0, verbosity);
-  cn_gyro(geom);
-  cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity,
-               rep_count);
-  verbose('d', 0, verbosity);
-  cn_dual(geom);
-}
-
-void cn_bevel(Geometry &geom, const bool use_truncate_algorithm,
-              const char planarization_method, const int num_iters_planar,
-              const double eps, const bool verbosity, const int rep_count)
-{
-  if (use_truncate_algorithm) {
-    verbose('^', 0, verbosity);
-    cn_truncate_by_algorithm(geom, CN_ONE_HALF, 0);
-  }
-  else {
-    verbose('a', 0, verbosity);
-    cn_ambo(geom);
-  }
-  cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity,
-               rep_count);
-  if (use_truncate_algorithm) {
-    verbose('#', 0, verbosity);
-    cn_truncate_by_algorithm(geom, CN_ONE_THIRD, 0);
-  }
-  else {
-    verbose('t', 0, verbosity);
-    cn_truncate(geom, 0, planarization_method, num_iters_planar, eps, verbosity,
-                rep_count);
-  }
-}
-
-void do_operations(Geometry &geom, const vector<ops *> &operations,
-                   const char planarization_method, const int num_iters_planar,
-                   const double eps, const bool use_truncate_algorithm,
-                   const bool verbosity, const int rep_count)
-{
-  for (auto operation : operations) {
-    switch (operation->op) {
-    // "real" cases
-    // ambo
-    case 'a':
-      if (use_truncate_algorithm) {
-        verbose('^', operation->op_var, verbosity);
-        cn_truncate_by_algorithm(geom, CN_ONE_HALF, operation->op_var);
-      }
-      else {
-        verbose(operation->op, operation->op_var, verbosity);
-        cn_ambo(geom);
-      }
-      break;
-
-    // chamfer
-    case 'c':
-      verbose(operation->op, operation->op_var, verbosity);
-      cn_chamfer(geom);
-      break;
-
-    // dual
-    case 'd':
-      verbose(operation->op, operation->op_var, verbosity);
-      cn_dual(geom);
-      break;
-
-    // gyro
-    case 'g':
-      verbose(operation->op, operation->op_var, verbosity);
-      cn_gyro(geom);
-      break;
-
-    // kis
-    case 'k':
-      verbose(operation->op, operation->op_var, verbosity);
-      cn_kis(geom, operation->op_var);
-      break;
-
-    // propellor
-    case 'p':
-      verbose(operation->op, operation->op_var, verbosity);
-      cn_propellor(geom);
-      break;
-
-    // reflect
-    case 'r':
-      verbose(operation->op, operation->op_var, verbosity);
+    // reflection is univeral
+    if (operation->op == 'r')
       cn_reflect(geom);
-      break;
+    else if (opts.hart_mode) {
+      switch (operation->op) {
+      // ambo
+      case 'a':
+        hart_ambo(geom);
+        break;
 
-    // whirl
-    case 'w':
-      verbose(operation->op, operation->op_var, verbosity);
-      cn_whirl(geom, planarization_method, num_iters_planar, eps, verbosity,
-               rep_count);
-      break;
+      // chamfer
+      case 'c':
+        hart_chamfer(geom);
+        break;
 
-    // null
-    case 'x':
-      verbose(operation->op, operation->op_var, verbosity);
-      break;
+      // dual
+      case 'd':
+        hart_dual(geom);
+        break;
 
-    // simulated cases for unreduced notation string
-    // bevel
-    case 'b':
-      verbose(operation->op, operation->op_var, verbosity);
-      cn_bevel(geom, use_truncate_algorithm, planarization_method,
-               num_iters_planar, eps, verbosity, rep_count);
-      break;
+      // gyro
+      case 'g':
+        hart_gyro(geom);
+        break;
 
-    // expand
-    case 'e':
-      verbose(operation->op, operation->op_var, verbosity);
-      cn_expand(geom, use_truncate_algorithm, planarization_method,
-                num_iters_planar, eps, verbosity, rep_count);
-      break;
+      // kis
+      case 'k':
+        hart_kisN(geom, operation->op_var);
+        break;
 
-    // join
-    case 'j':
-      verbose(operation->op, operation->op_var, verbosity);
-      cn_join(geom, use_truncate_algorithm, planarization_method,
-              num_iters_planar, eps, verbosity, rep_count);
-      break;
+      // propellor
+      case 'p':
+        hart_propellor(geom);
+        break;
 
-    // meta
-    case 'm':
-      verbose(operation->op, operation->op_var, verbosity);
-      cn_meta(geom, use_truncate_algorithm, planarization_method,
-              num_iters_planar, eps, verbosity, rep_count);
-      break;
+      // whirl
+      case 'w':
+        hart_whirl(geom, opts);
+        break;
 
-    // ortho
-    case 'o':
-      verbose(operation->op, operation->op_var, verbosity);
-      cn_ortho(geom, use_truncate_algorithm, planarization_method,
-               num_iters_planar, eps, verbosity, rep_count);
-      break;
-
-    // snub
-    case 's':
-      verbose(operation->op, operation->op_var, verbosity);
-      cn_snub(geom, planarization_method, num_iters_planar, eps, verbosity,
-              rep_count);
-      break;
-
-    // truncate. same as dk(n)d
-    case 't':
-      if (use_truncate_algorithm) {
-        verbose('#', operation->op_var, verbosity);
+      default:
+        fprintf(stderr, "unexpected operator: '%c'\n", operation->op);
+      }
+    }
+    // wythoff mode
+    else {
+      if (operation->op == 't' && operation->op_var > 1)
         cn_truncate_by_algorithm(geom, CN_ONE_THIRD, operation->op_var);
-      }
-      else {
-        verbose(operation->op, operation->op_var, verbosity);
-        cn_truncate(geom, operation->op_var, planarization_method,
-                    num_iters_planar, eps, verbosity, rep_count);
-      }
-      break;
-
-    default:
-      fprintf(stderr, "unexpected operator: '%c'\n", operation->op);
+      else
+        wythoff_make_tiling(geom, geom, wythoff_op, true);
     }
 
-    cn_planarize(geom, planarization_method, num_iters_planar, eps, verbosity,
-                 rep_count);
+    // planarize after each step
+    cn_planarize(geom, opts);
   }
 }
 
-void cn_face_coloring(Geometry &geom, const char face_coloring_method,
-                      const ColorMapMulti &map, const int face_opacity,
-                      const string &face_pattern)
+void cn_face_coloring(Geometry &geom, const cn_opts &opts)
 {
-  if (face_coloring_method == 'n') {
+  if (opts.face_coloring_method == 'n') {
     bool trans_success = true;
     const vector<vector<int>> &faces = geom.faces();
     for (unsigned int i = 0; i < faces.size(); i++) {
       int fsz = faces[i].size();
-      Color col = map.get_col(fsz - 3);
-      if (face_opacity > -1) {
-        int opq = (face_pattern[fsz % face_pattern.size()] == '1')
-                      ? face_opacity
+      Color col = opts.map.get_col(fsz - 3);
+      if (opts.face_opacity > -1) {
+        int opq = (opts.face_pattern[fsz % opts.face_pattern.size()] == '1')
+                      ? opts.face_opacity
                       : col[3];
         // map colors always are set but can be map index or invisible
         if (!col.set_alpha(opq))
@@ -1479,18 +1283,18 @@ void cn_face_coloring(Geometry &geom, const char face_coloring_method,
     if (!trans_success)
       fprintf(stderr, "warning: some faces could not be made transparent\n");
   }
-  else if (face_coloring_method == 's') {
+  else if (opts.face_coloring_method == 's') {
     Symmetry sym;
     vector<vector<set<int>>> sym_equivs;
     sym.init(geom, &sym_equivs);
 
     Coloring clrng;
-    clrng.add_cmap(map.clone());
+    clrng.add_cmap(opts.map.clone());
     clrng.set_geom(&geom);
     clrng.f_sets(sym_equivs[2], true);
 
-    if (face_opacity > -1) {
-      ColorValuesToRangeHsva valmap(msg_str("A%g", (double)face_opacity / 255));
+    if (opts.face_opacity > -1) {
+      ColorValuesToRangeHsva valmap(msg_str("A%g", opts.face_opacity / 255.0));
       valmap.apply(geom, FACES);
 
       for (const auto &kp : geom.colors(FACES).get_properties()) {
@@ -1503,7 +1307,7 @@ void cn_face_coloring(Geometry &geom, const char face_coloring_method,
   }
 
   // check if some faces are not set for transparency warning
-  if (face_opacity > -1) {
+  if (opts.face_opacity > -1) {
     if (geom.colors(FACES).get_properties().size() < geom.faces().size())
       fprintf(stderr, "warning: unset faces cannot be made transparent\n");
   }
@@ -1528,22 +1332,19 @@ int main(int argc, char *argv[])
 
   centroid_to_origin(geom);
 
-  do_operations(geom, opts.operations, opts.planarization_method,
-                opts.num_iters_planar, opts.epsilon,
-                opts.use_truncate_algorithm, opts.verbosity, opts.rep_count);
+  do_operations(geom, opts);
 
   if (opts.unitize)
     unitize_edges(geom);
 
-  cn_face_coloring(geom, opts.face_coloring_method, opts.map, opts.face_opacity,
-                   opts.face_pattern);
+  cn_face_coloring(geom, opts);
 
   // color vertices and edges
   Coloring(&geom).vef_one_col(opts.vert_col, opts.edge_col, Color());
 
   opts.write_or_error(geom, opts.ofile);
 
-  verbose('$', 0, opts.verbosity);
+  verbose('$', 0, opts);
 
   return 0;
 }
