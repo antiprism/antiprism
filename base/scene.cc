@@ -65,7 +65,7 @@ Vec3d GeometryDisplay::get_label_pos(const Vec3d &point, double elem_sz)
   Vec3d off_set(point - sc_geom->get_centre());
   if (off_set.len2() < 1e-20)
     off_set = Vec3d(0, 0, 1e-10);
-  off_set *= 1.07 + elem_sz / off_set.len();
+  off_set *= 1 + label_offset + elem_sz / off_set.len();
   return sc_geom->get_centre() + off_set;
 }
 
@@ -82,9 +82,9 @@ Vec3d GeometryDisplay::get_e_label_pos(int idx)
 
 Vec3d GeometryDisplay::get_f_label_pos(int idx)
 {
-  // use edge radius for face
+
   return get_label_pos(sc_geom->get_geom().face_cent(idx),
-                       elem(EDGES).get_size());
+                       sc_geom->min_rad());
 }
 
 GeometryDisplayLabel::GeometryDisplayLabel()
@@ -234,7 +234,6 @@ Vec3d SceneGeometry::get_e_label_pos(int idx) const
   else
     return geom.edge_cent(idx);
 }
-
 Vec3d SceneGeometry::get_f_label_pos(int idx) const
 {
   if (disps.size())

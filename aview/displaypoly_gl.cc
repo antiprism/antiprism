@@ -199,8 +199,8 @@ void DisplayPoly_gl::gl_geom(const Scene &scen)
     gl_edges(scen);
 }
 
-static void draw_text(char *str, double font_sz, Vec3d pos, int halign = 1,
-                      int valign = 1, bool bill = true,
+static void draw_text(char *str, double font_sz, Vec3d pos,
+                      Vec3d norm = Vec3d(), int halign = 1, int valign = 1,
                       const anti_StrokeFont *font = ANTI_STROKE_ROMAN)
 {
   const float drop = 33.33;
@@ -240,9 +240,9 @@ static void draw_text(char *str, double font_sz, Vec3d pos, int halign = 1,
   glPushMatrix();
   glTranslated(pos[0], pos[1], pos[2]);
 
-  if (bill) {
-    float m[16];
-    glGetFloatv(GL_MODELVIEW_MATRIX, m);
+  float m[16];
+  glGetFloatv(GL_MODELVIEW_MATRIX, m);
+  if (!norm.is_set()) {
     for (int i = 0; i < 3; i++)
       for (int j = 0; j < 3; j++) {
         if (i == j)
@@ -252,9 +252,34 @@ static void draw_text(char *str, double font_sz, Vec3d pos, int halign = 1,
       }
     glLoadMatrixf(m);
   }
+  else {
+    Trans3d trans_cur; // Model coords to View coords
+    // from_gl_matrixf(m, trans_cur);
+    for (int i = 0; i < 16; i++)
+      trans_cur[i] = m[i];
+    trans_cur = trans_cur.transpose();
+    trans_cur[3] = trans_cur[7] = trans_cur[11] = 0;
+
+    // Work in View coords. Rotate label into position by rotating
+    // about Y, then towards Y, to use View up direction for labels
+    Vec3d n = trans_cur * norm.to_unit(); // norm in View coords
+    Vec3d n_xz(n[0], 0.0, n[2]);
+    auto ang = angle_around_axis(Vec3d::Z, n_xz, Vec3d::Y);
+    const auto trans_tr = (trans_cur.transpose() * Trans3d::rotate(n_xz, n) *
+                           Trans3d::rotate(Vec3d::Y, ang))
+                              .transpose();
+    for (int i = 0; i < 16; i++)
+      m[i] = (float)trans_tr[i];
+    glMultMatrixf(m);
+
+    // Don't view at number labels from behind
+    if (n[2] < 0)
+      glRotatef(180, 0, 1, 0);
+  }
 
   glScalef(scale, scale, scale);
-  glTranslatef(off_x, off_y, 0);
+  glTranslatef(off_x, off_y, 10);
+
   glNormal3f(0, 0, 1);
   for (char *c = str; *c; c++)
     antiStrokeCharacter(font, *c);
@@ -264,6 +289,12 @@ static void draw_text(char *str, double font_sz, Vec3d pos, int halign = 1,
 static void gl_write_label(char *label, Vec3d pos, const Camera &cam)
 {
   draw_text(label, cam.get_text_sz(pos), pos);
+}
+
+static void gl_write_label_planar(char *label, Vec3d pos, Vec3d norm,
+                                  const Camera &cam)
+{
+  draw_text(label, cam.get_text_sz(pos), pos, norm);
 }
 
 void DisplayNumLabels_gl::gl_verts(const Scene &scen)
@@ -304,7 +335,12 @@ void DisplayNumLabels_gl::gl_faces(const Scene &scen)
     if (geom.colors(FACES).get((int)i).is_invisible())
       continue;
     sprintf(label, "%u", i);
-    gl_write_label(label, sc_geom->get_f_label_pos(i), scen.cur_camera());
+    if(use_alt_labels)
+      gl_write_label_planar(label, sc_geom->get_geom().face_cent(i),
+                            sc_geom->get_geom().face_norm(i),
+                            scen.cur_camera());
+    else
+      gl_write_label(label, sc_geom->get_f_label_pos(i), scen.cur_camera());
   }
 }
 

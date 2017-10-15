@@ -45,7 +45,8 @@ void glut_state::make_menu()
   glutAddMenuEntry("Faces 'F'", 'F');
   glutAddMenuEntry("Vertex Nums 'n'", 'n');
   glutAddMenuEntry("Face Nums 'N'", 'N');
-  glutAddMenuEntry("Edge Nums 'M'", 'M');
+  glutAddMenuEntry("Edge Nums 'm'", 'm');
+  glutAddMenuEntry("Alt Labels 'M'", 'M');
   glutAddMenuEntry("Transparency 'T'", 'T');
   glutAddMenuEntry("Sym Elems 'Y'", 'Y');
   glutAddMenuEntry("Orientation 'O'", 'O');
@@ -114,19 +115,23 @@ static void toggle(char elem)
     vector<GeometryDisplay *>::const_iterator disp;
     for (disp = geo->get_disps().begin(); disp != geo->get_disps().end();
          ++disp) {
-      if (DisplayPoly *disp_p = dynamic_cast<DisplayPoly *>(*disp)) {
+      if (DisplayPoly_gl *disp_p = dynamic_cast<DisplayPoly_gl *>(*disp)) {
         if (elem == 'v')
           disp_p->elem(VERTS).set_show(!disp_p->elem(VERTS).get_show());
         else if (elem == 'e')
           disp_p->elem(EDGES).set_show(!disp_p->elem(EDGES).get_show());
         else if (elem == 'f')
           disp_p->elem(FACES).set_show(!disp_p->elem(FACES).get_show());
-      }
-      if (DisplayPoly_gl *disp_p = dynamic_cast<DisplayPoly_gl *>(*disp)) {
-        if (elem == 'O')
+        else if (elem == 'O')
           disp_p->set_show_orientation(!disp_p->get_show_orientation());
       }
     }
+    if (DisplayNumLabels_gl *disp_n =
+            dynamic_cast<DisplayNumLabels_gl *>(geo->get_label())) {
+      if (elem == 'M')
+        disp_n->set_use_alt_labels(!disp_n->get_use_alt_labels());
+    }
+
   }
 }
 
@@ -227,13 +232,15 @@ void keyboard_cb(unsigned char key, int /*x*/, int /*y*/)
   case 'f':
     toggle('f');
     break;
+  case 'M':
+    toggle('M');
+    break;
   case 'N':
     toggle_lab('N');
     break;
   case 'n':
     toggle_lab('n');
     break;
-  case 'M':
   case 'm':
     toggle_lab('m');
     break;

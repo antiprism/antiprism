@@ -57,6 +57,7 @@ public:
 
 class DisplayNumLabels_gl : public virtual DisplayNumLabels {
 private:
+  bool use_alt_labels = false;
   void gl_faces(const Scene &scen);
   void gl_verts(const Scene &scen);
   void gl_edges(const Scene &scen);
@@ -64,6 +65,8 @@ private:
 public:
   GeometryDisplay *clone() const { return new DisplayNumLabels_gl(*this); };
   void gl_geom(const Scene &scen);
+  void set_use_alt_labels(bool use_alt = true) { use_alt_labels = use_alt; }
+  bool get_use_alt_labels() { return use_alt_labels; }
 };
 
 class DisplaySymmetry_gl : public virtual DisplaySymmetry,
