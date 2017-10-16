@@ -1137,45 +1137,47 @@ struct ConwayOperator {
   std::string pattern;
 };
 
+// clang-format off
 ConwayOperator conway_operator_list[]{
     // Equivalent: d, a, s
-    {"d", "dual", "[F]0V,0E"},
-    {"a", "ambo", "[E]0F,0V"},
-    {"S", "seed", "[V]0E,0F"},
+    {"d",   "dual",           "[F]0V,0E"},
+    {"a",   "ambo",           "[E]0F,0V"},
+    {"S",   "seed",           "[V]0E,0F"},
 
-    {"j", "join", "[F,V]0_1E"},
+    {"j",   "join",           "[F,V]0_1E"},
 
     // Equivalent: k, n, u
-    {"k", "kis", "[F,V]0_1v1v,1E"},
-    {"n", "needle", "[V,F]0_1f1f,1E"},
-    {"u", "subdivide", "[V,E]0_1e1e,1F"},
+    {"k",   "kis",            "[F,V]0_1v1v,1E"},
+    {"n",   "needle",         "[V,F]1f0_1f,1E"},
+    {"u",   "subdivide",      "[V,E]0_1e1e,1F"},
 
     // Equivalent: t, z, e
-    {"t", "truncate", "[VE]0v0e,0V,0E"},
-    {"z", "zip", "[EF]0e0f,0E,0F"},
-    {"e", "expand", "[FV]0f0v,0F,0V"},
+    {"t",   "truncate",       "[VE]0v0e,0V,0E"},
+    {"z",   "zip",            "[EF]0e0f,0E,0F"},
+    {"e",   "expand",         "[FV]0f0v,0F,0V"},
 
     // Symmetric: s, m, b
-    {"s", "snub", "[VEF]0V,0E,0F,0V0E0F"},
-    {"m", "meta", "[V,E,F]*0_1_2"},
-    {"b", "bevel", "[VEF]0v0e,0e0f,0f0v"},
+    {"s",   "snub",           "[VEF]0V,0E,0F,0V0E0F"},
+    {"m",   "meta",           "[V,E,F]*0_1_2"},
+    {"b",   "bevel",          "[VEF]0v0e,0e0f,0f0v"},
 
-    {"o", "ortho", "[V,E,F]1_0e1_2e"},
-    {"g", "gyro", "[F,VE,V]1_0F1_2V1E,1E"},
-    {"c", "chamfer", "[V,VF]1F,0_1v1f"},
-    {"l", "loft", "[V,VF]1F,0_1v1_0v,0E"},
-    {"p", "propeller", "[V,VEF]1F,1_0V1E1F,1E"},
-    {"q", "quinto", "[V,E,EF]2F,0_1_2e2_1e"},
-    {"L0", "joined-lace", "[V,EF2]1F,1e1_0e,1_0E"},
-    {"L", "lace", "[V,EF2]1F,1e1_0e,1_0v0v,0E"},
-    {"K", "stake", "[V,EF2,F]0_1_2e1e,1_0v0v,0E"},
-    {"M0", "joined-medial", "[F,V,EF]*0_1_2,1_2E"},
-    {"M3", "edge-medial-3", "[F,V,VE2]0_2_1e2e,2_0v2v"},
-    {"m3", "medial-3", "[F,V,VE]*0_1_2,2_0v2v"},
-    {"b3", "bevel3", "[VEF,E2F]1_0e0v,0e0f,*1_0f0_1f,1E"},
-    {"o3", "ortho3", "[VF2,V,VE2]0_2e1_2e,0_2v2_0v,0F,2E"},
-    {"X", "cross", "[V,E,F,VF]3_1v3_2v,*0_1_3"},
+    {"o",   "ortho",          "[V,E,F]1_0e1_2e"},
+    {"g",   "gyro",           "[F,VE,V]1_0F1_2V1E,1E"},
+    {"c",   "chamfer",        "[V,VF]1F,0_1v1f"},
+    {"l",   "loft",           "[V,VF]1F,0_1v1_0v,0E"},
+    {"p",   "propellor",      "[V,VEF]1F,1_0V1E1F,1E"},
+    {"q",   "quinto",         "[V,E,EF]2F,0_1_2e2_1e"},
+    {"L0",  "joined-lace",    "[V,EF2]1F,1e1_0e,1_0E"},
+    {"L",   "lace",           "[V,EF2]1F,1e1_0e,1_0v0v,0E"},
+    {"K",   "stake",          "[V,EF2,F]0_1_2e1e,1_0v0v,0E"},
+    {"M0",  "joined-medial",  "[F,V,EF]*0_1_2,1_2E"},
+    {"M3",  "edge-medial-3",  "[F,V,VE2]0_2_1e2e,2_0v2v"},
+    {"m3",  "medial-3",       "[F,V,VE]*0_1_2,2_0v2v"},
+    {"b3",  "bevel3",         "[VEF,E2F]1_0e0v,0e0f,*1_0f0_1f,1E"},
+    {"o3",  "ortho3",         "[VF2,V,VE2]0_2e1_2e,0_2v2_0v,0F,2E"},
+    {"X",   "cross",          "[V,E,F,VF]3_1v3_2v,*0_1_3"},
 };
+// clang-format on
 
 bool Tiling::find_nbrs()
 {
@@ -1321,6 +1323,44 @@ Status Tiling::add_tile(const string &pat)
   return stat;
 }
 
+static void delete_verts(Geometry &geom, const vector<int> &v_nos)
+{
+  vector<int> dels = v_nos;
+  map<int, int> v_map;
+  if (!dels.size())
+    return;
+  sort(dels.begin(), dels.end());
+  unsigned int del_verts_cnt = 0;
+  int map_to;
+  for (unsigned int i = 0; i < geom.verts().size(); i++) {
+    if (del_verts_cnt < dels.size() && (int)i == dels[del_verts_cnt]) {
+      del_verts_cnt++;
+      map_to = -1;
+    }
+    else {
+      map_to = i - del_verts_cnt;
+      geom.verts(map_to) = geom.verts(i);
+    }
+    v_map[i] = map_to;
+  }
+  geom.raw_verts().resize(geom.verts().size() - del_verts_cnt);
+  geom.colors(VERTS).remap(v_map);
+
+  vector<int> del_faces;
+  for (unsigned int i = 0; i < geom.faces().size(); i++) {
+    int curr_idx = 0;
+    for (unsigned int j = 0; j < geom.faces(i).size(); j++) {
+      int new_idx = v_map[geom.faces(i, j)];
+      if (new_idx >= 0)
+        geom.raw_faces()[i][curr_idx++] = new_idx;
+    }
+    geom.raw_faces()[i].resize(curr_idx);
+    if (curr_idx < 2)
+      del_faces.push_back(i);
+  }
+  geom.del(FACES, del_faces);
+}
+
 static bool valid_start_face(int f, int start_faces)
 {
   int pos_tri = f % 2;
@@ -1394,7 +1434,7 @@ Status Tiling::make_tiling(Geometry &geom, vector<int> *tile_counts) const
       tile_counts->at(p_idx) = geom.faces().size() - start_faces_sz;
   }
 
-  geom.del(VERTS, geom.get_info().get_free_verts());
+  delete_verts(geom, geom.get_info().get_free_verts());
   return Status::ok();
 }
 
@@ -1638,7 +1678,11 @@ void Tiling::print_conway_list(FILE *ofile)
   }
   fprintf(
       ofile,
-      "\nOperators M, m and o accept a general positive integer, e.g. M5\n");
+      "\nOperators M, m and o are part of a series and accept a general\n"
+      "positive integer >3, e.g. M5. All operators taking particular numbers\n"
+      "and operators with numbers <4 are included in the list above. For\n"
+      "Operators like t and k which take a number to apply to only certain\n"
+      "elements, only the base operator is listed\n");
 }
 
 namespace anti {
