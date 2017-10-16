@@ -377,13 +377,19 @@ double edge_nearpoints_radius(const Geometry &geom, double &min, double &max, Ve
   return nearpt_radius / double(e_sz);
 }
 
-// RK - average of edge near points radius
-void unitize_nearpoints_radius(Geometry &geom)
+// RK - wrapper
+double edge_nearpoints_radius(const Geometry &geom)
 {
   double min = 0;
   double max = 0;
   Vec3d center;
-  double avg = edge_nearpoints_radius(geom, min, max, center);
+  return edge_nearpoints_radius(geom, min, max, center);
+}
+
+// RK - average of edge near points radius
+void unitize_nearpoints_radius(Geometry &geom)
+{
+  double avg = edge_nearpoints_radius(geom);
   geom.transform(Trans3d::scale(1 / avg));
 }
 
@@ -737,6 +743,11 @@ Geometry incircles(const Geometry &geom, const Color &incircle_color, bool fille
 }
 
 void construct_model(Geometry &base, const cn_opts &opts) {
+  // RK - set radius to 1 for get_dual call, if necessary
+  double radius = edge_nearpoints_radius(base);
+  if (double_ne(radius, 1.0, opts.epsilon))
+    unitize_nearpoints_radius(base);
+
   Geometry dual;
   get_dual(dual, base, 1, Vec3d(0, 0, 0));
 
