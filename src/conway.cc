@@ -55,6 +55,50 @@ using namespace anti;
 #define CN_ONE_THIRD 1 / 3.0
 #define CN_ONE_HALF 0.5
 
+struct ConwayOperator {
+  std::string operator_short;
+  std::string operator_name;
+  bool allow_n;
+  bool hart_operator;
+};
+
+// clang-format off
+ConwayOperator conway_operator_list[]{
+    {"a",  "ambo",          false, true  },
+    //{"b3", "bevel3",        false, false }, // allows only 3
+    {"b",  "bevel",         true,  false },
+    {"c",  "chamfer",       false, true  },
+    {"d",  "dual",          false, true  },
+    {"e",  "expand",        false, false },
+    {"g",  "gyro",          false, true  },
+    {"j",  "join",          false, false },
+    {"k",  "kis",           true,  true  },
+    {"K",  "stake",         false, false },
+    //{"L0", "joined-lace",   false, false }, // allows only explicit 0 or 1
+    {"L",  "lace",          true,  false },
+    {"l",  "loft",          false, false },
+    //{"M0", "joined-medial", false, false }, // allows only explicit 0 or 3
+    //{"M3", "edge-medial-3", false, false },
+    {"M",  "medial",        true,  false },
+    //{"m3", "medial-3",      false, false }, // allows any N
+    {"m",  "meta",          true,  false },
+    {"n",  "needle",        false, false },
+    //{"o3", "ortho3",        false, false }, // allows any N
+    {"o",  "ortho",         true,  false },
+    {"p",  "propellor",     false, true  },
+    {"q",  "quinto",        false, false },
+    {"r",  "reflect",       false, false },
+    {"S",  "seed",          false, false },
+    {"s",  "snub",          false, false },
+    {"t",  "truncate",      true,  false },
+    {"u",  "subdivide",     false, false },
+    {"w",  "whirl",         false, true  },
+    {"X",  "cross",         false, false },
+    {"z",  "zip",           false, false },
+
+};
+// clang-format on
+
 class ops {
 public:
   int op_pos;
@@ -73,10 +117,20 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
   int num_val = 0;
   bool delayed_write = false;
 
-  string operators = "abcdegjkmopqrstw";
+  // get allowable operators from table
+  string operators;
+  int last_op = sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
+  for (int i = 0; i < last_op; i++)
+    operators.push_back(conway_operator_list[i].operator_short[0]);
+
+  // get operators which allow N from table
+  string digits_allowed = "PAY";
+  for (int i = 0; i < last_op; i++)
+    if (conway_operator_list[i].allow_n)
+      digits_allowed.push_back(conway_operator_list[i].operator_short[0]);
+
   string operands = "TCOIDPAY";
   string digits = "0123456789";
-  string digits_allowed = "tkPAY";
 
   operand = '\0';
   poly_size = 0;
@@ -93,7 +147,10 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
 
       current_op = cn_string[i];
 
-      // delay if t or k
+      // patch: for L standing alone to detect set num_val = -1
+      if (current_op == 'L')
+        num_val = -1;
+
       if (digits_allowed.find(current_op) == string::npos)
         operations.push_back(new ops(i + 1, current_op, num_val));
       else
@@ -148,12 +205,53 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
         operations.push_back(new ops(i + 1, current_op, num_val));
         delayed_write = false;
       }
-      else {
+      // will be at end of string as it is an operand
+      else if (current_op == 'P' || current_op == 'A' || current_op == 'Y') {
         poly_size = atoi(number_string.c_str());
         if (poly_size < 3) {
           fprintf(stderr, "P(n), A(n), or Y(n), n must be 3 or greater\n");
           return i;
         }
+      }
+      // b allows only 3. 0 will not be passed to wythoff
+      else if (current_op == 'b') {
+        num_val = atoi(number_string.c_str());
+        if (num_val != 0 && num_val != 3) {
+          fprintf(stderr, "b(n), n must be 3\n");
+          return i;
+        }
+        operations.push_back(new ops(i + 1, current_op, num_val));
+        delayed_write = false;
+      }
+      // L allow 0 or 1. 0 will be made explicit in call to wythoff
+      else if (current_op == 'L') {
+        num_val = atoi(number_string.c_str());
+        if (num_val != 0) {
+          fprintf(stderr, "L(n), n must 0\n");
+          return i;
+        }
+        operations.push_back(new ops(i + 1, current_op, num_val));
+        delayed_write = false;
+      }
+      // M allow 0 or 3. 0 will be made explicit in call to wythoff
+      else if (current_op == 'M') {
+        num_val = atoi(number_string.c_str());
+        if (num_val != 0 && num_val != 3) {
+          fprintf(stderr, "M(n), n must 0 or 3\n");
+          return i;
+        }
+        // patch: if num_val is 0, use -1 as a place holder
+        //operations.push_back(new ops(i + 1, current_op, (num_val == 0) ? -1 : num_val));
+        operations.push_back(new ops(i + 1, current_op, num_val));
+        delayed_write = false;
+      }
+      // any other operator with N
+      else if (digits_allowed.find(current_op) != string::npos) {
+        num_val = atoi(number_string.c_str());
+        // for other operators only set num_val if greater than 1
+        if (num_val > 1)
+          operations.push_back(new ops(i + 1, current_op, num_val));
+        delayed_write = false;
       }
 
       num_val = 0;
@@ -640,9 +738,10 @@ void cn_opts::process_command_line(int argc, char **argv)
   if (!strlen(cn_string.c_str()))
     error("no Conway Notation string given");
 
-  if (strspn(cn_string.c_str(), "abcdegjkmopqrstwTCOIDPAY0123456789,") !=
-      strlen(cn_string.c_str()))
-    error("Conway Notation must consist of abcdegjkmopqrstwTCOIDPAY0123456789");
+  //  if (strspn(cn_string.c_str(), "abcdegjkmopqrstwTCOIDPAY0123456789,") !=
+  //      strlen(cn_string.c_str()))
+  //    error("Conway Notation must consist of
+  //    abcdegjkmopqrstwTCOIDPAY0123456789");
 
   if (int pos = validate_cn_string(cn_string, operations, operand, poly_size))
     error(msg_str("Unexpected character in position %d: %s", pos + 1,
@@ -720,72 +819,52 @@ void cn_opts::process_command_line(int argc, char **argv)
 
 void verbose(const char operation, const int op_var, const cn_opts &opts)
 {
-  string hart_string;
-  if (opts.hart_mode)
-    hart_string = "(GHart)";
-
   if (opts.verbosity) {
+    string operator_name;
+
+    int last_op = sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
+    for (int i = 0; i < last_op; i++) {
+      if (operation == conway_operator_list[i].operator_short[0]) {
+        operator_name = conway_operator_list[i].operator_name;
+        break;
+      }
+    }
+
+    string hart_operators = "acdgkpw";
+    string hart_string;
+    if (opts.hart_mode && (hart_operators.find(operation) != string::npos))
+      hart_string = "(GHart)";
+
+    // special cases
     char buf[MSG_SZ];
     buf[0] = '\0';
-    switch (operation) {
-    case 'a':
-      fprintf(stderr, "ambo %s\n", hart_string.c_str());
-      break;
-    case 'b':
-      fprintf(stderr, "bevel\n");
-      break;
-    case 'c':
-      fprintf(stderr, "chamfer %s\n", hart_string.c_str());
-      break;
-    case 'd':
-      fprintf(stderr, "dual %s\n", hart_string.c_str());
-      break;
-    case 'e':
-      fprintf(stderr, "expand\n");
-      break;
-    case 'g':
-      fprintf(stderr, "gyro %s\n", hart_string.c_str());
-      break;
-    case 'j':
-      fprintf(stderr, "join\n");
-      break;
-    case 'k':
-      if (op_var)
-        sprintf(buf, "(%d)", op_var);
-      fprintf(stderr, "kis%s %s\n", buf, hart_string.c_str());
-      break;
-    case 'm':
-      fprintf(stderr, "meta\n");
-      break;
-    case 'o':
-      fprintf(stderr, "ortho\n");
-      break;
-    case 'p':
-      fprintf(stderr, "propellor %s\n", hart_string.c_str());
-      break;
-    case 'r':
-      fprintf(stderr, "reflect\n");
-      break;
-    case 's':
-      fprintf(stderr, "snub\n");
-      break;
-    case 't':
-      if (op_var > 1)
-        sprintf(buf, "(%d) (function)", op_var);
-      fprintf(stderr, "truncate%s\n", buf);
-      break;
-    case 'w':
-      fprintf(stderr, "whirl %s\n", hart_string.c_str());
-      break;
-    case '_':
-      fprintf(stderr, "planarizing ...\n");
-      break;
-    case '$':
-      fprintf(stderr, "done.\n");
-      break;
-    default:
-      fprintf(stderr, "unexpected: '%c'\n", operation);
+    if (operation == '_')
+      operator_name = "planarizing ...";
+    else if (operation == '$')
+      operator_name = "done.";
+    // L and op_var is -1 means L stands alone
+    else if (operation == 'L' && op_var == -1) {
+      buf[0] = '\0';
     }
+    // if L or M have a 0
+    else if ((operation == 'L' || operation == 'M') && (op_var == 0)) {
+      if (operation == 'L')
+        operator_name = "joined-lace";
+      else if (operation == 'M')
+        operator_name = "joined-medial";
+    }
+    // if M has a 3
+    else if (operation == 'M' && op_var == 3) {
+      operator_name = "edge-medial-3";
+    }
+    // b can have a 3, otherwise stands alone
+    else if (operation == 'b' && op_var == 3) {
+      operator_name = "bevel3";
+    }
+    // all other case show op_var when greater than 1
+    else if (op_var > 1)
+      sprintf(buf, "(%d)", op_var);
+    fprintf(stderr, "%s%s %s\n", operator_name.c_str(), buf, hart_string.c_str());
   }
 }
 
@@ -1137,7 +1216,7 @@ void hart_propellor(Geometry &geom)
 }
 
 // chamfer for hart code
-void hart_chamfer(Geometry &geom)
+void hart_chamfer(Geometry &geom, const cn_opts &opts)
 {
   vector<Vec3d> &verts = geom.raw_verts();
   int sz = verts.size();
@@ -1153,6 +1232,7 @@ void hart_chamfer(Geometry &geom)
   for (unsigned int i = sz; i < verts.size(); i++)
     v_idxs.push_back(i);
 
+  verbose('t', 0, opts);
   truncate_verts(geom, v_idxs, CN_ONE_HALF);
 
   geom.orient();
@@ -1173,6 +1253,7 @@ void hart_whirl(Geometry &geom, const cn_opts &opts)
   for (int i = 0; i < num_faces; i++)
     v_idxs.push_back(i);
 
+  verbose('t', 0, opts);
   truncate_verts(geom, v_idxs, CN_ONE_HALF, nullptr);
 
   geom.orient();
@@ -1201,10 +1282,6 @@ void do_operations(Geometry &geom, const cn_opts &opts)
   for (auto operation : opts.operations) {
     verbose(operation->op, operation->op_var, opts);
 
-    // wythoff call requires a string
-    string wythoff_op;
-    wythoff_op.push_back(operation->op);
-
     bool hart_operation_done = false;
 
     // reflection is universal
@@ -1219,7 +1296,7 @@ void do_operations(Geometry &geom, const cn_opts &opts)
 
       // chamfer
       case 'c':
-        hart_chamfer(geom);
+        hart_chamfer(geom, opts);
         break;
 
       // dual
@@ -1257,13 +1334,42 @@ void do_operations(Geometry &geom, const cn_opts &opts)
       }
     }
 
-    // wythoff mode
+    // wythoff mode (with exceptions)
     if (!hart_operation_done) {
+      // truncate with N>1 uses Hart algorithm
       if (operation->op == 't' && operation->op_var > 1)
         cn_truncate_by_algorithm(geom, CN_ONE_THIRD, operation->op_var);
-      else
+      // kis with N>1 uses Hart algorithm
+      else if (operation->op == 'k' && operation->op_var > 1)
+        hart_kisN(geom, operation->op_var);
+      // whirl uses Hart algorithm
+      else if (operation->op == 'w')
+        hart_whirl(geom, opts);
+      else {
+        // wythoff call requires a string
+        string wythoff_op;
+        wythoff_op.push_back(operation->op);
+
+        char buf[MSG_SZ];
+        if (operation->op_var > 1) {
+          sprintf(buf, "%d", operation->op_var);
+          wythoff_op += string(buf);
+        }
+        // L and M are special cases allowing explicit 0
+        // if L stands alone op_var with be -1
+        else if ((operation->op_var == 0) && operation->op == 'L') {
+          sprintf(buf, "0");
+          wythoff_op += string(buf);
+        }
+        else if ((operation->op_var == 0) && operation->op == 'M') {
+          sprintf(buf, "0");
+          wythoff_op += string(buf);
+        }
+
+//fprintf(stderr, "wythoff_op = %s\n", wythoff_op.c_str());
         opts.print_status_or_exit(
             wythoff_make_tiling(geom, geom, wythoff_op, true));
+      }
       geom.orient();
     }
 
