@@ -74,10 +74,10 @@ ConwayOperator conway_operator_list[]{
     {"j",  "join",          false, false },
     {"k",  "kis",           true,  true  },
     {"K",  "stake",         false, false },
-    //{"L0", "joined-lace",   false, false }, // allows only explicit 0 or 1
+    //{"L0", "joined-lace",   false, false }, // allows only explicit 0
     {"L",  "lace",          true,  false },
     {"l",  "loft",          false, false },
-    //{"M0", "joined-medial", false, false }, // allows only explicit 0 or 3
+    //{"M0", "joined-medial", false, false }, // allows only explicit 0, 2 or larger
     //{"M3", "edge-medial-3", false, false },
     {"M",  "medial",        true,  false },
     //{"m3", "medial-3",      false, false }, // allows any N
@@ -233,11 +233,11 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
         operations.push_back(new ops(i + 1, current_op, num_val));
         delayed_write = false;
       }
-      // M allow 0 or 3. 0 will be made explicit in call to wythoff
+      // M allow 0, 2 or greater. 0 will be made explicit in call to wythoff
       else if (current_op == 'M') {
         num_val = atoi(number_string.c_str());
-        if (num_val != 0 && num_val != 3) {
-          fprintf(stderr, "M(n), n must 0 or 3\n");
+        if (num_val == 1) {
+          fprintf(stderr, "M(n), n must 0, 2 or greater\n");
           return i;
         }
         // patch: if num_val is 0, use -1 as a place holder
@@ -853,17 +853,10 @@ void verbose(const char operation, const int op_var, const cn_opts &opts)
       else if (operation == 'M')
         operator_name = "joined-medial";
     }
-    // if M has a 3
-    else if (operation == 'M' && op_var == 3) {
-      operator_name = "edge-medial-3";
-    }
-    // b can have a 3, otherwise stands alone
-    else if (operation == 'b' && op_var == 3) {
-      operator_name = "bevel3";
-    }
     // all other case show op_var when greater than 1
     else if (op_var > 1)
       sprintf(buf, "(%d)", op_var);
+
     fprintf(stderr, "%s%s %s\n", operator_name.c_str(), buf, hart_string.c_str());
   }
 }
@@ -1369,6 +1362,14 @@ void do_operations(Geometry &geom, const cn_opts &opts)
 //fprintf(stderr, "wythoff_op = %s\n", wythoff_op.c_str());
         opts.print_status_or_exit(
             wythoff_make_tiling(geom, geom, wythoff_op, true));
+
+        // remove digon results
+        vector<int> dels;
+        for(int i=0; i<(int)geom.faces().size(); i++) {
+          if(geom.faces(i).size() < 3)
+            dels.push_back(i);
+        }
+        geom.del(FACES, dels); 
       }
       geom.orient();
     }
