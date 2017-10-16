@@ -612,7 +612,7 @@ static Vec3d get_fermat_point(Vec3d v0, Vec3d v1, Vec3d v2, bool degenerate,
       max_ang = ang > max_ang ? ang_diff : max_ang;
     }
     if (max_ang > epsilon)
-      sprintf(msg, "innacurate calculation of fermat point "
+      sprintf(msg, "inaccurate calculation of fermat point "
                    "(angle difference %g)",
               max_ang);
   }
