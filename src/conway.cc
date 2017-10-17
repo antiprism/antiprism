@@ -72,7 +72,7 @@ ConwayOperator conway_operator_list[]{
     {"e",  "expand",        false, false },
     {"g",  "gyro",          false, true  },
     {"j",  "join",          false, false },
-    {"k",  "kis",           true,  true  },
+    {"k",  "kis",           true,  true  }, // allows N > 2 for vertices
     {"K",  "stake",         false, false },
     //{"L0", "joined-lace",   false, false }, // allows only explicit 0
     {"L",  "lace",          true,  false },
@@ -90,7 +90,7 @@ ConwayOperator conway_operator_list[]{
     {"r",  "reflect",       false, false },
     {"S",  "seed",          false, false },
     {"s",  "snub",          false, false },
-    {"t",  "truncate",      true,  false },
+    {"t",  "truncate",      true,  false }, // allows N > 2 for faces
     {"u",  "subdivide",     false, false },
     {"w",  "whirl",         false, true  },
     {"X",  "cross",         false, false },
@@ -135,6 +135,9 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
   operand = '\0';
   poly_size = 0;
 
+  // patch for stand alone M, not allowed
+  bool M_operand_patch = false;
+
   for (unsigned int i = 0; i < cn_string.length(); i++) {
     if (operators.find(cn_string[i]) != string::npos) {
       if (operand != '\0')
@@ -151,6 +154,14 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
       if (current_op == 'L')
         num_val = -1;
 
+      // patch: for M standing alone. Next token must be number
+      if (M_operand_patch) {
+        fprintf(stderr, "M(n), require n must be 0, 2 or higher\n");
+        return i+1;
+      }
+      if (current_op == 'M')
+        M_operand_patch = true;
+
       if (digits_allowed.find(current_op) == string::npos)
         operations.push_back(new ops(i + 1, current_op, num_val));
       else
@@ -160,6 +171,13 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
       if (operand != '\0')
         return i+1;
 
+      // need to check here too
+      // patch: for M standing alone. Next token must be number
+      if (M_operand_patch) {
+        fprintf(stderr, "M(n), require n must be 0, 2 or higher\n");
+        return i+1;
+      }
+
       if (delayed_write) {
         operations.push_back(new ops(i, current_op, num_val));
         delayed_write = false;
@@ -168,7 +186,9 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
       operand = cn_string[i];
       current_op = '\0';
     }
-    else if (digits.find(cn_string[i]) != string::npos) {
+    else if (digits.find(cn_string[i]) != string::npos) { 
+      M_operand_patch = false;
+
       if (operand != '\0') {
         if (digits_allowed.find(operand) == string::npos) {
           return i+1;
@@ -187,7 +207,15 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
       number_string =
           cn_string.substr(digits_start, (digits_end - digits_start + 1));
 
-      if (current_op == 'k') {
+      // will be at end of string as it is an operand
+      if (operand == 'P' || operand == 'A' || operand == 'Y') {
+        poly_size = atoi(number_string.c_str());
+        if (poly_size < 3) {
+          fprintf(stderr, "P(n), A(n), or Y(n), n must be 3 or greater\n");
+          return i+1;
+        }
+      }
+      else if (current_op == 'k') {
         num_val = atoi(number_string.c_str());
         if (num_val < 3) {
           fprintf(stderr, "kis k(n), n must be 3 or greater\n");
@@ -204,14 +232,6 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
         }
         operations.push_back(new ops(i + 1, current_op, num_val));
         delayed_write = false;
-      }
-      // will be at end of string as it is an operand
-      else if (current_op == 'P' || current_op == 'A' || current_op == 'Y') {
-        poly_size = atoi(number_string.c_str());
-        if (poly_size < 3) {
-          fprintf(stderr, "P(n), A(n), or Y(n), n must be 3 or greater\n");
-          return i+1;
-        }
       }
       // b allows only 3. 0 will not be passed to wythoff
       else if (current_op == 'b') {
@@ -271,6 +291,12 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
   // if P, A or Y was specified with no digit n
   if ((digits_allowed.find(operand) != string::npos) && poly_size == 0) {
     fprintf(stderr, "P(n), A(n), or Y(n), n must be 3 or greater\n");
+    return cn_string.length();
+  }
+
+  // patch: for M standing alone. Next token must be number
+  if (M_operand_patch) {
+    fprintf(stderr, "M(n), require n must be 0, 2 or higher\n");
     return cn_string.length();
   }
 
@@ -579,26 +605,64 @@ void extended_help()
 "\n"
 "c = chamfer   New hexagonal faces are added in place of edges\n"
 "\n"
-"w = whirl  Gyro followed by truncation of vertices centered on original faces.\n"
-"This create 2 new hexagons for every original edge\n"
+"b3 = bevel3   dual to medial-3 (m3)\n"
 "\n"
-"b3 = bevel3\n"
-"K = stake\n"
-"L0 = joined-lace\n"
-"L = lace\n"
-"l = loft\n"
-"M0 = joined-medial\n"
-"M = medial\n"// allows only explicit 0, 2 or larger
-"n = needle\n"
-"q = quinto\n"
-"S = seed\n"
-"u = subdivide\n"
+"K = stake     Subdivide faces with central quads, and triangles\n"
 "\n"
-"w = whirl  Gyro followed by truncation of vertices centered on original faces.\n"
-"This create 2 new hexagons for every original edge\n"
+"L0 = joined-lace  Similar to lace, except new with quad faces across original\n"
+"                  edges\n"
 "\n"
-"X = cross\n"
-"z = zip\n"
+"L = lace      An augmentation of each face by an antiprism, adding a twist\n"
+"              smaller copy of each face, and triangles between\n"
+"\n"
+"l = loft      An augmentation of each face by prism, adding a smaller copy of\n"
+"              each face with trapezoids between the inner and outer ones\n"
+"\n"
+"M0 = joined-medial  Like medial, but new rhombic faces in place of original\n"
+"                    edges\n"
+"\n"
+"M = medial    Similar to medial except no diagonal edges added, creating quad\n"
+"              faces there\n"
+"\n"
+"n = needle    Dual of truncation, triangulate with 2 triangles across every\n"
+"              edge. This bisect faces across all vertices and edges, while\n"
+"              removing original edges\n"
+"\n"
+"q = quinto    ortho followed by truncation of vertices centered on original\n"
+"              faces. This create 2 new pentagons for every original edge\n"
+"\n"
+"S = seed      Seed form\n"
+"\n"
+"u = subdivide Ambo while retaining original vertices. Similar to Loop\n"
+"              subdivision surface for triangle face\n"
+"\n"
+"w = whirl     Gyro followed by truncation of vertices centered on original\n"
+"              faces. This create 2 new hexagons for every original edge\n"
+"\n"
+"X = cross     Combination of kis and subdivide operation. Original edges are\n"
+"              divided in half, with triangle and quad faces\n"
+"\n"
+"z = zip       Dual of kis or truncation of the dual. This create new edges\n"
+"              perpendicular to original edges, a truncation beyond \"ambo\" with\n"
+"              new edges \"zipped\" between original faces. It is also called\n"
+"              bitruncation\n"
+"\n"
+"\n"
+"Summary of operators which can take a number n\n"
+"\n"
+"b  - n may be 3\n"
+"k  - n may be 3 or higher representing vertex connections\n"
+"L  - n may be explicit 0\n"
+"M  - n may be explicit 0, 2 or higher (required)\n"
+"m  - Allows any positive integer\n"
+"o  - Allows any positive integer\n"
+"t  - n may be 3 or higher representing face sides\n"
+"\n"
+"Operands which require a number n\n"
+"\n"
+"P  - Prisms\n"
+"A  - Antiprism\n"
+"Y  - Pyramids\n"
 "\n");
 }
 
@@ -1402,7 +1466,7 @@ void do_operations(Geometry &geom, const cn_opts &opts)
         geom.del(FACES, dels);
 
         // duplicate faces happened?
-        merge_coincident_elements(geom, "vef", opts.epsilon); 
+        //merge_coincident_elements(geom, "vef", opts.epsilon); 
       }
     }
 
