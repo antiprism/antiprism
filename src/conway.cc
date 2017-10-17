@@ -138,7 +138,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
   for (unsigned int i = 0; i < cn_string.length(); i++) {
     if (operators.find(cn_string[i]) != string::npos) {
       if (operand != '\0')
-        return i;
+        return i+1;
 
       if (delayed_write) {
         operations.push_back(new ops(i, current_op, num_val));
@@ -158,7 +158,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
     }
     else if (operands.find(cn_string[i]) != string::npos) {
       if (operand != '\0')
-        return i;
+        return i+1;
 
       if (delayed_write) {
         operations.push_back(new ops(i, current_op, num_val));
@@ -168,14 +168,14 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
       operand = cn_string[i];
       current_op = '\0';
     }
-    else if (digits.find(digits) != string::npos) {
+    else if (digits.find(cn_string[i]) != string::npos) {
       if (operand != '\0') {
         if (digits_allowed.find(operand) == string::npos) {
-          return i;
+          return i+1;
         }
       }
       else if (digits_allowed.find(current_op) == string::npos) {
-        return i;
+        return i+1;
       }
 
       int digits_start = i;
@@ -191,7 +191,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
         num_val = atoi(number_string.c_str());
         if (num_val < 3) {
           fprintf(stderr, "kis k(n), n must be 3 or greater\n");
-          return i;
+          return i+1;
         }
         operations.push_back(new ops(i + 1, current_op, num_val));
         delayed_write = false;
@@ -200,7 +200,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
         num_val = atoi(number_string.c_str());
         if (num_val < 3) {
           fprintf(stderr, "trunc t(n), n must be 3 or greater\n");
-          return i;
+          return i+1;
         }
         operations.push_back(new ops(i + 1, current_op, num_val));
         delayed_write = false;
@@ -210,7 +210,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
         poly_size = atoi(number_string.c_str());
         if (poly_size < 3) {
           fprintf(stderr, "P(n), A(n), or Y(n), n must be 3 or greater\n");
-          return i;
+          return i+1;
         }
       }
       // b allows only 3. 0 will not be passed to wythoff
@@ -218,7 +218,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
         num_val = atoi(number_string.c_str());
         if (num_val != 0 && num_val != 3) {
           fprintf(stderr, "b(n), n must be 3\n");
-          return i;
+          return i+1;
         }
         operations.push_back(new ops(i + 1, current_op, num_val));
         delayed_write = false;
@@ -228,7 +228,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
         num_val = atoi(number_string.c_str());
         if (num_val != 0) {
           fprintf(stderr, "L(n), n must 0\n");
-          return i;
+          return i+1;
         }
         operations.push_back(new ops(i + 1, current_op, num_val));
         delayed_write = false;
@@ -238,7 +238,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
         num_val = atoi(number_string.c_str());
         if (num_val == 1) {
           fprintf(stderr, "M(n), n must 0, 2 or greater\n");
-          return i;
+          return i+1;
         }
         // patch: if num_val is 0, use -1 as a place holder
         //operations.push_back(new ops(i + 1, current_op, (num_val == 0) ? -1 : num_val));
@@ -256,6 +256,11 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
 
       num_val = 0;
       i = digits_end;
+    }
+    // character was not found to be valid
+    else {
+      //fprintf(stderr,"unexpected character %c in operation string\n", cn_string[i]);
+      return i+1;
     }
   }
 
@@ -343,6 +348,8 @@ string resolved_cn_string(const string &cn_string)
   string target;
   string resolve;
 
+  string digits = "0123456789";
+
   // first 3 targets are positional
   if (resolve_string.length() > 1) {
     string tmp = resolve_string.substr(resolve_string.length() - 2, 2);
@@ -361,9 +368,26 @@ string resolved_cn_string(const string &cn_string)
     resolve = resolve_item_list[i].resolve;
     for (size_t pos = resolve_string.find_first_of(target, 0);
          pos != string::npos; pos = resolve_string.find_first_of(target, 0)) {
-      resolve_string.replace(pos, target.length(), resolve);
+      // RK - have to check now since some operators can have a number
+      if ((pos + 1 == resolve_string.length()) || (digits.find(resolve_string[pos + 1]) == string::npos))
+        resolve_string.replace(pos, target.length(), resolve);
+      else {
+        // RK - if so b, o and m are temporarily replaced with @, #, $
+        // so that loop can continue
+        if (resolve_string[pos] == 'b')
+          resolve_string.replace(pos, 1, "@");
+        else if (resolve_string[pos] == 'o')
+          resolve_string.replace(pos, 1, "#");
+        else if (resolve_string[pos] == 'm')
+          resolve_string.replace(pos, 1, "$");
+      }
     }
   }
+
+  // if temporary characters exists
+  replace( resolve_string.begin(), resolve_string.end(), '@', 'b');
+  replace( resolve_string.begin(), resolve_string.end(), '#', 'o');
+  replace( resolve_string.begin(), resolve_string.end(), '$', 'm');
 
   // 7 is special case
   target = resolve_item_list[7].target;
@@ -371,7 +395,7 @@ string resolved_cn_string(const string &cn_string)
   for (size_t pos = resolve_string.find_first_of(target, 0);
        pos != string::npos; pos = resolve_string.find_first_of(target, 0)) {
     resolve_string.replace(pos, target.length(), resolve);
-    size_t pos2 = resolve_string.find_first_not_of("0123456789", pos + 2);
+    size_t pos2 = resolve_string.find_first_not_of(digits, pos + 2);
     if (pos2 != string::npos)
       resolve_string.insert(pos2, "d");
     else
@@ -494,8 +518,6 @@ void extended_help()
 "cuboctahedron.\n"
 "Note: bevel is also known as \"omnitruncating\" the polyhedron, or omnitruncation\n"
 "\n"
-"c = chamfer   New hexagonal faces are added in place of edges (added)\n"
-"\n"
 "d = dual   The dual of a polyhedron has a vertex for each face, and a face for\n"
 "each vertex, of the original polyhedron, e.g., dC=O.  Duality is an operation\n"
 "of order two, meaning for any polyhedron X, ddX=X, e.g., ddC=dO=C.\n" 
@@ -524,12 +546,12 @@ void extended_help()
 "m = meta   Dual to b, mX=dbX=kjX.  mC has 48 triangular faces.  m is like k\n"
 "and o combined; new edges connect new vertices at the face centers to the old\n"
 "vertices and new vertices at the edge midpoints.  mX=mdX.  mC is the\n"
-"\"hexakis octahedron.\"\n"
+"\"hexakis octahedron.\" (Added: can be \"mn\" where n is any positive integer)\n"
 "\n"
 "o = ortho  Dual to e, oX=deX=jjX.  oC is the trapezoidal icositetrahedron, with\n"
 "24 kite-shaped faces.  oX has the effect of putting new vertices in the middle\n"
 "of each face of X and connecting them, with new edges, to the edge midpoints of\n"
-"X.\n"
+"X. (Added: can be \"on\" where n is any positive integer)\n"
 "\n"
 "p = propellor    Makes each n-gon face into a \"propellor\" of an n-gon\n"
 "surrounded by n quadrilaterals, e.g., pT is the tetrahedrally stellated\n"
@@ -552,8 +574,31 @@ void extended_help()
 "the six squares of the C, and eight triangles corresponding to the cube's eight\n"
 "vertices.\n"
 "\n"
+"\n"
+"Added operations:\n"
+"\n"
+"c = chamfer   New hexagonal faces are added in place of edges\n"
+"\n"
 "w = whirl  Gyro followed by truncation of vertices centered on original faces.\n"
-"This create 2 new hexagons for every original edge (added)\n"
+"This create 2 new hexagons for every original edge\n"
+"\n"
+"b3 = bevel3\n"
+"K = stake\n"
+"L0 = joined-lace\n"
+"L = lace\n"
+"l = loft\n"
+"M0 = joined-medial\n"
+"M = medial\n"// allows only explicit 0, 2 or larger
+"n = needle\n"
+"q = quinto\n"
+"S = seed\n"
+"u = subdivide\n"
+"\n"
+"w = whirl  Gyro followed by truncation of vertices centered on original faces.\n"
+"This create 2 new hexagons for every original edge\n"
+"\n"
+"X = cross\n"
+"z = zip\n"
 "\n");
 }
 
@@ -738,14 +783,9 @@ void cn_opts::process_command_line(int argc, char **argv)
   if (!strlen(cn_string.c_str()))
     error("no Conway Notation string given");
 
-  //  if (strspn(cn_string.c_str(), "abcdegjkmopqrstwTCOIDPAY0123456789,") !=
-  //      strlen(cn_string.c_str()))
-  //    error("Conway Notation must consist of
-  //    abcdegjkmopqrstwTCOIDPAY0123456789");
-
   if (int pos = validate_cn_string(cn_string, operations, operand, poly_size))
-    error(msg_str("Unexpected character in position %d: %s", pos + 1,
-                  cn_string.c_str()));
+    error(msg_str("Unexpected character in position %d: %c", pos,
+                  cn_string[pos-1]));
 
   if (resolve_ops) {
     cn_string = resolved_cn_string(cn_string);
@@ -756,8 +796,8 @@ void cn_opts::process_command_line(int argc, char **argv)
 
     // revalidate (should be valid) to rebuild operations table
     if (int pos = validate_cn_string(cn_string, operations, operand, poly_size))
-      error(msg_str("Unexpected character in position %d: %s", pos + 1,
-                    cn_string.c_str()));
+      error(msg_str("Unexpected character in position %d: %c", pos,
+                    cn_string[pos-1]));
   }
 
   optind++;
@@ -833,13 +873,15 @@ void verbose(const char operation, const int op_var, const cn_opts &opts)
     string hart_operators = "acdgkpw";
     string hart_string;
     if (opts.hart_mode && (hart_operators.find(operation) != string::npos))
-      hart_string = "(GHart)";
+      hart_string = "(hart)";
 
     // special cases
     char buf[MSG_SZ];
     buf[0] = '\0';
     if (operation == '_')
       operator_name = "planarizing ...";
+    else if (operation == '@')
+      operator_name = "non-orientable geometry";
     else if (operation == '$')
       operator_name = "done.";
     // L and op_var is -1 means L stands alone
@@ -875,7 +917,6 @@ void centroid_to_origin(Geometry &geom)
   geom.transform(Trans3d::translate(-centroid(geom.verts())));
 }
 
-/*
 // RK - average radius rather than maximum has more reliability than max
 void unitize_vertex_radius(Geometry &geom)
 {
@@ -885,7 +926,6 @@ void unitize_vertex_radius(Geometry &geom)
   double avg = info.vert_dist_lims().sum / info.num_verts();
   geom.transform(Trans3d::scale(1 / avg));
 }
-*/
 
 void cn_planarize(Geometry &geom, const cn_opts &opts)
 {
@@ -902,6 +942,8 @@ void cn_planarize(Geometry &geom, const cn_opts &opts)
       canonicalize_mm(geom, opts.num_iters_planar, opts.rep_count,
                       opts.epsilon);
     }
+    // sometimes radius becomes very small
+    unitize_vertex_radius(geom);
   }
 }
 
@@ -1032,8 +1074,6 @@ void hart_ambo(Geometry &geom)
   build_new_faces(faces_table, verts_table, faces);
   faces_table.clear();
   verts_table.clear();
-
-  geom.orient();
 }
 
 void hart_gyro(Geometry &geom)
@@ -1101,8 +1141,6 @@ void hart_gyro(Geometry &geom)
   build_new_faces(faces_table, verts_table, faces);
   faces_table.clear();
   verts_table.clear();
-
-  geom.orient();
 }
 
 void hart_kisN(Geometry &geom, const int n)
@@ -1143,8 +1181,6 @@ void hart_kisN(Geometry &geom, const int n)
     faces = faces_new;
     faces_new.clear();
   }
-
-  geom.orient();
 }
 
 void hart_propellor(Geometry &geom)
@@ -1204,8 +1240,6 @@ void hart_propellor(Geometry &geom)
   build_new_faces(faces_table, verts_table, faces);
   faces_table.clear();
   verts_table.clear();
-
-  geom.orient();
 }
 
 // chamfer for hart code
@@ -1227,17 +1261,20 @@ void hart_chamfer(Geometry &geom, const cn_opts &opts)
 
   verbose('t', 0, opts);
   truncate_verts(geom, v_idxs, CN_ONE_HALF);
-
-  geom.orient();
 }
 
-// chamfer for whirl code
+// whirl for hart code
 void hart_whirl(Geometry &geom, const cn_opts &opts)
 {
   int num_faces = geom.raw_faces().size();
 
   verbose('g', 0, opts);
   hart_gyro(geom);
+
+  // after intra-step operation
+  geom.orient();
+  if (!geom.is_oriented())
+    verbose('@', 0, opts);
 
   cn_planarize(geom, opts);
 
@@ -1248,8 +1285,6 @@ void hart_whirl(Geometry &geom, const cn_opts &opts)
 
   verbose('t', 0, opts);
   truncate_verts(geom, v_idxs, CN_ONE_HALF, nullptr);
-
-  geom.orient();
 }
 
 // functions which can use Antiprism built in features
@@ -1259,7 +1294,6 @@ void hart_dual(Geometry &geom)
   centroid_to_origin(geom);
   get_dual(dual, geom, 1, Vec3d(0, 0, 0));
   geom = dual;
-  geom.orient();
 }
 
 void cn_reflect(Geometry &geom) { geom.transform(Trans3d::inversion()); }
@@ -1267,7 +1301,6 @@ void cn_reflect(Geometry &geom) { geom.transform(Trans3d::inversion()); }
 void cn_truncate_by_algorithm(Geometry &geom, const double ratio, const int n)
 {
   truncate_verts(geom, ratio, n);
-  geom.orient();
 }
 
 void do_operations(Geometry &geom, const cn_opts &opts)
@@ -1335,9 +1368,6 @@ void do_operations(Geometry &geom, const cn_opts &opts)
       // kis with N>1 uses Hart algorithm
       else if (operation->op == 'k' && operation->op_var > 1)
         hart_kisN(geom, operation->op_var);
-      // whirl uses Hart algorithm
-      else if (operation->op == 'w')
-        hart_whirl(geom, opts);
       else {
         // wythoff call requires a string
         string wythoff_op;
@@ -1363,16 +1393,22 @@ void do_operations(Geometry &geom, const cn_opts &opts)
         opts.print_status_or_exit(
             wythoff_make_tiling(geom, geom, wythoff_op, true));
 
-        // remove digon results
+        // remove digon from results
         vector<int> dels;
         for(int i=0; i<(int)geom.faces().size(); i++) {
           if(geom.faces(i).size() < 3)
             dels.push_back(i);
         }
-        geom.del(FACES, dels); 
+        geom.del(FACES, dels);
+
+        // duplicate faces happened?
+        merge_coincident_elements(geom, "vef", opts.epsilon); 
       }
-      geom.orient();
     }
+
+    geom.orient();
+    if (!geom.is_oriented())
+      verbose('@', 0, opts);
 
     // planarize after each step
     cn_planarize(geom, opts);
