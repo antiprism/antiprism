@@ -75,15 +75,15 @@ bool edge_into_geom(Geometry &geom, const int v_idx1, const int v_idx2,
 bool mesh_edges(Geometry &geom, const double eps);
 
 /// Project a normal from 3D -> 2D
-/**\param input normal.
- * \return idx will be the dimension not included (x:0 y:1 z:2).
- * \return sign will be the sign of the projection. */
+/**\param normal input normal.
+ * \param idx will be the dimension not included (x:0 y:1 z:2).
+ * \param sign will be the sign of the projection. */
 void project_using_normal(const Vec3d &normal, int &idx, int &sign);
 
 /// fill in faces into a faceless mesh
 /**\param geom the geometry.
  * \param planar_merge_type (1: tile, 2: merge).
- * \return nonconvex_faces if any faces are nonconvex, and index list,
+ * \param nonconvex_faces if any faces are nonconvex, and index list,
  * \param normal of mesh.
  * \param eps value for contolling the limit of precision. */
 void fill_in_faces(Geometry &geom, const int planar_merge_type,

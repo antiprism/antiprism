@@ -571,8 +571,8 @@ public:
 
   /// Write coordinates to a file stream
   /**\param file the file stream.
-   * \param file stream for materials file.
-   * \param mtl_file is the materials file.
+   * \param mfile stream for materials file.
+   * \param mtl_file is the materials file name.
    * \param sep a string to use as the seperator between coordinates.
    * \param sig_dgts the number of significant digits to write,
    * or if negative then the number of digits after the decimal point. */
