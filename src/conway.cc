@@ -663,7 +663,15 @@ void extended_help()
 "P  - Prisms\n"
 "A  - Antiprism\n"
 "Y  - Pyramids\n"
+"\n"
+"Substitutions used by George Hart algorithms\n"
 "\n");
+
+  int num_subst = sizeof(resolve_item_list) / sizeof(resolve_item_list[0]);
+  for (int i = 0; i < num_subst; i++)
+    fprintf(stdout,"%-2s -> %s\n", resolve_item_list[i].target, resolve_item_list[i].resolve);
+
+fprintf(stderr,"\n");
 }
 
 void cn_opts::usage()
