@@ -1171,11 +1171,9 @@ ConwayOperator conway_operator_list[]{
     {"L",   "lace",           "[V,EF2]1F,1e1_0e,1_0v0v,0E"},
     {"K",   "stake",          "[V,EF2,F]0_1_2e1e,1_0v0v,0E"},
     {"M0",  "joined-medial",  "[F,V,EF]*0_1_2,1_2E"},
-    {"M3",  "edge-medial-3",  "[F,V,VE2]0_2_1e2e,2_0v2v"},
-    {"m3",  "medial-3",       "[F,V,VE]*0_1_2,2_0v2v"},
-    {"b3",  "bevel3",         "[VEF,E2F]1_0e0v,0e0f,*1_0f0_1f,1E"},
-    {"o3",  "ortho3",         "[VF2,V,VE2]0_2e1_2e,0_2v2_0v,0F,2E"},
+    //{"b3",  "bevel3",         "[VEF,E2F]1_0e0v,0e0f,1_0f0_1f,1E"},
     {"X",   "cross",          "[V,E,F,VF]3_1v3_2v,*0_1_3"},
+    {"w",   "whirl",          "[VF,VE,V]0F,0_1V2_1E1_0F,1E"},
 };
 // clang-format on
 
@@ -1561,12 +1559,11 @@ static string coord_string(Vec3d v)
   return coords;
 }
 
-static Status medial_pattern(char op, int N, string &pat)
+static string M_pattern(int N)
 {
-  if (N < 2)
-    return Status::error(msg_str("invalid number %d", N));
+  N += 1; // FIX CODE BELOW TO AVOID THIS
 
-  pat = "[F";
+  string pat = "[F";
   for (int i = 0; i < N + 1; i += 2) {
     double e_num = i;
     double v_num = N - e_num;
@@ -1574,10 +1571,7 @@ static Status medial_pattern(char op, int N, string &pat)
   }
   int last_idx = N / 2 + 1;
 
-  if (op == 'M')
-    pat += "]0_2_1e2e";
-  else if (op == 'm')
-    pat += "]*0_1_2";
+  pat += "]0_2_1e2e";
 
   for (int i = 2; i < last_idx; i++)
     pat += msg_str(",*0_%d_%d", i, i + 1);
@@ -1587,15 +1581,39 @@ static Status medial_pattern(char op, int N, string &pat)
     pat += msg_str(",%dE", last_idx);
   }
 
-  return Status::ok();
+  return pat;
 }
 
-static Status ortho_pattern(char /*op*/, int N, string &pat)
+static string m_pattern(int N)
 {
-  if (N < 2)
-    return Status::error(msg_str("invalid number %d", N));
+  N += 1; // FIX CODE BELOW TO AVOID THIS
 
-  pat = "[";
+  string pat = "[F";
+  for (int i = 0; i < N + 1; i += 2) {
+    double e_num = i;
+    double v_num = N - e_num;
+    pat += "," + coord_string(Vec3d(v_num, e_num, 0));
+  }
+  int last_idx = N / 2 + 1;
+
+  pat += "]";
+
+  for (int i = 1; i < last_idx; i++)
+    pat += msg_str(",*0_%d_%d", i, i + 1);
+
+  if (!is_even(N)) {
+    pat += msg_str(",%d_0v%dv", last_idx, last_idx);
+    pat += msg_str(",%dE", last_idx);
+  }
+
+  return pat;
+}
+
+static string o_pattern(int N)
+{
+  N += 1; // FIX CODE BELOW TO AVOID THIS
+
+  string pat = "[";
   for (int a = 0; a <= N; a += 2)
     for (int b = 0; b <= a; b += 2)
       pat += coord_string(Vec3d(((a + N % 2) - b), b, (N - (a + N % 2)))) + ",";
@@ -1619,7 +1637,77 @@ static Status ortho_pattern(char /*op*/, int N, string &pat)
   }
   pat.pop_back();
 
-  return Status::ok();
+  return pat;
+}
+
+static string e_pattern(int N)
+{
+  string pat = "[";
+  for (int a = 0; a <= N; a += 2)
+    for (int b = 0; b <= a; b += 2)
+      pat += coord_string(Vec3d(((a + N % 2) - b), b, (N - (a + N % 2) + 1))) +
+             ",";
+  pat.back() = ']';
+
+  auto crds2idx = [](int a, int b) { return (a / 2 + 1) * a / 4 + b / 2; };
+  for (int a = 0; a < N - N % 2; a += 2)
+    for (int b = 0; b < a; b += 2)
+      pat += msg_str("*%d_%d_%d_%d,", crds2idx(a, b), crds2idx(a, b + 2),
+                     crds2idx(a + 2, b + 4), crds2idx(a + 2, b + 2));
+
+  for (int a = 0; a < N - N % 2; a += 2)
+    pat += msg_str("%d_%de%d_%de,", crds2idx(a, 0), crds2idx(a + 2, 2),
+                   crds2idx(a + 2, 0), crds2idx(a + 2, 2));
+
+  int top_a = N-N%2;
+  for (int b = 0; b < top_a; b += 2)
+      pat += msg_str("%d_%df%d_%df,",
+          crds2idx(top_a, b), crds2idx(top_a, b + 2),
+          crds2idx(top_a, b + 2), crds2idx(top_a, b));
+
+  pat += msg_str("%dV,", crds2idx(N-N%2, 0));
+
+  if (N % 2) {
+    for (int a = 0; a < N - 1; a += 2)
+      pat += msg_str("%d_%dv%d_%dv,", crds2idx(a, a), crds2idx(a + 2, a + 2),
+                     crds2idx(a + 2, a + 2), crds2idx(a, a));
+    pat +=
+        msg_str("0F,%dv%df", crds2idx(N - 1, N - 1), crds2idx(N - 1, N - 1));
+  }
+  else
+    pat += msg_str("%dE", crds2idx(N, N));
+
+  return pat;
+}
+
+static string b_pattern(int N)
+{
+  N += 1; // FIX CODE BELOW TO AVOID THIS
+
+  string pat = "[";
+  for (int b = 1; b <= N+N%2; b +=2)
+    pat += coord_string(Vec3d((N - b), b, 1)) + ",";
+  pat.back() = ']';
+
+  pat += "0e0f,";
+
+  for (int b = 0; b < N + N%2; b += 2)
+    pat += msg_str("%d_", b / 2);
+  pat.back() = 'v';
+  for (int b = 0; b < N - 1; b += 2)
+    pat += msg_str("%d_", N / 2 - b / 2 - 1);
+  if(pat.back() == '_')
+    pat.pop_back();
+  pat += 'e';
+
+  for (int b = 0; b < N-2+N%2; b +=2)
+    pat += msg_str(",%d_%df%d_%df", b/2, b/2+1, b/2+1, b/2);
+  if(N%2)
+     pat += msg_str(",%dE", N/2);
+  else
+     pat += msg_str(",%dv%df", N/2-1, N/2-1);
+
+  return pat;
 }
 
 Status Tiling::read_conway(const string &op)
@@ -1635,14 +1723,22 @@ Status Tiling::read_conway(const string &op)
   int op_int;
   char buff;
   if (sscanf(op.c_str(), "%c%d%c", &op_char, &op_int, &buff) == 2) {
-    if (op_int < 1)
-      return Status::error("Conway operater number must be a positive integer");
-    if (op_char == 'M' || op_char == 'm')
-      stat = medial_pattern(op_char, op_int, pat);
+    if (op_int < 0)
+      return Status::error("Conway operater number cannot be nagative");
+    if (op_char == 'M')
+      pat = M_pattern(op_int);
+    else if (op_char == 'm')
+      pat = m_pattern(op_int);
     else if (op_char == 'o')
-      stat = ortho_pattern(op_char, op_int, pat);
+      pat = o_pattern(op_int);
+    else if (op_char == 'e')
+      pat = e_pattern(op_int);
+    else if (op_char == 'b')
+      pat = b_pattern(op_int);
     else
       stat.set_error("Conway operator '" + op + "' not known");
+    if(pat == "")
+      stat.set_error("Conway operator " + op + ": invalid number");
   }
   else
     stat.set_error("Conway operator '" + op + "' not known");
@@ -1678,11 +1774,13 @@ void Tiling::print_conway_list(FILE *ofile)
   }
   fprintf(
       ofile,
-      "\nOperators M, m and o are part of a series and accept a general\n"
-      "positive integer >3, e.g. M5. All operators taking particular numbers\n"
-      "and operators with numbers <4 are included in the list above. For\n"
-      "Operators like t and k which take a number to apply to only certain\n"
-      "elements, only the base operator is listed\n");
+      "\nOperators m (meta), o (ortho), e (expand), b (bevel) are each\n"
+      "part of a sequence, and accept a general integer >=0 as a parameter,\n"
+      "where 1 is the base operator and 0 is a lower level operator.\n"
+      "M (edge-medial) is a sequence starting at 1. Examples: M5, m5, e2, o0.\n"
+      "M0 and L0 are standalone operators, and not the 0 entry of a sequence.\n"
+      "Some operators, like t and k, normally take a number to filter the\n"
+      "elements the pattern will be applied to, but this is not supported.\n");
 }
 
 namespace anti {
