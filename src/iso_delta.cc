@@ -429,7 +429,7 @@ void id_opts::usage()
 "\n"
 "Options\n"
 "%s"
-"  -l        display the list of Isohedral Deltahedra 1 thru 42\n"
+"  -l        display the list of Isohedral Deltahedra 1 thru 44\n"
 "  -t        generate triangle only (Isohedral Deltahedra 1 to 44 and option -d)\n"
 "  -v        verbose output (Isohedral Deltahedra 1 thru 44 and option -d)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
