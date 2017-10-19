@@ -65,32 +65,26 @@ struct ConwayOperator {
 // clang-format off
 ConwayOperator conway_operator_list[]{
     {"a",  "ambo",          false, true  },
-    //{"b3", "bevel3",        false, false }, // allows only 3
-    {"b",  "bevel",         true,  false },
+    {"b",  "bevel",         true,  false }, // allows N >= 0
     {"c",  "chamfer",       false, true  },
     {"d",  "dual",          false, true  },
-    {"e",  "expand",        false, false },
+    {"e",  "expand",        true,  false }, // allows N >= 0
     {"g",  "gyro",          false, true  },
     {"j",  "join",          false, false },
-    {"k",  "kis",           true,  true  }, // allows N > 2 for vertices
+    {"k",  "kis",           true,  true  }, // allows N >= 3 for vertices
     {"K",  "stake",         false, false },
-    //{"L0", "joined-lace",   false, false }, // allows only explicit 0
-    {"L",  "lace",          true,  false },
+    {"L",  "lace",          true,  false }, // allows 0 or blank
     {"l",  "loft",          false, false },
-    //{"M0", "joined-medial", false, false }, // allows only explicit 0, 2 or larger
-    //{"M3", "edge-medial-3", false, false },
-    {"M",  "medial",        true,  false },
-    //{"m3", "medial-3",      false, false }, // allows any N
-    {"m",  "meta",          true,  false },
+    {"M",  "medial",        true,  false }, // allows N >= 0
+    {"m",  "meta",          true,  false }, // allows N >= 0
     {"n",  "needle",        false, false },
-    //{"o3", "ortho3",        false, false }, // allows any N
-    {"o",  "ortho",         true,  false },
+    {"o",  "ortho",         true,  false }, // allows N >= 0
     {"p",  "propellor",     false, true  },
     {"q",  "quinto",        false, false },
     {"r",  "reflect",       false, false },
     {"S",  "seed",          false, false },
     {"s",  "snub",          false, false },
-    {"t",  "truncate",      true,  false }, // allows N > 2 for faces
+    {"t",  "truncate",      true,  false }, // allows N >= 3 for faces
     {"u",  "subdivide",     false, false },
     {"w",  "whirl",         false, true  },
     {"X",  "cross",         false, false },
@@ -114,29 +108,26 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
 {
   char current_op = '\0';
   string number_string;
-  int num_val = 0;
+  int num_val = 1;
   bool delayed_write = false;
 
   // get allowable operators from table
+  // and get operators which allow N from table
   string operators;
+  string digits_allowed = "";
   int last_op = sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
-  for (int i = 0; i < last_op; i++)
+  for (int i = 0; i < last_op; i++) {
     operators.push_back(conway_operator_list[i].operator_short[0]);
-
-  // get operators which allow N from table
-  string digits_allowed = "PAY";
-  for (int i = 0; i < last_op; i++)
     if (conway_operator_list[i].allow_n)
       digits_allowed.push_back(conway_operator_list[i].operator_short[0]);
+  }
 
   string operands = "TCOIDPAY";
+  string digits_required = "PAY";
   string digits = "0123456789";
 
   operand = '\0';
   poly_size = 0;
-
-  // patch for stand alone M, not allowed
-  bool M_operand_patch = false;
 
   for (unsigned int i = 0; i < cn_string.length(); i++) {
     if (operators.find(cn_string[i]) != string::npos) {
@@ -154,14 +145,6 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
       if (current_op == 'L')
         num_val = -1;
 
-      // patch: for M standing alone. Next token must be number
-      if (M_operand_patch) {
-        fprintf(stderr, "M(n), require n must be 0, 2 or higher\n");
-        return i+1;
-      }
-      if (current_op == 'M')
-        M_operand_patch = true;
-
       if (digits_allowed.find(current_op) == string::npos)
         operations.push_back(new ops(i + 1, current_op, num_val));
       else
@@ -171,13 +154,6 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
       if (operand != '\0')
         return i+1;
 
-      // need to check here too
-      // patch: for M standing alone. Next token must be number
-      if (M_operand_patch) {
-        fprintf(stderr, "M(n), require n must be 0, 2 or higher\n");
-        return i+1;
-      }
-
       if (delayed_write) {
         operations.push_back(new ops(i, current_op, num_val));
         delayed_write = false;
@@ -186,14 +162,14 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
       operand = cn_string[i];
       current_op = '\0';
     }
-    else if (digits.find(cn_string[i]) != string::npos) { 
-      M_operand_patch = false;
-
+    else if (digits.find(cn_string[i]) != string::npos) {
+      // if another operand before numeric
       if (operand != '\0') {
         if (digits_allowed.find(operand) == string::npos) {
           return i+1;
         }
       }
+      // if not a numeric allowed operator
       else if (digits_allowed.find(current_op) == string::npos) {
         return i+1;
       }
@@ -208,7 +184,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
           cn_string.substr(digits_start, (digits_end - digits_start + 1));
 
       // will be at end of string as it is an operand
-      if (operand == 'P' || operand == 'A' || operand == 'Y') {
+      if (digits_required.find(operand) != string::npos) {
         poly_size = atoi(number_string.c_str());
         if (poly_size < 3) {
           fprintf(stderr, "P(n), A(n), or Y(n), n must be 3 or greater\n");
@@ -233,17 +209,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
         operations.push_back(new ops(i + 1, current_op, num_val));
         delayed_write = false;
       }
-      // b allows only 3. 0 will not be passed to wythoff
-      else if (current_op == 'b') {
-        num_val = atoi(number_string.c_str());
-        if (num_val != 0 && num_val != 3) {
-          fprintf(stderr, "b(n), n must be 3\n");
-          return i+1;
-        }
-        operations.push_back(new ops(i + 1, current_op, num_val));
-        delayed_write = false;
-      }
-      // L allow 0 or 1. 0 will be made explicit in call to wythoff
+      // L allow 0. 0 will be made explicit in call to wythoff
       else if (current_op == 'L') {
         num_val = atoi(number_string.c_str());
         if (num_val != 0) {
@@ -253,28 +219,18 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
         operations.push_back(new ops(i + 1, current_op, num_val));
         delayed_write = false;
       }
-      // M allow 0, 2 or greater. 0 will be made explicit in call to wythoff
-      else if (current_op == 'M') {
+      // operators allowing 0 or greater
+      else if (digits_allowed.find(current_op) != string::npos) {
         num_val = atoi(number_string.c_str());
-        if (num_val == 1) {
-          fprintf(stderr, "M(n), n must 0, 2 or greater\n");
+        if (num_val < 0) {
+          fprintf(stderr, "%c(%d), n must be 0 or greater\n", current_op, num_val);
           return i+1;
         }
-        // patch: if num_val is 0, use -1 as a place holder
-        //operations.push_back(new ops(i + 1, current_op, (num_val == 0) ? -1 : num_val));
         operations.push_back(new ops(i + 1, current_op, num_val));
         delayed_write = false;
       }
-      // any other operator with N
-      else if (digits_allowed.find(current_op) != string::npos) {
-        num_val = atoi(number_string.c_str());
-        // for other operators only set num_val if greater than 1
-        if (num_val > 1)
-          operations.push_back(new ops(i + 1, current_op, num_val));
-        delayed_write = false;
-      }
 
-      num_val = 0;
+      num_val = 1;
       i = digits_end;
     }
     // character was not found to be valid
@@ -284,19 +240,13 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
     }
   }
 
-  // if t or k was specified alone at end
+  // if an allowed numeric operation was specified alone at end
   if (delayed_write)
     operations.push_back(new ops(cn_string.length(), current_op, num_val));
 
   // if P, A or Y was specified with no digit n
-  if ((digits_allowed.find(operand) != string::npos) && poly_size == 0) {
+  if ((digits_required.find(operand) != string::npos) && poly_size == 0) {
     fprintf(stderr, "P(n), A(n), or Y(n), n must be 3 or greater\n");
-    return cn_string.length();
-  }
-
-  // patch: for M standing alone. Next token must be number
-  if (M_operand_patch) {
-    fprintf(stderr, "M(n), require n must be 0, 2 or higher\n");
     return cn_string.length();
   }
 
@@ -398,22 +348,25 @@ string resolved_cn_string(const string &cn_string)
       if ((pos + 1 == resolve_string.length()) || (digits.find(resolve_string[pos + 1]) == string::npos))
         resolve_string.replace(pos, target.length(), resolve);
       else {
-        // RK - if so b, o and m are temporarily replaced with @, #, $
+        // RK - if so e, b, o and m are temporarily replaced with @, #, $, %
         // so that loop can continue
-        if (resolve_string[pos] == 'b')
+        if (resolve_string[pos] == 'e')
           resolve_string.replace(pos, 1, "@");
-        else if (resolve_string[pos] == 'o')
+        else if (resolve_string[pos] == 'b')
           resolve_string.replace(pos, 1, "#");
-        else if (resolve_string[pos] == 'm')
+        else if (resolve_string[pos] == 'o')
           resolve_string.replace(pos, 1, "$");
+        else if (resolve_string[pos] == 'm')
+          resolve_string.replace(pos, 1, "%");
       }
     }
   }
 
   // if temporary characters exists
-  replace( resolve_string.begin(), resolve_string.end(), '@', 'b');
-  replace( resolve_string.begin(), resolve_string.end(), '#', 'o');
-  replace( resolve_string.begin(), resolve_string.end(), '$', 'm');
+  replace( resolve_string.begin(), resolve_string.end(), '@', 'e');
+  replace( resolve_string.begin(), resolve_string.end(), '#', 'b');
+  replace( resolve_string.begin(), resolve_string.end(), '$', 'o');
+  replace( resolve_string.begin(), resolve_string.end(), '%', 'm');
 
   // 7 is special case
   target = resolve_item_list[7].target;
@@ -506,7 +459,7 @@ public:
 // clang-format off
 void extended_help()
 {
-   fprintf(stdout,
+  fprintf(stdout,
 "\n"
 "The following is a description of Conway Notation edited from the Conway\n"
 "Notation web page by George W. Hart (http://www.georgehart.com)\n"
@@ -541,7 +494,7 @@ void extended_help()
 "Note: ambo is also known as \"rectifying\" the polyhedron, or rectification\n"
 "\n"
 "b = bevel  The bevel operation can be defined by bX=taX.  bC is the truncated\n"
-"cuboctahedron.\n"
+"cuboctahedron.  (Wythoff: or \"bn\" where n is 0 or greater)\n"
 "Note: bevel is also known as \"omnitruncating\" the polyhedron, or omnitruncation\n"
 "\n"
 "d = dual   The dual of a polyhedron has a vertex for each face, and a face for\n"
@@ -552,7 +505,7 @@ void extended_help()
 "separated from all its neighbors and reconnected with a new 4-sided face,\n"
 "corresponding to an edge of X.  An n-gon is then added to connect the 4-sided\n"
 "faces at each n-fold vertex.  For example, eC is the rhombicuboctahedron.  It\n"
-"turns out that eX=aaX and so eX=edX.\n"
+"turns out that eX=aaX and so eX=edX (Wythoff: or \"en\" where n is 0 or greater)\n"
 "Note: expand is also known as \"cantellating\" the polyhedron, or cantellation\n"
 "\n"
 "g = gyro   The dual operation to s is g. gX=dsdX=dsX, with all 5-sided faces.\n"
@@ -572,12 +525,12 @@ void extended_help()
 "m = meta   Dual to b, mX=dbX=kjX.  mC has 48 triangular faces.  m is like k\n"
 "and o combined; new edges connect new vertices at the face centers to the old\n"
 "vertices and new vertices at the edge midpoints.  mX=mdX.  mC is the\n"
-"\"hexakis octahedron.\" (Added: can be \"mn\" where n is any positive integer)\n"
+"\"hexakis octahedron.\"  (Wythoff: or \"mn\" where n is 0 or greater)\n"
 "\n"
 "o = ortho  Dual to e, oX=deX=jjX.  oC is the trapezoidal icositetrahedron, with\n"
 "24 kite-shaped faces.  oX has the effect of putting new vertices in the middle\n"
 "of each face of X and connecting them, with new edges, to the edge midpoints of\n"
-"X. (Added: can be \"on\" where n is any positive integer)\n"
+"X.  (Wythoff: or \"on\" where n is 0 or greater)\n"
 "\n"
 "p = propellor    Makes each n-gon face into a \"propellor\" of an n-gon\n"
 "surrounded by n quadrilaterals, e.g., pT is the tetrahedrally stellated\n"
@@ -601,11 +554,10 @@ void extended_help()
 "vertices.\n"
 "\n"
 "\n"
-"Added operations:\n"
+"Extenstions: Further operations added. See\n"
+"https://en.wikipedia.org/wiki/Conway_polyhedron_notation\n"
 "\n"
 "c = chamfer   New hexagonal faces are added in place of edges\n"
-"\n"
-"b3 = bevel3   dual to medial-3 (m3)\n"
 "\n"
 "K = stake     Subdivide faces with central quads, and triangles\n"
 "\n"
@@ -618,11 +570,8 @@ void extended_help()
 "l = loft      An augmentation of each face by prism, adding a smaller copy of\n"
 "              each face with trapezoids between the inner and outer ones\n"
 "\n"
-"M0 = joined-medial  Like medial, but new rhombic faces in place of original\n"
-"                    edges\n"
-"\n"
 "M = medial    Similar to medial except no diagonal edges added, creating quad\n"
-"              faces there\n"
+"              faces there (can be \"Mn\" where n is 0 or greater)\n"
 "\n"
 "n = needle    Dual of truncation, triangulate with 2 triangles across every\n"
 "              edge. This bisect faces across all vertices and edges, while\n"
@@ -650,13 +599,14 @@ void extended_help()
 "\n"
 "Summary of operators which can take a number n\n"
 "\n"
-"b  - n may be 3\n"
-"k  - n may be 3 or higher representing vertex connections\n"
+"e  - n may be 0 or greater (default: 1)\n"
+"b  - n may be 0 or greater (default: 1)\n"
+"k  - n may be 3 or greater representing vertex connections\n"
 "L  - n may be explicit 0\n"
-"M  - n may be explicit 0, 2 or higher (required)\n"
-"m  - Allows any positive integer\n"
-"o  - Allows any positive integer\n"
-"t  - n may be 3 or higher representing face sides\n"
+"M  - n may be 0 or greater (default: 1)\n"
+"m  - n may be 0 or greater (default: 1)\n"
+"o  - n may be 0 or greater (default: 1)\n"
+"t  - n may be 3 or greater representing face sides\n"
 "\n"
 "Operands which require a number n\n"
 "\n"
@@ -671,7 +621,21 @@ void extended_help()
   for (int i = 0; i < num_subst; i++)
     fprintf(stdout,"%-2s -> %s\n", resolve_item_list[i].target, resolve_item_list[i].resolve);
 
-fprintf(stderr,"\n");
+  fprintf(stdout,
+"\n"
+"Various equivalent forms\n"
+"\n"
+"jT    = C\n"
+"sT    = I\n"
+"dA3   = C\n"
+"k5A5  = I (A special gyroelongated dipyramid)\n"
+"t5dA5 = D (A special truncated trapezohedron)\n"
+"t4daC = cC\n"
+"t4kC  = lC\n"
+"daC   = jC\n"
+"t5daaD or t5deD or t5oD = qD\n"
+"dedD   = oD\n"
+"\n");
 }
 
 void cn_opts::usage()
@@ -682,6 +646,8 @@ void cn_opts::usage()
 "\n"
 "Conway Notation uses algorithms by George W. Hart (http://www.georgehart.com)\n"
 "http://www.georgehart.com/virtual-polyhedra/conway_notation.html\n"
+"Extenstions: Further operations added. See\n"
+"https://en.wikipedia.org/wiki/Conway_polyhedron_notation\n"
 "\n"
 "Read a polyhedron from a file in OFF format.\n"
 "If input_file is not given and no seed polyhedron is given in the notation\n"
@@ -960,15 +926,12 @@ void verbose(const char operation, const int op_var, const cn_opts &opts)
     else if (operation == 'L' && op_var == -1) {
       buf[0] = '\0';
     }
-    // if L or M have a 0
-    else if ((operation == 'L' || operation == 'M') && (op_var == 0)) {
-      if (operation == 'L')
-        operator_name = "joined-lace";
-      else if (operation == 'M')
-        operator_name = "joined-medial";
+    // if L may have a 0
+    else if (operation == 'L' && op_var == 0) {
+      operator_name = "joined-lace";
     }
-    // all other case show op_var when greater than 1
-    else if (op_var > 1)
+    // all other case show op_var when not 1
+    else if (op_var != 1)
       sprintf(buf, "(%d)", op_var);
 
     fprintf(stderr, "%s%s %s\n", operator_name.c_str(), buf, hart_string.c_str());
@@ -1014,8 +977,9 @@ void cn_planarize(Geometry &geom, const cn_opts &opts)
       canonicalize_mm(geom, opts.num_iters_planar, opts.rep_count,
                       opts.epsilon);
     }
-    // sometimes radius becomes very small
-    unitize_vertex_radius(geom);
+    // sometimes radius becomes very small with option p
+    if (opts.planarization_method == 'p')
+      unitize_vertex_radius(geom);
   }
 }
 
@@ -1446,18 +1410,14 @@ void do_operations(Geometry &geom, const cn_opts &opts)
         wythoff_op.push_back(operation->op);
 
         char buf[MSG_SZ];
-        if (operation->op_var > 1) {
+        // abs because -1 can be a special case of stand alone operation
+        if (abs(operation->op_var) != 1) {
           sprintf(buf, "%d", operation->op_var);
           wythoff_op += string(buf);
         }
-        // L and M are special cases allowing explicit 0
-        // if L stands alone op_var with be -1
-        else if ((operation->op_var == 0) && operation->op == 'L') {
-          sprintf(buf, "0");
-          wythoff_op += string(buf);
-        }
-        else if ((operation->op_var == 0) && operation->op == 'M') {
-          sprintf(buf, "0");
+        // RK - temporary patch
+        else if ((operation->op_var == 1) && operation->op == 'M') {
+          sprintf(buf, "1");
           wythoff_op += string(buf);
         }
 
