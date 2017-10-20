@@ -200,6 +200,7 @@ bool canonicalize_mm(Geometry &geom, const double edge_factor,
 }
 
 // RK - wrapper for basic canonicalization with mathematical algorithm
+// meant to be called with finite num_iters (not -1)
 bool canonicalize_mm(Geometry &geom, const int num_iters, const int rep_count,
                      const double eps)
 {
@@ -211,6 +212,7 @@ bool canonicalize_mm(Geometry &geom, const int num_iters, const int rep_count,
 }
 
 // RK - wrapper for basic planarization with mathematical algorithm
+// meant to be called with finite num_iters (not -1)
 bool planarize_mm(Geometry &geom, const int num_iters, const int rep_count,
                   const double eps)
 {
@@ -570,22 +572,24 @@ bool canonicalize_bd(Geometry &base, const int num_iters,
 }
 
 // RK - wrapper for basic canonicalization with base/dual algorithm
+// meant to be called with finite num_iters (not -1)
 bool canonicalize_bd(Geometry &geom, const int num_iters, const int rep_count,
                      const double eps)
 {
   char centering = 'x';
   char normal_type = 'n';
-  return canonicalize_bd(geom, num_iters, 'b', 0.8, rep_count, centering,
+  return canonicalize_bd(geom, num_iters, 'b', DBL_MAX, rep_count, centering,
                          normal_type, eps);
 }
 
 // RK - wrapper for basic planarization with base/dual algorithm
+// meant to be called with finite num_iters (not -1)
 bool planarize_bd(Geometry &geom, const int num_iters, const int rep_count,
                   const double eps)
 {
   char centering = 'x';
   char normal_type = 'n';
-  return canonicalize_bd(geom, num_iters, 'p', 0.8, rep_count, centering,
+  return canonicalize_bd(geom, num_iters, 'p', DBL_MAX, rep_count, centering,
                          normal_type, eps);
 }
 

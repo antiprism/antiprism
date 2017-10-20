@@ -70,6 +70,7 @@ ConwayOperator conway_operator_list[]{
     {"d",  "dual",          false, true  },
     {"e",  "expand",        true,  false }, // allows N >= 0
     {"g",  "gyro",          false, true  },
+    {"J",  "joined-medial", false, false }, // replaces wiki M0
     {"j",  "join",          false, false },
     {"k",  "kis",           true,  true  }, // allows N >= 3 for vertices
     {"K",  "stake",         false, false },
@@ -122,8 +123,8 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
       digits_allowed.push_back(conway_operator_list[i].operator_short[0]);
   }
 
-  string operands = "TCOIDPAY";
-  string digits_required = "PAY";
+  string operands = "TCOIDPAYZ";
+  string digits_required = "PAYZ";
   string digits = "0123456789";
 
   operand = '\0';
@@ -132,7 +133,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
   for (unsigned int i = 0; i < cn_string.length(); i++) {
     if (operators.find(cn_string[i]) != string::npos) {
       if (operand != '\0')
-        return i+1;
+        return i + 1;
 
       if (delayed_write) {
         operations.push_back(new ops(i, current_op, num_val));
@@ -141,10 +142,6 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
 
       current_op = cn_string[i];
 
-      // patch: for L standing alone to detect set num_val = -1
-      if (current_op == 'L')
-        num_val = -1;
-
       if (digits_allowed.find(current_op) == string::npos)
         operations.push_back(new ops(i + 1, current_op, num_val));
       else
@@ -152,7 +149,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
     }
     else if (operands.find(cn_string[i]) != string::npos) {
       if (operand != '\0')
-        return i+1;
+        return i + 1;
 
       if (delayed_write) {
         operations.push_back(new ops(i, current_op, num_val));
@@ -163,15 +160,15 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
       current_op = '\0';
     }
     else if (digits.find(cn_string[i]) != string::npos) {
-      // if another operand before numeric
+      // only operands which require a number
       if (operand != '\0') {
-        if (digits_allowed.find(operand) == string::npos) {
-          return i+1;
+        if (digits_required.find(operand) == string::npos) {
+          return i + 1;
         }
       }
       // if not a numeric allowed operator
       else if (digits_allowed.find(current_op) == string::npos) {
-        return i+1;
+        return i + 1;
       }
 
       int digits_start = i;
@@ -187,15 +184,16 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
       if (digits_required.find(operand) != string::npos) {
         poly_size = atoi(number_string.c_str());
         if (poly_size < 3) {
-          fprintf(stderr, "P(n), A(n), or Y(n), n must be 3 or greater\n");
-          return i+1;
+          fprintf(stderr,
+                  "P(n), A(n), Y(n), or Z(n), n must be 3 or greater\n");
+          return i + 1;
         }
       }
       else if (current_op == 'k') {
         num_val = atoi(number_string.c_str());
         if (num_val < 3) {
           fprintf(stderr, "kis k(n), n must be 3 or greater\n");
-          return i+1;
+          return i + 1;
         }
         operations.push_back(new ops(i + 1, current_op, num_val));
         delayed_write = false;
@@ -203,18 +201,18 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
       else if (current_op == 't') {
         num_val = atoi(number_string.c_str());
         if (num_val < 3) {
-          fprintf(stderr, "trunc t(n), n must be 3 or greater\n");
-          return i+1;
+          fprintf(stderr, "truncate t(n), n must be 3 or greater\n");
+          return i + 1;
         }
         operations.push_back(new ops(i + 1, current_op, num_val));
         delayed_write = false;
       }
-      // L allow 0. 0 will be made explicit in call to wythoff
+      // L must be 0 or 1
       else if (current_op == 'L') {
         num_val = atoi(number_string.c_str());
-        if (num_val != 0) {
-          fprintf(stderr, "L(n), n must 0\n");
-          return i+1;
+        if (num_val > 1) {
+          fprintf(stderr, "L(n), n must 0 or 1\n");
+          return i + 1;
         }
         operations.push_back(new ops(i + 1, current_op, num_val));
         delayed_write = false;
@@ -223,8 +221,9 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
       else if (digits_allowed.find(current_op) != string::npos) {
         num_val = atoi(number_string.c_str());
         if (num_val < 0) {
-          fprintf(stderr, "%c(%d), n must be 0 or greater\n", current_op, num_val);
-          return i+1;
+          fprintf(stderr, "%c(%d), n must be 0 or greater\n", current_op,
+                  num_val);
+          return i + 1;
         }
         operations.push_back(new ops(i + 1, current_op, num_val));
         delayed_write = false;
@@ -235,8 +234,9 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
     }
     // character was not found to be valid
     else {
-      //fprintf(stderr,"unexpected character %c in operation string\n", cn_string[i]);
-      return i+1;
+      // fprintf(stderr,"unexpected character %c in operation string\n",
+      // cn_string[i]);
+      return i + 1;
     }
   }
 
@@ -246,7 +246,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
 
   // if P, A or Y was specified with no digit n
   if ((digits_required.find(operand) != string::npos) && poly_size == 0) {
-    fprintf(stderr, "P(n), A(n), or Y(n), n must be 3 or greater\n");
+    fprintf(stderr, "P(n), A(n), Y(n), Z(n), n must be 3 or greater\n");
     return cn_string.length();
   }
 
@@ -286,6 +286,7 @@ struct ResolveItem {
 };
 
 // clang-format off
+// order sensative, do not sort
 ResolveItem resolve_item_list[] = {
     {  "P4", "C",   },
     {  "A3", "O",   },
@@ -345,7 +346,8 @@ string resolved_cn_string(const string &cn_string)
     for (size_t pos = resolve_string.find_first_of(target, 0);
          pos != string::npos; pos = resolve_string.find_first_of(target, 0)) {
       // RK - have to check now since some operators can have a number
-      if ((pos + 1 == resolve_string.length()) || (digits.find(resolve_string[pos + 1]) == string::npos))
+      if ((pos + 1 == resolve_string.length()) ||
+          (digits.find(resolve_string[pos + 1]) == string::npos))
         resolve_string.replace(pos, target.length(), resolve);
       else {
         // RK - if so e, b, o and m are temporarily replaced with @, #, $, %
@@ -363,10 +365,10 @@ string resolved_cn_string(const string &cn_string)
   }
 
   // if temporary characters exists
-  replace( resolve_string.begin(), resolve_string.end(), '@', 'e');
-  replace( resolve_string.begin(), resolve_string.end(), '#', 'b');
-  replace( resolve_string.begin(), resolve_string.end(), '$', 'o');
-  replace( resolve_string.begin(), resolve_string.end(), '%', 'm');
+  replace(resolve_string.begin(), resolve_string.end(), '@', 'e');
+  replace(resolve_string.begin(), resolve_string.end(), '#', 'b');
+  replace(resolve_string.begin(), resolve_string.end(), '$', 'o');
+  replace(resolve_string.begin(), resolve_string.end(), '%', 'm');
 
   // 7 is special case
   target = resolve_item_list[7].target;
@@ -494,7 +496,7 @@ void extended_help()
 "Note: ambo is also known as \"rectifying\" the polyhedron, or rectification\n"
 "\n"
 "b = bevel  The bevel operation can be defined by bX=taX.  bC is the truncated\n"
-"cuboctahedron.  (Wythoff: or \"bn\" where n is 0 or greater)\n"
+"cuboctahedron.  (Antiprism: or \"bn\" where n is 0 or greater)\n"
 "Note: bevel is also known as \"omnitruncating\" the polyhedron, or omnitruncation\n"
 "\n"
 "d = dual   The dual of a polyhedron has a vertex for each face, and a face for\n"
@@ -505,7 +507,7 @@ void extended_help()
 "separated from all its neighbors and reconnected with a new 4-sided face,\n"
 "corresponding to an edge of X.  An n-gon is then added to connect the 4-sided\n"
 "faces at each n-fold vertex.  For example, eC is the rhombicuboctahedron.  It\n"
-"turns out that eX=aaX and so eX=edX (Wythoff: or \"en\" where n is 0 or greater)\n"
+"turns out that eX=aaX and so eX=edX (Antiprism: or \"en\" where n is 0 or greater)\n"
 "Note: expand is also known as \"cantellating\" the polyhedron, or cantellation\n"
 "\n"
 "g = gyro   The dual operation to s is g. gX=dsdX=dsX, with all 5-sided faces.\n"
@@ -525,12 +527,12 @@ void extended_help()
 "m = meta   Dual to b, mX=dbX=kjX.  mC has 48 triangular faces.  m is like k\n"
 "and o combined; new edges connect new vertices at the face centers to the old\n"
 "vertices and new vertices at the edge midpoints.  mX=mdX.  mC is the\n"
-"\"hexakis octahedron.\"  (Wythoff: or \"mn\" where n is 0 or greater)\n"
+"\"hexakis octahedron.\"  (Antiprism: or \"mn\" where n is 0 or greater)\n"
 "\n"
 "o = ortho  Dual to e, oX=deX=jjX.  oC is the trapezoidal icositetrahedron, with\n"
 "24 kite-shaped faces.  oX has the effect of putting new vertices in the middle\n"
 "of each face of X and connecting them, with new edges, to the edge midpoints of\n"
-"X.  (Wythoff: or \"on\" where n is 0 or greater)\n"
+"X.  (Antiprism: or \"on\" where n is 0 or greater)\n"
 "\n"
 "p = propellor    Makes each n-gon face into a \"propellor\" of an n-gon\n"
 "surrounded by n quadrilaterals, e.g., pT is the tetrahedrally stellated\n"
@@ -554,10 +556,12 @@ void extended_help()
 "vertices.\n"
 "\n"
 "\n"
-"Extenstions: Further operations added. See\n"
+"Antiprism Extensions: Further operations added. See\n"
 "https://en.wikipedia.org/wiki/Conway_polyhedron_notation\n"
 "\n"
 "c = chamfer   New hexagonal faces are added in place of edges\n"
+"\n"
+"J = joined-medial  Like medial, but new rhombic faces in place of original edges\n"
 "\n"
 "K = stake     Subdivide faces with central quads, and triangles\n"
 "\n"
@@ -599,20 +603,25 @@ void extended_help()
 "\n"
 "Summary of operators which can take a number n\n"
 "\n"
-"e  - n may be 0 or greater (default: 1)\n"
 "b  - n may be 0 or greater (default: 1)\n"
+"e  - n may be 0 or greater (default: 1)\n"
 "k  - n may be 3 or greater representing vertex connections\n"
-"L  - n may be explicit 0\n"
+"L  - n may be 0 or 1 (1=Lace)\n"
 "M  - n may be 0 or greater (default: 1)\n"
 "m  - n may be 0 or greater (default: 1)\n"
 "o  - n may be 0 or greater (default: 1)\n"
 "t  - n may be 3 or greater representing face sides\n"
 "\n"
-"Operands which require a number n\n"
+"Seeds which require a number n, 3 or greater\n"
 "\n"
-"P  - Prisms\n"
+"P  - Prism\n"
 "A  - Antiprism\n"
-"Y  - Pyramids\n"
+"Y  - Pyramid\n"
+"Z  - Polygon (Antiprism Extension)\n"
+"\n"
+"Note: Antiprism Extensions will work on tilings. Hart algorithms (-d) will not\n"
+"e.g.: unitile2d 3 | conway p -i 0 | antiview -v 0.1 (-i 0 for no planarization)\n"
+"\n"
 "\n"
 "Substitutions used by George Hart algorithms\n"
 "\n");
@@ -623,6 +632,7 @@ void extended_help()
 
   fprintf(stdout,
 "\n"
+/*
 "Various equivalent forms\n"
 "\n"
 "jT    = C\n"
@@ -635,6 +645,12 @@ void extended_help()
 "daC   = jC\n"
 "t5daaD or t5deD or t5oD = qD\n"
 "dedD   = oD\n"
+*/
+"Equivalent Operations\n"
+"\n"
+"b0 = z        e0 = d        o0 = S        m0 = k        M0 = o\n"
+"b1 = b        e1 = e        o1 = o        m1 = m        M1 = M\n"
+"b2 = Wiki b3  e2 = Wiki e3  o2 = Wiki o3  m2 = Wiki m3  M2 = Wiki M3\n"
 "\n");
 }
 
@@ -646,7 +662,8 @@ void cn_opts::usage()
 "\n"
 "Conway Notation uses algorithms by George W. Hart (http://www.georgehart.com)\n"
 "http://www.georgehart.com/virtual-polyhedra/conway_notation.html\n"
-"Extenstions: Further operations added. See\n"
+"\n"
+"Antiprism Extensions: Further operations added. See\n"
 "https://en.wikipedia.org/wiki/Conway_polyhedron_notation\n"
 "\n"
 "Read a polyhedron from a file in OFF format.\n"
@@ -673,7 +690,7 @@ void cn_opts::usage()
 "  -l <lim>  minimum distance change to terminate planarization, as negative\n"
 "               exponent (default: %d giving %.0e)\n"
 "\n"
-"\nColoring Options (run 'off_util -H color' for help on color formats)\n"
+"Coloring Options (run 'off_util -H color' for help on color formats)\n"
 "  -V <col>  vertex color (default: gold)\n"
 "  -E <col>  edge color   (default: lightgray)\n"
 "  -f <mthd> mthd is face coloring method using color in map (default: n)\n"
@@ -823,7 +840,7 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   if (int pos = validate_cn_string(cn_string, operations, operand, poly_size))
     error(msg_str("Unexpected character in position %d: %c", pos,
-                  cn_string[pos-1]));
+                  cn_string[pos - 1]));
 
   if (resolve_ops) {
     cn_string = resolved_cn_string(cn_string);
@@ -835,7 +852,7 @@ void cn_opts::process_command_line(int argc, char **argv)
     // revalidate (should be valid) to rebuild operations table
     if (int pos = validate_cn_string(cn_string, operations, operand, poly_size))
       error(msg_str("Unexpected character in position %d: %c", pos,
-                    cn_string[pos-1]));
+                    cn_string[pos - 1]));
   }
 
   optind++;
@@ -900,7 +917,8 @@ void verbose(const char operation, const int op_var, const cn_opts &opts)
   if (opts.verbosity) {
     string operator_name;
 
-    int last_op = sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
+    int last_op =
+        sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
     for (int i = 0; i < last_op; i++) {
       if (operation == conway_operator_list[i].operator_short[0]) {
         operator_name = conway_operator_list[i].operator_name;
@@ -934,7 +952,8 @@ void verbose(const char operation, const int op_var, const cn_opts &opts)
     else if (op_var != 1)
       sprintf(buf, "(%d)", op_var);
 
-    fprintf(stderr, "%s%s %s\n", operator_name.c_str(), buf, hart_string.c_str());
+    fprintf(stderr, "%s%s %s\n", operator_name.c_str(), buf,
+            hart_string.c_str());
   }
 }
 
@@ -957,7 +976,7 @@ void unitize_vertex_radius(Geometry &geom)
 {
   GeometryInfo info(geom);
   info.set_center(geom.centroid());
-  //geom.transform(Trans3d::scale(1 / info.vert_dist_lims().max));
+  // geom.transform(Trans3d::scale(1 / info.vert_dist_lims().max));
   double avg = info.vert_dist_lims().sum / info.num_verts();
   geom.transform(Trans3d::scale(1 / avg));
 }
@@ -983,7 +1002,8 @@ void cn_planarize(Geometry &geom, const cn_opts &opts)
   }
 }
 
-void get_operand(Geometry &geom, const char operand, const int poly_size)
+void get_operand(Geometry &geom, const char operand, const int poly_size,
+                 cn_opts &opts)
 {
   string uniforms = "TCOID";
 
@@ -1025,6 +1045,11 @@ void get_operand(Geometry &geom, const char operand, const int poly_size)
     case 'Y':
       pgon.set_type(Polygon::pyramid);
       break;
+
+    case 'Z':
+      pgon.set_type(Polygon::dihedron);
+      pgon.set_subtype(Polygon::sub_dihedron_polygon);
+      break;
     }
 
     pgon.set_edge(0, 1.0);
@@ -1038,6 +1063,23 @@ void get_operand(Geometry &geom, const char operand, const int poly_size)
       pgon.set_edge(1, 1.0);
 
     pgon.make_poly(geom);
+
+    /* RK - if polygon size 2 was allowed, caused too much trouble
+    if ((poly_size == 2) && (operand == 'P' || operand == 'Y')) {
+      geom.transform(Trans3d::rotate(deg2rad(90), 0, 0));
+    */
+    if (operand == 'Z') {
+      if (opts.hart_mode) {
+        opts.warning(
+            "polygons will not process correctly with George Hart algorithms. turned off");
+        opts.hart_mode = false;
+      }
+      if (opts.num_iters_planar != 0) {
+        opts.warning(
+            "planarization iterations must be 0 for polygons. set to 0");
+        opts.num_iters_planar = 0;
+      }
+    }
   }
 }
 
@@ -1415,26 +1457,20 @@ void do_operations(Geometry &geom, const cn_opts &opts)
           sprintf(buf, "%d", operation->op_var);
           wythoff_op += string(buf);
         }
-        // RK - temporary patch
-        else if ((operation->op_var == 1) && operation->op == 'M') {
-          sprintf(buf, "1");
-          wythoff_op += string(buf);
-        }
 
-//fprintf(stderr, "wythoff_op = %s\n", wythoff_op.c_str());
+        // fprintf(stderr, "wythoff_op = %s\n", wythoff_op.c_str());
         opts.print_status_or_exit(
             wythoff_make_tiling(geom, geom, wythoff_op, true));
 
         // remove digon from results
         vector<int> dels;
-        for(int i=0; i<(int)geom.faces().size(); i++) {
-          if(geom.faces(i).size() < 3)
+        for (int i = 0; i < (int)geom.faces().size(); i++) {
+          if (geom.faces(i).size() < 3)
             dels.push_back(i);
         }
         geom.del(FACES, dels);
 
-        // duplicate faces happened?
-        //merge_coincident_elements(geom, "vef", opts.epsilon); 
+        // merge_coincident_elements(geom, "vef", opts.epsilon);
       }
     }
 
@@ -1505,7 +1541,7 @@ int main(int argc, char *argv[])
 
   Geometry geom;
   if (opts.operand)
-    get_operand(geom, opts.operand, opts.poly_size);
+    get_operand(geom, opts.operand, opts.poly_size, opts);
   else
     opts.read_or_error(geom, opts.ifile);
 
