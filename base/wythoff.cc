@@ -1151,15 +1151,15 @@ ConwayOperator conway_operator_list[]{
     {"n",   "needle",         "[V,F]1f0_1f,1E"},
     {"u",   "subdivide",      "[V,E]0_1e1e,1F"},
 
-    // Equivalent: t, z, e
+    // Equivalent: t, z, e (tile order to match e0=z and e1=e
     {"t",   "truncate",       "[VE]0v0e,0V,0E"},
-    {"z",   "zip",            "[EF]0e0f,0E,0F"},
-    {"e",   "expand",         "[FV]0f0v,0F,0V"},
+    {"z",   "zip",            "[EF]0e0f,0F,0E"},
+    {"e",   "expand",         "[FV]0V,0F,0f0v"},
 
     // Symmetric: s, m, b
     {"s",   "snub",           "[VEF]0V,0E,0F,0V0E0F"},
     {"m",   "meta",           "[V,E,F]*0_1_2"},
-    {"b",   "bevel",          "[VEF]0v0e,0e0f,0f0v"},
+    {"b",   "bevel",          "[VEF]0e0f,0v0e,0f0v"},
 
     {"o",   "ortho",          "[V,E,F]1_0e1_2e"},
     {"g",   "gyro",           "[F,VE,V]1_0F1_2V1E,1E"},
@@ -1170,8 +1170,8 @@ ConwayOperator conway_operator_list[]{
     {"L0",  "joined-lace",    "[V,EF2]1F,1e1_0e,1_0E"},
     {"L",   "lace",           "[V,EF2]1F,1e1_0e,1_0v0v,0E"},
     {"K",   "stake",          "[V,EF2,F]0_1_2e1e,1_0v0v,0E"},
-    {"M0",  "joined-medial",  "[F,V,EF]*0_1_2,1_2E"},
-    //{"b3",  "bevel3",         "[VEF,E2F]1_0e0v,0e0f,1_0f0_1f,1E"},
+    {"M",   "edge-medial",    "[F,V3,VE2]0_2_1e2e,2_0v2v,2E"},
+    {"J",   "joined-medial",  "[F,V,EF]*0_1_2,1_2E"},
     {"X",   "cross",          "[V,E,F,VF]3_1v3_2v,*0_1_3"},
     {"w",   "whirl",          "[VF,VE,V]0F,0_1V2_1E1_0F,1E"},
 };
@@ -1561,7 +1561,7 @@ static string coord_string(Vec3d v)
 
 static string M_pattern(int N)
 {
-  N += 1; // FIX CODE BELOW TO AVOID THIS
+  N += 2; // FIX CODE BELOW TO AVOID THIS
 
   string pat = "[F";
   for (int i = 0; i < N + 1; i += 2) {
@@ -1724,7 +1724,7 @@ Status Tiling::read_conway(const string &op)
   char buff;
   if (sscanf(op.c_str(), "%c%d%c", &op_char, &op_int, &buff) == 2) {
     if (op_int < 0)
-      return Status::error("Conway operater number cannot be nagative");
+      return Status::error("Conway operater number cannot be negative");
     if (op_char == 'M')
       pat = M_pattern(op_int);
     else if (op_char == 'm')
@@ -1736,9 +1736,11 @@ Status Tiling::read_conway(const string &op)
     else if (op_char == 'b')
       pat = b_pattern(op_int);
     else
-      stat.set_error("Conway operator '" + op + "' not known");
+      stat.set_error(
+          msg_str("Conway operator %c: not known", op_char));
     if(pat == "")
-      stat.set_error("Conway operator " + op + ": invalid number");
+      stat.set_error(
+          msg_str("Conway operator %c: invalid number %d", op_char, op_int));
   }
   else
     stat.set_error("Conway operator '" + op + "' not known");
@@ -1774,13 +1776,12 @@ void Tiling::print_conway_list(FILE *ofile)
   }
   fprintf(
       ofile,
-      "\nOperators m (meta), o (ortho), e (expand), b (bevel) are each\n"
-      "part of a sequence, and accept a general integer >=0 as a parameter,\n"
-      "where 1 is the base operator and 0 is a lower level operator.\n"
-      "M (edge-medial) is a sequence starting at 1. Examples: M5, m5, e2, o0.\n"
-      "M0 and L0 are standalone operators, and not the 0 entry of a sequence.\n"
-      "Some operators, like t and k, normally take a number to filter the\n"
-      "elements the pattern will be applied to, but this is not supported.\n");
+      "\nOperators m, o, e, b, M are each part of a sequence, and accept a \n"
+      "general integer >=0 as a parameter, where 1 is the base operator \n"
+      "and 0 is a lower level operator.  Examples: M5, m5, e2, o0.  L0 is \n"
+      "a standalone operator, and not the 0 entry of a sequence. Some \n"
+      "operators, like t and k, take a number to filter the elements the \n"
+      "pattern will be applied to, but this is not supported.\n");
 }
 
 namespace anti {
