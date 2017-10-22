@@ -726,7 +726,7 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hHsgruvp:l:i:z:f:V:E:T:O:m:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hHsgtruvp:l:i:z:f:V:E:T:O:m:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
