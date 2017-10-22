@@ -422,6 +422,7 @@ public:
   string cn_string;
   bool resolve_ops;
   bool hart_mode;
+  bool tile_mode;
   bool reverse_ops;
   char operand;
   int poly_size;
@@ -445,12 +446,12 @@ public:
 
   cn_opts()
       : ProgramOpts("conway"), cn_string(""), resolve_ops(false),
-        hart_mode(false), reverse_ops(false), operand('\0'), poly_size(0),
-        planarization_method('p'), num_iters_planar(1000), rep_count(-1),
-        unitize(false), verbosity(false), face_coloring_method('n'),
-        face_opacity(-1), face_pattern("1"), epsilon(0),
-        vert_col(Color(255, 215, 0)),  // gold
-        edge_col(Color(211, 211, 211)) // lightgrey
+        hart_mode(false), tile_mode(false), reverse_ops(false), operand('\0'),
+        poly_size(0), planarization_method('p'), num_iters_planar(1000),
+        rep_count(-1), unitize(false), verbosity(false),
+        face_coloring_method('n'), face_opacity(-1), face_pattern("1"),
+        epsilon(0), vert_col(Color(255, 215, 0)), // gold
+        edge_col(Color(211, 211, 211))            // lightgrey
   {
   }
 
@@ -675,6 +676,8 @@ void cn_opts::usage()
 "  -H        Conway Notation detailed help. seeds and operator descriptions\n"
 "  -s        apply Conway Notation string substitutions\n"
 "  -g        use George Hart algorithms (sets -s)\n"
+"  -t        tile mode. when input is a tiling. unsets -g  sets -p u\n"
+"              set if seed of Z is detected\n"
 "  -r        execute operations in reverse order (left to right)\n"
 "  -u        make final product be averge unit edge length\n"
 "  -v        verbose output\n"
@@ -685,6 +688,7 @@ void cn_opts::usage()
 "            p - face centroids (magnitude squared) (default)\n"
 "            m - mathematica planarize\n"
 "            c - mathematica canonicalize\n"
+"            u - make faces into unit-edged regular polygons (minmax -a u)\n"
 "  -i <itrs> maximum inter-step planarization iterations (default: 1000)\n"
 "  -z <n>    status reporting every n iterations, -1 for no status (default: -1)\n"
 "  -l <lim>  minimum distance change to terminate planarization, as negative\n"
@@ -714,6 +718,7 @@ void cn_opts::process_command_line(int argc, char **argv)
 {
   opterr = 0;
   int c;
+  bool planarization_method_set = false;
 
   int sig_compare = INT_MAX;
 
@@ -739,6 +744,10 @@ void cn_opts::process_command_line(int argc, char **argv)
       resolve_ops = true;
       break;
 
+    case 't':
+      tile_mode = true;
+      break;
+
     case 'r':
       reverse_ops = true;
       break;
@@ -752,10 +761,11 @@ void cn_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'p':
-      if (strlen(optarg) == 1 && strchr("pmc", int(*optarg)))
+      planarization_method_set = true;
+      if (strlen(optarg) == 1 && strchr("pmcu", int(*optarg)))
         planarization_method = *optarg;
       else
-        error("planarize method type must be p, m or c", c);
+        error("planarize method type must be p, m, c or u", c);
       break;
 
     case 'l':
@@ -867,6 +877,20 @@ void cn_opts::process_command_line(int argc, char **argv)
   // operations are done in reverse order (unless defeated)
   if (!reverse_ops)
     sort(operations.begin(), operations.end(), cmp_ops);
+
+  if (operand == 'Z')
+    tile_mode = true;
+  if (tile_mode) {
+    if (hart_mode) {
+      warning("polygons will not process correctly with George Hart "
+              "algorithms. turned off");
+      hart_mode = false;
+    }
+    if (planarization_method_set && (planarization_method != 'u')) {
+      warning("planarization method for tiling set to 'u'");
+    }
+    planarization_method = 'u';
+  }
 
   if (!map_file.size())
     map_file = "m1";
@@ -996,14 +1020,17 @@ void cn_planarize(Geometry &geom, const cn_opts &opts)
       canonicalize_mm(geom, opts.num_iters_planar, opts.rep_count,
                       opts.epsilon);
     }
+    else if (opts.planarization_method == 'u') {
+      minmax_unit_planar(geom, opts.num_iters_planar, opts.rep_count,
+                         opts.epsilon);
+    }
     // sometimes radius becomes very small with option p
     if (opts.planarization_method == 'p')
       unitize_vertex_radius(geom);
   }
 }
 
-void get_operand(Geometry &geom, const char operand, const int poly_size,
-                 cn_opts &opts)
+void get_operand(Geometry &geom, const char operand, const int poly_size)
 {
   string uniforms = "TCOID";
 
@@ -1065,21 +1092,9 @@ void get_operand(Geometry &geom, const char operand, const int poly_size,
     pgon.make_poly(geom);
 
     /* RK - if polygon size 2 was allowed, caused too much trouble
-    if ((poly_size == 2) && (operand == 'P' || operand == 'Y')) {
+    if ((poly_size == 2) && (operand == 'P' || operand == 'Y'))
       geom.transform(Trans3d::rotate(deg2rad(90), 0, 0));
     */
-    if (operand == 'Z') {
-      if (opts.hart_mode) {
-        opts.warning(
-            "polygons will not process correctly with George Hart algorithms. turned off");
-        opts.hart_mode = false;
-      }
-      if (opts.num_iters_planar != 0) {
-        opts.warning(
-            "planarization iterations must be 0 for polygons. set to 0");
-        opts.num_iters_planar = 0;
-      }
-    }
   }
 }
 
@@ -1541,7 +1556,7 @@ int main(int argc, char *argv[])
 
   Geometry geom;
   if (opts.operand)
-    get_operand(geom, opts.operand, opts.poly_size, opts);
+    get_operand(geom, opts.operand, opts.poly_size);
   else
     opts.read_or_error(geom, opts.ifile);
 

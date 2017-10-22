@@ -402,6 +402,47 @@ bool canonicalize_bd(Geometry &geom, const int num_iters,
 bool planarize_bd(Geometry &geom, const int num_iters, const int rep_count = -1,
                   const double eps = epsilon);
 
+/// minmax_unit() ported from minmax (-a u)
+/**\param geom geometry to make polygons near unit edge.
+ * \param shorten_factor small number to scale edge adjustments.
+ * \param plane_factor small number to scale plane adjustments.
+ * \param radius_factor small number to scale radius adjustments.
+ * \param num_iters maximumn number of iterations.
+ * \param radius_range_percent if the model outer radius increases this
+ *  much over the inner radius then it is growing too much, terminate.
+ * \param rep_count report on propgress after this many iterations.
+ * \param normal_type: n - Newell, t -triangles, q - quads (default n)
+ * \param eps a small number, coordinates differing by less than eps are
+ *  the same. */
+bool minmax_unit_planar(Geometry &geom, const double shorten_factor,
+                        const double plane_factor, const double radius_factor,
+                        const int num_iters, const double radius_range_percent,
+                        const int rep_count, const char normal_type = 'n',
+                        const double eps = epsilon);
+
+/// an abbreviated wrapper for minmax_unit_planar
+/**\param geom geometry to planarize.
+ * \param num_iters maximumn number of iterations.
+ * \param rep_count report on propgress after this many iterations.
+ * \param eps a small number, coordinates differing by less than eps are
+ *  the same. */
+bool minmax_unit_planar(Geometry &geom, const int num_iters,
+                        const int rep_count = -1, const double eps = epsilon);
+
+/// an abbreviated wrapper for minmax_unit_planar, controls radius_range_percent
+/**\param geom geometry to planarize.
+ * \param num_iters maximumn number of iterations.
+ * \param radius_range_percent if the model outer radius increases this
+ *  much over the inner radius then it is growing too much, terminate.
+ * \param rep_count report on propgress after this many iterations.
+ * \param normal_type: n - Newell, t -triangles, q - quads (default n)
+ * \param eps a small number, coordinates differing by less than eps are
+ *  the same. */
+bool minmax_unit_planar(Geometry &geom, const int num_iters,
+                        const double radius_range_percent,
+                        const int rep_count = -1, const char normal_type = 'n',
+                        const double eps = epsilon);
+
 /// Close polyhedron (basic)
 /**Each hole (open circuit of edges) is converted to a face with colour col
  * holes having a vertex with more than two open edges are not filled

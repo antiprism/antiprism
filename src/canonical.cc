@@ -127,6 +127,7 @@ void cn_opts::usage()
 "               f - face centroids\n"
 "               m - mathematica planarize\n"
 "               a - sand and fill planarize\n"
+"               u - make faces into unit-edged regular polygons (minmax -a u)\n"
 "  -i <itrs> maximum number of planarize iterations (default: no limit)\n"
 "  -c <opt>  canonicalization\n"
 "               m - mathematica version (default)\n"
@@ -206,10 +207,10 @@ void cn_opts::process_command_line(int argc, char **argv)
 
     case 'p':
       p_set = true;
-      if (strlen(optarg) == 1 && strchr("pqfma", int(*optarg)))
+      if (strlen(optarg) == 1 && strchr("pqfmau", int(*optarg)))
         planarize_method = *optarg;
       else
-        error("planarize method type must be p, q, f, m, a", c);
+        error("planarize method type must be p, q, f, m, a, u", c);
       break;
 
     case 'i':
@@ -927,6 +928,9 @@ int main(int argc, char *argv[])
     else
     if (opts.planarize_method == 'a')
       planarize_str = "sand and fill";
+    else
+    if (opts.planarize_method == 'u')
+      planarize_str = "minmax -a u";
     fprintf(stderr, "planarize: (%s method)\n",planarize_str.c_str());
 
     if (opts.planarize_method == 'm') {
@@ -941,6 +945,10 @@ int main(int argc, char *argv[])
       completed = canonicalize_unit(geom, opts.num_iters_planar, opts.radius_range_percent / 100,
                                     opts.rep_count, opts.centering, opts.normal_type, planarize_only, opts.epsilon);
     }
+    // case u
+    else
+    if (opts.planarize_method == 'u')
+      completed = minmax_unit_planar(geom, opts.num_iters_planar, opts.radius_range_percent / 100, opts.rep_count, opts.normal_type, opts.epsilon);
     // cases p, q, f
     else
       completed = canonicalize_bd(geom, opts.num_iters_planar, opts.planarize_method,

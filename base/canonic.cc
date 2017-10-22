@@ -38,8 +38,10 @@
 #include <string>
 #include <vector>
 
+#include "boundbox.h"
 #include "geometry.h"
 #include "geometryinfo.h"
+#include "planar.h"
 
 using std::string;
 using std::vector;
@@ -185,8 +187,9 @@ bool canonicalize_mm(Geometry &geom, const double edge_factor,
     // if minimum and maximum radius are differing, the polyhedron is crumpling
     if (radius_range_percent &&
         canonical_radius_range_test(geom, radius_range_percent)) {
-      fprintf(stderr,
-              "\nbreaking out: radius range detected. try increasing -d\n");
+      fprintf(
+          stderr,
+          "\nbreaking out: radius range detected. try increasing percentage\n");
       break;
     }
   }
@@ -557,8 +560,9 @@ bool canonicalize_bd(Geometry &base, const int num_iters,
     // if minimum and maximum radius are differing, the polyhedron is crumpling
     if (radius_range_percent &&
         canonical_radius_range_test(base, radius_range_percent)) {
-      fprintf(stderr,
-              "\nbreaking out: radius range detected. try increasing -d\n");
+      fprintf(
+          stderr,
+          "\nbreaking out: radius range detected. try increasing percentage\n");
       break;
     }
   }
@@ -591,6 +595,136 @@ bool planarize_bd(Geometry &geom, const int num_iters, const int rep_count,
   char normal_type = 'n';
   return canonicalize_bd(geom, num_iters, 'p', DBL_MAX, rep_count, centering,
                          normal_type, eps);
+}
+
+// port for minmax unit (-a u) used for planarization
+// parameters and code format changed to match above functions
+// algorithm not changed
+// used in canonical and conway
+bool minmax_unit_planar(Geometry &geom, const double shorten_factor,
+                        const double plane_factor, const double radius_factor,
+                        const int num_iters, const double radius_range_percent,
+                        const int rep_count, const char normal_type,
+                        const double eps)
+{
+  bool completed = false;
+
+  // do a scale to get edges close to 1
+  GeometryInfo info(geom);
+  double scale = info.iedge_length_lims().sum / info.num_iedges();
+  if (scale)
+    geom.transform(Trans3d::scale(1 / scale));
+
+  const vector<Vec3d> &verts = geom.verts();
+  const vector<vector<int>> &faces = geom.faces();
+
+  Vec3d origin(0, 0, 0);
+  vector<double> rads(faces.size());
+  for (unsigned int f = 0; f < faces.size(); f++) {
+    int N = faces[f].size();
+    int D = abs(find_polygon_denominator_signed(geom, f, epsilon));
+    if (!D)
+      D = 1;
+    rads[f] = 0.5 / sin(M_PI * D / N); // circumradius of regular polygon
+    // fprintf(stderr, "{%d/%d} rad=%g\n", N, D, rads[f]);
+  }
+
+  double max_diff2 = 0;
+  unsigned int cnt = 0;
+  for (cnt = 0; cnt < (unsigned int)num_iters;) {
+    vector<Vec3d> old_verts = verts;
+
+    // Vertx offsets for the iteration.
+    vector<Vec3d> offsets(verts.size(), Vec3d::zero);
+    for (unsigned int ff = cnt; ff < faces.size() + cnt; ff++) {
+      const unsigned int f = ff % faces.size();
+      const vector<int> &face = faces[f];
+      const unsigned int f_sz = face.size();
+      // Vec3d norm = geom.face_norm(f).unit();
+      Vec3d norm = face_normal_by_type(geom, f, 'q').unit();
+      Vec3d f_cent = geom.face_cent(f);
+      if (vdot(norm, f_cent) < 0)
+        norm *= -1.0;
+
+      for (unsigned int vv = cnt; vv < f_sz + cnt; vv++) {
+        unsigned int v = vv % f_sz;
+        // offset for unit edges
+        vector<int> edge = make_edge(face[v], face[(v + 1) % f_sz]);
+        Vec3d offset =
+            (1 - geom.edge_len(edge)) * shorten_factor * geom.edge_vec(edge);
+        offsets[edge[0]] -= offset;
+        offsets[edge[1]] += offset;
+
+        // offset for planarity
+        offsets[face[v]] +=
+            vdot(plane_factor * norm, f_cent - verts[face[v]]) * norm;
+
+        // offset for polygon radius
+        Vec3d rad_vec = (verts[face[v]] - f_cent);
+        offsets[face[v]] += (rads[f] - rad_vec.len()) * radius_factor * rad_vec;
+      }
+    }
+
+    // adjust vertices post-loop
+    for (unsigned int i = 0; i < offsets.size(); i++)
+      geom.raw_verts()[i] += offsets[i];
+
+    max_diff2 = 0;
+    for (auto &offset : offsets) {
+      double diff2 = offset.len2();
+      if (diff2 > max_diff2)
+        max_diff2 = diff2;
+    }
+
+    // increment count here for reporting
+    cnt++;
+
+    if ((rep_count > -1) && (cnt % rep_count == 0))
+      fprintf(stderr, "%-15d max_diff=%.17g\n", cnt, sqrt(max_diff2));
+
+    double width = BoundBox(verts).max_width();
+    if (sqrt(max_diff2) / width < eps) {
+      completed = true;
+      break;
+    }
+
+    // if minimum and maximum radius are differing, the polyhedron is crumpling
+    if (radius_range_percent &&
+        canonical_radius_range_test(geom, radius_range_percent)) {
+      fprintf(
+          stderr,
+          "\nbreaking out: radius range detected. try increasing percentage\n");
+      break;
+    }
+  }
+
+  if (rep_count > -1) {
+    fprintf(stderr, "\n%-15d final max_diff=%.17g\n", cnt, sqrt(max_diff2));
+    fprintf(stderr, "\n");
+  }
+
+  return completed;
+}
+
+// RK - wrapper for basic planarization with minmax -a u algorithm
+// meant to be called with finite num_iters (not -1)
+bool minmax_unit_planar(Geometry &geom, const int num_iters,
+                        const int rep_count, const double eps)
+{
+  char normal_type = 'n';
+  return (minmax_unit_planar(geom, 1.0 / 200, 1.0 / 200, 1.0 / 200, num_iters,
+                             DBL_MAX, rep_count, normal_type, eps));
+}
+
+// RK - wrapper for basic planarization with minmax -a u algorithm
+// copy, controls radius_range_percent, normal_type
+bool minmax_unit_planar(Geometry &geom, const int num_iters,
+                        const double radius_range_percent, const int rep_count,
+                        const char normal_type, const double eps)
+{
+  return (minmax_unit_planar(geom, 1.0 / 200, 1.0 / 200, 1.0 / 200, num_iters,
+                             radius_range_percent, rep_count, normal_type,
+                             eps));
 }
 
 } // namespace anti
