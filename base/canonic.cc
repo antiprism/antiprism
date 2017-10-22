@@ -376,20 +376,18 @@ Vec3d face_norm_nonplanar_quads(const Geometry &geom, const int f_idx)
 }
 
 // select normal by type. Newell, triangles, or quads
+// 'n' is the default, if normal_type is not given or is wrong
 Vec3d face_normal_by_type(const Geometry &geom, const vector<int> &face,
                           const char normal_type)
 {
   Vec3d face_normal;
 
-  if (normal_type == 'n')
-    face_normal = geom.face_norm(face);
-  else if (normal_type == 't')
+  if (normal_type == 't')
     face_normal = face_norm_nonplanar_triangles(geom, face);
   else if (normal_type == 'q')
     face_normal = face_norm_nonplanar_quads(geom, face);
-  else
-    fprintf(stderr, "error: face_normal_by_type: expected type n, t, or q\n");
-
+  else // if (normal_type == 'n')
+    face_normal = geom.face_norm(face);
   return face_normal;
 }
 
@@ -641,7 +639,7 @@ bool minmax_unit_planar(Geometry &geom, const double shorten_factor,
       const vector<int> &face = faces[f];
       const unsigned int f_sz = face.size();
       // Vec3d norm = geom.face_norm(f).unit();
-      Vec3d norm = face_normal_by_type(geom, f, 'q').unit();
+      Vec3d norm = face_normal_by_type(geom, f, normal_type).unit();
       Vec3d f_cent = geom.face_cent(f);
       if (vdot(norm, f_cent) < 0)
         norm *= -1.0;
