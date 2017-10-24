@@ -73,8 +73,8 @@ ConwayOperator conway_operator_list[]{
     {"J",  "joined-medial", false, false }, // replaces wiki M0
     {"j",  "join",          false, false },
     {"k",  "kis",           true,  true  }, // allows N >= 3 for vertices
-    {"K",  "stake",         false, false },
-    {"L",  "lace",          true,  false }, // allows 0 or blank
+    {"K",  "stake",         true,  false }, // allows N >= 3 for faces
+    {"L",  "lace",          true,  false }, // allows N >= 3 for faces, or 0
     {"l",  "loft",          false, false },
     {"M",  "medial",        true,  false }, // allows N >= 0
     {"m",  "meta",          true,  false }, // allows N >= 0
@@ -125,6 +125,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
 
   string operands = "TCOIDPAYZ";
   string digits_required = "PAYZ";
+  string digits_ge_3 = "tkKL";
   string digits = "0123456789";
 
   operand = '\0';
@@ -180,7 +181,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
       number_string =
           cn_string.substr(digits_start, (digits_end - digits_start + 1));
 
-      // will be at end of string as it is an operand
+      // will be at end of string as it is an operand, P, A, Y or Z
       if (digits_required.find(operand) != string::npos) {
         poly_size = atoi(number_string.c_str());
         if (poly_size < 3) {
@@ -189,29 +190,21 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
           return i + 1;
         }
       }
-      else if (current_op == 'k') {
-        num_val = atoi(number_string.c_str());
-        if (num_val < 3) {
-          fprintf(stderr, "kis k(n), n must be 3 or greater\n");
-          return i + 1;
-        }
-        operations.push_back(new ops(i + 1, current_op, num_val));
-        delayed_write = false;
-      }
-      else if (current_op == 't') {
-        num_val = atoi(number_string.c_str());
-        if (num_val < 3) {
-          fprintf(stderr, "truncate t(n), n must be 3 or greater\n");
-          return i + 1;
-        }
-        operations.push_back(new ops(i + 1, current_op, num_val));
-        delayed_write = false;
-      }
-      // L must be 0 or 1
+      // L must be 0 or 1, 3 or greater
       else if (current_op == 'L') {
         num_val = atoi(number_string.c_str());
-        if (num_val > 1) {
-          fprintf(stderr, "L(n), n must 0 or 1\n");
+        if (num_val == 2) {
+          fprintf(stderr, "L(n), n must 0, 1, 3 or greater\n");
+          return i + 1;
+        }
+        operations.push_back(new ops(i + 1, current_op, num_val));
+        delayed_write = false;
+      }
+      // K, k, t must be 3 or greater
+      else if (digits_ge_3.find(current_op) != string::npos) {
+        num_val = atoi(number_string.c_str());
+        if (num_val < 3) {
+          fprintf(stderr, "K(n), k(n), t(n), n must be 3 or greater\n");
           return i + 1;
         }
         operations.push_back(new ops(i + 1, current_op, num_val));
@@ -565,12 +558,14 @@ void extended_help()
 "J = joined-medial  Like medial, but new rhombic faces in place of original edges\n"
 "\n"
 "K = stake     Subdivide faces with central quads, and triangles\n"
+"              (can be \"Kn\" where n is 3 or greater)\n"
 "\n"
 "L0 = joined-lace  Similar to lace, except new with quad faces across original\n"
 "                  edges\n"
 "\n"
 "L = lace      An augmentation of each face by an antiprism, adding a twist\n"
 "              smaller copy of each face, and triangles between\n"
+"              (can be \"Ln\" where n is 3 or greater)\n"
 "\n"
 "l = loft      An augmentation of each face by prism, adding a smaller copy of\n"
 "              each face with trapezoids between the inner and outer ones\n"
@@ -606,8 +601,9 @@ void extended_help()
 "\n"
 "b  - n may be 0 or greater (default: 1)\n"
 "e  - n may be 0 or greater (default: 1)\n"
+"K   -n may be 3 or greater representing faces sides\n"
 "k  - n may be 3 or greater representing vertex connections\n"
-"L  - n may be 0 or 1 (1=Lace)\n"
+"L  - n may be 3 or greater representing face sides, or 0\n"
 "M  - n may be 0 or greater (default: 1)\n"
 "m  - n may be 0 or greater (default: 1)\n"
 "o  - n may be 0 or greater (default: 1)\n"
@@ -1391,13 +1387,16 @@ void hart_dual(Geometry &geom)
 
 void cn_reflect(Geometry &geom) { geom.transform(Trans3d::inversion()); }
 
-void cn_truncate_by_algorithm(Geometry &geom, const double ratio, const int n)
+// built in truncate from off_util
+void util_truncate(Geometry &geom, const double ratio, const int n)
 {
   truncate_verts(geom, ratio, n);
 }
 
 void do_operations(Geometry &geom, const cn_opts &opts)
 {
+  string digits_ge_3 = "tkKL"; // t processed with utility
+
   for (auto operation : opts.operations) {
     verbose(operation->op, operation->op_var, opts);
 
@@ -1457,18 +1456,39 @@ void do_operations(Geometry &geom, const cn_opts &opts)
     if (!hart_operation_done) {
       // truncate with N>1 uses Hart algorithm
       if (operation->op == 't' && operation->op_var > 1)
-        cn_truncate_by_algorithm(geom, CN_ONE_THIRD, operation->op_var);
-      // kis with N>1 uses Hart algorithm
-      else if (operation->op == 'k' && operation->op_var > 1)
-        hart_kisN(geom, operation->op_var);
+        util_truncate(geom, CN_ONE_THIRD, operation->op_var);
       else {
+        Geometry geom_save;
+        vector<int> dels;
+        // can wythoff handle n
+        bool wythoff_n = true;
+        if ((digits_ge_3.find(operation->op) != string::npos) &&
+            (operation->op_var > 1)) {
+          wythoff_n = false;
+          geom_save = geom;
+          // remove all faces of size op_var from geom_save
+          for (int i = 0; i < (int)geom.faces().size(); i++) {
+            if ((int)geom_save.faces(i).size() == operation->op_var)
+              dels.push_back(i);
+          }
+          // if matching faces found
+          if (dels.size()) {
+            geom_save.del(FACES, dels);
+            // place only those faces in geom
+            geom = faces_to_geom(geom, dels);
+          }
+          // no faces to act on, loop
+          else {
+            continue;
+          }
+        }
+
         // wythoff call requires a string
         string wythoff_op;
         wythoff_op.push_back(operation->op);
 
         char buf[MSG_SZ];
-        // abs because -1 can be a special case of stand alone operation
-        if (abs(operation->op_var) != 1) {
+        if ((operation->op_var != 1) && wythoff_n) {
           sprintf(buf, "%d", operation->op_var);
           wythoff_op += string(buf);
         }
@@ -1477,8 +1497,14 @@ void do_operations(Geometry &geom, const cn_opts &opts)
         opts.print_status_or_exit(
             wythoff_make_tiling(geom, geom, wythoff_op, true));
 
+        // if faces were deleted, reappend them
+        if (dels.size()) {
+          geom.append(geom_save);
+          merge_coincident_elements(geom, "vef", opts.epsilon);
+        }
+
         // remove digon from results
-        vector<int> dels;
+        dels.clear();
         for (int i = 0; i < (int)geom.faces().size(); i++) {
           if (geom.faces(i).size() < 3)
             dels.push_back(i);
