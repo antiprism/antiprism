@@ -75,7 +75,7 @@ ConwayOperator conway_operator_list[]{
     {"k",  "kis",           true,  true  }, // allows N >= 3 for vertices
     {"K",  "stake",         true,  false }, // allows N >= 3 for faces
     {"L",  "lace",          true,  false }, // allows N >= 3 for faces, or 0
-    {"l",  "loft",          false, false },
+    {"l",  "loft",          true,  false }, // allows N >= 3 for faces
     {"M",  "medial",        true,  false }, // allows N >= 0
     {"m",  "meta",          true,  false }, // allows N >= 0
     {"n",  "needle",        false, false },
@@ -125,7 +125,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
 
   string operands = "TCOIDPAYZ";
   string digits_required = "PAYZ";
-  string digits_ge_3 = "tkKL";
+  string digits_ge_3 = "KkLlt";
   string digits = "0123456789";
 
   operand = '\0';
@@ -200,11 +200,11 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
         operations.push_back(new ops(i + 1, current_op, num_val));
         delayed_write = false;
       }
-      // K, k, t must be 3 or greater
+      // K, k, l, t must be 3 or greater
       else if (digits_ge_3.find(current_op) != string::npos) {
         num_val = atoi(number_string.c_str());
         if (num_val < 3) {
-          fprintf(stderr, "K(n), k(n), t(n), n must be 3 or greater\n");
+          fprintf(stderr, "K(n), k(n), l(n), t(n), n must be 3 or greater\n");
           return i + 1;
         }
         operations.push_back(new ops(i + 1, current_op, num_val));
@@ -1415,7 +1415,7 @@ void util_truncate(Geometry &geom, const double ratio, const int n)
 
 void do_operations(Geometry &geom, const cn_opts &opts)
 {
-  string digits_ge_3 = "tkKL"; // t processed with utility
+  string digits_ge_3 = "KkLlt"; // t processed with utility
 
   for (auto operation : opts.operations) {
     verbose(operation->op, operation->op_var, opts);
