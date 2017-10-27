@@ -1359,9 +1359,9 @@ static void delete_verts(Geometry &geom, const vector<int> &v_nos)
   geom.del(FACES, del_faces);
 }
 
-static bool valid_start_face(int f, int start_faces)
+static bool valid_start_face(int f, int start_faces, bool rev)
 {
-  int pos_tri = f % 2;
+  int pos_tri = (f + rev) % 2;
   return !((start_faces == '-' && pos_tri) || (start_faces == '+' && !pos_tri));
 }
 
@@ -1422,7 +1422,7 @@ Status Tiling::make_tiling(Geometry &geom, vector<int> *tile_counts) const
     int start_faces_sz = geom.faces().size();
     unsigned char start_faces = pat.get_start_faces();
     for (int i = 0; i < faces_sz; i++) {
-      if (!seen[i] && valid_start_face(i, start_faces)) {
+      if (!seen[i] && valid_start_face(i, start_faces, reverse)) {
         add_circuit(geom, i, pat, seen, col, index_order, point_vertex_offsets);
         if (one_of_each_tile)
           break;

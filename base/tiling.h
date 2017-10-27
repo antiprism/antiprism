@@ -105,6 +105,7 @@ private:
   std::vector<std::vector<int>> nbrs; ///< Base tiling face neighbours
   // std::vector<Vec3d> vert_norms;            ///< Base tiling vertex normals
 
+  bool reverse;                       ///< Reverse +/- start faces
   bool one_of_each_tile; ///< Only plot one tile per kind
 
   /// Find base tiling face neighbours
@@ -130,7 +131,7 @@ private:
 
 public:
   /// Constructor
-  Tiling() : one_of_each_tile(false) {}
+  Tiling() : reverse(false), one_of_each_tile(false) {}
 
   /// Set the base geometry
   /**\param geom the base geometry
@@ -176,6 +177,11 @@ public:
   /// Get the base meta tiling
   /**\return The base meta tiling */
   const Geometry &get_meta() const { return meta; }
+
+  /// Reverse pattern, switch pattern start faces
+  /**\param rev \ctrue to reverse, (flip +/- in tile patterns), \c false
+   *  to use use original pattern */
+  void reverse_pattern(bool rev = true) { reverse = rev; }
 
   /// Set that only tile of each kind should be plotted
   /**\param val \c true, only one of each kind, otherwise \c false, all */

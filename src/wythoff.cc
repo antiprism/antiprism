@@ -102,6 +102,7 @@ void wy_opts::usage()
 "                          according to: V=ef, E=fv, F=ve\n"
 "  -c <op>   Conway polyhedron notation operator, or 'list' to list all\n"
 "            available operators with their corresponding patterns\n"
+"  -R        reverse pattern, exchanges the signs of the start triangles\n"
 "  -r        relabel pattern, exactly three letters VEF written in any order\n"
 "            e.g. EFV relabels the pattern as V->E,v->e,E->F,e->f,F->V,f->v\n"
 "  -M        input geometry is a 'meta' tiling, don't apply meta operation\n"
@@ -123,7 +124,7 @@ void wy_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":ho:p:c:f:r:Miuqa")) != -1) {
+  while ((c = getopt(argc, argv, ":ho:p:c:f:Rr:Miuqa")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -138,6 +139,10 @@ void wy_opts::process_command_line(int argc, char **argv)
         exit(0);
       }
       print_status_or_exit(tiling.read_conway(optarg), 'c');
+      break;
+
+    case 'R':
+      tiling.reverse_pattern();
       break;
 
     case 'r':
@@ -211,7 +216,7 @@ int main(int argc, char *argv[])
     opts.error("base polyhedron is not orientable");
   if (!opts.input_is_meta && !info.is_oriented()) {
     opts.warning("base polyhedron is not oriented; it will be oriented.");
-    geom.orient();
+    geom.orient(1); // positive orientation
   }
 
   Tiling &tiling = opts.tiling;
