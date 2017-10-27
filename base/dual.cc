@@ -201,36 +201,19 @@ void get_pol_recip_verts(Geometry &dual, const Geometry &geom, double recip_rad,
   // const int r_sign = 1 - 2*(recip_rad<0); // -ve rad will reflect in centre
   const int r_sign = 1; // no reflection in centre
 
-  Vec3d vert;
-  const vector<Vec3d> &verts = geom.verts();
-  const vector<vector<int>> &faces = geom.faces();
-  map<pair<int, int>, pair<int, int>> edges;
-  map<pair<int, int>, pair<int, int>>::iterator mi;
-  pair<int, int> edge;
   dual.clear(VERTS);
-  for (const auto &face : faces) {
-    if (recip_rad == 0) { // all dual vertices = centre
+  for (const auto &face : geom.faces()) {
+    if(recip_rad) {
+      auto f_norm = geom.face_norm(face);
+      auto f_cent = geom.face_cent(face);
+      double f_dist = vdot(f_norm, f_cent - centre);
+      double dist = r_sign * recip_rad * recip_rad / f_dist;
+      if (fabs(f_dist) < min_lim || fabs(dist) > inf)
+        dist = r_sign * inf * (1 - 2 * (f_dist < 0)) / f_norm.len();
+      dual.add_vert(f_norm * dist + centre);
+    }
+    else            // all dual vertices = centre
       dual.add_vert(centre);
-      continue;
-    }
-
-    for (unsigned int v1 = 0; v1 + 2 < face.size(); ++v1) {
-      for (unsigned int v2 = v1 + 1; v2 + 1 < face.size(); ++v2) {
-        for (unsigned int v3 = v2 + 1; v3 < face.size(); ++v3) {
-          vert = verts[face[v2]] - verts[face[v1]];
-          vert = vcross(vert, verts[face[v3]] - verts[face[v2]]);
-          if (vert.len() > min_lim) {
-            double face_dist = vdot(vert, verts[face[0]] - centre);
-            double dist = r_sign * recip_rad * recip_rad / face_dist;
-            if (fabs(face_dist) < min_lim || fabs(dist) > inf)
-              dist = r_sign * inf * (1 - 2 * (face_dist < 0)) / vert.len();
-            dual.add_vert(vert * dist + centre);
-            v1 = v2 = v3 = face.size(); // to move on to next face
-            break;
-          }
-        }
-      }
-    }
   }
 }
 

@@ -9,6 +9,7 @@ xx-xx-18 Adrian Rossiter <adrian@antiprism.com>
          Changes
             poly_weave: moved to unsupported programs
          Fixes
+            pol_recip: dual vertices for very small faces
             poly_weave: input can be non-closed surface
             off_util: -u input can be non-closed surface
 
