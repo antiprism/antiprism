@@ -576,6 +576,10 @@ public:
   /**\return A bounding sphere. */
   const BoundSphere &get_bound_sph() const { return bound_sph; }
 
+  /// Set a bounding sphere for the scene
+  /**\param sph bounding sphere for scene */
+  void set_bound_sph(const BoundSphere &sph) { bound_sph = sph; }
+
   /// Add a geometry to the scene
   /**\param sc_geom the geometry to add. */
   void add_geom(const SceneGeometry sc_geom);

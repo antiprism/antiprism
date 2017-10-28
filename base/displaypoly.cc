@@ -1265,8 +1265,24 @@ void ViewOpts::set_view_vals(Scene &scen)
     scen.get_geoms()[i].get_disps()[0]->elem(VERTS).set_size(
         scen.get_geoms()[0].get_disps()[0]->get_vert_rad());
   }
-  if (scen.get_width() < epsilon)
-    warning("scene width is zero and may not be displayed correctly");
+  if (scen.get_width() < epsilon) {
+    if(scen.get_inf_dist() >= 0) {
+      BoundSphere bound_sph;
+      for (const auto &sgeom : scen.get_geoms())
+        bound_sph.add_points(sgeom.get_geom().verts());
+      scen.set_inf_dist();
+      // The following is an incomplete fix. If it was possible to delete
+      // a geometry from the scene then the recalculation of the sphere would
+      // return the scene to having zero width
+      scen.set_bound_sph(bound_sph);
+    }
+
+   if (scen.get_width() < epsilon)
+     warning("scene width is zero and may not be displayed correctly");
+   else
+     warning("geometry assumed to be large, with no infinite vertices "
+         "(set option -I appropriately if this is not correct)");
+  }
 }
 
 const char *ViewOpts::help_view_text =

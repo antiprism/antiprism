@@ -12,6 +12,7 @@ xx-xx-18 Adrian Rossiter <adrian@antiprism.com>
             pol_recip: dual vertices for very small faces
             poly_weave: input can be non-closed surface
             off_util: -u input can be non-closed surface
+            antiview: default handling of large models
 
 Version 0.24.1
 18-11-16 Adrian Rossiter <adrian@antiprism.com>
