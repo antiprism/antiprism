@@ -21,14 +21,14 @@ Options
 .TP
 \fB\-p\fR <pat>
 pattern in form: [Coords0:Coords1:...]Path0,Path1...
-Coordinates are barycentric, in form VaEbFc:
+Coordinates are barycentric, in form aVbEcF:
 .IP
 VEF element letters, and a,b,c are barycentric coordinates
-corresponding to the preceding element letter. Ommiting a
+corresponding to the following element letter. Ommiting a
 an element letter and coordinate sets the coordinate to zero.
 Ommitting just the coordinate sets the coordinate to 1. E.g
 .IP
-V = (1,0,0), VE = (1,1,0), VE2F3 = (1,2,3)
+V = (1,0,0), VE = (1,1,0), V2E3F = (1,2,3)
 Paths are in the form: TrisPidx0Move0Pidx1Move1...
 .IP
 Tris: one of +\-* (default +) indicating that paths should
@@ -47,6 +47,9 @@ v,e,f \- step over side opposite V,E,F
 V,E,F \- step two trianglesi, rotating about V,E,F,
 .IP
 according to: V=ef, E=fv, F=ve
+.IP
+Paths can start with either a move or a point, but cannot both
+start and end with a move
 .TP
 \fB\-c\fR <op>
 Conway polyhedron notation operator, or 'list' to list all

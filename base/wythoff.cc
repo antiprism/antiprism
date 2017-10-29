@@ -1018,9 +1018,10 @@ Status Tile::read(const string &pat)
   bool has_tris_spec = strchr("+-*", pat[0]);
   start_faces = (has_tris_spec) ? pat[0] : '+';
   unsigned int pos = has_tris_spec;
-  if (!std::isdigit(pat[pos]))
-    return Status::error("tile specifier: first character (or first "
-                         "character after +-*)  must be a digit");
+  if (!std::isdigit(pat[pos]) && !std::isdigit(pat.back()))
+    return Status::error(
+        "tile specifier: first character (or first character after +-*), "
+        "or last character must be a digit");
 
   while (pos < pat.size()) {
     int len;
@@ -1167,10 +1168,10 @@ ConwayOperator conway_operator_list[]{
     {"l",   "loft",           "[V,VF]1F,0_1v1_0v,0E"},
     {"p",   "propellor",      "[V,VEF]1F,1_0V1E1F,1E"},
     {"q",   "quinto",         "[V,E,EF]2F,0_1_2e2_1e"},
-    {"L0",  "joined-lace",    "[V,EF2]1F,1e1_0e,1_0E"},
-    {"L",   "lace",           "[V,EF2]1F,1e1_0e,1_0v0v,0E"},
-    {"K",   "stake",          "[V,EF2,F]0_1_2e1e,1_0v0v,0E"},
-    {"M",   "edge-medial",    "[F,V3,VE2]0_2_1e2e,2_0v2v,2E"},
+    {"L0",  "joined-lace",    "[V,E2F]1F,1e1_0e,1_0E"},
+    {"L",   "lace",           "[V,E2F]1F,1e1_0e,1_0v0v,0E"},
+    {"K",   "stake",          "[V,E2F,F]0_1_2e1e,1_0v0v,0E"},
+    {"M",   "edge-medial",    "[F,3V,V2E]0_2_1e2e,2_0v2v,2E"},
     {"J",   "joined-medial",  "[F,V,EF]*0_1_2,1_2E"},
     {"X",   "cross",          "[V,E,F,VF]3_1v3_2v,*0_1_3"},
     {"w",   "whirl",          "[VF,VE,V]0F,0_1V2_1E1_0F,1E"},
@@ -1451,7 +1452,7 @@ Status read_point(const char *point_str, std::pair<Vec3d, Color> &point)
   coords = Vec3d::zero;
   map<char, int> elem_idx = {{'V', 0}, {'E', 1}, {'F', 2}};
   string pt_string(point_str);
-  std::regex re_coord("[VEF]([-+]?([0-9]*\\.[0-9]+|[0-9]+))?");
+  std::regex re_coord("([-+]?([0-9]*\\.[0-9]+|[0-9]+))?[VEF]");
   std::sregex_token_iterator next(pt_string.begin(), pt_string.end(), re_coord,
                                   {-1, 0});
   std::sregex_token_iterator end;
@@ -1463,16 +1464,18 @@ Status read_point(const char *point_str, std::pair<Vec3d, Color> &point)
     if (next->str() != "")
       return Status::error("invalid characters in coordinates: " + next->str());
     next++;
-    int idx = elem_idx[next->str()[0]];
+    int idx = elem_idx[next->str().back()];
     if (seen[idx])
       return Status::error(
-          msg_str("coordinates %c given more than once", next->str()[0]));
+          msg_str("coordinates %c given more than once", next->str().back()));
     else
       seen[idx] = true;
     if (next->str().size() < 2)
       coords[idx] = 1;
     else {
-      Status stat = read_double(next->str().c_str() + 1, &coords[idx]);
+      string coord_str = next->str();
+      coord_str.pop_back();
+      Status stat = read_double(coord_str.c_str(), &coords[idx]);
       if (stat.is_error())
         return stat;
     }
@@ -1551,9 +1554,9 @@ static string coord_string(Vec3d v)
   string coords;
   for (int i = 0; i < 3; i++)
     if (v[i]) {
-      coords += VEF[i];
       if (v[i] != 1.0)
         coords += msg_str("%g", v[i]);
+      coords += VEF[i];
     }
 
   return coords;

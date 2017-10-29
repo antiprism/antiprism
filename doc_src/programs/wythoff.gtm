@@ -19,7 +19,7 @@
 
 
 <<EXAMPLES_START>>
-List the Conway operators for loys of examples of the constructive notation
+List the Conway operators for lots of examples of the constructive notation
 <<CMDS_START>>
 wythoff -c list
 <<CMDS_END>>
@@ -55,8 +55,10 @@ unitile2d -s t -w 8 -l 24 2 | wythoff  -c s -M | antiview
 a specified tiling pattern from any suitable triangular tiling.
 <p>
 Triangle tilings are created, by default, from the input model
-by the Conway 'meta' operation. This is made from all triangles that join
-a face centre to one of its vertices and a neighbouring edge centre.
+by the Conway 'meta' operation. This consists of all triangles that join
+a face centre to one of its vertices and a neighbouring edge centre. With
+regard to starting triangles, the meta triangle (Vn, En, F) is labelled
+-/black, and the meta triangle (Vn+1, En, F) is labelled +/white.
 Alternatively, with <i>option -M</i> the input will be considered
 to be a suitable triangle tiling, and must be 2-colourable and
 all the vertices of even order.
@@ -100,7 +102,7 @@ The <i>twist</i> program created a model connected like a twisted
 struct zig-zag tensegrity. The <i>wythoff</i> program can create
 equivalently connected models with the following pattern.
 <<CMDS_START>>
-wythoff -p [V4E2F8]0feEV0fe0E0V ico | antiview 
+wythoff -p [4V2E8F]0feEV0fe0E0V ico | antiview 
 <<CMDS_END>>
 <<NOTES_END>>
 
