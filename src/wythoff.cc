@@ -51,6 +51,7 @@ public:
   bool add_meta;
   double face_ht;
   string relabel;
+  bool reverse;
   Tiling tiling;
   bool color_with_value;
   bool quiet;
@@ -59,7 +60,7 @@ public:
 
   wy_opts()
       : ProgramOpts("wythoff"), input_is_meta(false), add_meta(false),
-        face_ht(0.0), color_with_value(true), quiet(false)
+        face_ht(0.0), reverse(false), color_with_value(true), quiet(false)
   {
   }
 
@@ -144,7 +145,7 @@ void wy_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'R':
-      tiling.reverse_pattern();
+      reverse = true;
       break;
 
     case 'r':
@@ -224,6 +225,8 @@ int main(int argc, char *argv[])
   Tiling &tiling = opts.tiling;
   if (opts.relabel != "")
     opts.print_status_or_exit(tiling.relabel_pattern(opts.relabel), 'm');
+  if (opts.reverse)
+    tiling.reverse_pattern();
 
   Status stat = tiling.set_geom(geom, opts.input_is_meta, opts.face_ht);
   if (stat.is_error())

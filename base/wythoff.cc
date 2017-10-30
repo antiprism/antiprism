@@ -1079,6 +1079,15 @@ void Tile::relabel(vector<int> relab)
       op = relab[op];
 }
 
+void Tile::flip_start_faces()
+{
+  // Flip +/-, * is left unchanged
+  if (start_faces == '+')
+    start_faces = '-';
+  else if (start_faces == '-')
+    start_faces = '+';
+}
+
 vector<int> Tile::check_index_range(int num_points) const
 {
   vector<int> out_of_range;
@@ -1322,6 +1331,12 @@ Status Tiling::add_tile(const string &pat)
   return stat;
 }
 
+void Tiling::reverse_pattern()
+{
+  for (auto &path : pat_paths)
+    path.flip_start_faces();
+}
+
 static void delete_verts(Geometry &geom, const vector<int> &v_nos)
 {
   vector<int> dels = v_nos;
@@ -1360,9 +1375,9 @@ static void delete_verts(Geometry &geom, const vector<int> &v_nos)
   geom.del(FACES, del_faces);
 }
 
-static bool valid_start_face(int f, int start_faces, bool rev)
+static bool valid_start_face(int f, int start_faces)
 {
-  int pos_tri = (f + rev) % 2;
+  int pos_tri = f % 2;
   return !((start_faces == '-' && pos_tri) || (start_faces == '+' && !pos_tri));
 }
 
@@ -1423,7 +1438,7 @@ Status Tiling::make_tiling(Geometry &geom, vector<int> *tile_counts) const
     int start_faces_sz = geom.faces().size();
     unsigned char start_faces = pat.get_start_faces();
     for (int i = 0; i < faces_sz; i++) {
-      if (!seen[i] && valid_start_face(i, start_faces, reverse)) {
+      if (!seen[i] && valid_start_face(i, start_faces)) {
         add_circuit(geom, i, pat, seen, col, index_order, point_vertex_offsets);
         if (one_of_each_tile)
           break;
@@ -1662,20 +1677,18 @@ static string e_pattern(int N)
     pat += msg_str("%d_%de%d_%de,", crds2idx(a, 0), crds2idx(a + 2, 2),
                    crds2idx(a + 2, 0), crds2idx(a + 2, 2));
 
-  int top_a = N-N%2;
+  int top_a = N - N % 2;
   for (int b = 0; b < top_a; b += 2)
-      pat += msg_str("%d_%df%d_%df,",
-          crds2idx(top_a, b), crds2idx(top_a, b + 2),
-          crds2idx(top_a, b + 2), crds2idx(top_a, b));
+    pat += msg_str("%d_%df%d_%df,", crds2idx(top_a, b), crds2idx(top_a, b + 2),
+                   crds2idx(top_a, b + 2), crds2idx(top_a, b));
 
-  pat += msg_str("%dV,", crds2idx(N-N%2, 0));
+  pat += msg_str("%dV,", crds2idx(N - N % 2, 0));
 
   if (N % 2) {
     for (int a = 0; a < N - 1; a += 2)
       pat += msg_str("%d_%dv%d_%dv,", crds2idx(a, a), crds2idx(a + 2, a + 2),
                      crds2idx(a + 2, a + 2), crds2idx(a, a));
-    pat +=
-        msg_str("0F,%dv%df", crds2idx(N - 1, N - 1), crds2idx(N - 1, N - 1));
+    pat += msg_str("0F,%dv%df", crds2idx(N - 1, N - 1), crds2idx(N - 1, N - 1));
   }
   else
     pat += msg_str("%dE", crds2idx(N, N));
@@ -1688,27 +1701,27 @@ static string b_pattern(int N)
   N += 1; // FIX CODE BELOW TO AVOID THIS
 
   string pat = "[";
-  for (int b = 1; b <= N+N%2; b +=2)
+  for (int b = 1; b <= N + N % 2; b += 2)
     pat += coord_string(Vec3d((N - b), b, 1)) + ",";
   pat.back() = ']';
 
   pat += "0e0f,";
 
-  for (int b = 0; b < N + N%2; b += 2)
+  for (int b = 0; b < N + N % 2; b += 2)
     pat += msg_str("%d_", b / 2);
   pat.back() = 'v';
   for (int b = 0; b < N - 1; b += 2)
     pat += msg_str("%d_", N / 2 - b / 2 - 1);
-  if(pat.back() == '_')
+  if (pat.back() == '_')
     pat.pop_back();
   pat += 'e';
 
-  for (int b = 0; b < N-2+N%2; b +=2)
-    pat += msg_str(",%d_%df%d_%df", b/2, b/2+1, b/2+1, b/2);
-  if(N%2)
-     pat += msg_str(",%dE", N/2);
+  for (int b = 0; b < N - 2 + N % 2; b += 2)
+    pat += msg_str(",%d_%df%d_%df", b / 2, b / 2 + 1, b / 2 + 1, b / 2);
+  if (N % 2)
+    pat += msg_str(",%dE", N / 2);
   else
-     pat += msg_str(",%dv%df", N/2-1, N/2-1);
+    pat += msg_str(",%dv%df", N / 2 - 1, N / 2 - 1);
 
   return pat;
 }
@@ -1739,9 +1752,8 @@ Status Tiling::read_conway(const string &op)
     else if (op_char == 'b')
       pat = b_pattern(op_int);
     else
-      stat.set_error(
-          msg_str("Conway operator %c: not known", op_char));
-    if(pat == "")
+      stat.set_error(msg_str("Conway operator %c: not known", op_char));
+    if (pat == "")
       stat.set_error(
           msg_str("Conway operator %c: invalid number %d", op_char, op_int));
   }
@@ -1791,13 +1803,16 @@ namespace anti {
 // export these functions
 
 Status wythoff_make_tiling(Geometry &tiled_geom, const Geometry &base_geom,
-                           const std::string &pat, bool pat_is_conway_op)
+                           const std::string &pat, bool pat_is_conway_op,
+                           bool reverse)
 {
   Tiling tiling;
   Status stat =
       (pat_is_conway_op) ? tiling.read_conway(pat) : tiling.read_pattern(pat);
   if (!stat.is_error()) {
     tiling.set_geom(base_geom); // not meta, so will not fail
+    if (reverse)
+      tiling.reverse_pattern();
     tiling.make_tiling(tiled_geom);
   }
   return stat;

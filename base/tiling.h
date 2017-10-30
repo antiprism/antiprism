@@ -86,6 +86,10 @@ public:
   /**\param relab relabelling permutation VEF -> . */
   void relabel(std::vector<int> relab);
 
+  // Flip start faces
+  /**Flip +/-, * is left unchanged. */
+  void flip_start_faces();
+
   /// Check point index numbers are within rage
   /** \param num_points the number of points
    *  \return The index numbers which were out of range. */
@@ -105,7 +109,6 @@ private:
   std::vector<std::vector<int>> nbrs; ///< Base tiling face neighbours
   // std::vector<Vec3d> vert_norms;            ///< Base tiling vertex normals
 
-  bool reverse;                       ///< Reverse +/- start faces
   bool one_of_each_tile; ///< Only plot one tile per kind
 
   /// Find base tiling face neighbours
@@ -131,7 +134,7 @@ private:
 
 public:
   /// Constructor
-  Tiling() : reverse(false), one_of_each_tile(false) {}
+  Tiling() : one_of_each_tile(false) {}
 
   /// Set the base geometry
   /**\param geom the base geometry
@@ -179,9 +182,7 @@ public:
   const Geometry &get_meta() const { return meta; }
 
   /// Reverse pattern, switch pattern start faces
-  /**\param rev \ctrue to reverse, (flip +/- in tile patterns), \c false
-   *  to use use original pattern */
-  void reverse_pattern(bool rev = true) { reverse = rev; }
+  void reverse_pattern();
 
   /// Set that only tile of each kind should be plotted
   /**\param val \c true, only one of each kind, otherwise \c false, all */
@@ -207,11 +208,12 @@ public:
  *  specifying a Conway Notation operator if \c pat_is_conway_op is \c true)
  * \param pat_is_conway_op if \c true the pattern is a Conway Notation
  *  operator, typically a single letter possibly followed by an integer.
+ * \param reverse reverse the pattern, flip start triangles
  * \return status, which evaluates to \c true if the geometry and
  *  pattern were valid, otherwise \c false to indicate an error. */
 Status wythoff_make_tiling(Geometry &tiled_geom, const Geometry &base_geom,
                            const std::string &pat,
-                           bool pat_is_conway_op = false);
+                           bool pat_is_conway_op = false, bool reverse = false);
 
 /// Get vertex points of a Schwarz triangle, and its symmetry group
 /**\param fracs six integers, taken in pairs as the angle fractions.
