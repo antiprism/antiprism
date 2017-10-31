@@ -49,6 +49,7 @@ using std::string;
 using std::vector;
 using std::map;
 using std::set;
+using std::pair;
 
 using namespace anti;
 
@@ -701,10 +702,10 @@ void cn_opts::usage()
 "\n"
 "Planarization options (use canonical program to canonicalize output)\n"
 "  -p <mthd> inter-step planarization method\n"
-"            p - face centroids (magnitude squared) (default)\n"
-"            m - mathematica planarize\n"
-"            c - mathematica canonicalize\n"
-"            u - make faces into unit-edged regular polygons (minmax -a u)\n"
+"               p - face centroids (magnitude squared) (default)\n"
+"               m - mathematica planarize\n"
+"               c - mathematica canonicalize\n"
+"               u - make faces into unit-edged regular polygons (minmax -a u)\n"
 "  -i <itrs> maximum inter-step planarization iterations (default: 1000)\n"
 "  -z <n>    status reporting every n iterations, -1 for no status (default: -1)\n"
 "  -l <lim>  minimum distance change to terminate planarization, as negative\n"
@@ -715,12 +716,14 @@ void cn_opts::usage()
 "  -E <col>  edge color   (default: lightgray)\n"
 "  -f <mthd> mthd is face coloring method using color in map (default: n)\n"
 "               key word: none - sets no color\n"
-"               n - color by number of sides\n"
+"               n - by number of sides\n"
 "               s - symmetric coloring\n"
+"               o - newly created faces by operation\n"
+"               w - resolve color indexes (overrides -V and -E)\n"
 "  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
 "  -O <strg> face transparency pattern string (-f n only). valid values\n"
 "               0 - map color alpha value, 1 -T alpha applied (default: '1')\n"
-"  -m <maps> color maps for faces to be tried in turn (default: m1)\n"
+"  -m <maps> color maps for faces to be tried in turn (default: m1, for -g, m2)\n"
 "               keyword m1: red,darkorange1,yellow,darkgreen,cyan,blue,magenta,\n"
 "                           white,grey,black\n"
 "               keyword m2: red,blue,green,yellow,brown,magenta,purple,grue,\n"
@@ -810,7 +813,7 @@ void cn_opts::process_command_line(int argc, char **argv)
     case 'f':
       if (!strcasecmp(optarg, "none"))
         face_coloring_method = '\0';
-      else if (strspn(optarg, "ns") != strlen(optarg) || strlen(optarg) > 1)
+      else if (strspn(optarg, "nosw") != strlen(optarg) || strlen(optarg) > 1)
         error(msg_str("invalid face Coloring method '%s'", optarg), c);
       else {
         face_coloring_method = *optarg;
@@ -861,6 +864,11 @@ void cn_opts::process_command_line(int argc, char **argv)
   if (argc > 1)
     cn_string = argv[optind];
 
+  if (hart_mode) {
+    if ((face_coloring_method == 'o') || (face_coloring_method == 'w'))
+      error("when -g set, face coloring methods o and w are invalid",'f');
+  }
+
   if (!strlen(cn_string.c_str()))
     error("no Conway Notation string given");
 
@@ -899,7 +907,7 @@ void cn_opts::process_command_line(int argc, char **argv)
   if (tile_mode) {
     if (hart_mode) {
       warning("polygons will not process correctly with George Hart "
-              "algorithms. turned off");
+              "algorithms. turned off", 'g');
       hart_mode = false;
     }
     if (planarization_method_set && (planarization_method != 'u')) {
@@ -909,7 +917,7 @@ void cn_opts::process_command_line(int argc, char **argv)
   }
 
   if (!map_file.size())
-    map_file = "m1";
+    map_file = (hart_mode) ? "m2" : "m1";
 
   if (map_file == "m1" || map_file == "m2") {
     auto *col_map = new ColorMapMap;
@@ -1040,18 +1048,19 @@ void cn_planarize(Geometry &geom, const cn_opts &opts)
       minmax_unit_planar(geom, opts.num_iters_planar, opts.rep_count,
                          opts.epsilon);
     }
-    // sometimes radius becomes very small with option p
-    if (opts.planarization_method == 'p')
-      unitize_vertex_radius(geom);
+    // note: sometimes radius becomes very small with option p
+    // if unitizing faces, don't alter radius
+    if (opts.planarization_method != 'u')
+      unitize_nearpoints_radius(geom);
   }
 }
 
-void get_operand(Geometry &geom, const char operand, const int poly_size)
+void get_operand(Geometry &geom, const cn_opts &opts)
 {
   string uniforms = "TCOID";
 
-  if (uniforms.find(operand) != string::npos) {
-    switch (operand) {
+  if (uniforms.find(opts.operand) != string::npos) {
+    switch (opts.operand) {
     case 'T':
       geom.read_resource("std_tet");
       break;
@@ -1074,9 +1083,9 @@ void get_operand(Geometry &geom, const char operand, const int poly_size)
     }
   }
   else {
-    Polygon pgon(poly_size, 1);
+    Polygon pgon(opts.poly_size, 1);
 
-    switch (operand) {
+    switch (opts.operand) {
     case 'P':
       pgon.set_type(Polygon::prism);
       break;
@@ -1097,9 +1106,9 @@ void get_operand(Geometry &geom, const char operand, const int poly_size)
 
     pgon.set_edge(0, 1.0);
 
-    if (operand == 'Y' && poly_size > 5)
+    if (opts.operand == 'Y' && opts.poly_size > 5)
       // Based on circumradius
-      pgon.set_height(0, (1 / sin(M_PI / poly_size)) / 2);
+      pgon.set_height(0, (1 / sin(M_PI / opts.poly_size)) / 2);
     // inradius
     // poly->set_height((1/tan(M_PI/poly_size))/2);
     else
@@ -1108,10 +1117,14 @@ void get_operand(Geometry &geom, const char operand, const int poly_size)
     pgon.make_poly(geom);
 
     /* RK - if polygon size 2 was allowed, caused too much trouble
-    if ((poly_size == 2) && (operand == 'P' || operand == 'Y'))
+    if ((opts.poly_size == 2) && (opts.operand == 'P' || opts.operand == 'Y'))
       geom.transform(Trans3d::rotate(deg2rad(90), 0, 0));
     */
   }
+
+  // by default seed will be all one color
+  Color col = opts.map.get_col(0);
+  Coloring(&geom).vef_one_col(col, col, col);
 }
 
 // RK - for hart code
@@ -1351,6 +1364,7 @@ void hart_propellor(Geometry &geom)
   verts_table.clear();
 }
 
+/*
 // chamfer for hart code
 void hart_chamfer(Geometry &geom, const cn_opts &opts)
 {
@@ -1395,9 +1409,10 @@ void hart_whirl(Geometry &geom, const cn_opts &opts)
   verbose('t', 0, opts);
   truncate_verts(geom, v_idxs, CN_ONE_HALF, nullptr);
 }
+*/
 
 // functions which can use Antiprism built in features
-void hart_dual(Geometry &geom)
+void antiprism_dual(Geometry &geom)
 {
   Geometry dual;
   centroid_to_origin(geom);
@@ -1405,20 +1420,24 @@ void hart_dual(Geometry &geom)
   geom = dual;
 }
 
-void cn_reflect(Geometry &geom) { geom.transform(Trans3d::inversion()); }
+void antiprism_reflect(Geometry &geom) { geom.transform(Trans3d::inversion()); }
 
 // built in truncate from off_util
-void util_truncate(Geometry &geom, const double ratio, const int n)
+void antiprism_truncate(Geometry &geom, const double ratio, const int n)
 {
   truncate_verts(geom, ratio, n);
 }
 
 void do_operations(Geometry &geom, const cn_opts &opts)
 {
+  int reflect_toggle = 0;
+  int operation_number = 0;
+
   string digits_ge_3 = "KkLlt"; // t processed with utility
 
   for (auto operation : opts.operations) {
     verbose(operation->op, operation->op_var, opts);
+    operation_number++;
 
     bool hart_operation_done = false;
 
@@ -1432,14 +1451,9 @@ void do_operations(Geometry &geom, const cn_opts &opts)
         hart_ambo(geom);
         break;
 
-      // chamfer
-      case 'c':
-        hart_chamfer(geom, opts);
-        break;
-
       // dual
       case 'd':
-        hart_dual(geom);
+        antiprism_dual(geom);
         break;
 
       // gyro
@@ -1459,12 +1473,8 @@ void do_operations(Geometry &geom, const cn_opts &opts)
 
       // reflect
       case 'r':
-        cn_reflect(geom);
-        break;
-
-      // whirl
-      case 'w':
-        hart_whirl(geom, opts);
+        antiprism_reflect(geom);
+        reflect_toggle++;
         break;
 
       default:
@@ -1476,7 +1486,7 @@ void do_operations(Geometry &geom, const cn_opts &opts)
     if (!hart_operation_done) {
       // truncate with N>1 uses Hart algorithm
       if (operation->op == 't' && operation->op_var > 1)
-        util_truncate(geom, CN_ONE_THIRD, operation->op_var);
+        antiprism_truncate(geom, CN_ONE_THIRD, operation->op_var);
       else {
         Geometry geom_save;
         vector<int> dels;
@@ -1513,9 +1523,38 @@ void do_operations(Geometry &geom, const cn_opts &opts)
           wythoff_op += string(buf);
         }
 
+        // if coloring new faces, track color of current faces
+        vector<pair<Vec3d, Color>> color_centroids;
+        if (opts.face_coloring_method == 'o') {
+          for (int i = 0; i < (int)geom.faces().size(); i++) {
+            pair<Vec3d, Color> color_cent;
+            color_cent.first = geom.face_cent(i);
+            color_cent.second = geom.colors(FACES).get(i);
+            color_centroids.push_back(color_cent);
+          }
+        }
+
         // fprintf(stderr, "wythoff_op = %s\n", wythoff_op.c_str());
         opts.print_status_or_exit(
             wythoff_make_tiling(geom, geom, wythoff_op, true));
+
+        // if coloring new faces, restore color of previous faces
+        if (opts.face_coloring_method == 'o') {
+          for (int i = 0; i < (int)geom.faces().size(); i++) {
+            Vec3d face_centroid = geom.face_cent(i);
+            bool found = false;
+            for (int j = 0; j < (int)color_centroids.size(); j++) {
+              pair<Vec3d, Color> color_cent = color_centroids[j];
+              if (!compare(face_centroid, color_cent.first, opts.epsilon)) {
+                geom.colors(FACES).set(i, color_cent.second);
+                found = true;
+                break;
+              }
+            }
+            if (!found)
+              geom.colors(FACES).set(i, opts.map.get_col(operation_number));
+          }
+        }
 
         // if faces were deleted, reappend them
         if (dels.size()) {
@@ -1523,11 +1562,17 @@ void do_operations(Geometry &geom, const cn_opts &opts)
           merge_coincident_elements(geom, "vef", opts.epsilon);
         }
 
-        // remove digon from results
+        // remove digons
         dels.clear();
         for (int i = 0; i < (int)geom.faces().size(); i++) {
-          if (geom.faces(i).size() < 3)
+          if (geom.faces(i).size() < 3) {
+            // if coloring model like wythoff, move digons to edges
+            if (opts.face_coloring_method == 'w') {
+              Color col = geom.colors(FACES).get(i);
+              geom.add_edge(geom.faces(i), col);
+            }
             dels.push_back(i);
+          }
         }
         geom.del(FACES, dels);
 
@@ -1535,7 +1580,11 @@ void do_operations(Geometry &geom, const cn_opts &opts)
       }
     }
 
-    geom.orient();
+    // orientation is reversed if reflected 1=positive 2=negative
+    if (is_even(reflect_toggle))
+      geom.orient(1);
+    else
+      geom.orient(2);
     if (!geom.is_oriented())
       verbose('@', 0, opts);
 
@@ -1544,7 +1593,7 @@ void do_operations(Geometry &geom, const cn_opts &opts)
   }
 }
 
-void cn_face_coloring(Geometry &geom, const cn_opts &opts)
+void cn_coloring(Geometry &geom, const cn_opts &opts)
 {
   if (opts.face_coloring_method == 'n') {
     bool trans_success = true;
@@ -1587,12 +1636,24 @@ void cn_face_coloring(Geometry &geom, const cn_opts &opts)
       }
     }
   }
+  // set color values from map indexes from wythoff call
+  else if (opts.face_coloring_method == 'w') {
+    Coloring clrng(&geom);
+    clrng.add_cmap(opts.map.clone());
+    clrng.v_apply_cmap();
+    clrng.e_apply_cmap();
+    clrng.f_apply_cmap();
+  }
 
   // check if some faces are not set for transparency warning
   if (opts.face_opacity > -1) {
     if (geom.colors(FACES).get_properties().size() < geom.faces().size())
       fprintf(stderr, "warning: unset faces cannot be made transparent\n");
   }
+
+  // color vertices and edges
+  if (opts.face_coloring_method != 'w')
+    Coloring(&geom).vef_one_col(opts.vert_col, opts.edge_col, Color());
 }
 
 int main(int argc, char *argv[])
@@ -1602,7 +1663,7 @@ int main(int argc, char *argv[])
 
   Geometry geom;
   if (opts.operand)
-    get_operand(geom, opts.operand, opts.poly_size);
+    get_operand(geom, opts);
   else
     opts.read_or_error(geom, opts.ifile);
 
@@ -1619,10 +1680,7 @@ int main(int argc, char *argv[])
   if (opts.unitize)
     unitize_edges(geom);
 
-  cn_face_coloring(geom, opts);
-
-  // color vertices and edges
-  Coloring(&geom).vef_one_col(opts.vert_col, opts.edge_col, Color());
+  cn_coloring(geom, opts);
 
   opts.write_or_error(geom, opts.ofile);
 

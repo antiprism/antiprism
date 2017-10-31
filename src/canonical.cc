@@ -348,52 +348,6 @@ void cn_opts::process_command_line(int argc, char **argv)
   epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
-// RK - find nearpoints radius, sets range minimum and maximum
-double edge_nearpoints_radius(const Geometry &geom, double &min, double &max, Vec3d &center)
-{
-  min = DBL_MAX;
-  max = DBL_MIN;
-
-  vector<vector<int>> edges;
-  geom.get_impl_edges(edges);
-
-  vector<Vec3d> near_pts;
-
-  double nearpt_radius = 0;
-  int e_sz = edges.size();
-  for (auto &edge : edges) {
-    Vec3d P = geom.edge_nearpt(edge, Vec3d(0, 0, 0));
-    near_pts.push_back(P);
-
-    double l = P.len();
-    nearpt_radius += l;
-    if (l < min)
-      min = l;
-    if (l > max)
-      max = l;
-  }
-
-  center = centroid(near_pts);
-
-  return nearpt_radius / double(e_sz);
-}
-
-// RK - wrapper
-double edge_nearpoints_radius(const Geometry &geom)
-{
-  double min = 0;
-  double max = 0;
-  Vec3d center;
-  return edge_nearpoints_radius(geom, min, max, center);
-}
-
-// RK - average of edge near points radius
-void unitize_nearpoints_radius(Geometry &geom)
-{
-  double avg = edge_nearpoints_radius(geom);
-  geom.transform(Trans3d::scale(1 / avg));
-}
-
 // RK - average radius rather than maximum has more reliability than max
 void unitize_vertex_radius(Geometry &geom)
 {

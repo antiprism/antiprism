@@ -273,6 +273,22 @@ void get_congruence_maps(const Geometry &geom, Trans3d trans,
                          std::vector<std::vector<int>> &elem_maps,
                          double eps = epsilon);
 
+/// find nearpoints radius, sets range minimum and maximum
+/**\param geom geometry.
+ * \param min returns the minimum nearpoints radius.
+ * \param max returns the maximum nearpoints radius.
+ * \param center returns the cente rof the nearpoints.
+ * \returns the average radius of the nearpoints. */
+double edge_nearpoints_radius(const Geometry &geom, double &min, double &max, Vec3d &center);
+
+/// wrapper for above.
+/**\param geom geometry. */
+double edge_nearpoints_radius(const Geometry &geom);
+
+/// sets radius of geom to average of edge near points radius
+/**\param geom geometry. */
+void unitize_nearpoints_radius(Geometry &geom);
+
 /// return the unit normal of all perimeter triangles
 /**\param geom geometry.
  * \param face contains the vertex index numbers in the face. */
