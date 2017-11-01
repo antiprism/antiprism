@@ -95,6 +95,37 @@ ConwayOperator conway_operator_list[]{
 };
 // clang-format on
 
+string operators_str()
+{
+  string operators;
+  int last_op = sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
+  for (int i = 0; i < last_op; i++) {
+    operators.push_back(conway_operator_list[i].operator_short[0]);
+  }
+  return operators;
+}
+
+string digits_allowed_str()
+{
+  string digits_allowed;
+  int last_op = sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
+  for (int i = 0; i < last_op; i++) {
+    if (conway_operator_list[i].allow_n)
+      digits_allowed.push_back(conway_operator_list[i].operator_short[0]);
+  }
+  return digits_allowed;
+}
+
+string uniforms_str() { return "TCOID"; }
+
+string digits_required_str() { return "PAYZ"; }
+
+string operands_str() { return (uniforms_str() + digits_required_str()); }
+
+string digits_ge_3_str() { return "KkLlt"; }
+
+string digits_str() { return "0123456789"; }
+
 class ops {
 public:
   int op_pos;
@@ -106,7 +137,7 @@ public:
 bool cmp_ops(const ops *a, const ops *b) { return a->op_pos > b->op_pos; }
 
 int validate_cn_string(const string &cn_string, vector<ops *> &operations,
-                       char &operand, int &poly_size)
+                       char &operand, int &poly_size, string alpha_user)
 {
   char current_op = '\0';
   string number_string;
@@ -115,37 +146,33 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
 
   // get allowable operators from table
   // and get operators which allow N from table
-  string operators;
-  string digits_allowed = "";
-  int last_op = sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
-  for (int i = 0; i < last_op; i++) {
-    operators.push_back(conway_operator_list[i].operator_short[0]);
-    if (conway_operator_list[i].allow_n)
-      digits_allowed.push_back(conway_operator_list[i].operator_short[0]);
-  }
+  string operators = operators_str() + alpha_user;
+  string digits_allowed = digits_allowed_str();
 
-  string operands = "TCOIDPAYZ";
-  string digits_required = "PAYZ";
-  string digits_ge_3 = "KkLlt";
-  string digits = "0123456789";
+  // ^ is repeat
+  string operands = operands_str() + string("^");
+  string digits_required = digits_required_str() + string("^");
+  string digits_ge_3 = digits_ge_3_str();
+  string digits = digits_str();
 
   operand = '\0';
   poly_size = 0;
 
+  int op_count = 0;
   for (unsigned int i = 0; i < cn_string.length(); i++) {
     if (operators.find(cn_string[i]) != string::npos) {
       if (operand != '\0')
         return i + 1;
 
       if (delayed_write) {
-        operations.push_back(new ops(i, current_op, num_val));
+        operations.push_back(new ops(op_count++, current_op, num_val));
         delayed_write = false;
       }
 
       current_op = cn_string[i];
 
       if (digits_allowed.find(current_op) == string::npos)
-        operations.push_back(new ops(i + 1, current_op, num_val));
+        operations.push_back(new ops(op_count++, current_op, num_val));
       else
         delayed_write = true;
     }
@@ -154,13 +181,14 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
         return i + 1;
 
       if (delayed_write) {
-        operations.push_back(new ops(i, current_op, num_val));
+        operations.push_back(new ops(op_count++, current_op, num_val));
         delayed_write = false;
       }
 
       operand = cn_string[i];
       current_op = '\0';
     }
+    // if digits
     else if (digits.find(cn_string[i]) != string::npos) {
       // only operands which require a number
       if (operand != '\0') {
@@ -182,8 +210,29 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
       number_string =
           cn_string.substr(digits_start, (digits_end - digits_start + 1));
 
+      // if repeat character
+      if (operand == '^') {
+        int sz = (int)operations.size();
+        if (!sz) {
+          fprintf(stderr, "repeat operator is a beginning of string\n");
+          return i;
+        }
+        int num_repeats = atoi(number_string.c_str());
+        if (!num_repeats) {
+          fprintf(stderr, "repeat count must be greater than 0\n");
+          return i + 1;
+        }
+
+        ops *last = operations[sz - 1];
+        char op = last->op;
+        int op_var = last->op_var;
+
+        for (int i = 0; i < num_repeats - 1; i++)
+          operations.push_back(new ops(op_count++, op, op_var));
+        operand = '\0';
+      }
       // will be at end of string as it is an operand, P, A, Y or Z
-      if (digits_required.find(operand) != string::npos) {
+      else if (digits_required.find(operand) != string::npos) {
         poly_size = atoi(number_string.c_str());
         if (poly_size < 3) {
           fprintf(stderr,
@@ -198,7 +247,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
           fprintf(stderr, "L(n), n must 0, 1, 3 or greater\n");
           return i + 1;
         }
-        operations.push_back(new ops(i + 1, current_op, num_val));
+        operations.push_back(new ops(op_count++, current_op, num_val));
         delayed_write = false;
       }
       // K, k, l, t must be 3 or greater
@@ -208,7 +257,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
           fprintf(stderr, "K(n), k(n), l(n), t(n), n must be 3 or greater\n");
           return i + 1;
         }
-        operations.push_back(new ops(i + 1, current_op, num_val));
+        operations.push_back(new ops(op_count++, current_op, num_val));
         delayed_write = false;
       }
       // operators allowing 0 or greater
@@ -219,7 +268,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
                   num_val);
           return i + 1;
         }
-        operations.push_back(new ops(i + 1, current_op, num_val));
+        operations.push_back(new ops(op_count++, current_op, num_val));
         delayed_write = false;
       }
 
@@ -236,7 +285,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
 
   // if an allowed numeric operation was specified alone at end
   if (delayed_write)
-    operations.push_back(new ops(cn_string.length(), current_op, num_val));
+    operations.push_back(new ops(op_count++, current_op, num_val));
 
   // if P, A or Y was specified with no digit n
   if ((digits_required.find(operand) != string::npos) && poly_size == 0) {
@@ -319,7 +368,7 @@ string resolved_cn_string(const string &cn_string)
   string target;
   string resolve;
 
-  string digits = "0123456789";
+  string digits = digits_str();
 
   // first 3 targets are positional
   if (resolve_string.length() > 1) {
@@ -438,6 +487,10 @@ public:
 
   vector<ops *> operations;
 
+  // for on the fly user operators
+  string alpha_user;
+  std::map<char, vector<ops *>> operations_user;
+
   cn_opts()
       : ProgramOpts("conway"), cn_string(""), resolve_ops(false),
         hart_mode(false), tile_mode(false), reverse_ops(false), operand('\0'),
@@ -477,9 +530,10 @@ void extended_help()
 "antiprisms, An, and pyramids, Yn, where n is a number (3 or greater) which you\n"
 "specify to indicate the size of the base you want, e.g., Y3=T, P4=C, and A3=O.\n"
 "\n"
-"Operations: Currently, abcdegjkmoprst are defined. They are motivated by the\n"
+"Operations: Currently, abdegjkmoprst are defined. They are motivated by the\n"
 "operations needed to create the Archimedean solids and their duals from the\n"
 "platonic solids.  Try each on a cube:\n"
+"\n(Antiprism: note that more operations have since been defined)\n"
 "\n"
 "a = ambo   The ambo operation can be thought of as truncating to the edge\n"
 "midpoints.  It produces a polyhedron, aX, with one vertex for each edge of X.\n"
@@ -610,6 +664,9 @@ void extended_help()
 "o  - n may be 0 or greater (default: 1)\n"
 "t  - n may be 3 or greater representing face sides\n"
 "\n"
+"Antiprism Extension: note that any operation can be repeated N time by following\n"
+"it with the ^ symbol and a number greater than 0. Examples: a^3C M0^2T\n"
+"\n"
 "Seeds which require a number n, 3 or greater\n"
 "\n"
 "P  - Prism\n"
@@ -738,6 +795,9 @@ void cn_opts::process_command_line(int argc, char **argv)
   opterr = 0;
   int c;
   bool planarization_method_set = false;
+  int op_term = 0;
+
+  string alphas_in_use = operators_str() + operands_str();
 
   int sig_compare = INT_MAX;
 
@@ -745,7 +805,7 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hHsgtruvp:l:i:z:f:V:E:T:O:m:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hHsgtruvc:p:l:i:z:f:V:E:T:O:m:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -778,6 +838,72 @@ void cn_opts::process_command_line(int argc, char **argv)
     case 'v':
       verbosity = true;
       break;
+
+    case 'c': {
+      op_term++;
+
+      char operation = '\0';
+      string user_op;
+
+      char parse_key1[] = ",";
+
+      // memory pointer for strtok_r
+      char *tok_ptr1;
+
+      char *ptok1 = strtok_r(optarg, parse_key1, &tok_ptr1);
+      int count1 = 0;
+      while (ptok1 != nullptr) {
+        // first argument is color
+        if (count1 == 0) {
+          // print_status_or_exit(tmp_color.read(ptok1), c);
+          if (strlen(ptok1) != 1)
+            error(msg_str("term %d: operation must be one character '%s'",
+                          op_term, ptok1),
+                  c);
+          else if (!isalpha(ptok1[0])) {
+            error(msg_str("term %d: operation must be alphabetic '%s'", op_term,
+                          ptok1),
+                  c);
+          }
+          else if (alphas_in_use.find(ptok1[0]) != string::npos) {
+            error(msg_str("term %d: operation character already in use '%s'",
+                          op_term, ptok1),
+                  c);
+          }
+          else {
+            operation = ptok1[0];
+            alphas_in_use += operation;
+            alpha_user += operation;
+          }
+        }
+        else if (count1 == 1) {
+          user_op = ptok1;
+        }
+        else {
+          error(msg_str("term %d: unexpected parameter '%s'", op_term, ptok1),
+                c);
+        }
+
+        ptok1 = strtok_r(nullptr, parse_key1, &tok_ptr1);
+        count1++;
+      }
+
+      char operand_test;
+      int dummy1;
+      string dummy2;
+      if (int pos = validate_cn_string(user_op, operations_user[operation],
+                                       operand_test, dummy1, dummy2))
+        error(msg_str("term %d: unexpected character in position %d: %c",
+                      op_term, pos, user_op[pos - 1]),
+              c);
+
+      if (operand_test)
+        error(msg_str("term %d: cannot contain operand in position %d: %c",
+                      op_term, user_op.length(), operand_test),
+              c);
+
+      break;
+    }
 
     case 'p':
       planarization_method_set = true;
@@ -860,60 +986,65 @@ void cn_opts::process_command_line(int argc, char **argv)
   if (argc - optind > 2)
     error("too many arguments");
 
-  // avoid segfault
-  if (argc > 1)
+  if (argc - optind > 0)
     cn_string = argv[optind];
-
-  if (hart_mode) {
-    if ((face_coloring_method == 'o') || (face_coloring_method == 'w'))
-      error("when -g set, face coloring methods o and w are invalid",'f');
-  }
-
-  if (!strlen(cn_string.c_str()))
+  else
     error("no Conway Notation string given");
 
-  if (int pos = validate_cn_string(cn_string, operations, operand, poly_size))
+  if (int pos = validate_cn_string(cn_string, operations, operand, poly_size,
+                                   alpha_user))
     error(msg_str("Unexpected character in position %d: %c", pos,
                   cn_string[pos - 1]));
 
   if (resolve_ops) {
     cn_string = resolved_cn_string(cn_string);
 
+    // operations is a vector of objects
     for (auto &operation : operations)
       delete operation;
     operations.clear();
 
     // revalidate (should be valid) to rebuild operations table
-    if (int pos = validate_cn_string(cn_string, operations, operand, poly_size))
+    if (int pos = validate_cn_string(cn_string, operations, operand, poly_size,
+                                     alpha_user))
       error(msg_str("Unexpected character in position %d: %c", pos,
                     cn_string[pos - 1]));
   }
 
-  optind++;
-  if (argc - optind == 1) {
-    ifile = argv[optind];
+  if (argc - optind == 2) {
+    ifile = argv[++optind];
     if (operand)
       error(
           msg_str("operand '%c' was specified so input file '%s' is unexpected",
                   operand, ifile.c_str()));
   }
 
-  // operations are done in reverse order (unless defeated)
-  if (!reverse_ops)
+  // operations can be done in reverse order
+  if (!reverse_ops) {
     sort(operations.begin(), operations.end(), cmp_ops);
+    for (unsigned int i = 0; i < alpha_user.length(); i++)
+      sort(operations_user[alpha_user[i]].begin(),
+           operations_user[alpha_user[i]].end(), cmp_ops);
+  }
 
   if (operand == 'Z')
     tile_mode = true;
   if (tile_mode) {
     if (hart_mode) {
       warning("polygons will not process correctly with George Hart "
-              "algorithms. turned off", 'g');
+              "algorithms. turned off",
+              'g');
       hart_mode = false;
     }
     if (planarization_method_set && (planarization_method != 'u')) {
       warning("planarization method for tiling set to 'u'");
     }
     planarization_method = 'u';
+  }
+
+  if (hart_mode) {
+    if ((face_coloring_method == 'o') || (face_coloring_method == 'w'))
+      error("when -g set, face coloring methods o and w are invalid", 'f');
   }
 
   if (!map_file.size())
@@ -960,7 +1091,7 @@ void cn_opts::process_command_line(int argc, char **argv)
   epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
-void verbose(const char operation, const int op_var, const cn_opts &opts)
+void verbose(char operation, int op_var, const cn_opts &opts)
 {
   if (opts.verbosity) {
     string operator_name;
@@ -974,7 +1105,7 @@ void verbose(const char operation, const int op_var, const cn_opts &opts)
       }
     }
 
-    string hart_operators = "acdgkpw";
+    string hart_operators = "adgkp";
     string hart_string;
     if (opts.hart_mode && (hart_operators.find(operation) != string::npos))
       hart_string = "(hart)";
@@ -982,7 +1113,12 @@ void verbose(const char operation, const int op_var, const cn_opts &opts)
     // special cases
     char buf[MSG_SZ];
     buf[0] = '\0';
-    if (operation == '_')
+    bool user_op = false;
+    if (opts.alpha_user.find(operation) != string::npos) {
+      user_op = true;
+      operator_name = "user operation: ";
+    }
+    else if (operation == '_')
       operator_name = "planarizing ...";
     else if (operation == '@')
       operator_name = "non-orientable geometry";
@@ -1000,8 +1136,8 @@ void verbose(const char operation, const int op_var, const cn_opts &opts)
     else if (op_var != 1)
       sprintf(buf, "(%d)", op_var);
 
-    fprintf(stderr, "%s%s %s\n", operator_name.c_str(), buf,
-            hart_string.c_str());
+    fprintf(stderr, "%s%c%s %s\n", operator_name.c_str(),
+            (user_op ? operation : '\0'), buf, hart_string.c_str());
   }
 }
 
@@ -1265,8 +1401,12 @@ void hart_gyro(Geometry &geom)
   verts_table.clear();
 }
 
-void hart_kisN(Geometry &geom, const int n)
+void hart_kisN(Geometry &geom, int n)
 {
+  // default num_val was changed to 1
+  if (n < 3)
+    n = 0;
+
   vector<vector<int>> &faces = geom.raw_faces();
   vector<Vec3d> &verts = geom.raw_verts();
 
@@ -1423,26 +1563,137 @@ void antiprism_dual(Geometry &geom)
 void antiprism_reflect(Geometry &geom) { geom.transform(Trans3d::inversion()); }
 
 // built in truncate from off_util
-void antiprism_truncate(Geometry &geom, const double ratio, const int n)
+void antiprism_truncate(Geometry &geom, double ratio, int n)
 {
   truncate_verts(geom, ratio, n);
 }
 
-void do_operations(Geometry &geom, const cn_opts &opts)
+void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
+             int &reflect_toggle, const cn_opts &opts)
+{
+  operation_number++;
+
+  string digits_ge_3 = digits_ge_3_str(); // t processed with utility
+
+  // if coloring new faces, track color of current faces
+  vector<pair<Vec3d, Color>> color_centroids;
+  if (opts.face_coloring_method == 'o') {
+    for (int i = 0; i < (int)geom.faces().size(); i++) {
+      pair<Vec3d, Color> color_cent;
+      color_cent.first = geom.face_cent(i);
+      color_cent.second = geom.colors(FACES).get(i);
+      color_centroids.push_back(color_cent);
+    }
+  }
+
+  // truncate with N>1 uses Hart algorithm
+  if (operation == 't' && op_var > 1)
+    antiprism_truncate(geom, CN_ONE_THIRD, op_var);
+  else if (operation == 'r') {
+    antiprism_reflect(geom);
+    reflect_toggle++;
+    // decrimenting operation number gives consistent colors
+    operation_number--;
+  }
+  else {
+    Geometry geom_save;
+    vector<int> dels;
+    // can wythoff handle n
+    bool wythoff_n = true;
+    if ((digits_ge_3.find(operation) != string::npos) && (op_var > 1)) {
+      wythoff_n = false;
+      geom_save = geom;
+      // remove all faces of size op_var from geom_save
+      for (int i = 0; i < (int)geom.faces().size(); i++) {
+        if ((int)geom_save.faces(i).size() == op_var)
+          dels.push_back(i);
+      }
+      // if matching faces found
+      if (dels.size()) {
+        geom_save.del(FACES, dels);
+        // place only those faces in geom
+        geom = faces_to_geom(geom, dels);
+      }
+      // no faces to act on, loop
+      else {
+        return;
+      }
+    }
+
+    // wythoff call requires a string
+    string wythoff_op;
+    wythoff_op.push_back(operation);
+
+    char buf[MSG_SZ];
+    if ((op_var != 1) && wythoff_n) {
+      sprintf(buf, "%d", op_var);
+      wythoff_op += string(buf);
+    }
+
+    // fprintf(stderr, "wythoff_op = %s\n", wythoff_op.c_str());
+    opts.print_status_or_exit(
+        wythoff_make_tiling(geom, geom, wythoff_op, true));
+
+    // if faces were deleted, reappend them
+    if (dels.size()) {
+      geom.append(geom_save);
+      merge_coincident_elements(geom, "vef", opts.epsilon);
+    }
+
+    // remove digons
+    dels.clear();
+    for (int i = 0; i < (int)geom.faces().size(); i++) {
+      if (geom.faces(i).size() < 3) {
+        // if coloring model like wythoff, move digons to edges
+        if (opts.face_coloring_method == 'w') {
+          Color col = geom.colors(FACES).get(i);
+          geom.add_edge(geom.faces(i), col);
+        }
+        dels.push_back(i);
+      }
+    }
+    geom.del(FACES, dels);
+  }
+
+  // if coloring new faces, restore color of previous faces
+  if (opts.face_coloring_method == 'o') {
+    for (int i = 0; i < (int)geom.faces().size(); i++) {
+      Vec3d face_centroid = geom.face_cent(i);
+      bool found = false;
+      for (int j = 0; j < (int)color_centroids.size(); j++) {
+        pair<Vec3d, Color> color_cent = color_centroids[j];
+        if (!compare(face_centroid, color_cent.first, opts.epsilon)) {
+          geom.colors(FACES).set(i, color_cent.second);
+          found = true;
+          break;
+        }
+      }
+      if (!found)
+        geom.colors(FACES).set(i, opts.map.get_col(operation_number));
+    }
+  }
+
+  // orientation is reversed if reflected 1=positive 2=negative
+  geom.orient((is_even(reflect_toggle)) ? 1 : 2);
+  if (!geom.is_oriented())
+    verbose('@', 0, opts);
+
+  // planarize after each step
+  cn_planarize(geom, opts);
+}
+
+void do_operations(Geometry &geom, cn_opts &opts)
 {
   int reflect_toggle = 0;
   int operation_number = 0;
 
-  string digits_ge_3 = "KkLlt"; // t processed with utility
-
   for (auto operation : opts.operations) {
     verbose(operation->op, operation->op_var, opts);
-    operation_number++;
 
     bool hart_operation_done = false;
 
-    // reflection is universal
-    if (opts.hart_mode || operation->op == 'r') {
+    // reflection is done in wythoff
+    if (opts.hart_mode) {
       hart_operation_done = true;
 
       switch (operation->op) {
@@ -1471,12 +1722,6 @@ void do_operations(Geometry &geom, const cn_opts &opts)
         hart_propellor(geom);
         break;
 
-      // reflect
-      case 'r':
-        antiprism_reflect(geom);
-        reflect_toggle++;
-        break;
-
       default:
         hart_operation_done = false;
       }
@@ -1484,112 +1729,29 @@ void do_operations(Geometry &geom, const cn_opts &opts)
 
     // wythoff mode (with exceptions)
     if (!hart_operation_done) {
-      // truncate with N>1 uses Hart algorithm
-      if (operation->op == 't' && operation->op_var > 1)
-        antiprism_truncate(geom, CN_ONE_THIRD, operation->op_var);
+      if (opts.alpha_user.find(operation->op) == string::npos)
+        wythoff(geom, operation->op, operation->op_var, operation_number,
+                reflect_toggle, opts);
       else {
-        Geometry geom_save;
-        vector<int> dels;
-        // can wythoff handle n
-        bool wythoff_n = true;
-        if ((digits_ge_3.find(operation->op) != string::npos) &&
-            (operation->op_var > 1)) {
-          wythoff_n = false;
-          geom_save = geom;
-          // remove all faces of size op_var from geom_save
-          for (int i = 0; i < (int)geom.faces().size(); i++) {
-            if ((int)geom_save.faces(i).size() == operation->op_var)
-              dels.push_back(i);
-          }
-          // if matching faces found
-          if (dels.size()) {
-            geom_save.del(FACES, dels);
-            // place only those faces in geom
-            geom = faces_to_geom(geom, dels);
-          }
-          // no faces to act on, loop
-          else {
-            continue;
-          }
+        for (auto operation_user : opts.operations_user[operation->op]) {
+          verbose(operation_user->op, operation_user->op_var, opts);
+          wythoff(geom, operation_user->op, operation_user->op_var,
+                  operation_number, reflect_toggle, opts);
         }
-
-        // wythoff call requires a string
-        string wythoff_op;
-        wythoff_op.push_back(operation->op);
-
-        char buf[MSG_SZ];
-        if ((operation->op_var != 1) && wythoff_n) {
-          sprintf(buf, "%d", operation->op_var);
-          wythoff_op += string(buf);
-        }
-
-        // if coloring new faces, track color of current faces
-        vector<pair<Vec3d, Color>> color_centroids;
-        if (opts.face_coloring_method == 'o') {
-          for (int i = 0; i < (int)geom.faces().size(); i++) {
-            pair<Vec3d, Color> color_cent;
-            color_cent.first = geom.face_cent(i);
-            color_cent.second = geom.colors(FACES).get(i);
-            color_centroids.push_back(color_cent);
-          }
-        }
-
-        // fprintf(stderr, "wythoff_op = %s\n", wythoff_op.c_str());
-        opts.print_status_or_exit(
-            wythoff_make_tiling(geom, geom, wythoff_op, true));
-
-        // if coloring new faces, restore color of previous faces
-        if (opts.face_coloring_method == 'o') {
-          for (int i = 0; i < (int)geom.faces().size(); i++) {
-            Vec3d face_centroid = geom.face_cent(i);
-            bool found = false;
-            for (int j = 0; j < (int)color_centroids.size(); j++) {
-              pair<Vec3d, Color> color_cent = color_centroids[j];
-              if (!compare(face_centroid, color_cent.first, opts.epsilon)) {
-                geom.colors(FACES).set(i, color_cent.second);
-                found = true;
-                break;
-              }
-            }
-            if (!found)
-              geom.colors(FACES).set(i, opts.map.get_col(operation_number));
-          }
-        }
-
-        // if faces were deleted, reappend them
-        if (dels.size()) {
-          geom.append(geom_save);
-          merge_coincident_elements(geom, "vef", opts.epsilon);
-        }
-
-        // remove digons
-        dels.clear();
-        for (int i = 0; i < (int)geom.faces().size(); i++) {
-          if (geom.faces(i).size() < 3) {
-            // if coloring model like wythoff, move digons to edges
-            if (opts.face_coloring_method == 'w') {
-              Color col = geom.colors(FACES).get(i);
-              geom.add_edge(geom.faces(i), col);
-            }
-            dels.push_back(i);
-          }
-        }
-        geom.del(FACES, dels);
-
-        // merge_coincident_elements(geom, "vef", opts.epsilon);
       }
     }
+    else {
+      // these steps are needed for hart_mode
+      operation_number++;
 
-    // orientation is reversed if reflected 1=positive 2=negative
-    if (is_even(reflect_toggle))
-      geom.orient(1);
-    else
-      geom.orient(2);
-    if (!geom.is_oriented())
-      verbose('@', 0, opts);
+      // orientation is reversed if reflected 1=positive 2=negative
+      geom.orient((is_even(reflect_toggle)) ? 1 : 2);
+      if (!geom.is_oriented())
+        verbose('@', 0, opts);
 
-    // planarize after each step
-    cn_planarize(geom, opts);
+      // planarize after each step
+      cn_planarize(geom, opts);
+    }
   }
 }
 
