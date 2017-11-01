@@ -750,6 +750,8 @@ void cn_opts::usage()
 "  -H        Conway Notation detailed help. seeds and operator descriptions\n"
 "  -s        apply Conway Notation string substitutions\n"
 "  -g        use George Hart algorithms (sets -s)\n"
+"  -c <op,s> user defined operation strings in the form of op,string\n"
+"              any operations may be used. Examples: x,kt  y,tk  v,dwd\n"
 "  -t        tile mode. when input is a tiling. unsets -g  sets -p u\n"
 "              set if seed of Z is detected\n"
 "  -r        execute operations in reverse order (left to right)\n"
@@ -1576,8 +1578,9 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
   string digits_ge_3 = digits_ge_3_str(); // t processed with utility
 
   // if coloring new faces, track color of current faces
+  // skip for reflections
   vector<pair<Vec3d, Color>> color_centroids;
-  if (opts.face_coloring_method == 'o') {
+  if ((opts.face_coloring_method == 'o') && (operation != 'r')) {
     for (int i = 0; i < (int)geom.faces().size(); i++) {
       pair<Vec3d, Color> color_cent;
       color_cent.first = geom.face_cent(i);
@@ -1656,7 +1659,7 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
   }
 
   // if coloring new faces, restore color of previous faces
-  if (opts.face_coloring_method == 'o') {
+  if ((opts.face_coloring_method == 'o') && (operation != 'r')) {
     for (int i = 0; i < (int)geom.faces().size(); i++) {
       Vec3d face_centroid = geom.face_cent(i);
       bool found = false;
