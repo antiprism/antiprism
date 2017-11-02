@@ -1605,11 +1605,13 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
   operation_number++;
 
   string digits_ge_3 = digits_ge_3_str(); // t processed with utility
+  string non_color_ops = "r+-";
 
   // if coloring new faces, track color of current faces
-  // skip for reflections
+  // skip for reflections, orientation (when colors are not altered)
   vector<pair<Vec3d, Color>> color_centroids;
-  if ((opts.face_coloring_method == 'o') && (operation != 'r')) {
+  if ((opts.face_coloring_method == 'o') &&
+      (non_color_ops.find(operation) == string::npos)) {
     for (int i = 0; i < (int)geom.faces().size(); i++) {
       pair<Vec3d, Color> color_cent;
       color_cent.first = geom.face_cent(i);
@@ -1697,7 +1699,8 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
   }
 
   // if coloring new faces, restore color of previous faces
-  if ((opts.face_coloring_method == 'o') && (operation != 'r')) {
+  if ((opts.face_coloring_method == 'o') &&
+      (non_color_ops.find(operation) == string::npos)) {
     for (int i = 0; i < (int)geom.faces().size(); i++) {
       Vec3d face_centroid = geom.face_cent(i);
       bool found = false;
