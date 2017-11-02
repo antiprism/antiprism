@@ -514,10 +514,12 @@ void Geometry::verts_merge(map<int, int> &vmap)
       if (vmi != vmap.end())
         raw_faces()[i][j] = vmap[idx];
     }
-    auto vi = unique(raw_faces()[i].begin(), raw_faces()[i].end());
-    if (faces(i, 0) == *(vi - 1))
-      vi--;
-    raw_faces()[i].resize(vi - faces(i).begin());
+    if (raw_faces()[i].size()) {
+      auto vi = unique(raw_faces()[i].begin(), raw_faces()[i].end());
+      if (faces(i, 0) == *(vi - 1))
+        vi--;
+      raw_faces()[i].resize(vi - faces(i).begin());
+    }
     if (faces(i).size() < 3)
       del_faces.push_back(i);
   }

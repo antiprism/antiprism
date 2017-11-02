@@ -74,71 +74,91 @@ void truncate_verts(Geometry &geom, vector<int> &v_idxs, double ratio,
   if (!info)
     info = &tmp_info;
 
-  bool merge = (ratio == 0.5);
-  map<vector<int>, vector<int>> e_to_vs; // vertex pairs to merge
-  const vector<Vec3d> &verts = geom.verts();
-  map<vector<int>, vector<int>> v3maps;
-  for (int idx : v_idxs) {
-    vector<int> cons;
-    cons = make_face_from_contours(info->get_vert_figs()[idx]);
-    int orig_vsz = verts.size();
-    vector<int> tface;
-    for (unsigned int j = 0; j < cons.size(); j++) {
-      geom.add_vert(verts[idx] + ratio * (verts[cons[j]] - verts[idx]));
-      tface.push_back(orig_vsz + j);
-      // set up maps for faces conversion of old index to new index pair
-      vector<int> v3(3);
-      v3[0] = cons[j];
-      v3[1] = idx;
-      v3[2] = cons[(j + 1) % cons.size()];
-      vector<int> v2(2);
-      v2[0] = orig_vsz + j;
-      v2[1] = orig_vsz + (j + 1) % cons.size();
-      v3maps[v3] = v2;
-      if (merge)
-        e_to_vs[make_edge(v3[0], v3[1])].push_back(orig_vsz + j);
+  Geometry trunc_geom;
+
+  // Convert v_idxs to sorted and without duplicates
+  std::sort(v_idxs.begin(), v_idxs.end());
+  v_idxs.erase(unique(v_idxs.begin(), v_idxs.end()), v_idxs.end());
+
+  // Add the non truncated vertices to the geometry. Map old to new
+  // vertex index numbers
+  map<int, int> old2new_idxs;
+  { // new scope for tempory objects
+    vector<int> v_range(geom.verts().size());
+    for (int i = 0; i < (int)geom.verts().size(); i++)
+      v_range[i] = i;
+    vector<int> non_trunc_idxs;
+    std::set_difference(v_range.begin(), v_range.end(), v_idxs.begin(),
+                        v_idxs.end(),
+                        std::inserter(non_trunc_idxs, non_trunc_idxs.begin()));
+    for (int i = 0; i < (int)non_trunc_idxs.size(); i++) {
+      int old_idx = non_trunc_idxs[i];
+      old2new_idxs[old_idx] = i;
+      trunc_geom.add_vert(geom.verts(old_idx), geom.colors(VERTS).get(old_idx));
     }
-    geom.add_face(tface);
   }
 
-  for (unsigned int i = 0; i < geom.faces().size(); i++) {
-    vector<int> tface;
-    const int fsz = geom.faces(i).size();
-    vector<vector<int>> v3s(fsz, vector<int>(3));
-    for (int j = 0; j < fsz; j++) {
-      v3s[j][0] = geom.faces(i, j);
-      v3s[j][1] = geom.faces_mod(i, (j + 1));
-      v3s[j][2] = geom.faces_mod(i, (j + 2));
-    }
-    for (auto &v3 : v3s) {
-      map<vector<int>, vector<int>>::iterator mi;
-      if ((mi = v3maps.find(v3)) != v3maps.end()) { // v3 in right order
-        tface.push_back(mi->second[0]);
-        tface.push_back(mi->second[1]);
-      }
-      else {
-        swap(v3[0], v3[2]);
-        if ((mi = v3maps.find(v3)) != v3maps.end()) { // v3 in rev order
-          tface.push_back(mi->second[1]);
-          tface.push_back(mi->second[0]);
+  // Each old edge is mapped, in each order, to a new vertex index associated
+  // with the truncation of the first edge vertex. New vertex is an original
+  // vertex location or a truncation vertex lying on the edge.
+  map<vector<int>, int> old_es2new_idxs;
+  for (int idx0 = 0; idx0 < (int)info->get_vert_cons().size(); idx0++) {
+    auto non_trunc_it = old2new_idxs.find(idx0);
+    bool truncating = non_trunc_it == old2new_idxs.end();
+    for (int j = 0; j < (int)info->get_vert_cons()[idx0].size(); j++) {
+      int idx1 = info->get_vert_cons()[idx0][j];
+      if (truncating) {
+        // is it a merged new vertex - both ends of the edge are trunc'd to 0.5
+        bool merged_vertex =
+            ratio == 0.5 && old2new_idxs.find(idx1) == old2new_idxs.end();
+        // Add the new vertex unless it is the second copy of a merged vertex
+        if (!merged_vertex || idx0 < idx1) {
+          old_es2new_idxs[{idx0, idx1}] = (int)trunc_geom.verts().size();
+          trunc_geom.add_vert(geom.verts(idx0) +
+                              ratio * (geom.verts(idx1) - geom.verts(idx0)));
         }
-        else // v3 not found
-          tface.push_back(v3[1]);
+        // Add the second copy of a merged vertex
+        if (merged_vertex && idx0 < idx1)
+          old_es2new_idxs[{idx1, idx0}] = (int)trunc_geom.verts().size() - 1;
       }
+      else
+        old_es2new_idxs[{idx0, idx1}] = non_trunc_it->second;
     }
-    geom.raw_faces()[i] = tface;
   }
 
-  if (merge) {
-    map<int, int> idx_map;
-    map<vector<int>, vector<int>>::iterator mi;
-    for (mi = e_to_vs.begin(); mi != e_to_vs.end(); mi++) {
-      if (mi->second.size() == 2) // two vertices on an edge
-        idx_map[mi->second[1]] = mi->second[0];
+  // Add faces from truncated vertices
+  for (int idx0 : v_idxs) {
+    for (const auto &cons : info->get_vert_figs()[idx0]) {
+      vector<int> face;
+      for (int idx1 : cons)
+        face.push_back(old_es2new_idxs[{idx0, idx1}]);
+      if (face.size() >= 2)
+        trunc_geom.add_face(face);
     }
-    geom.verts_merge(idx_map);
   }
-  geom.del(VERTS, v_idxs);
+
+  // Add original faces truncated at the vertices
+  for (int f_idx = 0; f_idx < (int)geom.faces().size(); f_idx++) {
+    vector<int> trunc_face;
+    for (int i = 0; i < (int)geom.faces(f_idx).size(); i++) {
+      int idx0 = geom.faces(f_idx, i);
+      int idx1 = geom.faces_mod(f_idx, i + 1);
+      int new_idx0 = old_es2new_idxs[{idx0, idx1}];
+      int new_idx1 = old_es2new_idxs[{idx1, idx0}];
+      // Add the first vertex if it is not the same as the previous vertex
+      if (!trunc_face.size() || new_idx0 != trunc_face.back())
+        trunc_face.push_back(new_idx0);
+      // Add the second vertex if it is not the same as the previous vertex
+      if (new_idx1 != trunc_face.back())
+        trunc_face.push_back(new_idx1);
+    }
+    // Clear any repeated index of the first and last entry
+    if (trunc_face.size() > 1 && trunc_face.front() == trunc_face.back())
+      trunc_face.resize(trunc_face.size() - 1);
+    trunc_geom.add_face(trunc_face, geom.colors(FACES).get(f_idx));
+  }
+
+  geom = trunc_geom;
 }
 
 // truncate vertices with vertex order (default order = 0, truncate all)
