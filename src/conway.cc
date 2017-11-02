@@ -1128,6 +1128,10 @@ void verbose(char operation, int op_var, const cn_opts &opts)
     }
     else if (operation == '_')
       operator_name = "planarizing ...";
+    else if (operation == '+')
+      operator_name = "orient positive mode";
+    else if (operation == '-')
+      operator_name = "orient negative mode";
     else if (operation == '@')
       operator_name = "non-orientable geometry";
     else if (operation == '$')
@@ -1846,6 +1850,7 @@ int main(int argc, char *argv[])
     opts.read_or_error(geom, opts.ifile);
 
   // the program works better with oriented input, centroid at the origin
+  verbose('+', 1, opts);
   geom.orient();
   if (!geom.is_oriented())
     opts.warning("input file contains a non-orientable geometry. output is "
