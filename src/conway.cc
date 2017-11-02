@@ -83,6 +83,7 @@ ConwayOperator conway_operator_list[]{
     {"o",  "ortho",         true,  false }, // allows N >= 0
     {"p",  "propellor",     false, true  },
     {"q",  "quinto",        false, false },
+    {"R",  "reflect orient",false, false },
     {"r",  "reflect",       false, false },
     {"S",  "seed",          false, false },
     {"s",  "snub",          false, false },
@@ -1603,9 +1604,10 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
   // truncate with N>1 uses Hart algorithm
   if (operation == 't' && op_var > 1)
     antiprism_truncate(geom, CN_ONE_THIRD, op_var);
-  else if (operation == 'r') {
+  else if ((operation == 'r') || (operation == 'R')) {
     antiprism_reflect(geom);
-    reflect_toggle++;
+    if (operation == 'R')
+      reflect_toggle++;
     // decrimenting operation number gives consistent colors
     operation_number--;
   }
