@@ -65,34 +65,34 @@ struct ConwayOperator {
 
 // clang-format off
 ConwayOperator conway_operator_list[]{
-    {"a",  "ambo",          false, true  },
-    {"b",  "bevel",         true,  false }, // allows N >= 0
-    {"c",  "chamfer",       false, true  },
-    {"d",  "dual",          false, true  },
-    {"e",  "expand",        true,  false }, // allows N >= 0
-    {"g",  "gyro",          false, true  },
-    {"J",  "joined-medial", false, false }, // replaces wiki M0
-    {"j",  "join",          false, false },
-    {"k",  "kis",           true,  true  }, // allows N >= 3 for vertices
-    {"K",  "stake",         true,  false }, // allows N >= 3 for faces
-    {"L",  "lace",          true,  false }, // allows N >= 3 for faces, or 0
-    {"l",  "loft",          true,  false }, // allows N >= 3 for faces
-    {"M",  "medial",        true,  false }, // allows N >= 0
-    {"m",  "meta",          true,  false }, // allows N >= 0
-    {"n",  "needle",        false, false },
-    {"o",  "ortho",         true,  false }, // allows N >= 0
-    {"p",  "propellor",     false, true  },
-    {"q",  "quinto",        false, false },
-    {"R",  "reflect orient",false, false },
-    {"r",  "reflect",       false, false },
-    {"S",  "seed",          false, false },
-    {"s",  "snub",          false, false },
-    {"t",  "truncate",      true,  false }, // allows N >= 3 for faces
-    {"u",  "subdivide",     false, false },
-    {"w",  "whirl",         false, true  },
-    {"X",  "cross",         false, false },
-    {"z",  "zip",           false, false },
-
+    {"a",  "ambo",            false, true  },
+    {"b",  "bevel",           true,  false }, // allows N >= 0
+    {"c",  "chamfer",         false, true  },
+    {"d",  "dual",            false, true  },
+    {"e",  "expand",          true,  false }, // allows N >= 0
+    {"g",  "gyro",            false, true  },
+    {"J",  "joined-medial",   false, false }, // replaces wiki M0
+    {"j",  "join",            false, false },
+    {"k",  "kis",             true,  true  }, // allows N >= 3 for vertices
+    {"K",  "stake",           true,  false }, // allows N >= 3 for faces
+    {"L",  "lace",            true,  false }, // allows N >= 3 for faces, or 0
+    {"l",  "loft",            true,  false }, // allows N >= 3 for faces
+    {"M",  "medial",          true,  false }, // allows N >= 0
+    {"m",  "meta",            true,  false }, // allows N >= 0
+    {"n",  "needle",          false, false },
+    {"o",  "ortho",           true,  false }, // allows N >= 0
+    {"p",  "propellor",       false, true  },
+    {"q",  "quinto",          false, false },
+    {"r",  "reflect",         false, false },
+    {"S",  "seed",            false, false },
+    {"s",  "snub",            false, false },
+    {"t",  "truncate",        true,  false }, // allows N >= 3 for faces
+    {"u",  "subdivide",       false, false },
+    {"w",  "whirl",           false, true  },
+    {"X",  "cross",           false, false },
+    {"z",  "zip",             false, false },
+    {"+",  "orient positive", false, false },
+    {"-",  "orient negative", false, false },
 };
 // clang-format on
 
@@ -652,6 +652,11 @@ void extended_help()
 "              new edges \"zipped\" between original faces. It is also called\n"
 "              bitruncation\n"
 "\n"
+"Orientation of the input model will have an effect on chiral operations such as\n"
+"snub or whirl. The orientation is set to positive by default. Two operations\n"
+"have been added to control orientation:\n"
+"+ (plus sign) = positive orientation  - (minus sign) = negative orientation\n"
+"Changing orientation can be placed anywhere in the operation string\n"
 "\n"
 "Summary of operators which can take a number n\n"
 "\n"
@@ -1571,10 +1576,10 @@ void antiprism_truncate(Geometry &geom, double ratio, int n)
   truncate_verts(geom, ratio, n);
 }
 
-void orient_planar(Geometry &geom, int reflect_toggle, const cn_opts &opts)
+void orient_planar(Geometry &geom, bool orientation_positive, const cn_opts &opts)
 {
   // orientation is reversed if reflected 1=positive 2=negative
-  geom.orient((is_even(reflect_toggle)) ? 1 : 2);
+  geom.orient((orientation_positive) ? 1 : 2);
   if (!geom.is_oriented())
     verbose('@', 0, opts);
 
@@ -1583,7 +1588,7 @@ void orient_planar(Geometry &geom, int reflect_toggle, const cn_opts &opts)
 }
 
 void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
-             int &reflect_toggle, const cn_opts &opts)
+             bool &orientation_positive, const cn_opts &opts)
 {
   operation_number++;
 
@@ -1604,11 +1609,17 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
   // truncate with N>1 uses Hart algorithm
   if (operation == 't' && op_var > 1)
     antiprism_truncate(geom, CN_ONE_THIRD, op_var);
-  else if ((operation == 'r') || (operation == 'R')) {
+  else if (operation == 'r') {
     antiprism_reflect(geom);
-    if (operation == 'R')
-      reflect_toggle++;
     // decrimenting operation number gives consistent colors
+    operation_number--;
+  }
+  else if (operation == '+') {
+    orientation_positive = true;
+    operation_number--;
+  }
+  else if (operation == '-') {
+    orientation_positive = false;
     operation_number--;
   }
   else {
@@ -1669,6 +1680,8 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
       }
     }
     geom.del(FACES, dels);
+    // remove any free vertices that were formed
+    geom.del(VERTS, geom.get_info().get_free_verts());
   }
 
   // if coloring new faces, restore color of previous faces
@@ -1689,12 +1702,12 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
     }
   }
 
-  orient_planar(geom, reflect_toggle, opts);
+  orient_planar(geom, orientation_positive, opts);
 }
 
 void do_operations(Geometry &geom, cn_opts &opts)
 {
-  int reflect_toggle = 0;
+  bool orientation_positive = true;
   int operation_number = 0;
 
   for (auto operation : opts.operations) {
@@ -1740,18 +1753,18 @@ void do_operations(Geometry &geom, cn_opts &opts)
     if (hart_operation_done) {
       // these steps are needed for hart_mode
       operation_number++;
-      orient_planar(geom, reflect_toggle, opts);
+      orient_planar(geom, orientation_positive, opts);
     }
     else {
       // wythoff mode
       if (opts.alpha_user.find(operation->op) == string::npos)
         wythoff(geom, operation->op, operation->op_var, operation_number,
-                reflect_toggle, opts);
+                orientation_positive, opts);
       else {
         for (auto operation_user : opts.operations_user[operation->op]) {
           verbose(operation_user->op, operation_user->op_var, opts);
           wythoff(geom, operation_user->op, operation_user->op_var,
-                  operation_number, reflect_toggle, opts);
+                  operation_number, orientation_positive, opts);
         }
       }
     }
