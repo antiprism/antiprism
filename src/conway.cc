@@ -1038,16 +1038,17 @@ void cn_opts::process_command_line(int argc, char **argv)
   if (operand == 'Z')
     tile_mode = true;
   if (tile_mode) {
+    warning("in tile mode", 't');
     if (hart_mode) {
       warning("polygons will not process correctly with George Hart "
               "algorithms. turned off",
               'g');
       hart_mode = false;
     }
-    if (planarization_method_set && (planarization_method != 'u')) {
-      warning("planarization method for tiling set to 'u'");
+    if (!planarization_method_set) {
+      planarization_method = 'u';
+      warning("default planarization method for tiling set to 'u'");
     }
-    planarization_method = 'u';
   }
 
   if (hart_mode) {
@@ -1572,7 +1573,13 @@ void antiprism_dual(Geometry &geom)
   geom = dual;
 }
 
-void antiprism_reflect(Geometry &geom) { geom.transform(Trans3d::inversion()); }
+void antiprism_reflect(Geometry &geom, const cn_opts &opts)
+{
+  if (opts.tile_mode)
+    geom.transform(Trans3d::reflection(Vec3d(1, 0, 0)));
+  else
+    geom.transform(Trans3d::inversion());
+}
 
 // built in truncate from off_util
 void antiprism_truncate(Geometry &geom, double ratio, int n)
@@ -1580,7 +1587,8 @@ void antiprism_truncate(Geometry &geom, double ratio, int n)
   truncate_verts(geom, ratio, n);
 }
 
-void orient_planar(Geometry &geom, bool orientation_positive, const cn_opts &opts)
+void orient_planar(Geometry &geom, bool orientation_positive,
+                   const cn_opts &opts)
 {
   // orientation is reversed if reflected 1=positive 2=negative
   geom.orient((orientation_positive) ? 1 : 2);
@@ -1614,7 +1622,7 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
   if (operation == 't' && op_var > 1)
     antiprism_truncate(geom, CN_ONE_THIRD, op_var);
   else if (operation == 'r') {
-    antiprism_reflect(geom);
+    antiprism_reflect(geom, opts);
     // decrimenting operation number gives consistent colors
     operation_number--;
   }
@@ -1851,7 +1859,7 @@ int main(int argc, char *argv[])
 
   // the program works better with oriented input, centroid at the origin
   verbose('+', 1, opts);
-  geom.orient();
+  geom.orient(1); // 1=positive
   if (!geom.is_oriented())
     opts.warning("input file contains a non-orientable geometry. output is "
                  "unpredictable");
