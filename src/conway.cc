@@ -1570,6 +1570,17 @@ void antiprism_truncate(Geometry &geom, double ratio, int n)
   truncate_verts(geom, ratio, n);
 }
 
+void orient_planar(Geometry &geom, int reflect_toggle, const cn_opts &opts)
+{
+  // orientation is reversed if reflected 1=positive 2=negative
+  geom.orient((is_even(reflect_toggle)) ? 1 : 2);
+  if (!geom.is_oriented())
+    verbose('@', 0, opts);
+
+  // planarize after each step
+  cn_planarize(geom, opts);
+}
+
 void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
              int &reflect_toggle, const cn_opts &opts)
 {
@@ -1676,13 +1687,7 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
     }
   }
 
-  // orientation is reversed if reflected 1=positive 2=negative
-  geom.orient((is_even(reflect_toggle)) ? 1 : 2);
-  if (!geom.is_oriented())
-    verbose('@', 0, opts);
-
-  // planarize after each step
-  cn_planarize(geom, opts);
+  orient_planar(geom, reflect_toggle, opts);
 }
 
 void do_operations(Geometry &geom, cn_opts &opts)
@@ -1730,8 +1735,13 @@ void do_operations(Geometry &geom, cn_opts &opts)
       }
     }
 
-    // wythoff mode (with exceptions)
-    if (!hart_operation_done) {
+    if (hart_operation_done) {
+      // these steps are needed for hart_mode
+      operation_number++;
+      orient_planar(geom, reflect_toggle, opts);
+    }
+    else {
+      // wythoff mode
       if (opts.alpha_user.find(operation->op) == string::npos)
         wythoff(geom, operation->op, operation->op_var, operation_number,
                 reflect_toggle, opts);
@@ -1742,18 +1752,6 @@ void do_operations(Geometry &geom, cn_opts &opts)
                   operation_number, reflect_toggle, opts);
         }
       }
-    }
-    else {
-      // these steps are needed for hart_mode
-      operation_number++;
-
-      // orientation is reversed if reflected 1=positive 2=negative
-      geom.orient((is_even(reflect_toggle)) ? 1 : 2);
-      if (!geom.is_oriented())
-        verbose('@', 0, opts);
-
-      // planarize after each step
-      cn_planarize(geom, opts);
     }
   }
 }
