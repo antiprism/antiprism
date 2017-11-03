@@ -1540,7 +1540,7 @@ void hart_chamfer(Geometry &geom, const cn_opts &opts)
 }
 
 // whirl for hart code
-void hart_whirl(Geometry &geom, const cn_opts &opts)
+void hart_whirl(Geometry &geom, bool orientation_positive, const cn_opts &opts)
 {
   int num_faces = geom.raw_faces().size();
 
@@ -1548,9 +1548,12 @@ void hart_whirl(Geometry &geom, const cn_opts &opts)
   hart_gyro(geom);
 
   // after intra-step operation
-  geom.orient();
-  if (!geom.is_oriented())
+  GeometryInfo info(geom);
+  if (!info.is_orientable())
     verbose('@', 0, opts);
+  else
+    // orientation is reversed if reflected 1=positive 2=negative
+    geom.orient((orientation_positive) ? 1 : 2);
 
   cn_planarize(geom, opts);
 
@@ -1590,10 +1593,12 @@ void antiprism_truncate(Geometry &geom, double ratio, int n)
 void orient_planar(Geometry &geom, bool orientation_positive,
                    const cn_opts &opts)
 {
-  // orientation is reversed if reflected 1=positive 2=negative
-  geom.orient((orientation_positive) ? 1 : 2);
-  if (!geom.is_oriented())
+  GeometryInfo info(geom);
+  if (!info.is_orientable())
     verbose('@', 0, opts);
+  else
+    // orientation is reversed if reflected 1=positive 2=negative
+    geom.orient((orientation_positive) ? 1 : 2);
 
   // planarize after each step
   cn_planarize(geom, opts);
@@ -1868,10 +1873,11 @@ int main(int argc, char *argv[])
 
   // the program works better with oriented input, centroid at the origin
   verbose('+', 1, opts);
-  geom.orient(1); // 1=positive
-  if (!geom.is_oriented())
+  if (!info.is_orientable())
     opts.warning("input file contains a non-orientable geometry. output is "
                  "unpredictable");
+  else
+    geom.orient(1); // 1=positive
 
   centroid_to_origin(geom);
 
