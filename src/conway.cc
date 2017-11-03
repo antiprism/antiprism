@@ -1860,6 +1860,12 @@ int main(int argc, char *argv[])
   else
     opts.read_or_error(geom, opts.ifile);
 
+  GeometryInfo info(geom);
+  if ((opts.planarization_method == 'p') && !info.is_closed()) {
+    opts.planarization_method = 'm';
+    opts.warning("input model is not closed. Planarization method p will not work. Switching to m");
+  }
+
   // the program works better with oriented input, centroid at the origin
   verbose('+', 1, opts);
   geom.orient(1); // 1=positive
