@@ -11,7 +11,8 @@ xx-xx-18 Adrian Rossiter <adrian@antiprism.com>
          Fixes
             pol_recip: dual vertices for very small faces
             poly_weave: input can be non-closed surface
-            off_util: -u input can be non-closed surface
+            off_util: -u input can be non-closed surface, -T/-E work with
+              more models
             antiview: default handling of large models
 
 Version 0.24.1

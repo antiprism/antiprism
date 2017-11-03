@@ -57,13 +57,17 @@ void make_edges_to_faces(Geometry &geom)
   geom.clear(FACES);
 
   for (auto &mv : edges) {
-    vector<int> face(4);
-    face[0] = mv.first[0];
-    face[1] = mv.second[0] + orig_v_sz;
-    face[2] = mv.first[1];
-    face[3] = mv.second[1] + orig_v_sz;
-    geom.add_face(face);
+    if (mv.second.size() == 2) {
+      vector<int> face(4);
+      face[0] = mv.first[0];
+      face[1] = mv.second[0] + orig_v_sz;
+      face[2] = mv.first[1];
+      face[3] = mv.second[1] + orig_v_sz;
+      geom.add_face(face);
+    }
   }
+
+  geom.del(VERTS, geom.get_info().get_free_verts());
 }
 
 // truncate vertices specified by index number
