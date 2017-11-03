@@ -848,19 +848,18 @@ static void make_meta(const Geometry &geom, Geometry &meta,
     meta.add_vert(face_pt, Color(2));
   }
 
-  auto ef_pairs = geom.get_edge_face_pairs();
-  for (auto &ef : ef_pairs) {
-    // The edge and face pair make a quadrilateral
-    // Add the centre to this quadrilateral
-    int e_idx = meta.add_vert(geom.edge_cent(ef.first), Color(1));
-    // Add four triangles
-    if (ef.second[0] >= 0) {
-      meta.add_face(ef.first[0], e_idx, ef.second[0] + f_start, -1);
-      meta.add_face(ef.first[1], e_idx, ef.second[0] + f_start, -1);
-    }
-    if (ef.second[1] >= 0) {
-      meta.add_face(ef.first[1], e_idx, ef.second[1] + f_start, -1);
-      meta.add_face(ef.first[0], e_idx, ef.second[1] + f_start, -1);
+  GeometryInfo info(geom);
+  map<vector<int>, int> e2v;
+  for (const auto &e : info.get_impl_edges())
+    e2v[e] = meta.add_vert(geom.edge_cent(e), Color(1));
+  for (int f_idx = 0; f_idx < (int)geom.faces().size(); f_idx++) {
+    int f_cent_idx = f_start + f_idx;
+    for (int v = 0; v < (int)geom.faces(f_idx).size(); v++) {
+      int v0 = geom.faces(f_idx, v);
+      int v1 = geom.faces_mod(f_idx, v + 1);
+      int e_cent_idx = e2v[make_edge(v0, v1)];
+      meta.add_face(v0, e_cent_idx, f_cent_idx, -1);
+      meta.add_face(v1, e_cent_idx, f_cent_idx, -1);
     }
   }
 }
@@ -1337,6 +1336,12 @@ void Tiling::reverse_pattern()
     path.flip_start_faces();
 }
 
+void Tiling::start_everywhere()
+{
+  for (auto &path : pat_paths)
+    path.set_start_faces('*');
+}
+
 static void delete_verts(Geometry &geom, const vector<int> &v_nos)
 {
   vector<int> dels = v_nos;
@@ -1438,6 +1443,9 @@ Status Tiling::make_tiling(Geometry &geom, vector<int> *tile_counts) const
     int start_faces_sz = geom.faces().size();
     unsigned char start_faces = pat.get_start_faces();
     for (int i = 0; i < faces_sz; i++) {
+      // for(int f=0; f<(int)seen.size(); f++)
+      //  fprintf(stderr, "i=%d, seen[%d]=%d\n", i, f, (int)seen[f]);
+      // fprintf(stderr, "\n");
       if (!seen[i] && valid_start_face(i, start_faces)) {
         add_circuit(geom, i, pat, seen, col, index_order, point_vertex_offsets);
         if (one_of_each_tile)

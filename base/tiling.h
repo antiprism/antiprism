@@ -66,9 +66,13 @@ public:
    *  successfully read, otherwise \c false to indicate an error. */
   Status read(const std::string &pat);
 
-  /// Get the start face types where the for the tile
-  /**\return Start face types '+' positive, '-' negavie or '*' both. */
+  /// Get the start face types for the tile
+  /**\return Start face types '+' positive, '-' negative or '*' both. */
   unsigned char get_start_faces() const { return start_faces; }
+
+  /// Set the start face types for the tile
+  /**\param start start face types: '+' positive, '-' negative or '*' both. */
+  void set_start_faces(unsigned char start = '*') { start_faces = start; }
 
   /// Start reading operations
   void start_op() const;
@@ -181,8 +185,11 @@ public:
   /**\return The base meta tiling */
   const Geometry &get_meta() const { return meta; }
 
-  /// Reverse pattern, switch pattern start faces
+  /// Reverse pattern, switch current tile start faces
   void reverse_pattern();
+
+  /// Set current tile start faces to both (*)
+  void start_everywhere();
 
   /// Set that only tile of each kind should be plotted
   /**\param val \c true, only one of each kind, otherwise \c false, all */

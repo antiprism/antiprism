@@ -215,18 +215,27 @@ int main(int argc, char *argv[])
   opts.read_or_error(geom, opts.ifile);
 
   GeometryInfo info(geom);
-  if (!info.is_orientable())
-    opts.error("base polyhedron is not orientable");
-  if (!opts.input_is_meta && !info.is_oriented()) {
-    opts.warning("base polyhedron is not oriented; it will be oriented.");
+  bool orientable = true;
+  if (!info.is_orientable()) {
+    orientable = false;
+    opts.warning("base polyhedron is not orientable: tiles will start from "
+                 "every meta triangle");
+  }
+  if (!opts.input_is_meta && orientable && !info.is_oriented()) {
+    opts.warning("base polyhedron is not oriented: it will be oriented.");
     geom.orient(1); // positive orientation
   }
 
   Tiling &tiling = opts.tiling;
   if (opts.relabel != "")
     opts.print_status_or_exit(tiling.relabel_pattern(opts.relabel), 'm');
-  if (opts.reverse)
+  if (opts.reverse) {
     tiling.reverse_pattern();
+    opts.warning("base polyhedron is not oriented: reverse has no effect", 'R');
+  }
+
+  if (!orientable)
+    tiling.start_everywhere();
 
   Status stat = tiling.set_geom(geom, opts.input_is_meta, opts.face_ht);
   if (stat.is_error())
@@ -234,6 +243,8 @@ int main(int argc, char *argv[])
   Geometry ogeom;
   vector<int> tile_counts;
   opts.print_status_or_exit(tiling.make_tiling(ogeom, &tile_counts));
+  if (!orientable)
+    merge_coincident_elements(ogeom, "f");
 
   if (!opts.quiet) {
     fprintf(stderr, "\n");
