@@ -101,7 +101,7 @@ void stellate_opts::usage()
 "\n"
 "Options\n"
 "%s"
-"  -n <fnos> face number of input file for stellation diagram (default: 0)\n"
+"  -f <fnos> face number of input file for stellation diagram (default: 0)\n"
 "            followed by face numbers of stellation diagram for stellation\n"
 "            model seperated by commas. multiple -n parameters as needed\n"
 "  -s <sym>  symmetry subgroup (Schoenflies notation)\n"
