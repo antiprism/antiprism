@@ -534,20 +534,17 @@ int main(int argc, char *argv[])
   opts.read_or_error(geom, opts.ifile);
 
   // process symmetry symbol
-  Symmetry geom_full_sym(geom);
-  string geom_sym_symbol = opts.sym_str;
-  if (!geom_sym_symbol.length())
-    geom_sym_symbol = geom_full_sym.get_symbol().c_str();
+  Symmetry sym(geom);
+  if (!opts.sym_str.length())
+    opts.sym_str = sym.get_symbol().c_str();
   else {
     // if specified, check validity
-    Symmetry geom_sub_sym = geom_full_sym;
-    vector<vector<set<int>>> sym_equivs;
-    geom_sub_sym.init(geom, &sym_equivs);
-
-    Status stat = geom_full_sym.get_sub_sym(geom_sym_symbol, &geom_sub_sym);
+    sym.init(geom);
+    Symmetry full_sym = sym;
+    Status stat = full_sym.get_sub_sym(opts.sym_str, &sym);
     if (stat.is_error())
       opts.error(msg_str("invalid subsymmetry '%s': %s",
-                         geom_sym_symbol.c_str(), stat.c_msg()),
+                         opts.sym_str.c_str(), stat.c_msg()),
                  's');
   }
 
@@ -582,7 +579,7 @@ int main(int argc, char *argv[])
     // construct the diagrams
     if (!diagrams[stellation_face_idx].verts().size())
       diagrams[stellation_face_idx] =
-          make_stellation_diagram(geom, stellation_face_idx, geom_sym_symbol,
+          make_stellation_diagram(geom, stellation_face_idx, opts.sym_str,
                                   opts.projection_width, opts.epsilon);
 
     // check face index range. start from 1 since 0 is a placeholder for
