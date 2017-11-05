@@ -562,7 +562,7 @@ int main(int argc, char *argv[])
                       idx_lists[i], INT_MAX, false),
         'f');
     if (!idx_lists[i].size())
-      opts.error("file contains no elements of this query type", 'f');
+      opts.error("no face number are input", 'f');
 
     // stellation face index is in the first position
     int stellation_face_idx = idx_lists[i][0];
