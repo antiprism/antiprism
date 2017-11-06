@@ -215,12 +215,15 @@ public:
  *  specifying a Conway Notation operator if \c pat_is_conway_op is \c true)
  * \param pat_is_conway_op if \c true the pattern is a Conway Notation
  *  operator, typically a single letter possibly followed by an integer.
+ * \param oriented geom is oriented, otherwise tiles use all start triangles
+ *  and result may not be a polyhedron.
  * \param reverse reverse the pattern, flip start triangles
  * \return status, which evaluates to \c true if the geometry and
  *  pattern were valid, otherwise \c false to indicate an error. */
 Status wythoff_make_tiling(Geometry &tiled_geom, const Geometry &base_geom,
                            const std::string &pat,
-                           bool pat_is_conway_op = false, bool reverse = false);
+                           bool pat_is_conway_op = false, bool oriented = true,
+                           bool reverse = false);
 
 /// Get vertex points of a Schwarz triangle, and its symmetry group
 /**\param fracs six integers, taken in pairs as the angle fractions.

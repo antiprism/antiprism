@@ -1812,13 +1812,15 @@ namespace anti {
 
 Status wythoff_make_tiling(Geometry &tiled_geom, const Geometry &base_geom,
                            const std::string &pat, bool pat_is_conway_op,
-                           bool reverse)
+                           bool oriented, bool reverse)
 {
   Tiling tiling;
   Status stat =
       (pat_is_conway_op) ? tiling.read_conway(pat) : tiling.read_pattern(pat);
   if (!stat.is_error()) {
     tiling.set_geom(base_geom); // not meta, so will not fail
+    if (!oriented)
+      tiling.start_everywhere();
     if (reverse)
       tiling.reverse_pattern();
     tiling.make_tiling(tiled_geom);
