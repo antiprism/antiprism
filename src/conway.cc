@@ -1678,13 +1678,13 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
 
     // fprintf(stderr, "wythoff_op = %s\n", wythoff_op.c_str());
     opts.print_status_or_exit(
-        wythoff_make_tiling(geom, geom, wythoff_op, true));
+        wythoff_make_tiling(geom, geom, wythoff_op, true, false));
 
     // if faces were deleted, reappend them
-    if (dels.size()) {
+    if (dels.size())
       geom.append(geom_save);
-      merge_coincident_elements(geom, "vef", opts.epsilon);
-    }
+    // set to merge in any case if duplicates are encountered
+    merge_coincident_elements(geom, "vef", opts.epsilon);
 
     // remove digons
     dels.clear();
@@ -1868,7 +1868,8 @@ int main(int argc, char *argv[])
   GeometryInfo info(geom);
   if ((opts.planarization_method == 'p') && !info.is_closed()) {
     opts.planarization_method = 'm';
-    opts.warning("input model is not closed. Planarization method p will not work. Switching to m");
+    opts.warning("input model is not closed. Planarization method p will not "
+                 "work. Switching to m");
   }
 
   // the program works better with oriented input, centroid at the origin
