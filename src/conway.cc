@@ -471,6 +471,7 @@ public:
   char operand;
   int poly_size;
   char planarization_method;
+  bool planarization_method_set;
   int num_iters_planar;
   int rep_count;
   bool unitize;
@@ -495,7 +496,7 @@ public:
   cn_opts()
       : ProgramOpts("conway"), cn_string(""), resolve_ops(false),
         hart_mode(false), tile_mode(false), reverse_ops(false), operand('\0'),
-        poly_size(0), planarization_method('p'), num_iters_planar(1000),
+        poly_size(0), planarization_method('p'), planarization_method_set(false), num_iters_planar(1000),
         rep_count(-1), unitize(false), verbosity(false),
         face_coloring_method('n'), face_opacity(-1), face_pattern("1"),
         epsilon(0), vert_col(Color(255, 215, 0)), // gold
@@ -802,7 +803,6 @@ void cn_opts::process_command_line(int argc, char **argv)
 {
   opterr = 0;
   int c;
-  bool planarization_method_set = false;
   int op_term = 0;
 
   string alphas_in_use = operators_str() + operands_str();
@@ -1178,28 +1178,28 @@ void unitize_vertex_radius(Geometry &geom)
   geom.transform(Trans3d::scale(1 / avg));
 }
 
-void cn_planarize(Geometry &geom, const cn_opts &opts)
+void cn_planarize(Geometry &geom, char planarization_method, const cn_opts &opts)
 {
   if (opts.num_iters_planar != 0) {
     verbose('_', 0, opts);
-    if (opts.planarization_method == 'p')
+    if (planarization_method == 'p')
       planarize_bd(geom, opts.num_iters_planar, opts.rep_count, opts.epsilon);
-    else if (opts.planarization_method == 'm')
+    else if (planarization_method == 'm')
       planarize_mm(geom, opts.num_iters_planar, opts.rep_count, opts.epsilon);
-    else if (opts.planarization_method == 'c') {
+    else if (planarization_method == 'c') {
       // RK - need?
       // unitize_vertex_radius(geom);
       // geom.transform(Trans3d::translate(-centroid(geom.verts())));
       canonicalize_mm(geom, opts.num_iters_planar, opts.rep_count,
                       opts.epsilon);
     }
-    else if (opts.planarization_method == 'u') {
+    else if (planarization_method == 'u') {
       minmax_unit_planar(geom, opts.num_iters_planar, opts.rep_count,
                          opts.epsilon);
     }
     // note: sometimes radius becomes very small with option p
     // if unitizing faces, don't alter radius
-    if (opts.planarization_method != 'u')
+    if (planarization_method != 'u')
       unitize_nearpoints_radius(geom);
   }
 }
@@ -1593,15 +1593,23 @@ void antiprism_truncate(Geometry &geom, double ratio, int n)
 void orient_planar(Geometry &geom, bool orientation_positive,
                    const cn_opts &opts)
 {
+  // local copy
+  char planarization_method = opts.planarization_method;
+
   GeometryInfo info(geom);
-  if (!info.is_orientable())
+  if (!info.is_orientable()) {
     verbose('@', 0, opts);
+    if (!opts.planarization_method_set) {
+      planarization_method = 'u';
+      opts.warning("default planarization method for non-orientable geometry set to 'u'");
+    }
+  }
   else
     // orientation is reversed if reflected 1=positive 2=negative
     geom.orient((orientation_positive) ? 1 : 2);
 
   // planarize after each step
-  cn_planarize(geom, opts);
+  cn_planarize(geom, planarization_method, opts);
 }
 
 void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
