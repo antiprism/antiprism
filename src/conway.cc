@@ -470,8 +470,8 @@ public:
   bool reverse_ops;
   char operand;
   int poly_size;
-  char planarization_method;
-  bool planarization_method_set;
+  char planarize_method;
+  bool planarize_method_set;
   int num_iters_planar;
   int rep_count;
   bool unitize;
@@ -496,8 +496,8 @@ public:
   cn_opts()
       : ProgramOpts("conway"), cn_string(""), resolve_ops(false),
         hart_mode(false), tile_mode(false), reverse_ops(false), operand('\0'),
-        poly_size(0), planarization_method('p'), planarization_method_set(false), num_iters_planar(1000),
-        rep_count(-1), unitize(false), verbosity(false),
+        poly_size(0), planarize_method('p'), planarize_method_set(false),
+        num_iters_planar(1000), rep_count(-1), unitize(false), verbosity(false),
         face_coloring_method('n'), face_opacity(-1), face_pattern("1"),
         epsilon(0), vert_col(Color(255, 215, 0)), // gold
         edge_col(Color(211, 211, 211))            // lightgrey
@@ -772,6 +772,7 @@ void cn_opts::usage()
 "               m - mathematica planarize\n"
 "               c - mathematica canonicalize\n"
 "               u - make faces into unit-edged regular polygons (minmax -a u)\n"
+"               x - none\n"
 "  -i <itrs> maximum inter-step planarization iterations (default: 1000)\n"
 "  -z <n>    status reporting every n iterations, -1 for no status (default: -1)\n"
 "  -l <lim>  minimum distance change to terminate planarization, as negative\n"
@@ -914,21 +915,20 @@ void cn_opts::process_command_line(int argc, char **argv)
     }
 
     case 'p':
-      planarization_method_set = true;
-      if (strlen(optarg) == 1 && strchr("pmcu", int(*optarg)))
-        planarization_method = *optarg;
+      planarize_method_set = true;
+      if (strlen(optarg) == 1 && strchr("pmcux", int(*optarg)))
+        planarize_method = *optarg;
       else
-        error("planarize method type must be p, m, c or u", c);
+        error("planarize method type must be p, m, c, u or x", c);
       break;
 
     case 'l':
       print_status_or_exit(read_int(optarg, &sig_compare), c);
       if (sig_compare < 0) {
-        warning("canonicalization limit is negative, and so ignored", c);
+        warning("limit is negative, and so ignored", c);
       }
       if (sig_compare > DEF_SIG_DGTS) {
-        warning("canonicalization limit is very small, may not be attainable",
-                c);
+        warning("limit is very small, may not be attainable", c);
       }
       break;
 
@@ -1045,8 +1045,8 @@ void cn_opts::process_command_line(int argc, char **argv)
               'g');
       hart_mode = false;
     }
-    if (!planarization_method_set) {
-      planarization_method = 'u';
+    if (!planarize_method_set) {
+      planarize_method = 'u';
       warning("default planarization method for tiling set to 'u'");
     }
   }
@@ -1178,28 +1178,28 @@ void unitize_vertex_radius(Geometry &geom)
   geom.transform(Trans3d::scale(1 / avg));
 }
 
-void cn_planarize(Geometry &geom, char planarization_method, const cn_opts &opts)
+void cn_planarize(Geometry &geom, char planarize_method, const cn_opts &opts)
 {
-  if (opts.num_iters_planar != 0) {
+  if ((opts.num_iters_planar != 0) && (opts.planarize_method != 'x')) {
     verbose('_', 0, opts);
-    if (planarization_method == 'p')
+    if (planarize_method == 'p')
       planarize_bd(geom, opts.num_iters_planar, opts.rep_count, opts.epsilon);
-    else if (planarization_method == 'm')
+    else if (planarize_method == 'm')
       planarize_mm(geom, opts.num_iters_planar, opts.rep_count, opts.epsilon);
-    else if (planarization_method == 'c') {
+    else if (planarize_method == 'c') {
       // RK - need?
       // unitize_vertex_radius(geom);
       // geom.transform(Trans3d::translate(-centroid(geom.verts())));
       canonicalize_mm(geom, opts.num_iters_planar, opts.rep_count,
                       opts.epsilon);
     }
-    else if (planarization_method == 'u') {
+    else if (planarize_method == 'u') {
       minmax_unit_planar(geom, opts.num_iters_planar, opts.rep_count,
                          opts.epsilon);
     }
     // note: sometimes radius becomes very small with option p
     // if unitizing faces, don't alter radius
-    if (planarization_method != 'u')
+    if (planarize_method != 'u')
       unitize_nearpoints_radius(geom);
   }
 }
@@ -1590,18 +1590,20 @@ void antiprism_truncate(Geometry &geom, double ratio, int n)
   truncate_verts(geom, ratio, n);
 }
 
-void orient_planar(Geometry &geom, bool orientation_positive,
-                   const cn_opts &opts)
+void orient_planar(Geometry &geom, bool &is_orientable,
+                   bool &orientation_positive, const cn_opts &opts)
 {
   // local copy
-  char planarization_method = opts.planarization_method;
+  char planarize_method = opts.planarize_method;
 
   GeometryInfo info(geom);
-  if (!info.is_orientable()) {
+  is_orientable = info.is_orientable();
+  if (!is_orientable) {
     verbose('@', 0, opts);
-    if (!opts.planarization_method_set) {
-      planarization_method = 'u';
-      opts.warning("default planarization method for non-orientable geometry set to 'u'");
+    if (!opts.planarize_method_set) {
+      planarize_method = 'u';
+      opts.warning("default planarization method for non-orientable geometry "
+                   "set to 'u'");
     }
   }
   else
@@ -1609,11 +1611,13 @@ void orient_planar(Geometry &geom, bool orientation_positive,
     geom.orient((orientation_positive) ? 1 : 2);
 
   // planarize after each step
-  cn_planarize(geom, planarization_method, opts);
+  cn_planarize(geom, planarize_method, opts);
 }
 
+// is_orientable and orientation_positive can change
 void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
-             bool &orientation_positive, const cn_opts &opts)
+             bool &is_orientable, bool &orientation_positive,
+             const cn_opts &opts)
 {
   operation_number++;
 
@@ -1686,7 +1690,17 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
 
     // fprintf(stderr, "wythoff_op = %s\n", wythoff_op.c_str());
     opts.print_status_or_exit(
-        wythoff_make_tiling(geom, geom, wythoff_op, true, false));
+        wythoff_make_tiling(geom, geom, wythoff_op, is_orientable, false));
+
+    // check for 3 faces at an edge
+    auto efpairs = geom.get_edge_face_pairs(false);
+    map<vector<int>, vector<int>>::const_iterator ei;
+    for (ei = efpairs.begin(); ei != efpairs.end(); ++ei) {
+      if (ei->second.size() > 2) {
+        opts.warning("3 or more faces to an edge");
+        break;
+      }
+    }
 
     // if faces were deleted, reappend them
     if (dels.size())
@@ -1730,13 +1744,26 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
     }
   }
 
-  orient_planar(geom, orientation_positive, opts);
+  orient_planar(geom, is_orientable, orientation_positive, opts);
 }
 
 void do_operations(Geometry &geom, cn_opts &opts)
 {
+  bool is_orientable = true;
   bool orientation_positive = true;
   int operation_number = 0;
+
+  // the program works better with oriented input, centroid at the origin
+  verbose('+', 1, opts);
+  GeometryInfo info(geom);
+  is_orientable = info.is_orientable();
+  if (!is_orientable)
+    opts.warning("input file contains a non-orientable geometry. output is "
+                 "unpredictable");
+  else
+    geom.orient(1); // 1=positive
+
+  centroid_to_origin(geom);
 
   for (auto operation : opts.operations) {
     verbose(operation->op, operation->op_var, opts);
@@ -1781,18 +1808,18 @@ void do_operations(Geometry &geom, cn_opts &opts)
     if (hart_operation_done) {
       // these steps are needed for hart_mode
       operation_number++;
-      orient_planar(geom, orientation_positive, opts);
+      orient_planar(geom, is_orientable, orientation_positive, opts);
     }
     else {
       // wythoff mode
       if (opts.alpha_user.find(operation->op) == string::npos)
         wythoff(geom, operation->op, operation->op_var, operation_number,
-                orientation_positive, opts);
+                is_orientable, orientation_positive, opts);
       else {
         for (auto operation_user : opts.operations_user[operation->op]) {
           verbose(operation_user->op, operation_user->op_var, opts);
           wythoff(geom, operation_user->op, operation_user->op_var,
-                  operation_number, orientation_positive, opts);
+                  operation_number, is_orientable, orientation_positive, opts);
         }
       }
     }
@@ -1874,21 +1901,11 @@ int main(int argc, char *argv[])
     opts.read_or_error(geom, opts.ifile);
 
   GeometryInfo info(geom);
-  if ((opts.planarization_method == 'p') && !info.is_closed()) {
-    opts.planarization_method = 'm';
+  if ((opts.planarize_method == 'p') && !info.is_closed()) {
+    opts.planarize_method = 'm';
     opts.warning("input model is not closed. Planarization method p will not "
                  "work. Switching to m");
   }
-
-  // the program works better with oriented input, centroid at the origin
-  verbose('+', 1, opts);
-  if (!info.is_orientable())
-    opts.warning("input file contains a non-orientable geometry. output is "
-                 "unpredictable");
-  else
-    geom.orient(1); // 1=positive
-
-  centroid_to_origin(geom);
 
   do_operations(geom, opts);
 
