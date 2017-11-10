@@ -211,18 +211,16 @@ public:
  * are coloured by elements used in weighting V=0, E, F, VE, EF, FV, VEF
  * \param tiled_geom to return the final model
  * \param base_geom the oriented polyhedron (or tiling) to be processed
- * \param pat the pattern to apply, in Wythoff constructive notation (or
- *  specifying a Conway Notation operator if \c pat_is_conway_op is \c true)
- * \param pat_is_conway_op if \c true the pattern is a Conway Notation
- *  operator, typically a single letter possibly followed by an integer.
+ * \param pat the pattern to apply, in Wythoff constructive notation or
+ *  by specifying a single Conway Notation operator (typically a single
+ *  letter possibly followed by an integer.)
  * \param oriented geom is oriented, otherwise tiles use all start triangles
  *  and result may not be a polyhedron.
  * \param reverse reverse the pattern, flip start triangles
  * \return status, which evaluates to \c true if the geometry and
  *  pattern were valid, otherwise \c false to indicate an error. */
 Status wythoff_make_tiling(Geometry &tiled_geom, const Geometry &base_geom,
-                           const std::string &pat,
-                           bool pat_is_conway_op = false, bool oriented = true,
+                           const std::string &pat, bool oriented = true,
                            bool reverse = false);
 
 /// Get vertex points of a Schwarz triangle, and its symmetry group
