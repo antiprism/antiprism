@@ -123,7 +123,7 @@ void stellate_opts::usage()
 "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
 "  -F <opt>  face coloring method. d - from diagram, s - symmetry (default: d)\n"
 "               c - color by compound\n"
-"               C - face/face connections map 0: < 1, map 1: all = 1, map 2: > 1\n"
+"               C - face/face connection count using map n colors\n"
 "               keyword: none - sets no color\n"
 "  -E <col>  edge color. f - from faces (default: invisible)\n"
 "               C - edge/face connection count using map n colors\n"
@@ -296,6 +296,9 @@ void color_stellation(Geometry &stellation, char face_coloring_method,
   ColorMap *cmap = colormap_from_name(map_string.c_str());
   clrng.add_cmap(cmap);
 
+  // in case of face coloring C
+  Geometry kis;
+
   // stellation is built with color from the diagram
   if (face_coloring_method != 'd') {
     if (!face_coloring_method)
@@ -311,25 +314,49 @@ void color_stellation(Geometry &stellation, char face_coloring_method,
     else if (face_coloring_method == 'c')
       clrng.f_parts(true);
     else if (face_coloring_method == 'C') {
+      wythoff_make_tiling(kis, stellation, "k", true, false);
+      // remove digons
+      vector<int> dels;
+      for (int i = 0; i < (int)kis.faces().size(); i++) {
+        if (kis.faces(i).size() < 3)
+          dels.push_back(i);
+      }
+      kis.del(FACES, dels);
+      kis.orient(1);
+
+      // make new verts and edges invisible
+      kis.add_missing_impl_edges();
+      for (unsigned int i = 0; i < kis.verts().size(); i++) {
+        int v_idx = find_vert_by_coords(stellation, kis.verts()[i], epsilon);
+        if (v_idx == -1) {
+          kis.colors(VERTS).set(i, Color::invisible);
+          vector<int> edge_idx = find_edges_with_vertex(kis.edges(), i);
+          for (unsigned int j = 0; j < edge_idx.size(); j++)
+            kis.colors(EDGES).set(edge_idx[j], Color::invisible);
+        }
+      }
+      // the old faces are cleared and kis faces added
+      stellation.clear(FACES);
+      stellation.append(kis);
+      int blend_type = 1; // first color, invisible edges stay
+      merge_coincident_elements(stellation, "vef", blend_type, epsilon);
+
       for (unsigned int i = 0; i < stellation.faces().size(); i++) {
         vector<int> face = stellation.faces()[i];
         int fsz = face.size();
-        // connection count
-        // 0, if any edge has less than 1 face connected
-        // 1, if all faces connect to 1 face
-        // 2, if any edge has more than 1 face connected
-        int connection_count = 0;
+        // face to face
+        // connections with invisible faces are ignored
+        int connections = 0;
         for (int j = 0; j < fsz; j++) {
           int v1 = face[j];
           int v2 = face[(j + 1) % fsz];
-          vector<int> face_idx =
-              find_faces_with_edge(stellation.faces(), make_edge(v1, v2));
-          connection_count =
-              (face_idx.size() < 2) ? 0 : ((face_idx.size() > 2) ? 2 : 1);
-          if (face_idx.size() != 2)
-            break;
+          vector<int> edge = make_edge(v1, v2);
+          vector<int> face_idx = find_faces_with_edge(stellation.faces(), edge);
+          int edge_no = find_edge_in_edge_list(stellation.edges(), edge);
+          if (!(stellation.colors(EDGES).get(edge_no)).is_invisible())
+            connections += face_idx.size();
         }
-        stellation.colors(FACES).set(i, cmap->get_col(connection_count));
+        stellation.colors(FACES).set(i, cmap->get_col(connections));
       }
     }
     else
@@ -350,8 +377,12 @@ void color_stellation(Geometry &stellation, char face_coloring_method,
     for (const auto &edge : stellation.edges()) {
       vector<int> faces = efpairs[edge];
       int i = find_edge_in_edge_list(stellation.edges(), edge);
-      if (i > -1)
-        stellation.colors(EDGES).set(i, cmap->get_col(faces.size()));
+      if (i > -1) {
+        if (!(stellation.colors(EDGES).get(i)).is_invisible()) {
+          int connections = faces.size();
+          stellation.colors(EDGES).set(i, cmap->get_col(connections));
+        }
+      }
     }
   }
   else
@@ -367,6 +398,18 @@ void color_stellation(Geometry &stellation, char face_coloring_method,
   else
     // use color selected
     clrng.v_one_col(vertex_color);
+
+  // if using face connection coloring
+  // vertices from kis must be made invisible in stellation
+  if (face_coloring_method == 'C') {
+    for (unsigned int i = 0; i < kis.verts().size(); i++) {
+      int v_idx = find_vert_by_coords(stellation, kis.verts()[i], epsilon);
+      if (v_idx != -1) {
+        if ((kis.colors(VERTS).get(i)).is_invisible())
+          stellation.colors(VERTS).set(v_idx, Color::invisible);
+      }
+    }
+  }
 
   // set transparency
   if (face_opacity > -1)
@@ -543,8 +586,8 @@ int main(int argc, char *argv[])
     Symmetry full_sym = sym;
     Status stat = full_sym.get_sub_sym(opts.sym_str, &sym);
     if (stat.is_error())
-      opts.error(msg_str("invalid subsymmetry '%s': %s",
-                         opts.sym_str.c_str(), stat.c_msg()),
+      opts.error(msg_str("invalid subsymmetry '%s': %s", opts.sym_str.c_str(),
+                         stat.c_msg()),
                  's');
   }
 
