@@ -758,24 +758,24 @@ Geometry fill_interior(const Geometry &geom, const int lattice_type)
 {
   const vector<Vec3d> &verts = geom.verts();
 
-  map<pair<int, int>, int> min_z_vert;
-  map<pair<int, int>, int> max_z_vert;
+  map<pair<long, long>, long> min_z_vert;
+  map<pair<long, long>, long> max_z_vert;
 
-  map<pair<int, int>, int>::iterator it;
-  for (int i = 0; i < (int)verts.size(); i++) {
-    int x = round(verts[i][0]);
-    int y = round(verts[i][1]);
-    int z = round(verts[i][2]);
+  map<pair<long, long>, long>::iterator it;
+  for (long i = 0; i < (long)verts.size(); i++) {
+    long x = lround(verts[i][0]);
+    long y = lround(verts[i][1]);
+    long z = lround(verts[i][2]);
 
-    pair<int, int> key = make_pair(x, y);
+    pair<long, long> key = make_pair(x, y);
 
     // initialize values
     it = min_z_vert.find(key);
     if (it == min_z_vert.end())
-      min_z_vert[key] = INT_MAX;
+      min_z_vert[key] = LONG_MAX;
     it = max_z_vert.find(key);
     if (it == max_z_vert.end())
-      max_z_vert[key] = INT_MIN;
+      max_z_vert[key] = LONG_MIN;
 
     // find minimum z and maximum z for an x,y
     if (z < min_z_vert[key])
@@ -788,10 +788,10 @@ Geometry fill_interior(const Geometry &geom, const int lattice_type)
   vector<Vec3d> &fill_verts = fill.raw_verts();
 
   for (auto const &key : min_z_vert) {
-    int x = key.first.first;
-    int y = key.first.second;
-    int z_min = key.second;
-    int z_max = max_z_vert[make_pair(x, y)];
+    long x = key.first.first;
+    long y = key.first.second;
+    long z_min = key.second;
+    long z_max = max_z_vert[make_pair(x, y)];
     for (long i = z_min + 1; i < z_max; i++) {
       if (!lattice_type || valid_point(lattice_type, x, y, i))
         fill_verts.push_back(Vec3d(x, y, i));
