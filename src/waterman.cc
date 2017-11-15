@@ -42,6 +42,8 @@
 
 using std::string;
 using std::vector;
+using std::pair;
+using std::make_pair;
 
 using namespace anti;
 
@@ -83,6 +85,7 @@ public:
   bool origin_based;
   Vec3d center;
   int method;
+  bool fill;
   bool verbose;
   long scale;
   bool tester_defeat;
@@ -91,13 +94,14 @@ public:
   Color vert_col;
   Color edge_col;
   Color face_col;
+  Color fill_col;
   char color_method;
   int face_opacity;
   double epsilon;
 
   waterman_opts()
       : ProgramOpts("waterman"), lattice_type(-1), radius(0), R_squared(0),
-        origin_based(true), method(1), verbose(false), scale(0),
+        origin_based(true), method(1), fill(false), verbose(false), scale(0),
         tester_defeat(false), convex_hull(true), add_hull(false),
         color_method('\0'), face_opacity(-1), epsilon(0)
   {
@@ -123,18 +127,20 @@ void waterman_opts::usage()
 "  -q <cent> center of lattice, in form \"x_val,y_val,z_val\" (default: origin)\n"
 "  -m <mthd> 1 - sphere-ray intersection  2 - z guess (default: 1)\n"
 "  -C <opt>  c - convex hull only, i - keep interior, s - supress (default: c)\n"
+"  -f        fill interior points (not for -C c)\n"
 "  -t        defeat computational error testing for sphere-ray method\n"
 "  -v        verbose output (on computational errors)\n"
 "  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
-"  -V <col>  vertex color\n"
+"  -V <col>  model vertex color (default: none)\n"
 "  -E <col>  edge color (for convex hull, default: none)\n"
 "  -F <col>  face color (for convex hull, default: none)\n"
 "               lower case outputs map indexes. upper case outputs color values\n"
 "               key word: s,S color by symmetry using face normals\n"
 "               key word: c,C color by symmetry using face normals (chiral)\n"
+"  -Z <col>  fill vertex color (default: model vertex color)\n"
 "  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
 "\n"
 "\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
@@ -154,7 +160,7 @@ void waterman_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hr:q:m:tvl:C:V:E:F:T:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hr:q:m:ftvC:V:E:F:Z:T:l:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -205,22 +211,16 @@ void waterman_opts::process_command_line(int argc, char **argv)
       }
       break;
 
+    case 'f':
+      fill = true;
+      break;
+
     case 't':
       tester_defeat = true;
       break;
 
     case 'v':
       verbose = true;
-      break;
-
-    case 'l':
-      print_status_or_exit(read_int(optarg, &sig_compare), c);
-      if (sig_compare < 0) {
-        warning("limit is negative, and so ignored", c);
-      }
-      if (sig_compare > DEF_SIG_DGTS) {
-        warning("limit is very small, may not be attainable", c);
-      }
       break;
 
     case 'C':
@@ -248,10 +248,24 @@ void waterman_opts::process_command_line(int argc, char **argv)
         print_status_or_exit(face_col.read(optarg), c);
       break;
 
+    case 'Z':
+      print_status_or_exit(fill_col.read(optarg), c);
+      break;
+
     case 'T':
       print_status_or_exit(read_int(optarg, &face_opacity), c);
       if (face_opacity < 0 || face_opacity > 255) {
         error("face transparency must be between 0 and 255", c);
+      }
+      break;
+
+    case 'l':
+      print_status_or_exit(read_int(optarg, &sig_compare), c);
+      if (sig_compare < 0) {
+        warning("limit is negative, and so ignored", c);
+      }
+      if (sig_compare > DEF_SIG_DGTS) {
+        warning("limit is very small, may not be attainable", c);
       }
       break;
 
@@ -302,6 +316,15 @@ void waterman_opts::process_command_line(int argc, char **argv)
     if (color_method == 's' || color_method == 'c')
       warning("when writing indexes transparency setting ignored", "T");
   }
+
+  if (fill && convex_hull && !add_hull) {
+    warning("fill cannot be used with -C c", 'f');
+    fill = false;
+  }
+
+  // fill color vertex default is that of outer vertex color
+  if (vert_col.is_set() && !fill_col.is_set())
+    fill_col = vert_col;
 
   if (tester_defeat) {
     if (method == 1)
@@ -730,6 +753,54 @@ void z_guess_waterman(Geometry &geom, const int lattice_type,
   // fprintf(stderr,"Total errors amount: %ld\n",total_amount);
 }
 
+// fill interior points
+Geometry fill_interior(const Geometry &geom, const int lattice_type)
+{
+  const vector<Vec3d> &verts = geom.verts();
+
+  map<pair<int, int>, int> min_z_vert;
+  map<pair<int, int>, int> max_z_vert;
+
+  map<pair<int, int>, int>::iterator it;
+  for (int i = 0; i < (int)verts.size(); i++) {
+    int x = round(verts[i][0]);
+    int y = round(verts[i][1]);
+    int z = round(verts[i][2]);
+
+    pair<int, int> key = make_pair(x, y);
+
+    // initialize values
+    it = min_z_vert.find(key);
+    if (it == min_z_vert.end())
+      min_z_vert[key] = INT_MAX;
+    it = max_z_vert.find(key);
+    if (it == max_z_vert.end())
+      max_z_vert[key] = INT_MIN;
+
+    // find minimum z and maximum z for an x,y
+    if (z < min_z_vert[key])
+      min_z_vert[key] = z;
+    if (z > max_z_vert[key])
+      max_z_vert[key] = z;
+  }
+
+  Geometry fill;
+  vector<Vec3d> &fill_verts = fill.raw_verts();
+
+  for (auto const &key : min_z_vert) {
+    int x = key.first.first;
+    int y = key.first.second;
+    int z_min = key.second;
+    int z_max = max_z_vert[make_pair(x, y)];
+    for (long i = z_min + 1; i < z_max; i++) {
+      if (!lattice_type || valid_point(lattice_type, x, y, i))
+        fill_verts.push_back(Vec3d(x, y, i));
+    }
+  }
+
+  return fill;
+}
+
 int main(int argc, char *argv[])
 {
   waterman_opts opts;
@@ -748,6 +819,18 @@ int main(int argc, char *argv[])
     z_guess_waterman(geom, opts.lattice_type, opts.center, opts.radius,
                      opts.scale, opts.verbose);
 
+  // interior filling
+  Geometry fill_verts;
+  if (opts.fill) {
+    if (opts.verbose)
+      fprintf(stderr, "filling interior\n");
+
+    fill_verts = fill_interior(geom, opts.lattice_type);
+    if (opts.fill_col.is_set())
+      Coloring(&fill_verts).v_one_col(opts.fill_col);
+  }
+
+  // convex hull and coloring
   if (opts.convex_hull) {
     if (opts.verbose)
       fprintf(stderr, "performing convex hull\n");
@@ -774,9 +857,13 @@ int main(int argc, char *argv[])
     }
   }
 
-  // color vertices no matter what
+  // color vertices
   if (opts.vert_col.is_set())
     Coloring(&geom).v_one_col(opts.vert_col);
+
+  // append fill points
+  if (opts.fill)
+    geom.append(fill_verts);
 
   if (opts.verbose)
     fprintf(stderr, "writing output\n");
