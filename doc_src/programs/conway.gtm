@@ -26,7 +26,7 @@ conway tk4Y4 | antiview
 
 A Great rhombicuboctahedron with coloured faces
 <<CMDS_START>>
-conway -c m -f n dmO | antiview
+conway dmO -p u -f n | antiview
 <<CMDS_END>>
 
 A snub geodesic sphere
@@ -36,7 +36,7 @@ conway s geo_3 | antiview
 
 A snub pentagrammic antiprism
 <<CMDS_START>>
-conway s ant5/2 | antiview
+conway s ant5/2 -p u | antiview
 <<CMDS_END>>
 <<EXAMPLES_END>>
 
@@ -51,6 +51,9 @@ The Conway Notation algorithms were adapted from the
 Javascript on George Hart's
 <a href="http://www.georgehart.com/virtual-polyhedra/conway_notation.html">
 Conway Notation</a> page.
+<p>
+Antiprism Extensions: Further operations added. See
+<a href="https://en.wikipedia.org/wiki/Conway_polyhedron_notation">
 <p>
 Canonicalization and planarization may not always converge on
 a convex polyhedron.
