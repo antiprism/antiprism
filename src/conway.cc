@@ -732,7 +732,6 @@ void extended_help()
 "\n"
 "b0 = z        e0 = d        o0 = S        m0 = k        M0 = o\n"
 "b1 = b        e1 = e        o1 = o        m1 = m        M1 = M\n"
-"b2 = Wiki b3  e2 = Wiki e3  o2 = Wiki o3  m2 = Wiki m3  M2 = Wiki M3\n"
 "\n");
 }
 
