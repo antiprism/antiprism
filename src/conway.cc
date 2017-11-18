@@ -1844,7 +1844,7 @@ void cn_coloring(Geometry &geom, const cn_opts &opts)
       geom.colors(FACES).set(i, col);
     }
     if (!trans_success)
-      fprintf(stderr, "warning: some faces could not be made transparent\n");
+      opts.warning("some faces could not be made transparent", 'T');
   }
   else if (opts.face_coloring_method == 's') {
     Symmetry sym;
@@ -1862,7 +1862,7 @@ void cn_coloring(Geometry &geom, const cn_opts &opts)
 
       for (const auto &kp : geom.colors(FACES).get_properties()) {
         if (kp.second.is_index()) {
-          fprintf(stderr, "warning: map indexes cannot be made transparent\n");
+          opts.warning("map indexes cannot be made transparent", 'T');
           break;
         }
       }
@@ -1880,7 +1880,7 @@ void cn_coloring(Geometry &geom, const cn_opts &opts)
   // check if some faces are not set for transparency warning
   if (opts.face_opacity > -1) {
     if (geom.colors(FACES).get_properties().size() < geom.faces().size())
-      fprintf(stderr, "warning: unset faces cannot be made transparent\n");
+      opts.warning("unset faces cannot be made transparent", 'T');
   }
 
   // color vertices and edges

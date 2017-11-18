@@ -1307,11 +1307,10 @@ void case_q_5_excavated_octahedra(Geometry &geom, double angle)
   transform_and_repeat(geom, "I", "Oh", Trans3d::rotate(0, angle, 0));
 }
 
-void compound_coloring(Geometry &geom, const char coloring_method,
-                       const ColorMapMulti &map, const int face_opacity)
+void compound_coloring(Geometry &geom, const id_opts &opts)
 {
   // color by sub-symmetry as map indexes happened by default in sym_repeat()
-  if (!coloring_method) {
+  if (!opts.coloring_method) {
     // no color, strip colors
     geom.colors(FACES).clear();
     geom.clear(EDGES);
@@ -1319,14 +1318,14 @@ void compound_coloring(Geometry &geom, const char coloring_method,
   }
   else {
     Coloring clrng;
-    clrng.add_cmap(map.clone());
+    clrng.add_cmap(opts.map.clone());
     clrng.set_geom(&geom);
 
-    if (coloring_method == 'c') {
+    if (opts.coloring_method == 'c') {
       // color by constituents
       clrng.f_parts(true);
     }
-    else if (coloring_method == 's') {
+    else if (opts.coloring_method == 's') {
       Symmetry sym;
       vector<vector<set<int>>> sym_equivs;
       sym.init(geom, &sym_equivs);
@@ -1339,13 +1338,13 @@ void compound_coloring(Geometry &geom, const char coloring_method,
     clrng.v_face_color();
 
     // transparency
-    if (face_opacity > -1) {
-      ColorValuesToRangeHsva valmap(msg_str("A%g", (double)face_opacity / 255));
+    if (opts.face_opacity > -1) {
+      ColorValuesToRangeHsva valmap(msg_str("A%g", (double)opts.face_opacity / 255));
       valmap.apply(geom, FACES);
 
       for (const auto &kp : geom.colors(FACES).get_properties()) {
         if (kp.second.is_index()) {
-          fprintf(stderr, "warning: map indexes cannot be made transparent\n");
+          opts.warning("map indexes cannot be made transparent", 'T');
           break;
         }
       }
@@ -1353,9 +1352,9 @@ void compound_coloring(Geometry &geom, const char coloring_method,
   }
 
   // check if some faces are not set for transparency warning
-  if (face_opacity > -1) {
+  if (opts.face_opacity > -1) {
     if (geom.colors(FACES).get_properties().size() < geom.faces().size())
-      fprintf(stderr, "warning: unset faces cannot be made transparent\n");
+      opts.warning("unset faces cannot be made transparent", 'T');
   }
 }
 
@@ -1474,7 +1473,7 @@ int main(int argc, char *argv[])
   // orient for positive volume
   geom.orient();
 
-  compound_coloring(geom, opts.coloring_method, opts.map, opts.face_opacity);
+  compound_coloring(geom, opts);
 
   opts.write_or_error(geom, opts.ofile);
 
