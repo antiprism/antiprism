@@ -1,0 +1,44 @@
+#define HL_PROG class=curpage
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<<TITLE_HEAD>>
+
+<<TOP_LINKS>>
+
+<<USAGE_START>>
+<pre class="prog_help">
+<<__SYSTEM__(../src_extra/<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</pre>
+<<USAGE_END>>
+
+
+<<EXAMPLES_START>>
+Color faces of a geodesic sphere symmetrically in radial bands
+Also display symmetry axes with -A
+<<CMDS_START>>
+off_color -e white -v white geo_7_4_d | radial -A 2 | antiview -v 0.01
+<<CMDS_END>>
+
+Color a figure from conway notation from faces 0 and 3
+<<CMDS_START>>
+conway a^5C | radial -f f0,3 | antiview -x ve
+<<CMDS_END>>
+<<EXAMPLES_END>>
+
+
+<<NOTES_START>>
+<i>radial</i> was written by
+<a href="http://www.interocitors.com/polyhedra/">Roger Kaufman</a>.
+<p>
+Radial colors bands of color eminating from radial points on the
+model. It can color from symmetry axes or chosen faces. It can
+also display symmetry axes as part of the model.
+<<NOTES_END>>
+
+#include "<<END>>"

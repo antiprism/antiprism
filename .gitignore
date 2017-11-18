@@ -50,6 +50,7 @@ src_extra/off2m
 src_extra/m2off
 src_extra/off2txt
 src_extra/kaleido
+src_extra/radial
 src/off2pov
 src/off2eig
 src/off2vrml
