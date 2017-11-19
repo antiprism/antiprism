@@ -565,13 +565,13 @@ void set_indexes_to_color(Geometry &geom, const radial_opts &opts) {
   max_ridge++;
 
   // default is to make a rainbow map of number of ridges
-  opts.warning(msg_str("maximum ridges formed is %d\n", max_ridge));
+  opts.warning(msg_str("maximum ridges formed is %d", max_ridge));
   string map_name;
   if (opts.map_string == "rng") {
     char buf[MSG_SZ];
     sprintf(buf, "rng%d", max_ridge);
     map_name = string(buf);
-    opts.warning(msg_str("default map used is %s\n", map_name.c_str()));
+    opts.warning(msg_str("default map used is %s", map_name.c_str()));
   }
 
   Coloring clrng;
