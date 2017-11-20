@@ -1691,22 +1691,6 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
     opts.print_status_or_exit(
         wythoff_make_tiling(geom, geom, wythoff_op, is_orientable, false));
 
-    // check for 3 faces at an edge
-    auto efpairs = geom.get_edge_face_pairs(false);
-    map<vector<int>, vector<int>>::const_iterator ei;
-    for (ei = efpairs.begin(); ei != efpairs.end(); ++ei) {
-      if (ei->second.size() > 2) {
-        opts.warning("3 or more faces to an edge");
-        break;
-      }
-    }
-
-    // if faces were deleted, reappend them
-    if (dels.size())
-      geom.append(geom_save);
-    // set to merge in any case if duplicates are encountered
-    merge_coincident_elements(geom, "vef", opts.epsilon);
-
     // remove digons
     dels.clear();
     for (int i = 0; i < (int)geom.faces().size(); i++) {
@@ -1722,6 +1706,22 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
     geom.del(FACES, dels);
     // remove any free vertices that were formed
     geom.del(VERTS, geom.get_info().get_free_verts());
+
+    // check for 3 faces at an edge
+    auto efpairs = geom.get_edge_face_pairs(false);
+    map<vector<int>, vector<int>>::const_iterator ei;
+    for (ei = efpairs.begin(); ei != efpairs.end(); ++ei) {
+      if (ei->second.size() > 2) {
+        opts.warning("3 or more faces to an edge");
+        break;
+      }
+    }
+
+    // if faces were deleted, reappend them
+    if (dels.size())
+      geom.append(geom_save);
+    // set to merge in any case if duplicates are encountered
+    merge_coincident_elements(geom, "vef", opts.epsilon);
   }
 
   // if coloring new faces, restore color of previous faces
