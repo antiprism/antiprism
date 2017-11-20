@@ -99,6 +99,7 @@ provided for interest only
 <li><a href="dome_layer.html">dome_layer</a> - dome strut arrangements
 <li><a href="twist.html">twist</a> - twist the edges of a polyhedron
 <li><a href="kaleido.html">kaleido</a> - uniform polyhedra (Zvi Har'El)
+<li><a href="radial.html">radial</a> - radial colouring based on symmetry
 <li><a href="spidron.html">spidron</a> - spidronise a polyhedron
 <li><a href="poly_weave.html">poly_weave</a> - weave based on a polyhedron
 <li><a href="off2m.html">off2m</a> - convert an OFF file to LiveGraphics3D 'm' format
