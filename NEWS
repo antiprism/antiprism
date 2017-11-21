@@ -8,10 +8,11 @@ xx-xx-18 Adrian Rossiter <adrian@antiprism.com>
             wythoff: Wythoff-style tilings on various surfaces
          Changes
             poly_weave: moved to unsupported programs
+            off_util: removed -E
          Fixes
             pol_recip: dual vertices for very small faces
             poly_weave: input can be non-closed surface
-            off_util: -u input can be non-closed surface, -T/-E work with
+            off_util: -u input can be non-closed surface, -T works with
               more models
             antiview: default handling of large models
 

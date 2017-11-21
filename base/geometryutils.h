@@ -191,11 +191,6 @@ void get_dual(Geometry &dual, const Geometry &geom, double recip_rad = 0,
  * \param inf distance at which a point is considered to be ideal. */
 void add_extra_ideal_elems(Geometry &geom, Vec3d centre, double inf);
 
-/// Make a geometry with a face for each edge in the original
-/**Like the Conway 'join' operation.
- * \param geom geometry with edges to convert into faces.*/
-void make_edges_to_faces(Geometry &geom);
-
 /// Truncate specified vertices
 /**\param geom geometry to truncate
  * \param v_idxs index numbers of vertices to truncate.
