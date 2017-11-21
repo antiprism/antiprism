@@ -119,7 +119,7 @@ string digits_allowed_str()
 
 string uniforms_str() { return "TCOID"; }
 
-string digits_required_str() { return "PAYZ"; }
+string digits_required_str() { return "PAYZR"; }
 
 string operands_str() { return (uniforms_str() + digits_required_str()); }
 
@@ -232,12 +232,12 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
           operations.push_back(new ops(op_count++, op, op_var));
         operand = '\0';
       }
-      // will be at end of string as it is an operand, P, A, Y or Z
+      // will be at end of string as it is an operand, P, A, Y, Z, R
       else if (digits_required.find(operand) != string::npos) {
         poly_size = atoi(number_string.c_str());
         if (poly_size < 3) {
           fprintf(stderr,
-                  "P(n), A(n), Y(n), or Z(n), n must be 3 or greater\n");
+                  "P(n), A(n), Y(n), Z(n), R(n) n must be 3 or greater\n");
           return i + 1;
         }
       }
@@ -290,7 +290,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
 
   // if P, A or Y was specified with no digit n
   if ((digits_required.find(operand) != string::npos) && poly_size == 0) {
-    fprintf(stderr, "P(n), A(n), Y(n), Z(n), n must be 3 or greater\n");
+    fprintf(stderr, "P(n), A(n), Y(n), Z(n), R(n), n must be 3 or greater\n");
     return cn_string.length();
   }
 
@@ -513,8 +513,18 @@ void extended_help()
 {
   fprintf(stdout,
 "\n"
+"Conway Notation was discribed by Mathematician John Conway to George Hart in\n"
+"the late 1990's for a book they planned to coauthor. Due to an illness the book\n"
+"never came to fruition and John Conway did not think there was enough a for a\n"
+"separate publication. Conway gave George Hart permission to present it in\n"
+"\"Sculpture Based on Propellorized Polyhedra in the Proceedings of MOSAIC 2000\"\n"
+"The paper can be viewed here: http://www.georgehart.com/propello/propello.html\n"
+"The project was expected to encourage more operations to be developed which has\n"
+"happened in various places including here at Antiprism. (www.antiprism.com)\n"
+"\n"
 "The following is a description of Conway Notation edited from the Conway\n"
 "Notation web page by George W. Hart (http://www.georgehart.com)\n"
+"\n"
 "More detailed information and examples can be found at\n"
 "http://www.georgehart.com/virtual-polyhedra/conway_notation.html\n"
 "and at\n"
@@ -524,8 +534,9 @@ void extended_help()
 "letter. Operations to perform on any polyhedron are specified with lower-case\n"
 "letters preceding it. This program contains a small set of seeds and operators\n"
 "from which an infinite number of derived polyhedra can be generated.\n"
+"\n"
 "Note: This C++ port of Conway Notation can also operate on OFF files from\n"
-"standard input if the seed polyhedron is not specified.\n"
+"standard input if the seed polyhedron is not specified. (Antiprism Extension)\n"
 "\n"
 "Seeds: The platonic solids are denoted T, O, C, I, and D, according to their\n"
 "first letter. Other polyhedra which are implemented here include prisms, Pn,\n"
@@ -535,7 +546,8 @@ void extended_help()
 "Operations: Currently, abdegjkmoprst are defined. They are motivated by the\n"
 "operations needed to create the Archimedean solids and their duals from the\n"
 "platonic solids.  Try each on a cube:\n"
-"\n(Antiprism: note that more operations have since been defined)\n"
+"\n"
+"\n(Antiprism Extenstion: note that more operations have since been defined)\n"
 "\n"
 "a = ambo   The ambo operation can be thought of as truncating to the edge\n"
 "midpoints.  It produces a polyhedron, aX, with one vertex for each edge of X.\n"
@@ -547,7 +559,7 @@ void extended_help()
 "Note: ambo is also known as \"rectifying\" the polyhedron, or rectification\n"
 "\n"
 "b = bevel  The bevel operation can be defined by bX=taX.  bC is the truncated\n"
-"cuboctahedron.  (Antiprism: or \"bn\" where n is 0 or greater)\n"
+"cuboctahedron.  (Antiprism Extension: or \"bn\" where n is 0 or greater)\n"
 "Note: bevel is also known as \"omnitruncating\" the polyhedron, or omnitruncation\n"
 "\n"
 "d = dual   The dual of a polyhedron has a vertex for each face, and a face for\n"
@@ -578,12 +590,12 @@ void extended_help()
 "m = meta   Dual to b, mX=dbX=kjX.  mC has 48 triangular faces.  m is like k\n"
 "and o combined; new edges connect new vertices at the face centers to the old\n"
 "vertices and new vertices at the edge midpoints.  mX=mdX.  mC is the\n"
-"\"hexakis octahedron.\"  (Antiprism: or \"mn\" where n is 0 or greater)\n"
+"\"hexakis octahedron.\"  (Antiprism Extension: or \"mn\" where n is 0 or greater)\n"
 "\n"
 "o = ortho  Dual to e, oX=deX=jjX.  oC is the trapezoidal icositetrahedron, with\n"
 "24 kite-shaped faces.  oX has the effect of putting new vertices in the middle\n"
 "of each face of X and connecting them, with new edges, to the edge midpoints of\n"
-"X.  (Antiprism: or \"on\" where n is 0 or greater)\n"
+"X.  (Antiprism Extension: or \"on\" where n is 0 or greater)\n"
 "\n"
 "p = propellor    Makes each n-gon face into a \"propellor\" of an n-gon\n"
 "surrounded by n quadrilaterals, e.g., pT is the tetrahedrally stellated\n"
@@ -607,7 +619,7 @@ void extended_help()
 "vertices.\n"
 "\n"
 "\n"
-"Antiprism Extensions: Further operations added. See\n"
+"Antiprism Extension: Further operations added. Also see\n"
 "https://en.wikipedia.org/wiki/Conway_polyhedron_notation\n"
 "\n"
 "c = chamfer   New hexagonal faces are added in place of edges\n"
@@ -680,6 +692,7 @@ void extended_help()
 "A  - Antiprism\n"
 "Y  - Pyramid\n"
 "Z  - Polygon (Antiprism Extension)\n"
+"R  - Random Convex Polyhedron (Antiprism Extension)\n"
 "\n"
 "Note: Antiprism Extensions will work on tilings. Hart algorithms (-d) will not\n"
 "e.g.: unitile2d 3 | conway p -t | antiview -v 0.1 (-t for tile mode)\n"
@@ -691,18 +704,18 @@ void extended_help()
 "Hexagonal:  tkZ6       ctkZ6       cctkZ6\n"
 "Triangular: ktkZ6      kctkZ6      kcctkZ6 (kis operation on Hexagonal)\n"
 "\n"
-"Name                   Vertex Fig  Op     String Dual Name              String\n"
-"Square                 4,4,4,4            oZ4    Square                 do2Z4\n"
-"Truncated Square       4,8,8       trunc  toZ4   Tetrakis Square        dto2Z4\n"
-"Snub Square            3,3,4,3,4   snub   soZ4   Cairo Pentagonal       dso2Z4\n"
-"Triangular             3,3,3,3,3,3 kis    ktkZ6  Hexagonal              ddctkZ6\n"
-"Hexagonal              6,6,6              tkZ6   Triangular             dkctkZ6\n"
-"Trihexagonal           3,6,3,6     ambo   atkZ6  Rhombille              dactkZ6\n"
-"Snub Trihexagonal      3,3,3,3,6   snub   stkZ6  Floret Pentagonal      dsctkZ6\n"
-"Truncated Hexagonal    3,12,12     trunc  ttkZ6  Triakis triangular     dtctkZ6\n"
-"Rhombitrihexagonal     3,4,6,4     expand etkZ6  Deltoidal Trihexagonal dectkZ6\n"
-"Truncated Trihexagonal 4,6,12      bevel  btkZ6  Kisrhombille           dbctkZ6\n"
-"Elongated Triangular   3,3,3,4,4   Non Wythoffian Prismatic Triangular  none\n"
+"Name                   Vertex Fig  Op     String  Dual Name              String\n"
+"Square                 4,4,4,4            oZ4     Square                 do2Z4\n"
+"Truncated Square       4,8,8       trunc  toZ4    Tetrakis Square        dto2Z4\n"
+"Snub Square            3,3,4,3,4   snub   soZ4    Cairo Pentagonal       dso2Z4\n"
+"Triangular             3,3,3,3,3,3 kis    ktkZ6   Hexagonal              ddctkZ6\n"
+"Hexagonal              6,6,6              tkZ6    Triangular             dkctkZ6\n"
+"Trihexagonal           3,6,3,6     ambo   atkZ6   Rhombille              dactkZ6\n"
+"Snub Trihexagonal      3,3,3,3,6   snub   stkZ6   Floret Pentagonal      dsctkZ6\n"
+"Truncated Hexagonal    3,12,12     trunc  ttkZ6   Triakis triangular     dtctkZ6\n"
+"Rhombitrihexagonal     3,4,6,4     expand etkZ6   Deltoidal Trihexagonal dectkZ6\n"
+"Truncated Trihexagonal 4,6,12      bevel  btkZ6   Kisrhombille           dbctkZ6\n"
+"Elongated Triangular   3,3,3,4,4   Non Wythoffian Prismatic Triangular   none\n"
 "\n"
 "\n"
 "Substitutions used by George Hart algorithms\n"
@@ -1167,6 +1180,7 @@ void centroid_to_origin(Geometry &geom)
   geom.transform(Trans3d::translate(-centroid(geom.verts())));
 }
 
+/*
 // RK - average radius rather than maximum has more reliability than max
 void unitize_vertex_radius(Geometry &geom)
 {
@@ -1176,6 +1190,7 @@ void unitize_vertex_radius(Geometry &geom)
   double avg = info.vert_dist_lims().sum / info.num_verts();
   geom.transform(Trans3d::scale(1 / avg));
 }
+*/
 
 void cn_planarize(Geometry &geom, char planarize_method, const cn_opts &opts)
 {
@@ -1249,6 +1264,15 @@ void get_operand(Geometry &geom, const cn_opts &opts)
     case 'Z':
       pgon.set_type(Polygon::dihedron);
       pgon.set_subtype(Polygon::sub_dihedron_polygon);
+      break;
+
+    // a polyhedron of random points
+    case 'R':
+      Random rnd;
+      rnd.time_seed();
+      for (int i = 0; i < opts.poly_size; i++)
+        geom.add_vert(Vec3d::random(rnd).unit());
+      geom.set_hull();
       break;
     }
 
@@ -1566,7 +1590,7 @@ void hart_whirl(Geometry &geom, bool orientation_positive, const cn_opts &opts)
 }
 */
 
-// functions which can use Antiprism built in features
+// operations which can use Antiprism built in features
 void antiprism_dual(Geometry &geom)
 {
   Geometry dual;
