@@ -513,7 +513,7 @@ void extended_help()
 {
   fprintf(stdout,
 "\n"
-"Conway Notation was discribed by Mathematician John Conway to George Hart in\n"
+"Conway Notation was described by Mathematician John Conway to George Hart in\n"
 "the late 1990's for a book they planned to coauthor. Due to an illness the book\n"
 "never came to fruition and John Conway did not think there was enough a for a\n"
 "separate publication. Conway gave George Hart permission to present it in\n"
