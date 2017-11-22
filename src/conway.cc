@@ -768,9 +768,11 @@ void cn_opts::usage()
 "%s"
 "  -H        Conway Notation detailed help. seeds and operator descriptions\n"
 "  -s        apply Conway Notation string substitutions\n"
-"  -g        use George Hart algorithms (sets -s)\n"
-"  -c <op,s> user defined operation strings in the form of op,string\n"
-"              any operations may be used. Examples: x,kt  y,tk  v,dwd\n"
+"  -g        use George Hart algorithms (sets -s, -p m or -p x cannot be used)\n"
+"  -c <op=s> user defined operation strings in the form of op,string\n"
+"              op can be any operation letter not currently in use\n"
+"              string can be any operations. More than one <op=s> can be used\n"
+"              Examples: -c x=kt,y=tk,v=dwd or -c x=kt -c y=tk -c v=dwd\n"
 "  -t        tile mode. when input is a tiling. unsets -g  sets -p u\n"
 "              set if seed of Z is detected\n"
 "  -r        execute operations in reverse order (left to right)\n"
@@ -861,8 +863,6 @@ void cn_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'c': {
-      op_term++;
-
       char operation = '\0';
       string user_op;
 
@@ -871,57 +871,78 @@ void cn_opts::process_command_line(int argc, char **argv)
       // memory pointer for strtok_r
       char *tok_ptr1;
 
+      vector<string> tokens;
       char *ptok1 = strtok_r(optarg, parse_key1, &tok_ptr1);
-      int count1 = 0;
       while (ptok1 != nullptr) {
-        // first argument is color
-        if (count1 == 0) {
-          // print_status_or_exit(tmp_color.read(ptok1), c);
-          if (strlen(ptok1) != 1)
-            error(msg_str("term %d: operation must be one character '%s'",
-                          op_term, ptok1),
-                  c);
-          else if (!isalpha(ptok1[0])) {
-            error(msg_str("term %d: operation must be alphabetic '%s'", op_term,
-                          ptok1),
-                  c);
-          }
-          else if (alphas_in_use.find(ptok1[0]) != string::npos) {
-            error(msg_str("term %d: operation character already in use '%s'",
-                          op_term, ptok1),
-                  c);
-          }
-          else {
-            operation = ptok1[0];
-            alphas_in_use += operation;
-            alpha_user += operation;
-          }
-        }
-        else if (count1 == 1) {
-          user_op = ptok1;
-        }
-        else {
-          error(msg_str("term %d: unexpected parameter '%s'", op_term, ptok1),
-                c);
-        }
-
+        tokens.push_back(ptok1);
         ptok1 = strtok_r(nullptr, parse_key1, &tok_ptr1);
-        count1++;
       }
 
-      char operand_test;
-      int dummy1;
-      string dummy2;
-      if (int pos = validate_cn_string(user_op, operations_user[operation],
-                                       operand_test, dummy1, dummy2))
-        error(msg_str("term %d: unexpected character in position %d: %c",
-                      op_term, pos, user_op[pos - 1]),
-              c);
+      for (int i = 0; i < (int)tokens.size(); i++) {
+        op_term++;
 
-      if (operand_test)
-        error(msg_str("term %d: cannot contain operand in position %d: %c",
-                      op_term, user_op.length(), operand_test),
-              c);
+        char parse_key2[] = "=";
+
+        // memory pointer for strtok_r
+        char *tok_ptr2;
+
+        // string to char * (not const) from StackOverflow
+        auto *writable = new char[tokens[i].size() + 1];
+        copy(tokens[i].begin(), tokens[i].end(), writable);
+        writable[tokens[i].size()] = '\0';
+
+        char *ptok2 = strtok_r(writable, parse_key2, &tok_ptr2);
+        int count1 = 0;
+        while (ptok2 != nullptr) {
+          if (count1 == 0) {
+            if (strlen(ptok2) != 1)
+              error(msg_str("term %d: operation must be one character '%s'",
+                            op_term, ptok2),
+                    c);
+            else if (!isalpha(ptok2[0])) {
+              error(msg_str("term %d: operation must be alphabetic '%s'",
+                            op_term, ptok2),
+                    c);
+            }
+            else if (alphas_in_use.find(ptok2[0]) != string::npos) {
+              error(msg_str("term %d: operation character already in use '%s'",
+                            op_term, ptok2),
+                    c);
+            }
+            else {
+              operation = ptok2[0];
+              alphas_in_use += operation;
+              alpha_user += operation;
+            }
+          }
+          else if (count1 == 1) {
+            user_op = ptok2;
+          }
+          else {
+            error(msg_str("term %d: unexpected parameter '%s'", op_term, ptok2),
+                  c);
+          }
+
+          ptok2 = strtok_r(nullptr, parse_key2, &tok_ptr2);
+          count1++;
+        }
+
+        char operand_test;
+        int dummy1;
+        string dummy2;
+        if (int pos = validate_cn_string(user_op, operations_user[operation],
+                                         operand_test, dummy1, dummy2))
+          error(msg_str("term %d: unexpected character in position %d: %c",
+                        op_term, pos, user_op[pos - 1]),
+                c);
+
+        if (operand_test)
+          error(msg_str("term %d: cannot contain operand in position %d: %c",
+                        op_term, user_op.length(), operand_test),
+                c);
+
+        delete[] writable;
+      }
 
       break;
     }
@@ -1047,8 +1068,10 @@ void cn_opts::process_command_line(int argc, char **argv)
            operations_user[alpha_user[i]].end(), cmp_ops);
   }
 
+  // force tile mode if using polygon
   if (operand == 'Z')
     tile_mode = true;
+
   if (tile_mode) {
     warning("in tile mode", 't');
     if (hart_mode) {
@@ -1064,10 +1087,13 @@ void cn_opts::process_command_line(int argc, char **argv)
   }
 
   if (hart_mode) {
+    if ((planarize_method == 'm') || (planarize_method == 'x'))
+      error("when -g set, planrize method must be p, c, or u", 'p');
     if ((face_coloring_method == 'o') || (face_coloring_method == 'w'))
       error("when -g set, face coloring methods o and w are invalid", 'f');
   }
 
+  // when use George Hart algorithms, use map he used on line
   if (!map_file.size())
     map_file = (hart_mode) ? "m2" : "m1";
 
@@ -1126,7 +1152,7 @@ void verbose(char operation, int op_var, const cn_opts &opts)
       }
     }
 
-    string hart_operators = "adgkp";
+    string hart_operators = "agkp";
     string hart_string;
     if (opts.hart_mode && (hart_operators.find(operation) != string::npos))
       hart_string = "(hart)";
@@ -1591,6 +1617,7 @@ void hart_whirl(Geometry &geom, bool orientation_positive, const cn_opts &opts)
 */
 
 // operations which can use Antiprism built in features
+/*
 void antiprism_dual(Geometry &geom)
 {
   Geometry dual;
@@ -1598,6 +1625,7 @@ void antiprism_dual(Geometry &geom)
   get_dual(dual, geom, 1, Vec3d(0, 0, 0));
   geom = dual;
 }
+*/
 
 void antiprism_reflect(Geometry &geom, const cn_opts &opts)
 {
@@ -1803,11 +1831,6 @@ void do_operations(Geometry &geom, cn_opts &opts)
         hart_ambo(geom);
         break;
 
-      // dual
-      case 'd':
-        antiprism_dual(geom);
-        break;
-
       // gyro
       case 'g':
         hart_gyro(geom);
@@ -1851,6 +1874,10 @@ void do_operations(Geometry &geom, cn_opts &opts)
 
 void cn_coloring(Geometry &geom, const cn_opts &opts)
 {
+  // can't color an empty geom. on -f s it will cause segfault
+  if (!geom.verts().size())
+    return;
+
   if (opts.face_coloring_method == 'n') {
     bool trans_success = true;
     const vector<vector<int>> &faces = geom.faces();
