@@ -6,8 +6,17 @@ xx-xx-18 Adrian Rossiter <adrian@antiprism.com>
             stellate: polyhedron stellations (Roger Kaufman)
             miller: Miller's stellations of the icosahedron (Roger Kaufman)
             wythoff: Wythoff-style tilings on various surfaces
+            kaleido: Legacy program ported to Antiprism (Roger Kaufman)
+            radial: Color by symmetry radiating from axes (Roger Kaufman)
          Changes
             poly_weave: moved to unsupported programs
+            off2obj: added optional mtl file output
+            canonical: works on more models and code reorganization
+              added new planarization and display options
+            conway: changed to use wythoff engine while keeping legacy
+              code by George Hart. Enhancements and additional operators
+              to original conway operators
+            waterman: option to fill interior points
          Fixes
             pol_recip: dual vertices for very small faces
             poly_weave: input can be non-closed surface
