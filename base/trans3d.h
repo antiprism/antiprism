@@ -310,7 +310,7 @@ inline Trans3d::Trans3d(const Vec4d &r1, const Vec4d &r2, const Vec4d &r3,
   const Vec4d *pvec[] = {&r1, &r2, &r3, &r4};
   for (int i = 0; i < 4; i++)
     for (int j = 0; j < 4; j++)
-      m[i] = (*pvec[i])[j];
+      m[4 * i + j] = (*pvec[i])[j];
 }
 
 inline Trans3d Trans3d::unit() { return Trans3d(); }

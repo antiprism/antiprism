@@ -61,7 +61,8 @@ mtimestamp $dd.$MM.$yyyy
 
 ./programs/dome_layer.gtm 3 UNSUPPORTED: dome_layer - dome strut arrangements
 ./programs/poly_weave.gtm 3 UNSUPPORTED poly_weave - weave based on a polyhedron
-./programs/kaleido.gtm 2 UNSUPPORTED: kaleido - uniform polyhedra (Zvi Har'El)
+./programs/kaleido.gtm 3 UNSUPPORTED: kaleido - uniform polyhedra (Zvi Har'El)
+./programs/radial.gtm 3 UNSUPPORTED: radial - radial colouring based on symmetry
 ./programs/twist.gtm 3 UNSUPPORTED: twist - twist the edges of a polyhedron
 ./programs/spidron.gtm 3 UNSUPPORTED: spidron - spidronise a polyhedron
 ./programs/off2m.gtm 3 UNSUPPORTED: off2m - convert an OFF file for LiveGraphics3D

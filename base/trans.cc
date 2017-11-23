@@ -46,30 +46,6 @@ using std::swap;
 using std::string;
 
 namespace anti {
-
-void make_edges_to_faces(Geometry &geom)
-{
-  int orig_v_sz = geom.verts().size();
-  for (auto &f : geom.faces())
-    geom.add_vert(geom.face_cent(f));
-
-  auto edges = geom.get_edge_face_pairs(false);
-  geom.clear(FACES);
-
-  for (auto &mv : edges) {
-    if (mv.second.size() == 2) {
-      vector<int> face(4);
-      face[0] = mv.first[0];
-      face[1] = mv.second[0] + orig_v_sz;
-      face[2] = mv.first[1];
-      face[3] = mv.second[1] + orig_v_sz;
-      geom.add_face(face);
-    }
-  }
-
-  geom.del(VERTS, geom.get_info().get_free_verts());
-}
-
 // truncate vertices specified by index number
 void truncate_verts(Geometry &geom, vector<int> &v_idxs, double ratio,
                     GeometryInfo *info)
@@ -179,5 +155,35 @@ void truncate_verts(Geometry &geom, double ratio, int order, GeometryInfo *info)
       v_idxs.push_back(i);
   truncate_verts(geom, v_idxs, ratio, info);
 }
+
+/*
+/// Make a geometry with a face for each edge in the original
+/ **Like the Conway 'join' operation.
+  * \param geom geometry with edges to convert into faces.* /
+void make_edges_to_faces(Geometry &geom);
+
+void make_edges_to_faces(Geometry &geom)
+{
+  int orig_v_sz = geom.verts().size();
+  for (auto &f : geom.faces())
+    geom.add_vert(geom.face_cent(f));
+
+  auto edges = geom.get_edge_face_pairs(false);
+  geom.clear(FACES);
+
+  for (auto &mv : edges) {
+    if (mv.second.size() == 2) {
+      vector<int> face(4);
+      face[0] = mv.first[0];
+      face[1] = mv.second[0] + orig_v_sz;
+      face[2] = mv.first[1];
+      face[3] = mv.second[1] + orig_v_sz;
+      geom.add_face(face);
+    }
+  }
+
+  geom.del(VERTS, geom.get_info().get_free_verts());
+}
+*/
 
 } // namespace anti

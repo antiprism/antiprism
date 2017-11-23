@@ -948,27 +948,19 @@ Status Polygon::make_snub_antiprism_part(Geometry &geom)
   coeffs[4] = 4;
   double sol[4];
   int num_roots = quartic(coeffs, sol);
-  // fprintf(stderr, "\n%d radius values to test\n", num_roots);
   vector<double> valid;
   for (int i = 0; i < num_roots; i++) {
     double r = sol[i] / s;
-    // fprintf(stderr, "\nradius (%d)\n   r = %.16f\n", i, r);
     double rt = 1 - pow(r - 0.5 / s, 2);
-    // fprintf(stderr, "   h1^2 = %.16f\n", rt);
     if (rt < -sqrt_epsilon)
       continue;
     double h1 = rt > sqrt_epsilon ? sqrt(rt) : 0;
     rt = 3 / 4.0 - pow(r - 0.5 * c / s, 2);
-    // fprintf(stderr, "   h2^2 = %.16f\n", rt);
     if (rt < -sqrt_epsilon)
       continue;
     double h2 = rt > sqrt_epsilon ? sqrt(rt) : 0;
     for (int j = 0; j < 2; j++) {
       h1 *= -1; // flip sign
-      // fprintf(stderr, "      h1=%.16f\n", h1);
-      // fprintf(stderr, "      h2=%.16f\n", h2);
-      // fprintf(stderr, "      edge length = %.16f\n",
-      // 2*r*r*(1-c)+(h1-h2)*(h1-h2));
       if (fabs(2 * r * r * (1 - c) + (h1 - h2) * (h1 - h2) - 1) > epsilon / s)
         continue;
       valid.push_back(r);
@@ -979,11 +971,7 @@ Status Polygon::make_snub_antiprism_part(Geometry &geom)
     }
   }
 
-  int num_sols = valid.size() / 3;
-  if (num_sols > 2)
-    fprintf(stderr, "\n\n*** unexpected: snub-antiprism has more than 2 "
-                    "solutions!!! (%d solutions)\n\n)",
-            num_sols);
+  int num_sols = valid.size() / 3; // has never been more than 2
 
   if (subtype > num_sols - 1)
     return Status::error("subtype too large (the snub-antiprism only has %d "
@@ -994,10 +982,6 @@ Status Polygon::make_snub_antiprism_part(Geometry &geom)
   double H =
       (valid[subtype * 3 + 1] + valid[3 * subtype + 2]) / 2; // new top layer ht
   double h = H - valid[subtype * 3 + 1]; // new upper inner layer height
-
-  // fprintf(stderr, "\nFinal values\n   r = %.16f\n   H = %.16f\n   h =
-  // %.16f\n",
-  //      r, H, h);
 
   set_edge(0, 1.0);
   add_polygon(geom, H);

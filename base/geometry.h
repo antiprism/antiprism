@@ -594,8 +594,10 @@ public:
   void get_impl_edges(std::vector<std::vector<int>> &edgs) const;
 
   /// Get faces lying on each side of an edge for all edges
-  /**\param oriented the geometry is oriented and the first face in
-   *  the face pair has the vertices of the edge pair in order.
+  /**\param oriented \c true the geometry is oriented and the first face in
+   *  the face pair has the vertices of the edge pair in order, -1 for
+   *  a face index indicates the edge is open to that sid. \c false the
+   * value is a list of all face sharing the edge,in any order.
    * \return edge2facepr return map of edges to face pairs.*/
   std::map<std::vector<int>, std::vector<int>>
   get_edge_face_pairs(bool oriented = true) const;
