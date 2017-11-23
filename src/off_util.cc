@@ -1332,8 +1332,7 @@ void pr_opts::process_command_line(int argc, char **argv)
   handle_long_opts(argc, argv);
 
   bool trailing_option_l = false; // to warn if there is an -l after a -M
-  while ((c = getopt(argc, argv, ":hH:st:O:d:x:eD:K:A:c:gT:SM:l:u:o:")) !=
-         -1) {
+  while ((c = getopt(argc, argv, ":hH:st:O:d:x:eD:K:A:c:gT:SM:l:u:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 

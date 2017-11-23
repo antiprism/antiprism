@@ -50,7 +50,8 @@ using std::map;
 namespace anti {
 
 // RK - find nearpoints radius, sets range minimum and maximum
-double edge_nearpoints_radius(const Geometry &geom, double &min, double &max, Vec3d &center)
+double edge_nearpoints_radius(const Geometry &geom, double &min, double &max,
+                              Vec3d &center)
 {
   min = DBL_MAX;
   max = DBL_MIN;

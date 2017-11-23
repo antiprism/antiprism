@@ -71,13 +71,11 @@ OpenGL and GLUT development libraries are required to build <i>antiview</i>.
 Antiprism Python
 </a></h3>
 
-Antiprism Python is a separate package of useful modelling programs written
-in Python. See the
-<a href="https://github.com/antiprism/antiprism_python/blob/master/README.md">Antiprism Python README</a>,
-for details and program descriptions. The package can be downloaded as a
-<a href="https://github.com/antiprism/antiprism_python/archive/master.zip">ZIP file</a>
-or using the
-<a href="https://github.com/antiprism/antiprism_python">Git Repository</a>.
+<a href="https://github.com/antiprism/antiprism_python">Antiprism Python</a>
+is a complementary package of useful modelling programs written in Python.
+See the
+<a href="https://github.com/antiprism/antiprism_python/blob/master/README.rst">Antiprism Python README</a>,
+for program descriptions and installation details.
 
 
 #include "<<END>>"

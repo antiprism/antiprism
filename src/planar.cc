@@ -2321,7 +2321,8 @@ void do_cmy_mode(Geometry &geom, const bool ryb_mode, const char edge_blending)
 void apply_transparency(Geometry &geom, const planar_opts &opts)
 {
   if (opts.face_opacity > -1) {
-    ColorValuesToRangeHsva valmap(msg_str("A%g", (double)opts.face_opacity / 255));
+    ColorValuesToRangeHsva valmap(
+        msg_str("A%g", (double)opts.face_opacity / 255));
     valmap.apply(geom, FACES);
 
     for (const auto &kp : geom.colors(FACES).get_properties()) {

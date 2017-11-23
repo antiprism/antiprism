@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT(antiprism, 0.24.99+01, adrian@antiprism.com)
-AC_SUBST(RELEASE_DATE, ["9 October 2016"])
+AC_INIT(antiprism, 0.25, adrian@antiprism.com)
+AC_SUBST(RELEASE_DATE, ["23 November 2017"])
 AC_CANONICAL_TARGET  # For m4/fltk.m4
 AM_INIT_AUTOMAKE([1.9 foreign])
 

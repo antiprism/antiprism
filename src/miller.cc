@@ -216,9 +216,11 @@ void miller_opts::process_command_line(int argc, char **argv)
 }
 
 // copy of code from stellate.cc
-void apply_transparency(Geometry &geom, const miller_opts &opts, int alternate_opacity=-1)
+void apply_transparency(Geometry &geom, const miller_opts &opts,
+                        int alternate_opacity = -1)
 {
-  int face_opacity = (alternate_opacity != -1) ? alternate_opacity : opts.face_opacity;
+  int face_opacity =
+      (alternate_opacity != -1) ? alternate_opacity : opts.face_opacity;
   if (face_opacity > -1) {
     ColorValuesToRangeHsva valmap(msg_str("A%g", (double)face_opacity / 255));
     valmap.apply(geom, FACES);

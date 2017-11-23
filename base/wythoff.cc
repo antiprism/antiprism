@@ -1817,13 +1817,13 @@ Status wythoff_make_tiling(Geometry &tiled_geom, const Geometry &base_geom,
   Status stat =
       (pat[0] == '[') ? tiling.read_pattern(pat) : tiling.read_conway(pat);
   if (!stat.is_error()) {
-    tiling.set_geom(base_geom);     // not meta, so will not fail
+    tiling.set_geom(base_geom); // not meta, so will not fail
     if (!oriented)
       tiling.start_everywhere();
     if (reverse)
       tiling.reverse_pattern();
     tiling.make_tiling(tiled_geom);
-    if (!oriented)                // some tiles may be doubled
+    if (!oriented) // some tiles may be doubled
       merge_coincident_elements(tiled_geom, "f");
   }
   return stat;

@@ -7,8 +7,9 @@ with the help of the following developers
 
 Antiprism incorporates code from these projects and authors
    Qhull - http://www.qhull.org
-   Kaleido - Zvi Har’El  http://www.math.technion.ac.il/~rl/
    Darko Kirovski, Miodrag Podkonjak (graph colouring)
+   Kevin Locke - https://github.com/kevinoid/ultragetopt
    Pawel W. Olszta - http://freeglut.sourceforge.net
    Robin Whittle - http://www.firstpr.com.au/dsp/rand31/
+   Kaleido - Zvi Har’El  http://www.math.technion.ac.il/~rl/
 

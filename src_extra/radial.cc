@@ -70,7 +70,9 @@ public:
 
   radial_opts()
       : ProgramOpts("radial"), axis_orders_set(false), sym_str(""),
-        show_axes(0), map_string("rng"), face_opacity(-1), epsilon(0) {}
+        show_axes(0), map_string("rng"), face_opacity(-1), epsilon(0)
+  {
+  }
   void process_command_line(int argc, char **argv);
   void usage();
 };
@@ -110,7 +112,8 @@ void radial_opts::usage()
 }
 // clang-format on
 
-void radial_opts::process_command_line(int argc, char **argv) {
+void radial_opts::process_command_line(int argc, char **argv)
+{
   opterr = 0;
   int c;
 
@@ -164,12 +167,14 @@ void radial_opts::process_command_line(int argc, char **argv) {
           if (axis_order < 0 || axis_order > 2)
             error("axis order must be 0, 1 or 2", c);
           axis_orders[axis_order] = axis_order;
-        } else if (i == 1) {
+        }
+        else if (i == 1) {
           int ax_pct = idx_lst[i];
           if (ax_pct < 1)
             error("axis percent must be 1 or greater", c);
           axis_percent[axis_order] = ax_pct;
-        } else
+        }
+        else
           error("excess entries for axis orders", c);
       }
       axis_orders_set = true;
@@ -257,7 +262,8 @@ void radial_opts::process_command_line(int argc, char **argv) {
 // sym.init() done before call
 // color with map indexes by axis number
 Geometry get_axes(const Geometry &geom, Symmetry &sym, int ax_idx,
-                  const radial_opts &opts) {
+                  const radial_opts &opts)
+{
   if (opts.sym_str.length()) {
     Symmetry full_sym = sym;
     full_sym.get_sub_sym(opts.sym_str, &sym);
@@ -304,7 +310,8 @@ Geometry get_axes(const Geometry &geom, Symmetry &sym, int ax_idx,
       vector<Vec3d> tri_verts;
       get_schwarz_tri_verts(n_folds, tri_verts);
       axis_pt = tri_verts[ax_idx];
-    } else // Single axis
+    }
+    else // Single axis
       axis_pt = Vec3d::Z;
 
     Geometry axis;
@@ -326,7 +333,8 @@ Geometry get_axes(const Geometry &geom, Symmetry &sym, int ax_idx,
 // find starting faces for fronts
 void find_fronts_from_axes(map<int, vector<int>> &fronts, const Geometry &axes,
                            const Geometry &geom, const Vec3d &cent,
-                           const radial_opts &opts) {
+                           const radial_opts &opts)
+{
   const vector<Vec3d> &axes_verts = axes.verts();
 
   const vector<vector<int>> &faces = geom.faces();
@@ -412,7 +420,8 @@ void find_fronts_from_axes(map<int, vector<int>> &fronts, const Geometry &axes,
 
 // if index list is supplied, use it for fronts
 void find_fronts_from_list(map<int, vector<int>> &fronts, const Geometry &geom,
-                           const radial_opts &opts) {
+                           const radial_opts &opts)
+{
   // if index list is supplied, use it for fronts
   // edges need to exist
   vector<vector<int>> edges;
@@ -428,7 +437,8 @@ void find_fronts_from_list(map<int, vector<int>> &fronts, const Geometry &geom,
         face_idx = find_faces_with_vertex(geom.faces(), idx_list[j]);
         fronts[front_no].insert(fronts[front_no].end(), face_idx.begin(),
                                 face_idx.end());
-      } else if (elem_type == 'e') {
+      }
+      else if (elem_type == 'e') {
         int v1 = edges[idx_list[j]][0];
         int v2 = edges[idx_list[j]][1];
         face_idx = find_faces_with_vertex(geom.faces(), v1);
@@ -437,9 +447,11 @@ void find_fronts_from_list(map<int, vector<int>> &fronts, const Geometry &geom,
         face_idx = find_faces_with_vertex(geom.faces(), v2);
         fronts[front_no].insert(fronts[front_no].end(), face_idx.begin(),
                                 face_idx.end());
-      } else if (elem_type == 'f') {
+      }
+      else if (elem_type == 'f') {
         fronts[front_no].push_back(idx_list[j]);
-      } else if (elem_type == 's') {
+      }
+      else if (elem_type == 's') {
         bool found = false;
         for (unsigned int k = 0; k < geom.faces().size(); k++) {
           if (idx_list[j] == (int)geom.faces(k).size()) {
@@ -458,7 +470,8 @@ void find_fronts_from_list(map<int, vector<int>> &fronts, const Geometry &geom,
 }
 
 // color with map indexes
-void radial_coloring(Geometry &geom, map<int, vector<int>> &fronts) {
+void radial_coloring(Geometry &geom, map<int, vector<int>> &fronts)
+{
   // clear all colors
   geom.colors(FACES).clear();
 
@@ -519,7 +532,8 @@ void radial_coloring(Geometry &geom, map<int, vector<int>> &fronts) {
 }
 
 // break down model into parts
-void compound_parts(Geometry &geom, vector<Geometry> &parts) {
+void compound_parts(Geometry &geom, vector<Geometry> &parts)
+{
   GeometryInfo info(geom);
   if (info.num_parts() == 1)
     parts.push_back(geom);
@@ -536,9 +550,11 @@ void compound_parts(Geometry &geom, vector<Geometry> &parts) {
   }
 }
 
-void apply_transparency(Geometry &geom, const radial_opts &opts) {
+void apply_transparency(Geometry &geom, const radial_opts &opts)
+{
   if (opts.face_opacity > -1) {
-    ColorValuesToRangeHsva valmap(msg_str("A%g", (double)opts.face_opacity / 255));
+    ColorValuesToRangeHsva valmap(
+        msg_str("A%g", (double)opts.face_opacity / 255));
     valmap.apply(geom, FACES);
 
     for (const auto &kp : geom.colors(FACES).get_properties()) {
@@ -554,7 +570,8 @@ void apply_transparency(Geometry &geom, const radial_opts &opts) {
   }
 }
 
-void set_indexes_to_color(Geometry &geom, const radial_opts &opts) {
+void set_indexes_to_color(Geometry &geom, const radial_opts &opts)
+{
   // find maximum index
   int max_ridge = 0;
   for (unsigned int i = 0; i < geom.faces().size(); i++) {
@@ -579,7 +596,8 @@ void set_indexes_to_color(Geometry &geom, const radial_opts &opts) {
   if (map_name.length()) {
     ColorMap *cmap = colormap_from_name(map_name.c_str());
     clrng.add_cmap(cmap);
-  } else
+  }
+  else
     clrng.add_cmap(opts.map.clone());
   clrng.f_apply_cmap();
 
@@ -588,7 +606,8 @@ void set_indexes_to_color(Geometry &geom, const radial_opts &opts) {
     apply_transparency(geom, opts);
 }
 
-void append_axes(Geometry &geom, Geometry &axes, const radial_opts &opts) {
+void append_axes(Geometry &geom, Geometry &axes, const radial_opts &opts)
+{
   if (opts.show_axes == 2) {
     // add axes
     const vector<Vec3d> &verts = axes.verts();
@@ -613,7 +632,8 @@ void append_axes(Geometry &geom, Geometry &axes, const radial_opts &opts) {
   geom.append(axes);
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
   radial_opts opts;
   opts.process_command_line(argc, argv);
 
@@ -642,17 +662,20 @@ int main(int argc, char *argv[]) {
         }
         if (!found)
           opts.error("no faces found of size requested");
-      } else {
+      }
+      else {
         for (unsigned int j = 0; j < idx_list.size(); j++) {
           int sz = 0;
           string elem_name;
           if (elem_type == 'v') {
             sz = vsz;
             elem_name = "vertex";
-          } else if (elem_type == 'e') {
+          }
+          else if (elem_type == 'e') {
             sz = esz;
             elem_name = "edge";
-          } else if (elem_type == 'f') {
+          }
+          else if (elem_type == 'f') {
             sz = fsz;
             elem_name = "face";
           }

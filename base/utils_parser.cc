@@ -152,10 +152,10 @@ Status read_double(const char *str, double *f)
 
     *f = p.Eval();
 
-    if (isnan(*f))
+    if (std::isnan(*f))
       stat.set_error(
           msg_str("%s: result is not a number (domain error, etc)", msg_type));
-    else if (isinf(*f))
+    else if (std::isinf(*f))
       stat.set_error(
           msg_str("%s: result is not a finite number (division by zero, etc)",
                   msg_type));

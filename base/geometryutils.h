@@ -274,7 +274,8 @@ void get_congruence_maps(const Geometry &geom, Trans3d trans,
  * \param max returns the maximum nearpoints radius.
  * \param center returns the cente rof the nearpoints.
  * \returns the average radius of the nearpoints. */
-double edge_nearpoints_radius(const Geometry &geom, double &min, double &max, Vec3d &center);
+double edge_nearpoints_radius(const Geometry &geom, double &min, double &max,
+                              Vec3d &center);
 
 /// wrapper for above.
 /**\param geom geometry. */

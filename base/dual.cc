@@ -203,7 +203,7 @@ void get_pol_recip_verts(Geometry &dual, const Geometry &geom, double recip_rad,
 
   dual.clear(VERTS);
   for (const auto &face : geom.faces()) {
-    if(recip_rad) {
+    if (recip_rad) {
       auto f_norm = geom.face_norm(face);
       auto f_cent = geom.face_cent(face);
       double f_dist = vdot(f_norm, f_cent - centre);
@@ -212,7 +212,7 @@ void get_pol_recip_verts(Geometry &dual, const Geometry &geom, double recip_rad,
         dist = r_sign * inf * (1 - 2 * (f_dist < 0)) / f_norm.len();
       dual.add_vert(f_norm * dist + centre);
     }
-    else            // all dual vertices = centre
+    else // all dual vertices = centre
       dual.add_vert(centre);
   }
 }

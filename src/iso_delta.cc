@@ -1339,7 +1339,8 @@ void compound_coloring(Geometry &geom, const id_opts &opts)
 
     // transparency
     if (opts.face_opacity > -1) {
-      ColorValuesToRangeHsva valmap(msg_str("A%g", (double)opts.face_opacity / 255));
+      ColorValuesToRangeHsva valmap(
+          msg_str("A%g", (double)opts.face_opacity / 255));
       valmap.apply(geom, FACES);
 
       for (const auto &kp : geom.colors(FACES).get_properties()) {
