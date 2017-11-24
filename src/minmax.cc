@@ -37,7 +37,6 @@
 
 #include "../base/antiprism.h"
 
-using std::isnan;
 using std::string;
 using std::vector;
 
@@ -242,19 +241,19 @@ void mm_opts::process_command_line(int argc, char **argv)
   }
 
   if (algm == 'u') {
-    if (isnan(shorten_rad_by))
+    if (std::isnan(shorten_rad_by))
       shorten_rad_by = shorten_by;
-    if (isnan(flatten_by))
+    if (std::isnan(flatten_by))
       flatten_by = shorten_by;
-    if (!isnan(lengthen_by))
+    if (!std::isnan(lengthen_by))
       warning("set, but not used for this algorithm", 'l');
   }
   else { // algm ia v or a
-    if (isnan(shorten_rad_by))
+    if (std::isnan(shorten_rad_by))
       lengthen_by = 0.0;
-    if (!isnan(shorten_rad_by))
+    if (!std::isnan(shorten_rad_by))
       warning("set, but not used for this algorithm", 'k');
-    if (!isnan(flatten_by))
+    if (!std::isnan(flatten_by))
       warning("set, but not used for this algorithm", 'f');
   }
 

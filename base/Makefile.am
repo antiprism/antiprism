@@ -60,6 +60,7 @@ pkginclude_HEADERS = \
 	scene.h \
 	status.h \
 	symmetry.h \
+	tiling.h \
 	timer.h \
 	trans3d.h \
 	trans4d.h \

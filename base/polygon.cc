@@ -684,7 +684,7 @@ Status Polygon::make_pyramid_part(Geometry &geom)
 /*
 void dipyramid::make_scal_part(Geometry &geom)
 {
-   double twist_ang = isnan(twist_angle) ? 0.0 : twist_angle;
+   double twist_ang = std::isnan(twist_angle) ? 0.0 : twist_angle;
 
    double edge = get_edge();
    double ring_ht = 0.0;
