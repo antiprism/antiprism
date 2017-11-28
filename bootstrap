@@ -1,7 +1,2 @@
 #! /bin/sh
-libtoolize --force --copy \
-&& aclocal -I m4 \
-&& autoheader \
-&& automake --gnu --add-missing \
-&& autoconf
-
+autoreconf -v -i -I m4 -W all,no-obsolete,no-override

@@ -1518,7 +1518,7 @@ Status Tiling::read_pattern(const string &pat)
 
   string pat2 = pat;
   std::smatch m_all;
-  std::regex r_all("^\\[(.*)](.*)");
+  std::regex r_all("^\\[(.*)\\](.*)");
   std::regex_match(pat2, m_all, r_all);
   if (m_all.size() < 3)
     return Status::error(
