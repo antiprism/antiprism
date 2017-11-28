@@ -1769,8 +1769,8 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
       }
     }
 
-    // if faces were deleted, reappend them
-    if (dels.size())
+    // if geom_save has geometry, part of geom was saved. remerge
+    if (geom_save.verts().size())
       geom.append(geom_save);
     // set to merge in any case if duplicates are encountered
     merge_coincident_elements(geom, "vef", opts.epsilon);
