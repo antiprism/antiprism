@@ -251,11 +251,18 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
         operations.push_back(new ops(op_count++, current_op, num_val));
         delayed_write = false;
       }
-      // K, k, l, t must be 3 or greater
+      // K, k, l must be 3 or greater, t can be 2 or greater
       else if (digits_ge_3.find(current_op) != string::npos) {
         num_val = atoi(number_string.c_str());
+        if (current_op == 't') {
+          if (num_val < 2) {
+            fprintf(stderr, "%c(n), n must be 2 or greater\n", current_op);
+            return i + 1;
+          }
+        }
+        else
         if (num_val < 3) {
-          fprintf(stderr, "K(n), k(n), l(n), t(n), n must be 3 or greater\n");
+          fprintf(stderr, "%c(n), n must be 3 or greater\n", current_op);
           return i + 1;
         }
         operations.push_back(new ops(op_count++, current_op, num_val));
@@ -681,7 +688,7 @@ void extended_help()
 "M  - n may be 0 or greater (default: 1)\n"
 "m  - n may be 0 or greater (default: 1)\n"
 "o  - n may be 0 or greater (default: 1)\n"
-"t  - n may be 3 or greater representing face sides\n"
+"t  - n may be 2 or greater representing face sides\n"
 "\n"
 "Antiprism Extension: note that any operation can be repeated N time by following\n"
 "it with the ^ symbol and a number greater than 0. Examples: a^3C M0^2T\n"
