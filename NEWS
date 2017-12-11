@@ -1,5 +1,10 @@
 NEWS for Antiprism: http://www.antiprism.com
 
+Version 0.25.1
+08-12-17 Adrian Rossiter <adrian@antiprism.com>
+         Fixes
+            build: issues affecting OSX, install all headers
+
 Version 0.25
 23-11-17 Adrian Rossiter <adrian@antiprism.com>
          New Programs

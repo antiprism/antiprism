@@ -50,7 +50,10 @@ sudo apt-get install antiprism
 
 <h3>Windows</h3>
 
-Download and run either the 64-bit and 32-bit installer
+Download and run either the 64-bit and 32-bit installer. Please, ignore
+antivirus warnings about the installers not being signed, or being
+"infected" with DRep (which is an erroneous message from Avast that
+<a href="https://www.starmessagesoftware.com/faq-page/what-is-avast-drep-infection">does not indicate an infection</a>).
 <ul>
 <li><a href="http://www.antiprism.com/files/<<ANTIPRISM_WIN64_FILE>>"><<ANTIPRISM_WIN64_FILE>></a>
 <li><a href="http://www.antiprism.com/files/<<ANTIPRISM_WIN32_FILE>>"><<ANTIPRISM_WIN32_FILE>></a>

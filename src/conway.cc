@@ -260,8 +260,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
             return i + 1;
           }
         }
-        else
-        if (num_val < 3) {
+        else if (num_val < 3) {
           fprintf(stderr, "%c(n), n must be 3 or greater\n", current_op);
           return i + 1;
         }
