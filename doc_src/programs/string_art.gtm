@@ -10,7 +10,7 @@
 
 <<USAGE_START>>
 <pre class="prog_help">
-<<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
+<<__SYSTEM__(../src_extra/<<BASENAME>> -h > tmp.txt)>>
 #entities ON
 #include "tmp.txt"
 #entities OFF

@@ -30,38 +30,37 @@ mtimestamp $dd.$MM.$yyyy
 ./programs/off_normals.gtm 3 off_normals - utility for working with normals
 ./programs/conv_hull.gtm 3 conv_hull - convex hulls (using Qhull)
 ./programs/pol_recip.gtm 3 pol_recip - polar reciprocals (duals)
+./programs/canonical.gtm 3 canonical - canonicalize a polyhedon
 ./programs/geodesic.gtm 3 geodesic - geodesic spheres
 ./programs/zono.gtm 3 zono - zonohedra from OFF files
-./programs/polygon.gtm 3 polygon - polygon based polyhedra
 ./programs/stellate.gtm 3 stellate - polyhedron stellations
-./programs/miller.gtm 3 miller - Miller's stellations of the icosahedron
-./programs/iso_delta.gtm 3 iso_delta - isohedral deltahedra
-./programs/iso_kite.gtm 3 iso_kite - isohedral kite-faced polyhedra
 ./programs/conway.gtm 3 conway - Conway Notation transformations
 ./programs/wythoff.gtm 3 wythoff - Wythoff-style constructions
 ./programs/poly_kscope.gtm 3 poly_kscope - polyhedral kaleidoscope
 ./programs/to_nfold.gtm 3 to_nfold - change the rotational symmetry of a polyhedron
-./programs/unitile2d.gtm 3 unitile2d - make uniform tilings on a surface
-./programs/string_art.gtm 3 string_art - string figures
-./programs/lat_grid.gtm 3 lat_grid - lattices and grids with integer coordinates
-./programs/bravais.gtm 3 bravais - Bravais lattices
-./programs/lat_util.gtm 3 lat_util - lattice utilities
 ./programs/symmetro.gtm 3 symmetro - polyhedra with regular polygons at symmetry axes
-./programs/waterman.gtm 3 waterman - Waterman polyhedra
-./programs/n_icons.gtm 3 n_icons - sphericon like polyhedra 
 ./programs/kcycle.gtm 3 kcycle - kaleidocycle rings of polyhedron
-./programs/jitterbug.gtm 3 jitterbug - jitterbug transformation
 ./programs/leonardo.gtm 3 leonardo - Leonardo da Vinci style models
-./programs/canonical.gtm 3 canonical - canonicalize a polyhedon
-./programs/sph_rings.gtm 3 sph_rings - rings of points on a sphere
-./programs/sph_saff.gtm 3 sph_saff - spiral points on a sphere (Saff and Kuiljaars)
-./programs/repel.gtm 3 repel - equilibrium of points repelling on a sphere
 ./programs/minmax.gtm 3 minmax - optimal spherical tesselations
 ./programs/col_util.gtm 3 col_util - colour utilities including plots and blends
+./programs/lat_util.gtm 3 lat_util - lattice utilities
+./programs/polygon.gtm 3 polygon - polygon based polyhedra
+./programs/miller.gtm 3 miller - Miller's stellations of the icosahedron
+./programs/iso_delta.gtm 3 iso_delta - isohedral deltahedra
+./programs/iso_kite.gtm 3 iso_kite - isohedral kite-faced polyhedra
+./programs/unitile2d.gtm 3 unitile2d - make uniform tilings on a surface
+./programs/n_icons.gtm 3 n_icons - sphericon like polyhedra 
+./programs/waterman.gtm 3 waterman - Waterman polyhedra
+./programs/sph_rings.gtm 3 sph_rings - rings of points on a sphere
+./programs/repel.gtm 3 repel - equilibrium of points repelling on a sphere
+./programs/lat_grid.gtm 3 lat_grid - lattices and grids with integer coordinates
+./programs/bravais.gtm 3 bravais - Bravais lattices
 
 ./programs/dome_layer.gtm 3 UNSUPPORTED: dome_layer - dome strut arrangements
 ./programs/poly_weave.gtm 3 UNSUPPORTED: poly_weave - weave based on a polyhedron
 ./programs/mmop_origami.gtm 3 UNSUPPORTED: mmop_origami - multimodular polyhedron origami
+./programs/jitterbug.gtm 3 UNSUPPORTED: jitterbug - jitterbug transformation
+./programs/string_art.gtm 3 UNSUPPORTED: string_art - string figures
 ./programs/kaleido.gtm 3 UNSUPPORTED: kaleido - uniform polyhedra (Zvi Har'El)
 ./programs/radial.gtm 3 UNSUPPORTED: radial - radial colouring based on symmetry
 ./programs/twist.gtm 3 UNSUPPORTED: twist - twist the edges of a polyhedron

@@ -55,38 +55,41 @@ Programs
 <li><a href="off_normals.html">off_normals</a> - utility for working with normals
 </ul>
   
-<b>Generation</b>
+<b>Transformation</b>
 <ul>
 <li><a href="conv_hull.html">conv_hull</a> - convex hulls (using Qhull)
 <li><a href="pol_recip.html">pol_recip</a> - polar reciprocals (duals)
+<li><a href="canonical.html">canonical</a> - canonicalize a polyhedron
 <li><a href="geodesic.html">geodesic</a> - geodesic spheres
 <li><a href="zono.html">zono</a> - zonohedra
-<li><a href="polygon.html">polygon</a> - polygon based polyhedra (prisms, pyramids, etc)
 <li><a href="stellate.html">stellate</a> - polyhedron stellations
+<li><a href="conway.html">conway</a> - Conway Notation transformations
+<li><a href="wythoff.html">wythoff</a> -  Wythoff-style constructions
+<li><a href="poly_kscope.html">poly_kscope</a> - polyhedral kaleidoscope
+<li><a href="to_nfold.html">to_nfold</a> - change the rotational symmetry of a polyhedron
+<li><a href="symmetro.html">symmetro</a> - polyhedra with regular polygons at symmetry axes
+<li><a href="kcycle.html">kcycle</a> - kaleidocycle rings of polyhedron 
+<li><a href="leonardo.html">leonardo</a> - Leonardo da Vinci style models
+<li><a href="minmax.html">minmax</a> - minimise a spherical tesselation's maximum edge length, turn face data only into a spherical tesselation
+<li><a href="col_util.html">col_util</a> - colour utilities, plots and blending
+<li><a href="lat_util.html">lat_util</a> - lattice utilities
+</ul>
+
+<b>Models</b>
+<ul>
+  <li><a href="off_util.html">off_util</a> - output
+    <a href="http://www.antiprism.com/examples/150_named_models/index.html">named resource models</a>
+<li><a href="polygon.html">polygon</a> - polygon based polyhedra (prisms, pyramids, etc)
 <li><a href="miller.html">miller</a> - Miller's stellations of the icosahedron
 <li><a href="iso_delta.html">iso_delta</a> - isohedral deltahedra
 <li><a href="iso_kite.html">iso_kite</a> - isohedral kiteohedra
-<li><a href="conway.html">conway</a> - Conway Notation transformations
-<li><a href="poly_kscope.html">poly_kscope</a> - polyhedral kaleidoscope
-<li><a href="to_nfold.html">to_nfold</a> - change the rotational symmetry of a polyhedron
 <li><a href="unitile2d.html">unitile2d</a> - uniform tilings on a surface
-<li><a href="string_art.html">string_art</a> - string figures
+<li><a href="n_icons.html">n_icons</a> - sphericon like polyhedra 
+<li><a href="waterman.html">waterman</a> - Waterman polyhedra
+<li><a href="sph_rings.html">sph_rings</a> - rings of points on a sphere
+<li><a href="repel.html">repel</a> - equilibrium of points repelling on a sphere
 <li><a href="lat_grid.html">lat_grid</a> - lattices and grids with integer coordinates
 <li><a href="bravais.html">bravais</a> - Bravais lattices
-<li><a href="lat_util.html">lat_util</a> - lattice utilities
-<li><a href="symmetro.html">symmetro</a> - polyhedra with regular polygons at symmetry axes
-<li><a href="waterman.html">waterman</a> - Waterman polyhedra
-<li><a href="n_icons.html">n_icons</a> - sphericon like polyhedra 
-<li><a href="kcycle.html">kcycle</a> - kaleidocycle rings of polyhedron 
-<li><a href="jitterbug.html">jitterbug</a> - jitterbug transformation
-<li><a href="leonardo.html">leonardo</a> - Leonardo da Vinci style models
-<li><a href="wythoff.html">wythoff</a> -  Wythoff-style constructions
-<li><a href="canonical.html">canonical</a> - canonicalize a polyhedron
-<li><a href="sph_rings.html">sph_rings</a> - rings of points on a sphere
-<li><a href="sph_saff.html">sph_saff</a> - spiral points on a sphere (Saff and Kuiljaars)
-<li><a href="repel.html">repel</a> - equilibrium of points repelling on a sphere
-<li><a href="minmax.html">minmax</a> - minimise a spherical tesselation's maximum edge length, turn face data only into a spherical tesselation
-<li><a href="col_util.html">col_util</a> - colour utilities, plots and blending
 </ul>
 
 <h3><a name="unsupported">
@@ -103,6 +106,8 @@ provided for interest only
 <li><a href="spidron.html">spidron</a> - spidronise a polyhedron
 <li><a href="poly_weave.html">poly_weave</a> - weave based on a polyhedron
 <li><a href="mmop_origami.html">mmop_origami</a> - multimodular origami polyhedra
+<li><a href="jitterbug.html">jitterbug</a> - jitterbug transformation
+<li><a href="string_art.html">string_art</a> - string figures
 <li><a href="off2m.html">off2m</a> - convert an OFF file to LiveGraphics3D 'm' format
 <li><a href="m2off.html">m2off</a> - convert a LiveGraphics3D 'm' file to OFF format
 <li><a href="off2txt.html">off2txt</a> - convert an OFF file to Hedron format

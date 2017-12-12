@@ -47,6 +47,8 @@ src_extra/spidron
 src_extra/dome_layer
 src_extra/poly_weave
 src_extra/mmop_origami
+src_extra/jitterbug
+src_extra/string_art
 src_extra/off2m
 src_extra/m2off
 src_extra/off2txt
@@ -74,14 +76,11 @@ src/conv_hull
 src/pol_recip
 src/geodesic
 src/minmax
-src/sph_saff
 src/sph_rings
 src/off_report
 src/off_query
 src/off_normals
 src/kcycle
-src/string_art
-src/jitterbug
 src/leonardo
 src/unitile2d
 src/repel

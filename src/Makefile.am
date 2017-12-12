@@ -20,9 +20,8 @@ liblattice_grid_la_SOURCES = lattice_grid.cc lattice_grid.h
 bin_PROGRAMS = off2pov off2vrml off2crds off2obj obj2off off2dae \
 		off_color off_util off_trans off_align \
 		poly_kscope polygon zono conv_hull pol_recip \
-		geodesic minmax sph_saff sph_rings \
-		off_report off_query \
-		kcycle string_art jitterbug unitile2d repel \
+		geodesic minmax sph_rings off_report off_query \
+		kcycle unitile2d repel \
 		lat_grid lat_util canonical conway n_icons iso_delta \
 		bravais waterman col_util planar off_normals leonardo \
 		iso_kite to_nfold symmetro stellate miller wythoff
@@ -31,9 +30,9 @@ dist_man1_MANS = off2pov.1 off2vrml.1 off2crds.1 off2obj.1 \
 		obj2off.1 off2dae.1 \
 		off_color.1 off_util.1 off_trans.1 off_align.1 \
       		poly_kscope.1 polygon.1 zono.1 conv_hull.1 pol_recip.1 \
-		geodesic.1 minmax.1 sph_saff.1 sph_rings.1 \
+		geodesic.1 minmax.1 sph_rings.1 \
 		off_report.1 off_query.1 \
-		kcycle.1 string_art.1 jitterbug.1 unitile2d.1 repel.1 \
+		kcycle.1 unitile2d.1 repel.1 \
 		lat_grid.1 lat_util.1 canonical.1 conway.1 n_icons.1 \
 		iso_delta.1 bravais.1 waterman.1 col_util.1 planar.1 \
 		off_normals.1 leonardo.1 iso_kite.1 to_nfold.1 \
@@ -56,13 +55,10 @@ conv_hull_SOURCES = conv_hull.cc
 pol_recip_SOURCES = pol_recip.cc
 geodesic_SOURCES = geodesic.cc
 minmax_SOURCES = minmax.cc
-sph_saff_SOURCES = sph_saff.cc
 sph_rings_SOURCES = sph_rings.cc
 off_report_SOURCES = off_report.cc rep_print.cc rep_print.h
 off_query_SOURCES = off_query.cc rep_print.cc rep_print.h
 kcycle_SOURCES = kcycle.cc
-string_art_SOURCES = string_art.cc
-jitterbug_SOURCES = jitterbug.cc
 unitile2d_SOURCES = unitile2d.cc
 repel_SOURCES = repel.cc
 lat_grid_SOURCES = lat_grid.cc

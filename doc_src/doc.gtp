@@ -31,34 +31,31 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/off_normals.gtm 2 off_normals - utility for working with normals
 ./doc/conv_hull.gtm 2 conv_hull - convex hulls (using Qhull)
 ./doc/pol_recip.gtm 2 pol_recip - polar reciprocals (duals)
+./doc/canonical.gtm 2 canonical - canonicalize a polyhedon
 ./doc/geodesic.gtm 2 geodesic - geodesic spheres
 ./doc/zono.gtm 2 zono - zonohedra from OFF files
-./doc/polygon.gtm 2 polygon - polygon based polyhedra
 ./doc/stellate.gtm 2 stellate - polyhedron stellations
-./doc/miller.gtm 2 miller - Miller's stellations of the icosahedron
-./doc/iso_delta.gtm 2 iso_delta - isohedral deltahedra
-./doc/iso_kite.gtm 2 iso_kite - isohedral kite-faced polyhedra
 ./doc/conway.gtm 2 conway - Conway Notation transformations
 ./doc/wythoff.gtm 2 wythoff - Wythoff-style constructions
 ./doc/poly_kscope.gtm 2 poly_kscope - polyhedral kaleidoscope
 ./doc/to_nfold.gtm 2 to_nfold - change the rotational symmetry of a polyhedron
-./doc/unitile2d.gtm 2 unitile2d - make uniform tilings on a surface
-./doc/string_art.gtm 2 string_art - string figures
-./doc/lat_grid.gtm 2 lat_grid - lattices and grids with integer coordinates
-./doc/bravais.gtm 2 bravais - Bravais lattices
-./doc/lat_util.gtm 2 lat_util - lattice utilities
 ./doc/symmetro.gtm 2 symmetro - polyhedra with regular polygons at symmetry axes
-./doc/waterman.gtm 2 waterman - Waterman polyhedra
-./doc/n_icons.gtm 2 n_icons - sphericon like polyhedra 
 ./doc/kcycle.gtm 2 kcycle - kaleidocycle rings of polyhedron
 ./doc/leonardo.gtm 2 leonardo - Leonardo da Vinci style models
-./doc/jitterbug.gtm 2 jitterbug - jitterbug transformation
-./doc/canonical.gtm 2 canonical - canonicalize a polyhedon
-./doc/sph_rings.gtm 2 sph_rings - rings of points on a sphere
-./doc/sph_saff.gtm 2 sph_saff - spiral points on a sphere (Saff and Kuiljaars)
-./doc/repel.gtm 2 repel - equilibrium of points repelling on a sphere
 ./doc/minmax.gtm 2 minmax - optimal spherical tesselations
 ./doc/col_util.gtm 2 col_util - colour utilities including plots and blends
+./doc/lat_util.gtm 2 lat_util - lattice utilities
+./doc/polygon.gtm 2 polygon - polygon based polyhedra
+./doc/miller.gtm 2 miller - Miller's stellations of the icosahedron
+./doc/iso_delta.gtm 2 iso_delta - isohedral deltahedra
+./doc/iso_kite.gtm 2 iso_kite - isohedral kite-faced polyhedra
+./doc/unitile2d.gtm 2 unitile2d - make uniform tilings on a surface
+./doc/n_icons.gtm 2 n_icons - sphericon like polyhedra 
+./doc/waterman.gtm 2 waterman - Waterman polyhedra
+./doc/sph_rings.gtm 2 sph_rings - rings of points on a sphere
+./doc/repel.gtm 2 repel - equilibrium of points repelling on a sphere
+./doc/lat_grid.gtm 2 lat_grid - lattices and grids with integer coordinates
+./doc/bravais.gtm 2 bravais - Bravais lattices
 
 ./doc/dome_layer.gtm 2 UNSUPPORTED: dome_layer - dome strut arrangements
 ./doc/twist.gtm 2 UNSUPPORTED: twist - twist the edges of a polyhedron
@@ -67,6 +64,8 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/spidron.gtm 2 UNSUPPORTED: spidron - spidronise a polyhedron
 ./doc/poly_weave.gtm 2 UNSUPPORTED: poly_weave - weave based on a polyhedron
 ./doc/mmop_origami.gtm 2 UNSUPPORTED: mmop_origami - multimodular polyhedron origami
+./doc/jitterbug.gtm 2 UNSUPPORTED: jitterbug - jitterbug transformation
+./doc/string_art.gtm 2 UNSUPPORTED: string_art - string figures
 ./doc/off2m.gtm 2 UNSUPPORTED: off2m - convert an OFF file for LiveGraphics3D
 ./doc/m2off.gtm 2 UNSUPPORTED: m2off - convert a LiveGraphics3D 'm' file to OFF format
 ./doc/off2txt.gtm 2 UNSUPPORTED: off2txt - convert an OFF file to Hedron format
