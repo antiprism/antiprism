@@ -66,6 +66,7 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/radial.gtm 2 UNSUPPORTED: radial - radial colouring based on symmetry
 ./doc/spidron.gtm 2 UNSUPPORTED: spidron - spidronise a polyhedron
 ./doc/poly_weave.gtm 2 UNSUPPORTED: poly_weave - weave based on a polyhedron
+./doc/mmop_origami.gtm 2 UNSUPPORTED: mmop_origami - multimodular polyhedron origami
 ./doc/off2m.gtm 2 UNSUPPORTED: off2m - convert an OFF file for LiveGraphics3D
 ./doc/m2off.gtm 2 UNSUPPORTED: m2off - convert a LiveGraphics3D 'm' file to OFF format
 ./doc/off2txt.gtm 2 UNSUPPORTED: off2txt - convert an OFF file to Hedron format

@@ -61,6 +61,7 @@ mtimestamp $dd.$MM.$yyyy
 
 ./programs/dome_layer.gtm 3 UNSUPPORTED: dome_layer - dome strut arrangements
 ./programs/poly_weave.gtm 3 UNSUPPORTED: poly_weave - weave based on a polyhedron
+./programs/mmop_origami.gtm 3 UNSUPPORTED: mmop_origami - multimodular polyhedron origami
 ./programs/kaleido.gtm 3 UNSUPPORTED: kaleido - uniform polyhedra (Zvi Har'El)
 ./programs/radial.gtm 3 UNSUPPORTED: radial - radial colouring based on symmetry
 ./programs/twist.gtm 3 UNSUPPORTED: twist - twist the edges of a polyhedron

@@ -1,13 +1,13 @@
 Antiprism
 =========
 
-Notes for Antiprism 0.25.1
---------------------------
+Notes for Antiprism 0.26
+------------------------
 
-The release includes new programs: stellate (Roger Kaufman) constructs
-polyhedron stellations, miller (Roger Kaufman) generates Miller's
-stellations of the icosahedron, wythoff makes Wythoff-style tilings
-on surfaces. There are also new features, improvements, and bug fixes.
+The release includes new programs: mmop_origami constructs models
+whose vertices are folded regular polygons.
+
+There are also new features, improvements, and bug fixes.
 See the NEWS file for more details.
 
 Please look out for bugs and other issues, and report them to me at

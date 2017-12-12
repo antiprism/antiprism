@@ -1,0 +1,86 @@
+#define HL_PROG class=curpage
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<<TITLE_HEAD>>
+
+<<TOP_LINKS>>
+
+<<USAGE_START>>
+<pre class="prog_help">
+<<__SYSTEM__(../src_extra/<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</pre>
+<<USAGE_END>>
+
+
+<<EXAMPLES_START>>
+Cuboctahedron dual
+<<CMDS_START>>
+mmop_origami cubo_d | antiview
+<<CMDS_END>>
+
+Cuboctahedron dual, preserve base vertex colours
+<<CMDS_START>>
+mmop_origami -V cubo_d | antiview
+<<CMDS_END>>
+
+Cuboctahedron dual, preserve base vertex colours, 'pop' face centres
+a little
+<<CMDS_START>>
+mmop_origami -V -p 0.1 cubo_d | antiview
+<<CMDS_END>>
+
+Cuboctahedron dual, preserve base vertex colours, 'pop' face centres
+a lot
+<<CMDS_START>>
+mmop_origami -V -p 0.5 cubo_d | antiview
+<<CMDS_END>>
+
+Rhombicosidodecahedron dual, truncate modules to 1/3
+<<CMDS_START>>
+mmop_origami -p -0.2 -t 1/3 rhombicosid_d | antiview
+<<CMDS_END>>
+
+
+<<EXAMPLES_END>>
+
+
+<<NOTES_START>>
+<i>mmop_origami</i> creates models like those described in
+<a href=http://store.doverpublications.com/0486423174.html> Multimodular Origami
+  Polyhedra: Archimedeans, Buckyballs and Duality</a>
+by Rona Gurkewitz, Bennett Arnstein.
+<p>
+A solution will have vertex units made of regular polygons, which are
+creased from centre-to-vertex and centre-to-midedge. Solutions are
+found by iteration. Multiple solutions may exist, and can be found by
+raising or lowering face centres with <i>option -p</i>. Other solutions
+may exist by raising some centres and lowering others, but this is not
+currently supported.
+<p>
+Sometimes the algorithm will 'jam' on a non-solution, and some models do
+not have geometrically realisable solutions.
+Check the quality of solutions by seeing if the triangles have good angles.
+The following is close to a solution, but icreasing the number of
+iterations doesn't improve the solution, so it is probably jammed.
+<<CMDS_START>>
+mmop_origami -p 0.1 -s 1 -n 100000 tr_icosid_d | off_report -C F
+<<CMDS_END>>
+
+The following model does not have a (symmetrical) solution
+<<CMDS_START>>
+mmop_origami pri7 | off_report -C F
+<<CMDS_END>>
+<p>
+Convergence is slow on models with flat hexagons in the solution
+<<CMDS_START>>
+mmop_origami -n 200000 tr_ico | off_report -C F
+<<CMDS_END>>
+<<NOTES_END>>
+
+#include "<<END>>"

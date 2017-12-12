@@ -102,6 +102,7 @@ provided for interest only
 <li><a href="radial.html">radial</a> - radial colouring based on symmetry
 <li><a href="spidron.html">spidron</a> - spidronise a polyhedron
 <li><a href="poly_weave.html">poly_weave</a> - weave based on a polyhedron
+<li><a href="mmop_origami.html">mmop_origami</a> - multimodular origami polyhedra
 <li><a href="off2m.html">off2m</a> - convert an OFF file to LiveGraphics3D 'm' format
 <li><a href="m2off.html">m2off</a> - convert a LiveGraphics3D 'm' file to OFF format
 <li><a href="off2txt.html">off2txt</a> - convert an OFF file to Hedron format
