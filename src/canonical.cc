@@ -812,6 +812,42 @@ void construct_model(Geometry &base, const cn_opts &opts) {
     base.append(dual_incircles);
 }
 
+void check_model(const Geometry &geom, string s, const cn_opts &opts)
+{
+  double epsilon_local1 = 1e-4;         // coincident elements
+  double epsilon_local2 = opts.epsilon; // face area (default is 1e-12)
+
+  Geometry geom_merged = geom;
+  merge_coincident_elements(geom_merged, "vef", 0, epsilon_local1);
+
+  if (geom.verts().size() != geom_merged.verts().size())
+    opts.warning(msg_str("possible coincident vertices found in %s", s.c_str()));
+
+  if (geom.faces().size() != geom_merged.faces().size())
+    opts.warning(msg_str("possible coincident faces found in %s", s.c_str()));
+
+  GeometryInfo info(geom);
+  vector<double> areas = info.get_f_areas();
+  for (unsigned int i = 0; i < areas.size(); i++) {
+    //fprintf(stderr, "%.17lf\n", areas[i]);
+    if (areas[i] < epsilon_local2) {
+      opts.warning(msg_str("possible faces of near 0 area found in %s (face %d)", s.c_str(), i));
+      break;
+    }
+  }
+}
+
+void check_coincidence(const Geometry &geom, const cn_opts &opts)
+{
+  string s = "base";
+  check_model(geom, s, opts);
+
+  Geometry dual;
+  get_dual(dual, geom, 1);
+  s = "dual";
+  check_model(dual, s, opts);
+}
+
 int main(int argc, char *argv[])
 {
   cn_opts opts;
@@ -821,7 +857,7 @@ int main(int argc, char *argv[])
   opts.read_or_error(geom, opts.ifile);
 
   if (opts.edge_distribution) {
-    fprintf(stderr, "edge distribution: (project onto sphere)\n");
+    fprintf(stderr, "edge distribution: project onto sphere\n");
     if (opts.edge_distribution == 's')
       project_onto_sphere(geom);
   }
@@ -829,31 +865,31 @@ int main(int argc, char *argv[])
   fprintf(stderr,"\n");
   fprintf(stderr,"starting radius: ");
   if (opts.initial_radius == 'e') {
-    fprintf(stderr, "(average edge near points)\n");
+    fprintf(stderr, "average edge near points\n");
     unitize_nearpoints_radius(geom);
   }
   else
   if (opts.centering == 'v') {
-    fprintf(stderr, "(average vertex)\n");
+    fprintf(stderr, "average vertex\n");
     unitize_vertex_radius(geom);
   }
   else
   if (opts.centering == 'x')
-    fprintf(stderr, "(radius not changed)\n");
+    fprintf(stderr, "radius not changed\n");
 
   fprintf(stderr,"centering: ");
   if (opts.centering == 'e') {
-    fprintf(stderr, "(edge near points centroid to origin)\n");
+    fprintf(stderr, "edge near points centroid to origin\n");
     geom.transform(Trans3d::translate(-edge_nearpoints_centroid(geom, Vec3d(0, 0, 0))));
   }
   else
   if (opts.centering == 'v') {
-    fprintf(stderr, "(vertex centroid to origin)\n");
+    fprintf(stderr, "vertex centroid to origin\n");
     geom.transform(Trans3d::translate(-centroid(geom.verts())));
   }
   else
   if (opts.centering == 'x')
-    fprintf(stderr, "(model not moved)\n");
+    fprintf(stderr, "model not moved\n");
 
   fprintf(stderr,"normals: ");
   if (opts.normal_type == 'n')
@@ -885,7 +921,7 @@ int main(int argc, char *argv[])
     else
     if (opts.planarize_method == 'u')
       planarize_str = "minmax -a u";
-    fprintf(stderr, "planarize: (%s method)\n",planarize_str.c_str());
+    fprintf(stderr, "planarize: %s method\n",planarize_str.c_str());
 
     if (opts.planarize_method == 'm') {
       bool planarize_only = true;
@@ -922,7 +958,7 @@ int main(int argc, char *argv[])
     else
     if (opts.canonical_method == 'a')
       canonicalize_str = "moving edge";
-    fprintf(stderr, "canonicalize: (%s method)\n",canonicalize_str.c_str());
+    fprintf(stderr, "canonicalize: %s method\n",canonicalize_str.c_str());
     if (opts.canonical_method == 'm') {
       bool planarize_only = false;
       completed = canonicalize_mm(geom, opts.mm_edge_factor / 100, opts.mm_plane_factor / 100,
@@ -947,6 +983,9 @@ int main(int argc, char *argv[])
     // RK - print midradius info
     midradius_info(geom, completed);
   }
+
+  // RK - add coincidence checking the model
+  check_coincidence(geom, opts);
 
   // RK - parts to output
   construct_model(geom, opts);
