@@ -66,8 +66,6 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/mmop_origami.gtm 2 UNSUPPORTED: mmop_origami - multimodular polyhedron origami
 ./doc/jitterbug.gtm 2 UNSUPPORTED: jitterbug - jitterbug transformation
 ./doc/string_art.gtm 2 UNSUPPORTED: string_art - string figures
-./doc/off2m.gtm 2 UNSUPPORTED: off2m - convert an OFF file for LiveGraphics3D
-./doc/m2off.gtm 2 UNSUPPORTED: m2off - convert a LiveGraphics3D 'm' file to OFF format
 ./doc/off2txt.gtm 2 UNSUPPORTED: off2txt - convert an OFF file to Hedron format
 
 ./doc/resources.gtm 2 Antiprism Resource Files

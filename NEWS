@@ -6,6 +6,7 @@ xx-xx-xx Adrian Rossiter <adrian@antiprism.com>
             mmop_origami: multimodular polyhedron origami models
          Changes
             sph_saff: removed (use antiprism_python)
+            off2m,m2off: removed (Java applets no longer popular)
          Fixes
 
 Version 0.25.1

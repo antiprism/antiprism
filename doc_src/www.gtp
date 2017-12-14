@@ -65,8 +65,6 @@ mtimestamp $dd.$MM.$yyyy
 ./programs/radial.gtm 3 UNSUPPORTED: radial - radial colouring based on symmetry
 ./programs/twist.gtm 3 UNSUPPORTED: twist - twist the edges of a polyhedron
 ./programs/spidron.gtm 3 UNSUPPORTED: spidron - spidronise a polyhedron
-./programs/off2m.gtm 3 UNSUPPORTED: off2m - convert an OFF file for LiveGraphics3D
-./programs/m2off.gtm 3 UNSUPPORTED: m2off - convert a LiveGraphics3D 'm' file to OFF format
 ./programs/off2txt.gtm 3 UNSUPPORTED: off2txt - convert an OFF file to Hedron format
 
 ./programs/resources.gtm 3 Antiprism Resource Files

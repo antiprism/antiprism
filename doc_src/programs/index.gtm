@@ -108,8 +108,6 @@ provided for interest only
 <li><a href="mmop_origami.html">mmop_origami</a> - multimodular origami polyhedra
 <li><a href="jitterbug.html">jitterbug</a> - jitterbug transformation
 <li><a href="string_art.html">string_art</a> - string figures
-<li><a href="off2m.html">off2m</a> - convert an OFF file to LiveGraphics3D 'm' format
-<li><a href="m2off.html">m2off</a> - convert a LiveGraphics3D 'm' file to OFF format
 <li><a href="off2txt.html">off2txt</a> - convert an OFF file to Hedron format
 </ul>
 
