@@ -42,6 +42,8 @@ using std::map;
 
 FILE *file_open_w(string file_name, char *errmsg)
 {
+  if (errmsg)
+    *errmsg = '\0';
   FILE *ofile = stdout; // write to stdout by default
   if (file_name != "") {
     ofile = fopen(file_name.c_str(), "w");
