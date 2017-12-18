@@ -68,6 +68,7 @@ public:
   string output_parts;
   int face_opacity;
   double offset;
+  int roundness;
   char normal_type;
 
   double epsilon;
@@ -85,7 +86,7 @@ public:
         canonical_method('m'), num_iters_canonical(-1), mm_edge_factor(50),
         mm_plane_factor(20), alternate_algorithm(false), rep_count(1000),
         radius_range_percent(80), output_parts("b"), face_opacity(-1),
-        offset(0), normal_type('n'), epsilon(0),
+        offset(0), roundness(8), normal_type('n'), epsilon(0),
         ipoints_col(Color(255, 255, 0)), base_nearpts_col(Color(255, 0, 0)),
         dual_nearpts_col(Color(0.0, 0.39216, 0.0)), base_edge_col(Color()),
         dual_edge_col(Color()), sphere_col(Color(255, 255, 255))
@@ -141,6 +142,7 @@ void cn_opts::usage()
 "               u - minimum tangent sphere, U - maximum, o - origin point\n"
 "               s - base incircles, S - rings, t -dual incircles, T -rings\n"
 "  -q <dist> offset for incircles to avoid coplanarity e.g 0.0001 (default: 0.0)\n"
+"  -g <opt>  roundness of tangent sphere, positive integer n (default: 8)\n"
 "  -x <opt>  Normals: n - Newell's, t - triangles, q - quads (default: Newell's)\n"
 "  -d <perc> radius test. precent difference between minumum and maximum radius\n"
 "               checks if polyhedron is collapsing. 0 for no test (default: 80)\n"
@@ -179,7 +181,7 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hC:r:e:p:i:c:n:O:q:E:P:Ad:x:z:I:N:M:B:D:U:T:l:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hC:r:e:p:i:c:n:O:q:g:E:P:Ad:x:z:I:N:M:B:D:U:T:l:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -244,6 +246,10 @@ void cn_opts::process_command_line(int argc, char **argv)
 
     case 'q':
       print_status_or_exit(read_double(optarg, &offset), c);
+      break;
+
+    case 'g':
+      print_status_or_exit(read_int(optarg, &roundness), c);
       break;
 
     case 'x':
@@ -788,7 +794,9 @@ void construct_model(Geometry &base, const cn_opts &opts) {
   // add unit sphere on origin
   if (opts.output_parts.find_first_of("uU") != string::npos) {
     Geometry sgeom;
-    sgeom.read_resource("geo_4_4");
+    char geo_str[MSG_SZ];
+    sprintf(geo_str,"geo_%d_%d", opts.roundness, opts.roundness);
+    sgeom.read_resource(geo_str);
     sgeom.transform(Trans3d::translate(-centroid(sgeom.verts())));
     unitize_vertex_radius(sgeom);
 
