@@ -709,6 +709,12 @@ void construct_model(Geometry &base, const cn_opts &opts) {
   if (double_ne(radius, 1.0, opts.epsilon))
     unitize_nearpoints_radius(base);
 
+  // get statistics before model is changed
+  double min = 0;
+  double max = 0;
+  Vec3d center;
+  edge_nearpoints_radius(base, min, max, center);
+
   Geometry dual;
   get_dual(dual, base, 1, Vec3d(0, 0, 0));
 
@@ -800,10 +806,6 @@ void construct_model(Geometry &base, const cn_opts &opts) {
     sgeom.transform(Trans3d::translate(-centroid(sgeom.verts())));
     unitize_vertex_radius(sgeom);
 
-    double min = 0;
-    double max = 0;
-    Vec3d center;
-    edge_nearpoints_radius(base, min, max, center);
     if (opts.output_parts.find("u") != string::npos)
       sgeom.transform(Trans3d::scale(min));
     else
