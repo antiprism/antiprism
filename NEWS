@@ -5,6 +5,7 @@ xx-xx-xx Adrian Rossiter <adrian@antiprism.com>
          New Programs
             mmop_origami: multimodular polyhedron origami models
          Changes
+            pol_recip: removed -r X (use wythoff -c d)
             sph_saff: removed (use antiprism_python)
             off2m,m2off: removed (Java applets no longer popular)
          Fixes

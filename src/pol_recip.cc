@@ -104,7 +104,6 @@ void pr_opts::usage()
 "              v - nearest vertex distance, V - furthest vertex distance\n"
 "              e - nearest edge distance,   E - furthest edge distance\n"
 "              f - nearest face distance,   F - furthest face distance\n"
-"              X - topological dual using face centroids for dual vertices\n"  
 "            or a comma separated list of vertex indices (starting from 0)\n"
 "            and the distance is to the space containing those vertices\n"
 "  -R <rad>  initial value for a radius calculation (default: calculated)\n"
@@ -165,7 +164,7 @@ void pr_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'r':
-      if (strlen(optarg) == 1 && strchr("VvEeFfX", *optarg)) {
+      if (strlen(optarg) == 1 && strchr("VvEeFf", *optarg)) {
         recip_rad_type = *optarg;
       }
       else if (read_double(optarg, &recip_rad)) {
@@ -179,7 +178,7 @@ void pr_opts::process_command_line(int argc, char **argv)
       else if (read_int_list(optarg, space_verts, true))
         recip_rad_type = 'S';
       else
-        error("radius must be a radius value, or r,V,v,E,e,F,f,X or a list of "
+        error("radius must be a radius value, or r,V,v,E,e,F,f or a list of "
               "index numbers",
               c);
       break;
@@ -558,9 +557,6 @@ double find_recip_rad(Geometry &geom, char type, Vec3d cent,
   case 'S':
     rad = (nearest_point(cent, geom.verts(), vidxs) - cent).len();
     break;
-  case 'X':
-    rad = 1;
-    break;
   }
   return rad;
 }
@@ -688,9 +684,6 @@ int main(int argc, char *argv[])
     msg += string(errmsg);
     opts.warning(msg);
   }
-
-  if (opts.recip_rad_type == 'X')
-    geom.face_cents(dual.raw_verts());
 
   if (opts.extra_ideal_elems)
     add_extra_ideal_elems(dual, centre, 1.005 * opts.inf);
