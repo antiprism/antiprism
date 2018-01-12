@@ -645,7 +645,7 @@ void extended_help()
 "l = loft      An augmentation of each face by prism, adding a smaller copy of\n"
 "              each face with trapezoids between the inner and outer ones\n"
 "\n"
-"M = medial    Similar to medial except no diagonal edges added, creating quad\n"
+"M = medial    Similar to meta except no diagonal edges added, creating quad\n"
 "              faces. All faces processed or can be \"Mn\" where n is 0 or greater\n"
 "\n"
 "n = needle    Dual of truncation, triangulate with 2 triangles across every\n"
