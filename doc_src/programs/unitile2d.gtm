@@ -21,12 +21,12 @@
 <<EXAMPLES_START>>
 Display a chunky figure-8 Klein bottle
 <<CMDS_START>>
-unitile2d -s K -R 1.5 6 | off_color -f N -s 5 | antiview
+unitile2d -s K -R 1.5 6 | off_color -f N | antiview -t no_tri
 <<CMDS_END>>
 
 Display the Roman surface, using a larger number of tiles
 <<CMDS_START>>
-unitile2d -s r -l 40 -w 40 9 | off_color -f N -s 2 | antiview
+unitile2d -s r -l 40 -w 40 9 | off_color -f N | antiview -t no_tri
 <<CMDS_END>>
 <<EXAMPLES_END>>
 
