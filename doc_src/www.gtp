@@ -57,16 +57,16 @@ mtimestamp $dd.$MM.$yyyy
 ./programs/lat_grid.gtm 3 lat_grid - lattices and grids with integer coordinates
 ./programs/bravais.gtm 3 bravais - Bravais lattices
 
-./programs/dome_layer.gtm 3 UNSUPPORTED: dome_layer - dome strut arrangements
-./programs/poly_weave.gtm 3 UNSUPPORTED: poly_weave - weave based on a polyhedron
-./programs/rotegrity.gtm 3 UNSUPPORTED: rotegrity - make rotegrity models
-./programs/mmop_origami.gtm 3 UNSUPPORTED: mmop_origami - multimodular polyhedron origami
-./programs/jitterbug.gtm 3 UNSUPPORTED: jitterbug - jitterbug transformation
-./programs/string_art.gtm 3 UNSUPPORTED: string_art - string figures
-./programs/kaleido.gtm 3 UNSUPPORTED: kaleido - uniform polyhedra (Zvi Har'El)
-./programs/radial.gtm 3 UNSUPPORTED: radial - radial colouring based on symmetry
-./programs/spidron.gtm 3 UNSUPPORTED: spidron - spidronise a polyhedron
-./programs/off2txt.gtm 3 UNSUPPORTED: off2txt - convert an OFF file to Hedron format
+./programs/dome_layer.gtm 3 EXTRA: dome_layer - dome strut arrangements
+./programs/poly_weave.gtm 3 EXTRA: poly_weave - weave based on a polyhedron
+./programs/rotegrity.gtm 3 EXTRA: rotegrity - make rotegrity models
+./programs/mmop_origami.gtm 3 EXTRA: mmop_origami - multimodular polyhedron origami
+./programs/jitterbug.gtm 3 EXTRA: jitterbug - jitterbug transformation
+./programs/string_art.gtm 3 EXTRA: string_art - string figures
+./programs/kaleido.gtm 3 EXTRA: kaleido - uniform polyhedra (Zvi Har'El)
+./programs/radial.gtm 3 EXTRA: radial - radial colouring based on symmetry
+./programs/spidron.gtm 3 EXTRA: spidron - spidronise a polyhedron
+./programs/off2txt.gtm 3 EXTRA: off2txt - convert an OFF file to Hedron format
 
 ./programs/resources.gtm 3 Antiprism Resource Files
 ./programs/extras_readme.gtm 4 Antiprism Resources - Extras

@@ -74,6 +74,15 @@ file for changes in the Antiprism releases.
 </tr>
 
 <tr class="tbl1" valign="top">
+<td>19/12/2017</td>
+<td>
+New examples albums:
+<a href="examples/200_programs/635_pol_recip/index.html">pol_recip</a>,
+<a href="examples/200_programs/660_zono/index.html">zono</a>.
+</td>
+</tr>
+
+<tr class="tbl1" valign="top">
 <td>08/12/2017</td>
 <td>
 Antiprism 0.25.1 released. Program documentation updated.

@@ -19,6 +19,9 @@
 
 
 <<EXAMPLES_START>>
+See also,
+<a href="http://www.antiprism.com/examples/200_programs/670_leonardo/imagelist.html">leonardo examples with images</a>.
+<p>
 Leonardo da Vinci style rhombicuboctahedron
 <<CMDS_START>>
 leonardo std_rhombicuboctahedron | antiview -v 0.02

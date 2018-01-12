@@ -58,15 +58,15 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/lat_grid.gtm 2 lat_grid - lattices and grids with integer coordinates
 ./doc/bravais.gtm 2 bravais - Bravais lattices
 
-./doc/dome_layer.gtm 2 UNSUPPORTED: dome_layer - dome strut arrangements
-./doc/rotegrity.gtm 2 UNSUPPORTED: rotegrity - make rotegrity models
-./doc/kaleido.gtm 2 UNSUPPORTED: kaleido - uniform polyhedra (Zvi Har'El)
-./doc/spidron.gtm 2 UNSUPPORTED: spidron - spidronise a polyhedron
-./doc/poly_weave.gtm 2 UNSUPPORTED: poly_weave - weave based on a polyhedron
-./doc/mmop_origami.gtm 2 UNSUPPORTED: mmop_origami - multimodular polyhedron origami
-./doc/jitterbug.gtm 2 UNSUPPORTED: jitterbug - jitterbug transformation
-./doc/string_art.gtm 2 UNSUPPORTED: string_art - string figures
-./doc/off2txt.gtm 2 UNSUPPORTED: off2txt - convert an OFF file to Hedron format
+./doc/dome_layer.gtm 2 EXTRA: dome_layer - dome strut arrangements
+./doc/rotegrity.gtm 2 EXTRA: rotegrity - make rotegrity models
+./doc/kaleido.gtm 2 EXTRA: kaleido - uniform polyhedra (Zvi Har'El)
+./doc/spidron.gtm 2 EXTRA: spidron - spidronise a polyhedron
+./doc/poly_weave.gtm 2 EXTRA: poly_weave - weave based on a polyhedron
+./doc/mmop_origami.gtm 2 EXTRA: mmop_origami - multimodular polyhedron origami
+./doc/jitterbug.gtm 2 EXTRA: jitterbug - jitterbug transformation
+./doc/string_art.gtm 2 EXTRA: string_art - string figures
+./doc/off2txt.gtm 2 EXTRA: off2txt - convert an OFF file to Hedron format
 
 ./doc/resources.gtm 2 Antiprism Resource Files
 ./doc/extras_readme.gtm 3 Antiprism Resources - Extras

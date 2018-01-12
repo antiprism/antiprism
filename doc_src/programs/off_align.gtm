@@ -19,6 +19,9 @@
 
 
 <<EXAMPLES_START>>
+See also,
+<a href="http://www.antiprism.com/examples/200_programs/630_off_align/imagelist.html">off_align examples with images</a>.
+<p>
 Bond vertices 0,2,4 of an octahedron brick to vertices 0,1,2 of a
 tetrahedron base, and output both parts in the order brick (octahedron)
 followed by base (tetrahedron)

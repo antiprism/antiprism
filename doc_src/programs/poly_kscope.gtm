@@ -19,6 +19,9 @@
 
 
 <<EXAMPLES_START>>
+See also,
+<a href="http://www.antiprism.com/examples/200_programs/640_poly_kscope/imagelist.html">poly_kscope examples with images</a>.
+<p>
 Icosahedral arrangement of 60 cubes
 <<CMDS_START>>
 poly_kscope -s I -o tmp.off cube.off

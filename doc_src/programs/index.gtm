@@ -93,19 +93,19 @@ Programs
 <li><a href="bravais.html">bravais</a> - Bravais lattices
 </ul>
 
-<h3><a name="unsupported">
-Unsupported Programs
+<h3><a name="extra">
+Extra Programs
 </a></h3>
 
-Unsupported programs may be incomplete or of limited use and are
-provided for interest only
+Extra programs are more loosely related to polyhedra, incomplete or of
+limited use. They are provided for interest only.
 <ul>
-<li><a href="dome_layer.html">dome_layer</a> - dome strut arrangements
 <li><a href="rotegrity.html">rotegrity</a> - make rotegrity models
+<li><a href="mmop_origami.html">mmop_origami</a> - multimodular origami polyhedra
+<li><a href="poly_weave.html">poly_weave</a> - weave based on a polyhedron
 <li><a href="kaleido.html">kaleido</a> - uniform polyhedra (Zvi Har'El)
 <li><a href="spidron.html">spidron</a> - spidronise a polyhedron
-<li><a href="poly_weave.html">poly_weave</a> - weave based on a polyhedron
-<li><a href="mmop_origami.html">mmop_origami</a> - multimodular origami polyhedra
+<li><a href="dome_layer.html">dome_layer</a> - dome strut arrangements
 <li><a href="jitterbug.html">jitterbug</a> - jitterbug transformation
 <li><a href="string_art.html">string_art</a> - string figures
 <li><a href="off2txt.html">off2txt</a> - convert an OFF file to Hedron format

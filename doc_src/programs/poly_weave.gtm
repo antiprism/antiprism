@@ -19,6 +19,9 @@
 
 
 <<EXAMPLES_START>>
+See also,
+<a href="http://www.antiprism.com/examples/200_programs/700_poly_weave/imagelist.html">poly_weave examples with images</a>.
+<p>
 An interwoven set of six pentagons
 <<CMDS_START>>
 poly_weave -o woven_pents.off icosahedron
