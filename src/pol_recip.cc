@@ -69,7 +69,7 @@ public:
   pr_opts()
       : ProgramOpts("pol_recip"), recip_rad(0), init_rad(0),
         recip_rad_type('x'), recip_cent_type('x'), init_cent_type('x'),
-        invert(false), inf(1e15), extra_ideal_elems(true), num_iters(100),
+        invert(false), inf(1e15), extra_ideal_elems(true), num_iters(10000),
         epsilon(0), append(false)
   {
   }
