@@ -1218,7 +1218,6 @@ void pr_opts::usage()
 "            (which reverses the orientation of the model as it was input)\n"
 "  -T <rat>  truncate vertices by cutting edges at a ratio from each vertex,\n"
 "            can also be 'rat,num' to truncate only vertices of order num\n"
-"  -E        turn edges into (non-planar) faces\n"
 "  -s        skeleton, write the face edges and remove the faces\n"
 "  -t <disp> triangulate, include face parts according to winding number\n"
 "            from: odd, nonzero, positive, negative, triangulate (synonym\n"

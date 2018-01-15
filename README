@@ -104,10 +104,7 @@ MSYS build environment.
 
 Mac OS X
 --------
-Changes have been made to support building on OS X (with
-thanks to Ralph Sutherland), but these changes are currently
-untested. Any feedback regarding successful or failed builds
-would be appreciated. Run configure with "--with-x=no".
+Run configure with "--with-x=no".
 
 
 Git Code Repository
