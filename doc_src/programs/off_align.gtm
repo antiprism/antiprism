@@ -53,7 +53,31 @@ Options <i>-f</i> and <i>-F</i> must take an option argument. If the
 argument should be empty then give the argument as a comma <i>','</i>.
 This will indicate that the brick geometry is empty (use the base geometry
 for the brick) and all following parameters are defaults.
+<p>
+For <i>-f</i> and <i>-v</i>, option <i>-y</i> repeats the aligned
+brick with the specified symmetry group. For <i>-F</i>, <i>-y</i> selects a
+face set on the base model to bond to, and there is only one bond for each of
+these faces. If the aligned brick model is not fixed by the same symmetry
+subgroup that fixes the bond face (i.e. maps it onto itself),
+then the final model won't have the symmetry given in -y.
+<p>
+Here is an example aligning the side of a triangular prism with a cube
+face, the result has Oh symmetry
+<<CMDS_START>>
+    off_align -f pri3,0,2 -y full cube | antiview
+<<CMDS_END>>
+And the same example using bonding, the warning is triggered and the
+result does not have Oh symmetry
+<<CMDS_START>>
+    off_align -F pri3,0,2 -y full cube | antiview
+<<CMDS_END>>
 
+Sometimes the warning will be redundant
+<<CMDS_START>>
+    off_align -F pri3 -y full oct | antiview
+<<CMDS_END>>
+Models with coincident vertices will have those vertices merged when
+using option <i>-F</i>.
 <<NOTES_END>>
 
 #include "<<END>>"

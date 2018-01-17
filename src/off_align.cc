@@ -420,13 +420,14 @@ bool bond_base::bond_all(Geometry &geom_out, int out_type, char *errmsg)
 
 class align_opts : public ProgramOpts {
 public:
+  bool has_merge;
   vector<pair<char, string>> brick_args;
   string sym_str;
   int out_type;
   string ifile;
   string ofile;
 
-  align_opts() : ProgramOpts("off_align"), out_type(0) {}
+  align_opts() : ProgramOpts("off_align"), has_merge(false), out_type(0) {}
 
   void process_command_line(int argc, char **argv);
   void usage();
@@ -500,8 +501,9 @@ void align_opts::process_command_line(int argc, char **argv)
       continue;
 
     switch (c) {
-    case 'v':
     case 'F':
+      has_merge = true;  // then fall through
+    case 'v':
     case 'f':
       brick_args.push_back(pair<char, string>(c, optarg));
       break;
@@ -565,6 +567,14 @@ int main(int argc, char *argv[])
   char errmsg[MSG_SZ];
   Geometry geom;
   opts.read_or_error(geom, opts.ifile);
+
+  if(opts.has_merge) {
+    unsigned int num_verts = geom.verts().size();
+    merge_coincident_elements(geom, "v");
+    if(geom.verts().size() != num_verts)
+      opts.warning("coincident vertices in base geometry have been merged",
+                   'F');
+  }
 
   bond_base base(geom);
   if (opts.sym_str != "")
