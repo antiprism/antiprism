@@ -28,13 +28,15 @@ Display the Roman surface, using a larger number of tiles
 <<CMDS_START>>
 unitile2d -s r -l 40 -w 40 9 | off_color -f N | antiview -t no_tri
 <<CMDS_END>>
+
+General "trefoil" with triangle tiling and 7/3 path
+<<CMDS_START>>
+unitile2d -s T -w 12 -l 160 -r 0.6 -d 7,3 2 | off_color -f P | antiview -xev -t no_tri
+<<CMDS_END>>
 <<EXAMPLES_END>>
 
 
 <<NOTES_START>>
-This program is work in progress, and may change considerably in
-future releases.
-<p>
 If a pattern doesn't mesh on a surface you may have to change options
 -l or -w slightly. Pattern 7 won't mesh on any non-orientable surface.
 Using values for option -T which are inappropriate for a particular

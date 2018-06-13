@@ -86,6 +86,7 @@ public:
   void conic_frust(double top_rad, double bot_rad, double ht);
   void mobius(double sect_rad, double ring_rad);
   void torus(double sect_rad, double ring_rad);
+  void torus_trefoil(double sect_rad, double ring_rad, vector<double> pq);
   void klein(double sect_rad, double ring_rad);
   void klein2(double sect_rad, double ring_rad);
   void roman_boy(double t);
@@ -427,6 +428,52 @@ void unitile::torus(double sect_rad, double ring_rad)
   }
 }
 
+void unitile::torus_trefoil(double sect_rad, double ring_rad,
+    vector<double> pq)
+{
+  plane(ut_join, ut_join);
+  vector<Vec3d> &verts = raw_verts();
+  int i=-1;
+  for (auto &vert : verts) {
+    i++;
+    double a0 = 2 * M_PI * vert[0] / x_end;
+    double a1 = 2 * M_PI * vert[1] / y_end;
+
+    int q = 3;
+    int p = 2;
+
+    if(pq.size()>0) {
+      if(floor(pq[0]) > 0)
+         q = floor(pq[0]);
+      p = 1;
+      if(pq.size()>1 && floor(pq[1]) > 0)
+         p = floor(pq[1]);
+    }
+
+    double a = ring_rad;
+    double b = 1.0;
+    double x = (a + b*cos(q*a1))*cos(p*a1);
+    double y = (a + b*cos(q*a1))*sin(p*a1);
+    double z = b*sin(q*a1);
+    Vec3d P(x, y, z);
+
+    double a11 = a1 + 0.0001;
+    double x0 = (a + b*cos(q*a11))*cos(p*a11);
+    double y0 = (a + b*cos(q*a11))*sin(p*a11);
+    double z0 = b*sin(q*a11);
+    Vec3d P0(x0, y0, z0);
+    Vec3d Q(a*cos(p*a1), a*sin(p*a1), 0);
+
+    Vec3d dir = (P0 - P).unit();
+    Vec3d norm = P - Q;
+
+    double ang = a0+(p+1)*a1; // stops the tube twist
+    Vec3d v(sect_rad * cos(ang), sect_rad * sin(ang), 0);
+    vert = Trans3d::translate(P) *
+           Trans3d::align(Vec3d::Z, Vec3d::Y, dir, norm) * v;
+  }
+}
+
 // http://en.wikipedia.org/wiki/Image:KleinBottle-01.png
 void unitile::klein(double sect_rad, double /*ring_rad*/)
 {
@@ -623,7 +670,7 @@ public:
   double to_tile;
   double r;
   double R;
-  double d;
+  vector <double> d;
   Trans3d trans_m;
   Trans4d rot4d_m;
   Vec3d shear;
@@ -632,7 +679,7 @@ public:
 
   ut_opts()
       : ProgramOpts("unitile2d"), surface('p'), pattern(1), width(20),
-        height(-1), to_tile(true), r(1), R(3), d(NAN), shear(Vec3d(0, 0, 0))
+        height(-1), to_tile(true), r(1), R(3), shear(Vec3d(0, 0, 0))
   {
   }
   void process_command_line(int argc, char **argv);
@@ -662,6 +709,7 @@ void ut_opts::usage()
 "            -T X,Y,0)\n"
 "        m - mobius strip (-R ring radius, -r strip width, -T X,0,0)\n"
 "        t - torus (-R ring radius, -r tube radius. -T X,Y,0)\n"
+"        T - trefoil (-R ring radius, -r tube radius. -T X,Y,0, -d N,D)\n"
 "        k - Klein bottle (-r tube radius, -T X,0,0)\n"
 "        K - figure-8 Klein bottle (-R ring radius, -r tube radius, -T X,0,0)\n"
 "        C - cross-cap (needs tile vertices at tiling rectangle corners)\n"
@@ -706,8 +754,8 @@ void ut_opts::process_command_line(int argc, char **argv)
 
     switch (c) {
     case 's':
-      if (strlen(optarg) != 1 || !strchr("pcmtkKCrbRwxy", *optarg))
-        error("surface type must be one of pcmtkKCwrbRxy", c);
+      if (strlen(optarg) != 1 || !strchr("pcmtTkKCrbRwxy", *optarg))
+        error("surface type must be one of pcmtTkKCwrbRxy", c);
       surface = *optarg;
       break;
 
@@ -740,7 +788,7 @@ void ut_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'd':
-      print_status_or_exit(read_double(optarg, &d), c);
+      print_status_or_exit(read_double_list(optarg, d), c);
       break;
 
     case 'T':
@@ -812,13 +860,16 @@ int main(int argc, char *argv[])
     ut.plane(unitile::ut_open, unitile::ut_open);
     break;
   case 'c':
-    ut.conic_frust(opts.r, opts.R, std::isnan(opts.d) ? 5.0 : opts.d);
+    ut.conic_frust(opts.r, opts.R, opts.d.size()==0 ? 5.0 : opts.d[0]);
     break;
   case 'm':
     ut.mobius(opts.r, opts.R);
     break;
   case 't':
     ut.torus(opts.r, opts.R);
+    break;
+  case 'T':
+    ut.torus_trefoil(opts.r, opts.R, opts.d);
     break;
   case 'k':
     ut.klein(opts.r, opts.R);
@@ -837,7 +888,7 @@ int main(int argc, char *argv[])
     ut.roman_boy(1);
     break;
   case 'R':
-    ut.roman_boy(std::isnan(opts.d) ? 0.0 : opts.d);
+    ut.roman_boy(opts.d.size()==0 ? 0.0 : opts.d[0]);
     break;
   case 'w':
     ut.cross_cap2();
