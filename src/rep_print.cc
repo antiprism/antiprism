@@ -670,11 +670,14 @@ void rep_printer::e_face_idxs(int e_idx)
   char str[MSG_SZ], str2[MSG_SZ];
   vector<int> edge = geom.edges(e_idx);
   auto ei = get_edge_face_pairs().find(edge);
-  if (ei != get_edge_face_pairs().end())
-    fprintf(ofile, "%s %s", fidx2s(str, ei->second[0]),
-            fidx2s(str2, ei->second[1]));
-  else
-    fprintf(ofile, "-1 -1");
+  if (ei != get_edge_face_pairs().end()) {
+    auto fidxs = ei->second;
+     for (unsigned int i = 0; i < fidxs.size(); i++) {
+       if (fidxs[i] >= 0)
+         fprintf(ofile, "%s%s", fidx2s(str, fidxs[i]),
+                 (i < fidxs.size() - 1) ? " " : "");
+     }
+  }
 }
 
 void rep_printer::e_dihedral_angle(int e_idx)
