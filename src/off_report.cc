@@ -86,14 +86,15 @@ void or_opts::usage()
 "  -S <secs> Print values by sections, given as a list of letters\n"
 "            A - all                     G - general\n"
 "            F - faces                   E - edges\n"
-"            S - solid Angles            a - plane angles\n"
+"            S - solid angles            a - plane angles\n"
 "            D - distances (min/max)     s - symmetry\n"
 "  -C <vals> Print counts of values, given as a list of letters\n"
-"            A - All                     F - faces type by angles\n"
+"            A - all                     F - faces type by angles\n"
 "            E - edge lengths            w - windings\n"
 "            S - solid angles            D - dihedral angles\n"
 "            s - face sides              o - vertex orders\n"
 "            h - vertex heights (z-crds) O - symmetry orbits\n"
+"            e - faces at an edge\n"
 "  -k        keep orientation, don't try to orient the faces\n"
 "  -y        subsymmetry for orbits: symmetry subgroup (Schoenflies notation)\n"
 "            optionally followed by a comma and conjugation type (integer)\n"
@@ -146,7 +147,7 @@ void or_opts::process_command_line(int argc, char **argv)
     }
 
     case 'C': {
-      const char *all_count_letters = "AFwEDSsohO";
+      const char *all_count_letters = "AFwEDeSsohO";
       size_t len;
       if ((len = strspn(optarg, all_count_letters)) == strlen(optarg)) {
         if (strchr(optarg, 'A'))
@@ -258,6 +259,9 @@ void print_counts(rep_printer &rep, const char *counts)
       break;
     case 'D':
       rep.dihedral_angles_cnts();
+      break;
+    case 'e':
+      rep.edge_faces_cnts();
       break;
     case 'S':
       rep.solid_angles_cnts();

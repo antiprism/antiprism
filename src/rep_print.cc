@@ -380,6 +380,25 @@ void rep_printer::dihedral_angles_cnts()
   fprintf(ofile, "\n");
 }
 
+void rep_printer::edge_faces_cnts()
+{
+  char s1[MSG_SZ];
+  char s2[MSG_SZ];
+  fprintf(ofile, "[edge_faces_cnts]\n");
+
+  auto ef_prs = geom.get_edge_face_pairs(false);
+  map<int, int> edge_faces_cnts;
+  for (auto ei : geom.edges()) {
+    auto e2fs = ef_prs.find(ei);
+    if (e2fs != ef_prs.end())
+      edge_faces_cnts[e2fs->second.size()]++;
+  }
+
+  for (auto sz2cnt : edge_faces_cnts)
+    fprintf(ofile, "%d = %d\n", sz2cnt.first, sz2cnt.second);
+  fprintf(ofile, "\n");
+}
+
 void rep_printer::solid_angles_cnts()
 {
   char s1[MSG_SZ];

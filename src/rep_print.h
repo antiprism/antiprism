@@ -102,6 +102,7 @@ public:
   void windings();
   void edge_lengths_cnts();
   void dihedral_angles_cnts();
+  void edge_faces_cnts();
   void sym_orbit_cnts();
 
   void v_index(int v_idx);
