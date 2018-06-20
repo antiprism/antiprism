@@ -461,7 +461,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             char *tok_ptr2;
 
             int n_part;
-            int d_part;
+            int d_part = 1;
 
             // string to char * (not const) from StackOverflow
             auto *writable = new char[tokens[i].size() + 1];
@@ -477,7 +477,6 @@ void symmetro_opts::process_command_line(int argc, char **argv)
 
                 if (n_part <= 0)
                   error("n of n/d must be positive", c);
-                n.push_back(n_part);
               }
               else if (count2 == 1) {
                 print_status_or_exit(read_int(ptok2, &d_part),
@@ -485,7 +484,6 @@ void symmetro_opts::process_command_line(int argc, char **argv)
 
                 if (d_part <= 0)
                   error("d of n/d must be positive", c);
-                d[(i == 4) ? 0 : 1] = d_part;
               }
 
               ptok2 = strtok_r(nullptr, parse_key2, &tok_ptr2);
@@ -493,9 +491,8 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             }
             delete[] writable;
 
-            // if there is no denominator then it is 1
-            if ((int)n.size() > (int)d.size())
-              d[(i == 4) ? 0 : 1] = 1;
+            multipliers.push_back(n_part);
+            d[(i == 4) ? 0 : 1] = d_part;
           }
         }
       }
@@ -946,7 +943,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
   if (!mode)
     error("one of -k, -t, -s, -c must be specified");
 
-  // convert n to multipliers
+  // convert n to multipliers for modes s or c
   if ((int)n.size()) {
     multipliers.clear();
     for (int i = 0; i < (int)n.size(); i++) {
