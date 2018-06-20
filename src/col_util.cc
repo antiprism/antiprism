@@ -301,12 +301,6 @@ void col_util_opts::process_command_line(int argc, char **argv)
       ofile = optarg;
       break;
 
-    case '?':
-      error("unknown option", string("-") + (char)optopt);
-
-    case ':':
-      error("missing argument", string("-") + (char)optopt);
-
     default:
       error("unknown command line error");
     }
