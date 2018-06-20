@@ -382,8 +382,6 @@ void rep_printer::dihedral_angles_cnts()
 
 void rep_printer::edge_faces_cnts()
 {
-  char s1[MSG_SZ];
-  char s2[MSG_SZ];
   fprintf(ofile, "[edge_faces_cnts]\n");
 
   auto ef_prs = geom.get_edge_face_pairs(false);
@@ -686,7 +684,7 @@ void rep_printer::e_vert_idxs(int e_idx)
 
 void rep_printer::e_face_idxs(int e_idx)
 {
-  char str[MSG_SZ], str2[MSG_SZ];
+  char str[MSG_SZ];
   vector<int> edge = geom.edges(e_idx);
   auto ei = get_edge_face_pairs().find(edge);
   if (ei != get_edge_face_pairs().end()) {

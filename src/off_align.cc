@@ -502,7 +502,8 @@ void align_opts::process_command_line(int argc, char **argv)
 
     switch (c) {
     case 'F':
-      has_merge = true;  // then fall through
+      has_merge = true;
+      // fall through
     case 'v':
     case 'f':
       brick_args.push_back(pair<char, string>(c, optarg));

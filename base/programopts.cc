@@ -108,9 +108,11 @@ bool ProgramOpts::common_opts(char c, char opt)
 
   case '?':
     error("unknown option", string("-") + opt);
+    break;
 
   case ':':
     error("missing argument", string("-") + opt);
+    break;
 
   default:
     return false;

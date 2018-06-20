@@ -69,6 +69,15 @@ void    qh_srand(qhT *qh, int seed);
     Determine the number of points
     Generate the points
 */
+
+#if 1
+
+int qh_rboxpoints(qhT *, char*) {
+  return 5;
+}
+
+#else // comment out function
+
 int qh_rboxpoints(qhT *qh, char* rbox_command) {
   int i,j,k;
   int gendim;
@@ -756,6 +765,8 @@ int qh_rboxpoints(qhT *qh, char* rbox_command) {
   qh_free(simplex);
   return qh_ERRnone;
 } /* rboxpoints */
+
+#endif // comment out function
 
 /*------------------------------------------------
 outxxx - output functions for qh_rboxpoints

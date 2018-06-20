@@ -83,7 +83,7 @@ int qh_argv_to_command(int argc, char *argv[], char* command, int max_size) {
       goto error_argv;
     }else
       strcat(command, " ");
-      strcat(command, s);
+    strcat(command, s); // indented in to remove warning (does it need {}?)
   }
   return 1;
 
