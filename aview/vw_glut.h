@@ -66,6 +66,7 @@
 #include <GL/freeglut.h>
 #elif GLUT_TYPE == FOUND_FLTKGLUT
 #include <FL/glut.H>
+#undef Status
 #else
 #error "No GLUT library has been specified"
 #endif

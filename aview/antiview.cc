@@ -146,6 +146,47 @@ Vec3d neg_z(Vec3d v)
   return v;
 }
 
+#if GLUT_TYPE == FOUND_FLTKGLUT
+
+bool glutInitFltk(int *argc, char **argv)
+{
+  vector<char *> argv_fl;          // FLTK options and parameters
+  argv_fl.push_back(argv[0]);     // program name
+  vector<char *> argv_other;       // Non-FLTK options and parameters
+  argv_other.push_back(argv[0]);  // program name
+
+  // Divide original argument list into FLTK and non-FLTK entries
+  for (int i = 1; i < *argc; i++) {
+    if (strcmp(argv[i], "-geometry") == 0 || strcmp(argv[i], "-display") == 0) {
+      argv_fl.push_back(argv[i]);
+      ++i;  // option needs parameter, so advance i
+      if (i < *argc)
+         argv_fl.push_back(argv[i]);
+    }
+    else if (strcmp(argv[i], "-iconic") == 0)
+      argv_fl.push_back(argv[i]);
+    else
+      argv_other.push_back(argv[i]);
+  }
+
+  // Set up argument list for glutInit with FLTK options
+  int argc_fl = argv_fl.size();
+  for(int i=0; i < argc_fl; i++)
+    argv[i] = argv_fl[i];
+
+  glutInit(&argc_fl, argv);
+  if(argc_fl > 1)               // not all aguments processed by FLTK
+    return false;
+
+  // Set up argument list with FLTK options removed
+  *argc = argv_other.size();
+  for(int i=0; i < *argc; i++)
+    argv[i] = argv_other[i];
+
+  return true;
+}
+#endif
+
 int main(int argc, char *argv[])
 {
   // Check if a -geometry argument was given
@@ -156,7 +197,16 @@ int main(int argc, char *argv[])
       break;
     }
 
+  vw_opts opts;
+
+#if GLUT_TYPE == FOUND_FLTKGLUT
+  if(!glutInitFltk(&argc, argv))
+    opts.error( "invalid or missing FLTK Glut option parameter for "
+                "-geometry or -display");
+#else
   glutInit(&argc, argv);
+#endif
+
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
 
   if (!geometry_arg) {
@@ -172,7 +222,6 @@ int main(int argc, char *argv[])
   glutSpecialFunc(special_cb);
   glutMotionFunc(motion_cb);
 
-  vw_opts opts;
   opts.set_geom_defs(DisplayPoly_gl());
   opts.set_num_label_defs(DisplayNumLabels_gl());
   opts.set_sym_defs(DisplaySymmetry_gl());
