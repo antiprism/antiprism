@@ -158,8 +158,10 @@ void ksc_opts::process_command_line(int argc, char **argv)
 
         if (!(stat = sub_sym.init(parts[1], Trans3d())))
           error(msg_str("sub-symmetry type: %s", stat.c_msg()), c);
-        if (!(stat = sym.get_sub_sym(sub_sym, &sym, sub_sym_conj)))
+        Symmetry final_sub_sym;
+        if (!(stat = sym.get_sub_sym(sub_sym, &final_sub_sym, sub_sym_conj)))
           error(msg_str("sub-symmetry: %s", stat.c_msg()), c);
+        sym = final_sub_sym;
       }
       break;
 
