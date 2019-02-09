@@ -1133,7 +1133,7 @@ int GeometryInfo::genus()
   if (genus_val == INT_MAX) {
     genus_val = INT_MAX - 1; // 'not known' value
     if (num_parts() == 1 && is_known_connectivity()) {
-      int euler_char = num_verts() - num_edges() + num_faces();
+      int euler_char = num_verts() - num_iedges() + num_faces();
       Geometry geom2 = geom;
       if (close_poly_basic(geom2)) {
         int num_boundaries = geom2.faces().size() - num_faces();
