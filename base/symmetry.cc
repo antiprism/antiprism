@@ -536,7 +536,12 @@ void Symmetry::find_full_sym_type(const set<SymmetryAxis> &full_sym)
   }
 
   // tetrahedral
-  else if (max_fold1.get_nfold() == 3 || max_fold1.get_nfold() == 6) {
+  else if ((max_fold1.get_nfold() == 3 || max_fold1.get_nfold() == 6) &&
+           // axes may be part of incompletely detected O or I symmetry,
+           // in which case leave to be detected as C1
+           double_eq(vdot(max_fold1.get_axis(), max_fold2.get_axis()), 1.0 / 3,
+                     sym_eps)) {
+    fprintf(stderr, "cos = %g\n", vdot(max_fold1.get_axis(), max_fold2.get_axis()));
     if (has_dh)
       sym_type = Symmetry::Th;
     else if (has_dv)
@@ -582,6 +587,7 @@ void Symmetry::find_full_sym_type(const set<SymmetryAxis> &full_sym)
   else {
     // sym_type = Symmetry::unknown;
     // Don't allow to fail
+    axes.clear(); // clear any detected axes
     sym_type = Symmetry::C1;
     to_std = Trans3d();
   }
