@@ -1,0 +1,82 @@
+#define HL_PROG class=curpage
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<<TITLE_HEAD>>
+
+<<TOP_LINKS>>
+
+<<USAGE_START>>
+<pre class="prog_help">
+<<__SYSTEM__(../src_extra/<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</pre>
+<<USAGE_END>>
+
+<<EXAMPLES_START>>
+Convert a geodesic sphere into a rotegrity and colour by symmetry
+<<CMDS_START>>
+rotegrity -c s geo_3_1 | antiview -v 0.01
+<<CMDS_END>>
+
+Make a rotegrity with double units. It has alternate winding around base
+faces and base vertices.
+<<CMDS_START>>
+rotegrity -c s -M d geo_2_1 | antiview -v 0.01
+<<CMDS_END>>
+
+Make a rotegrity with triple units. It has alternate winding around base
+faces and base vertices.
+<<CMDS_START>>
+rotegrity -f 0.2 -c s -M j geo_2 | antiview -v 0.01
+<<CMDS_END>>
+
+Add a central white sphere to make models easier to view
+<<CMDS_START>>
+off_color -v invisible -e invisible -f white geo_10 -o sph.off
+rotegrity -c s -M d geo_3_1 | antiview -v 0.01 - sph.off
+<<CMDS_END>>
+
+Class I and II geodesic spheres have edges related by mirror symmetry,
+and these appear to become rotegrity units of the same length (there are
+ten shorter edge lengths, and ten edge orbits in this example). The
+colours of the rotegrity here are taken from the edge colours of the
+base model
+<<CMDS_START>>
+off_color -e S geo_3_3 | rotegrity | antiview -v 0.01
+rotegrity geo_3_3 | off_report -C E
+off_report -C O geo_3_3
+<<CMDS_END>>
+
+The convex hull of a random collection of points will generally
+jam during solution. 
+<<CMDS_START>>
+repel -N 83 -n 100000 | conv_hull | rotegrity | antiview
+<<CMDS_END>>
+
+A previously processsed model can be processed again by specifying
+<i>option -t</i>
+<<CMDS_START>>
+zono -P 10  | rotegrity -c s -s 1 -n 100 | rotegrity -t | antiview -v 0.02
+<<CMDS_END>>
+
+<<NOTES_START>>
+There are some relevant threads on the
+<a href="https://groups.google.com/forum/#!forum/geodesichelp">GeodesicHelp</a> group:
+<a href="https://groups.google.com/forum/#!topic/geodesichelp/fnl2SIdzrF4/discussion">Tensegrities, nexorades & rotegrities</a>,
+<a href="https://groups.google.com/d/topic/geodesichelp/XiSQaDRKhKc/discussion">Nexorades/Rotegrities - Frequencies 1 through 3</a> and
+<a href="https://groups.google.com/d/topic/geodesichelp/RFBZ6uFmsjU/discussion">New Nexorade/Rotegrity project</a>.
+<p>
+The program will not solve all base models, and even models which appear
+reasonable may scramble, jam or contract to a point.
+Try reducing <i>option -s</i> if a model scrambles or contracts (e.g. 
+<i>-s 0.1</i>), and use a low number of iterations to see how the model
+transforms before failing.
+<<NOTES_END>>
+
+
+#include "<<END>>"

@@ -67,14 +67,17 @@ Status Vec3d::read(const char *str)
   return Status::ok();
 }
 
+std::string Vec3d::str() const
+{
+  return is_set() ? msg_str("(%f,%f,%f)", v[0], v[1], v[2])
+                  : std::string("(not set)");
+}
+
 void Vec3d::dump(const char *var, FILE *file) const
 {
   if (var)
     fprintf(file, "%s=", var);
-  if (is_set()) // ihas been set
-    fprintf(file, "(%f,%f,%f)\n", v[0], v[1], v[2]);
-  else
-    fprintf(file, "(not set)\n");
+  fprintf(file, "%s\n", str().c_str());
 }
 
 // make vector unusable

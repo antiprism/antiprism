@@ -59,6 +59,7 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/bravais.gtm 2 bravais - Bravais lattices
 
 ./doc/dome_layer.gtm 2 UNSUPPORTED: dome_layer - dome strut arrangements
+./doc/rotegrity.gtm 2 UNSUPPORTED: rotegrity - make rotegrity models
 ./doc/twist.gtm 2 UNSUPPORTED: twist - twist the edges of a polyhedron
 ./doc/kaleido.gtm 2 UNSUPPORTED: kaleido - uniform polyhedra (Zvi Har'El)
 ./doc/spidron.gtm 2 UNSUPPORTED: spidron - spidronise a polyhedron

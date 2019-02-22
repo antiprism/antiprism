@@ -122,7 +122,8 @@ public:
    * left cosets with.
    * \param lcosets the left cosets.
    * \return The number of cosets.*/
-  int lcosets(const Transformations sub, std::vector<Transformations> &lcosets) const;
+  int lcosets(const Transformations sub,
+              std::vector<Transformations> &lcosets) const;
 
   /// The minimum set of transformations that will generate one group of
   /// transformations from another
@@ -162,7 +163,6 @@ public:
   /// Check if there are transformations in the set.
   /**\return \c true if set, otherwise \c false */
   bool is_set() const { return trans.size() > 0; }
-
 };
 
 /// Form direct product of two sets of transformations
@@ -265,14 +265,15 @@ public:
   void dump() const;
 };
 
-///Compare two Transformationss for equality
+/// Compare two Transformationss for equality
 /**\param t0 first Transformations
  * \param t1 second Transformations
  * \return  \c true id \c t0 and \t t1 contain the same set of transformations,
  * otherwise \c false.*/
-inline bool operator ==(const Transformations &t0, const Transformations &t1)
-{ return compare(t0, t1)==0; }
-
+inline bool operator==(const Transformations &t0, const Transformations &t1)
+{
+  return compare(t0, t1) == 0;
+}
 
 /// Get sets of elements that are equivalent under a set of transformations
 /**\param geom the geometry.
@@ -567,6 +568,10 @@ public:
    *  could be found, otherwise \c false.*/
   Status get_sub_sym(const std::string &sub_name, Symmetry *sub) const;
 
+  /// Get a maximal direct symmetry subgroup
+  /**\return the symmetry group containing all direct transformations.**/
+  Symmetry get_max_direct_sub_sym() const;
+
   /// Get the axes or mirrors.
   /**\return The symmetry axes or mirrors. */
   const std::set<SymmetryAxis> &get_axes() const;
@@ -664,26 +669,130 @@ public:
   void dump() const;
 };
 
-/// Orbit of an element under some transformation group
-class orbit
-{
-   private:
-      int element;             // element to find the orbit of
-      Symmetry stab;            // stabilizer subgroup, fixes elem
-      std::map<int, Trans3d> elems;   // elements on the orbit, each mapped to a
-                               // transformation that carries the base
-                               // element onto it
-      void init_vert_orbit(const Geometry &geom, const Symmetry &sym);
-      void init_edge_orbit(const Geometry &geom, const Symmetry &sym);
-      void init_face_orbit(const Geometry &geom, const Symmetry &sym);
+/// Subspace
+class Subspace {
+public:
+  /// Type of subspace, corresponding to dimension
+  enum class SubspaceType {
+    none,  ///< Uninitialized
+    point, ///< A point
+    line,  ///< A line
+    plane, ///< A plane
+    space  ///< The whole space
+  };
+  /// Constructor
+  /**\param type type of subspace
+   * \param point a point fixed by the subspace (or uninitialized)
+   * \param direction direction of axis or normal to plane (or uninitialized)*/
+  Subspace(SubspaceType type = SubspaceType::none, Vec3d point = Vec3d(),
+           Vec3d direction = Vec3d());
 
-   public:
-      const std::map<int, Trans3d> &get_elems()  const { return elems; }
-      const Symmetry get_stab() const { return stab; }
+  /// Nearest point in the subspace
+  /**\param P the point
+   * \return nearest point to P in the subspace. */
+  Vec3d nearest_point(Vec3d P) const;
 
-      void init(const Geometry &geom, int elem, int elem_type,
-            const Symmetry &sym);
+  /// A string representation of the subspace
+  std::string str() const;
 
+private:
+  SubspaceType type;
+  Vec3d point;
+  Vec3d direction;
+};
+
+/// Orbit relationship mapping
+class ElemOrbitMapping {
+public:
+  /// Constructor
+  /**\param orbit_no the orbit number that the element lies on
+   * \param trans_to transformation that carries a particular element onto the
+   *                 principal orbit element
+   * \param trans_from transformation that carries the principal orbit element
+   *                   onto a particular element*/
+  ElemOrbitMapping(int orbit_no, std::set<Trans3d>::const_iterator trans_to,
+                   std::set<Trans3d>::const_iterator trans_from)
+      : orbit_no(orbit_no), trans_to(trans_to), trans_from(trans_from)
+  {
+  }
+  /// Get the orbit number
+  /**\return the orbit number*/
+  int get_orbit_no() const { return orbit_no; }
+
+  /// Get the transformation onto the principal orbit element
+  /**\return the transformation that carries a particular element onto the
+   *         principal orbit element*/
+  const Trans3d &get_trans_to() const { return *trans_to; }
+
+  /// Get the transformation from the principal orbit element
+  /**\return the transformation that carries the principal orbit element
+   *         onto a particular element*/
+  const Trans3d &get_trans_from() const { return *trans_from; }
+
+private:
+  int orbit_no;
+  std::set<Trans3d>::const_iterator trans_to;
+  std::set<Trans3d>::const_iterator trans_from;
+};
+
+/// Symmetric propogation of movements of individual vertices
+class SymmetricUpdater {
+public:
+  /// Constructor
+  /**\param geom the geometry
+   * \param sym symmetry group, or subgroup, of the geometry
+   * \return deferred update a copy of geom during iteration*/
+  SymmetricUpdater(const Geometry &geom, Symmetry sym, bool deferred);
+
+  /// Get equivalent sets
+  /**\param elem_type VERTS, EDGES or FACES
+   * \return vector of sets of equivalent elements */
+  const std::vector<std::set<int>> get_equiv_sets(int elem_type) const
+  {
+    return equiv_sets[elem_type];
+  }
+
+  /// Update the principal orbit vertex location using any vertex on the orbit
+  /**\param v_idx the index of the vertex whose location will be updated
+   * \param point the new location of the vertex */
+  void update_principal_vertex(int v_idx, Vec3d point);
+
+  /// Update a vertex location using the principal orbit vertex
+  /**\param v_idx the index of the vertex which will be updated
+   * \return the updated vertex coordinates */
+  Vec3d update_from_principal_vertex(int v_idx);
+
+  /// Update all vertex locations using principal orbit vertices
+  void update_all();
+
+  /// Prepare for the next iteration
+  /** If deferred, switch current geometry and updated geometry. */
+  void prepare_for_next_iteration();
+
+  /// Get the final geometry after all iteration has finished
+  /** \return the current reading geometry */
+  const Geometry &get_geom_reading() const { return geoms[reading_idx]; }
+
+  /// Get the final geometry after all iteration has finished
+  /** \return the current writing geometry */
+  Geometry &get_geom_writing() { return geoms[writing_idx]; }
+
+  /// Get the final geometry after all iteration has finished
+  /** \return the final geometry */
+  const Geometry &get_geom_final();
+
+private:
+  std::vector<anti::Geometry> geoms;
+  int reading_idx;
+  int writing_idx;
+  Symmetry symmetry;
+  Transformations transformations;
+  std::vector<std::vector<std::set<int>>> equiv_sets;
+  std::vector<int> orbit_vertex_idx;
+  std::vector<Subspace> orbit_invariant_subspaces;
+  std::vector<ElemOrbitMapping> orbit_mapping;
+
+  void init_vert_orbit(int orbit_idx, const std::set<int> &orbit);
 };
 
 /// Get element equivalence transformations
@@ -696,8 +805,7 @@ class orbit
  * \param sym the symmetry group
  * \return The stabilizer group.*/
 Symmetry get_elem_stabilizer(const Geometry &geom, int idx, int elem_type,
-            const Symmetry &sym);
-
+                             const Symmetry &sym);
 
 /// Check if a set of transformations fixes an element
 /**An element is fixed if all the transformations map the element onto itself.
@@ -707,7 +815,7 @@ Symmetry get_elem_stabilizer(const Geometry &geom, int idx, int elem_type,
  * \param sym the symmetry group
  * \return \c true if the element was fixed, otherwise \c false.*/
 bool elem_fixed(const Geometry &geom, int idx, int elem_type,
-      const Symmetry &sym);
+                const Symmetry &sym);
 
 } // namespace anti
 

@@ -51,6 +51,7 @@ src_extra/jitterbug
 src_extra/string_art
 src_extra/off2txt
 src_extra/kaleido
+src_extra/rotegrity
 src/off2pov
 src/off2eig
 src/off2vrml

@@ -59,6 +59,7 @@ mtimestamp $dd.$MM.$yyyy
 
 ./programs/dome_layer.gtm 3 UNSUPPORTED: dome_layer - dome strut arrangements
 ./programs/poly_weave.gtm 3 UNSUPPORTED: poly_weave - weave based on a polyhedron
+./programs/rotegrity.gtm 3 UNSUPPORTED: rotegrity - make rotegrity models
 ./programs/mmop_origami.gtm 3 UNSUPPORTED: mmop_origami - multimodular polyhedron origami
 ./programs/jitterbug.gtm 3 UNSUPPORTED: jitterbug - jitterbug transformation
 ./programs/string_art.gtm 3 UNSUPPORTED: string_art - string figures

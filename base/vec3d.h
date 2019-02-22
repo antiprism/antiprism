@@ -182,6 +182,10 @@ public:
    * \param file file stream to print the variable. */
   void dump(const char *var = "", FILE *file = stderr) const;
 
+  /// Print a vector variable
+  /**\return a string representation of the variable */
+  std::string str() const;
+
   static Vec3d X;    //<Unit vector in the direction of the x-axis
   static Vec3d Y;    //<Unit vector in the direction of the y-axis
   static Vec3d Z;    //<Unit vector in the direction of the z-axis
