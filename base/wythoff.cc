@@ -1161,9 +1161,9 @@ ConwayOperator conway_operator_list[]{
     {"u",   "subdivide",      "[V,E]0_1e1e,1F"},
 
     // Equivalent: t, z, e (tile order to match e0=z and e1=e
-    {"t",   "truncate",       "[VE]0v0e,0V,0E"},
-    {"z",   "zip",            "[EF]0e0f,0F,0E"},
-    {"e",   "expand",         "[FV]0V,0F,0f0v"},
+    {"t",   "truncate",       "[VE]0V0E,0V,0E"},
+    {"z",   "zip",            "[EF]0E0F,0F,0E"},
+    {"e",   "expand",         "[FV]0V,0F,0F0V"},
 
     // Symmetric: s, m, b
     {"s",   "snub",           "[VEF]0V,0E,0F,0V0E0F"},
