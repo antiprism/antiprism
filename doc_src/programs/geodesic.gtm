@@ -47,12 +47,12 @@ opposite orientations, the geodesic faces that bridge the edge
 will not be included in the output.
 <p>
 All the patterns may be specified by a pair of integers. If the
-integers are <i>a</i> and <i>b</i>,a triangular grid is laid out on
+integers are <i>a</i> and <i>b</i>, a triangular grid is laid out on
 the polyhedron face, having
 <i>(a&sup2;&nbsp;+&nbsp;ab&nbsp;+&nbsp;b&sup2;)/highest&nbsp;common&nbsp;factor(a,&nbsp;b)</i>
-divisions. Taking the face edges in order it is posible, starting
-at a face vertex, to step <i>a</i> units in the direction of one edge, then
-<i>b</i> units in the direction of the following edge and, if lying on the
+divisions. Taking the faces in order it is posible, starting
+at a face vertex, to step <i>a</i> units in a direction between the edges, then
+turn left and step another <i>b</i> units and, if the point lies on the
 face, this point will be a geodesic vertex. The process can be repeated
 three times from this geodesic vertex, finding the original face vertex
 and up to two new geodesic vertices. The process is continued until all

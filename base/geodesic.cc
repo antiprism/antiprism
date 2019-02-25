@@ -39,9 +39,9 @@
 #include "private_geodesic.h"
 #include "private_misc.h"
 
-using std::vector;
 using std::map;
 using std::swap;
+using std::vector;
 
 using namespace anti;
 
@@ -455,24 +455,19 @@ inline bool Geodesic::tri_test(int i, int j, int di, int dj)
   if (out_cnt == 0) // 3 points in so part of face
     return true;
 
+  // face has 1 point out, and 2 points in face or on edges
+
   int is_face_cnt = p0.is_face() + p1.is_face() + p2.is_face();
+
   // 2 verts in face so can only belong to this face
   if (is_face_cnt == 2)
     return true;
 
   // face now has one point out, and zero or one point on face
   if (is_face_cnt == 0)
-    return (m > n && dj) ? false : true;
-  else {
-    if (m < n && dj)
-      return true;
-    else if (m > n && di)
-      return true;
-    else if (m == n)
-      return dj ? true : false;
-  }
-
-  return false;
+    return false;
+  else
+    return dj;
 }
 
 void Geodesic::grid_to_tris(vector<int> indx, vector<vector<int>> &new_tris,

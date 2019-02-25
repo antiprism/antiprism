@@ -84,8 +84,8 @@ private:
   void init();
   void sphere_projection(anti::Geometry &geom);
   void make_grid_idxs();
-  int grid_x(int i, int j) { return i * (-n) + j * (m + n); }
-  int grid_y(int i, int j) { return i * (m + n) + j * (-m); }
+  int grid_x(int i, int j) { return i * (-m) + j * (m + n); }
+  int grid_y(int i, int j) { return i * (m + n) + j * (-n); }
   int_pr rot_e0(int_pr crds) // half-rot about centre e0
   {
     return mk_int_pr(freq - crds.first, -crds.second);
@@ -98,11 +98,11 @@ private:
 
   int coord_i(int_pr crds)
   {
-    return (m * crds.first + (m + n) * crds.second) / (m * m + m * n + n * n);
+    return (n * crds.first + (m + n) * crds.second) / (m * m + m * n + n * n);
   }
   int coord_j(int_pr crds)
   {
-    return ((m + n) * crds.first + n * crds.second) / (m * m + m * n + n * n);
+    return ((m + n) * crds.first + m * crds.second) / (m * m + m * n + n * n);
   }
 
   void grid_to_points(std::vector<int> indx, std::vector<anti::Vec3d> &gverts);
