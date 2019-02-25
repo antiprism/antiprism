@@ -51,7 +51,6 @@ src_extra/jitterbug
 src_extra/string_art
 src_extra/off2txt
 src_extra/kaleido
-src_extra/radial
 src/off2pov
 src/off2eig
 src/off2vrml
@@ -97,6 +96,7 @@ src/planar
 src/symmetro
 src/stellate
 src/miller
+src/off_color_radial
 aview/antiview
 python/antiprism.py
 python/antiprism.pyc
