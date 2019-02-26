@@ -22,6 +22,7 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/off2obj.gtm 2 off2obj - convert an OFF file to Wavefront OBJ format
 ./doc/obj2off.gtm 2 obj2off - convert a Wavefront OBJ file to OFF format
 ./doc/off_color.gtm 2 off_color - add colours to an OFF file
+./doc/off_color_radial.gtm 2 off_color_radial - radial colouring based on symmetry
 ./doc/off_trans.gtm 2 off_trans - transformations (rotations etc) of OFF files
 ./doc/off_align.gtm 2 off_align - alignment of OFF files
 ./doc/off_util.gtm 2 off_util - utilities for OFF files
@@ -60,7 +61,6 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/dome_layer.gtm 2 UNSUPPORTED: dome_layer - dome strut arrangements
 ./doc/twist.gtm 2 UNSUPPORTED: twist - twist the edges of a polyhedron
 ./doc/kaleido.gtm 2 UNSUPPORTED: kaleido - uniform polyhedra (Zvi Har'El)
-./doc/radial.gtm 2 UNSUPPORTED: radial - radial colouring based on symmetry
 ./doc/spidron.gtm 2 UNSUPPORTED: spidron - spidronise a polyhedron
 ./doc/poly_weave.gtm 2 UNSUPPORTED: poly_weave - weave based on a polyhedron
 ./doc/mmop_origami.gtm 2 UNSUPPORTED: mmop_origami - multimodular polyhedron origami

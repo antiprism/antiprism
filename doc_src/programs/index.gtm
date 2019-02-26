@@ -41,10 +41,11 @@ Programs
 
 <b>Manipulation</b>
 <ul>
-<li><a href="off_color.html">off_color</a> - add colours to an OFF file
-<li><a href="off_trans.html">off_trans</a> - transformations (rotations, translations, etc) of OFF files
-<li><a href="off_align.html">off_align</a> - alignment of OFF files 
 <li><a href="off_util.html">off_util</a> - utilities for OFF files (orientation, merging, etc)
+<li><a href="off_trans.html">off_trans</a> - transformations (rotations, translations, etc) of OFF files
+<li><a href="off_color.html">off_color</a> - add colours to an OFF file
+<li><a href="off_color_radial.html">off_color_radial</a> - radial colouring based on symmetry
+<li><a href="off_align.html">off_align</a> - alignment of OFF files 
 <li><a href="planar.html">planar</a> - convert overlapping coplanar polygons into non-overlapping tiles
 </ul>
 
@@ -102,7 +103,6 @@ provided for interest only
 <li><a href="dome_layer.html">dome_layer</a> - dome strut arrangements
 <li><a href="twist.html">twist</a> - twist the edges of a polyhedron
 <li><a href="kaleido.html">kaleido</a> - uniform polyhedra (Zvi Har'El)
-<li><a href="radial.html">radial</a> - radial colouring based on symmetry
 <li><a href="spidron.html">spidron</a> - spidronise a polyhedron
 <li><a href="poly_weave.html">poly_weave</a> - weave based on a polyhedron
 <li><a href="mmop_origami.html">mmop_origami</a> - multimodular origami polyhedra
