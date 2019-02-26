@@ -24,7 +24,7 @@ bin_PROGRAMS = off2pov off2vrml off2crds off2obj obj2off off2dae \
 		kcycle unitile2d repel \
 		lat_grid lat_util canonical conway n_icons iso_delta \
 		bravais waterman col_util planar off_normals leonardo \
-		iso_kite to_nfold symmetro stellate miller wythoff
+		iso_kite to_nfold symmetro stellate miller wythoff off_color_radial
 
 dist_man1_MANS = off2pov.1 off2vrml.1 off2crds.1 off2obj.1 \
 		obj2off.1 off2dae.1 \
@@ -36,7 +36,7 @@ dist_man1_MANS = off2pov.1 off2vrml.1 off2crds.1 off2obj.1 \
 		lat_grid.1 lat_util.1 canonical.1 conway.1 n_icons.1 \
 		iso_delta.1 bravais.1 waterman.1 col_util.1 planar.1 \
 		off_normals.1 leonardo.1 iso_kite.1 to_nfold.1 \
-		symmetro.1 stellate.1 miller.1 wythoff.1
+		symmetro.1 stellate.1 miller.1 wythoff.1 off_color_radial.1
 
 off2pov_SOURCES = off2pov.cc
 off2crds_SOURCES = off2crds.cc
@@ -84,4 +84,5 @@ symmetro_SOURCES = symmetro.cc
 stellate_SOURCES = stellate.cc
 miller_SOURCES = miller.cc
 wythoff_SOURCES = wythoff.cc
+off_color_radial_SOURCES = off_color_radial.cc
 

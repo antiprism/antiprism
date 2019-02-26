@@ -23,7 +23,7 @@
 */
 
 /*
-   Name: radial.cc
+   Name: off_color_radial.cc
    Description: Color in radial pattern based on symmetry
    Project: Antiprism - http://www.antiprism.com
 */
@@ -52,11 +52,13 @@ public:
   string ifile;
   string ofile;
 
+  int coloring_method;
   vector<int> axis_orders;
   vector<int> axis_percent;
   bool axis_orders_set;
   string sym_str;
   int show_axes;
+  int axes_coloring;
 
   // element index lists
   vector<pair<char, vector<int>>> elem_lists;
@@ -69,8 +71,8 @@ public:
   double epsilon;
 
   radial_opts()
-      : ProgramOpts("radial"), axis_orders_set(false), sym_str(""),
-        show_axes(0), map_string("rng"), face_opacity(-1), epsilon(0)
+      : ProgramOpts("off_color_radial"), coloring_method(0), axis_orders_set(false), sym_str(""),
+        show_axes(0), axes_coloring(1), map_string("rng"), face_opacity(-1), epsilon(0)
   {
   }
   void process_command_line(int argc, char **argv);
@@ -88,8 +90,11 @@ void radial_opts::usage()
 "\n"
 "Options\n"
 "%s"
-"  -a <ax,p> axis order. may be 0, 1 or 2 (default 0) (multiple -a as needed)\n"
-"               p is percent length of the axis. (default 100 percent)\n"
+"  -d <opt>  coloring. radial=1, axes=2 (default: 1)\n"
+"               (multiple -c as needed)\n"
+"  -a <ax,p> axis order. primary=1, secondary=2, tertiary=3, all=4 (default: 1)\n"
+"               p is percent length of the axis. (default: 100 percent)\n"
+"               (multiple -a as needed)\n"
 "  -f <list> specify a list of elements, list starts with element letter,\n"
 "            followed by an index number list, given as index ranges separated\n"
 "            by commas. range can be one number or two numbers separated by a\n"
@@ -97,16 +102,16 @@ void radial_opts::usage()
 "            Index number list will be preceded by f, e, v for faces, edges and\n"
 "            vertices. Elements resolve to connected faces to be staring point\n"
 "            for radial coloring. special selector: s for number of face sides\n"
-"            (-f overrides -a, multiple -f as needed)\n"
+"               (multiple -f as needed, -f overrides -a)\n"
 "  -s <sym>  symmetry subgroup (Schoenflies notation)\n"
-"  -A <opt>  show axes used.  points=1, axes=2 (default: none)\n"
 "  -l <lim>  minimum distance change to terminate planarization, as negative\n"
 "               exponent (default: %d giving %.0e)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\nColoring Options (run 'off_util -H color' for help on color formats)\n"
 "  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
 "  -m <maps> color maps for all elements to be tried in turn (default: rng)\n"
-"  -n <maps> map name for axes 0, 1 and 2 (default: map_red:yellow:darkgreen)\n"
+"  -n <maps> color maps for axes (A=1: calculated, A=2: map_red:blue:yellow)\n"
+"  -A <opt>  color axes by nfold=1, order=2 (default: 1)\n"
 "\n"
 "\n", prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
 }
@@ -134,11 +139,24 @@ void radial_opts::process_command_line(int argc, char **argv)
   axis_percent.push_back(100);
   axis_percent.push_back(100);
 
-  while ((c = getopt(argc, argv, ":hf:a:s:A:T:m:n:l:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hd:f:a:s:T:m:n:A:l:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
     switch (c) {
+    case 'd': {
+      print_status_or_exit(
+          get_arg_id(optarg, &arg_id, "radial=1|axes=2", argmatch_add_id_maps),
+          c);
+      int option = atoi(arg_id.c_str());
+      if (option == 1)
+        coloring_method = 1;
+      else
+      if (option == 2)
+        show_axes = 2;
+      break;
+    }
+
     case 'f': {
       pair<char, vector<int>> elem_lst;
       string elements = "vefs";
@@ -158,38 +176,60 @@ void radial_opts::process_command_line(int argc, char **argv)
     }
 
     case 'a': {
-      vector<int> idx_lst;
-      print_status_or_exit(read_idx_list(optarg, idx_lst, INT_MAX, false), c);
+      char parse_key1[] = ",";
+
+      // memory pointers for strtok_r
+      char *tok_ptr1;
+
+      vector<string> tokens;
+      char *ptok1 = strtok_r(optarg, parse_key1, &tok_ptr1);
+      while (ptok1 != nullptr) {
+        tokens.push_back(ptok1);
+        ptok1 = strtok_r(nullptr, parse_key1, &tok_ptr1);
+      }
+
+      int sz = (int)tokens.size();
+      if (sz > 2)
+        error("excess entries for axis orders", c);
+
       int axis_order;
-      for (unsigned int i = 0; i < idx_lst.size(); i++) {
+      for (int i = 0; i < sz; i++) {
         if (i == 0) {
-          axis_order = idx_lst[i];
-          if (axis_order < 0 || axis_order > 2)
-            error("axis order must be 0, 1 or 2", c);
-          axis_orders[axis_order] = axis_order;
+          print_status_or_exit(
+              get_arg_id(tokens[i].c_str(), &arg_id, "primary=1|secondary=2|tertiary=3|all=4", argmatch_add_id_maps),
+              c);
+          axis_order = atoi(arg_id.c_str());
+          if (axis_order == 4) {
+            for (int j = 0; j < 3; j++)
+               axis_orders[j] = j;
+          }
+          else {
+            // axes start with 0
+            axis_order--;
+            axis_orders[axis_order] = axis_order;
+          }
         }
         else if (i == 1) {
-          int ax_pct = idx_lst[i];
+          int ax_pct;
+          read_int(tokens[i].c_str(), &ax_pct);
           if (ax_pct < 1)
             error("axis percent must be 1 or greater", c);
-          axis_percent[axis_order] = ax_pct;
+          if (axis_order == 4) {
+            for (int j = 0; j < 3; j++)
+               axis_percent[j] = ax_pct;
+          }
+          else {
+            axis_percent[axis_order] = ax_pct;
+          }
         }
-        else
-          error("excess entries for axis orders", c);
       }
+
       axis_orders_set = true;
       break;
     }
 
     case 's':
       sym_str = optarg;
-      break;
-
-    case 'A':
-      print_status_or_exit(
-          get_arg_id(optarg, &arg_id, "points=1|axes=2", argmatch_add_id_maps),
-          c);
-      show_axes = atoi(arg_id.c_str());
       break;
 
     case 'T':
@@ -205,6 +245,13 @@ void radial_opts::process_command_line(int argc, char **argv)
 
     case 'n':
       map_string_axes = optarg;
+      break;
+
+    case 'A':
+      print_status_or_exit(
+          get_arg_id(optarg, &arg_id, "nfold=1|order=2", argmatch_add_id_maps),
+          c);
+      axes_coloring = atoi(arg_id.c_str());
       break;
 
     case 'l':
@@ -226,6 +273,11 @@ void radial_opts::process_command_line(int argc, char **argv)
     }
   }
 
+
+  // default coloring method
+  if (show_axes == 0)
+    coloring_method = 1;
+
   // if elements specified, don't use axes
   if (elem_lists.size()) {
     for (unsigned int i = 0; i < axis_orders.size(); i++)
@@ -245,9 +297,32 @@ void radial_opts::process_command_line(int argc, char **argv)
 
   print_status_or_exit(map.init(map_string.c_str()), 'm');
 
-  if (!map_string_axes.size())
-    map_string_axes = "map_red:yellow:darkgreen";
-  print_status_or_exit(map_axes.init(map_string_axes.c_str()), 'n');
+  // default axes map
+  if (!map_string_axes.size()) {
+    if (axes_coloring == 1) {
+      // nfold map is same as antiview
+      auto *col_map0 = new ColorMapMap;
+      col_map0->set_col(0, Color(0.6, 0.3, 0.0));
+      col_map0->set_col(1, Color(0.8, 0.8, 0.2)); // borrow color 2, nfold index can be 1
+      col_map0->set_col(2, Color(0.8, 0.8, 0.2));
+      col_map0->set_col(3, Color(0.3, 0.8, 0.3));
+      col_map0->set_col(4, Color(0.6, 0.0, 0.0));
+      col_map0->set_col(5, Color(0.0, 0.0, 0.6));
+      map_axes.add_cmap(col_map0);
+
+      // nfold 6 and higher same color
+      auto *col_map = new ColorMapMap;
+      col_map->set_col(0, Color(0.6, 0.3, 0.0));
+      col_map->set_wrap();
+      map_axes.add_cmap(col_map);
+    }
+    else
+    if (axes_coloring == 2) {
+      // match symmetro face colors
+      map_string_axes = "map_red:blue:yellow";
+      print_status_or_exit(map_axes.init(map_string_axes.c_str()), 'n');
+    }
+  }
 
   if (argc - optind > 1)
     error("too many arguments");
@@ -293,13 +368,13 @@ Geometry get_axes(const Geometry &geom, Symmetry &sym, int ax_idx,
   case Symmetry::C:
   case Symmetry::Cv:
   case Symmetry::Ch:
-    n_folds = {0}; // Use principal axis vertex
+    n_folds = {sym.get_nfold()}; // Use principal axis vertex
     break;
   }
 
   Geometry axes;
 
-  if (n_folds.size()) {
+  if (n_folds.size() && ((n_folds.size() == 6) || (ax_idx == 0))) {
     double max_dist = 0.0;
     for (const auto &vert : geom.verts())
       // Use sym.get_to_std() to centre on orig
@@ -320,11 +395,24 @@ Geometry get_axes(const Geometry &geom, Symmetry &sym, int ax_idx,
         sym.get_to_std().inverse() * // Carry from std pos'n to geom pos'n
         (max_dist * 1.1 * axis_pt)); // Scale the axis point first
     sym_repeat(axes, axis, sym);     // Repeat positioned axis point
-    merge_coincident_elements(axes, "v");
+    merge_coincident_elements(axes, "v", 1e-8);
 
-    // set map index to axis number
+    // set color map index to axis vertices
+    int map_idx = 0;
+    if (opts.axes_coloring == 1) {
+      // reverse secondary and tertiary (why?)
+      int ax_tweaked = (ax_idx == 1) ?  2 : ((ax_idx == 2) ? 1 : 0);
+      map_idx = n_folds[ax_tweaked%n_folds.size()];
+      if ((ax_tweaked == 0) && (sym.get_sym_type() == Symmetry::S))
+        map_idx /= 2;
+//fprintf(stderr,"ax_tweaked = %d map_idx = %d\n", ax_tweaked, map_idx);
+    }
+    else
+    if (opts.axes_coloring == 2) {
+      map_idx = ax_idx;
+    }
     for (unsigned int i = 0; i < axes.verts().size(); i++)
-      axes.colors(VERTS).set(i, ax_idx);
+      axes.colors(VERTS).set(i, map_idx);
   }
 
   return axes;
@@ -606,6 +694,7 @@ void set_indexes_to_color(Geometry &geom, const radial_opts &opts)
     apply_transparency(geom, opts);
 }
 
+// for now show_axes is always 2 to display whole axis
 void append_axes(Geometry &geom, Geometry &axes, const radial_opts &opts)
 {
   if (opts.show_axes == 2) {
@@ -613,13 +702,25 @@ void append_axes(Geometry &geom, Geometry &axes, const radial_opts &opts)
     const vector<Vec3d> &verts = axes.verts();
     int vsz = verts.size();
 
+    // add a vertex to model at centroid
     Vec3d cent = centroid(geom.verts());
     axes.add_vert(cent, Color(255, 255, 255));
     int cent_vert = vsz;
 
+    // connect centroid to axes points
+    Color c;
     for (int i = 0; i < vsz; i++) {
-      Color c = axes.colors(VERTS).get(i);
+      c = axes.colors(VERTS).get(i);
+      //int v_mirror = find_vert_by_coords(axes, -verts[i], opts.epsilon);
       axes.add_edge(make_edge(i, cent_vert), c);
+    }
+
+    // for when there is only the base axis
+    if (vsz == 1) {
+      axes.transform(Trans3d::translate(-cent));
+      axes.add_vert((-verts[0]), c);
+      axes.transform(Trans3d::translate(cent));
+      axes.add_edge(make_edge((int)verts.size()-1, cent_vert), c);
     }
   }
 
@@ -630,6 +731,41 @@ void append_axes(Geometry &geom, Geometry &axes, const radial_opts &opts)
   clrng.e_apply_cmap();
 
   geom.append(axes);
+}
+
+void radial_coloring(Geometry &geom, const Geometry &axes, const radial_opts &opts)
+{
+  // centroid needs to be preserved before possible compound break down
+  Vec3d cent = centroid(geom.verts());
+
+  // find fronts from axes or list
+  map<int, vector<int>> fronts;
+  // if fronts from elements, do this once
+  if (opts.elem_lists.size())
+    find_fronts_from_list(fronts, geom, opts);
+
+  // process possible compound
+  vector<Geometry> parts;
+  if (opts.axis_orders_set)
+    compound_parts(geom, parts);
+  else
+    // when front from elements, compound cannot be split
+    parts.push_back(geom);
+
+  // process each part, then rebuild geom
+  geom.clear_all();
+  for (unsigned int i = 0; i < parts.size(); i++) {
+    if (opts.axis_orders_set) {
+      fronts.clear();
+      // fronts from axes needs to be done for each part
+      find_fronts_from_axes(fronts, axes, parts[i], cent, opts);
+    }
+    radial_coloring(parts[i], fronts);
+    geom.append(parts[i]);
+  }
+
+  // now turn all indexes to color
+  set_indexes_to_color(geom, opts);
 }
 
 int main(int argc, char *argv[])
@@ -728,36 +864,8 @@ int main(int argc, char *argv[])
     // fprintf(stderr, "axes.size = %d\n", (int)axes.verts().size());
   }
 
-  // centroid needs to be preserved before possible compound break down
-  Vec3d cent = centroid(geom.verts());
-
-  // find fronts from axes or list
-  map<int, vector<int>> fronts;
-  // if fronts from elements, do this once
-  if (opts.elem_lists.size())
-    find_fronts_from_list(fronts, geom, opts);
-
-  // process possible compound
-  vector<Geometry> parts;
-  if (opts.axis_orders_set)
-    compound_parts(geom, parts);
-  else
-    // when front from elements, compound cannot be split
-    parts.push_back(geom);
-
-  // process each part, then rebuild geom
-  geom.clear_all();
-  for (unsigned int i = 0; i < parts.size(); i++) {
-    if (opts.axis_orders_set) {
-      fronts.clear();
-      // fronts from axes needs to be done for each part
-      find_fronts_from_axes(fronts, axes, parts[i], cent, opts);
-    }
-    radial_coloring(parts[i], fronts);
-    geom.append(parts[i]);
-  }
-
-  set_indexes_to_color(geom, opts);
+  if (opts.coloring_method == 1)
+    radial_coloring(geom, axes, opts);
 
   // append axes if set
   if (opts.show_axes)
