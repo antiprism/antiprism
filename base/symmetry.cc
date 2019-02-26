@@ -24,7 +24,7 @@
 
 /* \file symmetry.cc
  *\brief symmetry handling
-*/
+ */
 
 #include <algorithm>
 #include <map>
@@ -37,12 +37,12 @@
 #include "symmetry.h"
 #include "utils.h"
 
-using std::string;
-using std::vector;
 using std::map;
-using std::set;
 using std::pair;
+using std::set;
+using std::string;
 using std::swap;
+using std::vector;
 
 namespace anti {
 
@@ -284,9 +284,9 @@ public:
    *\return reference to this object with the transformations set. */
   sch_gen &S(int n)
   {
-    return C(n / 2) * (sch_gen().unit() +
-                       Trans3d::reflection(Vec3d::Z) *
-                           Trans3d::rotate(Vec3d::Z, 2 * M_PI / n));
+    return C(n / 2) *
+           (sch_gen().unit() + Trans3d::reflection(Vec3d::Z) *
+                                   Trans3d::rotate(Vec3d::Z, 2 * M_PI / n));
   }
 
   /// Set up T symmetry transformation group.
@@ -1601,12 +1601,14 @@ const set<Symmetry> &Symmetry::get_sub_syms() const
           add_sub_axes(sym);
         }
         // vertical mirror through dihedral axis
-        sym.init(Cs, 0, Trans3d::rotate(Vec3d::X, M_PI / 2) *
-                            Trans3d::rotate(axis, M_PI / nfold) * to_std);
+        sym.init(Cs, 0,
+                 Trans3d::rotate(Vec3d::X, M_PI / 2) *
+                     Trans3d::rotate(axis, M_PI / nfold) * to_std);
         sub_syms.insert(sym);
         // dihedral axis
-        sym.init(dih_type, 2, Trans3d::rotate(Vec3d::Y, M_PI / 2) *
-                                  Trans3d::rotate(axis, M_PI / nfold) * to_std);
+        sym.init(dih_type, 2,
+                 Trans3d::rotate(Vec3d::Y, M_PI / 2) *
+                     Trans3d::rotate(axis, M_PI / nfold) * to_std);
         add_sub_axes(sym);
       }
       else
@@ -1623,8 +1625,9 @@ const set<Symmetry> &Symmetry::get_sub_syms() const
     case Dv:
       add_sub_axes(*this);
       // vertical mirror between dihedral axes
-      sym.init(Cs, 0, Trans3d::rotate(axis, M_PI / (2 * nfold)) *
-                          Trans3d::rotate(Vec3d::X, M_PI / 2) * to_std);
+      sym.init(Cs, 0,
+               Trans3d::rotate(axis, M_PI / (2 * nfold)) *
+                   Trans3d::rotate(Vec3d::X, M_PI / 2) * to_std);
       sub_syms.insert(sym);
       if (nfold % 2 == 0) {
         dih_type = D;
@@ -1635,8 +1638,9 @@ const set<Symmetry> &Symmetry::get_sub_syms() const
           sym.init(D, 2, Trans3d::rotate(axis, M_PI / nfold) * to_std);
           add_sub_axes(sym);
         }
-        sym.init(dih_type, 2, Trans3d::rotate(Vec3d::Y, M_PI / 2) *
-                                  Trans3d::rotate(axis, M_PI / nfold) * to_std);
+        sym.init(dih_type, 2,
+                 Trans3d::rotate(Vec3d::Y, M_PI / 2) *
+                     Trans3d::rotate(axis, M_PI / nfold) * to_std);
         add_sub_axes(sym);
       }
       else
@@ -1653,8 +1657,9 @@ const set<Symmetry> &Symmetry::get_sub_syms() const
       }
       dih_type = (nfold % 2 == 0) ? D : C;
 
-      sym.init(dih_type, 2, Trans3d::rotate(Vec3d::Y, M_PI / 2) *
-                                Trans3d::rotate(axis, M_PI / nfold) * to_std);
+      sym.init(dih_type, 2,
+               Trans3d::rotate(Vec3d::Y, M_PI / 2) *
+                   Trans3d::rotate(axis, M_PI / nfold) * to_std);
       add_sub_axes(sym);
       sym.init(dih_type, 2, Trans3d::rotate(Vec3d::Y, M_PI / 2) * to_std);
       add_sub_axes(sym);
@@ -1672,8 +1677,9 @@ const set<Symmetry> &Symmetry::get_sub_syms() const
 
     case Cv:
       if (nfold % 2 == 0) { // nfold even: add second vertical mirror
-        sym.init(Cs, 0, Trans3d::rotate(axis, M_PI / nfold) *
-                            Trans3d::rotate(Vec3d::X, M_PI / 2) * to_std);
+        sym.init(Cs, 0,
+                 Trans3d::rotate(axis, M_PI / nfold) *
+                     Trans3d::rotate(Vec3d::X, M_PI / 2) * to_std);
         sub_syms.insert(sym);
         if (nfold > 2) {
           sym.init(Cv, nfold / 2, Trans3d::rotate(axis, M_PI / nfold) * to_std);

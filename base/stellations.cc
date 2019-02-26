@@ -39,9 +39,9 @@
 #include "private_std_polys.h"
 #include "utils.h"
 
+using std::map;
 using std::string;
 using std::vector;
-using std::map;
 
 using namespace anti;
 

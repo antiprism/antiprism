@@ -24,7 +24,7 @@
 
 /*!\file geometryinfo.h
  * \brief Anayse and get information about a geometry
-*/
+ */
 
 #ifndef GEOMETRYINFO_H
 #define GEOMETRYINFO_H

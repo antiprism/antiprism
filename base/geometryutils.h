@@ -24,7 +24,7 @@
 
 /*!\file geometryutils.h
  * \brief Utilities associated with geometries
-*/
+ */
 
 #ifndef GEOMETRYUTILS_H
 #define GEOMETRYUTILS_H

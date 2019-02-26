@@ -35,11 +35,11 @@
 
 #include "private_std_polys.h"
 
-using std::string;
-using std::vector;
 using std::map;
 using std::pair;
+using std::string;
 using std::swap;
+using std::vector;
 
 using namespace anti;
 
@@ -612,8 +612,9 @@ static Vec3d get_fermat_point(Vec3d v0, Vec3d v1, Vec3d v2, bool degenerate,
       max_ang = ang > max_ang ? ang_diff : max_ang;
     }
     if (max_ang > epsilon)
-      sprintf(msg, "inaccurate calculation of fermat point "
-                   "(angle difference %g)",
+      sprintf(msg,
+              "inaccurate calculation of fermat point "
+              "(angle difference %g)",
               max_ang);
   }
 

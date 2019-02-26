@@ -24,7 +24,7 @@
 
 /*\file geom.cc
  * \brief Classes to represent a geometry
-*/
+ */
 
 #include <algorithm>
 #include <stdarg.h>
@@ -39,11 +39,11 @@
 #include "symmetry.h"
 #include "utils.h"
 
-using std::string;
-using std::vector;
-using std::swap;
 using std::map;
 using std::pair;
+using std::string;
+using std::swap;
+using std::vector;
 
 namespace anti {
 

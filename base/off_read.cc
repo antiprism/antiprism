@@ -74,8 +74,9 @@ bool off_file_read(string file_name, Geometry &geom, char *errmsg)
       geom_ok = true;
     else {
       if (errmsg)
-        snprintf(errmsg, MSG_SZ - 50, "could not open input "
-                                      "file \'%s=%s\': %s",
+        snprintf(errmsg, MSG_SZ - 50,
+                 "could not open input "
+                 "file \'%s=%s\': %s",
                  file_name.c_str(), alt_name.c_str(), errmsg2);
     }
   }
@@ -91,8 +92,9 @@ bool off_file_read(string file_name, Geometry &geom, char *errmsg)
       geom_ok = true;
     else {
       if (errmsg)
-        snprintf(errmsg, MSG_SZ - 50, "could not open input "
-                                      "file \'%s\': %s",
+        snprintf(errmsg, MSG_SZ - 50,
+                 "could not open input "
+                 "file \'%s\': %s",
                  file_name.c_str(), errmsg2);
     }
   }
@@ -267,8 +269,9 @@ bool off_file_read(FILE *ifile, Geometry &geom, char *errmsg)
 
   if (num_pts == 0 && num_faces != 0) {
     if (errmsg)
-      snprintf(errmsg, MSG_SZ, "line %d: element counts: cannot have a "
-                               "positive face count if vertex count is zero",
+      snprintf(errmsg, MSG_SZ,
+               "line %d: element counts: cannot have a "
+               "positive face count if vertex count is zero",
                file_line_no);
     return false;
   }

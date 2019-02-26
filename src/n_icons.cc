@@ -41,14 +41,14 @@
 #include "../base/antiprism.h"
 #include "n_icons.h"
 
-using std::string;
-using std::vector;
-using std::swap;
-using std::set;
+using std::make_pair;
 using std::map;
 using std::pair;
-using std::make_pair;
+using std::set;
 using std::sort;
+using std::string;
+using std::swap;
+using std::vector;
 
 using namespace anti;
 
@@ -1101,8 +1101,9 @@ void build_prime_polygon(Geometry &geom, vector<int> &prime_meridian,
 
   for (int i = 0; i < opts.ncon_order; i++) {
     prime_meridian.push_back(i);
-    add_coord(geom, coordinates, Vec3d(cos(deg2rad(ang)) * radius,
-                                       sin(deg2rad(ang)) * radius, 0.0));
+    add_coord(
+        geom, coordinates,
+        Vec3d(cos(deg2rad(ang)) * radius, sin(deg2rad(ang)) * radius, 0.0));
     if (double_eq(fmod(angle_in_range(ang, opts.epsilon), 360.0), 90.0,
                   epsilon_local)) {
       pole[0]->idx = geom.verts().size() - 1;
@@ -2149,8 +2150,9 @@ void build_prime_meridian(Geometry &geom, vector<int> &prime_meridian,
     prime_meridian.push_back(i);
     double radius =
         ((opts.build_method != 2) || is_even(i)) ? outer_radius : inner_radius;
-    add_coord(geom, coordinates, Vec3d(cos(deg2rad(angle)) * radius,
-                                       sin(deg2rad(angle)) * radius, 0));
+    add_coord(
+        geom, coordinates,
+        Vec3d(cos(deg2rad(angle)) * radius, sin(deg2rad(angle)) * radius, 0));
     angle += arc;
   }
 
@@ -2608,8 +2610,9 @@ void close_latitudinal(Geometry &geom, vector<faceList *> &face_list,
 
   // In cases of odd opts.longitudes sides or even opts.longitudes side cuts
   // which are not half models this generates a third side to cover
-  if (!opts.add_poles && ((is_even(opts.ncon_order) && !point_cut_calc) ||
-                          !is_even(opts.ncon_order)) &&
+  if (!opts.add_poles &&
+      ((is_even(opts.ncon_order) && !point_cut_calc) ||
+       !is_even(opts.ncon_order)) &&
       (!half_model(opts.longitudes)) && (strchr(opts.closure.c_str(), 'v'))) {
     face[2].push_back(0);
     if (is_even(opts.ncon_order) && !point_cut_calc)
@@ -2870,13 +2873,15 @@ void model_info(const Geometry &geom, const ncon_opts &opts)
     int actual_twist = opts.twist * 2;
     if (opts.hybrid) {
       actual_twist -= 1;
-      fprintf(stderr, "With angle, this Hybrid is similar to N = %d/%d  twist "
-                      "= %d  side cut\n",
+      fprintf(stderr,
+              "With angle, this Hybrid is similar to N = %d/%d  twist "
+              "= %d  side cut\n",
               actual_order, actual_d, actual_twist);
     }
     else {
-      fprintf(stderr, "with angle, this model is similar to N = %d/%d  twist = "
-                      "%d  side cut\n",
+      fprintf(stderr,
+              "with angle, this model is similar to N = %d/%d  twist = "
+              "%d  side cut\n",
               actual_order, actual_d, actual_twist);
     }
   }
@@ -2887,8 +2892,9 @@ void model_info(const Geometry &geom, const ncon_opts &opts)
 
   unsigned long fsz = geom.faces().size();
   unsigned long vsz = geom.verts().size();
-  fprintf(stderr, "The graphical model shown has %lu faces, %lu vertices, and "
-                  "%lu implicit edges\n",
+  fprintf(stderr,
+          "The graphical model shown has %lu faces, %lu vertices, and "
+          "%lu implicit edges\n",
           fsz, vsz, (fsz + vsz - 2));
 
   fprintf(stderr, "========================================\n");
@@ -2910,8 +2916,9 @@ void ncon_info(const int ncon_order, const bool point_cut, const int twist,
 
     fprintf(stderr, "\n");
     if (hybrid) {
-      fprintf(stderr, "This is an order %d, hybrid n-icon. By hybrid, it means "
-                      "it is one half a\n",
+      fprintf(stderr,
+              "This is an order %d, hybrid n-icon. By hybrid, it means "
+              "it is one half a\n",
               ncon_order);
       fprintf(stderr, "point cut n-icon joined to half of a side cut n-icon. "
                       "Hybrid n-icons are\n");
@@ -2922,8 +2929,9 @@ void ncon_info(const int ncon_order, const bool point_cut, const int twist,
       fprintf(stderr, "Circuit patterns are self dual.\n");
     }
     else if (is_even(ncon_order) && point_cut) {
-      fprintf(stderr, "The order of this n-icon, %d, is even. It is, what is "
-                      "termed, a Point Cut.\n",
+      fprintf(stderr,
+              "The order of this n-icon, %d, is even. It is, what is "
+              "termed, a Point Cut.\n",
               ncon_order);
       fprintf(stderr, "Even order, point cut n-icons have at least one "
                       "continuous surface and\n");
@@ -2933,8 +2941,9 @@ void ncon_info(const int ncon_order, const bool point_cut, const int twist,
                       "Side Cut n-icons.\n");
     }
     else if (is_even(ncon_order) && !point_cut) {
-      fprintf(stderr, "The order of this n-icon, %d, is even. It is, what is "
-                      "termed, a Side Cut.\n",
+      fprintf(stderr,
+              "The order of this n-icon, %d, is even. It is, what is "
+              "termed, a Side Cut.\n",
               ncon_order);
       fprintf(stderr, "Even order, side cut n-icons have at least two "
                       "discontinuous surfaces and\n");
@@ -2944,8 +2953,9 @@ void ncon_info(const int ncon_order, const bool point_cut, const int twist,
                       "Cut n-icons.\n");
     }
     else if (!is_even(ncon_order)) {
-      fprintf(stderr, "The order of this n-icon, %d, is odd. It could be "
-                      "termed both a Point Cut\n",
+      fprintf(stderr,
+              "The order of this n-icon, %d, is odd. It could be "
+              "termed both a Point Cut\n",
               ncon_order);
       fprintf(stderr, "and a Side Cut depending on the poles. Odd order "
                       "n-icons have at least one\n");
@@ -2971,8 +2981,9 @@ void ncon_info(const int ncon_order, const bool point_cut, const int twist,
     }
     else if (is_even(ncon_order) && !point_cut) {
       fprintf(stderr, "It has two polar caps\n");
-      fprintf(stderr, "It is the polyhedral dual of the twist 0 point cut "
-                      "order %d n-icon\n",
+      fprintf(stderr,
+              "It is the polyhedral dual of the twist 0 point cut "
+              "order %d n-icon\n",
               ncon_order);
     }
     else if (!is_even(ncon_order)) {
@@ -2997,8 +3008,9 @@ void ncon_info(const int ncon_order, const bool point_cut, const int twist,
 
   if (info) {
     fprintf(stderr, "\n");
-    fprintf(stderr, "Using coloring, there are %d distinct twists ranging from "
-                    "%d through +%d\n",
+    fprintf(stderr,
+            "Using coloring, there are %d distinct twists ranging from "
+            "%d through +%d\n",
             ncon_order, first, last);
   }
 
@@ -3056,8 +3068,9 @@ void ncon_info(const int ncon_order, const bool point_cut, const int twist,
 
   if (info) {
     fprintf(stderr, "\n");
-    fprintf(stderr, "Without coloring, there are %d distinct twists ranging "
-                    "from %d through +%d\n",
+    fprintf(stderr,
+            "Without coloring, there are %d distinct twists ranging "
+            "from %d through +%d\n",
             forms, first, last);
     fprintf(stderr, "   %d base model(twist 0)\n", base_form);
     fprintf(stderr, "   %d form%s chiral and %s mirror image%s\n", chiral,
@@ -3205,8 +3218,9 @@ void ncon_info(const int ncon_order, const bool point_cut, const int twist,
 
   if (info) {
     fprintf(stderr, "\n");
-    fprintf(stderr, "Treated as conic, it has a total of %d surface%s and a "
-                    "total of %d edge%s\n",
+    fprintf(stderr,
+            "Treated as conic, it has a total of %d surface%s and a "
+            "total of %d edge%s\n",
             sd.total_surfaces, ((sd.total_surfaces == 1) ? "" : "s"),
             sd.c_edges + sd.d_edges,
             ((sd.c_edges + sd.d_edges == 1) ? "" : "s"));
@@ -5114,8 +5128,9 @@ void add_triangles_to_close(Geometry &geom, vector<int> &added_triangles,
           // check for infinite loop
           if (face[0] == face_check[0] && face[1] == face_check[1] &&
               face[2] == face_check[2]) {
-            fprintf(stderr, "warning: face %d %d %d failed. Polygon at limits "
-                            "of accuracy (method=3)\n",
+            fprintf(stderr,
+                    "warning: face %d %d %d failed. Polygon at limits "
+                    "of accuracy (method=3)\n",
                     face[0], face[1], face[2]);
             return;
           }
@@ -5432,8 +5447,9 @@ int process_normal(Geometry &geom, ncon_opts &opts)
 
   // debug
   if (opts.info && opts.build_method == 3) {
-    fprintf(stderr, "debug (twist=0): face circuits(d=1) = %d face "
-                    "circuits(counted) = %d edge circuits(counted) = %d\n",
+    fprintf(stderr,
+            "debug (twist=0): face circuits(d=1) = %d face "
+            "circuits(counted) = %d edge circuits(counted) = %d\n",
             num_lats(opts.ncon_order, opts.point_cut),
             num_lats_faces(face_list), num_lats_edges(edge_list));
   }

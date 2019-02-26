@@ -95,11 +95,13 @@ void PovWriter::scene_header(FILE *ofile, const Scene &scen)
 {
   fprintf(ofile, "#version 3.6;\n\n");
   fprintf(ofile, "#include \"colors.inc\"\n\n");
-  fprintf(ofile, "// Scene Width - maximum distance between any 2 points\n"
-                 "#declare SceneWidth = %g;\n\n",
+  fprintf(ofile,
+          "// Scene Width - maximum distance between any 2 points\n"
+          "#declare SceneWidth = %g;\n\n",
           scen.get_bound_sph().get_width());
-  fprintf(ofile, "// Scene Centre\n"
-                 "#declare SceneCentre = %s;\n\n",
+  fprintf(ofile,
+          "// Scene Centre\n"
+          "#declare SceneCentre = %s;\n\n",
           pov_vec(scen.get_bound_sph().get_centre()).c_str());
   fprintf(ofile,
           "// The values below may be changed (original values in brackets):\n"
@@ -109,12 +111,14 @@ void PovWriter::scene_header(FILE *ofile, const Scene &scen)
           "// povray option like +KFF2 which will produce the left and right\n"
           "// stereo views in separate image files.\n");
   fprintf(ofile, "#declare StereoType = %d;\n\n", get_stereo_type());
-  fprintf(ofile, "// Shadow, 0 - shadows mono no shadows stero,"
-                 "1 - no shadows, 2 - shadows\n"
-                 "#declare Shadow = %d;\n\n",
+  fprintf(ofile,
+          "// Shadow, 0 - shadows mono no shadows stero,"
+          "1 - no shadows, 2 - shadows\n"
+          "#declare Shadow = %d;\n\n",
           get_shadow());
-  fprintf(ofile, "// Background colour (%s)\n"
-                 "#declare BgColour = %s; \n\n",
+  fprintf(ofile,
+          "// Background colour (%s)\n"
+          "#declare BgColour = %s; \n\n",
           pov_col(scen.get_bg_col()).c_str(),
           pov_col(scen.get_bg_col()).c_str());
   fprintf(ofile, "// Max Trace Level (10), increase if black areas appear when "
@@ -125,10 +129,11 @@ void PovWriter::scene_header(FILE *ofile, const Scene &scen)
           "Declare=AspectRatio=1.3333\n"
           "#ifndef(AspectRatio) #declare AspectRatio = 1.33333; #end\n\n");
 
-  fprintf(ofile, "// Vertex numbering\n"
-                 "#declare TextSize = %g; // if 0 use value calc'd from geom\n"
-                 "#declare TextColour = %s; //\n"
-                 "#declare FontFile = \"cyrvetic.ttf\"\n\n",
+  fprintf(ofile,
+          "// Vertex numbering\n"
+          "#declare TextSize = %g; // if 0 use value calc'd from geom\n"
+          "#declare TextColour = %s; //\n"
+          "#declare FontFile = \"cyrvetic.ttf\"\n\n",
           scen.get_width() / 20, pov_col(text_colour).c_str());
 }
 
@@ -295,28 +300,34 @@ void PovWriter::cameras(FILE *ofile, const Scene &scen)
       dist_txt = dtostr(cam.get_distance());
     else
       dist_txt = "   1.2 * SceneWidth";
-    fprintf(ofile, "   // Distance from viewer to LookAt point (%s)\n"
-                   "   #declare Distance = 0.9*%s;\n\n",
+    fprintf(ofile,
+            "   // Distance from viewer to LookAt point (%s)\n"
+            "   #declare Distance = 0.9*%s;\n\n",
             dist_txt.c_str(), dist_txt.c_str());
 
-    fprintf(ofile, "   // Rotation Centre\n"
-                   "   #declare RotCentre = %s;\n\n",
+    fprintf(ofile,
+            "   // Rotation Centre\n"
+            "   #declare RotCentre = %s;\n\n",
             pov_vec(cam.get_centre()).c_str());
-    fprintf(ofile, "   // Width of perspective (%g) if 0 use default\n"
-                   "   #declare PerspFactor = %g;\n\n",
+    fprintf(ofile,
+            "   // Width of perspective (%g) if 0 use default\n"
+            "   #declare PerspFactor = %g;\n\n",
             cam.get_persp(), cam.get_persp());
-    fprintf(ofile, "   // View point, where camera looks (%s)\n"
-                   "   #declare LookAt = %s;\n\n",
+    fprintf(ofile,
+            "   // View point, where camera looks (%s)\n"
+            "   #declare LookAt = %s;\n\n",
             pov_vec(cam.get_lookat()).c_str(),
             pov_vec(cam.get_lookat()).c_str());
 
     Vec3d angs = -cam.get_rotation().get_euler() * rad2deg();
-    fprintf(ofile, "   // Rotation about points centre (%s)\n"
-                   "   #declare Rotation = %s;\n\n",
+    fprintf(ofile,
+            "   // Rotation about points centre (%s)\n"
+            "   #declare Rotation = %s;\n\n",
             pov_vec(angs).c_str(), pov_vec(angs).c_str());
-    fprintf(ofile, "   // Shadow, 0 - shadows mono no shadows stero,"
-                   " 1 - no shadows, 2 - shadows\n"
-                   "   #declare Shadow = %d;\n\n",
+    fprintf(ofile,
+            "   // Shadow, 0 - shadows mono no shadows stero,"
+            " 1 - no shadows, 2 - shadows\n"
+            "   #declare Shadow = %d;\n\n",
             shadow);
     fprintf(ofile, "   #break\n\n");
   }

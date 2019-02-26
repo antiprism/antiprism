@@ -55,9 +55,9 @@ For more information on this code, see Anuj Mehrotra and Michael A. Trick,
 #include <stdio.h>
 #include <stdlib.h>
 
-using std::vector;
-using std::set;
 using std::pair;
+using std::set;
+using std::vector;
 
 int ProperColor::find_colors()
 {

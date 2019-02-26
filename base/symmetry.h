@@ -24,7 +24,7 @@
 
 /*!\file symmetry.h
  *\brief symmetry and transformation handling
-*/
+ */
 
 #ifndef SYMMETRY_H
 #define SYMMETRY_H

@@ -38,10 +38,10 @@
 
 #include "../base/antiprism.h"
 
-using std::string;
-using std::vector;
 using std::map;
+using std::string;
 using std::swap;
+using std::vector;
 
 using namespace anti;
 
@@ -277,8 +277,9 @@ int find_mid_centre(Geometry &geom, double &rad, Vec3d &cent, int n,
       break;
   }
   char str[MSG_SZ];
-  fprintf(stderr, "[n=%d, limit=%sachieved, r_test=%g, c_test=%g]\n"
-                  "centre=(%s), radius=%.16g\n",
+  fprintf(stderr,
+          "[n=%d, limit=%sachieved, r_test=%g, c_test=%g]\n"
+          "centre=(%s), radius=%.16g\n",
           cnt, cnt == n ? "not " : "", cent_test, rad_test,
           vtostr(str, cent, " "), rad);
   return 1;
@@ -400,8 +401,9 @@ int find_can_centre(Geometry &geom, char type, double &rad, Vec3d &cent,
                      Trans3d::translate(-cur_cent));
   }
   char str[MSG_SZ];
-  fprintf(stderr, "[n=%d, limit=%sachieved, r_test=%g, c_test=%g]\n"
-                  "centre=(%s), radius=%.16g%s\n",
+  fprintf(stderr,
+          "[n=%d, limit=%sachieved, r_test=%g, c_test=%g]\n"
+          "centre=(%s), radius=%.16g%s\n",
           cnt, cnt == n ? "not " : "", cent_test, rad_test,
           vtostr(str, cent, " "), rad, (invert) ? "i" : "");
   //}

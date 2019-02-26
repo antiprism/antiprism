@@ -24,7 +24,7 @@
 
 /* \file Trans3d.cc
  *\brief Matrix transformations for 3D geometry.
-*/
+ */
 
 #include <stdio.h>
 #include <vector>

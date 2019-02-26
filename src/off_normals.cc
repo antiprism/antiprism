@@ -40,10 +40,10 @@
 
 #include "../base/antiprism.h"
 
-using std::string;
-using std::vector;
 using std::pair;
+using std::string;
 using std::swap;
+using std::vector;
 
 using namespace anti;
 

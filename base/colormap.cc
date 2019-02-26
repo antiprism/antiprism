@@ -38,9 +38,9 @@
 
 #include "private_named_cols.h"
 
+using std::map;
 using std::string;
 using std::vector;
-using std::map;
 
 namespace anti {
 

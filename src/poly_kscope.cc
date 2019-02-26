@@ -42,13 +42,13 @@
 
 #include "../base/antiprism.h"
 
-using std::string;
-using std::vector;
-using std::map;
-using std::set;
-using std::pair;
 using std::make_pair;
+using std::map;
+using std::pair;
+using std::set;
+using std::string;
 using std::swap;
+using std::vector;
 
 using namespace anti;
 
@@ -362,7 +362,7 @@ Status compound_get_component_trans(Trans3d &trans, Symmetry part_sym,
   return Status::ok();
 }
 
-void print_report(FILE *ofile, const Symmetry & final, const Symmetry &part,
+void print_report(FILE *ofile, const Symmetry &final, const Symmetry &part,
                   int cnt)
 {
   Transformations k_trans;

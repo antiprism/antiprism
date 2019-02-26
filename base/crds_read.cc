@@ -37,8 +37,8 @@
 #include "private_off_file.h"
 #include "utils.h"
 
-using std::vector;
 using std::string;
+using std::vector;
 
 bool crds_file_read(string file_name, Geometry &geom, char *errmsg)
 {

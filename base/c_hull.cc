@@ -45,11 +45,11 @@
 
 #define NUM_TO_USE_DELAUNAY 20
 
-using std::vector;
 using std::map;
 using std::pair;
-using std::swap;
 using std::string;
+using std::swap;
+using std::vector;
 
 namespace anti {
 

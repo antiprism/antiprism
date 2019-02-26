@@ -39,11 +39,11 @@
 #include <string>
 #include <vector>
 
-using std::string;
-using std::vector;
 using std::map;
-using std::swap;
 using std::not_equal_to;
+using std::string;
+using std::swap;
+using std::vector;
 
 using namespace anti;
 

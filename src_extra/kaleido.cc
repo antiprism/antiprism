@@ -66,9 +66,9 @@
 
 #include "../base/antiprism.h"
 
-using std::vector;
-using std::swap;
 using std::set;
+using std::swap;
+using std::vector;
 
 using namespace anti;
 

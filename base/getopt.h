@@ -30,7 +30,7 @@
 
 /*!\file getopt.h
  * \brief Ultragetopt: replacement for getopt
-*/
+ */
 
 /* define ULTRAGETOPT_REPLACE_GETOPT for ultragetopt*() to replace getopt*() */
 /* define ULTRAGETOPT_ONLY_DOS for ultragetopt*_dos() to replace ultragetopt*()

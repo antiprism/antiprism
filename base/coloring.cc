@@ -42,10 +42,10 @@
 #include "random.h"
 #include "utils.h"
 
+using std::map;
+using std::set;
 using std::string;
 using std::vector;
-using std::set;
-using std::map;
 
 namespace anti {
 

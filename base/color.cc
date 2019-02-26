@@ -35,10 +35,10 @@
 #include <string>
 #include <vector>
 
-using std::vector;
-using std::string;
-using std::min;
 using std::max;
+using std::min;
+using std::string;
+using std::vector;
 
 namespace anti {
 

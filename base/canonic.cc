@@ -43,9 +43,9 @@
 #include "geometryinfo.h"
 #include "planar.h"
 
+using std::map;
 using std::string;
 using std::vector;
-using std::map;
 
 namespace anti {
 

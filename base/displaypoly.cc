@@ -41,10 +41,10 @@
 #include "utils.h"
 #include "vrmlwriter.h"
 
-using std::string;
-using std::vector;
 using std::map;
 using std::set;
+using std::string;
+using std::vector;
 
 namespace anti {
 
@@ -138,11 +138,12 @@ int DisplayPoly::animate()
 
 static void vrml_translation_begin(FILE *ofile, const Scene &scen)
 {
-  fprintf(ofile, "# scene transformations\n"
-                 "Transform {\n"
-                 "   translation %s\n"
-                 "   children [\n\n"
-                 "# forget indentation and carry on...\n\n",
+  fprintf(ofile,
+          "# scene transformations\n"
+          "Transform {\n"
+          "   translation %s\n"
+          "   children [\n\n"
+          "# forget indentation and carry on...\n\n",
           vrml_vec(-scen.cur_camera().get_lookat()).c_str());
 }
 
@@ -154,118 +155,122 @@ static void vrml_translation_end(FILE *ofile)
 void DisplayPoly::vrml_protos(FILE *ofile)
 {
   Color vcol = def_col(VERTS);
-  fprintf(ofile, "\n"
-                 "PROTO V_%s [\n"
-                 "   field SFVec3f C 0 0 0    # centre\n"
-                 "   field SFColor clr %s     # colour\n"
-                 "   field SFFloat trn %.4f     # transparency\n"
-                 "]\n"
-                 "{\n"
-                 "   Transform {\n"
-                 "      translation IS C\n"
-                 "      children [\n"
-                 "         Shape {\n"
-                 "            appearance Appearance {\n"
-                 "               material Material {\n"
-                 "                  diffuseColor IS clr\n"
-                 "                  transparency IS trn\n"
-                 "               }\n"
-                 "            }\n"
-                 "            geometry Sphere {\n"
-                 "               radius %g\n"
-                 "            }\n"
-                 "         }\n"
-                 "      ]\n"
-                 "   }\n"
-                 "}\n",
+  fprintf(ofile,
+          "\n"
+          "PROTO V_%s [\n"
+          "   field SFVec3f C 0 0 0    # centre\n"
+          "   field SFColor clr %s     # colour\n"
+          "   field SFFloat trn %.4f     # transparency\n"
+          "]\n"
+          "{\n"
+          "   Transform {\n"
+          "      translation IS C\n"
+          "      children [\n"
+          "         Shape {\n"
+          "            appearance Appearance {\n"
+          "               material Material {\n"
+          "                  diffuseColor IS clr\n"
+          "                  transparency IS trn\n"
+          "               }\n"
+          "            }\n"
+          "            geometry Sphere {\n"
+          "               radius %g\n"
+          "            }\n"
+          "         }\n"
+          "      ]\n"
+          "   }\n"
+          "}\n",
           dots2underscores(sc_geom->get_name()).c_str(), vrml_col(vcol).c_str(),
           vcol.get_transparency_d(), get_vert_rad());
 
   Color ecol = def_col(EDGES);
-  fprintf(ofile, "\n"
-                 "PROTO E_%s [\n"
-                 "   field SFVec3f C 0 0 0     # centre\n"
-                 "   field SFRotation R 1 0 0 0     # rotation\n"
-                 "   field SFColor clr %s    # colour\n"
-                 "   field SFFloat trn %.4f     # transparency\n"
-                 "   field SFFloat rad %g    # radius\n"
-                 "   field SFFloat ht 1   # height\n"
-                 "]\n"
-                 "{\n"
-                 "   Transform {\n"
-                 "      translation IS C\n"
-                 "      rotation IS R\n"
-                 "      children [\n"
-                 "         Shape {\n"
-                 "            appearance Appearance {\n"
-                 "               material Material {\n"
-                 "                  diffuseColor IS clr\n"
-                 "                  transparency IS trn\n"
-                 "               }\n"
-                 "            }\n"
-                 "            geometry Cylinder {\n"
-                 "               radius IS rad\n"
-                 "               height IS ht\n"
-                 "            }\n"
-                 "         }\n"
-                 "      ]\n"
-                 "   }\n"
-                 "}\n",
+  fprintf(ofile,
+          "\n"
+          "PROTO E_%s [\n"
+          "   field SFVec3f C 0 0 0     # centre\n"
+          "   field SFRotation R 1 0 0 0     # rotation\n"
+          "   field SFColor clr %s    # colour\n"
+          "   field SFFloat trn %.4f     # transparency\n"
+          "   field SFFloat rad %g    # radius\n"
+          "   field SFFloat ht 1   # height\n"
+          "]\n"
+          "{\n"
+          "   Transform {\n"
+          "      translation IS C\n"
+          "      rotation IS R\n"
+          "      children [\n"
+          "         Shape {\n"
+          "            appearance Appearance {\n"
+          "               material Material {\n"
+          "                  diffuseColor IS clr\n"
+          "                  transparency IS trn\n"
+          "               }\n"
+          "            }\n"
+          "            geometry Cylinder {\n"
+          "               radius IS rad\n"
+          "               height IS ht\n"
+          "            }\n"
+          "         }\n"
+          "      ]\n"
+          "   }\n"
+          "}\n",
           dots2underscores(sc_geom->get_name()).c_str(), vrml_col(ecol).c_str(),
           ecol.get_transparency_d(), get_edge_rad());
 
   Color fcol = def_col(FACES);
-  fprintf(ofile, "\n"
-                 "PROTO F0_%s [\n"
-                 "   field MFInt32 ci [0 0 0 -1]  # coordinate index node\n"
-                 "   field SFNode vc NULL         # coords\n"
-                 "   field SFColor clr %s  # colour\n"
-                 "   field SFFloat trn %.4f  # transparency\n"
-                 "]\n"
-                 "{\n"
-                 "   Shape {\n"
-                 "      appearance Appearance {\n"
-                 "         material Material {\n"
-                 "            diffuseColor IS clr\n"
-                 "            transparency IS trn\n"
-                 "         }\n"
-                 "      }\n"
-                 "      geometry IndexedFaceSet  {\n"
-                 "         colorPerVertex FALSE\n"
-                 "         solid FALSE\n"
-                 "         coord IS vc\n"
-                 "         coordIndex IS ci\n"
-                 "      }\n"
-                 "  }\n"
-                 "}\n",
+  fprintf(ofile,
+          "\n"
+          "PROTO F0_%s [\n"
+          "   field MFInt32 ci [0 0 0 -1]  # coordinate index node\n"
+          "   field SFNode vc NULL         # coords\n"
+          "   field SFColor clr %s  # colour\n"
+          "   field SFFloat trn %.4f  # transparency\n"
+          "]\n"
+          "{\n"
+          "   Shape {\n"
+          "      appearance Appearance {\n"
+          "         material Material {\n"
+          "            diffuseColor IS clr\n"
+          "            transparency IS trn\n"
+          "         }\n"
+          "      }\n"
+          "      geometry IndexedFaceSet  {\n"
+          "         colorPerVertex FALSE\n"
+          "         solid FALSE\n"
+          "         coord IS vc\n"
+          "         coordIndex IS ci\n"
+          "      }\n"
+          "  }\n"
+          "}\n",
           dots2underscores(sc_geom->get_name()).c_str(), vrml_col(fcol).c_str(),
           fcol.get_transparency_d());
 
-  fprintf(ofile, "\n"
-                 "PROTO F_%s [\n"
-                 "   field MFInt32 ci [0 0 0 -1]  # coordinate index node\n"
-                 "   field SFNode vc NULL         # coords\n"
-                 "   field MFColor clrs [0 0 0]  # colours\n"
-                 //"   field SFColor clr %s  # colour\n"
-                 "   field SFFloat trn %.4f  # transparency\n"
-                 "]\n"
-                 "{\n"
-                 "   Shape {\n"
-                 "      appearance Appearance {\n"
-                 "         material Material {\n"
-                 //"            diffuseColor IS clr\n"
-                 "            transparency IS trn\n"
-                 "         }\n"
-                 "      }\n"
-                 "      geometry IndexedFaceSet  {\n"
-                 "         colorPerVertex FALSE\n"
-                 "         solid FALSE\n"
-                 "         coord IS vc\n"
-                 "         coordIndex IS ci\n"
-                 "         color Color { color IS clrs }\n"
-                 "      }\n"
-                 "  }\n"
-                 "}\n",
+  fprintf(ofile,
+          "\n"
+          "PROTO F_%s [\n"
+          "   field MFInt32 ci [0 0 0 -1]  # coordinate index node\n"
+          "   field SFNode vc NULL         # coords\n"
+          "   field MFColor clrs [0 0 0]  # colours\n"
+          //"   field SFColor clr %s  # colour\n"
+          "   field SFFloat trn %.4f  # transparency\n"
+          "]\n"
+          "{\n"
+          "   Shape {\n"
+          "      appearance Appearance {\n"
+          "         material Material {\n"
+          //"            diffuseColor IS clr\n"
+          "            transparency IS trn\n"
+          "         }\n"
+          "      }\n"
+          "      geometry IndexedFaceSet  {\n"
+          "         colorPerVertex FALSE\n"
+          "         solid FALSE\n"
+          "         coord IS vc\n"
+          "         coordIndex IS ci\n"
+          "         color Color { color IS clrs }\n"
+          "      }\n"
+          "  }\n"
+          "}\n",
           dots2underscores(sc_geom->get_name()).c_str(),
           /*vrml_col(fcol).c_str(),*/
           fcol.get_transparency_d());
@@ -317,19 +322,20 @@ void DisplayPoly::vrml_verts(FILE *ofile, int sig_digits)
 
 void DisplayPoly::vrml_verts_l(FILE *ofile)
 {
-  fprintf(ofile, "# Vertex elements\n"
-                 "\n"
-                 "Shape {\n"
-                 "   appearance Appearance {\n"
-                 "      material Material {\n"
-                 "         emissiveColor %s\n"
-                 "      }\n"
-                 "   }\n"
-                 "   geometry PointSet {\n"
-                 "      coord USE CRDS\n"
-                 "   }\n"
-                 "}\n"
-                 "\n",
+  fprintf(ofile,
+          "# Vertex elements\n"
+          "\n"
+          "Shape {\n"
+          "   appearance Appearance {\n"
+          "      material Material {\n"
+          "         emissiveColor %s\n"
+          "      }\n"
+          "   }\n"
+          "   geometry PointSet {\n"
+          "      coord USE CRDS\n"
+          "   }\n"
+          "}\n"
+          "\n",
           vrml_col(def_col(VERTS)).c_str());
 
   fprintf(ofile, "\n\n\n");
@@ -371,12 +377,13 @@ void DisplayPoly::vrml_edges(FILE *ofile)
 void DisplayPoly::vrml_edges_l(FILE *ofile)
 {
   fprintf(ofile, "# Edge elements\n");
-  fprintf(ofile, "Shape {\n"
-                 "   appearance Appearance {\n"
-                 "      material Material {\n"
-                 "         emissiveColor %s\n"
-                 "      }\n"
-                 "   }\n",
+  fprintf(ofile,
+          "Shape {\n"
+          "   appearance Appearance {\n"
+          "      material Material {\n"
+          "         emissiveColor %s\n"
+          "      }\n"
+          "   }\n",
           vrml_col(def_col(EDGES)).c_str());
   fprintf(ofile, "   geometry IndexedLineSet {\n"
                  "      colorPerVertex FALSE\n"
@@ -489,38 +496,42 @@ void DisplayPoly::vrml_geom(FILE *ofile, const Scene &scen, int sig_digits)
 
 void DisplayPoly::pov_default_vals(FILE *ofile)
 {
-  fprintf(ofile, "#declare PtsCentre = %s;\n"
-                 "#declare PtsWidth = %g;\n"
-                 "#declare PtsBallRad = %g;\n"
-                 "\n",
+  fprintf(ofile,
+          "#declare PtsCentre = %s;\n"
+          "#declare PtsWidth = %g;\n"
+          "#declare PtsBallRad = %g;\n"
+          "\n",
           pov_vec(sc_geom->get_centre()).c_str(), sc_geom->get_width(),
           sc_geom->get_v_ball_rad());
 
-  fprintf(
-      ofile, "// Display flags\n"
-             "#declare show = 1; // Show object, may be 1 - show, 0 hide\n"
-             "\n"
-             "   // Show elements of a type values may be 1 - show, 0 - hide\n"
-             "   #declare verts_show = %d;\n"
-             "   #declare edges_show = %d;\n"
-             "   #declare faces_show = %d;\n"
-             "\n",
-      elem(VERTS).get_show(), elem(EDGES).get_show(), elem(FACES).get_show());
+  fprintf(ofile,
+          "// Display flags\n"
+          "#declare show = 1; // Show object, may be 1 - show, 0 hide\n"
+          "\n"
+          "   // Show elements of a type values may be 1 - show, 0 - hide\n"
+          "   #declare verts_show = %d;\n"
+          "   #declare edges_show = %d;\n"
+          "   #declare faces_show = %d;\n"
+          "\n",
+          elem(VERTS).get_show(), elem(EDGES).get_show(),
+          elem(FACES).get_show());
 
-  fprintf(ofile, "// Display values\n"
-                 "   // Size (or radius) of elements\n"
-                 "   #declare vert_sz = %g; // %g\n"
-                 "   #declare edge_sz = %g; // %g\n"
-                 "   #declare face_sz = %g; // %g\n"
-                 "\n",
+  fprintf(ofile,
+          "// Display values\n"
+          "   // Size (or radius) of elements\n"
+          "   #declare vert_sz = %g; // %g\n"
+          "   #declare edge_sz = %g; // %g\n"
+          "   #declare face_sz = %g; // %g\n"
+          "\n",
           get_vert_rad(), get_vert_rad(), get_edge_rad(), get_edge_rad(),
           elem(FACES).get_size(), elem(FACES).get_size());
 
-  fprintf(ofile, "   // Colour of elements (used to set up default textures\n"
-                 "   #declare vert_col = %s; // %s\n"
-                 "   #declare edge_col = %s; // %s\n"
-                 "   #declare face_col = %s; // %s\n"
-                 "\n",
+  fprintf(ofile,
+          "   // Colour of elements (used to set up default textures\n"
+          "   #declare vert_col = %s; // %s\n"
+          "   #declare edge_col = %s; // %s\n"
+          "   #declare face_col = %s; // %s\n"
+          "\n",
           pov_col(def_col(VERTS)).c_str(), pov_col(def_col(VERTS)).c_str(),
           pov_col(def_col(EDGES)).c_str(), pov_col(def_col(EDGES)).c_str(),
           pov_col(def_col(FACES)).c_str(), pov_col(def_col(FACES)).c_str());
@@ -572,8 +583,9 @@ void DisplayPoly::pov_include_files(FILE *ofile)
 void DisplayPoly::pov_vert_arrays(FILE *ofile, int sig_digits)
 {
   const vector<Vec3d> &vs = disp_geom.verts();
-  fprintf(ofile, "// Array of vertex coordinates\n"
-                 "#declare num_verts = %lu;\n",
+  fprintf(ofile,
+          "// Array of vertex coordinates\n"
+          "#declare num_verts = %lu;\n",
           (unsigned long)vs.size());
 
   if (!vs.size())
@@ -601,8 +613,9 @@ void DisplayPoly::pov_vert_arrays(FILE *ofile, int sig_digits)
 void DisplayPoly::pov_edge_arrays(FILE *ofile)
 {
   const vector<vector<int>> &es = disp_geom.edges();
-  fprintf(ofile, "// Array of edge indexes\n"
-                 "#declare num_edges = %lu;\n",
+  fprintf(ofile,
+          "// Array of edge indexes\n"
+          "#declare num_edges = %lu;\n",
           (unsigned long)es.size());
   if (!es.size())
     return;
@@ -634,9 +647,10 @@ void DisplayPoly::pov_face_arrays(FILE *ofile)
   for (const auto &f : fs)
     num_face_items += f.size() + 1; // add 1 for the numper of points
 
-  fprintf(ofile, "// Array of face vertex counts and indexes\n"
-                 "#declare num_faces = %lu;\n"
-                 "#declare num_face_items = %d;\n",
+  fprintf(ofile,
+          "// Array of face vertex counts and indexes\n"
+          "#declare num_faces = %lu;\n"
+          "#declare num_face_items = %d;\n",
           (unsigned long)fs.size(), num_face_items);
   if (!fs.size())
     return;
@@ -769,16 +783,17 @@ DisplayNumLabels::DisplayNumLabels()
 void DisplayNumLabels::pov_geom(FILE *ofile, const Scene & /*scen*/,
                                 int /*sig_dgts*/)
 {
-  fprintf(
-      ofile, "// Label display flags\n"
-             "#declare show = 1; // Show object, may be 1 - show, 0 hide\n"
-             "\n"
-             "   // Show elements of a type values may be 1 - show, 0 - hide\n"
-             "   #declare vert_labs_show = %d;\n"
-             "   #declare edge_labs_show = %d;\n"
-             "   #declare face_labs_show = %d;\n"
-             "\n",
-      elem(VERTS).get_show(), elem(EDGES).get_show(), elem(FACES).get_show());
+  fprintf(ofile,
+          "// Label display flags\n"
+          "#declare show = 1; // Show object, may be 1 - show, 0 hide\n"
+          "\n"
+          "   // Show elements of a type values may be 1 - show, 0 - hide\n"
+          "   #declare vert_labs_show = %d;\n"
+          "   #declare edge_labs_show = %d;\n"
+          "   #declare face_labs_show = %d;\n"
+          "\n",
+          elem(VERTS).get_show(), elem(EDGES).get_show(),
+          elem(FACES).get_show());
 
   fprintf(ofile,
           "   // Label colour for elements (used to set up default textures\n"
@@ -845,33 +860,34 @@ void DisplayNumLabels::vrml_protos(FILE *ofile, const Scene &scen)
   Vec3d txt_col = Vec3d(bg_dark, bg_dark, bg_dark);
   double txt_sz = scen.get_width() / 30;
 
-  fprintf(ofile, "\n"
-                 "PROTO LAB [\n"
-                 "   field SFColor lab_clr %s"
-                 "   field MFString lab_txt \"\"\n"
-                 "   field SFVec3f lab_pos 0 0 0\n"
-                 "]\n"
-                 "{\n"
-                 "   Transform {\n"
-                 "      translation IS lab_pos\n"
-                 "      children [\n"
-                 "         Billboard {\n"
-                 "            axisOfRotation 0 0 0\n"
-                 "            children [\n"
-                 "               Shape {\n"
-                 "                  geometry Text { string IS lab_txt "
-                 "fontStyle FontStyle { size %g justify \"MIDDLE\"} }\n"
-                 "                  appearance Appearance {\n"
-                 "                     material Material {\n"
-                 "                        diffuseColor IS lab_clr\n"
-                 "                     }\n"
-                 "                  }\n"
-                 "               }\n"
-                 "            ]\n"
-                 "         }\n"
-                 "      ]\n"
-                 "   }\n"
-                 "}\n",
+  fprintf(ofile,
+          "\n"
+          "PROTO LAB [\n"
+          "   field SFColor lab_clr %s"
+          "   field MFString lab_txt \"\"\n"
+          "   field SFVec3f lab_pos 0 0 0\n"
+          "]\n"
+          "{\n"
+          "   Transform {\n"
+          "      translation IS lab_pos\n"
+          "      children [\n"
+          "         Billboard {\n"
+          "            axisOfRotation 0 0 0\n"
+          "            children [\n"
+          "               Shape {\n"
+          "                  geometry Text { string IS lab_txt "
+          "fontStyle FontStyle { size %g justify \"MIDDLE\"} }\n"
+          "                  appearance Appearance {\n"
+          "                     material Material {\n"
+          "                        diffuseColor IS lab_clr\n"
+          "                     }\n"
+          "                  }\n"
+          "               }\n"
+          "            ]\n"
+          "         }\n"
+          "      ]\n"
+          "   }\n"
+          "}\n",
           vrml_col(txt_col).c_str(), txt_sz);
 
   char lab_lets[3];

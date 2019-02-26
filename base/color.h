@@ -24,7 +24,7 @@
 
 /*!\file color.h
  * \brief A colour value class
-*/
+ */
 
 #ifndef COLOR_H
 #define COLOR_H

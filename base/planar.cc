@@ -38,13 +38,13 @@
 
 #include "planar.h"
 
-using std::string;
-using std::vector;
-using std::set;
-using std::sort;
-using std::pair;
 using std::make_pair;
 using std::map;
+using std::pair;
+using std::set;
+using std::sort;
+using std::string;
+using std::vector;
 
 namespace anti {
 

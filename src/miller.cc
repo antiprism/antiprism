@@ -37,10 +37,10 @@
 
 #include "../base/antiprism.h"
 
-using std::string;
-using std::vector;
 using std::map;
 using std::set;
+using std::string;
+using std::vector;
 
 using namespace anti;
 

@@ -40,8 +40,8 @@
 #include "../base/antiprism.h"
 
 using std::string;
-using std::vector;
 using std::swap;
+using std::vector;
 
 using namespace anti;
 
@@ -1519,8 +1519,9 @@ vector<Geometry> symmetro::calc_polygons(
           }
           else if (i == 1) {
             pgeom[j].add_vert(
-                rot_inv * Trans3d::rotate(Vec3d(0, 0, 1),
-                                          (idx * angle(n, d[j])) + bump_angle) *
+                rot_inv *
+                Trans3d::rotate(Vec3d(0, 0, 1),
+                                (idx * angle(n, d[j])) + bump_angle) *
                 Q);
           }
         }
@@ -1882,10 +1883,10 @@ Geometry build_frame(vector<Geometry> &pgeom, const symmetro_opts &opts)
     if (strchr("SCHV", opts.sym)) {
       // Vec3d v2 = Vec3d(v1[0],v1[1],-v1[2]) *
       // Trans3d::rotate(0,0,deg2rad(180.0/opts.p));
-      Vec3d v2 =
-          Vec3d(v1[0], v1[1], -v1[2]) *
-          Trans3d::rotate(0, 0, (M_PI * double(opts.d[0]) / double(opts.p) *
-                                 (is_even(opts.p) ? 2.0 : 1.0)));
+      Vec3d v2 = Vec3d(v1[0], v1[1], -v1[2]) *
+                 Trans3d::rotate(0, 0,
+                                 (M_PI * double(opts.d[0]) / double(opts.p) *
+                                  (is_even(opts.p) ? 2.0 : 1.0)));
 
       ax = vcross(v1, v2).unit();
       ang = angle_around_axis(v1, v2, ax);

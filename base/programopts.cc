@@ -35,8 +35,8 @@
 #include <map>
 #include <string.h>
 
-using std::string;
 using std::map;
+using std::string;
 
 namespace anti {
 

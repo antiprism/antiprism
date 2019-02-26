@@ -40,10 +40,10 @@
 #include "../base/antiprism.h"
 #include "rep_print.h"
 
+using std::pair;
+using std::set;
 using std::string;
 using std::vector;
-using std::set;
-using std::pair;
 
 using namespace anti;
 

@@ -40,11 +40,11 @@
 
 #include "../base/antiprism.h"
 
-using std::string;
-using std::vector;
-using std::set;
 using std::map;
 using std::pair;
+using std::set;
+using std::string;
+using std::vector;
 
 using namespace anti;
 
@@ -216,8 +216,9 @@ bool bond_base::add_brick(char type, const string &brick_str, char *errmsg)
     if (f0 < 0 || f0 >= (int)base.faces().size()) {
       if (errmsg) {
         if (base.faces().size())
-          snprintf(errmsg, MSG_SZ, "invalid base face '%d', "
-                                   "last face is %d",
+          snprintf(errmsg, MSG_SZ,
+                   "invalid base face '%d', "
+                   "last face is %d",
                    f0, (int)base.faces().size() - 1);
         else
           snprintf(errmsg, MSG_SZ, "base has no faces");
@@ -569,10 +570,10 @@ int main(int argc, char *argv[])
   Geometry geom;
   opts.read_or_error(geom, opts.ifile);
 
-  if(opts.has_merge) {
+  if (opts.has_merge) {
     unsigned int num_verts = geom.verts().size();
     merge_coincident_elements(geom, "v");
-    if(geom.verts().size() != num_verts)
+    if (geom.verts().size() != num_verts)
       opts.warning("coincident vertices in base geometry have been merged",
                    'F');
   }

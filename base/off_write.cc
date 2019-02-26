@@ -36,9 +36,9 @@
 #include "private_off_file.h"
 #include "utils.h"
 
-using std::vector;
-using std::string;
 using std::map;
+using std::string;
+using std::vector;
 
 FILE *file_open_w(string file_name, char *errmsg)
 {

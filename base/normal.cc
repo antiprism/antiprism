@@ -24,7 +24,7 @@
 
 /*!\file normals.cc
  * \brief classes for working with normals
-*/
+ */
 
 #include <string>
 #include <vector>

@@ -42,13 +42,13 @@
 #include "private_misc.h"
 #include "utils.h"
 
-using std::vector;
-using std::set;
+using std::logical_not;
 using std::map;
 using std::pair;
-using std::swap;
-using std::logical_not;
+using std::set;
 using std::string;
+using std::swap;
+using std::vector;
 
 namespace anti {
 

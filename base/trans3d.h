@@ -24,7 +24,7 @@
 
 /*!\file trans3d.h
  *\brief Matrix transformations for 3D geometry.
-*/
+ */
 
 #ifndef TRANS3D_H
 #define TRANS3D_H

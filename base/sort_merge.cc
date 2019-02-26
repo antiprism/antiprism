@@ -42,10 +42,10 @@
 #include "geometryutils.h"
 #include "mathutils.h"
 
-using std::string;
-using std::vector;
 using std::map;
 using std::set;
+using std::string;
+using std::vector;
 
 namespace anti {
 

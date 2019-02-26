@@ -311,8 +311,8 @@ public:
  * \param line the string containing the map specifier, applying to all
  *  element types by default, but letters from vef may by specified after
  *  a comma to indicate the element types that the coloring will be set for.
-* \return status, which evaluates to \c true if a valid colourings line was
-*  read, otherwise \c false */
+ * \return status, which evaluates to \c true if a valid colourings line was
+ *  read, otherwise \c false */
 Status read_colorings(Coloring clrngs[], const char *line);
 
 } // namespace anti

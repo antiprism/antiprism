@@ -35,7 +35,6 @@
 #include <limits.h>
 #include <map>
 #include <math.h>
-#include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,9 +46,9 @@
 
 #include "utils.h"
 
+using std::map;
 using std::string;
 using std::vector;
-using std::map;
 
 namespace anti {
 

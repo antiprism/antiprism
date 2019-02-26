@@ -43,8 +43,8 @@
 #include "lattice_grid.h"
 
 using std::string;
-using std::vector;
 using std::swap;
+using std::vector;
 
 using namespace anti;
 
@@ -1019,8 +1019,9 @@ int bravais_check(string &crystal_system, string &centering,
   if (angle_rule[crystal_system_index] == 3) {
     if ((alpha && alpha != 90.0) || (beta && beta != 90.0) ||
         (gamma && gamma != 90.0))
-      fprintf(stderr, "warning: for crystal system %s, alpha, beta and gamma "
-                      "must be 90 degrees. -a ignored\n",
+      fprintf(stderr,
+              "warning: for crystal system %s, alpha, beta and gamma "
+              "must be 90 degrees. -a ignored\n",
               crystal_system.c_str());
     alpha = 90;
     beta = 90;
@@ -1035,9 +1036,10 @@ int bravais_check(string &crystal_system, string &centering,
       // order)
       if (angle_rule[crystal_system_index] == 5 &&
           !(alpha == 90 && beta == 90 && gamma == 120)) {
-    fprintf(stderr, "warning: for crystal system %s, of alpha, beta and gamma, "
-                    "two values must be 90 degrees and one value 120 degrees. "
-                    "-a ignored\n",
+    fprintf(stderr,
+            "warning: for crystal system %s, of alpha, beta and gamma, "
+            "two values must be 90 degrees and one value 120 degrees. "
+            "-a ignored\n",
             crystal_system.c_str());
     alpha = 90;
     beta = 90;
@@ -1552,8 +1554,9 @@ void bravais_dual(Geometry &geom, const vector<Vec3d> &primitive_vectors,
     const vector<Vec3d> &verts = geom.verts();
     for (unsigned int i = 0; i < 4; i++) {
       if (prim_vec_idxs[i] >= (int)verts.size()) {
-        fprintf(stderr, "error in bravais_dual: vertex %d does not exist. "
-                        "cannot perform dual\n",
+        fprintf(stderr,
+                "error in bravais_dual: vertex %d does not exist. "
+                "cannot perform dual\n",
                 prim_vec_idxs[i]);
         return;
       }

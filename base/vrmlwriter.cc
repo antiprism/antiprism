@@ -86,10 +86,11 @@ void VrmlWriter::header(FILE *ofile)
 
 void VrmlWriter::scene_header(FILE *ofile, Scene &scen)
 {
-  fprintf(ofile, "Background { skyColor [ %s ] }\n"
-                 "\n"
-                 "DirectionalLight { intensity 0 ambientIntensity 0.5}\n"
-                 "\n",
+  fprintf(ofile,
+          "Background { skyColor [ %s ] }\n"
+          "\n"
+          "DirectionalLight { intensity 0 ambientIntensity 0.5}\n"
+          "\n",
           vrml_col(scen.get_bg_col()).c_str());
 }
 
@@ -109,12 +110,13 @@ void VrmlWriter::cameras(FILE *ofile, Scene &scen)
     if (ax_ang.get_axis().is_set())
       axis = ax_ang.get_axis();
 
-    fprintf(ofile, "      DEF %s Viewpoint {\n"
-                   "         position %s\n"
-                   "         orientation %s %g\n"
-                   "         fieldOfView %g\n"
-                   "         description \"%s\"\n"
-                   "      }\n",
+    fprintf(ofile,
+            "      DEF %s Viewpoint {\n"
+            "         position %s\n"
+            "         orientation %s %g\n"
+            "         fieldOfView %g\n"
+            "         description \"%s\"\n"
+            "      }\n",
             scen.get_camera_name(i).c_str(), vrml_vec(cam_pos).c_str(),
             vrml_vec(axis).c_str(), ax_ang.get_ang(), 0.78 / cam.get_persp(),
             scen.get_camera_name(i).c_str());

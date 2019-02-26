@@ -39,11 +39,11 @@
 
 #include "../base/antiprism.h"
 
-using std::string;
-using std::vector;
-using std::set;
 using std::map;
 using std::pair;
+using std::set;
+using std::string;
+using std::vector;
 
 using namespace anti;
 
@@ -71,8 +71,9 @@ public:
   double epsilon;
 
   radial_opts()
-      : ProgramOpts("off_color_radial"), coloring_method(0), axis_orders_set(false), sym_str(""),
-        show_axes(0), axes_coloring(1), map_string("rng"), face_opacity(-1), epsilon(0)
+      : ProgramOpts("off_color_radial"), coloring_method(0),
+        axis_orders_set(false), sym_str(""), show_axes(0), axes_coloring(1),
+        map_string("rng"), face_opacity(-1), epsilon(0)
   {
   }
   void process_command_line(int argc, char **argv);
@@ -151,8 +152,7 @@ void radial_opts::process_command_line(int argc, char **argv)
       int option = atoi(arg_id.c_str());
       if (option == 1)
         coloring_method = 1;
-      else
-      if (option == 2)
+      else if (option == 2)
         show_axes = 2;
       break;
     }
@@ -196,12 +196,14 @@ void radial_opts::process_command_line(int argc, char **argv)
       for (int i = 0; i < sz; i++) {
         if (i == 0) {
           print_status_or_exit(
-              get_arg_id(tokens[i].c_str(), &arg_id, "primary=1|secondary=2|tertiary=3|all=4", argmatch_add_id_maps),
+              get_arg_id(tokens[i].c_str(), &arg_id,
+                         "primary=1|secondary=2|tertiary=3|all=4",
+                         argmatch_add_id_maps),
               c);
           axis_order = atoi(arg_id.c_str());
           if (axis_order == 4) {
             for (int j = 0; j < 3; j++)
-               axis_orders[j] = j;
+              axis_orders[j] = j;
           }
           else {
             // axes start with 0
@@ -216,7 +218,7 @@ void radial_opts::process_command_line(int argc, char **argv)
             error("axis percent must be 1 or greater", c);
           if (axis_order == 4) {
             for (int j = 0; j < 3; j++)
-               axis_percent[j] = ax_pct;
+              axis_percent[j] = ax_pct;
           }
           else {
             axis_percent[axis_order] = ax_pct;
@@ -273,7 +275,6 @@ void radial_opts::process_command_line(int argc, char **argv)
     }
   }
 
-
   // default coloring method
   if (show_axes == 0)
     coloring_method = 1;
@@ -303,7 +304,8 @@ void radial_opts::process_command_line(int argc, char **argv)
       // nfold map is same as antiview
       auto *col_map0 = new ColorMapMap;
       col_map0->set_col(0, Color(0.6, 0.3, 0.0));
-      col_map0->set_col(1, Color(0.8, 0.8, 0.2)); // borrow color 2, nfold index can be 1
+      col_map0->set_col(
+          1, Color(0.8, 0.8, 0.2)); // borrow color 2, nfold index can be 1
       col_map0->set_col(2, Color(0.8, 0.8, 0.2));
       col_map0->set_col(3, Color(0.3, 0.8, 0.3));
       col_map0->set_col(4, Color(0.6, 0.0, 0.0));
@@ -316,8 +318,7 @@ void radial_opts::process_command_line(int argc, char **argv)
       col_map->set_wrap();
       map_axes.add_cmap(col_map);
     }
-    else
-    if (axes_coloring == 2) {
+    else if (axes_coloring == 2) {
       // match symmetro face colors
       map_string_axes = "map_red:blue:yellow";
       print_status_or_exit(map_axes.init(map_string_axes.c_str()), 'n');
@@ -401,14 +402,13 @@ Geometry get_axes(const Geometry &geom, Symmetry &sym, int ax_idx,
     int map_idx = 0;
     if (opts.axes_coloring == 1) {
       // reverse secondary and tertiary (why?)
-      int ax_tweaked = (ax_idx == 1) ?  2 : ((ax_idx == 2) ? 1 : 0);
-      map_idx = n_folds[ax_tweaked%n_folds.size()];
+      int ax_tweaked = (ax_idx == 1) ? 2 : ((ax_idx == 2) ? 1 : 0);
+      map_idx = n_folds[ax_tweaked % n_folds.size()];
       if ((ax_tweaked == 0) && (sym.get_sym_type() == Symmetry::S))
         map_idx /= 2;
-//fprintf(stderr,"ax_tweaked = %d map_idx = %d\n", ax_tweaked, map_idx);
+      // fprintf(stderr,"ax_tweaked = %d map_idx = %d\n", ax_tweaked, map_idx);
     }
-    else
-    if (opts.axes_coloring == 2) {
+    else if (opts.axes_coloring == 2) {
       map_idx = ax_idx;
     }
     for (unsigned int i = 0; i < axes.verts().size(); i++)
@@ -711,7 +711,7 @@ void append_axes(Geometry &geom, Geometry &axes, const radial_opts &opts)
     Color c;
     for (int i = 0; i < vsz; i++) {
       c = axes.colors(VERTS).get(i);
-      //int v_mirror = find_vert_by_coords(axes, -verts[i], opts.epsilon);
+      // int v_mirror = find_vert_by_coords(axes, -verts[i], opts.epsilon);
       axes.add_edge(make_edge(i, cent_vert), c);
     }
 
@@ -720,7 +720,7 @@ void append_axes(Geometry &geom, Geometry &axes, const radial_opts &opts)
       axes.transform(Trans3d::translate(-cent));
       axes.add_vert((-verts[0]), c);
       axes.transform(Trans3d::translate(cent));
-      axes.add_edge(make_edge((int)verts.size()-1, cent_vert), c);
+      axes.add_edge(make_edge((int)verts.size() - 1, cent_vert), c);
     }
   }
 
@@ -733,7 +733,8 @@ void append_axes(Geometry &geom, Geometry &axes, const radial_opts &opts)
   geom.append(axes);
 }
 
-void radial_coloring(Geometry &geom, const Geometry &axes, const radial_opts &opts)
+void radial_coloring(Geometry &geom, const Geometry &axes,
+                     const radial_opts &opts)
 {
   // centroid needs to be preserved before possible compound break down
   Vec3d cent = centroid(geom.verts());

@@ -42,8 +42,8 @@
 #include "../base/antiprism.h"
 #include "lattice_grid.h"
 
-using std::vector;
 using std::string;
+using std::vector;
 
 using namespace anti;
 

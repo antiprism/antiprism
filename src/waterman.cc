@@ -40,10 +40,10 @@
 #include "../base/antiprism.h"
 #include "lattice_grid.h"
 
+using std::make_pair;
+using std::pair;
 using std::string;
 using std::vector;
-using std::pair;
-using std::make_pair;
 
 using namespace anti;
 

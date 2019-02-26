@@ -41,13 +41,13 @@
 
 #include "../base/antiprism.h"
 
-using std::string;
-using std::vector;
-using std::pair;
 using std::make_pair;
 using std::map;
-using std::min;
 using std::max;
+using std::min;
+using std::pair;
+using std::string;
+using std::vector;
 
 using namespace anti;
 
@@ -1021,9 +1021,10 @@ bool pnpoly(const Geometry &polygon, const Vec3d &P, const int idx,
     //     (testx < (vertx_j-vertx_i) * (testy-verty_i) / (verty_j-verty_i) +
     //     vertx_i) )
     if ((double_gt(verty_i, testy, eps) != double_gt(verty_j, testy, eps)) &&
-        double_lt(testx, (vertx_j - vertx_i) * (testy - verty_i) /
-                                 (verty_j - verty_i) +
-                             vertx_i,
+        double_lt(testx,
+                  (vertx_j - vertx_i) * (testy - verty_i) /
+                          (verty_j - verty_i) +
+                      vertx_i,
                   eps))
       c = !c;
   }

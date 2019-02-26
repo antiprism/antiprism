@@ -24,7 +24,7 @@
 
 /*!\file geometry.h
  * \brief Classes to represent a geometry
-*/
+ */
 
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
@@ -473,7 +473,7 @@ public:
   /**\param e_idx edge index number.
    * \param P the point
    * \return The coordinates of the nearest point to \c P on the
-    * line of the edge. */
+   * line of the edge. */
   Vec3d edge_nearpt(int e_idx, Vec3d P) const;
 
   /// Get the nearest point on an edge to another point, for an edge.

@@ -40,11 +40,11 @@
 #include "../base/antiprism.h"
 #include "../base/vec_utils.h"
 
-using std::string;
-using std::vector;
 using std::map;
 using std::pair;
+using std::string;
 using std::swap;
+using std::vector;
 
 using namespace anti;
 

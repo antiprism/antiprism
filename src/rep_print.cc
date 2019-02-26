@@ -37,11 +37,11 @@
 #include <utility>
 #include <vector>
 
-using std::string;
-using std::set;
-using std::vector;
 using std::map;
 using std::pair;
+using std::set;
+using std::string;
+using std::vector;
 
 using namespace anti;
 
@@ -689,11 +689,11 @@ void rep_printer::e_face_idxs(int e_idx)
   auto ei = get_edge_face_pairs().find(edge);
   if (ei != get_edge_face_pairs().end()) {
     auto fidxs = ei->second;
-     for (unsigned int i = 0; i < fidxs.size(); i++) {
-       if (fidxs[i] >= 0)
-         fprintf(ofile, "%s%s", fidx2s(str, fidxs[i]),
-                 (i < fidxs.size() - 1) ? " " : "");
-     }
+    for (unsigned int i = 0; i < fidxs.size(); i++) {
+      if (fidxs[i] >= 0)
+        fprintf(ofile, "%s%s", fidx2s(str, fidxs[i]),
+                (i < fidxs.size() - 1) ? " " : "");
+    }
   }
 }
 

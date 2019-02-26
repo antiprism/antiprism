@@ -46,10 +46,10 @@
 
 #include "../base/antiprism.h"
 
-using std::string;
-using std::vector;
 using std::set;
+using std::string;
 using std::swap;
+using std::vector;
 
 using namespace anti;
 
@@ -351,9 +351,8 @@ int id_poly::lookup_sym_no(string sym)
     if (sym_norm2 == iso_delta_item_list[i].name)
       return i;
 
-    if (idx < 0 &&
-        strncmp(sym_norm2.c_str(), iso_delta_item_list[i].name,
-                sym_norm2.size()) == 0)
+    if (idx < 0 && strncmp(sym_norm2.c_str(), iso_delta_item_list[i].name,
+                           sym_norm2.size()) == 0)
       idx = i;
   }
 

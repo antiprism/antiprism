@@ -39,11 +39,11 @@
 #include "geometryinfo.h"
 #include "geometryutils.h"
 
-using std::vector;
 using std::map;
 using std::pair;
-using std::swap;
 using std::string;
+using std::swap;
+using std::vector;
 
 namespace anti {
 // truncate vertices specified by index number

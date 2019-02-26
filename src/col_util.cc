@@ -39,10 +39,10 @@
 
 #include "../base/antiprism.h"
 
+using std::max;
+using std::min;
 using std::string;
 using std::vector;
-using std::min;
-using std::max;
 
 using namespace anti;
 

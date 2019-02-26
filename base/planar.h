@@ -36,9 +36,9 @@
 #include "geometryutils.h"
 #include "vec3d.h"
 
+using std::map;
 using std::string;
 using std::vector;
-using std::map;
 
 namespace anti {
 

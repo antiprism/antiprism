@@ -35,9 +35,9 @@
 
 #include "../base/antiprism.h"
 
+using std::map;
 using std::string;
 using std::vector;
-using std::map;
 
 using namespace anti;
 

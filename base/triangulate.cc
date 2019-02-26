@@ -36,8 +36,8 @@
 #include "geometry.h"
 #include "tesselator/glu.h"
 
-using std::vector;
 using std::map;
+using std::vector;
 
 #ifdef HAVE_CONFIG_H
 #include "../config.h"

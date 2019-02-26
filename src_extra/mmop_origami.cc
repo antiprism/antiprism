@@ -331,12 +331,12 @@ Status make_origami(const Geometry &geom, Geometry &orig, iter_params it_params,
 
 void truncate_faces(Geometry &orig, double trunc_len)
 {
-  map< vector<int>, int > e2v; // edge to truncation vertex
+  map<vector<int>, int> e2v; // edge to truncation vertex
   for (int i = 0; i < (int)orig.faces().size(); i++) {
     auto face = orig.faces(i);
     // Truncate the vertex at F.
     int N = orig.colors(FACES).get(i).get_index();
-    double ang = M_PI / N;  // Original vertex angle
+    double ang = M_PI / N; // Original vertex angle
     double ang_b = ang - atan(2 * trunc_len * tan(ang));
     double len2 = sqrt(pow(trunc_len, 2) + pow(0.5 / tan(ang), 2)) * cos(ang_b);
 
@@ -367,7 +367,6 @@ void truncate_faces(Geometry &orig, double trunc_len)
   orig.del(VERTS, orig.get_info().get_free_verts()); // delete F vertices
 }
 
-
 int main(int argc, char *argv[])
 {
   mmop_opts opts;
@@ -379,8 +378,8 @@ int main(int argc, char *argv[])
   if (!geom.faces().size())
     opts.error("input file contains no faces");
 
-  if(!opts.keep_orient && !geom.orient(1)) // positive orientation
-      opts.error("base polyhedron cannot be oriented: override with option -k");
+  if (!opts.keep_orient && !geom.orient(1)) // positive orientation
+    opts.error("base polyhedron cannot be oriented: override with option -k");
 
   Geometry origami;
   make_origami(geom, origami, opts.it_params, opts.adjust_fact / 200,
@@ -389,19 +388,19 @@ int main(int argc, char *argv[])
     truncate_faces(origami, opts.trunc_len / 2);
 
   GeometryInfo info(origami);
-  for(const auto &face : origami.faces()) {
+  for (const auto &face : origami.faces()) {
     int hub_idx = face[0];
     origami.colors(VERTS).set(hub_idx, Color::invisible);
-    for(int con : info.get_vert_cons()[hub_idx])
+    for (int con : info.get_vert_cons()[hub_idx])
       origami.add_edge(hub_idx, con, Color::invisible);
   }
 
-  if(opts.color_method == 'v')
+  if (opts.color_method == 'v')
     for (unsigned int i = 0; i < origami.faces().size(); i++)
       origami.colors(FACES).set(i, geom.colors(VERTS).get(origami.faces(i, 0)));
 
   for (int i = 0; i < 3; i++)
-      opts.clrngs[i].set_geom(&origami);
+    opts.clrngs[i].set_geom(&origami);
 
   opts.clrngs[0].v_apply_cmap();
   opts.clrngs[1].e_apply_cmap();
