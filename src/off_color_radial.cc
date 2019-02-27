@@ -299,13 +299,14 @@ void radial_opts::process_command_line(int argc, char **argv)
   print_status_or_exit(map.init(map_string.c_str()), 'm');
 
   // default axes map
-  if (!map_string_axes.size()) {
+  if (map_string_axes.size())
+    print_status_or_exit(map_axes.init(map_string_axes.c_str()), 'n');
+  else {
     if (axes_coloring == 1) {
       // nfold map is same as antiview
       auto *col_map0 = new ColorMapMap;
       col_map0->set_col(0, Color(0.6, 0.3, 0.0));
-      col_map0->set_col(
-          1, Color(0.8, 0.8, 0.2)); // borrow color 2, nfold index can be 1
+      col_map0->set_col(1, Color());
       col_map0->set_col(2, Color(0.8, 0.8, 0.2));
       col_map0->set_col(3, Color(0.3, 0.8, 0.3));
       col_map0->set_col(4, Color(0.6, 0.0, 0.0));
@@ -406,6 +407,9 @@ Geometry get_axes(const Geometry &geom, Symmetry &sym, int ax_idx,
       map_idx = n_folds[ax_tweaked % n_folds.size()];
       if ((ax_tweaked == 0) && (sym.get_sym_type() == Symmetry::S))
         map_idx /= 2;
+      // sometimes nfold is 1, needs to be 2
+      if (map_idx == 1)
+        map_idx++;
       // fprintf(stderr,"ax_tweaked = %d map_idx = %d\n", ax_tweaked, map_idx);
     }
     else if (opts.axes_coloring == 2) {
