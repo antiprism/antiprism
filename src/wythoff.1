@@ -65,8 +65,10 @@ e.g. EFV relabels the pattern as V\->E,v\->e,E\->F,e\->f,F\->V,f\->v
 \fB\-M\fR
 input geometry is a 'meta' tiling, don't apply meta operation
 .TP
-\fB\-i\fR
-tiles are coloured by index number (default, colour by value)
+\fB\-C\fR
+colouring method for tiles:none, index, value, association
+(default: index) index and value methods use the path index,
+association associates tiles with base geometry element colours
 .TP
 \fB\-u\fR
 output only one example of each type of tile (one per path)

@@ -53,14 +53,17 @@ public:
   string relabel;
   bool reverse;
   Tiling tiling;
-  bool color_with_value;
+  Tiling::ColoringType col_type;
+  bool color_by_value;
   bool quiet;
   string ifile;
   string ofile;
 
   wy_opts()
       : ProgramOpts("wythoff"), input_is_meta(false), add_meta(false),
-        face_ht(0.0), reverse(false), color_with_value(true), quiet(false)
+        face_ht(0.0), reverse(false),
+        col_type(Tiling::ColoringType::path_index), color_by_value(true),
+        quiet(false)
   {
   }
 
@@ -109,7 +112,9 @@ void wy_opts::usage()
 "  -r        relabel pattern, exactly three letters VEF written in any order\n"
 "            e.g. EFV relabels the pattern as V->E,v->e,E->F,e->f,F->V,f->v\n"
 "  -M        input geometry is a 'meta' tiling, don't apply meta operation\n"
-"  -i        tiles are coloured by index number (default, colour by value)\n"
+"  -C        colouring method for tiles:none, index, value, association\n"
+"            (default: index) index and value methods use the path index,\n"
+"            association associates tiles with base geometry element colours\n"
 "  -u        output only one example of each type of tile (one per path)\n"
 "  -a        add the 'meta'-transformed base\n"
 "  -f <ht>   lift the face centres by this height\n"
@@ -127,7 +132,7 @@ void wy_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":ho:p:c:f:Rr:Miuqa")) != -1) {
+  while ((c = getopt(argc, argv, ":ho:p:c:f:Rr:MC:uqa")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -168,9 +173,22 @@ void wy_opts::process_command_line(int argc, char **argv)
       print_status_or_exit(read_double(optarg, &face_ht), 'f');
       break;
 
-    case 'i':
-      color_with_value = false;
+    case 'C': {
+      string arg_id;
+      print_status_or_exit(
+          get_arg_id(optarg, &arg_id, "none=0|index=1|value=2|association=3"));
+      int id = atoi(arg_id.c_str());
+      typedef Tiling::ColoringType CT;
+      if (id == 0)
+        col_type = CT::none;
+      else if (id == 1 || id == 2)
+        col_type = CT::path_index;
+      else
+        col_type = CT::associated_element;
+
+      color_by_value = (id != 1);
       break;
+    }
 
     case 'q':
       quiet = true;
@@ -241,8 +259,9 @@ int main(int argc, char *argv[])
   if (stat.is_error())
     opts.print_status_or_exit(stat, 'm');
   Geometry ogeom;
-  vector<int> tile_counts;
-  opts.print_status_or_exit(tiling.make_tiling(ogeom, &tile_counts));
+  vector<Tile::TileReport> tile_reports;
+  opts.print_status_or_exit(
+      tiling.make_tiling(ogeom, opts.col_type, &tile_reports));
   if (!orientable)
     merge_coincident_elements(ogeom, "f");
 
@@ -250,12 +269,20 @@ int main(int argc, char *argv[])
     fprintf(stderr, "\n");
     fprintf(stderr, "Tiling pattern: %s\n", tiling.pattern_string().c_str());
     fprintf(stderr, "Tile Counts:\n");
-    for (unsigned int i = 0; i < tile_counts.size(); i++)
-      fprintf(stderr, "  %-4u: %d\n", i, tile_counts[i]);
+    fprintf(stderr, "No.:  Tiles:  Type:  Full Association:\n");
+    string assoc_elem_str = "VEF345X"; // VEF=6 -> X
+    for (unsigned int i = 0; i < tile_reports.size(); i++) {
+      const auto &rep = tile_reports[i];
+      string full_assoc = rep.step.size() ? "(" + rep.step + ")" : "";
+      full_assoc += rep.assoc.size() ? rep.assoc : "1";
+      full_assoc += rep.step_back.size() ? "(" + rep.step_back + ")" : "";
+      fprintf(stderr, "%3u, %6d, %5c,  %s\n", i, rep.count,
+              assoc_elem_str[rep.assoc_type], full_assoc.c_str());
+    }
     fprintf(stderr, "\n");
   }
 
-  if (opts.color_with_value) {
+  if (opts.color_by_value) {
     Coloring clrng(&ogeom);
     clrng.add_cmap(colormap_from_name("spread"));
     clrng.e_apply_cmap();
@@ -268,7 +295,7 @@ int main(int argc, char *argv[])
 
   if (opts.add_meta) {
     Geometry meta = tiling.get_meta();
-    if (opts.color_with_value)
+    if (opts.color_by_value)
       color_meta(meta);
     ogeom.append(meta);
   }

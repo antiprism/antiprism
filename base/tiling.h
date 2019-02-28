@@ -43,7 +43,6 @@ private:
   std::vector<int> idxs; // index numbers of points visited
   std::vector<int> ops;  // operations between visiting points
   char start_faces;      // start tile on: '+', '-' or '*' (both) face types
-
   mutable std::vector<int>::const_iterator ops_i;
   mutable std::vector<int>::const_iterator idxs_i;
 
@@ -56,8 +55,16 @@ public:
     VE,       ///< Point lying in edge VE
     EF,       ///< Point lying in edge EF
     FV,       ///< Point lying in edge FE
-    VEF,      ///< Point lying inside trinagle VEF
+    VEF,      ///< Point lying inside triangle VEF
     P         ///< Plot point operation
+  };
+
+  struct TileReport {
+    int count;             // count of tiles generated for a path
+    std::string step;      // steps to reach associated element (mirrors vef)
+    std::string assoc;     // associated element type (mirrors vef)
+    std::string step_back; // steps to return from assoc'd element (mirrors vef)
+    int assoc_type;        // associated element type
   };
 
   /// Read a tile pattern string
@@ -101,12 +108,21 @@ public:
 
   /// Convert the tile to a string representation
   std::string tile_string();
+
+  /// Get element association
+  /**\return vector with four strings:
+   *         1 - steps to reach associated element (mirrors vef)
+   *         2 - associated element type (mirrors vef)
+   *         3 - steps to return from associated element (mirrors vef)
+   *         4 - associated element type letter (VEF or X for none) */
+  TileReport get_element_association() const;
 };
 
 // Tiling using Wythoff constructive notation
 class Tiling {
 private:
   std::vector<std::pair<Vec3d, Color>> points; ///< Points
+  ElemProps<Color> orig_colors;                ///< original colours
   std::vector<Tile> pat_paths;                 ///< Tile patterns
 
   Geometry meta;                      ///< Base triangle tiling
@@ -119,6 +135,21 @@ private:
   /** \return Status, which evaluates to \c true if the nieghbours were
    *  found successfully, otherwise \c false to indicate an error. */
   bool find_nbrs();
+
+  /// Find the colour of the element associated with a tiling vertex
+  /**\param f_idx the index of the meta tiling face
+   * \param incl the element types included in the pattern point specifier
+   * \return colour of the associated element. */
+  Color get_associated_element_point_color(int f_idx, int incl) const;
+
+  /// Find the element associated with a circuit
+  /**\param start_idx the index of the start face
+   * \param step the sequence of mirrors vef to step to the associated meta
+   *  triangle
+   * \param type the element type, from V, E, F or VEF for no element
+   * \return index of the associated element, or -1 if no element. */
+  int get_associated_element(int start_idx, const std::string &step,
+                             int assoc_type) const;
 
   /// Add a circuit (face) for an individual tile pattern
   /**\param geom the geometry to add the circuit face to
@@ -137,6 +168,8 @@ private:
   const std::vector<Tile> &get_pat_paths() const { return pat_paths; }
 
 public:
+  enum class ColoringType { none, path_index, associated_element };
+
   /// Constructor
   Tiling() : one_of_each_tile(false) {}
 
@@ -158,11 +191,14 @@ public:
 
   /// Make the tiling
   /**\param geom the geometry to return the tiling
-   * \param tile_counts to return how many tiles of each kind were created
+   * \param col_type method for colouring the tiles
+   * \param tile_reports reports about the paths and the tiles produced
    * \return Status, which evaluates to \c true if the tiling was
    *  successfully created, otherwise \c false to indicate an error. */
-  Status make_tiling(Geometry &geom,
-                     std::vector<int> *tile_counts = nullptr) const;
+  Status
+  make_tiling(Geometry &geom, ColoringType col_type = ColoringType::path_index,
+              std::vector<Tile::TileReport> *tile_reports = nullptr) const;
+
   /// Read tiling pattern
   /**\param pat the tiling pattern string
    * \return Status, which evaluates to \c true if the pattern string was
@@ -217,11 +253,13 @@ public:
  * \param oriented geom is oriented, otherwise tiles use all start triangles
  *  and result may not be a polyhedron.
  * \param reverse reverse the pattern, flip start triangles
+ * \param col_type type of colouring
  * \return status, which evaluates to \c true if the geometry and
  *  pattern were valid, otherwise \c false to indicate an error. */
-Status wythoff_make_tiling(Geometry &tiled_geom, const Geometry &base_geom,
-                           const std::string &pat, bool oriented = true,
-                           bool reverse = false);
+Status wythoff_make_tiling(
+    Geometry &tiled_geom, const Geometry &base_geom, const std::string &pat,
+    bool oriented = true, bool reverse = false,
+    Tiling::ColoringType col_type = Tiling::ColoringType::path_index);
 
 /// Get vertex points of a Schwarz triangle, and its symmetry group
 /**\param fracs six integers, taken in pairs as the angle fractions.

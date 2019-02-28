@@ -50,6 +50,14 @@ and the snub operation is applied to it
 unitile2d -s t -w 8 -l 24 2 | wythoff  -c s -M | antiview
 <<CMDS_END>>
 
+Models may be coloured using the colours on the base model. in this example
+the faces of a dodecahedron are coloured randomly, the model is processed
+with Conway operations <i>p</i> and <i>o4</i>, and coloured by element
+association. The final model shows patches of colour corresponding to
+the original coloured faces.
+<<CMDS_START>>
+off_color -f U dod | wythoff -c p -C a | wythoff -c o4 -C a | off_util -S | antiview -x ev
+<<CMDS_END>>
 <<NOTES_START>>
 <i>wythoff</i> expands on the ideas behind the Wythoff symbol to create
 a specified tiling pattern from any suitable triangular tiling.
@@ -67,10 +75,14 @@ The output tiling will not necesarily be planar, or have equal edge lengths.
 The output of 'spherical' tilings can be processed with the <i>canonical</i>
 program.
 <p>
-In the final model, vertices are coloured according to which elements
-are involved in the pattern coordinates: V=0/red, E=1/green, F=2/blue,
-VE=3/yellow, EF=4/cyan, FE=5/magenta, VEF=6/grey. Faces are coloured
-according to their corresponding position in the pattern.
+Two colouring types can be selected for the final model with
+<i>option -C</i>. A pattern-based colouring is the default:
+vertices are coloured according to which elements
+are involved in their pattern coordinates: V=0/red, E=1/green, F=2/blue,
+VE=3/yellow, EF=4/cyan, FE=5/magenta, VEF=6/grey; faces are coloured
+according to the position of their corresponding path in the pattern.
+The other colouring is by associating final vertices and faces
+with elements in the base model (see below), and inheriting their colours.
 
 <h4>Comparison with corresponding Conway notation operators</h4>
 
@@ -95,6 +107,42 @@ operators expressed in constructive notation are: seed/dual/ambo,
 truncate/zip/expand, kis/needle/subdivide. Some operators
 are symmetric with respect to the element types, for example snub, meta
 and bevel.
+
+<h4>Element association</h4>
+
+When the pattern paths are repeated to generate final faces, these
+faces may be associated with elements in the base model. A path may:
+cycle a base vertex, edge centre  or face centre; not cycle (the
+path is the whole face); repeat by reflection; or "wander" around
+the model (the path doesn't cycle locally). The behaviour can be determined
+from the path specifier.
+<p>
+To analyse a path, write its reflections as a sequence, and remove
+sequential repeated reflections. It will then be in
+the form <i>(step)association(step_back)</i>, where <i>step</i> is a
+series of mirrors (maybe none) and <i>step_back</i> is the same
+series of mirrors in reverse. The series of mirrors in <i>association</i>
+(which may be none) then determines the kind of element associated with the
+path, for eample it may be a rotation about an element of a type, etc.
+The <i>step</i> is the reflections to move from from the starting
+meta triangle to the meta triangle that contains the associated element.
+<p>
+As a example, the patternd fo truncate is <tt>[VE]0V0E,0V,0E</tt>.
+Write down the first path, remove the point specifiers, convert to
+reflections,  and remove sequential repeats:
+<tt>0V0E -> VE = (ef)(fv) = effv = ev</tt> this gives no
+step, and the association is <tt>ev</tt>, which is a rotation
+about a face centre (a reverse direction F).
+The final face will therefore cycle the face element of its starting
+meta triangle. Similarly, the second path will cycle the vertex element
+on the starting meta triangle, and the third path will cycle the
+edge element.
+<p>
+For the purposes of colouring, vertices are associated with
+base elements as follows: a final vertex
+is associated with a coinciding base vertex, or an edge if it coincides
+with an edge centre, otherwise the face element of the meta triangle it
+belongs to.
 
 <h4>Replacement for twist program</h4>
 

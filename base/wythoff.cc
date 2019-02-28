@@ -22,6 +22,8 @@
   IN THE SOFTWARE.
 */
 
+#include <algorithm>
+#include <functional>
 #include <regex>
 #include <string.h>
 #include <string>
@@ -834,6 +836,48 @@ bool Wythoff::make_tri_poly(Geometry &geom)
 
 //------------------------------------------------------------
 // General Wythoff tiling
+static ElemProps<Color> get_original_colors(const Geometry &geom, bool is_meta)
+{
+  // Get the vertex colours first
+  ElemProps<Color> orig_colors;
+  for (unsigned int i = 0; i < geom.verts().size(); i++) {
+    const auto &col = geom.colors(VERTS).get(i);
+    if (col.is_set())
+      orig_colors.set(i, col);
+  }
+
+  // for meta tiling, this is all the colours, for a polyhedron
+  // base, add the face colours and then the edge colours.
+  if (!is_meta) {
+    int f_start = geom.verts().size(); // offset for face index numbers
+    for (unsigned int i = 0; i < geom.faces().size(); i++) {
+      const auto &col = geom.colors(FACES).get(i);
+      if (col.is_set())
+        orig_colors.set(i + f_start, col);
+    }
+
+    map<vector<int>, Color> e2col;
+    for (unsigned int i = 0; i < geom.edges().size(); i++) {
+      Color col = geom.colors(EDGES).get(i);
+      if (col.is_set())
+        e2col[geom.edges(i)] = col;
+    }
+
+    // offset for edge index numbers (where index is position in
+    // implicicit edge list)
+    int e_start = geom.verts().size() + geom.faces().size();
+    GeometryInfo info(geom);
+    map<vector<int>, int> e2v;
+    int e_idx = 0;
+    for (const auto &e : info.get_impl_edges()) {
+      auto e_it = e2col.find(e);
+      if (e_it != e2col.end())
+        orig_colors.set(e_idx + e_start, e_it->second);
+      e_idx++;
+    }
+  }
+  return orig_colors;
+}
 
 static void make_meta(const Geometry &geom, Geometry &meta,
                       double face_ht = 0.0)
@@ -1010,6 +1054,99 @@ int Tile::get_op() const
 
 int Tile::get_idx() const { return *idxs_i; }
 
+// https://codereview.stackexchange.com/questions/187212/remove-all-adjacent-duplicates-in-a-string-using-a-stack
+template <typename Iter> Iter remove_duplicates(Iter begin, Iter end)
+{
+  using namespace std::placeholders;
+
+  auto dest = begin;
+
+  do {
+    Iter pair = std::adjacent_find(begin, end);
+    if (dest != begin) {
+      std::copy(begin, pair, dest);
+      dest += std::distance(begin, pair);
+    }
+    else {
+      dest = pair;
+    }
+    begin = pair;
+    if (pair != end) {
+      begin += 2;
+    }
+  } while (begin != end);
+
+  return dest;
+}
+
+template <typename Iter> Iter repeatedly_remove_duplicates(Iter begin, Iter end)
+{
+  Iter new_end;
+  while ((new_end = remove_duplicates(begin, end)) != end) {
+    end = new_end;
+  }
+  return end;
+}
+
+std::string repeatedly_remove_duplicates(std::string s)
+{
+  s.erase(repeatedly_remove_duplicates(s.begin(), s.end()), s.end());
+  return s;
+}
+
+Tile::TileReport Tile::get_element_association() const
+{
+  TileReport rep;
+  string elems = "vef";
+  string association = "VEFX";
+  string ops_str;
+  for (auto op : ops)
+    if (op != P)
+      ops_str.push_back(elems[op]);
+
+  auto reduced = repeatedly_remove_duplicates(ops_str);
+  int sz = reduced.size();
+  int mismatch_idx;
+  for (mismatch_idx = 0; mismatch_idx < sz; mismatch_idx++)
+    if (reduced[mismatch_idx] != reduced[sz - 1 - mismatch_idx])
+      break;
+
+  rep.step = reduced.substr(0, mismatch_idx);
+  rep.assoc = reduced.substr(mismatch_idx, sz - 2 * mismatch_idx);
+  rep.step_back = reduced.substr(sz - mismatch_idx, sz);
+
+  vector<bool> contains(3, false); // contains which of v, e, f
+  for (int i = 0; i < 3; i++)
+    if (rep.assoc.find(elems[i]) != string::npos)
+      contains[i] = true;
+
+  int elem_tri_idx;
+  if (contains[0] && contains[1] && contains[2]) // v, e and f
+    elem_tri_idx = VEF;
+  else if (contains[0] && contains[1]) // v and e
+    elem_tri_idx = F;
+  else if (contains[1] && contains[2]) // e and f
+    elem_tri_idx = V;
+  else if (contains[2] && contains[0]) // f and v
+    elem_tri_idx = E;
+  else if (contains[0]) // v
+    elem_tri_idx = F;   // Face-like
+  else if (contains[1]) // e
+    elem_tri_idx = F;   // Face-like
+  else if (contains[2]) // f
+    elem_tri_idx = F;   // Face-like? Maybe Edge-like
+  else                  // empty
+    elem_tri_idx = F;   // assign to face
+
+  rep.assoc_type = elem_tri_idx;
+
+  // string assoc_elem_str = "VEF345X";   // VEF=6 -> X
+  // fprintf(stderr, "final=(%s)%s(%s) association=%c\n\n", rep.step.c_str(),
+  //        rep.assoc.c_str(), rep.step_back.c_str(),
+  //        assoc_elem_str[elem_tri_idx]);
+  return rep;
+}
+
 Status Tile::read(const string &pat)
 {
   // initialise
@@ -1069,6 +1206,7 @@ Status Tile::read(const string &pat)
       pos++;
   }
 
+  get_element_association();
   return Status::ok();
 }
 
@@ -1229,6 +1367,34 @@ static Vec3d point_on_face(const Geometry &meta, int f_idx, const Vec3d &crds)
   return P;
 }
 
+Color Tiling::get_associated_element_point_color(int f_idx, int incl) const
+{
+  int idx = -1;
+  if (incl == Tile::V) // on a vertex
+    idx = Tile::V;
+  else if (incl == Tile::E) // on an edge
+    idx = Tile::E;
+  else // on a face
+    idx = Tile::F;
+
+  return orig_colors.get(meta.faces(f_idx, idx));
+}
+
+int Tiling::get_associated_element(int start_idx, const string &step,
+                                   int assoc_type) const
+{
+  const map<char, int> elem_idx = {{'V', 0}, {'E', 1}, {'F', 2}};
+  int idx;
+  if (assoc_type == Tile::VEF)
+    idx = -1; // invalid index
+  else {
+    idx = start_idx;
+    for (char op : step)
+      idx = nbrs[idx][elem_idx.at(std::toupper(op))]; // move to next tri
+  }
+  return idx >= 0 ? meta.faces(idx, assoc_type) : idx;
+}
+
 // Each pattern point plotted for a meta triangle cooresponds to
 // a previously assigned geometry vertex. Get the index of that vertex.
 static int
@@ -1298,6 +1464,8 @@ static void reverse_odd_faces(Geometry &geom)
 
 Status Tiling::set_geom(const Geometry &geom, bool is_meta, double face_ht)
 {
+  orig_colors = get_original_colors(geom, is_meta);
+
   if (is_meta) {
     meta = geom;
     Status stat = normalize_meta(meta);
@@ -1306,6 +1474,7 @@ Status Tiling::set_geom(const Geometry &geom, bool is_meta, double face_ht)
   }
   else
     make_meta(geom, meta, face_ht);
+
   find_nbrs();
   if (is_meta) {
     // Neighbouring faces must have index numbers of opposite parity
@@ -1387,11 +1556,21 @@ static bool valid_start_face(int f, int start_faces)
   return !((start_faces == '-' && pos_tri) || (start_faces == '+' && !pos_tri));
 }
 
-Status Tiling::make_tiling(Geometry &geom, vector<int> *tile_counts) const
+static void store_tri(map<vector<int>, pair<int, int>> &elem_to_tri,
+                      vector<int> key, int tri_idx)
+{
+  auto pr = elem_to_tri.insert({key, {-1, tri_idx}});
+  if (pr.second == false && is_even(pr.first->second.second) &&
+      !is_even(tri_idx))
+    pr.first->second.second = tri_idx;
+}
+
+Status Tiling::make_tiling(Geometry &geom, ColoringType col_type,
+                           vector<Tile::TileReport> *tile_reports) const
 {
   geom.clear_all();
-  if (tile_counts)
-    tile_counts->resize(pat_paths.size(), 0);
+  if (tile_reports)
+    tile_reports->resize(pat_paths.size());
 
   // All the possible element inclusion postions V, E, F, VE, EF, FV, VEF.
   // Each entry maps to order (to find index of corresponding point)
@@ -1400,13 +1579,14 @@ Status Tiling::make_tiling(Geometry &geom, vector<int> *tile_counts) const
   vector<map<vector<int>, pair<int, int>>> index_order(7);
   for (int i = 0; i < (int)meta.faces().size(); i++) {
     const auto &face = meta.faces(i);
+    index_order[Tile::VEF][{i}] = {-1, i};
     index_order[Tile::V][{face[Tile::V]}] = {-1, i};
     index_order[Tile::E][{face[Tile::E]}] = {-1, i};
     index_order[Tile::F][{face[Tile::F]}] = {-1, i};
-    index_order[Tile::VE][make_edge(face[Tile::V], face[Tile::E])] = {-1, i};
+    store_tri(index_order[Tile::VE], make_edge(face[Tile::V], face[Tile::E]),
+              i);
     index_order[Tile::EF][make_edge(face[Tile::E], face[Tile::F])] = {-1, i};
     index_order[Tile::FV][make_edge(face[Tile::F], face[Tile::V])] = {-1, i};
-    index_order[Tile::VEF][{i}] = {-1, i};
   }
   for (int i = (int)Tile::V; i <= (int)Tile::VEF; i++) {
     int pos = 0;
@@ -1422,8 +1602,15 @@ Status Tiling::make_tiling(Geometry &geom, vector<int> *tile_counts) const
     int incl = pt.second.get_index();
     Vec3d crds = pt.first;
     crds /= crds[0] + crds[1] + crds[2];
-    for (auto &m : index_order[incl])
-      geom.add_vert(point_on_face(meta, m.second.second, crds), pt.second);
+    for (auto &m : index_order[incl]) {
+      const int f_idx = m.second.second;
+      Color col; // col_type==ColoringType::none
+      if (col_type == ColoringType::path_index)
+        col = pt.second; // Colour by element type inclusion in coords
+      else if (col_type == ColoringType::associated_element)
+        col = get_associated_element_point_color(f_idx, incl);
+      geom.add_vert(point_on_face(meta, f_idx, crds), col);
+    }
   }
 
   int faces_sz = meta.faces().size();
@@ -1439,7 +1626,7 @@ Status Tiling::make_tiling(Geometry &geom, vector<int> *tile_counts) const
       return Status::error(msg.c_str());
     }
 
-    Color col(p_idx);
+    auto assoc = pat.get_element_association();
     vector<bool> seen(faces_sz, false);
     int start_faces_sz = geom.faces().size();
     unsigned char start_faces = pat.get_start_faces();
@@ -1448,13 +1635,23 @@ Status Tiling::make_tiling(Geometry &geom, vector<int> *tile_counts) const
       //  fprintf(stderr, "i=%d, seen[%d]=%d\n", i, f, (int)seen[f]);
       // fprintf(stderr, "\n");
       if (!seen[i] && valid_start_face(i, start_faces)) {
+        Color col; // col_type==ColoringType::none
+        if (col_type == ColoringType::path_index)
+          col.set_index(p_idx);
+        else if (col_type == ColoringType::associated_element) {
+          int col_idx = get_associated_element(i, assoc.step, assoc.assoc_type);
+          if (col_idx >= 0)
+            col = orig_colors.get(col_idx);
+        }
         add_circuit(geom, i, pat, seen, col, index_order, point_vertex_offsets);
         if (one_of_each_tile)
           break;
       }
     }
-    if (tile_counts)
-      tile_counts->at(p_idx) = geom.faces().size() - start_faces_sz;
+    if (tile_reports) {
+      assoc.count = geom.faces().size() - start_faces_sz;
+      tile_reports->at(p_idx) = assoc;
+    }
   }
 
   delete_verts(geom, geom.get_info().get_free_verts());
@@ -1812,7 +2009,8 @@ namespace anti {
 // export these functions
 
 Status wythoff_make_tiling(Geometry &tiled_geom, const Geometry &base_geom,
-                           const std::string &pat, bool oriented, bool reverse)
+                           const std::string &pat, bool oriented, bool reverse,
+                           Tiling::ColoringType col_type)
 {
   Tiling tiling;
   Status stat =
@@ -1823,7 +2021,7 @@ Status wythoff_make_tiling(Geometry &tiled_geom, const Geometry &base_geom,
       tiling.start_everywhere();
     if (reverse)
       tiling.reverse_pattern();
-    tiling.make_tiling(tiled_geom);
+    tiling.make_tiling(tiled_geom, col_type);
     if (!oriented) // some tiles may be doubled
       merge_coincident_elements(tiled_geom, "f");
   }
