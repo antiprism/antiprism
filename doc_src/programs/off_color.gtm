@@ -22,20 +22,28 @@
 Make a cuboctahedron with the triangle faces a different colour to
 the square faces
 <<CMDS_START>>
-off_color -f N -o cubo.off cuboctahedron
+off_color -f N cuboctahedron | antiview
 <<CMDS_END>>
 
 Same again, but make the colours black and white. Create a file called
-my_colormap.txt with these two lines which convert index numbers into colour
-values (with the <i>-f n</i> option faces have an index number the same as
-their number of sides).
+my_colormap.txt with these two lines, which convert colour index numbers
+into colour values. With <i>-f N</i>, faces are assigned a colour index
+number the same as the number of sides, and this is then mapped to a
+colour value by the active colour map.
 <pre>
    3 = 0.0 0.0 0.0
    4 = 1.0 1.0 1.0
 </pre>
 Now the command is
 <<CMDS_START>>
-off_color -f n -m my_colormap.txt -o cubo.off cuboctahedron
+off_color -f N -m my_colormap.txt cuboctahedron | antiview
+<<CMDS_END>>
+
+Even easier, create the colour map on the command line, with component
+values or names
+<<CMDS_START>>
+off_color -f N -m map_3=0.0/0.0/0.0:4=1.0/1.0/1.0 cuboctahedron | antiview
+off_color -f N -m map_3=black:4=white cuboctahedron | antiview
 <<CMDS_END>>
 
 Colour faces with unique colours
@@ -102,6 +110,9 @@ Proper colourings are not always optimal.
 Face colourings G and L which use normals are affected by the
 orientation of the faces. If the colouring is patchy then
 orient the faces with <i>off_util -O pos</i>
+<p>
+See also <a href="off_color_radial.html">off_color_radial</a> for a symmetric
+colouring method.
 <<NOTES_END>>
 
 #include "<<END>>"

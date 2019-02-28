@@ -219,7 +219,7 @@ void o_col_opts::usage()
 "  -r <rnge> Map HSVA values onto the specified HSVA ranges after other\n"
 "            processing (but before -I), component letters are followed by\n"
 "            one or two values separated by a colon e.g H0.5:0.8 followed by\n"
-"            elements to map from v, e and f (H0:1,S0:1,V0:1,A0:1,vef)\n"
+"            a comma and elements to map from v, e, f (H0:1S0:1V0:1A0:1,vef)\n"
 "  -I <elms> map color values to index numbers (after other procesing)\n"
 "            elements to map are from v, e and f (default none)\n"
 "  -w <wdth> width of sphere containing points (default: calculated)\n"
