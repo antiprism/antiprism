@@ -485,11 +485,15 @@ public:
   char face_coloring_method;
   int face_opacity;
   string face_pattern;
+  int seed_coloring_method;
 
   double epsilon;
 
   Color vert_col;
   Color edge_col;
+
+  Tiling::ColoringType col_type;
+  bool color_by_value;
 
   ColorMapMulti map;
 
@@ -505,8 +509,10 @@ public:
         poly_size(0), planarize_method('p'), planarize_method_set(false),
         num_iters_planar(1000), rep_count(-1), unitize(false), verbosity(false),
         face_coloring_method('n'), face_opacity(-1), face_pattern("1"),
-        epsilon(0), vert_col(Color(255, 215, 0)), // gold
-        edge_col(Color(211, 211, 211))            // lightgrey
+        seed_coloring_method(1), epsilon(0),
+        vert_col(Color(255, 215, 0)),   // gold
+        edge_col(Color(211, 211, 211)), // lightgrey
+        col_type(Tiling::ColoringType::path_index), color_by_value(true)
   {
   }
 
@@ -807,6 +813,11 @@ void cn_opts::usage()
 "               s - symmetric coloring\n"
 "               o - newly created faces by operation\n"
 "               w - resolve color indexes (overrides -V and -E)\n"
+"  -C <mthd> colouring method for tiles: none, index, value, association\n"
+"            (default: index) index and value methods use the path index,\n"
+"            association associates tiles with base geometry element colours\n"
+"               (when -f w is set)\n"
+"  -R <opt>  built in seed coloring: one=1, unique=2, symmetry=3 (default: 1)\n"
 "  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
 "  -O <strg> face transparency pattern string (-f n only). valid values\n"
 "               0 - map color alpha value, 1 -T alpha applied (default: '1')\n"
@@ -834,7 +845,8 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hHsgtruvc:p:l:i:z:f:V:E:T:O:m:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hHsgtruvc:p:l:i:z:f:C:R:V:E:T:O:m:o:")) !=
+         -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -992,6 +1004,34 @@ void cn_opts::process_command_line(int argc, char **argv)
         face_coloring_method = *optarg;
       }
       break;
+
+    case 'C': {
+      string arg_id;
+      print_status_or_exit(
+          get_arg_id(optarg, &arg_id, "none=0|index=1|value=2|association=3"),
+          c);
+      int id = atoi(arg_id.c_str());
+      typedef Tiling::ColoringType CT;
+      if (id == 0)
+        col_type = CT::none;
+      else if (id == 1 || id == 2)
+        col_type = CT::path_index;
+      else
+        col_type = CT::associated_element;
+
+      color_by_value = (id != 1);
+      break;
+    }
+
+    case 'R': {
+      string arg_id;
+      print_status_or_exit(get_arg_id(optarg, &arg_id,
+                                      "one=1|unique=2|symmetry=3",
+                                      argmatch_add_id_maps),
+                           c);
+      seed_coloring_method = atoi(arg_id.c_str());
+      break;
+    }
 
     case 'V':
       print_status_or_exit(vert_col.read(optarg), c);
@@ -1327,8 +1367,26 @@ void get_operand(Geometry &geom, const cn_opts &opts)
   }
 
   // by default seed will be all one color
-  Color col = opts.map.get_col(0);
-  Coloring(&geom).vef_one_col(col, col, col);
+  Coloring clrng(&geom);
+  if (opts.seed_coloring_method == 1) {
+    Color col = opts.map.get_col(0);
+    clrng.vef_one_col(col, col, col);
+  }
+  else if (opts.seed_coloring_method == 2) {
+    // unique
+    clrng.v_unique(true);
+    clrng.e_unique(true);
+    clrng.f_unique(true);
+  }
+  else if (opts.seed_coloring_method == 3) {
+    // color by symmetry
+    Symmetry sym;
+    vector<vector<set<int>>> sym_equivs;
+    sym.init(geom, &sym_equivs);
+    clrng.v_sets(sym_equivs[2], true);
+    clrng.e_sets(sym_equivs[2], true);
+    clrng.f_sets(sym_equivs[2], true);
+  }
 }
 
 // RK - for hart code
@@ -1746,8 +1804,8 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
     }
 
     // fprintf(stderr, "wythoff_op = %s\n", wythoff_op.c_str());
-    opts.print_status_or_exit(
-        wythoff_make_tiling(geom, geom, wythoff_op, is_orientable, false));
+    opts.print_status_or_exit(wythoff_make_tiling(
+        geom, geom, wythoff_op, is_orientable, false, opts.col_type));
 
     // remove digons
     dels.clear();

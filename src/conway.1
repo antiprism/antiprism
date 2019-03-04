@@ -89,6 +89,16 @@ s \- symmetric coloring
 o \- newly created faces by operation
 w \- resolve color indexes (overrides \fB\-V\fR and \fB\-E\fR)
 .HP
+\fB\-C\fR <mthd> colouring method for tiles: none, index, value, association
+.IP
+(default: index) index and value methods use the path index,
+association associates tiles with base geometry element colours
+.IP
+(when \fB\-f\fR w is set)
+.TP
+\fB\-R\fR <opt>
+built in seed coloring: one=1, unique=2, symmetry=3 (default: 1)
+.HP
 \fB\-T\fR <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
 .HP
 \fB\-O\fR <strg> face transparency pattern string (\fB\-f\fR n only). valid values
