@@ -269,7 +269,7 @@ void ncon_opts::usage()
 "               return 1 from program if entire model has been colored\n"
 "  -W        add symmetry polygon (for -f S or -e S)\n"
 "\nSurface Count Reporting (options above igonored)\n"
-"  -J <type> list n-icons with more than one surface. Valid values for type\n"
+"  -L <type> list n-icons with more than one surface. Valid values for type\n"
 "               n = point cut even order n_icons\n"
 "               s = side cut even order n-icons (surfaces > 2)\n"
 "               o = odd order n_icons\n"
@@ -279,7 +279,7 @@ void ncon_opts::usage()
 "               k = hybrids (where N/4 is even)\n"
 "               l = hybrids (where N/4 is odd)\n"
 "  -K <k,k2> range of n-icons to list for multiple surfaces\n"
-"  -L        long form report\n"
+"  -J        long form report\n"
 "  -Z        filter out case 2 types\n"
 "\n"
 "\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
@@ -298,7 +298,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
 
   while ((c = getopt(
               argc, argv,
-              ":hn:t:sHM:x:Ac:z:a:r:R:IJ:K:LZm:f:ST:O:e:U:P:Q:YD:X:Wl:o:")) !=
+              ":hn:t:sHM:x:Ac:z:a:r:R:IL:K:JZm:f:ST:O:e:U:P:Q:YD:X:Wl:o:")) !=
          -1) {
     if (common_opts(c, optopt))
       continue;
@@ -395,7 +395,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
       info = true;
       break;
 
-    case 'J':
+    case 'L':
       if (strspn(optarg, "nsohijkl") != strlen(optarg) || strlen(optarg) > 1)
         error(msg_str("n-icon type is '%s', must be only one of n, s, "
                       "o, h, i, j, k, or l\n",
@@ -415,7 +415,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
         error("k2 shown must be greater than or equal to k", c);
       break;
 
-    case 'L':
+    case 'J':
       long_form = true;
       break;
 
