@@ -21,7 +21,7 @@
 <<EXAMPLES_START>>
 View stellation number 9 in the list
 <<CMDS_START>>
-miller m9 | antiview
+miller 9 | antiview
 <<CMDS_END>>
 
 View the E shell with face and edge connectivity by color

@@ -87,10 +87,11 @@ void miller_opts::usage()
 "\n"
 "Usage: %s [options] input\n"
 "\n"
-"Millers 59 Icosahedra Stellations. Plus additional stellations discovered since\n"
-"input m_i where i is a number from 1 to 75. Or m_string where string consists\n"
+"Millers 59 Icosahedra Stellations. Plus additional stellations discovered since.\n"
+"input may be Miller list number from 1 to 75. Or m_string where string consists\n"
 "of one or more cell names: A,B,C,D,E,F,G,H,e1,f1,f1',g1,e2,f2,g2  e.g m_De1f1g1\n"
 "model string can be followed by I or Ih symmetry. e.g. ""m_e1f1',I""\n"
+"std_ may precede input string to output a raw model\n" 
 "\n"
 "Options\n"
 "%s"
@@ -701,6 +702,11 @@ int Miller::get_poly(Geometry &geom, int sym, string cell_str, string sym_str, m
 int make_resource_miller(Geometry &geom, string name, bool is_std, miller_opts &opts,
                          char *errmsg = nullptr)
 {
+  int sym_no = 0;
+  // check if it is just the index number, if so format as m%d
+  if (read_int(name.c_str(), &sym_no))
+    name = "m" + std::to_string(sym_no);
+  else
   if (name.size() < 2 || !strchr("mM", name[0]) ||
       name.find('.') != string::npos)
     return -1; // not miller name (the "." indicates a likely local file)
@@ -710,7 +716,6 @@ int make_resource_miller(Geometry &geom, string name, bool is_std, miller_opts &
   string sym_str;
 
   Miller mill;
-  int sym_no;
   if (read_int(name.c_str() + 1, &sym_no)) {
     sym_no--;
     if (sym_no < 0 || sym_no >= mill.get_last_M()) {
