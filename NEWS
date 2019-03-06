@@ -3,12 +3,20 @@ NEWS for Antiprism: http://www.antiprism.com
 Version 0.26
 xx-xx-xx Adrian Rossiter <adrian@antiprism.com>
          New Programs
+            rotegrity: make various styles of rotegrity models
             mmop_origami: multimodular polyhedron origami models
          Changes
+            wythoff: new option -C for colouring by element
+            geodesic, geo_m_n: change direction of pattern turn,
+              so (m, n) is like previous (n, m)
+            n_icons: swap -J and -L option letters
+            radial: renamed to off_color_radial
+            twist: removed (use rotegrity -T -f)
             pol_recip: removed -r X (use wythoff -c d)
             sph_saff: removed (use antiprism_python)
             off2m,m2off: removed (Java applets no longer popular)
          Fixes
+            minor bug fixes and improvements
 
 Version 0.25.1
 08-12-17 Adrian Rossiter <adrian@antiprism.com>

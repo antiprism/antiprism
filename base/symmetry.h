@@ -268,7 +268,7 @@ public:
 /// Compare two Transformationss for equality
 /**\param t0 first Transformations
  * \param t1 second Transformations
- * \return  \c true id \c t0 and \t t1 contain the same set of transformations,
+ * \return  \c true id \c t0 and \c t1 contain the same set of transformations,
  * otherwise \c false.*/
 inline bool operator==(const Transformations &t0, const Transformations &t1)
 {
@@ -741,7 +741,7 @@ public:
   /// Constructor
   /**\param geom the geometry
    * \param sym symmetry group, or subgroup, of the geometry
-   * \return deferred update a copy of geom during iteration*/
+   * \param deferred update a copy of geom during iteration*/
   SymmetricUpdater(const Geometry &geom, Symmetry sym, bool deferred);
 
   /// Get equivalent sets
