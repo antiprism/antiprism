@@ -13,14 +13,13 @@ LDADD = $(top_builddir)/base/libantiprism.la
 	rm /tmp/h2m_name_$*
 
 
-bin_PROGRAMS = twist spidron off2txt dome_layer poly_weave mmop_origami \
+bin_PROGRAMS = spidron off2txt dome_layer poly_weave mmop_origami \
 	       jitterbug string_art kaleido rotegrity
 
-dist_man1_MANS = twist.1 spidron.1 off2txt.1 dome_layer.1 poly_weave.1 \
+dist_man1_MANS = spidron.1 off2txt.1 dome_layer.1 poly_weave.1 \
 		 mmop_origami.1 jitterbug.1 string_art.1 kaleido.1 \
 		 rotegrity.1
 
-twist_SOURCES = twist.cc
 spidron_SOURCES = spidron.cc
 off2txt_SOURCES = off2txt.cc
 dome_layer_SOURCES = dome_layer.cc

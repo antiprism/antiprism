@@ -76,7 +76,30 @@ reasonable may scramble, jam or contract to a point.
 Try reducing <i>option -s</i> if a model scrambles or contracts (e.g. 
 <i>-s 0.1</i>), and use a low number of iterations to see how the model
 transforms before failing.
-<<NOTES_END>>
 
+<h4>Twist program compatibility</h4>
+The functionality of the old <i>twist</i> program, now removed from Antiprism,
+is temporarily available through <i>option -T</i>.
+<p>
+The twisted model is like a zig-zag tensegrity, but without the zig-zag;
+the strut and its string loop lie on a plane.
+<p>
+An edge of a polyhedron has two vertices on the ends and is flanked by
+two faces. In the dual these faces are associated with vertices, and so
+an edge can be associated with four coordinates: two polyhedron vertices
+and two dual vertices.
+<p>
+An edge of a polyhedron can be associated, by the vertices above, with
+an edge in the dual. The planes through these two edges and the centre
+intersect in a line through the centre. The centre of a twist edge, the
+same size as the polyhedron edge can be put on this line and the twist
+edge rotated about the line by <tt>f*90</tt> degrees. Finally, the twist
+edge is translated by the proportion <tt>f</tt> between the centre of the
+polyhedron edge and the centre of the dual edge.
+<p>
+Finally, the twist edge segment is extended to see where it intersects
+the planes through its edge neighbours, then the extended edge is
+scaled (using the model centre) back to the original size.
+<<NOTES_END>>
 
 #include "<<END>>"

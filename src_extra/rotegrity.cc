@@ -74,23 +74,18 @@ public:
 class rot_opts : public ProgramOpts {
 public:
   iter_params it_params;
-  double adjust_fact;
-  double end_fraction;
-  bool already_twisted;
-  int method;
-  int output_type;
-  int col_type;
+  double adjust_fact = 98; // generally efficient, chosen from testing
+  double end_fraction = 1 / 3.0;
+  bool already_twisted = false;
+  int method = 0;      // unset
+  int output_type = 1; // full
+  int col_type = 0;    // unset
+  bool twist_program_replacement = false;
   Coloring clrngs[3];
   string ifile;
   string ofile;
 
-  rot_opts()
-      : ProgramOpts("rotegrity"), adjust_fact(98.0), end_fraction(1 / 3.0),
-        already_twisted(false), method(0 /*unset*/), output_type(1 /*full*/),
-        col_type(0 /*unset*/)
-  {
-    read_colorings(clrngs, "spread");
-  }
+  rot_opts() : ProgramOpts("rotegrity") { read_colorings(clrngs, "spread"); }
 
   void process_command_line(int argc, char **argv);
   void usage();
@@ -131,6 +126,8 @@ void rot_opts::usage()
 "  -z <n>    status checking and reporting every n iterations, -1 for no\n"
 "            status (default: 1000)\n"
 "  -q        quiet, do not print status messages\n"
+"  -T        reproduce output of former 'twist' program (see Notes), -f is\n"
+"            twist factor, -O is output type, unused options silently ignored\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
 "\n", prog_name(), help_ver_text,
@@ -147,7 +144,7 @@ void rot_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hf:tM:O:c:m:n:s:l:z:qo:")) != -1) {
+  while ((c = getopt(argc, argv, ":hf:tM:O:c:m:n:s:l:z:qTo:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -221,6 +218,10 @@ void rot_opts::process_command_line(int argc, char **argv)
       it_params.rep_file = nullptr;
       break;
 
+    case 'T':
+      twist_program_replacement = true;
+      break;
+
     case 'o':
       ofile = optarg;
       break;
@@ -236,17 +237,17 @@ void rot_opts::process_command_line(int argc, char **argv)
   if (argc - optind == 1)
     ifile = argv[optind];
 
-  if(already_twisted) {
-    if(method)
+  if (already_twisted) {
+    if (method)
       error("cannot use option -M with previously twisted input", 't');
-    if(col_type)
+    if (col_type)
       error("cannot use option -c to colour previously twisted input", 't');
   }
 
-  if(method == 0)
-    method = 1;   // default: 'twist'
+  if (method == 0)
+    method = 1; // default: 'twist'
 
-  if(col_type == 0)
+  if (col_type == 0)
     col_type = 1; // default: 'edge'
 }
 
@@ -440,6 +441,8 @@ void to_output_type(Geometry &geom, int type)
   geom.clear(FACES);
 }
 
+void make_twist_original(const Geometry &geom, rot_opts &opts);
+
 int main(int argc, char *argv[])
 {
   rot_opts opts;
@@ -450,6 +453,12 @@ int main(int argc, char *argv[])
 
   if (!geom.faces().size())
     opts.error("input file contains no faces");
+
+  if (opts.twist_program_replacement) {
+    // Avoid impact of this option on rest of program
+    make_twist_original(geom, opts);
+    return 0;
+  }
 
   geom.transform(Trans3d::translate(-geom.centroid()));
   Symmetry sym(geom);
@@ -483,4 +492,156 @@ int main(int argc, char *argv[])
   opts.write_or_error(rotegrity, opts.ofile);
 
   return 0;
+}
+
+// -----------------------------------------------------------------------
+// Original twist program code follows. Likely to be removed in the future.
+
+Geometry twist_original(const Geometry &poly, Geometry &dual, double twist_val,
+                        Vec3d centre, bool struts_only)
+{
+  auto edges = poly.get_edge_face_pairs(true);
+  map<vector<int>, vector<int>>::iterator mi, mi_next;
+  Geometry twist;
+
+  Vec3d v0, v1, vm; // strut ends and middle
+  double ratio;
+  Vec3d v0p, v1p, v0d, v1d; // vertices at ends 1 and 2 in poly and dual
+  map<vector<int>, vector<int>> attach_edges;
+  vector<int> tv_map;
+  map<vector<int>, std::pair<Vec3d, Vec3d>> twist_edges;
+  map<vector<int>, std::pair<Vec3d, Vec3d>>::iterator mi_tw, mi_tw2;
+  for (mi = edges.begin(); mi != edges.end(); mi++) {
+    v0p = poly.verts(mi->first[0]);
+    v1p = poly.verts(mi->first[1]);
+    v0d = dual.verts(mi->second[1]);
+    v1d = dual.verts(mi->second[0]);
+    // don't need this
+    // ratio = (v1p - v0p).len() / (v1d - v0d).len();
+    // v0d = centre + (v0d - centre)*ratio;
+    // v1d = centre + (v1d - centre)*ratio;
+    Vec3d norm = vcross(v1p - v0p, v1d - v0d);
+    Trans3d trans = Trans3d::translate(-0.5 * (v0p + v1p));
+    trans = Trans3d::rotate(norm, twist_val * M_PI / 2) * trans;
+    trans = Trans3d::translate(0.5 * (v0p + v1p)) * trans;
+    trans =
+        Trans3d::translate((v0d + v1d - v0p - v1p) * 0.5 * twist_val) * trans;
+
+    v0 = trans * v0p;
+    v1 = trans * v1p;
+
+    // v0 = v0p + (v0d - v0p)*twist_val;
+    // v1 = v1p + (v1d - v1p)*twist_val;
+
+    twist_edges[mi->first] = std::pair<Vec3d, Vec3d>(v0, v1);
+    vector<int> ve = mi->first;
+    if (ve[1] < ve[0])
+      std::swap(ve[1], ve[0]);
+    attach_edges[ve] = vector<int>();
+  }
+
+  double edge_len = (v1p - v0p).len();
+  vector<int>::const_iterator vi;
+  for (mi_tw = twist_edges.begin(); mi_tw != twist_edges.end(); mi_tw++) {
+    mi = edges.find(mi_tw->first);
+    twist.add_face(vector<int>());
+    for (int i = 0; i < 2; i++) {
+      vector<int> e_next(2);
+      e_next[0] = mi_tw->first[(i + 1) % 2];
+      const vector<int> &face = poly.faces(mi->second[i]);
+      vi = find(face.begin(), face.end(), e_next[0]);
+      e_next[1] = ++vi != face.end() ? *vi : face.front();
+      // fprintf(stderr, "twist_edge/next (%d, %d)/(%d, %d)\n", mi_tw->first[0],
+      // mi_tw->first[1], e_next[0], e_next[1]);
+      if (e_next[1] < e_next[0])
+        std::swap(e_next[1], e_next[0]);
+      mi_tw2 = twist_edges.find(e_next);
+      attach_edges[e_next].push_back(twist.verts().size());
+      int where;
+      Vec3d v = line_plane_intersect(centre, mi_tw2->second.first,
+                                     mi_tw2->second.second, mi_tw->second.first,
+                                     mi_tw->second.second, &where);
+      if (!v.is_set())
+        return Geometry(); // Failure in construction
+
+      tv_map.push_back(mi_tw->first[i]);
+      twist.add_vert(v);
+      twist.faces(twist.faces().size() - 1).push_back(twist.verts().size() - 1);
+    }
+
+    Vec3d &v0 = twist.verts(twist.verts().size() - 2);
+    Vec3d &v1 = twist.verts(twist.verts().size() - 1);
+    ratio = edge_len / (v1 - v0).len();
+    v0 = centre + (v0 - centre) * ratio;
+    v1 = centre + (v1 - centre) * ratio;
+  }
+
+  if (struts_only) {
+    for (unsigned int i = 0; i < twist.faces().size(); i++)
+      twist.add_edge(make_edge(twist.faces(i, 0), twist.faces(i, 1)), 0);
+    twist.clear(FACES);
+  }
+  else {
+    for (unsigned int i = 0; i < twist.faces().size(); i++) {
+      vector<int> edge(2);
+      edge[0] = tv_map[twist.faces(i, 0)];
+      edge[1] = tv_map[twist.faces(i, 1)];
+      if (edge[1] < edge[0])
+        std::swap(edge[1], edge[0]);
+      // fprintf(stderr, "edge = (%d, %d) edge.size = %d\n", edge[0], edge[1],
+      // (int)edge.size());
+      vector<int> v_idxs = attach_edges.find(edge)->second;
+      Vec3d P0 = twist.face_v(i, 0);
+      Vec3d edge_vec = twist.face_v(i, 1) - P0;
+      if (vdot(edge_vec, twist.verts(v_idxs[0]) - P0) <
+          vdot(edge_vec, twist.verts(v_idxs[1]) - P0))
+        std::swap(v_idxs[0], v_idxs[1]);
+      twist.faces(i).push_back(v_idxs[0]);
+      twist.faces(i).push_back(v_idxs[1]);
+
+      for (int j = 0; j < 4; j++)
+        twist.add_edge(
+            make_edge(twist.faces(i, j), twist.faces(i, (j + 1) % 4)),
+            Color(bool(j)));
+    }
+  }
+
+  return twist;
+}
+
+void make_twist_original(const Geometry &geom, rot_opts &opts)
+{
+  Vec3d origin(0, 0, 0);
+  Geometry dual;
+  get_dual(dual, geom, 1, origin);
+
+  vector<int> invalid_verts;
+  for (unsigned int i = 0; i < dual.verts().size(); i++) {
+    if (!dual.verts(i).is_set()) {
+      dual.del(VERTS, i);
+      int idx = invalid_verts.size() + i;
+      invalid_verts.push_back(idx);
+      i--;
+    }
+  }
+  if (invalid_verts.size()) {
+    string msg(
+        "removed invalid vertices (and associated faces) with indices - ");
+    char errmsg[MSG_SZ];
+    for (unsigned int i = 0; i < invalid_verts.size() - 1; i++) {
+      snprintf(errmsg, MSG_SZ, "%d,", invalid_verts[i]);
+      msg += string(errmsg);
+    }
+    snprintf(errmsg, MSG_SZ, "%d", invalid_verts.back());
+    msg += string(errmsg);
+    opts.warning(msg);
+  }
+
+  Geometry twisted =
+      twist_original(geom, dual, opts.end_fraction, origin, false);
+  if (!twisted.is_set())
+    opts.error("failed to construct model", 'T');
+
+  to_output_type(twisted, opts.output_type);
+  opts.write_or_error(twisted, opts.ofile);
 }
