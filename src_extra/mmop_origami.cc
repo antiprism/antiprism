@@ -51,7 +51,7 @@ public:
   int sig_digits;
   FILE *rep_file;
   iter_params()
-      : num_iters(10000), num_iters_status(1000), sig_digits(16),
+      : num_iters(10000), num_iters_status(1000), sig_digits(15),
         rep_file(stderr)
   {
   }
@@ -124,8 +124,8 @@ void mmop_opts::usage()
 "            indexes (default: rand), a part consisting of letters from\n"
 "            v, e, f, selects the element types to apply the map list to\n"
 "            (default 'vef'). The 'compound' map should give useful results.\n"
-"  -L <lim>  NOT USED: minimum change of distance/width_of_model to\n"
-"               terminate, as negative exponent (default: %d giving %.0e)\n"
+"  -l <lim>  minimum change of distance/width_of_model to\n"
+"            terminate, as negative exponent (default: %d giving %.0e)\n"
 "  -z <n>    status checking and reporting every n iterations, -1 for no\n"
 "            status (default: 1000)\n"
 "  -q        quiet, do not print status messages\n"
@@ -144,7 +144,7 @@ void mmop_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hn:s:t:kp:Vm:L:z:qo:")) != -1) {
+  while ((c = getopt(argc, argv, ":hn:s:t:kp:Vm:l:z:qo:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -191,7 +191,7 @@ void mmop_opts::process_command_line(int argc, char **argv)
       print_status_or_exit(read_colorings(clrngs, optarg), c);
       break;
 
-    case 'L':
+    case 'l':
       print_status_or_exit(read_int(optarg, &it_params.sig_digits), c);
       if (it_params.sig_digits < 0) {
         warning("termination limit is negative, and so ignored", c);
@@ -285,11 +285,13 @@ inline double adjust_edge(Geometry &geom, int v0, int v1, double len,
 Status make_origami(const Geometry &geom, Geometry &orig, iter_params it_params,
                     double factor, double init_ht)
 {
+  const auto test_val = it_params.get_test_val();
   double max_diff = 0;
   double slant = 0.5; // hardcoded for a model of reasonable and known size
   map<vector<int>, vector<double>> lens;
   make_origami_faces(geom, orig, lens, slant, init_ht);
-  for (int cnt = 1; cnt <= it_params.num_iters; cnt++) {
+  int cnt;
+  for (cnt = 1; cnt <= it_params.num_iters; cnt++) {
     double fact = factor;
     // Start gently seems like good idea, but is commented out as it affects
     // final symmetry
@@ -317,6 +319,9 @@ Status make_origami(const Geometry &geom, Geometry &orig, iter_params it_params,
       }
     }
 
+    if (max_diff <= test_val)
+      break;
+
     if (!it_params.quiet() && it_params.check_status(cnt))
       fprintf(it_params.rep_file, "\niter:%-15d max_diff:%17.15f ", cnt,
               max_diff);
@@ -324,8 +329,9 @@ Status make_origami(const Geometry &geom, Geometry &orig, iter_params it_params,
       fprintf(it_params.rep_file, ".");
   }
   if (!it_params.quiet() && it_params.checking_status())
-    fprintf(it_params.rep_file, "\nFinal:\niter:%-15d max:%17.15f\n",
-            it_params.num_iters, max_diff);
+    fprintf(it_params.rep_file, "\nFinal:\niter:%-15d max_diff:%17.15f\n",
+            (cnt < it_params.num_iters) ? cnt : it_params.num_iters, max_diff);
+
   return Status::ok();
 }
 
