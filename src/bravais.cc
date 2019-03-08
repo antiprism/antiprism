@@ -119,6 +119,7 @@ public:
   Color cent_col;
   bool trans_to_origin;
   int r_lattice_type;
+  bool inversion;
 
   bool list_bravais;
   Vec3d list_radii_center;
@@ -146,9 +147,9 @@ public:
         voronoi_central_cell(false), auto_grid_type('\0'),
         grid_for_radius(false), convex_hull(false), add_hull(false),
         append_lattice(false), color_method('\0'), face_opacity(-1),
-        trans_to_origin(false), r_lattice_type(0), list_bravais(false),
-        list_radii_original_center('\0'), list_radii(0), list_struts(0),
-        dual_lattice(false), verbose(false), epsilon(0)
+        trans_to_origin(false), r_lattice_type(0), inversion(false),
+        list_bravais(false), list_radii_original_center('\0'), list_radii(0),
+        list_struts(0), dual_lattice(false), verbose(false), epsilon(0)
   {
   }
 
@@ -247,7 +248,7 @@ void brav_opts::usage()
 "\nOptions\n"
 "%s"
 "  -H        additional help\n"
-"  -I        verbose output\n"
+"  -W        verbose output\n"
 "  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
 "               (default: %d giving %.0e)\n"
 "  -o <file> write output to file (default: write to standard output)\n"
@@ -268,6 +269,7 @@ void brav_opts::usage()
 "               even,odd,even - on cell mid-edge   odd,even,odd - on face center\n"
 "  -G <type> automatic grid center type (type 8 invalid for cell centering = P):\n"
 "               p - corner, i - body, f - face, e - mid-edge, 8 - eighth cell\n"
+"  -I        inversion (centering type F or I)\n"
 "  -d <vrts> output dual of lattice based on primitive vectors\n"
 "               c - use primitive vectors base on centering type\n"
 "               four integers - primitive vectors are determined by four vertex\n"
@@ -281,7 +283,7 @@ void brav_opts::usage()
 "               c - cells only, i - cell(s) touching center only\n"
 "  -A        append the original lattice to the final product\n"
 "\nContainer Options\n"
-"  -c <type> container, c - cube (default), s - sphere (uses radius)\n"
+"  -c <type> container s - sphere (uses radius) (default: none)\n"
 "  -k <file> container, convex hull of off file or built in model (uses radius)\n"
 "  -r <c,n>  radius. c is radius taken to optional root n. n = 2 is sqrt\n"
 "               or  l - max insphere radius, s - min insphere radius (default)\n"
@@ -346,7 +348,7 @@ void brav_opts::process_command_line(int argc, char **argv)
 
   while ((c = getopt(
               argc, argv,
-              ":hHIc:k:r:p:q:s:uv:a:g:G:d:l:D:C:AV:E:F:T:Z:KOR:BQ:L:S:o:")) !=
+              ":hHWc:k:r:p:q:s:uv:a:g:G:Id:l:D:C:AV:E:F:T:Z:KOR:BQ:L:S:o:")) !=
          -1) {
     if (common_opts(c, optopt))
       continue;
@@ -356,13 +358,13 @@ void brav_opts::process_command_line(int argc, char **argv)
       extended_help();
       exit(0);
 
-    case 'I':
+    case 'W':
       verbose = true;
       break;
 
     case 'c':
-      if (strlen(optarg) > 1 || !strchr("cs", *optarg))
-        error("method is '" + string(optarg) + "' must be c or s", c);
+      if (strlen(optarg) > 1 || !strchr("s", *optarg))
+        error("method is '" + string(optarg) + "' must be s", c);
       container = *optarg;
       break;
 
@@ -481,6 +483,10 @@ void brav_opts::process_command_line(int argc, char **argv)
         error("grid type is '" + string(optarg) + "' must be p, f, i, e, or 8",
               c);
       auto_grid_type = *optarg;
+      break;
+
+    case 'I':
+      inversion = true;
       break;
 
     case 'd':
@@ -689,7 +695,7 @@ void brav_opts::process_command_line(int argc, char **argv)
 
   if (container == 'c' && !cfile.length() &&
       (radius != 0 || offset.is_set() || radius_by_coord.is_set()))
-    warning("cubic container in use. Radius parameters ignored", 'c');
+    warning("no container in use. Radius parameters ignored", 'c');
 
   if (use_centering_for_dual || prim_vec_idxs.size())
     dual_lattice = true;
@@ -1288,6 +1294,33 @@ void bravais_centering_i(Geometry &geom)
   geom.add_vert(Vec3d(0, 0, 0)); // 8
 }
 
+void bravais_centering_f_inverted(Geometry &geom)
+{
+  geom.add_vert(Vec3d(-1, -1, 0)); // 1
+  geom.add_vert(Vec3d(-1, 0, -1)); // 2
+  geom.add_vert(Vec3d(-1, 0, 1));  // 3
+  geom.add_vert(Vec3d(-1, 1, 0));  // 4
+  geom.add_vert(Vec3d(0, -1, -1)); // 5
+  geom.add_vert(Vec3d(0, -1, 1));  // 6
+  geom.add_vert(Vec3d(0, 0, 0));   // 7
+  geom.add_vert(Vec3d(0, 1, -1));  // 8
+  geom.add_vert(Vec3d(0, 1, 1));   // 9
+  geom.add_vert(Vec3d(1, -1, 0));  // 10
+  geom.add_vert(Vec3d(1, 0, -1));  // 11
+  geom.add_vert(Vec3d(1, 0, 1));   // 12
+  geom.add_vert(Vec3d(1, 1, 0));   // 13
+}
+
+void bravais_centering_i_inverted(Geometry &geom)
+{
+  geom.add_vert(Vec3d(-1, 0, 0));  // 1
+  geom.add_vert(Vec3d(0, -1, -1)); // 2
+  geom.add_vert(Vec3d(0, -1, 1));  // 3
+  geom.add_vert(Vec3d(0, 1, -1));  // 4
+  geom.add_vert(Vec3d(0, 1, 1));   // 5
+  geom.add_vert(Vec3d(1, 0, 0));   // 6
+}
+
 void bravais_cell_struts(Geometry &geom, const Color &edge_col)
 {
   int f[] = {0, 1, 0, 2, 0, 4, 3, 1, 3, 2, 3, 7,
@@ -1302,9 +1335,15 @@ void bravais_cell_struts(Geometry &geom, const Color &edge_col)
 
 void bravais_cell(Geometry &geom, const string &centering,
                   const bool cell_struts, const Color &vert_col,
-                  const Color &edge_col)
+                  const Color &edge_col, const bool inversion)
 {
-  if (centering == "p")
+  if (inversion) {
+    if (centering == "f")
+      bravais_centering_f_inverted(geom);
+    else if (centering == "i")
+      bravais_centering_i_inverted(geom);
+  }
+  else if (centering == "p")
     bravais_centering_p(geom);
   else if (centering == "a")
     bravais_centering_a(geom);
@@ -1322,7 +1361,7 @@ void bravais_cell(Geometry &geom, const string &centering,
     vc.v_one_col(vert_col);
   }
 
-  if (cell_struts)
+  if (cell_struts & !inversion)
     bravais_cell_struts(geom, edge_col);
 }
 
@@ -1475,8 +1514,8 @@ void r_lattice_overlay(Geometry &geom, const vector<int> &grid,
 {
   Geometry hgeom;
 
-  bravais_cell(hgeom, "p", true, vert_col,
-               edge_col); // hard code struts and colors for the "R" lattice
+  bravais_cell(hgeom, "p", true, vert_col, edge_col,
+               false); // hard code struts and colors for the "R" lattice
   geom_to_grid(hgeom, grid, cell_size, eps);
 
   hgeom.transform(r_lattice_trans_mat(false));
@@ -1637,7 +1676,10 @@ void do_bravais(Geometry &geom, Geometry &container, brav_opts &opts)
 
   // for duals, force to primitive centering
   string centering = opts.dual_lattice ? "p" : opts.centering;
-  bravais_cell(geom, centering, struts, vertex_col, edge_col);
+  // in case centering changed, check inversion
+  if (centering != "f" && centering != "i")
+    opts.inversion = false;
+  bravais_cell(geom, centering, struts, vertex_col, edge_col, opts.inversion);
 
   // if hexagonal/cubic fill option, fill cell
   if (opts.r_lattice_type == 2 || opts.r_lattice_type == 4) {
@@ -1900,6 +1942,14 @@ int main(int argc, char **argv)
             opts.crystal_system.begin(), ::tolower);
   transform(opts.centering.begin(), opts.centering.end(),
             opts.centering.begin(), ::tolower);
+
+  // inversion only allowed for f or i centering
+  if (opts.inversion) {
+    if (opts.centering != "f" && opts.centering != "i")
+      opts.error("inversion can only be used with centering F or I", 'I');
+    if (opts.cell_struts)
+      opts.warning("-u has no effect with inversion", 'u');
+  }
 
   // in place of ubravais.list_bravais(sym_no);
   string crystal_system_print_str = opts.crystal_system;
