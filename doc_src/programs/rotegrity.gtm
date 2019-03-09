@@ -76,6 +76,16 @@ reasonable may scramble, jam or contract to a point.
 Try reducing <i>option -s</i> if a model scrambles or contracts (e.g. 
 <i>-s 0.1</i>), and use a low number of iterations to see how the model
 transforms before failing.
+<p>
+To produce attractive raytraced images with the elements as straps, use
+the off2pov include file <tt>share/pov_inc/rotegrity.inc</tt> included in
+the Antiprism package. Example command (must use use <i>off_color -f none</i>
+to ensure that the faces are included in the POV file, and
+<i>off2pov -t no_tri</i> to ensure that the faces are not triangulated)
+<<CMDS_START>>
+off_color -e S geo_3_1 | rotegrity | off_color -f none | off2pov -t no_tri -v 0.02 -i rotegrity.inc -o rot_geo_3_1.pov
+<<CMDS_END>>
+
 
 <h4>Twist program compatibility</h4>
 The functionality of the old <i>twist</i> program, now removed from Antiprism,
