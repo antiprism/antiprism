@@ -77,6 +77,18 @@ Try reducing <i>option -s</i> if a model scrambles or contracts (e.g.
 <i>-s 0.1</i>), and use a low number of iterations to see how the model
 transforms before failing.
 <p>
+<i>Option -M</i> selects different model types, and makes arrangements
+of units that replace an original unit. Although, <i>-M d</i> produces
+attractive models it, along with <i>-M X</i>, does not produce especially
+unique models. <i>-M d</i> is like applying the Conway <i>join</i> operator,
+then forming a basic rotegrity, then reversing the openings corresponding
+to original face centres.  <i>-M X</i> is like applying the Conway <i>ortho</i>
+operator, then forming a basic rotegrity, then reversing the openings
+corresponding to original face centres. Reviewing a number of other unit
+replacement schemes revealed they were all like applying a Conway
+operator, applying <i>-M t</i> or <i>-M j</i>, then reversing openings
+corresponding to particular "centre" types in the Conway operator pattern.
+<p>
 To produce attractive raytraced images with the elements as straps, use
 the off2pov include file <tt>share/pov_inc/rotegrity.inc</tt> included in
 the Antiprism package. Example command (must use use <i>off_color -f none</i>

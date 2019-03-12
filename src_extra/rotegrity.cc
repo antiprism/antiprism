@@ -108,8 +108,8 @@ void rot_opts::usage()
 "  -f <frac> fraction of length for end sections (default: 1/3)\n"
 "  -t        input model is already twisted (produced by this program or\n"
 "            'twist' program)\n"
-"  -M <mthd> method of conversion from base model - twist, double, join\n"
-"            (default: t)\n"
+"  -M <mthd> method of conversion from base model - twist, double, joined,\n"
+"            or X (default: t)\n"
 "  -O <type> output type for units: full (face), rotegrity (3 short struts),\n"
 "            nexorade (long strut) (default: full). Only 'full' output can \n"
 "            be used as input with option -t\n"
@@ -178,8 +178,9 @@ void rot_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'M':
-      print_status_or_exit(get_arg_id(optarg, &arg_id, "twist=1|doube=2|join=3",
-                                      argmatch_default),
+      print_status_or_exit(get_arg_id(optarg, &arg_id,
+                                      "twist=1|double=2|joined=3|X=4",
+                                      argmatch_add_id_maps),
                            c);
       method = atoi(arg_id.c_str());
       break;
@@ -289,7 +290,7 @@ void make_twist(Geometry &tw_geom, const Geometry &geom, const Symmetry &sym,
   string pattern;
   if (method == 1)
     pattern = msg_str("[%gV%gE]0V0E0fe", 1 - wt, wt);
-  else if (method == 2)
+  else if (method == 2 || method == 4)
     pattern = msg_str("[%gV%gE,%gE%gF]0V0_1F1", 1 - wt, wt, wt, 1 - wt);
   else if (method == 3)
     pattern = msg_str("[2VE-0.3F,2F3E,3FV]0V0_1F2_1");
@@ -309,17 +310,33 @@ void make_twist(Geometry &tw_geom, const Geometry &geom, const Symmetry &sym,
   int num_faces = tw_geom.faces().size();
   for (int i = 0; i < num_faces; i++) {
     auto face = tw_geom.faces(i);
+    auto col = tw_geom.colors(FACES).get(i);
     int unit_fsz = 4;
-    tw_geom.faces(i) = vector<int>(face.begin(), face.begin() + unit_fsz);
-    if (method == 2)
-      tw_geom.add_face(vector<int>(face.begin() + unit_fsz, face.end()),
-                       tw_geom.colors(FACES).get(i));
+    if (method == 1) {
+      tw_geom.faces(i) = vector<int>(face.begin(), face.begin() + unit_fsz);
+    }
+    else if (method == 2) {
+      tw_geom.faces(i) = vector<int>(face.begin(), face.begin() + unit_fsz);
+      tw_geom.add_face(vector<int>(face.begin() + unit_fsz, face.end()), col);
+    }
     else if (method == 3) {
-      tw_geom.add_face(
-          vector<int>(face.begin() + 5, face.begin() + 5 + unit_fsz),
-          tw_geom.colors(FACES).get(i));
-      tw_geom.add_face({face[4], face[3], face[8], face[9]},
-                       tw_geom.colors(FACES).get(i));
+      tw_geom.faces(i) = vector<int>(face.begin(), face.begin() + unit_fsz);
+      tw_geom.add_face({face[5], face[6], face[7], face[8]}, col);
+      tw_geom.add_face({face[4], face[3], face[8], face[9]}, col);
+    }
+    else if (method == 4) {
+      vector<int> squ = {face[1], face[2], face[5], face[6]};
+      auto cent = centroid(tw_geom.verts(), squ);
+      int v_sz = tw_geom.verts().size();
+      for (int j = 0; j < 4; j++)
+        tw_geom.add_vert(
+            (tw_geom.verts(squ[j]) + tw_geom.verts(squ[(j + 1) % 4]) + cent) /
+            3);
+
+      tw_geom.faces(i) = vector<int>({face[0], face[1], v_sz + 0, v_sz + 1});
+      tw_geom.add_face({face[3], face[2], v_sz + 1, v_sz + 2}, col);
+      tw_geom.add_face({face[4], face[5], v_sz + 2, v_sz + 3}, col);
+      tw_geom.add_face({face[7], face[6], v_sz + 3, v_sz + 0}, col);
     }
   }
 
