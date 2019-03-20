@@ -55,6 +55,13 @@ edges in the face colour
 poly_weave icosahedron | off_color -f U -e F | antiview -v 0.1 -x f
 <<CMDS_END>>
 
+A colour cycling animation can be made by providing
+a rate specifier in Herz with a colour map, e.g. 5hz, which
+then shifts the colour index numbers in the map at that rate
+<<CMDS_START>>
+unitile2d -s t | off_color -f u | antiview -R 60,0,0 -m rng10_H0:1%,5hz
+<<CMDS_END>>
+
 <<EXAMPLES_END>>
 
 
@@ -66,6 +73,10 @@ mode this plane can be moved forward and backwards. It may take a
 couple of forward drags with the mouse (or hold down the the up-arrow
 key for a few seconds) until this plane reaches the model and starts
 slicing into it.
+<p>
+Antiview supports a colour map cycling animation by adding a rate
+specifier with the map specifiers, e.g. <i>rng10_H0:1%,5hz</i>
+will cycle the colours in the map rng10_H0:1% at 5 Hz.
 <<NOTES_END>>
 
 #include "<<END>>"

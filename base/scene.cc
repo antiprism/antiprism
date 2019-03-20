@@ -323,7 +323,7 @@ int Camera::animate()
 // -------------------------------------------------------------------
 // Scene
 
-Scene::Scene()
+Scene::Scene(): cycle_rate(-1 /* instant updates */)
 {
   set_bg_col();
   set_inf_dist(DEF_CAMERA_INF_DIST);
