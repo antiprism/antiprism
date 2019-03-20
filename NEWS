@@ -3,7 +3,7 @@ NEWS for Antiprism: http://www.antiprism.com
 Version 0.26
 xx-xx-xx Adrian Rossiter <adrian@antiprism.com>
          New Programs
-            rotegrity: make various styles of rotegrity models
+            rotegrity: make rotegrity and nexorade models
             mmop_origami: multimodular polyhedron origami models
          Changes
             wythoff: new option -C for colouring by element

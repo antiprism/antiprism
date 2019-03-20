@@ -146,7 +146,7 @@ public:
    *  "" if the argument is not matched.
    * \param maps a set of maps from argument strings to identifiers
    *  separated by '|', e.g. 'string1=id1|sting2=id2|string3=id3'
-   * \param match_flags the default is a icase insesetive match of
+   * \param match_flags the default is a icase insensitive match of
    *  \a arg to a string or failing that to the start of exactly one string.
    *  \c argmatch_case_sensitive distinguishes case, \c argmatch_no_partial
    *  disallows partial matches, \c argmatch_add_id_maps add extra maps

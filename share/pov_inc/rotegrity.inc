@@ -2,10 +2,10 @@
 // This file may be copied, modified and redistributed
 //
 // Render rotegrity units (Adrian Rossiter)
-// Example command (must use use 'off_color -f none' to ensure
+// Example command (must use use 'rortegrit -O f' to ensure
 // that the faces are included in the POV file, and must use
 // 'off2pov -t no_tri' to ensure the faces are not triangulated)
-// off_color -e S geo_3_1 | rotegrity | off_color -f none | off2pov -t no_tri -v 0.02 -i rotegrity.inc > rot_geo_3_1.pov
+// off_color -e S geo_3_1 | rotegrity -O f | off2pov -t no_tri -v 0.02 -i rotegrity.inc > rot_geo_3_1.pov
 
 
 #include "textures.inc"
@@ -81,7 +81,7 @@
   #else
     #local R = 10000;      // far away for flat unit
   #end
-  #local col_tex = local_col_to_tex(v_cols[faces[idx + 1]], vert_tex_map, vert_col_map, vert_tex)
+  #local col_tex = local_col_to_tex(f_cols[face_no], face_tex_map, face_col_map, face_tex)
   intersection {
     difference {
       sphere { <0, 0, 0> R+incr/2 }

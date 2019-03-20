@@ -17,19 +17,24 @@ Options
 .HP
 \fB\-\-version\fR version information
 .HP
+\fB\-a\fR <type> model type: rotegrity, nexorade, for nexorade followed
+.IP
+by an optional comma and strut length
+.HP
 \fB\-f\fR <frac> fraction of length for end sections (default: 1/3)
 .TP
 \fB\-t\fR
 input model is already twisted (produced by this program or
 \&'twist' program)
 .HP
-\fB\-M\fR <mthd> method of conversion from base model \- twist, double, join,
+\fB\-M\fR <mthd> method of conversion from base model \- twist, double, joined,
 .IP
 or X (default: t)
 .HP
 \fB\-O\fR <type> output type for units: full (face), rotegrity (3 short struts),
 .IP
-nexorade (long strut) (default: full). Only 'full' output can
+nexorade (long strut), Nexorade (long strut, direction vertices)
+(default: full). Only 'full' output can
 be used as input with option \fB\-t\fR
 .HP
 \fB\-m\fR <maps> a comma separated list of colour maps used to transform colour
@@ -38,9 +43,9 @@ indexes (default: rand), a part consisting of letters from
 v, e, f, selects the element types to apply the map list to
 (default 'vef').
 .HP
-\fB\-c\fR <type> colouring type: edge (base model edges), symmetry, none
+\fB\-c\fR <type> colouring type: edge (base model edges), symmetry, unit
 .IP
-(default: edge(
+(according to shape), none (default: edge)
 .HP
 \fB\-n\fR <itrs> number of iterations (default 10000)
 .HP

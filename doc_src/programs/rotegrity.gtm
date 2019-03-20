@@ -18,27 +18,30 @@
 <<USAGE_END>>
 
 <<EXAMPLES_START>>
-Convert a geodesic sphere into a rotegrity and colour by symmetry
+
+<h3>Rotegrity Examples</h3>
+
+Convert a geodesic sphere into a nexorade and colour by symmetry
 <<CMDS_START>>
-rotegrity -c s geo_3_1 | antiview -v 0.01
+rotegrity -c s -O r geo_3_1 | antiview -v 0.01
 <<CMDS_END>>
 
 Make a rotegrity with double units. It has alternate winding around base
 faces and base vertices.
 <<CMDS_START>>
-rotegrity -c s -M d geo_2_1 | antiview -v 0.01
+rotegrity -c s -O r -M 2 geo_2_1 | antiview -v 0.01
 <<CMDS_END>>
 
 Make a rotegrity with triple units. It has alternate winding around base
 faces and base vertices.
 <<CMDS_START>>
-rotegrity -f 0.2 -c s -M j geo_2 | antiview -v 0.01
+rotegrity -f 0.2 -c s -O r -M 3 geo_2 | antiview -v 0.01
 <<CMDS_END>>
 
 Add a central white sphere to make models easier to view
 <<CMDS_START>>
 off_color -v invisible -e invisible -f white geo_10 -o sph.off
-rotegrity -c s -M d geo_3_1 | antiview -v 0.01 - sph.off
+rotegrity -c s -O r -M 2 geo_3_1 | antiview -v 0.01 - sph.off
 <<CMDS_END>>
 
 Class I and II geodesic spheres have edges related by mirror symmetry,
@@ -55,14 +58,43 @@ off_report -C O geo_3_3
 The convex hull of a random collection of points will generally
 jam during solution. 
 <<CMDS_START>>
-repel -N 83 -n 100000 | conv_hull | rotegrity | antiview
+repel -N 83 -n 100000 | conv_hull | rotegrity -O r | antiview
 <<CMDS_END>>
 
-A previously processsed model can be processed again by specifying
-<i>option -t</i>
+A previously processsed model can be processed again by specifying by
+using full face outout with <i>rotegrity -O f</i> and rereading with
+<i>rotegrity -t</i>
 <<CMDS_START>>
-zono -P 10  | rotegrity -c s -s 1 -n 100 | rotegrity -t | antiview -v 0.02
+zono -P 10  | rotegrity -c s -s 1 -n 100 -O f | rotegrity -t -O r | antiview -v 0.02
 <<CMDS_END>>
+
+<h3>Nexorade Examples</h3>
+
+Convert a geodesic sphere into a nexorade and colour by symmetry
+<<CMDS_START>>
+rotegrity -a n -c s -O n geo_3_1 | antiview -v 0.01
+<<CMDS_END>>
+
+Having seen the report written to the screen by the previous command,
+recreate the model with the given radius (<i>antiview -e 0.0078889</i>)
+and a strut length slightly longer than the minimum
+(<i>rotegrity -a n,0.45</i>)
+<<CMDS_START>>
+rotegrity -a n,0.45 -c s -O n geo_3_1 | antiview -v 0.0078889 -e 0.0078889
+<<CMDS_END>>
+
+Make a nexorade  with double struts.
+<<CMDS_START>>
+rotegrity -a n,0.45 -c s -O n -M 2 geo_2_1 | antiview -v 0.0079 -e 0.0079
+<<CMDS_END>>
+
+A previously processsed model can be processed again by specifying by
+using full face outout with <i>rotegrity -O f</i> and rereading with
+<i>rotegrity -t</i>
+<<CMDS_START>>
+zono -P 10  | rotegrity -a n -c s -s 1 -n 100 -O f | rotegrity -a n -t -O n | antiview -v 0.02
+<<CMDS_END>>
+
 
 <<NOTES_START>>
 There are some relevant threads on the
@@ -89,14 +121,32 @@ replacement schemes revealed they were all like applying a Conway
 operator, applying <i>-M t</i> or <i>-M j</i>, then reversing openings
 corresponding to particular "centre" types in the Conway operator pattern.
 <p>
-To produce attractive raytraced images with the elements as straps, use
-the off2pov include file <tt>share/pov_inc/rotegrity.inc</tt> included in
-the Antiprism package. Example command (must use use <i>off_color -f none</i>
-to ensure that the faces are included in the POV file, and
-<i>off2pov -t no_tri</i> to ensure that the faces are not triangulated)
+To produce attractive raytraced images of rotegrity models
+with the elements represented by straps, use the off2pov include
+file <tt>share/pov_inc/rotegrity.inc</tt> included in
+the Antiprism package. Control the strap width with
+<i>off2pov -v</i> and the starp thickness 
+. Example command (must use <i>rotegrity -O f</i>
+to include faces data and <i>off2pov -t no_tri</i> to ensure that
+the faces are not triangulated)
 <<CMDS_START>>
-off_color -e S geo_3_1 | rotegrity | off_color -f none | off2pov -t no_tri -v 0.02 -i rotegrity.inc -o rot_geo_3_1.pov
+off_color -e S geo_3_1 | rotegrity -O f | off2pov -t no_tri -v 0.02 -i rotegrity.inc -o rot_geo_3_1.pov
+povray +a +p +H600 +W800 rot_geo_3_1.pov
 <<CMDS_END>>
+
+To produce attractive raytraced images of nexorade models
+with the elements represented by rods, use the off2pov include
+file <tt>share/pov_inc/nexorade.inc</tt> included in the Antiprism
+package. Check the solution report to choose an edge radius
+and strut length. Example command, (must use <i>rotegrity -O f</i>
+to include faces data and <i>off2pov -t no_tri</i> to ensure that
+the faces are not triangulated).
+<<CMDS_START>>
+off_color -e S geo_3_1 | rotegrity -a n -O f -o nex_geo_3_1.off
+off2pov -t no_tri -e 0.00789 -i nexorade.inc -o nex_geo_3_1.pov nex_geo_3_1.off
+povray +a +p +H600 +W800 declare=strut_len=0.45 nex_geo_3_1.pov
+<<CMDS_END>>
+
 
 
 <h4>Twist program compatibility</h4>

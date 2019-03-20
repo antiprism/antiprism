@@ -74,12 +74,14 @@ public:
 class rot_opts : public ProgramOpts {
 public:
   iter_params it_params;
+  char algorithm = 'r';    // rotegrity
+  double strut_len = 0;    // strut length
   double adjust_fact = 98; // generally efficient, chosen from testing
   double end_fraction = 1 / 3.0;
   bool already_twisted = false;
-  int method = 0;      // unset
-  int output_type = 1; // full
-  int col_type = 0;    // unset
+  int method = 0;         // unset
+  char output_type = 'f'; // full
+  int col_type = 'x';     // unset
   bool twist_program_replacement = false;
   Coloring clrngs[3];
   string ifile;
@@ -105,20 +107,23 @@ void rot_opts::usage()
 "\n"
 "Options\n"
 "%s"
+"  -a <type> model type: rotegrity, nexorade, for nexorade followed\n"
+"            by an optional comma and strut length\n"
 "  -f <frac> fraction of length for end sections (default: 1/3)\n"
 "  -t        input model is already twisted (produced by this program or\n"
 "            'twist' program)\n"
 "  -M <mthd> method of conversion from base model - twist, double, joined,\n"
 "            or X (default: t)\n"
 "  -O <type> output type for units: full (face), rotegrity (3 short struts),\n"
-"            nexorade (long strut) (default: full). Only 'full' output can \n"
+"            nexorade (long strut), Nexorade (long strut, direction vertices)\n"
+"            (default: full). Only 'full' output can \n"
 "            be used as input with option -t\n"
 "  -m <maps> a comma separated list of colour maps used to transform colour\n"
 "            indexes (default: rand), a part consisting of letters from\n"
 "            v, e, f, selects the element types to apply the map list to\n"
 "            (default 'vef').\n"
-"  -c <type> colouring type: edge (base model edges), symmetry, none\n"
-"            (default: edge(\n"
+"  -c <type> colouring type: edge (base model edges), symmetry, unit\n"
+"            (according to shape), none (default: edge)\n"
 "  -n <itrs> number of iterations (default 10000)\n"
 "  -s <perc> percentage to adjust corrections on iteration (default: %.0f)\n"
 "  -l <lim>  minimum change of vertex distance to terminate, as negative\n"
@@ -144,11 +149,32 @@ void rot_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hf:tM:O:c:m:n:s:l:z:qTo:")) != -1) {
+  while ((c = getopt(argc, argv, ":ha:f:tM:O:c:m:n:s:l:z:qTo:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
     switch (c) {
+    case 'a': {
+      vector<char *> parts;
+      split_line(optarg, parts, ",");
+      if (parts.size() < 1 || parts.size() > 2)
+        error("argument should have 1-2 comma separated parts", c);
+      print_status_or_exit(get_arg_id(parts[0], &arg_id,
+                                      "rotegrity=r|nexorade=n|tensegrity=t",
+                                      argmatch_add_id_maps),
+                           c);
+      algorithm = arg_id[0];
+      if (parts.size() > 1) {
+        if (algorithm == 'n' || algorithm == 't') {
+          print_status_or_exit(read_double(parts[1], &strut_len), c);
+          if (strut_len < 0)
+            error("length of the strut cannot be negative", c);
+        }
+        else
+          error("algorithm does not have a strut length parameter", c);
+      }
+      break;
+    }
     case 'n':
       print_status_or_exit(read_int(optarg, &it_params.num_iters), c);
       if (it_params.num_iters < 0)
@@ -186,19 +212,20 @@ void rot_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'O':
-      print_status_or_exit(get_arg_id(optarg, &arg_id,
-                                      "full=1|rotegrity=2|nexorade=3",
-                                      argmatch_default),
-                           c);
-      output_type = atoi(arg_id.c_str());
+      print_status_or_exit(
+          get_arg_id(optarg, &arg_id,
+                     "full=f|rotegrity=r|nexorade=n|Nexorade=N|tensegrity=t",
+                     argmatch_case_sensitive),
+          c);
+      output_type = arg_id[0];
       break;
 
     case 'c':
       print_status_or_exit(get_arg_id(optarg, &arg_id,
-                                      "edge=1|symmetry=2|none=3",
+                                      "edge=e|symmetry=s|unit=u|none=n",
                                       argmatch_default),
                            c);
-      col_type = atoi(arg_id.c_str());
+      col_type = arg_id[0];
       break;
 
     case 'm':
@@ -241,15 +268,15 @@ void rot_opts::process_command_line(int argc, char **argv)
   if (already_twisted) {
     if (method)
       error("cannot use option -M with previously twisted input", 't');
-    if (col_type)
+    if (col_type != 'x')
       error("cannot use option -c to colour previously twisted input", 't');
   }
 
   if (method == 0)
     method = 1; // default: 'twist'
 
-  if (col_type == 0)
-    col_type = 1; // default: 'edge'
+  if (col_type == 'x') // unset
+    col_type = 'e';    // default: 'edge'
 }
 
 Status check_polyhedron_model(GeometryInfo &info)
@@ -282,11 +309,27 @@ Status check_twist_model(const Geometry &geom)
   }
   return Status::ok();
 }
+/*
+static void color_unit(Geometry &geom, int f_idx, const Color &col)
+{
+  for (int i = 0; i < 4; i++)
+    geom.add_edge(geom.faces(f_idx, i), geom.faces(f_idx, (i + 1) % 4), col);
+  for (int i = 0; i < 2; i++)
+    geom.colors(VERTS).set(geom.faces(f_idx, i), col);
+  geom.colors(FACES).set(f_idx, Color::invisible);
+}
+*/
 
 void make_twist(Geometry &tw_geom, const Geometry &geom, const Symmetry &sym,
-                int method, double ratio, int col_type)
+                int method, double ratio, char col_type)
 {
+  // set the weight, avoiding models with coincident vertices
   double wt = 2 * ratio;
+  int wt_int = round(wt);
+  double wt_frac = wt - wt_int;
+  if (double_eq(wt_frac, 0.0, 0.001))
+    wt += 0.001 * sgn(wt_frac);
+
   string pattern;
   if (method == 1)
     pattern = msg_str("[%gV%gE]0V0E0fe", 1 - wt, wt);
@@ -295,17 +338,19 @@ void make_twist(Geometry &tw_geom, const Geometry &geom, const Symmetry &sym,
   else if (method == 3)
     pattern = msg_str("[2VE-0.3F,2F3E,3FV]0V0_1F2_1");
 
-  // Model suitable for 'edge' colouring type: col_type == 0
+  // Model suitable for 'edge' colouring type: col_type == 'e'
   wythoff_make_tiling(tw_geom, geom, pattern, true, false,
                       Tiling::ColoringType::associated_element);
-  if (col_type == 2) { // 'symmetry' colouring
+  if (col_type == 's') { // 'symmetry' colouring
     vector<vector<std::set<int>>> sym_equivs;
     get_equiv_elems(tw_geom, sym.get_trans(), &sym_equivs);
     Coloring coloring(&tw_geom);
     coloring.f_sets(sym_equivs[2], false);
   }
-  else if (col_type == 3) // 'none' colouring
+  else if (col_type == 'n') // 'none' colouring
     tw_geom.clear_cols();
+
+  tw_geom.colors(VERTS).clear();
 
   int num_faces = tw_geom.faces().size();
   for (int i = 0; i < num_faces; i++) {
@@ -343,13 +388,6 @@ void make_twist(Geometry &tw_geom, const Geometry &geom, const Symmetry &sym,
   for (unsigned int i = 0; i < tw_geom.faces().size(); i++) {
     auto &face = tw_geom.faces(i);
     std::rotate(face.begin(), face.begin() + 3, face.end());
-    Color col = tw_geom.colors(FACES).get(i);
-    tw_geom.add_edge(face[0], face[1], Color::invisible);
-    for (int i = 1; i < 4; i++)
-      tw_geom.add_edge(face[i], face[(i + 1) % 4], col);
-    for (int i = 0; i < 2; i++)
-      tw_geom.colors(VERTS).set(face[i], col);
-    tw_geom.colors(FACES).set(i, Color::invisible);
   }
 }
 
@@ -362,12 +400,80 @@ inline double adjust_vert_to_target(Vec3d &v_new, const Vec3d &vert,
   return diff;
 }
 
-void make_rotegrity(Geometry &rotegrity, const Symmetry &sym,
-                    double end_fraction, iter_params it_params, double factor)
+//---------------------------------------------------------------------
+// Comparison
+
+/// Less, for doubles
+struct DoubleLess {
+  double limit;
+
+  DoubleLess(double limit = epsilon) : limit(limit) {}
+  bool operator()(const double &val1, const double &val2) const
+  {
+    return double_lt(val1, val2, limit);
+  }
+};
+
+/// Less, for vectors of doubles
+struct VectorDoubleLess {
+  double limit;
+
+  VectorDoubleLess(double limit = epsilon) : limit(limit) {}
+  bool operator()(const std::vector<double> &vals1,
+                  const std::vector<double> &vals2) const;
+};
+
+bool VectorDoubleLess::operator()(const vector<double> &vals1,
+                                  const vector<double> &vals2) const
+{
+  int cmp = double_compare(vals1.size(), vals2.size());
+  if (!cmp) {
+    for (unsigned int i = 0; i < vals1.size(); i++)
+      if ((cmp = double_compare(vals1[i], vals2[i], limit)))
+        break;
+  }
+  return cmp < 0;
+}
+//---------------------------------------------------------------------
+
+string report_rotegrity(Geometry &geom, double end_fraction, bool color)
+{
+  string report =
+      "Two lines per rotegrity unit (angles in degrees)\n"
+      "  1: unit_index_number (used for colouring), number_of_units\n"
+      "  2: total_unit_angle, outer_segment_angle, inner_segment_angle\n"
+      "\n";
+  const double eps = 1e-10;
+  map<vector<double>, vector<int>, VectorDoubleLess> units(
+      (VectorDoubleLess(eps)));
+  for (unsigned int i = 0; i < geom.faces().size(); i++) {
+    auto ang = rad2deg(
+        acos(safe_for_trig(vdot(geom.face_v(i, 1), geom.face_v(i, 0)))));
+
+    units[{ang, ang * end_fraction, ang * (1 - 2 * end_fraction)}].push_back(i);
+  }
+
+  int unit_no = 0;
+  for (const auto &unit : units) {
+    report += msg_str("%-4d, %d\n", unit_no, (int)unit.second.size());
+    report += msg_str("    %16.13f,%16.13f,%16.13f\n", unit.first[0],
+                      unit.first[1], unit.first[2]);
+    if (color) {
+      for (auto f : unit.second)
+        geom.colors(FACES).set(f, Color(unit_no));
+    }
+    unit_no++;
+  }
+
+  return report;
+}
+
+void make_rotegrity(Geometry &geom, const Symmetry &sym, double end_fraction,
+                    iter_params it_params, double factor)
 {
   const auto test_val = it_params.get_test_val();
   // Read and write to same model (Defered update is slower)
-  SymmetricUpdater sym_updater(rotegrity, sym, false);
+  SymmetricUpdater sym_updater(geom, sym, false);
   const auto &face_orbits = sym_updater.get_equiv_sets(FACES);
 
   double max_diff = 0.0;
@@ -428,31 +534,277 @@ void make_rotegrity(Geometry &rotegrity, const Symmetry &sym,
     fprintf(it_params.rep_file, "\nFinal:\niter:%-15d max_diff:%17.15f\n",
             (cnt < it_params.num_iters) ? cnt : it_params.num_iters, max_diff);
 
-  rotegrity = sym_updater.get_geom_final();
+  geom = sym_updater.get_geom_final();
+
+  return;
 }
 
-void to_output_type(Geometry &geom, int type)
+string report_nexorade(Geometry &geom, double strut_len, bool color,
+                       const vector<vector<int>> &f2fs)
 {
-  if (type == 1)
-    return;
-
-  map<vector<int>, Color> edge2col;
-  for (unsigned int i = 0; i < geom.edges().size(); i++)
-    edge2col[geom.edges(i)] = geom.colors(EDGES).get(i);
-  geom.clear(EDGES);
-
+  string report =
+      "Radius and range of radius valaues (model units), followed by minimum\n"
+      "strut length to ensure contact, then three lines per strut type\n"
+      "  1: strut_index_number (used for colouring), number_of_struts\n"
+      "  2: strut_length (model units), fraction_1st_contact, "
+      "fraction_2nd_contact\n"
+      "  3: ang_1st_contact, ang_2nd_contact, ang_3rd_contact, "
+      "ang_4th_contact\n"
+      "In the coloured model, angles are measured anticlockwise from the white "
+      "end\n"
+      "\n";
+  const double eps = 1e-8;
+  double rad_min = 1e100;
+  double rad_max = 0.0;
+  double len_max = 0.0;
+  map<vector<double>, vector<int>, VectorDoubleLess> units(
+      (VectorDoubleLess(eps)));
+  vector<bool> f_flipped(geom.faces().size(), false);
   for (unsigned int i = 0; i < geom.faces().size(); i++) {
-    auto &face = geom.faces(i);
-    if (type == 2) {
-      for (int i = 1; i < 4; i++) {
-        auto edge = make_edge(face[i], face[(i + 1) % 4]);
-        geom.add_edge_raw(edge, edge2col[edge]);
+    // Project onto strut axis
+    vector<Vec3d> v(4);     // contact points projected onto axis
+    vector<Vec3d> vecs(4);  // contact points vectors perpendicular to axis
+    vector<double> angs(4); // contact points vectors perpendicular to axis
+    const Vec3d axis = geom.face_v(i, 1) - geom.face_v(i, 0);
+    const double axis_len = axis.len();
+    if (axis_len > len_max)
+      len_max = axis_len;
+
+    for (int j = 0; j < 4; j++) {
+      if (j > 1) { // middle contact points
+        v[j] = nearest_point(geom.face_v(i, j), geom.face_v(i, 0),
+                             geom.face_v(i, 1));
+        auto dist = (geom.face_v(i, j) - v[j]).len();
+        if (dist < rad_min)
+          rad_min = dist;
+        else if (dist > rad_max)
+          rad_max = dist;
+      }
+      else // end contact points
+        v[j] = geom.face_v(i, j);
+
+      if (j > 1) {
+        vecs[j] = geom.face_v(i, j) - v[j];
+      }
+      else {
+        const int f_idx = f2fs[i][j * 2];
+        const auto near_pt = nearest_point(
+            geom.face_v(i, j), geom.face_v(f_idx, 0), geom.face_v(f_idx, 1));
+        vecs[j] = near_pt - geom.face_v(i, j);
+      }
+
+      angs[j] = (j == 0) ? 0.0 : angle_around_axis(vecs[0], vecs[j], axis);
+    }
+
+    // Choose angle 0 so end angles have same magnitude but different signs
+    auto mid = angs[1] / 2;
+    if (angs[1] > M_PI) // make the end angles large angles
+      mid -= M_PI;
+    for (int j = 0; j < 4; j++) {
+      double ang = angs[j] - mid;
+      if (ang < 0)
+        ang += 2 * M_PI;
+      else if (ang > 2 * M_PI)
+        ang -= 2 * M_PI;
+      angs[j] = M_PI - ang;
+      // fprintf(stderr, "angs[%d] = %g \n", j, angs[j]);
+    }
+
+    // normalise the angles so struts are the same if flipped
+    if (fabs(angs[3]) > fabs(angs[2])) {
+      f_flipped[i] = true;
+      std::swap(angs[0], angs[1]);
+      std::swap(angs[2], angs[3]);
+      for (int a = 0; a < 4; a++)
+        angs[a] *= -1;
+    }
+
+    double len1 = (v[1] - v[0]).len();            // first contact length
+    double len2 = (v[3] - v[2]).len();            // second contact length
+    double len0 = (strut_len) ? strut_len : len1; // strut length
+    units[{len0, (len0 - len1) / 2 / len0, (len0 - len2) / 2 / len0, angs[0],
+           angs[1], angs[2], angs[3]}]
+        .push_back(i);
+  }
+
+  double radius = (rad_min + rad_max) / 4; // average from max and min diameters
+  report += msg_str("radius:            %19.15f (+/-%.15f)\n", radius,
+                    radius - rad_min / 2) +
+            msg_str("strut length from: %19.15f\n", len_max);
+
+  int unit_no = 0;
+  const Color colors[] = {Color(0, 0, 0), Color(255, 255, 255)};
+  for (const auto &unit : units) {
+    report += msg_str("%-4d, %d\n", unit_no, (int)unit.second.size());
+    report += msg_str("    %16.13f,%16.13f,%16.13f\n", unit.first[0],
+                      unit.first[1], unit.first[2]);
+    report += msg_str("    %16.8f,%16.8f,%16.8f,%16.8f\n",
+                      rad2deg(unit.first[3]), rad2deg(unit.first[6]),
+                      rad2deg(unit.first[5]), rad2deg(unit.first[4]));
+    if (color) {
+      for (auto f : unit.second) {
+        geom.colors(FACES).set(f, Color(unit_no));
+        const int v0 = geom.faces(f, 0);
+        const int v1 = geom.faces(f, 1);
+        bool is_dihedral = (double_eq(unit.first[3], -unit.first[4], eps) &&
+                            double_eq(unit.first[5], -unit.first[6], eps));
+        geom.colors(VERTS).set(v0, colors[!f_flipped[f] | is_dihedral]);
+        geom.colors(VERTS).set(v1, colors[f_flipped[f] | is_dihedral]);
+      }
+      unit_no++;
+    }
+  }
+
+  return report;
+}
+
+vector<vector<int>> make_nexorade(Geometry &geom, const Symmetry &sym,
+                                  double end_fraction, iter_params it_params,
+                                  double factor)
+{
+  const auto test_val = it_params.get_test_val();
+  const auto &faces = geom.faces();
+  vector<vector<int>> f2fs(faces.size(), vector<int>(4));
+  {
+    vector<vector<int>> v2fs(geom.verts().size(), vector<int>(4));
+    for (unsigned int i = 0; i < faces.size(); i++) {
+      // v_idx -> strut_face, is_first_end_con, string_face, is_first_end_con
+      for (int j = 0; j < 4; j++) {
+        bool is_string = (j > 1); // string or strut
+        v2fs[faces[i][j]][2 * is_string] = i;
+        v2fs[faces[i][j]][2 * is_string + 1] = (j == 0 || j == 3); // con end
       }
     }
-    else if (type == 3) {
+    for (unsigned int i = 0; i < v2fs.size(); i++)
+      // fprintf(stderr, "v2fs[%d] = %d,%d,  %d,%d\n", i, v2fs[i][0],
+      // v2fs[i][1], v2fs[i][2], v2fs[i][3]);
+      for (unsigned int i = 0; i < geom.faces().size(); i++) {
+        f2fs[i][0] = v2fs[faces[i][0]][2]; // v0: strut_face -> string_face
+        f2fs[i][1] = v2fs[faces[i][0]][3]; // v0: is_first_end_con
+        f2fs[i][2] = v2fs[faces[i][1]][2]; // v1: strut_face -> string_face
+        f2fs[i][3] = v2fs[faces[i][1]][3]; // v1: is_first_end_con
+      }
+  }
+  // Read and write to same model (Defered update is slower)
+  SymmetricUpdater sym_updater(geom, sym, false);
+  const auto &face_orbits = sym_updater.get_equiv_sets(FACES);
+
+  double rad = -1;
+  double max_diff = 0.0;
+  int cnt;
+  for (cnt = 1; cnt <= it_params.num_iters; cnt++) {
+    max_diff = 0.0;
+    double dist_sum = 0;
+    double rad_diff_sum = 0;
+    for (const auto &face_orbit : face_orbits) {
+      int f_idx = *face_orbit.begin();
+      const auto &face = sym_updater.get_geom_reading().faces(f_idx);
+      // Start: make sure vertices are current
+      for (int i = 0; i < 4; i++)
+        sym_updater.update_from_principal_vertex(face[i]);
+
+      for (int i = 0; i < 2; i++) {
+        // Edge direction flips with i
+        const vector<int> edge = {faces[f_idx][i], faces[f_idx][!i]};
+
+        const int f = f2fs[f_idx][i * 2];
+        bool first_end = f2fs[f_idx][i * 2 + 1];
+        vector<int> e_con = {faces[f][!first_end], faces[f][first_end]};
+
+        for (auto idx : {edge[0], edge[1], e_con[0], e_con[1]})
+          sym_updater.update_from_principal_vertex(idx);
+
+        auto &v_edge0 = sym_updater.get_geom_reading().verts(edge[0]);
+        auto &v_edge1 = sym_updater.get_geom_reading().verts(edge[1]);
+        auto &v_e_con0 = sym_updater.get_geom_reading().verts(e_con[0]);
+        auto &v_e_con1 = sym_updater.get_geom_reading().verts(e_con[1]);
+        Vec3d P; // nearest point on this edge
+        Vec3d Q; // nearest point on connected edge
+        lines_nearest_points(v_edge0, v_edge1, v_e_con0, v_e_con1, P, Q);
+        auto perp = P - Q; // from connected edge to this edge
+        dist_sum += perp.len();
+        rad_diff_sum += fabs(perp.len() / 2 - rad);
+
+        const auto perp_dir = perp.unit();
+        const auto base_point = v_e_con0 + (v_e_con1 - v_e_con0) * end_fraction;
+        const auto ideal_point = base_point + perp_dir * (2 * rad);
+        const auto diff_vec = ideal_point - v_edge0;
+        const auto diff = diff_vec.len();
+        if (diff > max_diff)
+          max_diff = diff;
+
+        auto v_new = (v_edge0 + diff_vec * factor);
+        if (rad != -1)
+          sym_updater.update_principal_vertex(edge[0], v_new);
+      }
+    }
+    // Sum of per distances, /2 to make radius, /num_f_orbits for
+    // times through loop, /2 for number of ends
+    if (rad == -1) // first time through
+      rad = (dist_sum / 2) / face_orbits.size() / 2;
+    else {
+      double rad_diff = (dist_sum / 2) / face_orbits.size() / 2 - rad;
+      rad += rad_diff * factor;
+    }
+
+    if (max_diff <= test_val)
+      break;
+
+    if (!it_params.quiet() && it_params.check_status(cnt))
+      fprintf(it_params.rep_file, "\niter:%-15d max_diff:%17.15f ", cnt,
+              max_diff);
+    else if (it_params.print_progress_dot(cnt))
+      fprintf(it_params.rep_file, ".");
+  }
+  if (!it_params.quiet() && it_params.checking_status())
+    fprintf(it_params.rep_file, "\nFinal:\niter:%-15d max_diff:%17.15f\n",
+            (cnt < it_params.num_iters) ? cnt : it_params.num_iters, max_diff);
+
+  geom = sym_updater.get_geom_final();
+
+  return f2fs;
+}
+
+void to_output_type(Geometry &geom, int out_type, double strut_len)
+{
+  if (out_type == 'f') // full
+    return;
+
+  geom.clear(EDGES);
+
+  for (unsigned int f = 0; f < geom.faces().size(); f++) {
+    const auto &face = geom.faces(f);
+    const auto &col = geom.colors(FACES).get(f);
+    if (out_type == 'r') { // rotegrity
+      for (int i = 1; i < 4; i++) {
+        geom.add_edge_raw(make_edge(face[i], face[(i + 1) % 4]), col);
+        if (i < 3)
+          geom.colors(VERTS).set(face[i - 1], col); // face[0] and face[1]
+      }
+    }
+    else if (out_type == 'n' || out_type == 'N') { // nexorade
       auto edge = make_edge(face[0], face[1]);
-      auto edge_col = make_edge(face[2], face[3]);
-      geom.add_edge_raw(edge, edge2col[edge_col]);
+      geom.add_edge_raw(edge, col);
+      if (strut_len) {
+        auto mid = geom.edge_cent(edge);
+        auto dir = geom.edge_vec(edge).unit();
+        geom.verts(edge[0]) = mid - dir * strut_len / 2;
+        geom.verts(edge[1]) = mid + dir * strut_len / 2;
+      }
+      for (int i = 0; i < 2; i++) {
+        if (out_type == 'n' || !geom.colors(VERTS).get(edge[0]).is_set()) {
+          geom.colors(VERTS).set(edge[0], col);
+          geom.colors(VERTS).set(edge[1], col);
+        }
+      }
+    }
+    else if (out_type == 't') { // tensegrity
+      Color colors[] = {col, Color(1.0, 1.0, 1.0)};
+      for (int i = 0; i < 4; i++) {
+        auto edge = make_edge(face[i], face[(i + 1) % 4]);
+        geom.add_edge_raw(edge, colors[(i > 0)]);
+        geom.colors(VERTS).set(face[i], colors[(i < 2)]);
+      }
     }
   }
   geom.clear(FACES);
@@ -479,10 +831,10 @@ int main(int argc, char *argv[])
 
   geom.transform(Trans3d::translate(-geom.centroid()));
   Symmetry sym(geom);
-  Geometry rotegrity;
+  Geometry o_geom;
   if (opts.already_twisted) {
     opts.print_status_or_exit(check_twist_model(geom));
-    rotegrity = geom;
+    o_geom = geom;
   }
   else {
     GeometryInfo info(geom);
@@ -491,22 +843,35 @@ int main(int argc, char *argv[])
       opts.warning("polyhedron model: orienting model as not oriented");
       geom.orient(1);
     }
-    make_twist(rotegrity, geom, sym, opts.method, opts.end_fraction,
+    make_twist(o_geom, geom, sym, opts.method, opts.end_fraction,
                opts.col_type);
-    project_onto_sphere(rotegrity);
+    project_onto_sphere(o_geom);
   }
 
-  make_rotegrity(rotegrity, sym.get_max_direct_sub_sym(), opts.end_fraction,
-                 opts.it_params, opts.adjust_fact / 100);
+  string report;
+  if (opts.algorithm == 'r') {
+    make_rotegrity(o_geom, sym.get_max_direct_sub_sym(), opts.end_fraction,
+                   opts.it_params, opts.adjust_fact / 100);
+    report = report_rotegrity(o_geom, opts.end_fraction, opts.col_type == 'u');
+  }
+  else if (opts.algorithm == 'n') {
+    auto f2fs =
+        make_nexorade(o_geom, sym.get_max_direct_sub_sym(), opts.end_fraction,
+                      opts.it_params, opts.adjust_fact / 100);
+    report =
+        report_nexorade(o_geom, opts.strut_len, opts.col_type == 'u', f2fs);
+  }
 
-  to_output_type(rotegrity, opts.output_type);
+  to_output_type(o_geom, opts.output_type, opts.strut_len);
   for (int i = 0; i < 3; i++)
-    opts.clrngs[i].set_geom(&rotegrity);
+    opts.clrngs[i].set_geom(&o_geom);
   opts.clrngs[VERTS].v_apply_cmap();
   opts.clrngs[EDGES].e_apply_cmap();
   opts.clrngs[FACES].f_apply_cmap();
 
-  opts.write_or_error(rotegrity, opts.ofile);
+  if (report.size())
+    fprintf(stderr, "\nResult\n------\n%s", report.c_str());
+  opts.write_or_error(o_geom, opts.ofile);
 
   return 0;
 }
@@ -659,6 +1024,6 @@ void make_twist_original(const Geometry &geom, rot_opts &opts)
   if (!twisted.is_set())
     opts.error("failed to construct model", 'T');
 
-  to_output_type(twisted, opts.output_type);
+  to_output_type(twisted, opts.output_type, opts.strut_len);
   opts.write_or_error(twisted, opts.ofile);
 }

@@ -155,6 +155,11 @@ bool double_le(double d1, double d2, double eps = epsilon);
  * \return A safe value. */
 double safe_for_trig(double val);
 
+/// Get sign, as -1, 1
+/**\param val the value to get the sign of
+ * \return 1 for x>=0 else -1 */
+template <typename T> int sgn(T val) { return (val < 0) ? -1 : 1; }
+
 // inline function definitions
 
 inline double deg2rad(double ang) { return ang * M_PI / 180; }
