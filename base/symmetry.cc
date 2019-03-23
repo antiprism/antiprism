@@ -2205,7 +2205,7 @@ Vec3d Subspace::nearest_point(Vec3d P) const
   else if (type == SubspaceType::line)
     return anti::nearest_point(P, point, point + direction);
   else if (type == SubspaceType::plane)
-    return point + vdot(P - point, direction) * direction;
+    return P + vdot(point-P, direction) * direction;
   else // type == SubspaceType::space
     return P;
 }
