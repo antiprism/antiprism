@@ -92,7 +92,7 @@ void radial_opts::usage()
 "Options\n"
 "%s"
 "  -d <opt>  coloring. radial=1, axes=2 (default: 1)\n"
-"               (multiple -c as needed)\n"
+"               (multiple -d as needed)\n"
 "  -a <ax,p> axis order. primary=1, secondary=2, tertiary=3, all=4 (default: 1)\n"
 "               p is percent length of the axis. (default: 100 percent)\n"
 "               (multiple -a as needed)\n"
