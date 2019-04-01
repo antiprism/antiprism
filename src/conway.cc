@@ -812,7 +812,7 @@ void cn_opts::usage()
 "               n - by number of sides\n"
 "               s - symmetric coloring\n"
 "               o - newly created faces by operation\n"
-"               w - resolve color indexes (overrides -V and -E)\n"
+"               w - resolve color indexes (overrides -V)\n"
 "  -C <mthd> colouring method for tiles: none, index, value, association\n"
 "            (default: index) index and value methods use the path index,\n"
 "            association associates tiles with base geometry element colours\n"
@@ -1999,7 +1999,12 @@ void cn_coloring(Geometry &geom, const cn_opts &opts)
   }
 
   // color vertices and edges
-  if (opts.face_coloring_method != 'w')
+  if (opts.face_coloring_method == 'w') {
+    // wythoff doesn't color edges
+    geom.add_missing_impl_edges();
+    Coloring(&geom).e_one_col(opts.edge_col);
+  }
+  else
     Coloring(&geom).vef_one_col(opts.vert_col, opts.edge_col, Color());
 }
 
