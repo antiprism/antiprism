@@ -58,6 +58,7 @@ public:
 class DisplayNumLabels_gl : public virtual DisplayNumLabels {
 private:
   bool use_alt_labels = false;
+  float text_scale = 1.0;
   void gl_faces(const Scene &scen);
   void gl_verts(const Scene &scen);
   void gl_edges(const Scene &scen);
@@ -65,8 +66,12 @@ private:
 public:
   GeometryDisplay *clone() const { return new DisplayNumLabels_gl(*this); };
   void gl_geom(const Scene &scen);
+  void write_label(const Scene &scen, char *label, Vec3d pos,
+                   Vec3d norm = Vec3d());
   void set_use_alt_labels(bool use_alt = true) { use_alt_labels = use_alt; }
   bool get_use_alt_labels() { return use_alt_labels; }
+  void set_text_scale(float scale) { text_scale = scale; }
+  float get_text_scale() { return text_scale; }
 };
 
 class DisplaySymmetry_gl : public virtual DisplaySymmetry,

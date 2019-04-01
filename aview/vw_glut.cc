@@ -170,6 +170,11 @@ static void scale(char elem, double scal)
           disp_p->elem(EDGES).set_size(disp_p->get_edge_rad() * scal);
       }
     }
+    if (DisplayNumLabels_gl *disp_n =
+            dynamic_cast<DisplayNumLabels_gl *>(geo->get_label())) {
+      if (elem == 'u')
+        disp_n->set_text_scale(disp_n->get_text_scale() * scal);
+    }
   }
 }
 
@@ -269,6 +274,12 @@ void keyboard_cb(unsigned char key, int /*x*/, int /*y*/)
     break;
   case 'l':
     scale('e', 1 / elem_scale);
+    break;
+  case 'u':
+    scale('u', 1 / elem_scale);
+    break;
+  case 'U':
+    scale('u', elem_scale);
     break;
   default:
     break;

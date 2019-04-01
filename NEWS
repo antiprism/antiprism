@@ -6,6 +6,8 @@ xx-xx-xx Adrian Rossiter <adrian@antiprism.com>
             rotegrity: make rotegrity and nexorade models
             mmop_origami: multimodular polyhedron origami models
          Changes
+            antiview: new keys 'u/U' change label size, 'M' planar
+              face labels
             wythoff: new option -C for colouring by element
             geodesic, geo_m_n: change direction of pattern turn,
               so (m, n) is like previous (n, m)

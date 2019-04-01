@@ -286,15 +286,11 @@ static void draw_text(char *str, double font_sz, Vec3d pos,
   glPopMatrix();
 }
 
-static void gl_write_label(char *label, Vec3d pos, const Camera &cam)
+void DisplayNumLabels_gl::write_label(const Scene &scen, char *label, Vec3d pos,
+                                      Vec3d norm)
 {
-  draw_text(label, cam.get_text_sz(pos), pos);
-}
-
-static void gl_write_label_planar(char *label, Vec3d pos, Vec3d norm,
-                                  const Camera &cam)
-{
-  draw_text(label, cam.get_text_sz(pos), pos, norm);
+  const float font_size = scen.cur_camera().get_text_sz(pos) * text_scale;
+  draw_text(label, font_size, pos, norm);
 }
 
 void DisplayNumLabels_gl::gl_verts(const Scene &scen)
@@ -307,7 +303,7 @@ void DisplayNumLabels_gl::gl_verts(const Scene &scen)
     if (geom.colors(VERTS).get((int)i).is_invisible())
       continue;
     sprintf(label, "%u", i);
-    gl_write_label(label, sc_geom->get_v_label_pos(i), scen.cur_camera());
+    write_label(scen, label, sc_geom->get_v_label_pos(i));
   }
 }
 
@@ -321,7 +317,7 @@ void DisplayNumLabels_gl::gl_edges(const Scene &scen)
     if (geom.colors(EDGES).get((int)i).is_invisible())
       continue;
     sprintf(label, "%u", i);
-    gl_write_label(label, sc_geom->get_e_label_pos(i), scen.cur_camera());
+    write_label(scen, label, sc_geom->get_e_label_pos(i));
   }
 }
 
@@ -336,11 +332,10 @@ void DisplayNumLabels_gl::gl_faces(const Scene &scen)
       continue;
     sprintf(label, "%u", i);
     if(use_alt_labels)
-      gl_write_label_planar(label, sc_geom->get_geom().face_cent(i),
-                            sc_geom->get_geom().face_norm(i),
-                            scen.cur_camera());
+      write_label(scen, label, sc_geom->get_geom().face_cent(i),
+                  sc_geom->get_geom().face_norm(i));
     else
-      gl_write_label(label, sc_geom->get_f_label_pos(i), scen.cur_camera());
+      write_label(scen, label, sc_geom->get_f_label_pos(i));
   }
 }
 
