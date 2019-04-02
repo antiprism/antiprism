@@ -821,8 +821,7 @@ void cn_opts::usage()
 "  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
 "  -O <strg> face transparency pattern string (-f n only). valid values\n"
 "               0 - map color alpha value, 1 -T alpha applied (default: '1')\n"
-"  -m <maps> color maps for faces to be tried in turn\n"
-"               (default for -f n: m1, for -g, m2, otherwise, default: rnd)\n"
+"  -m <maps> color maps for faces to be tried in turn (default: m1, for -g, m2)\n"
 "               keyword m1: red,darkorange1,yellow,darkgreen,cyan,blue,magenta,\n"
 "                           white,grey,black\n"
 "               keyword m2: red,blue,green,yellow,brown,magenta,purple,grue,\n"
@@ -1140,13 +1139,9 @@ void cn_opts::process_command_line(int argc, char **argv)
       error("when -g set, face coloring methods o and w are invalid", 'f');
   }
 
-  if (!map_file.size()) {
-    if (face_coloring_method == 'n')
-      // when use George Hart algorithms, use map he used on line
-      map_file = (hart_mode) ? "m2" : "m1";
-    else
-      map_file = "rnd";
-  }
+  // when use George Hart algorithms, use map he used on line
+  if (!map_file.size())
+    map_file = (hart_mode) ? "m2" : "m1";
 
   if (map_file == "m1" || map_file == "m2") {
     auto *col_map = new ColorMapMap;
@@ -1180,8 +1175,11 @@ void cn_opts::process_command_line(int argc, char **argv)
       // George Hart had all higher faces at grey
       col_map->set_col(0, Color(0.5, 0.5, 0.5)); // 13-sided faces and higher
     }
-    col_map->set_wrap();
     map.add_cmap(col_map);
+
+    // append a spread map instead of wrapping
+    ColorMap *spread_map = colormap_from_name("spread");
+    map.add_cmap(spread_map);
   }
   else
     print_status_or_exit(map.init(map_file.c_str()), 'm');
