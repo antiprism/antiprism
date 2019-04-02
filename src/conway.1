@@ -105,9 +105,11 @@ built in seed coloring: one=1, unique=2, symmetry=3 (default: 1)
 .IP
 0 \- map color alpha value, 1 \fB\-T\fR alpha applied (default: '1')
 .HP
-\fB\-m\fR <maps> color maps for faces to be tried in turn (default: m1, for \fB\-g\fR, m2)
-.TP
+\fB\-m\fR <maps> color maps for faces to be tried in turn
+.IP
+(default for \fB\-f\fR n: m1, for \fB\-g\fR, m2, otherwise, default: rnd)
 keyword m1: red,darkorange1,yellow,darkgreen,cyan,blue,magenta,
+.IP
 white,grey,black
 .TP
 keyword m2: red,blue,green,yellow,brown,magenta,purple,grue,

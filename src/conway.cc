@@ -821,7 +821,8 @@ void cn_opts::usage()
 "  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
 "  -O <strg> face transparency pattern string (-f n only). valid values\n"
 "               0 - map color alpha value, 1 -T alpha applied (default: '1')\n"
-"  -m <maps> color maps for faces to be tried in turn (default: m1, for -g, m2)\n"
+"  -m <maps> color maps for faces to be tried in turn\n"
+"               (default for -f n: m1, for -g, m2, otherwise, default: rnd)\n"
 "               keyword m1: red,darkorange1,yellow,darkgreen,cyan,blue,magenta,\n"
 "                           white,grey,black\n"
 "               keyword m2: red,blue,green,yellow,brown,magenta,purple,grue,\n"
@@ -1139,9 +1140,13 @@ void cn_opts::process_command_line(int argc, char **argv)
       error("when -g set, face coloring methods o and w are invalid", 'f');
   }
 
-  // when use George Hart algorithms, use map he used on line
-  if (!map_file.size())
-    map_file = (hart_mode) ? "m2" : "m1";
+  if (!map_file.size()) {
+    if (face_coloring_method == 'n')
+      // when use George Hart algorithms, use map he used on line
+      map_file = (hart_mode) ? "m2" : "m1";
+    else
+      map_file = "rnd";
+  }
 
   if (map_file == "m1" || map_file == "m2") {
     auto *col_map = new ColorMapMap;
@@ -1383,8 +1388,8 @@ void get_operand(Geometry &geom, const cn_opts &opts)
     Symmetry sym;
     vector<vector<set<int>>> sym_equivs;
     sym.init(geom, &sym_equivs);
-    clrng.v_sets(sym_equivs[2], true);
-    clrng.e_sets(sym_equivs[2], true);
+    clrng.v_sets(sym_equivs[0], true);
+    clrng.e_sets(sym_equivs[1], true);
     clrng.f_sets(sym_equivs[2], true);
   }
 }
