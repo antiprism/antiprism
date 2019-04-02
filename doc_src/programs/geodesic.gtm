@@ -19,6 +19,9 @@
 
 
 <<EXAMPLES_START>>
+See also,
+<a href="http://www.antiprism.com/examples/200_programs/650_geodesic/imagelist.html">geodesic examples with images</a>.
+<p>
 A Class II icosahedral geodesic sphere with a pattern frequency of 4
 <<CMDS_START>>
 geodesic -c 2 -f 4 ico

@@ -1,14 +1,15 @@
 NEWS for Antiprism: http://www.antiprism.com
 
 Version 0.26
-xx-xx-xx Adrian Rossiter <adrian@antiprism.com>
+05-04-19 Adrian Rossiter <adrian@antiprism.com>
          New Programs
             rotegrity: make rotegrity and nexorade models
             mmop_origami: multimodular polyhedron origami models
          Changes
             antiview: new keys 'u/U' change label size, 'M' planar
               face labels
-            wythoff: new option -C for colouring by element
+            wythoff: new option -C for colouring by base elements
+            conway: new options -C colouring method, -R colour seed
             geodesic, geo_m_n: change direction of pattern turn,
               so (m, n) is like previous (n, m)
             bravais: added inverse of f and i centering types

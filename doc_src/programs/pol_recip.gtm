@@ -19,6 +19,9 @@
 
 
 <<EXAMPLES_START>>
+See also,
+<a href="http://www.antiprism.com/examples/200_programs/635_pol_recip/imagelist.html">pol_recip examples with images</a>.
+<p>
 Make the dual of an octahedron, a cube.
 <<CMDS_START>>
 pol_recip oct | antiview
