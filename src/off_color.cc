@@ -213,7 +213,7 @@ void o_col_opts::usage()
 "            vertex and its colour gives a light direction and colour\n"
 "            (default: a set of six lights giving a rainbow colouring\n"
 "  -m <maps> a comma separated list of colour maps used to transform colour\n"
-"            indexes (default: rand), a part consisting of letters from\n"
+"            indexes (default: spread), a part consisting of letters from\n"
 "            v, e, f, selects the element types to apply the map list to\n"
 "            (default 'vef').\n"
 "  -r <rnge> Map HSVA values onto the specified HSVA ranges after other\n"
