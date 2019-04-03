@@ -811,6 +811,7 @@ void cn_opts::usage()
 "               key word: none - sets no color\n"
 "               n - by number of sides\n"
 "               s - symmetric coloring\n"
+"               u - unique coloring\n"
 "               o - newly created faces by operation\n"
 "               w - resolve color indexes (overrides -V)\n"
 "  -C <mthd> colouring method for tiles: none, index, value, association\n"
@@ -998,7 +999,7 @@ void cn_opts::process_command_line(int argc, char **argv)
     case 'f':
       if (!strcasecmp(optarg, "none"))
         face_coloring_method = '\0';
-      else if (strspn(optarg, "nosw") != strlen(optarg) || strlen(optarg) > 1)
+      else if (strspn(optarg, "nsuow") != strlen(optarg) || strlen(optarg) > 1)
         error(msg_str("invalid face Coloring method '%s'", optarg), c);
       else {
         face_coloring_method = *optarg;
@@ -1985,6 +1986,12 @@ void cn_coloring(Geometry &geom, const cn_opts &opts)
         }
       }
     }
+  }
+  else if (opts.face_coloring_method == 'u') {
+    Coloring clrng(&geom);
+    clrng.add_cmap(opts.map.clone());
+    clrng.f_unique(true);
+    clrng.f_apply_cmap();
   }
   // set color values from map indexes from wythoff call
   else if (opts.face_coloring_method == 'w') {
