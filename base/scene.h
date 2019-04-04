@@ -134,10 +134,10 @@ public:
   bool get_elem_trans() { return elem_trans; }
 
   /// Set label offset
-  /**\Higher values push the label further out from its element.
+  /** Higher values push the label further out from its element.
    * \param offset value of offset
    * \return The position of the label. */
-  void set_label_offset(float offset=0.07) {label_offset = offset; }
+  void set_label_offset(float offset = 0.07) { label_offset = offset; }
 
   /// Position of a label for a point.
   /**\param point the point to be labelled.

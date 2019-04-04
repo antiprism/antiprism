@@ -19,6 +19,9 @@
 
 
 <<EXAMPLES_START>>
+See also,
+<a href="http://www.antiprism.com/examples/200_programs/720_mmop_origami/imagelist.html">mmop_origami examples with images</a>.
+<p>
 Cuboctahedron dual
 <<CMDS_START>>
 mmop_origami cubo_d | antiview

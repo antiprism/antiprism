@@ -20,7 +20,9 @@
 <<EXAMPLES_START>>
 
 <h3>Rotegrity Examples</h3>
-
+See also,
+<a href="http://www.antiprism.com/examples/200_programs/705_rotegrity/imagelist.html">rotegrity examples with images</a>.
+<p>
 Convert a geodesic sphere into a nexorade and colour by symmetry
 <<CMDS_START>>
 rotegrity -c s -O r geo_3_1 | antiview -v 0.01
@@ -143,8 +145,8 @@ to include faces data and <i>off2pov -t no_tri</i> to ensure that
 the faces are not triangulated).
 <<CMDS_START>>
 off_color -e S geo_3_1 | rotegrity -a n -O f -o nex_geo_3_1.off
-off2pov -t no_tri -e 0.00789 -i nexorade.inc -o nex_geo_3_1.pov nex_geo_3_1.off
-povray +a +p +H600 +W800 declare=strut_len=0.45 nex_geo_3_1.pov
+off2pov -t no_tri -v 0.00789 -e 0.45 -i nexorade.inc -o nex_geo_3_1.pov nex_geo_3_1.off
+povray +a +p +H600 +W800 nex_geo_3_1.pov
 <<CMDS_END>>
 
 

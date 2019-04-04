@@ -2,12 +2,13 @@
 // This file may be copied, modified and redistributed
 //
 // Render nexorade units (Adrian Rossiter)
+// off2pov -v controls the radius and -e the strut length
 // Example command (must use use 'rotegrity -O f' to ensure
 // that faces are included in the POV file, and must use
 // 'off2pov -t no_tri' to ensure the faces are not triangulated)
 // off_color -e S geo_3_1 | rotegrity -a n -O f -o nex_geo_3_1.off
-// off2pov -t no_tri -e 0.00789 -i nexorade.inc -o nex_geo_3_1.pov nex_geo_3_1.off
-// povray +a +p +H600 +W800 declare=strut_len=0.44 nex_geo_3_1.pov
+// off2pov -t no_tri -v 0.00789 -e 0.45 -i nexorade.inc -o nex_geo_3_1.pov nex_geo_3_1.off
+// povray +a +p +H600 +W800 nex_geo_3_1.pov
 
 #include "textures.inc"
 #include "transforms.inc"
@@ -45,7 +46,7 @@
 #end
 
 
-#ifndef(strut_len) #declare strut_len = 0.3; #end
+#ifndef(strut_len) #declare strut_len = edge_sz; #end
 
 #macro disp_face(face_no, idx, col)
   #local v0 = verts[faces[idx+1]];
@@ -58,7 +59,7 @@
   #local end1 = e_mid + e_dir*strut_len/2;
   
   #local col_tex = local_col_to_tex(f_cols[face_no], face_tex_map, face_col_map, face_tex)
-  cylinder { end0, end1, edge_sz texture { col_tex } }
+  cylinder { end0, end1, vert_sz texture { col_tex } }
 #end
 
 

@@ -64,7 +64,6 @@ mtimestamp $dd.$MM.$yyyy
 ./programs/jitterbug.gtm 3 EXTRA: jitterbug - jitterbug transformation
 ./programs/string_art.gtm 3 EXTRA: string_art - string figures
 ./programs/kaleido.gtm 3 EXTRA: kaleido - uniform polyhedra (Zvi Har'El)
-./programs/radial.gtm 3 EXTRA: radial - radial colouring based on symmetry
 ./programs/spidron.gtm 3 EXTRA: spidron - spidronise a polyhedron
 ./programs/off2txt.gtm 3 EXTRA: off2txt - convert an OFF file to Hedron format
 

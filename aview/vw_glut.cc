@@ -131,7 +131,6 @@ static void toggle(char elem)
       if (elem == 'M')
         disp_n->set_use_alt_labels(!disp_n->get_use_alt_labels());
     }
-
   }
 }
 

@@ -83,8 +83,7 @@ Vec3d GeometryDisplay::get_e_label_pos(int idx)
 Vec3d GeometryDisplay::get_f_label_pos(int idx)
 {
 
-  return get_label_pos(sc_geom->get_geom().face_cent(idx),
-                       sc_geom->min_rad());
+  return get_label_pos(sc_geom->get_geom().face_cent(idx), sc_geom->min_rad());
 }
 
 GeometryDisplayLabel::GeometryDisplayLabel()
@@ -322,7 +321,7 @@ int Camera::animate()
 // -------------------------------------------------------------------
 // Scene
 
-Scene::Scene(): cycle_rate(-1 /* instant updates */)
+Scene::Scene() : cycle_rate(-1 /* instant updates */)
 {
   set_bg_col();
   set_inf_dist(DEF_CAMERA_INF_DIST);

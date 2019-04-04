@@ -74,6 +74,18 @@ file for changes in the Antiprism releases.
 </tr>
 
 <tr class="tbl1" valign="top">
+<td>05/04/2019</td>
+<td>
+Antiprism 0.26 released. Program documentation updated.
+New examples albums:
+<a href="examples/200_programs/680_symmetro/index.html">symmetro</a>,
+<a href="examples/200_programs/705_rotegrity/index.html">rotegrity</a>,
+<a href="examples/200_programs/720_mmop_origami/index.html">mmop_origami</a>,
+<a href="examples/150_named_models/600_wythoff/index.html">wythoff resource models</a>.
+</td>
+</tr>
+
+<tr class="tbl1" valign="top">
 <td>19/12/2017</td>
 <td>
 New examples albums:
@@ -152,10 +164,6 @@ section expanded.
 <tr class="tbl1" valign="top">
 <td>25/01/2012</td>
 <td>
-The site has been offline for three weeks due to a problem with
-the hosting company. It is now back on online again with a
-different hosting company.
-<p>
 New Antiprism 0.20 examples albums: off_trans, off_align, poly_kscope
 and geodesic.
 </td>

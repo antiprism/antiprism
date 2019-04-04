@@ -19,6 +19,9 @@
 
 
 <<EXAMPLES_START>>
+See also,
+<a href="http://www.antiprism.com/examples/200_programs/680_symmetro/imagelist.html">symmetro examples with images</a>.
+<p>
 Make a Cuboctahedron (U7)
 <<CMDS_START>>
 symmetro -k o,1,1,0,e | antiview

@@ -4,12 +4,12 @@ Antiprism
 Notes for Antiprism 0.26
 ------------------------
 
-This is a minor release. It includes new programs: 'rotegrity' makes
-various styles of rotegrity model, 'mmop_origami' constructs models
-whose vertices are folded regular polygons.
+This is a minor release. It includes two new programs: 'rotegrity'
+makes rotegrity and nexorade models, and 'mmop_origami' constructs
+models whose vertices are folded regular polygons.
 
-There are also new features, improvements, and bug fixes, and some
-programs were removed. See the NEWS file for more details.
+There are new features, improvements, and bug fixes. Some programs
+were removed. See the NEWS file for more details.
 
 Please look out for bugs and other issues, and report them to me at
 at: adrian@antiprism.com

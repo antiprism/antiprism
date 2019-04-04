@@ -331,7 +331,7 @@ void DisplayNumLabels_gl::gl_faces(const Scene &scen)
     if (geom.colors(FACES).get((int)i).is_invisible())
       continue;
     sprintf(label, "%u", i);
-    if(use_alt_labels)
+    if (use_alt_labels)
       write_label(scen, label, sc_geom->get_geom().face_cent(i),
                   sc_geom->get_geom().face_norm(i));
     else
