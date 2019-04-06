@@ -10,17 +10,15 @@
 <<CONT_S_START>>
 <small><a href="#current">Current Release</a></small>
 <<BARSPACE>>
+<small><a href="#dev">Development Snapshots</a></small>
+<<BARSPACE>>
 <small><a href="#antiprism_python">Antiprism Python</a></small>
 <<CONT_S_END>>
 
 
 <h2><a name="antiprism">
-Antiprism Programs
+Antiprism Current Release
 </a></h2>
-
-<h3><a name="current">
-Current Release
-</a></h3>
 
 The current version is <<ANTIPRISM_RELEASE>>, released <<REL_DATE>>.
 Here are the
@@ -70,9 +68,26 @@ environment using the
 OpenGL and GLUT development libraries are required to build <i>antiview</i>.
 
 
-<h3><a name="antiprism_python">
+<h2><a name="dev">
+Antiprism Snapshot Releases
+</a></h2>
+
+<p>
+<a href="http://www.antiprism.com/snapshots/">Antiprism snapshot releases</a>
+are available as Windows binaries, Ubuntu packages and source packages.
+</p><p>
+The latest development code is in the
+<a href="https://github.com/antiprism/antiprism">Antiprism Git repository</a>.
+See
+<a href="https://github.com/antiprism/antiprism/blob/master/README.git">README.git</a>
+and
+<a href="https://github.com/antiprism/antiprism/blob/master/README">README</a>
+for information on building the programs.
+</p>
+
+<h2><a name="antiprism_python">
 Antiprism Python
-</a></h3>
+</a></h2>
 
 <a href="https://github.com/antiprism/antiprism_python">Antiprism Python</a>
 is a complementary package of useful modelling programs written in Python.
