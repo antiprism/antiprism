@@ -27,6 +27,12 @@ A largish polar zonohedron
 zono -P 50 | antiview
 <<CMDS_END>>
 
+A largish rhombic spirallohedron
+<<CMDS_START>>
+zono -P 50,5 | antiview
+<<CMDS_END>>
+
+
 Rhombic triacontaahedron
 <<CMDS_START>>
 zono ico | antiview
@@ -54,5 +60,11 @@ zono -S ico -u -C red tet | antiview
 Option <i>-S</i> implements George Hart's
 <a href="http://www.georgehart.com/virtual-polyhedra/zonish_polyhedra.html">Zonish polyhedra</a>.
 <<NOTES_END>>
-
+<p>
+<a herf="http://mathworld.wolfram.com/RhombicSpirallohedron.html">Rhombic
+  spirallohedra</a>
+were
+<a href="https://www.northforktrails.com/RussellTowle/Mathematica/Mathematica.html">discovered by Russell Towle</a>. See also
+<a href="https://youtu.be/OADGS587eOs">Spirallohedra Rule!</a> and 
+<a href="https://youtu.be/Js0evCum83o">Hexagonal Spirallohedra</a>, 
 #include "<<END>>"

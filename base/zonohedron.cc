@@ -249,38 +249,129 @@ Status make_zonohedrified_polyhedron(Geometry &geom, const Geometry &seed,
   return Status::ok();
 }
 
+static inline int pos_mod(int a, int b) { return (a % b + b) % b; }
+
+static int get_idx(int P, int s, int s_step, int num_spirals, int i, int j,
+                   int V)
+{
+  // each spiral is a rectangular array of quads: P-s_step x s_step
+  //  with 0 <= i < P-s_tep and 0 <= y < s_step
+  //
+  // fprintf(stderr, "   (%d, %d) -> ", i, j);
+  int idx = -999999;
+  if (i < 0) {
+    if (j == 0) {
+      idx = -2; // first point
+      // fprintf(stderr, "idx_a=%d\n", idx);
+    }
+    else if (j > P - s_step) {
+      // Move to next spiral and go down i points
+      idx = ((pos_mod(s - 1, num_spirals) + 1) * (P - s_step) * s_step) + j - P;
+      // fprintf(stderr, "idx_b0=%d\n", idx);
+    }
+    else {
+      // Move to previous spiral and go down j points
+      idx = (pos_mod(s - 1, num_spirals) * (P - s_step) * s_step) +
+            (j - 1) * s_step;
+      // fprintf(stderr, "idx_b1=%d (%d->%d : %d->%d)\n", idx, pos_mod(s - 1,
+      // num_spirals), pos_mod(s - 1, num_spirals) * (P - s_step) * s_step, j, (j
+      // - 1)*s_step);
+    }
+  }
+  else if (j == s_step) {
+    if (i == P - s_step - 1) {
+      idx = -1;
+      // fprintf(stderr, "idx_c=%d\n", idx);
+    }
+    else if (i >= P - 2 * s_step) {
+      // Move to next spiral and go down i points
+      idx = (pos_mod(s - 1, num_spirals) * (P - s_step) * s_step) +
+            (P - s_step) * s_step + i - (P - s_step - 1);
+      // fprintf(stderr, "idx_d=%d\n", idx);
+    }
+    else {
+      // Move to next spiral and go down i points
+      idx = (pos_mod(s - 1, num_spirals) * (P - s_step) * s_step) +
+            (i + j) * s_step;
+      // fprintf(stderr, "idx_e=%d\n", idx);
+    }
+  }
+  else {
+    idx = (s * (P - s_step) * s_step) + (i * s_step) + j;
+    // fprintf(stderr, "idx_f=%d\n", idx);
+  }
+
+  // if(idx > P*(P-s_step)-1)
+  // if(idx>47)
+  //  idx=-1;
+
+  return V + idx + 2;
+}
+
+static inline vector<int> get_face(int P, int s, int s_step, int num_spirals,
+                                   int i, int j, int V)
+{
+  vector<int> face = {get_idx(P, s, s_step, num_spirals, i - 1, j, V),
+                      get_idx(P, s, s_step, num_spirals, i, j, V),
+                      get_idx(P, s, s_step, num_spirals, i, j + 1, V),
+                      get_idx(P, s, s_step, num_spirals, i - 1, j + 1, V)};
+  // fprintf(stderr, "(%d, %d) -> %d, %d, %d, %d\n", i, j, face[0], face[1],
+  // face[2], face[3]);
+  return face;
+}
+
 Status make_polar_zonohedron(Geometry &geom, const vector<Vec3d> &star,
-                             int step)
+                             int step, int spiral_step)
 {
   geom.clear_all();
-  int N = star.size();
-  int D = step;
-  int num_parts = gcd(N, D);
-  int P = N / num_parts;
+  int N = star.size();       // number of vectors
+  int D = step;              // step between vectors
+  int num_parts = gcd(N, D); // number of parts in final model
+
+  int P = N / num_parts; // number of vectors in part
+  int P_spiral_step =
+      (spiral_step == 0) ? 1 : pos_mod(spiral_step / num_parts, P);
+  int P_num_spirals = P / gcd(P, P_spiral_step);
+
+  // fprintf(stderr, "N=%d, D=%d, num_parts=%d\n", N, D, num_parts);
+  // fprintf(stderr, "spiral_step=%d\n", spiral_step);
+  // fprintf(stderr, "P=%d, P_spiral_step=%d, P_num_spirals=%d\n", P,
+  //        P_spiral_step, P_num_spirals);
+
   for (int p = 0; p < num_parts; p++) {
     int V = geom.verts().size();
     vector<Vec3d> star_part;
     for (int i = 0; i < P; i++)
-      star_part.push_back(star[(p + i * D) % N]);
+      star_part.push_back(star[(p * P / P_num_spirals + i * D) % N]);
 
-    geom.add_verts(star_part);
-    for (int i = 1; i < P - 1; i++)
-      for (int j = 0; j < P; j++)
-        geom.add_vert(geom.verts(V + (i - 1) * P + j) + star_part[(i + j) % P]);
-    geom.add_vert(geom.verts(V + P * (P - 2)) + star_part[P - 1]);
-    geom.add_vert(Vec3d(0, 0, 0));
-    for (int j = 0; j < P; j++) {
-      geom.add_face(V + P * (P - 1) + 1, V + j, V + j + P, V + (j + 1) % P, -1);
-      if (P > 2)
-        geom.add_face(V + P * (P - 1), V + P * (P - 2) + j,
-                      V + P * (P - 3) + (j + 1) % P,
-                      V + P * (P - 2) + (j + 1) % P, -1);
-    }
-    for (int i = 0; i < P - 3; i++)
-      for (int j = 0; j < P; j++) {
-        geom.add_face(V + i * P + (j + 1) % P, V + (i + 1) * P + j,
-                      V + (i + 2) * P + j, V + (i + 1) * P + (j + 1) % P, -1);
+    geom.add_vert(Vec3d(0, 0, 0)); // initial point
+    geom.add_vert(Vec3d(0, 0, 0)); // final point, set later
+    Vec3d A;                       // points along this spiral
+    Vec3d B;                       // points along following spiral
+    for (int s = 0; s < P_num_spirals; s++) {
+      A = Vec3d(0, 0, 0);
+      for (int i = 0; i < P - P_spiral_step; i++) {
+        int i_idx = (s * P_spiral_step + i) % P;
+        // fprintf(stderr, "\ti_idx=%d\n", i_idx);
+        A += star_part[i_idx]; // next point on this spiral
+
+        B = Vec3d(0, 0, 0);
+        for (int j = 0; j < P_spiral_step; j++) {
+          // A.dump("A");
+          // B.dump("B");
+          //(A+B).dump("A+B");
+          geom.add_vert(A + B);
+          // index of next star vector on following spiral
+          int j_idx = pos_mod((s - 1) * P_spiral_step + j, P);
+          // fprintf(stderr, "\t\tj_idx=%d\n", j_idx);
+          B += star_part[j_idx]; // next point on following spiral
+          geom.add_face(get_face(P, s, P_spiral_step, P_num_spirals, i, j, V),
+                        Color(p * P_num_spirals + s));
+        }
+        // index of next star vector on this spiral
       }
+    }
+    geom.verts(V + 1) = A + B; // set final point
   }
   return Status::ok();
 }

@@ -85,11 +85,13 @@ Status make_zonohedrified_polyhedron(Geometry &geom, const Geometry &seed,
 /**\param geom to return the polar zonohedron
  * \param star the ordered star of vectors.
  * \param step step this many places to get to the next vector in the star
+ * \param spiral_step step this many places between ridges of a rhombic
+ *  spirallohedron, 0 for a regular polar zonohedron
  * \return status, which evaluates to true if the zonohedron could be
  *  calculated (possibly with warnings), otherwise \c false to indicate
  *  an error. */
 Status make_polar_zonohedron(Geometry &geom, const std::vector<Vec3d> &star,
-                             int step = 1);
+                             int step = 1, int spiral_step = 0);
 
 /// Set planar geodesic division.
 /** A Class I pattern is made with m=0,n=1. A Class II pattern

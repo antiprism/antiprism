@@ -46,25 +46,22 @@ using namespace ::anti;
 
 class zo_opts : public ProgramOpts {
 public:
-  char method;
-  Vec3d centre;
-  bool centroid;
-  bool out_star;
-  bool unit_len;
+  char method = 'v';
+  Vec3d centre = Vec3d(0, 0, 0);
+  bool centroid = false;
+  bool out_star = false;
+  bool unit_len = false;
   Color zone_col;
-  int pol_num;
-  Polygon pgon;
-  bool non_polar_opt;
+  int pol_num = 0;
+  int pol_spiral_step = 0;
+  Polygon pgon = 2;
+  bool non_polar_opt = false;
+  Coloring clrngs[3];
   string ifile;
   Geometry seed_geom;
   string ofile;
 
-  zo_opts()
-      : ProgramOpts("zono"), method('v'), centre(Vec3d(0, 0, 0)),
-        centroid(false), out_star(false), unit_len(false), pol_num(0), pgon(2),
-        non_polar_opt(false)
-  {
-  }
+  zo_opts() : ProgramOpts("zono") { read_colorings(clrngs, "spread"); }
   void process_command_line(int argc, char **argv);
   void usage();
 };
@@ -95,7 +92,10 @@ void zo_opts::usage()
 "  -C <col>  colour for new zone faces\n"
 "  -P <star> polar zonohedron from ordered star, can be an offset polygon\n"
 "            given as an integer or fraction (e.g. 5, 7/2) or 's' to use\n"
-"            star_file\n"
+"            star_file. Optionally, follow by a comma and an integer to\n"
+"            to make a spirallohedron with that spiral width (default:0, a\n"
+"            polar zonohedron). Any further comma separated parts are colour\n"
+"            maps to colour the faces.\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
 "\n", prog_name(), help_ver_text);
@@ -106,6 +106,8 @@ void zo_opts::process_command_line(int argc, char **argv)
 {
   opterr = 0;
   int c;
+  vector<char *> parts;
+  string map_str;
 
   handle_long_opts(argc, argv);
 
@@ -151,11 +153,17 @@ void zo_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'P':
-      if (strcmp(optarg, "s") == 0)
+      split_line(optarg, parts, ",");
+      if (parts.size() > 1)
+        print_status_or_exit(read_int(parts[1], &pol_spiral_step), c);
+      else
+        pol_spiral_step = 0; // default
+
+      if (strcmp(parts[0], "s") == 0)
         pol_num = -1; // use star argument
       else {
         int pol_denom = 0;
-        print_status_or_exit(read_fraction(optarg, &pol_num, &pol_denom), c);
+        print_status_or_exit(read_fraction(parts[0], &pol_num, &pol_denom), c);
         if (pol_num < 2)
           error("number of sides must be 2 or greater", c);
         if (pol_denom < 1)
@@ -165,7 +173,23 @@ void zo_opts::process_command_line(int argc, char **argv)
                 "sides",
                 c);
         pgon = Polygon(pol_num, pol_denom);
+
+        if (pol_spiral_step % pol_denom)
+          error("spiral step mut be divisible by the polygon denominator", c);
+        if (pol_spiral_step && pol_spiral_step % pol_num == 0)
+          error("spiral step must not be divisible by the polygon numerator",
+                c);
       }
+
+      map_str = "";
+      if (parts.size() > 2) {
+        for (int i = 2; i < (int)parts.size(); i++)
+          map_str += parts[i] + string(",");
+      }
+      else
+        map_str = "spread";
+
+      print_status_or_exit(read_colorings(clrngs, map_str.c_str()), c);
       break;
 
     case 'o':
@@ -196,7 +220,8 @@ int main(int argc, char **argv)
   vector<Vec3d> star;
   if (opts.pol_num > 0) {
     Geometry gstar;
-    opts.pgon.add_polygon(gstar, sqrt(0.5));
+    Polygon pgon2(opts.pol_num);
+    pgon2.add_polygon(gstar, sqrt(0.5));
     star = gstar.verts();
   }
   else {
@@ -229,9 +254,11 @@ int main(int argc, char **argv)
     opts.print_status_or_exit(make_zonohedrified_polyhedron(
         zono, opts.seed_geom, star, opts.zone_col));
   else if (opts.pol_num) {
-    Geometry zono_base;
-    make_polar_zonohedron(zono_base, star);
-    opts.pgon.repeat_part(zono, zono_base);
+    make_polar_zonohedron(zono, star,
+                          opts.pgon.get_step() * opts.pgon.get_parts(),
+                          opts.pol_spiral_step);
+    opts.clrngs[FACES].set_geom(&zono);
+    opts.clrngs[FACES].f_apply_cmap();
   }
   else {
     opts.print_status_or_exit(make_zonohedron(zono, star));
