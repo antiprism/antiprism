@@ -174,8 +174,11 @@ void zo_opts::process_command_line(int argc, char **argv)
                 c);
         pgon = Polygon(pol_num, pol_denom);
 
-        if (pol_spiral_step % pol_denom)
-          error("spiral step mut be divisible by the polygon denominator", c);
+        if (pol_spiral_step % pol_denom &&
+            pol_spiral_step % (pol_num - pol_denom))
+          error("spiral step must be divisible by the polygon denominator, or "
+                "by the numerator minus the denominator",
+                c);
         if (pol_spiral_step && pol_spiral_step % pol_num == 0)
           error("spiral step must not be divisible by the polygon numerator",
                 c);
