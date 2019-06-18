@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
 
   Tiling &tiling = opts.tiling;
   if (opts.relabel != "")
-    opts.print_status_or_exit(tiling.relabel_pattern(opts.relabel), 'm');
+    opts.print_status_or_exit(tiling.relabel_pattern(opts.relabel), 'r');
   if (opts.reverse) {
     tiling.reverse_pattern();
     opts.warning("base polyhedron is not oriented: reverse has no effect", 'R');

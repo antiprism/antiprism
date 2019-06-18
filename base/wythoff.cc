@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-2016, Adrian Rossiter
+   Copyright (c) 2012-2019, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -1932,6 +1932,92 @@ static string b_pattern(int N)
   return pat;
 }
 
+static string g_pattern(int N)
+{
+  if (N < 1)
+    return ""; // number out of range
+
+  string pat = "[V";
+  int divs = 2 * N + 1;
+  for (int b = 0; b < N; b++) {
+    const int e_coord = 2 * (b + 1);
+    pat += "," + coord_string(Vec3d(divs - e_coord, e_coord, 0));
+  }
+  pat += ",F]";
+
+  int F_idx = N + 1;
+
+  if (N == 1)
+    pat += msg_str("1_2F1_0V1E");
+  else
+    pat += msg_str("%d_1_0e1_2e", F_idx);
+
+  for (int b = 0; b < N - 1; b++) {
+    pat += msg_str(",%d", F_idx);
+    int div_start = 2 * b + 1;
+    bool past_center = false;
+    for (int i = 0; i < 3; i++) {
+      int div = div_start + i;
+      char op = '_';
+      if (div > N && !past_center) {
+        op = 'v';
+        past_center = true;
+      }
+      pat += msg_str("%c%d", op, (div <= N) ? div : 2 * N + 1 - div);
+    }
+    if (past_center)
+      pat += 'v';
+  }
+
+  pat += msg_str(",%dE", N);
+
+  return pat;
+}
+
+static string s_pattern(int N)
+{
+  if (N < 1)
+    return ""; // number out of range
+
+  string pat = "[";
+  int divs = N;
+  for (int b = 0; b < N / 2 + 1; b++) {
+    const int e_coord = 2 * b;
+    pat += coord_string(Vec3d(divs - e_coord, e_coord, 1)) + ',';
+  }
+  pat.back() = ']';
+
+  auto div2idx = [](int idx, int N) { return (idx <= N / 2) ? idx : N - idx; };
+
+  pat += msg_str("0V,%dE,", N / 2);
+
+  bool past_center = false;
+  for (int b = 0; b < N; b++) {
+    string op = (b) ? "_" : "";
+    if (2 * b > N && !past_center) {
+      op = "v";
+      past_center = true;
+    }
+    pat += msg_str("%s%d", op.c_str(), div2idx(b, N));
+  }
+  if (past_center)
+    pat += 'v';
+
+  pat += 'F';
+
+  for (int b = 0; b < N / 2; b++) {
+    pat += msg_str(",%d_%df%df", div2idx(b, N), div2idx(b + 1, N),
+                   div2idx(N - (b + 1), N));
+    pat += msg_str(",%d_f%d_%df", div2idx(b, N), div2idx(N - (b + 1), N),
+                   div2idx(N - b, N));
+  }
+  if (!is_even(N))
+    pat += msg_str(",%df%dv%dvf", div2idx(N / 2, N), div2idx(N - N / 2, N),
+                   div2idx(N - (N / 2 + 1), N));
+
+  return pat;
+}
+
 Status Tiling::read_conway(const string &op)
 {
   int last_op = sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
@@ -1957,6 +2043,10 @@ Status Tiling::read_conway(const string &op)
       pat = e_pattern(op_int);
     else if (op_char == 'b')
       pat = b_pattern(op_int);
+    else if (op_char == 'g')
+      pat = g_pattern(op_int);
+    else if (op_char == 's')
+      pat = s_pattern(op_int);
     else
       stat.set_error(msg_str("Conway operator %c: not known", op_char));
     if (pat == "")
@@ -1997,12 +2087,15 @@ void Tiling::print_conway_list(FILE *ofile)
   }
   fprintf(
       ofile,
-      "\nOperators m, o, e, b, M are each part of a sequence, and accept a \n"
-      "general integer >=0 as a parameter, where 1 is the base operator \n"
-      "and 0 is a lower level operator.  Examples: M5, m5, e2, o0.  L0 is \n"
-      "a standalone operator, and not the 0 entry of a sequence. Some \n"
-      "operators, like t and k, take a number to filter the elements the \n"
-      "pattern will be applied to, but this is not supported.\n");
+      // clang-format off
+"\n"
+"Operators m, o, e, b, M, g, s are each part of a sequence, and accept an\n"
+"optional integer >=1 as a parameter, where 1 is the base operator. Operators\n"
+"m, o, e, b, M also accept 0, which produces a lower level operator.\n"
+"Examples: M5, m5, e2, o0. L0 is a standalone operator, and not the 0 entry\n"
+"of a sequence. Some operators, like t and k, take a number to filter the \n"
+"ments the pattern will be applied to, but this is not supported.\n");
+  // clang-format on
 }
 
 namespace anti {
