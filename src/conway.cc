@@ -70,7 +70,7 @@ ConwayOperator conway_operator_list[]{
     {"c",  "chamfer",         false, true  },
     {"d",  "dual",            false, true  },
     {"e",  "expand",          true,  false }, // allows N >= 0
-    {"g",  "gyro",            false, true  },
+    {"g",  "gyro",            true,  true  },
     {"J",  "joined-medial",   false, false }, // replaces wiki M0
     {"j",  "join",            false, false },
     {"k",  "kis",             true,  true  }, // allows N >= 3 for vertices
@@ -85,7 +85,7 @@ ConwayOperator conway_operator_list[]{
     {"q",  "quinto",          false, false },
     {"r",  "reflect",         false, false },
     {"S",  "seed",            false, false },
-    {"s",  "snub",            false, false },
+    {"s",  "snub",            true,  false },
     {"t",  "truncate",        true,  false }, // allows N >= 3 for faces
     {"u",  "subdivide",       false, false },
     {"w",  "whirl",           false, true  },
@@ -246,6 +246,16 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
         num_val = atoi(number_string.c_str());
         if (num_val == 2) {
           fprintf(stderr, "L(n), n must 0, 1, 3 or greater\n");
+          return i + 1;
+        }
+        operations.push_back(new ops(op_count++, current_op, num_val));
+        delayed_write = false;
+      }
+      // g or s do not allow 0
+      else if (current_op == 'g' || current_op == 's') {
+        num_val = atoi(number_string.c_str());
+        if (num_val == 0) {
+          fprintf(stderr, "%c(n), n must 1 or greater\n", current_op);
           return i + 1;
         }
         operations.push_back(new ops(op_count++, current_op, num_val));
@@ -588,7 +598,8 @@ void extended_help()
 "g = gyro   The dual operation to s is g. gX=dsdX=dsX, with all 5-sided faces.\n"
 "The gyrocube, gC=gO=\"pentagonal icositetrahedron,\" is dual to the snub cube.\n"
 "g is like k but with the new edges connecting the face centers to the 1/3\n"
-"points on the edges rather than the vertices.\n"
+"points on the edges rather than the vertices. (Antiprism Extension: or \"gn\"\n"
+"where n is 1 or greater)\n"
 "\n"
 "j = join   The join operator is dual to ambo, so jX=dadX=daX.  jX is like kX\n"
 "without the original edges of X.  It produces a polyhedron with one 4-sided\n"
@@ -622,6 +633,7 @@ void extended_help()
 "thought of as eC followed by the operation of slicing each of the new 4-fold\n"
 "faces along a diagonal into two triangles.  With a consistent handedness to\n"
 "these cuts, all the vertices of sX are 5-fold.  Note that sX=sdX.\n"
+"(Antiprism Extension: or \"sn\" where n is 1 or greater)\n"
 "\n"
 "t = truncate  All faces are processed or tn = just n-sided faces are processed\n"
 "Truncating a polyhedron cuts off each vertex, producing a new n-sided face for\n"
@@ -687,12 +699,14 @@ void extended_help()
 "\n"
 "b  - n may be 0 or greater (default: 1)\n"
 "e  - n may be 0 or greater (default: 1)\n"
-"K   -n may be 3 or greater representing faces sides\n"
+"g  - n may be 1 or greater (default: 1)\n"
+"K  - n may be 3 or greater representing faces sides\n"
 "k  - n may be 3 or greater representing vertex connections\n"
 "L  - n may be 3 or greater representing face sides, or 0\n"
 "M  - n may be 0 or greater (default: 1)\n"
 "m  - n may be 0 or greater (default: 1)\n"
 "o  - n may be 0 or greater (default: 1)\n"
+"s  - n may be 1 or greater (default: 1)\n"
 "t  - n may be 2 or greater representing face sides\n"
 "\n"
 "Antiprism Extension: note that any operation can be repeated N time by following\n"
