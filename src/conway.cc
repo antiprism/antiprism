@@ -723,7 +723,7 @@ void extended_help()
 "Note: Antiprism Extensions will work on tilings. Hart algorithms (-d) will not\n"
 "e.g.: unitile2d 3 | conway p -t | antiview -v 0.1 (-t for tile mode)\n"
 "\n"
-"Regular tilings can be constructed from base polygons. The basic tilings are:\n"
+"Regular 2D tilings can be constructed from base polygons. The basic tilings are:\n"
 "\n"
 "            One Layer  Two Layers  Three Layers...\n"
 "Square:     oZ4        o2Z4        o3Z4\n"
@@ -799,7 +799,7 @@ void cn_opts::usage()
 "              op can be any operation letter not currently in use\n"
 "              string can be any operations. More than one <op=s> can be used\n"
 "              Examples: -c x=kt,y=tk,v=dwd or -c x=kt -c y=tk -c v=dwd\n"
-"  -t        tile mode. when input is a tiling. unsets -g  sets -p u\n"
+"  -t        tile mode. when input is a 2D tiling. unsets -g  sets -p u\n"
 "              set if seed of Z is detected\n"
 "  -r        execute operations in reverse order (left to right)\n"
 "  -u        make final product be averge unit edge length\n"
@@ -1820,6 +1820,10 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
       sprintf(buf, "%d", op_var);
       wythoff_op += string(buf);
     }
+
+    // for tile mode, use old wythoff truncate
+    if (opts.tile_mode && wythoff_op == "t")
+      wythoff_op = "[VE]0v0e,0V,0E";
 
     // fprintf(stderr, "wythoff_op = %s\n", wythoff_op.c_str());
     opts.print_status_or_exit(wythoff_make_tiling(
