@@ -1284,6 +1284,12 @@ void unitize_vertex_radius(Geometry &geom)
 
 void cn_planarize(Geometry &geom, char planarize_method, const cn_opts &opts)
 {
+  // if the model becomes open mid-processing, can no longer use method p
+  GeometryInfo info(geom);
+  if ((planarize_method == 'p') && !info.is_closed()) {
+    planarize_method = 'm';
+  }
+
   if ((opts.num_iters_planar != 0) && (opts.planarize_method != 'x')) {
     verbose('_', 0, opts);
     if (planarize_method == 'p')
