@@ -157,7 +157,7 @@ void DisplayPoly::vrml_protos(FILE *ofile)
   Color vcol = def_col(VERTS);
   fprintf(ofile,
           "\n"
-          "PROTO V_%s [\n"
+          "PROTO V%s_%s [\n"
           "   field SFVec3f C 0 0 0    # centre\n"
           "   field SFColor clr %s     # colour\n"
           "   field SFFloat trn %.4f     # transparency\n"
@@ -180,13 +180,13 @@ void DisplayPoly::vrml_protos(FILE *ofile)
           "      ]\n"
           "   }\n"
           "}\n",
-          dots2underscores(sc_geom->get_name()).c_str(), vrml_col(vcol).c_str(),
-          vcol.get_transparency_d(), get_vert_rad());
+          get_id_label().c_str(), dots2underscores(sc_geom->get_name()).c_str(),
+          vrml_col(vcol).c_str(), vcol.get_transparency_d(), get_vert_rad());
 
   Color ecol = def_col(EDGES);
   fprintf(ofile,
           "\n"
-          "PROTO E_%s [\n"
+          "PROTO E%s_%s [\n"
           "   field SFVec3f C 0 0 0     # centre\n"
           "   field SFRotation R 1 0 0 0     # rotation\n"
           "   field SFColor clr %s    # colour\n"
@@ -214,13 +214,13 @@ void DisplayPoly::vrml_protos(FILE *ofile)
           "      ]\n"
           "   }\n"
           "}\n",
-          dots2underscores(sc_geom->get_name()).c_str(), vrml_col(ecol).c_str(),
-          ecol.get_transparency_d(), get_edge_rad());
+          get_id_label().c_str(), dots2underscores(sc_geom->get_name()).c_str(),
+          vrml_col(ecol).c_str(), ecol.get_transparency_d(), get_edge_rad());
 
   Color fcol = def_col(FACES);
   fprintf(ofile,
           "\n"
-          "PROTO F0_%s [\n"
+          "PROTO F0%s_%s [\n"
           "   field MFInt32 ci [0 0 0 -1]  # coordinate index node\n"
           "   field SFNode vc NULL         # coords\n"
           "   field SFColor clr %s  # colour\n"
@@ -242,12 +242,12 @@ void DisplayPoly::vrml_protos(FILE *ofile)
           "      }\n"
           "  }\n"
           "}\n",
-          dots2underscores(sc_geom->get_name()).c_str(), vrml_col(fcol).c_str(),
-          fcol.get_transparency_d());
+          get_id_label().c_str(), dots2underscores(sc_geom->get_name()).c_str(),
+          vrml_col(fcol).c_str(), fcol.get_transparency_d());
 
   fprintf(ofile,
           "\n"
-          "PROTO F_%s [\n"
+          "PROTO F%s_%s [\n"
           "   field MFInt32 ci [0 0 0 -1]  # coordinate index node\n"
           "   field SFNode vc NULL         # coords\n"
           "   field MFColor clrs [0 0 0]  # colours\n"
@@ -271,7 +271,7 @@ void DisplayPoly::vrml_protos(FILE *ofile)
           "      }\n"
           "  }\n"
           "}\n",
-          dots2underscores(sc_geom->get_name()).c_str(),
+          get_id_label().c_str(), dots2underscores(sc_geom->get_name()).c_str(),
           /*vrml_col(fcol).c_str(),*/
           fcol.get_transparency_d());
 }
@@ -775,6 +775,7 @@ void DisplayPoly::pov_geom(FILE *ofile, const Scene &, int sig_digits)
 
 DisplayNumLabels::DisplayNumLabels()
 {
+  set_id_label("L");
   elem(VERTS).set_col(Color(0.5, 0.0, 0.0));
   elem(EDGES).set_col(Color(0.0, 0.5, 0.0));
   elem(FACES).set_col(Color(0.0, 0.0, 0.5));
@@ -859,10 +860,11 @@ void DisplayNumLabels::vrml_protos(FILE *ofile, const Scene &scen)
   bool bg_dark = (bg[0] + bg[1] + bg[2]) < 1.5;
   Vec3d txt_col = Vec3d(bg_dark, bg_dark, bg_dark);
   double txt_sz = scen.get_width() / 30;
+  string name = dots2underscores(sc_geom->get_name());
 
   fprintf(ofile,
           "\n"
-          "PROTO LAB [\n"
+          "PROTO L%s_%s [\n"
           "   field SFColor lab_clr %s"
           "   field MFString lab_txt \"\"\n"
           "   field SFVec3f lab_pos 0 0 0\n"
@@ -888,7 +890,8 @@ void DisplayNumLabels::vrml_protos(FILE *ofile, const Scene &scen)
           "      ]\n"
           "   }\n"
           "}\n",
-          vrml_col(txt_col).c_str(), txt_sz);
+          get_id_label().c_str(), name.c_str(), vrml_col(txt_col).c_str(),
+          txt_sz);
 
   char lab_lets[3];
   Color lab_cols[3];
@@ -902,7 +905,7 @@ void DisplayNumLabels::vrml_protos(FILE *ofile, const Scene &scen)
   for (int i = 0; i < 3; i++) {
     fprintf(ofile,
             "\n"
-            "PROTO %cLAB [\n"
+            "PROTO %c%s_%s [\n"
             "   field SFColor clr %s\n"
             "   field MFString txt \"\"\n"
             "   field SFVec3f pos 0 0 0\n"
@@ -910,12 +913,14 @@ void DisplayNumLabels::vrml_protos(FILE *ofile, const Scene &scen)
             "{\n"
             "   Group {\n"
             "   children [\n"
-            "      LAB { lab_clr IS clr lab_txt IS txt lab_pos IS pos }\n"
+            "      L%s_%s { lab_clr IS clr lab_txt IS txt lab_pos IS pos }\n"
             "      ]\n"
             "   }\n"
             "}\n"
             "\n",
-            lab_lets[i], vrml_col(lab_cols[i]).c_str());
+            lab_lets[i], get_id_label().c_str(), name.c_str(),
+            vrml_col(lab_cols[i]).c_str(), get_id_label().c_str(),
+            name.c_str());
   }
 }
 
@@ -927,7 +932,8 @@ void DisplayNumLabels::vrml_verts(FILE *ofile)
   for (int i = 0; i < v_sz; i++) {
     if (geom.colors(VERTS).get((int)i).is_invisible())
       continue;
-    fprintf(ofile, "VLAB { txt \"%d\" pos %s }\n", i,
+    fprintf(ofile, "V%s_%s { txt \"%d\" pos %s }\n", get_id_label().c_str(),
+            dots2underscores(sc_geom->get_name()).c_str(), i,
             vrml_vec(sc_geom->get_v_label_pos(i), 4).c_str());
   }
   fprintf(ofile, "\n\n\n");
@@ -941,7 +947,8 @@ void DisplayNumLabels::vrml_edges(FILE *ofile)
   for (int i = 0; i < e_sz; i++) {
     if (geom.colors(EDGES).get((int)i).is_invisible())
       continue;
-    fprintf(ofile, "ELAB { txt \"%d\" pos %s }\n", i,
+    fprintf(ofile, "E%s_%s { txt \"%d\" pos %s }\n", get_id_label().c_str(),
+            dots2underscores(sc_geom->get_name()).c_str(), i,
             vrml_vec(sc_geom->get_e_label_pos(i), 4).c_str());
   }
   fprintf(ofile, "\n\n\n");
@@ -955,7 +962,8 @@ void DisplayNumLabels::vrml_faces(FILE *ofile)
   for (int i = 0; i < f_sz; i++) {
     if (geom.colors(FACES).get((int)i).is_invisible())
       continue;
-    fprintf(ofile, "FLAB { txt \"%d\" pos %s }\n", i,
+    fprintf(ofile, "F%s_%s { txt \"%d\" pos %s }\n", get_id_label().c_str(),
+            dots2underscores(sc_geom->get_name()).c_str(), i,
             vrml_vec(sc_geom->get_f_label_pos(i), 4).c_str());
   }
   fprintf(ofile, "\n\n\n");
@@ -980,6 +988,7 @@ void DisplayNumLabels::vrml_geom(FILE *ofile, const Scene &scen, int)
 DisplaySymmetry::DisplaySymmetry()
     : show_axes(false), show_mirrors(false), show_rotrefls(false), sym()
 {
+  set_id_label("S");
   elem(VERTS).set_show(false);
   elem(EDGES).set_show(false);
 }

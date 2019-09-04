@@ -88,6 +88,7 @@ private:
   ElemDispProps elems[3];
   bool elem_trans;
   float label_offset;
+  std::string id_label;
 
 protected:
   SceneGeometry *sc_geom; ///< The scene geometry to be displaed.
@@ -144,6 +145,16 @@ public:
    * \param elem_sz the size of the element.
    * \return The position of the label. */
   virtual Vec3d get_label_pos(const Vec3d &point, double elem_sz);
+
+  /// Set id label
+  /** Id label to differentiate display types and avoid name conflicts.
+   * \param label id label */
+  void set_id_label(std::string label) { id_label = label; }
+
+  /// Set id label
+  /** Id label to differentiate display types and avoid name conflicts.
+   * \return Id label. */
+  virtual std::string get_id_label() { return id_label; }
 
   /// Position of a vertex label.
   /**\param idx vertex index number.
