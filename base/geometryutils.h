@@ -93,6 +93,21 @@ Status make_zonohedrified_polyhedron(Geometry &geom, const Geometry &seed,
 Status make_polar_zonohedron(Geometry &geom, const std::vector<Vec3d> &star,
                              int step = 1, int spiral_step = 0);
 
+
+/// Make a translation surface from two ordered stars of vectors
+/**\param geom to return the polar zonohedron
+ * \param star0 an ordered star of vectors for first dimension of surface.
+ * \param star1 an ordered star of vectors for second dimension of surface.
+ * \param open_flgs two characters (or one to use for both) to indicate
+ *  if the stars of vectors are open, or close to form a loop:
+ *  d - detect, c - force close, o - leave open
+ * \return status, which evaluates to true if the zonohedron could be
+ *  calculated (possibly with warnings), otherwise \c false to indicate
+ *  an error. */
+Status make_translation_surface(Geometry &geom, const Geometry &star0,
+                                const Geometry &star1,
+                                const std::string open_flgs = "");
+
 /// Set planar geodesic division.
 /** A Class I pattern is made with m=0,n=1. A Class II pattern
  *  is made with m=1,n=1. A Class III pattern is made with n>=1,m>1.

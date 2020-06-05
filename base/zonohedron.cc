@@ -376,4 +376,80 @@ Status make_polar_zonohedron(Geometry &geom, const vector<Vec3d> &star,
   return Status::ok();
 }
 
+Status make_translation_surface(Geometry &geom, const Geometry &star0,
+                                const Geometry &star1, const string open_flgs)
+{
+  // set open_type to two values from d, o, c for default (detect open
+  // or close), close (add a close vector), open (don't add a close vector)
+  vector<char> open_type(2, open_flgs.empty() ? 'd' : open_flgs[0]);
+  if(open_flgs.size()>1)
+    open_type[1] = open_flgs[1];
+
+  // Vectors that will be used, and whether they are a loop (i.e. is the
+  // last point reached by the chain identified with the initial point)
+  vector<vector<Vec3d>> chains(2, {Vec3d::zero});
+  vector<bool> is_loop(2);
+
+  const Geometry *stars[] = {&star0, &star1};
+  for (int s = 0; s < 2; s++) {
+    Vec3d sum = Vec3d::zero;
+    for(size_t i=0; i<stars[s]->verts().size(); i++)
+      sum += stars[s]->verts(i);
+
+    chains[s].insert(chains[s].end(), stars[s]->verts().begin(),
+                     stars[s]->verts().end());
+    // detect whether vectors form a loop
+    is_loop[s] = compare(sum / stars[s]->verts().size(), Vec3d::zero) == 0;
+    if (open_type[s] == 'd') {
+      if (is_loop[s]) {
+        // the last vertex is the same as the first and so can be deleted
+        chains[s].resize(chains[s].size() - 1);
+      }
+    }
+    else
+      is_loop[s] = (open_type[s] == 'c');
+  }
+
+  const int v_sz[2] = {(int)chains[0].size(), (int)chains[1].size()};
+  Vec3d cur0 = Vec3d::zero;
+  for (int i = 0; i < v_sz[0]; i++) {
+    cur0 += chains[0][i];
+    Vec3d cur1 = Vec3d::zero;
+    for (int j = 0; j < v_sz[1]; j++) {
+      cur1 += chains[1][j];
+      geom.add_vert(cur0 + cur1);
+      vector<int> face = {i * v_sz[1] + j, i * v_sz[1] + (j + 1),
+                          (i + 1) * v_sz[1] + (j + 1), (i + 1) * v_sz[1] + j};
+      if (i + 1 < v_sz[0] && j + 1 < v_sz[1]) {
+        geom.add_face(face);
+        geom.add_edge({face[0], face[3]}, stars[0]->colors(VERTS).get(i));
+        geom.add_edge({face[0], face[1]}, stars[1]->colors(VERTS).get(j));
+      }
+      else if(i + 1 < v_sz[0])
+        geom.add_edge({face[0], face[3]}, stars[0]->colors(VERTS).get(i));
+      else if(j + 1 < v_sz[1])
+        geom.add_edge({face[0], face[1]}, stars[1]->colors(VERTS).get(j));
+      bool add_close_i_edge = (is_loop[0] && i + 1 == v_sz[0]);
+      bool add_close_j_edge = (is_loop[1] && j + 1 == v_sz[1]);
+      if (add_close_i_edge || add_close_j_edge) {
+        const int i_next = (i + 1) % v_sz[0];
+        const int j_next = (j + 1) % v_sz[1];
+        vector<int> face2 = {i * v_sz[1] + j, i * v_sz[1] + j_next,
+                             i_next * v_sz[1] + j_next, i_next * v_sz[1] + j};
+        if (i + 1 != v_sz[0] || j + 1 != v_sz[1] ||
+            (is_loop[0] && is_loop[1]))
+          geom.add_face(face2);
+
+        if (is_loop[0])
+          geom.add_edge({face2[0], face2[3]}, stars[0]->colors(VERTS).get(i));
+        if (is_loop[1])
+          geom.add_edge({face2[0], face2[1]}, stars[1]->colors(VERTS).get(j));
+      }
+    }
+  }
+  return Status::ok();
+}
+
+
+
 } // namespace anti

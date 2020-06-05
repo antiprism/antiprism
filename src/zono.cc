@@ -59,6 +59,8 @@ public:
   Coloring clrngs[3];
   string ifile;
   Geometry seed_geom;
+  Geometry star_translation;
+  string open_flgs;
   string ofile;
 
   zo_opts() : ProgramOpts("zono") { read_colorings(clrngs, "spread"); }
@@ -96,6 +98,10 @@ void zo_opts::usage()
 "            to make a spirallohedron with that spiral width (default:0, a\n"
 "            polar zonohedron). Any further comma separated parts are colour\n"
 "            maps to colour the faces.\n"
+"  -T <star> translation surface, made from input star and this star,\n"
+"            optionally followed by a comma and two characters (or one to\n"
+"            use for both) to indicate if the stars of vectors are open, or\n"
+"            close to form a loop: d-detect, c-force close, o-leave open\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
 "\n", prog_name(), help_ver_text);
@@ -111,7 +117,7 @@ void zo_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hm:c:S:suC:P:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hm:c:S:suC:P:T:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -195,6 +201,19 @@ void zo_opts::process_command_line(int argc, char **argv)
       print_status_or_exit(read_colorings(clrngs, map_str.c_str()), c);
       break;
 
+    case 'T':
+      split_line(optarg, parts, ",");
+      if (parts.size() > 1) {
+        if (strspn(parts[1], "doc") != strlen(parts[1]))
+          error("close setting can contain only the characters d, o, c", c);
+        if (strlen(parts[1]) > 2)
+          error("close setting cannot be longer than two characters", c);
+        open_flgs = parts[1];
+      }
+
+      read_or_error(star_translation, parts[0]);
+      break;
+
     case 'o':
       ofile = optarg;
       break;
@@ -203,6 +222,9 @@ void zo_opts::process_command_line(int argc, char **argv)
       error("unknown command line error");
     }
   }
+
+  if (pol_num > 0 && star_translation.is_set())
+    error("options -P and -T cannot be used together");
 
   if (pol_num > 0 && (non_polar_opt || argc - optind))
     error("option -P polygon parameter is not compatible with options m, c or "
@@ -262,6 +284,12 @@ int main(int argc, char **argv)
                           opts.pol_spiral_step);
     opts.clrngs[FACES].set_geom(&zono);
     opts.clrngs[FACES].f_apply_cmap();
+  }
+  else if (opts.star_translation.is_set()) {
+    Geometry g_star;
+    g_star.add_verts(star);
+    make_translation_surface(zono, g_star, opts.star_translation,
+                             opts.open_flgs);
   }
   else {
     opts.print_status_or_exit(make_zonohedron(zono, star));
