@@ -113,6 +113,7 @@ public:
   string e_sub_sym;
   vector<set<int>> e_equivs;
   Color e_col;
+  double e_min_len_diff;
 
   char f_col_op;
   string f_sub_sym;
@@ -190,6 +191,7 @@ void o_col_opts::usage()
 "               k,K - sets of edges connected by edges\n"
 "               F   - colour with average adjoining face colour\n"
 "               d,D - colour by edge direction\n"
+"               j,J - color by edge length [,minimum_difference (def: 1e-6)]\n"
 "               g,G - gradient on z-coordinate of edge direction\n"
 "               c,C - gradient on z-coordinate of centroid\n"
 "               L   - lighting effect (see option -l)\n"
@@ -295,17 +297,27 @@ void o_col_opts::process_command_line(int argc, char **argv)
       }
       optarg_orig = optarg;
       split_line(optarg, parts, ",");
-      if (strlen(parts[0]) == 1 && strchr("uUpPsSkKFgGcCLldDM", *parts[0]))
+      if (strlen(parts[0]) == 1 && strchr("uUpPsSkKjJFgGcCLldDM", *parts[0]))
         e_col_op = *parts[0];
       else
         error("invalid colouring", c);
 
-      if (!((strchr("sS", (char)e_col_op) && parts.size() < 4) ||
-            parts.size() < 2))
+      if (!((strchr("sS", e_col_op) && parts.size() < 4) ||
+            (strchr("jJ", e_col_op) && parts.size() < 3) || parts.size() < 2))
         error("too many comma separated parts", c);
 
       if (strchr("sS", e_col_op))
         e_sub_sym = optarg_orig.size() > 2 ? optarg_orig.substr(2) : "";
+
+      if (strchr("jJ", e_col_op)) {
+        if (parts.size() == 1)
+          e_min_len_diff = 1e-6;
+        else
+          print_status_or_exit(read_double(parts[1], &e_min_len_diff));
+        if (e_min_len_diff <= 0)
+          error("edge length minimum distance must be positive", c);
+      }
+
       break;
 
     case 'E':
@@ -607,6 +619,8 @@ int main(int argc, char *argv[])
       ec.e_proper(op == 'P');
     else if (strchr("sS", op))
       ec.e_sets(sym_equivs[1], op == 'S');
+    else if (strchr("jJ", op))
+      ec.e_lengths(opts.e_min_len_diff, op == 'J');
     else if (strchr("kK", op))
       ec.e_parts(op == 'K');
     else if (strchr("Gg", op))

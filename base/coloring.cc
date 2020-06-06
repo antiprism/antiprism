@@ -28,6 +28,7 @@
 
 #include <algorithm>
 #include <limits.h>
+#include <limits>
 #include <map>
 #include <set>
 #include <string.h>
@@ -581,6 +582,31 @@ void Coloring::e_vector(bool apply_map)
     }
     idx++;
   }
+}
+
+void Coloring::e_lengths(double min_diff, bool apply_map)
+{
+  if (get_geom()->edges().size() == 0)
+    return;
+
+  const Geometry &geom = *get_geom();
+  vector<std::pair<double, int>> lens(geom.edges().size());
+  for (unsigned int i = 0; i < geom.edges().size(); i++)
+    lens[i] = {geom.edge_len(i), i};
+  std::sort(lens.begin(), lens.end());
+
+  vector<set<int>> equivs;
+  // large negative will test different to first edge length
+  double seq_first_len = -std::numeric_limits<double>::max();
+  for (auto kp : lens) {
+    if (!double_eq(kp.first, seq_first_len, min_diff)) {
+      seq_first_len = kp.first;
+      equivs.push_back(set<int>());
+    }
+    equivs.back().insert(kp.second);
+  }
+
+  e_sets(equivs, apply_map);
 }
 
 void Coloring::e_lights(Geometry lts)

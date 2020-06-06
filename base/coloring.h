@@ -283,6 +283,15 @@ public:
    * these index numbers using the colour maps */
   void e_vector(bool apply_map = true);
 
+  /// Colour each edge according to unique lengths
+  /** Edges are considered in length order until an edge is found
+   *  that is is greater than the minimum difference from the first
+   *  edge in the sequence
+   * \param min_diff the minimum difference
+   * \param apply_map if \c false, colour with index numbers,
+   *  if \c true, convert these index numbers using the colour maps */
+  void e_lengths(double min_diff, bool apply_map = true);
+
   /// Colour each edge using a set of lights.
   /**\param lts a geometry holding coloured vertices to use as lights.*/
   void e_lights(Geometry lts);

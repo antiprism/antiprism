@@ -1,5 +1,10 @@
 NEWS for Antiprism: http://www.antiprism.com
 
+Version 0.27
+xx-xx-20 Adrian Rossiter <adrian@antiprism.com>
+         Changes
+            off_color: new -e jJ to colour by edge length
+
 Version 0.26
 05-04-19 Adrian Rossiter <adrian@antiprism.com>
          New Programs
