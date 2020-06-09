@@ -1,9 +1,14 @@
 NEWS for Antiprism: http://www.antiprism.com
 
 Version 0.27
-xx-xx-20 Adrian Rossiter <adrian@antiprism.com>
+01-10-20 Adrian Rossiter <adrian@antiprism.com>
          Changes
             off_color: new -e jJ to colour by edge length
+            zono: -P add spirallohedra, new -T translation product
+            conway: g and s take a numeric parameter
+         Fixes
+            off2vrml: avoid duplicate PROTO statements
+            minor bug fixes and improvements
 
 Version 0.26
 05-04-19 Adrian Rossiter <adrian@antiprism.com>

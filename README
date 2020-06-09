@@ -1,15 +1,10 @@
 Antiprism
 =========
 
-Notes for Antiprism 0.26
+Notes for Antiprism 0.27
 ------------------------
 
-This is a minor release. It includes two new programs: 'rotegrity'
-makes rotegrity and nexorade models, and 'mmop_origami' constructs
-models whose vertices are folded regular polygons.
-
-There are new features, improvements, and bug fixes. Some programs
-were removed. See the NEWS file for more details.
+This is a minor release. See the NEWS file for more details.
 
 Please look out for bugs and other issues, and report them to me at
 at: adrian@antiprism.com
@@ -35,7 +30,7 @@ documented.
 
 Antiprism is available as source code
 
-   http://www.antiprism.com/files/antiprism-0.26.tar.gz
+   http://www.antiprism.com/files/antiprism-0.27.tar.gz
 
 Ubuntu packages
 
@@ -43,8 +38,8 @@ Ubuntu packages
 
 Windows 64-bit and 32-bit installers
 
-   http://www.antiprism.com/files/antiprism-0.26_w64_install.exe
-   http://www.antiprism.com/files/antiprism-0.26_w32_install.exe
+   http://www.antiprism.com/files/antiprism-0.27_w64_install.exe
+   http://www.antiprism.com/files/antiprism-0.27_w32_install.exe
 
 In Windows, the DOS Box started from the Antiprism Shell menu
 item is configured and ready to run the Antiprism programs.

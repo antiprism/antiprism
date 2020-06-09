@@ -1106,7 +1106,7 @@ Status Symmetry::init(int type, int n, const Trans3d &pos)
 
   to_std = pos;
   sym_type = type;
-  if (sym_type >= C || sym_type <= S) // principal axis
+  if (sym_type >= C && sym_type <= S) // principal axis
     nfold = n;
 
   // Allow for alternative descriptions of "lesser" symmetries
@@ -1385,7 +1385,7 @@ private:
   const Symmetry &sym;
 
 public:
-  same_sym_group(Symmetry s) : sym(s) {}
+  same_sym_group(const Symmetry &s) : sym(s) {}
 
   bool operator()(const Symmetry &cmp) const
   {
