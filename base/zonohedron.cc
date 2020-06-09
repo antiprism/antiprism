@@ -274,7 +274,8 @@ static int get_idx(int P, int s, int s_step, int num_spirals, int i, int j,
       idx = (pos_mod(s - 1, num_spirals) * (P - s_step) * s_step) +
             (j - 1) * s_step;
       // fprintf(stderr, "idx_b1=%d (%d->%d : %d->%d)\n", idx, pos_mod(s - 1,
-      // num_spirals), pos_mod(s - 1, num_spirals) * (P - s_step) * s_step, j, (j
+      // num_spirals), pos_mod(s - 1, num_spirals) * (P - s_step) * s_step, j,
+      // (j
       // - 1)*s_step);
     }
   }
@@ -372,7 +373,7 @@ Status make_translation_surface(Geometry &geom, const Geometry &star0,
   // set open_type to two values from d, o, c for default (detect open
   // or close), close (add a close vector), open (don't add a close vector)
   vector<char> open_type(2, open_flgs.empty() ? 'd' : open_flgs[0]);
-  if(open_flgs.size()>1)
+  if (open_flgs.size() > 1)
     open_type[1] = open_flgs[1];
 
   // Vectors that will be used, and whether they are a loop (i.e. is the
@@ -383,7 +384,7 @@ Status make_translation_surface(Geometry &geom, const Geometry &star0,
   const Geometry *stars[] = {&star0, &star1};
   for (int s = 0; s < 2; s++) {
     Vec3d sum = Vec3d::zero;
-    for(size_t i=0; i<stars[s]->verts().size(); i++)
+    for (size_t i = 0; i < stars[s]->verts().size(); i++)
       sum += stars[s]->verts(i);
 
     chains[s].insert(chains[s].end(), stars[s]->verts().begin(),
@@ -415,9 +416,9 @@ Status make_translation_surface(Geometry &geom, const Geometry &star0,
         geom.add_edge({face[0], face[3]}, stars[0]->colors(VERTS).get(i));
         geom.add_edge({face[0], face[1]}, stars[1]->colors(VERTS).get(j));
       }
-      else if(i + 1 < v_sz[0])
+      else if (i + 1 < v_sz[0])
         geom.add_edge({face[0], face[3]}, stars[0]->colors(VERTS).get(i));
-      else if(j + 1 < v_sz[1])
+      else if (j + 1 < v_sz[1])
         geom.add_edge({face[0], face[1]}, stars[1]->colors(VERTS).get(j));
       bool add_close_i_edge = (is_loop[0] && i + 1 == v_sz[0]);
       bool add_close_j_edge = (is_loop[1] && j + 1 == v_sz[1]);
@@ -426,8 +427,7 @@ Status make_translation_surface(Geometry &geom, const Geometry &star0,
         const int j_next = (j + 1) % v_sz[1];
         vector<int> face2 = {i * v_sz[1] + j, i * v_sz[1] + j_next,
                              i_next * v_sz[1] + j_next, i_next * v_sz[1] + j};
-        if (i + 1 != v_sz[0] || j + 1 != v_sz[1] ||
-            (is_loop[0] && is_loop[1]))
+        if (i + 1 != v_sz[0] || j + 1 != v_sz[1] || (is_loop[0] && is_loop[1]))
           geom.add_face(face2);
 
         if (is_loop[0])
@@ -439,7 +439,5 @@ Status make_translation_surface(Geometry &geom, const Geometry &star0,
   }
   return Status::ok();
 }
-
-
 
 } // namespace anti

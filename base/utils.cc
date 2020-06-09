@@ -445,7 +445,7 @@ string find_alt_name(FILE *afile, const char *a_name)
   const int line_size = 1024;
   char line[line_size];
   char aname[line_size];
-  strncpy(aname, a_name, line_size-1);
+  strncpy(aname, a_name, line_size - 1);
   aname[line_size - 1] = '\0';
   clear_extra_whitespace(aname);
 

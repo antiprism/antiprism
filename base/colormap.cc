@@ -926,8 +926,8 @@ static bool parse_map_from_line(const char *line, map<int, Color> *cmap,
     col.read(col_pos);
     if (!col.is_set()) {
       if (errmsg)
-        snprintf(errmsg, MSG_SZ, "entry %d: invalid colour, '%.*s'", i + 1,
-                 150, col_pos);
+        snprintf(errmsg, MSG_SZ, "entry %d: invalid colour, '%.*s'", i + 1, 150,
+                 col_pos);
       cmap_ok = false;
     }
 

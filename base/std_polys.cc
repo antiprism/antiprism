@@ -1196,8 +1196,8 @@ static int make_resource_wythoff(Geometry &geom, string name, bool is_std,
   Wythoff wyt(symbol_str.c_str(), &stat);
   if (stat.is_error()) {
     if (errmsg)
-      snprintf(errmsg, MSG_SZ, "wythoff name: invalid symbol: %.*s",
-               150, stat.c_msg());
+      snprintf(errmsg, MSG_SZ, "wythoff name: invalid symbol: %.*s", 150,
+               stat.c_msg());
     return 1; // fail
   }
 

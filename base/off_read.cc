@@ -93,8 +93,8 @@ bool off_file_read(string file_name, Geometry &geom, char *errmsg)
     else {
       if (errmsg)
         snprintf(errmsg, MSG_SZ - 50,
-                 "could not open input file \'%.*s\': %.*s",
-                 80, file_name.c_str(), 80, errmsg2);
+                 "could not open input file \'%.*s\': %.*s", 80,
+                 file_name.c_str(), 80, errmsg2);
     }
   }
 

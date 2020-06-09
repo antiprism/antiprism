@@ -93,7 +93,6 @@ Status make_zonohedrified_polyhedron(Geometry &geom, const Geometry &seed,
 Status make_polar_zonohedron(Geometry &geom, const std::vector<Vec3d> &star,
                              int step = 1, int spiral_step = 0);
 
-
 /// Make a translation surface from two ordered stars of vectors
 /**\param geom to return the polar zonohedron
  * \param star0 an ordered star of vectors for first dimension of surface.

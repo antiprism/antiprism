@@ -428,12 +428,11 @@ void unitile::torus(double sect_rad, double ring_rad)
   }
 }
 
-void unitile::torus_trefoil(double sect_rad, double ring_rad,
-    vector<double> pq)
+void unitile::torus_trefoil(double sect_rad, double ring_rad, vector<double> pq)
 {
   plane(ut_join, ut_join);
   vector<Vec3d> &verts = raw_verts();
-  int i=-1;
+  int i = -1;
   for (auto &vert : verts) {
     i++;
     double a0 = 2 * M_PI * vert[0] / x_end;
@@ -442,32 +441,32 @@ void unitile::torus_trefoil(double sect_rad, double ring_rad,
     int q = 3;
     int p = 2;
 
-    if(pq.size()>0) {
-      if(floor(pq[0]) > 0)
-         q = floor(pq[0]);
+    if (pq.size() > 0) {
+      if (floor(pq[0]) > 0)
+        q = floor(pq[0]);
       p = 1;
-      if(pq.size()>1 && floor(pq[1]) > 0)
-         p = floor(pq[1]);
+      if (pq.size() > 1 && floor(pq[1]) > 0)
+        p = floor(pq[1]);
     }
 
     double a = ring_rad;
     double b = 1.0;
-    double x = (a + b*cos(q*a1))*cos(p*a1);
-    double y = (a + b*cos(q*a1))*sin(p*a1);
-    double z = b*sin(q*a1);
+    double x = (a + b * cos(q * a1)) * cos(p * a1);
+    double y = (a + b * cos(q * a1)) * sin(p * a1);
+    double z = b * sin(q * a1);
     Vec3d P(x, y, z);
 
     double a11 = a1 + 0.0001;
-    double x0 = (a + b*cos(q*a11))*cos(p*a11);
-    double y0 = (a + b*cos(q*a11))*sin(p*a11);
-    double z0 = b*sin(q*a11);
+    double x0 = (a + b * cos(q * a11)) * cos(p * a11);
+    double y0 = (a + b * cos(q * a11)) * sin(p * a11);
+    double z0 = b * sin(q * a11);
     Vec3d P0(x0, y0, z0);
-    Vec3d Q(a*cos(p*a1), a*sin(p*a1), 0);
+    Vec3d Q(a * cos(p * a1), a * sin(p * a1), 0);
 
     Vec3d dir = (P0 - P).unit();
     Vec3d norm = P - Q;
 
-    double ang = a0+(p+1)*a1; // stops the tube twist
+    double ang = a0 + (p + 1) * a1; // stops the tube twist
     Vec3d v(sect_rad * cos(ang), sect_rad * sin(ang), 0);
     vert = Trans3d::translate(P) *
            Trans3d::align(Vec3d::Z, Vec3d::Y, dir, norm) * v;
@@ -670,7 +669,7 @@ public:
   double to_tile;
   double r;
   double R;
-  vector <double> d;
+  vector<double> d;
   Trans3d trans_m;
   Trans4d rot4d_m;
   Vec3d shear;
@@ -860,7 +859,7 @@ int main(int argc, char *argv[])
     ut.plane(unitile::ut_open, unitile::ut_open);
     break;
   case 'c':
-    ut.conic_frust(opts.r, opts.R, opts.d.size()==0 ? 5.0 : opts.d[0]);
+    ut.conic_frust(opts.r, opts.R, opts.d.size() == 0 ? 5.0 : opts.d[0]);
     break;
   case 'm':
     ut.mobius(opts.r, opts.R);
@@ -888,7 +887,7 @@ int main(int argc, char *argv[])
     ut.roman_boy(1);
     break;
   case 'R':
-    ut.roman_boy(opts.d.size()==0 ? 0.0 : opts.d[0]);
+    ut.roman_boy(opts.d.size() == 0 ? 0.0 : opts.d[0]);
     break;
   case 'w':
     ut.cross_cap2();
