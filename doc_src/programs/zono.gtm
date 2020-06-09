@@ -32,8 +32,7 @@ A largish rhombic spirallohedron
 zono -P 50,5 | antiview
 <<CMDS_END>>
 
-
-Rhombic triacontaahedron
+Rhombic triacontahedron
 <<CMDS_START>>
 zono ico | antiview
 <<CMDS_END>>
@@ -49,9 +48,24 @@ zono -m i -u ico | antiview
 <<CMDS_END>>
 
 Make a unit star from tetrahedron vertices and use to add red zones
-to a dodecahedron
+to a icosahedron
 <<CMDS_START>>
 zono -S ico -u -C red tet | antiview
+<<CMDS_END>>
+<<EXAMPLES_END>>
+
+Rhombic torus as a translation surface
+<<CMDS_START>>
+off_util -s std_pol10  | off_trans -R 90,0,0 | zono -T std_pol10 - |
+antiview
+<<CMDS_END>>
+<<EXAMPLES_END>>
+
+Spirallohedron from translation surface
+<<CMDS_START>>
+off_trans -T 0,0,1 std_pol12  | off_util -Dv3- > t1.off
+off_trans -T 0,0,1 std_pol12  | off_util -Dv-2 > t2.off
+zono -T t1.off t2.off | poly_kscope -sC4 | antiview
 <<CMDS_END>>
 <<EXAMPLES_END>>
 

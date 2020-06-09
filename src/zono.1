@@ -28,29 +28,30 @@ e \- explicit edges are vectors
 .TP
 \fB\-s\fR
 output the star (instead of the zonohedron)
-.TP
-\fB\-S\fR
-seed model to add zones to, must be convex
+.HP
+\fB\-S\fR <poly> seed model to add zones to, must be convex
 .TP
 \fB\-u\fR
 make vectors unit length
 .TP
 \fB\-C\fR <col>
 colour for new zone faces
-.HP
-\fB\-P\fR <star> polar zonohedron from ordered star, can be an offset polygon
-.IP
+.TP
+\fB\-P\fR <arg>
+polar zonohedron from ordered star, arg can be an offset polygon
 given as an integer or fraction (e.g. 5, 7/2) or 's' to use
 star_file. Optionally, follow by a comma and an integer to
 to make a spirallohedron with that spiral width (default:0, a
 polar zonohedron). Any further comma separated parts are colour
 maps to colour the faces.
 .HP
-\fB\-T\fR <star> translation surface, made from input star and this star,
+\fB\-T\fR <star> translation surface made from two ordered stars (argument star
 .IP
-optionally followed by a comma and two characters (or one to
-use for both) to indicate if the stars of vectors are open, or
-close to form a loop: d\-detect, c\-force close, o\-leave open
+and star_file) optionally followed by a comma and two characters
+(or one to use for both) to indicate if the stars of vectors
+are open, or close to form a loop: d\-detect, c\-force close,
+.IP
+o\-leave open.
 .HP
 \fB\-o\fR <file> write output to file (default: write to standard output)
 .SH "SEE ALSO"
