@@ -780,7 +780,8 @@ static bool parse_gimp_file(FILE *cfile, map<int, Color> *cmap,
     if (!col.is_set()) {
       if (errmsg)
         snprintf(errmsg, MSG_SZ,
-                 "gimp colour map: line %d: invalid colour '%s'", line_no, buf);
+                 "gimp colour map: line %d: invalid colour '%.*s'", line_no,
+                 150, buf);
       return false;
     }
 
@@ -830,16 +831,17 @@ static bool parse_file(FILE *cfile, map<int, Color> *cmap,
       col_pos = eq_pos + 1;
       if (strchr(col_pos, '=')) {
         if (errmsg)
-          snprintf(errmsg, MSG_SZ, "colour map: line %d: more than one =, '%s'",
-                   line_no, line);
+          snprintf(errmsg, MSG_SZ,
+                   "colour map: line %d: more than one =, '%.*s'", line_no, 150,
+                   line);
         return false;
       }
       *eq_pos = '\0';
       if (!read_int(entry, &next_idx) || next_idx < 0) {
         if (errmsg)
           snprintf(errmsg, MSG_SZ,
-                   "colour map: line %d: invalid index number, '%s'", line_no,
-                   entry);
+                   "colour map: line %d: invalid index number, '%.*s'", line_no,
+                   150, entry);
         return false;
       }
     }
@@ -848,8 +850,8 @@ static bool parse_file(FILE *cfile, map<int, Color> *cmap,
     col.read(col_pos);
     if (!col.is_set()) {
       if (errmsg)
-        snprintf(errmsg, MSG_SZ, "colour map: line %d: invalid colour, '%s'",
-                 line_no, col_pos);
+        snprintf(errmsg, MSG_SZ, "colour map: line %d: invalid colour, '%.*s'",
+                 line_no, 150, col_pos);
       return false;
     }
 
@@ -908,8 +910,8 @@ static bool parse_map_from_line(const char *line, map<int, Color> *cmap,
       *eq_pos = '\0';
       if (!read_int(entry, &next_idx) || next_idx < 0) {
         if (errmsg)
-          snprintf(errmsg, MSG_SZ, "entry %d: invalid index number, '%s'",
-                   i + 1, entry);
+          snprintf(errmsg, MSG_SZ, "entry %d: invalid index number, '%.*s'",
+                   i + 1, 150, entry);
         cmap_ok = false;
         break;
       }
@@ -924,8 +926,8 @@ static bool parse_map_from_line(const char *line, map<int, Color> *cmap,
     col.read(col_pos);
     if (!col.is_set()) {
       if (errmsg)
-        snprintf(errmsg, MSG_SZ, "entry %d: invalid colour, '%s'", i + 1,
-                 col_pos);
+        snprintf(errmsg, MSG_SZ, "entry %d: invalid colour, '%.*s'", i + 1,
+                 150, col_pos);
       cmap_ok = false;
     }
 
@@ -1383,8 +1385,7 @@ static Status chk_range(vector<double> &v)
 Status ColorValuesToRangeHsva::add_range(int idx, const char *rngs)
 {
   char str[MSG_SZ];
-  strncpy(str, rngs, MSG_SZ);
-  str[MSG_SZ - 1] = '\0';
+  strcpy_msg(str, rngs);
   Status stat = read_double_list(str, ranges[idx], 2, ":");
   if (stat.is_error())
     return stat;

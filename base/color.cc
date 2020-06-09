@@ -504,8 +504,7 @@ Status Color::read_hexvals(char *str)
 {
   unset();
   char hexstr[MSG_SZ];
-  strncpy(hexstr, str, MSG_SZ - 1);
-  hexstr[MSG_SZ - 1] = '\0';
+  strcpy_msg(hexstr, str);
   if (!strchr("Xx#", *hexstr))
     return Status::error(
         msg_str("hex format, first character is not X, x, or #"));
@@ -534,8 +533,7 @@ Status Color::read_hsva_vals(char *str)
     return Status::error("hsva format: does not start with H or h");
 
   char hsva_str[MSG_SZ];
-  strncpy(hsva_str, str + 1, MSG_SZ - 1);
-  hsva_str[MSG_SZ - 1] = '\0';
+  strcpy_msg(hsva_str, str + 1);
   vector<double> vals;
   bool hue_degrees = (str[0] == 'h');
   Status stat = read_double_list(hsva_str, vals, 4);

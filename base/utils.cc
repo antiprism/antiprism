@@ -289,7 +289,7 @@ Status read_fraction(const char *frac_str, int *num, int *denom)
 {
   Status stat2;
   char frac_str_cpy[MSG_SZ];
-  strncpy(frac_str_cpy, frac_str, MSG_SZ);
+  strcpy_msg(frac_str_cpy, frac_str);
 
   *denom = 1;
   char *p = strchr(frac_str_cpy, '/');
@@ -409,8 +409,7 @@ char *clear_extra_whitespace(char *str)
 
 char *to_resource_name(char *to, const char *from)
 {
-  strncpy(to, from, MSG_SZ);
-  to[MSG_SZ - 1] = '\0';
+  strcpy_msg(to, from);
   clear_extra_whitespace(to);
   for (char *p = to; *p; p++)
     *p = tolower(*p);
@@ -419,12 +418,10 @@ char *to_resource_name(char *to, const char *from)
 
 char *copy_str(const char *str)
 {
-  int buff_sz = strlen(str) + 1;
+  size_t buff_sz = strlen(str) + 1;
   char *p = (char *)malloc(buff_sz);
-  if (p) {
-    strncpy(p, str, buff_sz - 1);
-    p[buff_sz - 1] = '\0';
-  }
+  if (p)
+    strcpy(p, str);
   return p;
 }
 
@@ -448,7 +445,7 @@ string find_alt_name(FILE *afile, const char *a_name)
   const int line_size = 1024;
   char line[line_size];
   char aname[line_size];
-  strncpy(aname, a_name, line_size);
+  strncpy(aname, a_name, line_size-1);
   aname[line_size - 1] = '\0';
   clear_extra_whitespace(aname);
 

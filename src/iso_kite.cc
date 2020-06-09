@@ -110,7 +110,7 @@ const char *compounds[][4] = {
 Status read_fraction(const char *frac_str, int &num, int &denom)
 {
   char frac_str_cpy[MSG_SZ];
-  strncpy(frac_str_cpy, frac_str, MSG_SZ);
+  strcpy_msg(frac_str_cpy, frac_str);
 
   Status stat;
   denom = 1;
@@ -253,7 +253,7 @@ int tri_from_str(const char *str, vector<int> &fracs, char *errmsg = nullptr)
   if (errmsg)
     *errmsg = '\0';
   char str_cpy[MSG_SZ];
-  strncpy(str_cpy, str, MSG_SZ);
+  strcpy_msg(str_cpy, str);
 
   char sym_char;
   int tri_idx;
@@ -339,7 +339,7 @@ int args2fracs(const char *model, vector<int> &fracs, char *errmsg = nullptr)
   }
   char errmsg2[MSG_SZ];
   char model_cpy[MSG_SZ];
-  strncpy(model_cpy, model, MSG_SZ);
+  strcpy_msg(model_cpy, model);
   vector<char *> parts;
   int num_parts = split_line(model_cpy, parts);
 

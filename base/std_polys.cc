@@ -70,7 +70,7 @@ string expand_abbrevs(const string &name, const char *abbrevs[][2], size_t last)
 {
   string expanded;
   char name_cpy[MSG_SZ];
-  strncpy(name_cpy, name.c_str(), MSG_SZ);
+  strcpy_msg(name_cpy, name.c_str());
   vector<char *> parts;
   split_line(name_cpy, parts, RES_SEPARATOR);
   for (unsigned int i = 1; i < parts.size(); i++) {
@@ -900,7 +900,7 @@ int make_resource_geodesic(Geometry &geom, string name, bool is_std,
   }
 
   char str[MSG_SZ];
-  strncpy(str, name.c_str() + offset, MSG_SZ - 1);
+  strcpy_msg(str, name.c_str() + offset);
   str[MSG_SZ - 1] = '\0';
   vector<char *> num_strs;
   split_line(str, num_strs, "_");
@@ -1046,7 +1046,7 @@ int make_resource_sym(Geometry &geom, string name, char *errmsg = nullptr)
   Status stat = sym.init(name.substr(4), Trans3d());
   if (stat.is_error()) {
     if (errmsg)
-      strncpy(errmsg, stat.c_msg(), MSG_SZ);
+      strcpy_msg(errmsg, stat.c_msg());
     return 1;
   }
 
@@ -1063,7 +1063,7 @@ int make_resource_pgon(Geometry &geom, string name, bool is_std, char *errmsg)
                // so the name is not handled
 
   char pnam[MSG_SZ];
-  strncpy(pnam, name.c_str(), MSG_SZ);
+  strcpy_msg(pnam, name.c_str());
   int num_sides;
   int step = 1;
   char *pnum = pnam + 3;
@@ -1196,15 +1196,16 @@ static int make_resource_wythoff(Geometry &geom, string name, bool is_std,
   Wythoff wyt(symbol_str.c_str(), &stat);
   if (stat.is_error()) {
     if (errmsg)
-      snprintf(errmsg, MSG_SZ, "wythoff name: invalid symbol: %s",
-               stat.c_msg());
+      snprintf(errmsg, MSG_SZ, "wythoff name: invalid symbol: %.*s",
+               150, stat.c_msg());
     return 1; // fail
   }
 
   char errmsg2[MSG_SZ];
   if (!wyt.make_poly(geom, errmsg2))
     if (errmsg) {
-      snprintf(errmsg, MSG_SZ, "wythoff name: invalid symbol: %s", errmsg2);
+      snprintf(errmsg, MSG_SZ, "wythoff name: invalid symbol: %.*s", 150,
+               errmsg2);
       return 1; // fail
     }
   if (*errmsg2)

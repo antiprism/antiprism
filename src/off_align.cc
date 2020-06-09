@@ -73,7 +73,7 @@ Status bond_base::set_sym(const char *sym_str)
 {
   Status stat;
   char sym_cpy[MSG_SZ]; // big enough for normal use
-  strncpy(sym_cpy, sym_str, MSG_SZ);
+  strcpy_msg(sym_cpy, sym_str);
 
   Symmetry full_sym(base);
   vector<char *> parts;

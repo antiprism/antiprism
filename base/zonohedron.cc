@@ -333,11 +333,6 @@ Status make_polar_zonohedron(Geometry &geom, const vector<Vec3d> &star,
       (spiral_step == 0) ? 1 : pos_mod(spiral_step / num_parts, P);
   int P_num_spirals = P / gcd(P, P_spiral_step);
 
-  // fprintf(stderr, "N=%d, D=%d, num_parts=%d\n", N, D, num_parts);
-  // fprintf(stderr, "spiral_step=%d\n", spiral_step);
-  // fprintf(stderr, "P=%d, P_spiral_step=%d, P_num_spirals=%d\n", P,
-  //        P_spiral_step, P_num_spirals);
-
   for (int p = 0; p < num_parts; p++) {
     int V = geom.verts().size();
     vector<Vec3d> star_part;
@@ -352,18 +347,13 @@ Status make_polar_zonohedron(Geometry &geom, const vector<Vec3d> &star,
       A = Vec3d(0, 0, 0);
       for (int i = 0; i < P - P_spiral_step; i++) {
         int i_idx = (s * P_spiral_step + i) % P;
-        // fprintf(stderr, "\ti_idx=%d\n", i_idx);
         A += star_part[i_idx]; // next point on this spiral
 
         B = Vec3d(0, 0, 0);
         for (int j = 0; j < P_spiral_step; j++) {
-          // A.dump("A");
-          // B.dump("B");
-          //(A+B).dump("A+B");
           geom.add_vert(A + B);
           // index of next star vector on following spiral
           int j_idx = pos_mod((s - 1) * P_spiral_step + j, P);
-          // fprintf(stderr, "\t\tj_idx=%d\n", j_idx);
           B += star_part[j_idx]; // next point on following spiral
           geom.add_face(get_face(P, s, P_spiral_step, P_num_spirals, i, j, V),
                         Color(p * P_num_spirals + s));

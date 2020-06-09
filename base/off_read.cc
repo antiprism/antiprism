@@ -76,8 +76,8 @@ bool off_file_read(string file_name, Geometry &geom, char *errmsg)
       if (errmsg)
         snprintf(errmsg, MSG_SZ - 50,
                  "could not open input "
-                 "file \'%s=%s\': %s",
-                 file_name.c_str(), alt_name.c_str(), errmsg2);
+                 "file \'%.*s=%.*s\': %.*s",
+                 50, file_name.c_str(), 60, alt_name.c_str(), 60, errmsg2);
     }
   }
   else if (ifile) { // the file name was found
@@ -93,9 +93,8 @@ bool off_file_read(string file_name, Geometry &geom, char *errmsg)
     else {
       if (errmsg)
         snprintf(errmsg, MSG_SZ - 50,
-                 "could not open input "
-                 "file \'%s\': %s",
-                 file_name.c_str(), errmsg2);
+                 "could not open input file \'%.*s\': %.*s",
+                 80, file_name.c_str(), 80, errmsg2);
     }
   }
 
@@ -226,14 +225,14 @@ bool off_file_read(FILE *ifile, Geometry &geom, char *errmsg)
   if (!strstr(line, "OFF")) {
     if (*line == '3') {
       if (errmsg)
-        strncpy(errmsg, "assuming file has Qhull OFF output format", MSG_SZ);
+        strcpy_msg(errmsg, "assuming file has Qhull OFF output format");
     }
     else {
       if (errmsg)
-        strncpy(errmsg, "assuming file is list of coordinates", MSG_SZ);
+        strcpy_msg(errmsg, "assuming file is list of coordinates");
       crds_file_read(ifile, geom, line);
       if (errmsg && !geom.is_set())
-        strncat(errmsg, ": no coordinates found", MSG_SZ);
+        strncat(errmsg, ": no coordinates found", MSG_SZ - 1 - strlen(errmsg));
       return geom.is_set();
     }
   }
@@ -301,7 +300,8 @@ bool off_file_read(FILE *ifile, Geometry &geom, char *errmsg)
     if (data_line_no <= 2 + num_pts) { // vertex line
       if (!add_vert(geom, vals, errmsg2)) {
         if (errmsg)
-          snprintf(errmsg, MSG_SZ, "line %d: %s", file_line_no, errmsg2);
+          snprintf(errmsg, MSG_SZ, "line %d: %.*s", file_line_no,
+                   int(MSG_SZ - 60), errmsg2);
         geom.clear_all();
         break;
       }
@@ -311,7 +311,8 @@ bool off_file_read(FILE *ifile, Geometry &geom, char *errmsg)
       if (!add_face(geom, vals, errmsg2, alt_cols, &contains_int_gt_1,
                     &contains_adj_equal_idx)) {
         if (errmsg)
-          snprintf(errmsg, MSG_SZ, "line %d: %s", file_line_no, errmsg2);
+          snprintf(errmsg, MSG_SZ, "lineil %d: %.*s", file_line_no,
+                   int(MSG_SZ - 60), errmsg2);
         geom.clear_all();
         break;
       }
@@ -354,7 +355,7 @@ bool off_file_read(FILE *ifile, Geometry &geom, char *errmsg)
   }
 
   if (errmsg && !geom.is_set() && !*errmsg) // no previous error message
-    strncpy(errmsg, "no vertices (empty geometry)", MSG_SZ);
+    strcpy_msg(errmsg, "no vertices (empty geometry)");
 
   return geom.is_set();
 }

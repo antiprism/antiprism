@@ -216,7 +216,7 @@ localgluTessProperty( localGLUtesselator *tess, localGLenum which, localGLdouble
     windingRule = (localGLenum) value;
     if( windingRule != value ) break;	/* not an integer */
 
-    switch( windingRule ) {
+    switch (windingRule) {
     case localGLU_TESS_WINDING_ODD:
     case localGLU_TESS_WINDING_NONZERO:
     case localGLU_TESS_WINDING_POSITIVE:
@@ -227,6 +227,7 @@ localgluTessProperty( localGLUtesselator *tess, localGLenum which, localGLdouble
     default:
       break;
     }
+    break;
 
   case localGLU_TESS_BOUNDARY_ONLY:
     tess->boundaryOnly = (value != 0);

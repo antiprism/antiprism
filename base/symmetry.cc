@@ -1452,7 +1452,7 @@ Status Symmetry::get_sub_sym(const string &sub_name, Symmetry *sub) const
   Symmetry sub_sym;
 
   char sub_cpy[MSG_SZ];
-  strncpy(sub_cpy, sub_name.c_str(), MSG_SZ);
+  strcpy_msg(sub_cpy, sub_name.c_str());
   vector<char *> parts;
   split_line(sub_cpy, parts, ",");
   if (parts.size() > 2)
@@ -1999,7 +1999,7 @@ Status SymmetryAutos::set_realignment(const string &realign)
   vector<double> vars;
 
   char realign_cpy[MSG_SZ];
-  strncpy(realign_cpy, realign.c_str(), MSG_SZ);
+  strcpy_msg(realign_cpy, realign.c_str());
   char *p = strchr(realign_cpy, ':');
   if (p)
     *p = '\0'; // terminator at first ':'

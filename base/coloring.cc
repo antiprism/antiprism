@@ -30,6 +30,7 @@
 #include <limits.h>
 #include <limits>
 #include <map>
+#include <memory>
 #include <set>
 #include <string.h>
 #include <string>
@@ -653,11 +654,11 @@ static bool get_cycle_rate(const char *str, double *cps)
 {
   size_t len = strlen(str);
   if (len >= 3 && str[len - 2] == 'h' && str[len - 1] == 'z') {
-    char str_copy[MSG_SZ];
-    strncpy(str_copy, str, len - 2);
+    std::unique_ptr<char[]> str_copy(copy_str(str));
+    strncpy(str_copy.get(), str, len - 2);
     str_copy[len - 2] = '\0';
     double cycs;
-    if (read_double(str_copy, &cycs) && cycs >= 0.0) {
+    if (read_double(str_copy.get(), &cycs) && cycs >= 0.0) {
       *cps = cycs;
       return true;
     }
@@ -669,8 +670,7 @@ static bool get_cycle_rate(const char *str, double *cps)
 Status read_colorings(Coloring clrngs[], const char *line)
 {
   char line_copy[MSG_SZ];
-  strncpy(line_copy, line, MSG_SZ);
-  line_copy[MSG_SZ - 1] = '\0';
+  strcpy_msg(line_copy, line);
 
   vector<char *> parts;
   int parts_sz = split_line(line_copy, parts, ",");
@@ -687,9 +687,9 @@ Status read_colorings(Coloring clrngs[], const char *line)
     if (get_cycle_rate(parts[i], &cps)) {
       clrng.set_cycle_msecs((int)(1000 / cps));
       if (col_map)
-        stat.set_warning(msg_str("cycle_rate '%s' is also a valid "
-                                 "colour map name",
-                                 parts[i]));
+        stat.set_warning(string("cycle_rate '") + parts[i] +
+                         "' is also a valid "
+                         "colour map name");
     }
     else if (strspn(parts[i], "vef") == strlen(parts[i])) {
       conv_elems |= 4 * (strchr(parts[i], 'f') != nullptr) +

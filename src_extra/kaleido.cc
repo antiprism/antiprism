@@ -946,6 +946,8 @@ int unpacksym(char *sym, Polyhedron *P, Uniform *uniform, int last_uniform)
     ;
   if (!c)
     Err("no data");
+
+  char wyth[MSG_SZ];
   if (c == '#') {
     while ((c = *sym++) && isspace(c))
       ;
@@ -965,8 +967,7 @@ int unpacksym(char *sym, Polyhedron *P, Uniform *uniform, int last_uniform)
       ;
     if (c)
       Err("data exceeded");
-    char wyth[256];
-    strncpy(wyth, uniform[P->index = n - 1].Wythoff, 256);
+    strcpy_msg(wyth, uniform[P->index = n - 1].Wythoff);
     sym = wyth;
   }
   else

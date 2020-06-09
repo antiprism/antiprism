@@ -11,3 +11,4 @@ libmuparser_la_SOURCES = \
 	muParserStack.h muParserTemplateMagic.h muParserTest.h muParserToken.h \
 	muParserTokenReader.h
 
+libmuparser_la_CPPFLAGS = -Wno-cast-function-type

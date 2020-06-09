@@ -480,7 +480,7 @@ Status Wythoff::read_symbol(const char *sym)
 
   Status stat;
   char fracs_str[MSG_SZ];
-  strncpy(fracs_str, sym_norm2.c_str(), MSG_SZ);
+  strcpy_msg(fracs_str, sym_norm2.c_str());
   char *frac_p = strtok(fracs_str, " ");
   for (int f = 0; f < 3; f++) {
     if (!frac_p)

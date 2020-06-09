@@ -550,7 +550,7 @@ bool delete_elements(Geometry &geom, vector<string> del_elems, bool keep,
       Color c;
       char c_name[MSG_SZ];
       if (vi_str.length() > 1)
-        strncpy(c_name, vi_str.substr(1).c_str(), MSG_SZ);
+        strcpy_msg(c_name, vi_str.substr(1).c_str());
       else {
         strcpy_msg(errmsg, "no color specified");
         return false;
@@ -1517,7 +1517,7 @@ void pr_opts::process_command_line(int argc, char **argv)
 
       // Get merge elements
       char elems[MSG_SZ];
-      strncpy(elems, parts[0], MSG_SZ);
+      strcpy_msg(elems, parts[0]);
       if (strspn(elems, "svefab") != strlen(elems))
         error(msg_str("elements to merge are %s must be v, e, f, a, b "
                       "or s\n",

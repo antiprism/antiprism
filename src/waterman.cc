@@ -63,7 +63,7 @@ int get_num_decs(const char *str)
 int get_max_num_decs(const char *str, const int num_parts)
 {
   char str_copy[MSG_SZ];
-  strncpy(str_copy, str, MSG_SZ);
+  strcpy_msg(str_copy, str);
   vector<char *> parts;
   split_line(str_copy, parts, ",");
   int max_num_decs = 0;
