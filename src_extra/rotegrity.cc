@@ -651,8 +651,8 @@ string report_nexorade(Geometry &geom, double strut_len, bool color,
         geom.colors(VERTS).set(v0, colors[!f_flipped[f] | is_dihedral]);
         geom.colors(VERTS).set(v1, colors[f_flipped[f] | is_dihedral]);
       }
-      unit_no++;
     }
+    unit_no++;
   }
 
   return report;
