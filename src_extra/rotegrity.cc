@@ -543,15 +543,18 @@ string report_nexorade(Geometry &geom, double strut_len, bool color,
                        const vector<vector<int>> &f2fs)
 {
   string report =
-      "Radius and range of radius valaues (model units), followed by minimum\n"
-      "strut length to ensure contact, then three lines per strut type\n"
-      "  1: strut_index_number (used for colouring), number_of_struts\n"
-      "  2: strut_length (model units), fraction_1st_contact, "
-      "fraction_2nd_contact\n"
-      "  3: ang_1st_contact, ang_2nd_contact, ang_3rd_contact, "
-      "ang_4th_contact\n"
-      "In the coloured model, angles are measured anticlockwise from the white "
-      "end\n"
+      "Radius and range of radius valaues, followed by minimum strut length\n"
+      "to ensure contact, then three lines per strut type\n"
+      "  1: strut_index_number (used for colouring), number_of_struts, "
+      "strut_length\n"
+      "  2: length_to_1st_contact, length_to_2nd_contact,\n"
+      "     length_to_3rd_contact, length_to_4th_contact\n"
+      "  3: angle_of_1st_contact, angle_of_2nd_contact,\n"
+      "     angle_of_3rd_contact, angle_of_4th_contact\n"
+      "Lengths are measured from either end of the strut\n"
+      "Angles (degrees) are measured looking along the strut central line\n"
+      "from the white end (display with -c u), anticlockwise, from an outward\n"
+      "pointing zero angle (consider the angles to be relative to each other)\n"
       "\n";
   const double eps = 1e-8;
   double rad_min = 1e100;
@@ -622,8 +625,11 @@ string report_nexorade(Geometry &geom, double strut_len, bool color,
     double len1 = (v[1] - v[0]).len();            // first contact length
     double len2 = (v[3] - v[2]).len();            // second contact length
     double len0 = (strut_len) ? strut_len : len1; // strut length
-    units[{len0, (len0 - len1) / 2 / len0, (len0 - len2) / 2 / len0, angs[0],
-           angs[1], angs[2], angs[3]}]
+    double dist1 = (len0 - len1) / 2;
+    double dist2 = (len0 - len2) / 2;
+
+    units[{len0, dist1, dist2, len0 - dist2, len0 - dist1, angs[0], angs[1],
+           angs[2], angs[3]}]
         .push_back(i);
   }
 
@@ -635,12 +641,13 @@ string report_nexorade(Geometry &geom, double strut_len, bool color,
   int unit_no = 0;
   const Color colors[] = {Color(0, 0, 0), Color(255, 255, 255)};
   for (const auto &unit : units) {
-    report += msg_str("%-4d, %d\n", unit_no, (int)unit.second.size());
-    report += msg_str("    %16.13f,%16.13f,%16.13f\n", unit.first[0],
-                      unit.first[1], unit.first[2]);
+    report += msg_str("%-4d, %4d, %16.13f\n", unit_no, (int)unit.second.size(),
+                      unit.first[0]);
+    report += msg_str("    %16.13f,%16.13f,%16.13f,%16.13f\n", unit.first[1],
+                      unit.first[2], unit.first[3], unit.first[4]);
     report += msg_str("    %16.8f,%16.8f,%16.8f,%16.8f\n",
-                      rad2deg(unit.first[3]), rad2deg(unit.first[6]),
-                      rad2deg(unit.first[5]), rad2deg(unit.first[4]));
+                      rad2deg(unit.first[5]), rad2deg(unit.first[8]),
+                      rad2deg(unit.first[7]), rad2deg(unit.first[6]));
     if (color) {
       for (auto f : unit.second) {
         geom.colors(FACES).set(f, Color(unit_no));
