@@ -112,8 +112,9 @@ and bevel.
 
 When the pattern paths are repeated to generate final faces, these
 faces may be associated with elements in the base model. A path may:
-cycle a base vertex, edge centre  or face centre; not cycle (the
-path is the whole face); repeat by reflection; or "wander" around
+cycle a base vertex, edge centre  or face centre;
+not cycle(the path is the whole face);
+repeat by reflection; or "wander" around
 the model (the path doesn't cycle locally). The behaviour can be determined
 from the path specifier.
 <p>
@@ -143,6 +144,72 @@ base elements as follows: a final vertex
 is associated with a coinciding base vertex, or an edge if it coincides
 with an edge centre, otherwise the face element of the meta triangle it
 belongs to.
+
+<h4>Repacement for to_nfold</h4>
+
+The <i>to_nfold</i> program has some similarities with <i>wythoff</i>,
+and automatically infers the tiling pattern from the base model,
+but only works for cyclic models. Its handing of oblique polygons
+that wind the axis will not allow it to produce series like the
+crossed antiprisms.
+<p>
+On the other hand, there is no way for a <i>wythoff</i> pattern to specify
+a cycle like <tt>0(N/2 steps of)V1(N/2-1 steps of)V0V</tt>, which could
+draw a triangle that cycles any axis at an oblique angle, because the
+steps that need to be specified are relative to the N of the axis.
+<p>
+A solution is to produce a wythoff pattern that is parameterised
+by N/D, and apply this to a <tt>schwarz_N_2_2p</tt> meta tiling.
+The following example shows how this technique can be applied to
+generate the crossed antiprisms.
+<p>
+Display a 5/2 crossed antiprism, along with a suitable schwarz tiling to
+represent the base meta-tiling
+<<CMDS_START>>
+polygon ant 5/3 | off_trans -S 2 | antiview - schwarz_5_2_2p
+<<CMDS_END>>
+Work out a pattern that generates the crossed antiprism for the
+meta-tiling (the -r option is to make the vertex elements lie on
+the axis, which is perhaps easier to follow)
+<<CMDS_START>>
+wythoff -M schwarz_5_2_2p -r FVE -p [VEF]0VV,0VVE0EVVE0EV | antiview
+<<CMDS_END>>
+The first cycle is a fixed number of V's for the polygon step (2):
+<tt>VV = (D)V</tt>
+In the second cycle: the first step is relative to N and D (slant "down")
+<tt>VVE = ((N-D+1)/2)V</tt>
+; the second step is relative to D (horizontal)
+<tt>EVVE = E(D)VE</tt>
+; the third step is relative to N and D (slant "up")
+<tt>EV = E((N-D-1)/2)V</tt> .
+<p>
+The full parameterised pattern is:
+<p>
+<tt>[VEF]0(D)V,0((N-D+1)/2)VE0E(D)VE,0((N-D-1)/2)V
+<p>
+To generate an 11/4 crossed antiprism, which has Dv symmetry like the
+5/2 crossed antiprism, N=11 and D=4, giving the following pattern
+<p>
+<tt>[VEF]0(4)V,0((11-4+1)/2)VE0E(4)VE,0((11-4-1)/2)V = [VEF]0VVVV,0VVVVE0EVVVVE0VVV</tt>
+<p>
+Construct the 11/4 crossed antiprism
+<<CMDS_START>>
+wythoff -M schwarz_11_2_2p -r FVE -p [VEF]0VVVV,0VVVVE0EVVVVE0EVVV | antiview
+<<CMDS_END>>
+For crossed antiprisms with Dh symmetry the parameterised pattern is
+different, and could be determined to be, e.g.
+<p>
+<tt>   [VF]0(D)V,0((N-D)/2+1)VE0E(D)VE0E((N-D)/2-1)V</tt>
+<p>
+Here is the pattern for the 13/5 crossed antiprism, found by plugging N=13
+and D=5 into the parametrised pattern above
+<p>
+<tt>[VF]0(5),0(13-5)/2 + 1)VE0E(5)VE0E((13-5)/2 - 1)V = [VF]0VVVVV,0VVVVVE0EVVVVVE0EVVV</tt>
+<p>
+Construct the 13/5 crossed antiprism
+<<CMDS_START>>
+  wythoff -M schwarz_13_2_2p -r FVE -p [VF]0VVVVV,0VVVVVE0EVVVVVE0EVVV | antiview
+<<CMDS_END>>
 
 <h4>Replacement for twist program</h4>
 
