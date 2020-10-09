@@ -57,6 +57,28 @@ Convert a polyhedral torus
    unitile2d -s t | off_trans -R 90,0,0 | to_nfold 11/2 | antiview
 <<CMDS_END>>
 
+A 5/2 crossed-antiprism has oblique faces that cycle the axis, and the
+result of regular processing does not produce a crossed-antiprism,
+but the crossed-antiprism form can be preserved with option <i>-x</i>
+<<CMDS_START>>
+   antiview ant5/3
+   to_nfold 7 ant5/3 | antiview
+   to_nfold 7 ant5/3 -x 0 | antiview
+<<CMDS_END>>
+
+Uncross a crossed-antiprism (the fraction parameter is required,
+but not used) 
+<<CMDS_START>>
+   antiview ant5/3
+   to_nfold 2 ant5/3 -p 0,-1 | antiview
+<<CMDS_END>>
+
+Dimple a ring of vertices of a snub-antiprism (the fraction parameter is
+required, but not used) 
+<<CMDS_START>>
+   antiview snu4
+   to_nfold 2 snu4 -p 10,0.2 | antiview
+<<CMDS_END>>
 
 <<EXAMPLES_END>>
 
@@ -111,7 +133,8 @@ arbitrarily.
 <li>Faces that slant and are intersected by the axis may lead to
     skew polygons that wrap the axis several times. This may not
     be the desired result, however, it is correct for the
-    algorithm. e.g. <tt>to_nfold&nbsp;7&nbsp;ant5/3</tt>.
+    algorithm. e.g. <tt>to_nfold&nbsp;7&nbsp;ant5/3</tt>. It
+    may be possib;e to correct this with option <i>-x</i>.
 </ul>
 <p>
 <i>to_nfold</i> is based on an 

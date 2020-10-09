@@ -145,7 +145,7 @@ is associated with a coinciding base vertex, or an edge if it coincides
 with an edge centre, otherwise the face element of the meta triangle it
 belongs to.
 
-<h4>Repacement for to_nfold</h4>
+<h4>Repalcement for to_nfold</h4>
 
 The <i>to_nfold</i> program has some similarities with <i>wythoff</i>,
 and automatically infers the tiling pattern from the base model,
@@ -183,7 +183,7 @@ In the second cycle: the first step is relative to N and D (slant "down")
 ; the third step is relative to N and D (slant "up")
 <tt>EV = E((N-D-1)/2)V</tt> .
 <p>
-The full parameterised pattern is:
+The full parametrised pattern is:
 <p>
 <tt>[VEF]0(D)V,0((N-D+1)/2)VE0E(D)VE,0((N-D-1)/2)V
 <p>

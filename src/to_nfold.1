@@ -12,14 +12,27 @@ new model, generally non\-planar, with the same relative connections, but
 with an n\-fold axis instead. fraction is given as n, or n/d (n and d
 integers). Vertices of a face originally separated by x/m of a turn around
 the z\-axis will be separated by xd/n of a turn in the final model. If
-input_file is not given the program reads from standard input. to_nfold is based
-on an idea by Bruce R. Gilson.
+input_file is not given the program reads from standard input.
+to_nfold is based on an idea by Bruce R. Gilson.
 .PP
 Options
 .HP
 \fB\-h\fR,\-\-help this help message (run 'off_util \fB\-H\fR help' for general help)
 .HP
 \fB\-\-version\fR version information
+.HP
+\fB\-x\fR <idxs> vertex index numbers, separated by commas, the rings including
+.IP
+these vertices will be rotated 180 degrees before processing
+and rotated back afterwards
+.HP
+\fB\-p\fR <args> transform ring of vertices of base model, and suppress normal
+.IP
+to_nfold processing. Arguments are two or three numbers
+separated by commas: vertex index number (specifies the ring),
+the scale\-xy factor (ring radius), and an optional translation\-z
+(ring height). Can be used multiple times. Index numbers are
+preserved.
 .HP
 \fB\-o\fR <file> write output to file (default: write to standard output)
 .SH "SEE ALSO"

@@ -48,11 +48,41 @@ using std::vector;
 
 using namespace anti;
 
+struct PopVertex {
+  int index;
+  double scale_xy;
+  double translate_z;
+
+  Status read(char *str);
+};
+
+Status PopVertex::read(char *str)
+{
+  Status stat;
+  vector<char *> parts;
+  split_line(str, parts, ",");
+  if (parts.size() < 2 || parts.size() > 3)
+    return Status::error(
+        "must have either two or three comma separated values");
+  if (!(stat = read_int(parts[0], &index)))
+    return Status::error("index number: " + stat.msg());
+  if (index < 0)
+    return Status::error("index number: cannot be negative");
+  if (!(stat = read_double(parts[1], &scale_xy)))
+    return Status::error("scale-xy: " + stat.msg());
+  translate_z = 0.0;
+  if (parts.size() > 2 && !(stat = read_double(parts[2], &translate_z)))
+    return Status::error("translate-z: " + stat.msg());
+  return Status::ok();
+}
+
 class nfold_opts : public ProgramOpts {
 private:
 public:
   int num;
   int denom;
+  vector<int> cross_ring_verts;
+  vector<PopVertex> pop_vertices;
 
   string ifile;
   string ofile;
@@ -76,11 +106,20 @@ void nfold_opts::usage()
 "with an n-fold axis instead. fraction is given as n, or n/d (n and d\n"
 "integers). Vertices of a face originally separated by x/m of a turn around\n"
 "the z-axis will be separated by xd/n of a turn in the final model. If\n"
-"input_file is not given the program reads from standard input. %s is based \n"
-"on an idea by Bruce R. Gilson.\n"
+"input_file is not given the program reads from standard input.\n"
+"%s is based on an idea by Bruce R. Gilson.\n"
 "\n"
 "Options\n"
 "%s"
+"  -x <idxs> vertex index numbers, separated by commas, the rings including\n"
+"            these vertices will be rotated 180 degrees before processing\n"
+"            and rotated back afterwards\n"
+"  -p <args> transform ring of vertices of base model, and suppress normal\n"
+"            to_nfold processing. Arguments are two or three numbers\n"
+"            separated by commas: vertex index number (specifies the ring),\n"
+"            the scale-xy factor (ring radius), and an optional translation-z\n"
+"            (ring height). Can be used multiple times. Index numbers are\n"
+"            preserved.\n"
 "  -o <file> write output to file (default: write to standard output)\n"
 "\n"
 "\n", prog_name(), prog_name(), help_ver_text);
@@ -94,11 +133,22 @@ void nfold_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":ho:")) != -1) {
+  while ((c = getopt(argc, argv, ":hx:p:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
     switch (c) {
+    case 'x':
+      print_status_or_exit(read_int_list(optarg, cross_ring_verts, true), c);
+      break;
+
+    case 'p': {
+      PopVertex pop_vert;
+      print_status_or_exit(pop_vert.read(optarg), c);
+      pop_vertices.push_back(pop_vert);
+      break;
+    }
+
     case 'o':
       ofile = optarg;
       break;
@@ -396,9 +446,10 @@ cyc_chain::cyc_chain(const Geometry &geom, const vector<int> &face, int len,
 class cyc_geom {
 private:
   double eps;
-  const Geometry *geom;
+  Geometry geom;
   Geometry chains;
   int from_n;
+  vector<vector<set<int>>> sym_equivs;
   unsigned char warnings;
   string error_msg;
 
@@ -408,19 +459,23 @@ private:
 
 public:
   cyc_geom(double eps) : eps(eps) {}
-  int set_geom(const Geometry *geo);
-  int make_geom(Geometry *o_geom, int to_n, int to_d = 1);
-  const Geometry *get_geom() const { return geom; }
+  bool set_geom(const Geometry &geo);
+  bool make_geom(Geometry *o_geom, int to_n, int to_d = 1,
+                 const vector<int> cross_ring_verts = vector<int>());
+  const Geometry &get_geom() const { return geom; }
+  int get_ring_idx(int v_idx);
+  int num_rings() { return sym_equivs[VERTS].size(); }
+  Status pop_ring(int ring_idx, double scale_xy, double translate_z);
   const string &get_error_msg() const { return error_msg; }
   vector<string> get_input_warnings();
   vector<string> get_output_warnings();
 };
 
-int cyc_geom::set_geom(const Geometry *geo)
+bool cyc_geom::set_geom(const Geometry &geo)
 {
   from_n = 0;
 
-  Symmetry sym(*geo);
+  Symmetry sym(geo);
   const set<SymmetryAxis> &axes = sym.get_axes();
   set<SymmetryAxis>::const_iterator ax;
   for (ax = axes.begin(); ax != axes.end(); ++ax) {
@@ -432,12 +487,15 @@ int cyc_geom::set_geom(const Geometry *geo)
   }
 
   if (!from_n) {
-    geom = nullptr;
     error_msg = "model does not have cyclic symmetry around the z-axis";
     return false;
   }
 
   geom = geo;
+
+  Symmetry sym_Cn(Symmetry::C, from_n);
+  get_equiv_elems(geom, sym_Cn.get_trans(), &sym_equivs);
+
   return true;
 }
 
@@ -544,20 +602,72 @@ void cyc_geom::add_chain_to_geom(cyc_chain &chain, Geometry *o_geom, int to_n,
       o_geom->add_face(get_next_face(face, i, to_n));
   }
 }
-int cyc_geom::make_geom(Geometry *o_geom, int to_n, int to_d)
+
+int cyc_geom::get_ring_idx(int v_idx)
+{
+  int ring_idx = -1;
+  const vector<set<int>> &v_equivs = sym_equivs[VERTS];
+  for (int r_idx = 0; r_idx < (int)v_equivs.size(); r_idx++) {
+    if (v_equivs[r_idx].count(v_idx) > 0) {
+      ring_idx = r_idx;
+      break;
+    }
+  }
+  return ring_idx;
+}
+
+Status cyc_geom::pop_ring(int ring_idx, double scale_xy, double translate_z)
+{
+  if (ring_idx < 0 || ring_idx >= (int)sym_equivs[VERTS].size())
+    return Status::error(msg_str("invalid ring number %d", ring_idx));
+
+  for (auto v_idx : sym_equivs[VERTS][ring_idx]) {
+    geom.verts(v_idx)[0] *= scale_xy;
+    geom.verts(v_idx)[1] *= scale_xy;
+    geom.verts(v_idx)[2] += translate_z;
+  }
+
+  return Status::ok();
+}
+
+bool cyc_geom::make_geom(Geometry *o_geom, int to_n, int to_d,
+                         const vector<int> cross_ring_verts)
 {
   warnings = WARN_NONE;
-  Symmetry sym_Cn(Symmetry::C, from_n);
-  vector<vector<set<int>>> sym_equivs;
-  get_equiv_elems(*geom, sym_Cn.get_trans(), &sym_equivs);
-  const vector<set<int>> &f_equivs = sym_equivs[2];
+
+  // Find the rings that will be crossed
+  const vector<set<int>> &v_equivs = sym_equivs[0];
+  vector<bool> cross_rings(v_equivs.size(), false);
+  for (int v_idx : cross_ring_verts) {
+    int ring_idx = get_ring_idx(v_idx);
+    if (ring_idx >= 0) {
+      if (cross_rings[ring_idx]) {
+        error_msg = msg_str("option -x: index number %d is on a ring that has "
+                            "already been crossed",
+                            v_idx);
+        return false;
+      }
+      else
+        cross_rings[ring_idx] = true;
+    }
+  }
+
+  for (int ring_idx = 0; ring_idx < (int)v_equivs.size(); ring_idx++) {
+    if (cross_rings[ring_idx]) {
+      // rotate all the vertices in the ring by 180
+      for (auto v_idx : v_equivs[ring_idx]) { // cross any crossed ring vertices
+        geom.verts(v_idx)[0] *= -1;
+        geom.verts(v_idx)[1] *= -1;
+      }
+    }
+  }
 
   // Set up vertices, as types
   cyc_verts cyc_vs(to_n, sym_eps);        // vertex types in final model.
   cyc_verts cyc_vs_from(from_n, sym_eps); // vertex types in original model
   for (auto &i : sym_equivs[0]) {
     // get equiv vertex in first from_n sector
-    cyc_vert cyc_v = cyc_vs_from.get_vert_type(geom->verts(*i.begin())).first;
+    cyc_vert cyc_v = cyc_vs_from.get_vert_type(geom.verts(*i.begin())).first;
     // 'scale' to corresponding position in first to_n sector
     cyc_v.cyc_ang *= (double)from_n * to_d / to_n;
     cyc_vs.add_vert(cyc_v);
@@ -567,36 +677,42 @@ int cyc_geom::make_geom(Geometry *o_geom, int to_n, int to_d)
   // Set up final vertices
   vector<cyc_vert> vs;
   cyc_vs.to_vector(&vs);
-  for (auto v : vs) {
+  for (int i = 0; i < (int)vs.size(); i++) {
     for (int step = 0; step < to_n; step++) {
-      cyc_vert v_rot = v;
+      cyc_vert v_rot = vs[i];
       v_rot.cyc_ang += step * 2 * M_PI / to_n;
-      o_geom->add_vert(v_rot.to_Vec3d());
+      auto vert = v_rot.to_Vec3d();
+      if (cross_rings[i]) { // uncross any crossed ring vertices
+        vert[0] *= -1;
+        vert[1] *= -1;
+      }
+      o_geom->add_vert(vert);
     }
   }
 
   vector<cyc_chain> chains;
+  const vector<set<int>> &f_equivs = sym_equivs[FACES];
   for (const auto &f_equiv : f_equivs) {
     const int f_idx = *f_equiv.begin();
     // fprintf(stderr, "\n\nNEW CHAIN face_idx=%d\n", f_idx);
     // fprintf(stderr, "Num faces=%d, from_n=%d\n", (int)f_equivs[i].size(),
     // from_n);
-    vector<int> face = geom->faces(f_idx);
+    vector<int> face = geom.faces(f_idx);
     int fsz = face.size();
 
     // Find the minimum length of chain of edges that make a repeat unit
     int chain_sz = fsz * f_equiv.size() / from_n;
     if (chain_sz < fsz) {
       double steps =
-          angle_around_axis(geom->verts(face[0]),
-                            geom->verts(face[chain_sz % fsz]), Vec3d::Z) *
+          angle_around_axis(geom.verts(face[0]),
+                            geom.verts(face[chain_sz % fsz]), Vec3d::Z) *
           from_n / (2 * M_PI);
       double diff = steps - round(steps);
       if (double_ne(diff, 0.0, eps))
         warnings |= WARN_NOCHAIN;
     }
 
-    cyc_chain cyc_c(*geom, face, chain_sz, eps);
+    cyc_chain cyc_c(geom, face, chain_sz, eps);
     chains.push_back(cyc_c);
     warnings |= cyc_c.warnings;
   }
@@ -608,11 +724,11 @@ int cyc_geom::make_geom(Geometry *o_geom, int to_n, int to_d)
     for (auto si = f_equivs[i].begin(); si != f_equivs[i].end(); ++si)
       f2equiv[*si] = i;
 
-  auto e2f = geom->get_edge_face_pairs(false);
+  auto e2f = geom.get_edge_face_pairs(false);
   for (const auto &kp : e2f) {
-    if (is_axial_edge(kp.first, *geom, eps) && kp.second.size() == 2 &&
+    if (is_axial_edge(kp.first, geom, eps) && kp.second.size() == 2 &&
         f2equiv[kp.second[0]] == f2equiv[kp.second[1]]) {
-      cyc_chain cyc_c(*geom, kp.first, 1, eps);
+      cyc_chain cyc_c(geom, kp.first, 1, eps);
       chains.push_back(cyc_c);
     }
   }
@@ -632,27 +748,62 @@ int main(int argc, char *argv[])
 
   Geometry geom;
   opts.read_or_error(geom, opts.ifile);
+
+  // merge geometry and check cross rings are valid
+  int num_verts_orig = geom.verts().size();
   merge_coincident_elements(geom, "vef", 0, eps);
+  if (opts.cross_ring_verts.size() != 0) {
+    if ((int)geom.verts().size() != num_verts_orig)
+      opts.error("cannot use this option with input model that has coincident "
+                 "vertices (merge vertices first)",
+                 'x');
+    for (int idx : opts.cross_ring_verts) {
+      if (idx >= num_verts_orig)
+        opts.error(msg_str("index number %d, out of range", idx), 'x');
+    }
+  }
 
   cyc_geom cyc(eps);
-  if (!cyc.set_geom(&geom))
+  if (!cyc.set_geom(geom))
     opts.error(cyc.get_error_msg(), "input geometry");
 
-  Geometry o_geom;
-  cyc.make_geom(&o_geom, opts.num, opts.denom);
+  if (opts.pop_vertices.size() > 0) {
+    // pop vertices (don't apply nfold processing)
+    vector<bool> rings_seen(cyc.num_rings());
+    for (auto pop_vert : opts.pop_vertices) {
+      int ring_idx = cyc.get_ring_idx(pop_vert.index);
+      if (ring_idx < 0)
+        opts.error(
+            msg_str("vertex index %d is not on a vertex ring", pop_vert.index),
+            'p');
+      if (rings_seen[ring_idx])
+        opts.error(msg_str("vertex index %d is on a vertex ring that has "
+                           "already been processed",
+                           pop_vert.index),
+                   'p');
+      cyc.pop_ring(ring_idx, pop_vert.scale_xy, pop_vert.translate_z);
+    }
+    opts.write_or_error(cyc.get_geom(), opts.ofile);
+  }
+  else {
+    // apply nfold processing
+    Geometry o_geom;
+    if (!cyc.make_geom(&o_geom, opts.num, opts.denom, opts.cross_ring_verts))
+      opts.error(cyc.get_error_msg(), "input geometry");
 
-  o_geom.orient();
+    o_geom.orient();
 
-  vector<string> msgs = cyc.get_input_warnings();
-  for (auto &msg : msgs)
-    opts.warning(msg, "input geometry");
+    vector<string> msgs = cyc.get_input_warnings();
+    for (auto &msg : msgs)
+      opts.warning(msg, "input geometry");
 
-  msgs = cyc.get_output_warnings();
-  for (auto &msg : msgs)
-    opts.warning(msg, "output geometry");
+    msgs = cyc.get_output_warnings();
+    for (auto &msg : msgs)
+      opts.warning(msg, "output geometry");
 
-  merge_coincident_elements(o_geom, "vef", 0, eps);
-  opts.write_or_error(o_geom, opts.ofile);
+    merge_coincident_elements(o_geom, "vef", 0, eps);
+    opts.write_or_error(o_geom, opts.ofile);
+  }
 
   return 0;
 }
