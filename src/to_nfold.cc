@@ -280,7 +280,7 @@ public:
   pair<cyc_vert, int> get_vert_type(cyc_vert cyc_v) const;
   int get_vert_idx(cyc_vert cyc_v) const;
   void add_vert(cyc_vert cyc_v);
-  void assign_types_in_order();
+  void assign_types_in_order(vector<int> &ring_map);
   void to_vector(vector<cyc_vert> *v_types) const;
 };
 
@@ -337,12 +337,15 @@ double cyc_verts::first_sector(double ang) const
   return first_ang;
 }
 
-void cyc_verts::assign_types_in_order()
+void cyc_verts::assign_types_in_order(vector<int> &ring_map)
 {
+  ring_map.resize(v2type.size());
   int i = 0;
   map<cyc_vert, int, cyc_vert_cmp>::iterator mi;
-  for (mi = v2type.begin(); mi != v2type.end(); ++mi)
+  for (mi = v2type.begin(); mi != v2type.end(); ++mi) {
+    ring_map[i] = mi->second;
     mi->second = i++;
+  }
 }
 
 void cyc_verts::to_vector(vector<cyc_vert> *v_types) const
@@ -672,7 +675,8 @@ bool cyc_geom::make_geom(Geometry *o_geom, int to_n, int to_d,
     cyc_v.cyc_ang *= (double)from_n * to_d / to_n;
     cyc_vs.add_vert(cyc_v);
   }
-  cyc_vs.assign_types_in_order(); // number the vertices nicely
+  vector<int> ring_map;
+  cyc_vs.assign_types_in_order(ring_map); // number the vertices nicely
 
   // Set up final vertices
   vector<cyc_vert> vs;
@@ -682,7 +686,7 @@ bool cyc_geom::make_geom(Geometry *o_geom, int to_n, int to_d,
       cyc_vert v_rot = vs[i];
       v_rot.cyc_ang += step * 2 * M_PI / to_n;
       auto vert = v_rot.to_Vec3d();
-      if (cross_rings[i]) { // uncross any crossed ring vertices
+      if (cross_rings[ring_map[i]]) { // uncross any crossed ring vertices
         vert[0] *= -1;
         vert[1] *= -1;
       }
