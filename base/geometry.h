@@ -277,7 +277,6 @@ public:
   GeomElemProps<Color> &get_cols();
 
   /// Clear all colours for all elements
-  /**\return the colour. */
   void clear_cols();
 
   /// Append a geometry

@@ -136,8 +136,7 @@ public:
 
   /// Set label offset
   /** Higher values push the label further out from its element.
-   * \param offset value of offset
-   * \return The position of the label. */
+   * \param offset value of offset */
   void set_label_offset(float offset = 0.07) { label_offset = offset; }
 
   /// Position of a label for a point.

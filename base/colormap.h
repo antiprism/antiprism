@@ -223,8 +223,7 @@ public:
 
   /// Set a colour value for an index number.
   /**\param idx the index.
-   * \param col the colour to set.
-   * \return The colour. */
+   * \param col the colour to set. */
   void set_col(int idx, Color col);
 };
 

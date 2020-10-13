@@ -1,5 +1,11 @@
 NEWS for Antiprism: http://www.antiprism.com
 
+Version 0.28
+xx-xx-20 Adrian Rossiter <adrian@antiprism.com>
+         Changes
+            to_nfold: add -x, -p to help with crossed models
+         Fixes
+
 Version 0.27
 01-10-20 Adrian Rossiter <adrian@antiprism.com>
          Changes
