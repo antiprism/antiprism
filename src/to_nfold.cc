@@ -216,6 +216,9 @@ public:
     radius = Vec3d(v[0], v[1], 0).len();
     height = v[2];
     cyc_ang = angle_around_axis(Vec3d::X, v, Vec3d::Z);
+    if (fabs(cyc_ang) <
+        0.1) // correct for precision problem around v near (0,0,1)
+      cyc_ang = angle_around_axis(Vec3d::X - Vec3d::Y, v, Vec3d::Z) - M_PI / 4;
   }
 
   void to_range_0_2pi() { cyc_ang = ::to_range_0_2pi(cyc_ang); }

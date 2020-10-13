@@ -2159,7 +2159,7 @@ static Symmetry get_vert_stabilizer(const Geometry &geom, int v_idx,
   const Transformations &ts = sym.get_trans();
   for (set<Trans3d>::iterator si = ts.get_trans().begin();
        si != ts.get_trans().end(); si++) {
-    if (compare(geom.verts(v_idx), (*si) * geom.verts(v_idx), epsilon) == 0)
+    if (compare(geom.verts(v_idx), (*si) * geom.verts(v_idx), sym_eps) == 0)
       stab_trans += *si;
   }
 
@@ -2304,7 +2304,10 @@ void SymmetricUpdater::init_vert_orbit(int orbit_idx, const set<int> &orbit)
     for (auto mi = equivs[VERTS].begin(); mi != equivs[VERTS].end(); ++mi) {
       fprintf(stderr, "idx=%d: ", mi->first);
       for (auto si = mi->second.begin(); si != mi->second.end(); si++) {
-        fprintf(stderr, "%d  ", idxs[*si]);
+        if (*si < (int)idxs.size())
+          fprintf(stderr, "%d  ", idxs[*si]);
+        else
+          fprintf(stderr, "*%d", *si);
       }
       fprintf(stderr, "\n");
     }

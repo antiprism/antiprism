@@ -17,15 +17,19 @@
 </pre>
 <<USAGE_END>>
 
-
-
-
 <<EXAMPLES_START>>
 Turn an icosahedron 3-fold axis into a six-fold axis, and make the
 resulting faces regular
 <<CMDS_START>>
 off_trans -y D3v ico | to_nfold 6 | minmax -a u -s 20 -n 10000 | antiview
 <<CMDS_END>>
+
+Make the faces of a (3,5) icosahedral geodesic sphere into regular
+triangles, while ensuring that the icosahedral symmetry is maintained
+<<CMDS_START>>
+minmax -a u -n 100000 -s 29 -L 15 -y full geo_5_3 | antiview
+<<CMDS_END>>
+
 
 Make a geometric representation of a polyhedron having only face data,
 in this case a geodesic sphere has all its coordinates set to the origin
@@ -44,12 +48,16 @@ minmax -n 100000 unscrambled.off &gt; unscrambled2.off
 
 <<NOTES_START>>
 Doesn't always succeed. Experiment with option <i>-s</i>, <i>-l</i>,
-<i>k</i> and <i>-f</i> to improve convergence, but setting them too
+<i>-k</i> and <i>-f</i> to improve convergence, but setting them too
 high may cause the model to scramble. Run the program for longer by
 increasing option <i>-n</i>. The program shows the progress every
 1000 iterations (change with option <i>-z</i>) by printing the
 longest and shortest edge lengths (<i>-a v/a</i>) or the maximum
 distance a vertex moved (<i>-a u</i>).
+<p>
+Option <i>-y full</i> constrains the symmetry of a model, but
+will also complete quicker for models with good symmetry and a
+large number of elements.
 <<NOTES_END>>
 
 #include "<<END>>"

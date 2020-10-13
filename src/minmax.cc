@@ -37,6 +37,7 @@
 
 #include "../base/antiprism.h"
 
+using std::set;
 using std::string;
 using std::vector;
 
@@ -80,6 +81,7 @@ public:
   double lengthen_by;
   double shorten_rad_by;
   double flatten_by;
+  string sym_str;
   Vec4d ellipsoid;
 
   string ifile;
@@ -128,6 +130,9 @@ void mm_opts::usage()
 "              r - random placement\n"
 "              u - unscramble: place a small polygon on one side and the\n"
 "                  rest of the vertices at a point on the other side\n"
+"  -y <sub>  maintain symmetry of the base model: sub is symmetry\n"
+"            subgroup (Schoenflies notation) or 'full', optionally followed\n"
+"            by a ',' and conjugation type (integer)\n"
 "  -E <prms> use ellipsoid, three numbers separated by commas are the\n"
 "            axis lengths (for a superellipsoid an optional fourth number\n"
 "            gives the power)\n"
@@ -151,7 +156,7 @@ void mm_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hn:s:l:k:f:a:p:E:L:z:qo:")) != -1) {
+  while ((c = getopt(argc, argv, ":hn:s:l:k:f:a:p:y:E:L:z:qo:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -211,6 +216,10 @@ void mm_opts::process_command_line(int argc, char **argv)
       placement = *optarg;
       break;
 
+    case 'y':
+      sym_str = optarg;
+      break;
+
     case 'E':
       print_status_or_exit(read_double_list(optarg, nums), c);
       if (nums.size() < 3 || nums.size() > 4)
@@ -262,6 +271,35 @@ void mm_opts::process_command_line(int argc, char **argv)
 
   if (argc - optind == 1)
     ifile = argv[optind];
+}
+
+Status init_sym(const Geometry &geom, const char *sym_str, Symmetry &sym)
+{
+  Status stat;
+  char sym_cpy[MSG_SZ]; // big enough for normal use
+  strcpy_msg(sym_cpy, sym_str);
+
+  Symmetry full_sym(geom);
+  vector<char *> parts;
+  split_line(sym_cpy, parts, ",");
+  if (parts.size() == 0 || parts.size() > 2)
+    return Status::error("argument should have 1 or 2 comma separated parts");
+
+  Symmetry sub_sym;
+  if (strncmp(parts[0], "full", strlen(parts[0])) == 0)
+    sub_sym = full_sym;
+  else if (!(stat = sub_sym.init(parts[0], Trans3d())))
+    return Status::error(msg_str("sub-symmetry type: %s", stat.c_msg()));
+
+  int sub_sym_conj = 0;
+  if (parts.size() > 1 && !(stat = read_int(parts[1], &sub_sym_conj)))
+    return Status::error(
+        msg_str("sub-symmetry conjugation number: %s", stat.c_msg()));
+
+  if (!(stat = full_sym.get_sub_sym(sub_sym, &sym, sub_sym_conj)))
+    return Status::error(msg_str("sub-symmetry: %s", stat.c_msg()));
+
+  return Status::ok();
 }
 
 void to_ellipsoid(Vec3d &v, Vec4d ellipsoid)
@@ -412,12 +450,13 @@ void minmax_v(Geometry &geom, iter_params it_params, vector<vector<int>> &eds,
             it_params.num_iters, g_max_dist, g_min_dist);
 }
 
-void minmax_unit(Geometry &geom, iter_params it_params, double shorten_factor,
-                 double plane_factor, double radius_factor)
+Status minmax_unit_orig(Geometry &geom, iter_params it_params,
+                        double shorten_factor, double plane_factor,
+                        double radius_factor)
 {
   double test_val = it_params.get_test_val();
   const double divergence_test2 = 1e30; // test vertex dist^2 for divergence
-  // do a scale to get edges close to 1
+  // Scale to get edges close to 1
   GeometryInfo info(geom);
   double scale = info.iedge_length_lims().sum / info.num_iedges();
   if (scale)
@@ -435,41 +474,40 @@ void minmax_unit(Geometry &geom, iter_params it_params, double shorten_factor,
     if (!D)
       D = 1;
     rads[f] = 0.5 / sin(M_PI * D / N); // circumradius of regular polygon
-    // fprintf(stderr, "{%d/%d} rad=%g\n", N, D, rads[f]);
   }
 
   bool diverging = false;
   int cnt = 0;
   for (cnt = 1; cnt <= it_params.num_iters; cnt++) {
-    vector<Vec3d> old_verts = verts;
-
-    // Vertx offsets for the iteration.
+    // Vertex offsets for the iteration.
     vector<Vec3d> offsets(verts.size(), Vec3d::zero);
-    for (unsigned int ff = cnt; ff < faces.size() + cnt; ff++) {
-      const unsigned int f = ff % faces.size();
-      const vector<int> &face = faces[f];
+    for (unsigned int f_idx = 0; f_idx < faces.size(); f_idx++) {
+      const vector<int> &face = faces[f_idx];
       const unsigned int f_sz = face.size();
-      Vec3d norm = geom.face_norm(f).unit();
-      Vec3d f_cent = geom.face_cent(f);
+      Vec3d norm = geom.face_norm(f_idx).unit();
+      Vec3d f_cent = geom.face_cent(f_idx);
       if (vdot(norm, f_cent) < 0)
         norm *= -1.0;
 
-      for (unsigned int vv = cnt; vv < f_sz + cnt; vv++) {
-        unsigned int v = vv % f_sz;
+      for (unsigned int i = 0; i < f_sz; i++) {
+        int v_idx = face[i];
+        int v_idx_next = face[(i + 1) % f_sz];
+
         // offset for unit edges
-        vector<int> edge = make_edge(face[v], face[(v + 1) % f_sz]);
+        vector<int> edge = {v_idx, v_idx_next};
         Vec3d offset =
             (1 - geom.edge_len(edge)) * shorten_factor * geom.edge_vec(edge);
-        offsets[edge[0]] -= offset;
-        offsets[edge[1]] += offset;
+        offsets[v_idx] -= offset;
+        offsets[v_idx_next] += offset;
 
         // offset for planarity
-        offsets[face[v]] +=
-            vdot(plane_factor * norm, f_cent - verts[face[v]]) * norm;
+        offsets[v_idx] +=
+            vdot(plane_factor * norm, f_cent - verts[v_idx]) * norm;
 
         // offset for polygon radius
-        Vec3d rad_vec = (verts[face[v]] - f_cent);
-        offsets[face[v]] += (rads[f] - rad_vec.len()) * radius_factor * rad_vec;
+        Vec3d rad_vec = (verts[v_idx] - f_cent);
+        offsets[v_idx] +=
+            (rads[f_idx] - rad_vec.len()) * radius_factor * rad_vec;
       }
     }
 
@@ -510,6 +548,154 @@ void minmax_unit(Geometry &geom, iter_params it_params, double shorten_factor,
   if (!it_params.quiet() && it_params.checking_status())
     fprintf(it_params.rep_file, "\nfinal: iter:%-15d max_diff:%17.15e\n", cnt,
             sqrt(max_diff2));
+
+  return Status::ok();
+}
+
+Status minmax_unit_sym(Geometry &base_geom, iter_params it_params,
+                       double shorten_factor, double plane_factor,
+                       double radius_factor, const string &sym_str)
+{
+  Symmetry sym(Symmetry::C1);
+  Status stat;
+  if (!(stat = init_sym(base_geom, sym_str.c_str(), sym)))
+    return stat;
+
+  double test_val = it_params.get_test_val();
+  const double divergence_test2 = 1e30; // test vertex dist^2 for divergence
+  // Scale to get edges close to 1
+  GeometryInfo info(base_geom);
+  double scale = info.iedge_length_lims().sum / info.num_iedges();
+  if (scale)
+    base_geom.transform(Trans3d::scale(1 / scale));
+  info.get_vert_cons();
+
+  SymmetricUpdater sym_updater(base_geom, sym, false);
+  const Geometry &geom = sym_updater.get_geom_reading();
+  const vector<Vec3d> &verts = geom.verts();
+  const vector<vector<int>> &faces = geom.faces();
+
+  double max_diff2 = 0;
+  Vec3d origin(0, 0, 0);
+  vector<double> rads(faces.size());
+  for (unsigned int f = 0; f < faces.size(); f++) {
+    int N = faces[f].size();
+    int D = abs(find_polygon_denominator_signed(geom, f, epsilon));
+    if (!D)
+      D = 1;
+    rads[f] = 0.5 / sin(M_PI * D / N); // circumradius of regular polygon
+  }
+
+  // Get a list of the faces that contain a principal vertex of any type
+  set<int> faces_to_process;
+  {
+    vector<set<int>> vert_faces(geom.verts().size());
+    for (int f_idx = 0; f_idx < (int)geom.faces().size(); f_idx++)
+      for (int v_idx : geom.faces(f_idx))
+        vert_faces[v_idx].insert(f_idx);
+
+    for (auto &v_orbit : sym_updater.get_equiv_sets(VERTS))
+      for (int f_idx : vert_faces[*v_orbit.begin()])
+        faces_to_process.insert(f_idx);
+  }
+
+  bool diverging = false;
+  int cnt = 0;
+  for (cnt = 1; cnt <= it_params.num_iters; cnt++) {
+    // Vertx offsets for the iteration.
+    vector<Vec3d> offsets(verts.size(), Vec3d::zero);
+    for (int f_idx : faces_to_process) {
+      const vector<int> &face = faces[f_idx];
+
+      // Ensure that the face vertices are up to date
+      for (int v_idx : face)
+        sym_updater.update_from_principal_vertex(v_idx);
+
+      Vec3d norm = geom.face_norm(f_idx).unit();
+      Vec3d f_cent = geom.face_cent(f_idx);
+      if (vdot(norm, f_cent) < 0)
+        norm *= -1.0;
+
+      for (int i = 0; i < (int)face.size(); i++) {
+        const int v_idx = face[i];
+        // offset for planarity
+        offsets[v_idx] +=
+            vdot(plane_factor * norm, f_cent - verts[v_idx]) * norm;
+
+        // offset for polygon radius
+        Vec3d rad_vec = (verts[v_idx] - f_cent);
+        offsets[v_idx] +=
+            (rads[f_idx] - rad_vec.len()) * radius_factor * rad_vec;
+      }
+    }
+
+    // offsets for unit edges
+    for (auto &v_orbit : sym_updater.get_equiv_sets(VERTS)) {
+      const int v_idx = *v_orbit.begin();
+      for (int v_neigh : info.get_vert_cons()[v_idx]) {
+        vector<int> edge = {v_idx, v_neigh};
+        Vec3d offset =
+            (1 - geom.edge_len(edge)) * shorten_factor * geom.edge_vec(edge);
+        offsets[v_idx] -= 2 * offset;
+      }
+    }
+
+    // adjust principal vertices post-loop
+    for (auto &v_orbit : sym_updater.get_equiv_sets(VERTS)) {
+      const int v_idx = *v_orbit.begin();
+      auto vert = sym_updater.get_geom_reading().verts(v_idx);
+      sym_updater.update_principal_vertex(v_idx, vert + offsets[v_idx]);
+    }
+
+    if (it_params.check_status(cnt)) {
+      max_diff2 = 0;
+      for (auto &offset : offsets) {
+        double diff2 = offset.len2();
+        if (diff2 > max_diff2)
+          max_diff2 = diff2;
+      }
+
+      double width = BoundBox(verts).max_width();
+      if (sqrt(max_diff2) / width < test_val)
+        break;
+
+      if (!it_params.quiet())
+        fprintf(it_params.rep_file, "iter:%-15d max_diff:%17.15e\n", cnt,
+                sqrt(max_diff2));
+
+      // see if radius is expanding or contracting unreasonably
+      if (divergence_test2 > 0) {
+        diverging = false;
+        for (auto &offset : offsets)
+          if (offset.len2() > divergence_test2) {
+            diverging = true;
+            break;
+          }
+      }
+    }
+  }
+
+  if (!it_params.quiet() && diverging)
+    fprintf(it_params.rep_file, "Probably Diverging. Breaking out.\n");
+  if (!it_params.quiet() && it_params.checking_status())
+    fprintf(it_params.rep_file, "\nfinal: iter:%-15d max_diff:%17.15e\n", cnt,
+            sqrt(max_diff2));
+
+  base_geom = sym_updater.get_geom_final();
+  return Status::ok();
+}
+
+Status minmax_unit(Geometry &base_geom, iter_params it_params,
+                   double shorten_factor, double plane_factor,
+                   double radius_factor, const string &sym_str)
+{
+  // If no symmetry argument then process with the original algorithm
+  if (sym_str.empty())
+    return minmax_unit_orig(base_geom, it_params, shorten_factor, plane_factor,
+                            radius_factor);
+  else
+    return minmax_unit_sym(base_geom, it_params, shorten_factor, plane_factor,
+                           radius_factor, sym_str);
 }
 
 int main(int argc, char *argv[])
@@ -539,8 +725,9 @@ int main(int argc, char *argv[])
         minmax_v(geom, opts.it_params, eds, opts.shorten_by / 200,
                  opts.lengthen_by / 200, opts.ellipsoid);
       else if (opts.algm == 'u')
-        minmax_unit(geom, opts.it_params, opts.shorten_by / 200,
-                    opts.flatten_by / 200, opts.shorten_rad_by / 200);
+        opts.print_status_or_exit(minmax_unit(
+            geom, opts.it_params, opts.shorten_by / 200, opts.flatten_by / 200,
+            opts.shorten_rad_by / 200, opts.sym_str));
     }
   }
   else
