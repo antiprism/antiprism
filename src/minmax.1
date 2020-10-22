@@ -9,7 +9,8 @@ minmax - optimal spherical tesselations
 Read a file in OFF format containing a graph of a polyhedron, with or
 without vertex coordinates, and try to create a spherical or ellipsoidal
 tesselation where the maximum edge is a minimum length, or try to make
-into a regular polyhedron. If input_file is not given the program reads
+into a regular\-faced polyhedron. Option adjustment factors expressed as
+a percentage are approximate. If input_file is not given the program reads
 from standard input.
 .PP
 Options
@@ -22,13 +23,18 @@ Options
 .HP
 \fB\-s\fR <perc> percentage to shorten longest edges on iteration (default: 1)
 .HP
-\fB\-l\fR <perc> percentage to lengthen shortest edges (\fB\-a\fR a/v) on iteration
+\fB\-l\fR <perc> percentage to lengthen shortest edges (\fB\-a\fR v) on iteration
 .IP
 (default: 0.0)
 .HP
-\fB\-k\fR <perc> percentage to reduce polygon radius (\fB\-a\fR u) on iteration
+\fB\-k\fR <perc> \fB\-a\fR u \- percentage to reduce polygon radius on iteration
 .IP
 (default: value of \fB\-s\fR)
+.IP
+\fB\-a\fR e \- percentage to reduce minimum target length on iteration
+.IP
+(default: 1e\-6), will oscillate at certain precision,
+process output with smaller value to improve solution
 .HP
 \fB\-f\fR <perc> percentage to reduce distance of vertex from face plane (\fB\-a\fR u)
 .IP
@@ -37,19 +43,21 @@ on iteration (default: value of \fB\-s\fR)
 \fB\-a\fR <alg>
 length changing algorithm
 .IP
-v \- shortest and longest edges attached to a vertex (default)
-a \- shortest and longest of all edges
-u \- make faces into unit\-edged regular polygons (\fB\-l\fR controls
+e \- equalise edges on sphere or ellipsoid (default)
+v \- equalise shortest and longest edges attached to a vertex
 .IP
-planarity, ignore \fB\-p\fR, \fB\-E\fR)
+on sphere or ellipsoid (unscramble algorithm, see \fB\-p\fR u)
+.IP
+u \- make faces into unit\-edged regular polygons
 .HP
 \fB\-p\fR <mthd> method of placement onto a unit sphere:
 .IP
-n \- project onto the sphere (default)
+n \- project onto the sphere (default for \fB\-a\fR v/e)
 r \- random placement
 u \- unscramble: place a small polygon on one side and the
 .IP
 rest of the vertices at a point on the other side
+(sets \fB\-a\fR v if not specifically set)
 .TP
 \fB\-y\fR <sub>
 maintain symmetry of the base model: sub is symmetry

@@ -39,9 +39,22 @@ off_trans geo_3 -S 0 &gt; scrambled.off
 minmax -p u -n 100000 scrambled.off &gt; unscrambled.off
 <<CMDS_END>>
 
-Run for a bit longer, don't need <i>-p u</i> this time
+Run for a bit longer if necessary, don't use <i>-p u</i> this time,
+but specify the unscrambling algorithm <i>-a v</i>
 <<CMDS_START>>
-minmax -n 100000 unscrambled.off &gt; unscrambled2.off
+minmax -n 100000 -a v unscrambled.off &gt; unscrambled2.off
+<<CMDS_END>>
+
+Make an equal edge tiling on a sphere, and use -y full to constrain
+to the original symmetry, which may also be faster
+<<CMDS_START>>
+minmax -n 10000 -a e -s 100 geo_3_3_d | antiview
+minmax -n 100000 -a e -y full -s 200 geo_3_3_d | antiview
+<<CMDS_END>>
+
+Solve an equal-edge models on an ellipsoid
+<<CMDS_START>>
+minmax -n 100000 -a e -E 1,1.2,1.5 -y full -s 200 geo_3_3_d | antiview
 <<CMDS_END>>
 <<EXAMPLES_END>>
 

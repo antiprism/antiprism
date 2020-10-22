@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2016, Adrian Rossiter
+   Copyright (c) 2003-2020, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -24,7 +24,7 @@
 
 /*
    Name: minmax.cc
-   Description: minimise the maximum edge length on a sphere
+   Description: make equal-edge, face-regular and unscrambled polyhedra
    Project: Antiprism - http://www.antiprism.com
 */
 
@@ -59,8 +59,7 @@ public:
   bool quiet() { return rep_file == nullptr; }
   bool check_status(int n)
   {
-    return n == num_iters || n == 1 ||
-           (num_iters_status > 0 && n % num_iters_status == 0);
+    return n == 1 || (num_iters_status > 0 && n % num_iters_status == 0);
   }
   bool checking_status() { return num_iters_status > 0; };
   bool print_progress_dot(int n)
@@ -88,7 +87,7 @@ public:
   string ofile;
 
   mm_opts()
-      : ProgramOpts("minmax"), algm('v'), placement('n'), shorten_by(1.0),
+      : ProgramOpts("minmax"), algm('\0'), placement('\0'), shorten_by(1.0),
         lengthen_by(NAN), shorten_rad_by(NAN), flatten_by(NAN)
   {
   }
@@ -107,29 +106,34 @@ void mm_opts::usage()
 "Read a file in OFF format containing a graph of a polyhedron, with or\n"
 "without vertex coordinates, and try to create a spherical or ellipsoidal\n"
 "tesselation where the maximum edge is a minimum length, or try to make\n"
-"into a regular polyhedron. If input_file is not given the program reads\n"
+"into a regular-faced polyhedron. Option adjustment factors expressed as\n"
+"a percentage are approximate. If input_file is not given the program reads\n"
 "from standard input.\n"
 "\n"
 "Options\n"
 "%s"
 "  -n <itrs> number of iterations (default 1000)\n"
 "  -s <perc> percentage to shorten longest edges on iteration (default: 1)\n"
-"  -l <perc> percentage to lengthen shortest edges (-a a/v) on iteration \n"
+"  -l <perc> percentage to lengthen shortest edges (-a v) on iteration \n"
 "            (default: 0.0)\n"
-"  -k <perc> percentage to reduce polygon radius (-a u) on iteration\n"
-"            (default: value of -s)\n"
+"  -k <perc> -a u - percentage to reduce polygon radius on iteration\n"
+"                   (default: value of -s)\n"
+"            -a e - percentage to reduce minimum target length on iteration\n"
+"                   (default: 1e-6), will oscillate at certain precision,\n"
+"                   process output with smaller value to improve solution\n"
 "  -f <perc> percentage to reduce distance of vertex from face plane (-a u)\n"
 "            on iteration (default: value of -s)\n"
 "  -a <alg>  length changing algorithm\n"
-"              v - shortest and longest edges attached to a vertex (default)\n"
-"              a - shortest and longest of all edges\n"
-"              u - make faces into unit-edged regular polygons (-l controls\n"
-"                  planarity, ignore -p, -E)\n"
+"              e - equalise edges on sphere or ellipsoid (default)\n"
+"              v - equalise shortest and longest edges attached to a vertex\n"
+"                  on sphere or ellipsoid (unscramble algorithm, see -p u)\n"
+"              u - make faces into unit-edged regular polygons\n"
 "  -p <mthd> method of placement onto a unit sphere:\n"
-"              n - project onto the sphere (default)\n"
+"              n - project onto the sphere (default for -a v/e)\n"
 "              r - random placement\n"
 "              u - unscramble: place a small polygon on one side and the\n"
 "                  rest of the vertices at a point on the other side\n"
+"                  (sets -a v if not specifically set)\n"
 "  -y <sub>  maintain symmetry of the base model: sub is symmetry\n"
 "            subgroup (Schoenflies notation) or 'full', optionally followed\n"
 "            by a ',' and conjugation type (integer)\n"
@@ -205,8 +209,8 @@ void mm_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'a':
-      if (strlen(optarg) > 1 || !strchr("avu", *optarg))
-        error("method is '" + string(optarg) + "' must be a, v or u");
+      if (strlen(optarg) > 1 || !strchr("evu", *optarg))
+        error("method is '" + string(optarg) + "' must be e, v or u");
       algm = *optarg;
       break;
 
@@ -249,6 +253,15 @@ void mm_opts::process_command_line(int argc, char **argv)
     }
   }
 
+  // Default algorithm is 'e', but if unscrambling it is 'u'
+  if (!algm)
+    algm = (placement == 'u') ? 'v' : 'e';
+
+  if (placement == 'u' && algm != 'v')
+    error(msg_str("algorithm %c is not compatible with unscramble (use -a v)",
+                  algm),
+          'p');
+
   if (algm == 'u') {
     if (std::isnan(shorten_rad_by))
       shorten_rad_by = shorten_by;
@@ -256,15 +269,33 @@ void mm_opts::process_command_line(int argc, char **argv)
       flatten_by = shorten_by;
     if (!std::isnan(lengthen_by))
       warning("set, but not used for this algorithm", 'l');
+    if (ellipsoid.is_set())
+      warning("set, but not used for this algorithm", 'E');
+    if (placement)
+      warning(msg_str("placement method used with -a u", placement), 'p');
   }
-  else { // algm ia v or a
-    if (std::isnan(shorten_rad_by))
+  else if (algm == 'v') {
+    if (std::isnan(lengthen_by))
       lengthen_by = 0.0;
     if (!std::isnan(shorten_rad_by))
       warning("set, but not used for this algorithm", 'k');
     if (!std::isnan(flatten_by))
       warning("set, but not used for this algorithm", 'f');
+    if (!placement)
+      placement = 'n';
   }
+  else if (algm == 'e') {
+    if (std::isnan(shorten_rad_by))
+      shorten_rad_by = 1e-6;
+    if (!std::isnan(lengthen_by))
+      warning("set, but not used for this algorithm", 'l');
+    if (!std::isnan(flatten_by))
+      warning("set, but not used for this algorithm", 'f');
+    if (!placement)
+      placement = 'n';
+  }
+  else
+    error("invalid algorithm '%c'", algm);
 
   if (argc - optind > 1)
     error("too many arguments");
@@ -304,19 +335,21 @@ Status init_sym(const Geometry &geom, const char *sym_str, Symmetry &sym)
 
 void to_ellipsoid(Vec3d &v, Vec4d ellipsoid)
 {
-  if (!ellipsoid.is_set())
-    v.to_unit();
-  else if (v.len2() > epsilon) {
+  if (compare(v, Vec3d::zero) == 0)
+    v = {0, 0, 1};
+
+  if (ellipsoid.is_set()) {
     double scale = 0;
     for (unsigned int i = 0; i < 3; i++)
       scale += pow(fabs(v[i] / ellipsoid[i]), ellipsoid[3]);
     v *= pow(scale, -1 / ellipsoid[3]);
   }
+  else
+    v.to_unit();
 }
 
 void initial_placement(Geometry &geom, char placement, Vec4d ellipsoid)
 {
-  const vector<int> &face = geom.faces(0);
   switch (placement) {
   case 'n':
     for (unsigned int i = 0; i < geom.verts().size(); i++)
@@ -326,10 +359,13 @@ void initial_placement(Geometry &geom, char placement, Vec4d ellipsoid)
   case 'u':
     for (unsigned int i = 0; i < geom.verts().size(); i++)
       geom.verts(i) = Vec3d(-1, 0, 0);
-    for (unsigned int i = 0; i < face.size(); i++) {
-      geom.verts(face[i]) = Vec3d(1, 0.01 * cos(i * 2 * M_PI / face.size()),
-                                  0.01 * sin(i * 2 * M_PI / face.size()));
-      geom.verts(face[i]).to_unit();
+    if (geom.faces().size()) {
+      const vector<int> &face = geom.faces(0);
+      for (unsigned int i = 0; i < face.size(); i++) {
+        geom.verts(face[i]) = Vec3d(1, 0.01 * cos(i * 2 * M_PI / face.size()),
+                                    0.01 * sin(i * 2 * M_PI / face.size()));
+        geom.verts(face[i]).to_unit();
+      }
     }
     break;
 
@@ -345,58 +381,24 @@ void initial_placement(Geometry &geom, char placement, Vec4d ellipsoid)
   }
 }
 
-void minmax_a(Geometry &geom, iter_params it_params, double shorten_factor,
-              double lengthen_factor, Vec4d ellipsoid = Vec4d())
+vector<vector<int>> get_edge_connections(const Geometry &geom)
 {
-  int max_edge = 0, min_edge = 0, p0, p1;
-  double dist, max_dist = 0, min_dist = 1e100;
-  for (int cnt = 1; cnt <= it_params.num_iters; cnt++) {
-    max_dist = 0;
-    min_dist = 1e100;
-    for (unsigned int i = 0; i < geom.edges().size(); i++) {
-      dist = geom.edge_vec(i).len2();
-      if (dist > max_dist) {
-        max_dist = dist;
-        max_edge = i;
-      }
-      if (dist < min_dist) {
-        min_dist = dist;
-        min_edge = i;
-      }
-    }
-
-    p0 = geom.edges(max_edge, 0);
-    p1 = geom.edges(max_edge, 1);
-    Vec3d diff = geom.edge_vec(max_edge);
-    geom.verts(p0) += diff * shorten_factor;
-    to_ellipsoid(geom.verts(p0), ellipsoid);
-    geom.verts(p1) -= diff * shorten_factor;
-    to_ellipsoid(geom.verts(p1), ellipsoid);
-
-    p0 = geom.edges(min_edge, 0);
-    p1 = geom.edges(min_edge, 1);
-    diff = geom.edge_vec(min_edge);
-    geom.verts(p0) -= diff * lengthen_factor;
-    to_ellipsoid(geom.verts(p0), ellipsoid);
-    geom.verts(p1) += diff * lengthen_factor;
-    to_ellipsoid(geom.verts(p1), ellipsoid);
-
-    if (!it_params.quiet() && it_params.check_status(cnt))
-      fprintf(it_params.rep_file, "\niter:%-15d max:%17.15f min:%17.15f ", cnt,
-              max_dist, min_dist);
-    else if (it_params.print_progress_dot(cnt))
-      fprintf(it_params.rep_file, ".");
+  vector<vector<int>> edges(geom.verts().size());
+  for (unsigned int i = 0; i < geom.edges().size(); i++) {
+    edges[geom.edges(i, 0)].push_back(geom.edges(i, 1));
+    edges[geom.edges(i, 1)].push_back(geom.edges(i, 0));
   }
-  if (!it_params.quiet() && it_params.checking_status())
-    fprintf(it_params.rep_file,
-            "\nFinal:\niter:%-15d max:%17.15f min:%17.15f\n",
-            it_params.num_iters, max_dist, min_dist);
+  return edges;
 }
 
-void minmax_v(Geometry &geom, iter_params it_params, vector<vector<int>> &eds,
-              double shorten_factor, double lengthen_factor,
-              Vec4d ellipsoid = Vec4d())
+//------------------------------------------------------------------
+// Unscramble
+
+Status minmax_v(Geometry &geom, iter_params it_params, double shorten_factor,
+                double lengthen_factor, Vec4d ellipsoid)
 {
+  auto eds = GeometryInfo(geom).get_vert_cons();
+
   int max_edge = 0, min_edge = 0, p0, p1;
   double dist, max_dist = 0, min_dist = 1e100, g_max_dist = 0,
                g_min_dist = 1e100;
@@ -440,15 +442,185 @@ void minmax_v(Geometry &geom, iter_params it_params, vector<vector<int>> &eds,
 
     if (!it_params.quiet() && it_params.check_status(cnt))
       fprintf(it_params.rep_file, "\niter:%-15d max:%17.15f min:%17.15f ", cnt,
-              g_max_dist, g_min_dist);
+              sqrt(g_max_dist), sqrt(g_min_dist));
     else if (it_params.print_progress_dot(cnt))
       fprintf(it_params.rep_file, ".");
   }
   if (!it_params.quiet() && it_params.checking_status())
     fprintf(it_params.rep_file,
             "\nFinal:\niter:%-15d max:%17.15f min:%17.15f\n",
-            it_params.num_iters, g_max_dist, g_min_dist);
+            it_params.num_iters, sqrt(g_max_dist), sqrt(g_min_dist));
+
+  return Status::ok();
 }
+
+//------------------------------------------------------------------
+// Equal edge
+
+Status minmax_e_orig(Geometry &geom, iter_params it_params,
+                     double shorten_factor, double shrink_factor,
+                     Vec4d ellipsoid)
+{
+  double g_max_dist = 0;
+  double g_min_dist = 1e100;
+  double g_scale_factor = 1;
+  double max_dist = 0;
+  double min_dist = 1e100;
+
+  auto eds = GeometryInfo(geom).get_vert_cons();
+
+  for (int cnt = 0; cnt <= it_params.num_iters; cnt++) {
+    // Vertex offsets for the iteration.
+    const vector<Vec3d> &verts = geom.verts();
+    vector<Vec3d> offsets(verts.size(), Vec3d::zero);
+
+    max_dist = 0;
+    min_dist = 1e100;
+    for (unsigned int v = 0; v < verts.size(); v++) {
+      if (eds[v].size() == 0)
+        continue;
+      for (unsigned int i = 0; i < eds[v].size(); i++) {
+        auto vec = geom.verts(v) - geom.verts(eds[v][i]);
+        double dist = vec.len();
+        if (dist > max_dist)
+          max_dist = dist;
+        if (dist < min_dist)
+          min_dist = dist;
+        offsets[v] += (vec / dist) * (g_min_dist - dist) * g_scale_factor *
+                      shorten_factor;
+      }
+    }
+
+    // adjust vertices post-loop (skip first time as global values not set)
+    if (cnt > 0) {
+      for (unsigned int i = 0; i < offsets.size(); i++) {
+        geom.raw_verts()[i] += offsets[i];
+        to_ellipsoid(geom.verts(i), ellipsoid);
+      }
+    }
+
+    g_min_dist = min_dist * (1 - shrink_factor);
+    g_max_dist = max_dist;
+    g_scale_factor = (g_max_dist - g_min_dist) / g_min_dist;
+
+    if (cnt > 0) {
+      if (!it_params.quiet() && it_params.check_status(cnt))
+        fprintf(it_params.rep_file, "\niter:%-15d max:%17.15f min:%17.15f ",
+                cnt, max_dist, min_dist);
+      else if (it_params.print_progress_dot(cnt))
+        fprintf(it_params.rep_file, ".");
+    }
+  }
+  if (!it_params.quiet() && it_params.checking_status())
+    fprintf(it_params.rep_file,
+            "\nFinal:\niter:%-15d max:%17.15f min:%17.15f\n",
+            it_params.num_iters, max_dist, min_dist);
+
+  return Status::ok();
+}
+
+Status minmax_e_sym(Geometry &base_geom, iter_params it_params,
+                    double shorten_factor, double shrink_factor,
+                    Vec4d ellipsoid, string sym_str)
+{
+  Symmetry sym(Symmetry::C1);
+  Status stat;
+  if (!(stat = init_sym(base_geom, sym_str.c_str(), sym)))
+    return stat;
+
+  SymmetricUpdater sym_updater(base_geom, sym, false);
+  const Geometry &geom = sym_updater.get_geom_reading();
+  auto eds = GeometryInfo(geom).get_vert_cons();
+
+  // Get a list of the vertices that are principal vertices, or are
+  // connected to a principal vertex
+  vector<int> principal_verts;
+  set<int> verts_to_process;
+  for (auto &v_orbit : sym_updater.get_equiv_sets(VERTS)) {
+    int principal_idx = *v_orbit.begin();
+    principal_verts.push_back(principal_idx);
+    verts_to_process.insert(principal_idx);
+    for (int v_idx : eds[principal_idx])
+      verts_to_process.insert(v_idx);
+  }
+
+  double g_max_dist = 0;
+  double g_min_dist = 1e100;
+  double g_scale_factor = 1;
+  double max_dist = 0;
+  double min_dist = 1e100;
+
+  for (int cnt = 0; cnt <= it_params.num_iters; cnt++) {
+    // Vertex offsets for the iteration.
+    const vector<Vec3d> &verts = geom.verts();
+    vector<Vec3d> offsets(verts.size(), Vec3d::zero);
+
+    // Ensure that the vertices used in adjustment are up to date
+    for (int v_idx : verts_to_process)
+      sym_updater.update_from_principal_vertex(v_idx);
+
+    max_dist = 0;
+    min_dist = 1e100;
+    for (int v_idx : principal_verts) {
+      if (eds[v_idx].size() == 0)
+        continue;
+      for (unsigned int i = 0; i < eds[v_idx].size(); i++) {
+        auto vec = geom.verts(v_idx) - geom.verts(eds[v_idx][i]);
+        double dist = vec.len();
+        if (dist > max_dist)
+          max_dist = dist;
+        if (dist < min_dist)
+          min_dist = dist;
+        offsets[v_idx] += (vec / dist) * (g_min_dist - dist) * g_scale_factor *
+                          shorten_factor;
+      }
+    }
+
+    // adjust vertices post-loop (skip first time as global values not set)
+    if (cnt > 0) {
+      for (int v_idx : principal_verts) {
+        auto vert = verts[v_idx] + offsets[v_idx];
+        to_ellipsoid(vert, ellipsoid);
+        sym_updater.update_principal_vertex(v_idx, vert);
+      }
+    }
+
+    g_min_dist = min_dist * (1 - shrink_factor);
+    g_max_dist = max_dist;
+    g_scale_factor = (g_max_dist - g_min_dist) / g_min_dist;
+
+    if (cnt > 0) {
+      if (!it_params.quiet() && it_params.check_status(cnt))
+        fprintf(it_params.rep_file, "\niter:%-15d max:%17.15f min:%17.15f ",
+                cnt, max_dist, min_dist);
+      else if (it_params.print_progress_dot(cnt))
+        fprintf(it_params.rep_file, ".");
+    }
+  }
+  if (!it_params.quiet() && it_params.checking_status())
+    fprintf(it_params.rep_file,
+            "\nFinal:\niter:%-15d max:%17.15f min:%17.15f\n",
+            it_params.num_iters, max_dist, min_dist);
+
+  base_geom = sym_updater.get_geom_final();
+  return Status::ok();
+}
+
+Status minmax_e(Geometry &base_geom, iter_params it_params,
+                double shorten_factor, double shrink_factor,
+                Vec4d ellipsoid = Vec4d(), string sym_str = string())
+{
+  // If no symmetry argument then process with the original algorithm
+  if (sym_str.empty())
+    return minmax_e_orig(base_geom, it_params, shorten_factor, shrink_factor,
+                         ellipsoid);
+  else
+    return minmax_e_sym(base_geom, it_params, shorten_factor, shrink_factor,
+                        ellipsoid, sym_str);
+}
+
+//------------------------------------------------------------------
+// Unit edge regular polygon
 
 Status minmax_unit_orig(Geometry &geom, iter_params it_params,
                         double shorten_factor, double plane_factor,
@@ -546,8 +718,8 @@ Status minmax_unit_orig(Geometry &geom, iter_params it_params,
   if (!it_params.quiet() && diverging)
     fprintf(it_params.rep_file, "Probably Diverging. Breaking out.\n");
   if (!it_params.quiet() && it_params.checking_status())
-    fprintf(it_params.rep_file, "\nfinal: iter:%-15d max_diff:%17.15e\n", cnt,
-            sqrt(max_diff2));
+    fprintf(it_params.rep_file, "Final:\niter:%-15d max_diff:%17.15e\n",
+            cnt - 1 + diverging, sqrt(max_diff2));
 
   return Status::ok();
 }
@@ -569,7 +741,6 @@ Status minmax_unit_sym(Geometry &base_geom, iter_params it_params,
   if (scale)
     base_geom.transform(Trans3d::scale(1 / scale));
   info.get_vert_cons();
-
   SymmetricUpdater sym_updater(base_geom, sym, false);
   const Geometry &geom = sym_updater.get_geom_reading();
   const vector<Vec3d> &verts = geom.verts();
@@ -587,29 +758,45 @@ Status minmax_unit_sym(Geometry &base_geom, iter_params it_params,
   }
 
   // Get a list of the faces that contain a principal vertex of any type
-  set<int> faces_to_process;
+  vector<int> principal_verts;
+  vector<int> verts_to_update;
+  vector<int> faces_to_process;
   {
     vector<set<int>> vert_faces(geom.verts().size());
     for (int f_idx = 0; f_idx < (int)geom.faces().size(); f_idx++)
-      for (int v_idx : geom.faces(f_idx))
+      for (int v_idx : faces[f_idx])
         vert_faces[v_idx].insert(f_idx);
 
-    for (auto &v_orbit : sym_updater.get_equiv_sets(VERTS))
-      for (int f_idx : vert_faces[*v_orbit.begin()])
-        faces_to_process.insert(f_idx);
+    for (auto &v_orbit : sym_updater.get_equiv_sets(VERTS)) {
+      int principal_idx = *v_orbit.begin();
+      principal_verts.push_back(principal_idx);
+      for (int f_idx : vert_faces[principal_idx]) {
+        faces_to_process.push_back(f_idx);
+        for (int v_idx : faces[f_idx])
+          verts_to_update.push_back(v_idx);
+      }
+    }
   }
+  sort(verts_to_update.begin(), verts_to_update.end());
+  verts_to_update.erase(unique(verts_to_update.begin(), verts_to_update.end()),
+                        verts_to_update.end());
+  sort(faces_to_process.begin(), faces_to_process.end());
+  faces_to_process.erase(
+      unique(faces_to_process.begin(), faces_to_process.end()),
+      faces_to_process.end());
 
   bool diverging = false;
   int cnt = 0;
   for (cnt = 1; cnt <= it_params.num_iters; cnt++) {
     // Vertx offsets for the iteration.
     vector<Vec3d> offsets(verts.size(), Vec3d::zero);
+
+    // Ensure that the vertices used in adjustment are up to date
+    for (int v_idx : verts_to_update)
+      sym_updater.update_from_principal_vertex(v_idx);
+
     for (int f_idx : faces_to_process) {
       const vector<int> &face = faces[f_idx];
-
-      // Ensure that the face vertices are up to date
-      for (int v_idx : face)
-        sym_updater.update_from_principal_vertex(v_idx);
 
       Vec3d norm = geom.face_norm(f_idx).unit();
       Vec3d f_cent = geom.face_cent(f_idx);
@@ -630,8 +817,7 @@ Status minmax_unit_sym(Geometry &base_geom, iter_params it_params,
     }
 
     // offsets for unit edges
-    for (auto &v_orbit : sym_updater.get_equiv_sets(VERTS)) {
-      const int v_idx = *v_orbit.begin();
+    for (int v_idx : principal_verts) {
       for (int v_neigh : info.get_vert_cons()[v_idx]) {
         vector<int> edge = {v_idx, v_neigh};
         Vec3d offset =
@@ -641,11 +827,8 @@ Status minmax_unit_sym(Geometry &base_geom, iter_params it_params,
     }
 
     // adjust principal vertices post-loop
-    for (auto &v_orbit : sym_updater.get_equiv_sets(VERTS)) {
-      const int v_idx = *v_orbit.begin();
-      auto vert = sym_updater.get_geom_reading().verts(v_idx);
-      sym_updater.update_principal_vertex(v_idx, vert + offsets[v_idx]);
-    }
+    for (int v_idx : principal_verts)
+      sym_updater.update_principal_vertex(v_idx, verts[v_idx] + offsets[v_idx]);
 
     if (it_params.check_status(cnt)) {
       max_diff2 = 0;
@@ -678,8 +861,8 @@ Status minmax_unit_sym(Geometry &base_geom, iter_params it_params,
   if (!it_params.quiet() && diverging)
     fprintf(it_params.rep_file, "Probably Diverging. Breaking out.\n");
   if (!it_params.quiet() && it_params.checking_status())
-    fprintf(it_params.rep_file, "\nfinal: iter:%-15d max_diff:%17.15e\n", cnt,
-            sqrt(max_diff2));
+    fprintf(it_params.rep_file, "Final:\niter:%-15d max_diff:%17.15e\n",
+            cnt - 1 + diverging, sqrt(max_diff2));
 
   base_geom = sym_updater.get_geom_final();
   return Status::ok();
@@ -706,32 +889,21 @@ int main(int argc, char *argv[])
   Geometry geom;
   opts.read_or_error(geom, opts.ifile);
 
-  if (!geom.edges().size())
-    geom.add_missing_impl_edges();
+  if (opts.placement)
+    initial_placement(geom, opts.placement, opts.ellipsoid);
 
-  if (geom.edges().size()) {
-    if (opts.algm != 'u')
-      initial_placement(geom, opts.placement, opts.ellipsoid);
-    if (opts.algm == 'a')
-      minmax_a(geom, opts.it_params, opts.shorten_by / 200,
-               opts.lengthen_by / 200, opts.ellipsoid);
-    else {
-      vector<vector<int>> eds(geom.verts().size());
-      for (unsigned int i = 0; i < geom.edges().size(); i++) {
-        eds[geom.edges(i, 0)].push_back(geom.edges(i, 1));
-        eds[geom.edges(i, 1)].push_back(geom.edges(i, 0));
-      }
-      if (opts.algm == 'v')
-        minmax_v(geom, opts.it_params, eds, opts.shorten_by / 200,
-                 opts.lengthen_by / 200, opts.ellipsoid);
-      else if (opts.algm == 'u')
-        opts.print_status_or_exit(minmax_unit(
-            geom, opts.it_params, opts.shorten_by / 200, opts.flatten_by / 200,
-            opts.shorten_rad_by / 200, opts.sym_str));
-    }
-  }
-  else
-    opts.warning("input file contains no edges");
+  if (geom.faces().size() == 0)
+    opts.warning("no faces so algorithm not applied");
+  else if (opts.algm == 'e')
+    minmax_e(geom, opts.it_params, opts.shorten_by / 200,
+             opts.shorten_rad_by / 200, opts.ellipsoid, opts.sym_str);
+  else if (opts.algm == 'v')
+    minmax_v(geom, opts.it_params, opts.shorten_by / 200,
+             opts.lengthen_by / 200, opts.ellipsoid);
+  else if (opts.algm == 'u')
+    opts.print_status_or_exit(minmax_unit(
+        geom, opts.it_params, opts.shorten_by / 200, opts.flatten_by / 200,
+        opts.shorten_rad_by / 200, opts.sym_str));
 
   opts.write_or_error(geom, opts.ofile);
 

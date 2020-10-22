@@ -42,11 +42,18 @@ namespace anti {
 /// A set of transformations
 class Transformations {
 private:
-  std::set<Trans3d> trans;
+  struct SymTransLess {
+    bool operator()(const Trans3d &t1, const Trans3d &t2)
+    {
+      return compare(t1, t2, sym_eps) < 0;
+    }
+  };
+  std::set<Trans3d, SymTransLess> trans;
 
 public:
   /// A constant iterator over the set
-  typedef std::set<Trans3d>::const_iterator const_iterator;
+  typedef std::set<Trans3d, SymTransLess> SymTransSet;
+  typedef SymTransSet::const_iterator const_iterator;
 
   /// Add a transformation
   /**\param tr transformation to add
@@ -154,11 +161,11 @@ public:
 
   /// Get the underlying transformation set
   /**\return The underlying transformation set */
-  const std::set<Trans3d> &get_trans() const { return trans; }
+  const SymTransSet &get_trans() const { return trans; }
 
   /// Get the underlying transformation set
   /**\return The underlying transformation set */
-  std::set<Trans3d> &get_trans() { return trans; }
+  SymTransSet &get_trans() { return trans; }
 
   /// Check if there are transformations in the set.
   /**\return \c true if set, otherwise \c false */

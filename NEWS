@@ -4,6 +4,8 @@ Version 0.28
 xx-xx-20 Adrian Rossiter <adrian@antiprism.com>
          Changes
             to_nfold: add -x, -p to help with crossed models
+            minmax: add -y for symmetry constraint, add -a e
+              equal-edge algorithm
          Fixes
 
 Version 0.27

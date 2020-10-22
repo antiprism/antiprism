@@ -62,7 +62,7 @@ Transformations &Transformations::product(const Transformations &s1,
 
 Transformations &Transformations::product_with(const Transformations &s)
 {
-  set<Trans3d> trans_orig = trans;
+  SymTransSet trans_orig = trans;
   clear();
   set<Trans3d>::iterator i0, i1;
   for (i0 = trans_orig.begin(); i0 != trans_orig.end(); i0++)
@@ -73,7 +73,7 @@ Transformations &Transformations::product_with(const Transformations &s)
 
 Transformations &Transformations::conjugate(const Trans3d &t)
 {
-  set<Trans3d> conj;
+  SymTransSet conj;
   Trans3d inv = t.inverse();
   for (const auto &tran : trans)
     conj.insert(t * tran * inv);
@@ -81,20 +81,27 @@ Transformations &Transformations::conjugate(const Trans3d &t)
   return *this;
 }
 
+struct SymTransCmp {
+  bool operator()(const Trans3d &t1, const Trans3d &t2)
+  {
+    return compare(t1, t2, sym_eps);
+  }
+};
 Transformations &Transformations::intersection(const Transformations &s1,
                                                const Transformations &s2)
 {
   clear();
   set_intersection(s1.trans.begin(), s1.trans.end(), s2.trans.begin(),
-                   s2.trans.end(), inserter(trans, trans.end()));
+                   s2.trans.end(), inserter(trans, trans.end()),
+                   SymTransLess());
   return *this;
 }
 
 Transformations &Transformations::subtract(const Transformations &s)
 {
-  set<Trans3d> diff;
+  SymTransSet diff;
   set_difference(trans.begin(), trans.end(), s.trans.begin(), s.trans.end(),
-                 inserter(diff, diff.begin()));
+                 inserter(diff, diff.begin()), SymTransLess());
   trans = diff;
   return *this;
 }
@@ -152,7 +159,7 @@ int compare(const Transformations &t0, const Transformations &t1)
   auto i0 = t0.begin();
   auto i1 = t1.begin();
   for (; i0 != t0.end(); ++i0, ++i1) {
-    int cmp = compare(*i0, *i1);
+    int cmp = compare(*i0, *i1, sym_eps);
     if (cmp)
       return cmp;
   }
@@ -170,6 +177,7 @@ Transformations &Transformations::min_set(const Transformations &tr_whole,
   Transformations inter;
   inter.intersection(part, whole);
   inter += Trans3d(); // must include unit!
+
   while (whole.is_set()) {
     Trans3d tr = *whole.trans.begin();        // select a transf from init list
     add(tr);                                  // and add it to the final list
@@ -2281,6 +2289,7 @@ void SymmetricUpdater::init_vert_orbit(int orbit_idx, const set<int> &orbit)
   // fprintf(stderr, "v_idx = %d\n", v_idx);
   Symmetry stab = get_vert_stabilizer(geoms[reading_idx], v_idx, symmetry);
   // fprintf(stderr, "stab=%s: ", stab.get_symbol().c_str());
+
   // Set of transformations that carry the vertex once onto each orbit vertex
   Transformations trans;
   trans.min_set(symmetry.get_trans(), stab.get_trans());
