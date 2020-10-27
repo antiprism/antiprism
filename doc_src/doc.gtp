@@ -43,7 +43,7 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/symmetro.gtm 2 symmetro - polyhedra with regular polygons at symmetry axes
 ./doc/kcycle.gtm 2 kcycle - kaleidocycle rings of polyhedron
 ./doc/leonardo.gtm 2 leonardo - Leonardo da Vinci style models
-./doc/minmax.gtm 2 minmax - optimal spherical tesselations
+./doc/poly_form.gtm 2 poly_form - make face-regular and unscramble models
 ./doc/col_util.gtm 2 col_util - colour utilities including plots and blends
 ./doc/lat_util.gtm 2 lat_util - lattice utilities
 ./doc/polygon.gtm 2 polygon - polygon based polyhedra

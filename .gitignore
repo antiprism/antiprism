@@ -72,7 +72,7 @@ src/zono
 src/conv_hull
 src/pol_recip
 src/geodesic
-src/minmax
+src/poly_form
 src/sph_rings
 src/off_report
 src/off_query

@@ -2,11 +2,15 @@ NEWS for Antiprism: http://www.antiprism.com
 
 Version 0.28
 xx-xx-20 Adrian Rossiter <adrian@antiprism.com>
+         New Programs
+            poly_form: rename from minmax, rename options, add -y
+              for symmetry constraint, add -a e equal-edge algorithm
          Changes
             to_nfold: add -x, -p to help with crossed models
-            minmax: add -y for symmetry constraint, add -a e
-              equal-edge algorithm
+            minmax: rename to poly_form
+            repel: add -z for status reporting
          Fixes
+            minor bug fixes and improvements
 
 Version 0.27
 01-10-20 Adrian Rossiter <adrian@antiprism.com>

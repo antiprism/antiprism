@@ -57,6 +57,7 @@
 #include "geometryinfo.h"
 #include "geometryutils.h"
 #include "getopt.h"
+#include "iteration.h"
 #include "mathutils.h"
 #include "normal.h"
 #include "planar.h"

@@ -45,51 +45,54 @@ using namespace anti;
 
 class rep_opts : public ProgramOpts {
 public:
-  int num_iters;
+  IterationControl it_ctrl;
   int num_pts;
   int rep_form;
   double shorten_by;
-  double epsilon;
 
   string ifile;
   string ofile;
 
-  rep_opts()
-      : ProgramOpts("repel"), num_iters(-1), num_pts(-1), rep_form(2),
-        shorten_by(-1), epsilon(0)
+  rep_opts() : ProgramOpts("repel"), num_pts(-1), rep_form(2), shorten_by(-1)
   {
+    it_ctrl.set_max_iters_unlimited();
+    it_ctrl.set_status_period_iters(1000);
+    it_ctrl.set_sig_digits(12);
   }
 
   void process_command_line(int argc, char **argv);
   void usage();
 };
 
-// clang-format off
 void rep_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] [input_file]\n"
-"\n"
-"An equilibrium position is found for a set of points which repel each\n"
-"other. The initial coordinates are read from input_file if given (or\n"
-"from standard input), otherwise use -N to generate a random set.\n"
-"\n"
-"Options\n"
-"%s"
-"  -N <num>  initialise with a number of randomly placed points\n"
-"  -n <itrs> maximum number of iterations (default: no limit)\n" 
-"  -s <perc> percentage to shorten the travel distance (default: adaptive)\n" 
-"  -l <lim>  minimum distance change to terminate, as negative exponent\n"
-"               (default: %d giving %.0e)\n"
-"  -r <rep>  repelling formula\n"
-"              1 - inverse of distance\n"
-"              2 - inverse square of distance (default)\n"
-"              3 - inverse cube of distance\n"
-"              4 - inverse square root of distance\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"\n", prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
+  fprintf(stdout, R"(
+Usage: %s [options] [input_file]
+
+An equilibrium position is found for a set of points which repel each
+other. The initial coordinates are read from input_file if given (or
+from standard input), otherwise use -N to generate a random set.
+
+Options
+%s
+  -N <num>  initialise with a number of randomly placed points
+  -n <itrs> maximum number of iterations, -1 for unlimited (default: %d)
+  -s <perc> percentage to shorten the travel distance (default: adaptive)
+  -r <rep>  repelling formula
+              1 - inverse of distance
+              2 - inverse square of distance (default)
+              3 - inverse cube of distance
+              4 - inverse square root of distance
+  -l <lim>  minimum change of distance/width_of_model to terminate, as 
+               negative exponent (default: %d giving %.0e)
+  -z <n>    check and report status every n iterations, 0 for no periodic
+            checking, -1 to supress the final status check (default: %d)
+  -o <file> write output to file (default: write to standard output)
+
+)",
+          prog_name(), help_ver_text, it_ctrl.get_max_iters(),
+          it_ctrl.get_sig_digits(), it_ctrl.get_test_val(),
+          it_ctrl.get_status_period_iters());
 }
 // clang-format on
 
@@ -98,19 +101,23 @@ void rep_opts::process_command_line(int argc, char **argv)
   opterr = 0;
   int c;
 
-  int sig_compare = INT_MAX;
+  int num;
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hn:N:s:l:r:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hn:z:N:s:l:r:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
     switch (c) {
     case 'n':
-      print_status_or_exit(read_int(optarg, &num_iters), c);
-      if (num_iters < 0)
-        error("number of iterations must be greater than 0", c);
+      print_status_or_exit(read_int(optarg, &num), c);
+      print_status_or_exit(it_ctrl.set_max_iters(num), c);
+      break;
+
+    case 'z':
+      print_status_or_exit(read_int(optarg, &num), c);
+      print_status_or_exit(it_ctrl.set_status_period_iters(num), c);
       break;
 
     case 'N':
@@ -126,13 +133,8 @@ void rep_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'l':
-      print_status_or_exit(read_int(optarg, &sig_compare), c);
-      if (sig_compare < 0) {
-        warning("limit is negative, and so ignored", c);
-      }
-      if (sig_compare > DEF_SIG_DGTS) {
-        warning("limit is very small, may not be attainable", c);
-      }
+      print_status_or_exit(read_int(optarg, &num), c);
+      print_status_or_exit(it_ctrl.set_sig_digits(num), c);
       break;
 
     case 'r':
@@ -161,8 +163,6 @@ void rep_opts::process_command_line(int argc, char **argv)
     else
       ifile = argv[optind];
   }
-
-  epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
 typedef Vec3d (*REPEL_FN)(Vec3d, Vec3d);
@@ -200,8 +200,8 @@ void random_placement(Geometry &geom, int n)
     geom.add_vert(Vec3d::random(rnd).unit());
 }
 
-void repel(Geometry &geom, REPEL_FN rep_fn, double shorten_factor, double limit,
-           int n)
+void repel(Geometry &geom, IterationControl it_ctrl, REPEL_FN rep_fn,
+           double shorten_factor)
 {
   const int v_sz = geom.verts().size();
   vector<int> wts(v_sz);
@@ -221,11 +221,10 @@ void repel(Geometry &geom, REPEL_FN rep_fn, double shorten_factor, double limit,
     shorten_factor = 0.001;
   }
 
-  fprintf(stderr, "\n   ");
+  double test_val = it_ctrl.get_test_val();
 
-  unsigned int cnt;
-  for (cnt = 0; cnt < (unsigned int)n; cnt++) {
-    std::fill(offsets.begin(), offsets.end(), Vec3d(0, 0, 0));
+  for (it_ctrl.start_iter(); !it_ctrl.is_end_iter(); it_ctrl.next_iter()) {
+    std::fill(offsets.begin(), offsets.end(), Vec3d::zero);
     max_dist2 = 0;
 
     for (int i = 0; i < v_sz - 1; i++) {
@@ -246,14 +245,11 @@ void repel(Geometry &geom, REPEL_FN rep_fn, double shorten_factor, double limit,
       geom.verts(i) = new_pos;
     }
 
-    if (sqrt(max_dist2) < limit)
-      break;
-
     if (adaptive) {
       max_dist2_sum += max_dist2;
       if (max_dist2 < last_av_max_dist2)
         converge += 1;
-      if (!(cnt % anum)) {
+      if (!(it_ctrl.get_current_iter() % anum)) {
         if (converge > anum / 1.5) {
           chng_cnt = chng_cnt > 0 ? chng_cnt + 1 : 1;
           shorten_factor *= 1 + 0.005 * chng_cnt;
@@ -270,7 +266,7 @@ void repel(Geometry &geom, REPEL_FN rep_fn, double shorten_factor, double limit,
           chng_cnt = 0;
 
         last_av_max_dist2 = max_dist2_sum / anum;
-        fprintf(stderr, "%2d ", converge / 5);
+        //             fprintf(stderr, "%2d ", converge / 5);
         // fprintf(stderr, "\n%d %g %g (%g)\n", converge, shorten_factor,
         // last_av_max_dist2, max_dist2);
         converge = 0;
@@ -278,27 +274,34 @@ void repel(Geometry &geom, REPEL_FN rep_fn, double shorten_factor, double limit,
       }
     }
 
-    // if((cnt+1)%100 == 0)
-    //   fprintf(stderr, ".");
-    if ((cnt + 1) % 1000 == 0) {
-      double offset_sum = 0;
+    if (it_ctrl.is_status_check_iter()) {
+      bool finished = false;
+      string finish_reason;
+
+      if (sqrt(max_dist2) < test_val) {
+        finished = true;
+        finish_reason = "solved, test value achieved";
+      }
+      else if (it_ctrl.is_last_iter()) {
+        // reached last iteration without solving
+        finished = true;
+        finish_reason = "not solved, test value not achieved";
+      }
+
+      double offset_sum = 0.0;
       for (auto &offset : offsets)
         offset_sum += offset.len();
-      // fprintf(stderr, "\n%-15d %12.10g %g\n   ", cnt+1, sqrt(max_dist2),
-      // shorten_factor);
-      fprintf(stderr, "\n%-13d  movement=%13.10g  s=%7.6g  F-sum=%.10g\n   ",
-              cnt + 1, sqrt(max_dist2), shorten_factor, offset_sum);
+
+      if (finished)
+        it_ctrl.print("Final iteration (%s):\n", finish_reason.c_str());
+      it_ctrl.print("%-12u  max_diff:%-16.10g  s:%-11.6g  F-sum:%-.17g\n",
+                    it_ctrl.get_current_iter(), sqrt(max_dist2), shorten_factor,
+                    offset_sum);
+
+      if (finished)
+        break;
     }
   }
-
-  if ((cnt) % 1000 != 0) {
-    double offset_sum = 0;
-    for (auto &offset : offsets)
-      offset_sum += offset.len();
-    fprintf(stderr, "\n%-13d  movement=%13.10g  s=%7.6g  F-sum=%.10g\n   ", cnt,
-            sqrt(max_dist2), shorten_factor, offset_sum);
-  }
-  fprintf(stderr, "\n");
 }
 
 int main(int argc, char *argv[])
@@ -313,8 +316,7 @@ int main(int argc, char *argv[])
     opts.read_or_error(geom, opts.ifile);
 
   REPEL_FN fn[] = {rep_inv_dist1, rep_inv_dist2, rep_inv_dist3, rep_inv_dist05};
-  repel(geom, fn[opts.rep_form - 1], opts.shorten_by / 100, opts.epsilon,
-        opts.num_iters);
+  repel(geom, opts.it_ctrl, fn[opts.rep_form - 1], opts.shorten_by / 100);
 
   opts.write_or_error(geom, opts.ofile);
 

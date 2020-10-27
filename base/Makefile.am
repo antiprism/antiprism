@@ -10,7 +10,7 @@ libantiprism_la_SOURCES = \
 	programopts.cc status.cc vec3d.cc trans3d.cc \
 	vec4d.cc trans4d.cc vec_utils.cc vec_utils_norm.cc vec_utils_cent.cc \
 	utils.cc utils_parser.cc getopt.cc mathutils.cc \
-	normal.cc c_hull.cc triangulate.cc \
+	normal.cc c_hull.cc triangulate.cc iteration.cc \
 	symmetry.cc sort_merge.cc boundbox.cc geometryinfo.cc \
 	coloring.cc prop_col.cc named_cols.cc geodesic.cc zonohedron.cc \
 	johnson.cc uniform.cc std_polys.cc skilling.cc stellations.cc \
@@ -19,7 +19,8 @@ libantiprism_la_SOURCES = \
 	\
 	antiprism.h boundbox.h elemprops.h colormap.h coloring.h color.h \
 	const.h displaypoly.h geometry.h geometryutils.h geometryinfo.h \
-	trans3d.h trans4d.h mathutils.h normal.h polygon.h povwriter.h \
+	iteration.h trans3d.h trans4d.h mathutils.h normal.h \
+	polygon.h povwriter.h \
 	programopts.h random.h scene.h status.h symmetry.h tiling.h timer.h \
 	utils.h getopt.h vec3d.h vec4d.h vec_utils.h vrmlwriter.h planar.h \
 	\
@@ -47,15 +48,17 @@ pkginclude_HEADERS = \
 	coloring.h \
 	const.h \
 	displaypoly.h \
+	elemprops.h \
 	geometry.h \
 	geometryutils.h \
 	geometryinfo.h \
+	iteration.h \
 	mathutils.h \
 	normal.h \
+	planar.h \
 	polygon.h \
 	povwriter.h \
 	programopts.h \
-	elemprops.h \
 	random.h \
 	scene.h \
 	status.h \
@@ -69,7 +72,6 @@ pkginclude_HEADERS = \
 	vec3d.h \
 	vec4d.h \
 	vec_utils.h \
-	vrmlwriter.h \
-	planar.h
+	vrmlwriter.h
 	
 endif

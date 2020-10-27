@@ -71,7 +71,7 @@ Programs
 <li><a href="symmetro.html">symmetro</a> - polyhedra with regular polygons at symmetry axes
 <li><a href="kcycle.html">kcycle</a> - kaleidocycle rings of polyhedron 
 <li><a href="leonardo.html">leonardo</a> - Leonardo da Vinci style models
-<li><a href="minmax.html">minmax</a> - minimise a spherical tesselation's maximum edge length, turn face data only into a spherical tesselation
+<li><a href="poly_form.html">poly_form</a> - make face-regular, equal-edge and unscrambled polyhedra
 <li><a href="col_util.html">col_util</a> - colour utilities, plots and blending
 <li><a href="lat_util.html">lat_util</a> - lattice utilities
 </ul>

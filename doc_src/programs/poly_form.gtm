@@ -1,0 +1,88 @@
+#define HL_PROG class=curpage
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<<TITLE_HEAD>>
+
+<<TOP_LINKS>>
+
+<<USAGE_START>>
+<pre class="prog_help">
+<<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</pre>
+<<USAGE_END>>
+
+<<EXAMPLES_START>>
+Turn an icosahedron 3-fold axis into a six-fold axis, and make the
+resulting faces regular
+<<CMDS_START>>
+off_trans -y D3v ico | to_nfold 6 | poly_form -s 15 | antiview
+<<CMDS_END>>
+
+Make the faces of a (3,5) icosahedral geodesic sphere into regular
+triangles, while ensuring that the icosahedral symmetry is maintained,
+set -n and -l higher for a better solution
+<<CMDS_START>>
+poly_form -n 100000 -s 15 -l 14 -y full geo_5_3 | antiview
+<<CMDS_END>>
+
+
+Make a geometric representation of a polyhedron having only face data,
+in this case a geodesic sphere has all its coordinates set to the origin
+and is then laid out again on a sphere
+<<CMDS_START>>
+off_trans geo_3 -S 0 &gt; scrambled.off
+poly_form -a u scrambled.off &gt; unscrambled.off
+<<CMDS_END>>
+
+Run for a bit longer if necessary, don't use <i>-a u</i> this time
+as this includes an initial placement, instead use just the unscrambling
+algorithm <i>-a U</i>
+<<CMDS_START>>
+poly_form -n 100000 -a U unscrambled.off &gt; unscrambled2.off
+<<CMDS_END>>
+
+Make an equal edge tiling on a sphere, and use -y full to constrain
+to the original symmetry, which may also be faster
+<<CMDS_START>>
+poly_form -n 100000 -a e -s 100 geo_3_3_d | antiview
+poly_form -n 100000 -a e -y full -s 100 geo_3_3_d | antiview
+<<CMDS_END>>
+
+Solve an equal-edge model on an ellipsoid
+<<CMDS_START>>
+poly_form -n 100000 -a e -E 1,1.2,1.5 -y full -s 50 geo_3_3_d | antiview
+<<CMDS_END>>
+<<EXAMPLES_END>>
+
+
+<<NOTES_START>>
+Doesn't always succeed. Experiment with option <i>-s</i>,
+<i>-k</i> and <i>-f</i> to improve convergence, but setting them too
+high may cause the model to scramble. Run the program for longer by
+increasing option <i>-n</i>. The program shows the progress every
+1000 iterations (change with option <i>-z</i>) by printing the
+longest and shortest edge lengths and/or the maximum
+distance a vertex moved.
+<p>
+Option <i>-y full</i> constrains the symmetry of a model, and
+will also complete quicker for models with good symmetry and a
+large number of elements.
+<p>
+The program was previously called <i>minmax</i>, but includes various
+changes. Option <i>-p</i> is gone, for <i>-p u</i> use <i>-a u</i>. Option
+<i>-a</i> parameters are renamed: <i>-a u</i> is now <i>-a r</i> (and is the
+default), <i>-a v -p u</i> is <i>-a u</i>, and <i>-a v</i> is <i>-a U</i>
+for unscrambling and <i>-a e</i> for equalising edges.
+Option <i>-L</i> is gone, and option <i>-l</i>
+is now used to specify precision (an option for lengthening edges  
+is no longer needed). The default for -n is raised to 10000
+
+<<NOTES_END>>
+
+#include "<<END>>"

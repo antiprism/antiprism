@@ -21,12 +21,12 @@
 <<EXAMPLES_START>>
 Make a snub cube
 <<CMDS_START>>
-repel -N 24 -l 15 | conv_hull -o snub_cube.off
+repel -N 24 -l 15 | conv_hull | antiview
 <<CMDS_END>>
 
 Make a snub cube in fewer iterations by not using adaptive shortening
 <<CMDS_START>>
-repel -N 24 -s 1 -l 15 | conv_hull -o snub_cube.off
+repel -N 24 -s 1 -l 15 | conv_hull | antiview
 <<CMDS_END>>
 <<EXAMPLES_END>>
 
@@ -40,10 +40,6 @@ better results, producing more accurate squares.
 The progress report includes the number of iterations, the greatest
 distance moved by a point, the shortening factor, and the sum of all
 the forces.
-<p>
-If adaptive shortening is used then there is also a line of figures
-showing the number of times out of ten that the shortening factor
-was increased.
 <<NOTES_END>>
 
 #include "<<END>>"

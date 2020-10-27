@@ -35,7 +35,7 @@ geodesic -c 2 ico | canonical -O bd | antiview
 The program will not always converge, and produce the canonical form.
 In this cases it may help to distort the polyhedron before running
 canonical. This could be done with <i>off_util -S</i>, <i>repel</i>,
-<i>minmax</i>, <i>off_trans</i> or even editing the OFF file by hand.
+<i>poly_form</i>, <i>off_trans</i> or even editing the OFF file by hand.
 <p>
 George Hart has a page on
 <a href="http://www.georgehart.com/virtual-polyhedra/canonical.html">
