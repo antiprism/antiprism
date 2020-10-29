@@ -65,10 +65,12 @@ gives the power)
 minimum change of distance/width_of_model to terminate, as
 .IP
 negative exponent (default: 14 giving 1e\-14)
-.TP
-\fB\-z\fR <n>
-check and report status every n iterations, 0 for no periodic
-checking, \fB\-1\fR to supress the final status check (default: 1000)
+.HP
+\fB\-z\fR <nums> number of iterations between status reports (implies termination
+.IP
+check) (0 for final report only, \fB\-1\fR for no report), optionally
+followed by a comma and the number of iterations between
+termination checks (0 for report checks only) (default: 1000,0)
 .HP
 \fB\-o\fR <file> write output to file (default: write to standard output)
 .SH "SEE ALSO"

@@ -56,7 +56,7 @@ public:
   rep_opts() : ProgramOpts("repel"), num_pts(-1), rep_form(2), shorten_by(-1)
   {
     it_ctrl.set_max_iters_unlimited();
-    it_ctrl.set_status_period_iters(1000);
+    it_ctrl.set_status_checks("1000,1");
     it_ctrl.set_sig_digits(12);
   }
 
@@ -85,14 +85,17 @@ Options
               4 - inverse square root of distance
   -l <lim>  minimum change of distance/width_of_model to terminate, as 
                negative exponent (default: %d giving %.0e)
-  -z <n>    check and report status every n iterations, 0 for no periodic
-            checking, -1 to supress the final status check (default: %d)
+  -z <nums> number of iterations between status reports (implies termination
+            check) (0 for final report only, -1 for no report), optionally
+            followed by a comma and the number of iterations between
+            termination checks (0 for report checks only) (default: %d,%d)
   -o <file> write output to file (default: write to standard output)
 
 )",
           prog_name(), help_ver_text, it_ctrl.get_max_iters(),
           it_ctrl.get_sig_digits(), it_ctrl.get_test_val(),
-          it_ctrl.get_status_period_iters());
+          it_ctrl.get_status_check_and_report_iters(),
+          it_ctrl.get_status_check_only_iters());
 }
 // clang-format on
 
@@ -116,8 +119,7 @@ void rep_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'z':
-      print_status_or_exit(read_int(optarg, &num), c);
-      print_status_or_exit(it_ctrl.set_status_period_iters(num), c);
+      print_status_or_exit(it_ctrl.set_status_checks(optarg), c);
       break;
 
     case 'N':
@@ -223,7 +225,7 @@ void repel(Geometry &geom, IterationControl it_ctrl, REPEL_FN rep_fn,
 
   double test_val = it_ctrl.get_test_val();
 
-  for (it_ctrl.start_iter(); !it_ctrl.is_end_iter(); it_ctrl.next_iter()) {
+  for (it_ctrl.start_iter(); !it_ctrl.is_done(); it_ctrl.next_iter()) {
     std::fill(offsets.begin(), offsets.end(), Vec3d::zero);
     max_dist2 = 0;
 
@@ -275,31 +277,29 @@ void repel(Geometry &geom, IterationControl it_ctrl, REPEL_FN rep_fn,
     }
 
     if (it_ctrl.is_status_check_iter()) {
-      bool finished = false;
       string finish_reason;
 
       if (sqrt(max_dist2) < test_val) {
-        finished = true;
+        it_ctrl.set_finished();
         finish_reason = "solved, test value achieved";
       }
       else if (it_ctrl.is_last_iter()) {
         // reached last iteration without solving
-        finished = true;
+        it_ctrl.set_finished();
         finish_reason = "not solved, test value not achieved";
       }
 
-      double offset_sum = 0.0;
-      for (auto &offset : offsets)
-        offset_sum += offset.len();
+      if (it_ctrl.is_status_report_iter()) {
+        double offset_sum = 0.0;
+        for (auto &offset : offsets)
+          offset_sum += offset.len();
 
-      if (finished)
-        it_ctrl.print("Final iteration (%s):\n", finish_reason.c_str());
-      it_ctrl.print("%-12u  max_diff:%-16.10g  s:%-11.6g  F-sum:%-.17g\n",
-                    it_ctrl.get_current_iter(), sqrt(max_dist2), shorten_factor,
-                    offset_sum);
-
-      if (finished)
-        break;
+        if (it_ctrl.is_finished())
+          it_ctrl.print("Final iteration (%s):\n", finish_reason.c_str());
+        it_ctrl.print("%-12u  max_diff:%-16.10g  s:%-11.6g  F-sum:%-.16g\n",
+                      it_ctrl.get_current_iter(), sqrt(max_dist2),
+                      shorten_factor, offset_sum);
+      }
     }
   }
 }

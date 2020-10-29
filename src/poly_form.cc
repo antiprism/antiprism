@@ -63,7 +63,7 @@ public:
         shorten_rad_by(NAN), flatten_by(NAN)
   {
     it_ctrl.set_max_iters(10000);
-    it_ctrl.set_status_period_iters(1000);
+    it_ctrl.set_status_check_and_report_iters(1000);
     it_ctrl.set_sig_digits(14);
   }
 
@@ -111,13 +111,16 @@ Options
             gives the power)
   -l <lim>  minimum change of distance/width_of_model to terminate, as 
                negative exponent (default: %d giving %.0e)
-  -z <n>    check and report status every n iterations, 0 for no periodic
-            checking, -1 to supress the final status check (default: %d)
+  -z <nums> number of iterations between status reports (implies termination
+            check) (0 for final report only, -1 for no report), optionally
+            followed by a comma and the number of iterations between
+            termination checks (0 for report checks only) (default: %d,%d)
   -o <file> write output to file (default: write to standard output)
 )",
           prog_name(), help_ver_text, it_ctrl.get_max_iters(),
           it_ctrl.get_sig_digits(), it_ctrl.get_test_val(),
-          it_ctrl.get_status_period_iters());
+          it_ctrl.get_status_check_and_report_iters(),
+          it_ctrl.get_status_check_only_iters());
 }
 
 void pf_opts::process_command_line(int argc, char **argv)
@@ -144,8 +147,7 @@ void pf_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'z':
-      print_status_or_exit(read_int(optarg, &num), c);
-      print_status_or_exit(it_ctrl.set_status_period_iters(num), c);
+      print_status_or_exit(it_ctrl.set_status_checks(optarg), c);
       break;
 
     case 's':
@@ -320,7 +322,7 @@ Status make_unscramble(Geometry &geom, IterationControl it_ctrl,
 
   double g_max_dist = 0;
   double g_min_dist = 1e100;
-  for (it_ctrl.start_iter(); !it_ctrl.is_end_iter(); it_ctrl.next_iter()) {
+  for (it_ctrl.start_iter(); !it_ctrl.is_done(); it_ctrl.next_iter()) {
     g_max_dist = 0;
     g_min_dist = 1e100;
     for (unsigned int v = 0; v < geom.verts().size(); v++) {
@@ -350,22 +352,17 @@ Status make_unscramble(Geometry &geom, IterationControl it_ctrl,
       to_ellipsoid(geom.verts(p0), ellipsoid);
     }
 
-    bool finished = false;
-    if (it_ctrl.is_status_check_iter()) {
+    // no status checks
+    // if (it_ctrl.is_status_check_iter()) { ; }
 
-      if (it_ctrl.is_last_iter())
-        finished = true;
-
-      if (finished)
+    if (it_ctrl.is_status_report_iter()) {
+      if (it_ctrl.is_finished())
         it_ctrl.print("Final iteration:\n");
 
       it_ctrl.print("%-12u max:%17.15f min:%17.15f\n",
                     it_ctrl.get_current_iter(), sqrt(g_max_dist),
                     sqrt(g_min_dist));
     }
-
-    if (finished)
-      break;
   }
 
   return Status::ok();
@@ -427,7 +424,7 @@ Status make_equal_edges(Geometry &base_geom, IterationControl it_ctrl,
 
   vector<Vec3d> offsets(verts.size()); // Vertex adjustments
 
-  for (it_ctrl.start_iter_with_setup(); !it_ctrl.is_end_iter();
+  for (it_ctrl.start_iter_with_setup(); !it_ctrl.is_done();
        it_ctrl.next_iter()) {
     std::fill(offsets.begin(), offsets.end(), Vec3d::zero);
 
@@ -472,29 +469,27 @@ Status make_equal_edges(Geometry &base_geom, IterationControl it_ctrl,
 
     // Do not check status or finish before modifying the model
     if (!it_ctrl.is_setup_iter()) {
-      bool finished = false;
-      string finish_reason;
+      string finish_msg;
       if (it_ctrl.is_status_check_iter()) {
 
         if ((max_dist - min_dist) < test_val) { // absolute difference
-          finished = true;
-          finish_reason = "solved, test value achieved";
+          it_ctrl.set_finished();
+          finish_msg = "solved, test value achieved";
         }
         else if (it_ctrl.is_last_iter()) {
-          finished = true;
-          finish_reason = "not solved, test value not achieved";
+          it_ctrl.set_finished();
+          finish_msg = "not solved, test value not achieved";
         }
+      }
 
-        if (finished)
-          it_ctrl.print("Final iteration (%s):\n", finish_reason.c_str());
+      if (it_ctrl.is_status_report_iter()) {
+        if (it_ctrl.is_finished())
+          it_ctrl.print("Final iteration (%s):\n", finish_msg.c_str());
 
         it_ctrl.print("%-12u max:%17.15f min:%17.15f diff:%.11g\n",
                       it_ctrl.get_current_iter(), max_dist, min_dist,
                       max_dist - min_dist);
       }
-
-      if (finished)
-        break;
     }
   }
 
@@ -601,7 +596,7 @@ Status make_regular_faces(Geometry &base_geom, IterationControl it_ctrl,
 
   vector<Vec3d> offsets(verts.size()); // Vertex adjustments
 
-  for (it_ctrl.start_iter(); !it_ctrl.is_end_iter(); it_ctrl.next_iter()) {
+  for (it_ctrl.start_iter(); !it_ctrl.is_done(); it_ctrl.next_iter()) {
     std::fill(offsets.begin(), offsets.end(), Vec3d::zero);
 
     if (using_symmetry) {
@@ -653,7 +648,9 @@ Status make_regular_faces(Geometry &base_geom, IterationControl it_ctrl,
         base_geom.raw_verts()[i] += offsets[i];
     }
 
+    string finish_msg;
     if (it_ctrl.is_status_check_iter()) {
+
       max_diff2 = 0;
       for (auto &offset : offsets) {
         double diff2 = offset.len2();
@@ -661,38 +658,34 @@ Status make_regular_faces(Geometry &base_geom, IterationControl it_ctrl,
           max_diff2 = diff2;
       }
 
-      bool finished = false;
-      string finish_reason;
-
       double width = BoundBox(verts).max_width();
       if (sqrt(max_diff2) / width < test_val) {
-        // solved on any iteration
-        finished = true;
-        finish_reason = "solved, test value achieved";
+        it_ctrl.set_finished();
+        finish_msg = "solved, test value achieved";
       }
       else if (it_ctrl.is_last_iter()) {
         // reached last iteration without solving
-        finished = true;
-        finish_reason = "not solved, test value not achieved";
+        it_ctrl.set_finished();
+        finish_msg = "not solved, test value not achieved";
       }
 
       // check if radius is expanding or contracting unreasonably,
       // but only for the purpose of finishing early
-      if (!finished && divergence_test2 > 0) {
+      if (!it_ctrl.is_finished() && divergence_test2 > 0) {
         for (auto &offset : offsets)
           if (offset.len2() > divergence_test2) {
-            finished = true;
-            finish_reason = "not solved, quit early as probably diverging";
+            it_ctrl.set_finished();
+            finish_msg = "not solved, quit early as probably diverging";
           }
       }
+    }
 
-      if (finished)
-        it_ctrl.print("Final iteration (%s):\n", finish_reason.c_str());
+    if (it_ctrl.is_status_report_iter()) {
+      if (it_ctrl.is_finished())
+        it_ctrl.print("Final iteration (%s):\n", finish_msg.c_str());
+
       it_ctrl.print("%-12u max_diff:%17.15e\n", it_ctrl.get_current_iter(),
                     sqrt(max_diff2));
-
-      if (finished)
-        break;
     }
   }
 

@@ -27,10 +27,13 @@
 */
 
 #include "../base/iteration.h"
+#include "../base/utils.h"
 
 #include <limits>
+#include <memory>
 #include <stdarg.h>
 #include <stdio.h>
+#include <vector>
 
 namespace anti {
 
@@ -40,7 +43,8 @@ const unsigned int IterationControl::unlimited =
 Status IterationControl::check_reporting()
 {
   Status stat;
-  if (max_iters == unlimited && status_period_iters <= 0)
+  if (max_iters == unlimited && status_check_and_report_iters <= 0 &&
+      status_check_only_iters == 0)
     stat.set_warning("unlimited iterations but no status checking, iteration "
                      "may not terminate");
   return stat;
@@ -62,13 +66,45 @@ Status IterationControl::set_max_iters(int iters)
   return stat;
 }
 
-Status IterationControl::set_status_period_iters(int iters)
+Status IterationControl::set_status_check_and_report_iters(int iters)
 {
   Status stat;
   if (iters < -1)
-    stat.set_error("number of iterations for status cannot be less than -1");
+    stat.set_error("number of iterations for status check and report cannot be "
+                   "less than -1");
   else
-    status_period_iters = iters;
+    status_check_and_report_iters = iters;
+
+  return stat;
+}
+
+Status IterationControl::set_status_check_only_iters(int iters)
+{
+  Status stat;
+  if (iters < 0)
+    stat.set_error("number of iterations for status check only cannot be "
+                   "negative");
+  else
+    status_check_only_iters = iters;
+
+  return stat;
+}
+
+Status IterationControl::set_status_checks(std::string iters_str)
+{
+  std::vector<int> nums;
+  Status stat;
+  if (!(stat = read_int_list(&iters_str[0], nums))) // get non-const char *
+    return stat;
+
+  if (nums.size() > 0 && !(stat = set_status_check_and_report_iters(nums[0])))
+    return stat;
+  if (nums.size() > 1 && !(stat = set_status_check_only_iters(nums[1])))
+    return stat;
+  if (nums.size() > 2)
+    return stat.set_error(
+        msg_str("must give exactly two numbers (%lu were given)",
+                (unsigned long)nums.size()));
 
   if (stat)
     stat = check_reporting();
