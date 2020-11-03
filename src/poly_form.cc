@@ -48,7 +48,6 @@ class pf_opts : public ProgramOpts {
 public:
   IterationControl it_ctrl;
   char algm;
-  char placement;
   double shorten_by;
   double shorten_rad_by;
   double flatten_by;
@@ -62,9 +61,12 @@ public:
       : ProgramOpts("poly_form"), algm('\0'), shorten_by(1.0),
         shorten_rad_by(NAN), flatten_by(NAN)
   {
-    it_ctrl.set_max_iters(10000);
+    // The following defaults are suitable for small and medium models
+    it_ctrl.set_max_iters(10000); // will finish reasobly quickly
     it_ctrl.set_status_check_and_report_iters(1000);
-    it_ctrl.set_sig_digits(14);
+    // Test for default algorithm -a r not cheap, but enable early termination
+    it_ctrl.set_status_check_only_iters(100);
+    it_ctrl.set_sig_digits(14); // achievable in reasonable time
   }
 
   void process_command_line(int argc, char **argv);
@@ -94,6 +96,7 @@ Options
             U - equalise shortest and longest edges attached to a vertex
                   on sphere or ellipsoid (use to continue unscrambling)
             e - equalise edges on sphere or ellipsoid (default)
+            p - planarise
   -n <itrs> maximum number of iterations, -1 for unlimited (default: %d)
   -s <perc> percentage to shorten longest edges on iteration (default: 1)
   -k <perc> -a r - percentage to reduce polygon radius on iteration
@@ -101,7 +104,7 @@ Options
             -a e - percentage to reduce minimum target length on iteration
                    (default: 1e-6), will oscillate at certain precision,
                    process output with smaller value to improve solution
-  -f <perc> percentage to reduce distance of vertex from face plane (-a r)
+  -f <perc> percentage to reduce distance of vertex from face plane (-a rp)
             on iteration (default: value of -s)
   -y <sub>  maintain symmetry of the base model: sub is symmetry
             subgroup (Schoenflies notation) or 'full', optionally followed
@@ -171,8 +174,8 @@ void pf_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'a':
-      if (strlen(optarg) > 1 || !strchr("ruUe", *optarg))
-        error("method is '" + string(optarg) + "' must be from r, u, U, e");
+      if (strlen(optarg) > 1 || !strchr("ruUep", *optarg))
+        error("method is '" + string(optarg) + "' must be from ruUep");
       algm = *optarg;
       break;
 
@@ -211,27 +214,27 @@ void pf_opts::process_command_line(int argc, char **argv)
       flatten_by = shorten_by;
     if (ellipsoid.is_set())
       warning("set, but not used for this algorithm", 'E');
-    if (placement)
-      warning(msg_str("placement method used with -a u", placement), 'p');
   }
   else if (algm == 'u' || algm == 'U') {
     if (!std::isnan(shorten_rad_by))
       warning("set, but not used for this algorithm", 'k');
     if (!std::isnan(flatten_by))
       warning("set, but not used for this algorithm", 'f');
-    if (!placement)
-      placement = 'n';
   }
   else if (algm == 'e') {
     if (std::isnan(shorten_rad_by))
       shorten_rad_by = 1e-6;
     if (!std::isnan(flatten_by))
       warning("set, but not used for this algorithm", 'f');
-    if (!placement)
-      placement = 'n';
   }
-  else
-    error("invalid algorithm '%c'", algm);
+  else if (algm == 'p') {
+    if (std::isnan(flatten_by))
+      flatten_by = shorten_by;
+    if (!std::isnan(shorten_rad_by))
+      warning("set, but not used for this algorithm", 'k');
+    if (ellipsoid.is_set())
+      warning("set, but not used for this algorithm", 'E');
+  }
 
   if (argc - optind > 1)
     error("too many arguments");
@@ -695,6 +698,142 @@ Status make_regular_faces(Geometry &base_geom, IterationControl it_ctrl,
   return Status::ok();
 }
 
+//------------------------------------------------------------------
+// Make faces planar
+
+inline Vec3d nearpoint_on_plane(const Vec3d &P, const Vec3d &point_on_plane,
+                                const Vec3d &unit_norm)
+{
+  return P + vdot(point_on_plane - P, unit_norm) * unit_norm;
+}
+
+Status make_planar(Geometry &base_geom, IterationControl it_ctrl,
+                   double plane_factor)
+{
+  // chosen by experiment
+  const double intersect_test_val = 1e-5; // test for coplanar faces
+  const double diff2_test_val = 10;       // limit for using plane intersection
+  const double readjustment = 1.01;       // to adjust adjustment factor
+  const double plane_factor_max = 1.1;    // maximum value for adjustment factor
+
+  auto &geom = base_geom;
+  // No further processing if no faces, but not an error
+  if (geom.faces().size() == 0)
+    return Status::ok();
+
+  double test_val = it_ctrl.get_test_val();
+  const vector<Vec3d> &verts = geom.verts();
+  const vector<vector<int>> &faces = geom.faces();
+
+  vector<vector<int>> vert_faces(geom.verts().size());
+  for (int f_idx = 0; f_idx < (int)geom.faces().size(); f_idx++)
+    for (int v_idx : faces[f_idx])
+      vert_faces[v_idx].push_back(f_idx);
+
+  vector<Vec3d> offsets(verts.size()); // Vertex adjustments
+
+  double last_max_diff2 = 0.0;
+  for (it_ctrl.start_iter(); !it_ctrl.is_done(); it_ctrl.next_iter()) {
+    std::fill(offsets.begin(), offsets.end(), Vec3d::zero);
+
+    GeometryInfo info(geom);
+    vector<Vec3d> norms;
+    geom.face_norms(norms);
+    vector<Vec3d> cents;
+    geom.face_cents(cents);
+
+    int cnt_proj = 0;
+    int cnt_int = 0;
+    double max_diff2 = 0.0;
+    for (unsigned int v_idx = 0; v_idx < geom.verts().size(); v_idx++) {
+      int intersect_cnt = 0;
+      const auto &vfaces = vert_faces[v_idx];
+      const int vf_sz = vfaces.size();
+      bool good_intersections = (vf_sz >= 3);
+      for (int f0 = 0; f0 < vf_sz - 2 && good_intersections; f0++) {
+        int f0_idx = vfaces[f0];
+        for (int f1 = f0 + 1; f1 < vf_sz - 1 && good_intersections; f1++) {
+          int f1_idx = vfaces[f1];
+          for (int f2 = f1 + 1; f2 < vf_sz && good_intersections; f2++) {
+            int f2_idx = vfaces[f2];
+            Vec3d intersection;
+            good_intersections = three_plane_intersect(
+                cents[f0_idx], norms[f0_idx], cents[f1_idx], norms[f1_idx],
+                cents[f2_idx], norms[f2_idx], intersection, intersect_test_val);
+            offsets[v_idx] += intersection;
+            intersect_cnt++;
+          }
+        }
+      }
+
+      if (good_intersections)
+        offsets[v_idx] =
+            (offsets[v_idx] / intersect_cnt - verts[v_idx]) * plane_factor;
+
+      // no good 3 plane intersections OR
+      // moving to much
+      if (!good_intersections ||
+          offsets[v_idx].len2() / last_max_diff2 > diff2_test_val) {
+        // target vertex is centroid of projection of vertex onto planes
+        offsets[v_idx] = Vec3d::zero;
+        for (int f0 = 0; f0 < vf_sz; f0++) {
+          int f0_idx = vfaces[f0];
+          offsets[v_idx] +=
+              nearpoint_on_plane(verts[v_idx], cents[f0_idx], norms[f0_idx]);
+        }
+        offsets[v_idx] = (offsets[v_idx] / vf_sz - verts[v_idx]) * plane_factor;
+        cnt_proj++;
+      }
+      else
+        cnt_int++;
+
+      auto diff2 = offsets[v_idx].len2();
+      if (diff2 > max_diff2)
+        max_diff2 = diff2;
+    }
+
+    for (unsigned int v_idx = 0; v_idx < verts.size(); v_idx++)
+      geom.verts(v_idx) += offsets[v_idx];
+
+    // adjust plane factor
+    if (max_diff2 < last_max_diff2)
+      plane_factor *= readjustment;
+    else
+      plane_factor /= readjustment;
+    if (plane_factor > plane_factor_max)
+      plane_factor = plane_factor_max;
+    last_max_diff2 = max_diff2;
+
+    string finish_msg;
+    if (it_ctrl.is_status_check_iter()) {
+      double width = BoundBox(verts).max_width();
+      if (sqrt(max_diff2) / width < test_val) {
+        it_ctrl.set_finished();
+        finish_msg = "solved, test value achieved";
+      }
+      else if (it_ctrl.is_last_iter()) {
+        // reached last iteration without solving
+        it_ctrl.set_finished();
+        finish_msg = "not solved, test value not achieved";
+      }
+    }
+
+    if (it_ctrl.is_status_report_iter()) {
+      if (it_ctrl.is_finished())
+        it_ctrl.print("Final iteration (%s):\n", finish_msg.c_str());
+
+      it_ctrl.print("%-12u max_diff:%17.15e  -f %-10.5f i/p: %7d/%-7d\n",
+                    it_ctrl.get_current_iter(), sqrt(max_diff2),
+                    100 * plane_factor, cnt_int, cnt_proj);
+    }
+  }
+
+  return Status::ok();
+}
+
+//------------------------------------------------------------------
+// Main
+
 int main(int argc, char *argv[])
 {
   pf_opts opts;
@@ -708,8 +847,8 @@ int main(int argc, char *argv[])
 
   if (opts.algm == 'r') {
     opts.print_status_or_exit(make_regular_faces(
-        geom, opts.it_ctrl, opts.shorten_by / 200, opts.flatten_by / 200,
-        opts.shorten_rad_by / 200, opts.sym_str));
+        geom, opts.it_ctrl, opts.shorten_by / 200, opts.flatten_by / 100,
+        opts.shorten_rad_by / 100, opts.sym_str));
   }
   else if (opts.algm == 'u' || opts.algm == 'U') {
     opts.print_status_or_exit(
@@ -718,8 +857,12 @@ int main(int argc, char *argv[])
   }
   else if (opts.algm == 'e') {
     opts.print_status_or_exit(make_equal_edges(
-        geom, opts.it_ctrl, opts.shorten_by / 200, opts.shorten_rad_by / 200,
+        geom, opts.it_ctrl, opts.shorten_by / 200, opts.shorten_rad_by / 100,
         opts.ellipsoid, opts.sym_str));
+  }
+  else if (opts.algm == 'p') {
+    opts.print_status_or_exit(
+        make_planar(geom, opts.it_ctrl, opts.flatten_by / 100));
   }
 
   opts.write_or_error(geom, opts.ofile);

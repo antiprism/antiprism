@@ -54,6 +54,15 @@ poly_form -n 100000 -a e -s 100 geo_3_3_d | antiview
 poly_form -n 100000 -a e -y full -s 100 geo_3_3_d | antiview
 <<CMDS_END>>
 
+An equal-edge tiling on a sphere may not be solvable, but the result
+might still be symmetric, which could then be used to speed up
+a regular-faced solution
+<<CMDS_START>>
+poly_form -a u geo_3_3 | poly_form -a e -s 100 | antiview -s a
+poly_form -a u geo_3_3 | poly_form -a e -s 100 | poly_form -n -1 -y full | antiview
+<<CMDS_END>>
+
+
 Solve an equal-edge model on an ellipsoid
 <<CMDS_START>>
 poly_form -n 100000 -a e -E 1,1.2,1.5 -y full -s 50 geo_3_3_d | antiview

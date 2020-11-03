@@ -86,10 +86,10 @@ bool two_plane_intersect(Vec3d Q0, Vec3d n0, Vec3d Q1, Vec3d n1, Vec3d &P,
 
 // http://astronomy.swin.edu.au/~pbourke/geometry/planes/
 bool three_plane_intersect(Vec3d Q0, Vec3d n0, Vec3d Q1, Vec3d n1, Vec3d Q2,
-                           Vec3d &n2, Vec3d &P, double eps)
+                           Vec3d n2, Vec3d &P, double eps)
 {
   double tri_prod = vtriple(n0, n1, n2);
-  if (fabs(tri_prod) / (n0.len() * n1.len() * n2.len()) < eps)
+  if (fabs(tri_prod) / (n0.len2() * n1.len2() * n2.len2()) < eps * eps)
     return false;
   double d1 = vdot(Q0, n0);
   double d2 = vdot(Q1, n1);

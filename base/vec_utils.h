@@ -95,9 +95,18 @@ Vec3d line_plane_intersect(Vec3d Q0, Vec3d Q1, Vec3d Q2, Vec3d P0, Vec3d P1,
 bool two_plane_intersect(Vec3d Q0, Vec3d n0, Vec3d Q1, Vec3d n1, Vec3d &P,
                          Vec3d &dir, double eps = epsilon);
 
-// unused
-// bool three_plane_intersect(Vec3d Q0, Vec3d n0, Vec3d Q1, Vec3d n1,
-//      Vec3d Q2, Vec3d &n2, Vec3d &P, double eps=epsilon);
+/// Get the point where three planes intersect.
+/**\param Q0 a point on the first plane.
+ * \param n0 the normal to the first plane.
+ * \param Q1 a point on the second plane.
+ * \param n1 the normal to the second plane.
+ * \param Q2 a point on the second plane.
+ * \param n2 the normal to the second plane.
+ * \param P to return the point of intersection.
+ * \param eps value for contolling the limit of precision
+ * \return \c true if the planes intersect, otherwise \c false. */
+bool three_plane_intersect(Vec3d Q0, Vec3d n0, Vec3d Q1, Vec3d n1, Vec3d Q2,
+                           Vec3d n2, Vec3d &P, double eps = epsilon);
 
 /// Get the nearest point on a line to another (skew) line
 /**\param P0 a point on the first line.

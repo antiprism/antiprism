@@ -23,13 +23,8 @@ initialise with a number of randomly placed points
 .HP
 \fB\-s\fR <perc> percentage to shorten the travel distance (default: adaptive)
 .TP
-\fB\-r\fR <rep>
-repelling formula
-.IP
-1 \- inverse of distance
-2 \- inverse square of distance (default)
-3 \- inverse cube of distance
-4 \- inverse square root of distance
+\fB\-r\fR <exp>
+repelling formula, 1/distance^exp (default: 2)
 .TP
 \fB\-l\fR <lim>
 minimum change of distance/width_of_model to terminate, as

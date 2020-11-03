@@ -46,18 +46,21 @@ using namespace anti;
 class rep_opts : public ProgramOpts {
 public:
   IterationControl it_ctrl;
-  int num_pts;
-  int rep_form;
-  double shorten_by;
+  int num_pts = -1;
+  double repel_formula_exp = 2;
+  double shorten_by = -1;
 
   string ifile;
   string ofile;
 
-  rep_opts() : ProgramOpts("repel"), num_pts(-1), rep_form(2), shorten_by(-1)
+  rep_opts() : ProgramOpts("repel")
   {
-    it_ctrl.set_max_iters_unlimited();
-    it_ctrl.set_status_checks("1000,1");
-    it_ctrl.set_sig_digits(12);
+    // The following defaults are suitable for small and medium models
+    it_ctrl.set_max_iters_unlimited();      // finish only when solved
+    it_ctrl.set_status_check_only_iters(1); // cheap test, check every time
+    it_ctrl.set_status_check_and_report_iters(1000);
+    it_ctrl.set_sig_digits(12); // produces reasonable solutions for typical
+                                // models (N<100) within a couple of seconds
   }
 
   void process_command_line(int argc, char **argv);
@@ -78,11 +81,7 @@ Options
   -N <num>  initialise with a number of randomly placed points
   -n <itrs> maximum number of iterations, -1 for unlimited (default: %d)
   -s <perc> percentage to shorten the travel distance (default: adaptive)
-  -r <rep>  repelling formula
-              1 - inverse of distance
-              2 - inverse square of distance (default)
-              3 - inverse cube of distance
-              4 - inverse square root of distance
+  -r <exp>  repelling formula, 1/distance^exp (default: 2)
   -l <lim>  minimum change of distance/width_of_model to terminate, as 
                negative exponent (default: %d giving %.0e)
   -z <nums> number of iterations between status reports (implies termination
@@ -140,9 +139,11 @@ void rep_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'r':
-      print_status_or_exit(read_int(optarg, &rep_form), c);
-      if (rep_form < 1 || rep_form > 4)
-        error("formula is given by its number, 1 - 4", c);
+      print_status_or_exit(read_double(optarg, &repel_formula_exp), c);
+      if (repel_formula_exp < 0)
+        warning("exponent is negative, may not produce a good "
+                "distribution",
+                c);
       break;
 
     case 'o':
@@ -167,30 +168,11 @@ void rep_opts::process_command_line(int argc, char **argv)
   }
 }
 
-typedef Vec3d (*REPEL_FN)(Vec3d, Vec3d);
-
-Vec3d rep_inv_dist1(Vec3d v1, Vec3d v2)
+Vec3d repel_inv_dist_exp(Vec3d v1, Vec3d v2, double exp)
 {
-  double len = pow((v2 - v1).len2(), -0.5);
-  return (v2 - v1).with_len(len);
-}
-
-Vec3d rep_inv_dist2(Vec3d v1, Vec3d v2)
-{
-  double len = 1 / (v2 - v1).len2();
-  return (v2 - v1).with_len(len);
-}
-
-Vec3d rep_inv_dist3(Vec3d v1, Vec3d v2)
-{
-  double len = pow((v2 - v1).len2(), -1.5);
-  return (v2 - v1).with_len(len);
-}
-
-Vec3d rep_inv_dist05(Vec3d v1, Vec3d v2)
-{
-  double len = pow((v2 - v1).len2(), -0.25);
-  return (v2 - v1).with_len(len);
+  v2 -= v1; // v2 is now the offset from v1 to v2
+  const double len = (exp == 2.0) ? 1 / v2.len2() : pow(v2.len2(), -exp / 2);
+  return v2.with_len(len);
 }
 
 void random_placement(Geometry &geom, int n)
@@ -202,7 +184,7 @@ void random_placement(Geometry &geom, int n)
     geom.add_vert(Vec3d::random(rnd).unit());
 }
 
-void repel(Geometry &geom, IterationControl it_ctrl, REPEL_FN rep_fn,
+void repel(Geometry &geom, IterationControl it_ctrl, double exponent,
            double shorten_factor)
 {
   const int v_sz = geom.verts().size();
@@ -231,9 +213,10 @@ void repel(Geometry &geom, IterationControl it_ctrl, REPEL_FN rep_fn,
 
     for (int i = 0; i < v_sz - 1; i++) {
       for (int j = i + 1; j < v_sz; j++) {
-        Vec3d offset = rep_fn(geom.verts(i), geom.verts(j)) * (wts[i] * wts[j]);
-        offsets[i] -= offset / wts[i];
-        offsets[j] += offset / wts[j];
+        Vec3d offset =
+            repel_inv_dist_exp(geom.verts(i), geom.verts(j), exponent);
+        offsets[i] -= offset;
+        offsets[j] += offset;
       }
     }
 
@@ -315,8 +298,7 @@ int main(int argc, char *argv[])
   else
     opts.read_or_error(geom, opts.ifile);
 
-  REPEL_FN fn[] = {rep_inv_dist1, rep_inv_dist2, rep_inv_dist3, rep_inv_dist05};
-  repel(geom, opts.it_ctrl, fn[opts.rep_form - 1], opts.shorten_by / 100);
+  repel(geom, opts.it_ctrl, opts.repel_formula_exp, opts.shorten_by / 100);
 
   opts.write_or_error(geom, opts.ofile);
 

@@ -33,6 +33,7 @@ U \- equalise shortest and longest edges attached to a vertex
 on sphere or ellipsoid (use to continue unscrambling)
 .IP
 e \- equalise edges on sphere or ellipsoid (default)
+p \- planarise
 .HP
 \fB\-n\fR <itrs> maximum number of iterations, \fB\-1\fR for unlimited (default: 10000)
 .HP
@@ -47,7 +48,7 @@ e \- equalise edges on sphere or ellipsoid (default)
 (default: 1e\-6), will oscillate at certain precision,
 process output with smaller value to improve solution
 .HP
-\fB\-f\fR <perc> percentage to reduce distance of vertex from face plane (\fB\-a\fR r)
+\fB\-f\fR <perc> percentage to reduce distance of vertex from face plane (\fB\-a\fR rp)
 .IP
 on iteration (default: value of \fB\-s\fR)
 .TP
@@ -70,7 +71,7 @@ negative exponent (default: 14 giving 1e\-14)
 .IP
 check) (0 for final report only, \fB\-1\fR for no report), optionally
 followed by a comma and the number of iterations between
-termination checks (0 for report checks only) (default: 1000,0)
+termination checks (0 for report checks only) (default: 1000,100)
 .HP
 \fB\-o\fR <file> write output to file (default: write to standard output)
 .SH "SEE ALSO"
