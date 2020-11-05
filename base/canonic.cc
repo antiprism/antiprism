@@ -33,6 +33,7 @@
 
 #include <float.h>
 #include <math.h>
+#include <numeric>
 #include <stdlib.h>
 #include <string.h>
 #include <string>
@@ -44,6 +45,7 @@
 #include "planar.h"
 
 using std::map;
+using std::set;
 using std::string;
 using std::vector;
 
@@ -117,25 +119,26 @@ bool canonical_radius_range_test(const Geometry &geom,
 // RK - the model will possibly become non-convex early in the loops.
 // if it contorts too badly, the model will implode. Having the input
 // model at a radius of near 1 minimizes this problem
-bool canonicalize_mm(Geometry &geom, const double edge_factor,
-                     const double plane_factor, const int num_iters,
-                     const double radius_range_percent, const int rep_count,
-                     const bool alternate_loop, const bool planar_only,
-                     const char normal_type, const double eps)
+bool canonicalize_mm(Geometry &geom, IterationControl it_ctrl,
+                     const double edge_factor, const double plane_factor,
+                     const double radius_range_percent, const char normal_type,
+                     const bool alternate_loop, const bool planarize_only)
 {
   bool completed = false;
+  it_ctrl.set_finished(false);
 
   vector<Vec3d> &verts = geom.raw_verts();
 
   vector<vector<int>> edges;
   geom.get_impl_edges(edges);
 
+  double test_val = it_ctrl.get_test_val();
   double max_diff2 = 0;
-  unsigned int cnt;
-  for (cnt = 0; cnt < (unsigned int)num_iters;) {
+
+  for (it_ctrl.start_iter(); !it_ctrl.is_done(); it_ctrl.next_iter()) {
     vector<Vec3d> verts_last = verts;
 
-    if (!planar_only) {
+    if (!planarize_only) {
       vector<Vec3d> near_pts;
       if (!alternate_loop) {
         for (auto &edge : edges) {
@@ -191,9 +194,7 @@ bool canonicalize_mm(Geometry &geom, const double edge_factor,
     for (auto &v : vs)
       v = Vec3d(0, 0, 0);
 
-    // progressively advances starting face each iteration
-    for (unsigned int ff = cnt; ff < geom.faces().size() + cnt; ff++) {
-      int f = ff % geom.faces().size();
+    for (unsigned int f = 0; f < geom.faces().size(); f++) {
       if (geom.faces(f).size() == 3)
         continue;
       Vec3d face_normal = face_normal_by_type(geom, f, normal_type).unit();
@@ -212,65 +213,49 @@ bool canonicalize_mm(Geometry &geom, const double edge_factor,
     for (unsigned int i = 0; i < vs.size(); i++)
       verts[i] += vs[i];
 
-    // len2() for difference value to minimize internal sqrt() calls
-    max_diff2 = 0;
-    for (unsigned int i = 0; i < verts.size(); i++) {
-      double diff2 = (verts[i] - verts_last[i]).len2();
-      if (diff2 > max_diff2)
-        max_diff2 = diff2;
+    string finish_msg;
+    if (it_ctrl.is_status_check_iter()) {
+      // len2() for difference value to minimize internal sqrt() calls
+      max_diff2 = 0;
+      for (unsigned int i = 0; i < verts.size(); i++) {
+        double diff2 = (verts[i] - verts_last[i]).len2();
+        if (diff2 > max_diff2)
+          max_diff2 = diff2;
+      }
+
+      if (sqrt(max_diff2) < test_val) {
+        completed = true;
+        it_ctrl.set_finished();
+        finish_msg = "solved, test value achieved";
+      }
+      else if (it_ctrl.is_last_iter()) {
+        // reached last iteration without solving
+        it_ctrl.set_finished();
+        finish_msg = "not solved, test value not achieved";
+      }
+
+      // check if radius is expanding or contracting unreasonably,
+      // but only for the purpose of finishing early
+      // if minimum and maximum radius are differing, the polyhedron is
+      // crumpling
+      if (radius_range_percent &&
+          canonical_radius_range_test(geom, radius_range_percent)) {
+        if (!it_ctrl.is_finished())
+          it_ctrl.set_finished();
+        finish_msg = "breaking out: radius range detected. try increasing -d";
+      }
     }
 
-    // increment count here for reporting
-    cnt++;
+    if (it_ctrl.is_status_report_iter()) {
+      if (it_ctrl.is_finished())
+        it_ctrl.print("Final iteration (%s):\n", finish_msg.c_str());
 
-    if ((rep_count > 0) && (cnt % rep_count == 0))
-      fprintf(stderr, "%-15d max_diff=%.17g\n", cnt, sqrt(max_diff2));
-
-    if (sqrt(max_diff2) < eps) {
-      completed = true;
-      break;
+      it_ctrl.print("%-12u max_diff:%17.15e\n", it_ctrl.get_current_iter(),
+                    sqrt(max_diff2));
     }
-
-    // if minimum and maximum radius are differing, the polyhedron is crumpling
-    if (radius_range_percent &&
-        canonical_radius_range_test(geom, radius_range_percent)) {
-      fprintf(
-          stderr,
-          "\nbreaking out: radius range detected. try increasing percentage\n");
-      break;
-    }
-  }
-
-  if (rep_count > -1) {
-    fprintf(stderr, "\n%-15d final max_diff=%.17g\n", cnt, sqrt(max_diff2));
-    fprintf(stderr, "\n");
   }
 
   return completed;
-}
-
-// RK - wrapper for basic canonicalization with mathematical algorithm
-// meant to be called with finite num_iters (not -1)
-bool canonicalize_mm(Geometry &geom, const int num_iters, const int rep_count,
-                     const double eps)
-{
-  char normal_type = 'n';
-  bool alternate_loop = false;
-  bool planarize_only = false;
-  return canonicalize_mm(geom, 0.3, 0.5, num_iters, DBL_MAX, rep_count,
-                         alternate_loop, planarize_only, normal_type, eps);
-}
-
-// RK - wrapper for basic planarization with mathematical algorithm
-// meant to be called with finite num_iters (not -1)
-bool planarize_mm(Geometry &geom, const int num_iters, const int rep_count,
-                  const double eps)
-{
-  char normal_type = 'n';
-  bool alternate_loop = false;
-  bool planarize_only = true;
-  return canonicalize_mm(geom, 0.3, 0.5, num_iters, DBL_MAX, rep_count,
-                         alternate_loop, planarize_only, normal_type, eps);
 }
 
 // reciprocalN() is from the Hart's Conway Notation web page
@@ -528,22 +513,23 @@ Vec3d edge_nearpoints_centroid(Geometry &geom, const Vec3d cent)
 
 // Implementation of George Hart's planarization and canonicalization algorithms
 // http://www.georgehart.com/virtual-polyhedra/conway_notation.html
-bool canonicalize_bd(Geometry &base, const int num_iters,
+bool canonicalize_bd(Geometry &base, IterationControl it_ctrl,
                      const char canonical_method,
-                     const double radius_range_percent, const int rep_count,
-                     const char centering, const char normal_type,
-                     const double eps)
+                     const double radius_range_percent, const char centering,
+                     const char normal_type)
 {
   bool completed = false;
+  it_ctrl.set_finished(false);
 
   Geometry dual;
   // the dual's initial vertex locations are immediately overwritten
   get_dual(dual, base, 1);
   dual.clear_cols();
 
+  double test_val = it_ctrl.get_test_val();
   double max_diff2 = 0;
-  unsigned int cnt;
-  for (cnt = 0; cnt < (unsigned int)num_iters;) {
+
+  for (it_ctrl.start_iter(); !it_ctrl.is_done(); it_ctrl.next_iter()) {
     vector<Vec3d> base_verts_last = base.verts();
 
     switch (canonical_method) {
@@ -559,110 +545,109 @@ bool canonicalize_bd(Geometry &base, const int num_iters,
     }
 
     // adjust vertices with side effect of planarization. len2() version
-    case 'p':
+    case 'q':
       // move centroid to origin for balance
       dual.raw_verts() = reciprocalC_len2(base);
       base.transform(Trans3d::translate(-centroid(dual.verts())));
       base.raw_verts() = reciprocalC_len2(dual);
       base.transform(Trans3d::translate(-centroid(base.verts())));
       break;
-
-    // adjust vertices with side effect of planarization. len() version
-    case 'q':
-      // move centroid to origin for balance
-      dual.raw_verts() = reciprocalC_len(base);
-      base.transform(Trans3d::translate(-centroid(dual.verts())));
-      base.raw_verts() = reciprocalC_len(dual);
-      base.transform(Trans3d::translate(-centroid(base.verts())));
-      break;
-
-    // adjust vertices with side effect of planarization. face centroids version
-    case 'f':
-      base.face_cents(dual.raw_verts());
-      dual.face_cents(base.raw_verts());
-      break;
     }
 
-    // len2() for difference value to minimize internal sqrt() calls
-    max_diff2 = 0;
-    for (unsigned int i = 0; i < base.verts().size(); i++) {
-      double diff2 = (base.verts(i) - base_verts_last[i]).len2();
-      if (diff2 > max_diff2)
-        max_diff2 = diff2;
+    string finish_msg;
+    if (it_ctrl.is_status_check_iter()) {
+      // len2() for difference value to minimize internal sqrt() calls
+      max_diff2 = 0;
+      for (unsigned int i = 0; i < base.verts().size(); i++) {
+        double diff2 = (base.verts(i) - base_verts_last[i]).len2();
+        if (diff2 > max_diff2)
+          max_diff2 = diff2;
+      }
+
+      if (sqrt(max_diff2) < test_val) {
+        completed = true;
+        it_ctrl.set_finished();
+        finish_msg = "solved, test value achieved";
+      }
+      else if (it_ctrl.is_last_iter()) {
+        // reached last iteration without solving
+        it_ctrl.set_finished();
+        finish_msg = "not solved, test value not achieved";
+      }
+
+      // check if radius is expanding or contracting unreasonably,
+      // but only for the purpose of finishing early
+      // if minimum and maximum radius are differing, the polyhedron is
+      // crumpling
+      if (radius_range_percent &&
+          canonical_radius_range_test(base, radius_range_percent)) {
+        if (!it_ctrl.is_finished())
+          it_ctrl.set_finished();
+        finish_msg = "breaking out: radius range detected. try increasing -d";
+      }
     }
 
-    // increment count here for reporting
-    cnt++;
+    if (it_ctrl.is_status_report_iter()) {
+      if (it_ctrl.is_finished())
+        it_ctrl.print("Final iteration (%s):\n", finish_msg.c_str());
 
-    if ((rep_count > 0) && (cnt % rep_count == 0))
-      fprintf(stderr, "%-15d max_diff=%.17g\n", cnt, sqrt(max_diff2));
-
-    if (sqrt(max_diff2) < eps) {
-      completed = true;
-      break;
+      it_ctrl.print("%-12u max_diff:%17.15e\n", it_ctrl.get_current_iter(),
+                    sqrt(max_diff2));
     }
-
-    // if minimum and maximum radius are differing, the polyhedron is crumpling
-    if (radius_range_percent &&
-        canonical_radius_range_test(base, radius_range_percent)) {
-      fprintf(
-          stderr,
-          "\nbreaking out: radius range detected. try increasing percentage\n");
-      break;
-    }
-  }
-
-  if (rep_count > -1) {
-    fprintf(stderr, "\n%-15d final max_diff=%.17g\n", cnt, sqrt(max_diff2));
-    fprintf(stderr, "\n");
   }
 
   return completed;
-}
-
-// RK - wrapper for basic canonicalization with base/dual algorithm
-// meant to be called with finite num_iters (not -1)
-bool canonicalize_bd(Geometry &geom, const int num_iters, const int rep_count,
-                     const double eps)
-{
-  char centering = 'x';
-  char normal_type = 'n';
-  return canonicalize_bd(geom, num_iters, 'b', DBL_MAX, rep_count, centering,
-                         normal_type, eps);
-}
+} // namespace anti
 
 // RK - wrapper for basic planarization with base/dual algorithm
 // meant to be called with finite num_iters (not -1)
-bool planarize_bd(Geometry &geom, const int num_iters, const int rep_count,
-                  const double eps)
+// for an internal call from conway
+bool planarize_bd(Geometry &geom, IterationControl it_ctrl)
 {
+  char canonical_method = 'q';
+  double radius_range_percent = 0;
   char centering = 'x';
   char normal_type = 'n';
-  return canonicalize_bd(geom, num_iters, 'p', DBL_MAX, rep_count, centering,
-                         normal_type, eps);
+  return canonicalize_bd(geom, it_ctrl, canonical_method, radius_range_percent,
+                         centering, normal_type);
 }
 
-// port for minmax unit (-a u) used for planarization
-// parameters and code format changed to match above functions
-// algorithm not changed
-// used in canonical and conway
-bool minmax_unit_planar(Geometry &geom, const double shorten_factor,
-                        const double plane_factor, const double radius_factor,
-                        const int num_iters, const double radius_range_percent,
-                        const int rep_count, const char normal_type,
-                        const double eps)
-{
-  bool completed = false;
+//------------------------------------------------------------------
+// Unit edge regular polygon
 
-  // do a scale to get edges close to 1
-  GeometryInfo info(geom);
+Status make_regular_faces2(Geometry &base_geom, IterationControl it_ctrl,
+                           double shorten_factor, double plane_factor,
+                           double radius_factor, const string &sym_str)
+{
+  Symmetry sym(Symmetry::C1);
+  Status stat;
+  if (sym_str.size()) {
+    // if (!(stat = init_sym(base_geom, sym_str.c_str(), sym)))
+    //  return stat;
+  }
+  bool using_symmetry = (sym.get_sym_type() != Symmetry::C1);
+
+  // No further processing if no faces, but not an error
+  if (base_geom.faces().size() == 0)
+    return Status::ok();
+
+  double test_val = it_ctrl.get_test_val();
+  const double divergence_test2 = 1e30; // test vertex dist^2 for divergence
+  // Scale to get edges close to 1
+  GeometryInfo info(base_geom);
   double scale = info.iedge_length_lims().sum / info.num_iedges();
   if (scale)
-    geom.transform(Trans3d::scale(1 / scale));
+    base_geom.transform(Trans3d::scale(1 / scale));
+
+  SymmetricUpdater sym_updater((using_symmetry) ? base_geom : Geometry(), sym,
+                               false);
+  const Geometry &geom =
+      (using_symmetry) ? sym_updater.get_geom_reading() : base_geom;
 
   const vector<Vec3d> &verts = geom.verts();
   const vector<vector<int>> &faces = geom.faces();
 
+  double max_diff2 = 0;
   Vec3d origin(0, 0, 0);
   vector<double> rads(faces.size());
   for (unsigned int f = 0; f < faces.size(); f++) {
@@ -671,105 +656,454 @@ bool minmax_unit_planar(Geometry &geom, const double shorten_factor,
     if (!D)
       D = 1;
     rads[f] = 0.5 / sin(M_PI * D / N); // circumradius of regular polygon
-    // fprintf(stderr, "{%d/%d} rad=%g\n", N, D, rads[f]);
   }
 
-  double max_diff2 = 0;
-  unsigned int cnt = 0;
-  for (cnt = 0; cnt < (unsigned int)num_iters;) {
-    vector<Vec3d> old_verts = verts;
+  // Get a list of the faces that contain a principal vertex of any type
+  vector<int> principal_verts;
+  vector<int> verts_to_update;
+  vector<int> faces_to_process;
+  vector<int> edges_to_process;
+  if (using_symmetry) {
+    vector<set<int>> vert_faces(geom.verts().size());
+    for (int f_idx = 0; f_idx < (int)geom.faces().size(); f_idx++)
+      for (int v_idx : faces[f_idx])
+        vert_faces[v_idx].insert(f_idx);
 
-    // Vertx offsets for the iteration.
-    vector<Vec3d> offsets(verts.size(), Vec3d::zero);
-    for (unsigned int ff = cnt; ff < faces.size() + cnt; ff++) {
-      const unsigned int f = ff % faces.size();
-      const vector<int> &face = faces[f];
-      const unsigned int f_sz = face.size();
-      // Vec3d norm = geom.face_norm(f).unit();
-      Vec3d norm = face_normal_by_type(geom, f, normal_type).unit();
-      Vec3d f_cent = geom.face_cent(f);
+    vector<set<int>> vert_edges(info.get_impl_edges().size());
+    for (int e_idx = 0; e_idx < (int)info.get_impl_edges().size(); e_idx++)
+      for (int v_idx : info.get_impl_edges()[e_idx])
+        vert_edges[v_idx].insert(e_idx);
+
+    for (auto &v_orbit : sym_updater.get_equiv_sets(VERTS)) {
+      int principal_idx = *v_orbit.begin();
+      principal_verts.push_back(principal_idx);
+      for (int f_idx : vert_faces[principal_idx]) {
+        faces_to_process.push_back(f_idx);
+        for (int v_idx : faces[f_idx])
+          verts_to_update.push_back(v_idx);
+      }
+      for (int e_idx : vert_edges[principal_idx])
+        edges_to_process.push_back(e_idx);
+      // implicit edges, so vertices already addded to verts_to_update
+    }
+    sort(verts_to_update.begin(), verts_to_update.end());
+    verts_to_update.erase(
+        unique(verts_to_update.begin(), verts_to_update.end()),
+        verts_to_update.end());
+    sort(faces_to_process.begin(), faces_to_process.end());
+    faces_to_process.erase(
+        unique(faces_to_process.begin(), faces_to_process.end()),
+        faces_to_process.end());
+  }
+  else { // not using_symmetry
+    // all vertices are proncipal vertices
+    principal_verts.resize(verts.size());
+    std::iota(principal_verts.begin(), principal_verts.end(), 0);
+    // all face numbers should be be processed
+    faces_to_process.resize(faces.size());
+    std::iota(faces_to_process.begin(), faces_to_process.end(), 0);
+    // all edges should be be processed
+    edges_to_process.resize(info.get_impl_edges().size());
+    std::iota(edges_to_process.begin(), edges_to_process.end(), 0);
+  }
+
+  vector<Vec3d> offsets(verts.size()); // Vertex adjustments
+
+  for (it_ctrl.start_iter(); !it_ctrl.is_done(); it_ctrl.next_iter()) {
+    std::fill(offsets.begin(), offsets.end(), Vec3d::zero);
+
+    if (using_symmetry) {
+      // Ensure that the vertices used in adjustment are up to date
+      for (int v_idx : verts_to_update)
+        sym_updater.update_from_principal_vertex(v_idx);
+    }
+
+    for (int f_idx : faces_to_process) {
+      const vector<int> &face = faces[f_idx];
+
+      Vec3d norm = geom.face_norm(f_idx).unit();
+      Vec3d f_cent = geom.face_cent(f_idx);
       if (vdot(norm, f_cent) < 0)
         norm *= -1.0;
 
-      for (unsigned int vv = cnt; vv < f_sz + cnt; vv++) {
-        unsigned int v = vv % f_sz;
-        // offset for unit edges
-        vector<int> edge = make_edge(face[v], face[(v + 1) % f_sz]);
-        Vec3d offset =
-            (1 - geom.edge_len(edge)) * shorten_factor * geom.edge_vec(edge);
-        offsets[edge[0]] -= offset;
-        offsets[edge[1]] += offset;
-
+      for (int i = 0; i < (int)face.size(); i++) {
+        const int v_idx = face[i];
         // offset for planarity
-        offsets[face[v]] +=
-            vdot(plane_factor * norm, f_cent - verts[face[v]]) * norm;
+        offsets[v_idx] +=
+            vdot(plane_factor * norm, f_cent - verts[v_idx]) * norm;
 
         // offset for polygon radius
-        Vec3d rad_vec = (verts[face[v]] - f_cent);
-        offsets[face[v]] += (rads[f] - rad_vec.len()) * radius_factor * rad_vec;
+        Vec3d rad_vec = (verts[v_idx] - f_cent);
+        offsets[v_idx] +=
+            (rads[f_idx] - rad_vec.len()) * radius_factor * rad_vec;
       }
     }
 
-    // adjust vertices post-loop
-    for (unsigned int i = 0; i < offsets.size(); i++)
-      geom.raw_verts()[i] += offsets[i];
+    // offsets for unit edges
+    for (int e_idx : edges_to_process) {
+      const auto &edge = info.get_impl_edges()[e_idx];
+      Vec3d offset =
+          (1 - geom.edge_len(edge)) * shorten_factor * geom.edge_vec(edge);
+      offsets[edge[0]] -= 2 * offset;
+      offsets[edge[1]] += 2 * offset;
+    }
 
-    max_diff2 = 0;
-    for (auto &offset : offsets) {
-      double diff2 = offset.len2();
+    // adjust vertices post-loop
+    if (using_symmetry) {
+      // adjust principal vertices
+      for (int v_idx : principal_verts)
+        sym_updater.update_principal_vertex(v_idx,
+                                            verts[v_idx] + offsets[v_idx]);
+    }
+    else { // not using_symmetry
+      // adjust all vertices
+      for (unsigned int i = 0; i < verts.size(); i++)
+        base_geom.raw_verts()[i] += offsets[i];
+    }
+
+    string finish_msg;
+    if (it_ctrl.is_status_check_iter()) {
+
+      max_diff2 = 0;
+      for (auto &offset : offsets) {
+        double diff2 = offset.len2();
+        if (diff2 > max_diff2)
+          max_diff2 = diff2;
+      }
+
+      double width = BoundBox(verts).max_width();
+      if (sqrt(max_diff2) / width < test_val) {
+        it_ctrl.set_finished();
+        finish_msg = "solved, test value achieved";
+      }
+      else if (it_ctrl.is_last_iter()) {
+        // reached last iteration without solving
+        it_ctrl.set_finished();
+        finish_msg = "not solved, test value not achieved";
+      }
+
+      // check if radius is expanding or contracting unreasonably,
+      // but only for the purpose of finishing early
+      if (!it_ctrl.is_finished() && divergence_test2 > 0) {
+        for (auto &offset : offsets)
+          if (offset.len2() > divergence_test2) {
+            it_ctrl.set_finished();
+            finish_msg = "not solved, quit early as probably diverging";
+          }
+      }
+    }
+
+    if (it_ctrl.is_status_report_iter()) {
+      if (it_ctrl.is_finished())
+        it_ctrl.print("Final iteration (%s):\n", finish_msg.c_str());
+
+      it_ctrl.print("%-12u max_diff:%17.15e\n", it_ctrl.get_current_iter(),
+                    sqrt(max_diff2));
+    }
+  }
+
+  if (using_symmetry)
+    base_geom = sym_updater.get_geom_final();
+
+  return Status::ok();
+}
+
+//------------------------------------------------------------------
+// Make faces planar
+
+inline Vec3d nearpoint_on_plane(const Vec3d &P, const Vec3d &point_on_plane,
+                                const Vec3d &unit_norm)
+{
+  return P + vdot(point_on_plane - P, unit_norm) * unit_norm;
+}
+
+Status make_planar2(Geometry &base_geom, IterationControl it_ctrl,
+                    double plane_factor)
+{
+  // chosen by experiment
+  const double intersect_test_val = 1e-5; // test for coplanar faces
+  const double diff2_test_val = 10;       // limit for using plane intersection
+  const double readjustment = 1.01;       // to adjust adjustment factor
+  const double plane_factor_max = 1.1;    // maximum value for adjustment factor
+
+  auto &geom = base_geom;
+  // No further processing if no faces, but not an error
+  if (geom.faces().size() == 0)
+    return Status::ok();
+
+  double test_val = it_ctrl.get_test_val();
+  const vector<Vec3d> &verts = geom.verts();
+  const vector<vector<int>> &faces = geom.faces();
+
+  vector<vector<int>> vert_faces(geom.verts().size());
+  for (int f_idx = 0; f_idx < (int)geom.faces().size(); f_idx++)
+    for (int v_idx : faces[f_idx])
+      vert_faces[v_idx].push_back(f_idx);
+
+  vector<Vec3d> offsets(verts.size()); // Vertex adjustments
+
+  double last_max_diff2 = 0.0;
+  for (it_ctrl.start_iter(); !it_ctrl.is_done(); it_ctrl.next_iter()) {
+    std::fill(offsets.begin(), offsets.end(), Vec3d::zero);
+
+    GeometryInfo info(geom);
+    vector<Vec3d> norms;
+    geom.face_norms(norms);
+    vector<Vec3d> cents;
+    geom.face_cents(cents);
+
+    int cnt_proj = 0;
+    int cnt_int = 0;
+    double max_diff2 = 0.0;
+    for (unsigned int v_idx = 0; v_idx < geom.verts().size(); v_idx++) {
+      int intersect_cnt = 0;
+      const auto &vfaces = vert_faces[v_idx];
+      const int vf_sz = vfaces.size();
+      bool good_intersections = (vf_sz >= 3);
+      for (int f0 = 0; f0 < vf_sz - 2 && good_intersections; f0++) {
+        int f0_idx = vfaces[f0];
+        for (int f1 = f0 + 1; f1 < vf_sz - 1 && good_intersections; f1++) {
+          int f1_idx = vfaces[f1];
+          for (int f2 = f1 + 1; f2 < vf_sz && good_intersections; f2++) {
+            int f2_idx = vfaces[f2];
+            Vec3d intersection;
+            good_intersections = three_plane_intersect(
+                cents[f0_idx], norms[f0_idx], cents[f1_idx], norms[f1_idx],
+                cents[f2_idx], norms[f2_idx], intersection, intersect_test_val);
+            offsets[v_idx] += intersection;
+            intersect_cnt++;
+          }
+        }
+      }
+
+      if (good_intersections)
+        offsets[v_idx] =
+            (offsets[v_idx] / intersect_cnt - verts[v_idx]) * plane_factor;
+
+      // no good 3 plane intersections OR
+      // moving to much
+      if (!good_intersections ||
+          offsets[v_idx].len2() / last_max_diff2 > diff2_test_val) {
+        // target vertex is centroid of projection of vertex onto planes
+        offsets[v_idx] = Vec3d::zero;
+        for (int f0 = 0; f0 < vf_sz; f0++) {
+          int f0_idx = vfaces[f0];
+          offsets[v_idx] +=
+              nearpoint_on_plane(verts[v_idx], cents[f0_idx], norms[f0_idx]);
+        }
+        offsets[v_idx] = (offsets[v_idx] / vf_sz - verts[v_idx]) * plane_factor;
+        cnt_proj++;
+      }
+      else
+        cnt_int++;
+
+      auto diff2 = offsets[v_idx].len2();
       if (diff2 > max_diff2)
         max_diff2 = diff2;
     }
 
-    // increment count here for reporting
-    cnt++;
+    for (unsigned int v_idx = 0; v_idx < verts.size(); v_idx++)
+      geom.verts(v_idx) += offsets[v_idx];
 
-    if ((rep_count > -1) && (cnt % rep_count == 0))
-      fprintf(stderr, "%-15d max_diff=%.17g\n", cnt, sqrt(max_diff2));
+    // adjust plane factor
+    if (max_diff2 < last_max_diff2)
+      plane_factor *= readjustment;
+    else
+      plane_factor /= readjustment;
+    if (plane_factor > plane_factor_max)
+      plane_factor = plane_factor_max;
+    last_max_diff2 = max_diff2;
 
-    double width = BoundBox(verts).max_width();
-    if (sqrt(max_diff2) / width < eps) {
-      completed = true;
-      break;
+    string finish_msg;
+    if (it_ctrl.is_status_check_iter()) {
+      double width = BoundBox(verts).max_width();
+      if (sqrt(max_diff2) / width < test_val) {
+        it_ctrl.set_finished();
+        finish_msg = "solved, test value achieved";
+      }
+      else if (it_ctrl.is_last_iter()) {
+        // reached last iteration without solving
+        it_ctrl.set_finished();
+        finish_msg = "not solved, test value not achieved";
+      }
     }
 
-    // if minimum and maximum radius are differing, the polyhedron is crumpling
-    if (radius_range_percent &&
-        canonical_radius_range_test(geom, radius_range_percent)) {
-      fprintf(
-          stderr,
-          "\nbreaking out: radius range detected. try increasing percentage\n");
-      break;
+    if (it_ctrl.is_status_report_iter()) {
+      if (it_ctrl.is_finished())
+        it_ctrl.print("Final iteration (%s):\n", finish_msg.c_str());
+
+      it_ctrl.print("%-12u max_diff:%17.15e  -f %-10.5f i/p: %7d/%-7d\n",
+                    it_ctrl.get_current_iter(), sqrt(max_diff2),
+                    100 * plane_factor, cnt_int, cnt_proj);
     }
   }
 
-  if (rep_count > -1) {
-    fprintf(stderr, "\n%-15d final max_diff=%.17g\n", cnt, sqrt(max_diff2));
-    fprintf(stderr, "\n");
+  return Status::ok();
+}
+
+/*
+// plane a single face aligned to the z axis
+void plane_face(Geometry &polygon)
+{
+  Vec3d face_normal = polygon.face_norm(0).unit();
+  Vec3d face_centroid = polygon.face_cent(0);
+  // make sure face_normal points outward
+  if (vdot(face_normal, face_centroid) < 0)
+    face_normal *= -1.0;
+
+  // this gives the same results (from the mathematica algorithm)
+  // for (auto &vert : polygon.raw_verts())
+  //  vert += vdot(face_normal, face_centroid - vert) * face_normal;
+  // return;
+
+  // rotate face to z axis
+  Trans3d trans = Trans3d::rotate(face_normal, Vec3d(0, 0, 1));
+  polygon.transform(trans);
+
+  // refresh face centroid
+  face_centroid = polygon.face_cent(0);
+
+  // set z of all vertices to height of face centroid
+  for (auto &vert : polygon.raw_verts())
+    vert[2] = face_centroid[2];
+
+  // rotate face back to original position
+  polygon.transform(trans.inverse());
+}
+*/
+
+// P and Q are modified
+void move_line_to_point(Vec3d &P, Vec3d &Q, const Vec3d &X)
+{
+  Vec3d Y = X + (Q - P);
+  Vec3d V = P + X;
+  Vec3d P2 = lines_intersection(P, V, X, Y, 0);
+  if (P2.is_set()) {
+    Q += P2 - P;
+    P = P2;
+  }
+}
+
+// RK - edge near points of base seek 1
+bool canonicalize_unit(Geometry &geom, IterationControl it_ctrl,
+                       const double radius_range_percent, const char centering,
+                       const char normal_type, const bool planarize_only)
+{
+  bool completed = false;
+  it_ctrl.set_finished(false);
+
+  vector<vector<int>> edges;
+  geom.get_impl_edges(edges);
+
+  vector<Vec3d> &verts = geom.raw_verts();
+
+  double test_val = it_ctrl.get_test_val();
+  double max_diff2 = 0;
+
+  for (it_ctrl.start_iter(); !it_ctrl.is_done(); it_ctrl.next_iter()) {
+    vector<Vec3d> verts_last = verts;
+
+    if (!planarize_only) {
+      for (auto &edge : edges) {
+        // unit near point
+        Vec3d P = geom.edge_nearpt(edge, Vec3d(0, 0, 0)).unit();
+        move_line_to_point(verts[edge[0]], verts[edge[1]], P);
+      }
+
+      // re-center for drift
+      if (centering == 'e')
+        geom.transform(Trans3d::translate(
+            -edge_nearpoints_centroid(geom, Vec3d(0, 0, 0))));
+      else if (centering == 'v')
+        geom.transform(Trans3d::translate(-centroid(geom.verts())));
+    }
+
+    for (unsigned int f = 0; f < geom.faces().size(); f++) {
+      /*
+            // give polygon its own geom. face index needs to reside in vector
+            vector<int> face_idxs(1);
+            face_idxs[0] = f;
+            Geometry polygon = faces_to_geom(geom, face_idxs);
+            plane_face(polygon);
+
+            // map vertices back into original geom
+            // the numerical order of vertex list in polygon geom is preserved
+            vector<int> v_idx;
+            for (int v : geom.faces(f))
+              v_idx.push_back(v);
+            sort(v_idx.begin(), v_idx.end());
+            int j = 0;
+            for (int v : v_idx)
+              verts[v] = polygon.verts(j++);
+      */
+      // RK - this does formulaically what the above does by brute force
+      Vec3d face_normal = face_normal_by_type(geom, f, normal_type).unit();
+      Vec3d face_centroid = geom.face_cent(f);
+      // make sure face_normal points outward
+      if (vdot(face_normal, face_centroid) < 0)
+        face_normal *= -1.0;
+      // place a planar vertex over or under verts[v]
+      // adds or subtracts it to get to the planar verts[v]
+      for (int v : geom.faces(f))
+        verts[v] += vdot(face_normal, face_centroid - verts[v]) * face_normal;
+    }
+
+    string finish_msg;
+    if (it_ctrl.is_status_check_iter()) {
+      // len2() for difference value to minimize internal sqrt() calls
+      max_diff2 = 0;
+      for (unsigned int i = 0; i < verts.size(); i++) {
+        double diff2 = (verts[i] - verts_last[i]).len2();
+        if (diff2 > max_diff2)
+          max_diff2 = diff2;
+      }
+
+      if (sqrt(max_diff2) < test_val) {
+        completed = true;
+        it_ctrl.set_finished();
+        finish_msg = "solved, test value achieved";
+      }
+      else if (it_ctrl.is_last_iter()) {
+        // reached last iteration without solving
+        it_ctrl.set_finished();
+        finish_msg = "not solved, test value not achieved";
+      }
+
+      // check if radius is expanding or contracting unreasonably,
+      // but only for the purpose of finishing early
+      // if minimum and maximum radius are differing, the polyhedron is
+      // crumpling
+      if (radius_range_percent &&
+          canonical_radius_range_test(geom, radius_range_percent)) {
+        if (!it_ctrl.is_finished())
+          it_ctrl.set_finished();
+        finish_msg = "breaking out: radius range detected. try increasing -d";
+      }
+    }
+
+    if (it_ctrl.is_status_report_iter()) {
+      if (it_ctrl.is_finished())
+        it_ctrl.print("Final iteration (%s):\n", finish_msg.c_str());
+
+      it_ctrl.print("%-12u max_diff:%17.15e\n", it_ctrl.get_current_iter(),
+                    sqrt(max_diff2));
+    }
   }
 
   return completed;
 }
 
-// RK - wrapper for basic planarization with minmax -a u algorithm
+// RK - wrapper for basic planarization with unit algorithm
 // meant to be called with finite num_iters (not -1)
-bool minmax_unit_planar(Geometry &geom, const int num_iters,
-                        const int rep_count, const double eps)
+// for an internal call from conway
+bool planarize_unit(Geometry &geom, IterationControl it_ctrl)
 {
+  double radius_range_percent = 0;
+  char centering = 'x';
   char normal_type = 'n';
-  return (minmax_unit_planar(geom, 1.0 / 200, 1.0 / 200, 1.0 / 200, num_iters,
-                             DBL_MAX, rep_count, normal_type, eps));
-}
-
-// RK - wrapper for basic planarization with minmax -a u algorithm
-// copy, controls radius_range_percent, normal_type
-bool minmax_unit_planar(Geometry &geom, const int num_iters,
-                        const double radius_range_percent, const int rep_count,
-                        const char normal_type, const double eps)
-{
-  return (minmax_unit_planar(geom, 1.0 / 200, 1.0 / 200, 1.0 / 200, num_iters,
-                             radius_range_percent, rep_count, normal_type,
-                             eps));
+  bool planarize_only = true;
+  return canonicalize_unit(geom, it_ctrl, radius_range_percent, centering,
+                           normal_type, planarize_only);
 }
 
 } // namespace anti

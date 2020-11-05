@@ -29,7 +29,7 @@ Conway Notation detailed help. seeds and operator descriptions
 apply Conway Notation string substitutions
 .TP
 \fB\-g\fR
-use George Hart algorithms (sets \fB\-s\fR, \fB\-p\fR m or \fB\-p\fR x cannot be used)
+use George Hart algorithms (sets \fB\-s\fR)
 .HP
 \fB\-c\fR <op=s> user defined operation strings in the form of op,string
 .IP
@@ -38,7 +38,7 @@ string can be any operations. More than one <op=s> can be used
 Examples: \fB\-c\fR x=kt,y=tk,v=dwd or \fB\-c\fR x=kt \fB\-c\fR y=tk \fB\-c\fR v=dwd
 .TP
 \fB\-t\fR
-tile mode. when input is a 2D tiling. unsets \fB\-g\fR  sets \fB\-p\fR u
+tile mode. when input is a 2D tiling. unsets \fB\-g\fR
 .IP
 set if seed of Z is detected
 .TP
@@ -51,44 +51,41 @@ make final product be averge unit edge length
 \fB\-v\fR
 verbose output
 .HP
-\fB\-o\fR <file> write output to file (default: write to standard output)
-.PP
-Planarization options (use canonical program to canonicalize output)
-.HP
-\fB\-p\fR <mthd> inter\-step planarization method
+\fB\-i\fR <itrs> maximum planarize iterations. \fB\-1\fR for unlimited (default: 1000)
 .IP
-p \- face centroids (magnitude squared) (default)
-m \- mathematica planarize
-c \- mathematica canonicalize
-u \- make faces into unit\-edged regular polygons (minmax \fB\-a\fR u)
-x \- none
-.HP
-\fB\-i\fR <itrs> maximum inter\-step planarization iterations (default: 1000)
-.TP
-\fB\-z\fR <n>
-status reporting every n iterations, \fB\-1\fR for no status (default: \fB\-1\fR)
+WARNING: unstable models may not finish unless \fB\-i\fR is set
 .TP
 \fB\-l\fR <lim>
 minimum distance change to terminate planarization, as negative
 .IP
 exponent (default: 12 giving 1e\-12)
+.IP
+WARNING: high values can cause non\-terminal behaviour. Use \fB\-i\fR
+.HP
+\fB\-z\fR <nums> number of iterations between status reports (implies termination
+.IP
+check) (0 for final report only, \fB\-1\fR for no report), optionally
+followed by a comma and the number of iterations between
+termination checks (0 for report checks only) (default: \fB\-1\fR,1)
+.HP
+\fB\-o\fR <file> write output to file (default: write to standard output)
 .PP
-Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
+Colouring Options (run 'off_util \fB\-H\fR colour' for help on colour formats)
 .TP
 \fB\-V\fR <col>
-vertex color (default: gold)
+vertex colour (default: gold)
 .TP
 \fB\-E\fR <col>
-edge color   (default: lightgray)
+edge colour   (default: lightgray)
 .HP
-\fB\-f\fR <mthd> mthd is face coloring method using color in map (default: n)
+\fB\-f\fR <mthd> mthd is face colouring method using colour in map (default: n)
 .IP
-key word: none \- sets no color
+key word: none \- sets no colour
 n \- by number of sides
-s \- symmetric coloring
-u \- unique coloring
+s \- symmetric colouring
+u \- unique colouring
 o \- newly created faces by operation
-w \- resolve color indexes (overrides \fB\-V\fR)
+w \- resolve colour indexes (overrides \fB\-V\fR)
 .HP
 \fB\-C\fR <mthd> colouring method for tiles: none, index, value, association
 .IP
@@ -98,18 +95,18 @@ association associates tiles with base geometry element colours
 (when \fB\-f\fR w is set)
 .TP
 \fB\-R\fR <opt>
-built in seed coloring: one=1, unique=2, symmetry=3 (default: 1)
+built in seed colouring: one=1, unique=2, symmetry=3 (default: 1)
 .HP
 \fB\-T\fR <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
 .HP
 \fB\-O\fR <strg> face transparency pattern string (\fB\-f\fR n only). valid values
 .IP
-0 \- map color alpha value, 1 \fB\-T\fR alpha applied (default: '1')
+0 \- map colour alpha value, 1 \fB\-T\fR alpha applied (default: '1')
 .HP
-\fB\-m\fR <maps> color maps for faces to be tried in turn (default: m1, for \fB\-g\fR, m2)
+\fB\-m\fR <maps> colour maps for faces to be tried in turn (default: m1, for \fB\-g\fR, m2)
 .TP
 keyword m1: red,darkorange1,yellow,darkgreen,cyan,blue,magenta,
-white,grey,black
+white,gray,black
 .TP
 keyword m2: red,blue,green,yellow,brown,magenta,purple,grue,
 gray,orange (from George Hart's original applet)

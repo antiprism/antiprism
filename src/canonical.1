@@ -40,14 +40,15 @@ x \- not moved
 \fB\-p\fR <opt>
 planarization (done before canoncalization. default: none)
 .IP
-p \- face centroids (magnitude squared)
-q \- face centroids (magnitude)
-f \- face centroids
+q \- face centroids magnitude squared
 m \- mathematica planarize
 a \- sand and fill planarize
-u \- make faces into unit\-edged regular polygons (minmax \fB\-a\fR u)
+p \- fast planarize (poly_form \fB\-a\fR p)
+r \- make faces into unit\-edged regular polygons (poly_form \fB\-a\fR r)
 .HP
-\fB\-i\fR <itrs> maximum number of planarize iterations (default: no limit)
+\fB\-i\fR <itrs> maximum planarize iterations. \fB\-1\fR for unlimited (default: \fB\-1\fR)
+.IP
+WARNING: unstable models may not finish unless \fB\-i\fR is set
 .TP
 \fB\-c\fR <opt>
 canonicalization
@@ -57,16 +58,18 @@ b \- base/dual version (reciprocate on face normals)
 a \- moving edge version
 x \- none (default, if \fB\-p\fR is set)
 .HP
-\fB\-n\fR <itrs> maximum number of canonical iterations (default: no limit)
+\fB\-n\fR <itrs> maximum canonical iterations. \fB\-1\fR for unlimited (default: \fB\-1\fR)
+.IP
+WARNING: unstable models may not finish unless \fB\-n\fR is set
 .HP
 \fB\-O\fR <args> output b \- base, d \- dual, i \- intersection points (default: b)
 .IP
 n \- base edge near points, m \- dual edge near points
-p \- base near points centeroid, q \- dual near points centroid
-u \- minimum tangent sphere, U \- maximum, o \- origin point
-s \- base incircles, S \- rings, t \fB\-dual\fR incircles, T \fB\-rings\fR
+p \- base near points centroid, q \- dual near points centroid
+u \- minimum tangent sphere, U \- maximum; o \- origin point
+s \- base incircles, S \- rings; t \- dual incircles, T \- rings
 .HP
-\fB\-q\fR <dist> offset for incircles to avoid coplanarity e.g 0.0001 (default: 0.0)
+\fB\-q\fR <dist> offset for incircles to avoid coplanarity e.g 0.0001 (default: 0)
 .TP
 \fB\-g\fR <opt>
 roundness of tangent sphere, positive integer n (default: 8)
@@ -74,48 +77,61 @@ roundness of tangent sphere, positive integer n (default: 8)
 \fB\-x\fR <opt>
 Normals: n \- Newell's, t \- triangles, q \- quads (default: Newell's)
 .HP
-\fB\-d\fR <perc> radius test. precent difference between minumum and maximum radius
+\fB\-d\fR <perc> radius test. percent difference between minimum and maximum radius
 .IP
-checks if polyhedron is collapsing. 0 for no test (default: 80)
-.TP
-\fB\-z\fR <n>
-status reporting every n lines. \fB\-1\fR for no status. (default: 1000)
+checks if polyhedron is collapsing. 0 for no test
+(default: 80 for canonicalizing, not used for planarizing)
 .TP
 \fB\-l\fR <lim>
 minimum distance change to terminate, as negative exponent
 .IP
 (default: 12 giving 1e\-12)
+.IP
+WARNING: high values can cause non\-terminal behaviour. Use \fB\-n\fR
+.HP
+\fB\-z\fR <nums> number of iterations between status reports (implies termination
+.IP
+check) (0 for final report only, \fB\-1\fR for no report), optionally
+followed by a comma and the number of iterations between
+termination checks (0 for report checks only) (default: 1000,1)
 .HP
 \fB\-o\fR <file> write output to file (default: write to standard output)
 .PP
-Mathematica Canonicalize Options (\fB\-c\fR m and \fB\-p\fR m)
-.HP
+Extra Options
+.IP
+for (\fB\-c\fR m and \fB\-p\fR m)
 \fB\-E\fR <perc> percentage to scale the edge tangency error (default: 50)
-.HP
 \fB\-P\fR <perc> percentage to scale the face planarity error (default: 20)
-.TP
-\fB\-A\fR
-alterate algorithm. try if imbalance in result (\fB\-c\fR m only)
+\fB\-A\fR        alternate algorithm. try if imbalance in result (\fB\-c\fR m only)
+for (\fB\-p\fR r and \fB\-p\fR p)
+\fB\-S\fR <perc> percentage to shorten longest edges on iteration (default: 1)
+\fB\-K\fR <perc> percentage to reduce polygon radius on iteration
+.IP
+(default: value of \fB\-S\fR)
+.HP
+\fB\-F\fR <perc> percentage to reduce distance of vertex from face plane (\fB\-p\fR rp)
+.IP
+on iteration (default: value of \fB\-S\fR)
 .PP
-Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
+Colouring Options (run 'off_util \fB\-H\fR colour' for help on colour formats)
 .TP
 \fB\-I\fR <col>
-intersection points and/or origin color (default: yellow)
+intersection points and/or origin colour (default: yellow)
 .TP
 \fB\-N\fR <col>
-base near points, centroid, incircles color (default: red)
+base near points, centroid, incircles colour (default: red)
 .TP
 \fB\-M\fR <col>
-dual near points, centroid, incircles color (default: darkgreen)
+dual near points, centroid, incircles colour (default: darkgreen)
 .TP
 \fB\-B\fR <col>
-base edge color (default: unchanged)
+base edge colour (default: unchanged)
 .TP
 \fB\-D\fR <col>
-dual edge color (default: unchanged)
+dual edge colour (default: unchanged)
 .TP
 \fB\-U\fR <col>
-unit sphere color (default: white)
+unit sphere colour (default: white)
 .HP
 \fB\-T\fR <tran> base/dual transparency. range from 0 (invisible) to 255 (opaque)
 .SH "SEE ALSO"

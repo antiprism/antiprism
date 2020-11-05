@@ -30,6 +30,7 @@
 #define GEOMETRYUTILS_H
 
 #include "coloring.h"
+#include "iteration.h"
 #include "normal.h"
 #include "symmetry.h"
 
@@ -348,41 +349,19 @@ bool canonical_radius_range_test(const Geometry &geom,
 /// Canonicalize (George Hart "Mathematica" algorithm)
 /**See http://library.wolfram.com/infocenter/Articles/2012/
  * \param geom geometry to canonicalise.
+ * \param geom it_ctrl interation control.
  * \param edge_factor small number to scale edge adjustments.
  * \param plane_factor small number to scale plane adjustments.
- * \param num_iters maximumn number of iterations.
  * \param radius_range_percent if the model outer radius increases this
  *  much over the inner radius then it is growing too much, terminate.
- * \param rep_count report on propgress after this many iterations.
- * \param alternate_loop use alternate loop.
- * \param planar_only planarise only.
  * \param normal_type: n - Newell, t -triangles, q - quads (default n)
- * \param eps a small number, coordinates differing by less than eps are
- *  the same. */
-bool canonicalize_mm(Geometry &geom, const double edge_factor,
-                     const double plane_factor, const int num_iters,
-                     const double radius_range_percent, const int rep_count,
-                     const bool alternate_loop, const bool planar_only,
-                     const char normal_type = 'n', const double eps = epsilon);
-
-/// an abbreviated wrapper for canonicalization with mathematica
-/**\param geom geometry to planarize.
- * \param num_iters maximumn number of iterations.
- * \param rep_count report on propgress after this many iterations.
- * \param eps a small number, coordinates differing by less than eps are
- *  the same. */
-bool canonicalize_mm(Geometry &geom, const int num_iters,
-                     const int rep_count = -1, const double eps = epsilon);
-
-/// an abbreviated wrapper for planarize with mathematica
-/**\param geom geometry to planarize.
- * \param num_iters maximumn number of iterations.
- * \param rep_count report on propgress after this many iterations.
- * \param eps a small number, coordinates differing by less than eps are
- *  the same.
+ * \param alternate_loop use alternate loop.
+ * \param planarize_only planarise only.
  * \return \c true if success, otherwise \c false */
-bool planarize_mm(Geometry &geom, const int num_iters, const int rep_count = -1,
-                  const double eps = epsilon);
+bool canonicalize_mm(Geometry &geom, IterationControl it_ctrl,
+                     const double edge_factor, const double plane_factor,
+                     const double radius_range_percent, const char normal_type,
+                     const bool alternate_loop, const bool planarize_only);
 
 /// returns the edge near points centroid
 /**\param geom geometry to measure
@@ -394,82 +373,71 @@ Vec3d edge_nearpoints_centroid(Geometry &geom,
 /// Canonicalize (George Hart "Conway Notation" algorithm)
 /**See http://www.georgehart.com/virtual-polyhedra/conway_notation.html
  * \param base geometry to canonicalise.
- * \param canonical_method - 'b': base/dual, 'p': adjust vertices with
- * side effect of planarization (len2() version), 'q': adjust vertices with
- * side effect of planarization (len() version), case 'f': use face centres.
- * \param num_iters maximumn number of iterations.
+ * \param geom it_ctrl interation control.
+ * \param canonical_method - 'b': base/dual, 'q': adjust vertices with
+ * side effect of planarization (len2() version)
  * \param radius_range_percent if the model outer radius increases this
  *  much over the inner radius then it is growing too much, terminate.
- * \param rep_count report on propgress after this many iterations.
  * \param centering passed from canonical program, when centering is not used
  * \param normal_type: n - Newell, t -triangles, q - quads (default n)
- * \param eps a small number, coordinates differing by less than eps are
- *  the same.
  * \return \c true if success, otherwise \c false */
-bool canonicalize_bd(Geometry &base, const int num_iters,
+bool canonicalize_bd(Geometry &base, IterationControl it_ctrl,
                      const char canonical_method,
-                     const double radius_range_percent, const int rep_count,
-                     const char centering, const char normal_type = 'n',
-                     const double eps = epsilon);
+                     const double radius_range_percent, const char centering,
+                     const char normal_type);
 
-/// an abbreviated wrapper for canonicalization with the base/dual method
+/// an abbreviated wrapper for planarization with the base/dual method
 /**\param geom geometry to planarize.
- * \param num_iters maximumn number of iterations.
- * \param rep_count report on propgress after this many iterations.
- * \param eps a small number, coordinates differing by less than eps are
- *  the same. */
-bool canonicalize_bd(Geometry &geom, const int num_iters,
-                     const int rep_count = -1, const double eps = epsilon);
+ * \param geom it_ctrl interation control.
+ * \return \c true if success, otherwise \c false */
+bool planarize_bd(Geometry &geom, IterationControl it_ctrl);
 
-/// an abbreviated wrapper for planarize with the base/dual method
-/**\param geom geometry to planarize.
- * \param num_iters maximumn number of iterations.
- * \param rep_count report on propgress after this many iterations.
- * \param eps a small number, coordinates differing by less than eps are
- *  the same. */
-bool planarize_bd(Geometry &geom, const int num_iters, const int rep_count = -1,
-                  const double eps = epsilon);
-
-/// minmax_unit() ported from minmax (-a u)
+/// make_regular_faces() from poly_form (-a r)
 /**\param geom geometry to make polygons near unit edge.
+ * \param geom it_ctrl interation control.
  * \param shorten_factor small number to scale edge adjustments.
  * \param plane_factor small number to scale plane adjustments.
  * \param radius_factor small number to scale radius adjustments.
- * \param num_iters maximumn number of iterations.
+ * \param sym_str to speed up code when symmetry is present.
+ * \return status, evaluates to \c true completed, otherwise false.*/
+Status make_regular_faces2(Geometry &geom, IterationControl it_ctrl,
+                           const double shorten_factor,
+                           const double plane_factor,
+                           const double radius_factor,
+                           const std::string &sym_str);
+
+/// an abbreviated wrapper for planarization with make_regular_faces
+/**\param geom geometry to planarize.
+ * \param geom it_ctrl interation control.
+ * \return status, evaluates to \c true completed, otherwise false.*/
+Status make_regular_faces(Geometry &geom, IterationControl it_ctrl);
+
+/// an abbreviated wrapper for planarization with make_regular_faces
+/**\param geom geometry to planarize.
+ * \param geom it_ctrl interation control.
+ * \param plane_factor small number to scale plane adjustments.
+ * \return status, evaluates to \c true completed, otherwise false.*/
+Status make_planar2(Geometry &base_geom, IterationControl it_ctrl,
+                    double plane_factor);
+
+/// RK - edge near points of base seek 1
+/**\param geom geometry to canonicalise.
+ * \param geom it_ctrl interation control.
  * \param radius_range_percent if the model outer radius increases this
  *  much over the inner radius then it is growing too much, terminate.
- * \param rep_count report on propgress after this many iterations.
- * \param normal_type: n - Newell, t -triangles, q - quads (default n)
- * \param eps a small number, coordinates differing by less than eps are
- *  the same. */
-bool minmax_unit_planar(Geometry &geom, const double shorten_factor,
-                        const double plane_factor, const double radius_factor,
-                        const int num_iters, const double radius_range_percent,
-                        const int rep_count, const char normal_type = 'n',
-                        const double eps = epsilon);
+ * \param centering passed from canonical program, when centering is not used
+ * \param normal_type : n - Newell, t - triangles, q - quads(default n)
+ * \param planarize_only planarise only.
+ * \return \c true if success, otherwise \c false */
+bool canonicalize_unit(Geometry &geom, IterationControl it_ctrl,
+                       const double radius_range_percent, const char centering,
+                       const char normal_type, const bool planarize_only);
 
-/// an abbreviated wrapper for minmax_unit_planar
+/// an abbreviated wrapper for planarization with canonicalize_unit
 /**\param geom geometry to planarize.
- * \param num_iters maximumn number of iterations.
- * \param rep_count report on propgress after this many iterations.
- * \param eps a small number, coordinates differing by less than eps are
- *  the same. */
-bool minmax_unit_planar(Geometry &geom, const int num_iters,
-                        const int rep_count = -1, const double eps = epsilon);
-
-/// an abbreviated wrapper for minmax_unit_planar, controls radius_range_percent
-/**\param geom geometry to planarize.
- * \param num_iters maximumn number of iterations.
- * \param radius_range_percent if the model outer radius increases this
- *  much over the inner radius then it is growing too much, terminate.
- * \param rep_count report on propgress after this many iterations.
- * \param normal_type: n - Newell, t -triangles, q - quads (default n)
- * \param eps a small number, coordinates differing by less than eps are
- *  the same. */
-bool minmax_unit_planar(Geometry &geom, const int num_iters,
-                        const double radius_range_percent,
-                        const int rep_count = -1, const char normal_type = 'n',
-                        const double eps = epsilon);
+ * \param geom it_ctrl interation control
+ * \return \c true if success, otherwise \c false */
+bool planarize_unit(Geometry &geom, IterationControl it_ctrl);
 
 /// Close polyhedron (basic)
 /**Each hole (open circuit of edges) is converted to a face with colour col
