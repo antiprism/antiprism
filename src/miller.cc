@@ -367,7 +367,6 @@ void color_stellation(Geometry &stellation, const miller_opts &opts)
 }
 
 struct MillerItem {
-  int number;
   const char *cell_string;
   const char *sub_sym;
   bool remove_inline_verts;
@@ -407,89 +406,89 @@ public:
 */
 
 // clang-format off
-// Table of miller Models which are not Uniforms
+// Table of miller Models which are not Uniforms, 75 items
 // Number, Cells, symmetry, remove inline vertices
 // f1 left handed form represented by f3
 MillerItem miller_item_list[] = {
    // Full symmetry
-   {  1, "A",          "Ih", true  }, // w4
-   {  2, "B",          "Ih", true  }, // w26
-   {  3, "C",          "Ih", true  }, // w23
-   {  4, "D",          "Ih", true  },
-   {  5, "E",          "Ih", true  },
-   {  6, "F",          "Ih", true  }, // w27
-   {  7, "G",          "Ih", true  }, // w41
-   {  8, "H",          "Ih", true  }, // w42
-   {  9, "e1",         "Ih", true  }, // w37
-   { 10, "f1",         "Ih", false },
-   { 11, "g1",         "Ih", true  }, // w29
-   { 12, "e1f1",       "Ih", false },
-   { 13, "e1f1g1",     "Ih", true  },
-   { 14, "f1g1",       "Ih", false },
-   { 15, "e2",         "Ih", true  }, // cells
-   { 16, "f2",         "Ih", true  },
-   { 17, "g2",         "Ih", false }, // cells, faces not merged
-   { 18, "e2f2",       "Ih", true  },
-   { 19, "e2f2g2",     "Ih", true  },
-   { 20, "f2g2",       "Ih", true  }, // w30
-   { 21, "De1",        "Ih", true  }, // w32
-   { 22, "Ef1",        "Ih", true  }, // w25
-   { 23, "Fg1",        "Ih", true  }, // w31
-   { 24, "De1f1",      "Ih", true  }, // cells, faces not merged
-   { 25, "De1f1g1",    "Ih", true  },
-   { 26, "Ef1g1",      "Ih", true  }, // w28
-   { 27, "De2",        "Ih", true  },
-   { 28, "Ef2",        "Ih", true  },
-   { 29, "Fg2",        "Ih", true  }, // w33
-   { 30, "De2f2",      "Ih", true  }, // w34
-   { 31, "De2f2g2",    "Ih", true  },
-   { 32, "Ef2g2",      "Ih", true  }, // cells
+   { "A",          "Ih", true  }, // w4
+   { "B",          "Ih", true  }, // w26
+   { "C",          "Ih", true  }, // w23
+   { "D",          "Ih", true  },
+   { "E",          "Ih", true  },
+   { "F",          "Ih", true  }, // w27
+   { "G",          "Ih", true  }, // w41
+   { "H",          "Ih", true  }, // w42
+   { "e1",         "Ih", true  }, // w37
+   { "f1",         "Ih", false },
+   { "g1",         "Ih", true  }, // w29
+   { "e1f1",       "Ih", false },
+   { "e1f1g1",     "Ih", true  },
+   { "f1g1",       "Ih", false },
+   { "e2",         "Ih", true  }, // cells
+   { "f2",         "Ih", true  },
+   { "g2",         "Ih", false }, // cells, faces not merged
+   { "e2f2",       "Ih", true  },
+   { "e2f2g2",     "Ih", true  },
+   { "f2g2",       "Ih", true  }, // w30
+   { "De1",        "Ih", true  }, // w32
+   { "Ef1",        "Ih", true  }, // w25
+   { "Fg1",        "Ih", true  }, // w31
+   { "De1f1",      "Ih", true  }, // cells, faces not merged
+   { "De1f1g1",    "Ih", true  },
+   { "Ef1g1",      "Ih", true  }, // w28
+   { "De2",        "Ih", true  },
+   { "Ef2",        "Ih", true  },
+   { "Fg2",        "Ih", true  }, // w33
+   { "De2f2",      "Ih", true  }, // w34
+   { "De2f2g2",    "Ih", true  },
+   { "Ef2g2",      "Ih", true  }, // cells
    // Enantiomeric
-   { 33, "f1'",        "I",  true  }, // w35
-   { 34, "e1f1'",      "I",  true  }, // w36
-   { 35, "De1f1'",     "I",  false },
-   { 36, "f1'g1",      "I",  false },
-   { 37, "e1f1'g1",    "I",  false }, // w39
-   { 38, "De1f1'g1",   "I",  false },
-   { 39, "f1'g2",      "I",  false },
-   { 40, "e1f1'g2",    "I",  true  }, // cells, faces not merged
-   { 41, "De1f1'g2",   "I",  true  }, // cells, faces not merged
-   { 42, "f1'f2g2",    "I",  true  },
-   { 43, "e1f1'f2g2",  "I",  true  },
-   { 44, "De1f1'f2g2", "I",  true  }, // cells
-   { 45, "e2f1'",      "I",  false }, // w40
-   { 46, "De2f1'",     "I",  true  },
-   { 47, "Ef1'",       "I",  true  }, // w24
-   { 48, "e2f1'g1",    "I",  false },
-   { 49, "De2f1'g1",   "I",  true  },
-   { 50, "Ef1'g1",     "I",  true  },
-   { 51, "e2f1'f2",    "I",  true  }, // w38
-   { 52, "De2f1'f2",   "I",  true  },
-   { 53, "Ef1'f2",     "I",  true  },
-   { 54, "e2f1'f2g1",  "I",  true  },
-   { 55, "De2f1'f2g1", "I",  true  },
-   { 56, "Ef1'f2g1",   "I",  true  },
-   { 57, "e2f1'f2g2",  "I",  true  },
-   { 58, "De2f1'f2g2", "I",  true  },
-   { 59, "Ef1'f2g2",   "I",  true  },
+   { "f1'",        "I",  true  }, // w35
+   { "e1f1'",      "I",  true  }, // w36
+   { "De1f1'",     "I",  false },
+   { "f1'g1",      "I",  false },
+   { "e1f1'g1",    "I",  false }, // w39
+   { "De1f1'g1",   "I",  false },
+   { "f1'g2",      "I",  false },
+   { "e1f1'g2",    "I",  true  }, // cells, faces not merged
+   { "De1f1'g2",   "I",  true  }, // cells, faces not merged
+   { "f1'f2g2",    "I",  true  },
+   { "e1f1'f2g2",  "I",  true  },
+   { "De1f1'f2g2", "I",  true  }, // cells
+   { "e2f1'",      "I",  false }, // w40
+   { "De2f1'",     "I",  true  },
+   { "Ef1'",       "I",  true  }, // w24
+   { "e2f1'g1",    "I",  false },
+   { "De2f1'g1",   "I",  true  },
+   { "Ef1'g1",     "I",  true  },
+   { "e2f1'f2",    "I",  true  }, // w38
+   { "De2f1'f2",   "I",  true  },
+   { "Ef1'f2",     "I",  true  },
+   { "e2f1'f2g1",  "I",  true  },
+   { "De2f1'f2g1", "I",  true  },
+   { "Ef1'f2g1",   "I",  true  },
+   { "e2f1'f2g2",  "I",  true  },
+   { "De2f1'f2g2", "I",  true  },
+   { "Ef1'f2g2",   "I",  true  },
    // begin the true lost stellations
-   { 60, "Be1",        "Ih", true  },
-   { 61, "Ce2",        "Ih", true  },
-   { 62, "Df1",        "I",  true  },
-   { 63, "Af2",        "Ih", true  },
-   { 64, "Df2",        "Ih", true  },
-   { 65, "De1f1'f2",   "I",  true  },
-   { 66, "De1g1",      "Ih", true  },
-   { 67, "Af2g1",      "Ih", true  },
-   { 68, "De1f1'f2g1", "I",  true  },
-   { 69, "Af2g2",      "Ih", true  },
+   { "Be1",        "Ih", true  },
+   { "Ce2",        "Ih", true  },
+   { "Df1",        "I",  true  },
+   { "Af2",        "Ih", true  },
+   { "Df2",        "Ih", true  },
+   { "De1f1'f2",   "I",  true  },
+   { "De1g1",      "Ih", true  },
+   { "Af2g1",      "Ih", true  },
+   { "De1f1'f2g1", "I",  true  },
+   { "Af2g2",      "Ih", true  },
    // begin the candidate lost stellations
-   { 70, "Be2",        "Ih", true  },
-   { 71, "De2f2",      "Ih", true  },
-   { 72, "e1g1",       "Ih", true  },
-   { 73, "Ef1g1",      "Ih", true  },
-   { 74, "Cf2g1",      "Ih", true  },
-   { 75, "ACDf2g1",    "Ih", true  },
+   { "Be2",        "Ih", true  },
+   { "De2f2",      "Ih", true  },
+   { "e1g1",       "Ih", true  },
+   { "Ef1g1",      "Ih", true  },
+   { "Cf2g1",      "Ih", true  },
+   { "ACDf2g1",    "Ih", true  },
 };
 // clang-format on
 
