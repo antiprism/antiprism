@@ -25,7 +25,7 @@
 #include <algorithm>
 #include <functional>
 #include <regex>
-#include <string.h>
+#include <cstring>
 #include <string>
 #include <vector>
 

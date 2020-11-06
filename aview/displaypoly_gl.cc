@@ -43,7 +43,7 @@
 #include <OpenGL/glu.h>
 #endif
 
-#include <string.h>
+#include <cstring>
 #include <vector>
 
 #include "../base/antiprism.h"

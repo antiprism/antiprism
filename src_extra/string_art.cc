@@ -28,9 +28,9 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
 
 #include <string>
 #include <vector>

@@ -28,8 +28,8 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 #include <map>
 #include <set>
@@ -1194,7 +1194,7 @@ int get_winding_number_polygon(const Geometry &polygon,
     // projection index = 2;
     int wn = 0;
     wn_PnPoly(pgon, pts[i], 2, wn, eps);
-    if ((abs(wn) > abs(winding_number)) ||
+    if ((std::abs(wn) > std::abs(winding_number)) ||
         ((wn > 0) && (wn == -winding_number)))
       winding_number = wn;
   }

@@ -26,9 +26,9 @@
    \brief Read OFF files
 */
 
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
 
 #include <algorithm>
 #include <string>

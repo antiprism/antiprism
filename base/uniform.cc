@@ -114,12 +114,12 @@ U69   great inverted snub icosidodecahedron
 U74   great retrosnub icosidodecahedron
 */
 
-#include <float.h>
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cfloat>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
 
-#include <ctype.h>
+#include <cctype>
 #include <unistd.h>
 
 #include <string>

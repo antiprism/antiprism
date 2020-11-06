@@ -31,7 +31,7 @@
 #ifndef POVWRITER_H
 #define POVWRITER_H
 
-#include <stdio.h>
+#include <cstdio>
 
 #include <string>
 #include <vector>

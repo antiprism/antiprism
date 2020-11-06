@@ -29,10 +29,10 @@
 */
 
 #include <algorithm>
-#include <ctype.h>
+#include <cctype>
 #include <map>
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <cstring>
 #include <string>
 #include <vector>
 

@@ -29,8 +29,8 @@
 #include <algorithm>
 #include <map>
 #include <set>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 #include "geometryinfo.h"
 #include "mathutils.h"

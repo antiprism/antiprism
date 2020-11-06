@@ -31,9 +31,9 @@
 #include <algorithm>
 #include <cctype>
 #include <functional>
-#include <math.h>
+#include <cmath>
 #include <memory>
-#include <string.h>
+#include <cstring>
 #include <string>
 #include <vector>
 

@@ -28,11 +28,11 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <ctype.h>
-#include <math.h>
+#include <cctype>
+#include <cmath>
 #include <set>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 #include <string>
 #include <utility>
 #include <vector>

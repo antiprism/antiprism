@@ -33,8 +33,8 @@
 #include "trans3d.h"
 #include "vec3d.h"
 #include "vec4d.h"
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <string>
 #include <vector>
 

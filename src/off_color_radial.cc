@@ -28,10 +28,10 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <ctype.h>
-#include <float.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cctype>
+#include <cfloat>
+#include <cstdio>
+#include <cstdlib>
 
 #include <set>
 #include <string>

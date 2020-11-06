@@ -29,8 +29,8 @@
 #ifndef CONST_H
 #define CONST_H
 
-#include <math.h>
-#include <stddef.h>
+#include <cmath>
+#include <cstddef>
 
 namespace anti {
 // frequently used constants

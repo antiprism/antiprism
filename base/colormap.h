@@ -33,7 +33,7 @@
 #include "geometry.h"
 #include "random.h"
 #include "status.h"
-#include <limits.h>
+#include <climits>
 #include <map>
 #include <vector>
 

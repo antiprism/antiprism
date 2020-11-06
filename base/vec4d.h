@@ -31,11 +31,12 @@
 #ifndef VEC4D_H
 #define VEC4D_H
 
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+
 #include "random.h"
 #include "status.h"
-#include <cmath>
-#include <stdio.h>
-#include <stdlib.h>
 
 namespace anti {
 

@@ -52,7 +52,7 @@
    The cube's not in the above list because it's a prism.
 */
 
-#include <ctype.h>
+#include <cctype>
 #include <string>
 #include <vector>
 

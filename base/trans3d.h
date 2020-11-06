@@ -31,7 +31,7 @@
 
 #include "vec3d.h"
 #include "vec4d.h"
-#include <math.h>
+#include <cmath>
 #include <vector>
 
 namespace anti {

@@ -35,7 +35,7 @@
 
 #include "geometry.h"
 #include "trans3d.h"
-#include <math.h>
+#include <cmath>
 
 namespace anti {
 

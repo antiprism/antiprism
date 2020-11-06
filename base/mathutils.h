@@ -30,7 +30,7 @@
 #define MATHUTILS_H
 
 #include <algorithm>
-#include <math.h>
+#include <cmath>
 
 #include "const.h"
 

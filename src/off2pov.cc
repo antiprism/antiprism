@@ -27,9 +27,9 @@
 */
 
 #include "../base/antiprism.h"
-#include <ctype.h>
-#include <math.h>
-#include <string.h>
+#include <cctype>
+#include <cmath>
+#include <cstring>
 #include <string>
 #include <vector>
 

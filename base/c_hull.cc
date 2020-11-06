@@ -26,8 +26,8 @@
    \brief wrapper around qhull for convex hulls and delaunay edges.
 */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 #include <algorithm>
 #include <functional>

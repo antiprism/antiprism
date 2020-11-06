@@ -33,7 +33,7 @@
 #include "programopts.h"
 #include "utils.h"
 #include <map>
-#include <string.h>
+#include <cstring>
 
 using std::map;
 using std::string;

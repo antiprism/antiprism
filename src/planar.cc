@@ -28,11 +28,11 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <float.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cfloat>
+#include <cstdio>
+#include <cstdlib>
 
-#include <ctype.h>
+#include <cctype>
 
 #include <algorithm>
 #include <map>
@@ -1402,9 +1402,9 @@ bool winding_rule_filter(int winding_rule_mode, int winding_rule,
 
   // negative winding rule mode means do absolute value comparison
   if (winding_rule_mode < 0) {
-    winding_rule_mode = abs(winding_rule_mode);
-    winding_rule = abs(winding_rule);
-    winding_number = abs(winding_number);
+    winding_rule_mode = std::abs(winding_rule_mode);
+    winding_rule = std::abs(winding_rule);
+    winding_number = std::abs(winding_number);
   }
 
   if (winding_rule_mode == 0) {
@@ -1541,7 +1541,7 @@ void sample_colors(Geometry &sgeom, const Geometry &cgeom,
           // if merging, find largest magnitude of winding number
           // if they are -W and +W, chose the positive
           if (opts.planar_merge_type == 2) {
-            if ((abs(winding_number) > abs(winding_total)) ||
+            if ((std::abs(winding_number) > std::abs(winding_total)) ||
                 ((winding_number > 0) && (winding_number == -winding_total)))
               winding_total = winding_number;
           }
@@ -1600,7 +1600,7 @@ void sample_colors(Geometry &sgeom, const Geometry &cgeom,
       int wtotal = winding_total;
       // if absolute value of winding numbers (or their negative) are colored
       if (opts.color_by_winding_number != 'w') {
-        wtotal = abs(wtotal);
+        wtotal = std::abs(wtotal);
         if (opts.color_by_winding_number == 'n')
           wtotal = -wtotal;
       }
@@ -2295,7 +2295,7 @@ void resolve_winding_number_indexes(Geometry &geom, const ColorMapMulti &map,
       if (c_idx >= 0)
         geom.colors(FACES).set(i, map.get_col(c_idx));
       else
-        geom.colors(FACES).set(i, map_negative.get_col(abs(c_idx)));
+        geom.colors(FACES).set(i, map_negative.get_col(std::abs(c_idx)));
     }
   }
 }
@@ -2355,7 +2355,7 @@ void color_by_winding_number_raw(Geometry &geom,
 
     // if absolute value of winding numbers (or their negative) are colored
     if (color_by_winding_number != 'w') {
-      wtotal = abs(wtotal);
+      wtotal = std::abs(wtotal);
       if (color_by_winding_number == 'n')
         wtotal = -wtotal;
     }

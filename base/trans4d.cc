@@ -26,7 +26,7 @@
    \brief Matrix transformations for 4D geometry.
 */
 
-#include <stdio.h>
+#include <cstdio>
 
 #include "trans4d.h"
 

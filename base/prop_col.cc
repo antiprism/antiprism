@@ -51,9 +51,9 @@ For more information on this code, see Anuj Mehrotra and Michael A. Trick,
 #include <vector>
 
 #include "private_prop_col.h"
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
 
 using std::pair;
 using std::set;
@@ -455,10 +455,10 @@ int ProperColor::color(int i, int current_color)
       removed use of iostreams, graph initialised from a geometry object
 */
 
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #include <algorithm>
 using std::max;

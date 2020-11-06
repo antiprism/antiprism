@@ -26,7 +26,7 @@
  *\brief Matrix transformations for 3D geometry.
  */
 
-#include <stdio.h>
+#include <cstdio>
 #include <vector>
 
 #include "mathutils.h"

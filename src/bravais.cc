@@ -28,12 +28,12 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
 
-#include <ctype.h>
-#include <limits.h>
+#include <cctype>
+#include <climits>
 
 #include <algorithm>
 #include <string>
@@ -557,8 +557,7 @@ void brav_opts::process_command_line(int argc, char **argv)
 
     case 'F': {
       // make a copy of optarg so original isn't split yet
-      char *optarg_copy = (char *)malloc(strlen(optarg) + 1);
-      strcpy(optarg_copy, optarg);
+      char *optarg_copy = copy_str(optarg);
       vector<char *> parts;
       split_line(optarg_copy, parts, ",");
 

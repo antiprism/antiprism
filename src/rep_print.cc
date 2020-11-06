@@ -31,8 +31,8 @@
 #include "rep_print.h"
 #include <map>
 #include <set>
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #include <string>
 #include <utility>
 #include <vector>

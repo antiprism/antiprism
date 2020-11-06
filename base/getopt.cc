@@ -28,12 +28,12 @@
 
 /* Adrian Rossiter: converted to a class for ANTIPRISM */
 
-#include <assert.h>
-#include <ctype.h> /* islower() isupper() tolower() toupper() */
-#include <stdarg.h>
-#include <stdio.h>  /* fprintf() */
-#include <stdlib.h> /* getenv() */
-#include <string.h> /* strcmp(), strncmp(), strchr() */
+#include <cassert>
+#include <cctype> /* islower() isupper() tolower() toupper() */
+#include <cstdarg>
+#include <cstdio>  /* fprintf() */
+#include <cstdlib> /* getenv() */
+#include <cstring> /* strcmp(), strncmp(), strchr() */
 
 #undef ULTRAGETOPT_REPLACE_GETOPT /* Protect against project-wide defines */
 #include "getopt.h"

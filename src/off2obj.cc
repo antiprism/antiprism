@@ -28,9 +28,9 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
 
 #include <string>
 #include <vector>

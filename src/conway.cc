@@ -31,12 +31,12 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <limits.h>
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <climits>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
 
-#include <ctype.h>
+#include <cctype>
 
 #include <map>
 #include <set>

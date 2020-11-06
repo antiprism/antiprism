@@ -32,10 +32,10 @@
 #include <algorithm>
 #include <functional>
 #include <map>
-#include <math.h>
+#include <cmath>
 #include <memory>
 #include <regex>
-#include <string.h>
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -103,10 +103,7 @@ public:
 Status weave_path::init(const string &path)
 {
   path_points.clear();
-  int buff_sz = path.size() + 1;
-  vector<char> path_str(buff_sz);
-  strncpy(&path_str[0], path.c_str(), buff_sz - 1);
-  path_str[buff_sz - 1] = '\0';
+  auto path_str = path;
   vector<char *> parts;
   int parts_sz = split_line(&path_str[0], parts, ":", true);
   Status stat = point.read(parts[0]);

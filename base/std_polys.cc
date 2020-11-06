@@ -31,8 +31,8 @@
 #include <algorithm>
 #include <map>
 #include <set>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include <string>
 #include <vector>
 

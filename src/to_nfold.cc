@@ -29,11 +29,11 @@
 */
 
 #include <algorithm>
-#include <ctype.h>
+#include <cctype>
 #include <map>
-#include <math.h>
+#include <cmath>
 #include <set>
-#include <string.h>
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -434,7 +434,7 @@ cyc_chain::cyc_chain(const Geometry &geom, const vector<int> &face, int len,
     int idx = half_turns[i];
     int idx_before = (idx - 1 + fsz) % fsz;
     int idx_after = (idx + 1) % fsz;
-    if (hts_sz > 1 && abs(half_turns[i] - half_turns[(i + 1) % fsz]) == 1)
+    if (hts_sz > 1 && std::abs(half_turns[i] - half_turns[(i + 1) % fsz]) == 1)
       warnings |= WARN_EDGE180_CONSECUTIVE;
     // Find sum of adjacent angles
     double test_ang = cyc_vts[idx_before].cyc_ang + cyc_vts[idx_after].cyc_ang;

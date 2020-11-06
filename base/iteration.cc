@@ -31,8 +31,8 @@
 
 #include <limits>
 #include <memory>
-#include <stdarg.h>
-#include <stdio.h>
+#include <cstdarg>
+#include <cstdio>
 #include <vector>
 
 namespace anti {

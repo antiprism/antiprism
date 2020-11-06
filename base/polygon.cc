@@ -27,8 +27,8 @@
 */
 
 #include <algorithm>
-#include <float.h>
-#include <stdlib.h>
+#include <cfloat>
+#include <cstdlib>
 #include <vector>
 
 #include "polygon.h"
@@ -682,6 +682,7 @@ Status Polygon::make_pyramid_part(Geometry &geom)
 //--------------------------------------------------------------------
 
 /*
+#include <cmath>
 void dipyramid::make_scal_part(Geometry &geom)
 {
    double twist_ang = std::isnan(twist_angle) ? 0.0 : twist_angle;

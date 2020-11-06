@@ -29,7 +29,7 @@
 #ifndef VRMLWRITER_H
 #define VRMLWRITER_H
 
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 
 #include "scene.h"

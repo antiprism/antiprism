@@ -28,11 +28,11 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <climits>
+#include <cstdio>
+#include <cstdlib>
 
-#include <ctype.h>
+#include <cctype>
 
 #include <string>
 #include <vector>
@@ -268,8 +268,7 @@ void lutil_opts::process_command_line(int argc, char **argv)
 
     case 'E': {
       // make a copy of optarg so original isn't split yet
-      char *optarg_copy = (char *)malloc(strlen(optarg) + 1);
-      strcpy(optarg_copy, optarg);
+      char *optarg_copy = copy_str(optarg);
       vector<char *> parts;
       split_line(optarg_copy, parts, ",");
 
@@ -284,8 +283,7 @@ void lutil_opts::process_command_line(int argc, char **argv)
 
     case 'F': {
       // make a copy of optarg so original isn't split yet
-      char *optarg_copy = (char *)malloc(strlen(optarg) + 1);
-      strcpy(optarg_copy, optarg);
+      char *optarg_copy = copy_str(optarg);
       vector<char *> parts;
       split_line(optarg_copy, parts, ",");
 

@@ -32,7 +32,7 @@
 #include "../base/const.h"
 #include "../base/status.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace anti {
 

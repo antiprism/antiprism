@@ -13,9 +13,9 @@
 #ifndef RANDOM_H
 #define RANDOM_H
 
-#include <math.h>
-#include <stdlib.h>
-#include <time.h>
+#include <cmath>
+#include <cstdlib>
+#include <ctime>
 
 #define consta 16807
 

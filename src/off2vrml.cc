@@ -29,8 +29,8 @@
 */
 
 #include "../base/antiprism.h"
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <cstring>
 #include <string>
 #include <vector>
 

@@ -29,7 +29,7 @@
 #ifndef TRANS4D_H
 #define TRANS4D_H
 
-#include <math.h>
+#include <cmath>
 
 #include "mathutils.h"
 #include "vec4d.h"

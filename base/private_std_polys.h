@@ -29,8 +29,8 @@
 #ifndef PRIVATE_STD_POLYS_H
 #define PRIVATE_STD_POLYS_H
 
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 
 #include "geometry.h"
 #include "geometryutils.h"

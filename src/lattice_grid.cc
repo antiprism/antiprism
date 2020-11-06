@@ -28,11 +28,11 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
-#include <ctype.h>
-#include <math.h>
+#include <cctype>
+#include <cmath>
 
 #include <algorithm>
 #include <memory>
@@ -78,7 +78,7 @@ bool rh_dodec_test(int x, int y, int z) // dist2 = 3 (8)
 
 bool cubo_oct_test(int x, int y, int z) // dist2 = 2
 {
-  return (abs(x) % 2 + abs(y) % 2 + abs(z) % 2) == 2;
+  return (std::abs(x) % 2 + std::abs(y) % 2 + std::abs(z) % 2) == 2;
 }
 
 bool tr_oct_test(int x, int y, int z) // dist2 = 2
@@ -97,13 +97,13 @@ bool tr_tet_tet_test(int x, int y, int z) // dist2 = 2
 
 bool tr_tet_tr_oct_cubo_test(int x, int y, int z) // dist2 = 4
 {
-  x = abs(x) % 6;
+  x = std::abs(x) % 6;
   if (x > 3)
     x = 6 - x;
-  y = abs(y) % 6;
+  y = std::abs(y) % 6;
   if (y > 3)
     y = 6 - y;
-  z = abs(z) % 6;
+  z = std::abs(z) % 6;
   if (z > 3)
     z = 6 - z;
   int dist2 = x * x + y * y;

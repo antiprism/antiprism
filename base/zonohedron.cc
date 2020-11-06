@@ -26,8 +26,8 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 #include <algorithm>
 #include <functional>

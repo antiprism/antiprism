@@ -28,11 +28,11 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <float.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cfloat>
+#include <cstdio>
+#include <cstdlib>
 
-#include <ctype.h>
+#include <cctype>
 
 #include <algorithm>
 #include <string>
@@ -892,7 +892,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
     twist *= 2;
   }
 
-  mod_twist = abs(twist % ncon_order);
+  mod_twist = std::abs(twist % ncon_order);
 }
 
 int longitudinal_faces(const int ncon_order, const bool point_cut)
@@ -1560,7 +1560,7 @@ void apply_latitudes(const Geometry &geom,
       for (unsigned int i = 0; i < edge_lats_save.size(); i++) {
         int lat = edge_lats_save[i];
         if (lat < -1)
-          lat = (opts.hide_indent) ? -1 : abs(lat + 2);
+          lat = (opts.hide_indent) ? -1 : std::abs(lat + 2);
         edge_list[i]->lat = lat;
       }
     }
@@ -1579,7 +1579,7 @@ void apply_latitudes(const Geometry &geom,
     for (unsigned int i = 0; i < edge_lats_save.size(); i++) {
       int lat = edge_lats_save[i];
       if (lat < -1) {
-        lat = (opts.hide_indent) ? -1 : abs(lat + 2);
+        lat = (opts.hide_indent) ? -1 : std::abs(lat + 2);
         edge_list[i]->lat = lat;
       }
     }
@@ -1935,7 +1935,7 @@ void restore_indented_edges(const vector<edgeList *> &edge_list,
   for (auto i : edge_list) {
     int lat = i->lat;
     if (lat < -1) {
-      lat = (opts.hide_indent) ? -1 : abs(lat + 2);
+      lat = (opts.hide_indent) ? -1 : std::abs(lat + 2);
       i->lat = lat;
     }
   }
@@ -1962,7 +1962,7 @@ vector<pair<int, int>> get_lat_pairs(const int n, int d, const bool point_cut)
     if (next > max_lats)
       next = n - (next % max_lats);
     else if (next < 0)
-      next = abs(next) - 1;
+      next = std::abs(next) - 1;
 
     lats.first = i;
     lats.second = next;
@@ -2282,7 +2282,7 @@ void form_globe(Geometry &geom, const vector<int> &prime_meridian,
       }
 
       // for second half of hybrid, adjust longitudes for later mirror image
-      lon = (second_half ? abs(lon - half) + half - 1 : lon);
+      lon = (second_half ? std::abs(lon - half) + half - 1 : lon);
 
       // when j = 0 "prime the system"
       if (j > 0) {
@@ -2749,7 +2749,7 @@ void ncon_twist(Geometry &geom, const vector<polarOrb *> &polar_orbit,
       q = polar_orbit[k]->forward;
     else
       q = polar_orbit[k]->backward;
-    for (int n = 1; n < abs(twist); n++) {
+    for (int n = 1; n < std::abs(twist); n++) {
       if (twist > 0)
         q = polar_orbit[q]->forward;
       else
@@ -2773,12 +2773,12 @@ void ncon_twist(Geometry &geom, const vector<polarOrb *> &polar_orbit,
   for (auto &face : faces)
     for (int &j : face)
       if (j < 0)
-        j = abs(j);
+        j = std::abs(j);
 
   for (auto &edge : edges)
     for (int &j : edge)
       if (j < 0)
-        j = abs(j);
+        j = std::abs(j);
 
   // edges may have been made to be out of numerical order
   for (auto &edge : edges)
@@ -3019,7 +3019,7 @@ void ncon_info(const int ncon_order, const bool point_cut, const int twist,
     mod_twist = -1;
   int color_twist = mod_twist % last;
   if (is_even(ncon_order) && color_twist == -last)
-    color_twist = abs(color_twist);
+    color_twist = std::abs(color_twist);
   if (mod_twist != color_twist) {
     if (mod_twist > last)
       color_twist = first + color_twist - 1;
@@ -3103,7 +3103,7 @@ void ncon_info(const int ncon_order, const bool point_cut, const int twist,
     }
 
   // using abs(base_twist) so much it might as well be stored
-  int posi_twist = abs(base_twist);
+  int posi_twist = std::abs(base_twist);
 
   sd.nonchiral =
       (((chiral == 0 || base_twist == 0 ||
@@ -4674,7 +4674,7 @@ void build_color_table(map<int, pair<int, int>> &color_table,
   // for the color tables twist is made positive. The positive twist colors work
   // for negative twists.
   int n = ncon_order;
-  int t = abs(twist);
+  int t = std::abs(twist);
 
   // for even n, twist 0, symmetric coloring does't happen, so temporarily twist
   // half way

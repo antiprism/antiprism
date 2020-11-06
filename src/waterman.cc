@@ -31,9 +31,9 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib> // avoid ambiguities with std::abs(long) on OSX
-#include <ctype.h>
+#include <cctype>
 #include <limits>
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 #include <vector>
 

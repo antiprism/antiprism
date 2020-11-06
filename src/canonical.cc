@@ -32,12 +32,12 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <ctype.h>
-#include <float.h>
-#include <limits.h>
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cctype>
+#include <cfloat>
+#include <climits>
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
 #include <string>
 #include <vector>
 

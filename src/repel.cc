@@ -28,12 +28,12 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <ctype.h>
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cctype>
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
 #include <string>
-#include <time.h>
+#include <ctime>
 #include <vector>
 
 #include "../base/antiprism.h"

@@ -26,10 +26,10 @@
    \brief Read and write OFF and coordinate files
 */
 
-#include <ctype.h>
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cctype>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
 
 #include <algorithm>
 #include <vector>

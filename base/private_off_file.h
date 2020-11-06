@@ -30,7 +30,7 @@
 #define PRIVATE_OFF_FILE_H
 
 #include "geometry.h"
-#include <stdio.h>
+#include <cstdio>
 
 using namespace anti;
 

@@ -27,12 +27,12 @@
  */
 
 #include <algorithm>
-#include <limits.h>
+#include <climits>
 #include <limits>
 #include <map>
 #include <memory>
 #include <set>
-#include <string.h>
+#include <cstring>
 #include <string>
 #include <vector>
 

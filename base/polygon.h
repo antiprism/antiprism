@@ -30,7 +30,7 @@
 #define POLYGON_H
 
 #include <cmath>
-#include <string.h>
+#include <cstring>
 
 #include "geometry.h"
 #include "geometryutils.h"

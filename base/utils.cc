@@ -31,14 +31,14 @@
 #include "../config.h"
 #endif
 
-#include <ctype.h>
-#include <limits.h>
+#include <cctype>
+#include <climits>
 #include <map>
-#include <math.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cmath>
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>

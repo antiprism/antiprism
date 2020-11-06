@@ -29,6 +29,7 @@
 */
 
 #include <algorithm>
+#include <cmath>
 #include <map>
 #include <string>
 #include <vector>

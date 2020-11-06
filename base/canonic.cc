@@ -31,11 +31,11 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <float.h>
-#include <math.h>
+#include <cfloat>
+#include <cmath>
 #include <numeric>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -652,7 +652,7 @@ Status make_regular_faces2(Geometry &base_geom, IterationControl it_ctrl,
   vector<double> rads(faces.size());
   for (unsigned int f = 0; f < faces.size(); f++) {
     int N = faces[f].size();
-    int D = abs(find_polygon_denominator_signed(geom, f, epsilon));
+    int D = std::abs(find_polygon_denominator_signed(geom, f, epsilon));
     if (!D)
       D = 1;
     rads[f] = 0.5 / sin(M_PI * D / N); // circumradius of regular polygon

@@ -27,9 +27,9 @@
 */
 
 #include <algorithm>
-#include <ctype.h>
+#include <cctype>
 #include <map>
-#include <string.h>
+#include <cstring>
 
 #include "coloring.h"
 #include "geometry.h"

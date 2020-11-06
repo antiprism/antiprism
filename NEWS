@@ -11,6 +11,7 @@ xx-xx-20 Adrian Rossiter <adrian@antiprism.com>
             repel: add -z for status reporting
          Fixes
             minor bug fixes and improvements
+            code review and fixes for potential issues
 
 Version 0.27
 01-10-20 Adrian Rossiter <adrian@antiprism.com>

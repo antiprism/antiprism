@@ -28,17 +28,17 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 #include <algorithm>
-#include <ctype.h>
+#include <cctype>
 #include <map>
-#include <math.h>
+#include <cmath>
 #include <set>
-#include <string.h>
+#include <cstring>
 #include <string>
-#include <time.h>
+#include <ctime>
 #include <vector>
 
 #include "../base/antiprism.h"
