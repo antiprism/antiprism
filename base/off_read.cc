@@ -212,9 +212,8 @@ bool off_file_read(FILE *ifile, Geometry &geom, char *errmsg)
     *errmsg = '\0';
 
   // read OFF type
-  int read_ret;
   char *line = nullptr;
-  while ((read_ret = read_off_line(ifile, &line)) == 0) {
+  while (read_off_line(ifile, &line) == 0) {
     file_line_no++;
     if (sscanf(line, " %*s") != EOF)
       break;
@@ -240,7 +239,7 @@ bool off_file_read(FILE *ifile, Geometry &geom, char *errmsg)
   free(line); // finished with file format line
 
   // read counts of coords, polys (and edges)
-  while ((read_ret = read_off_line(ifile, &line)) == 0) {
+  while (read_off_line(ifile, &line) == 0) {
     file_line_no++;
     if (sscanf(line, " %*s") != EOF)
       break;
@@ -287,7 +286,7 @@ bool off_file_read(FILE *ifile, Geometry &geom, char *errmsg)
   vector<int> adj_equal_idx_lines;
 
   // read coords
-  while ((read_ret = read_off_line(ifile, &line)) == 0) {
+  while (read_off_line(ifile, &line) == 0) {
     file_line_no++;
 
     vector<char *> vals;

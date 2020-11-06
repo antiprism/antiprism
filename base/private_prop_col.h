@@ -191,8 +191,8 @@ public:
       if (vertex[i].edge)
         delete vertex[i].edge;
     if (vertex)
-      delete vertex;
-    delete rando;
+      delete[] vertex;
+    delete[] rando;
   }
   float Cost(Edge *, long);
   void SetValue(Vertex *, float *, float *);

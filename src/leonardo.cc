@@ -305,20 +305,20 @@ bool leonardo_faces(Geometry &geom_out, const Geometry &geom, double width,
 
       // top face
       if (!panels)
-        geom_out.add_face(start + N * j, start + N * ((j + 1) % f_sz),
-                          start + N * ((j + 1) % f_sz) + 1, start + N * j + 1,
-                          -1);
+        geom_out.add_face({start + N * j, start + N * ((j + 1) % f_sz),
+                           start + N * ((j + 1) % f_sz) + 1,
+                           start + N * j + 1});
 
       if (is_solid) {
         // bottom face
         if (!panels) {
-          geom_out.add_face(start + N * j + 2, start + N * ((j + 1) % f_sz) + 2,
-                            start + N * ((j + 1) % f_sz) + 3, start + N * j + 3,
-                            -1);
+          geom_out.add_face(
+              {start + N * j + 2, start + N * ((j + 1) % f_sz) + 2,
+               start + N * ((j + 1) % f_sz) + 3, start + N * j + 3});
           // inner vertical face
-          geom_out.add_face(start + N * j + 1, start + N * ((j + 1) % f_sz) + 1,
-                            start + N * ((j + 1) % f_sz) + 3, start + N * j + 3,
-                            -1);
+          geom_out.add_face(
+              {start + N * j + 1, start + N * ((j + 1) % f_sz) + 1,
+               start + N * ((j + 1) % f_sz) + 3, start + N * j + 3});
         }
 
         // outer vertical face, if original edge is open
@@ -327,9 +327,9 @@ bool leonardo_faces(Geometry &geom_out, const Geometry &geom, double width,
                  make_edge(face[j], face[(j + 1) % f_sz])) != open_edges.end();
         if (is_open) {
           int f_idx =
-              geom_out.add_face(start + N * j, start + N * ((j + 1) % f_sz),
-                                start + N * ((j + 1) % f_sz) + 2 - panels,
-                                start + N * j + 2 - panels, -1);
+              geom_out.add_face({start + N * j, start + N * ((j + 1) % f_sz),
+                                 start + N * ((j + 1) % f_sz) + 2 - panels,
+                                 start + N * j + 2 - panels});
           if (panels) // easier to colour here
             geom_out.colors(FACES).set(f_idx, f_col);
         }
@@ -363,6 +363,7 @@ bool leonardo_faces(Geometry &geom_out, const Geometry &geom, double width,
 
   return true;
 }
+
 
 double min_dist_edge_to_face_cent(Geometry &geom)
 {

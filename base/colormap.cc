@@ -1236,7 +1236,7 @@ static ColorMap *colormap_from_name_generated(const char *map_name,
       if (extra_chars)
         stat->set_error(msg_str("uniform map: trailing characters '%s'",
                                 map_name + name_len + num_len));
-      delete cmap;
+      delete multi;
       delete overrides;
       delete spread_map;
       cmap = nullptr;
@@ -1266,7 +1266,7 @@ static ColorMap *colormap_from_name_generated(const char *map_name,
       cmap = multi;
     }
     else {
-      delete cmap;
+      delete multi;
       delete overrides;
       delete spread_map;
       cmap = nullptr;
@@ -1275,14 +1275,22 @@ static ColorMap *colormap_from_name_generated(const char *map_name,
 
   else if (strcmp(name, "remap") == 0) {
     auto *cmr = new ColorMapRemap;
-    if (cmr && (*stat = cmr->init(map_name)))
-      cmap = cmr;
+    if (cmr) {
+      if ((*stat = cmr->init(map_name)))
+        cmap = cmr;
+      else
+        delete cmr;
+    }
   }
 
   else if (strcmp(name, "deal") == 0) {
     auto *cmr = new ColorMapDeal;
-    if (cmr && (*stat = cmr->init(map_name + name_len)))
-      cmap = cmr;
+    if (cmr) {
+      if ((*stat = cmr->init(map_name + name_len)))
+        cmap = cmr;
+      else
+        delete cmr;
+    }
   }
 
   else if (strcmp(name, "map") == 0 && map_name[name_len] == '_') {

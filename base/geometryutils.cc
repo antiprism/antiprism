@@ -26,17 +26,14 @@
    \brief utilities for geometries
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-
-#include <vector>
-
 #include "geometry.h"
 #include "geometryinfo.h"
 #include "geometryutils.h"
 #include "mathutils.h"
 #include "private_geodesic.h"
 #include "private_misc.h"
+
+#include <vector>
 
 using std::vector;
 

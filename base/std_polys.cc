@@ -966,15 +966,14 @@ static void get_arrow(Geometry &geom, const Symmetry &sym)
   geom.add_vert(Vec3d(3.0, 0.0, 0.5));
   geom.add_vert(Vec3d(2.0, 0.5, 0.25));
   geom.add_vert(Vec3d(0.0, 0.5, 0.25));
-  geom.colors(FACES).set(geom.add_face(1, 2, 3, 4, 0, -1),
-                         Color(0.9, 0.9, 0.7));
-  geom.colors(FACES).set(geom.add_face(6, 2, 7, 8, 5, -1),
-                         Color(0.0, 0.2, 0.6));
-  geom.colors(FACES).set(geom.add_face(0, 1, 6, 5, -1), Color(0.9, 0.9, 0.7));
-  geom.colors(FACES).set(geom.add_face(1, 2, 6, -1), Color(0.9, 0.9, 0.7));
-  geom.colors(FACES).set(geom.add_face(2, 3, 7, -1), Color(0.9, 0.9, 0.7));
-  geom.colors(FACES).set(geom.add_face(3, 4, 8, 7, -1), Color(0.9, 0.9, 0.7));
-  geom.colors(FACES).set(geom.add_face(4, 0, 5, 8, -1), Color(0.9, 0.9, 0.7));
+
+  geom.add_face({1, 2, 3, 4, 0}, Color(0.9, 0.9, 0.7));
+  geom.add_face({6, 2, 7, 8, 5}, Color(0.0, 0.2, 0.6));
+  geom.add_face({0, 1, 6, 5}, Color(0.9, 0.9, 0.7));
+  geom.add_face({1, 2, 6}, Color(0.9, 0.9, 0.7));
+  geom.add_face({2, 3, 7}, Color(0.9, 0.9, 0.7));
+  geom.add_face({3, 4, 8, 7}, Color(0.9, 0.9, 0.7));
+  geom.add_face({4, 0, 5, 8}, Color(0.9, 0.9, 0.7));
 
   Trans3d trans = Trans3d::translate(Vec3d(0.1, 0.2, 0.4));
   int fold = sym.get_nfold();
@@ -1290,7 +1289,7 @@ static void rh_hexacontahedron(Geometry &geom, bool is_std = false)
   geom_face.add_vert(Vec3d(1 / phi, phi, 1));
   geom_face.add_vert(Vec3d(0, 1 / phi, 1));
   geom_face.add_vert(Vec3d(-1 / phi, phi, 1));
-  geom_face.add_face(0, 1, 2, 3, -1);
+  geom_face.add_face({0, 1, 2, 3});
   if (!is_std) // Make unit edges
     geom_face.transform(Trans3d::scale(1 / geom_face.edge_vec(0, 1).len()));
   sym_repeat(geom, geom_face, Symmetry(Symmetry::I));
@@ -1324,20 +1323,20 @@ static void csaszar(Geometry &geom, bool is_std = false)
   for (int i = 0; i < 7; i++)
     geom.add_vert(Vec3d(crds[is_std][i]));
 
-  geom.add_face(0, 1, 5, -1);
-  geom.add_face(0, 3, 1, -1);
-  geom.add_face(4, 2, 1, -1);
-  geom.add_face(3, 0, 2, -1);
-  geom.add_face(1, 6, 5, -1);
-  geom.add_face(2, 6, 1, -1);
-  geom.add_face(0, 6, 2, -1);
-  geom.add_face(5, 4, 0, -1);
-  geom.add_face(5, 2, 4, -1);
-  geom.add_face(1, 3, 4, -1);
-  geom.add_face(2, 5, 3, -1);
-  geom.add_face(4, 6, 0, -1);
-  geom.add_face(3, 6, 4, -1);
-  geom.add_face(5, 6, 3, -1);
+  geom.add_face({0, 1, 5});
+  geom.add_face({0, 3, 1});
+  geom.add_face({4, 2, 1});
+  geom.add_face({3, 0, 2});
+  geom.add_face({1, 6, 5});
+  geom.add_face({2, 6, 1});
+  geom.add_face({0, 6, 2});
+  geom.add_face({5, 4, 0});
+  geom.add_face({5, 2, 4});
+  geom.add_face({1, 3, 4});
+  geom.add_face({2, 5, 3});
+  geom.add_face({4, 6, 0});
+  geom.add_face({3, 6, 4});
+  geom.add_face({5, 6, 3});
 
   if (!is_std)
     set_resource_unique_color(geom);
@@ -1367,13 +1366,13 @@ static void szilassi(Geometry &geom, bool is_std = false)
   for (auto &crd : crds)
     geom.add_vert(Vec3d(crd));
 
-  geom.add_face(0, 2, 5, 4, 3, 1, -1);
-  geom.add_face(1, 7, 9, 8, 6, 0, -1);
-  geom.add_face(0, 6, 10, 11, 12, 2, -1);
-  geom.add_face(1, 3, 11, 10, 13, 7, -1);
-  geom.add_face(4, 5, 13, 10, 6, 8, -1);
-  geom.add_face(8, 9, 12, 11, 3, 4, -1);
-  geom.add_face(5, 2, 12, 9, 7, 13, -1);
+  geom.add_face({0, 2, 5, 4, 3, 1});
+  geom.add_face({1, 7, 9, 8, 6, 0});
+  geom.add_face({0, 6, 10, 11, 12, 2});
+  geom.add_face({1, 3, 11, 10, 13, 7});
+  geom.add_face({4, 5, 13, 10, 6, 8});
+  geom.add_face({8, 9, 12, 11, 3, 4});
+  geom.add_face({5, 2, 12, 9, 7, 13});
 
   if (!is_std)
     set_resource_unique_color(geom);

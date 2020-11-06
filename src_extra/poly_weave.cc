@@ -67,22 +67,17 @@ void make_meta(const Geometry &geom, Geometry &meta, double face_ht = 0.0)
     // Add the centre to this quadrilateral
     int e_idx = meta.add_vert(geom.edge_cent(ef_pair.first));
     // Add four triangles
-    int idx;
     if (ef_pair.second[0] >= 0) {
-      idx = meta.add_face(ef_pair.first[0], e_idx, ef_pair.second[0] + f_start,
-                          -1);
-      meta.colors(FACES).set(idx, light);
-      idx = meta.add_face(ef_pair.first[1], e_idx, ef_pair.second[0] + f_start,
-                          -1);
-      meta.colors(FACES).set(idx, dark);
+      meta.add_face({ef_pair.first[0], e_idx, ef_pair.second[0] + f_start},
+                    light);
+      meta.add_face({ef_pair.first[1], e_idx, ef_pair.second[0] + f_start},
+                    dark);
     }
     if (ef_pair.second[1] >= 0) {
-      idx = meta.add_face(ef_pair.first[1], e_idx, ef_pair.second[1] + f_start,
-                          -1);
-      meta.colors(FACES).set(idx, light);
-      idx = meta.add_face(ef_pair.first[0], e_idx, ef_pair.second[1] + f_start,
-                          -1);
-      meta.colors(FACES).set(idx, dark);
+      meta.add_face({ef_pair.first[1], e_idx, ef_pair.second[1] + f_start},
+                    light);
+      meta.add_face({ef_pair.first[0], e_idx, ef_pair.second[1] + f_start},
+                    dark);
     }
   }
   meta.add_missing_impl_edges();

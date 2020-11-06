@@ -26,10 +26,6 @@
  * \brief Classes to represent a geometry
  */
 
-#include <algorithm>
-#include <stdarg.h>
-#include <stdlib.h>
-
 #include "coloring.h"
 #include "geometry.h"
 #include "geometryinfo.h"
@@ -38,6 +34,8 @@
 #include "private_std_polys.h"
 #include "symmetry.h"
 #include "utils.h"
+
+#include <algorithm>
 
 using std::map;
 using std::pair;
@@ -119,17 +117,6 @@ int Geometry::add_face(const std::vector<int> &face, Color col)
   if (col.is_set())
     colors(FACES).set(idx, col);
   return idx;
-}
-
-int Geometry::add_face(int v1, ...)
-{
-  vector<int> face;
-  va_list ap;
-  va_start(ap, v1);
-  for (int i = v1; i != -1; i = va_arg(ap, int))
-    face.push_back(i);
-  va_end(ap);
-  return add_face(face);
 }
 
 int Geometry::add_faces(const vector<vector<int>> &fces)
@@ -438,17 +425,6 @@ void Geometry::write_obj(FILE *file, FILE *mfile, string mtl_file,
 }
 
 GeometryInfo Geometry::get_info() const { return GeometryInfo(*this); }
-
-vector<int> make_face(int v1, ...)
-{
-  vector<int> face;
-  va_list ap;
-  va_start(ap, v1);
-  for (int i = v1; i != -1; i = va_arg(ap, int))
-    face.push_back(i);
-  va_end(ap);
-  return face;
-}
 
 vector<int> make_edge(int v_idx1, int v_idx2)
 {

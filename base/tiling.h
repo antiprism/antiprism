@@ -29,7 +29,9 @@
 #ifndef TILING_H
 #define TILING_H
 
-#include "status.h"
+#include "symmetry.h"
+#include "geometry.h"
+#include "color.h"
 
 #include <string>
 #include <utility>

@@ -856,7 +856,7 @@ bool make_base_model(Geometry &geom, const vector<int> &fracs, int num_fracs,
     }
   }
 
-  kite_geom.add_face(0, 1, 2, 3, -1);
+  kite_geom.add_face({0, 1, 2, 3});
 
   *sym_used = sym.get_symbol();
   if (sym.get_symbol()[0] == 'D')
@@ -1075,7 +1075,7 @@ int main(int argc, char *argv[])
     Geometry kite;
     for (int i = 0; i < 4; i++)
       kite.add_vert(out_geom.face_v(0, i));
-    kite.add_face(0, 1, 2, 3, -1);
+    kite.add_face({0, 1, 2, 3});
     out_geom = kite;
   }
 

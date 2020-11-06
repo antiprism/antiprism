@@ -323,13 +323,13 @@ Status Polygon::make_prism_crown_part(Geometry &geom)
 
   int N = num_sides;
   for (int i = 0; i < N; i++) {
-    geom.add_face((i - step2 + num_sides) % num_sides,
-                  (i + 1) % num_sides + num_sides, (i + 1 + step2) % num_sides,
-                  (i) % num_sides + num_sides, -1);
+    geom.add_face({(i - step2 + num_sides) % num_sides,
+                   (i + 1) % num_sides + num_sides, (i + 1 + step2) % num_sides,
+                   (i) % num_sides + num_sides});
 
-    geom.add_face((i - step2 + num_sides) % num_sides + num_sides,
+    geom.add_face({(i - step2 + num_sides) % num_sides + num_sides,
                   (i + 1) % num_sides, (i + 1 + step2) % num_sides + num_sides,
-                  (i) % num_sides, -1);
+                  (i) % num_sides});
   }
 
   return Status::ok();
@@ -419,10 +419,10 @@ Status Polygon::make_antiprism_scal_part(Geometry &geom)
   int apex_idx2 = geom.add_vert(Vec3d(0, 0, -apex_ht));
 
   for (int i = 0; i < num_sides; i++) {
-    geom.add_face(i, i + num_sides, apex_idx1, -1);
-    geom.add_face(i + num_sides, i, apex_idx2, -1);
-    geom.add_face(i + num_sides, (i + 1) % num_sides, apex_idx1, -1);
-    geom.add_face((i + 1) % num_sides, i + num_sides, apex_idx2, -1);
+    geom.add_face({i, i + num_sides, apex_idx1});
+    geom.add_face({i + num_sides, i, apex_idx2});
+    geom.add_face({i + num_sides, (i + 1) % num_sides, apex_idx1});
+    geom.add_face({(i + 1) % num_sides, i + num_sides, apex_idx2});
   }
 
   return Status::ok();
@@ -437,10 +437,10 @@ static void add_scal_faces(Geometry &geom, int v0, int v1, int v2, int v3,
       vcross(geom.verts(v0) - geom.verts(v2), geom.verts(v3) - geom.verts(v1))
           .unit();
   int ap = geom.add_vert(cent + norm * ht2);
-  geom.add_face(v0, v1, ap, -1);
-  geom.add_face(v1, v2, ap, -1);
-  geom.add_face(v2, v3, ap, -1);
-  geom.add_face(v3, v0, ap, -1);
+  geom.add_face({v0, v1, ap});
+  geom.add_face({v1, v2, ap});
+  geom.add_face({v2, v3, ap});
+  geom.add_face({v3, v0, ap});
 }
 
 Status Polygon::make_antiprism_subscal_part(Geometry &geom)
@@ -493,12 +493,12 @@ Status Polygon::make_antiprism_crown_part(Geometry &geom)
   step2 = ((step2 % num_sides) + num_sides) % num_sides;
 
   for (int i = 0; i < num_sides; i++) {
-    geom.add_face((i + 1 - step2 + num_sides) % num_sides,
+    geom.add_face({(i + 1 - step2 + num_sides) % num_sides,
                   (i + 1) % num_sides + num_sides, (i + 1 + step2) % num_sides,
-                  (i) % num_sides + num_sides, -1);
-    geom.add_face((i + 1 - step2 + num_sides) % num_sides + num_sides,
+                  (i) % num_sides + num_sides});
+    geom.add_face({(i + 1 - step2 + num_sides) % num_sides + num_sides,
                   (i + 1) % num_sides, (i + 1 + step2) % num_sides + num_sides,
-                  (i + 2) % num_sides, -1);
+                  (i + 2) % num_sides});
   }
 
   return Status::ok();
@@ -648,8 +648,8 @@ Status Polygon::make_pyramid_part(Geometry &geom)
     else {
       geom.del(FACES, vector<int>(1, 0));
       int apex = geom.add_vert(Vec3d(0, 0, pri.get_height(0) / 2 + ht));
-      geom.add_face(0, 1, apex, -1);
-      geom.add_face(1, 0, apex, -1);
+      geom.add_face({0, 1, apex});
+      geom.add_face({1, 0, apex});
     }
   }
   else if (subtype == sub_pyramid_gyroelongated) {
@@ -671,8 +671,8 @@ Status Polygon::make_pyramid_part(Geometry &geom)
     else {
       geom.del(FACES, vector<int>(1, 0));
       int apex = geom.add_vert(Vec3d(0, 0, ant.get_height(0) / 2 + ht));
-      geom.add_face(0, 1, apex, -1);
-      geom.add_face(1, 0, apex, -1);
+      geom.add_face({0, 1, apex});
+      geom.add_face({1, 0, apex});
     }
   }
 
@@ -737,8 +737,8 @@ Status Polygon::make_dipyramid_scal_part(Geometry &geom)
   int apex_idx2 = geom.add_vert(Vec3d(0, 0, -ht));
 
   for (int i = 0; i < 2 * num_sides; i++) {
-    geom.add_face(i, (i + 1) % (2 * num_sides), apex_idx1, -1);
-    geom.add_face((i + 1) % (2 * num_sides), i, apex_idx2, -1);
+    geom.add_face({i, (i + 1) % (2 * num_sides), apex_idx1});
+    geom.add_face({(i + 1) % (2 * num_sides), i, apex_idx2});
   }
 
   return Status::ok();
@@ -786,8 +786,8 @@ Status Polygon::make_dipyramid_part(Geometry &geom)
       geom.del(FACES, vector<int>(1, 0));
       int off = (subtype == sub_default) ? 0 : 2;
       int apex = geom.add_vert(Vec3d(0, 0, geom.verts(off)[2] - ht));
-      geom.add_face(0 + off, 1 + off, apex, -1);
-      geom.add_face(1 + off, 0 + off, apex, -1);
+      geom.add_face({0 + off, 1 + off, apex});
+      geom.add_face({1 + off, 0 + off, apex});
     }
   }
 
@@ -1049,11 +1049,10 @@ Status Polygon::make_crown_part(Geometry &geom)
         Vec3d(0, 0, e2 / 2);
     geom.add_vert(pgon[p_idx].verts(v_idx) + v);
     geom.add_vert(pgon[p_idx].verts(v_idx) - v);
-    geom.add_face(2 * i, 2 * i + 1, (2 * (i + 1)) % num,
-                  (2 * (i + 1) + 1) % num, -1);
-    geom.add_face((2 * (i + 0) + p_idx) % num, (2 * (i + 1) + !p_idx) % num,
-                  (2 * (i + 3) + p_idx) % num, (2 * (i + 2) + !p_idx) % num,
-                  -1);
+    geom.add_face(
+        {2 * i, 2 * i + 1, (2 * (i + 1)) % num, (2 * (i + 1) + 1) % num});
+    geom.add_face({(2 * (i + 0) + p_idx) % num, (2 * (i + 1) + !p_idx) % num,
+                   (2 * (i + 3) + p_idx) % num, (2 * (i + 2) + !p_idx) % num});
   }
 
   return Status::ok();
@@ -1079,11 +1078,11 @@ Status Polygon::make_crown_full(Geometry &geom)
     geom.clear(FACES);
     int offset = (step2 - step1) / 2;
     for (int i = 0; i < N; i++) {
-      geom.add_face((i - offset + N) % N, (i + step1) % N + N,
-                    (i + step1 + offset + N) % N, (i) % N + N, -1);
+      geom.add_face({(i - offset + N) % N, (i + step1) % N + N,
+                    (i + step1 + offset + N) % N, (i) % N + N});
 
-      geom.add_face((i - offset + N) % N + N, (i + step1) % N,
-                    (i + step1 + offset + N) % N + N, (i) % N, -1);
+      geom.add_face({(i - offset + N) % N + N, (i + step1) % N,
+                    (i + step1 + offset + N) % N + N, (i) % N});
     }
   }
   else {
@@ -1099,15 +1098,15 @@ Status Polygon::make_crown_full(Geometry &geom)
     bool odd2 = !is_even(step2);
     for (int i = 0; i < N; i++) {
       geom.add_face(
-          (i) % N,
-          (i - 1 + (step2 + odd2) / 2 + (step1 + odd1) / 2 + N) % N + N,
-          (i + step2) % N,
-          (i - 1 + (step2 + odd2) / 2 - (step1 - odd1) / 2 + N) % N + N, -1);
+          {(i) % N,
+           (i - 1 + (step2 + odd2) / 2 + (step1 + odd1) / 2 + N) % N + N,
+           (i + step2) % N,
+           (i - 1 + (step2 + odd2) / 2 - (step1 - odd1) / 2 + N) % N + N});
       geom.add_face(
-          (i) % N,
-          (i - 1 + (step1 + odd1) / 2 + (step2 + odd2) / 2 + N) % N + N,
-          (i + step1) % N,
-          (i - 1 + (step1 + odd1) / 2 - (step2 - odd2) / 2 + N) % N + N, -1);
+          {(i) % N,
+           (i - 1 + (step1 + odd1) / 2 + (step2 + odd2) / 2 + N) % N + N,
+           (i + step1) % N,
+           (i - 1 + (step1 + odd1) / 2 - (step2 - odd2) / 2 + N) % N + N});
     }
   }
 

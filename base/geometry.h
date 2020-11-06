@@ -227,13 +227,6 @@ public:
    * \return index number of newly added face. */
   virtual int add_face(const std::vector<int> &face, Color col = Color());
 
-  /// Add a face made from integer arguments, without colour
-  /**The final argument must be a dummy value of \c -1.
-   * \param v1 the first index
-   * \param ... further indexes in the face, and a final -1 to terminate.
-   * \return index number of newly added face. */
-  virtual int add_face(int v1, ...);
-
   /// Add several faces, without colour
   /**\param fces faces to add.
    * \return index number of last added face. */

@@ -745,7 +745,7 @@ bool Wythoff::make_poly(Geometry &geom, char *errmsg)
     if (fracs[2] == 2 && fracs[4] == 2) { // P|2 2 is degenerate
       geom.add_vert(pt);
       geom.add_vert(-pt);
-      geom.add_face(0, 1, -1); // add as face, for sizing by edge length
+      geom.add_face({0, 1}); // add as face, for sizing by edge length
     }
     else { // usual construction
       add_faces(geom, pt, fracs[2], fracs[3], verts, 1, sym);
@@ -784,7 +784,7 @@ bool Wythoff::make_tri(Geometry &geom)
   geom.clear_all();
   if (is_set()) {
     geom.add_verts(verts);
-    geom.add_face(0, 1, 2, -1);
+    geom.add_face({0, 1, 2});
   }
   return is_set();
 }
@@ -903,8 +903,8 @@ static void make_meta(const Geometry &geom, Geometry &meta,
       int v0 = geom.faces(f_idx, v);
       int v1 = geom.faces_mod(f_idx, v + 1);
       int e_cent_idx = e2v[make_edge(v0, v1)];
-      meta.add_face(v0, e_cent_idx, f_cent_idx, -1);
-      meta.add_face(v1, e_cent_idx, f_cent_idx, -1);
+      meta.add_face({v0, e_cent_idx, f_cent_idx});
+      meta.add_face({v1, e_cent_idx, f_cent_idx});
     }
   }
 }
