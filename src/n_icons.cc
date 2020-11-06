@@ -2087,9 +2087,10 @@ void calc_radii(double &inner_radius, double &outer_radius, double &arc,
     outer_radius = outer_radius_calc;
 
   if (opts.build_method == 2) {
-    // reculate arc and interior_angle;
+    // reculate arc
     arc = 360.0 / N;
-    interior_angle = (180.0 - arc) / 2.0;
+    // interior angle (not used)
+    //interior_angle = (180.0 - arc) / 2.0;
 
     int n_calc = N / ((d != 1) ? 2 : 1);
     if (2 * d > n_calc)
