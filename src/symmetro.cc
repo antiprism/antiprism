@@ -2059,7 +2059,7 @@ int main(int argc, char *argv[])
   if (opts.verbose) {
     s.debug(opts.mode);
 
-    double edge_length[2];
+    double edge_length[2] = {0,0};
     for (int i = 0; i < (int)pgeom.size(); i++) {
       GeometryInfo info(pgeom[i]);
       if (info.num_iedges() > 0) {
