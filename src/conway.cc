@@ -489,6 +489,7 @@ public:
   bool reverse_ops;
   char operand;
   int poly_size;
+  // RK: default planarize method change from q to a, code unchanged
   char planarize_method;
   bool unitize;
   bool verbosity;
@@ -516,7 +517,7 @@ public:
   cn_opts()
       : ProgramOpts("conway"), cn_string(""), resolve_ops(false),
         hart_mode(false), tile_mode(false), reverse_ops(false), operand('\0'),
-        poly_size(0), planarize_method('q'), unitize(false), verbosity(false),
+        poly_size(0), planarize_method('a'), unitize(false), verbosity(false),
         face_coloring_method('n'), face_opacity(-1), face_pattern("1"),
         seed_coloring_method(1), epsilon(0),
         vert_col(Color(255, 215, 0)),   // gold
@@ -592,7 +593,7 @@ e = expand This is Mrs. Stott's expansion operation.  Each face of X is
 separated from all its neighbors and reconnected with a new 4-sided face,
 corresponding to an edge of X.  An n-gon is then added to connect the 4-sided
 faces at each n-fold vertex.  For example, eC is the rhombicuboctahedron.  It
-turns out that eX=aaX and so eX=edX (Antiprism: or "en" where n is 0 or greater)
+turns out that eX=aaX and so eX=edX (Antiprism: "en" where n is 0 or greater)
 Note: expand is also known as "cantellating" the polyhedron, or cantellation
 
 g = gyro   The dual operation to s is g. gX=dsdX=dsX, with all 5-sided faces.
@@ -648,7 +649,7 @@ https://en.wikipedia.org/wiki/Conway_polyhedron_notation
 
 c = chamfer   New hexagonal faces are added in place of edges
 
-J = joined-medial  Like medial, but new rhombic faces in place of original edges
+J = joined-medial Like medial, but new rhombic faces in place of original edges
 
 K = stake     Subdivide faces with central quads, and triangles
               All faces processed or can be "Kn" where n is 3 or greater
@@ -691,7 +692,7 @@ z = zip       Dual of kis or truncation of the dual. This create new edges
 
 Orientation of the input model will have an effect on chiral operations such as
 snub or whirl. The orientation mode is set to positive by default. Operations
-have been added to control orientation mode. The mode will remain until changed.
+have been added to control orientation mode. The mode will remain until changed
 + (plus sign) = positive orientation  - (minus sign) = negative orientation
 Changing orientation mode can be placed anywhere in the operation string
 
@@ -709,8 +710,8 @@ o  - n may be 0 or greater (default: 1)
 s  - n may be 1 or greater (default: 1)
 t  - n may be 2 or greater representing face sides
 
-Antiprism Extension: note that any operation can be repeated N time by following
-it with the ^ symbol and a number greater than 0. Examples: a^3C M0^2T
+Antiprism Extension: any operation can be repeated N time by following it with
+the ^ symbol and a number greater than 0. Examples: a^3C M0^2T
 
 Seeds which require a number n, 3 or greater
 
@@ -723,25 +724,25 @@ R  - Random Convex Polyhedron (Antiprism Extension)
 Note: Antiprism Extensions will work on tilings. Hart algorithms (-d) will not
 e.g.: unitile2d 3 | conway p -t | antiview -v 0.1 (-t for tile mode)
 
-Regular 2D tilings can be constructed from base polygons. The basic tilings are:
+Regular 2D tilings can be constructed from base polygons. The basic tilings are
 
             One Layer  Two Layers  Three Layers...
 Square:     oZ4        o2Z4        o3Z4
 Hexagonal:  tkZ6       ctkZ6       cctkZ6
 Triangular: ktkZ6      kctkZ6      kcctkZ6 (kis operation on Hexagonal)
 
-Name                   Vertex Fig  Op     String  Dual Name              String
-Square                 4,4,4,4            oZ4     Square                 do2Z4
-Truncated Square       4,8,8       trunc  toZ4    Tetrakis Square        dto2Z4
-Snub Square            3,3,4,3,4   snub   soZ4    Cairo Pentagonal       dso2Z4
-Triangular             3,3,3,3,3,3 kis    ktkZ6   Hexagonal              ddctkZ6
-Hexagonal              6,6,6              tkZ6    Triangular             dkctkZ6
-Trihexagonal           3,6,3,6     ambo   atkZ6   Rhombille              dactkZ6
-Snub Trihexagonal      3,3,3,3,6   snub   stkZ6   Floret Pentagonal      dsctkZ6
-Truncated Hexagonal    3,12,12     trunc  ttkZ6   Triakis triangular     dtctkZ6
-Rhombitrihexagonal     3,4,6,4     expand etkZ6   Deltoidal Trihexagonal dectkZ6
-Truncated Trihexagonal 4,6,12      bevel  btkZ6   Kisrhombille           dbctkZ6
-Elongated Triangular   3,3,3,4,4   Non Wythoffian Prismatic Triangular   none
+Name                   Vertex Fig  Op     String Dual Name              String
+Square                 4,4,4,4            oZ4    Square                 do2Z4
+Truncated Square       4,8,8       trunc  toZ4   Tetrakis Square        dto2Z4
+Snub Square            3,3,4,3,4   snub   soZ4   Cairo Pentagonal       dso2Z4
+Triangular             3,3,3,3,3,3 kis    ktkZ6  Hexagonal              ddctkZ6
+Hexagonal              6,6,6              tkZ6   Triangular             dctkZ6
+Trihexagonal           3,6,3,6     ambo   atkZ6  Rhombille              dactkZ6
+Snub Trihexagonal      3,3,3,3,6   snub   stkZ6  Floret Pentagonal      dsctkZ6
+Truncated Hexagonal    3,12,12     trunc  ttkZ6  Triakis triangular     dtctkZ6
+Rhombitrihexagonal     3,4,6,4     expand etkZ6  Deltoidal Trihexagonal dectkZ6
+Truncated Trihexagonal 4,6,12      bevel  btkZ6  Kisrhombille           dbctkZ6
+Elongated Triangular   3,3,3,4,4   NonWythoffian Prismatic Triangular   none
 
 
 Substitutions used by George Hart algorithms
@@ -1123,7 +1124,7 @@ void cn_opts::process_command_line(int argc, char **argv)
               'g');
       hart_mode = false;
     }
-    planarize_method = 'r';
+    planarize_method = 'a';
   }
 
   if (hart_mode) {
@@ -1263,8 +1264,8 @@ void cn_planarize(Geometry &geom, char planarize_method, const cn_opts &opts)
 {
   // if the model becomes open mid-processing, sand and fill planar works
   GeometryInfo info(geom);
-  if ((planarize_method != 'r') && !info.is_closed()) {
-    planarize_method = 'r';
+  if ((planarize_method != 'a') && !info.is_closed()) {
+    planarize_method = 'a';
   }
 
   if (opts.it_ctrl.get_max_iters() != 0) {
@@ -1272,15 +1273,10 @@ void cn_planarize(Geometry &geom, char planarize_method, const cn_opts &opts)
     if (planarize_method == 'q') {
       planarize_bd(geom, opts.it_ctrl);
     }
-    else if (planarize_method == 'r') {
+    else if (planarize_method == 'a') {
       planarize_unit(geom, opts.it_ctrl);
     }
   }
-
-  // note: sometimes radius becomes very small with base/dual methods
-  // if unitizing edges, don't alter radius
-  if (planarize_method == 'q')
-    unitize_nearpoints_radius(geom);
 }
 
 void get_operand(Geometry &geom, const cn_opts &opts)
@@ -1709,8 +1705,8 @@ void orient_planar(Geometry &geom, bool &is_orientable,
   if (!is_orientable) {
     verbose('@', 0, opts);
     // default planarization method for non-orientable geometry set to unit edge
-    if (opts.planarize_method != 'r') {
-      planarize_method = 'r';
+    if (opts.planarize_method != 'a') {
+      planarize_method = 'a';
     }
   }
   else
@@ -2025,7 +2021,7 @@ int main(int argc, char *argv[])
   // to unit edge
   GeometryInfo info(geom);
   if ((opts.planarize_method == 'q') && !info.is_closed()) {
-    opts.planarize_method = 'r';
+    opts.planarize_method = 'a';
   }
 
   do_operations(geom, opts);

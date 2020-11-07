@@ -488,16 +488,6 @@ vector<Vec3d> reciprocalC_len2(const Geometry &geom)
   return centers;
 }
 
-// reciprocate on face centers dividing by magnitude
-vector<Vec3d> reciprocalC_len(const Geometry &geom)
-{
-  vector<Vec3d> centers;
-  geom.face_cents(centers);
-  for (auto &center : centers)
-    center /= center.len();
-  return centers;
-}
-
 // Addition to algorithm by Adrian Rossiter
 // Finds the edge near points centroid
 Vec3d edge_nearpoints_centroid(Geometry &geom, const Vec3d cent)
@@ -537,10 +527,12 @@ bool canonicalize_bd(Geometry &base, IterationControl it_ctrl,
     case 'b': {
       dual.raw_verts() = reciprocalN(base, normal_type);
       base.raw_verts() = reciprocalN(dual, normal_type);
-      if (centering != 'x') {
-        Vec3d e_cent = edge_nearpoints_centroid(base, Vec3d(0, 0, 0));
-        base.transform(Trans3d::translate(-0.1 * e_cent));
-      }
+      // re-center for drift
+      if (centering == 'e')
+        base.transform(Trans3d::translate(
+            -edge_nearpoints_centroid(base, Vec3d(0, 0, 0))));
+      else if (centering == 'v')
+        base.transform(Trans3d::translate(-centroid(base.verts())));
       break;
     }
 
@@ -548,11 +540,13 @@ bool canonicalize_bd(Geometry &base, IterationControl it_ctrl,
     case 'q':
       // move centroid to origin for balance
       dual.raw_verts() = reciprocalC_len2(base);
-      base.transform(Trans3d::translate(-centroid(dual.verts())));
       base.raw_verts() = reciprocalC_len2(dual);
       base.transform(Trans3d::translate(-centroid(base.verts())));
       break;
     }
+    
+    // reduces size imbalance problem with this algorithm
+    unitize_nearpoints_radius(base);
 
     string finish_msg;
     if (it_ctrl.is_status_check_iter()) {
