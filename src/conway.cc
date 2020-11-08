@@ -489,7 +489,6 @@ public:
   bool reverse_ops;
   char operand;
   int poly_size;
-  // RK: default planarize method change from q to a, code unchanged
   char planarize_method;
   bool unitize;
   bool verbosity;
@@ -517,7 +516,7 @@ public:
   cn_opts()
       : ProgramOpts("conway"), cn_string(""), resolve_ops(false),
         hart_mode(false), tile_mode(false), reverse_ops(false), operand('\0'),
-        poly_size(0), planarize_method('a'), unitize(false), verbosity(false),
+        poly_size(0), planarize_method('q'), unitize(false), verbosity(false),
         face_coloring_method('n'), face_opacity(-1), face_pattern("1"),
         seed_coloring_method(1), epsilon(0),
         vert_col(Color(255, 215, 0)),   // gold
