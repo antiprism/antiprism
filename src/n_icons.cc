@@ -192,99 +192,99 @@ public:
   void usage();
 };
 
-// clang-format off
 void ncon_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options]\n"
-"\n"
-"Creates Sphericon like Polyhedra. Also known as Streptohedra\n"
-"\n"
-"Options\n"
-"%s"
-"  -n <n/d>  n-icon of order n. n must be 3 or greater (default: 4)\n"
-"               use d to make star n-icon. d less than n\n"
-"  -t <twst> number of twists. Can be negative, positive or 0 (default: 1)\n"
-"  -s        side-cut of even order n-icon (default is point-cut)\n"
-"  -H        hybrid of even order n-icon\n"
-"  -a        angle (-z 3 only)\n"
-"  -r        override inner radius (-z 2 only)\n"
-"  -R        override outer radius (-z 2 only)\n"
-"  -z <mthd> construction method\n"
-"               1 - n/d must be co-prime. bow-ties can occur (default for d=1)\n"
-"               2 - n/d compounds allowed. shell model (default for d>1)\n"
-"               3 - n/d compounds allowed. No bow-ties (default if angle not 0)\n"
-"  -M <m,m2> longitudes of model of m sides with optional m2 of m sides showing\n"
-"               m may be odd, 3 or greater if twist is 0 (default: 36,36)\n"
-"  -A        place a north and south pole in top and bottom if they exist\n"
-"                only valid if m2<m. Not valid with -c h (-z 1 only)\n"
-"  -c <clse> close open model if m2<m. Valid values h or v (-z 1,2)\n"
-"               h = horizontal closure, v = vertical closure\n"   
-"  -x <elms> v, e and f to remove OFF faces with one vertex (vertices),\n"
-"               two-vertices (edges) and three or more vertices (faces)\n"
-"               E - if face is invisble, associated edge is made invisible\n"
-"  -I        information on current n-icon\n"  
-"  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
-"               (default: %d giving %.0e)\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\nColoring Options (run 'off_util -H color' for help on color formats)\n"
-"  -f <mthd> mthd is face coloring method. The coloring is done before twist\n"
-"               key word: none - sets no color\n"
-"               S - color by symmetry polygon (default)\n"
-"               s - color by circuits algorithm (n/d must be co-prime)\n"
-"               f - color circuits with flood fill (-z 2,3 any n/d)\n"
-"               c - color by compound\n"
-"               a - color by compound, alternate method\n"
-"               l - color latitudinally\n"
-"               m - color longitudinally\n"
-"               b - checkerboard with first two colors in face color list\n"
-"               n - use each color in succession\n"
-"               x - first two colors based on sign of x\n"
-"               y - first two colors based on sign of y\n"
-"               z - first two colors based on sign of z (z is the twist plane)\n"
-"               o - use first eight colors per xyz octants\n"
-"  -S        color circuits symmetrically for coloring method s,f,S (even n)\n"
-"  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
-"  -O <strg> face transparency pattern string. valid values\n"
-"               0 -T value suppressed, 1 -T value applied  (default: '1')\n"
-"  -e <mthd> mthd is edge coloring method. The coloring is done before twist\n"
-"               key word: none - sets no color\n"
-"               key word: Q - defer coloring all edges to option Q  (default)\n"
-"                  or use the same letter options specified in -f, except c,a\n"
-"               F - color edges with average adjoining face color\n"
-"  -U <tran> edge transparency. valid range from 0 (invisible) to 255 (opaque)\n"
-"  -P <strg> edge transparency pattern string. valid values\n"
-"               0 -U value suppressed, 1 -U value applied  (default: '1')\n"
-"  -Q <col>  color given to uncolored edges and vertices of final model\n"
-"               key word: none - sets no color (default: invisible)\n"
-"  -Y        for n/d shells, when showing edges, show indented edges\n"
-"  -m <maps> color maps to be tried in turn. (default: map_red:darkorange1:\n"
-"               yellow:darkgreen:cyan:blue:magenta:white:grey:black%%) optionally\n"
-"               followed by elements to map from v, e or f (default: vef)\n"
-"  -D <c,e>  default color c for uncolored elements e (default: darkgrey,ef)\n"
-"               key word: none - sets no color. elements e can include e or f\n"
-"  -X <int>  flood fill stop. used with circuit or compound coloring (-f f,c)\n"
-"               use 0 (default) to flood fill entire model. if -X is not 0 then\n"
-"               return 1 from program if entire model has been colored\n"
-"  -W        add symmetry polygon (for -f S or -e S)\n"
-"\nSurface Count Reporting (options above igonored)\n"
-"  -L <type> list n-icons with more than one surface. Valid values for type\n"
-"               n = point cut even order n_icons\n"
-"               s = side cut even order n-icons (surfaces > 2)\n"
-"               o = odd order n_icons\n"
-"               h = hybrids (all)\n"
-"               i = hybrids (where N/2 is even)\n"
-"               j = hybrids (where N/2 is odd)\n"
-"               k = hybrids (where N/4 is even)\n"
-"               l = hybrids (where N/4 is odd)\n"
-"  -K <k,k2> range of n-icons to list for multiple surfaces\n"
-"  -J        long form report\n"
-"  -Z        filter out case 2 types\n"
-"\n"
-"\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
+  fprintf(stdout, R"(
+Usage: %s [options]
+
+Creates Sphericon like Polyhedra. Also known as Streptohedra
+
+Options
+%s
+  -n <n/d>  n-icon of order n. n must be 3 or greater (default: 4)
+               use d to make star n-icon. d less than n
+  -t <twst> number of twists. Can be negative, positive or 0 (default: 1)
+  -s        side-cut of even order n-icon (default is point-cut)
+  -H        hybrid of even order n-icon
+  -a        angle (-z 3 only)
+  -r        override inner radius (-z 2 only)
+  -R        override outer radius (-z 2 only)
+  -z <mthd> construction method
+               1 - n/d must be co-prime. bow-ties can occur (default for d=1)
+               2 - n/d compounds allowed. shell model (default for d>1)
+               3 - n/d compounds allowed. No bow-ties (default if angle not 0)
+  -M <m,m2> longitudes of model of m sides with optional m2 of m sides showing
+               m may be odd, 3 or greater if twist is 0 (default: 36,36)
+  -A        place a north and south pole in top and bottom if they exist
+                only valid if m2<m. Not valid with -c h (-z 1 only)
+  -c <clse> close open model if m2<m. Valid values h or v (-z 1,2)
+               h = horizontal closure, v = vertical closure   
+  -x <elms> v, e and f to remove OFF faces with one vertex (vertices),
+               two-vertices (edges) and three or more vertices (faces)
+               E - if face is invisible, associated edge is made invisible
+  -I        information on current n-icon  
+  -l <lim>  minimum distance for unique vertex locations as negative exponent
+               (default: %d giving %.0e)
+  -o <file> write output to file (default: write to standard output)
+
+Coloring Options (run 'off_util -H color' for help on color formats)
+  -f <mthd> mthd is face coloring method. The coloring is done before twist
+               key word: none - sets no color
+               S - color by symmetry polygon (default)
+               s - color by circuits algorithm (n/d must be co-prime)
+               f - color circuits with flood fill (-z 2,3 any n/d)
+               c - color by compound
+               a - color by compound, alternate method
+               l - color latitudinally
+               m - color longitudinally
+               b - checkerboard with first two colors in face color list
+               n - use each color in succession
+               x - first two colors based on sign of x
+               y - first two colors based on sign of y
+               z - first two colors based on sign of z (z is the twist plane)
+               o - use first eight colors per xyz octants
+  -S        color circuits symmetrically for coloring method s,f,S (even n)
+  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
+  -O <strg> face transparency pattern string. valid values
+               0 -T value suppressed, 1 -T value applied  (default: '1')
+  -e <mthd> mthd is edge coloring method. The coloring is done before twist
+               key word: none - sets no color
+               key word: Q - defer coloring all edges to option Q  (default)
+                  or use the same letter options specified in -f, except c,a
+               F - color edges with average adjoining face color
+  -U <tran> edge transparency. valid range from 0 (invisible) to 255 (opaque)
+  -P <strg> edge transparency pattern string. valid values
+               0 -U value suppressed, 1 -U value applied  (default: '1')
+  -Q <col>  color given to uncolored edges and vertices of final model
+               key word: none - sets no color (default: invisible)
+  -Y        for n/d shells, when showing edges, show indented edges
+  -m <maps> color maps to be tried in turn. (default: map_red:darkorange1:
+               yellow:darkgreen:cyan:blue:magenta:white:gray:black%%) optionally
+               followed by elements to map from v, e or f (default: vef)
+  -D <c,e>  default color c for uncolored elements e (default: darkgray,ef)
+               key word: none - sets no color. elements e can include e or f
+  -X <int>  flood fill stop. used with circuit or compound coloring (-f f,c)
+               use 0 (default) to flood fill entire model. if -X is not 0 then
+               return 1 from program if entire model has been colored
+  -W        add symmetry polygon (for -f S or -e S)
+
+Surface Count Reporting (options above ignored)
+  -L <type> list n-icons with more than one surface. Valid values for type
+               n = point cut even order n_icons
+               s = side cut even order n-icons (surfaces > 2)
+               o = odd order n_icons
+               h = hybrids (all)
+               i = hybrids (where N/2 is even)
+               j = hybrids (where N/2 is odd)
+               k = hybrids (where N/4 is even)
+               l = hybrids (where N/4 is odd)
+  -K <k,k2> range of n-icons to list for multiple surfaces
+  -J        long form report
+  -Z        filter out case 2 types
+)",
+          prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
+          ::epsilon);
 }
-// clang-format on
 
 void ncon_opts::process_command_line(int argc, char **argv)
 {
@@ -2090,7 +2090,7 @@ void calc_radii(double &inner_radius, double &outer_radius, double &arc,
     // reculate arc
     arc = 360.0 / N;
     // interior angle (not used)
-    //interior_angle = (180.0 - arc) / 2.0;
+    // interior_angle = (180.0 - arc) / 2.0;
 
     int n_calc = N / ((d != 1) ? 2 : 1);
     if (2 * d > n_calc)

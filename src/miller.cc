@@ -80,44 +80,43 @@ public:
   void usage();
 };
 
-// clang-format off
 void miller_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] input\n"
-"\n"
-"Millers 59 Icosahedra Stellations. Plus additional stellations discovered since.\n"
-"input may be Miller list number from 1 to 75. Or m_string where string consists\n"
-"of one or more cell names: A,B,C,D,E,F,G,H,e1,f1,f1',g1,e2,f2,g2  e.g m_De1f1g1\n"
-"model string can be followed by I or Ih symmetry. e.g. ""m_e1f1',I""\n"
-"std_ may precede input string to output a raw model\n" 
-"\n"
-"Options\n"
-"%s"
-"  -L        list models only\n"
-"  -M        merge stellation facelets\n"
-"  -r        rebuild compound model to separate vertices\n"
-"  -O <args> output s - stellation, d - diagram (default: s)\n"
-"  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
-"               (default: %d giving %.0e)\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\nColoring Options (run 'off_util -H color' for help on color formats)\n"
-"  -F <opt>  face coloring method. d - from diagram, s - symmetry\n"
-"               c - color by compound (default: 255,193,37, if compound then c)\n"
-"               C - face/face connection count using map n colors\n"
-"               keyword: none - sets no color\n"
-"  -E <col>  edge color. f - from faces (default: invisible)\n"
-"               C - edge/face connection count using map n colors\n"
-"               keyword: none - sets no color\n"
-"  -V <col>  vertex color.  e - from edges (default: invisible)\n"
-"               keyword: none - sets no color\n"
-"  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
-"  -m <maps> color maps. stellation diagram or face symmetry (default: compound)\n"
-"\n"
-"\n", prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
+  fprintf(stdout, R"(
+Usage: %s [options] input
+
+Millers 59 Icosahedra Stellations. Plus additional stellations since discovered
+input may be Miller list number from 1 to 75. Or m_string where string consists
+of one or more cell names: A,B,C,D,E,F,G,H,e1,f1,f1',g1,e2,f2,g2  e.g m_De1f1g1
+model string can be followed by I or Ih symmetry. e.g. m_e1f1',I
+std_ may precede input string to output a raw model 
+
+Options
+%s
+  -L        list models only
+  -M        merge stellation facelets
+  -r        rebuild compound model to separate vertices
+  -O <args> output s - stellation, d - diagram (default: s)
+  -l <lim>  minimum distance for unique vertex locations as negative exponent
+               (default: %d giving %.0e)
+  -o <file> write output to file (default: write to standard output)
+
+Coloring Options (run 'off_util -H color' for help on color formats)
+  -F <opt>  face coloring method. d - from diagram, s - symmetry
+               c - color by compound (default: 255,193,37, if compound then c)
+               C - face/face connection count using map n colors
+               keyword: none - sets no color
+  -E <col>  edge color. f - from faces (default: invisible)
+               C - edge/face connection count using map n colors
+               keyword: none - sets no color
+  -V <col>  vertex color.  e - from edges (default: invisible)
+               keyword: none - sets no color
+  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
+  -m <maps> color maps. stellation diagram or face symmetry (default: compound)
+)",
+          prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
+          ::epsilon);
 }
-// clang-format on
 
 void miller_opts::process_command_line(int argc, char **argv)
 {

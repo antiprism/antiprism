@@ -113,89 +113,90 @@ public:
   void usage();
 };
 
-// clang-format off
 void planar_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] [input_file]\n"
-"\n"
-"Read a file in OFF format and convert overlapping coplanar polygons into\n"
-"non-overlapping polygon tiles. If input_file is not given the program \n"
-"reads from standard input.\n"
-"\n"
-"Options\n"
-"%s"
-"  -d <opt>  blend overlapping (tile) or adjacent (merge) planar faces\n"  
-"               tile=1, merge=2 (default: none)\n"
-"  -p <opt>  polygon fill algorithm.  angular=1, modulo2=2 (pnpoly)\n"
-"               triangulation=3, even_overlap=4, alt_modulo2=5 (default: 1)\n"
-"  -w <opt>  winding rule, include face parts according to winding number\n"
-"               odd, even, positive, negative, nonzero, zero (default: none)\n"
-"               zodd, zeven, zpositive, znegative (includes zero)\n"
-"               or symbol proceeding integer: eq, ne, gt, ge, lt, le  meaning\n"
-"               equal, not equal, greater than, greater than or equal, less\n"
-"               than, less than or equal. use 'a' for absolute value  e.g. gea2\n"
-"  -z        use direction of normals for hemispherical winding numbers\n"
-"  -V        verbose output (of minimum and maximum winding numbers)\n"
-"  -H        turn off hole detection\n"
-"  -S        stitch seams created by tiling or merging\n"
-"  -R        split pinched faces\n"
-"  -r        rebuild compound model to separate vertices\n"
-"  -I        rid faces of extra in-line vertices\n"
-"  -e <opt>  blend existing explicit edges and/or vertices using blend options\n"
-"               e - edges, v - vertices, b - both (-d forces b, otherwise none)\n"
-"  -E <opt>  remove explicit edges, blend new ones using face colors (sets -S)\n"
-"               e - edges only, v - also blend vertices (default: none)\n"
-"               V - also blend invisible vertices, s - strip edges and vertices\n"
-"  -D        delete invisible faces created by winding rule\n"
-"  -O <opt>  orient the faces first (if possible) then for volume\n"
-"               positive=1, negative=2, reverse=3, or use flip=4\n"
-"               which reverses the orientation of the model as it was input\n"
-"  -C <xyz>  center of model, in form 'X,Y,Z' (default: centroid)\n"
-"  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
-"               (default: %d giving %.0e)\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\nColor Blending Options (for option -d)\n"
-"  -M <mode> color blending mode. HSV=1, HSL=2, RGB=3 (default: 3)\n"
-"  -s <sat>  HSV/HSL saturation curve. Greather than 0 (default: 1)\n"
-"               1.0 - no curve. lower than 1.0 makes blends more pastel\n"
-"  -t <val>  HSV/HSL threshold to use average saturation (default: 1)\n"
-"               between 0.0 (all averaging) and 1.0 (no averaging)\n"
-"  -v <val>  HSV/HSL value curve (default: 0)\n"
-"               simulates subtractive coloring for blending 3 or more colors\n"
-"               RGB: Red+Green+Blue = White   Cyan+Magenta+Yellow = Black\n"
-"               RYB: Red+Yellow+Blue = Black  Green+Magenta+Orange = White\n"
-"               1.0 - no curve. lower than 1.0 number makes blends lighter\n"
-"               0.0 - use average value instead\n"
-"  -u <val>  HSV/HSL value advance. Rotates meaning of white and black\n"
-"               valid values 0.0 to 120.0 degrees (default: 0)\n"
-"  -a <int>  alpha for blend. average=1, minimum=2, maximum=3 (default: 3)\n"
-"  -y        RYB mode. Blend colors as in Red-Yellow-Blue color wheel\n"
-"  -c        CMY mode. Complementary colors.  RGB->(RYB/GMO)->CMY->blend\n"
-"  -b <val>  brightness adjustment for areas of blended colors\n"
-"               valid values -1.0 to +1.0 (default: no adjustment)\n"
-"               negative for darker, positive for lighter\n"
-"               at 0, an area with 2 blended colors will not change\n"
-"               but areas with 3 or more will become slightly darker\n"
-"\nColoring Options (run 'off_util -H color' for help on color formats)\n"
-"  -f <opt>  take face colors from map (processed before -d)\n"
-"               n - unique color for faces with same normals\n"
-"               p - unique color for faces on same planes only\n"
-"               o - unique color for faces on same and opposite normals\n"
-"  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
-"  -Z <col>  color for areas found colorless by winding (default: invisible)\n"
-"               key word: b - force a color blend\n"
-"  -W <opt>  color by winding number, using maps (overrides option -f)\n"
-"               w - use actual winding number\n"
-"               a - absolute value of winding number\n"
-"               n - negative of absolute value of winding number\n"
-"  -m <maps> color maps for faces to be tried in turn (default: compound)\n"
-"  -n <maps> maps for negative winding numbers (default: rng17_S0V0.5:0)\n"
-"               (map position zero not used. default is 16 gradients)\n"
-"\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
+  fprintf(stdout, R"(
+Usage: %s [options] [input_file]
+
+Read a file in OFF format and convert overlapping coplanar polygons into
+non-overlapping polygon tiles. If input_file is not given the program 
+reads from standard input.
+
+Options
+%s
+  -d <opt>  blend overlapping (tile) or adjacent (merge) planar faces  
+               tile=1, merge=2 (default: none)
+  -p <opt>  polygon fill algorithm.  angular=1, modulo2=2 (pnpoly)
+               triangulation=3, even_overlap=4, alt_modulo2=5 (default: 1)
+  -w <opt>  winding rule, include face parts according to winding number
+               odd, even, positive, negative, nonzero, zero (default: none)
+               zodd, zeven, zpositive, znegative (includes zero)
+               or symbol proceeding integer: eq, ne, gt, ge, lt, le  meaning
+               equal, not equal, greater than, greater than or equal, less
+               than, less than or equal. use 'a' for absolute value  e.g. gea2
+  -z        use direction of normals for hemispherical winding numbers
+  -V        verbose output (of minimum and maximum winding numbers)
+  -H        turn off hole detection
+  -S        stitch seams created by tiling or merging
+  -R        split pinched faces
+  -r        rebuild compound model to separate vertices
+  -I        rid faces of extra in-line vertices
+  -e <opt>  blend existing explicit edges and/or vertices using blend options
+               e - edges, v - vertices, b - both (-d forces b, otherwise none)
+  -E <opt>  remove explicit edges, blend new ones using face colors (sets -S)
+               e - edges only, v - also blend vertices (default: none)
+               V - also blend invisible vertices, s - strip edges and vertices
+  -D        delete invisible faces created by winding rule
+  -O <opt>  orient the faces first (if possible) then for volume
+               positive=1, negative=2, reverse=3, or use flip=4
+               which reverses the orientation of the model as it was input
+  -C <xyz>  center of model, in form 'X,Y,Z' (default: centroid)
+  -l <lim>  minimum distance for unique vertex locations as negative exponent
+               (default: %d giving %.0e)
+  -o <file> write output to file (default: write to standard output)
+
+Color Blending Options (for option -d)
+  -M <mode> color blending mode. HSV=1, HSL=2, RGB=3 (default: 3)
+  -s <sat>  HSV/HSL saturation curve. Greater than 0 (default: 1)
+               1.0 - no curve. lower than 1.0 makes blends more pastel
+  -t <val>  HSV/HSL threshold to use average saturation (default: 1)
+               between 0.0 (all averaging) and 1.0 (no averaging)
+  -v <val>  HSV/HSL value curve (default: 0)
+               simulates subtractive coloring for blending 3 or more colors
+               RGB: Red+Green+Blue = White   Cyan+Magenta+Yellow = Black
+               RYB: Red+Yellow+Blue = Black  Green+Magenta+Orange = White
+               1.0 - no curve. lower than 1.0 number makes blends lighter
+               0.0 - use average value instead
+  -u <val>  HSV/HSL value advance. Rotates meaning of white and black
+               valid values 0.0 to 120.0 degrees (default: 0)
+  -a <int>  alpha for blend. average=1, minimum=2, maximum=3 (default: 3)
+  -y        RYB mode. Blend colors as in Red-Yellow-Blue color wheel
+  -c        CMY mode. Complementary colors.  RGB->(RYB/GMO)->CMY->blend
+  -b <val>  brightness adjustment for areas of blended colors
+               valid values -1.0 to +1.0 (default: no adjustment)
+               negative for darker, positive for lighter
+               at 0, an area with 2 blended colors will not change
+               but areas with 3 or more will become slightly darker
+
+Coloring Options (run 'off_util -H color' for help on color formats)
+  -f <opt>  take face colors from map (processed before -d)
+               n - unique color for faces with same normals
+               p - unique color for faces on same planes only
+               o - unique color for faces on same and opposite normals
+  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
+  -Z <col>  color for areas found colorless by winding (default: invisible)
+               key word: b - force a color blend
+  -W <opt>  color by winding number, using maps (overrides option -f)
+               w - use actual winding number
+               a - absolute value of winding number
+               n - negative of absolute value of winding number
+  -m <maps> color maps for faces to be tried in turn (default: compound)
+  -n <maps> maps for negative winding numbers (default: rng17_S0V0.5:0)
+               (map position zero not used. default is 16 gradients)
+)",
+          prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
+          ::epsilon);
 }
-// clang-format on
 
 void planar_opts::process_command_line(int argc, char **argv)
 {

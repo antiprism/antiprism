@@ -102,91 +102,90 @@ public:
   void usage();
 };
 
-// clang-format off
 void symmetro_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options]\n"
-"\n"
-"Symmetrohedra and Twisters are created by placing equilateral polygons centered\n"
-"on the symmetry axes of Icosahedral, Octahedral, Tetrahedral, or Dihedral\n"
-"symmetry. The sides of the polygons will be a multiple number of the axis\n"
-"reflection number. Axes are numbered as 0, 1 and 2\n"
-"\n"
-"It is possible to generate models such that the polygons intersect. If a\n"
-"collision is detected, convex hull will be suppressed\n"
-"\n"
-"options -k, -t, -s and -c cannot be used together but one needs to be specified\n" 
-"\n"
-"Options\n"
-"%s"
-"  -k <s,l,m,n,a> Kaplan-Hart notation. Generate Symmetrohedra based on a study\n"
-"            by Craig S. Kaplan and George W. Hart (http://www.georgehart.com).\n"
-"            Url: http://www.cgl.uwaterloo.ca/~csk/projects/symmetrohedra\n"
-"            s: symmetry type of Symmetrohedra. sets {p,q,2}\n"
-"               I-icosahedral {5,3,2} O-octahedral {4,3,2} T-tetrahedral {3,3,2}\n"
-"            l,m,n: multipliers for axis polygons. Separated by commas, one\n"
-"               multiplier must be * or 0, the other two are positive integers\n"
-"            a: face rotation type: vertex=1, edge=0  (default: 1)\n"
-"            example: -k i,2,*,4,e\n"
-"  -t <s[p,q]i,m1,m2> Twister notation. Generate twister models.\n"
-"            s: symmetry. I-icosahedral, O-octahedral, T-tetrahedral, D-dihedral\n"
-"            p,q: rotational order of each of the two axes. may be swapped\n"
-"            i: (default: 1): integer to select between non-equivalent pairs of\n"
-"               axes having the same symmetry group and rotational orders\n"
-"            m1,m2: an integer multiplier for each axis. i.e. m1*p and m2*q\n"
-"               also can be entered as m1/d, m2/d fractional values\n"
-"               e.g. T[3,2],1,2  I[5,2]2,1/2,3  D7[7,3],1,2  D11[2,2]5,2,2\n"
-"                  Axis pairs are from the following\n"
-"                  T: [3,3], [3,2], [2,2]\n"
-"                  O: [4,4], [4,3], [4,2]x2, [3,3], [3,2]x2, [2,2]x2\n"
-"                  I: [5,5], [5,3]x2, [5,2]x3, [3,3]x2, [3,2]x4, [2,2]x4\n"
-"                  Dn:[n,2], [2,2]x(n/2 rounded down)\n"
-"  -s <n/d:D>,s S symmetry twisters. denominator d optional (default: 1)\n"
-"               optional D substitutes a polygon of n/D in place of n/d\n"
-"               optional s: symmetry override c - C symmetry\n"
-"  -c <n1/d1:D1,n2/d2:D2,s,v> C symmetry twisters\n"
-"               optional d denominator (default: 1)\n"
-"               optional D substitutes a polygon of n/D in place of n/d\n"
-"               optional n2 can differ from n1. if not specified n2=n1, d2=d1\n"
-"               optional s: symmetry: c - C (default), h - Ch, v - Cv, d - D\n"
-"               optional v: vertex index of radial polygon to bring to z plane\n"
-"                  v of -1 is original position (default: index of largest z)\n"
-"  -M <opt>  mirroring (may create compound). Can be x, y or z (default: none)\n"
-"  -a <a,n>  a in degrees of rotation given to polygon applied to optional\n"
-"               axis n (default: 0)  radians may be entered as 'rad(a)'\n"
-"  -r <r,n>  set the edge length of the polygon on axis n (default: 0)\n"
-"               to r. Must be non-negative. The default edge length is 1\n"
-"  -A <a>    a in degrees is angle between axes (default: calculated)\n"
-"  -C <mode> convex hull. polygons=1, suppress=2, force=3, normal=4 (default: 4)\n"
-"  -q <args> include frame elements in output\n"
-"               r - rhombic tiling edges, a - rotation axes (default: none)\n"
-"  -O <dist> amount to offset the first polygon to avoid coplanarity with the\n"
-"               second polygon, for example 0.0001 (default: 0.0)\n"
-"  -x        remove any free faces that are produced\n"
-"  -v        verbose output\n"
-"  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
-"               (default: %d giving %.0e)\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\nColoring Options (run 'off_util -H color' for help on color formats)\n"
-"  -V <col>  vertex color (default: gold)\n"
-"  -E <col>  edge color   (default: lightgray)\n"
-"  -D        don't cover digons with edge color\n"
-"  -Q <col>  frame color  (default: skyblue3)\n"
-"  -f <mthd> mthd is face coloring method using color in map (default: a)\n"
-"               key word: none - sets no color\n"
-"               a - color by axis number\n"
-"               n - color by number of sides (map start from digons (sides 2))\n"
-"  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
-"  -m <maps> color maps for faces to be tried in turn (default: m1)\n"
-"               keyword m1: red,blue,yellow,darkgreen\n"
-"                  note: position 4 color is for faces added by convex hull\n"
-"               keyword m2: approximating colors in the symmetrohedra pdf file\n"
-"\n"
-"\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
+  fprintf(stdout, R"(
+Usage: %s [options]
+
+Symmetrohedra and Twisters are created by placing equilateral polygons centered
+on the symmetry axes of Icosahedral, Octahedral, Tetrahedral, or Dihedral
+symmetry. The sides of the polygons will be a multiple number of the axis
+reflection number. Axes are numbered as 0, 1 and 2
+
+It is possible to generate models such that the polygons intersect. If a
+collision is detected, convex hull will be suppressed
+
+options -k, -t, -s and -c cannot be used together but one needs to be specified 
+
+Options
+%s
+  -k <s,l,m,n,a> Kaplan-Hart notation. Generate Symmetrohedra based on a study
+            by Craig S. Kaplan and George W. Hart (http://www.georgehart.com).
+            Url: http://www.cgl.uwaterloo.ca/~csk/projects/symmetrohedra
+            s: symmetry type of Symmetrohedra. sets {p,q,2}
+               I-icosahedral {5,3,2} O-octahedral {4,3,2} T-tetrahedral {3,3,2}
+            l,m,n: multipliers for axis polygons. Separated by commas, one
+               multiplier must be * or 0, the other two are positive integers
+            a: face rotation type: vertex=1, edge=0  (default: 1)
+            example: -k i,2,*,4,e
+  -t <s[p,q]i,m1,m2> Twister notation. Generate twister models.
+            s: symmetry. I-icosahedral, O-octahedral, T-tetrahedral, D-dihedral
+            p,q: rotational order of each of the two axes. may be swapped
+            i: (default: 1): integer to select between non-equivalent pairs of
+               axes having the same symmetry group and rotational orders
+            m1,m2: an integer multiplier for each axis. i.e. m1*p and m2*q
+               also can be entered as m1/d, m2/d fractional values
+               e.g. T[3,2],1,2  I[5,2]2,1/2,3  D7[7,3],1,2  D11[2,2]5,2,2
+                  Axis pairs are from the following
+                  T: [3,3], [3,2], [2,2]
+                  O: [4,4], [4,3], [4,2]x2, [3,3], [3,2]x2, [2,2]x2
+                  I: [5,5], [5,3]x2, [5,2]x3, [3,3]x2, [3,2]x4, [2,2]x4
+                  Dn:[n,2], [2,2]x(n/2 rounded down)
+  -s <n/d:D>,s S symmetry twisters. denominator d optional (default: 1)
+               optional D substitutes a polygon of n/D in place of n/d
+               optional s: symmetry override c - C symmetry
+  -c <n1/d1:D1,n2/d2:D2,s,v> C symmetry twisters
+               optional d denominator (default: 1)
+               optional D substitutes a polygon of n/D in place of n/d
+               optional n2 can differ from n1. if not specified n2=n1, d2=d1
+               optional s: symmetry: c - C (default), h - Ch, v - Cv, d - D
+               optional v: vertex index of radial polygon to bring to z plane
+                  v of -1 is original position (default: index of largest z)
+  -M <opt>  mirroring (may create compound). Can be x, y or z (default: none)
+  -a <a,n>  a in degrees of rotation given to polygon applied to optional
+               axis n (default: 0)  radians may be entered as 'rad(a)'
+  -r <r,n>  set the edge length of the polygon on axis n (default: 0)
+               to r. Must be non-negative. The default edge length is 1
+  -A <a>    a in degrees is angle between axes (default: calculated)
+  -C <mode> convex hull. polygons=1, suppress=2, force=3, normal=4 (default: 4)
+  -q <args> include frame elements in output
+               r - rhombic tiling edges, a - rotation axes (default: none)
+  -O <dist> amount to offset the first polygon to avoid coplanarity with the
+               second polygon, for example 0.0001 (default: 0.0)
+  -x        remove any free faces that are produced
+  -v        verbose output
+  -l <lim>  minimum distance for unique vertex locations as negative exponent
+               (default: %d giving %.0e)
+  -o <file> write output to file (default: write to standard output)
+
+Coloring Options (run 'off_util -H color' for help on color formats)
+  -V <col>  vertex color (default: gold)
+  -E <col>  edge color   (default: lightgray)
+  -D        don't cover digons with edge color
+  -Q <col>  frame color  (default: skyblue3)
+  -f <mthd> mthd is face coloring method using color in map (default: a)
+               key word: none - sets no color
+               a - color by axis number
+               n - color by number of sides (map start from digons (sides 2))
+  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
+  -m <maps> color maps for faces to be tried in turn (default: m1)
+               keyword m1: red,blue,yellow,darkgreen
+                  note: position 4 color is for faces added by convex hull
+               keyword m2: approximating colors in the symmetrohedra pdf file
+)",
+          prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
+          ::epsilon);
 }
-// clang-format on
 
 // from StackOverflow
 // remove blanks from input char*
@@ -2059,7 +2058,7 @@ int main(int argc, char *argv[])
   if (opts.verbose) {
     s.debug(opts.mode);
 
-    double edge_length[2] = {0,0};
+    double edge_length[2] = {0, 0};
     for (int i = 0; i < (int)pgeom.size(); i++) {
       GeometryInfo info(pgeom[i]);
       if (info.num_iedges() > 0) {

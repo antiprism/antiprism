@@ -89,51 +89,49 @@ public:
   void usage();
 };
 
-// clang-format off
 void off_normals_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] [input_file]\n"
-"\n"
-"Display normals of faces, implicit edges, and vertices\n"
-"If input_file is not given the program reads from standard input.\n"
-"\n"
-"Options\n"
-"%s"
-"  -u        unit normals  (positional normals otherwise)\n"
-"  -e        connect to element centroid\n"
-"  -p <opt>  force polarity. o - set all outward,  i - set all inward\n"
-"               r - reverse both inward and outward\n"
-"  -i <elms> include normals. The element string can include o, i and h\n"
-"               to show, respectively, outward, inward and hemispherical\n"
-"               note: exlusion occurs before -p  (default: oih)\n"
-"  -s <elms> include elements. The element string can include v, e and f\n"
-"               to show, respectively, vertices, edges and faces  (default: f)\n"
-"  -d <opt>  delete elements.  f - delete faces of unincluded normals\n"
-"               a - delete all of original model\n"
-"  -c <opts> average pattern string for edge and vertex normals. Done before -p\n"
-"               r - raw,  o - outward,  i - inward,  u - unit  (default: r)\n"
-"  -a        alternate calculation for vertex normals\n"
-"  -C <xyz>  center of model, in form 'X,Y,Z'  (default: centroid)\n"
-"  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
-"               (default: %d giving %.0e)\n"
-"  -o <file> write output to file  (default: write to standard output)\n"
-"\nColoring Options (run 'off_util -H color' for help on color formats)\n"
-"  -O <col>  outward normal vertex color\n"
-"  -I <col>  inward normal vertex color\n"
-"               default: vertex color is negative of outward col\n"
-"  -H <col>  hemispherical normal vertex color  (default: gray50)\n"
-"  -E <col>  normal vector color. connected to element centroid\n"
-"               default: color of normal vertex\n"
-"               key word: r take random color\n"
-"  -B <col>  normal vector base color. color at element centroid\n"
-"               key word: b take color of element (default)\n"
-"               key word: n take color of normal vertex\n"
-"\n"
-"\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5),::epsilon);
+  fprintf(stdout, R"(
+Usage: %s [options] [input_file]
+
+Display normals of faces, implicit edges, and vertices
+If input_file is not given the program reads from standard input.
+
+Options
+%s
+  -u        unit normals  (positional normals otherwise)
+  -e        connect to element centroid
+  -p <opt>  force polarity. o - set all outward,  i - set all inward
+               r - reverse both inward and outward
+  -i <elms> include normals. The element string can include o, i and h
+               to show, respectively, outward, inward and hemispherical
+               note: exclusion occurs before -p  (default: oih)
+  -s <elms> include elements. The element string can include v, e and f
+               to show, respectively, vertices, edges and faces  (default: f)
+  -d <opt>  delete elements.  f - delete faces of excluded normals
+               a - delete all of original model
+  -c <opts> average pattern string for edge and vertex normals. Done before -p
+               r - raw,  o - outward,  i - inward,  u - unit  (default: r)
+  -a        alternate calculation for vertex normals
+  -C <xyz>  center of model, in form 'X,Y,Z'  (default: centroid)
+  -l <lim>  minimum distance for unique vertex locations as negative exponent
+               (default: %d giving %.0e)
+  -o <file> write output to file  (default: write to standard output)
+
+Coloring Options (run 'off_util -H color' for help on color formats)
+  -O <col>  outward normal vertex color
+  -I <col>  inward normal vertex color
+               default: vertex color is negative of outward col
+  -H <col>  hemispherical normal vertex color  (default: gray50)
+  -E <col>  normal vector color. connected to element centroid
+               default: color of normal vertex
+               key word: r take random color
+  -B <col>  normal vector base color. color at element centroid
+               key word: b take color of element (default)
+               key word: n take color of normal vertex
+)",
+prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5),::epsilon);
 }
-// clang-format on
 
 void off_normals_opts::process_command_line(int argc, char **argv)
 {

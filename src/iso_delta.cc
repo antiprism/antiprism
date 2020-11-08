@@ -411,97 +411,97 @@ public:
   void usage();
 };
 
-// clang-format off
 void id_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] polyhedron\n"
-"\n"
-"Make Isohedral Deltahedra in OFF format. The polyhedron may be specified\n"
-"by its list number, or the (start of the) name of the polyhedron.\n"
-"Additional examples can be generated using -d or -c paramters.\n"
-"Based on a paper by G. C. Shephard\n"
-"Periodica Mathematica Hungarica, Volume 39, Numbers 1-3, 2000 , pp. 83-106(24).\n"
-"with enhancements by Jim McNeill (http://www.orchidpalms.com/polyhedra)\n"
-"and Adrian Rossiter (http://www.antiprism.com)\n"
-"\n"
-"Options\n"
-"%s"
-"  -l        display the list of Isohedral Deltahedra 1 thru 44\n"
-"  -t        generate triangle only (Isohedral Deltahedra 1 to 44 and option -d)\n"
-"  -v        verbose output (Isohedral Deltahedra 1 thru 44 and option -d)\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-// undocumented switch
-//"  -w        allow angle on b,e,f,m,n,o,p,q creates bi-hedral forms\n"
-"\nIsohedral Deltahedra Options\n"
-"  -a <ang>  angle\n"
-"  -n <n/d>  n/d (d is optional)\n"
-"              note: for option -d and compound cases c, g, h:\n"
-"              n and d must be such that (2 < n/d < 6)\n"
-"  -k <int>  in special cases, for specifying number of constituents\n"
-"  -s <int>  in special cases, for subtypes (default: 1)\n"
-"\nIsohedral Deltahedra Special Cases\n"
-"  -d        dipyramid of n/d using -n n/d (infinite set)\n"
-"  -c <type> compound cases (a thru f from Shephard's paper)\n"
-"              a - tetrahedron repeated k times, evenly spaced\n"
-"                     when k=1 tetrahedron, when k=2 Stella Octangula\n"
-"                     Uniform Compound Set UC23 when n/d is 2/1\n"
-"              b - 5 or 10 tetrahedra\n"
-"                     s=1 icosahedral, s=2 with horizontal reflection\n"
-"                     Uniform Compounds UC05 and UC06\n"
-"              c - 2 dipyramids of n/d using -a angle (default: calculated)\n"
-"                     relaxed dual of Uniform Compound Set UC20 and k=1\n"
-"              d - 6 octahedra using -a angle (default: 22.5)\n"
-"                     At 45.0 degrees is 3 Octahedra\n"
-"                     dual of Uniform Compound Set UC07\n"
-"              e - 4 or 8 triangular dipyramids\n"
-"                     s=1 octahedral, s=2 with horizontal reflection\n"
-"                     relaxed duals of Uniform Compounds UC30 & UC31\n"
-"              f - 6 or 12 5/1 pentagonal or 5/2 star dipyramids\n"
-"                     5/1: s=1 icosahedral, s=2 with horizontal reflection\n"
-"                          relaxed duals of Uniform Compounds UC34 & UC35\n"
-"                     5/2: s=3 icosahedral, s=4 with horizontal reflection\n"
-"                          relaxed duals of Uniform Compounds UC36 & UC37\n"
-"\n          additional cases:\n"
-"              g - 2 tetrahedra using -a angle (default: 45.0)\n"
-"                     At 45.0 degrees is Uniform Compound UC04\n"
-"                     Uniform Compound Set UC23 when n/d is 2/1 and k=1\n"
-"              h - 2 tetrahedra repeated k times, evenly spaced\n"
-"                     using -a angle (default: 1.0)\n"
-"                     Uniform Compound Set UC23 when n/d is 2/1 for any k\n"
-"              i - 6 tetrahedra using -a angle (default: 45.0)\n"
-"                     Uniform Compound UC01. At 45.0 degrees is UC03\n"
-"              j - 12 tetrahedra using -a angle (default: 30.0)\n"
-"                     Uniform Compound UC02. At 45.0 degrees is UC03\n"
-"              k - 2 dipyramids of n/d repeated k times, evenly spaced\n"
-"                     using -a angle (default: 1.0)\n"
-"                     relaxed dual of Uniform Compound Set UC20\n"
-"              l - k dipyramids of n/d using -n n/d, evenly spaced\n"
-"                     relaxed dual of Uniform Compound Set UC21\n"
-"              m - 10 or 20 triangular dipyramids\n"
-"                     s=1 icosahedral, s=2 with horizontal reflection\n"
-"                     relaxed duals of Uniform Compounds UC32 & UC33\n"
-"              n - 6 10/3 star dipyramids\n"
-"                     relaxed dual of Uniform Compounds UC41\n"
-"              o - 5 or 10 Augmented Tetrahedra T2(1)\n"
-"                     s=1 icosahedral, s=2 with horizontal reflection\n"
-"                     relaxed duals of Uniform Compounds UC55 & UC56\n"
-"              p - 5 Augmented Octahedra O6(1)\n"
-"                     relaxed dual of Uniform Compounds UC57\n"
-"              q - 5 Excavated Octahedra O6(2)\n"
-"                     relaxed dual of Uniform Compounds UC58\n"
-"\nColoring Options (run 'off_util -H color' for help on color formats)\n"
-"  -f <mthd> mthd is face coloring method using color in map (default: c)\n"
-"              key word: none - sets no color\n"
-"              c - unique coloring for each compound constituent\n"
-"              s - symmetric coloring (should always be one color)\n"
-"  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
-"  -m <maps> color maps for all elements to be tried in turn (default: compound)\n"
-"\n"
-"\n", prog_name(), help_ver_text);
+  fprintf(stdout, R"(
+Usage: %s [options] polyhedron
+
+Make Isohedral Deltahedra in OFF format. The polyhedron may be specified
+by its list number, or the (start of the) name of the polyhedron.
+Additional examples can be generated using -d or -c parameters.
+Based on a paper by G. C. Shephard
+Periodica Mathematica Hungarica, Volume 39, Numbers 1-3, 2000 , pp. 83-106(24).
+with enhancements by Jim McNeill (http://www.orchidpalms.com/polyhedra)
+and Adrian Rossiter (http://www.antiprism.com)
+
+Options
+%s
+  -l        display the list of Isohedral Deltahedra 1 thru 44
+  -t        generate triangle only (Isohedral Deltahedra 1 to 44 and option -d)
+  -v        verbose output (Isohedral Deltahedra 1 thru 44 and option -d)
+  -o <file> write output to file (default: write to standard output)
+
+Isohedral Deltahedra Options
+  -a <ang>  angle
+  -n <n/d>  n/d (d is optional)
+              note: for option -d and compound cases c, g, h:
+              n and d must be such that (2 < n/d < 6)
+  -k <int>  in special cases, for specifying number of constituents
+  -s <int>  in special cases, for subtypes (default: 1)
+
+Isohedral Deltahedra Special Cases
+  -d        dipyramid of n/d using -n n/d (infinite set)
+  -c <type> compound cases (a thru f from Shephard's paper)
+              a - tetrahedron repeated k times, evenly spaced
+                     when k=1 tetrahedron, when k=2 Stella Octangula
+                     Uniform Compound Set UC23 when n/d is 2/1
+              b - 5 or 10 tetrahedra
+                     s=1 icosahedral, s=2 with horizontal reflection
+                     Uniform Compounds UC05 and UC06
+              c - 2 dipyramids of n/d using -a angle (default: calculated)
+                     relaxed dual of Uniform Compound Set UC20 and k=1
+              d - 6 octahedra using -a angle (default: 22.5)
+                     At 45.0 degrees is 3 Octahedra
+                     dual of Uniform Compound Set UC07
+              e - 4 or 8 triangular dipyramids
+                     s=1 octahedral, s=2 with horizontal reflection
+                     relaxed duals of Uniform Compounds UC30 & UC31
+              f - 6 or 12 5/1 pentagonal or 5/2 star dipyramids
+                     5/1: s=1 icosahedral, s=2 with horizontal reflection
+                          relaxed duals of Uniform Compounds UC34 & UC35
+                     5/2: s=3 icosahedral, s=4 with horizontal reflection
+                          relaxed duals of Uniform Compounds UC36 & UC37
+          additional cases:
+              g - 2 tetrahedra using -a angle (default: 45.0)
+                     At 45.0 degrees is Uniform Compound UC04
+                     Uniform Compound Set UC23 when n/d is 2/1 and k=1
+              h - 2 tetrahedra repeated k times, evenly spaced
+                     using -a angle (default: 1.0)
+                     Uniform Compound Set UC23 when n/d is 2/1 for any k
+              i - 6 tetrahedra using -a angle (default: 45.0)
+                     Uniform Compound UC01. At 45.0 degrees is UC03
+              j - 12 tetrahedra using -a angle (default: 30.0)
+                     Uniform Compound UC02. At 45.0 degrees is UC03
+              k - 2 dipyramids of n/d repeated k times, evenly spaced
+                     using -a angle (default: 1.0)
+                     relaxed dual of Uniform Compound Set UC20
+              l - k dipyramids of n/d using -n n/d, evenly spaced
+                     relaxed dual of Uniform Compound Set UC21
+              m - 10 or 20 triangular dipyramids
+                     s=1 icosahedral, s=2 with horizontal reflection
+                     relaxed duals of Uniform Compounds UC32 & UC33
+              n - 6 10/3 star dipyramids
+                     relaxed dual of Uniform Compounds UC41
+              o - 5 or 10 Augmented Tetrahedra T2(1)
+                     s=1 icosahedral, s=2 with horizontal reflection
+                     relaxed duals of Uniform Compounds UC55 & UC56
+              p - 5 Augmented Octahedra O6(1)
+                     relaxed dual of Uniform Compounds UC57
+              q - 5 Excavated Octahedra O6(2)
+                     relaxed dual of Uniform Compounds UC58
+
+Coloring Options (run 'off_util -H color' for help on color formats)
+  -f <mthd> mthd is face coloring method using color in map (default: c)
+              key word: none - sets no color
+              c - unique coloring for each compound constituent
+              s - symmetric coloring (should always be one color)
+  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
+  -m <maps> color maps for all elements to be tried in turn (default: compound)
+)",
+          prog_name(), help_ver_text);
 }
-// clang-format on
+// undocumented switch
+//  -w        allow angle on b,e,f,m,n,o,p,q creates bi-hedral forms
 
 void id_opts::process_command_line(int argc, char **argv)
 {

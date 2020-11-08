@@ -90,52 +90,51 @@ public:
   void usage();
 };
 
-// clang-format off
 void stellate_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] [input_file]\n"
-"\n"
-"Stellate a polyhedron.\n"
-"\n"
-"Options\n"
-"%s"
-"  -f <fnos> face number of input file for stellation diagram (default: 0)\n"
-"            followed by face numbers of stellation diagram for stellation\n"
-"            model seperated by commas. multiple -n parameters as needed\n"
-"  -s <sym>  symmetry subgroup (Schoenflies notation)\n"
-"  -M        do not merge stellation facelets\n"
-"  -I        do not remove inline vertices (if not -M)\n"
-"  -S        do not split pinched faces (if not -M)\n"
-"  -R        resolve stellation facelets\n"
-"  -D        remove multiples occurrences (sets -R)\n"
-"  -r        rebuild compound model to separate vertices\n"
-"  -O <args> output s - stellation, d - diagram, i - input model (default: s)\n"
-"               D - diagram faces used highlighted, S - with symmetry\n"
-"               R - resolved faces used for stellation (when using D or S)\n"
-"               F - highlighted faces only (when using D, S or R)\n"
-"  -z        move first diagram to face front (out of symmetry alignment)\n"
-"  -w <int>  width to project stellation diagram (default: 500)\n"
-"  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
-"               (default: %d giving %.0e)\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\nColoring Options (run 'off_util -H color' for help on color formats)\n"
-"  -F <opt>  face coloring method. d - from diagram, s - symmetry (default: d)\n"
-"               c - color by compound\n"
-"               C - face/face connection count using map n colors\n"
-"               keyword: none - sets no color\n"
-"  -E <col>  edge color. f - from faces (default: invisible)\n"
-"               C - edge/face connection count using map n colors\n"
-"               keyword: none - sets no color\n"
-"  -V <col>  vertex color.  e - from edges (default: invisible)\n"
-"               keyword: none - sets no color\n"
-"  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
-"  -m <maps> color maps. stellation diagram or face symmetry (default: compound)\n"
-"\n"
-"\n", prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
+  fprintf(stdout, R"(
+Usage: %s [options] [input_file]
+
+Stellate a polyhedron.
+
+Options
+%s
+  -f <fnos> face number of input file for stellation diagram (default: 0)
+            followed by face numbers of stellation diagram for stellation
+            model separated by commas. multiple -n parameters as needed
+  -s <sym>  symmetry subgroup (Schoenflies notation)
+  -M        do not merge stellation facelets
+  -I        do not remove inline vertices (if not -M)
+  -S        do not split pinched faces (if not -M)
+  -R        resolve stellation facelets
+  -D        remove multiples occurrences (sets -R)
+  -r        rebuild compound model to separate vertices
+  -O <args> output s - stellation, d - diagram, i - input model (default: s)
+               D - diagram faces used highlighted, S - with symmetry
+               R - resolved faces used for stellation (when using D or S)
+               F - highlighted faces only (when using D, S or R)
+  -z        move first diagram to face front (out of symmetry alignment)
+  -w <int>  width to project stellation diagram (default: 500)
+  -l <lim>  minimum distance for unique vertex locations as negative exponent
+               (default: %d giving %.0e)
+  -o <file> write output to file (default: write to standard output)
+
+Coloring Options (run 'off_util -H color' for help on color formats)
+  -F <opt>  face coloring method. d - from diagram, s - symmetry (default: d)
+               c - color by compound
+               C - face/face connection count using map n colors
+               keyword: none - sets no color
+  -E <col>  edge color. f - from faces (default: invisible)
+               C - edge/face connection count using map n colors
+               keyword: none - sets no color
+  -V <col>  vertex color.  e - from edges (default: invisible)
+               keyword: none - sets no color
+  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
+  -m <maps> color maps. stellation diagram or face symmetry (default: compound)
+)",
+          prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
+          ::epsilon);
 }
-// clang-format on
 
 void stellate_opts::process_command_line(int argc, char **argv)
 {

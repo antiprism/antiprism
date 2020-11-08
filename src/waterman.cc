@@ -29,11 +29,11 @@
 */
 
 #include <algorithm>
-#include <cmath>
-#include <cstdlib> // avoid ambiguities with std::abs(long) on OSX
 #include <cctype>
-#include <limits>
+#include <cmath>
 #include <cstdio>
+#include <cstdlib> // avoid ambiguities with std::abs(long) on OSX
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -111,41 +111,40 @@ public:
   void usage();
 };
 
-// clang-format off
 void waterman_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] lattice\n"
-"\n"
-"Use sphere-ray intersection for producing waterman polyhedra. Lattice can be\n"
-"SC, FCC, or BCC\n"
-"\n"
-"Options\n"
-"%s"
-"  -r <r,n>  clip radius. r is radius taken to optional root n. n = 2 is sqrt\n"
-"  -q <cent> center of lattice, in form \"x_val,y_val,z_val\" (default: origin)\n"
-"  -m <mthd> 1 - sphere-ray intersection  2 - z guess (default: 1)\n"
-"  -C <opt>  c - convex hull only, i - keep interior, s - supress (default: c)\n"
-"  -f        fill interior points (not for -C c)\n"
-"  -t        defeat computational error testing for sphere-ray method\n"
-"  -v        verbose output (on computational errors)\n"
-"  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
-"               (default: %d giving %.0e)\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\nColoring Options (run 'off_util -H color' for help on color formats)\n"
-"  -V <col>  model vertex color (default: none)\n"
-"  -E <col>  edge color (for convex hull, default: none)\n"
-"  -F <col>  face color (for convex hull, default: none)\n"
-"               lower case outputs map indexes. upper case outputs color values\n"
-"               key word: s,S color by symmetry using face normals\n"
-"               key word: c,C color by symmetry using face normals (chiral)\n"
-"  -Z <col>  fill vertex color (default: model vertex color)\n"
-"  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
-"\n"
-"\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
+  fprintf(stdout, R"(
+Usage: %s [options] lattice
+
+Use sphere-ray intersection for producing Waterman Polyhedra. Lattice can be
+SC, FCC, or BCC
+
+Options
+%s
+  -r <r,n>  clip radius. r is radius taken to optional root n. n = 2 is sqrt
+  -q <cent> center of lattice, in form "x_val,y_val,z_val" (default: origin)
+  -m <mthd> 1 - sphere-ray intersection  2 - z guess (default: 1)
+  -C <opt>  c - convex hull only, i - keep interior, s - suppress (default: c)
+  -f        fill interior points (not for -C c)
+  -t        defeat computational error testing for sphere-ray method
+  -v        verbose output (on computational errors)
+  -l <lim>  minimum distance for unique vertex locations as negative exponent
+               (default: %d giving %.0e)
+  -o <file> write output to file (default: write to standard output)
+
+Coloring Options (run 'off_util -H color' for help on color formats)
+  -V <col>  model vertex color (default: none)
+  -E <col>  edge color (for convex hull, default: none)
+  -F <col>  face color (for convex hull, default: none)
+               lower case outputs map indexes. upper case outputs color values
+               key word: s,S color by symmetry using face normals
+               key word: c,C color by symmetry using face normals (chiral)
+  -Z <col>  fill vertex color (default: model vertex color)
+  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
+)",
+          prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
+          ::epsilon);
 }
-// clang-format on
 
 void waterman_opts::process_command_line(int argc, char **argv)
 {

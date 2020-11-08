@@ -56,25 +56,22 @@ public:
   void usage();
 };
 
-// clang-format off
 void o2o_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] [input_file]\n"
-"\n"
-"Convert an OFF file to Wavefront OBJ file format.\n"
-"\n"
-"Options\n"
-"%s"
-"  -m <file> generate mtl file. file name is hardcoded into obj file\n"
-"  -d <dgts> number of significant digits (default %d) or if negative\n"
-"            then the number of digits after the decimal point\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"\n", prog_name(), help_ver_text, DEF_SIG_DGTS);
+   fprintf(stdout, R"(
+Usage: %s [options] [input_file]
+
+Convert an OFF file to Wavefront OBJ file format.
+
+Options
+%s
+  -m <file> generate mtl file. file name is hard coded into obj file
+  -d <dgts> number of significant digits (default %d) or if negative
+            then the number of digits after the decimal point
+  -o <file> write output to file (default: write to standard output)
+)",
+   prog_name(), help_ver_text, DEF_SIG_DGTS);
 }
-// clang-format on
 
 void o2o_opts::process_command_line(int argc, char **argv)
 {

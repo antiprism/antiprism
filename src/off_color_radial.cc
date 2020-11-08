@@ -80,43 +80,42 @@ public:
   void usage();
 };
 
-// clang-format off
 void radial_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] [input_file]\n"
-"\n"
-"Color in radial pattern based on symmetry.\n"
-"\n"
-"Options\n"
-"%s"
-"  -d <opt>  coloring. radial=1, axes=2 (default: 1)\n"
-"               (multiple -d as needed)\n"
-"  -a <ax,p> axis order. primary=1, secondary=2, tertiary=3, all=4 (default: 1)\n"
-"               p is percent length of the axis. (default: 100 percent)\n"
-"               (multiple -a as needed)\n"
-"  -f <list> specify a list of elements, list starts with element letter,\n"
-"            followed by an index number list, given as index ranges separated\n"
-"            by commas. range can be one number or two numbers separated by a\n"
-"            hyphen (default range numbers: 0 and largest index).\n"
-"            Index number list will be preceded by f, e, v for faces, edges and\n"
-"            vertices. Elements resolve to connected faces to be staring point\n"
-"            for radial coloring. special selector: s for number of face sides\n"
-"               (multiple -f as needed, -f overrides -a)\n"
-"  -s <sym>  symmetry subgroup (Schoenflies notation)\n"
-"  -l <lim>  minimum distance change to terminate planarization, as negative\n"
-"               exponent (default: %d giving %.0e)\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\nColoring Options (run 'off_util -H color' for help on color formats)\n"
-"  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)\n"
-"  -m <maps> color maps for all elements to be tried in turn (default: rng)\n"
-"  -n <maps> color maps for axes (A=1: calculated, A=2: map_red:blue:yellow)\n"
-"  -A <opt>  color axes by nfold=1, order=2 (default: 1)\n"
-"\n"
-"\n", prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
+  fprintf(stdout, R"(
+Usage: %s [options] [input_file]
+
+Color in radial pattern based on symmetry.
+
+Options
+%s
+  -d <opt>  coloring. radial=1, axes=2 (default: 1)
+               (multiple -d as needed)
+  -a <ax,p> axis order. primary=1, secondary=2, tertiary=3, all=4 (default: 1)
+               p is percent length of the axis. (default: 100 percent)
+               (multiple -a as needed)
+  -f <list> specify a list of elements, list starts with element letter,
+            followed by an index number list, given as index ranges separated
+            by commas. range can be one number or two numbers separated by a
+            hyphen (default range numbers: 0 and largest index).
+            Index number list will be preceded by f, e, v for faces, edges and
+            vertices. Elements resolve to connected faces to be staring point
+            for radial coloring. special selector: s for number of face sides
+               (multiple -f as needed, -f overrides -a)
+  -s <sym>  symmetry subgroup (Schoenflies notation)
+  -l <lim>  minimum distance change to terminate planarization, as negative
+               exponent (default: %d giving %.0e)
+  -o <file> write output to file (default: write to standard output)
+
+Coloring Options (run 'off_util -H color' for help on color formats)
+  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
+  -m <maps> color maps for all elements to be tried in turn (default: rng)
+  -n <maps> color maps for axes (A=1: calculated, A=2: map_red:blue:yellow)
+  -A <opt>  color axes by nfold=1, order=2 (default: 1)
+)",
+          prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
+          ::epsilon);
 }
-// clang-format on
 
 void radial_opts::process_command_line(int argc, char **argv)
 {

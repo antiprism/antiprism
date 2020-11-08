@@ -175,13 +175,13 @@ Extra Options
   -F <perc> percentage to reduce distance of vertex from face plane (-p rp)
             on iteration (default: value of -S) 
 
-Colouring Options (run 'off_util -H colour' for help on colour formats)
-  -I <col>  intersection points and/or origin colour (default: yellow)
-  -N <col>  base near points, centroid, incircles colour (default: red)
-  -M <col>  dual near points, centroid, incircles colour (default: darkgreen)
-  -B <col>  base edge colour (default: unchanged)
-  -D <col>  dual edge colour (default: unchanged)
-  -U <col>  unit sphere colour (default: white)
+Coloring Options (run 'off_util -H color' for help on color formats)
+  -I <col>  intersection points and/or origin color (default: yellow)
+  -N <col>  base near points, centroid, incircles color (default: red)
+  -M <col>  dual near points, centroid, incircles color (default: darkgreen)
+  -B <col>  base edge color (default: unchanged)
+  -D <col>  dual edge color (default: unchanged)
+  -U <col>  unit sphere color (default: white)
   -T <tran> base/dual transparency. range from 0 (invisible) to 255 (opaque)
 )",
           prog_name(), help_ver_text, it_ctrl.get_max_iters(),

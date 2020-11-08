@@ -99,69 +99,69 @@ public:
   void usage();
 };
 
-// clang-format off
 void lutil_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] [input_files]\n"
-"\n"
-"Read one or more files in OFF format, combine them into a single file and\n"
-"process it. Operations take place in the order listed below. input_files is the\n"
-"list of files to process. If they don't exist, explicit edges are created.\n"
-"If the input possesses faces they are stripped by default.\n"
-"\n"
-"Options\n"
-"%s"
-"  -h        this help message\n"
-"  -I        verbose output\n"
-"  -z        suppress stripping of faces\n"
-"  -c <type> container, c - cube (default), s - sphere (uses radius)\n"
-"  -k <file> container, convex hull of off file or built in model (uses radius)\n"
-"  -r <c,n>  radius. c is radius taken to optional root n. n = 2 is sqrt\n"
-"               or  l - max insphere radius, s - min insphere radius (default)\n"
-"               or  k - take radius from container specified by -k\n"
-"  -q <vecs> center offset, in form \"a_val,b_val,c_val\" (default: none)\n"
-"  -s <s,n>  create struts. s is strut length taken to optional root n\n"
-"               use multiple -s parameters for multiple struts\n"
-"  -D <opt>  Voronoi (a.k.a Dirichlet) cells (Brillouin zones for duals)\n"
-"               c - cells only, i - cell(s) touching center only\n"
-"  -C <opt>  c - convex hull only, i - keep interior\n"
-"  -A        append the original lattice to the final product\n"
-"  -R <fi,s> repeat off file fi at every vertex in lattice. If optional s is\n"
-"            set, sort and merge elements whose coordinates are the same to\n"
-"            the number of decimal places given by option -l.  elements can\n"
-"            include: v - vertices, e - edges, f - faces,  a - all (vef)\n"
-"            n - no merging  (default 'a'. Colors blended as RGB)\n"
-"  -K        append cage of container of -k to final product\n"
-"  -Z <col>  add center vertex to final product in color col\n"
-"  -O        translate center of final product to origin\n"
-"  -l <lim>  minimum distance for unique vertex locations as negative exponent\n"
-"               (default: %d giving %.0e)\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\nListing Options\n"
-"  -Q <vecs> center for radius calculations in -L (default: centroid)\n"
-"               c - original center, o - original center + offset in -q\n"
-"  -L <opt>  list unique radial distances of points (to standard output)\n"
-"               f - full report, v - values only\n"
-"  -S <opt>  list every possible strut value (to standard output)\n"
-"               f - full report, v - values only\n"
-"\nColoring Options (run 'off_util -H color' for help on color formats)\n"
-"  -V <col>  vertex color, (optional) transparency, (optional) elements\n"
-"               transparency. valid range from 0 (invisible) to 255 (opaque)\n"
-"               elements to color are l - lattice, c - convex hull, v - voronoi\n"
-"                  (default elements: lcv)\n"
-"  -E <col>  edge color (for struts, convex hulls, and voronoi)\n"
-"               lower case outputs map indexes. upper case outputs color values\n"
-"               key word: r,R for color edges by root value of final product\n"
-"  -F <col>  face color (for convex hulls and voronoi)\n"
-"               key word: s,S color by symmetry using face normals\n"
-"               key word: c,C color by symmetry using face normals (chiral)\n"
-"  -T <tran> face transparency for color by symmetry. valid range from 0 to 255\n"
-"\n"
-"\n",prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
+  fprintf(stdout, R"(
+Usage: %s [options] [input_files]
+
+Read one or more files in OFF format, combine them into a single file and
+process it. Operations take place in the order listed below. input_files is the
+list of files to process. If they don't exist, explicit edges are created.
+If the input possesses faces they are stripped by default.
+
+Options
+%s
+  -h        this help message
+  -I        verbose output
+  -z        suppress stripping of faces
+  -c <type> container, c - cube (default), s - sphere (uses radius)
+  -k <file> container, convex hull of off file or built in model (uses radius)
+  -r <c,n>  radius. c is radius taken to optional root n. n = 2 is sqrt
+               or  l - max insphere radius, s - min insphere radius (default)
+               or  k - take radius from container specified by -k
+  -q <vecs> center offset, in form \a_val,b_val,c_val\ (default: none)
+  -s <s,n>  create struts. s is strut length taken to optional root n
+               use multiple -s parameters for multiple struts
+  -D <opt>  Voronoi (a.k.a Dirichlet) cells (Brillouin zones for duals)
+               c - cells only, i - cell(s) touching center only
+  -C <opt>  c - convex hull only, i - keep interior
+  -A        append the original lattice to the final product
+  -R <fi,s> repeat off file fi at every vertex in lattice. If optional s is
+            set, sort and merge elements whose coordinates are the same to
+            the number of decimal places given by option -l.  elements can
+            include: v - vertices, e - edges, f - faces,  a - all (vef)
+            n - no merging  (default 'a'. Colors blended as RGB)
+  -K        append cage of container of -k to final product
+  -Z <col>  add center vertex to final product in color col
+  -O        translate center of final product to origin
+  -l <lim>  minimum distance for unique vertex locations as negative exponent
+               (default: %d giving %.0e)
+  -o <file> write output to file (default: write to standard output)
+
+Listing Options
+  -Q <vecs> center for radius calculations in -L (default: centroid)
+               c - original center, o - original center + offset in -q
+  -L <opt>  list unique radial distances of points (to standard output)
+               f - full report, v - values only
+  -S <opt>  list every possible strut value (to standard output)
+               f - full report, v - values only
+
+Coloring Options (run 'off_util -H color' for help on color formats)
+  -V <col>  vertex color, (optional) transparency, (optional) elements
+               transparency. valid range from 0 (invisible) to 255 (opaque)
+               elements to color are l - lattice, c - convex hull, v - voronoi
+                  (default elements: lcv)
+  -E <col>  edge color (for struts, convex hulls, and voronoi)
+               lower case outputs map indexes. upper case outputs color values
+               key word: r,R for color edges by root value of final product
+  -F <col>  face color (for convex hulls and voronoi)
+               key word: s,S color by symmetry using face normals
+               key word: c,C color by symmetry using face normals (chiral)
+  -T <tran> face transparency for color by symmetry. valid range from 0 to 255
+)",
+          prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
+          ::epsilon);
 }
-// clang-format on
 
 void lutil_opts::process_command_line(int argc, char **argv)
 {

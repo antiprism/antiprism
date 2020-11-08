@@ -816,25 +816,25 @@ Options
             termination checks (0 for report checks only) (default: %d,%d)
   -o <file> write output to file (default: write to standard output)
 
-Colouring Options (run 'off_util -H colour' for help on colour formats)
-  -V <col>  vertex colour (default: gold)
-  -E <col>  edge colour   (default: lightgray)
-  -f <mthd> mthd is face colouring method using colour in map (default: n)
-               key word: none - sets no colour
+Coloring Options (run 'off_util -H color' for help on color formats)
+  -V <col>  vertex color (default: gold)
+  -E <col>  edge color   (default: lightgray)
+  -f <mthd> mthd is face coloring method using color in map (default: n)
+               key word: none - sets no color
                n - by number of sides
-               s - symmetric colouring
-               u - unique colouring
+               s - symmetric coloring
+               u - unique coloring
                o - newly created faces by operation
-               w - resolve colour indexes (overrides -V)
-  -C <mthd> colouring method for tiles: none, index, value, association
+               w - resolve color indexes (overrides -V)
+  -C <mthd> coloring method for tiles: none, index, value, association
             (default: index) index and value methods use the path index,
-            association associates tiles with base geometry element colours
+            association associates tiles with base geometry element colors
                (when -f w is set)
-  -R <opt>  built in seed colouring: one=1, unique=2, symmetry=3 (default: 1)
+  -R <opt>  built in seed coloring: one=1, unique=2, symmetry=3 (default: 1)
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
   -O <strg> face transparency pattern string (-f n only). valid values
-               0 - map colour alpha value, 1 -T alpha applied (default: '1')
-  -m <maps> colour maps for faces to be tried in turn (default: m1, for -g, m2)
+               0 - map color alpha value, 1 -T alpha applied (default: '1')
+  -m <maps> color maps for faces to be tried in turn (default: m1, for -g, m2)
                keyword m1: red,darkorange1,yellow,darkgreen,cyan,blue,magenta,
                            white,gray,black
                keyword m2: red,blue,green,yellow,brown,magenta,purple,grue,
@@ -997,7 +997,7 @@ void cn_opts::process_command_line(int argc, char **argv)
       if (!strcasecmp(optarg, "none"))
         face_coloring_method = '\0';
       else if (strspn(optarg, "nsuow") != strlen(optarg) || strlen(optarg) > 1)
-        error(msg_str("invalid face Colouring method '%s'", optarg), c);
+        error(msg_str("invalid face Coloring method '%s'", optarg), c);
       else {
         face_coloring_method = *optarg;
       }
@@ -1129,7 +1129,7 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   if (hart_mode) {
     if ((face_coloring_method == 'o') || (face_coloring_method == 'w'))
-      error("when -g set, face colouring methods o and w are invalid", 'f');
+      error("when -g set, face coloring methods o and w are invalid", 'f');
   }
 
   // when use George Hart algorithms, use map he used on line
