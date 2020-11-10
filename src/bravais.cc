@@ -576,17 +576,11 @@ void brav_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'F': {
-      // make a copy of optarg so original isn't split yet
-      char *optarg_copy = copy_str(optarg);
-      vector<char *> parts;
-      split_line(optarg_copy, parts, ",");
-
+      Split parts(optarg, ",");
       if ((!strcasecmp(parts[0], "s")) || (!strcasecmp(parts[0], "c")))
         color_method = parts[0][0];
       else
         parse_color_string(this, optarg, c, face_col);
-
-      free(optarg_copy);
       break;
     }
 

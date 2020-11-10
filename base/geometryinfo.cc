@@ -31,9 +31,9 @@
 #include "mathutils.h"
 #include "private_misc.h"
 #include <algorithm>
+#include <cstring>
 #include <map>
 #include <set>
-#include <cstring>
 #include <string>
 #include <utility>
 #include <vector>

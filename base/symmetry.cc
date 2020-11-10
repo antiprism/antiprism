@@ -27,10 +27,10 @@
  */
 
 #include <algorithm>
-#include <map>
-#include <set>
 #include <cstdlib>
 #include <cstring>
+#include <map>
+#include <set>
 
 #include "geometryinfo.h"
 #include "mathutils.h"
@@ -1132,28 +1132,24 @@ Status Symmetry::init(const string &name, const Trans3d &pos)
   sym_type = unknown;
   nfold = 0;
 
-  if (name.length() > MSG_SZ)
-    return Status::error("too many characters in symmetry type name");
-
-  char c_num[MSG_SZ] = "";
-  char c_name[MSG_SZ] = "";
   char numbers[] = "0123456789";
-  size_t pos1 = strcspn(name.c_str(), numbers);
-  size_t pos2 = pos1;
-  if (pos1 < name.length())
-    pos2 += strspn(name.c_str() + pos1, numbers);
+  size_t pos1 = strcspn(name.c_str(), numbers); // pos to end or first digit
+  size_t pos2 = pos1;                           // pos to end or first digit
+  if (pos1 < name.length())                     // name includes a digit
+    pos2 +=
+        strspn(name.c_str() + pos1, numbers); // pos to end or after last digit
 
-  strncpy(c_name, name.c_str(), pos1);
-  strcat_msg(c_name, name.c_str() + pos2);
-  strncpy(c_num, name.c_str() + pos1, pos2 - pos1);
-
-  int fold = atoi(c_num);
+  // map all the symmetry types to their type number
   map<string, int> sym_names;
   for (int i = 1; i < Ih + 1; i++)
     sym_names[type_str[i]] = i;
 
-  auto sni = sym_names.find(c_name);
+  // Assemble the symmetry type string (allows, e.g. Cv3 = C3v, but not 3Cv)
+  auto sym_type_str = (pos1) ? name.substr(0, pos1) + name.substr(pos2) : "";
+  auto sni = sym_names.find(sym_type_str.c_str());
   int type = (sni != sym_names.end()) ? sni->second : -1;
+
+  int fold = atoi(name.substr(pos1, pos2 - pos1).c_str()); // digit substring
 
   return init(type, fold, pos);
 }
@@ -1457,16 +1453,12 @@ Status Symmetry::get_sub_sym(const string &sub_name, Symmetry *sub) const
 {
   *sub = Symmetry();
 
-  Symmetry sub_sym;
-
-  char sub_cpy[MSG_SZ];
-  strcpy_msg(sub_cpy, sub_name.c_str());
-  vector<char *> parts;
-  split_line(sub_cpy, parts, ",");
+  Split parts(sub_name, ",");
   if (parts.size() > 2)
     return Status::error("too many comma separated parts");
 
   Status stat;
+  Symmetry sub_sym;
   if (parts.size() == 0 || strncmp(parts[0], "full", strlen(parts[0])) == 0)
     sub_sym = *this;
   else if (!(stat = sub_sym.init(parts[0], Trans3d())))
@@ -2006,17 +1998,18 @@ Status SymmetryAutos::set_realignment(const string &realign)
 {
   vector<double> vars;
 
-  char realign_cpy[MSG_SZ];
-  strcpy_msg(realign_cpy, realign.c_str());
-  char *p = strchr(realign_cpy, ':');
+  string realign_cpy(realign);         // copy, do not access as C++ string
+  char *realign_ptr = &realign_cpy[0]; // may be used to modify characters
+
+  char *p = strchr(realign_ptr, ':');
   if (p)
     *p = '\0'; // terminator at first ':'
 
   Status stat;
   int type = 0;
-  if (realign == "" || (p && p == realign_cpy)) // empty, so set default of 0
+  if (realign == "" || (p && p == realign_ptr)) // empty, so set default of 0
     type = 0;
-  else if (!(stat = read_int(realign_cpy, &type)))
+  else if (!(stat = read_int(realign_ptr, &type)))
     return Status::error(msg_str("fixed type: %s", stat.c_msg()));
 
   if (!(stat = set_fixed_type(type)))

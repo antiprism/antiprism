@@ -63,9 +63,8 @@ void file_close_w(FILE *ofile)
 void crds_write(FILE *ofile, const Geometry &geom, const char *sep,
                 int sig_dgts)
 {
-  char line[MSG_SZ];
   for (unsigned int i = 0; i < geom.verts().size(); i++)
-    fprintf(ofile, "%s\n", vtostr(line, geom.verts(i), sep, sig_dgts));
+    fprintf(ofile, "%s\n", vtostr(geom.verts(i), sep, sig_dgts).c_str());
 }
 
 bool crds_write(string file_name, const Geometry &geom, char *errmsg,
@@ -154,9 +153,8 @@ void obj_write(FILE *ofile, FILE *mfile, string mtl_file, const Geometry &geom,
     fprintf(ofile, "mtllib %s\n", mtl_file.c_str());
 
   // v entries
-  char line[MSG_SZ];
   for (unsigned int i = 0; i < geom.verts().size(); i++)
-    fprintf(ofile, "v %s\n", vtostr(line, geom.verts(i), sep, sig_dgts));
+    fprintf(ofile, "v %s\n", vtostr(geom.verts(i), sep, sig_dgts).c_str());
 
   Color last_color = Color();
 
@@ -282,38 +280,35 @@ bool off_file_write(string file_name, const vector<const Geometry *> &geoms,
   return true;
 }
 
-char *off_col(char *str, Color col)
+string off_col(Color col)
 {
   if (col.is_index())
-    snprintf(str, MSG_SZ - 1, " %d", col.get_index());
+    return msg_str(" %d", col.get_index());
   else if (col.is_value()) {
     if (col.get_transparency())
-      vtostr(str, col.get_vec4d(), " ", -5);
+      return vtostr(col.get_vec4d(), " ", -5);
     else
-      vtostr(str, col.get_vec3d(), " ", -5);
+      return vtostr(col.get_vec3d(), " ", -5);
   }
   else
-    *str = '\0';
-
-  return str;
+    return string();
 }
 
 void off_polys_write(FILE *ofile, const Geometry &geom, int offset)
 {
-  char col_str[MSG_SZ];
   for (unsigned int i = 0; i < geom.faces().size(); i++) {
     fprintf(ofile, "%lu", (unsigned long)geom.faces(i).size());
     for (unsigned int j = 0; j < geom.faces(i).size(); j++) {
       fprintf(ofile, " %d", geom.faces(i, j) + offset);
     }
-    fprintf(ofile, " %s", off_col(col_str, geom.colors(FACES).get(i)));
+    fprintf(ofile, " %s", off_col(geom.colors(FACES).get(i)).c_str());
     fprintf(ofile, "\n");
   }
 
   for (unsigned int i = 0; i < geom.edges().size(); i++) {
     fprintf(ofile, "2 %d %d", geom.edges(i, 0) + offset,
             geom.edges(i, 1) + offset);
-    fprintf(ofile, " %s", off_col(col_str, geom.colors(EDGES).get(i)));
+    fprintf(ofile, " %s", off_col(geom.colors(EDGES).get(i)).c_str());
     fprintf(ofile, "\n");
   }
   // print coloured vertex elements
@@ -321,7 +316,7 @@ void off_polys_write(FILE *ofile, const Geometry &geom, int offset)
   for (mi = geom.colors(VERTS).get_properties().begin();
        mi != geom.colors(VERTS).get_properties().end(); mi++) {
     fprintf(ofile, "1 %d %s\n", (mi->first) + offset,
-            off_col(col_str, mi->second));
+            off_col(mi->second).c_str());
   }
 }
 

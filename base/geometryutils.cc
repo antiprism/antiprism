@@ -26,9 +26,9 @@
    \brief utilities for geometries
 */
 
+#include "geometryutils.h"
 #include "geometry.h"
 #include "geometryinfo.h"
-#include "geometryutils.h"
 #include "mathutils.h"
 #include "private_geodesic.h"
 #include "private_misc.h"

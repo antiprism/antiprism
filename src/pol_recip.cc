@@ -30,9 +30,9 @@
 
 #include <algorithm>
 #include <cctype>
-#include <map>
 #include <cmath>
 #include <cstring>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -276,12 +276,11 @@ int find_mid_centre(Geometry &geom, double &rad, Vec3d &cent, int n,
     if (fabs(cent_test) < eps && fabs(rad_test) < eps)
       break;
   }
-  char str[MSG_SZ];
   fprintf(stderr,
           "[n=%d, limit=%sachieved, r_test=%g, c_test=%g]\n"
           "centre=(%s), radius=%.16g\n",
           cnt, cnt == n ? "not " : "", cent_test, rad_test,
-          vtostr(str, cent, " "), rad);
+          vtostr(cent, " ").c_str(), rad);
   return 1;
 }
 
@@ -400,12 +399,11 @@ int find_can_centre(Geometry &geom, char type, double &rad, Vec3d &cent,
       dual.transform(Trans3d::translate(cur_cent) * Trans3d::inversion() *
                      Trans3d::translate(-cur_cent));
   }
-  char str[MSG_SZ];
   fprintf(stderr,
           "[n=%d, limit=%sachieved, r_test=%g, c_test=%g]\n"
           "centre=(%s), radius=%.16g%s\n",
           cnt, cnt == n ? "not " : "", cent_test, rad_test,
-          vtostr(str, cent, " "), rad, (invert) ? "i" : "");
+          vtostr(cent, " ").c_str(), rad, (invert) ? "i" : "");
   //}
 
   return 1;
@@ -449,9 +447,8 @@ Vec3d find_circumcenter(const Geometry &geom)
   cent[1] = res[2] / 2;
   cent[2] = res[3] / 2;
   double rad = sqrt(cent.len2() + res[0]);
-  char str[MSG_SZ];
   fprintf(stderr, "Circumsphere: centre=(%s), radius=%.16g\n",
-          vtostr(str, cent, " "), rad);
+          vtostr(cent, " ").c_str(), rad);
   return cent;
 }
 
@@ -484,8 +481,7 @@ Vec3d find_NOTmidcenter(const Geometry &geom)
     vec[2] += vdot(P, Vec3d(v[2] * v[0],     v[2] * v[1],     v[2] * v[2] - 1));
   }
   auto cent = mat.inverse() * vec;
-  char str[MSG_SZ];
-  fprintf(stderr, "Midcentre: centre=(%s)\n", vtostr(str, cent, " "));
+  fprintf(stderr, "Midcentre: centre=(%s)\n", vtostr(cent, " ").c_str());
   return cent;
 }
 */
@@ -584,29 +580,20 @@ bool strip_free_elements(Geometry &geom)
   return free_edges.size() || free_verts.size();
 }
 
-bool is_polyhedron(const Geometry &geom, char *errmsg = nullptr)
+Status is_polyhedron(const Geometry &geom)
 {
   GeometryInfo info(geom);
-  if (!info.num_faces()) {
-    if (errmsg)
-      strcpy_msg(errmsg, "not a polyhedron, has no faces");
-    return false;
-  }
+  if (!info.num_faces())
+    return Status::error("not a polyhedron, has no faces");
 
-  if (!info.is_closed()) {
-    if (errmsg)
-      strcpy_msg(errmsg, "not a polyhedron, is not closed");
-    return false;
-  }
+  if (!info.is_closed())
+    return Status::error("not a polyhedron, is not closed");
 
-  if (!info.is_known_connectivity()) {
-    if (errmsg)
-      strcpy_msg(errmsg, "unknown whether a polyhedron, ambiguous "
+  if (!info.is_known_connectivity())
+    return Status::error("unknown whether a polyhedron, ambiguous "
                          "connectivity");
-    return false;
-  }
 
-  return true; // each edge shared by exactly 2 faces
+  return Status::ok(); // each edge shared by exactly 2 faces
 }
 
 int main(int argc, char *argv[])
@@ -617,9 +604,7 @@ int main(int argc, char *argv[])
   Geometry geom;
   opts.read_or_error(geom, opts.ifile);
 
-  char errmsg[MSG_SZ];
-  if (!is_polyhedron(geom, errmsg))
-    opts.error(errmsg, "input_file");
+  opts.print_status_or_exit(is_polyhedron(geom), "input_file");
 
   if (strip_free_elements(geom))
     opts.warning("stripped vertices or edges which were not part of any face",
@@ -675,15 +660,14 @@ int main(int argc, char *argv[])
       i--;
     }
   }
+
   if (invalid_verts.size()) {
     string msg(
         "removed invalid vertices (and associated faces) with indices - ");
     for (unsigned int i = 0; i < invalid_verts.size() - 1; i++) {
-      snprintf(errmsg, MSG_SZ, "%d,", invalid_verts[i]);
-      msg += string(errmsg);
+      msg += msg_str("%d,", invalid_verts[i]);
     }
-    snprintf(errmsg, MSG_SZ, "%d", invalid_verts.back());
-    msg += string(errmsg);
+    msg += msg_str("%d", invalid_verts.back());
     opts.warning(msg);
   }
 

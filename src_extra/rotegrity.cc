@@ -28,8 +28,8 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <cmath>
 #include <cctype>
+#include <cmath>
 #include <cstdlib>
 #include <cstring>
 #include <string>
@@ -155,8 +155,7 @@ void rot_opts::process_command_line(int argc, char **argv)
 
     switch (c) {
     case 'a': {
-      vector<char *> parts;
-      split_line(optarg, parts, ",");
+      Split parts(optarg, ",");
       if (parts.size() < 1 || parts.size() > 2)
         error("argument should have 1-2 comma separated parts", c);
       print_status_or_exit(get_arg_id(parts[0], &arg_id,

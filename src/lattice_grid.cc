@@ -215,11 +215,11 @@ void sph_lat_grid::make_lattice(Geometry &geom)
 // 4 args - color r,g,b, assignment
 // 5 args - color r,g,b, transparency, assignment
 // vcol is a vector size 4 of pre-allocated colors
-void parse_color_string(ProgramOpts *opts, char *optarg, const char c,
-                        vector<Color> &vcol)
+void parse_color_string(const ProgramOpts *opts, const char *optarg,
+                        const char c, vector<Color> &vcol)
 {
-  vector<char *> parts;
-  int parts_sz = split_line(optarg, parts, ",");
+  const Split parts(optarg, ",");
+  int parts_sz = parts.size();
   if (parts_sz > 5)
     opts->error("the argument has more than 5 parts", c);
 
@@ -228,15 +228,9 @@ void parse_color_string(ProgramOpts *opts, char *optarg, const char c,
   int next_parms_idx = 1;
 
   // see if entry is r,g,b
-  char parts_test[MSG_SZ];
   if (parts_sz >= 3) {
-    parts_test[0] = '\0';
-    strcat_msg(parts_test, parts[0]);
-    strcat_msg(parts_test, ",");
-    strcat_msg(parts_test, parts[1]);
-    strcat_msg(parts_test, ",");
-    strcat_msg(parts_test, parts[2]);
-    if (col.read(parts_test)) {
+    string color_str_tmp = string(parts[0]) + "," + parts[1] + "," + parts[2];
+    if (col.read(color_str_tmp.c_str())) {
       if (col.is_set())
         valid_color = true;
       next_parms_idx = 3;

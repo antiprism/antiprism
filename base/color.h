@@ -249,7 +249,7 @@ public:
    * \param col_str the color string.
    * \return status, which evaluates to \c true if a valid colour was read,
    *  otherwise \c false */
-  Status read(char *col_str);
+  Status read(const char *col_str);
 
   /// Read an OFF colour given as number strings.
   /** Read decimal values, integer values or an index number
@@ -263,47 +263,47 @@ public:
    *    - \c 5 - four decimal values (RGBA)
    * \return status, which evaluates to \c true if a valid colour was read,
    *  or there was no color to read, otherwise \c false */
-  Status from_offvals(std::vector<char *> &vals, int *col_type = nullptr);
+  Status from_offvals(const std::vector<char *> &vals, int *col_type = nullptr);
 
   /// Read a colour given as floating point values.
   /**\param vals 3 (RGB) or 4 (RGBA) values in range \c 0.0 - \c 1.0.
    * \return status, which evaluates to \c true if a valid colour was read,
    *  otherwise \c false */
-  Status from_decvals(std::vector<double> &vals);
+  Status from_decvals(const std::vector<double> &vals);
 
   /// Read a colour given as integers.
   /**\param vals 3 (RGB) or 4 (RGBA) values in range \c 0 - \c 255.
    * \return status, which evaluates to \c true if a valid colour was read,
    *  otherwise \c false */
-  Status from_intvals(std::vector<int> &vals);
+  Status from_intvals(const std::vector<int> &vals);
 
   /// Read a colour given as decimal strings.
   /**\param vals 3 (RGB) or 4 (RGBA) numbers in range
    *  \c 0.0 - \c 1.0 held as strings.
    * \return status, which evaluates to \c true if a valid colour was read,
    *  otherwise \c false */
-  Status read_decvals(std::vector<char *> &vals);
+  Status read_decvals(const std::vector<char *> &vals);
 
   /// Read a colour given as integer strings.
   /**\param vals 3 (RGB) or 4 (RGBA) numbers in range
    *  \c 0 - \c 255 held as strings.
    * \return status, which evaluates to \c true if a valid colour was read,
    *  otherwise \c false */
-  Status read_intvals(std::vector<char *> &vals);
+  Status read_intvals(const std::vector<char *> &vals);
 
   /// Read a colour given as decimals in a string.
   /**\param str a string of 3 (RGB) or 4 (RGBA) comma separated
    *  decimals in range \c 0.0 - \c 1.0.
    * \return status, which evaluates to \c true if a valid colour was read,
    *  otherwise \c false */
-  Status read_decvals(char *str);
+  Status read_decvals(const char *str);
 
   /// Read a colour given as integers in a string.
   /**\param str a string of 3 (RGB) or 4 (RGBA) comma separated
    *  integers in range \c 0 - \c 255.
    * \return status, which evaluates to \c true if a valid colour was read,
    *  otherwise \c false */
-  Status read_intvals(char *str);
+  Status read_intvals(const char *str);
 
   /// Read a colour given as hex format in a string.
   /**\param str a string starting with X, x or # followed by
@@ -311,7 +311,7 @@ public:
    *  integers in range \c 0 - \c 255.
    * \return status, which evaluates to \c true if a valid colour was read,
    *  otherwise \c false */
-  Status read_hexvals(char *str);
+  Status read_hexvals(const char *str);
 
   /// Read a colour given as HSVA format in a string.
   /**\param str a string starting with H or h followed by
@@ -321,7 +321,7 @@ public:
    *  range \c 0.0 - \c 1.0.
    * \return status, which evaluates to \c true if a valid colour was read,
    *  otherwise \c false */
-  Status read_hsva_vals(char *str);
+  Status read_hsva_vals(const char *str);
 
   /// Read a colour given by name.
   /**\param str the colour name to be looked up in the internal list
@@ -330,7 +330,7 @@ public:
    *  index number in the X11 color map.
    * \return status, which evaluates to \c true if a valid colour was read,
    *  otherwise \c false */
-  Status read_colorname(char *str, bool as_index = false);
+  Status read_colorname(const char *str, bool as_index = false);
 
   /// The invisible colour for non-display elements.
   static Color invisible;

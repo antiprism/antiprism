@@ -30,12 +30,12 @@
 
 #include "../base/antiprism.h"
 #include <algorithm>
+#include <cmath>
+#include <cstring>
 #include <functional>
 #include <map>
-#include <cmath>
 #include <memory>
 #include <regex>
-#include <cstring>
 #include <string>
 #include <vector>
 
@@ -103,9 +103,8 @@ public:
 Status weave_path::init(const string &path)
 {
   path_points.clear();
-  auto path_str = path;
-  vector<char *> parts;
-  int parts_sz = split_line(&path_str[0], parts, ":", true);
+  Split parts(path, ":", true);
+  int parts_sz = parts.size();
   Status stat = point.read(parts[0]);
   if (stat.is_error())
     return Status::error(msg_str("path '%s': first (join) point: '%s'",

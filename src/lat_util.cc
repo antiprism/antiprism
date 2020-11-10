@@ -171,6 +171,7 @@ void lutil_opts::process_command_line(int argc, char **argv)
 
   int sig_compare = INT_MAX;
   vector<double> double_parms;
+  Split parts;
   Color col_tmp;
 
   vert_col.resize(3);
@@ -266,35 +267,21 @@ void lutil_opts::process_command_line(int argc, char **argv)
       parse_color_string(this, optarg, c, vert_col);
       break;
 
-    case 'E': {
-      // make a copy of optarg so original isn't split yet
-      char *optarg_copy = copy_str(optarg);
-      vector<char *> parts;
-      split_line(optarg_copy, parts, ",");
-
+    case 'E':
+      parts.init(optarg, ",");
       if (!strcasecmp(parts[0], "r"))
         color_edges_by_sqrt = parts[0][0];
       else
         parse_color_string(this, optarg, c, edge_col);
-
-      free(optarg_copy);
       break;
-    }
 
-    case 'F': {
-      // make a copy of optarg so original isn't split yet
-      char *optarg_copy = copy_str(optarg);
-      vector<char *> parts;
-      split_line(optarg_copy, parts, ",");
-
+    case 'F':
+      parts.init(optarg, ",");
       if ((!strcasecmp(parts[0], "s")) || (!strcasecmp(parts[0], "c")))
         color_method = parts[0][0];
       else
         parse_color_string(this, optarg, c, face_col);
-
-      free(optarg_copy);
       break;
-    }
 
     case 'T':
       print_status_or_exit(read_int(optarg, &face_opacity), c);
@@ -316,8 +303,7 @@ void lutil_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'R': {
-      vector<char *> parts;
-      int parts_sz = split_line(optarg, parts, ",");
+      int parts_sz = parts.init(optarg, ",");
       if (parts_sz > 2)
         error("the argument has more than 2 parts", c);
 

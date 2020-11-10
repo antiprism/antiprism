@@ -62,10 +62,7 @@ int get_num_decs(const char *str)
 
 int get_max_num_decs(const char *str, const int num_parts)
 {
-  char str_copy[MSG_SZ];
-  strcpy_msg(str_copy, str);
-  vector<char *> parts;
-  split_line(str_copy, parts, ",");
+  Split parts(str, ",");
   int max_num_decs = 0;
   for (int i = 0; i < (int)parts.size() && i < num_parts; i++) {
     int num_decs = get_num_decs(parts[i]);
@@ -338,7 +335,7 @@ void waterman_opts::process_command_line(int argc, char **argv)
     double test_scale = pow(10, max_num_decs);
     // if((center.mag() + radius + 1)*test_scale > LONG_MAX/sqrt(3))
     if ((center.len() + radius + 1) * test_scale >
-        sqrt(std::numeric_limits<long long>::max()) / sqrt(3))
+        sqrt(double(std::numeric_limits<long long>::max())) / sqrt(3))
       scale = 0; // don't use integer calculations
     else
       scale = (long)(test_scale + 0.5);

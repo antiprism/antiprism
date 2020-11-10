@@ -336,8 +336,7 @@ void trans_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'Y': {
-      vector<char *> parts;
-      split_line(optarg, parts, ",");
+      Split parts(optarg, ",");
       if (parts.size() < 1 || parts.size() > 4)
         error("argument should have 1-4 comma separated parts", c);
 
@@ -378,8 +377,7 @@ void trans_opts::process_command_line(int argc, char **argv)
       geom_cur.transform(trans_m);
       Symmetry full_sym(geom_cur);
 
-      vector<char *> parts;
-      split_line(optarg, parts, ",");
+      Split parts(optarg, ",");
       if (parts.size() == 0 || parts.size() > 3)
         error("argument should have 1-3 comma separated parts", c);
 

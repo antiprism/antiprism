@@ -33,12 +33,12 @@
 
 #include <cctype>
 #include <climits>
-#include <map>
 #include <cmath>
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <map>
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -73,6 +73,7 @@ string dots2underscores(string str)
       i = '_';
   return str;
 }
+
 Status read_double_noparse(const char *str, double *f)
 {
   bool to_sqrt;
@@ -108,7 +109,8 @@ Status read_int(const char *str, int *i)
   return Status::ok();
 }
 
-Status read_int_list(vector<char *> &vals, vector<int> &nums, bool is_index)
+Status read_int_list(const vector<char *> &vals, vector<int> &nums,
+                     bool is_index)
 {
   nums.clear();
   int num;
@@ -125,12 +127,16 @@ Status read_int_list(vector<char *> &vals, vector<int> &nums, bool is_index)
   return Status::ok();
 }
 
-Status read_int_list(char *str, vector<int> &nums, bool is_index, int len,
+Status read_int_list(const char *str, vector<int> &nums, bool is_index, int len,
                      const char *sep)
 {
   nums.clear();
   int vec_idx;
-  char *v_str = strtok(str, sep);
+
+  string str_cpy(str);         // copy, do not access as C++ string
+  char *str_ptr = &str_cpy[0]; // may be used to modify characters
+
+  char *v_str = strtok(str_ptr, sep);
   int i = 0;
   while (v_str) {
     i++;
@@ -150,7 +156,7 @@ Status read_int_list(char *str, vector<int> &nums, bool is_index, int len,
   return Status::ok();
 }
 
-static Status read_idx(char *str, int *idx, int num_idxs)
+static Status read_idx(const char *str, int *idx, int num_idxs)
 {
   if (!read_int(str, idx))
     return Status::error(msg_str("'%s' is not an integer", str));
@@ -171,14 +177,18 @@ static Status read_idx(char *str, int *idx, int num_idxs)
   return Status::ok();
 }
 
-Status read_idx_list(char *str, vector<int> &nums, int num_idxs,
+Status read_idx_list(const char *str, vector<int> &nums, int num_idxs,
                      bool allow_extra)
 {
   Status stat;
   nums.clear();
   int idx, idx2;
   char *p;
-  char *v_str = strtok(str, ",");
+
+  string str_cpy(str);         // copy, do not access as C++ string
+  char *str_ptr = &str_cpy[0]; // may be used to modify characters
+
+  char *v_str = strtok(str_ptr, ",");
   while (v_str) {
     if ((p = strchr(v_str, '-'))) { // process a range
       *p = '\0';                    // terminate first index
@@ -223,7 +233,7 @@ Status read_idx_list(char *str, vector<int> &nums, int num_idxs,
   return Status::ok();
 }
 
-static Status read_double_list(vector<char *> &vals, vector<double> &nums,
+static Status read_double_list(const vector<char *> &vals, vector<double> &nums,
                                bool parse)
 {
   nums.clear();
@@ -239,22 +249,27 @@ static Status read_double_list(vector<char *> &vals, vector<double> &nums,
   return Status::ok();
 }
 
-Status read_double_list(vector<char *> &vals, vector<double> &nums)
+Status read_double_list(const vector<char *> &vals, vector<double> &nums)
 {
   return read_double_list(vals, nums, true);
 }
 
-Status read_double_list_noparse(vector<char *> &vals, vector<double> &nums)
+Status read_double_list_noparse(const vector<char *> &vals,
+                                vector<double> &nums)
 {
   return read_double_list(vals, nums, false);
 }
 
-static Status read_double_list(char *str, vector<double> &nums, int len,
+static Status read_double_list(const char *str, vector<double> &nums, int len,
                                const char *sep, bool parse)
 {
   nums.clear();
+
+  string str_cpy(str);         // copy, do not access as C++ string
+  char *str_ptr = &str_cpy[0]; // may be used to modify characters
+
   double num;
-  char *num_str = strtok(str, sep);
+  char *num_str = strtok(str_ptr, sep);
   int i = 0;
   while (num_str) {
     i++;
@@ -273,35 +288,37 @@ static Status read_double_list(char *str, vector<double> &nums, int len,
   return Status::ok();
 }
 
-Status read_double_list(char *str, vector<double> &nums, int len,
+Status read_double_list(const char *str, vector<double> &nums, int len,
                         const char *sep)
 {
   return read_double_list(str, nums, len, sep, true);
 }
 
-Status read_double_list_noparse(char *str, vector<double> &nums, int len,
+Status read_double_list_noparse(const char *str, vector<double> &nums, int len,
                                 const char *sep)
 {
   return read_double_list(str, nums, len, sep, false);
 }
 
-Status read_fraction(const char *frac_str, int *num, int *denom)
+Status read_fraction(const char *str, int *num, int *denom)
 {
+  Status stat;
   Status stat2;
-  char frac_str_cpy[MSG_SZ];
-  strcpy_msg(frac_str_cpy, frac_str);
+
+  string str_cpy(str);         // copy, do not access as C++ string
+  char *str_ptr = &str_cpy[0]; // may be used to modify characters
 
   *denom = 1;
-  char *p = strchr(frac_str_cpy, '/');
+  char *p = strchr(str_ptr, '/');
   if (p != nullptr) {
     *p++ = '\0';
     if (!(stat2 = read_int(p, denom)))
-      return Status().set_error("denominator, " + stat2.msg());
+      return stat.set_error("denominator, " + stat2.msg());
   }
-  if (!(stat2 = read_int(frac_str_cpy, num)))
-    return Status().set_error("numerator, " + stat2.msg());
+  if (!(stat2 = read_int(str_ptr, num)))
+    return stat.set_error("numerator, " + stat2.msg());
 
-  return Status();
+  return stat;
 }
 
 int read_line(FILE *file, char **line)
@@ -337,50 +354,6 @@ int read_line(FILE *file, char **line)
   }
 }
 
-int split_line(char *line, vector<char *> &parts, const char *delims,
-               bool strict)
-{
-  parts.clear();
-  if (!delims)
-    delims = WHITESPACE;
-
-  if (strict) {
-    char *cur = line;
-    parts.push_back(cur);                    // always an entry, even if null
-    while (*(cur += strcspn(cur, delims))) { // quit at end of string
-      *cur = '\0';                           // terminate part
-      cur++;                                 // start of next part
-      parts.push_back(cur);                  // add even if final null
-    }
-    /*while(*cur) {                             // quit at end of string
-       cur += strcspn(cur, delims);           // next delimiter
-       if(*cur) {                             // part ended with delimiter
-          *cur = '\0';                        // terminate part
-          cur++;                              // start of next part
-          parts.push_back(cur);                // add even if final null
-       }
-    }*/
-  }
-  else {
-    char *val;
-    if (!(val = strtok(line, delims)))
-      return 0;
-
-    parts.push_back(val);
-    while ((val = strtok(nullptr, delims)))
-      parts.push_back(val);
-  }
-
-  return parts.size();
-}
-
-void backslash_to_forward(string &path)
-{
-  for (char &si : path)
-    if (si == '\\')
-      si = '/';
-}
-
 // remove leading and trailing space, covert whitepspace to single space
 char *clear_extra_whitespace(char *str)
 {
@@ -407,6 +380,12 @@ char *clear_extra_whitespace(char *str)
   return str;
 }
 
+void clear_extra_whitespace(string &str)
+{
+  clear_extra_whitespace(&str[0]); // clear whitespace inplace
+  str.resize(strlen(&str[0]));     // resize to the length of the C string
+}
+
 char *to_resource_name(char *to, const char *from)
 {
   strcpy_msg(to, from);
@@ -416,13 +395,11 @@ char *to_resource_name(char *to, const char *from)
   return to;
 }
 
-char *copy_str(const char *str)
+void backslash_to_forward(string &path)
 {
-  size_t buff_sz = strlen(str) + 1;
-  char *p = (char *)malloc(buff_sz);
-  if (p)
-    strcpy(p, str);
-  return p;
+  for (char &si : path)
+    if (si == '\\')
+      si = '/';
 }
 
 FILE *fopen_file(string &fpath)
@@ -586,13 +563,6 @@ char *strcpy_msg(char *dest, const char *src)
   return dest;
 }
 
-char *strcat_msg(char *dest, const char *src)
-{
-  strncat(dest, src, MSG_SZ - 1);
-  dest[MSG_SZ - 1] = '\0';
-  return dest;
-}
-
 string msg_str(const char *fmt, ...)
 {
   char message[MSG_SZ];
@@ -600,6 +570,43 @@ string msg_str(const char *fmt, ...)
   va_start(args, fmt);
   vsnprintf(message, MSG_SZ - 1, fmt, args);
   return message;
+}
+
+namespace {
+int split_line(char *line, vector<char *> &parts, const char *delims,
+               bool strict)
+{
+  parts.clear();
+  if (!delims)
+    delims = WHITESPACE;
+
+  if (strict) {
+    char *cur = line;
+    parts.push_back(cur);                    // always an entry, even if null
+    while (*(cur += strcspn(cur, delims))) { // quit at end of string
+      *cur = '\0';                           // terminate part
+      cur++;                                 // start of next part
+      parts.push_back(cur);                  // add even if final null
+    }
+  }
+  else {
+    char *val;
+    if (!(val = strtok(line, delims)))
+      return 0;
+
+    parts.push_back(val);
+    while ((val = strtok(nullptr, delims)))
+      parts.push_back(val);
+  }
+
+  return parts.size();
+}
+}; // namespace
+
+int Split::init(const char *line, const char *delims, bool strict)
+{
+  data = line;
+  return split_line(&data[0], parts, delims, strict);
 }
 
 } // namespace anti

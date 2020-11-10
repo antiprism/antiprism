@@ -29,10 +29,10 @@
 */
 
 #include <algorithm>
-#include <map>
-#include <set>
 #include <cstdio>
 #include <cstdlib>
+#include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -69,10 +69,7 @@ namespace {
 string expand_abbrevs(const string &name, const char *abbrevs[][2], size_t last)
 {
   string expanded;
-  char name_cpy[MSG_SZ];
-  strcpy_msg(name_cpy, name.c_str());
-  vector<char *> parts;
-  split_line(name_cpy, parts, RES_SEPARATOR);
+  Split parts(name, RES_SEPARATOR);
   for (unsigned int i = 1; i < parts.size(); i++) {
     size_t j;
     for (j = 0; j < last; j++) {
@@ -899,11 +896,7 @@ int make_resource_geodesic(Geometry &geom, string name, bool is_std,
     return 1; // fail
   }
 
-  char str[MSG_SZ];
-  strcpy_msg(str, name.c_str() + offset);
-  str[MSG_SZ - 1] = '\0';
-  vector<char *> num_strs;
-  split_line(str, num_strs, "_");
+  Split num_strs(name.c_str() + offset, "_");
   int nums[2] = {1, 0};
   if (num_strs.size() > 2) {
     if (errmsg)

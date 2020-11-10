@@ -32,7 +32,6 @@
 #define VEC3D_H
 
 #include <cmath>
-#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 

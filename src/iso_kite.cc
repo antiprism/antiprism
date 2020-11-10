@@ -108,28 +108,9 @@ const char *compounds[][4] = {
 };
 // clang-format on
 
-Status read_fraction(const char *frac_str, int &num, int &denom)
+Status read_triangle_fraction(const char *frac_str, int &num, int &denom)
 {
-  char frac_str_cpy[MSG_SZ];
-  strcpy_msg(frac_str_cpy, frac_str);
-
-  Status stat;
-  denom = 1;
-  char *p = strchr(frac_str_cpy, '/');
-  if (p != nullptr) {
-    *p++ = '\0';
-    if (!(stat = read_int(p, &denom)))
-      return Status::error(msg_str("denominator, %s", stat.c_msg()));
-  }
-  if (!(stat = read_int(frac_str_cpy, &num)))
-    return Status::error(msg_str("numerator, %s", stat.c_msg()));
-
-  return Status::ok();
-}
-
-Status read_triangle_fraction(char *frac_str, int &num, int &denom)
-{
-  Status stat = read_fraction(frac_str, num, denom);
+  Status stat = read_fraction(frac_str, &num, &denom);
   if (stat.is_error())
     return stat;
 
@@ -253,14 +234,12 @@ int tri_from_str(const char *str, vector<int> &fracs, char *errmsg = nullptr)
 {
   if (errmsg)
     *errmsg = '\0';
-  char str_cpy[MSG_SZ];
-  strcpy_msg(str_cpy, str);
 
   char sym_char;
   int tri_idx;
   char perm;
   char buf;
-  int num = sscanf(str_cpy, "%c%d%c%c", &sym_char, &tri_idx, &perm, &buf);
+  int num = sscanf(str, "%c%d%c%c", &sym_char, &tri_idx, &perm, &buf);
   if (num < 2 || num > 3) {
     if (errmsg)
       sprintf(errmsg, "invalid format for triangle description");
@@ -339,10 +318,8 @@ int args2fracs(const char *model, vector<int> &fracs, char *errmsg = nullptr)
     return 0;
   }
   char errmsg2[MSG_SZ];
-  char model_cpy[MSG_SZ];
-  strcpy_msg(model_cpy, model);
-  vector<char *> parts;
-  int num_parts = split_line(model_cpy, parts);
+  Split parts(model);
+  int num_parts = parts.size();
 
   if (num_parts == 1) {
     int ret = tri_from_str(model, fracs, errmsg2);

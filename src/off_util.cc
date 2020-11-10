@@ -30,12 +30,12 @@
 
 #include <algorithm>
 #include <cctype>
-#include <map>
 #include <cmath>
+#include <cstring>
+#include <map>
 #include <memory>
 #include <set>
 #include <stack>
-#include <cstring>
 #include <string>
 #include <vector>
 
@@ -321,16 +321,10 @@ bool get_del_element_list(Geometry &geom, const string &elem,
   if (!elem.size())
     return true;
 
-  unique_ptr<char> elem_str(copy_str(elem.c_str()));
-  if (!elem_str.get()) {
-    strcpy_msg(errmsg, "could not allocate memory");
-    return false;
-  }
-
   const char *elem_type_strs[] = {"vertex",    "edge",      "face",
                                   "edge part", "face part", "vertex orders",
                                   "face sides"};
-  char elem_type_char = *elem_str;
+  char elem_type_char = elem[0];
   int elem_type;
   int elem_type_name;
   int elems_sz;
@@ -385,7 +379,7 @@ bool get_del_element_list(Geometry &geom, const string &elem,
   }
 
   Status stat =
-      read_idx_list(elem_str.get() + 1, elem_lists[elem_type], elems_sz, false);
+      read_idx_list(elem.c_str() + 1, elem_lists[elem_type], elems_sz, false);
   if (stat.is_error()) {
     strcpy_msg(errmsg, msg_str("list for %s elements: %s",
                                elem_type_strs[elem_type], stat.c_msg())
@@ -405,14 +399,8 @@ bool get_del_parts_list(vector<vector<int>> &edge_parts,
   if (!elem.size())
     return true;
 
-  std::unique_ptr<char> elem_str(copy_str(elem.c_str()));
-  if (!elem_str.get()) {
-    strcpy_msg(errmsg, "could not allocate memory");
-    return false;
-  }
-
   const char *elem_type_strs[] = {"vertex", "edge", "face"};
-  char elem_type_char = *elem_str;
+  char elem_type_char = elem[0];
   int elem_type;
   int elems_sz = 0;
   if (elem_type_char == 'V') {
@@ -443,7 +431,7 @@ bool get_del_parts_list(vector<vector<int>> &edge_parts,
   }
 
   Status stat =
-      read_idx_list(elem_str.get() + 1, elem_lists[elem_type], elems_sz, false);
+      read_idx_list(elem.c_str() + 1, elem_lists[elem_type], elems_sz, false);
   if (stat.is_error()) {
     strcpy_msg(errmsg, msg_str("list for %s parts: %s",
                                elem_type_strs[elem_type], stat.c_msg())
@@ -1057,13 +1045,7 @@ bool add_element(Geometry &geom, const string &elem, char *errmsg)
   if (!elem.size())
     return true;
 
-  std::unique_ptr<char> elem_str(copy_str(elem.c_str()));
-  if (!elem_str.get()) {
-    strcpy_msg(errmsg, "could not allocate memory");
-    return false;
-  }
-
-  char elem_type_char = *elem_str;
+  char elem_type_char = elem[0];
   const char *elem_type_str;
   if (elem_type_char == 'v')
     elem_type_str = "vertex";
@@ -1079,8 +1061,8 @@ bool add_element(Geometry &geom, const string &elem, char *errmsg)
     return false;
   }
 
-  vector<char *> parts;
-  int num_parts = split_line(elem_str.get() + 1, parts, ":");
+  Split parts(elem.c_str() + 1, ":");
+  int num_parts = parts.size();
   if (num_parts > 2) {
     strcpy_msg(errmsg, "more than one ':' used");
     return false;
@@ -1321,7 +1303,6 @@ void pr_opts::process_command_line(int argc, char **argv)
   char errmsg[MSG_SZ];
   opterr = 0;
   int c;
-  vector<char *> parts;
   Geometry adding;
   Color close_col;
   string arg_id;
@@ -1388,8 +1369,8 @@ void pr_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'T': {
-      vector<char *> parts;
-      int parts_sz = split_line(optarg, parts, ",");
+      Split parts(optarg, ",");
+      int parts_sz = parts.size();
       if (parts_sz > 2)
         error("truncation must be 'ratio' or 'ratio,vert_order'", c);
       double trunc_ratio;
@@ -1441,8 +1422,7 @@ void pr_opts::process_command_line(int argc, char **argv)
       bool forward_error =
           ((strlen(optarg) > 1) && (optarg[strlen(optarg) - 2] == '%')) ? true
                                                                         : false;
-      vector<char *> entries;
-      split_line(optarg, entries, "%");
+      Split entries(optarg, "%");
       if (!entries.size())
         error("invalid argument", c);
       if (entries.size() > 1 || forward_error)
@@ -1470,8 +1450,7 @@ void pr_opts::process_command_line(int argc, char **argv)
       bool forward_error =
           ((strlen(optarg) > 1) && (optarg[strlen(optarg) - 2] == '%')) ? true
                                                                         : false;
-      vector<char *> entries;
-      split_line(optarg, entries, "%");
+      Split entries(optarg, "%");
       if (!entries.size())
         error("invalid argument", c);
       if (entries.size() > 1 || forward_error)
@@ -1513,7 +1492,7 @@ void pr_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'M': {
-      split_line(optarg, parts, ",");
+      Split parts(optarg, ",");
 
       // Get merge elements
       char elems[MSG_SZ];
@@ -1588,7 +1567,7 @@ void pr_opts::process_command_line(int argc, char **argv)
 
     case 'u': {
       int unzip_root;
-      split_line(optarg, parts, ",");
+      Split parts(optarg, ",");
       print_status_or_exit(read_int(parts[0], &unzip_root), c);
 
       double unzip_frac = 0.0;

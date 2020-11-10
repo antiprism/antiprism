@@ -28,8 +28,8 @@
 
 #include <algorithm>
 #include <cctype>
-#include <map>
 #include <cstring>
+#include <map>
 
 #include "coloring.h"
 #include "geometry.h"
@@ -212,8 +212,7 @@ Status ColorMapDeal::init(const char *map_name)
   if (stat.is_error())
     return stat;
 
-  vector<char *> vals;
-  split_line(name, vals, "_", true);
+  Split vals(name, "_", true);
 
   if (vals.size() > 2)
     return Status::error("map_name contains more than one '_'");
@@ -366,8 +365,7 @@ Status ColorMapRange::init(const char *map_name)
   if (stat.is_error())
     return stat;
 
-  vector<char *> vals;
-  split_line(name, vals, "_");
+  Split vals(name, "_");
   // for(unsigned int i=0; i<vals.size(); i++)
   //   fprintf(stderr, "vals[%d] = '%s'\n", i, vals[i]);
 
@@ -392,17 +390,18 @@ Status ColorMapRange::init(const char *map_name)
       vals.size() < 2) // A size was given but no comp ranges
     return Status::ok();
 
-  if (strpbrk(vals.back(), "HhSsVv") && strpbrk(vals.back(), "RrGgBb"))
+  const char *vals_back = (vals.size()) ? vals[vals.size() - 1] : "";
+  if (strpbrk(vals_back, "HhSsVv") && strpbrk(vals_back, "RrGgBb"))
     return Status::error(
         "component letters include both 'HhSsVv' "
         "and 'RrGgBb', can only include letters from one set\n");
 
-  int rng_len = strlen(vals.back());
+  int rng_len = strlen(vals_back);
   char rngs[MSG_SZ];
   char *q = rngs;
   int cur_idx = -1;
   char cur_comp = 'X';
-  for (const char *p = vals.back(); p - vals.back() < rng_len + 1; p++) {
+  for (const char *p = vals_back; p - vals_back < rng_len + 1; p++) {
     // fprintf(stderr, "*p = %c\n", *p);
     if (strchr("HhSsVvAaRrGgBb", *p) || cur_idx < 0 || *p == '\0') {
       *q = '\0';
@@ -872,13 +871,7 @@ static bool parse_map_from_line(const char *line, map<int, Color> *cmap,
   if (errmsg)
     *errmsg = '\0';
 
-  // copy the map string so the original will not be modified
-  int buff_sz = strlen(line) + 1;
-  auto *str = new char[buff_sz];
-  strncpy(str, line, buff_sz);
-
-  vector<char *> entries;
-  split_line(str, entries, ":");
+  Split entries(line, ":");
   int next_idx = 0; // index to use if no map index is given with a colour
   bool cmap_ok = true;
   for (unsigned int i = 0; i < entries.size(); i++) {
@@ -939,7 +932,6 @@ static bool parse_map_from_line(const char *line, map<int, Color> *cmap,
     (*cmap)[next_idx++] = col;
   }
 
-  delete[] str;
   return cmap_ok;
 }
 
@@ -1037,9 +1029,8 @@ Status ColorMapMulti::init(const char *map_name)
   strcpy_msg(names, map_name);
 
   Status stat;
-  vector<char *> parts;
-  int parts_sz = split_line(names, parts, ",");
-  // TODO: AR: Check this as new code
+  Split parts(names, ",");
+  int parts_sz = parts.size();
   for (int i = 0; i < parts_sz; i++) {
     ColorMap *col_map = colormap_from_name(parts[i], &stat);
     string msg = stat.msg();
@@ -1202,13 +1193,13 @@ static ColorMap *colormap_from_name_generated(const char *map_name,
     if (strspn(map_name + name_len, "0123456789-+*%") ==
         strlen(map_name + name_len)) {
       bool wrp = (name[strlen(name) - 1] == 'w');
-      char grey_name[MSG_SZ];
       size_t num_dgts = strspn(map_name + name_len, "0123456789");
-      strncpy(grey_name, map_name + name_len, num_dgts);
-      snprintf(grey_name + num_dgts, MSG_SZ - num_dgts - 1, "_H0S0V0:1%s%s",
-               wrp ? ":0" : "", map_name + name_len + num_dgts);
+
+      string grey_spec_str(map_name + name_len, num_dgts);
+      grey_spec_str += msg_str("_H0S0V0:1%s%s", wrp ? ":0" : "",
+                               map_name + name_len + num_dgts);
       cmap = new ColorMapRangeHsv();
-      if (cmap && !(*stat = cmap->init(grey_name))) {
+      if (cmap && !(*stat = cmap->init(grey_spec_str.c_str()))) {
         delete cmap;
         cmap = nullptr;
       }
@@ -1392,9 +1383,7 @@ static Status chk_range(vector<double> &v)
 
 Status ColorValuesToRangeHsva::add_range(int idx, const char *rngs)
 {
-  char str[MSG_SZ];
-  strcpy_msg(str, rngs);
-  Status stat = read_double_list(str, ranges[idx], 2, ":");
+  Status stat = read_double_list(rngs, ranges[idx], 2, ":");
   if (stat.is_error())
     return stat;
   if (!(stat = chk_range(ranges[idx])))

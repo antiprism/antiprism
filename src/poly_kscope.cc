@@ -125,7 +125,7 @@ void ksc_opts::process_command_line(int argc, char **argv)
   opterr = 0;
   int c;
   Geometry sgeom;
-  vector<char *> parts;
+  Split parts;
   vector<double> nums;
   Trans3d trans_m2;
   bool option_s_seen = false;
@@ -139,7 +139,7 @@ void ksc_opts::process_command_line(int argc, char **argv)
     switch (c) {
     case 's':
       option_s_seen = true;
-      split_line(optarg, parts, ",");
+      parts.init(optarg, ",");
       if (parts.size() == 0 || parts.size() > 3)
         error("argument should have 1 to 3 comma separated parts", c);
 
@@ -198,7 +198,7 @@ void ksc_opts::process_command_line(int argc, char **argv)
       if (strncmp(optarg, "list", strlen(optarg)) == 0)
         compound_print_list = true;
       else {
-        split_line(optarg, parts, ",");
+        parts.init(optarg, ",");
         if (parts.size() == 0 || parts.size() > 2)
           error("argument should have 1 or 2 comma separated parts", c);
         print_status_or_exit(read_int(parts[0], &compound_number), c);

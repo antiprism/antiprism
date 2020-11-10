@@ -28,10 +28,10 @@
 
 #include <algorithm>
 #include <cctype>
-#include <map>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <map>
 #include <vector>
 
 #include "geometryutils.h"

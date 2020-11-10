@@ -28,11 +28,11 @@
 
 #include <algorithm>
 #include <climits>
+#include <cstring>
 #include <limits>
 #include <map>
 #include <memory>
 #include <set>
-#include <cstring>
 #include <string>
 #include <vector>
 
@@ -654,11 +654,9 @@ static bool get_cycle_rate(const char *str, double *cps)
 {
   size_t len = strlen(str);
   if (len >= 3 && str[len - 2] == 'h' && str[len - 1] == 'z') {
-    std::unique_ptr<char[]> str_copy(copy_str(str));
-    strncpy(str_copy.get(), str, len - 2);
-    str_copy[len - 2] = '\0';
+    string cps_str(str, len - 2); // copy without final "hz"
     double cycs;
-    if (read_double(str_copy.get(), &cycs) && cycs >= 0.0) {
+    if (read_double(cps_str.c_str(), &cycs) && cycs >= 0.0) {
       *cps = cycs;
       return true;
     }
@@ -669,18 +667,12 @@ static bool get_cycle_rate(const char *str, double *cps)
 
 Status read_colorings(Coloring clrngs[], const char *line)
 {
-  char line_copy[MSG_SZ];
-  strcpy_msg(line_copy, line);
-
-  vector<char *> parts;
-  int parts_sz = split_line(line_copy, parts, ",");
-
-  vector<char *> map_names;
+  Status stat;
   Coloring clrng;
   unsigned int conv_elems = 0;
 
-  Status stat;
-  for (int i = 0; i < parts_sz; i++) {
+  Split parts(line, ",");
+  for (size_t i = 0; i < parts.size(); i++) {
     Status stat2;
     ColorMap *col_map = colormap_from_name(parts[i], &stat2);
     double cps;

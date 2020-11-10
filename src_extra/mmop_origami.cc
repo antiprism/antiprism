@@ -32,8 +32,8 @@
 */
 
 #include "../base/antiprism.h"
-#include <cmath>
 #include <cctype>
+#include <cmath>
 #include <cstdlib>
 #include <cstring>
 #include <string>

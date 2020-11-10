@@ -26,15 +26,15 @@
    convert polyhedron faces to triangles
 */
 
+#include "geometry.h"
+#include "tesselator/glu.h"
+
 #include <algorithm>
-#include <map>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <map>
 #include <vector>
-
-#include "geometry.h"
-#include "tesselator/glu.h"
 
 using std::map;
 using std::vector;

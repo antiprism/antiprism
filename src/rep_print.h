@@ -40,25 +40,18 @@
 class rep_printer : public anti::GeometryInfo {
 private:
   int sig_dgts;
-  char *d2s(char *buf, double d) { return anti::dtostr(buf, d, sig_dgts); }
-  char *v2s(char *buf, anti::Vec3d v);
-  char *vidx2s(char *buf, int idx)
+  std::string d2s(double d) { return anti::dtostr(d, sig_dgts); }
+  std::string v2s(anti::Vec3d v)
   {
-    return idx2s(buf, idx, num_verts() - extra_v_sz);
+    return (v.is_set()) ? vtostr(v, " ", sig_dgts) : "not valid";
   }
-  char *eidx2s(char *buf, int idx)
-  {
-    return idx2s(buf, idx, num_edges() - extra_e_sz);
-  }
-  char *fidx2s(char *buf, int idx)
-  {
-    return idx2s(buf, idx, num_faces() - extra_f_sz);
-  }
-  char *col2s(char *buf, anti::Color col);
+  std::string vidx2s(int idx) { return idx2s(idx, num_verts() - extra_v_sz); }
+  std::string eidx2s(int idx) { return idx2s(idx, num_edges() - extra_e_sz); }
+  std::string fidx2s(int idx) { return idx2s(idx, num_faces() - extra_f_sz); }
+  std::string col2s(anti::Color col);
+  std::string idx2s(int idx, int extra_sz);
 
   std::string sub_sym_str;
-
-  char *idx2s(char *buf, int idx, int extra_sz);
   int extra_v_sz;
   int extra_e_sz;
   int extra_f_sz;

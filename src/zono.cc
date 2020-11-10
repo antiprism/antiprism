@@ -113,7 +113,7 @@ void zo_opts::process_command_line(int argc, char **argv)
 {
   opterr = 0;
   int c;
-  vector<char *> parts;
+  Split parts;
   string map_str;
 
   handle_long_opts(argc, argv);
@@ -160,7 +160,7 @@ void zo_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'P':
-      split_line(optarg, parts, ",");
+      parts.init(optarg, ",");
       if (parts.size() > 1)
         print_status_or_exit(read_int(parts[1], &pol_spiral_step), c);
       else
@@ -203,7 +203,7 @@ void zo_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'T':
-      split_line(optarg, parts, ",");
+      parts.init(optarg, ",");
       if (parts.size() > 1) {
         if (strspn(parts[1], "doc") != strlen(parts[1]))
           error("close setting can contain only the characters d, o, c", c);

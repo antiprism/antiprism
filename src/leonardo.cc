@@ -364,7 +364,6 @@ bool leonardo_faces(Geometry &geom_out, const Geometry &geom, double width,
   return true;
 }
 
-
 double min_dist_edge_to_face_cent(Geometry &geom)
 {
   double min_dist2 = 1e100; // large value

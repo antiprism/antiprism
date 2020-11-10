@@ -87,7 +87,7 @@ Status read_int(const char *str, int *i);
  * \param denom used to return the denominator.
  * \return status, evaluates to \c true if a valid fraction
  * was read, otherwise \c false.*/
-Status read_fraction(const char *frac_str, int *num, int *denom);
+Status read_fraction(const char *str, int *num, int *denom);
 
 /// Read floating point numbers, or mathematical expressions, from a list of
 /// strings.
@@ -97,7 +97,8 @@ Status read_fraction(const char *frac_str, int *num, int *denom);
  * \param nums used to return the floating point numbers.
  * \return status, evaluates to \c true if only valid floating point numbers
  *  were read, otherwise \c false.*/
-Status read_double_list(std::vector<char *> &vals, std::vector<double> &nums);
+Status read_double_list(const std::vector<char *> &vals,
+                        std::vector<double> &nums);
 
 /// Read floating point numbers from a list of strings.
 /** The strings should only hold the floating point number, but may
@@ -106,7 +107,7 @@ Status read_double_list(std::vector<char *> &vals, std::vector<double> &nums);
  * \param nums used to return the floating point numbers.
  * \return status, evaluates to \c true if only valid floating point numbers
  *  were read, otherwise \c false.*/
-Status read_double_list_noparse(std::vector<char *> &vals,
+Status read_double_list_noparse(const std::vector<char *> &vals,
                                 std::vector<double> &nums);
 
 /// Read floating point numbers, or mathematical expressions, listed in a single
@@ -120,7 +121,7 @@ Status read_double_list_noparse(std::vector<char *> &vals,
  * \param sep the characters that can separate the numbers.
  * \return status, evaluates to \c true if only valid floating point numbers
  *  were read, , and no more than \a len (if \c len>0),otherwise \c false.*/
-Status read_double_list(char *str, std::vector<double> &nums, int len = 0,
+Status read_double_list(const char *str, std::vector<double> &nums, int len = 0,
                         const char *sep = ",");
 
 /// Read floating point numbers listed in a single string.
@@ -133,7 +134,7 @@ Status read_double_list(char *str, std::vector<double> &nums, int len = 0,
  * \param sep the characters that can separate the numbers.
  * \return status, evaluates to \c true if only valid floating point numbers
  *  were read, , and no more than \a len (if \c len>0),otherwise \c false.*/
-Status read_double_list_noparse(char *str, std::vector<double> &nums,
+Status read_double_list_noparse(const char *str, std::vector<double> &nums,
                                 int len = 0, const char *sep = ",");
 
 /// Read integers from a list of strings.
@@ -144,7 +145,7 @@ Status read_double_list_noparse(char *str, std::vector<double> &nums,
  * \param is_index if true then the integers cannot be negative.
  * \return status, evaluates to \c true if only valid integers
  *  were read, otherwise \c false.*/
-Status read_int_list(std::vector<char *> &vals, std::vector<int> &nums,
+Status read_int_list(const std::vector<char *> &vals, std::vector<int> &nums,
                      bool is_index = false);
 
 /// Read integers listed in a single string.
@@ -158,8 +159,8 @@ Status read_int_list(std::vector<char *> &vals, std::vector<int> &nums,
  * \param sep the characters that can separate the numbers.
  * \return status, evaluates to \c true if only valid integers
  *  were read, , and no more than \a len (if \c len>0),otherwise \c false.*/
-Status read_int_list(char *str, std::vector<int> &nums, bool is_index = false,
-                     int len = 0, const char *sep = ",");
+Status read_int_list(const char *str, std::vector<int> &nums,
+                     bool is_index = false, int len = 0, const char *sep = ",");
 
 /// Read index numbers listed in a single string.
 /** The string consists of comma separated index number ranges, and may
@@ -174,7 +175,7 @@ Status read_int_list(char *str, std::vector<int> &nums, bool is_index = false,
  *  which are indexed relative to num_idxs, i.e. X0 = num_idxs.
  * \return status, evaluates to \c true if only valid index numbers
  *  were read, otherwise \c false.*/
-Status read_idx_list(char *str, std::vector<int> &nums, int num_idxs,
+Status read_idx_list(const char *str, std::vector<int> &nums, int num_idxs,
                      bool allow_extra = false);
 
 /// Read a line of arbitrary length
@@ -189,22 +190,9 @@ Status read_idx_list(char *str, std::vector<int> &nums, int num_idxs,
  * </ul> */
 int read_line(FILE *file, char **line);
 
-/// Split a line into delimited parts
-/**\param line the line to split (this will be modified).
- * \param parts the parts of the split line.
- * \param delims the characters to use as delimiters, if \c 0 then use
- *  whitespace characters.
- * \param strict if true then treat every delimiter as a separator, returning
- *  null strings between adjacent delimiters, always returning at least
- *  one part.
- * \return The number of parts. */
-int split_line(char *line, std::vector<char *> &parts,
-               const char *delims = nullptr, bool strict = false);
-
 /// Remove leading and trailing space, convert any whitespace to a single space
-/**\param str the string to convert.
- * \return A pointer to the string. */
-char *clear_extra_whitespace(char *str);
+/**\param str the string to convert. */
+void clear_extra_whitespace(std::string &str);
 
 /// Convert to a normalised resource name
 /** Remove leading and trailing space, convert any whitespace to a
@@ -240,22 +228,10 @@ FILE *open_sup_file(const char *fname, const char *subdir,
  * \return The converted string. */
 std::string msg_str(const char *fmt, ...);
 
-/// Copy a C string
-/** The copy is dynamically allocated and must be freed with free()
- * \param str the string to copy
- * \return A pointer to the newly allocated string, or 0*/
-char *copy_str(const char *str);
-
 /// Convert an integer to a string
 /**\param i the integer.
- * \return A pointer to \a buf, which holds the string. */
-std::string itostr(int i);
-
-/// Convert an integer to a string
-/**\param buf a buffer to return the string.
- * \param i the integer.
  * \return The string. */
-char *itostr(char *buf, int i);
+std::string itostr(int i);
 
 /// Convert a floating point number to a string
 /**\param f the floating point number.
@@ -263,14 +239,6 @@ char *itostr(char *buf, int i);
  *  or if negative then the number of digits after the decimal point.
  * \return The string. */
 std::string dtostr(double f, int sig_dgts = 17);
-
-/// Convert a floating point number to a string
-/**\param buf a buffer to return the string.
- * \param f the floating point number.
- * \param sig_dgts the number of significant digits in the conversion,
- *  or if negative then the number of digits after the decimal point.
- * \return A pointer to \a buf, which holds the string. */
-char *dtostr(char *buf, double f, int sig_dgts = 17);
 
 /// Convert a coordinate vector to a string
 /**\param v the vector.
@@ -281,37 +249,97 @@ char *dtostr(char *buf, double f, int sig_dgts = 17);
 std::string vtostr(Vec3d v, const char *sep = ", ", int sig_dgts = 17);
 
 /// Convert a coordinate vector to a string
-/**\param buf a buffer to return the string.
- * \param v the vector.
+/**\param v the vector.
  * \param sep the separator between the numbers.
  * \param sig_dgts the number of significant digits in the conversion,
  *  or if negative then the number of digits after the decimal point.
- * \return A pointer to \a buf, which holds the string. */
-char *vtostr(char *buf, Vec3d v, const char *sep = ", ", int sig_dgts = 17);
+ * \return The string. */
+std::string vtostr(Vec4d v, const char *sep = ", ", int sig_dgts = 17);
 
-/// Convert a coordinate vector to a string
-/**\param buf a buffer to return the string.
- * \param v the vector.
- * \param sep the separator between the numbers.
- * \param sig_dgts the number of significant digits in the conversion,
- *  or if negative then the number of digits after the decimal point.
- * \return A pointer to \a buf, which holds the string. */
-inline char *vtostr(char *buf, Vec4d v, const char *sep = ", ",
-                    int sig_dgts = 17);
+/// Class to split a line into delimited parts
+class Split {
+private:
+  std::string data;
+  std::vector<char *> parts;
+
+public:
+  /// Constructor
+  Split() = default;
+
+  /// Constructor
+  /**\param line the line to split
+   * \param delims the characters to use as delimiters, if \c nullptr then use
+   *  whitespace characters.
+   * \param strict if true then treat every delimiter as a separator, returning
+   *  null strings between adjacent delimiters, always returning at least
+   *  one part.*/
+  Split(const char *line, const char *delims = nullptr, bool strict = false)
+  {
+    init(line, delims, strict);
+  }
+
+  /// Constructor
+  /**\param line_str the line to split
+   * \param delims the characters to use as delimiters, if \c nullptr then use
+   *  whitespace characters.
+   * \param strict if true then treat every delimiter as a separator, returning
+   *  null strings between adjacent delimiters, always returning at least
+   *  one part.*/
+  Split(const std::string &line_str, const char *delims = nullptr,
+        bool strict = false)
+  {
+    init(line_str, delims, strict);
+  }
+
+  /// Init
+  /**\param line the line to split
+   * \param delims the characters to use as delimiters, if \c nullptr then use
+   *  whitespace characters.
+   * \param strict if true then treat every delimiter as a separator, returning
+   *  null strings between adjacent delimiters, always returning at least
+   *  one part.
+   * \return The number of parts. */
+  int init(const char *line, const char *delims = nullptr, bool strict = false);
+
+  /// Init
+  /**\param line_str the line to split
+   * \param delims the characters to use as delimiters, if \c nullptr then use
+   *  whitespace characters.
+   * \param strict if true then treat every delimiter as a separator, returning
+   *  null strings between adjacent delimiters, always returning at least
+   *  one part.
+   * \return The number of parts. */
+  int init(const std::string &line_str, const char *delims = nullptr,
+           bool strict = false)
+  {
+    return init(line_str.c_str(), delims, strict);
+  }
+
+  /// Size, the number of parts
+  /**\return The number of parts. */
+  size_t size() const { return parts.size(); }
+
+  /// Get a part
+  /**\param idx the part index.
+   * \return The part. */
+  const char *operator[](int idx) const { return parts[idx]; }
+
+  /// Get the parts
+  /**\return The parts. */
+  const std::vector<char *> &get_parts() const { return parts; }
+
+  // Copy disallowed
+  Split(const Split &) = delete;
+  void operator=(const Split &) = delete;
+};
 
 char *strcpy_msg(char *dest, const char *src);
-char *strcat_msg(char *dest, const char *src);
 
 // inline function definitions
 
 inline std::string itostr(int i)
 {
   char buf[MSG_SZ];
-  return std::string(itostr(buf, i));
-}
-
-inline char *itostr(char *buf, int i)
-{
   buf[MSG_SZ - 1] = 0;
   sprintf(buf, "%d", i);
   return buf;
@@ -320,12 +348,7 @@ inline char *itostr(char *buf, int i)
 inline std::string dtostr(double f, int sig_dgts)
 {
   char buf[MSG_SZ];
-  return std::string(dtostr(buf, f, sig_dgts));
-}
-
-inline char *dtostr(char *buf, double f, int sig_dgts)
-{
-  buf[MSG_SZ - 1] = 0;
+  buf[MSG_SZ - 1] = '\0';
   if (sig_dgts > 0)
     snprintf(buf, MSG_SZ - 1, "%.*g", sig_dgts, f);
   else
@@ -336,11 +359,6 @@ inline char *dtostr(char *buf, double f, int sig_dgts)
 inline std::string vtostr(Vec3d v, const char *sep, int sig_dgts)
 {
   char buf[MSG_SZ];
-  return std::string(vtostr(buf, v, sep, sig_dgts));
-}
-
-inline char *vtostr(char *buf, Vec3d v, const char *sep, int sig_dgts)
-{
   buf[MSG_SZ - 1] = 0;
   if (sig_dgts > 0)
     snprintf(buf, MSG_SZ - 1, "%.*g%s%.*g%s%.*g", sig_dgts, v[0], sep, sig_dgts,
@@ -351,8 +369,9 @@ inline char *vtostr(char *buf, Vec3d v, const char *sep, int sig_dgts)
   return buf;
 }
 
-inline char *vtostr(char *buf, Vec4d v, const char *sep, int sig_dgts)
+inline std::string vtostr(Vec4d v, const char *sep, int sig_dgts)
 {
+  char buf[MSG_SZ];
   buf[MSG_SZ - 1] = 0;
   if (sig_dgts > 0)
     snprintf(buf, MSG_SZ - 1, "%.*g%s%.*g%s%.*g%s%.*g", sig_dgts, v[0], sep,

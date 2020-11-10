@@ -26,8 +26,8 @@
  * \brief Classes to represent a geometry
  */
 
-#include "coloring.h"
 #include "geometry.h"
+#include "coloring.h"
 #include "geometryinfo.h"
 #include "private_misc.h"
 #include "private_off_file.h"

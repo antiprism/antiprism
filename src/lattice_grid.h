@@ -56,7 +56,7 @@ bool hcp_diamond_test(int x, int y, int z);        // dist2 = 27
 void add_struts(anti::Geometry &geom, int len2);
 
 // for lattice code only
-void parse_color_string(anti::ProgramOpts *, char *, const char,
+void parse_color_string(const anti::ProgramOpts *, const char *, const char,
                         vector<anti::Color> &);
 
 double lattice_radius(const anti::Geometry &, const char);

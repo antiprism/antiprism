@@ -33,12 +33,12 @@
 
 #include <algorithm>
 #include <cctype>
-#include <map>
 #include <cmath>
-#include <set>
 #include <cstring>
-#include <string>
 #include <ctime>
+#include <map>
+#include <set>
+#include <string>
 #include <vector>
 
 #include "../base/antiprism.h"
@@ -238,8 +238,7 @@ void o_col_opts::process_command_line(int argc, char **argv)
 {
   Status stat;
   opterr = 0;
-  vector<char *> parts;
-  string optarg_orig;
+  Split parts;
   bool prev_char_was_not;
   int c;
 
@@ -255,8 +254,7 @@ void o_col_opts::process_command_line(int argc, char **argv)
         v_col_op = 'o';
         break;
       }
-      optarg_orig = optarg;
-      split_line(optarg, parts, ",");
+      parts.init(optarg, ",");
       if (strlen(parts[0]) == 1 && strchr("uUpPsSnNaAFEcCLM", *parts[0]))
         v_col_op = *parts[0];
       else
@@ -267,7 +265,7 @@ void o_col_opts::process_command_line(int argc, char **argv)
         error("too many comma separated parts", c);
 
       if (strchr("sS", v_col_op))
-        v_sub_sym = optarg_orig.size() > 2 ? optarg_orig.substr(2) : "";
+        v_sub_sym = strlen(optarg) > 2 ? optarg + 2 : "";
       break;
 
     case 'f':
@@ -275,8 +273,7 @@ void o_col_opts::process_command_line(int argc, char **argv)
         f_col_op = 'o';
         break;
       }
-      optarg_orig = optarg;
-      split_line(optarg, parts, ",");
+      parts.init(optarg, ",");
       if (strlen(parts[0]) == 1 && strchr("uUpPsSnNaAkKgGcCLlM", *parts[0]))
         f_col_op = *parts[0];
       else
@@ -287,7 +284,7 @@ void o_col_opts::process_command_line(int argc, char **argv)
         error("too many comma separated parts", c);
 
       if (strchr("sS", f_col_op))
-        f_sub_sym = optarg_orig.size() > 2 ? optarg_orig.substr(2) : "";
+        f_sub_sym = strlen(optarg) > 2 ? optarg + 2 : "";
       break;
 
     case 'e':
@@ -295,8 +292,7 @@ void o_col_opts::process_command_line(int argc, char **argv)
         e_col_op = 'o';
         break;
       }
-      optarg_orig = optarg;
-      split_line(optarg, parts, ",");
+      parts.init(optarg, ",");
       if (strlen(parts[0]) == 1 && strchr("uUpPsSkKjJFgGcCLldDM", *parts[0]))
         e_col_op = *parts[0];
       else
@@ -307,7 +303,7 @@ void o_col_opts::process_command_line(int argc, char **argv)
         error("too many comma separated parts", c);
 
       if (strchr("sS", e_col_op))
-        e_sub_sym = optarg_orig.size() > 2 ? optarg_orig.substr(2) : "";
+        e_sub_sym = strlen(optarg) > 2 ? optarg + 2 : "";
 
       if (strchr("jJ", e_col_op)) {
         if (parts.size() == 1)
@@ -337,7 +333,7 @@ void o_col_opts::process_command_line(int argc, char **argv)
     case 'r': {
       char r_elems;
       ColorValuesToRangeHsva col_proc;
-      if (split_line(optarg, parts, ",") > 2)
+      if (parts.init(optarg, ",") > 2)
         error("too many comma separated parts", c);
       print_status_or_exit(col_proc.init(parts[0]), c);
       if (parts.size() > 1) {
@@ -418,19 +414,19 @@ void o_col_opts::process_command_line(int argc, char **argv)
     ifile = argv[optind];
 }
 
-bool lights_read(const string &fname, Geometry *lights, char *errmsg)
+Status lights_read(const string &fname, Geometry *lights)
 {
-  *errmsg = '\0';
+  Status stat;
   FILE *lfile = open_sup_file(fname.c_str(), "/col_lights/");
-  if (lfile == nullptr) {
-    if (errmsg)
-      snprintf(errmsg, MSG_SZ, "could not open colour lights file \'%s\'",
-               fname.c_str());
-    return 0;
-  }
+  if (lfile == nullptr)
+    return stat.set_error(
+        msg_str("could not open colour lights file \'%s\'", fname.c_str()));
 
-  if (!lights->read(lfile))
-    return false;
+  Status stat2;
+  if (!(stat2 = lights->read(lfile)))
+    return stat.set_error(
+        msg_str("colour lights file \'%s\': %s", fname.c_str(), stat2.c_msg()));
+
   bool no_color = false;
   for (unsigned int i = 0; i < lights->verts().size(); i++) {
     if (!lights->colors(VERTS).get(i).is_value()) {
@@ -439,9 +435,9 @@ bool lights_read(const string &fname, Geometry *lights, char *errmsg)
     }
   }
   if (no_color)
-    strcpy_msg(errmsg, "one or more missing colours, set to grey");
+    stat.set_warning("one or more missing colours, set to grey");
 
-  return true;
+  return stat;
 }
 
 inline unsigned int col_type(const Color &col)
@@ -502,14 +498,9 @@ int main(int argc, char *argv[])
   opts.read_or_error(geom, opts.ifile);
 
   // read lights
-  char errmsg[MSG_SZ];
   Geometry lights;
-  if (opts.lfile != "") {
-    if (!lights_read(opts.lfile, &lights, errmsg))
-      opts.error(errmsg, 'l');
-    if (*errmsg)
-      opts.warning(errmsg, 'l');
-  }
+  if (opts.lfile != "")
+    opts.print_status_or_exit(lights_read(opts.lfile, &lights), 'l');
 
   // store original edges
   unsigned int orig_edges_sz = geom.edges().size();

@@ -28,11 +28,11 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <cmath>
 #include <cctype>
-#include <numeric>
+#include <cmath>
 #include <cstdlib>
 #include <cstring>
+#include <numeric>
 #include <string>
 #include <vector>
 
@@ -246,12 +246,9 @@ void pf_opts::process_command_line(int argc, char **argv)
 Status init_sym(const Geometry &geom, const char *sym_str, Symmetry &sym)
 {
   Status stat;
-  char sym_cpy[MSG_SZ]; // big enough for normal use
-  strcpy_msg(sym_cpy, sym_str);
-
   Symmetry full_sym(geom);
-  vector<char *> parts;
-  split_line(sym_cpy, parts, ",");
+
+  Split parts(sym_str, ",");
   if (parts.size() == 0 || parts.size() > 2)
     return Status::error("argument should have 1 or 2 comma separated parts");
 

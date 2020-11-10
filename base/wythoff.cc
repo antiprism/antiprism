@@ -23,9 +23,9 @@
 */
 
 #include <algorithm>
+#include <cstring>
 #include <functional>
 #include <regex>
-#include <cstring>
 #include <string>
 #include <vector>
 
@@ -1723,9 +1723,8 @@ Status Tiling::read_pattern(const string &pat)
         msg_str("pattern '%s': not in form [Point0,Point1,...]Path0,Path1...",
                 pat.c_str()));
 
-  std::unique_ptr<char> pat_str(copy_str(m_all[1].str().c_str()));
-  vector<char *> parts;
-  int num_parts = split_line(pat_str.get(), parts, ",");
+  Split parts;
+  int num_parts = parts.init(m_all[1].str(), ",");
   points.resize(num_parts);
   for (int i = 0; i < num_parts; i++) {
     auto stat = read_point(parts[i], points[i]);
@@ -1733,8 +1732,7 @@ Status Tiling::read_pattern(const string &pat)
       return Status::error(msg_str("Point%d: ", i) + stat.msg());
   }
 
-  std::unique_ptr<char> paths(copy_str(m_all[2].str().c_str()));
-  num_parts = split_line(paths.get(), parts, ",");
+  num_parts = parts.init(m_all[2].str(), ",");
   pat_paths.resize(num_parts);
   for (int i = 0; i < num_parts; i++) {
     auto stat = pat_paths[i].read(parts[i]);

@@ -29,10 +29,10 @@
 #include "../base/iteration.h"
 #include "../base/utils.h"
 
-#include <limits>
-#include <memory>
 #include <cstdarg>
 #include <cstdio>
+#include <limits>
+#include <memory>
 #include <vector>
 
 namespace anti {
@@ -94,7 +94,7 @@ Status IterationControl::set_status_checks(std::string iters_str)
 {
   std::vector<int> nums;
   Status stat;
-  if (!(stat = read_int_list(&iters_str[0], nums))) // get non-const char *
+  if (!(stat = read_int_list(iters_str.c_str(), nums)))
     return stat;
 
   if (nums.size() > 0 && !(stat = set_status_check_and_report_iters(nums[0])))

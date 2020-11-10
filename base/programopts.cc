@@ -32,8 +32,8 @@
 
 #include "programopts.h"
 #include "utils.h"
-#include <map>
 #include <cstring>
+#include <map>
 
 using std::map;
 using std::string;

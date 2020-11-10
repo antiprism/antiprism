@@ -104,7 +104,7 @@ bool off_file_read(string file_name, Geometry &geom, char *errmsg)
   return geom_ok;
 }
 
-bool add_vert(Geometry &geom, vector<char *> vals, char *errmsg)
+bool add_vert(Geometry &geom, const vector<char *> &vals, char *errmsg)
 {
   Status stat;
   Vec3d v;
@@ -289,15 +289,14 @@ bool off_file_read(FILE *ifile, Geometry &geom, char *errmsg)
   while (read_off_line(ifile, &line) == 0) {
     file_line_no++;
 
-    vector<char *> vals;
-    int split_ret = split_line(line, vals);
-    if (!split_ret) // line was blank
-      continue;     // skip the line
+    Split vals(line);
+    if (!vals.size()) // line was blank
+      continue;       // skip the line
 
     data_line_no++;
 
     if (data_line_no <= 2 + num_pts) { // vertex line
-      if (!add_vert(geom, vals, errmsg2)) {
+      if (!add_vert(geom, vals.get_parts(), errmsg2)) {
         if (errmsg)
           snprintf(errmsg, MSG_SZ, "line %d: %.*s", file_line_no,
                    int(MSG_SZ - 60), errmsg2);
@@ -307,10 +306,10 @@ bool off_file_read(FILE *ifile, Geometry &geom, char *errmsg)
     }
     else if (data_line_no <= 2 + num_pts + num_faces) { // face line
       bool contains_adj_equal_idx;
-      if (!add_face(geom, vals, errmsg2, alt_cols, &contains_int_gt_1,
-                    &contains_adj_equal_idx)) {
+      if (!add_face(geom, vals.get_parts(), errmsg2, alt_cols,
+                    &contains_int_gt_1, &contains_adj_equal_idx)) {
         if (errmsg)
-          snprintf(errmsg, MSG_SZ, "lineil %d: %.*s", file_line_no,
+          snprintf(errmsg, MSG_SZ, "line %d: %.*s", file_line_no,
                    int(MSG_SZ - 60), errmsg2);
         geom.clear_all();
         break;

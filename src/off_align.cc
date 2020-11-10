@@ -72,12 +72,9 @@ public:
 Status bond_base::set_sym(const char *sym_str)
 {
   Status stat;
-  char sym_cpy[MSG_SZ]; // big enough for normal use
-  strcpy_msg(sym_cpy, sym_str);
 
   Symmetry full_sym(base);
-  vector<char *> parts;
-  split_line(sym_cpy, parts, ",");
+  Split parts(sym_str, ",");
   if (parts.size() == 0 || parts.size() > 2)
     return Status::error("argument should have 1 or 2 comma separated parts");
 
@@ -124,7 +121,10 @@ bool bond_base::add_brick(char type, const string &brick_str, char *errmsg)
 {
   if (errmsg)
     *errmsg = '\0';
-  char *str = copy_str(brick_str.c_str());
+
+  string str_cpy(brick_str); // copy, do not access as C++ string
+  char *str = &str_cpy[0];   // may be used to modify characters
+
   char *first_comma = strchr(str, ',');
   if (first_comma)
     *first_comma = '\0';

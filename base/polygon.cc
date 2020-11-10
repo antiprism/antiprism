@@ -328,8 +328,8 @@ Status Polygon::make_prism_crown_part(Geometry &geom)
                    (i) % num_sides + num_sides});
 
     geom.add_face({(i - step2 + num_sides) % num_sides + num_sides,
-                  (i + 1) % num_sides, (i + 1 + step2) % num_sides + num_sides,
-                  (i) % num_sides});
+                   (i + 1) % num_sides, (i + 1 + step2) % num_sides + num_sides,
+                   (i) % num_sides});
   }
 
   return Status::ok();
@@ -494,11 +494,11 @@ Status Polygon::make_antiprism_crown_part(Geometry &geom)
 
   for (int i = 0; i < num_sides; i++) {
     geom.add_face({(i + 1 - step2 + num_sides) % num_sides,
-                  (i + 1) % num_sides + num_sides, (i + 1 + step2) % num_sides,
-                  (i) % num_sides + num_sides});
+                   (i + 1) % num_sides + num_sides, (i + 1 + step2) % num_sides,
+                   (i) % num_sides + num_sides});
     geom.add_face({(i + 1 - step2 + num_sides) % num_sides + num_sides,
-                  (i + 1) % num_sides, (i + 1 + step2) % num_sides + num_sides,
-                  (i + 2) % num_sides});
+                   (i + 1) % num_sides, (i + 1 + step2) % num_sides + num_sides,
+                   (i + 2) % num_sides});
   }
 
   return Status::ok();
@@ -1080,10 +1080,10 @@ Status Polygon::make_crown_full(Geometry &geom)
     int offset = (step2 - step1) / 2;
     for (int i = 0; i < N; i++) {
       geom.add_face({(i - offset + N) % N, (i + step1) % N + N,
-                    (i + step1 + offset + N) % N, (i) % N + N});
+                     (i + step1 + offset + N) % N, (i) % N + N});
 
       geom.add_face({(i - offset + N) % N + N, (i + step1) % N,
-                    (i + step1 + offset + N) % N + N, (i) % N});
+                     (i + step1 + offset + N) % N + N, (i) % N});
     }
   }
   else {

@@ -283,14 +283,8 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             tok = "0";
           mult += tok;
 
-          // string to char * (not const) from StackOverflow
-          auto *writable = new char[mult.size() + 1];
-          copy(mult.begin(), mult.end(), writable);
-          writable[mult.size()] = '\0';
-
-          print_status_or_exit(read_int_list(writable, multipliers, true, 3),
-                               c);
-          delete[] writable;
+          print_status_or_exit(
+              read_int_list(mult.c_str(), multipliers, true, 3), c);
 
           // might not be able to happen
           if ((int)multipliers.size() != 3)

@@ -30,9 +30,9 @@
 
 #include <cctype>
 #include <cmath>
-#include <set>
 #include <cstdlib>
 #include <cstring>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -284,8 +284,7 @@ void oq_opts::process_command_line(int argc, char **argv)
       error(msg_str("index x%d out of range", idx - max_elem_sz), 'I');
 
   if (!idxs.size()) { // default, process all if none specified
-    char all[MSG_SZ] = "-";
-    read_idx_list(all, idx_list, max_elem_sz, false);
+    read_idx_list("-", idx_list, max_elem_sz, false);
     add_to_list(idxs, idx_list);
   }
   if (!idxs.size()) // default, process all if none specified
@@ -433,9 +432,8 @@ void face_query(FILE *ofile, rep_printer &rep, oq_opts &opts)
       query_items.push_back(&rep_printer::f_color);
       break;
     default:
-      char str[MSG_SZ];
-      snprintf(str, MSG_SZ - 1, "unknown query letter '%c'", opts.query[i]);
-      opts.error(str, "F query");
+      opts.error(msg_str("unknown query letter '%c'", opts.query[i]),
+                 "F query");
     }
   }
 

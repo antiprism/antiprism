@@ -30,10 +30,10 @@
 
 #include <algorithm>
 #include <cctype>
-#include <map>
 #include <cmath>
-#include <set>
 #include <cstring>
+#include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -53,14 +53,13 @@ struct PopVertex {
   double scale_xy;
   double translate_z;
 
-  Status read(char *str);
+  Status read(const char *str);
 };
 
-Status PopVertex::read(char *str)
+Status PopVertex::read(const char *str)
 {
   Status stat;
-  vector<char *> parts;
-  split_line(str, parts, ",");
+  Split parts(str, ",");
   if (parts.size() < 2 || parts.size() > 3)
     return Status::error(
         "must have either two or three comma separated values");
