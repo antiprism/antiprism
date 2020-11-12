@@ -30,6 +30,7 @@
 #define UTILS_H
 
 #include "geometry.h"
+
 #include "trans3d.h"
 #include "vec3d.h"
 #include "vec4d.h"

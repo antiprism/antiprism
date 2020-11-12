@@ -52,12 +52,12 @@
    The cube's not in the above list because it's a prism.
 */
 
+#include "polygon.h"
+#include "private_std_polys.h"
+
 #include <cctype>
 #include <string>
 #include <vector>
-
-#include "polygon.h"
-#include "private_std_polys.h"
 
 using std::string;
 using std::vector;

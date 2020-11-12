@@ -31,1680 +31,1657 @@
 #ifndef HELP_H
 #define HELP_H
 
-// clang-format off
-const char *help_help =
-    "Help topics\n"
-    "===========\n"
-    "Type 'off_util -H topic_name' for help on each topic\n"
-    "\n"
-    "colour:       selecting colours for models\n"
-    "   Color :     colour value formats\n"
-    "   col_names :   colour names\n"
-    "   col_map :     colour map formats and resource colour maps\n"
-    "expressions:  mathematical expressions for floating point arguments\n"
-    "symmetry:     symmetry features and option arguments\n"
-    "models:       built in models\n"
-    "   common_polys: common polyhedra\n"
-    "   uniform:      uniform polyhedra (including wythoff_ models)\n"
-    "   ud:           uniform dual polyhedra\n"
-    "   johnson:      johnson polyhedra\n"
-    "   uc:           uniform compounds\n"
-    "   bowers:       supported Bowers short name notations\n"
-    "   polygon:      prisms, pyramids, antiprisms, etc\n"
-    "   geodesic:     geodesic spheres\n"
-    "   sym_models:   symmetry example models\n"
-    "   schwarz:      Schwarz triangles\n"
-    "   std_polys:    some information on polyhedra with usual coordinates\n";
+const char *help_help = R"(Help topics
+===========
+Type 'off_util -H topic_name' for help on each topic
 
-const char *help_models =
-    "Models\n"
-    "======\n"
-    "Antiprism includes a number of built in models. These may be used by \n"
-    "any program that expects an OFF file, by passing the model name instead\n"
-    "of a file name e.g. antiview u1. Adding _d to a resource model name will\n"
-    "give the dual of the model. Prefixing std_ to a resource name will give\n"
-    "an uncoloured standard or usual representation of the polyhedron.\n"
-    "\n"
-    "See the help topic for each model type for more details\n"
-    "   common_polys: common polyhedra\n"
-    "   uniform:      uniform polyhedra (including wythoff_ models)\n"
-    "   ud:           uniform dual polyhedra\n"
-    "   johnson:      johnson polyhedra\n"
-    "   uc:           uniform compounds\n"
-    "   polygon:      prisms, pyramids, antiprisms, etc\n"
-    "   std_polys:    polyhedra with usual coordinates\n"
-    "   geodesic:     geodesic spheres\n"
-    "   sym_models:   symmetry example models\n"
-    "   schwarz:      Schwarz triangles\n"
-    "   std_polys:    some information on polyhedra with usual coordinates\n";
+colour:       selecting colours for models
+   col_val :     colour value formats
+   col_names :   colour names
+   col_map :     colour map formats and resource colour maps
+expressions:  mathematical expressions for floating point arguments
+symmetry:     symmetry features and option arguments
+models:       built in models
+   common_polys: common polyhedra
+   uniform:      uniform polyhedra (including wythoff_ models)
+   ud:           uniform dual polyhedra
+   johnson:      johnson polyhedra
+   uc:           uniform compounds
+   bowers:       supported Bowers short name notations
+   polygon:      prisms, pyramids, antiprisms, etc
+   geodesic:     geodesic spheres
+   sym_models:   symmetry example models
+   schwarz:      Schwarz triangles
+   std_polys:    information on usual coordinates)";
 
-const char *help_common_polys =
-    "Common Polyhedra\n"
-    "================\n"
-    "Common polyhedra are given by name only. Some names have their own \n"
-    "construction, while others are just a synonym for another resource \n"
-    "model name\n"
-    "\n"
-    "   Constructed:\n"
-    "     rhombic_dodecahedron, rd\n"
-    "     rhombic_triacontahedron, rt\n"
-    "     rhombic_enneacontahedron, re\n"
-    "     rhombic_hexacontahedron, rh_hex\n"
-    "     szilassi\n"
-    "     csaszar\n"
-    "\n"
-    "   Synonyms:\n"
-    "     tetrahedron, tet                          u1\n"
-    "     truncated_tetrahedron, tr_tet             u2\n"
-    "     octahedron, oct                           u5\n"
-    "     cube                                      u6\n"
-    "     cuboctahedron, cubo                       u7\n"
-    "     truncated_octahedron, tr_oct              u8\n"
-    "     truncated_cube, tr_cube                   u9\n"
-    "     rhombicuboctahedron, rh_cubo              u10\n"
-    "     truncated_cuboctahedron, tr_cubo          u11\n"
-    "     snub_cube, sn_cube                        u12\n"
-    "     icosahedron, icosa, ico                   u22\n"
-    "     dodecahedron, dod                         u23\n"
-    "     icosidodecahedron, icosid                 u24\n"
-    "     truncated_icosahedron, tr_ico             u25\n"
-    "     truncated_dodecahedron, tr_dod            u26\n"
-    "     rhombicosidodecahedron, rh_icosid         u27\n"
-    "     truncated_icosidodecahedron, tr_icosid    u28\n"
-    "     snub_dodecahedron, sn_dod                 u29\n"
-    "     small_stellated_dodecahedron, sm_st_dod   u34\n"
-    "     great_dodecahedron, gr_dod                u35\n"
-    "     great_stellated_dodecahedron, gr_st_dod   u52\n"
-    "     great_icosahedron, gr_ico                 u53\n"
-    "     triakis_tetrahedron, tri_tet              u2_d\n"
-    "     triakis_octahedron, tri_oct               u9_d\n"
-    "     tetrakis_hexahedron, tetr_hex             u8_d\n"
-    "     disdyakis_hexahedron, disd_hex            u8_d\n"
-    "     deltoidal_icositetrahedron, delt_icosit   u10_d\n"
-    "     trapezoidal_icositetrahedron, trap_icosit u10_d\n"
-    "     hexakis_octahedron, hex_oct               u11_d\n"
-    "     disdyakis_dodecahedron, disd_dod          u11_d\n"
-    "     pentagonal_icositetrahedron, pen_icosit   u12_d\n"
-    "     triakis_icosahedron, tri_ico              u26_d\n"
-    "     pentakis_dodecahedron, pent_dod           u25_d\n"
-    "     deltoidal_hexacontahedron, delt_hexac     u27_d\n"
-    "     trapezoidal_hexacontahedron, trap_hexac   u27_d\n"
-    "     hexakis_icosahedron, hex_ico              u28_d\n"
-    "     disdyakis_triacontahedron, disd_tri       u28_d\n"
-    "     pentagonal_hexacontahedron, pen_hexac     u29_d\n"
-    "\n"
-    "     e.g. tet, great_icosahedron\n";
+const char *help_models = R"(Models
+======
+Antiprism includes a number of built in models. These may be used by 
+any program that expects an OFF file, by passing the model name instead
+of a file name e.g. antiview u1. Adding _d to a resource model name will
+give the dual of the model. Prefixing std_ to a resource name will give
+an uncoloured standard or usual representation of the polyhedron.
 
-const char *help_uniform =
-    "Uniform Polyhedra\n"
-    "=================\n"
-    "Uniform polyhdra can be specified by\n"
-    "\n"
-    "o   A U number e.g. u8\n"
-    "\n"
-    "o   u_ followed by the specific Wythoff Symbol in the list below,\n"
-    "    e.g. \"u_2 4|3\", which will be used as a lookup for the\n"
-    "    corresponding uniform \n"
-    "\n"
-    "o   wythoff_ followed by a general Wythoff Symbol, where '_' and ':'\n"
-    "    maybe used instead of ' ', and ':', e.g. wythoff_2_4:3. The model\n"
-    "    is constructed directly from the symbol. Note that some degenerate\n"
-    "    snub models may not be constructed correctly. The faces around each\n"
-    "    triangle vertex are coloured, in order, red, blue, yellow, and snub\n"
-    "    triangles are coloured white.\n"
-    "\n"
-    "o   u_ followed by a name (see the list below) Use '_' instead of\n"
-    "    a space to avoid having to quote the model name. The beginning\n"
-    "    of a name can be given and the first match from the list of\n"
-    "    uniform polyhedra below is returned.\n"
-    "\n"
-    "    When giving a name the following abbreviations can be used\n"
-    "       tr:     truncated\n"
-    "       sm:     small\n"
-    "       gr:     great\n"
-    "       st:     stellated\n"
-    "       sn:     snub\n"
-    "       tet:    tetrahedron\n"
-    "       ico:    icosahedron\n"
-    "       icosa:  icosahedron\n"
-    "       dod:    dodecahedron\n"
-    "       oct:    octahedron\n"
-    "       cubo:   cuboctahedron\n"
-    "       icosid: icosidodecahedron\n"
-    "\n"
-    "    e.g. u_truncated_octahedron, u_tr_octahedron, u_tr_oct, u_tr_o\n"
-    "\n"
-    "o   Common polyhedra can be given by name only (see help for\n"
-    "    'common_polys' for list) e.g. tet, cube\n"
-    "\n"
-    "o   Uniform prism are named 'pri' followed by the polygon\n"
-    "    fraction e.g pri5, pri5/2\n"
-    "\n"
-    "o   Uniform antiprism are named 'ant' followed by the polygon\n"
-    "    fraction e.g ant5, ant5/2, ant5/3\n"
-    "\n"
-    "Uniform List:\n"
-    "\n"
-    "U No.  Wythoff Sym    Name\n"
-    "-----  -----------    ------------------------\n"
-    "U1           3|2 3    tetrahedron\n"
-    "U2           2 3|3    truncated tetrahedron\n"
-    "U3         3/2 3|3    octahemioctahedron\n"
-    "U4         3/2 3|2    tetrahemihexahedron\n"
-    "U5           4|2 3    octahedron\n"
-    "U6           3|2 4    cube\n"
-    "U7           2|3 4    cuboctahedron\n"
-    "U8           2 4|3    truncated octahedron\n"
-    "U9           2 3|4    truncated cube\n"
-    "U10          3 4|2    rhombicuboctahedron\n"
-    "U11         2 3 4|    truncated cuboctahedron\n"
-    "U12         |2 3 4    snub cube\n"
-    "U13        3/2 4|4    small cubicuboctahedron\n"
-    "U14        3 4|4/3    great cubicuboctahedron\n"
-    "U15        4/3 4|3    cubohemioctahedron\n"
-    "U16       4/3 3 4|    cubitruncated cuboctahedron\n"
-    "U17        3/2 4|2    great rhombicuboctahedron\n"
-    "U18       3/2 2 4|    small rhombihexahedron\n"
-    "U19        2 3|4/3    stellated truncated hexahedron\n"
-    "U20       4/3 2 3|    great truncated cuboctahedron\n"
-    "U21     4/3 3/2 2|    great rhombihexahedron\n"
-    "U22          5|2 3    icosahedron\n"
-    "U23          3|2 5    dodecahedron\n"
-    "U24          2|3 5    icosidodecahedron\n"
-    "U25          2 5|3    truncated icosahedron\n"
-    "U26          2 3|5    truncated dodecahedron\n"
-    "U27          3 5|2    rhombicosidodecahedron\n"
-    "U28         2 3 5|    truncated icosidodecahedron\n"
-    "U29         |2 3 5    snub dodecahedron\n"
-    "U30        3|5/2 3    small ditrigonal icosidodecahedron\n"
-    "U31        5/2 3|3    small icosicosidodecahedron\n"
-    "U32       |5/2 3 3    small snub icosicosidodecahedron\n"
-    "U33        3/2 5|5    small dodecicosidodecahedron\n"
-    "U34        5|2 5/2    small stellated dodecahedron\n"
-    "U35        5/2|2 5    great dodecahedron\n"
-    "U36        2|5/2 5    great dodecadodecahedron\n"
-    "U37        2 5/2|5    truncated great dodecahedron\n"
-    "U38        5/2 5|2    rhombidodecadodecahedron\n"
-    "U39       2 5/2 5|    small rhombidodecahedron\n"
-    "U40       |2 5/2 5    snub dodecadodecahedron\n"
-    "U41        3|5/3 5    ditrigonal dodecadodecahedron\n"
-    "U42        3 5|5/3    great ditrigonal dodecicosidodecahedron\n"
-    "U43        5/3 3|5    small ditrigonal dodecicosidodecahedron\n"
-    "U44        5/3 5|3    icosidodecadodecahedron\n"
-    "U45       5/3 3 5|    icositruncated dodecadodecahedron\n"
-    "U46       |5/3 3 5    snub icosidodecadodecahedron\n"
-    "U47        3/2|3 5    great ditrigonal icosidodecahedron\n"
-    "U48        3/2 5|3    great icosicosidodecahedron\n"
-    "U49        3/2 3|5    small icosihemidodecahedron\n"
-    "U50       3/2 3 5|    small dodecicosahedron\n"
-    "U51        5/4 5|5    small dodecahemidodecahedron\n"
-    "U52        3|2 5/2    great stellated dodecahedron\n"
-    "U53        5/2|2 3    great icosahedron\n"
-    "U54        2|5/2 3    great icosidodecahedron\n"
-    "U55        2 5/2|3    great truncated icosahedron\n"
-    "U56       2 5/2 3|    rhombicosahedron\n"
-    "U57       |2 5/2 3    great snub icosidodecahedron\n"
-    "U58        2 5|5/3    small stellated truncated dodecahedron\n"
-    "U59       5/3 2 5|    truncated dodecadodecahedron\n"
-    "U60       |5/3 2 5    inverted snub dodecadodecahedron\n"
-    "U61      5/2 3|5/3    great dodecicosidodecahedron\n"
-    "U62      5/3 5/2|3    small dodecahemicosahedron\n"
-    "U63     5/3 5/2 3|    great dodecicosahedron\n"
-    "U64     |5/3 5/2 3    great snub dodecicosidodecahedron\n"
-    "U65        5/4 5|3    great dodecahemicosahedron\n"
-    "U66        2 3|5/3    great stellated truncated dodecahedron\n"
-    "U67        5/3 3|2    great rhombicosidodecahedron\n"
-    "U68       5/3 2 3|    great truncated icosidodecahedron\n"
-    "U69       |5/3 2 3    great inverted snub icosidodecahedron\n"
-    "U70    5/3 5/2|5/3    great dodecahemidodecahedron\n"
-    "U71      3/2 3|5/3    great icosihemidodecahedron\n"
-    "U72   |3/2 3/2 5/2    small retrosnub icosicosidodecahedron\n"
-    "U73     3/2 5/3 2|    great rhombidodecahedron\n"
-    "U74     |3/2 5/3 2    great retrosnub icosidodecahedron\n"
-    "U75  3/2 5/3 3 5/2    great dirhombicosidodecahedron\n"
-    "U76          2 5|2    pentagonal prism\n"
-    "U77         |2 2 5    pentagonal antiprism\n"
-    "U78        2 5/2|2    pentagrammic prism\n"
-    "U79       |2 2 5/2    pentagrammic antiprism\n"
-    "U80       |2 2 5/3    pentagrammic crossed antiprism\n";
+See the help topic for each model type for more details
+   common_polys: common polyhedra
+   uniform:      uniform polyhedra (including wythoff_ models)
+   ud:           uniform dual polyhedra
+   johnson:      johnson polyhedra
+   uc:           uniform compounds
+   bowers:       supported Bowers short name notations
+   polygon:      prisms, pyramids, antiprisms, etc
+   geodesic:     geodesic spheres
+   sym_models:   symmetry example models
+   schwarz:      Schwarz triangles
+   std_polys:    information on usual coordinates)";
 
-const char *help_uniform_duals =
-    "Uniform Dual Polyhedra\n"
-    "======================\n"
-    "Uniform dual polyhdra can be specified by\n"
-    "\n"
-    "o   UD followed by a U number e.g. ud8\n"
-    "\n"
-    "o   ud_ followed by a name (see the list below) Use '_' instead of\n"
-    "    a space to avoid having to quote the model name. The beginning\n"
-    "    of a name can be given and the first match from the list of\n"
-    "    uniform dual polyhedra below is returned.\n"
-    "\n"
-    "    When giving a name the following abbreviations can be used\n"
-    "       sm:       small\n"
-    "       gr:       great\n"
-    "       st:       stellated\n"
-    "       inv:      inverted\n"
-    "       delt:     deltoidal\n"
-    "       pen:      pentagonal\n"
-    "       med:      medial\n"
-    "       triam:    triambic\n"
-    "       ditrig:   ditrigonal\n"
-    "       tri:      triakis\n"
-    "       tetr:     tetrakis\n"
-    "       pent:     pentakis\n"
-    "       hex:      hexakis\n"
-    "       disd:     disdyakis\n"
-    "       tet:      tetrahedron\n"
-    "       ico:      icosahedron\n"
-    "       icosa:    icosahedron\n"
-    "       dod:      dodecahedron\n"
-    "       oct:      octahedron\n"
-    "       cubo:     cuboctahedron\n"
-    "       hexa:     hexahedron\n"
-    "       hexec:    hexecontahedron\n"
-    "       icositet: icositetrahedron\n"
-    "\n"
-    "    e.g. u_truncated_octahedron, u_tr_octahedron, u_tr_oct, u_tr_o\n"
-    "\n"
-    "o   Common polyhedra can be given by name only (see help for\n"
-    "    'common_polys' for list) e.g. tet, cube\n"
-    "\n"
-    "o   Uniform prism are named 'pri' followed by the polygon\n"
-    "    fraction e.g pri5, pri5/2\n"
-    "\n"
-    "o   Uniform antiprism are named 'ant' followed by the polygon\n"
-    "    fraction e.g ant5, ant5/2, ant5/3\n"
-    "\n"
-    "Uniform List:\n"
-    "\n"
-    "UD No.     Name\n"
-    "-----      ------------------------\n"
-    "UD1        tetrahedron\n"
-    "UD2        triakistetrahedron\n"
-    "UD3        octahemioctacron\n"
-    "UD4        tetrahemihexacron\n"
-    "UD5        cube\n"
-    "UD6        octahedron\n"
-    "UD7        rhombic dodecahedron\n"
-    "UD8        tetrakishexahedron\n"
-    "UD9        triakisoctahedron\n"
-    "UD10       deltoidal icositetrahedron\n"
-    "UD11       disdyakisdodecahedron\n"
-    "UD12       pentagonal icositetrahedron\n"
-    "UD13       small hexacronic icositetrahedron\n"
-    "UD14       great hexacronic icositetrahedron\n"
-    "UD15       hexahemioctacron\n"
-    "UD16       tetradyakishexahedron\n"
-    "UD17       great deltoidal icositetrahedron\n"
-    "UD18       small rhombihexacron\n"
-    "UD19       great triakisoctahedron\n"
-    "UD20       great disdyakisdodecahedron\n"
-    "UD21       great rhombihexacron\n"
-    "UD22       dodecahedron\n"
-    "UD23       icosahedron\n"
-    "UD24       rhombic triacontahedron\n"
-    "UD25       pentakisdodecahedron\n"
-    "UD26       triakisicosahedron\n"
-    "UD27       deltoidal hexecontahedron\n"
-    "UD28       disdyakistriacontahedron\n"
-    "UD29       pentagonal hexecontahedron\n"
-    "UD30       small triambic icosahedron\n"
-    "UD31       small icosacronic hexecontahedron\n"
-    "UD32       small hexagonal hexecontahedron\n"
-    "UD33       small dodecacronic hexecontahedron\n"
-    "UD34       great dodecahedron\n"
-    "UD35       small stellated dodecahedron\n"
-    "UD36       medial rhombic triacontahedron\n"
-    "UD37       small stellapentakisdodecahedron\n"
-    "UD38       medial deltoidal hexecontahedron\n"
-    "UD39       small rhombidodecacron\n"
-    "UD40       medial pentagonal hexecontahedron\n"
-    "UD41       medial triambic icosahedron\n"
-    "UD42       great ditrigonal dodecacronic hexecontahedron\n"
-    "UD43       small ditrigonal dodecacronic hexecontahedron\n"
-    "UD44       medial icosacronic hexecontahedron\n"
-    "UD45       tridyakisicosahedron\n"
-    "UD46       medial hexagonal hexecontahedron\n"
-    "UD47       great triambic icosahedron\n"
-    "UD48       great icosacronic hexecontahedron\n"
-    "UD49       small icosihemidodecacron\n"
-    "UD50       small dodecicosacron\n"
-    "UD51       small dodecahemidodecacron\n"
-    "UD52       great icosahedron\n"
-    "UD53       great stellated dodecahedron\n"
-    "UD54       great rhombic triacontahedron\n"
-    "UD55       great stellapentakisdodecahedron\n"
-    "UD56       rhombicosacron\n"
-    "UD57       great pentagonal hexecontahedron\n"
-    "UD58       great pentakisdodekahedron\n"
-    "UD59       medial disdyakistriacontahedron\n"
-    "UD60       medial inverted pentagonal hexecontahedron\n"
-    "UD61       great dodecacronic hexecontahedron\n"
-    "UD62       small dodecahemicosacron\n"
-    "UD63       great dodecicosacron\n"
-    "UD64       great hexagonal hexecontahedron\n"
-    "UD65       great dodecahemicosacron\n"
-    "UD66       great triakisicosahedron\n"
-    "UD67       great deltoidal hexecontahedron\n"
-    "UD68       great disdyakistriacontahedron\n"
-    "UD69       great inverted pentagonal hexecontahedron\n"
-    "UD70       great dodecahemidodecacron\n"
-    "UD71       great icosihemidodecacron\n"
-    "UD72       small hexagrammic hexecontahedron\n"
-    "UD73       great rhombidodecacron\n"
-    "UD74       great pentagrammic hexecontahedron\n"
-    "UD75       great dirhombicosidodecacron\n"
-    "UD76       pentagonal dipyramid\n"
-    "UD77       pentagonal deltohedron\n"
-    "UD78       pentagrammic dipyramid\n"
-    "UD79       pentagrammic deltohedron\n"
-    "UD80       pentagrammic concave deltohedron\n";
+const char *help_common_polys = R"(Common Polyhedra
+================
+Common polyhedra are given by name only. Some names have their own 
+construction, while others are just a synonym for another resource 
+model name
 
-const char *help_johnson =
-    "Johnson Polyhedra\n"
-    "=================\n"
-    "Johnson polyhedra can be specified by a\n"
-    "\n"
-    "o   A J number e.g. j8\n"
-    "\n"
-    "o   j_ followed by a name (see the list below) Use '_' instead of\n"
-    "    a space to avoid having to quote the model name. The beginning\n"
-    "    of a name can be given and the first match from the list of\n"
-    "    Johnson polyhedra below is returned.\n"
-    "\n"
-    "    When giving a name the following abbreviations can be used\n"
-    "       tri:   triangular\n"
-    "       sq:    square\n"
-    "       squ:   square\n"
-    "       pe:    pentagonal\n"
-    "       pen:   pentagonal\n"
-    "       el:    elongated\n"
-    "       ge:    gyroelongated\n"
-    "       tr:    truncated\n"
-    "       au:    augmented\n"
-    "       ba:    biaugmenbted\n"
-    "       ta:    triaugmented\n"
-    "\n"
-    "    e.g. j_elongated_triangular_pyramid, j_el_tri_pyr, j_el\n"
-    "\n"
-    "The Johnson polyhedron will be aligned with its symmetry group, but\n"
-    "appending '_raw' to the name will preserve the original construction\n"
-    "alignment.\n"
-    "\n"
-    "Johnson List:\n"
-    "\n"
-    "J No.  Name\n"
-    "-----  -------------------------------\n"
-    "J1     square pyramid\n"
-    "J2     pentagonal pyramid\n"
-    "J3     triangular cupola\n"
-    "J4     square cupola\n"
-    "J5     pentagonal cupola\n"
-    "J6     pentagonal rotunda\n"
-    "J7     elongated triangular pyramid\n"
-    "J8     elongated square pyramid\n"
-    "J9     elongated pentagonal pyramid\n"
-    "J10    gyroelongated square pyramid\n"
-    "J11    gyroelongated pentagonal pyramid\n"
-    "J12    triangular dipyramid\n"
-    "J13    pentagonal dipyramid\n"
-    "J14    elongated triangular dipyramid\n"
-    "J15    elongated square dipyramid\n"
-    "J16    elongated pentagonal dipyramid\n"
-    "J17    gyroelongated square dipyramid\n"
-    "J18    elongated triangular cupola\n"
-    "J19    elongated square cupola\n"
-    "J20    elongated pentagonal cupola\n"
-    "J21    elongated pentagonal rotunda\n"
-    "J22    gyroelongated triangular cupola\n"
-    "J23    gyroelongated square cupola\n"
-    "J24    gyroelongated pentagonal cupola\n"
-    "J25    gyroelongated pentagonal rotunda\n"
-    "J26    gyrobifastigium\n"
-    "J27    triangular orthobicupola\n"
-    "J28    square orthobicupola\n"
-    "J29    square gyrobicupola\n"
-    "J30    pentagonal orthobicupola\n"
-    "J31    pentagonal gyrobicupola\n"
-    "J32    pentagonal orthocupolarotunda\n"
-    "J33    pentagonal gyrocupolarotunda\n"
-    "J34    pentagonal orthobirotunda\n"
-    "J35    elongated triangular orthobicupola\n"
-    "J36    elongated triangular gyrobicupola\n"
-    "J37    elongated square gyrobicupola\n"
-    "J38    elongated pentagonal orthobicupola\n"
-    "J39    elongated pentagonal gyrobicupola\n"
-    "J40    elongated pentagonal orthocupolarotunda\n"
-    "J41    elongated pentagonal gyrocupolarotunda\n"
-    "J42    elongated pentagonal orthobirotunda\n"
-    "J43    elongated pentagonal gyrobirotunda\n"
-    "J44    gyroelongated triangular bicupola\n"
-    "J45    gyroelongated square bicupola\n"
-    "J46    gyroelongated pentagonal bicupola\n"
-    "J47    gyroelongated pentagonal cupolarotunda\n"
-    "J48    gyroelongated pentagonal birotunda\n"
-    "J49    augmented triangular prism\n"
-    "J50    biaugmented triangular prism\n"
-    "J51    triaugmented triangular prism\n"
-    "J52    augmented pentagonal prism\n"
-    "J53    biaugmented pentagonal prism\n"
-    "J54    augmented hexagonal prism\n"
-    "J55    parabiaugmented hexagonal prism\n"
-    "J56    metabiaugmented hexagonal prism\n"
-    "J57    triaugmented hexagonal prism\n"
-    "J58    augmented dodecahedron\n"
-    "J59    parabiaugmented dodecahedron\n"
-    "J60    metabiaugmented dodecahedron\n"
-    "J61    triaugmented dodecahedron\n"
-    "J62    metabidiminished icosahedron\n"
-    "J63    tridiminished icosahedron\n"
-    "J64    augmented tridiminished icosahedron\n"
-    "J65    augmented truncated tetrahedron\n"
-    "J66    augmented truncated cube\n"
-    "J67    biaugmented truncated cube\n"
-    "J68    augmented truncated dodecahedron\n"
-    "J69    parabiaugmented truncated dodecahedron\n"
-    "J70    metabiaugmented truncated dodecahedron\n"
-    "J71    triaugmented truncated dodecahedron\n"
-    "J72    gyrate rhombicosidodecahedron\n"
-    "J73    parabigyrate rhombicosidodecahedron\n"
-    "J74    metabigyrate rhombicosidodecahedron\n"
-    "J75    trigyrate rhombicosidodecahedron\n"
-    "J76    diminished rhombicosidodecahedron\n"
-    "J77    paragyrate diminished rhombicosidodecahedron\n"
-    "J78    metagyrate diminished rhombicosidodecahedron\n"
-    "J79    bigyrate diminished rhombicosidodecahedron\n"
-    "J80    parabidiminished rhombicosidodecahedron\n"
-    "J81    metabidiminished rhombicosidodecahedron\n"
-    "J82    gyrate bidiminished rhombicosidodecahedron\n"
-    "J83    tridiminished rhombicosidodecahedron\n"
-    "J84    snub disphenoid\n"
-    "J85    snub square antiprism\n"
-    "J86    sphenocorona\n"
-    "J87    augmented sphenocorona\n"
-    "J88    sphenomegacorona\n"
-    "J89    hebesphenomegacorona\n"
-    "J90    disphenocingulum\n"
-    "J91    bilunabirotunda\n"
-    "J92    triangular hebesphenorotunda\n";
+   Constructed:
+     rhombic_dodecahedron, rd
+     rhombic_triacontahedron, rt
+     rhombic_enneacontahedron, re
+     rhombic_hexacontahedron, rh_hex
+     szilassi
+     csaszar
 
-const char *help_polygon =
-    "Polygon-based Polyhedra\n"
-    "=======================\n"
-    "Polygon-based polyhedra have unit edges and are specified by their\n"
-    "abbreviated class name followed by the base polygon, given as a fraction.\n"
-    "(Note that some models, e.g. pyr7, cannot be made to have unit edges.)\n"
-    "\n"
-    "The class names are\n"
-    "   pri:     prism\n"
-    "   ant:     antiprism\n"
-    "   pyr:     pyramid\n"
-    "   dip:     dipyramid\n"
-    "   cup:     cupola\n"
-    "   ort:     orthobicupola\n"
-    "   gyr:     gyrobicupola\n"
-    "\n"
-    "   e.g. pri5, pyr7/2"
-    "\n";
+   Synonyms:
+     tetrahedron, tet                          u1
+     truncated_tetrahedron, tr_tet             u2
+     octahedron, oct                           u5
+     cube                                      u6
+     cuboctahedron, cubo                       u7
+     truncated_octahedron, tr_oct              u8
+     truncated_cube, tr_cube                   u9
+     rhombicuboctahedron, rh_cubo              u10
+     truncated_cuboctahedron, tr_cubo          u11
+     snub_cube, sn_cube                        u12
+     icosahedron, icosa, ico                   u22
+     dodecahedron, dod                         u23
+     icosidodecahedron, icosid                 u24
+     truncated_icosahedron, tr_ico             u25
+     truncated_dodecahedron, tr_dod            u26
+     rhombicosidodecahedron, rh_icosid         u27
+     truncated_icosidodecahedron, tr_icosid    u28
+     snub_dodecahedron, sn_dod                 u29
+     small_stellated_dodecahedron, sm_st_dod   u34
+     great_dodecahedron, gr_dod                u35
+     great_stellated_dodecahedron, gr_st_dod   u52
+     great_icosahedron, gr_ico                 u53
+     triakis_tetrahedron, tri_tet              u2_d
+     triakis_octahedron, tri_oct               u9_d
+     tetrakis_hexahedron, tetr_hex             u8_d
+     disdyakis_hexahedron, disd_hex            u8_d
+     deltoidal_icositetrahedron, delt_icosit   u10_d
+     trapezoidal_icositetrahedron, trap_icosit u10_d
+     hexakis_octahedron, hex_oct               u11_d
+     disdyakis_dodecahedron, disd_dod          u11_d
+     pentagonal_icositetrahedron, pen_icosit   u12_d
+     triakis_icosahedron, tri_ico              u26_d
+     pentakis_dodecahedron, pent_dod           u25_d
+     deltoidal_hexacontahedron, delt_hexac     u27_d
+     trapezoidal_hexacontahedron, trap_hexac   u27_d
+     hexakis_icosahedron, hex_ico              u28_d
+     disdyakis_triacontahedron, disd_tri       u28_d
+     pentagonal_hexacontahedron, pen_hexac     u29_d
 
-const char *help_std_polys =
-    "Standard Polyhedra\n"
-    "==================\n"
-    "Any built-in polyhedron can be generated in a standard form by prefixing\n"
-    "std_ before the name. Any polyhedron generated this way will have no colour\n"
-    "added. For uniform polyhedra, uniform duals, and uniform compounds, their\n"
-    "coordinates are left as calculated and not given unit edge lengths\n"
-    "\n"
-    "Some notable models and their coordinates are\n"
-    "   tetrahedron, tet:                 0, 1\n"
-    "   truncated_tetrahedron, tr_tet:    1, 3\n"
-    "   cube:                             1\n"
-    "   truncated_cube, tr_cube:          1, sqrt(2)-1\n"
-    "   snub_cube, sn_cube:               expressions using cube roots\n"
-    "   octahedron, oct:                  0, 1\n"
-    "   truncated_octahedron, tr_oct:     0, 1, 2\n"
-    "   dodecahedron, dod:                0, phi, 1/phi\n"
-    "   snub_dodecahedron, sn_dod:        expressions using phi and cube roots\n"
-    "   icosahedron, ico:                 0, 1, phi\n"
-    "   cuboctahedron, cubo:              0, 1\n"
-    "   truncated_cuboctahedron, tr_cubo: 1, 1+sqrt(2), 1+2*sqrt(2)\n"
-    "   truncated_icosidodecahedron, tr_icosid:\n"
-    "                                     phi and integer based\n"
-    "   rhombicuboctahedron, rhombicubo, rh_cubo:\n"
-    "                                     1, 1+sqrt(2)\n"
-    "   rhombicosidodecahedron, rhombicosid, rh_icosid:\n"
-    "                                     1, phi, phi^2, phi^3, 2phi, 2+phi\n"
-    "\n"
-    "   rhombic_dodecahedron, rd           0, 1, 2\n"
-    "   rhombic_triacontahedron, rt        0, 1, phi, 1/phi\n"
-    "   rhombic_enneacontahedron, re       0, 1, expresions using phi\n"
-    "\n"
-    "   e.g. std_truncated_tetrahedron, std_tr_tet, std_rh_cubo\n";
+     e.g. tet, great_icosahedron)";
 
-const char *help_uniform_compounds =
-    "Uniform Compounds\n"
-    "=================\n"
-    "Uniform compounds can be specified by\n"
-    "\n"
-    "o   A UC number e.g. uc5\n"
-    "\n"
-    "o   uc_ followed by a name (see the list below) Use '_' instead of\n"
-    "    a space to avoid having to quote the model name. The beginning\n"
-    "    of a name can be given and the first match from the list of\n"
-    "    uniform compounds below is returned.\n"
-    "\n"
-    "    When giving a name the following abbreviations can be used\n"
-    "       tr:     truncated\n"
-    "       sm:     small\n"
-    "       gr:     great\n"
-    "       st:     stellated\n"
-    "       sn:     snub\n"
-    "       tet:    tetrahedra\n"
-    "       ico:    icosahedra\n"
-    "       icosa:  icosahedra\n"
-    "       dod:    dodecahedra\n"
-    "       oct:    octahedra\n"
-    "       cubo:   cuboctahedra\n"
-    "       icosid: icosidodecahedra\n"
-    "       pri:    prisms\n"
-    "       ant:    antiprisms\n"
-    "       rot:    rotational\n"
-    "\n"
-    "    e.g. uc_5_tetrahedra, uc_5_tet, uc_2_tr_tet, uc_2_tr_t\n"
-    "\n"
-    "    When a compound is listed as rotational, an angle can be supplied after\n"
-    "    an underscore. If no angle is supplied, a random angle is generated\n"
-    "\n"
-    "    e.g. uc2_a30, uc7_a22.5, uc11_a11.315, uc28_a0\n"
-    "\n"
-    "    For uc20 to uc25 n/d and k can be supplied after an underscore.\n"
-    "    If no n/d or k is supplied then random values are generated\n"
-    "\n"
-    "    e.g. uc21_n5/2k4, uc22_n7/3, uc23_n7/3k3, uc25_n7/4k3\n"
-    "\n"
-    "    Because uc20, uc22, and uc24 an angle can also be supplied.\n"
-    "    Note that the order of a, n/d and k does not matter\n"
-    "\n"
-    "    e.g. uc20_n9/2, uc20_k5, uc22_n7/3k2a4, uc22_a7n5/3k3, uc24_a3k5n7/4\n"
-    "\n"
-    "\n"
-    "Uniform Compound List:\n"
-    "\n"
-    "UC No  Name\n"
-    "-----  -------------------------------\n"
-    "UC1    6 tetrahedra rotational\n"
-    "UC2    12 tetrahedra rotational\n"
-    "UC3    6 tetrahedra\n"
-    "UC4    2 tetrahedra\n"
-    "UC5    5 tetrahedra\n"
-    "UC6    10 tetrahedra\n"
-    "UC7    6 cubes rotational\n"
-    "UC8    3 cubes\n"
-    "UC9    5 cubes\n"
-    "UC10   4 octahedra rotational\n"
-    "UC11   8 octahedra rotational\n"
-    "UC12   4 octahedra\n"
-    "UC13   20 octahedra rotational\n"
-    "UC14   20 octahedra\n"
-    "UC15   10 octahedra 1\n"
-    "UC16   10 octahedra 2\n"
-    "UC17   5 octahedra\n"
-    "UC18   5 tetrahemihexahedra\n"
-    "UC19   20 tetrahemihexahedra\n"
-    "UC20   2k n d gonal prisms rotational\n"
-    "UC21   k n d gonal prisms\n"
-    "UC22   2k n odd d gonal antiprisms rotational\n"
-    "UC23   k n odd d gonal antiprisms\n"
-    "UC24   2k n even d gonal antiprisms rotational\n"
-    "UC25   k n even d gonal antiprisms\n"
-    "UC26   12 pentagonal antiprisms rotational\n"
-    "UC27   6 pentagonal antiprisms\n"
-    "UC28   12 pentagrammic crossed antiprisms rotational\n"
-    "UC29   6 pentagrammic crossed antiprisms\n"
-    "UC30   4 triangular prisms\n"
-    "UC31   8 triangular prisms\n"
-    "UC32   10 triangular prisms\n"
-    "UC33   20 triangular prisms\n"
-    "UC34   6 pentagonal prisms\n"
-    "UC35   12 pentagonal prisms\n"
-    "UC36   6 pentagrammic prisms\n"
-    "UC37   12 pentagrammic prisms\n"
-    "UC38   4 hexagonal prisms\n"
-    "UC39   10 hexagonal prisms\n"
-    "UC40   6 decagonal prisms\n"
-    "UC41   6 decagrammic prisms\n"
-    "UC42   3 square antiprisms\n"
-    "UC43   6 square antiprisms\n"
-    "UC44   6 pentagrammic antiprisms\n"
-    "UC45   12 pentagrammic antiprisms\n"
-    "UC46   2 icosahedra\n"
-    "UC47   5 icosahedra\n"
-    "UC48   2 great dodecahedra\n"
-    "UC49   5 great dodecahedra\n"
-    "UC50   2 small stellated dodecahedra\n"
-    "UC51   5 small stellated dodecahedra\n"
-    "UC52   2 great icosahedra\n"
-    "UC53   5 great icosahedra\n"
-    "UC54   2 truncated tetrahedra\n"
-    "UC55   5 truncated tetrahedra\n"
-    "UC56   10 truncated tetrahedra\n"
-    "UC57   5 truncated cubes\n"
-    "UC58   5 stellated truncated hexahedra\n"
-    "UC59   5 cuboctahedra\n"
-    "UC60   5 cubohemioctahedra\n"
-    "UC61   5 octahemioctahedra\n"
-    "UC62   5 rhombicuboctahedra\n"
-    "UC63   5 small rhombihexahedra\n"
-    "UC64   5 small cubicuboctahedra\n"
-    "UC65   5 great cubicuboctahedra\n"
-    "UC66   5 great rhombihexahedra\n"
-    "UC67   5 great rhombicuboctahedra\n"
-    "UC68   2 snub cubes\n"
-    "UC69   2 snub dodecahedra\n"
-    "UC70   2 great snub icosidodecahedra\n"
-    "UC71   2 great inverted snub icosidodecahedra\n"
-    "UC72   2 great retrosnub icosidodecahedra\n"
-    "UC73   2 snub dodecadodecahedra\n"
-    "UC74   2 inverted snub dodecadodecahedra\n"
-    "UC75   2 snub icosidodecadodecahedra\n";
+const char *help_uniform = R"(Uniform Polyhedra
+=================
+Uniform polyhdra can be specified by
 
-const char *help_geodesic =
-    "Geodesic Spheres\n"
-    "================\n"
-    "A geodesic sphere is specified by a base polyhedron and a pattern\n"
-    "given by two integers. The pattern numbers determined the class of\n"
-    "geodesic sphere, and more specifically the 'stepping' for moving\n"
-    "between original base vertices in the geodesic model.\n"
-    "\n"
-    "o   geo_\n"
-    "    optionally followed by a letter to indicate the base polyhedron\n"
-    "       - i: icosahedron (default)\n"
-    "       - o: octahedron\n"
-    "       - t: tetrahdron\n"
-    "    followed by the first pattern number\n"
-    "    optionally followed by a second pattern number (default 0)\n"
-    "\n"
-    "Class I patterns are of the form m,0 or 0,n (the pattern frequency\n"
-    "   is m or n, and this figure is also the \"frequency\")\n"
-    "   e.g. geo_4, geo_o3, geo_o3_0, geo_t0_3\n"
-    "Class II patterns are of the form m,m (the pattern frequency is m,i\n"
-    "   but the \"frequency\" is often described as 2m)\n"
-    "   e.g. geo_4_4, geo_o3_3\n"
-    "Class III patterns are of the form m,n with m>0, n>0 and m=/=n (the\n"
-    "   the pattern frequency is the greatest common divisor of m and n)\n"
-    "   e.g. geo_4_1, geo_o3_2, geo_t4_2\n";
+o   A U number e.g. u8
 
-const char *help_sym_models =
-    "Symmetry Example Models\n"
-    "=======================\n"
-    "These models are made as a symmetric arrangement of arrows. The\n"
-    "number of arrows in the model is the size of the given symmetry\n"
-    "group. To display the symmetry elements view the models with, for\n"
-    "example, 'antiview -s a sym_D3h'\n"
-    "\n"
-    "The models are given by:\n"
-    "o   sym_ followed by a Schoenflies symbol from\n"
-    "            Cs  - mirror\n"
-    "            Ci  - inversion\n"
-    "            Cn  - cyclic rotational\n"
-    "            Cnv - cyclic rotational with vertical mirror\n"
-    "            Cnh - cyclic rotational with horizontal mirror\n"
-    "            Dn  - dihedral rotational\n"
-    "            Dnv - dihedral rotational with vertical mirror\n"
-    "            Dnh - dihedral rotational with horizontal mirror\n"
-    "            Sn  - cyclic rotational (n/2-fold) with inversion\n"
-    "            T   - tetrahedral rotational\n"
-    "            Td  - tetrahedral rotational with mirror\n"
-    "            Th  - tetrahedral rotational with inversion\n"
-    "            O   - octahedral rotational\n"
-    "            Oh  - octahedral rotational with mirror\n"
-    "            I   - icosahedral rotational\n"
-    "            Ih  - icosahedral rotational with mirror\n"
-    "\n"
-    "   e.g. sym_Cs, sym_C3, sym_D3h, sym_S6, sym_I\n";
+o   u_ followed by the specific Wythoff Symbol in the list below,
+    e.g. 'u_2 4|3', which will be used as a lookup for the
+    corresponding uniform 
 
-const char *help_color =
-    "Colour\n"
-    "======\n"
-    "Colouring a model usually involves specifying individual colours. A colour\n"
-    "can be specified directly in a number of formats, or can be the name of a\n"
-    "colour that Antiprism recognises, or can be an index number that will\n"
-    "generally be turned into a final colour by looking it up in a colour map.\n"
-    "Antiprism includes some colour maps, and facilities for creating new ones.\n"
-    "\n"
-    "See these help topics for more details\n"
-    "   Color :     colour value formats\n"
-    "   col_names :   colour names\n"
-    "   col_map :     colour map formats and resource colour maps\n";
+o   wythoff_ followed by a general Wythoff Symbol, where '_' and ':'
+    maybe used instead of ' ', and ':', e.g. wythoff_2_4:3. The model
+    is constructed directly from the symbol. Note that some degenerate
+    snub models may not be constructed correctly. The faces around each
+    triangle vertex are coloured, in order, red, blue, yellow, and snub
+    triangles are coloured white.
 
-const char *help_color_val =
-    "Colour Values\n"
-    "=============\n"
-    "Colour values may be given in a number of formats.\n"
-    "\n"
-    "Red, Green, Blue and Alpha components (RGBA):\n"
-    "   3 or 4 decimal numbers separated by commas in the range 0.0-1.0\n"
-    "       (e.g. orange is '1.0,0.5,0.0')\n"
-    "   3 or 4 integers separated by commas in the range 0 - 255\n"
-    "       (e.g. orange is '255,128,0')\n"
-    "   x (or X or #) followed by 3 or 4 pairs of hexadecimal integers\n"
-    "       (e.g. orange is 'xFF8000')\n"
-    "Hue, Saturation, Value and Alpha components (HSVA):\n"
-    "   H or h, immediately followed by 3 or 4 decimal numbers separated by\n"
-    "   commas in the range 0.0-1.0. For initial h the hue has range\n"
-    "   0.0 to 360.0\n"
-    "       (e.g. orange is 'H0.07,1.0,1.0', or 'h25,1.0,1.0)\n"
-    "Colour name:\n"
-    "   Common colour names. See 'off_util -H col_names' for the full list.\n"
-    "       (e.g. 'orange')\n"
-    "Colour index:\n"
-    "   A positive integer that can be used as index into a colour map\n"
-    "       (e.g. '5')\n";
+o   u_ followed by a name (see the list below) Use '_' instead of
+    a space to avoid having to quote the model name. The beginning
+    of a name can be given and the first match from the list of
+    uniform polyhedra below is returned.
 
-const char *help_color_names =
-    "Named Colours\n"
-    "=============\n"
-    "\n"
-    "Colour names can be used to specify a colour given on the command\n"
-    "line or in a colour map file.\n"
-    "\n"
-    "The names are those used in X11's rgb.txt. The list of colours is also\n"
-    "given in the Antiprism X11 colour map file included with the\n"
-    "resources. Other names: 'invisible' corresponds to transparent black,\n"
-    "and is used to indicate that display elements should be excluded from\n"
-    "display; 'none' is a colour with no colour data, setting an element to\n"
-    "this colour removes any colour data for the element\n"
-    "\n"
-    "The colour names are (with their integer RGB description):\n"
-    "\n"
-    "snow (255,250,250)               ghostwhite (248,248,255)\n"
-    "whitesmoke (245,245,245)         gainsboro (220,220,220)\n"
-    "floralwhite (255,250,240)        oldlace (253,245,230)\n"
-    "linen (250,240,230)              antiquewhite (250,235,215)\n"
-    "papayawhip (255,239,213)         blanchedalmond (255,235,205)\n"
-    "bisque (255,228,196)             peachpuff (255,218,185)\n"
-    "navajowhite (255,222,173)        moccasin (255,228,181)\n"
-    "cornsilk (255,248,220)           ivory (255,255,240)\n"
-    "lemonchiffon (255,250,205)       seashell (255,245,238)\n"
-    "honeydew (240,255,240)           mintcream (245,255,250)\n"
-    "azure (240,255,255)              aliceblue (240,248,255)\n"
-    "lavender (230,230,250)           lavenderblush (255,240,245)\n"
-    "mistyrose (255,228,225)          white (255,255,255)\n"
-    "black (0,0,0)                    darkslategray (47,79,79)\n"
-    "dimgray (105,105,105)            slategray (112,128,144)\n"
-    "lightslategray (119,136,153)     gray (190,190,190)\n"
-    "lightgray (211,211,211)          midnightblue (25,25,112)\n"
-    "navy (0,0,128)                   navyblue (0,0,128)\n"
-    "cornflowerblue (100,149,237)     darkslateblue (72,61,139)\n"
-    "slateblue (106,90,205)           mediumslateblue (123,104,238)\n"
-    "lightslateblue (132,112,255)     mediumblue (0,0,205)\n"
-    "royalblue (65,105,225)           blue (0,0,255)\n"
-    "dodgerblue (30,144,255)          deepskyblue (0,191,255)\n"
-    "skyblue (135,206,235)            lightskyblue (135,206,250)\n"
-    "steelblue (70,130,180)           lightsteelblue (176,196,222)\n"
-    "lightblue (173,216,230)          powderblue (176,224,230)\n"
-    "paleturquoise (175,238,238)      darkturquoise (0,206,209)\n"
-    "mediumturquoise (72,209,204)     turquoise (64,224,208)\n"
-    "cyan (0,255,255)                 lightcyan (224,255,255)\n"
-    "cadetblue (95,158,160)           mediumaquamarine (102,205,170)\n"
-    "aquamarine (127,255,212)         darkgreen (0,100,0)\n"
-    "darkolivegreen (85,107,47)       darkseagreen (143,188,143)\n"
-    "seagreen (46,139,87)             mediumseagreen (60,179,113)\n"
-    "lightseagreen (32,178,170)       palegreen (152,251,152)\n"
-    "springgreen (0,255,127)          lawngreen (124,252,0)\n"
-    "green (0,255,0)                  chartreuse (127,255,0)\n"
-    "mediumspringgreen (0,250,154)    greenyellow (173,255,47)\n"
-    "limegreen (50,205,50)            yellowgreen (154,205,50)\n"
-    "forestgreen (34,139,34)          olivedrab (107,142,35)\n"
-    "darkkhaki (189,183,107)          khaki (240,230,140)\n"
-    "palegoldenrod (238,232,170)      lightgoldenrodyellow (250,250,210)\n"
-    "lightyellow (255,255,224)        yellow (255,255,0)\n"
-    "gold (255,215,0)                 lightgoldenrod (238,221,130)\n"
-    "goldenrod (218,165,32)           darkgoldenrod (184,134,11)\n"
-    "rosybrown (188,143,143)          indianred (205,92,92)\n"
-    "saddlebrown (139,69,19)          sienna (160,82,45)\n"
-    "peru (205,133,63)                burlywood (222,184,135)\n"
-    "beige (245,245,220)              wheat (245,222,179)\n"
-    "sandybrown (244,164,96)          tan (210,180,140)\n"
-    "chocolate (210,105,30)           firebrick (178,34,34)\n"
-    "brown (165,42,42)                darksalmon (233,150,122)\n"
-    "salmon (250,128,114)             lightsalmon (255,160,122)\n"
-    "orange (255,165,0)               darkorange (255,140,0)\n"
-    "coral (255,127,80)               lightcoral (240,128,128)\n"
-    "tomato (255,99,71)               orangered (255,69,0)\n"
-    "red (255,0,0)                    hotpink (255,105,180)\n"
-    "deeppink (255,20,147)            pink (255,192,203)\n"
-    "lightpink (255,182,193)          palevioletred (219,112,147)\n"
-    "maroon (176,48,96)               mediumvioletred (199,21,133)\n"
-    "violetred (208,32,144)           magenta (255,0,255)\n"
-    "violet (238,130,238)             plum (221,160,221)\n"
-    "orchid (218,112,214)             mediumorchid (186,85,211)\n"
-    "darkorchid (153,50,204)          darkviolet (148,0,211)\n"
-    "blueviolet (138,43,226)          purple (160,32,240)\n"
-    "mediumpurple (147,112,219)       thistle (216,191,216)\n"
-    "snow1 (255,250,250)              snow2 (238,233,233)\n"
-    "snow3 (205,201,201)              snow4 (139,137,137)\n"
-    "seashell1 (255,245,238)          seashell2 (238,229,222)\n"
-    "seashell3 (205,197,191)          seashell4 (139,134,130)\n"
-    "antiquewhite1 (255,239,219)      antiquewhite2 (238,223,204)\n"
-    "antiquewhite3 (205,192,176)      antiquewhite4 (139,131,120)\n"
-    "bisque1 (255,228,196)            bisque2 (238,213,183)\n"
-    "bisque3 (205,183,158)            bisque4 (139,125,107)\n"
-    "peachpuff1 (255,218,185)         peachpuff2 (238,203,173)\n"
-    "peachpuff3 (205,175,149)         peachpuff4 (139,119,101)\n"
-    "navajowhite1 (255,222,173)       navajowhite2 (238,207,161)\n"
-    "navajowhite3 (205,179,139)       navajowhite4 (139,121,94)\n"
-    "lemonchiffon1 (255,250,205)      lemonchiffon2 (238,233,191)\n"
-    "lemonchiffon3 (205,201,165)      lemonchiffon4 (139,137,112)\n"
-    "cornsilk1 (255,248,220)          cornsilk2 (238,232,205)\n"
-    "cornsilk3 (205,200,177)          cornsilk4 (139,136,120)\n"
-    "ivory1 (255,255,240)             ivory2 (238,238,224)\n"
-    "ivory3 (205,205,193)             ivory4 (139,139,131)\n"
-    "honeydew1 (240,255,240)          honeydew2 (224,238,224)\n"
-    "honeydew3 (193,205,193)          honeydew4 (131,139,131)\n"
-    "lavenderblush1 (255,240,245)     lavenderblush2 (238,224,229)\n"
-    "lavenderblush3 (205,193,197)     lavenderblush4 (139,131,134)\n"
-    "mistyrose1 (255,228,225)         mistyrose2 (238,213,210)\n"
-    "mistyrose3 (205,183,181)         mistyrose4 (139,125,123)\n"
-    "azure1 (240,255,255)             azure2 (224,238,238)\n"
-    "azure3 (193,205,205)             azure4 (131,139,139)\n"
-    "slateblue1 (131,111,255)         slateblue2 (122,103,238)\n"
-    "slateblue3 (105,89,205)          slateblue4 (71,60,139)\n"
-    "royalblue1 (72,118,255)          royalblue2 (67,110,238)\n"
-    "royalblue3 (58,95,205)           royalblue4 (39,64,139)\n"
-    "blue1 (0,0,255)                  blue2 (0,0,238)\n"
-    "blue3 (0,0,205)                  blue4 (0,0,139)\n"
-    "dodgerblue1 (30,144,255)         dodgerblue2 (28,134,238)\n"
-    "dodgerblue3 (24,116,205)         dodgerblue4 (16,78,139)\n"
-    "steelblue1 (99,184,255)          steelblue2 (92,172,238)\n"
-    "steelblue3 (79,148,205)          steelblue4 (54,100,139)\n"
-    "deepskyblue1 (0,191,255)         deepskyblue2 (0,178,238)\n"
-    "deepskyblue3 (0,154,205)         deepskyblue4 (0,104,139)\n"
-    "skyblue1 (135,206,255)           skyblue2 (126,192,238)\n"
-    "skyblue3 (108,166,205)           skyblue4 (74,112,139)\n"
-    "lightskyblue1 (176,226,255)      lightskyblue2 (164,211,238)\n"
-    "lightskyblue3 (141,182,205)      lightskyblue4 (96,123,139)\n"
-    "slategray1 (198,226,255)         slategray2 (185,211,238)\n"
-    "slategray3 (159,182,205)         slategray4 (108,123,139)\n"
-    "lightsteelblue1 (202,225,255)    lightsteelblue2 (188,210,238)\n"
-    "lightsteelblue3 (162,181,205)    lightsteelblue4 (110,123,139)\n"
-    "lightblue1 (191,239,255)         lightblue2 (178,223,238)\n"
-    "lightblue3 (154,192,205)         lightblue4 (104,131,139)\n"
-    "lightcyan1 (224,255,255)         lightcyan2 (209,238,238)\n"
-    "lightcyan3 (180,205,205)         lightcyan4 (122,139,139)\n"
-    "paleturquoise1 (187,255,255)     paleturquoise2 (174,238,238)\n"
-    "paleturquoise3 (150,205,205)     paleturquoise4 (102,139,139)\n"
-    "cadetblue1 (152,245,255)         cadetblue2 (142,229,238)\n"
-    "cadetblue3 (122,197,205)         cadetblue4 (83,134,139)\n"
-    "turquoise1 (0,245,255)           turquoise2 (0,229,238)\n"
-    "turquoise3 (0,197,205)           turquoise4 (0,134,139)\n"
-    "cyan1 (0,255,255)                cyan2 (0,238,238)\n"
-    "cyan3 (0,205,205)                cyan4 (0,139,139)\n"
-    "darkslategray1 (151,255,255)     darkslategray2 (141,238,238)\n"
-    "darkslategray3 (121,205,205)     darkslategray4 (82,139,139)\n"
-    "aquamarine1 (127,255,212)        aquamarine2 (118,238,198)\n"
-    "aquamarine3 (102,205,170)        aquamarine4 (69,139,116)\n"
-    "darkseagreen1 (193,255,193)      darkseagreen2 (180,238,180)\n"
-    "darkseagreen3 (155,205,155)      darkseagreen4 (105,139,105)\n"
-    "seagreen1 (84,255,159)           seagreen2 (78,238,148)\n"
-    "seagreen3 (67,205,128)           seagreen4 (46,139,87)\n"
-    "palegreen1 (154,255,154)         palegreen2 (144,238,144)\n"
-    "palegreen3 (124,205,124)         palegreen4 (84,139,84)\n"
-    "springgreen1 (0,255,127)         springgreen2 (0,238,118)\n"
-    "springgreen3 (0,205,102)         springgreen4 (0,139,69)\n"
-    "green1 (0,255,0)                 green2 (0,238,0)\n"
-    "green3 (0,205,0)                 green4 (0,139,0)\n"
-    "chartreuse1 (127,255,0)          chartreuse2 (118,238,0)\n"
-    "chartreuse3 (102,205,0)          chartreuse4 (69,139,0)\n"
-    "olivedrab1 (192,255,62)          olivedrab2 (179,238,58)\n"
-    "olivedrab3 (154,205,50)          olivedrab4 (105,139,34)\n"
-    "darkolivegreen1 (202,255,112)    darkolivegreen2 (188,238,104)\n"
-    "darkolivegreen3 (162,205,90)     darkolivegreen4 (110,139,61)\n"
-    "khaki1 (255,246,143)             khaki2 (238,230,133)\n"
-    "khaki3 (205,198,115)             khaki4 (139,134,78)\n"
-    "lightgoldenrod1 (255,236,139)    lightgoldenrod2 (238,220,130)\n"
-    "lightgoldenrod3 (205,190,112)    lightgoldenrod4 (139,129,76)\n"
-    "lightyellow1 (255,255,224)       lightyellow2 (238,238,209)\n"
-    "lightyellow3 (205,205,180)       lightyellow4 (139,139,122)\n"
-    "yellow1 (255,255,0)              yellow2 (238,238,0)\n"
-    "yellow3 (205,205,0)              yellow4 (139,139,0)\n"
-    "gold1 (255,215,0)                gold2 (238,201,0)\n"
-    "gold3 (205,173,0)                gold4 (139,117,0)\n"
-    "goldenrod1 (255,193,37)          goldenrod2 (238,180,34)\n"
-    "goldenrod3 (205,155,29)          goldenrod4 (139,105,20)\n"
-    "darkgoldenrod1 (255,185,15)      darkgoldenrod2 (238,173,14)\n"
-    "darkgoldenrod3 (205,149,12)      darkgoldenrod4 (139,101,8)\n"
-    "rosybrown1 (255,193,193)         rosybrown2 (238,180,180)\n"
-    "rosybrown3 (205,155,155)         rosybrown4 (139,105,105)\n"
-    "indianred1 (255,106,106)         indianred2 (238,99,99)\n"
-    "indianred3 (205,85,85)           indianred4 (139,58,58)\n"
-    "sienna1 (255,130,71)             sienna2 (238,121,66)\n"
-    "sienna3 (205,104,57)             sienna4 (139,71,38)\n"
-    "burlywood1 (255,211,155)         burlywood2 (238,197,145)\n"
-    "burlywood3 (205,170,125)         burlywood4 (139,115,85)\n"
-    "wheat1 (255,231,186)             wheat2 (238,216,174)\n"
-    "wheat3 (205,186,150)             wheat4 (139,126,102)\n"
-    "tan1 (255,165,79)                tan2 (238,154,73)\n"
-    "tan3 (205,133,63)                tan4 (139,90,43)\n"
-    "chocolate1 (255,127,36)          chocolate2 (238,118,33)\n"
-    "chocolate3 (205,102,29)          chocolate4 (139,69,19)\n"
-    "firebrick1 (255,48,48)           firebrick2 (238,44,44)\n"
-    "firebrick3 (205,38,38)           firebrick4 (139,26,26)\n"
-    "brown1 (255,64,64)               brown2 (238,59,59)\n"
-    "brown3 (205,51,51)               brown4 (139,35,35)\n"
-    "salmon1 (255,140,105)            salmon2 (238,130,98)\n"
-    "salmon3 (205,112,84)             salmon4 (139,76,57)\n"
-    "lightsalmon1 (255,160,122)       lightsalmon2 (238,149,114)\n"
-    "lightsalmon3 (205,129,98)        lightsalmon4 (139,87,66)\n"
-    "orange1 (255,165,0)              orange2 (238,154,0)\n"
-    "orange3 (205,133,0)              orange4 (139,90,0)\n"
-    "darkorange1 (255,127,0)          darkorange2 (238,118,0)\n"
-    "darkorange3 (205,102,0)          darkorange4 (139,69,0)\n"
-    "coral1 (255,114,86)              coral2 (238,106,80)\n"
-    "coral3 (205,91,69)               coral4 (139,62,47)\n"
-    "tomato1 (255,99,71)              tomato2 (238,92,66)\n"
-    "tomato3 (205,79,57)              tomato4 (139,54,38)\n"
-    "orangered1 (255,69,0)            orangered2 (238,64,0)\n"
-    "orangered3 (205,55,0)            orangered4 (139,37,0)\n"
-    "red1 (255,0,0)                   red2 (238,0,0)\n"
-    "red3 (205,0,0)                   red4 (139,0,0)\n"
-    "deeppink1 (255,20,147)           deeppink2 (238,18,137)\n"
-    "deeppink3 (205,16,118)           deeppink4 (139,10,80)\n"
-    "hotpink1 (255,110,180)           hotpink2 (238,106,167)\n"
-    "hotpink3 (205,96,144)            hotpink4 (139,58,98)\n"
-    "pink1 (255,181,197)              pink2 (238,169,184)\n"
-    "pink3 (205,145,158)              pink4 (139,99,108)\n"
-    "lightpink1 (255,174,185)         lightpink2 (238,162,173)\n"
-    "lightpink3 (205,140,149)         lightpink4 (139,95,101)\n"
-    "palevioletred1 (255,130,171)     palevioletred2 (238,121,159)\n"
-    "palevioletred3 (205,104,137)     palevioletred4 (139,71,93)\n"
-    "maroon1 (255,52,179)             maroon2 (238,48,167)\n"
-    "maroon3 (205,41,144)             maroon4 (139,28,98)\n"
-    "violetred1 (255,62,150)          violetred2 (238,58,140)\n"
-    "violetred3 (205,50,120)          violetred4 (139,34,82)\n"
-    "magenta1 (255,0,255)             magenta2 (238,0,238)\n"
-    "magenta3 (205,0,205)             magenta4 (139,0,139)\n"
-    "orchid1 (255,131,250)            orchid2 (238,122,233)\n"
-    "orchid3 (205,105,201)            orchid4 (139,71,137)\n"
-    "plum1 (255,187,255)              plum2 (238,174,238)\n"
-    "plum3 (205,150,205)              plum4 (139,102,139)\n"
-    "mediumorchid1 (224,102,255)      mediumorchid2 (209,95,238)\n"
-    "mediumorchid3 (180,82,205)       mediumorchid4 (122,55,139)\n"
-    "darkorchid1 (191,62,255)         darkorchid2 (178,58,238)\n"
-    "darkorchid3 (154,50,205)         darkorchid4 (104,34,139)\n"
-    "purple1 (155,48,255)             purple2 (145,44,238)\n"
-    "purple3 (125,38,205)             purple4 (85,26,139)\n"
-    "mediumpurple1 (171,130,255)      mediumpurple2 (159,121,238)\n"
-    "mediumpurple3 (137,104,205)      mediumpurple4 (93,71,139)\n"
-    "thistle1 (255,225,255)           thistle2 (238,210,238)\n"
-    "thistle3 (205,181,205)           thistle4 (139,123,139)\n"
-    "gray0 (0,0,0)                    gray1 (3,3,3)\n"
-    "gray2 (5,5,5)                    gray3 (8,8,8)\n"
-    "gray4 (10,10,10)                 gray5 (13,13,13)\n"
-    "gray6 (15,15,15)                 gray7 (18,18,18)\n"
-    "gray8 (20,20,20)                 gray9 (23,23,23)\n"
-    "gray10 (26,26,26)                gray11 (28,28,28)\n"
-    "gray12 (31,31,31)                gray13 (33,33,33)\n"
-    "gray14 (36,36,36)                gray15 (38,38,38)\n"
-    "gray16 (41,41,41)                gray17 (43,43,43)\n"
-    "gray18 (46,46,46)                gray19 (48,48,48)\n"
-    "gray20 (51,51,51)                gray21 (54,54,54)\n"
-    "gray22 (56,56,56)                gray23 (59,59,59)\n"
-    "gray24 (61,61,61)                gray25 (64,64,64)\n"
-    "gray26 (66,66,66)                gray27 (69,69,69)\n"
-    "gray28 (71,71,71)                gray29 (74,74,74)\n"
-    "gray30 (77,77,77)                gray31 (79,79,79)\n"
-    "gray32 (82,82,82)                gray33 (84,84,84)\n"
-    "gray34 (87,87,87)                gray35 (89,89,89)\n"
-    "gray36 (92,92,92)                gray37 (94,94,94)\n"
-    "gray38 (97,97,97)                gray39 (99,99,99)\n"
-    "gray40 (102,102,102)             gray41 (105,105,105)\n"
-    "gray42 (107,107,107)             gray43 (110,110,110)\n"
-    "gray44 (112,112,112)             gray45 (115,115,115)\n"
-    "gray46 (117,117,117)             gray47 (120,120,120)\n"
-    "gray48 (122,122,122)             gray49 (125,125,125)\n"
-    "gray50 (127,127,127)             gray51 (130,130,130)\n"
-    "gray52 (133,133,133)             gray53 (135,135,135)\n"
-    "gray54 (138,138,138)             gray55 (140,140,140)\n"
-    "gray56 (143,143,143)             gray57 (145,145,145)\n"
-    "gray58 (148,148,148)             gray59 (150,150,150)\n"
-    "gray60 (153,153,153)             gray61 (156,156,156)\n"
-    "gray62 (158,158,158)             gray63 (161,161,161)\n"
-    "gray64 (163,163,163)             gray65 (166,166,166)\n"
-    "gray66 (168,168,168)             gray67 (171,171,171)\n"
-    "gray68 (173,173,173)             gray69 (176,176,176)\n"
-    "gray70 (179,179,179)             gray71 (181,181,181)\n"
-    "gray72 (184,184,184)             gray73 (186,186,186)\n"
-    "gray74 (189,189,189)             gray75 (191,191,191)\n"
-    "gray76 (194,194,194)             gray77 (196,196,196)\n"
-    "gray78 (199,199,199)             gray79 (201,201,201)\n"
-    "gray80 (204,204,204)             gray81 (207,207,207)\n"
-    "gray82 (209,209,209)             gray83 (212,212,212)\n"
-    "gray84 (214,214,214)             gray85 (217,217,217)\n"
-    "gray86 (219,219,219)             gray87 (222,222,222)\n"
-    "gray88 (224,224,224)             gray89 (227,227,227)\n"
-    "gray90 (229,229,229)             gray91 (232,232,232)\n"
-    "gray92 (235,235,235)             gray93 (237,237,237)\n"
-    "gray94 (240,240,240)             gray95 (242,242,242)\n"
-    "gray96 (245,245,245)             gray97 (247,247,247)\n"
-    "gray98 (250,250,250)             gray99 (252,252,252)\n"
-    "gray100 (255,255,255)            darkgray (169,169,169)\n"
-    "darkblue (0,0,139)               darkcyan (0,139,139)\n"
-    "darkmagenta (139,0,139)          darkred (139,0,0)\n"
-    "lightgreen (144,238,144)\n";
+    When giving a name the following abbreviations can be used
+       tr:     truncated
+       sm:     small
+       gr:     great
+       st:     stellated
+       sn:     snub
+       tet:    tetrahedron
+       ico:    icosahedron
+       icosa:  icosahedron
+       dod:    dodecahedron
+       oct:    octahedron
+       cubo:   cuboctahedron
+       icosid: icosidodecahedron
 
-const char *help_ColorMap =
-    "Colour Maps\n"
-    "===========\n"
-    "OFF elements may be coloured by index numbers. Colour maps provide a\n"
-    "way to convert these index numbers into colour values and are used\n"
-    "in command options such as off_color -m, antiview -m and n_icons -m.\n"
-    "\n"
-    "The maps may use the Antiprism colour map format, Gimp Palette format\n"
-    "or Fractint format. The Antiprism format has lines of the form\n"
-    "index_number = color_value # comment_text', e.g. '2 = 1.0,0.0,0.0 # red'\n"
-    "anything after # is a comment and ignored. Blank lines are ignored\n"
-    "\n"
-    "A map may be given by several maps separated by ',' e.g. 'map1,map2'.\n"
-    "The maps are tried in order until a conversion is found for an index\n"
-    "number\n"
-    "\n"
-    "Map modifiers\n"
-    "-------------\n"
-    "A map may be modified by remapping its own entries. The modifiers\n"
-    "can be given in any order but the general form is\n"
-    "\n"
-    "   map_name+shift*step%wrap\n"
-    "\n"
-    "Any index, idx, is mapped to the colour value with index\n"
-    "   wrap is 0:      shift + idx*step\n"
-    "   wrap is not 0: (shift + idx*step) % wrap   [where % is modulus]\n"
-    "The defaults are shift=0, step=1, wrap=0. If a bare % is given then the\n"
-    "the wrap value will be the largest index number in the map plus one\n"
-    "e.g. cmap+1  : for index 10 get the colour value for cmap index 11\n"
-    "     cmap*2  : for index 10 get the colour value for cmap index 20\n"
-    "     cmap%6 : for index 10 get the colour value for cmap index 4\n"
-    "\n"
-    "Resource Maps\n"
-    "-------------\n"
-    "Internal (see below for format):\n"
-    "   spread\n"
-    "      Gives a range of colours each differing from the last few. Useful\n"
-    "      to colour elements whose index numbers have been set sequentially.\n"
-    "   rnd, rand, random\n"
-    "      A random map, with colours selected within certain ranges\n"
-    "      (default: component ranges H0:1S0.7:1V0.7:1).\n"
-    "   rng, range\n"
-    "      A map made by ranging between component values\n"
-    "      (default: size 256, component ranges H0:1S0.9V0.9).\n"
-    "   remap\n"
-    "      A map of index numbers to themselves. Use with the map modifiers\n"
-    "      to remap index numbers.\n"
-    "   null\n"
-    "      An empty map.\n"
-    "   grey, greyw\n"
-    "      greyscales (default: size 256), grey runs from black to white\n"
-    "      and greyw is wrappable and runs from black to white to black again.\n"
-    "   uniform\n"
-    "      used to colour the uniform, Johnson and polygon-based resource\n"
-    "      models (applied with off_color -f A -m uniform)\n"
-    "   compound\n"
-    "      used to colour the uniform compound resource models (applied\n"
-    "      with off_color -f K -v F -e F -m compound)\n"
-    "   map\n"
-    "      makes a colour map on the command line. Map entries are separated\n"
-    "      by ':' and each entry corresponds to a line in an Antiprism format\n"
-    "      map. Colours given by components may also have the components\n"
-    "      separated by '/' (as spaces will require quoting or escaping).\n"
-    "\n"
-    "   These maps contain a mapping for every index number (except default for\n"
-    "   rng is 256 entries). Follow the map name immediately by a number to set\n"
-    "   a particular size for the map (e.g. rnd64). The random and range maps\n"
-    "   (with the optional size specification) can be followed by '_' and then\n"
-    "   a letter from HSVA or RGBA (upper or lower case) to specify a component.\n"
-    "   This is followed by floating point numbers numbers separated by ':'.\n"
-    "   These numbers must be in the range 0.0 to 1.0. H may be larger than\n"
-    "   1.0 to allow hue ranges that cross the 1.0/0.0 boundary. Lower case 'h'\n"
-    "   gives the hue in the range 0-360. The random map allows one number for\n"
-    "   a fixed value, or two numbers for a range. The range map places the\n"
-    "   components at equal steps throughout the map and interpolates between\n"
-    "   the values\n"
-    "   e.g. rnd - default random map\n"
-    "        rnd64 - random map with 64 entries\n"
-    "        rnd256_S0V0:1 - random map with 256 grey entries\n"
-    "        rng - default range map, like a rainbow map with 256 entries\n"
-    "        rng16 - rainbow map with 16 entries\n"
-    "        rng_S0V0:1 - greyscale with 256 entries\n"
-    "        rng_R0:1:1G1:1:0B1:0:1 - runs from cyan to yellow to magenta.\n"
-    "\n"
-    "External (in resource directory 'col_maps'):\n"
-    "   x11 (549 colours)\n"
-    "       Broad range of named colours from X11's rgb.txt. The names may\n"
-    "       also be used to specify colours on the command line.\n"
-    "   vga (16 colours)\n"
-    "       Original VGA named colours.\n"
-    "   html (140 colours)\n"
-    "       Broad range of colours. These are the colours that can be used\n"
-    "       by name in HTML.\n"
-    "   ms (48 colours)\n"
-    "       A colour map based on the Micosoft colour dialog.\n"
-    "   iscc (267 colours)\n"
-    "       Colour centroids (http://tx4.us/nbs-iscc.htm)\n"
-    "   rainbow (224 colours)\n"
-    "       A rainbow map, with cyan and green\n"
-    "   rainbowc (192 colours)\n"
-    "       A rainbow map, with cyan but not green\n"
-    "   rainbowg (192 colours)\n"
-    "       A rainbow map, with green but not cyan\n"
-    "   spectrum (401 colours)\n"
-    "       An approximate visible spectrum\n";
+    e.g. u_truncated_octahedron, u_tr_octahedron, u_tr_oct, u_tr_o
 
-const char *help_symmetry =
-    "Symmetry\n"
-    "========\n"
-    "Several programs have features involving symmetry:\n"
-    "   poly_kscope - repeats a model symmetrically, used to make compounds\n"
-    "   off_align - repeats a model symmetrically, used to augment polyhedra\n"
-    "   off_trans - aligns a model according to symmetry\n"
-    "   off_report - prints symmetry information for a model\n"
-    "   off_color - colours by symmetry orbit\n"
-    "   antiview, off2vrml, off2pov - displays symmetry elements\n"
-    "\n"
-    "The program option parameters are organised around the following ideas\n"
-    "\n"
-    "  Symmetry group\n"
-    "    A set (group) of (Euclidean) transformations that carry a\n"
-    "    polyhedron onto itself, described in general form using\n"
-    "    Schoenflies notation (see below) e.g. Oh, D3v.\n"
-    "\n"
-    "  Full symmetry group of a polyhedron\n"
-    "    The set of all (Euclidean) transformations that carry a\n"
-    "    polyhedron onto itself.\n"
-    "\n"
-    "  Symmetry subgroup, or subsymmetry\n"
-    "    A set of transformations from a symmetry group which, considered\n"
-    "    alone, also form a symmetry group, e.g. a cube has Oh symmetry\n"
-    "    and has a 3-fold axis corresponding to a C3v subgroup.\n"
-    "\n"
-    "  Symmetry orbit of an element\n"
-    "    A set of equivalent elements, those elements that this element is\n"
-    "    carried on to by a symmetry or subsymmetry of the model.\n"
-    "\n"
-    "  Standard alignment of a symmetry\n"
-    "    A symmetry group could be aligned anywhere in the coordinate\n"
-    "    system, but there are particular alignments that fit nicely\n"
-    "    with the coordinate axes, and these are used as the 'standard'\n"
-    "    alignments in Antiprism. They are a way of associating a symbol\n"
-    "    like D3v with a fixed set of transformations.\n"
-    "\n"
-    "  Conjugation subtype of a subsymmetry\n"
-    "    This is an integer used to distinguish subgroups which are\n"
-    "    not carried onto each other (by conjugation) by the\n"
-    "    transformations of the parent symmetry group. For example a\n"
-    "    cube has a 2 fold axis through mid-edge and a 2-fold axis\n"
-    "    through a face centre. There is no symmetry of the cube that\n"
-    "    carries one onto the other and so they will have different\n"
-    "    subtype numbers. Geometrically, they look different in the cube.\n"
-    "\n"
-    "  Symmetry realignment\n"
-    "    If you align a polyhedron with the standard set of symmetries\n"
-    "    for its full symmetry group there is often more than one\n"
-    "    distinct way to achieve this (a transformation not in the\n"
-    "    symmetry group that transforms the symmetry group onto\n"
-    "    itself). For example, if you align a cereal box-like cuboid\n"
-    "    naturally with the coordinate axes there are 6 possibilities\n"
-    "    i.e. the centres of the three rectangle types can lie on any\n"
-    "    of the axes, with 3x2x1 = 6. Possibilities for some polyhedra\n"
-    "    are infinite e.g. the symmetry group of a pyramid does not change\n"
-    "    when it is translated along its principal axis. The realignment\n"
-    "    is given by a series of colon separated numbers, the first\n"
-    "    number selects from a finite set of realignments, and the\n"
-    "    following numbers are decimals to control rotations and\n"
-    "    translations as follows\n"
-    "      axial rotation:    1 number  - degrees around principle axis\n"
-    "      full rotation:     3 numbers - degrees around x, y and z axes\n"
-    "      axial translation: 1 number  - distance to translate along principal\n"
-    "                                     axis\n"
-    "      plane translation: 2 numbers - distance to translate along two\n"
-    "                                     orthogonal directions in (mirror) plane\n"
-    "      full translation:  3 numbers - distance to translate along x, y and z\n"
-    "                                     axes\n"
-    "\n"
-    "  Schoenflies notation\n"
-    "    Used to specify symmetry groups. The standard alignments have,\n"
-    "    preferentially, a centre (fixed point) on the origin a principal\n"
-    "    rotational axes on the z-axis, a dihedral axis on the x-axis, a\n"
-    "    mirror normal on the y-axis (except Cs has a mirror normal on the\n"
-    "    z-axis). The polyhedral symmetry types have a 3-fold axis on "
-    "(1,1,1).\n"
-    "    In the following list of symbols, when a type contains 'n' this must\n"
-    "    be replaced by an integer (giving an n-fold axis), and for S this\n"
-    "    integer must be even.\n"
-    "         C1  - identity\n"
-    "         Cs  - mirror\n"
-    "         Ci  - inversion\n"
-    "         Cn  - cyclic rotational\n"
-    "         Cnv - cyclic rotational with vertical mirror\n"
-    "         Cnh - cyclic rotational with horizontal mirror\n"
-    "         Dn  - dihedral rotational\n"
-    "         Dnv - dihedral rotational with vertical mirror\n"
-    "         Dnh - dihedral rotational with horizontal mirror\n"
-    "         Sn  - cyclic rotational (n/2-fold) with inversion\n"
-    "         T   - tetrahedral rotational\n"
-    "         Td  - tetrahedral rotational with mirror\n"
-    "         Th  - tetrahedral rotational with inversion\n"
-    "         O   - octahedral rotational\n"
-    "         Oh  - octahedral rotational with mirror\n"
-    "         I   - icosahedral rotational\n"
-    "         Ih  - icosahedral rotational with mirror\n"
-    "\n";
+o   Common polyhedra can be given by name only (see help for
+    'common_polys' for list) e.g. tet, cube
 
-const char *help_bowers =
-    "Bowers Short Name Notations\n"
-    "===========================\n"
-    "Jonathan Bowers has created short names for the Uniforms, Uniform Compounds,\n"
-    "Johnson polyhedra, and prisms. These notations are supported by Antiprism.\n"
-    "\n"
-    "Short Name   Symbol and Name\n"
-    "----------   ---------------\n"
-    "tet          U1   tetrahedron\n"
-    "tut          U2   truncated tetrahedron\n"
-    "oho          U3   octahemioctahedron\n"
-    "thah         U4   tetrahemihexahedron\n"
-    "oct          U5   octahedron\n"
-    "cube         U6   cube\n"
-    "co           U7   cuboctahedron\n"
-    "toe          U8   truncated octahedron\n"
-    "tic          U9   truncated cube\n"
-    "sirco        U10  rhombicuboctahedron\n"
-    "girco        U11  truncated cuboctahedron\n"
-    "snic         U12  snub cube\n"
-    "socco        U13  small cubicuboctahedron\n"
-    "gocco        U14  great cubicuboctahedron\n"
-    "cho          U15  cubohemioctahedron\n"
-    "cotco        U16  cubitruncated cuboctahedron\n"
-    "querco       U17  great rhombicuboctahedron\n"
-    "sroh         U18  small rhombihexahedron\n"
-    "quith        U19  stellated truncated hexahedron\n"
-    "quitco       U20  great truncated cuboctahedron\n"
-    "groh         U21  great rhombihexahedron\n"
-    "ike          U22  icosahedron\n"
-    "doe          U23  dodecahedron\n"
-    "id           U24  icosidodecahedron\n"
-    "ti           U25  truncated icosahedron\n"
-    "tid          U26  truncated dodecahedron\n"
-    "srid         U27  rhombicosidodecahedron\n"
-    "grid         U28  truncated icosidodecahedron\n"
-    "snid         U29  snub dodecahedron\n"
-    "sidtid       U30  small ditrigonal icosidodecahedron\n"
-    "siid         U31  small icosicosidodecahedron\n"
-    "seside       U32  small snub icosicosidodecahedron\n"
-    "saddid       U33  small dodecicosidodecahedron\n"
-    "sissid       U34  small stellated dodecahedron\n"
-    "gad          U35  great dodecahedron\n"
-    "did          U36  great dodecadodecahedron\n"
-    "tigid        U37  truncated great dodecahedron\n"
-    "raded        U38  rhombidodecadodecahedron\n"
-    "sird         U39  small rhombidodecahedron\n"
-    "siddid       U40  snub dodecadodecahedron\n"
-    "ditdid       U41  ditrigonal dodecadodecahedron\n"
-    "gidditdid    U42  great ditrigonal dodecicosidodecahedron\n"
-    "sidditdid    U43  small ditrigonal dodecicosidodecahedron\n"
-    "ided         U44  icosidodecadodecahedron\n"
-    "idtid        U45  icositruncated dodecadodecahedron\n"
-    "sided        U46  snub icosidodecadodecahedron\n"
-    "gidtid       U47  great ditrigonal icosidodecahedron\n"
-    "giid         U48  great icosicosidodecahedron\n"
-    "seihid       U49  small icosihemidodecahedron\n"
-    "siddy        U50  small dodecicosahedron\n"
-    "sidhid       U51  small dodecahemidodecahedron\n"
-    "gissid       U52  great stellated dodecahedron\n"
-    "gike         U53  great icosahedron\n"
-    "gid          U54  great icosidodecahedron\n"
-    "tiggy        U55  great truncated icosahedron\n"
-    "ri           U56  rhombicosahedron\n"
-    "gosid        U57  great snub icosidodecahedron\n"
-    "quitsissid   U58  small stellated truncated dodecahedron\n"
-    "quitdid      U59  truncated dodecadodecahedron\n"
-    "isdid        U60  inverted snub dodecadodecahedron\n"
-    "gaddid       U61  great dodecicosidodecahedron\n"
-    "sidhei       U62  small dodecahemicosahedron\n"
-    "giddy        U63  great dodecicosahedron\n"
-    "gisdid       U64  great snub dodecicosidodecahedron\n"
-    "gidhei       U65  great dodecahemicosahedron\n"
-    "quitgissid   U66  great stellated truncated dodecahedron\n"
-    "qrid         U67  great rhombicosidodecahedron\n"
-    "gaquatid     U68  great truncated icosidodecahedron\n"
-    "gisid        U69  great inverted snub icosidodecahedron\n"
-    "gidhid       U70  great dodecahemidodecahedron\n"
-    "geihid       U71  great icosihemidodecahedron\n"
-    "sirsid       U72  small retrosnub icosicosidodecahedron\n"
-    "gird         U73  great rhombidodecahedron\n"
-    "girsid       U74  great retrosnub icosidodecahedron\n"
-    "gidrid       U75  great dirhombicosidodecahedron\n"
-    "pip          U76  pentagonal prism\n"
-    "pap          U77  pentagonal antiprism\n"
-    "stip         U78  pentagrammic prism\n"
-    "stap         U79  pentagrammic antiprism\n"
-    "starp        U80  pentagrammic crossed antiprism\n"
-    "\n"
-    "sis          UC1   6 tetrahedra rotational\n"
-    "dis          UC2   12 tetrahedra rotational\n"
-    "snu          UC3   6 tetrahedra\n"
-    "so           UC4   2 tetrahedra\n"
-    "ki           UC5   5 tetrahedra\n"
-    "e            UC6   10 tetrahedra\n"
-    "risdoh       UC7   6 cubes rotational\n"
-    "rah          UC8   3 cubes\n"
-    "rhom         UC9   5 cubes\n"
-    "dissit       UC10  4 octahedra rotational\n"
-    "doso         UC11  8 octahedra rotational\n"
-    "sno          UC12  4 octahedra\n"
-    "addasi       UC13  20 octahedra rotational\n"
-    "dasi         UC14  20 octahedra\n"
-    "gissi        UC15  10 octahedra 1\n"
-    "si           UC16  10 octahedra 2\n"
-    "se           UC17  5 octahedra\n"
-    "hirki        UC18  5 tetrahemihexahedra\n"
-    "sapisseri    UC19  20 tetrahemihexahedra\n"
-    "gadsid       UC26  12 pentagonal antiprisms rotational\n"
-    "gassid       UC27  6 pentagonal antiprisms\n"
-    "gidasid      UC28  12 pentagrammic crossed antiprisms rotational\n"
-    "gissed       UC29  6 pentagrammic crossed antiprisms\n"
-    "ro           UC30  4 triangular prisms\n"
-    "dro          UC31  8 triangular prisms\n"
-    "kri          UC32  10 triangular prisms\n"
-    "dri          UC33  20 triangular prisms\n"
-    "kred         UC34  6 pentagonal prisms\n"
-    "dird         UC35  12 pentagonal prisms\n"
-    "gikrid       UC36  6 pentagrammic prisms\n"
-    "giddird      UC37  12 pentagrammic prisms\n"
-    "griso        UC38  4 hexagonal prisms\n"
-    "rosi         UC39  10 hexagonal prisms\n"
-    "rassid       UC40  6 decagonal prisms\n"
-    "grassid      UC41  6 decagrammic prisms\n"
-    "gassic       UC42  3 square antiprisms\n"
-    "gidsac       UC43  6 square antiprisms\n"
-    "sassid       UC44  6 pentagrammic antiprisms\n"
-    "sadsid       UC45  12 pentagrammic antiprisms\n"
-    "siddo        UC46  2 icosahedra\n"
-    "sne          UC47  5 icosahedra\n"
-    "presipsido   UC48  2 great dodecahedra\n"
-    "presipsi     UC49  5 great dodecahedra\n"
-    "passipsido   UC50  2 small stellated dodecahedra\n"
-    "passipsi     UC51  5 small stellated dodecahedra\n"
-    "sirsido      UC52  2 great icosahedra\n"
-    "sirsei       UC53  5 great icosahedra\n"
-    "tisso        UC54  2 truncated tetrahedra\n"
-    "taki         UC55  5 truncated tetrahedra\n"
-    "te           UC56  10 truncated tetrahedra\n"
-    "harie        UC57  5 truncated cubes\n"
-    "quahri       UC58  5 stellated truncated hexahedra\n"
-    "arie         UC59  5 cuboctahedra\n"
-    "gari         UC60  5 cubohemioctahedra\n"
-    "iddei        UC61  5 octahemioctahedra\n"
-    "rasseri      UC62  5 rhombicuboctahedra\n"
-    "rasher       UC63  5 small rhombihexahedra\n"
-    "rahrie       UC64  5 small cubicuboctahedra\n"
-    "raquahri     UC65  5 great cubicuboctahedra\n"
-    "rasquahr     UC66  5 great rhombihexahedra\n"
-    "rasquahpri   UC67  5 great rhombicuboctahedra\n"
-    "disco        UC68  2 snub cubes\n"
-    "dissid       UC69  2 snub dodecahedra\n"
-    "giddasid     UC70  2 great snub icosidodecahedra\n"
-    "gidsid       UC71  2 great inverted snub icosidodecahedra\n"
-    "gidrissid    UC72  2 great retrosnub icosidodecahedra\n"
-    "disdid       UC73  2 snub dodecadodecahedra\n"
-    "idisdid      UC74  2 inverted snub dodecadodecahedra\n"
-    "desided      UC75  2 snub icosidodecadodecahedra\n"
-    "\n"
-    "squippy      J1   square pyramid\n"
-    "peppy        J2   pentagonal pyramid\n"
-    "tricu        J3   triangular cupola\n"
-    "squicu       J4   square cupola\n"
-    "pecu         J5   pentagonal cupola\n"
-    "pero         J6   pentagonal rotunda\n"
-    "etripy       J7   elongated triangular pyramid\n"
-    "esquippy     J8   elongated square pyramid\n"
-    "epeppy       J9   elongated pentagonal pyramid\n"
-    "gyesp        J10  gyroelongated square pyramid\n"
-    "gyepip       J11  gyroelongated pentagonal pyramid\n"
-    "tridpy       J12  triangular dipyramid\n"
-    "pedpy        J13  pentagonal dipyramid\n"
-    "etidpy       J14  elongated triangular dipyramid\n"
-    "esquidpy     J15  elongated square dipyramid\n"
-    "epedpy       J16  elongated pentagonal dipyramid\n"
-    "gyesqidpy    J17  gyroelongated square dipyramid\n"
-    "etcu         J18  elongated triangular cupola\n"
-    "escu         J19  elongated square cupola\n"
-    "epcu         J20  elongated pentagonal cupola\n"
-    "epro         J21  elongated pentagonal rotunda\n"
-    "gyetcu       J22  gyroelongated triangular cupola\n"
-    "gyescu       J23  gyroelongated square cupola\n"
-    "gyepcu       J24  gyroelongated pentagonal cupola\n"
-    "gyepro       J25  gyroelongated pentagonal rotunda\n"
-    "gybef        J26  gyrobifastigium\n"
-    "tobcu        J27  triangular orthobicupola\n"
-    "squobcu      J28  square orthobicupola\n"
-    "squigybcu    J29  square gyrobicupola\n"
-    "pobcu        J30  pentagonal orthobicupola\n"
-    "pegybcu      J31  pentagonal gyrobicupola\n"
-    "pocuro       J32  pentagonal orthocupolarotunda\n"
-    "pegycuro     J33  pentagonal gyrocupolarotunda\n"
-    "pobro        J34  pentagonal orthobirotunda\n"
-    "etobcu       J35  elongated triangular orthobicupola\n"
-    "etigybcu     J36  elongated triangular gyrobicupola\n"
-    "esquigybcu   J37  elongated square gyrobicupola\n"
-    "epobcu       J38  elongated pentagonal orthobicupola\n"
-    "epigybcu     J39  elongated pentagonal gyrobicupola\n"
-    "epocuro      J40  elongated pentagonal orthocupolarotunda\n"
-    "epgycuro     J41  elongated pentagonal gyrocupolarotunda\n"
-    "epobro       J42  elongated pentagonal orthobirotunda\n"
-    "epgybro      J43  elongated pentagonal gyrobirotunda\n"
-    "gyetibcu     J44  gyroelongated triangular bicupola\n"
-    "gyesquibcu   J45  gyroelongated square bicupola\n"
-    "gyepibcu     J46  gyroelongated pentagonal bicupola\n"
-    "gyepcuro     J47  gyroelongated pentagonal cupolarotunda\n"
-    "gyepabro     J48  gyroelongated pentagonal birotunda\n"
-    "autip        J49  augmented triangular prism\n"
-    "bautip       J50  biaugmented triangular prism\n"
-    "tautip       J51  triaugmented triangular prism\n"
-    "aupip        J52  augmented pentagonal prism\n"
-    "baupip       J53  biaugmented pentagonal prism\n"
-    "auhip        J54  augmented hexagonal prism\n"
-    "pabauhip     J55  parabiaugmented hexagonal prism\n"
-    "mabauhip     J56  metabiaugmented hexagonal prism\n"
-    "tauhip       J57  triaugmented hexagonal prism\n"
-    "aud          J58  augmented dodecahedron\n"
-    "pabaud       J59  parabiaugmented dodecahedron\n"
-    "mabaud       J60  metabiaugmented dodecahedron\n"
-    "taud         J61  triaugmented dodecahedron\n"
-    "mibdi        J62  metabidiminished icosahedron\n"
-    "teddi        J63  tridiminished icosahedron\n"
-    "auteddi      J64  augmented tridiminished icosahedron\n"
-    "autut        J65  augmented truncated tetrahedron\n"
-    "autic        J66  augmented truncated cube\n"
-    "bautic       J67  biaugmented truncated cube\n"
-    "autid        J68  augmented truncated dodecahedron\n"
-    "pabautid     J69  parabiaugmented truncated dodecahedron\n"
-    "mabautid     J70  metabiaugmented truncated dodecahedron\n"
-    "tautid       J71  triaugmented truncated dodecahedron\n"
-    "gyrid        J72  gyrate rhombicosidodecahedron\n"
-    "pabgyrid     J73  parabigyrate rhombicosidodecahedron\n"
-    "mabgyrid     J74  metabigyrate rhombicosidodecahedron\n"
-    "tagyrid      J75  trigyrate rhombicosidodecahedron\n"
-    "dirid        J76  diminished rhombicosidodecahedron\n"
-    "pagydrid     J77  paragyrate diminished rhombicosidodecahedron\n"
-    "magydrid     J78  metagyrate diminished rhombicosidodecahedron\n"
-    "bagydrid     J79  bigyrate diminished rhombicosidodecahedron\n"
-    "pabidrid     J80  parabidiminished rhombicosidodecahedron\n"
-    "mabidrid     J81  metabidiminished rhombicosidodecahedron\n"
-    "gybadrid     J82  gyrate bidiminished rhombicosidodecahedron\n"
-    "tedrid       J83  tridiminished rhombicosidodecahedron\n"
-    "snadow       J84  snub disphenoid\n"
-    "snisquap     J85  snub square antiprism\n"
-    "waco         J86  sphenocorona\n"
-    "auwaco       J87  augmented sphenocorona\n"
-    "wamco        J88  sphenomegacorona\n"
-    "hawmco       J89  hebesphenomegacorona\n"
-    "dawci        J90  disphenocingulum\n"
-    "bilbiro      J91  bilunabirotunda\n"
-    "thawro       J92  triangular hebesphenorotunda\n"
-    "\n"
-    "trip         pri3     triangular prism\n"
-    "pip          pri5     pentagonal prism\n"
-    "stip         pri5/2   pentagrammic prism\n"
-    "hip          pri6     hexagonal prism\n"
-    "hep          pri7     heptagonal prism\n"
-    "ship         pri7/2   heptagrammic prism\n"
-    "giship       pri7/3   heptagrammic prism\n"
-    "op           pri8     octagonal prism\n"
-    "stop         pri8/3   octagrammic prism\n"
-    "ep           pri9     nonagonal prism\n"
-    "step         pri9/2   nonagrammic prism\n"
-    "gistep       pri9/4   nongrammic prism\n"
-    "dip          pri10    decagonal prism\n"
-    "stiddip      pri10/3  decagrammic prism\n"
-    "\n"
-    "squap        ant4     square antiprism\n"
-    "pap          ant5     pentagonal antiprism\n"
-    "stap         ant5/2   pentagrammic antiprism\n"
-    "starp        ant5/3   pentagrammic crossed antiprism\n"
-    "hap          ant6     hexagonal antiprism\n"
-    "heap         ant7     heptagonal antiprism\n"
-    "sthap        ant7/2   heptagrammic antiprism\n"
-    "gisthap      ant7/3   heptagrammic antiprism\n"
-    "gisthirp     ant7/4   heptagrammic crossed antiprism\n"
-    "oap          ant8     octagonal antiprism\n"
-    "stoap        ant8/3   octagrammic antiprism\n"
-    "storp        ant8/5   octagrammic crossed antiprism\n"
-    "eap          ant9     nonagonal antiprism\n"
-    "steap        ant9/2   nonagonal antiprism\n"
-    "gisteap      ant9/4   nonagonal antiprism\n"
-    "gisterp      ant9/5   nonagonal crossed antiprism\n"
-    "dap          ant10    decagonal antiprism\n"
-    "stiddap      ant10/3  decagrammic antiprism\n";
+o   Uniform prism are named 'pri' followed by the polygon
+    fraction e.g pri5, pri5/2
 
-const char *help_schwarz =
-    "Schwarz triangles\n"
-    "=================\n"
-    "A Schwarz triangle, aligned with with the corresponding minimal symmetry\n"
-    "group, can be specified as follows:\n"
-    "\n"
-    "schwarz_ followed by the three fractions separated by spaces or '_'. The\n"
-    "fractions are in the form used in the Wythoff symbol. If a triangle has\n"
-    "an angle of PIn/d, its fraction is d/n, e.g. the Mobius triangle for\n"
-    "octahedral symmetry has angles PI/2, PI/3 and PI/4 and is given by\n"
-    "schwarz_2_3_4, a spherical tetrahedron face has angles of 2PI/3 and is\n"
-    "given by schwarz_3/2_3/2_3/2\n";
+o   Uniform antiprism are named 'ant' followed by the polygon
+    fraction e.g ant5, ant5/2, ant5/3
 
-const char *help_expreval =
-    "Expression Evaluation\n"
-    "=====================\n"
-    "Any program that accepts a floating point argument will also accept the\n"
-    "argumant as a mathematical expression. This expression will be used to\n"
-    "calculate a numeric value, that will then passed to the program.\n"
-    "\n"
-    "Several of the characters that can appear in an expression may be\n"
-    "intercepted by the shell for its own use, and the expression will\n"
-    "often need to be enclosed in quotes, e.g.\n"
-    "\n"
-    "   off_trans -T \"1+sqrt(2)\",0,0 cube\n"
-    "\n"
-    "Arithmetic operators, + - * / ^, may be used, and various functions,\n"
-    "including: sqrt(), sin(), cos(), tan(), asin(), acos(), atan(), deg().\n"
-    "The full list of functions is included further below.\n"
-    "\n"
-    "The following constants are defined: convenience square roots of the\n"
-    "form rt2, rt3, rt5, etc, pi = 3.14159..., phi = (sqrt(5)+1)/2 = 1.61803...\n"
-    "\n"
-    "A limited set of variables, var0, var1, ...var9, may be used in\n"
-    "expressions (default value 0.0). Assign a value to a variable with\n"
-    "'=', and separate sub-expressions with ';'. The result of the last\n"
-    "sub-expression is returned as the result of the whole expression.\n"
-    "\n"
-    "Examples:\n"
-    "   Expresion                  Result\n"
-    "   1                            1.0\n"
-    "   1+1                          2.0\n"
-    "   1+2*3                        7.0\n"
-    "   (1+2)*3                      9.0\n"
-    "   sin(30)                      0.5\n"
-    "   deg(pi/3)                   60.0\n"
-    "   sum(1;2;3)                   6.0\n"
-    "   var0=2;var1=3;var0^var1      8.0\n"
+Uniform List:
 
-    "\n"
-    "The code that handles the expression evaluation is muParse, written\n"
-    "by Ingo Berg: http://muparser.beltoforion.de/ . The following is from\n"
-    "the muParser project documentation (with slight changes):\n"
-    "\n"
-    "Built-in functions\n"
-    "The following table gives an overview of the functions supported by the\n"
-    "default implementation. It lists the function names, the number of\n"
-    "arguments and a brief description. Separate function arguments with ';'.\n"
-    "\n"
-    "   Name    Argc.  Explanation\n"
-    "   sin     1      sine function (degrees)\n"
-    "   cos     1      cosine function (degrees)\n"
-    "   tan     1      tangens function (degrees)\n"
-    "   asin    1      arcus sine function (degrees)\n"
-    "   acos    1      arcus cosine function (degrees)\n"
-    "   atan    1      arcus tangens function (degrees)\n"
-    "   sinh    1      hyperbolic sine function\n"
-    "   cosh    1      hyperbolic cosine\n"
-    "   tanh    1      hyperbolic tangens function\n"
-    "   asinh   1      hyperbolic arcus sine function\n"
-    "   acosh   1      hyperbolic arcus tangens function\n"
-    "   atanh   1      hyperbolic arcur tangens function\n"
-    "   log2    1      logarithm to the base 2\n"
-    "   log10   1      logarithm to the base 10\n"
-    "   log     1      logarithm to the base 10\n"
-    "   ln      1      logarithm to base e (2.71828...)\n"
-    "   exp     1      e raised to the power of x\n"
-    "   sqrt    1      square root of a value\n"
-    "   sign    1      sign function -1 if x<0; 1 if x>0\n"
-    "   rint    1      round to nearest integer\n"
-    "   deg     1      convert from radians to degrees\n"
-    "   rad     1      convert from degrees to radians\n"
-    "   abs     1      absolute value\n"
-    "   min     var.   min of all arguments\n"
-    "   max     var.   max of all arguments\n"
-    "   sum     var.   sum of all arguments\n"
-    "   avg     var.   mean value of all arguments\n"
-    "\n"
-    "Built-in binary operators\n"
-    "The following table lists the default binary operators supported by the\n"
-    "parser.\n"
-    "\n"
-    "   Operator  Meaning                   Priority\n"
-    "   =         assignment (*see below)   -1\n"
-    "   &&        logical and                1\n"
-    "   ||        logical or                 2\n"
-    "   <=        less or equal              4\n"
-    "   >=        greater or equal           4\n"
-    "   !=        not equal                  4\n"
-    "   ==        equal                      4\n"
-    "   >         greater than               4\n"
-    "   <         less than                  4\n"
-    "   +         addition                   5\n"
-    "   -         subtraction                5\n"
-    "   *         multiplication             6\n"
-    "   */        division                   6\n"
-    "   ^         raise x to the power of y  7\n"
-    "*The assignment operator is special since it changes one of its "
-    "arguments\n"
-    "and can only by applied to variables.\n"
-    "\n"
-    "Other operators\n"
-    "muParser has built in support for the if then else operator. It uses\n"
-    "lazy evaluation in order to make sure only the necessary branch of the\n"
-    "expression is evaluated.\n"
-    "\n"
-    "   Operator    Meaning                 Remarks\n"
-    "   ?:          if then else operator   C++ style syntax\n"
-    "\n";
-// clang-format on
+U No.  Wythoff Sym    Name
+-----  -----------    ------------------------
+U1           3|2 3    tetrahedron
+U2           2 3|3    truncated tetrahedron
+U3         3/2 3|3    octahemioctahedron
+U4         3/2 3|2    tetrahemihexahedron
+U5           4|2 3    octahedron
+U6           3|2 4    cube
+U7           2|3 4    cuboctahedron
+U8           2 4|3    truncated octahedron
+U9           2 3|4    truncated cube
+U10          3 4|2    rhombicuboctahedron
+U11         2 3 4|    truncated cuboctahedron
+U12         |2 3 4    snub cube
+U13        3/2 4|4    small cubicuboctahedron
+U14        3 4|4/3    great cubicuboctahedron
+U15        4/3 4|3    cubohemioctahedron
+U16       4/3 3 4|    cubitruncated cuboctahedron
+U17        3/2 4|2    great rhombicuboctahedron
+U18       3/2 2 4|    small rhombihexahedron
+U19        2 3|4/3    stellated truncated hexahedron
+U20       4/3 2 3|    great truncated cuboctahedron
+U21     4/3 3/2 2|    great rhombihexahedron
+U22          5|2 3    icosahedron
+U23          3|2 5    dodecahedron
+U24          2|3 5    icosidodecahedron
+U25          2 5|3    truncated icosahedron
+U26          2 3|5    truncated dodecahedron
+U27          3 5|2    rhombicosidodecahedron
+U28         2 3 5|    truncated icosidodecahedron
+U29         |2 3 5    snub dodecahedron
+U30        3|5/2 3    small ditrigonal icosidodecahedron
+U31        5/2 3|3    small icosicosidodecahedron
+U32       |5/2 3 3    small snub icosicosidodecahedron
+U33        3/2 5|5    small dodecicosidodecahedron
+U34        5|2 5/2    small stellated dodecahedron
+U35        5/2|2 5    great dodecahedron
+U36        2|5/2 5    great dodecadodecahedron
+U37        2 5/2|5    truncated great dodecahedron
+U38        5/2 5|2    rhombidodecadodecahedron
+U39       2 5/2 5|    small rhombidodecahedron
+U40       |2 5/2 5    snub dodecadodecahedron
+U41        3|5/3 5    ditrigonal dodecadodecahedron
+U42        3 5|5/3    great ditrigonal dodecicosidodecahedron
+U43        5/3 3|5    small ditrigonal dodecicosidodecahedron
+U44        5/3 5|3    icosidodecadodecahedron
+U45       5/3 3 5|    icositruncated dodecadodecahedron
+U46       |5/3 3 5    snub icosidodecadodecahedron
+U47        3/2|3 5    great ditrigonal icosidodecahedron
+U48        3/2 5|3    great icosicosidodecahedron
+U49        3/2 3|5    small icosihemidodecahedron
+U50       3/2 3 5|    small dodecicosahedron
+U51        5/4 5|5    small dodecahemidodecahedron
+U52        3|2 5/2    great stellated dodecahedron
+U53        5/2|2 3    great icosahedron
+U54        2|5/2 3    great icosidodecahedron
+U55        2 5/2|3    great truncated icosahedron
+U56       2 5/2 3|    rhombicosahedron
+U57       |2 5/2 3    great snub icosidodecahedron
+U58        2 5|5/3    small stellated truncated dodecahedron
+U59       5/3 2 5|    truncated dodecadodecahedron
+U60       |5/3 2 5    inverted snub dodecadodecahedron
+U61      5/2 3|5/3    great dodecicosidodecahedron
+U62      5/3 5/2|3    small dodecahemicosahedron
+U63     5/3 5/2 3|    great dodecicosahedron
+U64     |5/3 5/2 3    great snub dodecicosidodecahedron
+U65        5/4 5|3    great dodecahemicosahedron
+U66        2 3|5/3    great stellated truncated dodecahedron
+U67        5/3 3|2    great rhombicosidodecahedron
+U68       5/3 2 3|    great truncated icosidodecahedron
+U69       |5/3 2 3    great inverted snub icosidodecahedron
+U70    5/3 5/2|5/3    great dodecahemidodecahedron
+U71      3/2 3|5/3    great icosihemidodecahedron
+U72   |3/2 3/2 5/2    small retrosnub icosicosidodecahedron
+U73     3/2 5/3 2|    great rhombidodecahedron
+U74     |3/2 5/3 2    great retrosnub icosidodecahedron
+U75  3/2 5/3 3 5/2    great dirhombicosidodecahedron
+U76          2 5|2    pentagonal prism
+U77         |2 2 5    pentagonal antiprism
+U78        2 5/2|2    pentagrammic prism
+U79       |2 2 5/2    pentagrammic antiprism
+U80       |2 2 5/3    pentagrammic crossed antiprism)";
+
+const char *help_uniform_duals = R"(Uniform Dual Polyhedra
+======================
+Uniform dual polyhdra can be specified by
+
+o   UD followed by a U number e.g. ud8
+
+o   ud_ followed by a name (see the list below) Use '_' instead of
+    a space to avoid having to quote the model name. The beginning
+    of a name can be given and the first match from the list of
+    uniform dual polyhedra below is returned.
+
+    When giving a name the following abbreviations can be used
+       sm:       small
+       gr:       great
+       st:       stellated
+       inv:      inverted
+       delt:     deltoidal
+       pen:      pentagonal
+       med:      medial
+       triam:    triambic
+       ditrig:   ditrigonal
+       tri:      triakis
+       tetr:     tetrakis
+       pent:     pentakis
+       hex:      hexakis
+       disd:     disdyakis
+       tet:      tetrahedron
+       ico:      icosahedron
+       icosa:    icosahedron
+       dod:      dodecahedron
+       oct:      octahedron
+       cubo:     cuboctahedron
+       hexa:     hexahedron
+       hexec:    hexecontahedron
+       icositet: icositetrahedron
+
+    e.g. u_truncated_octahedron, u_tr_octahedron, u_tr_oct, u_tr_o
+
+o   Common polyhedra can be given by name only (see help for
+    'common_polys' for list) e.g. tet, cube
+
+o   Uniform prism are named 'pri' followed by the polygon
+    fraction e.g pri5, pri5/2
+
+o   Uniform antiprism are named 'ant' followed by the polygon
+    fraction e.g ant5, ant5/2, ant5/3
+
+Uniform List:
+
+UD No.     Name
+-----      ------------------------
+UD1        tetrahedron
+UD2        triakistetrahedron
+UD3        octahemioctacron
+UD4        tetrahemihexacron
+UD5        cube
+UD6        octahedron
+UD7        rhombic dodecahedron
+UD8        tetrakishexahedron
+UD9        triakisoctahedron
+UD10       deltoidal icositetrahedron
+UD11       disdyakisdodecahedron
+UD12       pentagonal icositetrahedron
+UD13       small hexacronic icositetrahedron
+UD14       great hexacronic icositetrahedron
+UD15       hexahemioctacron
+UD16       tetradyakishexahedron
+UD17       great deltoidal icositetrahedron
+UD18       small rhombihexacron
+UD19       great triakisoctahedron
+UD20       great disdyakisdodecahedron
+UD21       great rhombihexacron
+UD22       dodecahedron
+UD23       icosahedron
+UD24       rhombic triacontahedron
+UD25       pentakisdodecahedron
+UD26       triakisicosahedron
+UD27       deltoidal hexecontahedron
+UD28       disdyakistriacontahedron
+UD29       pentagonal hexecontahedron
+UD30       small triambic icosahedron
+UD31       small icosacronic hexecontahedron
+UD32       small hexagonal hexecontahedron
+UD33       small dodecacronic hexecontahedron
+UD34       great dodecahedron
+UD35       small stellated dodecahedron
+UD36       medial rhombic triacontahedron
+UD37       small stellapentakisdodecahedron
+UD38       medial deltoidal hexecontahedron
+UD39       small rhombidodecacron
+UD40       medial pentagonal hexecontahedron
+UD41       medial triambic icosahedron
+UD42       great ditrigonal dodecacronic hexecontahedron
+UD43       small ditrigonal dodecacronic hexecontahedron
+UD44       medial icosacronic hexecontahedron
+UD45       tridyakisicosahedron
+UD46       medial hexagonal hexecontahedron
+UD47       great triambic icosahedron
+UD48       great icosacronic hexecontahedron
+UD49       small icosihemidodecacron
+UD50       small dodecicosacron
+UD51       small dodecahemidodecacron
+UD52       great icosahedron
+UD53       great stellated dodecahedron
+UD54       great rhombic triacontahedron
+UD55       great stellapentakisdodecahedron
+UD56       rhombicosacron
+UD57       great pentagonal hexecontahedron
+UD58       great pentakisdodekahedron
+UD59       medial disdyakistriacontahedron
+UD60       medial inverted pentagonal hexecontahedron
+UD61       great dodecacronic hexecontahedron
+UD62       small dodecahemicosacron
+UD63       great dodecicosacron
+UD64       great hexagonal hexecontahedron
+UD65       great dodecahemicosacron
+UD66       great triakisicosahedron
+UD67       great deltoidal hexecontahedron
+UD68       great disdyakistriacontahedron
+UD69       great inverted pentagonal hexecontahedron
+UD70       great dodecahemidodecacron
+UD71       great icosihemidodecacron
+UD72       small hexagrammic hexecontahedron
+UD73       great rhombidodecacron
+UD74       great pentagrammic hexecontahedron
+UD75       great dirhombicosidodecacron
+UD76       pentagonal dipyramid
+UD77       pentagonal deltohedron
+UD78       pentagrammic dipyramid
+UD79       pentagrammic deltohedron
+UD80       pentagrammic concave deltohedron)";
+
+const char *help_johnson = R"(Johnson Polyhedra
+=================
+Johnson polyhedra can be specified by a
+
+o   A J number e.g. j8
+
+o   j_ followed by a name (see the list below) Use '_' instead of
+    a space to avoid having to quote the model name. The beginning
+    of a name can be given and the first match from the list of
+    Johnson polyhedra below is returned.
+
+    When giving a name the following abbreviations can be used
+       tri:   triangular
+       sq:    square
+       squ:   square
+       pe:    pentagonal
+       pen:   pentagonal
+       el:    elongated
+       ge:    gyroelongated
+       tr:    truncated
+       au:    augmented
+       ba:    biaugmenbted
+       ta:    triaugmented
+
+    e.g. j_elongated_triangular_pyramid, j_el_tri_pyr, j_el
+
+The Johnson polyhedron will be aligned with its symmetry group, but
+appending '_raw' to the name will preserve the original construction
+alignment.
+
+Johnson List:
+
+J No.  Name
+-----  -------------------------------
+J1     square pyramid
+J2     pentagonal pyramid
+J3     triangular cupola
+J4     square cupola
+J5     pentagonal cupola
+J6     pentagonal rotunda
+J7     elongated triangular pyramid
+J8     elongated square pyramid
+J9     elongated pentagonal pyramid
+J10    gyroelongated square pyramid
+J11    gyroelongated pentagonal pyramid
+J12    triangular dipyramid
+J13    pentagonal dipyramid
+J14    elongated triangular dipyramid
+J15    elongated square dipyramid
+J16    elongated pentagonal dipyramid
+J17    gyroelongated square dipyramid
+J18    elongated triangular cupola
+J19    elongated square cupola
+J20    elongated pentagonal cupola
+J21    elongated pentagonal rotunda
+J22    gyroelongated triangular cupola
+J23    gyroelongated square cupola
+J24    gyroelongated pentagonal cupola
+J25    gyroelongated pentagonal rotunda
+J26    gyrobifastigium
+J27    triangular orthobicupola
+J28    square orthobicupola
+J29    square gyrobicupola
+J30    pentagonal orthobicupola
+J31    pentagonal gyrobicupola
+J32    pentagonal orthocupolarotunda
+J33    pentagonal gyrocupolarotunda
+J34    pentagonal orthobirotunda
+J35    elongated triangular orthobicupola
+J36    elongated triangular gyrobicupola
+J37    elongated square gyrobicupola
+J38    elongated pentagonal orthobicupola
+J39    elongated pentagonal gyrobicupola
+J40    elongated pentagonal orthocupolarotunda
+J41    elongated pentagonal gyrocupolarotunda
+J42    elongated pentagonal orthobirotunda
+J43    elongated pentagonal gyrobirotunda
+J44    gyroelongated triangular bicupola
+J45    gyroelongated square bicupola
+J46    gyroelongated pentagonal bicupola
+J47    gyroelongated pentagonal cupolarotunda
+J48    gyroelongated pentagonal birotunda
+J49    augmented triangular prism
+J50    biaugmented triangular prism
+J51    triaugmented triangular prism
+J52    augmented pentagonal prism
+J53    biaugmented pentagonal prism
+J54    augmented hexagonal prism
+J55    parabiaugmented hexagonal prism
+J56    metabiaugmented hexagonal prism
+J57    triaugmented hexagonal prism
+J58    augmented dodecahedron
+J59    parabiaugmented dodecahedron
+J60    metabiaugmented dodecahedron
+J61    triaugmented dodecahedron
+J62    metabidiminished icosahedron
+J63    tridiminished icosahedron
+J64    augmented tridiminished icosahedron
+J65    augmented truncated tetrahedron
+J66    augmented truncated cube
+J67    biaugmented truncated cube
+J68    augmented truncated dodecahedron
+J69    parabiaugmented truncated dodecahedron
+J70    metabiaugmented truncated dodecahedron
+J71    triaugmented truncated dodecahedron
+J72    gyrate rhombicosidodecahedron
+J73    parabigyrate rhombicosidodecahedron
+J74    metabigyrate rhombicosidodecahedron
+J75    trigyrate rhombicosidodecahedron
+J76    diminished rhombicosidodecahedron
+J77    paragyrate diminished rhombicosidodecahedron
+J78    metagyrate diminished rhombicosidodecahedron
+J79    bigyrate diminished rhombicosidodecahedron
+J80    parabidiminished rhombicosidodecahedron
+J81    metabidiminished rhombicosidodecahedron
+J82    gyrate bidiminished rhombicosidodecahedron
+J83    tridiminished rhombicosidodecahedron
+J84    snub disphenoid
+J85    snub square antiprism
+J86    sphenocorona
+J87    augmented sphenocorona
+J88    sphenomegacorona
+J89    hebesphenomegacorona
+J90    disphenocingulum
+J91    bilunabirotunda
+J92    triangular hebesphenorotunda)";
+
+const char *help_polygon = R"(Polygon-based Polyhedra
+=======================
+Polygon-based polyhedra have unit edges and are specified by their
+abbreviated class name followed by the base polygon, given as a fraction.
+(Note that some models, e.g. pyr7, cannot be made to have unit edges.)
+
+The class names are
+   pol:     polygon
+   pri:     prism
+   ant:     antiprism
+   pyr:     pyramid
+   dip:     dipyramid
+   cup:     cupola
+   ort:     orthobicupola
+   gyr:     gyrobicupola
+
+   e.g. pri5, pyr7/2)";
+
+const char *help_std_polys = R"(Standard Polyhedra
+==================
+Any built-in polyhedron can be generated in a standard form by prefixing
+std_ before the name. Any polyhedron generated this way will have no colour
+added. For uniform polyhedra, uniform duals, and uniform compounds, their
+coordinates are left as calculated and not given unit edge lengths
+
+Some notable models and their coordinates are
+   tetrahedron, tet:                 0, 1
+   truncated_tetrahedron, tr_tet:    1, 3
+   cube:                             1
+   truncated_cube, tr_cube:          1, sqrt(2)-1
+   snub_cube, sn_cube:               expressions using cube roots
+   octahedron, oct:                  0, 1
+   truncated_octahedron, tr_oct:     0, 1, 2
+   dodecahedron, dod:                0, phi, 1/phi
+   snub_dodecahedron, sn_dod:        expressions using phi and cube roots
+   icosahedron, ico:                 0, 1, phi
+   cuboctahedron, cubo:              0, 1
+   truncated_cuboctahedron, tr_cubo: 1, 1+sqrt(2), 1+2*sqrt(2)
+   truncated_icosidodecahedron, tr_icosid:
+                                     phi and integer based
+   rhombicuboctahedron, rhombicubo, rh_cubo:
+                                     1, 1+sqrt(2)
+   rhombicosidodecahedron, rhombicosid, rh_icosid:
+                                     1, phi, phi^2, phi^3, 2phi, 2+phi
+
+   rhombic_dodecahedron, rd           0, 1, 2
+   rhombic_triacontahedron, rt        0, 1, phi, 1/phi
+   rhombic_enneacontahedron, re       0, 1, expresions using phi
+
+   e.g. std_truncated_tetrahedron, std_tr_tet, std_rh_cubo)";
+
+const char *help_uniform_compounds = R"(Uniform Compounds
+=================
+Uniform compounds can be specified by
+
+o   A UC number e.g. uc5
+
+o   uc_ followed by a name (see the list below) Use '_' instead of
+    a space to avoid having to quote the model name. The beginning
+    of a name can be given and the first match from the list of
+    uniform compounds below is returned.
+
+    When giving a name the following abbreviations can be used
+       tr:     truncated
+       sm:     small
+       gr:     great
+       st:     stellated
+       sn:     snub
+       tet:    tetrahedra
+       ico:    icosahedra
+       icosa:  icosahedra
+       dod:    dodecahedra
+       oct:    octahedra
+       cubo:   cuboctahedra
+       icosid: icosidodecahedra
+       pri:    prisms
+       ant:    antiprisms
+       rot:    rotational
+
+    e.g. uc_5_tetrahedra, uc_5_tet, uc_2_tr_tet, uc_2_tr_t
+
+    When a compound is listed as rotational, an angle can be supplied after
+    an underscore. If no angle is supplied, a random angle is generated
+
+    e.g. uc2_a30, uc7_a22.5, uc11_a11.315, uc28_a0
+
+    For uc20 to uc25 n/d and k can be supplied after an underscore.
+    If no n/d or k is supplied then random values are generated
+
+    e.g. uc21_n5/2k4, uc22_n7/3, uc23_n7/3k3, uc25_n7/4k3
+
+    Because uc20, uc22, and uc24 an angle can also be supplied.
+    Note that the order of a, n/d and k does not matter
+
+    e.g. uc20_n9/2, uc20_k5, uc22_n7/3k2a4, uc22_a7n5/3k3, uc24_a3k5n7/4
+
+
+Uniform Compound List:
+
+UC No  Name
+-----  -------------------------------
+UC1    6 tetrahedra rotational
+UC2    12 tetrahedra rotational
+UC3    6 tetrahedra
+UC4    2 tetrahedra
+UC5    5 tetrahedra
+UC6    10 tetrahedra
+UC7    6 cubes rotational
+UC8    3 cubes
+UC9    5 cubes
+UC10   4 octahedra rotational
+UC11   8 octahedra rotational
+UC12   4 octahedra
+UC13   20 octahedra rotational
+UC14   20 octahedra
+UC15   10 octahedra 1
+UC16   10 octahedra 2
+UC17   5 octahedra
+UC18   5 tetrahemihexahedra
+UC19   20 tetrahemihexahedra
+UC20   2k n d gonal prisms rotational
+UC21   k n d gonal prisms
+UC22   2k n odd d gonal antiprisms rotational
+UC23   k n odd d gonal antiprisms
+UC24   2k n even d gonal antiprisms rotational
+UC25   k n even d gonal antiprisms
+UC26   12 pentagonal antiprisms rotational
+UC27   6 pentagonal antiprisms
+UC28   12 pentagrammic crossed antiprisms rotational
+UC29   6 pentagrammic crossed antiprisms
+UC30   4 triangular prisms
+UC31   8 triangular prisms
+UC32   10 triangular prisms
+UC33   20 triangular prisms
+UC34   6 pentagonal prisms
+UC35   12 pentagonal prisms
+UC36   6 pentagrammic prisms
+UC37   12 pentagrammic prisms
+UC38   4 hexagonal prisms
+UC39   10 hexagonal prisms
+UC40   6 decagonal prisms
+UC41   6 decagrammic prisms
+UC42   3 square antiprisms
+UC43   6 square antiprisms
+UC44   6 pentagrammic antiprisms
+UC45   12 pentagrammic antiprisms
+UC46   2 icosahedra
+UC47   5 icosahedra
+UC48   2 great dodecahedra
+UC49   5 great dodecahedra
+UC50   2 small stellated dodecahedra
+UC51   5 small stellated dodecahedra
+UC52   2 great icosahedra
+UC53   5 great icosahedra
+UC54   2 truncated tetrahedra
+UC55   5 truncated tetrahedra
+UC56   10 truncated tetrahedra
+UC57   5 truncated cubes
+UC58   5 stellated truncated hexahedra
+UC59   5 cuboctahedra
+UC60   5 cubohemioctahedra
+UC61   5 octahemioctahedra
+UC62   5 rhombicuboctahedra
+UC63   5 small rhombihexahedra
+UC64   5 small cubicuboctahedra
+UC65   5 great cubicuboctahedra
+UC66   5 great rhombihexahedra
+UC67   5 great rhombicuboctahedra
+UC68   2 snub cubes
+UC69   2 snub dodecahedra
+UC70   2 great snub icosidodecahedra
+UC71   2 great inverted snub icosidodecahedra
+UC72   2 great retrosnub icosidodecahedra
+UC73   2 snub dodecadodecahedra
+UC74   2 inverted snub dodecadodecahedra
+UC75   2 snub icosidodecadodecahedra)";
+
+const char *help_geodesic = R"(Geodesic Spheres
+================
+A geodesic sphere is specified by a base polyhedron and a pattern
+given by two integers. The pattern numbers determined the class of
+geodesic sphere, and more specifically the 'stepping' for moving
+between original base vertices in the geodesic model.
+
+o   geo_
+    optionally followed by a letter to indicate the base polyhedron
+       - i: icosahedron (default)
+       - o: octahedron
+       - t: tetrahdron
+    followed by the first pattern number
+    optionally followed by a second pattern number (default 0)
+
+Class I patterns are of the form m,0 or 0,n (the pattern frequency
+   is m or n, and this figure is also the 'frequency')
+   e.g. geo_4, geo_o3, geo_o3_0, geo_t0_3
+Class II patterns are of the form m,m (the pattern frequency is m,i
+   but the 'frequency' is often described as 2m)
+   e.g. geo_4_4, geo_o3_3
+Class III patterns are of the form m,n with m>0, n>0 and m=/=n (the
+   the pattern frequency is the greatest common divisor of m and n)
+   e.g. geo_4_1, geo_o3_2, geo_t4_2)";
+
+const char *help_sym_models = R"(Symmetry Example Models
+=======================
+These models are made as a symmetric arrangement of arrows. The
+number of arrows in the model is the size of the given symmetry
+group. To display the symmetry elements view the models with, for
+example, 'antiview -s a sym_D3h'
+
+The models are given by:
+o   sym_ followed by a Schoenflies symbol from
+            Cs  - mirror
+            Ci  - inversion
+            Cn  - cyclic rotational
+            Cnv - cyclic rotational with vertical mirror
+            Cnh - cyclic rotational with horizontal mirror
+            Dn  - dihedral rotational
+            Dnv - dihedral rotational with vertical mirror
+            Dnh - dihedral rotational with horizontal mirror
+            Sn  - cyclic rotational (n/2-fold) with inversion
+            T   - tetrahedral rotational
+            Td  - tetrahedral rotational with mirror
+            Th  - tetrahedral rotational with inversion
+            O   - octahedral rotational
+            Oh  - octahedral rotational with mirror
+            I   - icosahedral rotational
+            Ih  - icosahedral rotational with mirror
+
+   e.g. sym_Cs, sym_C3, sym_D3h, sym_S6, sym_I)";
+
+const char *help_color = R"(Colour
+======
+Colouring a model usually involves specifying individual colours. A colour
+can be specified directly in a number of formats, or can be the name of a
+colour that Antiprism recognises, or can be an index number that will
+generally be turned into a final colour by looking it up in a colour map.
+Antiprism includes some colour maps, and facilities for creating new ones.
+
+See these help topics for more details
+   col_val :     colour value formats
+   col_names :   colour names
+   col_map :     colour map formats and resource colour maps)";
+
+const char *help_color_val = R"(Colour Values
+=============
+Colour values may be given in a number of formats.
+
+Red, Green, Blue and Alpha components (RGBA):
+   3 or 4 decimal numbers separated by commas in the range 0.0-1.0
+       (e.g. orange is '1.0,0.5,0.0')
+   3 or 4 integers separated by commas in the range 0 - 255
+       (e.g. orange is '255,128,0')
+   x (or X or #) followed by 3 or 4 pairs of hexadecimal integers
+       (e.g. orange is 'xFF8000')
+Hue, Saturation, Value and Alpha components (HSVA):
+   H or h, immediately followed by 3 or 4 decimal numbers separated by
+   commas in the range 0.0-1.0. For initial h the hue has range
+   0.0 to 360.0
+       (e.g. orange is 'H0.07,1.0,1.0', or 'h25,1.0,1.0)
+Colour name:
+   Common colour names. See 'off_util -H col_names' for the full list.
+       (e.g. 'orange')
+Colour index:
+   A positive integer that can be used as index into a colour map
+       (e.g. '5'))";
+
+const char *help_color_names = R"(Named Colours
+=============
+
+Colour names can be used to specify a colour given on the command
+line or in a colour map file.
+
+The names are those used in X11's rgb.txt. The list of colours is also
+given in the Antiprism X11 colour map file included with the
+resources. Other names: 'invisible' corresponds to transparent black,
+and is used to indicate that display elements should be excluded from
+display; 'none' is a colour with no colour data, setting an element to
+this colour removes any colour data for the element
+
+The colour names are (with their integer RGB description):
+
+snow (255,250,250)               ghostwhite (248,248,255)
+whitesmoke (245,245,245)         gainsboro (220,220,220)
+floralwhite (255,250,240)        oldlace (253,245,230)
+linen (250,240,230)              antiquewhite (250,235,215)
+papayawhip (255,239,213)         blanchedalmond (255,235,205)
+bisque (255,228,196)             peachpuff (255,218,185)
+navajowhite (255,222,173)        moccasin (255,228,181)
+cornsilk (255,248,220)           ivory (255,255,240)
+lemonchiffon (255,250,205)       seashell (255,245,238)
+honeydew (240,255,240)           mintcream (245,255,250)
+azure (240,255,255)              aliceblue (240,248,255)
+lavender (230,230,250)           lavenderblush (255,240,245)
+mistyrose (255,228,225)          white (255,255,255)
+black (0,0,0)                    darkslategray (47,79,79)
+dimgray (105,105,105)            slategray (112,128,144)
+lightslategray (119,136,153)     gray (190,190,190)
+lightgray (211,211,211)          midnightblue (25,25,112)
+navy (0,0,128)                   navyblue (0,0,128)
+cornflowerblue (100,149,237)     darkslateblue (72,61,139)
+slateblue (106,90,205)           mediumslateblue (123,104,238)
+lightslateblue (132,112,255)     mediumblue (0,0,205)
+royalblue (65,105,225)           blue (0,0,255)
+dodgerblue (30,144,255)          deepskyblue (0,191,255)
+skyblue (135,206,235)            lightskyblue (135,206,250)
+steelblue (70,130,180)           lightsteelblue (176,196,222)
+lightblue (173,216,230)          powderblue (176,224,230)
+paleturquoise (175,238,238)      darkturquoise (0,206,209)
+mediumturquoise (72,209,204)     turquoise (64,224,208)
+cyan (0,255,255)                 lightcyan (224,255,255)
+cadetblue (95,158,160)           mediumaquamarine (102,205,170)
+aquamarine (127,255,212)         darkgreen (0,100,0)
+darkolivegreen (85,107,47)       darkseagreen (143,188,143)
+seagreen (46,139,87)             mediumseagreen (60,179,113)
+lightseagreen (32,178,170)       palegreen (152,251,152)
+springgreen (0,255,127)          lawngreen (124,252,0)
+green (0,255,0)                  chartreuse (127,255,0)
+mediumspringgreen (0,250,154)    greenyellow (173,255,47)
+limegreen (50,205,50)            yellowgreen (154,205,50)
+forestgreen (34,139,34)          olivedrab (107,142,35)
+darkkhaki (189,183,107)          khaki (240,230,140)
+palegoldenrod (238,232,170)      lightgoldenrodyellow (250,250,210)
+lightyellow (255,255,224)        yellow (255,255,0)
+gold (255,215,0)                 lightgoldenrod (238,221,130)
+goldenrod (218,165,32)           darkgoldenrod (184,134,11)
+rosybrown (188,143,143)          indianred (205,92,92)
+saddlebrown (139,69,19)          sienna (160,82,45)
+peru (205,133,63)                burlywood (222,184,135)
+beige (245,245,220)              wheat (245,222,179)
+sandybrown (244,164,96)          tan (210,180,140)
+chocolate (210,105,30)           firebrick (178,34,34)
+brown (165,42,42)                darksalmon (233,150,122)
+salmon (250,128,114)             lightsalmon (255,160,122)
+orange (255,165,0)               darkorange (255,140,0)
+coral (255,127,80)               lightcoral (240,128,128)
+tomato (255,99,71)               orangered (255,69,0)
+red (255,0,0)                    hotpink (255,105,180)
+deeppink (255,20,147)            pink (255,192,203)
+lightpink (255,182,193)          palevioletred (219,112,147)
+maroon (176,48,96)               mediumvioletred (199,21,133)
+violetred (208,32,144)           magenta (255,0,255)
+violet (238,130,238)             plum (221,160,221)
+orchid (218,112,214)             mediumorchid (186,85,211)
+darkorchid (153,50,204)          darkviolet (148,0,211)
+blueviolet (138,43,226)          purple (160,32,240)
+mediumpurple (147,112,219)       thistle (216,191,216)
+snow1 (255,250,250)              snow2 (238,233,233)
+snow3 (205,201,201)              snow4 (139,137,137)
+seashell1 (255,245,238)          seashell2 (238,229,222)
+seashell3 (205,197,191)          seashell4 (139,134,130)
+antiquewhite1 (255,239,219)      antiquewhite2 (238,223,204)
+antiquewhite3 (205,192,176)      antiquewhite4 (139,131,120)
+bisque1 (255,228,196)            bisque2 (238,213,183)
+bisque3 (205,183,158)            bisque4 (139,125,107)
+peachpuff1 (255,218,185)         peachpuff2 (238,203,173)
+peachpuff3 (205,175,149)         peachpuff4 (139,119,101)
+navajowhite1 (255,222,173)       navajowhite2 (238,207,161)
+navajowhite3 (205,179,139)       navajowhite4 (139,121,94)
+lemonchiffon1 (255,250,205)      lemonchiffon2 (238,233,191)
+lemonchiffon3 (205,201,165)      lemonchiffon4 (139,137,112)
+cornsilk1 (255,248,220)          cornsilk2 (238,232,205)
+cornsilk3 (205,200,177)          cornsilk4 (139,136,120)
+ivory1 (255,255,240)             ivory2 (238,238,224)
+ivory3 (205,205,193)             ivory4 (139,139,131)
+honeydew1 (240,255,240)          honeydew2 (224,238,224)
+honeydew3 (193,205,193)          honeydew4 (131,139,131)
+lavenderblush1 (255,240,245)     lavenderblush2 (238,224,229)
+lavenderblush3 (205,193,197)     lavenderblush4 (139,131,134)
+mistyrose1 (255,228,225)         mistyrose2 (238,213,210)
+mistyrose3 (205,183,181)         mistyrose4 (139,125,123)
+azure1 (240,255,255)             azure2 (224,238,238)
+azure3 (193,205,205)             azure4 (131,139,139)
+slateblue1 (131,111,255)         slateblue2 (122,103,238)
+slateblue3 (105,89,205)          slateblue4 (71,60,139)
+royalblue1 (72,118,255)          royalblue2 (67,110,238)
+royalblue3 (58,95,205)           royalblue4 (39,64,139)
+blue1 (0,0,255)                  blue2 (0,0,238)
+blue3 (0,0,205)                  blue4 (0,0,139)
+dodgerblue1 (30,144,255)         dodgerblue2 (28,134,238)
+dodgerblue3 (24,116,205)         dodgerblue4 (16,78,139)
+steelblue1 (99,184,255)          steelblue2 (92,172,238)
+steelblue3 (79,148,205)          steelblue4 (54,100,139)
+deepskyblue1 (0,191,255)         deepskyblue2 (0,178,238)
+deepskyblue3 (0,154,205)         deepskyblue4 (0,104,139)
+skyblue1 (135,206,255)           skyblue2 (126,192,238)
+skyblue3 (108,166,205)           skyblue4 (74,112,139)
+lightskyblue1 (176,226,255)      lightskyblue2 (164,211,238)
+lightskyblue3 (141,182,205)      lightskyblue4 (96,123,139)
+slategray1 (198,226,255)         slategray2 (185,211,238)
+slategray3 (159,182,205)         slategray4 (108,123,139)
+lightsteelblue1 (202,225,255)    lightsteelblue2 (188,210,238)
+lightsteelblue3 (162,181,205)    lightsteelblue4 (110,123,139)
+lightblue1 (191,239,255)         lightblue2 (178,223,238)
+lightblue3 (154,192,205)         lightblue4 (104,131,139)
+lightcyan1 (224,255,255)         lightcyan2 (209,238,238)
+lightcyan3 (180,205,205)         lightcyan4 (122,139,139)
+paleturquoise1 (187,255,255)     paleturquoise2 (174,238,238)
+paleturquoise3 (150,205,205)     paleturquoise4 (102,139,139)
+cadetblue1 (152,245,255)         cadetblue2 (142,229,238)
+cadetblue3 (122,197,205)         cadetblue4 (83,134,139)
+turquoise1 (0,245,255)           turquoise2 (0,229,238)
+turquoise3 (0,197,205)           turquoise4 (0,134,139)
+cyan1 (0,255,255)                cyan2 (0,238,238)
+cyan3 (0,205,205)                cyan4 (0,139,139)
+darkslategray1 (151,255,255)     darkslategray2 (141,238,238)
+darkslategray3 (121,205,205)     darkslategray4 (82,139,139)
+aquamarine1 (127,255,212)        aquamarine2 (118,238,198)
+aquamarine3 (102,205,170)        aquamarine4 (69,139,116)
+darkseagreen1 (193,255,193)      darkseagreen2 (180,238,180)
+darkseagreen3 (155,205,155)      darkseagreen4 (105,139,105)
+seagreen1 (84,255,159)           seagreen2 (78,238,148)
+seagreen3 (67,205,128)           seagreen4 (46,139,87)
+palegreen1 (154,255,154)         palegreen2 (144,238,144)
+palegreen3 (124,205,124)         palegreen4 (84,139,84)
+springgreen1 (0,255,127)         springgreen2 (0,238,118)
+springgreen3 (0,205,102)         springgreen4 (0,139,69)
+green1 (0,255,0)                 green2 (0,238,0)
+green3 (0,205,0)                 green4 (0,139,0)
+chartreuse1 (127,255,0)          chartreuse2 (118,238,0)
+chartreuse3 (102,205,0)          chartreuse4 (69,139,0)
+olivedrab1 (192,255,62)          olivedrab2 (179,238,58)
+olivedrab3 (154,205,50)          olivedrab4 (105,139,34)
+darkolivegreen1 (202,255,112)    darkolivegreen2 (188,238,104)
+darkolivegreen3 (162,205,90)     darkolivegreen4 (110,139,61)
+khaki1 (255,246,143)             khaki2 (238,230,133)
+khaki3 (205,198,115)             khaki4 (139,134,78)
+lightgoldenrod1 (255,236,139)    lightgoldenrod2 (238,220,130)
+lightgoldenrod3 (205,190,112)    lightgoldenrod4 (139,129,76)
+lightyellow1 (255,255,224)       lightyellow2 (238,238,209)
+lightyellow3 (205,205,180)       lightyellow4 (139,139,122)
+yellow1 (255,255,0)              yellow2 (238,238,0)
+yellow3 (205,205,0)              yellow4 (139,139,0)
+gold1 (255,215,0)                gold2 (238,201,0)
+gold3 (205,173,0)                gold4 (139,117,0)
+goldenrod1 (255,193,37)          goldenrod2 (238,180,34)
+goldenrod3 (205,155,29)          goldenrod4 (139,105,20)
+darkgoldenrod1 (255,185,15)      darkgoldenrod2 (238,173,14)
+darkgoldenrod3 (205,149,12)      darkgoldenrod4 (139,101,8)
+rosybrown1 (255,193,193)         rosybrown2 (238,180,180)
+rosybrown3 (205,155,155)         rosybrown4 (139,105,105)
+indianred1 (255,106,106)         indianred2 (238,99,99)
+indianred3 (205,85,85)           indianred4 (139,58,58)
+sienna1 (255,130,71)             sienna2 (238,121,66)
+sienna3 (205,104,57)             sienna4 (139,71,38)
+burlywood1 (255,211,155)         burlywood2 (238,197,145)
+burlywood3 (205,170,125)         burlywood4 (139,115,85)
+wheat1 (255,231,186)             wheat2 (238,216,174)
+wheat3 (205,186,150)             wheat4 (139,126,102)
+tan1 (255,165,79)                tan2 (238,154,73)
+tan3 (205,133,63)                tan4 (139,90,43)
+chocolate1 (255,127,36)          chocolate2 (238,118,33)
+chocolate3 (205,102,29)          chocolate4 (139,69,19)
+firebrick1 (255,48,48)           firebrick2 (238,44,44)
+firebrick3 (205,38,38)           firebrick4 (139,26,26)
+brown1 (255,64,64)               brown2 (238,59,59)
+brown3 (205,51,51)               brown4 (139,35,35)
+salmon1 (255,140,105)            salmon2 (238,130,98)
+salmon3 (205,112,84)             salmon4 (139,76,57)
+lightsalmon1 (255,160,122)       lightsalmon2 (238,149,114)
+lightsalmon3 (205,129,98)        lightsalmon4 (139,87,66)
+orange1 (255,165,0)              orange2 (238,154,0)
+orange3 (205,133,0)              orange4 (139,90,0)
+darkorange1 (255,127,0)          darkorange2 (238,118,0)
+darkorange3 (205,102,0)          darkorange4 (139,69,0)
+coral1 (255,114,86)              coral2 (238,106,80)
+coral3 (205,91,69)               coral4 (139,62,47)
+tomato1 (255,99,71)              tomato2 (238,92,66)
+tomato3 (205,79,57)              tomato4 (139,54,38)
+orangered1 (255,69,0)            orangered2 (238,64,0)
+orangered3 (205,55,0)            orangered4 (139,37,0)
+red1 (255,0,0)                   red2 (238,0,0)
+red3 (205,0,0)                   red4 (139,0,0)
+deeppink1 (255,20,147)           deeppink2 (238,18,137)
+deeppink3 (205,16,118)           deeppink4 (139,10,80)
+hotpink1 (255,110,180)           hotpink2 (238,106,167)
+hotpink3 (205,96,144)            hotpink4 (139,58,98)
+pink1 (255,181,197)              pink2 (238,169,184)
+pink3 (205,145,158)              pink4 (139,99,108)
+lightpink1 (255,174,185)         lightpink2 (238,162,173)
+lightpink3 (205,140,149)         lightpink4 (139,95,101)
+palevioletred1 (255,130,171)     palevioletred2 (238,121,159)
+palevioletred3 (205,104,137)     palevioletred4 (139,71,93)
+maroon1 (255,52,179)             maroon2 (238,48,167)
+maroon3 (205,41,144)             maroon4 (139,28,98)
+violetred1 (255,62,150)          violetred2 (238,58,140)
+violetred3 (205,50,120)          violetred4 (139,34,82)
+magenta1 (255,0,255)             magenta2 (238,0,238)
+magenta3 (205,0,205)             magenta4 (139,0,139)
+orchid1 (255,131,250)            orchid2 (238,122,233)
+orchid3 (205,105,201)            orchid4 (139,71,137)
+plum1 (255,187,255)              plum2 (238,174,238)
+plum3 (205,150,205)              plum4 (139,102,139)
+mediumorchid1 (224,102,255)      mediumorchid2 (209,95,238)
+mediumorchid3 (180,82,205)       mediumorchid4 (122,55,139)
+darkorchid1 (191,62,255)         darkorchid2 (178,58,238)
+darkorchid3 (154,50,205)         darkorchid4 (104,34,139)
+purple1 (155,48,255)             purple2 (145,44,238)
+purple3 (125,38,205)             purple4 (85,26,139)
+mediumpurple1 (171,130,255)      mediumpurple2 (159,121,238)
+mediumpurple3 (137,104,205)      mediumpurple4 (93,71,139)
+thistle1 (255,225,255)           thistle2 (238,210,238)
+thistle3 (205,181,205)           thistle4 (139,123,139)
+gray0 (0,0,0)                    gray1 (3,3,3)
+gray2 (5,5,5)                    gray3 (8,8,8)
+gray4 (10,10,10)                 gray5 (13,13,13)
+gray6 (15,15,15)                 gray7 (18,18,18)
+gray8 (20,20,20)                 gray9 (23,23,23)
+gray10 (26,26,26)                gray11 (28,28,28)
+gray12 (31,31,31)                gray13 (33,33,33)
+gray14 (36,36,36)                gray15 (38,38,38)
+gray16 (41,41,41)                gray17 (43,43,43)
+gray18 (46,46,46)                gray19 (48,48,48)
+gray20 (51,51,51)                gray21 (54,54,54)
+gray22 (56,56,56)                gray23 (59,59,59)
+gray24 (61,61,61)                gray25 (64,64,64)
+gray26 (66,66,66)                gray27 (69,69,69)
+gray28 (71,71,71)                gray29 (74,74,74)
+gray30 (77,77,77)                gray31 (79,79,79)
+gray32 (82,82,82)                gray33 (84,84,84)
+gray34 (87,87,87)                gray35 (89,89,89)
+gray36 (92,92,92)                gray37 (94,94,94)
+gray38 (97,97,97)                gray39 (99,99,99)
+gray40 (102,102,102)             gray41 (105,105,105)
+gray42 (107,107,107)             gray43 (110,110,110)
+gray44 (112,112,112)             gray45 (115,115,115)
+gray46 (117,117,117)             gray47 (120,120,120)
+gray48 (122,122,122)             gray49 (125,125,125)
+gray50 (127,127,127)             gray51 (130,130,130)
+gray52 (133,133,133)             gray53 (135,135,135)
+gray54 (138,138,138)             gray55 (140,140,140)
+gray56 (143,143,143)             gray57 (145,145,145)
+gray58 (148,148,148)             gray59 (150,150,150)
+gray60 (153,153,153)             gray61 (156,156,156)
+gray62 (158,158,158)             gray63 (161,161,161)
+gray64 (163,163,163)             gray65 (166,166,166)
+gray66 (168,168,168)             gray67 (171,171,171)
+gray68 (173,173,173)             gray69 (176,176,176)
+gray70 (179,179,179)             gray71 (181,181,181)
+gray72 (184,184,184)             gray73 (186,186,186)
+gray74 (189,189,189)             gray75 (191,191,191)
+gray76 (194,194,194)             gray77 (196,196,196)
+gray78 (199,199,199)             gray79 (201,201,201)
+gray80 (204,204,204)             gray81 (207,207,207)
+gray82 (209,209,209)             gray83 (212,212,212)
+gray84 (214,214,214)             gray85 (217,217,217)
+gray86 (219,219,219)             gray87 (222,222,222)
+gray88 (224,224,224)             gray89 (227,227,227)
+gray90 (229,229,229)             gray91 (232,232,232)
+gray92 (235,235,235)             gray93 (237,237,237)
+gray94 (240,240,240)             gray95 (242,242,242)
+gray96 (245,245,245)             gray97 (247,247,247)
+gray98 (250,250,250)             gray99 (252,252,252)
+gray100 (255,255,255)            darkgray (169,169,169)
+darkblue (0,0,139)               darkcyan (0,139,139)
+darkmagenta (139,0,139)          darkred (139,0,0)
+lightgreen (144,238,144))";
+
+const char *help_ColorMap = R"(Colour Maps
+===========
+OFF elements may be coloured by index numbers. Colour maps provide a
+way to convert these index numbers into colour values and are used
+in command options such as off_color -m, antiview -m and n_icons -m.
+
+The maps may use the Antiprism colour map format, Gimp Palette format
+or Fractint format. The Antiprism format has lines of the form
+index_number = color_value # comment_text', e.g. '2 = 1.0,0.0,0.0 # red'
+anything after # is a comment and ignored. Blank lines are ignored
+
+A map may be given by several maps separated by ',' e.g. 'map1,map2'.
+The maps are tried in order until a conversion is found for an index
+number
+
+Map modifiers
+-------------
+A map may be modified by remapping its own entries. The modifiers
+can be given in any order but the general form is
+
+   map_name+shift*step%wrap
+
+Any index, idx, is mapped to the colour value with index
+   wrap is 0:      shift + idx*step
+   wrap is not 0: (shift + idx*step) % wrap   [where % is modulus]
+The defaults are shift=0, step=1, wrap=0. If a bare % is given then the
+the wrap value will be the largest index number in the map plus one
+e.g. cmap+1  : for index 10 get the colour value for cmap index 11
+     cmap*2  : for index 10 get the colour value for cmap index 20
+     cmap%6 : for index 10 get the colour value for cmap index 4
+
+Resource Maps
+-------------
+Internal (see below for format):
+   spread
+      Gives a range of colours each differing from the last few. Useful
+      to colour elements whose index numbers have been set sequentially.
+   rnd, rand, random
+      A random map, with colours selected within certain ranges
+      (default: component ranges H0:1S0.7:1V0.7:1).
+   rng, range
+      A map made by ranging between component values
+      (default: size 256, component ranges H0:1S0.9V0.9).
+   remap
+      A map of index numbers to themselves. Use with the map modifiers
+      to remap index numbers.
+   null
+      An empty map.
+   grey, greyw
+      greyscales (default: size 256), grey runs from black to white
+      and greyw is wrappable and runs from black to white to black again.
+   uniform
+      used to colour the uniform, Johnson and polygon-based resource
+      models (applied with off_color -f A -m uniform)
+   compound
+      used to colour the uniform compound resource models (applied
+      with off_color -f K -v F -e F -m compound)
+   map
+      makes a colour map on the command line. Map entries are separated
+      by ':' and each entry corresponds to a line in an Antiprism format
+      map. Colours given by components may also have the components
+      separated by '/' (as spaces will require quoting or escaping).
+
+   These maps contain a mapping for every index number (except default for
+   rng is 256 entries). Follow the map name immediately by a number to set
+   a particular size for the map (e.g. rnd64). The random and range maps
+   (with the optional size specification) can be followed by '_' and then
+   a letter from HSVA or RGBA (upper or lower case) to specify a component.
+   This is followed by floating point numbers numbers separated by ':'.
+   These numbers must be in the range 0.0 to 1.0. H may be larger than
+   1.0 to allow hue ranges that cross the 1.0/0.0 boundary. Lower case 'h'
+   gives the hue in the range 0-360. The random map allows one number for
+   a fixed value, or two numbers for a range. The range map places the
+   components at equal steps throughout the map and interpolates between
+   the values
+   e.g. rnd - default random map
+        rnd64 - random map with 64 entries
+        rnd256_S0V0:1 - random map with 256 grey entries
+        rng - default range map, like a rainbow map with 256 entries
+        rng16 - rainbow map with 16 entries
+        rng_S0V0:1 - greyscale with 256 entries
+        rng_R0:1:1G1:1:0B1:0:1 - runs from cyan to yellow to magenta.
+
+External (in resource directory 'col_maps'):
+   x11 (549 colours)
+       Broad range of named colours from X11's rgb.txt. The names may
+       also be used to specify colours on the command line.
+   vga (16 colours)
+       Original VGA named colours.
+   html (140 colours)
+       Broad range of colours. These are the colours that can be used
+       by name in HTML.
+   ms (48 colours)
+       A colour map based on the Micosoft colour dialog.
+   iscc (267 colours)
+       Colour centroids (http://tx4.us/nbs-iscc.htm)
+   rainbow (224 colours)
+       A rainbow map, with cyan and green
+   rainbowc (192 colours)
+       A rainbow map, with cyan but not green
+   rainbowg (192 colours)
+       A rainbow map, with green but not cyan
+   spectrum (401 colours)
+       An approximate visible spectrum)";
+
+const char *help_symmetry = R"(Symmetry
+========
+Several programs have features involving symmetry:
+   poly_kscope - repeats a model symmetrically, used to make compounds
+   off_align - repeats a model symmetrically, used to augment polyhedra
+   off_trans - aligns a model according to symmetry
+   off_report - prints symmetry information for a model
+   off_color - colours by symmetry orbit
+   antiview, off2vrml, off2pov - displays symmetry elements
+
+The program option parameters are organised around the following ideas
+
+  Symmetry group
+    A set (group) of (Euclidean) transformations that carry a
+    polyhedron onto itself, described in general form using
+    Schoenflies notation (see below) e.g. Oh, D3v.
+
+  Full symmetry group of a polyhedron
+    The set of all (Euclidean) transformations that carry a
+    polyhedron onto itself.
+
+  Symmetry subgroup, or subsymmetry
+    A set of transformations from a symmetry group which, considered
+    alone, also form a symmetry group, e.g. a cube has Oh symmetry
+    and has a 3-fold axis corresponding to a C3v subgroup.
+
+  Symmetry orbit of an element
+    A set of equivalent elements, those elements that this element is
+    carried on to by a symmetry or subsymmetry of the model.
+
+  Standard alignment of a symmetry
+    A symmetry group could be aligned anywhere in the coordinate
+    system, but there are particular alignments that fit nicely
+    with the coordinate axes, and these are used as the 'standard'
+    alignments in Antiprism. They are a way of associating a symbol
+    like D3v with a fixed set of transformations.
+
+  Conjugation subtype of a subsymmetry
+    This is an integer used to distinguish subgroups which are
+    not carried onto each other (by conjugation) by the
+    transformations of the parent symmetry group. For example a
+    cube has a 2 fold axis through mid-edge and a 2-fold axis
+    through a face centre. There is no symmetry of the cube that
+    carries one onto the other and so they will have different
+    subtype numbers. Geometrically, they look different in the cube.
+
+  Symmetry realignment
+    If you align a polyhedron with the standard set of symmetries
+    for its full symmetry group there is often more than one
+    distinct way to achieve this (a transformation not in the
+    symmetry group that transforms the symmetry group onto
+    itself). For example, if you align a cereal box-like cuboid
+    naturally with the coordinate axes there are 6 possibilities
+    i.e. the centres of the three rectangle types can lie on any
+    of the axes, with 3x2x1 = 6. Possibilities for some polyhedra
+    are infinite e.g. the symmetry group of a pyramid does not change
+    when it is translated along its principal axis. The realignment
+    is given by a series of colon separated numbers, the first
+    number selects from a finite set of realignments, and the
+    following numbers are decimals to control rotations and
+    translations as follows
+      axial rotation:    1 number  - degrees around principle axis
+      full rotation:     3 numbers - degrees around x, y and z axes
+      axial translation: 1 number  - distance to translate along principal
+                                     axis
+      plane translation: 2 numbers - distance to translate along two
+                                     orthogonal directions in (mirror) plane
+      full translation:  3 numbers - distance to translate along x, y and z
+                                     axes
+
+  Schoenflies notation
+    Used to specify symmetry groups. The standard alignments have,
+    preferentially, a centre (fixed point) on the origin a principal
+    rotational axes on the z-axis, a dihedral axis on the x-axis, a
+    mirror normal on the y-axis (except Cs has a mirror normal on the
+    z-axis). The polyhedral symmetry types have a 3-fold axis on (1,1,1).
+    In the following list of symbols, when a type contains 'n' this must
+    be replaced by an integer (giving an n-fold axis), and for S this
+    integer must be even.
+         C1  - identity
+         Cs  - mirror
+         Ci  - inversion
+         Cn  - cyclic rotational
+         Cnv - cyclic rotational with vertical mirror
+         Cnh - cyclic rotational with horizontal mirror
+         Dn  - dihedral rotational
+         Dnv - dihedral rotational with vertical mirror
+         Dnh - dihedral rotational with horizontal mirror
+         Sn  - cyclic rotational (n/2-fold) with inversion
+         T   - tetrahedral rotational
+         Td  - tetrahedral rotational with mirror
+         Th  - tetrahedral rotational with inversion
+         O   - octahedral rotational
+         Oh  - octahedral rotational with mirror
+         I   - icosahedral rotational
+         Ih  - icosahedral rotational with mirror)";
+
+const char *help_bowers = R"(Bowers Short Name Notations
+===========================
+Jonathan Bowers has created short names for the Uniforms, Uniform Compounds,
+Johnson polyhedra, and prisms. These notations are supported by Antiprism.
+
+Short Name   Symbol and Name
+----------   ---------------
+tet          U1   tetrahedron
+tut          U2   truncated tetrahedron
+oho          U3   octahemioctahedron
+thah         U4   tetrahemihexahedron
+oct          U5   octahedron
+cube         U6   cube
+co           U7   cuboctahedron
+toe          U8   truncated octahedron
+tic          U9   truncated cube
+sirco        U10  rhombicuboctahedron
+girco        U11  truncated cuboctahedron
+snic         U12  snub cube
+socco        U13  small cubicuboctahedron
+gocco        U14  great cubicuboctahedron
+cho          U15  cubohemioctahedron
+cotco        U16  cubitruncated cuboctahedron
+querco       U17  great rhombicuboctahedron
+sroh         U18  small rhombihexahedron
+quith        U19  stellated truncated hexahedron
+quitco       U20  great truncated cuboctahedron
+groh         U21  great rhombihexahedron
+ike          U22  icosahedron
+doe          U23  dodecahedron
+id           U24  icosidodecahedron
+ti           U25  truncated icosahedron
+tid          U26  truncated dodecahedron
+srid         U27  rhombicosidodecahedron
+grid         U28  truncated icosidodecahedron
+snid         U29  snub dodecahedron
+sidtid       U30  small ditrigonal icosidodecahedron
+siid         U31  small icosicosidodecahedron
+seside       U32  small snub icosicosidodecahedron
+saddid       U33  small dodecicosidodecahedron
+sissid       U34  small stellated dodecahedron
+gad          U35  great dodecahedron
+did          U36  great dodecadodecahedron
+tigid        U37  truncated great dodecahedron
+raded        U38  rhombidodecadodecahedron
+sird         U39  small rhombidodecahedron
+siddid       U40  snub dodecadodecahedron
+ditdid       U41  ditrigonal dodecadodecahedron
+gidditdid    U42  great ditrigonal dodecicosidodecahedron
+sidditdid    U43  small ditrigonal dodecicosidodecahedron
+ided         U44  icosidodecadodecahedron
+idtid        U45  icositruncated dodecadodecahedron
+sided        U46  snub icosidodecadodecahedron
+gidtid       U47  great ditrigonal icosidodecahedron
+giid         U48  great icosicosidodecahedron
+seihid       U49  small icosihemidodecahedron
+siddy        U50  small dodecicosahedron
+sidhid       U51  small dodecahemidodecahedron
+gissid       U52  great stellated dodecahedron
+gike         U53  great icosahedron
+gid          U54  great icosidodecahedron
+tiggy        U55  great truncated icosahedron
+ri           U56  rhombicosahedron
+gosid        U57  great snub icosidodecahedron
+quitsissid   U58  small stellated truncated dodecahedron
+quitdid      U59  truncated dodecadodecahedron
+isdid        U60  inverted snub dodecadodecahedron
+gaddid       U61  great dodecicosidodecahedron
+sidhei       U62  small dodecahemicosahedron
+giddy        U63  great dodecicosahedron
+gisdid       U64  great snub dodecicosidodecahedron
+gidhei       U65  great dodecahemicosahedron
+quitgissid   U66  great stellated truncated dodecahedron
+qrid         U67  great rhombicosidodecahedron
+gaquatid     U68  great truncated icosidodecahedron
+gisid        U69  great inverted snub icosidodecahedron
+gidhid       U70  great dodecahemidodecahedron
+geihid       U71  great icosihemidodecahedron
+sirsid       U72  small retrosnub icosicosidodecahedron
+gird         U73  great rhombidodecahedron
+girsid       U74  great retrosnub icosidodecahedron
+gidrid       U75  great dirhombicosidodecahedron
+pip          U76  pentagonal prism
+pap          U77  pentagonal antiprism
+stip         U78  pentagrammic prism
+stap         U79  pentagrammic antiprism
+starp        U80  pentagrammic crossed antiprism
+
+sis          UC1   6 tetrahedra rotational
+dis          UC2   12 tetrahedra rotational
+snu          UC3   6 tetrahedra
+so           UC4   2 tetrahedra
+ki           UC5   5 tetrahedra
+e            UC6   10 tetrahedra
+risdoh       UC7   6 cubes rotational
+rah          UC8   3 cubes
+rhom         UC9   5 cubes
+dissit       UC10  4 octahedra rotational
+doso         UC11  8 octahedra rotational
+sno          UC12  4 octahedra
+addasi       UC13  20 octahedra rotational
+dasi         UC14  20 octahedra
+gissi        UC15  10 octahedra 1
+si           UC16  10 octahedra 2
+se           UC17  5 octahedra
+hirki        UC18  5 tetrahemihexahedra
+sapisseri    UC19  20 tetrahemihexahedra
+gadsid       UC26  12 pentagonal antiprisms rotational
+gassid       UC27  6 pentagonal antiprisms
+gidasid      UC28  12 pentagrammic crossed antiprisms rotational
+gissed       UC29  6 pentagrammic crossed antiprisms
+ro           UC30  4 triangular prisms
+dro          UC31  8 triangular prisms
+kri          UC32  10 triangular prisms
+dri          UC33  20 triangular prisms
+kred         UC34  6 pentagonal prisms
+dird         UC35  12 pentagonal prisms
+gikrid       UC36  6 pentagrammic prisms
+giddird      UC37  12 pentagrammic prisms
+griso        UC38  4 hexagonal prisms
+rosi         UC39  10 hexagonal prisms
+rassid       UC40  6 decagonal prisms
+grassid      UC41  6 decagrammic prisms
+gassic       UC42  3 square antiprisms
+gidsac       UC43  6 square antiprisms
+sassid       UC44  6 pentagrammic antiprisms
+sadsid       UC45  12 pentagrammic antiprisms
+siddo        UC46  2 icosahedra
+sne          UC47  5 icosahedra
+presipsido   UC48  2 great dodecahedra
+presipsi     UC49  5 great dodecahedra
+passipsido   UC50  2 small stellated dodecahedra
+passipsi     UC51  5 small stellated dodecahedra
+sirsido      UC52  2 great icosahedra
+sirsei       UC53  5 great icosahedra
+tisso        UC54  2 truncated tetrahedra
+taki         UC55  5 truncated tetrahedra
+te           UC56  10 truncated tetrahedra
+harie        UC57  5 truncated cubes
+quahri       UC58  5 stellated truncated hexahedra
+arie         UC59  5 cuboctahedra
+gari         UC60  5 cubohemioctahedra
+iddei        UC61  5 octahemioctahedra
+rasseri      UC62  5 rhombicuboctahedra
+rasher       UC63  5 small rhombihexahedra
+rahrie       UC64  5 small cubicuboctahedra
+raquahri     UC65  5 great cubicuboctahedra
+rasquahr     UC66  5 great rhombihexahedra
+rasquahpri   UC67  5 great rhombicuboctahedra
+disco        UC68  2 snub cubes
+dissid       UC69  2 snub dodecahedra
+giddasid     UC70  2 great snub icosidodecahedra
+gidsid       UC71  2 great inverted snub icosidodecahedra
+gidrissid    UC72  2 great retrosnub icosidodecahedra
+disdid       UC73  2 snub dodecadodecahedra
+idisdid      UC74  2 inverted snub dodecadodecahedra
+desided      UC75  2 snub icosidodecadodecahedra
+
+squippy      J1   square pyramid
+peppy        J2   pentagonal pyramid
+tricu        J3   triangular cupola
+squicu       J4   square cupola
+pecu         J5   pentagonal cupola
+pero         J6   pentagonal rotunda
+etripy       J7   elongated triangular pyramid
+esquippy     J8   elongated square pyramid
+epeppy       J9   elongated pentagonal pyramid
+gyesp        J10  gyroelongated square pyramid
+gyepip       J11  gyroelongated pentagonal pyramid
+tridpy       J12  triangular dipyramid
+pedpy        J13  pentagonal dipyramid
+etidpy       J14  elongated triangular dipyramid
+esquidpy     J15  elongated square dipyramid
+epedpy       J16  elongated pentagonal dipyramid
+gyesqidpy    J17  gyroelongated square dipyramid
+etcu         J18  elongated triangular cupola
+escu         J19  elongated square cupola
+epcu         J20  elongated pentagonal cupola
+epro         J21  elongated pentagonal rotunda
+gyetcu       J22  gyroelongated triangular cupola
+gyescu       J23  gyroelongated square cupola
+gyepcu       J24  gyroelongated pentagonal cupola
+gyepro       J25  gyroelongated pentagonal rotunda
+gybef        J26  gyrobifastigium
+tobcu        J27  triangular orthobicupola
+squobcu      J28  square orthobicupola
+squigybcu    J29  square gyrobicupola
+pobcu        J30  pentagonal orthobicupola
+pegybcu      J31  pentagonal gyrobicupola
+pocuro       J32  pentagonal orthocupolarotunda
+pegycuro     J33  pentagonal gyrocupolarotunda
+pobro        J34  pentagonal orthobirotunda
+etobcu       J35  elongated triangular orthobicupola
+etigybcu     J36  elongated triangular gyrobicupola
+esquigybcu   J37  elongated square gyrobicupola
+epobcu       J38  elongated pentagonal orthobicupola
+epigybcu     J39  elongated pentagonal gyrobicupola
+epocuro      J40  elongated pentagonal orthocupolarotunda
+epgycuro     J41  elongated pentagonal gyrocupolarotunda
+epobro       J42  elongated pentagonal orthobirotunda
+epgybro      J43  elongated pentagonal gyrobirotunda
+gyetibcu     J44  gyroelongated triangular bicupola
+gyesquibcu   J45  gyroelongated square bicupola
+gyepibcu     J46  gyroelongated pentagonal bicupola
+gyepcuro     J47  gyroelongated pentagonal cupolarotunda
+gyepabro     J48  gyroelongated pentagonal birotunda
+autip        J49  augmented triangular prism
+bautip       J50  biaugmented triangular prism
+tautip       J51  triaugmented triangular prism
+aupip        J52  augmented pentagonal prism
+baupip       J53  biaugmented pentagonal prism
+auhip        J54  augmented hexagonal prism
+pabauhip     J55  parabiaugmented hexagonal prism
+mabauhip     J56  metabiaugmented hexagonal prism
+tauhip       J57  triaugmented hexagonal prism
+aud          J58  augmented dodecahedron
+pabaud       J59  parabiaugmented dodecahedron
+mabaud       J60  metabiaugmented dodecahedron
+taud         J61  triaugmented dodecahedron
+mibdi        J62  metabidiminished icosahedron
+teddi        J63  tridiminished icosahedron
+auteddi      J64  augmented tridiminished icosahedron
+autut        J65  augmented truncated tetrahedron
+autic        J66  augmented truncated cube
+bautic       J67  biaugmented truncated cube
+autid        J68  augmented truncated dodecahedron
+pabautid     J69  parabiaugmented truncated dodecahedron
+mabautid     J70  metabiaugmented truncated dodecahedron
+tautid       J71  triaugmented truncated dodecahedron
+gyrid        J72  gyrate rhombicosidodecahedron
+pabgyrid     J73  parabigyrate rhombicosidodecahedron
+mabgyrid     J74  metabigyrate rhombicosidodecahedron
+tagyrid      J75  trigyrate rhombicosidodecahedron
+dirid        J76  diminished rhombicosidodecahedron
+pagydrid     J77  paragyrate diminished rhombicosidodecahedron
+magydrid     J78  metagyrate diminished rhombicosidodecahedron
+bagydrid     J79  bigyrate diminished rhombicosidodecahedron
+pabidrid     J80  parabidiminished rhombicosidodecahedron
+mabidrid     J81  metabidiminished rhombicosidodecahedron
+gybadrid     J82  gyrate bidiminished rhombicosidodecahedron
+tedrid       J83  tridiminished rhombicosidodecahedron
+snadow       J84  snub disphenoid
+snisquap     J85  snub square antiprism
+waco         J86  sphenocorona
+auwaco       J87  augmented sphenocorona
+wamco        J88  sphenomegacorona
+hawmco       J89  hebesphenomegacorona
+dawci        J90  disphenocingulum
+bilbiro      J91  bilunabirotunda
+thawro       J92  triangular hebesphenorotunda
+
+trip         pri3     triangular prism
+pip          pri5     pentagonal prism
+stip         pri5/2   pentagrammic prism
+hip          pri6     hexagonal prism
+hep          pri7     heptagonal prism
+ship         pri7/2   heptagrammic prism
+giship       pri7/3   heptagrammic prism
+op           pri8     octagonal prism
+stop         pri8/3   octagrammic prism
+ep           pri9     nonagonal prism
+step         pri9/2   nonagrammic prism
+gistep       pri9/4   nongrammic prism
+dip          pri10    decagonal prism
+stiddip      pri10/3  decagrammic prism
+
+squap        ant4     square antiprism
+pap          ant5     pentagonal antiprism
+stap         ant5/2   pentagrammic antiprism
+starp        ant5/3   pentagrammic crossed antiprism
+hap          ant6     hexagonal antiprism
+heap         ant7     heptagonal antiprism
+sthap        ant7/2   heptagrammic antiprism
+gisthap      ant7/3   heptagrammic antiprism
+gisthirp     ant7/4   heptagrammic crossed antiprism
+oap          ant8     octagonal antiprism
+stoap        ant8/3   octagrammic antiprism
+storp        ant8/5   octagrammic crossed antiprism
+eap          ant9     nonagonal antiprism
+steap        ant9/2   nonagonal antiprism
+gisteap      ant9/4   nonagonal antiprism
+gisterp      ant9/5   nonagonal crossed antiprism
+dap          ant10    decagonal antiprism
+stiddap      ant10/3  decagrammic antiprism)";
+
+const char *help_schwarz = R"(Schwarz triangles
+=================
+A Schwarz triangle, aligned with with the corresponding minimal symmetry
+group, can be specified as follows:
+
+schwarz_ followed by the three fractions separated by spaces or '_'. The
+fractions are in the form used in the Wythoff symbol. If a triangle has
+an angle of PIn/d, its fraction is d/n, e.g. the Mobius triangle for
+octahedral symmetry has angles PI/2, PI/3 and PI/4 and is given by
+schwarz_2_3_4, a spherical tetrahedron face has angles of 2PI/3 and is
+given by schwarz_3/2_3/2_3/2. Add 'p' to repeat the triangle to make a
+polyhedron, e.g. schwarz_5_3_2p.)";
+
+const char *help_expreval = R"(Expression Evaluation
+=====================
+Any program that accepts a floating point argument will also accept the
+argumant as a mathematical expression. This expression will be used to
+calculate a numeric value, that will then passed to the program.
+
+Several of the characters that can appear in an expression may be
+intercepted by the shell for its own use, and the expression will
+often need to be enclosed in quotes, e.g.
+
+   off_trans -T '1+sqrt(2)',0,0 cube
+
+Arithmetic operators, + - * / ^, may be used, and various functions,
+including: sqrt(), sin(), cos(), tan(), asin(), acos(), atan(), deg().
+The full list of functions is included further below.
+
+The following constants are defined: convenience square roots of the
+form rt2, rt3, rt5, etc, pi = 3.14159..., phi = (sqrt(5)+1)/2 = 1.61803...
+
+A limited set of variables, var0, var1, ...var9, may be used in
+expressions (default value 0.0). Assign a value to a variable with
+'=', and separate sub-expressions with ';'. The result of the last
+sub-expression is returned as the result of the whole expression.
+
+Examples:
+   Expresion                  Result
+   1                            1.0
+   1+1                          2.0
+   1+2*3                        7.0
+   (1+2)*3                      9.0
+   sin(30)                      0.5
+   deg(pi/3)                   60.0
+   sum(1;2;3)                   6.0
+   var0=2;var1=3;var0^var1      8.0
+
+
+The code that handles the expression evaluation is muParse, written
+by Ingo Berg: http://muparser.beltoforion.de/ . The following is from
+the muParser project documentation (with slight changes):
+
+Built-in functions
+The following table gives an overview of the functions supported by the
+default implementation. It lists the function names, the number of
+arguments and a brief description. Separate function arguments with ';'.
+
+   Name    Argc.  Explanation
+   sin     1      sine function (degrees)
+   cos     1      cosine function (degrees)
+   tan     1      tangens function (degrees)
+   asin    1      arcus sine function (degrees)
+   acos    1      arcus cosine function (degrees)
+   atan    1      arcus tangens function (degrees)
+   sinh    1      hyperbolic sine function
+   cosh    1      hyperbolic cosine
+   tanh    1      hyperbolic tangens function
+   asinh   1      hyperbolic arcus sine function
+   acosh   1      hyperbolic arcus tangens function
+   atanh   1      hyperbolic arcur tangens function
+   log2    1      logarithm to the base 2
+   log10   1      logarithm to the base 10
+   log     1      logarithm to the base 10
+   ln      1      logarithm to base e (2.71828...)
+   exp     1      e raised to the power of x
+   sqrt    1      square root of a value
+   sign    1      sign function -1 if x<0; 1 if x>0
+   rint    1      round to nearest integer
+   deg     1      convert from radians to degrees
+   rad     1      convert from degrees to radians
+   abs     1      absolute value
+   min     var.   min of all arguments
+   max     var.   max of all arguments
+   sum     var.   sum of all arguments
+   avg     var.   mean value of all arguments
+
+Built-in binary operators
+The following table lists the default binary operators supported by the
+parser.
+
+   Operator  Meaning                   Priority
+   =         assignment (*see below)   -1
+   &&        logical and                1
+   ||        logical or                 2
+   <=        less or equal              4
+   >=        greater or equal           4
+   !=        not equal                  4
+   ==        equal                      4
+   >         greater than               4
+   <         less than                  4
+   +         addition                   5
+   -         subtraction                5
+   *         multiplication             6
+   */        division                   6
+   ^         raise x to the power of y  7
+*The assignment operator is special since it changes one of its "
+arguments
+and can only by applied to variables.
+
+Other operators
+muParser has built in support for the if then else operator. It uses
+lazy evaluation in order to make sure only the necessary branch of the
+expression is evaluated.
+
+   Operator    Meaning                 Remarks
+   ?:          if then else operator   C++ style syntax)";
 
 #endif // HELP_H

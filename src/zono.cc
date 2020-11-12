@@ -28,16 +28,15 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
+#include <algorithm>
 #include <cctype>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
-
-#include <algorithm>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::string;
 using std::vector;
@@ -68,46 +67,44 @@ public:
   void usage();
 };
 
-// clang-format off
 void zo_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] [star_file] \n"
-"\n"
-"Make a zonohedron or add zones to a convex seed polyhdron. The zones are\n"
-"created from a star of vectors, which can be based on a polyhdron (input\n"
-"model and option -m) or initialised (option -P) to make a polar zonohedron.\n"
-"If input_file is not given the program reads from standard input\n"
-"\n"
-"Options\n"
-"%s"
-"  -m <mthd> method to create star from input, can be\n"
-"               v - centre to vertices are vectors (default)\n"
-"               a - all vertex to vertex are vectors\n"
-"               i - implicit edges (face sides) are vectors\n"
-"               e - explicit edges are vectors\n"
-"  -c <cent> centre of points for method v, C for centroid (default: 0,0,0)\n"
-"  -s        output the star (instead of the zonohedron)\n"
-"  -S <poly> seed model to add zones to, must be convex\n"
-"  -u        make vectors unit length\n"
-"  -C <col>  colour for new zone faces\n"
-"  -P <arg>  polar zonohedron from ordered star, arg can be an offset polygon\n"
-"            given as an integer or fraction (e.g. 5, 7/2) or 's' to use\n"
-"            star_file. Optionally, follow by a comma and an integer to\n"
-"            to make a spirallohedron with that spiral width (default:0, a\n"
-"            polar zonohedron). Any further comma separated parts are colour\n"
-"            maps to colour the faces.\n"
-"  -T <star> translation surface made from two ordered stars (argument star\n"
-"            and star_file) optionally followed by a comma and two characters\n"
-"            (or one to use for both) to indicate if the stars of vectors\n"
-"            are open, or close to form a loop: d-detect, c-force close,\n"
-"             o-leave open.\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"\n", prog_name(), help_ver_text);
+  fprintf(stdout, R"(
+Usage: %s [options] [star_file] 
+
+Make a zonohedron or add zones to a convex seed polyhdron. The zones are
+created from a star of vectors, which can be based on a polyhdron (input
+model and option -m) or initialised (option -P) to make a polar zonohedron.
+If input_file is not given the program reads from standard input
+
+Options
+%s
+  -m <mthd> method to create star from input, can be
+               v - centre to vertices are vectors (default)
+               a - all vertex to vertex are vectors
+               i - implicit edges (face sides) are vectors
+               e - explicit edges are vectors
+  -c <cent> centre of points for method v, C for centroid (default: 0,0,0)
+  -s        output the star (instead of the zonohedron)
+  -S <poly> seed model to add zones to, must be convex
+  -u        make vectors unit length
+  -C <col>  colour for new zone faces
+  -P <arg>  polar zonohedron from ordered star, arg can be an offset polygon
+            given as an integer or fraction (e.g. 5, 7/2) or 's' to use
+            star_file. Optionally, follow by a comma and an integer to
+            to make a spirallohedron with that spiral width (default:0, a
+            polar zonohedron). Any further comma separated parts are colour
+            maps to colour the faces.
+  -T <star> translation surface made from two ordered stars (argument star
+            and star_file) optionally followed by a comma and two characters
+            (or one to use for both) to indicate if the stars of vectors
+            are open, or close to form a loop: d-detect, c-force close,
+             o-leave open.
+  -o <file> write output to file (default: write to standard output)
+
+)",
+          prog_name(), help_ver_text);
 }
-// clang-format on
 
 void zo_opts::process_command_line(int argc, char **argv)
 {

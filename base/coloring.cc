@@ -26,6 +26,14 @@
  * \brief classes to color all elements of a type.
  */
 
+#include "coloring.h"
+#include "boundbox.h"
+#include "geometryinfo.h"
+#include "mathutils.h"
+#include "private_prop_col.h"
+#include "random.h"
+#include "utils.h"
+
 #include <algorithm>
 #include <climits>
 #include <cstring>
@@ -35,14 +43,6 @@
 #include <set>
 #include <string>
 #include <vector>
-
-#include "boundbox.h"
-#include "coloring.h"
-#include "geometryinfo.h"
-#include "mathutils.h"
-#include "private_prop_col.h"
-#include "random.h"
-#include "utils.h"
 
 using std::map;
 using std::set;

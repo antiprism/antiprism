@@ -28,16 +28,15 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
 #include <cctype>
 #include <cfloat>
 #include <cstdio>
 #include <cstdlib>
-
 #include <set>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::map;
 using std::pair;
@@ -112,6 +111,7 @@ Coloring Options (run 'off_util -H color' for help on color formats)
   -m <maps> color maps for all elements to be tried in turn (default: rng)
   -n <maps> color maps for axes (A=1: calculated, A=2: map_red:blue:yellow)
   -A <opt>  color axes by nfold=1, order=2 (default: 1)
+
 )",
           prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
           ::epsilon);

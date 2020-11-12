@@ -28,6 +28,8 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
 #include <cctype>
 #include <cmath>
 #include <cstdlib>
@@ -35,8 +37,6 @@
 #include <ctime>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::string;
 using std::vector;
@@ -96,7 +96,6 @@ Options
           it_ctrl.get_status_check_and_report_iters(),
           it_ctrl.get_status_check_only_iters());
 }
-// clang-format on
 
 void rep_opts::process_command_line(int argc, char **argv)
 {

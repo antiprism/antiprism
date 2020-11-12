@@ -30,6 +30,7 @@
 #define VEC_UTILS_H
 
 #include "vec3d.h"
+
 #include <vector>
 
 namespace anti {

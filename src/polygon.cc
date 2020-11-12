@@ -28,15 +28,14 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
-
 #include <map>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::map;
 using std::string;
@@ -57,74 +56,72 @@ public:
   void usage();
 };
 
-// clang-format off
 void pg_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] type num_sides\n"
-"\n"
-"Make polyhedra based on polygons. The polyhedron type and subtype may be\n"
-"given by (partial) name or number\n"
-"   1. prism (angle: polygons twist, forming an antiprism)\n"
-"        subtypes: 1. antiprism, from triangulating side faces\n"
-"                  2. trapezohedron, with this antiprism-ised belt\n"
-"                  3. crown (-A integer to specify a second polygon step)\n"
-"   2. antiprism (angle: polygons twist)\n"
-"        subtypes: 1. trapezohedron, with this antiprism belt\n"
-"                  2. antihermaphrodite, with this antiprism base\n"
-"                  3. scalenohedron (-L for apex height)\n"
-"                  4. subdivided_scalenohedron (-L for apex height)\n"
-"                  5. crown (-A integer to specify a second polygon step)\n"
-"   3. pyramid (angle: base separates, polygons twist to antihermaphrodite)\n"
-"        subtypes: 1. antihermaphrodite, with this antiprism base\n"
-"                  2. elongated (-L for prism height)\n"
-"                  3. gyroelongated (-L for antiprism height)\n"
-"   4. dipyramid (angle: base separates, polygons twist to trapezohedron)\n"
-"        subtypes: 1. trapezohedron, with this pyramid apex\n"
-"                  2. elongated (-L for prism height)\n"
-"                  3. gyroelongated (-L for antiprism height)\n"
-"                  4. dipyramid_scalenohedron (-R for alternate vertex radius)\n"
-"   5. cupola\n"
-"        subtypes: 1. elongated (-L for prism height)\n"
-"                  2. gyroelongated (-L for antiprism height)\n"
-"                  3. cupoloid\n"
-"   6. orthobicupola\n"
-"        subtypes: 1. elongated (-L for prism height)\n"
-"                  2. gyroelongated (-L for antiprism height)\n"
-"   7. gyrobicupola\n"
-"        subtypes: 1. elongated (-L for prism height)\n"
-"                  2. gyroelongated (-L for antiprism height)\n"
-"   8. snub-antiprism\n"
-"        subtypes: 1. inverted, triangle band inverted\n"
-"   9. dihedron\n"
-"        subtypes: 1. polygon\n"
-"  10. crown polyhedron (either -A integer to specify a second polygon step,\n"
-"                            or -a angle to specify a twist\n"
-"\n"
-"num_sides is a number (N) optionally followed by / and a second\n"
-"number (N/D). N is the number of vertices spaced equally on a\n"
-"circle, and each vertex is joined to the Dth (default: 1) vertex\n"
-"moving around the circle.\n"
-"\n"
-"Options\n"
-"%s"
-"  -s <subt> a number or name (see type list above) indicting a subtype\n"
-"            or modification of a polyhedron\n"
-"  -e <len>  length of polygon edges (default: 1)\n"
-"  -E <len>  length of non-polygon edges (default: calculate from -l)\n"
-"  -r <rad>  circumradius of polygon (default: calculate from -e)\n"
-"  -R <rad>  a second radius value\n"
-"  -l <hgt>  height of upper vertices above base polygon\n"
-"            (default: circumradius of polygon)\n"
-"  -L <hgt>  a second height or length value\n"
-"  -a <ang>  twist angle (degrees)\n"
-"  -A <ang>  a second twist angle (degrees)\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"\n", prog_name(), help_ver_text);
+  fprintf(stdout, R"(
+Usage: %s [options] type num_sides
+
+Make polyhedra based on polygons. The polyhedron type and subtype may be
+given by (partial) name or number
+   1. prism (angle: polygons twist, forming an antiprism)
+        subtypes: 1. antiprism, from triangulating side faces
+                  2. trapezohedron, with this antiprism-ised belt
+                  3. crown (-A integer to specify a second polygon step)
+   2. antiprism (angle: polygons twist)
+        subtypes: 1. trapezohedron, with this antiprism belt
+                  2. antihermaphrodite, with this antiprism base
+                  3. scalenohedron (-L for apex height)
+                  4. subdivided_scalenohedron (-L for apex height)
+                  5. crown (-A integer to specify a second polygon step)
+   3. pyramid (angle: base separates, polygons twist to antihermaphrodite)
+        subtypes: 1. antihermaphrodite, with this antiprism base
+                  2. elongated (-L for prism height)
+                  3. gyroelongated (-L for antiprism height)
+   4. dipyramid (angle: base separates, polygons twist to trapezohedron)
+        subtypes: 1. trapezohedron, with this pyramid apex
+                  2. elongated (-L for prism height)
+                  3. gyroelongated (-L for antiprism height)
+                  4. dipyramid_scalenohedron (-R for alternate vertex radius)
+   5. cupola
+        subtypes: 1. elongated (-L for prism height)
+                  2. gyroelongated (-L for antiprism height)
+                  3. cupoloid
+   6. orthobicupola
+        subtypes: 1. elongated (-L for prism height)
+                  2. gyroelongated (-L for antiprism height)
+   7. gyrobicupola
+        subtypes: 1. elongated (-L for prism height)
+                  2. gyroelongated (-L for antiprism height)
+   8. snub-antiprism
+        subtypes: 1. inverted, triangle band inverted
+   9. dihedron
+        subtypes: 1. polygon
+  10. crown polyhedron (either -A integer to specify a second polygon step,
+                            or -a angle to specify a twist
+
+num_sides is a number (N) optionally followed by / and a second
+number (N/D). N is the number of vertices spaced equally on a
+circle, and each vertex is joined to the Dth (default: 1) vertex
+moving around the circle.
+
+Options
+%s
+  -s <subt> a number or name (see type list above) indicting a subtype
+            or modification of a polyhedron
+  -e <len>  length of polygon edges (default: 1)
+  -E <len>  length of non-polygon edges (default: calculate from -l)
+  -r <rad>  circumradius of polygon (default: calculate from -e)
+  -R <rad>  a second radius value
+  -l <hgt>  height of upper vertices above base polygon
+            (default: circumradius of polygon)
+  -L <hgt>  a second height or length value
+  -a <ang>  twist angle (degrees)
+  -A <ang>  a second twist angle (degrees)
+  -o <file> write output to file (default: write to standard output)
+
+)",
+          prog_name(), help_ver_text);
 }
-// clang-format on
 
 void pg_opts::process_command_line(int argc, char **argv)
 {

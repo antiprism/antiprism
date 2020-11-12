@@ -28,16 +28,15 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
+#include <algorithm>
 #include <cctype>
 #include <cfloat>
 #include <cstdio>
 #include <cstdlib>
-
-#include <algorithm>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::string;
 using std::swap;
@@ -182,6 +181,7 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                keyword m1: red,blue,yellow,darkgreen
                   note: position 4 color is for faces added by convex hull
                keyword m2: approximating colors in the symmetrohedra pdf file
+
 )",
           prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
           ::epsilon);

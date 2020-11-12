@@ -31,11 +31,11 @@
 #ifndef PRIVATE_MISC_H
 #define PRIVATE_MISC_H
 
+#include "geometry.h"
+
 #include <map>
 #include <string>
 #include <vector>
-
-#include "geometry.h"
 
 namespace anti {
 

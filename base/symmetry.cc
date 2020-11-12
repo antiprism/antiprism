@@ -26,16 +26,16 @@
  *\brief symmetry handling
  */
 
+#include "symmetry.h"
+#include "geometryinfo.h"
+#include "mathutils.h"
+#include "utils.h"
+
 #include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <map>
 #include <set>
-
-#include "geometryinfo.h"
-#include "mathutils.h"
-#include "symmetry.h"
-#include "utils.h"
 
 using std::map;
 using std::pair;

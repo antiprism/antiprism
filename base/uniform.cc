@@ -114,18 +114,16 @@ U69   great inverted snub icosidodecahedron
 U74   great retrosnub icosidodecahedron
 */
 
+#include "private_std_polys.h"
+
+#include <cctype>
 #include <cfloat>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
-
-#include <cctype>
-#include <unistd.h>
-
 #include <string>
+#include <unistd.h>
 #include <vector>
-
-#include "private_std_polys.h"
 
 using std::string;
 using std::vector;

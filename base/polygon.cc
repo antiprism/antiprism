@@ -26,15 +26,15 @@
    \brief Generate polyhedra based on polygons.
 */
 
-#include <algorithm>
-#include <cfloat>
-#include <cstdlib>
-#include <vector>
-
 #include "polygon.h"
 #include "private_std_polys.h"
 #include "symmetry.h"
 #include "utils.h"
+
+#include <algorithm>
+#include <cfloat>
+#include <cstdlib>
+#include <vector>
 
 using std::vector;
 

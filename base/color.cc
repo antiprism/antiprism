@@ -31,6 +31,7 @@
 #include "color.h"
 #include "private_named_cols.h"
 #include "utils.h"
+
 #include <cstring>
 #include <string>
 #include <vector>

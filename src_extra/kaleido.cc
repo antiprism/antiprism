@@ -59,12 +59,12 @@
  *****************************************************************************
  */
 
+#include "../base/antiprism.h"
+
 #include <cerrno>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
-
-#include "../base/antiprism.h"
 
 using std::set;
 using std::swap;
@@ -562,6 +562,7 @@ Precision options
   -d <dgts> number of significant digits (default %d) or if negative
             then the number of digits after the decimal point
   -o <file> write output to file (default: write to standard output)
+
 )",
           prog_name(), help_ver_text, DEF_SIG_DGTS);
 }

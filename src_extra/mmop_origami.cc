@@ -32,6 +32,7 @@
 */
 
 #include "../base/antiprism.h"
+
 #include <cctype>
 #include <cmath>
 #include <cstdlib>
@@ -97,44 +98,42 @@ public:
   void usage();
 };
 
-// clang-format off
 void mmop_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] [input_file]\n"
-"\n"
-"Read a file in OFF format containing an oriented polyhedron, and try to\n"
-"convert to a multimodular origami polyhedron form with unit-edged polygons.\n"
-"The form is described in Multimodular Origami Polyhedra: Archimedeans,\n"
-"Buckyballs and Duality by Rona Gurkewitz, Bennett Arnstein\n"
-"http://store.doverpublications.com/0486423174.html\n"
-"If input_file is not given the program reads from standard input.\n"
-"\n"
-"Options\n"
-"%s"
-"  -n <itrs> number of iterations (default 10000)\n"
-"  -s <perc> percentage to adjust corrections on iteration (default: 100)\n"
-"  -t <val>  truncate polygon edge to this length (default: no truncation\n"
-"  -k        keep orientation, affects face centre offset direction (default:\n"
-"            set positive orientation)\n"
-"  -p <ht>   set initial height of face centres (default: -0.5)\n"
-"  -V        colour units with base model vertex colour\n"
-"  -m <maps> a comma separated list of colour maps used to transform colour\n"
-"            indexes (default: rand), a part consisting of letters from\n"
-"            v, e, f, selects the element types to apply the map list to\n"
-"            (default 'vef'). The 'compound' map should give useful results.\n"
-"  -l <lim>  minimum change of distance/width_of_model to\n"
-"            terminate, as negative exponent (default: %d giving %.0e)\n"
-"  -z <n>    status checking and reporting every n iterations, -1 for no\n"
-"            status (default: 1000)\n"
-"  -q        quiet, do not print status messages\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"\n", prog_name(), help_ver_text,
-   it_params.sig_digits, it_params.get_test_val() );
+  fprintf(stdout, R"(
+Usage: %s [options] [input_file]
+
+Read a file in OFF format containing an oriented polyhedron, and try to
+convert to a multimodular origami polyhedron form with unit-edged polygons.
+The form is described in Multimodular Origami Polyhedra: Archimedeans,
+Buckyballs and Duality by Rona Gurkewitz, Bennett Arnstein
+http://store.doverpublications.com/0486423174.html
+If input_file is not given the program reads from standard input.
+
+Options
+%s
+  -n <itrs> number of iterations (default 10000)
+  -s <perc> percentage to adjust corrections on iteration (default: 100)
+  -t <val>  truncate polygon edge to this length (default: no truncation
+  -k        keep orientation, affects face centre offset direction (default:
+            set positive orientation)
+  -p <ht>   set initial height of face centres (default: -0.5)
+  -V        colour units with base model vertex colour
+  -m <maps> a comma separated list of colour maps used to transform colour
+            indexes (default: rand), a part consisting of letters from
+            v, e, f, selects the element types to apply the map list to
+            (default 'vef'). The 'compound' map should give useful results.
+  -l <lim>  minimum change of distance/width_of_model to
+            terminate, as negative exponent (default: %d giving %.0e)
+  -z <n>    status checking and reporting every n iterations, -1 for no
+            status (default: 1000)
+  -q        quiet, do not print status messages
+  -o <file> write output to file (default: write to standard output)
+
+)",
+          prog_name(), help_ver_text, it_params.sig_digits,
+          it_params.get_test_val());
 }
-// clang-format on
 
 void mmop_opts::process_command_line(int argc, char **argv)
 {

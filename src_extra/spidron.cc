@@ -28,15 +28,14 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
-
-#include <algorithm>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::map;
 using std::string;
@@ -64,29 +63,27 @@ public:
   void usage();
 };
 
-// clang-format off
 void spid_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] [input_file]\n"
-"\n"
-"Read a file in OFF format and convert to model built from spidron units.\n"
-"If input_file is not given the program reads from standard input.\n"
-"\n"
-"Options\n"
-"%s"
-"  -l <len>  unit length, half the number of triangles from edge to centre\n"
-"  -t <type> folding type, 1 - spidronmyd (default)\n"
-"  -a <ang>  angle of first triangle (default: 30)\n"
-"  -b <ang>  angle of second triangle (default: two times angle of option -a)\n"
-"  -p <pat>  folding pattern, a series of 0's and 1's, to old in or out\n"
-"            (default: 01)\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"\n", prog_name(), help_ver_text);
+  fprintf(stdout, R"(
+Usage: %s [options] [input_file]
+
+Read a file in OFF format and convert to model built from spidron units.
+If input_file is not given the program reads from standard input.
+
+Options
+%s
+  -l <len>  unit length, half the number of triangles from edge to centre
+  -t <type> folding type, 1 - spidronmyd (default)
+  -a <ang>  angle of first triangle (default: 30)
+  -b <ang>  angle of second triangle (default: two times angle of option -a)
+  -p <pat>  folding pattern, a series of 0's and 1's, to old in or out
+            (default: 01)
+  -o <file> write output to file (default: write to standard output)
+
+)",
+          prog_name(), help_ver_text);
 }
-// clang-format on
 
 void spid_opts::process_command_line(int argc, char **argv)
 {

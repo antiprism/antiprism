@@ -29,18 +29,18 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "coloring.h"
+#include "geometry.h"
+#include "geometryinfo.h"
+#include "geometryutils.h"
+#include "mathutils.h"
+
 #include <algorithm>
 #include <cstring>
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
-
-#include "coloring.h"
-#include "geometry.h"
-#include "geometryinfo.h"
-#include "geometryutils.h"
-#include "mathutils.h"
 
 using std::map;
 using std::set;

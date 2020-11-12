@@ -27,6 +27,7 @@
 */
 
 #include "../base/antiprism.h"
+
 #include <cctype>
 #include <cmath>
 #include <cstring>
@@ -60,43 +61,41 @@ public:
   void usage();
 };
 
-// clang-format off
 void o2p_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] input_files\n"
-"\n"
-"Convert files in OFF format to POV format for display in POV-ray. If\n"
-"input_files are not given the program reads from standard input.\n"
-"\n"
-"Options\n"
-"%s"
-"%s"
-"  -O <type> output type, can be: 'a' all in one POV file (default),\n"
-"            's' separate files, 'o' objects only, 't' template only\n"
-"  -i <fils> include files (separated by commas) for every POV geometry\n"
-"  -j <fils> include files (separated by commas) for the POV scene file\n"
-"  -J <fils> include files (separated by commas) containing additional POV\n"
-"            objects for the POV scene file\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"  Scene options\n"
-"%s"
-"  -P <pers> narrow the angle of perspective (range 0-100,\n"
-"            default: 2, recommend 4 for stereo option -S 1)\n"
-"  -W        use lighting with shadows"
-"  -S <type> produce stereo output, type is 0 (default) mono, 1 stereo\n"
-"            with one image file, 2 stereo with two image files (use\n"
-"            the POV-Ray +KFF2 option for output)\n"
-"\n"
-"  Precision options\n"
-"%s"
-"\n"
-"\n", prog_name(), help_ver_text, help_view_text,
-      help_scene_text, help_prec_text);
+  fprintf(stdout, R"(
+Usage: %s [options] input_files
+
+Convert files in OFF format to POV format for display in POV-ray. If
+input_files are not given the program reads from standard input.
+
+Options
+%s
+%s
+  -O <type> output type, can be: 'a' all in one POV file (default),
+            's' separate files, 'o' objects only, 't' template only
+  -i <fils> include files (separated by commas) for every POV geometry
+  -j <fils> include files (separated by commas) for the POV scene file
+  -J <fils> include files (separated by commas) containing additional POV
+            objects for the POV scene file
+  -o <file> write output to file (default: write to standard output)
+
+  Scene options
+%s
+  -P <pers> narrow the angle of perspective (range 0-100,
+            default: 2, recommend 4 for stereo option -S 1)
+  -W        use lighting with shado
+  -S <type> produce stereo output, type is 0 (default) mono, 1 stereo
+            with one image file, 2 stereo with two image files (use
+            the POV-Ray +KFF2 option for output)
+
+  Precision options
+%s
+
+)",
+          prog_name(), help_ver_text, help_view_text, help_scene_text,
+          help_prec_text);
 }
-// clang-format on
 
 void o2p_opts::process_command_line(int argc, char **argv)
 {

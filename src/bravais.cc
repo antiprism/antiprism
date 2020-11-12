@@ -28,19 +28,17 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+#include "lattice_grid.h"
+
+#include <algorithm>
+#include <cctype>
+#include <climits>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
-
-#include <cctype>
-#include <climits>
-
-#include <algorithm>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
-#include "lattice_grid.h"
 
 using std::string;
 using std::swap;
@@ -336,6 +334,7 @@ Listing Options
                f - full report, v - values only
   -S <opt>  list every possible strut value (to standard output)
                f - full report, v - values only
+
 )",
           prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
           ::epsilon);

@@ -29,14 +29,14 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 
-#include <map>
-#include <string>
-#include <vector>
-
 #include "elemprops.h"
 #include "status.h"
 #include "trans3d.h"
 #include "vec_utils.h"
+
+#include <map>
+#include <string>
+#include <vector>
 
 namespace anti {
 

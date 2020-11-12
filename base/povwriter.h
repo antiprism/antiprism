@@ -31,13 +31,12 @@
 #ifndef POVWRITER_H
 #define POVWRITER_H
 
-#include <cstdio>
-
-#include <string>
-#include <vector>
-
 #include "scene.h"
 #include "utils.h"
+
+#include <cstdio>
+#include <string>
+#include <vector>
 
 namespace anti {
 

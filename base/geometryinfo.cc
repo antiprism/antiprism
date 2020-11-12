@@ -30,6 +30,7 @@
 #include "geometryutils.h"
 #include "mathutils.h"
 #include "private_misc.h"
+
 #include <algorithm>
 #include <cstring>
 #include <map>

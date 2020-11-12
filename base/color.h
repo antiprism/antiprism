@@ -29,10 +29,10 @@
 #ifndef COLOR_H
 #define COLOR_H
 
-#include <vector>
-
 #include "vec3d.h"
 #include "vec4d.h"
+
+#include <vector>
 
 namespace anti {
 

@@ -28,17 +28,16 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
-
 #include <map>
 #include <set>
 #include <string>
 #include <utility>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::map;
 using std::pair;
@@ -434,59 +433,57 @@ public:
   void usage();
 };
 
-// clang-format off
 void align_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] [input_file]\n"
-"\n"
-"Read a base file and brick file in OFF format, and use vertices or faces\n"
-"to position the brick with respect to the base. The brick may be repeated\n"
-"symmetrically and/or merged with the base. If input_file is not given the\n"
-"program reads from standard input.\n"
-"\n"
-"Options\n"
-"%s"
-"  -v <arg>  align by vertices, arg is a comma separated list of a brick\n"
-"            geometry (if empty use base) optionally followed by 'r' (reverse\n"
-"            brick orientation) followed by two, four or six points given as\n"
-"            the vertex index number in the OFF files (starting at 0). The base\n"
-"            points are all given first and then the brick points.\n"
-"            Formats:\n"
-"               u1,v1 - point alignment\n"
-"                  translation u1-v1 (so v1 of brick moves to u1 of base)\n"
-"               u1,u2,v1,v2 - line alignment\n"
-"                  point alignment as above followed by rotation through\n"
-"                  u1 perpendicular to u1u2 and v1v2 to align u1u2 and v1v2.\n"
-"               u1,u2,u3,v1,v2,v3 - face alignment\n"
-"                  line alignment as above followed by a rotation\n"
-"                  around u1,u2 so v3 lies in plane of u1u2u3.\n"
-"  -f <arg>  align by face index, arg is a comma separated list of a brick\n"
-"            geometry (if empty use base) followed by up to three numbers\n"
-"            separated by commas: base face index, brick face index\n"
-"            (default: 0), polygon alignment selection number (default: 0)\n"
-"  -F <arg>  align and combine polyhedra by face index, arg is a comma\n"
-"            separated list of a brick geometry (if empty use base) followed\n"
-"            by up to three numbers: base face index, brick face index\n"
-"            (default: 0), polygon alignment selection number (default: 0).\n"
-"            Brick is after base, bond vertices are merged, bond faces are\n"
-"            removed\n"
-"  -M <val>  merge parts, select and order parts in the output, val may be:\n"
-"               default (0):    any combined part (-F) followed by any brick\n"
-"                               parts (-v, -f)\n"
-"               brick (1):      brick parts only\n"
-"               base_brick (2): base part, possibly combined (-F). followed\n"
-"                               any brick parts (-v, -f)\n"
-"               brick_base (3): brick parts (-v, -f), followed by base part\n"
-"  -y <sub>  repeat bricks according to symmetry of base. sub is symmetry\n"
-"            subgroup (Schoenflies notation) or 'full' optionally followed\n"
-"            by a ',' and conjugation type (integer)\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"\n", prog_name(), help_ver_text);
+  fprintf(stdout, R"(
+Usage: %s [options] [input_file]
+
+Read a base file and brick file in OFF format, and use vertices or faces
+to position the brick with respect to the base. The brick may be repeated
+symmetrically and/or merged with the base. If input_file is not given the
+program reads from standard input.
+
+Options
+%s
+  -v <arg>  align by vertices, arg is a comma separated list of a brick
+            geometry (if empty use base) optionally followed by 'r' (reverse
+            brick orientation) followed by two, four or six points given as
+            the vertex index number in the OFF files (starting at 0). The base
+            points are all given first and then the brick points.
+            Formats:
+               u1,v1 - point alignment
+                  translation u1-v1 (so v1 of brick moves to u1 of base)
+               u1,u2,v1,v2 - line alignment
+                  point alignment as above followed by rotation through
+                  u1 perpendicular to u1u2 and v1v2 to align u1u2 and v1v2.
+               u1,u2,u3,v1,v2,v3 - face alignment
+                  line alignment as above followed by a rotation
+                  around u1,u2 so v3 lies in plane of u1u2u3.
+  -f <arg>  align by face index, arg is a comma separated list of a brick
+            geometry (if empty use base) followed by up to three numbers
+            separated by commas: base face index, brick face index
+            (default: 0), polygon alignment selection number (default: 0)
+  -F <arg>  align and combine polyhedra by face index, arg is a comma
+            separated list of a brick geometry (if empty use base) followed
+            by up to three numbers: base face index, brick face index
+            (default: 0), polygon alignment selection number (default: 0).
+            Brick is after base, bond vertices are merged, bond faces are
+            removed
+  -M <val>  merge parts, select and order parts in the output, val may be:
+               default (0):    any combined part (-F) followed by any brick
+                               parts (-v, -f)
+               brick (1):      brick parts only
+               base_brick (2): base part, possibly combined (-F). followed
+                               any brick parts (-v, -f)
+               brick_base (3): brick parts (-v, -f), followed by base part
+  -y <sub>  repeat bricks according to symmetry of base. sub is symmetry
+            subgroup (Schoenflies notation) or 'full' optionally followed
+            by a ',' and conjugation type (integer)
+  -o <file> write output to file (default: write to standard output)
+
+)",
+          prog_name(), help_ver_text);
 }
-// clang-format on
 
 void align_opts::process_command_line(int argc, char **argv)
 {

@@ -31,19 +31,17 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
+#include <cctype>
 #include <climits>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
-
-#include <cctype>
-
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::map;
 using std::pair;
@@ -745,6 +743,7 @@ Elongated Triangular   3,3,3,4,4   NonWythoffian Prismatic Triangular   none
 
 
 Substitutions used by George Hart algorithms
+
 )");
 
   int num_subst = sizeof(resolve_item_list) / sizeof(resolve_item_list[0]);
@@ -838,6 +837,7 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                            white,gray,black
                keyword m2: red,blue,green,yellow,brown,magenta,purple,grue,
                            gray,orange (from George Hart's original applet)
+
 )",
           prog_name(), help_ver_text, it_ctrl.get_max_iters(),
           it_ctrl.get_sig_digits(), it_ctrl.get_test_val(),

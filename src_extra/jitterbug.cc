@@ -28,6 +28,8 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -35,9 +37,6 @@
 #include <map>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
-#include "../base/vec_utils.h"
 
 using std::string;
 using std::vector;
@@ -70,42 +69,40 @@ public:
   void usage();
 };
 
-// clang-format off
 void jb_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] [cycle_stage]\n"
-"\n"
-"Create a stage of the jitterbug transformation in OFF format. The\n"
-"cycles run from 0.0 to 1.0. The fractional part of cycle_stage\n"
-"is tied to a stage in a full rotation jitterbug. This stage is\n"
-"measured by the distance travelled by a point moving around a square\n"
-"which halves a cube of edge 0.25, and which determines the jitterbug\n"
-"shape.\n"
-"\n"
-"Options\n"
-"%s"
-"  -f <fces> faces to include:"
-"              x - none\n"
-"              a - all\n"
-"              e - equilateral triangles (default)\n"
-"              o - other triangles\n"
-"  -c <cyc>  cycle type:\n"
-"              f - full rotation\n"
-"              o - alternating between left and_ang(cyc_val) right octahedron stages\n"
-"              r - rolling between left and right octahedron stages\n"
-"              i - alternating between left and right icosahedron stages\n"
-"  -l <size> lattice size, nummber of jitterbugs along an edge (default 1)\n"
-"  -r        allow lattice reversal by fixing connections between\n"
-"            jitterbug neighbours\n"
-"  -t        fix an opposing pair of triangles, stopping them from rotating\n"
-"  -T        rotate so equilateral triangle is on top (suports -t)\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"\n", prog_name(), help_ver_text);
+  fprintf(stdout, R"(
+Usage: %s [options] [cycle_stage]
+
+Create a stage of the jitterbug transformation in OFF format. The
+cycles run from 0.0 to 1.0. The fractional part of cycle_stage
+is tied to a stage in a full rotation jitterbug. This stage is
+measured by the distance travelled by a point moving around a square
+which halves a cube of edge 0.25, and which determines the jitterbug
+shape.
+
+Options
+%s
+  -f <fces> faces to includ
+              x - none
+              a - all
+              e - equilateral triangles (default)
+              o - other triangles
+  -c <cyc>  cycle type:
+              f - full rotation
+              o - alternating between left and right octahedron stages
+              r - rolling between left and right octahedron stages
+              i - alternating between left and right icosahedron stages
+  -l <size> lattice size, nummber of jitterbugs along an edge (default 1)
+  -r        allow lattice reversal by fixing connections between
+            jitterbug neighbours
+  -t        fix an opposing pair of triangles, stopping them from rotating
+  -T        rotate so equilateral triangle is on top (suports -t)
+  -o <file> write output to file (default: write to standard output)
+
+)",
+          prog_name(), help_ver_text);
 }
-// clang-format on
 
 void jb_opts::process_command_line(int argc, char **argv)
 {

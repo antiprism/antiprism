@@ -28,11 +28,11 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <vector>
-
+#include "vec_utils.h"
 #include "boundbox.h"
 #include "mathutils.h"
-#include "vec_utils.h"
+
+#include <vector>
 
 using std::vector;
 

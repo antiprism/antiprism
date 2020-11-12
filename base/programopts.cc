@@ -32,6 +32,7 @@
 
 #include "programopts.h"
 #include "utils.h"
+
 #include <cstring>
 #include <map>
 
@@ -42,7 +43,7 @@ namespace anti {
 
 const char *ProgramOpts::help_ver_text =
     "  -h,--help this help message (run 'off_util -H help' for general help)\n"
-    "  --version version information\n";
+    "  --version version information";
 
 const char *ProgramOpts::prog_name() const { return program_name.c_str(); }
 

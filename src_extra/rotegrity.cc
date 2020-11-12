@@ -28,14 +28,14 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
 #include <cctype>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::string;
 using std::vector;
@@ -93,52 +93,50 @@ public:
   void usage();
 };
 
-// clang-format off
 void rot_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] [input_file]\n"
-"\n"
-"Read a file in OFF format containing a roughly spherical polyhedron, or\n"
-"previously twisted model, and try to convert into a rotegrity. Units\n"
-"keep original edge colours. If input_file is not given the program reads\n"
-"from standard input.\n"
-"\n"
-"Options\n"
-"%s"
-"  -a <type> model type: rotegrity, nexorade, for nexorade followed\n"
-"            by an optional comma and strut length\n"
-"  -f <frac> fraction of length for end sections (default: 1/3)\n"
-"  -t        input model is already twisted (produced by this program or\n"
-"            'twist' program)\n"
-"  -M <mthd> method of conversion from base model - twist, double, joined,\n"
-"            or X (default: t)\n"
-"  -O <type> output type for units: full (face), rotegrity (3 short struts),\n"
-"            nexorade (long strut), Nexorade (long strut, direction vertices)\n"
-"            (default: full). Only 'full' output can \n"
-"            be used as input with option -t\n"
-"  -m <maps> a comma separated list of colour maps used to transform colour\n"
-"            indexes (default: rand), a part consisting of letters from\n"
-"            v, e, f, selects the element types to apply the map list to\n"
-"            (default 'vef').\n"
-"  -c <type> colouring type: edge (base model edges), symmetry, unit\n"
-"            (according to shape), none (default: edge)\n"
-"  -n <itrs> number of iterations (default 10000)\n"
-"  -s <perc> percentage to adjust corrections on iteration (default: %.0f)\n"
-"  -l <lim>  minimum change of vertex distance to terminate, as negative\n"
-"            exponent (default: %d giving %.0e)\n"
-"  -z <n>    status checking and reporting every n iterations, -1 for no\n"
-"            status (default: 1000)\n"
-"  -q        quiet, do not print status messages\n"
-"  -T        reproduce output of former 'twist' program (see Notes), -f is\n"
-"            twist factor, -O is output type, unused options silently ignored\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"\n", prog_name(), help_ver_text,
-   adjust_fact, it_params.sig_digits, it_params.get_test_val() );
+  fprintf(stdout, R"(
+Usage: %s [options] [input_file]
+
+Read a file in OFF format containing a roughly spherical polyhedron, or
+previously twisted model, and try to convert into a rotegrity. Units
+keep original edge colours. If input_file is not given the program reads
+from standard input.
+
+Options
+%s
+  -a <type> model type: rotegrity, nexorade, for nexorade followed
+            by an optional comma and strut length
+  -f <frac> fraction of length for end sections (default: 1/3)
+  -t        input model is already twisted (produced by this program or
+            'twist' program)
+  -M <mthd> method of conversion from base model - twist, double, joined,
+            or X (default: t)
+  -O <type> output type for units: full (face), rotegrity (3 short struts),
+            nexorade (long strut), Nexorade (long strut, direction vertices)
+            (default: full). Only 'full' output can 
+            be used as input with option -t
+  -m <maps> a comma separated list of colour maps used to transform colour
+            indexes (default: rand), a part consisting of letters from
+            v, e, f, selects the element types to apply the map list to
+            (default 'vef').
+  -c <type> colouring type: edge (base model edges), symmetry, unit
+            (according to shape), none (default: edge)
+  -n <itrs> number of iterations (default 10000)
+  -s <perc> percentage to adjust corrections on iteration (default: %.0f)
+  -l <lim>  minimum change of vertex distance to terminate, as negative
+            exponent (default: %d giving %.0e)
+  -z <n>    status checking and reporting every n iterations, -1 for no
+            status (default: 1000)
+  -q        quiet, do not print status messages
+  -T        reproduce output of former 'twist' program (see Notes), -f is
+            twist factor, -O is output type, unused options silently ignored
+  -o <file> write output to file (default: write to standard output)
+
+)",
+          prog_name(), help_ver_text, adjust_fact, it_params.sig_digits,
+          it_params.get_test_val());
 }
-// clang-format on
 
 void rot_opts::process_command_line(int argc, char **argv)
 {

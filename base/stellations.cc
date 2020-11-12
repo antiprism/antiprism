@@ -28,16 +28,15 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <cstdio>
-#include <cstdlib>
-
-#include <map>
-#include <string>
-#include <vector>
-
 #include "planar.h"
 #include "private_std_polys.h"
 #include "utils.h"
+
+#include <cstdio>
+#include <cstdlib>
+#include <map>
+#include <string>
+#include <vector>
 
 using std::map;
 using std::string;

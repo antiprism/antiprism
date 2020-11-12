@@ -26,13 +26,14 @@
    \brief antiview - command line OFF file viewer
 */
 
+#include "displaypoly_gl.h"
+#include "vw_glut.h"
+
+#include "../base/antiprism.h"
+
 #include <string>
 #include <unistd.h>
 #include <vector>
-
-#include "../base/antiprism.h"
-#include "displaypoly_gl.h"
-#include "vw_glut.h"
 
 using std::string;
 using std::vector;
@@ -49,67 +50,65 @@ public:
   void usage();
 };
 
-// clang-format off
 void vw_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] input_file\n"
-"\n"
-"View a file in OFF format. If input file isn't given read from\n"
-"standard input\n"
-"\n"
-"Options\n"
-"%s"
-"%s"
-"  -w <wdth> width of sphere containing points (default: calculated)\n"
-"  -I <dist> maximum distance from origin for viewable points\n"
-"            (default: ignored)\n"
-"  Scene options\n"
-"%s"
-"\n"
-"Viewing\n"
-"There are four main viewing control modes - rotation (default), drag,\n"
-"zoom, slice. Select a mode with the following keys, or right-click on\n"
-"the window and select from the menu.\n"
-"\n"
-"Click and drag on the window with the mouse to move the model, or use the\n"
-"arrow keys. The zoom and slice are controlled by forward and backward\n"
-"dragging, or the up and down arrow keys.\n"
-"\n"
-"Menu Items\n"
-"   r - rotate, turn the model about its centre\n"
-"   d - drag, drag the model around the screen\n"
-"   z - zoom, Zoom in or out\n"
-"   s - spin control, set or stop the model spinning\n"
-"   S - slice, slice into the model.\n"
-"   P - projection, toggle display between perspective and orthogonal\n"
-"   v - show/hide vertices, toggle display of vertex spheres\n"
-"   e - show/hide edges, toggle display of edge rods\n"
-"   f - show/hide faces, toggle display of faces\n"
-"   n - show/hide vertex numbers, toggle display of vertex number labels\n"
-"   N - show/hide face numbers, toggle display of face number labels\n"
-"   m - show/hide edge numbers, toggle display of edge number labels\n"
-"   M - toggle alternative number labels (planar face labels)\n"
-"   t - rotate through display of face transparency: model, 50%%, none\n"
-"   y - rotate through display of symmetry elements: axes; axes and\n"
-"       mirrors; axes, mirrors and rot-reflection planes; none\n"
-"   O - show/hide orientation, toggle colouring of the front side of \n"
-"       faces white and the back side black\n"
-"   r - reset, reset to the initial viewing options \n"
-"   Q - Quit\n"
-"\n"
-"Other Keys\n"
-"   J/j - increase/decrease vertex and edge size\n"
-"   K/k - increase/decrease vertex size\n"
-"   L/l - increase/decrease edge size\n"
-"   U/u - increase/decrease label text size\n"
-"   c - toggle label colours between light and dark\n"
-"   C - Invert label colours\n"
-"\n"
-"\n", prog_name(), help_ver_text, help_view_text, help_scene_text);
+  fprintf(stdout, R"(
+Usage: %s [options] input_file
+
+View a file in OFF format. If input file isn't given read from
+standard input
+
+Options
+%s
+%s
+  -w <wdth> width of sphere containing points (default: calculated)
+  -I <dist> maximum distance from origin for viewable points
+            (default: ignored)
+  Scene options
+%s
+
+Viewing
+There are four main viewing control modes - rotation (default), drag,
+zoom, slice. Select a mode with the following keys, or right-click on
+the window and select from the menu.
+
+Click and drag on the window with the mouse to move the model, or use the
+arrow keys. The zoom and slice are controlled by forward and backward
+dragging, or the up and down arrow keys.
+
+Menu Items
+   r - rotate, turn the model about its centre
+   d - drag, drag the model around the screen
+   z - zoom, Zoom in or out
+   s - spin control, set or stop the model spinning
+   S - slice, slice into the model.
+   P - projection, toggle display between perspective and orthogonal
+   v - show/hide vertices, toggle display of vertex spheres
+   e - show/hide edges, toggle display of edge rods
+   f - show/hide faces, toggle display of faces
+   n - show/hide vertex numbers, toggle display of vertex number labels
+   N - show/hide face numbers, toggle display of face number labels
+   m - show/hide edge numbers, toggle display of edge number labels
+   M - toggle alternative number labels (planar face labels)
+   t - rotate through display of face transparency: model, 50%%, none
+   y - rotate through display of symmetry elements: axes; axes and
+       mirrors; axes, mirrors and rot-reflection planes; none
+   O - show/hide orientation, toggle colouring of the front side of 
+       faces white and the back side black
+   r - reset, reset to the initial viewing options 
+   Q - Quit
+
+Other Keys
+   J/j - increase/decrease vertex and edge size
+   K/k - increase/decrease vertex size
+   L/l - increase/decrease edge size
+   U/u - increase/decrease label text size
+   c - toggle label colours between light and dark
+   C - Invert label colours
+
+)",
+          prog_name(), help_ver_text, help_view_text, help_scene_text);
 }
-// clang-format off
 
 void vw_opts::process_command_line(int argc, char **argv)
 {
@@ -152,18 +151,18 @@ Vec3d neg_z(Vec3d v)
 
 bool glutInitFltk(int *argc, char **argv)
 {
-  vector<char *> argv_fl;          // FLTK options and parameters
-  argv_fl.push_back(argv[0]);     // program name
-  vector<char *> argv_other;       // Non-FLTK options and parameters
-  argv_other.push_back(argv[0]);  // program name
+  vector<char *> argv_fl;        // FLTK options and parameters
+  argv_fl.push_back(argv[0]);    // program name
+  vector<char *> argv_other;     // Non-FLTK options and parameters
+  argv_other.push_back(argv[0]); // program name
 
   // Divide original argument list into FLTK and non-FLTK entries
   for (int i = 1; i < *argc; i++) {
     if (strcmp(argv[i], "-geometry") == 0 || strcmp(argv[i], "-display") == 0) {
       argv_fl.push_back(argv[i]);
-      ++i;  // option needs parameter, so advance i
+      ++i; // option needs parameter, so advance i
       if (i < *argc)
-         argv_fl.push_back(argv[i]);
+        argv_fl.push_back(argv[i]);
     }
     else if (strcmp(argv[i], "-iconic") == 0)
       argv_fl.push_back(argv[i]);
@@ -173,16 +172,16 @@ bool glutInitFltk(int *argc, char **argv)
 
   // Set up argument list for glutInit with FLTK options
   int argc_fl = argv_fl.size();
-  for(int i=0; i < argc_fl; i++)
+  for (int i = 0; i < argc_fl; i++)
     argv[i] = argv_fl[i];
 
   glutInit(&argc_fl, argv);
-  if(argc_fl > 1)               // not all aguments processed by FLTK
+  if (argc_fl > 1) // not all aguments processed by FLTK
     return false;
 
   // Set up argument list with FLTK options removed
   *argc = argv_other.size();
-  for(int i=0; i < *argc; i++)
+  for (int i = 0; i < *argc; i++)
     argv[i] = argv_other[i];
 
   return true;
@@ -202,9 +201,9 @@ int main(int argc, char *argv[])
   vw_opts opts;
 
 #if GLUT_TYPE == FOUND_FLTKGLUT
-  if(!glutInitFltk(&argc, argv))
-    opts.error( "invalid or missing FLTK Glut option parameter for "
-                "-geometry or -display");
+  if (!glutInitFltk(&argc, argv))
+    opts.error("invalid or missing FLTK Glut option parameter for "
+               "-geometry or -display");
 #else
   glutInit(&argc, argv);
 #endif

@@ -32,6 +32,8 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
 #include <cctype>
 #include <cfloat>
 #include <climits>
@@ -40,8 +42,6 @@
 #include <cstring>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::string;
 using std::vector;
@@ -183,6 +183,7 @@ Coloring Options (run 'off_util -H color' for help on color formats)
   -D <col>  dual edge color (default: unchanged)
   -U <col>  unit sphere color (default: white)
   -T <tran> base/dual transparency. range from 0 (invisible) to 255 (opaque)
+
 )",
           prog_name(), help_ver_text, it_ctrl.get_max_iters(),
           it_ctrl.get_max_iters(), it_ctrl.get_sig_digits(),

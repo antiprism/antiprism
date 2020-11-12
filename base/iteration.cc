@@ -126,10 +126,10 @@ Status IterationControl::set_sig_digits(int digits)
 int IterationControl::print(const char *fmt, ...) const
 {
   int ret = 0;
-  va_list args;
-  va_start(args, fmt);
-  ret = vfprintf(stream, fmt, args);
-  va_end(args);
+  va_list ap;
+  va_start(ap, fmt);
+  ret = vfprintf(stream, fmt, ap);
+  va_end(ap);
   return ret;
 }
 

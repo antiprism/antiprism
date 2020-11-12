@@ -28,6 +28,8 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
 #include <cctype>
 #include <cmath>
 #include <cstdlib>
@@ -35,8 +37,6 @@
 #include <numeric>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::set;
 using std::string;
@@ -119,6 +119,7 @@ Options
             followed by a comma and the number of iterations between
             termination checks (0 for report checks only) (default: %d,%d)
   -o <file> write output to file (default: write to standard output)
+
 )",
           prog_name(), help_ver_text, it_ctrl.get_max_iters(),
           it_ctrl.get_sig_digits(), it_ctrl.get_test_val(),

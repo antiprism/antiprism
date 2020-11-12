@@ -26,17 +26,16 @@
    \brief A colour map class
 */
 
+#include "coloring.h"
+#include "geometry.h"
+#include "private_named_cols.h"
+#include "random.h"
+#include "utils.h"
+
 #include <algorithm>
 #include <cctype>
 #include <cstring>
 #include <map>
-
-#include "coloring.h"
-#include "geometry.h"
-#include "random.h"
-#include "utils.h"
-
-#include "private_named_cols.h"
 
 using std::map;
 using std::string;

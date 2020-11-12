@@ -26,9 +26,9 @@
    \brief class to handle return status
 */
 
-#include <string>
-
 #include "status.h"
+
+#include <string>
 
 using std::string;
 

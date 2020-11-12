@@ -28,17 +28,15 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+#include "lattice_grid.h"
+
+#include <cctype>
 #include <climits>
 #include <cstdio>
 #include <cstdlib>
-
-#include <cctype>
-
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
-#include "lattice_grid.h"
 
 using std::string;
 using std::vector;
@@ -158,6 +156,7 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                key word: s,S color by symmetry using face normals
                key word: c,C color by symmetry using face normals (chiral)
   -T <tran> face transparency for color by symmetry. valid range from 0 to 255
+
 )",
           prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
           ::epsilon);

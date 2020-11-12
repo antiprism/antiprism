@@ -28,20 +28,19 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <cstdio>
-#include <cstdlib>
+#include "../base/antiprism.h"
 
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::map;
 using std::pair;
@@ -144,95 +143,93 @@ public:
   void usage();
 };
 
-// clang-format off
 void o_col_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] [input_file]\n"
-"\n"
-"Read a file in OFF format and add colours to it. If input_file is\n"
-"not given the program reads from standard input.\n"
-"\n"
-"A colour value can be a single integer (a colour index), a value in\n"
-"form 'R,G,B,A' (3 or 4 values 0.0-1.0, or 0-255) or hex 'xFFFFFF', a\n"
-"colour name from the X11 colour map, 'invisible' or 'none' (which sets\n"
-"without any colour information)\n"
-"\n"
-"Lowercase letters (except l) colour using index numbers and uppercase\n"
-"letters colour using colour values. Symmetric colourings are optionally\n"
-"followed, separated by commas, by a subsymmetry (Schoenflies notation)\n"
-"and a conjugation type (integer)\n"
-"\n"
-"Options\n"
-"%s"
-"  -f <col>  colour the faces according to:\n"
-"               a colour value - apply to all faces\n"
-"               u,U - unique colour\n"
-"               p,P - minimal proper colouring\n"
-"               s,S - symmetric colouring [,sub_group,conj_type] (see above)\n"
-"               n,N - colour by number of sides\n"
-"               a,A - colour by average internal angle (to nearest degree)\n"
-"               k,K - sets of faces connected by face edges\n"
-"               g,G - gradient on z-coordinate of normal\n"
-"               c,C - gradient on z-coordinate of centroid\n"
-"               L   - lighting effect by normal (see option -l)\n"
-"               l   - lighting effect by centroid (see option -l)\n"
-"               M   - use colour map to convert existing colour index numbers\n"
-"                     into to values\n"
-"  -E <type> colour by edge type, e - explicit edges, i - implicit edges\n"
-"            I - implicit edges which are not explicit edges (default: if -e\n"
-"            explicit and implicit, else explicit for mapping only)\n"
-"  -e <col>  colour the edges according to:\n"
-"               a colour value - apply to all edges\n"
-"               u,U - unique colour\n"
-"               p,P - minimal proper colouring\n"
-"               s,S - symmetric colouring [,sub_group,conj_type] (see above)\n"
-"               k,K - sets of edges connected by edges\n"
-"               F   - colour with average adjoining face colour\n"
-"               d,D - colour by edge direction\n"
-"               j,J - color by edge length [,minimum_difference (def: 1e-6)]\n"
-"               g,G - gradient on z-coordinate of edge direction\n"
-"               c,C - gradient on z-coordinate of centroid\n"
-"               L   - lighting effect (see option -l)\n"
-"               l   - lighting effect on edge directions (see option -l)\n"
-"               M   - use colour map to convert existing colour index numbers\n"
-"                     into to values\n"
-"  -v <col>  colour the vertices according to:\n"
-"               a colour value - apply to all vertices\n"
-"               u,U - unique colour\n"
-"               p,P - minimal proper colouring\n"
-"               s,S - symmetric colouring [,sub_group,conj_type] (see above)\n"
-"               n,N - colour by order of vertex\n"
-"               a,A - colour by avg internal ang of vert-fig (to nearest deg)\n"
-"               F   - colour with average adjoining face colour\n"
-"               E   - colour with average adjoining edge colour\n"
-"               c,C - gradient on z-coordinate\n"
-"               L   - lighting effect (see option -l)\n"
-"               M   - use colour map to convert existing colour index numbers\n"
-"                     into to values\n"
-"  -l <file> lights for colouring type L in a file in OFF format, each\n"
-"            vertex and its colour gives a light direction and colour\n"
-"            (default: a set of six lights giving a rainbow colouring\n"
-"  -m <maps> a comma separated list of colour maps used to transform colour\n"
-"            indexes (default: spread), a part consisting of letters from\n"
-"            v, e, f, selects the element types to apply the map list to\n"
-"            (default 'vef').\n"
-"  -r <rnge> Map HSVA values onto the specified HSVA ranges after other\n"
-"            processing (but before -I), component letters are followed by\n"
-"            one or two values separated by a colon e.g H0.5:0.8 followed by\n"
-"            a comma and elements to map from v, e, f (H0:1S0:1V0:1A0:1,vef)\n"
-"  -I <elms> map color values to index numbers (after other procesing)\n"
-"            elements to map are from v, e and f (default none)\n"
-"  -w <wdth> width of sphere containing points (default: calculated)\n"
-"  -U <typs> colour only elements with particular current colour types:\n"
-"            u - unset, i - indexed, v - visible colour value, x - invisible.\n"
-"            ~ before the letter will select the opposite.\n" 
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"\n", prog_name(), help_ver_text);
+  fprintf(stdout, R"(
+Usage: %s [options] [input_file]
+
+Read a file in OFF format and add colours to it. If input_file is
+not given the program reads from standard input.
+
+A colour value can be a single integer (a colour index), a value in
+form 'R,G,B,A' (3 or 4 values 0.0-1.0, or 0-255) or hex 'xFFFFFF', a
+colour name from the X11 colour map, 'invisible' or 'none' (which sets
+without any colour information)
+
+Lowercase letters (except l) colour using index numbers and uppercase
+letters colour using colour values. Symmetric colourings are optionally
+followed, separated by commas, by a subsymmetry (Schoenflies notation)
+and a conjugation type (integer)
+
+Options
+%s
+  -f <col>  colour the faces according to:
+               a colour value - apply to all faces
+               u,U - unique colour
+               p,P - minimal proper colouring
+               s,S - symmetric colouring [,sub_group,conj_type] (see above)
+               n,N - colour by number of sides
+               a,A - colour by average internal angle (to nearest degree)
+               k,K - sets of faces connected by face edges
+               g,G - gradient on z-coordinate of normal
+               c,C - gradient on z-coordinate of centroid
+               L   - lighting effect by normal (see option -l)
+               l   - lighting effect by centroid (see option -l)
+               M   - use colour map to convert existing colour index numbers
+                     into to values
+  -E <type> colour by edge type, e - explicit edges, i - implicit edges
+            I - implicit edges which are not explicit edges (default: if -e
+            explicit and implicit, else explicit for mapping only)
+  -e <col>  colour the edges according to:
+               a colour value - apply to all edges
+               u,U - unique colour
+               p,P - minimal proper colouring
+               s,S - symmetric colouring [,sub_group,conj_type] (see above)
+               k,K - sets of edges connected by edges
+               F   - colour with average adjoining face colour
+               d,D - colour by edge direction
+               j,J - color by edge length [,minimum_difference (def: 1e-6)]
+               g,G - gradient on z-coordinate of edge direction
+               c,C - gradient on z-coordinate of centroid
+               L   - lighting effect (see option -l)
+               l   - lighting effect on edge directions (see option -l)
+               M   - use colour map to convert existing colour index numbers
+                     into to values
+  -v <col>  colour the vertices according to:
+               a colour value - apply to all vertices
+               u,U - unique colour
+               p,P - minimal proper colouring
+               s,S - symmetric colouring [,sub_group,conj_type] (see above)
+               n,N - colour by order of vertex
+               a,A - colour by avg internal ang of vert-fig (to nearest deg)
+               F   - colour with average adjoining face colour
+               E   - colour with average adjoining edge colour
+               c,C - gradient on z-coordinate
+               L   - lighting effect (see option -l)
+               M   - use colour map to convert existing colour index numbers
+                     into to values
+  -l <file> lights for colouring type L in a file in OFF format, each
+            vertex and its colour gives a light direction and colour
+            (default: a set of six lights giving a rainbow colouring
+  -m <maps> a comma separated list of colour maps used to transform colour
+            indexes (default: spread), a part consisting of letters from
+            v, e, f, selects the element types to apply the map list to
+            (default 'vef').
+  -r <rnge> Map HSVA values onto the specified HSVA ranges after other
+            processing (but before -I), component letters are followed by
+            one or two values separated by a colon e.g H0.5:0.8 followed by
+            a comma and elements to map from v, e, f (H0:1S0:1V0:1A0:1,vef)
+  -I <elms> map color values to index numbers (after other procesing)
+            elements to map are from v, e and f (default none)
+  -w <wdth> width of sphere containing points (default: calculated)
+  -U <typs> colour only elements with particular current colour types:
+            u - unset, i - indexed, v - visible colour value, x - invisible.
+            ~ before the letter will select the opposite.
+  -o <file> write output to file (default: write to standard output)
+
+)",
+          prog_name(), help_ver_text);
 }
-// clang-format on
 
 void o_col_opts::process_command_line(int argc, char **argv)
 {

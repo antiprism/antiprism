@@ -28,6 +28,8 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -35,8 +37,6 @@
 #include <map>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::map;
 using std::string;
@@ -78,49 +78,48 @@ public:
   void usage();
 };
 
-// clang-format off
 void pr_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] [input_file]\n"
-"\n"
-"Read a file in OFF format and make a polar reciprocal from the face\n"
-"planes. If input_file is not given the program reads from standard input.\n"
-"\n"
-"Options\n"
-"%s"
-"  -c <cent> reciprocation centre (default: C)\n"
-"              X,Y,Z - centre with these coordinates\n"
-"              C - vertex centroid,    M - mid-sphere (approximate)\n"
-"              R - circumcentre (avg)\n"
-"              e - edge balanced,      E - edge balanced with inversion\n"
-"              v - vert/face balanced, V - vert/face balanced with inversion\n"
-"              a - v/f/e balanced      A - v/f/e balanced with inversion\n"
-"  -C <init> initial value for a centre calculation, in form 'X,Y,Z',\n"
-"            or C to use centroid (default), M to calculate approx mid-sphere\n"
-"  -r <rad>  reciprocation radius (default: calculated)\n"
-"              radius value - use this value as the radius\n"
-"              v - nearest vertex distance, V - furthest vertex distance\n"
-"              e - nearest edge distance,   E - furthest edge distance\n"
-"              f - nearest face distance,   F - furthest face distance\n"
-"            or a comma separated list of vertex indices (starting from 0)\n"
-"            and the distance is to the space containing those vertices\n"
-"  -R <rad>  initial value for a radius calculation (default: calculated)\n"
-"  -i        transform dual by reflecting in centre point\n"
-"  -I <dist> maximum distance to project any normal or infinite dual vertex\n"
-"            (default: %.0e), if 0 then use actual distances and delete\n"
-"            infinite points\n"
-"  -x        exclude extra elements added to duals with ideal vertices\n"
-"  -n <itrs> maximum number of iterations (default: 10000)\n"
-"  -l <lim>  minimum distance change to terminate, as negative exponent\n"
-"               (default: %d giving %.0e)\n"
-"  -a        append dual to original polyhedron\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"\n", prog_name(), help_ver_text, inf, int(-log(::epsilon)/log(10) + 0.5), ::epsilon);
+  fprintf(stdout, R"(
+Usage: %s [options] [input_file]
+
+Read a file in OFF format and make a polar reciprocal from the face
+planes. If input_file is not given the program reads from standard input.
+
+Options
+%s
+  -c <cent> reciprocation centre (default: C)
+              X,Y,Z - centre with these coordinates
+              C - vertex centroid,    M - mid-sphere (approximate)
+              R - circumcentre (avg)
+              e - edge balanced,      E - edge balanced with inversion
+              v - vert/face balanced, V - vert/face balanced with inversion
+              a - v/f/e balanced      A - v/f/e balanced with inversion
+  -C <init> initial value for a centre calculation, in form 'X,Y,Z',
+            or C to use centroid (default), M to calculate approx mid-sphere
+  -r <rad>  reciprocation radius (default: calculated)
+              radius value - use this value as the radius
+              v - nearest vertex distance, V - furthest vertex distance
+              e - nearest edge distance,   E - furthest edge distance
+              f - nearest face distance,   F - furthest face distance
+            or a comma separated list of vertex indices (starting from 0)
+            and the distance is to the space containing those vertices
+  -R <rad>  initial value for a radius calculation (default: calculated)
+  -i        transform dual by reflecting in centre point
+  -I <dist> maximum distance to project any normal or infinite dual vertex
+            (default: %.0e), if 0 then use actual distances and delete
+            infinite points
+  -x        exclude extra elements added to duals with ideal vertices
+  -n <itrs> maximum number of iterations (default: 10000)
+  -l <lim>  minimum distance change to terminate, as negative exponent
+               (default: %d giving %.0e)
+  -a        append dual to original polyhedron
+  -o <file> write output to file (default: write to standard output)
+
+)",
+          prog_name(), help_ver_text, inf, int(-log(::epsilon) / log(10) + 0.5),
+          ::epsilon);
 }
-// clang-format on
 
 void pr_opts::process_command_line(int argc, char **argv)
 {

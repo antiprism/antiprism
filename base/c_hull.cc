@@ -26,22 +26,20 @@
    \brief wrapper around qhull for convex hulls and delaunay edges.
 */
 
-#include <cstdio>
-#include <cstdlib>
-
-#include <algorithm>
-#include <functional>
-#include <map>
-#include <string>
-#include <vector>
-
 #include "boundbox.h"
 #include "geometry.h"
 #include "geometryutils.h"
 #include "mathutils.h"
+#include "qhull/qhull_ra.h"
 #include "utils.h"
 
-#include "qhull/qhull_ra.h"
+#include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <functional>
+#include <map>
+#include <string>
+#include <vector>
 
 #define NUM_TO_USE_DELAUNAY 20
 

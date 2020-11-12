@@ -29,12 +29,12 @@
 #ifndef POLYGON_H
 #define POLYGON_H
 
-#include <cmath>
-#include <cstring>
-
 #include "geometry.h"
 #include "geometryutils.h"
 #include "mathutils.h"
+
+#include <cmath>
+#include <cstring>
 
 namespace anti {
 

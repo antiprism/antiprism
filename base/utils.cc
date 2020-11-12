@@ -27,6 +27,8 @@
    I/O conversions, etc
 */
 
+#include "utils.h"
+
 #ifdef HAVE_CONFIG_H
 #include "../config.h"
 #endif
@@ -43,8 +45,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <vector>
-
-#include "utils.h"
 
 using std::map;
 using std::string;
@@ -566,9 +566,10 @@ char *strcpy_msg(char *dest, const char *src)
 string msg_str(const char *fmt, ...)
 {
   char message[MSG_SZ];
-  va_list args;
-  va_start(args, fmt);
-  vsnprintf(message, MSG_SZ - 1, fmt, args);
+  va_list ap;
+  va_start(ap, fmt);
+  vsnprintf(message, MSG_SZ - 1, fmt, ap);
+  va_end(ap);
   return message;
 }
 

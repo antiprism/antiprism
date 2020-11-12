@@ -28,13 +28,13 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
 #include <algorithm>
 #include <cmath>
 #include <map>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::map;
 using std::string;
@@ -157,70 +157,68 @@ public:
   void usage();
 };
 
-// clang-format off
 void kt_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] model_args...\n"
-"\n"
-"Create all isohedral polyhedra and polyhedron compounds whose face type\n"
-"is a kite (or dart)\n"
-"\n"
-"Model_args can be a Schwarz triangle name (which can also be given as two\n"
-"or three fractions A, B, C (default 2) which specify the Schwarz triangle\n"
-"vertices, where n/d corresponds to an angle PI*d/n), optionally followed by\n"
-"a permutation letter from AaBbCc, to rotate the fraction A, B, or C to the\n"
-"front (and if lowercase then follow by swapping the last two fractions)\n"
-"  T1:  (3 3 2)         T2:  (3 3 3/2)\n"
-"  O1:  (4 3 2)         O2:  (4/3 4 3)\n"
-"  I1:  (5 3 2)         I2:  (5/2 3 2)\n"
-"  I3:  (5/2 5 2)       I4:  (5/2 3 3)\n"
-"  I5:  (5/4 3 3)       I6:  (5/3 5 3)\n"
-"  I7:  (5/4 5 3)       I8:  (5/3 5/2 3)\n"
-"  I9:  (5/4 5 5)       I10: (5/2 5/2 5/2)\n"
-"If model_args is a single fraction then make a trapezohedron (with B and C\n"
-"as antiprism vertices).\n"
-"The kite has vertices along A, C, B, and C reflected in AB. The height of up\n"
-"to two vertices may be given, and the third is calculated (B and C have\n"
-"the same height in a trapezohedron). If less than two heights are given\n"
-"the calculated vertex will be B, if not specified, otherwise A. The kite\n"
-"is repeated with the symmetry corresponding to the base Schwarz triangle,\n"
-"or trapezohedron model.\n"
-"Notes: the tetrahedral triangles T1 and T2 both produce a model with\n"
-"octahedral symmetry when height A=-B (cube and rhombic dodecahedron,\n"
-"respectively). These models do not form an octahedral compound, and have\n"
-"common symmetry subgroup of Th in the icosahedral compounds. The 3\n"
-"trapezohedron also has octahedral symmetry at height A=+/-B (cube), and\n"
-"likewise has a common symmetry subgroup of Th in icosahedral compounds.\n"
-"\n"
-"Options\n"
-"  -h        this help message\n"
-"  -l num    'list' will list all compounds of the specified base model, or\n"
-"            all models and compounds if no base model specified. The list\n"
-"            includes a model number and base model, and if a compound, the\n"
-"            alignment symmetry (possibly with realignment number) and final\n"
-"            symmetry (and possibly a final pre-realignment number).\n"
-"            Specifying a number will make the the model with that number\n"
-"            in the list.\n"
-"  -A ht     height of kite apex on OA (default 1.0 or calculated)\n"
-"  -B ht     height of kite apex on OB (only magnitude used if trapezohedron,\n"
-"            default 1.0 or calculated)\n"
-"  -C ht     height of kite side vertex on OC (Schwarz triangle only,\n"
-"            default 1.0 or calculated)\n"
-"  -a ang    angle, for compounds where this is a parameter\n"
-"  -N parts  number of parts, for compounds where this is a parameter\n"
-"  -c type   colour the faces around each vertex of a type, from AaBbCc\n"
-"            (colouring by value/index for upper/lower case) using a\n"
-"            different colour for each set (Schwarz models only), or Kk\n"
-"            to colour by base component (which may be compound)\n"
-"  -k        output a single kite (colours not applied)\n"
-"  -q        quiet, don't print final report\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"\n", prog_name());
+  fprintf(stdout, R"(
+Usage: %s [options] model_args...
+
+Create all isohedral polyhedra and polyhedron compounds whose face type
+is a kite (or dart)
+
+Model_args can be a Schwarz triangle name (which can also be given as two
+or three fractions A, B, C (default 2) which specify the Schwarz triangle
+vertices, where n/d corresponds to an angle PI*d/n), optionally followed by
+a permutation letter from AaBbCc, to rotate the fraction A, B, or C to the
+front (and if lowercase then follow by swapping the last two fractions)
+  T1:  (3 3 2)         T2:  (3 3 3/2)
+  O1:  (4 3 2)         O2:  (4/3 4 3)
+  I1:  (5 3 2)         I2:  (5/2 3 2)
+  I3:  (5/2 5 2)       I4:  (5/2 3 3)
+  I5:  (5/4 3 3)       I6:  (5/3 5 3)
+  I7:  (5/4 5 3)       I8:  (5/3 5/2 3)
+  I9:  (5/4 5 5)       I10: (5/2 5/2 5/2)
+If model_args is a single fraction then make a trapezohedron (with B and C
+as antiprism vertices).
+The kite has vertices along A, C, B, and C reflected in AB. The height of up
+to two vertices may be given, and the third is calculated (B and C have
+the same height in a trapezohedron). If less than two heights are given
+the calculated vertex will be B, if not specified, otherwise A. The kite
+is repeated with the symmetry corresponding to the base Schwarz triangle,
+or trapezohedron model.
+Notes: the tetrahedral triangles T1 and T2 both produce a model with
+octahedral symmetry when height A=-B (cube and rhombic dodecahedron,
+respectively). These models do not form an octahedral compound, and have
+common symmetry subgroup of Th in the icosahedral compounds. The 3
+trapezohedron also has octahedral symmetry at height A=+/-B (cube), and
+likewise has a common symmetry subgroup of Th in icosahedral compounds.
+
+Options
+%s
+  -l num    'list' will list all compounds of the specified base model, or
+            all models and compounds if no base model specified. The list
+            includes a model number and base model, and if a compound, the
+            alignment symmetry (possibly with realignment number) and final
+            symmetry (and possibly a final pre-realignment number).
+            Specifying a number will make the the model with that number
+            in the list.
+  -A ht     height of kite apex on OA (default 1.0 or calculated)
+  -B ht     height of kite apex on OB (only magnitude used if trapezohedron,
+            default 1.0 or calculated)
+  -C ht     height of kite side vertex on OC (Schwarz triangle only,
+            default 1.0 or calculated)
+  -a ang    angle, for compounds where this is a parameter
+  -N parts  number of parts, for compounds where this is a parameter
+  -c type   colour the faces around each vertex of a type, from AaBbCc
+            (colouring by value/index for upper/lower case) using a
+            different colour for each set (Schwarz models only), or Kk
+            to colour by base component (which may be compound)
+  -k        output a single kite (colours not applied)
+  -q        quiet, don't print final report
+  -o <file> write output to file (default: write to standard output)
+
+)",
+          prog_name(), help_ver_text);
 }
-// clang-format on
 
 void kt_opts::read_vert_height(int idx, char c)
 {

@@ -28,13 +28,13 @@
  *  A vector class with common vector operations.
  */
 
+#include "vec3d.h"
+#include "utils.h"
+
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-
-#include "utils.h"
-#include "vec3d.h"
 
 namespace anti {
 

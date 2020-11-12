@@ -28,6 +28,8 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -36,8 +38,6 @@
 #include <set>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::map;
 using std::pair;
@@ -92,38 +92,36 @@ public:
   void usage();
 };
 
-// clang-format off
 void nfold_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] fraction [input_file]\n"
-"\n"
-"Generalise an axial model by changing its rotational symmetry. Read a model,\n"
-"in OFF format, with an m-fold rotational axis on the z-axis, and create a\n"
-"new model, generally non-planar, with the same relative connections, but\n"
-"with an n-fold axis instead. fraction is given as n, or n/d (n and d\n"
-"integers). Vertices of a face originally separated by x/m of a turn around\n"
-"the z-axis will be separated by xd/n of a turn in the final model. If\n"
-"input_file is not given the program reads from standard input.\n"
-"%s is based on an idea by Bruce R. Gilson.\n"
-"\n"
-"Options\n"
-"%s"
-"  -x <idxs> vertex index numbers, separated by commas, the rings including\n"
-"            these vertices will be rotated 180 degrees before processing\n"
-"            and rotated back afterwards\n"
-"  -p <args> transform ring of vertices of base model, and suppress normal\n"
-"            to_nfold processing. Arguments are two or three numbers\n"
-"            separated by commas: vertex index number (specifies the ring),\n"
-"            the scale-xy factor (ring radius), and an optional translation-z\n"
-"            (ring height). Can be used multiple times. Index numbers are\n"
-"            preserved.\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"\n", prog_name(), prog_name(), help_ver_text);
+  fprintf(stdout, R"(
+Usage: %s [options] fraction [input_file]
+
+Generalise an axial model by changing its rotational symmetry. Read a model,
+in OFF format, with an m-fold rotational axis on the z-axis, and create a
+new model, generally non-planar, with the same relative connections, but
+with an n-fold axis instead. fraction is given as n, or n/d (n and d
+integers). Vertices of a face originally separated by x/m of a turn around
+the z-axis will be separated by xd/n of a turn in the final model. If
+input_file is not given the program reads from standard input.
+%s is based on an idea by Bruce R. Gilson.
+
+Options
+%s
+  -x <idxs> vertex index numbers, separated by commas, the rings including
+            these vertices will be rotated 180 degrees before processing
+            and rotated back afterwards
+  -p <args> transform ring of vertices of base model, and suppress normal
+            to_nfold processing. Arguments are two or three numbers
+            separated by commas: vertex index number (specifies the ring),
+            the scale-xy factor (ring radius), and an optional translation-z
+            (ring height). Can be used multiple times. Index numbers are
+            preserved.
+  -o <file> write output to file (default: write to standard output)
+
+)",
+          prog_name(), prog_name(), help_ver_text);
 }
-// clang-format on
 
 void nfold_opts::process_command_line(int argc, char **argv)
 {

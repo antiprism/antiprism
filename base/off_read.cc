@@ -26,18 +26,17 @@
    \brief Read OFF files
 */
 
-#include <cmath>
-#include <cstdio>
-#include <cstdlib>
-
-#include <algorithm>
-#include <string>
-#include <vector>
-
 #include "polygon.h"
 #include "private_off_file.h"
 #include "private_std_polys.h"
 #include "utils.h"
+
+#include <algorithm>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <string>
+#include <vector>
 
 using std::string;
 using std::vector;

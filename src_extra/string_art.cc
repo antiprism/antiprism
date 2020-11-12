@@ -28,14 +28,13 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
-
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::map;
 using std::string;
@@ -157,42 +156,40 @@ public:
   void usage();
 };
 
-// clang-format off
 void string_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options]\n"
-"\n"
-"Create a string art in OFF fomat. Each pin arrangement shape is\n"
-"modified by any immediately following transformation options.\n"
-"\n"
-"Options\n"
-"%s"
-"  -c <num>  a unit circle arrangement of num pins\n"
-"  -l <num>  a 2 unit line arrangement of num pins\n"
-"  -p <crds> line end points coordinates, six numbers separated by commas\n"
-"  -T <tran> translate, three numbers separated by commas which are\n"
-"            used as the x, y and z displacements\n"
-"  -R <rot>  rotate about an axis, three, four or six numbers separated by\n"
-"            commas. If three numbers these are angles (degrees) to rotate\n"
-"            about the x, y and z axes. If four numbers, the first three\n"
-"            are a direction vector for the axis, the last number is the\n"
-"            angle (degrees) to rotate. If six numbers, these are two\n"
-"            vectors and rotate to carry the first to the second\n"
-"  -M <norm> reflect in a plane, three numbers separated by commas which\n"
-"            give a vector normal to the plane of reflection.\n"
-"  -S <scal> scale, one, three or four numbers separated by commas. If one\n"
-"            number then scale by this factor in all directions. If three\n"
-"            numbers these are the factors to scale along the x, y and\n"
-"            z axes. If four numbers, the first three are a direction\n"
-"            vector for the scaling, the last number is the factor to scale\n"
-"  -I        invert\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"\n", prog_name(), help_ver_text);
+  fprintf(stdout, R"(
+Usage: %s [options]
+
+Create a string art in OFF fomat. Each pin arrangement shape is
+modified by any immediately following transformation options.
+
+Options
+%s
+  -c <num>  a unit circle arrangement of num pins
+  -l <num>  a 2 unit line arrangement of num pins
+  -p <crds> line end points coordinates, six numbers separated by commas
+  -T <tran> translate, three numbers separated by commas which are
+            used as the x, y and z displacements
+  -R <rot>  rotate about an axis, three, four or six numbers separated by
+            commas. If three numbers these are angles (degrees) to rotate
+            about the x, y and z axes. If four numbers, the first three
+            are a direction vector for the axis, the last number is the
+            angle (degrees) to rotate. If six numbers, these are two
+            vectors and rotate to carry the first to the second
+  -M <norm> reflect in a plane, three numbers separated by commas which
+            give a vector normal to the plane of reflection.
+  -S <scal> scale, one, three or four numbers separated by commas. If one
+            number then scale by this factor in all directions. If three
+            numbers these are the factors to scale along the x, y and
+            z axes. If four numbers, the first three are a direction
+            vector for the scaling, the last number is the factor to scale
+  -I        invert
+  -o <file> write output to file (default: write to standard output)
+
+)",
+          prog_name(), help_ver_text);
 }
-// clang-format on
 
 void string_opts::process_command_line(int argc, char **argv)
 {

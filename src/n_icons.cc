@@ -28,18 +28,16 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "n_icons.h"
+#include "../base/antiprism.h"
+
+#include <algorithm>
+#include <cctype>
 #include <cfloat>
 #include <cstdio>
 #include <cstdlib>
-
-#include <cctype>
-
-#include <algorithm>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
-#include "n_icons.h"
 
 using std::make_pair;
 using std::map;
@@ -281,6 +279,7 @@ Surface Count Reporting (options above ignored)
   -K <k,k2> range of n-icons to list for multiple surfaces
   -J        long form report
   -Z        filter out case 2 types
+
 )",
           prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
           ::epsilon);

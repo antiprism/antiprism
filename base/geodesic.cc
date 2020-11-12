@@ -26,6 +26,11 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "geometryutils.h"
+#include "mathutils.h"
+#include "private_geodesic.h"
+#include "private_misc.h"
+
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
@@ -33,11 +38,6 @@
 #include <cstring>
 #include <map>
 #include <vector>
-
-#include "geometryutils.h"
-#include "mathutils.h"
-#include "private_geodesic.h"
-#include "private_misc.h"
 
 using std::map;
 using std::swap;

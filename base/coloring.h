@@ -29,10 +29,10 @@
 #ifndef COLORING_H
 #define COLORING_H
 
-#include <set>
-
 #include "colormap.h"
 #include "geometry.h"
+
+#include <set>
 
 namespace anti {
 

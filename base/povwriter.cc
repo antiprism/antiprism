@@ -26,12 +26,12 @@
    Export to POV-Ray format
 */
 
-#include <string>
-#include <vector>
-
+#include "povwriter.h"
 #include "displaypoly.h"
 #include "mathutils.h"
-#include "povwriter.h"
+
+#include <string>
+#include <vector>
 
 using std::string;
 using std::vector;

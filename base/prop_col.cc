@@ -46,14 +46,14 @@ For more information on this code, see Anuj Mehrotra and Michael A. Trick,
       convert to class and use STL conatiners rather than arrays
 */
 
-#include <set>
-#include <utility>
-#include <vector>
-
 #include "private_prop_col.h"
+
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <set>
+#include <utility>
+#include <vector>
 
 using std::pair;
 using std::set;

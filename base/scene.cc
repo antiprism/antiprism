@@ -26,13 +26,13 @@
    Scene classes for a camera and geometry.
 */
 
-#include <string>
-#include <vector>
-
-#include "private_misc.h"
 #include "scene.h"
+#include "private_misc.h"
 #include "utils.h"
 #include "vec_utils.h"
+
+#include <string>
+#include <vector>
 
 using std::string;
 using std::vector;

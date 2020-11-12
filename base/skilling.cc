@@ -26,20 +26,19 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <cmath>
-#include <cstdio>
-#include <cstdlib>
-
-#include <algorithm>
-#include <string>
-#include <vector>
-
 #include "coloring.h"
 #include "geometryutils.h"
 #include "mathutils.h"
 #include "private_std_polys.h"
 #include "random.h"
 #include "utils.h"
+
+#include <algorithm>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <string>
+#include <vector>
 
 using std::string;
 using std::vector;

@@ -28,6 +28,8 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -35,8 +37,6 @@
 #include <map>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::string;
 using std::vector;
@@ -59,29 +59,27 @@ public:
   void usage();
 };
 
-// clang-format off
 void kc_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] hinge_vertex_idxs\n"
-"\n"
-"Make a kaleidocyle from a polyhedron. hinge_vertex_idxs is four integers\n"
-"separated by commas (e.g. 0,1,2,3). These are the index numbers of the\n"
-"vertices for the two eges that will be hinges in the cycle.\n"
-"\n"
-"Options\n"
-"%s"
-"  -a <ang>  angle in degrees to rotate the first hinge from\n"
-"            horizontal (default: 0.0)\n"
-"  -n <num>  number of pairs of polyhedra in cycle (default: 6)\n"
-"  -i <file> input file in OFF format. If '-' then read file from stdin.\n"
-"            (default: a tetrahedron with hinge_vertex_idxs 0,1,2,3)\n" 
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"\n", prog_name(), help_ver_text);
+  fprintf(stdout, R"(
+Usage: %s [options] hinge_vertex_idxs
+
+Make a kaleidocyle from a polyhedron. hinge_vertex_idxs is four integers
+separated by commas (e.g. 0,1,2,3). These are the index numbers of the
+vertices for the two eges that will be hinges in the cycle.
+
+Options
+%s
+  -a <ang>  angle in degrees to rotate the first hinge from
+            horizontal (default: 0.0)
+  -n <num>  number of pairs of polyhedra in cycle (default: 6)
+  -i <file> input file in OFF format. If '-' then read file from stdin.
+            (default: a tetrahedron with hinge_vertex_idxs 0,1,2,3)\
+  -o <file> write output to file (default: write to standard output)
+
+)",
+          prog_name(), help_ver_text);
 }
-// clang-format on
 
 void kc_opts::process_command_line(int argc, char **argv)
 {

@@ -28,6 +28,9 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+#include "help.h"
+
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -38,10 +41,6 @@
 #include <stack>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
-
-#include "help.h"
 
 using std::map;
 using std::pair;
@@ -1166,94 +1165,93 @@ public:
   void usage();
 };
 
-// clang-format off
 void pr_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] input_files\n"
-"\n"
-"Read one or more files in OFF format, combine them into a single file and\n"
-"process it. Most operations manipulate elements, such as adding, deleting,\n"
-"and combining elements, triangulating and orientimg faces, making an edge\n"
-"skeleton, and rounding the precision of coordinates. Other miscellaneous\n"
-"operations include projection onto a sphere, creating a net, truncating\n"
-"vertices, and converting edges to quadrilaterals. Operations are performeded\n"
-"in the order they are given on the command line. input_files is the list of\n"
-"files to process, which may include 'null' as an empty geometry, or if not\n"
-"given the program reads from standard input.\n"
-"\n"
-"Options\n"
-"%s"
-"  -M <args> Sort and merge elements whose coordinates are the same to\n"
-"            the number of decimal places given by option -l.  args is 1 or 2\n"
-"            comma separated parts. The first part is the elements to merge,\n"
-"            which can include: v - vertices, e - edges, f - faces,\n"
-"            a - all (vef), b - bond (merge 've' and delete any face\n"
-"            coincident with another), s - sort without merging.\n"
-"            The second part (default 3) is the merge blend color:\n"
-"            first=1, last=2, rgb=3, ryb=4\n"
-"  -l <lim>  minimum distance for unique vertex locations as negative\n"
-"            exponent (default: %d giving %.0e)\n"
-"  -O <opt>  orient the faces first (if possible) then adjust for signed\n"
-"            volume, value may be: positive, negative, reverse, or flip\n"
-"            (which reverses the orientation of the model as it was input)\n"
-"  -T <rat>  truncate vertices by cutting edges at a ratio from each vertex,\n"
-"            can also be 'rat,num' to truncate only vertices of order num\n"
-"  -s        skeleton, write the face edges and remove the faces\n"
-"  -t <disp> triangulate, include face parts according to winding number\n"
-"            from: odd, nonzero, positive, negative, triangulate (synonym\n"
-"            for nonzero)\n"
-"  -g        geometry only, remove all colours, remove all two-vertex faces\n"
-"            (edges) that are also a face edge\n"
-"  -x <elms> remove OFF face elements. The element string is processed in\n"
-"            order and can include v, e, f to remove OFF faces with one\n"
-"            vertex (vertices), two-vertices (edges) and three or more\n"
-"            vertices (faces), V to remove vertices that are not part\n"
-"            of any face or edge, E to remove two-vertex faces (edges)\n"
-"            that are not part of any face, D to remove two-vertex faces (edges)\n"
-"            that are also a face edge (decorators), F to remove faces that\n"
-"            do not share a vertex with another face\n"
-"  -e        Fill in missing explicit edges\n"
-"  -D <list> delete a list of elements, list starts with element letter,\n"
-"            followed by an index number list, given as index ranges separated\n"
-"            by commas. range can be one number or two numbers separated by a\n"
-"            hyphen (default range numbers: 0 and largest index). Element\n"
-"            letters may also be F or E to delete compound parts by part number.\n"
-"            Index number list may be preceded by f, e, v, E or F to find \n"
-"            elements based on connectivity to another element type or part.\n"
-"            Compound parts may also be found by element number. Only elements\n"
-"            specifically specified are deleted. list can have a suffix '%%' to\n"
-"            invert results. e or E only act on explicit edges. If some explicit\n"
-"            edges are missing, use -e to fill them in\n"
-"            special connectivity selectors: o - vertices by vertex order\n"
-"               s - faces by number of sides, or to select by a color...\n"
-"               x - vertex color, y - edge color, z - face color\n"
-"  -K <list> keep a list of elements using the same parameters as -D. Only\n"
-"            elements specifically specified are kept along with their vertex\n"
-"            and edge decorators if present. Implicit edges which are kept are\n"
-"            converted to explicit edges\n"
-"  -A <elem> add element, elem is element letter (v, e, f), followed by\n"
-"            element data, optionally followed by ':' and a colour. Data is\n"
-"               v: three comma separated coordinates\n"
-"               e: a comma separated list of index numbers, joined as a ring\n"
-"               f: a comma separated list of index numbers\n"
-"            negative index numbers are relative to the end of the vertex\n"
-"            list, last vertex is -1 (useful to refer to added vertices.)\n"
-"  -c <col>  close polyhedron, each hole converted to a face with colour col,\n"
-"            holes having a vertex with more than two open edges are not filled\n"
-"  -S        project onto unit sphere centred at origin\n"
-"  -u <args> unfold a polyhedron into a net, takes up to three comma separated\n"
-"            values for base face index, dihedral fraction (normally 1.0 to\n"
-"            -1.0, default: 0.0 flat), and final option letters: 'f' centre\n"
-"            on centroid of face centres, 'z' align base face normal to z_axis.\n"
-"  -d <dgts> number of significant digits (default %d) or if negative\n"
-"            then the number of digits after the decimal point\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"\n", prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5), ::epsilon, DEF_SIG_DGTS);
+  fprintf(stdout, R"(
+Usage: %s [options] input_files
+
+Read one or more files in OFF format, combine them into a single file and
+process it. Most operations manipulate elements, such as adding, deleting,
+and combining elements, triangulating and orientimg faces, making an edge
+skeleton, and rounding the precision of coordinates. Other miscellaneous
+operations include projection onto a sphere, creating a net, truncating
+vertices, and converting edges to quadrilaterals. Operations are performeded
+in the order they are given on the command line. input_files is the list of
+files to process, which may include 'null' as an empty geometry, or if not
+given the program reads from standard input.
+
+Options
+%s
+  -M <args> Sort and merge elements whose coordinates are the same to
+            the number of decimal places given by option -l.  args is 1 or 2
+            comma separated parts. The first part is the elements to merge,
+            which can include: v - vertices, e - edges, f - faces,
+            a - all (vef), b - bond (merge 've' and delete any face
+            coincident with another), s - sort without merging.
+            The second part (default 3) is the merge blend color:
+            first=1, last=2, rgb=3, ryb=4
+  -l <lim>  minimum distance for unique vertex locations as negative
+            exponent (default: %d giving %.0e)
+  -O <opt>  orient the faces first (if possible) then adjust for signed
+            volume, value may be: positive, negative, reverse, or flip
+            (which reverses the orientation of the model as it was input)
+  -T <rat>  truncate vertices by cutting edges at a ratio from each vertex,
+            can also be 'rat,num' to truncate only vertices of order num
+  -s        skeleton, write the face edges and remove the faces
+  -t <disp> triangulate, include face parts according to winding number
+            from: odd, nonzero, positive, negative, triangulate (synonym
+            for nonzero)
+  -g        geometry only, remove all colours, remove all two-vertex faces
+            (edges) that are also a face edge
+  -x <elms> remove OFF face elements. The element string is processed in
+            order and can include v, e, f to remove OFF faces with one
+            vertex (vertices), two-vertices (edges) and three or more
+            vertices (faces), V to remove vertices that are not part
+            of any face or edge, E to remove two-vertex faces (edges)
+            that are not part of any face, D to remove two-vertex faces (edges)
+            that are also a face edge (decorators), F to remove faces that
+            do not share a vertex with another face
+  -e        Fill in missing explicit edges
+  -D <list> delete a list of elements, list starts with element letter,
+            followed by an index number list, given as index ranges separated
+            by commas. range can be one number or two numbers separated by a
+            hyphen (default range numbers: 0 and largest index). Element
+            letters may also be F or E to delete compound parts by part number.
+            Index number list may be preceded by f, e, v, E or F to find 
+            elements based on connectivity to another element type or part.
+            Compound parts may also be found by element number. Only elements
+            specifically specified are deleted. list can have a suffix '%%' to
+            invert results. e or E only act on explicit edges. If some explicit
+            edges are missing, use -e to fill them in
+            special connectivity selectors: o - vertices by vertex order
+               s - faces by number of sides, or to select by a color...
+               x - vertex color, y - edge color, z - face color
+  -K <list> keep a list of elements using the same parameters as -D. Only
+            elements specifically specified are kept along with their vertex
+            and edge decorators if present. Implicit edges which are kept are
+            converted to explicit edges
+  -A <elem> add element, elem is element letter (v, e, f), followed by
+            element data, optionally followed by ':' and a colour. Data is
+               v: three comma separated coordinates
+               e: a comma separated list of index numbers, joined as a ring
+               f: a comma separated list of index numbers
+            negative index numbers are relative to the end of the vertex
+            list, last vertex is -1 (useful to refer to added vertices.)
+  -c <col>  close polyhedron, each hole converted to a face with colour col,
+            holes having a vertex with more than two open edges are not filled
+  -S        project onto unit sphere centred at origin
+  -u <args> unfold a polyhedron into a net, takes up to three comma separated
+            values for base face index, dihedral fraction (normally 1.0 to
+            -1.0, default: 0.0 flat), and final option letters: 'f' centre
+            on centroid of face centres, 'z' align base face normal to z_axis.
+  -d <dgts> number of significant digits (default %d) or if negative
+            then the number of digits after the decimal point
+  -o <file> write output to file (default: write to standard output)
+
+)",
+          prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
+          ::epsilon, DEF_SIG_DGTS);
 }
-// clang-format on
 
 const char *get_help(const char *name)
 {
@@ -1281,7 +1279,7 @@ const char *get_help(const char *name)
   help["sym_models"] = help_sym_models;
   help["color"] = help_color;
   help["colour"] = help_color;
-  help["Color"] = help_color_val;
+  help["col_val"] = help_color_val;
   help["col_names"] = help_color_names;
   help["col_map"] = help_ColorMap;
   help["expressions"] = help_expreval;
@@ -1326,7 +1324,7 @@ void pr_opts::process_command_line(int argc, char **argv)
     else if (c == 'H') {
       const char *help_text = get_help(optarg);
       if (help_text) {
-        fprintf(stdout, "\n%s\n", help_text);
+        fprintf(stdout, "\n%s\n\n", help_text);
         exit(0);
       }
       else

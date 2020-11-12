@@ -31,14 +31,14 @@
 #ifndef VEC3D_H
 #define VEC3D_H
 
-#include <cmath>
-#include <cstdio>
-#include <cstdlib>
-
 #include "const.h"
 #include "mathutils.h"
 #include "random.h"
 #include "status.h"
+
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
 
 namespace anti {
 

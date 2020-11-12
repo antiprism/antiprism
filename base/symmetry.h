@@ -29,13 +29,13 @@
 #ifndef SYMMETRY_H
 #define SYMMETRY_H
 
+#include "geometry.h"
+#include "trans3d.h"
+
+#include <cmath>
 #include <set>
 #include <string>
 #include <vector>
-
-#include "geometry.h"
-#include "trans3d.h"
-#include <cmath>
 
 namespace anti {
 

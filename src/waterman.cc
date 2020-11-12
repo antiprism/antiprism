@@ -28,6 +28,9 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+#include "lattice_grid.h"
+
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -36,9 +39,6 @@
 #include <limits>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
-#include "lattice_grid.h"
 
 using std::make_pair;
 using std::pair;
@@ -138,6 +138,7 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                key word: c,C color by symmetry using face normals (chiral)
   -Z <col>  fill vertex color (default: model vertex color)
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
+
 )",
           prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
           ::epsilon);

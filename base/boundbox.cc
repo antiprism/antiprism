@@ -26,9 +26,9 @@
    \brief Bounding box and sphere
 */
 
-#include <vector>
-
 #include "boundbox.h"
+
+#include <vector>
 
 using std::vector;
 

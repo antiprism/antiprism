@@ -26,9 +26,9 @@
    \brief Matrix transformations for 4D geometry.
 */
 
-#include <cstdio>
-
 #include "trans4d.h"
+
+#include <cstdio>
 
 namespace anti {
 

@@ -31,6 +31,11 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "boundbox.h"
+#include "geometry.h"
+#include "geometryinfo.h"
+#include "planar.h"
+
 #include <cfloat>
 #include <cmath>
 #include <cstdlib>
@@ -38,11 +43,6 @@
 #include <numeric>
 #include <string>
 #include <vector>
-
-#include "boundbox.h"
-#include "geometry.h"
-#include "geometryinfo.h"
-#include "planar.h"
 
 using std::map;
 using std::set;
@@ -544,7 +544,7 @@ bool canonicalize_bd(Geometry &base, IterationControl it_ctrl,
       base.transform(Trans3d::translate(-centroid(base.verts())));
       break;
     }
-    
+
     // reduces size imbalance problem with this algorithm
     unitize_nearpoints_radius(base);
 

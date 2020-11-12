@@ -26,16 +26,15 @@
    \brief Read and write OFF and coordinate files
 */
 
+#include "private_off_file.h"
+#include "utils.h"
+
+#include <algorithm>
 #include <cctype>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
-
-#include <algorithm>
 #include <vector>
-
-#include "private_off_file.h"
-#include "utils.h"
 
 using std::string;
 using std::vector;

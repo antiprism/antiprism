@@ -28,14 +28,13 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
-
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::string;
 using std::vector;
@@ -58,7 +57,7 @@ public:
 
 void o2o_opts::usage()
 {
-   fprintf(stdout, R"(
+  fprintf(stdout, R"(
 Usage: %s [options] [input_file]
 
 Convert an OFF file to Wavefront OBJ file format.
@@ -69,8 +68,9 @@ Options
   -d <dgts> number of significant digits (default %d) or if negative
             then the number of digits after the decimal point
   -o <file> write output to file (default: write to standard output)
+
 )",
-   prog_name(), help_ver_text, DEF_SIG_DGTS);
+          prog_name(), help_ver_text, DEF_SIG_DGTS);
 }
 
 void o2o_opts::process_command_line(int argc, char **argv)

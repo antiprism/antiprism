@@ -31,12 +31,11 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include <cctype>
+#include "../base/antiprism.h"
 
+#include <cctype>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::string;
 using std::vector;
@@ -87,6 +86,7 @@ Options
   -d <dgts> number of significant digits (default %d) or if negative
             then the number of digits after the decimal point
   -o <file> file name for output (otherwise prints to stdout)
+
 )",
           prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
           ::epsilon, DEF_SIG_DGTS);

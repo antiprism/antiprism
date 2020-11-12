@@ -26,11 +26,11 @@
    \brief write a VRML file
 */
 
+#include "vrmlwriter.h"
+#include "symmetry.h"
+
 #include <string>
 #include <vector>
-
-#include "symmetry.h"
-#include "vrmlwriter.h"
 
 using std::string;
 using std::vector;

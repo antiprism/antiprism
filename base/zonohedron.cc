@@ -26,21 +26,20 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <cstdio>
-#include <cstdlib>
-
-#include <algorithm>
-#include <functional>
-#include <map>
-#include <set>
-#include <string>
-#include <vector>
-
 #include "geometry.h"
 #include "geometryinfo.h"
 #include "polygon.h"
 #include "private_misc.h"
 #include "utils.h"
+
+#include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <functional>
+#include <map>
+#include <set>
+#include <string>
+#include <vector>
 
 using std::logical_not;
 using std::map;

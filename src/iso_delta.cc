@@ -34,17 +34,15 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
+#include <cctype>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
-
-#include <cctype>
-
 #include <set>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::set;
 using std::string;
@@ -497,6 +495,7 @@ Coloring Options (run 'off_util -H color' for help on color formats)
               s - symmetric coloring (should always be one color)
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
   -m <maps> color maps for all elements to be tried in turn (default: compound)
+
 )",
           prog_name(), help_ver_text);
 }

@@ -28,14 +28,13 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
 #include <cstdio>
 #include <cstdlib>
-
 #include <map>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::map;
 using std::set;
@@ -113,6 +112,7 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                keyword: none - sets no color
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
   -m <maps> color maps. stellation diagram or face symmetry (default: compound)
+
 )",
           prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
           ::epsilon);

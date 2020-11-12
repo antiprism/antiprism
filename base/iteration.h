@@ -29,10 +29,10 @@
 #ifndef ITERATION_H
 #define ITERATION_H
 
+#include <cmath>
+
 #include "../base/const.h"
 #include "../base/status.h"
-
-#include <cmath>
 
 namespace anti {
 

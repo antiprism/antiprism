@@ -28,6 +28,9 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+#include "rep_print.h"
+
 #include <cctype>
 #include <cmath>
 #include <cstdlib>
@@ -36,9 +39,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-#include "../base/antiprism.h"
-#include "rep_print.h"
 
 using std::pair;
 using std::set;
@@ -74,60 +74,58 @@ public:
   void usage();
 };
 
-// clang-format off
 void oq_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] query [input_file]\n"
-"\n"
-"Read a file in OFF format and list element data for specified elements.\n"
-"Added elements of the query type are also added to the query list.\n"
-"Added elements are referred to by xN, where N is the order the element\n"
-"was added (starting with 0). Query is a list of letters, the first is the\n"
-"query element type V, F, or E followed by the values to print\n"
-"   V - Vertex:\n"
-"       c - coordinates             d - distance from centre\n"
-"       f - face index numbs        F - face angles\n"
-"       a - solid angle             n - neighbours\n"
-"       o - order                   g - vertex figure\n"
-"       K - colour\n"
-"   E - Edge:\n"
-"       v - vertex index nums       d - distance from centre\n"
-"       f - face index nums         D - direction\n"
-"       a - diheral angle           l - length\n"
-"       c - central angle           C - centroid\n"
-"       K - colour\n"
-"   F - Face:\n"
-"       v - vertex index nums       d - distance from centre\n"
-"       n - neighbours              A - area\n"
-"       N - normal                  C - centroid\n"
-"       a - angles                  l - lengths\n"
-"       s - number of sides         p - max nonplanar distance\n"
-"       P - perimeter               K - colour\n"
-"\n"
-"Options\n"
-"%s"
-"  -c <cent> centre of shape in form 'X,Y,Z', or C to use\n"
-"            centroid (default, '0,0,0')\n"
-"  -I <idxs> list of elements by index number given as index ranges\n"
-"            separated by commas, range can be one number or two\n"
-"            numbers separated by a hyphen (default range numbers: 0 and\n"
-"            largest index, default argument: any added elements else '-')\n"
-"  -v <crds> add vertex, coordinates in form 'X,Y,Z'\n"
-"  -f <vnos> add face, a list of vertex index numbers separated by commas\n"
-"  -e <vnos> add edges, a list of vertex index numbers separated by commas\n"
-"            and taken in pairs\n"
-"  -k        keep orientation, don't try to orient the faces\n"
-"  -E <type> edges for query, e - explicit edges, i - implicit edges\n"
-"            a - explicit and implicit (default)\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"  -d <dgts> number of significant digits (default 17) or if negative\n"
-"            then the number of digits after the decimal point\n"
-"\n"
-"\n", prog_name(), help_ver_text);
+  fprintf(stdout, R"(
+Usage: %s [options] query [input_file]
+
+Read a file in OFF format and list element data for specified elements.
+Added elements of the query type are also added to the query list.
+Added elements are referred to by xN, where N is the order the element
+was added (starting with 0). Query is a list of letters, the first is the
+query element type V, F, or E followed by the values to print
+   V - Vertex:
+       c - coordinates             d - distance from centre
+       f - face index numbs        F - face angles
+       a - solid angle             n - neighbours
+       o - order                   g - vertex figure
+       K - colour
+   E - Edge:
+       v - vertex index nums       d - distance from centre
+       f - face index nums         D - direction
+       a - diheral angle           l - length
+       c - central angle           C - centroid
+       K - colour
+   F - Face:
+       v - vertex index nums       d - distance from centre
+       n - neighbours              A - area
+       N - normal                  C - centroid
+       a - angles                  l - lengths
+       s - number of sides         p - max nonplanar distance
+       P - perimeter               K - colour
+
+Options
+%s
+  -c <cent> centre of shape in form 'X,Y,Z', or C to use
+            centroid (default, '0,0,0')
+  -I <idxs> list of elements by index number given as index ranges
+            separated by commas, range can be one number or two
+            numbers separated by a hyphen (default range numbers: 0 and
+            largest index, default argument: any added elements else '-')
+  -v <crds> add vertex, coordinates in form 'X,Y,Z'
+  -f <vnos> add face, a list of vertex index numbers separated by commas
+  -e <vnos> add edges, a list of vertex index numbers separated by commas
+            and taken in pairs
+  -k        keep orientation, don't try to orient the faces
+  -E <type> edges for query, e - explicit edges, i - implicit edges
+            a - explicit and implicit (default)
+  -o <file> write output to file (default: write to standard output)
+  -d <dgts> number of significant digits (default 17) or if negative
+            then the number of digits after the decimal point
+
+)",
+          prog_name(), help_ver_text);
 }
-// clang-format on
 
 void add_to_list(vector<int> &list, vector<int> &to_add)
 {

@@ -28,17 +28,15 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <cstdio>
-#include <cstdlib>
-
-#include <cctype>
+#include "../base/antiprism.h"
 
 #include <algorithm>
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
 #include <memory>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::pair;
 using std::string;
@@ -129,8 +127,10 @@ Coloring Options (run 'off_util -H color' for help on color formats)
   -B <col>  normal vector base color. color at element centroid
                key word: b take color of element (default)
                key word: n take color of normal vertex
+
 )",
-prog_name(), help_ver_text, int(-log(::epsilon)/log(10) + 0.5),::epsilon);
+          prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
+          ::epsilon);
 }
 
 void off_normals_opts::process_command_line(int argc, char **argv)

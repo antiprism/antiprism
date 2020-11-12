@@ -30,6 +30,7 @@
 #define ELEMPROPS_H
 
 #include "color.h"
+
 #include <map>
 
 namespace anti {

@@ -26,21 +26,20 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-
-#include <algorithm>
-#include <functional>
-#include <map>
-#include <string>
-#include <vector>
-
 #include "coloring.h"
 #include "geometryinfo.h"
 #include "mathutils.h"
 #include "symmetry.h"
 #include "utils.h"
+
+#include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <functional>
+#include <map>
+#include <string>
+#include <vector>
 
 using std::map;
 using std::pair;

@@ -26,11 +26,11 @@
  *\brief Matrix transformations for 3D geometry.
  */
 
+#include "trans3d.h"
+#include "mathutils.h"
+
 #include <cstdio>
 #include <vector>
-
-#include "mathutils.h"
-#include "trans3d.h"
 
 using std::vector;
 

@@ -28,13 +28,12 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
-
 #include <string>
-
-#include "../base/antiprism.h"
 
 using std::string;
 
@@ -52,26 +51,24 @@ public:
   void usage();
 };
 
-// clang-format off
 void ch_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] [input_file]\n"
-"\n"
-"Read a file in OFF format and make a convex hull (using Qhull). If\n"
-"input_file is not given the program reads from standard input.\n"
-"\n"
-"Options\n"
-"%s"
-"  -a        append the convex hull to the input file\n"
-"  -Q <args> additional arguments to pass to qhull (unsupported, may not\n"
-"            work, check output)\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"\n", prog_name(), help_ver_text);
+  fprintf(stdout, R"(
+Usage: %s [options] [input_file]
+
+Read a file in OFF format and make a convex hull (using Qhull). If
+input_file is not given the program reads from standard input.
+
+Options
+%s
+  -a        append the convex hull to the input file
+  -Q <args> additional arguments to pass to qhull (unsupported, may not
+            work, check output)
+  -o <file> write output to file (default: write to standard output)
+
+)",
+          prog_name(), help_ver_text);
 }
-// clang-format on
 
 void ch_opts::process_command_line(int argc, char **argv)
 {

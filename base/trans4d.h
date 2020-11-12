@@ -29,10 +29,10 @@
 #ifndef TRANS4D_H
 #define TRANS4D_H
 
-#include <cmath>
-
 #include "mathutils.h"
 #include "vec4d.h"
+
+#include <cmath>
 
 namespace anti {
 

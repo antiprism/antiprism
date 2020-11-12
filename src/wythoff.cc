@@ -28,6 +28,8 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -36,8 +38,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::string;
 using std::vector;
@@ -71,59 +71,57 @@ public:
   void usage();
 };
 
-// clang-format off
 void wy_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] [input_file]\n"
-"\n"
-"Read a file in OFF format and apply a specified pattern to generate polygon\n"
-"tiles. The polyhedron faces are divided by a 'meta' operation into triangles\n"
-"each having vertices which are a vertex V, edge centre E and face centre F.\n"
-"A start point is positioned on one of these triangles, the next point is\n"
-"found by using the pattern to step between triangles, leading to a circuit.\n"
-"If input_file is not given the program reads from standard input.\n"
-"\n"
-"Options\n"
-"%s"
-"  -p <pat>  pattern in form: [Coords0:Coords1:...]Path0,Path1...\n"
-"            Coordinates are barycentric, in form aVbEcF:\n"
-"              VEF element letters, and a,b,c are barycentric coordinates\n"
-"              corresponding to the following element letter. Ommiting a\n"
-"              an element letter and coordinate sets the coordinate to zero.\n"
-"              Ommitting just the coordinate sets the coordinate to 1. E.g\n"
-"            V = (1,0,0), VE = (1,1,0), V2E3F = (1,2,3)\n"
-"            Paths are in the form: TrisPidx0Move0Pidx1Move1...\n"
-"              Tris: one of +-* (default +) indicating that paths should\n"
-"                start for positive, negative or both kinds of triangles.\n"
-"              Pidx: an index number of a point from the coordinates list\n"
-"              Move: an operation for stepping to the next triangle, given\n"
-"                as a series of characters from the following:\n"
-"                  _     - no move, stay on the same triangle\n"
-"                  v,e,f - step over side opposite V,E,F\n"
-"                  V,E,F - step two trianglesi, rotating about V,E,F,\n"
-"                          according to: V=ef, E=fv, F=ve\n"
-"              Paths can start with either a move or a point, but cannot both\n"
-"              start and end with a move\n"
-"  -c <op>   Conway polyhedron notation operator, or 'list' to list all\n"
-"            available operators with their corresponding patterns\n"
-"  -R        reverse pattern, exchanges the signs of the start triangles\n"
-"  -r        relabel pattern, exactly three letters VEF written in any order\n"
-"            e.g. EFV relabels the pattern as V->E,v->e,E->F,e->f,F->V,f->v\n"
-"  -M        input geometry is a 'meta' tiling, don't apply meta operation\n"
-"  -C        colouring method for tiles:none, index, value, association\n"
-"            (default: index) index and value methods use the path index,\n"
-"            association associates tiles with base geometry element colours\n"
-"  -u        output only one example of each type of tile (one per path)\n"
-"  -a        add the 'meta'-transformed base\n"
-"  -f <ht>   lift the face centres by this height\n"
-"  -q        quiet, don't print report\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"\n", prog_name(), help_ver_text);
+  fprintf(stdout, R"(
+Usage: %s [options] [input_file]
+
+Read a file in OFF format and apply a specified pattern to generate polygon
+tiles. The polyhedron faces are divided by a 'meta' operation into triangles
+each having vertices which are a vertex V, edge centre E and face centre F.
+A start point is positioned on one of these triangles, the next point is
+found by using the pattern to step between triangles, leading to a circuit.
+If input_file is not given the program reads from standard input.
+
+Options
+%s
+  -p <pat>  pattern in form: [Coords0:Coords1:...]Path0,Path1...
+            Coordinates are barycentric, in form aVbEcF:
+              VEF element letters, and a,b,c are barycentric coordinates
+              corresponding to the following element letter. Ommiting a
+              an element letter and coordinate sets the coordinate to zero.
+              Ommitting just the coordinate sets the coordinate to 1. E.g
+            V = (1,0,0), VE = (1,1,0), V2E3F = (1,2,3)
+            Paths are in the form: TrisPidx0Move0Pidx1Move1...
+              Tris: one of +-* (default +) indicating that paths should
+                start for positive, negative or both kinds of triangles.
+              Pidx: an index number of a point from the coordinates list
+              Move: an operation for stepping to the next triangle, given
+                as a series of characters from the following:
+                  _     - no move, stay on the same triangle
+                  v,e,f - step over side opposite V,E,F
+                  V,E,F - step two trianglesi, rotating about V,E,F,
+                          according to: V=ef, E=fv, F=ve
+              Paths can start with either a move or a point, but cannot both
+              start and end with a move
+  -c <op>   Conway polyhedron notation operator, or 'list' to list all
+            available operators with their corresponding patterns
+  -R        reverse pattern, exchanges the signs of the start triangles
+  -r        relabel pattern, exactly three letters VEF written in any order
+            e.g. EFV relabels the pattern as V->E,v->e,E->F,e->f,F->V,f->v
+  -M        input geometry is a 'meta' tiling, don't apply meta operation
+  -C        colouring method for tiles:none, index, value, association
+            (default: index) index and value methods use the path index,
+            association associates tiles with base geometry element colours
+  -u        output only one example of each type of tile (one per path)
+  -a        add the 'meta'-transformed base
+  -f <ht>   lift the face centres by this height
+  -q        quiet, don't print report
+  -o <file> write output to file (default: write to standard output)
+
+)",
+          prog_name(), help_ver_text);
 }
-// clang-format on
 
 void wy_opts::process_command_line(int argc, char **argv)
 {

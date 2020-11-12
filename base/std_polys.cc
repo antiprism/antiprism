@@ -28,14 +28,6 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <algorithm>
-#include <cstdio>
-#include <cstdlib>
-#include <map>
-#include <set>
-#include <string>
-#include <vector>
-
 #include "coloring.h"
 #include "geometryinfo.h"
 #include "geometryutils.h"
@@ -43,6 +35,14 @@
 #include "polygon.h"
 #include "private_std_polys.h"
 #include "utils.h"
+
+#include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <map>
+#include <set>
+#include <string>
+#include <vector>
 
 using std::map;
 using std::set;

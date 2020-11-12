@@ -27,12 +27,6 @@
    with element number labels
 */
 
-#include <cstring>
-#include <map>
-#include <set>
-#include <string>
-#include <vector>
-
 #include "displaypoly.h"
 #include "mathutils.h"
 #include "povwriter.h"
@@ -40,6 +34,12 @@
 #include "symmetry.h"
 #include "utils.h"
 #include "vrmlwriter.h"
+
+#include <cstring>
+#include <map>
+#include <set>
+#include <string>
+#include <vector>
 
 using std::map;
 using std::set;

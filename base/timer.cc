@@ -28,11 +28,11 @@
 
 #include "timer.h"
 
-namespace anti {
-
 #ifdef HAVE_CONFIG_H
 #include "../config.h"
 #endif
+
+namespace anti {
 
 #if UTIMER == 1 // gettimeofday
 

@@ -31,16 +31,15 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include <cctype>
-#include <cmath>
+#include "../base/antiprism.h"
+#include "lattice_grid.h"
 
 #include <algorithm>
+#include <cctype>
+#include <cmath>
 #include <memory>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
-#include "lattice_grid.h"
 
 using std::string;
 using std::vector;

@@ -29,11 +29,11 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
 #include <map>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::map;
 using std::string;
@@ -74,39 +74,37 @@ public:
   void usage();
 };
 
-// clang-format off
 void leo_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] [input_file]\n"
-"\n"
-"Read a file in OFF format, and thicken the faces and cut a hole in their\n"
-"centres to produce a model like those illustrated by Leonardo da Vinci. If\n"
-"input_file is not given the program reads from standard input.\n"
-"\n"
-"Options\n"
-"%s"
-"  -w <wdth> width of the perimeter border of the faces, follow by %% for\n"
-"            percentage of maximum width without overlap (default: %g%%)\n"
-"  -l <ht>   height to thicken faces, 0 for single polygon height, follow by\n"
-"            %% for percentage of width value (default: %g%%)\n"
-"  -c <cent> centre point to extrude faces towards, in form 'X,Y,Z', or C to\n"
-"            use centroid (default: no centre, use calculated vertex normals)\n"
-"  -p        faces converted to panels without holes (incompatible with\n"
-"            -w, -x, -e)\n"
-"  -m        distribute the height equally on both sides of the faces, so\n"
-"            the original faces would lie in the middle of the new faces\n"
-"            (use for non-orientable models)\n"
-"  -x        hide the edges that join the outside of a face to the hole\n"
-"  -e        take colours from the edge colours of the base polyhedron\n"
-"            (default: use face colours)\n"
-"  -k        keep orientation, don't try to orient the faces\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"\n", prog_name(), help_ver_text, def_width, def_height);
+  fprintf(stdout, R"(
+Usage: %s [options] [input_file]
+
+Read a file in OFF format, and thicken the faces and cut a hole in their
+centres to produce a model like those illustrated by Leonardo da Vinci. If
+input_file is not given the program reads from standard input.
+
+Options
+%s
+  -w <wdth> width of the perimeter border of the faces, follow by %% for
+            percentage of maximum width without overlap (default: %g%%)
+  -l <ht>   height to thicken faces, 0 for single polygon height, follow by
+            %% for percentage of width value (default: %g%%)
+  -c <cent> centre point to extrude faces towards, in form 'X,Y,Z', or C to
+            use centroid (default: no centre, use calculated vertex normals)
+  -p        faces converted to panels without holes (incompatible with
+            -w, -x, -e)
+  -m        distribute the height equally on both sides of the faces, so
+            the original faces would lie in the middle of the new faces
+            (use for non-orientable models)
+  -x        hide the edges that join the outside of a face to the hole
+  -e        take colours from the edge colours of the base polyhedron
+            (default: use face colours)
+  -k        keep orientation, don't try to orient the faces
+  -o <file> write output to file (default: write to standard output)
+
+)",
+          prog_name(), help_ver_text, def_width, def_height);
 }
-// clang-format on
 
 void leo_opts::process_command_line(int argc, char **argv)
 {

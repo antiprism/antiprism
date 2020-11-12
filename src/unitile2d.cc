@@ -28,14 +28,14 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::string;
 using std::vector;
@@ -685,59 +685,57 @@ public:
   void usage();
 };
 
-// clang-format off
 void ut_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] [pattern]\n"
-"\n"
-"Makes uniform tilings on a surface. Surfaces include plane or cylinder\n"
-"section, torus, Klein bottle, and many others.\n"
-"Patterns are (default: 1)\n"
-"   1 - 4,4,4,4      {4,4}    5 - 3,3,3,4,4      9  - 4,8,8\n"
-"   2 - 3,3,3,3,3,3  {3,6}    6 - 3,3,4,3,4      10 - 3,4,6,4\n"
-"   3 - 6,6,6        {6,3}    7 - 3,3,3,3,6      11 - 4,6,12\n"
-"   4 - 3,6,3,6               8 - 3,12,12\n"
-"\n"
-"Options\n"
-"%s"
-"  -s <type> surface type:\n"
-"        p - plane (default)\n"
-"        c - conical frustum (-R bottom radius, -r top radius, -d height,\n"
-"            -T X,Y,0)\n"
-"        m - mobius strip (-R ring radius, -r strip width, -T X,0,0)\n"
-"        t - torus (-R ring radius, -r tube radius. -T X,Y,0)\n"
-"        T - trefoil (-R ring radius, -r tube radius. -T X,Y,0, -d N,D)\n"
-"        k - Klein bottle (-r tube radius, -T X,0,0)\n"
-"        K - figure-8 Klein bottle (-R ring radius, -r tube radius, -T X,0,0)\n"
-"        C - cross-cap (needs tile vertices at tiling rectangle corners)\n"
-"        w - cross-cap (does not preserve tiling, only works with pattern 1!)\n"
-"        r - Roman (does not preserve tiling)\n"
-"        b - Boy's (does not presere tiling)\n"
-"        R - Roman to Boy's (-d stage of tansformation, range 0.0-1.0\n"
-"            does not preserve tiling\n"
-"        x - 4D torus (-W rotatation in 4D before projection onto xyz, -T X,Y,0\n"
-"        y - 4D Klein bottle (-W rotatation in 4D before projection onto xyz)\n"
-"  -w <wdth> width of tiling (default: 20)\n"
-"  -l <ht>   height of tiling (default: width)\n"
-"  -g        use given height and width, don't increase to make\n"
-"            rectangular tile\n"
-"  -r <rad>  'minor' radius of surface\n"
-"  -R <rad>  'major' radius of surface\n"
-"  -d <dist> height of conic frustrum (-s C, default: 5.0) or parameter for\n"
-"            Roman to Boy's surface (-s R, default 0.0)\n"
-"  -T <tran> translate pattern, three numbers separated by commas which are\n"
-"            used as the x, y and z displacements\n"
-"  -S <X,Y>  \"shear\" the base rectangular tiling pattern by X units in the\n"
-"            w direction and Y units in the l direction (used with -s t)\n"
-"  -W <rot>  rotation of 4D surface before projection, six angles\n"
-"            separated by commas to rotate in planes xy,yz,zw,wx,xz,yw\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"\n", prog_name(), help_ver_text);
+  fprintf(stdout, R"(
+Usage: %s [options] [pattern]
+
+Makes uniform tilings on a surface. Surfaces include plane or cylinder
+section, torus, Klein bottle, and many others.
+Patterns are (default: 1)
+   1 - 4,4,4,4      {4,4}    5 - 3,3,3,4,4      9  - 4,8,8
+   2 - 3,3,3,3,3,3  {3,6}    6 - 3,3,4,3,4      10 - 3,4,6,4
+   3 - 6,6,6        {6,3}    7 - 3,3,3,3,6      11 - 4,6,12
+   4 - 3,6,3,6               8 - 3,12,12
+
+Options
+%s
+  -s <type> surface type:
+        p - plane (default)
+        c - conical frustum (-R bottom radius, -r top radius, -d height,
+            -T X,Y,0)
+        m - mobius strip (-R ring radius, -r strip width, -T X,0,0)
+        t - torus (-R ring radius, -r tube radius. -T X,Y,0)
+        T - trefoil (-R ring radius, -r tube radius. -T X,Y,0, -d N,D)
+        k - Klein bottle (-r tube radius, -T X,0,0)
+        K - figure-8 Klein bottle (-R ring radius, -r tube radius, -T X,0,0)
+        C - cross-cap (needs tile vertices at tiling rectangle corners)
+        w - cross-cap (does not preserve tiling, only works with pattern 1!)
+        r - Roman (does not preserve tiling)
+        b - Boy's (does not presere tiling)
+        R - Roman to Boy's (-d stage of tansformation, range 0.0-1.0
+            does not preserve tiling
+        x - 4D torus (-W rotatation in 4D before projection onto xyz, -T X,Y,0
+        y - 4D Klein bottle (-W rotatation in 4D before projection onto xyz)
+  -w <wdth> width of tiling (default: 20)
+  -l <ht>   height of tiling (default: width)
+  -g        use given height and width, don't increase to make
+            rectangular tile
+  -r <rad>  'minor' radius of surface
+  -R <rad>  'major' radius of surface
+  -d <dist> height of conic frustrum (-s C, default: 5.0) or parameter for
+            Roman to Boy's surface (-s R, default 0.0)
+  -T <tran> translate pattern, three numbers separated by commas which are
+            used as the x, y and z displacements
+  -S <X,Y>  \"shear\" the base rectangular tiling pattern by X units in the
+            w direction and Y units in the l direction (used with -s t)
+  -W <rot>  rotation of 4D surface before projection, six angles
+            separated by commas to rotate in planes xy,yz,zw,wx,xz,yw
+  -o <file> write output to file (default: write to standard output)
+
+)",
+          prog_name(), help_ver_text);
 }
-// clang-format on
 
 void ut_opts::process_command_line(int argc, char **argv)
 {

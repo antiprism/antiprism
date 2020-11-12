@@ -22,20 +22,19 @@
   IN THE SOFTWARE.
 */
 
+#include "geometry.h"
+#include "geometryinfo.h"
+#include "private_std_polys.h"
+#include "symmetry.h"
+#include "tiling.h"
+#include "utils.h"
+
 #include <algorithm>
 #include <cstring>
 #include <functional>
 #include <regex>
 #include <string>
 #include <vector>
-
-#include "geometry.h"
-#include "geometryinfo.h"
-#include "symmetry.h"
-#include "tiling.h"
-#include "utils.h"
-
-#include "private_std_polys.h"
 
 using std::map;
 using std::pair;

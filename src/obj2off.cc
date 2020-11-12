@@ -28,16 +28,14 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
+#include <cctype>
 #include <climits>
 #include <cstdio>
 #include <cstdlib>
-
-#include <cctype>
-
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::string;
 using std::vector;
@@ -69,6 +67,7 @@ Options
   -d <dgts> number of significant digits (default %d) or if negative
             then the number of digits after the decimal point
   -o <file> write output to file (default: write to standard output)
+
 )",
           prog_name(), help_ver_text, DEF_SIG_DGTS);
 }

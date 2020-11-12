@@ -31,6 +31,7 @@
 
 #include "vec3d.h"
 #include "vec4d.h"
+
 #include <cmath>
 #include <vector>
 

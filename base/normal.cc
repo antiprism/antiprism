@@ -26,10 +26,10 @@
  * \brief classes for working with normals
  */
 
+#include "geometryutils.h"
+
 #include <string>
 #include <vector>
-
-#include "geometryutils.h"
 
 using std::string;
 using std::vector;

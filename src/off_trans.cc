@@ -28,15 +28,14 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "../base/antiprism.h"
+
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
-
 #include <string>
 #include <utility>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::map;
 using std::pair;
@@ -58,67 +57,65 @@ public:
   void usage();
 };
 
-// clang-format off
 void trans_opts::usage()
 {
-   fprintf(stdout,
-"\n"
-"Usage: %s [options] [input_file]\n"
-"\n"
-"Read a file in OFF format and apply transformations to it. If\n"
-"input_file is not given the program reads from standard input.\n"
-"\n"
-"Options\n"
-"%s"
-"  -T <tran> translate, three numbers separated by commas which are\n"
-"            used as the x, y and z displacements\n"
-"  -R <rot>  rotate about an axis, three, four or six numbers separated by\n"
-"            commas. If three numbers these are angles (degrees) to rotate\n"
-"            about the x, y and z axes. If four numbers, the first three\n"
-"            are a direction vector for the axis, the last number is the\n"
-"            angle (degrees) to rotate. If six numbers, these are two\n"
-"            vectors (from,to) and rotate to carry the first to the second.\n"
-"            If twelve numbers these are four vectors (from1,from2,to1,to2)\n"
-"            and rotate to carry the first onto the third then rotate around\n"
-"            the third to carry the second onto the fourth\n"
-"  -M <norm> reflect in a plane, three numbers separated by commas which\n"
-"            give a vector normal to the plane of reflection.\n"
-"  -S <scal> scale, one, three or four numbers separated by commas. If one\n"
-"            number then scale by this factor in all directions. If three\n"
-"            numbers these are the factors to scale along the x, y and\n"
-"            z axes. If four numbers, the first three are a direction\n"
-"            vector for the scaling, the last number is the factor to scale\n"
-"  -I        inversion\n"
-"  -A <crds> transformation that will align two sets of three points\n"
-"            (18 numbers coordinates of from1,from2,from3,to1,to2,to3)\n"
-"  -a <angs> transformation that makes particular angles between the\n"
-"            mapped axes, angles in degrees in form yz_ang,zx_ang,xy_ang\n"
-"            (corresponding to the angles opposite the x-, y- and z-axis)\n"
-"  -X <mtrx> transformation matrix of 9 or 12 values, given left-to-right\n"
-"            top-to-bottom, used to premultipy each coordinate\n"
-"  -C        translation that carries the centroid to the origin\n"
-"  -y        align geometry with the standard alignment for a symmetry type,\n"
-"            up to three comma separated parts: symmetry subgroup (Schoenflies\n"
-"            notation) or 'full', conjugation type (integer), realignment\n"
-"            (colon separated list of an integer then decimal numbers)\n"
-"  -Y        align standard alignment of a symmetry type with its position\n"
-"            as a subgroup of another symmetry type, up to four comma\n"
-"            separated parts: main symmetry (Schoenflies notation) or\n"
-"            file name, subgroup (Schoenflies notation), conjugation type\n"
-"            (integer), realignment (colon separated list of an integer\n"
-"            then decimal numbers)\n"
-"  -s <type> relative scaling, scale so a measure has a value of 1.\n"
-"            VAa need an oriented polyhedron, V needs a closed polyhedron.\n"
-"            A - area                       a - average face area\n"
-"            E - perimeter (sum of edges)   e - average edge length\n"
-"            V - volume                     r - radius, from centroid\n"
-"                                               to furthest vertex\n"
-"  -i        replace the current combined transformation by its inverse\n"
-"  -o <file> write output to file (default: write to standard output)\n"
-"\n"
-"\n", prog_name(), help_ver_text);
+  fprintf(stdout, R"(
+Usage: %s [options] [input_file]
+
+Read a file in OFF format and apply transformations to it. If
+input_file is not given the program reads from standard input.
+
+Options
+%s
+  -T <tran> translate, three numbers separated by commas which are
+            used as the x, y and z displacements
+  -R <rot>  rotate about an axis, three, four or six numbers separated by
+            commas. If three numbers these are angles (degrees) to rotate
+            about the x, y and z axes. If four numbers, the first three
+            are a direction vector for the axis, the last number is the
+            angle (degrees) to rotate. If six numbers, these are two
+            vectors (from,to) and rotate to carry the first to the second.
+            If twelve numbers these are four vectors (from1,from2,to1,to2)
+            and rotate to carry the first onto the third then rotate around
+            the third to carry the second onto the fourth
+  -M <norm> reflect in a plane, three numbers separated by commas which
+            give a vector normal to the plane of reflection.
+  -S <scal> scale, one, three or four numbers separated by commas. If one
+            number then scale by this factor in all directions. If three
+            numbers these are the factors to scale along the x, y and
+            z axes. If four numbers, the first three are a direction
+            vector for the scaling, the last number is the factor to scale
+  -I        inversion
+  -A <crds> transformation that will align two sets of three points
+            (18 numbers coordinates of from1,from2,from3,to1,to2,to3)
+  -a <angs> transformation that makes particular angles between the
+            mapped axes, angles in degrees in form yz_ang,zx_ang,xy_ang
+            (corresponding to the angles opposite the x-, y- and z-axis)
+  -X <mtrx> transformation matrix of 9 or 12 values, given left-to-right
+            top-to-bottom, used to premultipy each coordinate
+  -C        translation that carries the centroid to the origin
+  -y        align geometry with the standard alignment for a symmetry type,
+            up to three comma separated parts: symmetry subgroup (Schoenflies
+            notation) or 'full', conjugation type (integer), realignment
+            (colon separated list of an integer then decimal numbers)
+  -Y        align standard alignment of a symmetry type with its position
+            as a subgroup of another symmetry type, up to four comma
+            separated parts: main symmetry (Schoenflies notation) or
+            file name, subgroup (Schoenflies notation), conjugation type
+            (integer), realignment (colon separated list of an integer
+            then decimal numbers)
+  -s <type> relative scaling, scale so a measure has a value of 1.
+            VAa need an oriented polyhedron, V needs a closed polyhedron.
+            A - area                       a - average face area
+            E - perimeter (sum of edges)   e - average edge length
+            V - volume                     r - radius, from centroid
+                                               to furthest vertex
+  -i        replace the current combined transformation by its inverse
+  -o <file> write output to file (default: write to standard output)
+
+)",
+          prog_name(), help_ver_text);
 }
-// clang-format on
 
 bool rel_scale_val(Geometry &geom, char rel_scale, double *scale, char *errmsg)
 {

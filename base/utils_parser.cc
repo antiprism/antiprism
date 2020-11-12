@@ -26,6 +26,10 @@
    \brief parse mathematical expressions (using muParser)
 */
 
+#include "mathutils.h"
+#include "muparser/muParser.h"
+#include "utils.h"
+
 #ifdef HAVE_CONFIG_H
 #include "../config.h"
 #endif
@@ -35,10 +39,6 @@
 #include <cstring>
 #include <sys/stat.h>
 #include <sys/types.h>
-
-#include "mathutils.h"
-#include "muparser/muParser.h"
-#include "utils.h"
 
 // The muParser header includes <cmath> which conflicts with <math.h>
 // on, at least, Cygwin, regarding isnan() and isinf(). Include all

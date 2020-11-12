@@ -31,12 +31,12 @@
 #ifndef GEODESIC_H
 #define GEODESIC_H
 
+#include "geometry.h"
+#include "geometryutils.h"
+
 #include <map>
 #include <string>
 #include <vector>
-
-#include "geometry.h"
-#include "geometryutils.h"
 
 typedef std::pair<int, int> int_pr;
 inline int_pr mk_int_pr(int x, int y)

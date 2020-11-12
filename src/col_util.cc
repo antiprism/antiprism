@@ -28,16 +28,14 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <cstdio>
-#include <cstdlib>
-
-#include <cctype>
+#include "../base/antiprism.h"
 
 #include <algorithm>
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
 #include <string>
 #include <vector>
-
-#include "../base/antiprism.h"
 
 using std::max;
 using std::min;
@@ -149,6 +147,7 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                note: -m and -O may be used together
   -U        allow only unique colors (sorts by color)
   -Z <int>  maximum entries to read from open ended maps (default: 256)
+
 )",
           prog_name(), help_ver_text);
 }

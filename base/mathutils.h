@@ -29,10 +29,10 @@
 #ifndef MATHUTILS_H
 #define MATHUTILS_H
 
+#include "const.h"
+
 #include <algorithm>
 #include <cmath>
-
-#include "const.h"
 
 #ifndef NAN
 #define NAN (0.0F / 0.0F)

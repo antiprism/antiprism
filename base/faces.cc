@@ -26,17 +26,16 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-#include <cstdio>
-#include <cstdlib>
+#include "geometry.h"
+#include "geometryutils.h"
 
 #include <algorithm>
+#include <cstdio>
+#include <cstdlib>
 #include <functional>
 #include <map>
 #include <string>
 #include <vector>
-
-#include "geometry.h"
-#include "geometryutils.h"
 
 using std::map;
 using std::pair;

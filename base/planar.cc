@@ -28,15 +28,14 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
+#include "planar.h"
+
 #include <cstdio>
 #include <cstdlib>
-
 #include <map>
 #include <set>
 #include <string>
 #include <vector>
-
-#include "planar.h"
 
 using std::make_pair;
 using std::map;
