@@ -83,7 +83,7 @@ Status read_int(const char *str, int *i);
 /// Read a fraction from a string.
 /**The string should only hold an integer, or two integers seperated by '/',
  * but may have leading and trailing whitespace.
- * \param frac_str the string holding the fraction.
+ * \param str the string holding the fraction.
  * \param num used to return the numerator.
  * \param denom used to return the denominator.
  * \return status, evaluates to \c true if a valid fraction

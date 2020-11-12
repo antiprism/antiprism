@@ -349,7 +349,7 @@ bool canonical_radius_range_test(const Geometry &geom,
 /// Canonicalize (George Hart "Mathematica" algorithm)
 /**See http://library.wolfram.com/infocenter/Articles/2012/
  * \param geom geometry to canonicalise.
- * \param geom it_ctrl interation control.
+ * \param it_ctrl interation control.
  * \param edge_factor small number to scale edge adjustments.
  * \param plane_factor small number to scale plane adjustments.
  * \param radius_range_percent if the model outer radius increases this
@@ -373,7 +373,7 @@ Vec3d edge_nearpoints_centroid(Geometry &geom,
 /// Canonicalize (George Hart "Conway Notation" algorithm)
 /**See http://www.georgehart.com/virtual-polyhedra/conway_notation.html
  * \param base geometry to canonicalise.
- * \param geom it_ctrl interation control.
+ * \param it_ctrl interation control.
  * \param canonical_method - 'b': base/dual, 'q': adjust vertices with
  * side effect of planarization (len2() version)
  * \param radius_range_percent if the model outer radius increases this
@@ -388,13 +388,13 @@ bool canonicalize_bd(Geometry &base, IterationControl it_ctrl,
 
 /// an abbreviated wrapper for planarization with the base/dual method
 /**\param geom geometry to planarize.
- * \param geom it_ctrl interation control.
+ * \param it_ctrl interation control.
  * \return \c true if success, otherwise \c false */
 bool planarize_bd(Geometry &geom, IterationControl it_ctrl);
 
 /// make_regular_faces() from poly_form (-a r)
 /**\param geom geometry to make polygons near unit edge.
- * \param geom it_ctrl interation control.
+ * \param it_ctrl interation control.
  * \param shorten_factor small number to scale edge adjustments.
  * \param plane_factor small number to scale plane adjustments.
  * \param radius_factor small number to scale radius adjustments.
@@ -408,13 +408,13 @@ Status make_regular_faces2(Geometry &geom, IterationControl it_ctrl,
 
 /// an abbreviated wrapper for planarization with make_regular_faces
 /**\param geom geometry to planarize.
- * \param geom it_ctrl interation control.
+ * \param it_ctrl interation control.
  * \return status, evaluates to \c true completed, otherwise false.*/
 Status make_regular_faces(Geometry &geom, IterationControl it_ctrl);
 
 /// an abbreviated wrapper for planarization with make_regular_faces
-/**\param geom geometry to planarize.
- * \param geom it_ctrl interation control.
+/**\param base_geom geometry to planarize.
+ * \param it_ctrl interation control.
  * \param plane_factor small number to scale plane adjustments.
  * \return status, evaluates to \c true completed, otherwise false.*/
 Status make_planar2(Geometry &base_geom, IterationControl it_ctrl,
@@ -422,7 +422,7 @@ Status make_planar2(Geometry &base_geom, IterationControl it_ctrl,
 
 /// RK - edge near points of base seek 1
 /**\param geom geometry to canonicalise.
- * \param geom it_ctrl interation control.
+ * \param it_ctrl interation control.
  * \param radius_range_percent if the model outer radius increases this
  *  much over the inner radius then it is growing too much, terminate.
  * \param centering passed from canonical program, when centering is not used
@@ -435,7 +435,7 @@ bool canonicalize_unit(Geometry &geom, IterationControl it_ctrl,
 
 /// an abbreviated wrapper for planarization with canonicalize_unit
 /**\param geom geometry to planarize.
- * \param geom it_ctrl interation control
+ * \param it_ctrl interation control
  * \return \c true if success, otherwise \c false */
 bool planarize_unit(Geometry &geom, IterationControl it_ctrl);
 

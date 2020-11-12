@@ -80,7 +80,7 @@ public:
   int get_status_check_only_iters() const { return status_check_only_iters; }
 
   /// Set status check periods for reporting and check-only
-  /**\param periods the number of iterations for status check with report,
+  /**\param iters_str the number of iterations for status check with report,
    *  optionally followed by a comma and the number of iterations for
    *  status only
    * \return status, evaluates to \c true if a valid string
