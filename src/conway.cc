@@ -47,7 +47,6 @@ using std::map;
 using std::pair;
 using std::set;
 using std::string;
-using std::to_string;
 using std::vector;
 
 using namespace anti;
@@ -212,7 +211,7 @@ int validate_cn_string(const string &cn_string, vector<ops *> &operations,
 
       // if repeat character
       if (operand == '^') {
-        int sz = (int)operations.size();
+        unsigned int sz = operations.size();
         if (!sz) {
           fprintf(stderr, "repeat operator is a beginning of string\n");
           return i;
@@ -909,7 +908,7 @@ void cn_opts::process_command_line(int argc, char **argv)
         ptok1 = strtok_r(nullptr, parse_key1, &tok_ptr1);
       }
 
-      for (int i = 0; i < (int)tokens.size(); i++) {
+      for (unsigned int i = 0; i < tokens.size(); i++) {
         op_term++;
 
         char parse_key2[] = "=";
@@ -1199,8 +1198,7 @@ void verbose(char operation, int op_var, const cn_opts &opts)
       hart_string = "(hart)";
 
     // special cases
-    char buf[MSG_SZ];
-    buf[0] = '\0';
+    string buf;
     bool user_op = false;
     if (opts.alpha_user.find(operation) != string::npos) {
       user_op = true;
@@ -1218,7 +1216,7 @@ void verbose(char operation, int op_var, const cn_opts &opts)
       operator_name = "done.";
     // L and op_var is -1 means L stands alone
     else if (operation == 'L' && op_var == -1) {
-      buf[0] = '\0';
+      buf = "";
     }
     // if L may have a 0
     else if (operation == 'L' && op_var == 0) {
@@ -1226,10 +1224,10 @@ void verbose(char operation, int op_var, const cn_opts &opts)
     }
     // all other case show op_var when not 1
     else if (op_var != 1)
-      sprintf(buf, "(%d)", op_var);
+      buf = "(" + std::to_string(op_var) + ")";
 
     fprintf(stderr, "%s%c%s %s\n", operator_name.c_str(),
-            (user_op ? operation : '\0'), buf, hart_string.c_str());
+            (user_op ? operation : '\0'), buf.c_str(), hart_string.c_str());
   }
 }
 
@@ -1414,7 +1412,9 @@ void hart_ambo(Geometry &geom)
   map<string, map<string, string>> faces_table;
   vector<Vec3d> verts_new;
 
-  char buf1[MSG_SZ], buf2[MSG_SZ], buf3[MSG_SZ];
+  string buf1;
+  string buf2;
+  string buf3;
   unsigned int vert_num = 0;
   for (unsigned int i = 0; i < faces.size(); i++) {
     int v1 = faces[i].at(faces[i].size() - 2);
@@ -1422,17 +1422,22 @@ void hart_ambo(Geometry &geom)
     for (unsigned int j = 0; j < faces[i].size(); j++) {
       int v3 = faces[i].at(j);
       if (v1 < v2) {
-        sprintf(buf1, "%d_%d", (v1 < v2) ? v1 : v2, (v1 > v2) ? v1 : v2);
+        buf1 = std::to_string((v1 < v2) ? v1 : v2) + "_" +
+               std::to_string((v1 > v2) ? v1 : v2);
         verts_table[buf1] = vert_num++;
         verts_new.push_back((verts[v1] + verts[v2]) * 0.5);
       }
-      sprintf(buf1, "f%d", i);
-      sprintf(buf2, "%d_%d", (v1 < v2) ? v1 : v2, (v1 > v2) ? v1 : v2);
-      sprintf(buf3, "%d_%d", (v2 < v3) ? v2 : v3, (v2 > v3) ? v2 : v3);
+      buf1 = "f" + std::to_string(i);
+      buf2 = std::to_string((v1 < v2) ? v1 : v2) + "_" +
+             std::to_string((v1 > v2) ? v1 : v2);
+      buf3 = std::to_string((v2 < v3) ? v2 : v3) + "_" +
+             std::to_string((v2 > v3) ? v2 : v3);
       faces_table[buf1][buf2] = buf3;
-      sprintf(buf1, "v%d", v2);
-      sprintf(buf2, "%d_%d", (v2 < v3) ? v2 : v3, (v2 > v3) ? v2 : v3);
-      sprintf(buf3, "%d_%d", (v1 < v2) ? v1 : v2, (v1 > v2) ? v1 : v2);
+      buf1 = "v" + std::to_string(v2);
+      buf2 = std::to_string((v2 < v3) ? v2 : v3) + "_" +
+             std::to_string((v2 > v3) ? v2 : v3);
+      buf3 = std::to_string((v1 < v2) ? v1 : v2) + "_" +
+             std::to_string((v1 > v2) ? v1 : v2);
       faces_table[buf1][buf2] = buf3;
       v1 = v2;
       v2 = v3;
@@ -1457,19 +1462,21 @@ void hart_gyro(Geometry &geom)
   map<string, map<string, string>> faces_table;
   vector<Vec3d> verts_new;
 
-  char buf1[MSG_SZ], buf2[MSG_SZ], buf3[MSG_SZ];
+  string buf1;
+  string buf2;
+  string buf3;
   unsigned int vert_num = 0;
   vector<Vec3d> centers;
   geom.face_cents(centers);
   for (unsigned int i = 0; i < faces.size(); i++) {
-    sprintf(buf1, "f%d", i);
+    buf1 = "f" + std::to_string(i);
     verts_table[buf1] = vert_num++;
     verts_new.push_back(centers[i].unit());
   }
   centers.clear();
 
   for (unsigned int i = 0; i < verts.size(); i++) {
-    sprintf(buf1, "v%d", i);
+    buf1 = "v" + std::to_string(i);
     verts_table[buf1] = vert_num++;
     verts_new.push_back(verts[i]);
   }
@@ -1479,26 +1486,26 @@ void hart_gyro(Geometry &geom)
     int v2 = faces[i].at(faces[i].size() - 1);
     for (unsigned int j = 0; j < faces[i].size(); j++) {
       int v3 = faces[i].at(j);
-      sprintf(buf1, "%d~%d", v1, v2);
+      buf1 = std::to_string(v1) + "~" + std::to_string(v2);
       verts_table[buf1] = vert_num++;
       // approx. (2/3)v1 + (1/3)v2
       verts_new.push_back(verts[v1] * 0.7 + verts[v2] * 0.3);
 
-      sprintf(buf1, "%df%d", i, v1);
-      sprintf(buf2, "f%d", i);
-      sprintf(buf3, "%d~%d", v1, v2);
+      buf1 = std::to_string(i) + "f" + std::to_string(v1);
+      buf2 = "f" + std::to_string(i);
+      buf3 = std::to_string(v1) + "~" + std::to_string(v2);
       faces_table[buf1][buf2] = buf3;
-      sprintf(buf2, "%d~%d", v1, v2);
-      sprintf(buf3, "%d~%d", v2, v1);
+      buf2 = std::to_string(v1) + "~" + std::to_string(v2);
+      buf3 = std::to_string(v2) + "~" + std::to_string(v1);
       faces_table[buf1][buf2] = buf3;
-      sprintf(buf2, "%d~%d", v2, v1);
-      sprintf(buf3, "v%d", v2);
+      buf2 = std::to_string(v2) + "~" + std::to_string(v1);
+      buf3 = "v" + std::to_string(v2);
       faces_table[buf1][buf2] = buf3;
-      sprintf(buf2, "v%d", v2);
-      sprintf(buf3, "%d~%d", v2, v3);
+      buf2 = "v" + std::to_string(v2);
+      buf3 = std::to_string(v2) + "~" + std::to_string(v3);
       faces_table[buf1][buf2] = buf3;
-      sprintf(buf2, "%d~%d", v2, v3);
-      sprintf(buf3, "f%d", i);
+      buf2 = std::to_string(v2) + "~" + std::to_string(v3);
+      buf3 = "f" + std::to_string(i);
       faces_table[buf1][buf2] = buf3;
 
       v1 = v2;
@@ -1568,10 +1575,12 @@ void hart_propellor(Geometry &geom)
   map<string, map<string, string>> faces_table;
   vector<Vec3d> verts_new;
 
-  char buf1[MSG_SZ], buf2[MSG_SZ], buf3[MSG_SZ];
+  string buf1;
+  string buf2;
+  string buf3;
   unsigned int vert_num = 0;
   for (unsigned int i = 0; i < verts.size(); i++) {
-    sprintf(buf1, "v%d", i);
+    buf1 = "v" + std::to_string(i);
     verts_table[buf1] = vert_num++;
     verts_new.push_back(verts[i].unit());
   }
@@ -1581,27 +1590,27 @@ void hart_propellor(Geometry &geom)
     int v2 = faces[i].at(faces[i].size() - 1);
     for (unsigned int j = 0; j < faces[i].size(); j++) {
       int v3 = faces[i].at(j);
-      sprintf(buf1, "%d~%d", v1, v2);
+      buf1 = std::to_string(v1) + "~" + std::to_string(v2);
       verts_table[buf1] = vert_num++;
       // approx. (2/3)v1 + (1/3)v2
       verts_new.push_back(verts[v1] * 0.7 + verts[v2] * 0.3);
 
-      sprintf(buf1, "v%d", i);
-      sprintf(buf2, "%d~%d", v1, v2);
-      sprintf(buf3, "%d~%d", v2, v3);
+      buf1 = "v" + std::to_string(i);
+      buf2 = std::to_string(v1) + "~" + std::to_string(v2);
+      buf3 = std::to_string(v2) + "~" + std::to_string(v3);
       faces_table[buf1][buf2] = buf3;
-      sprintf(buf1, "%df%d", i, v2);
-      sprintf(buf2, "%d~%d", v1, v2);
-      sprintf(buf3, "%d~%d", v2, v1);
+      buf1 = std::to_string(i) + "f" + std::to_string(v2);
+      buf2 = std::to_string(v1) + "~" + std::to_string(v2);
+      buf3 = std::to_string(v2) + "~" + std::to_string(v1);
       faces_table[buf1][buf2] = buf3;
-      sprintf(buf2, "%d~%d", v2, v1);
-      sprintf(buf3, "v%d", v2);
+      buf2 = std::to_string(v2) + "~" + std::to_string(v1);
+      buf3 = "v" + std::to_string(v2);
       faces_table[buf1][buf2] = buf3;
-      sprintf(buf2, "v%d", v2);
-      sprintf(buf3, "%d~%d", v2, v3);
+      buf2 = "v" + std::to_string(v2);
+      buf3 = std::to_string(v2) + "~" + std::to_string(v3);
       faces_table[buf1][buf2] = buf3;
-      sprintf(buf2, "%d~%d", v2, v3);
-      sprintf(buf3, "%d~%d", v1, v2);
+      buf2 = std::to_string(v2) + "~" + std::to_string(v3);
+      buf3 = std::to_string(v1) + "~" + std::to_string(v2);
       faces_table[buf1][buf2] = buf3;
 
       v1 = v2;
@@ -1623,7 +1632,7 @@ void hart_propellor(Geometry &geom)
 void hart_chamfer(Geometry &geom, const cn_opts &opts)
 {
   vector<Vec3d> &verts = geom.raw_verts();
-  int sz = verts.size();
+  unsigned int sz = verts.size();
 
   // make all edges a face
   // this is a join operation but retains the original vertex indexes
@@ -1643,7 +1652,7 @@ void hart_chamfer(Geometry &geom, const cn_opts &opts)
 // whirl for hart code
 void hart_whirl(Geometry &geom, bool orientation_positive, const cn_opts &opts)
 {
-  int num_faces = geom.raw_faces().size();
+  unsigned int num_faces = geom.raw_faces().size();
 
   verbose('g', 0, opts);
   hart_gyro(geom);
@@ -1660,7 +1669,7 @@ void hart_whirl(Geometry &geom, bool orientation_positive, const cn_opts &opts)
 
   // only truncate on original face centers
   vector<int> v_idxs;
-  for (int i = 0; i < num_faces; i++)
+  for (unsigned int i = 0; i < num_faces; i++)
     v_idxs.push_back(i);
 
   verbose('t', 0, opts);
@@ -1731,7 +1740,7 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
   vector<pair<Vec3d, Color>> color_centroids;
   if ((opts.face_coloring_method == 'o') &&
       (non_color_ops.find(operation) == string::npos)) {
-    for (int i = 0; i < (int)geom.faces().size(); i++) {
+    for (unsigned int i = 0; i < geom.faces().size(); i++) {
       pair<Vec3d, Color> color_cent;
       color_cent.first = geom.face_cent(i);
       color_cent.second = geom.colors(FACES).get(i);
@@ -1764,7 +1773,7 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
       wythoff_n = false;
       geom_save = geom;
       // remove all faces of size op_var from geom_save
-      for (int i = 0; i < (int)geom.faces().size(); i++) {
+      for (unsigned int i = 0; i < geom.faces().size(); i++) {
         if ((int)geom_save.faces(i).size() == op_var)
           dels.push_back(i);
       }
@@ -1784,11 +1793,8 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
     string wythoff_op;
     wythoff_op.push_back(operation);
 
-    char buf[MSG_SZ];
-    if ((op_var != 1) && wythoff_n) {
-      sprintf(buf, "%d", op_var);
-      wythoff_op += string(buf);
-    }
+    if ((op_var != 1) && wythoff_n)
+      wythoff_op += std::to_string(op_var);
 
     // for tile mode, use old wythoff truncate
     if (opts.tile_mode && wythoff_op == "t")
@@ -1800,7 +1806,7 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
 
     // remove digons
     dels.clear();
-    for (int i = 0; i < (int)geom.faces().size(); i++) {
+    for (unsigned int i = 0; i < geom.faces().size(); i++) {
       if (geom.faces(i).size() < 3) {
         // if coloring model like wythoff, move digons to edges
         if (opts.face_coloring_method == 'w') {
@@ -1834,10 +1840,10 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
   // if coloring new faces, restore color of previous faces
   if ((opts.face_coloring_method == 'o') &&
       (non_color_ops.find(operation) == string::npos)) {
-    for (int i = 0; i < (int)geom.faces().size(); i++) {
+    for (unsigned int i = 0; i < geom.faces().size(); i++) {
       Vec3d face_centroid = geom.face_cent(i);
       bool found = false;
-      for (int j = 0; j < (int)color_centroids.size(); j++) {
+      for (unsigned int j = 0; j < color_centroids.size(); j++) {
         pair<Vec3d, Color> color_cent = color_centroids[j];
         if (!compare(face_centroid, color_cent.first, opts.epsilon)) {
           geom.colors(FACES).set(i, color_cent.second);
@@ -1937,7 +1943,7 @@ void cn_coloring(Geometry &geom, const cn_opts &opts)
     bool trans_success = true;
     const vector<vector<int>> &faces = geom.faces();
     for (unsigned int i = 0; i < faces.size(); i++) {
-      int fsz = faces[i].size();
+      unsigned int fsz = faces[i].size();
       Color col = opts.map.get_col(fsz - 3);
       if (opts.face_opacity > -1) {
         int opq = (opts.face_pattern[fsz % opts.face_pattern.size()] == '1')

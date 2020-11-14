@@ -64,7 +64,6 @@ double edge_nearpoints_radius(const Geometry &geom, double &min, double &max,
   vector<Vec3d> near_pts;
 
   double nearpt_radius = 0;
-  int e_sz = edges.size();
   for (auto &edge : edges) {
     Vec3d P = geom.edge_nearpt(edge, Vec3d(0, 0, 0));
     near_pts.push_back(P);
@@ -79,7 +78,7 @@ double edge_nearpoints_radius(const Geometry &geom, double &min, double &max,
 
   center = centroid(near_pts);
 
-  return nearpt_radius / double(e_sz);
+  return nearpt_radius / double(edges.size());
 }
 
 // RK - wrapper
@@ -170,7 +169,7 @@ bool canonicalize_mm(Geometry &geom, IterationControl it_ctrl,
             // RK - revolving loop. didn't solve the imbalance problem
             else {
               for (unsigned int ee = cnt; ee < edges.size() + cnt; ee++) {
-                int e = ee % edges.size();
+                unsigned int e = ee % edges.size();
                 Vec3d P = geom.edge_nearpt(edges[e], Vec3d(0, 0, 0));
                 near_pts.push_back(P);
                 Vec3d offset = edge_factor * (P.len() - 1) * P;
@@ -494,11 +493,10 @@ Vec3d edge_nearpoints_centroid(Geometry &geom, const Vec3d cent)
 {
   vector<vector<int>> edges;
   geom.get_impl_edges(edges);
-  int e_sz = edges.size();
   Vec3d e_cent(0, 0, 0);
   for (auto &edge : edges)
     e_cent += geom.edge_nearpt(edge, cent);
-  return e_cent / double(e_sz);
+  return e_cent / double(edges.size());
 }
 
 // Implementation of George Hart's planarization and canonicalization algorithms
@@ -591,7 +589,7 @@ bool canonicalize_bd(Geometry &base, IterationControl it_ctrl,
   }
 
   return completed;
-} // namespace anti
+}
 
 // RK - wrapper for basic planarization with base/dual algorithm
 // meant to be called with finite num_iters (not -1)

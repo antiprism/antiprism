@@ -319,11 +319,11 @@ void col_util_opts::process_command_line(int argc, char **argv)
   }
 
   // fill in missing sat_powers with -1.0, meaning use centroid saturation
-  for (int i = sat_powers.size(); i < 4; i++)
+  for (unsigned int i = sat_powers.size(); i < 4; i++)
     sat_powers.push_back(-1.0);
 
   // fill in missing value_powers with -1.0, meaning use average values
-  for (int i = value_powers.size(); i < 4; i++)
+  for (unsigned int i = value_powers.size(); i < 4; i++)
     value_powers.push_back(-1.0);
 
   if (hsl_height && color_system_mode != 2)
@@ -447,9 +447,9 @@ void color_wheel(Geometry &geom, const vector<Color> &cols,
         col.set_brightness(brightness_adj);
 
       if (verbose) {
-        char name[MSG_SZ];
-        sprintf(name, "[blend %d]", lvl + 1);
-        col.dump(name);
+        string name;
+        name = "[blend " + std::to_string(lvl + 1) + "]";
+        col.dump(name.c_str());
       }
 
       geom.add_face(face, col);
@@ -707,12 +707,12 @@ void color_grid(Geometry &geom, const vector<Color> &cols)
   Geometry sgeom;
   sgeom.append(make_square());
 
-  int cols_sz = cols.size();
-  int dim = (int)ceil(sqrt(cols_sz));
+  unsigned int cols_sz = cols.size();
+  unsigned int dim = (int)ceil(sqrt(cols_sz));
 
-  int k = 0;
-  for (int i = 0; i < dim; i++) {
-    for (int j = 0; j < dim; j++) {
+  unsigned int k = 0;
+  for (unsigned int i = 0; i < dim; i++) {
+    for (unsigned int j = 0; j < dim; j++) {
       Geometry tgeom = sgeom;
       if (k < cols_sz && cols[k].is_index()) {
         tgeom.add_vert(Vec3d(0.5, 0.45, 0.0), Color(0.0, 0.0, 0.0));
@@ -878,13 +878,15 @@ int main(int argc, char *argv[])
       else {
         if (opts.map_type == 2)
           fprintf(ofile, "%-5d = ", i);
-        char buffer[MSG_SZ];
-        buffer[0] = '\0';
-        if (cols[i][3] != 255)
-          sprintf(buffer, "%3d", cols[i][3]);
+        string buffer = "";
+        if (cols[i][3] != 255) {
+          string buf = std::to_string(cols[i][3]);
+          // pad with leading spaces to length 3
+          buffer = std::string(3 - buf.length(), ' ') + buf;
+        }
         if (cols[i].is_value())
           fprintf(ofile, "%3d %3d %3d %s\n", cols[i][0], cols[i][1], cols[i][2],
-                  buffer);
+                  buffer.c_str());
         else
           fprintf(ofile, "%3d\n", cols[i].get_index());
       }
@@ -912,9 +914,9 @@ int main(int argc, char *argv[])
                   geom, col, opts.color_system_mode, opts.chroma_level,
                   opts.ryb_mode, opts.seven_mode, opts.brightness_adj);
               if (opts.verbose) {
-                char name[MSG_SZ];
-                sprintf(name, "[blend %d]", i + 1);
-                blend.dump(name);
+                string name;
+                name = "[blend " + std::to_string(i + 1) + "]";
+                blend.dump(name.c_str());
               }
             }
           }

@@ -140,16 +140,16 @@ bool mesh_edges(Geometry &geom, const double eps)
   geom.transform(Trans3d::scale(1 / mesh_radius));
 
   // remember original sizes as the geom will be changing size
-  int vsz = verts.size();
-  int esz = edges.size();
+  unsigned int vsz = verts.size();
+  unsigned int esz = edges.size();
 
   vector<int> deleted_edges;
   vector<pair<pair<int, int>, int>> new_verts;
 
   // compare only existing edges
-  for (int i = 0; i < esz; i++) {
+  for (unsigned int i = 0; i < esz; i++) {
     vector<pair<double, int>> line_intersections;
-    for (int j = 0; j < esz; j++) {
+    for (unsigned int j = 0; j < esz; j++) {
       // don't compare to self
       if (i == j)
         continue;
@@ -157,7 +157,7 @@ bool mesh_edges(Geometry &geom, const double eps)
       // see if the new vertex was already created
       int v_idx = -1;
       for (auto &new_vert : new_verts) {
-        if (new_vert.first.first == i && new_vert.first.second == j) {
+        if (new_vert.first.first == (int)i && new_vert.first.second == (int)j) {
           v_idx = new_vert.second;
           break;
         }
@@ -174,7 +174,7 @@ bool mesh_edges(Geometry &geom, const double eps)
           v_idx =
               vertex_into_geom(geom, intersection_point, Color::invisible, eps);
           // don't include existing vertices
-          if (v_idx < vsz)
+          if (v_idx < (int)vsz)
             v_idx = -1;
           else {
             // store index of vert at i,j. Reverse index i,j so it will be found
@@ -327,7 +327,7 @@ void construct_faces(Geometry &geom, map<pair<int, int>, int> &turn_map)
   vector<int> face;
   get_first_unvisited_triad(geom, first_unvisited, visited, turn_map, face);
   while (face.size()) {
-    int fsz = face.size();
+    unsigned int fsz = face.size();
     int a = face[fsz - 2];
     int b = face[fsz - 1];
     int c = turn_map[make_pair(a, b)];
@@ -343,7 +343,7 @@ void construct_faces(Geometry &geom, map<pair<int, int>, int> &turn_map)
       geom.add_face(face);
       // mark turns visited and start a new face
       fsz = face.size();
-      for (int i = 0; i < fsz; i++)
+      for (unsigned int i = 0; i < fsz; i++)
         visited[make_pair(face[i], face[(i + 1) % fsz])] = true;
       get_first_unvisited_triad(geom, first_unvisited, visited, turn_map, face);
     }
@@ -361,8 +361,8 @@ void analyze_faces(Geometry &geom, const int planar_merge_type,
   for (unsigned int i = 0; i < faces.size(); i++) {
     double angle_sum = 0;
     bool all_negative_turns = true;
-    int fsz = faces[i].size();
-    for (int j = 0; j < fsz; j++) {
+    unsigned int fsz = faces[i].size();
+    for (unsigned int j = 0; j < fsz; j++) {
       int a = faces[i][j];
       int v = faces[i][(j + 1) % fsz];
       int b = faces[i][(j + 2) % fsz];
@@ -532,9 +532,9 @@ Geometry make_stellation_diagram(Geometry &geom, int f_idx, string sym_string,
   // Color face_color = geom.colors(FACES).get(f_idx);
 
   // find where all other faces intersect face(f_idx)
-  for (int i = 0; i < (int)faces.size(); i++) {
+  for (unsigned int i = 0; i < faces.size(); i++) {
     // don't intersect self
-    if (i == f_idx)
+    if ((int)i == f_idx)
       continue;
 
     // experimental, didn't work well
@@ -570,7 +570,7 @@ Geometry make_stellation_diagram(Geometry &geom, int f_idx, string sym_string,
 
       diagram.add_vert(P - dir * vert_radius);
       diagram.add_vert(P + dir * vert_radius);
-      int sz = diagram.verts().size();
+      unsigned int sz = diagram.verts().size();
       diagram.add_edge(make_edge(sz - 2, sz - 1));
     }
   }
@@ -629,9 +629,9 @@ void split_pinched_faces(Geometry &geom, double eps)
 
       for (unsigned int j = 0; j < dups.size(); j++) {
         vector<int> face = faces[i];
-        int sz = face.size();
-        for (int k = 0; k < sz; k++) {
-          int l = 0;
+        unsigned int sz = face.size();
+        for (unsigned int k = 0; k < sz; k++) {
+          unsigned int l = 0;
           if (face[k] == dups[j]) {
             l = k;
             vector<int> facelet;
@@ -1024,12 +1024,12 @@ bool cn_PnPoly(const Geometry &polygon, const Vec3d &P, const int idx, int
    double testy = P[idx2]; // P.y
 
    const vector<int> &face = polygon.faces()[0];
-   int n = face.size();
+   unsigned int n = face.size();
 
    int cn = 0;    // the crossing number counter
 
    // loop through all edges of the polygon
-   for (int i=0; i<n; i++) {    // edge from face[i] to face[i+1]
+   for (unsigned int i=0; i<n; i++) {    // edge from face[i] to face[i+1]
       int j = (i+1)%n;
 
       double vertx_i = verts[face[i]][idx1]; // V[i].x
@@ -1083,13 +1083,13 @@ static bool wn_PnPoly(const Geometry &polygon, const Vec3d &P, const int idx,
   double testy = P[idx2]; // P.y
 
   const vector<int> &face = polygon.faces()[0];
-  int n = face.size();
+  unsigned int n = face.size();
 
   int wn = 0; // the winding number counter
 
   // loop through all edges of the polygon
-  for (int i = 0; i < n; i++) { // edge from face[i] to face[i+1]
-    int j = (i + 1) % n;
+  for (unsigned int i = 0; i < n; i++) { // edge from face[i] to face[i+1]
+    unsigned int j = (i + 1) % n;
 
     Vec3d vert_i = verts[face[i]]; // V[i]
     Vec3d vert_j = verts[face[j]]; // V[[i+1]
@@ -1097,7 +1097,7 @@ static bool wn_PnPoly(const Geometry &polygon, const Vec3d &P, const int idx,
     double verty_i = vert_i[idx2]; // V[i].y
     double verty_j = vert_j[idx2]; // V[i+1].y
 
-    for (int i = 0; i < n; i++) { // edge from face[i] to face[i+1]
+    for (unsigned int i = 0; i < n; i++) { // edge from face[i] to face[i+1]
       // if (verty_i <= testy) {   // start y <= P.y
       if (double_le(verty_i, testy, eps)) {
         // if (verty_j > testy)     // an upward crossing
@@ -1144,21 +1144,21 @@ int get_winding_number_polygon(const Geometry &polygon,
   Geometry pgon = polygon;
   vector<Vec3d> pts = points;
 
-  int psz = (int)pts.size();
+  unsigned int psz = pts.size();
   if (!psz) {
     const vector<Vec3d> &verts = pgon.verts();
     const vector<int> &face = pgon.faces()[0];
 
     vector<Vec3d> triangle;
-    int fsz = (int)face.size();
-    for (int i = 0; i < fsz; i++) {
+    unsigned int fsz = face.size();
+    for (unsigned int i = 0; i < fsz; i++) {
       triangle.push_back(verts[face[i]]);
       triangle.push_back(verts[face[(i + 1) % fsz]]);
       triangle.push_back(verts[face[(i + 2) % fsz]]);
       pts.push_back(centroid(triangle));
       triangle.clear();
     }
-    psz = (int)pts.size();
+    psz = pts.size();
   }
 
   Vec3d norm = face_normal.outward().unit();
@@ -1180,16 +1180,16 @@ int get_winding_number_polygon(const Geometry &polygon,
   // also rotate points per matrix
   Geometry vgeom;
   ;
-  for (int i = 0; i < psz; i++)
+  for (unsigned int i = 0; i < psz; i++)
     vgeom.add_vert(pts[i]);
   vgeom.transform(trans);
   pts.clear();
-  for (int i = 0; i < psz; i++)
+  for (unsigned int i = 0; i < psz; i++)
     pts.push_back(vgeom.verts()[i]);
   vgeom.clear_all();
 
   int winding_number = 0;
-  for (int i = 0; i < psz; i++) {
+  for (unsigned int i = 0; i < psz; i++) {
     // projection index = 2;
     int wn = 0;
     wn_PnPoly(pgon, pts[i], 2, wn, eps);
@@ -1214,6 +1214,7 @@ int find_polygon_denominator_signed(const Geometry &geom, int face_idx,
   vector<Vec3d> points; // empty points to trigger test triangles
   int d = get_winding_number_polygon(polygon, points, face_normal, false, eps);
 
+  // fsz used for arithmetic
   int fsz = (int)face.size();
   if (d < 0)
     d += fsz;

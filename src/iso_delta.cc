@@ -700,7 +700,7 @@ void verbose_output(const Vec3d &A, const Vec3d &B, const Vec3d &C,
 void make_triangle(Geometry &geom, const Vec3d &A, const Vec3d &B,
                    const Vec3d &C, Color c)
 {
-  int sz = geom.verts().size();
+  unsigned int sz = geom.verts().size();
 
   geom.add_vert(A);
   geom.add_vert(B);
@@ -792,7 +792,7 @@ int find_equ_tris(Vec3d A, Vec3d B, Vec3d C, vector<double> &factors,
 
     double b = (AB + rt) / B2;
 
-    int num_factors = factors.size();
+    unsigned int num_factors = factors.size();
 
     // AB and AC should be almost the same length, if not reject
     // RK: was 1e-3 (.001), but with reversing B and C method, we can reject
@@ -1009,13 +1009,10 @@ void make_poly(Geometry &geom, const string &sym_type, const bool triangle_only,
 void make_delta_dipyramid(Geometry &geom, const int n, const int d,
                           bool triangle_only = false, bool verbose = false)
 {
-  char buf1[MSG_SZ];
-  char buf2[MSG_SZ];
-
-  sprintf(buf1, "D%dh", n);
-  sprintf(buf2, "[%d/%d,1/2,1/2]", d, n);
-  fprintf(stderr, "Dihedral Group:  %s  %s  %d/%d %sdipyramid\n", buf1, buf2, n,
-          d, ((d == 1) ? "" : "star "));
+  string buf1 = "D" + std::to_string(n) + "h";
+  string buf2 = "[" + std::to_string(d) + "/" + std::to_string(n) + ",1/2,1/2]";
+  fprintf(stderr, "Dihedral Group:  %s  %s  %d/%d %sdipyramid\n", buf1.c_str(),
+          buf2.c_str(), n, d, ((d == 1) ? "" : "star "));
 
   string sym_type = buf1;
 
@@ -1039,8 +1036,7 @@ void make_delta_dipyramid(Geometry &geom, const int n, const int d,
 void tet_to_dihedral(Geometry &geom, const string &sym_from, const int k,
                      Trans3d pos = Trans3d())
 {
-  char sym_to[MSG_SZ];
-  sprintf(sym_to, "D%d%s", k, ((k % 4 == 0) ? "h" : "v"));
+  string sym_to = "D" + std::to_string(k) + ((k % 4 == 0) ? "h" : "v");
   transform_and_repeat(geom, sym_to, sym_from, pos);
 }
 
@@ -1079,10 +1075,8 @@ void case_c_2_dipyramids(Geometry &geom, double angle, const int n, const int d)
   fprintf(stderr, "Using: ");
   make_delta_dipyramid(geom, n, d);
 
-  char sym_from[MSG_SZ];
-  sprintf(sym_from, "D%dh", n);
-  char sym_to[MSG_SZ];
-  sprintf(sym_to, "D%dh", 2 * n);
+  string sym_from = "D" + std::to_string(n) + "h";
+  string sym_to = "D" + std::to_string(2 * n) + "h";
 
   // advance angle so that angle = 0 is coincident constituents
   geom.transform(Trans3d::rotate(0, 0, angle + M_PI / (2 * n)));
@@ -1207,10 +1201,8 @@ void case_k_2k_dipyramids(Geometry &geom, double angle, const int k,
   fprintf(stderr, "Using: ");
   make_delta_dipyramid(geom, n, d);
 
-  char sym_from[MSG_SZ];
-  sprintf(sym_from, "D%dh", n);
-  char sym_to[MSG_SZ];
-  sprintf(sym_to, "D%dh", k * n);
+  string sym_from = "D" + std::to_string(n) + "h";
+  string sym_to = "D" + std::to_string(k * n) + "h";
 
   transform_and_repeat(geom, sym_from, sym_from,
                        Trans3d::rotate(0, 0, angle + M_PI));
@@ -1222,10 +1214,8 @@ void case_l_k_dipyramids(Geometry &geom, const int k, const int n, const int d)
   fprintf(stderr, "Using: ");
   make_delta_dipyramid(geom, n, d);
 
-  char sym_from[MSG_SZ];
-  sprintf(sym_from, "D%dh", n);
-  char sym_to[MSG_SZ];
-  sprintf(sym_to, "D%dh", k * n);
+  string sym_from = "D" + std::to_string(n) + "h";
+  string sym_to = "D" + std::to_string(k * n) + "h";
 
   transform_and_repeat(geom, sym_to, sym_from);
 }

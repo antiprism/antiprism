@@ -309,14 +309,14 @@ Container Options
 
 Coloring Options (run 'off_util -H color' for help on color formats)
   -V <col>  vertex color, (optional) transparency, (optional) elements
-               transparency. valid range from 0 (invisible) to 255 (opaque)
+               transparency: valid range from 0 (invisible) to 255 (opaque)
                elements to color are l - lattice, c - convex hull, v - voronoi
                                      h - hex relation (default elements: lcvh)
   -E <col>  edge color (same format as for vertices)
-  -F <col>  face color (same format as for vertices)
-               lower case outputs map indexes. upper case outputs color values
+  -F <col>  face color (same format as for vertices) or
                key word: s,S color by symmetry using face normals
                key word: c,C color by symmetry using face normals (chiral)
+               lower case outputs map indexes. upper case outputs color values
   -T <tran> face transparency for color by symmetry. valid range from 0 to 255
 
 Scene Options
@@ -567,11 +567,11 @@ void brav_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'V':
-      parse_color_string(this, optarg, c, vert_col);
+      parse_color_string(this, optarg, c, "lcvh", vert_col);
       break;
 
     case 'E':
-      parse_color_string(this, optarg, c, edge_col);
+      parse_color_string(this, optarg, c, "lcvh", edge_col);
       break;
 
     case 'F': {
@@ -579,7 +579,7 @@ void brav_opts::process_command_line(int argc, char **argv)
       if ((!strcasecmp(parts[0], "s")) || (!strcasecmp(parts[0], "c")))
         color_method = parts[0][0];
       else
-        parse_color_string(this, optarg, c, face_col);
+        parse_color_string(this, optarg, c, "lcvh", face_col);
       break;
     }
 

@@ -215,18 +215,24 @@ void sph_lat_grid::make_lattice(Geometry &geom)
 // 5 args - color r,g,b, transparency, assignment
 // vcol is a vector size 4 of pre-allocated colors
 void parse_color_string(const ProgramOpts *opts, const char *optarg,
-                        const char c, vector<Color> &vcol)
+                        const char c, const string &allowed_chars,
+                        vector<Color> &vcol)
 {
   const Split parts(optarg, ",");
   int parts_sz = parts.size();
-  if (parts_sz > 5)
-    opts->error("the argument has more than 5 parts", c);
+
+  int dummy;
+  Status is_int = read_int(parts[0], &dummy);
+  if (is_int.is_ok() && parts_sz > 5)
+    opts->error("the argument is a color value and has more than 5 parts", c);
+  else if (!is_int.is_ok() && parts_sz > 3)
+    opts->error("the argument is a color name and has more than 3 parts", c);
 
   Color col;
   bool valid_color = false;
   int next_parms_idx = 1;
 
-  // see if entry is r,g,b
+  // see if entry is a valid r,g,b
   if (parts_sz >= 3) {
     string color_str_tmp = string(parts[0]) + "," + parts[1] + "," + parts[2];
     if (col.read(color_str_tmp.c_str())) {
@@ -236,7 +242,7 @@ void parse_color_string(const ProgramOpts *opts, const char *optarg,
     }
   }
 
-  // check to see if it was a color name
+  // check to see if it is a valid color name
   if (!valid_color) {
     if (col.read(parts[0])) {
       if (col.is_set())
@@ -245,16 +251,15 @@ void parse_color_string(const ProgramOpts *opts, const char *optarg,
     }
   }
 
+  // if the color is not valid, output the color error
   if (!valid_color)
     opts->print_status_or_exit(col.read(parts[0]), c);
 
-  // add transparency
+  // check for transparency
   if (parts_sz > next_parms_idx) {
-    // if the next part isn't an assignment
-    if (strspn(parts[next_parms_idx], "lcvh") !=
-        strlen(parts[next_parms_idx])) {
-      int opacity = 255;
-      opts->print_status_or_exit(read_int(parts[next_parms_idx], &opacity), c);
+    // if the next part is an integer
+    int opacity = 255;
+    if (read_int(parts[next_parms_idx], &opacity)) {
       if (opacity < 0 || opacity > 255)
         opts->error(
             msg_str("transparency is '%d' and must be between 0 and 255",
@@ -269,10 +274,10 @@ void parse_color_string(const ProgramOpts *opts, const char *optarg,
 
   unsigned int conv_elems = 15;
   if (parts_sz > next_parms_idx) {
-    if (strspn(parts[next_parms_idx], "lcvh") != strlen(parts[next_parms_idx]))
-      opts->error(msg_str("elements to map are '%s' must be from "
-                          "l, c, v, h",
-                          parts[next_parms_idx]),
+    if (strspn(parts[next_parms_idx], allowed_chars.c_str()) !=
+        strlen(parts[next_parms_idx]))
+      opts->error(msg_str("elements to map are '%s' must be from '%s'",
+                          parts[next_parms_idx], allowed_chars.c_str()),
                   c);
     conv_elems = 8 * (strchr(parts[next_parms_idx], 'h') != nullptr) +
                  4 * (strchr(parts[next_parms_idx], 'v') != nullptr) +
@@ -282,17 +287,12 @@ void parse_color_string(const ProgramOpts *opts, const char *optarg,
   }
 
   for (int i = 0; i < 4; i++) {
-    if (conv_elems & (1 << i)) {
-      // current color can be unset
-      if (!col.is_set())
-        vcol[i] = Color();
-      else
-        vcol[i] = col;
-    }
+    if (conv_elems & (1 << i))
+      vcol[i] = col;
   }
 
   if (parts_sz > next_parms_idx)
-    opts->error("extraneous input", c);
+    opts->error(msg_str("extraneous input: '%s'", parts[next_parms_idx]), c);
 }
 
 double lattice_radius(const Geometry &geom, const char radius_type)
@@ -445,15 +445,24 @@ void list_grid_radii(const string &file_name, const Geometry &geom,
   int rank = 1;
 
   if (report_type == 1) {
-    char buffer[MSG_SZ];
+    string buffer;
     if (!list_radii_center.is_set())
-      sprintf(buffer, "centroid");
-    else
-      sprintf(buffer, "%g,%g,%g", list_radii_center[0], list_radii_center[1],
-              list_radii_center[2]);
+      buffer = "centroid";
+    else {
+      string buf;
+      for (unsigned int i = 0; i < 3; i++) {
+        buf = std::to_string(list_radii_center[i]);
+        // truncate trailing zeros and decimal point if it is the last
+        buf.erase(buf.find_last_not_of('0') + 1, std::string::npos);
+        buf.erase(buf.find_last_not_of('.') + 1, std::string::npos);
+        buffer += buf;
+        if (i < 2)
+          buffer += ",";
+      }
+    }
     fprintf(ofile,
             "\nList of unique radial distances in grid using center: %s\n\n",
-            buffer);
+            buffer.c_str());
 
     fprintf(ofile, "Rank\tDistance\tD Squared\tOccurrence\n");
     fprintf(ofile, "----\t--------\t---------\t----------\n");

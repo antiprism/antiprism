@@ -146,13 +146,14 @@ Listing Options
 
 Coloring Options (run 'off_util -H color' for help on color formats)
   -V <col>  vertex color, (optional) transparency, (optional) elements
-               transparency. valid range from 0 (invisible) to 255 (opaque)
+               transparency: valid range from 0 (invisible) to 255 (opaque)
                elements to color are l - lattice, c - convex hull, v - voronoi
                   (default elements: lcv)
-  -E <col>  edge color (for struts, convex hulls, and voronoi)
-               lower case outputs map indexes. upper case outputs color values
+               Note: input elements from -R input are not changed
+  -E <col>  edge color (same format as for vertices) or
                key word: r,R for color edges by root value of final product
-  -F <col>  face color (for convex hulls and voronoi)
+               lower case outputs map indexes. upper case outputs color values
+  -F <col>  face color (same format as for vertices) or
                key word: s,S color by symmetry using face normals
                key word: c,C color by symmetry using face normals (chiral)
   -T <tran> face transparency for color by symmetry. valid range from 0 to 255
@@ -166,16 +167,16 @@ void lutil_opts::process_command_line(int argc, char **argv)
 {
   opterr = 0;
   int c;
-  char errmsg[MSG_SZ];
+  char errmsg[MSG_SZ] = {0};
 
   int sig_compare = INT_MAX;
   vector<double> double_parms;
   Split parts;
   Color col_tmp;
 
-  vert_col.resize(3);
-  edge_col.resize(3);
-  face_col.resize(3);
+  vert_col.resize(4);
+  edge_col.resize(4);
+  face_col.resize(4);
 
   // set some default colors
   // 0 - lattice  1 - convex hull  2 - voronoi
@@ -263,7 +264,7 @@ void lutil_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'V':
-      parse_color_string(this, optarg, c, vert_col);
+      parse_color_string(this, optarg, c, "lcv", vert_col);
       break;
 
     case 'E':
@@ -271,7 +272,7 @@ void lutil_opts::process_command_line(int argc, char **argv)
       if (!strcasecmp(parts[0], "r"))
         color_edges_by_sqrt = parts[0][0];
       else
-        parse_color_string(this, optarg, c, edge_col);
+        parse_color_string(this, optarg, c, "lcv", edge_col);
       break;
 
     case 'F':
@@ -279,7 +280,7 @@ void lutil_opts::process_command_line(int argc, char **argv)
       if ((!strcasecmp(parts[0], "s")) || (!strcasecmp(parts[0], "c")))
         color_method = parts[0][0];
       else
-        parse_color_string(this, optarg, c, face_col);
+        parse_color_string(this, optarg, c, "lcv", face_col);
       break;
 
     case 'T':
@@ -309,9 +310,10 @@ void lutil_opts::process_command_line(int argc, char **argv)
       rfile = parts[0];
       if (parts_sz > 1) {
         if (strspn(parts[1], "vefan") != strlen(parts[1])) {
-          snprintf(errmsg, MSG_SZ,
-                   "elements to merge are %s must be v, e, f, a or n\n",
-                   parts[1]);
+          strcpy_msg(errmsg,
+                     msg_str("elements to merge are %s must be v, e, f, a or n",
+                             parts[1])
+                         .c_str());
           error(errmsg, c);
         }
         if (strchr(parts[1], 'a') && strlen(parts[1]) > 1) {

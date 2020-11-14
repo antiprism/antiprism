@@ -57,7 +57,7 @@ void add_struts(anti::Geometry &geom, int len2);
 
 // for lattice code only
 void parse_color_string(const anti::ProgramOpts *, const char *, const char,
-                        vector<anti::Color> &);
+                        const std::string &, vector<anti::Color> &);
 
 double lattice_radius(const anti::Geometry &, const char);
 void geom_container_clip(anti::Geometry &, anti::Geometry &, const double,

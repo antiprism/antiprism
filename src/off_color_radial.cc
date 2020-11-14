@@ -187,12 +187,12 @@ void radial_opts::process_command_line(int argc, char **argv)
         ptok1 = strtok_r(nullptr, parse_key1, &tok_ptr1);
       }
 
-      int sz = (int)tokens.size();
+      unsigned int sz = (int)tokens.size();
       if (sz > 2)
         error("excess entries for axis orders", c);
 
       int axis_order;
-      for (int i = 0; i < sz; i++) {
+      for (unsigned int i = 0; i < sz; i++) {
         if (i == 0) {
           print_status_or_exit(
               get_arg_id(tokens[i].c_str(), &arg_id,
@@ -586,8 +586,8 @@ void radial_coloring(Geometry &geom, map<int, vector<int>> &fronts)
         // get faces connected to this face via edge or vertex
         vector<int> face_idx;
         vector<int> face = geom.faces()[front[i]];
-        int fsz = face.size();
-        for (int j = 0; j < fsz; j++) {
+        unsigned int fsz = face.size();
+        for (unsigned int j = 0; j < fsz; j++) {
           int v1 = face[j];
           int v2 = face[(j + 1) % fsz];
           // face_idx = find_faces_with_edge(geom.faces(), make_edge(v1, v2));
@@ -676,9 +676,7 @@ void set_indexes_to_color(Geometry &geom, const radial_opts &opts)
   opts.warning(msg_str("maximum ridges formed is %d", max_ridge));
   string map_name;
   if (opts.map_string == "rng") {
-    char buf[MSG_SZ];
-    sprintf(buf, "rng%d", max_ridge);
-    map_name = string(buf);
+    map_name = "rng" + std::to_string(max_ridge);
     opts.warning(msg_str("default map used is %s", map_name.c_str()));
   }
 
@@ -703,7 +701,7 @@ void append_axes(Geometry &geom, Geometry &axes, const radial_opts &opts)
   if (opts.show_axes == 2) {
     // add axes
     const vector<Vec3d> &verts = axes.verts();
-    int vsz = verts.size();
+    unsigned int vsz = verts.size();
 
     // add a vertex to model at centroid
     Vec3d cent = centroid(geom.verts());
@@ -712,7 +710,7 @@ void append_axes(Geometry &geom, Geometry &axes, const radial_opts &opts)
 
     // connect centroid to axes points
     Color c;
-    for (int i = 0; i < vsz; i++) {
+    for (unsigned int i = 0; i < vsz; i++) {
       c = axes.colors(VERTS).get(i);
       // int v_mirror = find_vert_by_coords(axes, -verts[i], opts.epsilon);
       axes.add_edge(make_edge(i, cent_vert), c);
@@ -781,11 +779,11 @@ int main(int argc, char *argv[])
   opts.read_or_error(geom, opts.ifile);
 
   if (opts.elem_lists.size()) {
-    int vsz = geom.verts().size();
+    unsigned int vsz = geom.verts().size();
     vector<vector<int>> edges;
     geom.get_impl_edges(edges);
-    int esz = edges.size();
-    int fsz = geom.faces().size();
+    unsigned int esz = edges.size();
+    unsigned int fsz = geom.faces().size();
     for (unsigned int i = 0; i < opts.elem_lists.size(); i++) {
       pair<char, vector<int>> elem_lst = opts.elem_lists[i];
       char elem_type = elem_lst.first;
@@ -793,7 +791,7 @@ int main(int argc, char *argv[])
       if (elem_type == 's') {
         bool found = false;
         for (unsigned int j = 0; j < idx_list.size(); j++) {
-          for (int k = 0; k < fsz; k++) {
+          for (unsigned int k = 0; k < fsz; k++) {
             if (idx_list[j] == (int)geom.faces(k).size()) {
               found = true;
               break;
@@ -805,7 +803,7 @@ int main(int argc, char *argv[])
       }
       else {
         for (unsigned int j = 0; j < idx_list.size(); j++) {
-          int sz = 0;
+          unsigned int sz = 0;
           string elem_name;
           if (elem_type == 'v') {
             sz = vsz;
@@ -819,7 +817,7 @@ int main(int argc, char *argv[])
             sz = fsz;
             elem_name = "face";
           }
-          if (idx_list[j] > sz - 1) {
+          if (idx_list[j] > (int)sz - 1) {
             opts.error(
                 msg_str("term %d, element %d, %s number %d is larger than %s "
                         "numbers of input model: %d",

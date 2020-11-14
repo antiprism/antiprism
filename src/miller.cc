@@ -266,9 +266,9 @@ void color_stellation(Geometry &stellation, const miller_opts &opts)
       wythoff_make_tiling(kis, stellation, "k", true, false);
       // remove digons
       vector<int> dels;
-      for (int i = 0; i < (int)kis.faces().size(); i++) {
+      for (unsigned int i = 0; i < kis.faces().size(); i++) {
         if (kis.faces(i).size() < 3)
-          dels.push_back(i);
+          dels.push_back((int)i);
       }
       kis.del(FACES, dels);
       kis.orient(1);
@@ -292,11 +292,11 @@ void color_stellation(Geometry &stellation, const miller_opts &opts)
 
       for (unsigned int i = 0; i < stellation.faces().size(); i++) {
         vector<int> face = stellation.faces()[i];
-        int fsz = face.size();
+        unsigned int fsz = face.size();
         // face to face
         // connections with invisible faces are ignored
         int connections = 0;
-        for (int j = 0; j < fsz; j++) {
+        for (unsigned int j = 0; j < fsz; j++) {
           int v1 = face[j];
           int v2 = face[(j + 1) % fsz];
           vector<int> edge = make_edge(v1, v2);
@@ -328,7 +328,7 @@ void color_stellation(Geometry &stellation, const miller_opts &opts)
       int i = find_edge_in_edge_list(stellation.edges(), edge);
       if (i > -1) {
         if (!(stellation.colors(EDGES).get(i)).is_invisible()) {
-          int connections = faces.size();
+          unsigned int connections = faces.size();
           stellation.colors(EDGES).set(i, cmap->get_col(connections));
         }
       }
@@ -634,7 +634,7 @@ int Miller::get_poly(Geometry &geom, int sym, string cell_str, string sym_str, m
 
   vector<string> diagram_list_strings = decode_cell_string(cell_str);
   // if list is empty, code string was invalid
-  int sz = diagram_list_strings.size();
+  unsigned int sz = diagram_list_strings.size();
   if (!sz)
     return -1;
 
@@ -698,8 +698,10 @@ int Miller::get_poly(Geometry &geom, int sym, string cell_str, string sym_str, m
 }
 
 int make_resource_miller(Geometry &geom, string name, bool is_std, miller_opts &opts,
-                         char *errmsg = nullptr)
+                         char *errmsg)
 {
+  *errmsg = '\0';
+
   int sym_no = 0;
   // check if it is just the index number, if so format as m%d
   if (read_int(name.c_str(), &sym_no))
@@ -717,8 +719,7 @@ int make_resource_miller(Geometry &geom, string name, bool is_std, miller_opts &
   if (read_int(name.c_str() + 1, &sym_no)) {
     sym_no--;
     if (sym_no < 0 || sym_no >= mill.get_last_M()) {
-      if (errmsg)
-        snprintf(errmsg, MSG_SZ, "miller stellation number out of range");
+      strcpy_msg(errmsg, "miller stellation number out of range");
       return 1; // fail
     }
   }
@@ -731,8 +732,7 @@ int make_resource_miller(Geometry &geom, string name, bool is_std, miller_opts &
       sym_str = cell_str.substr(pos+1);
       if (sym_str.length()) {
         if (sym_str != "I" && sym_str != "Ih") {
-          if (errmsg)
-            snprintf(errmsg, MSG_SZ, "miller cell name symmetry must be I or Ih");
+          strcpy_msg(errmsg, "miller cell name symmetry must be I or Ih");
           return 1; // fail
         }
       }
@@ -803,13 +803,12 @@ int make_resource_miller(Geometry &geom, string name, bool is_std, miller_opts &
   return 0; // name found
 }
 
-int try_miller(Geometry &geom, miller_opts &opts)
+int try_miller(Geometry &geom, miller_opts &opts, char *errmsg)
 {
   string name = opts.ifile;
   bool is_std = (name.size() > 3 && name.substr(0, 4) == "std_");
   if (is_std)
     name = name.substr(4);
-  char errmsg[MSG_SZ];
   int idx = make_resource_miller(geom, name, is_std, opts, errmsg);
   return(idx);
 }
@@ -825,9 +824,12 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
+  char errmsg[MSG_SZ] = {0};
+
   Geometry geom;
-  if (try_miller(geom, opts))
-    opts.error("model not found");
+  if (try_miller(geom, opts, errmsg))
+    if (*errmsg)
+      opts.error(errmsg);
 
   opts.write_or_error(geom, opts.ofile);
 

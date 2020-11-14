@@ -105,10 +105,9 @@ void obj2off_opts::process_command_line(int argc, char **argv)
     ifile = argv[optind];
 }
 
-void convert_obj_to_off(string &file_name, Geometry &geom, char *errmsg)
+bool convert_obj_to_off(string &file_name, Geometry &geom, char *errmsg)
 {
-  if (errmsg)
-    *errmsg = '\0';
+  *errmsg = '\0';
 
   FILE *ifile;
   if (file_name == "" || file_name == "-") {
@@ -118,9 +117,10 @@ void convert_obj_to_off(string &file_name, Geometry &geom, char *errmsg)
   else {
     ifile = fopen(file_name.c_str(), "r");
     if (!ifile) {
-      if (errmsg)
-        snprintf(errmsg, MSG_SZ, "could not open input file \'%s\'",
-                 file_name.c_str());
+      strcpy_msg(
+          errmsg,
+          msg_str("could not open input file '%s'", file_name.c_str()).c_str());
+      return false;
     }
   }
 
@@ -171,6 +171,8 @@ void convert_obj_to_off(string &file_name, Geometry &geom, char *errmsg)
 
   if (file_name != "stdin")
     fclose(ifile);
+
+  return true;
 }
 
 int main(int argc, char *argv[])
@@ -180,11 +182,12 @@ int main(int argc, char *argv[])
 
   Geometry geom;
 
-  char errmsg[MSG_SZ];
+  char errmsg[MSG_SZ] = {0};
+
   // obj is enough like OFF that it can be parsed and converted in line
-  convert_obj_to_off(opts.ifile, geom, errmsg);
-  if (*errmsg)
-    opts.error(errmsg);
+  if (!convert_obj_to_off(opts.ifile, geom, errmsg))
+    if (*errmsg)
+      opts.error(errmsg);
 
   opts.write_or_error(geom, opts.ofile, opts.sig_digits);
 

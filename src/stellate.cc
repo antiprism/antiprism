@@ -315,9 +315,9 @@ void color_stellation(Geometry &stellation, const stellate_opts &opts)
       wythoff_make_tiling(kis, stellation, "k", true, false);
       // remove digons
       vector<int> dels;
-      for (int i = 0; i < (int)kis.faces().size(); i++) {
+      for (unsigned int i = 0; i < kis.faces().size(); i++) {
         if (kis.faces(i).size() < 3)
-          dels.push_back(i);
+          dels.push_back((int)i);
       }
       kis.del(FACES, dels);
       kis.orient(1);
@@ -341,11 +341,11 @@ void color_stellation(Geometry &stellation, const stellate_opts &opts)
 
       for (unsigned int i = 0; i < stellation.faces().size(); i++) {
         vector<int> face = stellation.faces()[i];
-        int fsz = face.size();
+        unsigned int fsz = face.size();
         // face to face
         // connections with invisible faces are ignored
         int connections = 0;
-        for (int j = 0; j < fsz; j++) {
+        for (unsigned int j = 0; j < fsz; j++) {
           int v1 = face[j];
           int v2 = face[(j + 1) % fsz];
           vector<int> edge = make_edge(v1, v2);
@@ -377,7 +377,7 @@ void color_stellation(Geometry &stellation, const stellate_opts &opts)
       int i = find_edge_in_edge_list(stellation.edges(), edge);
       if (i > -1) {
         if (!(stellation.colors(EDGES).get(i)).is_invisible()) {
-          int connections = faces.size();
+          unsigned int connections = faces.size();
           stellation.colors(EDGES).set(i, cmap->get_col(connections));
         }
       }

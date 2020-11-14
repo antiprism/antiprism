@@ -539,13 +539,13 @@ vector<vector<int>> on_same_plane_filter(const Geometry &geom,
   vector<int> coplanar_faces_actual;
   vector<int> written;
 
-  int sz = coplanar_faces.size();
-  for (int i = 0; i < sz; i++) {
+  unsigned int sz = coplanar_faces.size();
+  for (unsigned int i = 0; i < sz; i++) {
     int face_idx1 = coplanar_faces[i];
     if (find(written.begin(), written.end(), face_idx1) != written.end())
       continue;
     coplanar_faces_actual.push_back(face_idx1);
-    for (int j = i + 1; j < sz; j++) {
+    for (unsigned int j = i + 1; j < sz; j++) {
       if (i == j)
         continue;
       int face_idx2 = coplanar_faces[j];
@@ -600,10 +600,10 @@ void build_coplanar_faces_list(const Geometry &geom,
 
   // hemispherical normals are folded only with specific option
   // if folded, this is what associates them on the same plane
-  int sz = hemispherical_table.size();
+  unsigned int sz = hemispherical_table.size();
   if (fold_normals_hemispherical && (sz > 1)) {
-    for (int i = 0; i < sz - 1; i++) {
-      for (int j = i + 1; j < sz; j++) {
+    for (unsigned int i = 0; i < sz - 1; i++) {
+      for (unsigned int j = i + 1; j < sz; j++) {
         if (!compare(hemispherical_table[i].first,
                      -hemispherical_table[j].first, eps)) {
           hemispherical_table[j].first = -hemispherical_table[j].first;
@@ -620,7 +620,7 @@ void build_coplanar_faces_list(const Geometry &geom,
     // at least one face is on a plane
     coplanar_faces.push_back(hemispherical_table[0].second);
     // find faces on same plane and group them together
-    for (int i = 1; i < sz; i++) {
+    for (unsigned int i = 1; i < sz; i++) {
       if (compare(hemispherical_table[i].first,
                   hemispherical_table[i - 1].first, eps)) {
         vector<vector<int>> coplanar_faces_filtered =
@@ -648,8 +648,8 @@ void build_coplanar_faces_list(const Geometry &geom,
   // non-hemispherical normals are folded only with specific option
   sz = face_normal_table.size();
   if (fold_normals && (sz > 1)) {
-    for (int i = 0; i < sz - 1; i++) {
-      for (int j = i + 1; j < sz; j++) {
+    for (unsigned int i = 0; i < sz - 1; i++) {
+      for (unsigned int j = i + 1; j < sz; j++) {
         if (!compare(face_normal_table[i].first, -face_normal_table[j].first,
                      eps)) {
           face_normal_table[j].first = -face_normal_table[j].first;
@@ -666,7 +666,7 @@ void build_coplanar_faces_list(const Geometry &geom,
     // at least one face is on a plane
     coplanar_faces.push_back(face_normal_table[0].second);
     // find faces on same plane and group them together
-    for (int i = 1; i < sz; i++) {
+    for (unsigned int i = 1; i < sz; i++) {
       if (compare(face_normal_table[i].first, face_normal_table[i - 1].first,
                   eps)) {
         vector<vector<int>> coplanar_faces_filtered =
@@ -720,8 +720,8 @@ bool is_point_on_polygon_edges(const Geometry &polygon, const Vec3d &P,
 
   bool answer = false;
 
-  int fsz = face.size();
-  for (int i = 0; i < fsz; i++) {
+  unsigned int fsz = face.size();
+  for (unsigned int i = 0; i < fsz; i++) {
     Vec3d v1 = verts[face[i]];
     Vec3d v2 = verts[face[(i + 1) % fsz]];
     if ((point_in_segment(P, v1, v2, eps)).is_set()) {
@@ -852,7 +852,7 @@ bool InsidePolygon_solution1(const Geometry &polygon, const Vec3d &P,
   double p_y = P[idx2];
 
   const vector<int> &face = polygon.faces()[0];
-  int N = face.size();
+  unsigned int nvert = face.size();
 
   // left vertex
   double p1_x = verts[face[0]][idx1];
@@ -864,7 +864,7 @@ bool InsidePolygon_solution1(const Geometry &polygon, const Vec3d &P,
   bound = false;
 
   // check all rays
-  for (int i = 1; i <= N; ++i) {
+  for (unsigned int i = 1; i <= nvert; ++i) {
 
     // point is a vertex
     if (double_eq(p_x, p1_x, eps) && double_eq(p_y, p1_y, eps)) {
@@ -873,8 +873,8 @@ bool InsidePolygon_solution1(const Geometry &polygon, const Vec3d &P,
     }
 
     // right vertex
-    double p2_x = verts[face[i % N]][idx1];
-    double p2_y = verts[face[i % N]][idx2];
+    double p2_x = verts[face[i % nvert]][idx1];
+    double p2_y = verts[face[i % nvert]][idx2];
 
     // ray is outside of our interests
     // if (p_y < min(p1_y, p2_y) || p_y > max(p1_y, p2_y)) {
@@ -944,7 +944,7 @@ bool InsidePolygon_solution1(const Geometry &polygon, const Vec3d &P,
       if (double_eq(p_y, p2_y, eps) && double_le(p_x, p2_x, eps)) {
 
         // next vertex
-        double p3_y = verts[face[(i + 1) % N]][idx2];
+        double p3_y = verts[face[(i + 1) % nvert]][idx2];
 
         // p_y lies between p1_y & p3_y
         // if (p_y >= min(p1_y, p3_y) && p_y <= max(p1_y, p3_y)) {
@@ -1097,14 +1097,14 @@ bool InsidePolygon_solution2(const Geometry &polygon, const Vec3d &P,
   double p_y = P[idx2];
 
   const vector<int> &face = polygon.faces()[0];
-  int n = face.size();
+  unsigned int fsz = face.size();
 
   double angle = 0;
-  for (int i = 0; i < n; i++) {
+  for (unsigned int i = 0; i < fsz; i++) {
     double p1_x = verts[face[i]][idx1] - p_x;
     double p1_y = verts[face[i]][idx2] - p_y;
-    double p2_x = verts[face[(i + 1) % n]][idx1] - p_x;
-    double p2_y = verts[face[(i + 1) % n]][idx2] - p_y;
+    double p2_x = verts[face[(i + 1) % fsz]][idx1] - p_x;
+    double p2_y = verts[face[(i + 1) % fsz]][idx2] - p_y;
     angle += Angle2D(p1_x, p1_y, p2_x, p2_y, eps);
   }
 
@@ -1189,19 +1189,19 @@ bool mesh_verts(Geometry &geom, const double eps)
   const vector<vector<int>> &edges = geom.edges();
 
   // remember original sizes as the geom will be changing size
-  int vsz = verts.size();
-  int esz = edges.size();
+  unsigned int vsz = verts.size();
+  unsigned int esz = edges.size();
 
   vector<int> deleted_edges;
 
   // compare only existing edges and verts
-  for (int i = 0; i < esz; i++) {
+  for (unsigned int i = 0; i < esz; i++) {
     vector<pair<double, int>> line_intersections;
     Vec3d Q0 = verts[edges[i][0]];
     Vec3d Q1 = verts[edges[i][1]];
-    for (int v_idx = 0; v_idx < vsz; v_idx++) {
+    for (unsigned int v_idx = 0; v_idx < vsz; v_idx++) {
       // don't compare to self
-      if (edges[i][0] == v_idx || edges[i][1] == v_idx)
+      if (edges[i][0] == (int)v_idx || edges[i][1] == (int)v_idx)
         continue;
 
       // find if P is in Q0,Q1
@@ -1592,6 +1592,7 @@ void sample_colors(Geometry &sgeom, const Geometry &cgeom,
         cols.push_back(average_color_all_faces);
     }
 
+    // sz as int used in arithmetic
     int sz = cols.size();
 
     Color col;
@@ -1834,7 +1835,7 @@ vector<int> find_end_points_vertex(const Geometry &geom,
   // out greater than 2
   // then have to take a vertex from longest edge. vert of longest edge will be
   // at the bottom of the list
-  int sz = gverts.size();
+  unsigned int sz = gverts.size();
   if (sz > 2) {
     vector<pair<double, int>> distance_table;
     for (unsigned int i = 0; i < gverts.size(); i++) {
@@ -1957,14 +1958,14 @@ void stitch_faces_on_seams(Geometry &geom, const double eps)
     vert_has_faces.push_back(find_faces_with_vertex(faces, i));
 
   for (auto colinear_verts : colinear_vertex_list) {
-    int sz = colinear_verts.size();
+    unsigned int sz = colinear_verts.size();
     // if there are only two verts there can be no face between them
-    for (int j = 0; j < sz - 2; j++) {
+    for (unsigned int j = 0; j < sz - 2; j++) {
       int start_v_idx = colinear_verts[j];
       vector<int> vert_has_faces_start = vert_has_faces[start_v_idx];
       for (int face_idx : vert_has_faces_start) {
         vector<int> added_vertices;
-        for (int l = j + 1; l < sz; l++) {
+        for (unsigned int l = j + 1; l < sz; l++) {
           int test_v_idx = colinear_verts[l];
           vector<int> vert_has_faces_test = vert_has_faces[test_v_idx];
           if (find(vert_has_faces_test.begin(), vert_has_faces_test.end(),
@@ -2041,14 +2042,14 @@ string pre_edge_blend(Geometry &geom, const char edge_blending,
   string elems = "";
 
   if (edge_blending == 'e' || edge_blending == 'b') {
-    int sz = edges.size();
+    unsigned int sz = edges.size();
     vector<bool> used(sz);
-    for (int i = 0; i < sz; i++) {
+    for (unsigned int i = 0; i < sz; i++) {
       if (used[i])
         continue;
       vector<Color> cols;
       cols.push_back(geom.colors(EDGES).get(i));
-      for (int j = i + 1; j < sz; j++) {
+      for (unsigned int j = i + 1; j < sz; j++) {
         if (used[j])
           continue;
         if (compare_edge_verts(geom, i, j, opts.epsilon)) {
@@ -2064,14 +2065,14 @@ string pre_edge_blend(Geometry &geom, const char edge_blending,
   }
 
   if (edge_blending == 'v' || edge_blending == 'b') {
-    int sz = verts.size();
+    unsigned int sz = verts.size();
     vector<bool> used(sz);
-    for (int i = 0; i < sz; i++) {
+    for (unsigned int i = 0; i < sz; i++) {
       if (used[i])
         continue;
       vector<Color> cols;
       cols.push_back(geom.colors(VERTS).get(i));
-      for (int j = i + 1; j < sz; j++) {
+      for (unsigned int j = i + 1; j < sz; j++) {
         if (used[j])
           continue;
         if (!compare(verts[i], verts[j], opts.epsilon)) {
@@ -2349,6 +2350,7 @@ void color_by_winding_number_raw(Geometry &geom,
   for (unsigned int i = 0; i < faces.size(); i++) {
     int wtotal = find_polygon_denominator_signed(geom, i, eps);
 
+    // fsz as int used in arithmetic
     int fsz = (int)faces[i].size();
     if (wtotal > fsz / 2)
       wtotal -= fsz;

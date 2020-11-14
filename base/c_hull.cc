@@ -91,7 +91,7 @@ static bool make_hull(Geometry &geom, bool append, string qh_args, char *errmsg)
 
   if (ret) {
     if (errmsg)
-      snprintf(errmsg, MSG_SZ, "error calculating convex hull");
+      strcpy_msg(errmsg, "error calculating convex hull");
     qhull_cleanup(qh);
     delete[] points;
     return false;
@@ -145,7 +145,7 @@ static bool make_hull(Geometry &geom, bool append, string qh_args, char *errmsg)
         }
       }
       if (lns.size() != 2 * r_cnt) {
-        snprintf(errmsg, MSG_SZ, "ridge included more than two points");
+        strcpy_msg(errmsg, "ridge included more than two points");
       }
 
       ordered_face.push_back(lns[0]);
@@ -188,7 +188,7 @@ static int dimension_safe_make_hull(Geometry &geom, bool append, string qh_args,
   // an empty geom should be the only reason an error can occur
   if (!(geom.verts().size())) {
     if (errmsg)
-      snprintf(errmsg, MSG_SZ, "convex hull could not be created. no vertices");
+      strcpy_msg(errmsg, "convex hull could not be created. no vertices");
     return -1;
   }
 
@@ -270,8 +270,8 @@ static int dimension_safe_make_hull(Geometry &geom, bool append, string qh_args,
             // 0 dimensional geom should not have gotten in here. instead, make
             // this an error so it can be spotted
             if (errmsg)
-              snprintf(errmsg, MSG_SZ,
-                       "convex hull failed even after checking for a line");
+              strcpy_msg(errmsg,
+                         "convex hull failed even after checking for a line");
             return -1;
           }
 
@@ -335,7 +335,7 @@ static int dimension_safe_make_hull(Geometry &geom, bool append, string qh_args,
 Status add_hull(Geometry &geom, string qh_args, int *dim)
 {
   Status stat;
-  char errmsg[MSG_SZ];
+  char errmsg[MSG_SZ] = {0};
   int ret = dimension_safe_make_hull(geom, true, qh_args, errmsg);
   if (dim)
     *dim = ret;
@@ -347,7 +347,7 @@ Status add_hull(Geometry &geom, string qh_args, int *dim)
 Status set_hull(Geometry &geom, string qh_args, int *dim)
 {
   Status stat;
-  char errmsg[MSG_SZ];
+  char errmsg[MSG_SZ] = {0};
   int ret = dimension_safe_make_hull(geom, false, qh_args, errmsg);
   if (dim)
     *dim = ret;

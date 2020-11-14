@@ -255,7 +255,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
         ptok1 = strtok_r(nullptr, parse_key1, &tok_ptr1);
       }
 
-      int sz = (int)tokens.size();
+      unsigned int sz = tokens.size();
       if (sz < 4 || sz > 5)
         error("expecting 4 or 5 parameters for Kaplan-Hart notation", c);
       else if (sz == 4) {
@@ -265,7 +265,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
 
       string mult;
       int num_multipliers = 0;
-      for (int i = 0; i < sz; i++) {
+      for (unsigned int i = 0; i < sz; i++) {
         if (i == 0) {
           sym = toupper(tokens[i][0]);
           if (!strchr("TOI", sym))
@@ -402,11 +402,11 @@ void symmetro_opts::process_command_line(int argc, char **argv)
         tokens.insert(it + 3, "1");
       }
 
-      int sz = (int)tokens.size();
+      unsigned int sz = tokens.size();
       if (sz != 6)
         error("incorrect format for Twister notation", c);
 
-      for (int i = 0; i < sz; i++) {
+      for (unsigned int i = 0; i < sz; i++) {
         if (i == 0) {
           sym = toupper(tokens[i][0]);
           if (!strchr("TOID", sym))
@@ -937,9 +937,9 @@ void symmetro_opts::process_command_line(int argc, char **argv)
     error("one of -k, -t, -s, -c must be specified");
 
   // convert n to multipliers for modes s or c
-  if ((int)n.size()) {
+  if (n.size()) {
     multipliers.clear();
-    for (int i = 0; i < (int)n.size(); i++) {
+    for (unsigned int i = 0; i < n.size(); i++) {
       multipliers.push_back(n[i]);
       // mode=s or c
       if (mode == 's')
@@ -1052,10 +1052,9 @@ void symmetro::debug(const char mode)
   fprintf(stderr, "\n");
 
   if (strchr("kt", mode)) {
-    char s[MSG_SZ];
-    sprintf(s, "%d", dihedral_n);
-    fprintf(stderr, "symmetry = %c%s[%d,%d]%d\n", sym, (sym == 'D' ? s : ""), p,
-            q, sym_id_no);
+    fprintf(stderr, "symmetry = %c%s[%d,%d]%d\n", sym,
+            (sym == 'D' ? std::to_string(dihedral_n).c_str() : ""), p, q,
+            sym_id_no);
     fprintf(stderr, "\n");
   }
 
@@ -1071,12 +1070,13 @@ void symmetro::debug(const char mode)
   fprintf(stderr, "\n");
 
   for (int i = 0; i < 2; i++) {
-    char s[MSG_SZ];
-    s[0] = '\0';
+    string buffer = "";
     if (d_substitute[i] && (d_substitute[i] != d[i]))
-      sprintf(s, "(then substituted with %d/%d-gon)", getN(i), d_substitute[i]);
+      buffer = "(then substituted with " + std::to_string(getN(i)) + "/" +
+               std::to_string(d_substitute[i]) + "-gon)";
     if (mult[i])
-      fprintf(stderr, "axis %d polygon: %d/%d-gon %s\n", i, getN(i), d[i], s);
+      fprintf(stderr, "axis %d polygon: %d/%d-gon %s\n", i, getN(i), d[i],
+              buffer.c_str());
   }
   fprintf(stderr, "\n");
 }
@@ -1149,8 +1149,7 @@ void symmetro::swap_vecs(Vec3d &a, Vec3d &b)
 
 int symmetro::fill_sym_vec(const char mode, char *errmsg)
 {
-  if (errmsg)
-    *errmsg = '\0';
+  *errmsg = '\0';
 
   int err_no = 0; // 1 - wrong p,q  2 - wrong sym_id_no  3 - wrong sym
 
@@ -1350,11 +1349,12 @@ int symmetro::fill_sym_vec(const char mode, char *errmsg)
     err_no = (sym_vec[0].is_set()) ? 0 : 2;
 
   if (err_no == 1)
-    snprintf(errmsg, MSG_SZ, "invalid p,q values: %d,%d", p, q);
+    strcpy_msg(errmsg, msg_str("invalid p,q values: %d,%d", p, q).c_str());
   else if (err_no == 2)
-    snprintf(errmsg, MSG_SZ, "invalid symmetry id no: %d", sym_id_no);
+    strcpy_msg(errmsg,
+               msg_str("invalid symmetry id no: %d", sym_id_no).c_str());
   else if (err_no == 3)
-    snprintf(errmsg, MSG_SZ, "invalid symmetry: %c", sym);
+    strcpy_msg(errmsg, msg_str("invalid symmetry: %c", sym).c_str());
 
   return err_no;
 }
@@ -1414,8 +1414,7 @@ vector<Geometry> symmetro::calc_polygons(
     const bool add_pi, const bool swap_axes, const double offset,
     const bool verbose, double &angle_between_axes, char *errmsg)
 {
-  if (errmsg)
-    *errmsg = '\0';
+  *errmsg = '\0';
 
   // there will be two polygons generated in seperate geoms
   vector<Geometry> pgeom(2);
@@ -1464,7 +1463,8 @@ vector<Geometry> symmetro::calc_polygons(
 
   double disc = b * b - 4 * a * c;
   if (disc < -epsilon) {
-    snprintf(errmsg, MSG_SZ, "model is not geometrically constructible");
+    strcpy_msg(errmsg, "model is not geometrically constructible");
+
     return pgeom;
   }
   else if (disc < 0)
@@ -1487,7 +1487,7 @@ vector<Geometry> symmetro::calc_polygons(
     sym_vec[axis[1]] *= -1.0;
   }
 
-  for (int i = 0; i < (int)pgeom.size(); i++) {
+  for (unsigned int i = 0; i < pgeom.size(); i++) {
     int j = axis[i];
     int n = getN(j);
 
@@ -1555,8 +1555,8 @@ bool is_point_on_polygon_edges(const Geometry &polygon, const Vec3d &P,
 
   bool answer = false;
 
-  int fsz = face.size();
-  for (int i = 0; i < fsz; i++) {
+  unsigned int fsz = face.size();
+  for (unsigned int i = 0; i < fsz; i++) {
     Vec3d v1 = verts[face[i]];
     Vec3d v2 = verts[face[(i + 1) % fsz]];
     if ((point_in_segment(P, v1, v2, eps)).is_set()) {
@@ -1574,12 +1574,12 @@ bool detect_collision(const Geometry &geom, const symmetro_opts &opts)
   const vector<Vec3d> &verts = geom.verts();
 
   // don't test digons
-  for (int i = 0; i < (int)faces.size(); i++) {
+  for (unsigned int i = 0; i < faces.size(); i++) {
     vector<int> face0 = faces[i];
     // digons won't work in plane intersection
     if (face0.size() < 3)
       continue;
-    for (int j = i + 1; j < (int)faces.size(); j++) {
+    for (unsigned int j = i + 1; j < faces.size(); j++) {
       vector<int> face1 = faces[j];
       if (face1.size() < 3)
         continue;
@@ -1615,17 +1615,17 @@ bool detect_collision(const Geometry &geom, const symmetro_opts &opts)
 void delete_free_faces(Geometry &geom)
 {
   const vector<vector<int>> &faces = geom.faces();
-  int fsz = faces.size();
+  unsigned int fsz = faces.size();
   vector<bool> found(fsz);
 
-  for (int i = 0; i < fsz; i++) {
+  for (unsigned int i = 0; i < fsz; i++) {
     if (found[i])
       continue;
     // need to check for faces with lower index than i
-    for (int j = 0; j < fsz; j++) {
+    for (unsigned int j = 0; j < fsz; j++) {
       if (i == j)
         continue;
-      for (int k = 0; k < (int)faces[i].size(); k++) {
+      for (unsigned int k = 0; k < faces[i].size(); k++) {
         if (vertex_exists_in_face(faces[j], faces[i][k])) {
           found[i] = true;
           found[j] = true;
@@ -1638,7 +1638,7 @@ void delete_free_faces(Geometry &geom)
   }
 
   vector<int> face_list;
-  for (int i = 0; i < fsz; i++)
+  for (unsigned int i = 0; i < fsz; i++)
     if (!found[i])
       face_list.push_back(i);
 
@@ -1714,7 +1714,7 @@ Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
         // find greatest Z
         vz = 0;
         P = pgeom[1].verts(vz);
-        for (int i = 1; i < (int)pgeom[1].verts().size(); i++) {
+        for (unsigned int i = 1; i < pgeom[1].verts().size(); i++) {
           if (pgeom[1].verts(i)[2] > P[2]) {
             vz = i;
             P = pgeom[1].verts(vz);
@@ -1779,7 +1779,7 @@ Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
     // after sort merge, only new faces from convex hull will be uncolored
     if (opts.face_coloring_method == 'a') {
       Coloring clrng(&geom);
-      for (int i = 0; i < (int)geom.faces().size(); i++) {
+      for (unsigned int i = 0; i < geom.faces().size(); i++) {
         Color col = geom.colors(FACES).get(i);
         if (!col.is_set()) {
           // convex hull color is map position 3
@@ -1830,8 +1830,7 @@ Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
   if (opts.color_digons) {
     vector<int> del_faces;
     for (unsigned int i = 0; i < geom.faces().size(); i++) {
-      int fsz = geom.faces(i).size();
-      if (fsz == 2) {
+      if (geom.faces(i).size() == 2) {
         vector<int> edge = make_edge(geom.faces(i)[0], geom.faces(i)[1]);
         Color col = geom.colors(FACES).get(i);
         geom.add_edge(edge, col);
@@ -1893,7 +1892,7 @@ Geometry build_frame(vector<Geometry> &pgeom, const symmetro_opts &opts)
   }
 
   if (strchr(opts.frame_elems.c_str(), 'a')) {
-    int sz = geom.verts().size();
+    unsigned int sz = geom.verts().size();
     geom.add_vert(v0);
     geom.add_vert(-v0);
     geom.add_edge(make_edge(sz, sz + 1));
@@ -1917,7 +1916,7 @@ Geometry build_frame(vector<Geometry> &pgeom, const symmetro_opts &opts)
 void unitize_edges( vector<Geometry> &pgeom )
 {
    vector<double> val(2);
-   for( int i=0; i<(int)pgeom.size(); i++ ) {
+   for( unsigned int i=0; i<pgeom.size(); i++ ) {
       GeometryInfo info(pgeom[i]);
       if (info.num_iedges() > 0)
          val[i] = info.iedge_lengths().sum/info.num_iedges();
@@ -1933,15 +1932,15 @@ int main(int argc, char *argv[])
 {
   symmetro_opts opts;
   opts.process_command_line(argc, argv);
-  char errmsg[MSG_SZ];
+  char errmsg[MSG_SZ] = {0};
 
   symmetro s;
   s.setSym(opts.sym, opts.p, opts.q, opts.dihedral_n, opts.sym_id_no);
 
   // indexes will be 0,1 except in the case of mode=k when index 2 can be
   // present
-  vector<int> idx;
-  for (int i = 0; i < (int)opts.multipliers.size(); i++) {
+  vector<unsigned int> idx;
+  for (unsigned int i = 0; i < opts.multipliers.size(); i++) {
     if (opts.multipliers[i])
       idx.push_back(i);
   }
@@ -1950,15 +1949,15 @@ int main(int argc, char *argv[])
     idx.push_back(idx[0]);
 
   // set multipliers, axis index for color, in object
-  for (int i = 0; i < (int)idx.size(); i++) {
+  for (unsigned int i = 0; i < idx.size(); i++) {
     s.setMult(i, opts.multipliers[idx[i]]);
     opts.col_axis_idx.push_back(idx[i]);
   }
 
   // set d, d_substitute in object
-  for (int i = 0; i < (int)opts.d.size(); i++)
+  for (unsigned int i = 0; i < opts.d.size(); i++)
     s.setD(i, opts.d[i]);
-  for (int i = 0; i < (int)opts.d_substitute.size(); i++)
+  for (unsigned int i = 0; i < opts.d_substitute.size(); i++)
     s.setD_substitute(i, opts.d_substitute[i]);
 
   // scale will be DBL_MAX when not set
@@ -1968,19 +1967,19 @@ int main(int argc, char *argv[])
     opts.scale_axis = idx[0];
     swap(opts.scale[0], opts.scale[opts.scale_axis]);
   }
-  for (int i = 0; i < (int)opts.scale.size(); i++) {
+  for (unsigned int i = 0; i < opts.scale.size(); i++) {
     if ((opts.scale[i] != DBL_MAX) && (i != idx[0] && i != idx[1]))
       opts.error(
           msg_str("polygon '%d' is not generated so cannot be used for scaling",
                   i),
           'r');
   }
-  for (int i = 0; i < (int)opts.scale.size(); i++) {
+  for (unsigned int i = 0; i < opts.scale.size(); i++) {
     if (opts.scale[i] < 0)
       opts.error("scale cannot be negative", 'r');
   }
   if (opts.mode == 's' || opts.mode == 'c') {
-    for (int i = 0; i < (int)opts.scale.size(); i++) {
+    for (unsigned int i = 0; i < opts.scale.size(); i++) {
       if (opts.scale[i] != DBL_MAX) {
         opts.warning(
             "some polygons may not meet when scale is used with -s or -c", 'r');
@@ -1988,7 +1987,7 @@ int main(int argc, char *argv[])
       }
     }
   }
-  for (int i = 0; i < (int)idx.size(); i++) {
+  for (unsigned int i = 0; i < idx.size(); i++) {
     double r = (opts.scale[idx[i]] == DBL_MAX) ? 1 : opts.scale[idx[i]];
     s.setScale(i, r);
   }
@@ -1999,7 +1998,8 @@ int main(int argc, char *argv[])
   // check rotation axis specifier for zero
   if (opts.mode != 'k' && opts.rotation_axis == 2)
     opts.error("only 0 and 1 are valid for axis when not using option -k", 'a');
-  else if (opts.rotation_axis != idx[0] && opts.rotation_axis != idx[1])
+  else if (opts.rotation_axis != (int)idx[0] &&
+           opts.rotation_axis != (int)idx[1])
     opts.error(
         msg_str("polygon '%d' is not generated so cannot be used for rotation",
                 opts.rotation_axis),
@@ -2009,12 +2009,12 @@ int main(int argc, char *argv[])
   bool swap_axes = false;
   if (opts.mode == 'k' && opts.p == opts.q)
     swap_axes = false;
-  else if (opts.rotation_axis == idx[1])
+  else if (opts.rotation_axis == (int)idx[1])
     swap_axes = true;
 
   // if convex_hull is not set
   if (!opts.convex_hull) {
-    for (int i = 0; i < (int)opts.d.size(); i++) {
+    for (unsigned int i = 0; i < opts.d.size(); i++) {
       if (opts.d[i] > 1 || opts.d_substitute[i] > 1) {
         // supress convex hull
         opts.convex_hull = 2;
@@ -2052,8 +2052,8 @@ int main(int argc, char *argv[])
   if (opts.verbose) {
     s.debug(opts.mode);
 
-    double edge_length[2] = {0, 0};
-    for (int i = 0; i < (int)pgeom.size(); i++) {
+    double edge_length[2] = {0};
+    for (unsigned int i = 0; i < pgeom.size(); i++) {
       GeometryInfo info(pgeom[i]);
       if (info.num_iedges() > 0) {
         edge_length[i] = info.iedge_length_lims().sum / info.num_iedges();

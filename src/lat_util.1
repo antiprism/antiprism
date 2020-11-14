@@ -101,19 +101,21 @@ Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
 \fB\-V\fR <col>
 vertex color, (optional) transparency, (optional) elements
 .IP
-transparency. valid range from 0 (invisible) to 255 (opaque)
+transparency: valid range from 0 (invisible) to 255 (opaque)
 elements to color are l \- lattice, c \- convex hull, v \- voronoi
 .IP
 (default elements: lcv)
+.IP
+Note: input elements from \fB\-R\fR input are not changed
 .TP
 \fB\-E\fR <col>
-edge color (for struts, convex hulls, and voronoi)
+edge color (same format as for vertices) or
 .IP
-lower case outputs map indexes. upper case outputs color values
 key word: r,R for color edges by root value of final product
+lower case outputs map indexes. upper case outputs color values
 .TP
 \fB\-F\fR <col>
-face color (for convex hulls and voronoi)
+face color (same format as for vertices) or
 .IP
 key word: s,S color by symmetry using face normals
 key word: c,C color by symmetry using face normals (chiral)

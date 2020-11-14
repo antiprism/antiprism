@@ -476,8 +476,8 @@ void planarity_info(Geometry &geom)
 
   double max_nonplanar = 0;
   double sum_nonplanar = 0;
-  int sz = geom.faces().size();
-  for (int i = 0; i < sz; i++) {
+  unsigned int sz = geom.faces().size();
+  for (unsigned int i = 0; i < sz; i++) {
     double nonplanar = rep.get_f_max_nonplanars()[i];
     sum_nonplanar += nonplanar;
     if (nonplanar > max_nonplanar)
@@ -600,6 +600,17 @@ int face_no)
   radius = min;
 
   return face_edge_nearpt_centroid;
+}
+
+vector<Vec3d> face_edge_nearpoints_centroids(const Geometry &base)
+{
+  double rad;
+  Geometry near_pts;
+  unsigned int fsz = base.faces().size();
+  for (unsigned int i = 0; i < fsz; i++)
+    near_pts.add_vert(face_edge_nearpoints_centroid(base, rad, i));
+
+  return(near_pts.verts());
 }
 */
 
@@ -785,8 +796,8 @@ void construct_model(Geometry &base, const cn_opts &opts)
   // add unit sphere on origin
   if (opts.output_parts.find_first_of("uU") != string::npos) {
     Geometry sgeom;
-    char geo_str[MSG_SZ];
-    sprintf(geo_str, "geo_%d_%d", opts.roundness, opts.roundness);
+    string geo_str = "geo_" + std::to_string(opts.roundness) + "_" +
+                     std::to_string(opts.roundness);
     sgeom.read_resource(geo_str);
     sgeom.transform(Trans3d::translate(-centroid(sgeom.verts())));
     unitize_vertex_radius(sgeom);

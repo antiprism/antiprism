@@ -551,17 +551,14 @@ Options
 %s
   -w <opt>  off=1, vrml=2  (default: off)
   -b <opt>  base=1, dual=2 (default: base)
-
-
-Listings (0 to list all)
-  -l        list polyhedron names, symbols and reference figures only
-  -v        print vertex and face coordinates
-  -x        print successive approximations
-
-Precision options
   -d <dgts> number of significant digits (default %d) or if negative
             then the number of digits after the decimal point
   -o <file> write output to file (default: write to standard output)
+
+Listings (use 0 for Symbol to list all)
+  -l        list polyhedron names, symbols and reference figures only
+  -v        print vertex and face coordinates
+  -x        print successive approximations
 
 )",
           prog_name(), help_ver_text, DEF_SIG_DGTS);
@@ -574,7 +571,7 @@ Precision options
 void kaleido_opts::process_command_line(int argc, char **argv)
 {
   char c;
-  char errmsg[MSG_SZ];
+  char errmsg[MSG_SZ] = {0};
   bool sig_digits_set = false;
 
   string arg_id;
@@ -681,7 +678,7 @@ void Err(const char *errmsg)
 
 void printErrorMessage(int error_number, string func_name)
 {
-  char buffer[256];
+  char buffer[MSG_SZ] = {0};
   snprintf(buffer, sizeof(buffer), "(%s) errno: %d %s", func_name.c_str(),
            error_number, strerror(error_number));
   Err(buffer);
@@ -948,7 +945,7 @@ int unpacksym(char *sym, Polyhedron *P, Uniform *uniform, int last_uniform)
   if (!c)
     Err("no data");
 
-  char wyth[MSG_SZ];
+  char wyth[MSG_SZ] = {0};
   if (c == '#') {
     while ((c = *sym++) && isspace(c))
       ;
@@ -2360,13 +2357,13 @@ int get_poly(Geometry &geom, Polyhedron *poly)
         lns.push_back(edges[j + 1]);
       }
 
-    int num_edges = faces[i].size();
+    unsigned int num_edges = faces[i].size();
     faces[i].clear();
     faces[i].push_back(lns[0]);
     int pt = lns[1];
-    for (int j = 1; j < num_edges; j++) {
+    for (unsigned int j = 1; j < num_edges; j++) {
       faces[i].push_back(pt);
-      for (int k = j; k < num_edges; k++) {
+      for (unsigned int k = j; k < num_edges; k++) {
         if (lns[k * 2] == pt) {
           pt = lns[k * 2 + 1];
           swap(lns[j * 2], lns[k * 2 + 1]);
@@ -2400,8 +2397,7 @@ void color_off(Geometry &geom)
 
   const vector<vector<int>> &faces = geom.faces();
   for (unsigned int i = 0; i < faces.size(); i++) {
-    int fsz = faces[i].size();
-    Color col = col_map->get_col(fsz);
+    Color col = col_map->get_col(faces[i].size());
     geom.colors(FACES).set(i, col);
   }
 }
@@ -2424,7 +2420,7 @@ int main(int argc, char *argv[])
   Uniform *uniform;
   int last_uniform = get_uniform_list(&uniform);
 
-  char sym[256];
+  char sym[MSG_SZ] = {0};
   Polyhedron *P = nullptr;
 
   int first = 1;
@@ -2446,7 +2442,7 @@ int main(int argc, char *argv[])
 
   for (int i = first; i <= last; i++) {
     // size of char strings used in kaleido
-    char sym[256];
+    char sym[MSG_SZ] = {0};
     if (opts.symbol == "0") {
       sprintf(sym, "#%d", i);
       P = kaleido(sym, uniform, last_uniform);

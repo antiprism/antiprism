@@ -354,16 +354,14 @@ int UniformCompound::get_poly(Geometry &geom, int sym, double angle, int n,
 
   int uc_num = sym + 1;
   if (uc_num >= 20 && uc_num <= 25) {
-    char tmp_str[MSG_SZ];
-    sprintf(tmp_str, "%d/%d", n, d);
+    string tmp_str = std::to_string(n) + "/" + std::to_string(d);
     constituent_str += tmp_str;
 
-    char sym_from_local[MSG_SZ];
-    sprintf(sym_from_local, "D%d%s", n,
-            (uc_num == 22 || uc_num == 23) ? "v" : "h");
-    char sym_to_local[MSG_SZ];
-    sprintf(sym_to_local, "D%d%s", k * n,
-            ((uc_num == 22 || uc_num == 23) && !is_even(k)) ? "v" : "h");
+    string sym_from_local =
+        "D" + std::to_string(n) + ((uc_num == 22 || uc_num == 23) ? "v" : "h");
+    string sym_to_local =
+        "D" + std::to_string(k * n) +
+        (((uc_num == 22 || uc_num == 23) && !is_even(k)) ? "v" : "h");
 
     sym_from = sym_from_local;
     sym_to = sym_to_local;
@@ -467,7 +465,7 @@ int UniformCompound::parse_uc_args(string &name, double &angle, int &n, int &d,
   string uc_name = name.substr(0, loc);
 
   if (loc + 1 >= (int)name.length())
-    snprintf(errmsg, MSG_SZ, "argument string not found\n");
+    strcpy_msg(errmsg, "argument string not found");
   // process uc args
   else {
     string and_the_rest = name.substr((loc + 1));
@@ -483,8 +481,7 @@ int UniformCompound::parse_uc_args(string &name, double &angle, int &n, int &d,
           // don't accept empty digit string or "." at end of string
           if (!digits_str.length() ||
               digits_str[digits_str.length() - 1] == '.') {
-            snprintf(errmsg, MSG_SZ,
-                     "no digits found, or decimal point at end");
+            strcpy_msg(errmsg, "no digits found, or decimal point at end");
             break;
           }
           else
@@ -495,28 +492,29 @@ int UniformCompound::parse_uc_args(string &name, double &angle, int &n, int &d,
       }
       else if (digits.find(i) != string::npos) {
         if (!operand) {
-          snprintf(errmsg, MSG_SZ, "operator expected");
+          strcpy_msg(errmsg, "operator expected");
           break;
         }
         else if (operand == '/' && n < 1) {
-          snprintf(errmsg, MSG_SZ,
-                   "d of n/d supplied but n is zero or not set");
+          strcpy_msg(errmsg, "d of n/d supplied but n is zero or not set");
           break;
         }
         else if (operand != 'a' && (i == '.' || i == '-')) {
-          snprintf(errmsg, MSG_SZ, "operator %c should have a positive integer",
-                   operand);
+          strcpy_msg(
+              errmsg,
+              msg_str("operator %c should have a positive integer", operand)
+                  .c_str());
           break;
         }
         if ((digits_str.find('.') != string::npos) && i == '.') {
-          snprintf(errmsg, MSG_SZ, "decimal point encountered more than once");
+          strcpy_msg(errmsg, "decimal point encountered more than once");
           break;
         }
         else
           digits_str += i;
       }
       else {
-        snprintf(errmsg, MSG_SZ, "unexpected character: %c", i);
+        strcpy_msg(errmsg, msg_str("unexpected character: %c", i).c_str());
         break;
       }
     }
@@ -524,7 +522,7 @@ int UniformCompound::parse_uc_args(string &name, double &angle, int &n, int &d,
     if (operand) {
       // don't accept empty digit string or "." at end of string
       if (!digits_str.length() || digits_str[digits_str.length() - 1] == '.')
-        snprintf(errmsg, MSG_SZ, "no digits found, or decimal point at end");
+        strcpy_msg(errmsg, "no digits found, or decimal point at end");
       else
         assign_uc_value(operand, digits_str.c_str(), angle, n, d, k);
     }
@@ -532,13 +530,13 @@ int UniformCompound::parse_uc_args(string &name, double &angle, int &n, int &d,
 
   if (!*errmsg) {
     if (n == 0)
-      snprintf(errmsg, MSG_SZ, "operator n must not be 0");
+      strcpy_msg(errmsg, "operator n must not be 0");
     else if (d == 0)
-      snprintf(errmsg, MSG_SZ, "operator / must not be 0");
+      strcpy_msg(errmsg, "operator / must not be 0");
     else if (k == 0)
-      snprintf(errmsg, MSG_SZ, "operator k must not be 0");
+      strcpy_msg(errmsg, "operator k must not be 0");
     else if (n > 0 && d > 0 && gcd(n, d) != 1)
-      snprintf(errmsg, MSG_SZ, "n and d must be co-prime");
+      strcpy_msg(errmsg, "n and d must be co-prime");
   }
 
   if (!*errmsg) {
@@ -575,7 +573,7 @@ int UniformCompound::set_uc_args(int sym, double &angle, int &n, int &d, int &k,
     angle = deg2rad(angle);
   }
   else if (!needs_angle && angle != INFINITY) {
-    snprintf(errmsg, MSG_SZ, "for UC%d, angle is not needed", sym);
+    strcpy_msg(errmsg, msg_str("for UC%d, angle is not needed", sym).c_str());
     return 1;
   }
 
@@ -584,7 +582,7 @@ int UniformCompound::set_uc_args(int sym, double &angle, int &n, int &d, int &k,
   if (uc20_25 && n == -1)
     n = ran.ran_int_in_range(2, 20); // range 2 to 20
   else if (!uc20_25 && n != -1) {
-    snprintf(errmsg, MSG_SZ, "for UC%d, n is not needed", sym);
+    strcpy_msg(errmsg, msg_str("for UC%d, n is not needed", sym).c_str());
     return 1;
   }
 
@@ -615,7 +613,7 @@ int UniformCompound::set_uc_args(int sym, double &angle, int &n, int &d, int &k,
     }
   }
   else if (!uc20_25 && d != -1) {
-    snprintf(errmsg, MSG_SZ, "for UC%d, d is not needed", sym);
+    strcpy_msg(errmsg, msg_str("for UC%d, d is not needed", sym).c_str());
     return 1;
   }
 
@@ -626,7 +624,7 @@ int UniformCompound::set_uc_args(int sym, double &angle, int &n, int &d, int &k,
   if (uc20_25 && k == -1)
     k = ran.ran_int_in_range(k_min, 4); // range k_min to 4
   else if (!uc20_25 && k != -1) {
-    snprintf(errmsg, MSG_SZ, "for UC%d, k is not needed", sym);
+    strcpy_msg(errmsg, msg_str("for UC%d, k is not needed", sym).c_str());
     return 1;
   }
 
@@ -634,31 +632,33 @@ int UniformCompound::set_uc_args(int sym, double &angle, int &n, int &d, int &k,
   // checked
   if (uc20_25) {
     if (k < k_min) {
-      snprintf(errmsg, MSG_SZ, "for UC%d, k must be greater than %d", sym,
-               k_min);
+      strcpy_msg(
+          errmsg,
+          msg_str("for UC%d, k must be greater than %d", sym, k_min).c_str());
       return 1;
     }
 
     if (sym == 20 || sym == 21) {
       // RK - this constraint is not necessary for prisms
       // if ((double)n/d <= 2.0) {
-      //   snprintf(errmsg, MSG_SZ, "for UC%d, n/d (%d/%d) must be greater than
-      //   2",sym,n,d);
-      //   return 1;
+      //   strcpy_msg(errmsg, msg_str("for UC%d, n/d (%d/%d) must be greater
+      //   than 2",sym,n,d).c_str()); return 1;
       //}
     }
     else if (sym >= 22) {
       if ((sym == 22 || sym == 23) && is_even(d)) {
-        snprintf(errmsg, MSG_SZ, "for UC%d, d must be odd\n", sym);
+        strcpy_msg(errmsg, msg_str("for UC%d, d must be odd", sym).c_str());
         return 1;
       }
       else if ((sym == 24 || sym == 25) && !is_even(d)) {
-        snprintf(errmsg, MSG_SZ, "for UC%d, d must be even\n", sym);
+        strcpy_msg(errmsg, msg_str("for UC%d, d must be even", sym).c_str());
         return 1;
       }
       if ((double)n / d <= 3.0 / 2) {
-        snprintf(errmsg, MSG_SZ,
-                 "for UC%d, n/d (%d/%d) must be greater than 3/2", sym, n, d);
+        strcpy_msg(
+            errmsg,
+            msg_str("for UC%d, n/d (%d/%d) must be greater than 3/2", sym, n, d)
+                .c_str());
         return 1;
       }
     }
