@@ -149,7 +149,7 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                transparency: valid range from 0 (invisible) to 255 (opaque)
                elements to color are l - lattice, c - convex hull, v - voronoi
                   (default elements: lcv)
-               Note: input elements from -R input are not changed
+               Note: input element colors from -R input are not changed
   -E <col>  edge color (same format as for vertices) or
                key word: r,R for color edges by root value of final product
                lower case outputs map indexes. upper case outputs color values
