@@ -449,9 +449,8 @@ void list_grid_radii(const string &file_name, const Geometry &geom,
     if (!list_radii_center.is_set())
       buffer = "centroid";
     else {
-      string buf;
       for (unsigned int i = 0; i < 3; i++) {
-        buf = std::to_string(list_radii_center[i]);
+        string buf = std::to_string(list_radii_center[i]);
         // truncate trailing zeros and decimal point if it is the last
         buf.erase(buf.find_last_not_of('0') + 1, std::string::npos);
         buf.erase(buf.find_last_not_of('.') + 1, std::string::npos);
