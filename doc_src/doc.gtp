@@ -59,7 +59,7 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/bravais.gtm 2 bravais - Bravais lattices
 
 ./doc/dome_layer.gtm 2 EXTRA: dome_layer - dome strut arrangements
-./doc/rotegrity.gtm 2 EXTRA: rotegrity - make rotegrity models
+./doc/rotegrity.gtm 2 EXTRA: rotegrity - make rotegrity and nexorede models
 ./doc/kaleido.gtm 2 EXTRA: kaleido - uniform polyhedra (Zvi Har'El)
 ./doc/spidron.gtm 2 EXTRA: spidron - spidronise a polyhedron
 ./doc/poly_weave.gtm 2 EXTRA: poly_weave - weave based on a polyhedron

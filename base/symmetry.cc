@@ -35,6 +35,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <map>
+#include <numeric>
 #include <set>
 
 using std::map;
@@ -2280,7 +2281,7 @@ void SymmetricUpdater::init_vert_orbit(int orbit_idx, const set<int> &orbit)
   vector<int> idxs(orbit.begin(), orbit.end());
   int v_idx = idxs[0];
   // fprintf(stderr, "v_idx = %d\n", v_idx);
-  Symmetry stab = get_vert_stabilizer(geoms[reading_idx], v_idx, symmetry);
+  Symmetry stab = get_vert_stabilizer(geom, v_idx, symmetry);
   // fprintf(stderr, "stab=%s: ", stab.get_symbol().c_str());
 
   // Set of transformations that carry the vertex once onto each orbit vertex
@@ -2290,10 +2291,10 @@ void SymmetricUpdater::init_vert_orbit(int orbit_idx, const set<int> &orbit)
   const int num_repeats = trans.size();
 
   Geometry merge_geom, part_geom;
-  part_geom.add_vert(geoms[reading_idx].verts(v_idx));
+  part_geom.add_vert(geom.verts(v_idx));
   sym_repeat(merge_geom, part_geom, trans);
   for (auto idx : idxs)
-    merge_geom.add_vert(geoms[reading_idx].verts(idx));
+    merge_geom.add_vert(geom.verts(idx));
 
   vector<map<int, set<int>>> equivs;
   merge_coincident_elements(merge_geom, "v", &equivs, sym_eps);
@@ -2351,25 +2352,74 @@ void SymmetricUpdater::init_vert_orbit(int orbit_idx, const set<int> &orbit)
   // fprintf(stderr, "init_vert_orbit out\n");
 }
 
-SymmetricUpdater::SymmetricUpdater(const Geometry &geom, Symmetry sym,
-                                   bool deferred)
+SymmetricUpdater::SymmetricUpdater(const Geometry &base_geom, Symmetry sym)
     : symmetry(sym)
 {
-  geoms.resize(1 + deferred, geom);
-  reading_idx = 0;
-  writing_idx = deferred; // 0 if only one geom, 1 if two geoms
+  geom = base_geom;
   orbit_vertex_idx.clear();
   orbit_invariant_subspaces.clear();
   orbit_mapping.clear();
 
   transformations = symmetry.get_trans();
   orbit_mapping.resize(
-      geoms[reading_idx].verts().size(),
+      geom.verts().size(),
       ElemOrbitMapping(-1, transformations.end(), transformations.end()));
-  get_equiv_elems(geoms[reading_idx], transformations, &equiv_sets);
+  get_equiv_elems(geom, transformations, &equiv_sets);
   const vector<set<int>> &v_equiv_sets = equiv_sets[VERTS];
   for (size_t orbit_idx = 0; orbit_idx < v_equiv_sets.size(); orbit_idx++)
     init_vert_orbit(orbit_idx, v_equiv_sets[orbit_idx]);
+}
+
+vector<int> SymmetricUpdater::get_principal(int type)
+{
+  vector<int> principal_idxs;
+  if (type >= VERTS && type <= FACES) {
+    for (auto &orbit : get_equiv_sets(type))
+      principal_idxs.push_back(*orbit.begin());
+  }
+
+  return principal_idxs;
+}
+
+void SymmetricUpdater::to_unique_index_list(vector<int> &idxs)
+{
+  sort(idxs.begin(), idxs.end());
+  idxs.erase(unique(idxs.begin(), idxs.end()), idxs.end());
+}
+
+vector<int> SymmetricUpdater::sequential_index_list(int size)
+{
+  vector<int> idxs;
+  if (size > 0) {
+    idxs.resize(size);
+    std::iota(idxs.begin(), idxs.end(), 0);
+  }
+  return idxs;
+}
+
+vector<int>
+SymmetricUpdater::get_included_verts(const vector<int> &elem_idxs,
+                                     const vector<vector<int>> &elem_verts)
+{
+  vector<int> included_verts;
+  for (int elem_idx : elem_idxs) {
+    included_verts.insert(included_verts.end(), elem_verts[elem_idx].begin(),
+                          elem_verts[elem_idx].end());
+  }
+  to_unique_index_list(included_verts);
+  return included_verts;
+}
+
+vector<int>
+SymmetricUpdater::get_associated_elems(const vector<vector<int>> &elems)
+{
+  vector<int> elem_idxs;
+  for (auto &v_orbit : get_equiv_sets(VERTS)) {
+    int v_idx = *v_orbit.begin();
+    elem_idxs.insert(elem_idxs.end(), elems[v_idx].begin(), elems[v_idx].end());
+  }
+  to_unique_index_list(elem_idxs);
+  return elem_idxs;
 }
 
 void SymmetricUpdater::update_principal_vertex(int v_idx, Vec3d point)
@@ -2379,13 +2429,12 @@ void SymmetricUpdater::update_principal_vertex(int v_idx, Vec3d point)
 
   // Update the principal orbit vertex with the new value
   if (orb_vert_idx != v_idx)
-    geoms[writing_idx].verts(orb_vert_idx) = orb.get_trans_to() * point;
+    geom.verts(orb_vert_idx) = orb.get_trans_to() * point;
   else // don't map if this is the principal vertex
-    geoms[writing_idx].verts(orb_vert_idx) = point;
+    geom.verts(orb_vert_idx) = point;
   const auto &subspace = orbit_invariant_subspaces[orb.get_orbit_no()];
-  geoms[writing_idx].verts(orb_vert_idx) =
-      subspace.nearest_point(geoms[writing_idx].verts(orb_vert_idx))
-          .with_len(point.len());
+  geom.verts(orb_vert_idx) =
+      subspace.nearest_point(geom.verts(orb_vert_idx)).with_len(point.len());
 }
 
 Vec3d SymmetricUpdater::update_from_principal_vertex(int v_idx)
@@ -2395,152 +2444,21 @@ Vec3d SymmetricUpdater::update_from_principal_vertex(int v_idx)
 
   // Update the value from the principal orbit vertex
   if (orb_vert_idx != v_idx) // don't map if this is the principal vertex
-    geoms[reading_idx].verts(v_idx) =
-        orb.get_trans_from() * geoms[reading_idx].verts(orb_vert_idx);
-  return geoms[reading_idx].verts(v_idx);
+    geom.verts(v_idx) = orb.get_trans_from() * geom.verts(orb_vert_idx);
+
+  return geom.verts(v_idx);
 }
 
 void SymmetricUpdater::update_all()
 {
-  for (unsigned int i = 0; i < geoms[reading_idx].verts().size(); i++)
+  for (unsigned int i = 0; i < geom.verts().size(); i++)
     update_from_principal_vertex(i);
-}
-
-void SymmetricUpdater::prepare_for_next_iteration()
-{
-  swap(reading_idx, writing_idx);
 }
 
 const Geometry &SymmetricUpdater::get_geom_final()
 {
   update_all();
-  return geoms[reading_idx];
+  return geom;
 }
 
 } // namespace anti
-
-/*
-// Initialise vertex orbit
-
-
-/// Orbit of an element under some transformation group
-class Orbit
-{
-   private:
-     int element;                  // element to find the orbit of
-     Symmetry stab;                // stabilizer subgroup, fixes elem
-     std::map<int, Trans3d> elems; // elements on the orbit, each mapped to a
-                                   // transformation that carries the base
-                                   // element onto it
-     void init_vert_orbit(const Geometry &geom, const Symmetry &sym);
-     void init_edge_orbit(const Geometry &geom, const Symmetry &sym);
-     void init_face_orbit(const Geometry &geom, const Symmetry &sym);
-
-   public:
-     ///Get the element to transformation mapping
-     / **\return the mapping from the index of elements on the orbit to
-      * the transformation that carries the original element onto it. * /
-  const std::map<int, Trans3d> &get_elems() const { return elems; }
-
-  /// Get the stabalizer subgroup
-  / **\return the symmetry group that maps the original element onto itself.* /
-  const Symmetry get_stabilizer() const { return stab; }
-
-  /// Initialise orbit
-  / **\param geom the geometry
-   * \param elem the element index to find the orbit of
-   * \param elem_type type of element: ELEM_VERTS, ELEM_EDGES, ELEM_FACES
-   * \param sym the symmetry group * /
-  void init(const Geometry &geom, int elem, int elem_type, const Symmetry &sym);
-
-};
-
-
-
-void Orbit::init_vert_orbit(const Geometry &geom, const Symmetry &sym)
-{
-  fprintf(stderr, "\ninit_vert_orbit in\n");
-  fprintf(stderr, "element = %d\n", element);
-  elems.clear();
-  stab = get_vert_stabilizer(geom, element, sym);
-  // Symmetry new_stab(Symmetry::Cv, 3, stab.get_to_std());
-  // stab = new_stab;
-  fprintf(stderr, "stab=%s: ", stab.get_symbol().c_str());
-  Transformations
-      trans; // will carry an element just once onto each orbit element
-  trans.min_set(sym.get_trans(), stab.get_trans());
-  fprintf(stderr, "trans.size()=%lu: ", (unsigned long)trans.size());
-  const int num_repeats = trans.size();
-
-  Geometry merge_geom, part_geom;
-  part_geom.add_vert(geom.verts(element));
-  sym_repeat(merge_geom, part_geom, trans);
-  merge_geom.add_verts(geom.verts()); // no need for append
-
-  vector<map<int, set<int>>> equivs;
-  merge_coincident_elements(merge_geom, "v", &equivs);
-
-  // map first of any coincident vertices to its trans order number
-  vector<int> idxs_in_trans_order(num_repeats);
-  for (map<int, set<int>>::iterator mi = equivs[0].begin();
-       mi != equivs[0].end(); ++mi) {
-    fprintf(stderr, "idx=%d: ", mi->first);
-    for (set<int>::iterator si = mi->second.begin(); si != mi->second.end();
-         si++) {
-      fprintf(stderr, "%d  ", *si);
-    }
-    fprintf(stderr, "\n");
-  }
-  fprintf(stderr, "Maps done\n");
-
-  for (map<int, set<int>>::iterator mi = equivs[0].begin();
-       mi != equivs[0].end(); ++mi) {
-    if (mi->second.size() < 2) { // Shouldn't happen!
-      fprintf(stderr, "orbit: missing map! (for idx=%d)\n", mi->first);
-    //return;
-    }
-    else {
-      set<int>::iterator si = mi->second.begin();
-      const int pos = *si;
-      const int idx = *(++si);
-      idxs_in_trans_order[pos] = idx - num_repeats;
-    }
-  }
-
-  int pos = 0;
-  for (set<Trans3d>::iterator si = trans.begin(); si != trans.end(); si++) {
-    fprintf(stderr, "pos %d: idx %d\n", pos, idxs_in_trans_order[pos]);
-    si->dump();
-    elems[idxs_in_trans_order[pos]] = *si;
-    pos++;
-  }
-  fprintf(stderr, "init_vert_orbit out\n");
-}
-
-// Initialise edge orbit
-void Orbit::init_edge_orbit(const Geometry &geom, const Symmetry &sym)
-{
-   stab = get_edge_stabilizer(geom, element, sym);
-}
-
-// Initialise face orbit
-void Orbit::init_face_orbit(const Geometry &geom, const Symmetry &sym)
-{
-   stab = get_face_stabilizer(geom, element, sym);
-}
-
-
-void Orbit::init(const Geometry &geom, int elem, int elem_type,
-   const Symmetry &sym)
-{
-   stab = Symmetry();
-   element = elem;
-
-   if(elem_type==ELEM_VERTS)
-      init_vert_orbit(geom, sym);
-   else if(elem_type==ELEM_EDGES)
-      init_edge_orbit(geom, sym);
-   else if(elem_type==ELEM_FACES)
-      init_face_orbit(geom, sym);
-}
-*/

@@ -100,7 +100,7 @@ Extra Programs
 Extra programs are more loosely related to polyhedra, incomplete or of
 limited use. They are provided for interest only.
 <ul>
-<li><a href="rotegrity.html">rotegrity</a> - make rotegrity models
+<li><a href="rotegrity.html">rotegrity</a> - make rotegrity and nexorede models
 <li><a href="mmop_origami.html">mmop_origami</a> - multimodular origami polyhedra
 <li><a href="poly_weave.html">poly_weave</a> - weave based on a polyhedron
 <li><a href="kaleido.html">kaleido</a> - uniform polyhedra (Zvi Har'El)

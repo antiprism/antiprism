@@ -5,10 +5,12 @@ xx-xx-20 Adrian Rossiter <adrian@antiprism.com>
          New Programs
             poly_form: rename from minmax, rename options, add -y
               for symmetry constraint, add -a e equal-edge algorithm
+              and -a p planarisation
          Changes
             to_nfold: add -x, -p to help with crossed models
             minmax: rename to poly_form
             repel: add -z for status reporting
+            rotegrity: remove -T (old twist program output)
          Fixes
             minor bug fixes and improvements
             code review and fixes for potential issues

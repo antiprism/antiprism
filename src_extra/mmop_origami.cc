@@ -45,53 +45,27 @@ using std::vector;
 
 using namespace anti;
 
-class iter_params {
-public:
-  int num_iters;
-  int num_iters_status;
-  int sig_digits;
-  FILE *rep_file;
-  iter_params()
-      : num_iters(10000), num_iters_status(1000), sig_digits(15),
-        rep_file(stderr)
-  {
-  }
-
-  double get_test_val() { return pow(10, -sig_digits); }
-  bool quiet() { return rep_file == nullptr; }
-  bool check_status(int n)
-  {
-    return n == num_iters || n == 1 ||
-           (num_iters_status > 0 && n % num_iters_status == 0);
-  }
-  bool checking_status() { return num_iters_status > 0; };
-  bool print_progress_dot(int n)
-  {
-    if (!quiet() && num_iters_status >= 10)
-      return (n % num_iters) % (num_iters_status / 10) == 0;
-    else
-      return false;
-  }
-};
-
 class mmop_opts : public ProgramOpts {
 public:
-  iter_params it_params;
-  double adjust_fact;
-  double trunc_len;
-  double keep_orient;
-  double init_ht;
-  char color_method;
+  IterationControl it_ctrl;
+  double adjust_fact = 100.0;
+  double trunc_len = 1.0;
+  double keep_orient = false;
+  double init_ht = -0.5;
+  char color_method = 'n';
   Coloring clrngs[3];
 
   string ifile;
   string ofile;
 
-  mmop_opts()
-      : ProgramOpts("mmop_origami"), adjust_fact(100.0), trunc_len(1.0),
-        keep_orient(false), init_ht(-0.5), color_method('n')
+  mmop_opts() : ProgramOpts("mmop_origami")
   {
     clrngs[2].add_cmap(colormap_from_name("spread"));
+    it_ctrl.set_max_iters(10000); // will finish reasobly quickly
+    it_ctrl.set_status_check_and_report_iters(1000);
+    it_ctrl.set_status_check_only_iters(
+        1);                     // test cheap, enable early termination
+    it_ctrl.set_sig_digits(15); // achievable in reasonable time
   }
 
   void process_command_line(int argc, char **argv);
@@ -112,8 +86,6 @@ If input_file is not given the program reads from standard input.
 
 Options
 %s
-  -n <itrs> number of iterations (default 10000)
-  -s <perc> percentage to adjust corrections on iteration (default: 100)
   -t <val>  truncate polygon edge to this length (default: no truncation
   -k        keep orientation, affects face centre offset direction (default:
             set positive orientation)
@@ -123,53 +95,37 @@ Options
             indexes (default: rand), a part consisting of letters from
             v, e, f, selects the element types to apply the map list to
             (default 'vef'). The 'compound' map should give useful results.
+  -s <perc> percentage to adjust corrections on iteration (default: %0.0f)
+  -n <itrs> maximum number of iterations, -1 for unlimited (default: %d)
   -l <lim>  minimum change of distance/width_of_model to
             terminate, as negative exponent (default: %d giving %.0e)
-  -z <n>    status checking and reporting every n iterations, -1 for no
-            status (default: 1000)
-  -q        quiet, do not print status messages
+  -z <nums> number of iterations between status reports (implies termination
+            check) (0 for final report only, -1 for no report), optionally
+            followed by a comma and the number of iterations between
+            termination checks (0 for report checks only) (default: %d,%d)
   -o <file> write output to file (default: write to standard output)
 
 )",
-          prog_name(), help_ver_text, it_params.sig_digits,
-          it_params.get_test_val());
+          prog_name(), help_ver_text, adjust_fact, it_ctrl.get_max_iters(),
+          it_ctrl.get_sig_digits(), it_ctrl.get_test_val(),
+          it_ctrl.get_status_check_and_report_iters(),
+          it_ctrl.get_status_check_only_iters());
 }
 
 void mmop_opts::process_command_line(int argc, char **argv)
 {
   opterr = 0;
   int c;
+  int num;
   vector<double> nums;
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hn:s:t:kp:Vm:l:z:qo:")) != -1) {
+  while ((c = getopt(argc, argv, ":hn:s:t:kp:Vm:l:z:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
     switch (c) {
-    case 'o':
-      ofile = optarg;
-      break;
-
-    case 'n':
-      print_status_or_exit(read_int(optarg, &it_params.num_iters), c);
-      if (it_params.num_iters < 0)
-        error("number of iterations must be greater than 0", c);
-      break;
-
-    case 'z':
-      print_status_or_exit(read_int(optarg, &it_params.num_iters_status), c);
-      if (it_params.num_iters_status < -1)
-        error("number of iterations must be -1 or greater", c);
-      break;
-
-    case 's':
-      print_status_or_exit(read_double(optarg, &adjust_fact), c);
-      if (adjust_fact < 0 || adjust_fact > 100)
-        warning("not in range 0 to 100", c);
-      break;
-
     case 't':
       print_status_or_exit(read_double(optarg, &trunc_len), c);
       break;
@@ -190,18 +146,28 @@ void mmop_opts::process_command_line(int argc, char **argv)
       print_status_or_exit(read_colorings(clrngs, optarg), c);
       break;
 
-    case 'l':
-      print_status_or_exit(read_int(optarg, &it_params.sig_digits), c);
-      if (it_params.sig_digits < 0) {
-        warning("termination limit is negative, and so ignored", c);
-      }
-      if (it_params.sig_digits > DEF_SIG_DGTS) {
-        warning("termination limit is very small, may not be attainable", c);
-      }
+    case 's':
+      print_status_or_exit(read_double(optarg, &adjust_fact), c);
+      if (adjust_fact < 0 || adjust_fact > 100)
+        warning("not in range 0 to 100", c);
       break;
 
-    case 'q':
-      it_params.rep_file = nullptr;
+    case 'n':
+      print_status_or_exit(read_int(optarg, &num), c);
+      print_status_or_exit(it_ctrl.set_max_iters(num), c);
+      break;
+
+    case 'z':
+      print_status_or_exit(it_ctrl.set_status_checks(optarg), c);
+      break;
+
+    case 'l':
+      print_status_or_exit(read_int(optarg, &num), c);
+      print_status_or_exit(it_ctrl.set_sig_digits(num), c);
+      break;
+
+    case 'o':
+      ofile = optarg;
       break;
 
     default:
@@ -281,16 +247,15 @@ inline double adjust_edge(Geometry &geom, int v0, int v1, double len,
   return diff;
 }
 
-Status make_origami(const Geometry &geom, Geometry &orig, iter_params it_params,
+Status make_origami(const Geometry &geom, Geometry &orig, IterationControl it_ctrl,
                     double factor, double init_ht)
 {
-  const auto test_val = it_params.get_test_val();
+  const auto test_val = it_ctrl.get_test_val();
   double max_diff = 0;
   double slant = 0.5; // hardcoded for a model of reasonable and known size
   map<vector<int>, vector<double>> lens;
   make_origami_faces(geom, orig, lens, slant, init_ht);
-  int cnt;
-  for (cnt = 1; cnt <= it_params.num_iters; cnt++) {
+  for (it_ctrl.start_iter(); !it_ctrl.is_done(); it_ctrl.next_iter()) {
     double fact = factor;
     // Start gently seems like good idea, but is commented out as it affects
     // final symmetry
@@ -318,18 +283,27 @@ Status make_origami(const Geometry &geom, Geometry &orig, iter_params it_params,
       }
     }
 
-    if (max_diff <= test_val)
-      break;
+    string finish_msg;
+    if (it_ctrl.is_status_check_iter()) {
 
-    if (!it_params.quiet() && it_params.check_status(cnt))
-      fprintf(it_params.rep_file, "\niter:%-15d max_diff:%17.15f ", cnt,
-              max_diff);
-    else if (it_params.print_progress_dot(cnt))
-      fprintf(it_params.rep_file, ".");
+      if (max_diff < test_val) {
+        it_ctrl.set_finished();
+        finish_msg = "solved, test value achieved";
+      }
+      else if (it_ctrl.is_last_iter()) {
+        it_ctrl.set_finished();
+        finish_msg = "not solved, test value not achieved";
+      }
+    }
+
+    if (it_ctrl.is_status_report_iter()) {
+      if (it_ctrl.is_finished())
+        it_ctrl.print("Final iteration (%s):\n", finish_msg.c_str());
+
+      it_ctrl.print("%-12u max_diff:%17.15e\n", it_ctrl.get_current_iter(),
+                    max_diff);
+    }
   }
-  if (!it_params.quiet() && it_params.checking_status())
-    fprintf(it_params.rep_file, "\nFinal:\niter:%-15d max_diff:%17.15f\n",
-            (cnt < it_params.num_iters) ? cnt : it_params.num_iters, max_diff);
 
   return Status::ok();
 }
@@ -387,7 +361,7 @@ int main(int argc, char *argv[])
     opts.error("base polyhedron cannot be oriented: override with option -k");
 
   Geometry origami;
-  make_origami(geom, origami, opts.it_params, opts.adjust_fact / 200,
+  make_origami(geom, origami, opts.it_ctrl, opts.adjust_fact / 200,
                opts.init_ht);
   if (opts.trunc_len != 1)
     truncate_faces(origami, opts.trunc_len / 2);

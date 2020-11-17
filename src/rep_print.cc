@@ -596,11 +596,10 @@ void rep_printer::v_figure(int v_idx)
 
 void rep_printer::v_face_idxs(int v_idx)
 {
-  const Geometry &dual = get_dual();
-  const vector<int> &fcons = dual.faces(v_idx);
-  for (unsigned int i = 0; i < fcons.size(); i++)
-    fprintf(ofile, "%s%s", fidx2s(fcons[i]).c_str(),
-            (i < fcons.size() - 1) ? " " : "");
+  const vector<int> &v_faces = get_vert_faces()[v_idx];
+  for (size_t i = 0; i < v_faces.size(); i++)
+    fprintf(ofile, "%s%s", fidx2s(v_faces[i]).c_str(),
+            (i < v_faces.size() - 1) ? " " : "");
 }
 
 void rep_printer::v_solid_angle(int v_idx)

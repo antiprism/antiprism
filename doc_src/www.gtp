@@ -59,7 +59,7 @@ mtimestamp $dd.$MM.$yyyy
 
 ./programs/dome_layer.gtm 3 EXTRA: dome_layer - dome strut arrangements
 ./programs/poly_weave.gtm 3 EXTRA: poly_weave - weave based on a polyhedron
-./programs/rotegrity.gtm 3 EXTRA: rotegrity - make rotegrity models
+./programs/rotegrity.gtm 3 EXTRA: rotegrity - make rotegrity and nexorede models
 ./programs/mmop_origami.gtm 3 EXTRA: mmop_origami - multimodular polyhedron origami
 ./programs/jitterbug.gtm 3 EXTRA: jitterbug - jitterbug transformation
 ./programs/string_art.gtm 3 EXTRA: string_art - string figures

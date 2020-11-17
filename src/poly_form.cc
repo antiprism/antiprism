@@ -47,19 +47,17 @@ using namespace anti;
 class pf_opts : public ProgramOpts {
 public:
   IterationControl it_ctrl;
-  char algm;
-  double shorten_by;
-  double shorten_rad_by;
-  double flatten_by;
-  string sym_str;
-  Vec4d ellipsoid;
+  char algm = '\0';            // algorithm, use default
+  double shorten_by = 1.0;     // shorten adjustment, a small amount
+  double shorten_rad_by = NAN; // shorten radius adjustment, use default
+  double flatten_by = NAN;     // flatten adjustment, use default
+  bool use_symmetry = false;   // don't use symmetry
+  Vec4d ellipsoid;             // projection ellipsoid, unset, use default
 
   string ifile;
   string ofile;
 
-  pf_opts()
-      : ProgramOpts("poly_form"), algm('\0'), shorten_by(1.0),
-        shorten_rad_by(NAN), flatten_by(NAN)
+  pf_opts() : ProgramOpts("poly_form")
   {
     // The following defaults are suitable for small and medium models
     it_ctrl.set_max_iters(10000); // will finish reasobly quickly
@@ -106,9 +104,7 @@ Options
                    process output with smaller value to improve solution
   -f <perc> percentage to reduce distance of vertex from face plane (-a rp)
             on iteration (default: value of -s)
-  -y <sub>  maintain symmetry of the base model: sub is symmetry
-            subgroup (Schoenflies notation) or 'full', optionally followed
-            by a ',' and conjugation type (integer)
+  -y        maintain symmetry of the base model (with -a e/r/p)
   -E <prms> use ellipsoid, three numbers separated by commas are the
             axis lengths (for a superellipsoid an optional fourth number
             gives the power)
@@ -136,7 +132,7 @@ void pf_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hn:s:l:k:f:a:y:E:z:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hn:s:l:k:f:a:yE:z:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -181,7 +177,7 @@ void pf_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'y':
-      sym_str = optarg;
+      use_symmetry = true;
       break;
 
     case 'E':
@@ -217,6 +213,8 @@ void pf_opts::process_command_line(int argc, char **argv)
       warning("set, but not used for this algorithm", 'E');
   }
   else if (algm == 'u' || algm == 'U') {
+    if (use_symmetry)
+      error(msg_str("cannot maintain symmetry with algorithm '%c'", algm), 'y');
     if (!std::isnan(shorten_rad_by))
       warning("set, but not used for this algorithm", 'k');
     if (!std::isnan(flatten_by))
@@ -242,32 +240,6 @@ void pf_opts::process_command_line(int argc, char **argv)
 
   if (argc - optind == 1)
     ifile = argv[optind];
-}
-
-Status init_sym(const Geometry &geom, const char *sym_str, Symmetry &sym)
-{
-  Status stat;
-  Symmetry full_sym(geom);
-
-  Split parts(sym_str, ",");
-  if (parts.size() == 0 || parts.size() > 2)
-    return Status::error("argument should have 1 or 2 comma separated parts");
-
-  Symmetry sub_sym;
-  if (strncmp(parts[0], "full", strlen(parts[0])) == 0)
-    sub_sym = full_sym;
-  else if (!(stat = sub_sym.init(parts[0], Trans3d())))
-    return Status::error(msg_str("sub-symmetry type: %s", stat.c_msg()));
-
-  int sub_sym_conj = 0;
-  if (parts.size() > 1 && !(stat = read_int(parts[1], &sub_sym_conj)))
-    return Status::error(
-        msg_str("sub-symmetry conjugation number: %s", stat.c_msg()));
-
-  if (!(stat = full_sym.get_sub_sym(sub_sym, &sym, sub_sym_conj)))
-    return Status::error(msg_str("sub-symmetry: %s", stat.c_msg()));
-
-  return Status::ok();
 }
 
 void to_ellipsoid(Vec3d &v, const Vec4d &ellipsoid)
@@ -374,46 +346,35 @@ Status make_unscramble(Geometry &geom, IterationControl it_ctrl,
 
 Status make_equal_edges(Geometry &base_geom, IterationControl it_ctrl,
                         double shorten_factor, double shrink_factor,
-                        Vec4d ellipsoid, string sym_str)
+                        Vec4d ellipsoid, const Symmetry &sym)
 {
   to_ellipsoid(base_geom, ellipsoid); // map before finding symmetry
 
   Status stat;
-  Symmetry sym(Symmetry::C1);
-  if (sym_str.size()) {
-    if (!(stat = init_sym(base_geom, sym_str.c_str(), sym)))
-      return stat;
-  }
-  bool using_symmetry = (sym.get_sym_type() != Symmetry::C1);
+
+  bool using_symmetry = (sym.get_sym_type() > Symmetry::C1);
 
   // No further processing if no faces, but not an error
   if (base_geom.faces().size() == 0)
     return Status::ok();
 
-  SymmetricUpdater sym_updater((using_symmetry) ? base_geom : Geometry(), sym,
-                               false);
+  SymmetricUpdater sym_updater((using_symmetry) ? base_geom : Geometry(), sym);
   const Geometry &geom =
-      (using_symmetry) ? sym_updater.get_geom_reading() : base_geom;
+      (using_symmetry) ? sym_updater.get_geom_working() : base_geom;
 
   const vector<Vec3d> &verts = geom.verts();
   auto eds = GeometryInfo(geom).get_vert_cons();
 
-  // Get a list of the vertices that are principal vertices, or are
-  // connected to a principal vertex
-  vector<int> principal_verts;
-  set<int> verts_to_process;
+  vector<int> principal_verts; // first vertex in each vertex orbit
+  vector<int> verts_to_update; // vertices accessed during iteration
   if (using_symmetry) {
-    for (auto &v_orbit : sym_updater.get_equiv_sets(VERTS)) {
-      int principal_idx = *v_orbit.begin();
-      principal_verts.push_back(principal_idx);
-      verts_to_process.insert(principal_idx);
-      for (int v_idx : eds[principal_idx])
-        verts_to_process.insert(v_idx);
-    }
+    principal_verts = sym_updater.get_principal(VERTS);
+    verts_to_update =
+        SymmetricUpdater::get_included_verts(principal_verts, eds);
   }
   else {
-    principal_verts.resize(verts.size());
-    std::iota(principal_verts.begin(), principal_verts.end(), 0);
+    principal_verts =
+        SymmetricUpdater::sequential_index_list(geom.verts().size());
   }
 
   double g_max_dist = 0;
@@ -431,7 +392,7 @@ Status make_equal_edges(Geometry &base_geom, IterationControl it_ctrl,
 
     if (using_symmetry) {
       // Ensure that the vertices used in adjustment are up to date
-      for (int v_idx : verts_to_process)
+      for (auto v_idx : verts_to_update)
         sym_updater.update_from_principal_vertex(v_idx);
     }
 
@@ -505,15 +466,11 @@ Status make_equal_edges(Geometry &base_geom, IterationControl it_ctrl,
 
 Status make_regular_faces(Geometry &base_geom, IterationControl it_ctrl,
                           double shorten_factor, double plane_factor,
-                          double radius_factor, const string &sym_str)
+                          double radius_factor, const Symmetry &sym)
 {
-  Symmetry sym(Symmetry::C1);
   Status stat;
-  if (sym_str.size()) {
-    if (!(stat = init_sym(base_geom, sym_str.c_str(), sym)))
-      return stat;
-  }
-  bool using_symmetry = (sym.get_sym_type() != Symmetry::C1);
+
+  bool using_symmetry = (sym.get_sym_type() > Symmetry::C1);
 
   // No further processing if no faces, but not an error
   if (base_geom.faces().size() == 0)
@@ -527,10 +484,9 @@ Status make_regular_faces(Geometry &base_geom, IterationControl it_ctrl,
   if (scale)
     base_geom.transform(Trans3d::scale(1 / scale));
 
-  SymmetricUpdater sym_updater((using_symmetry) ? base_geom : Geometry(), sym,
-                               false);
+  SymmetricUpdater sym_updater((using_symmetry) ? base_geom : Geometry(), sym);
   const Geometry &geom =
-      (using_symmetry) ? sym_updater.get_geom_reading() : base_geom;
+      (using_symmetry) ? sym_updater.get_geom_working() : base_geom;
 
   const vector<Vec3d> &verts = geom.verts();
   const vector<vector<int>> &faces = geom.faces();
@@ -546,53 +502,26 @@ Status make_regular_faces(Geometry &base_geom, IterationControl it_ctrl,
     rads[f] = 0.5 / sin(M_PI * D / N); // circumradius of regular polygon
   }
 
-  // Get a list of the faces that contain a principal vertex of any type
-  vector<int> principal_verts;
-  vector<int> verts_to_update;
-  vector<int> faces_to_process;
-  vector<int> edges_to_process;
+  vector<int> principal_verts;  // first vertex in each vertex orbit
+  vector<int> verts_to_update;  // vertices accessed during iteration
+  vector<int> faces_to_process; // faces processed during iteration
+  vector<int> edges_to_process; // edges processed during iteration
   if (using_symmetry) {
-    vector<set<int>> vert_faces(geom.verts().size());
-    for (int f_idx = 0; f_idx < (int)geom.faces().size(); f_idx++)
-      for (int v_idx : faces[f_idx])
-        vert_faces[v_idx].insert(f_idx);
-
-    vector<set<int>> vert_edges(info.get_impl_edges().size());
-    for (int e_idx = 0; e_idx < (int)info.get_impl_edges().size(); e_idx++)
-      for (int v_idx : info.get_impl_edges()[e_idx])
-        vert_edges[v_idx].insert(e_idx);
-
-    for (auto &v_orbit : sym_updater.get_equiv_sets(VERTS)) {
-      int principal_idx = *v_orbit.begin();
-      principal_verts.push_back(principal_idx);
-      for (int f_idx : vert_faces[principal_idx]) {
-        faces_to_process.push_back(f_idx);
-        for (int v_idx : faces[f_idx])
-          verts_to_update.push_back(v_idx);
-      }
-      for (int e_idx : vert_edges[principal_idx])
-        edges_to_process.push_back(e_idx);
-      // implicit edges, so vertices already addded to verts_to_update
-    }
-    sort(verts_to_update.begin(), verts_to_update.end());
-    verts_to_update.erase(
-        unique(verts_to_update.begin(), verts_to_update.end()),
-        verts_to_update.end());
-    sort(faces_to_process.begin(), faces_to_process.end());
-    faces_to_process.erase(
-        unique(faces_to_process.begin(), faces_to_process.end()),
-        faces_to_process.end());
+    principal_verts = sym_updater.get_principal(VERTS);
+    faces_to_process = sym_updater.get_associated_elems(info.get_vert_faces());
+    edges_to_process =
+        sym_updater.get_associated_elems(info.get_vert_impl_edges());
+    // All the vertices that need to be updated lie on the faces to be processed
+    verts_to_update =
+        SymmetricUpdater::get_included_verts(faces_to_process, geom.faces());
   }
   else { // not using_symmetry
-    // all vertices are proncipal vertices
-    principal_verts.resize(verts.size());
-    std::iota(principal_verts.begin(), principal_verts.end(), 0);
-    // all face numbers should be be processed
-    faces_to_process.resize(faces.size());
-    std::iota(faces_to_process.begin(), faces_to_process.end(), 0);
-    // all edges should be be processed
-    edges_to_process.resize(info.get_impl_edges().size());
-    std::iota(edges_to_process.begin(), edges_to_process.end(), 0);
+    principal_verts =
+        SymmetricUpdater::sequential_index_list(geom.verts().size());
+    faces_to_process =
+        SymmetricUpdater::sequential_index_list(geom.faces().size());
+    edges_to_process =
+        SymmetricUpdater::sequential_index_list(info.get_impl_edges().size());
   }
 
   vector<Vec3d> offsets(verts.size()); // Vertex adjustments
@@ -706,44 +635,73 @@ inline Vec3d nearpoint_on_plane(const Vec3d &P, const Vec3d &point_on_plane,
 }
 
 Status make_planar(Geometry &base_geom, IterationControl it_ctrl,
-                   double plane_factor)
+                   double plane_factor, const Symmetry &sym)
 {
   // chosen by experiment
   const double intersect_test_val = 1e-5; // test for coplanar faces
   const double diff2_test_val = 10;       // limit for using plane intersection
   const double readjustment = 1.01;       // to adjust adjustment factor
   const double plane_factor_max = 1.1;    // maximum value for adjustment factor
+  bool using_symmetry = (sym.get_sym_type() > Symmetry::C1);
 
-  auto &geom = base_geom;
+  SymmetricUpdater sym_updater((using_symmetry) ? base_geom : Geometry(), sym);
+  const Geometry &geom =
+      (using_symmetry) ? sym_updater.get_geom_working() : base_geom;
+
   // No further processing if no faces, but not an error
   if (geom.faces().size() == 0)
     return Status::ok();
 
-  double test_val = it_ctrl.get_test_val();
   const vector<Vec3d> &verts = geom.verts();
   const vector<vector<int>> &faces = geom.faces();
 
-  vector<vector<int>> vert_faces(geom.verts().size());
-  for (int f_idx = 0; f_idx < (int)geom.faces().size(); f_idx++)
-    for (int v_idx : faces[f_idx])
-      vert_faces[v_idx].push_back(f_idx);
+  // List of faces that a vertex is part of
+  GeometryInfo info(geom);
+  const auto &vert_faces = info.get_vert_faces();
 
+  // Get a list of the faces that contain a principal vertex of any type
+  vector<int> principal_verts;  // first vertex in each vertex orbit
+  vector<int> verts_to_update;  // vertices accessed during iteration
+  vector<int> faces_to_process; // faces processed during iteration
+  if (using_symmetry) {
+    principal_verts = sym_updater.get_principal(VERTS);
+    faces_to_process = sym_updater.get_associated_elems(vert_faces);
+    verts_to_update =
+        SymmetricUpdater::get_included_verts(faces_to_process, geom.faces());
+  }
+  else { // not using_symmetry
+    principal_verts =
+        SymmetricUpdater::sequential_index_list(geom.verts().size());
+    faces_to_process =
+        SymmetricUpdater::sequential_index_list(geom.faces().size());
+  }
+
+  // Use oversized arrays to avoid mapping
   vector<Vec3d> offsets(verts.size()); // Vertex adjustments
+  vector<Vec3d> norms(faces.size());   // Face normals
+  vector<Vec3d> cents(faces.size());   // Face centroids
 
+  double test_val = it_ctrl.get_test_val();
   double last_max_diff2 = 0.0;
   for (it_ctrl.start_iter(); !it_ctrl.is_done(); it_ctrl.next_iter()) {
     std::fill(offsets.begin(), offsets.end(), Vec3d::zero);
 
-    GeometryInfo info(geom);
-    vector<Vec3d> norms;
-    geom.face_norms(norms);
-    vector<Vec3d> cents;
-    geom.face_cents(cents);
+    if (using_symmetry) {
+      // Ensure that the vertices used in adjustment are up to date
+      for (auto v_idx : verts_to_update)
+        sym_updater.update_from_principal_vertex(v_idx);
+    }
+
+    // Initialize face data for just the necessary faces
+    for (auto f_idx : faces_to_process) {
+      norms[f_idx] = geom.face_norm(f_idx).unit();
+      cents[f_idx] = geom.face_cent(f_idx);
+    }
 
     int cnt_proj = 0;
     int cnt_int = 0;
     double max_diff2 = 0.0;
-    for (unsigned int v_idx = 0; v_idx < geom.verts().size(); v_idx++) {
+    for (auto v_idx : principal_verts) {
       int intersect_cnt = 0;
       const auto &vfaces = vert_faces[v_idx];
       const int vf_sz = vfaces.size();
@@ -790,8 +748,18 @@ Status make_planar(Geometry &base_geom, IterationControl it_ctrl,
         max_diff2 = diff2;
     }
 
-    for (unsigned int v_idx = 0; v_idx < verts.size(); v_idx++)
-      geom.verts(v_idx) += offsets[v_idx];
+    // adjust vertices post-loop
+    if (using_symmetry) {
+      // adjust principal vertices
+      for (int v_idx : principal_verts)
+        sym_updater.update_principal_vertex(v_idx,
+                                            verts[v_idx] + offsets[v_idx]);
+    }
+    else { // not using_symmetry
+      // adjust all vertices
+      for (unsigned int i = 0; i < verts.size(); i++)
+        base_geom.raw_verts()[i] += offsets[i];
+    }
 
     // adjust plane factor
     if (max_diff2 < last_max_diff2)
@@ -826,6 +794,9 @@ Status make_planar(Geometry &base_geom, IterationControl it_ctrl,
     }
   }
 
+  if (using_symmetry)
+    base_geom = sym_updater.get_geom_final();
+
   return Status::ok();
 }
 
@@ -840,13 +811,20 @@ int main(int argc, char *argv[])
   Geometry geom;
   opts.read_or_error(geom, opts.ifile);
 
+  if (opts.ellipsoid.is_set()) // will only be set for algorithms where valid
+    to_ellipsoid(geom, opts.ellipsoid);
+
+  Symmetry sym;
+  if (opts.use_symmetry)
+    opts.print_status_or_exit(sym.init(geom), 'y');
+
   if (geom.faces().size() == 0)
     opts.warning("no face date in input, no iterative processing will occur");
 
   if (opts.algm == 'r') {
     opts.print_status_or_exit(make_regular_faces(
         geom, opts.it_ctrl, opts.shorten_by / 200, opts.flatten_by / 100,
-        opts.shorten_rad_by / 100, opts.sym_str));
+        opts.shorten_rad_by / 100, sym));
   }
   else if (opts.algm == 'u' || opts.algm == 'U') {
     opts.print_status_or_exit(
@@ -854,13 +832,13 @@ int main(int argc, char *argv[])
                         opts.ellipsoid, (opts.algm == 'u')));
   }
   else if (opts.algm == 'e') {
-    opts.print_status_or_exit(make_equal_edges(
-        geom, opts.it_ctrl, opts.shorten_by / 200, opts.shorten_rad_by / 100,
-        opts.ellipsoid, opts.sym_str));
+    opts.print_status_or_exit(
+        make_equal_edges(geom, opts.it_ctrl, opts.shorten_by / 200,
+                         opts.shorten_rad_by / 100, opts.ellipsoid, sym));
   }
   else if (opts.algm == 'p') {
     opts.print_status_or_exit(
-        make_planar(geom, opts.it_ctrl, opts.flatten_by / 100));
+        make_planar(geom, opts.it_ctrl, opts.flatten_by / 100, sym));
   }
 
   opts.write_or_error(geom, opts.ofile);

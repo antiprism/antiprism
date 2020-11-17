@@ -631,10 +631,9 @@ Status make_regular_faces2(Geometry &base_geom, IterationControl it_ctrl,
   if (scale)
     base_geom.transform(Trans3d::scale(1 / scale));
 
-  SymmetricUpdater sym_updater((using_symmetry) ? base_geom : Geometry(), sym,
-                               false);
+  SymmetricUpdater sym_updater((using_symmetry) ? base_geom : Geometry(), sym);
   const Geometry &geom =
-      (using_symmetry) ? sym_updater.get_geom_reading() : base_geom;
+      (using_symmetry) ? sym_updater.get_geom_working() : base_geom;
 
   const vector<Vec3d> &verts = geom.verts();
   const vector<vector<int>> &faces = geom.faces();

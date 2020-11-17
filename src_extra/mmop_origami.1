@@ -18,10 +18,6 @@ Options
 \fB\-h\fR,\-\-help this help message (run 'off_util \fB\-H\fR help' for general help)
 .HP
 \fB\-\-version\fR version information
-.HP
-\fB\-n\fR <itrs> number of iterations (default 10000)
-.HP
-\fB\-s\fR <perc> percentage to adjust corrections on iteration (default: 100)
 .TP
 \fB\-t\fR <val>
 truncate polygon edge to this length (default: no truncation
@@ -41,17 +37,20 @@ colour units with base model vertex colour
 indexes (default: rand), a part consisting of letters from
 v, e, f, selects the element types to apply the map list to
 (default 'vef'). The 'compound' map should give useful results.
+.HP
+\fB\-s\fR <perc> percentage to adjust corrections on iteration (default: 100)
+.HP
+\fB\-n\fR <itrs> maximum number of iterations, \fB\-1\fR for unlimited (default: 10000)
 .TP
 \fB\-l\fR <lim>
 minimum change of distance/width_of_model to
 terminate, as negative exponent (default: 15 giving 1e\-15)
-.TP
-\fB\-z\fR <n>
-status checking and reporting every n iterations, \fB\-1\fR for no
-status (default: 1000)
-.TP
-\fB\-q\fR
-quiet, do not print status messages
+.HP
+\fB\-z\fR <nums> number of iterations between status reports (implies termination
+.IP
+check) (0 for final report only, \fB\-1\fR for no report), optionally
+followed by a comma and the number of iterations between
+termination checks (0 for report checks only) (default: 1000,1)
 .HP
 \fB\-o\fR <file> write output to file (default: write to standard output)
 .SH "SEE ALSO"

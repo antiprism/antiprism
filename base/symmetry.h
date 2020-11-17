@@ -747,11 +747,10 @@ class SymmetricUpdater {
 public:
   /// Constructor
   /**\param geom the geometry
-   * \param sym symmetry group, or subgroup, of the geometry
-   * \param deferred update a copy of geom during iteration*/
-  SymmetricUpdater(const Geometry &geom, Symmetry sym, bool deferred);
+   * \param sym symmetry group, or subgroup, of the geometry */
+  SymmetricUpdater(const Geometry &geom, Symmetry sym);
 
-  /// Get equivalent sets
+  /// Get equivalent sets for an element type
   /**\param elem_type VERTS, EDGES or FACES
    * \return vector of sets of equivalent elements */
   const std::vector<std::set<int>> get_equiv_sets(int elem_type) const
@@ -759,7 +758,36 @@ public:
     return equiv_sets[elem_type];
   }
 
-  /// Update the principal orbit vertex location using any vertex on the orbit
+  /// Get principal (first) elements of an element type
+  /**\param elem_type VERTS, EDGES or FACES
+   * \return index numbers of principal elements of a type. */
+  std::vector<int> get_principal(int elem_type);
+
+  /// Remove duplicates from a list of index numbers
+  /**\param idxs the list of index numbers to process */
+  static void to_unique_index_list(std::vector<int> &idxs);
+
+  /// Make a sequential list of all index numbers
+  /**\param size the number of index numbers
+   * \return the index numbers. */
+  static std::vector<int> sequential_index_list(int size);
+
+  /// Get a list of all included vertices
+  /**\param elem_idxs the key elements that a vertex is part of
+   * \param elem_verts the vertices that are part of each element
+   * \return all associated vertices. */
+  static std::vector<int>
+  get_included_verts(const std::vector<int> &elem_idxs,
+                     const std::vector<std::vector<int>> &elem_verts);
+
+  /// Make a list of associated element index numbers for principal vertices
+  /**\param elems element lists in principal vertex order
+   * \return all included element index numbers. */
+  std::vector<int>
+  get_associated_elems(const std::vector<std::vector<int>> &elems);
+
+  /// Update the principal orbit vertex location using any vertex on the
+  /// orbit
   /**\param v_idx the index of the vertex whose location will be updated
    * \param point the new location of the vertex */
   void update_principal_vertex(int v_idx, Vec3d point);
@@ -776,22 +804,17 @@ public:
   /** If deferred, switch current geometry and updated geometry. */
   void prepare_for_next_iteration();
 
-  /// Get the final geometry after all iteration has finished
-  /** \return the current reading geometry */
-  const Geometry &get_geom_reading() const { return geoms[reading_idx]; }
-
-  /// Get the final geometry after all iteration has finished
-  /** \return the current writing geometry */
-  Geometry &get_geom_writing() { return geoms[writing_idx]; }
+  /// Get the working geometry (for updating vertices of interest)
+  /** Use \c get_geom_final() to get a fully updated geometry
+   * \return the working geometry */
+  const Geometry &get_geom_working() const { return geom; }
 
   /// Get the final geometry after all iteration has finished
   /** \return the final geometry */
   const Geometry &get_geom_final();
 
 private:
-  std::vector<anti::Geometry> geoms;
-  int reading_idx;
-  int writing_idx;
+  Geometry geom;
   Symmetry symmetry;
   Transformations transformations;
   std::vector<std::vector<std::set<int>>> equiv_sets;

@@ -130,6 +130,8 @@ void GeometryInfo::reset()
   vertex_angles.clear();
   f_areas.clear();
   f_perimeters.clear();
+  vert_impl_edges.clear();
+  vert_faces.clear();
   vert_cons.clear();
   vert_cons_orig.clear();
   face_cons.clear();
@@ -311,6 +313,20 @@ const vector<vector<int>> &GeometryInfo::get_vert_cons()
   if (!vert_cons.size())
     find_vert_cons();
   return vert_cons;
+}
+
+const vector<vector<int>> &GeometryInfo::get_vert_faces()
+{
+  if (!vert_faces.size())
+    find_vert_elems(geom.faces(), vert_faces);
+  return vert_faces;
+}
+
+const vector<vector<int>> &GeometryInfo::get_vert_impl_edges()
+{
+  if (!vert_impl_edges.size())
+    find_vert_elems(get_impl_edges(), vert_impl_edges);
+  return vert_impl_edges;
 }
 
 const vector<vector<vector<int>>> &GeometryInfo::get_face_cons()
@@ -805,7 +821,20 @@ void GeometryInfo::find_vert_cons()
     vert_cons[e[0]].push_back(e[1]);
     vert_cons[e[1]].push_back(e[0]);
   }
-  return;
+}
+
+void GeometryInfo::find_vert_elems(const vector<vector<int>> &elems,
+                                   vector<vector<int>> &vert_elems)
+{
+  vert_elems.resize(num_verts(), vector<int>());
+  for (size_t elem_idx = 0; elem_idx < elems.size(); elem_idx++)
+    for (int v_idx : elems[elem_idx])
+      vert_elems[v_idx].push_back(elem_idx);
+
+  for (auto v_idxs : vert_elems) {
+    sort(v_idxs.begin(), v_idxs.end());
+    v_idxs.erase(unique(v_idxs.begin(), v_idxs.end()), v_idxs.end());
+  }
 }
 
 void GeometryInfo::find_face_cons()

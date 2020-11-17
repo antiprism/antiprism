@@ -157,6 +157,8 @@ private:
   std::vector<double> f_max_nonplanars;
   std::vector<std::vector<int>> vert_cons;
   std::vector<std::vector<int>> vert_cons_orig;
+  std::vector<std::vector<int>> vert_faces;
+  std::vector<std::vector<int>> vert_impl_edges;
   std::vector<std::vector<std::vector<int>>> face_cons;
   std::vector<std::vector<std::vector<int>>> vert_figs;
   std::vector<Vec3d> vert_norms;
@@ -176,6 +178,8 @@ private:
   void find_vert_cons_orig();
   void find_face_cons();
   void find_vert_figs();
+  void find_vert_elems(const std::vector<std::vector<int>> &elems,
+                       std::vector<std::vector<int>> &vert_elems);
   void find_vert_norms(bool local_orient = false);
   void find_free_verts();
   void find_solid_angles();
@@ -405,6 +409,17 @@ public:
    * disjoint circuits.
    * \return The vertex figure circuits for each vertex.*/
   const std::vector<std::vector<std::vector<int>>> &get_vert_figs();
+
+  /// Get, vertex implicit edges
+  /**Get, for each vertex, the implicit edges it is a part of
+   * (in numeric order)
+   * \return The implicit edges connected to each vertex.*/
+  const std::vector<std::vector<int>> &get_vert_impl_edges();
+
+  /// Get, vertex faces
+  /**Get, for each vertex, the faces it is a part of (in numeric order)
+   * \return The faces connected to each vertex.*/
+  const std::vector<std::vector<int>> &get_vert_faces();
 
   /// Get free verts
   /** Free vertices are vertices that are not part of any face
