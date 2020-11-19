@@ -853,13 +853,17 @@ void shuffle_model_indexes(Geometry &geom, const cn_opts &opts)
   else {
     fprintf(stderr, "shuffle model indexes: vertices\n");
     vector<int> deal = geom_deal(geom, geom.verts().size());
+    map<int, Color> new_cols;
     vector<Vec3d> shuffled_verts;
     for (unsigned int i = 0; i < geom.verts().size(); i++) {
       int v_new = deal[i];
       new_verts[v_new] = i;
       shuffled_verts.push_back(geom.verts(v_new));
+      new_cols[i] = geom.colors(VERTS).get(v_new);
     }
     geom.raw_verts() = shuffled_verts;
+    for (unsigned int i = 0; i < geom.verts().size(); i++)
+      geom.colors(VERTS).set(i, new_cols[i]);
   }
 
   if (shuffle_faces || shuffle_verts) {
@@ -874,6 +878,7 @@ void shuffle_model_indexes(Geometry &geom, const cn_opts &opts)
       for (unsigned int i = 0; i < geom.faces().size(); i++)
         face_order[deal[i]] = i;
     }
+    map<int, Color> new_cols;
     vector<vector<int>> shuffled_faces;
     for (unsigned int i = 0; i < face_order.size(); i++) {
       vector<int> face;
@@ -883,8 +888,11 @@ void shuffle_model_indexes(Geometry &geom, const cn_opts &opts)
         face.push_back(v_new);
       }
       shuffled_faces.push_back(face);
+      new_cols[i] = geom.colors(FACES).get(face_order[i]);
     }
     geom.raw_faces() = shuffled_faces;
+    for (unsigned int i = 0; i < geom.faces().size(); i++)
+      geom.colors(FACES).set(i, new_cols[i]);
   }
 
   if (!geom.edges().size()) {
@@ -902,6 +910,7 @@ void shuffle_model_indexes(Geometry &geom, const cn_opts &opts)
       for (unsigned int i = 0; i < geom.edges().size(); i++)
         edge_order[deal[i]] = i;
     }
+    map<int, Color> new_cols;
     vector<vector<int>> shuffled_edges;
     for (unsigned int i = 0; i < geom.edges().size(); i++) {
       vector<int> edge;
@@ -911,8 +920,11 @@ void shuffle_model_indexes(Geometry &geom, const cn_opts &opts)
         edge.push_back(v_new);
       }
       shuffled_edges.push_back(edge);
+      new_cols[i] = geom.colors(EDGES).get(edge_order[i]);
     }
     geom.raw_edges() = shuffled_edges;
+    for (unsigned int i = 0; i < geom.edges().size(); i++)
+      geom.colors(EDGES).set(i, new_cols[i]);
   }
 }
 
