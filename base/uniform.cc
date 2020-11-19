@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-2016, Roger Kaufman
+   Copyright (c) 2012-2020, Roger Kaufman
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -31,8 +31,8 @@ Many uniform polyhedra share the same convex hull. In this table an indentation
 of the name shows that it shares the convex hull of the parent above it. An
 asterisk shows that it is a Platonic or Achimedian polyhedron. If an un-indented
 occurrence happens below an asterisked model, then it is a parent and an
-irregular
-type of the Achimedian above it. In all there are 36 unique convex hulls.
+irregular type of the Achimedian above it. In all there are 36 unique convex
+hulls.
 
 (U40,U60 use different roots to same formula)
 (U57,U69,U74 use different roots of same formula)

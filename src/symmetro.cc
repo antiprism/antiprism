@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2014-2016, Roger Kaufman and Adrian Rossiter
+   Copyright (c) 2014-2020, Roger Kaufman, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -241,47 +241,40 @@ void symmetro_opts::process_command_line(int argc, char **argv)
         error("-k, -t, -s, -c cannot be used together", c);
       mode = 'k';
 
-      char parse_key1[] = ",";
-
-      // memory pointers for strtok_r
-      char *tok_ptr1;
-
       char *opts = deblank(optarg);
 
-      vector<string> tokens;
-      char *ptok1 = strtok_r(opts, parse_key1, &tok_ptr1);
-      while (ptok1 != nullptr) {
-        tokens.push_back(ptok1);
-        ptok1 = strtok_r(nullptr, parse_key1, &tok_ptr1);
-      }
+      Split pts(opts, ",");
+      vector<string> parts;
+      for (unsigned int i = 0; i < pts.size(); i++)
+        parts.push_back(pts[i]);
 
-      unsigned int sz = tokens.size();
-      if (sz < 4 || sz > 5)
+      unsigned int parts_sz = parts.size();
+      if (parts_sz < 4 || parts_sz > 5)
         error("expecting 4 or 5 parameters for Kaplan-Hart notation", c);
-      else if (sz == 4) {
-        tokens.push_back("v");
-        sz++;
+      else if (parts_sz == 4) {
+        parts.push_back("v");
+        parts_sz++;
       }
 
       string mult;
       int num_multipliers = 0;
-      for (unsigned int i = 0; i < sz; i++) {
+      for (unsigned int i = 0; i < parts_sz; i++) {
         if (i == 0) {
-          sym = toupper(tokens[i][0]);
+          sym = toupper(parts[i][0]);
           if (!strchr("TOI", sym))
             error(msg_str("invalid symmetry character '%c'", sym), c);
         }
         else if (i == 1 || i == 2) {
-          string tok = tokens[i];
-          if (tok.length() == 1 && tok[0] == '*')
-            tok = "0";
-          mult += tok + ",";
+          string part = parts[i];
+          if (part.length() == 1 && part[0] == '*')
+            part = "0";
+          mult += part + ",";
         }
         else if (i == 3) {
-          string tok = tokens[i];
-          if (tok.length() == 1 && tok[0] == '*')
-            tok = "0";
-          mult += tok;
+          string part = parts[i];
+          if (part.length() == 1 && part[0] == '*')
+            part = "0";
+          mult += part;
 
           print_status_or_exit(
               read_int_list(mult.c_str(), multipliers, true, 3), c);
@@ -341,7 +334,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
         else if (i == 4) {
           // in the paper, edge connection is shown as 'e', vertex connection is
           // shown a '1'
-          print_status_or_exit(get_arg_id(tokens[i].c_str(), &id,
+          print_status_or_exit(get_arg_id(parts[i].c_str(), &id,
                                           "edge=0|vertex=1",
                                           argmatch_add_id_maps),
                                c);
@@ -381,108 +374,88 @@ void symmetro_opts::process_command_line(int argc, char **argv)
         error("-k, -t, -s, -c cannot be used together", c);
       mode = 't';
 
-      char parse_key1[] = ",[]";
-
-      // memory pointer for strtok_r
-      char *tok_ptr1;
-
       char *opts = deblank(optarg);
-      bool id_no_given = (strstr(opts, "],")) ? false : true;
+      bool id_num_given = (strstr(opts, "],")) ? false : true;
 
-      vector<string> tokens;
-      char *ptok1 = strtok_r(opts, parse_key1, &tok_ptr1);
-      while (ptok1 != nullptr) {
-        tokens.push_back(ptok1);
-        ptok1 = strtok_r(nullptr, parse_key1, &tok_ptr1);
-      }
+      Split pts(opts, ",[]");
+      vector<string> parts;
+      for (unsigned int i = 0; i < pts.size(); i++)
+        parts.push_back(pts[i]);
 
-      if (!id_no_given) {
+      if (!id_num_given) {
         vector<string>::iterator it;
-        it = tokens.begin();
-        tokens.insert(it + 3, "1");
+        it = parts.begin();
+        parts.insert(it + 3, "1");
       }
 
-      unsigned int sz = tokens.size();
-      if (sz != 6)
+      unsigned int parts_sz = parts.size();
+      if (parts_sz != 6)
         error("incorrect format for Twister notation", c);
 
-      for (unsigned int i = 0; i < sz; i++) {
+      for (unsigned int i = 0; i < parts_sz; i++) {
         if (i == 0) {
-          sym = toupper(tokens[i][0]);
+          sym = toupper(parts[i][0]);
           if (!strchr("TOID", sym))
             error(msg_str("invalid symmetry character '%c'", sym), c);
 
           // dihedral
           if (sym == 'D') {
-            if (tokens[i].length() < 2)
+            if (parts[i].length() < 2)
               error("No N found after D symmetry specifier", c);
-            print_status_or_exit(read_int(tokens[i].c_str() + 1, &dihedral_n),
+            print_status_or_exit(read_int(parts[i].c_str() + 1, &dihedral_n),
                                  "option t: dihedral symmetry N");
           }
         }
         else if (i == 1) {
-          print_status_or_exit(read_int(tokens[i].c_str(), &p),
+          print_status_or_exit(read_int(parts[i].c_str(), &p),
                                "option t: axis 1");
           if (p < 2)
             error("axis 1 rotational order number be greater than 1", c);
         }
         else if (i == 2) {
-          print_status_or_exit(read_int(tokens[i].c_str(), &q),
+          print_status_or_exit(read_int(parts[i].c_str(), &q),
                                "option t: axis 2");
           if (q < 2)
             error("axis 2 rotational order number be greater than 1", c);
         }
         else if (i == 3) {
-          print_status_or_exit(read_int(tokens[i].c_str(), &sym_id_no),
+          print_status_or_exit(read_int(parts[i].c_str(), &sym_id_no),
                                "option t: symmetry id number");
           if (sym_id_no <= 0)
             error("symmetry id number must be positive", c);
         }
         else if (i == 4 || i == 5) {
-          if (!strchr(tokens[i].c_str(), '/')) {
+          if (!strchr(parts[i].c_str(), '/')) {
             int mult;
-            print_status_or_exit(read_int(tokens[i].c_str(), &mult),
+            print_status_or_exit(read_int(parts[i].c_str(), &mult),
                                  "option t: multiplier");
             if (mult <= 0)
               error("multiplier must be positive", c);
             multipliers.push_back(mult);
           }
           else {
-            char parse_key2[] = "/";
-
-            // memory pointer for strtok_r
-            char *tok_ptr2;
-
             int n_part;
             int d_part = 1;
 
-            // string to char * (not const) from StackOverflow
-            auto *writable = new char[tokens[i].size() + 1];
-            copy(tokens[i].begin(), tokens[i].end(), writable);
-            writable[tokens[i].size()] = '\0';
+            Split parts2(parts[i], "/");
+            unsigned int parts2_sz = parts2.size();
 
-            char *ptok2 = strtok_r(writable, parse_key2, &tok_ptr2);
-            int count2 = 0;
-            while (ptok2 != nullptr) {
-              if (count2 == 0) {
-                print_status_or_exit(read_int(ptok2, &n_part),
+            for (unsigned int j = 0; j < parts2_sz; j++) {
+              if (j == 0) {
+                print_status_or_exit(read_int(parts2[j], &n_part),
                                      "option t: n/d (n part)");
 
                 if (n_part <= 0)
                   error("n of n/d must be positive", c);
               }
-              else if (count2 == 1) {
-                print_status_or_exit(read_int(ptok2, &d_part),
+              else if (j == 1) {
+                print_status_or_exit(read_int(parts2[j], &d_part),
                                      "option t: n/d (d part)");
 
                 if (d_part <= 0)
                   error("d of n/d must be positive", c);
               }
-
-              ptok2 = strtok_r(nullptr, parse_key2, &tok_ptr2);
-              count2++;
             }
-            delete[] writable;
 
             multipliers.push_back(n_part);
             d[(i == 4) ? 0 : 1] = d_part;
@@ -516,29 +489,24 @@ void symmetro_opts::process_command_line(int argc, char **argv)
 
       string sym_override;
 
-      char parse_key1[] = ",";
-      char parse_key2[] = "/:";
+      Split parts(optarg, ",");
+      unsigned int parts_sz = parts.size();
 
-      // memory pointers for strtok_r
-      char *tok_ptr1;
-      char *tok_ptr2;
-
-      char *ptok1 = strtok_r(optarg, parse_key1, &tok_ptr1);
-      int count1 = 0;
-      while (ptok1 != nullptr) {
-        if (count1 == 0) {
+      for (unsigned int i = 0; i < parts_sz; i++) {
+        if (i == 0) {
           int n_part;
           int d_part;
           int d_sub;
 
-          bool found_slash = (strchr(ptok1, '/')) ? true : false;
-          bool found_colon = (strchr(ptok1, ':')) ? true : false;
+          bool found_slash = (strchr(parts[i], '/')) ? true : false;
+          bool found_colon = (strchr(parts[i], ':')) ? true : false;
 
-          char *ptok2 = strtok_r(ptok1, parse_key2, &tok_ptr2);
-          int count2 = 0;
-          while (ptok2 != nullptr) {
-            if (count2 == 0) {
-              print_status_or_exit(read_int(ptok2, &n_part),
+          Split parts2(parts[i], "/:");
+          unsigned int parts2_sz = parts2.size();
+
+          for (unsigned int j = 0; j < parts2_sz; j++) {
+            if (j == 0) {
+              print_status_or_exit(read_int(parts2[j], &n_part),
                                    "option s: n/d (n part)");
 
               if (n_part < 2)
@@ -546,52 +514,46 @@ void symmetro_opts::process_command_line(int argc, char **argv)
 
               n.push_back(n_part);
             }
-            else if (count2 == 1) {
-              print_status_or_exit(read_int(ptok2, &d_part),
+            else if (j == 1) {
+              print_status_or_exit(read_int(parts2[j], &d_part),
                                    "option s: n/d (d part)");
 
               if (d_part <= 0 && found_slash)
                 error("d of n/d must be positive", c);
 
-              d[count1] = d_part;
+              d[i] = d_part;
             }
-            else if (count2 == 2) {
-              print_status_or_exit(read_int(ptok2, &d_sub),
+            else if (j == 2) {
+              print_status_or_exit(read_int(parts2[j], &d_sub),
                                    "option s: substitute D");
 
-              if (d_sub < 1 || d_sub >= n[count1])
-                error(msg_str("substitute D must be between 1 and %d",
-                              n[count1] - 1),
-                      c);
+              if (d_sub < 1 || d_sub >= n[i])
+                error(
+                    msg_str("substitute D must be between 1 and %d", n[i] - 1),
+                    c);
 
-              d_substitute[count1] = d_sub;
+              d_substitute[i] = d_sub;
             }
-
-            ptok2 = strtok_r(nullptr, parse_key2, &tok_ptr2);
-            count2++;
           }
 
           // if no slash, but colon exists d_substitute will be in the wrong
           // place
           if (!found_slash && found_colon) {
-            d_substitute[count1] = d[count1];
-            d[count1] = 1;
-            if (d_substitute[count1] < 1 || d_substitute[count1] >= n[count1])
-              error(msg_str("substitute D must be between 1 and %d",
-                            n[count1] - 1),
+            d_substitute[i] = d[i];
+            d[i] = 1;
+            if (d_substitute[i] < 1 || d_substitute[i] >= n[i])
+              error(msg_str("substitute D must be between 1 and %d", n[i] - 1),
                     c);
           }
         }
-        else if (count1 == 1) {
-          if ((strspn(ptok1, "cC") != strlen(ptok1)) || strlen(ptok1) > 1)
-            error(msg_str("symmetry override is '%s' must be c", ptok1), c);
-          sym_override = ptok1;
+        else if (i == 1) {
+          if ((strspn(parts[i], "cC") != strlen(parts[i])) ||
+              strlen(parts[i]) > 1)
+            error(msg_str("symmetry override is '%s' must be c", parts[i]), c);
+          sym_override = parts[i];
         }
-        else if (count1 > 0)
+        else if (i > 1)
           error("too many arguments", c);
-
-        ptok1 = strtok_r(nullptr, parse_key1, &tok_ptr1);
-        count1++;
       }
 
       // fill both n/d
@@ -629,100 +591,86 @@ void symmetro_opts::process_command_line(int argc, char **argv)
 
       string sym_override;
 
-      char parse_key1[] = ",";
-      char parse_key2[] = "/:";
+      Split parts(optarg, ",");
+      unsigned int parts_sz = parts.size();
 
-      // memory pointers for strtok_r
-      char *tok_ptr1;
-      char *tok_ptr2;
-
-      char *ptok1 = strtok_r(optarg, parse_key1, &tok_ptr1);
-      int count1 = 0;
-      while (ptok1 != nullptr) {
+      for (unsigned int i = 0; i < parts_sz; i++) {
         // if second n/d is not specified and symmetry given move straight to
         // next term
-        if ((count1 == 1) && (strspn(ptok1, "cCvVhHdD") == strlen(ptok1)))
-          count1++;
+        if ((i == 1) && (strspn(parts[i], "cCvVhHdD") == strlen(parts[i])))
+          i++;
 
-        if (count1 == 0 || count1 == 1) {
+        if (i == 0 || i == 1) {
           int n_part;
           int d_part;
           int d_sub;
 
-          bool found_slash = (strchr(ptok1, '/')) ? true : false;
-          bool found_colon = (strchr(ptok1, ':')) ? true : false;
+          bool found_slash = (strchr(parts[i], '/')) ? true : false;
+          bool found_colon = (strchr(parts[i], ':')) ? true : false;
 
-          char *ptok2 = strtok_r(ptok1, parse_key2, &tok_ptr2);
-          int count2 = 0;
-          while (ptok2 != nullptr) {
-            if (count2 == 0) {
+          Split parts2(parts[i], "/:");
+          unsigned int parts2_sz = parts2.size();
+
+          for (unsigned int j = 0; j < parts2_sz; j++) {
+            if (j == 0) {
               print_status_or_exit(
-                  read_int(ptok2, &n_part),
-                  msg_str("option c: n/d (n part) (term %d)", count1 + 1));
+                  read_int(parts2[j], &n_part),
+                  msg_str("option c: n/d (n part) (term %d)", i + 1));
 
               if (n_part < 2)
-                error(msg_str("n of n/d must be greater than 1 (term %d)",
-                              count1 + 1),
-                      c);
+                error(
+                    msg_str("n of n/d must be greater than 1 (term %d)", i + 1),
+                    c);
               n.push_back(n_part);
             }
-            else if (count2 == 1) {
+            else if (j == 1) {
               print_status_or_exit(
-                  read_int(ptok2, &d_part),
-                  msg_str("option c: n/d (d part) (term %d)", count1 + 1));
+                  read_int(parts2[j], &d_part),
+                  msg_str("option c: n/d (d part) (term %d)", i + 1));
 
               if (d_part <= 0 && found_slash)
-                error(
-                    msg_str("d of n/d must be positive (term %d)", count1 + 1),
-                    c);
-              d[count1] = d_part;
+                error(msg_str("d of n/d must be positive (term %d)", i + 1), c);
+              d[i] = d_part;
             }
-            else if (count2 == 2) {
+            else if (j == 2) {
               print_status_or_exit(
-                  read_int(ptok2, &d_sub),
-                  msg_str("option s: substitute D (term %d)", count1 + 1));
+                  read_int(parts2[j], &d_sub),
+                  msg_str("option s: substitute D (term %d)", i + 1));
 
-              if (d_sub < 1 || d_sub >= n[count1])
+              if (d_sub < 1 || d_sub >= n[i])
                 error(msg_str("substitute D must be between 1 and %d (term %d)",
-                              n[count1] - 1, count1 + 1),
+                              n[i] - 1, i + 1),
                       c);
 
-              d_substitute[count1] = d_sub;
+              d_substitute[i] = d_sub;
             }
-
-            ptok2 = strtok_r(nullptr, parse_key2, &tok_ptr2);
-            count2++;
           }
 
           // if no slash, but colon exists d_substitute will be in the wrong
           // place
           if (!found_slash && found_colon) {
-            d_substitute[count1] = d[count1];
-            d[count1] = 1;
-            if (d_substitute[count1] < 1 || d_substitute[count1] >= n[count1])
-              error(msg_str("substitute D must be between 1 and %d",
-                            n[count1] - 1),
+            d_substitute[i] = d[i];
+            d[i] = 1;
+            if (d_substitute[i] < 1 || d_substitute[i] >= n[i])
+              error(msg_str("substitute D must be between 1 and %d", n[i] - 1),
                     c);
           }
         }
-        else if (count1 == 2) {
-          if (!read_int(ptok1, &vert_z)) {
-            if ((strspn(ptok1, "cCvVhHdD") != strlen(ptok1)) ||
-                strlen(ptok1) > 1)
+        else if (i == 2) {
+          if (!read_int(parts[i], &vert_z)) {
+            if ((strspn(parts[i], "cCvVhHdD") != strlen(parts[i])) ||
+                strlen(parts[i]) > 1)
               error(msg_str("symmetry override is '%s' must be c, v, h or d",
-                            ptok1),
+                            parts[i]),
                     c);
-            sym_override = ptok1;
+            sym_override = parts[i];
           }
         }
-        else if (count1 == 3) {
-          print_status_or_exit(read_int(ptok1, &vert_z), "option c: vert_z");
+        else if (i == 3) {
+          print_status_or_exit(read_int(parts[i], &vert_z), "option c: vert_z");
         }
-        else if (count1 > 3)
+        else if (i > 3)
           error("too many arguments", c);
-
-        ptok1 = strtok_r(nullptr, parse_key1, &tok_ptr1);
-        count1++;
       }
 
       // fill both n/d
@@ -763,15 +711,11 @@ void symmetro_opts::process_command_line(int argc, char **argv)
 
     // rotation
     case 'a': {
-      char parse_key1[] = ",";
+      Split parts(optarg, ",");
+      unsigned int parts_sz = parts.size();
 
-      // memory pointer for strtok_r
-      char *tok_ptr1;
-
-      char *ptok1 = strtok_r(optarg, parse_key1, &tok_ptr1);
-      int count1 = 0;
-      while (ptok1 != nullptr) {
-        if (count1 == 0) {
+      for (unsigned int i = 0; i < parts_sz; i++) {
+        if (i == 0) {
           // see if it is built in amount
           char ex = optarg[strlen(optarg) - 1];
           if (ex == 'e' || ex == 'x') {
@@ -788,11 +732,10 @@ void symmetro_opts::process_command_line(int argc, char **argv)
               add_pi = true;
           }
           else {
-            // find 'rad' in ptok1, else value is degrees
-            char *pch = strstr(ptok1, "rad");
-            bool rotation_as_inc = ((pch == nullptr) ? false : true);
+            // find 'rad' in parts[i], else value is degrees
+            bool rotation_as_inc = (strstr(parts[i], "rad")) ? false : true;
             double rot;
-            print_status_or_exit(read_double(ptok1, &rot),
+            print_status_or_exit(read_double(parts[i], &rot),
                                  "option a: rotation value");
             if (rotation_as_inc)
               rotation_as_increment += rot;
@@ -800,9 +743,9 @@ void symmetro_opts::process_command_line(int argc, char **argv)
               rotation += rot;
           }
         }
-        else if (count1 == 1) {
+        else if (i == 1) {
           double rotation_axis_tmp;
-          print_status_or_exit(read_double(ptok1, &rotation_axis_tmp),
+          print_status_or_exit(read_double(parts[i], &rotation_axis_tmp),
                                "option a: rotation axis");
           // if ( rotation_axis_tmp - a > 0.0 )
           //   error(msg_str("axis numbers must be specified by an integer:
@@ -812,9 +755,6 @@ void symmetro_opts::process_command_line(int argc, char **argv)
           if (rotation_axis < 0 || rotation_axis > 2)
             error("axis to apply rotation should be 0, 1 or 2", c);
         }
-
-        ptok1 = strtok_r(nullptr, parse_key1, &tok_ptr1);
-        count1++;
       }
 
       break;

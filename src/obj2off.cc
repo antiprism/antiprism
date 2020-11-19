@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2014-2016, Roger Kaufman
+   Copyright (c) 2014-2020, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -124,8 +124,6 @@ bool convert_obj_to_off(string &file_name, Geometry &geom, char *errmsg)
     }
   }
 
-  char parse_key[] = " ";
-
   int offset = 1; // obj files start indexes from 1
 
   char *line = nullptr;
@@ -134,37 +132,54 @@ bool convert_obj_to_off(string &file_name, Geometry &geom, char *errmsg)
       if (isspace(*p))
         *p = ' ';
 
-    char *ptok = strtok(line, parse_key);
-    char key = ptok ? *ptok : '\0';
-    int idx;
+    Split parts(line, " ");
+    unsigned int parts_sz = parts.size();
 
-    // only use x y z
+    char key = '\0';
+    if (strlen(parts[0]))
+      key = parts[0][0];
+
     if (key == 'v') {
+      // only use x y z
       double coord[3];
-      for (double &j : coord) {
-        ptok = strtok(nullptr, parse_key);
-        sscanf(ptok, "%lf", &j);
+      for (unsigned int i = 1; i < parts_sz; i++) {
+        if (!read_double(parts[i], &coord[i - 1])) {
+          strcpy_msg(errmsg,
+                     msg_str("invalid coordinate '%s'", parts[i]).c_str());
+          return false;
+        }
       }
       geom.add_vert(Vec3d(coord[0], coord[1], coord[2]));
     }
     else if (key == 'f' || key == 'l') {
+      int idx;
       vector<int> indexes;
-      ptok = strtok(nullptr, parse_key);
-      while (ptok != nullptr) {
-        sscanf(ptok, "%d", &idx);
+      for (unsigned int i = 1; i < parts_sz; i++) {
+        if (!read_int(parts[i], &idx)) {
+          strcpy_msg(
+              errmsg,
+              msg_str("invalid face or edge index '%s'", parts[i]).c_str());
+          return false;
+        }
         indexes.push_back(idx - offset);
-        ptok = strtok(nullptr, parse_key);
       }
       if (key == 'f')
         geom.add_face(indexes);
       else if (key == 'l')
         geom.add_edge(indexes);
     }
-    else if (key == 'p') {
-      ptok = strtok(nullptr, parse_key);
-      sscanf(ptok, "%d", &idx);
-      geom.colors(VERTS).set(idx - offset, Color());
-    }
+    /* RK - The p key only outputs sequential vertex color map numbers
+        else if (key == 'p') {
+          int idx;
+          if (!read_int(parts[1], &idx)) {
+            strcpy_msg(
+                errmsg,
+                msg_str("invalid vertex color index '%s'", parts[1]).c_str());
+            return false;
+          }
+          geom.colors(VERTS).set(idx - offset, idx);
+        }
+    */
 
     free(line);
   }

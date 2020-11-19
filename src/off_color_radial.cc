@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2017, Roger Kaufman
+   Copyright (c) 2017-2020, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -175,27 +175,17 @@ void radial_opts::process_command_line(int argc, char **argv)
     }
 
     case 'a': {
-      char parse_key1[] = ",";
+      Split parts(optarg, ",");
+      unsigned int parts_sz = parts.size();
 
-      // memory pointers for strtok_r
-      char *tok_ptr1;
-
-      vector<string> tokens;
-      char *ptok1 = strtok_r(optarg, parse_key1, &tok_ptr1);
-      while (ptok1 != nullptr) {
-        tokens.push_back(ptok1);
-        ptok1 = strtok_r(nullptr, parse_key1, &tok_ptr1);
-      }
-
-      unsigned int sz = (int)tokens.size();
-      if (sz > 2)
+      if (parts_sz > 2)
         error("excess entries for axis orders", c);
 
       int axis_order;
-      for (unsigned int i = 0; i < sz; i++) {
+      for (unsigned int i = 0; i < parts_sz; i++) {
         if (i == 0) {
           print_status_or_exit(
-              get_arg_id(tokens[i].c_str(), &arg_id,
+              get_arg_id(parts[i], &arg_id,
                          "primary=1|secondary=2|tertiary=3|all=4",
                          argmatch_add_id_maps),
               c);
@@ -212,7 +202,7 @@ void radial_opts::process_command_line(int argc, char **argv)
         }
         else if (i == 1) {
           int ax_pct;
-          read_int(tokens[i].c_str(), &ax_pct);
+          read_int(parts[i], &ax_pct);
           if (ax_pct < 1)
             error("axis percent must be 1 or greater", c);
           if (axis_order == 4) {

@@ -24,17 +24,20 @@ Scene Options
 .HP
 \fB\-M\fR <mode> color system mode. HSV=1, HSL=2, RGB=3 (default: 3)
 .IP
-plot as cone, bicone or cube respectively
+plot as cone, bicone or cube
 .TP
 \fB\-d\fR <int>
 output type. plot=1, wheel=2, grid=3, map=4 (default: 1)
 .IP
 if color wheel and RGB, only one color blend is possible
 .TP
+\fB\-w\fR <int>
+width of grid. positive integer. (\fB\-d\fR 3) (default: automatic)
+.TP
 \fB\-V\fR
 verbose output. show color blend RGBA components
 .PP
-Output type 1 options
+Output for plot (\fB\-d\fR 1) options
 .TP
 \fB\-r\fR <int>
 HSV/HSL chroma  0 \- none (cylinder), 1 \- conic, 2 \- hexagonal
@@ -49,7 +52,7 @@ container control (default: 2)
 2 \- full
 .TP
 \fB\-z\fR <int>
-1 \- show model upright, 2 \- upright but don\e't rotate RGB cube
+1 \- show model upright, 2 \- upright but don't rotate RGB cube
 .TP
 \fB\-q\fR <int>
 height of the HSL cones (default: no change)

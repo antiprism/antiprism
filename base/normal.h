@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2010-2016, Roger Kaufman
+   Copyright (c) 2010-2020, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -37,7 +37,8 @@ namespace anti {
 class Normal {
 private:
   Vec3d normal;
-  int direction; // 1 = outward  0 = hemispherical  -1 = inward
+  int direction;    // 1 = outward, 0 = hemispherical, -1 = inward
+  char normal_type; // n = Newell, t = triangles, q = quads
 
 public:
   /// Constructor
@@ -47,7 +48,7 @@ public:
   /// Constructor
   /**Face normal. */
   Normal(const Geometry &geom, const int face_idx, Vec3d C = Vec3d(),
-         double eps = epsilon);
+         char type = 'n', double eps = epsilon);
 
   /// Constructor
   /**For precalculated normals. */
@@ -105,14 +106,15 @@ public:
    * \param cent the centre of the model, if set, otherwise vertex centroid.
    * \param eps a small number, coordinates differing by less than eps are
    *  the same. */
-  FaceNormals(const Geometry &geom, Vec3d cent = Vec3d(), double eps = epsilon);
+  FaceNormals(const Geometry &geom, Vec3d cent = Vec3d(), char type = 'n',
+              double eps = epsilon);
 
   /// Refresh
   /**\param geom the geometry.
    * \param cent the centre of the model, if set, otherwise vertex centroid.
    * \param eps a small number, coordinates differing by less than eps are
    *  the same. */
-  void refresh(const Geometry &geom, Vec3d cent = Vec3d(),
+  void refresh(const Geometry &geom, Vec3d cent = Vec3d(), char type = 'n',
                double eps = epsilon);
 
   /// Get edge normal
@@ -192,9 +194,10 @@ inline bool Normal::is_hemispherical() const { return (direction == 0); }
 
 inline FaceNormals::FaceNormals() {}
 
-inline FaceNormals::FaceNormals(const Geometry &geom, Vec3d cent, double eps)
+inline FaceNormals::FaceNormals(const Geometry &geom, Vec3d cent, char type,
+                                double eps)
 {
-  refresh(geom, cent, eps);
+  refresh(geom, cent, type, eps);
 }
 
 inline unsigned int FaceNormals::size() const { return (normals.size()); }

@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2007-2016, Roger Kaufman
+   Copyright (c) 2007-2020, Roger Kaufman
    Includes ideas and algorithms by George W. Hart, http://www.georgehart.com
 
    Antiprism - http://www.antiprism.com
@@ -896,65 +896,45 @@ void cn_opts::process_command_line(int argc, char **argv)
       char operation = '\0';
       string user_op;
 
-      char parse_key1[] = ",";
+      Split parts(optarg, ",");
+      unsigned int parts_sz = parts.size();
 
-      // memory pointer for strtok_r
-      char *tok_ptr1;
-
-      vector<string> tokens;
-      char *ptok1 = strtok_r(optarg, parse_key1, &tok_ptr1);
-      while (ptok1 != nullptr) {
-        tokens.push_back(ptok1);
-        ptok1 = strtok_r(nullptr, parse_key1, &tok_ptr1);
-      }
-
-      for (unsigned int i = 0; i < tokens.size(); i++) {
+      for (unsigned int i = 0; i < parts_sz; i++) {
         op_term++;
 
-        char parse_key2[] = "=";
+        Split parts2(parts[i], "=");
+        unsigned int parts2_sz = parts2.size();
 
-        // memory pointer for strtok_r
-        char *tok_ptr2;
-
-        // string to char * (not const) from StackOverflow
-        auto *writable = new char[tokens[i].size() + 1];
-        copy(tokens[i].begin(), tokens[i].end(), writable);
-        writable[tokens[i].size()] = '\0';
-
-        char *ptok2 = strtok_r(writable, parse_key2, &tok_ptr2);
-        int count1 = 0;
-        while (ptok2 != nullptr) {
-          if (count1 == 0) {
-            if (strlen(ptok2) != 1)
+        for (unsigned int j = 0; j < parts2_sz; j++) {
+          if (j == 0) {
+            if (strlen(parts2[j]) != 1)
               error(msg_str("term %d: operation must be one character '%s'",
-                            op_term, ptok2),
+                            op_term, parts2[j]),
                     c);
-            else if (!isalpha(ptok2[0])) {
+            else if (!isalpha(parts2[j][0])) {
               error(msg_str("term %d: operation must be alphabetic '%s'",
-                            op_term, ptok2),
+                            op_term, parts2[j]),
                     c);
             }
-            else if (alphas_in_use.find(ptok2[0]) != string::npos) {
+            else if (alphas_in_use.find(parts2[j][0]) != string::npos) {
               error(msg_str("term %d: operation character already in use '%s'",
-                            op_term, ptok2),
+                            op_term, parts2[j]),
                     c);
             }
             else {
-              operation = ptok2[0];
+              operation = parts2[j][0];
               alphas_in_use += operation;
               alpha_user += operation;
             }
           }
-          else if (count1 == 1) {
-            user_op = ptok2;
+          else if (j == 1) {
+            user_op = parts2[j];
           }
           else {
-            error(msg_str("term %d: unexpected parameter '%s'", op_term, ptok2),
+            error(msg_str("term %d: unexpected parameter '%s'", op_term,
+                          parts2[j]),
                   c);
           }
-
-          ptok2 = strtok_r(nullptr, parse_key2, &tok_ptr2);
-          count1++;
         }
 
         char operand_test;
@@ -970,8 +950,6 @@ void cn_opts::process_command_line(int argc, char **argv)
           error(msg_str("term %d: cannot contain operand in position %d: %c",
                         op_term, user_op.length(), operand_test),
                 c);
-
-        delete[] writable;
       }
 
       break;

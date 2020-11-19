@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2014-2016, Roger Kaufman
+   Copyright (c) 2014-2020, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 

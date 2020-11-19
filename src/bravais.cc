@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2008-2016, Roger Kaufman
+   Copyright (c) 2008-2020, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -220,10 +220,10 @@ Hexagonal        C6 C3h C6h D6 C6v D3h D6h
 Cubic            T Th O Td Oh
 Of the symbols used for cell centering:
 P - stands for Primitive. It is a cube depicted by a vertex at eight corners
-C - stands for having a point filled in on the \C\ side of the primitive cell
+C - stands for having a point filled in on the "C" side of the primitive cell
     this is described in some texts as Base Centering. C is most commonly used
-    A or B means use the \A\ or \B\ sides instead. Just a rotation of C
-F - stands for Face Centering and fills all three, \A\, \B\ and \C\ sides
+    A or B means use the "A" or "B" sides instead. Just a rotation of C
+F - stands for Face Centering and fills all three, "A", "B" and "C" sides
 I - (from German: innenzentriert, meaning Body Centered) is the primitive cell
     with one point filled in the center of the cell
     
@@ -267,9 +267,9 @@ Options
   -o <file> write output to file (default: write to standard output)
 
 Lattice Options
-  -v <v,n>  vector lengths, non-zero, in form \a,b,c\ (default: calculated)
+  -v <v,n>  vector lengths, non-zero, in form "a,b,c" (default: calculated)
                optional fourth number, vectors taken to root n
-  -a <angs> angles in the form \alpha,beta,gamma\. Ignored for Orthorhombic,
+  -a <angs> angles in the form "alpha,beta,gamma". Ignored for Orthorhombic,
                Tetragonal, and Cubic. For Hexagonal, any non-90 position may be
                120. Otherwise, if not supplied then random angles are chosen.
                Angles cannot be zero or 180. Angles may be negative values.
@@ -303,8 +303,8 @@ Container Options
   -r <c,n>  radius. c is radius taken to optional root n. n = 2 is sqrt
                or  l - max insphere radius, s - min insphere radius (default)
                or  k - take radius from container specified by -k
-  -p <xyz>  radius to lattice point \x_val,y_val,z_val\
-  -q <vecs> center offset, in form \a_val,b_val,c_val\ (default: none)
+  -p <xyz>  radius to lattice point "x_val,y_val,z_val"
+  -q <vecs> center offset, in form "a_val,b_val,c_val" (default: none)
   -C <opt>  c - convex hull only, i - keep interior
 
 Coloring Options (run 'off_util -H color' for help on color formats)

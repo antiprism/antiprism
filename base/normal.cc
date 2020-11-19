@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2010-2016, Roger Kaufman
+   Copyright (c) 2010-2020, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -37,12 +37,13 @@ using std::vector;
 namespace anti {
 
 // face normal
-Normal::Normal(const Geometry &geom, const int face_idx, Vec3d C, double eps)
+Normal::Normal(const Geometry &geom, const int face_idx, Vec3d C, char type,
+               double eps)
 {
   const vector<int> &face = geom.faces()[face_idx];
   const vector<Vec3d> &verts = geom.verts();
 
-  normal = face_norm(verts, face);
+  normal = face_normal_by_type(geom, face, type);
 
   if (!C.is_set())
     C = centroid(verts);
@@ -72,7 +73,8 @@ Normal::Normal(const Geometry &geom, const Vec3d &norm, const int v_idx,
   direction = double_compare(D, 0.0, eps);
 }
 
-void FaceNormals::refresh(const Geometry &geom, Vec3d cent, double eps)
+void FaceNormals::refresh(const Geometry &geom, Vec3d cent, char type,
+                          double eps)
 {
   ngeom = &geom;
 
@@ -81,7 +83,7 @@ void FaceNormals::refresh(const Geometry &geom, Vec3d cent, double eps)
 
   normals.clear();
   for (unsigned int i = 0; i < geom.faces().size(); i++)
-    normals.push_back(Normal(*ngeom, i, cent, eps));
+    normals.push_back(Normal(*ngeom, i, cent, type, eps));
 }
 
 // private common code for averaging edge and vertex normals

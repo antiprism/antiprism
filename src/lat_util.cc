@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2008-2016, Roger Kaufman
+   Copyright (c) 2008-2020, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -117,7 +117,7 @@ Options
   -r <c,n>  radius. c is radius taken to optional root n. n = 2 is sqrt
                or  l - max insphere radius, s - min insphere radius (default)
                or  k - take radius from container specified by -k
-  -q <vecs> center offset, in form \a_val,b_val,c_val\ (default: none)
+  -q <vecs> center offset, in form "a_val,b_val,c_val" (default: none)
   -s <s,n>  create struts. s is strut length taken to optional root n
                use multiple -s parameters for multiple struts
   -D <opt>  Voronoi (a.k.a Dirichlet) cells (Brillouin zones for duals)

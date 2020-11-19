@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2007-2016, Roger Kaufman
+   Copyright (c) 2007-2020, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -500,34 +500,30 @@ void ncon_opts::process_command_line(int argc, char **argv)
       bool set_edge = true;
       bool set_face = true;
 
-      char parse_key1[] = ",";
+      Split parts(optarg, ",");
+      unsigned int parts_sz = parts.size();
 
-      // memory pointer for strtok_r
-      char *tok_ptr1;
+      if (parts_sz > 2)
+        error("excess entries for uncolored elements", c);
 
-      char *ptok1 = strtok_r(optarg, parse_key1, &tok_ptr1);
-      int count1 = 0;
-      while (ptok1 != nullptr) {
+      for (unsigned int i = 0; i < parts_sz; i++) {
         // first argument is color
-        if (count1 == 0) {
-          print_status_or_exit(tmp_color.read(ptok1), c);
+        if (i == 0) {
+          print_status_or_exit(tmp_color.read(parts[i]), c);
         }
-        else if (count1 == 1) {
+        else if (i == 1) {
           set_edge = false;
           set_face = false;
 
-          if (strspn(ptok1, "ef") != strlen(ptok1))
+          if (strspn(parts[i], "ef") != strlen(parts[i]))
             error(msg_str("elements %s must be in e, f", optarg), c);
 
-          if (strchr(ptok1, 'e'))
+          if (strchr(parts[i], 'e'))
             set_edge = true;
 
-          if (strchr(ptok1, 'f'))
+          if (strchr(parts[i], 'f'))
             set_face = true;
         }
-
-        ptok1 = strtok_r(nullptr, parse_key1, &tok_ptr1);
-        count1++;
       }
 
       if (set_edge)

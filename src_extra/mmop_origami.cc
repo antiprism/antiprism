@@ -247,8 +247,8 @@ inline double adjust_edge(Geometry &geom, int v0, int v1, double len,
   return diff;
 }
 
-Status make_origami(const Geometry &geom, Geometry &orig, IterationControl it_ctrl,
-                    double factor, double init_ht)
+Status make_origami(const Geometry &geom, Geometry &orig,
+                    IterationControl it_ctrl, double factor, double init_ht)
 {
   const auto test_val = it_ctrl.get_test_val();
   double max_diff = 0;

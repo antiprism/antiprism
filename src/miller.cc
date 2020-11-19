@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2017, Roger Kaufman
+   Copyright (c) 2017-2020, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -580,37 +580,37 @@ vector<string> decode_cell_string(string cell_str)
   int len_cnt = len;
   while (len_cnt > 0) {
     string cell_substr = cell_str.substr(len-len_cnt);
-    string token;
-    int tok_len = 0;
+    string part;
+    int part_len = 0;
     size_t pos = cell_substr.find_first_of("ABCDEFGH");
     if (pos != string::npos) {
       if (pos+1 <= cell_substr.size())
-        tok_len = (cell_substr.substr(pos+1,1).find_first_of("'+-") != string::npos) ? 2 : 1;
+        part_len = (cell_substr.substr(pos+1,1).find_first_of("'+-") != string::npos) ? 2 : 1;
     }
     else {
       pos = cell_substr.find_first_of("efg");
       if (pos != string::npos) {
         if (pos+2 <= cell_substr.size())
-          tok_len = (cell_substr.substr(pos+2,1).find_first_of("'+-") != string::npos) ? 3 : 2;
+          part_len = (cell_substr.substr(pos+2,1).find_first_of("'+-") != string::npos) ? 3 : 2;
       }
     }
-    if (tok_len) {
+    if (part_len) {
       if (pos <= cell_substr.size())
-        token = cell_substr.substr(pos,tok_len);
-      len_cnt-=tok_len;
+        part = cell_substr.substr(pos,part_len);
+      len_cnt-=part_len;
     }
 
-//fprintf(stderr,"token = '%s'\n", token.c_str());
-//fprintf(stderr,"cell[token] = %s\n", cell[token].c_str());
+//fprintf(stderr,"part = '%s'\n", part.c_str());
+//fprintf(stderr,"cell[part] = %s\n", cell[part].c_str());
 
     // if not found, return empty string list
-    if (!cell[token].length()) {
+    if (!cell[part].length()) {
       diagram_list_strings.clear();
       break;
     }
     else {
       // append face number
-      diagram_list_strings.push_back(cell[token]);
+      diagram_list_strings.push_back(cell[part]);
     }
   }
 

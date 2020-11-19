@@ -23,6 +23,11 @@ edge distribution (default : none)
 .IP
 s \- project vertices onto a sphere
 .TP
+\fB\-s\fR <opt>
+shuffle model indexes
+.IP
+v \- vertices, e \- edges, f \- faces, a \- all (default: none)
+.TP
 \fB\-r\fR <opt>
 initial radius
 .IP
@@ -44,7 +49,6 @@ q \- face centroids magnitude squared
 m \- mathematica planarize
 a \- sand and fill planarize
 p \- fast planarize (poly_form \fB\-a\fR p)
-r \- make faces into unit\-edged regular polygons (poly_form \fB\-a\fR r)
 .HP
 \fB\-i\fR <itrs> maximum planarize iterations. \fB\-1\fR for unlimited (default: \fB\-1\fR)
 .IP
@@ -99,19 +103,10 @@ termination checks (0 for report checks only) (default: 1000,1)
 .PP
 Extra Options
 .IP
-for (\fB\-c\fR m and \fB\-p\fR m)
-\fB\-E\fR <perc> percentage to scale the edge tangency error (default: 50)
-\fB\-P\fR <perc> percentage to scale the face planarity error (default: 20)
+for (\fB\-c\fR m, \fB\-p\fR m, and \fB\-p\fR p)
+\fB\-E\fR <perc> percentage to scale the edge tangency (default: 50)
+\fB\-P\fR <perc> percentage to scale the face planarity (default: 20) (also \fB\-p\fR p)
 \fB\-A\fR        alternate algorithm. try if imbalance in result (\fB\-c\fR m only)
-for (\fB\-p\fR r and \fB\-p\fR p)
-\fB\-S\fR <perc> percentage to shorten longest edges on iteration (default: 1)
-\fB\-K\fR <perc> percentage to reduce polygon radius on iteration
-.IP
-(default: value of \fB\-S\fR)
-.HP
-\fB\-F\fR <perc> percentage to reduce distance of vertex from face plane (\fB\-p\fR rp)
-.IP
-on iteration (default: value of \fB\-S\fR)
 .PP
 Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
 .TP

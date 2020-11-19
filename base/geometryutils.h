@@ -392,34 +392,6 @@ bool canonicalize_bd(Geometry &base, IterationControl it_ctrl,
  * \return \c true if success, otherwise \c false */
 bool planarize_bd(Geometry &geom, IterationControl it_ctrl);
 
-/// make_regular_faces() from poly_form (-a r)
-/**\param geom geometry to make polygons near unit edge.
- * \param it_ctrl interation control.
- * \param shorten_factor small number to scale edge adjustments.
- * \param plane_factor small number to scale plane adjustments.
- * \param radius_factor small number to scale radius adjustments.
- * \param sym_str to speed up code when symmetry is present.
- * \return status, evaluates to \c true completed, otherwise false.*/
-Status make_regular_faces2(Geometry &geom, IterationControl it_ctrl,
-                           const double shorten_factor,
-                           const double plane_factor,
-                           const double radius_factor,
-                           const std::string &sym_str);
-
-/// an abbreviated wrapper for planarization with make_regular_faces
-/**\param geom geometry to planarize.
- * \param it_ctrl interation control.
- * \return status, evaluates to \c true completed, otherwise false.*/
-Status make_regular_faces(Geometry &geom, IterationControl it_ctrl);
-
-/// an abbreviated wrapper for planarization with make_regular_faces
-/**\param base_geom geometry to planarize.
- * \param it_ctrl interation control.
- * \param plane_factor small number to scale plane adjustments.
- * \return status, evaluates to \c true completed, otherwise false.*/
-Status make_planar2(Geometry &base_geom, IterationControl it_ctrl,
-                    double plane_factor);
-
 /// RK - edge near points of base seek 1
 /**\param geom geometry to canonicalise.
  * \param it_ctrl interation control.
@@ -438,6 +410,15 @@ bool canonicalize_unit(Geometry &geom, IterationControl it_ctrl,
  * \param it_ctrl interation control
  * \return \c true if success, otherwise \c false */
 bool planarize_unit(Geometry &geom, IterationControl it_ctrl);
+
+/// an abbreviated wrapper for planarization with make_regular_faces
+/**\param base_geom geometry to planarize.
+ * \param it_ctrl interation control.
+ * \param plane_factor small number to scale plane adjustments.
+ * \param sym a symmetry to follow which speeds up calculations.
+ * \return status, evaluates to \c true completed, otherwise false.*/
+Status make_planar(Geometry &base_geom, IterationControl it_ctrl,
+                   double plane_factor, const Symmetry &sym);
 
 /// Close polyhedron (basic)
 /**Each hole (open circuit of edges) is converted to a face with colour col

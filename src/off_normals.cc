@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2011-2016, Roger Kaufman
+   Copyright (c) 2011-2020, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -60,6 +60,7 @@ public:
   string show_elems;
   string average_pattern;
   bool alternate_calculation;
+  char normal_type;
 
   Color outward_normal_col;
   Color inward_normal_col;
@@ -77,7 +78,7 @@ public:
         exclude_normals_elems('\0'), force_normals_polarity('\0'),
         elem_normal_vecs(false), edge_normal_method('\0'),
         base_normal_method('b'), show_pointing("oih"), show_elems("f"),
-        average_pattern("r"), alternate_calculation(false),
+        average_pattern("r"), alternate_calculation(false), normal_type('n'),
         hemispherical_normal_col(Color(127, 127, 127)), sig_compare(INT_MAX),
         epsilon(0)
   {
@@ -98,23 +99,24 @@ If input_file is not given the program reads from standard input.
 Options
 %s
   -u        unit normals  (positional normals otherwise)
-  -e        connect to element centroid
-  -p <opt>  force polarity. o - set all outward,  i - set all inward
+  -e        connect to element centroid (for reference)
+  -p <opt>  force polarity. o - outward, i - inward
                r - reverse both inward and outward
   -i <elms> include normals. The element string can include o, i and h
-               to show, respectively, outward, inward and hemispherical
-               note: exclusion occurs before -p  (default: oih)
+               to show outward, inward and hemispherical
+               note: exclusion occurs before -p (default: oih)
   -s <elms> include elements. The element string can include v, e and f
-               to show, respectively, vertices, edges and faces  (default: f)
-  -d <opt>  delete elements.  f - delete faces of excluded normals
+               to show vertices, edges and faces (default: f)
+  -d <opt>  delete elements. f - delete faces of excluded normals
                a - delete all of original model
   -c <opts> average pattern string for edge and vertex normals. Done before -p
-               r - raw,  o - outward,  i - inward,  u - unit  (default: r)
+               r - raw, o - outward, i - inward, u - unit (default: r)
   -a        alternate calculation for vertex normals
-  -C <xyz>  center of model, in form 'X,Y,Z'  (default: centroid)
+  -x <opt>  face normals: n - Newell's, t - triangles, q - quads (default: n)
+  -C <xyz>  center of model, in form 'X,Y,Z' (default: centroid)
   -l <lim>  minimum distance for unique vertex locations as negative exponent
                (default: %d giving %.0e)
-  -o <file> write output to file  (default: write to standard output)
+  -o <file> write output to file (default: write to standard output)
 
 Coloring Options (run 'off_util -H color' for help on color formats)
   -O <col>  outward normal vertex color
@@ -140,7 +142,7 @@ void off_normals_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":huep:i:s:d:c:aO:I:H:E:B:C:l:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":huep:i:s:d:c:ax:O:I:H:E:B:C:l:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -191,6 +193,13 @@ void off_normals_opts::process_command_line(int argc, char **argv)
 
     case 'a':
       alternate_calculation = true;
+      break;
+
+    case 'x':
+      if (strlen(optarg) == 1 && strchr("ntq", int(*optarg)))
+        normal_type = *optarg;
+      else
+        error("normal type must be n, t, q", c);
       break;
 
     case 'O':
@@ -265,7 +274,7 @@ void add_normals(Geometry &geom, const off_normals_opts &opts)
   Geometry ngeom;
   vector<int> deleted_faces;
 
-  FaceNormals x_normals(geom, opts.center, opts.epsilon);
+  FaceNormals x_normals(geom, opts.center, opts.normal_type, opts.epsilon);
 
   if (strchr(opts.show_elems.c_str(), 'f')) {
     std::unique_ptr<ColorMap> cmap(colormap_from_name("rnd")); // for -E r

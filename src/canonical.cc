@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2017, Adrian Rossiter, Roger Kaufman
+   Copyright (c) 2003-2020, Adrian Rossiter, Roger Kaufman
    Includes ideas and algorithms by George W. Hart, http://www.georgehart.com
 
    Antiprism - http://www.antiprism.com
@@ -58,16 +58,14 @@ public:
   char centering;
   char initial_radius;
   char edge_distribution;
+  string shuffle_model_indexes;
   char planarize_method;
   int num_iters_planar;
   char canonical_method;
   int num_iters_canonical;
-  double mm_edge_factor;
-  double mm_plane_factor;
+  double edge_factor;
+  double plane_factor;
   bool alternate_algorithm;
-  double shorten_by;
-  double shorten_rad_by;
-  double flatten_by;
   double radius_range_percent;
   string output_parts;
   int face_opacity;
@@ -87,9 +85,8 @@ public:
   cn_opts()
       : ProgramOpts("canonical"), centering('e'), initial_radius('e'),
         edge_distribution('\0'), planarize_method('\0'), num_iters_planar(-1),
-        canonical_method('m'), num_iters_canonical(-1), mm_edge_factor(DBL_MAX),
-        mm_plane_factor(DBL_MAX), alternate_algorithm(false),
-        shorten_by(DBL_MAX), shorten_rad_by(DBL_MAX), flatten_by(DBL_MAX),
+        canonical_method('m'), num_iters_canonical(-1), edge_factor(DBL_MAX),
+        plane_factor(DBL_MAX), alternate_algorithm(false),
         radius_range_percent(-1), output_parts("b"), face_opacity(-1),
         offset(0), roundness(8), normal_type('n'), epsilon(0),
         ipoints_col(Color(255, 255, 0)), base_nearpts_col(Color(255, 0, 0)),
@@ -120,6 +117,8 @@ Options
 %s
   -e <opt>  edge distribution (default : none)
                s - project vertices onto a sphere
+  -s <opt>  shuffle model indexes
+               v - vertices, e - edges, f - faces, a - all (default: none)
   -r <opt>  initial radius
                e - average edge near points radius = 1 (default)
                v - average vertex radius = 1
@@ -133,7 +132,6 @@ Options
                m - mathematica planarize
                a - sand and fill planarize
                p - fast planarize (poly_form -a p)
-               r - make faces into unit-edged regular polygons (poly_form -a r)
   -i <itrs> maximum planarize iterations. -1 for unlimited (default: %d)
             WARNING: unstable models may not finish unless -i is set
   -c <opt>  canonicalization
@@ -164,16 +162,10 @@ Options
   -o <file> write output to file (default: write to standard output)
 
 Extra Options
-  for (-c m and -p m)
-  -E <perc> percentage to scale the edge tangency error (default: 50) 
-  -P <perc> percentage to scale the face planarity error (default: 20)
+  for (-c m, -p m, and -p p)
+  -E <perc> percentage to scale the edge tangency (default: 50) 
+  -P <perc> percentage to scale the face planarity (default: 20) (also -p p)
   -A        alternate algorithm. try if imbalance in result (-c m only)
-  for (-p r and -p p)
-  -S <perc> percentage to shorten longest edges on iteration (default: 1)
-  -K <perc> percentage to reduce polygon radius on iteration
-               (default: value of -S)
-  -F <perc> percentage to reduce distance of vertex from face plane (-p rp)
-            on iteration (default: value of -S) 
 
 Coloring Options (run 'off_util -H color' for help on color formats)
   -I <col>  intersection points and/or origin color (default: yellow)
@@ -204,8 +196,7 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   while ((c = getopt(
               argc, argv,
-              ":hC:r:e:p:i:c:n:O:q:g:E:P:AS:K:F:d:x:z:I:N:M:B:D:U:T:l:o:")) !=
-         -1) {
+              ":hC:r:e:s:p:i:c:n:O:q:g:E:P:Ad:x:z:I:N:M:B:D:U:T:l:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -215,6 +206,15 @@ void cn_opts::process_command_line(int argc, char **argv)
         edge_distribution = *optarg;
       else
         error("edge_distribution method type must be s", c);
+      break;
+
+    case 's':
+      if (strspn(optarg, "vefa") != strlen(optarg))
+        error(msg_str("suffle parts are '%s' must be any or all from "
+                      "v, e, f, a",
+                      optarg),
+              c);
+      shuffle_model_indexes = optarg;
       break;
 
     case 'r':
@@ -233,10 +233,10 @@ void cn_opts::process_command_line(int argc, char **argv)
 
     case 'p':
       p_set = true;
-      if (strlen(optarg) == 1 && strchr("qmapr", int(*optarg)))
+      if (strlen(optarg) == 1 && strchr("qmap", int(*optarg)))
         planarize_method = *optarg;
       else
-        error("planarize method type must be q, m, a, p, r", c);
+        error("planarize method type must be q, m, a, p", c);
       break;
 
     case 'i':
@@ -285,40 +285,20 @@ void cn_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'E':
-      print_status_or_exit(read_double(optarg, &mm_edge_factor), c);
-      if (mm_edge_factor <= 0 || mm_edge_factor >= 100)
+      print_status_or_exit(read_double(optarg, &edge_factor), c);
+      if (edge_factor <= 0 || edge_factor >= 100)
         warning("edge factor not inside range 0 to 100", c);
       break;
 
     case 'P':
-      print_status_or_exit(read_double(optarg, &mm_plane_factor), c);
-      if (mm_plane_factor <= 0 || mm_plane_factor >= 100) {
+      print_status_or_exit(read_double(optarg, &plane_factor), c);
+      if (plane_factor <= 0 || plane_factor >= 100) {
         warning("plane factor not inside range 0 to 100", c);
       }
       break;
 
     case 'A':
       alternate_algorithm = true;
-      break;
-
-    case 'S':
-      print_status_or_exit(read_double(optarg, &shorten_by), c);
-      if (shorten_by < 0 || shorten_by > 100)
-        warning("not in range 0 to 100", c);
-      break;
-
-    case 'K':
-      print_status_or_exit(read_double(optarg, &shorten_rad_by), c);
-      if (shorten_rad_by < 0 || shorten_rad_by > 100) {
-        warning("not in range 0 to 100", c);
-      }
-      break;
-
-    case 'F':
-      print_status_or_exit(read_double(optarg, &flatten_by), c);
-      if (flatten_by < 0 || flatten_by > 100) {
-        warning("not in range 0 to 100", c);
-      }
       break;
 
     case 'd':
@@ -386,35 +366,19 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   // set default variables
   if (canonical_method == 'm' || planarize_method == 'm') {
-    if (mm_edge_factor == DBL_MAX)
-      mm_edge_factor = 50.0;
+    if (edge_factor == DBL_MAX)
+      edge_factor = 50.0;
   }
-  else if (mm_edge_factor != DBL_MAX)
+  else if (edge_factor != DBL_MAX)
     warning("set, but not used for this algorithm", 'E');
 
-  if (canonical_method == 'm' || planarize_method == 'm') {
-    if (mm_plane_factor == DBL_MAX)
-      mm_plane_factor = 20.0;
+  if (canonical_method == 'm' || planarize_method == 'm' ||
+      planarize_method == 'p') {
+    if (plane_factor == DBL_MAX)
+      plane_factor = 20.0;
   }
-  else if (mm_plane_factor != DBL_MAX)
+  else if (plane_factor != DBL_MAX)
     warning("set, but not used for this algorithm", 'P');
-
-  if (planarize_method == 'r' || planarize_method == 'p') {
-    if (shorten_by == DBL_MAX)
-      shorten_by = 1.0;
-    if (shorten_rad_by == DBL_MAX)
-      shorten_rad_by = shorten_by;
-    if (flatten_by == DBL_MAX)
-      flatten_by = shorten_by;
-  }
-  else {
-    if (shorten_by != DBL_MAX)
-      warning("set, but not used for this algorithm", 'S');
-    if (shorten_rad_by != DBL_MAX)
-      warning("set, but not used for this algorithm", 'K');
-    if (flatten_by != DBL_MAX)
-      warning("set, but not used for this algorithm", 'F');
-  }
 
   if ((canonical_method == 'x') && planarize_method &&
       (radius_range_percent > -1))
@@ -857,6 +821,101 @@ void check_coincidence(const Geometry &geom, const cn_opts &opts)
   check_model(dual, s, opts);
 }
 
+vector<int> geom_deal(Geometry &geom, const int pack_size)
+{
+  Coloring clrng;
+  clrng.set_geom(&geom);
+  string map_name = "deal" + std::to_string(pack_size);
+  ColorMap *pack = colormap_from_name(map_name.c_str());
+  clrng.add_cmap(pack);
+
+  vector<int> deal;
+  for (int i = 0; i < pack->effective_size(); i++)
+    deal.push_back(pack->get_col(i).get_index());
+
+  return (deal);
+}
+
+void shuffle_model_indexes(Geometry &geom, const cn_opts &opts)
+{
+  bool shuffle_verts =
+      (opts.shuffle_model_indexes.find_first_of("va") != string::npos);
+  bool shuffle_faces =
+      (opts.shuffle_model_indexes.find_first_of("fa") != string::npos);
+  bool shuffle_edges =
+      (opts.shuffle_model_indexes.find_first_of("ea") != string::npos);
+
+  map<int, int> new_verts;
+  if (!shuffle_verts) {
+    for (unsigned int i = 0; i < geom.verts().size(); i++)
+      new_verts[i] = i;
+  }
+  else {
+    fprintf(stderr, "shuffle model indexes: vertices\n");
+    vector<int> deal = geom_deal(geom, geom.verts().size());
+    vector<Vec3d> shuffled_verts;
+    for (unsigned int i = 0; i < geom.verts().size(); i++) {
+      int v_new = deal[i];
+      new_verts[v_new] = i;
+      shuffled_verts.push_back(geom.verts(v_new));
+    }
+    geom.raw_verts() = shuffled_verts;
+  }
+
+  if (shuffle_faces || shuffle_verts) {
+    map<int, int> face_order;
+    if (!shuffle_faces) {
+      for (unsigned int i = 0; i < geom.faces().size(); i++)
+        face_order[i] = i;
+    }
+    else {
+      fprintf(stderr, "shuffle model indexes: faces\n");
+      vector<int> deal = geom_deal(geom, geom.faces().size());
+      for (unsigned int i = 0; i < geom.faces().size(); i++)
+        face_order[deal[i]] = i;
+    }
+    vector<vector<int>> shuffled_faces;
+    for (unsigned int i = 0; i < face_order.size(); i++) {
+      vector<int> face;
+      for (unsigned int j = 0; j < geom.faces(face_order[i]).size(); j++) {
+        int v = geom.faces(face_order[i])[j];
+        int v_new = new_verts[v];
+        face.push_back(v_new);
+      }
+      shuffled_faces.push_back(face);
+    }
+    geom.raw_faces() = shuffled_faces;
+  }
+
+  if (!geom.edges().size()) {
+    fprintf(stderr, "shuffle model indexes: no explicit edges\n");
+  }
+  else if (shuffle_edges || shuffle_verts) {
+    map<int, int> edge_order;
+    if (!shuffle_edges)
+      for (unsigned int i = 0; i < geom.edges().size(); i++) {
+        edge_order[i] = i;
+      }
+    else {
+      fprintf(stderr, "shuffle model indexes: edges\n");
+      vector<int> deal = geom_deal(geom, geom.edges().size());
+      for (unsigned int i = 0; i < geom.edges().size(); i++)
+        edge_order[deal[i]] = i;
+    }
+    vector<vector<int>> shuffled_edges;
+    for (unsigned int i = 0; i < geom.edges().size(); i++) {
+      vector<int> edge;
+      for (unsigned int j = 0; j < geom.edges(edge_order[i]).size(); j++) {
+        int v = geom.edges(edge_order[i])[j];
+        int v_new = new_verts[v];
+        edge.push_back(v_new);
+      }
+      shuffled_edges.push_back(edge);
+    }
+    geom.raw_edges() = shuffled_edges;
+  }
+}
+
 int main(int argc, char *argv[])
 {
   cn_opts opts;
@@ -870,6 +929,9 @@ int main(int argc, char *argv[])
     if (opts.edge_distribution == 's')
       project_onto_sphere(geom);
   }
+
+  if (opts.shuffle_model_indexes.length())
+    shuffle_model_indexes(geom, opts);
 
   fprintf(stderr, "\n");
   fprintf(stderr, "starting radius: ");
@@ -916,8 +978,6 @@ int main(int argc, char *argv[])
       planarize_str = "sand and fill";
     else if (opts.planarize_method == 'p')
       planarize_str = "poly_form -a p";
-    else if (opts.planarize_method == 'r')
-      planarize_str = "poly_form -a r";
     fprintf(stderr, "planarize: %s method\n", planarize_str.c_str());
 
     bool planarize_only = true;
@@ -932,8 +992,8 @@ int main(int argc, char *argv[])
                                   opts.normal_type);
     }
     else if (opts.planarize_method == 'm') {
-      completed = canonicalize_mm(geom, opts.it_ctrl, opts.mm_edge_factor / 100,
-                                  opts.mm_plane_factor / 100,
+      completed = canonicalize_mm(geom, opts.it_ctrl, opts.edge_factor / 100,
+                                  opts.plane_factor / 100,
                                   radius_range_pct / 100, opts.normal_type,
                                   opts.alternate_algorithm, planarize_only);
     }
@@ -943,16 +1003,9 @@ int main(int argc, char *argv[])
                             opts.centering, opts.normal_type, planarize_only);
     }
     else if (opts.planarize_method == 'p') {
+      Symmetry dummy;
       Status stat;
-      stat = make_planar2(geom, opts.it_ctrl, opts.flatten_by / 100);
-      completed = (stat.is_ok() ? true : false);
-    }
-    else if (opts.planarize_method == 'r') {
-      string sym_str = "";
-      Status stat;
-      stat = make_regular_faces2(geom, opts.it_ctrl, opts.shorten_by / 200,
-                                 opts.flatten_by / 100,
-                                 opts.shorten_rad_by / 100, sym_str);
+      stat = make_planar(geom, opts.it_ctrl, opts.plane_factor / 100, dummy);
       completed = (stat.is_ok() ? true : false);
     }
 
@@ -976,8 +1029,8 @@ int main(int argc, char *argv[])
         (opts.radius_range_percent < 0) ? 80 : opts.radius_range_percent;
 
     if (opts.canonical_method == 'm') {
-      completed = canonicalize_mm(geom, opts.it_ctrl, opts.mm_edge_factor / 100,
-                                  opts.mm_plane_factor / 100,
+      completed = canonicalize_mm(geom, opts.it_ctrl, opts.edge_factor / 100,
+                                  opts.plane_factor / 100,
                                   radius_range_pct / 100, opts.normal_type,
                                   opts.alternate_algorithm, planarize_only);
     }

@@ -126,7 +126,7 @@ Status IterationControl::set_sig_digits(int digits)
 int IterationControl::print(const char *fmt, ...) const
 {
   int ret = 0;
-  if(stream != nullptr) {
+  if (stream != nullptr) {
     va_list ap;
     va_start(ap, fmt);
     ret = vfprintf(stream, fmt, ap);

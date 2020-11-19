@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2016, Adrian Rossiter
+   Copyright (c) 2003-2020, Adrian Rossiter, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -218,8 +218,8 @@ void parse_color_string(const ProgramOpts *opts, const char *optarg,
                         const char c, const string &allowed_chars,
                         vector<Color> &vcol)
 {
-  const Split parts(optarg, ",");
-  int parts_sz = parts.size();
+  Split parts(optarg, ",");
+  unsigned int parts_sz = parts.size();
 
   int dummy;
   Status is_int = read_int(parts[0], &dummy);
@@ -230,7 +230,7 @@ void parse_color_string(const ProgramOpts *opts, const char *optarg,
 
   Color col;
   bool valid_color = false;
-  int next_parms_idx = 1;
+  unsigned int next_parms_idx = 1;
 
   // see if entry is a valid r,g,b
   if (parts_sz >= 3) {
@@ -448,17 +448,10 @@ void list_grid_radii(const string &file_name, const Geometry &geom,
     string buffer;
     if (!list_radii_center.is_set())
       buffer = "centroid";
-    else {
-      for (unsigned int i = 0; i < 3; i++) {
-        string buf = std::to_string(list_radii_center[i]);
-        // truncate trailing zeros and decimal point if it is the last
-        buf.erase(buf.find_last_not_of('0') + 1, std::string::npos);
-        buf.erase(buf.find_last_not_of('.') + 1, std::string::npos);
-        buffer += buf;
-        if (i < 2)
-          buffer += ",";
-      }
-    }
+    else
+      buffer = msg_str("%g,%g,%g", list_radii_center[0], list_radii_center[1],
+                       list_radii_center[2]);
+
     fprintf(ofile,
             "\nList of unique radial distances in grid using center: %s\n\n",
             buffer.c_str());

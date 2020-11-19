@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2017, Roger Kaufman
+   Copyright (c) 2010-2020, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -1024,12 +1024,12 @@ bool cn_PnPoly(const Geometry &polygon, const Vec3d &P, const int idx, int
    double testy = P[idx2]; // P.y
 
    const vector<int> &face = polygon.faces()[0];
-   unsigned int n = face.size();
+   int n = face.size();
 
    int cn = 0;    // the crossing number counter
 
    // loop through all edges of the polygon
-   for (unsigned int i=0; i<n; i++) {    // edge from face[i] to face[i+1]
+   for (int i=0; i<n; i++) {    // edge from face[i] to face[i+1]
       int j = (i+1)%n;
 
       double vertx_i = verts[face[i]][idx1]; // V[i].x
@@ -1083,13 +1083,13 @@ static bool wn_PnPoly(const Geometry &polygon, const Vec3d &P, const int idx,
   double testy = P[idx2]; // P.y
 
   const vector<int> &face = polygon.faces()[0];
-  unsigned int n = face.size();
+  int n = face.size();
 
   int wn = 0; // the winding number counter
 
   // loop through all edges of the polygon
-  for (unsigned int i = 0; i < n; i++) { // edge from face[i] to face[i+1]
-    unsigned int j = (i + 1) % n;
+  for (int i = 0; i < n; i++) { // edge from face[i] to face[i+1]
+    int j = (i + 1) % n;
 
     Vec3d vert_i = verts[face[i]]; // V[i]
     Vec3d vert_j = verts[face[j]]; // V[[i+1]
@@ -1097,7 +1097,7 @@ static bool wn_PnPoly(const Geometry &polygon, const Vec3d &P, const int idx,
     double verty_i = vert_i[idx2]; // V[i].y
     double verty_j = vert_j[idx2]; // V[i+1].y
 
-    for (unsigned int i = 0; i < n; i++) { // edge from face[i] to face[i+1]
+    for (int i = 0; i < n; i++) { // edge from face[i] to face[i+1]
       // if (verty_i <= testy) {   // start y <= P.y
       if (double_le(verty_i, testy, eps)) {
         // if (verty_j > testy)     // an upward crossing
@@ -1116,6 +1116,7 @@ static bool wn_PnPoly(const Geometry &polygon, const Vec3d &P, const int idx,
     }
   }
 
+  // n must not be unsigned
   if (n)
     winding_number = wn / n;
 

@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2010-2016, Roger Kaufman
+   Copyright (c) 2010-2020, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -260,14 +260,10 @@ void planar_opts::process_command_line(int argc, char **argv)
           substr_start = 3;
         }
 
-        int tmp;
-        char buff;
-        if (sscanf((arg_id.substr(substr_start)).c_str(), " %d %c", &tmp,
-                   &buff) != 1)
+        if (!read_int((arg_id.substr(substr_start).c_str()), &winding_rule))
           error("expecting integer number after eq,ne,gt,ge,lt,le for winding "
                 "number",
                 c);
-        winding_rule = tmp;
       }
       else {
         winding_rule_mode = 0;
@@ -1838,7 +1834,7 @@ vector<int> find_end_points_vertex(const Geometry &geom,
   unsigned int sz = gverts.size();
   if (sz > 2) {
     vector<pair<double, int>> distance_table;
-    for (unsigned int i = 0; i < gverts.size(); i++) {
+    for (unsigned int i = 0; i < sz; i++) {
       double dist = (gverts[i] - gverts[(i + 1) % sz]).len();
       distance_table.push_back(make_pair(dist, i));
     }

@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2016, Roger Kaufman
+   Copyright (c) 2010-2020, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -51,6 +51,7 @@ public:
   string gfile;
 
   int display_type;
+  int grid_width;
   int color_system_mode;
   int map_type;
   int show_container;
@@ -76,12 +77,12 @@ public:
   ColorMapMulti map;
 
   col_util_opts()
-      : ProgramOpts("col_util"), display_type(1), color_system_mode(3),
-        map_type(1), show_container(2), unique_colors(false), upright_view(0),
-        chroma_level(0), hsl_height(0), plot_centroid(false),
-        sat_threshold(1.0), value_advance(0.0), alpha_mode(3), cmy_mode(false),
-        ryb_mode(false), seven_mode(false), brightness_adj(0), map_maximum(0),
-        verbose(false)
+      : ProgramOpts("col_util"), display_type(1), grid_width(0),
+        color_system_mode(3), map_type(1), show_container(2),
+        unique_colors(false), upright_view(0), chroma_level(0), hsl_height(0),
+        plot_centroid(false), sat_threshold(1.0), value_advance(0.0),
+        alpha_mode(3), cmy_mode(false), ryb_mode(false), seven_mode(false),
+        brightness_adj(0), map_maximum(0), verbose(false)
   {
   }
 
@@ -104,17 +105,18 @@ Options
 
 Scene Options
   -M <mode> color system mode. HSV=1, HSL=2, RGB=3 (default: 3)
-               plot as cone, bicone or cube respectively
+               plot as cone, bicone or cube
   -d <int>  output type. plot=1, wheel=2, grid=3, map=4 (default: 1)
                if color wheel and RGB, only one color blend is possible
+  -w <int>  width of grid. positive integer. (-d 3) (default: automatic)
   -V        verbose output. show color blend RGBA components
 
-Output type 1 options 
+Output for plot (-d 1) options 
   -r <int>  HSV/HSL chroma  0 - none (cylinder), 1 - conic, 2 - hexagonal
   -S        HSV/HSL distribute colors heptagonally, 7 ways, as in the rainbow
   -k <int>  container control (default: 2)
                0 - suppress, 1 - no facets on chroma-2,  2 - full
-  -z <int>  1 - show model upright, 2 - upright but don\'t rotate RGB cube
+  -z <int>  1 - show model upright, 2 - upright but don't rotate RGB cube
   -q <int>  height of the HSL cones (default: no change)
                1 - double, 2 - make 90 degree dihedral
   -p        plot color centroid(s)
@@ -163,7 +165,7 @@ void col_util_opts::process_command_line(int argc, char **argv)
   handle_long_opts(argc, argv);
 
   while ((c = getopt(argc, argv,
-                     ":hd:m:k:q:z:f:r:b:s:t:u:v:pa:cySl:M:O:UZ:Vo:")) != -1) {
+                     ":hd:w:m:k:q:z:f:r:b:s:t:u:v:pa:cySl:M:O:UZ:Vo:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -174,6 +176,12 @@ void col_util_opts::process_command_line(int argc, char **argv)
                                       argmatch_add_id_maps),
                            c);
       display_type = atoi(arg_id.c_str());
+      break;
+
+    case 'w':
+      print_status_or_exit(read_int(optarg, &grid_width), c);
+      if (grid_width < 1)
+        error("grid width must be positive", c);
       break;
 
     case 'M':
@@ -702,17 +710,30 @@ Geometry make_square()
   return geom;
 }
 
-void color_grid(Geometry &geom, const vector<Color> &cols)
+void color_grid(Geometry &geom, const vector<Color> &cols,
+                const int &grid_width)
 {
   Geometry sgeom;
   sgeom.append(make_square());
 
   unsigned int cols_sz = cols.size();
-  unsigned int dim = (int)ceil(sqrt(cols_sz));
+  unsigned int dim1;
+  unsigned int dim2;
+
+  if (!grid_width) {
+    dim2 = (int)ceil(sqrt(cols_sz));
+    dim1 = dim2;
+  }
+  else {
+    dim2 = grid_width;
+    dim1 = cols_sz / grid_width;
+    if (cols_sz - (dim1 * cols_sz) > 0)
+      dim1++;
+  }
 
   unsigned int k = 0;
-  for (unsigned int i = 0; i < dim; i++) {
-    for (unsigned int j = 0; j < dim; j++) {
+  for (unsigned int i = 0; i < dim1; i++) {
+    for (unsigned int j = 0; j < dim2; j++) {
       Geometry tgeom = sgeom;
       if (k < cols_sz && cols[k].is_index()) {
         tgeom.add_vert(Vec3d(0.5, 0.45, 0.0), Color(0.0, 0.0, 0.0));
@@ -879,11 +900,8 @@ int main(int argc, char *argv[])
         if (opts.map_type == 2)
           fprintf(ofile, "%-5d = ", i);
         string buffer = "";
-        if (cols[i][3] != 255) {
-          string buf = std::to_string(cols[i][3]);
-          // pad with leading spaces to length 3
-          buffer = std::string(3 - buf.length(), ' ') + buf;
-        }
+        if (cols[i][3] != 255)
+          buffer = msg_str("%3d", cols[i][3]);
         if (cols[i].is_value())
           fprintf(ofile, "%3d %3d %3d %s\n", cols[i][0], cols[i][1], cols[i][2],
                   buffer.c_str());
@@ -978,7 +996,7 @@ int main(int argc, char *argv[])
                   opts.alpha_mode, opts.ryb_mode, opts.brightness_adj,
                   opts.verbose);
     else if (opts.display_type == 3)
-      color_grid(geom, cols);
+      color_grid(geom, cols, opts.grid_width);
 
     opts.write_or_error(geom, opts.ofile);
   }
