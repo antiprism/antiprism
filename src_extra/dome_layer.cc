@@ -48,13 +48,13 @@ class dome_opts : public ProgramOpts {
 public:
   string type;
   double radius;
-  bool use_Colorues;
+  bool use_col_values;
   string ifile;
   string ofile;
 
   dome_opts()
       : ProgramOpts("dome_layer"), type("eden"), radius(0.85),
-        use_Colorues(true)
+        use_col_values(true)
   {
   }
   void process_command_line(int argc, char **argv);
@@ -90,7 +90,6 @@ void dome_opts::process_command_line(int argc, char **argv)
 {
   opterr = 0;
   int c;
-  char name[MSG_SZ];
 
   handle_long_opts(argc, argv);
 
@@ -104,7 +103,7 @@ void dome_opts::process_command_line(int argc, char **argv)
       break;
 
     case 't':
-      type = to_resource_name(name, optarg);
+      type = to_resource_name(optarg);
       if (type != "eden" && type != "dual" && type != "asm" &&
           type != "honeycomb" && type != "prism")
         error("unknown layering type", c);
@@ -115,7 +114,7 @@ void dome_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'i':
-      use_Colorues = false;
+      use_col_values = false;
       break;
 
     default:
@@ -357,7 +356,7 @@ int main(int argc, char *argv[])
   else if (opts.type == "prism")
     make_dome_prism(geom, dome, opts.radius);
 
-  if (opts.use_Colorues)
+  if (opts.use_col_values)
     set_color_values(dome);
 
   opts.write_or_error(dome, opts.ofile);

@@ -207,17 +207,13 @@ Vec3d force_line_plane_intersect(Vec3d Q, Vec3d n, Vec3d P0, Vec3d P1)
   return pt;
 }
 
-bool leonardo_faces(Geometry &geom_out, const Geometry &geom, double width,
-                    double height, Vec3d centre, double ht_offset,
-                    bool hide_edges, bool col_from_edges, bool panels,
-                    char *errmsg)
+Status leonardo_faces(Geometry &geom_out, const Geometry &geom, double width,
+                      double height, Vec3d centre, double ht_offset,
+                      bool hide_edges, bool col_from_edges, bool panels)
 {
-  if (!geom.faces().size()) {
-    if (errmsg)
-      strcpy_msg(errmsg, "base polyhedron has no faces and cannot be "
-                         "converted");
-    return false;
-  }
+  if (!geom.faces().size())
+    return Status::error(
+        "base polyhedron has no faces and cannot be converted");
 
   bool is_solid = (height != 0.0);
   const double height_below = height + ht_offset; // height "below" surface
@@ -359,7 +355,7 @@ bool leonardo_faces(Geometry &geom_out, const Geometry &geom, double width,
     }
   }
 
-  return true;
+  return Status::ok();
 }
 
 double min_dist_edge_to_face_cent(Geometry &geom)
@@ -427,12 +423,10 @@ int main(int argc, char *argv[])
       centre = geom.centroid();
   }
 
-  char errmsg[MSG_SZ];
   Geometry geom_out;
-  if (!leonardo_faces(geom_out, geom, width, height, centre,
-                      -height * 0.5 * opts.centre_height, opts.hide_edges,
-                      opts.col_from_edges, opts.panels, errmsg))
-    opts.error(errmsg);
+  opts.print_status_or_exit(leonardo_faces(
+      geom_out, geom, width, height, centre, -height * 0.5 * opts.centre_height,
+      opts.hide_edges, opts.col_from_edges, opts.panels));
 
   opts.write_or_error(geom_out, opts.ofile);
 

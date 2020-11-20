@@ -47,8 +47,7 @@ typedef void (*model_func)(anti::Geometry &);
  * normalized form */
 void normalised_face_list(anti::Geometry &geom);
 
-bool make_resource_geom(anti::Geometry &geom, std::string name,
-                        char *errmsg = nullptr);
+anti::Status make_resource_geom(anti::Geometry &geom, std::string name);
 
 struct UniformItem {
   model_func pfunc;
@@ -128,7 +127,7 @@ private:
 
 public:
   Wythoff(const char *sym, anti::Status *status);
-  bool make_poly(anti::Geometry &geom, char *errmsg = nullptr);
+  anti::Status make_poly(anti::Geometry &geom);
   bool make_tri_poly(anti::Geometry &geom);
   bool make_tri(anti::Geometry &geom);
   bool is_set() { return bar_pos != -1; }

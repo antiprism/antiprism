@@ -198,10 +198,9 @@ void clear_extra_whitespace(std::string &str);
 /// Convert to a normalised resource name
 /** Remove leading and trailing space, convert any whitespace to a
  *  single space, make lowercase
- * \param to the string to convert (up to \c MSG_SZ-1 characters used.)
- * \param from the string to convert (length \c MSG_SZ.)
- * \return A pointer to the \a to string. */
-char *to_resource_name(char *to, const char *from);
+ * \param from the string to convert
+ * \return the converted string. */
+std::string to_resource_name(const char *from);
 
 /// Open a support file
 /** Tries to open a file by its name, then tries to open it in

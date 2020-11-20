@@ -478,8 +478,7 @@ Status Wythoff::read_symbol(const char *sym)
     return Status::error("more than three fractions in symbol");
 
   Status stat;
-  char fracs_str[MSG_SZ];
-  strcpy_msg(fracs_str, sym_norm2.c_str());
+  char *fracs_str = &sym_norm2[0]; // destructive, not using a copy
   char *frac_p = strtok(fracs_str, " ");
   for (int f = 0; f < 3; f++) {
     if (!frac_p)
@@ -583,7 +582,7 @@ static Vec3d get_angle_bisector_norm(Vec3d v0, Vec3d v1, Vec3d v2)
 }
 
 static Vec3d get_fermat_point(Vec3d v0, Vec3d v1, Vec3d v2, bool degenerate,
-                              char *msg = nullptr)
+                              string &msg)
 {
   Vec3d v[3];
   v[0] = v0;
@@ -602,22 +601,19 @@ static Vec3d get_fermat_point(Vec3d v0, Vec3d v1, Vec3d v2, bool degenerate,
     pt = (pt + off_factor * offset).unit();
   }
 
-  if (msg) {
-    *msg = '\0';
-    double max_ang = 0.0;
-    for (int i = 0; i < 3; i++) {
-      double ang = angle_around_axis(v[i], v[(i + 1) % 3], pt);
-      if (ang > M_PI)
-        ang = 2 * M_PI - ang;
-      double ang_diff = fabs(2 * M_PI / 3 - ang);
-      max_ang = ang > max_ang ? ang_diff : max_ang;
-    }
-    if (max_ang > epsilon)
-      sprintf(msg,
-              "inaccurate calculation of fermat point "
-              "(angle difference %g)",
-              max_ang);
+  msg.clear();
+  double max_ang = 0.0;
+  for (int i = 0; i < 3; i++) {
+    double ang = angle_around_axis(v[i], v[(i + 1) % 3], pt);
+    if (ang > M_PI)
+      ang = 2 * M_PI - ang;
+    double ang_diff = fabs(2 * M_PI / 3 - ang);
+    max_ang = ang > max_ang ? ang_diff : max_ang;
   }
+  if (max_ang > epsilon)
+    msg =
+        msg_str("inaccurate calculation of fermat point (angle difference %g)",
+                max_ang);
 
   return pt;
 }
@@ -655,11 +651,10 @@ static void add_faces(Geometry &geom, Vec3d pt, int num, int denom,
   add_faces(geom, pt, num, denom, axes[idx], Color(idx), sym);
 }
 
-bool Wythoff::make_poly(Geometry &geom, char *errmsg)
+Status Wythoff::make_poly(Geometry &geom)
 {
-  if (errmsg)
-    *errmsg = '\0';
   geom.clear_all();
+  string message;
   Symmetry sym(get_tri_sym());
   if (bar_pos == 0) {
     int max_fract = 0;
@@ -672,9 +667,7 @@ bool Wythoff::make_poly(Geometry &geom, char *errmsg)
     if (2 * fracs[2 * max_fract] < 3 * fracs[2 * max_fract + 1] &&
         fracs[(2 * max_fract + 2) % 6] == 2 &&
         fracs[(2 * max_fract + 4) % 6] == 2) {
-      if (errmsg)
-        sprintf(errmsg, "symbol leads to nonconstructible antiprism");
-      return false;
+      return Status::error("symbol leads to nonconstructible antiprism");
     }
 
     Vec3d f_pt; // Fermat point
@@ -713,7 +706,8 @@ bool Wythoff::make_poly(Geometry &geom, char *errmsg)
       }
     }
     else { // general case
-      f_pt = get_fermat_point(verts[0], verts[1], verts[2], degenerate, errmsg);
+      f_pt =
+          get_fermat_point(verts[0], verts[1], verts[2], degenerate, message);
 
       // Reflect in sides of triangle
       Vec3d u0 = Trans3d::reflection(vcross(verts[1], verts[2])) * f_pt;
@@ -772,10 +766,10 @@ bool Wythoff::make_poly(Geometry &geom, char *errmsg)
     add_faces(geom, pt, 2 * fracs[4], fracs[5], verts, 2, sym);
   }
   else
-    return false;
+    return Status::error("invalid symbol");
 
   merge_coincident_elements(geom, "v", epsilon);
-  return true;
+  return (message.empty()) ? Status::ok() : Status::warning(message);
 }
 
 bool Wythoff::make_tri(Geometry &geom)

@@ -37,8 +37,6 @@ using namespace anti;
 
 int read_off_line(FILE *fp, char **line);
 
-bool crds_file_read(std::string file_name, anti::Geometry &geom,
-                    char *errmsg = nullptr);
 void crds_file_read(FILE *ifile, anti::Geometry &geom,
                     char *first_line = nullptr);
 

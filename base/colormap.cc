@@ -67,8 +67,9 @@ Status ColorMap::init(const char *params)
   if (!params) // treat null pointer like the empty string
     return Status::ok();
 
-  char prms[MSG_SZ];
-  strcpy_msg(prms, params);
+  // Make a copy for parsing
+  string params_str = params;
+  char *prms = &params_str[0];
 
   Status stat;
 
@@ -204,8 +205,9 @@ public:
 
 Status ColorMapDeal::init(const char *map_name)
 {
-  char name[MSG_SZ];
-  strcpy_msg(name, map_name);
+  // Make a copy for parsing
+  string name_str(map_name);
+  char *name = &name_str[0];
 
   Status stat = init_strip(name);
   if (stat.is_error())
@@ -262,7 +264,7 @@ void ColorMapDeal::shuffle()
 Color ColorMapDeal::get_col(int idx) const
 {
   int eff_idx = get_effective_index(idx);
-  if (idx < (int)map_vals.size())
+  if (eff_idx < (int)map_vals.size())
     return Color(map_vals[eff_idx]);
   else
     return Color();
@@ -353,8 +355,9 @@ Color ColorMapRange::get_col(int idx) const
 
 Status ColorMapRange::init(const char *map_name)
 {
-  char name[MSG_SZ];
-  strcpy_msg(name, map_name);
+  // Make a copy for parsing
+  string name_str(map_name);
+  char *name = &name_str[0];
 
   const char *p = strchr(map_name, '_');
   if (p && *(p + 1) == '\0')
@@ -371,8 +374,6 @@ Status ColorMapRange::init(const char *map_name)
   if (vals.size() > 2)
     return Status::error("map_name contains more than one '_'");
   // Get the map size
-  char errmsg2[MSG_SZ];
-  *errmsg2 = '\0';
   if (*map_name != '_') {
     if (vals.size()) {
       if (!(stat = read_int(vals[0], &map_sz)))
@@ -396,8 +397,8 @@ Status ColorMapRange::init(const char *map_name)
         "and 'RrGgBb', can only include letters from one set\n");
 
   int rng_len = strlen(vals_back);
-  char rngs[MSG_SZ];
-  char *q = rngs;
+  vector<char> rngs(rng_len + 1, 0);
+  char *q = rngs.data();
   int cur_idx = -1;
   char cur_comp = 'X';
   for (const char *p = vals_back; p - vals_back < rng_len + 1; p++) {
@@ -405,7 +406,7 @@ Status ColorMapRange::init(const char *map_name)
     if (strchr("HhSsVvAaRrGgBb", *p) || cur_idx < 0 || *p == '\0') {
       *q = '\0';
       if (cur_idx >= 0) {
-        if ((stat = read_double_list(rngs, ranges[cur_idx], 0, ":"))) {
+        if ((stat = read_double_list(rngs.data(), ranges[cur_idx], 0, ":"))) {
           if (ranges[cur_idx].size() == 0)
             return Status::error(msg_str("component letter '%c' "
                                          "isn't followed by any values",
@@ -436,7 +437,7 @@ Status ColorMapRange::init(const char *map_name)
       else
         return Status::error(msg_str("invalid component letter '%c'", *p));
       cur_comp = *p;
-      q = rngs;
+      q = rngs.data();
     }
     else if (!(isdigit(*p) || *p == '.' || *p == ':')) {
       return Status::error(msg_str("invalid component letter '%c'", *p));
@@ -713,17 +714,13 @@ Color ColorMapSpread::get_col(int idx) const
 
 // ColorMapMap
 
-static bool parse_gimp_file(FILE *cfile, map<int, Color> *cmap,
-                            char *errmsg = nullptr)
+static Status parse_gimp_file(FILE *cfile, map<int, Color> *cmap)
 {
   const int line_size = 1024;
   char line[line_size];
   char buf[line_size];
 
   int stage = 0;
-
-  if (errmsg)
-    *errmsg = '\0';
 
   int idx_no = 0;
   int line_no = 0;
@@ -765,39 +762,30 @@ static bool parse_gimp_file(FILE *cfile, map<int, Color> *cmap,
     char *b = (g) ? strtok(nullptr, WHITESPACE) : nullptr;
     // char *name = (b) ? strtok(NULL, WHITESPACE) : 0;
 
-    if (!b) {
-      if (errmsg)
-        snprintf(errmsg, MSG_SZ,
-                 "gimp colour map: line %d: not enough colour values", line_no);
-      return false;
-    }
+    if (!b)
+      return Status::error(msg_str(
+          "gimp colour map: line %d: not enough colour values", line_no));
 
     sprintf(buf, "%s %s %s", r, g, b);
     Color col;
     col.read(buf);
-    if (!col.is_set()) {
-      if (errmsg)
-        snprintf(errmsg, MSG_SZ,
-                 "gimp colour map: line %d: invalid colour '%.*s'", line_no,
-                 150, buf);
-      return false;
-    }
+    if (!col.is_set())
+      return Status::error(
+          msg_str("gimp colour map: line %d: invalid colour '%.*s'", line_no,
+                  150, buf));
 
     // col.get_val().dump();
     (*cmap)[idx_no++] = col;
   }
 
-  return true;
+  return Status::ok();
 }
 
-static bool parse_file(FILE *cfile, map<int, Color> *cmap,
-                       char *errmsg = nullptr)
+static Status parse_file(FILE *cfile, map<int, Color> *cmap)
 {
+  string messages;
   const int line_size = 1024;
   char line[line_size];
-
-  if (errmsg)
-    *errmsg = '\0';
 
   int line_no = 0;
   int next_idx = 0; // index to use if no map index is given with a colour
@@ -805,8 +793,8 @@ static bool parse_file(FILE *cfile, map<int, Color> *cmap,
     line_no++;
 
     // copy the map entry string
-    char entry[MSG_SZ];
-    strcpy_msg(entry, line);
+    string entry_cpy(line);
+    char *entry = &entry_cpy[0];
 
     // ignore comments
     char *first_hash = strchr(entry, '#');
@@ -820,63 +808,52 @@ static bool parse_file(FILE *cfile, map<int, Color> *cmap,
 
     if (!cmap->size() && strncasecmp(entry, "GIMP Palette", 12) == 0) {
       rewind(cfile);
-      return parse_gimp_file(cfile, cmap, errmsg);
+      return parse_gimp_file(cfile, cmap);
     }
 
     char *col_pos = entry;
     char *eq_pos = strchr(entry, '=');
     if (eq_pos) {
       col_pos = eq_pos + 1;
-      if (strchr(col_pos, '=')) {
-        if (errmsg)
-          snprintf(errmsg, MSG_SZ,
-                   "colour map: line %d: more than one =, '%.*s'", line_no, 150,
-                   line);
-        return false;
-      }
+      if (strchr(col_pos, '='))
+        return Status::error(
+            msg_str("colour map: line %d: more than one =, '%.*s'", line_no,
+                    150, line));
+
       *eq_pos = '\0';
-      if (!read_int(entry, &next_idx) || next_idx < 0) {
-        if (errmsg)
-          snprintf(errmsg, MSG_SZ,
-                   "colour map: line %d: invalid index number, '%.*s'", line_no,
-                   150, entry);
-        return false;
-      }
+      if (!read_int(entry, &next_idx) || next_idx < 0)
+        return Status::error(
+            msg_str("colour map: line %d: invalid index number, '%.*s'",
+                    line_no, 150, entry));
     }
 
     Color col;
     col.read(col_pos);
-    if (!col.is_set()) {
-      if (errmsg)
-        snprintf(errmsg, MSG_SZ, "colour map: line %d: invalid colour, '%.*s'",
-                 line_no, 150, col_pos);
-      return false;
-    }
+    if (!col.is_set())
+      return Status::error(
+          msg_str("colour map: line %d: invalid colour, '%.*s'", line_no, 150,
+                  col_pos));
 
-    if (errmsg && !*errmsg && cmap->find(next_idx) != cmap->end())
-      snprintf(errmsg, MSG_SZ,
-               "colour map: line %d: mapping for index %d is being overwritten",
-               line_no, next_idx);
+    if (cmap->find(next_idx) != cmap->end())
+      messages += msg_str(
+          "colour map: line %d: mapping for index %d is being overwritten\n",
+          line_no, next_idx);
 
     (*cmap)[next_idx++] = col;
   }
 
-  return true;
+  return (messages.empty()) ? Status::ok() : Status::warning(messages);
 }
 
-static bool parse_map_from_line(const char *line, map<int, Color> *cmap,
-                                char *errmsg = nullptr)
+static Status parse_map_from_line(const char *line, map<int, Color> *cmap)
 {
-  if (errmsg)
-    *errmsg = '\0';
-
+  string messages;
   Split entries(line, ":");
   int next_idx = 0; // index to use if no map index is given with a colour
-  bool cmap_ok = true;
   for (unsigned int i = 0; i < entries.size(); i++) {
     // copy the map entry string
-    char entry[MSG_SZ];
-    strcpy_msg(entry, entries[i]);
+    string entry_cpy(entries[i]);
+    char *entry = &entry_cpy[0];
 
     // ignore comments
     char *first_hash = strchr(entry, '#');
@@ -892,21 +869,14 @@ static bool parse_map_from_line(const char *line, map<int, Color> *cmap,
     char *eq_pos = strchr(entry, '=');
     if (eq_pos) {
       col_pos = eq_pos + 1;
-      if (strchr(col_pos, '=')) {
-        if (errmsg)
-          snprintf(errmsg, MSG_SZ, "entry %d: more than one =, '%s'", i + 1,
-                   entries[i]);
-        cmap_ok = false;
-        break;
-      }
+      if (strchr(col_pos, '='))
+        return Status::error(
+            msg_str("entry %d: more than one =, '%s'", i + 1, entries[i]));
+
       *eq_pos = '\0';
-      if (!read_int(entry, &next_idx) || next_idx < 0) {
-        if (errmsg)
-          snprintf(errmsg, MSG_SZ, "entry %d: invalid index number, '%.*s'",
-                   i + 1, 150, entry);
-        cmap_ok = false;
-        break;
-      }
+      if (!read_int(entry, &next_idx) || next_idx < 0)
+        return Status::error(msg_str("entry %d: invalid index number, '%.*s'",
+                                     i + 1, 150, entry));
     }
 
     // Allow '' as a number separator
@@ -916,22 +886,18 @@ static bool parse_map_from_line(const char *line, map<int, Color> *cmap,
 
     Color col;
     col.read(col_pos);
-    if (!col.is_set()) {
-      if (errmsg)
-        snprintf(errmsg, MSG_SZ, "entry %d: invalid colour, '%.*s'", i + 1, 150,
-                 col_pos);
-      cmap_ok = false;
-    }
+    if (!col.is_set())
+      return Status::error(
+          msg_str("entry %d: invalid colour, '%.*s'", i + 1, 150, col_pos));
 
-    if (errmsg && !*errmsg && cmap->find(next_idx) != cmap->end())
-      snprintf(errmsg, MSG_SZ,
-               "entry %d: mapping for index %d is being overwritten", i,
-               next_idx);
+    if (cmap->find(next_idx) != cmap->end())
+      messages += msg_str("entry %d: mapping for index %d is being overwritten",
+                          i, next_idx);
 
     (*cmap)[next_idx++] = col;
   }
 
-  return cmap_ok;
+  return (messages.empty()) ? Status::ok() : Status::warning(messages);
 }
 
 Color ColorMapMap::get_col(int idx) const
@@ -958,8 +924,9 @@ int ColorMapMap::effective_size() const
 
 Status ColorMapMap::init(const char *map_name)
 {
-  char name[MSG_SZ];
-  strcpy_msg(name, map_name);
+  // Make a copy for parsing
+  string name_str(map_name);
+  char *name = &name_str[0];
 
   Status stat = init_strip(name);
   if (stat.is_error())
@@ -967,13 +934,8 @@ Status ColorMapMap::init(const char *map_name)
 
   string alt_name;
   FILE *cfile = open_sup_file(name, "/col_maps/", &alt_name);
-  if (cfile) {
-    char errmsg2[MSG_SZ];
-    if (parse_file(cfile, &cmap, errmsg2))
-      stat.set_ok(errmsg2);
-    else
-      stat.set_error(errmsg2);
-  }
+  if (cfile)
+    stat = parse_file(cfile, &cmap);
   else
     stat.set_error("map file not found");
 
@@ -988,17 +950,14 @@ Status ColorMapMap::init(const char *map_name)
 
 Status ColorMapMap::init_from_line(const char *map_line)
 {
-  char name[MSG_SZ];
-  strcpy_msg(name, map_line);
+  string map_line_cpy(map_line);
+  char *name = &map_line_cpy[0];
 
   Status stat = init_strip(name);
-  if (stat.is_error())
-    return stat;
+  if (stat)
+    stat = parse_map_from_line(name, &cmap);
 
-  char errmsg2[MSG_SZ];
-  if (!parse_map_from_line(name, &cmap, errmsg2))
-    stat.set_error(errmsg2);
-  if (get_wrap() == -1)
+  if (stat && get_wrap() == -1)
     set_wrap(effective_size());
 
   return stat;
@@ -1024,8 +983,9 @@ Status ColorMapMulti::init(const char *map_name)
   while (cmaps.size())
     del_cmap();
 
-  char names[MSG_SZ];
-  strcpy_msg(names, map_name);
+  // Make a copy for parsing
+  string names_str(map_name);
+  char *names = &names_str[0];
 
   Status stat;
   Split parts(names, ",");
@@ -1136,8 +1096,11 @@ Color ColorMapMulti::get_col(int idx) const
 static ColorMap *colormap_from_name_generated(const char *map_name,
                                               Status *stat)
 {
-  char name[MSG_SZ];
-  strcpy_msg(name, map_name);
+  stat->set_ok();
+
+  // Make a copy for parsing
+  string name_str(map_name);
+  char *name = &name_str[0];
   size_t name_len = strspn(name, "abcdefghijklmnopqrstuvwxyz");
   name[name_len] = '\0';
 
@@ -1303,14 +1266,13 @@ ColorMap *colormap_from_name(const char *map_name, Status *stat)
 {
   ColorMap *cmap = nullptr;
 
-  char name[MSG_SZ];
-  strcpy_msg(name, map_name);
+  // Make a copy for parsing
+  string name_str(map_name);
+  char *name = &name_str[0];
   size_t name_len = strcspn(name, "+*%");
   name[name_len] = '\0';
 
-  char errmsg2[MSG_SZ];
   Status stat2;
-  *errmsg2 = '\0';
   string alt_name;
   FILE *cfile = open_sup_file(name, "/col_maps/", &alt_name);
   if (alt_name != "") { // an alt name found before a file with the name
@@ -1413,16 +1375,17 @@ Status ColorValuesToRangeHsva::init(const string &range_name,
 
   Status stat;
   int name_len = range_name.size();
-  char name[MSG_SZ];
-  strcpy_msg(name, range_name.c_str());
-  char rngs[MSG_SZ];
-  char *q = rngs;
+  // Make a copy for parsing
+  string name_str(range_name);
+  char *name = &name_str[0];
+  vector<char> rngs(name_len + 1, 0);
+  char *q = rngs.data();
   int cur_idx = -1;
   char cur_comp = 'X';
   for (const char *p = name; p - name < name_len + 1; p++) {
     if (strchr("HhSsVvAa", *p) || cur_idx < 0 || *p == '\0') {
       *q = '\0';
-      if (cur_idx >= 0 && !(stat = add_range(cur_idx, rngs)))
+      if (cur_idx >= 0 && !(stat = add_range(cur_idx, rngs.data())))
         return Status::error(
             msg_str("component '%c': %s", cur_comp, stat.c_msg()));
       if (strchr("Hh", *p))
@@ -1437,11 +1400,11 @@ Status ColorValuesToRangeHsva::init(const string &range_name,
         return Status::error(msg_str("invalid component letter '%c'", *p));
 
       cur_comp = *p;
-      q = rngs;
+      q = rngs.data();
     }
     else if (!(isdigit(*p) || *p == '.' || *p == ':'))
-      return Status::error(
-          msg_str("invalid component letter '%c'", (cur_idx < 0) ? *rngs : *p));
+      return Status::error(msg_str("invalid component letter '%c'",
+                                   (cur_idx < 0) ? rngs[0] : *p));
     else if (!isspace(*p)) {
       *q++ = *p;
     }

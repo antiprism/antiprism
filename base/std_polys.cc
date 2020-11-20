@@ -574,7 +574,7 @@ const char *j_abbrevs[][2] = {
 // clang-format on
 
 int make_resource_uniform(Geometry &geom, string name, bool is_std,
-                          char *errmsg = nullptr)
+                          string *error_msg = nullptr)
 {
   if (name.size() < 2 || !strchr("uUkKwW", name[0]) ||
       name.find('.') != string::npos)
@@ -596,9 +596,9 @@ int make_resource_uniform(Geometry &geom, string name, bool is_std,
       name.erase(1, 1);
     sym_no = uni.lookup_sym_no(name, is_dual);
     if (sym_no == -1) {
-      if (errmsg)
-        snprintf(errmsg, MSG_SZ, "invalid uniform polyhedron %sname",
-                 (is_dual) ? "dual " : "");
+      if (error_msg)
+        *error_msg = msg_str("invalid uniform polyhedron %sname",
+                             (is_dual) ? "dual " : "");
       return 1; // fail
     }
   }
@@ -613,9 +613,9 @@ int make_resource_uniform(Geometry &geom, string name, bool is_std,
                                 sizeof(u_abbrevs) / sizeof(u_abbrevs[0]));
     sym_no = uni.lookup_sym_no(expanded.c_str(), is_dual);
     if (sym_no == -1) {
-      if (errmsg)
-        snprintf(errmsg, MSG_SZ, "invalid uniform polyhedron %sname",
-                 (is_dual) ? "dual " : "");
+      if (error_msg)
+        *error_msg = msg_str("invalid uniform polyhedron %sname",
+                             (is_dual) ? "dual " : "");
       return 1; // fail
     }
   }
@@ -638,7 +638,7 @@ int make_resource_uniform(Geometry &geom, string name, bool is_std,
 }
 
 int make_resource_wenninger(Geometry &geom, string name, bool is_std,
-                            char *errmsg = nullptr)
+                            string *error_msg = nullptr)
 {
   if (name.size() < 2 || !strchr("wW", name[0]) ||
       name.find('.') != string::npos)
@@ -653,8 +653,8 @@ int make_resource_wenninger(Geometry &geom, string name, bool is_std,
       name.erase(1, 1);
     sym_no--;
     if (sym_no < 0 || !wenn.test_valid(sym_no)) {
-      if (errmsg)
-        snprintf(errmsg, MSG_SZ, "wenninger stellation number out of range");
+      if (error_msg)
+        *error_msg = "wenninger stellation number out of range";
       return 1; // fail
     }
   }
@@ -699,7 +699,7 @@ int make_resource_wenninger(Geometry &geom, string name, bool is_std,
 }
 
 int make_resource_uniform_compound(Geometry &geom, string name, bool is_std,
-                                   char *errmsg = nullptr)
+                                   string *error_msg = nullptr)
 {
   // lower case the name
   transform(name.begin(), name.end(), name.begin(), ::tolower);
@@ -724,8 +724,8 @@ int make_resource_uniform_compound(Geometry &geom, string name, bool is_std,
   if (read_int(name.c_str() + 2, &sym_no)) {
     sym_no--;
     if (sym_no < 0 || sym_no >= uniform_compounds.get_last_uc()) {
-      if (errmsg)
-        snprintf(errmsg, MSG_SZ, "uniform compound number out of range");
+      if (error_msg)
+        *error_msg = "uniform compound number out of range";
       return 1; // fail
     }
   }
@@ -776,7 +776,7 @@ int make_resource_uniform_compound(Geometry &geom, string name, bool is_std,
 }
 
 int make_resource_johnson(Geometry &geom, string name, bool is_std,
-                          char *errmsg = nullptr)
+                          string *error_msg = nullptr)
 {
   // If model name ends in _raw then don't symmetry align
   bool sym_align = true;
@@ -795,8 +795,8 @@ int make_resource_johnson(Geometry &geom, string name, bool is_std,
   if (read_int(name.c_str() + 1, &sym_no)) {
     sym_no--;
     if (sym_no < 0 || sym_no >= json.get_last_J()) {
-      if (errmsg)
-        snprintf(errmsg, MSG_SZ, "Johnson polyhedron number out of range");
+      if (error_msg)
+        *error_msg = "Johnson polyhedron number out of range";
       return 1; // fail
     }
   }
@@ -805,8 +805,8 @@ int make_resource_johnson(Geometry &geom, string name, bool is_std,
                                      sizeof(j_abbrevs) / sizeof(j_abbrevs[0]));
     sym_no = json.lookup_sym_no(expanded.c_str());
     if (sym_no == -1) {
-      if (errmsg)
-        snprintf(errmsg, MSG_SZ, "invalid Johnson polyhedron name");
+      if (error_msg)
+        *error_msg = "invalid Johnson polyhedron name";
       return 1; // fail
     }
   }
@@ -852,7 +852,7 @@ void res_Coloring::f_all_angles(bool as_values)
 }
 
 int make_resource_geodesic(Geometry &geom, string name, bool is_std,
-                           char *errmsg)
+                           string *error_msg)
 {
   if (name.size() < 5 || name.substr(0, 4) != "geo_" ||
       name.find('.') != string::npos)
@@ -891,38 +891,36 @@ int make_resource_geodesic(Geometry &geom, string name, bool is_std,
     base.read_resource("std_ico");
   }
   else {
-    if (errmsg)
-      snprintf(errmsg, MSG_SZ, "geodesic base polyhedron not i, o, t or T");
+    if (error_msg)
+      *error_msg = "geodesic base polyhedron not i, o, t or T";
     return 1; // fail
   }
 
   Split num_strs(name.c_str() + offset, "_");
   int nums[2] = {1, 0};
   if (num_strs.size() > 2) {
-    if (errmsg)
-      snprintf(errmsg, MSG_SZ,
-               "geodesic division: must be given by 1 or 2 integers");
+    if (error_msg)
+      *error_msg = "geodesic division: must be given by 1 or 2 integers";
     return 1; // fail
   }
 
   if (num_strs.size() > 0 && !read_int(num_strs[0], &nums[0])) {
-    if (errmsg)
-      snprintf(errmsg, MSG_SZ,
-               "geodesic division:%s division number not an integer",
-               (num_strs.size() > 1) ? " first" : "");
+    if (error_msg)
+      *error_msg =
+          msg_str("geodesic division:%s division number not an integer",
+                  (num_strs.size() > 1) ? " first" : "");
     return 1; // fail
   }
 
   if (num_strs.size() > 1 && !read_int(num_strs[1], &nums[1])) {
-    if (errmsg)
-      snprintf(errmsg, MSG_SZ,
-               "geodesic division: second division number not an integer");
+    if (error_msg)
+      *error_msg = "geodesic division: second division number not an integer";
     return 1; // fail
   }
 
   if (!make_geodesic_sphere(geom, base, nums[0], nums[1])) {
-    if (errmsg)
-      snprintf(errmsg, MSG_SZ, "geodesic division: invalid division");
+    if (error_msg)
+      *error_msg = "geodesic division: invalid division";
     return 1; // fail
   }
 
@@ -1027,7 +1025,8 @@ static void get_arrow(Geometry &geom, const Symmetry &sym)
   geom.transform(trans);
 }
 
-int make_resource_sym(Geometry &geom, string name, char *errmsg = nullptr)
+int make_resource_sym(Geometry &geom, string name, bool is_std,
+                      string *error_msg = nullptr)
 {
   if (name.size() < 5 || name.substr(0, 4) != "sym_" ||
       name.find('.') != string::npos)
@@ -1037,18 +1036,23 @@ int make_resource_sym(Geometry &geom, string name, char *errmsg = nullptr)
   Symmetry sym;
   Status stat = sym.init(name.substr(4), Trans3d());
   if (stat.is_error()) {
-    if (errmsg)
-      strcpy_msg(errmsg, stat.c_msg());
+    if (error_msg)
+      *error_msg = stat.msg();
     return 1;
   }
 
   Geometry arrow;
   get_arrow(arrow, sym);
   sym_repeat(geom, arrow, sym.get_trans());
+
+  if (is_std)
+    geom.clear_cols();
+
   return 0;
 }
 
-int make_resource_pgon(Geometry &geom, string name, bool is_std, char *errmsg)
+int make_resource_pgon(Geometry &geom, string name, bool is_std,
+                       string *error_msg)
 {
   if (name.find('.') != string::npos)
     return -1; // not polygon res name (the "." indicates a likely local file)
@@ -1106,8 +1110,8 @@ int make_resource_pgon(Geometry &geom, string name, bool is_std, char *errmsg)
   pgon.set_subtype(subtype);
 
   if (!uni_pgon(geom, pgon)) {
-    if (errmsg)
-      strcpy_msg(errmsg, "polyhedron cannot have unit edges");
+    if (error_msg)
+      *error_msg = "polyhedron cannot have unit edges";
     return 1; // failure
   }
 
@@ -1118,7 +1122,7 @@ int make_resource_pgon(Geometry &geom, string name, bool is_std, char *errmsg)
 }
 
 int make_resource_schwarz(Geometry &geom, string name, bool is_std,
-                          char *errmsg = nullptr)
+                          string *error_msg = nullptr)
 {
   if (name.size() < (7 + 5) || name.substr(0, 7) != "schwarz" ||
       name.find('.') != string::npos)
@@ -1126,8 +1130,8 @@ int make_resource_schwarz(Geometry &geom, string name, bool is_std,
                // so the name is not handled
 
   if (name.find(':') != string::npos || name.find('|') != string::npos) {
-    if (errmsg)
-      snprintf(errmsg, MSG_SZ, "schwarz name: cannot contain bar character");
+    if (error_msg)
+      *error_msg = "schwarz name: cannot contain bar character";
     return 1; // fail
   }
 
@@ -1147,9 +1151,8 @@ int make_resource_schwarz(Geometry &geom, string name, bool is_std,
   Status stat;
   Wythoff wyt(symbol_str.c_str(), &stat);
   if (stat.is_error()) {
-    if (errmsg)
-      snprintf(errmsg, MSG_SZ, "schwarz name: invalid symbol: %s",
-               stat.c_msg());
+    if (error_msg)
+      *error_msg = "schwarz name: invalid symbol: " + stat.msg();
     return 1; // fail
   }
 
@@ -1169,7 +1172,7 @@ int make_resource_schwarz(Geometry &geom, string name, bool is_std,
 }
 
 static int make_resource_wythoff(Geometry &geom, string name, bool is_std,
-                                 char *errmsg = nullptr)
+                                 string *error_msg = nullptr)
 {
   if (name.size() < (7 + 5) || name.substr(0, 7) != "wythoff" ||
       name.find('.') != string::npos)
@@ -1187,21 +1190,19 @@ static int make_resource_wythoff(Geometry &geom, string name, bool is_std,
   Status stat;
   Wythoff wyt(symbol_str.c_str(), &stat);
   if (stat.is_error()) {
-    if (errmsg)
-      snprintf(errmsg, MSG_SZ, "wythoff name: invalid symbol: %.*s", 150,
-               stat.c_msg());
+    if (error_msg)
+      *error_msg = "wythoff name: invalid symbol: " + stat.msg();
     return 1; // fail
   }
 
-  char errmsg2[MSG_SZ];
-  if (!wyt.make_poly(geom, errmsg2))
-    if (errmsg) {
-      snprintf(errmsg, MSG_SZ, "wythoff name: invalid symbol: %.*s", 150,
-               errmsg2);
-      return 1; // fail
-    }
-  if (*errmsg2)
-    fprintf(stderr, "warning: wythoff name: %s\n", errmsg2);
+  if (!(stat = wyt.make_poly(geom))) {
+    if (error_msg)
+      *error_msg = "wythoff name: invalid symbol: " + stat.msg();
+    return 1; // fail
+  }
+  if (stat.is_warning() && error_msg)
+    *error_msg = "wythoff name: invalid symbol: " + stat.msg();
+  // fprintf(stderr, "warning: wythoff name: %s\n", stat.c_msg());
 
   if (!is_std) {
     double e_len = geom.edge_vec(geom.faces(0, 0), geom.faces(0, 1)).len();
@@ -1372,7 +1373,7 @@ static void szilassi(Geometry &geom, bool is_std = false)
 }
 
 int make_resource_misc_poly(Geometry &geom, string name, bool is_std,
-                            char * /*errmsg=0*/)
+                            string * /*error_msg = nullptr*/)
 {
   if (name.find('.') != string::npos)
     return -1; // not misc poly name (the "." indicates a likely local file)
@@ -1407,20 +1408,17 @@ int make_resource_misc_poly(Geometry &geom, string name, bool is_std,
 }
 // clang-format on
 
-bool make_resource_geom(Geometry &geom, string name, char *errmsg)
+Status make_resource_geom(Geometry &geom, string name)
 {
-  if (errmsg)
-    *errmsg = '\0';
-
   geom.clear_all();
 
   if (!name.size())
-    return false;
+    return Status::error("no name given");
 
   bool make_dual = false;
   process_for_dual(name, make_dual);
 
-  char errmsg2[MSG_SZ];
+  string error_msg;
   bool geom_ok = false;
 
   // RK: standard keyword "std_" now used for all built-in polyhedra
@@ -1430,120 +1428,31 @@ bool make_resource_geom(Geometry &geom, string name, char *errmsg)
     name = name.substr(4);
 
   // Look for an internal alternative name
-  char alt_name[MSG_SZ];
-  to_resource_name(alt_name, name.c_str());
+  auto alt_name = to_resource_name(name.c_str());
 
   for (auto &i : alt_names) {
-    if (strcmp(alt_name, i[0]) == 0) {
+    if (alt_name == i[0]) {
       name = i[1]; // set name to the usual name for the model
       process_for_dual(name, make_dual);
       break;
     }
   }
 
-  if (!geom_ok) {
-    int ret = make_resource_misc_poly(geom, name, is_std, errmsg2);
-    if (ret == 0)
-      geom_ok = true;
-  }
+  vector<int (*)(Geometry &, string, bool, string *)> make_funcs = {
+      make_resource_misc_poly,        make_resource_pgon,
+      make_resource_uniform,          make_resource_wenninger,
+      make_resource_uniform_compound, make_resource_johnson,
+      make_resource_geodesic,         make_resource_wythoff,
+      make_resource_schwarz,          make_resource_sym};
 
-  if (!geom_ok) {
-    int ret = make_resource_pgon(geom, name, is_std, errmsg2);
-    if (ret == 0)
+  for (auto make_func : make_funcs) {
+    int ret = make_func(geom, name, is_std, &error_msg);
+    if (ret == 0) {
       geom_ok = true;
-    else if (ret > 0) {
-      if (errmsg)
-        strcpy_msg(errmsg, errmsg2);
-      return false;
+      break;
     }
-  }
-
-  if (!geom_ok) {
-    int ret = make_resource_uniform(geom, name, is_std, errmsg2);
-    if (ret == 0)
-      geom_ok = true;
-    else if (ret > 0) {
-      if (errmsg)
-        strcpy_msg(errmsg, errmsg2);
-      return false;
-    }
-  }
-
-  if (!geom_ok) {
-    int ret = make_resource_wenninger(geom, name, is_std, errmsg2);
-    if (ret == 0)
-      geom_ok = true;
-    else if (ret > 0) {
-      if (errmsg)
-        strcpy_msg(errmsg, errmsg2);
-      return false;
-    }
-  }
-
-  if (!geom_ok) {
-    int ret = make_resource_uniform_compound(geom, name, is_std, errmsg2);
-    if (ret == 0)
-      geom_ok = true;
-    else if (ret > 0) {
-      if (errmsg)
-        strcpy_msg(errmsg, errmsg2);
-      return false;
-    }
-  }
-
-  if (!geom_ok) {
-    int ret = make_resource_johnson(geom, name, is_std, errmsg2);
-    if (ret == 0)
-      geom_ok = true;
-    else if (ret > 0) {
-      if (errmsg)
-        strcpy_msg(errmsg, errmsg2);
-      return false;
-    }
-  }
-
-  if (!geom_ok) {
-    int ret = make_resource_geodesic(geom, name, is_std, errmsg2);
-    if (ret == 0)
-      geom_ok = true;
-    else if (ret > 0) {
-      if (errmsg)
-        strcpy_msg(errmsg, errmsg2);
-      return false;
-    }
-  }
-
-  if (!geom_ok) {
-    int ret = make_resource_wythoff(geom, name, is_std, errmsg2);
-    if (ret == 0)
-      geom_ok = true;
-    else if (ret > 0) {
-      if (errmsg)
-        strcpy_msg(errmsg, errmsg2);
-      return false;
-    }
-  }
-
-  if (!geom_ok) {
-    int ret = make_resource_schwarz(geom, name, is_std, errmsg2);
-    if (ret == 0)
-      geom_ok = true;
-    else if (ret > 0) {
-      if (errmsg)
-        strcpy_msg(errmsg, errmsg2);
-      return false;
-    }
-  }
-
-  if (!geom_ok) {
-    int ret = make_resource_sym(geom, name, errmsg2);
-    if (ret == 0)
-      geom_ok = true;
-    else if (ret > 0) {
-      if (errmsg)
-        strcpy_msg(errmsg, errmsg2);
-      return false;
-    }
+    else if (ret > 0)
+      return Status::error(error_msg);
   }
 
   // Catch any failure to make a valid geometry
@@ -1551,12 +1460,15 @@ bool make_resource_geom(Geometry &geom, string name, char *errmsg)
     geom_ok = false;
 
   if (!geom_ok) {
-    if (errmsg && !*errmsg)
-      strcpy_msg(errmsg, "not found (or invalid)");
+    if (!error_msg.empty())
+      error_msg = "not found (or invalid)";
   }
 
   if (geom_ok && make_dual)
     make_resource_dual(geom, is_std);
 
-  return geom_ok;
+  if (geom_ok)
+    return (error_msg.empty()) ? Status::ok() : Status::warning(error_msg);
+  else
+    return Status::error(error_msg);
 }

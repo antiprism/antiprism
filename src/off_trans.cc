@@ -117,26 +117,21 @@ Options
           prog_name(), help_ver_text);
 }
 
-bool rel_scale_val(Geometry &geom, char rel_scale, double *scale, char *errmsg)
+Status rel_scale_val(Geometry &geom, char rel_scale, double *scale)
 {
   GeometryInfo info(geom);
-  *errmsg = '\0';
   if (strchr("VAa", rel_scale)) {
-    if (!geom.faces().size()) {
-      strcpy_msg(errmsg, "scaling type is V, A or a but there is no "
-                         "face data");
-      return false;
-    }
+    if (!geom.faces().size())
+      return Status::error(
+          "scaling type is V, A or a but there is no face data");
     if (!info.is_oriented())
-      strcpy_msg(errmsg, "scaling type is V, A or a and polyhedron is not"
-                         "oriented");
+      return Status::error(
+          "scaling type is V, A or a but polyhedron is not oriented");
+    if (strchr("V", rel_scale) && !info.is_closed())
+      return Status::error("scaling type is V but polyhedron is not closed");
   }
-  if (strchr("V", rel_scale) && !info.is_closed())
-    strcpy_msg(errmsg, "scaling type is V and polyhedron is not closed");
-  if (strchr("Ee", rel_scale) && (!info.num_edges() && !info.num_iedges())) {
-    strcpy_msg(errmsg, "scaling type is E or e but there is no edge data");
-    return false;
-  }
+  if (strchr("Ee", rel_scale) && (!info.num_edges() && !info.num_iedges()))
+    return Status::error("scaling type is E or e but there is no edge data");
 
   switch (rel_scale) {
   case 'V':
@@ -166,7 +161,7 @@ bool rel_scale_val(Geometry &geom, char rel_scale, double *scale, char *errmsg)
     break;
   }
 
-  return true;
+  return Status::ok();
 }
 
 void trans_opts::process_command_line(int argc, char **argv)
@@ -409,10 +404,7 @@ void trans_opts::process_command_line(int argc, char **argv)
       Geometry geom_cur = geom;
       geom_cur.transform(trans_m);
       double scale;
-      if (!rel_scale_val(geom_cur, rel_scale, &scale, errmsg))
-        error(errmsg, 's');
-      if (*errmsg)
-        warning(errmsg, 's');
+      print_status_or_exit(rel_scale_val(geom_cur, rel_scale, &scale), c);
       trans_m = Trans3d::scale(1 / scale) * trans_m;
       break;
     }

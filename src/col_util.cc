@@ -78,12 +78,13 @@ public:
   ColorMapMulti map;
 
   col_util_opts()
-      : ProgramOpts("col_util"), display_type(1), grid_width(0), collect_indexes(false),
-        color_system_mode(3), map_type(1), show_container(2),
-        unique_colors(false), upright_view(0), chroma_level(0), hsl_height(0),
-        plot_centroid(false), sat_threshold(1.0), value_advance(0.0),
-        alpha_mode(3), cmy_mode(false), ryb_mode(false), seven_mode(false),
-        brightness_adj(0), map_maximum(0), verbose(false)
+      : ProgramOpts("col_util"), display_type(1), grid_width(0),
+        collect_indexes(false), color_system_mode(3), map_type(1),
+        show_container(2), unique_colors(false), upright_view(0),
+        chroma_level(0), hsl_height(0), plot_centroid(false),
+        sat_threshold(1.0), value_advance(0.0), alpha_mode(3), cmy_mode(false),
+        ryb_mode(false), seven_mode(false), brightness_adj(0), map_maximum(0),
+        verbose(false)
   {
   }
 
@@ -169,7 +170,8 @@ void col_util_opts::process_command_line(int argc, char **argv)
   handle_long_opts(argc, argv);
 
   while ((c = getopt(argc, argv,
-                     ":hd:w:Im:k:q:z:f:r:b:s:t:u:v:pa:cySl:M:O:UZ:Vo:")) != -1) {
+                     ":hd:w:Im:k:q:z:f:r:b:s:t:u:v:pa:cySl:M:O:UZ:Vo:")) !=
+         -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -187,7 +189,7 @@ void col_util_opts::process_command_line(int argc, char **argv)
       if (grid_width < 1)
         error("grid width must be positive", c);
       break;
-      
+
     case 'I':
       collect_indexes = true;
       break;
@@ -823,13 +825,15 @@ void collect_cols(vector<Color> &cols, col_util_opts &opts)
                          max_map_sz, map_sz),
                  'Z');
   for (int j = 0; j < max_map_sz; j++)
-    collect_col(cols, opts.map.get_col(j), (opts.display_type == 3 && opts.collect_indexes));
+    collect_col(cols, opts.map.get_col(j),
+                (opts.display_type == 3 && opts.collect_indexes));
 
   // file
   if (opts.gfile.length()) {
     Geometry geom;
     opts.read_or_error(geom, opts.gfile);
-    collect_cols_from_geom(geom, cols, (opts.display_type == 3 && opts.collect_indexes));
+    collect_cols_from_geom(geom, cols,
+                           (opts.display_type == 3 && opts.collect_indexes));
   }
 
   if (opts.unique_colors) {

@@ -39,31 +39,6 @@
 using std::string;
 using std::vector;
 
-bool crds_file_read(string file_name, Geometry &geom, char *errmsg)
-{
-  FILE *ifile;
-  if (file_name == "" || file_name == "-") {
-    ifile = stdin;
-    file_name = "stdin";
-  }
-  else {
-    ifile = fopen(file_name.c_str(), "r");
-    if (!ifile) {
-      if (errmsg)
-        snprintf(errmsg, MSG_SZ, "could not open input file \'%s\'",
-                 file_name.c_str());
-      return false;
-    }
-  }
-
-  crds_file_read(ifile, geom);
-
-  if (file_name != "")
-    fclose(ifile);
-
-  return true;
-}
-
 void crds_file_read(FILE *ifile, Geometry &geom, char *first_line)
 {
   int read_ret = 0;

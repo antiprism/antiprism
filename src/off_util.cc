@@ -1287,9 +1287,8 @@ const char *get_help(const char *name)
   help["symmetry"] = help_symmetry;
   help["bowers"] = help_bowers;
   help["schwarz"] = help_schwarz;
-  char hname[MSG_SZ];
-  to_resource_name(hname, name);
-  auto mi = help.find(hname);
+
+  auto mi = help.find(to_resource_name(name));
   if (mi != help.end())
     return mi->second;
   else

@@ -320,16 +320,7 @@ int Geometry::orient(vector<vector<int>> *parts)
   return orient_geom(*this, parts);
 }
 
-Status Geometry::orient(int type)
-{
-  Status stat;
-  char errmsg[MSG_SZ];
-  if (!orient_geom(*this, type, errmsg))
-    stat.set_error(errmsg);
-  else if (*errmsg)
-    stat.set_warning(errmsg);
-  return stat;
-}
+Status Geometry::orient(int type) { return orient_geom(*this, type); }
 
 void Geometry::orient_reverse() { return ::orient_reverse(*this); }
 
@@ -364,13 +355,7 @@ Status Geometry::read(FILE *file)
 
 Status Geometry::read_resource(string res_name)
 {
-  Status stat;
-  char errmsg[MSG_SZ];
-  if (!make_resource_geom(*this, res_name, errmsg))
-    stat.set_error(errmsg);
-  else if (*errmsg)
-    stat.set_warning(errmsg);
-  return stat;
+  return make_resource_geom(*this, res_name);
 }
 
 Status Geometry::write(string file_name, int sig_dgts) const

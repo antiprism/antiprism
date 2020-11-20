@@ -1087,7 +1087,7 @@ in command options such as off_color -m, antiview -m and n_icons -m.
 
 The maps may use the Antiprism colour map format, Gimp Palette format
 or Fractint format. The Antiprism format has lines of the form
-index_number = color_value # comment_text', e.g. '2 = 1.0,0.0,0.0 # red'
+index_number = color_value # comment_text, e.g. '2 = 1.0,0.0,0.0 # red'
 anything after # is a comment and ignored. Blank lines are ignored
 
 A map may be given by several maps separated by ',' e.g. 'map1,map2'.
@@ -1116,6 +1116,11 @@ Internal (see below for format):
    spread
       Gives a range of colours each differing from the last few. Useful
       to colour elements whose index numbers have been set sequentially.
+   map
+      makes a colour map on the command line. Map entries are separated
+      by ':' and each entry corresponds to a line in an Antiprism format
+      map. Colours given by components may also have the components
+      separated by '/' (as spaces will require quoting or escaping).
    rnd, rand, random
       A random map, with colours selected within certain ranges
       (default: component ranges H0:1S0.7:1V0.7:1).
@@ -1127,6 +1132,11 @@ Internal (see below for format):
       to remap index numbers.
    null
       An empty map.
+   deal
+      A map (default: size 256) containing a random shuffle of the
+      values 0 to packsize-1, packsize is the same as size by default,
+      but can be cahnged by adding _packsize (sequential deals are used
+      if this is less than size), e.g. deal100, deal_3 
    grey, greyw
       greyscales (default: size 256), grey runs from black to white
       and greyw is wrappable and runs from black to white to black again.
@@ -1136,11 +1146,6 @@ Internal (see below for format):
    compound
       used to colour the uniform compound resource models (applied
       with off_color -f K -v F -e F -m compound)
-   map
-      makes a colour map on the command line. Map entries are separated
-      by ':' and each entry corresponds to a line in an Antiprism format
-      map. Colours given by components may also have the components
-      separated by '/' (as spaces will require quoting or escaping).
 
    These maps contain a mapping for every index number (except default for
    rng is 256 entries). Follow the map name immediately by a number to set

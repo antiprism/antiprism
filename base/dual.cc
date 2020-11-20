@@ -159,17 +159,15 @@ int orient_geom(Geometry &geom, vector<vector<int>> *parts)
 // From planar.cc (Roger Kaufman)
 // volume to positive=1, negative=2, reverse=3
 // or flip=4 which reverse the orientation of the input model\n"
-bool orient_geom(Geometry &geom, int option, char *errmsg)
+Status orient_geom(Geometry &geom, int option)
 {
-  if (errmsg)
-    *errmsg = '\0';
+  string message;
 
   GeometryInfo info(geom);
   bool is_orientable = info.is_orientable();
   if (!is_orientable)
-    if (errmsg)
-      strcpy_msg(errmsg, "input file contains a non-orientable geometry, "
-                         "use 'flip' to reverse face orientations");
+    message = "input file contains a non-orientable geometry, "
+              "use 'flip' to reverse face orientations";
   // if model is not oriented, don't do a pre-orientation if we just want
   // orient_reverse
   if (!info.is_oriented() && option != 4)
@@ -177,14 +175,16 @@ bool orient_geom(Geometry &geom, int option, char *errmsg)
   info.reset();
   double vol = info.volume();
   if (is_orientable && vol == 0 && (option == 1 || option == 2))
-    if (errmsg)
-      strcpy_msg(errmsg, "volume is zero, use 'reverse' for alternative "
-                         "orientation");
+    message = "volume is zero, use 'reverse' for alternative orientation";
+
   if ((vol < 0 && option == 1) || (vol > 0 && option == 2) || option == 3 ||
       option == 4)
     geom.orient_reverse();
 
-  return option == 4 || is_orientable;
+  if (option == 4 || is_orientable)
+    return (message.empty()) ? Status::ok() : Status::warning(message);
+  else
+    return Status::error(message);
 }
 
 void orient_reverse(Geometry &geom)

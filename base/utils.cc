@@ -386,13 +386,13 @@ void clear_extra_whitespace(string &str)
   str.resize(strlen(&str[0]));     // resize to the length of the C string
 }
 
-char *to_resource_name(char *to, const char *from)
+string to_resource_name(const char *from)
 {
-  strcpy_msg(to, from);
-  clear_extra_whitespace(to);
-  for (char *p = to; *p; p++)
-    *p = tolower(*p);
-  return to;
+  string res_name(from);
+  clear_extra_whitespace(res_name);
+  for (auto &c : res_name)
+    c = tolower(c);
+  return res_name;
 }
 
 void backslash_to_forward(string &path)
@@ -563,14 +563,28 @@ char *strcpy_msg(char *dest, const char *src)
   return dest;
 }
 
+// https://stackoverflow.com/questions/2342162/stdstring-formatting-
+// like-sprintf/49812018#49812018
 string msg_str(const char *fmt, ...)
 {
-  char message[MSG_SZ];
+  // initialize use of the variable argument array
   va_list ap;
   va_start(ap, fmt);
-  vsnprintf(message, MSG_SZ - 1, fmt, ap);
+
+  // reliably acquire the size
+  // from a copy of the variable argument array
+  // and a functionally reliable call to mock the formatting
+  va_list ap_copy;
+  va_copy(ap_copy, ap);
+  const int len = vsnprintf(NULL, 0, fmt, ap_copy);
+  va_end(ap_copy);
+
+  // return a formatted string without risking memory mismanagement
+  // and without assuming any compiler or platform specific behavior
+  vector<char> vstr(len + 1);
+  vsnprintf(vstr.data(), vstr.size(), fmt, ap);
   va_end(ap);
-  return message;
+  return string(vstr.data(), len);
 }
 
 namespace {

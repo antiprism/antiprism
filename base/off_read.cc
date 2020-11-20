@@ -57,7 +57,7 @@ bool off_file_read(string file_name, Geometry &geom, char *errmsg)
   if (errmsg)
     *errmsg = '\0';
 
-  char errmsg2[MSG_SZ];
+  Status stat;
   bool geom_ok = false;
   string alt_name;
   FILE *ifile;
@@ -69,14 +69,17 @@ bool off_file_read(string file_name, Geometry &geom, char *errmsg)
     ifile = open_sup_file(file_name.c_str(), "/models/", &alt_name);
 
   if (alt_name != "") { // an alt name found before a file with the name
-    if (make_resource_geom(geom, alt_name, errmsg2))
+    if ((stat = make_resource_geom(geom, alt_name))) {
+      if (errmsg)
+        strcpy_msg(errmsg, stat.c_msg());
       geom_ok = true;
+    }
     else {
       if (errmsg)
         snprintf(errmsg, MSG_SZ - 50,
                  "could not open input "
                  "file \'%.*s=%.*s\': %.*s",
-                 50, file_name.c_str(), 60, alt_name.c_str(), 60, errmsg2);
+                 50, file_name.c_str(), 60, alt_name.c_str(), 60, stat.c_msg());
     }
   }
   else if (ifile) { // the file name was found
@@ -87,13 +90,16 @@ bool off_file_read(string file_name, Geometry &geom, char *errmsg)
     }
   }
   else { // try the name as an internal identifier
-    if (make_resource_geom(geom, file_name, errmsg2))
+    if ((stat = make_resource_geom(geom, file_name))) {
+      if (errmsg)
+        strcpy_msg(errmsg, stat.c_msg());
       geom_ok = true;
+    }
     else {
       if (errmsg)
         snprintf(errmsg, MSG_SZ - 50,
                  "could not open input file \'%.*s\': %.*s", 80,
-                 file_name.c_str(), 80, errmsg2);
+                 file_name.c_str(), 80, stat.c_msg());
     }
   }
 

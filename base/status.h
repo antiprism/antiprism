@@ -118,7 +118,7 @@ inline void Status::set_status_message(const std::string &msg, int code,
   status_code = code + type;
 }
 
-inline Status::operator bool() const { return is_ok(); }
+inline Status::operator bool() const { return !is_error(); }
 
 inline bool Status::is_ok() const
 {

@@ -77,7 +77,7 @@ double get_min_vert_to_vert_dist(const std::vector<Vec3d> &verts,
                                  double sig_dist);
 
 int orient_geom(Geometry &geom, std::vector<std::vector<int>> *parts = nullptr);
-bool orient_geom(Geometry &geom, int type, char *errmsg = nullptr);
+Status orient_geom(Geometry &geom, int type);
 void orient_reverse(Geometry &geom);
 void get_star(const Geometry &geom, std::vector<Vec3d> &star, char type = 'v',
               Vec3d centre = Vec3d(0, 0, 0));
