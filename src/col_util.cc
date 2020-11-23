@@ -52,6 +52,7 @@ public:
 
   int display_type;
   int grid_width;
+  int collect_indexes;
   int color_system_mode;
   int map_type;
   int show_container;
@@ -77,7 +78,7 @@ public:
   ColorMapMulti map;
 
   col_util_opts()
-      : ProgramOpts("col_util"), display_type(1), grid_width(0),
+      : ProgramOpts("col_util"), display_type(1), grid_width(0), collect_indexes(false),
         color_system_mode(3), map_type(1), show_container(2),
         unique_colors(false), upright_view(0), chroma_level(0), hsl_height(0),
         plot_centroid(false), sat_threshold(1.0), value_advance(0.0),
@@ -108,20 +109,23 @@ Scene Options
                plot as cone, bicone or cube
   -d <int>  output type. plot=1, wheel=2, grid=3, map=4 (default: 1)
                if color wheel and RGB, only one color blend is possible
-  -w <int>  width of grid. positive integer. (-d 3) (default: automatic)
-  -V        verbose output. show color blend RGBA components
 
-Output for plot (-d 1) options 
+Output for grid (-d 3) Options
+  -w <int>  width of grid. positive integer. (default: automatic)
+  -I        include map indexes on grid
+
+Output for plot (-d 1) Options 
   -r <int>  HSV/HSL chroma  0 - none (cylinder), 1 - conic, 2 - hexagonal
   -S        HSV/HSL distribute colors heptagonally, 7 ways, as in the rainbow
-  -k <int>  container control (default: 2)
-               0 - suppress, 1 - no facets on chroma-2,  2 - full
-  -z <int>  1 - show model upright, 2 - upright but don't rotate RGB cube
-  -q <int>  height of the HSL cones (default: no change)
-               1 - double, 2 - make 90 degree dihedral
-  -p        plot color centroid(s)
+  -k <int>  container visibility (default: 2)
+               0 - suppress, 1 - no facets (-r 2),  2 - full
+  -z <int>  1 - show model upright, 2 - upright, don't rotate cube (RGB -M 3)
+  -q <int>  HSL height of cone (-M 2, -r 1,2) (default: no change)
+               1 - double, 2 - make perimeter angle 90 degrees dihedral
 
-Color Blending Options
+Color Blending Options (-d 1, -p)
+  -p        plot color centroid (or multiple centroids -s, -v)
+  -V        verbose output. show color blend RGBA components 
   -s <sat>  HSV/HSL saturation curve. Greater than 0 (default: 1)
                1.0 - no curve. lower than 1.0 makes blends more pastel
                4 numbers can be entered separated by commas
@@ -139,7 +143,7 @@ Color Blending Options
   -a <int>  alpha for blend. average=1, minimum=2, maximum=3 (default: 3)
   -y        RYB mode. Blend colors as in Red-Yellow-Blue color wheel
   -c        CMY mode. Complementary colors.  RGB->(RYB/GMO)->CMY->blend
-  -b <val>  All color system modes. brightness adjustment for final blend
+  -b <val>  HSV/HSL/RGB brightness adjustment for final blend
                valid values -1.0 to +1.0 (default: 0)
                negative for darker, positive for lighter, 0 for no change
 
@@ -165,7 +169,7 @@ void col_util_opts::process_command_line(int argc, char **argv)
   handle_long_opts(argc, argv);
 
   while ((c = getopt(argc, argv,
-                     ":hd:w:m:k:q:z:f:r:b:s:t:u:v:pa:cySl:M:O:UZ:Vo:")) != -1) {
+                     ":hd:w:Im:k:q:z:f:r:b:s:t:u:v:pa:cySl:M:O:UZ:Vo:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -182,6 +186,10 @@ void col_util_opts::process_command_line(int argc, char **argv)
       print_status_or_exit(read_int(optarg, &grid_width), c);
       if (grid_width < 1)
         error("grid width must be positive", c);
+      break;
+      
+    case 'I':
+      collect_indexes = true;
       break;
 
     case 'M':
@@ -779,11 +787,11 @@ public:
   }
 };
 
-void collect_col(vector<Color> &cols, const Color &col, bool no_indexes)
+void collect_col(vector<Color> &cols, const Color &col, bool collect_indexes)
 {
   if (!col.is_set())
     return;
-  else if (no_indexes && col.is_index())
+  else if (!collect_indexes && col.is_index())
     return;
   cols.push_back(col);
 }
@@ -815,15 +823,13 @@ void collect_cols(vector<Color> &cols, col_util_opts &opts)
                          max_map_sz, map_sz),
                  'Z');
   for (int j = 0; j < max_map_sz; j++)
-    collect_col(cols, opts.map.get_col(j),
-                (opts.display_type == 1 || opts.display_type == 2));
+    collect_col(cols, opts.map.get_col(j), (opts.display_type == 3 && opts.collect_indexes));
 
   // file
   if (opts.gfile.length()) {
     Geometry geom;
     opts.read_or_error(geom, opts.gfile);
-    collect_cols_from_geom(geom, cols,
-                           (opts.display_type == 1 || opts.display_type == 2));
+    collect_cols_from_geom(geom, cols, (opts.display_type == 3 && opts.collect_indexes));
   }
 
   if (opts.unique_colors) {
@@ -837,7 +843,7 @@ void collect_cols(vector<Color> &cols, col_util_opts &opts)
       col = col_blend::rgb_complement(col, opts.ryb_mode);
 
   for (auto &col : cols) {
-    if (col[3] < 32) {
+    if (!col.is_index() && col[3] < 32) {
       opts.warning("colors with a very small alpha values may not be seen");
       break;
     }

@@ -30,14 +30,16 @@ plot as cone, bicone or cube
 output type. plot=1, wheel=2, grid=3, map=4 (default: 1)
 .IP
 if color wheel and RGB, only one color blend is possible
+.PP
+Output for grid (\fB\-d\fR 3) Options
 .TP
 \fB\-w\fR <int>
-width of grid. positive integer. (\fB\-d\fR 3) (default: automatic)
+width of grid. positive integer. (default: automatic)
 .TP
-\fB\-V\fR
-verbose output. show color blend RGBA components
+\fB\-I\fR
+include map indexes on grid
 .PP
-Output for plot (\fB\-d\fR 1) options
+Output for plot (\fB\-d\fR 1) Options
 .TP
 \fB\-r\fR <int>
 HSV/HSL chroma  0 \- none (cylinder), 1 \- conic, 2 \- hexagonal
@@ -46,23 +48,26 @@ HSV/HSL chroma  0 \- none (cylinder), 1 \- conic, 2 \- hexagonal
 HSV/HSL distribute colors heptagonally, 7 ways, as in the rainbow
 .TP
 \fB\-k\fR <int>
-container control (default: 2)
+container visibility (default: 2)
 .TP
-0 \- suppress, 1 \- no facets on chroma\-2,
+0 \- suppress, 1 \- no facets (\fB\-r\fR 2),
 2 \- full
 .TP
 \fB\-z\fR <int>
-1 \- show model upright, 2 \- upright but don't rotate RGB cube
+1 \- show model upright, 2 \- upright, don't rotate cube (RGB \fB\-M\fR 3)
 .TP
 \fB\-q\fR <int>
-height of the HSL cones (default: no change)
+HSL height of cone (\fB\-M\fR 2, \fB\-r\fR 1,2) (default: no change)
 .IP
-1 \- double, 2 \- make 90 degree dihedral
+1 \- double, 2 \- make perimeter angle 90 degrees dihedral
+.PP
+Color Blending Options (\fB\-d\fR 1, \fB\-p\fR)
 .TP
 \fB\-p\fR
-plot color centroid(s)
-.PP
-Color Blending Options
+plot color centroid (or multiple centroids \fB\-s\fR, \fB\-v\fR)
+.TP
+\fB\-V\fR
+verbose output. show color blend RGBA components
 .TP
 \fB\-s\fR <sat>
 HSV/HSL saturation curve. Greater than 0 (default: 1)
@@ -100,7 +105,7 @@ RYB mode. Blend colors as in Red\-Yellow\-Blue color wheel
 CMY mode. Complementary colors.  RGB\->(RYB/GMO)\->CMY\->blend
 .TP
 \fB\-b\fR <val>
-All color system modes. brightness adjustment for final blend
+HSV/HSL/RGB brightness adjustment for final blend
 .IP
 valid values \fB\-1\fR.0 to +1.0 (default: 0)
 negative for darker, positive for lighter, 0 for no change
