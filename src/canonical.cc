@@ -383,6 +383,11 @@ void cn_opts::process_command_line(int argc, char **argv)
   if ((canonical_method == 'x') && planarize_method &&
       (radius_range_percent > -1))
     warning("set, but not used for planarization", 'd');
+    
+  if (planarize_method == 'p' && normal_type != 'n') {
+    warning("only Newell's normal method used for fast planar", 'p'); 
+    normal_type = 'n';
+  }
 
   if (argc - optind > 1)
     error("too many arguments");
