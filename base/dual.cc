@@ -165,7 +165,7 @@ Status orient_geom(Geometry &geom, int option)
 
   GeometryInfo info(geom);
   bool is_orientable = info.is_orientable();
-  if (!is_orientable)
+  if (!is_orientable && option != 4)
     message = "input file contains a non-orientable geometry, "
               "use 'flip' to reverse face orientations";
   // if model is not oriented, don't do a pre-orientation if we just want
