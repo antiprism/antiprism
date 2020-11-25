@@ -450,7 +450,7 @@ void UniformCompound::assign_uc_value(char operand, const char *digits_str,
 int UniformCompound::parse_uc_args(string &name, double &angle, int &n, int &d,
                                    int &k, char *errmsg)
 {
-  int ret = 1;
+  int ret = 0;
 
   *errmsg = '\0';
 
@@ -539,14 +539,15 @@ int UniformCompound::parse_uc_args(string &name, double &angle, int &n, int &d,
       strcpy_msg(errmsg, "n and d must be co-prime");
   }
 
-  if (!*errmsg) {
+  if (*errmsg)
+    ret = 1; // fail
+  else {
     name = uc_name;
     if (n != -1 &&
         d == -1) // if n is set, set d or it will be randomly selected
       d = 1;
     if (angle != INFINITY)
       angle = deg2rad(angle);
-    ret = 0;
   }
 
   return ret;

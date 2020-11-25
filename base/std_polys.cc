@@ -714,10 +714,16 @@ int make_resource_uniform_compound(Geometry &geom, string name, bool is_std,
 
   UniformCompound uniform_compounds;
 
+  char errmsg[MSG_SZ] = {0};
+
   // if complex parms, parse them
   if (strpbrk(name.c_str(), RES_SEPARATOR)) {
-    char errmsg2[MSG_SZ];
-    uniform_compounds.parse_uc_args(name, angle, n, d, k, errmsg2);
+    int ret = uniform_compounds.parse_uc_args(name, angle, n, d, k, errmsg);
+    if (ret > 0) {
+      if (error_msg)
+        *error_msg = errmsg;
+      return 1; // fail
+    }
   }
 
   int sym_no;
@@ -739,25 +745,11 @@ int make_resource_uniform_compound(Geometry &geom, string name, bool is_std,
   else
     return -1; // not uniform compound name
 
-  char errmsg2[MSG_SZ];
-  int ret = uniform_compounds.set_uc_args(sym_no + 1, angle, n, d, k, errmsg2);
-  if (ret > 0)
+  int ret = uniform_compounds.set_uc_args(sym_no + 1, angle, n, d, k, errmsg);
+  if (ret > 0) {
+    if (error_msg)
+      *error_msg = errmsg;
     return 1; // fail
-
-  if (angle != INFINITY || n != -1 || d != -1 || k != -1) {
-    char angle_str[MSG_SZ] = "";
-    if (angle != INFINITY)
-      snprintf(angle_str, MSG_SZ, "a%g", rad2deg(angle));
-    char n_str[MSG_SZ] = "";
-    if (n != -1)
-      snprintf(n_str, MSG_SZ, "n%d", n);
-    char d_str[MSG_SZ] = "";
-    if (d > 1)
-      snprintf(d_str, MSG_SZ, "/%d", d);
-    char k_str[MSG_SZ] = "";
-    if (k != -1)
-      snprintf(k_str, MSG_SZ, "k%d", k);
-    // fprintf(stderr,"UC%d_%s%s%s%s\n",sym_no+1,angle_str,n_str,d_str,k_str);
   }
 
   uniform_compounds.get_poly(geom, sym_no, angle, n, d, k, is_std);
