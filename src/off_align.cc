@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2016, Adrian Rossiter
+   Copyright (c) 2003-2020, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -64,8 +64,8 @@ public:
   enum { out_default = 0, out_brick, out_base_brick, out_brick_base };
   bond_base(Geometry &bas) : base(bas) {}
   Status set_sym(const char *sym_str);
-  bool add_brick(char type, const string &brick_str, char *errmsg = nullptr);
-  bool bond_all(Geometry &geom_out, int out_type, char *errmsg = nullptr);
+  Status add_brick(char type, const string &brick_str);
+  Status bond_all(Geometry &geom_out, int out_type);
 };
 
 Status bond_base::set_sym(const char *sym_str)
@@ -116,150 +116,91 @@ int get_aligns(const vector<double> &angs0, const vector<double> &angs1,
   return aligns.size();
 }
 
-bool bond_base::add_brick(char type, const string &brick_str, char *errmsg)
+Status bond_base::add_brick(char type, const string &brick_str)
 {
-  if (errmsg)
-    *errmsg = '\0';
-
-  string str_cpy(brick_str); // copy, do not access as C++ string
-  char *str = &str_cpy[0];   // may be used to modify characters
-
-  char *first_comma = strchr(str, ',');
-  if (first_comma)
-    *first_comma = '\0';
+  auto first_comma_pos = brick_str.find(','); // split on first comma
+  string geom_str = brick_str.substr(0, first_comma_pos); // first part
+  string bond_idxs_str;
+  if (first_comma_pos != string::npos)
+    bond_idxs_str = brick_str.substr(first_comma_pos + 1); // all after comma
 
   bricks.push_back(bond_brick());
   bond_brick &brick = bricks.back();
 
   Status stat;
-  if (!*str)
+  if (geom_str.empty()) // brick geometry specifier is empty, use base geometry
     brick.geom = base;
   else {
-    if (!(stat = brick.geom.read(str))) {
-      if (errmsg)
-        snprintf(errmsg, MSG_SZ, "brick geometry: %s", stat.c_msg());
-      bricks.pop_back();
-      free(str);
-      return false;
-    }
+    if (!(stat = brick.geom.read(geom_str)))
+      return Status::error("brick geometry: " + stat.msg());
   }
 
-  if (first_comma) {
-    if (!(stat = read_int_list(first_comma + 1, brick.bond, true))) {
-      if (errmsg)
-        snprintf(errmsg, MSG_SZ, "bond values: %s", stat.c_msg());
-      bricks.pop_back();
-      free(str);
-      return false;
-    }
-  }
+  if (!(stat = read_int_list(bond_idxs_str.c_str(), brick.bond, true)))
+    return Status::error("bond values: " + stat.msg());
 
   if (type == 'v') {
     brick.align_type = align_verts;
     int n = brick.bond.size();
-    if (n != 2 && n != 4 && n != 6) {
-      if (errmsg)
-        strcpy_msg(
-            errmsg,
-            msg_str("must give 2, 4 or 6 vertices (%d were given)", n).c_str());
-      bricks.pop_back();
-      free(str);
-      return false;
-    }
+    if (n != 2 && n != 4 && n != 6)
+      return Status::error(
+          msg_str("must give 2, 4 or 6 vertices (%d were given)", n));
+
     if (n > 2) {
       for (int i = 0; i < n / 2; i++) {
-        if (brick.bond[i] == brick.bond[(i + 1) % (n / 2)]) {
-          if (errmsg)
-            strcpy_msg(errmsg, "repeated vertex index in base");
-          bricks.pop_back();
-          free(str);
-          return false;
-        }
-        if (brick.bond[n / 2 + i] == brick.bond[n / 2 + (i + 1) % (n / 2)]) {
-          if (errmsg)
-            strcpy_msg(errmsg, "repeated vertex index in brick");
-          bricks.pop_back();
-          free(str);
-          return false;
-        }
+        if (brick.bond[i] == brick.bond[(i + 1) % (n / 2)])
+          return Status::error("repeated vertex index in base");
+        if (brick.bond[n / 2 + i] == brick.bond[n / 2 + (i + 1) % (n / 2)])
+          return Status::error("repeated vertex index in base");
       }
     }
     for (unsigned int i = 0; i < brick.bond.size(); i++) {
       const vector<Vec3d> &vs =
           (i < brick.bond.size() / 2) ? base.verts() : brick.geom.verts();
-      if (brick.bond[i] < 0 || brick.bond[i] >= (int)vs.size()) {
-        if (errmsg)
-          snprintf(errmsg, MSG_SZ,
-                   "bond values: vertex %d (position %d) is out of bounds",
-                   brick.bond[i], i + 1);
-        bricks.pop_back();
-        free(str);
-        return false;
-      }
+      if (brick.bond[i] < 0 || brick.bond[i] >= (int)vs.size())
+        return Status::error(
+            msg_str("bond values: vertex %d (position %d) is out of bounds",
+                    brick.bond[i], i + 1));
     }
   }
   else if (type == 'f' || type == 'F') {
     brick.align_type = (type == 'f') ? align_faces : align_faces_merge;
-    if (brick.bond.size() > 3) {
-      if (errmsg)
-        snprintf(errmsg, MSG_SZ,
-                 "up to three arguments can be given (%lu were given)",
-                 (unsigned long)brick.bond.size());
-      bricks.pop_back();
-      free(str);
-      return false;
-    }
+    if (brick.bond.size() > 3)
+      return Status::error(
+          msg_str("up to three arguments can be given (%d were given)",
+                  (int)brick.bond.size()));
     brick.bond.resize(3, 0);
     int f0 = brick.bond[0];
     int f1 = brick.bond[1];
     if (f0 < 0 || f0 >= (int)base.faces().size()) {
-      if (errmsg) {
-        if (base.faces().size())
-          snprintf(errmsg, MSG_SZ,
-                   "invalid base face '%d', "
-                   "last face is %d",
-                   f0, (int)base.faces().size() - 1);
-        else
-          snprintf(errmsg, MSG_SZ, "base has no faces");
-      }
-      bricks.pop_back();
-      free(str);
-      return false;
+      if (base.faces().size())
+        return Status::error(msg_str("invalid base face '%d', last face is %d",
+                                     f0, (int)base.faces().size() - 1));
+      else
+        return Status::error("base has no faces");
     }
     if (f1 < 0 || f1 >= (int)brick.geom.faces().size()) {
-      if (errmsg) {
-        if (brick.geom.faces().size())
-          strcpy_msg(errmsg, msg_str("invalid brick face '%d', last face is %d",
-                                     f1, (int)brick.geom.faces().size() - 1)
-                                 .c_str());
-        else
-          snprintf(errmsg, MSG_SZ, "brick has no faces");
-      }
-      bricks.pop_back();
-      free(str);
-      return false;
+      if (brick.geom.faces().size())
+        return Status::error(msg_str("invalid brick face '%d', last face is %d",
+                                     f1, (int)brick.geom.faces().size() - 1));
+      else
+        return Status::error("brick has no faces");
     }
     if (brick.align_type == align_faces_merge &&
-        base.faces(f0).size() != brick.geom.faces(f1).size()) {
-      if (errmsg)
-        strcpy_msg(errmsg, "faces to bond have different number of sides");
-    }
+        base.faces(f0).size() != brick.geom.faces(f1).size())
+      return Status::error("faces to bond have different number of sides");
+
     vector<int> aligns;
     vector<double> angs0, angs1;
     base.face_angles_lengths(f0, &angs0);
     brick.geom.face_angles_lengths(f1, &angs1);
     if (!get_aligns(angs0, angs1, aligns)) {
-      if (errmsg)
-        sprintf(errmsg,
-                "base and brick bonding faces are not the same shape\n");
-      return false;
+      return Status::error(
+          "base and brick bonding faces are not the same shape\n");
     }
     if (brick.bond[2] >= (int)aligns.size()) {
-      if (errmsg)
-        snprintf(errmsg, MSG_SZ,
-                 "bond selection number is %d, last selection is %d\n",
-                 brick.bond[2], (int)aligns.size() - 1);
-      return false;
+      return Status::error(
+          msg_str("bond selection number is %d, last selection is %d\n",
+                  brick.bond[2], (int)aligns.size() - 1));
     }
     vector<int> &face = brick.geom.raw_faces()[f1];
     int sel = aligns[brick.bond[2]];
@@ -270,28 +211,26 @@ bool bond_base::add_brick(char type, const string &brick_str, char *errmsg)
       rotate(face.begin(), face.begin() + (-sel - 1), face.end());
     }
   }
-  return true;
+
+  return Status::ok();
 }
 
-bool bond_base::bond_all(Geometry &geom_out, int out_type, char *errmsg)
+Status bond_base::bond_all(Geometry &geom_out, int out_type)
 {
-  *errmsg = '\0';
   geom_out.clear_all();
   double base_rad = BoundSphere(base.verts()).get_radius();
   // check for errors before making any transformations
   vector<bond_brick>::iterator bi;
   for (bi = bricks.begin(); bi != bricks.end(); ++bi) {
     if (bi->align_type == align_faces_merge &&
-        (out_type == out_brick || out_type == out_brick_base)) {
-      if (errmsg)
-        sprintf(errmsg,
-                "output type is %s and not compatible with a merged brick",
-                (out_type == out_brick) ? "brick only" : "brick then base");
-      return false;
-    }
+        (out_type == out_brick || out_type == out_brick_base))
+      return Status::error(
+          msg_str("output type is %s and not compatible with a merged brick",
+                  (out_type == out_brick) ? "brick only" : "brick then base"));
   }
 
   bool has_merged_brick = false;
+  bool face_used_more_than_once = false;
   Geometry base_out;
   Geometry brick_out;
   vector<Geometry> merge_bricks;
@@ -346,19 +285,13 @@ bool bond_base::bond_all(Geometry &geom_out, int out_type, char *errmsg)
           const int f0_map = elem_maps[2][f0];
           const vector<int> &f0_mapface = base.faces(f0_map);
           int f0_sz = base.faces(f0).size();
-          if (f0_sz == 0) {
-            if (errmsg)
-              strcpy_msg(errmsg, "a base bond face has no vertices");
-            return false;
-          }
+          if (f0_sz == 0)
+            return Status::error("a base bond face has no vertices");
           auto vi = face_params.find(f0_map);
           bool direct = Isometry(t).is_direct();
           if (vi == face_params.end() || (!(vi->second)[2] && direct)) {
             if (vi != face_params.end())
-              strcpy_msg(errmsg,
-                         "option -F: the same bond face was "
-                         "specified in more than one call to -F, only the "
-                         "last specified bond will be used");
+              face_used_more_than_once = true;
             int map_offset;
             const int idx0 = base.faces(f0)[0];
             for (map_offset = 0; map_offset < f0_sz; map_offset++) {
@@ -415,7 +348,13 @@ bool bond_base::bond_all(Geometry &geom_out, int out_type, char *errmsg)
     geom_out.append(brick_out);
     geom_out.append(base);
   }
-  return true;
+
+  if (face_used_more_than_once)
+    return Status::warning(
+        "face merge: the same bond face was specified for merging in more than "
+        "one call, only the last specified bond will be used");
+  else
+    return Status::ok();
 }
 
 class align_opts : public ProgramOpts {
@@ -563,7 +502,6 @@ int main(int argc, char *argv[])
   align_opts opts;
   opts.process_command_line(argc, argv);
 
-  char errmsg[MSG_SZ];
   Geometry geom;
   opts.read_or_error(geom, opts.ifile);
 
@@ -580,18 +518,13 @@ int main(int argc, char *argv[])
     opts.print_status_or_exit(base.set_sym(opts.sym_str.c_str()), 'y');
 
   vector<pair<char, string>>::iterator argi;
-  for (argi = opts.brick_args.begin(); argi != opts.brick_args.end(); ++argi) {
-    if (!base.add_brick(argi->first, argi->second, errmsg))
-      opts.error(errmsg, argi->first);
-    else if (*errmsg)
-      opts.warning(errmsg, argi->first);
-  }
+  for (argi = opts.brick_args.begin(); argi != opts.brick_args.end(); ++argi)
+    opts.print_status_or_exit(base.add_brick(argi->first, argi->second),
+                              argi->first);
 
   Geometry geom_out;
-  if (!base.bond_all(geom_out, opts.out_type, errmsg))
-    opts.error(errmsg, 'M');
-  if (*errmsg)
-    opts.warning(errmsg, 'M');
+  opts.print_status_or_exit(base.bond_all(geom_out, opts.out_type), 'M');
+
   opts.write_or_error(geom_out, opts.ofile);
 
   return 0;
