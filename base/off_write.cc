@@ -30,25 +30,26 @@
 #include "utils.h"
 
 #include <algorithm>
+#include <cerrno>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <vector>
 
 using std::map;
 using std::string;
 using std::vector;
 
-FILE *file_open_w(string file_name, char *errmsg)
+FILE *file_open_w(string file_name, string &error_msg)
 {
-  if (errmsg)
-    *errmsg = '\0';
+  error_msg.clear();
   FILE *ofile = stdout; // write to stdout by default
   if (file_name != "") {
     ofile = fopen(file_name.c_str(), "w");
-    if (!ofile && errmsg)
-      snprintf(errmsg, MSG_SZ, "could not output file \'%s\'",
-               file_name.c_str());
+    if (!ofile)
+      error_msg =
+          "could not write file '" + file_name + "': " + strerror(errno);
   }
   return ofile;
 }
@@ -66,16 +67,17 @@ void crds_write(FILE *ofile, const Geometry &geom, const char *sep,
     fprintf(ofile, "%s\n", vtostr(geom.verts(i), sep, sig_dgts).c_str());
 }
 
-bool crds_write(string file_name, const Geometry &geom, char *errmsg,
-                const char *sep, int sig_dgts)
+Status crds_write(string file_name, const Geometry &geom, const char *sep,
+                  int sig_dgts)
 {
-  FILE *ofile = file_open_w(file_name, errmsg);
+  string error_msg;
+  FILE *ofile = file_open_w(file_name, error_msg);
   if (!ofile)
-    return false;
+    return Status::error(error_msg);
 
   crds_write(ofile, geom, sep, sig_dgts);
   file_close_w(ofile);
-  return true;
+  return Status::ok();
 }
 
 // RK - color sorting functions
@@ -235,18 +237,19 @@ void obj_write(FILE *ofile, FILE *mfile, string mtl_file, const Geometry &geom,
     write_mtl_file(mfile, cols);
 }
 
-bool obj_write(string file_name, string mtl_file, const Geometry &geom,
-               char *errmsg, const char *sep, int sig_dgts)
+Status obj_write(string file_name, string mtl_file, const Geometry &geom,
+                 const char *sep, int sig_dgts)
 {
-  FILE *ofile = file_open_w(file_name, errmsg);
+  string error_msg;
+  FILE *ofile = file_open_w(file_name, error_msg);
   if (!ofile)
-    return false;
+    return Status::error(error_msg);
 
   FILE *mfile = nullptr;
   if (mtl_file.length()) {
-    mfile = file_open_w(mtl_file, errmsg);
+    mfile = file_open_w(mtl_file, error_msg);
     if (!mfile)
-      return false;
+      return Status::error(error_msg);
   }
 
   obj_write(ofile, mfile, mtl_file, geom, sep, sig_dgts);
@@ -254,29 +257,27 @@ bool obj_write(string file_name, string mtl_file, const Geometry &geom,
 
   if (mfile)
     file_close_w(mfile);
-  return true;
+  return Status::ok();
 }
 
-bool off_file_write(string file_name, const Geometry &geom, char *errmsg,
-                    int sig_dgts)
+Status off_file_write(string file_name, const Geometry &geom, int sig_dgts)
 {
   vector<const Geometry *> vg;
   vg.push_back(&geom);
-  return off_file_write(file_name, vg, errmsg, sig_dgts);
+  return off_file_write(file_name, vg, sig_dgts);
 }
 
-bool off_file_write(string file_name, const vector<const Geometry *> &geoms,
-                    char *errmsg, int sig_dgts)
+Status off_file_write(string file_name, const vector<const Geometry *> &geoms,
+                      int sig_dgts)
 {
-  if (errmsg)
-    *errmsg = '\0';
-  FILE *ofile = file_open_w(file_name, errmsg);
+  string error_msg;
+  FILE *ofile = file_open_w(file_name, error_msg);
   if (!ofile)
-    return false;
+    return Status::error(error_msg);
 
   off_file_write(ofile, geoms, sig_dgts);
   file_close_w(ofile);
-  return true;
+  return Status::ok();
 }
 
 string off_col(Color col)

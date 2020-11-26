@@ -443,8 +443,6 @@ string find_alt_name(FILE *afile, const char *a_name)
     if ((name = strtok(nullptr, "\n"))) {
       if (strcasecmp(clear_extra_whitespace(altname), aname) == 0) {
         clear_extra_whitespace(name);
-        for (char *p = name; *p; p++)
-          *p = tolower(*p);
         return string((name));
       }
     }

@@ -40,31 +40,29 @@ int read_off_line(FILE *fp, char **line);
 void crds_file_read(FILE *ifile, anti::Geometry &geom,
                     char *first_line = nullptr);
 
-bool crds_write(std::string file_name, const anti::Geometry &geom,
-                char *errmsg = nullptr, const char *sep = " ",
-                int sig_dgts = DEF_SIG_DGTS);
+anti::Status crds_write(std::string file_name, const anti::Geometry &geom,
+                        const char *sep = " ", int sig_dgts = DEF_SIG_DGTS);
 void crds_write(FILE *ofile, const anti::Geometry &geom, const char *sep = " ",
                 int sig_dgts = DEF_SIG_DGTS);
 
-bool obj_write(std::string file_name, std::string mtl_file,
-               const Geometry &geom, char *errmsg = nullptr,
-               const char *sep = " ", int sig_dgts = DEF_SIG_DGTS);
+anti::Status obj_write(std::string file_name, std::string mtl_file,
+                       const Geometry &geom, const char *sep = " ",
+                       int sig_dgts = DEF_SIG_DGTS);
 void obj_write(FILE *ofile, FILE *mfile, std::string mtl_file,
                const Geometry &geom, const char *sep = " ",
                int sig_dgts = DEF_SIG_DGTS);
 
-bool off_file_read(std::string file_name, anti::Geometry &geom,
-                   char *errmsg = nullptr);
-bool off_file_read(FILE *ifile, anti::Geometry &geom, char *errmsg = nullptr);
+anti::Status off_file_read(std::string file_name, anti::Geometry &geom);
+anti::Status off_file_read(FILE *ifile, anti::Geometry &geom);
 
-bool off_file_write(std::string file_name, const anti::Geometry &geom,
-                    char *errmsg = nullptr, int sig_dgts = DEF_SIG_DGTS);
+anti::Status off_file_write(std::string file_name, const anti::Geometry &geom,
+                            int sig_dgts = DEF_SIG_DGTS);
 void off_file_write(FILE *ofile, const anti::Geometry &geom,
                     int sig_dgts = DEF_SIG_DGTS);
 
-bool off_file_write(std::string file_name,
-                    const std::vector<const anti::Geometry *> &geoms,
-                    char *errmsg = nullptr, int sig_dgts = DEF_SIG_DGTS);
+anti::Status off_file_write(std::string file_name,
+                            const std::vector<const anti::Geometry *> &geoms,
+                            int sig_dgts = DEF_SIG_DGTS);
 void off_file_write(FILE *ofile,
                     const std::vector<const anti::Geometry *> &geoms,
                     int sig_dgts = DEF_SIG_DGTS);

@@ -1452,7 +1452,7 @@ Status make_resource_geom(Geometry &geom, string name)
     geom_ok = false;
 
   if (!geom_ok) {
-    if (!error_msg.empty())
+    if (error_msg.empty())
       error_msg = "not found (or invalid)";
   }
 

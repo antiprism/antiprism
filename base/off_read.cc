@@ -39,6 +39,7 @@
 #include <vector>
 
 using std::string;
+using std::to_string;
 using std::vector;
 
 int read_off_line(FILE *fp, char **line)
@@ -52,13 +53,9 @@ int read_off_line(FILE *fp, char **line)
   return ret;
 }
 
-bool off_file_read(string file_name, Geometry &geom, char *errmsg)
+Status off_file_read(string file_name, Geometry &geom)
 {
-  if (errmsg)
-    *errmsg = '\0';
-
   Status stat;
-  bool geom_ok = false;
   string alt_name;
   FILE *ifile;
   if (file_name == "" || file_name == "-") {
@@ -69,115 +66,88 @@ bool off_file_read(string file_name, Geometry &geom, char *errmsg)
     ifile = open_sup_file(file_name.c_str(), "/models/", &alt_name);
 
   if (alt_name != "") { // an alt name found before a file with the name
-    if ((stat = make_resource_geom(geom, alt_name))) {
-      if (errmsg)
-        strcpy_msg(errmsg, stat.c_msg());
-      geom_ok = true;
-    }
-    else {
-      if (errmsg)
-        snprintf(errmsg, MSG_SZ - 50,
-                 "could not open input "
-                 "file \'%.*s=%.*s\': %.*s",
-                 50, file_name.c_str(), 60, alt_name.c_str(), 60, stat.c_msg());
-    }
+    if (!(stat = make_resource_geom(geom, alt_name)))
+      stat.set_error("could not open input file '" + file_name + "=" +
+                     alt_name + "': " + stat.msg());
   }
   else if (ifile) { // the file name was found
-    geom_ok = off_file_read(ifile, geom, errmsg);
-    if (errmsg && *errmsg) {
-      string msg("reading \'" + file_name + "\': " + errmsg);
-      snprintf(errmsg, MSG_SZ, "%s", msg.c_str());
+    stat = off_file_read(ifile, geom);
+    if (!stat.msg().empty()) {
+      string msg("reading '" + file_name + "': " + stat.msg());
     }
   }
   else { // try the name as an internal identifier
-    if ((stat = make_resource_geom(geom, file_name))) {
-      if (errmsg)
-        strcpy_msg(errmsg, stat.c_msg());
-      geom_ok = true;
-    }
-    else {
-      if (errmsg)
-        snprintf(errmsg, MSG_SZ - 50,
-                 "could not open input file \'%.*s\': %.*s", 80,
-                 file_name.c_str(), 80, stat.c_msg());
-    }
+    if (!(stat = make_resource_geom(geom, file_name)))
+      stat.set_error("could not open input file'" + file_name + ": " +
+                     stat.msg());
   }
 
   if (ifile && ifile != stdin)
     fclose(ifile);
 
-  return geom_ok;
+  return stat;
 }
 
-bool add_vert(Geometry &geom, const vector<char *> &vals, char *errmsg)
+Status add_vert(Geometry &geom, const vector<char *> &vals)
 {
   Status stat;
   Vec3d v;
   for (unsigned int i = 0; (i < vals.size() && i < 3); i++) {
-    if (!(stat = read_double_noparse(vals[i], &v[i]))) {
-      sprintf(errmsg, "vertex coords: '%s' %s", vals[i], stat.c_msg());
-      return false;
-    }
+    if (!(stat = read_double_noparse(vals[i], &v[i])))
+      return Status::error(
+          msg_str("vertex coords: '%s' %s", vals[i], stat.c_msg()));
   }
 
-  if (vals.size() < 3) {
-    snprintf(errmsg, MSG_SZ, "vertex coords: less than three coordinates");
-    return false;
-  }
+  if (vals.size() < 3)
+    return Status::error("vertex coords: less than three coordinates");
+
   geom.add_vert(v);
 
-  return true;
+  return Status::ok();
 }
 
-bool add_face(Geometry &geom, vector<char *> vals, char *errmsg,
-              Geometry &alt_cols, bool *contains_int_gt_1,
-              bool *contains_adj_equal_idx)
+Status add_face(Geometry &geom, vector<char *> vals, Geometry &alt_cols,
+                bool *contains_int_gt_1, bool *contains_adj_equal_idx)
 {
   Status stat;
   int face_sz;
-  if (!vals.size()) {
-    sprintf(errmsg, "face: no face data");
-    return false;
-  }
-  if (!(stat = read_int(vals[0], &face_sz))) {
-    sprintf(errmsg, "face size: '%s' %s", vals[0], stat.c_msg());
-    return 0;
-  }
-  if (face_sz < 1) {
-    sprintf(errmsg, "face size: '%d', must be 1 or more", face_sz);
-    return 0;
-  }
+  if (!vals.size())
+    return Status::error("face: no face data");
+
+  if (!(stat = read_int(vals[0], &face_sz)))
+    return Status::error(msg_str("face size: '%s' %s", vals[0], stat.c_msg()));
+
+  if (face_sz < 1)
+    return Status::error(
+        msg_str("face size: '%d', must be 1 or more", face_sz));
+
   *contains_adj_equal_idx = false;
   vector<int> face(face_sz);
   for (unsigned int i = 1; (i < vals.size() && (int)i <= face_sz); i++) {
-    if (!(stat = read_int(vals[i], &face[i - 1]))) {
-      sprintf(errmsg, "face index: '%s' %s", vals[i], stat.c_msg());
-      return false;
-    }
+    if (!(stat = read_int(vals[i], &face[i - 1])))
+      return Status::error(
+          msg_str("face index: '%s' %s", vals[i], stat.c_msg()));
+
     int last_vert = geom.verts().size() - 1;
-    if (face[i - 1] < 0 || face[i - 1] > last_vert) {
-      sprintf(errmsg, "face index: '%s' is not in range 0 to %d", vals[i],
-              last_vert);
-      return false;
-    }
+    if (face[i - 1] < 0 || face[i - 1] > last_vert)
+      return Status::error(msg_str("face index: '%s' is not in range 0 to %d",
+                                   vals[i], last_vert));
+
     if (i > 1 && face[i - 1] == face[i - 2])
       *contains_adj_equal_idx = true;
   }
   if (face_sz > 1 && face[0] == face[face_sz - 1])
     *contains_adj_equal_idx = true;
 
-  if ((int)vals.size() - 1 < face_sz) {
-    snprintf(errmsg, MSG_SZ, "face: less than %d values", face_sz);
-    return false;
-  }
+  if ((int)vals.size() - 1 < face_sz)
+    return Status::error(msg_str("face: less than %d values", face_sz));
 
   vals.erase(vals.begin(), vals.begin() + face_sz + 1);
   int col_type;
   Color col, alt_col;
-  if (!(stat = col.from_offvals(vals, &col_type))) {
-    snprintf(errmsg, MSG_SZ, "face colour: invalid colour: %s", stat.c_msg());
-    return false;
-  }
+  if (!(stat = col.from_offvals(vals, &col_type)))
+    return Status::error(
+        msg_str("face colour: invalid colour: %s", stat.c_msg()));
 
   alt_col = col;
   if (col_type == 3 || col_type == 4) { // read as integers
@@ -204,17 +174,12 @@ bool add_face(Geometry &geom, vector<char *> vals, char *errmsg,
     alt_cols.colors(FACES).set(idx, alt_col);
   }
 
-  return true;
+  return Status::ok();
 }
 
-bool off_file_read(FILE *ifile, Geometry &geom, char *errmsg)
+Status off_file_read(FILE *ifile, Geometry &geom)
 {
-  char errmsg2[MSG_SZ];
-
   int file_line_no = 0; // line number in the file
-
-  if (errmsg)
-    *errmsg = '\0';
 
   // read OFF type
   char *line = nullptr;
@@ -226,18 +191,15 @@ bool off_file_read(FILE *ifile, Geometry &geom, char *errmsg)
       free(line);
   }
 
+  string message;
   if (!strstr(line, "OFF")) {
-    if (*line == '3') {
-      if (errmsg)
-        strcpy_msg(errmsg, "assuming file has Qhull OFF output format");
-    }
+    if (*line == '3')
+      message = "assuming file has Qhull OFF output format";
     else {
-      if (errmsg)
-        strcpy_msg(errmsg, "assuming file is list of coordinates");
+      message = "assuming file is list of coordinates";
       crds_file_read(ifile, geom, line);
-      if (errmsg && !geom.is_set())
-        strncat(errmsg, ": no coordinates found", MSG_SZ - 1 - strlen(errmsg));
-      return geom.is_set();
+      return geom.is_set() ? Status::warning(message)
+                           : Status::error(message + ": no coordinates found");
     }
   }
 
@@ -256,28 +218,19 @@ bool off_file_read(FILE *ifile, Geometry &geom, char *errmsg)
   int scan_ret = sscanf(line, " %d %d", &num_pts, &num_faces);
   free(line); // finished with vert and face count line
 
-  if (scan_ret < 2) {
-    if (errmsg)
-      snprintf(errmsg, MSG_SZ, "line %d: didn't find face and vertex counts",
-               file_line_no);
-    return false;
-  }
+  if (scan_ret < 2)
+    return Status::error(
+        msg_str("line %d: didn't find face and vertex counts", file_line_no));
 
-  if (num_pts < 0 || num_faces < 0) {
-    if (errmsg)
-      snprintf(errmsg, MSG_SZ, "line %d: element counts: %s count is negative",
-               file_line_no, (num_pts < 0) ? "vertex" : "face");
-    return false;
-  }
+  if (num_pts < 0 || num_faces < 0)
+    return Status::error(
+        msg_str("line %d: element counts: %s count is negative", file_line_no,
+                (num_pts < 0) ? "vertex" : "face"));
 
-  if (num_pts == 0 && num_faces != 0) {
-    if (errmsg)
-      snprintf(errmsg, MSG_SZ,
-               "line %d: element counts: cannot have a "
-               "positive face count if vertex count is zero",
-               file_line_no);
-    return false;
-  }
+  if (num_pts == 0 && num_faces != 0)
+    return Status::error(msg_str("line %d: element counts: cannot have a "
+                                 "positive face count if vertex count is zero ",
+                                 file_line_no));
 
   int data_line_no = 2; // non blank lines
 
@@ -300,22 +253,19 @@ bool off_file_read(FILE *ifile, Geometry &geom, char *errmsg)
 
     data_line_no++;
 
+    Status stat;
     if (data_line_no <= 2 + num_pts) { // vertex line
-      if (!add_vert(geom, vals.get_parts(), errmsg2)) {
-        if (errmsg)
-          snprintf(errmsg, MSG_SZ, "line %d: %.*s", file_line_no,
-                   int(MSG_SZ - 60), errmsg2);
+      if (!(stat = add_vert(geom, vals.get_parts()))) {
+        message = msg_str("line %d: ", file_line_no) + stat.msg();
         geom.clear_all();
         break;
       }
     }
     else if (data_line_no <= 2 + num_pts + num_faces) { // face line
       bool contains_adj_equal_idx;
-      if (!add_face(geom, vals.get_parts(), errmsg2, alt_cols,
-                    &contains_int_gt_1, &contains_adj_equal_idx)) {
-        if (errmsg)
-          snprintf(errmsg, MSG_SZ, "line %d: %.*s", file_line_no,
-                   int(MSG_SZ - 60), errmsg2);
+      if (!(stat = add_face(geom, vals.get_parts(), alt_cols,
+                            &contains_int_gt_1, &contains_adj_equal_idx))) {
+        message = msg_str("line %d: ", file_line_no) + stat.msg();
         geom.clear_all();
         break;
       }
@@ -325,8 +275,7 @@ bool off_file_read(FILE *ifile, Geometry &geom, char *errmsg)
         adj_equal_idx_lines.push_back(file_line_no);
     }
     else { // extra data at end
-      if (errmsg)
-        snprintf(errmsg, MSG_SZ, "line %d: data at end of file", file_line_no);
+      message = msg_str("line %d: data at end of file", file_line_no);
       geom.clear_all();
       break;
     }
@@ -339,7 +288,7 @@ bool off_file_read(FILE *ifile, Geometry &geom, char *errmsg)
     geom.get_cols() = alt_cols.get_cols();
 
   // create warning message for adjacent equal vertex numbers on faces
-  if (errmsg && adj_equal_idx_lines.size()) {
+  if (adj_equal_idx_lines.size()) {
     string msg("line");
     msg += ((adj_equal_idx_lines.size() > 1) ? "s " : " ");
     for (unsigned int i = 0;
@@ -352,13 +301,16 @@ bool off_file_read(FILE *ifile, Geometry &geom, char *errmsg)
       msg.resize(msg.size() - 2); // the list was complete
 
     msg += ": face element has adjacent vertices with the same index number";
-    if (*errmsg) // already a message
-      strncat(errmsg, ", and, ", MSG_SZ);
-    strncat(errmsg, msg.c_str(), MSG_SZ);
+    if (!message.empty()) // already a message
+      message += ", and, ";
+    message += msg;
   }
 
-  if (errmsg && !geom.is_set() && !*errmsg) // no previous error message
-    strcpy_msg(errmsg, "no vertices (empty geometry)");
+  if (!geom.is_set() && message.empty()) // no previous error message
+    message = "no vertices (empty geometry)";
 
-  return geom.is_set();
+  if (geom.is_set())
+    return message.empty() ? Status::ok() : Status::warning(message);
+  else
+    return Status::error(message);
 }

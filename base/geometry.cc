@@ -333,25 +333,10 @@ void Geometry::triangulate(Color col, unsigned int winding, vector<int> *fmap)
 
 Status Geometry::read(string file_name)
 {
-  Status stat;
-  char errmsg[MSG_SZ];
-  if (!off_file_read(file_name, *this, errmsg))
-    stat.set_error(errmsg);
-  else if (*errmsg)
-    stat.set_warning(errmsg);
-  return stat;
+  return off_file_read(file_name, *this);
 }
 
-Status Geometry::read(FILE *file)
-{
-  Status stat;
-  char errmsg[MSG_SZ];
-  if (!off_file_read(file, *this, errmsg))
-    stat.set_error(errmsg);
-  else if (*errmsg)
-    stat.set_warning(errmsg);
-  return stat;
-}
+Status Geometry::read(FILE *file) { return off_file_read(file, *this); }
 
 Status Geometry::read_resource(string res_name)
 {
@@ -360,13 +345,7 @@ Status Geometry::read_resource(string res_name)
 
 Status Geometry::write(string file_name, int sig_dgts) const
 {
-  Status stat;
-  char errmsg[MSG_SZ];
-  if (!off_file_write(file_name, *this, errmsg, sig_dgts))
-    stat.set_error(errmsg);
-  else if (*errmsg)
-    stat.set_warning(errmsg);
-  return stat;
+  return off_file_write(file_name, *this, sig_dgts);
 }
 
 void Geometry::write(FILE *file, int sig_dgts) const
@@ -377,13 +356,7 @@ void Geometry::write(FILE *file, int sig_dgts) const
 Status Geometry::write_crds(string file_name, const char *sep,
                             int sig_dgts) const
 {
-  Status stat;
-  char errmsg[MSG_SZ];
-  if (!crds_write(file_name, *this, errmsg, sep, sig_dgts))
-    stat.set_error(errmsg);
-  else if (*errmsg)
-    stat.set_warning(errmsg);
-  return stat;
+  return crds_write(file_name, *this, sep, sig_dgts);
 }
 
 void Geometry::write_crds(FILE *file, const char *sep, int sig_dgts) const
@@ -394,13 +367,7 @@ void Geometry::write_crds(FILE *file, const char *sep, int sig_dgts) const
 Status Geometry::write_obj(string file_name, string mtl_file, const char *sep,
                            int sig_dgts) const
 {
-  Status stat;
-  char errmsg[MSG_SZ];
-  if (!obj_write(file_name, mtl_file, *this, errmsg, sep, sig_dgts))
-    stat.set_error(errmsg);
-  else if (*errmsg)
-    stat.set_warning(errmsg);
-  return stat;
+  return obj_write(file_name, mtl_file, *this, sep, sig_dgts);
 }
 
 void Geometry::write_obj(FILE *file, FILE *mfile, string mtl_file,
