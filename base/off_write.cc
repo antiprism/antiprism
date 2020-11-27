@@ -48,8 +48,8 @@ FILE *file_open_w(string file_name, string &error_msg)
   if (file_name != "") {
     ofile = fopen(file_name.c_str(), "w");
     if (!ofile)
-      error_msg =
-          "could not write file '" + file_name + "': " + strerror(errno);
+      error_msg = "could not open file for writing '" + file_name +
+                  "': " + strerror(errno);
   }
   return ofile;
 }

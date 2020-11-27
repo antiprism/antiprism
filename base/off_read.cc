@@ -67,8 +67,8 @@ Status off_file_read(string file_name, Geometry &geom)
 
   if (alt_name != "") { // an alt name found before a file with the name
     if (!(stat = make_resource_geom(geom, alt_name)))
-      stat.set_error("could not open input file '" + file_name + "=" +
-                     alt_name + "': " + stat.msg());
+      stat.set_error("could not open input file from alternative name '" +
+                     file_name + "' = '" + alt_name + "': " + stat.msg());
   }
   else if (ifile) { // the file name was found
     stat = off_file_read(ifile, geom);
@@ -78,7 +78,7 @@ Status off_file_read(string file_name, Geometry &geom)
   }
   else { // try the name as an internal identifier
     if (!(stat = make_resource_geom(geom, file_name)))
-      stat.set_error("could not open input file'" + file_name + ": " +
+      stat.set_error("could not open input file '" + file_name + "': " +
                      stat.msg());
   }
 
