@@ -90,16 +90,16 @@ ColorMapMap *alloc_default_map()
 {
   auto *col_map = new ColorMapMap;
 
-  col_map->set_col(0, Color(1.0, 0.0, 0.0));     // red
-  col_map->set_col(1, Color(1.0, 0.49804, 0.0)); // darkoranage1
-  col_map->set_col(2, Color(1.0, 1.0, 0.0));     // yellow
-  col_map->set_col(3, Color(0.0, 0.39216, 0.0)); // darkgreen
-  col_map->set_col(4, Color(0.0, 1.0, 1.0));     // cyan
-  col_map->set_col(5, Color(0.0, 0.0, 1.0));     // blue
-  col_map->set_col(6, Color(1.0, 0.0, 1.0));     // magenta
-  col_map->set_col(7, Color(1.0, 1.0, 1.0));     // white
-  col_map->set_col(8, Color(0.5, 0.5, 0.5));     // grey
-  col_map->set_col(9, Color(0.0, 0.0, 0.0));     // black
+  col_map->set_col(0, Color(255, 0, 0));     // red
+  col_map->set_col(1, Color(255, 127, 0));   // darkorange1
+  col_map->set_col(2, Color(255, 255, 0));   // yellow
+  col_map->set_col(3, Color(0, 100, 0));     // darkgreen
+  col_map->set_col(4, Color(0, 255, 255));   // cyan
+  col_map->set_col(5, Color(0, 0, 255));     // blue
+  col_map->set_col(6, Color(255, 0, 255));   // magenta
+  col_map->set_col(7, Color(255, 255, 255)); // white
+  col_map->set_col(8, Color(127, 127, 127)); // grey50
+  col_map->set_col(9, Color(0, 0, 0));       // black
 
   col_map->set_wrap();
 
@@ -257,8 +257,8 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                key word: none - sets no color (default: invisible)
   -Y        for n/d shells, when showing edges, show indented edges
   -m <maps> color maps to be tried in turn. (default: map_red:darkorange1:
-               yellow:darkgreen:cyan:blue:magenta:white:gray:black%%) optionally
-               followed by elements to map from v, e or f (default: vef)
+               yellow:darkgreen:cyan:blue:magenta:white:gray50:black%%)
+               optionally followed by elements from v, e or f (default: vef)
   -D <c,e>  default color c for uncolored elements e (default: darkgray,ef)
                key word: none - sets no color. elements e can include e or f
   -X <int>  flood fill stop. used with circuit or compound coloring (-f f,c)

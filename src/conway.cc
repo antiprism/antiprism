@@ -833,7 +833,7 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                0 - map color alpha value, 1 -T alpha applied (default: '1')
   -m <maps> color maps for faces to be tried in turn (default: m1, for -g, m2)
                keyword m1: red,darkorange1,yellow,darkgreen,cyan,blue,magenta,
-                           white,gray,black
+                           white,gray50,black
                keyword m2: red,blue,green,yellow,brown,magenta,purple,grue,
                            gray,orange (from George Hart's original applet)
 
@@ -1115,17 +1115,16 @@ void cn_opts::process_command_line(int argc, char **argv)
   if (map_file == "m1" || map_file == "m2") {
     auto *col_map = new ColorMapMap;
     if (map_file == "m1") {
-      col_map->set_col(0, Color(1.0, 0.0, 0.0)); // 3-sided faces red
-      col_map->set_col(1,
-                       Color(1.0, 0.49804, 0.0)); // 4-sided faces darkoranage1
-      col_map->set_col(2, Color(1.0, 1.0, 0.0));  // 5-sided faces yellow
-      col_map->set_col(3, Color(0.0, 0.39216, 0.0)); // 6-sided faces darkgreen
-      col_map->set_col(4, Color(0.0, 1.0, 1.0));     // 7-sided faces cyan
-      col_map->set_col(5, Color(0.0, 0.0, 1.0));     // 8-sided faces blue
-      col_map->set_col(6, Color(1.0, 0.0, 1.0));     // 9-sided faces magenta
-      col_map->set_col(7, Color(1.0, 1.0, 1.0));     // 10-sided faces white
-      col_map->set_col(8, Color(0.5, 0.5, 0.5));     // 11-sided faces gray
-      col_map->set_col(9, Color(0.0, 0.0, 0.0));     // 12-sided faces black
+      col_map->set_col(0, Color(255, 0, 0));        // 3-sided faces red
+      col_map->set_col(1, Color(255, 127, 0));     // 4-sided faces darkoranage1
+      col_map->set_col(2, Color(255, 255, 0));      // 5-sided faces yellow
+      col_map->set_col(3, Color(0, 100, 0));        // 6-sided faces darkgreen
+      col_map->set_col(4, Color(0, 255, 255));      // 7-sided faces cyan
+      col_map->set_col(5, Color(0, 0, 255));        // 8-sided faces blue
+      col_map->set_col(6, Color(255, 0, 255));      // 9-sided faces magenta
+      col_map->set_col(7, Color(255, 255, 255));    // 10-sided faces white
+      col_map->set_col(8, Color(127, 127, 127));    // 11-sided faces gray50
+      col_map->set_col(9, Color(0, 0, 0));          // 12-sided faces black
     }
     else if (map_file == "m2") {
       auto *col_map0 = new ColorMapMap;
