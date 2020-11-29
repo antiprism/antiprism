@@ -77,8 +77,11 @@ void Color::dump(const char *var, FILE *file) const
     fprintf(file, "invisible\n");
   else if (is_index())
     fprintf(file, "%d (index)\n", get_index());
-  else
-    fprintf(file, "(%d,%d,%d,%d)\n", rgba[0], rgba[1], rgba[2], rgba[3]);
+  else {
+    Vec4d hsva = get_hsva();
+    fprintf(file, "rgb: (%d,%d,%d,%d) hsva: (%g,%g,%g,%g)\n", rgba[0], rgba[1],
+            rgba[2], rgba[3], hsva[0], hsva[1], hsva[2], hsva[3]);
+  }
 }
 
 bool Color::set_complement(Color col)

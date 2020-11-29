@@ -23,26 +23,41 @@ map type: rgb=1, antiprism=2, decimal=3 (default: 1)
 Scene Options
 .HP
 \fB\-M\fR <mode> color system mode. HSV=1, HSL=2, RGB=3 (default: 3)
-.IP
-plot as cone, bicone or cube
 .TP
 \fB\-d\fR <int>
 output type. plot=1, wheel=2, grid=3, map=4 (default: 1)
+.TP
+\fB\-y\fR
+RYB mode. Blend colors as in Red\-Yellow\-Blue color wheel
+.TP
+\fB\-c\fR
+CMY mode. Complementary colors.  RGB\->(RYB/GMO)\->CMY\->blend
+.TP
+\fB\-b\fR <val>
+brightness adjustment. valid values \fB\-1\fR.0 to +1.0 (default: 0)
 .IP
-if color wheel and RGB, only one color blend is possible
+negative for darker, positive for lighter, 0 for no change
+.IP
+(\fB\-y\fR also affects location of color on plot. \fB\-c\fR and \fB\-b\fR affect
+.IP
+all colors in all output types)
 .PP
 Output for grid (\fB\-d\fR 3) Options
 .TP
 \fB\-w\fR <int>
 width of grid. positive integer. (default: automatic)
+.IP
+key word: b \- display as a bar code style
 .TP
 \fB\-I\fR
-include map indexes on grid
+exclude map indexes on grid
 .PP
 Output for plot (\fB\-d\fR 1) Options
 .TP
 \fB\-r\fR <int>
-HSV/HSL chroma  0 \- none (cylinder), 1 \- conic, 2 \- hexagonal
+HSV/HSL container (default: 4)
+.IP
+cylinder=1, conic=2, hexagonal=3, cube=4
 .TP
 \fB\-S\fR
 HSV/HSL distribute colors heptagonally, 7 ways, as in the rainbow
@@ -50,16 +65,19 @@ HSV/HSL distribute colors heptagonally, 7 ways, as in the rainbow
 \fB\-k\fR <int>
 container visibility (default: 2)
 .TP
-0 \- suppress, 1 \- no facets (\fB\-r\fR 2),
+0 \- suppress, 1 \- no facets (\fB\-r\fR 3),
 2 \- full
 .TP
 \fB\-z\fR <int>
 1 \- show model upright, 2 \- upright, don't rotate cube (RGB \fB\-M\fR 3)
 .TP
 \fB\-q\fR <int>
-HSL height of cone (\fB\-M\fR 2, \fB\-r\fR 1,2) (default: no change)
+height of cone or pyramid (\fB\-M\fR 2, \fB\-r\fR 2,3) (default: no change)
 .IP
 1 \- double, 2 \- make perimeter angle 90 degrees dihedral
+.TP
+\fB\-R\fR
+show reference primary and secondary colors on containers
 .PP
 Color Blending Options (\fB\-d\fR 1, \fB\-p\fR)
 .TP
@@ -97,18 +115,6 @@ valid values 0.0 to 120.0 degrees (default: 0)
 .TP
 \fB\-a\fR <int>
 alpha for blend. average=1, minimum=2, maximum=3 (default: 3)
-.TP
-\fB\-y\fR
-RYB mode. Blend colors as in Red\-Yellow\-Blue color wheel
-.TP
-\fB\-c\fR
-CMY mode. Complementary colors.  RGB\->(RYB/GMO)\->CMY\->blend
-.TP
-\fB\-b\fR <val>
-HSV/HSL/RGB brightness adjustment for final blend
-.IP
-valid values \fB\-1\fR.0 to +1.0 (default: 0)
-negative for darker, positive for lighter, 0 for no change
 .PP
 Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
 .TP
@@ -119,8 +125,8 @@ get colors from a color map, or multiple maps separated by commas
 .IP
 note: \fB\-m\fR and \fB\-O\fR may be used together
 .TP
-\fB\-U\fR
-allow only unique colors (sorts by color)
+\fB\-U\fR <opt>
+sort colors. s \- simple,  u \- unique  (by hue, saturation, value)
 .TP
 \fB\-Z\fR <int>
 maximum entries to read from open ended maps (default: 256)

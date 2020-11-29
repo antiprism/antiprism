@@ -26,23 +26,23 @@ col_util -d plot -m map_blue:yellow | antiview -v 0.05
 
 HSV cylinder centroid of blue and yellow
 <<CMDS_START>>
-col_util -d plot -m map_blue:yellow -M 1 | antiview -v 0.05
+col_util -d plot -m map_blue:yellow -M hsv -r cylinder | antiview -v 0.05
 <<CMDS_END>>
 
-Blend in RYB mode
+Blend in conic container in HSL mode and RYB mode
 <<CMDS_START>>
-col_util -d plot -m map_blue:yellow -M 2 -p -y | antiview -v 0.05
+col_util -d plot -m map_blue:yellow -M hsl -p -y -r conic | antiview -v 0.05
 <<CMDS_END>>
 
-Blend in RYB mode with different saturation modifiers
+Blend in cubic contain in HSL model and  RYB mode with different saturation modifiers
 <<CMDS_START>>
-col_util -d plot -m map_blue:yellow -M 2 -p -y -s 0.8,1.01,2,3 | antiview -v 0.05
+col_util -d plot -m map_blue:yellow -M hsl -p -y -s 0.8,1.01,2,3 -r cube | antiview -v 0.05
 <<CMDS_END>>
 
-Compare additive and subtractive colouring
+Compare additive and subtractive colouring in cubic container
 <<CMDS_START>>
-col_util -d plot -m map_red:green:blue -M 2 -p -v 1,2,3,4 | antiview -v 0.05
-col_util -d plot -m map_red:green:blue -M 2 -p -v 1,2,3,4 -c | antiview -v 0.05
+col_util -d plot -m map_red:green:blue -M hsl -p -v 1,2,3,4 | antiview -v 0.05
+col_util -d plot -m map_red:green:blue -M hsl -p -v 1,2,3,4 -c | antiview -v 0.05
 <<CMDS_END>>
 
 Plot rainbow colour map in RGB cube
@@ -53,9 +53,9 @@ col_util -m rainbow | antiview -v 0.03
 Plot rainbow colour map in HSL cylinder, hexagonal dipyramid, or
 heptagonal dipyramid
 <<CMDS_START>>
-col_util -m rainbow -M 2 -r 0 | antiview -v 0.03
-col_util -m rainbow -M 2 -r 2 | antiview -v 0.03
-col_util -m rainbow -M 2 -r 2 -S | antiview -v 0.03
+col_util -m rainbow -M hsl -r cylinder | antiview -v 0.03
+col_util -m rainbow -M hsl -r hexagonal | antiview -v 0.03
+col_util -m rainbow -M hsl -r hexagonal -S | antiview -v 0.03
 <<CMDS_END>>
 
 Display a color wheel of red green and blue
@@ -63,9 +63,10 @@ Display a color wheel of red green and blue
 col_util -d wheel -m map_red:green:blue | antiview
 <<CMDS_END>>
 
-Display rainbow colour map as a grid
+Display rainbow colour map as a grid or as a bar code
 <<CMDS_START>>
 col_util -d grid -m rainbow | antiview
+col_util -d grid -m rainbow -b w| antiview
 <<CMDS_END>>
 <<EXAMPLES_END>>
 
