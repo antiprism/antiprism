@@ -222,39 +222,10 @@ FILE *open_sup_file(const char *fname, const char *subdir,
                     std::string *fpath = nullptr);
 
 /// Convert a C formated message string to a C++ string
-/** Converts the first MSG_SZ-1 characters of the C format string
- * \param fmt the formatted string
+/**\param fmt the formatted string
  * \param ... the values for the format
  * \return The converted string. */
 std::string msg_str(const char *fmt, ...);
-
-/// Convert an integer to a string
-/**\param i the integer.
- * \return The string. */
-std::string itostr(int i);
-
-/// Convert a floating point number to a string
-/**\param f the floating point number.
- * \param sig_dgts the number of significant digits in the conversion,
- *  or if negative then the number of digits after the decimal point.
- * \return The string. */
-std::string dtostr(double f, int sig_dgts = 17);
-
-/// Convert a coordinate vector to a string
-/**\param v the vector.
- * \param sep the separator between the numbers.
- * \param sig_dgts the number of significant digits in the conversion,
- *  or if negative then the number of digits after the decimal point.
- * \return The string. */
-std::string vtostr(Vec3d v, const char *sep = ", ", int sig_dgts = 17);
-
-/// Convert a coordinate vector to a string
-/**\param v the vector.
- * \param sep the separator between the numbers.
- * \param sig_dgts the number of significant digits in the conversion,
- *  or if negative then the number of digits after the decimal point.
- * \return The string. */
-std::string vtostr(Vec4d v, const char *sep = ", ", int sig_dgts = 17);
 
 /// Class to split a line into delimited parts
 class Split {
@@ -334,57 +305,6 @@ public:
 };
 
 char *strcpy_msg(char *dest, const char *src);
-
-// inline function definitions
-
-inline std::string itostr(int i)
-{
-  char buf[MSG_SZ];
-  buf[MSG_SZ - 1] = 0;
-  sprintf(buf, "%d", i);
-  return buf;
-}
-
-inline std::string dtostr(double f, int sig_dgts)
-{
-  char buf[MSG_SZ];
-  buf[MSG_SZ - 1] = '\0';
-  if (sig_dgts > 0)
-    snprintf(buf, MSG_SZ - 1, "%.*g", sig_dgts, f);
-  else
-    snprintf(buf, MSG_SZ - 1, "%.*f", -sig_dgts, f);
-  return buf;
-}
-
-inline std::string vtostr(Vec3d v, const char *sep, int sig_dgts)
-{
-  char buf[MSG_SZ];
-  buf[MSG_SZ - 1] = 0;
-  if (sig_dgts > 0)
-    snprintf(buf, MSG_SZ - 1, "%.*g%s%.*g%s%.*g", sig_dgts, v[0], sep, sig_dgts,
-             v[1], sep, sig_dgts, v[2]);
-  else
-    snprintf(buf, MSG_SZ - 1, "%.*f%s%.*f%s%.*f", -sig_dgts, v[0], sep,
-             -sig_dgts, v[1], sep, -sig_dgts, v[2]);
-  return buf;
-}
-
-inline std::string vtostr(Vec4d v, const char *sep, int sig_dgts)
-{
-  char buf[MSG_SZ];
-  buf[MSG_SZ - 1] = 0;
-  if (sig_dgts > 0)
-    snprintf(buf, MSG_SZ - 1, "%.*g%s%.*g%s%.*g%s%.*g", sig_dgts, v[0], sep,
-             sig_dgts, v[1], sep, sig_dgts, v[2], sep, sig_dgts, v[3]);
-  else
-    snprintf(buf, MSG_SZ - 1, "%.*f%s%.*f%s%.*f%s%.*f", -sig_dgts, v[0], sep,
-             -sig_dgts, v[1], sep, -sig_dgts, v[2], sep, -sig_dgts, v[3]);
-  return buf;
-}
-
-// for alternate name look up
-std::string find_alt_name(FILE *, const char *);
-std::string find_alt_name(const char *fname, const char *subdir);
 
 } // namespace anti
 

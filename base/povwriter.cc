@@ -43,27 +43,24 @@ namespace anti {
 
 string pov_vec(double x, double y, double z, int sig_digits)
 {
-  char buf[256];
   if (sig_digits > 0)
-    snprintf(buf, 256, "<%.*g, %.*g, %.*g>", sig_digits, x, sig_digits, y,
-             sig_digits, z);
+    return msg_str("<%.*g, %.*g, %.*g>", sig_digits, x, sig_digits, y,
+                   sig_digits, z);
   else
-    snprintf(buf, 256, "<%.*f, %.*f, %.*f>", -sig_digits, x, -sig_digits, y,
-             -sig_digits, z);
-  return buf;
+    return msg_str("<%.*f, %.*f, %.*f>", -sig_digits, x, -sig_digits, y,
+                   -sig_digits, z);
 }
 
 string pov_col(const Color &col)
 {
-  char buf[MSG_SZ];
-  *buf = '\0';
   if (col.is_value()) {
     Vec4d cv = col.get_vec4d();
-    snprintf(buf, MSG_SZ, "<%g, %g, %g, %g>", cv[0], cv[1], cv[2], 1 - cv[3]);
+    return msg_str("<%g, %g, %g, %g>", cv[0], cv[1], cv[2], 1 - cv[3]);
   }
-  if (col.is_index())
-    snprintf(buf, MSG_SZ, "<%d, -1, 0, 0>", col.get_index());
-  return buf;
+  else if (col.is_index())
+    return msg_str("<%d, -1, 0, 0>", col.get_index());
+  else
+    return string();
 }
 
 // ------------------------------------------------------------------
@@ -297,7 +294,7 @@ void PovWriter::cameras(FILE *ofile, const Scene &scen)
 
     string dist_txt;
     if (cam.get_distance())
-      dist_txt = dtostr(cam.get_distance());
+      dist_txt = msg_str("%.17g", cam.get_distance());
     else
       dist_txt = "   1.2 * SceneWidth";
     fprintf(ofile,

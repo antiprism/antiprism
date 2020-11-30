@@ -64,7 +64,7 @@ void crds_write(FILE *ofile, const Geometry &geom, const char *sep,
                 int sig_dgts)
 {
   for (unsigned int i = 0; i < geom.verts().size(); i++)
-    fprintf(ofile, "%s\n", vtostr(geom.verts(i), sep, sig_dgts).c_str());
+    fprintf(ofile, "%s\n", geom.verts(i).to_str(sep, sig_dgts).c_str());
 }
 
 Status crds_write(string file_name, const Geometry &geom, const char *sep,
@@ -155,7 +155,7 @@ void obj_write(FILE *ofile, FILE *mfile, string mtl_file, const Geometry &geom,
 
   // v entries
   for (unsigned int i = 0; i < geom.verts().size(); i++)
-    fprintf(ofile, "v %s\n", vtostr(geom.verts(i), sep, sig_dgts).c_str());
+    fprintf(ofile, "v %s\n", geom.verts(i).to_str(sep, sig_dgts).c_str());
 
   Color last_color = Color();
 
@@ -286,9 +286,9 @@ string off_col(Color col)
     return msg_str(" %d", col.get_index());
   else if (col.is_value()) {
     if (col.get_transparency())
-      return vtostr(col.get_vec4d(), " ", -5);
+      return col.get_vec4d().to_str(" ", -5);
     else
-      return vtostr(col.get_vec3d(), " ", -5);
+      return col.get_vec3d().to_str(" ", -5);
   }
   else
     return string();

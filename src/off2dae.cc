@@ -279,19 +279,12 @@ string Collada_writer::col2hex(const Color &col)
 
 string Collada_writer::format_vec(const Vec3d &v, int sig_digits)
 {
-  char buf[MSG_SZ];
-  if (sig_digits > 0)
-    snprintf(buf, MSG_SZ, "%.*g %.*g %.*g", sig_digits, v[0], sig_digits, v[1],
-             sig_digits, v[2]);
-  else
-    snprintf(buf, MSG_SZ, "%.*f %.*f %.*f", -sig_digits, v[0], -sig_digits,
-             v[1], -sig_digits, v[2]);
-  return buf;
+  return v.to_str(" ", sig_digits);
 }
 
 string Collada_writer::id_tag(const string &name, int g, int d)
 {
-  return itostr(g) + "_" + itostr(d) + "_" + name;
+  return std::to_string(g) + "_" + std::to_string(d) + "_" + name;
 }
 
 void Collada_writer::print_asset()
@@ -305,8 +298,10 @@ void Collada_writer::print_asset()
 
   time_t now;
   time(&now);
-  char datetime_iso8601[MSG_SZ];
-  strftime(datetime_iso8601, MSG_SZ, "%FT%TZ", gmtime(&now));
+  size_t buff_sz = 256;
+  char datetime_iso8601[buff_sz];
+  if (!strftime(datetime_iso8601, buff_sz, "%FT%TZ", gmtime(&now)))
+    *datetime_iso8601 = '\0';
   print_open_close("created", datetime_iso8601);
   print_open_close("modified", datetime_iso8601);
 
@@ -393,13 +388,13 @@ void Collada_writer::print_geometry_vecs(const string &id,
 
   print_open(XML_elem("float_array")
                  .add_id("float_array_" + id)
-                 .add_attr("count", itostr(3 * vecs.size())));
+                 .add_attr("count", std::to_string(3 * vecs.size())));
   print_vertex_coords(vecs, sig_digits);
   print_close(); // float_array
 
   print_open("technique_common");
   print_open(XML_elem("accessor")
-                 .add_attr("count", itostr(vecs.size()))
+                 .add_attr("count", std::to_string(vecs.size()))
                  .add_attr("source", "#float_array_" + id)
                  .add_attr("offset", "0")
                  .add_attr("stride", "3"));
@@ -462,7 +457,7 @@ void Collada_writer::print_geometry(const string &id, const Geometry &geom,
     string imat = "im_" + ((mat != "") ? mat : col2hex(face_col));
     print_open(XML_elem(triangulate ? "triangles" : "polylist")
                    .add_attr("material", imat)
-                   .add_attr("count", itostr(face_idxs.size())));
+                   .add_attr("count", std::to_string(face_idxs.size())));
 
     print_open_empty(XML_elem("input")
                          .add_attr("semantic", "VERTEX")
@@ -496,7 +491,7 @@ void Collada_writer::print_geometry(const string &id, const Geometry &geom,
 void Collada_writer::print_geometry_sphere()
 {
   Geometry geom;
-  geom.read_resource("std_geo_" + itostr(smooth_level));
+  geom.read_resource("std_geo_" + std::to_string(smooth_level));
   map<Color, vector<int>> g_col2fs;
   for (int i = 0; i < (int)geom.faces().size(); i++)
     g_col2fs[Color(0)].push_back(i);
@@ -635,8 +630,8 @@ void Collada_writer::print_library_visual_scene_edges(DisplayPoly &disp,
       double ang = -acos(safe_for_trig(dir[2])); // ang betwn dir and y-axis
       Vec3d axis = vcross(dir, Vec3d(0, 0, 2)).unit(); // axis
       print_open_close("translate", format_vec(mid, 8));
-      print_open_close("rotate",
-                       format_vec(axis, 8) + " " + dtostr(rad2deg(ang), 8));
+      print_open_close("rotate", format_vec(axis, 8) + " " +
+                                     msg_str("%.8g", rad2deg(ang)));
       print_open_close(
           "scale",
           format_vec(Vec3d(disp.get_edge_rad(), disp.get_edge_rad(), ht), 8));

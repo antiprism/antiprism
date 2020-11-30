@@ -417,12 +417,12 @@ FILE *fopen_file(string &fpath)
   return file;
 }
 
-string find_alt_name(FILE *afile, const char *a_name)
+string find_alt_name(FILE *afile, const string &a_name)
 {
   const int line_size = 1024;
   char line[line_size];
   char aname[line_size];
-  strncpy(aname, a_name, line_size - 1);
+  strncpy(aname, a_name.c_str(), line_size - 1);
   aname[line_size - 1] = '\0';
   clear_extra_whitespace(aname);
 
@@ -451,36 +451,30 @@ string find_alt_name(FILE *afile, const char *a_name)
   return string("");
 }
 
-string find_alt_name(const char *fname, const char *subdir)
+string find_alt_name(string fname, string subdir)
 {
   string aname;
-  FILE *alt = open_sup_file("alt_names.txt", subdir);
+  FILE *alt = open_sup_file("alt_names.txt", subdir.c_str());
   if (alt) {
-    char f_name[MSG_SZ];
-    strcpy_msg(f_name, fname);
     aname = find_alt_name(alt, fname);
     fclose(alt);
   }
   return aname;
 }
 
-FILE *open_file_data(const string &dir, const string &fname,
-                     string *aname = nullptr)
+FILE *open_file_data(const string &dir, string f_name, string *aname = nullptr)
 {
   if (aname)
     *aname = "";
 
   FILE *file = nullptr;
-  // convert fname to lowercase
-  char f_name[MSG_SZ];
-  unsigned int i;
-  for (i = 0; i < fname.size() && i < MSG_SZ - 1; i++)
-    f_name[i] = tolower(fname[i]);
-  f_name[i] = '\0';
+  // convert f_name to lowercase
+  for (auto &c : f_name)
+    c = tolower(c);
 
   string fpath;
   // don't allow escape from data directory
-  if (!strchr(f_name, '\\') && !strchr(f_name, '/')) {
+  if (!strchr(f_name.c_str(), '\\') && !strchr(f_name.c_str(), '/')) {
     fpath = dir + f_name;
     if ((file = fopen_file(fpath)))
       return file;

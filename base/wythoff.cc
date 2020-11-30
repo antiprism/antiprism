@@ -355,9 +355,9 @@ string Wythoff::to_str()
         sym += "|";
       else if (i)
         sym += " ";
-      sym += itostr(fracs[2 * i]);
+      sym += std::to_string(fracs[2 * i]);
       if (fracs[2 * i + 1] > 1)
-        sym += "/" + itostr(fracs[2 * i + 1]);
+        sym += "/" + std::to_string(fracs[2 * i + 1]);
     }
     if (bar_pos == 3)
       sym += "|";
@@ -375,7 +375,7 @@ static string get_tri_symmetry(const vector<int> &fracs)
   tri_normalise(fs, tmp);
   string sym;
   if (fs[2] == 2)
-    sym = "D" + itostr(fs[4]);
+    sym = "D" + std::to_string(fs[4]);
   else if (fs[4] == 5)
     sym = "I";
   else if (fs[4] == 4)
@@ -1243,7 +1243,7 @@ string Tile::tile_string()
       if (op == last_op)
         tile += "_";
       if (p_idx < idxs.size())
-        tile += itostr(idxs[p_idx]);
+        tile += std::to_string(idxs[p_idx]);
       else {
         tile += msg_str("ERROR: index %u out of range", p_idx);
         break;
@@ -1612,9 +1612,10 @@ Status Tiling::make_tiling(Geometry &geom, ColoringType col_type,
     // Check index range
     auto out_of_range = pat.check_index_range(points.size());
     if (out_of_range.size()) {
-      string msg = "Path" + itostr(p_idx) + ": index numbers out of range:";
+      string msg =
+          "Path" + std::to_string(p_idx) + ": index numbers out of range:";
       for (auto idx : out_of_range)
-        msg += " " + itostr(idx) + ",";
+        msg += " " + std::to_string(idx) + ",";
       msg.pop_back();
       return Status::error(msg.c_str());
     }

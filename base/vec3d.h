@@ -176,14 +176,21 @@ public:
    * otherwise \c false to indictate an error. */
   Status read(const char *str);
 
+  /// Print a vector variable
+  /**\return a string representation of the variable */
+  // std::string str() const;
+
+  /// Convert to a coordinate string
+  /**\param sep the separator between the numbers.
+   * \param sig_dgts the number of significant digits in the conversion,
+   *  or if negative then the number of digits after the decimal point.
+   * \return The string. */
+  std::string to_str(const char *sep = ", ", int sig_dgts = 17) const;
+
   /// Debugging print of a vector variable
   /**\param var a string to identify the vector variable.
    * \param file file stream to print the variable. */
   void dump(const char *var = "", FILE *file = stderr) const;
-
-  /// Print a vector variable
-  /**\return a string representation of the variable */
-  std::string str() const;
 
   static Vec3d X;    //<Unit vector in the direction of the x-axis
   static Vec3d Y;    //<Unit vector in the direction of the y-axis

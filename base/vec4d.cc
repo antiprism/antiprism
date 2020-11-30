@@ -70,6 +70,17 @@ Status Vec4d::read(const char *str)
   return Status::ok();
 }
 
+std::string Vec4d::to_str(const char *sep, int sig_dgts) const
+{
+  const auto *v = get_v();
+  if (sig_dgts > 0)
+    return msg_str("%.*g%s%.*g%s%.*g%s%.*g", sig_dgts, v[0], sep, sig_dgts,
+                   v[1], sep, sig_dgts, v[2], sep, sig_dgts, v[3]);
+  else
+    return msg_str("%.*f%s%.*f%s%.*f%s%.*f", -sig_dgts, v[0], sep, -sig_dgts,
+                   v[1], sep, -sig_dgts, v[2], sep, -sig_dgts, v[3]);
+}
+
 void Vec4d::dump(const char *var, FILE *file) const
 {
   if (var)

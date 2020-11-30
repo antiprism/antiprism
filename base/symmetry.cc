@@ -1174,7 +1174,7 @@ string Symmetry::get_symbol() const
   if (sym_type < C || sym_type > S)
     return type_str[sym_type];
   else
-    return string() + type_str[sym_type][0] + itostr(nfold) +
+    return string() + type_str[sym_type][0] + std::to_string(nfold) +
            (type_str[sym_type] + 1);
 }
 
@@ -2260,11 +2260,11 @@ string Subspace::str() const
   if (type == SubspaceType::none)
     ret += "none";
   else if (type == SubspaceType::point)
-    ret += "point, " + point.str();
+    ret += "point, (" + point.to_str() + ")";
   else if (type == SubspaceType::line)
-    ret += "line, " + point.str() + ", " + direction.str();
+    ret += "line, (" + point.to_str() + "), (" + direction.to_str() + ")";
   else if (type == SubspaceType::plane)
-    ret += "plane, " + point.str() + ", " + direction.str();
+    ret += "plane, (" + point.to_str() + "), (" + direction.to_str() + ")";
   else // type == SubspaceType::space
     ret += "space";
 

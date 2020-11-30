@@ -290,10 +290,8 @@ void Geodesic::make_geo(Geometry &geo)
     int e_idx = find(gedges.begin(), gedges.end(), edge) - gedges.begin();
     Color e_col = base.colors(EDGES).get(orig_edge[2]);
     geo.colors(EDGES).set(e_idx, e_col);
-    // char buf[MSG_SZ];
-    // vtostr(buf, e_col.get_Vec4d());
     // fprintf(stderr, "adding edge (%d, %d) col=%s\n", edge[0], edge[1],
-    // buf);
+    // e_col.get_Vec4d().to_str());
   }
   clear_def_edges(geo);
 }

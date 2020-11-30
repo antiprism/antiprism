@@ -279,7 +279,7 @@ int find_mid_centre(Geometry &geom, double &rad, Vec3d &cent, int n,
           "[n=%d, limit=%sachieved, r_test=%g, c_test=%g]\n"
           "centre=(%s), radius=%.16g\n",
           cnt, cnt == n ? "not " : "", cent_test, rad_test,
-          vtostr(cent, " ").c_str(), rad);
+          cent.to_str(" ").c_str(), rad);
   return 1;
 }
 
@@ -402,7 +402,7 @@ int find_can_centre(Geometry &geom, char type, double &rad, Vec3d &cent,
           "[n=%d, limit=%sachieved, r_test=%g, c_test=%g]\n"
           "centre=(%s), radius=%.16g%s\n",
           cnt, cnt == n ? "not " : "", cent_test, rad_test,
-          vtostr(cent, " ").c_str(), rad, (invert) ? "i" : "");
+          cent.to_str(" ").c_str(), rad, (invert) ? "i" : "");
   //}
 
   return 1;
@@ -447,7 +447,7 @@ Vec3d find_circumcenter(const Geometry &geom)
   cent[2] = res[3] / 2;
   double rad = sqrt(cent.len2() + res[0]);
   fprintf(stderr, "Circumsphere: centre=(%s), radius=%.16g\n",
-          vtostr(cent, " ").c_str(), rad);
+          cent.to_str(" ").c_str(), rad);
   return cent;
 }
 

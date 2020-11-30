@@ -562,7 +562,7 @@ public:
 Status ColorMapRangeRand::check_range_sizes(const char *components)
 {
   for (int i = 0; i < 4; i++)
-    if (ranges[i].size()==0 || ranges[i].size() > 2)
+    if (ranges[i].size() == 0 || ranges[i].size() > 2)
       return Status::error(
           msg_str("component %c or %c: %s values given", components[i],
                   tolower(components[i]),
@@ -603,7 +603,7 @@ Status ColorMapRangeRandHsv::init(const char *map_name)
 {
   set_func = &Color::set_hsva;
 
-  ranges[0] = {0, 1}; // H
+  ranges[0] = {0, 1};   // H
   ranges[1] = {0.7, 1}; // S
   ranges[2] = {0.7, 1}; // V
   ranges[3] = {1};      // A

@@ -40,14 +40,15 @@
 class rep_printer : public anti::GeometryInfo {
 private:
   int sig_dgts;
-  std::string d2s(double d) { return anti::dtostr(d, sig_dgts); }
+
   std::string v2s(anti::Vec3d v)
   {
-    return (v.is_set()) ? vtostr(v, " ", sig_dgts) : "not valid";
+    return (v.is_set()) ? v.to_str(" ", sig_dgts) : "not valid";
   }
   std::string vidx2s(int idx) { return idx2s(idx, num_verts() - extra_v_sz); }
   std::string eidx2s(int idx) { return idx2s(idx, num_edges() - extra_e_sz); }
   std::string fidx2s(int idx) { return idx2s(idx, num_faces() - extra_f_sz); }
+  std::string d2s(double d);
   std::string col2s(anti::Color col);
   std::string idx2s(int idx, int extra_sz);
 

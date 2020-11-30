@@ -42,9 +42,10 @@ namespace anti {
 
 /// Vector with 4 components
 class Vec4d {
-public:
+private:
   double v[4];
 
+public:
   /// Constructor
   /** The vector is initialised to the unset state */
   Vec4d() { unset(); }
@@ -139,6 +140,10 @@ public:
   /**\param val the value of the w component. */
   void w(double val) { v[3] = val; }
 
+  /// Get a pointer to the vector component array.
+  /** \return A pointer to the underlying component array. */
+  const double *get_v() const { return v; }
+
   /// Unset the vector.
   /**Put the vector into the initial unset state. The vector will return
    * \c false if tested */
@@ -160,6 +165,13 @@ public:
    * \return status, which evaluates to \c true if a valid vector was read,
    * otherwise \c false to indictate an error. */
   Status read(const char *str);
+
+  /// Convert to a coordinate string
+  /**\param sep the separator between the numbers.
+   * \param sig_dgts the number of significant digits in the conversion,
+   *  or if negative then the number of digits after the decimal point.
+   * \return The string. */
+  std::string to_str(const char *sep = ", ", int sig_dgts = 17) const;
 
   /// Debugging print of a vector variable
   /**\param var a string to identify the vector variable.

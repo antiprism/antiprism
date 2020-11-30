@@ -55,6 +55,14 @@ Status rep_printer::set_sub_symmetry(const string &sub_sym)
   return stat;
 }
 
+std::string rep_printer::d2s(double d)
+{
+  if (sig_dgts > 0)
+    return msg_str("%.*g", sig_dgts, d);
+  else
+    return msg_str("%.*f", -sig_dgts, d);
+}
+
 string rep_printer::idx2s(int idx, int extra_sz)
 {
   if (idx < extra_sz)

@@ -28,6 +28,7 @@
 
 #include "vrmlwriter.h"
 #include "symmetry.h"
+#include "utils.h"
 
 #include <string>
 #include <vector>
@@ -41,26 +42,22 @@ namespace anti {
 
 string vrml_vec(double x, double y, double z, int sig_digits)
 {
-  char buf[256];
   if (sig_digits > 0)
-    snprintf(buf, 256, "%.*g %.*g %.*g", sig_digits, x, sig_digits, y,
-             sig_digits, z);
+    return msg_str("%.*g %.*g %.*g", sig_digits, x, sig_digits, y, sig_digits,
+                   z);
   else
-    snprintf(buf, 256, "%.*f %.*f %.*f", -sig_digits, x, -sig_digits, y,
-             -sig_digits, z);
-  return buf;
+    return msg_str("%.*f %.*f %.*f", -sig_digits, x, -sig_digits, y,
+                   -sig_digits, z);
 }
 
 string vrml_col(const Color &col)
 {
   Vec4d cv = col.get_vec4d();
-  char buf[256];
-  snprintf(buf, 256, "%.4f %.4f %.4f", cv[0], cv[1], cv[2]);
+  return msg_str("%.4f %.4f %.4f", cv[0], cv[1], cv[2]);
   // if(col.get_trans())
   //   snprintf(buf, 256, "<%g, %g, %g, %g>", cv[0], cv[1], cv[2], cv[3]);
   // else
   //   snprintf(buf, 256, "<%g, %g, %g>", cv[0], cv[1], cv[2]);
-  return buf;
 }
 
 // --------------------------------------------------------------

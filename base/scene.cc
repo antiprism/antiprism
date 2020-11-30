@@ -402,9 +402,7 @@ Camera &Scene::cur_camera() { return cams[cur_cam_num]; }
 
 string Scene::get_camera_name(int idx) const
 {
-  char str[MSG_SZ];
-  snprintf(str, MSG_SZ, "%s_camera_%d", cams[idx].get_name().c_str(), idx);
-  return str;
+  return msg_str("%s_camera_%d", cams[idx].get_name().c_str(), idx);
 }
 
 void Scene::add_camera(const Camera &cam)

@@ -228,10 +228,9 @@ void kt_opts::read_vert_height(int idx, char c)
   print_status_or_exit(read_double(optarg, &heights[idx]), c);
 }
 
-int tri_from_str(const char *str, vector<int> &fracs, char *errmsg = nullptr)
+int tri_from_str(const char *str, vector<int> &fracs, string &error_msg)
 {
-  if (errmsg)
-    *errmsg = '\0';
+  error_msg.clear();
 
   char sym_char;
   int tri_idx;
@@ -239,20 +238,18 @@ int tri_from_str(const char *str, vector<int> &fracs, char *errmsg = nullptr)
   char buf;
   int num = sscanf(str, "%c%d%c%c", &sym_char, &tri_idx, &perm, &buf);
   if (num < 2 || num > 3) {
-    if (errmsg)
-      sprintf(errmsg, "invalid format for triangle description");
+    error_msg = "invalid format for triangle description";
     return -1; // -1 for skipping if multiple formats considered
   }
 
   if (!strchr("TOI", sym_char)) {
-    if (errmsg)
-      sprintf(errmsg, "first letter is not T, O or I");
+    error_msg = "first letter is not T, O or I";
     return 1; // fail
   }
+
   if (tri_idx < 1 || (sym_char == 'T' && tri_idx > 2) ||
       (sym_char == 'O' && tri_idx > 2) || (sym_char == 'I' && tri_idx > 10)) {
-    if (errmsg)
-      sprintf(errmsg, "number out of range for triangle type");
+    error_msg = "number out of range for triangle type";
     return 1; // fail
   }
 
@@ -275,8 +272,7 @@ int tri_from_str(const char *str, vector<int> &fracs, char *errmsg = nullptr)
   string base_str = msg_str("%c%d", sym_char, tri_idx);
   auto mi = axes.find(base_str);
   if (mi == axes.end()) {
-    if (errmsg)
-      sprintf(errmsg, "triangle not found (internal error)");
+    error_msg = "triangle not found (internal error)";
     return 1; // fail
   }
 
@@ -287,8 +283,7 @@ int tri_from_str(const char *str, vector<int> &fracs, char *errmsg = nullptr)
 
   if (num == 3) { // permutation specified
     if (!strchr("ABCabc", perm)) {
-      if (errmsg)
-        sprintf(errmsg, "permutation letter is not from ABCabc");
+      error_msg = "permutation letter is not from ABCabc";
       return 1; // fail
     }
     if (strchr("Bb", perm))
@@ -305,24 +300,20 @@ int tri_from_str(const char *str, vector<int> &fracs, char *errmsg = nullptr)
 }
 
 // convert model name to fractions, return number of fractions or 0
-int args2fracs(const char *model, vector<int> &fracs, char *errmsg = nullptr)
+int args2fracs(const char *model, vector<int> &fracs, string &error_msg)
 {
-  if (errmsg)
-    *errmsg = '\0';
+  error_msg.clear();
   fracs.resize(6);
   if (*model == '\0') {
-    if (errmsg)
-      strcpy_msg(errmsg, "model name is blank");
+    error_msg = "model name is blank";
     return 0;
   }
-  char errmsg2[MSG_SZ];
   Split parts(model);
   int num_parts = parts.size();
 
   if (num_parts == 1) {
-    int ret = tri_from_str(model, fracs, errmsg2);
-    if (errmsg)
-      strcpy_msg(errmsg, errmsg2);
+    string error_msg2;
+    int ret = tri_from_str(model, fracs, error_msg);
     if (ret == 0) // success
       return 3;
     else if (ret == 1) // failure
@@ -334,24 +325,18 @@ int args2fracs(const char *model, vector<int> &fracs, char *errmsg = nullptr)
   Status stat;
   if (num_parts > 0) {
     if (!(stat = read_triangle_fraction(parts[0], fracs[0], fracs[1]))) {
-      if (errmsg)
-        snprintf(errmsg, MSG_SZ, "fraction A is '%s': %s", parts[0],
-                 stat.c_msg());
+      error_msg = msg_str("fraction A is '%s': %s", parts[0], stat.c_msg());
       return 0;
     }
   }
   if (num_parts > 1) {
     if (!(stat = read_triangle_fraction(parts[1], fracs[2], fracs[3]))) {
-      if (errmsg)
-        snprintf(errmsg, MSG_SZ, "fraction B is '%s': %s", parts[1],
-                 stat.c_msg());
+      error_msg = msg_str("fraction B is '%s': %s", parts[1], stat.c_msg());
       return 0;
     }
     if (num_parts > 2) {
       if (!(stat = read_triangle_fraction(parts[2], fracs[4], fracs[5]))) {
-        if (errmsg)
-          snprintf(errmsg, MSG_SZ, "fraction C is '%s': %s", parts[2],
-                   stat.c_msg());
+        error_msg = msg_str("fraction C is '%s': %s", parts[2], stat.c_msg());
         return 0;
       }
     }
@@ -365,7 +350,6 @@ int args2fracs(const char *model, vector<int> &fracs, char *errmsg = nullptr)
 
 void kt_opts::process_command_line(int argc, char **argv)
 {
-  char errmsg[MSG_SZ];
   opterr = 0;
   int c;
 
@@ -419,8 +403,7 @@ void kt_opts::process_command_line(int argc, char **argv)
         list_idx = 0;
       else {
         if (!read_int(optarg, &list_idx))
-          error(msg_str("list number is '%s', must be an integer "
-                        "or 'list'",
+          error(msg_str("list number is '%s', must be an integer or 'list'",
                         optarg),
                 c);
         if (list_idx < 1)
@@ -463,9 +446,10 @@ void kt_opts::process_command_line(int argc, char **argv)
     model_name += string(" ") + argv[optind + 2];
 
   // args2fracs may change num_fracs
-  num_fracs = args2fracs(model_name.c_str(), triangle, errmsg);
+  string error_msg;
+  num_fracs = args2fracs(model_name.c_str(), triangle, error_msg);
   if (model_name.size() && !num_fracs)
-    error(errmsg);
+    error(error_msg);
 
   if (num_fracs == 1) { // trapezohedron
     if (heights_set & 4)
@@ -514,29 +498,24 @@ bool get_C(const Vec3d &A, const Vec3d &B, Vec3d &C)
   return true;
 }
 
-bool is_degenerate_model(const vector<Vec3d> &kite, char *errmsg)
+string degeneracy_message(const vector<Vec3d> &kite)
 {
+  string prefix = "degenerate model: ";
 
   // kite vertices - A:0, C:1, B:2, C':3
   Vec3d k012_offset = kite[1] - nearest_point(kite[1], kite[0], kite[2]);
-  if (k012_offset.len() < epsilon) {
-    strcpy_msg(errmsg, "kite shape is a line segment");
-    return true;
-  }
+  if (k012_offset.len() < epsilon)
+    return prefix + "kite shape is a line segment";
 
   Vec3d k123_offset = kite[2] - nearest_point(kite[2], kite[1], kite[3]);
   Vec3d k301_offset = kite[0] - nearest_point(kite[0], kite[3], kite[1]);
-  if (k123_offset.len() < epsilon || k301_offset.len() < epsilon) {
-    strcpy_msg(errmsg, "kite shape is a triangle");
-    return true;
-  }
+  if (k123_offset.len() < epsilon || k301_offset.len() < epsilon)
+    return prefix + "kite shape is a triangle";
 
-  if (fabs(vtriple(kite[0], kite[1], kite[2])) < epsilon) {
-    strcpy_msg(errmsg, "model does not enclose any space");
-    return true;
-  }
+  if (fabs(vtriple(kite[0], kite[1], kite[2])) < epsilon)
+    return prefix + "model does not enclose any space";
 
-  return false;
+  return string();
 }
 
 bool fraction_to_trap_kite(vector<int> tri, Symmetry &sym, vector<Vec3d> &kite,
@@ -667,9 +646,10 @@ void flip_triangle(vector<int> &fracs, int frac)
 void get_list(vector<vector<string>> &list, string model, int N)
 {
   vector<int> fracs(6);
-  int num_fracs = args2fracs(model.c_str(), fracs);
+  string error_msg; // Not read, list contains only valid models
+  int num_fracs = args2fracs(model.c_str(), fracs, error_msg);
   string trap2;         // trapezohedron pair
-  string schwarz_equiv; // equivalend base Schwarz model
+  string schwarz_equiv; // equivalent base Schwarz model
   if (num_fracs == 1) { // trapezohedron
     trap2 = msg_str("%d/%d", 2 * fracs[0], 2 * fracs[1]);
     vector<string> desc;
@@ -680,7 +660,7 @@ void get_list(vector<vector<string>> &list, string model, int N)
            3) { // check if fracs correspond to a base Schwarz model
     for (int i = 0; strcmp(base_models[i], "end") != 0; i++) {
       vector<int> b_fracs;
-      if (tri_from_str(base_models[i], b_fracs) == 0 &&
+      if (tri_from_str(base_models[i], b_fracs, error_msg) == 0 &&
           fracs[4] == b_fracs[4]) { // C
         if (fracs[5] != b_fracs[5])
           flip_triangle(fracs, 0);    // covert C to suplement
@@ -800,36 +780,28 @@ void print_base_model_report(const string &model_name,
   fprintf(stderr, "\n");
 }
 
-bool make_base_model(Geometry &geom, const vector<int> &fracs, int num_fracs,
-                     unsigned int heights_set, double heights[],
-                     char color_type, vector<double> *hts_used,
-                     string *sym_used, bool kite_only, char *errmsg)
+Status make_base_model(Geometry &geom, const vector<int> &fracs, int num_fracs,
+                       unsigned int heights_set, double heights[],
+                       char color_type, vector<double> *hts_used,
+                       string *sym_used, bool kite_only)
 {
-  *errmsg = '\0';
   Geometry kite_geom;
   vector<Vec3d> schwarz_verts;
   Symmetry sym;
   bool is_schwarz = (num_fracs > 1);
   if (is_schwarz) {
-    if (!get_schwarz_tri_verts(fracs, schwarz_verts, &sym)) {
-      strcpy_msg(errmsg, "fractions do not correspond to a Schwarz "
-                         "triangle");
-      return false;
-    }
+    if (!get_schwarz_tri_verts(fracs, schwarz_verts, &sym))
+      return Status::error("fractions do not correspond to a Schwarz triangle");
     if (!triangle_to_kite(schwarz_verts, kite_geom.raw_verts(), heights_set,
-                          heights, hts_used)) {
-      strcpy_msg(errmsg, "could not calculate Schwarz model with "
-                         "these heights");
-      return false;
-    }
+                          heights, hts_used))
+      return Status::error(
+          "could not calculate Schwarz model with these heights");
   }
   else {
     if (!fraction_to_trap_kite(fracs, sym, kite_geom.raw_verts(), heights_set,
-                               heights, hts_used)) {
-      strcpy_msg(errmsg, "could not calculate trapezohedron with these "
-                         "heights (try increasing B height)");
-      return false;
-    }
+                               heights, hts_used))
+      return Status::error("could not calculate trapezohedron with these "
+                           "heights (try increasing B height)");
   }
 
   kite_geom.add_face({0, 1, 2, 3});
@@ -842,10 +814,6 @@ bool make_base_model(Geometry &geom, const vector<int> &fracs, int num_fracs,
   else
     *sym_used += 'h';
 
-  char errmsg2[MSG_SZ];
-  if (is_degenerate_model(kite_geom.verts(), errmsg2))
-    sprintf(errmsg, "degenerate model: %s", errmsg2);
-
   if (color_type == 0 || color_type == 1 ||             // All Aa
       (is_schwarz && color_type > 1 && color_type < 6)) // Schwarz BbCc
     repeat_kite_with_color(geom, kite_geom, sym, fracs, color_type);
@@ -854,14 +822,16 @@ bool make_base_model(Geometry &geom, const vector<int> &fracs, int num_fracs,
 
   if (!kite_only) // avoid reordering faces if single kite is to be output
     merge_coincident_elements(geom, "v", epsilon);
-  return true;
+
+  string error_msg = degeneracy_message(kite_geom.verts());
+  return (error_msg.empty()) ? Status::ok() : Status::warning(error_msg);
 }
 
-bool make_list_model(Geometry &geom, const string model_str,
-                     vector<string> &model_desc, unsigned int heights_set,
-                     double heights[], int num_parts, double angle,
-                     char color_type, bool kite_only, char *errmsg,
-                     vector<string> &warnings, int verb)
+Status make_list_model(Geometry &geom, const string model_str,
+                       vector<string> &model_desc, unsigned int heights_set,
+                       double heights[], int num_parts, double angle,
+                       char color_type, bool kite_only,
+                       vector<string> &warnings, int verb)
 {
   warnings.clear();
   string base_model =
@@ -873,16 +843,19 @@ bool make_list_model(Geometry &geom, const string model_str,
     base_model = "7/2"; // example model
 
   vector<int> fracs(6);
-  int num_fracs = args2fracs(base_model.c_str(), fracs, errmsg);
+  string error_msg; // Not read, list contains only valid models
+  int num_fracs = args2fracs(base_model.c_str(), fracs, error_msg);
 
   Geometry base_geom;
   vector<double> hts_used;
   string sym_used;
-  if (!make_base_model(base_geom, fracs, num_fracs, heights_set, heights,
-                       color_type, &hts_used, &sym_used, kite_only, errmsg))
-    return false;
-  if (*errmsg)
-    warnings.push_back(errmsg);
+  Status stat;
+  if (!(stat =
+            make_base_model(base_geom, fracs, num_fracs, heights_set, heights,
+                            color_type, &hts_used, &sym_used, kite_only)))
+    return stat;
+  if (!stat.msg().empty())
+    warnings.push_back(stat.msg());
 
   Coloring clrngs[3];
   if (is_even(color_type)) // value letter is followed by index letter
@@ -899,7 +872,7 @@ bool make_list_model(Geometry &geom, const string model_str,
       print_base_model_report(base_model, orig_base_model, hts_used,
                               base_sym.get_symbol(), sym_used);
     }
-    return true;
+    return Status::ok();
   }
 
   string full_sym_str = model_desc[1];
@@ -997,7 +970,7 @@ bool make_list_model(Geometry &geom, const string model_str,
     fprintf(stderr, "\n");
   }
 
-  return true;
+  return Status::ok();
 }
 
 int main(int argc, char *argv[])
@@ -1005,17 +978,13 @@ int main(int argc, char *argv[])
   kt_opts opts;
   opts.process_command_line(argc, argv);
 
-  char errmsg[MSG_SZ];
   Geometry out_geom;
   if (opts.list_idx < 0) {
     vector<double> hts_used;
     string sym_used;
-    if (!make_base_model(out_geom, opts.triangle, opts.num_fracs,
-                         opts.heights_set, opts.heights, opts.color_type,
-                         &hts_used, &sym_used, opts.kite_only, errmsg))
-      opts.error(errmsg);
-    if (*errmsg)
-      opts.warning(errmsg);
+    opts.print_status_or_exit(make_base_model(
+        out_geom, opts.triangle, opts.num_fracs, opts.heights_set, opts.heights,
+        opts.color_type, &hts_used, &sym_used, opts.kite_only));
     if (opts.verb)
       print_base_model_report(opts.model_name, opts.model_name, hts_used,
                               Symmetry(out_geom).get_symbol(), sym_used);
@@ -1034,11 +1003,12 @@ int main(int argc, char *argv[])
     }
     else if (opts.list_idx <= (int)list.size()) {
       vector<string> warnings;
-      if (!make_list_model(out_geom, opts.model_name, list[opts.list_idx - 1],
-                           opts.heights_set, opts.heights, opts.num_parts,
-                           opts.angle, opts.color_type, opts.kite_only, errmsg,
-                           warnings, opts.verb))
-        opts.error(errmsg);
+      Status stat;
+      if (!(stat = make_list_model(
+                out_geom, opts.model_name, list[opts.list_idx - 1],
+                opts.heights_set, opts.heights, opts.num_parts, opts.angle,
+                opts.color_type, opts.kite_only, warnings, opts.verb)))
+        opts.error(stat.msg());
       for (auto &warning : warnings)
         opts.warning(warning.c_str());
     }

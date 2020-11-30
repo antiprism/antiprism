@@ -142,15 +142,13 @@ Status ProgramOpts::get_arg_id(const char *arg, string *arg_id,
 {
   *arg_id = ""; // invalid value
 
-  char arg_lower[MSG_SZ];
+  string arg_lower = arg;
   bool ignore_case = !(argmatch_case_sensitive & match_flags);
   if (ignore_case) { // make lowercase copy of arg
-    char *q = arg_lower;
-    for (const char *p = arg; *p; ++p)
-      *q++ = tolower(*p);
-    *q = '\0';
+    for (auto &c : arg_lower)
+      c = tolower(c);
   }
-  const char *argu = (ignore_case) ? arg_lower : arg;
+  const char *argu = (ignore_case) ? &arg_lower[0] : arg;
 
   // set up arg -> id map
   map<string, string> mps;
@@ -161,7 +159,7 @@ Status ProgramOpts::get_arg_id(const char *arg, string *arg_id,
   while (true) {
     if (*p == '|' || *p == '\0') { // end of argument, id pair
       if (id == "")                // no '=' in pair so ID is position number
-        id = itostr(pos_no);
+        id = std::to_string(pos_no);
       if (argument != "") // don't stor empty pairs
         mps[argument] = id;
       if (!*p) // end of string, finish processing

@@ -66,18 +66,30 @@ Status Vec3d::read(const char *str)
 
   return Status::ok();
 }
-
+/*
 std::string Vec3d::str() const
 {
   return is_set() ? msg_str("(%f,%f,%f)", v[0], v[1], v[2])
                   : std::string("(not set)");
+}
+*/
+
+std::string Vec3d::to_str(const char *sep, int sig_dgts) const
+{
+  const auto *v = get_v();
+  if (sig_dgts > 0)
+    return msg_str("%.*g%s%.*g%s%.*g", sig_dgts, v[0], sep, sig_dgts, v[1], sep,
+                   sig_dgts, v[2]);
+  else
+    return msg_str("%.*f%s%.*f%s%.*f", -sig_dgts, v[0], sep, -sig_dgts, v[1],
+                   sep, -sig_dgts, v[2]);
 }
 
 void Vec3d::dump(const char *var, FILE *file) const
 {
   if (var)
     fprintf(file, "%s=", var);
-  fprintf(file, "%s\n", str().c_str());
+  fprintf(file, "(%s)\n", to_str().c_str());
 }
 
 // make vector unusable

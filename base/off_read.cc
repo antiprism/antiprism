@@ -78,8 +78,8 @@ Status off_file_read(string file_name, Geometry &geom)
   }
   else { // try the name as an internal identifier
     if (!(stat = make_resource_geom(geom, file_name)))
-      stat.set_error("could not open input file '" + file_name + "': " +
-                     stat.msg());
+      stat.set_error("could not open input file '" + file_name +
+                     "': " + stat.msg());
   }
 
   if (ifile && ifile != stdin)
@@ -293,7 +293,7 @@ Status off_file_read(FILE *ifile, Geometry &geom)
     msg += ((adj_equal_idx_lines.size() > 1) ? "s " : " ");
     for (unsigned int i = 0;
          i < adj_equal_idx_lines.size() && i < max_adj_equal_idx_lines - 1; i++)
-      msg += itostr(adj_equal_idx_lines[i]) + ", ";
+      msg += std::to_string(adj_equal_idx_lines[i]) + ", ";
 
     if (adj_equal_idx_lines.size() == max_adj_equal_idx_lines)
       msg += "..."; // the unmentioned last line and any others

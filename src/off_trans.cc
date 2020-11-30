@@ -166,7 +166,6 @@ Status rel_scale_val(Geometry &geom, char rel_scale, double *scale)
 
 void trans_opts::process_command_line(int argc, char **argv)
 {
-  char errmsg[MSG_SZ];
   Status stat;
   opterr = 0;
   int c;

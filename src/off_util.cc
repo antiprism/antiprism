@@ -53,8 +53,8 @@ using std::vector;
 using namespace anti;
 
 // Defined at end of file
-int unzip_poly(Geometry &geom, int root, double fract, char centring,
-               bool unzip_z_align, char *errmsg);
+Status unzip_poly(Geometry &geom, int root, double fract, char centring,
+                  bool unzip_z_align);
 
 void triangulate_faces(Geometry &geom, unsigned int winding_rule)
 {
@@ -311,14 +311,13 @@ void resolve_color_to_elem(Geometry &geom, const Color &c,
   elem_list.clear();
 }
 
-bool get_del_element_list(Geometry &geom, const string &elem,
-                          vector<vector<int>> &elem_lists,
-                          vector<vector<int>> &edge_parts,
-                          vector<vector<int>> &face_parts, char *errmsg)
+Status get_del_element_list(Geometry &geom, const string &elem,
+                            vector<vector<int>> &elem_lists,
+                            vector<vector<int>> &edge_parts,
+                            vector<vector<int>> &face_parts)
 {
-  *errmsg = '\0';
   if (!elem.size())
-    return true;
+    return Status::ok();
 
   const char *elem_type_strs[] = {"vertex",    "edge",      "face",
                                   "edge part", "face part", "vertex orders",
@@ -363,40 +362,31 @@ bool get_del_element_list(Geometry &geom, const string &elem,
     elems_sz = max_face_sides(geom) + 1;
   }
   else {
-    strcpy_msg(errmsg, msg_str("invalid element type '%c', "
-                               "should be v, e, f, E, F, o, s",
-                               elem_type_char)
-                           .c_str());
-    return false;
+    return Status::error(msg_str("invalid element type '%c', "
+                                 "should be v, e, f, E, F, o, s",
+                                 elem_type_char));
   }
 
-  if (elem_lists[elem_type].size()) {
-    strcpy_msg(errmsg, msg_str("list for %s elements already given",
-                               elem_type_strs[elem_type_name])
-                           .c_str());
-    return false;
-  }
+  if (elem_lists[elem_type].size())
+    return Status::error(msg_str("list for %s elements already given",
+                                 elem_type_strs[elem_type_name]));
 
   Status stat =
       read_idx_list(elem.c_str() + 1, elem_lists[elem_type], elems_sz, false);
-  if (stat.is_error()) {
-    strcpy_msg(errmsg, msg_str("list for %s elements: %s",
-                               elem_type_strs[elem_type], stat.c_msg())
-                           .c_str());
-    return false;
-  }
+  if (stat.is_error())
+    return Status::error(msg_str("list for %s elements: %s",
+                                 elem_type_strs[elem_type], stat.c_msg()));
 
-  return true;
+  return Status::ok();
 }
 
 // vertex not used. future use?
-bool get_del_parts_list(vector<vector<int>> &edge_parts,
-                        vector<vector<int>> &face_parts, const string &elem,
-                        vector<vector<int>> &elem_lists, char *errmsg)
+Status get_del_parts_list(vector<vector<int>> &edge_parts,
+                          vector<vector<int>> &face_parts, const string &elem,
+                          vector<vector<int>> &elem_lists)
 {
-  *errmsg = '\0';
   if (!elem.size())
-    return true;
+    Status::ok();
 
   const char *elem_type_strs[] = {"vertex", "edge", "face"};
   char elem_type_char = elem[0];
@@ -415,42 +405,30 @@ bool get_del_parts_list(vector<vector<int>> &edge_parts,
     elems_sz = face_parts.size();
   }
   else {
-    strcpy_msg(errmsg, msg_str("invalid element type '%c', "
-                               "should be E, or F",
-                               elem_type_char)
-                           .c_str());
-    return false;
+    return Status::error(msg_str("invalid element type '%c', should be E, or F",
+                                 elem_type_char));
   }
 
-  if (elem_lists[elem_type].size()) {
-    strcpy_msg(errmsg, msg_str("list for %s parts already given",
-                               elem_type_strs[elem_type])
-                           .c_str());
-    return false;
-  }
+  if (elem_lists[elem_type].size())
+    return Status::error(
+        msg_str("list for %s parts already given", elem_type_strs[elem_type]));
 
   Status stat =
       read_idx_list(elem.c_str() + 1, elem_lists[elem_type], elems_sz, false);
-  if (stat.is_error()) {
-    strcpy_msg(errmsg, msg_str("list for %s parts: %s",
-                               elem_type_strs[elem_type], stat.c_msg())
-                           .c_str());
-    return false;
-  }
+  if (stat.is_error())
+    return Status::error(msg_str("list for %s parts: %s",
+                                 elem_type_strs[elem_type], stat.c_msg()));
 
-  return true;
+  return Status::ok();
 }
 
 // if multi is true, old behavior of more than one element type deleted
 // collectively is still possible
-bool delete_elements(Geometry &geom, vector<string> del_elems, bool keep,
-                     string invert_del, bool multi, char *errmsg)
+Status delete_elements(Geometry &geom, vector<string> del_elems, bool keep,
+                       string invert_del, bool multi)
 {
-  *errmsg = '\0';
-  if ((int)del_elems[0].size() <= 1) {
-    strcpy_msg(errmsg, "selection string is missing");
-    return false;
-  }
+  if ((int)del_elems[0].size() <= 1)
+    return Status::error("selection string is missing");
 
   // preserve original edge list and complete a new one
   vector<vector<int>> original_edges = geom.edges();
@@ -472,13 +450,10 @@ bool delete_elements(Geometry &geom, vector<string> del_elems, bool keep,
     // fprintf(stderr,"elem_type_char = %c\n",elem_type_char);
     string str = "vefEF";
     std::size_t found = str.find(elem_type_char);
-    if (found == std::string::npos) {
-      strcpy_msg(errmsg, msg_str("invalid element type '%c', "
-                                 "should be v, e, f, E , F",
-                                 elem_type_char)
-                             .c_str());
-      return false;
-    }
+    if (found == std::string::npos)
+      return Status::error(msg_str("invalid element type '%c', "
+                                   "should be v, e, f, E , F",
+                                   elem_type_char));
 
     char selection_type_char = vi_str[1];
     str = "vefEFosxyz";
@@ -490,11 +465,9 @@ bool delete_elements(Geometry &geom, vector<string> del_elems, bool keep,
         selection_type_char = elem_type_char;
       }
       else {
-        strcpy_msg(errmsg, msg_str("invalid selection type '%c', "
-                                   "should be v, e, f, E, F, o, s, x, y, z",
-                                   selection_type_char)
-                               .c_str());
-        return false;
+        return Status::error(msg_str("invalid selection type '%c', should be "
+                                     "v, e, f, E, F, o, s, x, y, z",
+                                     selection_type_char));
       }
     }
     else {
@@ -505,12 +478,14 @@ bool delete_elements(Geometry &geom, vector<string> del_elems, bool keep,
 
     vector<vector<int>> elem_lists_selection(3);
 
+    Status stat;
     bool special_selector = false;
     // validate and resolve vertex orders to vertices
     if (selection_type_char == 'o') {
-      if (!get_del_element_list(geom, vi_str, elem_lists_selection, edge_parts,
-                                face_parts, errmsg))
-        return false;
+      if (!(stat = get_del_element_list(geom, vi_str, elem_lists_selection,
+                                        edge_parts, face_parts)))
+        return Status(stat);
+
       resolve_vert_order_to_verts(geom, elem_lists_selection[0]);
       // the list is now vertex indexes
       selection_type_char = 'v';
@@ -519,9 +494,10 @@ bool delete_elements(Geometry &geom, vector<string> del_elems, bool keep,
     else
         // validate and resolve face sides to faces
         if (selection_type_char == 's') {
-      if (!get_del_element_list(geom, vi_str, elem_lists_selection, edge_parts,
-                                face_parts, errmsg))
-        return false;
+      if (!(stat = get_del_element_list(geom, vi_str, elem_lists_selection,
+                                        edge_parts, face_parts)))
+        return Status(stat);
+
       resolve_face_sides_to_faces(geom, elem_lists_selection[2]);
       // the list is now face indexes
       selection_type_char = 'f';
@@ -534,16 +510,12 @@ bool delete_elements(Geometry &geom, vector<string> del_elems, bool keep,
       // Coloring clrngs[3];
       // if(!read_Colorings(clrngs, vi_str.substr(1), errmsg))
       //   return false;
+      if (vi_str.length() <= 1)
+        return Status::error("no color specified");
+
       Color c;
-      char c_name[MSG_SZ];
-      if (vi_str.length() > 1)
-        strcpy_msg(c_name, vi_str.substr(1).c_str());
-      else {
-        strcpy_msg(errmsg, "no color specified");
-        return false;
-      }
-      if (!c.read(c_name))
-        return false;
+      if (!(stat = c.read(vi_str.substr(1).c_str())))
+        return Status(stat);
       resolve_color_to_elem(geom, c, selection_type_char, elem_lists_selection);
       // the list is now element type
       selection_type_char = (selection_type_char == 'x')
@@ -556,9 +528,9 @@ bool delete_elements(Geometry &geom, vector<string> del_elems, bool keep,
       // process parts
       if (elem_type_char == selection_type_char) {
         // resolve part numbers
-        if (!get_del_parts_list(edge_parts, face_parts, vi_str,
-                                elem_lists_selection, errmsg))
-          return false;
+        if (!(stat = get_del_parts_list(edge_parts, face_parts, vi_str,
+                                        elem_lists_selection)))
+          return Status(stat);
 
         // at this point elem_lists contain part numbers
         vector<int> elem_lists_resolved;
@@ -585,9 +557,9 @@ bool delete_elements(Geometry &geom, vector<string> del_elems, bool keep,
       else {
         // resolve parts to elements
         if (!special_selector)
-          if (!get_del_element_list(geom, vi_str, elem_lists_selection,
-                                    edge_parts, face_parts, errmsg))
-            return false;
+          if (!(stat = get_del_element_list(geom, vi_str, elem_lists_selection,
+                                            edge_parts, face_parts)))
+            return Status(stat);
 
         vector<int> elem_lists_resolved;
         if (elem_type_char == 'E') {
@@ -731,9 +703,9 @@ bool delete_elements(Geometry &geom, vector<string> del_elems, bool keep,
     // process elements
     else {
       if (!special_selector)
-        if (!get_del_element_list(geom, vi_str, elem_lists_selection,
-                                  edge_parts, face_parts, errmsg))
-          return false;
+        if (!(stat = get_del_element_list(geom, vi_str, elem_lists_selection,
+                                          edge_parts, face_parts)))
+          return Status(stat);
 
       // previous behaviour
       if (elem_type_char == selection_type_char) {
@@ -1030,19 +1002,17 @@ bool delete_elements(Geometry &geom, vector<string> del_elems, bool keep,
   else
     geom.del(VERTS, elem_lists[0]);
 
-  if (explicit_edge_warning)
-    strcpy_msg(
-        errmsg,
-        "some deleted edges were implicit edges. use -e to make them explicit");
-
-  return true;
+  return (explicit_edge_warning)
+             ? Status::warning(
+                   "some deleted edges were implicit edges. use -e to "
+                   "make them explicit")
+             : Status::ok();
 }
 
-bool add_element(Geometry &geom, const string &elem, char *errmsg)
+Status add_element(Geometry &geom, const string &elem)
 {
-  *errmsg = '\0';
   if (!elem.size())
-    return true;
+    return Status::ok();
 
   char elem_type_char = elem[0];
   const char *elem_type_str;
@@ -1053,74 +1023,58 @@ bool add_element(Geometry &geom, const string &elem, char *errmsg)
   else if (elem_type_char == 'f')
     elem_type_str = "face";
   else {
-    strcpy_msg(errmsg, msg_str("invalid element type '%c', "
-                               "should be v, e, or f",
-                               elem_type_char)
-                           .c_str());
-    return false;
+    return Status::error(msg_str("invalid element type '%c', "
+                                 "should be v, e, or f",
+                                 elem_type_char));
   }
 
-  Split parts(elem.c_str() + 1, ":");
+  Split parts(elem.c_str() + 1, ":", true);
   int num_parts = parts.size();
-  if (num_parts > 2) {
-    strcpy_msg(errmsg, "more than one ':' used");
-    return false;
-  }
-  if (num_parts == 0 || *parts[0] == '\0') {
-    strcpy_msg(errmsg, msg_str("'%s': no element data", elem.c_str()).c_str());
-    return false;
-  }
+  if (num_parts > 2)
+    return Status::error("more than one ':' used");
+
+  if (num_parts == 0 || *parts[0] == '\0')
+    return Status::error(msg_str("'%s': no element data", elem.c_str()));
 
   Status stat;
   Color col;
   if (num_parts > 1 && *parts[1] != '\0') {
-    if (!(stat = col.read(parts[1]))) {
-      strcpy_msg(errmsg, msg_str("%s colour '%s': %s", elem_type_str, parts[1],
-                                 stat.c_msg())
-                             .c_str());
-      return false;
-    }
+    if (!(stat = col.read(parts[1])))
+      return Status::error(
+          msg_str("%s colour '%s': %s", elem_type_str, parts[1], stat.c_msg()));
   }
 
   if (elem_type_char == 'v') {
     Vec3d vec;
-    if (!(stat = vec.read(parts[0]))) {
-      strcpy_msg(errmsg,
-                 msg_str("vertex coordinates '%s': %s", parts[0], stat.c_msg())
-                     .c_str());
-      return false;
-    }
+    if (!(stat = vec.read(parts[0])))
+      return Status::error(
+          msg_str("vertex coordinates '%s': %s", parts[0], stat.c_msg()));
+
     geom.add_vert(vec, col);
   }
   else if (elem_type_char == 'e' || elem_type_char == 'f') {
     vector<int> idx_list;
-    if (!(stat = read_int_list(parts[0], idx_list))) {
-      strcpy_msg(errmsg, msg_str("%s index numbers: '%s': %s", elem_type_str,
-                                 parts[0], stat.c_msg())
-                             .c_str());
-      return false;
-    }
+    if (!(stat = read_int_list(parts[0], idx_list)))
+      return Status::error(msg_str("%s index numbers: '%s': %s", elem_type_str,
+                                   parts[0], stat.c_msg()));
+
     int list_sz = idx_list.size();
     for (int i = 0; i < list_sz; i++) {
       int idx = idx_list[i];
       if (idx < 0)
         idx += geom.verts().size();
-      if (idx < 0 || idx >= (int)geom.verts().size()) {
-        strcpy_msg(errmsg, msg_str("%s index numbers: '%s': %d out of range",
-                                   elem_type_str, parts[0], idx_list[i])
-                               .c_str());
-        return false;
-      }
+      if (idx < 0 || idx >= (int)geom.verts().size())
+        return Status::error(msg_str("%s index numbers: '%s': %d out of range",
+                                     elem_type_str, parts[0], idx_list[i]));
+
       idx_list[i] = idx;
     }
     if (elem_type_char == 'e') {
-      if (list_sz < 2) {
-        strcpy_msg(errmsg, msg_str("%s index numbers: '%s': "
-                                   "must give at least two numbers",
-                                   elem_type_str, parts[0])
-                               .c_str());
-        return false;
-      }
+      if (list_sz < 2)
+        return Status::error(msg_str("%s index numbers: '%s': "
+                                     "must give at least two numbers",
+                                     elem_type_str, parts[0]));
+
       if (list_sz == 2)
         geom.add_edge(idx_list, col);
       else {
@@ -1130,27 +1084,26 @@ bool add_element(Geometry &geom, const string &elem, char *errmsg)
       }
     }
     if (elem_type_char == 'f') {
-      if (!list_sz) {
-        strcpy_msg(errmsg, msg_str("%s index numbers: '%s': "
-                                   "no index numbers given",
-                                   elem_type_str, parts[0])
-                               .c_str());
-        return false;
-      }
+      if (!list_sz)
+        return Status::error(msg_str("%s index numbers: '%s': "
+                                     "no index numbers given",
+                                     elem_type_str, parts[0]));
+
       geom.add_face(idx_list, col);
     }
   }
-  return true;
+  return Status::ok();
 }
 
-bool add_elements(Geometry &geom, vector<string> add_elems, char *errmsg)
+Status add_elements(Geometry &geom, vector<string> add_elems)
 {
+  Status stat;
   vector<string>::const_iterator vi;
   for (vi = add_elems.begin(); vi != add_elems.end(); ++vi) {
-    if (!add_element(geom, *vi, errmsg))
-      return false;
+    if (!(stat = add_element(geom, *vi)))
+      break;
   }
-  return true;
+  return stat;
 }
 
 class pr_opts : public ProgramOpts {
@@ -1297,7 +1250,6 @@ const char *get_help(const char *name)
 
 void pr_opts::process_command_line(int argc, char **argv)
 {
-  char errmsg[MSG_SZ];
   opterr = 0;
   int c;
   Geometry adding;
@@ -1435,10 +1387,8 @@ void pr_opts::process_command_line(int argc, char **argv)
         else if (entries[0][0] == 'v')
           invert_del = 'v';
       }
-      if (!delete_elements(geom, del_elems, false, invert_del, false, errmsg))
-        error(errmsg, c);
-      if (*errmsg)
-        warning(errmsg);
+      print_status_or_exit(
+          delete_elements(geom, del_elems, false, invert_del, false), c);
       break;
     }
 
@@ -1463,16 +1413,15 @@ void pr_opts::process_command_line(int argc, char **argv)
         else if (entries[0][0] == 'v')
           invert_del = 'v';
       }
-      if (!delete_elements(geom, del_elems, true, invert_del, false, errmsg))
-        error(errmsg, c);
+      print_status_or_exit(
+          delete_elements(geom, del_elems, true, invert_del, false), c);
       break;
     }
 
     case 'A':
       add_elems.clear();
       add_elems.push_back(optarg);
-      if (!add_elements(geom, add_elems, errmsg))
-        error(errmsg, c);
+      print_status_or_exit(add_elements(geom, add_elems), c);
       break;
 
     case 'g':
@@ -1492,28 +1441,27 @@ void pr_opts::process_command_line(int argc, char **argv)
       Split parts(optarg, ",");
 
       // Get merge elements
-      char elems[MSG_SZ];
-      strcpy_msg(elems, parts[0]);
-      if (strspn(elems, "svefab") != strlen(elems))
+      string elems(parts[0]);
+      if (strspn(elems.c_str(), "svefab") != elems.size())
         error(msg_str("elements to merge are %s must be v, e, f, a, b "
-                      "or s\n",
-                      elems),
+                      "or s",
+                      elems.c_str()),
               c);
 
-      if (strchr(elems, 's') && strlen(elems) > 1)
+      if (strchr(elems.c_str(), 's') && elems.size() > 1)
         error("s is for sorting only, cannot be used with v, e, or f", c);
 
-      if (strchr(elems, 'a') && strlen(elems) > 1)
+      if (strchr(elems.c_str(), 'a') && elems.size() > 1)
         error("a includes vef, and must be used alone", c);
 
-      if (strchr(elems, 'b') && strlen(elems) > 1)
+      if (strchr(elems.c_str(), 'b') && elems.size() > 1)
         error("b includes vef, and must be used alone", c);
 
-      if (strspn(elems, "ef") && !strchr(elems, 'v'))
+      if (strspn(elems.c_str(), "ef") && !strchr(elems.c_str(), 'v'))
         warning("without v, some orphan vertices may result", c);
 
-      if (*elems == 'a')
-        strcpy_msg(elems, "vef");
+      if (elems[0] == 'a')
+        elems = "vef";
 
       // Get blend type
       int blend_type = 3;
@@ -1528,7 +1476,7 @@ void pr_opts::process_command_line(int argc, char **argv)
       // Process
       double epsilon =
           (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
-      if (*elems == 'b') {
+      if (elems[0] == 'b') {
         merge_coincident_elements(geom, "ve", blend_type, epsilon);
         Geometry tmp = geom;
         vector<map<int, set<int>>> equiv_elems;
@@ -1586,9 +1534,9 @@ void pr_opts::process_command_line(int argc, char **argv)
           unzip_z_align = true;
       }
 
-      if (!unzip_poly(geom, unzip_root, unzip_frac, unzip_centre, unzip_z_align,
-                      errmsg))
-        error(errmsg, 'u');
+      print_status_or_exit(
+          unzip_poly(geom, unzip_root, unzip_frac, unzip_centre, unzip_z_align),
+          c);
 
       break;
     }
@@ -1838,25 +1786,21 @@ int unzip_tree::flatten(const Geometry &geom, Geometry &net_geom,
   return 1;
 }
 
-int unzip_poly(Geometry &geom, int root, double fract, char centring,
-               bool unzip_z_align, char *errmsg)
+Status unzip_poly(Geometry &geom, int root, double fract, char centring,
+                  bool unzip_z_align)
 {
   GeometryInfo info(geom);
-  if (!info.is_polyhedron())
-    strcpy_msg(errmsg, "input not a polyhedron (temporary restriction)");
 
-  if (info.num_parts() > 1) {
-    strcpy_msg(errmsg, "input not connected (temporary restriction)");
-    return 0;
-  }
-  if (root < 0 || root >= (int)geom.faces().size()) {
-    sprintf(errmsg, "root face '%d' is not a valid face index number", root);
-    return 0;
-  }
-  if (!strchr("fx", centring)) {
-    sprintf(errmsg, "invalid centring type '%c', must be f or x", centring);
-    return 0;
-  }
+  if (info.num_parts() > 1)
+    return Status::error("input not connected (temporary restriction)");
+
+  if (root < 0 || root >= (int)geom.faces().size())
+    return Status::error(
+        msg_str("root face '%d' is not a valid face index number", root));
+
+  if (!strchr("fx", centring))
+    return Status::error(
+        msg_str("invalid centring type '%c', must be f or x", centring));
 
   if (unzip_z_align)
     geom.transform(Trans3d::rotate(geom.face_norm(root), Vec3d::Z));
@@ -1873,5 +1817,5 @@ int unzip_poly(Geometry &geom, int root, double fract, char centring,
   }
 
   geom = net_geom;
-  return 1;
+  return Status::ok();
 }
