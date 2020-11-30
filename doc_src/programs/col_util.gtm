@@ -63,7 +63,7 @@ Display a color wheel of red green and blue
 col_util -d wheel -m map_red:green:blue | antiview
 <<CMDS_END>>
 
-Display rainbow colour map as a grid or as a bar code
+Display rainbow colour map as a grid or as a color bars
 <<CMDS_START>>
 col_util -d grid -m rainbow | antiview
 col_util -d grid -m rainbow -b w| antiview
