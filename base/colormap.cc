@@ -544,6 +544,9 @@ Status ColorMapRangeRgb::init(const char *map_name)
 /// A colour map using random values in a range
 class ColorMapRangeRand : public ColorMapRange {
 public:
+  // Check the component ranges have 1 or 2 values
+  Status check_range_sizes(const char *components);
+
   /// Get the colour value for an index number.
   /**\param idx the index.
    * \return The colour. */
@@ -555,6 +558,17 @@ public:
    *  that the clone failed. */
   ColorMap *clone() const { return new ColorMapRangeRand(*this); }
 };
+
+Status ColorMapRangeRand::check_range_sizes(const char *components)
+{
+  for (int i = 0; i < 4; i++)
+    if (ranges[i].size()==0 || ranges[i].size() > 2)
+      return Status::error(
+          msg_str("component %c or %c: %s values given", components[i],
+                  tolower(components[i]),
+                  (ranges[i].size() == 0) ? "no" : "more than two"));
+  return Status::ok();
+}
 
 Color ColorMapRangeRand::get_col(int idx) const
 {
@@ -588,16 +602,19 @@ public:
 Status ColorMapRangeRandHsv::init(const char *map_name)
 {
   set_func = &Color::set_hsva;
-  ranges[0].push_back(0);
-  ranges[0].push_back(1);
-  ranges[1].push_back(0.7);
-  ranges[1].push_back(1);
-  ranges[2].push_back(0.7);
-  ranges[2].push_back(1);
-  ranges[3].push_back(1);
+
+  ranges[0] = {0, 1}; // H
+  ranges[1] = {0.7, 1}; // S
+  ranges[2] = {0.7, 1}; // V
+  ranges[3] = {1};      // A
+
   set_map_sz(max_map_sz);
 
-  return ColorMapRange::init(map_name);
+  Status stat = ColorMapRange::init(map_name);
+  if (stat)
+    stat = check_range_sizes("HSVA");
+
+  return stat;
 }
 
 //-----------------------------------------------------------------------
@@ -621,16 +638,19 @@ public:
 Status ColorMapRangeRandRgb::init(const char *map_name)
 {
   set_func = &Color::set_rgba;
-  ranges[0].push_back(0.3);
-  ranges[0].push_back(1);
-  ranges[1].push_back(0.3);
-  ranges[1].push_back(1);
-  ranges[2].push_back(0.3);
-  ranges[2].push_back(1);
-  ranges[3].push_back(1);
+
+  ranges[0] = {0.3, 1}; // R
+  ranges[1] = {0.3, 1}; // G
+  ranges[2] = {0.4, 1}; // B
+  ranges[3] = {1};      // A
+
   set_map_sz(max_map_sz);
 
-  return ColorMapRange::init(map_name);
+  Status stat = ColorMapRange::init(map_name);
+  if (stat)
+    stat = check_range_sizes("RGBA");
+
+  return stat;
 }
 
 //-----------------------------------------------------------------------
