@@ -79,7 +79,7 @@ public:
 
   col_util_opts()
       : ProgramOpts("col_util"), display_type(1), grid_width(0),
-        collect_indexes(true), color_system_mode(3), map_type(1),
+        collect_indexes(true), color_system_mode(3), map_type(0),
         show_container(2), show_reference(false), sort_colors('\0'),
         upright_view(0), container(0), hsl_height(0), plot_centroid(false),
         sat_threshold(1.0), value_advance(0.0), alpha_mode(3), cmy_mode(false),
@@ -117,7 +117,7 @@ Scene Options
 
 Output for grid (-d 3) Options
   -w <int>  width of grid. positive integer. (default: automatic)
-              key word: b - display as a bar code style
+              key word: b - display as color bars
   -I        exclude map indexes on grid
 
 Output for plot (-d 1) Options 
@@ -188,7 +188,7 @@ void col_util_opts::process_command_line(int argc, char **argv)
 
     case 'w':
       if (strlen(optarg) == 1 && strchr("b", *optarg))
-        grid_width = -1; // bar code
+        grid_width = -1; // color bars
       else {
         print_status_or_exit(read_int(optarg, &grid_width), c);
         if (grid_width < 1)
@@ -352,11 +352,11 @@ void col_util_opts::process_command_line(int argc, char **argv)
   // check these values before filling in defaults
   if (display_type == 3 || display_type == 4) {
     if (plot_centroid)
-      warning("plotting centroid colors not valid in this output mode", "p");
+      warning("plotting centroid colors is only valid in plot or wheel mode", "p");
     if (sat_powers.size())
-      warning("saturation entries are not valid in this output mode", "s");
+      warning("saturation entries are only valid in plot or wheel mode", "s");
     if (value_powers.size())
-      warning("value entries are not valid in this output mode", "v");
+      warning("value entries are only valid in plot or wheel mode", "v");
   }
 
   // fill in missing sat_powers with -1.0, meaning use centroid saturation
@@ -366,19 +366,32 @@ void col_util_opts::process_command_line(int argc, char **argv)
   // fill in missing value_powers with -1.0, meaning use average values
   for (unsigned int i = value_powers.size(); i < 4; i++)
     value_powers.push_back(-1.0);
+  
+  if (map_type && display_type != 4) {
+    warning("map type is only valid in map mode", "f");
+    map_type = 0;
+  }
+  else {
+    // set default map type here
+    if (!map_type)
+      map_type = 1;
+  }
 
   if (!collect_indexes && display_type != 3) {
-    warning("excluding map indexes only valid in grid mode");
+    warning("excluding map indexes only valid in grid mode", "I");
     collect_indexes = true;
   }
-
-  if (container && display_type > 1) {
-    warning("container type has no effect in this output", "r");
-    container = 0;
+  
+  if (grid_width && display_type != 3) {
+    warning("grid width only valid in grid mode", "w");
+    grid_width = 0;
   }
 
-  if (container && color_system_mode == 3) {
-    warning("container type has no effect in RGB mode", "r");
+  if (container) { 
+    if ( display_type > 1)
+      warning("container type is only valid in plot mode", "r");
+    if (color_system_mode == 3)
+      warning("container type has no effect in RGB mode", "r");
     container = 0;
   }
   else {
@@ -394,13 +407,11 @@ void col_util_opts::process_command_line(int argc, char **argv)
       (color_system_mode == 3 || (container == 1 || container == 4)))
     warning("facets are only in HSV or HSL conic or hexagonal container", "k");
 
-  if (!show_container && show_reference) {
-    warning("show reference has no effect when container is not shown", "R");
-    show_reference = false;
-  }
-
-  if (show_reference && display_type != 1) {
-    warning("show reference has no effect when not displaying plot", "R");
+  if (show_reference) { 
+    if (!show_container)
+      warning("show reference has no effect when container is not shown", "R");
+    if (display_type != 1)
+      warning("show reference has no effect when not displaying plot", "R");
     show_reference = false;
   }
 
@@ -835,13 +846,13 @@ Geometry make_square(const int &width)
 void color_grid(Geometry &geom, const vector<Color> &cols,
                 const col_util_opts &opts)
 {
-  bool bar_code = (opts.grid_width == -1 ? true : false);
+  bool color_bars = (opts.grid_width == -1 ? true : false);
   int width = opts.grid_width;
-  if (bar_code)
+  if (color_bars)
     width = cols.size();
 
   Geometry sgeom;
-  sgeom.append(make_square((bar_code ? width : 1)));
+  sgeom.append(make_square((color_bars ? width : 1)));
 
   unsigned int cols_sz = cols.size();
   unsigned int dim1;
@@ -854,7 +865,7 @@ void color_grid(Geometry &geom, const vector<Color> &cols,
   else {
     dim2 = width;
     dim1 = cols_sz / width;
-    if (cols_sz - (dim1 * cols_sz) > 0)
+    if (cols_sz - (dim1 * width) > 0)
       dim1++;
   }
 
