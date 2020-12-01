@@ -298,9 +298,9 @@ void Collada_writer::print_asset()
 
   time_t now;
   time(&now);
-  size_t buff_sz = 256;
+  size_t buff_sz = 32;
   char datetime_iso8601[buff_sz];
-  if (!strftime(datetime_iso8601, buff_sz, "%FT%TZ", gmtime(&now)))
+  if (!strftime(datetime_iso8601, buff_sz, "%Y-%m-%dT%H:%M:%SZ", gmtime(&now)))
     *datetime_iso8601 = '\0';
   print_open_close("created", datetime_iso8601);
   print_open_close("modified", datetime_iso8601);
