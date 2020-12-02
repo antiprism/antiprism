@@ -448,11 +448,9 @@ void UniformCompound::assign_uc_value(char operand, const char *digits_str,
 }
 
 int UniformCompound::parse_uc_args(string &name, double &angle, int &n, int &d,
-                                   int &k, char *errmsg)
+                                   int &k, string *error_msg = nullptr)
 {
   int ret = 0;
-
-  *errmsg = '\0';
 
   int loc = 0;
   int loc1 = name.rfind("_");
@@ -464,8 +462,10 @@ int UniformCompound::parse_uc_args(string &name, double &angle, int &n, int &d,
 
   string uc_name = name.substr(0, loc);
 
-  if (loc + 1 >= (int)name.length())
-    strcpy_msg(errmsg, "argument string not found");
+  if (loc + 1 >= (int)name.length()) {
+    if (error_msg)
+      *error_msg = "argument string not found";
+  }
   // process uc args
   else {
     string and_the_rest = name.substr((loc + 1));
@@ -481,7 +481,8 @@ int UniformCompound::parse_uc_args(string &name, double &angle, int &n, int &d,
           // don't accept empty digit string or "." at end of string
           if (!digits_str.length() ||
               digits_str[digits_str.length() - 1] == '.') {
-            strcpy_msg(errmsg, "no digits found, or decimal point at end");
+            if (error_msg)
+              *error_msg = "no digits found, or decimal point at end";
             break;
           }
           else
@@ -492,56 +493,66 @@ int UniformCompound::parse_uc_args(string &name, double &angle, int &n, int &d,
       }
       else if (digits.find(i) != string::npos) {
         if (!operand) {
-          strcpy_msg(errmsg, "operator expected");
+          if (error_msg)
+            *error_msg = "operator expected";
           break;
         }
         else if (operand == '/' && n < 1) {
-          strcpy_msg(errmsg, "d of n/d supplied but n is zero or not set");
+          if (error_msg)
+            *error_msg = "d of n/d supplied but n is zero or not set";
           break;
         }
         else if (operand != 'a' && (i == '.' || i == '-')) {
-          strcpy_msg(
-              errmsg,
-              msg_str("operator %c should have a positive integer", operand)
-                  .c_str());
+          if (error_msg)
+            *error_msg =
+                msg_str("operator %c should have a positive integer", operand);
           break;
         }
         if ((digits_str.find('.') != string::npos) && i == '.') {
-          strcpy_msg(errmsg, "decimal point encountered more than once");
+          if (error_msg)
+            *error_msg = "decimal point encountered more than once";
           break;
         }
         else
           digits_str += i;
       }
       else {
-        strcpy_msg(errmsg, msg_str("unexpected character: %c", i).c_str());
+        if (error_msg)
+          *error_msg = msg_str("unexpected character: %c", i);
         break;
       }
     }
 
     if (operand) {
       // don't accept empty digit string or "." at end of string
-      if (!digits_str.length() || digits_str[digits_str.length() - 1] == '.')
-        strcpy_msg(errmsg, "no digits found, or decimal point at end");
+      if (!digits_str.length() || digits_str[digits_str.length() - 1] == '.') {
+        if (error_msg)
+          *error_msg = "no digits found, or decimal point at end";
+      }
       else
         assign_uc_value(operand, digits_str.c_str(), angle, n, d, k);
     }
   }
 
-  if (!*errmsg) {
-    if (n == 0)
-      strcpy_msg(errmsg, "operator n must not be 0");
-    else if (d == 0)
-      strcpy_msg(errmsg, "operator / must not be 0");
-    else if (k == 0)
-      strcpy_msg(errmsg, "operator k must not be 0");
-    else if (n > 0 && d > 0 && gcd(n, d) != 1)
-      strcpy_msg(errmsg, "n and d must be co-prime");
+  if (error_msg) {
+    if (error_msg->empty()) {
+      if (n == 0)
+        *error_msg = "operator n must not be 0";
+      else if (d == 0)
+        *error_msg = "operator / must not be 0";
+      else if (k == 0)
+        *error_msg = "operator k must not be 0";
+      else if (n > 0 && d > 0 && gcd(n, d) != 1)
+        *error_msg = "n and d must be co-prime";
+    }
   }
 
-  if (*errmsg)
-    ret = 1; // fail
-  else {
+  if (error_msg) {
+    if (!error_msg->empty())
+      ret = 1; // fail
+  }
+
+  if (!ret) {
     name = uc_name;
     if (n != -1 &&
         d == -1) // if n is set, set d or it will be randomly selected
@@ -554,7 +565,7 @@ int UniformCompound::parse_uc_args(string &name, double &angle, int &n, int &d,
 }
 
 int UniformCompound::set_uc_args(int sym, double &angle, int &n, int &d, int &k,
-                                 char *errmsg)
+                                 string *error_msg = nullptr)
 {
   int need_angle[] = {1,  2,  7,  10, 11, 13,
                       20, 22, 24, 26, 28}; // 11 occurrances
@@ -574,7 +585,8 @@ int UniformCompound::set_uc_args(int sym, double &angle, int &n, int &d, int &k,
     angle = deg2rad(angle);
   }
   else if (!needs_angle && angle != INFINITY) {
-    strcpy_msg(errmsg, msg_str("for UC%d, angle is not needed", sym).c_str());
+    if (error_msg)
+      *error_msg = msg_str("for UC%d, angle is not needed", sym);
     return 1;
   }
 
@@ -583,7 +595,8 @@ int UniformCompound::set_uc_args(int sym, double &angle, int &n, int &d, int &k,
   if (uc20_25 && n == -1)
     n = ran.ran_int_in_range(2, 20); // range 2 to 20
   else if (!uc20_25 && n != -1) {
-    strcpy_msg(errmsg, msg_str("for UC%d, n is not needed", sym).c_str());
+    if (error_msg)
+      *error_msg = msg_str("for UC%d, n is not needed", sym);
     return 1;
   }
 
@@ -614,7 +627,8 @@ int UniformCompound::set_uc_args(int sym, double &angle, int &n, int &d, int &k,
     }
   }
   else if (!uc20_25 && d != -1) {
-    strcpy_msg(errmsg, msg_str("for UC%d, d is not needed", sym).c_str());
+    if (error_msg)
+      *error_msg = msg_str("for UC%d, d is not needed", sym);
     return 1;
   }
 
@@ -625,7 +639,8 @@ int UniformCompound::set_uc_args(int sym, double &angle, int &n, int &d, int &k,
   if (uc20_25 && k == -1)
     k = ran.ran_int_in_range(k_min, 4); // range k_min to 4
   else if (!uc20_25 && k != -1) {
-    strcpy_msg(errmsg, msg_str("for UC%d, k is not needed", sym).c_str());
+    if (error_msg)
+      *error_msg = msg_str("for UC%d, k is not needed", sym);
     return 1;
   }
 
@@ -633,33 +648,34 @@ int UniformCompound::set_uc_args(int sym, double &angle, int &n, int &d, int &k,
   // checked
   if (uc20_25) {
     if (k < k_min) {
-      strcpy_msg(
-          errmsg,
-          msg_str("for UC%d, k must be greater than %d", sym, k_min).c_str());
+      if (error_msg)
+        *error_msg = msg_str("for UC%d, k must be greater than %d", sym, k_min);
       return 1;
     }
 
     if (sym == 20 || sym == 21) {
       // RK - this constraint is not necessary for prisms
       // if ((double)n/d <= 2.0) {
-      //   strcpy_msg(errmsg, msg_str("for UC%d, n/d (%d/%d) must be greater
+      //   if (error_msg)
+      //     *error_msg = msg_str("for UC%d, n/d (%d/%d) must be greater
       //   than 2",sym,n,d).c_str()); return 1;
       //}
     }
     else if (sym >= 22) {
       if ((sym == 22 || sym == 23) && is_even(d)) {
-        strcpy_msg(errmsg, msg_str("for UC%d, d must be odd", sym).c_str());
+        if (error_msg)
+          *error_msg = msg_str("for UC%d, d must be odd", sym);
         return 1;
       }
       else if ((sym == 24 || sym == 25) && !is_even(d)) {
-        strcpy_msg(errmsg, msg_str("for UC%d, d must be even", sym).c_str());
+        if (error_msg)
+          *error_msg = msg_str("for UC%d, d must be even", sym);
         return 1;
       }
       if ((double)n / d <= 3.0 / 2) {
-        strcpy_msg(
-            errmsg,
-            msg_str("for UC%d, n/d (%d/%d) must be greater than 3/2", sym, n, d)
-                .c_str());
+        if (error_msg)
+          *error_msg = msg_str("for UC%d, n/d (%d/%d) must be greater than 3/2",
+                               sym, n, d);
         return 1;
       }
     }

@@ -167,7 +167,6 @@ void lutil_opts::process_command_line(int argc, char **argv)
 {
   opterr = 0;
   int c;
-  char errmsg[MSG_SZ] = {0};
 
   int sig_compare = INT_MAX;
   vector<double> double_parms;
@@ -309,13 +308,11 @@ void lutil_opts::process_command_line(int argc, char **argv)
 
       rfile = parts[0];
       if (parts_sz > 1) {
-        if (strspn(parts[1], "vefan") != strlen(parts[1])) {
-          strcpy_msg(errmsg,
-                     msg_str("elements to merge are %s must be v, e, f, a or n",
-                             parts[1])
-                         .c_str());
-          error(errmsg, c);
-        }
+        if (strspn(parts[1], "vefan") != strlen(parts[1]))
+          error(msg_str("elements to merge are %s must be v, e, f, a or n",
+                        parts[1])
+                    .c_str(),
+                c);
         if (strchr(parts[1], 'a') && strlen(parts[1]) > 1) {
           error("a includes vef, and must be used alone", c);
         }

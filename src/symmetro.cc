@@ -956,7 +956,7 @@ public:
   // double getAngleBetweenAxes( const int axis1, const int axis2 );
   double getAngleBetweenAxesSin(const int axis1, const int axis2);
   void swap_vecs(Vec3d &a, Vec3d &b);
-  int fill_sym_vec(const char mode, char *errmsg);
+  int fill_sym_vec(const char mode, string *error_msg);
 
   double angle(const int n, const int d);
   double circumradius(const int n, const int d);
@@ -966,7 +966,7 @@ public:
                                  const double rotation_as_increment,
                                  const bool add_pi, const bool swap_axes,
                                  const double offset, const bool verbose,
-                                 double &angle_between_axes, char *errmsg);
+                                 double &angle_between_axes, string *error_msg);
 
   ~symmetro() = default;
 
@@ -1087,10 +1087,8 @@ void symmetro::swap_vecs(Vec3d &a, Vec3d &b)
   swap(a, b);
 }
 
-int symmetro::fill_sym_vec(const char mode, char *errmsg)
+int symmetro::fill_sym_vec(const char mode, string *error_msg = nullptr)
 {
-  *errmsg = '\0';
-
   int err_no = 0; // 1 - wrong p,q  2 - wrong sym_id_no  3 - wrong sym
 
   if (sym == 'T') {
@@ -1288,13 +1286,18 @@ int symmetro::fill_sym_vec(const char mode, char *errmsg)
   if (!err_no)
     err_no = (sym_vec[0].is_set()) ? 0 : 2;
 
-  if (err_no == 1)
-    strcpy_msg(errmsg, msg_str("invalid p,q values: %d,%d", p, q).c_str());
-  else if (err_no == 2)
-    strcpy_msg(errmsg,
-               msg_str("invalid symmetry id no: %d", sym_id_no).c_str());
-  else if (err_no == 3)
-    strcpy_msg(errmsg, msg_str("invalid symmetry: %c", sym).c_str());
+  if (err_no == 1) {
+    if (error_msg)
+      *error_msg = msg_str("invalid p,q values: %d,%d", p, q);
+  }
+  else if (err_no == 2) {
+    if (error_msg)
+      *error_msg = msg_str("invalid symmetry id no: %d", sym_id_no);
+  }
+  else if (err_no == 3) {
+    if (error_msg)
+      *error_msg = msg_str("invalid symmetry: %c", sym);
+  }
 
   return err_no;
 }
@@ -1352,10 +1355,8 @@ void symmetro::substitute_polygon(Geometry &geom, const int axis_no)
 vector<Geometry> symmetro::calc_polygons(
     const char mode, const double rotation, const double rotation_as_increment,
     const bool add_pi, const bool swap_axes, const double offset,
-    const bool verbose, double &angle_between_axes, char *errmsg)
+    const bool verbose, double &angle_between_axes, string *error_msg = nullptr)
 {
-  *errmsg = '\0';
-
   // there will be two polygons generated in seperate geoms
   vector<Geometry> pgeom(2);
 
@@ -1403,7 +1404,8 @@ vector<Geometry> symmetro::calc_polygons(
 
   double disc = b * b - 4 * a * c;
   if (disc < -epsilon) {
-    strcpy_msg(errmsg, "model is not geometrically constructible");
+    if (error_msg)
+      *error_msg = "model is not geometrically constructible";
 
     return pgeom;
   }
@@ -1872,7 +1874,6 @@ int main(int argc, char *argv[])
 {
   symmetro_opts opts;
   opts.process_command_line(argc, argv);
-  char errmsg[MSG_SZ] = {0};
 
   symmetro s;
   s.setSym(opts.sym, opts.p, opts.q, opts.dihedral_n, opts.sym_id_no);
@@ -1977,14 +1978,17 @@ int main(int argc, char *argv[])
   // ready to generate
 
   // fill symmetry axes here
-  if (s.fill_sym_vec(opts.mode, errmsg))
-    opts.error(errmsg);
+  string error_msg;
+  if (s.fill_sym_vec(opts.mode, &error_msg))
+    if (!error_msg.empty())
+      opts.error(error_msg);
 
-  vector<Geometry> pgeom = s.calc_polygons(
-      opts.mode, opts.rotation, opts.rotation_as_increment, opts.add_pi,
-      swap_axes, opts.offset, opts.verbose, opts.angle_between_axes, errmsg);
-  if (*errmsg)
-    opts.error(errmsg);
+  vector<Geometry> pgeom =
+      s.calc_polygons(opts.mode, opts.rotation, opts.rotation_as_increment,
+                      opts.add_pi, swap_axes, opts.offset, opts.verbose,
+                      opts.angle_between_axes, &error_msg);
+  if (!error_msg.empty())
+    opts.error(error_msg);
 
   // if ( opts.d_substitute[0] || opts.d_substitute[1] )
   //   unitize_edges( pgeom );

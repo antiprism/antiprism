@@ -105,10 +105,9 @@ void obj2off_opts::process_command_line(int argc, char **argv)
     ifile = argv[optind];
 }
 
-bool convert_obj_to_off(string &file_name, Geometry &geom, char *errmsg)
+bool convert_obj_to_off(string &file_name, Geometry &geom,
+                        string *error_msg = nullptr)
 {
-  *errmsg = '\0';
-
   FILE *ifile;
   if (file_name == "" || file_name == "-") {
     ifile = stdin;
@@ -117,9 +116,9 @@ bool convert_obj_to_off(string &file_name, Geometry &geom, char *errmsg)
   else {
     ifile = fopen(file_name.c_str(), "r");
     if (!ifile) {
-      strcpy_msg(
-          errmsg,
-          msg_str("could not open input file '%s'", file_name.c_str()).c_str());
+      if (error_msg)
+        *error_msg =
+            msg_str("could not open input file '%s'", file_name.c_str());
       return false;
     }
   }
@@ -144,8 +143,8 @@ bool convert_obj_to_off(string &file_name, Geometry &geom, char *errmsg)
       double coord[3];
       for (unsigned int i = 1; i < parts_sz; i++) {
         if (!read_double(parts[i], &coord[i - 1])) {
-          strcpy_msg(errmsg,
-                     msg_str("invalid coordinate '%s'", parts[i]).c_str());
+          if (error_msg)
+            *error_msg = msg_str("invalid coordinate '%s'", parts[i]);
           return false;
         }
       }
@@ -156,9 +155,8 @@ bool convert_obj_to_off(string &file_name, Geometry &geom, char *errmsg)
       vector<int> indexes;
       for (unsigned int i = 1; i < parts_sz; i++) {
         if (!read_int(parts[i], &idx)) {
-          strcpy_msg(
-              errmsg,
-              msg_str("invalid face or edge index '%s'", parts[i]).c_str());
+          if (error_msg)
+            *error_msg = msg_str("invalid face or edge index '%s'", parts[i]);
           return false;
         }
         indexes.push_back(idx - offset);
@@ -172,9 +170,8 @@ bool convert_obj_to_off(string &file_name, Geometry &geom, char *errmsg)
         else if (key == 'p') {
           int idx;
           if (!read_int(parts[1], &idx)) {
-            strcpy_msg(
-                errmsg,
-                msg_str("invalid vertex color index '%s'", parts[1]).c_str());
+            if (error_msg)
+              *error_msg = msg_str("invalid vertex color index '%s'", parts[1]);
             return false;
           }
           geom.colors(VERTS).set(idx - offset, idx);
@@ -197,12 +194,12 @@ int main(int argc, char *argv[])
 
   Geometry geom;
 
-  char errmsg[MSG_SZ] = {0};
+  string error_msg;
 
   // obj is enough like OFF that it can be parsed and converted in line
-  if (!convert_obj_to_off(opts.ifile, geom, errmsg))
-    if (*errmsg)
-      opts.error(errmsg);
+  if (!convert_obj_to_off(opts.ifile, geom, &error_msg))
+    if (!error_msg.empty())
+      opts.error(error_msg);
 
   opts.write_or_error(geom, opts.ofile, opts.sig_digits);
 

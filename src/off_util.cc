@@ -367,10 +367,6 @@ Status get_del_element_list(Geometry &geom, const string &elem,
                                  elem_type_char));
   }
 
-  if (elem_lists[elem_type].size())
-    return Status::error(msg_str("list for %s elements already given",
-                                 elem_type_strs[elem_type_name]));
-
   Status stat =
       read_idx_list(elem.c_str() + 1, elem_lists[elem_type], elems_sz, false);
   if (stat.is_error())
@@ -408,10 +404,6 @@ Status get_del_parts_list(vector<vector<int>> &edge_parts,
     return Status::error(msg_str("invalid element type '%c', should be E, or F",
                                  elem_type_char));
   }
-
-  if (elem_lists[elem_type].size())
-    return Status::error(
-        msg_str("list for %s parts already given", elem_type_strs[elem_type]));
 
   Status stat =
       read_idx_list(elem.c_str() + 1, elem_lists[elem_type], elems_sz, false);
@@ -1054,6 +1046,7 @@ Status add_element(Geometry &geom, const string &elem)
   }
   else if (elem_type_char == 'e' || elem_type_char == 'f') {
     vector<int> idx_list;
+    // specifically allow negative indexes in the command
     if (!(stat = read_int_list(parts[0], idx_list)))
       return Status::error(msg_str("%s index numbers: '%s': %s", elem_type_str,
                                    parts[0], stat.c_msg()));
@@ -1084,11 +1077,6 @@ Status add_element(Geometry &geom, const string &elem)
       }
     }
     if (elem_type_char == 'f') {
-      if (!list_sz)
-        return Status::error(msg_str("%s index numbers: '%s': "
-                                     "no index numbers given",
-                                     elem_type_str, parts[0]));
-
       geom.add_face(idx_list, col);
     }
   }

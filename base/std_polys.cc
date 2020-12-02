@@ -714,16 +714,11 @@ int make_resource_uniform_compound(Geometry &geom, string name, bool is_std,
 
   UniformCompound uniform_compounds;
 
-  char errmsg[MSG_SZ] = {0};
-
   // if complex parms, parse them
   if (strpbrk(name.c_str(), RES_SEPARATOR)) {
-    int ret = uniform_compounds.parse_uc_args(name, angle, n, d, k, errmsg);
-    if (ret > 0) {
-      if (error_msg)
-        *error_msg = errmsg;
+    int ret = uniform_compounds.parse_uc_args(name, angle, n, d, k, error_msg);
+    if (ret > 0)
       return 1; // fail
-    }
   }
 
   int sym_no;
@@ -745,12 +740,10 @@ int make_resource_uniform_compound(Geometry &geom, string name, bool is_std,
   else
     return -1; // not uniform compound name
 
-  int ret = uniform_compounds.set_uc_args(sym_no + 1, angle, n, d, k, errmsg);
-  if (ret > 0) {
-    if (error_msg)
-      *error_msg = errmsg;
+  int ret =
+      uniform_compounds.set_uc_args(sym_no + 1, angle, n, d, k, error_msg);
+  if (ret > 0)
     return 1; // fail
-  }
 
   uniform_compounds.get_poly(geom, sym_no, angle, n, d, k, is_std);
 

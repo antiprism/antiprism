@@ -352,7 +352,8 @@ void col_util_opts::process_command_line(int argc, char **argv)
   // check these values before filling in defaults
   if (display_type == 3 || display_type == 4) {
     if (plot_centroid)
-      warning("plotting centroid colors is only valid in plot or wheel mode", "p");
+      warning("plotting centroid colors is only valid in plot or wheel mode",
+              "p");
     if (sat_powers.size())
       warning("saturation entries are only valid in plot or wheel mode", "s");
     if (value_powers.size())
@@ -366,7 +367,7 @@ void col_util_opts::process_command_line(int argc, char **argv)
   // fill in missing value_powers with -1.0, meaning use average values
   for (unsigned int i = value_powers.size(); i < 4; i++)
     value_powers.push_back(-1.0);
-  
+
   if (map_type && display_type != 4) {
     warning("map type is only valid in map mode", "f");
     map_type = 0;
@@ -381,14 +382,14 @@ void col_util_opts::process_command_line(int argc, char **argv)
     warning("excluding map indexes only valid in grid mode", "I");
     collect_indexes = true;
   }
-  
+
   if (grid_width && display_type != 3) {
     warning("grid width only valid in grid mode", "w");
     grid_width = 0;
   }
 
-  if (container) { 
-    if ( display_type > 1)
+  if (container) {
+    if (display_type > 1)
       warning("container type is only valid in plot mode", "r");
     if (color_system_mode == 3)
       warning("container type has no effect in RGB mode", "r");
@@ -407,7 +408,7 @@ void col_util_opts::process_command_line(int argc, char **argv)
       (color_system_mode == 3 || (container == 1 || container == 4)))
     warning("facets are only in HSV or HSL conic or hexagonal container", "k");
 
-  if (show_reference) { 
+  if (show_reference) {
     if (!show_container)
       warning("show reference has no effect when container is not shown", "R");
     if (display_type != 1)

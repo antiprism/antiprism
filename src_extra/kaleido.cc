@@ -72,6 +72,9 @@ using std::vector;
 
 using namespace anti;
 
+// STR_SZ for char string definitions still present (antiprism)
+#define STR_SZ 256
+
 // definitions and structures used to be in kaleido.h
 #ifndef MAXLONG
 #define MAXLONG 0x7FFFFFFF
@@ -571,7 +574,6 @@ Listings (use 0 for Symbol to list all)
 void kaleido_opts::process_command_line(int argc, char **argv)
 {
   char c;
-  char errmsg[MSG_SZ] = {0};
   bool sig_digits_set = false;
 
   string arg_id;
@@ -586,8 +588,6 @@ void kaleido_opts::process_command_line(int argc, char **argv)
     case 'w':
       print_status_or_exit(
           get_arg_id(optarg, &arg_id, "off=1|vrml=2", argmatch_add_id_maps), c);
-      if (arg_id == "")
-        error(errmsg);
       model = atoi(arg_id.c_str());
       break;
 
@@ -595,8 +595,6 @@ void kaleido_opts::process_command_line(int argc, char **argv)
       print_status_or_exit(
           get_arg_id(optarg, &arg_id, "base=1|dual=2", argmatch_add_id_maps),
           c);
-      if (arg_id == "")
-        error(errmsg);
       base = atoi(arg_id.c_str());
       break;
 
@@ -678,7 +676,7 @@ void Err(const char *errmsg)
 
 void printErrorMessage(int error_number, string func_name)
 {
-  char buffer[MSG_SZ] = {0};
+  char buffer[STR_SZ] = {0};
   snprintf(buffer, sizeof(buffer), "(%s) errno: %d %s", func_name.c_str(),
            error_number, strerror(error_number));
   Err(buffer);
@@ -945,7 +943,7 @@ int unpacksym(char *sym, Polyhedron *P, Uniform *uniform, int last_uniform)
   if (!c)
     Err("no data");
 
-  char wyth[MSG_SZ] = {0};
+  char wyth[STR_SZ] = {0};
   if (c == '#') {
     while ((c = *sym++) && isspace(c))
       ;
@@ -965,7 +963,7 @@ int unpacksym(char *sym, Polyhedron *P, Uniform *uniform, int last_uniform)
       ;
     if (c)
       Err("data exceeded");
-    strcpy_msg(wyth, uniform[P->index = n - 1].Wythoff);
+    strncpy(wyth, uniform[P->index = n - 1].Wythoff, STR_SZ);
     sym = wyth;
   }
   else
@@ -2420,7 +2418,7 @@ int main(int argc, char *argv[])
   Uniform *uniform;
   int last_uniform = get_uniform_list(&uniform);
 
-  char sym[MSG_SZ] = {0};
+  char sym[STR_SZ] = {0};
   Polyhedron *P = nullptr;
 
   int first = 1;
@@ -2442,7 +2440,7 @@ int main(int argc, char *argv[])
 
   for (int i = first; i <= last; i++) {
     // size of char strings used in kaleido
-    char sym[MSG_SZ] = {0};
+    char sym[STR_SZ] = {0};
     if (opts.symbol == "0") {
       sprintf(sym, "#%d", i);
       P = kaleido(sym, uniform, last_uniform);

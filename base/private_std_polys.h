@@ -94,8 +94,9 @@ public:
   void assign_uc_value(char operand, const char *digits_str, double &angle,
                        int &n, int &d, int &k);
   int parse_uc_args(std::string &name, double &angle, int &n, int &d, int &k,
-                    char *errmsg);
-  int set_uc_args(int sym, double &angle, int &n, int &d, int &k, char *errmsg);
+                    std::string *error_msg);
+  int set_uc_args(int sym, double &angle, int &n, int &d, int &k,
+                  std::string *error_msg);
 };
 
 struct JohnsonItem {

@@ -557,7 +557,7 @@ vector<string> decode_cell_string(string cell_str)
   cell["g2+"] = "0,10,33,34,57";
 
   // left hand
-  cell["A+"]  = "0,18"; // same
+  cell["A-"]  = "0,18"; // same
   cell["B-"]  = "0,28";
   cell["C-"]  = "0,45";
   cell["D-"]  = "0,17,44";
@@ -575,9 +575,18 @@ vector<string> decode_cell_string(string cell_str)
 
   // code
   vector<string> diagram_list_strings;
-
+  
   int len = cell_str.length();
   int len_cnt = len;
+  
+  // quick check that only valid characters are in the string
+  size_t pos = cell_str.find_first_not_of("ABCDEFGHefg1'+-");
+  if (pos != string::npos) {
+    // found an illegal character is in the string, return empty list
+    diagram_list_strings.clear();
+    len_cnt = 0; // prevent while loop
+  }
+
   while (len_cnt > 0) {
     string cell_substr = cell_str.substr(len-len_cnt);
     string part;
@@ -698,19 +707,20 @@ int Miller::get_poly(Geometry &geom, int sym, string cell_str, string sym_str, m
 }
 
 int make_resource_miller(Geometry &geom, string name, bool is_std, miller_opts &opts,
-                         char *errmsg)
+                         string *error_msg = nullptr)
 {
-  *errmsg = '\0';
-
   int sym_no = 0;
   // check if it is just the index number, if so format as m%d
   if (read_int(name.c_str(), &sym_no))
     name = "m" + std::to_string(sym_no);
   else
   if (name.size() < 2 || !strchr("mM", name[0]) ||
-      name.find('.') != string::npos)
-    return -1; // not miller name (the "." indicates a likely local file)
+      name.find('.') != string::npos) {
+    if (error_msg)
+      *error_msg = "miller number and name designations start with m";
+    return -1; // not wenninger name (the "." indicates a likely local file)
                // so the name is not handled
+  }
 
   string cell_str;
   string sym_str;
@@ -719,8 +729,9 @@ int make_resource_miller(Geometry &geom, string name, bool is_std, miller_opts &
   if (read_int(name.c_str() + 1, &sym_no)) {
     sym_no--;
     if (sym_no < 0 || sym_no >= mill.get_last_M()) {
-      strcpy_msg(errmsg, "miller stellation number out of range");
-      return 1; // fail
+      if (error_msg)
+        *error_msg = "miller stellation number out of range";
+      return -1; // fail
     }
   }
   else
@@ -732,20 +743,27 @@ int make_resource_miller(Geometry &geom, string name, bool is_std, miller_opts &
       sym_str = cell_str.substr(pos+1);
       if (sym_str.length()) {
         if (sym_str != "I" && sym_str != "Ih") {
-          strcpy_msg(errmsg, "miller cell name symmetry must be I or Ih");
-          return 1; // fail
+          if (error_msg)
+            *error_msg = "miller cell name symmetry must be I or Ih";
+          return -1; // fail
         }
       }
       cell_str = cell_str.substr(0,pos);
     }
   }
-  else
-    return -1; // not a string of cell names
+  else {
+    if (error_msg)
+      *error_msg = "not a string of cell names";
+    return -1;
+  }
 
   map<int, Geometry> diagrams;
   int ret = mill.get_poly(geom, sym_no, cell_str, sym_str, diagrams, opts);
-  if (ret < 1)
-    return 1; // fail
+  if (ret < 1) {
+    if (error_msg)
+      *error_msg = "code string was invalid";
+    return -1;
+  }
 
   if (opts.rebuild_compound_model) {
     rebuild_compound(geom);
@@ -803,13 +821,13 @@ int make_resource_miller(Geometry &geom, string name, bool is_std, miller_opts &
   return 0; // name found
 }
 
-int try_miller(Geometry &geom, miller_opts &opts, char *errmsg)
+int try_miller(Geometry &geom, miller_opts &opts, string *error_msg = nullptr)
 {
   string name = opts.ifile;
   bool is_std = (name.size() > 3 && name.substr(0, 4) == "std_");
   if (is_std)
     name = name.substr(4);
-  int idx = make_resource_miller(geom, name, is_std, opts, errmsg);
+  int idx = make_resource_miller(geom, name, is_std, opts, error_msg);
   return(idx);
 }
 
@@ -824,12 +842,12 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  char errmsg[MSG_SZ] = {0};
+  string error_msg;
 
   Geometry geom;
-  if (try_miller(geom, opts, errmsg))
-    if (*errmsg)
-      opts.error(errmsg);
+  if (try_miller(geom, opts, &error_msg))
+    if (!error_msg.empty())
+      opts.error(error_msg);
 
   opts.write_or_error(geom, opts.ofile);
 
