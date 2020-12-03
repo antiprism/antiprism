@@ -886,7 +886,8 @@ Color blend_HSX_centroid(const vector<Color> &cols, int color_system_mode,
 
   // saturation of color centroid is higher than sat_threshold, use average
   // saturation
-  if (S > sat_threshold)
+  // if (S > sat_threshold) S could be slightly larger than 1
+  if (double_gt(S, sat_threshold, epsilon))
     S = saturation_sum / cols_sz;
 
   // hue
