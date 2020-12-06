@@ -104,6 +104,7 @@ public:
   /// Constructor
   /**\param geom the geometry.
    * \param cent the centre of the model, if set, otherwise vertex centroid.
+   * \param type normal type: n - Newell, t - triangles, q - quads
    * \param eps a small number, coordinates differing by less than eps are
    *  the same. */
   FaceNormals(const Geometry &geom, Vec3d cent = Vec3d(), char type = 'n',
@@ -112,6 +113,7 @@ public:
   /// Refresh
   /**\param geom the geometry.
    * \param cent the centre of the model, if set, otherwise vertex centroid.
+   * \param type normal type: n - Newell, t - triangles, q - quads
    * \param eps a small number, coordinates differing by less than eps are
    *  the same. */
   void refresh(const Geometry &geom, Vec3d cent = Vec3d(), char type = 'n',

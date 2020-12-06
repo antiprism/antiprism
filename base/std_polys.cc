@@ -1039,14 +1039,13 @@ int make_resource_sym(Geometry &geom, string name, bool is_std,
 int make_resource_pgon(Geometry &geom, string name, bool is_std,
                        string *error_msg)
 {
-  if (name.find('.') != string::npos)
+  if (name.size() < 4 || name.find('.') != string::npos)
     return -1; // not polygon res name (the "." indicates a likely local file)
                // so the name is not handled
 
-  char pnam[MSG_SZ];
-  strcpy_msg(pnam, name.c_str());
   int num_sides;
   int step = 1;
+  char *pnam = &name[0];   // don't use name as string again
   char *pnum = pnam + 3;
   char *p = strchr(pnum, '/');
   if (p != nullptr) {

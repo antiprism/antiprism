@@ -304,8 +304,6 @@ public:
   void operator=(const Split &) = delete;
 };
 
-char *strcpy_msg(char *dest, const char *src);
-
 } // namespace anti
 
 #endif // UTILS_H

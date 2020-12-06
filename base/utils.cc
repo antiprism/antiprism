@@ -548,13 +548,6 @@ FILE *open_sup_file(const char *fname, const char *subdir, string *alt_name,
   return nullptr;
 }
 
-char *strcpy_msg(char *dest, const char *src)
-{
-  strncpy(dest, src, MSG_SZ - 1);
-  dest[MSG_SZ - 1] = '\0';
-  return dest;
-}
-
 // https://stackoverflow.com/questions/2342162/stdstring-formatting-
 // like-sprintf/49812018#49812018
 string msg_str(const char *fmt, ...)

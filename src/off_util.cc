@@ -324,40 +324,32 @@ Status get_del_element_list(Geometry &geom, const string &elem,
                                   "face sides"};
   char elem_type_char = elem[0];
   int elem_type;
-  int elem_type_name;
   int elems_sz;
   if (elem_type_char == 'v') {
-    elem_type_name = 0;
     elem_type = 0;
     elems_sz = geom.verts().size();
   }
   else if (elem_type_char == 'e') {
-    elem_type_name = 1;
     elem_type = 1;
     elems_sz = geom.edges().size();
   }
   else if (elem_type_char == 'f') {
-    elem_type_name = 2;
     elem_type = 2;
     elems_sz = geom.faces().size();
   }
   else if (elem_type_char == 'E') {
-    elem_type_name = 3;
     elem_type = 1;
     elems_sz = edge_parts.size();
   }
   else if (elem_type_char == 'F') {
-    elem_type_name = 4;
     elem_type = 2;
     elems_sz = face_parts.size();
   }
   else if (elem_type_char == 'o') {
-    elem_type_name = 5;
     elem_type = 0;
     elems_sz = max_vertex_order(geom) + 1;
   }
   else if (elem_type_char == 's') {
-    elem_type_name = 6;
     elem_type = 2;
     elems_sz = max_face_sides(geom) + 1;
   }

@@ -36,6 +36,9 @@
 #include <cstring>
 #include <string>
 
+/// Characters that separate parts of a resource name
+const char RES_SEPARATOR[] = "_ ";
+
 /// A basic function type that makes a model.
 typedef void (*model_func)(anti::Geometry &);
 
