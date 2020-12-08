@@ -101,9 +101,9 @@ public:
         delete_invisible_faces(false), edge_blending('\0'),
         special_edge_processing('\0'), zero_density_color(Color::invisible),
         zero_density_force_blend(false), brightness_adj(-2.0),
-        color_system_mode(3), cmy_mode(false), ryb_mode(false), sat_power(0.0),
-        value_power(0.0), sat_threshold(1.0), value_advance(0.0), alpha_mode(3),
-        face_opacity(-1), epsilon(0)
+        color_system_mode(2), cmy_mode(false), ryb_mode(false), sat_power(-1.0),
+        value_power(-1.0), sat_threshold(1.0), value_advance(0.0),
+        alpha_mode(3), face_opacity(-1), epsilon(0)
   {
   }
 
@@ -122,19 +122,16 @@ reads from standard input.
 
 Options
 %s
+  -l <lim>  minimum distance for unique vertex locations as negative exponent
+               (default: %d giving %.0e)
+  -o <file> write output to file (default: write to standard output)
+  
+Scene Options
+  -M <mode> color system mode. HSV=1, HSL=2, RGB=3 (default: 2)
   -d <opt>  blend overlapping (tile) or adjacent (merge) planar faces  
                tile=1, merge=2 (default: none)
   -p <opt>  polygon fill algorithm.  angular=1, modulo2=2 (pnpoly)
                triangulation=3, even_overlap=4, alt_modulo2=5 (default: 1)
-  -w <opt>  winding rule, include face parts according to winding number
-               odd, even, positive, negative, nonzero, zero (default: none)
-               zodd, zeven, zpositive, znegative (includes zero)
-               or symbol proceeding integer: eq, ne, gt, ge, lt, le  meaning
-               equal, not equal, greater than, greater than or equal, less
-               than, less than or equal. use 'a' for absolute value  e.g. gea2
-  -z        use direction of normals for hemispherical winding numbers
-  -V        verbose output (of minimum and maximum winding numbers)
-  -H        turn off hole detection
   -S        stitch seams created by tiling or merging
   -R        split pinched faces
   -r        rebuild compound model to separate vertices
@@ -144,22 +141,35 @@ Options
   -E <opt>  remove explicit edges, blend new ones using face colors (sets -S)
                e - edges only, v - also blend vertices (default: none)
                V - also blend invisible vertices, s - strip edges and vertices
+  -c        CMY mode. Complementary colors.  RGB->(RYB/GMO)->CMY->blend
+  -b <val>  brightness adjustment for areas of blended colors
+               valid values -1.0 to +1.0 (default: no adjustment)
+               negative for darker, positive for lighter
+               at 0, an area with 2 blended colors will not change
+               but areas with 3 or more will become slightly darker
+
+Winding Options
+  -w <opt>  winding rule, include face parts according to winding number
+               odd, even, positive, negative, nonzero, zero (default: none)
+               zodd, zeven, zpositive, znegative (includes zero)
+               or symbol proceeding integer: eq, ne, gt, ge, lt, le  meaning
+               equal, not equal, greater than, greater than or equal, less
+               than, less than or equal. use 'a' for absolute value  e.g. gea2
+  -z        use direction of normals for hemispherical winding numbers
   -D        delete invisible faces created by winding rule
   -O <opt>  orient the faces first (if possible) then for volume
                positive=1, negative=2, reverse=3, or use flip=4
                which reverses the orientation of the model as it was input
-  -C <xyz>  center of model, in form 'X,Y,Z' (default: centroid)
-  -l <lim>  minimum distance for unique vertex locations as negative exponent
-               (default: %d giving %.0e)
-  -o <file> write output to file (default: write to standard output)
+  -C <xyz>  center of model for normals, in form 'X,Y,Z' (default: centroid)
+  -H        turn off hole detection
+  -V        verbose output (of minimum and maximum winding numbers)
 
-Color Blending Options (for option -d)
-  -M <mode> color blending mode. HSV=1, HSL=2, RGB=3 (default: 3)
+Color Blending Options (for option -d, -M 1,2)
   -s <sat>  HSV/HSL saturation curve. Greater than 0 (default: 1)
                1.0 - no curve. lower than 1.0 makes blends more pastel
   -t <val>  HSV/HSL threshold to use average saturation (default: 1)
                between 0.0 (all averaging) and 1.0 (no averaging)
-  -v <val>  HSV/HSL value curve (default: 0)
+  -v <val>  HSV/HSL value curve. Positive integer (default: 0)
                simulates subtractive coloring for blending 3 or more colors
                RGB: Red+Green+Blue = White   Cyan+Magenta+Yellow = Black
                RYB: Red+Yellow+Blue = Black  Green+Magenta+Orange = White
@@ -169,12 +179,6 @@ Color Blending Options (for option -d)
                valid values 0.0 to 120.0 degrees (default: 0)
   -a <int>  alpha for blend. average=1, minimum=2, maximum=3 (default: 3)
   -y        RYB mode. Blend colors as in Red-Yellow-Blue color wheel
-  -c        CMY mode. Complementary colors.  RGB->(RYB/GMO)->CMY->blend
-  -b <val>  brightness adjustment for areas of blended colors
-               valid values -1.0 to +1.0 (default: no adjustment)
-               negative for darker, positive for lighter
-               at 0, an area with 2 blended colors will not change
-               but areas with 3 or more will become slightly darker
 
 Coloring Options (run 'off_util -H color' for help on color formats)
   -f <opt>  take face colors from map (processed before -d)
@@ -456,6 +460,24 @@ void planar_opts::process_command_line(int argc, char **argv)
   // if (edge_blending && special_edge_processing)
   //   error("edge blending and special edge processing cannot be used
   //   together","e");
+
+  if (color_system_mode == 3) {
+    if (sat_power > 0)
+      warning("saturation entries are not used in RGB mode", "s");
+    if (sat_threshold != 1.0)
+      warning("saturation threshold is not used in RGB mode", "t");
+
+    if (value_power > 0)
+      warning("value entries are are not used in RGB mode", "v");
+    if (value_advance != 0)
+      warning("value advance is not used in RGB mode", "u");
+  }
+  else {
+    if (sat_power == 0.0 && sat_threshold != 1.0)
+      warning("saturation threshold has no effect if -s is not set", "t");
+    if (value_power < 0 && value_advance != 0)
+      warning("value advance has no effect if -v is not set", "u");
+  }
 
   if (!planar_merge_type) {
     if (polygon_fill_type)
@@ -1454,11 +1476,11 @@ bool winding_rule_filter(int winding_rule_mode, int winding_rule,
   return answer;
 }
 
-// winding_total_min, winding_total_max are changed
+// winding_numbers collects the winding number found
 void sample_colors(Geometry &sgeom, const Geometry &cgeom,
                    const vector<Normal> &original_normals,
-                   const vector<int> &nonconvex_faces, int &winding_total_min,
-                   int &winding_total_max, const planar_opts &opts)
+                   const vector<int> &nonconvex_faces,
+                   vector<int> &winding_numbers, const planar_opts &opts)
 {
   const vector<vector<int>> &sfaces = sgeom.faces();
   const vector<vector<int>> &cfaces = cgeom.faces();
@@ -1568,10 +1590,7 @@ void sample_colors(Geometry &sgeom, const Geometry &cgeom,
     if (opts.winding_div2)
       winding_total = (winding_total + 1) / 2;
 
-    if (winding_total < winding_total_min)
-      winding_total_min = winding_total;
-    if (winding_total > winding_total_max)
-      winding_total_max = winding_total;
+    winding_numbers.push_back(winding_total);
 
     if ((opts.winding_rule != INT_MAX)) {
       // if cols.size() is not zero then there were hits
@@ -1648,8 +1667,7 @@ void blend_overlapping_faces(Geometry &geom,
   Geometry bgeom;
   vector<int> deleted_faces;
 
-  int winding_number_min = INT_MAX;
-  int winding_number_max = INT_MIN;
+  vector<int> winding_numbers;
 
   for (unsigned int i = 0; i < coplanar_faces_list.size(); i++) {
     // load a geom with color faces. keep it and copy it.
@@ -1701,15 +1719,8 @@ void blend_overlapping_faces(Geometry &geom,
     collect_original_normals(original_normals, coplanar_faces_list[i],
                              FaceNormals);
 
-    int winding_total_min = INT_MAX;
-    int winding_total_max = INT_MIN;
     sample_colors(sgeom, cgeom, original_normals, nonconvex_faces,
-                  winding_total_min, winding_total_max, opts);
-
-    if (winding_total_min < winding_number_min)
-      winding_number_min = winding_total_min;
-    if (winding_total_max > winding_number_max)
-      winding_number_max = winding_total_max;
+                  winding_numbers, opts);
 
     bgeom.append(sgeom);
 
@@ -1722,8 +1733,17 @@ void blend_overlapping_faces(Geometry &geom,
   geom.append(bgeom);
 
   if (opts.verbose) {
-    fprintf(stderr, "minimum winding number = %d\n", winding_number_min);
-    fprintf(stderr, "maximum winding number = %d\n", winding_number_max);
+    sort(winding_numbers.begin(), winding_numbers.end());
+    auto vi = unique(winding_numbers.begin(), winding_numbers.end());
+    winding_numbers.resize(vi - winding_numbers.begin());
+
+    fprintf(stderr, "winding numbers:");
+    for (unsigned int i = 0; i < winding_numbers.size(); i++) {
+      fprintf(stderr, " %d", winding_numbers[i]);
+      if (i != winding_numbers.size() - 1)
+        fprintf(stderr, ",");
+    }
+    fprintf(stderr, "\n");
   }
 }
 

@@ -783,13 +783,13 @@ Color blend_HSX_centroid(const vector<Color> &cols, int color_system_mode,
   else if (cols.size() == 1)
     return cols[0];
 
-  // saturation power can't be 0 or less
+  // saturation power can't be 0 or less, set default to 1
   if (sat_power <= 0.0)
     sat_power = 1.0;
 
-  // can't blend two or less colors to black
-  if (cols.size() < 3)
-    value_power = 0.0;
+  // value power can't be less than 0, set default to 0
+  if (value_power <= 0.0)
+    value_power = 0;
 
   double saturation_sum = 0.0;
 
@@ -833,14 +833,16 @@ Color blend_HSX_centroid(const vector<Color> &cols, int color_system_mode,
       angle = deg2rad(hsx_to_ryb(rad2deg(angle)));
 
     // if value_power is set, simulate subtractive Coloring for 3 or more colors
-    double V =
-        (value_power <= 0.0)
-            ? hsxa[2]
-            : pow(fabs(60.0 - fmod(rad2deg(angle) + (ryb_mode ? 60.0 : 0.0) +
-                                       value_advance,
-                                   120.0)) /
-                      60,
-                  value_power);
+    double V = hsxa[2];
+    if (value_power > 0.0 && cols_sz > 2) {
+      // angle advancement, if set
+      double a = (ryb_mode ? 60.0 : 0.0) + value_advance;
+      V = pow(fabs(60.0 - fmod(rad2deg(angle) + a, 120.0)) / 60, value_power);
+      // V is from 0-1.0 so convert hsv to hsl when in hsl mode, only need l
+      // l = (2 - s) * v / 2
+      if (color_system_mode == 2)
+        V = (2.0 - S) * V / 2.0;
+    }
 
     alpha_min = (hsxa[3] < alpha_min) ? hsxa[3] : alpha_min;
     alpha_max = (hsxa[3] > alpha_max) ? hsxa[3] : alpha_max;
@@ -856,8 +858,7 @@ Color blend_HSX_centroid(const vector<Color> &cols, int color_system_mode,
   // invisible
   // heirarchy: first map index, unset, invisible
   // note: invisible should be after unset, else an invisible element placed
-  // where an
-  //       unset one is will cause it to disappear
+  // where an unset one is will cause it to disappear
   if (!cols_sz) {
     if (map_found.is_set())
       return (map_found);

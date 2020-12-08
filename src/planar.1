@@ -16,6 +16,17 @@ Options
 .HP
 \fB\-\-version\fR version information
 .TP
+\fB\-l\fR <lim>
+minimum distance for unique vertex locations as negative exponent
+.IP
+(default: 12 giving 1e\-12)
+.HP
+\fB\-o\fR <file> write output to file (default: write to standard output)
+.PP
+Scene Options
+.HP
+\fB\-M\fR <mode> color system mode. HSV=1, HSL=2, RGB=3 (default: 2)
+.TP
 \fB\-d\fR <opt>
 blend overlapping (tile) or adjacent (merge) planar faces
 .IP
@@ -25,24 +36,6 @@ tile=1, merge=2 (default: none)
 polygon fill algorithm.  angular=1, modulo2=2 (pnpoly)
 .IP
 triangulation=3, even_overlap=4, alt_modulo2=5 (default: 1)
-.TP
-\fB\-w\fR <opt>
-winding rule, include face parts according to winding number
-.IP
-odd, even, positive, negative, nonzero, zero (default: none)
-zodd, zeven, zpositive, znegative (includes zero)
-or symbol proceeding integer: eq, ne, gt, ge, lt, le  meaning
-equal, not equal, greater than, greater than or equal, less
-than, less than or equal. use 'a' for absolute value  e.g. gea2
-.TP
-\fB\-z\fR
-use direction of normals for hemispherical winding numbers
-.TP
-\fB\-V\fR
-verbose output (of minimum and maximum winding numbers)
-.TP
-\fB\-H\fR
-turn off hole detection
 .TP
 \fB\-S\fR
 stitch seams created by tiling or merging
@@ -67,6 +60,31 @@ remove explicit edges, blend new ones using face colors (sets \fB\-S\fR)
 e \- edges only, v \- also blend vertices (default: none)
 V \- also blend invisible vertices, s \- strip edges and vertices
 .TP
+\fB\-c\fR
+CMY mode. Complementary colors.  RGB\->(RYB/GMO)\->CMY\->blend
+.TP
+\fB\-b\fR <val>
+brightness adjustment for areas of blended colors
+.IP
+valid values \fB\-1\fR.0 to +1.0 (default: no adjustment)
+negative for darker, positive for lighter
+at 0, an area with 2 blended colors will not change
+but areas with 3 or more will become slightly darker
+.PP
+Winding Options
+.TP
+\fB\-w\fR <opt>
+winding rule, include face parts according to winding number
+.IP
+odd, even, positive, negative, nonzero, zero (default: none)
+zodd, zeven, zpositive, znegative (includes zero)
+or symbol proceeding integer: eq, ne, gt, ge, lt, le  meaning
+equal, not equal, greater than, greater than or equal, less
+than, less than or equal. use 'a' for absolute value  e.g. gea2
+.TP
+\fB\-z\fR
+use direction of normals for hemispherical winding numbers
+.TP
 \fB\-D\fR
 delete invisible faces created by winding rule
 .TP
@@ -77,18 +95,15 @@ positive=1, negative=2, reverse=3, or use flip=4
 which reverses the orientation of the model as it was input
 .TP
 \fB\-C\fR <xyz>
-center of model, in form 'X,Y,Z' (default: centroid)
+center of model for normals, in form 'X,Y,Z' (default: centroid)
 .TP
-\fB\-l\fR <lim>
-minimum distance for unique vertex locations as negative exponent
-.IP
-(default: 12 giving 1e\-12)
-.HP
-\fB\-o\fR <file> write output to file (default: write to standard output)
+\fB\-H\fR
+turn off hole detection
+.TP
+\fB\-V\fR
+verbose output (of minimum and maximum winding numbers)
 .PP
-Color Blending Options (for option \fB\-d\fR)
-.HP
-\fB\-M\fR <mode> color blending mode. HSV=1, HSL=2, RGB=3 (default: 3)
+Color Blending Options (for option \fB\-d\fR, \fB\-M\fR 1,2)
 .TP
 \fB\-s\fR <sat>
 HSV/HSL saturation curve. Greater than 0 (default: 1)
@@ -101,7 +116,7 @@ HSV/HSL threshold to use average saturation (default: 1)
 between 0.0 (all averaging) and 1.0 (no averaging)
 .TP
 \fB\-v\fR <val>
-HSV/HSL value curve (default: 0)
+HSV/HSL value curve. Positive integer (default: 0)
 .IP
 simulates subtractive coloring for blending 3 or more colors
 RGB: Red+Green+Blue = White   Cyan+Magenta+Yellow = Black
@@ -119,17 +134,6 @@ alpha for blend. average=1, minimum=2, maximum=3 (default: 3)
 .TP
 \fB\-y\fR
 RYB mode. Blend colors as in Red\-Yellow\-Blue color wheel
-.TP
-\fB\-c\fR
-CMY mode. Complementary colors.  RGB\->(RYB/GMO)\->CMY\->blend
-.TP
-\fB\-b\fR <val>
-brightness adjustment for areas of blended colors
-.IP
-valid values \fB\-1\fR.0 to +1.0 (default: no adjustment)
-negative for darker, positive for lighter
-at 0, an area with 2 blended colors will not change
-but areas with 3 or more will become slightly darker
 .PP
 Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
 .TP

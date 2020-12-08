@@ -11,7 +11,15 @@ xx-xx-20 Adrian Rossiter <adrian@antiprism.com>
             minmax: rename to poly_form
             repel: add -z for status reporting
             rotegrity: remove -T (old twist program output)
+            col_util: add -w for control of color grid and (new) color bars
+              -I can exclude map indexes from color grid
+              -r cube as new default container in HSV/HSL mode
+              -R to optionally show primary and secondary reference colors
+              -U adds simple sorting of colors along with already unique sort
+            planar
+              -V verbose lists all winding numbers found in a model
          Fixes
+            usage helps review and organize
             minor bug fixes and improvements
             code review and fixes for potential issues
 

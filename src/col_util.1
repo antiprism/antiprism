@@ -22,7 +22,7 @@ map type: rgb=1, antiprism=2, decimal=3 (default: 1)
 .PP
 Scene Options
 .HP
-\fB\-M\fR <mode> color system mode. HSV=1, HSL=2, RGB=3 (default: 3)
+\fB\-M\fR <mode> color system mode. HSV=1, HSL=2, RGB=3 (default: 2)
 .TP
 \fB\-d\fR <int>
 output type. plot=1, wheel=2, grid=3, map=4 (default: 1)
@@ -79,7 +79,7 @@ height of cone or pyramid (\fB\-M\fR 2, \fB\-r\fR 2,3) (default: no change)
 \fB\-R\fR
 show reference primary and secondary colors on containers
 .PP
-Color Blending Options (\fB\-d\fR 1, \fB\-p\fR)
+Color Blending Options (\fB\-d\fR 1, \fB\-M\fR 1,2, \fB\-p\fR)
 .TP
 \fB\-p\fR
 plot color centroid (or multiple centroids \fB\-s\fR, \fB\-v\fR)
@@ -99,7 +99,7 @@ HSV/HSL threshold to use average saturation (default: 1)
 between 0.0 (all averaging) and 1.0 (no averaging)
 .TP
 \fB\-v\fR <val>
-HSV/HSL value curve (default: 0)
+HSV/HSL value curve. Positive integer (default: 0)
 .IP
 simulates subtractive coloring for blending 3 or more colors
 RGB: Red+Green+Blue = White   Cyan+Magenta+Yellow = Black

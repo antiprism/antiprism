@@ -21,7 +21,7 @@
 <<EXAMPLES_START>>
 RGB cube centroid of blue and yellow
 <<CMDS_START>>
-col_util -d plot -m map_blue:yellow | antiview -v 0.05
+col_util -d plot -m map_blue:yellow -M rgb | antiview -v 0.05
 <<CMDS_END>>
 
 HSV cylinder centroid of blue and yellow
@@ -47,7 +47,7 @@ col_util -d plot -m map_red:green:blue -M hsl -p -v 1,2,3,4 -c | antiview -v 0.0
 
 Plot rainbow colour map in RGB cube
 <<CMDS_START>>
-col_util -m rainbow | antiview -v 0.03
+col_util -m rainbow -M rgb | antiview -v 0.03
 <<CMDS_END>>
 
 Plot rainbow colour map in HSL cylinder, hexagonal dipyramid, or
@@ -66,7 +66,7 @@ col_util -d wheel -m map_red:green:blue | antiview
 Display rainbow colour map as a grid or as a color bars
 <<CMDS_START>>
 col_util -d grid -m rainbow | antiview
-col_util -d grid -m rainbow -b w| antiview
+col_util -d grid -m rainbow*10 -I -w b | antiview
 <<CMDS_END>>
 <<EXAMPLES_END>>
 

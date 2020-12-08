@@ -79,7 +79,7 @@ public:
 
   col_util_opts()
       : ProgramOpts("col_util"), display_type(1), grid_width(0),
-        collect_indexes(true), color_system_mode(3), map_type(0),
+        collect_indexes(true), color_system_mode(2), map_type(0),
         show_container(2), show_reference(false), sort_colors('\0'),
         upright_view(0), container(0), hsl_height(0), plot_centroid(false),
         sat_threshold(1.0), value_advance(0.0), alpha_mode(3), cmy_mode(false),
@@ -106,7 +106,7 @@ Options
                map type: rgb=1, antiprism=2, decimal=3 (default: 1)
 
 Scene Options
-  -M <mode> color system mode. HSV=1, HSL=2, RGB=3 (default: 3)
+  -M <mode> color system mode. HSV=1, HSL=2, RGB=3 (default: 2)
   -d <int>  output type. plot=1, wheel=2, grid=3, map=4 (default: 1)
   -y        RYB mode. Blend colors as in Red-Yellow-Blue color wheel
   -c        CMY mode. Complementary colors.  RGB->(RYB/GMO)->CMY->blend
@@ -131,7 +131,7 @@ Output for plot (-d 1) Options
                1 - double, 2 - make perimeter angle 90 degrees dihedral
   -R        show reference primary and secondary colors on containers
 
-Color Blending Options (-d 1, -p)
+Color Blending Options (-d 1, -M 1,2, -p)
   -p        plot color centroid (or multiple centroids -s, -v)
   -V        verbose output. show color blend RGBA components 
   -s <sat>  HSV/HSL saturation curve. Greater than 0 (default: 1)
@@ -139,7 +139,7 @@ Color Blending Options (-d 1, -p)
                4 numbers can be entered separated by commas
   -t <val>  HSV/HSL threshold to use average saturation (default: 1)
                between 0.0 (all averaging) and 1.0 (no averaging)
-  -v <val>  HSV/HSL value curve (default: 0)
+  -v <val>  HSV/HSL value curve. Positive integer (default: 0)
                simulates subtractive coloring for blending 3 or more colors
                RGB: Red+Green+Blue = White   Cyan+Magenta+Yellow = Black
                RYB: Red+Yellow+Blue = Black  Green+Magenta+Orange = White
@@ -342,11 +342,20 @@ void col_util_opts::process_command_line(int argc, char **argv)
     error("too many arguments");
 
   if (color_system_mode == 3) {
-    if (display_type == 2)
-      warning("only averge blend is displayed on wheel in RGB mode");
-    else if (display_type == 1 && plot_centroid)
-      warning("only averge blend is plotted for one color centroid in RGB mode",
-              "p");
+    if (display_type == 1 && plot_centroid)
+      warning("only averge blend is displayed on plots in RGB mode", "p");
+    else if (display_type == 2)
+      warning("only averge blend is displayed on wheel in RGB mode", "p");
+
+    if (sat_powers.size())
+      warning("saturation entries are not used in RGB mode", "s");
+    if (sat_threshold != 1.0)
+      warning("saturation threshold is not used in RGB mode", "t");
+
+    if (value_powers.size())
+      warning("value entries are are not used in RGB mode", "v");
+    if (value_advance > 0)
+      warning("value advance is not used in RGB mode", "u");
   }
 
   // check these values before filling in defaults
@@ -356,8 +365,20 @@ void col_util_opts::process_command_line(int argc, char **argv)
               "p");
     if (sat_powers.size())
       warning("saturation entries are only valid in plot or wheel mode", "s");
+    if (sat_threshold != 1.0)
+      warning("saturation threshold is only valid in plot or wheel mode", "t");
+
     if (value_powers.size())
       warning("value entries are only valid in plot or wheel mode", "v");
+    if (value_advance > 0)
+      warning("value advance is only valid in plot or wheel mode", "u");
+  }
+
+  if (color_system_mode != 3) {
+    if (sat_powers.size() == 0 && sat_threshold != 1.0)
+      warning("saturation threshold has no effect if -s is not set", "t");
+    if (value_powers.size() == 0 && value_advance > 0)
+      warning("value advance has no effect if -v is not set", "u");
   }
 
   // fill in missing sat_powers with -1.0, meaning use centroid saturation
@@ -790,9 +811,9 @@ Color plot_rgb_point(Geometry &geom, Color &col, const col_util_opts &opts)
 
   // rcol is relocated color, not to be displayed
   Color rcol = col;
-  Vec4d hsxa = rcol.get_hsva();
   if (opts.ryb_mode) {
     // only need hue so algorithm doesn't matter
+    Vec4d hsxa = rcol.get_hsva();
     hsxa[0] = col_blend::hsx_to_ryb(rad2deg(2 * M_PI * hsxa[0])) / 360.0;
     rcol.set_hsva(hsxa);
   }
@@ -800,9 +821,12 @@ Color plot_rgb_point(Geometry &geom, Color &col, const col_util_opts &opts)
   if (opts.color_system_mode == 3)
     geom.add_vert(Vec3d(rcol[0] / 255.0, rcol[1] / 255.0, rcol[2] / 255.0),
                   col);
-  else
+  else {
     // borrow function for plotting hsv cube
+    // hsxa is relocated color, not to be displayed
+    Vec4d hsxa = col_blend::get_hsxa(col, opts.color_system_mode);
     geom.add_vert(Vec3d(hsxa[0], hsxa[1], hsxa[2]), col);
+  }
 
   return col;
 }
