@@ -1276,45 +1276,50 @@ struct ConwayOperator {
   std::string operator_short;
   std::string operator_name;
   std::string pattern;
+  int num_params;
 };
 
 // clang-format off
 ConwayOperator conway_operator_list[]{
     // Equivalent: d, a, s
-    {"d",   "dual",           "[F]0V,0E"},
-    {"a",   "ambo",           "[E]0F,0V"},
-    {"S",   "seed",           "[V]0E,0F"},
+    {"d",   "dual",           "[F]0V,0E", 0},
+    {"a",   "ambo",           "[E]0F,0V", 0},
+    {"S",   "seed",           "[V]0E,0F", 0},
 
-    {"j",   "join",           "[F,V]0_1E"},
+    {"j",   "join",           "[F,V]0_1E", 0},
 
     // Equivalent: k, n, u
-    {"k",   "kis",            "[F,V]0_1v1v,1E"},
-    {"n",   "needle",         "[V,F]1f0_1f,1E"},
-    {"u",   "subdivide",      "[V,E]0_1e1e,1F"},
+    {"k",   "kis",            "[F,V]0_1v1v,1E", 0},
+    {"n",   "needle",         "[V,F]1f0_1f,1E", 0},
+    {"u",   "subdivide",      "[V,E]0_1e1e,1F", 0},
 
     // Equivalent: t, z, e (tile order to match e0=z and e1=e
-    {"t",   "truncate",       "[VE]0V0E,0V,0E"},
-    {"z",   "zip",            "[EF]0E0F,0F,0E"},
-    {"e",   "expand",         "[FV]0V,0F,0F0V"},
+    {"t",   "truncate",       "[VE]0V0E,0V,0E", 0},
+    {"z",   "zip",            "[EF]0E0F,0F,0E", 0},
+    {"e",   "expand",         "[FV]0V,0F,0F0V", 1},
 
     // Symmetric: s, m, b
-    {"s",   "snub",           "[VEF]0V,0E,0F,0V0E0F"},
-    {"m",   "meta",           "[V,E,F]*0_1_2"},
-    {"b",   "bevel",          "[VEF]0e0f,0v0e,0f0v"},
+    {"s",   "snub",           "[VEF]0V,0E,0F,0V0E0F", 1},
+    {"m",   "meta",           "[V,E,F]*0_1_2", 1},
+    {"b",   "bevel",          "[VEF]0e0f,0v0e,0f0v", 1},
 
-    {"o",   "ortho",          "[V,E,F]1_0e1_2e"},
-    {"g",   "gyro",           "[F,VE,V]1_0F1_2V1E,1E"},
-    {"c",   "chamfer",        "[V,VF]1F,0_1v1f"},
-    {"l",   "loft",           "[V,VF]1F,0_1v1_0v,0E"},
-    {"p",   "propellor",      "[V,VEF]1F,1_0V1E1F,1E"},
-    {"q",   "quinto",         "[V,E,EF]2F,0_1_2e2_1e"},
-    {"L0",  "joined-lace",    "[V,E2F]1F,1e1_0e,1_0E"},
-    {"L",   "lace",           "[V,E2F]1F,1e1_0e,1_0v0v,0E"},
-    {"K",   "stake",          "[V,E2F,F]0_1_2e1e,1_0v0v,0E"},
-    {"M",   "edge-medial",    "[F,3V,V2E]0_2_1e2e,2_0v2v,2E"},
-    {"J",   "joined-medial",  "[F,V,EF]*0_1_2,1_2E"},
-    {"X",   "cross",          "[V,E,F,VF]3_1v3_2v,*0_1_3"},
-    {"w",   "whirl",          "[VF,VE,V]0F,0_1V2_1E1_0F,1E"},
+    {"o",   "ortho",          "[V,E,F]1_0e1_2e", 1},
+    {"g",   "gyro",           "[F,VE,V]1_0F1_2V1E,1E", 1},
+    {"c",   "chamfer",        "[V,VF]1F,0_1v1f", 0},
+    {"l",   "loft",           "[V,VF]1F,0_1v1_0v,0E", 1},
+    {"p",   "propellor",      "[V,VEF]1F,1_0V1E1F,1E", 0},
+    {"q",   "quinto",         "[V,E,EF]2F,0_1_2e2_1e", 0},
+    {"L_0", "joined-lace",    "[V,EF]1F,1e1_0e,1_0E", 1},
+    {"G",   "opposite-lace",  "[V,EF]1F,1e1_0e,0_1f1f,1E", 0},
+    {"L",   "lace",           "[V,EF]1F,1e1_0e,1_0v0v,0E", 1},
+    {"K",   "stake",          "[V,EF,F]0_1_2e1e,1_0v0v,0E", 0},
+    {"M",   "edge-medial",    "[F,3V,V2E]0_2_1e2e,2_0v2v,2E", 1},
+    {"J",   "joined-medial",  "[F,V,EF]*0_1_2,1_2E", 0},
+    {"X",   "cross",          "[V,E,F,VF]3_1v3_2v,*0_1_3", 0},
+    {"w",   "whirl",          "[VF,VE,V]0F,0_1V2_1E1_0F,1E", 0},
+    {"E",   "ethel",          "[V,VE,VF]0_1_2e1e,2F,1_2v2f", 0},
+    {"W",   "waffle",         "[V,E,F,V2E,VF]0_4_3f4f,2_4_3v3_4v,3E", 0},
+    {"B",   "bowtie",         "[V,E,F,VE,EF]1_3_4,0_3_4_2e4_1_3e", 0},
 };
 // clang-format on
 
@@ -1767,8 +1772,12 @@ static string coord_string(Vec3d v)
   string coords;
   for (int i = 0; i < 3; i++)
     if (v[i]) {
-      if (v[i] != 1.0)
-        coords += msg_str("%g", v[i]);
+      if (v[i] != 1.0) {
+        auto str = msg_str("%g", v[i]);
+        if (str.find('e') != string::npos)
+          str = msg_str("%f", v[i]);
+        coords += str;
+      }
       coords += VEF[i];
     }
 
@@ -1832,7 +1841,9 @@ static string o_pattern(int N)
   string pat = "[";
   for (int a = 0; a <= N; a += 2)
     for (int b = 0; b <= a; b += 2)
-      pat += coord_string(Vec3d(((a + N % 2) - b), b, (N - (a + N % 2)))) + ",";
+      pat += coord_string(Vec3d(((a + N % 2) - b), b, (N - (a + N % 2))) /
+                          (2 - N % 2)) +
+             ",";
   pat.back() = ']';
 
   auto crds2idx = [](int a, int b) { return (a / 2 + 1) * a / 4 + b / 2; };
@@ -2010,46 +2021,147 @@ static string s_pattern(int N)
   return pat;
 }
 
+static string l_pattern(int N)
+{
+  if (N < 0)
+    return ""; // number out of range
+
+  string pat = "[";
+  int divs = N + 1;
+  for (int i = 0; i < divs; i++) {
+    pat += coord_string(Vec3d(divs - i, 0, i)) + ',';
+  }
+  pat.back() = ']';
+
+  pat += msg_str("%dF,", divs - 1);
+
+  for (int i = 0; i < divs - 1; i++)
+    pat += msg_str("%d_%dv%d_%dv,", i, i + 1, i + 1, i);
+
+  pat += msg_str("0E");
+
+  return pat;
+}
+
+static string L_pattern(int N)
+{
+  if (N < 0)
+    return ""; // number out of range
+
+  if (N == 0)
+    return "[V,EF]1F,1e1_0e,1_0E"; // L0 is its own operator
+
+  string pat = "[";
+  int divs = N + 1;
+  for (int i = 0; i < divs; i++) {
+    if (i == 0)
+      pat += coord_string(Vec3d(1, 0, 0)) + ',';
+    else if (i == 1)
+      pat += coord_string(Vec3d(0, 5, 1)) + ',';
+    else if (i % 2 == 0)
+      pat += coord_string(Vec3d(1, 0, pow(5, i - 1))) + ',';
+    else if (i % 2 == 1)
+      pat += coord_string(Vec3d(0, 1, pow(2, i / 2) * pow(5, i - 2))) + ',';
+  }
+  pat.back() = ']';
+
+  pat += msg_str("%dF,", divs - 1);
+
+  for (int i = 0; i < divs - 1; i++) {
+    const char *c = (i % 2) ? "ve" : "ev";
+    pat += msg_str("%d%c%d_%d%c,", i + 1, c[0], i + 1, i, c[0]);
+    pat += msg_str("%d%c%d_%d%c,", i, c[1], i, i + 1, c[1]);
+  }
+
+  pat += msg_str("0E");
+
+  return pat;
+}
+
 Status Tiling::read_conway(const string &op)
 {
-  int last_op = sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
-  for (int i = 0; i < last_op; i++)
-    if (conway_operator_list[i].operator_short == op)
-      return read_pattern(conway_operator_list[i].pattern);
-
-  Status stat;
-  string pat;
-  char op_char;
-  int op_int;
+  const auto unset = std::numeric_limits<int>::max(); // unset parameter value
+  int param1 = unset;
+  int param2 = unset;
+  char op_char; // Conway operation letter
   char buff;
-  if (sscanf(op.c_str(), "%c%d%c", &op_char, &op_int, &buff) == 2) {
-    if (op_int < 0)
-      return Status::error("Conway operater number cannot be negative");
-    if (op_char == 'M')
-      pat = M_pattern(op_int);
-    else if (op_char == 'm')
-      pat = m_pattern(op_int);
-    else if (op_char == 'o')
-      pat = o_pattern(op_int);
-    else if (op_char == 'e')
-      pat = e_pattern(op_int);
-    else if (op_char == 'b')
-      pat = b_pattern(op_int);
-    else if (op_char == 'g')
-      pat = g_pattern(op_int);
-    else if (op_char == 's')
-      pat = s_pattern(op_int);
-    else
-      stat.set_error(msg_str("Conway operator %c: not known", op_char));
-    if (pat == "")
-      stat.set_error(
-          msg_str("Conway operator %c: invalid number %d", op_char, op_int));
-  }
-  else
-    stat.set_error("Conway operator '" + op + "' not known");
+  bool valid_format =
+      (sscanf(op.c_str(), "%c%c", &op_char, &buff) == 1 ||             // X
+       sscanf(op.c_str(), "%c%d%c", &op_char, &param1, &buff) == 2 ||  // X1
+       sscanf(op.c_str(), "%c_%d%c", &op_char, &param1, &buff) == 2 || // X_1
+       sscanf(op.c_str(), "%c_%d_%d%c", &op_char, &param1, &param2,
+              &buff) == 3 // X_1_2
+      );
+  if (!valid_format)
+    return Status::error("Conway operator '" + op + "': invalid format");
 
-  if (stat.is_error())
-    return stat;
+  // Look up operator
+  int op_idx = -1;             // index number of operator in list
+  vector<string> param_ops(3); // op letters for each number of paramieters
+  int last_op = sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
+  for (int i = 0; i < last_op; i++) {
+    const char c = conway_operator_list[i].operator_short[0];
+    param_ops[conway_operator_list[i].num_params] += c;
+    if (c == op_char)
+      op_idx = i;
+  }
+
+  auto prefix = msg_str("Conway operator %c: ", op_char);
+  if (op_idx < 0) // not found
+    return Status::error(prefix + "operator not recognised");
+
+  int number_of_params = (param1 != unset) + (param2 != unset);
+  if (number_of_params > conway_operator_list[op_idx].num_params) {
+    if (conway_operator_list[op_idx].num_params == 0)
+      return Status::error(prefix + "does not take a parameter");
+    else
+      return Status::error(prefix + "too many parameters for operator");
+  }
+  if (param1 < 0 || param2 < 0)
+    return Status::error(prefix + "parameter cannot be negative");
+
+  string pat;            // final wythoff pattern
+  if (param1 == unset) { // no parameter given, use base pattern
+    pat = conway_operator_list[op_idx].pattern;
+  }
+  else { // parameter given, use sequence processing
+    if (strchr(param_ops[1].c_str(), op_char)) {
+      if (op_char == 'M')
+        pat = M_pattern(param1);
+      else if (op_char == 'm')
+        pat = m_pattern(param1);
+      else if (op_char == 'o')
+        pat = o_pattern(param1);
+      else if (op_char == 'e')
+        pat = e_pattern(param1);
+      else if (op_char == 'b')
+        pat = b_pattern(param1);
+      else if (op_char == 'g')
+        pat = g_pattern(param1);
+      else if (op_char == 's')
+        pat = s_pattern(param1);
+      else if (op_char == 'l')
+        pat = l_pattern(param1);
+      else if (op_char == 'L')
+        pat = L_pattern(param1);
+      else
+        return Status::error(
+            prefix + "one-parameter operator not handled (internal error)");
+
+      if (pat == "")
+        return Status::error(prefix + msg_str("invalid parameter %d", param1));
+    }
+    else if (strchr(param_ops[2].c_str(), op_char)) {
+      if (pat == "") {
+        if (param2 == unset)
+          return Status::error(prefix +
+                               msg_str("invalid parameter %d", param1));
+        else
+          return Status::error(
+              prefix + msg_str("invalid parameters %d, %d", param1, param2));
+      }
+    }
+  }
 
   return read_pattern(pat);
 }
@@ -2077,17 +2189,15 @@ void Tiling::print_conway_list(FILE *ofile)
     fprintf(ofile, "%-5s%-15s%s\n", op.operator_short.c_str(),
             op.operator_name.c_str(), op.pattern.c_str());
   }
-  fprintf(
-      ofile,
-      // clang-format off
-"\n"
-"Operators m, o, e, b, M, g, s are each part of a sequence, and accept an\n"
-"optional integer >=1 as a parameter, where 1 is the base operator. Operators\n"
-"m, o, e, b, M also accept 0, which produces a lower level operator.\n"
-"Examples: M5, m5, e2, o0. L0 is a standalone operator, and not the 0 entry\n"
-"of a sequence. Some operators, like t and k, take a number to filter the \n"
-"ments the pattern will be applied to, but this is not supported.\n");
-  // clang-format on
+  fprintf(ofile, R"(
+Operators m, o, e, b, M, g, s, l, L can be considered part of a sequence,
+and accept an optional integer >=1 as a parameter, where 1 is the base
+operator. Operators m, o, e, b, M, l, L also accept 0, which produces
+a lower level operator (except L_0 is a standalone operator, and not
+the 0 entry of the L sequence). Examples: M_5, m_5, e_2, o_0. Some
+operators, like t and k, take a number to filter the elements that the
+pattern will be applied to, but this is not supported.
+)");
 }
 
 namespace anti {
