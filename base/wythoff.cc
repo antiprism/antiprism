@@ -1358,7 +1358,7 @@ Status TilingColoring::read(const string &str)
   if (id == 0)
     set_type_none();
   else if (id == 1 || id == 2)
-    set_type_path_index((id == 1));
+    set_type_path_index((id == 2));
   else {
     if (parts.size() > 1) {
       if (strcasecmp(parts[1], "V") == 0)
