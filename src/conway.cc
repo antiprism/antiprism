@@ -57,258 +57,332 @@ using namespace anti;
 struct ConwayOperator {
   string operator_short;
   string operator_name;
-  bool allow_n;
+  int sub;
+  int sides;
   bool hart_operator;
 };
 
 // clang-format off
 ConwayOperator conway_operator_list[]{
-    {"a",  "ambo",            false, true  },
-    {"b",  "bevel",           true,  false }, // allows N >= 0
-    {"c",  "chamfer",         false, true  },
-    {"d",  "dual",            false, true  },
-    {"e",  "expand",          true,  false }, // allows N >= 0
-    {"g",  "gyro",            true,  true  },
-    {"J",  "joined-medial",   false, false }, // replaces wiki M0
-    {"j",  "join",            false, false },
-    {"K",  "stake",           true,  false }, // allows N >= 3 for faces
-    {"k",  "kis",             true,  true  }, // allows N >= 3 for vertices
-    {"L",  "lace",            true,  false }, // allows N >= 3 for faces, or 0
-    {"l",  "loft",            true,  false }, // allows N >= 3 for faces
-    {"M",  "medial",          true,  false }, // allows N >= 0
-    {"m",  "meta",            true,  false }, // allows N >= 0
-    {"n",  "needle",          false, false },
-    {"o",  "ortho",           true,  false }, // allows N >= 0
-    {"p",  "propeller",       false, true  },
-    {"q",  "quinto",          false, false },
-    {"r",  "reflect",         false, false },
-    {"S",  "seed",            false, false },
-    {"s",  "snub",            true,  false },
-    {"t",  "truncate",        true,  false }, // allows N >= 3 for faces
-    {"u",  "subdivide",       false, false },
-    {"w",  "whirl",           false, true  },
-    {"X",  "cross",           false, false },
-    {"z",  "zip",             false, false },
-    {"+",  "orient positive", false, false },
-    {"-",  "orient negative", false, false },
+    {"a",  "ambo",            -1, -1, true  },
+    {"B",  "bowtie",          -1, -1, false },
+    {"b",  "bevel",            0, -1, false }, // subscript >= 0
+    {"c",  "chamfer",         -1, -1, true  },
+    {"d",  "dual",            -1, -1, true  },
+    {"E",  "ethyl",           -1, -1, false },
+    {"e",  "expand",           0, -1, false }, // subscript >= 0
+    {"G",  "opposite-lace",   -1, -1, false },
+    {"g",  "gyro",             1, -1, true  }, // subscript >= 1
+    {"J",  "joined-medial",   -1, -1, false }, // replaces wiki M0
+    {"j",  "join",            -1, -1, false },
+    {"K",  "stake",           -1,  3, false }, // face sides >= 3
+    {"k",  "kis",             -1,  3, true  }, // vertex sides >= 3
+    {"L",  "lace",             0, -1, false }, // subscript >= 0, face sides >= 3
+    {"l",  "loft",             0, -1, false }, // face sides >= 3
+    {"M",  "medial",           0, -1, false }, // subscript >= 0
+    {"m",  "meta",             0, -1, false }, // subscript >= 0
+    {"n",  "needle",          -1, -1, false },
+    {"o",  "ortho",            0, -1, false }, // subscript >= 0
+    {"p",  "propeller",       -1, -1, true  },
+    {"q",  "quinto",          -1, -1, false },
+    {"r",  "reflect",         -1, -1, false },
+    {"S",  "seed",            -1, -1, false },
+    {"s",  "snub",             1, -1, false }, // subscript >= 1
+    {"t",  "truncate",        -1,  2, false }, // vertex sides >= 2
+    {"u",  "subdivide",       -1, -1, false },
+    {"W",  "waffle",          -1, -1, false },
+    {"w",  "whirl",           -1, -1, true  },
+    {"X",  "cross",           -1, -1, false },
+    {"z",  "zip",             -1, -1, false },
+    {"+",  "orient positive", -1, -1, false },
+    {"-",  "orient negative", -1, -1, false },
+};
+
+struct ConwaySeed {
+  string seed;
+  string seed_name;
+  int sides;
+};
+
+ConwaySeed conway_seed_list[]{
+    {"T",  "tetrahedron",     -1 },
+    {"C",  "cube",            -1 },
+    {"O",  "octahedron",      -1 },
+    {"I",  "icosahedron",     -1 },
+    {"D",  "dodecahedron",    -1 },
+    {"P",  "prism",            3 }, // sides >= 3 required
+    {"A",  "antiprism",        3 }, // sides >= 3 required
+    {"Y",  "pyramid",          3 }, // sides >= 3 required
+    {"Z",  "polygon",          3 }, // sides >= 3 required
+    {"R",  "random",           3 }, // sides >= 3 required
 };
 // clang-format on
 
-string operators_str()
+bool find_operator(const char &op)
 {
-  string operators;
-  int last_op = sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
-  for (int i = 0; i < last_op; i++) {
-    operators.push_back(conway_operator_list[i].operator_short[0]);
+  bool found = false;
+  unsigned int last_op = sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
+  for (unsigned int i = 0; i < last_op; i++) {
+    if (op == conway_operator_list[i].operator_short[0]) {
+      found = true;
+      break;
+    }
   }
-  return operators;
+  return found;
 }
 
-string digits_allowed_str()
+int find_subs_allowed(const char &op)
 {
-  string digits_allowed;
-  int last_op = sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
-  for (int i = 0; i < last_op; i++) {
-    if (conway_operator_list[i].allow_n)
-      digits_allowed.push_back(conway_operator_list[i].operator_short[0]);
+  int found = -1;
+  unsigned int last_op = sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
+  for (unsigned int i = 0; i < last_op; i++) {
+    if (op == conway_operator_list[i].operator_short[0]) {
+      if (conway_operator_list[i].sub > -1)
+        found = conway_operator_list[i].sub;
+      break;
+    }
   }
-  return digits_allowed;
+  return found;
 }
 
-string uniforms_str() { return "TCOID"; }
+int find_sides_allowed(const char &op)
+{
+  int found = -1;
+  unsigned int last_op = sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
+  for (unsigned int i = 0; i < last_op; i++) {
+    if (op == conway_operator_list[i].operator_short[0]) {
+      if (conway_operator_list[i].sides > -1)
+        found = conway_operator_list[i].sides;
+      break;
+    }
+  }
+  return found;
+}
 
-string digits_required_str() { return "PAYZR"; }
+bool find_seed(const char &seed)
+{
+  bool found = false;
+  unsigned int last_op = sizeof(conway_seed_list) / sizeof(conway_seed_list[0]);
+  for (unsigned int i = 0; i < last_op; i++) {
+    if (seed == conway_seed_list[i].seed[0]) {
+      found = true;
+      break;
+    }
+  }
+  return found;
+}
 
-string operands_str() { return (uniforms_str() + digits_required_str()); }
-
-string digits_ge_3_str() { return "KkLlt"; }
-
-string digits_str() { return "0123456789"; }
+int find_seed_sides(const char &seed)
+{
+  int found = -1;
+  unsigned int last_op = sizeof(conway_seed_list) / sizeof(conway_seed_list[0]);
+  for (unsigned int i = 0; i < last_op; i++) {
+    if (seed == conway_seed_list[i].seed[0]) {
+      if (conway_seed_list[i].sides > -1)
+        found = conway_seed_list[i].sides;
+      break;
+    }
+  }
+  return found;
+}
 
 class ops {
 public:
   int op_pos;
   char op;
-  int op_var;
-  ops(int n, char o, int v) : op_pos(n), op(o), op_var(v) {}
+  int sub;
+  int sides;
+  ops(int n, char o, int s1, int s2) : op_pos(n), op(o), sub(s1), sides(s2) {}
 };
 
 bool cmp_ops(const ops *a, const ops *b) { return a->op_pos > b->op_pos; }
 
-int validate_cn_string(const string &cn_string, vector<ops *> &operations,
-                       char &operand, int &poly_size, string alpha_user)
+// op, sub and sides will be reset
+void write_operation(vector<ops *> &operations, int op_count, char &op, int &sub, int &sides)
 {
-  char current_op = '\0';
-  string number_string;
-  int num_val = 1;
-  bool delayed_write = false;
+  operations.push_back(new ops(op_count++, op, sub, sides));
+  op = '\0';
+  sub = 1;
+  sides = -1;
+}
 
-  // get allowable operators from table
-  // and get operators which allow N from table
-  string operators = operators_str() + alpha_user;
-  string digits_allowed = digits_allowed_str();
-
-  // ^ is repeat
-  string operands = operands_str() + string("^");
-  string digits_required = digits_required_str() + string("^");
-  string digits_ge_3 = digits_ge_3_str();
-  string digits = digits_str();
-
-  operand = '\0';
-  poly_size = 0;
+Status validate_cn_string(const string &cn_string, vector<ops *> &operations,
+                          char &seed, int &seed_size, const string alpha_user)
+{
+  seed = '\0';
+  seed_size = 0;
+  int sub = 1;
+  int sides = -1; 
+  
+  Status stat;
+  bool end_of_command = false;
+  int num_val = -1;
+  
+  int require_seed_sides = -1;
+  int possible_sub = -1;
+  int possible_sides = -1;
+  int possible_repeats = -1;
+  
+  string digits = "0123456789";
+  
+  char pending_op = '\0';
+  int pending_pos = 0;
 
   int op_count = 0;
   for (unsigned int i = 0; i < cn_string.length(); i++) {
-    if (operators.find(cn_string[i]) != string::npos) {
-      if (operand != '\0')
-        return i + 1;
+    char current = cn_string[i];
+//fprintf(stderr,"cn_string[%d] = %c\n", i, current);
 
-      if (delayed_write) {
-        operations.push_back(new ops(op_count++, current_op, num_val));
-        delayed_write = false;
+    bool is_digit = (digits.find(current) != string::npos);
+
+    // seed with no N requirement has been found, no more characters expected
+    if (end_of_command)
+      return stat.set_error(msg_str("extra characters past seed \'%c\': \'%s\' at position %d", seed, cn_string.substr(i).c_str(), i+1));
+     
+    // seed with N requirement has been found, digits expected
+    if ((require_seed_sides > -1) && !is_digit)
+      return stat.set_error(msg_str("seed \'%c\' requires a number of sides of %d or more at position %d", seed, require_seed_sides, i+1));
+    
+    // a number found where it shouldn't be
+    if (((possible_sub == -1) && (possible_sides == -1) && (require_seed_sides == -1) && (possible_repeats == -1)) && is_digit)
+      return stat.set_error(msg_str("operator \'%c\' illegal number value specified: %c at position %d", pending_op, current, i+1));
+    
+    // a number must follow a superscript
+    if ((possible_repeats == 1) && !is_digit)
+      return stat.set_error(msg_str("superscript \'%c\' requires a number of %d or more at position %d", '^', possible_repeats, i+1));
+      
+    // if no more digits, handle delayed write with current num_val, process next character
+    if (((possible_sub > -1) || (possible_sides > -1)) && !is_digit) {
+      if (num_val > -1) {
+        if (possible_sub > -1)
+          sub = num_val;
+        else
+        if (possible_sides > -1)
+          sides = num_val;
       }
-
-      current_op = cn_string[i];
-
-      if (digits_allowed.find(current_op) == string::npos)
-        operations.push_back(new ops(op_count++, current_op, num_val));
-      else
-        delayed_write = true;
+      write_operation(operations, op_count, pending_op, sub, sides);
+      possible_sub = -1;
+      possible_sides = -1;
+      num_val = -1;
     }
-    else if (operands.find(cn_string[i]) != string::npos) {
-      if (operand != '\0')
-        return i + 1;
 
-      if (delayed_write) {
-        operations.push_back(new ops(op_count++, current_op, num_val));
-        delayed_write = false;
-      }
-
-      operand = cn_string[i];
-      current_op = '\0';
+    // its a superscript
+    if (current == '^') {
+      pending_op = current;
+      pending_pos = i+1;
+      
+      if (i == 0)
+        return stat.set_error(msg_str("superscript \'%c\' illegal in first position %d", pending_op, i+1));
+      possible_repeats = 1;
     }
-    // if digits
-    else if (digits.find(cn_string[i]) != string::npos) {
-      // only operands which require a number
-      if (operand != '\0') {
-        if (digits_required.find(operand) == string::npos) {
-          return i + 1;
-        }
-      }
-      // if not a numeric allowed operator
-      else if (digits_allowed.find(current_op) == string::npos) {
-        return i + 1;
-      }
-
+    // its a digit
+    else if (is_digit) {
+//fprintf(stderr,"found digit\n");
+      // find full number string and advance counter
       int digits_start = i;
       int digits_end = i;
       while ((digits_end + 1 < (int)cn_string.length()) &&
              (digits.find(cn_string[digits_end + 1]) != string::npos))
         digits_end++;
 
-      number_string =
-          cn_string.substr(digits_start, (digits_end - digits_start + 1));
+      num_val = std::stoi(cn_string.substr(digits_start, (digits_end - digits_start + 1)));
+//fprintf(stderr,"num_val = %d\n", num_val);
 
-      // if repeat character
-      if (operand == '^') {
-        unsigned int sz = operations.size();
-        if (!sz) {
-          fprintf(stderr, "repeat operator is a beginning of string\n");
-          return i;
-        }
-        int num_repeats = atoi(number_string.c_str());
-        if (!num_repeats) {
-          fprintf(stderr, "repeat count must be greater than 0\n");
-          return i + 1;
-        }
+      // its a pending superscript
+      if (possible_repeats == 1) {
+        if (num_val < 1)
+          return stat.set_error(msg_str("superscript \'%c\' requires a number of %d or more at position %d", pending_op, possible_repeats, pending_pos));
 
-        ops *last = operations[sz - 1];
-        char op = last->op;
-        int op_var = last->op_var;
-
-        for (int i = 0; i < num_repeats - 1; i++)
-          operations.push_back(new ops(op_count++, op, op_var));
-        operand = '\0';
+        // repeat last operator  
+        char op_last = operations[operations.size()-1]->op;
+        int sub_last = operations[operations.size()-1]->sub;
+        int sides_last = operations[operations.size()-1]->sides;
+        for (unsigned int i = 0; i < num_val - 1; i++)
+          operations.push_back(new ops(op_count++, op_last, sub_last, sides_last));
+          
+        possible_repeats = -1;
+        num_val = -1;
       }
-      // will be at end of string as it is an operand, P, A, Y, Z, R
-      else if (digits_required.find(operand) != string::npos) {
-        poly_size = atoi(number_string.c_str());
-        if (poly_size < 3) {
-          fprintf(stderr,
-                  "P(n), A(n), Y(n), Z(n), R(n) n must be 3 or greater\n");
-          return i + 1;
-        }
+      // its a pending seed
+      else if (require_seed_sides > -1) {
+        seed_size = num_val;
+        if (seed_size < require_seed_sides)
+          return stat.set_error(msg_str("seed \'%c\' requires a number of sides of %d or more at position %d", seed, require_seed_sides, pending_pos));
+        require_seed_sides = -1;
+        end_of_command = true;
       }
-      // L must be 0 or 1, 3 or greater
-      else if (current_op == 'L') {
-        num_val = atoi(number_string.c_str());
-        if (num_val == 2) {
-          fprintf(stderr, "L(n), n must 0, 1, 3 or greater\n");
-          return i + 1;
-        }
-        operations.push_back(new ops(op_count++, current_op, num_val));
-        delayed_write = false;
+      // its a pending subscript
+      else if (possible_sub > -1) {
+        if (num_val < possible_sub)
+          return stat.set_error(msg_str("operator \'%c\' subscript must be %d or more at position %d", pending_op, possible_sub, pending_pos));
       }
-      // g or s do not allow 0
-      else if (current_op == 'g' || current_op == 's') {
-        num_val = atoi(number_string.c_str());
-        if (num_val == 0) {
-          fprintf(stderr, "%c(n), n must 1 or greater\n", current_op);
-          return i + 1;
-        }
-        operations.push_back(new ops(op_count++, current_op, num_val));
-        delayed_write = false;
-      }
-      // K, k, l must be 3 or greater, t can be 2 or greater
-      else if (digits_ge_3.find(current_op) != string::npos) {
-        num_val = atoi(number_string.c_str());
-        if (current_op == 't') {
-          if (num_val < 2) {
-            fprintf(stderr, "%c(n), n must be 2 or greater\n", current_op);
-            return i + 1;
-          }
-        }
-        else if (num_val < 3) {
-          fprintf(stderr, "%c(n), n must be 3 or greater\n", current_op);
-          return i + 1;
-        }
-        operations.push_back(new ops(op_count++, current_op, num_val));
-        delayed_write = false;
-      }
-      // operators allowing 0 or greater
-      else if (digits_allowed.find(current_op) != string::npos) {
-        num_val = atoi(number_string.c_str());
-        if (num_val < 0) {
-          fprintf(stderr, "%c(%d), n must be 0 or greater\n", current_op,
-                  num_val);
-          return i + 1;
-        }
-        operations.push_back(new ops(op_count++, current_op, num_val));
-        delayed_write = false;
+      // its a pending sides
+      if (possible_sides > -1) {
+        if (num_val < possible_sides)
+          return stat.set_error(msg_str("operator \'%c\' requires a number of sides of %d or more at position %d", pending_op, possible_sides, pending_pos));
       }
 
-      num_val = 1;
       i = digits_end;
     }
-    // character was not found to be valid
-    else {
-      // fprintf(stderr,"unexpected character %c in operation string\n",
-      // cn_string[i]);
-      return i + 1;
+    // its an operator
+    else if (find_operator(current)) {
+//fprintf(stderr,"found op\n");
+      pending_op = current;
+      pending_pos = i+1;
+      
+      possible_sub = find_subs_allowed(current);
+      possible_sides = find_sides_allowed(current);
+
+      // if an operator needs no value number, write immediately
+      if (possible_sub == -1 && possible_sides == -1)
+        write_operation(operations, op_count, current, sub, sides);
     }
+    // its an alpha, needs no value number, write immediately
+    else if (alpha_user.find(current) != string::npos) {
+//fprintf(stderr,"found alpha\n");
+      pending_op = current; // for reporting
+      pending_pos = i+1;
+      
+      write_operation(operations, op_count, current, sub, sides);
+    }
+    // its a seed
+    else if (find_seed(current)) {
+//fprintf(stderr,"found seed\n");
+      seed = current;
+      pending_pos = i+1;
+      require_seed_sides = find_seed_sides(seed);
+      if (require_seed_sides == -1)
+        end_of_command = true;
+    }
+    // fell through, unused character
+    else
+      return stat.set_error(msg_str("unexpected character \'%c\' at position %d", current, i+1));
+  }
+  
+  // if superscript was last character
+  if ((pending_op == '^') && (possible_repeats == 1))
+    return stat.set_error(msg_str("superscript \'%c\' requires a number of %d or more at position %d", '^', possible_repeats, pending_pos));
+
+  // if this happened its probably a dangling seed that needs N    
+  if (require_seed_sides > -1) {
+    seed_size = num_val;
+    if (seed_size < require_seed_sides)
+      return stat.set_error(msg_str("seed \'%c\' requires a number of sides of %d or more at position %d", seed, require_seed_sides, pending_pos));
+  }
+    
+  // possible pending operation if no seed was specified
+  if ((possible_sub > -1) || (possible_sides > -1)) {
+    if (num_val > -1) {
+      if (possible_sub > -1)
+        sub = num_val;
+      else
+      if (possible_sides > -1)
+        sides = num_val;
+    }
+    write_operation(operations, op_count, pending_op, sub, sides);
   }
 
-  // if an allowed numeric operation was specified alone at end
-  if (delayed_write)
-    operations.push_back(new ops(op_count++, current_op, num_val));
-
-  // if P, A or Y was specified with no digit n
-  if ((digits_required.find(operand) != string::npos) && poly_size == 0) {
-    fprintf(stderr, "P(n), A(n), Y(n), Z(n), R(n), n must be 3 or greater\n");
-    return cn_string.length();
-  }
-
-  return 0;
+  return Status::ok();
 }
 
 // G. Hart Commentary
@@ -383,7 +457,7 @@ string resolved_cn_string(const string &cn_string)
   string target;
   string resolve;
 
-  string digits = digits_str();
+  string digits = "0123456789";
 
   // first 3 targets are positional
   if (resolve_string.length() > 1) {
@@ -484,8 +558,8 @@ public:
   bool hart_mode;
   bool tile_mode;
   bool reverse_ops;
-  char operand;
-  int poly_size;
+  char seed;
+  int seed_size;
   char planarize_method;
   bool unitize;
   bool verbosity;
@@ -511,8 +585,8 @@ public:
 
   cn_opts()
       : ProgramOpts("conway"), cn_string(""), resolve_ops(false),
-        hart_mode(false), tile_mode(false), reverse_ops(false), operand('\0'),
-        poly_size(0), planarize_method('q'), unitize(false), verbosity(false),
+        hart_mode(false), tile_mode(false), reverse_ops(false), seed('\0'),
+        seed_size(0), planarize_method('q'), unitize(false), verbosity(false),
         face_coloring_method('n'), face_opacity(-1), face_pattern("1"),
         seed_coloring_method(1), epsilon(0),
         vert_col(Color(255, 215, 0)),  // gold
@@ -643,12 +717,18 @@ https://en.wikipedia.org/wiki/Conway_polyhedron_notation
 
 c = chamfer   New hexagonal faces are added in place of edges
 
+B = bowtie    Bowtie like triangles divide pentagonal faces
+
+E = ethyl     like expand but triangles are divided into 3 kites
+
+G = opposite-lace Similar to lace, except triangles split opposite lace
+
 J = joined-medial Like medial, but new rhombic faces in place of original edges
 
 K = stake     Subdivide faces with central quads, and triangles
               All faces processed or can be "Kn" where n is 3 or greater
 
-L0 = joined-lace  Similar to lace, except new with quad faces across original
+L0 = joined-lace  Similar to lace, except with new quad faces across original
                   edges
 
 L = lace      An augmentation of each face by an antiprism, adding a twist
@@ -672,6 +752,8 @@ S = seed      Seed form
 
 u = subdivide Ambo while retaining original vertices. Similar to Loop
               subdivision surface for triangle face
+
+W = waffle    Truncation on all vertices and then all faces split into sections
 
 w = whirl     Gyro followed by truncation of vertices centered on original
               faces. This create 2 new hexagons for every original edge
@@ -822,7 +904,7 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                o - newly created faces by operation
                w - resolve color indexes (overrides -V)
 %s
-            (when -f w is set)
+               (when -f w is set)
   -R <opt>  built in seed coloring: one=1, unique=2, symmetry=3 (default: 1)
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
   -O <strg> face transparency pattern string (-f n only). valid values
@@ -848,7 +930,7 @@ void cn_opts::process_command_line(int argc, char **argv)
   int num;
   int op_term = 0;
 
-  string alphas_in_use = operators_str() + operands_str();
+  string alphas_in_use;
 
   string map_file;
 
@@ -913,7 +995,7 @@ void cn_opts::process_command_line(int argc, char **argv)
                             op_term, parts2[j]),
                     c);
             }
-            else if (alphas_in_use.find(parts2[j][0]) != string::npos) {
+            else if (find_operator(parts2[j][0]) || find_seed(parts2[j][0]) || (alphas_in_use.find(parts2[j][0]) != string::npos)) {
               error(msg_str("term %d: operation character already in use '%s'",
                             op_term, parts2[j]),
                     c);
@@ -934,19 +1016,14 @@ void cn_opts::process_command_line(int argc, char **argv)
           }
         }
 
-        char operand_test;
+        char seed_test = '\0';
         int dummy1;
         string dummy2;
-        if (int pos = validate_cn_string(user_op, operations_user[operation],
-                                         operand_test, dummy1, dummy2))
-          error(msg_str("term %d: unexpected character in position %d: %c",
-                        op_term, pos, user_op[pos - 1]),
-                c);
-
-        if (operand_test)
-          error(msg_str("term %d: cannot contain operand in position %d: %c",
-                        op_term, user_op.length(), operand_test),
-                c);
+        string error_msg = validate_cn_string(user_op, operations_user[operation], seed_test, dummy1, dummy2).msg();
+        if (!error_msg.empty())
+          error(msg_str("term %d: %s", op_term, error_msg.c_str()));
+        if (seed_test)
+          error(msg_str("term %d: cannot contain a seed: %c", op_term, seed_test), c);
       }
 
       break;
@@ -976,9 +1053,10 @@ void cn_opts::process_command_line(int argc, char **argv)
       }
       break;
 
-    case 'C':
+    case 'C': {
       print_status_or_exit(col_type.read(optarg), c);
       break;
+    }
 
     case 'R': {
       string arg_id;
@@ -1035,10 +1113,7 @@ void cn_opts::process_command_line(int argc, char **argv)
   else
     error("no Conway Notation string given");
 
-  if (int pos = validate_cn_string(cn_string, operations, operand, poly_size,
-                                   alpha_user))
-    error(msg_str("Unexpected character in position %d: %c", pos,
-                  cn_string[pos - 1]));
+  print_status_or_exit(validate_cn_string(cn_string, operations, seed, seed_size, alpha_user));
 
   if (resolve_ops) {
     cn_string = resolved_cn_string(cn_string);
@@ -1049,18 +1124,15 @@ void cn_opts::process_command_line(int argc, char **argv)
     operations.clear();
 
     // revalidate (should be valid) to rebuild operations table
-    if (int pos = validate_cn_string(cn_string, operations, operand, poly_size,
-                                     alpha_user))
-      error(msg_str("Unexpected character in position %d: %c", pos,
-                    cn_string[pos - 1]));
+    print_status_or_exit(validate_cn_string(cn_string, operations, seed, seed_size, alpha_user));
   }
 
   if (argc - optind == 2) {
     ifile = argv[++optind];
-    if (operand)
+    if (seed)
       error(
-          msg_str("operand '%c' was specified so input file '%s' is unexpected",
-                  operand, ifile.c_str()));
+          msg_str("seed '%c' was specified so input file '%s' is unexpected",
+                  seed, ifile.c_str()));
   }
 
   // operations can be done in reverse order
@@ -1072,7 +1144,7 @@ void cn_opts::process_command_line(int argc, char **argv)
   }
 
   // force tile mode if using polygon
-  if (operand == 'Z')
+  if (seed == 'Z')
     tile_mode = true;
 
   if (tile_mode) {
@@ -1098,16 +1170,16 @@ void cn_opts::process_command_line(int argc, char **argv)
   if (map_file == "m1" || map_file == "m2") {
     auto *col_map = new ColorMapMap;
     if (map_file == "m1") {
-      col_map->set_col(0, Color(255, 0, 0));     // 3-sided faces red
-      col_map->set_col(1, Color(255, 127, 0));   // 4-sided faces darkoranage1
-      col_map->set_col(2, Color(255, 255, 0));   // 5-sided faces yellow
-      col_map->set_col(3, Color(0, 100, 0));     // 6-sided faces darkgreen
-      col_map->set_col(4, Color(0, 255, 255));   // 7-sided faces cyan
-      col_map->set_col(5, Color(0, 0, 255));     // 8-sided faces blue
-      col_map->set_col(6, Color(255, 0, 255));   // 9-sided faces magenta
-      col_map->set_col(7, Color(255, 255, 255)); // 10-sided faces white
-      col_map->set_col(8, Color(127, 127, 127)); // 11-sided faces gray50
-      col_map->set_col(9, Color(0, 0, 0));       // 12-sided faces black
+      col_map->set_col(0, Color(255, 0, 0));        // 3-sided faces red
+      col_map->set_col(1, Color(255, 127, 0));     // 4-sided faces darkoranage1
+      col_map->set_col(2, Color(255, 255, 0));      // 5-sided faces yellow
+      col_map->set_col(3, Color(0, 100, 0));        // 6-sided faces darkgreen
+      col_map->set_col(4, Color(0, 255, 255));      // 7-sided faces cyan
+      col_map->set_col(5, Color(0, 0, 255));        // 8-sided faces blue
+      col_map->set_col(6, Color(255, 0, 255));      // 9-sided faces magenta
+      col_map->set_col(7, Color(255, 255, 255));    // 10-sided faces white
+      col_map->set_col(8, Color(127, 127, 127));    // 11-sided faces gray50
+      col_map->set_col(9, Color(0, 0, 0));          // 12-sided faces black
     }
     else if (map_file == "m2") {
       auto *col_map0 = new ColorMapMap;
@@ -1138,8 +1210,9 @@ void cn_opts::process_command_line(int argc, char **argv)
   epsilon = it_ctrl.get_test_val();
 }
 
-void verbose(char operation, int op_var, const cn_opts &opts)
+void verbose(char operation, int sub, int sides, const cn_opts &opts)
 {
+//fprintf(stderr,"verbose operation = %c sub = %d sides = %d\n", operation, sub, sides);
   if (opts.verbosity) {
     string operator_name;
 
@@ -1174,17 +1247,20 @@ void verbose(char operation, int op_var, const cn_opts &opts)
       operator_name = "non-orientable geometry";
     else if (operation == '$')
       operator_name = "done.";
-    // L and op_var is -1 means L stands alone
-    else if (operation == 'L' && op_var == -1) {
-      buf = "";
-    }
-    // if L may have a 0
-    else if (operation == 'L' && op_var == 0) {
+    // if L0 is specially named
+    else if (operation == 'L' && sub == 0) {
       operator_name = "joined-lace";
     }
-    // all other case show op_var when not 1
-    else if (op_var != 1)
-      buf = "(" + std::to_string(op_var) + ")";
+    // all other case show numbers when not 1
+    else if (sub != 1 || sides != -1) {
+      int num = 0;
+      if (sub != 1)
+        num = sub;
+      else
+      if (sides != -1)
+        num = sides;
+      buf = "(" + std::to_string(num) + ")";
+    }
 
     fprintf(stderr, "%s%c%s %s\n", operator_name.c_str(),
             (user_op ? operation : '\0'), buf.c_str(), hart_string.c_str());
@@ -1226,7 +1302,7 @@ void cn_planarize(Geometry &geom, char planarize_method, const cn_opts &opts)
   }
 
   if (opts.it_ctrl.get_max_iters() != 0) {
-    verbose('_', 0, opts);
+    verbose('_', 1, -1, opts);
     if (planarize_method == 'q') {
       planarize_bd(geom, opts.it_ctrl);
     }
@@ -1236,12 +1312,12 @@ void cn_planarize(Geometry &geom, char planarize_method, const cn_opts &opts)
   }
 }
 
-void get_operand(Geometry &geom, const cn_opts &opts)
+void get_seed(Geometry &geom, const cn_opts &opts)
 {
   string uniforms = "TCOID";
 
-  if (uniforms.find(opts.operand) != string::npos) {
-    switch (opts.operand) {
+  if (uniforms.find(opts.seed) != string::npos) {
+    switch (opts.seed) {
     case 'T':
       geom.read_resource("std_tet");
       break;
@@ -1264,9 +1340,9 @@ void get_operand(Geometry &geom, const cn_opts &opts)
     }
   }
   else {
-    Polygon pgon(opts.poly_size, 1);
+    Polygon pgon(opts.seed_size, 1);
 
-    switch (opts.operand) {
+    switch (opts.seed) {
     case 'P':
       pgon.set_type(Polygon::prism);
       break;
@@ -1288,7 +1364,7 @@ void get_operand(Geometry &geom, const cn_opts &opts)
     case 'R':
       Random rnd;
       rnd.time_seed();
-      for (int i = 0; i < opts.poly_size; i++)
+      for (int i = 0; i < opts.seed_size; i++)
         geom.add_vert(Vec3d::random(rnd).unit());
       geom.set_hull();
       break;
@@ -1296,18 +1372,18 @@ void get_operand(Geometry &geom, const cn_opts &opts)
 
     pgon.set_edge(0, 1.0);
 
-    if (opts.operand == 'Y' && opts.poly_size > 5)
+    if (opts.seed == 'Y' && opts.seed_size > 5)
       // Based on circumradius
-      pgon.set_height(0, (1 / sin(M_PI / opts.poly_size)) / 2);
+      pgon.set_height(0, (1 / sin(M_PI / opts.seed_size)) / 2);
     // inradius
-    // poly->set_height((1/tan(M_PI/poly_size))/2);
+    // poly->set_height((1/tan(M_PI/seed_size))/2);
     else
       pgon.set_edge(1, 1.0);
 
     pgon.make_poly(geom);
 
     /* RK - if polygon size 2 was allowed, caused too much trouble
-    if ((opts.poly_size == 2) && (opts.operand == 'P' || opts.operand == 'Y'))
+    if ((opts.seed_size == 2) && (opts.seed == 'P' || opts.seed == 'Y'))
       geom.transform(Trans3d::rotate(deg2rad(90), 0, 0));
     */
   }
@@ -1605,7 +1681,7 @@ void hart_chamfer(Geometry &geom, const cn_opts &opts)
   for (unsigned int i = sz; i < verts.size(); i++)
     v_idxs.push_back(i);
 
-  verbose('t', 0, opts);
+  verbose('t', 1, -1, opts);
   truncate_verts(geom, v_idxs, CN_ONE_HALF);
 }
 
@@ -1614,13 +1690,13 @@ void hart_whirl(Geometry &geom, bool orientation_positive, const cn_opts &opts)
 {
   unsigned int num_faces = geom.raw_faces().size();
 
-  verbose('g', 0, opts);
+  verbose('g', 1, -1, opts);
   hart_gyro(geom);
 
   // after intra-step operation
   GeometryInfo info(geom);
   if (!info.is_orientable())
-    verbose('@', 0, opts);
+    verbose('@', 1, -1, opts);
   else
     // orientation is reversed if reflected 1=positive 2=negative
     geom.orient((orientation_positive) ? 1 : 2);
@@ -1632,7 +1708,7 @@ void hart_whirl(Geometry &geom, bool orientation_positive, const cn_opts &opts)
   for (unsigned int i = 0; i < num_faces; i++)
     v_idxs.push_back(i);
 
-  verbose('t', 0, opts);
+  verbose('t', 1, -1, opts);
   truncate_verts(geom, v_idxs, CN_ONE_HALF, nullptr);
 }
 */
@@ -1671,7 +1747,7 @@ void orient_planar(Geometry &geom, bool &is_orientable,
   GeometryInfo info(geom);
   is_orientable = info.is_orientable();
   if (!is_orientable) {
-    verbose('@', 0, opts);
+    verbose('@', 1, -1, opts);
     // default planarization method for non-orientable geometry set to unit edge
     if (opts.planarize_method != 'a') {
       planarize_method = 'a';
@@ -1686,13 +1762,12 @@ void orient_planar(Geometry &geom, bool &is_orientable,
 }
 
 // is_orientable and orientation_positive can change
-void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
+void wythoff(Geometry &geom, char operation, int sub, int sides, int &operation_number,
              bool &is_orientable, bool &orientation_positive,
              const cn_opts &opts)
 {
   operation_number++;
 
-  string digits_ge_3 = digits_ge_3_str(); // t processed with utility
   string non_color_ops = "r+-";
 
   // if coloring new faces, track color of current faces
@@ -1709,8 +1784,8 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
   }
 
   // truncate with N>1 uses Hart algorithm
-  if (operation == 't' && op_var > 1)
-    antiprism_truncate(geom, CN_ONE_THIRD, op_var);
+  if (operation == 't' && sides > 1)
+    antiprism_truncate(geom, CN_ONE_THIRD, sides);
   else if (operation == 'r') {
     antiprism_reflect(geom, opts);
     // decrimenting operation number gives consistent colors
@@ -1729,12 +1804,12 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
     vector<int> dels;
     // can wythoff handle n
     bool wythoff_n = true;
-    if ((digits_ge_3.find(operation) != string::npos) && (op_var > 1)) {
+    if (sides > 1) {
       wythoff_n = false;
       geom_save = geom;
-      // remove all faces of size op_var from geom_save
+      // remove all faces of size sides from geom_save
       for (unsigned int i = 0; i < geom.faces().size(); i++) {
-        if ((int)geom_save.faces(i).size() == op_var)
+        if ((int)geom_save.faces(i).size() == sides)
           dels.push_back(i);
       }
       // if matching faces found
@@ -1753,13 +1828,14 @@ void wythoff(Geometry &geom, char operation, int op_var, int &operation_number,
     string wythoff_op;
     wythoff_op.push_back(operation);
 
-    if ((op_var != 1) && wythoff_n)
-      wythoff_op += std::to_string(op_var);
+    if ((sub != 1) && wythoff_n)
+      wythoff_op += std::to_string(sub);
 
     // for tile mode, use old wythoff truncate
     if (opts.tile_mode && wythoff_op == "t")
       wythoff_op = "[VE]0v0e,0V,0E";
 
+//fprintf(stderr,"wythoff_op = %s\n", wythoff_op.c_str());
     // fprintf(stderr, "wythoff_op = %s\n", wythoff_op.c_str());
     opts.print_status_or_exit(wythoff_make_tiling(
         geom, geom, wythoff_op, is_orientable, false, opts.col_type));
@@ -1826,7 +1902,7 @@ void do_operations(Geometry &geom, cn_opts &opts)
   int operation_number = 0;
 
   // the program works better with oriented input, centroid at the origin
-  verbose('+', 1, opts);
+  verbose('+', 1, -1, opts);
   GeometryInfo info(geom);
   is_orientable = info.is_orientable();
   if (!is_orientable)
@@ -1838,7 +1914,7 @@ void do_operations(Geometry &geom, cn_opts &opts)
   centroid_to_origin(geom);
 
   for (auto operation : opts.operations) {
-    verbose(operation->op, operation->op_var, opts);
+    verbose(operation->op, operation->sub, operation->sides, opts);
 
     bool hart_operation_done = false;
 
@@ -1859,7 +1935,7 @@ void do_operations(Geometry &geom, cn_opts &opts)
 
       // kis
       case 'k':
-        hart_kisN(geom, operation->op_var);
+        hart_kisN(geom, operation->sides);
         break;
 
       // propellor
@@ -1880,12 +1956,12 @@ void do_operations(Geometry &geom, cn_opts &opts)
     else {
       // wythoff mode
       if (opts.alpha_user.find(operation->op) == string::npos)
-        wythoff(geom, operation->op, operation->op_var, operation_number,
+        wythoff(geom, operation->op, operation->sub, operation->sides, operation_number,
                 is_orientable, orientation_positive, opts);
       else {
         for (auto operation_user : opts.operations_user[operation->op]) {
-          verbose(operation_user->op, operation_user->op_var, opts);
-          wythoff(geom, operation_user->op, operation_user->op_var,
+          verbose(operation_user->op, operation_user->sub, operation_user->sides, opts);
+          wythoff(geom, operation_user->op, operation_user->sub, operation_user->sides,
                   operation_number, is_orientable, orientation_positive, opts);
         }
       }
@@ -1977,8 +2053,8 @@ int main(int argc, char *argv[])
   opts.process_command_line(argc, argv);
 
   Geometry geom;
-  if (opts.operand)
-    get_operand(geom, opts);
+  if (opts.seed)
+    get_seed(geom, opts);
   else
     opts.read_or_error(geom, opts.ifile);
 
@@ -1998,7 +2074,7 @@ int main(int argc, char *argv[])
 
   opts.write_or_error(geom, opts.ofile);
 
-  verbose('$', 0, opts);
+  verbose('$', 1, -1, opts);
 
   return 0;
 }

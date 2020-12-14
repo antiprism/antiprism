@@ -162,7 +162,7 @@ Winding Options
                which reverses the orientation of the model as it was input
   -C <xyz>  center of model for normals, in form 'X,Y,Z' (default: centroid)
   -H        turn off hole detection
-  -V        verbose output (of minimum and maximum winding numbers)
+  -V        verbose output (list of winding numbers)
 
 Color Blending Options (for option -d, -M 1,2)
   -s <sat>  HSV/HSL saturation curve. Greater than 0 (default: 1)
