@@ -198,7 +198,7 @@ public:
 bool cmp_ops(const ops *a, const ops *b) { return a->op_pos > b->op_pos; }
 
 // op, sub and sides will be reset
-void write_operation(vector<ops *> &operations, int op_count, char &op, int &sub, int &sides)
+void write_operation(vector<ops *> &operations, int &op_count, char &op, int &sub, int &sides)
 {
   operations.push_back(new ops(op_count++, op, sub, sides));
   op = '\0';
@@ -297,7 +297,7 @@ Status validate_cn_string(const string &cn_string, vector<ops *> &operations,
         char op_last = operations[operations.size()-1]->op;
         int sub_last = operations[operations.size()-1]->sub;
         int sides_last = operations[operations.size()-1]->sides;
-        for (unsigned int i = 0; i < num_val - 1; i++)
+        for (int i = 0; i < num_val - 1; i++)
           operations.push_back(new ops(op_count++, op_last, sub_last, sides_last));
           
         possible_repeats = -1;
