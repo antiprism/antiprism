@@ -65,18 +65,16 @@ e.g. EFV relabels the pattern as V\->E,v\->e,E\->F,e\->f,F\->V,f\->v
 \fB\-M\fR
 input geometry is a 'meta' tiling, don't apply meta operation
 .HP
-\fB\-C\fR <mthd> colouring method for tiles
+\fB\-C\fR <mthd> colouring method for tiles, method can be
 .IP
-none: do not colour tiles
-index, value (default): use the path index
-association: colour tiles using corresponding base element
+none \- do not colour tiles
+index \- use the path index, colour with index numbers
+value \- use the path index, colour with colour values (default)
+association \- colour tiles using corresponding base element
 .IP
-colour, optionally follow by comma and
-.TP
-element type (from VEF): to colour local tiles by that
-element type (default: F)
-.IP
-colour: to colour all local tiles by that colour
+colour, optionally followed by a comma and a letter from V,
+E, F, or a colour, to colour local tiles by that element type
+(default: F), or colour all local tiles with a single colour
 .TP
 \fB\-u\fR
 output only one example of each type of tile (one per path)

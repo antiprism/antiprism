@@ -1383,14 +1383,14 @@ Status TilingColoring::read(const string &str)
 
 string TilingColoring::get_option_help(char op_char)
 {
-  return msg_str(R"(  -%c <mthd> colouring method for tiles
-               none: do not colour tiles
-               index, value (default): use the path index
-               association: colour tiles using corresponding base element
-                 colour, optionally follow by comma and
-                   element type (from VEF): to colour local tiles by that
-                      element type (default: F)
-                   colour: to colour all local tiles by that colour)",
+  return msg_str(R"(  -%c <mthd> colouring method for tiles, method can be
+               none - do not colour tiles
+               index - use the path index, colour with index numbers
+               value - use the path index, colour with colour values (default)
+               association - colour tiles using corresponding base element
+                 colour, optionally followed by a comma and a letter from V,
+                 E, F, or a colour, to colour local tiles by that element type
+                 (default: F), or colour all local tiles with a single colour)",
                  op_char);
 }
 
