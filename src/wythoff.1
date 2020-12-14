@@ -57,18 +57,26 @@ available operators with their corresponding patterns
 .TP
 \fB\-R\fR
 reverse pattern, exchanges the signs of the start triangles
-.TP
-\fB\-r\fR
-relabel pattern, exactly three letters VEF written in any order
+.HP
+\fB\-r\fR <elms> relabel pattern, exactly three letters VEF written in any order
+.IP
 e.g. EFV relabels the pattern as V\->E,v\->e,E\->F,e\->f,F\->V,f\->v
 .TP
 \fB\-M\fR
 input geometry is a 'meta' tiling, don't apply meta operation
+.HP
+\fB\-C\fR <mthd> colouring method for tiles
+.IP
+none: do not colour tiles
+index, value (default): use the path index
+association: colour tiles using corresponding base element
+.IP
+colour, optionally follow by comma and
 .TP
-\fB\-C\fR
-colouring method for tiles:none, index, value, association
-(default: index) index and value methods use the path index,
-association associates tiles with base geometry element colours
+element type (from VEF): to colour local tiles by that
+element type (default: F)
+.IP
+colour: to colour all local tiles by that colour
 .TP
 \fB\-u\fR
 output only one example of each type of tile (one per path)

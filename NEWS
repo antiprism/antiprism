@@ -16,12 +16,14 @@ xx-xx-20 Adrian Rossiter <adrian@antiprism.com>
               -r cube as new default container in HSV/HSL mode
               -R to optionally show primary and secondary reference colors
               -U adds simple sorting of colors along with already unique sort
-            planar
+            planar:
               -V verbose lists all winding numbers found in a model
+            wythoff: new operators and operator sequences, extend colour
+              by associated element
          Fixes
             usage helps review and organize
             minor bug fixes and improvements
-            code review and fixes for potential issues
+            major code review with fixes for potential issues
 
 Version 0.27
 01-10-20 Adrian Rossiter <adrian@antiprism.com>

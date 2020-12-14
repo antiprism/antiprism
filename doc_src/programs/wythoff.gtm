@@ -50,7 +50,7 @@ and the snub operation is applied to it
 unitile2d -s t -w 8 -l 24 2 | wythoff  -c s -M | antiview
 <<CMDS_END>>
 
-Models may be coloured using the colours on the base model. in this example
+Models may be coloured using the colours from the base model, in this example
 the faces of a dodecahedron are coloured randomly, the model is processed
 with Conway operations <i>p</i> and <i>o4</i>, and coloured by element
 association. The final model shows patches of colour corresponding to
@@ -58,6 +58,18 @@ the original coloured faces.
 <<CMDS_START>>
 off_color -f U dod | wythoff -c p -C a | wythoff -c o4 -C a | off_util -S | antiview -x ev
 <<CMDS_END>>
+
+The associated element colouring associates local tiles to the
+corresponding face element by default, but they can also be
+associated with vertices, edges or faces, or coloured with a colour
+<<CMDS_START>>
+off_color cube -v S,Ci -e grey | wythoff -c o4 -C a,v | antiview
+off_color cube -e S,Ci | wythoff -c o4 -C a,e | antiview
+off_color cube -f S,Ci -e grey | wythoff -c o4 -C a,f | antiview
+off_color cube -f S,Ci -e grey | wythoff -c o4 -C a,white | antiview
+<<CMDS_END>>
+
+
 <<NOTES_START>>
 <i>wythoff</i> expands on the ideas behind the Wythoff symbol to create
 a specified tiling pattern from any suitable triangular tiling.

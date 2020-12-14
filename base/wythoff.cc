@@ -25,6 +25,7 @@
 #include "geometry.h"
 #include "geometryinfo.h"
 #include "private_std_polys.h"
+#include "programopts.h"
 #include "symmetry.h"
 #include "tiling.h"
 #include "utils.h"
@@ -1123,13 +1124,13 @@ Tile::TileReport Tile::get_element_association() const
   else if (contains[2] && contains[0]) // f and v
     elem_tri_idx = E;
   else if (contains[0]) // v
-    elem_tri_idx = F;   // Face-like
+    elem_tri_idx = P;   // triangle-like
   else if (contains[1]) // e
-    elem_tri_idx = F;   // Face-like
+    elem_tri_idx = P;   // triangle-like
   else if (contains[2]) // f
-    elem_tri_idx = F;   // Face-like? Maybe Edge-like
+    elem_tri_idx = P;   // triangle-like
   else                  // empty
-    elem_tri_idx = F;   // assign to face
+    elem_tri_idx = P;   // assign to triangle
 
   rep.assoc_type = elem_tri_idx;
 
@@ -1322,6 +1323,76 @@ ConwayOperator conway_operator_list[]{
     {"B",   "bowtie",         "[V,E,F,VE,EF]1_3_4,0_3_4_2e4_1_3e", 0},
 };
 // clang-format on
+
+Status TilingColoring::set_type_associated(int elem, Color col)
+{
+  col_type = ColoringType::associated_element;
+  if (elem == Tile::V || elem == Tile::E || elem == Tile::F ||
+      elem == Tile::P) {
+    local_tile_assoc = elem;
+    color = col;
+  }
+  else
+    return Status::error("invalid associated element type");
+
+  return Status::ok();
+}
+
+Status TilingColoring::read(const string &str)
+{
+  Status stat;
+  Split parts(str.c_str(), ",");
+  if (parts.size() > 2)
+    return stat.set_error("more than one comma given");
+
+  string arg_id;
+  if (!(stat = ProgramOpts::get_arg_id(parts[0], &arg_id,
+                                       "none=0|index=1|value=2|association=3")))
+    return stat;
+
+  int id = atoi(arg_id.c_str());
+  if (id != 3 && parts.size() > 1)
+    return stat.set_error(
+        "comma given, but only valid for associated colouring");
+
+  if (id == 0)
+    set_type_none();
+  else if (id == 1 || id == 2)
+    set_type_path_index((id == 1));
+  else {
+    if (parts.size() > 1) {
+      if (strcasecmp(parts[1], "V") == 0)
+        set_type_associated(Tile::V);
+      else if (strcasecmp(parts[1], "E") == 0)
+        set_type_associated(Tile::E);
+      else if (strcasecmp(parts[1], "F") == 0)
+        set_type_associated(Tile::F);
+      else {
+        Color col;
+        if (!(stat = col.read(parts[1])))
+          return stat;
+        set_type_associated(Tile::P, col);
+      }
+    }
+    else
+      set_type_associated(Tile::F); // Default association for local tiles
+  }
+
+  return stat;
+}
+
+string TilingColoring::get_option_help(char op_char)
+{
+  return msg_str(R"(  -%c <mthd> colouring method for tiles
+               none: do not colour tiles
+               index, value (default): use the path index
+               association: colour tiles using corresponding base element
+                 colour, optionally follow by comma and
+                   element type (from VEF): to colour local tiles by that
+                      element type (default: F)
+                   colour: to colour all local tiles by that colour)",
+                 op_char);
+}
 
 bool Tiling::find_nbrs()
 {
@@ -1563,7 +1634,7 @@ static void store_tri(map<vector<int>, pair<int, int>> &elem_to_tri,
     pr.first->second.second = tri_idx;
 }
 
-Status Tiling::make_tiling(Geometry &geom, ColoringType col_type,
+Status Tiling::make_tiling(Geometry &geom, TilingColoring col_type,
                            vector<Tile::TileReport> *tile_reports) const
 {
   geom.clear_all();
@@ -1603,9 +1674,9 @@ Status Tiling::make_tiling(Geometry &geom, ColoringType col_type,
     for (auto &m : index_order[incl]) {
       const int f_idx = m.second.second;
       Color col; // col_type==ColoringType::none
-      if (col_type == ColoringType::path_index)
+      if (col_type.is_path_index())
         col = pt.second; // Colour by element type inclusion in coords
-      else if (col_type == ColoringType::associated_element)
+      else if (col_type.is_associated_element())
         col = get_associated_element_point_color(f_idx, incl);
       geom.add_vert(point_on_face(meta, f_idx, crds), col);
     }
@@ -1635,12 +1706,19 @@ Status Tiling::make_tiling(Geometry &geom, ColoringType col_type,
       // fprintf(stderr, "\n");
       if (!seen[i] && valid_start_face(i, start_faces)) {
         Color col; // col_type==ColoringType::none
-        if (col_type == ColoringType::path_index)
+        if (col_type.is_path_index())
           col.set_index(p_idx);
-        else if (col_type == ColoringType::associated_element) {
-          int col_idx = get_associated_element(i, assoc.step, assoc.assoc_type);
-          if (col_idx >= 0)
-            col = orig_colors.get(col_idx);
+        else if (col_type.is_associated_element()) {
+          auto type = (assoc.assoc_type == Tile::P)
+                          ? col_type.get_local_tile_assoc()
+                          : assoc.assoc_type;
+          if (type == Tile::P)
+            col = col_type.get_color();
+          else {
+            int col_idx = get_associated_element(i, assoc.step, type);
+            if (col_idx >= 0)
+              col = orig_colors.get(col_idx);
+          }
         }
         add_circuit(geom, i, pat, seen, col, index_order, point_vertex_offsets);
         if (one_of_each_tile)
@@ -1741,8 +1819,11 @@ Status Tiling::read_pattern(const string &pat)
   return Status::ok();
 }
 
-Status Tiling::relabel_pattern(const string &relabel)
+Status Tiling::relabel_pattern(string relabel)
 {
+  for (auto &c : relabel)
+    c = toupper(c);
+
   if (strlen(relabel.c_str()) != 3 || !strchr(relabel.c_str(), 'V') ||
       !strchr(relabel.c_str(), 'E') || !strchr(relabel.c_str(), 'F'))
     return Status::error(
@@ -2205,7 +2286,7 @@ namespace anti {
 
 Status wythoff_make_tiling(Geometry &tiled_geom, const Geometry &base_geom,
                            const std::string &pat, bool oriented, bool reverse,
-                           Tiling::ColoringType col_type)
+                           TilingColoring col_type)
 {
   Tiling tiling;
   Status stat =

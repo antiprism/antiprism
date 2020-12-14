@@ -499,8 +499,7 @@ public:
   Color vert_col;
   Color edge_col;
 
-  Tiling::ColoringType col_type;
-  bool color_by_value;
+  TilingColoring col_type;
 
   ColorMapMulti map;
 
@@ -516,9 +515,8 @@ public:
         poly_size(0), planarize_method('q'), unitize(false), verbosity(false),
         face_coloring_method('n'), face_opacity(-1), face_pattern("1"),
         seed_coloring_method(1), epsilon(0),
-        vert_col(Color(255, 215, 0)),   // gold
-        edge_col(Color(211, 211, 211)), // lightgray
-        col_type(Tiling::ColoringType::path_index), color_by_value(true)
+        vert_col(Color(255, 215, 0)),  // gold
+        edge_col(Color(211, 211, 211)) // lightgray
   {
     it_ctrl.set_max_iters(1000);
     it_ctrl.set_status_checks("-1,1");
@@ -823,10 +821,8 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                u - unique coloring
                o - newly created faces by operation
                w - resolve color indexes (overrides -V)
-  -C <mthd> coloring method for tiles: none, index, value, association
-            (default: index) index and value methods use the path index,
-            association associates tiles with base geometry element colors
-               (when -f w is set)
+%s
+            (when -f w is set)
   -R <opt>  built in seed coloring: one=1, unique=2, symmetry=3 (default: 1)
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
   -O <strg> face transparency pattern string (-f n only). valid values
@@ -841,7 +837,8 @@ Coloring Options (run 'off_util -H color' for help on color formats)
           prog_name(), help_ver_text, it_ctrl.get_max_iters(),
           it_ctrl.get_sig_digits(), it_ctrl.get_test_val(),
           it_ctrl.get_status_check_and_report_iters(),
-          it_ctrl.get_status_check_only_iters());
+          it_ctrl.get_status_check_only_iters(),
+          TilingColoring::get_option_help('C').c_str());
 }
 
 void cn_opts::process_command_line(int argc, char **argv)
@@ -979,23 +976,9 @@ void cn_opts::process_command_line(int argc, char **argv)
       }
       break;
 
-    case 'C': {
-      string arg_id;
-      print_status_or_exit(
-          get_arg_id(optarg, &arg_id, "none=0|index=1|value=2|association=3"),
-          c);
-      int id = atoi(arg_id.c_str());
-      typedef Tiling::ColoringType CT;
-      if (id == 0)
-        col_type = CT::none;
-      else if (id == 1 || id == 2)
-        col_type = CT::path_index;
-      else
-        col_type = CT::associated_element;
-
-      color_by_value = (id != 1);
+    case 'C':
+      print_status_or_exit(col_type.read(optarg), c);
       break;
-    }
 
     case 'R': {
       string arg_id;
@@ -1115,16 +1098,16 @@ void cn_opts::process_command_line(int argc, char **argv)
   if (map_file == "m1" || map_file == "m2") {
     auto *col_map = new ColorMapMap;
     if (map_file == "m1") {
-      col_map->set_col(0, Color(255, 0, 0));        // 3-sided faces red
-      col_map->set_col(1, Color(255, 127, 0));     // 4-sided faces darkoranage1
-      col_map->set_col(2, Color(255, 255, 0));      // 5-sided faces yellow
-      col_map->set_col(3, Color(0, 100, 0));        // 6-sided faces darkgreen
-      col_map->set_col(4, Color(0, 255, 255));      // 7-sided faces cyan
-      col_map->set_col(5, Color(0, 0, 255));        // 8-sided faces blue
-      col_map->set_col(6, Color(255, 0, 255));      // 9-sided faces magenta
-      col_map->set_col(7, Color(255, 255, 255));    // 10-sided faces white
-      col_map->set_col(8, Color(127, 127, 127));    // 11-sided faces gray50
-      col_map->set_col(9, Color(0, 0, 0));          // 12-sided faces black
+      col_map->set_col(0, Color(255, 0, 0));     // 3-sided faces red
+      col_map->set_col(1, Color(255, 127, 0));   // 4-sided faces darkoranage1
+      col_map->set_col(2, Color(255, 255, 0));   // 5-sided faces yellow
+      col_map->set_col(3, Color(0, 100, 0));     // 6-sided faces darkgreen
+      col_map->set_col(4, Color(0, 255, 255));   // 7-sided faces cyan
+      col_map->set_col(5, Color(0, 0, 255));     // 8-sided faces blue
+      col_map->set_col(6, Color(255, 0, 255));   // 9-sided faces magenta
+      col_map->set_col(7, Color(255, 255, 255)); // 10-sided faces white
+      col_map->set_col(8, Color(127, 127, 127)); // 11-sided faces gray50
+      col_map->set_col(9, Color(0, 0, 0));       // 12-sided faces black
     }
     else if (map_file == "m2") {
       auto *col_map0 = new ColorMapMap;

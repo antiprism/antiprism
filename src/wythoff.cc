@@ -47,25 +47,18 @@ using namespace anti;
 class wy_opts : public ProgramOpts {
 private:
 public:
-  bool input_is_meta;
-  bool add_meta;
-  double face_ht;
+  bool input_is_meta = false;
+  bool add_meta = false;
+  double face_ht = 0.0;
   string relabel;
-  bool reverse;
+  bool reverse = false;
   Tiling tiling;
-  Tiling::ColoringType col_type;
-  bool color_by_value;
-  bool quiet;
+  TilingColoring col_type;
+  bool quiet = false;
   string ifile;
   string ofile;
 
-  wy_opts()
-      : ProgramOpts("wythoff"), input_is_meta(false), add_meta(false),
-        face_ht(0.0), reverse(false),
-        col_type(Tiling::ColoringType::path_index), color_by_value(true),
-        quiet(false)
-  {
-  }
+  wy_opts() : ProgramOpts("wythoff") {}
 
   void process_command_line(int argc, char **argv);
   void usage();
@@ -107,12 +100,10 @@ Options
   -c <op>   Conway polyhedron notation operator, or 'list' to list all
             available operators with their corresponding patterns
   -R        reverse pattern, exchanges the signs of the start triangles
-  -r        relabel pattern, exactly three letters VEF written in any order
+  -r <elms> relabel pattern, exactly three letters VEF written in any order
             e.g. EFV relabels the pattern as V->E,v->e,E->F,e->f,F->V,f->v
   -M        input geometry is a 'meta' tiling, don't apply meta operation
-  -C        colouring method for tiles:none, index, value, association
-            (default: index) index and value methods use the path index,
-            association associates tiles with base geometry element colours
+%s
   -u        output only one example of each type of tile (one per path)
   -a        add the 'meta'-transformed base
   -f <ht>   lift the face centres by this height
@@ -120,7 +111,8 @@ Options
   -o <file> write output to file (default: write to standard output)
 
 )",
-          prog_name(), help_ver_text);
+          prog_name(), help_ver_text,
+          TilingColoring::get_option_help('C').c_str());
 }
 
 void wy_opts::process_command_line(int argc, char **argv)
@@ -136,7 +128,7 @@ void wy_opts::process_command_line(int argc, char **argv)
 
     switch (c) {
     case 'p':
-      print_status_or_exit(tiling.read_pattern(optarg), 'p');
+      print_status_or_exit(tiling.read_pattern(optarg), c);
       break;
 
     case 'c':
@@ -144,7 +136,7 @@ void wy_opts::process_command_line(int argc, char **argv)
         tiling.print_conway_list();
         exit(0);
       }
-      print_status_or_exit(tiling.read_conway(optarg), 'c');
+      print_status_or_exit(tiling.read_conway(optarg), c);
       break;
 
     case 'R':
@@ -168,25 +160,12 @@ void wy_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'f':
-      print_status_or_exit(read_double(optarg, &face_ht), 'f');
+      print_status_or_exit(read_double(optarg, &face_ht), c);
       break;
 
-    case 'C': {
-      string arg_id;
-      print_status_or_exit(
-          get_arg_id(optarg, &arg_id, "none=0|index=1|value=2|association=3"));
-      int id = atoi(arg_id.c_str());
-      typedef Tiling::ColoringType CT;
-      if (id == 0)
-        col_type = CT::none;
-      else if (id == 1 || id == 2)
-        col_type = CT::path_index;
-      else
-        col_type = CT::associated_element;
-
-      color_by_value = (id != 1);
+    case 'C':
+      print_status_or_exit(col_type.read(optarg), c);
       break;
-    }
 
     case 'q':
       quiet = true;
@@ -268,7 +247,7 @@ int main(int argc, char *argv[])
     fprintf(stderr, "Tiling pattern: %s\n", tiling.pattern_string().c_str());
     fprintf(stderr, "Tile Counts:\n");
     fprintf(stderr, "No.:  Tiles:  Type:  Full Association:\n");
-    string assoc_elem_str = "VEF345X"; // VEF=6 -> X
+    string assoc_elem_str = "VEF345X1"; // VEF=6 -> X
     for (unsigned int i = 0; i < tile_reports.size(); i++) {
       const auto &rep = tile_reports[i];
       string full_assoc = rep.step.size() ? "(" + rep.step + ")" : "";
@@ -280,7 +259,7 @@ int main(int argc, char *argv[])
     fprintf(stderr, "\n");
   }
 
-  if (opts.color_by_value) {
+  if (opts.col_type.get_color().is_value()) {
     Coloring clrng(&ogeom);
     clrng.add_cmap(colormap_from_name("spread"));
     clrng.e_apply_cmap();
@@ -293,7 +272,7 @@ int main(int argc, char *argv[])
 
   if (opts.add_meta) {
     Geometry meta = tiling.get_meta();
-    if (opts.color_by_value)
+    if (opts.col_type.get_color().is_value())
       color_meta(meta);
     ogeom.append(meta);
   }

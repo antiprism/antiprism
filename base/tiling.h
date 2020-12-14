@@ -120,6 +120,83 @@ public:
   TileReport get_element_association() const;
 };
 
+class TilingColoring {
+public:
+  enum ColoringType {
+    none,              ///< do not colour
+    path_index,        ///< colour by path index number
+    associated_element ///< colour same as corresponding base element
+  };
+
+  /// Constructor
+  /**\param str colouring method for tiles, can be gibven as initial substring
+      none: do not colour tiles
+      index, value (default): use the path index
+      association: colour tiles using corresponding base element
+        colour, optionally follow by comma and
+          element type (from VEF): to colour local tiles by that element
+                                   type (default: F)
+          colour: to colour all local tiles by that colour */
+  TilingColoring(const std::string &str = std::string())
+  {
+    if (str.empty() || !read(str))
+      set_type_path_index();
+  }
+
+  /// Read tiling colouring
+  /**\param str colouring method for tiles, can be gibven as initial substring
+      none: do not colour tiles
+      index, value (default): use the path index
+      association: colour tiles using corresponding base element
+        colour, optionally follow by comma and
+          element type (from VEF): to colour local tiles by that element
+                                   type (default: F)
+          colour: to colour all local tiles by that colour */
+  Status read(const std::string &str);
+
+  /// Get option help
+  /**\param op_char the option letter
+   * \return formatted help for option. */
+  static std::string get_option_help(char op_char);
+
+  /// Check if tiling colouring is by path index
+  /**\return \c true if tiling colouring is path index, otherwise \c false. */
+  bool is_path_index() const { return col_type == ColoringType::path_index; }
+
+  /// Check if tiling colouring is by associated element
+  /**\return \c true if tiling colouring is associated element,
+   *  otherwise \c false. */
+  bool is_associated_element() const
+  {
+    return col_type == ColoringType::associated_element;
+  }
+
+  /// Get association to use for local tiles
+  /**\return \c Tile::V - vertices, \c Tile::E - edges, \c Tile::F - faces,
+   *  \c Tile::P - the tiling colouring \c color.*/
+  int get_local_tile_assoc() const { return local_tile_assoc; }
+
+  /// Get the colour
+  /**\return the colour to use for local tiles with associated colouring,
+   *  or test with \c is_index() or \c is_value() for path index colouring. */
+  const Color &get_color() const { return color; }
+
+private:
+  // The set functions are private, as no external code uses them
+  void set_type_none() { col_type = ColoringType::none; }
+  void set_type_path_index(bool is_value = true)
+  {
+    col_type = ColoringType::path_index;
+    color = (is_value) ? Color(0, 0, 0) : Color(0); // example value or index
+  }
+  Status set_type_associated(int elem, Color col = Color());
+
+  ColoringType col_type = ColoringType::path_index;
+  int local_tile_assoc = Tile::F;
+  Color color; // colour for local tiles (local_tile_assoc Tile::P)
+               // or example to test for index/value (path_index)
+};
+
 // Tiling using Wythoff constructive notation
 class Tiling {
 private:
@@ -170,8 +247,6 @@ private:
   const std::vector<Tile> &get_pat_paths() const { return pat_paths; }
 
 public:
-  enum class ColoringType { none, path_index, associated_element };
-
   /// Constructor
   Tiling() : one_of_each_tile(false) {}
 
@@ -198,7 +273,7 @@ public:
    * \return Status, which evaluates to \c true if the tiling was
    *  successfully created, otherwise \c false to indicate an error. */
   Status
-  make_tiling(Geometry &geom, ColoringType col_type = ColoringType::path_index,
+  make_tiling(Geometry &geom, TilingColoring col_type = TilingColoring(),
               std::vector<Tile::TileReport> *tile_reports = nullptr) const;
 
   /// Read tiling pattern
@@ -211,7 +286,7 @@ public:
   /**\param relabel a three character string permution of the letters VEF
    * \return Status, which evaluates to \c true if the permutation was
    *  valid, otherwise \c false to indicate an error. */
-  Status relabel_pattern(const std::string &relabel);
+  Status relabel_pattern(const std::string relabel);
 
   /// Read Conway operation string
   /**\param op a single Conway operation
@@ -258,10 +333,10 @@ public:
  * \param col_type type of colouring
  * \return status, which evaluates to \c true if the geometry and
  *  pattern were valid, otherwise \c false to indicate an error. */
-Status wythoff_make_tiling(
-    Geometry &tiled_geom, const Geometry &base_geom, const std::string &pat,
-    bool oriented = true, bool reverse = false,
-    Tiling::ColoringType col_type = Tiling::ColoringType::path_index);
+Status wythoff_make_tiling(Geometry &tiled_geom, const Geometry &base_geom,
+                           const std::string &pat, bool oriented = true,
+                           bool reverse = false,
+                           TilingColoring col_type = TilingColoring());
 
 /// Get vertex points of a Schwarz triangle, and its symmetry group
 /**\param fracs six integers, taken in pairs as the angle fractions.

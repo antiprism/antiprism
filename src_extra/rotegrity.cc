@@ -290,8 +290,7 @@ void make_twist(Geometry &tw_geom, const Geometry &geom, const Symmetry &sym,
     pattern = msg_str("[2VE-0.3F,2F3E,3FV]0V0_1F2_1");
 
   // Model suitable for 'edge' colouring type: col_type == 'e'
-  wythoff_make_tiling(tw_geom, geom, pattern, true, false,
-                      Tiling::ColoringType::associated_element);
+  wythoff_make_tiling(tw_geom, geom, pattern, true, false, TilingColoring("a"));
   if (col_type == 's') { // 'symmetry' colouring
     vector<vector<std::set<int>>> sym_equivs;
     get_equiv_elems(tw_geom, sym.get_trans(), &sym_equivs);
@@ -514,7 +513,7 @@ string report_nexorade(Geometry &geom, double strut_len, bool color,
       "Lengths are measured from either end of the strut\n"
       "Angles (degrees) are measured looking along the strut central line\n"
       "from the white end (display with -c u), anticlockwise, from an outward\n"
-      "pointing zero angle (consider the angles to be relative to each other)\n"
+      "pointing zero angle.\n"
       "\n";
   const double eps = 1e-8;
   double rad_min = 1e100;

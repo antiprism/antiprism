@@ -87,10 +87,18 @@ u \- unique coloring
 o \- newly created faces by operation
 w \- resolve color indexes (overrides \fB\-V\fR)
 .HP
-\fB\-C\fR <mthd> coloring method for tiles: none, index, value, association
+\fB\-C\fR <mthd> colouring method for tiles
 .IP
-(default: index) index and value methods use the path index,
-association associates tiles with base geometry element colors
+none: do not colour tiles
+index, value (default): use the path index
+association: colour tiles using corresponding base element
+.IP
+colour, optionally follow by comma and
+.TP
+element type (from VEF): to colour local tiles by that
+element type (default: F)
+.IP
+colour: to colour all local tiles by that colour
 .IP
 (when \fB\-f\fR w is set)
 .TP

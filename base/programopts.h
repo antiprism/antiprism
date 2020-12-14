@@ -154,8 +154,9 @@ public:
    *  so each identifiers maps to itself.
    * \return status, evaluates to \c true if a valid identifier was found,
    *  otherwise \c false.*/
-  Status get_arg_id(const char *arg, std::string *arg_id, const char *maps,
-                    unsigned int match_flags = argmatch_default);
+  static Status get_arg_id(const char *arg, std::string *arg_id,
+                           const char *maps,
+                           unsigned int match_flags = argmatch_default);
 
   /// Read a geometry from a name passed as a program argument
   /** Read geometry from a name, print any messages, and error out if necessary
