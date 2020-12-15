@@ -258,12 +258,17 @@ Status validate_cn_string(const string &cn_string, vector<ops *> &operations,
           seed, require_seed_sides, i + 1));
 
     // a number found where it shouldn't be
-    if (((possible_sub == -1) && (possible_sides == -1) &&
-         (require_seed_sides == -1) && (possible_repeats == -1)) &&
-        is_digit)
-      return stat.set_error(msg_str("operator \'%c\' unexpected number value "
-                                    "specified: %c at position %d",
-                                    pending_op, current, i + 1));
+    if (is_digit) {
+      if (i == 0)
+        return stat.set_error(msg_str(
+            "digit \'%c\' unexpected in first position %d", current, i + 1));
+
+      if (((possible_sub == -1) && (possible_sides == -1) &&
+           (require_seed_sides == -1) && (possible_repeats == -1)))
+        return stat.set_error(msg_str("operator \'%c\' unexpected number value "
+                                      "specified: %c at position %d",
+                                      pending_op, current, i + 1));
+    }
 
     // a number must follow a superscript
     if ((possible_repeats == 1) && !is_digit)
