@@ -1718,6 +1718,8 @@ int unzip_tree::flatten(const Geometry &geom, Geometry &net_geom,
 
         Vec3d axis = net_geom.edge_vec(join_edge).unit();
         double ang = angle_around_axis(norm_stack.top(), norm, axis);
+        if (ang > M_PI)
+          ang -= 2*M_PI;
         ang *= (fract - 1);
         Trans3d rot = Trans3d::rotate(axis, ang);
         Vec3d offset = net_geom.verts(join_edge[0]);
