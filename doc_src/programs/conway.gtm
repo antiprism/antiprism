@@ -19,25 +19,48 @@
 
 
 <<EXAMPLES_START>>
-A truncated octahedron
+Make truncated cuboctahedron and pass to poly_form to make unit edges
 <<CMDS_START>>
-conway tk4Y4 | antiview
+conway dmO | poly_form -a r |  antiview
 <<CMDS_END>>
 
-A Great rhombicuboctahedron with coloured faces
+A truncated octahedron passed to canonical
 <<CMDS_START>>
-conway dmO -p u -f n | antiview
+conway tk4Y4 | canonical | antiview
 <<CMDS_END>>
+
+A nice spiral pattern in Hart mode using operation substitutions
+<<CMDS_START>>
+conway eesD -g | antiview -v 0.01
+<<CMDS_END>>
+
+A snub pentagrammic antiprism
+<<CMDS_START>>
+conway s ant5/2 | antiview
 
 A snub geodesic sphere
 <<CMDS_START>>
 conway s geo_3 | antiview
 <<CMDS_END>>
 
-A snub pentagrammic antiprism
+opposite_lace operation on the dual of a geodesic sphere
 <<CMDS_START>>
-conway s ant5/2 -p u | antiview
+conway Gd geo_3 | antiview
 <<CMDS_END>>
+
+whirl operation repeated twice on a dodecahedron seed and colored radially
+<<CMDS_START>>
+conway w^2D | off_color_radial | antiview -x ve
+<<CMDS_END>>
+
+The lace operation subscript 2 applied to triangular faces of a cuboctahedron
+<<CMDS_START>>
+conway L_2:3aC | antiview -v 0.01
+<<CMDS_END>>
+
+An interesting result with what looks like star polygons
+<<CMDS_START>>
+conway L_2gC -f w | antiview -v 0.01
 <<EXAMPLES_END>>
 
 
@@ -53,7 +76,9 @@ Javascript on George Hart's
 Conway Notation</a> page.
 <p>
 Antiprism Extensions: Further operations added. See
-<a href="https://en.wikipedia.org/wiki/Conway_polyhedron_notation">
+<a href="http://en.wikipedia.org/wiki/Conway_polyhedron_notation">
+and
+<a href="http://antitile.readthedocs.io/en/latest/conway.html">
 <p>
 Canonicalization and planarization may not always converge on
 a convex polyhedron.

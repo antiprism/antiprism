@@ -381,15 +381,8 @@ Status validate_cn_string(const string &cn_string, vector<ops *> &operations,
                                         pending_pos));
         designated_sides = false;
       }
-      // its a pending subscript, passive
-      else if (possible_sub > -1) {
-        sub = num_val;
-        if (sub < possible_sub)
-          return stat.set_error(msg_str(
-              "operator \'%c\' subscript must be %d or more at position %d",
-              pending_op, possible_sub, pending_pos));
-      }
       // its a pending sides, passive
+      // checking sides first before subs gives sides precedence
       else if (possible_sides > -1) {
         sides = num_val;
         if (sides < possible_sides)
@@ -397,6 +390,14 @@ Status validate_cn_string(const string &cn_string, vector<ops *> &operations,
                                         "sides of %d or more at position %d",
                                         pending_op, possible_sides,
                                         pending_pos));
+      }
+      // its a pending subscript, passive
+      else if (possible_sub > -1) {
+        sub = num_val;
+        if (sub < possible_sub)
+          return stat.set_error(msg_str(
+              "operator \'%c\' subscript must be %d or more at position %d",
+              pending_op, possible_sub, pending_pos));
       }
 
       i = digits_end;
@@ -690,6 +691,8 @@ More detailed information and examples can be found at
 http://www.georgehart.com/virtual-polyhedra/conway_notation.html
 and at
 http://en.wikipedia.org/wiki/Conway_polyhedron_notation
+and at
+http://antitile.readthedocs.io/en/latest/conway.html
 
 Basics: In this notation, one specifies a "seed" polyhedron with a capital
 letter. Operations to perform on any polyhedron are specified with lower-case
@@ -783,7 +786,7 @@ vertices.
 
 
 Antiprism Extension: Further operations added. Also see
-https://en.wikipedia.org/wiki/Conway_polyhedron_notation
+http://en.wikipedia.org/wiki/Conway_polyhedron_notation
 
 c = chamfer   New hexagonal faces are added in place of edges
 
@@ -847,22 +850,22 @@ have been added to control orientation mode. The mode will remain until changed
 + (plus sign) = positive orientation  - (minus sign) = negative orientation
 Changing orientation mode can be placed anywhere in the operation string
 
-Summary of operators which can take n as subscript or m as face/vertex number
+Summary of operators which can take n as subscript or r as face/vertex number
 
 b  - n may be 0 or greater (default: 1)
 e  - n may be 0 or greater (default: 1)
 g  - n may be 1 or greater (default: 1)
-K  - m may be 3 or greater representing faces sides
-k  - m may be 3 or greater representing vertex connections
-L  - n,m n may be 0 or greater, m may be 3 or greater
-l  - n,m n may be 0 or greater, m may be 3 or greater
-       both n amd m may be used togeter as l_m:n or L_n:m (L_0: may not have m)
-       specified as lnum or Lnum, num defaults as subscript number 
+K  - r may be 3 or greater representing face sides
+k  - r may be 3 or greater representing face sides
+L  - n,r n may be 0 or greater, r may be 3 or greater
+l  - n,r n may be 0 or greater, r may be 3 or greater
+       both n amd r may be used togeter as L_n:r or l_n:r (L_0: may not have r)
+       without delimiters Lr and lr, r is face sides and subscript default to 1
 M  - n may be 0 or greater (default: 1)
 m  - n may be 0 or greater (default: 1)
 o  - n may be 0 or greater (default: 1)
 s  - n may be 1 or greater (default: 1)
-t  - m may be 2 or greater representing vertex connections (2 in tiles)
+t  - r may be 2 or greater representing vertex connections (2 in tiles)
 
 Antiprism Extension: any operation can be repeated N time by following it with
 the superscript symbol ^ and a number greater than 0. Examples: a^3C M0^2T
@@ -944,7 +947,9 @@ Conway Notation uses algorithms by George W. Hart (http://www.georgehart.com)
 http://www.georgehart.com/virtual-polyhedra/conway_notation.html
 
 Antiprism Extensions: Further operations added. See
-https://en.wikipedia.org/wiki/Conway_polyhedron_notation
+http://en.wikipedia.org/wiki/Conway_polyhedron_notation
+and
+http://antitile.readthedocs.io/en/latest/conway.html
 
 Read a polyhedron from a file in OFF format.
 If input_file is not given and no seed polyhedron is given in the notation
@@ -1299,7 +1304,8 @@ void cn_opts::process_command_line(int argc, char **argv)
   epsilon = it_ctrl.get_test_val();
 }
 
-void verbose(char operation, int sub, int sides, const cn_opts &opts)
+void verbose(const char &operation, const cn_opts &opts, const int &sub = 1,
+             const int &sides = -1)
 {
   if (opts.verbosity) {
     string operator_name;
@@ -1391,7 +1397,7 @@ void cn_planarize(Geometry &geom, char planarize_method, const cn_opts &opts)
   }
 
   if (opts.it_ctrl.get_max_iters() != 0) {
-    verbose('_', 1, -1, opts);
+    verbose('_', opts);
     if (planarize_method == 'q') {
       planarize_bd(geom, opts.it_ctrl);
     }
@@ -1770,7 +1776,7 @@ void hart_chamfer(Geometry &geom, const cn_opts &opts)
   for (unsigned int i = sz; i < verts.size(); i++)
     v_idxs.push_back(i);
 
-  verbose('t', 1, -1, opts);
+  verbose('t', opts);
   truncate_verts(geom, v_idxs, CN_ONE_HALF);
 }
 
@@ -1779,13 +1785,13 @@ void hart_whirl(Geometry &geom, bool orientation_positive, const cn_opts &opts)
 {
   unsigned int num_faces = geom.raw_faces().size();
 
-  verbose('g', 1, -1, opts);
+  verbose('g', opts);
   hart_gyro(geom);
 
   // after intra-step operation
   GeometryInfo info(geom);
   if (!info.is_orientable())
-    verbose('@', 1, -1, opts);
+    verbose('@', opts);
   else
     // orientation is reversed if reflected 1=positive 2=negative
     geom.orient((orientation_positive) ? 1 : 2);
@@ -1797,7 +1803,7 @@ void hart_whirl(Geometry &geom, bool orientation_positive, const cn_opts &opts)
   for (unsigned int i = 0; i < num_faces; i++)
     v_idxs.push_back(i);
 
-  verbose('t', 1, -1, opts);
+  verbose('t', opts);
   truncate_verts(geom, v_idxs, CN_ONE_HALF, nullptr);
 }
 */
@@ -1836,7 +1842,7 @@ void orient_planar(Geometry &geom, bool &is_orientable,
   GeometryInfo info(geom);
   is_orientable = info.is_orientable();
   if (!is_orientable) {
-    verbose('@', 1, -1, opts);
+    verbose('@', opts);
     // default planarization method for non-orientable geometry set to unit edge
     if (opts.planarize_method != 'a') {
       planarize_method = 'a';
@@ -1987,7 +1993,7 @@ void do_operations(Geometry &geom, cn_opts &opts)
   int operation_number = 0;
 
   // the program works better with oriented input, centroid at the origin
-  verbose('+', 1, -1, opts);
+  verbose('+', opts);
   GeometryInfo info(geom);
   is_orientable = info.is_orientable();
   if (!is_orientable)
@@ -1999,7 +2005,7 @@ void do_operations(Geometry &geom, cn_opts &opts)
   centroid_to_origin(geom);
 
   for (auto operation : opts.operations) {
-    verbose(operation->op, operation->sub, operation->sides, opts);
+    verbose(operation->op, opts, operation->sub, operation->sides);
 
     bool hart_operation_done = false;
 
@@ -2045,8 +2051,8 @@ void do_operations(Geometry &geom, cn_opts &opts)
                 operation_number, is_orientable, orientation_positive, opts);
       else {
         for (auto operation_user : opts.operations_user[operation->op]) {
-          verbose(operation_user->op, operation_user->sub,
-                  operation_user->sides, opts);
+          verbose(operation_user->op, opts, operation_user->sub,
+                  operation_user->sides);
           wythoff(geom, operation_user->op, operation_user->sub,
                   operation_user->sides, operation_number, is_orientable,
                   orientation_positive, opts);
@@ -2161,7 +2167,7 @@ int main(int argc, char *argv[])
 
   opts.write_or_error(geom, opts.ofile);
 
-  verbose('$', 1, -1, opts);
+  verbose('$', opts);
 
   return 0;
 }
