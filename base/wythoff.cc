@@ -1293,8 +1293,8 @@ ConwayOperator conway_operator_list[]{
 
     // Equivalent: k, n, u
     {"k",   "kis",            "[F,V]0_1v1v,1E", 0},
-    {"n",   "needle",         "[V,F]1f0_1f,1E", 0},
-    {"u",   "subdivide",      "[V,E]0_1e1e,1F", 0},
+    {"n",   "needle",         "[V,F]0_1f1f,1E", 0},
+    {"u",   "subdivide",      "[V,E]1F,0_1e1e", 2},
 
     // Equivalent: t, z, e (tile order to match e0=z and e1=e
     {"t",   "truncate",       "[VE]0V0E,0V,0E", 0},
@@ -1323,8 +1323,6 @@ ConwayOperator conway_operator_list[]{
     {"E",   "ethel",          "[V,VE,VF]0_1_2e1e,2F,1_2v2f", 0},
     {"W",   "waffle",         "[V,E,F,V2E,VF]0_4_3f4f,2_4_3v3_4v,3E", 0},
     {"B",   "bowtie",         "[V,E,F,VE,EF]1_3_4,0_3_4_2e4_1_3e", 0},
-
-    {"u",   "geodesic",       "[F,V2E,V]0_1v1v,1_0e1e,2_1e1e,1E", 2},
 };
 // clang-format on
 
@@ -2630,14 +2628,14 @@ void Tiling::print_conway_list(FILE *ofile)
             params.c_str(), op.operator_name.c_str(), op.pattern.c_str());
   }
   fprintf(ofile, R"(
-Operators m, o, e, b, M, g, s, l, L can be considered part of a sequence,
+Operators m, o, u, e, b, M, g, s, l, L can be considered part of a sequence,
 and accept an optional integer >=1 as a parameter, where 1 is the base
 operator. Operators m, o, e, b, M, l, L also accept 0, which produces a
 lower level operator (except L_0 is a standalone operator, and not the 0
-entry of the L sequence), e.g. M_5, m_5, e_2, o_0. Operator u takes one
-or two parameters (default u_3_0) e.g. u_5, u_1_4. Some operators, like
-t and k, take a number to filter the elements that the pattern will be
-applied to, but this is not supported.
+entry of the L sequence), e.g. M_5, m_5, e_2, o_0. Operator u may take one
+or two parameters, e.g. u_5, u_1_4. Some operators, like t and k, take a
+number to filter the elements that the pattern will be applied to, but this
+is not supported.
 )");
 }
 
