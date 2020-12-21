@@ -2325,7 +2325,6 @@ static string u_pattern(int N, int M)
         geo.colors(FACES).set(i, tile_type);
     }
   }
-  // geo.write("tmp.off");
 
   // Label some points of the meta triangle tiling of the base triangles
   const Vec3d V0 = base.verts(1);  // 60
@@ -2370,11 +2369,8 @@ static string u_pattern(int N, int M)
     if (tile_type > tile_unused) { // a valid tile
       vector<int> tile_pts;
       vector<string> tile_ops;
-      // fprintf(stderr, "f_idx = %d, tile_type = %d\n", (int)i, tile_type);
       for (int v_idx = 0; v_idx < 3; v_idx++) {
-        auto P = geo.face_v(i, v_idx);
-        // fprintf(stderr, "   P: idx=%d, (%s)\n", geo.faces(i, v_idx),
-        //         P.to_str(" ", 3).c_str());
+        const auto P = geo.face_v(i, v_idx);
 
         Vec3d Q;    // point in barycentric coordinates for containing meta
         size_t tri; // will hold index of meta triangle where point found
@@ -2393,8 +2389,6 @@ static string u_pattern(int N, int M)
           if (strchr("VEF_", op[0]))
             positive.insert(Q);
 
-          // fprintf(stderr, "ok %s: %s : %d\n", op.c_str(),
-          //         Q.to_str(", ", 3).c_str(), (int)pat_pt_idx);
           if (tile_type == tile_center) {
             tile_ops.push_back((strchr("VEF_", op[0])) ? "_" : "v");
             tile_pts.push_back(pat_pt_idx);
@@ -2406,9 +2400,9 @@ static string u_pattern(int N, int M)
           }
         }
         else {                          // point not found in a meta triangle
-          if (tile_type == tile_center) // not an error for centre triangle
-            fprintf(stderr, "INTERNAL ERROR: wythoff u_%d_%d (index: %d)\n", M,
-                    N, geo.faces(i, v_idx));
+          if (tile_type != tile_center) // not an error for centre triangle
+            fprintf(stderr, "INTERNAL ERROR: wythoff u_%d_%d (index: %d)\n", N,
+                    M, geo.faces(i, v_idx));
         }
 
         // test for edge on E, to convert to tile that winds E
@@ -2444,8 +2438,8 @@ static string u_pattern(int N, int M)
           string t;
           for (int i = 0; i < 3; i++)
             t += tile_ops[i] + to_string(tile_pts[i]);
-          fprintf(stderr, "INTERNAL ERROR: wythoff u_%d_%d (face %d: %s)\n", M,
-                  N, (int)i, t.c_str());
+          fprintf(stderr, "INTERNAL ERROR: wythoff u_%d_%d (face %d: %s)\n", N,
+                  M, (int)i, t.c_str());
         }
         else if (tile_ops[first] == "_") {
           for (int i = 0; i < 3; i++) {
@@ -2476,7 +2470,7 @@ static string u_pattern(int N, int M)
         if (edge_start_idx != -1) { // edge tile found
           int e0 = edge_start_idx;
           int e1 = (e0 + 1) % 3;
-          // choose e0 to be '_' over 'v'
+          // choose e0 to prefer '_' over 'v'
           if ((tile_ops[e1] == "_") ||
               ((tile_ops[e1] == "v") && (tile_ops[e0] != "_")))
             swap(e0, e1);
