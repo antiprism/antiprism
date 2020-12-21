@@ -898,18 +898,21 @@ n = needle    Dual of truncation, triangulate with 2 triangles across every
 
 q = quinto    ortho followed by truncation of vertices centered on original
               faces. This create 2 new pentagons for every original edge
+              it effectively lines the original faces with pentagons
+              Lei Williams call this operation "Pental"
 
 S = seed      Seed form
 
 u = subdivide Ambo while retaining original vertices. Similar to Loop
               subdivision surface for triangle face
-              One subscript as "un" where n is 1 or greater
+              One subscript as "un" or "u_n" where n is 1 or greater
               Two subscript as "un_m" or "u_n_m" where n and m are 1 or greater
 
 W = waffle    Truncation on all vertices and then all faces split into sections
 
 w = whirl     Gyro followed by truncation of vertices centered on original
               faces. This create 2 new hexagons for every original edge
+              it effectively lines the original faces with hexagons
 
 X = cross     Combination of kis and subdivide operation. Original edges are
               divided in half, with triangle and quad faces
