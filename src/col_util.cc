@@ -410,11 +410,14 @@ void col_util_opts::process_command_line(int argc, char **argv)
   }
 
   if (container) {
-    if (display_type > 1)
+    if (display_type > 1) {
       warning("container type is only valid in plot mode", "r");
-    if (color_system_mode == 3)
+      container = 0;
+    }
+    if (color_system_mode == 3) {
       warning("container type has no effect in RGB mode", "r");
-    container = 0;
+      container = 0;
+    }
   }
   else {
     // set default HSV/HSL container here (HSV/HSL cube)
