@@ -321,11 +321,16 @@ Status validate_cn_string(const string &cn_string, vector<ops *> &operations,
             msg_str("sides symbol \'%c\' at position %d not allowed for L0",
                     sides_symbol, i + 1));
 
-      // sides not already set
-      if (possible_sides == -1 || sides != -1)
-        return stat.set_error(msg_str(
-            "sides symbol \'%c\' at position %d for operator \'%c\' unexpected",
-            sides_symbol, i + 1, pending_op));
+      // sides not already set, or set and encountered again
+      if (possible_sides == -1 || sides != -1) {
+        string sides_str;
+        if (sides != -1)
+          sides_str = msg_str("(sides already set: %d)", sides);
+        return stat.set_error(msg_str("sides symbol \'%c\' at position %d for "
+                                      "operator \'%c\' unexpected %s",
+                                      sides_symbol, i + 1, pending_op,
+                                      sides_str.c_str()));
+      }
       designated_sides = true;
     }
     // its a subscript
