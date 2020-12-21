@@ -899,7 +899,7 @@ n = needle    Dual of truncation, triangulate with 2 triangles across every
 q = quinto    ortho followed by truncation of vertices centered on original
               faces. This create 2 new pentagons for every original edge
               it effectively lines the original faces with pentagons
-              Lei Williams call this operation "Pental"
+              Lei Williams called this operation "Pental"
 
 S = seed      Seed form
 
