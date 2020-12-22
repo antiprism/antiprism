@@ -2302,7 +2302,7 @@ static string u_pattern(int N, int M)
   base.add_face({3, 2, 1});
   base.add_face({4, 0, 2});
   base.add_face({5, 1, 0});
-  Geometry geo, geom;
+  Geometry geo;
   make_geodesic_planar(geo, base, M, N);
 
   // Find tiles that lie on a positive and negative meta triangle
@@ -2339,13 +2339,13 @@ static string u_pattern(int N, int M)
 
   // These are all the meta triangles which might include points
   vector<Tri> meta_triangles({
-      Tri({V0, E01, F}, "_"),              // base
-      Tri({V1, E01, F}, "v"),              // base negative
-      Tri({V0, E02, F}, "e"),              // fan anticlockwise from base
-      Tri({V0, E01, F01}, "f"),            // outside base
-      Tri({V0, F_r + 0.5 * V0, F_r}, "V"), // outside outside base
-      Tri({V1, E01, F01}, "E"),            // outside base negative
-      Tri({V1, E12, F}, "F"),              // fan clockwise from base negative
+      Tri({V0, E01, F}, "_"),               // base
+      Tri({V1, E01, F}, "v"),               // base negative
+      Tri({V0, E02, F}, "e"),               // fan anticlockwise from base
+      Tri({V0, E01, F01}, "f"),             // outside base
+      Tri({V0, F_r + 0.5 * V0, F_r}, "ef"), // outside outside base
+      Tri({V1, E01, F01}, "vf"),            // outside base negative
+      Tri({V1, E12, F}, "ve"),              // fan clockwise from base negative
   });
 
   // base vertex index -> meta triangle index and barycentric coords
@@ -2356,7 +2356,6 @@ static string u_pattern(int N, int M)
     return compare(v1, v2) == -1;
   };
   map<Vec3d, size_t, decltype(vec_cmp)> b_coords2pat_pt(vec_cmp);
-  std::set<Vec3d, decltype(vec_cmp)> positive(vec_cmp);
 
   const int to_int_factor = M * M + M * N + N * N; // for integer coordinates
   string pattern_paths;
@@ -2386,11 +2385,8 @@ static string u_pattern(int N, int M)
           auto pat_pt_idx = it_bool.first->second; // idx is iterator value
 
           string op = meta_triangles[tri].op;
-          if (strchr("VEF_", op[0]))
-            positive.insert(Q);
-
           if (tile_type == tile_center) {
-            tile_ops.push_back((strchr("VEF_", op[0])) ? "_" : "v");
+            tile_ops.push_back((op == "_" || is_even(op.size())) ? "_" : "v");
             tile_pts.push_back(pat_pt_idx);
             break; // only need one point for the central triangle
           }
@@ -2401,8 +2397,7 @@ static string u_pattern(int N, int M)
         }
         else {                          // point not found in a meta triangle
           if (tile_type != tile_center) // not an error for centre triangle
-            fprintf(stderr, "INTERNAL ERROR: wythoff u_%d_%d (index: %d)\n", N,
-                    M, geo.faces(i, v_idx));
+            return "";                  // INTERNAL ERROR
         }
 
         // test for edge on E, to convert to tile that winds E
@@ -2435,11 +2430,7 @@ static string u_pattern(int N, int M)
         }
 
         if (first == -1) { // shouldn't happen
-          string t;
-          for (int i = 0; i < 3; i++)
-            t += tile_ops[i] + to_string(tile_pts[i]);
-          fprintf(stderr, "INTERNAL ERROR: wythoff u_%d_%d (face %d: %s)\n", N,
-                  M, (int)i, t.c_str());
+          return "";       // INTERNAL ERROR
         }
         else if (tile_ops[first] == "_") {
           for (int i = 0; i < 3; i++) {
@@ -2460,11 +2451,7 @@ static string u_pattern(int N, int M)
           }
         }
         else {
-          string t;
-          for (int i = 0; i < 3; i++)
-            t += tile_ops[i] + to_string(tile_pts[i]);
-          fprintf(stderr, "INTERNAL ERROR: wythoff u_%d_%d (face %d: %s)\n", N,
-                  M, (int)i, t.c_str());
+          return ""; // INTERNAL ERROR, should not occur
         }
 
         if (edge_start_idx != -1) { // edge tile found
