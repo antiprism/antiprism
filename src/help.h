@@ -133,7 +133,7 @@ model name
 
 const char *help_uniform = R"(Uniform Polyhedra
 =================
-Uniform polyhdra can be specified by
+Uniform polyhedra can be specified by
 
 o   A U number e.g. u8
 
@@ -265,7 +265,7 @@ U80       |2 2 5/3    pentagrammic crossed antiprism)";
 
 const char *help_uniform_duals = R"(Uniform Dual Polyhedra
 ======================
-Uniform dual polyhdra can be specified by
+Uniform dual polyhedra can be specified by
 
 o   UD followed by a U number e.g. ud8
 
@@ -1135,11 +1135,14 @@ Internal (see below for format):
    deal
       A map (default: size 256) containing a random shuffle of the
       values 0 to packsize-1, packsize is the same as size by default,
-      but can be cahnged by adding _packsize (sequential deals are used
+      but can be changed by adding _packsize (sequential deals are used
       if this is less than size), e.g. deal100, deal_3 
    grey, greyw
       greyscales (default: size 256), grey runs from black to white
       and greyw is wrappable and runs from black to white to black again.
+   rainbow
+      A seven color rainbow map (default: size 256), which include a brightness
+      _value range from -1 (all black) to 1 (all white), e.g. rainbow_0.5
    uniform
       used to colour the uniform, Johnson and polygon-based resource
       models (applied with off_color -f A -m uniform)
@@ -1177,11 +1180,9 @@ External (in resource directory 'col_maps'):
        Broad range of colours. These are the colours that can be used
        by name in HTML.
    ms (48 colours)
-       A colour map based on the Micosoft colour dialog.
+       A colour map based on the Microsoft colour dialog.
    iscc (267 colours)
        Colour centroids (http://tx4.us/nbs-iscc.htm)
-   rainbow (224 colours)
-       A rainbow map, with cyan and green
    rainbowc (192 colours)
        A rainbow map, with cyan but not green
    rainbowg (192 colours)
@@ -1587,7 +1588,7 @@ polyhedron, e.g. schwarz_5_3_2p.)";
 const char *help_expreval = R"(Expression Evaluation
 =====================
 Any program that accepts a floating point argument will also accept the
-argumant as a mathematical expression. This expression will be used to
+argument as a mathematical expression. This expression will be used to
 calculate a numeric value, that will then passed to the program.
 
 Several of the characters that can appear in an expression may be
