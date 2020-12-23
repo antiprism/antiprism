@@ -1299,14 +1299,14 @@ ConwayOperator conway_operator_list[]{
     // Equivalent: t, z, e (tile order to match e0=z and e1=e
     {"t",   "truncate",       "[VE]0V0E,0V,0E", 0},
     {"z",   "zip",            "[EF]0E0F,0F,0E", 0},
-    {"e",   "expand",         "[FV]0V,0F,0F0V", 1},
+    {"e",   "expand",         "[FV]0V,0F,0F0V", 2},
 
     // Symmetric: s, m, b
     {"s",   "snub",           "[VEF]0V,0E,0F,0V0E0F", 1},
     {"m",   "meta",           "[V,E,F]*0_1_2", 1},
     {"b",   "bevel",          "[VEF]0e0f,0v0e,0f0v", 1},
 
-    {"o",   "ortho",          "[V,E,F]1_0e1_2e", 1},
+    {"o",   "ortho",          "[V,E,F]1_0e1_2e", 2},
     {"g",   "gyro",           "[F,VE,V]1_0F1_2V1E,1E", 1},
     {"c",   "chamfer",        "[V,VF]1F,0_1v1f", 0},
     {"l",   "loft",           "[V,VF]1F,0_1v1_0v,0E", 1},
@@ -1933,78 +1933,6 @@ static string m_pattern(int N)
   return pat;
 }
 
-static string o_pattern(int N)
-{
-  N += 1; // FIX CODE BELOW TO AVOID THIS
-
-  string pat = "[";
-  for (int a = 0; a <= N; a += 2)
-    for (int b = 0; b <= a; b += 2)
-      pat += coord_string(normalize_point(
-                 Vec3d(((a + N % 2) - b), b, (N - (a + N % 2))))) +
-             ",";
-  pat.back() = ']';
-
-  auto crds2idx = [](int a, int b) { return (a / 2 + 1) * a / 4 + b / 2; };
-  for (int a = 0; a < N - N % 2; a += 2)
-    for (int b = 0; b < a; b += 2)
-      pat += msg_str("*%d_%d_%d_%d,", crds2idx(a, b), crds2idx(a, b + 2),
-                     crds2idx(a + 2, b + 4), crds2idx(a + 2, b + 2));
-
-  for (int a = 0; a < N - N % 2; a += 2)
-    pat += msg_str("%d_%de%d_%de,", crds2idx(a, 0), crds2idx(a + 2, 2),
-                   crds2idx(a + 2, 0), crds2idx(a + 2, 2));
-
-  if (N % 2) {
-    for (int a = 0; a < N - N % 2; a += 2)
-      pat += msg_str("%d_%dv%d_%dv,", crds2idx(a, a), crds2idx(a + 2, a + 2),
-                     crds2idx(a + 2, a + 2), crds2idx(a, a));
-    pat += msg_str("0F,%dE,", crds2idx(N - 1, N - 1));
-  }
-  pat.pop_back();
-
-  return pat;
-}
-
-static string e_pattern(int N)
-{
-  string pat = "[";
-  for (int a = 0; a <= N; a += 2)
-    for (int b = 0; b <= a; b += 2)
-      pat += coord_string(normalize_point(
-                 Vec3d(((a + N % 2) - b), b, (N - (a + N % 2) + 1)))) +
-             ",";
-  pat.back() = ']';
-
-  auto crds2idx = [](int a, int b) { return (a / 2 + 1) * a / 4 + b / 2; };
-  for (int a = 0; a < N - N % 2; a += 2)
-    for (int b = 0; b < a; b += 2)
-      pat += msg_str("*%d_%d_%d_%d,", crds2idx(a, b), crds2idx(a, b + 2),
-                     crds2idx(a + 2, b + 4), crds2idx(a + 2, b + 2));
-
-  for (int a = 0; a < N - N % 2; a += 2)
-    pat += msg_str("%d_%de%d_%de,", crds2idx(a, 0), crds2idx(a + 2, 2),
-                   crds2idx(a + 2, 0), crds2idx(a + 2, 2));
-
-  int top_a = N - N % 2;
-  for (int b = 0; b < top_a; b += 2)
-    pat += msg_str("%d_%df%d_%df,", crds2idx(top_a, b), crds2idx(top_a, b + 2),
-                   crds2idx(top_a, b + 2), crds2idx(top_a, b));
-
-  pat += msg_str("%dV,", crds2idx(N - N % 2, 0));
-
-  if (N % 2) {
-    for (int a = 0; a < N - 1; a += 2)
-      pat += msg_str("%d_%dv%d_%dv,", crds2idx(a, a), crds2idx(a + 2, a + 2),
-                     crds2idx(a + 2, a + 2), crds2idx(a, a));
-    pat += msg_str("0F,%dv%df", crds2idx(N - 1, N - 1), crds2idx(N - 1, N - 1));
-  }
-  else
-    pat += msg_str("%dE", crds2idx(N, N));
-
-  return pat;
-}
-
 static string b_pattern(int N)
 {
   N += 1; // FIX CODE BELOW TO AVOID THIS
@@ -2491,6 +2419,234 @@ static string u_pattern(int N, int M)
   return pattern;
 }
 
+static string oe_pattern(char op, int N, int M)
+{
+  // One of the parameters can be 0, but not both
+  if (N < 1 && M < 1)
+    return "";
+
+  // Colour indexes for labelling tiles
+  enum {
+    tile_invalid = -1, // invalid
+    tile_face = 0,     // centred on a face centre
+    tile_edge = 1,     // centred on an edge centre
+    tile_vert = 2,     // centred on a vertex centre
+    tile_normal = 3,   // any other tile in a meta triangle
+  };
+
+  // Label some points of the meta triangle tiling of the base triangles
+  const Vec3d V0(1, 1, 0);         // 45
+  const Vec3d V1(1, -1, 0);        // -45
+  const Vec3d V2(-1, -1, 0);       // -135
+  const Vec3d V3(-1, 1, 0);        // 135
+  const Vec3d E01 = (V0 + V1) / 2; // 0
+  const Vec3d E30 = (V3 + V0) / 2; // 90
+  const Vec3d E12 = (V1 + V2) / 2; // -90
+  const Vec3d F(0, 0, 0);          // centre (origin)
+  const Vec3d F01 = 2 * E01;       // 0
+
+  // These are all the meta triangles which might include points
+  vector<Tri> meta_triangles({
+      Tri({V0, E01, F}, "_"),    // base
+      Tri({V1, E01, F}, "v"),    // base negative
+      Tri({V0, E30, F}, "e"),    // fan anticlockwise from base
+      Tri({V0, E01, F01}, "f"),  // outside base
+      Tri({V1, E01, F01}, "vf"), // outside base negative
+      Tri({V1, E12, F}, "ve"),   // fan clockwise from base negative
+  });
+
+  // barycentric coords -> pattern point index
+  auto vec_cmp = [](const Vec3d &v1, const Vec3d &v2) {
+    return compare(v1, v2) == -1;
+  };
+  map<Vec3d, size_t, decltype(vec_cmp)> b_coords2pat_pt(vec_cmp);
+
+  const int to_int_factor = 2 * (M * M + N * N); // XXXfor integer coordinates
+  string pattern_paths;
+  string pattern_edge_paths;
+
+  Geometry geom;
+  geom.add_verts({V0, V1, V2, V3, F});
+  geom.add_face({0, 1, 4});
+  double tile_edge_len = 2 / sqrt(N * N + M * M);
+  Vec3d vx = Vec3d(N, M, 0).with_len(tile_edge_len);
+  Vec3d vy = Vec3d(-M, N, 0).with_len(tile_edge_len);
+  for (int i = -(N + M + 1); i < N + M + 1; i++) {   // enough
+    for (int j = -(N + M + 1); j < N + M + 1; j++) { // enough
+      Vec3d off = -0.5 * (vx + vy);
+      auto C = is_even(M + N + (op == 'e')) * off + i * vx + j * vy;
+      const auto x = C[0];
+      const auto y = C[1];
+      int tile_type = tile_invalid;
+      if (double_ge(x, 0) && double_le(x, 1) && // 0 <= x <= 1
+          double_le(std::abs(y), 1)) {          // -1 <= y <= 1
+        if (compare(C, Vec3d(0, 0, 0)) == 0)
+          tile_type = tile_face;
+        else if (compare(C, Vec3d(1, 0, 0)) == 0)
+          tile_type = tile_edge;
+        else if (compare(C, Vec3d(1, 1, 0)) == 0)
+          tile_type = tile_vert;
+        else if ((double_lt(x, 1) && double_gt(x, std::abs(y))) || // interior
+                 double_eq(x, y) ||                                // e mirror
+                 (double_eq(x, 1) && double_ge(y, 0)))             // f mirror
+          tile_type = tile_normal;
+      }
+      if (tile_type == tile_invalid)
+        continue;
+
+      // The tile is valid
+      vector<Vec3d> points = {C + (vx + vy) / 2, C + (vx - vy) / 2,
+                              C + (-vx - vy) / 2, C + (-vx + vy) / 2};
+
+      int vsz = geom.verts().size();
+      geom.add_verts(points);
+      geom.add_face({vsz, vsz + 1, vsz + 2, vsz + 3});
+
+      int edge_start_idx = -1; // face offset where an edge tile starts
+      vector<int> tile_pts;
+      vector<string> tile_ops;
+      for (int v_idx = 0; v_idx < 4; v_idx++) {
+        const auto P = points[v_idx];
+
+        Vec3d Q;    // point in barycentric coordinates for containing meta
+        size_t tri; // will hold index of meta triangle where point found
+        for (tri = 0; tri < meta_triangles.size(); tri++)
+          if (meta_triangles[tri].cart2bary(P, Q)) // P is in meta triangle
+            break;
+
+        if (tri < meta_triangles.size()) { // point found in a meta triangle
+          Q = normalize_point(Q * to_int_factor); // to low integer coords
+          // If Q has already been seen, get the pattern index number,
+          // otherwise set it
+          auto it_bool = b_coords2pat_pt.insert({Q, b_coords2pat_pt.size()});
+          auto pat_pt_idx = it_bool.first->second; // idx is iterator value
+
+          string op = meta_triangles[tri].op;
+          if (tile_type == tile_normal) {
+            tile_ops.push_back(op);
+            tile_pts.push_back(pat_pt_idx);
+          }
+          else { // tile cycles an element
+            tile_ops.push_back((op == "_" || is_even(op.size())) ? "_" : "v");
+            tile_pts.push_back(pat_pt_idx);
+            if (tile_type != tile_edge || tile_ops.size() > 1)
+              break; // need one point for F and V, and two for E
+          }
+        }
+        else {                            // point not found in a meta triangle
+          if (tile_type == tile_normal) { // not an error for centre triangle
+            fprintf(stderr, "INTERNAL ERROR: wythoff o_%d_%d (point: %s)\n", N,
+                    M, P.to_str().c_str());
+            return ""; // INTERNAL ERROR
+          }
+        }
+
+        // test for edge on E, to convert to tile that winds E
+        if (compare((points[v_idx] + points[(v_idx + 1) % 4]) / 2, E01) == 0)
+          edge_start_idx = v_idx;
+      }
+
+      // Have found tiles as paths of points on meta triangles, need to
+      // convert to paths of points flipping between meta triangles
+      string tile_str;
+      if (tile_type != tile_normal) {
+        // No extra handling required (handled when point was found)
+        if (tile_ops[0] == "v")
+          tile_str += '-';
+        string elems("FEV");
+        tile_str += to_string(tile_pts[0]);
+        if (tile_type == tile_edge)
+          tile_str += "v" + to_string(tile_pts[1]) + "v";
+        tile_str += elems[tile_type];
+      }
+      else { // tile_normal
+        // handling will depend on whether path is positive or negative
+        // get the index of the first _, otherwise the first v
+        int first = -1; // index of first _ if found, or first v
+        for (int i = 0; i < 4; i++) {
+          if (tile_ops[i] == "_") { // if found then done
+            first = i;
+            break;
+          }
+          else if (tile_ops[i] == "v" && first == -1) // only record first v
+            first = i;
+        }
+
+        if (first == -1) { // shouldn't happen
+          string t;
+          for (int i = 0; i < 4; i++)
+            t += tile_ops[i] + to_string(tile_pts[i]);
+          fprintf(stderr, "INTERNAL ERROR: wythoff o_%d_%d (path: %s)\n", N, M,
+                  t.c_str());
+          return ""; // INTERNAL ERROR
+        }
+        else if (tile_ops[first] == "_") {
+          for (int i = 0; i < 4; i++) {
+            int idx = (i + first) % 4; // index starts at operator '_'
+            string start_op = (i) ? tile_ops[idx] : ""; // skip leading op
+            tile_str +=
+                start_op + to_string(tile_pts[idx]) + invert_op(start_op);
+          }
+        }
+        else if (tile_ops[first] == "v") {
+          tile_str = "-";
+          for (int i = 0; i < 4; i++) {
+            int idx = (i + first) % 4; // index starts at operator 'v'
+            // conjugate the operation with 'v' to reuse the base
+            // operators
+            string start_op = (i) ? "v" + tile_ops[idx] : ""; // skip leading op
+            tile_str +=
+                start_op + to_string(tile_pts[idx]) + invert_op(start_op);
+          }
+        }
+        else {
+          string t;
+          for (int i = 0; i < 4; i++)
+            t += tile_ops[i] + to_string(tile_pts[i]);
+          fprintf(stderr, "INTERNAL ERROR: wythoff o_%d_%d (path: %s)\n", N, M,
+                  t.c_str());
+          return ""; // INTERNAL ERROR, should not occur
+        }
+
+        if (edge_start_idx != -1) { // edge tile found
+          int e0 = edge_start_idx;
+          int e1 = (e0 + 1) % 4;
+          // choose e0 to prefer '_' over 'v'
+          if ((tile_ops[e1] == "_") ||
+              ((tile_ops[e1] == "v") && (tile_ops[e0] != "_")))
+            swap(e0, e1);
+          pattern_edge_paths = ((tile_ops[e0] == "v") ? "-" : "") +
+                               to_string(tile_pts[e0]) + "E,";
+        }
+      }
+      if (!tile_str.empty())
+        pattern_paths += tile_str + ",";
+    }
+  }
+
+  if (M + N == 1)
+    pattern_edge_paths = "0E,"; // isn't set by the algorithm for 1,0
+
+  // make an array of the pattern points in index order
+  vector<Vec3d> pat_points(b_coords2pat_pt.size());
+  for (const auto &kv : b_coords2pat_pt)
+    pat_points[kv.second] = kv.first;
+
+  // write the points in the pattern format
+  string pattern = "[";
+  for (const auto &coords : pat_points)
+    pattern += coord_string(coords) + ",";
+  pattern.back() = ']';
+
+  pattern += pattern_paths + pattern_edge_paths;
+  pattern.pop_back(); // remove the final ','
+  pattern = normalize_pattern(pattern);
+
+  return pattern;
+
+  // geom.write("tmp.off");
+}
+
 Status Tiling::read_conway(const string &op)
 {
   const auto unset = std::numeric_limits<int>::max(); // unset parameter value
@@ -2543,10 +2699,6 @@ Status Tiling::read_conway(const string &op)
         pat = M_pattern(param1);
       else if (op_char == 'm')
         pat = m_pattern(param1);
-      else if (op_char == 'o')
-        pat = o_pattern(param1);
-      else if (op_char == 'e')
-        pat = e_pattern(param1);
       else if (op_char == 'b')
         pat = b_pattern(param1);
       else if (op_char == 'g')
@@ -2568,6 +2720,12 @@ Status Tiling::read_conway(const string &op)
       if (op_char == 'u')
         pat = u_pattern((param1 == unset) ? 3 : param1,
                         (param2 == unset) ? 0 : param2);
+      if (op_char == 'o')
+        pat = oe_pattern('o', (param1 == unset) ? 2 : param1,
+                         (param2 == unset) ? 0 : param2);
+      if (op_char == 'e')
+        pat = oe_pattern('e', (param1 == unset) ? 2 : param1,
+                         (param2 == unset) ? 0 : param2);
       if (pat == "") {
         if (param2 == unset)
           return Status::error(prefix +
@@ -2609,14 +2767,17 @@ void Tiling::print_conway_list(FILE *ofile)
             params.c_str(), op.operator_name.c_str(), op.pattern.c_str());
   }
   fprintf(ofile, R"(
-Operators m, o, u, e, b, M, g, s, l, L can be considered part of a sequence,
-and accept an optional integer >=1 as a parameter, where 1 is the base
-operator. Operators m, o, e, b, M, l, L also accept 0, which produces a
-lower level operator (except L_0 is a standalone operator, and not the 0
-entry of the L sequence), e.g. M_5, m_5, e_2, o_0. Operator u may take one
-or two parameters, e.g. u_5, u_1_4. Some operators, like t and k, take a
-number to filter the elements that the pattern will be applied to, but this
-is not supported.
+Some operators are part of a sequence having an integer parameter.
+  m, g, b, M, s, l, L:  1 is the base, 0 is a lower level operator
+                        (except L_0, which is a standalone operator)
+  u, o, e:              2 is the base, 1 is a lower level operator
+
+Operators g, o, e take two integer parameters.
+
+Examples e, M, m_3, g_3, s_1, u_3, u_2_3, o_3_3, e_0_4
+
+Some Conway operators, like t and k, take a number to filter the elements
+that the pattern will be applied to, but this is not supported.
 )");
 }
 
