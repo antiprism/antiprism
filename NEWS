@@ -18,12 +18,20 @@ xx-xx-20 Adrian Rossiter <adrian@antiprism.com>
               -U adds simple sorting of colors along with already unique sort
             planar:
               -V verbose lists all winding numbers found in a model
+              -n map entries is now calculated
             wythoff: new operators and operator sequences, extend colour
               by associated element
             conway: new format for conway operators with 2 numbers e.g L_n:m
               new operators added, B,E,G,W
               operators L and l may now take subscripts
+              operator u may now take two subscripts
               status reporting method update
+              -p plarization options removed, done internally
+            off_color_radial: rainbow map entries calculated like rng
+            canonical:
+              -p face centroids and centroids magnitude planarization removed
+              -p u make unied edge removed
+              -p fast planarize added
          Fixes
             usage helps reviewed and organized
             minor bug fixes and improvements

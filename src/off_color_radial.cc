@@ -109,6 +109,7 @@ Options
 Coloring Options (run 'off_util -H color' for help on color formats)
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
   -m <maps> color maps for all elements to be tried in turn (default: rng)
+              rng and rainbow maps without entries specified are calculated 
   -n <maps> color maps for axes (A=1: calculated, A=2: map_red:blue:yellow)
   -A <opt>  color axes by nfold=1, order=2 (default: 1)
 
@@ -665,8 +666,8 @@ void set_indexes_to_color(Geometry &geom, const radial_opts &opts)
   // default is to make a rainbow map of number of ridges
   opts.warning(msg_str("maximum ridges formed is %d", max_ridge));
   string map_name;
-  if (opts.map_string == "rng") {
-    map_name = "rng" + std::to_string(max_ridge);
+  if (opts.map_string == "rng" || opts.map_string == "rainbow") {
+    map_name = opts.map_string + std::to_string(max_ridge);
     opts.warning(msg_str("default map used is %s", map_name.c_str()));
   }
 

@@ -85,6 +85,7 @@ public:
   double value_advance;
   int alpha_mode;
   int face_opacity;
+  string map_file_negative;
 
   ColorMapMulti map;
   ColorMapMulti map_negative;
@@ -193,8 +194,8 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                a - absolute value of winding number
                n - negative of absolute value of winding number
   -m <maps> color maps for faces to be tried in turn (default: compound)
-  -n <maps> maps for negative winding numbers (default: rng17_S0V0.5:0)
-               (map position zero not used. default is 16 gradients)
+  -n <maps> maps for negative winding numbers (default: calculated)
+               (map position zero not used for negative winding maps)
 
 )",
           prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
@@ -209,7 +210,6 @@ void planar_opts::process_command_line(int argc, char **argv)
   int sig_compare = INT_MAX;
   string arg_id;
   string map_file;
-  string map_file_negative;
 
   handle_long_opts(argc, argv);
 
@@ -513,10 +513,6 @@ void planar_opts::process_command_line(int argc, char **argv)
   if (!map_file.size())
     map_file = "compound";
   print_status_or_exit(map.init(map_file.c_str()), 'm');
-
-  if (!map_file_negative.size())
-    map_file_negative = "rng17_S0V0.5:0";
-  print_status_or_exit(map_negative.init(map_file_negative.c_str()), 'n');
 
   epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
@@ -1658,7 +1654,7 @@ void collect_original_normals(vector<Normal> &original_normals,
     original_normals.push_back(FaceNormals[i]);
 }
 
-void blend_overlapping_faces(Geometry &geom,
+void blend_overlapping_faces(Geometry &geom, vector<int> &winding_numbers,
                              const vector<vector<int>> &coplanar_faces_list,
                              const vector<Normal> &coplanar_normals,
                              const FaceNormals &FaceNormals,
@@ -1666,8 +1662,6 @@ void blend_overlapping_faces(Geometry &geom,
 {
   Geometry bgeom;
   vector<int> deleted_faces;
-
-  vector<int> winding_numbers;
 
   for (unsigned int i = 0; i < coplanar_faces_list.size(); i++) {
     // load a geom with color faces. keep it and copy it.
@@ -1732,11 +1726,11 @@ void blend_overlapping_faces(Geometry &geom,
   geom.del(FACES, deleted_faces);
   geom.append(bgeom);
 
-  if (opts.verbose) {
-    sort(winding_numbers.begin(), winding_numbers.end());
-    auto vi = unique(winding_numbers.begin(), winding_numbers.end());
-    winding_numbers.resize(vi - winding_numbers.begin());
+  sort(winding_numbers.begin(), winding_numbers.end());
+  auto vi = unique(winding_numbers.begin(), winding_numbers.end());
+  winding_numbers.resize(vi - winding_numbers.begin());
 
+  if (opts.verbose) {
     fprintf(stderr, "winding numbers:");
     for (unsigned int i = 0; i < winding_numbers.size(); i++) {
       fprintf(stderr, " %d", winding_numbers[i]);
@@ -1747,7 +1741,8 @@ void blend_overlapping_faces(Geometry &geom,
   }
 }
 
-void planar_merge(Geometry &geom, const planar_opts &opts)
+void planar_merge(Geometry &geom, vector<int> &winding_numbers,
+                  const planar_opts &opts)
 {
   FaceNormals face_normals(geom, opts.center, opts.epsilon);
 
@@ -1762,8 +1757,8 @@ void planar_merge(Geometry &geom, const planar_opts &opts)
                             face_normals, point_outward, fold_normals,
                             fold_normals_hemispherical, filtered, opts.epsilon);
 
-  blend_overlapping_faces(geom, coplanar_faces_list, coplanar_normals,
-                          face_normals, opts);
+  blend_overlapping_faces(geom, winding_numbers, coplanar_faces_list,
+                          coplanar_normals, face_normals, opts);
 }
 
 void color_by_plane(Geometry &geom, const planar_opts &opts)
@@ -2297,10 +2292,23 @@ void make_hole_connectors_invisible(Geometry &geom)
   }
 }
 
-void resolve_winding_number_indexes(Geometry &geom, const ColorMapMulti &map,
-                                    const ColorMapMulti &map_negative)
+void resolve_winding_number_indexes(Geometry &geom,
+                                    const vector<int> &winding_numbers,
+                                    planar_opts &opts)
 {
   const vector<vector<int>> &faces = geom.faces();
+
+  if (!opts.map_file_negative.size()) {
+    int min = 0;
+    for (unsigned int i = 0; i < winding_numbers.size(); i++) {
+      if (winding_numbers[i] < min)
+        min = winding_numbers[i];
+    }
+    min--; // at least 1
+    opts.map_file_negative = msg_str("rng%d_S0V0.5:0", abs(min));
+  }
+  opts.print_status_or_exit(
+      opts.map_negative.init(opts.map_file_negative.c_str()), 'n');
 
   for (unsigned int i = 0; i < faces.size(); i++) {
     Color col = geom.colors(FACES).get(i);
@@ -2310,9 +2318,9 @@ void resolve_winding_number_indexes(Geometry &geom, const ColorMapMulti &map,
         c_idx -= INT_MAX;
 
       if (c_idx >= 0)
-        geom.colors(FACES).set(i, map.get_col(c_idx));
+        geom.colors(FACES).set(i, opts.map.get_col(c_idx));
       else
-        geom.colors(FACES).set(i, map_negative.get_col(std::abs(c_idx)));
+        geom.colors(FACES).set(i, opts.map_negative.get_col(std::abs(c_idx)));
     }
   }
 }
@@ -2428,13 +2436,16 @@ int main(int argc, char *argv[])
   if (opts.face_color_method)
     color_by_plane(geom, opts);
 
+  // keep track of unique winding numbers
+  vector<int> winding_numbers;
+
   int original_edges_size = 0;
   if (opts.planar_merge_type) {
     // missing edges are added so that they won't blend to invisible
     geom.add_missing_impl_edges();
     original_edges_size = geom.edges().size();
 
-    planar_merge(geom, opts);
+    planar_merge(geom, winding_numbers, opts);
   }
 
   string elems;
@@ -2453,7 +2464,7 @@ int main(int argc, char *argv[])
     if (!opts.planar_merge_type)
       color_by_winding_number_raw(geom, opts.color_by_winding_number,
                                   opts.epsilon);
-    resolve_winding_number_indexes(geom, opts.map, opts.map_negative);
+    resolve_winding_number_indexes(geom, winding_numbers, opts);
   }
 
   // add vertices to 'stitch' faces with dangling edges due to tiling or merging
