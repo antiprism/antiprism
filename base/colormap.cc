@@ -1189,23 +1189,29 @@ static ColorMap *colormap_from_name_generated(const char *map_name,
   }
 
   else if (strcmp(name, "rainbow") == 0) {
-    string fract_str(map_name + name_len);
-    if (fract_str == "_") {
-      stat->set_error("rainbow map needs value after underscore");
-      return cmap;
-    }
+    double fract = 0; // light/dark value
 
-    double fract = 0;
-    Split parts(map_name, "_");
-    if (parts.size() > 1) {
-      *stat = read_double(parts[1], &fract);
+    size_t to_params_len = strcspn(map_name, "+*%"); // length to +*%
+    // value string follows base map name and map size, and runs to +*%
+    string value_str(map_name + name_len + num_len,
+                     to_params_len - (name_len + num_len));
+    if (!value_str.empty()) { // there are _value characters to process
+      if (value_str[0] != '_')
+        stat->set_error(msg_str("rainbow map has '%c' instead of underscore",
+                                value_str[0]));
+      else if (value_str.size() == 1)
+        stat->set_error("rainbow map needs value after underscore");
+      else { // there is a value after '_'
+        if ((*stat = read_double(&value_str[1], &fract))) { // true if number
+          if (fabs(fract) > 1) { // number was read, check value
+            stat->set_error(msg_str(
+                "rainbow map value '%g', must be between -1 and 1", fract));
+          }
+        }
+      }
+
       if (stat->is_error())
         return cmap;
-    }
-    if (fabs(fract) > 1) {
-      stat->set_error(
-          msg_str("rainbow map value '%g', must be between -1 and 1", fract));
-      return cmap;
     }
 
     double x = 0;
@@ -1227,13 +1233,11 @@ static ColorMap *colormap_from_name_generated(const char *map_name,
                           y, y, y, x, x, x, y, y, x, o, y, y, y, x, x, x, x, x,
                           x, x, y, y, y, x);
 
-    size_t num_dgts = strspn(map_name + name_len, "0123456789");
-    string rainbow_spec_str(map_name + name_len, num_dgts);
-    rainbow_spec_str +=
-        msg_str("%s%s", rainbow_str.c_str(), parts[0] + name_len + num_dgts);
-
     cmap = new ColorMapRangeRgb();
-    if (cmap && !(*stat = cmap->init(rainbow_spec_str.c_str()))) {
+    string map_size(map_name + name_len, num_len);
+    const char *final_params = map_name + to_params_len;
+    if (cmap && !(*stat = cmap->init(
+                      (map_size + rainbow_str + final_params).c_str()))) {
       delete cmap;
       cmap = nullptr;
     }
