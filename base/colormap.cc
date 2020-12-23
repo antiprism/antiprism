@@ -1188,6 +1188,57 @@ static ColorMap *colormap_from_name_generated(const char *map_name,
     }
   }
 
+  else if (strcmp(name, "rainbow") == 0) {
+    string fract_str(map_name + name_len);
+    if (fract_str == "_") {
+      stat->set_error("rainbow map needs value after underscore");
+      return cmap;
+    }
+
+    double fract = 0;
+    Split parts(map_name, "_");
+    if (parts.size() > 1) {
+      *stat = read_double(parts[1], &fract);
+      if (stat->is_error())
+        return cmap;
+    }
+    if (fabs(fract) > 1) {
+      stat->set_error(
+          msg_str("rainbow map value '%g', must be between -1 and 1", fract));
+      return cmap;
+    }
+
+    double x = 0;
+    double y = 1;
+    if (fract > 0)
+      x = fract;
+    else
+      y = fract + 1;
+
+    double o = 0.5; // orange
+    if (x > 0)
+      o = (x + 1) / 2;
+    else if (y < 1)
+      o = y / 2;
+
+    string rainbow_str;
+    rainbow_str = msg_str("_R%g:%g:%g:%g:%g:%g:%g:%gG%g:%g:%g:%g:%g:%g:%g:%gB%"
+                          "g:%g:%g:%g:%g:%g:%g:%g",
+                          y, y, y, x, x, x, y, y, x, o, y, y, y, x, x, x, x, x,
+                          x, x, y, y, y, x);
+
+    size_t num_dgts = strspn(map_name + name_len, "0123456789");
+    string rainbow_spec_str(map_name + name_len, num_dgts);
+    rainbow_spec_str +=
+        msg_str("%s%s", rainbow_str.c_str(), parts[0] + name_len + num_dgts);
+
+    cmap = new ColorMapRangeRgb();
+    if (cmap && !(*stat = cmap->init(rainbow_spec_str.c_str()))) {
+      delete cmap;
+      cmap = nullptr;
+    }
+  }
+
   else if (strcmp(name, "uniform") == 0) {
 
     auto *multi = new ColorMapMulti;
@@ -1225,13 +1276,13 @@ static ColorMap *colormap_from_name_generated(const char *map_name,
       // RK - for blending colors, make each two colors blend to different color
       // than adjacent ones
       // use nicer color values for green and orange
-      overrides->set_col(0, Color(1.0, 1.0, 0.0));     // yellow
-      overrides->set_col(1, Color(1.0, 0.0, 0.0));     // red
-      overrides->set_col(2, Color(0.0, 0.39216, 0.0)); // darkgreen (X11)
-      overrides->set_col(3, Color(0.0, 0.0, 1.0));     // blue
-      overrides->set_col(4, Color(1.0, 0.0, 1.0));     // magnenta
-      overrides->set_col(5, Color(0.0, 1.0, 1.0));     // cyan
-      overrides->set_col(6, Color(1.0, 0.49804, 0.0)); // darkorange1 (X11)
+      overrides->set_col(0, Color(255, 255, 0)); // yellow
+      overrides->set_col(1, Color(255, 0, 0));   // red
+      overrides->set_col(2, Color(0, 100, 0));   // darkgreen (X11)
+      overrides->set_col(3, Color(0, 0, 255));   // blue
+      overrides->set_col(4, Color(255, 0, 255)); // magnenta
+      overrides->set_col(5, Color(0, 255, 255)); // cyan
+      overrides->set_col(6, Color(255, 127, 0)); // darkorange1 (X11)
       multi->add_cmap(overrides);
       multi->add_cmap(spread_map);
       if (map_size >= 0)
