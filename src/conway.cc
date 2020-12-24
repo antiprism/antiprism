@@ -227,6 +227,7 @@ void write_operation(vector<ops *> &operations, int &op_count, char &op,
   // PATCH: if we get to this point and sub1 is 0 and sub2 is 0, sub2 must be 1
   if (sub1 == 0 && sub2 == 0)
     sub2 = 1;
+
   operations.push_back(new ops(op_count++, op, sub1, sub2, sides));
   op = '\0';
   sub1 = 1;
@@ -268,6 +269,10 @@ Status validate_cn_string(const string &cn_string, vector<ops *> &operations,
   int op_count = 0;
   for (unsigned int i = 0; i < cn_string.length(); i++) {
     char current = cn_string[i];
+
+    // PATCH: sub1 defaults to 2 for two subscript operators
+    if (find_sub2_allowed(current) != -1)
+      sub1 = 2;
 
     bool is_digit = (digits.find(current) != string::npos);
 
@@ -943,7 +948,7 @@ Changing orientation mode can be placed anywhere in the operation string
 Summary of operators which can take n as subscript or r as face/vertex number
 
 b  - n may be 0 or greater (default: 1)
-e  - n,m n and m may be 0 or greater except for _0_0 (default: _1_0)
+e  - n,m n and m may be 0 or greater except for _0_0 (default: _2_0)
 g  - n may be 1 or greater (default: 1)
 K  - r may be 3 or greater representing face sides
 k  - r may be 3 or greater representing face sides
@@ -953,10 +958,10 @@ l  - n,r n may be 0 or greater, r may be 3 or greater
        without delimiters Lr and lr, r is face sides and subscript default to 1
 M  - n may be 0 or greater (default: 1)
 m  - n may be 0 or greater (default: 1)
-o  - n,m n and m may be 0 or greater except for _0_0 (default: _1_0)
+o  - n,m n and m may be 0 or greater except for _0_0 (default: _2_0)
 s  - n may be 1 or greater (default: 1)
 t  - r may be 2 or greater representing vertex connections (2 in tiles)
-u  - n,m n and m may be 0 or greater except for _0_0 (default: _1_0)
+u  - n,m n and m may be 0 or greater except for _0_0 (default: _2_0)
 
 Antiprism Extension: any operation can be repeated N time by following it with
 the superscript symbol ^ and a number greater than 0. Examples: a^3C M0^2T
@@ -1007,7 +1012,7 @@ Substitutions used by George Hart algorithms
   }
 
   fprintf(stdout, R"(
-Equivalent Operations
+Equivalent Operations (Antiprism)
 
 b0 = z        e0 = d        o0 = S        m0 = k        M0 = o
 b1 = b        e1 = e        o1 = o        m1 = m        M1 = M
