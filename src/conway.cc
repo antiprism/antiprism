@@ -59,44 +59,46 @@ struct ConwayOperator {
   string operator_name;
   int sub1;
   int sub2;
+  int sub1_default;
+  int sub2_default;
   int sides;
   bool hart_operator;
 };
 
 // clang-format off
 ConwayOperator conway_operator_list[]{
-    {"a",  "ambo",            -1, -1, -1, true  },
-    {"B",  "bowtie",          -1, -1, -1, false },
-    {"b",  "bevel",            0, -1, -1, false }, // subscript >= 0
-    {"c",  "chamfer",         -1, -1, -1, true  },
-    {"d",  "dual",            -1, -1, -1, true  },
-    {"E",  "ethyl",           -1, -1, -1, false },
-    {"e",  "expand",           0,  0, -1, false }, // two subscripts n>=0 m>=0
-    {"G",  "opposite-lace",   -1, -1, -1, false },
-    {"g",  "gyro",             1, -1, -1, true  }, // subscript >= 1
-    {"J",  "joined-medial",   -1, -1, -1, false }, // replaces wiki M0
-    {"j",  "join",            -1, -1, -1, false },
-    {"K",  "stake",           -1, -1,  3, false }, // face sides >= 3
-    {"k",  "kis",             -1, -1,  3, true  }, // vertex sides >= 3
-    {"L",  "lace",             0, -1,  3, false }, // subscript >= 0, face sides >= 3
-    {"l",  "loft",             0, -1,  3, false }, // subscript >= 0, face sides >= 3
-    {"M",  "medial",           0, -1, -1, false }, // subscript >= 0
-    {"m",  "meta",             0, -1, -1, false }, // subscript >= 0
-    {"n",  "needle",          -1, -1, -1, false },
-    {"o",  "ortho",            0,  0, -1, false }, // two subscripts n>=0 m>=0
-    {"p",  "propeller",       -1, -1, -1, true  },
-    {"q",  "quinto",          -1, -1, -1, false },
-    {"r",  "reflect",         -1, -1, -1, false },
-    {"S",  "seed",            -1, -1, -1, false },
-    {"s",  "snub",             1, -1, -1, false }, // subscript >= 1
-    {"t",  "truncate",        -1, -1,  2, false }, // vertex sides >= 2
-    {"u",  "subdivide",        0,  0, -1, false }, // two subscripts n>=0 m>=0
-    {"W",  "waffle",          -1, -1, -1, false },
-    {"w",  "whirl",           -1, -1, -1, true  },
-    {"X",  "cross",           -1, -1, -1, false },
-    {"z",  "zip",             -1, -1, -1, false },
-    {"+",  "orient positive", -1, -1, -1, false },
-    {"-",  "orient negative", -1, -1, -1, false },
+    {"a",  "ambo",            -1, -1, -1, -1, -1, true  },
+    {"B",  "bowtie",          -1, -1, -1, -1, -1, false },
+    {"b",  "bevel",            0, -1,  1, -1, -1, false }, // subscript >= 0
+    {"c",  "chamfer",         -1, -1, -1, -1, -1, true  },
+    {"d",  "dual",            -1, -1, -1, -1, -1, true  },
+    {"E",  "ethyl",           -1, -1, -1, -1, -1, false },
+    {"e",  "expand",           0,  0,  2,  0, -1, false }, // two subscripts n>=0 m>=0
+    {"G",  "opposite-lace",   -1, -1, -1, -1, -1, false },
+    {"g",  "gyro",             1, -1,  1, -1, -1, true  }, // subscript >= 1
+    {"J",  "joined-medial",   -1, -1, -1, -1, -1, false }, // replaces wiki M0
+    {"j",  "join",            -1, -1, -1, -1, -1, false },
+    {"K",  "stake",           -1, -1, -1, -1,  3, false }, // face sides >= 3
+    {"k",  "kis",             -1, -1, -1, -1,  3, true  }, // vertex sides >= 3
+    {"L",  "lace",             0, -1,  1, -1,  3, false }, // subscript >= 0, face sides >= 3
+    {"l",  "loft",             0, -1,  1, -1,  3, false }, // subscript >= 0, face sides >= 3
+    {"M",  "medial",           0, -1,  1, -1, -1, false }, // subscript >= 0
+    {"m",  "meta",             0, -1,  1, -1, -1, false }, // subscript >= 0
+    {"n",  "needle",          -1, -1, -1, -1, -1, false },
+    {"o",  "ortho",            0,  0,  2,  0, -1, false }, // two subscripts n>=0 m>=0
+    {"p",  "propeller",       -1, -1, -1, -1, -1, true  },
+    {"q",  "quinto",          -1, -1, -1, -1, -1, false },
+    {"r",  "reflect",         -1, -1, -1, -1, -1, false },
+    {"S",  "seed",            -1, -1, -1, -1, -1, false },
+    {"s",  "snub",             1, -1,  1, -1, -1, false }, // subscript >= 1
+    {"t",  "truncate",        -1, -1, -1, -1,  2, false }, // vertex sides >= 2
+    {"u",  "subdivide",        0,  0,  2,  0, -1, false }, // two subscripts n>=0 m>=0
+    {"W",  "waffle",          -1, -1, -1, -1, -1, false },
+    {"w",  "whirl",           -1, -1, -1, -1, -1, true  },
+    {"X",  "cross",           -1, -1, -1, -1, -1, false },
+    {"z",  "zip",             -1, -1, -1, -1, -1, false },
+    {"+",  "orient positive", -1, -1, -1, -1, -1, false },
+    {"-",  "orient negative", -1, -1, -1, -1, -1, false },
 };
 
 struct ConwaySeed {
@@ -161,6 +163,34 @@ int find_sub2_allowed(const char &op)
     }
   }
   return found;
+}
+
+int sub1_default(const char &op)
+{
+  int def = -1;
+  unsigned int last_op =
+      sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
+  for (unsigned int i = 0; i < last_op; i++) {
+    if (op == conway_operator_list[i].operator_short[0]) {
+      def = conway_operator_list[i].sub1_default;
+      break;
+    }
+  }
+  return def;
+}
+
+int sub2_default(const char &op)
+{
+  int def = -1;
+  unsigned int last_op =
+      sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
+  for (unsigned int i = 0; i < last_op; i++) {
+    if (op == conway_operator_list[i].operator_short[0]) {
+      def = conway_operator_list[i].sub2_default;
+      break;
+    }
+  }
+  return def;
 }
 
 int find_sides_allowed(const char &op)
@@ -230,8 +260,8 @@ void write_operation(vector<ops *> &operations, int &op_count, char &op,
 
   operations.push_back(new ops(op_count++, op, sub1, sub2, sides));
   op = '\0';
-  sub1 = 1;
-  sub2 = 0;
+  sub1 = -2;
+  sub2 = -2;
   sides = -1;
 }
 
@@ -240,8 +270,8 @@ Status validate_cn_string(const string &cn_string, vector<ops *> &operations,
 {
   seed = '\0';
   seed_size = 0;
-  int sub1 = 1; // sub1 default is 1
-  int sub2 = 0; // sub2 default is 0
+  int sub1 = -2; // -2 means lookup not done
+  int sub2 = -2; // -2 means lookup not done
   int sides = -1;
 
   Status stat;
@@ -269,10 +299,6 @@ Status validate_cn_string(const string &cn_string, vector<ops *> &operations,
   int op_count = 0;
   for (unsigned int i = 0; i < cn_string.length(); i++) {
     char current = cn_string[i];
-
-    // PATCH: sub1 defaults to 2 for two subscript operators
-    if (find_sub2_allowed(current) != -1)
-      sub1 = 2;
 
     bool is_digit = (digits.find(current) != string::npos);
 
@@ -320,6 +346,12 @@ Status validate_cn_string(const string &cn_string, vector<ops *> &operations,
       num_val1 = -1;
       num_val2 = -1;
     }
+
+    // set subscript defaults here
+    if (sub1 == -2)
+      sub1 = sub1_default(current);
+    if (sub2 == -2)
+      sub2 = sub2_default(current);
 
     // its a sides symbol
     if (current == sides_symbol) {
