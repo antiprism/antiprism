@@ -71,7 +71,7 @@ ConwayOperator conway_operator_list[]{
     {"c",  "chamfer",         -1, -1, -1, true  },
     {"d",  "dual",            -1, -1, -1, true  },
     {"E",  "ethyl",           -1, -1, -1, false },
-    {"e",  "expand",           0, -1, -1, false }, // subscript >= 0
+    {"e",  "expand",           0,  0, -1, false }, // two subscripts n>=0 m>=0
     {"G",  "opposite-lace",   -1, -1, -1, false },
     {"g",  "gyro",             1, -1, -1, true  }, // subscript >= 1
     {"J",  "joined-medial",   -1, -1, -1, false }, // replaces wiki M0
@@ -83,14 +83,14 @@ ConwayOperator conway_operator_list[]{
     {"M",  "medial",           0, -1, -1, false }, // subscript >= 0
     {"m",  "meta",             0, -1, -1, false }, // subscript >= 0
     {"n",  "needle",          -1, -1, -1, false },
-    {"o",  "ortho",            0, -1, -1, false }, // subscript >= 0
+    {"o",  "ortho",            0,  0, -1, false }, // two subscripts n>=0 m>=0
     {"p",  "propeller",       -1, -1, -1, true  },
     {"q",  "quinto",          -1, -1, -1, false },
     {"r",  "reflect",         -1, -1, -1, false },
     {"S",  "seed",            -1, -1, -1, false },
     {"s",  "snub",             1, -1, -1, false }, // subscript >= 1
     {"t",  "truncate",        -1, -1,  2, false }, // vertex sides >= 2
-    {"u",  "subdivide",        1,  1, -1, false }, // two subscripts >= 1
+    {"u",  "subdivide",        0,  0, -1, false }, // two subscripts n>=0 m>=0
     {"W",  "waffle",          -1, -1, -1, false },
     {"w",  "whirl",           -1, -1, -1, true  },
     {"X",  "cross",           -1, -1, -1, false },
@@ -224,10 +224,13 @@ bool cmp_ops(const ops *a, const ops *b) { return a->op_pos > b->op_pos; }
 void write_operation(vector<ops *> &operations, int &op_count, char &op,
                      int &sub1, int &sub2, int &sides)
 {
+  // PATCH: if we get to this point and sub1 is 0 and sub2 is 0, sub2 must be 1
+  if (sub1 == 0 && sub2 == 0)
+    sub2 = 1;
   operations.push_back(new ops(op_count++, op, sub1, sub2, sides));
   op = '\0';
   sub1 = 1;
-  sub2 = 1;
+  sub2 = 0;
   sides = -1;
 }
 
@@ -236,8 +239,8 @@ Status validate_cn_string(const string &cn_string, vector<ops *> &operations,
 {
   seed = '\0';
   seed_size = 0;
-  int sub1 = 1;
-  int sub2 = 1;
+  int sub1 = 1; // sub1 default is 1
+  int sub2 = 0; // sub2 default is 0
   int sides = -1;
 
   Status stat;
@@ -396,6 +399,12 @@ Status validate_cn_string(const string &cn_string, vector<ops *> &operations,
           else
             num_val2 = num_val;
         }
+        // PATCH: special condition, subscripts of _0_0 are not allowed
+        if (num_val1 == 0 && num_val2 == 0)
+          return stat.set_error(msg_str("operator \'%c\' at position %d, two "
+                                        "subscripts of %d and %d not allowed",
+                                        pending_op, pending_pos, num_val1,
+                                        num_val2));
       }
       else
         return stat.set_error(msg_str("too many subscripts for operator \'%c\' "
@@ -807,7 +816,9 @@ e = expand This is Mrs. Stott's expansion operation.  Each face of X is
 separated from all its neighbors and reconnected with a new 4-sided face,
 corresponding to an edge of X.  An n-gon is then added to connect the 4-sided
 faces at each n-fold vertex.  For example, eC is the rhombicuboctahedron.  It
-turns out that eX=aaX and so eX=edX (Antiprism: "en" where n is 0 or greater)
+turns out that eX=aaX and so eX=edX (Antiprism Extension: One subscript as "en"
+or "e_n" where n is 0 or greater. Two subscripts as "en_m" or "e_n_m" where
+n and m are 0 or greater)
 Note: expand is also known as "cantellating" the polyhedron, or cantellation
 
 g = gyro   The dual operation to s is g. gX=dsdX=dsX, with all 5-sided faces.
@@ -833,7 +844,8 @@ vertices and new vertices at the edge midpoints.  mX=mdX.  mC is the
 o = ortho  Dual to e, oX=deX=jjX.  oC is the trapezoidal icositetrahedron, with
 24 kite-shaped faces.  oX has the effect of putting new vertices in the middle
 of each face of X and connecting them, with new edges, to the edge midpoints of
-X.  (Antiprism Extension: or "on" where n is 0 or greater)
+X. (Antiprism Extension: One subscript as "on" or "o_n" where n is 0 or greater
+Two subscripts as "on_m" or "o_n_m" where n and m are 0 or greater)
 
 p = propeller    Makes each n-gon face into a "propeller" of an n-gon
 surrounded by n quadrilaterals, e.g., pT is the tetrahedrally stellated
@@ -931,7 +943,7 @@ Changing orientation mode can be placed anywhere in the operation string
 Summary of operators which can take n as subscript or r as face/vertex number
 
 b  - n may be 0 or greater (default: 1)
-e  - n may be 0 or greater (default: 1)
+e  - n,m n and m may be 0 or greater except for _0_0 (default: _1_0)
 g  - n may be 1 or greater (default: 1)
 K  - r may be 3 or greater representing face sides
 k  - r may be 3 or greater representing face sides
@@ -941,10 +953,10 @@ l  - n,r n may be 0 or greater, r may be 3 or greater
        without delimiters Lr and lr, r is face sides and subscript default to 1
 M  - n may be 0 or greater (default: 1)
 m  - n may be 0 or greater (default: 1)
-o  - n may be 0 or greater (default: 1)
+o  - n,m n and m may be 0 or greater except for _0_0 (default: _1_0)
 s  - n may be 1 or greater (default: 1)
 t  - r may be 2 or greater representing vertex connections (2 in tiles)
-u  - n,m n and m may be 1 or greater (default: _1_1);
+u  - n,m n and m may be 0 or greater except for _0_0 (default: _1_0)
 
 Antiprism Extension: any operation can be repeated N time by following it with
 the superscript symbol ^ and a number greater than 0. Examples: a^3C M0^2T
@@ -2018,9 +2030,9 @@ void wythoff(Geometry &geom, char operation, int sub1, int sub2, int sides,
     string wythoff_op;
     wythoff_op.push_back(operation);
 
-    if ((sub1 != 1) || (sub2 != 1))
+    if (find_sub1_allowed(operation) != -1)
       wythoff_op += "_" + std::to_string(sub1);
-    if (sub2 != 1)
+    if (find_sub2_allowed(operation) != -1)
       wythoff_op += "_" + std::to_string(sub2);
 
     // for tile mode, use old wythoff truncate
