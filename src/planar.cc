@@ -2306,6 +2306,8 @@ void resolve_winding_number_indexes(Geometry &geom,
     }
     min--; // at least 1
     opts.map_file_negative = msg_str("rng%d_S0V0.5:0", abs(min));
+    opts.warning(msg_str("negative winding map used is %s",
+                         opts.map_file_negative.c_str()));
   }
   opts.print_status_or_exit(
       opts.map_negative.init(opts.map_file_negative.c_str()), 'n');
