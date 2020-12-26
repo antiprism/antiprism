@@ -1,7 +1,7 @@
 NEWS for Antiprism: http://www.antiprism.com
 
 Version 0.28
-xx-xx-20 Adrian Rossiter <adrian@antiprism.com>
+xx-01-21 Adrian Rossiter <adrian@antiprism.com>
          New Programs
             poly_form: rename from minmax, rename options, add -y
               for symmetry constraint, add -a e equal-edge algorithm
@@ -19,8 +19,8 @@ xx-xx-20 Adrian Rossiter <adrian@antiprism.com>
             planar:
               -V verbose lists all winding numbers found in a model
               -n map entries is now calculated
-            wythoff: new operators and operator sequences, extend colour
-              by associated element
+            wythoff: new operators and new and changed operator sequences
+              (see 'wythoff -c list'), extend colour by associated element
             conway: new format for conway operators with 2 numbers e.g L_n:r
               new operators added, B,E,G,W
               operators L and l may now take subscripts

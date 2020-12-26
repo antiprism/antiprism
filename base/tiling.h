@@ -118,6 +118,11 @@ public:
    *         3 - steps to return from associated element (mirrors vef)
    *         4 - associated element type letter (VEF or X for none) */
   TileReport get_element_association() const;
+
+  /// Normalize pattern (deduplicate operators, remove trailing _)
+  /**\param pat pattern string to mormalize
+   * \return normalized pattern string. */
+  static std::string normalize_pattern(const std::string &pattern);
 };
 
 class TilingColoring {

@@ -15,7 +15,8 @@ libantiprism_la_SOURCES = \
 	coloring.cc prop_col.cc named_cols.cc geodesic.cc zonohedron.cc \
 	johnson.cc uniform.cc std_polys.cc skilling.cc stellations.cc \
 	timer.cc polygon.cc povwriter.cc scene.cc \
-	canonic.cc trans.cc faces.cc vrmlwriter.cc wythoff.cc planar.cc \
+	canonic.cc trans.cc faces.cc vrmlwriter.cc \
+	wythoff.cc wythoff_tiling.cc wythoff_ops.cc planar.cc \
 	\
 	antiprism.h boundbox.h elemprops.h colormap.h coloring.h color.h \
 	const.h displaypoly.h geometry.h geometryutils.h geometryinfo.h \
