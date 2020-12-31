@@ -993,18 +993,20 @@ void Tiling::print_conway_list(FILE *ofile)
             params.c_str(), op.operator_name.c_str(), op.pattern.c_str());
   }
   fprintf(ofile, R"(
-Some operators are part of a sequence and take an optional integer parameter.
-  g, l, L:               1 is the base, 0 is a lower level operator
-                         (except L_0, which is a standalone operator)
-  m, b, M, s, u, o, e:   2 is the base, 1 is a lower level operator and
-                         0 is invalid
+The following operators take an optional integer parameter to form a sequence
+  g, l, L
+      1 is the base operator, g_0 is invalid, l_0 is a lower level operator,
+      L_0 is a standalone operator
+  m, b, M, s, X, u, o, e
+      2 is the base operator, 1 is a lower level operator, 0 is invalid
 
-Operators g, o, e optionally take two integer parameters, not both zero.
+Operators u, o, e optionally take two integer parameters, not both zero, to
+form a geodesic-like tiling
 
-Examples e, M, m_3, g_3, s_1, u_3, u_2_3, o_3_3, e_0_4
+Examples: e, M, m_3, g_3, s_1, u_3, u_2_3, o_3_3, e_0_4
 
-Some Conway operators, like t and k, take a number to filter the elements
-that the pattern will be applied to, but this is not supported.
+Note: in Conway notation, operators like t and k take an integer to select
+the elements to apply the operator to, but this is not supported by wythoff
 )");
 }
 

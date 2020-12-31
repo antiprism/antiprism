@@ -963,8 +963,8 @@ int unpacksym(char *sym, Polyhedron *P, Uniform *uniform, int last_uniform)
       ;
     if (c)
       Err("data exceeded");
-    strncpy(wyth, uniform[P->index = n - 1].Wythoff, STR_SZ-1);
-    wyth[STR_SZ-1] = '\0';
+    strncpy(wyth, uniform[P->index = n - 1].Wythoff, STR_SZ - 1);
+    wyth[STR_SZ - 1] = '\0';
     sym = wyth;
   }
   else
