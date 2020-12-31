@@ -69,7 +69,7 @@ struct ConwayOperator {
 ConwayOperator conway_operator_list[]{
     {"a",  "ambo",            -1, -1, -1, -1, -1, true  },
     {"B",  "bowtie",          -1, -1, -1, -1, -1, false },
-    {"b",  "bevel",            0, -1,  1, -1, -1, false }, // subscript >= 0
+    {"b",  "bevel",            1, -1,  2, -1, -1, false }, // subscript >= 1
     {"c",  "chamfer",         -1, -1, -1, -1, -1, true  },
     {"d",  "dual",            -1, -1, -1, -1, -1, true  },
     {"E",  "ethyl",           -1, -1, -1, -1, -1, false },
@@ -82,20 +82,20 @@ ConwayOperator conway_operator_list[]{
     {"k",  "kis",             -1, -1, -1, -1,  3, true  }, // vertex sides >= 3
     {"L",  "lace",             0, -1,  1, -1,  3, false }, // subscript >= 0, face sides >= 3
     {"l",  "loft",             0, -1,  1, -1,  3, false }, // subscript >= 0, face sides >= 3
-    {"M",  "medial",           0, -1,  1, -1, -1, false }, // subscript >= 0
-    {"m",  "meta",             0, -1,  1, -1, -1, false }, // subscript >= 0
+    {"M",  "medial",           1, -1,  2, -1, -1, false }, // subscript >= 1
+    {"m",  "meta",             1, -1,  2, -1, -1, false }, // subscript >= 1
     {"n",  "needle",          -1, -1, -1, -1, -1, false },
     {"o",  "ortho",            0,  0,  2,  0, -1, false }, // two subscripts n>=0 m>=0
     {"p",  "propeller",       -1, -1, -1, -1, -1, true  },
     {"q",  "quinto",          -1, -1, -1, -1, -1, false },
     {"r",  "reflect",         -1, -1, -1, -1, -1, false }, // only in conway
     {"S",  "seed",            -1, -1, -1, -1, -1, false },
-    {"s",  "snub",             1, -1,  1, -1, -1, false }, // subscript >= 1
+    {"s",  "snub",             1, -1,  2, -1, -1, false }, // subscript >= 1
     {"t",  "truncate",        -1, -1, -1, -1,  2, false }, // vertex sides >= 2
     {"u",  "subdivide",        0,  0,  2,  0, -1, false }, // two subscripts n>=0 m>=0
     {"W",  "waffle",          -1, -1, -1, -1, -1, false },
     {"w",  "whirl",           -1, -1, -1, -1, -1, true  },
-    {"X",  "cross",           -1, -1, -1, -1, -1, false },
+    {"X",  "cross",            1, -1,  2, -1, -1, false }, // subscript >= 1
     {"z",  "zip",             -1, -1, -1, -1, -1, false },
     {"+",  "orient positive", -1, -1, -1, -1, -1, false },
     {"-",  "orient negative", -1, -1, -1, -1, -1, false },
@@ -939,7 +939,7 @@ aC=aO is the cuboctahedron.
 Note: ambo is also known as "rectifying" the polyhedron, or rectification
 
 b = bevel  The bevel operation can be defined by bX=taX.  bC is the truncated
-cuboctahedron.  (Antiprism Extension: or "bn" where n is 0 or greater)
+cuboctahedron.  (Antiprism Extension: or "bn" where n is 1 or greater)
 Note: bevel is also known as "omnitruncating" the polyhedron, or omnitruncation
 
 d = dual   The dual of a polyhedron has a vertex for each face, and a face for
@@ -973,7 +973,7 @@ faces.  The k operator is dual to t, meaning kX=dtdX.
 m = meta   Dual to b, mX=dbX=kjX.  mC has 48 triangular faces.  m is like k
 and o combined; new edges connect new vertices at the face centers to the old
 vertices and new vertices at the edge midpoints.  mX=mdX.  mC is the
-"hexakis octahedron".  (Antiprism Extension: or "mn" where n is 0 or greater)
+"hexakis octahedron".  (Antiprism Extension: or "mn" where n is 1 or greater)
 
 o = ortho  Dual to e, oX=deX=jjX.  oC is the trapezoidal icositetrahedron, with
 24 kite-shaped faces.  oX has the effect of putting new vertices in the middle
@@ -1037,7 +1037,7 @@ l = loft      An augmentation of each face by prism, adding a smaller copy of
               Both may be specified as "l_n:r"
 
 M = medial    Similar to meta except no diagonal edges added, creating quad
-              faces. All faces processed or can be "Mm" where m is 0 or greater
+              faces. Can be "Mn" where n is 1 or greater
 
 n = needle    Dual of truncation, triangulate with 2 triangles across every
               edge. This bisect faces across all vertices and edges, while
@@ -1063,6 +1063,7 @@ w = whirl     Gyro followed by truncation of vertices centered on original
 
 X = cross     Combination of kis and subdivide operation. Original edges are
               divided in half, with triangle and quad faces
+              Can be "Xn" where n is 1 or greater
 
 z = zip       Dual of kis or truncation of the dual. This create new edges
               perpendicular to original edges, a truncation beyond "ambo" with
@@ -1077,7 +1078,7 @@ Changing orientation mode can be placed anywhere in the operation string
 
 Summary of operators which can take n as subscript or r as face/vertex number
 
-b  - n may be 0 or greater (default: 1)
+b  - n may be 1 or greater (default: 2)
 e  - n,m n and m may be 0 or greater except for _0 and _0_0 (default: _2_0)
 g  - n may be 1 or greater (default: 1)
 K  - r may be 3 or greater representing face sides
@@ -1086,12 +1087,13 @@ L  - n,r n may be 0 or greater, r may be 3 or greater
 l  - n,r n may be 0 or greater, r may be 3 or greater
        both n amd r may be used togeter as L_n:r or l_n:r (L_0: may not have r)
        without delimiters Lr and lr, r is face sides and subscript default to 1
-M  - n may be 0 or greater (default: 1)
-m  - n may be 0 or greater (default: 1)
+M  - n may be 1 or greater (default: 2)
+m  - n may be 1 or greater (default: 2)
 o  - n,m n and m may be 0 or greater except for _0 and _0_0 (default: _2_0)
-s  - n may be 1 or greater (default: 1)
+s  - n may be 1 or greater (default: 2)
 t  - r may be 2 or greater representing vertex connections (2 in tiles)
 u  - n,m n and m may be 0 or greater except for _0 and _0_0 (default: _2_0)
+X  - n may be 1 or greater (default: 2)
 
 Antiprism Extension: any operation can be repeated N time by following it with
 the superscript symbol ^ and a number greater than 0. Examples: a^3C M0^2T
@@ -1144,8 +1146,13 @@ Substitutions used by George Hart algorithms
   fprintf(stdout, R"(
 Equivalent Operations (Antiprism)
 
-b0 = z        e0 = d        o0 = S        m0 = k        M0 = o
-b1 = b        e1 = e        o1 = o        m1 = m        M1 = M
+b1 = z        e1 = d        M1 = o2       m1 = k        o1 = S
+b2 = b        e2 = e        M2 = M        m2 = m        o2 = o
+s1 = d        u1 = S        X1 = m1       
+s2 = s        u2 = u        X2 = X
+
+Equal but opposite handed: e_n_m = e_m_n, o_n_m = o_m_n, u_n_m = u_m_n
+
 )");
 }
 
