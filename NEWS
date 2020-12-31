@@ -21,17 +21,18 @@ xx-xx-20 Adrian Rossiter <adrian@antiprism.com>
               -n map entries is now calculated
             wythoff: new operators and operator sequences, extend colour
               by associated element
-            conway: new format for conway operators with 2 numbers e.g L_n:m
+            conway: new format for conway operators with 2 numbers e.g L_n:r
               new operators added, B,E,G,W
               operators L and l may now take subscripts
-              operator u may now take two subscripts
+              operator u, e and o may now take two subscripts
               status reporting method update
-              -p plarization options removed, done internally
-            off_color_radial: rainbow map entries calculated like rng
+              -p plarization options removed, now done internally
+            off_color_radial:
+              -m rainbow map entries calculated like rng
             canonical:
               -p face centroids and centroids magnitude planarization removed
-              -p u make unied edge removed
-              -p fast planarize added
+              -p u make unit edge removed
+              -p p fast planarize added
          Fixes
             usage helps reviewed and organized
             minor bug fixes and improvements

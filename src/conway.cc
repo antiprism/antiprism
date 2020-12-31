@@ -88,7 +88,7 @@ ConwayOperator conway_operator_list[]{
     {"o",  "ortho",            0,  0,  2,  0, -1, false }, // two subscripts n>=0 m>=0
     {"p",  "propeller",       -1, -1, -1, -1, -1, true  },
     {"q",  "quinto",          -1, -1, -1, -1, -1, false },
-    {"r",  "reflect",         -1, -1, -1, -1, -1, false },
+    {"r",  "reflect",         -1, -1, -1, -1, -1, false }, // only in conway
     {"S",  "seed",            -1, -1, -1, -1, -1, false },
     {"s",  "snub",             1, -1,  1, -1, -1, false }, // subscript >= 1
     {"t",  "truncate",        -1, -1, -1, -1,  2, false }, // vertex sides >= 2
@@ -100,6 +100,8 @@ ConwayOperator conway_operator_list[]{
     {"+",  "orient positive", -1, -1, -1, -1, -1, false },
     {"-",  "orient negative", -1, -1, -1, -1, -1, false },
 };
+
+// operators available: FfHhiNQUVvxy
 
 struct ConwaySeed {
   string seed;
@@ -121,13 +123,13 @@ ConwaySeed conway_seed_list[]{
 };
 // clang-format on
 
-bool find_operator(const char &op)
+bool find_operator(const string &op)
 {
   bool found = false;
   unsigned int last_op =
       sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
   for (unsigned int i = 0; i < last_op; i++) {
-    if (op == conway_operator_list[i].operator_short[0]) {
+    if (op == conway_operator_list[i].operator_short) {
       found = true;
       break;
     }
@@ -135,13 +137,13 @@ bool find_operator(const char &op)
   return found;
 }
 
-int find_sub1_allowed(const char &op)
+int find_sub1_allowed(const string &op)
 {
   int found = -1;
   unsigned int last_op =
       sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
   for (unsigned int i = 0; i < last_op; i++) {
-    if (op == conway_operator_list[i].operator_short[0]) {
+    if (op == conway_operator_list[i].operator_short) {
       if (conway_operator_list[i].sub1 > -1)
         found = conway_operator_list[i].sub1;
       break;
@@ -150,13 +152,13 @@ int find_sub1_allowed(const char &op)
   return found;
 }
 
-int find_sub2_allowed(const char &op)
+int find_sub2_allowed(const string &op)
 {
   int found = -1;
   unsigned int last_op =
       sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
   for (unsigned int i = 0; i < last_op; i++) {
-    if (op == conway_operator_list[i].operator_short[0]) {
+    if (op == conway_operator_list[i].operator_short) {
       if (conway_operator_list[i].sub2 > -1)
         found = conway_operator_list[i].sub2;
       break;
@@ -165,13 +167,13 @@ int find_sub2_allowed(const char &op)
   return found;
 }
 
-int sub1_default(const char &op)
+int sub1_default(const string &op)
 {
   int def = -1;
   unsigned int last_op =
       sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
   for (unsigned int i = 0; i < last_op; i++) {
-    if (op == conway_operator_list[i].operator_short[0]) {
+    if (op == conway_operator_list[i].operator_short) {
       def = conway_operator_list[i].sub1_default;
       break;
     }
@@ -179,13 +181,13 @@ int sub1_default(const char &op)
   return def;
 }
 
-int sub2_default(const char &op)
+int sub2_default(const string &op)
 {
   int def = -1;
   unsigned int last_op =
       sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
   for (unsigned int i = 0; i < last_op; i++) {
-    if (op == conway_operator_list[i].operator_short[0]) {
+    if (op == conway_operator_list[i].operator_short) {
       def = conway_operator_list[i].sub2_default;
       break;
     }
@@ -193,13 +195,13 @@ int sub2_default(const char &op)
   return def;
 }
 
-int find_sides_allowed(const char &op)
+int find_sides_allowed(const string &op)
 {
   int found = -1;
   unsigned int last_op =
       sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
   for (unsigned int i = 0; i < last_op; i++) {
-    if (op == conway_operator_list[i].operator_short[0]) {
+    if (op == conway_operator_list[i].operator_short) {
       if (conway_operator_list[i].sides > -1)
         found = conway_operator_list[i].sides;
       break;
@@ -208,12 +210,12 @@ int find_sides_allowed(const char &op)
   return found;
 }
 
-bool find_seed(const char &seed)
+bool find_seed(const string &seed)
 {
   bool found = false;
   unsigned int last_op = sizeof(conway_seed_list) / sizeof(conway_seed_list[0]);
   for (unsigned int i = 0; i < last_op; i++) {
-    if (seed == conway_seed_list[i].seed[0]) {
+    if (seed == conway_seed_list[i].seed) {
       found = true;
       break;
     }
@@ -221,12 +223,12 @@ bool find_seed(const char &seed)
   return found;
 }
 
-int find_seed_sides(const char &seed)
+int find_seed_sides(const string &seed)
 {
   int found = -1;
   unsigned int last_op = sizeof(conway_seed_list) / sizeof(conway_seed_list[0]);
   for (unsigned int i = 0; i < last_op; i++) {
-    if (seed == conway_seed_list[i].seed[0]) {
+    if (seed == conway_seed_list[i].seed) {
       if (conway_seed_list[i].sides > -1)
         found = conway_seed_list[i].sides;
       break;
@@ -238,11 +240,11 @@ int find_seed_sides(const char &seed)
 class ops {
 public:
   int op_pos;
-  char op;
+  string op;
   int sub1;
   int sub2;
   int sides;
-  ops(int n, char o, int s1, int s2, int si)
+  ops(int n, string o, int s1, int s2, int si)
       : op_pos(n), op(o), sub1(s1), sub2(s2), sides(si)
   {
   }
@@ -250,31 +252,71 @@ public:
 
 bool cmp_ops(const ops *a, const ops *b) { return a->op_pos > b->op_pos; }
 
-// op, sub and sides will be reset
-void write_operation(vector<ops *> &operations, int &op_count, char &op,
-                     int &sub1, int &sub2, int &sides)
+// iterate map for user operations, to find operation because of const
+bool find_user_operation(const std::map<string, vector<ops *>> &operations_user,
+                         const string &op)
 {
-  // PATCH: if we get to this point and sub1 is 0 and sub2 is 0, sub2 must be 1
-  if (sub1 == 0 && sub2 == 0)
-    sub2 = 1;
+  bool found = false;
+  for (std::pair<string, vector<ops *>> element : operations_user) {
+    string key = element.first;
+    if (key == op) {
+      found = true;
+      break;
+    }
+  }
+  return found;
+}
 
-  operations.push_back(new ops(op_count++, op, sub1, sub2, sides));
-  op = '\0';
-  sub1 = -2;
-  sub2 = -2;
+void reinitialize_vars(int &sub1, int &sub2, int &sides)
+{
+  sub1 = -2; // -2 means lookup not done
+  sub2 = -2; // -2 means lookup not done
   sides = -1;
 }
 
-Status validate_cn_string(const string &cn_string, vector<ops *> &operations,
-                          char &seed, int &seed_size, const string alpha_user)
+// op, sub and sides will be reset
+Status write_operation(vector<ops *> &operations, int &op_count, string &op,
+                       int &sub1, int &sub2, int &sides)
 {
-  seed = '\0';
-  seed_size = 0;
-  int sub1 = -2; // -2 means lookup not done
-  int sub2 = -2; // -2 means lookup not done
-  int sides = -1;
+  // PATCH:: check two subscript operators for _0 not allowed (sub2 not set)
+  if (find_sub2_allowed(op) != -1) {
+    if (sub1 == 0 && sub2 == -2)
+      return Status::error(msg_str("subscript of %d alone not allowed", sub1));
+    // set sub2 default here
+    if (sub2 == -2)
+      sub2 = sub2_default(op);
+  }
 
+  // PATCH: special condition, subscripts of _0_0 are not allowed
+  if (sub1 == 0 && sub2 == 0)
+    return Status::error(
+        msg_str("two subscripts of %d and %d not allowed", sub1, sub2));
+
+  operations.push_back(new ops(op_count++, op, sub1, sub2, sides));
+
+  op = "";
+  reinitialize_vars(sub1, sub2, sides);
+
+  return Status::ok();
+}
+
+Status
+validate_cn_string(const string &cn_string, vector<ops *> &operations,
+                   string &seed, int &seed_size,
+                   const std::map<string, vector<ops *>> &operations_user)
+{
   Status stat;
+  if (cn_string.empty())
+    return stat.set_error("no Conway Notation string given");
+
+  int sub1;
+  int sub2;
+  int sides;
+  reinitialize_vars(sub1, sub2, sides);
+
+  seed = "";
+  seed_size = 0;
+
   bool end_of_command = false;
 
   int require_seed_sides = -1;
@@ -282,9 +324,9 @@ Status validate_cn_string(const string &cn_string, vector<ops *> &operations,
   int possible_sides = -1;
   int possible_repeats = -1;
 
-  char super_symbol = '^';
-  char sub_symbol = '_';
-  char sides_symbol = ':';
+  string super_symbol = "^";
+  string sub_symbol = "_";
+  string sides_symbol = ":";
   bool designated_sub = false;
   bool designated_sides = false;
 
@@ -293,115 +335,144 @@ Status validate_cn_string(const string &cn_string, vector<ops *> &operations,
   int num_val1 = -1;
   int num_val2 = -1;
 
-  char pending_op = '\0';
+  string pending_op = "";
   int pending_pos = 0;
 
   int op_count = 0;
   for (unsigned int i = 0; i < cn_string.length(); i++) {
-    char current = cn_string[i];
+    // currently operators are only 1 character
+    string current = cn_string.substr(i, 1);
 
     bool is_digit = (digits.find(current) != string::npos);
-
-    bool is_delimiter = ((current == sub_symbol) || (current == sides_symbol));
 
     // seed with no N requirement has been found, no more characters expected
     if (end_of_command)
       return stat.set_error(
-          msg_str("extra characters past seed \'%c\': \'%s\' at position %d",
-                  seed, cn_string.substr(i).c_str(), i + 1));
-
-    // seed with N requirement has been found, digits expected
-    if ((require_seed_sides > -1) && !is_digit)
-      return stat.set_error(msg_str(
-          "seed \'%c\' at position %d requires a number of sides of %d or more",
-          seed, i + 1, require_seed_sides));
+          msg_str("extra characters past seed \'%s\': \'%s\' at position %d",
+                  seed.c_str(), cn_string.substr(i).c_str(), i + 1));
 
     // a number found where it shouldn't be
     if (is_digit) {
       if (i == 0)
-        return stat.set_error(msg_str(
-            "digit \'%c\' unexpected in first position %d", current, i + 1));
+        return stat.set_error(
+            msg_str("digit \'%s\' unexpected in first position %d",
+                    current.c_str(), i + 1));
 
+      // there is no operator or seed pending for the digit
       if (((possible_sub == -1) && (possible_sides == -1) &&
            (require_seed_sides == -1) && (possible_repeats == -1)))
-        return stat.set_error(
-            msg_str("operator \'%c\' at position %d unexpected number value "
-                    "specified: %c",
-                    pending_op, i + 1, current));
+        return stat.set_error(msg_str("unexpected number value "
+                                      "specified: \'%s\' at position %d",
+                                      current.c_str(), i + 1));
     }
+    // not a number where it should be
+    else {
+      // a number must follow sides
+      if (designated_sides)
+        return stat.set_error(msg_str(
+            "sides \'%s\' at position %d requires a number of %d or more",
+            sides_symbol.c_str(), i, possible_sides));
 
-    // a number must follow a superscript
-    if ((possible_repeats == 1) && !is_digit)
-      return stat.set_error(msg_str(
-          "superscript \'%c\' at position %d requires a number of %d or more",
-          super_symbol, i + 1, possible_repeats));
+      // a number must follow a subscript
+      if (designated_sub)
+        return stat.set_error(msg_str(
+            "subscript \'%s\' at position %d requires a number of %d or more",
+            sub_symbol.c_str(), i, possible_sub));
+
+      // a number must follow a seed with N requirement
+      if (require_seed_sides > -1)
+        return stat.set_error(msg_str("seed \'%s\' at position %d requires a "
+                                      "number of sides of %d or more",
+                                      seed.c_str(), i, require_seed_sides));
+
+      // a number must follow a superscript
+      if (possible_repeats == 1)
+        return stat.set_error(msg_str(
+            "superscript \'%s\' at position %d requires a number of %d or more",
+            super_symbol.c_str(), pending_pos, possible_repeats));
+    }
 
     // if no more digits or delimiter, handle delayed write with current values,
     // process next character
     if (((possible_sub > -1) || (possible_sides > -1)) && !is_digit &&
-        !is_delimiter) {
-      write_operation(operations, op_count, pending_op, sub1, sub2, sides);
+        !((current == sub_symbol) || (current == sides_symbol))) {
+      string error_msg =
+          write_operation(operations, op_count, pending_op, sub1, sub2, sides)
+              .msg();
+      if (!error_msg.empty())
+        return stat.set_error(msg_str("operator \'%s\' at position %d, %s",
+                                      pending_op.c_str(), pending_pos,
+                                      error_msg.c_str()));
       possible_sub = -1;
       possible_sides = -1;
       num_val1 = -1;
       num_val2 = -1;
     }
 
-    // set subscript defaults here
+    // set sub1 subscript defaults here, sub2 later
     if (sub1 == -2)
       sub1 = sub1_default(current);
-    if (sub2 == -2)
-      sub2 = sub2_default(current);
 
-    // its a sides symbol
+    // it is a sides symbol
     if (current == sides_symbol) {
-      // PATCH: L0 does not have sides value
-      if (pending_op == 'L' && sub1 == 0)
+      // PATCH: L_0 does not have sides value
+      if (pending_op == "L" && sub1 == 0)
         return stat.set_error(
-            msg_str("sides symbol \'%c\' at position %d not allowed for L0",
-                    sides_symbol, i + 1));
+            msg_str("sides symbol \'%s\' at position %d not allowed for L_0",
+                    sides_symbol.c_str(), i + 1));
 
-      // sides not already set, or set and encountered again
-      if (possible_sides == -1 || sides != -1) {
-        string sides_str;
-        if (sides != -1)
-          sides_str = msg_str("(sides already set: %d)", sides);
-        return stat.set_error(msg_str("sides symbol \'%c\' at position %d for "
-                                      "operator \'%c\' unexpected %s",
-                                      sides_symbol, i + 1, pending_op,
-                                      sides_str.c_str()));
+      if (i == 0)
+        return stat.set_error(
+            msg_str("sides \'%s\' unexpected in first position %d",
+                    sides_symbol.c_str(), i + 1));
+      if (possible_sides == -1 || sides != 1) {
+        if (possible_sides == -1)
+          return stat.set_error(
+              msg_str("sides symbol \'%s\' at position %d unexpected",
+                      sides_symbol.c_str(), i + 1));
+        // sides set and encountered again
+        else if (sides != -1) {
+          return stat.set_error(
+              msg_str("sides symbol \'%s\' at position %d for "
+                      "operator \'%s\' unexpected (sides already set: %d)",
+                      sides_symbol.c_str(), i + 1, pending_op.c_str(), sides));
+        }
       }
       designated_sides = true;
     }
-    // its a subscript
+    // it is a subscript
     else if (current == sub_symbol) {
+      if (i == 0)
+        return stat.set_error(
+            msg_str("subscript \'%s\' unexpected in first position %d",
+                    sub_symbol.c_str(), i + 1));
       if (possible_sub == -1)
         return stat.set_error(
-            msg_str("subscript symbol \'%c\' at position %d unexpected",
-                    sub_symbol, i + 1));
+            msg_str("subscript symbol \'%s\' at position %d unexpected",
+                    sub_symbol.c_str(), i + 1));
       if (sides != -1)
         return stat.set_error(
-            msg_str("subscript symbol \'%c\' at position %d found after sides",
-                    sub_symbol, i + 1));
+            msg_str("subscript symbol \'%s\' at position %d found after sides",
+                    sub_symbol.c_str(), i + 1));
       designated_sub = true;
     }
-    // its a superscript
+    // it is a superscript
     else if (current == super_symbol) {
       pending_op = current;
       pending_pos = i + 1;
 
       if (i == 0)
         return stat.set_error(
-            msg_str("superscript \'%c\' unexpected in first position %d",
-                    pending_op, i + 1));
+            msg_str("superscript \'%s\' unexpected in first position %d",
+                    pending_op.c_str(), i + 1));
       if (designated_sub || designated_sides)
         return stat.set_error(msg_str(
-            "superscript \'%c\' unexpected in position %d, digit expected",
-            pending_op, i + 1));
+            "superscript \'%s\' unexpected in position %d, digit expected",
+            pending_op.c_str(), i + 1));
 
       possible_repeats = 1;
     }
-    // its a digit
+    // it is a digit
     else if (is_digit) {
       // find full number string and advance counter
       int digits_start = i;
@@ -425,39 +496,36 @@ Status validate_cn_string(const string &cn_string, vector<ops *> &operations,
       else if (num_val2 == -1) {
         int min_allowed_sub2 = find_sub2_allowed(pending_op);
         if (min_allowed_sub2 == -1)
-          return stat.set_error(msg_str("operator \'%c\' at position %d, "
+          return stat.set_error(msg_str("operator \'%s\' at position %d, "
                                         "second subscript of %d unexpected",
-                                        pending_op, pending_pos, num_val));
+                                        pending_op.c_str(), pending_pos,
+                                        num_val));
         else {
           if (num_val < min_allowed_sub2)
             return stat.set_error(msg_str(
-                "operator \'%c\' at position %d, subscript must be %d or more",
-                pending_op, pending_pos, num_val));
+                "operator \'%s\' at position %d, subscript must be %d or more",
+                pending_op.c_str(), pending_pos, num_val));
           else
             num_val2 = num_val;
         }
-        // PATCH: special condition, subscripts of _0_0 are not allowed
-        if (num_val1 == 0 && num_val2 == 0)
-          return stat.set_error(msg_str("operator \'%c\' at position %d, two "
-                                        "subscripts of %d and %d not allowed",
-                                        pending_op, pending_pos, num_val1,
-                                        num_val2));
       }
-      else
-        return stat.set_error(msg_str("too many subscripts for operator \'%c\' "
+      else {
+        return stat.set_error(msg_str("too many subscripts for operator \'%s\' "
                                       "at position %d, value %d unexpected",
-                                      pending_op, pending_pos, num_val));
+                                      pending_op.c_str(), pending_pos,
+                                      num_val));
+      }
 
-      // its a pending superscript
+      // it is a pending superscript
       if (possible_repeats == 1) {
         if (num_val1 < 1)
           return stat.set_error(
-              msg_str("superscript \'%c\' at position %d requires a number "
+              msg_str("superscript \'%s\' at position %d requires a number "
                       "of %d or more",
-                      pending_op, pending_pos, possible_repeats));
+                      pending_op.c_str(), pending_pos, possible_repeats));
 
         // repeat last operator
-        char op_last = operations[operations.size() - 1]->op;
+        string op_last = operations[operations.size() - 1]->op;
         int sub1_last = operations[operations.size() - 1]->sub1;
         int sub2_last = operations[operations.size() - 1]->sub2;
         int sides_last = operations[operations.size() - 1]->sides;
@@ -465,63 +533,67 @@ Status validate_cn_string(const string &cn_string, vector<ops *> &operations,
           operations.push_back(
               new ops(op_count++, op_last, sub1_last, sub2_last, sides_last));
 
+        // need to reset as though write_operation occured
+        reinitialize_vars(sub1, sub2, sides);
+
+        num_val1 = -1;
         possible_repeats = -1;
       }
-      // its a pending seed
+      // it is a pending seed
       else if (require_seed_sides > -1) {
         seed_size = num_val1;
         if (seed_size < require_seed_sides)
           return stat.set_error(
-              msg_str("seed \'%c\' at position %d requires a number of "
+              msg_str("seed \'%s\' at position %d requires a number of "
                       "sides of %d or more, got %d",
-                      seed, pending_pos, require_seed_sides, num_val1));
+                      seed.c_str(), pending_pos, require_seed_sides, num_val1));
         require_seed_sides = -1;
         end_of_command = true;
       }
-      // its a designated subscript, check before passive
+      // it is a designated subscript, check before passive
       else if (designated_sub) {
         sub1 = num_val1;
         if (num_val2 != -1)
           sub2 = num_val2;
         if (sub1 < possible_sub)
           return stat.set_error(msg_str(
-              "operator \'%c\' at position %d, subscript must be %d or more",
-              pending_op, pending_pos, possible_sub));
+              "operator \'%s\' at position %d, subscript must be %d or more",
+              pending_op.c_str(), pending_pos, possible_sub));
         designated_sub = false;
       }
-      // its a designated sides, check before passive
+      // it is a designated sides, check before passive
       else if (designated_sides) {
         sides = num_val1;
         if (sides < possible_sides)
-          return stat.set_error(
-              msg_str("operator \'%c\' at position %d requires a number of "
-                      "sides of %d or more, got %d",
-                      pending_op, pending_pos, possible_sides, num_val1));
+          return stat.set_error(msg_str(
+              "operator \'%s\' at position %d requires a number of "
+              "sides of %d or more, got %d",
+              pending_op.c_str(), pending_pos, possible_sides, num_val1));
         designated_sides = false;
       }
-      // its a pending sides, passive
+      // it is a pending sides, passive
       // checking sides first before subs gives sides precedence
       else if (possible_sides > -1) {
         sides = num_val1;
         if (sides < possible_sides)
-          return stat.set_error(
-              msg_str("operator \'%c\' at position %d requires a number of "
-                      "sides of %d or more, got %d",
-                      pending_op, pending_pos, possible_sides, num_val1));
+          return stat.set_error(msg_str(
+              "operator \'%s\' at position %d requires a number of "
+              "sides of %d or more, got %d",
+              pending_op.c_str(), pending_pos, possible_sides, num_val1));
       }
-      // its a pending subscript, passive
+      // it is a pending subscript, passive
       else if (possible_sub > -1) {
         sub1 = num_val1;
         if (num_val2 != -1)
           sub2 = num_val2;
         if (sub1 < possible_sub)
-          return stat.set_error(msg_str("operator \'%c\' at position %d "
+          return stat.set_error(msg_str("operator \'%s\' at position %d "
                                         "subscript must be %d or more, got %d",
-                                        pending_op, pending_pos, possible_sub,
-                                        num_val1));
+                                        pending_op.c_str(), pending_pos,
+                                        possible_sub, num_val1));
       }
     }
-    // its an operator
+    // it is an operator
     else if (find_operator(current)) {
       pending_op = current;
       pending_pos = i + 1;
@@ -530,17 +602,30 @@ Status validate_cn_string(const string &cn_string, vector<ops *> &operations,
       possible_sides = find_sides_allowed(current);
 
       // if an operator needs no value number, write immediately
-      if (possible_sub == -1 && possible_sides == -1)
-        write_operation(operations, op_count, current, sub1, sub2, sides);
+      if (possible_sub == -1 && possible_sides == -1) {
+        string error_msg =
+            write_operation(operations, op_count, pending_op, sub1, sub2, sides)
+                .msg();
+        if (!error_msg.empty())
+          return stat.set_error(msg_str("operator \'%s\' at position %d, %s",
+                                        pending_op.c_str(), pending_pos,
+                                        error_msg.c_str()));
+      }
     }
-    // its an alpha, needs no value number, write immediately
-    else if (alpha_user.find(current) != string::npos) {
-      pending_op = current; // for reporting
+    // it is an alpha, needs no value number, write immediately
+    else if (find_user_operation(operations_user, current)) {
+      pending_op = current;
       pending_pos = i + 1;
 
-      write_operation(operations, op_count, current, sub1, sub2, sides);
+      string error_msg =
+          write_operation(operations, op_count, pending_op, sub1, sub2, sides)
+              .msg();
+      if (!error_msg.empty())
+        return stat.set_error(msg_str("operator \'%s\' at position %d, %s",
+                                      pending_op.c_str(), pending_pos,
+                                      error_msg.c_str()));
     }
-    // its a seed
+    // it is a seed
     else if (find_seed(current)) {
       seed = current;
       pending_pos = i + 1;
@@ -550,26 +635,46 @@ Status validate_cn_string(const string &cn_string, vector<ops *> &operations,
     }
     // fell through, unused character
     else
-      return stat.set_error(msg_str(
-          "unexpected character \'%c\' at position %d", current, i + 1));
+      return stat.set_error(
+          msg_str("unexpected character \'%s\' at position %d", current.c_str(),
+                  i + 1));
   }
+
+  // end of string occured
+
+  // if sides was last character
+  if (designated_sides)
+    return stat.set_error(
+        msg_str("sides \'%s\' at position %d requires a number of %d or more",
+                sides_symbol.c_str(), pending_pos + 1, possible_sides));
+
+  // if subscript was last character
+  if (designated_sub)
+    return stat.set_error(msg_str(
+        "subscript \'%s\' at position %d requires a number of %d or more",
+        sub_symbol.c_str(), pending_pos + 1, possible_sub));
+
+  // it is a dangling seed that needs N
+  if (require_seed_sides > -1)
+    return stat.set_error(msg_str(
+        "seed \'%s\' at position %d requires a number of sides of %d or more",
+        seed.c_str(), pending_pos, require_seed_sides));
 
   // if superscript was last character
   if ((pending_op == super_symbol) && (possible_repeats == 1))
     return stat.set_error(msg_str(
-        "superscript \'%c\' at position %d requires a number of %d or more",
-        super_symbol, pending_pos, possible_repeats));
-
-  // if this happened its probably a dangling seed that needs N
-  if (require_seed_sides > -1) {
-    return stat.set_error(msg_str(
-        "seed \'%c\' at position %d requires a number of sides of %d or more",
-        seed, pending_pos, require_seed_sides));
-  }
+        "superscript \'%s\' at position %d requires a number of %d or more",
+        super_symbol.c_str(), pending_pos, possible_repeats));
 
   // possible pending passive operation if no seed was specified
   if ((possible_sub > -1) || (possible_sides > -1)) {
-    write_operation(operations, op_count, pending_op, sub1, sub2, sides);
+    string error_msg =
+        write_operation(operations, op_count, pending_op, sub1, sub2, sides)
+            .msg();
+    if (!error_msg.empty())
+      return stat.set_error(msg_str("operator \'%s\' at position %d, %s",
+                                    pending_op.c_str(), pending_pos,
+                                    error_msg.c_str()));
   }
 
   return Status::ok();
@@ -724,15 +829,6 @@ string resolved_cn_string(const string &cn_string)
     }
   }
 
-  if (resolve_string != cn_string) {
-    fprintf(stderr, "%s resolved to: ", cn_string.c_str());
-    if (resolve_string.length() == 0)
-      fprintf(stderr, "%s", "NOTHING");
-    else
-      fprintf(stderr, "%s", resolve_string.c_str());
-    fprintf(stderr, "\n");
-  }
-
   return resolve_string;
 }
 
@@ -748,7 +844,7 @@ public:
   bool hart_mode;
   bool tile_mode;
   bool reverse_ops;
-  char seed;
+  string seed;
   int seed_size;
   char planarize_method;
   bool unitize;
@@ -770,13 +866,12 @@ public:
   vector<ops *> operations;
 
   // for on the fly user operators
-  string alpha_user;
-  std::map<char, vector<ops *>> operations_user;
+  std::map<string, vector<ops *>> operations_user;
 
   cn_opts()
       : ProgramOpts("conway"), cn_string(""), resolve_ops(false),
-        hart_mode(false), tile_mode(false), reverse_ops(false), seed('\0'),
-        seed_size(0), planarize_method('q'), unitize(false), verbosity(false),
+        hart_mode(false), tile_mode(false), reverse_ops(false), seed_size(0),
+        planarize_method('q'), unitize(false), verbosity(false),
         face_coloring_method('n'), face_opacity(-1), face_pattern("1"),
         seed_coloring_method(1), epsilon(0),
         vert_col(Color(255, 215, 0)),  // gold
@@ -826,6 +921,8 @@ first letter. Other polyhedra which are implemented here include prisms, Pn,
 antiprisms, An, and pyramids, Yn, where n is a number (3 or greater) which you
 specify to indicate the size of the base you want, e.g., Y3=T, P4=C, and A3=O.
 
+(Antiprism Extension: note that more seeds have since been defined)
+
 Operations: Currently, abdegjkmoprst are defined. They are motivated by the
 operations needed to create the Archimedean solids and their duals from the
 platonic solids.  Try each on a cube:
@@ -868,7 +965,7 @@ j = join   The join operator is dual to ambo, so jX=dadX=daX.  jX is like kX
 without the original edges of X.  It produces a polyhedron with one 4-sided
 face for each edge of X.  For example, jC=jO is the rhombic dodecahedron.
 
-k = kis    All faces are processed or kn = just n-sided faces are processed
+k = kis    All faces are processed or kr = just r-sided faces are processed
 The kis operation divides each n-sided face into n triangles.  A new vertex is
 added in the center of each face, e.g., the kiscube, kC, has 24 triangular
 faces.  The k operator is dual to t, meaning kX=dtdX.
@@ -899,7 +996,7 @@ faces along a diagonal into two triangles.  With a consistent handedness to
 these cuts, all the vertices of sX are 5-fold.  Note that sX=sdX.
 (Antiprism Extension: or "sn" where n is 1 or greater)
 
-t = truncate  All faces are processed or tn = just n-sided faces are processed
+t = truncate  All faces are processed or tr = just r-sided faces are processed
 Truncating a polyhedron cuts off each vertex, producing a new n-sided face for
 each n-fold vertex.  The faces of the original polyhedron still appear, but
 have twice as many sides, e.g., the tC has six octagonal sides corresponding to
@@ -916,27 +1013,28 @@ B = bowtie    Bowtie like triangles divide pentagonal faces
 
 E = ethyl     like expand but triangles are divided into 3 kites
 
-G = opposite-lace Similar to lace, except triangles split opposite lace
+G = opposite-lace  Similar to lace, except with new quad faces split opposite
+                   L_1. (has also been referred to as L_-1, not supported)
 
-J = joined-medial Like medial, but new rhombic faces in place of original edges
+J = joined-medial  Like medial but new rhombic faces in place of original edges
 
 K = stake     Subdivide faces with central quads, and triangles
-              All faces processed or can be "Km" where m is 3 or greater
+              All faces processed or can be "Kr" where r is 3 or greater
 
-L0 = joined-lace  Similar to lace, except with new quad faces across original
-                  edges
+L_0 = joined-lace  Similar to lace, except with new quad faces produced in L_1
+                   are not split
 
 L = lace      An augmentation of each face by an antiprism, adding a twist
               smaller copy of each face, and triangles between
-              Subscript as "Ln" where n is 0 or greater
-              All faces processed or can be "L:m" where m is 3 or greater
-              Both may be specified as "L_n:m"
+              Subscript as "L_n" where n is 0 or greater
+              All faces processed or can be "L:r" where r is 3 or greater
+              Both may be specified as "L_n:r"
 
 l = loft      An augmentation of each face by prism, adding a smaller copy of
               each face with trapezoids between the inner and outer ones
-              Subscript as "ln" where n is 0 or greater
-              All faces processed or can be "l:m" where m is 3 or greater
-              Both may be specified as "l_n:m"
+              Subscript as "l_n" where n is 0 or greater
+              All faces processed or can be "l:r" where r is 3 or greater
+              Both may be specified as "l_n:r"
 
 M = medial    Similar to meta except no diagonal edges added, creating quad
               faces. All faces processed or can be "Mm" where m is 0 or greater
@@ -980,7 +1078,7 @@ Changing orientation mode can be placed anywhere in the operation string
 Summary of operators which can take n as subscript or r as face/vertex number
 
 b  - n may be 0 or greater (default: 1)
-e  - n,m n and m may be 0 or greater except for _0_0 (default: _2_0)
+e  - n,m n and m may be 0 or greater except for _0 and _0_0 (default: _2_0)
 g  - n may be 1 or greater (default: 1)
 K  - r may be 3 or greater representing face sides
 k  - r may be 3 or greater representing face sides
@@ -990,10 +1088,10 @@ l  - n,r n may be 0 or greater, r may be 3 or greater
        without delimiters Lr and lr, r is face sides and subscript default to 1
 M  - n may be 0 or greater (default: 1)
 m  - n may be 0 or greater (default: 1)
-o  - n,m n and m may be 0 or greater except for _0_0 (default: _2_0)
+o  - n,m n and m may be 0 or greater except for _0 and _0_0 (default: _2_0)
 s  - n may be 1 or greater (default: 1)
 t  - r may be 2 or greater representing vertex connections (2 in tiles)
-u  - n,m n and m may be 0 or greater except for _0_0 (default: _2_0)
+u  - n,m n and m may be 0 or greater except for _0 and _0_0 (default: _2_0)
 
 Antiprism Extension: any operation can be repeated N time by following it with
 the superscript symbol ^ and a number greater than 0. Examples: a^3C M0^2T
@@ -1117,7 +1215,7 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                s - symmetric coloring
                u - unique coloring
                o - newly created faces by operation
-               w - resolve color indexes (overrides -V)
+               w - resolve color indexes (overrides -V and -E)
 %s
                (when -f w is set)
   -R <opt>  built in seed coloring: one=1, unique=2, symmetry=3 (default: 1)
@@ -1144,8 +1242,6 @@ void cn_opts::process_command_line(int argc, char **argv)
   int c;
   int num;
   int op_term = 0;
-
-  string alphas_in_use;
 
   string map_file;
 
@@ -1187,7 +1283,7 @@ void cn_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'c': {
-      char operation = '\0';
+      string operation = "";
       string user_op;
 
       Split parts(optarg, ",");
@@ -1210,17 +1306,14 @@ void cn_opts::process_command_line(int argc, char **argv)
                             op_term, parts2[j]),
                     c);
             }
-            else if (find_operator(parts2[j][0]) || find_seed(parts2[j][0]) ||
-                     (alphas_in_use.find(parts2[j][0]) != string::npos)) {
+            else if (find_operator(parts2[j]) || find_seed(parts2[j]) ||
+                     (find_user_operation(operations_user, parts2[j]))) {
               error(msg_str("term %d: operation character already in use '%s'",
                             op_term, parts2[j]),
                     c);
             }
-            else {
-              operation = parts2[j][0];
-              alphas_in_use += operation;
-              alpha_user += operation;
-            }
+            else
+              operation = parts2[j];
           }
           else if (j == 1) {
             user_op = parts2[j];
@@ -1232,19 +1325,19 @@ void cn_opts::process_command_line(int argc, char **argv)
           }
         }
 
-        char seed_test = '\0';
+        string seed_test;
         int dummy1;
-        string dummy2;
+        std::map<string, vector<ops *>> dummy2;
         string error_msg =
             validate_cn_string(user_op, operations_user[operation], seed_test,
                                dummy1, dummy2)
                 .msg();
         if (!error_msg.empty())
-          error(msg_str("term %d: %s", op_term, error_msg.c_str()));
-        if (seed_test)
-          error(
-              msg_str("term %d: cannot contain a seed: %c", op_term, seed_test),
-              c);
+          error(msg_str("term %d: %s", op_term, error_msg.c_str()), c);
+        if (!seed_test.empty())
+          error(msg_str("term %d: cannot contain a seed: %s", op_term,
+                        seed_test.c_str()),
+                c);
       }
 
       break;
@@ -1331,42 +1424,61 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   if (argc - optind > 0)
     cn_string = argv[optind];
-  else
-    error("no Conway Notation string given");
 
-  print_status_or_exit(
-      validate_cn_string(cn_string, operations, seed, seed_size, alpha_user));
+  print_status_or_exit(validate_cn_string(cn_string, operations, seed,
+                                          seed_size, operations_user));
 
   if (resolve_ops) {
-    cn_string = resolved_cn_string(cn_string);
+    string resolve_string = resolved_cn_string(cn_string);
 
-    // operations is a vector of objects
-    for (auto &operation : operations)
-      delete operation;
-    operations.clear();
+    if (resolve_string != cn_string) {
+      warning(msg_str("operator substitutions: '%s' resolved to '%s'",
+                      cn_string.c_str(),
+                      (resolve_string.empty() ? "NOTHING"
+                                              : resolve_string.c_str())),
+              's');
 
-    // revalidate (should be valid) to rebuild operations table
-    print_status_or_exit(
-        validate_cn_string(cn_string, operations, seed, seed_size, alpha_user));
+      cn_string = resolve_string;
+
+      // if the string has not been resolved to empty
+      if (!cn_string.empty()) {
+        // operations is a vector of objects
+        for (auto &operation : operations)
+          delete operation;
+        operations.clear();
+
+        // revalidate (should be valid) to rebuild operations table
+        print_status_or_exit(validate_cn_string(cn_string, operations, seed,
+                                                seed_size, operations_user));
+      }
+    }
   }
 
   if (argc - optind == 2) {
     ifile = argv[++optind];
-    if (seed)
-      error(msg_str("seed '%c' was specified so input file '%s' is unexpected",
-                    seed, ifile.c_str()));
+    if (!seed.empty())
+      error(msg_str("seed '%s' was specified so input file '%s' is unexpected",
+                    seed.c_str(), ifile.c_str()));
   }
+
+  // if this is not checked it waits for input
+  if (seed.empty() && ifile.empty())
+    error("no seed given");
 
   // operations can be done in reverse order
   if (!reverse_ops) {
     sort(operations.begin(), operations.end(), cmp_ops);
-    for (unsigned int i = 0; i < alpha_user.length(); i++)
-      sort(operations_user[alpha_user[i]].begin(),
-           operations_user[alpha_user[i]].end(), cmp_ops);
+    // iterate map for user operations
+    for (std::pair<string, vector<ops *>> element : operations_user) {
+      string key = element.first;
+      vector<ops *> ops = element.second;
+      sort(ops.begin(), ops.end(), cmp_ops);
+      operations_user[key] = ops;
+    }
   }
 
   // force tile mode if using polygon
-  if (seed == 'Z')
+  if (seed == "Z")
     tile_mode = true;
 
   if (tile_mode) {
@@ -1432,8 +1544,8 @@ void cn_opts::process_command_line(int argc, char **argv)
   epsilon = it_ctrl.get_test_val();
 }
 
-void verbose(const char &operation, const cn_opts &opts, const int &sub1 = 1,
-             const int &sub2 = 2, const int &sides = -1)
+void verbose(const string &operation, const cn_opts &opts, const int &sub1 = -1,
+             const int &sub2 = -1, const int &sides = -1)
 {
   if (opts.verbosity) {
     string operator_name;
@@ -1442,7 +1554,7 @@ void verbose(const char &operation, const cn_opts &opts, const int &sub1 = 1,
     int last_op =
         sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
     for (int i = 0; i < last_op; i++) {
-      if (operation == conway_operator_list[i].operator_short[0]) {
+      if (operation == conway_operator_list[i].operator_short) {
         operator_name = conway_operator_list[i].operator_name;
         operator_short = conway_operator_list[i].operator_short;
         break;
@@ -1454,27 +1566,25 @@ void verbose(const char &operation, const cn_opts &opts, const int &sub1 = 1,
     if (opts.hart_mode && (hart_operators.find(operation) != string::npos))
       hart_string = "(hart)";
 
+    // iterate map for user operations, use find because of const
+    bool user_op = find_user_operation(opts.operations_user, operation);
+
     // special cases
     string buf;
-    bool user_op = false;
-    if (opts.alpha_user.find(operation) != string::npos) {
-      user_op = true;
+    if (user_op)
       operator_name = "user operation";
-    }
-    else if (operation == '_')
-      operator_name = "planarizing ...";
-    else if (operation == '+')
+    else if (operation == "&")
+      operator_name = "end user operation";
+    else if (operation == "_")
+      operator_name = "planarizing " + std::to_string(sub1) + " faces ...";
+    else if (operation == "+")
       operator_name = "orient positive mode";
-    else if (operation == '-')
+    else if (operation == "-")
       operator_name = "orient negative mode";
-    else if (operation == '@')
+    else if (operation == "@")
       operator_name = "non-orientable geometry";
-    else if (operation == '$')
+    else if (operation == "$")
       operator_name = "done.";
-    // if L0 is specially named
-    else if (operation == 'L' && sub1 == 0) {
-      operator_name = "joined-lace";
-    }
     // all other case show numbers when allowed
     else {
       int sub1a = find_sub1_allowed(operation);
@@ -1503,6 +1613,12 @@ void verbose(const char &operation, const cn_opts &opts, const int &sub1 = 1,
       op_string = "(" + operator_short + ")";
     if (!op_string.empty())
       op_string += " ";
+
+    // PATCH: L_0 is specially named
+    if (operation == "L" && sub1 == 0) {
+      operator_name = "joined-lace";
+      buf = "(L_0)";
+    }
 
     fprintf(stderr, "%s%s %s %s\n", op_string.c_str(), operator_name.c_str(),
             buf.c_str(), hart_string.c_str());
@@ -1544,7 +1660,7 @@ void cn_planarize(Geometry &geom, char planarize_method, const cn_opts &opts)
   }
 
   if (opts.it_ctrl.get_max_iters() != 0) {
-    verbose('_', opts);
+    verbose("_", opts, (int)geom.faces().size());
     if (planarize_method == 'q') {
       planarize_bd(geom, opts.it_ctrl);
     }
@@ -1559,62 +1675,42 @@ void get_seed(Geometry &geom, const cn_opts &opts)
   string uniforms = "TCOID";
 
   if (uniforms.find(opts.seed) != string::npos) {
-    switch (opts.seed) {
-    case 'T':
+    if (opts.seed == "T")
       geom.read_resource("std_tet");
-      break;
-
-    case 'C':
+    else if (opts.seed == "C")
       geom.read_resource("std_cube");
-      break;
-
-    case 'O':
+    else if (opts.seed == "O")
       geom.read_resource("std_oct");
-      break;
-
-    case 'I':
+    else if (opts.seed == "I")
       geom.read_resource("std_ico");
-      break;
-
-    case 'D':
+    else if (opts.seed == "D")
       geom.read_resource("std_dod");
-      break;
-    }
   }
   else {
     Polygon pgon(opts.seed_size, 1);
 
-    switch (opts.seed) {
-    case 'P':
+    if (opts.seed == "P")
       pgon.set_type(Polygon::prism);
-      break;
-
-    case 'A':
+    else if (opts.seed == "A")
       pgon.set_type(Polygon::antiprism);
-      break;
-
-    case 'Y':
+    else if (opts.seed == "Y")
       pgon.set_type(Polygon::pyramid);
-      break;
-
-    case 'Z':
+    else if (opts.seed == "Z") {
       pgon.set_type(Polygon::dihedron);
       pgon.set_subtype(Polygon::sub_dihedron_polygon);
-      break;
-
+    }
     // a polyhedron of random points
-    case 'R':
+    else if (opts.seed == "R") {
       Random rnd;
       rnd.time_seed();
       for (int i = 0; i < opts.seed_size; i++)
         geom.add_vert(Vec3d::random(rnd).unit());
       geom.set_hull();
-      break;
     }
 
     pgon.set_edge(0, 1.0);
 
-    if (opts.seed == 'Y' && opts.seed_size > 5)
+    if (opts.seed == "Y" && opts.seed_size > 5)
       // Based on circumradius
       pgon.set_height(0, (1 / sin(M_PI / opts.seed_size)) / 2);
     // inradius
@@ -1625,7 +1721,7 @@ void get_seed(Geometry &geom, const cn_opts &opts)
     pgon.make_poly(geom);
 
     /* RK - if polygon size 2 was allowed, caused too much trouble
-    if ((opts.seed_size == 2) && (opts.seed == 'P' || opts.seed == 'Y'))
+    if ((opts.seed_size == 2) && (opts.seed == "P" || opts.seed == "Y"))
       geom.transform(Trans3d::rotate(deg2rad(90), 0, 0));
     */
   }
@@ -1923,7 +2019,7 @@ void hart_chamfer(Geometry &geom, const cn_opts &opts)
   for (unsigned int i = sz; i < verts.size(); i++)
     v_idxs.push_back(i);
 
-  verbose('t', opts);
+  verbose("t", opts);
   truncate_verts(geom, v_idxs, CN_ONE_HALF);
 }
 
@@ -1932,13 +2028,13 @@ void hart_whirl(Geometry &geom, bool orientation_positive, const cn_opts &opts)
 {
   unsigned int num_faces = geom.raw_faces().size();
 
-  verbose('g', opts);
+  verbose("g", opts);
   hart_gyro(geom);
 
   // after intra-step operation
   GeometryInfo info(geom);
   if (!info.is_orientable())
-    verbose('@', opts);
+    verbose("@", opts);
   else
     // orientation is reversed if reflected 1=positive 2=negative
     geom.orient((orientation_positive) ? 1 : 2);
@@ -1950,7 +2046,7 @@ void hart_whirl(Geometry &geom, bool orientation_positive, const cn_opts &opts)
   for (unsigned int i = 0; i < num_faces; i++)
     v_idxs.push_back(i);
 
-  verbose('t', opts);
+  verbose("t", opts);
   truncate_verts(geom, v_idxs, CN_ONE_HALF, nullptr);
 }
 */
@@ -1989,7 +2085,7 @@ void orient_planar(Geometry &geom, bool &is_orientable,
   GeometryInfo info(geom);
   is_orientable = info.is_orientable();
   if (!is_orientable) {
-    verbose('@', opts);
+    verbose("@", opts);
     // default planarization method for non-orientable geometry set to unit edge
     if (opts.planarize_method != 'a') {
       planarize_method = 'a';
@@ -2004,10 +2100,11 @@ void orient_planar(Geometry &geom, bool &is_orientable,
 }
 
 // is_orientable and orientation_positive can change
-void wythoff(Geometry &geom, char operation, int sub1, int sub2, int sides,
+void wythoff(Geometry &geom, string operation, int sub1, int sub2, int sides,
              int &operation_number, bool &is_orientable,
              bool &orientation_positive, const cn_opts &opts)
 {
+  // for color by operation number
   operation_number++;
 
   string non_color_ops = "r+-";
@@ -2026,18 +2123,18 @@ void wythoff(Geometry &geom, char operation, int sub1, int sub2, int sides,
   }
 
   // truncate with N>1 uses Hart algorithm
-  if (operation == 't' && sides > 1)
+  if (operation == "t" && sides > 1)
     antiprism_truncate(geom, CN_ONE_THIRD, sides);
-  else if (operation == 'r') {
+  else if (operation == "r") {
     antiprism_reflect(geom, opts);
     // decrimenting operation number gives consistent colors
     operation_number--;
   }
-  else if (operation == '+') {
+  else if (operation == "+") {
     orientation_positive = true;
     operation_number--;
   }
-  else if (operation == '-') {
+  else if (operation == "-") {
     orientation_positive = false;
     operation_number--;
   }
@@ -2064,8 +2161,7 @@ void wythoff(Geometry &geom, char operation, int sub1, int sub2, int sides,
     }
 
     // wythoff call requires a string
-    string wythoff_op;
-    wythoff_op.push_back(operation);
+    string wythoff_op = operation;
 
     if (find_sub1_allowed(operation) != -1)
       wythoff_op += "_" + std::to_string(sub1);
@@ -2080,11 +2176,11 @@ void wythoff(Geometry &geom, char operation, int sub1, int sub2, int sides,
     opts.print_status_or_exit(wythoff_make_tiling(
         geom, geom, wythoff_op, is_orientable, false, opts.col_type));
 
-    // remove digons
+    // remove digons since they can cause processing errors
     dels.clear();
     for (unsigned int i = 0; i < geom.faces().size(); i++) {
       if (geom.faces(i).size() < 3) {
-        // if coloring model like wythoff, move digons to edges
+        // but if coloring model like wythoff, move digons to edges
         if (opts.face_coloring_method == 'w') {
           Color col = geom.colors(FACES).get(i);
           geom.add_edge(geom.faces(i), col);
@@ -2142,7 +2238,7 @@ void do_operations(Geometry &geom, cn_opts &opts)
   int operation_number = 0;
 
   // the program works better with oriented input, centroid at the origin
-  verbose('+', opts);
+  verbose("+", opts);
   GeometryInfo info(geom);
   is_orientable = info.is_orientable();
   if (!is_orientable)
@@ -2159,34 +2255,24 @@ void do_operations(Geometry &geom, cn_opts &opts)
 
     bool hart_operation_done = false;
 
-    // reflection is done in wythoff
+    // reflection is done in wythoff()
     if (opts.hart_mode) {
       hart_operation_done = true;
 
-      switch (operation->op) {
       // ambo
-      case 'a':
+      if (operation->op == "a")
         hart_ambo(geom);
-        break;
-
       // gyro
-      case 'g':
+      else if (operation->op == "g")
         hart_gyro(geom);
-        break;
-
       // kis
-      case 'k':
+      else if (operation->op == "k")
         hart_kisN(geom, operation->sides);
-        break;
-
       // propellor
-      case 'p':
+      else if (operation->op == "p")
         hart_propellor(geom);
-        break;
-
-      default:
+      else
         hart_operation_done = false;
-      }
     }
 
     if (hart_operation_done) {
@@ -2196,18 +2282,21 @@ void do_operations(Geometry &geom, cn_opts &opts)
     }
     else {
       // wythoff mode
-      if (opts.alpha_user.find(operation->op) == string::npos)
-        wythoff(geom, operation->op, operation->sub1, operation->sub2,
-                operation->sides, operation_number, is_orientable,
-                orientation_positive, opts);
-      else {
+      // check size, or an empty map ends up with a map entry. memory bug?
+      if (find_user_operation(opts.operations_user, operation->op)) {
         for (auto operation_user : opts.operations_user[operation->op]) {
           verbose(operation_user->op, opts, operation_user->sub1,
-                  operation->sub2, operation_user->sides);
+                  operation_user->sub2, operation_user->sides);
           wythoff(geom, operation_user->op, operation_user->sub1,
                   operation_user->sub2, operation_user->sides, operation_number,
                   is_orientable, orientation_positive, opts);
         }
+        verbose("&", opts); // mention end user operation
+      }
+      else {
+        wythoff(geom, operation->op, operation->sub1, operation->sub2,
+                operation->sides, operation_number, is_orientable,
+                orientation_positive, opts);
       }
     }
   }
@@ -2281,14 +2370,24 @@ void cn_coloring(Geometry &geom, const cn_opts &opts)
       opts.warning("unset faces cannot be made transparent", 'T');
   }
 
-  // color vertices and edges
-  // wythoff coloring doesn't color edges
-  geom.add_missing_impl_edges();
-  Coloring(&geom).e_one_col(opts.edge_col);
-
-  // wythoff coloring does color vertices
+  // color vertices
+  // wythoff overrides coloring of vertices
   if (opts.face_coloring_method != 'w')
     Coloring(&geom).v_one_col(opts.vert_col);
+
+  // color edges
+  geom.add_missing_impl_edges();
+  if (opts.face_coloring_method != 'w')
+    Coloring(&geom).e_one_col(opts.edge_col);
+  // wythoff could color some edges
+  else {
+    for (unsigned int i = 0; i < geom.edges().size(); i++) {
+      Color c = geom.colors(EDGES).get(i);
+      // need to include invisible edges or crash
+      if (!c.is_set())
+        geom.colors(EDGES).set(i, opts.edge_col);
+    }
+  }
 }
 
 int main(int argc, char *argv[])
@@ -2297,13 +2396,13 @@ int main(int argc, char *argv[])
   opts.process_command_line(argc, argv);
 
   Geometry geom;
-  if (opts.seed)
+  if (!opts.seed.empty())
     get_seed(geom, opts);
   else
     opts.read_or_error(geom, opts.ifile);
 
-  // if input model is not closed, Base/Dual Planarization will not work. Switch
-  // to unit edge
+  // if input model is not closed, Base/Dual Planarization will not work.
+  // Switch to unit edge
   GeometryInfo info(geom);
   if ((opts.planarize_method == 'q') && !info.is_closed()) {
     opts.planarize_method = 'a';
@@ -2318,7 +2417,7 @@ int main(int argc, char *argv[])
 
   opts.write_or_error(geom, opts.ofile);
 
-  verbose('$', opts);
+  verbose("$", opts);
 
   return 0;
 }
