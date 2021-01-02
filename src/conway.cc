@@ -80,6 +80,7 @@ ConwayOperator conway_operator_list[]{
     {"j",  "join",            -1, -1, -1, -1, -1, false },
     {"K",  "stake",           -1, -1, -1, -1,  3, false }, // face sides >= 3
     {"k",  "kis",             -1, -1, -1, -1,  3, true  }, // vertex sides >= 3
+    {"L_0","joined-lace",     -1, -1, -1, -1, -1, false }, // placeholder
     {"L",  "lace",             0, -1,  1, -1,  3, false }, // subscript >= 0, face sides >= 3
     {"l",  "loft",             0, -1,  1, -1,  3, false }, // subscript >= 0, face sides >= 3
     {"M",  "medial",           1, -1,  2, -1, -1, false }, // subscript >= 1
@@ -303,7 +304,8 @@ Status write_operation(vector<ops *> &operations, int &op_count, string &op,
 Status
 validate_cn_string(const string &cn_string, vector<ops *> &operations,
                    string &seed, int &seed_size,
-                   const std::map<string, vector<ops *>> &operations_user)
+                   const std::map<string, vector<ops *>> &operations_user,
+                   const string &second_char)
 {
   Status stat;
   if (cn_string.empty())
@@ -340,8 +342,17 @@ validate_cn_string(const string &cn_string, vector<ops *> &operations,
 
   int op_count = 0;
   for (unsigned int i = 0; i < cn_string.length(); i++) {
-    // currently operators are only 1 character
-    string current = cn_string.substr(i, 1);
+    // check if it is a 2 character operator
+    int j = 1;
+    if ((i + 1 < cn_string.length()) &&
+        (isalpha(cn_string[i]) && cn_string.substr(i + 1, 1) == second_char))
+      j++;
+
+    string current = cn_string.substr(i, j);
+
+    // if operator was 2 characters, advance i
+    if (j == 2)
+      i++;
 
     bool is_digit = (digits.find(current) != string::npos);
 
@@ -708,8 +719,8 @@ validate_cn_string(const string &cn_string, vector<ops *> &operations,
 // gI --> gD   (for uniqueness)
 
 struct ResolveItem {
-  const char *target;
-  const char *resolve;
+  const string target;
+  const string resolve;
 };
 
 // clang-format off
@@ -777,12 +788,12 @@ string resolved_cn_string(const string &cn_string)
           (digits.find(resolve_string[pos + 1]) == string::npos))
         resolve_string.replace(pos, target.length(), resolve);
       else {
-        // RK - if so e, b, o and m are temporarily replaced with @, #, $, %
+        // RK - if so e, b, o and m are temporarily replaced with @, &, $, %
         // so that loop can continue
         if (resolve_string[pos] == 'e')
           resolve_string.replace(pos, 1, "@");
         else if (resolve_string[pos] == 'b')
-          resolve_string.replace(pos, 1, "#");
+          resolve_string.replace(pos, 1, "&");
         else if (resolve_string[pos] == 'o')
           resolve_string.replace(pos, 1, "$");
         else if (resolve_string[pos] == 'm')
@@ -793,7 +804,7 @@ string resolved_cn_string(const string &cn_string)
 
   // if temporary characters exists
   replace(resolve_string.begin(), resolve_string.end(), '@', 'e');
-  replace(resolve_string.begin(), resolve_string.end(), '#', 'b');
+  replace(resolve_string.begin(), resolve_string.end(), '&', 'b');
   replace(resolve_string.begin(), resolve_string.end(), '$', 'o');
   replace(resolve_string.begin(), resolve_string.end(), '%', 'm');
 
@@ -859,6 +870,8 @@ public:
   Color vert_col;
   Color edge_col;
 
+  string second_char;
+
   TilingColoring col_type;
 
   ColorMapMulti map;
@@ -874,8 +887,9 @@ public:
         planarize_method('q'), unitize(false), verbosity(false),
         face_coloring_method('n'), face_opacity(-1), face_pattern("1"),
         seed_coloring_method(1), epsilon(0),
-        vert_col(Color(255, 215, 0)),  // gold
-        edge_col(Color(211, 211, 211)) // lightgray
+        vert_col(Color(255, 215, 0)),   // gold
+        edge_col(Color(211, 211, 211)), // lightgray
+        second_char("#")
   {
     it_ctrl.set_max_iters(1000);
     it_ctrl.set_status_checks("-1,1");
@@ -1085,7 +1099,7 @@ K  - r may be 3 or greater representing face sides
 k  - r may be 3 or greater representing face sides
 L  - n,r n may be 0 or greater, r may be 3 or greater
 l  - n,r n may be 0 or greater, r may be 3 or greater
-       both n amd r may be used togeter as L_n:r or l_n:r (L_0: may not have r)
+       both n and r may be used together as L_n:r or l_n:r (L_0 may not have r)
        without delimiters Lr and lr, r is face sides and subscript default to 1
 M  - n may be 1 or greater (default: 2)
 m  - n may be 1 or greater (default: 2)
@@ -1137,8 +1151,8 @@ Substitutions used by George Hart algorithms
   for (int i = 0; i < 5; i++) {
     for (int j = 0; j <= 20; j += 5) {
       int k = i + j;
-      fprintf(stdout, "%-2s -> %-8s", resolve_item_list[k].target,
-              resolve_item_list[k].resolve);
+      fprintf(stdout, "%-2s -> %-8s", resolve_item_list[k].target.c_str(),
+              resolve_item_list[k].resolve.c_str());
     }
     fprintf(stdout, "\n");
   }
@@ -1146,9 +1160,9 @@ Substitutions used by George Hart algorithms
   fprintf(stdout, R"(
 Equivalent Operations (Antiprism)
 
-b1 = z        e1 = d        M1 = o2       m1 = k        o1 = S
+b1 = z        e1 = d        M1 = o        m1 = k        o1 = S
 b2 = b        e2 = e        M2 = M        m2 = m        o2 = o
-s1 = d        u1 = S        X1 = m1       
+s1 = d        u1 = S        X1 = k
 s2 = s        u2 = u        X2 = X
 
 Equal but opposite handed: e_n_m = e_m_n, o_n_m = o_m_n, u_n_m = u_m_n
@@ -1195,8 +1209,9 @@ Options
   -g        use George Hart algorithms (sets -s)
   -c <op=s> user defined operation strings in the form of op,string
               op can be any operation letter not currently in use
+              two character operations can be as alpha# e.g z#
               string can be any operations. More than one <op=s> can be used
-              Examples: -c x=kt,y=tk,v=dwd or -c x=kt -c y=tk -c v=dwd
+              Examples: -c x=kt,y=tk,a#=dwd or -c x=kt -c y=tk -c a#=dwd
   -t        tile mode. when input is a 2D tiling. unsets -g
               set if seed of Z is detected
   -r        execute operations in reverse order (left to right)
@@ -1304,18 +1319,25 @@ void cn_opts::process_command_line(int argc, char **argv)
 
         for (unsigned int j = 0; j < parts2_sz; j++) {
           if (j == 0) {
-            if (strlen(parts2[j]) != 1)
-              error(msg_str("term %d: operation must be one character '%s'",
-                            op_term, parts2[j]),
+            if (strlen(parts2[j]) > 2)
+              error(msg_str(
+                        "term %d: operation must be one or two characters '%s'",
+                        op_term, parts2[j]),
                     c);
             else if (!isalpha(parts2[j][0])) {
-              error(msg_str("term %d: operation must be alphabetic '%s'",
+              error(msg_str("term %d: first character must be alphabetic '%s'",
                             op_term, parts2[j]),
+                    c);
+            }
+            else if ((strlen(parts2[j]) == 2) &&
+                     (string(1, parts2[j][1]) != second_char)) {
+              error(msg_str("term %d: second character must be '%s': '%s'",
+                            op_term, second_char.c_str(), parts2[j]),
                     c);
             }
             else if (find_operator(parts2[j]) || find_seed(parts2[j]) ||
                      (find_user_operation(operations_user, parts2[j]))) {
-              error(msg_str("term %d: operation character already in use '%s'",
+              error(msg_str("term %d: operation string already in use '%s'",
                             op_term, parts2[j]),
                     c);
             }
@@ -1337,7 +1359,7 @@ void cn_opts::process_command_line(int argc, char **argv)
         std::map<string, vector<ops *>> dummy2;
         string error_msg =
             validate_cn_string(user_op, operations_user[operation], seed_test,
-                               dummy1, dummy2)
+                               dummy1, dummy2, second_char)
                 .msg();
         if (!error_msg.empty())
           error(msg_str("term %d: %s", op_term, error_msg.c_str()), c);
@@ -1432,8 +1454,8 @@ void cn_opts::process_command_line(int argc, char **argv)
   if (argc - optind > 0)
     cn_string = argv[optind];
 
-  print_status_or_exit(validate_cn_string(cn_string, operations, seed,
-                                          seed_size, operations_user));
+  print_status_or_exit(validate_cn_string(
+      cn_string, operations, seed, seed_size, operations_user, second_char));
 
   if (resolve_ops) {
     string resolve_string = resolved_cn_string(cn_string);
@@ -1456,7 +1478,8 @@ void cn_opts::process_command_line(int argc, char **argv)
 
         // revalidate (should be valid) to rebuild operations table
         print_status_or_exit(validate_cn_string(cn_string, operations, seed,
-                                                seed_size, operations_user));
+                                                seed_size, operations_user,
+                                                second_char));
       }
     }
   }
@@ -1554,6 +1577,12 @@ void cn_opts::process_command_line(int argc, char **argv)
 void verbose(const string &operation, const cn_opts &opts, const int &sub1 = -1,
              const int &sub2 = -1, const int &sides = -1)
 {
+  string op = operation;
+
+  // PATCH: L_0 is a special case
+  if (operation == "L" && sub1 == 0)
+    op = "L_0";
+
   if (opts.verbosity) {
     string operator_name;
     string operator_short;
@@ -1561,7 +1590,7 @@ void verbose(const string &operation, const cn_opts &opts, const int &sub1 = -1,
     int last_op =
         sizeof(conway_operator_list) / sizeof(conway_operator_list[0]);
     for (int i = 0; i < last_op; i++) {
-      if (operation == conway_operator_list[i].operator_short) {
+      if (op == conway_operator_list[i].operator_short) {
         operator_name = conway_operator_list[i].operator_name;
         operator_short = conway_operator_list[i].operator_short;
         break;
@@ -1570,33 +1599,33 @@ void verbose(const string &operation, const cn_opts &opts, const int &sub1 = -1,
 
     string hart_operators = "agkp";
     string hart_string;
-    if (opts.hart_mode && (hart_operators.find(operation) != string::npos))
+    if (opts.hart_mode && (hart_operators.find(op) != string::npos))
       hart_string = "(hart)";
 
     // iterate map for user operations, use find because of const
-    bool user_op = find_user_operation(opts.operations_user, operation);
+    bool user_op = find_user_operation(opts.operations_user, op);
 
     // special cases
     string buf;
     if (user_op)
       operator_name = "user operation";
-    else if (operation == "&")
+    else if (op == "&")
       operator_name = "end user operation";
-    else if (operation == "_")
+    else if (op == "_")
       operator_name = "planarizing " + std::to_string(sub1) + " faces ...";
-    else if (operation == "+")
+    else if (op == "+")
       operator_name = "orient positive mode";
-    else if (operation == "-")
+    else if (op == "-")
       operator_name = "orient negative mode";
-    else if (operation == "@")
+    else if (op == "@")
       operator_name = "non-orientable geometry";
-    else if (operation == "$")
+    else if (op == "$")
       operator_name = "done.";
     // all other case show numbers when allowed
     else {
-      int sub1a = find_sub1_allowed(operation);
-      int sub2a = find_sub2_allowed(operation);
-      int sidesa = find_sides_allowed(operation);
+      int sub1a = find_sub1_allowed(op);
+      int sub2a = find_sub2_allowed(op);
+      int sidesa = find_sides_allowed(op);
       if (sub1a != -1 || sub2a != -1) {
         buf = "(";
         if (sub1a != -1)
@@ -1613,19 +1642,13 @@ void verbose(const string &operation, const cn_opts &opts, const int &sub1 = -1,
     string op_string;
     if (user_op) {
       op_string = "(";
-      op_string += operation;
+      op_string += op;
       op_string += ")";
     }
     else if (!operator_short.empty())
       op_string = "(" + operator_short + ")";
     if (!op_string.empty())
       op_string += " ";
-
-    // PATCH: L_0 is specially named
-    if (operation == "L" && sub1 == 0) {
-      operator_name = "joined-lace";
-      buf = "(L_0)";
-    }
 
     fprintf(stderr, "%s%s %s %s\n", op_string.c_str(), operator_name.c_str(),
             buf.c_str(), hart_string.c_str());
