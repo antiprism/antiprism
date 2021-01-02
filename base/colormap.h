@@ -34,7 +34,7 @@
 #include "random.h"
 #include "status.h"
 
-#include <climits>
+#include <limits>
 #include <map>
 #include <vector>
 
@@ -53,7 +53,7 @@ protected:
   void copy_params(const ColorMap &cmap);
 
 public:
-  enum { max_map_sz = INT_MAX }; // The largest size of a map
+  enum { max_map_sz = std::numeric_limits<int>::max() }; // Largest map size
 
   /// Constructor
   ColorMap() : shift(0), step(1), wrap(0) {}
@@ -297,13 +297,14 @@ public:
    * \param col_map the colour map.
    * \param pos the position to add it, or at the end if pos is
    *  greater then the current size */
-  void add_cmap(ColorMap *col_map, unsigned int pos = INT_MAX);
+  void add_cmap(ColorMap *col_map,
+                unsigned int pos = std::numeric_limits<int>::max());
 
   /// Delete a colour map.
   /**\param pos the position of the colour map to delete, or delete
    *  the last colour map if \c pos is greater than or equal to the
    *  current size */
-  void del_cmap(unsigned int pos = INT_MAX);
+  void del_cmap(unsigned int pos = std::numeric_limits<int>::max());
 
   /// Get a the colour maps.
   /**\return The colour maps. */
@@ -373,6 +374,8 @@ inline int ColorMap::get_effective_index(int idx) const
   int eff_idx = shift + idx * step;
   if (wrap > 0)
     eff_idx %= wrap;
+  if (eff_idx < 0)
+    eff_idx += std::numeric_limits<int>::max();
   return eff_idx;
 }
 

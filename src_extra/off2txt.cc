@@ -34,6 +34,7 @@
 #include "../base/antiprism.h"
 
 #include <cctype>
+#include <climits>
 #include <string>
 #include <vector>
 

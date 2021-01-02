@@ -33,6 +33,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cfloat>
+#include <climits>
 #include <cstdio>
 #include <cstdlib>
 #include <map>

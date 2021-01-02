@@ -32,6 +32,7 @@
 #include "private_std_polys.h"
 #include "utils.h"
 
+#include <climits>
 #include <cstdio>
 #include <cstdlib>
 #include <map>

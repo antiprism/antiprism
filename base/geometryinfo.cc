@@ -33,6 +33,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <limits>
 #include <map>
 #include <set>
 #include <string>
@@ -117,7 +118,7 @@ void GeometryInfo::reset()
   oriented = -1;
   orientable = -1;
   found_connectivity = false;
-  genus_val = INT_MAX;
+  genus_val = std::numeric_limits<int>::max();
   dual.clear_all();
   sym = Symmetry();
   efpairs.clear();
@@ -184,7 +185,10 @@ bool GeometryInfo::is_known_connectivity()
   return known_connectivity;
 }
 
-bool GeometryInfo::is_known_genus() { return genus() < INT_MAX - 1; }
+bool GeometryInfo::is_known_genus()
+{
+  return genus() < std::numeric_limits<int>::max() - 1;
+}
 
 // elements
 int GeometryInfo::num_verts() const { return geom.verts().size(); }
@@ -1160,8 +1164,8 @@ void GeometryInfo::find_symmetry() { sym.init(geom); }
 
 int GeometryInfo::genus()
 {
-  if (genus_val == INT_MAX) {
-    genus_val = INT_MAX - 1; // 'not known' value
+  if (genus_val == std::numeric_limits<int>::max()) {
+    genus_val = std::numeric_limits<int>::max() - 1; // 'not known' value
     if (num_parts() == 1 && is_known_connectivity()) {
       int euler_char = num_verts() - num_iedges() + num_faces();
       Geometry geom2 = geom;

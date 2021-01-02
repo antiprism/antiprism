@@ -35,7 +35,6 @@
 #include "utils.h"
 
 #include <algorithm>
-#include <climits>
 #include <cstring>
 #include <limits>
 #include <map>
@@ -108,7 +107,7 @@ int Coloring::z_gradient(Vec3d vec, Vec3d cent, double height, int def_sz)
     if (cmaps[0]->effective_size() > 0)
       sz = cmaps[0]->effective_size();
     else
-      sz = INT_MAX;
+      sz = std::numeric_limits<int>::max();
   }
 
   return (int)floor(sz * (0.5 * height + (vec - cent)[2]) / (height + epsilon));

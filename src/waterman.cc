@@ -33,6 +33,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <climits>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib> // avoid ambiguities with std::abs(long) on OSX

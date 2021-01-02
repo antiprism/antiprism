@@ -32,6 +32,7 @@
 
 #include <cctype>
 #include <cfloat>
+#include <climits>
 #include <cstdio>
 #include <cstdlib>
 #include <set>

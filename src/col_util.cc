@@ -968,7 +968,7 @@ void collect_cols_from_geom(const Geometry &geom, vector<Color> &cols,
 void collect_cols(vector<Color> &cols, col_util_opts &opts)
 {
   int map_sz = opts.map.effective_size();
-  bool open_ended_map = (map_sz >= INT_MAX);
+  bool open_ended_map = (map_sz >= std::numeric_limits<int>::max());
   // map size priority:
   // -Z given
   // default for unlimited map (256)

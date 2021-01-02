@@ -30,6 +30,7 @@
 
 #include "../base/antiprism.h"
 
+#include <climits>
 #include <cstdio>
 #include <cstdlib>
 #include <map>
