@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2014-2020, Roger Kaufman
+   Copyright (c) 2014-2021, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -31,7 +31,6 @@
 #include "../base/antiprism.h"
 
 #include <cctype>
-#include <climits>
 #include <cstdio>
 #include <cstdlib>
 #include <string>

@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2007-2020, Roger Kaufman
+   Copyright (c) 2007-2021, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -33,8 +33,6 @@
 
 #include <algorithm>
 #include <cctype>
-#include <cfloat>
-#include <climits>
 #include <cstdio>
 #include <cstdlib>
 #include <string>
@@ -111,7 +109,9 @@ ColorMapMap *alloc_no_colorMap()
 {
   auto *col_map = new ColorMapMap;
 
-  col_map->set_col(0, INT_MAX); // index INT_MAX as unset edge color
+  col_map->set_col(
+      0,
+      std::numeric_limits<int>::max()); // index INT_MAX as unset edge color
   // this doesn't work because 'no color' is not allowed in a map
   // col_map->set_col(0, Color());  // unset edge color
 
@@ -173,16 +173,16 @@ public:
 
   ncon_opts()
       : ProgramOpts("n_icons"), ncon_order(4), d(1), build_method(0),
-        hide_indent(true), inner_radius(FLT_MAX), outer_radius(FLT_MAX),
-        angle(0), point_cut(true), hybrid(false), add_poles(false), twist(1),
-        info(false), add_symmetry_polygon(false), face_coloring_method('S'),
+        hide_indent(true), inner_radius(NAN), outer_radius(NAN), angle(0),
+        point_cut(true), hybrid(false), add_poles(false), twist(1), info(false),
+        add_symmetry_polygon(false), face_coloring_method('S'),
         face_opacity(-1), face_pattern("1"), edge_coloring_method('\0'),
         edge_opacity(-1), edge_pattern("1"), edge_set_no_color(false),
         unused_edge_color(Color::invisible), symmetric_coloring(false),
         long_form(false), filter_case2(false), flood_fill_stop(0),
         face_default_color(Color(192, 192, 192, 255)), // darkgrey
         edge_default_color(Color(192, 192, 192, 255)), // darkgrey
-        epsilon(0), angle_is_side_cut(false), double_sweep(false),
+        epsilon(::epsilon), angle_is_side_cut(false), double_sweep(false),
         radius_inversion(false), mod_twist(0), split(false)
   {
   }
@@ -291,7 +291,6 @@ void ncon_opts::process_command_line(int argc, char **argv)
   opterr = 0;
   int c;
 
-  int sig_compare = INT_MAX;
   Coloring clrngs[3];
 
   handle_long_opts(argc, argv);
@@ -546,6 +545,8 @@ void ncon_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'l':
+      int sig_compare;
+
       print_status_or_exit(read_int(optarg, &sig_compare), c);
       if (sig_compare < 0) {
         warning("limit is negative, and so ignored", c);
@@ -553,6 +554,8 @@ void ncon_opts::process_command_line(int argc, char **argv)
       if (sig_compare > DEF_SIG_DGTS) {
         warning("limit is very small, may not be attainable", c);
       }
+
+      epsilon = pow(10, -sig_compare);
       break;
 
     case 'o':
@@ -566,8 +569,6 @@ void ncon_opts::process_command_line(int argc, char **argv)
 
   if (argc - optind > 0)
     error("too many arguments");
-
-  epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 
   // surfaces subsystem
   if (ncon_surf.length() > 0) {
@@ -607,7 +608,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
         build_method = 2;
 
       // radii setting only valid with method 2
-      if (inner_radius != FLT_MAX || outer_radius != FLT_MAX)
+      if (!std::isnan(inner_radius) || !std::isnan(outer_radius))
         build_method = 2;
 
       // angle is only valid with method 3
@@ -629,7 +630,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
 
     if (build_method == 2) {
       if (d == 1) {
-        if (inner_radius != FLT_MAX) {
+        if (!std::isnan(inner_radius)) {
           if (hybrid) {
             if (is_even(twist))
               error("for method 2 and d=1, hybrid, inner radius cannot be set "
@@ -649,7 +650,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
                   "is odd",
                   'r');
         }
-        else if (outer_radius != FLT_MAX)
+        else if (!std::isnan(outer_radius))
           inner_radius = outer_radius;
       }
 
@@ -670,14 +671,14 @@ void ncon_opts::process_command_line(int argc, char **argv)
       }
     }
     else {
-      if (inner_radius != FLT_MAX) {
+      if (!std::isnan(inner_radius)) {
         warning("inner radius is only valid in construction method 2", "r");
-        inner_radius = FLT_MAX;
+        inner_radius = NAN;
       }
 
-      if (outer_radius != FLT_MAX) {
+      if (!std::isnan(outer_radius)) {
         warning("outer radius is only valid in construction method 2", "R");
-        outer_radius = FLT_MAX;
+        outer_radius = NAN;
       }
 
       if (!hide_indent) {
@@ -1315,7 +1316,7 @@ void apply_latitudes(const Geometry &geom,
     sort(edge_ys.begin(), edge_ys.end());
     reverse(edge_ys.begin(), edge_ys.end());
 
-    double last_y = DBL_MAX;
+    double last_y = std::numeric_limits<double>::max();
     int level = -1;
     for (auto &edge_y : edge_ys) {
       if (double_ne(edge_y.first, last_y, opts.epsilon))
@@ -1644,7 +1645,7 @@ void apply_latitudes(const Geometry &geom,
   vector<pair<double, int>> face_ys;
   for (unsigned int i = 0; i < original_faces.size(); i++) {
     vector<int> face = original_faces[i];
-    double min_y = DBL_MAX;
+    double min_y = std::numeric_limits<double>::max();
     for (int j : face) {
       double y = verts[j][1];
       if (y < min_y)
@@ -1722,7 +1723,7 @@ void fix_polygon_numbers(const vector<faceList *> &face_list,
   int lat = 0;
   unsigned int sz = 0;
   do {
-    int polygon_min = INT_MAX;
+    int polygon_min = std::numeric_limits<int>::max();
     for (unsigned int j = 0; j < 2; j++) {
       int lon = (opts.longitudes.front() / 2) - j;
       vector<int> idx = find_face_by_lat_lon(face_list, lat, lon);
@@ -1734,7 +1735,7 @@ void fix_polygon_numbers(const vector<faceList *> &face_list,
       }
     }
 
-    if (polygon_min != INT_MAX) {
+    if (polygon_min != std::numeric_limits<int>::max()) {
       for (auto j : face_list) {
         if (j->lat == lat)
           j->polygon_no = polygon_min;
@@ -2042,7 +2043,7 @@ void find_split_faces_shell_model(const Geometry &geom,
     reverse(face_zs.begin(), face_zs.end());
 
     vector<int> split_face_idx;
-    double last_z = DBL_MAX;
+    double last_z = std::numeric_limits<double>::max();
     for (unsigned int i = 0; i < face_zs.size(); i++) {
       if (double_ne(face_zs[i].first, last_z, opts.epsilon)) {
         if (i > 0) {
@@ -2076,7 +2077,7 @@ void calc_radii(double &inner_radius, double &outer_radius, double &arc,
   double interior_angle = (180.0 - arc) / 2.0;
   double inner_radius_calc = 0;
   double outer_radius_calc = sin(deg2rad(interior_angle)) / sin(deg2rad(arc));
-  if (outer_radius == FLT_MAX)
+  if (std::isnan(outer_radius))
     outer_radius = outer_radius_calc;
 
   if (opts.build_method == 2) {
@@ -2092,7 +2093,7 @@ void calc_radii(double &inner_radius, double &outer_radius, double &arc,
     // r = R * cos(pi*m/n) / cos(pi*(m-1)/n)
     inner_radius_calc = (outer_radius_calc * cos(M_PI * d / n_calc) /
                          cos(M_PI * (d - 1) / n_calc));
-    if (inner_radius == FLT_MAX)
+    if (std::isnan(inner_radius))
       inner_radius = (d == 1) ? outer_radius_calc : inner_radius_calc;
   }
 
@@ -3324,7 +3325,7 @@ void unset_marked_edges(Geometry &geom)
   // vector<int> deleted_edges;
   for (unsigned int i = 0; i < edges.size(); i++) {
     Color c = geom.colors(EDGES).get(i);
-    if (c.is_index() && c == INT_MAX) {
+    if (c.is_index() && c == std::numeric_limits<int>::max()) {
       geom.colors(EDGES).set(i, Color());
       // deleted_edges.push_back(i);
     }
@@ -3332,7 +3333,7 @@ void unset_marked_edges(Geometry &geom)
 
   for (unsigned int i = 0; i < verts.size(); i++) {
     Color c = geom.colors(VERTS).get(i);
-    if (c.is_index() && c == INT_MAX) {
+    if (c.is_index() && c == std::numeric_limits<int>::max()) {
       geom.colors(VERTS).set(i, Color());
     }
   }
@@ -4163,7 +4164,8 @@ void ncon_edge_coloring_by_adjacent_edge(Geometry &geom,
     for (unsigned int i = 0; i < geom.edges().size(); i++) {
       Color c = geom.colors(EDGES).get(i);
       // need to include invisible edges or crash
-      if ((c.is_index() && c == INT_MAX) || c.is_invisible()) {
+      if ((c.is_index() && c == std::numeric_limits<int>::max()) ||
+          c.is_invisible()) {
         edges.push_back(geom.edges(i));
         edge_no.push_back(i);
       }
@@ -4173,7 +4175,7 @@ void ncon_edge_coloring_by_adjacent_edge(Geometry &geom,
   // unset colors
   for (unsigned int i = 0; i < geom.edges().size(); i++) {
     Color c = geom.colors(EDGES).get(i);
-    if (c.is_index() && c == INT_MAX)
+    if (c.is_index() && c == std::numeric_limits<int>::max())
       set_edge_color(geom, i, Color(), 255);
   }
 
@@ -4525,9 +4527,9 @@ void find_poles(Geometry &geom, int &north, int &south, const ncon_opts &opts)
 {
   // find poles
   north = -1;
-  double y_north = -FLT_MAX;
+  double y_north = std::numeric_limits<double>::min();
   south = -1;
-  double y_south = FLT_MAX;
+  double y_south = std::numeric_limits<double>::max();
   for (unsigned int i = 0; i < geom.verts().size(); i++) {
     if (double_gt(geom.verts(i)[1], y_north, opts.epsilon)) {
       y_north = geom.verts(i)[1];
@@ -4578,7 +4580,7 @@ void mark_edge_circuits(Geometry &geom, const vector<edgeList *> &edge_list)
   for (auto i : edge_list) {
     int j = i->edge_no;
     if (!geom.colors(EDGES).get(j).is_invisible())
-      set_edge_color(geom, j, INT_MAX, 255);
+      set_edge_color(geom, j, std::numeric_limits<int>::max(), 255);
   }
 }
 
@@ -5166,9 +5168,9 @@ void restore_flood_longitude_edges(Geometry &geom,
   for (unsigned int i = 0; i < edges.size(); i++) {
     Color c = geom.colors(EDGES).get(i);
     int j = c.get_index();
-    if (j != INT_MAX && !c.is_invisible()) {
+    if (j != std::numeric_limits<int>::max() && !c.is_invisible()) {
       edge_list.push_back(new edgeList(i, j, opts.longitudes.front() / 2 - 1));
-      geom.colors(EDGES).set(i, INT_MAX);
+      geom.colors(EDGES).set(i, std::numeric_limits<int>::max());
     }
   }
 }
@@ -5212,7 +5214,7 @@ int process_hybrid(Geometry &geom, ncon_opts &opts)
 
   // hybrids which are really point cuts with radii swapped on opposite side
   bool special_hybrids = ((opts.build_method == 2) && (opts.d == 1) &&
-                          opts.inner_radius != FLT_MAX);
+                          !std::isnan(opts.inner_radius));
 
   // retain longitudes settings
   bool full = full_model(opts.longitudes);
@@ -5690,7 +5692,7 @@ void rotate_polygon(Geometry &pgon, const int N, const bool pc, const bool hyb,
   else
       // special special hybrids and their kin when N/2 is odd
       if ((opts.build_method == 2) && !is_even(N / 2) && (opts.d == 1) &&
-          (opts.inner_radius != FLT_MAX))
+          !std::isnan(opts.inner_radius))
     is_flipped = true;
 
   // note: the polygon is still on its side
@@ -5959,18 +5961,18 @@ void color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
     for (unsigned int e = 0; e < geom.edges().size(); e++) {
       // marked edges are the ones to be colored
       Color c = geom.colors(EDGES).get(e);
-      if (c.is_index() && c == INT_MAX) {
+      if (c.is_index() && c == std::numeric_limits<int>::max()) {
         lookup_edge_color(geom, e, axes, heights, false);
         c = geom.colors(EDGES).get(e);
         // if, because negative radii, the edge center is shifted onto the wrong
         // axis
         // no color will be found for look up, try the other axis
-        if (c.is_index() && c == INT_MAX) {
+        if (c.is_index() && c == std::numeric_limits<int>::max()) {
           // not found? try again
           lookup_edge_color(geom, e, axes, heights, true);
           c = geom.colors(EDGES).get(e);
           // if still not found, give up and make it invisible
-          if (c.is_index() && c == INT_MAX)
+          if (c.is_index() && c == std::numeric_limits<int>::max())
             set_edge_color(geom, e, Color::invisible, 255);
         }
       }
@@ -5979,7 +5981,7 @@ void color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
     // occasionally some vertices can be missed
     for (unsigned int i = 0; i < geom.verts().size(); i++) {
       Color c = geom.colors(VERTS).get(i);
-      if (c.is_index() && c == INT_MAX)
+      if (c.is_index() && c == std::numeric_limits<int>::max())
         geom.colors(VERTS).set(i, Color::invisible);
     }
 
@@ -6061,7 +6063,7 @@ int ncon_subsystem(Geometry &geom, ncon_opts &opts)
 
   bool radius_set =
       ((opts.build_method == 2) &&
-       (opts.inner_radius != FLT_MAX || opts.outer_radius != FLT_MAX))
+       (!std::isnan(opts.inner_radius) || !std::isnan(opts.outer_radius)))
           ? true
           : false;
 

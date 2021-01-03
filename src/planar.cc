@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2010-2020, Roger Kaufman
+   Copyright (c) 2010-2021, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -32,8 +32,6 @@
 
 #include <algorithm>
 #include <cctype>
-#include <cfloat>
-#include <climits>
 #include <cstdio>
 #include <cstdlib>
 #include <map>
@@ -95,7 +93,8 @@ public:
 
   planar_opts()
       : ProgramOpts("planar"), face_color_method('\0'), planar_merge_type(0),
-        polygon_fill_type(0), winding_rule(INT_MAX), winding_rule_mode(INT_MAX),
+        polygon_fill_type(0), winding_rule(std::numeric_limits<int>::max()),
+        winding_rule_mode(std::numeric_limits<int>::max()),
         color_by_winding_number('\0'), winding_div2(false), // not implemented
         find_direction(false), verbose(false), orient(0), hole_detection(true),
         stitch_faces(false), split_pinched(false),
@@ -105,7 +104,7 @@ public:
         zero_density_force_blend(false), brightness_adj(-2.0),
         color_system_mode(2), cmy_mode(false), ryb_mode(false), sat_power(-1.0),
         value_power(-1.0), sat_threshold(1.0), value_advance(0.0),
-        alpha_mode(3), face_opacity(-1), epsilon(0)
+        alpha_mode(3), face_opacity(-1), epsilon(::epsilon)
   {
   }
 
@@ -208,7 +207,6 @@ void planar_opts::process_command_line(int argc, char **argv)
   opterr = 0;
   int c;
 
-  int sig_compare = INT_MAX;
   string arg_id;
   string map_file;
 
@@ -256,7 +254,7 @@ void planar_opts::process_command_line(int argc, char **argv)
       else if (arg_id.substr(0, 2) == "le")
         winding_rule_mode = 6;
 
-      if (winding_rule_mode != INT_MAX) {
+      if (winding_rule_mode != std::numeric_limits<int>::max()) {
         int substr_start = 2;
         // negative winding_rule_mode will trigger absolute value evaluation
         // later
@@ -434,6 +432,8 @@ void planar_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'l':
+      int sig_compare;
+
       print_status_or_exit(read_int(optarg, &sig_compare), c);
       if (sig_compare < 0) {
         warning("limit is negative, and so ignored", c);
@@ -441,6 +441,8 @@ void planar_opts::process_command_line(int argc, char **argv)
       if (sig_compare > DEF_SIG_DGTS) {
         warning("limit is very small, may not be attainable", c);
       }
+
+      epsilon = pow(10, -sig_compare);
       break;
 
     case 'o':
@@ -484,7 +486,7 @@ void planar_opts::process_command_line(int argc, char **argv)
     if (polygon_fill_type)
       warning("polygon fill has no effect if tile or merge is not selected",
               "p");
-    if (winding_rule != INT_MAX)
+    if (winding_rule != std::numeric_limits<int>::max())
       warning("winding rule has no effect if tile or merge is not selected",
               "w");
     // zero density area cannot be colored with not tile or merge
@@ -514,8 +516,6 @@ void planar_opts::process_command_line(int argc, char **argv)
   if (!map_file.size())
     map_file = "compound";
   print_status_or_exit(map.init(map_file.c_str()), 'm');
-
-  epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
 bool cmp_verts(const pair<Vec3d, int> &a, const pair<Vec3d, int> &b,
@@ -1352,7 +1352,7 @@ void mark_hole_connectors(Geometry &geom,
       if ((point_in_segment(P1, v1, v2, eps)).is_set() &&
           (point_in_segment(P2, v1, v2, eps)).is_set()) {
         Color ecol;
-        ecol.set_index(INT_MAX);
+        ecol.set_index(std::numeric_limits<int>::max());
         geom.colors(EDGES).set(j, ecol);
       }
     }
@@ -1412,7 +1412,7 @@ bool winding_rule_filter(int winding_rule_mode, int winding_rule,
   bool answer = true;
 
   // default is accept all winding numbers
-  if (winding_rule_mode == INT_MAX)
+  if (winding_rule_mode == std::numeric_limits<int>::max())
     return answer;
 
   // negative winding rule mode means do absolute value comparison
@@ -1589,7 +1589,7 @@ void sample_colors(Geometry &sgeom, const Geometry &cgeom,
 
     winding_numbers.push_back(winding_total);
 
-    if ((opts.winding_rule != INT_MAX)) {
+    if ((opts.winding_rule != std::numeric_limits<int>::max())) {
       // if cols.size() is not zero then there were hits
       if (cols.size()) {
         if (!winding_rule_filter(opts.winding_rule_mode, opts.winding_rule,
@@ -1623,7 +1623,7 @@ void sample_colors(Geometry &sgeom, const Geometry &cgeom,
       else
         // negative winding numbers are set up to near INT_MAX to be subtracted
         // out later
-        col.set_index(wtotal + INT_MAX);
+        col.set_index(wtotal + std::numeric_limits<int>::max());
     }
     else
         // if there is no hit, then that patch is of zero density color. if
@@ -2138,7 +2138,7 @@ string post_edge_blend(Geometry &geom, const int original_edges_size,
 
       for (int added_edge : added_edge_idx) {
         Color col = geom.colors(EDGES).get(added_edge);
-        if (col.is_index() && col == INT_MAX)
+        if (col.is_index() && col == std::numeric_limits<int>::max())
           continue;
 
         Vec3d P1 = verts[edges[added_edge][0]];
@@ -2192,7 +2192,7 @@ void special_edge_process(Geometry &geom, const planar_opts &opts)
   vector<int> deleted_edges;
   for (unsigned int i = 0; i < edges.size(); i++) {
     Color col = geom.colors(EDGES).get(i);
-    if (!(col.is_index() && col == INT_MAX))
+    if (!(col.is_index() && col == std::numeric_limits<int>::max()))
       deleted_edges.push_back(i);
   }
   geom.del(EDGES, deleted_edges);
@@ -2215,7 +2215,7 @@ void special_edge_process(Geometry &geom, const planar_opts &opts)
   // special_edge_processing == 'e' will do at least this
   for (unsigned int i = 0; i < edges.size(); i++) {
     Color col = geom.colors(EDGES).get(i);
-    if (col.is_index() && col == INT_MAX)
+    if (col.is_index() && col == std::numeric_limits<int>::max())
       continue;
     vector<int> face_idx = find_faces_with_edge(faces, edges[i]);
     vector<Color> cols;
@@ -2240,7 +2240,7 @@ void special_edge_process(Geometry &geom, const planar_opts &opts)
       vector<Color> cols;
       for (int j : edge_idx) {
         Color col = geom.colors(EDGES).get(j);
-        if (col.is_index() && col == INT_MAX)
+        if (col.is_index() && col == std::numeric_limits<int>::max())
           continue;
         cols.push_back(col);
       }
@@ -2272,7 +2272,7 @@ void delete_invisible_faces(Geometry &geom, const bool hole_detection)
   if (hole_detection) {
     for (unsigned int i = 0; i < edges.size(); i++) {
       Color col = geom.colors(EDGES).get(i);
-      if (!(col.is_index() && col == INT_MAX))
+      if (!(col.is_index() && col == std::numeric_limits<int>::max()))
         continue;
       if (!find_faces_with_edge(faces, edges[i]).size())
         deleted_elems.push_back(i);
@@ -2288,7 +2288,7 @@ void make_hole_connectors_invisible(Geometry &geom)
 
   for (unsigned int i = 0; i < edges.size(); i++) {
     Color col = geom.colors(EDGES).get(i);
-    if (col.is_index() && col == INT_MAX)
+    if (col.is_index() && col == std::numeric_limits<int>::max())
       geom.colors(EDGES).set(i, Color::invisible);
   }
 }
@@ -2317,8 +2317,8 @@ void resolve_winding_number_indexes(Geometry &geom,
     Color col = geom.colors(FACES).get(i);
     if (col.is_index()) {
       int c_idx = col.get_index();
-      if (c_idx > INT_MAX / 2)
-        c_idx -= INT_MAX;
+      if (c_idx > std::numeric_limits<int>::max() / 2)
+        c_idx -= std::numeric_limits<int>::max();
 
       if (c_idx >= 0)
         geom.colors(FACES).set(i, opts.map.get_col(c_idx));
@@ -2395,7 +2395,7 @@ void color_by_winding_number_raw(Geometry &geom,
     else
       // negative winding numbers are set up to near INT_MAX to be subtracted
       // out later
-      col.set_index(wtotal + INT_MAX);
+      col.set_index(wtotal + std::numeric_limits<int>::max());
     geom.colors(FACES).set(i, col);
   }
 }

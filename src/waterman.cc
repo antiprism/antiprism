@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2008-2020, Roger Kaufman, Adrian Rossiter
+   Copyright (c) 2008-2021, Roger Kaufman, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -33,11 +33,9 @@
 
 #include <algorithm>
 #include <cctype>
-#include <climits>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib> // avoid ambiguities with std::abs(long) on OSX
-#include <limits>
 #include <string>
 #include <vector>
 
@@ -101,7 +99,7 @@ public:
       : ProgramOpts("waterman"), lattice_type(-1), radius(0), R_squared(0),
         origin_based(true), method(1), fill(false), verbose(false), scale(0),
         tester_defeat(false), convex_hull(true), add_hull(false),
-        color_method('\0'), face_opacity(-1), epsilon(0)
+        color_method('\0'), face_opacity(-1), epsilon(::epsilon)
   {
   }
 
@@ -150,7 +148,6 @@ void waterman_opts::process_command_line(int argc, char **argv)
   opterr = 0;
   int c;
 
-  int sig_compare = INT_MAX;
   vector<double> double_parms;
   double root = 1;
   int cent_num_decs = 0;
@@ -184,7 +181,8 @@ void waterman_opts::process_command_line(int argc, char **argv)
           R_num_decs = (R_num_decs + 1) / 2; // change in case of root 2
         }
         else if (root != 1)
-          R_num_decs = INT_MAX; // not suitable for integer calculations
+          R_num_decs = std::numeric_limits<int>::max(); // not suitable for
+                                                        // integer calculations
       }
       else { // radius given as explicit number
         radius = double_parms[0];
@@ -258,6 +256,8 @@ void waterman_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'l':
+      int sig_compare;
+
       print_status_or_exit(read_int(optarg, &sig_compare), c);
       if (sig_compare < 0) {
         warning("limit is negative, and so ignored", c);
@@ -265,6 +265,8 @@ void waterman_opts::process_command_line(int argc, char **argv)
       if (sig_compare > DEF_SIG_DGTS) {
         warning("limit is very small, may not be attainable", c);
       }
+
+      epsilon = pow(10, -sig_compare);
       break;
 
     case 'o':
@@ -350,8 +352,6 @@ void waterman_opts::process_command_line(int argc, char **argv)
     if (method == 2)
       error("z-guess method cannot be used in this case");
   }
-
-  epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
 // returns:
@@ -478,7 +478,7 @@ void refine_z_vals(long &z_near, long &z_far, const long x, const long y,
   }
   else {
     // Outside, so test for valid points below
-    z_nr = LONG_MAX; // an invalid value
+    z_nr = std::numeric_limits<long>::max(); // an invalid value
     for (long z_val = z_start - 1;; --z_val) {
       // fprintf(stderr, "zn out z_val=%ld\n", z_val);
       if (z_val * scale < i_center[2]) {
@@ -517,7 +517,7 @@ void refine_z_vals(long &z_near, long &z_far, const long x, const long y,
   }
   else {
     // Outside, so test for valid points above
-    z_fr = LONG_MAX; // an invalid value
+    z_fr = std::numeric_limits<long>::max(); // an invalid value
     for (long z_val = z_start + 1;; ++z_val) {
       // fprintf(stderr, "zf out z_val=%ld\n", z_val);
       if (z_val * scale > i_center[2]) {
@@ -651,9 +651,10 @@ void sphere_ray_waterman(Geometry &geom, const int lattice_type,
       }
 
       // don't write invalid points
-      if (z_near != LONG_MAX)
+      if (z_near != std::numeric_limits<long>::max())
         verts.push_back(Vec3d(x, y, z_near));
-      if (z_far != LONG_MAX && z_near != z_far) // don't rewrite tangent point
+      if (z_far != std::numeric_limits<long>::max() &&
+          z_near != z_far) // don't rewrite tangent point
         verts.push_back(Vec3d(x, y, z_far));
     }
   }
@@ -732,12 +733,13 @@ void z_guess_waterman(Geometry &geom, const int lattice_type,
         }
 
         // don't write invalid points
-        if (z_near != LONG_MAX)
+        if (z_near != std::numeric_limits<long>::max())
           verts.push_back(Vec3d(x, y, z_near));
         else
           z_near = 0; // when invalid, reset z_far for next guess
 
-        if (z_far != LONG_MAX && z_near != z_far) // don't rewrite tangent point
+        if (z_far != std::numeric_limits<long>::max() &&
+            z_near != z_far) // don't rewrite tangent point
           verts.push_back(Vec3d(x, y, z_far));
         else
           z_far = 0; // when invalid, reset z_far for next guess
@@ -770,10 +772,10 @@ Geometry fill_interior(const Geometry &geom, const int lattice_type)
     // initialize values
     it = min_z_vert.find(key);
     if (it == min_z_vert.end())
-      min_z_vert[key] = LONG_MAX;
+      min_z_vert[key] = std::numeric_limits<long>::max();
     it = max_z_vert.find(key);
     if (it == max_z_vert.end())
-      max_z_vert[key] = LONG_MIN;
+      max_z_vert[key] = std::numeric_limits<long>::min();
 
     // find minimum z and maximum z for an x,y
     if (z < min_z_vert[key])

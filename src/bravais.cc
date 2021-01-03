@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2008-2020, Roger Kaufman
+   Copyright (c) 2008-2021, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -33,7 +33,6 @@
 
 #include <algorithm>
 #include <cctype>
-#include <climits>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -147,7 +146,7 @@ public:
         append_lattice(false), color_method('\0'), face_opacity(-1),
         trans_to_origin(false), r_lattice_type(0), inversion(false),
         list_bravais(false), list_radii_original_center('\0'), list_radii(0),
-        list_struts(0), dual_lattice(false), verbose(false), epsilon(0)
+        list_struts(0), dual_lattice(false), verbose(false), epsilon(::epsilon)
   {
   }
 
@@ -345,7 +344,6 @@ void brav_opts::process_command_line(int argc, char **argv)
   opterr = 0;
   int c;
 
-  int sig_compare = INT_MAX;
   bool radius_set = false;
   vector<double> double_parms;
 
@@ -537,6 +535,8 @@ void brav_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'l':
+      int sig_compare;
+
       print_status_or_exit(read_int(optarg, &sig_compare), c);
       if (sig_compare < 0) {
         warning("limit is negative, and so ignored", c);
@@ -544,6 +544,8 @@ void brav_opts::process_command_line(int argc, char **argv)
       if (sig_compare > DEF_SIG_DGTS) {
         warning("limit is very small, may not be attainable", c);
       }
+
+      epsilon = pow(10, -sig_compare);
       break;
 
     case 'D':
@@ -717,8 +719,6 @@ void brav_opts::process_command_line(int argc, char **argv)
 
   if (list_radii && list_struts)
     error("cannot list radii and struts at the same time");
-
-  epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
 bravais::bravais()

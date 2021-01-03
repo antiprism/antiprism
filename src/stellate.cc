@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2017-2020, Roger Kaufman
+   Copyright (c) 2017-2021, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -30,7 +30,6 @@
 
 #include "../base/antiprism.h"
 
-#include <climits>
 #include <cstdio>
 #include <cstdlib>
 #include <set>
@@ -83,7 +82,7 @@ public:
         vertex_coloring_method('\0'), edge_coloring_method('\0'),
         face_coloring_method('d'), vertex_color(Color::invisible),
         edge_color(Color::invisible), face_color(Color()),
-        map_string("compound"), face_opacity(-1), epsilon(0)
+        map_string("compound"), face_opacity(-1), epsilon(::epsilon)
   {
   }
   void process_command_line(int argc, char **argv);
@@ -141,8 +140,6 @@ void stellate_opts::process_command_line(int argc, char **argv)
 {
   opterr = 0;
   int c;
-
-  int sig_compare = INT_MAX;
 
   handle_long_opts(argc, argv);
 
@@ -239,6 +236,8 @@ void stellate_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'l':
+      int sig_compare;
+
       print_status_or_exit(read_int(optarg, &sig_compare), c);
       if (sig_compare < 0) {
         warning("limit is negative, and so ignored", c);
@@ -246,6 +245,8 @@ void stellate_opts::process_command_line(int argc, char **argv)
       if (sig_compare > DEF_SIG_DGTS) {
         warning("limit is very small, may not be attainable", c);
       }
+
+      epsilon = pow(10, -sig_compare);
       break;
 
     case 'o':
@@ -262,8 +263,6 @@ void stellate_opts::process_command_line(int argc, char **argv)
 
   if (argc - optind == 1)
     ifile = argv[optind];
-
-  epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
 void apply_transparency(Geometry &geom, const stellate_opts &opts,
@@ -598,7 +597,7 @@ int main(int argc, char *argv[])
   for (int i = 0; i < sz; i++) {
     opts.print_status_or_exit(
         read_idx_list((char *)opts.diagram_list_strings[i].c_str(),
-                      idx_lists[i], INT_MAX, false),
+                      idx_lists[i], std::numeric_limits<int>::max(), false),
         'f');
     if (!idx_lists[i].size())
       opts.error("no face number are input", 'f');

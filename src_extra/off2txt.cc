@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2007-2020, Roger Kaufman
+   Copyright (c) 2007-2021, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -34,7 +34,6 @@
 #include "../base/antiprism.h"
 
 #include <cctype>
-#include <climits>
 #include <string>
 #include <vector>
 
@@ -59,7 +58,7 @@ public:
   o2t_opts()
       : ProgramOpts("off2txt"), estimate_colors(false), detect_rhombi(false),
         detect_star_polygons(false), exclude_coordinates(false),
-        force_transparent(false), epsilon(0), sig_digits(DEF_SIG_DGTS)
+        force_transparent(false), epsilon(::epsilon), sig_digits(DEF_SIG_DGTS)
   {
   }
 
@@ -97,7 +96,6 @@ void o2t_opts::process_command_line(int argc, char **argv)
 {
   opterr = 0;
   int c;
-  int sig_compare = INT_MAX;
 
   handle_long_opts(argc, argv);
 
@@ -127,6 +125,8 @@ void o2t_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'l':
+      int sig_compare;
+
       print_status_or_exit(read_int(optarg, &sig_compare), c);
       if (sig_compare < 0) {
         warning("limit is negative, and so ignored", c);
@@ -134,6 +134,8 @@ void o2t_opts::process_command_line(int argc, char **argv)
       if (sig_compare > 16) {
         warning("limit is very small, may not be attainable", c);
       }
+
+      epsilon = pow(10, -sig_compare);
       break;
 
     case 'd':
@@ -154,8 +156,6 @@ void o2t_opts::process_command_line(int argc, char **argv)
 
   if (argc - optind == 1)
     ifile = argv[optind];
-
-  epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
 string estimated_color(Color col)

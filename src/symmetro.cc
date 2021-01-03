@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2014-2020, Roger Kaufman, Adrian Rossiter
+   Copyright (c) 2014-2021, Roger Kaufman, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -32,8 +32,6 @@
 
 #include <algorithm>
 #include <cctype>
-#include <cfloat>
-#include <climits>
 #include <cstdio>
 #include <cstdlib>
 #include <string>
@@ -86,15 +84,15 @@ public:
 
   symmetro_opts()
       : ProgramOpts("symmetro"), sym('\0'), p(0), q(0), dihedral_n(0),
-        sym_id_no(1), sym_mirror('\0'), vert_z(INT_MAX), rotation(0.0),
-        rotation_as_increment(0.0), add_pi(false), rotation_axis(-1),
-        angle_between_axes(DBL_MAX), scale_axis(-1), convex_hull(0), offset(0),
-        remove_free_faces(false), verbose(false), mode('\0'),
-        face_coloring_method('a'), face_opacity(-1), color_digons(false),
-        vert_col(Color(255, 215, 0)),    // gold
-        edge_col(Color(211, 211, 211)),  // lightgrey
-        frame_col(Color(135, 206, 235)), // skyblue3
-        epsilon(0)
+        sym_id_no(1), sym_mirror('\0'), vert_z(std::numeric_limits<int>::max()),
+        rotation(0.0), rotation_as_increment(0.0), add_pi(false),
+        rotation_axis(-1), angle_between_axes(NAN), scale_axis(-1),
+        convex_hull(0), offset(0), remove_free_faces(false), verbose(false),
+        mode('\0'), face_coloring_method('a'), face_opacity(-1),
+        color_digons(false), vert_col(Color(255, 215, 0)), // gold
+        edge_col(Color(211, 211, 211)),                    // lightgrey
+        frame_col(Color(135, 206, 235)),                   // skyblue3
+        epsilon(::epsilon)
   {
   }
 
@@ -211,7 +209,6 @@ void symmetro_opts::process_command_line(int argc, char **argv)
   opterr = 0;
   int c;
 
-  int sig_compare = INT_MAX;
   string id;
   string map_file;
   vector<int> n;
@@ -228,7 +225,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
 
   // initialize scale array
   for (int i = 0; i < 3; i++)
-    scale.push_back(DBL_MAX);
+    scale.push_back(NAN);
 
   while ((c = getopt(argc, argv,
                      ":hk:t:m:s:c:M:a:r:A:C:q:O:xvf:Q:V:E:DT:l:o:")) != -1) {
@@ -690,7 +687,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
         sym_override = "C";
       sym = toupper(sym_override[0]);
 
-      if (vert_z != INT_MAX)
+      if (vert_z != std::numeric_limits<int>::max())
         if (vert_z < -1 || vert_z >= n[1])
           error(msg_str("vert z must be between 0 and %d", n[1] - 1), c);
 
@@ -853,6 +850,8 @@ void symmetro_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'l':
+      int sig_compare;
+
       print_status_or_exit(read_int(optarg, &sig_compare), c);
       if (sig_compare < 0) {
         warning("limit is negative, and so ignored", c);
@@ -860,6 +859,8 @@ void symmetro_opts::process_command_line(int argc, char **argv)
       if (sig_compare > DEF_SIG_DGTS) {
         warning("limit is very small, may not be attainable", c);
       }
+
+      epsilon = pow(10, -sig_compare);
       break;
 
     case 'o':
@@ -924,8 +925,6 @@ void symmetro_opts::process_command_line(int argc, char **argv)
   }
   else
     print_status_or_exit(map.init(map_file.c_str()), 'm');
-
-  epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
 class symmetro {
@@ -1371,7 +1370,7 @@ vector<Geometry> symmetro::calc_polygons(
   double r0 = scale[axis[0]] * circumradius(getN(axis[0]), d[axis[0]]);
   double r1 = scale[axis[1]] * circumradius(getN(axis[1]), d[axis[1]]);
 
-  if (angle_between_axes != DBL_MAX)
+  if (!std::isnan(angle_between_axes))
     angle_between_axes = deg2rad(angle_between_axes);
   else
     angle_between_axes = (mode == 's')
@@ -1647,7 +1646,7 @@ Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
 
       Vec3d P;
       int vz = opts.vert_z;
-      if (vz != INT_MAX) {
+      if (vz != std::numeric_limits<int>::max()) {
         P = pgeom[1].verts(vz);
 
         if (opts.verbose)
@@ -1905,12 +1904,12 @@ int main(int argc, char *argv[])
   // scale will be DBL_MAX when not set
   // if axis not specified and a scale is set, set default scale axis to first
   // axis index
-  if (opts.scale_axis == -1 && (opts.scale[0] != DBL_MAX)) {
+  if (opts.scale_axis == -1 && (!std::isnan(opts.scale[0]))) {
     opts.scale_axis = idx[0];
     swap(opts.scale[0], opts.scale[opts.scale_axis]);
   }
   for (unsigned int i = 0; i < opts.scale.size(); i++) {
-    if ((opts.scale[i] != DBL_MAX) && (i != idx[0] && i != idx[1]))
+    if ((!std::isnan(opts.scale[i])) && (i != idx[0] && i != idx[1]))
       opts.error(
           msg_str("polygon '%d' is not generated so cannot be used for scaling",
                   i),
@@ -1922,7 +1921,7 @@ int main(int argc, char *argv[])
   }
   if (opts.mode == 's' || opts.mode == 'c') {
     for (unsigned int i = 0; i < opts.scale.size(); i++) {
-      if (opts.scale[i] != DBL_MAX) {
+      if (!std::isnan(opts.scale[i])) {
         opts.warning(
             "some polygons may not meet when scale is used with -s or -c", 'r');
         break;
@@ -1930,7 +1929,7 @@ int main(int argc, char *argv[])
     }
   }
   for (unsigned int i = 0; i < idx.size(); i++) {
-    double r = (opts.scale[idx[i]] == DBL_MAX) ? 1 : opts.scale[idx[i]];
+    double r = (std::isnan(opts.scale[idx[i]])) ? 1 : opts.scale[idx[i]];
     s.setScale(i, r);
   }
 

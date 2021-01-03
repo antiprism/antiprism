@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2008-2020, Roger Kaufman
+   Copyright (c) 2008-2021, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -32,7 +32,6 @@
 #include "lattice_grid.h"
 
 #include <cctype>
-#include <climits>
 #include <cstdio>
 #include <cstdlib>
 #include <string>
@@ -89,7 +88,7 @@ public:
         add_hull(false), append_lattice(false), color_method('\0'),
         face_opacity(-1), list_radii_original_center('\0'), list_radii(0),
         list_struts(0), trans_to_origin(false), R_merge_elems("vef"),
-        blend_type(3), verbose(false), epsilon(0)
+        blend_type(3), verbose(false), epsilon(::epsilon)
   {
   }
 
@@ -168,7 +167,6 @@ void lutil_opts::process_command_line(int argc, char **argv)
   opterr = 0;
   int c;
 
-  int sig_compare = INT_MAX;
   vector<double> double_parms;
   Split parts;
   Color col_tmp;
@@ -361,6 +359,8 @@ void lutil_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'l':
+      int sig_compare;
+
       print_status_or_exit(read_int(optarg, &sig_compare), c);
       if (sig_compare < 0) {
         warning("limit is negative, and so ignored", c);
@@ -368,6 +368,8 @@ void lutil_opts::process_command_line(int argc, char **argv)
       if (sig_compare > DEF_SIG_DGTS) {
         warning("limit is very small, may not be attainable", c);
       }
+
+      epsilon = pow(10, -sig_compare);
       break;
 
     case 'o':
@@ -399,8 +401,6 @@ void lutil_opts::process_command_line(int argc, char **argv)
 
   if (list_radii && list_struts)
     error("cannot list radii and struts at the same time");
-
-  epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
 void make_skeleton(Geometry &geom, const bool strip_faces)

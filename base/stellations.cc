@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2017-2020, Roger Kaufman
+   Copyright (c) 2017-2021, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -32,7 +32,6 @@
 #include "private_std_polys.h"
 #include "utils.h"
 
-#include <climits>
 #include <cstdio>
 #include <cstdlib>
 #include <map>
@@ -153,8 +152,8 @@ int Wenninger::get_poly(Geometry &geom, int sym)
     if (!diagram_list_strings[i].length())
       continue;
 
-    read_idx_list(diagram_list_strings[i].c_str(), idx_lists[i], INT_MAX,
-                  false);
+    read_idx_list(diagram_list_strings[i].c_str(), idx_lists[i],
+                  std::numeric_limits<int>::max(), false);
 
     // stellation face index is in the first position
     int stellation_face_idx = idx_lists[i][0];

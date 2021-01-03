@@ -32,7 +32,6 @@
 
 #include <algorithm>
 #include <cctype>
-#include <climits>
 #include <cmath>
 #include <cstring>
 #include <map>
@@ -71,7 +70,7 @@ public:
       : ProgramOpts("pol_recip"), recip_rad(0), init_rad(0),
         recip_rad_type('x'), recip_cent_type('x'), init_cent_type('x'),
         invert(false), inf(1e15), extra_ideal_elems(true), num_iters(10000),
-        epsilon(0), append(false)
+        epsilon(::epsilon), append(false)
   {
   }
 
@@ -126,8 +125,6 @@ void pr_opts::process_command_line(int argc, char **argv)
 {
   opterr = 0;
   int c;
-
-  int sig_compare = INT_MAX;
 
   handle_long_opts(argc, argv);
 
@@ -212,6 +209,8 @@ void pr_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'l':
+      int sig_compare;
+
       print_status_or_exit(read_int(optarg, &sig_compare), c);
       if (sig_compare < 0) {
         warning("limit is negative, and so ignored", c);
@@ -219,6 +218,8 @@ void pr_opts::process_command_line(int argc, char **argv)
       if (sig_compare > DEF_SIG_DGTS) {
         warning("limit is very small, may not be attainable", c);
       }
+
+      epsilon = pow(10, -sig_compare);
       break;
 
     default:
@@ -233,8 +234,6 @@ void pr_opts::process_command_line(int argc, char **argv)
 
   if (argc - optind == 1)
     ifile = argv[optind];
-
-  epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
 int find_mid_centre(Geometry &geom, double &rad, Vec3d &cent, int n,

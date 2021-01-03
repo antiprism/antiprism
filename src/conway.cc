@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2007-2020, Roger Kaufman
+   Copyright (c) 2007-2021, Roger Kaufman
    Includes ideas and algorithms by George W. Hart, http://www.georgehart.com
 
    Antiprism - http://www.antiprism.com
@@ -34,7 +34,6 @@
 #include "../base/antiprism.h"
 
 #include <cctype>
-#include <climits>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -886,7 +885,7 @@ public:
         hart_mode(false), tile_mode(false), reverse_ops(false), seed_size(0),
         planarize_method('q'), unitize(false), verbosity(false),
         face_coloring_method('n'), face_opacity(-1), face_pattern("1"),
-        seed_coloring_method(1), epsilon(0),
+        seed_coloring_method(1), epsilon(::epsilon),
         vert_col(Color(255, 215, 0)),   // gold
         edge_col(Color(211, 211, 211)), // lightgray
         second_char("#")

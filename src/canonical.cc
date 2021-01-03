@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2020, Adrian Rossiter, Roger Kaufman
+   Copyright (c) 2003-2021, Adrian Rossiter, Roger Kaufman
    Includes ideas and algorithms by George W. Hart, http://www.georgehart.com
 
    Antiprism - http://www.antiprism.com
@@ -35,8 +35,6 @@
 #include "../base/antiprism.h"
 
 #include <cctype>
-#include <cfloat>
-#include <climits>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -85,11 +83,11 @@ public:
   cn_opts()
       : ProgramOpts("canonical"), centering('e'), initial_radius('e'),
         edge_distribution('\0'), planarize_method('\0'), num_iters_planar(-1),
-        canonical_method('m'), num_iters_canonical(-1), edge_factor(DBL_MAX),
-        plane_factor(DBL_MAX), alternate_algorithm(false),
-        radius_range_percent(-1), output_parts("b"), face_opacity(-1),
-        offset(0), roundness(8), normal_type('n'), epsilon(0),
-        ipoints_col(Color(255, 255, 0)), base_nearpts_col(Color(255, 0, 0)),
+        canonical_method('m'), num_iters_canonical(-1), edge_factor(NAN),
+        plane_factor(NAN), alternate_algorithm(false), radius_range_percent(-1),
+        output_parts("b"), face_opacity(-1), offset(0), roundness(8),
+        normal_type('n'), epsilon(::epsilon), ipoints_col(Color(255, 255, 0)),
+        base_nearpts_col(Color(255, 0, 0)),
         dual_nearpts_col(Color(0.0, 0.39216, 0.0)), base_edge_col(Color()),
         dual_edge_col(Color()), sphere_col(Color(255, 255, 255))
   {
@@ -366,18 +364,18 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   // set default variables
   if (canonical_method == 'm' || planarize_method == 'm') {
-    if (edge_factor == DBL_MAX)
+    if (std::isnan(edge_factor))
       edge_factor = 50.0;
   }
-  else if (edge_factor != DBL_MAX)
+  else if (!std::isnan(edge_factor))
     warning("set, but not used for this algorithm", 'E');
 
   if (canonical_method == 'm' || planarize_method == 'm' ||
       planarize_method == 'p') {
-    if (plane_factor == DBL_MAX)
+    if (std::isnan(plane_factor))
       plane_factor = 20.0;
   }
-  else if (plane_factor != DBL_MAX)
+  else if (!std::isnan(plane_factor))
     warning("set, but not used for this algorithm", 'P');
 
   if ((canonical_method == 'x') && planarize_method &&
@@ -622,7 +620,7 @@ double incircle_radius(const Geometry &geom, Vec3d &center, const int face_no)
   }
 
   // get the minimum radius
-  double radius = DBL_MAX;
+  double radius = std::numeric_limits<double>::max();
   for (unsigned int i = 0; i < fsz; i++) {
     double l = (center - near_pts[i]).len();
     if (l < radius)

@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2011-2020, Roger Kaufman
+   Copyright (c) 2011-2021, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -31,8 +31,6 @@
 #include "../base/antiprism.h"
 
 #include <algorithm>
-#include <cctype>
-#include <climits>
 #include <cstdio>
 #include <cstdlib>
 #include <memory>
@@ -71,7 +69,6 @@ public:
 
   Vec3d center;
 
-  int sig_compare;
   double epsilon;
 
   off_normals_opts()
@@ -80,8 +77,7 @@ public:
         elem_normal_vecs(false), edge_normal_method('\0'),
         base_normal_method('b'), show_pointing("oih"), show_elems("f"),
         average_pattern("r"), alternate_calculation(false), normal_type('n'),
-        hemispherical_normal_col(Color(127, 127, 127)), sig_compare(INT_MAX),
-        epsilon(0)
+        hemispherical_normal_col(Color(127, 127, 127)), epsilon(::epsilon)
   {
   }
 
@@ -234,6 +230,8 @@ void off_normals_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'l':
+      int sig_compare;
+
       print_status_or_exit(read_int(optarg, &sig_compare), c);
       if (sig_compare < 0) {
         warning("limit is negative, and so ignored", c);
@@ -241,6 +239,8 @@ void off_normals_opts::process_command_line(int argc, char **argv)
       if (sig_compare > 16) {
         warning("limit is very small, may not be attainable", c);
       }
+
+      epsilon = pow(10, -sig_compare);
       break;
 
     case 'o':
@@ -257,8 +257,6 @@ void off_normals_opts::process_command_line(int argc, char **argv)
 
   if (argc - optind == 1)
     ifile = argv[optind];
-
-  epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
 void add_normals(Geometry &geom, const off_normals_opts &opts)

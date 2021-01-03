@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2017-2020, Roger Kaufman
+   Copyright (c) 2017-2021, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -31,8 +31,6 @@
 #include "../base/antiprism.h"
 
 #include <cctype>
-#include <cfloat>
-#include <climits>
 #include <cstdio>
 #include <cstdlib>
 #include <set>
@@ -73,7 +71,7 @@ public:
   radial_opts()
       : ProgramOpts("off_color_radial"), coloring_method(0),
         axis_orders_set(false), sym_str(""), show_axes(0), axes_coloring(1),
-        map_string("rng"), face_opacity(-1), epsilon(0)
+        map_string("rng"), face_opacity(-1), epsilon(::epsilon)
   {
   }
   void process_command_line(int argc, char **argv);
@@ -124,7 +122,6 @@ void radial_opts::process_command_line(int argc, char **argv)
   opterr = 0;
   int c;
 
-  int sig_compare = INT_MAX;
   string arg_id;
 
   string map_string_axes;
@@ -168,7 +165,10 @@ void radial_opts::process_command_line(int argc, char **argv)
         optarg++;
       }
       vector<int> idx_lst;
-      print_status_or_exit(read_idx_list(optarg, idx_lst, INT_MAX, false), c);
+      print_status_or_exit(read_idx_list(optarg, idx_lst,
+                                         std::numeric_limits<int>::max(),
+                                         false),
+                           c);
       if (!idx_lst.size())
         error("no element numbers are in the list", c);
       elem_lst.second = idx_lst;
@@ -248,6 +248,8 @@ void radial_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'l':
+      int sig_compare;
+
       print_status_or_exit(read_int(optarg, &sig_compare), c);
       if (sig_compare < 0) {
         warning("limit is negative, and so ignored", c);
@@ -255,6 +257,8 @@ void radial_opts::process_command_line(int argc, char **argv)
       if (sig_compare > DEF_SIG_DGTS) {
         warning("limit is very small, may not be attainable", c);
       }
+
+      epsilon = pow(10, -sig_compare);
       break;
 
     case 'o':
@@ -322,8 +326,6 @@ void radial_opts::process_command_line(int argc, char **argv)
 
   if (argc - optind == 1)
     ifile = argv[optind];
-
-  epsilon = (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
 }
 
 // code to get axes by Adrian Rossiter
