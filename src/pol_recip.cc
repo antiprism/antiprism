@@ -60,7 +60,7 @@ public:
   double inf;
   double extra_ideal_elems;
   int num_iters;
-  double epsilon;
+  double eps;
   bool append;
 
   string ifile;
@@ -70,7 +70,7 @@ public:
       : ProgramOpts("pol_recip"), recip_rad(0), init_rad(0),
         recip_rad_type('x'), recip_cent_type('x'), init_cent_type('x'),
         invert(false), inf(1e15), extra_ideal_elems(true), num_iters(10000),
-        epsilon(::epsilon), append(false)
+        eps(anti::epsilon), append(false)
   {
   }
 
@@ -117,8 +117,8 @@ Options
   -o <file> write output to file (default: write to standard output)
 
 )",
-          prog_name(), help_ver_text, inf, int(-log(::epsilon) / log(10) + 0.5),
-          ::epsilon);
+          prog_name(), help_ver_text, inf,
+          int(-log(anti::epsilon) / log(10) + 0.5), anti::epsilon);
 }
 
 void pr_opts::process_command_line(int argc, char **argv)
@@ -154,7 +154,7 @@ void pr_opts::process_command_line(int argc, char **argv)
 
     case 'R':
       print_status_or_exit(read_double(optarg, &init_rad), c);
-      if (fabs(init_rad) < epsilon)
+      if (fabs(init_rad) < anti::epsilon)
         warning("radius is very small (the reciprocal will be very large)", c);
       else if (init_rad < 0)
         warning("radius is negative", c);
@@ -165,7 +165,7 @@ void pr_opts::process_command_line(int argc, char **argv)
         recip_rad_type = *optarg;
       }
       else if (read_double(optarg, &recip_rad)) {
-        if (fabs(recip_rad) < epsilon)
+        if (fabs(recip_rad) < anti::epsilon)
           warning("radius is very small (the reciprocal will be very large)",
                   c);
         else if (recip_rad < 0)
@@ -219,7 +219,7 @@ void pr_opts::process_command_line(int argc, char **argv)
         warning("limit is very small, may not be attainable", c);
       }
 
-      epsilon = pow(10, -sig_compare);
+      eps = pow(10, -sig_compare);
       break;
 
     default:
@@ -244,7 +244,7 @@ int find_mid_centre(Geometry &geom, double &rad, Vec3d &cent, int n,
   int e_sz = g_edges.size();
   if (!cent.is_set())
     cent = geom.centroid();
-  if (fabs(rad) < epsilon) {
+  if (fabs(rad) < anti::epsilon) {
     GeometryInfo rep(geom);
     rep.set_center(cent);
     rad = rep.iedge_dist_lims().sum / e_sz;
@@ -302,7 +302,7 @@ int find_can_centre(Geometry &geom, char type, double &rad, Vec3d &cent,
   int e_sz = g_edges.size();
   if (!cent.is_set())
     cent = geom.centroid();
-  if (fabs(rad) < epsilon) {
+  if (fabs(rad) < anti::epsilon) {
     GeometryInfo rep(geom);
     rep.set_center(cent);
     rad = (1 - 2 * (rad < 0)) * rep.iedge_dist_lims().sum / e_sz;
@@ -488,8 +488,8 @@ Vec3d find_NOTmidcenter(const Geometry &geom)
 void find_recip_centre(Geometry &geom, char type, double &rad, Vec3d &cent,
                        int n, const double &eps)
 {
-  if (fabs(rad) < epsilon)
-    rad = epsilon / 2.0;
+  if (fabs(rad) < anti::epsilon)
+    rad = anti::epsilon / 2.0;
   bool invert = strchr("EVA", type);
   switch (type) {
   case 'x': // default is C
@@ -614,8 +614,7 @@ int main(int argc, char *argv[])
   if (opts.init_cent_type == 'C')
     opts.init_cent = geom.centroid();
   else if (opts.init_cent_type == 'M')
-    find_mid_centre(geom, tmp_rad, opts.init_cent, opts.num_iters,
-                    opts.epsilon);
+    find_mid_centre(geom, tmp_rad, opts.init_cent, opts.num_iters, opts.eps);
 
   if (opts.recip_rad_type == 'x') {
     if (strchr("CMx", opts.recip_cent_type))
@@ -632,7 +631,7 @@ int main(int argc, char *argv[])
   else {
     centre = opts.init_cent;
     find_recip_centre(geom, opts.recip_cent_type, opts.init_rad, centre,
-                      opts.num_iters, opts.epsilon);
+                      opts.num_iters, opts.eps);
   }
 
   double radius;
