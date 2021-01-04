@@ -156,7 +156,7 @@ public:
   int flood_fill_stop;
   Color face_default_color;
   Color edge_default_color;
-  double epsilon;
+  double eps;
 
   ColorMapMulti face_map;
   ColorMapMulti edge_map;
@@ -182,7 +182,7 @@ public:
         long_form(false), filter_case2(false), flood_fill_stop(0),
         face_default_color(Color(192, 192, 192, 255)), // darkgrey
         edge_default_color(Color(192, 192, 192, 255)), // darkgrey
-        epsilon(::epsilon), angle_is_side_cut(false), double_sweep(false),
+        eps(anti::epsilon), angle_is_side_cut(false), double_sweep(false),
         radius_inversion(false), mod_twist(0), split(false)
   {
   }
@@ -282,8 +282,8 @@ Surface Count Reporting (options above ignored)
   -Z        filter out case 2 types
 
 )",
-          prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
-          ::epsilon);
+          prog_name(), help_ver_text, int(-log(anti::epsilon) / log(10) + 0.5),
+          anti::epsilon);
 }
 
 void ncon_opts::process_command_line(int argc, char **argv)
@@ -555,7 +555,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
         warning("limit is very small, may not be attainable", c);
       }
 
-      epsilon = pow(10, -sig_compare);
+      eps = pow(10, -sig_compare);
       break;
 
     case 'o':
@@ -815,7 +815,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
       error("circuit coloring only works n and d must be co-prime. Use 'S' or "
             "'f'",
             'f');
-    if (d > 1 && (gcd(ncon_order, d) == 1) && double_ne(angle, 0.0, epsilon))
+    if (d > 1 && (gcd(ncon_order, d) == 1) && double_ne(angle, 0.0, eps))
       error("When n/d is co-prime, angle must be 0. Use 'S' or 'f'", 'f');
   }
   else if (face_coloring_method == 'f') {
@@ -866,12 +866,12 @@ void ncon_opts::process_command_line(int argc, char **argv)
 
   if (build_method == 3) {
     angle_is_side_cut =
-        double_eq(fmod(angle_in_range(angle, epsilon), 360.0 / ncon_order),
-                  (180.0 / ncon_order), epsilon);
+        double_eq(fmod(angle_in_range(angle, eps), 360.0 / ncon_order),
+                  (180.0 / ncon_order), eps);
 
     // if it is a point cut 2N/N, method 3 cannot be used
-    bool pc = !angle_is_side_cut &&
-              angle_on_aligned_polygon(angle, ncon_order, epsilon);
+    bool pc =
+        !angle_is_side_cut && angle_on_aligned_polygon(angle, ncon_order, eps);
     if (!point_cut)
       pc = false;
     if ((ncon_order == 2 * d) && pc)
@@ -1084,7 +1084,7 @@ void build_prime_polygon(Geometry &geom, vector<int> &prime_meridian,
   double radius = sin(deg2rad(interior_angle)) / sin(deg2rad(arc));
 
   // patch for 2N/N
-  if (double_eq(arc, 180.0, opts.epsilon))
+  if (double_eq(arc, 180.0, opts.eps))
     radius = sin(deg2rad(90.0)) / sin(deg2rad(90.0));
 
   double ang = opts.angle;
@@ -1101,12 +1101,12 @@ void build_prime_polygon(Geometry &geom, vector<int> &prime_meridian,
     add_coord(
         geom, coordinates,
         Vec3d(cos(deg2rad(ang)) * radius, sin(deg2rad(ang)) * radius, 0.0));
-    if (double_eq(fmod(angle_in_range(ang, opts.epsilon), 360.0), 90.0,
+    if (double_eq(fmod(angle_in_range(ang, opts.eps), 360.0), 90.0,
                   epsilon_local)) {
       pole[0]->idx = geom.verts().size() - 1;
       pole[0]->lat = 0;
     }
-    else if (double_eq(fmod(angle_in_range(ang, opts.epsilon), 360.0), 270.0,
+    else if (double_eq(fmod(angle_in_range(ang, opts.eps), 360.0), 270.0,
                        epsilon_local)) {
       pole[1]->idx = geom.verts().size() - 1;
       // all coloring and circuits considered make it point cut. make it true
@@ -1319,7 +1319,7 @@ void apply_latitudes(const Geometry &geom,
     double last_y = std::numeric_limits<double>::max();
     int level = -1;
     for (auto &edge_y : edge_ys) {
-      if (double_ne(edge_y.first, last_y, opts.epsilon))
+      if (double_ne(edge_y.first, last_y, opts.eps))
         level++;
       last_y = edge_y.first;
       levels_edges[level].push_back(edge_y.second);
@@ -1439,14 +1439,14 @@ void apply_latitudes(const Geometry &geom,
           double first_level_y =
               verts[edges[levels_edges[first_level][0]][0]][1];
           if (!is_even(n) && (opts.d > 1) &&
-              double_gt(first_level_y, 0, opts.epsilon))
+              double_gt(first_level_y, 0, opts.eps))
             swap(face_idx[0], face_idx[1]);
 
           int face_painted = -1;
           double edge_y = (verts[edges[last_edge][0]])[1];
           for (unsigned int j = 0; j < face_idx.size(); j++) {
             double face_cent_y = centroid(verts, faces[face_idx[j]])[1];
-            if (double_eq(edge_y, face_cent_y, opts.epsilon)) {
+            if (double_eq(edge_y, face_cent_y, opts.eps)) {
               face_painted = j;
               break;
             }
@@ -1622,7 +1622,7 @@ void apply_latitudes(const Geometry &geom,
 
   double last_y = edge_ys[0].first;
   for (auto &edge_y : edge_ys) {
-    if (double_ne(edge_y.first, last_y, opts.epsilon)) {
+    if (double_ne(edge_y.first, last_y, opts.eps)) {
       lat++;
       if (double_sw) {
         lat -= wait;
@@ -1664,7 +1664,7 @@ void apply_latitudes(const Geometry &geom,
       vector<int> face = faces[i];
       for (int j : face) {
         Vec3d v = verts[j];
-        if (!compare(v, np, opts.epsilon)) {
+        if (!compare(v, np, opts.eps)) {
           face_list[i]->lat = 0;
           break;
         }
@@ -1677,7 +1677,7 @@ void apply_latitudes(const Geometry &geom,
 
   last_y = edge_ys[0].first;
   for (auto &edge_y : edge_ys) {
-    if (double_ne(edge_y.first, last_y, opts.epsilon)) {
+    if (double_ne(edge_y.first, last_y, opts.eps)) {
       lat = max_lat_used + 2;
       if (double_sw) {
         lat -= wait;
@@ -1775,7 +1775,7 @@ void form_angular_model(Geometry &geom, const vector<int> &prime_meridian,
       // if full sweep this works
       meridian = prime_meridian;
       if (!opts.double_sweep)
-        reverse_poly_indexes_on_y(geom, meridian, opts.epsilon);
+        reverse_poly_indexes_on_y(geom, meridian, opts.eps);
     }
     else {
       // add one 'meridian' of points
@@ -1840,7 +1840,7 @@ void form_angular_model(Geometry &geom, const vector<int> &prime_meridian,
           face.insert(face.end(), top_edge[k]);
 
         vector<vector<int>> face_parts =
-            split_bow_ties(geom, coordinates, face, opts.epsilon);
+            split_bow_ties(geom, coordinates, face, opts.eps);
 
         vector<int> split_face_idx;
 
@@ -2045,7 +2045,7 @@ void find_split_faces_shell_model(const Geometry &geom,
     vector<int> split_face_idx;
     double last_z = std::numeric_limits<double>::max();
     for (unsigned int i = 0; i < face_zs.size(); i++) {
-      if (double_ne(face_zs[i].first, last_z, opts.epsilon)) {
+      if (double_ne(face_zs[i].first, last_z, opts.eps)) {
         if (i > 0) {
           split_face_indexes.push_back(split_face_idx);
           split_face_idx.clear();
@@ -2071,7 +2071,7 @@ void calc_radii(double &inner_radius, double &outer_radius, double &arc,
   // the correct outer radius, except when d is 1
   arc = 360.0 / (N / ((opts.build_method == 2 && d != 1) ? 2 : 1)) * d;
   // but this causes a problem for 2N/N so make an exception (always 360/4 = 90)
-  if (opts.build_method == 2 && double_eq(arc, 180.0, opts.epsilon))
+  if (opts.build_method == 2 && double_eq(arc, 180.0, opts.eps))
     arc = 360.0 / N * d;
 
   double interior_angle = (180.0 - arc) / 2.0;
@@ -2098,9 +2098,9 @@ void calc_radii(double &inner_radius, double &outer_radius, double &arc,
   }
 
   // patch: radii cannot be exactly 0
-  if (double_eq(inner_radius, 0.0, opts.epsilon))
+  if (double_eq(inner_radius, 0.0, opts.eps))
     inner_radius += 1e-4;
-  if (double_eq(outer_radius, 0.0, opts.epsilon))
+  if (double_eq(outer_radius, 0.0, opts.eps))
     outer_radius += 1e-4;
 
   if (return_calc) {
@@ -4531,11 +4531,11 @@ void find_poles(Geometry &geom, int &north, int &south, const ncon_opts &opts)
   south = -1;
   double y_south = std::numeric_limits<double>::max();
   for (unsigned int i = 0; i < geom.verts().size(); i++) {
-    if (double_gt(geom.verts(i)[1], y_north, opts.epsilon)) {
+    if (double_gt(geom.verts(i)[1], y_north, opts.eps)) {
       y_north = geom.verts(i)[1];
       north = i;
     }
-    if (double_lt(geom.verts(i)[1], y_south, opts.epsilon)) {
+    if (double_lt(geom.verts(i)[1], y_south, opts.eps)) {
       y_south = geom.verts(i)[1];
       south = i;
     }
@@ -4806,7 +4806,7 @@ void ncon_coloring(Geometry &geom, const vector<faceList *> &face_list,
 
   // front and back twisting is opposite, fix when twisted half way
   if (opts.mod_twist &&
-      double_eq((double)opts.ncon_order / opts.mod_twist, 2.0, opts.epsilon)) {
+      double_eq((double)opts.ncon_order / opts.mod_twist, 2.0, opts.eps)) {
     for (auto &i : edge_color_table)
       swap(i.second.first, i.second.second);
     for (auto &i : face_color_table)
@@ -4872,7 +4872,7 @@ void build_globe(Geometry &geom, vector<coordList *> &coordinates,
     // forms with edge parallel with the Y axis only need 1/2 pass
     int polygons_total =
         (point_cut_calc ||
-         angle_on_aligned_polygon(opts.angle, opts.ncon_order, opts.epsilon))
+         angle_on_aligned_polygon(opts.angle, opts.ncon_order, opts.eps))
             ? opts.longitudes.front() / 2
             : opts.longitudes.front();
     double_sweep = (polygons_total == opts.longitudes.front()) ? true : false;
@@ -4890,8 +4890,8 @@ void build_globe(Geometry &geom, vector<coordList *> &coordinates,
                          outer_radius, point_cut_calc, opts);
 
     if (opts.build_method == 2)
-      radius_inversion = double_gt(fabs(opts.inner_radius),
-                                   fabs(opts.outer_radius), opts.epsilon);
+      radius_inversion =
+          double_gt(fabs(opts.inner_radius), fabs(opts.outer_radius), opts.eps);
 
     // need original point cut for polygon numbers
     form_globe(geom, prime_meridian, coordinates, face_list, edge_list,
@@ -5311,15 +5311,15 @@ int process_hybrid(Geometry &geom, ncon_opts &opts)
   // merge by using polar orbit coordinates. this keeps the face_list pointing
   // to the right faces
   vector<polarOrb *> polar_orbit;
-  find_polar_orbit(geom, polar_orbit, opts.build_method, opts.epsilon);
-  merge_halves(geom, polar_orbit, opts.epsilon);
+  find_polar_orbit(geom, polar_orbit, opts.build_method, opts.eps);
+  merge_halves(geom, polar_orbit, opts.eps);
   polar_orbit.clear();
 
   // for build method 3 there are some unmatched edges
   // make it a valid polyhedron, and be able to flood fill across divide
   vector<int> added_triangles;
   if (opts.build_method == 3)
-    add_triangles_to_close(geom, added_triangles, opts.epsilon);
+    add_triangles_to_close(geom, added_triangles, opts.eps);
 
   opts.longitudes.back() = longitudes_back;
 
@@ -5390,7 +5390,7 @@ int process_normal(Geometry &geom, ncon_opts &opts)
   // now we do the twisting
   // twist plane is now determined by points landing on z-plane
   vector<polarOrb *> polar_orbit;
-  find_polar_orbit(geom, polar_orbit, opts.build_method, opts.epsilon);
+  find_polar_orbit(geom, polar_orbit, opts.build_method, opts.eps);
 
   // method 1: can't twist when half or less of model is showing
   // method 2 and 3: whole model exists even though some longitudes will later
@@ -5408,13 +5408,13 @@ int process_normal(Geometry &geom, ncon_opts &opts)
   vector<int> added_triangles;
   if (opts.build_method == 3) {
     polar_orbit.clear();
-    find_polar_orbit(geom, polar_orbit, opts.build_method, opts.epsilon);
-    merge_halves(geom, polar_orbit, opts.epsilon);
+    find_polar_orbit(geom, polar_orbit, opts.build_method, opts.eps);
+    merge_halves(geom, polar_orbit, opts.eps);
     polar_orbit.clear();
 
     // for build method 3 there are some unmatched edges
     // make it a valid polyhedron, and be able to flood fill across divide
-    add_triangles_to_close(geom, added_triangles, opts.epsilon);
+    add_triangles_to_close(geom, added_triangles, opts.eps);
   }
 
   if (opts.build_method > 1 && opts.face_coloring_method == 'f')
@@ -5544,7 +5544,7 @@ void transfer_colors(Geometry &gpgon, const Geometry &pgon, const bool digons,
     Vec3d pv = pgon.verts(i);
     for (unsigned int j = 0; j < gpgon.verts().size(); j++) {
       Vec3d gv = gpgon.verts(j);
-      if (!compare(pv, gv, opts.epsilon)) {
+      if (!compare(pv, gv, opts.eps)) {
         v_map[i] = j;
         break;
       }
@@ -5572,7 +5572,7 @@ void transfer_colors(Geometry &gpgon, const Geometry &pgon, const bool digons,
           for (unsigned int m = 0; m < 2; m++) {
             Vec3d v1 = pgon.verts(pgon.edges(p_edges[m])[0]);
             Vec3d v2 = pgon.verts(pgon.edges(p_edges[m])[1]);
-            if ((point_in_segment(gp_vertex, v1, v2, opts.epsilon)).is_set()) {
+            if ((point_in_segment(gp_vertex, v1, v2, opts.eps)).is_set()) {
               gpgon.colors(EDGES).set(j, pgon.colors(EDGES).get(p_edges[m]));
             }
           }
@@ -5671,7 +5671,7 @@ void rotate_polygon(Geometry &pgon, const int N, const bool pc, const bool hyb,
 {
   // rotate polygons
   double rot_angle = 0;
-  if ((opts.build_method == 3) && double_ne(opts.angle, 0, opts.epsilon)) {
+  if ((opts.build_method == 3) && double_ne(opts.angle, 0, opts.eps)) {
     rot_angle = deg2rad(opts.angle);
     if (hyb && pc)
       rot_angle += M_PI / N;
@@ -5685,8 +5685,8 @@ void rotate_polygon(Geometry &pgon, const int N, const bool pc, const bool hyb,
   bool is_flipped = false;
   if (!is_even(N)) {
     // method 3 these angles will cause an upward flip
-    if ((opts.build_method == 3) && double_ne(opts.angle, 0, opts.epsilon) &&
-        (angle_on_aligned_polygon(opts.angle, N, opts.epsilon)))
+    if ((opts.build_method == 3) && double_ne(opts.angle, 0, opts.eps) &&
+        (angle_on_aligned_polygon(opts.angle, N, opts.eps)))
       is_flipped = true;
   }
   else
@@ -5727,13 +5727,13 @@ void color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
     double i_radius = opts.inner_radius;
     double o_radius = opts.outer_radius;
     // inner and outer radius must be both positive or negative
-    if ((double_gt(o_radius, 0, opts.epsilon) &&
-         double_gt(i_radius, 0, opts.epsilon)) ||
-        (double_lt(o_radius, 0, opts.epsilon) &&
-         double_lt(i_radius, 0, opts.epsilon))) {
+    if ((double_gt(o_radius, 0, opts.eps) &&
+         double_gt(i_radius, 0, opts.eps)) ||
+        (double_lt(o_radius, 0, opts.eps) &&
+         double_lt(i_radius, 0, opts.eps))) {
       i_radius = fabs(i_radius);
       o_radius = fabs(o_radius);
-      double ratio = double_gt(o_radius, i_radius, opts.epsilon)
+      double ratio = double_gt(o_radius, i_radius, opts.eps)
                          ? o_radius / i_radius
                          : i_radius / o_radius;
       for (int i = 1; i <= N / 2; i++) {
@@ -5822,12 +5822,12 @@ void color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
     if (digons)
       pgon.transform(Trans3d::scale(o_radius / 0.5));
 
-    poly_scale = (double_gt(fabs(opts.outer_radius), fabs(opts.inner_radius),
-                            opts.epsilon)
-                      ? fabs(opts.outer_radius)
-                      : fabs(opts.inner_radius)) /
-                 o_radius;
-    if (double_ne(poly_scale, 1.0, opts.epsilon))
+    poly_scale =
+        (double_gt(fabs(opts.outer_radius), fabs(opts.inner_radius), opts.eps)
+             ? fabs(opts.outer_radius)
+             : fabs(opts.inner_radius)) /
+        o_radius;
+    if (double_ne(poly_scale, 1.0, opts.eps))
       pgon.transform(Trans3d::scale(poly_scale));
   }
 
@@ -5840,14 +5840,14 @@ void color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
 
     // build gear polygon proper
     Geometry rpgon = build_gear_polygon(N, D, opts.outer_radius,
-                                        opts.inner_radius, 1.0, opts.epsilon);
+                                        opts.inner_radius, 1.0, opts.eps);
 
     rotate_polygon(rpgon, N, pc, hyb, opts);
     pgon_post_process(rpgon, axes, N, twist, hyb, opts);
 
     // build gear polygon as regular polygon
     Geometry gpgon =
-        build_gear_polygon(N, D, o_radius, i_radius, poly_scale, opts.epsilon);
+        build_gear_polygon(N, D, o_radius, i_radius, poly_scale, opts.eps);
 
     rotate_polygon(gpgon, N, pc, hyb, opts);
 
@@ -5917,7 +5917,7 @@ void color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
     if (opts.build_method == 2 && !opts.hide_indent && !gear_polygon_used) {
       // build gear polygon proper
       pgon = build_gear_polygon(N, D, opts.outer_radius, opts.inner_radius, 1.0,
-                                opts.epsilon);
+                                opts.eps);
 
       rotate_polygon(pgon, N, pc, hyb, opts);
 
@@ -5991,8 +5991,7 @@ void color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
       pc_p = true;
     if ((opts.build_method == 3) &&
         (!is_even(opts.ncon_order) &&
-         double_eq(angle_in_range(opts.angle, opts.epsilon), 180.0,
-                   opts.epsilon)))
+         double_eq(angle_in_range(opts.angle, opts.eps), 180.0, opts.eps)))
       pc_p = true;
     if ((!twist || (N / twist == 2)) && pc_p) {
       int north = -1;
@@ -6002,7 +6001,7 @@ void color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
       // congruent points on model take those colors
       if (north != -1) {
         for (unsigned int i = 0; i < geom.verts().size(); i++) {
-          if (!compare(geom.verts(i), pgon.verts(north), opts.epsilon)) {
+          if (!compare(geom.verts(i), pgon.verts(north), opts.eps)) {
             geom.colors(VERTS).set(i, pgon.colors(VERTS).get(north));
             break;
           }
@@ -6010,7 +6009,7 @@ void color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
       }
       if (south != -1) {
         for (unsigned int i = 0; i < geom.verts().size(); i++) {
-          if (!compare(geom.verts(i), pgon.verts(south), opts.epsilon)) {
+          if (!compare(geom.verts(i), pgon.verts(south), opts.eps)) {
             geom.colors(VERTS).set(i, pgon.colors(VERTS).get(south));
             break;
           }

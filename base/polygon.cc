@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2016, Adrian Rossiter
+   Copyright (c) 2003-2021, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -450,7 +450,7 @@ Status Polygon::make_antiprism_subscal_part(Geometry &geom)
   double rad = get_polygon_radius();
 
   double E = sqrt(ht * ht + pow(2 * rad * sin(angle() / 4), 2));
-  if (fabs(rad) > E - epsilon)
+  if (fabs(rad) > E - anti::epsilon)
     return Status::error("antprism slant height to short to close "
                          "polyhedron at apex");
 
@@ -513,7 +513,7 @@ Status Polygon::make_antiprism_part(Geometry &geom)
 
   if (value_is_set(edge[1])) {
     double dist = 2 * get_polygon_radius() * sin(angle() / 4);
-    if (fabs(edge[1]) - fabs(dist) < -epsilon)
+    if (fabs(edge[1]) - fabs(dist) < -anti::epsilon)
       return Status::error("slant edge too short to reach between vertices");
   }
   else if (subtype == sub_antiprism_crown)
@@ -593,7 +593,7 @@ Status Polygon::make_pyramid_part(Geometry &geom)
   if (value_is_set(height[0]))
     ht = height[0];
   else if (value_is_set(edge[1])) {
-    if (edge[1] - rad < -epsilon)
+    if (edge[1] - rad < -anti::epsilon)
       return Status::error("slant edge too short to reach apex");
 
     ht = (edge[1] > rad) ? sqrt(edge[1] * edge[1] - rad * rad) : 0;
@@ -824,7 +824,7 @@ Status Polygon::make_cupola_part(Geometry &geom)
   if (value_is_set(height[0]))
     ht = height[0];
   else if (value_is_set(edge[1])) {
-    if (edge[1] - rad < -epsilon) // CHECK need fabs?
+    if (edge[1] - rad < -anti::epsilon) // CHECK need fabs?
       return Status::error("edge too short to reach between polygons");
 
     double inrad1 = rad * cos(angle() / 2);
@@ -937,7 +937,7 @@ Status Polygon::make_gyrobicupola_part(Geometry &geom)
 
 Status Polygon::make_snub_antiprism_part(Geometry &geom)
 {
-  const double sqrt_epsilon = sqrt(epsilon);
+  const double sqrt_epsilon = sqrt(anti::epsilon);
   const double ang_inc = step * M_PI / num_sides;
   const double s = sin(ang_inc);
   const double c = cos(ang_inc);
@@ -962,12 +962,13 @@ Status Polygon::make_snub_antiprism_part(Geometry &geom)
     double h2 = rt > sqrt_epsilon ? sqrt(rt) : 0;
     for (int j = 0; j < 2; j++) {
       h1 *= -1; // flip sign
-      if (fabs(2 * r * r * (1 - c) + (h1 - h2) * (h1 - h2) - 1) > epsilon / s)
+      if (fabs(2 * r * r * (1 - c) + (h1 - h2) * (h1 - h2) - 1) >
+          anti::epsilon / s)
         continue;
       valid.push_back(r);
       valid.push_back(h1);
       valid.push_back(h2);
-      if (fabs(h1) < epsilon || fabs(h2) < epsilon)
+      if (fabs(h1) < anti::epsilon || fabs(h2) < anti::epsilon)
         break;
     }
   }

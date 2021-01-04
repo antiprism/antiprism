@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2016, Adrian Rossiter
+   Copyright (c) 2016-2021, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -475,7 +475,7 @@ bool get_B(const Vec3d &A, Vec3d &B, const Vec3d &C, const Vec3d &norm_AB)
   norm_AB.dump();
   Vec3d pivot = (C + Trans3d::reflection(norm_AB) * C) / 2;
   if (vcross((A - pivot).unit(), B.unit()).len() >
-      epsilon) // lines not parallel
+      anti::epsilon) // lines not parallel
     B = lines_intersection(A, pivot, Vec3d(0, 0, 0), B, 0);
   else // lines parallel
     B *= (A.len() + C.len()) *
@@ -504,15 +504,15 @@ string degeneracy_message(const vector<Vec3d> &kite)
 
   // kite vertices - A:0, C:1, B:2, C':3
   Vec3d k012_offset = kite[1] - nearest_point(kite[1], kite[0], kite[2]);
-  if (k012_offset.len() < epsilon)
+  if (k012_offset.len() < anti::epsilon)
     return prefix + "kite shape is a line segment";
 
   Vec3d k123_offset = kite[2] - nearest_point(kite[2], kite[1], kite[3]);
   Vec3d k301_offset = kite[0] - nearest_point(kite[0], kite[3], kite[1]);
-  if (k123_offset.len() < epsilon || k301_offset.len() < epsilon)
+  if (k123_offset.len() < anti::epsilon || k301_offset.len() < anti::epsilon)
     return prefix + "kite shape is a triangle";
 
-  if (fabs(vtriple(kite[0], kite[1], kite[2])) < epsilon)
+  if (fabs(vtriple(kite[0], kite[1], kite[2])) < anti::epsilon)
     return prefix + "model does not enclose any space";
 
   return string();
@@ -821,7 +821,7 @@ Status make_base_model(Geometry &geom, const vector<int> &fracs, int num_fracs,
     sym_repeat(geom, kite_geom, sym);
 
   if (!kite_only) // avoid reordering faces if single kite is to be output
-    merge_coincident_elements(geom, "v", epsilon);
+    merge_coincident_elements(geom, "v", anti::epsilon);
 
   string error_msg = degeneracy_message(kite_geom.verts());
   return (error_msg.empty()) ? Status::ok() : Status::warning(error_msg);

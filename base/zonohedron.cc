@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2016, Adrian Rossiter
+   Copyright (c) 2003-2021, Adrian Rossiter
 
    Permission is hereby granted, free of charge, to any person obtaining a
    copy of this software and associated documentation files (the "Software"),
@@ -54,20 +54,21 @@ namespace anti {
 struct vec_less {
   bool operator()(const Vec3d &v1, const Vec3d &v2) const
   {
-    return compare(v1, v2, epsilon) == -1; // may need to be larger for Qhull
+    return compare(v1, v2, anti::epsilon) ==
+           -1; // may need to be larger for Qhull
   }
 };
 
 // Normalised direction of the line of a vector
 Vec3d normalised_dir(const Vec3d v)
 {
-  if (v[0] < -epsilon)
+  if (v[0] < -anti::epsilon)
     return -v;
-  else if (v[0] < epsilon) {
-    if (v[1] < -epsilon)
+  else if (v[0] < anti::epsilon) {
+    if (v[1] < -anti::epsilon)
       return -v;
-    else if (v[1] < epsilon) {
-      if (v[2] < -epsilon)
+    else if (v[1] < anti::epsilon) {
+      if (v[2] < -anti::epsilon)
         return -v;
     }
   }
@@ -82,7 +83,7 @@ vector<Vec3d> get_star(const Geometry &geom, char type, Vec3d centre)
   case 'v': // vertices
     for (const auto &vert : verts) {
       Vec3d v = vert - centre;
-      if (v.len2() > epsilon * epsilon)
+      if (v.len2() > anti::epsilon * anti::epsilon)
         star.push_back(v);
     }
     break;
@@ -170,7 +171,7 @@ Status make_zonohedron(Geometry &geom, const vector<Vec3d> &star)
     for (unsigned int i = 0; i < star.size() - 1; i++)
       for (unsigned int j = i + 1; j < star.size(); j++) {
         Vec3d n = vcross(star[i], star[j]) / (star_mags[i] * star_mags[j]);
-        if (n.len2() > epsilon * epsilon) {
+        if (n.len2() > anti::epsilon * anti::epsilon) {
           Vec3d norm = normalised_dir(n).unit();
           stars2d[norm].insert(i);
           stars2d[norm].insert(j);

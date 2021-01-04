@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2016, Adrian Rossiter
+   Copyright (c) 2003-2021, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -158,8 +158,8 @@ static void RGBtoHSV(double r, double g, double b, double *h, double *s,
 
   delta = max - min;
 
-  if (max > epsilon)  // avoid division by zero
-    *s = delta / max; // s
+  if (max > anti::epsilon) // avoid division by zero
+    *s = delta / max;      // s
   else {
     // r = g = b = 0     // s = 0, v and h are not important
     *s = 0;
@@ -167,7 +167,7 @@ static void RGBtoHSV(double r, double g, double b, double *h, double *s,
     return;
   }
 
-  if (delta < epsilon) // grey range, avoid division by zero
+  if (delta < anti::epsilon) // grey range, avoid division by zero
     *h = 0;
   else if (r == max)
     *h = (g - b) / delta; // between yellow & magenta
@@ -888,7 +888,7 @@ Color blend_HSX_centroid(const vector<Color> &cols, int color_system_mode,
   // saturation of color centroid is higher than sat_threshold, use average
   // saturation
   // if (S > sat_threshold) S could be slightly larger than 1
-  if (double_gt(S, sat_threshold, epsilon))
+  if (double_gt(S, sat_threshold, anti::epsilon))
     S = saturation_sum / cols_sz;
 
   // hue

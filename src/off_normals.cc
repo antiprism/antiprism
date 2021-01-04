@@ -69,7 +69,7 @@ public:
 
   Vec3d center;
 
-  double epsilon;
+  double eps;
 
   off_normals_opts()
       : ProgramOpts("off_normals"), unit_normals(false),
@@ -77,7 +77,7 @@ public:
         elem_normal_vecs(false), edge_normal_method('\0'),
         base_normal_method('b'), show_pointing("oih"), show_elems("f"),
         average_pattern("r"), alternate_calculation(false), normal_type('n'),
-        hemispherical_normal_col(Color(127, 127, 127)), epsilon(::epsilon)
+        hemispherical_normal_col(Color(127, 127, 127)), eps(anti::epsilon)
   {
   }
 
@@ -128,8 +128,8 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                key word: n take color of normal vertex
 
 )",
-          prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
-          ::epsilon);
+          prog_name(), help_ver_text, int(-log(anti::epsilon) / log(10) + 0.5),
+          anti::epsilon);
 }
 
 void off_normals_opts::process_command_line(int argc, char **argv)
@@ -240,7 +240,7 @@ void off_normals_opts::process_command_line(int argc, char **argv)
         warning("limit is very small, may not be attainable", c);
       }
 
-      epsilon = pow(10, -sig_compare);
+      eps = pow(10, -sig_compare);
       break;
 
     case 'o':
@@ -273,7 +273,7 @@ void add_normals(Geometry &geom, const off_normals_opts &opts)
   Geometry ngeom;
   vector<int> deleted_faces;
 
-  FaceNormals x_normals(geom, opts.center, opts.normal_type, opts.epsilon);
+  FaceNormals x_normals(geom, opts.center, opts.normal_type, opts.eps);
 
   if (strchr(opts.show_elems.c_str(), 'f')) {
     std::unique_ptr<ColorMap> cmap(colormap_from_name("rnd")); // for -E r
@@ -444,7 +444,7 @@ void add_normals(Geometry &geom, const off_normals_opts &opts)
     for (unsigned int i = 0; i < verts.size(); i++) {
       Normal x_normal;
       if (opts.alternate_calculation)
-        x_normal = Normal(geom, v_norms[i], i, opts.center, opts.epsilon);
+        x_normal = Normal(geom, v_norms[i], i, opts.center, opts.eps);
       else
         x_normal = x_normals.vert_normal(i, opts.average_pattern);
 

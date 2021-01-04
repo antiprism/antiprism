@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2008-2016, Adrian Rossiter
+   Copyright (c) 2008-2021, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -269,7 +269,7 @@ double Camera::get_width() const
       w *= 2;
   }
 
-  return w > epsilon ? w : epsilon;
+  return w > anti::epsilon ? w : anti::epsilon;
 }
 
 Vec3d Camera::get_centre() const

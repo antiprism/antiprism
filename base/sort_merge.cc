@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2007-2020 Roger Kaufman
+   Copyright (c) 2007-2021 Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -372,7 +372,7 @@ void sort_vertices(Geometry &geom, vector<vertexMap> &vm_all_verts,
                    const string &delete_elems,
                    map<int, set<int>> *equiv_elems = nullptr,
                    bool chk_congruence = false, int blend_type = 1,
-                   double eps = epsilon)
+                   double eps = anti::epsilon)
 {
   vector<Vec3d> &verts = geom.raw_verts();
 

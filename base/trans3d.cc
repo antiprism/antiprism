@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2016, Adrian Rossiter
+   Copyright (c) 2003-2021, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -100,7 +100,7 @@ Trans3d Trans3d::rotate(Vec3d v_from, Vec3d v_to)
   v_to.to_unit();
   Vec3d axis = vcross(v_from, v_to);
   double cos_a = vdot(v_from, v_to);
-  if (fabs(cos_a) >= 1 - epsilon) {
+  if (fabs(cos_a) >= 1 - anti::epsilon) {
     cos_a = cos_a > 0 ? 1 : -1;
     axis = vcross(v_from, Vec3d(1.2135, 2.09865, 3.23784)); // fix this
   }
@@ -133,7 +133,7 @@ Trans3d Trans3d::angles_between_axes(double yz_ang, double zx_ang,
   double sq = 1 - cos(xy_ang) * cos(xy_ang) - cos(yz_ang) * cos(yz_ang) -
               cos(zx_ang) * cos(zx_ang) +
               2 * cos(xy_ang) * cos(yz_ang) * cos(zx_ang);
-  if (sq < -epsilon) {
+  if (sq < -anti::epsilon) {
     if (valid)
       *valid = false;
     return zero();
@@ -155,7 +155,7 @@ Trans3d Trans3d::inverse() const
 {
   Trans3d inv;
   double determ = determinant(m, 4);
-  if (fabs(determ) > epsilon) {
+  if (fabs(determ) > anti::epsilon) {
     // http://www.euclideanspace.com/maths/algebra/matrix/functions
     // /inverse/fourD/index.htm
     inv[0] = m[6] * m[11] * m[13] - m[7] * m[10] * m[13] + m[7] * m[9] * m[14] -
@@ -241,7 +241,7 @@ Vec4d Trans3d::get_quaternion() const
   // If the trace of the matrix is equal to zero then identify
   // which major diagonal element has the greatest value.
   // Depending on this, calculate the following:
-  if (T > epsilon) {
+  if (T > anti::epsilon) {
     S = sqrt(T) * 2;
     quat[0] = (m[9] - m[6]) / S;
     quat[1] = (m[2] - m[8]) / S;

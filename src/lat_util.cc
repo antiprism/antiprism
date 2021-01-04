@@ -74,7 +74,7 @@ public:
   int blend_type;
 
   bool verbose;
-  double epsilon;
+  double eps;
 
   // 0 - lattice  1 - convex hull  2 - voronoi
   vector<Color> vert_col;
@@ -88,7 +88,7 @@ public:
         add_hull(false), append_lattice(false), color_method('\0'),
         face_opacity(-1), list_radii_original_center('\0'), list_radii(0),
         list_struts(0), trans_to_origin(false), R_merge_elems("vef"),
-        blend_type(3), verbose(false), epsilon(::epsilon)
+        blend_type(3), verbose(false), eps(anti::epsilon)
   {
   }
 
@@ -158,8 +158,8 @@ Coloring Options (run 'off_util -H color' for help on color formats)
   -T <tran> face transparency for color by symmetry. valid range from 0 to 255
 
 )",
-          prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
-          ::epsilon);
+          prog_name(), help_ver_text, int(-log(anti::epsilon) / log(10) + 0.5),
+          anti::epsilon);
 }
 
 void lutil_opts::process_command_line(int argc, char **argv)
@@ -369,7 +369,7 @@ void lutil_opts::process_command_line(int argc, char **argv)
         warning("limit is very small, may not be attainable", c);
       }
 
-      epsilon = pow(10, -sig_compare);
+      eps = pow(10, -sig_compare);
       break;
 
     case 'o':
@@ -440,15 +440,14 @@ void process_lattices(Geometry &geom, Geometry &container,
                         (opts.radius_default == 'k')
                             ? lattice_radius(container, opts.radius_default)
                             : opts.radius,
-                        opts.offset, opts.verbose, opts.epsilon);
+                        opts.offset, opts.verbose, opts.eps);
   else if (opts.container == 's')
-    geom_spherical_clip(geom, opts.radius, opts.offset, opts.verbose,
-                        opts.epsilon);
+    geom_spherical_clip(geom, opts.radius, opts.offset, opts.verbose, opts.eps);
 
   if (opts.voronoi_cells) {
     Geometry vgeom;
     if (get_voronoi_geom(geom, vgeom, opts.voronoi_central_cell, false,
-                         opts.epsilon)) {
+                         opts.eps)) {
       Coloring(&vgeom).vef_one_col(opts.vert_col[2], opts.edge_col[2],
                                    opts.face_col[2]);
       geom = vgeom;
@@ -476,7 +475,7 @@ void process_lattices(Geometry &geom, Geometry &container,
   // face color by symmetry normals
   if (opts.color_method)
     color_by_symmetry_normals(geom, opts.color_method, opts.face_opacity,
-                              opts.epsilon);
+                              opts.eps);
 
   // if color by sqrt was used, override all edges of all structure
   if (opts.color_edges_by_sqrt)
@@ -493,7 +492,7 @@ void process_lattices(Geometry &geom, Geometry &container,
     geom = geom2;
     if (opts.R_merge_elems != "")
       merge_coincident_elements(geom, opts.R_merge_elems, opts.blend_type,
-                                opts.epsilon);
+                                opts.eps);
   }
 
   if (opts.list_radii) {
@@ -503,10 +502,10 @@ void process_lattices(Geometry &geom, Geometry &container,
         opts.list_radii_center += opts.offset;
     }
     list_grid_radii(opts.ofile, geom, opts.list_radii_center, opts.list_radii,
-                    opts.epsilon);
+                    opts.eps);
   }
   else if (opts.list_struts)
-    list_grid_struts(opts.ofile, geom, opts.list_struts, opts.epsilon);
+    list_grid_struts(opts.ofile, geom, opts.list_struts, opts.eps);
 
   if (opts.append_container) {
     container.add_missing_impl_edges();
@@ -515,7 +514,7 @@ void process_lattices(Geometry &geom, Geometry &container,
   }
 
   if (opts.cent_col.is_set())
-    color_centroid(geom, opts.cent_col, opts.epsilon);
+    color_centroid(geom, opts.cent_col, opts.eps);
 
   if (opts.trans_to_origin)
     geom.transform(Trans3d::translate(-centroid(geom.verts())));

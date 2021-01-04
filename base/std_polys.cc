@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2016, Adrian Rossiter
+   Copyright (c) 2003-2021, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -1271,7 +1271,7 @@ static void rh_hexacontahedron(Geometry &geom, bool is_std = false)
   if (!is_std) // Make unit edges
     geom_face.transform(Trans3d::scale(1 / geom_face.edge_vec(0, 1).len()));
   sym_repeat(geom, geom_face, Symmetry(Symmetry::I));
-  merge_coincident_elements(geom, "vef", epsilon);
+  merge_coincident_elements(geom, "vef", anti::epsilon);
   normalised_face_list(geom);
   if (!is_std)
     set_resource_polygon_color(geom);

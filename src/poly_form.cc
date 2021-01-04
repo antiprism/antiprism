@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2020, Adrian Rossiter
+   Copyright (c) 2003-2021, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -496,7 +496,7 @@ Status make_regular_faces(Geometry &base_geom, IterationControl it_ctrl,
   vector<double> rads(faces.size());
   for (unsigned int f = 0; f < faces.size(); f++) {
     int N = faces[f].size();
-    int D = std::abs(find_polygon_denominator_signed(geom, f, epsilon));
+    int D = std::abs(find_polygon_denominator_signed(geom, f, anti::epsilon));
     if (!D)
       D = 1;
     rads[f] = 0.5 / sin(M_PI * D / N); // circumradius of regular polygon

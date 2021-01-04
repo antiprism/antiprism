@@ -64,7 +64,7 @@ public:
   string map_string;
   int face_opacity;
 
-  double epsilon;
+  double eps;
 
   miller_opts()
       : ProgramOpts("miller"), output_parts("s"), merge_faces(false),
@@ -72,7 +72,7 @@ public:
         vertex_coloring_method('\0'), edge_coloring_method('\0'),
         face_coloring_method('\0'), vertex_color(Color::invisible),
         edge_color(Color::invisible), face_color(Color()),
-        map_string("compound"), face_opacity(-1), epsilon(::epsilon)
+        map_string("compound"), face_opacity(-1), eps(anti::epsilon)
   {
   }
   void process_command_line(int argc, char **argv);
@@ -114,8 +114,8 @@ Coloring Options (run 'off_util -H color' for help on color formats)
   -m <maps> color maps. stellation diagram or face symmetry (default: compound)
 
 )",
-          prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
-          ::epsilon);
+          prog_name(), help_ver_text, int(-log(anti::epsilon) / log(10) + 0.5),
+          anti::epsilon);
 }
 
 void miller_opts::process_command_line(int argc, char **argv)
@@ -196,7 +196,7 @@ void miller_opts::process_command_line(int argc, char **argv)
         warning("limit is very small, may not be attainable", c);
       }
 
-      epsilon = pow(10, -sig_compare);
+      eps = pow(10, -sig_compare);
       break;
 
     case 'o':
@@ -238,6 +238,7 @@ void apply_transparency(Geometry &geom, const miller_opts &opts,
   }
 }
 
+// use anti::epsilon so it is not effected by opt epsilon
 void color_stellation(Geometry &stellation, const miller_opts &opts)
 {
   // set color map
@@ -276,7 +277,8 @@ void color_stellation(Geometry &stellation, const miller_opts &opts)
       // make new verts and edges invisible
       kis.add_missing_impl_edges();
       for (unsigned int i = 0; i < kis.verts().size(); i++) {
-        int v_idx = find_vert_by_coords(stellation, kis.verts()[i], epsilon);
+        int v_idx =
+            find_vert_by_coords(stellation, kis.verts()[i], anti::epsilon);
         if (v_idx == -1) {
           kis.colors(VERTS).set(i, Color::invisible);
           vector<int> edge_idx = find_edges_with_vertex(kis.edges(), i);
@@ -288,7 +290,7 @@ void color_stellation(Geometry &stellation, const miller_opts &opts)
       stellation.clear(FACES);
       stellation.append(kis);
       int blend_type = 1; // first color, invisible edges stay
-      merge_coincident_elements(stellation, "vef", blend_type, epsilon);
+      merge_coincident_elements(stellation, "vef", blend_type, anti::epsilon);
 
       for (unsigned int i = 0; i < stellation.faces().size(); i++) {
         vector<int> face = stellation.faces()[i];
@@ -352,7 +354,8 @@ void color_stellation(Geometry &stellation, const miller_opts &opts)
   // vertices from kis must be made invisible in stellation
   if (opts.face_coloring_method == 'C') {
     for (unsigned int i = 0; i < kis.verts().size(); i++) {
-      int v_idx = find_vert_by_coords(stellation, kis.verts()[i], epsilon);
+      int v_idx =
+          find_vert_by_coords(stellation, kis.verts()[i], anti::epsilon);
       if (v_idx != -1) {
         if ((kis.colors(VERTS).get(i)).is_invisible())
           stellation.colors(VERTS).set(v_idx, Color::invisible);
@@ -671,7 +674,7 @@ int Miller::get_poly(Geometry &geom, int sym, string cell_str, string sym_str, m
   bool remove_multiples = true;
 
   geom = make_stellation(geom, diagrams, idx_lists, sym_str, merge_faces, remove_inline_verts,
-                         split_pinched, resolve_faces, remove_multiples, opts.map_string, opts.epsilon);
+                         split_pinched, resolve_faces, remove_multiples, opts.map_string, opts.eps);
 
   vector<vector<int>> idx_lists_full =
       lists_full(diagrams, idx_lists, remove_multiples);

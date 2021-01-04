@@ -127,7 +127,7 @@ public:
   bool dual_lattice;
 
   bool verbose;
-  double epsilon;
+  double eps;
 
   // 0 - lattice  1 - convex hull  2 - voronoi  3 - hex overlay
   vector<Color> vert_col;
@@ -146,7 +146,7 @@ public:
         append_lattice(false), color_method('\0'), face_opacity(-1),
         trans_to_origin(false), r_lattice_type(0), inversion(false),
         list_bravais(false), list_radii_original_center('\0'), list_radii(0),
-        list_struts(0), dual_lattice(false), verbose(false), epsilon(::epsilon)
+        list_struts(0), dual_lattice(false), verbose(false), eps(anti::epsilon)
   {
   }
 
@@ -335,8 +335,8 @@ Listing Options
                f - full report, v - values only
 
 )",
-          prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
-          ::epsilon);
+          prog_name(), help_ver_text, int(-log(anti::epsilon) / log(10) + 0.5),
+          anti::epsilon);
 }
 
 void brav_opts::process_command_line(int argc, char **argv)
@@ -545,7 +545,7 @@ void brav_opts::process_command_line(int argc, char **argv)
         warning("limit is very small, may not be attainable", c);
       }
 
-      epsilon = pow(10, -sig_compare);
+      eps = pow(10, -sig_compare);
       break;
 
     case 'D':
@@ -1751,11 +1751,11 @@ void do_bravais(Geometry &geom, Geometry &container, brav_opts &opts)
   // original cell size is 2x2x2
   vector<double> cell_size(3, 2.0);
 
-  geom_to_grid(geom, opts.grid, cell_size, opts.epsilon);
+  geom_to_grid(geom, opts.grid, cell_size, opts.eps);
 
   if (opts.r_lattice_type == 1 || opts.r_lattice_type == 3) {
     r_lattice_overlay(geom, opts.grid, cell_size, opts.vert_col[3],
-                      opts.edge_col[3], opts.epsilon);
+                      opts.edge_col[3], opts.eps);
     if (opts.r_lattice_type == 3)
       geom.transform(r_lattice_trans_mat(true));
   }
@@ -1817,7 +1817,7 @@ void do_bravais(Geometry &geom, Geometry &container, brav_opts &opts)
     if (opts.use_centering_for_dual)
       bravais_primitive_vectors(primitive_vectors, opts.centering);
     bravais_dual(geom, primitive_vectors, opts.prim_vec_idxs, opts.vecs,
-                 opts.angles, opts.epsilon);
+                 opts.angles, opts.eps);
   }
 
   for (unsigned int i = 0; i < opts.strut_len.size(); i++)
@@ -1838,17 +1838,16 @@ void do_bravais(Geometry &geom, Geometry &container, brav_opts &opts)
                         (opts.radius_default == 'k')
                             ? lattice_radius(container, opts.radius_default)
                             : opts.radius,
-                        opts.offset, opts.verbose, opts.epsilon);
+                        opts.offset, opts.verbose, opts.eps);
   }
   else if (opts.container == 's') {
-    geom_spherical_clip(geom, opts.radius, opts.offset, opts.verbose,
-                        opts.epsilon);
+    geom_spherical_clip(geom, opts.radius, opts.offset, opts.verbose, opts.eps);
   }
 
   if (opts.voronoi_cells) {
     Geometry vgeom;
     if (get_voronoi_geom(geom, vgeom, opts.voronoi_central_cell, false,
-                         opts.epsilon)) {
+                         opts.eps)) {
       Coloring(&vgeom).vef_one_col(opts.vert_col[2], opts.edge_col[2],
                                    opts.face_col[2]);
       geom = vgeom;
@@ -1875,7 +1874,7 @@ void do_bravais(Geometry &geom, Geometry &container, brav_opts &opts)
 
   if (opts.color_method)
     color_by_symmetry_normals(geom, opts.color_method, opts.face_opacity,
-                              opts.epsilon);
+                              opts.eps);
 
   if (opts.trans_to_origin)
     geom.transform(Trans3d::translate(-centroid(geom.verts())));
@@ -1887,14 +1886,14 @@ void do_bravais(Geometry &geom, Geometry &container, brav_opts &opts)
         opts.list_radii_center += opts.offset;
     }
     list_grid_radii(opts.ofile, geom, opts.list_radii_center, opts.list_radii,
-                    opts.epsilon);
+                    opts.eps);
   }
   else if (opts.list_struts)
-    list_grid_struts(opts.ofile, geom, opts.list_struts, opts.epsilon);
+    list_grid_struts(opts.ofile, geom, opts.list_struts, opts.eps);
 
   // last so not to alter listing outcomes
   if (opts.cent_col.is_set())
-    color_centroid(geom, opts.cent_col, opts.epsilon);
+    color_centroid(geom, opts.cent_col, opts.eps);
 
   if (opts.append_container) {
     container.add_missing_impl_edges();

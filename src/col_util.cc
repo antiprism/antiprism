@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2010-2020, Roger Kaufman
+   Copyright (c) 2010-2021, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -916,7 +916,8 @@ void color_grid(Geometry &geom, const vector<Color> &cols,
       tgeom.clear_all();
     }
   }
-  merge_coincident_elements(geom, "ve", epsilon);
+  // use anti::epsilon since there is no opts epsilon
+  merge_coincident_elements(geom, "ve", anti::epsilon);
   geom.transform(Trans3d::rotate(Vec3d(0.0, 0.0, deg2rad(-90.0))));
 }
 

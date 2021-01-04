@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2016, Adrian Rossiter
+   Copyright (c) 2003-2021, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -123,15 +123,15 @@ void unitile::add_polygon(double x_start, double y_start)
 {
   vector<Vec3d> &verts = raw_verts();
   vector<vector<int>> &faces = raw_faces();
-  int x_steps = (x_end - epsilon - x_start) / x_inc;
-  int y_steps = (y_end - epsilon - y_start) / y_inc;
+  int x_steps = (x_end - anti::epsilon - x_start) / x_inc;
+  int y_steps = (y_end - anti::epsilon - y_start) / y_inc;
   for (int i = 0; i <= x_steps; i++) {
     double x = x_start + i * x_inc;
-    if (x < -epsilon)
+    if (x < -anti::epsilon)
       continue;
     for (int j = 0; j <= y_steps; j++) {
       double y = y_start + j * y_inc;
-      if (y < -epsilon)
+      if (y < -anti::epsilon)
         continue;
       Vec3d cent(x, y, 0);
       vector<Vec3d> tile;
@@ -322,7 +322,7 @@ void unitile::ut_4612()
 
 void unitile::plane(int lr_join, int tb_join)
 {
-  double epsilon = 1e-6;
+  double local_epsilon = 1e-6;
   clear_all();
   void (unitile::*pat_funcs[])() = {nullptr,
                                     &unitile::ut_4444,
@@ -355,31 +355,31 @@ void unitile::plane(int lr_join, int tb_join)
   }
   for (auto &vert : verts) {
     if (lr_join == ut_twist &&
-        (vert[0] < -epsilon || vert[0] > x_end - epsilon))
+        (vert[0] < -local_epsilon || vert[0] > x_end - local_epsilon))
       vert[1] = -vert[1];
     if (lr_join == ut_twist2 &&
-        (vert[0] < -epsilon || vert[0] > x_end - epsilon))
+        (vert[0] < -local_epsilon || vert[0] > x_end - local_epsilon))
       vert[1] = y_end - vert[1];
     if (lr_join == ut_twist3 &&
-        (vert[0] < -epsilon || vert[0] > x_end - epsilon))
+        (vert[0] < -local_epsilon || vert[0] > x_end - local_epsilon))
       vert[1] = fmod(1.5 * y_end - vert[1], y_end);
     if (tb_join == ut_twist &&
-        (vert[1] < -epsilon || vert[1] > y_end - epsilon))
+        (vert[1] < -local_epsilon || vert[1] > y_end - local_epsilon))
       vert[0] = -vert[0];
     if (tb_join == ut_twist2 &&
-        (vert[1] < -epsilon || vert[1] > y_end - epsilon))
+        (vert[1] < -local_epsilon || vert[1] > y_end - local_epsilon))
       vert[0] = x_end - vert[0];
     if (tb_join == ut_twist3 &&
-        (vert[1] < -epsilon || vert[1] > y_end - epsilon))
+        (vert[1] < -local_epsilon || vert[1] > y_end - local_epsilon))
       vert[0] = fmod(1.5 * x_end - vert[0], x_end);
     if (tb_join == ut_join2 &&
-        (vert[1] < -epsilon || vert[1] > y_end - epsilon))
+        (vert[1] < -local_epsilon || vert[1] > y_end - local_epsilon))
       vert[0] = fmod(0.5 * x_end - vert[0], x_end);
     if (lr_join != ut_open) {
-      vert[0] = fmod(vert[0] + x_end, x_end - epsilon);
+      vert[0] = fmod(vert[0] + x_end, x_end - local_epsilon);
     }
     if (tb_join != ut_open) {
-      vert[1] = fmod(vert[1] + y_end, y_end - epsilon);
+      vert[1] = fmod(vert[1] + y_end, y_end - local_epsilon);
     }
   }
   merge_coincident_elements(*this, "v", 1e-5);
@@ -566,7 +566,7 @@ void unitile::cross_cap()
     // x *= 0.9;
     // y *= 0.9;
     double dist_to_edge;
-    if (fabs(x) < epsilon && fabs(y) < epsilon)
+    if (fabs(x) < anti::epsilon && fabs(y) < anti::epsilon)
       dist_to_edge = 1;
     else if (fabs(x) > fabs(y))
       dist_to_edge = sqrt(1 + fabs(y * y / (x * x)));

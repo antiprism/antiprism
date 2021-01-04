@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2016, Adrian Rossiter
+   Copyright (c) 2003-2021, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -127,7 +127,7 @@ void BoundSphere::find_radius_centre(const vector<Vec3d> &pts)
 
   double new_radius;
   Vec3d new_centre;
-  if (rad3 < rad2 + epsilon) {
+  if (rad3 < rad2 + anti::epsilon) {
     new_radius = sqrt(rad3);
     new_centre = centrd;
   }
@@ -144,7 +144,7 @@ void BoundSphere::add_b_sphere(Vec3d cent, double rad)
   if (centre.is_set()) {
     Vec3d offset = cent - centre;
     if (offset.len() <
-        (radius + rad) * epsilon) // relatively very close centres
+        (radius + rad) * anti::epsilon) // relatively very close centres
       radius = (radius > rad) ? radius : rad;
     else { // use container of two spheres
       Vec3d u = offset.unit();

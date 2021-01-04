@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2016, Adrian Rossiter
+   Copyright (c) 2003-2021, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -178,7 +178,7 @@ void kcycle(Geometry geom, Geometry &cycle, int num_prs, vector<int> idxs,
   double ang1 =
       acos(safe_for_trig((vdot(e2, n2) - vdot(e1, n2) * vdot(e1, e2)) /
                          (vcross(e1, n2).len() * vcross(e1, e2).len())));
-  int sign2 = vdot(e1, e2) > -epsilon;
+  int sign2 = vdot(e1, e2) > -anti::epsilon;
   double ang2 =
       acos(safe_for_trig((-vdot(e1, n2) * vdot(e1, e2)) /
                          (vcross(e1, n2).len() * vcross(e1, e2).len())));

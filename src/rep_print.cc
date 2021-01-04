@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2016, Adrian Rossiter
+   Copyright (c) 2003-2021, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -488,7 +488,7 @@ void rep_printer::vertex_figure_winding_cnts()
     int winding = 0;
     for (const auto &vfig : vfigs) {
       polygon.add_face(vfig);
-      int d = find_polygon_denominator_signed(polygon, 0, epsilon);
+      int d = find_polygon_denominator_signed(polygon, 0, anti::epsilon);
       polygon.clear(FACES);
 
       int fsz = vfig.size();
@@ -531,7 +531,7 @@ void rep_printer::windings()
   vector<int> winding_numbers;
   for (unsigned int i = 0; i < geom.faces().size(); i++)
     winding_numbers.push_back(
-        find_polygon_denominator_signed(geom, i, epsilon));
+        find_polygon_denominator_signed(geom, i, anti::epsilon));
 
   face_winding_cnts(winding_numbers, false);
   face_winding_cnts(winding_numbers, true);

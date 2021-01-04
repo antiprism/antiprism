@@ -93,13 +93,13 @@ public:
   Color fill_col;
   char color_method;
   int face_opacity;
-  double epsilon;
+  double eps;
 
   waterman_opts()
       : ProgramOpts("waterman"), lattice_type(-1), radius(0), R_squared(0),
         origin_based(true), method(1), fill(false), verbose(false), scale(0),
         tester_defeat(false), convex_hull(true), add_hull(false),
-        color_method('\0'), face_opacity(-1), epsilon(::epsilon)
+        color_method('\0'), face_opacity(-1), eps(anti::epsilon)
   {
   }
 
@@ -139,8 +139,8 @@ Coloring Options (run 'off_util -H color' for help on color formats)
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
 
 )",
-          prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
-          ::epsilon);
+          prog_name(), help_ver_text, int(-log(anti::epsilon) / log(10) + 0.5),
+          anti::epsilon);
 }
 
 void waterman_opts::process_command_line(int argc, char **argv)
@@ -196,7 +196,7 @@ void waterman_opts::process_command_line(int argc, char **argv)
     case 'q':
       cent_num_decs = get_max_num_decs(optarg, 3);
       print_status_or_exit(center.read(optarg), c);
-      if (compare(center, Vec3d(0, 0, 0), epsilon))
+      if (compare(center, Vec3d(0, 0, 0), anti::epsilon))
         origin_based = false;
       break;
 
@@ -266,7 +266,7 @@ void waterman_opts::process_command_line(int argc, char **argv)
         warning("limit is very small, may not be attainable", c);
       }
 
-      epsilon = pow(10, -sig_compare);
+      eps = pow(10, -sig_compare);
       break;
 
     case 'o':
@@ -814,7 +814,7 @@ int main(int argc, char *argv[])
   if (opts.method == 1)
     sphere_ray_waterman(geom, opts.lattice_type, opts.origin_based, opts.center,
                         opts.radius, opts.R_squared, opts.scale, opts.verbose,
-                        opts.tester_defeat, opts.epsilon);
+                        opts.tester_defeat, opts.eps);
   else
     z_guess_waterman(geom, opts.lattice_type, opts.center, opts.radius,
                      opts.scale, opts.verbose);
@@ -847,7 +847,7 @@ int main(int argc, char *argv[])
 
       if (opts.color_method)
         color_by_symmetry_normals(geom, opts.color_method, opts.face_opacity,
-                                  opts.epsilon);
+                                  opts.eps);
       else
         Coloring(&geom).f_one_col(opts.face_col);
 

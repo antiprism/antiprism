@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2008-2016, Adrian Rossiter
+   Copyright (c) 2008-2021, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -499,7 +499,7 @@ static double rand_in_range(vector<double> rng, int seed)
     Random rnd((seed + 130));
     rnd.seedi((rnd.ranlui() * rnd.ranlui() * rnd.ranlui()) & 0xFFFFFFFF);
     const double val =
-        fmod(rng[0] + (rng[1] - rng[0]) * rnd.ranf(), 1 + epsilon);
+        fmod(rng[0] + (rng[1] - rng[0]) * rnd.ranf(), 1 + anti::epsilon);
     return val;
   }
   else
@@ -1392,18 +1392,18 @@ ColorMap *colormap_from_name(const char *map_name, Status *stat)
 static Status chk_range(vector<double> &v)
 {
   if (v.size() == 1) {
-    if (v[0] < -epsilon || v[0] > 1 + epsilon)
+    if (v[0] < -anti::epsilon || v[0] > 1 + anti::epsilon)
       return Status::error(
           msg_str("value, %g, is not in rage 0.0 to 1.0", v[0]));
 
     v.push_back(v[0]);
   }
   else if (v.size() == 2) {
-    if (v[0] < -epsilon || v[0] > 1 + epsilon)
+    if (v[0] < -anti::epsilon || v[0] > 1 + anti::epsilon)
       return Status::error(
           msg_str("first value, %g, is not in rage 0.0 to 1.0", v[0]));
 
-    if (v[1] < -epsilon || v[1] > 1 + epsilon)
+    if (v[1] < -anti::epsilon || v[1] > 1 + anti::epsilon)
       return Status::error(
           msg_str("second value, %g, is not in rage 0.0 to 1.0", v[1]));
   }
@@ -1411,7 +1411,7 @@ static Status chk_range(vector<double> &v)
     return Status::error(msg_str("range has %lu values, must have 1 or 2",
                                  (unsigned long)v.size()));
 
-  if (v[0] > v[1] + epsilon)
+  if (v[0] > v[1] + anti::epsilon)
     v[1]++;
 
   return Status::ok();
@@ -1492,7 +1492,7 @@ Status ColorValuesToRangeHsva::init(const string &range_name,
 
 static inline double fract(const vector<double> &rng, double frac)
 {
-  return fmod(rng[0] + (rng[1] - rng[0]) * frac, 1 + epsilon);
+  return fmod(rng[0] + (rng[1] - rng[0]) * frac, 1 + anti::epsilon);
 }
 
 Color ColorValuesToRangeHsva::get_col(Color col)

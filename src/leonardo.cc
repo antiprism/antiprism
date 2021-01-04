@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2016, Adrian Rossiter
+   Copyright (c) 2016-2021, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -388,7 +388,7 @@ int main(int argc, char *argv[])
   // re-orient an orientable polyhedron to be positively oriented
   if (opts.orient) {
     GeometryInfo info(geom);
-    if (!info.is_oriented() || info.volume() < -epsilon) {
+    if (!info.is_oriented() || info.volume() < -anti::epsilon) {
       if (!info.is_orientable()) {
         if (!opts.centre_height)
           opts.warning("non-orientable polyhedron, using option -m may "
@@ -407,7 +407,7 @@ int main(int argc, char *argv[])
   double width = (opts.width == opts.DEF_VAL) ? opts.def_width : opts.width;
   if (opts.width_is_perc)
     width *= min_dist_edge_to_face_cent(geom) / 100;
-  if (fabs(width) < epsilon)
+  if (fabs(width) < anti::epsilon)
     opts.warning("width is very small, if using default may need to set a "
                  "value with -w");
 

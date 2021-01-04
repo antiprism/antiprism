@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2020, Adrian Rossiter, Roger Kaufman
+   Copyright (c) 2003-2021, Adrian Rossiter, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -159,7 +159,7 @@ void add_struts(Geometry &geom, int len2)
   const vector<Vec3d> &verts = geom.verts();
   for (unsigned int i = 0; i < verts.size(); i++)
     for (unsigned int j = i; j < verts.size(); j++) {
-      if (fabs((verts[i] - verts[j]).len2() - len2) < epsilon)
+      if (fabs((verts[i] - verts[j]).len2() - len2) < anti::epsilon)
         geom.add_edge(make_edge(i, j));
     }
 }
@@ -168,8 +168,8 @@ void int_lat_grid::make_lattice(Geometry &geom)
 {
   if (!centre.is_set())
     centre = Vec3d(1, 1, 1) * (o_width / 2.0);
-  double o_off = o_width / 2.0 + epsilon;
-  double i_off = i_width / 2.0 - epsilon;
+  double o_off = o_width / 2.0 + anti::epsilon;
+  double i_off = i_width / 2.0 - anti::epsilon;
   int i, j, k;
   for (k = int(ceil(centre[2] - o_off)); k <= centre[2] + o_off; k++)
     for (j = int(ceil(centre[1] - o_off)); j <= centre[1] + o_off; j++)
@@ -187,8 +187,8 @@ void sph_lat_grid::make_lattice(Geometry &geom)
 {
   if (!centre.is_set())
     centre = Vec3d(0, 0, 0);
-  double o_off = o_width + epsilon;
-  double i_off = i_width - epsilon;
+  double o_off = o_width + anti::epsilon;
+  double i_off = i_width - anti::epsilon;
   int i, j, k;
   for (k = int(ceil(centre[2] - o_off)); k <= centre[2] + o_off; k++)
     for (j = int(ceil(centre[1] - o_off)); j <= centre[1] + o_off; j++)

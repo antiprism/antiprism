@@ -80,7 +80,7 @@ public:
   Color frame_col;
   ColorMapMulti map;
 
-  double epsilon;
+  double eps;
 
   symmetro_opts()
       : ProgramOpts("symmetro"), sym('\0'), p(0), q(0), dihedral_n(0),
@@ -92,7 +92,7 @@ public:
         color_digons(false), vert_col(Color(255, 215, 0)), // gold
         edge_col(Color(211, 211, 211)),                    // lightgrey
         frame_col(Color(135, 206, 235)),                   // skyblue3
-        epsilon(::epsilon)
+        eps(anti::epsilon)
   {
   }
 
@@ -182,8 +182,8 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                keyword m2: approximating colors in the symmetrohedra pdf file
 
 )",
-          prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
-          ::epsilon);
+          prog_name(), help_ver_text, int(-log(anti::epsilon) / log(10) + 0.5),
+          anti::epsilon);
 }
 
 // from StackOverflow
@@ -860,7 +860,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
         warning("limit is very small, may not be attainable", c);
       }
 
-      epsilon = pow(10, -sig_compare);
+      eps = pow(10, -sig_compare);
       break;
 
     case 'o':
@@ -1403,7 +1403,7 @@ vector<Geometry> symmetro::calc_polygons(
   double c = q[0] * q[0] + q[1] * q[1] - r1 * r1;
 
   double disc = b * b - 4 * a * c;
-  if (disc < -epsilon) {
+  if (disc < -anti::epsilon) {
     if (error_msg)
       *error_msg = "model is not geometrically constructible";
 
@@ -1438,7 +1438,6 @@ vector<Geometry> symmetro::calc_polygons(
     int parts = (!(n % d_test)) ? d_test : 1;
     double bump_ang = angle(n, d[j]) / (double)parts;
 
-    // built in epsilon here
     if ((n > 0) && scale[j]) {
       double bump_angle = 0.0;
       int vert_idx = 0;
@@ -1529,7 +1528,7 @@ bool detect_collision(const Geometry &geom, const symmetro_opts &opts)
       Vec3d P, dir;
       if (two_plane_intersect(centroid(verts, face0), face_norm(verts, face0),
                               centroid(verts, face1), face_norm(verts, face1),
-                              P, dir, opts.epsilon)) {
+                              P, dir, opts.eps)) {
         if (!P.is_set())
           continue;
         // if two polygons intersect, see if intersection point is inside
@@ -1538,10 +1537,10 @@ bool detect_collision(const Geometry &geom, const symmetro_opts &opts)
         face_idxs.push_back(i);
         Geometry polygon = faces_to_geom(geom, face_idxs);
         // get winding number, if not zero, point is on a polygon
-        int winding_number = get_winding_number(polygon, P, opts.epsilon);
+        int winding_number = get_winding_number(polygon, P, opts.eps);
         // if point in on an edge set winding number back to zero
         if (winding_number) {
-          if (is_point_on_polygon_edges(polygon, P, opts.epsilon))
+          if (is_point_on_polygon_edges(polygon, P, opts.eps))
             winding_number = 0;
         }
         if (winding_number) {
@@ -1698,7 +1697,7 @@ Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
   }
 
   if (opts.convex_hull > 1)
-    merge_coincident_elements(geom, "vf", opts.epsilon);
+    merge_coincident_elements(geom, "vf", opts.eps);
 
   // check for collisions
   bool collision = false;
@@ -1716,7 +1715,7 @@ Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
         opts.warning(stat.msg(), 'C');
 
     // merged faces will retain RGB color
-    merge_coincident_elements(geom, "f", opts.epsilon);
+    merge_coincident_elements(geom, "f", opts.eps);
 
     // after sort merge, only new faces from convex hull will be uncolored
     if (opts.face_coloring_method == 'a') {
@@ -1847,7 +1846,7 @@ Geometry build_frame(vector<Geometry> &pgeom, const symmetro_opts &opts)
   if (opts.convex_hull > 1)
     sym_repeat(geom, opts);
 
-  // sort_merge_elems(geom, "ve", opts.epsilon);
+  // sort_merge_elems(geom, "ve", opts.eps);
 
   Coloring(&geom).vef_one_col(opts.frame_col, opts.frame_col, Color());
 
@@ -2012,7 +2011,7 @@ int main(int argc, char *argv[])
         if (i == j)
           continue;
         // built in epsilon here
-        if (edge_length[i] > epsilon && edge_length[j] > epsilon)
+        if (edge_length[i] > anti::epsilon && edge_length[j] > anti::epsilon)
           fprintf(stderr, "edge length ratio of polygon %d to %d = %.17lf\n", i,
                   j, edge_length[i] / edge_length[j]);
       }

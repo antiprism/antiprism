@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2013-2016, Adrian Rossiter
+   Copyright (c) 2013-2021, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -246,7 +246,8 @@ public:
 struct cyc_vert_cmp {
   int n_fold;
   double eps;
-  cyc_vert_cmp(int n_fold = 1, double eps = epsilon) : n_fold(n_fold), eps(eps)
+  cyc_vert_cmp(int n_fold = 1, double eps = anti::epsilon)
+      : n_fold(n_fold), eps(eps)
   {
   }
   bool operator()(const cyc_vert &from, const cyc_vert &to) const

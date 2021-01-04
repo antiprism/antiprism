@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2008-2016, Adrian Rossiter
+   Copyright (c) 2008-2021, Adrian Rossiter
 
    Project: Antiprism - http://www.antiprism.com
 
@@ -428,7 +428,7 @@ Isometry &Isometry::init(Trans3d m)
   double cos_a = quat[3];
   ang = 2 * acos(safe_for_trig(cos_a));
 
-  if (sqrt(1 - cos_a * cos_a) > epsilon)
+  if (sqrt(1 - cos_a * cos_a) > anti::epsilon)
     axis = Vec3d(quat[0], quat[1], quat[2]);
   else
     axis.unset();
@@ -949,7 +949,7 @@ static bool is_sym(const Geometry &test_geom, const Geometry &geom,
     t_pts[2] = test_geom.verts(i);
     pts[2] = test_geom.verts(v_map[i]);
     Vec3d norm = vcross(pts[1] - pts[0], pts[2] - pts[0]);
-    if (norm.len2() > (epsilon * epsilon))
+    if (norm.len2() > (anti::epsilon * anti::epsilon))
       break;
   }
 
@@ -986,7 +986,7 @@ static int find_syms(const Geometry &geom, Transformations &ts,
 
   Geometry merged_geom = geom;
   vector<map<int, set<int>>> orig_equivs;
-  merge_coincident_elements(merged_geom, "vef", &orig_equivs, epsilon);
+  merge_coincident_elements(merged_geom, "vef", &orig_equivs, anti::epsilon);
   Geometry test_geom = merged_geom;
 
   GeometryInfo inf(merged_geom);
@@ -1275,7 +1275,7 @@ void get_equiv_elems(const Geometry &geom, const Transformations &ts,
 
   Geometry merged_geom = geom;
   vector<map<int, set<int>>> orig_equivs;
-  merge_coincident_elements(merged_geom, "vef", &orig_equivs, epsilon);
+  merge_coincident_elements(merged_geom, "vef", &orig_equivs, anti::epsilon);
   Geometry test_geom = merged_geom;
 
   vector<map<int, set<int>>> equiv_elems(3);
@@ -2109,7 +2109,7 @@ static Symmetry get_elem_stabilizer(const Geometry &geom,
       coincident = true;
       for (int off = 0; off < elem_sz; off++) { // offset
         if (compare(geom.verts(elem[i]), trans_elem[(i + off) % elem_sz],
-                    epsilon) != 0) {
+                    anti::epsilon) != 0) {
           coincident = false;
           break;
         }
@@ -2139,7 +2139,7 @@ static Symmetry get_face_stabilizer(const Geometry &geom, int f_idx,
     test_geom = f_geom;
     test_geom.transform(*si);
     test_geom.append(f_geom);
-    merge_coincident_elements(test_geom, "f", epsilon);
+    merge_coincident_elements(test_geom, "f", anti::epsilon);
     if (test_geom.faces().size() == 1) // face carried onto itself
       stab_trans += *si;
   }

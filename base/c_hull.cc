@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2020, Adrian Rossiter, Roger Kaufman
+   Copyright (c) 2003-2021, Adrian Rossiter, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -171,7 +171,8 @@ static Status make_hull(Geometry &geom, bool append, string qh_args)
       ordered_face = face;
     }
     int f_no = geom.add_face(ordered_face);
-    if (vdot(geom.face_norm(f_no), geom.face_v(f_no, 0) - cent) < -epsilon)
+    if (vdot(geom.face_norm(f_no), geom.face_v(f_no, 0) - cent) <
+        -anti::epsilon)
       reverse(geom.raw_faces()[f_no].begin(), geom.raw_faces()[f_no].end());
   }
 
@@ -307,14 +308,14 @@ static int dimension_safe_make_hull(Geometry &geom, bool append, string qh_args,
     // if dimension is 0, if append is false, reduce to one point
     if (dimension == 0) {
       if (!append)
-        merge_coincident_elements(geom, "v", epsilon);
+        merge_coincident_elements(geom, "v", anti::epsilon);
     }
     // what should be left will be the line or polygon
     // if 1 dimensional, add one edge between the two points
     // a point may be double at the end so the vertices have to be sorted so
     // first and last are the end points for the edge connection
     else if (dimension == 1) {
-      merge_coincident_elements(geom, "s", epsilon);
+      merge_coincident_elements(geom, "s", anti::epsilon);
       // if not append, make sure all that exist is the first and last point
       if (!append) {
         vector<Vec3d> verts = geom.verts();
@@ -405,7 +406,8 @@ Status get_delaunay_edges(const vector<Vec3d> &verts,
     Vec3d v1 = verts[tet[1]] - verts[tet[0]];
     Vec3d v2 = verts[tet[2]] - verts[tet[0]];
     for (unsigned int i = 3; i < tet.size(); i++)
-      if (fabs(vtriple(v1, v2, verts[tet[i]] - verts[tet[0]])) > epsilon) {
+      if (fabs(vtriple(v1, v2, verts[tet[i]] - verts[tet[0]])) >
+          anti::epsilon) {
         coplanar = false;
         break;
       }

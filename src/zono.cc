@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2016, Adrian Rossiter
+   Copyright (c) 2003-2021, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -264,7 +264,7 @@ int main(int argc, char **argv)
     int star_final_sz = star.size();
     for (int i = 0; i < star_final_sz; i++)
       for (int j = i + 1; j < star_final_sz; j++) {
-        if (vcross(star[i], star[j]).len() < epsilon)
+        if (vcross(star[i], star[j]).len() < anti::epsilon)
           std::swap(star[j], star[--star_final_sz]);
       }
     star.resize(star_final_sz);

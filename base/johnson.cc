@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2006-2016, Adrian Rossiter
+   Copyright (c) 2006-2021, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -219,7 +219,7 @@ void J6(Geometry &geom)
   geom.transform(Trans3d::rotate(geom.face_cent(29), Vec3d(0, 1, 0)));
   vector<int> del_verts;
   for (unsigned int i = 0; i < geom.verts().size(); i++)
-    if (geom.verts(i)[1] < -epsilon)
+    if (geom.verts(i)[1] < -anti::epsilon)
       del_verts.push_back(i);
   geom.del(VERTS, del_verts);
   close_poly_basic(geom);

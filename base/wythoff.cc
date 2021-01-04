@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2012-2020, Adrian Rossiter
+   Copyright (c) 2012-2021, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -606,7 +606,7 @@ static Vec3d get_fermat_point(Vec3d v0, Vec3d v1, Vec3d v2, bool degenerate,
     double ang_diff = fabs(2 * M_PI / 3 - ang);
     max_ang = ang > max_ang ? ang_diff : max_ang;
   }
-  if (max_ang > epsilon)
+  if (max_ang > anti::epsilon)
     msg =
         msg_str("inaccurate calculation of fermat point (angle difference %g)",
                 max_ang);
@@ -637,7 +637,7 @@ static void add_faces(Geometry &geom, Vec3d pt, int num, int denom,
   else
     face_geom.add_edge(face, col);
   sym_repeat(sym_face_geom, face_geom, sym);
-  merge_coincident_elements(sym_face_geom, "vf", epsilon);
+  merge_coincident_elements(sym_face_geom, "vf", anti::epsilon);
   geom.append(sym_face_geom);
 }
 
@@ -749,7 +749,7 @@ Status Wythoff::make_poly(Geometry &geom)
     add_faces(geom, pt, fracs[0], fracs[1], verts, 0, sym);
     add_faces(geom, pt, fracs[2], fracs[3], verts, 1, sym);
     // All hemis apart from 3/2 3 | 3 have duplicated faces
-    merge_coincident_elements(geom, "vf", epsilon);
+    merge_coincident_elements(geom, "vf", anti::epsilon);
     add_faces(geom, pt, 2 * fracs[4], fracs[5], verts, 2, sym);
   }
   else if (bar_pos == 3) {
@@ -764,7 +764,7 @@ Status Wythoff::make_poly(Geometry &geom)
   else
     return Status::error("invalid symbol");
 
-  merge_coincident_elements(geom, "v", epsilon);
+  merge_coincident_elements(geom, "v", anti::epsilon);
   return (message.empty()) ? Status::ok() : Status::warning(message);
 }
 
@@ -817,7 +817,7 @@ bool Wythoff::make_tri_poly(Geometry &geom)
       geom_tri.transform(Trans3d::reflection(norm));
       clrng.f_one_col(1);
       geom.append(geom_tri);
-      merge_coincident_elements(geom, "v", epsilon);
+      merge_coincident_elements(geom, "v", anti::epsilon);
     }
   }
   return is_set();

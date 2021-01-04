@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2016, Adrian Rossiter
+   Copyright (c) 2003-2021, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -79,7 +79,7 @@ void Coloring::set_all_idx_to_val(map<int, Color> &cols)
 
 inline double fract(double rng[], double frac)
 {
-  return fmod(rng[0] + (rng[1] - rng[0]) * frac, 1 + epsilon);
+  return fmod(rng[0] + (rng[1] - rng[0]) * frac, 1 + anti::epsilon);
 }
 
 Vec3d get_unsigned(Vec3d v)
@@ -110,7 +110,8 @@ int Coloring::z_gradient(Vec3d vec, Vec3d cent, double height, int def_sz)
       sz = std::numeric_limits<int>::max();
   }
 
-  return (int)floor(sz * (0.5 * height + (vec - cent)[2]) / (height + epsilon));
+  return (int)floor(sz * (0.5 * height + (vec - cent)[2]) /
+                    (height + anti::epsilon));
 }
 
 void Coloring::setup_lights(Geometry &lts)
@@ -561,7 +562,7 @@ void Coloring::e_mid_point(bool apply_map)
 struct vec_less {
   bool operator()(const Vec3d &v1, const Vec3d &v2) const
   {
-    return compare(v1, v2, epsilon) == -1;
+    return compare(v1, v2, anti::epsilon) == -1;
   }
 };
 

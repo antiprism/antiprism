@@ -864,7 +864,7 @@ public:
   string face_pattern;
   int seed_coloring_method;
 
-  double epsilon;
+  double eps;
 
   Color vert_col;
   Color edge_col;
@@ -885,14 +885,14 @@ public:
         hart_mode(false), tile_mode(false), reverse_ops(false), seed_size(0),
         planarize_method('q'), unitize(false), verbosity(false),
         face_coloring_method('n'), face_opacity(-1), face_pattern("1"),
-        seed_coloring_method(1), epsilon(::epsilon),
+        seed_coloring_method(1), eps(anti::epsilon),
         vert_col(Color(255, 215, 0)),   // gold
         edge_col(Color(211, 211, 211)), // lightgray
         second_char("#")
   {
     it_ctrl.set_max_iters(1000);
     it_ctrl.set_status_checks("-1,1");
-    it_ctrl.set_sig_digits(int(-log(::epsilon) / log(10) + 0.5));
+    it_ctrl.set_sig_digits(int(-log(anti::epsilon) / log(10) + 0.5));
   }
 
   void process_command_line(int argc, char **argv);
@@ -1570,7 +1570,7 @@ void cn_opts::process_command_line(int argc, char **argv)
   else
     print_status_or_exit(map.init(map_file.c_str()), 'm');
 
-  epsilon = it_ctrl.get_test_val();
+  eps = it_ctrl.get_test_val();
 }
 
 void verbose(const string &operation, const cn_opts &opts, const int &sub1 = -1,
@@ -2235,7 +2235,7 @@ void wythoff(Geometry &geom, string operation, int sub1, int sub2, int sides,
     if (geom_save.verts().size())
       geom.append(geom_save);
     // set to merge in any case if duplicates are encountered
-    merge_coincident_elements(geom, "vef", opts.epsilon);
+    merge_coincident_elements(geom, "vef", opts.eps);
   }
 
   // if coloring new faces, restore color of previous faces
@@ -2246,7 +2246,7 @@ void wythoff(Geometry &geom, string operation, int sub1, int sub2, int sides,
       bool found = false;
       for (unsigned int j = 0; j < color_centroids.size(); j++) {
         pair<Vec3d, Color> color_cent = color_centroids[j];
-        if (!compare(face_centroid, color_cent.first, opts.epsilon)) {
+        if (!compare(face_centroid, color_cent.first, opts.eps)) {
           geom.colors(FACES).set(i, color_cent.second);
           found = true;
           break;

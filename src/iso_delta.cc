@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2008-2020, Roger Kaufman
+   Copyright (c) 2008-2021, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -782,13 +782,13 @@ int find_equ_tris(Vec3d A, Vec3d B, Vec3d C, vector<double> &factors,
       fprintf(stderr, "   rt = %.15lf\n", rt);
 
     // if root is 0 or negative continue
-    if (rt < -sqrt(epsilon)) {
+    if (rt < -sqrt(anti::epsilon)) {
       if (verbose)
         fprintf(stderr, "   rejecting negative root: %.15lf\n\n", rt);
       continue;
     }
 
-    rt = (rt > sqrt(epsilon)) ? sqrt(rt) : 0;
+    rt = (rt > sqrt(anti::epsilon)) ? sqrt(rt) : 0;
 
     double b = (AB + rt) / B2;
 
@@ -797,7 +797,7 @@ int find_equ_tris(Vec3d A, Vec3d B, Vec3d C, vector<double> &factors,
     // AB and AC should be almost the same length, if not reject
     // RK: was 1e-3 (.001), but with reversing B and C method, we can reject
     // almost all cases outside epsilon
-    if (fabs((b * B - A).len() - (b * B - c * C).len()) < epsilon) {
+    if (fabs((b * B - A).len() - (b * B - c * C).len()) < anti::epsilon) {
       double AB_len = (b * B - A).len();
       if (verbose)
         fprintf(stderr, "   |AbB| = %.15lf, |AcC| = %.15lf, |bBcC| = %.15lf\n",
@@ -814,7 +814,7 @@ int find_equ_tris(Vec3d A, Vec3d B, Vec3d C, vector<double> &factors,
       // AB and AC should be almost the same length, if not reject
       // RK: was 1e-3 (.001), but with reversing B and C method, we can reject
       // almost all cases outside epsilon
-      if (fabs((b * B - A).len() - (b * B - c * C).len()) < epsilon) {
+      if (fabs((b * B - A).len() - (b * B - c * C).len()) < anti::epsilon) {
         double AB_len = (b * B - A).len();
         if (verbose)
           fprintf(stderr,
@@ -903,28 +903,28 @@ bool refine_abg(/* const string &sym_type, */ bool reverse, const bool verbose,
 
     Vec3d t = triangle.verts()[0];
     for (i = 0; i < 3; i++)
-      if (double_ne(t[i], 0, epsilon))
+      if (double_ne(t[i], 0, anti::epsilon))
         break;
     for (j = 0; j < 3; j++)
-      if (double_ne(A[i], 0, epsilon))
+      if (double_ne(A[i], 0, anti::epsilon))
         break;
     a = t[i] / A[j];
 
     t = triangle.verts()[1];
     for (i = 0; i < 3; i++)
-      if (double_ne(t[i], 0, epsilon))
+      if (double_ne(t[i], 0, anti::epsilon))
         break;
     for (j = 0; j < 3; j++)
-      if (double_ne(B[j], 0, epsilon))
+      if (double_ne(B[j], 0, anti::epsilon))
         break;
     b = t[i] / B[j];
 
     t = triangle.verts()[2];
     for (i = 0; i < 3; i++)
-      if (double_ne(t[i], 0, epsilon))
+      if (double_ne(t[i], 0, anti::epsilon))
         break;
     for (j = 0; j < 3; j++)
-      if (double_ne(C[j], 0, epsilon))
+      if (double_ne(C[j], 0, anti::epsilon))
         break;
     g = t[i] / C[j];
 
@@ -955,7 +955,7 @@ bool refine_abg(/* const string &sym_type, */ bool reverse, const bool verbose,
           if (sym_type[0]=='D' || sym_type[0]=='I')
              triangle.transform(Trans3d::rotate(0, M_PI/2, 0));
           sym_repeat(poly, triangle, sym_type);
-          sort_merge_elems(poly, "vef", epsilon);
+          sort_merge_elems(poly, "vef", anti::epsilon);
           char filename[80];
           sprintf(filename,"triangle%d_poly.off",k+1);
           poly.write(filename);
@@ -1002,7 +1002,7 @@ void make_poly(Geometry &geom, const string &sym_type, const bool triangle_only,
 
   if (!triangle_only) {
     sym_repeat(geom, geom, sym_type);
-    merge_coincident_elements(geom, "vef", epsilon);
+    merge_coincident_elements(geom, "vef", anti::epsilon);
   }
 }
 

@@ -66,12 +66,12 @@ public:
   string map_string;
   int face_opacity;
 
-  double epsilon;
+  double eps;
 
   radial_opts()
       : ProgramOpts("off_color_radial"), coloring_method(0),
         axis_orders_set(false), sym_str(""), show_axes(0), axes_coloring(1),
-        map_string("rng"), face_opacity(-1), epsilon(::epsilon)
+        map_string("rng"), face_opacity(-1), eps(anti::epsilon)
   {
   }
   void process_command_line(int argc, char **argv);
@@ -113,8 +113,8 @@ Coloring Options (run 'off_util -H color' for help on color formats)
   -A <opt>  color axes by nfold=1, order=2 (default: 1)
 
 )",
-          prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
-          ::epsilon);
+          prog_name(), help_ver_text, int(-log(anti::epsilon) / log(10) + 0.5),
+          anti::epsilon);
 }
 
 void radial_opts::process_command_line(int argc, char **argv)
@@ -258,7 +258,7 @@ void radial_opts::process_command_line(int argc, char **argv)
         warning("limit is very small, may not be attainable", c);
       }
 
-      epsilon = pow(10, -sig_compare);
+      eps = pow(10, -sig_compare);
       break;
 
     case 'o':
@@ -431,8 +431,7 @@ void find_fronts_from_axes(map<int, vector<int>> &fronts, const Geometry &axes,
     // search vertices first
     for (unsigned int j = 0; j < verts.size(); j++) {
       // check if vertex is on axis because face might not be planar
-      if (point_in_segment(verts[j], axes_verts[i], cent, opts.epsilon)
-              .is_set()) {
+      if (point_in_segment(verts[j], axes_verts[i], cent, opts.eps).is_set()) {
         // intersection is a vertex. find all faces at vertex
         fronts[i] = find_faces_with_vertex(faces, j);
         break;
@@ -447,9 +446,9 @@ void find_fronts_from_axes(map<int, vector<int>> &fronts, const Geometry &axes,
         int v1 = edges[j][0];
         int v2 = edges[j][1];
         // if (lines_intersection(axes_verts[i], cent, verts[v1], verts[v2],
-        // opts.epsilon).is_set()) {
+        // opts.eps).is_set()) {
         if (segments_intersection(axes_verts[i], cent, verts[v1], verts[v2],
-                                  opts.epsilon)
+                                  opts.eps)
                 .is_set()) {
           // intersection is an edge
           fronts[i] = find_faces_with_edge(faces, make_edge(v1, v2));
@@ -470,19 +469,19 @@ void find_fronts_from_axes(map<int, vector<int>> &fronts, const Geometry &axes,
         int where = 0;
         int *w = &where;
         Vec3d P = line_plane_intersect(face_centroid, face_normal,
-                                       axes_verts[i], cent, w, opts.epsilon);
+                                       axes_verts[i], cent, w, opts.eps);
 
         // if point is on axis
-        if (point_in_segment(P, axes_verts[i], cent, opts.epsilon).is_set()) {
+        if (point_in_segment(P, axes_verts[i], cent, opts.eps).is_set()) {
           // get winding number, if not zero, point is on a polygon
           vector<int> face_idxs;
           face_idxs.push_back(j);
           Geometry polygon = faces_to_geom(geom, face_idxs);
-          Normal normal(polygon, face_normal, 0, cent, opts.epsilon);
+          Normal normal(polygon, face_normal, 0, cent, opts.eps);
           vector<Vec3d> one_point;
           one_point.push_back(P);
           int winding_number = get_winding_number_polygon(
-              polygon, one_point, normal, true, opts.epsilon);
+              polygon, one_point, normal, true, opts.eps);
           if (winding_number) {
             fronts[i].push_back(j);
             break;
@@ -706,7 +705,7 @@ void append_axes(Geometry &geom, Geometry &axes, const radial_opts &opts)
     Color c;
     for (unsigned int i = 0; i < vsz; i++) {
       c = axes.colors(VERTS).get(i);
-      // int v_mirror = find_vert_by_coords(axes, -verts[i], opts.epsilon);
+      // int v_mirror = find_vert_by_coords(axes, -verts[i], opts.eps);
       axes.add_edge(make_edge(i, cent_vert), c);
     }
 

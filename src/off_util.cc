@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2016, Adrian Rossiter
+   Copyright (c) 2003-2021, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -33,7 +33,6 @@
 
 #include <algorithm>
 #include <cctype>
-#include <climits>
 #include <cmath>
 #include <cstring>
 #include <map>
@@ -1091,10 +1090,14 @@ class pr_opts : public ProgramOpts {
 public:
   Geometry geom;
   int sig_digits;
+  double eps;
 
   string ofile;
 
-  pr_opts() : ProgramOpts("off_util"), sig_digits(DEF_SIG_DGTS) {}
+  pr_opts()
+      : ProgramOpts("off_util"), sig_digits(DEF_SIG_DGTS), eps(anti::epsilon)
+  {
+  }
   void process_command_line(int argc, char **argv);
   void usage();
 };
@@ -1183,8 +1186,8 @@ Options
   -o <file> write output to file (default: write to standard output)
 
 )",
-          prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
-          ::epsilon, DEF_SIG_DGTS);
+          prog_name(), help_ver_text, int(-log(anti::epsilon) / log(10) + 0.5),
+          anti::epsilon, DEF_SIG_DGTS);
 }
 
 const char *get_help(const char *name)
@@ -1283,7 +1286,6 @@ void pr_opts::process_command_line(int argc, char **argv)
     geom.append(geom_arg);
   }
 
-  int sig_compare = INT_MAX;
   vector<string> add_elems;
 
   for (auto &arg : args) {
@@ -1455,13 +1457,11 @@ void pr_opts::process_command_line(int argc, char **argv)
       }
 
       // Process
-      double epsilon =
-          (sig_compare != INT_MAX) ? pow(10, -sig_compare) : ::epsilon;
       if (elems[0] == 'b') {
-        merge_coincident_elements(geom, "ve", blend_type, epsilon);
+        merge_coincident_elements(geom, "ve", blend_type, eps);
         Geometry tmp = geom;
         vector<map<int, set<int>>> equiv_elems;
-        check_congruence(geom, tmp, &equiv_elems, epsilon);
+        check_congruence(geom, tmp, &equiv_elems, eps);
         vector<int> del_faces;
         map<int, set<int>>::iterator mi;
         for (mi = equiv_elems[2].begin(); mi != equiv_elems[2].end(); ++mi) {
@@ -1477,11 +1477,13 @@ void pr_opts::process_command_line(int argc, char **argv)
         geom.del(FACES, del_faces);
       }
       else
-        merge_coincident_elements(geom, elems, blend_type, epsilon);
+        merge_coincident_elements(geom, elems, blend_type, eps);
       break;
     }
 
     case 'l':
+      int sig_compare;
+
       print_status_or_exit(read_int(optarg, &sig_compare), c);
       if (sig_compare < 0) {
         warning("limit is negative, and so ignored", c);
@@ -1489,6 +1491,8 @@ void pr_opts::process_command_line(int argc, char **argv)
       if (sig_compare > DEF_SIG_DGTS) {
         warning("limit is very small, may not be attainable", c);
       }
+
+      eps = pow(10, -sig_compare);
       break;
 
     case 'u': {

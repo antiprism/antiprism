@@ -52,13 +52,13 @@ public:
   bool detect_star_polygons;
   bool exclude_coordinates;
   bool force_transparent;
-  double epsilon;
+  double eps;
   int sig_digits;
 
   o2t_opts()
       : ProgramOpts("off2txt"), estimate_colors(false), detect_rhombi(false),
         detect_star_polygons(false), exclude_coordinates(false),
-        force_transparent(false), epsilon(::epsilon), sig_digits(DEF_SIG_DGTS)
+        force_transparent(false), eps(anti::epsilon), sig_digits(DEF_SIG_DGTS)
   {
   }
 
@@ -88,8 +88,8 @@ Options
   -o <file> file name for output (otherwise prints to stdout)
 
 )",
-          prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
-          ::epsilon, DEF_SIG_DGTS);
+          prog_name(), help_ver_text, int(-log(anti::epsilon) / log(10) + 0.5),
+          anti::epsilon, DEF_SIG_DGTS);
 }
 
 void o2t_opts::process_command_line(int argc, char **argv)
@@ -135,7 +135,7 @@ void o2t_opts::process_command_line(int argc, char **argv)
         warning("limit is very small, may not be attainable", c);
       }
 
-      epsilon = pow(10, -sig_compare);
+      eps = pow(10, -sig_compare);
       break;
 
     case 'd':
@@ -315,8 +315,7 @@ int main(int argc, char *argv[])
 
   print_hedron_txt(ofile, geom, opts.sig_digits, opts.estimate_colors,
                    opts.detect_rhombi, opts.detect_star_polygons,
-                   opts.exclude_coordinates, opts.force_transparent,
-                   opts.epsilon);
+                   opts.exclude_coordinates, opts.force_transparent, opts.eps);
 
   if (opts.ofile != "")
     fclose(ofile);

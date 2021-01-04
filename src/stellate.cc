@@ -72,7 +72,7 @@ public:
   string map_string;
   int face_opacity;
 
-  double epsilon;
+  double eps;
 
   stellate_opts()
       : ProgramOpts("stellate"), merge_faces(true),
@@ -82,7 +82,7 @@ public:
         vertex_coloring_method('\0'), edge_coloring_method('\0'),
         face_coloring_method('d'), vertex_color(Color::invisible),
         edge_color(Color::invisible), face_color(Color()),
-        map_string("compound"), face_opacity(-1), epsilon(::epsilon)
+        map_string("compound"), face_opacity(-1), eps(anti::epsilon)
   {
   }
   void process_command_line(int argc, char **argv);
@@ -132,8 +132,8 @@ Coloring Options (run 'off_util -H color' for help on color formats)
   -m <maps> color maps. stellation diagram or face symmetry (default: compound)
 
 )",
-          prog_name(), help_ver_text, int(-log(::epsilon) / log(10) + 0.5),
-          ::epsilon);
+          prog_name(), help_ver_text, int(-log(anti::epsilon) / log(10) + 0.5),
+          anti::epsilon);
 }
 
 void stellate_opts::process_command_line(int argc, char **argv)
@@ -246,7 +246,7 @@ void stellate_opts::process_command_line(int argc, char **argv)
         warning("limit is very small, may not be attainable", c);
       }
 
-      epsilon = pow(10, -sig_compare);
+      eps = pow(10, -sig_compare);
       break;
 
     case 'o':
@@ -287,6 +287,7 @@ void apply_transparency(Geometry &geom, const stellate_opts &opts,
   }
 }
 
+// use anti::epsilon so it is not effected by opt epsilon
 void color_stellation(Geometry &stellation, const stellate_opts &opts)
 {
   // set color map
@@ -325,7 +326,8 @@ void color_stellation(Geometry &stellation, const stellate_opts &opts)
       // make new verts and edges invisible
       kis.add_missing_impl_edges();
       for (unsigned int i = 0; i < kis.verts().size(); i++) {
-        int v_idx = find_vert_by_coords(stellation, kis.verts()[i], epsilon);
+        int v_idx =
+            find_vert_by_coords(stellation, kis.verts()[i], anti::epsilon);
         if (v_idx == -1) {
           kis.colors(VERTS).set(i, Color::invisible);
           vector<int> edge_idx = find_edges_with_vertex(kis.edges(), i);
@@ -337,7 +339,7 @@ void color_stellation(Geometry &stellation, const stellate_opts &opts)
       stellation.clear(FACES);
       stellation.append(kis);
       int blend_type = 1; // first color, invisible edges stay
-      merge_coincident_elements(stellation, "vef", blend_type, epsilon);
+      merge_coincident_elements(stellation, "vef", blend_type, anti::epsilon);
 
       for (unsigned int i = 0; i < stellation.faces().size(); i++) {
         vector<int> face = stellation.faces()[i];
@@ -401,7 +403,8 @@ void color_stellation(Geometry &stellation, const stellate_opts &opts)
   // vertices from kis must be made invisible in stellation
   if (opts.face_coloring_method == 'C') {
     for (unsigned int i = 0; i < kis.verts().size(); i++) {
-      int v_idx = find_vert_by_coords(stellation, kis.verts()[i], epsilon);
+      int v_idx =
+          find_vert_by_coords(stellation, kis.verts()[i], anti::epsilon);
       if (v_idx != -1) {
         if ((kis.colors(VERTS).get(i)).is_invisible())
           stellation.colors(VERTS).set(v_idx, Color::invisible);
@@ -435,7 +438,7 @@ Geometry construct_model(Geometry &geom, map<int, Geometry> &diagrams,
     stellation = make_stellation(
         geom, diagrams, idx_lists, geom_sym_symbol, opts.merge_faces,
         opts.remove_inline_vertices, opts.split_pinched, opts.resolve_faces,
-        opts.remove_multiples, opts.map_string, opts.epsilon);
+        opts.remove_multiples, opts.map_string, opts.eps);
 
     if (opts.rebuild_compound_model) {
       rebuild_compound(stellation);
@@ -618,7 +621,7 @@ int main(int argc, char *argv[])
     if (!diagrams[stellation_face_idx].verts().size())
       diagrams[stellation_face_idx] =
           make_stellation_diagram(geom, stellation_face_idx, opts.sym_str,
-                                  opts.projection_width, opts.epsilon);
+                                  opts.projection_width, opts.eps);
 
     // check face index range. start from 1 since 0 is a placeholder for
     // stellation face

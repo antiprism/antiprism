@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2016, Adrian Rossiter
+   Copyright (c) 2003-2021, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -1290,7 +1290,7 @@ void ViewOpts::set_view_vals(Scene &scen)
     scen.get_geoms()[i].get_disps()[0]->elem(VERTS).set_size(
         scen.get_geoms()[0].get_disps()[0]->get_vert_rad());
   }
-  if (scen.get_width() < epsilon) {
+  if (scen.get_width() < anti::epsilon) {
     if (scen.get_inf_dist() >= 0) {
       BoundSphere bound_sph;
       for (const auto &sgeom : scen.get_geoms())
@@ -1302,7 +1302,7 @@ void ViewOpts::set_view_vals(Scene &scen)
       scen.set_bound_sph(bound_sph);
     }
 
-    if (scen.get_width() < epsilon)
+    if (scen.get_width() < anti::epsilon)
       warning("scene width is zero and may not be displayed correctly");
     else
       warning("geometry assumed to be large, with no infinite vertices "

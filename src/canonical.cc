@@ -71,7 +71,7 @@ public:
   int roundness;
   char normal_type;
 
-  double epsilon;
+  double eps;
 
   Color ipoints_col;
   Color base_nearpts_col;
@@ -86,14 +86,14 @@ public:
         canonical_method('m'), num_iters_canonical(-1), edge_factor(NAN),
         plane_factor(NAN), alternate_algorithm(false), radius_range_percent(-1),
         output_parts("b"), face_opacity(-1), offset(0), roundness(8),
-        normal_type('n'), epsilon(::epsilon), ipoints_col(Color(255, 255, 0)),
+        normal_type('n'), eps(anti::epsilon), ipoints_col(Color(255, 255, 0)),
         base_nearpts_col(Color(255, 0, 0)),
         dual_nearpts_col(Color(0.0, 0.39216, 0.0)), base_edge_col(Color()),
         dual_edge_col(Color()), sphere_col(Color(255, 255, 255))
   {
     it_ctrl.set_max_iters(-1);
     it_ctrl.set_status_checks("1000,1");
-    it_ctrl.set_sig_digits(int(-log(::epsilon) / log(10) + 0.5));
+    it_ctrl.set_sig_digits(int(-log(anti::epsilon) / log(10) + 0.5));
   }
 
   void process_command_line(int argc, char **argv);
@@ -393,7 +393,7 @@ void cn_opts::process_command_line(int argc, char **argv)
   if (argc - optind == 1)
     ifile = argv[optind];
 
-  epsilon = it_ctrl.get_test_val();
+  eps = it_ctrl.get_test_val();
 }
 
 // RK - average radius rather than maximum has more reliability than max
@@ -663,7 +663,7 @@ Geometry incircles(const Geometry &geom, const Color &incircle_color,
 void reset_model_size(Geometry &base, const cn_opts &opts)
 {
   double radius = edge_nearpoints_radius(base);
-  if (double_ne(radius, 1.0, opts.epsilon))
+  if (double_ne(radius, 1.0, opts.eps))
     unitize_nearpoints_radius(base);
 }
 
@@ -788,8 +788,8 @@ void construct_model(Geometry &base, const cn_opts &opts)
 
 void check_model(const Geometry &geom, string s, const cn_opts &opts)
 {
-  double epsilon_local1 = 1e-4;         // coincident elements
-  double epsilon_local2 = opts.epsilon; // face area (default is 1e-12)
+  double epsilon_local1 = 1e-4;     // coincident elements
+  double epsilon_local2 = opts.eps; // face area (default is 1e-12)
 
   Geometry geom_merged = geom;
   merge_coincident_elements(geom_merged, "vef", 0, epsilon_local1);
