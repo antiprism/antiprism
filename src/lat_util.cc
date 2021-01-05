@@ -360,15 +360,10 @@ void lutil_opts::process_command_line(int argc, char **argv)
 
     case 'l':
       int sig_compare;
-
       print_status_or_exit(read_int(optarg, &sig_compare), c);
-      if (sig_compare < 0) {
-        warning("limit is negative, and so ignored", c);
-      }
       if (sig_compare > DEF_SIG_DGTS) {
         warning("limit is very small, may not be attainable", c);
       }
-
       eps = pow(10, -sig_compare);
       break;
 
