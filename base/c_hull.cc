@@ -78,8 +78,11 @@ static Status make_hull(Geometry &geom, bool append, string qh_args)
   boolT ismalloc = False;  // don't free points in qh_freeqhull() or realloc
   FILE *outfile = nullptr; // suppress output from qh_produce_output()
   FILE *errfile = fopen("/dev/null", "w"); // suppress qhull error messages
-  if (!errfile)                            // must be a valid pointer
-    errfile = stderr;
+  if (!errfile) {
+    errfile = fopen("nul", "w"); // try for windows cross compilation
+    if (!errfile)
+      errfile = stderr; // must be a valid pointer
+  }
 
   qhT qh_val;
   qhT *qh = &qh_val;
@@ -370,8 +373,11 @@ Status get_delaunay_edges(const vector<Vec3d> &verts,
   boolT ismalloc = False;  // don't free points in qh_freeqhull() or realloc
   FILE *outfile = nullptr; // suppress output from qh_produce_output()
   FILE *errfile = fopen("/dev/null", "w"); // suppress qhull error messages
-  if (!errfile)                            // must be a valid pointer
-    errfile = stderr;
+  if (!errfile) {
+    errfile = fopen("nul", "w"); // try for windows cross compilation
+    if (!errfile)
+      errfile = stderr; // must be a valid pointer
+  }
 
   qhT qh_val;
   qhT *qh = &qh_val;
@@ -475,7 +481,11 @@ Status get_voronoi_cells(const vector<Vec3d> &verts, vector<Geometry> *cells,
   boolT ismalloc = False;  /* don't free points in qh_freeqhull() or realloc*/
   FILE *outfile = nullptr; /* output from qh_produce_output()   nullptr ?*/
   FILE *errfile = fopen("/dev/null", "w"); // suppress qhull error messages
-  // FILE *errfile= nullptr;    /* error messages from qhull code */
+  if (!errfile) {
+    errfile = fopen("nul", "w"); // try for windows cross compilation
+    if (!errfile)
+      errfile = stderr; // must be a valid pointer
+  }
 
   qhT qh_val;
   qhT *qh = &qh_val;
