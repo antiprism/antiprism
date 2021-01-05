@@ -4,7 +4,10 @@ Antiprism
 Notes for Antiprism 0.28 (in development)
 ------------------------
 
-This is a minor release. See the NEWS file for more details.
+This release contains a large number of smaller changes (by Roger
+Kaufman and Adrian Rossiter) including minor feature enhancements,
+reporting improvements and code review. See the NEWS file for more
+details.
 
 Please look out for bugs and other issues, and report them to me at
 at: adrian@antiprism.com

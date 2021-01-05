@@ -11,13 +11,18 @@ AC_CONFIG_SRCDIR([base/antiprism.h])
 AC_CONFIG_HEADER([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
+AC_ARG_VAR([AR_FLAGS],[flags for ar command, default 'cr'])
+if test x"$AR_FLAGS" = x ; then
+  ARFLAGS="cr"
+fi
+
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_CPP
 
 AC_LANG([C++])
-AX_CXX_COMPILE_STDCXX(11)
+AX_CXX_COMPILE_STDCXX(14)
 
 gl_LD_VERSION_SCRIPT
 LT_INIT([win32-dll])

@@ -33,6 +33,7 @@ xx-01-21 Adrian Rossiter <adrian@antiprism.com>
               -p face centroids and centroids magnitude planarization removed
               -p u make unit edge removed
               -p p fast planarize added
+            build: compile with C++14
          Fixes
             usage helps reviewed and organized
             minor bug fixes and improvements
