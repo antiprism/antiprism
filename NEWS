@@ -16,15 +16,18 @@ xx-01-21 Adrian Rossiter <adrian@antiprism.com>
               -r cube as new default container in HSV/HSL mode
               -R to optionally show primary and secondary reference colors
               -U adds simple sorting of colors along with already unique sort
+              -M default color system mode is now HSL
             planar:
               -V verbose lists all winding numbers found in a model
               -n map entries is now calculated
+              -M default color system mode is now HSL
             wythoff: new operators and new and changed operator sequences
               (see 'wythoff -c list'), extend colour by associated element
             conway: new format for conway operators with 2 numbers e.g L_n:r
               new operators added, B,E,G,W
-              operators L and l may now take subscripts
+              operators L, l and X may now take subscripts
               operator u, e and o may now take two subscripts
+              base subscripts updated
               status reporting method update
               -p plarization options removed, now done internally
             off_color_radial:
@@ -33,6 +36,8 @@ xx-01-21 Adrian Rossiter <adrian@antiprism.com>
               -p face centroids and centroids magnitude planarization removed
               -p u make unit edge removed
               -p p fast planarize added
+              -x normal types removed since all normals are unit normals
+              -S, R, F coloring options added
             build: compile with C++14
          Fixes
             usage helps reviewed and organized

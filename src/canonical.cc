@@ -69,13 +69,18 @@ public:
   int face_opacity;
   double offset;
   int roundness;
-  char normal_type;
 
   double eps;
 
   Color ipoints_col;
   Color base_nearpts_col;
   Color dual_nearpts_col;
+  char base_incircles_color_method;
+  Color base_incircles_col;
+  char dual_incircles_color_method;
+  Color dual_incircles_col;
+  char dual_face_color_method;
+  Color dual_face_col;
   Color base_edge_col;
   Color dual_edge_col;
   Color sphere_col;
@@ -86,10 +91,13 @@ public:
         canonical_method('m'), num_iters_canonical(-1), edge_factor(NAN),
         plane_factor(NAN), alternate_algorithm(false), radius_range_percent(-1),
         output_parts("b"), face_opacity(-1), offset(0), roundness(8),
-        normal_type('n'), eps(anti::epsilon), ipoints_col(Color(255, 255, 0)),
-        base_nearpts_col(Color(255, 0, 0)),
-        dual_nearpts_col(Color(0.0, 0.39216, 0.0)), base_edge_col(Color()),
-        dual_edge_col(Color()), sphere_col(Color(255, 255, 255))
+        eps(anti::epsilon), ipoints_col(Color(255, 255, 0)),
+        base_nearpts_col(Color(255, 0, 0)), dual_nearpts_col(Color(0, 100, 0)),
+        base_incircles_color_method('f'), base_incircles_col(Color()),
+        dual_incircles_color_method('f'), dual_incircles_col(Color()),
+        dual_face_color_method('\0'), dual_face_col(Color(211, 211, 211)),
+        base_edge_col(Color()), dual_edge_col(Color()),
+        sphere_col(Color(255, 255, 255))
   {
     it_ctrl.set_max_iters(-1);
     it_ctrl.set_status_checks("1000,1");
@@ -146,7 +154,6 @@ Options
                s - base incircles, S - rings; t - dual incircles, T - rings
   -q <dist> offset for incircles to avoid coplanarity e.g 0.0001 (default: 0)
   -g <opt>  roundness of tangent sphere, positive integer n (default: 8)
-  -x <opt>  Normals: n - Newell's, t - triangles, q - quads (default: Newell's)
   -d <perc> radius test. percent difference between minimum and maximum radius
                checks if polyhedron is collapsing. 0 for no test 
                (default: 80 for canonicalizing, not used for planarizing)
@@ -167,8 +174,14 @@ Extra Options
 
 Coloring Options (run 'off_util -H color' for help on color formats)
   -I <col>  intersection points and/or origin color (default: yellow)
-  -N <col>  base near points, centroid, incircles color (default: red)
-  -M <col>  dual near points, centroid, incircles color (default: darkgreen)
+  -N <col>  base near points, centroid color (default: red)
+  -M <col>  dual near points, centroid color (default: darkgreen)
+  -S <col>  base incircles color
+               key word: f take color of face (default)
+  -R <col>  dual incircles color
+               key word: f take color of face (default)
+  -F <col>  dual face color (default: lightgray)
+               key word: b take color from base vertices
   -B <col>  base edge color (default: unchanged)
   -D <col>  dual edge color (default: unchanged)
   -U <col>  unit sphere color (default: white)
@@ -194,7 +207,8 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   while ((c = getopt(
               argc, argv,
-              ":hC:r:e:s:p:i:c:n:O:q:g:E:P:Ad:x:z:I:N:M:B:D:U:T:l:o:")) != -1) {
+              ":hC:r:e:s:p:i:c:n:O:q:g:E:P:Ad:z:I:N:M:S:R:F:B:D:U:T:l:o:")) !=
+         -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -275,13 +289,6 @@ void cn_opts::process_command_line(int argc, char **argv)
       print_status_or_exit(read_int(optarg, &roundness), c);
       break;
 
-    case 'x':
-      if (strlen(optarg) == 1 && strchr("ntq", int(*optarg)))
-        normal_type = *optarg;
-      else
-        error("normal type must be n, t, q", c);
-      break;
-
     case 'E':
       print_status_or_exit(read_double(optarg, &edge_factor), c);
       if (edge_factor <= 0 || edge_factor >= 100)
@@ -319,6 +326,30 @@ void cn_opts::process_command_line(int argc, char **argv)
 
     case 'M':
       print_status_or_exit(dual_nearpts_col.read(optarg), c);
+      break;
+
+    case 'S':
+      base_incircles_color_method = '\0';
+      if (strchr("f", *optarg))
+        base_incircles_color_method = *optarg;
+      else
+        print_status_or_exit(base_incircles_col.read(optarg), c);
+      break;
+
+    case 'R':
+      dual_incircles_color_method = '\0';
+      if (strchr("f", *optarg))
+        dual_incircles_color_method = *optarg;
+      else
+        print_status_or_exit(dual_incircles_col.read(optarg), c);
+      break;
+
+    case 'F':
+      dual_face_color_method = '\0';
+      if (strchr("b", *optarg))
+        dual_face_color_method = *optarg;
+      else
+        print_status_or_exit(dual_face_col.read(optarg), c);
       break;
 
     case 'B':
@@ -381,11 +412,6 @@ void cn_opts::process_command_line(int argc, char **argv)
   if ((canonical_method == 'x') && planarize_method &&
       (radius_range_percent > -1))
     warning("set, but not used for planarization", 'd');
-
-  if (planarize_method == 'p' && normal_type != 'n') {
-    warning("only Newell's normal method used for fast planar", 'p');
-    normal_type = 'n';
-  }
 
   if (argc - optind > 1)
     error("too many arguments");
@@ -630,8 +656,8 @@ double incircle_radius(const Geometry &geom, Vec3d &center, const int face_no)
   return radius;
 }
 
-Geometry incircles(const Geometry &geom, const Color &incircle_color,
-                   bool filled, double offset)
+Geometry incircles(const Geometry &geom, const char &incircle_color_method,
+                   const Color &incircle_color, bool filled, double offset)
 {
   Geometry incircles;
   Geometry circle = unit_circle(60, incircle_color, filled);
@@ -641,9 +667,15 @@ Geometry incircles(const Geometry &geom, const Color &incircle_color,
     Vec3d face_centroid = anti::centroid(geom.verts(), geom.faces(i));
     Vec3d face_normal = face_norm(geom.verts(), geom.faces(i)).unit();
     Vec3d center = face_normal * vdot(face_centroid, face_normal);
+    Color col = geom.colors(FACES).get(i);
 
     // find radius of incircle, and make incircle of radius
     Geometry incircle = circle;
+    if (incircle_color_method == 'f') {
+      Coloring(&incircle).e_one_col(col);
+      Coloring(&incircle).f_one_col(col);
+    }
+
     double radius = incircle_radius(geom, center, i);
     incircle.transform(Trans3d::scale(radius));
 
@@ -678,6 +710,9 @@ void construct_model(Geometry &base, const cn_opts &opts)
   Geometry dual;
   get_dual(dual, base, 1, Vec3d(0, 0, 0));
 
+  if (opts.dual_face_color_method != 'b')
+    Coloring(&dual).f_one_col(opts.dual_face_col);
+
   vector<Vec3d> ips;
   vector<Vec3d> base_nearpts;
   vector<Vec3d> dual_nearpts;
@@ -687,16 +722,16 @@ void construct_model(Geometry &base, const cn_opts &opts)
   Geometry base_incircles;
   if (opts.output_parts.find_first_of("sS") != string::npos) {
     bool filled = (opts.output_parts.find("s") != string::npos) ? true : false;
-    base_incircles =
-        incircles(base, opts.base_nearpts_col, filled, opts.offset);
+    base_incircles = incircles(base, opts.base_incircles_color_method,
+                               opts.base_incircles_col, filled, opts.offset);
   }
 
   // dual incircles
   Geometry dual_incircles;
   if (opts.output_parts.find_first_of("tT") != string::npos) {
     bool filled = (opts.output_parts.find("t") != string::npos) ? true : false;
-    dual_incircles =
-        incircles(dual, opts.dual_nearpts_col, filled, opts.offset);
+    dual_incircles = incircles(dual, opts.dual_incircles_color_method,
+                               opts.dual_incircles_col, filled, opts.offset);
   }
 
   // clear base if not using
@@ -974,14 +1009,6 @@ int main(int argc, char *argv[])
   else if (opts.centering == 'x')
     fprintf(stderr, "model not moved\n");
 
-  fprintf(stderr, "normals: ");
-  if (opts.normal_type == 'n')
-    fprintf(stderr, "Newell's method\n");
-  else if (opts.normal_type == 't')
-    fprintf(stderr, "Triangles method\n");
-  else if (opts.normal_type == 'q')
-    fprintf(stderr, "Quads method\n");
-
   bool completed = false;
   if (opts.planarize_method) {
     string planarize_str;
@@ -1003,19 +1030,16 @@ int main(int argc, char *argv[])
 
     if (opts.planarize_method == 'q') {
       completed = canonicalize_bd(geom, opts.it_ctrl, opts.planarize_method,
-                                  radius_range_pct / 100, opts.centering,
-                                  opts.normal_type);
+                                  radius_range_pct / 100, opts.centering);
     }
     else if (opts.planarize_method == 'm') {
-      completed = canonicalize_mm(geom, opts.it_ctrl, opts.edge_factor / 100,
-                                  opts.plane_factor / 100,
-                                  radius_range_pct / 100, opts.normal_type,
-                                  opts.alternate_algorithm, planarize_only);
+      completed = canonicalize_mm(
+          geom, opts.it_ctrl, opts.edge_factor / 100, opts.plane_factor / 100,
+          radius_range_pct / 100, opts.alternate_algorithm, planarize_only);
     }
     else if (opts.planarize_method == 'a') {
-      completed =
-          canonicalize_unit(geom, opts.it_ctrl, radius_range_pct / 100,
-                            opts.centering, opts.normal_type, planarize_only);
+      completed = canonicalize_unit(geom, opts.it_ctrl, radius_range_pct / 100,
+                                    opts.centering, planarize_only);
     }
     else if (opts.planarize_method == 'p') {
       Symmetry dummy;
@@ -1044,20 +1068,17 @@ int main(int argc, char *argv[])
         (opts.radius_range_percent < 0) ? 80 : opts.radius_range_percent;
 
     if (opts.canonical_method == 'm') {
-      completed = canonicalize_mm(geom, opts.it_ctrl, opts.edge_factor / 100,
-                                  opts.plane_factor / 100,
-                                  radius_range_pct / 100, opts.normal_type,
-                                  opts.alternate_algorithm, planarize_only);
+      completed = canonicalize_mm(
+          geom, opts.it_ctrl, opts.edge_factor / 100, opts.plane_factor / 100,
+          radius_range_pct / 100, opts.alternate_algorithm, planarize_only);
     }
     else if (opts.canonical_method == 'b') {
       completed = canonicalize_bd(geom, opts.it_ctrl, opts.canonical_method,
-                                  radius_range_pct / 100, opts.centering,
-                                  opts.normal_type);
+                                  radius_range_pct / 100, opts.centering);
     }
     else if (opts.canonical_method == 'a') {
-      completed =
-          canonicalize_unit(geom, opts.it_ctrl, radius_range_pct / 100,
-                            opts.centering, opts.normal_type, planarize_only);
+      completed = canonicalize_unit(geom, opts.it_ctrl, radius_range_pct / 100,
+                                    opts.centering, planarize_only);
     }
 
     // RK - report planarity

@@ -354,13 +354,12 @@ bool canonical_radius_range_test(const Geometry &geom,
  * \param plane_factor small number to scale plane adjustments.
  * \param radius_range_percent if the model outer radius increases this
  *  much over the inner radius then it is growing too much, terminate.
- * \param normal_type: n - Newell, t -triangles, q - quads (default n)
  * \param alternate_loop use alternate loop.
  * \param planarize_only planarise only.
  * \return \c true if success, otherwise \c false */
 bool canonicalize_mm(Geometry &geom, IterationControl it_ctrl,
                      const double edge_factor, const double plane_factor,
-                     const double radius_range_percent, const char normal_type,
+                     const double radius_range_percent,
                      const bool alternate_loop, const bool planarize_only);
 
 /// returns the edge near points centroid
@@ -379,12 +378,10 @@ Vec3d edge_nearpoints_centroid(Geometry &geom,
  * \param radius_range_percent if the model outer radius increases this
  *  much over the inner radius then it is growing too much, terminate.
  * \param centering passed from canonical program, when centering is not used
- * \param normal_type: n - Newell, t -triangles, q - quads (default n)
  * \return \c true if success, otherwise \c false */
 bool canonicalize_bd(Geometry &base, IterationControl it_ctrl,
                      const char canonical_method,
-                     const double radius_range_percent, const char centering,
-                     const char normal_type);
+                     const double radius_range_percent, const char centering);
 
 /// an abbreviated wrapper for planarization with the base/dual method
 /**\param geom geometry to planarize.
@@ -398,12 +395,11 @@ bool planarize_bd(Geometry &geom, IterationControl it_ctrl);
  * \param radius_range_percent if the model outer radius increases this
  *  much over the inner radius then it is growing too much, terminate.
  * \param centering passed from canonical program, when centering is not used
- * \param normal_type : n - Newell, t - triangles, q - quads(default n)
  * \param planarize_only planarise only.
  * \return \c true if success, otherwise \c false */
 bool canonicalize_unit(Geometry &geom, IterationControl it_ctrl,
                        const double radius_range_percent, const char centering,
-                       const char normal_type, const bool planarize_only);
+                       const bool planarize_only);
 
 /// an abbreviated wrapper for planarization with canonicalize_unit
 /**\param geom geometry to planarize.

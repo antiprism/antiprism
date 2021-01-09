@@ -77,9 +77,6 @@ s \- base incircles, S \- rings; t \- dual incircles, T \- rings
 .TP
 \fB\-g\fR <opt>
 roundness of tangent sphere, positive integer n (default: 8)
-.TP
-\fB\-x\fR <opt>
-Normals: n \- Newell's, t \- triangles, q \- quads (default: Newell's)
 .HP
 \fB\-d\fR <perc> radius test. percent difference between minimum and maximum radius
 .IP
@@ -114,10 +111,25 @@ Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
 intersection points and/or origin color (default: yellow)
 .TP
 \fB\-N\fR <col>
-base near points, centroid, incircles color (default: red)
+base near points, centroid color (default: red)
 .TP
 \fB\-M\fR <col>
-dual near points, centroid, incircles color (default: darkgreen)
+dual near points, centroid color (default: darkgreen)
+.TP
+\fB\-S\fR <col>
+base incircles color
+.IP
+key word: f take color of face (default)
+.TP
+\fB\-R\fR <col>
+dual incircles color
+.IP
+key word: f take color of face (default)
+.TP
+\fB\-F\fR <col>
+dual face color (default: lightgray)
+.IP
+key word: b take color from base vertices
 .TP
 \fB\-B\fR <col>
 base edge color (default: unchanged)

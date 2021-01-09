@@ -36,6 +36,82 @@ using std::vector;
 
 namespace anti {
 
+// return the normal of all perimeter triangles
+Vec3d face_norm_nonplanar_triangles(const Geometry &geom,
+                                    const vector<int> &face)
+{
+  Vec3d face_normal(0, 0, 0);
+
+  unsigned int sz = face.size();
+  for (unsigned int i = 0; i < sz; i++) {
+    int v0 = face[i];
+    int v1 = face[(i + 1) % sz];
+    int v2 = face[(i + 2) % sz];
+
+    face_normal += vcross(geom.verts()[v0] - geom.verts()[v1],
+                          geom.verts()[v1] - geom.verts()[v2]);
+  }
+
+  return face_normal;
+}
+
+// return the normal of all perimeter triangles
+Vec3d face_norm_nonplanar_triangles(const Geometry &geom, const int f_idx)
+{
+  vector<int> face = geom.faces(f_idx);
+  return face_norm_nonplanar_triangles(geom, face);
+}
+
+// return the normal of all quads in polygon
+Vec3d face_norm_nonplanar_quads(const Geometry &geom, const vector<int> &face)
+{
+  Vec3d face_normal(0, 0, 0);
+
+  unsigned int sz = face.size();
+  for (unsigned int i = 0; i < sz; i++) {
+    int v0 = face[i];
+    int v1 = face[(i + 1) % sz];
+    int v2 = face[(i + 2) % sz];
+    int v3 = face[(i + 3) % sz];
+
+    face_normal += vcross(geom.verts()[v0] - geom.verts()[v2],
+                          geom.verts()[v1] - geom.verts()[v3]);
+  }
+
+  return face_normal;
+}
+
+// return the normal of quads in polygon
+Vec3d face_norm_nonplanar_quads(const Geometry &geom, const int f_idx)
+{
+  vector<int> face = geom.faces(f_idx);
+  return face_norm_nonplanar_quads(geom, face);
+}
+
+// select normal by type. Newell, triangles, or quads
+// 'n' is the default, if normal_type is not given or is wrong
+Vec3d face_normal_by_type(const Geometry &geom, const vector<int> &face,
+                          const char normal_type)
+{
+  Vec3d face_normal;
+
+  if (normal_type == 't')
+    face_normal = face_norm_nonplanar_triangles(geom, face);
+  else if (normal_type == 'q')
+    face_normal = face_norm_nonplanar_quads(geom, face);
+  else // if (normal_type == 'n')
+    face_normal = geom.face_norm(face);
+  return face_normal;
+}
+
+// select normal by type. Newell, triangles, or quads
+Vec3d face_normal_by_type(const Geometry &geom, const int f_idx,
+                          const char normal_type)
+{
+  vector<int> face = geom.faces(f_idx);
+  return face_normal_by_type(geom, face, normal_type);
+}
+
 // face normal
 Normal::Normal(const Geometry &geom, const int face_idx, Vec3d C, char type,
                double eps)
