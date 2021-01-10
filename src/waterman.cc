@@ -133,8 +133,8 @@ Coloring Options (run 'off_util -H color' for help on color formats)
   -E <col>  edge color (for convex hull, default: none)
   -F <col>  face color (for convex hull, default: none)
                lower case outputs map indexes. upper case outputs color values
-               key word: s,S color by symmetry using face normals
-               key word: c,C color by symmetry using face normals (chiral)
+               keyword: s,S color by symmetry using face normals
+               keyword: c,C color by symmetry using face normals (chiral)
   -Z <col>  fill vertex color (default: model vertex color)
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
 
@@ -258,9 +258,8 @@ void waterman_opts::process_command_line(int argc, char **argv)
     case 'l':
       int sig_compare;
       print_status_or_exit(read_int(optarg, &sig_compare), c);
-      if (sig_compare > DEF_SIG_DGTS) {
+      if (sig_compare > DEF_SIG_DGTS)
         warning("limit is very small, may not be attainable", c);
-      }
       eps = pow(10, -sig_compare);
       break;
 

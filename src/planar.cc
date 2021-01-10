@@ -188,7 +188,7 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                o - unique color for faces on same and opposite normals
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
   -Z <col>  color for areas found colorless by winding (default: invisible)
-               key word: b - force a color blend
+               keyword: b - force a color blend
   -W <opt>  color by winding number, using maps (overrides option -f)
                w - use actual winding number
                a - absolute value of winding number
@@ -434,9 +434,8 @@ void planar_opts::process_command_line(int argc, char **argv)
     case 'l':
       int sig_compare;
       print_status_or_exit(read_int(optarg, &sig_compare), c);
-      if (sig_compare > DEF_SIG_DGTS) {
+      if (sig_compare > DEF_SIG_DGTS)
         warning("limit is very small, may not be attainable", c);
-      }
       eps = pow(10, -sig_compare);
       break;
 

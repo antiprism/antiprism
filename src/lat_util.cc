@@ -150,11 +150,11 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                   (default elements: lcv)
                Note: input element colors from -R input are not changed
   -E <col>  edge color (same format as for vertices) or
-               key word: r,R for color edges by root value of final product
+               keyword: r,R for color edges by root value of final product
                lower case outputs map indexes. upper case outputs color values
   -F <col>  face color (same format as for vertices) or
-               key word: s,S color by symmetry using face normals
-               key word: c,C color by symmetry using face normals (chiral)
+               keyword: s,S color by symmetry using face normals
+               keyword: c,C color by symmetry using face normals (chiral)
   -T <tran> face transparency for color by symmetry. valid range from 0 to 255
 
 )",
@@ -177,7 +177,7 @@ void lutil_opts::process_command_line(int argc, char **argv)
 
   // set some default colors
   // 0 - lattice  1 - convex hull  2 - voronoi
-  // voronoi cells  vcol = gold; ecol = lightgrey; fcol = transparent yellow
+  // voronoi cells  vcol = gold; ecol = lightgray; fcol = transparent yellow
   vert_col[2] = Color(255, 215, 0);
   edge_col[2] = Color(211, 211, 211);
   face_col[2] = Color(255, 255, 0, 128);
@@ -361,9 +361,8 @@ void lutil_opts::process_command_line(int argc, char **argv)
     case 'l':
       int sig_compare;
       print_status_or_exit(read_int(optarg, &sig_compare), c);
-      if (sig_compare > DEF_SIG_DGTS) {
+      if (sig_compare > DEF_SIG_DGTS)
         warning("limit is very small, may not be attainable", c);
-      }
       eps = pow(10, -sig_compare);
       break;
 

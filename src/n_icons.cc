@@ -97,7 +97,7 @@ ColorMapMap *alloc_default_map()
   col_map->set_col(5, Color(0, 0, 255));     // blue
   col_map->set_col(6, Color(255, 0, 255));   // magenta
   col_map->set_col(7, Color(255, 255, 255)); // white
-  col_map->set_col(8, Color(127, 127, 127)); // grey50
+  col_map->set_col(8, Color(127, 127, 127)); // gray50
   col_map->set_col(9, Color(0, 0, 0));       // black
 
   col_map->set_wrap();
@@ -180,8 +180,8 @@ public:
         edge_opacity(-1), edge_pattern("1"), edge_set_no_color(false),
         unused_edge_color(Color::invisible), symmetric_coloring(false),
         long_form(false), filter_case2(false), flood_fill_stop(0),
-        face_default_color(Color(192, 192, 192, 255)), // darkgrey
-        edge_default_color(Color(192, 192, 192, 255)), // darkgrey
+        face_default_color(Color(192, 192, 192, 255)), // darkgray
+        edge_default_color(Color(192, 192, 192, 255)), // darkgray
         eps(anti::epsilon), angle_is_side_cut(false), double_sweep(false),
         radius_inversion(false), mod_twist(0), split(false)
   {
@@ -228,7 +228,7 @@ Options
 
 Coloring Options (run 'off_util -H color' for help on color formats)
   -f <mthd> mthd is face coloring method. The coloring is done before twist
-               key word: none - sets no color
+               keyword: none - sets no color
                S - color by symmetry polygon (default)
                s - color by circuits algorithm (n/d must be co-prime)
                f - color circuits with flood fill (-z 2,3 any n/d)
@@ -247,21 +247,21 @@ Coloring Options (run 'off_util -H color' for help on color formats)
   -O <strg> face transparency pattern string. valid values
                0 -T value suppressed, 1 -T value applied  (default: '1')
   -e <mthd> mthd is edge coloring method. The coloring is done before twist
-               key word: none - sets no color
-               key word: Q - defer coloring all edges to option Q  (default)
+               keyword: none - sets no color
+               keyword: Q - defer coloring all edges to option Q  (default)
                   or use the same letter options specified in -f, except c,a
                F - color edges with average adjoining face color
   -U <tran> edge transparency. valid range from 0 (invisible) to 255 (opaque)
   -P <strg> edge transparency pattern string. valid values
                0 -U value suppressed, 1 -U value applied  (default: '1')
   -Q <col>  color given to uncolored edges and vertices of final model
-               key word: none - sets no color (default: invisible)
+               keyword: none - sets no color (default: invisible)
   -Y        for n/d shells, when showing edges, show indented edges
   -m <maps> color maps to be tried in turn. (default: map_red:darkorange1:
                yellow:darkgreen:cyan:blue:magenta:white:gray50:black%%)
                optionally followed by elements from v, e or f (default: vef)
   -D <c,e>  default color c for uncolored elements e (default: darkgray,ef)
-               key word: none - sets no color. elements e can include e or f
+               keyword: none - sets no color. elements e can include e or f
   -X <int>  flood fill stop. used with circuit or compound coloring (-f f,c)
                use 0 (default) to flood fill entire model. if -X is not 0 then
                return 1 from program if entire model has been colored
@@ -547,9 +547,8 @@ void ncon_opts::process_command_line(int argc, char **argv)
     case 'l':
       int sig_compare;
       print_status_or_exit(read_int(optarg, &sig_compare), c);
-      if (sig_compare > DEF_SIG_DGTS) {
+      if (sig_compare > DEF_SIG_DGTS)
         warning("limit is very small, may not be attainable", c);
-      }
       eps = pow(10, -sig_compare);
       break;
 

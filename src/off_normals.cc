@@ -122,10 +122,10 @@ Coloring Options (run 'off_util -H color' for help on color formats)
   -H <col>  hemispherical normal vertex color  (default: gray50)
   -E <col>  normal vector color. connected to element centroid
                default: color of normal vertex
-               key word: r take random color
+               keyword: r take random color
   -B <col>  normal vector base color. color at element centroid
-               key word: b take color of element (default)
-               key word: n take color of normal vertex
+               keyword: b take color of element (default)
+               keyword: n take color of normal vertex
 
 )",
           prog_name(), help_ver_text, int(-log(anti::epsilon) / log(10) + 0.5),
@@ -232,9 +232,8 @@ void off_normals_opts::process_command_line(int argc, char **argv)
     case 'l':
       int sig_compare;
       print_status_or_exit(read_int(optarg, &sig_compare), c);
-      if (sig_compare > DEF_SIG_DGTS) {
+      if (sig_compare > DEF_SIG_DGTS)
         warning("limit is very small, may not be attainable", c);
-      }
       eps = pow(10, -sig_compare);
       break;
 

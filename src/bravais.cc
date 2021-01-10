@@ -313,8 +313,8 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                                      h - hex relation (default elements: lcvh)
   -E <col>  edge color (same format as for vertices)
   -F <col>  face color (same format as for vertices) or
-               key word: s,S color by symmetry using face normals
-               key word: c,C color by symmetry using face normals (chiral)
+               keyword: s,S color by symmetry using face normals
+               keyword: c,C color by symmetry using face normals (chiral)
                lower case outputs map indexes. upper case outputs color values
   -T <tran> face transparency for color by symmetry. valid range from 0 to 255
 
@@ -537,9 +537,8 @@ void brav_opts::process_command_line(int argc, char **argv)
     case 'l':
       int sig_compare;
       print_status_or_exit(read_int(optarg, &sig_compare), c);
-      if (sig_compare > DEF_SIG_DGTS) {
+      if (sig_compare > DEF_SIG_DGTS)
         warning("limit is very small, may not be attainable", c);
-      }
       eps = pow(10, -sig_compare);
       break;
 

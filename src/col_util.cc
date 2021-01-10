@@ -117,7 +117,7 @@ Scene Options
 
 Output for grid (-d 3) Options
   -w <int>  width of grid. positive integer. (default: automatic)
-              key word: b - display as color bars
+              keyword: b - display as color bars
   -I        exclude map indexes on grid
 
 Output for plot (-d 1) Options 

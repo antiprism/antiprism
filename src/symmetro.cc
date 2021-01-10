@@ -90,7 +90,7 @@ public:
         convex_hull(0), offset(0), remove_free_faces(false), verbose(false),
         mode('\0'), face_coloring_method('a'), face_opacity(-1),
         color_digons(false), vert_col(Color(255, 215, 0)), // gold
-        edge_col(Color(211, 211, 211)),                    // lightgrey
+        edge_col(Color(211, 211, 211)),                    // lightgray
         frame_col(Color(135, 206, 235)),                   // skyblue3
         eps(anti::epsilon)
   {
@@ -172,7 +172,7 @@ Coloring Options (run 'off_util -H color' for help on color formats)
   -D        don't cover digons with edge color
   -Q <col>  frame color  (default: skyblue3)
   -f <mthd> mthd is face coloring method using color in map (default: a)
-               key word: none - sets no color
+               keyword: none - sets no color
                a - color by axis number
                n - color by number of sides (map start from digons (sides 2))
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
@@ -852,9 +852,8 @@ void symmetro_opts::process_command_line(int argc, char **argv)
     case 'l':
       int sig_compare;
       print_status_or_exit(read_int(optarg, &sig_compare), c);
-      if (sig_compare > DEF_SIG_DGTS) {
+      if (sig_compare > DEF_SIG_DGTS)
         warning("limit is very small, may not be attainable", c);
-      }
       eps = pow(10, -sig_compare);
       break;
 

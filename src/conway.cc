@@ -1231,7 +1231,7 @@ Coloring Options (run 'off_util -H color' for help on color formats)
   -V <col>  vertex color (default: gold)
   -E <col>  edge color   (default: lightgray)
   -f <mthd> mthd is face coloring method using color in map (default: n)
-               key word: none - sets no color
+               keyword: none - sets no color
                n - by number of sides
                s - symmetric coloring
                u - unique coloring

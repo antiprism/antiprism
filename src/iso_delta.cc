@@ -490,7 +490,7 @@ Isohedral Deltahedra Special Cases
 
 Coloring Options (run 'off_util -H color' for help on color formats)
   -f <mthd> mthd is face coloring method using color in map (default: c)
-              key word: none - sets no color
+              keyword: none - sets no color
               c - unique coloring for each compound constituent
               s - symmetric coloring (should always be one color)
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)

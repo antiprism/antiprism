@@ -177,11 +177,11 @@ Coloring Options (run 'off_util -H color' for help on color formats)
   -N <col>  base near points, centroid color (default: red)
   -M <col>  dual near points, centroid color (default: darkgreen)
   -S <col>  base incircles color
-               key word: f take color of face (default)
+               keyword: f take color of face (default)
   -R <col>  dual incircles color
-               key word: f take color of face (default)
+               keyword: f take color of face (default)
   -F <col>  dual face color (default: lightgray)
-               key word: b take color from base vertices
+               keyword: b take color from base vertices
   -B <col>  base edge color (default: unchanged)
   -D <col>  dual edge color (default: unchanged)
   -U <col>  unit sphere color (default: white)
