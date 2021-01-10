@@ -31,8 +31,8 @@
 
 #include <cmath>
 
-#include "../base/const.h"
-#include "../base/status.h"
+#include "const.h"
+#include "status.h"
 
 namespace anti {
 
