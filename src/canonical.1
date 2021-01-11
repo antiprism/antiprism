@@ -42,6 +42,13 @@ e \- edge near points centroid (default)
 v \- vertex centroid
 x \- not moved
 .TP
+\fB\-t\fR <opt>
+target model
+.IP
+b \- work on base only (default)
+p \- work on dual for planarization only
+c \- work on dual for planarization and canonicalization
+.TP
 \fB\-p\fR <opt>
 planarization (done before canoncalization. default: none)
 .IP
@@ -49,9 +56,11 @@ q \- face centroids magnitude squared
 m \- mathematica planarize
 a \- sand and fill planarize
 p \- fast planarize (poly_form \fB\-a\fR p)
+e \- equalize edges (poly_form \fB\-a\fR e) (may not be planar)
 .HP
 \fB\-i\fR <itrs> maximum planarize iterations. \fB\-1\fR for unlimited (default: \fB\-1\fR)
 .IP
+(default for \fB\-p\fR e: 10000)
 WARNING: unstable models may not finish unless \fB\-i\fR is set
 .TP
 \fB\-c\fR <opt>
@@ -127,9 +136,9 @@ dual incircles color
 keyword: f take color of face (default)
 .TP
 \fB\-F\fR <col>
-dual face color (default: lightgray)
+dual face color
 .IP
-keyword: b take color from base vertices
+keyword: b take color from base vertices (default)
 .TP
 \fB\-B\fR <col>
 base edge color (default: unchanged)

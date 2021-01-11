@@ -57,6 +57,7 @@ public:
   char initial_radius;
   char edge_distribution;
   string shuffle_model_indexes;
+  char target_model;
   char planarize_method;
   int num_iters_planar;
   char canonical_method;
@@ -87,15 +88,15 @@ public:
 
   cn_opts()
       : ProgramOpts("canonical"), centering('e'), initial_radius('e'),
-        edge_distribution('\0'), planarize_method('\0'), num_iters_planar(-1),
-        canonical_method('m'), num_iters_canonical(-1), edge_factor(NAN),
-        plane_factor(NAN), alternate_algorithm(false), radius_range_percent(-1),
-        output_parts("b"), face_opacity(-1), offset(0), roundness(8),
-        eps(anti::epsilon), ipoints_col(Color(255, 255, 0)),
-        base_nearpts_col(Color(255, 0, 0)), dual_nearpts_col(Color(0, 100, 0)),
-        base_incircles_color_method('f'), base_incircles_col(Color()),
-        dual_incircles_color_method('f'), dual_incircles_col(Color()),
-        dual_face_color_method('\0'), dual_face_col(Color(211, 211, 211)),
+        edge_distribution('\0'), target_model('b'), planarize_method('\0'),
+        num_iters_planar(-1), canonical_method('m'), num_iters_canonical(-1),
+        edge_factor(NAN), plane_factor(NAN), alternate_algorithm(false),
+        radius_range_percent(-1), output_parts("b"), face_opacity(-1),
+        offset(0), roundness(8), eps(anti::epsilon),
+        ipoints_col(Color(255, 255, 0)), base_nearpts_col(Color(255, 0, 0)),
+        dual_nearpts_col(Color(0, 100, 0)), base_incircles_color_method('f'),
+        base_incircles_col(Color()), dual_incircles_color_method('f'),
+        dual_incircles_col(Color()), dual_face_color_method('b'),
         base_edge_col(Color()), dual_edge_col(Color()),
         sphere_col(Color(255, 255, 255))
   {
@@ -133,12 +134,18 @@ Options
                e - edge near points centroid (default)
                v - vertex centroid
                x - not moved
+  -t <opt>  target model
+               b - work on base only (default)
+               p - work on dual for planarization only
+               c - work on dual for planarization and canonicalization
   -p <opt>  planarization (done before canoncalization. default: none)
                q - face centroids magnitude squared
                m - mathematica planarize
                a - sand and fill planarize
                p - fast planarize (poly_form -a p)
+               e - equalize edges (poly_form -a e) (may not be planar)
   -i <itrs> maximum planarize iterations. -1 for unlimited (default: %d)
+            (default for -p e: 10000)
             WARNING: unstable models may not finish unless -i is set
   -c <opt>  canonicalization
                m - mathematica version (default)
@@ -180,8 +187,8 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                keyword: f take color of face (default)
   -R <col>  dual incircles color
                keyword: f take color of face (default)
-  -F <col>  dual face color (default: lightgray)
-               keyword: b take color from base vertices
+  -F <col>  dual face color
+               keyword: b take color from base vertices (default)
   -B <col>  base edge color (default: unchanged)
   -D <col>  dual edge color (default: unchanged)
   -U <col>  unit sphere color (default: white)
@@ -202,12 +209,13 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   bool p_set = false;
   bool c_set = false;
+  bool i_set = false;
 
   handle_long_opts(argc, argv);
 
   while ((c = getopt(
               argc, argv,
-              ":hC:r:e:s:p:i:c:n:O:q:g:E:P:Ad:z:I:N:M:S:R:F:B:D:U:T:l:o:")) !=
+              ":he:s:r:C:t:p:i:c:n:O:q:g:E:P:Ad:z:I:N:M:S:R:F:B:D:U:T:l:o:")) !=
          -1) {
     if (common_opts(c, optopt))
       continue;
@@ -243,15 +251,23 @@ void cn_opts::process_command_line(int argc, char **argv)
         error("centering method type must be e, v, x", c);
       break;
 
+    case 't':
+      if (strlen(optarg) == 1 && strchr("bpc", int(*optarg)))
+        target_model = *optarg;
+      else
+        error("target model type must be b, p, c", c);
+      break;
+
     case 'p':
       p_set = true;
-      if (strlen(optarg) == 1 && strchr("qmap", int(*optarg)))
+      if (strlen(optarg) == 1 && strchr("qmape", int(*optarg)))
         planarize_method = *optarg;
       else
-        error("planarize method type must be q, m, a, p", c);
+        error("planarize method type must be q, m, a, p, e", c);
       break;
 
     case 'i':
+      i_set = true;
       print_status_or_exit(read_int(optarg, &num_iters_planar), c);
       if (num_iters_planar < -1)
         error("number of iterations for planarization must be -1 or greater",
@@ -385,9 +401,15 @@ void cn_opts::process_command_line(int argc, char **argv)
     }
   }
 
+  // if -i is not set and -p e, set -i to 10000
+  if (!i_set && planarize_method == 'e')
+    num_iters_planar = 10000;
+
   // if planarizing only do not canonicalize
-  if (p_set && !c_set)
+  if (p_set && !c_set) {
     canonical_method = 'x';
+    warning("planarizing only", 'c');
+  }
 
   if (alternate_algorithm && canonical_method != 'm')
     warning("alternate form only has effect in mathematica canonicalization",
@@ -966,6 +988,157 @@ void shuffle_model_indexes(Geometry &geom, const cn_opts &opts)
   }
 }
 
+void check_convexity(const Geometry &geom, const cn_opts &opts)
+{
+  Geometry hull = geom;
+  hull.set_hull();
+  // if (!check_congruence(geom, hull)) {
+  if (geom.faces().size() != hull.faces().size()) {
+    string try_str;
+    if (opts.planarize_method != 'e')
+      try_str = "try using -p e";
+    opts.warning(msg_str("input model is not convex. %s", try_str.c_str()));
+  }
+}
+
+void to_ellipsoid(Vec3d &v, const Vec4d &ellipsoid)
+{
+  if (compare(v, Vec3d::zero) == 0)
+    v = {0, 0, 1};
+
+  if (ellipsoid.is_set()) {
+    double scale = 0;
+    for (unsigned int i = 0; i < 3; i++)
+      scale += pow(fabs(v[i] / ellipsoid[i]), ellipsoid[3]);
+    v *= pow(scale, -1 / ellipsoid[3]);
+  }
+  else
+    v.to_unit();
+}
+
+void to_ellipsoid(Geometry &geom, const Vec4d &ellipsoid)
+{
+  for (unsigned int i = 0; i < geom.verts().size(); i++)
+    to_ellipsoid(geom.verts(i), ellipsoid);
+}
+
+Status make_equal_edges(Geometry &base_geom, IterationControl it_ctrl,
+                        double shorten_factor, double shrink_factor,
+                        Vec4d ellipsoid, const Symmetry &sym)
+{
+  to_ellipsoid(base_geom, ellipsoid); // map before finding symmetry
+
+  Status stat;
+
+  bool using_symmetry = (sym.get_sym_type() > Symmetry::C1);
+
+  // No further processing if no faces, but not an error
+  if (base_geom.faces().size() == 0)
+    return Status::ok();
+
+  SymmetricUpdater sym_updater((using_symmetry) ? base_geom : Geometry(), sym);
+  const Geometry &geom =
+      (using_symmetry) ? sym_updater.get_geom_working() : base_geom;
+
+  const vector<Vec3d> &verts = geom.verts();
+  auto eds = GeometryInfo(geom).get_vert_cons();
+
+  vector<int> principal_verts; // first vertex in each vertex orbit
+  vector<int> verts_to_update; // vertices accessed during iteration
+  if (using_symmetry) {
+    principal_verts = sym_updater.get_principal(VERTS);
+    verts_to_update =
+        SymmetricUpdater::get_included_verts(principal_verts, eds);
+  }
+  else {
+    principal_verts =
+        SymmetricUpdater::sequential_index_list(geom.verts().size());
+  }
+
+  double g_max_dist = 0;
+  double g_min_dist = 1e100;
+  double g_scale_factor = 1;
+  double max_dist = 0;
+  double min_dist = 1e100;
+  double test_val = it_ctrl.get_test_val();
+
+  vector<Vec3d> offsets(verts.size()); // Vertex adjustments
+
+  for (it_ctrl.start_iter_with_setup(); !it_ctrl.is_done();
+       it_ctrl.next_iter()) {
+    std::fill(offsets.begin(), offsets.end(), Vec3d::zero);
+
+    if (using_symmetry) {
+      // Ensure that the vertices used in adjustment are up to date
+      for (auto v_idx : verts_to_update)
+        sym_updater.update_from_principal_vertex(v_idx);
+    }
+
+    max_dist = 0;
+    min_dist = 1e100;
+    for (int v_idx : principal_verts) {
+      if (eds[v_idx].size() == 0)
+        continue;
+      for (unsigned int i = 0; i < eds[v_idx].size(); i++) {
+        auto vec = verts[v_idx] - verts[eds[v_idx][i]];
+        double dist = vec.len();
+        if (dist > max_dist)
+          max_dist = dist;
+        if (dist < min_dist)
+          min_dist = dist;
+        offsets[v_idx] += (vec / dist) * (g_min_dist - dist) * g_scale_factor *
+                          shorten_factor;
+      }
+    }
+
+    // adjust vertices post-loop (skip setup iter as global values not set)
+    if (!it_ctrl.is_setup_iter()) {
+      for (int v_idx : principal_verts) {
+        auto vert = verts[v_idx] + offsets[v_idx];
+        to_ellipsoid(vert, ellipsoid);
+        if (using_symmetry)
+          sym_updater.update_principal_vertex(v_idx, vert);
+        else
+          base_geom.verts(v_idx) = vert;
+      }
+    }
+
+    g_min_dist = min_dist * (1 - shrink_factor);
+    g_max_dist = max_dist;
+    g_scale_factor = (g_max_dist - g_min_dist) / g_min_dist;
+
+    // Do not check status or finish before modifying the model
+    if (!it_ctrl.is_setup_iter()) {
+      string finish_msg;
+      if (it_ctrl.is_status_check_iter()) {
+
+        if ((max_dist - min_dist) < test_val) { // absolute difference
+          it_ctrl.set_finished();
+          finish_msg = "solved, test value achieved";
+        }
+        else if (it_ctrl.is_last_iter()) {
+          it_ctrl.set_finished();
+          finish_msg = "not solved, test value not achieved";
+        }
+      }
+
+      if (it_ctrl.is_status_report_iter()) {
+        if (it_ctrl.is_finished())
+          it_ctrl.print("Final iteration (%s):\n", finish_msg.c_str());
+
+        it_ctrl.print("%-12u max:%17.15f min:%17.15f diff:%.11g\n",
+                      it_ctrl.get_current_iter(), max_dist, min_dist,
+                      max_dist - min_dist);
+      }
+    }
+  }
+
+  if (using_symmetry)
+    base_geom = sym_updater.get_geom_final();
+
+  return Status::ok();
+}
+
 int main(int argc, char *argv[])
 {
   cn_opts opts;
@@ -973,6 +1146,8 @@ int main(int argc, char *argv[])
 
   Geometry geom;
   opts.read_or_error(geom, opts.ifile);
+
+  check_convexity(geom, opts);
 
   if (opts.edge_distribution) {
     fprintf(stderr, "edge distribution: project onto sphere\n");
@@ -1009,6 +1184,12 @@ int main(int argc, char *argv[])
   else if (opts.centering == 'x')
     fprintf(stderr, "model not moved\n");
 
+  if (opts.target_model != 'b') {
+    Geometry dual;
+    get_dual(dual, geom, 1);
+    geom = dual;
+  }
+
   bool completed = false;
   if (opts.planarize_method) {
     string planarize_str;
@@ -1042,14 +1223,30 @@ int main(int argc, char *argv[])
                                     opts.centering, planarize_only);
     }
     else if (opts.planarize_method == 'p') {
-      Symmetry dummy;
+      Symmetry sym;
       Status stat;
-      stat = make_planar(geom, opts.it_ctrl, opts.plane_factor / 100, dummy);
+      stat = make_planar(geom, opts.it_ctrl, opts.plane_factor / 100, sym);
+      completed = (stat.is_ok() ? true : false);
+    }
+    else if (opts.planarize_method == 'e') {
+      double shorten_by = 1;
+      double shorten_rad_by = 1e-6;
+      Vec4d ellipsoid;
+      Symmetry sym;
+      Status stat;
+      stat = make_equal_edges(geom, opts.it_ctrl, shorten_by / 200,
+                              shorten_rad_by / 100, ellipsoid, sym);
       completed = (stat.is_ok() ? true : false);
     }
 
     // RK - report planarity
     planarity_info(geom);
+  }
+
+  if (opts.target_model == 'p') {
+    Geometry dual;
+    get_dual(dual, geom, 1);
+    geom = dual;
   }
 
   if (opts.canonical_method && opts.canonical_method != 'x') {
@@ -1079,6 +1276,12 @@ int main(int argc, char *argv[])
     else if (opts.canonical_method == 'a') {
       completed = canonicalize_unit(geom, opts.it_ctrl, radius_range_pct / 100,
                                     opts.centering, planarize_only);
+    }
+
+    if (opts.target_model == 'c') {
+      Geometry dual;
+      get_dual(dual, geom, 1);
+      geom = dual;
     }
 
     // RK - report planarity
