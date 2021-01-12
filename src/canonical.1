@@ -67,6 +67,7 @@ WARNING: unstable models may not finish unless \fB\-i\fR is set
 canonicalization
 .IP
 m \- mathematica version (default)
+c \- circle packings
 b \- base/dual version (reciprocate on face normals)
 a \- moving edge version
 x \- none (default, if \fB\-p\fR is set)
@@ -74,6 +75,9 @@ x \- none (default, if \fB\-p\fR is set)
 \fB\-n\fR <itrs> maximum canonical iterations. \fB\-1\fR for unlimited (default: \fB\-1\fR)
 .IP
 WARNING: unstable models may not finish unless \fB\-n\fR is set
+.TP
+\fB\-y\fR
+maintain symmetry of the base model (\fB\-p\fR p, \fB\-p\fR e, \fB\-c\fR c)
 .HP
 \fB\-O\fR <args> output b \- base, d \- dual, i \- intersection points (default: b)
 .IP
@@ -109,10 +113,13 @@ termination checks (0 for report checks only) (default: 1000,1)
 .PP
 Extra Options
 .IP
-for (\fB\-c\fR m, \fB\-p\fR m, and \fB\-p\fR p)
+for (\fB\-c\fR m, \fB\-c\fR c, \fB\-p\fR m, and \fB\-p\fR p)
 \fB\-E\fR <perc> percentage to scale the edge tangency (default: 50)
 \fB\-P\fR <perc> percentage to scale the face planarity (default: 20) (also \fB\-p\fR p)
 \fB\-A\fR        alternate algorithm. try if imbalance in result (\fB\-c\fR m only)
+\fB\-F\fR <adj>  initial percent adjustment factor, optionally followed by a comma
+.IP
+and a maximum percent adjustment (default: 10,1000) (\fB\-c\fR c only)
 .PP
 Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
 .TP
@@ -126,24 +133,18 @@ base near points, centroid color (default: red)
 dual near points, centroid color (default: darkgreen)
 .TP
 \fB\-S\fR <col>
-base incircles color
-.IP
-keyword: f take color of face (default)
+base incircles color. keyword: f take color of face (default)
 .TP
 \fB\-R\fR <col>
-dual incircles color
-.IP
-keyword: f take color of face (default)
-.TP
-\fB\-F\fR <col>
-dual face color
-.IP
-keyword: b take color from base vertices (default)
-.TP
-\fB\-B\fR <col>
-base edge color (default: unchanged)
+dual incircles color. keyword: f take color of face (default)
 .TP
 \fB\-D\fR <col>
+dual face color. keyword: b take color from base vertices (default)
+.TP
+\fB\-J\fR <col>
+base edge color (default: unchanged)
+.TP
+\fB\-K\fR <col>
 dual edge color (default: unchanged)
 .TP
 \fB\-U\fR <col>

@@ -62,10 +62,13 @@ public:
   int num_iters_planar;
   char canonical_method;
   int num_iters_canonical;
+  bool use_symmetry;
   double edge_factor;
   double plane_factor;
   bool alternate_algorithm;
   double radius_range_percent;
+  double factor;
+  double factor_max;
   string output_parts;
   int face_opacity;
   double offset;
@@ -90,15 +93,15 @@ public:
       : ProgramOpts("canonical"), centering('e'), initial_radius('e'),
         edge_distribution('\0'), target_model('b'), planarize_method('\0'),
         num_iters_planar(-1), canonical_method('m'), num_iters_canonical(-1),
-        edge_factor(NAN), plane_factor(NAN), alternate_algorithm(false),
-        radius_range_percent(-1), output_parts("b"), face_opacity(-1),
-        offset(0), roundness(8), eps(anti::epsilon),
-        ipoints_col(Color(255, 255, 0)), base_nearpts_col(Color(255, 0, 0)),
-        dual_nearpts_col(Color(0, 100, 0)), base_incircles_color_method('f'),
-        base_incircles_col(Color()), dual_incircles_color_method('f'),
-        dual_incircles_col(Color()), dual_face_color_method('b'),
-        base_edge_col(Color()), dual_edge_col(Color()),
-        sphere_col(Color(255, 255, 255))
+        use_symmetry(false), edge_factor(NAN), plane_factor(NAN),
+        alternate_algorithm(false), radius_range_percent(-1), factor(NAN),
+        factor_max(NAN), output_parts("b"), face_opacity(-1), offset(0),
+        roundness(8), eps(anti::epsilon), ipoints_col(Color(255, 255, 0)),
+        base_nearpts_col(Color(255, 0, 0)), dual_nearpts_col(Color(0, 100, 0)),
+        base_incircles_color_method('f'), base_incircles_col(Color()),
+        dual_incircles_color_method('f'), dual_incircles_col(Color()),
+        dual_face_color_method('b'), base_edge_col(Color()),
+        dual_edge_col(Color()), sphere_col(Color(255, 255, 255))
   {
     it_ctrl.set_max_iters(-1);
     it_ctrl.set_status_checks("1000,1");
@@ -149,11 +152,13 @@ Options
             WARNING: unstable models may not finish unless -i is set
   -c <opt>  canonicalization
                m - mathematica version (default)
+               c - circle packings
                b - base/dual version (reciprocate on face normals)
                a - moving edge version
                x - none (default, if -p is set)
   -n <itrs> maximum canonical iterations. -1 for unlimited (default: %d)
             WARNING: unstable models may not finish unless -n is set
+  -y        maintain symmetry of the base model (-p p, -p e, -c c)
   -O <args> output b - base, d - dual, i - intersection points (default: b)
                n - base edge near points, m - dual edge near points
                p - base near points centroid, q - dual near points centroid
@@ -174,23 +179,22 @@ Options
   -o <file> write output to file (default: write to standard output)
 
 Extra Options
-  for (-c m, -p m, and -p p)
+  for (-c m, -c c, -p m, and -p p)
   -E <perc> percentage to scale the edge tangency (default: 50) 
   -P <perc> percentage to scale the face planarity (default: 20) (also -p p)
   -A        alternate algorithm. try if imbalance in result (-c m only)
+  -F <adj>  initial percent adjustment factor, optionally followed by a comma
+            and a maximum percent adjustment (default: 10,1000) (-c c only)
 
 Coloring Options (run 'off_util -H color' for help on color formats)
   -I <col>  intersection points and/or origin color (default: yellow)
   -N <col>  base near points, centroid color (default: red)
   -M <col>  dual near points, centroid color (default: darkgreen)
-  -S <col>  base incircles color
-               keyword: f take color of face (default)
-  -R <col>  dual incircles color
-               keyword: f take color of face (default)
-  -F <col>  dual face color
-               keyword: b take color from base vertices (default)
-  -B <col>  base edge color (default: unchanged)
-  -D <col>  dual edge color (default: unchanged)
+  -S <col>  base incircles color. keyword: f take color of face (default)
+  -R <col>  dual incircles color. keyword: f take color of face (default)
+  -D <col>  dual face color. keyword: b take color from base vertices (default)
+  -J <col>  base edge color (default: unchanged)
+  -K <col>  dual edge color (default: unchanged)
   -U <col>  unit sphere color (default: white)
   -T <tran> base/dual transparency. range from 0 (invisible) to 255 (opaque)
 
@@ -213,10 +217,11 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(
-              argc, argv,
-              ":he:s:r:C:t:p:i:c:n:O:q:g:E:P:Ad:z:I:N:M:S:R:F:B:D:U:T:l:o:")) !=
-         -1) {
+  while (
+      (c = getopt(
+           argc, argv,
+           ":he:s:r:C:t:p:i:c:n:yO:q:g:E:P:AF:d:z:I:N:M:S:R:D:J:K:U:T:l:o:")) !=
+      -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -276,16 +281,20 @@ void cn_opts::process_command_line(int argc, char **argv)
 
     case 'c':
       c_set = true;
-      if (strlen(optarg) == 1 && strchr("mbax", int(*optarg)))
+      if (strlen(optarg) == 1 && strchr("mcbax", int(*optarg)))
         canonical_method = *optarg;
       else
-        error("canonical method type must be m, b, a, x", c);
+        error("canonical method type must be m, c, b, a, x", c);
       break;
 
     case 'n':
       print_status_or_exit(read_int(optarg, &num_iters_canonical), c);
       if (num_iters_canonical < -1)
         error("number of iterations for canonical must be -1 or greater", c);
+      break;
+
+    case 'y':
+      use_symmetry = true;
       break;
 
     case 'O':
@@ -321,6 +330,31 @@ void cn_opts::process_command_line(int argc, char **argv)
     case 'A':
       alternate_algorithm = true;
       break;
+
+    case 'F': {
+      vector<double> nums;
+      print_status_or_exit(read_double_list(optarg, nums), c);
+      if (nums.size() < 1 || nums.size() > 2)
+        error(msg_str("must give one or two numbers (%lu were given)",
+                      (unsigned long)nums.size()),
+              c);
+      factor = nums[0];
+      if (factor < 0 || factor > 100)
+        warning("initial factor not in range 0 to 100", c);
+      factor_max = 110;
+      if (nums.size() > 1) {
+        factor_max = nums[1];
+        if (factor_max < 0)
+          warning("maximum factor negative", c);
+      }
+      if (factor_max < factor) {
+        warning("maximum factor less than initial factor, setting to initial "
+                "factor value",
+                c);
+        factor_max = factor;
+      }
+      break;
+    }
 
     case 'd':
       print_status_or_exit(read_double(optarg, &radius_range_percent), c);
@@ -360,7 +394,7 @@ void cn_opts::process_command_line(int argc, char **argv)
         print_status_or_exit(dual_incircles_col.read(optarg), c);
       break;
 
-    case 'F':
+    case 'D':
       dual_face_color_method = '\0';
       if (strchr("b", *optarg))
         dual_face_color_method = *optarg;
@@ -368,11 +402,11 @@ void cn_opts::process_command_line(int argc, char **argv)
         print_status_or_exit(dual_face_col.read(optarg), c);
       break;
 
-    case 'B':
+    case 'J':
       print_status_or_exit(base_edge_col.read(optarg), c);
       break;
 
-    case 'D':
+    case 'K':
       print_status_or_exit(dual_edge_col.read(optarg), c);
       break;
 
@@ -408,8 +442,14 @@ void cn_opts::process_command_line(int argc, char **argv)
   // if planarizing only do not canonicalize
   if (p_set && !c_set) {
     canonical_method = 'x';
-    warning("planarizing only", 'c');
+    warning("-c x in force, planarizing only", 'c');
   }
+
+  if (target_model == 'p' && !planarize_method)
+    error("target is for planarization but no method is selected", 't');
+
+  if (target_model == 'c' && canonical_method == 'x')
+    error("target is for canonicalization but no method is selected", 't');
 
   if (alternate_algorithm && canonical_method != 'm')
     warning("alternate form only has effect in mathematica canonicalization",
@@ -431,9 +471,26 @@ void cn_opts::process_command_line(int argc, char **argv)
   else if (!std::isnan(plane_factor))
     warning("set, but not used for this algorithm", 'P');
 
+  if (canonical_method == 'c') {
+    if (std::isnan(factor))
+      factor = 10.0;
+    if (std::isnan(factor_max))
+      factor_max = 1000.0;
+  }
+  else if (!std::isnan(factor))
+    warning("set, but not used for this algorithm", 'F');
+
   if ((canonical_method == 'x') && planarize_method &&
       (radius_range_percent > -1))
     warning("set, but not used for planarization", 'd');
+
+  if (use_symmetry) {
+    if (planarize_method &&
+        (planarize_method != 'p' && planarize_method != 'e'))
+      warning("set, but not used for this planarize algorithm", 'y');
+    if (canonical_method != 'c')
+      warning("set, but not used for this canonical algorithm", 'y');
+  }
 
   if (argc - optind > 1)
     error("too many arguments");
@@ -1139,6 +1196,271 @@ Status make_equal_edges(Geometry &base_geom, IterationControl it_ctrl,
   return Status::ok();
 }
 
+Geometry base_to_ambo(const Geometry &base)
+{
+  Geometry ambo = base;
+  truncate_verts(ambo, 0.5);
+  ambo.transform(Trans3d::translate(-ambo.centroid()));
+  return ambo;
+}
+
+void update_base_from_ambo_orig(Geometry &base, const Geometry &ambo)
+{
+  auto info = ambo.get_info();
+  const auto &f_cons_all = info.get_face_cons();
+  vector<Vec3d> norms;
+  ambo.face_norms(norms);
+  vector<Vec3d> cents;
+  ambo.face_cents(cents);
+  // probably unnecessary amount of intersections, but only done once
+  // maybe calculate once per side, using other faces at +n/3 and +2n/3
+  for (int i = 0; i < (int)base.verts().size(); i++) {
+    int intersect_cnt = 0;
+    auto v_avg = Vec3d::zero;
+    const auto &f_cons = f_cons_all[i];
+    const int f_neighs_sz = f_cons.size();
+    for (int e = 0; e < f_neighs_sz; e++) {
+      for (int f0 = 0; f0 < f_neighs_sz - 2; f0++) {
+        int f0_idx = f_cons[f0][0];
+        for (int f1 = f0 + 1; f1 < f_neighs_sz - 1; f1++) {
+          int f1_idx = f_cons[f1][0];
+          for (int f2 = f1 + 1; f2 < f_neighs_sz; f2++) {
+            int f2_idx = f_cons[f2][0];
+            Vec3d intersection;
+            if (three_plane_intersect(
+                    cents[f0_idx], norms[f0_idx], cents[f1_idx], norms[f1_idx],
+                    cents[f2_idx], norms[f2_idx], intersection)) {
+              v_avg += intersection;
+              intersect_cnt++;
+            }
+          }
+        }
+      }
+    }
+
+    if (intersect_cnt)
+      v_avg /= intersect_cnt;
+
+    base.verts(i) = v_avg;
+  }
+}
+
+void update_base_from_ambo(Geometry &base, const Geometry &ambo)
+{
+  auto info = ambo.get_info();
+  const auto &f_cons_all = info.get_face_cons();
+  vector<Vec3d> norms;
+  ambo.face_norms(norms);
+  vector<Vec3d> cents;
+  ambo.face_cents(cents);
+
+  for (int i = 0; i < (int)base.verts().size(); i++) {
+    int intersect_cnt = 0;
+    auto v_avg = Vec3d::zero;
+    const auto &f_cons = f_cons_all[i];
+    const int f_neighs_sz = f_cons.size();
+    for (int e = 0; e < f_neighs_sz; e++) {
+      auto f0_idx = f_cons[e][0];
+      auto f1_idx = f_cons[(e + f_neighs_sz / 3) % f_neighs_sz][0];
+      auto f2_idx = f_cons[(e + 2 * f_neighs_sz / 3) % f_neighs_sz][0];
+      Vec3d intersection;
+      if (three_plane_intersect(cents[f0_idx], norms[f0_idx], cents[f1_idx],
+                                norms[f1_idx], cents[f2_idx], norms[f2_idx],
+                                intersection)) {
+        v_avg += intersection;
+        intersect_cnt++;
+      }
+    }
+
+    if (intersect_cnt)
+      v_avg /= intersect_cnt;
+
+    base.verts(i) = v_avg;
+  }
+}
+
+inline Vec3d nearpoint_on_plane(const Vec3d &P, const Vec3d &point_on_plane,
+                                const Vec3d &unit_norm)
+{
+  return P + vdot(point_on_plane - P, unit_norm) * unit_norm;
+}
+
+Status make_planar_unit(Geometry &base_geom, IterationControl it_ctrl,
+                        double factor, double factor_max, const Symmetry &sym)
+{
+  // chosen by experiment
+  const double readjust_up = 1.01;    // to adjust adjustment factor up
+  const double readjust_down = 0.995; // to adjust adjustment factor down
+  const double unit_mult = 1;         // extra multiplier for unit adjustment
+  const double orth_mult = 0.05;      // extra multiplier for orthogonality adj
+  const double overlap_mult = 0.5;    // extra multiplier for overlap adj
+
+  base_geom.transform(Trans3d::translate(base_geom.centroid()));
+  base_geom.orient(1); // positive orientation
+
+  bool using_symmetry = (sym.get_sym_type() > Symmetry::C1);
+  SymmetricUpdater sym_updater((using_symmetry) ? base_geom : Geometry(), sym);
+  const Geometry &geom =
+      (using_symmetry) ? sym_updater.get_geom_working() : base_geom;
+
+  // No further processing if no faces, but not an error
+  if (geom.faces().size() == 0)
+    return Status::ok();
+
+  const vector<Vec3d> &verts = geom.verts();
+  const vector<vector<int>> &faces = geom.faces();
+
+  // List of faces that a vertex is part of
+  auto vert_faces = geom.get_info().get_dual().faces();
+  auto vert_figs = geom.get_info().get_vert_figs();
+
+  // Get a list of the faces that contain a principal vertex of any type
+  vector<int> principal_verts;  // first vertex in each vertex orbit
+  vector<int> verts_to_update;  // vertices accessed during iteration
+  vector<int> faces_to_process; // faces processed during iteration
+  if (using_symmetry) {
+    principal_verts = sym_updater.get_principal(VERTS);
+    faces_to_process = sym_updater.get_associated_elems(vert_faces);
+    verts_to_update =
+        SymmetricUpdater::get_included_verts(faces_to_process, geom.faces());
+  }
+  else { // not using_symmetry
+    principal_verts =
+        SymmetricUpdater::sequential_index_list(geom.verts().size());
+    faces_to_process =
+        SymmetricUpdater::sequential_index_list(geom.faces().size());
+  }
+
+  // Use oversized arrays to avoid mapping
+  vector<Vec3d> offsets(verts.size()); // Vertex adjustments
+  vector<Vec3d> norms(faces.size());   // Face normals
+  vector<Vec3d> cents(faces.size());   // Face centroids
+
+  double test_val = it_ctrl.get_test_val();
+  double last_max_diff2 = 0.0;
+  for (it_ctrl.start_iter(); !it_ctrl.is_done(); it_ctrl.next_iter()) {
+    Vec3d centroid = geom.centroid();
+    std::fill(offsets.begin(), offsets.end(), Vec3d::zero);
+
+    if (using_symmetry) {
+      // Ensure that the vertices used in adjustment are up to date
+      for (auto v_idx : verts_to_update)
+        sym_updater.update_from_principal_vertex(v_idx);
+    }
+
+    // Initialize face data for just the necessary faces
+    for (auto f_idx : faces_to_process) {
+      norms[f_idx] = geom.face_norm(f_idx).unit();
+      cents[f_idx] = geom.face_cent(f_idx);
+    }
+
+    double max_diff2 = 0.0;
+    for (auto v_idx : principal_verts) {
+      const auto &vfaces = vert_faces[v_idx];
+      const int vf_sz = vfaces.size();
+      // target vertex is centroid of projection of vertex onto planes
+      for (int f0 = 0; f0 < vf_sz; f0++) {
+        int f0_idx = vfaces[f0];
+        offsets[v_idx] +=
+            nearpoint_on_plane(verts[v_idx], cents[f0_idx], norms[f0_idx]);
+      }
+      offsets[v_idx] = (offsets[v_idx] / vf_sz - verts[v_idx]) * factor;
+
+      // adjust for centroid
+      offsets[v_idx] -= centroid;
+
+      // adjust for orthogonality
+      for (int i = 0; i < 2; i++) {
+        auto n = vcross(norms[vfaces[i + 2]], norms[vfaces[i]]).unit();
+        const auto v_ideal = nearpoint_on_plane(verts[v_idx], Vec3d::zero, n);
+        const auto offset = (v_ideal - verts[v_idx]) * factor * orth_mult;
+        offsets[v_idx] += offset;
+      }
+
+      // adjust for non-overlap
+      const auto &vfig = vert_figs[v_idx][0];
+      for (int i = 0; i < 4; i++) {
+        if (vtriple(verts[v_idx], verts[vfig[i]], verts[vfig[(i + 1) % 4]]) >
+            0) {
+          auto v_ideal = ::centroid(
+              {verts[vfig[0]], verts[vfig[1]], verts[vfig[2]], verts[vfig[3]]});
+          offsets[v_idx] += (v_ideal - verts[v_idx]) * overlap_mult;
+          break;
+        }
+      }
+
+      auto diff2 = offsets[v_idx].len2();
+      if (diff2 > max_diff2)
+        max_diff2 = diff2;
+    }
+
+    // adjust vertices post-loop
+    if (using_symmetry) {
+      // adjust principal vertices
+      for (int v_idx : principal_verts) {
+        auto new_v = verts[v_idx] + offsets[v_idx];
+        double new_v_len = new_v.len();
+        new_v *= 1 + (1 / new_v_len - 1) * factor * unit_mult;
+        sym_updater.update_principal_vertex(v_idx, new_v);
+      }
+    }
+    else { // not using_symmetry
+      // adjust all vertices
+      for (unsigned int i = 0; i < verts.size(); i++) {
+        auto new_v = verts[i] + offsets[i];
+        double new_v_len = new_v.len();
+        new_v *= 1 + (1 / new_v_len - 1) * unit_mult;
+        base_geom.raw_verts()[i] = new_v;
+      }
+    }
+
+    // adjust plane factor
+    if (max_diff2 < last_max_diff2)
+      factor *= readjust_up;
+    else
+      factor *= readjust_down;
+    if (factor > factor_max)
+      factor = factor_max;
+    last_max_diff2 = max_diff2;
+
+    string finish_msg;
+    if (it_ctrl.is_status_check_iter()) {
+      double width = BoundBox(verts).max_width();
+      if (sqrt(max_diff2) / width < test_val) {
+        it_ctrl.set_finished();
+        finish_msg = "solved, test value achieved";
+      }
+      else if (it_ctrl.is_last_iter()) {
+        // reached last iteration without solving
+        it_ctrl.set_finished();
+        finish_msg = "not solved, test value not achieved";
+      }
+    }
+
+    if (it_ctrl.is_status_report_iter()) {
+      if (it_ctrl.is_finished())
+        it_ctrl.print("Final iteration (%s):\n", finish_msg.c_str());
+
+      it_ctrl.print("%-12u max_diff:%17.15e  -f %-10.5f\n",
+                    it_ctrl.get_current_iter(), sqrt(max_diff2), 100 * factor);
+    }
+  }
+
+  if (using_symmetry)
+    base_geom = sym_updater.get_geom_final();
+
+  return Status::ok();
+}
+
+Status make_canonical_enp(Geometry &geom, IterationControl it_ctrl,
+                          double factor, double factor_max, const Symmetry &sym)
+{
+  Geometry ambo = base_to_ambo(geom);
+  Status stat = make_planar_unit(ambo, it_ctrl, factor, factor_max, sym);
+  update_base_from_ambo(geom, ambo);
+  return stat;
+}
+
 int main(int argc, char *argv[])
 {
   cn_opts opts;
@@ -1184,7 +1506,12 @@ int main(int argc, char *argv[])
   else if (opts.centering == 'x')
     fprintf(stderr, "model not moved\n");
 
+  Symmetry sym;
+  if (opts.use_symmetry)
+    opts.print_status_or_exit(sym.init(geom), 'y');
+
   if (opts.target_model != 'b') {
+    fprintf(stderr, "converting target to dual for planarization\n");
     Geometry dual;
     get_dual(dual, geom, 1);
     geom = dual;
@@ -1201,6 +1528,8 @@ int main(int argc, char *argv[])
       planarize_str = "sand and fill";
     else if (opts.planarize_method == 'p')
       planarize_str = "poly_form -a p";
+    else if (opts.planarize_method == 'e')
+      planarize_str = "poly_form -a e";
     fprintf(stderr, "planarize: %s method\n", planarize_str.c_str());
 
     bool planarize_only = true;
@@ -1223,7 +1552,6 @@ int main(int argc, char *argv[])
                                     opts.centering, planarize_only);
     }
     else if (opts.planarize_method == 'p') {
-      Symmetry sym;
       Status stat;
       stat = make_planar(geom, opts.it_ctrl, opts.plane_factor / 100, sym);
       completed = (stat.is_ok() ? true : false);
@@ -1232,27 +1560,29 @@ int main(int argc, char *argv[])
       double shorten_by = 1;
       double shorten_rad_by = 1e-6;
       Vec4d ellipsoid;
-      Symmetry sym;
       Status stat;
       stat = make_equal_edges(geom, opts.it_ctrl, shorten_by / 200,
                               shorten_rad_by / 100, ellipsoid, sym);
       completed = (stat.is_ok() ? true : false);
     }
 
+    if (opts.target_model == 'p') {
+      fprintf(stderr, "converting target back to base after planarization\n");
+      Geometry dual;
+      get_dual(dual, geom, 1);
+      geom = dual;
+    }
+
     // RK - report planarity
     planarity_info(geom);
-  }
-
-  if (opts.target_model == 'p') {
-    Geometry dual;
-    get_dual(dual, geom, 1);
-    geom = dual;
   }
 
   if (opts.canonical_method && opts.canonical_method != 'x') {
     string canonicalize_str;
     if (opts.canonical_method == 'm')
       canonicalize_str = "mathematica";
+    else if (opts.canonical_method == 'c')
+      canonicalize_str = "circle packings";
     else if (opts.canonical_method == 'b')
       canonicalize_str = "base/dual";
     else if (opts.canonical_method == 'a')
@@ -1269,6 +1599,10 @@ int main(int argc, char *argv[])
           geom, opts.it_ctrl, opts.edge_factor / 100, opts.plane_factor / 100,
           radius_range_pct / 100, opts.alternate_algorithm, planarize_only);
     }
+    else if (opts.canonical_method == 'c') {
+      completed = make_canonical_enp(geom, opts.it_ctrl, opts.factor / 100,
+                                     opts.factor_max / 100, sym);
+    }
     else if (opts.canonical_method == 'b') {
       completed = canonicalize_bd(geom, opts.it_ctrl, opts.canonical_method,
                                   radius_range_pct / 100, opts.centering);
@@ -1279,6 +1613,8 @@ int main(int argc, char *argv[])
     }
 
     if (opts.target_model == 'c') {
+      fprintf(stderr,
+              "converting target back to base after canonicalization\n");
       Geometry dual;
       get_dual(dual, geom, 1);
       geom = dual;

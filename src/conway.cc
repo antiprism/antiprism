@@ -1490,10 +1490,6 @@ void cn_opts::process_command_line(int argc, char **argv)
                     seed.c_str(), ifile.c_str()));
   }
 
-  // if this is not checked it waits for input
-  if (seed.empty() && ifile.empty())
-    error("no seed given");
-
   // operations can be done in reverse order
   if (!reverse_ops) {
     sort(operations.begin(), operations.end(), cmp_ops);
