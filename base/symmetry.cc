@@ -516,6 +516,29 @@ bool SymmetryAxis::operator<(const SymmetryAxis &s) const
   return false;
 }
 
+//-----------------------------------------------------------------
+// Subspace
+Subspace::Subspace(SubspaceType type, Vec3d point, Vec3d dir)
+    : type(type), point(point)
+{
+  if (dir.is_set())
+    direction = dir.unit();
+}
+
+Vec3d Subspace::nearest_point(Vec3d P) const
+{
+  if (type == SubspaceType::none)
+    return Vec3d();
+  else if (type == SubspaceType::point)
+    return point;
+  else if (type == SubspaceType::line)
+    return anti::nearest_point(P, point, point + direction);
+  else if (type == SubspaceType::plane)
+    return P + vdot(point - P, direction) * direction;
+  else // type == SubspaceType::space
+    return P;
+}
+
 // find symmetry from rotational axes
 void Symmetry::find_full_sym_type(const set<SymmetryAxis> &full_sym)
 {
@@ -1753,6 +1776,48 @@ SymmetryAutos &Symmetry::get_autos()
   return autos;
 }
 
+Subspace Symmetry::get_fixed_subspace() const
+{
+  Subspace::SubspaceType type;
+  Vec3d point = get_to_std().inverse() * Vec3d(0, 0, 0);
+  Vec3d direction;
+
+  switch (get_sym_type()) {
+  case Symmetry::C1:
+    type = Subspace::SubspaceType::space;
+    break;
+  case Symmetry::Cs:
+    type = Subspace::SubspaceType::plane;
+    if (get_mirrors().begin() != get_mirrors().end())
+      direction = *get_mirrors().begin(); // mirror normal
+    break;
+  case Symmetry::C:
+  case Symmetry::Cv:
+    type = Subspace::SubspaceType::line;
+    if (get_axes().begin() != get_axes().end())
+      direction = get_axes().begin()->get_axis();
+    break;
+  case Symmetry::Ci:
+  case Symmetry::S:
+  case Symmetry::Ch:
+  case Symmetry::D:
+  case Symmetry::Dv:
+  case Symmetry::Dh:
+  case Symmetry::T:
+  case Symmetry::Td:
+  case Symmetry::Th:
+  case Symmetry::O:
+  case Symmetry::Oh:
+  case Symmetry::I:
+  case Symmetry::Ih:
+    type = Subspace::SubspaceType::point;
+    break;
+  default:
+    type = Subspace::SubspaceType::none;
+  }
+  return Subspace(type, point, direction);
+}
+
 bool Symmetry::operator<(const Symmetry &s) const
 {
   if (sym_type < s.sym_type)
@@ -2190,88 +2255,6 @@ bool elem_fixed(const Geometry &geom, int idx, int elem_type,
 }
 
 //-----------------------------------------------------------------
-// Subspace
-Subspace::Subspace(SubspaceType type, Vec3d point, Vec3d dir)
-    : type(type), point(point)
-{
-  if (dir.is_set())
-    direction = dir.unit();
-}
-
-Vec3d Subspace::nearest_point(Vec3d P) const
-{
-  if (type == SubspaceType::none)
-    return Vec3d();
-  else if (type == SubspaceType::point)
-    return point;
-  else if (type == SubspaceType::line)
-    return anti::nearest_point(P, point, point + direction);
-  else if (type == SubspaceType::plane)
-    return P + vdot(point - P, direction) * direction;
-  else // type == SubspaceType::space
-    return P;
-}
-
-Subspace get_pointwise_invariant_subspace(const Symmetry &sym)
-{
-  Subspace::SubspaceType type;
-  Vec3d point = sym.get_to_std().inverse() * Vec3d(0, 0, 0);
-  Vec3d direction;
-
-  switch (sym.get_sym_type()) {
-  case Symmetry::C1:
-    type = Subspace::SubspaceType::space;
-    break;
-  case Symmetry::Cs:
-    type = Subspace::SubspaceType::plane;
-    if (sym.get_mirrors().begin() != sym.get_mirrors().end())
-      direction = *sym.get_mirrors().begin(); // mirror normal
-    break;
-  case Symmetry::C:
-  case Symmetry::Cv:
-    type = Subspace::SubspaceType::line;
-    if (sym.get_axes().begin() != sym.get_axes().end())
-      direction = sym.get_axes().begin()->get_axis();
-    break;
-  case Symmetry::Ci:
-  case Symmetry::S:
-  case Symmetry::Ch:
-  case Symmetry::D:
-  case Symmetry::Dv:
-  case Symmetry::Dh:
-  case Symmetry::T:
-  case Symmetry::Td:
-  case Symmetry::Th:
-  case Symmetry::O:
-  case Symmetry::Oh:
-  case Symmetry::I:
-  case Symmetry::Ih:
-    type = Subspace::SubspaceType::point;
-    break;
-  default:
-    type = Subspace::SubspaceType::none;
-  }
-  return Subspace(type, point, direction);
-}
-
-string Subspace::str() const
-{
-  string ret = "Subspace: ";
-  if (type == SubspaceType::none)
-    ret += "none";
-  else if (type == SubspaceType::point)
-    ret += "point, (" + point.to_str() + ")";
-  else if (type == SubspaceType::line)
-    ret += "line, (" + point.to_str() + "), (" + direction.to_str() + ")";
-  else if (type == SubspaceType::plane)
-    ret += "plane, (" + point.to_str() + "), (" + direction.to_str() + ")";
-  else // type == SubspaceType::space
-    ret += "space";
-
-  return ret;
-}
-
-//-----------------------------------------------------------------
 // SymmetricUpdater
 
 // Initialise vertex orbit
@@ -2341,7 +2324,7 @@ void SymmetricUpdater::init_vert_orbit(int orbit_idx, const set<int> &orbit)
 
   // Update orbit information
   orbit_vertex_idx.push_back(v_idx);
-  orbit_invariant_subspaces.push_back(get_pointwise_invariant_subspace(stab));
+  orbit_invariant_subspaces.push_back(stab.get_fixed_subspace());
   for (const auto &elem : elems) {
     // fprintf(stderr, "elem: idx=%d\n", elem.first);
     const auto it_to = transformations.get_trans().find(elem.second);

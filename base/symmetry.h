@@ -289,6 +289,37 @@ inline bool operator==(const Transformations &t0, const Transformations &t1)
  *  vertices (0), edges (1) and faces (2). */
 void get_equiv_elems(const Geometry &geom, const Transformations &ts,
                      std::vector<std::vector<std::set<int>>> *equiv_sets);
+/// Subspace
+class Subspace {
+public:
+  /// Type of subspace, corresponding to dimension
+  enum class SubspaceType {
+    none,  ///< Uninitialized
+    point, ///< A point
+    line,  ///< A line
+    plane, ///< A plane
+    space  ///< The whole space
+  };
+  /// Constructor
+  /**\param type type of subspace
+   * \param point a point fixed by the subspace (or uninitialized)
+   * \param direction direction of axis or normal to plane (or uninitialized)*/
+  Subspace(SubspaceType type = SubspaceType::none, Vec3d point = Vec3d(),
+           Vec3d direction = Vec3d());
+
+  /// Nearest point in the subspace
+  /**\param P the point
+   * \return nearest point to P in the subspace. */
+  Vec3d nearest_point(Vec3d P) const;
+
+  /// A string representation of the subspace
+  std::string str() const;
+
+private:
+  SubspaceType type;
+  Vec3d point;
+  Vec3d direction;
+};
 
 class SymmetryAxis;
 class Symmetry;
@@ -441,11 +472,6 @@ private:
    * \param n the n-fold order of the axis. */
   void set_nfold(int n) { nfold = n; }
 
-  /// Set the tranformation to standard symmetry type.
-  /**\param trans the transformation that carries an object with the
-   *  symmetry type onto the standard set of symmetries for that type. */
-  void set_to_std(const Trans3d &trans) { to_std = trans; }
-
 public:
   /// Constructor
   /** Find the symmetry in Schoenflies notation.
@@ -535,6 +561,11 @@ public:
    *  type onto the standard set of symmetries for that type. */
   Trans3d get_to_std() const { return to_std; }
 
+  /// Set the tranformation to standard symmetry type.
+  /**\param trans the transformation that carries an object with the
+   *  symmetry type onto the standard set of symmetries for that type. */
+  void set_to_std(const Trans3d &trans) { to_std = trans; }
+
   /// Get the symmetry transformations
   /**\param ts to return the set of symmetry transformations for this
    *  symmetry type.
@@ -578,6 +609,10 @@ public:
   /// Get a maximal direct symmetry subgroup
   /**\return the symmetry group containing all direct transformations.**/
   Symmetry get_max_direct_sub_sym() const;
+
+  /// Get the subspace fixed by the symmetry group
+  /**\return The subspace fixed by the symmetry group. */
+  Subspace get_fixed_subspace() const;
 
   /// Get the axes or mirrors.
   /**\return The symmetry axes or mirrors. */
@@ -674,38 +709,6 @@ public:
   /// Dump
   /** Print the object data to \c stdout for debugging. */
   void dump() const;
-};
-
-/// Subspace
-class Subspace {
-public:
-  /// Type of subspace, corresponding to dimension
-  enum class SubspaceType {
-    none,  ///< Uninitialized
-    point, ///< A point
-    line,  ///< A line
-    plane, ///< A plane
-    space  ///< The whole space
-  };
-  /// Constructor
-  /**\param type type of subspace
-   * \param point a point fixed by the subspace (or uninitialized)
-   * \param direction direction of axis or normal to plane (or uninitialized)*/
-  Subspace(SubspaceType type = SubspaceType::none, Vec3d point = Vec3d(),
-           Vec3d direction = Vec3d());
-
-  /// Nearest point in the subspace
-  /**\param P the point
-   * \return nearest point to P in the subspace. */
-  Vec3d nearest_point(Vec3d P) const;
-
-  /// A string representation of the subspace
-  std::string str() const;
-
-private:
-  SubspaceType type;
-  Vec3d point;
-  Vec3d direction;
 };
 
 /// Orbit relationship mapping
