@@ -182,7 +182,8 @@ Extra Options
   -P <perc> percentage to scale the face planarity (default: 20) (also -p p)
   -A        alternate algorithm. try if imbalance in result (-c m only)
   -F <adj>  initial percent adjustment factor, optionally followed by a comma
-            and a maximum percent adjustment (default: 10,1000) (-c c only)
+            and a maximum percent adjustment factor (-c c only)
+            (default: 10,1000 or 10,500 when -y is set)
 
 Coloring Options (run 'off_util -H color' for help on color formats)
   -I <col>  intersection points and/or origin color (default: yellow)
