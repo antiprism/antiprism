@@ -1016,12 +1016,8 @@ void check_convexity(const Geometry &geom, const cn_opts &opts)
   Geometry hull = geom;
   hull.set_hull();
   // if (!check_congruence(geom, hull)) {
-  if (geom.faces().size() != hull.faces().size()) {
-    string try_str;
-    if (opts.planarize_method != 'e')
-      try_str = "try using -p e";
-    opts.warning(msg_str("input model is not convex. %s", try_str.c_str()));
-  }
+  if (geom.faces().size() != hull.faces().size())
+    opts.warning("input model is not convex");
 }
 
 // Implementation of George Hart's canonicalization algorithm
