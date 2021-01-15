@@ -346,22 +346,6 @@ Vec3d face_normal_by_type(const Geometry &geom, const int f_idx,
 bool canonical_radius_range_test(const Geometry &geom,
                                  const double radius_range_percent);
 
-/// Canonicalize (George Hart "Mathematica" algorithm)
-/**See http://library.wolfram.com/infocenter/Articles/2012/
- * \param geom geometry to canonicalise.
- * \param it_ctrl interation control.
- * \param edge_factor small number to scale edge adjustments.
- * \param plane_factor small number to scale plane adjustments.
- * \param radius_range_percent if the model outer radius increases this
- *  much over the inner radius then it is growing too much, terminate.
- * \param alternate_loop use alternate loop.
- * \param planarize_only planarise only.
- * \return \c true if success, otherwise \c false */
-bool canonicalize_mm(Geometry &geom, IterationControl it_ctrl,
-                     const double edge_factor, const double plane_factor,
-                     const double radius_range_percent,
-                     const bool alternate_loop, const bool planarize_only);
-
 /// returns the edge near points centroid
 /**\param geom geometry to measure
  * \param cent centre from which to calculate nearpoints on edges

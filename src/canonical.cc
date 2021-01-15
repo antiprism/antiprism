@@ -146,9 +146,7 @@ Options
                m - mathematica planarize
                a - sand and fill planarize
                p - fast planarize (poly_form -a p)
-               e - equalize edges (poly_form -a e) (may not be planar)
   -i <itrs> maximum planarize iterations. -1 for unlimited (default: %d)
-            (default for -p e: 10000)
             WARNING: unstable models may not finish unless -i is set
   -c <opt>  canonicalization
                m - mathematica version (default)
@@ -158,7 +156,7 @@ Options
                x - none (default, if -p is set)
   -n <itrs> maximum canonical iterations. -1 for unlimited (default: %d)
             WARNING: unstable models may not finish unless -n is set
-  -y        maintain symmetry of the base model (-p p, -p e, -c c)
+  -y        maintain symmetry of the base model (-p p, -c c)
   -O <args> output b - base, d - dual, i - intersection points (default: b)
                n - base edge near points, m - dual edge near points
                p - base near points centroid, q - dual near points centroid
@@ -213,7 +211,6 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   bool p_set = false;
   bool c_set = false;
-  bool i_set = false;
 
   handle_long_opts(argc, argv);
 
@@ -265,14 +262,13 @@ void cn_opts::process_command_line(int argc, char **argv)
 
     case 'p':
       p_set = true;
-      if (strlen(optarg) == 1 && strchr("qmape", int(*optarg)))
+      if (strlen(optarg) == 1 && strchr("qmap", int(*optarg)))
         planarize_method = *optarg;
       else
-        error("planarize method type must be q, m, a, p, e", c);
+        error("planarize method type must be q, m, a, p", c);
       break;
 
     case 'i':
-      i_set = true;
       print_status_or_exit(read_int(optarg, &num_iters_planar), c);
       if (num_iters_planar < -1)
         error("number of iterations for planarization must be -1 or greater",
@@ -435,10 +431,6 @@ void cn_opts::process_command_line(int argc, char **argv)
     }
   }
 
-  // if -i is not set and -p e, set -i to 10000
-  if (!i_set && planarize_method == 'e')
-    num_iters_planar = 10000;
-
   // if planarizing only do not canonicalize
   if (p_set && !c_set) {
     canonical_method = 'x';
@@ -474,8 +466,12 @@ void cn_opts::process_command_line(int argc, char **argv)
   if (canonical_method == 'c') {
     if (std::isnan(factor))
       factor = 10.0;
-    if (std::isnan(factor_max))
-      factor_max = 1000.0;
+    if (std::isnan(factor_max)) {
+      if (use_symmetry)
+        factor_max = 500;
+      else
+        factor_max = 1000.0;
+    }
   }
   else if (!std::isnan(factor))
     warning("set, but not used for this algorithm", 'F');
@@ -510,37 +506,6 @@ void unitize_vertex_radius(Geometry &geom)
   double avg = info.vert_dist_lims().sum / info.num_verts();
   geom.transform(Trans3d::scale(1 / avg));
 }
-
-/*
-// plane a single face aligned to the z axis
-void plane_face(Geometry &polygon)
-{
-  Vec3d face_normal = polygon.face_norm(0).unit();
-  Vec3d face_centroid = polygon.face_cent(0);
-  // make sure face_normal points outward
-  if (vdot(face_normal, face_centroid) < 0)
-    face_normal *= -1.0;
-
-  // this gives the same results (from the mathematica algorithm)
-  // for (auto &vert : polygon.raw_verts())
-  //  vert += vdot(face_normal, face_centroid - vert) * face_normal;
-  // return;
-
-  // rotate face to z axis
-  Trans3d trans = Trans3d::rotate(face_normal, Vec3d(0, 0, 1));
-  polygon.transform(trans);
-
-  // refresh face centroid
-  face_centroid = polygon.face_cent(0);
-
-  // set z of all vertices to height of face centroid
-  for (auto &vert : polygon.raw_verts())
-    vert[2] = face_centroid[2];
-
-  // rotate face back to original position
-  polygon.transform(trans.inverse());
-}
-*/
 
 void planarity_info(Geometry &geom)
 {
@@ -1058,142 +1023,148 @@ void check_convexity(const Geometry &geom, const cn_opts &opts)
   }
 }
 
-void to_ellipsoid(Vec3d &v, const Vec4d &ellipsoid)
+// Implementation of George Hart's canonicalization algorithm
+// http://library.wolfram.com/infocenter/Articles/2012/
+// RK - the model will possibly become non-convex early in the loops.
+// if it contorts too badly, the model will implode. Having the input
+// model at a radius of near 1 minimizes this problem
+bool canonicalize_mm(Geometry &geom, IterationControl it_ctrl,
+                     const double edge_factor, const double plane_factor,
+                     const double radius_range_percent,
+                     const bool alternate_loop, const bool planarize_only)
 {
-  if (compare(v, Vec3d::zero) == 0)
-    v = {0, 0, 1};
+  bool completed = false;
+  it_ctrl.set_finished(false);
 
-  if (ellipsoid.is_set()) {
-    double scale = 0;
-    for (unsigned int i = 0; i < 3; i++)
-      scale += pow(fabs(v[i] / ellipsoid[i]), ellipsoid[3]);
-    v *= pow(scale, -1 / ellipsoid[3]);
-  }
-  else
-    v.to_unit();
-}
+  vector<Vec3d> &verts = geom.raw_verts();
 
-void to_ellipsoid(Geometry &geom, const Vec4d &ellipsoid)
-{
-  for (unsigned int i = 0; i < geom.verts().size(); i++)
-    to_ellipsoid(geom.verts(i), ellipsoid);
-}
+  vector<vector<int>> edges;
+  geom.get_impl_edges(edges);
 
-Status make_equal_edges(Geometry &base_geom, IterationControl it_ctrl,
-                        double shorten_factor, double shrink_factor,
-                        Vec4d ellipsoid, const Symmetry &sym)
-{
-  to_ellipsoid(base_geom, ellipsoid); // map before finding symmetry
-
-  Status stat;
-
-  bool using_symmetry = (sym.get_sym_type() > Symmetry::C1);
-
-  // No further processing if no faces, but not an error
-  if (base_geom.faces().size() == 0)
-    return Status::ok();
-
-  SymmetricUpdater sym_updater((using_symmetry) ? base_geom : Geometry(), sym);
-  const Geometry &geom =
-      (using_symmetry) ? sym_updater.get_geom_working() : base_geom;
-
-  const vector<Vec3d> &verts = geom.verts();
-  auto eds = GeometryInfo(geom).get_vert_cons();
-
-  vector<int> principal_verts; // first vertex in each vertex orbit
-  vector<int> verts_to_update; // vertices accessed during iteration
-  if (using_symmetry) {
-    principal_verts = sym_updater.get_principal(VERTS);
-    verts_to_update =
-        SymmetricUpdater::get_included_verts(principal_verts, eds);
-  }
-  else {
-    principal_verts =
-        SymmetricUpdater::sequential_index_list(geom.verts().size());
-  }
-
-  double g_max_dist = 0;
-  double g_min_dist = 1e100;
-  double g_scale_factor = 1;
-  double max_dist = 0;
-  double min_dist = 1e100;
   double test_val = it_ctrl.get_test_val();
+  double max_diff2 = 0;
 
-  vector<Vec3d> offsets(verts.size()); // Vertex adjustments
+  for (it_ctrl.start_iter(); !it_ctrl.is_done(); it_ctrl.next_iter()) {
+    vector<Vec3d> verts_last = verts;
 
-  for (it_ctrl.start_iter_with_setup(); !it_ctrl.is_done();
-       it_ctrl.next_iter()) {
-    std::fill(offsets.begin(), offsets.end(), Vec3d::zero);
+    if (!planarize_only) {
+      vector<Vec3d> near_pts;
+      if (!alternate_loop) {
+        for (auto &edge : edges) {
+          Vec3d P = geom.edge_nearpt(edge, Vec3d(0, 0, 0));
+          near_pts.push_back(P);
+          Vec3d offset = edge_factor * (P.len() - 1) * P;
+          verts[edge[0]] -= offset;
+          verts[edge[1]] -= offset;
+        }
+      }
+      // RK - alternate form causes the near points to be applied in a 2nd loop
+      // most often not needed unless the model is off balance
+      else {
+        for (auto &edge : edges) {
+          Vec3d P = geom.edge_nearpt(edge, Vec3d(0, 0, 0));
+          near_pts.push_back(P);
+          // RK - these 4 lines cause the near points to be applied in a 2nd
+          // loop
+        }
+        int p_cnt = 0;
+        for (auto &edge : edges) {
+          Vec3d P = near_pts[p_cnt++];
+          Vec3d offset = edge_factor * (P.len() - 1) * P;
+          verts[edge[0]] -= offset;
+          verts[edge[1]] -= offset;
+        }
+      }
+      /*
+            // RK - revolving loop. didn't solve the imbalance problem
+            else {
+              for (unsigned int ee = cnt; ee < edges.size() + cnt; ee++) {
+                unsigned int e = ee % edges.size();
+                Vec3d P = geom.edge_nearpt(edges[e], Vec3d(0, 0, 0));
+                near_pts.push_back(P);
+                Vec3d offset = edge_factor * (P.len() - 1) * P;
+                verts[edges[e][0]] -= offset;
+                verts[edges[e][1]] -= offset;
+              }
+            }
+      */
 
-    if (using_symmetry) {
-      // Ensure that the vertices used in adjustment are up to date
-      for (auto v_idx : verts_to_update)
-        sym_updater.update_from_principal_vertex(v_idx);
+      // re-center for drift
+      Vec3d cent_near_pts = centroid(near_pts);
+      for (unsigned int i = 0; i < verts.size(); i++)
+        verts[i] -= cent_near_pts;
     }
 
-    max_dist = 0;
-    min_dist = 1e100;
-    for (int v_idx : principal_verts) {
-      if (eds[v_idx].size() == 0)
+    // Make a copy of verts into vs and zero out
+    // Accumulate vertex changes instead of altering vertices in place
+    // This can help relieve when a vertex is pushed towards one plane
+    // and away from another
+    vector<Vec3d> vs = verts;
+    for (auto &v : vs)
+      v = Vec3d(0, 0, 0);
+
+    for (unsigned int f = 0; f < geom.faces().size(); f++) {
+      if (geom.faces(f).size() == 3)
         continue;
-      for (unsigned int i = 0; i < eds[v_idx].size(); i++) {
-        auto vec = verts[v_idx] - verts[eds[v_idx][i]];
-        double dist = vec.len();
-        if (dist > max_dist)
-          max_dist = dist;
-        if (dist < min_dist)
-          min_dist = dist;
-        offsets[v_idx] += (vec / dist) * (g_min_dist - dist) * g_scale_factor *
-                          shorten_factor;
+      Vec3d face_normal = face_norm(geom.verts(), geom.faces(f)).unit();
+      Vec3d face_centroid = geom.face_cent(f);
+      // make sure face_normal points outward
+      if (vdot(face_normal, face_centroid) < 0)
+        face_normal *= -1.0;
+      // place a planar vertex over or under verts[v]
+      // adds or subtracts it to get to the planar verts[v]
+      for (int v : geom.faces(f))
+        vs[v] += vdot(plane_factor * face_normal, face_centroid - verts[v]) *
+                 face_normal;
+    }
+
+    // adjust vertices post-loop
+    for (unsigned int i = 0; i < vs.size(); i++)
+      verts[i] += vs[i];
+
+    string finish_msg;
+    if (it_ctrl.is_status_check_iter()) {
+      // len2() for difference value to minimize internal sqrt() calls
+      max_diff2 = 0;
+      for (unsigned int i = 0; i < verts.size(); i++) {
+        double diff2 = (verts[i] - verts_last[i]).len2();
+        if (diff2 > max_diff2)
+          max_diff2 = diff2;
+      }
+
+      if (sqrt(max_diff2) < test_val) {
+        completed = true;
+        it_ctrl.set_finished();
+        finish_msg = "solved, test value achieved";
+      }
+      else if (it_ctrl.is_last_iter()) {
+        // reached last iteration without solving
+        it_ctrl.set_finished();
+        finish_msg = "not solved, test value not achieved";
+      }
+
+      // check if radius is expanding or contracting unreasonably,
+      // but only for the purpose of finishing early
+      // if minimum and maximum radius are differing, the polyhedron is
+      // crumpling
+      if (radius_range_percent &&
+          canonical_radius_range_test(geom, radius_range_percent)) {
+        if (!it_ctrl.is_finished())
+          it_ctrl.set_finished();
+        finish_msg = "breaking out: radius range detected. try increasing -d";
       }
     }
 
-    // adjust vertices post-loop (skip setup iter as global values not set)
-    if (!it_ctrl.is_setup_iter()) {
-      for (int v_idx : principal_verts) {
-        auto vert = verts[v_idx] + offsets[v_idx];
-        to_ellipsoid(vert, ellipsoid);
-        if (using_symmetry)
-          sym_updater.update_principal_vertex(v_idx, vert);
-        else
-          base_geom.verts(v_idx) = vert;
-      }
-    }
+    if (it_ctrl.is_status_report_iter()) {
+      if (it_ctrl.is_finished())
+        it_ctrl.print("Final iteration (%s):\n", finish_msg.c_str());
 
-    g_min_dist = min_dist * (1 - shrink_factor);
-    g_max_dist = max_dist;
-    g_scale_factor = (g_max_dist - g_min_dist) / g_min_dist;
-
-    // Do not check status or finish before modifying the model
-    if (!it_ctrl.is_setup_iter()) {
-      string finish_msg;
-      if (it_ctrl.is_status_check_iter()) {
-
-        if ((max_dist - min_dist) < test_val) { // absolute difference
-          it_ctrl.set_finished();
-          finish_msg = "solved, test value achieved";
-        }
-        else if (it_ctrl.is_last_iter()) {
-          it_ctrl.set_finished();
-          finish_msg = "not solved, test value not achieved";
-        }
-      }
-
-      if (it_ctrl.is_status_report_iter()) {
-        if (it_ctrl.is_finished())
-          it_ctrl.print("Final iteration (%s):\n", finish_msg.c_str());
-
-        it_ctrl.print("%-12u max:%17.15f min:%17.15f diff:%.11g\n",
-                      it_ctrl.get_current_iter(), max_dist, min_dist,
-                      max_dist - min_dist);
-      }
+      it_ctrl.print("%-12u max_diff:%17.15e\n", it_ctrl.get_current_iter(),
+                    sqrt(max_diff2));
     }
   }
 
-  if (using_symmetry)
-    base_geom = sym_updater.get_geom_final();
-
-  return Status::ok();
+  return completed;
 }
 
 Geometry base_to_ambo(const Geometry &base)
@@ -1202,47 +1173,6 @@ Geometry base_to_ambo(const Geometry &base)
   truncate_verts(ambo, 0.5);
   ambo.transform(Trans3d::translate(-ambo.centroid()));
   return ambo;
-}
-
-void update_base_from_ambo_orig(Geometry &base, const Geometry &ambo)
-{
-  auto info = ambo.get_info();
-  const auto &f_cons_all = info.get_face_cons();
-  vector<Vec3d> norms;
-  ambo.face_norms(norms);
-  vector<Vec3d> cents;
-  ambo.face_cents(cents);
-  // probably unnecessary amount of intersections, but only done once
-  // maybe calculate once per side, using other faces at +n/3 and +2n/3
-  for (int i = 0; i < (int)base.verts().size(); i++) {
-    int intersect_cnt = 0;
-    auto v_avg = Vec3d::zero;
-    const auto &f_cons = f_cons_all[i];
-    const int f_neighs_sz = f_cons.size();
-    for (int e = 0; e < f_neighs_sz; e++) {
-      for (int f0 = 0; f0 < f_neighs_sz - 2; f0++) {
-        int f0_idx = f_cons[f0][0];
-        for (int f1 = f0 + 1; f1 < f_neighs_sz - 1; f1++) {
-          int f1_idx = f_cons[f1][0];
-          for (int f2 = f1 + 1; f2 < f_neighs_sz; f2++) {
-            int f2_idx = f_cons[f2][0];
-            Vec3d intersection;
-            if (three_plane_intersect(
-                    cents[f0_idx], norms[f0_idx], cents[f1_idx], norms[f1_idx],
-                    cents[f2_idx], norms[f2_idx], intersection)) {
-              v_avg += intersection;
-              intersect_cnt++;
-            }
-          }
-        }
-      }
-    }
-
-    if (intersect_cnt)
-      v_avg /= intersect_cnt;
-
-    base.verts(i) = v_avg;
-  }
 }
 
 void update_base_from_ambo(Geometry &base, const Geometry &ambo)
@@ -1279,26 +1209,25 @@ void update_base_from_ambo(Geometry &base, const Geometry &ambo)
   }
 }
 
-inline Vec3d nearpoint_on_plane(const Vec3d &P, const Vec3d &point_on_plane,
-                                const Vec3d &unit_norm)
-{
-  return P + vdot(point_on_plane - P, unit_norm) * unit_norm;
-}
-
 Status make_planar_unit(Geometry &base_geom, IterationControl it_ctrl,
-                        double factor, double factor_max, const Symmetry &sym)
+                        double factor, double factor_max, Symmetry &sym)
 {
   // chosen by experiment
   const double readjust_up = 1.01;    // to adjust adjustment factor up
   const double readjust_down = 0.995; // to adjust adjustment factor down
-  const double unit_mult = 1;         // extra multiplier for unit adjustment
+  const double unit_mult = 1;         // factor for unit adjustment
   const double orth_mult = 0.05;      // extra multiplier for orthogonality adj
   const double overlap_mult = 0.5;    // extra multiplier for overlap adj
 
-  base_geom.transform(Trans3d::translate(base_geom.centroid()));
   base_geom.orient(1); // positive orientation
 
+  // transform to centre on centroid, adjust to_std to match
+  auto initial_centroid = base_geom.centroid();
+  base_geom.transform(Trans3d::translate(base_geom.centroid()));
+  sym.set_to_std(sym.get_to_std() * Trans3d::translate(initial_centroid));
+
   bool using_symmetry = (sym.get_sym_type() > Symmetry::C1);
+  auto fixed_subspace = sym.get_fixed_subspace(); // used to find centroid
   SymmetricUpdater sym_updater((using_symmetry) ? base_geom : Geometry(), sym);
   const Geometry &geom =
       (using_symmetry) ? sym_updater.get_geom_working() : base_geom;
@@ -1312,7 +1241,17 @@ Status make_planar_unit(Geometry &base_geom, IterationControl it_ctrl,
 
   // List of faces that a vertex is part of
   auto vert_faces = geom.get_info().get_dual().faces();
-  auto vert_figs = geom.get_info().get_vert_figs();
+  vector<vector<int>> vert_figs;
+  {
+    auto vfigs = geom.get_info().get_vert_figs();
+    for (const auto &vfig : vfigs) {
+      if (vfig[0].size() != 4)
+        return Status::error(msg_str(
+            "intermediate (ambo) model has vertex with order %d instead of 4",
+            (int)vfig[0].size()));
+      vert_figs.push_back(vfig[0]);
+    }
+  }
 
   // Get a list of the faces that contain a principal vertex of any type
   vector<int> principal_verts;  // first vertex in each vertex orbit
@@ -1323,6 +1262,11 @@ Status make_planar_unit(Geometry &base_geom, IterationControl it_ctrl,
     faces_to_process = sym_updater.get_associated_elems(vert_faces);
     verts_to_update =
         SymmetricUpdater::get_included_verts(faces_to_process, geom.faces());
+    auto vfig_verts_to_update =
+        SymmetricUpdater::get_included_verts(principal_verts, vert_figs);
+    verts_to_update.insert(verts_to_update.end(), vfig_verts_to_update.begin(),
+                           vfig_verts_to_update.end());
+    SymmetricUpdater::to_unique_index_list(verts_to_update);
   }
   else { // not using_symmetry
     principal_verts =
@@ -1339,7 +1283,6 @@ Status make_planar_unit(Geometry &base_geom, IterationControl it_ctrl,
   double test_val = it_ctrl.get_test_val();
   double last_max_diff2 = 0.0;
   for (it_ctrl.start_iter(); !it_ctrl.is_done(); it_ctrl.next_iter()) {
-    Vec3d centroid = geom.centroid();
     std::fill(offsets.begin(), offsets.end(), Vec3d::zero);
 
     if (using_symmetry) {
@@ -1352,6 +1295,20 @@ Status make_planar_unit(Geometry &base_geom, IterationControl it_ctrl,
     for (auto f_idx : faces_to_process) {
       norms[f_idx] = geom.face_norm(f_idx).unit();
       cents[f_idx] = geom.face_cent(f_idx);
+    }
+
+    Vec3d centroid = Vec3d::zero;
+    if (using_symmetry) {
+      // For each orbit, project a vertex weighted by the orbit size onto
+      // the fixed subspace
+      const auto &vorbits = sym_updater.get_equiv_sets(VERTS);
+      for (const auto &vorbit : vorbits)
+        centroid += fixed_subspace.nearest_point(verts[*vorbit.begin()]) *
+                    vorbit.size();
+      centroid /= verts.size(); // centroid of weighted projected vertices
+    }
+    else {
+      centroid = geom.centroid();
     }
 
     double max_diff2 = 0.0;
@@ -1378,7 +1335,7 @@ Status make_planar_unit(Geometry &base_geom, IterationControl it_ctrl,
       }
 
       // adjust for non-overlap
-      const auto &vfig = vert_figs[v_idx][0];
+      const auto &vfig = vert_figs[v_idx];
       for (int i = 0; i < 4; i++) {
         if (vtriple(verts[v_idx], verts[vfig[i]], verts[vfig[(i + 1) % 4]]) >
             0) {
@@ -1400,7 +1357,7 @@ Status make_planar_unit(Geometry &base_geom, IterationControl it_ctrl,
       for (int v_idx : principal_verts) {
         auto new_v = verts[v_idx] + offsets[v_idx];
         double new_v_len = new_v.len();
-        new_v *= 1 + (1 / new_v_len - 1) * factor * unit_mult;
+        new_v *= 1 + (1 / new_v_len - 1) * unit_mult;
         sym_updater.update_principal_vertex(v_idx, new_v);
       }
     }
@@ -1425,6 +1382,7 @@ Status make_planar_unit(Geometry &base_geom, IterationControl it_ctrl,
 
     string finish_msg;
     if (it_ctrl.is_status_check_iter()) {
+      sym_updater.update_all();
       double width = BoundBox(verts).max_width();
       if (sqrt(max_diff2) / width < test_val) {
         it_ctrl.set_finished();
@@ -1453,7 +1411,7 @@ Status make_planar_unit(Geometry &base_geom, IterationControl it_ctrl,
 }
 
 Status make_canonical_enp(Geometry &geom, IterationControl it_ctrl,
-                          double factor, double factor_max, const Symmetry &sym)
+                          double factor, double factor_max, Symmetry &sym)
 {
   Geometry ambo = base_to_ambo(geom);
   Status stat = make_planar_unit(ambo, it_ctrl, factor, factor_max, sym);
@@ -1528,8 +1486,6 @@ int main(int argc, char *argv[])
       planarize_str = "sand and fill";
     else if (opts.planarize_method == 'p')
       planarize_str = "poly_form -a p";
-    else if (opts.planarize_method == 'e')
-      planarize_str = "poly_form -a e";
     fprintf(stderr, "planarize: %s method\n", planarize_str.c_str());
 
     bool planarize_only = true;
@@ -1554,15 +1510,6 @@ int main(int argc, char *argv[])
     else if (opts.planarize_method == 'p') {
       Status stat;
       stat = make_planar(geom, opts.it_ctrl, opts.plane_factor / 100, sym);
-      completed = (stat.is_ok() ? true : false);
-    }
-    else if (opts.planarize_method == 'e') {
-      double shorten_by = 1;
-      double shorten_rad_by = 1e-6;
-      Vec4d ellipsoid;
-      Status stat;
-      stat = make_equal_edges(geom, opts.it_ctrl, shorten_by / 200,
-                              shorten_rad_by / 100, ellipsoid, sym);
       completed = (stat.is_ok() ? true : false);
     }
 

@@ -56,11 +56,9 @@ q \- face centroids magnitude squared
 m \- mathematica planarize
 a \- sand and fill planarize
 p \- fast planarize (poly_form \fB\-a\fR p)
-e \- equalize edges (poly_form \fB\-a\fR e) (may not be planar)
 .HP
 \fB\-i\fR <itrs> maximum planarize iterations. \fB\-1\fR for unlimited (default: \fB\-1\fR)
 .IP
-(default for \fB\-p\fR e: 10000)
 WARNING: unstable models may not finish unless \fB\-i\fR is set
 .TP
 \fB\-c\fR <opt>
@@ -77,7 +75,7 @@ x \- none (default, if \fB\-p\fR is set)
 WARNING: unstable models may not finish unless \fB\-n\fR is set
 .TP
 \fB\-y\fR
-maintain symmetry of the base model (\fB\-p\fR p, \fB\-p\fR e, \fB\-c\fR c)
+maintain symmetry of the base model (\fB\-p\fR p, \fB\-c\fR c)
 .HP
 \fB\-O\fR <args> output b \- base, d \- dual, i \- intersection points (default: b)
 .IP

@@ -156,6 +156,17 @@ inline Vec3d nearest_point(Vec3d P, Vec3d Q0, Vec3d Q1)
   return Q0 + vdot(u, P - Q0) * u;
 }
 
+/// Get the nearpoint on a plane
+/**\param P a point on the plane, usually a vertex
+ * \param point_on_plane a point on the plane, usually the centroid
+ * \param unit_norm unit normal of plane
+ * \return nearpoint vector */
+inline Vec3d nearpoint_on_plane(const Vec3d &P, const Vec3d &point_on_plane,
+                                const Vec3d &unit_norm)
+{
+  return P + vdot(point_on_plane - P, unit_norm) * unit_norm;
+}
+
 /// Get the nearest point on a plane to a particular point.
 /**\param P a point.
  * \param Q0 a point on the plane.
