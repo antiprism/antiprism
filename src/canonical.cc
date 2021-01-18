@@ -1276,6 +1276,8 @@ Status make_planar_unit(Geometry &base_geom, IterationControl it_ctrl,
   vector<Vec3d> offsets(verts.size()); // Vertex adjustments
   vector<Vec3d> norms(faces.size());   // Face normals
   vector<Vec3d> cents(faces.size());   // Face centroids
+  
+  Status stat; // for completed
 
   double test_val = it_ctrl.get_test_val();
   double last_max_diff2 = 0.0;
@@ -1384,11 +1386,13 @@ Status make_planar_unit(Geometry &base_geom, IterationControl it_ctrl,
       if (sqrt(max_diff2) / width < test_val) {
         it_ctrl.set_finished();
         finish_msg = "solved, test value achieved";
+        stat.set_ok();
       }
       else if (it_ctrl.is_last_iter()) {
         // reached last iteration without solving
         it_ctrl.set_finished();
         finish_msg = "not solved, test value not achieved";
+        stat.set_warning(finish_msg);
       }
     }
 
@@ -1404,16 +1408,17 @@ Status make_planar_unit(Geometry &base_geom, IterationControl it_ctrl,
   if (using_symmetry)
     base_geom = sym_updater.get_geom_final();
 
-  return Status::ok();
+  return stat;
 }
 
-Status make_canonical_enp(Geometry &geom, IterationControl it_ctrl,
+bool make_canonical_enp(Geometry &geom, IterationControl it_ctrl,
                           double factor, double factor_max, Symmetry &sym)
 {
   Geometry ambo = base_to_ambo(geom);
   Status stat = make_planar_unit(ambo, it_ctrl, factor, factor_max, sym);
   update_base_from_ambo(geom, ambo);
-  return stat;
+  bool completed = (stat.is_ok() ? true : false);
+  return completed;
 }
 
 int main(int argc, char *argv[])
