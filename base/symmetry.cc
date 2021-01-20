@@ -518,6 +518,7 @@ bool SymmetryAxis::operator<(const SymmetryAxis &s) const
 
 //-----------------------------------------------------------------
 // Subspace
+
 Subspace::Subspace(SubspaceType type, Vec3d point, Vec3d dir)
     : type(type), point(point)
 {
@@ -539,17 +540,21 @@ Vec3d Subspace::nearest_point(Vec3d P) const
     return P;
 }
 
+//-----------------------------------------------------------------
+// Symmetry
+
 // find symmetry from rotational axes
 void Symmetry::find_full_sym_type(const set<SymmetryAxis> &full_sym)
 {
-  // find two greatest n-fold axes
+  // find two greatest n-fold axes, do not allow axes to be colinear
   SymmetryAxis max_fold1, max_fold2;
   bool has_dv = false, has_dh = false;
   for (const auto &si : full_sym) {
     int nfold = si.get_nfold();
     if (nfold > max_fold1.get_nfold())
       max_fold1 = si;
-    else if (nfold > max_fold2.get_nfold())
+    else if (nfold > max_fold2.get_nfold() &&
+             compare(si.get_axis(), -max_fold1.get_axis(), sym_eps) != 0)
       max_fold2 = si;
     if (si.get_sym_type() == Symmetry::Dv)
       has_dv = true;
