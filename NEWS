@@ -33,12 +33,17 @@ xx-01-21 Adrian Rossiter <adrian@antiprism.com>
             off_color_radial:
               -m rainbow map entries calculated like rng
             canonical:
-              -c c circle packings, new algorithm added
-              -p face centroids and centroids magnitude planarization removed
-              -p u make unit edge removed
-              -p p fast planarize added
-              -x normal types removed since all normals are unit normals
               -S, R, D coloring options added
+              -O Output type convex hull added
+              -c c circle packings, new algorithm added
+              -C,-F new options for -c c
+              -p p fast planarize added
+              -p removed, (old p) face centroids and centroids magnitude
+              -p removed, u make unit edge
+              -x removed, normal types, since all normals are unit normals
+              -r removed, initial radius, always nearpoints = 1
+              -C removed, initial centering, always centered on edge nearpoints
+              -A removed, alternate algorithm no longer needed
             build: compile with C++14
          Fixes
             usage helps reviewed and organized

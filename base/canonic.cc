@@ -283,7 +283,7 @@ Vec3d edge_nearpoints_centroid(Geometry &geom, const Vec3d cent)
 // http://www.georgehart.com/virtual-polyhedra/conway_notation.html
 bool canonicalize_bd(Geometry &base, IterationControl it_ctrl,
                      const char canonical_method,
-                     const double radius_range_percent, const char centering)
+                     const double radius_range_percent)
 {
   bool completed = false;
   it_ctrl.set_finished(false);
@@ -305,11 +305,8 @@ bool canonicalize_bd(Geometry &base, IterationControl it_ctrl,
       dual.raw_verts() = reciprocalN(base);
       base.raw_verts() = reciprocalN(dual);
       // re-center for drift
-      if (centering == 'e')
-        base.transform(Trans3d::translate(
-            -edge_nearpoints_centroid(base, Vec3d(0, 0, 0))));
-      else if (centering == 'v')
-        base.transform(Trans3d::translate(-centroid(base.verts())));
+      base.transform(
+          Trans3d::translate(-edge_nearpoints_centroid(base, Vec3d(0, 0, 0))));
       break;
     }
 
@@ -377,9 +374,7 @@ bool planarize_bd(Geometry &geom, IterationControl it_ctrl)
 {
   char canonical_method = 'q';
   double radius_range_percent = 0;
-  char centering = 'x';
-  return canonicalize_bd(geom, it_ctrl, canonical_method, radius_range_percent,
-                         centering);
+  return canonicalize_bd(geom, it_ctrl, canonical_method, radius_range_percent);
 }
 
 /*
@@ -427,7 +422,7 @@ void move_line_to_point(Vec3d &P, Vec3d &Q, const Vec3d &X)
 
 // RK - edge near points of base seek 1
 bool canonicalize_unit(Geometry &geom, IterationControl it_ctrl,
-                       const double radius_range_percent, const char centering,
+                       const double radius_range_percent,
                        const bool planarize_only)
 {
   bool completed = false;
@@ -445,18 +440,18 @@ bool canonicalize_unit(Geometry &geom, IterationControl it_ctrl,
     vector<Vec3d> verts_last = verts;
 
     if (!planarize_only) {
+      vector<Vec3d> near_pts;
       for (auto &edge : edges) {
         // unit near point
         Vec3d P = geom.edge_nearpt(edge, Vec3d(0, 0, 0)).unit();
+        near_pts.push_back(P);
         move_line_to_point(verts[edge[0]], verts[edge[1]], P);
       }
 
       // re-center for drift
-      if (centering == 'e')
-        geom.transform(Trans3d::translate(
-            -edge_nearpoints_centroid(geom, Vec3d(0, 0, 0))));
-      else if (centering == 'v')
-        geom.transform(Trans3d::translate(-centroid(geom.verts())));
+      Vec3d cent_near_pts = centroid(near_pts);
+      for (unsigned int i = 0; i < verts.size(); i++)
+        verts[i] -= cent_near_pts;
     }
 
     for (unsigned int f = 0; f < geom.faces().size(); f++) {
@@ -540,10 +535,8 @@ bool canonicalize_unit(Geometry &geom, IterationControl it_ctrl,
 bool planarize_unit(Geometry &geom, IterationControl it_ctrl)
 {
   double radius_range_percent = 0;
-  char centering = 'x';
   bool planarize_only = true;
-  return canonicalize_unit(geom, it_ctrl, radius_range_percent, centering,
-                           planarize_only);
+  return canonicalize_unit(geom, it_ctrl, radius_range_percent, planarize_only);
 }
 
 //------------------------------------------------------------------
@@ -558,13 +551,15 @@ Status make_planar(Geometry &base_geom, IterationControl it_ctrl,
   const double plane_factor_max = 1.1;    // maximum value for adjustment factor
   bool using_symmetry = (sym.get_sym_type() > Symmetry::C1);
 
+  Status stat;
+
   SymmetricUpdater sym_updater((using_symmetry) ? base_geom : Geometry(), sym);
   const Geometry &geom =
       (using_symmetry) ? sym_updater.get_geom_working() : base_geom;
 
   // No further processing if no faces, but not an error
   if (geom.faces().size() == 0)
-    return Status::ok();
+    return stat;
 
   const vector<Vec3d> &verts = geom.verts();
   const vector<vector<int>> &faces = geom.faces();
@@ -690,11 +685,13 @@ Status make_planar(Geometry &base_geom, IterationControl it_ctrl,
       if (sqrt(max_diff2) / width < test_val) {
         it_ctrl.set_finished();
         finish_msg = "solved, test value achieved";
+        stat.set_ok(finish_msg);
       }
       else if (it_ctrl.is_last_iter()) {
         // reached last iteration without solving
         it_ctrl.set_finished();
         finish_msg = "not solved, test value not achieved";
+        stat.set_warning(finish_msg);
       }
     }
 
@@ -711,7 +708,7 @@ Status make_planar(Geometry &base_geom, IterationControl it_ctrl,
   if (using_symmetry)
     base_geom = sym_updater.get_geom_final();
 
-  return Status::ok();
+  return stat;
 }
 
 } // namespace anti
