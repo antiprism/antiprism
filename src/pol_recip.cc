@@ -89,14 +89,15 @@ planes. If input_file is not given the program reads from standard input.
 Options
 %s
   -c <cent> reciprocation centre (default: C)
-              X,Y,Z - centre with these coordinates
+              X,Y,Z - centre with these coordinates, 0 for origin
               C - vertex centroid,    M - mid-sphere (approximate)
               R - circumcentre (avg)
               e - edge balanced,      E - edge balanced with inversion
               v - vert/face balanced, V - vert/face balanced with inversion
               a - v/f/e balanced      A - v/f/e balanced with inversion
-  -C <init> initial value for a centre calculation, in form 'X,Y,Z',
-            or C to use centroid (default), M to calculate approx mid-sphere
+  -C <init> initial value for a centre calculation, in form 'X,Y,Z', 0 for
+            origin, C to use centroid (default), M to calculate approximate
+            mid-sphere
   -r <rad>  reciprocation radius (default: calculated)
               radius value - use this value as the radius
               v - nearest vertex distance, V - furthest vertex distance

@@ -84,7 +84,8 @@ Options
                a - all vertex to vertex are vectors
                i - implicit edges (face sides) are vectors
                e - explicit edges are vectors
-  -c <cent> centre of points for method v, C for centroid (default: 0,0,0)
+  -c <cent> centre of points for method v, in form 'X,Y,Z', or C to use
+            centroid (default '0,0,0')
   -s        output the star (instead of the zonohedron)
   -S <poly> seed model to add zones to, must be convex
   -u        make vectors unit length

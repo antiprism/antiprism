@@ -79,8 +79,8 @@ Read a file in OFF format and generate a report
 
 Options
 %s
-  -c <cent> centre of shape in form 'X,Y,Z', or C to use
-            centroid (default, '0,0,0')
+  -c <cent> centre of shape in form 'X,Y,Z', 0 to use origin, C to use
+            centroid (default 0)
   -S <secs> Print values by sections, given as a list of letters
             A - all                     G - general
             F - faces                   E - edges

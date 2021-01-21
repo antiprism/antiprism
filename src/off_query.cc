@@ -106,8 +106,8 @@ query element type V, F, or E followed by the values to print
 
 Options
 %s
-  -c <cent> centre of shape in form 'X,Y,Z', or C to use
-            centroid (default, '0,0,0')
+  -c <cent> centre of shape in form 'X,Y,Z', 0 to use origin, C to use
+            centroid (default 0)
   -I <idxs> list of elements by index number given as index ranges
             separated by commas, range can be one number or two
             numbers separated by a hyphen (default range numbers: 0 and

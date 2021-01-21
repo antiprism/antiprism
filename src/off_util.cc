@@ -1169,7 +1169,7 @@ Options
             converted to explicit edges
   -A <elem> add element, elem is element letter (v, e, f), followed by
             element data, optionally followed by ':' and a colour. Data is
-               v: three comma separated coordinates
+               v: three comma separated coordinates, 0 for origin
                e: a comma separated list of index numbers, joined as a ring
                f: a comma separated list of index numbers
             negative index numbers are relative to the end of the vertex
