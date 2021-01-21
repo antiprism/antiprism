@@ -122,7 +122,7 @@ void or_opts::process_command_line(int argc, char **argv)
       if (strcmp(optarg, "C") == 0)
         center_is_centroid = true;
       else
-        print_status_or_exit(center.read(optarg), c);
+        print_status_or_exit(center.read_maths(optarg), c);
       break;
 
     case 'S': {

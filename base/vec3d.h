@@ -176,6 +176,13 @@ public:
    * otherwise \c false to indictate an error. */
   Status read(const char *str);
 
+  /// Read a vector from a string, support maths expressions and '0' for origin
+  /**\param str a string containing three numbers or expressions separated by
+   * commas
+   * \return status, which evaluates to \c true if a valid vector was read,
+   * otherwise \c false to indictate an error. */
+  Status read_maths(const char *str);
+
   /// Print a vector variable
   /**\return a string representation of the variable */
   // std::string str() const;

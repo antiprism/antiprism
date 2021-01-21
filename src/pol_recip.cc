@@ -52,7 +52,7 @@ public:
   double recip_rad;
   double init_rad;
   char recip_rad_type;
-  Vec3d centre;
+  Vec3d center;
   Vec3d init_cent;
   char recip_cent_type;
   char init_cent_type;
@@ -136,7 +136,7 @@ void pr_opts::process_command_line(int argc, char **argv)
     case 'C':
       if (strlen(optarg) == 1 && strchr("CM", *optarg))
         init_cent_type = *optarg;
-      else if (init_cent.read(optarg))
+      else if (init_cent.read_maths(optarg))
         init_cent_type = 'c';
       else
         error("initial centre must be three coordinates, C, or M", c);
@@ -145,7 +145,7 @@ void pr_opts::process_command_line(int argc, char **argv)
     case 'c':
       if (strlen(optarg) == 1 && strchr("CRMeEvVaA", *optarg))
         recip_cent_type = *optarg;
-      else if (centre.read(optarg))
+      else if (center.read_maths(optarg))
         recip_cent_type = 'c';
       else
         error("centre type must be three coordinates, or letter from CRMeEvVaA",
@@ -230,7 +230,7 @@ void pr_opts::process_command_line(int argc, char **argv)
     ifile = argv[optind];
 }
 
-int find_mid_centre(Geometry &geom, double &rad, Vec3d &cent, int n,
+int find_mid_center(Geometry &geom, double &rad, Vec3d &cent, int n,
                     const double &eps)
 {
   vector<vector<int>> g_edges;
@@ -271,13 +271,13 @@ int find_mid_centre(Geometry &geom, double &rad, Vec3d &cent, int n,
   }
   fprintf(stderr,
           "[n=%d, limit=%sachieved, r_test=%g, c_test=%g]\n"
-          "centre=(%s), radius=%.16g\n",
+          "center=(%s), radius=%.16g\n",
           cnt, cnt == n ? "not " : "", cent_test, rad_test,
           cent.to_str(" ").c_str(), rad);
   return 1;
 }
 
-int find_can_centre(Geometry &geom, char type, double &rad, Vec3d &cent,
+int find_can_center(Geometry &geom, char type, double &rad, Vec3d &cent,
                     bool invert, int n, const double &eps)
 {
   bool use_e = false;
@@ -394,7 +394,7 @@ int find_can_centre(Geometry &geom, char type, double &rad, Vec3d &cent,
   }
   fprintf(stderr,
           "[n=%d, limit=%sachieved, r_test=%g, c_test=%g]\n"
-          "centre=(%s), radius=%.16g%s\n",
+          "center=(%s), radius=%.16g%s\n",
           cnt, cnt == n ? "not " : "", cent_test, rad_test,
           cent.to_str(" ").c_str(), rad, (invert) ? "i" : "");
   //}
@@ -440,7 +440,7 @@ Vec3d find_circumcenter(const Geometry &geom)
   cent[1] = res[2] / 2;
   cent[2] = res[3] / 2;
   double rad = sqrt(cent.len2() + res[0]);
-  fprintf(stderr, "Circumsphere: centre=(%s), radius=%.16g\n",
+  fprintf(stderr, "Circumsphere: center=(%s), radius=%.16g\n",
           cent.to_str(" ").c_str(), rad);
   return cent;
 }
@@ -479,7 +479,7 @@ Vec3d find_NOTmidcenter(const Geometry &geom)
 }
 */
 
-void find_recip_centre(Geometry &geom, char type, double &rad, Vec3d &cent,
+void find_recip_center(Geometry &geom, char type, double &rad, Vec3d &cent,
                        int n, const double &eps)
 {
   if (fabs(rad) < anti::epsilon)
@@ -494,28 +494,28 @@ void find_recip_centre(Geometry &geom, char type, double &rad, Vec3d &cent,
     cent = find_circumcenter(geom);
     break;
   case 'M':
-    find_mid_centre(geom, rad, cent, n, eps);
+    find_mid_center(geom, rad, cent, n, eps);
     break;
   case 'e':
-    find_can_centre(geom, 'e', rad, cent, invert, n, eps);
+    find_can_center(geom, 'e', rad, cent, invert, n, eps);
     break;
   case 'E':
     rad = -rad;
-    find_can_centre(geom, 'e', rad, cent, invert, n, eps);
+    find_can_center(geom, 'e', rad, cent, invert, n, eps);
     break;
   case 'v':
-    find_can_centre(geom, 'v', rad, cent, invert, n, eps);
+    find_can_center(geom, 'v', rad, cent, invert, n, eps);
     break;
   case 'V':
     rad = -rad;
-    find_can_centre(geom, 'v', rad, cent, invert, n, eps);
+    find_can_center(geom, 'v', rad, cent, invert, n, eps);
     break;
   case 'a':
-    find_can_centre(geom, 'a', rad, cent, invert, n, eps);
+    find_can_center(geom, 'a', rad, cent, invert, n, eps);
     break;
   case 'A':
     rad = -rad;
-    find_can_centre(geom, 'a', rad, cent, invert, n, eps);
+    find_can_center(geom, 'a', rad, cent, invert, n, eps);
     break;
   }
 }
@@ -603,12 +603,12 @@ int main(int argc, char *argv[])
     opts.warning("stripped vertices or edges which were not part of any face",
                  "input_file");
 
-  // Set up init_centre
+  // Set up init_center
   double tmp_rad = 0;
   if (opts.init_cent_type == 'C')
     opts.init_cent = geom.centroid();
   else if (opts.init_cent_type == 'M')
-    find_mid_centre(geom, tmp_rad, opts.init_cent, opts.num_iters, opts.eps);
+    find_mid_center(geom, tmp_rad, opts.init_cent, opts.num_iters, opts.eps);
 
   if (opts.recip_rad_type == 'x') {
     if (strchr("CMx", opts.recip_cent_type))
@@ -617,14 +617,14 @@ int main(int argc, char *argv[])
       opts.recip_rad_type = 'v';
   }
 
-  Vec3d centre;
+  Vec3d center;
   if (opts.recip_cent_type == 'c') {
-    centre = opts.centre;
+    center = opts.center;
     opts.init_rad = 1.0;
   }
   else {
-    centre = opts.init_cent;
-    find_recip_centre(geom, opts.recip_cent_type, opts.init_rad, centre,
+    center = opts.init_cent;
+    find_recip_center(geom, opts.recip_cent_type, opts.init_rad, center,
                       opts.num_iters, opts.eps);
   }
 
@@ -635,13 +635,13 @@ int main(int argc, char *argv[])
     radius = opts.init_rad;
   else
     radius =
-        find_recip_rad(geom, opts.recip_rad_type, centre, opts.space_verts);
+        find_recip_rad(geom, opts.recip_rad_type, center, opts.space_verts);
 
   Geometry dual;
-  get_dual(dual, geom, radius, centre, 1.01 * opts.inf);
+  get_dual(dual, geom, radius, center, 1.01 * opts.inf);
   if (opts.invert)
-    dual.transform(Trans3d::translate(centre) * Trans3d::inversion() *
-                   Trans3d::translate(-centre));
+    dual.transform(Trans3d::translate(center) * Trans3d::inversion() *
+                   Trans3d::translate(-center));
 
   vector<int> invalid_verts;
   for (unsigned int i = 0; i < dual.verts().size(); i++) {
@@ -664,7 +664,7 @@ int main(int argc, char *argv[])
   }
 
   if (opts.extra_ideal_elems)
-    add_extra_ideal_elems(dual, centre, 1.005 * opts.inf);
+    add_extra_ideal_elems(dual, center, 1.005 * opts.inf);
 
   for (const auto &kv : dual.colors(FACES).get_properties())
     if (kv.second.is_invisible()) {

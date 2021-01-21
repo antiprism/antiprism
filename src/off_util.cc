@@ -1029,16 +1029,12 @@ Status add_element(Geometry &geom, const string &elem)
   }
 
   if (elem_type_char == 'v') {
-    vector<double> coords;
-    stat = read_double_list(parts[0], coords);
-    if (stat && coords.size() != 3)
-      stat.set_error(
-          msg_str("must give 3 coordinates (%d given)", (int)coords.size()));
-    if (!stat)
+    Vec3d vec;
+    if (!(stat = vec.read_maths(parts[0])))
       return Status::error(
           msg_str("vertex coordinates '%s': %s", parts[0], stat.c_msg()));
 
-    geom.add_vert(Vec3d(coords.data()), col);
+    geom.add_vert(vec, col);
   }
   else if (elem_type_char == 'e' || elem_type_char == 'f') {
     vector<int> idx_list;

@@ -1490,17 +1490,17 @@ Status ViewOpts::read_disp_option(char opt, char *optarg)
     break;
 
   case 'C':
-    if ((stat = vec.read(optarg)))
+    if ((stat = vec.read_maths(optarg)))
       cam_defs.set_centre(vec);
     break;
 
   case 'L':
-    if ((stat = vec.read(optarg)))
+    if ((stat = vec.read_maths(optarg)))
       cam_defs.set_lookat(vec);
     break;
 
   case 'R':
-    if ((stat = vec.read(optarg)))
+    if ((stat = vec.read_maths(optarg)))
       cam_defs.set_rotation(Trans3d::rotate((vec)*deg2rad()));
     break;
 

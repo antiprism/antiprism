@@ -46,7 +46,7 @@ using namespace ::anti;
 class zo_opts : public ProgramOpts {
 public:
   char method = 'v';
-  Vec3d centre = Vec3d(0, 0, 0);
+  Vec3d center = Vec3d(0, 0, 0);
   bool centroid = false;
   bool out_star = false;
   bool unit_len = false;
@@ -130,7 +130,7 @@ void zo_opts::process_command_line(int argc, char **argv)
     case 'c':
       if ((strlen(optarg) == 1 && strchr("Cc", *optarg)))
         centroid = true;
-      else if (!centre.read(optarg))
+      else if (!center.read_maths(optarg))
         error("invalid centre '" + string(optarg) + "'", c);
       non_polar_opt = true;
       break;
@@ -252,9 +252,9 @@ int main(int argc, char **argv)
     opts.read_or_error(geom, opts.ifile);
 
     if (opts.centroid)
-      opts.centre = geom.centroid();
+      opts.center = geom.centroid();
 
-    star = get_star(geom, opts.method, opts.centre);
+    star = get_star(geom, opts.method, opts.center);
   }
 
   // Set star vectors to unit, and remove any parallel vectors

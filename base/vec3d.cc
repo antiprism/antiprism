@@ -66,16 +66,29 @@ Status Vec3d::read(const char *str)
 
   return Status::ok();
 }
-/*
-std::string Vec3d::str() const
+
+Status Vec3d::read_maths(const char *str)
 {
-  return is_set() ? msg_str("(%f,%f,%f)", v[0], v[1], v[2])
-                  : std::string("(not set)");
+  std::vector<double> coords;
+  Status stat;
+  if ((stat = read_double_list(str, coords))) {
+    if (coords.size() == 1 && coords[0] == 0)
+      *this = {0, 0, 0}; // set to zero/null/origin
+    else if (coords.size() == 3)
+      *this = coords.data(); // set to values calculated from maths expressions
+    else
+      stat.set_error(
+          msg_str("must give 3 coordinates (%d given)", (int)coords.size()));
+  }
+
+  return stat;
 }
-*/
 
 std::string Vec3d::to_str(const char *sep, int sig_dgts) const
 {
+  if (!is_set())
+    return "not set";
+
   const auto *v = get_v();
   if (sig_dgts > 0)
     return msg_str("%.*g%s%.*g%s%.*g", sig_dgts, v[0], sep, sig_dgts, v[1], sep,
