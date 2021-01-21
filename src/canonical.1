@@ -28,20 +28,6 @@ shuffle model indexes
 .IP
 v \- vertices, e \- edges, f \- faces, a \- all (default: none)
 .TP
-\fB\-r\fR <opt>
-initial radius
-.IP
-e \- average edge near points radius = 1 (default)
-v \- average vertex radius = 1
-x \- not changed
-.TP
-\fB\-C\fR <opt>
-initial centering
-.IP
-e \- edge near points centroid (default)
-v \- vertex centroid
-x \- not moved
-.TP
 \fB\-t\fR <opt>
 target model
 .IP
@@ -55,7 +41,7 @@ planarization (done before canoncalization. default: none)
 q \- face centroids magnitude squared
 m \- mathematica planarize
 a \- sand and fill planarize
-p \- fast planarize (poly_form \fB\-a\fR p)
+p \- poly_form planarize (poly_form \fB\-a\fR p)
 .HP
 \fB\-i\fR <itrs> maximum planarize iterations. \fB\-1\fR for unlimited (default: \fB\-1\fR)
 .IP
@@ -79,10 +65,10 @@ maintain symmetry of the base model (\fB\-p\fR p, \fB\-c\fR c)
 .HP
 \fB\-O\fR <args> output b \- base, d \- dual, i \- intersection points (default: b)
 .IP
-n \- base edge near points, m \- dual edge near points
-p \- base near points centroid, q \- dual near points centroid
-u \- minimum tangent sphere, U \- maximum; o \- origin point
-s \- base incircles, S \- rings; t \- dual incircles, T \- rings
+edge nearpoints, n \- base, m \- dual; C \- base/dual convex hull
+edge nearpoints centroid, p \- base, q \- dual; o \- origin point
+tangent sphere, u \- minimum, U \- maximum
+incircles, s \- base, t \- dual; as rings, S \- base, T \- dual
 .HP
 \fB\-q\fR <dist> offset for incircles to avoid coplanarity e.g 0.0001 (default: 0)
 .TP
@@ -114,11 +100,14 @@ Extra Options
 for (\fB\-c\fR m, \fB\-c\fR c, \fB\-p\fR m, and \fB\-p\fR p)
 \fB\-E\fR <perc> percentage to scale the edge tangency (default: 50)
 \fB\-P\fR <perc> percentage to scale the face planarity (default: 20) (also \fB\-p\fR p)
-\fB\-A\fR        alternate algorithm. try if imbalance in result (\fB\-c\fR m only)
-\fB\-F\fR <adj>  initial percent adjustment factor, optionally followed by a comma
+\fB\-f\fR <adj>  initial percent adjustment factor, optionally followed by a comma
 .IP
-and a maximum percent adjustment factor (\fB\-c\fR c only)
-(default: 10,1000 or 10,500 when \fB\-y\fR is set)
+and a maximum percent adjustment (default: 1,50) (\fB\-c\fR c only)
+.TP
+\fB\-C\fR
+continue processing a near\-canonical model (the initial
+intermediate processing model will preserves the geometry
+of the base model rather than avoid scrambling) (\fB\-c\fR c only)
 .PP
 Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
 .TP
@@ -147,7 +136,7 @@ base edge color (default: unchanged)
 dual edge color (default: unchanged)
 .TP
 \fB\-U\fR <col>
-unit sphere color (default: white)
+unit sphere and/or convex hull color (default: white)
 .HP
 \fB\-T\fR <tran> base/dual transparency. range from 0 (invisible) to 255 (opaque)
 .SH "SEE ALSO"

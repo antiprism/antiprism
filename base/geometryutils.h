@@ -361,11 +361,10 @@ Vec3d edge_nearpoints_centroid(Geometry &geom,
  * side effect of planarization (len2() version)
  * \param radius_range_percent if the model outer radius increases this
  *  much over the inner radius then it is growing too much, terminate.
- * \param centering passed from canonical program, when centering is not used
  * \return \c true if success, otherwise \c false */
 bool canonicalize_bd(Geometry &base, IterationControl it_ctrl,
                      const char canonical_method,
-                     const double radius_range_percent, const char centering);
+                     const double radius_range_percent);
 
 /// an abbreviated wrapper for planarization with the base/dual method
 /**\param geom geometry to planarize.
@@ -378,11 +377,10 @@ bool planarize_bd(Geometry &geom, IterationControl it_ctrl);
  * \param it_ctrl interation control.
  * \param radius_range_percent if the model outer radius increases this
  *  much over the inner radius then it is growing too much, terminate.
- * \param centering passed from canonical program, when centering is not used
  * \param planarize_only planarise only.
  * \return \c true if success, otherwise \c false */
 bool canonicalize_unit(Geometry &geom, IterationControl it_ctrl,
-                       const double radius_range_percent, const char centering,
+                       const double radius_range_percent,
                        const bool planarize_only);
 
 /// an abbreviated wrapper for planarization with canonicalize_unit
