@@ -98,6 +98,104 @@ public:
   void usage();
 };
 
+void extended_help()
+{
+  fprintf(stdout, R"(
+Calculating Canonical Polyhedra
+
+A relaxation algorithm is presented to determine a canonical form for an
+arbitrary convex polyhedron.
+
+by George W. Hart
+
+One important role of high-level mathematical software such as Mathematica is
+that it easily allows for the testing of experimental algorithms. Here we
+explore a method of finding a canonical form of a polyhedron. The canonical
+form is a polyhedron topologically equivalent to an input polyhedron, but with
+all edges tangent to a unit sphere and with the center of gravity of the
+tangent points being the origin.  A variety of examples will illustrate this
+procedure. One application is that the algorithm constructs a geometrically
+self-dual polyhedron given one which is only combinatorially self-dual.
+
+A theorem of Schramm [Schramm 1992] states that for any given convex polyhedron
+or 3-connected planar graph, there is a topologically equivalent polyhedron
+with the following properties:
+
+ 1) each edge is tangent to the unit sphere,
+
+ 2) the center of gravity of the points of tangency is the origin.
+
+The solution is unique, up to rotations and reflections of the sphere and so
+provides a kind of canonical representation. Although we will not pursue it
+here, the theorem is actually more general in that it allows the sphere to be
+replaced with an arbitrary smooth convex body, e.g., an egg-shaped
+quasi-ellipsoid. The theorem is closely related to the Koebe-Andreev-Thurston
+Circle Packing theorem for planar graphs. See Ziegler [Ziegler 1995, p. 118]
+for discussion and other references. 
+
+For example, if our input polyhedron is a geometrically distorted (but
+topologically unchanged) form of any Platonic or Archimedean solid, and we
+calculate its canonical form, our algorithm should output its undistorted form
+centered at the origin, with a midradius of 1, and with an arbitrary rotation.
+E.g., given any parallelepiped as input, the canonical form output is a cube of
+edge Sqrt[2]. For an arbitrary polyhedron, the canonical form is a way of
+illustrating its combinatorial or topological structure, which often lets one
+immediately see and understand its structure and symmetry.  
+
+As an illustration, we will use the algorithm to find three geometrically
+self-dual polyhedra, given starting points which are only combinatorially
+self-dual. It follows from the above that the dual polyhedron also shares
+properties (1) and (2). Thus, for these three self-dual examples, we can make
+a compound of the polyhedron with its dual, i.e., with itself, in which both
+polyhedra have the same points of tangencies and at these points their edges
+cross each other's at right angles. 
+
+The proofs cited above are of existence and not constructive, so we are
+interested in an algorithm for determining the canonical form of an input
+polyhedron. The algorithm proposed here operates by relaxation to iteratively
+move the vertices of the given polyhedron along a trajectory which converges
+at the canonical form. Although we begin and end with a polyhedron, during this
+relaxation, the object defined by the vertices is likely not to be a polyhedron
+geometrically.  Sets of points which belong to a face (combinatorially) are
+likely not to be coplanar. So we add a third condition for a solution, to the
+two above:
+
+ 3) the faces are planar.
+
+
+Algorithm
+
+Our algorithm inputs a polyhedron and iteratively adjusts its vertices to
+slightly improve its conformance with the three conditions above. Within a
+couple of hundred iterations, it typically finds all the conditions are
+satisfied within a small tolerance, and stops. Three simple operations are all
+that is needed, corresponding to the three conditions:
+
+ A) For each edge, the closest point to the origin is determined; call it p.
+    If p lies at unit distance from the origin, condition (1) is satisfied for
+    that edge. If not, a small fraction of p is added to the two vertices
+    which define the edge, (in proportion to the sign and amount of the error)
+    so that at the next iteration the edge will be closer to tangency with the
+    unit sphere. 
+
+ B) The center of gravity of all the points p is determined. If it is zero,
+    condition (2) is satisfied. If not, it is subtracted from all the vertices. 
+
+ C) For each face, if the vertices lie in some plane in space, condition (3) is
+    satisfied. If not, a plane which approximates it is computed. Each vertex
+    of the face is then moved along a normal towards the plane. 
+
+Iterating, it sometimes takes many steps for a correction at one part of the
+polyhedron to percolate its way around and equalize the conditions everywhere.
+On the examples below, between 50 and 100 iterations were sufficient to have
+all conditions satisfied within a tolerance of 10^-8. Although the individual
+steps are quite simple, this takes a minute or so in these examples and would
+take longer on more complex polyhedra. Refinement and optimization are left as
+future work.
+
+)");
+}
+
 void cn_opts::usage()
 {
   fprintf(stdout, R"(
@@ -111,6 +209,7 @@ If input_file is not given the program reads from standard input.
 
 Options
 %s
+  -H        documention on algorithm 
   -e <opt>  edge distribution (default : none)
                s - project vertices onto a sphere
   -s <opt>  shuffle model indexes
@@ -196,12 +295,16 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   while ((c = getopt(
               argc, argv,
-              ":he:s:t:p:i:c:n:yO:q:g:E:P:F:Cd:z:I:N:M:S:R:D:J:K:U:T:l:o:")) !=
+              ":hHe:s:t:p:i:c:n:yO:q:g:E:P:F:Cd:z:I:N:M:S:R:D:J:K:U:T:l:o:")) !=
          -1) {
     if (common_opts(c, optopt))
       continue;
 
     switch (c) {
+    case 'H':
+      extended_help();
+      exit(0);
+
     case 'e':
       if (strlen(optarg) == 1 && strchr("s", int(*optarg)))
         edge_distribution = *optarg;
@@ -454,6 +557,34 @@ void cn_opts::process_command_line(int argc, char **argv)
   eps = it_ctrl.get_test_val();
 }
 
+bool is_nonoverlap_single_cover(const Geometry &geom)
+{
+  // Get vertices projected onto a sphere
+  vector<Vec3d> verts;
+  std::transform(geom.verts().cbegin(), geom.verts().cend(),
+                 std::back_inserter(verts),
+                 [](const Vec3d &v) { return v.unit(); });
+
+  double area_sum = 0; // for sum of unsigned spherical areas
+  for (const auto &face : geom.faces()) {
+    const auto C = geom.face_cent(face).unit(); // face cent proj onto sphere
+    const int f_sz = face.size();
+    // Consider each edge of the face to make a triangle with the face centroid
+    for (int i = 0; i < f_sz; i++) {
+      vector<Vec3d> tri = {verts[face[i]], verts[face[(i + 1) % f_sz]], C};
+      // get the three angles and sum them
+      double tri_angle_sum = 0.0;
+      for (int tri_v = 0; tri_v < 3; tri_v++) {
+        const auto x20 = vcross(tri[(2 + tri_v) % 3], tri[tri_v]);
+        const auto x10 = vcross(tri[(1 + tri_v) % 3], tri[tri_v]);
+        tri_angle_sum += acos(safe_for_trig(vdot(x20.unit(), x10.unit())));
+      }
+      area_sum += fabs(tri_angle_sum) - M_PI; // triangle area is angle excess
+    }
+  }
+  return double_eq(area_sum, 4 * M_PI, 1e-5);
+}
+
 Geometry get_dual(const Geometry &base)
 {
   Geometry dual;
@@ -498,16 +629,16 @@ void check_coincidence(const Geometry &base, const Geometry &dual,
   check_model(dual, s, opts);
 }
 
-void check_convexity(const Geometry &geom, const cn_opts &opts)
+bool check_convexity(const Geometry &geom)
 {
   Geometry hull = geom;
   hull.set_hull();
-  // if (!check_congruence(geom, hull)) {
-  if (geom.faces().size() != hull.faces().size())
-    opts.warning("input model is not convex");
+  return (check_congruence(geom, hull));
+  // return (geom.faces().size() == hull.faces().size() &&
+  //        geom.verts().size() == hull.verts().size());
 }
 
-void planarity_info(Geometry &geom)
+bool planarity_info(Geometry &geom)
 {
   GeometryInfo rep(geom);
 
@@ -522,10 +653,11 @@ void planarity_info(Geometry &geom)
   }
   fprintf(stderr, "\n");
   fprintf(stderr, "maximum_nonplanarity = %.17g\n", max_nonplanar);
-  fprintf(stderr, "average_nonplanarity = %.17g\n", sum_nonplanar / sz);
-  //  fprintf(stderr, "isoperimetric quotient = %.17g\n",
-  //  rep.isoperimetric_quotient());
-  fprintf(stderr, "\n");
+  // fprintf(stderr, "average_nonplanarity = %.17g\n", sum_nonplanar / sz);
+  // fprintf(stderr, "isoperimetric quotient = %.17g\n",
+  // rep.isoperimetric_quotient());
+
+  return check_convexity(geom);
 }
 
 void generate_points(const Geometry &base, const Geometry &dual,
@@ -551,7 +683,6 @@ void generate_points(const Geometry &base, const Geometry &dual,
       Vec3d d0 = dual.verts(dual_edges[j][0]);
       Vec3d d1 = dual.verts(dual_edges[j][1]);
       // does base edge intersect with dual edge?
-      // use local epsilon
       Vec3d intersection_point =
           segments_intersection(b0, b1, d0, d1, epsilon_local);
       if (intersection_point.is_set()) {
@@ -562,44 +693,81 @@ void generate_points(const Geometry &base, const Geometry &dual,
   }
 }
 
+// RK - find nearpoints error. center is unchanged
+double edge_nearpoints_error(const Geometry &geom, double &min, double &max,
+                             Vec3d &center)
+{
+  min = std::numeric_limits<double>::max();
+  max = std::numeric_limits<double>::min();
+
+  vector<vector<int>> edges;
+  geom.get_impl_edges(edges);
+
+  vector<Vec3d> near_pts;
+
+  double nearpt_error = 0;
+  for (auto &edge : edges) {
+    Vec3d P = geom.edge_nearpt(edge, Vec3d(0, 0, 0));
+    near_pts.push_back(P);
+
+    double l = fabs(P.len() - 1.0);
+    nearpt_error += l;
+    if (l < min)
+      min = l;
+    if (l > max)
+      max = l;
+  }
+
+  center = centroid(near_pts);
+
+  return nearpt_error / double(edges.size());
+}
+
 double nearpoint_report(const Geometry &geom, const vector<Vec3d> &nearpts,
                         string str, const double &epsilon_local)
 {
   double min = 0;
   double max = 0;
   Vec3d center;
-  double radius = edge_nearpoints_radius(geom, min, max, center);
-  fprintf(stderr, "%s midradius = %.17g (range: %.15g to %.15g)\n", str.c_str(),
-          radius, min, max);
+  double error = edge_nearpoints_error(geom, min, max, center);
+  fprintf(stderr, "%s average midradius error = %.0e (range: %.0e to %.0e)\n",
+          str.c_str(), error, min, max);
 
   int radius_count = nearpts.size();
   int nearpts_size = nearpts.size();
   for (int i = 0; i < nearpts_size; i++) {
-    double l = nearpts[i].len();
-    if (double_ne(l, 1.0, epsilon_local))
+    double l = fabs(nearpts[i].len() - 1.0);
+    if (double_ne(l, 0.0, epsilon_local))
       radius_count--;
   }
-  double np_pct = (double)radius_count / nearpts_size * 100;
+
+  double np_pct = radius_count / (double)nearpts_size * 100;
   fprintf(
       stderr,
       "%d out of %d %s edge nearpoint radii lie within %.0e of length 1 (%g "
       "percent)\n",
       radius_count, nearpts_size, str.c_str(), epsilon_local, np_pct);
 
-  fprintf(stderr, "%s nearpoint centroid = (%.17g,%.17g,%.17g)\n", str.c_str(),
+  fprintf(stderr, "%s nearpoint centroid = (%.0e, %.0e, %.0e)\n", str.c_str(),
           center[0], center[1], center[2]);
 
-  string lstr = "lies ";
-  if (double_ne(center[0], 0.0, epsilon_local) ||
-      double_ne(center[1], 0.0, epsilon_local) ||
-      double_ne(center[2], 0.0, epsilon_local)) {
-    lstr = "does not lie ";
-    np_pct = 0; // negate for final criteria
+  double max_error = std::numeric_limits<int>::min();
+  for (unsigned int i = 0; i < 3; i++) {
+    double err = fabs(center[i]);
+    if (err > max_error)
+      max_error = err;
   }
+
+  string lstr = "lies ";
+  if (double_ne(max_error, 0.0, epsilon_local))
+    lstr = "does not lie ";
   fprintf(stderr, "%s nearpoint centroid %swithin %.0e of the origin\n",
           str.c_str(), lstr.c_str(), epsilon_local);
 
-  return np_pct;
+  if (max_error > max)
+    max = max_error;
+
+  return max;
 }
 
 void canonical_report(const Geometry &base, const Geometry &dual,
@@ -607,28 +775,38 @@ void canonical_report(const Geometry &base, const Geometry &dual,
                       vector<Vec3d> &ips, const bool completed,
                       const double &epsilon_local)
 {
+  double max_error = std::numeric_limits<int>::min();
+  double err = 0;
+
   fprintf(stderr, "the canonical algorithm %s\n",
           (completed ? "completed" : "did not complete"));
 
-  Symmetry sym(base);
-  fprintf(stderr, "the symmetry of base model is %s\n",
-          sym.get_symbol().c_str());
+  // Symmetry sym(base);
+  // fprintf(stderr, "the symmetry of base model is %s\n",
+  //        sym.get_symbol().c_str());
 
   int ip_size = ips.size();
   int bn_size = base_nearpts.size();
-  double ip_pct = (double)ip_size / bn_size * 100;
+  double pct = ip_size / (double)bn_size * 100;
   fprintf(
       stderr,
       "%d out of %d base/dual edge intersection points found (%g percent)\n",
-      ip_size, bn_size, ip_pct);
+      ip_size, bn_size, pct);
 
-  double base_pct = nearpoint_report(base, base_nearpts, "base", epsilon_local);
-  double dual_pct = nearpoint_report(dual, dual_nearpts, "dual", epsilon_local);
+  err = nearpoint_report(base, base_nearpts, "base", epsilon_local);
+  if (err > max_error)
+    max_error = err;
 
+  err = nearpoint_report(dual, dual_nearpts, "dual", epsilon_local);
+  if (err > max_error)
+    max_error = err;
+
+  fprintf(stderr, "canonical maximum numerical error is %.0e\n", max_error);
+  
   string str;
-  if (!(ip_pct == 100.0 && base_pct == 100.0 && dual_pct == 100.0))
-    str = "not ";
-  fprintf(stderr, "model has %smet 100 percent of criteria\n", str.c_str());
+  if (is_nonoverlap_single_cover(base))
+    str = "no ";  
+  fprintf(stderr,"the canonical model has %soverlap error\n", str.c_str());
 
   // fprintf(stderr, "note the midcenter is the origin\n");
   fprintf(stderr, "\n");
@@ -795,11 +973,12 @@ void construct_model(Geometry &base, Geometry &dual,
                      vector<Vec3d> &base_nearpts, vector<Vec3d> &dual_nearpts,
                      vector<Vec3d> &ips, const cn_opts &opts)
 {
-  // get statistics before model is changed
+  // get statistics before model is changed, if needed
   double min = 0;
   double max = 0;
   Vec3d center;
-  edge_nearpoints_radius(base, min, max, center);
+  if (opts.output_parts.find_first_of("uU") != string::npos)
+    edge_nearpoints_radius(base, min, max, center);
 
   if (opts.dual_face_color_method != 'b')
     Coloring(&dual).f_one_col(opts.dual_face_col);
@@ -1386,7 +1565,8 @@ int main(int argc, char *argv[])
   Geometry base;
   opts.read_or_error(base, opts.ifile);
 
-  check_convexity(base, opts);
+  if (!check_convexity(base))
+    opts.warning("input model may not be convex");
 
   if (opts.edge_distribution) {
     fprintf(stderr, "edge distribution: project onto sphere\n");
@@ -1458,10 +1638,14 @@ int main(int argc, char *argv[])
     }
 
     // RK - report planarity
-    planarity_info(base);
+    if (opts.canonical_method == 'x')
+      fprintf(stderr, "convex hull test: %s\n",
+              (planarity_info(base)) ? "passed"
+                                     : "triangulated. trying raising -l");
+    fprintf(stderr, "\n");
   }
 
-  if (opts.canonical_method && opts.canonical_method != 'x') {
+  if (opts.canonical_method != 'x') {
     string canonicalize_str;
     if (opts.canonical_method == 'm')
       canonicalize_str = "mathematica";
@@ -1504,13 +1688,17 @@ int main(int argc, char *argv[])
     }
 
     // RK - report planarity
-    planarity_info(base);
+    fprintf(stderr, "convex hull test: %s\n",
+            (planarity_info(base)) ? "passed"
+                                   : "triangulated. trying raising -l");
+    fprintf(stderr, "\n");
   }
 
   // RK - use fixed epsilon for quality comparisons
-  double epsilon_local = 1e-8;
-  fprintf(stderr, "analyzing result at a fixed epsilon of %.0e\n",
-          epsilon_local);
+  double epsilon_local = anti::epsilon * 10;
+  if (opts.canonical_method != 'x')
+    fprintf(stderr, "analyzing result at a fixed epsilon of %.0e\n",
+            epsilon_local);
 
   // RK - standardize model radius if needed
   reset_model_size(base, epsilon_local);
@@ -1526,7 +1714,7 @@ int main(int argc, char *argv[])
   vector<Vec3d> ips;
   generate_points(base, dual, base_nearpts, dual_nearpts, ips, epsilon_local);
 
-  if (opts.canonical_method && opts.canonical_method != 'x')
+  if (opts.canonical_method != 'x')
     canonical_report(base, dual, base_nearpts, dual_nearpts, ips, completed,
                      epsilon_local);
 

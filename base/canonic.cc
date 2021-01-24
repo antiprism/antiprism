@@ -55,8 +55,8 @@ namespace anti {
 double edge_nearpoints_radius(const Geometry &geom, double &min, double &max,
                               Vec3d &center)
 {
-  min = DBL_MAX;
-  max = DBL_MIN;
+  min = std::numeric_limits<double>::max();
+  max = std::numeric_limits<double>::min();
 
   vector<vector<int>> edges;
   geom.get_impl_edges(edges);
