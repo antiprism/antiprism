@@ -282,8 +282,8 @@ Vec3d edge_nearpoints_centroid(Geometry &geom, const Vec3d cent)
 // Implementation of George Hart's planarization and canonicalization algorithms
 // http://www.georgehart.com/virtual-polyhedra/conway_notation.html
 bool canonicalize_bd(Geometry &base, IterationControl it_ctrl,
-                     const char canonical_method,
-                     const double radius_range_percent)
+                     const double radius_range_percent,
+                     const bool planarize_only)
 {
   bool completed = false;
   it_ctrl.set_finished(false);
@@ -299,24 +299,20 @@ bool canonicalize_bd(Geometry &base, IterationControl it_ctrl,
   for (it_ctrl.start_iter(); !it_ctrl.is_done(); it_ctrl.next_iter()) {
     vector<Vec3d> base_verts_last = base.verts();
 
-    switch (canonical_method) {
-    // base/dual canonicalize method
-    case 'b': {
+    if (planarize_only) {
+      // adjust vertices with side effect of planarization. len2() version
+      dual.raw_verts() = reciprocalC_len2(base);
+      base.raw_verts() = reciprocalC_len2(dual);
+      // move centroid to origin for balance
+      base.transform(Trans3d::translate(-centroid(base.verts())));
+    }
+    else {
+      // base/dual canonicalize method
       dual.raw_verts() = reciprocalN(base);
       base.raw_verts() = reciprocalN(dual);
       // re-center for drift
       base.transform(
           Trans3d::translate(-edge_nearpoints_centroid(base, Vec3d(0, 0, 0))));
-      break;
-    }
-
-    // adjust vertices with side effect of planarization. len2() version
-    case 'q':
-      // move centroid to origin for balance
-      dual.raw_verts() = reciprocalC_len2(base);
-      base.raw_verts() = reciprocalC_len2(dual);
-      base.transform(Trans3d::translate(-centroid(base.verts())));
-      break;
     }
 
     // reduces size imbalance problem with this algorithm
@@ -372,9 +368,9 @@ bool canonicalize_bd(Geometry &base, IterationControl it_ctrl,
 // for an internal call from conway
 bool planarize_bd(Geometry &geom, IterationControl it_ctrl)
 {
-  char canonical_method = 'q';
   double radius_range_percent = 0;
-  return canonicalize_bd(geom, it_ctrl, canonical_method, radius_range_percent);
+  bool planarize_only = true;
+  return canonicalize_bd(geom, it_ctrl, radius_range_percent, planarize_only);
 }
 
 /*

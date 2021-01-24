@@ -58,7 +58,7 @@ public:
   char target_model = 'b';          // work on base model is default
   char planarize_method = '\0';     // no algorithm for planar is default
   int num_iters_planar = -1;        // unlimited iterations for planar
-  char canonical_method = 'm';      // mathematica algorithm is default
+  char canonical_method = 'c';      // circle packings algorithm is default
   int num_iters_canonical = -1;     // unlimited iterations for canonical
   bool use_symmetry = false;        // don't use symmetry
   double edge_factor = NAN;         // mathematica algorithm variable
@@ -219,17 +219,17 @@ Options
                p - work on dual for planarization only
                c - work on dual for planarization and canonicalization
   -p <opt>  planarization (done before canoncalization. default: none)
-               q - face centroids magnitude squared
-               m - mathematica planarize
-               a - sand and fill planarize
                p - poly_form planarize (poly_form -a p)
+               m - mathematica planarize
+               a - moving edge planarize
+               b - base/dual (reciprocate on face centroids magnitude squared)
   -i <itrs> maximum planarize iterations. -1 for unlimited (default: %d)
             WARNING: unstable models may not finish unless -i is set
   -c <opt>  canonicalization
-               m - mathematica version (default)
-               c - circle packings
-               b - base/dual version (reciprocate on face normals)
+               c - circle packings (default)
+               m - mathematica version
                a - moving edge version
+               b - base/dual version (reciprocate on face normals)
                x - none (default, if -p is set)
   -n <itrs> maximum canonical iterations. -1 for unlimited (default: %d)
             WARNING: unstable models may not finish unless -n is set
@@ -330,10 +330,10 @@ void cn_opts::process_command_line(int argc, char **argv)
 
     case 'p':
       p_set = true;
-      if (strlen(optarg) == 1 && strchr("qmap", int(*optarg)))
+      if (strlen(optarg) == 1 && strchr("pmab", int(*optarg)))
         planarize_method = *optarg;
       else
-        error("planarize method type must be q, m, a, p", c);
+        error("planarize method type must be p, a, m, b", c);
       break;
 
     case 'i':
@@ -345,10 +345,10 @@ void cn_opts::process_command_line(int argc, char **argv)
 
     case 'c':
       c_set = true;
-      if (strlen(optarg) == 1 && strchr("mcbax", int(*optarg)))
+      if (strlen(optarg) == 1 && strchr("cmabx", int(*optarg)))
         canonical_method = *optarg;
       else
-        error("canonical method type must be m, c, b, a, x", c);
+        error("canonical method type must be c, m, a, b, x", c);
       break;
 
     case 'n':
@@ -640,26 +640,26 @@ bool check_convexity(const Geometry &geom)
 }
 */
 
-bool planarity_info(Geometry &geom)
+void planarity_info(Geometry &geom)
 {
   GeometryInfo rep(geom);
 
-  double max_nonplanar = 0;
-  double sum_nonplanar = 0;
+  double max_nonplanar = std::numeric_limits<double>::min();
+  // double sum_nonplanar = 0;
   unsigned int sz = geom.faces().size();
   for (unsigned int i = 0; i < sz; i++) {
     double nonplanar = rep.get_f_max_nonplanars()[i];
-    sum_nonplanar += nonplanar;
+    // sum_nonplanar += nonplanar;
     if (nonplanar > max_nonplanar)
       max_nonplanar = nonplanar;
   }
   fprintf(stderr, "\n");
-  fprintf(stderr, "maximum_nonplanarity = %.17g\n", max_nonplanar);
+  fprintf(stderr, "maximum nonplanarity = %.0e\n", max_nonplanar);
   // fprintf(stderr, "average_nonplanarity = %.17g\n", sum_nonplanar / sz);
   // fprintf(stderr, "isoperimetric quotient = %.17g\n",
   // rep.isoperimetric_quotient());
 
-  return check_convexity(geom);
+  return;
 }
 
 void generate_points(const Geometry &base, const Geometry &dual,
@@ -695,7 +695,7 @@ void generate_points(const Geometry &base, const Geometry &dual,
   }
 }
 
-// RK - find nearpoints error. center is unchanged
+// find nearpoints error. center is unchanged
 double edge_nearpoints_error(const Geometry &geom, double &min, double &max,
                              Vec3d &center)
 {
@@ -722,6 +722,7 @@ double edge_nearpoints_error(const Geometry &geom, double &min, double &max,
 
   center = centroid(near_pts);
 
+  // adds computational error, not using average
   return nearpt_error / double(edges.size());
 }
 
@@ -731,9 +732,9 @@ double nearpoint_report(const Geometry &geom, const vector<Vec3d> &nearpts,
   double min = 0;
   double max = 0;
   Vec3d center;
-  double error = edge_nearpoints_error(geom, min, max, center);
-  fprintf(stderr, "%s average midradius error = %.0e (range: %.0e to %.0e)\n",
-          str.c_str(), error, min, max);
+  edge_nearpoints_error(geom, min, max, center);
+  fprintf(stderr, "%s range of edge nearpoint error is %.0e to %.0e\n",
+          str.c_str(), min, max);
 
   int radius_count = nearpts.size();
   int nearpts_size = nearpts.size();
@@ -750,9 +751,6 @@ double nearpoint_report(const Geometry &geom, const vector<Vec3d> &nearpts,
       "percent)\n",
       radius_count, nearpts_size, str.c_str(), epsilon_local, np_pct);
 
-  fprintf(stderr, "%s nearpoint centroid = (%.0e, %.0e, %.0e)\n", str.c_str(),
-          center[0], center[1], center[2]);
-
   double max_error = std::numeric_limits<int>::min();
   for (unsigned int i = 0; i < 3; i++) {
     double err = fabs(center[i]);
@@ -760,14 +758,17 @@ double nearpoint_report(const Geometry &geom, const vector<Vec3d> &nearpts,
       max_error = err;
   }
 
+  if (max_error > max)
+    max = max_error;
+
   string lstr = "lies ";
   if (double_ne(max_error, 0.0, epsilon_local))
     lstr = "does not lie ";
-  fprintf(stderr, "%s nearpoint centroid %swithin %.0e of the origin\n",
-          str.c_str(), lstr.c_str(), epsilon_local);
-
-  if (max_error > max)
-    max = max_error;
+  fprintf(
+      stderr,
+      "%s nearpoint centroid (%.0e, %.0e, %.0e) %swithin %.0e of the origin\n",
+      str.c_str(), center[0], center[1], center[2], lstr.c_str(),
+      epsilon_local);
 
   return max;
 }
@@ -787,6 +788,7 @@ void canonical_report(const Geometry &base, const Geometry &dual,
   // fprintf(stderr, "the symmetry of base model is %s\n",
   //        sym.get_symbol().c_str());
 
+  // intersection point count is not used in score
   int ip_size = ips.size();
   int bn_size = base_nearpts.size();
   double pct = ip_size / (double)bn_size * 100;
@@ -800,15 +802,16 @@ void canonical_report(const Geometry &base, const Geometry &dual,
     max_error = err;
 
   err = nearpoint_report(dual, dual_nearpts, "dual", epsilon_local);
-  if (err > max_error)
-    max_error = err;
+  // don't consider dual statistics in score
+  // if (err > max_error)
+  //  max_error = err;
 
-  fprintf(stderr, "canonical maximum numerical error is %.0e\n", max_error);
-  
+  fprintf(stderr, "base canonical model maximum error is %.0e\n", max_error);
+
   string str;
   if (is_nonoverlap_single_cover(base))
-    str = "no ";  
-  fprintf(stderr,"the canonical model has %soverlap error\n", str.c_str());
+    str = "no ";
+  fprintf(stderr, "base canonical model has %soverlap error\n", str.c_str());
 
   // fprintf(stderr, "note the midcenter is the origin\n");
   fprintf(stderr, "\n");
@@ -939,7 +942,7 @@ Geometry incircles(const Geometry &geom, const char &incircle_color_method,
   return incircles;
 }
 
-// RK - average radius rather than maximum has more reliability than max
+// average radius rather than maximum has more reliability than max
 void unitize_vertex_radius(Geometry &geom)
 {
   GeometryInfo info(geom);
@@ -949,8 +952,8 @@ void unitize_vertex_radius(Geometry &geom)
   geom.transform(Trans3d::scale(1 / avg));
 }
 
-// RK - models can change size drastically and
-// RK - set radius to 1 for get_dual call, if necessary
+// models from incomplete processing and other situations be large or small
+// set radius to 1 for get_dual call, if necessary
 void reset_model_size(Geometry &geom, const double &epsilon_local)
 {
   double radius = edge_nearpoints_radius(geom);
@@ -1615,9 +1618,9 @@ int main(int argc, char *argv[])
         0; // RK: not used when planarizing
            // (opts.radius_range_percent < 0) ? 0 : opts.radius_range_percent;
 
-    if (opts.planarize_method == 'q') {
-      completed = canonicalize_bd(base, opts.it_ctrl, opts.planarize_method,
-                                  radius_range_pct / 100);
+    if (opts.planarize_method == 'b') {
+      completed = canonicalize_bd(base, opts.it_ctrl, radius_range_pct / 100,
+                                  planarize_only);
     }
     else if (opts.planarize_method == 'm') {
       completed = canonicalize_mm(base, opts.it_ctrl, opts.edge_factor / 100,
@@ -1639,11 +1642,12 @@ int main(int argc, char *argv[])
       base = get_dual(base);
     }
 
-    // RK - report planarity
+    // report planarity, report convex hull test if planarizing only
+    planarity_info(base);
     if (opts.canonical_method == 'x')
       fprintf(stderr, "convex hull test: %s\n",
-              (planarity_info(base)) ? "passed"
-                                     : "triangulated. trying raising -l");
+              (check_convexity(base)) ? "passed"
+                                      : "triangulated. trying raising -l");
     fprintf(stderr, "\n");
   }
 
@@ -1675,8 +1679,8 @@ int main(int argc, char *argv[])
                                      opts.initial_point_type, sym);
     }
     else if (opts.canonical_method == 'b') {
-      completed = canonicalize_bd(base, opts.it_ctrl, opts.canonical_method,
-                                  radius_range_pct / 100);
+      completed = canonicalize_bd(base, opts.it_ctrl, radius_range_pct / 100,
+                                  planarize_only);
     }
     else if (opts.canonical_method == 'a') {
       completed = canonicalize_unit(base, opts.it_ctrl, radius_range_pct / 100,
@@ -1689,26 +1693,27 @@ int main(int argc, char *argv[])
       base = get_dual(base);
     }
 
-    // RK - report planarity
+    // report planarity
+    planarity_info(base);
     fprintf(stderr, "convex hull test: %s\n",
-            (planarity_info(base)) ? "passed"
-                                   : "triangulated. trying raising -l");
+            (check_convexity(base)) ? "passed"
+                                    : "triangulated. trying raising -l");
     fprintf(stderr, "\n");
   }
 
-  // RK - use fixed epsilon for quality comparisons
+  // use fixed epsilon for quality comparisons
   double epsilon_local = anti::epsilon * 10;
   if (opts.canonical_method != 'x')
     fprintf(stderr, "analyzing result at a fixed epsilon of %.0e\n",
             epsilon_local);
 
-  // RK - standardize model radius if needed
+  // standardize model radius if needed since dual is reciprocated on 1
   reset_model_size(base, epsilon_local);
 
   // generate dual once
   Geometry dual = get_dual(base);
 
-  // RK - add coincidence checking the model
+  // coincidence check for simulataneous vertices and faces
   check_coincidence(base, dual, opts);
 
   vector<Vec3d> base_nearpts;
@@ -1720,7 +1725,7 @@ int main(int argc, char *argv[])
     canonical_report(base, dual, base_nearpts, dual_nearpts, ips, completed,
                      epsilon_local);
 
-  // RK - parts to output
+  // parts to output
   construct_model(base, dual, base_nearpts, dual_nearpts, ips, opts);
 
   opts.write_or_error(base, opts.ofile);

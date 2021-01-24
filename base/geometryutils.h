@@ -362,14 +362,13 @@ Vec3d edge_nearpoints_centroid(Geometry &geom,
 /**See http://www.georgehart.com/virtual-polyhedra/conway_notation.html
  * \param base geometry to canonicalise.
  * \param it_ctrl interation control.
- * \param canonical_method - 'b': base/dual, 'q': adjust vertices with
- * side effect of planarization (len2() version)
  * \param radius_range_percent if the model outer radius increases this
  *  much over the inner radius then it is growing too much, terminate.
+ * \param planarize_only planarise only.
  * \return \c true if success, otherwise \c false */
 bool canonicalize_bd(Geometry &base, IterationControl it_ctrl,
-                     const char canonical_method,
-                     const double radius_range_percent);
+                     const double radius_range_percent,
+                     const bool planarize_only);
 
 /// an abbreviated wrapper for planarization with the base/dual method
 /**\param geom geometry to planarize.

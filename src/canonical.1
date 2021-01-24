@@ -41,10 +41,10 @@ c \- work on dual for planarization and canonicalization
 \fB\-p\fR <opt>
 planarization (done before canoncalization. default: none)
 .IP
-q \- face centroids magnitude squared
-m \- mathematica planarize
-a \- sand and fill planarize
 p \- poly_form planarize (poly_form \fB\-a\fR p)
+m \- mathematica planarize
+a \- moving edge planarize
+b \- base/dual (reciprocate on face centroids magnitude squared)
 .HP
 \fB\-i\fR <itrs> maximum planarize iterations. \fB\-1\fR for unlimited (default: \fB\-1\fR)
 .IP
@@ -53,10 +53,10 @@ WARNING: unstable models may not finish unless \fB\-i\fR is set
 \fB\-c\fR <opt>
 canonicalization
 .IP
-m \- mathematica version (default)
-c \- circle packings
-b \- base/dual version (reciprocate on face normals)
+c \- circle packings (default)
+m \- mathematica version
 a \- moving edge version
+b \- base/dual version (reciprocate on face normals)
 x \- none (default, if \fB\-p\fR is set)
 .HP
 \fB\-n\fR <itrs> maximum canonical iterations. \fB\-1\fR for unlimited (default: \fB\-1\fR)
