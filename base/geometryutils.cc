@@ -254,4 +254,15 @@ vector<vector<int>> find_unmatched_edges(const Geometry &geom)
   return unmatched_edges;
 }
 
+bool check_convexity(Geometry geom)
+{
+  geom.clear_cols(); // reduce copying and processing
+  geom.clear(EDGES); // don't consider explicit edges for congruency
+
+  auto geom_hull = geom;
+  geom_hull.set_hull();
+
+  return check_congruence(geom, geom_hull);
+}
+
 } // namespace anti

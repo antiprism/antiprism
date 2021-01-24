@@ -629,6 +629,7 @@ void check_coincidence(const Geometry &base, const Geometry &dual,
   check_model(dual, s, opts);
 }
 
+/*
 bool check_convexity(const Geometry &geom)
 {
   Geometry hull = geom;
@@ -637,6 +638,7 @@ bool check_convexity(const Geometry &geom)
   // return (geom.faces().size() == hull.faces().size() &&
   //        geom.verts().size() == hull.verts().size());
 }
+*/
 
 bool planarity_info(Geometry &geom)
 {

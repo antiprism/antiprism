@@ -285,6 +285,11 @@ void get_congruence_maps(const Geometry &geom, Trans3d trans,
                          std::vector<std::vector<int>> &elem_maps,
                          double eps = epsilon);
 
+/// Check if a geometry is convex
+/**\param geom geometry to check
+ * \return \c true if the geometry is convex, otherwise \c false. */
+bool check_convexity(Geometry geom);
+
 /// find nearpoints radius, sets range minimum and maximum
 /**\param geom geometry.
  * \param min returns the minimum nearpoints radius.
