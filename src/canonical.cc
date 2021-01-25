@@ -630,13 +630,30 @@ void check_coincidence(const Geometry &base, const Geometry &dual,
 }
 
 /*
-bool check_convexity(const Geometry &geom)
+// check convex hull for congruency to geom
+bool check_hull(const Geometry &geom)
 {
   Geometry hull = geom;
   hull.set_hull();
-  return (check_congruence(geom, hull));
-  // return (geom.faces().size() == hull.faces().size() &&
-  //        geom.verts().size() == hull.verts().size());
+  //return (check_congruence(geom, hull));
+  return (geom.faces().size() == hull.faces().size() &&
+          geom.verts().size() == hull.verts().size());
+}
+
+bool check_planarity(const Geometry &geom)
+{
+  bool convex = true;
+  for (unsigned int i = 0; i < geom.faces().size(); i++) {
+    vector<int> vec(1, i);
+    Geometry polygon = faces_to_geom(geom, vec);
+    polygon.set_hull();
+    if (polygon.faces().size() > 1) {
+// fprintf(stderr, "%d faces tested\n", i + 1);
+      convex = false;
+      break;
+    }
+  }
+  return convex;
 }
 */
 
@@ -745,11 +762,10 @@ double nearpoint_report(const Geometry &geom, const vector<Vec3d> &nearpts,
   }
 
   double np_pct = radius_count / (double)nearpts_size * 100;
-  fprintf(
-      stderr,
-      "%d out of %d %s edge nearpoint radii lie within %.0e of length 1 (%g "
-      "percent)\n",
-      radius_count, nearpts_size, str.c_str(), epsilon_local, np_pct);
+  fprintf(stderr,
+          "%d out of %d %s edge nearpoint radii lie within %.0e of length 1 "
+          "(%g%%)\n",
+          radius_count, nearpts_size, str.c_str(), epsilon_local, np_pct);
 
   double max_error = std::numeric_limits<int>::min();
   for (unsigned int i = 0; i < 3; i++) {
@@ -792,10 +808,9 @@ void canonical_report(const Geometry &base, const Geometry &dual,
   int ip_size = ips.size();
   int bn_size = base_nearpts.size();
   double pct = ip_size / (double)bn_size * 100;
-  fprintf(
-      stderr,
-      "%d out of %d base/dual edge intersection points found (%g percent)\n",
-      ip_size, bn_size, pct);
+  fprintf(stderr,
+          "%d out of %d base/dual edge intersection points found (%g%%)\n",
+          ip_size, bn_size, pct);
 
   err = nearpoint_report(base, base_nearpts, "base", epsilon_local);
   if (err > max_error)
