@@ -193,6 +193,162 @@ steps are quite simple, this takes a minute or so in these examples and would
 take longer on more complex polyhedra. Refinement and optimization are left as
 future work.
 
+Additional Work by Adrian Rossiter:
+
+Edge near-point / circle-packing canonicalisation algorithm
+===========================================================
+
+Approach
+========
+
+A polyhedron with a midsphere corresponds to two circle packings on the
+same sphere: the incircles of the base faces and the incircles of the dual
+faces. The circles from the two packs intersect at the edge tangency points
+of the base (or dual) polyhedron in two orthogonal tangent pairs. By moving
+a set of points until they satisfy the conditions for being the intersection
+points of these circles, a model corresponding to a polyhedron with a
+midsphere can be made.
+
+If the midsphere is the unit sphere, and the edge tangency points have
+their centroid at the sphere centre then the polyhedron is canonical.
+
+
+Processing model
+================
+
+The processing model has a vertex for each edge tangency point, and a face
+for each circle of the two packs. Each vertex is therefore surrounded by four
+faces, and these faces correspond, in opposing pairs, to each of the two
+circle packs.
+
+The canonical model is solved when the processing model satisfies
+the following conditions:
+
+*  the vertices are at distance 1 from the origin
+
+*  the vertices have their centroid at the origin
+
+*  each set of vertices corresponding to a base/dual face is coplanar,
+   and hence lies on a circle of the base/dual circle pack
+
+*  each vertex lies on the two planes through the origin containing the
+   normals of opposing faces, hence each pair of circles meeting at the
+   vertex are tangent (and this is sufficient to ensure that they are
+   also orthogonal)
+
+
+Algorithm
+=========
+
+Initialisation
+--------------
+
+1. Translate the base model to carry the vertex centroid to the origin.
+
+2. Converted to an 'ambo' form. The vertices are truncated to a single
+   point on each edge. These points are initially set to either the
+   centroid of the edge vertices (better for a general input), or the
+   point on the edge line nearest to the origin (better for a
+   near-canonical input).
+
+3. Make a list of the cycle of four faces around each vertex. Alternate
+   faces will be opposing faces.
+
+4. Choose a small termination value, that if the minimum vertex
+   movement is less than this then the iteration terminates.
+
+5. The amount of vertex movement is controlled by an adjustment factor,
+   which can change each iteration. Choose a starting value (e.g. .1),
+   and a maximum value (e.g. .5).
+
+
+Iteration
+---------
+
+An offset will be calculated for each vertex, and will be applied
+near the end of the iteration loop.
+
+For each vertex:
+
+1. Initialize the offset to zero.
+
+2. Adjust for the tangency point centroid:
+   Add
+      -vertices_centroid
+   to the offset.
+
+3. Adjust for coplanar / circular points:
+   Calculate the projection the vertex onto its four surrounding planes,
+   and then calculate the centroid of these four projection points. Add
+      (projection_point_centroid - vertex) * factor
+   to the offset.
+
+4. Adjust for mutual tangency / orthogonality:
+   For each pair of opposing faces:
+      find a normal to their normals (a base or dual edge direction)
+      calculate the projection of the vertex onto a plane through the origin
+      with this normal
+   Add
+      (projection_point_centroid - vertex) * factor
+   to the offset.
+
+5. Adjust for unscrambling:
+   If a vertex does not lie inside the cycle of its four neighbouring
+   vertices, make the following adjustment. Add
+      (neighbour_vertices_centroid - vertex) * 0.5 * factor
+   to the offset.
+
+6. Add the offset to the vertex
+
+7. Scale the vertex to have a length of exactly 1
+
+8. Adjust the adjustment factor:
+   If the maximum offset length is less than that of the last iteration
+   then scale the factor by 1.01 (if this will not exceed the maximum
+   specified), but if it is greater then scale the factor by 0.995.
+
+9. Terminate iteration if the maximum offset length is less than the
+   termination value.
+
+
+Final model
+-----------
+
+The processing model has faces that correspond to base faces and those
+that correspond to dual faces, which also correspond to base vertices as
+they were the faces produced by vertex truncation.
+
+The final base model retains the faces of the original base model, but
+each vertex is set to the polar reciprocal of the corresponding processing
+model face plane.
+
+For each vertex in the base model
+
+1. Determine the corresponding processing model face.
+
+2. Calculate the point nearest to the origin on the face plane, and its
+   distance from the origin, and the final vertex position is
+     position = point / distance^2
+
+
+Symmetry optimised variation
+============================
+
+The algorithm is suitable for use with a symmetry optimisation. This
+also forces the original symmetry to be maintained, as repeated processing
+of the vertices may otherwise cause them to wander from the original
+symmetry.
+
+Use the symmetry group of the base model. In the processing model just one
+vertex from each orbit is processed. The faces surrounding the vertex have
+their other vertex positions calculated, once per iteration, by by a symmetry
+transformation of a processed vertex.
+
+To avoid calculating all the vertex positions for the centroid, it can be
+calculated as: the centroid of the processed vertices, each projected onto
+the subspace left invariant by the subgroup that fixes it, and weighted by
+the number of vertices in its orbit. 
+
 )");
 }
 
@@ -254,14 +410,13 @@ Options
   -o <file> write output to file (default: write to standard output)
 
 Extra Options
-  for (-c m, -c c, -p m, and -p p)
-  -E <perc> percentage to scale the edge tangency (default: 50) 
-  -P <perc> percentage to scale the face planarity (default: 20) (also -p p)
+  -E <perc> percentage to scale edge tangency (default: 50) (-c m, -p m)
+  -P <perc> percentage to scale face planarity (default: 20) (-c m, -p m, -p p)
   -f <adj>  initial percent adjustment factor, optionally followed by a comma
-            and a maximum percent adjustment (default: 1,50) (-c c only)
+            and a maximum percent adjustment (default: 1,50) (-c c)
   -C        continue processing a near-canonical model (the initial
             intermediate processing model will preserves the geometry
-            of the base model rather than avoid scrambling) (-c c only)
+            of the base model rather than avoid scrambling) (-c c)
 
 Coloring Options (run 'off_util -H color' for help on color formats)
   -I <col>  intersection points and/or origin color (default: yellow)

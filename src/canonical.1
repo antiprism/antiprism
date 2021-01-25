@@ -99,18 +99,19 @@ termination checks (0 for report checks only) (default: 1000,1)
 \fB\-o\fR <file> write output to file (default: write to standard output)
 .PP
 Extra Options
-.IP
-for (\fB\-c\fR m, \fB\-c\fR c, \fB\-p\fR m, and \fB\-p\fR p)
-\fB\-E\fR <perc> percentage to scale the edge tangency (default: 50)
-\fB\-P\fR <perc> percentage to scale the face planarity (default: 20) (also \fB\-p\fR p)
-\fB\-f\fR <adj>  initial percent adjustment factor, optionally followed by a comma
-.IP
-and a maximum percent adjustment (default: 1,50) (\fB\-c\fR c only)
+.HP
+\fB\-E\fR <perc> percentage to scale edge tangency (default: 50) (\fB\-c\fR m, \fB\-p\fR m)
+.HP
+\fB\-P\fR <perc> percentage to scale face planarity (default: 20) (\fB\-c\fR m, \fB\-p\fR m, \fB\-p\fR p)
+.TP
+\fB\-f\fR <adj>
+initial percent adjustment factor, optionally followed by a comma
+and a maximum percent adjustment (default: 1,50) (\fB\-c\fR c)
 .TP
 \fB\-C\fR
 continue processing a near\-canonical model (the initial
 intermediate processing model will preserves the geometry
-of the base model rather than avoid scrambling) (\fB\-c\fR c only)
+of the base model rather than avoid scrambling) (\fB\-c\fR c)
 .PP
 Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
 .TP
