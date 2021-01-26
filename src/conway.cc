@@ -849,46 +849,35 @@ public:
   string ifile;
   string ofile;
 
-  string cn_string;
-  bool resolve_ops;
-  bool hart_mode;
-  bool tile_mode;
-  bool reverse_ops;
-  string seed;
-  int seed_size;
-  char planarize_method;
-  bool unitize;
-  bool verbosity;
-  char face_coloring_method;
-  int face_opacity;
-  string face_pattern;
-  int seed_coloring_method;
+  string cn_string;                // the conway notation string
+  bool resolve_ops = false;        // resolve operations in hart mode
+  bool hart_mode = false;          // George Hart legacy mode
+  bool tile_mode = false;          // tile mode for flat surfaces
+  bool reverse_ops = false;        // reverse the notation string
+  string seed;                     // the initial seed for operations
+  int seed_size = 0;               // for seeds that can have a size
+  char planarize_method = 'b';     // internal default planarization method
+  bool unitize = false;            // sets the edge lengths to average of 1
+  bool verbosity = false;          // output on screen
+  char face_coloring_method = 'n'; // default face coloring method
+  int face_opacity = -1;           // transparency from 0 to 255
+  string second_char = "#";        // for 2 character operations
 
-  double eps;
+  double eps = anti::epsilon;
 
-  Color vert_col;
-  Color edge_col;
-
-  string second_char;
-
-  TilingColoring col_type;
-
-  ColorMapMulti map;
-
-  vector<ops *> operations;
+  vector<ops *> operations; // operations list
 
   // for on the fly user operators
   std::map<string, vector<ops *>> operations_user;
 
-  cn_opts()
-      : ProgramOpts("conway"), cn_string(""), resolve_ops(false),
-        hart_mode(false), tile_mode(false), reverse_ops(false), seed_size(0),
-        planarize_method('q'), unitize(false), verbosity(false),
-        face_coloring_method('n'), face_opacity(-1), face_pattern("1"),
-        seed_coloring_method(1), eps(anti::epsilon),
-        vert_col(Color(255, 215, 0)),   // gold
-        edge_col(Color(211, 211, 211)), // lightgray
-        second_char("#")
+  Color vert_col = Color(255, 215, 0);   // gold
+  Color edge_col = Color(211, 211, 211); // lightgray
+
+  ColorMapMulti map;
+
+  TilingColoring col_type; // for wythoff
+
+  cn_opts() : ProgramOpts("conway")
   {
     it_ctrl.set_max_iters(1000);
     it_ctrl.set_status_checks("-1,1");
@@ -1239,10 +1228,7 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                w - resolve color indexes (overrides -V and -E)
 %s
                (when -f w is set)
-  -R <opt>  built in seed coloring: one=1, unique=2, symmetry=3 (default: 1)
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
-  -O <strg> face transparency pattern string (-f n only). valid values
-               0 - map color alpha value, 1 -T alpha applied (default: '1')
   -m <maps> color maps for faces to be tried in turn (default: m1, for -g, m2)
                keyword m1: red,darkorange1,yellow,darkgreen,cyan,blue,magenta,
                            white,gray50,black
@@ -1268,8 +1254,7 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hHsgtruvc:l:i:z:f:C:R:V:E:T:O:m:o:")) !=
-         -1) {
+  while ((c = getopt(argc, argv, ":hHsgtruvc:l:i:z:f:C:V:E:T:m:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -1400,16 +1385,6 @@ void cn_opts::process_command_line(int argc, char **argv)
       break;
     }
 
-    case 'R': {
-      string arg_id;
-      print_status_or_exit(get_arg_id(optarg, &arg_id,
-                                      "one=1|unique=2|symmetry=3",
-                                      argmatch_add_id_maps),
-                           c);
-      seed_coloring_method = atoi(arg_id.c_str());
-      break;
-    }
-
     case 'V':
       print_status_or_exit(vert_col.read(optarg), c);
       break;
@@ -1423,15 +1398,6 @@ void cn_opts::process_command_line(int argc, char **argv)
       if (face_opacity < 0 || face_opacity > 255) {
         error("face transparency must be between 0 and 255", c);
       }
-      break;
-
-    case 'O':
-      if (strspn(optarg, "01") != strlen(optarg))
-        error(msg_str("transparency string is '%s' must consist of "
-                      "0 and 1's",
-                      optarg),
-              c);
-      face_pattern = optarg;
       break;
 
     case 'm':
@@ -1686,7 +1652,7 @@ void cn_planarize(Geometry &geom, char planarize_method, const cn_opts &opts)
 
   if (opts.it_ctrl.get_max_iters() != 0) {
     verbose("_", opts, (int)geom.faces().size());
-    if (planarize_method == 'q') {
+    if (planarize_method == 'b') {
       planarize_bd(geom, opts.it_ctrl);
     }
     else if (planarize_method == 'a') {
@@ -1751,27 +1717,8 @@ void get_seed(Geometry &geom, const cn_opts &opts)
     */
   }
 
-  // by default seed will be all one color
-  Coloring clrng(&geom);
-  if (opts.seed_coloring_method == 1) {
-    Color col = opts.map.get_col(0);
-    clrng.vef_one_col(col, col, col);
-  }
-  else if (opts.seed_coloring_method == 2) {
-    // unique
-    clrng.v_unique(true);
-    clrng.e_unique(true);
-    clrng.f_unique(true);
-  }
-  else if (opts.seed_coloring_method == 3) {
-    // color by symmetry
-    Symmetry sym;
-    vector<vector<set<int>>> sym_equivs;
-    sym.init(geom, &sym_equivs);
-    clrng.v_sets(sym_equivs[0], true);
-    clrng.e_sets(sym_equivs[1], true);
-    clrng.f_sets(sym_equivs[2], true);
-  }
+  // by default seed face colors will first map color
+  Coloring(&geom).f_one_col(opts.map.get_col(0));
 }
 
 // RK - for hart code
@@ -2327,6 +2274,26 @@ void do_operations(Geometry &geom, cn_opts &opts)
   }
 }
 
+void apply_transparency(Geometry &geom, const cn_opts &opts)
+{
+  if (opts.face_opacity > -1) {
+    ColorValuesToRangeHsva valmap(
+        msg_str("A%g", (double)opts.face_opacity / 255));
+    valmap.apply(geom, FACES);
+
+    for (const auto &kp : geom.colors(FACES).get_properties()) {
+      if (kp.second.is_index()) {
+        opts.warning("map indexes cannot be made transparent", 'T');
+        break;
+      }
+    }
+
+    // check if some faces are not set
+    if (geom.colors(FACES).get_properties().size() < geom.faces().size())
+      opts.warning("unset faces cannot be made transparent", 'T');
+  }
+}
+
 void cn_coloring(Geometry &geom, const cn_opts &opts)
 {
   // can't color an empty geom. on -f s it will cause segfault
@@ -2334,23 +2301,12 @@ void cn_coloring(Geometry &geom, const cn_opts &opts)
     return;
 
   if (opts.face_coloring_method == 'n') {
-    bool trans_success = true;
     const vector<vector<int>> &faces = geom.faces();
     for (unsigned int i = 0; i < faces.size(); i++) {
       unsigned int fsz = faces[i].size();
       Color col = opts.map.get_col(fsz - 3);
-      if (opts.face_opacity > -1) {
-        int opq = (opts.face_pattern[fsz % opts.face_pattern.size()] == '1')
-                      ? opts.face_opacity
-                      : col[3];
-        // map colors always are set but can be map index or invisible
-        if (!col.set_alpha(opq))
-          trans_success = false;
-      }
       geom.colors(FACES).set(i, col);
     }
-    if (!trans_success)
-      opts.warning("some faces could not be made transparent", 'T');
   }
   else if (opts.face_coloring_method == 's') {
     Symmetry sym;
@@ -2361,18 +2317,6 @@ void cn_coloring(Geometry &geom, const cn_opts &opts)
     clrng.add_cmap(opts.map.clone());
     clrng.set_geom(&geom);
     clrng.f_sets(sym_equivs[2], true);
-
-    if (opts.face_opacity > -1) {
-      ColorValuesToRangeHsva valmap(msg_str("A%g", opts.face_opacity / 255.0));
-      valmap.apply(geom, FACES);
-
-      for (const auto &kp : geom.colors(FACES).get_properties()) {
-        if (kp.second.is_index()) {
-          opts.warning("map indexes cannot be made transparent", 'T');
-          break;
-        }
-      }
-    }
   }
   else if (opts.face_coloring_method == 'u') {
     Coloring clrng(&geom);
@@ -2389,11 +2333,8 @@ void cn_coloring(Geometry &geom, const cn_opts &opts)
     clrng.f_apply_cmap();
   }
 
-  // check if some faces are not set for transparency warning
-  if (opts.face_opacity > -1) {
-    if (geom.colors(FACES).get_properties().size() < geom.faces().size())
-      opts.warning("unset faces cannot be made transparent", 'T');
-  }
+  // apply transparency
+  apply_transparency(geom, opts);
 
   // color vertices
   // wythoff overrides coloring of vertices
@@ -2429,7 +2370,7 @@ int main(int argc, char *argv[])
   // if input model is not closed, Base/Dual Planarization will not work.
   // Switch to unit edge
   GeometryInfo info(geom);
-  if ((opts.planarize_method == 'q') && !info.is_closed()) {
+  if ((opts.planarize_method == 'b') && !info.is_closed()) {
     opts.planarize_method = 'a';
   }
 

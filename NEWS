@@ -29,7 +29,9 @@ xx-01-21 Adrian Rossiter <adrian@antiprism.com>
               operator u, e and o may now take two subscripts
               base subscripts updated
               status reporting method update
-              -p plarization options removed, now done internally
+              -p removed, plarization options, now done internally
+              -O removed, pattern strings didn't add value
+              -R removed, built in seed coloring didn't add value
             off_color_radial:
               -m rainbow map entries calculated like rng
             canonical:
