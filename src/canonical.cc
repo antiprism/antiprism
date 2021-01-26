@@ -410,7 +410,7 @@ Options
   -o <file> write output to file (default: write to standard output)
 
 Extra Options
-  -E <perc> percentage to scale edge tangency (default: 50) (-c m, -p m)
+  -E <perc> percentage to scale edge tangency (default: 50) (-c m)
   -P <perc> percentage to scale face planarity (default: 20) (-c m, -p m, -p p)
   -f <adj>  initial percent adjustment factor, optionally followed by a comma
             and a maximum percent adjustment (default: 1,50) (-c c)
@@ -667,7 +667,7 @@ void cn_opts::process_command_line(int argc, char **argv)
     error("target is for canonicalization but no method is selected", 't');
 
   // set default variables
-  if (canonical_method == 'm' || planarize_method == 'm') {
+  if (canonical_method == 'm') {
     if (std::isnan(edge_factor))
       edge_factor = 50.0;
   }
