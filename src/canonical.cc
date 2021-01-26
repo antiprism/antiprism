@@ -193,13 +193,14 @@ steps are quite simple, this takes a minute or so in these examples and would
 take longer on more complex polyhedra. Refinement and optimization are left as
 future work.
 
+
 Additional Work by Adrian Rossiter:
 
 Edge near-point / circle-packing canonicalisation algorithm
 ===========================================================
 
 Approach
-========
+--------
 
 A polyhedron with a midsphere corresponds to two circle packings on the
 same sphere: the incircles of the base faces and the incircles of the dual
@@ -214,7 +215,7 @@ their centroid at the sphere centre then the polyhedron is canonical.
 
 
 Processing model
-================
+----------------
 
 The processing model has a vertex for each edge tangency point, and a face
 for each circle of the two packs. Each vertex is therefore surrounded by four
@@ -228,8 +229,8 @@ the following conditions:
 
 *  the vertices have their centroid at the origin
 
-*  each set of vertices corresponding to a base/dual face is coplanar,
-   and hence lies on a circle of the base/dual circle pack
+*  the faces are planar, hence each set of vertices corresponding to a
+   base/dual face lies on a circle of the base/dual circle pack
 
 *  each vertex lies on the two planes through the origin containing the
    normals of opposing faces, hence each pair of circles meeting at the
@@ -238,10 +239,9 @@ the following conditions:
 
 
 Algorithm
-=========
+---------
 
 Initialisation
---------------
 
 1. Translate the base model to carry the vertex centroid to the origin.
 
@@ -263,7 +263,6 @@ Initialisation
 
 
 Iteration
----------
 
 An offset will be calculated for each vertex, and will be applied
 near the end of the iteration loop.
@@ -312,7 +311,6 @@ For each vertex:
 
 
 Final model
------------
 
 The processing model has faces that correspond to base faces and those
 that correspond to dual faces, which also correspond to base vertices as
@@ -331,8 +329,8 @@ For each vertex in the base model
      position = point / distance^2
 
 
-Symmetry optimised variation
-============================
+Symmetry optimisation
+---------------------
 
 The algorithm is suitable for use with a symmetry optimisation. This
 also forces the original symmetry to be maintained, as repeated processing
@@ -341,7 +339,7 @@ symmetry.
 
 Use the symmetry group of the base model. In the processing model just one
 vertex from each orbit is processed. The faces surrounding the vertex have
-their other vertex positions calculated, once per iteration, by by a symmetry
+their other vertex positions calculated, once per iteration, by a symmetry
 transformation of a processed vertex.
 
 To avoid calculating all the vertex positions for the centroid, it can be

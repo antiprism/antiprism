@@ -46,6 +46,15 @@ Uses algorithms by George W. Hart,
 The 'Mathematica' algorithms have been written to follow George Hart's
 <a href="http://library.wolfram.com/infocenter/Articles/2012/">
 Mathematica implementation</a>
+<p>
+The following extended help for the program may be displayed with
+<i>canonical -H</i>
+<pre class="prog_help">
+<<__SYSTEM__(../src/<<BASENAME>> -H > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</pre>
 <<NOTES_END>>
 
 #include "<<END>>"

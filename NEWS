@@ -36,7 +36,7 @@ xx-01-21 Adrian Rossiter <adrian@antiprism.com>
               -S, R, D coloring options added
               -O Output type convex hull added
               -c c circle packings, new algorithm added
-              -C,-F new options for -c c
+              -C,-f new options for -c c
               -p p fast planarize added
               -p removed, (old p) face centroids and centroids magnitude
               -p removed, u make unit edge
