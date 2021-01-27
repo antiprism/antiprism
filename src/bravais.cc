@@ -96,59 +96,49 @@ public:
   vector<int> prim_vec_idxs;
 
   vector<double> strut_len;
-  bool cell_struts;
-  bool use_centering_for_dual;
-  double radius;
-  char radius_default;
-  Vec3d radius_by_coord;
-  Vec3d offset;
-  char container;
-  bool append_container;
-  bool voronoi_cells;
-  bool voronoi_central_cell;
-  char auto_grid_type;
-  bool grid_for_radius;
-  bool convex_hull;
-  bool add_hull;
-  bool append_lattice;
-  char color_method;
-  int face_opacity;
-  Color cent_col;
-  bool trans_to_origin;
-  int r_lattice_type;
-  bool inversion;
+  bool cell_struts = false;            // show cell struts
+  bool use_centering_for_dual = false; // calculate dual on centering type
+  double radius = 0;                   // radius of container
+  char radius_default = 's';           // insphere radius is default
+  Vec3d radius_by_coord;               // calculate radius by x,y,z coordinate
+  Vec3d offset;                        // offset from origin for container
+  char container = 'c';                // default container (c all cubic space)
+  bool append_container = false;       // append cage of -k container
+  bool voronoi_cells = false;          // calculate voronoi cells
+  bool voronoi_central_cell = false;   // include voronoi cells only at center
+  char auto_grid_type = '\0';          // p,f,i,e or 8 for automatic grid size
+  bool grid_for_radius = false;        // for automatic grid size
+  bool convex_hull = false;            // convex hull for waterman polyhedra
+  bool add_hull = false;               // add lattice to waterman polyhedra
+  bool append_lattice = false;         // append lattice to final produc
+  bool trans_to_origin = false;        // tranlate lattice centroid to origin
+  int r_lattice_type = 0;              // hexagonal cube relation
+  bool inversion = false;              // inverts F or I lattices
+  bool verbose = false;                // option W gives lattice information
+  bool dual_lattice = false;           // calculate dual lattice
 
-  bool list_bravais;
-  Vec3d list_radii_center;
-  char list_radii_original_center;
-  int list_radii;
-  int list_struts;
+  bool list_bravais = false;              // list radii
+  Vec3d list_radii_center;                // centroid for calculating radii list
+  char list_radii_original_center = '\0'; // c - use centroid o - use q offset
+  int list_radii = 0;                     // list radii
+  int list_struts = 0;                    // list struts
 
-  bool dual_lattice;
+  double eps = anti::epsilon;
 
-  bool verbose;
-  double eps;
+  char color_method = '\0'; // color method for color by symmetry
+  int face_opacity = -1;    // transparency from 0 to 255
+  Color cent_col;           // color a centroid, add if missing
 
+  // colors for different parts are held in vector
   // 0 - lattice  1 - convex hull  2 - voronoi  3 - hex overlay
   vector<Color> vert_col;
   vector<Color> edge_col;
   vector<Color> face_col;
 
-  string crystal_system;
-  string centering;
+  string crystal_system; // see help
+  string centering;      // see help
 
-  brav_opts()
-      : ProgramOpts("bravais"), cell_struts(false),
-        use_centering_for_dual(false), radius(0), radius_default('s'),
-        container('c'), append_container(false), voronoi_cells(false),
-        voronoi_central_cell(false), auto_grid_type('\0'),
-        grid_for_radius(false), convex_hull(false), add_hull(false),
-        append_lattice(false), color_method('\0'), face_opacity(-1),
-        trans_to_origin(false), r_lattice_type(0), inversion(false),
-        list_bravais(false), list_radii_original_center('\0'), list_radii(0),
-        list_struts(0), dual_lattice(false), verbose(false), eps(anti::epsilon)
-  {
-  }
+  brav_opts() : ProgramOpts("bravais") {}
 
   void process_command_line(int argc, char **argv);
   void usage();
@@ -302,8 +292,8 @@ Container Options
   -r <c,n>  radius. c is radius taken to optional root n. n = 2 is sqrt
                or  l - max insphere radius, s - min insphere radius (default)
                or  k - take radius from container specified by -k
-  -p <xyz>  radius to lattice point "x_val,y_val,z_val"
-  -q <vecs> center offset, in form "a_val,b_val,c_val" (default: none)
+  -p <xyz>  radius to lattice, three comma separated coordinates, 0 for origin
+  -q <xyz>  center offset, three comma separated coordinates, 0 for origin
   -C <opt>  c - convex hull only, i - keep interior
 
 Coloring Options (run 'off_util -H color' for help on color formats)
@@ -407,11 +397,11 @@ void brav_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'p':
-      print_status_or_exit(radius_by_coord.read(optarg), c);
+      print_status_or_exit(radius_by_coord.read_maths(optarg), c);
       break;
 
     case 'q':
-      print_status_or_exit(offset.read(optarg), c);
+      print_status_or_exit(offset.read_maths(optarg), c);
       break;
 
     case 's': {
@@ -687,13 +677,13 @@ void brav_opts::process_command_line(int argc, char **argv)
   }
 
   if (grid_for_radius && !auto_grid_type)
-    error("-G required with -g a");
+    error("-G required with -g a", 'g');
 
   if (radius_set and radius_by_coord.is_set())
-    error("-p cannot be used with -r");
+    error("-p cannot be used with -r", 'p');
 
   if (container == 's' && cfile.length())
-    error("-c and -k cannot be specified together");
+    error("-c and -k cannot be specified together", 'c');
 
   if (append_container && !cfile.length())
     error("container can only be appended if one is provided with -k", 'K');
@@ -712,7 +702,7 @@ void brav_opts::process_command_line(int argc, char **argv)
     error("hex relation struts cannot be done on duals", 'R');
 
   if (list_radii && list_struts)
-    error("cannot list radii and struts at the same time");
+    error("cannot list radii and struts at the same time", 'L');
 }
 
 bravais::bravais()

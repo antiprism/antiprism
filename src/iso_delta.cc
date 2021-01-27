@@ -379,31 +379,26 @@ public:
   string ifile;
   string ofile;
 
-  bool list_polys;
-  string poly;
+  string poly;                 // polyhedron number 1 to 44
+  bool triangle_only = false;  // output only triangle before mirroring (1-44)
+  string case_type;            // multiple alternate cases are possible
+  bool make_dipyramid = false; // dipyramid of n/d using -n n/d
+  bool verbose = false;        // output math to screen
+  bool allow_angles = false;   // -w switch allows angles for other modes
+  double angle = NAN;          // angle to be set
+  int n = 0;                   // numerator
+  int d = 1;                   // denomenator
+  int k = 0;                   // for number of constituents
+  int s = 1;                   // for multiple subtypes
 
-  bool make_dipyramid;
-  bool triangle_only;
-  bool verbose;
-  bool allow_angles;
-  double angle;
-  int n;
-  int d;
-  int k;
-  int s;
-  char coloring_method;
-  int face_opacity;
+  char coloring_method = 'c'; // color method for color by symmetry
+  int face_opacity = -1;      // tranparency from 0 to 255
+
+  bool list_polys = false; // output the list of models to the screen
 
   ColorMapMulti map;
-  string case_type;
 
-  id_opts()
-      : ProgramOpts("iso_delta"), list_polys(false), make_dipyramid(false),
-        triangle_only(false), verbose(false), allow_angles(false),
-        angle(INFINITY), n(0), d(1), k(0), s(1), coloring_method('c'),
-        face_opacity(-1)
-  {
-  }
+  id_opts() : ProgramOpts("iso_delta") {}
 
   void process_command_line(int argc, char **argv);
   void usage();
@@ -430,12 +425,12 @@ Options
   -o <file> write output to file (default: write to standard output)
 
 Isohedral Deltahedra Options
-  -a <ang>  angle
-  -n <n/d>  n/d (d is optional)
-              note: for option -d and compound cases c, g, h:
+  -a <ang>  angle (-c c,d,g,h,i,j,k)
+  -n <n/d>  n/d (d is optional) (-c a,c,g,h,k,l and -d)
+              note: for option -d and compound cases c, k, l:
               n and d must be such that (2 < n/d < 6)
-  -k <int>  in special cases, for specifying number of constituents
-  -s <int>  in special cases, for subtypes (default: 1)
+  -k <int>  in special cases, for number of constituents (-c a,c,g,h,k,l)
+  -s <int>  in special cases, for subtypes (default: 1) (-c b,e,f,m,o)
 
 Isohedral Deltahedra Special Cases
   -d        dipyramid of n/d using -n n/d (infinite set)
@@ -557,14 +552,14 @@ void id_opts::process_command_line(int argc, char **argv)
       p = strchr(optarg, '/');
       if (p != nullptr) {
         *p++ = '\0';
-        print_status_or_exit(read_int(p, &d), "n/d (d part)");
+        print_status_or_exit(read_int(p, &d), "option n: n/d (d part)");
       }
 
-      print_status_or_exit(read_int(optarg, &n), "n/d (n part)");
+      print_status_or_exit(read_int(optarg, &n), "option n: n/d (n part)");
       if (n < 1)
-        error("must be an integer 1 or greater", "n/d (n part)");
+        error("must be an integer 1 or greater", "option n: n/d (n part)");
       if (d < 1)
-        error("d must be 1 or greater", "n/d (d part)");
+        error("d must be 1 or greater", "option n: n/d (d part)");
       break;
     }
 
@@ -616,7 +611,7 @@ void id_opts::process_command_line(int argc, char **argv)
       error("n must be greater than 0", 'n');
 
     if (d >= n)
-      error("d must be less than number of sides", "n/d (d part)");
+      error("d must be less than n", "case c, k or l: n/d (d part)");
     double decimal = (double)n / d;
     // report fractional value
     fprintf(stderr, "n/d: %d/%d = %.17lf\n", n, d, decimal);
@@ -631,9 +626,9 @@ void id_opts::process_command_line(int argc, char **argv)
        (case_type == "b" || case_type == "e" || case_type == "f" ||
         case_type == "m" || case_type == "n" || case_type == "o" ||
         case_type == "p" || case_type == "q"))) {
-    if (angle != INFINITY) {
+    if (!std::isnan(angle)) {
       warning("-a angle is ignored", 'a');
-      angle = INFINITY;
+      angle = NAN;
     }
   }
 
@@ -1048,7 +1043,7 @@ void case_a_star_tetrahedron(Geometry &geom, const int k)
 
 void case_b_5_or_10_tetrahedra(Geometry &geom, double angle, const int k)
 {
-  if (angle == INFINITY)
+  if (std::isnan(angle))
     angle = 0;
 
   geom.read_resource("u1");
@@ -1067,7 +1062,7 @@ void case_b_5_or_10_tetrahedra(Geometry &geom, double angle, const int k)
 
 void case_c_2_dipyramids(Geometry &geom, double angle, const int n, const int d)
 {
-  if (angle == INFINITY) {
+  if (std::isnan(angle)) {
     angle = (M_PI / 2) / n; // 90/n degrees
     fprintf(stderr, "angle calculated is %g\n", rad2deg(angle));
   }
@@ -1085,7 +1080,7 @@ void case_c_2_dipyramids(Geometry &geom, double angle, const int n, const int d)
 
 void case_d_6_octahedra(Geometry &geom, double angle)
 {
-  if (angle == INFINITY)
+  if (std::isnan(angle))
     angle = (M_PI / 8); // 22.5 degrees
 
   geom.read_resource("u5");
@@ -1098,7 +1093,7 @@ void case_d_6_octahedra(Geometry &geom, double angle)
 void case_e_4_or_8_triangular_dipyramids(Geometry &geom, double angle,
                                          const int k)
 {
-  if (angle == INFINITY)
+  if (std::isnan(angle))
     angle = 0;
 
   fprintf(stderr, "Using: ");
@@ -1124,7 +1119,7 @@ void case_e_4_or_8_triangular_dipyramids(Geometry &geom, double angle,
 void case_f_6_or_12_pentagonal_dipyramids(Geometry &geom, double angle,
                                           const int k)
 {
-  if (angle == INFINITY)
+  if (std::isnan(angle))
     angle = 0;
 
   fprintf(stderr, "Using: ");
@@ -1152,7 +1147,7 @@ void case_f_6_or_12_pentagonal_dipyramids(Geometry &geom, double angle,
 
 void case_g_2_tetrahedra(Geometry &geom, double angle)
 {
-  if (angle == INFINITY)
+  if (std::isnan(angle))
     angle = (M_PI / 4); // 45 degrees
 
   geom.read_resource("u1");
@@ -1164,7 +1159,7 @@ void case_g_2_tetrahedra(Geometry &geom, double angle)
 
 void case_h_2k_tetrahedra(Geometry &geom, double angle, const int k)
 {
-  if (angle == INFINITY)
+  if (std::isnan(angle))
     angle = deg2rad(1.0);
 
   case_g_2_tetrahedra(geom, angle);
@@ -1173,7 +1168,7 @@ void case_h_2k_tetrahedra(Geometry &geom, double angle, const int k)
 
 void case_i_6_tetrahedra(Geometry &geom, double angle)
 {
-  if (angle == INFINITY)
+  if (std::isnan(angle))
     angle = (M_PI / 4); // 45 degrees
 
   geom.read_resource("u1");
@@ -1183,7 +1178,7 @@ void case_i_6_tetrahedra(Geometry &geom, double angle)
 
 void case_j_12_tetrahedra(Geometry &geom, double angle)
 {
-  if (angle == INFINITY)
+  if (std::isnan(angle))
     angle = (M_PI / 6); // 30 degrees;
 
   geom.read_resource("u1");
@@ -1195,7 +1190,7 @@ void case_j_12_tetrahedra(Geometry &geom, double angle)
 void case_k_2k_dipyramids(Geometry &geom, double angle, const int k,
                           const int n, const int d)
 {
-  if (angle == INFINITY)
+  if (std::isnan(angle))
     angle = deg2rad(1.0);
 
   fprintf(stderr, "Using: ");
@@ -1223,7 +1218,7 @@ void case_l_k_dipyramids(Geometry &geom, const int k, const int n, const int d)
 void case_m_10_or_20_triangular_dipyramids(Geometry &geom, double angle,
                                            const int k)
 {
-  if (angle == INFINITY)
+  if (std::isnan(angle))
     angle = 0;
 
   fprintf(stderr, "Using: ");
@@ -1250,7 +1245,7 @@ void case_m_10_or_20_triangular_dipyramids(Geometry &geom, double angle,
 
 void case_n_6_10_3_star_dipyramids(Geometry &geom, double angle)
 {
-  if (angle == INFINITY)
+  if (std::isnan(angle))
     angle = 0;
 
   fprintf(stderr, "Using: ");
@@ -1264,7 +1259,7 @@ void case_n_6_10_3_star_dipyramids(Geometry &geom, double angle)
 void case_o_5_or_10_augmented_tetrahedra(Geometry &geom, double angle,
                                          const int k)
 {
-  if (angle == INFINITY)
+  if (std::isnan(angle))
     angle = 0;
 
   // to construct in one statement for Ih
@@ -1281,7 +1276,7 @@ void case_o_5_or_10_augmented_tetrahedra(Geometry &geom, double angle,
 
 void case_p_5_augmented_octahedra(Geometry &geom, double angle)
 {
-  if (angle == INFINITY)
+  if (std::isnan(angle))
     angle = 0;
 
   transform_and_repeat(geom, "I", "Oh", Trans3d::rotate(0, angle, 0));
@@ -1289,7 +1284,7 @@ void case_p_5_augmented_octahedra(Geometry &geom, double angle)
 
 void case_q_5_excavated_octahedra(Geometry &geom, double angle)
 {
-  if (angle == INFINITY)
+  if (std::isnan(angle))
     angle = 0;
 
   transform_and_repeat(geom, "I", "Oh", Trans3d::rotate(0, angle, 0));

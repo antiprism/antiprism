@@ -47,54 +47,42 @@ class symmetro_opts : public ProgramOpts {
 public:
   string ofile;
 
-  char sym;
-  int p;
-  int q;
-  int dihedral_n;
-  int sym_id_no;
-  vector<int> multipliers;
-  vector<int> d;
-  vector<int> d_substitute;
-  char sym_mirror;
-  int vert_z;
-  double rotation;
-  double rotation_as_increment;
-  bool add_pi;
-  int rotation_axis;
-  double angle_between_axes;
-  vector<double> scale;
-  int scale_axis;
-  int convex_hull;
-  string frame_elems;
-  double offset;
-  bool remove_free_faces;
-  bool verbose;
-  char mode;
+  char sym = '\0';          // symmetry entry will be T,O,I or D
+  int p = 0;                // rotational order
+  int q = 0;                // rotational order
+  int dihedral_n = 0;       // dihedral number for D
+  int sym_id_no = 1;        // id number for multiple symmetry choices
+  vector<int> multipliers;  // l,m,n multipliers for symmetries
+  vector<int> d;            // denominators for n/d
+  vector<int> d_substitute; // denominators substitutes for n/d
+  char sym_mirror = '\0';   // reflection
+  int vert_z = std::numeric_limits<int>::max(); // for -c twisters z position
+  double rotation = 0;                          // rotation of polygon
+  double rotation_as_increment = 0;             // rotation in radians
+  bool add_pi = false;                          // add pi to radians rotation
+  int rotation_axis = -1;          // axis to apply rotation, defaults to 0
+  double angle_between_axes = NAN; // override calculation
+  vector<double> scale;            // control scale of polygons 0,1 or 2
+  int scale_axis = -1;             // axis for which to set scale
+  int convex_hull = 0;             // mode of convex hull, calculated
+  string frame_elems;              // axis or sectional tiling or both
+  double offset = 0;               // to avoid coplanarity if it occurs
+  bool remove_free_faces = false;  // unconnected faces can be removed
+  bool verbose = false;            // report math output
+  char mode = '\0'; // k - Kaplan, t -twister, s - s symmetry, c - c symmetry
 
-  vector<int> col_axis_idx;
-  char face_coloring_method;
-  int face_opacity;
-  bool color_digons;
-  Color vert_col;
-  Color edge_col;
-  Color frame_col;
+  vector<int> col_axis_idx;               // color method a, colors by axis
+  char face_coloring_method = 'a';        // a - by axis, n - by polygon sides
+  int face_opacity = -1;                  // transparency from 0 to 255
+  bool color_digons = false;              // add an edge to color the digon
+  Color vert_col = Color(255, 215, 0);    // gold
+  Color edge_col = Color(211, 211, 211);  // lightgray
+  Color frame_col = Color(135, 206, 235); // skyblue3
   ColorMapMulti map;
 
-  double eps;
+  double eps = anti::epsilon;
 
-  symmetro_opts()
-      : ProgramOpts("symmetro"), sym('\0'), p(0), q(0), dihedral_n(0),
-        sym_id_no(1), sym_mirror('\0'), vert_z(std::numeric_limits<int>::max()),
-        rotation(0.0), rotation_as_increment(0.0), add_pi(false),
-        rotation_axis(-1), angle_between_axes(NAN), scale_axis(-1),
-        convex_hull(0), offset(0), remove_free_faces(false), verbose(false),
-        mode('\0'), face_coloring_method('a'), face_opacity(-1),
-        color_digons(false), vert_col(Color(255, 215, 0)), // gold
-        edge_col(Color(211, 211, 211)),                    // lightgray
-        frame_col(Color(135, 206, 235)),                   // skyblue3
-        eps(anti::epsilon)
-  {
-  }
+  symmetro_opts() : ProgramOpts("symmetro") {}
 
   void process_command_line(int argc, char **argv);
   void usage();
@@ -152,6 +140,7 @@ Options
   -M <opt>  mirroring (may create compound). Can be x, y or z (default: none)
   -a <a,n>  a in degrees of rotation given to polygon applied to optional
                axis n (default: 0)  radians may be entered as 'rad(a)'
+               keyword: e - +1 radian, x - +1+pi radians
   -r <r,n>  set the edge length of the polygon on axis n (default: 0)
                to r. Must be non-negative. The default edge length is 1
   -A <a>    a in degrees is angle between axes (default: calculated)
@@ -633,7 +622,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
             else if (j == 2) {
               print_status_or_exit(
                   read_int(parts2[j], &d_sub),
-                  msg_str("option s: substitute D (term %d)", i + 1));
+                  msg_str("option c: substitute D (term %d)", i + 1));
 
               if (d_sub < 1 || d_sub >= n[i])
                 error(msg_str("substitute D must be between 1 and %d (term %d)",
@@ -1744,9 +1733,8 @@ Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
       geom.colors(FACES).set(i, col);
     }
   }
-  else
-      // if transparency is set, check if face coloring is none
-      if (!opts.face_coloring_method) {
+  // if transparency is set, check if face coloring is none
+  else if (!opts.face_coloring_method) {
     if (opts.face_opacity > -1) {
       if (geom.colors(FACES).get_properties().size() < geom.faces().size())
         opts.warning("unset faces cannot be made transparent", 'T');

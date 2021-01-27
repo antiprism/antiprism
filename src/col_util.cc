@@ -48,45 +48,36 @@ class col_util_opts : public ProgramOpts {
 public:
   string ifile;
   string ofile;
-  string gfile;
+  string gfile; // optional input off file to collect colors for graphing
 
-  int display_type;
-  int grid_width;
-  int collect_indexes;
-  int color_system_mode;
-  int map_type;
-  int show_container;
-  int show_reference;
-  char sort_colors;
-  int upright_view;
-  int container;
-  int hsl_height;
-  bool plot_centroid;
-  double sat_threshold;
-  double value_advance;
-  int alpha_mode;
-  bool cmy_mode;
-  bool ryb_mode;
-  bool seven_mode;
-  double brightness_adj;
-  int map_maximum;
-  bool verbose;
+  int display_type = 1;       // plot=1 wheel=2 grid=3 map=4 (default: 1)
+  int grid_width = 0;         // width of grid (default : automatic)
+  int collect_indexes = true; // collect index number from input
+  int color_system_mode = 2;  // hsv=1 hsl=2 rgb=3 (default: 2)
+  int map_type = 0;           // rgb=1 antiprism=2 decimal=3 (default: 1)
+  int show_container = 2;     // 0 - suppress 1 - no facets  2 - full
+  int show_reference = false; // show reference colors
+  char sort_colors = '\0';    // s - simple,  u - unique
+  int upright_view = 0;       // 1 - upright, 2 - upright cube (default : none)
+  int container = 0;          // cylinder=1 conic=2 hexagonal=3 cube=4
+  int hsl_height = 0;         // 1 - double 2 - angle 90 degrees dihedral
+  bool plot_centroid = false; // plot centroid color
+  double sat_threshold = 1.0; // saturation curve
+  double value_advance = 0;   // value advance in degrees
+  int alpha_mode = 3;         // average=1 minimum=2 maximum=3 (default: 3)
+  bool cmy_mode = false;      // complementary colors
+  bool ryb_mode = false;      // Red-Yellow-Blue color wheel
+  bool seven_mode = false;    // use 7 divisions for color models
+  double brightness_adj = 0;  // brightness adjustment. -1 - black, 1 - white
+  int map_maximum = 0;        // maximum map entries to read for infinite maps
+  bool verbose = false;       // output information to screen
 
   vector<double> sat_powers;
   vector<double> value_powers;
 
   ColorMapMulti map;
 
-  col_util_opts()
-      : ProgramOpts("col_util"), display_type(1), grid_width(0),
-        collect_indexes(true), color_system_mode(2), map_type(0),
-        show_container(2), show_reference(false), sort_colors('\0'),
-        upright_view(0), container(0), hsl_height(0), plot_centroid(false),
-        sat_threshold(1.0), value_advance(0.0), alpha_mode(3), cmy_mode(false),
-        ryb_mode(false), seven_mode(false), brightness_adj(0), map_maximum(0),
-        verbose(false)
-  {
-  }
+  col_util_opts() : ProgramOpts("col_util") {}
 
   void process_command_line(int argc, char **argv);
   void usage();

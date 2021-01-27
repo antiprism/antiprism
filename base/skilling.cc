@@ -557,7 +557,7 @@ int UniformCompound::parse_uc_args(string &name, double &angle, int &n, int &d,
     if (n != -1 &&
         d == -1) // if n is set, set d or it will be randomly selected
       d = 1;
-    if (angle != INFINITY)
+    if (!std::isnan(angle))
       angle = deg2rad(angle);
   }
 
@@ -580,11 +580,11 @@ int UniformCompound::set_uc_args(int sym, double &angle, int &n, int &d, int &k,
   Random ran;
   ran.time_seed();
 
-  if (needs_angle && angle == INFINITY) {
+  if (needs_angle && std::isnan(angle)) {
     angle = ran.ran_in_range_exclude_end(0, 360); // 0 to 360
     angle = deg2rad(angle);
   }
-  else if (!needs_angle && angle != INFINITY) {
+  else if (!needs_angle && !std::isnan(angle)) {
     if (error_msg)
       *error_msg = msg_str("for UC%d, angle is not needed", sym);
     return 1;

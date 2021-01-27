@@ -707,7 +707,7 @@ int make_resource_uniform_compound(Geometry &geom, string name, bool is_std,
   if (name.size() < 3 || name.substr(0, 2) != "uc")
     return -1; // not uniform compound name
 
-  double angle = INFINITY;
+  double angle = NAN;
   int n = -1;
   int d = -1;
   int k = -1;
