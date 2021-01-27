@@ -95,7 +95,7 @@ public:
   vector<int> grid;
   vector<int> prim_vec_idxs;
 
-  vector<double> strut_len;
+  vector<double> strut_len;            // strut lengths to create if found
   bool cell_struts = false;            // show cell struts
   bool use_centering_for_dual = false; // calculate dual on centering type
   double radius = 0;                   // radius of container

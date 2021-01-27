@@ -48,33 +48,27 @@ public:
   string ifile;
   string ofile;
 
-  string output_parts;
-  bool merge_faces;
-  bool rebuild_compound_model;
-  bool list_polys;
+  string output_parts = "s";           // s - stellation d - diagram
+  bool merge_faces = false;            // do a planar merge on facelet
+  bool rebuild_compound_model = false; // rebuild with seperate constituents
 
-  char vertex_coloring_method;
-  char edge_coloring_method;
-  char face_coloring_method;
+  bool list_polys = false; // output the list of models to the screen
 
-  Color vertex_color;
-  Color edge_color;
-  Color face_color;
+  double eps = anti::epsilon;
 
-  string map_string;
-  int face_opacity;
+  char vertex_coloring_method = '\0'; // e
+  char edge_coloring_method = '\0';   // f,C
+  char face_coloring_method = '\0';   // d,s,c,C
 
-  double eps;
+  Color vertex_color = Color::invisible;
+  Color edge_color = Color::invisible;
+  Color face_color = Color();
 
-  miller_opts()
-      : ProgramOpts("miller"), output_parts("s"), merge_faces(false),
-        rebuild_compound_model(false), list_polys(false),
-        vertex_coloring_method('\0'), edge_coloring_method('\0'),
-        face_coloring_method('\0'), vertex_color(Color::invisible),
-        edge_color(Color::invisible), face_color(Color()),
-        map_string("compound"), face_opacity(-1), eps(anti::epsilon)
-  {
-  }
+  string map_string = "compound"; // default map name
+  int face_opacity = -1;          // transparency from 0 to 255
+
+  miller_opts() : ProgramOpts("miller") {}
+
   void process_command_line(int argc, char **argv);
   void usage();
 };
@@ -577,7 +571,7 @@ vector<string> decode_cell_string(string cell_str)
   int len_cnt = len;
   
   // quick check that only valid characters are in the string
-  size_t pos = cell_str.find_first_not_of("ABCDEFGHefg1'+-");
+  size_t pos = cell_str.find_first_not_of("ABCDEFGHefg12'+-");
   if (pos != string::npos) {
     // found an illegal character is in the string, return empty list
     diagram_list_strings.clear();

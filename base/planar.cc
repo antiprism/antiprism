@@ -475,6 +475,10 @@ Vec3d calc_stellation_point(Geometry &geom, int f_idx, const double eps)
 void color_stellation_diagram(Geometry &diagram, const Geometry &geom,
                               string sym_string, bool force_chiral)
 {
+  // if the diagram is empty, nothing to do
+  if (!diagram.verts().size())
+    return;
+
   // color diagram by symmetry (using map indexes)
   Symmetry diagram_full_sym(diagram);
   Symmetry diagram_sub_sym = diagram_full_sym;
@@ -735,7 +739,6 @@ vector<vector<int>> lists_resolved(const Geometry &geom,
                                    const vector<vector<int>> &idx_lists_full,
                                    bool remove_multiples)
 {
-
   // make chiral colored diagrams so left and right indexes are different
   for (unsigned int i = 0; i < diagrams.size(); i++)
     color_stellation_diagram(diagrams[i], geom, sym_string, true);

@@ -48,43 +48,35 @@ public:
   string ifile;
   string ofile;
 
-  vector<string> diagram_list_strings;
-  string sym_str;
-  bool merge_faces;
-  bool remove_inline_vertices;
-  bool split_pinched;
-  bool resolve_faces;
-  bool remove_multiples;
-  bool rebuild_compound_model;
+  string output_parts = "s";           // s, d, i, D, S, F, R
+  bool merge_faces = false;            // do a planar merge on facelet
+  bool remove_inline_vertices = true;  // if inline vertices exist, remove them
+  bool split_pinched = true;           // split pinched bowties
+  bool resolve_faces = false;          // resolves faces of same color
+  bool remove_multiples = false;       // remove multiple resolved faces
+  bool rebuild_compound_model = false; // rebuild with seperate constituents
 
-  string output_parts;
-  bool move_to_front;
-  int projection_width;
+  bool move_to_front = false; // move side with stellation to front
+  int projection_width = 500; // magnification of diagram
 
-  char vertex_coloring_method;
-  char edge_coloring_method;
-  char face_coloring_method;
+  vector<string> diagram_list_strings; // face numbers of diagram to use
+  string sym_str;                      // for sub-symmetry
 
-  Color vertex_color;
-  Color edge_color;
-  Color face_color;
+  double eps = anti::epsilon;
 
-  string map_string;
-  int face_opacity;
+  char vertex_coloring_method = '\0'; // e
+  char edge_coloring_method = '\0';   // f,C
+  char face_coloring_method = 'd';    // d,s,c,C
 
-  double eps;
+  Color vertex_color = Color::invisible;
+  Color edge_color = Color::invisible;
+  Color face_color = Color();
 
-  stellate_opts()
-      : ProgramOpts("stellate"), merge_faces(true),
-        remove_inline_vertices(true), split_pinched(true), resolve_faces(false),
-        remove_multiples(false), rebuild_compound_model(false),
-        output_parts("s"), move_to_front(false), projection_width(500),
-        vertex_coloring_method('\0'), edge_coloring_method('\0'),
-        face_coloring_method('d'), vertex_color(Color::invisible),
-        edge_color(Color::invisible), face_color(Color()),
-        map_string("compound"), face_opacity(-1), eps(anti::epsilon)
-  {
-  }
+  string map_string = "compound"; // default map name
+  int face_opacity = -1;          // transparency from 0 to 255
+
+  stellate_opts() : ProgramOpts("stellate") {}
+
   void process_command_line(int argc, char **argv);
   void usage();
 };
@@ -549,7 +541,7 @@ Geometry construct_model(Geometry &geom, map<int, Geometry> &diagrams,
 
   // move the first diagram to the front
   if (opts.move_to_front) {
-    Geometry diagram = diagrams.begin()->second;
+    Geometry diagram = diagrams[idx_lists[0][0]];
     Vec3d face_normal = face_norm(diagram.verts(), diagram.faces(0));
     if (vdot(face_normal, diagram.face_cent(0)) < 0)
       face_normal *= -1.0;

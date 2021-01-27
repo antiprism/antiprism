@@ -395,7 +395,7 @@ void sort_vertices(Geometry &geom, vector<vertexMap> &vm_all_verts,
   geom.clear(VERTS);
 
   // the sort needs a consistent epsilon, not a variable
-  stable_sort(vs.begin(), vs.end(), vert_cmp(anti::epsilon));
+  stable_sort(vs.begin(), vs.end(), vert_cmp(1e-8));
 
   // if not merging vertices, build map from old to new vertices for all
   // vertices

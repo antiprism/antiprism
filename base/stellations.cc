@@ -71,7 +71,7 @@ WenningerItem wenninger_item_list[] = {
    { 43, "cubo",    "0,19",                 "8,25",                    "",  "",  "Oh", true  }, // compound of cube and octahedron
    { 44, "cubo",    "0,2",                  "8,26",                    "",  "",  "Oh", true  }, // second stellation of cuboctahedron
    { 45, "cubo",    "0,1,24",               "8,9,10",                  "",  "",  "Oh", true  }, // third stellation of cuboctahedron
-   { 46, "cubo",    "0,5,20,24",            "8,7,8,9",                 "",  "",  "O",  true  }, // fourth stellation of cuboctahedron (changed Oh to O symmetry to make it work)
+   { 46, "cubo",    "0,5,20,24",            "8,7,8,9",                 "",  "",  "Oh", true  }, // fourth stellation of cuboctahedron
    { 47, "icosid",  "0,142",                "20,125",                  "",  "",  "Ih", true  }, // compound of dodecahedron and icosahedron
    { 48, "icosid",  "0,143",                "20,132",                  "",  "",  "Ih", true  }, // second stellation of icosidodecahedron
    { 49, "icosid",  "0,94,223",             "20,127,180",              "",  "",  "Ih", true  }, // third stellation of icosidodecahedron

@@ -47,50 +47,45 @@ public:
   vector<string> ifiles;
   string ofile;
   string cfile;
-  string rfile;
+  string rfile; // geom to be repeated
 
-  vector<double> strut_len;
-  bool strip_faces;
-  char color_edges_by_sqrt;
-  char container;
-  bool append_container;
-  double radius;
-  char radius_default;
-  Vec3d offset;
-  bool voronoi_cells;
-  bool voronoi_central_cell;
-  bool convex_hull;
-  bool add_hull;
-  bool append_lattice;
-  char color_method;
-  int face_opacity;
-  Vec3d list_radii_center;
-  char list_radii_original_center;
-  int list_radii;
-  int list_struts;
-  Color cent_col;
-  bool trans_to_origin;
-  string R_merge_elems;
-  int blend_type;
+  vector<double> strut_len;          // strut lengths to create if found
+  double radius = 0;                 // radius of container
+  char radius_default = 's';         // insphere radius is default
+  Vec3d offset;                      // offset from origin for container
+  char container = 'c';              // default container (c all cubic space)
+  bool append_container = false;     // append cage of -k container
+  bool voronoi_cells = false;        // calculate voronoi cells
+  bool voronoi_central_cell = false; // include voronoi cells only at center
+  bool convex_hull = false;          // convex hull for waterman polyhedra
+  bool add_hull = false;             // add lattice to waterman polyhedra
+  bool append_lattice = false;       // append lattice to final produc
+  bool trans_to_origin = false;      // tranlate lattice centroid to origin
+  bool verbose = false;              // option W gives lattice information
 
-  bool verbose;
-  double eps;
+  bool strip_faces = true;      // strip faces off input model
+  string R_merge_elems = "vef"; // merge for repeat elements
+  int blend_type = 3;           // RGB blend for repeat elements
 
+  Vec3d list_radii_center;                // centroid for calculating radii list
+  char list_radii_original_center = '\0'; // c - use centroid o - use q offset
+  int list_radii = 0;                     // list radii
+  int list_struts = 0;                    // list struts
+
+  double eps = anti::epsilon;
+
+  char color_method = '\0';        // color method for color by symmetry
+  int face_opacity = -1;           // transparency from 0 to 255
+  Color cent_col;                  // color a centroid, add if missing
+  char color_edges_by_sqrt = '\0'; // will be r or R, color edges base on sqrt
+
+  // colors for different parts are held in vector
   // 0 - lattice  1 - convex hull  2 - voronoi
   vector<Color> vert_col;
   vector<Color> edge_col;
   vector<Color> face_col;
 
-  lutil_opts()
-      : ProgramOpts("lat_util"), strip_faces(true), color_edges_by_sqrt('\0'),
-        container('c'), append_container(false), radius(0), radius_default('s'),
-        voronoi_cells(false), voronoi_central_cell(false), convex_hull(false),
-        add_hull(false), append_lattice(false), color_method('\0'),
-        face_opacity(-1), list_radii_original_center('\0'), list_radii(0),
-        list_struts(0), trans_to_origin(false), R_merge_elems("vef"),
-        blend_type(3), verbose(false), eps(anti::epsilon)
-  {
-  }
+  lutil_opts() : ProgramOpts("lat_util") {}
 
   void process_command_line(int argc, char **argv);
   void usage();
@@ -116,7 +111,7 @@ Options
   -r <c,n>  radius. c is radius taken to optional root n. n = 2 is sqrt
                or  l - max insphere radius, s - min insphere radius (default)
                or  k - take radius from container specified by -k
-  -q <vecs> center offset, in form "a_val,b_val,c_val" (default: none)
+  -q <xyz>  center offset, three comma separated coordinates, 0 for origin
   -s <s,n>  create struts. s is strut length taken to optional root n
                use multiple -s parameters for multiple struts
   -D <opt>  Voronoi (a.k.a Dirichlet) cells (Brillouin zones for duals)
@@ -225,7 +220,7 @@ void lutil_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'q':
-      print_status_or_exit(offset.read(optarg), c);
+      print_status_or_exit(offset.read_maths(optarg), c);
       break;
 
     case 's': {
@@ -379,7 +374,7 @@ void lutil_opts::process_command_line(int argc, char **argv)
     ifiles.push_back(string(argv[optind++]));
 
   if (container == 's' && cfile.length())
-    error("-c and -k cannot be specified together");
+    error("-c and -k cannot be specified together", 'c');
 
   if (append_container && !cfile.length())
     error("container can only be appended if one is provided with -k", 'K');
@@ -394,7 +389,7 @@ void lutil_opts::process_command_line(int argc, char **argv)
   //   error("radius not set");
 
   if (list_radii && list_struts)
-    error("cannot list radii and struts at the same time");
+    error("cannot list radii and struts at the same time", 'L');
 }
 
 void make_skeleton(Geometry &geom, const bool strip_faces)
