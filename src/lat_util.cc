@@ -332,7 +332,7 @@ void lutil_opts::process_command_line(int argc, char **argv)
           error("invalid option", c);
       }
       else
-        print_status_or_exit(list_radii_center.read(optarg), c);
+        print_status_or_exit(list_radii_center.read_maths(optarg), c);
       break;
 
     case 'L':

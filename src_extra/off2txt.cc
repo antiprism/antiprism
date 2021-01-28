@@ -47,20 +47,17 @@ public:
   string ifile;
   string ofile;
 
-  bool estimate_colors;
-  bool detect_rhombi;
-  bool detect_star_polygons;
-  bool exclude_coordinates;
-  bool force_transparent;
-  double eps;
-  int sig_digits;
+  bool estimate_colors = false;      // determine estimated hedron color
+  bool detect_rhombi = false;        // set detect rhombi color
+  bool detect_star_polygons = false; // set detect star polygons
+  bool exclude_coordinates = false;  // don't add coordinates to output
+  bool force_transparent = false;    // set transparent symbol
 
-  o2t_opts()
-      : ProgramOpts("off2txt"), estimate_colors(false), detect_rhombi(false),
-        detect_star_polygons(false), exclude_coordinates(false),
-        force_transparent(false), eps(anti::epsilon), sig_digits(DEF_SIG_DGTS)
-  {
-  }
+  int sig_digits = DEF_SIG_DGTS; // significant digits output (system default)
+
+  double eps = anti::epsilon;
+
+  o2t_opts() : ProgramOpts("off2txt") {}
 
   void process_command_line(int argc, char **argv);
   void usage();

@@ -124,68 +124,58 @@ class ncon_opts : public ProgramOpts {
 public:
   string ofile;
 
-  int ncon_order;
-  int d;
-  int build_method;
-  bool hide_indent;
-  double inner_radius;
-  double outer_radius;
-  double angle;
-  bool point_cut;
-  bool hybrid;
-  bool add_poles;
-  int twist;
-  bool info;
-  bool add_symmetry_polygon;
-  char face_coloring_method;
-  int face_opacity;
-  string face_pattern;
-  char edge_coloring_method;
-  int edge_opacity;
-  string edge_pattern;
-  bool edge_set_no_color;
-  Color unused_edge_color;
-  bool symmetric_coloring;
-  string closure;
-  vector<int> longitudes;
-  string hide_elems;
-  string ncon_surf;
-  vector<int> ncon_range;
-  bool long_form;
-  bool filter_case2;
-  int flood_fill_stop;
-  Color face_default_color;
-  Color edge_default_color;
-  double eps;
+  int ncon_order = 4;                // default n_icon n
+  int d = 1;                         // default n_icon d for n/d
+  int build_method = 0;              // methods are 1,2 and 3
+  bool hide_indent = true;           // for n/d shells, show indented edges
+  double inner_radius = NAN;         // for -z 2, overide calculated radius
+  double outer_radius = NAN;         // for -z 2, overide calculated radius
+  double angle = 0;                  // angle override for -z 3
+  bool point_cut = true;             // actually means the dual
+  bool hybrid = false;               // hybrid of the base and dual
+  bool add_poles = false;            // add a vertex to the point cut model
+  int twist = 1;                     // default twist of n_icon is 1
+  bool add_symmetry_polygon = false; // add the symmetry polygon for -S coloring
+  string closure;                    // if an open model, method of closure
+  vector<int> longitudes; // how many longitudes and how many to display
+  string hide_elems;      // elements to hide v,e,f or E edges of invisible f
+  bool info = false;      // output info of n_icon
+
+  // listing variables
+  string ncon_surf;          // what type of surface to list (see help)
+  vector<int> ncon_range;    // range of n to list
+  bool long_form = false;    // long form of information
+  bool filter_case2 = false; // filter out case 2 types
+
+  double eps = anti::epsilon;
+
+  // coloring
+  char face_coloring_method = 'S';  // default color by the symmetry algorithm
+  int face_opacity = -1;            // tranparency from 0 to 255
+  string face_pattern = "1";        // for face transparency patterns
+  char edge_coloring_method = '\0'; // edge coloring method is none
+  int edge_opacity = -1;            // transparency from 0 to 255
+  string edge_pattern = "1";        // for edge transparency patterns
+  bool edge_set_no_color = false;   // to set no edge coloring
+  Color unused_edge_color = Color::invisible; // edges not part of model
+  bool symmetric_coloring = false;            // symmetry color for some modes
+  int flood_fill_stop = 0;                    // flood fill early stop
+  Color face_default_color = Color(192, 192, 192, 255); // darkgray
+  Color edge_default_color = Color(192, 192, 192, 255); // darkgray
 
   ColorMapMulti face_map;
   ColorMapMulti edge_map;
 
-  // common variables carried by opts
-  bool angle_is_side_cut;
-  // double sweep is set in build_globe()
-  bool double_sweep;
-  bool radius_inversion;
-  int mod_twist;
+  // common variables
+  bool angle_is_side_cut = false; // if -z 3 angle is side cut
+  bool double_sweep = false;      // double sweep is set in build_globe
+  bool radius_inversion = false;  // if radius inversion occurs
+  int mod_twist = 0;              // mod of abs(twist)
 
   // former global variable
-  bool split;
+  bool split = false; // an original variable for splitting caps
 
-  ncon_opts()
-      : ProgramOpts("n_icons"), ncon_order(4), d(1), build_method(0),
-        hide_indent(true), inner_radius(NAN), outer_radius(NAN), angle(0),
-        point_cut(true), hybrid(false), add_poles(false), twist(1), info(false),
-        add_symmetry_polygon(false), face_coloring_method('S'),
-        face_opacity(-1), face_pattern("1"), edge_coloring_method('\0'),
-        edge_opacity(-1), edge_pattern("1"), edge_set_no_color(false),
-        unused_edge_color(Color::invisible), symmetric_coloring(false),
-        long_form(false), filter_case2(false), flood_fill_stop(0),
-        face_default_color(Color(192, 192, 192, 255)), // darkgray
-        edge_default_color(Color(192, 192, 192, 255)), // darkgray
-        eps(anti::epsilon), angle_is_side_cut(false), double_sweep(false),
-        radius_inversion(false), mod_twist(0), split(false)
-  {
-  }
+  ncon_opts() : ProgramOpts("n_icons") {}
 
   void process_command_line(int argc, char **argv);
   void usage();

@@ -53,60 +53,50 @@ public:
   string ifile;
   string ofile;
 
-  char face_color_method;
-  int planar_merge_type;
-  int polygon_fill_type;
-  int winding_rule;
-  int winding_rule_mode;
-  char color_by_winding_number;
-  bool winding_div2; // not implemented
-  bool find_direction;
-  bool verbose;
-  int orient;
-  bool hole_detection;
-  Vec3d center;
-  bool stitch_faces;
-  bool split_pinched;
-  bool rebuild_compound_model;
-  bool simplify_face_edges;
-  bool delete_invisible_faces;
-  char edge_blending;
-  char special_edge_processing;
-  Color zero_density_color;
-  bool zero_density_force_blend;
-  double brightness_adj;
-  int color_system_mode;
-  bool cmy_mode;
-  bool ryb_mode;
-  double sat_power;
-  double value_power;
-  double sat_threshold;
-  double value_advance;
-  int alpha_mode;
-  int face_opacity;
-  string map_file_negative;
+  int planar_merge_type = 0;           // tile=1, merge=2
+  int polygon_fill_type = 0;           // algorithms 1-5 (see help)
+  bool stitch_faces = false;           // stitch faces creating by tiling
+  bool split_pinched = false;          // split pinched bowties
+  char edge_blending = '\0';           // e - edges v - vertices b - both
+  char special_edge_processing = '\0'; // e,v,V,s (see help)
+  bool simplify_face_edges = false;    // remove in-line vertices
+  bool rebuild_compound_model = false; // rebuild with seperate constituents
+  Vec3d center;                        // center for normals calculation
+  int orient = 0;                      // pre-orient model 1-4 (see help)
+  bool verbose = false;                // output winding numbers found
+
+  // winding
+  bool winding_div2 = false;           // not implemented
+  bool find_direction = false;         // direction of normals for hemi
+  bool hole_detection = true;          // detect holes creating by winding
+  bool delete_invisible_faces = false; // those created by winding
+
+  // for filtering polygons based on winding characteristics
+  int winding_rule = std::numeric_limits<int>::max();
+  int winding_rule_mode = std::numeric_limits<int>::max();
+
+  double eps = anti::epsilon;
+
+  char face_color_method = '\0';       // n,p,o (see help)
+  char color_by_winding_number = '\0'; // w,a,n (see help)
+  Color zero_density_color = Color::invisible;
+  bool zero_density_force_blend = false; // force areas to be colored
+  int color_system_mode = 2;             // hsv=1 hsl=2 rgb=3 (default: 2)
+  double sat_power = -1.0;               // saturation curve
+  double value_power = -1.0;             // value curve
+  double sat_threshold = 1.0;            // to average saturation
+  double value_advance = 0;              // value advance in degrees
+  int alpha_mode = 3;                    // average=1 minimum=2 maximum=3
+  bool cmy_mode = false;                 // complementary colors
+  bool ryb_mode = false;                 // Red-Yellow-Blue color wheel
+  double brightness_adj = -2.0;          // -1 - black, 1 - white
+  int face_opacity = -1;                 // tranparency from 0 to 255
 
   ColorMapMulti map;
   ColorMapMulti map_negative;
+  string map_file_negative; // negative winding number map name
 
-  double eps;
-
-  planar_opts()
-      : ProgramOpts("planar"), face_color_method('\0'), planar_merge_type(0),
-        polygon_fill_type(0), winding_rule(std::numeric_limits<int>::max()),
-        winding_rule_mode(std::numeric_limits<int>::max()),
-        color_by_winding_number('\0'), winding_div2(false), // not implemented
-        find_direction(false), verbose(false), orient(0), hole_detection(true),
-        stitch_faces(false), split_pinched(false),
-        rebuild_compound_model(false), simplify_face_edges(false),
-        delete_invisible_faces(false), edge_blending('\0'),
-        special_edge_processing('\0'), zero_density_color(Color::invisible),
-        zero_density_force_blend(false), brightness_adj(-2.0),
-        color_system_mode(2), cmy_mode(false), ryb_mode(false), sat_power(-1.0),
-        value_power(-1.0), sat_threshold(1.0), value_advance(0.0),
-        alpha_mode(3), face_opacity(-1), eps(anti::epsilon)
-  {
-  }
+  planar_opts() : ProgramOpts("planar") {}
 
   void process_command_line(int argc, char **argv);
   void usage();
@@ -161,7 +151,8 @@ Winding Options
   -O <opt>  orient the faces first (if possible) then for volume
                positive=1, negative=2, reverse=3, or use flip=4
                which reverses the orientation of the model as it was input
-  -C <xyz>  center of model for normals, in form 'X,Y,Z' (default: centroid)
+  -C <xyz>  center of model for normals, three comma separated coordinates
+               0 for origin  (default: centroid)
   -H        turn off hole detection
   -V        verbose output (list of winding numbers)
 
@@ -303,7 +294,7 @@ void planar_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'C':
-      print_status_or_exit(center.read(optarg), c);
+      print_status_or_exit(center.read_maths(optarg), c);
       break;
 
     case 'S':
@@ -2299,7 +2290,7 @@ void resolve_winding_number_indexes(Geometry &geom,
       if (winding_numbers[i] < min)
         min = winding_numbers[i];
     }
-    min--; // at least 1
+    min -= 2; // at least 2
     opts.map_file_negative = msg_str("rng%d_S0V0.5:0", abs(min));
     opts.warning(msg_str("negative winding map used is %s",
                          opts.map_file_negative.c_str()));

@@ -50,30 +50,27 @@ public:
   string ifile;
   string ofile;
 
-  int coloring_method;
-  vector<int> axis_orders;
-  vector<int> axis_percent;
-  bool axis_orders_set;
-  string sym_str;
-  int show_axes;
-  int axes_coloring;
+  vector<int> axis_orders;      // axis order priority
+  vector<int> axis_percent;     // percent length of axes, 100 percent default
+  bool axis_orders_set = false; // false if using element lists
+  string sym_str;               // for sub-symmetry
+  int show_axes = 0;            // if coloring axes
 
   // element index lists
-  vector<pair<char, vector<int>>> elem_lists;
+  vector<pair<char, vector<int>>> elem_lists; // elements instead of axes
+
+  double eps = anti::epsilon;
+
+  int coloring_method = 0;   // color radial or axes or both
+  int axes_coloring = 1;     // color axes by nfold or order
+  string map_string = "rng"; // default map name
+  int face_opacity = -1;     // transparency from 0 to 255
 
   ColorMapMulti map;
   ColorMapMulti map_axes;
-  string map_string;
-  int face_opacity;
 
-  double eps;
+  radial_opts() : ProgramOpts("off_color_radial") {}
 
-  radial_opts()
-      : ProgramOpts("off_color_radial"), coloring_method(0),
-        axis_orders_set(false), sym_str(""), show_axes(0), axes_coloring(1),
-        map_string("rng"), face_opacity(-1), eps(anti::epsilon)
-  {
-  }
   void process_command_line(int argc, char **argv);
   void usage();
 };

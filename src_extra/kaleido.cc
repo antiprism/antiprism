@@ -513,23 +513,22 @@ class kaleido_opts : public ProgramOpts {
 public:
   string ofile;
 
-  string symbol;
-  int just_list;
-  int need_coordinates;
-  int need_approx;
-  int model;
-  int base;
-  double azimuth;
-  double elevation;
-  double freeze;
-  int sig_digits;
+  string symbol;                 // from command line, symbol of polyhedra
+  int model = 1;                 // off=1, vrml=2  (default: off)
+  int base = 1;                  // base=1, dual=2 (default: base)
+  int sig_digits = DEF_SIG_DGTS; // significant digits output (system default)
 
-  kaleido_opts()
-      : ProgramOpts("kaleido"), symbol(""), just_list(0), need_coordinates(0),
-        need_approx(0), model(1), base(1), azimuth(AZ), elevation(EL),
-        freeze(0), sig_digits(DEF_SIG_DGTS)
-  {
-  }
+  // for listings
+  int just_list = 0;        // list polyhedron names, symbols
+  int need_coordinates = 0; // print vertex and face coordinates
+  int need_approx = 0;      // print successive approximations
+
+  // -a -e -f hidden options for rotating, didn't work well if at all
+  double azimuth = AZ;
+  double elevation = EL;
+  double freeze = 0;
+
+  kaleido_opts() : ProgramOpts("kaleido") {}
 
   void process_command_line(int argc, char **argv);
   void usage();

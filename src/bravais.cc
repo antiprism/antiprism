@@ -90,10 +90,10 @@ public:
   string ofile;
   string cfile;
 
-  vector<double> vecs;
-  vector<double> angles;
-  vector<int> grid;
-  vector<int> prim_vec_idxs;
+  vector<double> vecs;       // 3 vectors for edge lengths
+  vector<double> angles;     // 3 angles for vectors
+  vector<int> grid;          // 3 integers for grid sizes
+  vector<int> prim_vec_idxs; // 4 vector vertex indexes for dual
 
   vector<double> strut_len;            // strut lengths to create if found
   bool cell_struts = false;            // show cell struts
@@ -615,7 +615,7 @@ void brav_opts::process_command_line(int argc, char **argv)
           error("invalid option", c);
       }
       else
-        print_status_or_exit(list_radii_center.read(optarg), c);
+        print_status_or_exit(list_radii_center.read_maths(optarg), c);
       break;
 
     case 'L':

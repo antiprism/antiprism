@@ -49,37 +49,29 @@ public:
   string ifile;
   string ofile;
 
-  bool unit_normals;
-  char exclude_normals_elems;
-  char force_normals_polarity;
-  bool elem_normal_vecs;
-  char edge_normal_method;
-  char base_normal_method;
-  string show_pointing;
-  string show_elems;
-  string average_pattern;
-  bool alternate_calculation;
-  char normal_type;
+  bool unit_normals = false;          // use unit normals
+  char force_normals_polarity = '\0'; // for a polarity of the normals
+  string show_pointing = "oih";       // default to show outward, inward, hemi
+  string show_elems = "f";            // normals to show, default face
+  string average_pattern = "r";       // average pattern string for e,v normals
+  bool alternate_calculation = false; // alternate calc for vertex normals
+  char normal_type = 'n';             // n - Newell's t - triangles q - quads
+  bool elem_normal_vecs = false;      // connect normal to its element
+  char exclude_normals_elems = '\0';  // delete parts of original model
+  Vec3d center;                       // center of model, default centroid
 
-  Color outward_normal_col;
-  Color inward_normal_col;
-  Color hemispherical_normal_col;
-  Color edge_normal_col;
-  Color base_normal_col;
+  Color hemispherical_normal_col = Color(127, 127, 127); // gray50
 
-  Vec3d center;
+  Color outward_normal_col;       // outward normal color
+  Color inward_normal_col;        // inward normal color
+  char base_normal_method = 'b';  // normal base color
+  Color base_normal_col;          // base color of normal vector
+  char edge_normal_method = '\0'; // edge normal color method
+  Color edge_normal_col;          // edge normal color
 
-  double eps;
+  double eps = anti::epsilon;
 
-  off_normals_opts()
-      : ProgramOpts("off_normals"), unit_normals(false),
-        exclude_normals_elems('\0'), force_normals_polarity('\0'),
-        elem_normal_vecs(false), edge_normal_method('\0'),
-        base_normal_method('b'), show_pointing("oih"), show_elems("f"),
-        average_pattern("r"), alternate_calculation(false), normal_type('n'),
-        hemispherical_normal_col(Color(127, 127, 127)), eps(anti::epsilon)
-  {
-  }
+  off_normals_opts() : ProgramOpts("off_normals") {}
 
   void process_command_line(int argc, char **argv);
   void usage();
@@ -110,7 +102,8 @@ Options
                r - raw, o - outward, i - inward, u - unit (default: r)
   -a        alternate calculation for vertex normals
   -x <opt>  face normals: n - Newell's, t - triangles, q - quads (default: n)
-  -C <xyz>  center of model, in form 'X,Y,Z' (default: centroid)
+  -C <xyz>  center of model for normals, three comma separated coordinates
+               0 for origin  (default: centroid)
   -l <lim>  minimum distance for unique vertex locations as negative exponent
                (default: %d giving %.0e)
   -o <file> write output to file (default: write to standard output)
@@ -226,7 +219,7 @@ void off_normals_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'C':
-      print_status_or_exit(center.read(optarg), c);
+      print_status_or_exit(center.read_maths(optarg), c);
       break;
 
     case 'l':

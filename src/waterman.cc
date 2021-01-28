@@ -75,33 +75,29 @@ class waterman_opts : public ProgramOpts {
 public:
   string ofile;
 
-  int lattice_type;
-  double radius;
-  double R_squared;
-  bool origin_based;
-  Vec3d center;
-  int method;
-  bool fill;
-  bool verbose;
-  long scale;
-  bool tester_defeat;
-  bool convex_hull;
-  bool add_hull;
-  Color vert_col;
-  Color edge_col;
-  Color face_col;
-  Color fill_col;
-  char color_method;
-  int face_opacity;
-  double eps;
+  int lattice_type = -1;      // from command line sc, fcc, bcc
+  double radius = 0;          // clip radius
+  double R_squared = 0;       // radius squared
+  Vec3d center;               // default is origin
+  bool origin_based = true;   // set true if center is at origin
+  int method = 1;             // 1 - sphere-ray intersection  2 - z guess
+  bool fill = false;          // fill interior points
+  long scale = 0;             // for precision
+  bool tester_defeat = false; // turn off computation testing for method 1
+  bool convex_hull = true;    // do convex hull of result
+  bool add_hull = false;      // add lattice to convex hull
+  bool verbose = false;       // output computational errors
 
-  waterman_opts()
-      : ProgramOpts("waterman"), lattice_type(-1), radius(0), R_squared(0),
-        origin_based(true), method(1), fill(false), verbose(false), scale(0),
-        tester_defeat(false), convex_hull(true), add_hull(false),
-        color_method('\0'), face_opacity(-1), eps(anti::epsilon)
-  {
-  }
+  double eps = anti::epsilon;
+
+  char color_method = '\0'; // color method for color by symmetry
+  int face_opacity = -1;    // transparency from 0 to 255
+  Color vert_col;           // vertex color
+  Color edge_col;           // edge color
+  Color face_col;           // face color
+  Color fill_col;           // fill vertex colors
+
+  waterman_opts() : ProgramOpts("waterman") {}
 
   void process_command_line(int argc, char **argv);
   void usage();
@@ -118,7 +114,8 @@ SC, FCC, or BCC
 Options
 %s
   -r <r,n>  clip radius. r is radius taken to optional root n. n = 2 is sqrt
-  -q <cent> center of lattice, in form "x_val,y_val,z_val" (default: origin)
+  -q <cent> center of lattice, three comma separated coordinates
+               0 for origin  (default: origin)
   -m <mthd> 1 - sphere-ray intersection  2 - z guess (default: 1)
   -C <opt>  c - convex hull only, i - keep interior, s - suppress (default: c)
   -f        fill interior points (not for -C c)
@@ -195,7 +192,7 @@ void waterman_opts::process_command_line(int argc, char **argv)
 
     case 'q':
       cent_num_decs = get_max_num_decs(optarg, 3);
-      print_status_or_exit(center.read(optarg), c);
+      print_status_or_exit(center.read_maths(optarg), c);
       if (compare(center, Vec3d(0, 0, 0), anti::epsilon))
         origin_based = false;
       break;

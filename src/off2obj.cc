@@ -45,12 +45,13 @@ class o2o_opts : public ProgramOpts {
 public:
   string ifile;
   string ofile;
+  string mtl_file; // meta file
 
-  string mtl_file;
-  string sep;
-  int sig_digits;
+  string sep = " ";              // seperator
+  int sig_digits = DEF_SIG_DGTS; // significant digits output (system default)
 
-  o2o_opts() : ProgramOpts("off2obj"), sep(" "), sig_digits(DEF_SIG_DGTS) {}
+  o2o_opts() : ProgramOpts("off2obj") {}
+
   void process_command_line(int argc, char **argv);
   void usage();
 };

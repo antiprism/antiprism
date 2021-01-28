@@ -43,11 +43,12 @@ using namespace anti;
 
 class obj2off_opts : public ProgramOpts {
 public:
-  int sig_digits;
   string ifile;
   string ofile;
 
-  obj2off_opts() : ProgramOpts("obj2off"), sig_digits(DEF_SIG_DGTS) {}
+  int sig_digits = DEF_SIG_DGTS; // significant digits output (system default)
+
+  obj2off_opts() : ProgramOpts("obj2off") {}
 
   void process_command_line(int argc, char **argv);
   void usage();

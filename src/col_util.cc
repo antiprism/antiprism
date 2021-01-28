@@ -62,7 +62,7 @@ public:
   int container = 0;          // cylinder=1 conic=2 hexagonal=3 cube=4
   int hsl_height = 0;         // 1 - double 2 - angle 90 degrees dihedral
   bool plot_centroid = false; // plot centroid color
-  double sat_threshold = 1.0; // saturation curve
+  double sat_threshold = 1.0; // saturation threshold to average saturation
   double value_advance = 0;   // value advance in degrees
   int alpha_mode = 3;         // average=1 minimum=2 maximum=3 (default: 3)
   bool cmy_mode = false;      // complementary colors
@@ -72,8 +72,8 @@ public:
   int map_maximum = 0;        // maximum map entries to read for infinite maps
   bool verbose = false;       // output information to screen
 
-  vector<double> sat_powers;
-  vector<double> value_powers;
+  vector<double> sat_powers;   // saturation curve (4 values)
+  vector<double> value_powers; // value curve (4 value)
 
   ColorMapMulti map;
 
