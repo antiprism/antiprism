@@ -172,14 +172,16 @@ int Wenninger::get_poly(Geometry &geom, int sym)
   string map_string = "compound";
 
   // these models need lower precision
+  /* RK - fixed epsilon in sort_merge made this no longer necessary
   int number = Wenninger_items[sym].number;
   double local_epsilon = epsilon;
   if (number == 59 || number == 60 || number == 66)
     local_epsilon = 1e-11;
+  */
 
   geom = make_stellation(geom, diagrams, idx_lists, sym_str, merge_faces,
                          remove_inline_verts, split_pinched, resolve_faces,
-                         remove_multiples, map_string, local_epsilon);
+                         remove_multiples, map_string);
 
   return 1;
 }
