@@ -422,6 +422,18 @@ double face_cos_a(double a, double b, double c)
 Geometry make_poly(double a12, double a34, double a13, double a24, double a14,
                    double a23, const tetra59_opts &opts)
 {
+  if (opts.verbose) {
+    fprintf(stderr, "\n");
+    fprintf(stderr, "dihedral angles at:\n");
+    fprintf(stderr, "edge a12 = %.17lf (%g deg)\n", a12, rad2deg(a12));
+    fprintf(stderr, "edge a34 = %.17lf (%g deg)\n", a34, rad2deg(a34));
+    fprintf(stderr, "edge a13 = %.17lf (%g deg)\n", a13, rad2deg(a13));
+    fprintf(stderr, "edge a24 = %.17lf (%g deg)\n", a24, rad2deg(a24));
+    fprintf(stderr, "edge a14 = %.17lf (%g deg)\n", a14, rad2deg(a14));
+    fprintf(stderr, "edge a23 = %.17lf (%g deg)\n", a23, rad2deg(a23));
+    fprintf(stderr, "\n");
+  }
+
   // face A angles
   double angle213 = face_cos_a(a14, a12, a13);
   double angle123 = face_cos_a(a24, a12, a23);
@@ -538,37 +550,26 @@ Geometry make_poly_sporadic(int N, int A12, int A34, int A13, int A24, int A14,
   double a14 = A14 * M_PI / N;
   double a23 = A23 * M_PI / N;
 
-  // clang-format off
+  // output terms as reduced fractions of pi
   if (opts.verbose) {
-    fprintf(stderr, "\n");
-    fprintf(stderr, "dihedral angles at:\n");
-    fprintf(stderr, "edge a12 = %2dpi/%d = %.17lf (%g deg)\n", A12, N, a12, rad2deg(a12));
-    fprintf(stderr, "edge a34 = %2dpi/%d = %.17lf (%g deg)\n", A34, N, a34, rad2deg(a34));
-    fprintf(stderr, "edge a13 = %2dpi/%d = %.17lf (%g deg)\n", A13, N, a13, rad2deg(a13));
-    fprintf(stderr, "edge a24 = %2dpi/%d = %.17lf (%g deg)\n", A24, N, a24, rad2deg(a24));
-    fprintf(stderr, "edge a14 = %2dpi/%d = %.17lf (%g deg)\n", A14, N, a14, rad2deg(a14));
-    fprintf(stderr, "edge a23 = %2dpi/%d = %.17lf (%g deg)\n", A23, N, a23, rad2deg(a23));
-    fprintf(stderr, "\n");
-  }
-  // clang-format on
+    int a12_gcd = (int)gcd(A12, N);
+    int a34_gcd = (int)gcd(A34, N);
+    int a13_gcd = (int)gcd(A13, N);
+    int a24_gcd = (int)gcd(A24, N);
+    int a14_gcd = (int)gcd(A14, N);
+    int a23_gcd = (int)gcd(A23, N);
 
-  return make_poly(a12, a34, a13, a24, a14, a23, opts);
-}
+    string a12_num = (A12 / a12_gcd == 1) ? "" : std::to_string(A12 / a12_gcd);
+    string a34_num = (A34 / a34_gcd == 1) ? "" : std::to_string(A34 / a34_gcd);
+    string a13_num = (A13 / a13_gcd == 1) ? "" : std::to_string(A13 / a13_gcd);
+    string a24_num = (A24 / a24_gcd == 1) ? "" : std::to_string(A24 / a24_gcd);
+    string a14_num = (A14 / a14_gcd == 1) ? "" : std::to_string(A14 / a14_gcd);
+    string a23_num = (A23 / a23_gcd == 1) ? "" : std::to_string(A23 / a23_gcd);
 
-// special cases format
-Geometry make_poly_special(double a12, double a34, double a13, double a24,
-                           double a14, double a23, const tetra59_opts &opts)
-{
-  if (opts.verbose) {
-    fprintf(stderr, "\n");
-    fprintf(stderr, "dihedral angles at:\n");
-    fprintf(stderr, "edge a12 = %.17lf (%g deg)\n", a12, rad2deg(a12));
-    fprintf(stderr, "edge a34 = %.17lf (%g deg)\n", a34, rad2deg(a34));
-    fprintf(stderr, "edge a13 = %.17lf (%g deg)\n", a13, rad2deg(a13));
-    fprintf(stderr, "edge a24 = %.17lf (%g deg)\n", a24, rad2deg(a24));
-    fprintf(stderr, "edge a14 = %.17lf (%g deg)\n", a14, rad2deg(a14));
-    fprintf(stderr, "edge a23 = %.17lf (%g deg)\n", a23, rad2deg(a23));
-    fprintf(stderr, "\n");
+    fprintf(stderr, "\n%spi/%d, %spi/%d, %spi/%d, %spi/%d, %spi/%d, %spi/%d\n",
+            a12_num.c_str(), N / a12_gcd, a34_num.c_str(), N / a34_gcd,
+            a13_num.c_str(), N / a13_gcd, a24_num.c_str(), N / a24_gcd,
+            a14_num.c_str(), N / a14_gcd, a23_num.c_str(), N / a23_gcd);
   }
 
   return make_poly(a12, a34, a13, a24, a14, a23, opts);
@@ -580,8 +581,8 @@ Geometry case1(const tetra59_opts &opts)
   // (pi/2, pi/2, pi − 2x, pi/3, x, x)
   // for pi/6 < x < pi/2 (30 < x < 90 degrees)
   double angle = opts.angle;
-  return make_poly_special(M_PI / 2, M_PI / 2, M_PI - 2 * angle, M_PI / 3,
-                           angle, angle, opts);
+  return make_poly(M_PI / 2, M_PI / 2, M_PI - 2 * angle, M_PI / 3, angle, angle,
+                   opts);
 }
 
 // angle is in radians
@@ -590,9 +591,8 @@ Geometry case2(const tetra59_opts &opts)
   // (5pi/6 − x, pi/6 + x, 2pi/3 − x, 2pi/3 − x, x, x)
   // for pi/6 < x ≤ pi/3 (30 < x <= 60 degrees)
   double angle = opts.angle;
-  return make_poly_special(5 * M_PI / 6 - angle, M_PI / 6 + angle,
-                           2 * M_PI / 3 - angle, 2 * M_PI / 3 - angle, angle,
-                           angle, opts);
+  return make_poly(5 * M_PI / 6 - angle, M_PI / 6 + angle, 2 * M_PI / 3 - angle,
+                   2 * M_PI / 3 - angle, angle, angle, opts);
 }
 
 void face_coloring(Geometry &geom, const tetra59_opts &opts)
