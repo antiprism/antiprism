@@ -155,7 +155,7 @@ tetra59::tetra59()
 
 void tetra59::list_poly(int idx, FILE *fp)
 {
-  fprintf(fp, "%2d) N=%2d (%3d,%3d,%3d,%3d,%3d,%3d) %-20s\n", idx + 1,
+  fprintf(fp, "%2d) N=%2d (%2d,%3d,%3d,%3d,%3d,%3d) %-20s\n", idx + 1,
           tetra59_items[idx].N, tetra59_items[idx].a12, tetra59_items[idx].a34,
           tetra59_items[idx].a13, tetra59_items[idx].a24,
           tetra59_items[idx].a14, tetra59_items[idx].a23,
@@ -164,8 +164,14 @@ void tetra59::list_poly(int idx, FILE *fp)
 
 void tetra59::list_polys(FILE *fp)
 {
-  for (int i = 0; i < last_tetra59; i++)
+  int reg_group = 0;
+  for (int i = 0; i < last_tetra59; i++) {
+    if (reg_group != reg(i)) {
+      reg_group = reg(i);
+      fprintf(stderr, "Regge group %d\n", reg_group);
+    }
     list_poly(i, fp);
+  }
   fprintf(fp, "\n");
   fprintf(fp, "Entries are given as six dihedral angles of faces 1,2,3,4\n");
   fprintf(fp, "(a12,a34,a13,a24,a14,a23) as multiples of pi/N\n");
@@ -633,7 +639,7 @@ Geometry case2(const tetra59_opts &opts)
                    2 * M_PI / 3 - angle, angle, angle, opts);
 }
 
-void face_coloring(Geometry &geom, int regge_cat, const tetra59_opts &opts)
+void face_coloring(Geometry &geom, int regge_grp, const tetra59_opts &opts)
 {
   // color by sub-symmetry as map indexes happened by default in sym_repeat()
   if (!opts.coloring_method) {
@@ -654,7 +660,7 @@ void face_coloring(Geometry &geom, int regge_cat, const tetra59_opts &opts)
       clrng.f_sets(sym_equivs[2], true);
     }
     else if (opts.coloring_method == 'r')
-      clrng.f_one_col(opts.map.get_col(regge_cat - 1));
+      clrng.f_one_col(opts.map.get_col(regge_grp - 1));
 
     // color vertices
     clrng.v_one_col(opts.vert_col);
@@ -698,7 +704,7 @@ int main(int argc, char *argv[])
 
   // the list cases
   Geometry geom;
-  int regge_cat = 0;
+  int regge_grp = 0;
 
   if (opts.s == 0) {
     int sym_no = tetra59s.lookup_sym_no(opts.poly);
@@ -709,7 +715,7 @@ int main(int argc, char *argv[])
 
     tetra59s.list_poly(sym_no);
 
-    regge_cat = tetra59s.reg(sym_no);
+    regge_grp = tetra59s.reg(sym_no);
     geom = make_poly_sporadic(tetra59s.N(sym_no), tetra59s.a12(sym_no),
                               tetra59s.a34(sym_no), tetra59s.a13(sym_no),
                               tetra59s.a24(sym_no), tetra59s.a14(sym_no),
@@ -727,7 +733,7 @@ int main(int argc, char *argv[])
             sym.get_symbol().c_str());
   }
 
-  face_coloring(geom, regge_cat, opts);
+  face_coloring(geom, regge_grp, opts);
 
   opts.write_or_error(geom, opts.ofile);
 
