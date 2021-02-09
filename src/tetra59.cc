@@ -58,69 +58,70 @@ struct Tetra59Item {
   int a23;
   int a14;
   string comment;
+  int reg;
 };
 
 // clang-format off
 Tetra59Item tetra59_item_list[] = {
-  {12,  3,  4,  3,  4,  6,  8, "H2 (pi/4)"},
-  {24,  5,  9,  6,  8, 13, 15, ""},
-  {12,  3,  6,  4,  6,  4,  6, "T0"},
-  {24,  7, 11,  7, 13,  8, 12, ""},
-  {15,  3,  3,  3,  5, 10, 10, "T18"},
-  {15,  2,  4,  4,  4, 10, 10, ""},
-  {15,  3,  3,  4,  4,  9, 11, ""},
-  {15,  3,  3,  5,  5,  9,  9, "T7"},
-  {15,  5,  5,  5,  9,  6,  6, "T23"},
-  {15,  3,  7,  6,  6,  7,  7, ""},
-  {15,  4,  8,  5,  5,  7,  7, ""},
-  {21,  3,  9,  7,  7, 12, 12, ""},
-  {21,  4, 10,  6,  6, 12, 12, ""},
-  {21,  6,  6,  7,  7,  9, 15, ""},
-  {30,  6, 12, 10, 15, 10, 20, "T17"},
-  {30,  4, 14, 10, 15, 12, 18, ""},
-  {60,  8, 28, 19, 31, 25, 35, ""},
-  {60, 12, 24, 15, 35, 25, 35, ""},
-  {60, 13, 23, 15, 35, 24, 36, ""},
-  {60, 13, 23, 19, 31, 20, 40, ""},
-  {30,  6, 18, 10, 10, 15, 15, "T13"},
-  {30,  4, 16, 12, 12, 15, 15, ""},
-  {30,  9, 21, 10, 10, 12, 12, ""},
-  {30,  6,  6, 10, 12, 15, 20, "T16"},
-  {30,  5,  7, 11, 11, 15, 20, ""},
-  {60,  7, 17, 20, 24, 35, 35, ""},
-  {60,  7, 17, 22, 22, 33, 37, ""},
-  {60, 10, 14, 17, 27, 35, 35, ""},
-  {60, 12, 12, 17, 27, 33, 37, ""},
-  {30,  6, 10, 10, 15, 12, 18, "T21"},
-  {30,  5, 11, 10, 15, 13, 17, ""},
-  {60, 10, 22, 21, 29, 25, 35, ""},
-  {60, 11, 21, 19, 31, 26, 34, ""},
-  {60, 11, 21, 21, 29, 24, 36, ""},
-  {60, 12, 20, 19, 31, 25, 35, ""},
-  {30,  6, 10,  6, 10, 15, 24, "T6"},
-  {60,  7, 25, 12, 20, 35, 43, ""},
-  {30,  6, 12,  6, 12, 15, 20, "T2"},
-  {60, 12, 24, 13, 23, 29, 41, ""},
-  {30,  6, 12, 10, 10, 15, 18, "T3"},
-  {30,  7, 13,  9,  9, 15, 18, ""},
-  {60, 12, 24, 17, 23, 33, 33, ""},
-  {60, 14, 26, 15, 21, 33, 33, ""},
-  {60, 15, 21, 20, 20, 27, 39, ""},
-  {60, 17, 23, 18, 18, 27, 39, ""},
-  {30,  6, 15,  6, 18, 10, 20, "T4"},
-  {30,  6, 15,  7, 17,  9, 21, ""},
-  {60,  9, 33, 14, 34, 21, 39, ""},
-  {60,  9, 33, 15, 33, 20, 40, ""},
-  {60, 11, 31, 12, 36, 21, 39, ""},
-  {60, 11, 31, 15, 33, 18, 42, ""},
-  {30,  6, 15, 10, 15, 12, 15, "T1"},
-  {30,  6, 15, 11, 14, 11, 16, ""},
-  {30,  8, 13,  8, 17, 12, 15, ""},
-  {30,  8, 13,  9, 18, 11, 14, ""},
-  {30,  8, 17,  9, 12, 11, 16, ""},
-  {30,  9, 12,  9, 18, 10, 15, ""},
-  {30, 10, 12, 10, 12, 15, 12, "T5"},
-  {60, 19, 25, 20, 24, 29, 25, ""},
+  {12,  3,  4,  3,  4,  6,  8, "H2 (pi/4)", 1},
+  {24,  5,  9,  6,  8, 13, 15, "", 1},
+  {12,  3,  6,  4,  6,  4,  6, "T0", 2},
+  {24,  7, 11,  7, 13,  8, 12, "", 2},
+  {15,  3,  3,  3,  5, 10, 10, "T18", 3},
+  {15,  2,  4,  4,  4, 10, 10, "", 3},
+  {15,  3,  3,  4,  4,  9, 11, "", 3},
+  {15,  3,  3,  5,  5,  9,  9, "T7", 4},
+  {15,  5,  5,  5,  9,  6,  6, "T23", 5},
+  {15,  3,  7,  6,  6,  7,  7, "", 5},
+  {15,  4,  8,  5,  5,  7,  7, "", 5},
+  {21,  3,  9,  7,  7, 12, 12, "", 6},
+  {21,  4, 10,  6,  6, 12, 12, "", 6},
+  {21,  6,  6,  7,  7,  9, 15, "", 6},
+  {30,  6, 12, 10, 15, 10, 20, "T17", 7},
+  {30,  4, 14, 10, 15, 12, 18, "", 7},
+  {60,  8, 28, 19, 31, 25, 35, "", 7},
+  {60, 12, 24, 15, 35, 25, 35, "", 7},
+  {60, 13, 23, 15, 35, 24, 36, "", 7},
+  {60, 13, 23, 19, 31, 20, 40, "", 7},
+  {30,  6, 18, 10, 10, 15, 15, "T13", 8},
+  {30,  4, 16, 12, 12, 15, 15, "", 8},
+  {30,  9, 21, 10, 10, 12, 12, "", 8},
+  {30,  6,  6, 10, 12, 15, 20, "T16", 9},
+  {30,  5,  7, 11, 11, 15, 20, "", 9},
+  {60,  7, 17, 20, 24, 35, 35, "", 9},
+  {60,  7, 17, 22, 22, 33, 37, "", 9},
+  {60, 10, 14, 17, 27, 35, 35, "", 9},
+  {60, 12, 12, 17, 27, 33, 37, "", 9},
+  {30,  6, 10, 10, 15, 12, 18, "T21", 10},
+  {30,  5, 11, 10, 15, 13, 17, "", 10},
+  {60, 10, 22, 21, 29, 25, 35, "", 10},
+  {60, 11, 21, 19, 31, 26, 34, "", 10},
+  {60, 11, 21, 21, 29, 24, 36, "", 10},
+  {60, 12, 20, 19, 31, 25, 35, "", 10},
+  {30,  6, 10,  6, 10, 15, 24, "T6", 11},
+  {60,  7, 25, 12, 20, 35, 43, "", 11},
+  {30,  6, 12,  6, 12, 15, 20, "T2", 12},
+  {60, 12, 24, 13, 23, 29, 41, "", 12},
+  {30,  6, 12, 10, 10, 15, 18, "T3", 13},
+  {30,  7, 13,  9,  9, 15, 18, "", 13},
+  {60, 12, 24, 17, 23, 33, 33, "", 13},
+  {60, 14, 26, 15, 21, 33, 33, "", 13},
+  {60, 15, 21, 20, 20, 27, 39, "", 13},
+  {60, 17, 23, 18, 18, 27, 39, "", 13},
+  {30,  6, 15,  6, 18, 10, 20, "T4", 14},
+  {30,  6, 15,  7, 17,  9, 21, "", 14},
+  {60,  9, 33, 14, 34, 21, 39, "", 14},
+  {60,  9, 33, 15, 33, 20, 40, "", 14},
+  {60, 11, 31, 12, 36, 21, 39, "", 14},
+  {60, 11, 31, 15, 33, 18, 42, "", 14},
+  {30,  6, 15, 10, 15, 12, 15, "T1", 15},
+  {30,  6, 15, 11, 14, 11, 16, "", 15},
+  {30,  8, 13,  8, 17, 12, 15, "", 15},
+  {30,  8, 13,  9, 18, 11, 14, "", 15},
+  {30,  8, 17,  9, 12, 11, 16, "", 15},
+  {30,  9, 12,  9, 18, 10, 15, "", 15},
+  {30, 10, 12, 10, 12, 15, 12, "T5", 16},
+  {60, 19, 25, 20, 24, 29, 25, "", 16},
 };
 // clang-format on
 
@@ -143,6 +144,7 @@ public:
   int a24(int i);
   int a14(int i);
   int a23(int i);
+  int reg(int i);
 };
 
 tetra59::tetra59()
@@ -225,6 +227,7 @@ int tetra59::a13(int i) { return tetra59_items[i].a13; }
 int tetra59::a24(int i) { return tetra59_items[i].a24; }
 int tetra59::a14(int i) { return tetra59_items[i].a14; }
 int tetra59::a23(int i) { return tetra59_items[i].a23; }
+int tetra59::reg(int i) { return tetra59_items[i].reg; }
 
 class tetra59_opts : public ProgramOpts {
 public:
@@ -253,6 +256,23 @@ public:
   void usage();
 };
 
+void extended_help()
+{
+  fprintf(stdout, R"(
+In memory of John H. Conway
+
+Abstract. We classify all sets of nonzero vectors in R3 such that the angle
+formed by each pair is a rational multiple of Pi .The special case of
+four-element subsets lets us classify all tetrahedra whose dihedral angles are
+multiples of Pi, solving a 1976 problem of Conway and Jones: there are 2
+one-parameter families and 59 sporadic tetrahedra, all but three of which are
+related to either the icosidodecahedron or the B3 root lattice. The proof
+requires the solution in roots of unity of a W(D6)-symmetric polynomial
+equation with 105 monomials (the previous record was 12 monomials).
+
+)");
+}
+
 void tetra59_opts::usage()
 {
   fprintf(stdout, R"(
@@ -267,6 +287,7 @@ The first case was published by M.J.M Hill in 1895. The second case is new.
 
 Options
 %s
+  -H        documention from paper
   -l        display the list of Sporadic Tetrahedra 1 thru 59
   -r        reflect
   -v        verbose output
@@ -288,8 +309,10 @@ Coloring Options (run 'off_util -H color' for help on color formats)
               (default: faces A:red B:yellow C:green B:blue)
               keyword: none - sets no color
               s - symmetric coloring
+              r - regge group (1-16) (not for special cases)
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
-  -m <maps> color maps for all elements to be tried in turn (default: compound)
+  -m <maps> color maps for faces to be tried in turn
+              (default for -f r: rainbow16, otherwise compound)
 
 )",
           prog_name(), help_ver_text);
@@ -304,11 +327,15 @@ void tetra59_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hlvra:s:wf:V:E:T:m:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hHlvra:s:wf:V:E:T:m:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
     switch (c) {
+    case 'H':
+      extended_help();
+      exit(0);
+
     case 'l':
       list_polys = true;
       break;
@@ -339,7 +366,7 @@ void tetra59_opts::process_command_line(int argc, char **argv)
     case 'f':
       if (!strcasecmp(optarg, "none"))
         coloring_method = '\0';
-      else if (strspn(optarg, "s") != strlen(optarg) || strlen(optarg) > 1)
+      else if (strspn(optarg, "rs") != strlen(optarg) || strlen(optarg) > 1)
         error(msg_str("invalid Coloring method '%s'", optarg), c);
       else
         coloring_method = *optarg;
@@ -396,8 +423,17 @@ void tetra59_opts::process_command_line(int argc, char **argv)
   if (argc - optind == 1)
     poly = argv[optind];
 
-  if (!map_file.size())
-    map_file = "compound";
+  if (s && coloring_method == 'r') {
+    warning("coloring by regge group has no effect for special cases", 'f');
+    coloring_method = 'x';
+  }
+
+  if (!map_file.size()) {
+    if (coloring_method == 'r')
+      map_file = "rainbow16";
+    else
+      map_file = "compound";
+  }
   print_status_or_exit(map.init(map_file.c_str()), 'm');
 }
 
@@ -540,7 +576,7 @@ Geometry make_poly(double a12, double a34, double a13, double a24, double a14,
 
 // integer format from the sporadic cases list
 Geometry make_poly_sporadic(int N, int A12, int A34, int A13, int A24, int A14,
-                            int A23, const tetra59_opts &opts)
+                            int A23, int regge, const tetra59_opts &opts)
 {
   // dihedral angles in radians
   double a12 = A12 * M_PI / N;
@@ -570,6 +606,8 @@ Geometry make_poly_sporadic(int N, int A12, int A34, int A13, int A24, int A14,
             a12_num.c_str(), N / a12_gcd, a34_num.c_str(), N / a34_gcd,
             a13_num.c_str(), N / a13_gcd, a24_num.c_str(), N / a24_gcd,
             a14_num.c_str(), N / a14_gcd, a23_num.c_str(), N / a23_gcd);
+
+    fprintf(stderr, "\nregge group = %d\n", regge);
   }
 
   return make_poly(a12, a34, a13, a24, a14, a23, opts);
@@ -595,7 +633,7 @@ Geometry case2(const tetra59_opts &opts)
                    2 * M_PI / 3 - angle, angle, angle, opts);
 }
 
-void face_coloring(Geometry &geom, const tetra59_opts &opts)
+void face_coloring(Geometry &geom, int regge_cat, const tetra59_opts &opts)
 {
   // color by sub-symmetry as map indexes happened by default in sym_repeat()
   if (!opts.coloring_method) {
@@ -615,6 +653,8 @@ void face_coloring(Geometry &geom, const tetra59_opts &opts)
       sym.init(geom, &sym_equivs);
       clrng.f_sets(sym_equivs[2], true);
     }
+    else if (opts.coloring_method == 'r')
+      clrng.f_one_col(opts.map.get_col(regge_cat - 1));
 
     // color vertices
     clrng.v_one_col(opts.vert_col);
@@ -658,6 +698,8 @@ int main(int argc, char *argv[])
 
   // the list cases
   Geometry geom;
+  int regge_cat = 0;
+
   if (opts.s == 0) {
     int sym_no = tetra59s.lookup_sym_no(opts.poly);
     if (sym_no >= tetra59s.get_last_tetra59())
@@ -667,10 +709,11 @@ int main(int argc, char *argv[])
 
     tetra59s.list_poly(sym_no);
 
+    regge_cat = tetra59s.reg(sym_no);
     geom = make_poly_sporadic(tetra59s.N(sym_no), tetra59s.a12(sym_no),
                               tetra59s.a34(sym_no), tetra59s.a13(sym_no),
                               tetra59s.a24(sym_no), tetra59s.a14(sym_no),
-                              tetra59s.a23(sym_no), opts);
+                              tetra59s.a23(sym_no), tetra59s.reg(sym_no), opts);
   }
   // special cases
   else if (opts.s == 1)
@@ -684,7 +727,7 @@ int main(int argc, char *argv[])
             sym.get_symbol().c_str());
   }
 
-  face_coloring(geom, opts);
+  face_coloring(geom, regge_cat, opts);
 
   opts.write_or_error(geom, opts.ofile);
 
