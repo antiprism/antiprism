@@ -48,15 +48,16 @@ using std::vector;
 
 using namespace anti;
 
+// values of terms 5 and 6 from the paper are reversed
 struct Tetra59Item {
   int N;
   int a12;
   int a34;
   int a13;
   int a24;
-  int a14;
   int a23;
-  const char *comment;
+  int a14;
+  string comment;
 };
 
 // clang-format off
@@ -156,7 +157,7 @@ void tetra59::list_poly(int idx, FILE *fp)
           tetra59_items[idx].N, tetra59_items[idx].a12, tetra59_items[idx].a34,
           tetra59_items[idx].a13, tetra59_items[idx].a24,
           tetra59_items[idx].a14, tetra59_items[idx].a23,
-          tetra59_items[idx].comment);
+          tetra59_items[idx].comment.c_str());
 }
 
 void tetra59::list_polys(FILE *fp)
@@ -168,6 +169,7 @@ void tetra59::list_polys(FILE *fp)
   fprintf(fp, "(a12,a34,a13,a24,a14,a23) as multiples of pi/N\n");
   fprintf(fp, "An extra symbol indicates 15 previously known forms from\n");
   fprintf(fp, "V. G. Boltianskii, Hilbert’s third problem, 1978\n");
+  fprintf(fp, "The cases without a symbol are newly discovered forms\n");
   fprintf(fp, "No cases of N equal to 21 were previously known\n");
 }
 
@@ -230,15 +232,18 @@ public:
   string ofile;
 
   string poly;               // polyhedron number 1 to 59
-  string case_type;          // multiple alternate cases are possible
-  bool verbose = false;      // output math to screen
+  bool reflect = false;      // make reflection model
   int s = 0;                 // for special cases 1 and 2
   double angle = 45;         // angle for special cases (default 30 degrees)
   bool allow_angles = false; // -w switch allows all angles for case s
   bool list_polys = false;   // output the list of models to the screen
+  bool verbose = false;      // output math to screen
 
-  char coloring_method = 'c'; // color method for color by symmetry
+  char coloring_method = 'x'; // color method for color by symmetry (bypass)
   int face_opacity = -1;      // tranparency from 0 to 255
+
+  Color vert_col = Color(255, 215, 0);   // gold
+  Color edge_col = Color(211, 211, 211); // lightgray
 
   ColorMapMulti map;
 
@@ -251,7 +256,7 @@ public:
 void tetra59_opts::usage()
 {
   fprintf(stdout, R"(
-Usage: %s [options] polyhedron (BETA)
+Usage: %s [options] polyhedron
 
 Generate 59 Tetrahedra with Rational Dihedral Angles in off format. The 59
 Sporadic Tetrahedra is from a paper by Kiran S. Kedlaya, Alexander Kolpakov,
@@ -263,6 +268,7 @@ The first case was published by M.J.M Hill in 1895. The second case is new.
 Options
 %s
   -l        display the list of Sporadic Tetrahedra 1 thru 59
+  -r        reflect
   -v        verbose output
   -o <file> write output to file (default: write to standard output)
 
@@ -276,10 +282,12 @@ Special Cases
   -w        allow any angle for case s (for testing case 2, 60 < x < 90)
 
 Coloring Options (run 'off_util -H color' for help on color formats)
-  -f <mthd> mthd is face coloring method using color in map (default: c)
+  -V <col>  vertex color (default: gold)
+  -E <col>  edge color   (default: lightgray)
+  -f <mthd> mthd is face coloring method using color in map 
+              (default: faces A:red B:yellow C:green B:blue)
               keyword: none - sets no color
-              c - unique coloring for each compound constituent
-              s - symmetric coloring (should always be one color)
+              s - symmetric coloring
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
   -m <maps> color maps for all elements to be tried in turn (default: compound)
 
@@ -296,7 +304,7 @@ void tetra59_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hlva:s:wf:T:m:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hlvra:s:wf:V:E:T:m:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -309,6 +317,10 @@ void tetra59_opts::process_command_line(int argc, char **argv)
       verbose = true;
       break;
 
+    case 'r':
+      reflect = true;
+      break;
+
     case 'a':
       print_status_or_exit(read_double(optarg, &angle), c);
       break;
@@ -319,7 +331,6 @@ void tetra59_opts::process_command_line(int argc, char **argv)
         error("must be 1 or 2", c);
       break;
 
-    // undocumented switch
     case 'w':
       allow_angles = true;
       warning("using -w allows any angle for case s");
@@ -328,10 +339,18 @@ void tetra59_opts::process_command_line(int argc, char **argv)
     case 'f':
       if (!strcasecmp(optarg, "none"))
         coloring_method = '\0';
-      else if (strspn(optarg, "cs") != strlen(optarg) || strlen(optarg) > 1)
+      else if (strspn(optarg, "s") != strlen(optarg) || strlen(optarg) > 1)
         error(msg_str("invalid Coloring method '%s'", optarg), c);
       else
         coloring_method = *optarg;
+      break;
+
+    case 'V':
+      print_status_or_exit(vert_col.read(optarg), c);
+      break;
+
+    case 'E':
+      print_status_or_exit(edge_col.read(optarg), c);
       break;
 
     case 'T':
@@ -396,27 +415,12 @@ double cos2sin(double a)
 // opposed to dihedral angle a is returned
 double face_cos_a(double a, double b, double c)
 {
-  double face_angle_a = (cos(a) + cos(b) * cos(c)) / (sin(b) * sin(c));
-
-  // clang-format off
-  if (face_angle_a > 1.0) {
-    fprintf(stderr, "ERROR: face_cos_a: greater than 1: %.17lf\n", face_angle_a);
-    fprintf(stderr, "info: input (radians): a = %g b = %g c = %g\n", a, b, c);
-    fprintf(stderr, "info: input (degrees): a = %g b = %g c = %g\n", rad2deg(a), rad2deg(b), rad2deg(c));
-    fprintf(stderr, "info: cos(a) = %g cos(b) = %g cos(c) = %g\n", cos(a), cos(b), cos(c));
-    fprintf(stderr, "info: numerator: cos(a) + cos(b)*cos(c) = %g\n", cos(a) + cos(b) * cos(c));
-    fprintf(stderr, "info: sin(b) = %g sin(c) = %g\n", sin(b), sin(c));
-    fprintf(stderr, "info: denominator: sin(b)*sin(c) = %g\n\n", sin(b) * sin(c));
-    exit(0);
-  }
-  // clang-format on
-
-  return face_angle_a;
+  return (cos(a) + cos(b) * cos(c)) / (sin(b) * sin(c));
 }
 
 // the dihedral angles are already calculated and are in radians
 Geometry make_poly(double a12, double a34, double a13, double a24, double a14,
-                   double a23, bool verbose)
+                   double a23, const tetra59_opts &opts)
 {
   // face A angles
   double angle213 = face_cos_a(a14, a12, a13);
@@ -431,7 +435,7 @@ Geometry make_poly(double a12, double a34, double a13, double a24, double a14,
   // face C angles (not needed to build)
   double angle324 = face_cos_a(a12, a23, a24);
   double angle234 = face_cos_a(a13, a23, a34);
-  double angle243 = face_cos_a(a23, a24, a34);
+  double angle243 = face_cos_a(a14, a24, a34);
 
   // face D angles (not needed to build)
   double angle134 = face_cos_a(a23, a13, a34);
@@ -439,28 +443,28 @@ Geometry make_poly(double a12, double a34, double a13, double a24, double a14,
   double angle314 = face_cos_a(a12, a13, a14);
 
   // clang-format off
-  if (verbose) {
-    fprintf(stderr, "P1 angle213 cos = % .17lf (%.17lf deg)\n", angle213, cos2deg(angle213));
-    fprintf(stderr, "P2 angle123 cos = % .17lf (%.17lf deg)\n", angle123, cos2deg(angle123));
-    fprintf(stderr, "P3 angle132 cos = % .17lf (%.17lf deg)\n", angle132, cos2deg(angle132));
+  if (opts.verbose) {
+    fprintf(stderr, "P1 angle213 cos = % .17lf (%g deg)\n", angle213, cos2deg(angle213));
+    fprintf(stderr, "P2 angle123 cos = % .17lf (%g deg)\n", angle123, cos2deg(angle123));
+    fprintf(stderr, "P3 angle132 cos = % .17lf (%g deg)\n", angle132, cos2deg(angle132));
     double sum = cos2deg(angle213) + cos2deg(angle123) + cos2deg(angle132);
     fprintf(stderr, "face A angles sum = %g\n\n", sum);
 
-    fprintf(stderr, "P4 angle142 cos = % .17lf (%.17lf deg)\n", angle142, cos2deg(angle142));
-    fprintf(stderr, "P1 angle214 cos = % .17lf (%.17lf deg)\n", angle214, cos2deg(angle214));
-    fprintf(stderr, "P2 angle124 cos = % .17lf (%.17lf deg)\n", angle124, cos2deg(angle124));
+    fprintf(stderr, "P4 angle142 cos = % .17lf (%g deg)\n", angle142, cos2deg(angle142));
+    fprintf(stderr, "P1 angle214 cos = % .17lf (%g deg)\n", angle214, cos2deg(angle214));
+    fprintf(stderr, "P2 angle124 cos = % .17lf (%g deg)\n", angle124, cos2deg(angle124));
     sum = cos2deg(angle142) + cos2deg(angle214) + cos2deg(angle124);
     fprintf(stderr, "face B angles sum = %g\n\n", sum);
 
-    fprintf(stderr, "P2 angle324 cos = % .17lf (%.17lf deg)\n", angle324, cos2deg(angle324));
-    fprintf(stderr, "P3 angle234 cos = % .17lf (%.17lf deg)\n", angle234, cos2deg(angle234));
-    fprintf(stderr, "P4 angle243 cos = % .17lf (%.17lf deg)\n", angle243, cos2deg(angle243));
+    fprintf(stderr, "P2 angle324 cos = % .17lf (%g deg)\n", angle324, cos2deg(angle324));
+    fprintf(stderr, "P3 angle234 cos = % .17lf (%g deg)\n", angle234, cos2deg(angle234));
+    fprintf(stderr, "P4 angle243 cos = % .17lf (%g deg)\n", angle243, cos2deg(angle243));
     sum = cos2deg(angle324) + cos2deg(angle234) + cos2deg(angle243);
     fprintf(stderr, "face C angles sum = %g\n\n", sum);
-
-    fprintf(stderr, "P3 angle134 cos = % .17lf (%.17lf deg)\n", angle134, cos2deg(angle134));
-    fprintf(stderr, "P4 angle143 cos = % .17lf (%.17lf deg)\n", angle143, cos2deg(angle143));
-    fprintf(stderr, "P1 angle314 cos = % .17lf (%.17lf deg)\n", angle314, cos2deg(angle314));
+      
+    fprintf(stderr, "P3 angle134 cos = % .17lf (%g deg)\n", angle134, cos2deg(angle134));
+    fprintf(stderr, "P4 angle143 cos = % .17lf (%g deg)\n", angle143, cos2deg(angle143));
+    fprintf(stderr, "P1 angle314 cos = % .17lf (%g deg)\n", angle314, cos2deg(angle314));
     sum = cos2deg(angle134) + cos2deg(angle143) + cos2deg(angle314);
     fprintf(stderr, "face D angles sum = %g\n\n", sum);
   }
@@ -477,16 +481,19 @@ Geometry make_poly(double a12, double a34, double a13, double a24, double a14,
 
   double edge34 = (edge14 / cos2sin(angle134)) * cos2sin(angle314); // info only
 
-  if (verbose) {
+  if (opts.verbose) {
     fprintf(stderr, "edge12 = %.17lf\n", edge12);
     fprintf(stderr, "edge13 = %.17lf\n", edge13);
     fprintf(stderr, "edge23 = %.17lf\n", edge23);
     fprintf(stderr, "edge14 = %.17lf\n", edge14);
     fprintf(stderr, "edge24 = %.17lf\n", edge24);
     fprintf(stderr, "edge34 = %.17lf\n", edge34);
+    fprintf(stderr, "\n");
   }
 
   Geometry geom;
+
+  double mult = (opts.reflect ? -1 : 1);
 
   // add base unit edge
   geom.add_vert(Vec3d(0, 0, 0)); // P1
@@ -494,20 +501,20 @@ Geometry make_poly(double a12, double a34, double a13, double a24, double a14,
 
   // rotate P3 on xy plane
   Geometry pgeom;
-  Vec3d P = Vec3d(edge13, 0, 0);
+  Vec3d P = Vec3d(mult * edge13, 0, 0);
   pgeom.add_vert(P);
   pgeom.transform(
-      Trans3d::rotate(0, 0, (M_PI / 2) - acos(safe_for_trig(angle213))));
+      Trans3d::rotate(0, 0, mult * (M_PI / 2) - acos(safe_for_trig(angle213))));
   geom.append(pgeom);
 
   // rotate P4 on xy plane
   pgeom.clear_all();
-  P = Vec3d(edge14, 0, 0);
+  P = Vec3d(mult * edge14, 0, 0);
   pgeom.add_vert(P);
   pgeom.transform(
-      Trans3d::rotate(0, 0, (M_PI / 2) - acos(safe_for_trig(angle214))));
-  // rotate face C around Y using dihedral angle
-  pgeom.transform(Trans3d::rotate(0, a12, 0));
+      Trans3d::rotate(0, 0, mult * (M_PI / 2) - acos(safe_for_trig(angle214))));
+  // rotate face B around Y using dihedral angle
+  pgeom.transform(Trans3d::rotate(0, mult * a12, 0));
   geom.append(pgeom);
 
   // add oriented faces, color coded
@@ -521,7 +528,7 @@ Geometry make_poly(double a12, double a34, double a13, double a24, double a14,
 
 // integer format from the sporadic cases list
 Geometry make_poly_sporadic(int N, int A12, int A34, int A13, int A24, int A14,
-                            int A23, bool verbose)
+                            int A23, const tetra59_opts &opts)
 {
   // dihedral angles in radians
   double a12 = A12 * M_PI / N;
@@ -532,66 +539,114 @@ Geometry make_poly_sporadic(int N, int A12, int A34, int A13, int A24, int A14,
   double a23 = A23 * M_PI / N;
 
   // clang-format off
-  if (verbose) {
+  if (opts.verbose) {
     fprintf(stderr, "\n");
     fprintf(stderr, "dihedral angles at:\n");
-    fprintf(stderr, "edge a12 = %2dpi/%d = %.17lf (%.17lf deg)\n", A12, N, a12, rad2deg(a12));
-    fprintf(stderr, "edge a34 = %2dpi/%d = %.17lf (%.17lf deg)\n", A34, N, a34, rad2deg(a34));
-    fprintf(stderr, "edge a13 = %2dpi/%d = %.17lf (%.17lf deg)\n", A13, N, a13, rad2deg(a13));
-    fprintf(stderr, "edge a24 = %2dpi/%d = %.17lf (%.17lf deg)\n", A24, N, a24, rad2deg(a24));
-    fprintf(stderr, "edge a14 = %2dpi/%d = %.17lf (%.17lf deg)\n", A14, N, a14, rad2deg(a14));
-    fprintf(stderr, "edge a23 = %2dpi/%d = %.17lf (%.17lf deg)\n", A23, N, a23, rad2deg(a23));
+    fprintf(stderr, "edge a12 = %2dpi/%d = %.17lf (%g deg)\n", A12, N, a12, rad2deg(a12));
+    fprintf(stderr, "edge a34 = %2dpi/%d = %.17lf (%g deg)\n", A34, N, a34, rad2deg(a34));
+    fprintf(stderr, "edge a13 = %2dpi/%d = %.17lf (%g deg)\n", A13, N, a13, rad2deg(a13));
+    fprintf(stderr, "edge a24 = %2dpi/%d = %.17lf (%g deg)\n", A24, N, a24, rad2deg(a24));
+    fprintf(stderr, "edge a14 = %2dpi/%d = %.17lf (%g deg)\n", A14, N, a14, rad2deg(a14));
+    fprintf(stderr, "edge a23 = %2dpi/%d = %.17lf (%g deg)\n", A23, N, a23, rad2deg(a23));
     fprintf(stderr, "\n");
   }
   // clang-format on
 
-  return make_poly(a12, a34, a13, a24, a14, a23, verbose);
+  return make_poly(a12, a34, a13, a24, a14, a23, opts);
 }
 
 // special cases format
 Geometry make_poly_special(double a12, double a34, double a13, double a24,
-                           double a14, double a23, bool verbose)
+                           double a14, double a23, const tetra59_opts &opts)
 {
-  if (verbose) {
+  if (opts.verbose) {
     fprintf(stderr, "\n");
     fprintf(stderr, "dihedral angles at:\n");
-    fprintf(stderr, "edge a12 = %.17lf (%.17lf deg)\n", a12, rad2deg(a12));
-    fprintf(stderr, "edge a34 = %.17lf (%.17lf deg)\n", a34, rad2deg(a34));
-    fprintf(stderr, "edge a13 = %.17lf (%.17lf deg)\n", a13, rad2deg(a13));
-    fprintf(stderr, "edge a24 = %.17lf (%.17lf deg)\n", a24, rad2deg(a24));
-    fprintf(stderr, "edge a14 = %.17lf (%.17lf deg)\n", a14, rad2deg(a14));
-    fprintf(stderr, "edge a23 = %.17lf (%.17lf deg)\n", a23, rad2deg(a23));
+    fprintf(stderr, "edge a12 = %.17lf (%g deg)\n", a12, rad2deg(a12));
+    fprintf(stderr, "edge a34 = %.17lf (%g deg)\n", a34, rad2deg(a34));
+    fprintf(stderr, "edge a13 = %.17lf (%g deg)\n", a13, rad2deg(a13));
+    fprintf(stderr, "edge a24 = %.17lf (%g deg)\n", a24, rad2deg(a24));
+    fprintf(stderr, "edge a14 = %.17lf (%g deg)\n", a14, rad2deg(a14));
+    fprintf(stderr, "edge a23 = %.17lf (%g deg)\n", a23, rad2deg(a23));
     fprintf(stderr, "\n");
   }
 
-  return make_poly(a12, a34, a13, a24, a14, a23, verbose);
+  return make_poly(a12, a34, a13, a24, a14, a23, opts);
 }
 
 // angle is in radians
-Geometry case1(double angle, bool verbose)
+Geometry case1(const tetra59_opts &opts)
 {
   // (pi/2, pi/2, pi − 2x, pi/3, x, x)
   // for pi/6 < x < pi/2 (30 < x < 90 degrees)
+  double angle = opts.angle;
   return make_poly_special(M_PI / 2, M_PI / 2, M_PI - 2 * angle, M_PI / 3,
-                           angle, angle, verbose);
+                           angle, angle, opts);
 }
 
 // angle is in radians
-Geometry case2(double angle, bool verbose)
+Geometry case2(const tetra59_opts &opts)
 {
   // (5pi/6 − x, pi/6 + x, 2pi/3 − x, 2pi/3 − x, x, x)
   // for pi/6 < x ≤ pi/3 (30 < x <= 60 degrees)
+  double angle = opts.angle;
   return make_poly_special(5 * M_PI / 6 - angle, M_PI / 6 + angle,
                            2 * M_PI / 3 - angle, 2 * M_PI / 3 - angle, angle,
-                           angle, verbose);
+                           angle, opts);
+}
+
+void face_coloring(Geometry &geom, const tetra59_opts &opts)
+{
+  // color by sub-symmetry as map indexes happened by default in sym_repeat()
+  if (!opts.coloring_method) {
+    // no color, strip colors
+    geom.colors(FACES).clear();
+    geom.clear(EDGES);
+    geom.colors(VERTS).clear();
+  }
+  else {
+    Coloring clrng;
+    clrng.add_cmap(opts.map.clone());
+    clrng.set_geom(&geom);
+
+    if (opts.coloring_method == 's') {
+      Symmetry sym;
+      vector<vector<set<int>>> sym_equivs;
+      sym.init(geom, &sym_equivs);
+      clrng.f_sets(sym_equivs[2], true);
+    }
+
+    // color vertices
+    clrng.v_one_col(opts.vert_col);
+
+    // color edges
+    geom.add_missing_impl_edges();
+    clrng.e_one_col(opts.edge_col);
+
+    // transparency
+    if (opts.face_opacity > -1) {
+      ColorValuesToRangeHsva valmap(
+          msg_str("A%g", (double)opts.face_opacity / 255));
+      valmap.apply(geom, FACES);
+
+      for (const auto &kp : geom.colors(FACES).get_properties()) {
+        if (kp.second.is_index()) {
+          opts.warning("map indexes cannot be made transparent", 'T');
+          break;
+        }
+      }
+    }
+  }
+
+  // check if some faces are not set for transparency warning
+  if (opts.face_opacity > -1) {
+    if (geom.colors(FACES).get_properties().size() < geom.faces().size())
+      opts.warning("unset faces cannot be made transparent", 'T');
+  }
 }
 
 int main(int argc, char *argv[])
 {
-  // test works for cube, returns 90 degrees
-  // fprintf(stderr,"cube dihedral = %.17lf\n", cos2deg(face_cos_a(M_PI/2,
-  // M_PI/2, M_PI/2))); exit(0);
-
   tetra59_opts opts;
   opts.process_command_line(argc, argv);
   tetra59 tetra59s;
@@ -615,15 +670,21 @@ int main(int argc, char *argv[])
     geom = make_poly_sporadic(tetra59s.N(sym_no), tetra59s.a12(sym_no),
                               tetra59s.a34(sym_no), tetra59s.a13(sym_no),
                               tetra59s.a24(sym_no), tetra59s.a14(sym_no),
-                              tetra59s.a23(sym_no), opts.verbose);
+                              tetra59s.a23(sym_no), opts);
   }
   // special cases
   else if (opts.s == 1)
-    geom = case1(opts.angle, opts.verbose);
+    geom = case1(opts);
   else if (opts.s == 2)
-    geom = case2(opts.angle, opts.verbose);
+    geom = case2(opts);
 
-  // compound_coloring(geom, opts);
+  if (opts.verbose) {
+    Symmetry sym(geom);
+    fprintf(stderr, "the symmetry of the tetrahedron is %s\n",
+            sym.get_symbol().c_str());
+  }
+
+  face_coloring(geom, opts);
 
   opts.write_or_error(geom, opts.ofile);
 
