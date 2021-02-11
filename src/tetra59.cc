@@ -26,7 +26,7 @@
    Name: tetra59.cc
    Description: 59 Tetrahedra with Rational Dihedral Angles
                 Based on a paper by Kiran S. Kedlaya, Alexander Kolpakov,
-                  Bjorn Poonen, AND Mechael Rubinstein
+                  Bjorn Poonen, and Mechael Rubinstein
                 Space Vectors Forming Rational Angles
                   https://arxiv.org/abs/2011.14232
    Project: Antiprism - http://www.antiprism.com
@@ -49,17 +49,18 @@ using std::vector;
 
 using namespace anti;
 
+// terms given in paper as (a12,a34,a13,a24,a14,a23)
 // values of terms 5 and 6 from the paper are reversed
 struct Tetra59Item {
   int N;
-  int a12;
-  int a34;
-  int a13;
-  int a24;
-  int a23;
-  int a14;
+  int term1;
+  int term2;
+  int term3;
+  int term4;
+  int term6; // reversed
+  int term5; // reversed
   string comment;
-  int reg;
+  int regge;
 };
 
 // clang-format off
@@ -156,10 +157,8 @@ tetra59::tetra59()
 
 void tetra59::list_poly(int idx, FILE *fp)
 {
-  fprintf(fp, "%2d) N=%2d (%2d,%3d,%3d,%3d,%3d,%3d) %-20s\n", idx + 1,
-          tetra59_items[idx].N, tetra59_items[idx].a12, tetra59_items[idx].a34,
-          tetra59_items[idx].a13, tetra59_items[idx].a24,
-          tetra59_items[idx].a14, tetra59_items[idx].a23,
+  fprintf(fp, "%2d) N=%2d (%2d,%3d,%3d,%3d,%3d,%3d) %-20s\n", idx + 1, N(idx),
+          a12(idx), a34(idx), a13(idx), a24(idx), a14(idx), a23(idx),
           tetra59_items[idx].comment.c_str());
 }
 
@@ -228,13 +227,13 @@ int tetra59::lookup_sym_no(string sym)
 }
 
 int tetra59::N(int i) { return tetra59_items[i].N; }
-int tetra59::a12(int i) { return tetra59_items[i].a12; }
-int tetra59::a34(int i) { return tetra59_items[i].a34; }
-int tetra59::a13(int i) { return tetra59_items[i].a13; }
-int tetra59::a24(int i) { return tetra59_items[i].a24; }
-int tetra59::a14(int i) { return tetra59_items[i].a14; }
-int tetra59::a23(int i) { return tetra59_items[i].a23; }
-int tetra59::reg(int i) { return tetra59_items[i].reg; }
+int tetra59::a12(int i) { return tetra59_items[i].term1; }
+int tetra59::a34(int i) { return tetra59_items[i].term2; }
+int tetra59::a13(int i) { return tetra59_items[i].term3; }
+int tetra59::a24(int i) { return tetra59_items[i].term4; }
+int tetra59::a14(int i) { return tetra59_items[i].term5; }
+int tetra59::a23(int i) { return tetra59_items[i].term6; }
+int tetra59::reg(int i) { return tetra59_items[i].regge; }
 
 class tetra59_opts : public ProgramOpts {
 public:

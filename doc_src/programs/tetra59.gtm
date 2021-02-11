@@ -1,0 +1,69 @@
+#define HL_PROG class=curpage
+
+#include "<<HEAD>>"
+#include "<<START>>"
+
+
+<<TITLE_HEAD>>
+
+<<TOP_LINKS>>
+
+<<USAGE_START>>
+<pre class="prog_help">
+<<__SYSTEM__(../src/<<BASENAME>> -h > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</pre>
+<<USAGE_END>>
+
+
+<<EXAMPLES_START>>
+list of 59 tetrahedra with rational dihedral angles
+<<CMDS_START>>
+tetra59 -l
+<<CMDS_END>>
+
+display a tetrahedra
+<<CMDS_START>>
+tetra59 12 | antiview -v 0.01
+<<CMDS_END>>
+
+display special case 2 tetrahedron with angle set at 40 degrees
+<<CMDS_START>>
+tetra59 -s 2 -a 40 | antiview -v 0.01
+<<CMDS_END>>
+
+compare two tetrahedra of the same volume in the same Regge class
+<<CMDS_START>>
+tetra59 24 -z > tmp.off
+tetra59 29 -z | antiview - tmp.off
+<<CMDS_END>>
+
+compare two tetrahedra of the same volumein the same Regge class
+but build the second tetrahedra with dihedral angles in a different order
+<<CMDS_START>>
+tetra59 14 -z > tmp.off
+tetra59 13 -d c -z | antiview - tmp.off
+<<CMDS_END>>
+<<EXAMPLES_END>>
+
+
+<<NOTES_START>>
+<i>tetra59</i> was written by
+<a href="http://www.interocitors.com/polyhedra/">Roger Kaufman</a>.
+Based on a paper by Kiran S. Kedlaya, Alexander Kolpakov, Bjorn Poonen, and
+Mechael Rubinstein: Space Vectors Forming Rational Angles
+<a href="https://arxiv.org/abs/2011.14232">https://arxiv.org/abs/2011.14232</a>.
+<p>
+The following extended help for the program may be displayed with
+<i>tetra59 -H</i>
+<pre class="prog_help">
+<<__SYSTEM__(../src/<<BASENAME>> -H > tmp.txt)>>
+#entities ON
+#include "tmp.txt"
+#entities OFF
+</pre>
+<<NOTES_END>>
+
+#include "<<END>>"
