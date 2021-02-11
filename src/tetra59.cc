@@ -253,7 +253,7 @@ public:
 
   bool list_polys = false; // output the list of models to the screen
 
-  char coloring_method = 'x'; // color method for color by symmetry (bypass)
+  char coloring_method = 'u'; // color method for color by symmetry
   int face_opacity = -1;      // tranparency from 0 to 255
 
   Color vert_col = Color(255, 215, 0);   // gold
@@ -338,9 +338,9 @@ Special Cases
 Coloring Options (run 'off_util -H color' for help on color formats)
   -V <col>  vertex color (default: gold)
   -E <col>  edge color   (default: lightgray)
-  -f <mthd> mthd is face coloring method using color in map 
-              (default: faces A:red B:yellow C:green B:blue)
+  -f <mthd> mthd is face coloring method using color in map (default: u)
               keyword: none - sets no color
+              u - unique coloring
               s - symmetric coloring
               r - regge group (1-16) (not for special cases)
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
@@ -611,10 +611,10 @@ Geometry make_poly(double a12, double a34, double a13, double a24, double a14,
   geom.append(pgeom);
 
   // add oriented faces, color coded
-  geom.add_face({2, 1, 0}, Color(255, 0, 0, 255));   // A red
-  geom.add_face({0, 1, 3}, Color(255, 255, 0, 255)); // B yellow
-  geom.add_face({1, 2, 3}, Color(0, 255, 0, 255));   // C green
-  geom.add_face({3, 2, 0}, Color(0, 0, 255, 255));   // D blue
+  geom.add_face({2, 1, 0}); // A yellow
+  geom.add_face({0, 1, 3}); // B red
+  geom.add_face({1, 2, 3}); // C green
+  geom.add_face({3, 2, 0}); // D blue
 
   return geom;
 }
@@ -715,7 +715,10 @@ void face_coloring(Geometry &geom, int regge_grp, const tetra59_opts &opts)
     clrng.add_cmap(opts.map.clone());
     clrng.set_geom(&geom);
 
-    if (opts.coloring_method == 's') {
+    if (opts.coloring_method == 'u') {
+      clrng.f_unique(true);
+    }
+    else if (opts.coloring_method == 's') {
       Symmetry sym;
       vector<vector<set<int>>> sym_equivs;
       sym.init(geom, &sym_equivs);
