@@ -319,7 +319,7 @@ Options
   -r        reflect
   -z        scale volume to 1
   -d <mthd> order of dihedral pairs, for matching dihedral angle at position
-            for regge symmetry. (not for special cases) (default:a)
+            for regge symmetry. (will also work for special cases) (default:a)
             pairs are: 1-(a12,a34) 2-(a13,a24) 3-(a14,a23)
             a:1,2,3; b:1,3,2; c:2,1,3; d:2,3,1; e:3,1,2; f:3,2,1
   -v        verbose output of edge math
