@@ -140,7 +140,7 @@ bool convert_obj_to_off(string &file_name, Geometry &geom,
 
     if (key == 'v') {
       // only use x y z
-      double coord[3];
+      double coord[3] = {0};
       for (unsigned int i = 1; i < parts_sz; i++) {
         if (!read_double(parts[i], &coord[i - 1])) {
           if (error_msg)
