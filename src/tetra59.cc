@@ -42,7 +42,6 @@
 #include <string>
 #include <vector>
 
-using std::pair;
 using std::set;
 using std::string;
 using std::vector;
@@ -140,13 +139,8 @@ public:
   int get_last_tetra59() { return last_tetra59; }
 
   int N(int i);
-  int a12(int i);
-  int a34(int i);
-  int a13(int i);
-  int a24(int i);
-  int a14(int i);
-  int a23(int i);
   int reg(int i);
+  int term(int term_no, int i);
 };
 
 tetra59::tetra59()
@@ -157,9 +151,9 @@ tetra59::tetra59()
 
 void tetra59::list_poly(int idx, FILE *fp)
 {
-  fprintf(fp, "%2d) N=%2d (%2d,%3d,%3d,%3d,%3d,%3d) %-20s\n", idx + 1, N(idx),
-          a12(idx), a34(idx), a13(idx), a24(idx), a14(idx), a23(idx),
-          tetra59_items[idx].comment.c_str());
+  fprintf(fp, "%2d) N=%2d (%2d,%3d), (%2d,%3d), (%2d,%3d) %-20s\n", idx + 1,
+          N(idx), term(0, idx), term(1, idx), term(2, idx), term(3, idx),
+          term(4, idx), term(5, idx), tetra59_items[idx].comment.c_str());
 }
 
 void tetra59::list_polys(FILE *fp)
@@ -178,7 +172,7 @@ void tetra59::list_polys(FILE *fp)
   fprintf(fp, "An extra symbol indicates 15 previously known forms from\n");
   fprintf(fp, "V. G. Boltianskii, Hilbert’s third problem, 1978\n");
   fprintf(fp, "The cases without a symbol are newly discovered forms\n");
-  fprintf(fp, "No cases of N equal to 21 were previously known\n");
+  fprintf(fp, "No cases of N=21 (Regge group 6) were previously known\n");
 }
 
 int tetra59::lookup_sym_no(string sym)
@@ -227,13 +221,27 @@ int tetra59::lookup_sym_no(string sym)
 }
 
 int tetra59::N(int i) { return tetra59_items[i].N; }
-int tetra59::a12(int i) { return tetra59_items[i].term1; }
-int tetra59::a34(int i) { return tetra59_items[i].term2; }
-int tetra59::a13(int i) { return tetra59_items[i].term3; }
-int tetra59::a24(int i) { return tetra59_items[i].term4; }
-int tetra59::a14(int i) { return tetra59_items[i].term5; }
-int tetra59::a23(int i) { return tetra59_items[i].term6; }
 int tetra59::reg(int i) { return tetra59_items[i].regge; }
+
+int tetra59::term(int term_no, int i)
+{
+  int t = 0;
+
+  if (term_no == 0)
+    t = tetra59_items[i].term1;
+  else if (term_no == 1)
+    t = tetra59_items[i].term2;
+  else if (term_no == 2)
+    t = tetra59_items[i].term3;
+  else if (term_no == 3)
+    t = tetra59_items[i].term4;
+  else if (term_no == 4)
+    t = tetra59_items[i].term5;
+  else if (term_no == 5)
+    t = tetra59_items[i].term6;
+
+  return t;
+}
 
 class tetra59_opts : public ProgramOpts {
 public:
@@ -269,7 +277,7 @@ public:
 void extended_help()
 {
   fprintf(stdout, R"(
-In memory of John H. Conway
+The project was undertaken in memory of John H. Conway
 
 Abstract. We classify all sets of nonzero vectors in R3 such that the angle
 formed by each pair is a rational multiple of Pi .The special case of
@@ -667,16 +675,22 @@ Geometry case1(const vector<int> &dihedral_order, const tetra59_opts &opts)
   if (opts.verbose || opts.verbose_face)
     fprintf(stderr, "\ncase 1: angle = %g\n", rad2deg(opts.angle));
 
-  vector<pair<double, double>> terms(3);
-  terms[dihedral_order[0]].first = M_PI / 2;
-  terms[dihedral_order[0]].second = M_PI / 2;
-  terms[dihedral_order[1]].first = M_PI - 2 * opts.angle;
-  terms[dihedral_order[1]].second = M_PI / 3;
-  terms[dihedral_order[2]].first = opts.angle;
-  terms[dihedral_order[2]].second = opts.angle;
+  vector<double> term(6);
+  term[0] = M_PI / 2;
+  term[1] = M_PI / 2;
+  term[2] = M_PI - 2 * opts.angle;
+  term[3] = M_PI / 3;
+  term[4] = opts.angle;
+  term[5] = opts.angle;
 
-  return make_poly(terms[0].first, terms[0].second, terms[1].first,
-                   terms[1].second, terms[2].first, terms[2].second, opts);
+  vector<double> terms(6);
+  for (unsigned int i = 0; i < 3; i++) {
+    terms[i * 2] = term[dihedral_order[i] * 2];
+    terms[i * 2 + 1] = term[dihedral_order[i] * 2 + 1];
+  }
+
+  return make_poly(terms[0], terms[1], terms[2], terms[3], terms[4], terms[5],
+                   opts);
 }
 
 // angle is in radians
@@ -688,16 +702,22 @@ Geometry case2(const vector<int> &dihedral_order, const tetra59_opts &opts)
   if (opts.verbose || opts.verbose_face)
     fprintf(stderr, "\ncase 2: angle = %g\n", rad2deg(opts.angle));
 
-  vector<pair<double, double>> terms(3);
-  terms[dihedral_order[0]].first = 5 * M_PI / 6 - opts.angle;
-  terms[dihedral_order[0]].second = M_PI / 6 + opts.angle;
-  terms[dihedral_order[1]].first = 2 * M_PI / 3 - opts.angle;
-  terms[dihedral_order[1]].second = 2 * M_PI / 3 - opts.angle;
-  terms[dihedral_order[2]].first = opts.angle;
-  terms[dihedral_order[2]].second = opts.angle;
+  vector<double> term(6);
+  term[0] = 5 * M_PI / 6 - opts.angle;
+  term[1] = M_PI / 6 + opts.angle;
+  term[2] = 2 * M_PI / 3 - opts.angle;
+  term[3] = 2 * M_PI / 3 - opts.angle;
+  term[4] = opts.angle;
+  term[5] = opts.angle;
 
-  return make_poly(terms[0].first, terms[0].second, terms[1].first,
-                   terms[1].second, terms[2].first, terms[2].second, opts);
+  vector<double> terms(6);
+  for (unsigned int i = 0; i < 3; i++) {
+    terms[i * 2] = term[dihedral_order[i] * 2];
+    terms[i * 2 + 1] = term[dihedral_order[i] * 2 + 1];
+  }
+
+  return make_poly(terms[0], terms[1], terms[2], terms[3], terms[4], terms[5],
+                   opts);
 }
 
 void face_coloring(Geometry &geom, int regge_grp, const tetra59_opts &opts)
@@ -813,22 +833,19 @@ int main(int argc, char *argv[])
       opts.error("unknown polyhedron '" + opts.poly + "'");
 
     // default 'a': 1-(a12,a34) 2-(a13,a24) 3-(a14,a23)
-    vector<pair<int, int>> terms(3);
-    terms[dihedral_order[0]].first = tetra59s.a12(sym_no);
-    terms[dihedral_order[0]].second = tetra59s.a34(sym_no);
-    terms[dihedral_order[1]].first = tetra59s.a13(sym_no);
-    terms[dihedral_order[1]].second = tetra59s.a24(sym_no);
-    terms[dihedral_order[2]].first = tetra59s.a14(sym_no);
-    terms[dihedral_order[2]].second = tetra59s.a23(sym_no);
+    vector<int> terms(6);
+    for (unsigned int i = 0; i < 3; i++) {
+      terms[i * 2] = tetra59s.term(dihedral_order[i] * 2, sym_no);
+      terms[i * 2 + 1] = tetra59s.term(dihedral_order[i] * 2 + 1, sym_no);
+    }
 
-    fprintf(stderr, "%2d) N=%2d (%2d,%3d,%3d,%3d,%3d,%3d)\n", sym_no + 1,
-            tetra59s.N(sym_no), terms[0].first, terms[0].second, terms[1].first,
-            terms[1].second, terms[2].first, terms[2].second);
+    fprintf(stderr, "%2d) N=%2d (%2d,%3d), (%2d,%3d), (%2d,%3d)\n", sym_no + 1,
+            tetra59s.N(sym_no), terms[0], terms[1], terms[2], terms[3],
+            terms[4], terms[5]);
 
     regge_grp = tetra59s.reg(sym_no);
-    geom = make_poly_sporadic(tetra59s.N(sym_no), terms[0].first,
-                              terms[0].second, terms[1].first, terms[1].second,
-                              terms[2].first, terms[2].second, regge_grp, opts);
+    geom = make_poly_sporadic(tetra59s.N(sym_no), terms[0], terms[1], terms[2],
+                              terms[3], terms[4], terms[5], regge_grp, opts);
   }
   // special cases
   else if (opts.s == 1)
