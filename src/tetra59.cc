@@ -338,7 +338,7 @@ Special Cases
               case 1: (pi/2, pi/2, pi - 2x, pi/3, x, x)
                         for pi/6 < x < pi/2 (30 < x < 90 degrees)
               case 2: (5pi/6 - x, pi/6 + x, 2pi/3 - x, 2pi/3 - x, x, x)
-                        for pi/6 < x ≤ pi/3 (30 < x <= 60 degrees)
+                        for pi/6 < x <= pi/3 (30 < x <= 60 degrees)
   -a <ang>  angle in degrees (default: 45)
   -w        allow any angle for case s (for testing case 2, 60 < x < 90)
 
