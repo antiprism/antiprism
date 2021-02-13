@@ -1,7 +1,7 @@
 NEWS for Antiprism: http://www.antiprism.com
 
 Version 0.28
-xx-01-21 Adrian Rossiter <adrian@antiprism.com>
+13-02-21 Adrian Rossiter <adrian@antiprism.com>
          New Programs
             poly_form: rename from minmax, rename options, add -y
               for symmetry constraint, add -a e equal-edge algorithm
