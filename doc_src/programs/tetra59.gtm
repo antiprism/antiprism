@@ -19,14 +19,24 @@
 
 
 <<EXAMPLES_START>>
-list of 59 tetrahedra with rational dihedral angles
+list of 59 tetrahedra with rational dihedral angles in integer factors
 <<CMDS_START>>
-tetra59 -l
+tetra59 -l int
+<<CMDS_END>>
+
+list of 59 tetrahedra with rational dihedral angles in degrees
+<<CMDS_START>>
+tetra59 -l deg
 <<CMDS_END>>
 
 display a tetrahedra
 <<CMDS_START>>
 tetra59 12 | antiview -v 0.01
+<<CMDS_END>>
+
+display a tetrahedra with a unique color given by its regge class
+<<CMDS_START>>
+tetra59 38 -f r | antiview -v 0.01
 <<CMDS_END>>
 
 display special case 2 tetrahedron with angle set at 40 degrees
@@ -40,11 +50,12 @@ tetra59 24 -z > tmp.off
 tetra59 29 -z | antiview - tmp.off
 <<CMDS_END>>
 
-compare two tetrahedra of the same volumein the same Regge class
-but build the second tetrahedra with dihedral angles in a different order
+compare two tetrahedra of the same volume in the same Regge class
+use the -p option to find the match of the dihedral pair (6, 6) in the second
+column set by -d c. It finds the matching pair in tetrahedron 14 in the first
+column. Use tetra59 -l deg to list standardized angles for easier matching
 <<CMDS_START>>
-tetra59 14 -z > tmp.off
-tetra59 13 -d c -z | antiview - tmp.off
+tetra59 13 -d c -p 1 | antiview
 <<CMDS_END>>
 <<EXAMPLES_END>>
 
