@@ -262,7 +262,7 @@ Status off_file_read(FILE *ifile, Geometry &geom)
       }
     }
     else if (data_line_no <= 2 + num_pts + num_faces) { // face line
-      bool contains_adj_equal_idx;
+      bool contains_adj_equal_idx = false;
       if (!(stat = add_face(geom, vals.get_parts(), alt_cols,
                             &contains_int_gt_1, &contains_adj_equal_idx))) {
         message = msg_str("line %d: ", file_line_no) + stat.msg();
