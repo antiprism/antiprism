@@ -48,6 +48,7 @@ mtimestamp $dd.$MM.$yyyy
 ./doc/lat_util.gtm 2 lat_util - lattice utilities
 ./doc/polygon.gtm 2 polygon - polygon based polyhedra
 ./doc/miller.gtm 2 miller - Miller's stellations of the icosahedron
+./doc/tetra59.gtm 2 tetra59 - 59 tetrahedra with rational dihedral angles
 ./doc/iso_delta.gtm 2 iso_delta - isohedral deltahedra
 ./doc/iso_kite.gtm 2 iso_kite - isohedral kite-faced polyhedra
 ./doc/unitile2d.gtm 2 unitile2d - make uniform tilings on a surface

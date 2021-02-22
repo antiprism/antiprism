@@ -97,6 +97,7 @@ src/symmetro
 src/stellate
 src/miller
 src/off_color_radial
+src/tetra59
 aview/antiview
 python/antiprism.py
 python/antiprism.pyc

@@ -4310,7 +4310,6 @@ void ncon_edge_coloring_by_adjacent_edge(Geometry &geom,
     for (int l = 0; l < 2; l++) {
       lon -= l;
       // edge lats start at 1
-      sz = 0;
       lat = 1;
       do {
         vector<int> idx = find_edge_by_lat_lon(edge_list, lat, lon);

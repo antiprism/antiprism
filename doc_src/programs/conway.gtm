@@ -83,13 +83,6 @@ and
 Canonicalization and planarization may not always converge on
 a convex polyhedron.
 <p>
-George Hart has a page on
-<a href="http://www.georgehart.com/virtual-polyhedra/canonical.html">
-canonicalization</a>.
-The 'Mathematica' algorithms have been written to follow his
-<a href="http://library.wolfram.com/infocenter/Articles/2012/">
-Mathematica implementation</a>
-<p>
 The following extended help for the program may be displayed with
 <i>conway -H</i>
 <pre class="prog_help">

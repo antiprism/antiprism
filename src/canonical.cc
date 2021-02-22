@@ -969,7 +969,7 @@ void canonical_report(const Geometry &base, const Geometry &dual,
   if (err > max_error)
     max_error = err;
 
-  err = nearpoint_report(dual, dual_nearpts, "dual", epsilon_local);
+  nearpoint_report(dual, dual_nearpts, "dual", epsilon_local);
   // don't consider dual statistics in score
   // if (err > max_error)
   //  max_error = err;
