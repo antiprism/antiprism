@@ -3,6 +3,7 @@ NEWS for Antiprism: http://www.antiprism.com
 Version 0.29
 XX-XX-21 Adrian Rossiter <adrian@antiprism.com>
          New Programs
+            tetra59: generate the 59 tetrahedra with rational dihedral angles
          Changes
          Fixes
 
@@ -12,7 +13,6 @@ Version 0.28
             poly_form: rename from minmax, rename options, add -y
               for symmetry constraint, add -a e equal-edge algorithm
               and -a p planarisation
-            tetra59: generate the 59 tetrahedra with rational dihedral angles
          Changes
             to_nfold: add -x, -p to help with crossed models
             minmax: rename to poly_form

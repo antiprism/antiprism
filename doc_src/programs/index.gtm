@@ -82,6 +82,7 @@ Programs
     <a href="http://www.antiprism.com/examples/150_named_models/index.html">named resource models</a>
 <li><a href="polygon.html">polygon</a> - polygon based polyhedra (prisms, pyramids, etc)
 <li><a href="miller.html">miller</a> - Miller's stellations of the icosahedron
+<li><a href="tetra59.html">tetra59</a> - 59 tetrahedra with rational dihedral angles
 <li><a href="iso_delta.html">iso_delta</a> - isohedral deltahedra
 <li><a href="iso_kite.html">iso_kite</a> - isohedral kiteohedra
 <li><a href="unitile2d.html">unitile2d</a> - uniform tilings on a surface
