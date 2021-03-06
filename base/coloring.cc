@@ -427,6 +427,22 @@ void Coloring::e_one_col(Color col)
     get_geom()->colors(EDGES).set(i, col);
 }
 
+void Coloring::e_order(bool apply_map)
+{
+  auto efpairs = get_geom()->get_edge_face_pairs(false);
+  for (const auto &edge : get_geom()->edges()) {
+    vector<int> faces = efpairs[edge];
+    int i = find_edge_in_edge_list(get_geom()->edges(), edge);
+    if (i > -1) {
+      unsigned int connections = faces.size();
+      if (apply_map)
+        get_geom()->colors(EDGES).set(i, get_col(connections));
+      else
+        get_geom()->colors(EDGES).set(i, connections);
+    }
+  }
+}
+
 void Coloring::e_sets(const vector<set<int>> &equivs, bool apply_map)
 {
   for (unsigned int i = 0; i < equivs.size(); i++) {
@@ -648,6 +664,39 @@ void Coloring::vef_one_col(Color vert_col, Color edge_col, Color face_col)
 
   if (face_col.is_set())
     f_one_col(face_col);
+}
+
+Status Coloring::apply_transparency(const int face_opacity)
+{
+  Status stat;
+  string warnings;
+
+  if (face_opacity > -1) {
+    ColorValuesToRangeHsva valmap(msg_str("A%g", (double)face_opacity / 255));
+    valmap.apply(*get_geom(), FACES);
+
+    for (const auto &kp : get_geom()->colors(FACES).get_properties()) {
+      if (kp.second.is_index()) {
+        warnings += "map indexes";
+        break;
+      }
+    }
+
+    // check if some faces are not set
+    if (get_geom()->colors(FACES).get_properties().size() <
+        get_geom()->faces().size()) {
+      if (!warnings.empty())
+        warnings += " and ";
+      warnings += "unset faces";
+    }
+  }
+
+  if (!warnings.empty()) {
+    warnings += " cannot be made trasparent";
+    stat.set_warning(warnings);
+  }
+
+  return stat;
 }
 
 static bool get_cycle_rate(const char *str, double *cps)

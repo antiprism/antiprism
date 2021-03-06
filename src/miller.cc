@@ -29,6 +29,7 @@
 */
 
 #include "../base/antiprism.h"
+#include "lattice_grid.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -37,7 +38,6 @@
 #include <vector>
 
 using std::map;
-using std::set;
 using std::string;
 using std::vector;
 
@@ -62,7 +62,8 @@ public:
 
   Color vertex_color = Color::invisible;
   Color edge_color = Color::invisible;
-  Color face_color = Color();
+  // goldenrod1: Color(255,193,37) ... from George Hart, Color(1.0,0.7,0.1)
+  Color face_color = Color(255, 193, 37);
 
   string map_string = "compound"; // default map name
   int face_opacity = -1;          // transparency from 0 to 255
@@ -82,12 +83,11 @@ Millers 59 Icosahedra Stellations. Plus additional stellations since discovered
 input may be Miller list number from 1 to 75. Or m_string where string consists
 of one or more cell names: A,B,C,D,E,F,G,H,e1,f1,f1',g1,e2,f2,g2  e.g m_De1f1g1
 model string can be followed by I or Ih symmetry. e.g. m_e1f1',I
-std_ may precede input string to output a raw model 
 
 Options
 %s
   -L        list models only
-  -M        merge stellation facelets
+  -M        merge stellation facelets (for cell name strings only)
   -r        rebuild compound model to separate vertices
   -O <args> output s - stellation, d - diagram (default: s)
   -l <lim>  minimum distance for unique vertex locations as negative exponent
@@ -97,12 +97,13 @@ Options
 Coloring Options (run 'off_util -H color' for help on color formats)
   -F <opt>  face coloring method. d - from diagram, s - symmetry
                c - color by compound (default: 255,193,37, if compound then c)
-               C - face/face connection count using map n colors
+               C - face/face connection count using map m colors
                keyword: none - sets no color
   -E <col>  edge color. f - from faces (default: invisible)
-               C - edge/face connection count using map n colors
+               C - edge/face connection count using map m colors
                keyword: none - sets no color
   -V <col>  vertex color.  e - from edges (default: invisible)
+               n - vertex connection count
                keyword: none - sets no color
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
   -m <maps> color maps. stellation diagram or face symmetry (default: compound)
@@ -146,7 +147,7 @@ void miller_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'V':
-      if (strchr("e", *optarg))
+      if (strlen(optarg) == 1 && strchr("en", int(*optarg)))
         vertex_coloring_method = *optarg;
       else
         print_status_or_exit(vertex_color.read(optarg), c);
@@ -162,10 +163,8 @@ void miller_opts::process_command_line(int argc, char **argv)
     case 'F':
       if (strlen(optarg) == 1 && strchr("dscC", int(*optarg)))
         face_coloring_method = *optarg;
-      else {
+      else
         print_status_or_exit(face_color.read(optarg), c);
-        face_coloring_method = 'x';
-      }
       break;
 
     case 'T':
@@ -203,163 +202,11 @@ void miller_opts::process_command_line(int argc, char **argv)
     ifile = argv[optind];
 }
 
-// copy of code from stellate.cc
-void apply_transparency(Geometry &geom, const miller_opts &opts,
-                        int alternate_opacity = -1)
-{
-  int face_opacity =
-      (alternate_opacity != -1) ? alternate_opacity : opts.face_opacity;
-  if (face_opacity > -1) {
-    ColorValuesToRangeHsva valmap(msg_str("A%g", (double)face_opacity / 255));
-    valmap.apply(geom, FACES);
-
-    for (const auto &kp : geom.colors(FACES).get_properties()) {
-      if (kp.second.is_index()) {
-        opts.warning("map indexes cannot be made transparent", 'T');
-        break;
-      }
-    }
-
-    // check if some faces are not set
-    if (geom.colors(FACES).get_properties().size() < geom.faces().size())
-      opts.warning("unset faces cannot be made transparent", 'T');
-  }
-}
-
-// use anti::epsilon so it is not effected by opt epsilon
-void color_stellation(Geometry &stellation, const miller_opts &opts)
-{
-  // set color map
-  Coloring clrng(&stellation);
-  ColorMap *cmap = colormap_from_name(opts.map_string.c_str());
-  clrng.add_cmap(cmap);
-
-  // in case of face coloring C
-  Geometry kis;
-
-  // stellation is built with color from the diagram
-  if (opts.face_coloring_method != 'd') {
-    if (!opts.face_coloring_method)
-      // if no color specified, clear faces
-      stellation.colors(FACES).clear();
-    else if (opts.face_coloring_method == 's') {
-      // color faces by symmetry
-      Symmetry sym;
-      vector<vector<set<int>>> sym_equivs;
-      sym.init(stellation, &sym_equivs);
-      clrng.f_sets(sym_equivs[2], true);
-    }
-    else if (opts.face_coloring_method == 'c')
-      clrng.f_parts(true);
-    else if (opts.face_coloring_method == 'C') {
-      wythoff_make_tiling(kis, stellation, "k", true, false);
-      // remove digons
-      vector<int> dels;
-      for (unsigned int i = 0; i < kis.faces().size(); i++) {
-        if (kis.faces(i).size() < 3)
-          dels.push_back((int)i);
-      }
-      kis.del(FACES, dels);
-      kis.orient(1);
-
-      // make new verts and edges invisible
-      kis.add_missing_impl_edges();
-      for (unsigned int i = 0; i < kis.verts().size(); i++) {
-        int v_idx =
-            find_vert_by_coords(stellation, kis.verts()[i], anti::epsilon);
-        if (v_idx == -1) {
-          kis.colors(VERTS).set(i, Color::invisible);
-          vector<int> edge_idx = find_edges_with_vertex(kis.edges(), i);
-          for (unsigned int j = 0; j < edge_idx.size(); j++)
-            kis.colors(EDGES).set(edge_idx[j], Color::invisible);
-        }
-      }
-      // the old faces are cleared and kis faces added
-      stellation.clear(FACES);
-      stellation.append(kis);
-      int blend_type = 1; // first color, invisible edges stay
-      merge_coincident_elements(stellation, "vef", blend_type, anti::epsilon);
-
-      for (unsigned int i = 0; i < stellation.faces().size(); i++) {
-        vector<int> face = stellation.faces()[i];
-        unsigned int fsz = face.size();
-        // face to face
-        // connections with invisible faces are ignored
-        int connections = 0;
-        for (unsigned int j = 0; j < fsz; j++) {
-          int v1 = face[j];
-          int v2 = face[(j + 1) % fsz];
-          vector<int> edge = make_edge(v1, v2);
-          vector<int> face_idx = find_faces_with_edge(stellation.faces(), edge);
-          int edge_no = find_edge_in_edge_list(stellation.edges(), edge);
-          if (!(stellation.colors(EDGES).get(edge_no)).is_invisible())
-            connections += face_idx.size();
-        }
-        stellation.colors(FACES).set(i, cmap->get_col(connections));
-      }
-    }
-    else
-      // use color selected
-      clrng.f_one_col(opts.face_color);
-  }
-
-  // if edges take color from faces (if faces none, clear edges)
-  if (opts.edge_coloring_method == 'f') {
-    // if face colors is none
-    if (!opts.face_coloring_method)
-      stellation.colors(EDGES).clear();
-    else
-      clrng.e_face_color();
-  }
-  else if (opts.edge_coloring_method == 'C') {
-    auto efpairs = stellation.get_edge_face_pairs(false);
-    for (const auto &edge : stellation.edges()) {
-      vector<int> faces = efpairs[edge];
-      int i = find_edge_in_edge_list(stellation.edges(), edge);
-      if (i > -1) {
-        if (!(stellation.colors(EDGES).get(i)).is_invisible()) {
-          unsigned int connections = faces.size();
-          stellation.colors(EDGES).set(i, cmap->get_col(connections));
-        }
-      }
-    }
-  }
-  else
-    // use color selected
-    clrng.e_one_col(opts.edge_color);
-
-  // vertices taking edge coloring from stellation is the default
-  // if not using default, sample colors again
-  if (opts.vertex_coloring_method == 'e') {
-    // vertices take color from edges
-    clrng.v_edge_color();
-  }
-  else
-    // use color selected
-    clrng.v_one_col(opts.vertex_color);
-
-  // if using face connection coloring
-  // vertices from kis must be made invisible in stellation
-  if (opts.face_coloring_method == 'C') {
-    for (unsigned int i = 0; i < kis.verts().size(); i++) {
-      int v_idx =
-          find_vert_by_coords(stellation, kis.verts()[i], anti::epsilon);
-      if (v_idx != -1) {
-        if ((kis.colors(VERTS).get(i)).is_invisible())
-          stellation.colors(VERTS).set(v_idx, Color::invisible);
-      }
-    }
-  }
-
-  // set transparency
-  if (opts.face_opacity > -1)
-    apply_transparency(stellation, opts);
-}
-
 struct MillerItem {
   const char *cell_string;
   const char *sub_sym;
   bool remove_inline_verts;
+  bool merge_faces;
 };
 
 class Miller {
@@ -381,18 +228,6 @@ public:
 32 Full Icosahedral Symmetry
 27 Enantiomeric (have mirror images, i.e. I symmetry)
 59 Total
-
-1   Icosahedron
-2   Triakis Icosahedron
-3   Compound of 5 Octahedra
-7   Great Icosahedron
-8   Echidnahedron
-16  Only model which is disconnected
-22  Compound of 10 Tetrahedra
-26  Excavated Dodecahedron
-30  Great Triambic Icosahedron
-??  Deltahedron of 60 faces
-47  Compound of 5 Tetrahedra
 */
 
 // clang-format off
@@ -401,84 +236,84 @@ public:
 // f1 left handed form represented by f3
 MillerItem miller_item_list[] = {
    // Full symmetry
-   { "A",          "Ih", true  }, // w4
-   { "B",          "Ih", true  }, // w26
-   { "C",          "Ih", true  }, // w23
-   { "D",          "Ih", true  },
-   { "E",          "Ih", true  },
-   { "F",          "Ih", true  }, // w27
-   { "G",          "Ih", true  }, // w41
-   { "H",          "Ih", true  }, // w42
-   { "e1",         "Ih", true  }, // w37
-   { "f1",         "Ih", false },
-   { "g1",         "Ih", true  }, // w29
-   { "e1f1",       "Ih", false },
-   { "e1f1g1",     "Ih", true  },
-   { "f1g1",       "Ih", false },
-   { "e2",         "Ih", true  }, // cells
-   { "f2",         "Ih", true  },
-   { "g2",         "Ih", false }, // cells, faces not merged
-   { "e2f2",       "Ih", true  },
-   { "e2f2g2",     "Ih", true  },
-   { "f2g2",       "Ih", true  }, // w30
-   { "De1",        "Ih", true  }, // w32
-   { "Ef1",        "Ih", true  }, // w25
-   { "Fg1",        "Ih", true  }, // w31
-   { "De1f1",      "Ih", true  }, // cells, faces not merged
-   { "De1f1g1",    "Ih", true  },
-   { "Ef1g1",      "Ih", true  }, // w28
-   { "De2",        "Ih", true  },
-   { "Ef2",        "Ih", true  },
-   { "Fg2",        "Ih", true  }, // w33
-   { "De2f2",      "Ih", true  }, // w34
-   { "De2f2g2",    "Ih", true  },
-   { "Ef2g2",      "Ih", true  }, // cells
+   { "A",          "Ih", true,  false }, // 01 w4  Icosahedron
+   { "B",          "Ih", true,  false }, // 02 w26 Triakis Icosahedron (60-deltahedron)
+   { "C",          "Ih", true,  false }, // 03 w23 Compound of 5 Octahedra
+   { "D",          "Ih", true,  false }, // 04
+   { "E",          "Ih", true,  false }, // 05
+   { "F",          "Ih", true,  false }, // 06 w27
+   { "G",          "Ih", true,  false }, // 07 w41 Great Icosahedron
+   { "H",          "Ih", true,  false }, // 08 w42 Echidnahedron
+   { "e1",         "Ih", true,  false }, // 09 w37
+   { "f1",         "Ih", false, false }, // 10 *
+   { "g1",         "Ih", true,  false }, // 11 w29
+   { "e1f1",       "Ih", false, false }, // 12 *
+   { "e1f1g1",     "Ih", true,  false }, // 13
+   { "f1g1",       "Ih", false, false }, // 14 *
+   { "e2",         "Ih", true,  false }, // 15 *
+   { "f2",         "Ih", true,  false }, // 16 Only model which is disconnected
+   { "g2",         "Ih", false, true  }, // 17
+   { "e2f2",       "Ih", true,  false }, // 18
+   { "e2f2g2",     "Ih", true,  false }, // 19
+   { "f2g2",       "Ih", true,  false }, // 20 w30
+   { "De1",        "Ih", true,  false }, // 21 w32
+   { "Ef1",        "Ih", true,  false }, // 22 w25 Compound of 10 Tetrahedra
+   { "Fg1",        "Ih", true,  false }, // 23 w31
+   { "De1f1",      "Ih", true,  false }, // 24 *
+   { "De1f1g1",    "Ih", true,  false }, // 25
+   { "Ef1g1",      "Ih", true,  false }, // 26 w28 Excavated Dodecahedron
+   { "De2",        "Ih", true,  false }, // 27
+   { "Ef2",        "Ih", true,  false }, // 28
+   { "Fg2",        "Ih", true,  false }, // 29 w33
+   { "De2f2",      "Ih", true,  false }, // 30 w34 Great Triambic Icosahedron
+   { "De2f2g2",    "Ih", true,  false }, // 31
+   { "Ef2g2",      "Ih", true,  false }, // 32 *
    // Enantiomeric
-   { "f1'",        "I",  true  }, // w35
-   { "e1f1'",      "I",  true  }, // w36
-   { "De1f1'",     "I",  false },
-   { "f1'g1",      "I",  false },
-   { "e1f1'g1",    "I",  false }, // w39
-   { "De1f1'g1",   "I",  false },
-   { "f1'g2",      "I",  false },
-   { "e1f1'g2",    "I",  true  }, // cells, faces not merged
-   { "De1f1'g2",   "I",  true  }, // cells, faces not merged
-   { "f1'f2g2",    "I",  true  },
-   { "e1f1'f2g2",  "I",  true  },
-   { "De1f1'f2g2", "I",  true  }, // cells
-   { "e2f1'",      "I",  false }, // w40
-   { "De2f1'",     "I",  true  },
-   { "Ef1'",       "I",  true  }, // w24
-   { "e2f1'g1",    "I",  false },
-   { "De2f1'g1",   "I",  true  },
-   { "Ef1'g1",     "I",  true  },
-   { "e2f1'f2",    "I",  true  }, // w38
-   { "De2f1'f2",   "I",  true  },
-   { "Ef1'f2",     "I",  true  },
-   { "e2f1'f2g1",  "I",  true  },
-   { "De2f1'f2g1", "I",  true  },
-   { "Ef1'f2g1",   "I",  true  },
-   { "e2f1'f2g2",  "I",  true  },
-   { "De2f1'f2g2", "I",  true  },
-   { "Ef1'f2g2",   "I",  true  },
+   { "f1'",        "I",  true,  false }, // 33 w35
+   { "e1f1'",      "I",  true,  false }, // 34 w36
+   { "De1f1'",     "I",  false, false }, // 35
+   { "f1'g1",      "I",  false, false }, // 36
+   { "e1f1'g1",    "I",  false, false }, // 37 w39
+   { "De1f1'g1",   "I",  false, false }, // 38
+   { "f1'g2",      "I",  false, true  }, // 39
+   { "e1f1'g2",    "I",  true,  false }, // 40 *
+   { "De1f1'g2",   "I",  true,  false }, // 41 *
+   { "f1'f2g2",    "I",  true,  false }, // 42
+   { "e1f1'f2g2",  "I",  true,  false }, // 43
+   { "De1f1'f2g2", "I",  true,  false }, // 44 *
+   { "e2f1'",      "I",  false, true  }, // 45 w40
+   { "De2f1'",     "I",  true,  false }, // 46
+   { "Ef1'",       "I",  true,  false }, // 47 w24 Compound of 5 Tetrahedra
+   { "e2f1'g1",    "I",  false, true  }, // 48
+   { "De2f1'g1",   "I",  true,  false }, // 49
+   { "Ef1'g1",     "I",  true,  false }, // 50
+   { "e2f1'f2",    "I",  true,  false }, // 51 w38
+   { "De2f1'f2",   "I",  true,  false }, // 52
+   { "Ef1'f2",     "I",  true,  false }, // 53
+   { "e2f1'f2g1",  "I",  true,  false }, // 54
+   { "De2f1'f2g1", "I",  true,  false }, // 55
+   { "Ef1'f2g1",   "I",  true,  false }, // 56
+   { "e2f1'f2g2",  "I",  true,  false }, // 57
+   { "De2f1'f2g2", "I",  true,  false }, // 58
+   { "Ef1'f2g2",   "I",  true,  false }, // 59
    // begin the true lost stellations
-   { "Be1",        "Ih", true  },
-   { "Ce2",        "Ih", true  },
-   { "Df1",        "I",  true  },
-   { "Af2",        "Ih", true  },
-   { "Df2",        "Ih", true  },
-   { "De1f1'f2",   "I",  true  },
-   { "De1g1",      "Ih", true  },
-   { "Af2g1",      "Ih", true  },
-   { "De1f1'f2g1", "I",  true  },
-   { "Af2g2",      "Ih", true  },
+   { "Be1",        "Ih", true,  false }, // 60
+   { "Ce2",        "Ih", true,  false }, // 61 *
+   { "Df1",        "I",  true,  false }, // 62 *
+   { "Af2",        "Ih", true,  false }, // 63
+   { "Df2",        "Ih", true,  false }, // 64 *
+   { "De1f1'f2",   "I",  true,  false }, // 65 *
+   { "De1g1",      "Ih", true,  false }, // 66 *
+   { "Af2g1",      "Ih", true,  false }, // 67
+   { "De1f1'f2g1", "I",  true,  false }, // 68 *
+   { "Af2g2",      "Ih", true,  false }, // 69
    // begin the candidate lost stellations
-   { "Be2",        "Ih", true  },
-   { "De2f2",      "Ih", true  },
-   { "e1g1",       "Ih", true  },
-   { "Ef1g1",      "Ih", true  },
-   { "Cf2g1",      "Ih", true  },
-   { "ACDf2g1",    "Ih", true  },
+   { "Be2",        "Ih", true,  false }, // 70 *
+   { "De2f2",      "Ih", true,  false }, // 71
+   { "e1g1",       "Ih", true,  false }, // 72 *
+   { "Ef1g1",      "Ih", true,  false }, // 73
+   { "Cf2g1",      "Ih", true,  false }, // 74
+   { "ACDf2g1",    "Ih", true,  false }, // 75 *
 };
 // clang-format on
 
@@ -655,7 +490,7 @@ int Miller::get_poly(Geometry &geom, int sym, string cell_str, string sym_str, m
       diagrams[stellation_face_idx] = make_stellation_diagram(geom, stellation_face_idx, sym_str);
   }
 
-  bool merge_faces = opts.merge_faces;
+  bool merge_faces = (sym > -1) ? Miller_items[sym].merge_faces : opts.merge_faces;
   bool remove_inline_verts = Miller_items[sym].remove_inline_verts;
   bool split_pinched = true;
   bool resolve_faces = true;
@@ -678,7 +513,7 @@ int Miller::get_poly(Geometry &geom, int sym, string cell_str, string sym_str, m
 
     // set large diagram transparency to 1/4th
     for (auto const &key1 : diagrams)
-      apply_transparency(diagrams[key1.first], opts, 64);
+      Status stat = Coloring(&diagrams[key1.first]).apply_transparency(64);
 
     for (unsigned int i = 0; i < idx_lists_full.size(); i++) {
       // stellation face index is in the first position
@@ -697,20 +532,18 @@ int Miller::get_poly(Geometry &geom, int sym, string cell_str, string sym_str, m
   return 1;
 }
 
-int make_resource_miller(Geometry &geom, string name, bool is_std, miller_opts &opts,
+int make_resource_miller(Geometry &geom, string name, miller_opts &opts,
                          string *error_msg = nullptr)
 {
-  int sym_no = 0;
+  int sym_no = -1;
   // check if it is just the index number, if so format as m%d
   if (read_int(name.c_str(), &sym_no))
     name = "m" + std::to_string(sym_no);
   else
-  if (name.size() < 2 || !strchr("mM", name[0]) ||
-      name.find('.') != string::npos) {
+  if (name.size() < 2 || !strchr("mM", name[0])) {
     if (error_msg)
       *error_msg = "miller number and name designations start with m";
-    return -1; // not wenninger name (the "." indicates a likely local file)
-               // so the name is not handled
+    return -1; // not miller name
   }
 
   string cell_str;
@@ -725,9 +558,8 @@ int make_resource_miller(Geometry &geom, string name, bool is_std, miller_opts &
       return -1; // fail
     }
   }
-  else
   // if the next character is an underscore, try it as cell names
-  if (name[1] == '_') {
+  else if (name[1] == '_') {
     cell_str = name.substr(2);
     size_t pos = cell_str.find_first_of(",");
     if (pos != string::npos) {
@@ -756,39 +588,26 @@ int make_resource_miller(Geometry &geom, string name, bool is_std, miller_opts &
     return -1;
   }
 
+  // for items 1 to 75 for seperate compound items
   if (opts.rebuild_compound_model) {
     rebuild_compound(geom);
     geom.add_missing_impl_edges();
   }
 
-  // if is_std, have to strip built in color
-  if (is_std) {
-    geom.colors(VERTS).clear();
-    geom.colors(EDGES).clear();
-    geom.colors(FACES).clear();
-  }
-  else if (!opts.face_coloring_method) {
-    Coloring clrng(&geom);
-    ColorMap *cmap = colormap_from_name("compound");
-    clrng.add_cmap(cmap);
-
+  // if coloring method not set
+  if (!opts.face_coloring_method) {
+    // check if it is a compound
     GeometryInfo info(geom);
     if (info.num_parts() > 1)
-      // color by compound
-      clrng.f_parts(true);
-    else
-      // faces to one color because model is not completely merged
-      // goldenrod1: Color(255,193,37) ... from George Hart, Color(1.0,0.7,0.1)
-      clrng.f_one_col(Color(255,193,37));
-
-    // edges can be confusing. set them to invisible
-    Coloring(&geom).vef_one_col(Color::invisible, Color::invisible, Color());
-
-    // patch to keep color_stellation from firing
-    opts.face_coloring_method = 'd';
+      opts.face_coloring_method = 'c';
   }
-
-  color_stellation(geom, opts);
+  
+  color_stellation(geom, opts.face_coloring_method,
+                      opts.edge_coloring_method,
+                      opts.vertex_coloring_method,
+                      opts.face_color, opts.edge_color,
+                      opts.vertex_color, opts.face_opacity,
+                      opts.map_string, "miller");
 
   // if only diagram is being output, clear geom
   if (opts.output_parts.find_first_of("s") == string::npos)
@@ -815,10 +634,7 @@ int make_resource_miller(Geometry &geom, string name, bool is_std, miller_opts &
 int try_miller(Geometry &geom, miller_opts &opts, string *error_msg = nullptr)
 {
   string name = opts.ifile;
-  bool is_std = (name.size() > 3 && name.substr(0, 4) == "std_");
-  if (is_std)
-    name = name.substr(4);
-  int idx = make_resource_miller(geom, name, is_std, opts, error_msg);
+  int idx = make_resource_miller(geom, name, opts, error_msg);
   return(idx);
 }
 

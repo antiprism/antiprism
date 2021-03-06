@@ -2332,26 +2332,6 @@ void do_cmy_mode(Geometry &geom, const bool ryb_mode, const char edge_blending)
           i, col_blend::rgb_complement(geom.colors(VERTS).get(i), ryb_mode));
 }
 
-void apply_transparency(Geometry &geom, const planar_opts &opts)
-{
-  if (opts.face_opacity > -1) {
-    ColorValuesToRangeHsva valmap(
-        msg_str("A%g", (double)opts.face_opacity / 255));
-    valmap.apply(geom, FACES);
-
-    for (const auto &kp : geom.colors(FACES).get_properties()) {
-      if (kp.second.is_index()) {
-        opts.warning("map indexes cannot be made transparent", 'T');
-        break;
-      }
-    }
-
-    // check if some faces are not set
-    if (geom.colors(FACES).get_properties().size() < geom.faces().size())
-      opts.warning("unset faces cannot be made transparent", 'T');
-  }
-}
-
 void color_by_winding_number_raw(Geometry &geom,
                                  const char color_by_winding_number,
                                  const double eps)
@@ -2480,8 +2460,10 @@ int main(int argc, char *argv[])
   if (opts.hole_detection)
     make_hole_connectors_invisible(geom);
 
-  // transparency
-  apply_transparency(geom, opts);
+  // apply transparency
+  Status stat = Coloring(&geom).apply_transparency(opts.face_opacity);
+  if (stat.is_warning())
+    opts.warning(stat.msg(), 'T');
 
   opts.write_or_error(geom, opts.ofile);
 

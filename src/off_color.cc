@@ -185,6 +185,7 @@ Options
                u,U - unique colour
                p,P - minimal proper colouring
                s,S - symmetric colouring [,sub_group,conj_type] (see above)
+               n,N - colour by number of faces connected to each edge
                k,K - sets of edges connected by edges
                F   - colour with average adjoining face colour
                d,D - colour by edge direction
@@ -290,7 +291,7 @@ void o_col_opts::process_command_line(int argc, char **argv)
         break;
       }
       parts.init(optarg, ",");
-      if (strlen(parts[0]) == 1 && strchr("uUpPsSkKjJFgGcCLldDM", *parts[0]))
+      if (strlen(parts[0]) == 1 && strchr("uUpPsSnNkKjJFgGcCLldDM", *parts[0]))
         e_col_op = *parts[0];
       else
         error("invalid colouring", c);
@@ -607,6 +608,8 @@ int main(int argc, char *argv[])
       ec.e_proper(op == 'P');
     else if (strchr("sS", op))
       ec.e_sets(sym_equivs[1], op == 'S');
+    else if (strchr("nN", op))
+      ec.e_order(op == 'N');
     else if (strchr("jJ", op))
       ec.e_lengths(opts.e_min_len_diff, op == 'J');
     else if (strchr("kK", op))

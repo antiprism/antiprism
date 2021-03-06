@@ -625,26 +625,6 @@ void compound_parts(Geometry &geom, vector<Geometry> &parts)
   }
 }
 
-void apply_transparency(Geometry &geom, const radial_opts &opts)
-{
-  if (opts.face_opacity > -1) {
-    ColorValuesToRangeHsva valmap(
-        msg_str("A%g", (double)opts.face_opacity / 255));
-    valmap.apply(geom, FACES);
-
-    for (const auto &kp : geom.colors(FACES).get_properties()) {
-      if (kp.second.is_index()) {
-        opts.warning("map indexes cannot be made transparent", 'T');
-        break;
-      }
-    }
-
-    // check if some faces are not set
-    if (geom.colors(FACES).get_properties().size() < geom.faces().size())
-      opts.warning("unset faces cannot be made transparent", 'T');
-  }
-}
-
 void set_indexes_to_color(Geometry &geom, const radial_opts &opts)
 {
   // find maximum index
@@ -674,9 +654,10 @@ void set_indexes_to_color(Geometry &geom, const radial_opts &opts)
     clrng.add_cmap(opts.map.clone());
   clrng.f_apply_cmap();
 
-  // set transparency
-  if (opts.face_opacity > -1)
-    apply_transparency(geom, opts);
+  // apply transparency
+  Status stat = Coloring(&geom).apply_transparency(opts.face_opacity);
+  if (stat.is_warning())
+    opts.warning(stat.msg(), 'T');
 }
 
 // for now show_axes is always 2 to display whole axis

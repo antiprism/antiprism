@@ -1219,19 +1219,10 @@ void construct_model(Geometry &base, Geometry &dual,
     base.add_vert(Vec3d(0, 0, 0), opts.ipoints_col);
   }
 
-  // apply opacity to faces of base and dual
-  if (opts.face_opacity > -1) {
-    ColorValuesToRangeHsva valmap(
-        msg_str("A%g", (double)opts.face_opacity / 255), Color(255, 255, 255));
-    valmap.apply(base, FACES);
-
-    for (const auto &kp : base.colors(FACES).get_properties()) {
-      if (kp.second.is_index()) {
-        opts.warning("map indexes cannot be made transparent", 'T');
-        break;
-      }
-    }
-  }
+  // apply transparency
+  Status stat = Coloring(&base).apply_transparency(opts.face_opacity);
+  if (stat.is_warning())
+    opts.warning(stat.msg(), 'T');
 
   // add unit sphere on origin
   if (opts.output_parts.find_first_of("uU") != string::npos) {

@@ -2274,26 +2274,6 @@ void do_operations(Geometry &geom, cn_opts &opts)
   }
 }
 
-void apply_transparency(Geometry &geom, const cn_opts &opts)
-{
-  if (opts.face_opacity > -1) {
-    ColorValuesToRangeHsva valmap(
-        msg_str("A%g", (double)opts.face_opacity / 255));
-    valmap.apply(geom, FACES);
-
-    for (const auto &kp : geom.colors(FACES).get_properties()) {
-      if (kp.second.is_index()) {
-        opts.warning("map indexes cannot be made transparent", 'T');
-        break;
-      }
-    }
-
-    // check if some faces are not set
-    if (geom.colors(FACES).get_properties().size() < geom.faces().size())
-      opts.warning("unset faces cannot be made transparent", 'T');
-  }
-}
-
 void cn_coloring(Geometry &geom, const cn_opts &opts)
 {
   // can't color an empty geom. on -f s it will cause segfault
@@ -2334,7 +2314,9 @@ void cn_coloring(Geometry &geom, const cn_opts &opts)
   }
 
   // apply transparency
-  apply_transparency(geom, opts);
+  Status stat = Coloring(&geom).apply_transparency(opts.face_opacity);
+  if (stat.is_warning())
+    opts.warning(stat.msg(), 'T');
 
   // color vertices
   // wythoff overrides coloring of vertices

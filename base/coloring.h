@@ -241,6 +241,11 @@ public:
   /**\param col colour for the edges. */
   void e_one_col(Color col);
 
+  /// Colour each edge by the number of edges connected to it.
+  /**\param apply_map if \c false, colour with index numbers,
+   *  if \c true, convert these index numbers using the colour maps */
+  void e_order(bool apply_map = true);
+
   /// Colour each edge set with a single colour
   /**\param equivs the indexes in each set are given the same colour.
    * \param apply_map if \c false, colour with index numbers,
@@ -312,6 +317,11 @@ public:
    * \param edge_col edge colour.
    * \param face_col face colour. */
   void vef_one_col(Color vert_col, Color edge_col, Color face_col);
+
+  /// Apply transparancy to faces of the geom
+  /** unset color and map indexes cannot be made transparent
+   * \param face_opacity value from 1 to 255 */
+  Status apply_transparency(const int);
 };
 
 /// Read colourings for vertex, edge and face elements from a string.

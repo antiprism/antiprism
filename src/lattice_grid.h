@@ -80,6 +80,12 @@ void color_by_symmetry_normals(anti::Geometry &, const char, const int,
                                double eps = anti::epsilon);
 void color_edges_by_sqrt(anti::Geometry &, const char);
 
+// color functions for stellation
+void color_stellation(anti::Geometry &geom, const char, const char, const char,
+                      const anti::Color &, const anti::Color &,
+                      const anti::Color &, const int, const string &,
+                      const string);
+
 // convex hull and voronoi wrappers
 void convex_hull_report(const anti::Geometry &, const bool);
 int get_voronoi_geom(anti::Geometry &, anti::Geometry &, const bool, const bool,

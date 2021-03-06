@@ -10,7 +10,6 @@ Millers 59 Icosahedra Stellations. Plus additional stellations since discovered
 input may be Miller list number from 1 to 75. Or m_string where string consists
 of one or more cell names: A,B,C,D,E,F,G,H,e1,f1,f1',g1,e2,f2,g2  e.g m_De1f1g1
 model string can be followed by I or Ih symmetry. e.g. m_e1f1',I
-std_ may precede input string to output a raw model
 .PP
 Options
 .HP
@@ -22,7 +21,7 @@ Options
 list models only
 .TP
 \fB\-M\fR
-merge stellation facelets
+merge stellation facelets (for cell name strings only)
 .TP
 \fB\-r\fR
 rebuild compound model to separate vertices
@@ -42,18 +41,19 @@ Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
 face coloring method. d \- from diagram, s \- symmetry
 .IP
 c \- color by compound (default: 255,193,37, if compound then c)
-C \- face/face connection count using map n colors
+C \- face/face connection count using map m colors
 keyword: none \- sets no color
 .TP
 \fB\-E\fR <col>
 edge color. f \- from faces (default: invisible)
 .IP
-C \- edge/face connection count using map n colors
+C \- edge/face connection count using map m colors
 keyword: none \- sets no color
 .TP
 \fB\-V\fR <col>
 vertex color.  e \- from edges (default: invisible)
 .IP
+n \- vertex connection count
 keyword: none \- sets no color
 .HP
 \fB\-T\fR <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)

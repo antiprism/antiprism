@@ -29,6 +29,7 @@
 */
 
 #include "../base/antiprism.h"
+#include "lattice_grid.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -212,7 +213,7 @@ void stellate_opts::process_command_line(int argc, char **argv)
         face_coloring_method = *optarg;
       else {
         print_status_or_exit(face_color.read(optarg), c);
-        face_coloring_method = 'x';
+        face_coloring_method = '\0';
       }
       break;
 
@@ -249,158 +250,6 @@ void stellate_opts::process_command_line(int argc, char **argv)
 
   if (argc - optind == 1)
     ifile = argv[optind];
-}
-
-void apply_transparency(Geometry &geom, const stellate_opts &opts,
-                        int alternate_opacity = -1)
-{
-  int face_opacity =
-      (alternate_opacity != -1) ? alternate_opacity : opts.face_opacity;
-  if (face_opacity > -1) {
-    ColorValuesToRangeHsva valmap(msg_str("A%g", (double)face_opacity / 255));
-    valmap.apply(geom, FACES);
-
-    for (const auto &kp : geom.colors(FACES).get_properties()) {
-      if (kp.second.is_index()) {
-        opts.warning("map indexes cannot be made transparent", 'T');
-        break;
-      }
-    }
-
-    // check if some faces are not set
-    if (geom.colors(FACES).get_properties().size() < geom.faces().size())
-      opts.warning("unset faces cannot be made transparent", 'T');
-  }
-}
-
-// use anti::epsilon so it is not effected by opt epsilon
-void color_stellation(Geometry &stellation, const stellate_opts &opts)
-{
-  // set color map
-  Coloring clrng(&stellation);
-  ColorMap *cmap = colormap_from_name(opts.map_string.c_str());
-  clrng.add_cmap(cmap);
-
-  // in case of face coloring C
-  Geometry kis;
-
-  // stellation is built with color from the diagram
-  if (opts.face_coloring_method != 'd') {
-    if (!opts.face_coloring_method)
-      // if no color specified, clear faces
-      stellation.colors(FACES).clear();
-    else if (opts.face_coloring_method == 's') {
-      // color faces by symmetry
-      Symmetry sym;
-      vector<vector<set<int>>> sym_equivs;
-      sym.init(stellation, &sym_equivs);
-      clrng.f_sets(sym_equivs[2], true);
-    }
-    else if (opts.face_coloring_method == 'c')
-      clrng.f_parts(true);
-    else if (opts.face_coloring_method == 'C') {
-      wythoff_make_tiling(kis, stellation, "k", true, false);
-      // remove digons
-      vector<int> dels;
-      for (unsigned int i = 0; i < kis.faces().size(); i++) {
-        if (kis.faces(i).size() < 3)
-          dels.push_back((int)i);
-      }
-      kis.del(FACES, dels);
-      kis.orient(1);
-
-      // make new verts and edges invisible
-      kis.add_missing_impl_edges();
-      for (unsigned int i = 0; i < kis.verts().size(); i++) {
-        int v_idx =
-            find_vert_by_coords(stellation, kis.verts()[i], anti::epsilon);
-        if (v_idx == -1) {
-          kis.colors(VERTS).set(i, Color::invisible);
-          vector<int> edge_idx = find_edges_with_vertex(kis.edges(), i);
-          for (unsigned int j = 0; j < edge_idx.size(); j++)
-            kis.colors(EDGES).set(edge_idx[j], Color::invisible);
-        }
-      }
-      // the old faces are cleared and kis faces added
-      stellation.clear(FACES);
-      stellation.append(kis);
-      int blend_type = 1; // first color, invisible edges stay
-      merge_coincident_elements(stellation, "vef", blend_type, anti::epsilon);
-
-      for (unsigned int i = 0; i < stellation.faces().size(); i++) {
-        vector<int> face = stellation.faces()[i];
-        unsigned int fsz = face.size();
-        // face to face
-        // connections with invisible faces are ignored
-        int connections = 0;
-        for (unsigned int j = 0; j < fsz; j++) {
-          int v1 = face[j];
-          int v2 = face[(j + 1) % fsz];
-          vector<int> edge = make_edge(v1, v2);
-          vector<int> face_idx = find_faces_with_edge(stellation.faces(), edge);
-          int edge_no = find_edge_in_edge_list(stellation.edges(), edge);
-          if (!(stellation.colors(EDGES).get(edge_no)).is_invisible())
-            connections += face_idx.size();
-        }
-        stellation.colors(FACES).set(i, cmap->get_col(connections));
-      }
-    }
-    else
-      // use color selected
-      clrng.f_one_col(opts.face_color);
-  }
-
-  // if edges take color from faces (if faces none, clear edges)
-  if (opts.edge_coloring_method == 'f') {
-    // if face colors is none
-    if (!opts.face_coloring_method)
-      stellation.colors(EDGES).clear();
-    else
-      clrng.e_face_color();
-  }
-  else if (opts.edge_coloring_method == 'C') {
-    auto efpairs = stellation.get_edge_face_pairs(false);
-    for (const auto &edge : stellation.edges()) {
-      vector<int> faces = efpairs[edge];
-      int i = find_edge_in_edge_list(stellation.edges(), edge);
-      if (i > -1) {
-        if (!(stellation.colors(EDGES).get(i)).is_invisible()) {
-          unsigned int connections = faces.size();
-          stellation.colors(EDGES).set(i, cmap->get_col(connections));
-        }
-      }
-    }
-  }
-  else
-    // use color selected
-    clrng.e_one_col(opts.edge_color);
-
-  // vertices taking edge coloring from stellation is the default
-  // if not using default, sample colors again
-  if (opts.vertex_coloring_method == 'e') {
-    // vertices take color from edges
-    clrng.v_edge_color();
-  }
-  else
-    // use color selected
-    clrng.v_one_col(opts.vertex_color);
-
-  // if using face connection coloring
-  // vertices from kis must be made invisible in stellation
-  if (opts.face_coloring_method == 'C') {
-    for (unsigned int i = 0; i < kis.verts().size(); i++) {
-      int v_idx =
-          find_vert_by_coords(stellation, kis.verts()[i], anti::epsilon);
-      if (v_idx != -1) {
-        if ((kis.colors(VERTS).get(i)).is_invisible())
-          stellation.colors(VERTS).set(v_idx, Color::invisible);
-      }
-    }
-  }
-
-  // set transparency
-  if (opts.face_opacity > -1)
-    apply_transparency(stellation, opts);
 }
 
 // idx_lists still contains stellation face number in position 0
@@ -453,7 +302,7 @@ Geometry construct_model(Geometry &geom, map<int, Geometry> &diagrams,
     if (opts.output_parts.find_first_of("DSR") != string::npos) {
       // set large diagram transparency to 1/4th
       for (auto const &key1 : diagrams)
-        apply_transparency(diagrams[key1.first], opts, 64);
+        Status stat = Coloring(&diagrams[key1.first]).apply_transparency(64);
 
       vector<vector<int>> *lists = &idx_lists;
       if (opts.output_parts.find_first_of("D") != string::npos)
@@ -512,7 +361,10 @@ Geometry construct_model(Geometry &geom, map<int, Geometry> &diagrams,
 
   // stellation model
   if (opts.output_parts.find("s") != string::npos) {
-    color_stellation(stellation, opts);
+    color_stellation(stellation, opts.face_coloring_method,
+                     opts.edge_coloring_method, opts.vertex_coloring_method,
+                     opts.face_color, opts.edge_color, opts.vertex_color,
+                     opts.face_opacity, opts.map_string, "stellate");
     model.append(stellation);
   }
 
@@ -534,8 +386,11 @@ Geometry construct_model(Geometry &geom, map<int, Geometry> &diagrams,
     clrng.add_cmap(cmap);
     clrng.f_sets(sym_equivs[2], true);
 
-    if (opts.face_opacity > -1)
-      apply_transparency(geom, opts);
+    // apply transparency
+    Status stat = Coloring(&geom).apply_transparency(opts.face_opacity);
+    if (stat.is_warning())
+      opts.warning(stat.msg(), 'T');
+
     model.append(geom);
   }
 
