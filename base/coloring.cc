@@ -429,17 +429,14 @@ void Coloring::e_one_col(Color col)
 
 void Coloring::e_order(bool apply_map)
 {
-  auto efpairs = get_geom()->get_edge_face_pairs(false);
-  for (const auto &edge : get_geom()->edges()) {
-    vector<int> faces = efpairs[edge];
-    int i = find_edge_in_edge_list(get_geom()->edges(), edge);
-    if (i > -1) {
-      unsigned int connections = faces.size();
-      if (apply_map)
-        get_geom()->colors(EDGES).set(i, get_col(connections));
-      else
-        get_geom()->colors(EDGES).set(i, connections);
-    }
+  auto ef_prs = get_geom()->get_edge_face_pairs(false);
+  for (unsigned int i = 0; i < get_geom()->edges().size(); i++) {
+    auto e2fs = ef_prs.find(get_geom()->edges(i));
+    unsigned int connections = (e2fs != ef_prs.end()) ? e2fs->second.size() : 0;
+    if (apply_map)
+      get_geom()->colors(EDGES).set(i, get_col(connections));
+    else
+      get_geom()->colors(EDGES).set(i, connections);
   }
 }
 
