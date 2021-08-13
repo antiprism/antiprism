@@ -44,16 +44,18 @@ using std::vector;
 
 using namespace anti;
 
+enum { TYPE_EDEN, TYPE_DUAL, TYPE_ASM, TYPE_HONEYCOMB, TYPE_PRISM, TYPE_END };
+
 class dome_opts : public ProgramOpts {
 public:
-  string type;
+  int type;
   double radius;
   bool use_col_values;
   string ifile;
   string ofile;
 
   dome_opts()
-      : ProgramOpts("dome_layer"), type("eden"), radius(0.85),
+      : ProgramOpts("dome_layer"), type(TYPE_EDEN), radius(0.85),
         use_col_values(true)
   {
   }
@@ -102,12 +104,14 @@ void dome_opts::process_command_line(int argc, char **argv)
       ofile = optarg;
       break;
 
-    case 't':
-      type = to_resource_name(optarg);
-      if (type != "eden" && type != "dual" && type != "asm" &&
-          type != "honeycomb" && type != "prism")
-        error("unknown layering type", c);
+    case 't': {
+      const char *params = "eden|dual|asm|honeycomb|prism";
+      string arg_id;
+      if (!get_arg_id(to_resource_name(optarg).c_str(), &arg_id, params))
+        error(msg_str("invalid layering type '%s'", optarg).c_str(), c);
+      type = atoi(arg_id.c_str());
       break;
+    }
 
     case 'r':
       print_status_or_exit(read_double(optarg, &radius), c);
@@ -292,7 +296,7 @@ void make_dome_honeycomb(const Geometry &geom, Geometry &dome, double radius)
   int orig_num_verts = dome.verts().size();
   dome.append(dual);
   for (int i = 0; i < orig_num_verts; i++) {
-    int f_idx = i + orig_num_faces;
+    int f_idx = i + 2 * orig_num_faces;
     for (unsigned int j = 0; j < dome.faces(f_idx).size(); j++)
       dome.add_edge(dome.faces(f_idx, j), i, Color(2));
   }
@@ -345,15 +349,15 @@ int main(int argc, char *argv[])
   opts.read_or_error(geom, opts.ifile);
 
   Geometry dome;
-  if (opts.type == "eden")
+  if (opts.type == TYPE_EDEN)
     make_dome_eden(geom, dome, opts.radius);
-  else if (opts.type == "dual")
+  else if (opts.type == TYPE_DUAL)
     make_dome_dual(geom, dome, opts.radius);
-  else if (opts.type == "asm")
+  else if (opts.type == TYPE_ASM)
     make_dome_asm(geom, dome, opts.radius);
-  else if (opts.type == "honeycomb")
+  else if (opts.type == TYPE_HONEYCOMB)
     make_dome_honeycomb(geom, dome, opts.radius);
-  else if (opts.type == "prism")
+  else if (opts.type == TYPE_PRISM)
     make_dome_prism(geom, dome, opts.radius);
 
   if (opts.use_col_values)
