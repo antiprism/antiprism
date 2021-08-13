@@ -355,34 +355,34 @@ void unitile::plane(int lr_join, int tb_join)
   }
   for (auto &vert : verts) {
     if (lr_join == ut_twist &&
-        (vert[0] < -local_epsilon || vert[0] > x_end - local_epsilon))
+        (vert[0] < -local_epsilon || vert[0] > x_end + local_epsilon))
       vert[1] = -vert[1];
     if (lr_join == ut_twist2 &&
-        (vert[0] < -local_epsilon || vert[0] > x_end - local_epsilon))
+        (vert[0] < -local_epsilon || vert[0] > x_end + local_epsilon))
       vert[1] = y_end - vert[1];
     if (lr_join == ut_twist3 &&
-        (vert[0] < -local_epsilon || vert[0] > x_end - local_epsilon))
+        (vert[0] < -local_epsilon || vert[0] > x_end + local_epsilon))
       vert[1] = fmod(1.5 * y_end - vert[1], y_end);
     if (tb_join == ut_twist &&
-        (vert[1] < -local_epsilon || vert[1] > y_end - local_epsilon))
+        (vert[1] < -local_epsilon || vert[1] > y_end + local_epsilon))
       vert[0] = -vert[0];
     if (tb_join == ut_twist2 &&
-        (vert[1] < -local_epsilon || vert[1] > y_end - local_epsilon))
+        (vert[1] < -local_epsilon || vert[1] > y_end + local_epsilon))
       vert[0] = x_end - vert[0];
     if (tb_join == ut_twist3 &&
-        (vert[1] < -local_epsilon || vert[1] > y_end - local_epsilon))
+        (vert[1] < -local_epsilon || vert[1] > y_end + local_epsilon))
       vert[0] = fmod(1.5 * x_end - vert[0], x_end);
     if (tb_join == ut_join2 &&
-        (vert[1] < -local_epsilon || vert[1] > y_end - local_epsilon))
+        (vert[1] < -local_epsilon || vert[1] > y_end + local_epsilon))
       vert[0] = fmod(0.5 * x_end - vert[0], x_end);
     if (lr_join != ut_open) {
-      vert[0] = fmod(vert[0] + x_end, x_end - local_epsilon);
+      vert[0] = fmod(vert[0] + x_end, x_end - epsilon);
     }
     if (tb_join != ut_open) {
-      vert[1] = fmod(vert[1] + y_end, y_end - local_epsilon);
+      vert[1] = fmod(vert[1] + y_end, y_end - epsilon);
     }
   }
-  merge_coincident_elements(*this, "v", 1e-5);
+  merge_coincident_elements(*this, "v", 1e-3);
 
   transform(trans_m);
 }
@@ -800,7 +800,7 @@ void ut_opts::process_command_line(int argc, char **argv)
     case 'S':
       print_status_or_exit(read_double_list(optarg, nums), c);
       if (nums.size() != 2)
-        error(msg_str("must give exactly thwo numbers (%lu were given)",
+        error(msg_str("must give exactly two numbers (%lu were given)",
                       (unsigned long)nums.size()),
               c);
       // trans_m = Trans3d::transl(Vec3d(nums[0], nums[1], nums[2]));
