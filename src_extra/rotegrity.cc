@@ -247,7 +247,7 @@ Status check_polyhedron_model(GeometryInfo &info)
   if (!info.is_orientable())
     return Status::error("polyhedron model: not orientable");
   if (info.genus() != 0)
-    return Status::error("polyhedron model: not connected like a sphere");
+    return Status::warning("polyhedron model: not connected like a sphere");
 
   return Status::ok();
 }
