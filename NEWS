@@ -5,7 +5,10 @@ XX-XX-21 Adrian Rossiter <adrian@antiprism.com>
          New Programs
             tetra59: generate the 59 tetrahedra with rational dihedral angles
          Changes
+            to_nfold: use base colours
          Fixes
+            dome_layer: honeycomb connections
+            unitile2d: surface closing
 
 Version 0.28
 13-02-21 Adrian Rossiter <adrian@antiprism.com>
