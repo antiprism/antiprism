@@ -826,15 +826,22 @@ bool Wythoff::make_tri_poly(Geometry &geom)
 void Tile::start_op() const
 {
   ops_i = ops.begin();
-  idxs_i = idxs.begin();
+  if (ops_i != ops.end() && *ops_i == P) // first operation is point
+    idxs_i = idxs.begin();               // initialise now
+  else
+    idxs_i = idxs.end(); // initialise later (on first point op)
 }
 
 void Tile::next_op() const
 {
   if (ops_i != ops.end()) {
     ++ops_i;
-    if (*ops_i == P)
-      ++idxs_i;
+    if (*ops_i == P) { // is the new operation a point?
+      if (idxs_i == idxs.end())
+        idxs_i = idxs.begin(); // initialise point index if first point
+      else
+        ++idxs_i; // increment point index if not first point
+    }
   }
 }
 
@@ -989,10 +996,6 @@ Status Tile::read(const string &pat)
   bool has_tris_spec = strchr("+-*", pat[0]);
   start_faces = (has_tris_spec) ? pat[0] : '+';
   unsigned int pos = has_tris_spec;
-  if (!std::isdigit(pat[pos]) && !std::isdigit(pat.back()))
-    return Status::error(
-        "tile specifier: first character (or first character after +-*), "
-        "or last character must be a digit");
 
   while (pos < pat.size()) {
     int len;
@@ -1069,7 +1072,7 @@ vector<int> Tile::check_index_range(int num_points) const
   return out_of_range;
 }
 
-string Tile::tile_string()
+string Tile::tile_string() const
 {
   vector<int> op2;
   string VEF = "VEF";
