@@ -95,8 +95,7 @@ Options
                   v,e,f - step over side opposite V,E,F
                   V,E,F - step two trianglesi, rotating about V,E,F,
                           according to: V=ef, E=fv, F=ve
-              Paths can start with either a move or a point, but cannot both
-              start and end with a move
+              Paths can start or end with either a move or a point
   -c <op>   Conway polyhedron notation operator, or 'list' to list all
             available operators with their corresponding patterns
   -R        reverse pattern, exchanges the signs of the start triangles

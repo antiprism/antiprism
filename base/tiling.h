@@ -109,7 +109,7 @@ public:
   std::vector<int> check_index_range(int num_points) const;
 
   /// Convert the tile to a string representation
-  std::string tile_string();
+  std::string tile_string() const;
 
   /// Get element association
   /**\return vector with four strings:

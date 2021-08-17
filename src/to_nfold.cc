@@ -102,7 +102,8 @@ in OFF format, with an m-fold rotational axis on the z-axis, and create a
 new model, generally non-planar, with the same relative connections, but
 with an n-fold axis instead. fraction is given as n, or n/d (n and d
 integers). Vertices of a face originally separated by x/m of a turn around
-the z-axis will be separated by xd/n of a turn in the final model. If
+the z-axis will be separated by xd/n of a turn in the final model. The new
+model will be symmetrically coloured using colours from the base model. If
 input_file is not given the program reads from standard input.
 %s is based on an idea by Bruce R. Gilson.
 
@@ -374,13 +375,15 @@ class cyc_chain {
 public:
   double start_angle;
   vector<cyc_vert> cyc_vts;
+  Color color;
   unsigned char warnings;
-  cyc_chain(const Geometry &geom, const vector<int> &face, int len, double eps);
+  cyc_chain(const Geometry &geom, const vector<int> &face, int len, Color col,
+            double eps);
 };
 
 cyc_chain::cyc_chain(const Geometry &geom, const vector<int> &face, int len,
-                     double eps)
-    : warnings(WARN_NONE)
+                     Color col, double eps)
+    : color(col), warnings(WARN_NONE)
 {
   // ensure that face starts with a non-axial vertex
   vector<int> face_rot = face;
@@ -603,7 +606,7 @@ void cyc_geom::add_chain_to_geom(cyc_chain &chain, Geometry *o_geom, int to_n,
 
   if (all_vertices_valid && num_chains_in_face) {
     for (int i = 0; i < to_n / num_chains_in_face; i++)
-      o_geom->add_face(get_next_face(face, i, to_n));
+      o_geom->add_face(get_next_face(face, i, to_n), chain.color);
   }
 }
 
@@ -717,7 +720,7 @@ bool cyc_geom::make_geom(Geometry *o_geom, int to_n, int to_d,
         warnings |= WARN_NOCHAIN;
     }
 
-    cyc_chain cyc_c(geom, face, chain_sz, eps);
+    cyc_chain cyc_c(geom, face, chain_sz, geom.colors(FACES).get(f_idx), eps);
     chains.push_back(cyc_c);
     warnings |= cyc_c.warnings;
   }
@@ -733,7 +736,7 @@ bool cyc_geom::make_geom(Geometry *o_geom, int to_n, int to_d,
   for (const auto &kp : e2f) {
     if (is_axial_edge(kp.first, geom, eps) && kp.second.size() == 2 &&
         f2equiv[kp.second[0]] == f2equiv[kp.second[1]]) {
-      cyc_chain cyc_c(geom, kp.first, 1, eps);
+      cyc_chain cyc_c(geom, kp.first, 1, Color(), eps);
       chains.push_back(cyc_c);
     }
   }
@@ -767,6 +770,9 @@ int main(int argc, char *argv[])
         opts.error(msg_str("index number %d, out of range", idx), 'x');
     }
   }
+
+  for (size_t i = 0; i < geom.edges().size(); i++)
+    geom.add_face(geom.edges(i), geom.colors(EDGES).get(i));
 
   cyc_geom cyc(eps);
   if (!cyc.set_geom(geom))
