@@ -418,7 +418,7 @@ void process_lattices(Geometry &geom, Geometry &container,
 
   for (unsigned int i = 0; i < opts.strut_len.size(); i++)
     add_color_struts(geom, opts.strut_len[i] * opts.strut_len[i],
-                     opts.edge_col[0]);
+                     opts.edge_col[0], opts.eps);
 
   if (!opts.radius && opts.radius_default != 'k')
     opts.radius = lattice_radius(geom, opts.radius_default);

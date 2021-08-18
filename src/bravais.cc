@@ -1778,7 +1778,7 @@ void do_bravais(Geometry &geom, Geometry &container, brav_opts &opts)
     geom.transform(Trans3d::rotate(0, 0, -45.0 * (M_PI / 180.0)));
 
     if (opts.cell_struts)
-      add_color_struts(geom, 1.0, opts.edge_col[0]);
+      add_color_struts(geom, 1.0, opts.edge_col[0], opts.eps);
 
     if (opts.r_lattice_type == 4)
       geom.transform(r_lattice_trans_mat(true));
@@ -1806,7 +1806,7 @@ void do_bravais(Geometry &geom, Geometry &container, brav_opts &opts)
 
   for (unsigned int i = 0; i < opts.strut_len.size(); i++)
     add_color_struts(geom, opts.strut_len[i] * opts.strut_len[i],
-                     opts.edge_col[0]);
+                     opts.edge_col[0], opts.eps);
 
   // radius calculation if needed
   if (opts.radius_by_coord.is_set())
