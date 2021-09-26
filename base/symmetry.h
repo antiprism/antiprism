@@ -43,7 +43,7 @@ namespace anti {
 class Transformations {
 private:
   struct SymTransLess {
-    bool operator()(const Trans3d &t1, const Trans3d &t2)
+    bool operator()(const Trans3d &t1, const Trans3d &t2) const
     {
       return compare(t1, t2, sym_eps) < 0;
     }
