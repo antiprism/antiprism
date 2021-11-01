@@ -1,10 +1,12 @@
 Antiprism
 =========
 
-Notes for Antiprism 0.29 (in Development)
------------------------------------------
+Notes for Antiprism 0.29
+------------------------
 
-See the NEWS file for more details.
+Minor release with bug fixes, small improvements and a new program
+tetra59 (by Roger Kaufman) to make tetrahedra with rational dihedral
+angles. See the NEWS file for more details.
 
 Please look out for bugs and other issues, and report them to me at
 at: adrian@antiprism.com

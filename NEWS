@@ -1,12 +1,13 @@
 NEWS for Antiprism: http://www.antiprism.com
 
 Version 0.29
-XX-XX-21 Adrian Rossiter <adrian@antiprism.com>
+01-11-21 Adrian Rossiter <adrian@antiprism.com>
          New Programs
             tetra59: generate the 59 tetrahedra with rational dihedral angles
          Changes
             to_nfold: use base colours
             wythoff: allow any path
+            off_color: -e nN colour edges by number of connected faces
          Fixes
             dome_layer: honeycomb connections
             unitile2d: surface closing

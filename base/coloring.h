@@ -321,7 +321,7 @@ public:
   /// Apply transparancy to faces of the geom
   /** unset color and map indexes cannot be made transparent
    * \param face_opacity value from 1 to 255 */
-  Status apply_transparency(const int);
+  Status apply_transparency(const int face_opacity);
 };
 
 /// Read colourings for vertex, edge and face elements from a string.

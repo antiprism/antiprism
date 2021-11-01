@@ -37,8 +37,8 @@ namespace anti {
 class Normal {
 private:
   Vec3d normal;
-  int direction;    // 1 = outward, 0 = hemispherical, -1 = inward
-  char normal_type; // n = Newell, t = triangles, q = quads
+  int direction; // 1 = outward, 0 = hemispherical, -1 = inward
+  // char normal_type; // n = Newell, t = triangles, q = quads
 
 public:
   /// Constructor
