@@ -14,11 +14,11 @@ LDADD = $(top_builddir)/base/libantiprism.la
 
 
 bin_PROGRAMS = spidron off2txt dome_layer poly_weave mmop_origami \
-	       jitterbug string_art kaleido rotegrity
+	       jitterbug string_art kaleido rotegrity sweep_edges
 
 dist_man1_MANS = spidron.1 off2txt.1 dome_layer.1 poly_weave.1 \
 		 mmop_origami.1 jitterbug.1 string_art.1 kaleido.1 \
-		 rotegrity.1
+		 rotegrity.1 sweep_edges.1
 
 spidron_SOURCES = spidron.cc
 off2txt_SOURCES = off2txt.cc
@@ -29,3 +29,4 @@ jitterbug_SOURCES = jitterbug.cc
 string_art_SOURCES = string_art.cc
 kaleido_SOURCES = kaleido.cc
 rotegrity_SOURCES = rotegrity.cc
+sweep_edges_SOURCES = sweep_edges.cc
