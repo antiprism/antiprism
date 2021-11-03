@@ -47,17 +47,15 @@ using namespace anti;
 
 class Sweep {
 private:
+  const string valid_types = "RSTMIAaXi"; // supported transformation types
+  // transformations, as type character and specification string
   vector<std::pair<char, string>> transformations;
-  int steps;
-  bool triangulate;
-  bool join_coincident_ends = true;
-  const string valid_types = "RSTMIAaXi";
+  int steps = 12;                   // total steps in sweep
+  bool triangulate = false;         // convert quads to triangles
+  bool join_coincident_ends = true; // join ends when coincident
+  double local_epsilon = 1e-8;      // epsilon for checking coincidence
 
 public:
-  Sweep(int stps = 12, bool trianglate = false)
-      : steps(stps), triangulate(trianglate)
-  {
-  }
   Status set_steps(int stps)
   {
     if (stps < 2)
@@ -65,8 +63,13 @@ public:
     steps = stps;
     return Status::ok();
   }
+  int get_steps() const { return steps; }
   void set_triangulate(bool trianglate) { triangulate = trianglate; }
+  bool get_triangulate() const { return triangulate; }
   void set_join_coincident_ends(bool join) { join_coincident_ends = join; }
+  bool get_join_coincident_ends() const { return join_coincident_ends; }
+  void set_local_epsilon(double eps) { local_epsilon = eps; }
+  double get_local_epsilon() const { return local_epsilon; }
   Status add_transformation(char type, string trans_str);
   Status set_transformation(Trans3d &trans, int step);
   Status make_sweep(Geometry &geom, Geometry &polygon);
@@ -332,6 +335,7 @@ Status Sweep::make_sweep(Geometry &geom, Geometry &polygon)
   if (!(stat = set_transformation(trans_last, steps)))
     return stat;
 
+  map<int, int> vmap_geom; // vert to vert merge correspondence in geom
   if (join_coincident_ends) {
     // Check if first and last set of polygon vertices are coincident
     Geometry poly_first = polygon;
@@ -339,9 +343,8 @@ Status Sweep::make_sweep(Geometry &geom, Geometry &polygon)
     Geometry poly_last = polygon;
     poly_last.transform(trans_last);
     map<int, int> vmap_poly; // vert to vert correspondence in poly
-    map<int, int> vmap_geom; // vert to vert correspondence in geom
     vector<map<int, std::set<int>>> equiv_elems;
-    if (check_congruence(poly_first, poly_last, &equiv_elems, anti::sym_eps)) {
+    if (check_congruence(poly_first, poly_last, &equiv_elems, local_epsilon)) {
       // Set up the vertex correspondence
       const int v_from_offset = (steps - 1) * polygon.verts().size();
       for (auto &v_orbit : equiv_elems[VERTS]) {
@@ -353,7 +356,6 @@ Status Sweep::make_sweep(Geometry &geom, Geometry &polygon)
           }
         }
       }
-      geom.verts_merge(vmap_geom); // merge first and last set of poly verts
 
       color_polygon = color_by_join(polygon, vmap_poly, edges);
     }
@@ -398,6 +400,8 @@ Status Sweep::make_sweep(Geometry &geom, Geometry &polygon)
                       pverts.colors(VERTS).get(v_idx));
     }
   }
+  if (vmap_geom.size())
+    geom.verts_merge(vmap_geom); // merge first and last set of poly verts
 
   return stat;
 }
@@ -421,21 +425,27 @@ public:
 
 void sw_opts::usage()
 {
+  const Sweep def_sweep;
   fprintf(stdout, R"(
-Usage: %s [options] polygon
+Usage: %s [options] input
 
-Read a polygon in OFF format and transform it multiple times to produce
-a polygonal surface made of the quadrilaterals swept by the edges. At each
-step the original polygon is transformed according to the specified
-transformations, which are defined using sweep progress variables FRAC
+Read input model in OFF format and transform it multiple times to produce
+a polygonal surface made of the quadrilaterals swept by the edges. At
+each step the input model is transformed according to the specified
+transformations, which can be defined using sweep progress variables FRAC
 and ANG. FRAC runs from 0.0 at at step 0 to 1.0 on the final step.
   FRAC = current_step / total_steps
   ANG = 360.0 * FRAC
-If polygon is not given the program reads from standard input.
+Colours are taken from the input model if the begining of the sweep does
+not coincide with the end, or if option -O is set, otherwise sweep circuits
+are found and the colours are set from the colour map (option -m). Vertex
+colours are used for final vertices and swept vertex edges, edge colours
+are used for swept edge faces.
+If input is not given the program reads from standard input.
 
 Options
 %s
-  -n <int>  number of steps (default: 12)
+  -n <int>  number of steps (default: %d)
   -T <tran> translate, three numbers separated by commas which are
             used as the x, y and z displacements
   -R <rot>  rotate about an axis, three, four or six numbers separated by
@@ -465,13 +475,18 @@ Options
   -i        replace the current combined transformation by its inverse
   -t        triangulate
   -O        do not join coincident sweep ends
+  -l <lim>  maximum distance between vertices that should be coincident, lim
+            is an integer represeting the negative exponent of the distance
+            (default: %d giving %.0e)
   -m <maps> a comma separated list of colour maps used to transform colour
             indexes (default: rand), a part consisting of letters from
             v, e, f, selects the element types to apply the map list to
             (default 'vef'). The 'compound' map should give useful results.
   -o <file> write output to file (default: write to standard output)
 )",
-          prog_name(), help_ver_text);
+          prog_name(), help_ver_text, def_sweep.get_steps(),
+          int(-log(def_sweep.get_local_epsilon()) / log(10) + 0.5),
+          def_sweep.get_local_epsilon());
 }
 
 void sw_opts::process_command_line(int argc, char **argv)
@@ -483,7 +498,7 @@ void sw_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hR:S:T:M:IA:a:X:in:tOm:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hR:S:T:M:IA:a:X:in:tOl:m:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -511,6 +526,14 @@ void sw_opts::process_command_line(int argc, char **argv)
 
     case 'O':
       sweep.set_join_coincident_ends(false);
+      break;
+
+    case 'l':
+      int sig_compare;
+      print_status_or_exit(read_int(optarg, &sig_compare), c);
+      if (sig_compare > DEF_SIG_DGTS)
+        warning("limit is very small, may not be attainable", c);
+      sweep.set_local_epsilon(pow(10, -sig_compare));
       break;
 
     case 'o':

@@ -4,18 +4,23 @@
 sweep_edges - sweep edges to make a surface
 .SH SYNOPSIS
 .B sweep
-[\fI\,options\/\fR] \fI\,polygon\/\fR
+[\fI\,options\/\fR] \fI\,input\/\fR
 .SH DESCRIPTION
-Read a polygon in OFF format and transform it multiple times to produce
-a polygonal surface made of the quadrilaterals swept by the edges. At each
-step the original polygon is transformed according to the specified
-transformations, which are defined using sweep progress variables FRAC
+Read input model in OFF format and transform it multiple times to produce
+a polygonal surface made of the quadrilaterals swept by the edges. At
+each step the original polygon is transformed according to the specified
+transformations, which can be defined using sweep progress variables FRAC
 and ANG. FRAC runs from 0.0 at at step 0 to 1.0 on the final step.
 .IP
 FRAC = current_step / total_steps
 ANG = 360.0 * FRAC
 .PP
-If polygon is not given the program reads from standard input.
+Colours are taken from the input model if the begining of the sweep does
+not coincide with the end or if option \fB\-O\fR is set, otherwise sweep circuits
+are found and the colours are set from the colour map (option \fB\-m\fR). Vertex
+colours are used for final vertices and swept vertex edges, edge colours
+are used for swept edge faces.
+If input is not given the program reads from standard input.
 .PP
 Options
 .HP
@@ -76,6 +81,11 @@ triangulate
 .TP
 \fB\-O\fR
 do not join coincident sweep ends
+.TP
+\fB\-l\fR <lim>
+maximum distance between vertices that should be coincident, lim
+is an integer represeting the negative exponent of the distance
+(default: 8 giving 1e\-08)
 .HP
 \fB\-m\fR <maps> a comma separated list of colour maps used to transform colour
 .IP

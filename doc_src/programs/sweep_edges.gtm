@@ -33,16 +33,17 @@ Twisted torus sweep. Using the hexagon model,
    progressively rotate it two edges around the z-axis (-R 0,0,ANG*2/6),
    translate it 2 units along the x-axis (-T 2,0,0),
    progressively rotate it 1 turn around the y-axis (-R 0,ANG,0).
-Sweep using 30 steps. Displaying the models with <i>antiview -t no_tri -x e</i>
-produces a smoother look to the surface.
+Sweep using 30 steps. Displaying the model with <i>antiview -t no_tri -x ev</i>
+produces a smoother look to the surface and hides vertices and eges.
 <<CMDS_START>>
-sweep_edges pol6 -n 30 -R 0,0,ANG*2/6 -T 2,0,0 -R 0,ANG,0 | antiview -t no_tri -x e
+sweep_edges pol6 -n 30 -R 0,0,ANG*2/6 -T 2,0,0 -R 0,ANG,0 | antiview -t no_tri -x ev
 <<CMDS_END>>
 
-Twisted torus sweep. As before, but turn a nonagon 6 edges while sweeping, and sweep at a
-larger radius
+Twisted torus sweep. As before, but turn a nonagon 6 edges while sweeping,
+and sweep at a larger radius. Setting the vertex and edge colours from a
+different colour map and then displaying the models with <i>antiview -t no_tri -v 0.05 -e 0.05 -E invisible</i> makes a smoother surface and shows the paths of the original vertices.
 <<CMDS_START>>
-sweep_edges pol9 -n 30 -R 0,0,ANG*6/9 -T 4,0,0 -R 0,ANG,0 | antiview -t no_tri -x e
+sweep_edges pol9 -n 30 -R 0,0,ANG*6/9 -T 4,0,0 -R 0,ANG,0 -m spread+3,ve | antiview -t no_tri -v 0.1 -e 0.1 -E invisible
 <<CMDS_END>>
 
 Twisted double wound torus sweep.
@@ -52,7 +53,7 @@ Using the triangle model,
    translate it 2 units along the x-axis (-T 2,0,0),
    progressively rotate it 2 turns around the y-axis (-R 0,2*ANG,0).
 <<CMDS_START>>
-sweep_edges -n 200 -T 0.5,0,0 -R 0,0,ANG -T 2,0,0 -R 0,2*ANG,0 pol3 | antiview -t no_tri -x e
+sweep_edges -n 200 -T 0.5,0,0 -R 0,0,ANG -T 2,0,0 -R 0,2*ANG,0 pol3 | antiview -t no_tri -x ev
 <<CMDS_END>>
 
 Tapered helix sweep. Colour the edges of a triangle model,
@@ -63,7 +64,7 @@ Tapered helix sweep. Colour the edges of a triangle model,
 Note that maths expressions using special characters lie '(' may need the
 option argument to be surrounded by quotes, or escaped in some other way.
 <<CMDS_START>>
-off_color -e U pol3 | sweep_edges -n 200 -S 0.5  -T "2*(1-FRAC),0,0" -T 0,5*FRAC,0 -R 0,10*ANG,0 | antiview -t no_tri -x e
+off_color -e U pol3 | sweep_edges -n 200 -S 0.5  -T "2*(1-FRAC),0,0" -T 0,5*FRAC,0 -R 0,10*ANG,0 | antiview -t no_tri -x ev
 <<CMDS_END>>
 
 Incomplete dipyramid sweep, which is the repeated symmetrically.
@@ -73,12 +74,12 @@ In the second command remake the model and repeat it symmetrically to be
 aligned with the edges of a cube.
 <<CMDS_START>>
 off_util null -Av0,1,0 -Av1,0,0 -Av0,-1,0 -Ae0,1:red -Ae1,2:green | sweep_edges -n 12 -R 0,3*ANG/4,0 | antiview -t no_tri
-off_util null -Av0,1,0 -Av1,0,0 -Av0,-1,0 -Ae0,1:red -Ae1,2:green | sweep_edges -n 12 -R 0,3*ANG/4,0 | off_trans -T -1,0,-1 | poly_kscope -s T | antiview -t no_tri -x e
+off_util null -Av0,1,0 -Av1,0,0 -Av0,-1,0 -Ae0,1:red -Ae1,2:green | sweep_edges -n 12 -R 0,3*ANG/4,0 | off_trans -T -1,0,-1 | poly_kscope -s T | antiview -t no_tri -x ev
 <<CMDS_END>>
 
 Klein bottle
 <<CMDS_START>>
-sweep_edges pol4 -R 0,ANG/2,0 -T "sin(ANG/2),0,0" -R 0,ANG,0 -n 200 | off_util -M a | antiview -t no_tri -x e
+sweep_edges pol4 -R 0,ANG/2,0 -T "sin(ANG/2),0,0" -R 0,ANG,0 -n 200 | off_util -M a | antiview -t no_tri -x ev
 <<CMDS_END>>
 
 Making a twisted surface with "sides" made from sweeping multiple edges may
@@ -88,10 +89,10 @@ benefit from a specified colouring. The following commands show <ul>
   <li>an open tube model is made with <i>-O</i>, that preserves the original colours, and colours mismatch</li>
   <li>an open tube model is made with <i>-O</i>, and the original colour indices are mapped so they match </li>
 <<CMDS_START>>
-sweep_edges -n 64 -R 0,0,2*ANG/4 -T 3,0,0 -R 0,ANG,0 -m map_red:green pol4 | antiview -t no_tri -x e
-off_util -g -s pol24 -Dv7- | off_trans -T -3.830648787770195,3.830648787770195,0 | poly_kscope -s C4 -c e | off_util -M a | sweep_edges -n 64 -R 0,0,2*ANG/4 -T 10,0,0 -R 0,ANG,0 | antiview  -t no_tri -x e
-off_util -g -s pol24 -Dv7- | off_trans -T -3.830648787770195,3.830648787770195,0 | poly_kscope -s C4 -c e | off_util -M a | sweep_edges -n 64 -R 0,0,2*ANG/4 -T 10,0,0 -R 0,ANG,0 -O | antiview  -t no_tri -x e
-off_util -g -s pol24 -Dv7- | off_trans -T -3.830648787770195,3.830648787770195,0 | poly_kscope -s C4 -c e | off_util -M a | sweep_edges -n 64 -R 0,0,2*ANG/4 -T 10,0,0 -R 0,ANG,0 -O -m map_red:green:green:red | antiview  -t no_tri -x e
+sweep_edges -n 64 -R 0,0,2*ANG/4 -T 3,0,0 -R 0,ANG,0 -m map_red:green pol4 | antiview -t no_tri -x ev
+off_util -g -s pol24 -Dv7- | off_trans -T -3.830648787770195,3.830648787770195,0 | poly_kscope -s C4 -c e | off_util -M a | sweep_edges -n 64 -R 0,0,2*ANG/4 -T 10,0,0 -R 0,ANG,0 | antiview  -t no_tri -x ev
+off_util -g -s pol24 -Dv7- | off_trans -T -3.830648787770195,3.830648787770195,0 | poly_kscope -s C4 -c e | off_util -M a | sweep_edges -n 64 -R 0,0,2*ANG/4 -T 10,0,0 -R 0,ANG,0 -O | antiview  -t no_tri -x ev
+off_util -g -s pol24 -Dv7- | off_trans -T -3.830648787770195,3.830648787770195,0 | poly_kscope -s C4 -c e | off_util -M a | sweep_edges -n 64 -R 0,0,2*ANG/4 -T 10,0,0 -R 0,ANG,0 -O -m map_red:green:green:red | antiview  -t no_tri -x ev
 <<CMDS_END>>
 
 Plane tiling with progressing scaling
@@ -107,8 +108,8 @@ Swept surfaces are sometimmes used in sculpture, for example
 <a href="https://www.google.com/search?q=sebastian+escultura&tbm=isch">Enrique Carbajal (Sebastian)</a> and
 <a href="https://www.google.com/search?q=Helaman+Ferguson+sculpture&tbm=isch">Helaman Ferguson</a>.
 
-The <a href="n_icons.html">n_icons</a> program sweeps half a polygon twice, as a progressive half turn, a twist,
-then another progressive half turn.
+The <a href="n_icons.html">n_icons</a> program sweeps half a polygon twice,
+as a progressive half turn, a twist, then another progressive half turn.
 
 
 #include "<<END>>"
