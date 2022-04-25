@@ -37,6 +37,7 @@ conway eesD -g | antiview -v 0.01
 A snub pentagrammic antiprism
 <<CMDS_START>>
 conway s ant5/2 | antiview
+<<CMDS_END>>
 
 A snub geodesic sphere
 <<CMDS_START>>
@@ -61,6 +62,8 @@ conway L_2:3aC | antiview -v 0.01
 An interesting result with what looks like star polygons
 <<CMDS_START>>
 conway L_2gC -f w | antiview -v 0.01
+<<CMDS_END>>
+
 <<EXAMPLES_END>>
 
 
@@ -76,9 +79,11 @@ Javascript on George Hart's
 Conway Notation</a> page.
 <p>
 Antiprism Extensions: Further operations added. See
-<a href="http://en.wikipedia.org/wiki/Conway_polyhedron_notation">
+<a href="https://en.wikipedia.org/wiki/Conway_polyhedron_notation">Conway
+polyhedron notation (Wikipedia)</a>
 and
-<a href="http://antitile.readthedocs.io/en/latest/conway.html">
+<a href="https://antitile.readthedocs.io/en/latest/conway.html">Conway
+operations (Antitile)</a>
 <p>
 Canonicalization and planarization may not always converge on
 a convex polyhedron.
