@@ -111,5 +111,6 @@ Swept surfaces are sometimmes used in sculpture, for example
 The <a href="n_icons.html">n_icons</a> program sweeps half a polygon twice,
 as a progressive half turn, a twist, then another progressive half turn.
 
+<<NOTES_END>>
 
 #include "<<END>>"

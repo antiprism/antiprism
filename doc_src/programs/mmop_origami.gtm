@@ -55,8 +55,8 @@ mmop_origami -p -0.2 -t 1/3 rhombicosid_d | antiview
 
 <<NOTES_START>>
 <i>mmop_origami</i> creates models like those described in
-<a href=http://store.doverpublications.com/0486423174.html> Multimodular Origami
-  Polyhedra: Archimedeans, Buckyballs and Duality</a>
+<a href="http://store.doverpublications.com/0486423174.html"> Multimodular
+Origami Polyhedra: Archimedeans, Buckyballs and Duality</a>
 by Rona Gurkewitz, Bennett Arnstein.
 <p>
 A solution will have vertex units made of regular polygons, which are
