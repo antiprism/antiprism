@@ -967,7 +967,7 @@ j = join   The join operator is dual to ambo, so jX=dadX=daX.  jX is like kX
 without the original edges of X.  It produces a polyhedron with one 4-sided
 face for each edge of X.  For example, jC=jO is the rhombic dodecahedron.
 
-k = kis    All faces are processed or kr = just r-sided faces are processed
+k = kis    All faces are processed or kr = only r-sided faces are processed
 The kis operation divides each n-sided face into n triangles.  A new vertex is
 added in the center of each face, e.g., the kiscube, kC, has 24 triangular
 faces.  The k operator is dual to t, meaning kX=dtdX.
@@ -998,12 +998,12 @@ faces along a diagonal into two triangles.  With a consistent handedness to
 these cuts, all the vertices of sX are 5-fold.  Note that sX=sdX.
 (Antiprism Extension: or "sn" where n is 1 or greater)
 
-t = truncate  All faces are processed or tr = just r-sided faces are processed
-Truncating a polyhedron cuts off each vertex, producing a new n-sided face for
-each n-fold vertex.  The faces of the original polyhedron still appear, but
-have twice as many sides, e.g., the tC has six octagonal sides corresponding to
-the six squares of the C, and eight triangles corresponding to the cube's eight
-vertices.
+t = truncate  All faces are processed or tr = only vertices of order r are
+processed. Truncating a polyhedron cuts off each vertex, producing a new
+n-sided face for each n-fold vertex.  The faces of the original polyhedron
+still appear, but have twice as many sides, e.g., the tC has six octagonal
+sides corresponding to the six squares of the C, and eight triangles
+corresponding to the cube's eight vertices.
 
 
 Antiprism Extension: Further operations added. Also see
@@ -1469,11 +1469,14 @@ void cn_opts::process_command_line(int argc, char **argv)
   }
 
   // force tile mode if using polygon
-  if (seed == "Z")
-    tile_mode = true;
+  if (seed == "Z") {
+    if (!tile_mode) {
+      warning("using Z polygons seed changes to tile mode", 't');
+      tile_mode = true;
+    }
+  }
 
   if (tile_mode) {
-    warning("in tile mode", 't');
     if (hart_mode) {
       warning("polygons will not process correctly with George Hart "
               "algorithms. turned off",
