@@ -1,14 +1,14 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.61)
-AC_INIT(antiprism, 0.29.99, adrian@antiprism.com)
+AC_PREREQ([2.69])
+AC_INIT([antiprism],[0.29.99],[adrian@antiprism.com])
 AC_SUBST(RELEASE_DATE, ["2 November 2021"])
 AC_CANONICAL_TARGET  # For m4/fltk.m4
 AM_INIT_AUTOMAKE([1.9 foreign])
 
 AC_CONFIG_SRCDIR([base/antiprism.h])
-AC_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
 AC_ARG_VAR([AR_FLAGS],[flags for ar command, default 'cr'])
@@ -32,17 +32,14 @@ if test $utimer = 0 ; then
    AC_MSG_CHECKING([for timeGetTime in winmm])
    my_ac_save_LIBS=$LIBS
    LIBS="-lwinmm $LIBS"
-   AC_TRY_LINK([#include <windef.h>
+   AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <windef.h>
              #include <mmsystem.h>
-             ],
-             [timeGetTime();],
-             [ dnl worked!
+             ]], [[timeGetTime();]])],[ dnl worked!
              utimer=2; AC_MSG_RESULT([yes])
-             ],
-             [ dnl failed, restore LIBS
+             ],[ dnl failed, restore LIBS
              LIBS=$my_ac_save_LIBS; utimer=0; AC_MSG_RESULT(no);
              AC_MSG_ERROR([no suitable subsecond time function found])
-             ],            )
+             ])
 fi
 
 AC_CHECK_LIB([m], [acos])
@@ -202,7 +199,6 @@ AM_CONDITIONAL(DEBIAN_INSTALL, test x$debian = xtrue)
 
 
 # Checks for header files.
-AC_HEADER_STDC
 AC_CHECK_HEADERS([float.h limits.h stdlib.h string.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
