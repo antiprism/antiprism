@@ -61,6 +61,7 @@ public:
   char canonical_method = 'c';      // circle packings algorithm is default
   int num_iters_canonical = -1;     // unlimited iterations for canonical
   bool use_symmetry = false;        // don't use symmetry
+  bool realign = false;             // realign output to full symmetry
   double edge_factor = NAN;         // mathematica algorithm variable
   double plane_factor = NAN;        // mathematica algorithm variable
   double radius_range_percent = -1; // percent expansion of model
@@ -85,6 +86,8 @@ public:
   Color dual_face_col = Color();
   Color base_edge_col = Color();
   Color dual_edge_col = Color();
+  Color base_vertex_col = Color();
+  Color dual_vertex_col = Color();
   Color sphere_col = Color(255, 255, 255); // white
 
   cn_opts() : ProgramOpts("canonical")
@@ -388,6 +391,7 @@ Options
   -n <itrs> maximum canonical iterations. -1 for unlimited (default: %d)
             WARNING: unstable models may not finish unless -n is set
   -y        maintain symmetry of the base model (-p p, -c c)
+  -Y        align output model geometry to full symmetry
   -O <args> output b - base, d - dual, i - intersection points (default: b)
                edge nearpoints, n - base, m - dual; C - base/dual convex hull
                edge nearpoints centroid, p - base, q - dual; o - origin point
@@ -425,6 +429,8 @@ Coloring Options (run 'off_util -H color' for help on color formats)
   -D <col>  dual face color. keyword: b take color from base vertices (default)
   -J <col>  base edge color (default: unchanged)
   -K <col>  dual edge color (default: unchanged)
+  -V <col>  base vertex color (default: unchanged)
+  -W <col>  dual vertex color (default: unchanged)
   -U <col>  unit sphere and/or convex hull color (default: white)
   -T <tran> base/dual transparency. range from 0 (invisible) to 255 (opaque)
 
@@ -446,10 +452,9 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(
-              argc, argv,
-              ":hHe:s:t:p:i:c:n:yO:q:g:E:P:F:Cd:z:I:N:M:S:R:D:J:K:U:T:l:o:")) !=
-         -1) {
+  while ((c = getopt(argc, argv,
+                     ":hHe:s:t:p:i:c:n:yO:q:g:E:P:F:Cd:Yz:I:N:M:S:R:D:J:K:V:W:"
+                     "U:T:l:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -512,6 +517,10 @@ void cn_opts::process_command_line(int argc, char **argv)
 
     case 'y':
       use_symmetry = true;
+      break;
+
+    case 'Y':
+      realign = true;
       break;
 
     case 'O':
@@ -627,6 +636,14 @@ void cn_opts::process_command_line(int argc, char **argv)
       print_status_or_exit(dual_edge_col.read(optarg), c);
       break;
 
+    case 'V':
+      print_status_or_exit(base_vertex_col.read(optarg), c);
+      break;
+
+    case 'W':
+      print_status_or_exit(dual_vertex_col.read(optarg), c);
+      break;
+
     case 'U':
       print_status_or_exit(sphere_col.read(optarg), c);
       break;
@@ -694,8 +711,7 @@ void cn_opts::process_command_line(int argc, char **argv)
     warning("set, but not used for planarization", 'd');
 
   if (use_symmetry) {
-    if (planarize_method &&
-        (planarize_method != 'p' && planarize_method != 'e'))
+    if (planarize_method && planarize_method != 'p')
       warning("set, but not used for this planarize algorithm", 'y');
     if (canonical_method != 'c')
       warning("set, but not used for this canonical algorithm", 'y');
@@ -953,10 +969,6 @@ void canonical_report(const Geometry &base, const Geometry &dual,
   fprintf(stderr, "the canonical algorithm %s\n",
           (completed ? "completed" : "did not complete"));
 
-  // Symmetry sym(base);
-  // fprintf(stderr, "the symmetry of base model is %s\n",
-  //        sym.get_symbol().c_str());
-
   // intersection point count is not used in score
   int ip_size = ips.size();
   int bn_size = base_nearpts.size();
@@ -1135,10 +1147,18 @@ void reset_model_size(Geometry &geom, const double &epsilon_local)
 
 void set_edge_colors(Geometry &geom, const Color col)
 {
-  // it is possible unset faces already exist
+  // it is possible unset colors already exist
   if (col.is_set()) {
     geom.add_missing_impl_edges();
     Coloring(&geom).e_one_col(col);
+  }
+}
+
+void set_vertex_colors(Geometry &geom, const Color col)
+{
+  // it is possible unset colors already exist
+  if (col.is_set()) {
+    Coloring(&geom).v_one_col(col);
   }
 }
 
@@ -1172,9 +1192,11 @@ void construct_model(Geometry &base, Geometry &dual,
                                opts.dual_incircles_col, filled, opts.offset);
   }
 
-  if (opts.output_parts.find_first_of("bC") != string::npos)
-    // set edge colors here
+  if (opts.output_parts.find_first_of("bC") != string::npos) {
+    // set edge and vertex colors here
     set_edge_colors(base, opts.base_edge_col);
+    set_vertex_colors(base, opts.base_vertex_col);
+  }
   else
     // clear base if not using
     base.clear_all();
@@ -1183,6 +1205,7 @@ void construct_model(Geometry &base, Geometry &dual,
   if (opts.output_parts.find_first_of("dC") != string::npos) {
     // set edge colors here
     set_edge_colors(dual, opts.dual_edge_col);
+    set_vertex_colors(dual, opts.dual_vertex_col);
     base.append(dual);
   }
 
@@ -1721,6 +1744,15 @@ bool make_canonical_enp(Geometry &geom, IterationControl it_ctrl, double factor,
   return stat.is_ok(); // true if completed;
 }
 
+void realign_output(Geometry &base)
+{
+  Symmetry sym(base);
+  fprintf(stderr, "the symmetry of output model is %s (realigned)\n",
+          sym.get_symbol().c_str());
+
+  base.transform(sym.get_to_std());
+}
+
 int main(int argc, char *argv[])
 {
   cn_opts opts;
@@ -1886,6 +1918,9 @@ int main(int argc, char *argv[])
 
   // parts to output
   construct_model(base, dual, base_nearpts, dual_nearpts, ips, opts);
+
+  if (opts.realign)
+    realign_output(base);
 
   opts.write_or_error(base, opts.ofile);
 
