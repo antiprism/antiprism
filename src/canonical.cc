@@ -1750,8 +1750,17 @@ int main(int argc, char *argv[])
       Trans3d::translate(-edge_nearpoints_centroid(base, Vec3d(0, 0, 0))));
 
   Symmetry sym;
-  if (opts.use_symmetry)
+  if (opts.use_symmetry) {
     opts.print_status_or_exit(sym.init(base), 'y');
+    // find the nearest point to the origin in the subspace fixed by sym
+    // the distance of this point from the origin should be within the
+    // precision limit, or the canonical algorithm may not complete
+    auto near_pt = sym.get_fixed_subspace().nearest_point(Vec3d::zero);
+    if (near_pt.len() > opts.it_ctrl.get_test_val())
+      opts.error("polyhedron not centred on origin (try aligning first with "
+                 "off_trans -y full)",
+                 'y');
+  }
 
   if (opts.target_model != 'b') {
     fprintf(stderr, "converting target to dual for planarization\n");
