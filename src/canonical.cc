@@ -375,7 +375,8 @@ Options
                b - work on base only (default)
                p - work on dual for planarization only
                c - work on dual for planarization and canonicalization
-  -p <opt>  planarization (done before canoncalization. default: none)
+  -p <opt>  planarization only, or initial planarization if -c is set
+              (default: no planarization)
                p - poly_form planarize (poly_form -a p)
                m - mathematica planarize
                a - moving edge planarize
@@ -390,7 +391,7 @@ Options
                x - none (default, if -p is set)
   -n <itrs> maximum canonical iterations. -1 for unlimited (default: %d)
             WARNING: unstable models may not finish unless -n is set
-  -y        maintain symmetry of the base model (-p p, -c c)
+  -y        maintain symmetry and alignment of the base model (with -p p, -c c)
   -Y        align output model geometry to full symmetry
   -O <args> output b - base, d - dual, i - intersection points (default: b)
                edge nearpoints, n - base, m - dual; C - base/dual convex hull
@@ -1925,11 +1926,11 @@ int main(int argc, char *argv[])
     canonical_report(base, dual, base_nearpts, dual_nearpts, ips, completed,
                      epsilon_local);
 
-  // parts to output
-  construct_model(base, dual, base_nearpts, dual_nearpts, ips, opts);
-
   if (opts.realign)
     realign_output(base);
+
+  // parts to output
+  construct_model(base, dual, base_nearpts, dual_nearpts, ips, opts);
 
   opts.write_or_error(base, opts.ofile);
 
