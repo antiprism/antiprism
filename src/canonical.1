@@ -39,7 +39,9 @@ p \- work on dual for planarization only
 c \- work on dual for planarization and canonicalization
 .TP
 \fB\-p\fR <opt>
-planarization (done before canoncalization. default: none)
+planarization only, or initial planarization if \fB\-c\fR is set
+.IP
+(default: no planarization)
 .IP
 p \- poly_form planarize (poly_form \fB\-a\fR p)
 m \- mathematica planarize
@@ -64,7 +66,7 @@ x \- none (default, if \fB\-p\fR is set)
 WARNING: unstable models may not finish unless \fB\-n\fR is set
 .TP
 \fB\-y\fR
-maintain symmetry of the base model (\fB\-p\fR p, \fB\-c\fR c)
+maintain symmetry and alignment of the base model (with \fB\-p\fR p, \fB\-c\fR c)
 .TP
 \fB\-Y\fR
 align output model geometry to full symmetry
