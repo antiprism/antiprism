@@ -70,7 +70,8 @@ public:
   char initial_point_type = 'c';    // c - edge centroids, n - edge near points
   string output_parts = "b";        // parts of output model
   int face_opacity = -1;            // transparency
-  double offset = 0;                // offset of tangency sphere
+  double offset = 0;                // incircle offset from faces
+  double radius_adj = 1;            // incircle radius adjustment
   int roundness = 8;                // roundness of tangency sphere
 
   double eps = anti::epsilon;
@@ -398,7 +399,8 @@ Options
                edge nearpoints centroid, p - base, q - dual; o - origin point
                tangent sphere, u - minimum, U - maximum
                incircles, s - base, t - dual; as rings, S - base, T - dual
-  -q <dist> offset for incircles to avoid coplanarity e.g 0.0001 (default: 0)
+  -q <dist> incircles offset to avoid coplanarity e.g 0.0001 (default: 0)
+  -Q <dist> incircles radius adjustment (default: 1)
   -g <opt>  roundness of tangent sphere, positive integer n (default: 8)
   -d <perc> radius test. percent difference between minimum and maximum radius
                checks if polyhedron is collapsing. 0 for no test 
@@ -453,9 +455,10 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv,
-                     ":hHe:s:t:p:i:c:n:yO:q:g:E:P:F:Cd:Yz:I:N:M:S:R:D:J:K:V:W:"
-                     "U:T:l:o:")) != -1) {
+  while (
+      (c = getopt(argc, argv,
+                  ":hHe:s:t:p:i:c:n:yO:q:Q:g:E:P:F:Cd:Yz:I:N:M:S:R:D:J:K:V:W:"
+                  "U:T:l:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -535,6 +538,10 @@ void cn_opts::process_command_line(int argc, char **argv)
 
     case 'q':
       print_status_or_exit(read_double(optarg, &offset), c);
+      break;
+
+    case 'Q':
+      print_status_or_exit(read_double(optarg, &radius_adj), c);
       break;
 
     case 'g':
@@ -1090,7 +1097,8 @@ double incircle_radius(const Geometry &geom, Vec3d &center, const int face_no)
 }
 
 Geometry incircles(const Geometry &geom, const char &incircle_color_method,
-                   const Color &incircle_color, bool filled, double offset)
+                   const Color &incircle_color, bool filled, double offset,
+                   double radius_adj)
 {
   Geometry incircles;
   Geometry circle = unit_circle(60, incircle_color, filled);
@@ -1109,7 +1117,7 @@ Geometry incircles(const Geometry &geom, const char &incircle_color_method,
       Coloring(&incircle).f_one_col(col);
     }
 
-    double radius = incircle_radius(geom, center, i);
+    double radius = incircle_radius(geom, center, i) * radius_adj;
     incircle.transform(Trans3d::scale(radius));
 
     // set depth of incircle
@@ -1182,7 +1190,8 @@ void construct_model(Geometry &base, Geometry &dual,
   if (opts.output_parts.find_first_of("sS") != string::npos) {
     bool filled = (opts.output_parts.find("s") != string::npos) ? true : false;
     base_incircles = incircles(base, opts.base_incircles_color_method,
-                               opts.base_incircles_col, filled, opts.offset);
+                               opts.base_incircles_col, filled, opts.offset,
+                               opts.radius_adj);
   }
 
   // dual incircles
@@ -1190,7 +1199,8 @@ void construct_model(Geometry &base, Geometry &dual,
   if (opts.output_parts.find_first_of("tT") != string::npos) {
     bool filled = (opts.output_parts.find("t") != string::npos) ? true : false;
     dual_incircles = incircles(dual, opts.dual_incircles_color_method,
-                               opts.dual_incircles_col, filled, opts.offset);
+                               opts.dual_incircles_col, filled, opts.offset,
+                               opts.radius_adj);
   }
 
   if (opts.output_parts.find_first_of("bC") != string::npos) {

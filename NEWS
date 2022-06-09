@@ -5,6 +5,10 @@ XX-XX-22 Adrian Rossiter <adrian@antiprism.com>
          New Programs
             sweep_edges: sweep edges to make a surface
          Changes
+            canonical:
+              -V, W coloring options added
+              -Y to realign output
+              -Q to adjust incircle radius
          Fixes
 
 Version 0.29
