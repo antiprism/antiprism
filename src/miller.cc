@@ -87,12 +87,16 @@ model string can be followed by I or Ih symmetry. e.g. m_e1f1',I
 Options
 %s
   -L        list models only
-  -M        merge stellation facelets (for cell name strings only)
-  -r        rebuild compound model to separate vertices
-  -O <args> output s - stellation, d - diagram (default: s)
   -l <lim>  minimum distance for unique vertex locations as negative exponent
                (default: %d giving %.0e)
   -o <file> write output to file (default: write to standard output)
+
+Program Options
+  -M        merge stellation facelets (for cell name strings only)
+  -r        rebuild compound model to separate vertices
+
+Scene Options
+  -O <args> output s - stellation, d - diagram (default: s)
 
 Coloring Options (run 'off_util -H color' for help on color formats)
   -F <opt>  face coloring method. d - from diagram, s - symmetry

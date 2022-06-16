@@ -113,17 +113,21 @@ SC, FCC, or BCC
 
 Options
 %s
-  -r <r,n>  clip radius. r is radius taken to optional root n. n = 2 is sqrt
-  -q <cent> center of lattice, three comma separated coordinates
-               0 for origin  (default: origin)
-  -m <mthd> 1 - sphere-ray intersection  2 - z guess (default: 1)
-  -C <opt>  c - convex hull only, i - keep interior, s - suppress (default: c)
-  -f        fill interior points (not for -C c)
-  -t        defeat computational error testing for sphere-ray method
   -v        verbose output (on computational errors)
   -l <lim>  minimum distance for unique vertex locations as negative exponent
                (default: %d giving %.0e)
   -o <file> write output to file (default: write to standard output)
+
+Program Options
+  -r <r,n>  clip radius. r is radius taken to optional root n. n = 2 is sqrt
+  -q <cent> center of lattice, three comma separated coordinates
+               0 for origin  (default: origin)
+  -m <mthd> 1 - sphere-ray intersection  2 - z guess (default: 1)
+  -f        fill interior points (not for -C c)
+  -t        defeat computational error testing for sphere-ray method
+
+Scene Options
+  -C <opt>  c - convex hull only, i - keep interior, s - suppress (default: c)
 
 Coloring Options (run 'off_util -H color' for help on color formats)
   -V <col>  model vertex color (default: none)

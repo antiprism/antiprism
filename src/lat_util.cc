@@ -105,6 +105,11 @@ Options
 %s
   -h        this help message
   -I        verbose output
+  -l <lim>  minimum distance for unique vertex locations as negative exponent
+               (default: %d giving %.0e)
+  -o <file> write output to file (default: write to standard output)
+
+Scene Options
   -z        suppress stripping of faces
   -c <type> container, c - cube (default), s - sphere (uses radius)
   -k <file> container, convex hull of off file or built in model (uses radius)
@@ -126,9 +131,6 @@ Options
   -K        append cage of container of -k to final product
   -Z <col>  add center vertex to final product in color col
   -O        translate center of final product to origin
-  -l <lim>  minimum distance for unique vertex locations as negative exponent
-               (default: %d giving %.0e)
-  -o <file> write output to file (default: write to standard output)
 
 Listing Options
   -Q <vecs> center for radius calculations in -L (default: centroid)

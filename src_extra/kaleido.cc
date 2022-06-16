@@ -551,11 +551,13 @@ Entering a listing option with symbol 0 will list all
 
 Options
 %s
-  -w <opt>  off=1, vrml=2  (default: off)
-  -b <opt>  base=1, dual=2 (default: base)
   -d <dgts> number of significant digits (default %d) or if negative
             then the number of digits after the decimal point
   -o <file> write output to file (default: write to standard output)
+
+Scene Options
+  -w <opt>  off=1, vrml=2  (default: off)
+  -b <opt>  base=1, dual=2 (default: base)
 
 Listings (use 0 for Symbol to list all)
   -l        list polyhedron names, symbols and reference figures only

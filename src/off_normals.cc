@@ -87,6 +87,11 @@ If input_file is not given the program reads from standard input.
 
 Options
 %s
+  -l <lim>  minimum distance for unique vertex locations as negative exponent
+               (default: %d giving %.0e)
+  -o <file> write output to file (default: write to standard output)
+
+Scene Options
   -u        unit normals  (positional normals otherwise)
   -e        connect to element centroid (for reference)
   -p <opt>  force polarity. o - outward, i - inward
@@ -104,9 +109,6 @@ Options
   -x <opt>  face normals: n - Newell's, t - triangles, q - quads (default: n)
   -C <xyz>  center of model for normals, three comma separated coordinates
                0 for origin  (default: centroid)
-  -l <lim>  minimum distance for unique vertex locations as negative exponent
-               (default: %d giving %.0e)
-  -o <file> write output to file (default: write to standard output)
 
 Coloring Options (run 'off_util -H color' for help on color formats)
   -O <col>  outward normal vertex color

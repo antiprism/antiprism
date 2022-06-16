@@ -73,16 +73,18 @@ input_file is not given the program reads from standard input.
 
 Options
 %s
-  -c        estimates colors from OFF file
-  -r        detect rhombi. D parameter added if found
-  -p        detect star polygons
-  -x        exclude coordinates
-  -t        force all faces transparent
   -l <lim>  minimum distance for unique vertex locations as negative exponent
                (default: %d giving %.0e)
   -d <dgts> number of significant digits (default %d) or if negative
             then the number of digits after the decimal point
   -o <file> file name for output (otherwise prints to stdout)
+
+Program Options
+  -c        estimates colors from OFF file
+  -r        detect rhombi. D parameter added if found
+  -p        detect star polygons
+  -x        exclude coordinates
+  -t        force all faces transparent
 
 )",
           prog_name(), help_ver_text, int(-log(anti::epsilon) / log(10) + 0.5),

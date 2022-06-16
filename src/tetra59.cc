@@ -364,18 +364,20 @@ The first case was published by M.J.M Hill in 1895. The second case is new.
 Options
 %s
   -H        abstract from the paper and description of regge symmetry
+  -v        verbose output of edge math
+  -b        verbose output of face math
   -l <int>  display the list of Sporadic Tetrahedra as integer=1, degrees=2
-  -r        reflect
-  -z        scale volume to 1
+  -o <file> write output to file (default: write to standard output)
+
+Scene Options
   -d <mthd> order of dihedral angles, for matching dihedral angle at position
             term 1 (a12) for regge symmetry (also permutes special cases) 
             angles permuted as pairs: 1-(a12,a34) 2-(a13,a24) 3-(a14,a23)
             for each pair in position one, there are two arrangements
             a:1,2,3  b:1,3,2; c:2,1,3  d:2,3,1; e:3,1,2  f:3,2,1 (default:a)
   -p <int>  build regge pair if found (1 or 2) not for special cases (sets -z)
-  -v        verbose output of edge math
-  -b        verbose output of face math
-  -o <file> write output to file (default: write to standard output)
+  -r        reflect
+  -z        scale volume to 1
 
 Special Cases
   -s <int>  special case 1 or 2 (default: none)

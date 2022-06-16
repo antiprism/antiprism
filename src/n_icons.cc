@@ -190,6 +190,12 @@ Creates Sphericon like Polyhedra. Also known as Streptohedra
 
 Options
 %s
+  -I        information on current n-icon  
+  -l <lim>  minimum distance for unique vertex locations as negative exponent
+               (default: %d giving %.0e)
+  -o <file> write output to file (default: write to standard output)
+
+Program Options
   -n <n/d>  n-icon of order n. n must be 3 or greater (default: 4)
                use d to make star n-icon. d less than n
   -t <twst> number of twists. Can be negative, positive or 0 (default: 1)
@@ -202,6 +208,8 @@ Options
                1 - n/d must be co-prime. bow-ties can occur (default for d=1)
                2 - n/d compounds allowed. shell model (default for d>1)
                3 - n/d compounds allowed. No bow-ties (default if angle not 0)
+
+Scene Options
   -M <m,m2> longitudes of model of m sides with optional m2 of m sides showing
                m may be odd, 3 or greater if twist is 0 (default: 36,36)
   -A        place a north and south pole in top and bottom if they exist
@@ -211,10 +219,8 @@ Options
   -x <elms> v, e and f to remove OFF faces with one vertex (vertices),
                two-vertices (edges) and three or more vertices (faces)
                E - if face is invisible, associated edge is made invisible
-  -I        information on current n-icon  
-  -l <lim>  minimum distance for unique vertex locations as negative exponent
-               (default: %d giving %.0e)
-  -o <file> write output to file (default: write to standard output)
+  -Y        for n/d shells, when showing edges, show indented edges
+  -W        add symmetry polygon (-f S or -e S)
 
 Coloring Options (run 'off_util -H color' for help on color formats)
   -f <mthd> mthd is face coloring method. The coloring is done before twist
@@ -246,16 +252,14 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                0 -U value suppressed, 1 -U value applied  (default: '1')
   -Q <col>  color given to uncolored edges and vertices of final model
                keyword: none - sets no color (default: invisible)
-  -Y        for n/d shells, when showing edges, show indented edges
-  -m <maps> color maps to be tried in turn. (default: map_red:darkorange1:
-               yellow:darkgreen:cyan:blue:magenta:white:gray50:black%%)
-               optionally followed by elements from v, e or f (default: vef)
   -D <c,e>  default color c for uncolored elements e (default: darkgray,ef)
                keyword: none - sets no color. elements e can include e or f
   -X <int>  flood fill stop. used with circuit or compound coloring (-f f,c)
                use 0 (default) to flood fill entire model. if -X is not 0 then
                return 1 from program if entire model has been colored
-  -W        add symmetry polygon (for -f S or -e S)
+  -m <maps> color maps to be tried in turn. (default: map_red:darkorange1:
+               yellow:darkgreen:cyan:blue:magenta:white:gray50:black%%)
+               optionally followed by elements from v, e or f (default: vef)
 
 Surface Count Reporting (options above ignored)
   -L <type> list n-icons with more than one surface. Valid values for type

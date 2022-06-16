@@ -849,19 +849,17 @@ public:
   string ifile;
   string ofile;
 
-  string cn_string;                // the conway notation string
-  bool resolve_ops = false;        // resolve operations in hart mode
-  bool hart_mode = false;          // George Hart legacy mode
-  bool tile_mode = false;          // tile mode for flat surfaces
-  bool reverse_ops = false;        // reverse the notation string
-  string seed;                     // the initial seed for operations
-  int seed_size = 0;               // for seeds that can have a size
-  char planarize_method = 'b';     // internal default planarization method
-  bool unitize = false;            // sets the edge lengths to average of 1
-  bool verbosity = false;          // output on screen
-  char face_coloring_method = 'n'; // default face coloring method
-  int face_opacity = -1;           // transparency from 0 to 255
-  string second_char = "#";        // for 2 character operations
+  string cn_string;            // the conway notation string
+  bool resolve_ops = false;    // resolve operations in hart mode
+  bool hart_mode = false;      // George Hart legacy mode
+  bool tile_mode = false;      // tile mode for flat surfaces
+  bool reverse_ops = false;    // reverse the notation string
+  string seed;                 // the initial seed for operations
+  int seed_size = 0;           // for seeds that can have a size
+  char planarize_method = 'b'; // internal default planarization method
+  bool unitize = false;        // sets the edge lengths to average of 1
+  bool verbosity = false;      // output on screen
+  string second_char = "#";    // for 2 character operations
 
   double eps = anti::epsilon;
 
@@ -870,8 +868,15 @@ public:
   // for on the fly user operators
   std::map<string, vector<ops *>> operations_user;
 
+  // coloring options
+  char vertex_coloring_method = '\0'; // default vert coloring method
+  char face_coloring_method = 'n';    // default face coloring method
+
   Color vert_col = Color(255, 215, 0);   // gold
   Color edge_col = Color(211, 211, 211); // lightgray
+  Color face_col = Color();              // not set
+
+  int face_opacity = -1; // transparency from 0 to 255
 
   ColorMapMulti map;
 
@@ -1193,6 +1198,17 @@ string then the program reads from standard input.
 Options
 %s
   -H        Conway Notation detailed help. seeds and operator descriptions
+  -v        verbose output
+  -z <nums> number of iterations between status reports (implies termination
+            check) (0 for final report only, -1 for no report), optionally
+            followed by a comma and the number of iterations between
+            termination checks (0 for report checks only) (default: %d,%d)
+  -l <lim>  minimum distance change to terminate planarization, as negative
+               exponent (default: %d giving %.0e)
+            WARNING: high values can cause non-terminal behaviour. Use -i
+  -o <file> write output to file (default: write to standard output)
+
+Conway Notation Options
   -s        apply Conway Notation string substitutions
   -g        use George Hart algorithms (sets -s)
   -c <op=s> user defined operation strings in the form of op,string
@@ -1203,23 +1219,18 @@ Options
   -t        tile mode. when input is a 2D tiling. unsets -g
               set if seed of Z is detected
   -r        execute operations in reverse order (left to right)
-  -u        make final product be averge unit edge length
-  -v        verbose output
+  -u        make final product be of averge unit edge length
   -i <itrs> maximum planarize iterations. -1 for unlimited (default: %d)
             WARNING: unstable models may not finish unless -i is set
-  -l <lim>  minimum distance change to terminate planarization, as negative
-               exponent (default: %d giving %.0e)
-            WARNING: high values can cause non-terminal behaviour. Use -i
-  -z <nums> number of iterations between status reports (implies termination
-            check) (0 for final report only, -1 for no report), optionally
-            followed by a comma and the number of iterations between
-            termination checks (0 for report checks only) (default: %d,%d)
-  -o <file> write output to file (default: write to standard output)
 
 Coloring Options (run 'off_util -H color' for help on color formats)
   -V <col>  vertex color (default: gold)
+               keyword: none - sets no color
+               n - by number of sides
+               s - symmetric coloring
+               u - unique coloring
   -E <col>  edge color   (default: lightgray)
-  -f <mthd> mthd is face coloring method using color in map (default: n)
+  -f <col>  face color. Or use method for using color in map (default: n)
                keyword: none - sets no color
                n - by number of sides
                s - symmetric coloring
@@ -1236,10 +1247,10 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                            gray,orange (from George Hart's original applet)
 
 )",
-          prog_name(), help_ver_text, it_ctrl.get_max_iters(),
-          it_ctrl.get_sig_digits(), it_ctrl.get_test_val(),
+          prog_name(), help_ver_text,
           it_ctrl.get_status_check_and_report_iters(),
-          it_ctrl.get_status_check_only_iters(),
+          it_ctrl.get_status_check_only_iters(), it_ctrl.get_sig_digits(),
+          it_ctrl.get_test_val(), it_ctrl.get_max_iters(),
           TilingColoring::get_option_help('C').c_str());
 }
 
@@ -1373,11 +1384,10 @@ void cn_opts::process_command_line(int argc, char **argv)
     case 'f':
       if (!strcasecmp(optarg, "none"))
         face_coloring_method = '\0';
-      else if (strspn(optarg, "nsuow") != strlen(optarg) || strlen(optarg) > 1)
-        error(msg_str("invalid face Coloring method '%s'", optarg), c);
-      else {
+      else if (strspn(optarg, "nsuow") && strlen(optarg) == 1)
         face_coloring_method = *optarg;
-      }
+      else
+        print_status_or_exit(face_col.read(optarg), c);
       break;
 
     case 'C': {
@@ -1386,7 +1396,14 @@ void cn_opts::process_command_line(int argc, char **argv)
     }
 
     case 'V':
-      print_status_or_exit(vert_col.read(optarg), c);
+      // unset default vertex color
+      vert_col = Color();
+      if (!strcasecmp(optarg, "none"))
+        vertex_coloring_method = '\0';
+      else if (strspn(optarg, "nsu") && strlen(optarg) == 1)
+        vertex_coloring_method = *optarg;
+      else
+        print_status_or_exit(vert_col.read(optarg), c);
       break;
 
     case 'E':
@@ -2283,23 +2300,56 @@ void cn_coloring(Geometry &geom, const cn_opts &opts)
   if (!geom.verts().size())
     return;
 
-  if (opts.face_coloring_method == 'n') {
-    const vector<vector<int>> &faces = geom.faces();
-    for (unsigned int i = 0; i < faces.size(); i++) {
-      unsigned int fsz = faces[i].size();
-      Color col = opts.map.get_col(fsz - 3);
-      geom.colors(FACES).set(i, col);
+  // Get symmetry if necessary
+  Symmetry sym;
+  vector<vector<set<int>>> sym_equivs;
+  vector<set<int>> v_equivs;
+  vector<set<int>> f_equivs;
+  if (opts.face_coloring_method == 's' || opts.vertex_coloring_method == 's') {
+    sym.init(geom, &sym_equivs);
+    v_equivs = sym_equivs[0];
+    f_equivs = sym_equivs[2];
+  }
+
+  // color vertices first since may be needed before face options
+  // wythoff overrides coloring of vertices
+  if (opts.face_coloring_method != 'w') {
+    if (opts.vert_col.is_set())
+      Coloring(&geom).v_one_col(opts.vert_col);
+    else if (opts.vertex_coloring_method == 'n') {
+      Coloring clrng(&geom);
+      clrng.add_cmap(opts.map.clone());
+      clrng.v_order(true);
+      clrng.f_apply_cmap();
+    }
+    else if (opts.vertex_coloring_method == 's') {
+      Coloring clrng;
+      clrng.add_cmap(opts.map.clone());
+      clrng.set_geom(&geom);
+      clrng.v_sets(v_equivs, true);
+    }
+    else if (opts.vertex_coloring_method == 'u') {
+      Coloring clrng(&geom);
+      clrng.add_cmap(opts.map.clone());
+      clrng.v_unique(true);
+      clrng.v_apply_cmap();
     }
   }
-  else if (opts.face_coloring_method == 's') {
-    Symmetry sym;
-    vector<vector<set<int>>> sym_equivs;
-    sym.init(geom, &sym_equivs);
 
+  // color faces 2nd
+  if (opts.face_col.is_set())
+    Coloring(&geom).f_one_col(opts.face_col);
+  else if (opts.face_coloring_method == 'n') {
+    Coloring clrng(&geom);
+    clrng.add_cmap(opts.map.clone());
+    clrng.f_sides(true);
+    clrng.f_apply_cmap();
+  }
+  else if (opts.face_coloring_method == 's') {
     Coloring clrng;
     clrng.add_cmap(opts.map.clone());
     clrng.set_geom(&geom);
-    clrng.f_sets(sym_equivs[2], true);
+    clrng.f_sets(f_equivs, true);
   }
   else if (opts.face_coloring_method == 'u') {
     Coloring clrng(&geom);
@@ -2321,12 +2371,7 @@ void cn_coloring(Geometry &geom, const cn_opts &opts)
   if (stat.is_warning())
     opts.warning(stat.msg(), 'T');
 
-  // color vertices
-  // wythoff overrides coloring of vertices
-  if (opts.face_coloring_method != 'w')
-    Coloring(&geom).v_one_col(opts.vert_col);
-
-  // color edges
+  // color edges 3rd
   geom.add_missing_impl_edges();
   if (opts.face_coloring_method != 'w')
     Coloring(&geom).e_one_col(opts.edge_col);

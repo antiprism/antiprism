@@ -21,6 +21,18 @@ Options
 \fB\-h\fR,\-\-help this help message (run 'off_util \fB\-H\fR help' for general help)
 .HP
 \fB\-\-version\fR version information
+.TP
+\fB\-v\fR
+verbose output
+.TP
+\fB\-l\fR <lim>
+minimum distance for unique vertex locations as negative exponent
+.IP
+(default: 12 giving 1e\-12)
+.HP
+\fB\-o\fR <file> write output to file (default: write to standard output)
+.PP
+Program Options
 .HP
 \fB\-k\fR <s,l,m,n,a> Kaplan\-Hart notation. Generate Symmetrohedra based on a study
 .IP
@@ -91,6 +103,8 @@ to r. Must be non\-negative. The default edge length is 1
 .TP
 \fB\-A\fR <a>
 a in degrees is angle between axes (default: calculated)
+.PP
+Scene Options
 .HP
 \fB\-C\fR <mode> convex hull. polygons=1, suppress=2, force=3, normal=4 (default: 4)
 .HP
@@ -104,16 +118,6 @@ second polygon, for example 0.0001 (default: 0.0)
 .TP
 \fB\-x\fR
 remove any free faces that are produced
-.TP
-\fB\-v\fR
-verbose output
-.TP
-\fB\-l\fR <lim>
-minimum distance for unique vertex locations as negative exponent
-.IP
-(default: 12 giving 1e\-12)
-.HP
-\fB\-o\fR <file> write output to file (default: write to standard output)
 .PP
 Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
 .TP
@@ -122,12 +126,6 @@ vertex color (default: gold)
 .TP
 \fB\-E\fR <col>
 edge color   (default: lightgray)
-.TP
-\fB\-D\fR
-don't cover digons with edge color
-.TP
-\fB\-Q\fR <col>
-frame color  (default: skyblue3)
 .HP
 \fB\-f\fR <mthd> mthd is face coloring method using color in map (default: a)
 .IP
@@ -136,6 +134,12 @@ a \- color by axis number
 n \- color by number of sides (map start from digons (sides 2))
 .HP
 \fB\-T\fR <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
+.TP
+\fB\-D\fR
+don't cover digons with edge color
+.TP
+\fB\-Q\fR <col>
+frame color  (default: skyblue3)
 .HP
 \fB\-m\fR <maps> color maps for faces to be tried in turn (default: m1)
 .IP

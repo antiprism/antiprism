@@ -105,6 +105,12 @@ options -k, -t, -s and -c cannot be used together but one needs to be specified
 
 Options
 %s
+  -v        verbose output
+  -l <lim>  minimum distance for unique vertex locations as negative exponent
+               (default: %d giving %.0e)
+  -o <file> write output to file (default: write to standard output)
+
+Program Options
   -k <s,l,m,n,a> Kaplan-Hart notation. Generate Symmetrohedra based on a study
             by Craig S. Kaplan and George W. Hart (http://www.georgehart.com).
             Url: http://www.cgl.uwaterloo.ca/~csk/projects/symmetrohedra
@@ -144,27 +150,25 @@ Options
   -r <r,n>  set the edge length of the polygon on axis n (default: 0)
                to r. Must be non-negative. The default edge length is 1
   -A <a>    a in degrees is angle between axes (default: calculated)
+  
+Scene Options
   -C <mode> convex hull. polygons=1, suppress=2, force=3, normal=4 (default: 4)
   -q <args> include frame elements in output
                r - rhombic tiling edges, a - rotation axes (default: none)
   -O <dist> amount to offset the first polygon to avoid coplanarity with the
                second polygon, for example 0.0001 (default: 0.0)
   -x        remove any free faces that are produced
-  -v        verbose output
-  -l <lim>  minimum distance for unique vertex locations as negative exponent
-               (default: %d giving %.0e)
-  -o <file> write output to file (default: write to standard output)
 
 Coloring Options (run 'off_util -H color' for help on color formats)
   -V <col>  vertex color (default: gold)
   -E <col>  edge color   (default: lightgray)
-  -D        don't cover digons with edge color
-  -Q <col>  frame color  (default: skyblue3)
   -f <mthd> mthd is face coloring method using color in map (default: a)
                keyword: none - sets no color
                a - color by axis number
                n - color by number of sides (map start from digons (sides 2))
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
+  -D        don't cover digons with edge color
+  -Q <col>  frame color  (default: skyblue3)
   -m <maps> color maps for faces to be tried in turn (default: m1)
                keyword m1: red,blue,yellow,darkgreen
                   note: position 4 color is for faces added by convex hull

@@ -84,6 +84,11 @@ Color in radial pattern based on symmetry.
 
 Options
 %s
+  -l <lim>  minimum distance change to terminate planarization, as negative
+               exponent (default: %d giving %.0e)
+  -o <file> write output to file (default: write to standard output)
+
+Scene Options
   -d <opt>  coloring. radial=1, axes=2 (default: 1)
                (multiple -d as needed)
   -a <ax,p> axis order. primary=1, secondary=2, tertiary=3, all=4 (default: 1)
@@ -98,9 +103,6 @@ Options
             for radial coloring. special selector: s for number of face sides
                (multiple -f as needed, -f overrides -a)
   -s <sym>  symmetry subgroup (Schoenflies notation)
-  -l <lim>  minimum distance change to terminate planarization, as negative
-               exponent (default: %d giving %.0e)
-  -o <file> write output to file (default: write to standard output)
 
 Coloring Options (run 'off_util -H color' for help on color formats)
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)

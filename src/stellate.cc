@@ -91,6 +91,11 @@ Stellate a polyhedron.
 
 Options
 %s
+  -l <lim>  minimum distance for unique vertex locations as negative exponent
+               (default: %d giving %.0e)
+  -o <file> write output to file (default: write to standard output)
+
+Program Options
   -f <fnos> face number of input file for stellation diagram (default: 0)
             followed by face numbers of stellation diagram for stellation
             model separated by commas. multiple -n parameters as needed
@@ -101,15 +106,14 @@ Options
   -R        resolve stellation facelets
   -D        remove multiples occurrences (sets -R)
   -r        rebuild compound model to separate vertices
+
+Scene Options
   -O <args> output s - stellation, d - diagram, i - input model (default: s)
                D - diagram faces used highlighted, S - with symmetry
                R - resolved faces used for stellation (when using D or S)
                F - highlighted faces only (when using D, S or R)
   -z        move first diagram to face front (out of symmetry alignment)
   -w <int>  width to project stellation diagram (default: 500)
-  -l <lim>  minimum distance for unique vertex locations as negative exponent
-               (default: %d giving %.0e)
-  -o <file> write output to file (default: write to standard output)
 
 Coloring Options (run 'off_util -H color' for help on color formats)
   -F <opt>  face coloring method. d - from diagram, s - symmetry (default: d)

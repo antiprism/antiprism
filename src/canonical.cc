@@ -356,7 +356,8 @@ the number of vertices in its orbit.
 
 void cn_opts::usage()
 {
-  fprintf(stdout, R"(
+  fprintf(
+      stdout, R"(
 Usage: %s [options] [input_file]
 
 Read a polyhedron from a file in OFF format. Canonicalize or planarize it.
@@ -367,7 +368,17 @@ If input_file is not given the program reads from standard input.
 
 Options
 %s
-  -H        documention on algorithm 
+  -H        documention on algorithm
+  -z <nums> number of iterations between status reports (implies termination
+            check) (0 for final report only, -1 for no report), optionally
+            followed by a comma and the number of iterations between
+            termination checks (0 for report checks only) (default: %d,%d)
+  -l <lim>  minimum distance change to terminate, as negative exponent
+               (default: %d giving %.0e)
+            WARNING: high values can cause non-terminal behaviour. Use -n
+  -o <file> write output to file (default: write to standard output)
+
+Canonical and Planarization Options
   -e <opt>  edge distribution (default : none)
                s - project vertices onto a sphere
   -s <opt>  shuffle model indexes
@@ -392,27 +403,11 @@ Options
                x - none (default, if -p is set)
   -n <itrs> maximum canonical iterations. -1 for unlimited (default: %d)
             WARNING: unstable models may not finish unless -n is set
-  -y        maintain symmetry and alignment of the base model (with -p p, -c c)
-  -Y        align output model geometry to full symmetry
-  -O <args> output b - base, d - dual, i - intersection points (default: b)
-               edge nearpoints, n - base, m - dual; C - base/dual convex hull
-               edge nearpoints centroid, p - base, q - dual; o - origin point
-               tangent sphere, u - minimum, U - maximum
-               incircles, s - base, t - dual; as rings, S - base, T - dual
-  -q <dist> incircles offset to avoid coplanarity e.g 0.0001 (default: 0)
-  -Q <dist> incircles radius adjustment (default: 1)
-  -g <opt>  roundness of tangent sphere, positive integer n (default: 8)
   -d <perc> radius test. percent difference between minimum and maximum radius
                checks if polyhedron is collapsing. 0 for no test 
                (default: 80 for canonicalizing, not used for planarizing)
-  -l <lim>  minimum distance change to terminate, as negative exponent
-               (default: %d giving %.0e)
-            WARNING: high values can cause non-terminal behaviour. Use -n
-  -z <nums> number of iterations between status reports (implies termination
-            check) (0 for final report only, -1 for no report), optionally
-            followed by a comma and the number of iterations between
-            termination checks (0 for report checks only) (default: %d,%d)
-  -o <file> write output to file (default: write to standard output)
+  -y        maintain symmetry and alignment of the base model during
+               processing (with -p p, -c c) 
 
 Extra Options
   -E <perc> percentage to scale edge tangency (default: 50) (-c m)
@@ -422,6 +417,17 @@ Extra Options
   -C        continue processing a near-canonical model (the initial
             intermediate processing model will preserves the geometry
             of the base model rather than avoid scrambling) (-c c)
+            
+Scene Options
+  -O <args> output b - base, d - dual, i - intersection points (default: b)
+               edge nearpoints, n - base, m - dual; C - base/dual convex hull
+               edge nearpoints centroid, p - base, q - dual; o - origin point
+               tangent sphere, u - minimum, U - maximum
+               incircles, s - base, t - dual; as rings, S - base, T - dual
+  -q <dist> incircles offset to avoid coplanarity e.g 0.0001 (default: 0)
+  -Q <dist> incircles radius adjustment (default: 1)
+  -g <opt>  roundness of tangent sphere, positive integer n (default: 8)
+  -Y        align output model geometry to full symmetry
 
 Coloring Options (run 'off_util -H color' for help on color formats)
   -I <col>  intersection points and/or origin color (default: yellow)
@@ -438,10 +444,9 @@ Coloring Options (run 'off_util -H color' for help on color formats)
   -T <tran> base/dual transparency. range from 0 (invisible) to 255 (opaque)
 
 )",
-          prog_name(), help_ver_text, it_ctrl.get_max_iters(),
-          it_ctrl.get_max_iters(), it_ctrl.get_sig_digits(),
-          it_ctrl.get_test_val(), it_ctrl.get_status_check_and_report_iters(),
-          it_ctrl.get_status_check_only_iters());
+      prog_name(), help_ver_text, it_ctrl.get_status_check_and_report_iters(),
+      it_ctrl.get_status_check_only_iters(), it_ctrl.get_sig_digits(),
+      it_ctrl.get_test_val(), it_ctrl.get_max_iters(), it_ctrl.get_max_iters());
 }
 
 void cn_opts::process_command_line(int argc, char **argv)

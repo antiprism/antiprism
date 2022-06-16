@@ -14,6 +14,18 @@ Options
 .HP
 \fB\-\-version\fR version information
 .TP
+\fB\-I\fR
+information on current n\-icon
+.TP
+\fB\-l\fR <lim>
+minimum distance for unique vertex locations as negative exponent
+.IP
+(default: 12 giving 1e\-12)
+.HP
+\fB\-o\fR <file> write output to file (default: write to standard output)
+.PP
+Program Options
+.TP
 \fB\-n\fR <n/d>
 n\-icon of order n. n must be 3 or greater (default: 4)
 .IP
@@ -41,6 +53,8 @@ override outer radius (\fB\-z\fR 2 only)
 1 \- n/d must be co\-prime. bow\-ties can occur (default for d=1)
 2 \- n/d compounds allowed. shell model (default for d>1)
 3 \- n/d compounds allowed. No bow\-ties (default if angle not 0)
+.PP
+Scene Options
 .HP
 \fB\-M\fR <m,m2> longitudes of model of m sides with optional m2 of m sides showing
 .IP
@@ -60,15 +74,11 @@ h = horizontal closure, v = vertical closure
 two\-vertices (edges) and three or more vertices (faces)
 E \- if face is invisible, associated edge is made invisible
 .TP
-\fB\-I\fR
-information on current n\-icon
+\fB\-Y\fR
+for n/d shells, when showing edges, show indented edges
 .TP
-\fB\-l\fR <lim>
-minimum distance for unique vertex locations as negative exponent
-.IP
-(default: 12 giving 1e\-12)
-.HP
-\fB\-o\fR <file> write output to file (default: write to standard output)
+\fB\-W\fR
+add symmetry polygon (\fB\-f\fR S or \fB\-e\fR S)
 .PP
 Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
 .HP
@@ -120,14 +130,6 @@ color given to uncolored edges and vertices of final model
 .IP
 keyword: none \- sets no color (default: invisible)
 .TP
-\fB\-Y\fR
-for n/d shells, when showing edges, show indented edges
-.HP
-\fB\-m\fR <maps> color maps to be tried in turn. (default: map_red:darkorange1:
-.IP
-yellow:darkgreen:cyan:blue:magenta:white:gray50:black%)
-optionally followed by elements from v, e or f (default: vef)
-.TP
 \fB\-D\fR <c,e>
 default color c for uncolored elements e (default: darkgray,ef)
 .IP
@@ -138,9 +140,11 @@ flood fill stop. used with circuit or compound coloring (\fB\-f\fR f,c)
 .IP
 use 0 (default) to flood fill entire model. if \fB\-X\fR is not 0 then
 return 1 from program if entire model has been colored
-.TP
-\fB\-W\fR
-add symmetry polygon (for \fB\-f\fR S or \fB\-e\fR S)
+.HP
+\fB\-m\fR <maps> color maps to be tried in turn. (default: map_red:darkorange1:
+.IP
+yellow:darkgreen:cyan:blue:magenta:white:gray50:black%)
+optionally followed by elements from v, e or f (default: vef)
 .PP
 Surface Count Reporting (options above ignored)
 .HP

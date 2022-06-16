@@ -22,14 +22,18 @@ Options
 \fB\-H\fR
 abstract from the paper and description of regge symmetry
 .TP
+\fB\-v\fR
+verbose output of edge math
+.TP
+\fB\-b\fR
+verbose output of face math
+.TP
 \fB\-l\fR <int>
 display the list of Sporadic Tetrahedra as integer=1, degrees=2
-.TP
-\fB\-r\fR
-reflect
-.TP
-\fB\-z\fR
-scale volume to 1
+.HP
+\fB\-o\fR <file> write output to file (default: write to standard output)
+.PP
+Scene Options
 .HP
 \fB\-d\fR <mthd> order of dihedral angles, for matching dihedral angle at position
 .IP
@@ -41,13 +45,11 @@ a:1,2,3  b:1,3,2; c:2,1,3  d:2,3,1; e:3,1,2  f:3,2,1 (default:a)
 \fB\-p\fR <int>
 build regge pair if found (1 or 2) not for special cases (sets \fB\-z\fR)
 .TP
-\fB\-v\fR
-verbose output of edge math
+\fB\-r\fR
+reflect
 .TP
-\fB\-b\fR
-verbose output of face math
-.HP
-\fB\-o\fR <file> write output to file (default: write to standard output)
+\fB\-z\fR
+scale volume to 1
 .PP
 Special Cases
 .TP
