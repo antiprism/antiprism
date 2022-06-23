@@ -55,6 +55,7 @@ void color_from_elems_default_blend(ElemProps<Color> &cols_to,
                                     vector<vector<int>> adj_elems,
                                     const ElemProps<Color> &cols_from)
 {
+  cols_to.clear();
   for (unsigned int i = 0; i < adj_elems.size(); ++i) {
     Vec4d col(0, 0, 0, 0);
     int val_cnt = 0;
