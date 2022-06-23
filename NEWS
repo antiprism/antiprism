@@ -9,6 +9,9 @@ XX-XX-22 Adrian Rossiter <adrian@antiprism.com>
               -V, W coloring options added
               -Y to realign output
               -Q to adjust incircle radius
+            off_color: add missing adjacent element colourings -f V, E
+              and -e V
+            build: minimum autoconf version changed to 0.69
          Fixes
 
 Version 0.29

@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2016, Adrian Rossiter
+   Copyright (c) 2003-2022, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -159,7 +159,8 @@ without any colour information)
 Lowercase letters (except l) colour using index numbers and uppercase
 letters colour using colour values. Symmetric colourings are optionally
 followed, separated by commas, by a subsymmetry (Schoenflies notation)
-and a conjugation type (integer)
+and a conjugation type (integer). Adjacent element colourings FEV are
+processed after other element colourings, and in the order -f, -e, -v.
 
 Options
 %s
@@ -171,6 +172,8 @@ Options
                n,N - colour by number of sides
                a,A - colour by average internal angle (to nearest degree)
                k,K - sets of faces connected by face edges
+               E   - colour with average adjacent edge colour
+               V   - colour with average adjacent vertex colour
                g,G - gradient on z-coordinate of normal
                c,C - gradient on z-coordinate of centroid
                L   - lighting effect by normal (see option -l)
@@ -187,7 +190,8 @@ Options
                s,S - symmetric colouring [,sub_group,conj_type] (see above)
                n,N - colour by number of faces connected to each edge
                k,K - sets of edges connected by edges
-               F   - colour with average adjoining face colour
+               F   - colour with average adjacent face colour
+               V   - colour with average adjacent vertex colour
                d,D - colour by edge direction
                j,J - color by edge length [,minimum_difference (def: 1e-6)]
                g,G - gradient on z-coordinate of edge direction
@@ -203,8 +207,8 @@ Options
                s,S - symmetric colouring [,sub_group,conj_type] (see above)
                n,N - colour by order of vertex
                a,A - colour by avg internal ang of vert-fig (to nearest deg)
-               F   - colour with average adjoining face colour
-               E   - colour with average adjoining edge colour
+               F   - colour with average adjacent face colour
+               E   - colour with average adjacent edge colour
                c,C - gradient on z-coordinate
                L   - lighting effect (see option -l)
                M   - use colour map to convert existing colour index numbers
@@ -272,7 +276,7 @@ void o_col_opts::process_command_line(int argc, char **argv)
         break;
       }
       parts.init(optarg, ",");
-      if (strlen(parts[0]) == 1 && strchr("uUpPsSnNaAkKgGcCLlM", *parts[0]))
+      if (strlen(parts[0]) == 1 && strchr("uUpPsSnNaAEVkKgGcCLlM", *parts[0]))
         f_col_op = *parts[0];
       else
         error("invalid colouring", c);
@@ -291,7 +295,7 @@ void o_col_opts::process_command_line(int argc, char **argv)
         break;
       }
       parts.init(optarg, ",");
-      if (strlen(parts[0]) == 1 && strchr("uUpPsSnNkKjJFgGcCLldDM", *parts[0]))
+      if (strlen(parts[0]) == 1 && strchr("uUpPsSnNkKjJFVgGcCLldDM", *parts[0]))
         e_col_op = *parts[0];
       else
         error("invalid colouring", c);
@@ -661,18 +665,6 @@ int main(int argc, char *argv[])
       vc.v_apply_cmap();
   }
 
-  /*
-  // convert index numbers to values after other processing
-  if(col_map.size()) {
-     if(strchr(opts.cmap_elems.c_str(), 'f'))
-        fc.apply_cmap();
-     if(strchr(opts.cmap_elems.c_str(), 'e'))
-        ec.apply_cmap();
-     if(strchr(opts.cmap_elems.c_str(), 'v'))
-        vc.apply_cmap();
-  }
-  */
-
   // value to value mappings
   if (opts.range_elems & (ELEM_VERTS))
     opts.col_procs[0].apply(geom.colors(VERTS).get_properties());
@@ -683,12 +675,20 @@ int main(int argc, char *argv[])
 
   // Average colour values from adjoining elements after converting
   // index numbers
+  if (opts.f_col_op == 'V')
+    fc.f_from_adjacent(VERTS);
+  else if (opts.f_col_op == 'E')
+    fc.f_from_adjacent(EDGES);
+
   if (opts.e_col_op == 'F')
-    ec.e_face_color();
-  if (opts.v_col_op == 'F')
-    vc.v_face_color();
-  else if (opts.v_col_op == 'E')
-    vc.v_edge_color();
+    ec.e_from_adjacent(FACES);
+  else if (opts.e_col_op == 'V')
+    ec.e_from_adjacent(VERTS);
+
+  if (opts.v_col_op == 'E')
+    vc.v_from_adjacent(EDGES);
+  else if (opts.v_col_op == 'F')
+    vc.v_from_adjacent(FACES);
 
   // Finally convert to index numbers
   color_vals_to_idxs(geom, opts.v2i_elems);

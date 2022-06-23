@@ -17,7 +17,8 @@ without any colour information)
 Lowercase letters (except l) colour using index numbers and uppercase
 letters colour using colour values. Symmetric colourings are optionally
 followed, separated by commas, by a subsymmetry (Schoenflies notation)
-and a conjugation type (integer)
+and a conjugation type (integer). Adjacent element colourings FEV are
+processed after other element colourings, and in the order \fB\-f\fR, \fB\-e\fR, \fB\-v\fR.
 .PP
 Options
 .HP
@@ -35,6 +36,8 @@ s,S \- symmetric colouring [,sub_group,conj_type] (see above)
 n,N \- colour by number of sides
 a,A \- colour by average internal angle (to nearest degree)
 k,K \- sets of faces connected by face edges
+E   \- colour with average adjacent edge colour
+V   \- colour with average adjacent vertex colour
 g,G \- gradient on z\-coordinate of normal
 c,C \- gradient on z\-coordinate of centroid
 L   \- lighting effect by normal (see option \fB\-l\fR)
@@ -57,7 +60,8 @@ p,P \- minimal proper colouring
 s,S \- symmetric colouring [,sub_group,conj_type] (see above)
 n,N \- colour by number of faces connected to each edge
 k,K \- sets of edges connected by edges
-F   \- colour with average adjoining face colour
+F   \- colour with average adjacent face colour
+V   \- colour with average adjacent vertex colour
 d,D \- colour by edge direction
 j,J \- color by edge length [,minimum_difference (def: 1e\-6)]
 g,G \- gradient on z\-coordinate of edge direction
@@ -77,8 +81,8 @@ p,P \- minimal proper colouring
 s,S \- symmetric colouring [,sub_group,conj_type] (see above)
 n,N \- colour by order of vertex
 a,A \- colour by avg internal ang of vert\-fig (to nearest deg)
-F   \- colour with average adjoining face colour
-E   \- colour with average adjoining edge colour
+F   \- colour with average adjacent face colour
+E   \- colour with average adjacent edge colour
 c,C \- gradient on z\-coordinate
 L   \- lighting effect (see option \fB\-l\fR)
 M   \- use colour map to convert existing colour index numbers

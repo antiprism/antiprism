@@ -4548,8 +4548,8 @@ void ncon_edge_coloring_from_faces(Geometry &geom, const ncon_opts &opts)
   Coloring clrng;
   clrng.add_cmap(opts.face_map.clone());
   clrng.set_geom(&geom);
-  clrng.e_face_color();
-  clrng.v_face_color();
+  clrng.e_from_adjacent(FACES);
+  clrng.v_from_adjacent(FACES);
 
   // restore invisible edges
   for (int inv_edge : inv_edges)

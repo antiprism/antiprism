@@ -935,8 +935,8 @@ Geometry make_stellation(const Geometry &geom, map<int, Geometry> &diagrams,
 
     // edge and vertices take color from faces
     stellation.add_missing_impl_edges();
-    clrng.e_face_color();
-    clrng.v_face_color();
+    clrng.e_from_adjacent(FACES);
+    clrng.v_from_adjacent(FACES);
 
     stellation_full.append(stellation);
   }

@@ -126,6 +126,7 @@ void GeometryInfo::reset()
   face_angles.clear();
   vert_dihed.clear();
   dihedral_angles.clear();
+  edge_index_numbers.clear();
   e_lengths.clear();
   sol_angles.clear();
   vertex_angles.clear();
@@ -377,6 +378,15 @@ const vector<int> &GeometryInfo::get_free_verts()
 }
 
 // edges
+
+int GeometryInfo::get_edge_index(int v_idx0, int v_idx1)
+{
+  if (!edge_index_numbers.size())
+    find_edge_index_numbers();
+  auto e_it = edge_index_numbers.find(make_edge(v_idx0, v_idx1));
+  return (e_it != edge_index_numbers.end()) ? e_it->second : -1;
+}
+
 const map<vector<int>, vector<int>> &GeometryInfo::get_edge_face_pairs()
 {
   if (!efpairs.size())
@@ -1058,6 +1068,13 @@ void GeometryInfo::find_solid_angles()
     else
       si->second.update(s_ang);
   }
+}
+
+void GeometryInfo::find_edge_index_numbers()
+{
+  edge_index_numbers.clear();
+  for (int i = 0; i < (int)geom.edges().size(); i++)
+    edge_index_numbers[geom.edges(i)] = i;
 }
 
 void GeometryInfo::find_e_lengths(

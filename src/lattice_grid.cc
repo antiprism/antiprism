@@ -762,7 +762,7 @@ void color_stellation(Geometry &geom, const char face_coloring_method,
       geom.colors(EDGES).clear();
     else
       // edges take colors from faces
-      clrng.e_face_color();
+      clrng.e_from_adjacent(FACES);
   }
   else if (edge_coloring_method == 'C') {
     // color by connection
@@ -774,7 +774,7 @@ void color_stellation(Geometry &geom, const char face_coloring_method,
 
   if (vertex_coloring_method == 'e') {
     // vertices take color from edges
-    clrng.v_edge_color();
+    clrng.v_from_adjacent(EDGES);
   }
   else if (vertex_coloring_method == 'n')
     clrng.v_order(true);

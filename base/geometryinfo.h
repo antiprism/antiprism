@@ -144,6 +144,7 @@ private:
   std::vector<std::vector<int>> edge_parts;
   std::map<std::vector<double>, int, AngleVectLess> face_angles;
   std::map<std::vector<double>, int, AngleVectLess> vert_dihed;
+  std::map<std::vector<int>, int> edge_index_numbers;
   std::map<double, double_range_cnt, AngleLess> dihedral_angles;
   std::map<double, double_range_cnt, AngleLess> e_lengths;
   std::map<double, double_range_cnt, AngleLess> ie_lengths;
@@ -169,6 +170,7 @@ private:
   Symmetry sym;
 
   void find_impl_edges();
+  void find_edge_index_numbers();
   void find_edge_face_pairs();
   void find_edge_parts();
   void find_connectivity();
@@ -452,6 +454,13 @@ public:
 
   // ----------------------------------------------------------
   // Edges
+
+  /// Get index number of edge between two vertices
+  /** Look up the edge index in the edge list
+   * \param v_id0 first vertex index number
+   * \param v_id1 second vertex index number
+   * \return The edge index number, or -1 if not found. */
+  int get_edge_index(int v_idx0, int v_idx1);
 
   /// Get edge face pairs
   /** An edge has two vertices, but may be part of any number of faces,

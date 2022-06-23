@@ -43,10 +43,6 @@ private:
   Geometry *geom;
 
   unsigned int cycle_msecs;
-
-  void face_edge_color(const std::vector<std::vector<int>> &elems,
-                       const ElemProps<Color> &cols);
-
   void edge_color_and_branch(int idx, int part, bool apply_map,
                              std::vector<std::vector<int>> &vcons,
                              std::vector<bool> &seen);
@@ -142,13 +138,10 @@ public:
    *  if \c true, convert these index numbers using the colour maps */
   void v_proper(bool apply_map = true);
 
-  /// Colour vertices by face colour.
-  /** Colour the vertices with the colour of a face they are on. */
-  void v_face_color();
-
-  /// Colour vertices by edge colour.
-  /** Colour the vertices with the colour of an edge they are on. */
-  void v_edge_color();
+  /// Colour vertices by adjacent elements of a type.
+  /** Colour the vertices with the colours of elements they lie on.
+   * \param type element type: FACES or EDGES*/
+  void v_from_adjacent(int type);
 
   /// Colour each vertex by the number of faces it lies on.
   /**\param apply_map if \c false, colour with index numbers,
@@ -207,6 +200,11 @@ public:
    *  if \c true, convert these index numbers using the colour maps */
   void f_avg_angle(bool apply_map = true);
 
+  /// Colour faces by adjacent elements of a type.
+  /** Colour the faces with the colours of elements they lie on.
+   * \param type element type: VERTS or EDGES*/
+  void f_from_adjacent(int type);
+
   /// Colour each face by the set of connected faces it is part of.
   /** To be connected two faces must share an edge.
    * \param apply_map if \c false, colour with index numbers,
@@ -263,9 +261,10 @@ public:
    *  if \c true, convert these index numbers using the colour maps */
   void e_proper(bool apply_map = true);
 
-  /// Colour by face colour
-  /** Colour the edges with the colour of a face they are part of. */
-  void e_face_color();
+  /// Colour edges by adjacent elements of a type.
+  /** Colour the vertices with the colours of elements they lie on.
+   * \param type element type: VERTS or FACES*/
+  void e_from_adjacent(int type);
 
   /// Colour each edge by the set of connected edges it is part of.
   /** To be connected two edges must share a vertex.

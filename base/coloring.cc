@@ -50,6 +50,33 @@ using std::vector;
 
 namespace anti {
 
+namespace {
+void color_from_elems_default_blend(ElemProps<Color> &cols_to,
+                                    vector<vector<int>> adj_elems,
+                                    const ElemProps<Color> &cols_from)
+{
+  for (unsigned int i = 0; i < adj_elems.size(); ++i) {
+    Vec4d col(0, 0, 0, 0);
+    int val_cnt = 0;
+    int first_idx = -1;
+    for (int j : adj_elems[i]) {
+      Color ecol = cols_from.get(j);
+      if (ecol.is_value()) {
+        col += ecol.get_vec4d();
+        val_cnt++;
+      }
+      else if (first_idx == -1 && ecol.is_index())
+        first_idx = ecol.get_index();
+    }
+    if (val_cnt)
+      cols_to.set(i, Color(col / double(val_cnt)));
+    else if (first_idx != -1)
+      cols_to.set(i, Color(first_idx));
+  }
+}
+
+}; // namespace
+
 Coloring::Coloring(Geometry *geo) : geom(geo), cycle_msecs(0) {}
 
 Coloring::~Coloring() = default;
@@ -236,50 +263,27 @@ void Coloring::v_avg_angle(bool apply_map)
   set_geom(orig_geom);
 }
 
+void Coloring::v_from_adjacent(int type)
+{
+  auto &geom = *get_geom();
+
+  // create the mapping of vertex index to adjacent edge/face index numbers
+  vector<vector<int>> adj_elems(geom.verts().size());
+  auto &elems_from = (type == FACES) ? geom.faces() : geom.edges();
+  for (unsigned int i = 0; i < elems_from.size(); ++i)
+    for (unsigned int j = 0; j < elems_from[i].size(); ++j)
+      adj_elems[elems_from[i][j]].push_back(i);
+
+  color_from_elems_default_blend(geom.colors(VERTS), adj_elems,
+                                 geom.colors(type));
+}
+
 void Coloring::v_lights(Geometry lts)
 {
   setup_lights(lts);
   Vec3d cent = get_geom()->centroid();
   for (unsigned int i = 0; i < get_geom()->verts().size(); i++)
     get_geom()->colors(VERTS).set(i, light(get_geom()->verts(i) - cent, lts));
-}
-
-void Coloring::face_edge_color(const vector<vector<int>> &elems,
-                               const ElemProps<Color> &cols)
-{
-  vector<vector<int>> v_elems(get_geom()->verts().size());
-  for (unsigned int i = 0; i < elems.size(); ++i)
-    for (unsigned int j = 0; j < elems[i].size(); ++j)
-      v_elems[elems[i][j]].push_back(i);
-
-  for (unsigned int i = 0; i < v_elems.size(); ++i) {
-    Vec4d col(0, 0, 0, 0);
-    int val_cnt = 0;
-    int first_idx = -1;
-    for (int j : v_elems[i]) {
-      Color ecol = cols.get(j);
-      if (ecol.is_value()) {
-        col += ecol.get_vec4d();
-        val_cnt++;
-      }
-      else if (first_idx == -1 && ecol.is_index())
-        first_idx = ecol.get_index();
-    }
-    if (val_cnt)
-      get_geom()->colors(VERTS).set(i, Color(col / double(val_cnt)));
-    else if (first_idx != -1)
-      get_geom()->colors(VERTS).set(i, Color(first_idx));
-  }
-}
-
-void Coloring::v_face_color()
-{
-  face_edge_color(get_geom()->faces(), get_geom()->colors(FACES));
-}
-
-void Coloring::v_edge_color()
-{
-  face_edge_color(get_geom()->edges(), get_geom()->colors(EDGES));
 }
 
 void Coloring::f_apply_cmap()
@@ -362,6 +366,29 @@ void Coloring::f_avg_angle(bool apply_map)
     else
       get_geom()->colors(FACES).set(i, idx);
   }
+}
+
+void Coloring::f_from_adjacent(int type)
+{
+  auto &geom = *get_geom();
+  vector<vector<int>> adj_elems; // used to hold created lists
+
+  if (type == EDGES) { // F from adjacent E
+    // create the mapping of face index to edge index numbers
+    auto info = geom.get_info();
+    adj_elems.resize(geom.faces().size());
+    const auto ef_pairs = geom.get_info().get_edge_face_pairs();
+    for (auto &ef_kp : ef_pairs) {
+      int e_idx = info.get_edge_index(ef_kp.first[0], ef_kp.first[1]);
+      if (e_idx >= 0)
+        for (auto f_idx : ef_kp.second)
+          adj_elems[f_idx].push_back(e_idx);
+    }
+  }
+
+  color_from_elems_default_blend(geom.colors(FACES),
+                                 (type == EDGES) ? adj_elems : geom.faces(),
+                                 geom.colors(type));
 }
 
 void Coloring::f_parts(bool apply_map)
@@ -492,41 +519,28 @@ void Coloring::e_proper(bool apply_map)
   }
 }
 
-void Coloring::e_face_color()
+void Coloring::e_from_adjacent(int type)
 {
-  const vector<vector<int>> &faces = get_geom()->faces();
-  vector<vector<int>> efaces(get_geom()->edges().size());
-  for (unsigned int i = 0; i < faces.size(); ++i) {
-    for (unsigned int j = 0; j < faces[i].size(); ++j) {
-      vector<int> edge =
-          make_edge(faces[i][j], faces[i][(j + 1) % faces[i].size()]);
-      auto ei = get_geom()->edges().begin();
-      while ((ei = find(ei, get_geom()->edges().end(), edge)) !=
-             get_geom()->edges().end()) {
-        efaces[ei - get_geom()->edges().begin()].push_back(i);
-        ++ei;
+  auto &geom = *get_geom();
+  vector<vector<int>> adj_elems; // used to hold created lists
+
+  if (type == FACES) { // E from adjacent F
+    // create the mapping of edge index to face index numbers
+    auto info = geom.get_info();
+    adj_elems.resize(geom.edges().size());
+    for (int i = 0; i < (int)geom.faces().size(); ++i) {
+      for (int j = 0; j < (int)geom.faces(i).size(); ++j) {
+        int e_idx =
+            info.get_edge_index(geom.faces(i, j), geom.faces_mod(i, j + 1));
+        if (e_idx >= 0)
+          adj_elems[e_idx].push_back(i);
       }
     }
   }
 
-  for (unsigned int i = 0; i < efaces.size(); ++i) {
-    Vec4d col(0, 0, 0, 0);
-    int val_cnt = 0;
-    int first_idx = -1;
-    for (int j : efaces[i]) {
-      Color fcol = get_geom()->colors(FACES).get(j);
-      if (fcol.is_value()) {
-        col += fcol.get_vec4d();
-        val_cnt++;
-      }
-      else if (first_idx == -1 && fcol.is_index())
-        first_idx = fcol.get_index();
-    }
-    if (val_cnt)
-      get_geom()->colors(EDGES).set(i, Color(col / double(val_cnt)));
-    else if (first_idx != -1)
-      get_geom()->colors(EDGES).set(i, Color(first_idx));
-  }
+  color_from_elems_default_blend(geom.colors(EDGES),
+                                 (type == FACES) ? adj_elems : geom.edges(),
+                                 geom.colors(type));
 }
 
 void Coloring::e_parts(bool apply_map)

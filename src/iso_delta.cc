@@ -1316,8 +1316,8 @@ void compound_coloring(Geometry &geom, const id_opts &opts)
 
     // blend edges from faces
     geom.add_missing_impl_edges();
-    clrng.e_face_color();
-    clrng.v_face_color();
+    clrng.e_from_adjacent(FACES);
+    clrng.v_from_adjacent(FACES);
   }
 
   // apply transparency
