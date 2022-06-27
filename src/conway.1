@@ -98,16 +98,32 @@ u \- unique coloring
 o \- newly created faces by operation
 w \- resolve color indexes (overrides \fB\-V\fR and \fB\-E\fR)
 .HP
-\fB\-C\fR <mthd> colouring method for tiles, method can be
+\fB\-C\fR <mthd> colouring method for tiles, optionally
+.IP
+followed by ':' and colouring method fot points.
+Tile colouring methods (empty for default)
 .IP
 none \- do not colour tiles
-index \- use the path index, colour with index numbers
-value \- use the path index, colour with colour values (default)
+index \- use the path index, and apply colormap (default)
 association \- colour tiles using corresponding base element
 .IP
 colour, optionally followed by a comma and a letter from V,
 E, F, or a colour, to colour local tiles by that element type
 (default: F), or colour all local tiles with a single colour
+.IP
+Vertex colouring (empty for default, if tile colouring is
+.IP
+association a compatible colouring is used)
+.IP
+none \- do not colour tiles (default if tiles colouring is none)
+index \- use the path index, and apply colormap (default if
+.IP
+tile colouring is index)
+.TP
+component \- colour by non\-zero components, V=1, E=2, F=4,
+V&E=3, E&F=6, V&F=5, V&E&F=7, and apply colormap
+.IP
+weight \- colour using barycentric coordinates as RGB
 .IP
 (when \fB\-f\fR w is set)
 .HP

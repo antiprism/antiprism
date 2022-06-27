@@ -1121,9 +1121,10 @@ namespace anti {
 
 Status wythoff_make_tiling(Geometry &tiled_geom, const Geometry &base_geom,
                            const std::string &pat, bool oriented, bool reverse,
-                           TilingColoring col_type)
+                           TilingColoring clrng)
 {
   Tiling tiling;
+  tiling.set_coloring(clrng);
   Status stat =
       (pat[0] == '[') ? tiling.read_pattern(pat) : tiling.read_conway(pat);
   if (!stat.is_error()) {
@@ -1132,7 +1133,7 @@ Status wythoff_make_tiling(Geometry &tiled_geom, const Geometry &base_geom,
       tiling.start_everywhere();
     if (reverse)
       tiling.reverse_pattern();
-    tiling.make_tiling(tiled_geom, col_type);
+    tiling.make_tiling(tiled_geom);
     if (!oriented) // some tiles may be doubled
       merge_coincident_elements(tiled_geom, "f");
   }

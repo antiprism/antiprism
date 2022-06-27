@@ -11,6 +11,8 @@ XX-XX-22 Adrian Rossiter <adrian@antiprism.com>
               -Q to adjust incircle radius
             off_color: add missing adjacent element colourings -f V, E
               and -e V
+            wythoff: -C add vertex colouring, 'value' method removed, 'index'
+               method colours by value. Add -m colormap option,
             build: minimum autoconf version changed to 0.69
          Fixes
             resource models: large geodesic duals corrected

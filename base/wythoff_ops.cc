@@ -970,7 +970,7 @@ string Tiling::pattern_string()
 {
   string pat = "[";
   for (auto v : points)
-    pat += coord_string(v.first) + ",";
+    pat += coord_string(v.get_coords()) + ",";
   pat.back() = ']';
   for (auto path : pat_paths)
     pat += path.tile_string() + ",";

@@ -79,6 +79,11 @@ public:
    * \return reference to this status.*/
   Status &set_error(const std::string &msg, int code = 0);
 
+  /// Add prefix to message
+  /**\param prefix message prefix
+   * \return reference to this status.*/
+  Status &add_prefix(const std::string &msg);
+
   /// Get status message
   /**\return The status message.*/
   const std::string &msg() const;
@@ -147,6 +152,12 @@ inline Status &Status::set_warning(const std::string &msg, int code)
 inline Status &Status::set_error(const std::string &msg, int code)
 {
   set_status_message(msg, code, STATUS_ERROR);
+  return *this;
+}
+
+inline Status &Status::add_prefix(const std::string &prefix)
+{
+  message = prefix + message;
   return *this;
 }
 

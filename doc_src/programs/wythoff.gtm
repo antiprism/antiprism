@@ -87,14 +87,16 @@ The output tiling will not necesarily be planar, or have equal edge lengths.
 The output of 'spherical' tilings can be processed with the <i>canonical</i>
 program.
 <p>
-Two colouring types can be selected for the final model with
-<i>option -C</i>. A pattern-based colouring is the default:
-vertices are coloured according to which elements
-are involved in their pattern coordinates: V=0/red, E=1/green, F=2/blue,
-VE=3/yellow, EF=4/cyan, FE=5/magenta, VEF=6/grey; faces are coloured
-according to the position of their corresponding path in the pattern.
-The other colouring is by associating final vertices and faces
-with elements in the base model (see below), and inheriting their colours.
+Several colouring methods are available for the final model with
+<i>option -C</i>. For points or tiles, <i>index</i> will colour by
+the position of an element in the pattern, and <i>association</i> will
+colour final elements with colours taken from elements in the
+base model (see below). Points can also be coloured with <i>weight</i>,
+using their normalised barycentric coordinates as RGB, and <i>component</i>,
+using the base elements that are involved in their pattern coordinates:
+V=0/red, E=1/green, F=2/blue, VE=3/yellow, EF=4/cyan, FE=5/magenta,
+VEF=6/grey. Set alternative colormaps with </i>option -m</i>, and use
+<i>-m null<\i> to retain the original colour index numbers.
 
 <h4>Comparison with corresponding Conway notation operators</h4>
 

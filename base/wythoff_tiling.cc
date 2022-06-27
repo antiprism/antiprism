@@ -236,58 +236,117 @@ static Status normalize_meta(Geometry &geom)
   return Status::ok();
 }
 
-Status TilingColoring::set_type_associated(int elem, Color col)
+Color TilingColoring::get_point_color(const TilingPoint &point) const
 {
-  col_type = ColoringType::associated_element;
-  if (elem == Tile::V || elem == Tile::E || elem == Tile::F ||
-      elem == Tile::P) {
-    local_tile_assoc = elem;
-    color = col;
-  }
+  Color col; // default unset: ct none
+  auto type = coloring_types[POINTS];
+  if (type == ColoringType::index)
+    col.set_index(point.get_index());
+  else if (type == ColoringType::component)
+    col.set_index(point.get_inclusion());
+  else if (type == ColoringType::weight)
+    col = Color(point.get_coords().unit()); // unit coordinates as RGB
+
+  return col;
+}
+
+ColorMap *TilingColoring::get_default_colormap(int elem) const
+{
+  string name = "null"; // associated_element and weight
+  if (coloring_types[elem] == ColoringType::index)
+    name = "spread";
+  else if (coloring_types[elem] == ColoringType::component)
+    name = "map_red:green:blue:yellow:cyan:magenta:grey80";
+  else // none, associated_element, weight
+    name = "null";
+
+  return colormap_from_name(name.c_str());
+}
+
+Status TilingColoring::set_coloring(int elem, ColoringType clrng_type,
+                                    int assoc, Color local)
+{
+  Status stat;
+  bool is_point = (elem == 1);
+  if (clrng_type == ColoringType::index || clrng_type == ColoringType::none ||
+      (is_point && clrng_type == ColoringType::component) ||
+      (is_point && clrng_type == ColoringType::weight) ||
+      clrng_type == ColoringType::associated_element)
+    coloring_types[elem] = clrng_type;
   else
-    return Status::error("invalid associated element type");
+    return Status::error("invalid colouring type");
+
+  if (clrng_type == ColoringType::associated_element) {
+    if (assoc == Tile::V || assoc == Tile::E || assoc == Tile::F ||
+        assoc == Tile::P) {
+      local_associations[elem] = assoc;
+      local_colors[elem] = local;
+    }
+    else
+      return Status::error("invalid associated element type");
+  }
 
   return Status::ok();
 }
 
-Status TilingColoring::read(const string &str)
+Status TilingColoring::read_coloring(const string &clrng_str)
 {
   Status stat;
-  Split parts(str.c_str(), ",");
-  if (parts.size() > 2)
-    return stat.set_error("more than one comma given");
+  Split parts_elems(clrng_str.c_str(), ":");
+  if (parts_elems.size() > ELEMS_SZ)
+    return stat.set_error("more than one colon given");
 
-  string arg_id;
-  if (!(stat = ProgramOpts::get_arg_id(parts[0], &arg_id,
-                                       "none=0|index=1|value=2|association=3")))
-    return stat;
+  // 0 - tile, 1 - point
+  for (size_t elem = 0; elem < parts_elems.size(); elem++) {
+    auto prefix = string((elem == TILES) ? "tile" : "point") + ": ";
+    Split parts(parts_elems[elem], ",");
+    if (parts.size() > 2)
+      return stat.set_error(prefix + "more than one comma given");
 
-  int id = atoi(arg_id.c_str());
-  if (id != 3 && parts.size() > 1)
-    return stat.set_error(
-        "comma given, but only valid for associated colouring");
+    string params = "none=0|index=1|association=2";
+    if (elem)
+      params += "|component=3|weight=4";
+    string arg_id;
+    if (!(stat = ProgramOpts::get_arg_id(parts[0], &arg_id, params.c_str())))
+      return stat.add_prefix(prefix);
 
-  if (id == 0)
-    set_type_none();
-  else if (id == 1 || id == 2)
-    set_type_path_index((id == 2));
-  else {
-    if (parts.size() > 1) {
-      if (strcasecmp(parts[1], "V") == 0)
-        set_type_associated(Tile::V);
-      else if (strcasecmp(parts[1], "E") == 0)
-        set_type_associated(Tile::E);
-      else if (strcasecmp(parts[1], "F") == 0)
-        set_type_associated(Tile::F);
-      else {
-        Color col;
-        if (!(stat = col.read(parts[1])))
-          return stat;
-        set_type_associated(Tile::P, col);
+    int id = atoi(arg_id.c_str());
+    if (id != 2 && parts.size() > 1)
+      return stat.set_error(
+          prefix + "comma given, but only valid for associated colouring");
+
+    if (id == 0)
+      set_coloring(elem, ColoringType::none);
+    else if (id == 1)
+      set_coloring(elem, ColoringType::index);
+    else if (id == 2) {
+      Color local_col;
+      int assoc = Tile::F;
+      if (parts.size() > 1) {
+        if (strcasecmp(parts[1], "V") == 0)
+          assoc = Tile::V;
+        else if (strcasecmp(parts[1], "E") == 0)
+          assoc = Tile::E;
+        else if (strcasecmp(parts[1], "F") == 0)
+          assoc = Tile::F;
+        else {
+          if (!(stat = local_col.read(parts[1])))
+            return stat;
+          assoc = Tile::P;
+        }
       }
+      set_coloring(elem, ColoringType::associated_element, assoc, local_col);
     }
-    else
-      set_type_associated(Tile::F); // Default association for local tiles
+    else if (elem == POINTS && id == 3)
+      set_coloring(elem, ColoringType::component);
+    else if (elem == POINTS && id == 4)
+      set_coloring(elem, ColoringType::weight);
+
+    if (elem == TILES) { // default point colouring is tile colouring
+      coloring_types[POINTS] = coloring_types[TILES];
+      local_associations[POINTS] = local_associations[TILES];
+      local_colors[POINTS] = local_colors[TILES];
+    }
   }
 
   return stat;
@@ -295,15 +354,25 @@ Status TilingColoring::read(const string &str)
 
 string TilingColoring::get_option_help(char op_char)
 {
-  return msg_str(R"(  -%c <mthd> colouring method for tiles, method can be
-               none - do not colour tiles
-               index - use the path index, colour with index numbers
-               value - use the path index, colour with colour values (default)
-               association - colour tiles using corresponding base element
-                 colour, optionally followed by a comma and a letter from V,
-                 E, F, or a colour, to colour local tiles by that element type
-                 (default: F), or colour all local tiles with a single colour)",
-                 op_char);
+  return msg_str(
+      R"(  -%c <mthd> tile colouring method, optionally followed by ':' and
+            point colouring method.
+               Tile colouring methods
+                 none - do not colour tiles
+                 index - use the path index, and apply colormap (default)
+                 association - colour tiles using corresponding base element
+                   colour, optionally followed by a comma and a letter from V,
+                   E, F, or a colour, to use for all local tiles (default: F)
+               Point colouring methods (default: use tile coloring method)
+                 none - do not colour points
+                 index - use the point index, and apply colormap
+                 association - colour points using corresponding base element
+                   colour, optionally followed by a comma and a letter from V,
+                   E, F, or a colour, to use for all local points (default: F)
+                 component - colour by non-zero components, V=1, E=2, F=4,
+                   V&E=3, E&F=6, V&F=5, V&E&F=7, and apply colormap
+                 weight - colour using barycentric coordinates as RGB)",
+      op_char);
 }
 
 bool Tiling::find_nbrs()
@@ -350,13 +419,16 @@ static Vec3d point_on_face(const Geometry &meta, int f_idx, const Vec3d &crds)
 
 Color Tiling::get_associated_element_point_color(int f_idx, int incl) const
 {
+
+  int local_incl = coloring.get_local_association(TilingColoring::POINTS);
   int idx = -1;
-  if (incl == Tile::V) // on a vertex
-    idx = Tile::V;
-  else if (incl == Tile::E) // on an edge
-    idx = Tile::E;
-  else // on a face
-    idx = Tile::F;
+  if (incl == Tile::V || incl == Tile::E || incl == Tile::F)
+    idx = incl;
+  else if (local_incl == Tile::V || local_incl == Tile::E ||
+           local_incl == Tile::F)
+    idx = local_incl;
+  else // no direct or indirect association with a base element
+    return coloring.get_local_color(TilingColoring::POINTS);
 
   return orig_colors.get(meta.faces(f_idx, idx));
 }
@@ -416,7 +488,7 @@ void Tiling::add_circuit(
     pat.start_op();
     while (pat.get_op() != Tile::END) {
       if (pat.get_op() == Tile::P) {
-        int incl = points[pat.get_idx()].second.get_index();
+        int incl = points[pat.get_idx()].get_inclusion();
         int v_idx = get_index(meta.faces(idx), idx, pat.get_idx(), incl,
                               index_order, point_vertex_offsets);
         face.push_back(v_idx);
@@ -493,7 +565,9 @@ void Tiling::start_everywhere()
     path.set_start_faces('*');
 }
 
-static void delete_verts(Geometry &geom, const vector<int> &v_nos)
+namespace {
+
+void delete_verts(Geometry &geom, const vector<int> &v_nos)
 {
   vector<int> dels = v_nos;
   map<int, int> v_map;
@@ -531,14 +605,14 @@ static void delete_verts(Geometry &geom, const vector<int> &v_nos)
   geom.del(FACES, del_faces);
 }
 
-static bool valid_start_face(int f, int start_faces)
+bool valid_start_face(int f, int start_faces)
 {
   int pos_tri = f % 2;
   return !((start_faces == '-' && pos_tri) || (start_faces == '+' && !pos_tri));
 }
 
-static void store_tri(map<vector<int>, pair<int, int>> &elem_to_tri,
-                      vector<int> key, int tri_idx)
+void store_tri(map<vector<int>, pair<int, int>> &elem_to_tri, vector<int> key,
+               int tri_idx)
 {
   auto pr = elem_to_tri.insert({key, {-1, tri_idx}});
   if (pr.second == false && is_even(pr.first->second.second) &&
@@ -546,7 +620,9 @@ static void store_tri(map<vector<int>, pair<int, int>> &elem_to_tri,
     pr.first->second.second = tri_idx;
 }
 
-Status Tiling::make_tiling(Geometry &geom, TilingColoring col_type,
+}; // namespace
+
+Status Tiling::make_tiling(Geometry &geom,
                            vector<Tile::TileReport> *tile_reports) const
 {
   geom.clear_all();
@@ -580,15 +656,13 @@ Status Tiling::make_tiling(Geometry &geom, TilingColoring col_type,
   for (int i = 0; i < (int)points.size(); i++) {
     point_vertex_offsets[i] = geom.verts().size();
     const auto &pt = points[i];
-    int incl = pt.second.get_index();
-    Vec3d crds = pt.first;
+    int incl = pt.get_inclusion();
+    Vec3d crds = pt.get_coords();
     crds /= crds[0] + crds[1] + crds[2];
     for (auto &m : index_order[incl]) {
       const int f_idx = m.second.second;
-      Color col; // col_type==ColoringType::none
-      if (col_type.is_path_index())
-        col = pt.second; // Colour by element type inclusion in coords
-      else if (col_type.is_associated_element())
+      Color col = coloring.get_point_color(pt);
+      if (coloring.is_associated_element(TilingColoring::POINTS))
         col = get_associated_element_point_color(f_idx, incl);
       geom.add_vert(point_on_face(meta, f_idx, crds), col);
     }
@@ -614,14 +688,15 @@ Status Tiling::make_tiling(Geometry &geom, TilingColoring col_type,
     for (int i = 0; i < faces_sz; i++) {
       if (!seen[i] && valid_start_face(i, start_faces)) {
         Color col; // col_type==ColoringType::none
-        if (col_type.is_path_index())
+        if (coloring.is_index(TilingColoring::TILES))
           col.set_index(p_idx);
-        else if (col_type.is_associated_element()) {
-          auto type = (assoc.assoc_type == Tile::P)
-                          ? col_type.get_local_tile_assoc()
-                          : assoc.assoc_type;
+        else if (coloring.is_associated_element(TilingColoring::TILES)) {
+          auto type =
+              (assoc.assoc_type == Tile::P)
+                  ? coloring.get_local_association(TilingColoring::TILES)
+                  : assoc.assoc_type;
           if (type == Tile::P)
-            col = col_type.get_color();
+            col = coloring.get_local_color(TilingColoring::TILES);
           else {
             int col_idx = get_associated_element(i, assoc.step, type);
             if (col_idx >= 0)
@@ -643,18 +718,10 @@ Status Tiling::make_tiling(Geometry &geom, TilingColoring col_type,
   return Status::ok();
 }
 
-static void color_point(std::pair<Vec3d, Color> &point)
-{
-  // val {1, 2, 4, 3, 6, 5, 7, 0} = v, e, f, ve, ef, fv, vef, 0
-  int col_idx_map[] = {7, 0, 1, 3, 2, 5, 4, 6}; // v, e, f, ve, ef, fv, vef, 0
-  const Vec3d &pt = point.first;
-  int val = (pt[0] != 0) + (pt[1] != 0) * 2 + (pt[2] != 0) * 4;
-  point.second.set_index(col_idx_map[val]);
-}
+namespace {
 
-Status read_point(const char *point_str, std::pair<Vec3d, Color> &point)
+Status read_point(const char *point_str, Vec3d &coords)
 {
-  Vec3d &coords = point.first;
   coords = Vec3d::zero;
   map<char, int> elem_idx = {{'V', 0}, {'E', 1}, {'F', 2}};
   string pt_string(point_str);
@@ -691,10 +758,10 @@ Status read_point(const char *point_str, std::pair<Vec3d, Color> &point)
   if (coords.len() == 0)
     return Status::error("coordinates cannot all be zero");
 
-  color_point(point);
-
   return Status::ok();
 }
+
+}; // namespace
 
 Status Tiling::read_pattern(const string &pat)
 {
@@ -712,9 +779,11 @@ Status Tiling::read_pattern(const string &pat)
   int num_parts = parts.init(m_all[1].str(), ",");
   points.resize(num_parts);
   for (int i = 0; i < num_parts; i++) {
-    auto stat = read_point(parts[i], points[i]);
+    Vec3d coords;
+    auto stat = read_point(parts[i], coords);
     if (stat.is_error())
       return Status::error(msg_str("Point%d: ", i) + stat.msg());
+    points[i] = TilingPoint(coords, i);
   }
 
   num_parts = parts.init(m_all[2].str(), ",");
@@ -743,10 +812,10 @@ Status Tiling::relabel_pattern(string relabel)
     relab[i] = elem_idx[relabel[i]];
 
   for (auto &pt : points) {
-    Vec3d v = pt.first;
+    Vec3d coords;
     for (int i = 0; i < 3; i++)
-      pt.first[relab[i]] = v[i];
-    color_point(pt);
+      coords[relab[i]] = pt.get_coords()[i];
+    pt = TilingPoint(coords, pt.get_index());
   }
 
   for (auto &pat : pat_paths)

@@ -30,6 +30,7 @@
 #define TILING_H
 
 #include "color.h"
+#include "colormap.h"
 #include "geometry.h"
 #include "symmetry.h"
 
@@ -125,39 +126,78 @@ public:
   static std::string normalize_pattern(const std::string &pattern);
 };
 
+class TilingPoint {
+public:
+  TilingPoint(Vec3d crds = Vec3d(), int idx = -1) : coords(crds), index(idx)
+  {
+    // val {1, 2, 4, 3, 6, 5, 7, 0} = v, e, f, ve, ef, fv, vef, 0 }
+    const int incl2idx[] = {7, 0, 1, 3, 2, 5, 4, 6}; // v,e,f,ve,ef,fv,vef,0
+    inclusion = incl2idx[(coords[0] != 0) + (coords[1] != 0) * 2 +
+                         (coords[2] != 0) * 4];
+  }
+  const Vec3d &get_coords() const { return coords; }
+  int get_index() const { return index; }
+  int get_inclusion() const { return inclusion; }
+
+private:
+  Vec3d coords;
+  int inclusion;
+  int index;
+};
+
 class TilingColoring {
 public:
-  enum ColoringType {
-    none,              ///< do not colour
-    path_index,        ///< colour by path index number
-    associated_element ///< colour same as corresponding base element
+  enum class ColoringType {
+    none,               ///< do not colour tile/point)
+    index,              ///< colour tile/point by index number
+    associated_element, ///< colour tile same as corresponding base element
+    component,          ///< colour point by presence of VEF components
+    weight,             ///< colour point by barycentric RGB colour
   };
+  enum { TILES = 0, POINTS = 1, ELEMS_SZ = 2 };
 
   /// Constructor
-  /**\param str colouring method for tiles, can be gibven as initial substring
-      none: do not colour tiles
-      index, value (default): use the path index
-      association: colour tiles using corresponding base element
-        colour, optionally follow by comma and
-          element type (from VEF): to colour local tiles by that element
-                                   type (default: F)
-          colour: to colour all local tiles by that colour */
-  TilingColoring(const std::string &str = std::string())
+  /**\param str colouring method for tiles, can be given as initial substring
+   * none: do not colour tiles
+   * index, value (default): use the path index
+   * association: colour tiles using corresponding base element
+   *   colour, optionally follow by comma and
+   *      element type (from VEF): to colour local tiles by that element
+   *                               type (default: F)
+   *     colour: to colour all local tiles by that colour */
+  TilingColoring(const std::string &clrng_str = std::string())
   {
-    if (str.empty() || !read(str))
-      set_type_path_index();
+    if (clrng_str.empty() || !read_coloring(clrng_str)) {
+      for (int elem : {TILES, POINTS})
+        set_coloring(elem, ColoringType::index);
+    }
   }
 
-  /// Read tiling colouring
-  /**\param str colouring method for tiles, can be gibven as initial substring
-      none: do not colour tiles
-      index, value (default): use the path index
-      association: colour tiles using corresponding base element
-        colour, optionally follow by comma and
-          element type (from VEF): to colour local tiles by that element
-                                   type (default: F)
-          colour: to colour all local tiles by that colour */
-  Status read(const std::string &str);
+  /// Read tile colouring
+  /**\param clrng_str colouring method for tiles, can be given as
+   * initial substring
+   *  none: do not colour tiles
+   *  index, value (default): use the path index
+   *  association: colour tiles using corresponding base element
+   *    colour, optionally follow by comma and
+   *      element type (from VEF): to colour local tiles by that element
+   *                               type (default: F)
+   *      colour: to colour all local tiles by that colour
+   * \return Status, which evaluates to \c true if the coloring was
+   *  valid, otherwise \c false to indicate an error. */
+  // Status read_tile_coloring(const std::string &clrng_str);
+  Status read_coloring(const std::string &clrng_str);
+
+  /// Read point colouring
+  /**\param clrng_str colouring method for points, can be given as
+   * initial substring
+   *  none: do not colour points
+   *  index, value: use the point index
+   *  component: colour points using the presence of VEF components (default)
+   *  weight: colour points using barycentric VEF components as RGBA
+   * \return Status, which evaluates to \c true if the coloring was
+   *  valid, otherwise \c false to indicate an error. */
+  // Status read_point_coloring(const std::string &clrng_str);
 
   /// Get option help
   /**\param op_char the option letter
@@ -165,49 +205,66 @@ public:
   static std::string get_option_help(char op_char);
 
   /// Check if tiling colouring is by path index
-  /**\return \c true if tiling colouring is path index, otherwise \c false. */
-  bool is_path_index() const { return col_type == ColoringType::path_index; }
-
-  /// Check if tiling colouring is by associated element
-  /**\return \c true if tiling colouring is associated element,
-   *  otherwise \c false. */
-  bool is_associated_element() const
+  /**\param elem 0 - tile, 1 - point
+   * \return \c true if tiling colouring is path index, otherwise \c false. */
+  bool is_index(int elem) const
   {
-    return col_type == ColoringType::associated_element;
+    return coloring_types[elem] == ColoringType::index;
   }
 
-  /// Get association to use for local tiles
-  /**\return \c Tile::V - vertices, \c Tile::E - edges, \c Tile::F - faces,
-   *  \c Tile::P - the tiling colouring \c color.*/
-  int get_local_tile_assoc() const { return local_tile_assoc; }
+  /// Check if tiling colouring is by associated element
+  /**\param elem 0 - tile, 1 - point
+   * \return \c true if tiling colouring is associated element,
+   *  otherwise \c false. */
+  bool is_associated_element(int elem) const
+  {
+    return coloring_types[elem] == ColoringType::associated_element;
+  }
 
-  /// Get the colour
-  /**\return the colour to use for local tiles with associated colouring,
-   *  or test with \c is_index() or \c is_value() for path index colouring. */
-  const Color &get_color() const { return color; }
+  /// Get associations to use for local elements
+  /**\param elem 0 - tile, 1 - point
+   * \return \c Tile::V - vertices, \c Tile::E - edges, \c Tile::F - faces,
+   *  \c Tile::P - the tiling colouring \c color.*/
+  int get_local_association(int elem) const { return local_associations[elem]; }
+
+  /// Get the colour to use for local elements
+  /**\param elem 0 - tile, 1 - point
+   * \return the colour to use for local tiles with associated colouring,
+   *  or test with \c is_index() or \c is_value() for tile index colouring. */
+  const Color &get_local_color(int elem) const { return local_colors[elem]; }
+
+  // ColoringType get_point_coloring_type() const { return point_clrng_type;}
+  Color get_point_color(const TilingPoint &point) const;
+
+  /// Get default element colormap
+  /**\return the default colormap to use for tiles (created with new, nust
+   * be deleted after use, or added to a \c Coloring which will manage the
+   * deletion) */
+  ColorMap *get_default_colormap(int elem) const;
 
 private:
   // The set functions are private, as no external code uses them
-  void set_type_none() { col_type = ColoringType::none; }
-  void set_type_path_index(bool is_value = true)
-  {
-    col_type = ColoringType::path_index;
-    color = (is_value) ? Color(0, 0, 0) : Color(0); // example value or index
-  }
-  Status set_type_associated(int elem, Color col = Color());
+  Status set_coloring(int elem, ColoringType clrng_type, int assoc = -1,
+                      Color local = Color());
+  /*  Status set_tile_coloring(ColoringType clrng_type, int elem = -1,
+                           Color local = Color());
 
-  ColoringType col_type = ColoringType::path_index;
-  int local_tile_assoc = Tile::F;
-  Color color; // colour for local tiles (local_tile_assoc Tile::P)
-               // or example to test for index/value (path_index)
+    Status set_point_coloring(ColoringType clrng_type, int elem = -1,
+                              Color local = Color());
+  */
+  std::vector<ColoringType> coloring_types =
+      std::vector<ColoringType>(ELEMS_SZ, ColoringType::index);
+  std::vector<int> local_associations = std::vector<int>(ELEMS_SZ, Tile::F);
+  std::vector<Color> local_colors = std::vector<Color>(ELEMS_SZ);
 };
 
 // Tiling using Wythoff constructive notation
 class Tiling {
 private:
-  std::vector<std::pair<Vec3d, Color>> points; ///< Points
-  ElemProps<Color> orig_colors;                ///< original colours
-  std::vector<Tile> pat_paths;                 ///< Tile patterns
+  std::vector<TilingPoint> points; ///< Points
+  ElemProps<Color> orig_colors;    ///< Original colours
+  std::vector<Tile> pat_paths;     ///< Tile patterns
+  TilingColoring coloring;         ///< Coloring for points, tiles
 
   Geometry meta;                      ///< Base triangle tiling
   std::vector<std::vector<int>> nbrs; ///< Base tiling face neighbours
@@ -223,6 +280,7 @@ private:
   /// Find the colour of the element associated with a tiling vertex
   /**\param f_idx the index of the meta tiling face
    * \param incl the element types included in the pattern point specifier
+   * \param coloring the tiling coloring
    * \return colour of the associated element. */
   Color get_associated_element_point_color(int f_idx, int incl) const;
 
@@ -231,6 +289,7 @@ private:
    * \param step the sequence of mirrors vef to step to the associated meta
    *  triangle
    * \param type the element type, from V, E, F or VEF for no element
+   * \param local_color colour for interior points
    * \return index of the associated element, or -1 if no element. */
   int get_associated_element(int start_idx, const std::string &step,
                              int assoc_type) const;
@@ -265,6 +324,32 @@ public:
   Status set_geom(const Geometry &geom, bool is_meta = false,
                   double face_ht = 0.0);
 
+  /// Set coloring
+  /**\param clrng the coloring to use for points and tiles */
+  void set_coloring(const TilingColoring &clrng) { coloring = clrng; }
+
+  /// Get coloring
+  /**\return the coloring to use for points and tiles */
+  const TilingColoring &get_coloring() const { return coloring; }
+
+  /// Get default tile colormap
+  /**\return the default colormap to use for tiles (created with new, nust
+   * be deleted after use, or added to a \c Coloring which will manage the
+   * deletion) */
+  ColorMap *get_default_tile_colormap() const
+  {
+    return coloring.get_default_colormap(TilingColoring::TILES);
+  }
+
+  /// Get default point colormap
+  /**\return the default colormap to use for tiles (created with new, nust
+   * be deleted after use, or added to a \c Coloring which will manage the
+   * deletion) */
+  ColorMap *get_default_point_colormap() const
+  {
+    return coloring.get_default_colormap(TilingColoring::POINTS);
+  }
+
   /// Add a tile
   /**\param pat the tile pattern string
    * \return Status, which evaluates to \c true if the pattern string was
@@ -273,12 +358,11 @@ public:
 
   /// Make the tiling
   /**\param geom the geometry to return the tiling
-   * \param col_type method for colouring the tiles
    * \param tile_reports reports about the paths and the tiles produced
    * \return Status, which evaluates to \c true if the tiling was
    *  successfully created, otherwise \c false to indicate an error. */
   Status
-  make_tiling(Geometry &geom, TilingColoring col_type = TilingColoring(),
+  make_tiling(Geometry &geom,
               std::vector<Tile::TileReport> *tile_reports = nullptr) const;
 
   /// Read tiling pattern

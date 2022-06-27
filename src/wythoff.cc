@@ -54,6 +54,7 @@ public:
   bool reverse = false;
   Tiling tiling;
   TilingColoring col_type;
+  Coloring clrngs[3];
   bool quiet = false;
   string ifile;
   string ofile;
@@ -103,6 +104,9 @@ Options
             e.g. EFV relabels the pattern as V->E,v->e,E->F,e->f,F->V,f->v
   -M        input geometry is a 'meta' tiling, don't apply meta operation
 %s
+  -m <maps> a comma separated list of colour maps used to transform colour
+            indexes (default: spread), a part consisting of letters from
+            v, e, f, selects the element types to apply the map list to
   -u        output only one example of each type of tile (one per path)
   -a        add the 'meta'-transformed base
   -f <ht>   lift the face centres by this height
@@ -121,7 +125,7 @@ void wy_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":ho:p:c:f:Rr:MC:uqa")) != -1) {
+  while ((c = getopt(argc, argv, ":ho:p:c:f:Rr:MC:m:uqa")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -163,7 +167,11 @@ void wy_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'C':
-      print_status_or_exit(col_type.read(optarg), c);
+      print_status_or_exit(col_type.read_coloring(optarg), c);
+      break;
+
+    case 'm':
+      print_status_or_exit(read_colorings(clrngs, optarg), c);
       break;
 
     case 'q':
@@ -234,10 +242,10 @@ int main(int argc, char *argv[])
   Status stat = tiling.set_geom(geom, opts.input_is_meta, opts.face_ht);
   if (stat.is_error())
     opts.print_status_or_exit(stat, 'm');
+  tiling.set_coloring(opts.col_type);
   Geometry ogeom;
   vector<Tile::TileReport> tile_reports;
-  opts.print_status_or_exit(
-      tiling.make_tiling(ogeom, opts.col_type, &tile_reports));
+  opts.print_status_or_exit(tiling.make_tiling(ogeom, &tile_reports));
   if (!orientable)
     merge_coincident_elements(ogeom, "f");
 
@@ -258,21 +266,26 @@ int main(int argc, char *argv[])
     fprintf(stderr, "\n");
   }
 
-  if (opts.col_type.get_color().is_value()) {
-    Coloring clrng(&ogeom);
-    clrng.add_cmap(colormap_from_name("spread"));
-    clrng.e_apply_cmap();
-    clrng.f_apply_cmap();
-    Coloring v_clrng(&ogeom);
-    v_clrng.add_cmap(
-        colormap_from_name("map_red:green:blue:yellow:cyan:magenta:grey80"));
-    v_clrng.v_apply_cmap();
+  // colour the final model
+  auto &clrngs = opts.clrngs;
+  for (int i = 0; i < 3; i++) {
+    auto &clrng = clrngs[i];
+    clrng.set_geom(&ogeom);
+    if (!clrng.get_cmaps().size()) { // no colouring set for this element
+      if (i == VERTS)
+        clrng.add_cmap(tiling.get_default_point_colormap());
+      else // FACES and EDGES
+        clrng.add_cmap(tiling.get_default_tile_colormap());
+    }
   }
+
+  clrngs[FACES].f_apply_cmap();
+  clrngs[EDGES].e_apply_cmap();
+  clrngs[VERTS].v_apply_cmap();
 
   if (opts.add_meta) {
     Geometry meta = tiling.get_meta();
-    if (opts.col_type.get_color().is_value())
-      color_meta(meta);
+    color_meta(meta);
     ogeom.append(meta);
   }
 

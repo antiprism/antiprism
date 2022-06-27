@@ -64,16 +64,38 @@ e.g. EFV relabels the pattern as V\->E,v\->e,E\->F,e\->f,F\->V,f\->v
 \fB\-M\fR
 input geometry is a 'meta' tiling, don't apply meta operation
 .HP
-\fB\-C\fR <mthd> colouring method for tiles, method can be
+\fB\-C\fR <mthd> tile colouring method, optionally followed by ':' and
+.IP
+point colouring method.
+.IP
+Tile colouring methods
 .IP
 none \- do not colour tiles
-index \- use the path index, colour with index numbers
-value \- use the path index, colour with colour values (default)
+index \- use the path index, and apply colormap (default)
 association \- colour tiles using corresponding base element
 .IP
 colour, optionally followed by a comma and a letter from V,
-E, F, or a colour, to colour local tiles by that element type
-(default: F), or colour all local tiles with a single colour
+E, F, or a colour, to use for all local tiles (default: F)
+.IP
+Point colouring methods (default: use tile coloring method)
+.IP
+none \- do not colour points
+index \- use the point index, and apply colormap
+association \- colour points using corresponding base element
+.IP
+colour, optionally followed by a comma and a letter from V,
+E, F, or a colour, to use for all local points (default: F)
+.IP
+component \- colour by non\-zero components, V=1, E=2, F=4,
+.IP
+V&E=3, E&F=6, V&F=5, V&E&F=7, and apply colormap
+.IP
+weight \- colour using barycentric coordinates as RGB
+.HP
+\fB\-m\fR <maps> a comma separated list of colour maps used to transform colour
+.IP
+indexes (default: spread), a part consisting of letters from
+v, e, f, selects the element types to apply the map list to
 .TP
 \fB\-u\fR
 output only one example of each type of tile (one per path)

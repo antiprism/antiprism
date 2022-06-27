@@ -1391,7 +1391,7 @@ void cn_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'C': {
-      print_status_or_exit(col_type.read(optarg), c);
+      print_status_or_exit(col_type.read_coloring(optarg), c);
       break;
     }
 
