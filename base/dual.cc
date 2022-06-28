@@ -203,7 +203,8 @@ void get_pol_recip_verts(Geometry &dual, const Geometry &geom, double recip_rad,
   dual.clear(VERTS);
   for (const auto &face : geom.faces()) {
     if (recip_rad) {
-      auto f_norm = geom.face_norm(face);
+      // use unit normal, as comparing with with fixed inf
+      auto f_norm = geom.face_norm(face).unit();
       auto f_cent = geom.face_cent(face);
       double f_dist = vdot(f_norm, f_cent - centre);
       double dist = r_sign * recip_rad * recip_rad / f_dist;

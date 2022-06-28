@@ -13,6 +13,7 @@ XX-XX-22 Adrian Rossiter <adrian@antiprism.com>
               and -e V
             build: minimum autoconf version changed to 0.69
          Fixes
+            resource models: large geodesic duals corrected
 
 Version 0.29
 01-11-21 Adrian Rossiter <adrian@antiprism.com>
