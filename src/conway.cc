@@ -842,6 +842,46 @@ string resolved_cn_string(const string &cn_string)
   return resolve_string;
 }
 
+ColorMapMap *alloc_default_map(const string map_file, const char m)
+{
+  auto *col_map = new ColorMapMap;
+  int n = (m == 'n') ? 3 : 0;
+
+  // color digons gray
+  if (n == 3)
+    col_map->set_col(2, Color(127, 127, 127)); // digons
+
+  if (map_file == "m1") {
+    col_map->set_col(n++, Color(255, 0, 0));     // 3-sided red
+    col_map->set_col(n++, Color(255, 127, 0));   // 4-sided darkoranage1
+    col_map->set_col(n++, Color(255, 255, 0));   // 5-sided yellow
+    col_map->set_col(n++, Color(0, 100, 0));     // 6-sided darkgreen
+    col_map->set_col(n++, Color(0, 255, 255));   // 7-sided cyan
+    col_map->set_col(n++, Color(0, 0, 255));     // 8-sided blue
+    col_map->set_col(n++, Color(255, 0, 255));   // 9-sided magenta
+    col_map->set_col(n++, Color(255, 255, 255)); // 10-sided white
+    col_map->set_col(n++, Color(127, 127, 127)); // 11-sided gray50
+    col_map->set_col(n++, Color(0, 0, 0));       // 12-sided black
+  }
+  else if (map_file == "m2") {
+    col_map->set_col(n++, Color(0.9, 0.3, 0.3));   // 3-sided red
+    col_map->set_col(n++, Color(0.4, 0.4, 1.0));   // 4-sided blue
+    col_map->set_col(n++, Color(0.2, 0.9, 0.3));   // 5-sided green
+    col_map->set_col(n++, Color(0.9, 0.9, 0.2));   // 6-sided yellow
+    col_map->set_col(n++, Color(0.5, 0.25, 0.25)); // 7-sided brown
+    col_map->set_col(n++, Color(0.8, 0.2, 0.8));   // 8-sided magenta
+    col_map->set_col(n++, Color(0.5, 0.2, 0.8));   // 9-sided purple
+    col_map->set_col(n++, Color(0.1, 0.9, 0.9));   // 10-sided grue
+    col_map->set_col(n++, Color(0.5, 0.5, 0.5));   // 11-sided gray
+    col_map->set_col(n++, Color(1.0, 0.6, 0.1));   // 12-sided orange
+
+    // George Hart had all higher faces at gray (no longer used)
+    // col_map->set_col(0, Color(0.5, 0.5, 0.5)); // 13-sided faces and higher
+  }
+
+  return col_map;
+}
+
 class cn_opts : public ProgramOpts {
 public:
   IterationControl it_ctrl;
@@ -870,6 +910,7 @@ public:
 
   // coloring options
   char vertex_coloring_method = '\0'; // default vert coloring method
+  char edge_coloring_method = '\0';   // default vert coloring method
   char face_coloring_method = 'n';    // default face coloring method
 
   Color vert_col = Color(255, 215, 0);   // gold
@@ -878,7 +919,10 @@ public:
 
   int face_opacity = -1; // transparency from 0 to 255
 
-  ColorMapMulti map;
+  // seperate maps for faces and verts because color by sides
+  ColorMapMulti face_map;
+  ColorMapMulti edge_map;
+  ColorMapMulti vert_map;
 
   TilingColoring col_type; // for wythoff
 
@@ -1226,25 +1270,32 @@ Conway Notation Options
 Coloring Options (run 'off_util -H color' for help on color formats)
   -V <col>  vertex color (default: gold)
                keyword: none - sets no color
-               n - by number of sides
+               n - order of vertex
                s - symmetric coloring
                u - unique coloring
   -E <col>  edge color   (default: lightgray)
+               keyword: none - sets no color
+               s - symmetric coloring
+               v - color with average adjacent vertex color (-V colors first)
+               f - color with average adjacent face color (-f colors first)
   -f <col>  face color. Or use method for using color in map (default: n)
                keyword: none - sets no color
                n - by number of sides
                s - symmetric coloring
                u - unique coloring
                o - newly created faces by operation
-               w - resolve color indexes (overrides -V and -E)
+               v - color with average adjacent vertex color (-V colors first)
+               w - use wythoff colors (overrides -V and -E)
 %s
                (when -f w is set)
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
-  -m <maps> color maps for faces to be tried in turn (default: m1, for -g, m2)
+  -m <maps> color maps to be tried in turn (default: m1, for -g, m2)
                keyword m1: red,darkorange1,yellow,darkgreen,cyan,blue,magenta,
                            white,gray50,black
                keyword m2: red,blue,green,yellow,brown,magenta,purple,grue,
                            gray,orange (from George Hart's original applet)
+               (built in maps start from position 3 when -f n or -v n)
+               (no effect when using -f w which uses internal wythoff maps)
 
 )",
           prog_name(), help_ver_text,
@@ -1262,6 +1313,7 @@ void cn_opts::process_command_line(int argc, char **argv)
   int op_term = 0;
 
   string map_file;
+  Coloring clrngs[3];
 
   handle_long_opts(argc, argv);
 
@@ -1382,12 +1434,12 @@ void cn_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'f':
-      if (!strcasecmp(optarg, "none"))
-        face_coloring_method = '\0';
-      else if (strspn(optarg, "nsuow") && strlen(optarg) == 1)
+      if (strspn(optarg, "nsuovw") && strlen(optarg) == 1)
         face_coloring_method = *optarg;
-      else
+      else {
         print_status_or_exit(face_col.read(optarg), c);
+        face_coloring_method = '\0';
+      }
       break;
 
     case 'C': {
@@ -1398,16 +1450,21 @@ void cn_opts::process_command_line(int argc, char **argv)
     case 'V':
       // unset default vertex color
       vert_col = Color();
-      if (!strcasecmp(optarg, "none"))
-        vertex_coloring_method = '\0';
-      else if (strspn(optarg, "nsu") && strlen(optarg) == 1)
+      if (strspn(optarg, "nsu") && strlen(optarg) == 1)
         vertex_coloring_method = *optarg;
-      else
+      else {
         print_status_or_exit(vert_col.read(optarg), c);
+        vertex_coloring_method = '\0';
+      }
       break;
 
     case 'E':
-      print_status_or_exit(edge_col.read(optarg), c);
+      // unset default edge color
+      edge_col = Color();
+      if (strlen(optarg) == 1 && strchr("sfv", int(*optarg)))
+        edge_coloring_method = *optarg;
+      else
+        print_status_or_exit(edge_col.read(optarg), c);
       break;
 
     case 'T':
@@ -1512,45 +1569,30 @@ void cn_opts::process_command_line(int argc, char **argv)
   if (!map_file.size())
     map_file = (hart_mode) ? "m2" : "m1";
 
-  if (map_file == "m1" || map_file == "m2") {
-    auto *col_map = new ColorMapMap;
-    if (map_file == "m1") {
-      col_map->set_col(0, Color(255, 0, 0));     // 3-sided faces red
-      col_map->set_col(1, Color(255, 127, 0));   // 4-sided faces darkoranage1
-      col_map->set_col(2, Color(255, 255, 0));   // 5-sided faces yellow
-      col_map->set_col(3, Color(0, 100, 0));     // 6-sided faces darkgreen
-      col_map->set_col(4, Color(0, 255, 255));   // 7-sided faces cyan
-      col_map->set_col(5, Color(0, 0, 255));     // 8-sided faces blue
-      col_map->set_col(6, Color(255, 0, 255));   // 9-sided faces magenta
-      col_map->set_col(7, Color(255, 255, 255)); // 10-sided faces white
-      col_map->set_col(8, Color(127, 127, 127)); // 11-sided faces gray50
-      col_map->set_col(9, Color(0, 0, 0));       // 12-sided faces black
-    }
-    else if (map_file == "m2") {
-      auto *col_map0 = new ColorMapMap;
-      col_map0->set_col(0, Color(0.9, 0.3, 0.3));   // 3-sided faces red
-      col_map0->set_col(1, Color(0.4, 0.4, 1.0));   // 4-sided faces blue
-      col_map0->set_col(2, Color(0.2, 0.9, 0.3));   // 5-sided faces green
-      col_map0->set_col(3, Color(0.9, 0.9, 0.2));   // 6-sided faces yellow
-      col_map0->set_col(4, Color(0.5, 0.25, 0.25)); // 7-sided faces brown
-      col_map0->set_col(5, Color(0.8, 0.2, 0.8));   // 8-sided faces magenta
-      col_map0->set_col(6, Color(0.5, 0.2, 0.8));   // 9-sided faces purple
-      col_map0->set_col(7, Color(0.1, 0.9, 0.9));   // 10-sided faces grue
-      col_map0->set_col(8, Color(0.5, 0.5, 0.5));   // 11-sided faces gray
-      col_map0->set_col(9, Color(1.0, 0.6, 0.1));   // 12-sided faces orange
-      map.add_cmap(col_map0);
+  if (map_file != "m1" && map_file != "m2")
+    print_status_or_exit(read_colorings(clrngs, map_file.c_str()), 'm');
 
-      // George Hart had all higher faces at gray
-      col_map->set_col(0, Color(0.5, 0.5, 0.5)); // 13-sided faces and higher
-    }
-    map.add_cmap(col_map);
-
-    // append a spread map instead of wrapping
+  if ((clrngs[FACES].get_cmaps()).size())
+    face_map = clrngs[FACES];
+  else {
+    face_map.add_cmap(alloc_default_map(map_file, face_coloring_method));
     ColorMap *spread_map = colormap_from_name("spread");
-    map.add_cmap(spread_map);
+    face_map.add_cmap(spread_map);
   }
-  else
-    print_status_or_exit(map.init(map_file.c_str()), 'm');
+  if ((clrngs[EDGES].get_cmaps()).size())
+    edge_map = clrngs[EDGES];
+  else {
+    edge_map.add_cmap(alloc_default_map(map_file, edge_coloring_method));
+    ColorMap *spread_map = colormap_from_name("spread");
+    edge_map.add_cmap(spread_map);
+  }
+  if ((clrngs[VERTS].get_cmaps()).size())
+    vert_map = clrngs[VERTS];
+  else {
+    vert_map.add_cmap(alloc_default_map(map_file, vertex_coloring_method));
+    ColorMap *spread_map = colormap_from_name("spread");
+    vert_map.add_cmap(spread_map);
+  }
 
   eps = it_ctrl.get_test_val();
 }
@@ -1738,7 +1780,8 @@ void get_seed(Geometry &geom, const cn_opts &opts)
   }
 
   // by default seed face colors will first map color
-  Coloring(&geom).f_one_col(opts.map.get_col(0));
+  int n = (opts.face_coloring_method == 'n') ? 3 : 0;
+  Coloring(&geom).f_one_col(opts.face_map.get_col(n));
 }
 
 // RK - for hart code
@@ -2216,7 +2259,7 @@ void wythoff(Geometry &geom, string operation, int sub1, int sub2, int sides,
         }
       }
       if (!found)
-        geom.colors(FACES).set(i, opts.map.get_col(operation_number));
+        geom.colors(FACES).set(i, opts.face_map.get_col(operation_number));
     }
   }
 
@@ -2300,14 +2343,20 @@ void cn_coloring(Geometry &geom, const cn_opts &opts)
   if (!geom.verts().size())
     return;
 
+  // need to create edges before symmetry call
+  geom.add_missing_impl_edges();
+
   // Get symmetry if necessary
   Symmetry sym;
   vector<vector<set<int>>> sym_equivs;
   vector<set<int>> v_equivs;
+  vector<set<int>> e_equivs;
   vector<set<int>> f_equivs;
-  if (opts.face_coloring_method == 's' || opts.vertex_coloring_method == 's') {
+  if (opts.face_coloring_method == 's' || opts.vertex_coloring_method == 's' ||
+      opts.edge_coloring_method == 's') {
     sym.init(geom, &sym_equivs);
     v_equivs = sym_equivs[0];
+    e_equivs = sym_equivs[1];
     f_equivs = sym_equivs[2];
   }
 
@@ -2318,19 +2367,18 @@ void cn_coloring(Geometry &geom, const cn_opts &opts)
       Coloring(&geom).v_one_col(opts.vert_col);
     else if (opts.vertex_coloring_method == 'n') {
       Coloring clrng(&geom);
-      clrng.add_cmap(opts.map.clone());
+      clrng.add_cmap(opts.vert_map.clone());
       clrng.v_order(true);
       clrng.f_apply_cmap();
     }
     else if (opts.vertex_coloring_method == 's') {
-      Coloring clrng;
-      clrng.add_cmap(opts.map.clone());
-      clrng.set_geom(&geom);
+      Coloring clrng(&geom);
+      clrng.add_cmap(opts.vert_map.clone());
       clrng.v_sets(v_equivs, true);
     }
     else if (opts.vertex_coloring_method == 'u') {
       Coloring clrng(&geom);
-      clrng.add_cmap(opts.map.clone());
+      clrng.add_cmap(opts.vert_map.clone());
       clrng.v_unique(true);
       clrng.v_apply_cmap();
     }
@@ -2341,41 +2389,72 @@ void cn_coloring(Geometry &geom, const cn_opts &opts)
     Coloring(&geom).f_one_col(opts.face_col);
   else if (opts.face_coloring_method == 'n') {
     Coloring clrng(&geom);
-    clrng.add_cmap(opts.map.clone());
+    clrng.add_cmap(opts.face_map.clone());
     clrng.f_sides(true);
     clrng.f_apply_cmap();
   }
   else if (opts.face_coloring_method == 's') {
-    Coloring clrng;
-    clrng.add_cmap(opts.map.clone());
-    clrng.set_geom(&geom);
+    Coloring clrng(&geom);
+    clrng.add_cmap(opts.face_map.clone());
     clrng.f_sets(f_equivs, true);
   }
   else if (opts.face_coloring_method == 'u') {
     Coloring clrng(&geom);
-    clrng.add_cmap(opts.map.clone());
+    clrng.add_cmap(opts.face_map.clone());
     clrng.f_unique(true);
+    clrng.f_apply_cmap();
+  }
+  else if (opts.face_coloring_method == 'v') {
+    Coloring clrng(&geom);
+    clrng.add_cmap(opts.face_map.clone());
+    clrng.f_from_adjacent(VERTS);
     clrng.f_apply_cmap();
   }
   // set color values from map indexes from wythoff call
   else if (opts.face_coloring_method == 'w') {
-    Coloring clrng(&geom);
-    clrng.add_cmap(opts.map.clone());
-    clrng.v_apply_cmap();
-    clrng.e_apply_cmap();
-    clrng.f_apply_cmap();
+    Tiling tiling;
+    Status stat = tiling.set_geom(geom, false, 0.0);
+    if (stat.is_error())
+      opts.print_status_or_exit(stat, 'C');
+    tiling.set_coloring(opts.col_type);
+
+    Coloring clrngs[3];
+    for (int i = 0; i < 3; i++) {
+      auto &clrng = clrngs[i];
+      clrng.set_geom(&geom);
+      if (i == VERTS)
+        clrng.add_cmap(tiling.get_default_point_colormap());
+      else // FACES and EDGES
+        clrng.add_cmap(tiling.get_default_tile_colormap());
+    }
+    clrngs[FACES].f_apply_cmap();
+    clrngs[EDGES].e_apply_cmap();
+    clrngs[VERTS].v_apply_cmap();
   }
 
-  // apply transparency
-  Status stat = Coloring(&geom).apply_transparency(opts.face_opacity);
-  if (stat.is_warning())
-    opts.warning(stat.msg(), 'T');
-
   // color edges 3rd
-  geom.add_missing_impl_edges();
-  if (opts.face_coloring_method != 'w')
-    Coloring(&geom).e_one_col(opts.edge_col);
-  // wythoff could color some edges
+  // wythoff overrides coloring of edges
+  if (opts.edge_coloring_method != 'w') {
+    if (opts.edge_col.is_set())
+      Coloring(&geom).e_one_col(opts.edge_col);
+    else if (opts.edge_coloring_method == 's') {
+      Coloring clrng(&geom);
+      clrng.add_cmap(opts.edge_map.clone());
+      clrng.e_sets(e_equivs, true);
+    }
+    else if (opts.edge_coloring_method == 'v') {
+      Coloring clrng(&geom);
+      clrng.add_cmap(opts.edge_map.clone());
+      clrng.e_from_adjacent(VERTS);
+      clrng.e_apply_cmap();
+    }
+    else if (opts.edge_coloring_method == 'f') {
+      Coloring clrng(&geom);
+      clrng.add_cmap(opts.edge_map.clone());
+      clrng.e_from_adjacent(FACES);
+      clrng.e_apply_cmap();
+    }
+  }
   else {
     for (unsigned int i = 0; i < geom.edges().size(); i++) {
       Color c = geom.colors(EDGES).get(i);
@@ -2384,6 +2463,11 @@ void cn_coloring(Geometry &geom, const cn_opts &opts)
         geom.colors(EDGES).set(i, opts.edge_col);
     }
   }
+
+  // apply transparency
+  Status stat = Coloring(&geom).apply_transparency(opts.face_opacity);
+  if (stat.is_warning())
+    opts.warning(stat.msg(), 'T');
 }
 
 int main(int argc, char *argv[])

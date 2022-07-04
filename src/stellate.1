@@ -65,23 +65,29 @@ width to project stellation diagram (default: 500)
 .PP
 Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
 .TP
-\fB\-F\fR <opt>
-face coloring method. d \- from diagram, s \- symmetry (default: d)
+\fB\-V\fR <col>
+vertex color (default: invisible)
 .IP
-c \- color by compound
-C \- face/face connection count using map n colors
 keyword: none \- sets no color
+e \- color with average adjacent edge color
+f \- color with average adjacent face color
+n \- order of vertex
 .TP
 \fB\-E\fR <col>
-edge color. f \- from faces (default: invisible)
+edge color (default: invisible)
 .IP
-C \- edge/face connection count using map n colors
 keyword: none \- sets no color
+f \- color with average adjacent face color
+C \- edge/face connection
 .TP
-\fB\-V\fR <col>
-vertex color.  e \- from edges (default: invisible)
+\fB\-F\fR <col>
+face color. Or use method for using color in map (default: d)
 .IP
 keyword: none \- sets no color
+d \- from diagram
+s \- symmetry
+c \- color by compound
+C \- face/face connection count
 .HP
 \fB\-T\fR <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
 .HP

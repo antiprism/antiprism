@@ -392,6 +392,20 @@ void lutil_opts::process_command_line(int argc, char **argv)
 
   if (list_radii && list_struts)
     error("cannot list radii and struts at the same time", 'L');
+
+  // for convex hull
+  if (face_opacity > -1) {
+    // if no face color is set but there is transparency set, use white
+    if (!face_col[1].is_set())
+      face_col[1] = Color(255, 255, 255);
+
+    // face color can only be made transparent if not index and not invisible
+    if (!face_col[1].set_alpha(face_opacity))
+      warning("transparency has no effect on map indexes or invisible", "T");
+
+    if (color_method == 's' || color_method == 'c')
+      warning("when writing indexes transparency setting ignored", "T");
+  }
 }
 
 void make_skeleton(Geometry &geom, const bool strip_faces)

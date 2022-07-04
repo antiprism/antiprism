@@ -61,6 +61,12 @@ public:
 
   double eps = anti::epsilon;
 
+  char vertex_coloring_method = '\0'; // e
+  char edge_coloring_method = '\0';   // f
+
+  Color vertex_color = Color(std::numeric_limits<int>::max()); // unset
+  Color edge_color = Color(std::numeric_limits<int>::max());   // unset
+
   int coloring_method = 0;   // color radial or axes or both
   int axes_coloring = 1;     // color axes by nfold or order
   string map_string = "rng"; // default map name
@@ -105,6 +111,13 @@ Scene Options
   -s <sym>  symmetry subgroup (Schoenflies notation)
 
 Coloring Options (run 'off_util -H color' for help on color formats)
+  -E <col>  edge color (default: unchanged)
+               keyword: none - sets no color
+               f - color with average adjacent face color
+  -V <col>  vertex color (default: unchanged)
+               keyword: none - sets no color
+               e - color with average adjacent edge color
+               f - color with average adjacent face color
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
   -m <maps> color maps for all elements to be tried in turn (default: rng)
               rng and rainbow maps without entries specified are calculated 
@@ -137,7 +150,7 @@ void radial_opts::process_command_line(int argc, char **argv)
   axis_percent.push_back(100);
   axis_percent.push_back(100);
 
-  while ((c = getopt(argc, argv, ":hd:f:a:s:T:m:n:A:l:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hd:f:a:s:E:V:T:m:n:A:l:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -222,6 +235,20 @@ void radial_opts::process_command_line(int argc, char **argv)
 
     case 's':
       sym_str = optarg;
+      break;
+
+    case 'V':
+      if (strlen(optarg) == 1 && strchr("ef", int(*optarg)))
+        vertex_coloring_method = *optarg;
+      else
+        print_status_or_exit(vertex_color.read(optarg), c);
+      break;
+
+    case 'E':
+      if (strlen(optarg) == 1 && strchr("f", int(*optarg)))
+        edge_coloring_method = *optarg;
+      else
+        print_status_or_exit(edge_color.read(optarg), c);
       break;
 
     case 'T':
@@ -737,6 +764,33 @@ void radial_coloring(Geometry &geom, const Geometry &axes,
   set_indexes_to_color(geom, opts);
 }
 
+void ev_coloring(Geometry &geom, const radial_opts &opts)
+{
+  geom.add_missing_impl_edges();
+  if (opts.edge_coloring_method == 'f') {
+    // edges take colors from faces
+    Coloring clrng(&geom);
+    clrng.e_from_adjacent(FACES);
+  }
+  else if (opts.edge_color != std::numeric_limits<int>::max())
+    // use color selected
+    Coloring(&geom).e_one_col(opts.edge_color);
+
+  if (opts.vertex_coloring_method == 'f') {
+    // edges take colors from edges
+    Coloring clrng(&geom);
+    clrng.v_from_adjacent(FACES);
+  }
+  else if (opts.vertex_coloring_method == 'e') {
+    // edges take colors from edges
+    Coloring clrng(&geom);
+    clrng.v_from_adjacent(EDGES);
+  }
+  else if (opts.vertex_color != std::numeric_limits<int>::max())
+    // use color selected
+    Coloring(&geom).v_one_col(opts.vertex_color);
+}
+
 int main(int argc, char *argv[])
 {
   radial_opts opts;
@@ -833,8 +887,10 @@ int main(int argc, char *argv[])
     // fprintf(stderr, "axes.size = %d\n", (int)axes.verts().size());
   }
 
-  if (opts.coloring_method == 1)
+  if (opts.coloring_method == 1) {
     radial_coloring(geom, axes, opts);
+    ev_coloring(geom, opts);
+  }
 
   // append axes if set
   if (opts.show_axes)

@@ -116,15 +116,21 @@ Scene Options
   -w <int>  width to project stellation diagram (default: 500)
 
 Coloring Options (run 'off_util -H color' for help on color formats)
-  -F <opt>  face coloring method. d - from diagram, s - symmetry (default: d)
+  -V <col>  vertex color (default: invisible)
+               keyword: none - sets no color
+               e - color with average adjacent edge color
+               f - color with average adjacent face color
+               n - order of vertex
+  -E <col>  edge color (default: invisible)
+               keyword: none - sets no color
+               f - color with average adjacent face color
+               C - edge/face connection
+  -F <col>  face color. Or use method for using color in map (default: d)
+               keyword: none - sets no color
+               d - from diagram
+               s - symmetry
                c - color by compound
-               C - face/face connection count using map n colors
-               keyword: none - sets no color
-  -E <col>  edge color. f - from faces (default: invisible)
-               C - edge/face connection count using map n colors
-               keyword: none - sets no color
-  -V <col>  vertex color.  e - from edges (default: invisible)
-               keyword: none - sets no color
+               C - face/face connection count
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
   -m <maps> color maps. stellation diagram or face symmetry (default: compound)
 
@@ -199,7 +205,7 @@ void stellate_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'V':
-      if (strchr("e", *optarg))
+      if (strlen(optarg) == 1 && strchr("efn", int(*optarg)))
         vertex_coloring_method = *optarg;
       else
         print_status_or_exit(vertex_color.read(optarg), c);

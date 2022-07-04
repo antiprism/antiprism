@@ -756,6 +756,7 @@ void color_stellation(Geometry &geom, const char face_coloring_method,
     if ((geom.colors(EDGES).get(i)).is_invisible())
       invisible_edges.push_back(i);
 
+  // color edges
   if (edge_coloring_method == 'f') {
     // if face colors is none clear edges
     if (!face_coloring_method && !face_color.is_set())
@@ -772,9 +773,14 @@ void color_stellation(Geometry &geom, const char face_coloring_method,
     // use color selected
     clrng.e_one_col(edge_color);
 
+  // color vertices
   if (vertex_coloring_method == 'e') {
     // vertices take color from edges
     clrng.v_from_adjacent(EDGES);
+  }
+  else if (vertex_coloring_method == 'f') {
+    // vertices take color from edges
+    clrng.v_from_adjacent(FACES);
   }
   else if (vertex_coloring_method == 'n')
     clrng.v_order(true);

@@ -81,12 +81,17 @@ Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
 vertex color (default: gold)
 .IP
 keyword: none \- sets no color
-n \- by number of sides
+n \- order of vertex
 s \- symmetric coloring
 u \- unique coloring
 .TP
 \fB\-E\fR <col>
 edge color   (default: lightgray)
+.IP
+keyword: none \- sets no color
+s \- symmetric coloring
+v \- color with average adjacent vertex color (\fB\-V\fR colors first)
+f \- color with average adjacent face color (\fB\-f\fR colors first)
 .TP
 \fB\-f\fR <col>
 face color. Or use method for using color in map (default: n)
@@ -96,31 +101,33 @@ n \- by number of sides
 s \- symmetric coloring
 u \- unique coloring
 o \- newly created faces by operation
-w \- resolve color indexes (overrides \fB\-V\fR and \fB\-E\fR)
+v \- color with average adjacent vertex color (\fB\-V\fR colors first)
+w \- use wythoff colors (overrides \fB\-V\fR and \fB\-E\fR)
 .HP
-\fB\-C\fR <mthd> colouring method for tiles, optionally
+\fB\-C\fR <mthd> tile colouring method, optionally followed by ':' and
 .IP
-followed by ':' and colouring method fot points.
-Tile colouring methods (empty for default)
+point colouring method.
+.IP
+Tile colouring methods
 .IP
 none \- do not colour tiles
 index \- use the path index, and apply colormap (default)
 association \- colour tiles using corresponding base element
 .IP
 colour, optionally followed by a comma and a letter from V,
-E, F, or a colour, to colour local tiles by that element type
-(default: F), or colour all local tiles with a single colour
+E, F, or a colour, to use for all local tiles (default: F)
 .IP
-Vertex colouring (empty for default, if tile colouring is
+Point colouring methods (default: use tile coloring method)
 .IP
-association a compatible colouring is used)
+none \- do not colour points
+index \- use the point index, and apply colormap
+association \- colour points using corresponding base element
 .IP
-none \- do not colour tiles (default if tiles colouring is none)
-index \- use the path index, and apply colormap (default if
+colour, optionally followed by a comma and a letter from V,
+E, F, or a colour, to use for all local points (default: F)
 .IP
-tile colouring is index)
-.TP
 component \- colour by non\-zero components, V=1, E=2, F=4,
+.IP
 V&E=3, E&F=6, V&F=5, V&E&F=7, and apply colormap
 .IP
 weight \- colour using barycentric coordinates as RGB
@@ -129,13 +136,16 @@ weight \- colour using barycentric coordinates as RGB
 .HP
 \fB\-T\fR <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
 .HP
-\fB\-m\fR <maps> color maps for faces to be tried in turn (default: m1, for \fB\-g\fR, m2)
+\fB\-m\fR <maps> color maps to be tried in turn (default: m1, for \fB\-g\fR, m2)
 .TP
 keyword m1: red,darkorange1,yellow,darkgreen,cyan,blue,magenta,
 white,gray50,black
 .TP
 keyword m2: red,blue,green,yellow,brown,magenta,purple,grue,
 gray,orange (from George Hart's original applet)
+.IP
+(built in maps start from position 3 when \fB\-f\fR n or \fB\-v\fR n)
+(no effect when using \fB\-f\fR w which uses internal wythoff maps)
 .SH "SEE ALSO"
 The full documentation for
 .B conway

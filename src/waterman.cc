@@ -92,10 +92,10 @@ public:
 
   char color_method = '\0'; // color method for color by symmetry
   int face_opacity = -1;    // transparency from 0 to 255
-  Color vert_col;           // vertex color
-  Color edge_col;           // edge color
-  Color face_col;           // face color
-  Color fill_col;           // fill vertex colors
+  Color vert_col = Color(); // not set
+  Color edge_col = Color(); // not set
+  Color face_col = Color(); // not set
+  Color fill_col = Color(); // not set
 
   waterman_opts() : ProgramOpts("waterman") {}
 

@@ -42,9 +42,9 @@ s: symmetry type of Symmetrohedra. sets {p,q,2}
 .IP
 I\-icosahedral {5,3,2} O\-octahedral {4,3,2} T\-tetrahedral {3,3,2}
 .IP
-l,m,n: multipliers for axis polygons. Separated by commas, one
+l,m,n: multipliers for axis polygons. Separated by commas, two
 .IP
-multiplier must be * or 0, the other two are positive integers
+multipliers may be * or 0, no more than two positive integers
 .TP
 a: face rotation type: vertex=1, edge=0
 (default: 1)
@@ -106,7 +106,7 @@ a in degrees is angle between axes (default: calculated)
 .PP
 Scene Options
 .HP
-\fB\-C\fR <mode> convex hull. polygons=1, suppress=2, force=3, normal=4 (default: 4)
+\fB\-C\fR <mode> convex hull. polygons=1, suppress=2, force=3, auto=4 (default: 4)
 .HP
 \fB\-q\fR <args> include frame elements in output
 .IP
@@ -126,12 +126,13 @@ vertex color (default: gold)
 .TP
 \fB\-E\fR <col>
 edge color   (default: lightgray)
-.HP
-\fB\-f\fR <mthd> mthd is face coloring method using color in map (default: a)
+.TP
+\fB\-f\fR <col>
+face color. Or use method for using color in map (default: a)
 .IP
 keyword: none \- sets no color
 a \- color by axis number
-n \- color by number of sides (map start from digons (sides 2))
+n \- color by number of sides
 .HP
 \fB\-T\fR <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
 .TP
@@ -148,6 +149,11 @@ keyword m1: red,blue,yellow,darkgreen
 note: position 4 color is for faces added by convex hull
 .IP
 keyword m2: approximating colors in the symmetrohedra pdf file
+keyword m3: red,darkorange1,yellow,darkgreen,cyan,blue,magenta,
+.IP
+white,gray50,black (default when \fB\-f\fR n)
+.IP
+(built in maps start from position 3 when \fB\-f\fR n)
 .SH "SEE ALSO"
 The full documentation for
 .B symmetro

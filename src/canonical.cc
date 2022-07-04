@@ -71,25 +71,25 @@ public:
   string output_parts = "b";        // parts of output model
   int face_opacity = -1;            // transparency
   double offset = 0;                // incircle offset from faces
-  double radius_adj = 1;            // incircle radius adjustment
   int roundness = 8;                // roundness of tangency sphere
 
   double eps = anti::epsilon;
 
-  Color ipoints_col = Color(255, 255, 0);    // yellow
-  Color base_nearpts_col = Color(255, 0, 0); // red
-  Color dual_nearpts_col = Color(0, 100, 0); // darkgreen
-  char base_incircles_color_method = 'f';    // take face colors is default
-  Color base_incircles_col = Color();
+  char base_incircles_color_method = 'f'; // take face colors is default
   char dual_incircles_color_method = 'f'; // take face colors is default
-  Color dual_incircles_col = Color();
-  char dual_face_color_method = 'b'; // take colors from base vertices
-  Color dual_face_col = Color();
-  Color base_edge_col = Color();
-  Color dual_edge_col = Color();
-  Color base_vertex_col = Color();
-  Color dual_vertex_col = Color();
-  Color sphere_col = Color(255, 255, 255); // white
+  char dual_face_color_method = 'b';      // take colors from base vertices
+
+  Color ipoints_col = Color(255, 255, 0);                         // yellow
+  Color base_nearpts_col = Color(255, 0, 0);                      // red
+  Color dual_nearpts_col = Color(0, 100, 0);                      // darkgreen
+  Color base_incircles_col = Color();                             // unset
+  Color dual_incircles_col = Color();                             // unset
+  Color dual_face_col = Color();                                  // unset
+  Color base_edge_col = Color(std::numeric_limits<int>::max());   // unset
+  Color dual_edge_col = Color(std::numeric_limits<int>::max());   // unset
+  Color base_vertex_col = Color(std::numeric_limits<int>::max()); // unset
+  Color dual_vertex_col = Color(std::numeric_limits<int>::max()); // unset
+  Color sphere_col = Color(255, 255, 255);                        // white
 
   cn_opts() : ProgramOpts("canonical")
   {
@@ -425,7 +425,6 @@ Scene Options
                tangent sphere, u - minimum, U - maximum
                incircles, s - base, t - dual; as rings, S - base, T - dual
   -q <dist> incircles offset to avoid coplanarity e.g 0.0001 (default: 0)
-  -Q <dist> incircles radius adjustment (default: 1)
   -g <opt>  roundness of tangent sphere, positive integer n (default: 8)
   -Y        align output model geometry to full symmetry
 
@@ -460,10 +459,9 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while (
-      (c = getopt(argc, argv,
-                  ":hHe:s:t:p:i:c:n:yO:q:Q:g:E:P:F:Cd:Yz:I:N:M:S:R:D:J:K:V:W:"
-                  "U:T:l:o:")) != -1) {
+  while ((c = getopt(argc, argv,
+                     ":hHe:s:t:p:i:c:n:yO:q:g:E:P:F:Cd:Yz:I:N:M:S:R:D:J:K:V:W:"
+                     "U:T:l:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -543,10 +541,6 @@ void cn_opts::process_command_line(int argc, char **argv)
 
     case 'q':
       print_status_or_exit(read_double(optarg, &offset), c);
-      break;
-
-    case 'Q':
-      print_status_or_exit(read_double(optarg, &radius_adj), c);
       break;
 
     case 'g':
@@ -1102,10 +1096,9 @@ double incircle_radius(const Geometry &geom, Vec3d &center, const int face_no)
 }
 
 Geometry incircles(const Geometry &geom, const char &incircle_color_method,
-                   const Color &incircle_color, bool filled, double offset,
-                   double radius_adj)
+                   const Color &incircle_color, bool filled, double offset)
 {
-  Geometry incircles;
+  Geometry incircles_geom;
   Geometry circle = unit_circle(60, incircle_color, filled);
 
   for (unsigned int i = 0; i < geom.faces().size(); i++) {
@@ -1122,18 +1115,24 @@ Geometry incircles(const Geometry &geom, const char &incircle_color_method,
       Coloring(&incircle).f_one_col(col);
     }
 
-    double radius = incircle_radius(geom, center, i) * radius_adj;
+    // set the radius of the incircle
+    double radius = incircle_radius(geom, center, i);
     incircle.transform(Trans3d::scale(radius));
 
     // set depth of incircle
-    double depth = center.len() + offset;
+    double depth = center.len();
     incircle.transform(Trans3d::translate(Vec3d(0, 0, depth)));
 
     // rotate incircle into place
     incircle.transform(Trans3d::rotate(Vec3d(0, 0, 1), center));
-    incircles.append(incircle);
+    incircles_geom.append(incircle);
   }
-  return incircles;
+
+  // scale whole geom instead of each indi
+  if (offset)
+    incircles_geom.transform(Trans3d::scale(offset + 1.0));
+
+  return incircles_geom;
 }
 
 // average radius rather than maximum has more reliability than max
@@ -1162,7 +1161,7 @@ void reset_model_size(Geometry &geom, const double &epsilon_local)
 void set_edge_colors(Geometry &geom, const Color col)
 {
   // it is possible unset colors already exist
-  if (col.is_set()) {
+  if (col != std::numeric_limits<int>::max()) {
     geom.add_missing_impl_edges();
     Coloring(&geom).e_one_col(col);
   }
@@ -1171,7 +1170,7 @@ void set_edge_colors(Geometry &geom, const Color col)
 void set_vertex_colors(Geometry &geom, const Color col)
 {
   // it is possible unset colors already exist
-  if (col.is_set()) {
+  if (col != std::numeric_limits<int>::max()) {
     Coloring(&geom).v_one_col(col);
   }
 }
@@ -1195,8 +1194,7 @@ void construct_model(Geometry &base, Geometry &dual,
   if (opts.output_parts.find_first_of("sS") != string::npos) {
     bool filled = (opts.output_parts.find("s") != string::npos) ? true : false;
     base_incircles = incircles(base, opts.base_incircles_color_method,
-                               opts.base_incircles_col, filled, opts.offset,
-                               opts.radius_adj);
+                               opts.base_incircles_col, filled, opts.offset);
   }
 
   // dual incircles
@@ -1204,8 +1202,7 @@ void construct_model(Geometry &base, Geometry &dual,
   if (opts.output_parts.find_first_of("tT") != string::npos) {
     bool filled = (opts.output_parts.find("t") != string::npos) ? true : false;
     dual_incircles = incircles(dual, opts.dual_incircles_color_method,
-                               opts.dual_incircles_col, filled, opts.offset,
-                               opts.radius_adj);
+                               opts.dual_incircles_col, filled, opts.offset);
   }
 
   if (opts.output_parts.find_first_of("bC") != string::npos) {
