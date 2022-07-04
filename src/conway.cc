@@ -1283,8 +1283,8 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                n - by number of sides
                s - symmetric coloring
                u - unique coloring
-               o - newly created faces by operation
                v - color with average adjacent vertex color (-V colors first)
+               o - newly created faces by operation
                w - use wythoff colors (overrides -V and -E)
 %s
                (when -f w is set)
@@ -2447,12 +2447,6 @@ void cn_coloring(Geometry &geom, const cn_opts &opts)
       Coloring clrng(&geom);
       clrng.add_cmap(opts.face_map.clone());
       clrng.f_from_adjacent(VERTS);
-      clrng.f_apply_cmap();
-    }
-    else if (opts.face_coloring_method == 'e') {
-      Coloring clrng(&geom);
-      clrng.add_cmap(opts.face_map.clone());
-      clrng.f_from_adjacent(EDGES);
       clrng.f_apply_cmap();
     }
 
