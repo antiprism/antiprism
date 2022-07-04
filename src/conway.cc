@@ -1461,7 +1461,7 @@ void cn_opts::process_command_line(int argc, char **argv)
     case 'E':
       // unset default edge color
       edge_col = Color();
-      if (strlen(optarg) == 1 && strchr("sfv", int(*optarg)))
+      if (strlen(optarg) == 1 && strchr("svf", int(*optarg)))
         edge_coloring_method = *optarg;
       else
         print_status_or_exit(edge_col.read(optarg), c);
@@ -1562,7 +1562,17 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   if (hart_mode) {
     if ((face_coloring_method == 'o') || (face_coloring_method == 'w'))
-      error("when -g set, face coloring methods o and w are invalid", 'f');
+      warning("when -g set, face coloring methods o and w are invalid", 'f');
+    face_coloring_method = 'n';
+  }
+
+  if (face_coloring_method == 'w') {
+    warning("edge and vertex coloring is overridden by wythoff colors", 'f');
+    if (map_file.length())
+      warning("edge and vertex coloring is overridden by wythoff colors", 'f');
+    edge_coloring_method = '\0';
+    vertex_coloring_method = '\0';
+    map_file = "";
   }
 
   // when use George Hart algorithms, use map he used on line
@@ -2343,26 +2353,56 @@ void cn_coloring(Geometry &geom, const cn_opts &opts)
   if (!geom.verts().size())
     return;
 
-  // need to create edges before symmetry call
+  // need to create edges so all calls work
   geom.add_missing_impl_edges();
 
-  // Get symmetry if necessary
-  Symmetry sym;
-  vector<vector<set<int>>> sym_equivs;
-  vector<set<int>> v_equivs;
-  vector<set<int>> e_equivs;
-  vector<set<int>> f_equivs;
-  if (opts.face_coloring_method == 's' || opts.vertex_coloring_method == 's' ||
-      opts.edge_coloring_method == 's') {
-    sym.init(geom, &sym_equivs);
-    v_equivs = sym_equivs[0];
-    e_equivs = sym_equivs[1];
-    f_equivs = sym_equivs[2];
-  }
+  // set color values from map indexes from wythoff call
+  // overrides all other coloring
+  if (opts.face_coloring_method == 'w') {
+    Tiling tiling;
+    Status stat = tiling.set_geom(geom, false, 0.0);
+    if (stat.is_error())
+      opts.print_status_or_exit(stat, 'C');
+    tiling.set_coloring(opts.col_type);
 
-  // color vertices first since may be needed before face options
-  // wythoff overrides coloring of vertices
-  if (opts.face_coloring_method != 'w') {
+    Coloring clrngs[3];
+    for (int i = 0; i < 3; i++) {
+      auto &clrng = clrngs[i];
+      clrng.set_geom(&geom);
+      if (i == VERTS)
+        clrng.add_cmap(tiling.get_default_point_colormap());
+      else // FACES and EDGES
+        clrng.add_cmap(tiling.get_default_tile_colormap());
+    }
+    clrngs[FACES].f_apply_cmap();
+    clrngs[EDGES].e_apply_cmap();
+    clrngs[VERTS].v_apply_cmap();
+
+    // for conway
+    for (unsigned int i = 0; i < geom.edges().size(); i++) {
+      Color c = geom.colors(EDGES).get(i);
+      // all edges need color for later logic
+      if (!c.is_set())
+        geom.colors(EDGES).set(i, opts.edge_col);
+    }
+  }
+  else {
+    // Get symmetry if necessary
+    Symmetry sym;
+    vector<vector<set<int>>> sym_equivs;
+    vector<set<int>> v_equivs;
+    vector<set<int>> e_equivs;
+    vector<set<int>> f_equivs;
+    if (opts.face_coloring_method == 's' ||
+        opts.vertex_coloring_method == 's' ||
+        opts.edge_coloring_method == 's') {
+      sym.init(geom, &sym_equivs);
+      v_equivs = sym_equivs[0];
+      e_equivs = sym_equivs[1];
+      f_equivs = sym_equivs[2];
+    }
+
+    // color vertices 1st since may be needed before edge or face blending
     if (opts.vert_col.is_set())
       Coloring(&geom).v_one_col(opts.vert_col);
     else if (opts.vertex_coloring_method == 'n') {
@@ -2382,59 +2422,41 @@ void cn_coloring(Geometry &geom, const cn_opts &opts)
       clrng.v_unique(true);
       clrng.v_apply_cmap();
     }
-  }
 
-  // color faces 2nd
-  if (opts.face_col.is_set())
-    Coloring(&geom).f_one_col(opts.face_col);
-  else if (opts.face_coloring_method == 'n') {
-    Coloring clrng(&geom);
-    clrng.add_cmap(opts.face_map.clone());
-    clrng.f_sides(true);
-    clrng.f_apply_cmap();
-  }
-  else if (opts.face_coloring_method == 's') {
-    Coloring clrng(&geom);
-    clrng.add_cmap(opts.face_map.clone());
-    clrng.f_sets(f_equivs, true);
-  }
-  else if (opts.face_coloring_method == 'u') {
-    Coloring clrng(&geom);
-    clrng.add_cmap(opts.face_map.clone());
-    clrng.f_unique(true);
-    clrng.f_apply_cmap();
-  }
-  else if (opts.face_coloring_method == 'v') {
-    Coloring clrng(&geom);
-    clrng.add_cmap(opts.face_map.clone());
-    clrng.f_from_adjacent(VERTS);
-    clrng.f_apply_cmap();
-  }
-  // set color values from map indexes from wythoff call
-  else if (opts.face_coloring_method == 'w') {
-    Tiling tiling;
-    Status stat = tiling.set_geom(geom, false, 0.0);
-    if (stat.is_error())
-      opts.print_status_or_exit(stat, 'C');
-    tiling.set_coloring(opts.col_type);
-
-    Coloring clrngs[3];
-    for (int i = 0; i < 3; i++) {
-      auto &clrng = clrngs[i];
-      clrng.set_geom(&geom);
-      if (i == VERTS)
-        clrng.add_cmap(tiling.get_default_point_colormap());
-      else // FACES and EDGES
-        clrng.add_cmap(tiling.get_default_tile_colormap());
+    // color faces 2nd since may be needed before edge blending
+    if (opts.face_col.is_set())
+      Coloring(&geom).f_one_col(opts.face_col);
+    else if (opts.face_coloring_method == 'n') {
+      Coloring clrng(&geom);
+      clrng.add_cmap(opts.face_map.clone());
+      clrng.f_sides(true);
+      clrng.f_apply_cmap();
     }
-    clrngs[FACES].f_apply_cmap();
-    clrngs[EDGES].e_apply_cmap();
-    clrngs[VERTS].v_apply_cmap();
-  }
+    else if (opts.face_coloring_method == 's') {
+      Coloring clrng(&geom);
+      clrng.add_cmap(opts.face_map.clone());
+      clrng.f_sets(f_equivs, true);
+    }
+    else if (opts.face_coloring_method == 'u') {
+      Coloring clrng(&geom);
+      clrng.add_cmap(opts.face_map.clone());
+      clrng.f_unique(true);
+      clrng.f_apply_cmap();
+    }
+    else if (opts.face_coloring_method == 'v') {
+      Coloring clrng(&geom);
+      clrng.add_cmap(opts.face_map.clone());
+      clrng.f_from_adjacent(VERTS);
+      clrng.f_apply_cmap();
+    }
+    else if (opts.face_coloring_method == 'e') {
+      Coloring clrng(&geom);
+      clrng.add_cmap(opts.face_map.clone());
+      clrng.f_from_adjacent(EDGES);
+      clrng.f_apply_cmap();
+    }
 
-  // color edges 3rd
-  // wythoff overrides coloring of edges
-  if (opts.edge_coloring_method != 'w') {
+    // color edges 3rd
     if (opts.edge_col.is_set())
       Coloring(&geom).e_one_col(opts.edge_col);
     else if (opts.edge_coloring_method == 's') {
@@ -2453,14 +2475,6 @@ void cn_coloring(Geometry &geom, const cn_opts &opts)
       clrng.add_cmap(opts.edge_map.clone());
       clrng.e_from_adjacent(FACES);
       clrng.e_apply_cmap();
-    }
-  }
-  else {
-    for (unsigned int i = 0; i < geom.edges().size(); i++) {
-      Color c = geom.colors(EDGES).get(i);
-      // need to include invisible edges or crash
-      if (!c.is_set())
-        geom.colors(EDGES).set(i, opts.edge_col);
     }
   }
 
