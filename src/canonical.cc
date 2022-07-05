@@ -1578,6 +1578,13 @@ Status make_planar_unit(Geometry &base_geom, IterationControl it_ctrl,
   {
     auto vfigs = geom.get_info().get_vert_figs();
     for (const auto &vfig : vfigs) {
+      if (vfig.size() == 0) {
+        stat.set_error(
+            "intermediate (ambo) model construction error, input polyhedron "
+            "may be invalid or degenerate (e.g. contain digons or order-2 "
+            "vertices)");
+        return stat;
+      }
       if (vfig[0].size() != 4) {
         stat.set_error(msg_str(
             "intermediate (ambo) model has vertex with order %d instead of 4",
@@ -1747,14 +1754,15 @@ Status make_planar_unit(Geometry &base_geom, IterationControl it_ctrl,
   return stat;
 }
 
-bool make_canonical_enp(Geometry &geom, IterationControl it_ctrl, double factor,
-                        double factor_max, char initial_point_type,
-                        Symmetry sym)
+Status make_canonical_enp(Geometry &geom, IterationControl it_ctrl,
+                          double factor, double factor_max,
+                          char initial_point_type, Symmetry sym)
 {
   Geometry ambo = base_to_ambo(geom, initial_point_type);
   Status stat = make_planar_unit(ambo, it_ctrl, factor, factor_max, sym);
-  update_base_from_ambo(geom, ambo);
-  return stat.is_ok(); // true if completed;
+  if (!stat.is_error())
+    update_base_from_ambo(geom, ambo);
+  return stat; // ok - completed, warning - not completed, error - error
 }
 
 void realign_output(Geometry &base)
@@ -1887,9 +1895,13 @@ int main(int argc, char *argv[])
                                   radius_range_pct / 100, planarize_only);
     }
     else if (opts.canonical_method == 'c') {
-      completed = make_canonical_enp(base, opts.it_ctrl, opts.factor / 100,
-                                     opts.factor_max / 100,
-                                     opts.initial_point_type, sym);
+      Status stat = make_canonical_enp(base, opts.it_ctrl, opts.factor / 100,
+                                       opts.factor_max / 100,
+                                       opts.initial_point_type, sym);
+      if (stat.is_error())
+        opts.print_status_or_exit(stat);
+
+      completed = stat.is_ok(); // ok - completed, warning - not completed
     }
     else if (opts.canonical_method == 'b') {
       completed = canonicalize_bd(base, opts.it_ctrl, radius_range_pct / 100,

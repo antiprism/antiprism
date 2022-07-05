@@ -44,6 +44,7 @@ using std::vector;
 namespace anti {
 
 Color Color::invisible(0, 0, 0, 0);
+Color Color::maximum_index(std::numeric_limits<int>::max());
 
 bool Color::operator==(Color c) const
 {
