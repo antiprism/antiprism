@@ -364,6 +364,8 @@ public:
   /**\param var a string to identify the vector variable.
    * \param file file stream to print the variable. */
   void dump(const char *var = "", FILE *file = stderr) const;
+
+  static Color maximum_index; //<Color set to maximum index
 };
 
 /// Less than
