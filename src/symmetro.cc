@@ -229,7 +229,7 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                keyword m2: approximating colors in the symmetrohedra pdf file
                keyword m3: red,darkorange1,yellow,darkgreen,cyan,blue,magenta,
                            white,gray50,black (default when -f n)
-               (built in maps start from position 3 when -f n)
+               (built in maps start at index 3 when -f n)
 
 )",
           prog_name(), help_ver_text, int(-log(anti::epsilon) / log(10) + 0.5),
