@@ -367,7 +367,7 @@ Vec3d edge_nearpoints_centroid(Geometry &geom,
  * \param planarize_only planarise only.
  * \return \c true if success, otherwise \c false */
 bool canonicalize_bd(Geometry &base, IterationControl it_ctrl,
-                     const double radius_range_percent,
+                     double radius_range_percent,
                      const bool planarize_only);
 
 /// an abbreviated wrapper for planarization with the base/dual method

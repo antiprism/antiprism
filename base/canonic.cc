@@ -282,7 +282,7 @@ Vec3d edge_nearpoints_centroid(Geometry &geom, const Vec3d cent)
 // Implementation of George Hart's planarization and canonicalization algorithms
 // http://www.georgehart.com/virtual-polyhedra/conway_notation.html
 bool canonicalize_bd(Geometry &base, IterationControl it_ctrl,
-                     const double radius_range_percent,
+                     double radius_range_percent,
                      const bool planarize_only)
 {
   bool completed = false;
@@ -328,6 +328,14 @@ bool canonicalize_bd(Geometry &base, IterationControl it_ctrl,
           max_diff2 = diff2;
       }
 
+      // break out if volume goes to zero, restore last good vertices
+      if (std::isnan(base.verts(0)[0])) {
+        it_ctrl.set_finished();
+        finish_msg = "error, volume went to zero";
+        base.raw_verts() = base_verts_last;
+        radius_range_percent = 0; // bypass range test
+      }
+      else
       if (sqrt(max_diff2) < test_val) {
         completed = true;
         it_ctrl.set_finished();
