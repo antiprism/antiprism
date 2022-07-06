@@ -64,8 +64,8 @@ public:
   char vertex_coloring_method = '\0'; // e
   char edge_coloring_method = '\0';   // f
 
-  Color vertex_color = Color(std::numeric_limits<int>::max()); // unset
-  Color edge_color = Color(std::numeric_limits<int>::max());   // unset
+  Color vertex_color = Color(Color::maximum_index); // unset
+  Color edge_color = Color(Color::maximum_index);   // unset
 
   int coloring_method = 0;   // color radial or axes or both
   int axes_coloring = 1;     // color axes by nfold or order
@@ -772,7 +772,8 @@ void ev_coloring(Geometry &geom, const radial_opts &opts)
     Coloring clrng(&geom);
     clrng.e_from_adjacent(FACES);
   }
-  else if (opts.edge_color != std::numeric_limits<int>::max())
+  // if color hasn't been input let current color unchanged
+  else if (!opts.edge_color.is_maximum_index())
     // use color selected
     Coloring(&geom).e_one_col(opts.edge_color);
 
@@ -786,7 +787,8 @@ void ev_coloring(Geometry &geom, const radial_opts &opts)
     Coloring clrng(&geom);
     clrng.v_from_adjacent(EDGES);
   }
-  else if (opts.vertex_color != std::numeric_limits<int>::max())
+  // if color hasn't been input let current color unchanged
+  else if (!opts.vertex_color.is_maximum_index())
     // use color selected
     Coloring(&geom).v_one_col(opts.vertex_color);
 }

@@ -1294,7 +1294,7 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                            white,gray50,black
                keyword m2: red,blue,green,yellow,brown,magenta,purple,grue,
                            gray,orange (from George Hart's original applet)
-               (built in maps start from position 3 when -f n or -v n)
+               (built in maps start at index 3 when -f n or -v n)
                (no effect when using -f w which uses internal wythoff maps)
 
 )",

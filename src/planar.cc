@@ -1337,7 +1337,7 @@ void mark_hole_connectors(Geometry &geom,
       if ((point_in_segment(P1, v1, v2, eps)).is_set() &&
           (point_in_segment(P2, v1, v2, eps)).is_set()) {
         Color ecol;
-        ecol.set_index(std::numeric_limits<int>::max());
+        ecol = Color::maximum_index;
         geom.colors(EDGES).set(j, ecol);
       }
     }
@@ -1574,7 +1574,7 @@ void sample_colors(Geometry &sgeom, const Geometry &cgeom,
 
     winding_numbers.push_back(winding_total);
 
-    if ((opts.winding_rule != std::numeric_limits<int>::max())) {
+    if (opts.winding_rule != std::numeric_limits<int>::max()) {
       // if cols.size() is not zero then there were hits
       if (cols.size()) {
         if (!winding_rule_filter(opts.winding_rule_mode, opts.winding_rule,
@@ -2123,7 +2123,7 @@ string post_edge_blend(Geometry &geom, const int original_edges_size,
 
       for (int added_edge : added_edge_idx) {
         Color col = geom.colors(EDGES).get(added_edge);
-        if (col.is_index() && col == std::numeric_limits<int>::max())
+        if (col.is_maximum_index())
           continue;
 
         Vec3d P1 = verts[edges[added_edge][0]];
@@ -2177,7 +2177,7 @@ void special_edge_process(Geometry &geom, const planar_opts &opts)
   vector<int> deleted_edges;
   for (unsigned int i = 0; i < edges.size(); i++) {
     Color col = geom.colors(EDGES).get(i);
-    if (!(col.is_index() && col == std::numeric_limits<int>::max()))
+    if (!col.is_maximum_index())
       deleted_edges.push_back(i);
   }
   geom.del(EDGES, deleted_edges);
@@ -2200,7 +2200,7 @@ void special_edge_process(Geometry &geom, const planar_opts &opts)
   // special_edge_processing == 'e' will do at least this
   for (unsigned int i = 0; i < edges.size(); i++) {
     Color col = geom.colors(EDGES).get(i);
-    if (col.is_index() && col == std::numeric_limits<int>::max())
+    if (col.is_maximum_index())
       continue;
     vector<int> face_idx = find_faces_with_edge(faces, edges[i]);
     vector<Color> cols;
@@ -2225,7 +2225,7 @@ void special_edge_process(Geometry &geom, const planar_opts &opts)
       vector<Color> cols;
       for (int j : edge_idx) {
         Color col = geom.colors(EDGES).get(j);
-        if (col.is_index() && col == std::numeric_limits<int>::max())
+        if (col.is_maximum_index())
           continue;
         cols.push_back(col);
       }
@@ -2257,7 +2257,7 @@ void delete_invisible_faces(Geometry &geom, const bool hole_detection)
   if (hole_detection) {
     for (unsigned int i = 0; i < edges.size(); i++) {
       Color col = geom.colors(EDGES).get(i);
-      if (!(col.is_index() && col == std::numeric_limits<int>::max()))
+      if (!col.is_maximum_index())
         continue;
       if (!find_faces_with_edge(faces, edges[i]).size())
         deleted_elems.push_back(i);
@@ -2273,7 +2273,7 @@ void make_hole_connectors_invisible(Geometry &geom)
 
   for (unsigned int i = 0; i < edges.size(); i++) {
     Color col = geom.colors(EDGES).get(i);
-    if (col.is_index() && col == std::numeric_limits<int>::max())
+    if (col.is_maximum_index())
       geom.colors(EDGES).set(i, Color::invisible);
   }
 }

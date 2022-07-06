@@ -227,6 +227,11 @@ public:
    *  otherwise \c false. */
   bool is_index() const;
 
+  /// Check whether a colour is held as the maximum index number
+  /**\return \c true if the colour holds the maximum index number,
+   *  otherwise \c false. */
+  bool is_maximum_index() const;
+
   /// Check whether a colour is invisible
   /**\return \c true if the colour holds the invisible colour value,
    *  otherwise \c false. */
@@ -487,6 +492,8 @@ inline bool Color::is_visible_value() const
 }
 
 inline bool Color::is_index() const { return index >= 0; }
+
+inline bool Color::is_maximum_index() const { return *this == maximum_index; }
 
 inline bool Color::is_invisible() const { return *this == invisible; }
 

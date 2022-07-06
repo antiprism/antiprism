@@ -79,17 +79,17 @@ public:
   char dual_incircles_color_method = 'f'; // take face colors is default
   char dual_face_color_method = 'b';      // take colors from base vertices
 
-  Color ipoints_col = Color(255, 255, 0);                         // yellow
-  Color base_nearpts_col = Color(255, 0, 0);                      // red
-  Color dual_nearpts_col = Color(0, 100, 0);                      // darkgreen
-  Color base_incircles_col = Color();                             // unset
-  Color dual_incircles_col = Color();                             // unset
-  Color dual_face_col = Color();                                  // unset
-  Color base_edge_col = Color(std::numeric_limits<int>::max());   // unset
-  Color dual_edge_col = Color(std::numeric_limits<int>::max());   // unset
-  Color base_vertex_col = Color(std::numeric_limits<int>::max()); // unset
-  Color dual_vertex_col = Color(std::numeric_limits<int>::max()); // unset
-  Color sphere_col = Color(255, 255, 255);                        // white
+  Color ipoints_col = Color(255, 255, 0);              // yellow
+  Color base_nearpts_col = Color(255, 0, 0);           // red
+  Color dual_nearpts_col = Color(0, 100, 0);           // darkgreen
+  Color base_incircles_col = Color();                  // unset
+  Color dual_incircles_col = Color();                  // unset
+  Color dual_face_col = Color();                       // unset
+  Color base_edge_col = Color(Color::maximum_index);   // unset
+  Color dual_edge_col = Color(Color::maximum_index);   // unset
+  Color base_vertex_col = Color(Color::maximum_index); // unset
+  Color dual_vertex_col = Color(Color::maximum_index); // unset
+  Color sphere_col = Color(255, 255, 255);             // white
 
   cn_opts() : ProgramOpts("canonical")
   {
@@ -1160,8 +1160,8 @@ void reset_model_size(Geometry &geom, const double &epsilon_local)
 
 void set_edge_colors(Geometry &geom, const Color col)
 {
-  // it is possible unset colors already exist
-  if (col != std::numeric_limits<int>::max()) {
+  // if color hasn't been input let current color unchanged
+  if (!col.is_maximum_index()) {
     geom.add_missing_impl_edges();
     Coloring(&geom).e_one_col(col);
   }
@@ -1169,8 +1169,8 @@ void set_edge_colors(Geometry &geom, const Color col)
 
 void set_vertex_colors(Geometry &geom, const Color col)
 {
-  // it is possible unset colors already exist
-  if (col != std::numeric_limits<int>::max()) {
+  // if color hasn't been input let current color unchanged
+  if (!col.is_maximum_index()) {
     Coloring(&geom).v_one_col(col);
   }
 }

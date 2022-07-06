@@ -109,9 +109,8 @@ ColorMapMap *alloc_no_colorMap()
 {
   auto *col_map = new ColorMapMap;
 
-  col_map->set_col(
-      0,
-      std::numeric_limits<int>::max()); // index INT_MAX as unset edge color
+  col_map->set_col(0,
+                   Color::maximum_index); // index INT_MAX as unset edge color
   // this doesn't work because 'no color' is not allowed in a map
   // col_map->set_col(0, Color());  // unset edge color
 
@@ -3313,7 +3312,7 @@ void unset_marked_edges(Geometry &geom)
   // vector<int> deleted_edges;
   for (unsigned int i = 0; i < edges.size(); i++) {
     Color c = geom.colors(EDGES).get(i);
-    if (c.is_index() && c == std::numeric_limits<int>::max()) {
+    if (c.is_maximum_index()) {
       geom.colors(EDGES).set(i, Color());
       // deleted_edges.push_back(i);
     }
@@ -3321,7 +3320,7 @@ void unset_marked_edges(Geometry &geom)
 
   for (unsigned int i = 0; i < verts.size(); i++) {
     Color c = geom.colors(VERTS).get(i);
-    if (c.is_index() && c == std::numeric_limits<int>::max()) {
+    if (c.is_maximum_index()) {
       geom.colors(VERTS).set(i, Color());
     }
   }
@@ -4152,8 +4151,7 @@ void ncon_edge_coloring_by_adjacent_edge(Geometry &geom,
     for (unsigned int i = 0; i < geom.edges().size(); i++) {
       Color c = geom.colors(EDGES).get(i);
       // need to include invisible edges or crash
-      if ((c.is_index() && c == std::numeric_limits<int>::max()) ||
-          c.is_invisible()) {
+      if (c.is_maximum_index() || c.is_invisible()) {
         edges.push_back(geom.edges(i));
         edge_no.push_back(i);
       }
@@ -4163,7 +4161,7 @@ void ncon_edge_coloring_by_adjacent_edge(Geometry &geom,
   // unset colors
   for (unsigned int i = 0; i < geom.edges().size(); i++) {
     Color c = geom.colors(EDGES).get(i);
-    if (c.is_index() && c == std::numeric_limits<int>::max())
+    if (c.is_maximum_index())
       set_edge_color(geom, i, Color(), 255);
   }
 
@@ -4567,7 +4565,7 @@ void mark_edge_circuits(Geometry &geom, const vector<edgeList *> &edge_list)
   for (auto i : edge_list) {
     int j = i->edge_no;
     if (!geom.colors(EDGES).get(j).is_invisible())
-      set_edge_color(geom, j, std::numeric_limits<int>::max(), 255);
+      set_edge_color(geom, j, Color::maximum_index, 255);
   }
 }
 
@@ -5154,10 +5152,10 @@ void restore_flood_longitude_edges(Geometry &geom,
 
   for (unsigned int i = 0; i < edges.size(); i++) {
     Color c = geom.colors(EDGES).get(i);
-    int j = c.get_index();
-    if (j != std::numeric_limits<int>::max() && !c.is_invisible()) {
-      edge_list.push_back(new edgeList(i, j, opts.longitudes.front() / 2 - 1));
-      geom.colors(EDGES).set(i, std::numeric_limits<int>::max());
+    if (!c.is_maximum_index() && !c.is_invisible()) {
+      edge_list.push_back(
+          new edgeList(i, c.get_index(), opts.longitudes.front() / 2 - 1));
+      geom.colors(EDGES).set(i, Color::maximum_index);
     }
   }
 }
@@ -5948,18 +5946,18 @@ void color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
     for (unsigned int e = 0; e < geom.edges().size(); e++) {
       // marked edges are the ones to be colored
       Color c = geom.colors(EDGES).get(e);
-      if (c.is_index() && c == std::numeric_limits<int>::max()) {
+      if (c.is_maximum_index()) {
         lookup_edge_color(geom, e, axes, heights, false);
         c = geom.colors(EDGES).get(e);
         // if, because negative radii, the edge center is shifted onto the wrong
         // axis
         // no color will be found for look up, try the other axis
-        if (c.is_index() && c == std::numeric_limits<int>::max()) {
+        if (c.is_maximum_index()) {
           // not found? try again
           lookup_edge_color(geom, e, axes, heights, true);
           c = geom.colors(EDGES).get(e);
           // if still not found, give up and make it invisible
-          if (c.is_index() && c == std::numeric_limits<int>::max())
+          if (c.is_maximum_index())
             set_edge_color(geom, e, Color::invisible, 255);
         }
       }
@@ -5968,7 +5966,7 @@ void color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
     // occasionally some vertices can be missed
     for (unsigned int i = 0; i < geom.verts().size(); i++) {
       Color c = geom.colors(VERTS).get(i);
-      if (c.is_index() && c == std::numeric_limits<int>::max())
+      if (c.is_maximum_index())
         geom.colors(VERTS).set(i, Color::invisible);
     }
 
