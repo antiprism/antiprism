@@ -1863,12 +1863,11 @@ int main(int argc, char *argv[])
       base = get_dual(base);
     }
 
-    // report planarity, report convex hull test if planarizing only
+    // report planarity, report convex hull test only if canonicalizing
     planarity_info(base);
-    if (opts.canonical_method == 'x')
+    if (opts.canonical_method != 'x')
       fprintf(stderr, "convex hull test: %s\n",
-              (check_convexity(base)) ? "passed"
-                                      : "triangulated. trying raising -l");
+              (check_convexity(base)) ? "convex" : "non-convex");
     fprintf(stderr, "\n");
   }
 
@@ -1918,11 +1917,13 @@ int main(int argc, char *argv[])
       base = get_dual(base);
     }
 
+    string s = "non-convex";
+    s += (opts.it_ctrl.get_sig_digits() < 15) ? " (try raising -l)" : "";
+
     // report planarity
     planarity_info(base);
     fprintf(stderr, "convex hull test: %s\n",
-            (check_convexity(base)) ? "passed"
-                                    : "triangulated. trying raising -l");
+            (check_convexity(base)) ? "convex" : s.c_str());
     fprintf(stderr, "\n");
   }
 
