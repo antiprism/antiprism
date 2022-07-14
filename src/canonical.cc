@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2021, Adrian Rossiter, Roger Kaufman
+   Copyright (c) 2003-2022, Adrian Rossiter, Roger Kaufman
    Includes ideas and algorithms by George W. Hart, http://www.georgehart.com
 
    Antiprism - http://www.antiprism.com
@@ -33,11 +33,9 @@
 */
 
 #include "../base/antiprism.h"
+#include "common.h"
 
-#include <cctype>
-#include <cmath>
-#include <cstdlib>
-#include <cstring>
+#include <cstdio>
 #include <string>
 #include <vector>
 

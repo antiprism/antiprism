@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2007-2021, Roger Kaufman
+   Copyright (c) 2007-2022, Roger Kaufman
    Includes ideas and algorithms by George W. Hart, http://www.georgehart.com
 
    Antiprism - http://www.antiprism.com
@@ -32,17 +32,13 @@
 */
 
 #include "../base/antiprism.h"
+#include "common.h"
 
-#include <cctype>
-#include <cmath>
 #include <cstdio>
-#include <cstdlib>
-#include <map>
 #include <set>
 #include <string>
 #include <vector>
 
-using std::map;
 using std::pair;
 using std::set;
 using std::string;

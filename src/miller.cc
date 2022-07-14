@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2017-2021, Roger Kaufman
+   Copyright (c) 2017-2022, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -29,10 +29,9 @@
 */
 
 #include "../base/antiprism.h"
-#include "lattice_grid.h"
+#include "common.h"
 
 #include <cstdio>
-#include <cstdlib>
 #include <map>
 #include <string>
 #include <vector>

@@ -13,9 +13,9 @@ LDADD = $(top_builddir)/base/libantiprism.la
 	rm /tmp/h2m_name_$*
 
 
-noinst_LTLIBRARIES = liblattice_grid.la
+noinst_LTLIBRARIES = libcommon.la
 					 
-liblattice_grid_la_SOURCES = lattice_grid.cc lattice_grid.h
+libcommon_la_SOURCES = common.cc common.h
 
 bin_PROGRAMS = off2pov off2vrml off2crds off2obj obj2off off2dae \
 		off_color off_util off_trans off_align \
@@ -64,17 +64,19 @@ kcycle_SOURCES = kcycle.cc
 unitile2d_SOURCES = unitile2d.cc
 repel_SOURCES = repel.cc
 lat_grid_SOURCES = lat_grid.cc
-lat_grid_LDADD = liblattice_grid.la $(LDADD)
+lat_grid_LDADD = libcommon.la $(LDADD)
 lat_util_SOURCES = lat_util.cc
-lat_util_LDADD = liblattice_grid.la $(LDADD)
-canonical_SOURCES = canonical.cc
-conway_SOURCES = conway.cc
+lat_util_LDADD = libcommon.la $(LDADD)
+canonical_SOURCES = canonical.cc $(LDADD)
+canonical_LDADD = libcommon.la $(LDADD)
+conway_SOURCES = conway.cc $(LDADD)
+conway_LDADD = libcommon.la $(LDADD)
 n_icons_SOURCES = n_icons.cc n_icons.h
 iso_delta_SOURCES = iso_delta.cc
 bravais_SOURCES = bravais.cc
-bravais_LDADD = liblattice_grid.la $(LDADD)
+bravais_LDADD = libcommon.la $(LDADD)
 waterman_SOURCES = waterman.cc
-waterman_LDADD = liblattice_grid.la $(LDADD)
+waterman_LDADD = libcommon.la $(LDADD)
 col_util_SOURCES = col_util.cc
 planar_SOURCES = planar.cc
 off_normals_SOURCES = off_normals.cc
@@ -83,9 +85,9 @@ iso_kite_SOURCES = iso_kite.cc
 to_nfold_SOURCES = to_nfold.cc
 symmetro_SOURCES = symmetro.cc
 stellate_SOURCES = stellate.cc
-stellate_LDADD = liblattice_grid.la $(LDADD)
+stellate_LDADD = libcommon.la $(LDADD)
 miller_SOURCES = miller.cc
-miller_LDADD = liblattice_grid.la $(LDADD)
+miller_LDADD = libcommon.la $(LDADD)
 wythoff_SOURCES = wythoff.cc
 off_color_radial_SOURCES = off_color_radial.cc
 tetra59_SOURCES = tetra59.cc

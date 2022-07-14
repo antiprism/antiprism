@@ -29,7 +29,7 @@
 */
 
 #include "../base/antiprism.h"
-#include "lattice_grid.h"
+#include "common.h"
 
 #include <cstdio>
 #include <cstdlib>

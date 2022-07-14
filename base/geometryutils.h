@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2016, Adrian Rossiter
+   Copyright (c) 2003-2022, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -290,23 +290,6 @@ void get_congruence_maps(const Geometry &geom, Trans3d trans,
  * \return \c true if the geometry is convex, otherwise \c false. */
 bool check_convexity(Geometry geom);
 
-/// find nearpoints radius, sets range minimum and maximum
-/**\param geom geometry.
- * \param min returns the minimum nearpoints radius.
- * \param max returns the maximum nearpoints radius.
- * \param center returns the cente rof the nearpoints.
- * \returns the average radius of the nearpoints. */
-double edge_nearpoints_radius(const Geometry &geom, double &min, double &max,
-                              Vec3d &center);
-
-/// wrapper for above.
-/**\param geom geometry. */
-double edge_nearpoints_radius(const Geometry &geom);
-
-/// sets radius of geom to average of edge near points radius
-/**\param geom geometry. */
-void unitize_nearpoints_radius(Geometry &geom);
-
 /// return the unit normal of all perimeter triangles
 /**\param geom geometry.
  * \param face contains the vertex index numbers in the face. */
@@ -343,55 +326,6 @@ Vec3d face_normal_by_type(const Geometry &geom, const std::vector<int> &face,
  * \param normal_type: n - Newell, t - triangular, q - quads */
 Vec3d face_normal_by_type(const Geometry &geom, const int f_idx,
                           const char normal_type);
-
-/// return true if maximum vertex radius is radius_range_percent (0.0 to ...)
-/**greater than minimum vertex radius (visible for canonical.cc)
- * \param geom geometry to measure.
- * \param radius_range_percent limit to maximum radius over minimum radius */
-bool canonical_radius_range_test(const Geometry &geom,
-                                 const double radius_range_percent);
-
-/// returns the edge near points centroid
-/**\param geom geometry to measure
- * \param cent centre from which to calculate nearpoints on edges
- * \return the centroid of the nearpoints. */
-Vec3d edge_nearpoints_centroid(Geometry &geom,
-                               const Vec3d cent = Vec3d(0, 0, 0));
-
-/// Canonicalize (George Hart "Conway Notation" algorithm)
-/**See http://www.georgehart.com/virtual-polyhedra/conway_notation.html
- * \param base geometry to canonicalise.
- * \param it_ctrl interation control.
- * \param radius_range_percent if the model outer radius increases this
- *  much over the inner radius then it is growing too much, terminate.
- * \param planarize_only planarise only.
- * \return \c true if success, otherwise \c false */
-bool canonicalize_bd(Geometry &base, IterationControl it_ctrl,
-                     double radius_range_percent,
-                     const bool planarize_only);
-
-/// an abbreviated wrapper for planarization with the base/dual method
-/**\param geom geometry to planarize.
- * \param it_ctrl interation control.
- * \return \c true if success, otherwise \c false */
-bool planarize_bd(Geometry &geom, IterationControl it_ctrl);
-
-/// RK - edge near points of base seek 1
-/**\param geom geometry to canonicalise.
- * \param it_ctrl interation control.
- * \param radius_range_percent if the model outer radius increases this
- *  much over the inner radius then it is growing too much, terminate.
- * \param planarize_only planarise only.
- * \return \c true if success, otherwise \c false */
-bool canonicalize_unit(Geometry &geom, IterationControl it_ctrl,
-                       const double radius_range_percent,
-                       const bool planarize_only);
-
-/// an abbreviated wrapper for planarization with canonicalize_unit
-/**\param geom geometry to planarize.
- * \param it_ctrl interation control
- * \return \c true if success, otherwise \c false */
-bool planarize_unit(Geometry &geom, IterationControl it_ctrl);
 
 /// an abbreviated wrapper for planarization with make_regular_faces
 /**\param base_geom geometry to planarize.
