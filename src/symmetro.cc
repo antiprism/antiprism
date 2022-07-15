@@ -1790,7 +1790,7 @@ Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
   // color vertices
   Coloring(&geom).v_one_col(opts.vert_col);
 
-  geom.orient();
+  geom.orient(1); // positive orientation
 
   return geom;
 }

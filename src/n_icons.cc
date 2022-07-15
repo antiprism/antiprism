@@ -6126,7 +6126,7 @@ int ncon_subsystem(Geometry &geom, ncon_opts &opts)
   if (opts.face_coloring_method)
     color_uncolored_faces(geom, opts);
 
-  geom.orient();
+  geom.orient(1); // positive orientation
 
   // elements can be chosen to be eliminated completely
   filter(geom, opts.hide_elems.c_str());

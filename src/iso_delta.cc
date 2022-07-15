@@ -1438,8 +1438,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  // orient for positive volume
-  geom.orient();
+  geom.orient(1); // positive orientation
 
   compound_coloring(geom, opts);
 

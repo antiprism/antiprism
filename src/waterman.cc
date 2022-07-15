@@ -833,7 +833,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "%s\n", stat.c_msg());
     }
     else {
-      geom.orient();
+      geom.orient(1); // positive orientation
       if (opts.verbose)
         convex_hull_report(geom, opts.add_hull);
 

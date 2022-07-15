@@ -306,7 +306,7 @@ double lattice_radius(const Geometry &geom, const char radius_type)
             "lattice_radius: warning: convex hull could not be created\n");
     return 0;
   }
-  tgeom.orient();
+  tgeom.orient(1); // positive orientation
 
   GeometryInfo rep(tgeom);
   rep.set_center(centroid(tgeom.verts()));
@@ -342,7 +342,7 @@ void geom_container_clip(Geometry &geom, Geometry &container,
             "geom_container_clip: warning: convex hull could not be created\n");
     return;
   }
-  container.orient();
+  container.orient(1); // positive orientation
 
   // standardize radius of 1 on maximum vertex. Then set radius
   Trans3d trans_m =
@@ -583,7 +583,7 @@ int get_voronoi_geom(Geometry &geom, Geometry &vgeom, const bool central_cells,
             "get_voronoi_geom: warning: convex hull could not be created\n");
     return 0;
   }
-  hgeom.orient();
+  hgeom.orient(1); // positive orientation
 
   // Add centroid to a vector. Needed in this form for are_points_in_hull()
   vector<Vec3d> cent = as_vector(centroid(hgeom.verts()));
@@ -779,7 +779,7 @@ void color_stellation(Geometry &geom, const char face_coloring_method,
           dels.push_back((int)i);
       }
       kis.del(FACES, dels);
-      kis.orient(1);
+      kis.orient(1); // positive orientation
 
       // make new verts and edges invisible
       kis.add_missing_impl_edges();

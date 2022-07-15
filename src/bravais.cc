@@ -1852,7 +1852,7 @@ void do_bravais(Geometry &geom, Geometry &container, brav_opts &opts)
     if (stat.is_error())
       fprintf(stderr, "%s\n", stat.c_msg());
     else {
-      geom.orient();
+      geom.orient(1); // positive orientation
       if (opts.verbose)
         convex_hull_report(geom, opts.add_hull);
       Coloring(&geom).vef_one_col(opts.vert_col[1], opts.edge_col[1],
