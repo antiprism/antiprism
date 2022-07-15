@@ -952,7 +952,7 @@ Geometry make_stellation(const Geometry &geom, map<int, Geometry> &diagrams,
   merge_coincident_elements(stellation_full, "vef", blend_type, eps);
 
   // orient the result
-  stellation_full.orient();
+  stellation_full.orient(1); // positive orientation
 
   return stellation_full;
 }
@@ -1070,7 +1070,7 @@ intersect
 
 // RK - try to use same variable names as original pnpoly
 // RK - there is proof that there are mistakes when epsilon is not considered
-// RK - wn is n time too large. winding_number = wn/n
+// RK - wn is n times too large. winding_number = wn/n
 
 static bool wn_PnPoly(const Geometry &polygon, const Vec3d &P, const int idx,
                       int &winding_number, double eps)
