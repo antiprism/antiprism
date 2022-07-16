@@ -853,6 +853,15 @@ void planarity_info(Geometry &geom)
   return;
 }
 
+// planarity testing with convex hull
+void convex_hull_test(const Geometry &geom, const cn_opts &opts)
+{
+  string s = "creases found";
+  s += (opts.it_ctrl.get_sig_digits() < 15) ? " (try raising -l)" : "";
+  fprintf(stderr, "convex hull planarity test: %s\n",
+          (check_convexity(geom)) ? "passed" : s.c_str());
+}
+
 void generate_points(const Geometry &base, const Geometry &dual,
                      vector<Vec3d> &base_nearpts, vector<Vec3d> &dual_nearpts,
                      vector<Vec3d> &ips, const double &epsilon_local)
@@ -1780,8 +1789,9 @@ int main(int argc, char *argv[])
   Geometry base;
   opts.read_or_error(base, opts.ifile);
 
-  if (!check_convexity(base))
-    opts.warning("input model may not be convex");
+  // need global convexity test
+  //if (!check_convexity(base))
+  //  opts.warning("input model may not be convex");
 
   if (opts.edge_distribution) {
     fprintf(stderr, "edge distribution: project onto sphere\n");
@@ -1863,9 +1873,7 @@ int main(int argc, char *argv[])
 
     // report planarity, report convex hull test only if canonicalizing
     planarity_info(base);
-    if (opts.canonical_method != 'x')
-      fprintf(stderr, "convex hull test: %s\n",
-              (check_convexity(base)) ? "convex" : "non-convex");
+    convex_hull_test(base, opts);
     fprintf(stderr, "\n");
   }
 
@@ -1920,8 +1928,7 @@ int main(int argc, char *argv[])
 
     // report planarity
     planarity_info(base);
-    fprintf(stderr, "convex hull test: %s\n",
-            (check_convexity(base)) ? "convex" : s.c_str());
+    convex_hull_test(base, opts);
     fprintf(stderr, "\n");
   }
 
