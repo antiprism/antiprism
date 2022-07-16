@@ -397,9 +397,7 @@ int main(int argc, char *argv[])
       else {
         opts.warning("re-orienting to have positive orientation, use "
                      "option -k to keep original orientation");
-        geom.orient();
-        if (GeometryInfo(geom).volume() < 0) // inefficient
-          geom.orient_reverse();
+        geom.orient(1); // 1 - positive orientation
       }
     }
   }

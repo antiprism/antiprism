@@ -313,11 +313,8 @@ int main(int argc, char *argv[])
     opts.error(("could not set subsymmetry: " + opts.sub_sym).c_str(), 'y');
 
   rep.is_oriented(); // set oriented value before orienting
-  if (opts.orient) {
-    geom.orient();
-    if (GeometryInfo(geom).volume() < 0) // inefficient
-      geom.orient_reverse();
-  }
+  if (opts.orient)
+    geom.orient(1); // 1 - positive orientation
 
   print_sections(rep, opts.sections.c_str());
   print_counts(rep, opts.counts.c_str());

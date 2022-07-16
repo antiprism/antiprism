@@ -465,13 +465,8 @@ int main(int argc, char *argv[])
   rep.set_sig_dgts(opts.sig_digits);
   rep.set_center(opts.center);
   rep.is_oriented(); // set oriented value before orienting
-  if (opts.orient) {
-    geom.orient();
-    if (GeometryInfo(geom).volume() < 0) // inneficient
-      geom.orient_reverse();
-  }
-
-  // print_ranges(rep, opts);
+  if (opts.orient)
+    geom.orient(1); // 1 - positive orientation
 
   for (auto &extra_vert : opts.extra_verts)
     geom.add_vert(extra_vert);
