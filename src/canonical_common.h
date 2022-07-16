@@ -23,13 +23,13 @@
 */
 
 /*
-   Name: common.h
-   Description: code shared by source code in /src
+   Name: canonical_common.h
+   Description: canonical code shared in /src
    Project: Antiprism - http://www.antiprism.com
 */
 
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef CANONICAL_COMMON_H
+#define CANONICAL_COMMON_H
 
 #include <cstdio>
 #include <string>
@@ -201,4 +201,4 @@ bool canonicalize_unit(anti::Geometry &geom, anti::IterationControl it_ctrl,
  * \return \c true if success, otherwise \c false */
 bool planarize_unit(anti::Geometry &geom, anti::IterationControl it_ctrl);
 
-#endif // COMMON_H
+#endif // CANONICAL_COMMON_H

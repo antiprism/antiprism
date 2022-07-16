@@ -29,7 +29,7 @@
 */
 
 #include "../base/antiprism.h"
-#include "common.h"
+#include "lat_grid_common.h"
 
 #include <cstdio>
 #include <cstdlib>

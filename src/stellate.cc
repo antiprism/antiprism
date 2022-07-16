@@ -29,7 +29,7 @@
 */
 
 #include "../base/antiprism.h"
-#include "common.h"
+#include "stellate_common.h"
 
 #include <cstdio>
 #include <set>

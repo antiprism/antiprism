@@ -29,7 +29,7 @@
 */
 
 #include "../base/antiprism.h"
-#include "common.h"
+#include "lat_util_common.h"
 
 #include <cctype>
 #include <cstdio>
