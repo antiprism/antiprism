@@ -809,7 +809,7 @@ bool check_hull(const Geometry &geom)
 {
   Geometry hull = geom;
   hull.set_hull();
-  //return (check_congruence(geom, hull));
+  //return (check_coincidence(geom, hull));
   return (geom.faces().size() == hull.faces().size() &&
           geom.verts().size() == hull.verts().size());
 }
@@ -1790,7 +1790,7 @@ int main(int argc, char *argv[])
   opts.read_or_error(base, opts.ifile);
 
   // need global convexity test
-  //if (!check_convexity(base))
+  // if (!check_convexity(base))
   //  opts.warning("input model may not be convex");
 
   if (opts.edge_distribution) {

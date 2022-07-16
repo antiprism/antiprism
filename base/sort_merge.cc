@@ -104,7 +104,7 @@ public:
   bool deleted;
   bool reversed;
 
-  // for congruence test
+  // for coincidence test
   vector<int> equiv_faces;
 
   facesSort(int i, vector<int> f, Color c, bool rev)
@@ -166,7 +166,7 @@ void sort_faces(Geometry &geom, const vector<vertexMap> &vm_all_verts,
                 const vector<vertexMap> &vm_merged_verts,
                 const string &delete_elems, const char &elem,
                 map<int, set<int>> *equiv_elems = nullptr,
-                bool chk_congruence = false, int blend_type = 1)
+                bool chk_coincidence = false, int blend_type = 1)
 {
   vector<vector<int>> &faces =
       (elem == 'f') ? geom.raw_faces() : geom.raw_edges();
@@ -257,7 +257,7 @@ void sort_faces(Geometry &geom, const vector<vertexMap> &vm_all_verts,
     stable_sort(fs.begin(), fs.end(), cmp_faces);
   }
 
-  // restore original sort of faces unless sort only or congruency check
+  // restore original sort of faces unless sort only or coincidence check
   if (!sort_only && !equiv_elems)
     sort(fs.begin(), fs.end(), cmp_face_no);
 
@@ -268,8 +268,8 @@ void sort_faces(Geometry &geom, const vector<vertexMap> &vm_all_verts,
       if (equiv_elems)
         (*equiv_elems)[j++].insert(f.equiv_faces.begin(), f.equiv_faces.end());
 
-      // only write out the geom if not doing congruency check
-      if (!chk_congruence) {
+      // only write out the geom if not doing coincidence check
+      if (!chk_coincidence) {
         // restore orientation unless sort only
         if (!sort_only && f.reversed)
           reverse(f.face.begin(), f.face.end());
@@ -371,7 +371,7 @@ void sort_vertices(Geometry &geom, vector<vertexMap> &vm_all_verts,
                    vector<vertexMap> &vm_merged_verts,
                    const string &delete_elems,
                    map<int, set<int>> *equiv_elems = nullptr,
-                   bool chk_congruence = false, int blend_type = 1,
+                   bool chk_coincidence = false, int blend_type = 1,
                    double eps = anti::epsilon)
 {
   vector<Vec3d> &verts = geom.raw_verts();
@@ -461,9 +461,9 @@ void sort_vertices(Geometry &geom, vector<vertexMap> &vm_all_verts,
       (*equiv_elems)[vspm.size() - 1].insert(v.vert_no);
   }
 
-  // only write out the geom if not doing congruency check
-  if (!chk_congruence) {
-    // restore original sort of vertices unless sort only or congruency check
+  // only write out the geom if not doing coincidence check
+  if (!chk_coincidence) {
+    // restore original sort of vertices unless sort only or coincidence check
     if (!sort_only && !equiv_elems) {
       sort(vspm.begin(), vspm.end(), cmp_vert_no);
 
@@ -492,7 +492,7 @@ void sort_vertices(Geometry &geom, vector<vertexMap> &vm_all_verts,
 
 bool sort_merge_elems(Geometry &geom, const string &merge_elems,
                       vector<map<int, set<int>>> *equiv_elems,
-                      bool chk_congruence, int blend_type, double eps)
+                      bool chk_coincidence, int blend_type, double eps)
 {
   // an empty geom cannot be processed
   if (!geom.verts().size())
@@ -505,7 +505,7 @@ bool sort_merge_elems(Geometry &geom, const string &merge_elems,
   // Congruence check expects a polyhedron with elements occurring
   // in coincident pairs, and exits early if this is not the case
   vector<map<int, set<int>>> equiv_elems_tmp;
-  if (chk_congruence && !equiv_elems)
+  if (chk_coincidence && !equiv_elems)
     equiv_elems = &equiv_elems_tmp;
 
   if (equiv_elems) {
@@ -519,23 +519,23 @@ bool sort_merge_elems(Geometry &geom, const string &merge_elems,
 
   vector<vertexMap> vm_all_verts, vm_merged_verts;
   sort_vertices(geom, vm_all_verts, vm_merged_verts, merge_elems,
-                (equiv_elems ? &(*equiv_elems)[0] : nullptr), chk_congruence,
+                (equiv_elems ? &(*equiv_elems)[0] : nullptr), chk_coincidence,
                 blend_type, eps);
-  if (chk_congruence && (*equiv_elems)[0].size() * 2 != num_verts)
+  if (chk_coincidence && (*equiv_elems)[0].size() * 2 != num_verts)
     return false;
 
   if (geom.edges().size())
     sort_faces(geom, vm_all_verts, vm_merged_verts, merge_elems, 'e',
-               (equiv_elems ? &(*equiv_elems)[1] : nullptr), chk_congruence,
+               (equiv_elems ? &(*equiv_elems)[1] : nullptr), chk_coincidence,
                blend_type);
-  if (chk_congruence && (*equiv_elems)[1].size() * 2 != num_edges)
+  if (chk_coincidence && (*equiv_elems)[1].size() * 2 != num_edges)
     return false;
 
   if (geom.faces().size())
     sort_faces(geom, vm_all_verts, vm_merged_verts, merge_elems, 'f',
-               (equiv_elems ? &(*equiv_elems)[2] : nullptr), chk_congruence,
+               (equiv_elems ? &(*equiv_elems)[2] : nullptr), chk_coincidence,
                blend_type);
-  if (chk_congruence && (*equiv_elems)[2].size() * 2 != num_faces)
+  if (chk_coincidence && (*equiv_elems)[2].size() * 2 != num_faces)
     return false;
 
   return true;
@@ -562,8 +562,8 @@ void merge_coincident_elements(Geometry &geom, const string &merge_elems,
   sort_merge_elems(geom, merge_elems, equiv_elems, false, 0, eps);
 }
 
-bool check_congruence(const Geometry &geom1, const Geometry &geom2,
-                      vector<map<int, set<int>>> *equiv_elems, double eps)
+bool check_coincidence(const Geometry &geom1, const Geometry &geom2,
+                       vector<map<int, set<int>>> *equiv_elems, double eps)
 {
   Geometry geom = geom1;
   geom.append(geom2);
@@ -584,14 +584,14 @@ bool check_congruence(const Geometry &geom1, const Geometry &geom2,
   return ret;
 }
 
-void get_congruence_maps(const Geometry &geom, Trans3d trans,
-                         vector<vector<int>> &elem_maps, double eps)
+void get_coincidence_maps(const Geometry &geom, Trans3d trans,
+                          vector<vector<int>> &elem_maps, double eps)
 {
   elem_maps.resize(3);
   Geometry tmp = geom;
   tmp.transform(trans);
   vector<map<int, set<int>>> equiv_elems;
-  check_congruence(geom, tmp, &equiv_elems, eps);
+  check_coincidence(geom, tmp, &equiv_elems, eps);
   int cnts[3];
   cnts[0] = geom.verts().size();
   cnts[1] = geom.edges().size();

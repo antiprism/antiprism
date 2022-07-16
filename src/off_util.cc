@@ -1461,7 +1461,7 @@ void pr_opts::process_command_line(int argc, char **argv)
         merge_coincident_elements(geom, "ve", blend_type, eps);
         Geometry tmp = geom;
         vector<map<int, set<int>>> equiv_elems;
-        check_congruence(geom, tmp, &equiv_elems, eps);
+        check_coincidence(geom, tmp, &equiv_elems, eps);
         vector<int> del_faces;
         map<int, set<int>>::iterator mi;
         for (mi = equiv_elems[2].begin(); mi != equiv_elems[2].end(); ++mi) {

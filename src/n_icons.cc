@@ -5538,7 +5538,7 @@ void transfer_colors(Geometry &gpgon, const Geometry &pgon, const bool digons,
 
   // in case polygons don't line up
   if (!v_map.size()) {
-    opts.warning("transfer_colors(): no congruency found");
+    opts.warning("transfer_colors(): no coincidence found");
     return;
   }
 
@@ -5983,7 +5983,7 @@ void color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
       int south = -1;
       find_poles(pgon, north, south, opts);
 
-      // congruent points on model take those colors
+      // coincident points on model take those colors
       if (north != -1) {
         for (unsigned int i = 0; i < geom.verts().size(); i++) {
           if (!compare(geom.verts(i), pgon.verts(north), opts.eps)) {

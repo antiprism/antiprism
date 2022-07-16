@@ -989,8 +989,7 @@ static bool is_sym(const Geometry &test_geom, const Geometry &geom,
   Geometry s_geom = geom;
   s_geom.transform(trans);
 
-  bool is_congruent = check_congruence(geom, s_geom, &new_equivs, sym_eps);
-  return is_congruent;
+  return check_coincidence(geom, s_geom, &new_equivs, sym_eps);
 }
 
 static void set_equiv_elems_identity(const Geometry &geom,
@@ -1315,7 +1314,7 @@ void get_equiv_elems(const Geometry &geom, const Transformations &ts,
     Geometry trans_geom = merged_geom;
     trans_geom.transform(t);
     vector<map<int, set<int>>> new_equivs;
-    check_congruence(merged_geom, trans_geom, &new_equivs, sym_eps);
+    check_coincidence(merged_geom, trans_geom, &new_equivs, sym_eps);
     update_equiv_elems(equiv_elems, new_equivs, cnts);
   }
 

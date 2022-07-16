@@ -42,7 +42,6 @@ using std::vector;
 
 using namespace anti;
 
-
 // parse special color entry strings for bravais and lat_util
 //
 // 1 arg  - color name/index

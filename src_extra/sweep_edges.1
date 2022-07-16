@@ -8,7 +8,7 @@ sweep_edges - sweep edges to make a surface
 .SH DESCRIPTION
 Read input model in OFF format and transform it multiple times to produce
 a polygonal surface made of the quadrilaterals swept by the edges. At
-each step the original polygon is transformed according to the specified
+each step the input model is transformed according to the specified
 transformations, which can be defined using sweep progress variables FRAC
 and ANG. FRAC runs from 0.0 at at step 0 to 1.0 on the final step.
 .IP
@@ -16,7 +16,7 @@ FRAC = current_step / total_steps
 ANG = 360.0 * FRAC
 .PP
 Colours are taken from the input model if the begining of the sweep does
-not coincide with the end or if option \fB\-O\fR is set, otherwise sweep circuits
+not coincide with the end, or if option \fB\-O\fR is set, otherwise sweep circuits
 are found and the colours are set from the colour map (option \fB\-m\fR). Vertex
 colours are used for final vertices and swept vertex edges, edge colours
 are used for swept edge faces.

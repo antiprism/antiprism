@@ -344,7 +344,7 @@ Status Sweep::make_sweep(Geometry &geom, Geometry &polygon)
     poly_last.transform(trans_last);
     map<int, int> vmap_poly; // vert to vert correspondence in poly
     vector<map<int, std::set<int>>> equiv_elems;
-    if (check_congruence(poly_first, poly_last, &equiv_elems, local_epsilon)) {
+    if (check_coincidence(poly_first, poly_last, &equiv_elems, local_epsilon)) {
       // Set up the vertex correspondence
       const int v_from_offset = (steps - 1) * polygon.verts().size();
       for (auto &v_orbit : equiv_elems[VERTS]) {

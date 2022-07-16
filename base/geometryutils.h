@@ -258,7 +258,7 @@ void merge_coincident_elements(Geometry &geom, const std::string &merge_elems,
 void merge_coincident_elements(Geometry &geom, const std::string &merge_elems,
                                double eps = epsilon);
 
-/// Check congruence of coincident polyhedra
+/// Check coincidence of polyhedra
 /**\param geom1 first geometry
  * \param geom2 second geometry
  * \param equiv_elems vector (0:vertices, 1:edges, 2:faces) of maps from an
@@ -266,8 +266,8 @@ void merge_coincident_elements(Geometry &geom, const std::string &merge_elems,
  *  were considered to be equivalent (after geom2 is appended to geom1).
  * \param eps a small number, coordinates differing by less than eps are
  *  the same.
- * \return \c true if the polyhedra are congruent, otherwise \c false. */
-bool check_congruence(
+ * \return \c true if the polyhedra are coincident, otherwise \c false. */
+bool check_coincidence(
     const Geometry &geom1, const Geometry &geom2,
     std::vector<std::map<int, std::set<int>>> *equiv_elems = nullptr,
     double eps = epsilon);
@@ -281,9 +281,9 @@ bool check_congruence(
  *  after the transformation.
  * \param eps a small number, coordinates differing by less than eps are
  *  the same. */
-void get_congruence_maps(const Geometry &geom, Trans3d trans,
-                         std::vector<std::vector<int>> &elem_maps,
-                         double eps = epsilon);
+void get_coincidence_maps(const Geometry &geom, Trans3d trans,
+                          std::vector<std::vector<int>> &elem_maps,
+                          double eps = epsilon);
 
 /// Check if a geometry is convex
 /**\param geom geometry to check

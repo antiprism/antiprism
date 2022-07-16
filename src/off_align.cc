@@ -281,7 +281,7 @@ Status bond_base::bond_all(Geometry &geom_out, int out_type)
           ts.add(Trans3d());
         for (const auto &t : ts) {
           vector<vector<int>> elem_maps;
-          get_congruence_maps(base, t, elem_maps, model_rad * sym_eps);
+          get_coincidence_maps(base, t, elem_maps, model_rad * sym_eps);
           const int f0_map = elem_maps[2][f0];
           const vector<int> &f0_mapface = base.faces(f0_map);
           int f0_sz = base.faces(f0).size();
