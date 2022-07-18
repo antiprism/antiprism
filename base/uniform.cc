@@ -73,7 +73,7 @@ U51      small dodecahemidodecahedron
 U54      great icosidodecahedron
 U70      great dodecahemidodecahedron
 U71      great icosihemidodecahedron
-U36      great dodecadodecahedron
+U36      dodecadodecahedron
 U62      small dodecahemicosahedron
 U65      great dodecahemicosahedron
 U26*  truncated dodecahedron
@@ -2486,7 +2486,7 @@ UniformItem uniform_item_list[] = {
    { U33, "3/2 5|5",        38,  42,  72, "small dodecicosidodecahedron",            "small dodecacronic hexecontahedron", },
    { U34, "5|2 5/2",        39,  43,  20, "small stellated dodecahedron",            "great dodecahedron", },
    { U35, "5/2|2 5",        40,  44,  21, "great dodecahedron",                      "small stellated dodecahedron", },
-   { U36, "2|5/2 5",        41,  45,  73, "great dodecadodecahedron",                "medial rhombic triacontahedron", },
+   { U36, "2|5/2 5",        41,  45,  73, "dodecadodecahedron",                "medial rhombic triacontahedron", },
    { U37, "2 5/2|5",        42,  47,  75, "truncated great dodecahedron",            "small stellapentakisdodecahedron", },
    { U38, "5/2 5|2",        43,  48,  76, "rhombidodecadodecahedron",                "medial deltoidal hexecontahedron", },
    { U39, "2 5/2 5|",       44,  46,  74, "small rhombidodecahedron",                "small rhombidodecacron", },

@@ -217,7 +217,7 @@ U32       |5/2 3 3    small snub icosicosidodecahedron
 U33        3/2 5|5    small dodecicosidodecahedron
 U34        5|2 5/2    small stellated dodecahedron
 U35        5/2|2 5    great dodecahedron
-U36        2|5/2 5    great dodecadodecahedron
+U36        2|5/2 5    dodecadodecahedron
 U37        2 5/2|5    truncated great dodecahedron
 U38        5/2 5|2    rhombidodecadodecahedron
 U39       2 5/2 5|    small rhombidodecahedron
@@ -1329,7 +1329,7 @@ seside       U32  small snub icosicosidodecahedron
 saddid       U33  small dodecicosidodecahedron
 sissid       U34  small stellated dodecahedron
 gad          U35  great dodecahedron
-did          U36  great dodecadodecahedron
+did          U36  dodecadodecahedron
 tigid        U37  truncated great dodecahedron
 raded        U38  rhombidodecadodecahedron
 sird         U39  small rhombidodecahedron

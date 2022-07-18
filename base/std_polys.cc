@@ -42,6 +42,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 using std::map;
@@ -118,7 +119,7 @@ static void make_resource_dual(Geometry &geom, bool is_std = false)
 }
 
 // clang-format off
-const char *alt_names[][2] = {
+std::unordered_map<string, string> alt_names = {
     {"tet", "u1"},
     {"tetrahedron", "u1"},
     {"truncated_tetrahedron", "u2"},
@@ -178,6 +179,8 @@ const char *alt_names[][2] = {
     {"great_icosahedron", "u53"},
     {"gr_icosahedron", "u53"},
     {"gr_ico", "u53"},
+
+    // Uniform duals
     {"triakistetrahedron", "u2_d"},
     {"triakis_tetrahedron", "u2_d"},
     {"tri_tet", "u2_d"},
@@ -499,6 +502,12 @@ const char *alt_names[][2] = {
     {"thawro", "j92"},
 };
 
+// alternative names for uniform polyhedra (for names following u_)
+// alternative name is lowercase, no abbreviations, words separated by spaces
+std::unordered_map<string, string> u_alt_names = {
+    {"great dodecadodecahedron", "u36"},
+};
+
 const char *u_abbrevs[][2] = {
    {"tr",     "truncated"},
    {"sm",     "small"},
@@ -604,13 +613,21 @@ int make_resource_uniform(Geometry &geom, string name, bool is_std,
   }
   // if name starts with "u_" prefix
   else if (strchr(RES_SEPARATOR, name[1 + is_dual])) {
+
     string expanded;
-    if (is_dual)
+    if (is_dual) {
       expanded = expand_abbrevs(name, ud_abbrevs,
                                 sizeof(ud_abbrevs) / sizeof(ud_abbrevs[0]));
-    else
+    }
+    else {
       expanded = expand_abbrevs(name, u_abbrevs,
                                 sizeof(u_abbrevs) / sizeof(u_abbrevs[0]));
+
+      // check if expanded name (no 'u_') is an alternative name
+      auto it = u_alt_names.find(to_resource_name(expanded.c_str()));
+      if (it != alt_names.end())
+        expanded = it->second; // set name to the usual name for the model
+    }
     sym_no = uni.lookup_sym_no(expanded.c_str(), is_dual);
     if (sym_no == -1) {
       if (error_msg)
@@ -1412,14 +1429,10 @@ Status make_resource_geom(Geometry &geom, string name)
     name = name.substr(4);
 
   // Look for an internal alternative name
-  auto alt_name = to_resource_name(name.c_str());
-
-  for (auto &i : alt_names) {
-    if (alt_name == i[0]) {
-      name = i[1]; // set name to the usual name for the model
-      process_for_dual(name, make_dual);
-      break;
-    }
+  auto it = alt_names.find(to_resource_name(name.c_str()));
+  if (it != alt_names.end()) {
+    name = it->second; // set name to the usual name for the model
+    process_for_dual(name, make_dual);
   }
 
   vector<int (*)(Geometry &, string, bool, string *)> make_funcs = {
