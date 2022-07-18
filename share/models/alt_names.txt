@@ -1,3 +1,4 @@
 Idisdrid=skilling
-Skillings_Figure=skilling
+Skillings Figure=skilling
+great disnub dirhombidodecahedron=skilling
 
