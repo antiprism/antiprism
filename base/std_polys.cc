@@ -505,8 +505,6 @@ std::unordered_map<string, string> alt_names = {
 // alternative names for uniform polyhedra (for names following u_)
 // alternative name is lowercase, no abbreviations, words separated by spaces
 std::unordered_map<string, string> u_alt_names = {
-    // from Kaleido
-    {"great dodecadodecahedron", "u36"},
     // Jim McNeill http://www.orchidpalms.com/polyhedra/uniform/uniform.html
     {"snub cuboctahedron","u12"},
     {"small rhombicube","u18"},
@@ -532,19 +530,40 @@ std::unordered_map<string, string> u_alt_names = {
     {"stellatruncated icosidodecahedron","u68"},
     {"great vertisnub icosidodecahedron","u69"},
     {"great disnub disicosidisdodecahedron","u75"},
+    // G Hart https://www.georgehart.com/virtual-polyhedra/uniform-index.html
+    {"great dodecadodecahedron", "u36"},
+    {"pentagrammatic prism","u78"},
+    {"pentagrammatic antiprism","u79"},
+    {"pentagrammatic crossed antiprism","u80"},
     // other alternate names found in Wikipedia
     {"triangular pyramid","u1"},
+    {"cantic cube","u2"},
     {"allelotetratetrahedron","u3"},
     {"hemicuboctahedron","u4"},
+    {"hemihexahedron","u4"},
     {"truncated hexahedron","u9"},
     {"small rhombicuboctahedron","u10"},
+    {"convex great rhombicuboctahedron","u11"},
+    {"rhombitruncated cuboctahedron","u11"},
+    {"omnitruncated cube","u11"},
+    {"cantitruncated cube","u11"},
+    {"beveled cube","u11"},
+    {"cubus simus","u12"},
     {"cuboctatruncated cuboctahedron","u16"},
+    {"nonconvex great rhombicuboctahedron","u17"},
+    {"quasirhombicuboctahedron","u17"},
     {"quasitruncated hexahedron","u19"},
     {"quasitruncated cuboctahedron","u20"},
     {"stellatruncated cuboctahedron","u20"},
+    {"convex great rhombicosidodecahedron","u28"},
+    {"rhombitruncated icosidodecahedron","u28"},
+    {"great rhombicosidodecahedron","u28"},
+    {"omnitruncated dodecahedron","u28"},
+    {"omnitruncated icosahedron","u28"},
     {"small ditrigonary icosidodecahedron","u30"},
     {"small triambic icosidodecahedron","u30"},
     {"small icosified icosidodecahedron","u31"},
+    {"holosnub icosahedron","u32"},
     {"small dodekicosidodecahedron","u33"},
     {"triambic dodecadodecahedron","u41"},
     {"icosidodecatruncated icosidodecahedron","u45"},
@@ -552,17 +571,117 @@ std::unordered_map<string, string> u_alt_names = {
     {"small icosahemidodecahedron","u49"},
     {"truncated great icosahedron","u55"}, // lists as title name!
     {"quasitruncated small stellated dodecahedron","u58"},
+    {"quasitruncated dodecadodecahedron","u59"},
     {"great dodecahemiicosahedron","u62"},
     {"great snub dodekicosidodecahedron","u64"},
     {"small dodecahemiicosahedron","u65"},
     {"quasitruncated great stellated dodecahedron","u66"},
-    {"nonconvex great rhombicosidodecahedron","u67"}, // nonconvex in title
+    {"nonconvex great rhombicosidodecahedron","u67"},
+    {"quasirhombicosidodecahedron","u67"},
     {"great quasitruncated icosidodecahedron","u68"},
     {"great icosahemidodecahedron","u71"},
     {"retrosnub disicosidodecahedron","u72"},
     {"small inverted retrosnub icosicosidodecahedron","u72"},
     {"retroholosnub icosahedron","u72"},
     {"great inverted retrosnub icosidodecahedron","u74"},
+};
+    
+// alternative names for uniform polyhedra duals (for names following ud_)
+// alternative name is lowercase, no abbreviations, words separated by spaces
+std::unordered_map<string, string> ud_alt_names = {
+    // duals
+    // G Hart https://www.georgehart.com/virtual-polyhedra/uniform-index.html
+    {"trapezoidal icositetrahedron","u10"},
+    {"great trapezoidal icositetrahedron","u17"},
+    {"trapezoidal hexecontahedron","u27"},
+    {"hexagonal hexecontahedron","u32"},
+    {"medial trapezoidal hexecontahedron","u38"},
+    {"great dodecacronic hexecontahedron","u42"},
+    {"small dodecacronic hexecontahedron","u43"},
+    {"great dodecahemiicosacron","u62"},
+    {"small dodecahemiicosacron","u65"},
+    {"great trapezoidal hexecontahedron","u67"},
+    {"small hexagrammatic hexecontahedron","u72"},
+    {"great pentagrammatic hexecontahedron","u74"},
+    {"pentagonal trapezohedron","u77"},
+    {"pentagrammatic dipyramid","u78"},
+    {"pentagrammatic trapezohedron","u79"},
+    {"pentagrammatic concave trapezohedron","u80"},
+    // Wenninger names via Wikipedia
+    {"triakis tetrahedron","u2"},
+    {"hexahedron","u5"},
+    {"tetrakis hexahedron","u8"},
+    {"triakis octahedron","u9"},
+    {"disdyakis dodecahedron","u11"},
+    {"tetradyakis hexahedron","u16"},
+    {"great triakis octahedron","u19"},
+    {"great disdyakis dodecahedron","u20"},
+    {"pentakis dodecahedron","u25"},
+    {"triakis icosahedron","u26"},
+    {"disdyakis triacontahedron","u28"},
+    {"small stellapentakis dodecahedron","u37"},
+    {"tridyakis icosahedron","u45"},
+    {"great stellapentakis dodecahedron","u55"},
+    {"great pentakis dodecahedron","u58"},
+    {"medial disdyakis triacontahedron","u59"},
+    {"great triakis icosahedron","u66"},
+    {"great disdyakis triacontahedron","u68"},
+    // other alternate names found in Wikipedia    
+    {"kistetrahedron","u2"},
+    {"tetrahexahedron","u8"},
+    {"hextetrahedron","u8"},
+    {"tetrakis cube","u8"},
+    {"kiscube","u8"},
+    {"disdyakis hexahedron","u8"},
+    {"hexakis tetrahedron","u8"},
+    {"kisoctahedron","u9"},
+    {"trisoctahedron","u9"},
+    {"trigonal trisoctahedron","u9"},
+    {"tetragonal icosikaitetrahedron","u10"},
+    {"tetragonal trisoctahedron","u10"},
+    {"strombic icositetrahedron","u10"},
+    {"hexoctahedron","u11"},
+    {"hexakis octahedron","u11"},
+    {"octakis cube","u11"},
+    {"octakis hexahedron","u11"},
+    {"kisrhombic dodecahedron","u11"},
+    {"pentagonal icosikaitetrahedron","u12"},
+    {"great sagittal disdodecahedron","u17"},
+    {"small dipteral disdodecahedron","u18"},
+    {"great dipteral disdodecahedron","u21"},
+    {"triacontahedron","u24"},
+    {"kisdodecahedron","u25"},
+    {"kisicosahedron","u26"},
+    {"strombic hexecontahedron","u27"},
+    {"tetragonal hexacontahedron","u27"},
+    {"hexakis icosahedron","u28"},
+    {"decakis dodecahedron","u28"},
+    {"kisrhombic triacontahedron","u28"},
+    {"small lanceal trisicosahedron","u31"},
+    {"small sagittal ditriacontahedron","u33"},
+    {"midly rhombic triacontahedron","u36"},
+    {"small stellated triacontahedron","u36"},
+    {"midly triambic icosahedron","u41"},
+    {"great lanceal trisicosahedron","u42"},
+    {"fat star","u43"},
+    {"midly sagittal ditriacontahedron","u44"},
+    {"midly dentoid ditriacontahedron","u46"},
+    {"medial triambic icosahedron","u47"},
+    {"great sagittal trisicosahedron","u48"},
+    {"small dipteral trisicosahedron","u50"},
+    {"great astropentakis dodecahedron","u55"},
+    {"midly dipteral ditriacontahedron","u56"},
+    {"great petaloid ditriacontahedron","u57"},
+    {"midly petaloid ditriacontahedron","u60"},
+    {"great lanceal ditriacontahedron","u61"},
+    {"great dipteral trisicosahedron","u63"},
+    {"great astroid ditriacontahedron","u64"},
+    {"great sagittal ditriacontahedron","u67"},
+    {"great strombic hexecontahedron","u67"},
+    {"trisdyakis icosahedron","u68"},
+    {"petaloidal trisicosahedron","u69"},
+    {"great dipteral ditriacontahedron","u73"},
+    {"great dentoid ditriacontahedron","u74"},
 };
 
 const char *u_abbrevs[][2] = {
@@ -675,6 +794,11 @@ int make_resource_uniform(Geometry &geom, string name, bool is_std,
     if (is_dual) {
       expanded = expand_abbrevs(name, ud_abbrevs,
                                 sizeof(ud_abbrevs) / sizeof(ud_abbrevs[0]));
+
+      // check if expanded name (no 'ud_') is an alternative name
+      auto it = ud_alt_names.find(to_resource_name(expanded.c_str()));
+      if (it != ud_alt_names.end())
+        expanded = it->second; // set name to the usual name for the model
     }
     else {
       expanded = expand_abbrevs(name, u_abbrevs,
@@ -682,7 +806,7 @@ int make_resource_uniform(Geometry &geom, string name, bool is_std,
 
       // check if expanded name (no 'u_') is an alternative name
       auto it = u_alt_names.find(to_resource_name(expanded.c_str()));
-      if (it != alt_names.end())
+      if (it != u_alt_names.end())
         expanded = it->second; // set name to the usual name for the model
     }
     sym_no = uni.lookup_sym_no(expanded.c_str(), is_dual);
