@@ -28,28 +28,27 @@
    Project: Antiprism - http://www.antiprism.com
 */
 
-/* These notes are from this thread on the internet: http://snipurl.com/hh13
-
-   Norman Johnson says there are 17 simple Johnson solids (although he uses
-   the word elementary rather than simple).
+/* Norman Johnson says there are 17 elementary Johnson solids. They cannot be
+   made by augmenting another solid.
 
    (1-6, 63, 80, 83-86, 88-92).
-
-   However, as Paul Gailunas has pointed out, there are 11 more elementary
-   convex solids whose faces are regular polygons:
-   tetrahedron
-   dodecahedron
-   truncated tetrahedron
-   truncated cube
-   truncated dodecahedron
-   truncated icosahedron
-   rhombitruncated cuboctahedron
-   rhombitruncated icosidodecahedron
-   snub cube
-   snub dodecahedron
-   truncated octahedron
-
-   The cube's not in the above list because it's a prism.
+   square pyramid (J1)
+   pentagonal pyramid (J2)
+   triangular cupola (J3)
+   square cupola (J4)
+   pentagonal cupola (J5)
+   pentagonal rotunda (J6)
+   tridiminished icosahedron (J63)
+   parabidiminished rhombicosidodecahedron (J80)
+   tridiminished rhombicosidodecahedron (J83)
+   snub disphenoid (J84)
+   snub square antiprism (J85)
+   sphenocorona (J86)
+   sphenomegacorona (J88)
+   hebesphenomegacorona (J89)
+   disphenocingulum (J90)
+   bilunabirotunda (J91)
+   triangular hebesphenorotunda (J92)
 */
 
 #include "polygon.h"
@@ -920,6 +919,7 @@ int Johnson::lookup_sym_no(string sym)
     if (sym_norm == J_items[i].name)
       return i;
 
+    // find portion of name
     if (idx < 0 &&
         strncmp(sym_norm.c_str(), J_items[i].name, sym_norm.size()) == 0)
       idx = i;

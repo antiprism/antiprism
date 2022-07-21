@@ -40,6 +40,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <map>
+#include <regex>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -211,18 +212,18 @@ std::unordered_map<string, string> alt_names = {
     {"pentakisdodecahedron", "u25_d"},
     {"pentakis_dodecahedron", "u25_d"},
     {"pent_dod", "u25_d"},
-    {"deltoidal_hexacontahedron", "u27_d"},
-    {"delt_hexac", "u27_d"},
-    {"trapezoidal_hexacontahedron", "u27_d"},
-    {"trap_hexac", "u27_d"},
+    {"deltoidal_hexecontahedron", "u27_d"},
+    {"delt_hexec", "u27_d"},
+    {"trapezoidal_hexecontahedron", "u27_d"},
+    {"trap_hexec", "u27_d"},
     {"hexakisicosahedron", "u28_d"},
     {"hexakis_icosahedron", "u28_d"},
     {"hex_ico", "u28_d"},
     {"disdyakistriacontahedron", "u28_d"},
     {"disdyakis_triacontahedron", "u28_d"},
     {"disd_tri", "u28_d"},
-    {"pentagonal_hexacontahedron", "u29_d"},
-    {"pen_hexac", "u29_d"},
+    {"pentagonal_hexecontahedron", "u29_d"},
+    {"pen_hexec", "u29_d"},
 
     // Bowers short names for Uniforms
     {"tet", "u1"},
@@ -591,16 +592,34 @@ std::unordered_map<string, string> u_alt_names = {
 std::unordered_map<string, string> ud_alt_names = {
     // duals
     // G Hart https://www.georgehart.com/virtual-polyhedra/uniform-index.html
+    {"triakistetrahedron","u2"},
+    {"tetrakishexahedron","u8"},
+    {"triakisoctahedron","u9"},
     {"trapezoidal icositetrahedron","u10"},
+    {"disdyakisdodecahedron","u11"},
+    {"tetradyakishexahedron","u16"},
     {"great trapezoidal icositetrahedron","u17"},
+    {"great triakisoctahedron","u19"},
+    {"great disdyakisdodecahedron","u20"},
+    {"pentakisdodecahedron","u25"},
+    {"triakisicosahedron","u26"},
     {"trapezoidal hexecontahedron","u27"},
+    {"disdyakistriacontahedron","u28"},
     {"hexagonal hexecontahedron","u32"},
+    {"small stellapentakisdodecahedron","u37"},
     {"medial trapezoidal hexecontahedron","u38"},
     {"great dodecacronic hexecontahedron","u42"},
     {"small dodecacronic hexecontahedron","u43"},
+    {"tridyakisicosahedron","u45"},
+    {"great stellapentakisdodecahedron","u55"},
+    {"great pentakisdodekahedron","u58"}, // legacy mispelling
+    {"great pentakisdodecahedron","u58"},
+    {"medial disdyakistriacontahedron","u59"},
     {"great dodecahemiicosacron","u62"},
     {"small dodecahemiicosacron","u65"},
+    {"great triakisicosahedron","u66"},
     {"great trapezoidal hexecontahedron","u67"},
+    {"great disdyakistriacontahedron","u68"},
     {"small hexagrammatic hexecontahedron","u72"},
     {"great pentagrammatic hexecontahedron","u74"},
     {"pentagonal trapezohedron","u77"},
@@ -608,24 +627,7 @@ std::unordered_map<string, string> ud_alt_names = {
     {"pentagrammatic trapezohedron","u79"},
     {"pentagrammatic concave trapezohedron","u80"},
     // Wenninger names via Wikipedia
-    {"triakis tetrahedron","u2"},
     {"hexahedron","u5"},
-    {"tetrakis hexahedron","u8"},
-    {"triakis octahedron","u9"},
-    {"disdyakis dodecahedron","u11"},
-    {"tetradyakis hexahedron","u16"},
-    {"great triakis octahedron","u19"},
-    {"great disdyakis dodecahedron","u20"},
-    {"pentakis dodecahedron","u25"},
-    {"triakis icosahedron","u26"},
-    {"disdyakis triacontahedron","u28"},
-    {"small stellapentakis dodecahedron","u37"},
-    {"tridyakis icosahedron","u45"},
-    {"great stellapentakis dodecahedron","u55"},
-    {"great pentakis dodecahedron","u58"},
-    {"medial disdyakis triacontahedron","u59"},
-    {"great triakis icosahedron","u66"},
-    {"great disdyakis triacontahedron","u68"},
     // other alternate names found in Wikipedia    
     {"kistetrahedron","u2"},
     {"tetrahexahedron","u8"},
@@ -653,7 +655,7 @@ std::unordered_map<string, string> ud_alt_names = {
     {"kisdodecahedron","u25"},
     {"kisicosahedron","u26"},
     {"strombic hexecontahedron","u27"},
-    {"tetragonal hexacontahedron","u27"},
+    {"tetragonal hexecontahedron","u27"},
     {"hexakis icosahedron","u28"},
     {"decakis dodecahedron","u28"},
     {"kisrhombic triacontahedron","u28"},
@@ -722,6 +724,7 @@ const char *ud_abbrevs[][2] = {
    {"cubo",    "cuboctahedron"},
    {"hexa",    "hexahedron"},
    {"hexec",   "hexecontahedron"},
+   {"hexac",   "hexecontahedron"},
    {"icositet","icositetrahedron"}
 };
 
@@ -1457,7 +1460,7 @@ static void rh_enneacontahedron(Geometry &geom, bool is_std = false)
     set_resource_polygon_color(geom);
 }
 
-static void rh_hexacontahedron(Geometry &geom, bool is_std = false)
+static void rh_hexecontahedron(Geometry &geom, bool is_std = false)
 {
   geom.clear_all();
   Geometry geom_face;
@@ -1574,9 +1577,9 @@ int make_resource_misc_poly(Geometry &geom, string name, bool is_std,
    models["rh_enneacontahedron"]         = rh_enneacontahedron;
    models["rh_ennea"]                    = rh_enneacontahedron;
    models["re"]                          = rh_enneacontahedron;
-   models["rhombic_hexacontahedron"]     = rh_hexacontahedron;
-   models["rh_hexacontahedron"]          = rh_hexacontahedron;
-   models["rh_hex"]                      = rh_hexacontahedron;
+   models["rhombic_hexecontahedron"]     = rh_hexecontahedron;
+   models["rh_hexecontahedron"]          = rh_hexecontahedron;
+   models["rh_hex"]                      = rh_hexecontahedron;
    models["szilassi"]                    = szilassi;
    models["csaszar"]                     = csaszar;
 
@@ -1596,6 +1599,9 @@ Status make_resource_geom(Geometry &geom, string name)
 
   if (!name.size())
     return Status::error("no name given");
+
+  // common spelling difference for hexe(a)contahedron
+  name = std::regex_replace(name, std::regex("hexacon"), "hexecon");
 
   bool make_dual = false;
   process_for_dual(name, make_dual);

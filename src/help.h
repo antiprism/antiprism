@@ -36,15 +36,18 @@ const char *help_help = R"(Help topics
 Type 'off_util -H topic_name' for help on each topic
 
 colour:       selecting colours for models
-   col_val :     colour value formats
-   col_names :   colour names
-   col_map :     colour map formats and resource colour maps
-expressions:  mathematical expressions for floating point arguments
-symmetry:     symmetry features and option arguments
-models:       built in models
+   col_val:      colour value formats
+   col_names:    colour names
+   col_map:      colour map formats and resource colour maps
+   expressions:  mathematical expressions for floating point arguments
+   symmetry:     symmetry features and option arguments
+   models:       built in models
    common_polys: common polyhedra
    uniform:      uniform polyhedra (including wythoff_ models)
    ud:           uniform dual polyhedra
+   uniform_syms: alternate names for uniform polyhedra
+   ud_syms:      alternate names for uniform dual polyhedra
+   wenninger:    uniform polyhedra by Wenninger number and included stellations
    johnson:      johnson polyhedra
    uc:           uniform compounds
    bowers:       supported Bowers short name notations
@@ -85,7 +88,7 @@ model name
      rhombic_dodecahedron, rd
      rhombic_triacontahedron, rt
      rhombic_enneacontahedron, re
-     rhombic_hexacontahedron, rh_hex
+     rhombic_hexecontahedron, rh_hex
      szilassi
      csaszar
 
@@ -123,11 +126,11 @@ model name
      pentagonal_icositetrahedron, pen_icosit   u12_d
      triakis_icosahedron, tri_ico              u26_d
      pentakis_dodecahedron, pent_dod           u25_d
-     deltoidal_hexacontahedron, delt_hexac     u27_d
-     trapezoidal_hexacontahedron, trap_hexac   u27_d
+     deltoidal_hexecontahedron, delt_hexec     u27_d
+     trapezoidal_hexecontahedron, trap_hexec   u27_d
      hexakis_icosahedron, hex_ico              u28_d
      disdyakis_triacontahedron, disd_tri       u28_d
-     pentagonal_hexacontahedron, pen_hexac     u29_d
+     pentagonal_hexecontahedron, pen_hexec     u29_d
 
      e.g. tet, great_icosahedron)";
 
@@ -263,6 +266,326 @@ U78        2 5/2|2    pentagrammic prism
 U79       |2 2 5/2    pentagrammic antiprism
 U80       |2 2 5/3    pentagrammic crossed antiprism)";
 
+const char *help_wenninger = R"(Wenninger Number
+================
+Polyhedra can be listed by Wenninger Number and include Wenninger Stellations
+
+Wenninger List:
+
+W No.  Name
+-----  ------------------------
+W1     tetrahedron
+W2     octahedron
+W3     cube
+W4     icosahedron
+W5     dodecahedron
+W6     truncated tetrahedron
+W7     truncated octahedron
+W8     truncated cube
+W9     truncated icosahedron
+W10    truncated dodecahedron
+W11    cuboctahedron
+W12    icosidodecahedron
+W13    rhombicuboctahedron
+W14    rhombicosidodecahedron
+W15    truncated cuboctahedron
+W16    truncated icosidodecahedron
+W17    snub cube
+W18    snub dodecahedron
+W19    compound of two tetrahedra, also uc4
+W20    small stellated dodecahedron
+W21    great dodecahedron
+W22    great stellated dodecahedron
+W23    compound of five octahedra, also uc17
+W24    compound of five tetrahedra, also uc5
+W25    compound of ten tetrahedra, also uc6
+W26    small triambic icosahedron, also u30_d
+W27    second stellation of icosahedron
+W28    third stellation of icosahedron, excavated dodecahedron
+W29    fourth stellation of icosahedron
+W30    fifth stellation of icosahedron
+W31    sixth stellation of icosahedron
+W32    seventh stellation of icosahedron
+W33    eighth stellafion of icosahedron, great triambic icosahedron, also u47_d
+W34    ninth stellation of icosahedron
+W35    tenth stellation of icosahedron
+W36    eleventh stellation of icosahedron
+W37    twelfth stellation of icosahedron
+W38    thirteenth stellation of icosahedron
+W39    fourteenth stellation of icosahedron
+W40    fifteenth stellation of icosahedron
+W41    great icosahedron
+W42    final stellation of the icosahedron
+W43    compound of cube and octahedron
+W44    second stellation of cuboctahedron
+W45    third stellation of cuboctahedron
+W46    fourth stellation of cuboctahedron
+W47    compound of dodecahedron and icosahedron
+W48    second stellation of icosidodecahedron
+W49    third stellation of icosidodecahedron
+W50    compound of small stellated dodecahedron and triakis icosahedron
+W51    compound of small stellated dodecahedron and five octahedra
+W52    sixth stellation of icosidodecahedron
+W53    seventh stellation of icosidodecahedron
+W54    compound of five tetrahedra and great dodecahedron
+W55    ninth stellation of icosidodecahedron
+W56    tenth stellation of icosidodecahedron
+W57    eleventh stellation of icosidodecahedron
+W58    twelfth stellation of icosidodecahedron
+W59    thirteenth stellation of icosidodecahedron
+W60    fourteenth stellation of icosidodecahedron
+W61    compound of great stellated dodecahedron and great icosahedron
+W62    fifteenth stellation of icosidodecahedron
+W63    sixteenth stellation of icosidodecahedron
+W64    seventeenth stellation of icosidodecahedron
+W65    eighteenth stellation of icosidodecahedron
+W66    nineteenth stellation of icosidodecahedron
+W67    tetrahemihexahedron
+W68    octahemioctahedron
+W69    small cubicuboctahedron
+W70    small ditrigonal icosidodecahedron
+W71    small icosicosidodecahedron
+W72    small dodecicosidodecahedron
+W73    dodecadodecahedron
+W74    small rhombidodecahedron
+W75    truncated great dodecahedron
+W76    rhombidodecadodecahedron
+W77    great cubicuboctahedron
+W78    cubohemioctahedron
+W79    cubitruncated cuboctahedron
+W80    ditrigonal dodecadodecahedron
+W81    great ditrigonal dodecicosidodecahedron
+W82    small ditrigonal dodecicosidodecahedron
+W83    icosidodecadodecahedron
+W84    icositruncated dodecadodecahedron
+W85    great rhombicuboctahedron
+W86    small rhombihexahedron
+W87    great ditrigonal icosidodecahedron
+W88    great icosicosidodecahedron
+W89    small icosihemidodecahedron
+W90    small dodecicosahedron
+W91    small dodecahemidodecahedron
+W92    stellated truncated hexahedron
+W93    great truncated cuboctahedron
+W94    great icosidodecahedron
+W95    great truncated icosahedron
+W96    rhombicosahedron
+W97    small stellated truncated dodecahedron
+W98    truncated dodecadodecahedron
+W99    great dodecicosidodecahedron
+W100   small dodecahemicosahedron
+W101   great dodecicosahedron
+W102   great dodecahemicosahedron
+W103   great rhombihexahedron
+W104   great stellated truncated dodecahedron
+W105   great rhombicosidodecahedron
+W106   great icosihemidodecahedron
+W107   great dodecahemidodecahedron
+W108   great truncated icosidodecahedron
+W109   great rhombidodecahedron
+W110   small snub icosicosidodecahedron
+W111   snub dodecadodecahedron
+W112   snub icosidodecadodecahedron
+W113   great inverted snub icosidodecahedron
+W114   inverted snub dodecadodecahedron
+W115   great snub dodecicosidodecahedron
+W116   great snub icosidodecahedron
+W117   great retrosnub icosidodecahedron
+W118   small retrosnub icosicosidodecahedron
+W119   great dirhombicosidodecahedron)";
+
+const char *help_uniform_syms = R"(Uniform Synonyms
+================
+Uniform polyhedra have aquired many alternate names over the years. This is a
+list of many names that have been seen and will work in Antiprism.
+
+o   u_ followed by the name (see the list below) Use '_' instead of
+    a space to avoid having to quote the model name.
+
+   Synonyms:
+   // Jim McNeill http://www.orchidpalms.com/polyhedra/uniform/uniform.html
+     snub cuboctahedron                               u12
+     small rhombicube                                 u18
+     stellatruncated cube                             u19
+     great rhombicube                                 u21
+     snub icosidodecahedron                           u29
+     snub disicosidodecahedron                        u32
+     dodecadodecahedron                               u36
+     great truncated dodecahedron                     u37
+     ditrigonary dodecadodecahedron                   u41
+     great dodekified icosidodecahedron               u42
+     small dodekified icosidodecahedron               u43
+     icosified dodecadodecahedron                     u44
+     great ditrigonary icosidodecahedron              u47
+     great icosified icosidodecahedron                u48
+     great truncated icosahedron                      u55
+     small stellatruncated dodecahedron               u58
+     stellatruncated dodecadodecahedron               u59
+     vertisnub dodecadodecahedron                     u60
+     great dodekicosahedron                           u63
+     great snub icosidisdodecahedron                  u64
+     great stellatruncated dodecahedron               u66
+     stellatruncated icosidodecahedron                u68
+     great vertisnub icosidodecahedron                u69
+     great disnub disicosidisdodecahedron             u75
+   // G Hart https://www.georgehart.com/virtual-polyhedra/uniform-index.html
+     great dodecadodecahedron                         u36
+     pentagrammatic prism                             u78
+     pentagrammatic antiprism                         u79
+     pentagrammatic crossed antiprism                 u80
+   // other alternate names found in Wikipedia
+     triangular pyramid                               u1
+     cantic cube                                      u2
+     allelotetratetrahedron                           u3
+     hemicuboctahedron                                u4
+     hemihexahedron                                   u4
+     truncated hexahedron                             u9
+     small rhombicuboctahedron                        u10
+     convex great rhombicuboctahedron                 u11
+     rhombitruncated cuboctahedron                    u11
+     omnitruncated cube                               u11
+     cantitruncated cube                              u11
+     beveled cube                                     u11
+     cubus simus                                      u12
+     cuboctatruncated cuboctahedron                   u16
+     nonconvex great rhombicuboctahedron              u17
+     quasirhombicuboctahedron                         u17
+     quasitruncated hexahedron                        u19
+     quasitruncated cuboctahedron                     u20
+     stellatruncated cuboctahedron                    u20
+     convex great rhombicosidodecahedron              u28
+     rhombitruncated icosidodecahedron                u28
+     great rhombicosidodecahedron                     u28
+     omnitruncated dodecahedron                       u28
+     omnitruncated icosahedron                        u28
+     small ditrigonary icosidodecahedron              u30
+     small triambic icosidodecahedron                 u30
+     small icosified icosidodecahedron                u31
+     holosnub icosahedron                             u32
+     small dodekicosidodecahedron                     u33
+     triambic dodecadodecahedron                      u41
+     icosidodecatruncated icosidodecahedron           u45
+     great triambic icosidodecahedron                 u47
+     small icosahemidodecahedron                      u49
+     truncated great icosahedron                      u55
+     quasitruncated small stellated dodecahedron      u58
+     quasitruncated dodecadodecahedron                u59
+     great dodecahemiicosahedron                      u62
+     great snub dodekicosidodecahedron                u64
+     small dodecahemiicosahedron                      u65
+     quasitruncated great stellated dodecahedron      u66
+     nonconvex great rhombicosidodecahedron           u67
+     quasirhombicosidodecahedron                      u67
+     great quasitruncated icosidodecahedron           u68
+     great icosahemidodecahedron                      u71
+     retrosnub disicosidodecahedron                   u72
+     small inverted retrosnub icosicosidodecahedron   u72
+     retroholosnub icosahedron                        u72
+     great inverted retrosnub icosidodecahedron       u74)";
+
+const char *help_uniform_dual_syms = R"(Uniform Dual Synonyms
+================
+Uniform dual polyhedra have aquired many alternate names over the years. This
+is a list of many names that have been seen and will work in Antiprism.
+
+o   ud_ followed by the name (see the list below) Use '_' instead of
+    a space to avoid having to quote the model name.
+
+   Synonyms:
+   // G Hart https://www.georgehart.com/virtual-polyhedra/uniform-index.html
+     triakistetrahedron                               u2_d
+     tetrakishexahedron                               u8_d
+     triakisoctahedron                                u9_d
+     trapezoidal icositetrahedron                     u10_d
+     disdyakisdodecahedron                            u11_d
+     tetradyakishexahedron                            u16_d
+     great trapezoidal icositetrahedron               u17_d
+     great triakisoctahedron                          u19_d
+     great disdyakisdodecahedron                      u20_d
+     pentakisdodecahedron                             u25_d
+     triakisicosahedron                               u26_d
+     trapezoidal hexecontahedron                      u27_d
+     disdyakistriacontahedron                         u28_d
+     hexagonal hexecontahedron                        u32_d
+     small stellapentakisdodecahedron                 u37_d
+     medial trapezoidal hexecontahedron               u38_d
+     great dodecacronic hexecontahedron               u42_d
+     small dodecacronic hexecontahedron               u43_d
+     tridyakisicosahedron                             u45_d
+     great stellapentakisdodecahedron                 u55_d
+     great pentakisdodekahedron                       u58_d
+     great pentakisdodecahedron                       u58_d
+     medial disdyakistriacontahedron                  u59_d
+     great dodecahemiicosacron                        u62_d
+     small dodecahemiicosacron                        u65_d
+     great triakisicosahedron                         u66_d
+     great trapezoidal hexecontahedron                u67_d
+     great disdyakistriacontahedron                   u68_d
+     small hexagrammatic hexecontahedron              u72_d
+     great pentagrammatic hexecontahedron             u74_d
+     pentagonal trapezohedron                         u77_d
+     pentagrammatic dipyramid                         u78_d
+     pentagrammatic trapezohedron                     u79_d
+     pentagrammatic concave trapezohedron             u80_d
+   // Wenninger names via Wikipedia
+     hexahedron                                       u5_d
+   // other alternate names found in Wikipedia
+     kistetrahedron                                   u2_d
+     tetrahexahedron                                  u8_d
+     hextetrahedron                                   u8_d
+     tetrakis cube                                    u8_d
+     kiscube                                          u8_d
+     disdyakis hexahedron                             u8_d
+     hexakis tetrahedron                              u8_d
+     kisoctahedron                                    u9_d
+     trisoctahedron                                   u9_d
+     trigonal trisoctahedron                          u9_d
+     tetragonal icosikaitetrahedron                   u10_d
+     tetragonal trisoctahedron                        u10_d
+     strombic icositetrahedron                        u10_d
+     hexoctahedron                                    u11_d
+     hexakis octahedron                               u11_d
+     octakis cube                                     u11_d
+     octakis hexahedron                               u11_d
+     kisrhombic dodecahedron                          u11_d
+     pentagonal icosikaitetrahedron                   u12_d
+     great sagittal disdodecahedron                   u17_d
+     small dipteral disdodecahedron                   u18_d
+     great dipteral disdodecahedron                   u21_d
+     triacontahedron                                  u24_d
+     kisdodecahedron                                  u25_d
+     kisicosahedron                                   u26_d
+     strombic hexecontahedron                         u27_d
+     tetragonal hexecontahedron                       u27_d
+     hexakis icosahedron                              u28_d
+     decakis dodecahedron                             u28_d
+     kisrhombic triacontahedron                       u28_d
+     small lanceal trisicosahedron                    u31_d
+     small sagittal ditriacontahedron                 u33_d
+     midly rhombic triacontahedron                    u36_d
+     small stellated triacontahedron                  u36_d
+     midly triambic icosahedron                       u41_d
+     great lanceal trisicosahedron                    u42_d
+     fat star                                         u43_d
+     midly sagittal ditriacontahedron                 u44_d
+     midly dentoid ditriacontahedron                  u46_d
+     medial triambic icosahedron                      u47_d
+     great sagittal trisicosahedron                   u48_d
+     small dipteral trisicosahedron                   u50_d
+     great astropentakis dodecahedron                 u55_d
+     midly dipteral ditriacontahedron                 u56_d
+     great petaloid ditriacontahedron                 u57_d
+     midly petaloid ditriacontahedron                 u60_d
+     great lanceal ditriacontahedron                  u61_d
+     great dipteral trisicosahedron                   u63_d
+     great astroid ditriacontahedron                  u64_d
+     great sagittal ditriacontahedron                 u67_d
+     great strombic hexecontahedron                   u67_d
+     trisdyakis icosahedron                           u68_d
+     petaloidal trisicosahedron                       u69_d
+     great dipteral ditriacontahedron                 u73_d
+     great dentoid ditriacontahedron                  u74_d)";
+
 const char *help_uniform_duals = R"(Uniform Dual Polyhedra
 ======================
 Uniform dual polyhedra can be specified by
@@ -297,6 +620,7 @@ o   ud_ followed by a name (see the list below) Use '_' instead of
        cubo:     cuboctahedron
        hexa:     hexahedron
        hexec:    hexecontahedron
+       hexac:    hexacontahedron
        icositet: icositetrahedron
 
     e.g. u_truncated_octahedron, u_tr_octahedron, u_tr_oct, u_tr_o
@@ -315,33 +639,33 @@ Uniform List:
 UD No.     Name
 -----      ------------------------
 UD1        tetrahedron
-UD2        triakistetrahedron
+UD2        triakis tetrahedron
 UD3        octahemioctacron
 UD4        tetrahemihexacron
 UD5        cube
 UD6        octahedron
 UD7        rhombic dodecahedron
-UD8        tetrakishexahedron
-UD9        triakisoctahedron
+UD8        tetrakis hexahedron
+UD9        triakis octahedron
 UD10       deltoidal icositetrahedron
-UD11       disdyakisdodecahedron
+UD11       disdyakis dodecahedron
 UD12       pentagonal icositetrahedron
 UD13       small hexacronic icositetrahedron
 UD14       great hexacronic icositetrahedron
 UD15       hexahemioctacron
-UD16       tetradyakishexahedron
+UD16       tetradyakis hexahedron
 UD17       great deltoidal icositetrahedron
 UD18       small rhombihexacron
-UD19       great triakisoctahedron
-UD20       great disdyakisdodecahedron
+UD19       great triakis octahedron
+UD20       great disdyakis dodecahedron
 UD21       great rhombihexacron
 UD22       dodecahedron
 UD23       icosahedron
 UD24       rhombic triacontahedron
-UD25       pentakisdodecahedron
-UD26       triakisicosahedron
+UD25       pentakis dodecahedron
+UD26       triakis icosahedron
 UD27       deltoidal hexecontahedron
-UD28       disdyakistriacontahedron
+UD28       disdyakis triacontahedron
 UD29       pentagonal hexecontahedron
 UD30       small triambic icosahedron
 UD31       small icosacronic hexecontahedron
@@ -350,7 +674,7 @@ UD33       small dodecacronic hexecontahedron
 UD34       great dodecahedron
 UD35       small stellated dodecahedron
 UD36       medial rhombic triacontahedron
-UD37       small stellapentakisdodecahedron
+UD37       small stellapentakis dodecahedron
 UD38       medial deltoidal hexecontahedron
 UD39       small rhombidodecacron
 UD40       medial pentagonal hexecontahedron
@@ -358,7 +682,7 @@ UD41       medial triambic icosahedron
 UD42       great ditrigonal dodecacronic hexecontahedron
 UD43       small ditrigonal dodecacronic hexecontahedron
 UD44       medial icosacronic hexecontahedron
-UD45       tridyakisicosahedron
+UD45       tridyakis icosahedron
 UD46       medial hexagonal hexecontahedron
 UD47       great triambic icosahedron
 UD48       great icosacronic hexecontahedron
@@ -368,20 +692,20 @@ UD51       small dodecahemidodecacron
 UD52       great icosahedron
 UD53       great stellated dodecahedron
 UD54       great rhombic triacontahedron
-UD55       great stellapentakisdodecahedron
+UD55       great stellapentakis dodecahedron
 UD56       rhombicosacron
 UD57       great pentagonal hexecontahedron
-UD58       great pentakisdodekahedron
-UD59       medial disdyakistriacontahedron
+UD58       great pentakis dodecahedron
+UD59       medial disdyakis triacontahedron
 UD60       medial inverted pentagonal hexecontahedron
 UD61       great dodecacronic hexecontahedron
 UD62       small dodecahemicosacron
 UD63       great dodecicosacron
 UD64       great hexagonal hexecontahedron
 UD65       great dodecahemicosacron
-UD66       great triakisicosahedron
+UD66       great triakis icosahedron
 UD67       great deltoidal hexecontahedron
-UD68       great disdyakistriacontahedron
+UD68       great disdyakis triacontahedron
 UD69       great inverted pentagonal hexecontahedron
 UD70       great dodecahemidodecacron
 UD71       great icosihemidodecacron
@@ -397,6 +721,28 @@ UD80       pentagrammic concave deltohedron)";
 
 const char *help_johnson = R"(Johnson Polyhedra
 =================
+Norman Johnson says there are 17 elementary Johnson solids. They cannot be
+made by augmenting another solid.
+
+(1-6, 63, 80, 83-86, 88-92)
+square pyramid (J1)
+pentagonal pyramid (J2)
+triangular cupola (J3)
+square cupola (J4)
+pentagonal cupola (J5)
+pentagonal rotunda (J6)
+tridiminished icosahedron (J63)
+parabidiminished rhombicosidodecahedron (J80)
+tridiminished rhombicosidodecahedron (J83)
+snub disphenoid (J84)
+snub square antiprism (J85)
+sphenocorona (J86)
+sphenomegacorona (J88)
+hebesphenomegacorona (J89)
+disphenocingulum (J90)
+bilunabirotunda (J91)
+triangular hebesphenorotunda (J92)
+
 Johnson polyhedra can be specified by a
 
 o   A J number e.g. j8

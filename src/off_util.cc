@@ -1224,6 +1224,9 @@ const char *get_help(const char *name)
   help["symmetry"] = help_symmetry;
   help["bowers"] = help_bowers;
   help["schwarz"] = help_schwarz;
+  help["wenninger"] = help_wenninger;
+  help["uniform_syms"] = help_uniform_syms;
+  help["ud_syms"] = help_uniform_dual_syms;
 
   auto mi = help.find(to_resource_name(name));
   if (mi != help.end())
