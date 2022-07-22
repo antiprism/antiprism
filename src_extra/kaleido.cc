@@ -1711,8 +1711,8 @@ Polyhedron *kaleido(char *sym, Uniform *uniform, int last_uniform)
 // uniform list is referenced (must have been global) so pass it from main
 // 'static char *' becomes 'static const char *' (deprication)
 // only write to *ofile from opts
-int printit(Polyhedron *P, int need_coordinates, int just_list, int digits,
-            int more_lines, Uniform *uniform_list, FILE *fp)
+int printit(Polyhedron *P, int need_coordinates, int digits, int more_lines,
+            Uniform *uniform_list, FILE *fp)
 {
   int j, i;
   double cosa;
@@ -1728,8 +1728,6 @@ int printit(Polyhedron *P, int need_coordinates, int just_list, int digits,
     fprintf(fp, " [%d,%d]", uniform_list[P->index].Coxeter,
             uniform_list[P->index].Wenninger);
   fprintf(fp, "\n");
-  if (just_list)
-    return 1;
   /*
    * Print combinatorial description.
    */
@@ -2464,8 +2462,8 @@ int main(int argc, char *argv[])
         Polyhedron Q = *P;
         newton(&Q, opts.need_approx, ofile);
       }
-      printit(P, opts.need_coordinates, opts.just_list, opts.sig_digits,
-              more_lines, uniform, ofile);
+      printit(P, opts.need_coordinates, opts.sig_digits, more_lines, uniform,
+              ofile);
     }
     else {
       // off model
