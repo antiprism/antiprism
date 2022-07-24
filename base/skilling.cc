@@ -420,12 +420,10 @@ int UniformCompound::lookup_sym_no(string sym)
 
   int idx = -1;
 
-  // is it a poly name or description
+  // is it an exact poly name or description
   for (int i = 0; i < get_last_uc(); i++) {
-    if (!strncasecmp(sym_norm2.c_str(), uc_item_list[i].name,
-                     sym_norm2.size()) ||
-        !strncasecmp(sym_norm2.c_str(), uc_item_list[i].description,
-                     sym_norm2.size())) {
+    if (!strcasecmp(sym_norm2.c_str(), uc_item_list[i].name) ||
+        !strcasecmp(sym_norm2.c_str(), uc_item_list[i].description)) {
       idx = i;
       break;
     }
@@ -451,6 +449,7 @@ int UniformCompound::parse_uc_args(string &name, double &angle, int &n, int &d,
                                    int &k, string *error_msg = nullptr)
 {
   int ret = 0;
+  *error_msg = "";
 
   int loc = 0;
   int loc1 = name.rfind("_");
@@ -471,63 +470,77 @@ int UniformCompound::parse_uc_args(string &name, double &angle, int &n, int &d,
     string and_the_rest = name.substr((loc + 1));
 
     string operators = "an/k";
-    string digits = "0123456789.-";
+    string digits = "0123456789";
     char operand = '\0';
     string digits_str;
 
+    // no digits in string means it is not an operation
+    bool digits_found = false;    
     for (char i : and_the_rest) {
-      if (operators.find(i) != string::npos) {
-        if (operand) {
-          // don't accept empty digit string or "." at end of string
-          if (!digits_str.length() ||
-              digits_str[digits_str.length() - 1] == '.') {
-            if (error_msg)
-              *error_msg = "no digits found, or decimal point at end";
-            break;
-          }
-          else
-            assign_uc_value(operand, digits_str.c_str(), angle, n, d, k);
-        }
-        digits_str.clear();
-        operand = i;
-      }
-      else if (digits.find(i) != string::npos) {
-        if (!operand) {
-          if (error_msg)
-            *error_msg = "operator expected";
-          break;
-        }
-        else if (operand == '/' && n < 1) {
-          if (error_msg)
-            *error_msg = "d of n/d supplied but n is zero or not set";
-          break;
-        }
-        else if (operand != 'a' && (i == '.' || i == '-')) {
-          if (error_msg)
-            *error_msg =
-                msg_str("operator %c should have a positive integer", operand);
-          break;
-        }
-        if ((digits_str.find('.') != string::npos) && i == '.') {
-          if (error_msg)
-            *error_msg = "decimal point encountered more than once";
-          break;
-        }
-        else
-          digits_str += i;
-      }
-      else {
-        if (error_msg)
-          *error_msg = msg_str("unexpected character: %c", i);
+      if (digits.find(i) != string::npos) {
+        digits_found = true;
         break;
       }
     }
 
+    if (digits_found) {
+      // look for decimal point or negative too
+      digits += ".-";
+      for (char i : and_the_rest) {
+        if (operators.find(i) != string::npos) {
+          if (operand) {
+            // don't accept "-" or "." at end of string
+            if (digits_str[digits_str.length() - 1] == '-' ||
+                digits_str[digits_str.length() - 1] == '.') {
+              if (error_msg)
+                *error_msg = "decimal point or negative sign at end";
+              break;
+            }
+            else
+              assign_uc_value(operand, digits_str.c_str(), angle, n, d, k);
+          }
+          digits_str.clear();
+          operand = i;
+        }
+        else if (digits.find(i) != string::npos) {
+          if (!operand) {
+            if (error_msg)
+              *error_msg = "operator expected";
+            break;
+          }
+          else if (operand == '/' && n < 1) {
+            if (error_msg)
+              *error_msg = "d of n/d supplied but n is zero or not set";
+            break;
+          }
+          else if (operand != 'a' && (i == '.' || i == '-')) {
+            if (error_msg)
+              *error_msg =
+                  msg_str("operator %c should have a positive integer", operand);
+            break;
+          }
+          if ((digits_str.find('.') != string::npos) && i == '.') {
+            if (error_msg)
+              *error_msg = "decimal point encountered more than once";
+            break;
+          }
+          else
+            digits_str += i;
+        }
+        else {
+          if (error_msg)
+            *error_msg = msg_str("unexpected character in operation: %c", i);
+          break;
+        }
+      }
+    }
+
     if (operand) {
-      // don't accept empty digit string or "." at end of string
-      if (!digits_str.length() || digits_str[digits_str.length() - 1] == '.') {
+      // don't accept "-" or "." at end of string
+      if (digits_str[digits_str.length() - 1] == '-' ||
+        digits_str[digits_str.length() - 1] == '.') {
         if (error_msg)
-          *error_msg = "no digits found, or decimal point at end";
+          *error_msg = "decimal point or negative sign at end";
       }
       else
         assign_uc_value(operand, digits_str.c_str(), angle, n, d, k);

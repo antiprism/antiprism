@@ -2667,24 +2667,13 @@ int Uniform::lookup_sym_no(string sym, int is_dual)
   for (char &i : sym_norm2)
     if (isalpha(i))
       i = tolower(i);
-  // remove any space after an -akis
-  /* no longer needed, akis without the space is in alternate
-  if (is_dual) {
-    size_t kis_pos = sym_norm2.find("akis ");
-    if (kis_pos != string::npos)
-      sym_norm2.erase(kis_pos + 4, 1);
-  }
-  */
+
   // fprintf(stderr, "sym_name = '%s'\n", sym_norm2.c_str());
   for (int i = 0; i < last_uniform; i++) {
     const char *name = (is_dual) ? uniform_items[i].dual.c_str()
                                  : uniform_items[i].name.c_str();
     if (sym_norm2 == name)
       return i;
-
-    // find portion of name
-    if (idx < 0 && strncmp(sym_norm2.c_str(), name, sym_norm2.size()) == 0)
-      idx = i;
   }
 
   return idx;

@@ -152,9 +152,7 @@ o   wythoff_ followed by a general Wythoff Symbol, where '_' and ':'
     triangles are coloured white.
 
 o   u_ followed by a name (see the list below) Use '_' instead of
-    a space to avoid having to quote the model name. The beginning
-    of a name can be given and the first match from the list of
-    uniform polyhedra below is returned.
+    a space to avoid having to quote the model name.
 
     When giving a name the following abbreviations can be used
        tr:     truncated
@@ -170,7 +168,7 @@ o   u_ followed by a name (see the list below) Use '_' instead of
        cubo:   cuboctahedron
        icosid: icosidodecahedron
 
-    e.g. u_truncated_octahedron, u_tr_octahedron, u_tr_oct, u_tr_o
+    e.g. u_truncated_octahedron, u_tr_octahedron, u_tr_oct
 
 o   Common polyhedra can be given by name only (see help for
     'common_polys' for list) e.g. tet, cube
@@ -593,9 +591,7 @@ Uniform dual polyhedra can be specified by
 o   UD followed by a U number e.g. ud8
 
 o   ud_ followed by a name (see the list below) Use '_' instead of
-    a space to avoid having to quote the model name. The beginning
-    of a name can be given and the first match from the list of
-    uniform dual polyhedra below is returned.
+    a space to avoid having to quote the model name.
 
     When giving a name the following abbreviations can be used
        sm:       small
@@ -748,9 +744,7 @@ Johnson polyhedra can be specified by a
 o   A J number e.g. j8
 
 o   j_ followed by a name (see the list below) Use '_' instead of
-    a space to avoid having to quote the model name. The beginning
-    of a name can be given and the first match from the list of
-    Johnson polyhedra below is returned.
+    a space to avoid having to quote the model name.
 
     When giving a name the following abbreviations can be used
        tri:   triangular
@@ -765,7 +759,7 @@ o   j_ followed by a name (see the list below) Use '_' instead of
        ba:    biaugmenbted
        ta:    triaugmented
 
-    e.g. j_elongated_triangular_pyramid, j_el_tri_pyr, j_el
+    e.g. j_elongated_triangular_pyramid, j_el_tri_pyramid
 
 The Johnson polyhedron will be aligned with its symmetry group, but
 appending '_raw' to the name will preserve the original construction
@@ -926,9 +920,7 @@ Uniform compounds can be specified by
 o   A UC number e.g. uc5
 
 o   uc_ followed by a name (see the list below) Use '_' instead of
-    a space to avoid having to quote the model name. The beginning
-    of a name can be given and the first match from the list of
-    uniform compounds below is returned.
+    a space to avoid having to quote the model name.
 
     When giving a name the following abbreviations can be used
        tr:     truncated
@@ -947,7 +939,7 @@ o   uc_ followed by a name (see the list below) Use '_' instead of
        ant:    antiprisms
        rot:    rotational
 
-    e.g. uc_5_tetrahedra, uc_5_tet, uc_2_tr_tet, uc_2_tr_t
+    e.g. uc_5_tetrahedra, uc_5_tet, uc_2_tr_tet, uc_20_octahedra_rot
 
     When a compound is listed as rotational, an angle can be supplied after
     an underscore. If no angle is supplied, a random angle is generated

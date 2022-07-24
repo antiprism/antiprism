@@ -18,6 +18,9 @@ XX-XX-22 Adrian Rossiter <adrian@antiprism.com>
             off_color_radial: added -V color and option f
                added -E color and options e,f
             symmetro: added m3 built in color map for better number of sides
+            johnson: updated j84-j92 formula constructions
+            uniform: substring search removed
+            help: added altnerate names and wenninger numbering sections
             build: minimum autoconf version changed to 0.69
          Fixes
             resource models: large geodesic duals corrected

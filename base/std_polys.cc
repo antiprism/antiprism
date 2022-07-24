@@ -60,9 +60,7 @@ typedef void (*std_model_func)(Geometry &, bool is_std);
 
 void normalised_face_list(Geometry &geom)
 {
-  geom.orient();
-  if (vdot(geom.face_norm(0), geom.face_cent(0)) < 0)
-    geom.orient_reverse();
+  geom.orient(1);
   sort(geom.raw_faces().begin(), geom.raw_faces().end());
 }
 
@@ -915,12 +913,19 @@ int make_resource_uniform_compound(Geometry &geom, string name, bool is_std,
 
   UniformCompound uniform_compounds;
 
+  // to restore name if no parameters found
+  string name_copy = name;
+
   // if complex parms, parse them
   if (strpbrk(name.c_str(), RES_SEPARATOR)) {
     int ret = uniform_compounds.parse_uc_args(name, angle, n, d, k, error_msg);
     if (ret > 0)
       return 1; // fail
   }
+  
+  // restore unmangled name if parse_uc_args found no parameters
+  if (std::isnan(angle) && (n == -1) && (d == -1) && (k == -1))
+    name = name_copy;
 
   int sym_no;
   if (read_int(name.c_str() + 2, &sym_no)) {
