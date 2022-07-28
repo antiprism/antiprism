@@ -654,10 +654,11 @@ void kaleido_opts::process_command_line(int argc, char **argv)
     just_list = false;
 
   // original code had significant digits at 6 for listings
-  if ((just_list == 2) || need_coordinates || need_approx) {
+  if (just_list || need_coordinates || need_approx) {
     if (!sig_digits_set) {
       sig_digits = 6;
-      warning("for listings, default significant digits is 6");
+      if (just_list != 1)
+        warning("for listings, default significant digits is 6");
     }
   }
   else {
