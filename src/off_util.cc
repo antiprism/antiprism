@@ -1227,6 +1227,7 @@ const char *get_help(const char *name)
   help["wenninger"] = help_wenninger;
   help["uniform_syms"] = help_uniform_syms;
   help["ud_syms"] = help_uniform_dual_syms;
+  help["johnson_syms"] = help_johnson_syms;
 
   auto mi = help.find(to_resource_name(name));
   if (mi != help.end())

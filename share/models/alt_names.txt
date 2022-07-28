@@ -1,5 +1,6 @@
 Idisdrid=skilling
 Skillings Figure=skilling
+Skillings Spectre=skilling
 great disnub dirhombidodecahedron=skilling
 great disnub dirhombidodecacron=skilling_d
 

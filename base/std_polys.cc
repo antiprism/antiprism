@@ -580,9 +580,21 @@ std::unordered_map<string, string> u_alt_names = {
     {"great quasitruncated icosidodecahedron","u68"},
     {"great icosahemidodecahedron","u71"},
     {"retrosnub disicosidodecahedron","u72"},
-    {"small inverted retrosnub icosicosidodecahedron","u72"},
+    {"retrosnub ditrigonary icosidodecahedron","u72"},
     {"retroholosnub icosahedron","u72"},
+    {"small inverted retrosnub icosicosidodecahedron","u72"},
     {"great inverted retrosnub icosidodecahedron","u74"},
+    {"millers monster","u75"},
+    // George Olshevsky Monster Names
+    {"hastur","u32"},
+    {"chaugnar faugn","u40"},
+    {"dagon","u46"},
+    {"tsathoggua","u57"},
+    {"nyarlathotep","u60"},
+    {"shub niggurath","u64"},
+    {"cthulhu","u69"},
+    {"yog sothoth","u72"},
+    {"azathoth","u74"},
 };
     
 // alternative names for uniform polyhedra duals (for names following ud_)
@@ -640,6 +652,8 @@ std::unordered_map<string, string> ud_alt_names = {
     {"tetragonal icosikaitetrahedron","u10"},
     {"tetragonal trisoctahedron","u10"},
     {"strombic icositetrahedron","u10"},
+    {"lanceolar icositetrahedron","u10"},
+    {"lanceolar disdodecahedron","u10"},
     {"hexoctahedron","u11"},
     {"hexakis octahedron","u11"},
     {"octakis cube","u11"},
@@ -647,6 +661,7 @@ std::unordered_map<string, string> ud_alt_names = {
     {"kisrhombic dodecahedron","u11"},
     {"pentagonal icosikaitetrahedron","u12"},
     {"great sagittal disdodecahedron","u17"},
+    {"great strombic icositetrahedron","u17"},
     {"small dipteral disdodecahedron","u18"},
     {"great dipteral disdodecahedron","u21"},
     {"triacontahedron","u24"},
@@ -669,6 +684,7 @@ std::unordered_map<string, string> ud_alt_names = {
     {"medial triambic icosahedron","u47"},
     {"great sagittal trisicosahedron","u48"},
     {"small dipteral trisicosahedron","u50"},
+    {"great stellated triacontahedron", "u54"},
     {"great astropentakis dodecahedron","u55"},
     {"midly dipteral ditriacontahedron","u56"},
     {"great petaloid ditriacontahedron","u57"},
@@ -677,11 +693,77 @@ std::unordered_map<string, string> ud_alt_names = {
     {"great dipteral trisicosahedron","u63"},
     {"great astroid ditriacontahedron","u64"},
     {"great sagittal ditriacontahedron","u67"},
+    {"great sagittal hexecontahedron","u67"},
     {"great strombic hexecontahedron","u67"},
     {"trisdyakis icosahedron","u68"},
     {"petaloidal trisicosahedron","u69"},
     {"great dipteral ditriacontahedron","u73"},
     {"great dentoid ditriacontahedron","u74"},
+    {"pentagrammic trapezohedron","u79"},
+    {"pentagrammic concave trapezohedron","u80"},
+};
+
+// alternative names for johnson solids (for names following j_)
+// alternative name is lowercase, no abbreviations, words separated by spaces
+std::unordered_map<string, string> j_alt_names = {
+    {"lesser dome","j4"},
+    {"diminished icosahedron","j11"},
+    {"triangular dipyramid","j12"},
+    {"hexadeltahedron","j12"},
+    {"pentagonal dipyramid","j13"},
+    {"decadeltahedron","j13"},
+    {"elongated triangular dipyramid","j14"},
+    {"triakis triangular prism","j14"},
+    {"elongated octahedron","j15"},
+    {"pencil cube","j15"},
+    {"12 faced pencil cube","j15"},
+    {"pentakis pentagonal prism","j16"},
+    {"heccaidecadeltahedron","j17"},
+    {"tetrakis square antiprism","j17"},
+    {"hexakaidecadeltahedron","j17"},
+    {"anticuboctahedron","j27"},
+    {"twisted cuboctahedron","j27"},
+    {"disheptahedron","j27"},
+    {"cantellated triangular prism","j35"},
+    {"millers solid","j37"},
+    {"pseudo rhombicuboctahedron","j37"},
+    {"gyrate rhombicuboctahedron","j37"},
+    {"cantellated pentagonal prism","j38"},
+    {"monolaterotruncated triangular bipyramid","j49"},
+    {"tetracaidecadeltahedron,","j51"},
+    {"tetrakis triangular prism","j51"},
+    {"siamese dodecahedron","j84"},
+    {"triangular dodecahedron","j84"},
+    {"trigonal dodecahedron","j84"},
+    {"dodecadeltahedron","j84"},
+    {"pentakis elongated gyrobifastigium","j90"}
+};
+
+// alternative names for johnson solids duals (for names following jd_)
+// alternative name is lowercase, no abbreviations, words separated by spaces
+std::unordered_map<string, string> jd_alt_names = {
+    {"triangular prism","j12"},
+    {"pentagonal prism","j13"},
+    {"triangular bifrustum","j14"},
+    {"square bifrustum","j15"},
+    {"pentagonal bifrustum","j16"},
+    {"elongated tetragonal disphenoid","j26"},
+    {"schmitt conway danzer biprism","j26"},
+    {"trapezo rhombic dodecahedron","j27"},
+    {"elongated square trapezohedron","j29"},
+    {"elongated pentagonal trapezohedron","j31"},
+    {"trapezo rhombic triacontahedron","j34"},
+    {"pseudo deltoidal icositetrahedron","j37"},
+    {"truncated triangular bipyramid","j51"},
+    {"associahedron k5","j51"},
+    {"monolaterotruncated pentagonal bipyramid","j52"},
+    {"parabilaterotruncated pentagonal bipyramid","j53"},
+    {"monolaterotruncated hexagonal bipyramid","j54"},
+    {"parabilaterotruncated hexagonal bipyramid","j55"},
+    {"alternate truncated hexagonal bipyramid","j57"},
+    {"gyroelongated pentagonal bifrustum","j58"},
+    {"elongated gyrobifastigium","j84"},
+    {"truncated snub disphenoid","j90"}
 };
 
 const char *u_abbrevs[][2] = {
@@ -768,10 +850,12 @@ int make_resource_uniform(Geometry &geom, string name, bool is_std,
                // so the name is not handled
 
   bool is_dual = strchr("dD", name[1]);
+
   Uniform uni;
   int sym_no;
   if (read_int(name.c_str() + 1 + is_dual, &sym_no)) {
     // bypass for wenninger stellations, found in next section
+    // still need the dD
     if (strchr("wW", name[0]) &&
         (sym_no == 19 || (sym_no >= 23 && sym_no <= 40) ||
          (sym_no >= 42 && sym_no <= 66)))
@@ -780,6 +864,7 @@ int make_resource_uniform(Geometry &geom, string name, bool is_std,
     // Uniform, Kaleido, Coxeter, or Wenninger number
     if (is_dual)
       name.erase(1, 1);
+
     sym_no = uni.lookup_sym_no(name, is_dual);
     if (sym_no == -1) {
       if (error_msg)
@@ -792,11 +877,12 @@ int make_resource_uniform(Geometry &geom, string name, bool is_std,
   else if (strchr(RES_SEPARATOR, name[1 + is_dual])) {
 
     string expanded;
+
     if (is_dual) {
       expanded = expand_abbrevs(name, ud_abbrevs,
                                 sizeof(ud_abbrevs) / sizeof(ud_abbrevs[0]));
 
-      // check if expanded name (no 'ud_') is an alternative name
+      // check alternative names
       auto it = ud_alt_names.find(to_resource_name(expanded.c_str()));
       if (it != ud_alt_names.end())
         expanded = it->second; // set name to the usual name for the model
@@ -805,7 +891,7 @@ int make_resource_uniform(Geometry &geom, string name, bool is_std,
       expanded = expand_abbrevs(name, u_abbrevs,
                                 sizeof(u_abbrevs) / sizeof(u_abbrevs[0]));
 
-      // check if expanded name (no 'u_') is an alternative name
+      // check alternative names
       auto it = u_alt_names.find(to_resource_name(expanded.c_str()));
       if (it != u_alt_names.end())
         expanded = it->second; // set name to the usual name for the model
@@ -845,11 +931,12 @@ int make_resource_wenninger(Geometry &geom, string name, bool is_std,
                // so the name is not handled
 
   bool is_dual = strchr("dD", name[1]);
+  if (is_dual)
+    name.erase(1, 1);
+
   Wenninger wenn;
   int sym_no;
   if (read_int(name.c_str() + 1, &sym_no)) {
-    if (is_dual)
-      name.erase(1, 1);
     sym_no--;
     if (sym_no < 0 || !wenn.test_valid(sym_no)) {
       if (error_msg)
@@ -900,9 +987,6 @@ int make_resource_wenninger(Geometry &geom, string name, bool is_std,
 int make_resource_uniform_compound(Geometry &geom, string name, bool is_std,
                                    string *error_msg = nullptr)
 {
-  // lower case the name
-  transform(name.begin(), name.end(), name.begin(), ::tolower);
-
   if (name.size() < 3 || name.substr(0, 2) != "uc")
     return -1; // not uniform compound name
 
@@ -922,7 +1006,7 @@ int make_resource_uniform_compound(Geometry &geom, string name, bool is_std,
     if (ret > 0)
       return 1; // fail
   }
-  
+
   // restore unmangled name if parse_uc_args found no parameters
   if (std::isnan(angle) && (n == -1) && (d == -1) && (k == -1))
     name = name_copy;
@@ -981,6 +1065,10 @@ int make_resource_johnson(Geometry &geom, string name, bool is_std,
     return -1; // not johnson name (the "." indicates a likely local file)
                // so the name is not handled
 
+  bool is_dual = strchr("dD", name[1]);
+  if (is_dual)
+    name.erase(1, 1);
+
   Johnson json;
   int sym_no;
   if (read_int(name.c_str() + 1, &sym_no)) {
@@ -994,7 +1082,25 @@ int make_resource_johnson(Geometry &geom, string name, bool is_std,
   else if (strchr(RES_SEPARATOR, name[1])) {
     string expanded = expand_abbrevs(name, j_abbrevs,
                                      sizeof(j_abbrevs) / sizeof(j_abbrevs[0]));
+
+    // check alternate names
+    if (is_dual) {
+      auto it = jd_alt_names.find(to_resource_name(expanded.c_str()));
+      if (it != jd_alt_names.end())
+        expanded = it->second; // set name to the usual name for the model
+    }
+    else {
+      auto it = j_alt_names.find(to_resource_name(expanded.c_str()));
+      if (it != j_alt_names.end())
+        expanded = it->second; // set name to the usual name for the model
+    }
+
     sym_no = json.lookup_sym_no(expanded.c_str());
+
+    // if expanded name turned into a j number (alternate names), must add 1
+    if (strchr("jJ", expanded[0]))
+      sym_no++;
+
     if (sym_no == -1) {
       if (error_msg)
         *error_msg = "invalid Johnson polyhedron name";
@@ -1005,6 +1111,10 @@ int make_resource_johnson(Geometry &geom, string name, bool is_std,
     return -1; // not johnson name
 
   json.get_poly(geom, sym_no);
+
+  // this is here if 'd' was the second character
+  if (is_dual)
+    make_resource_dual(geom, is_std);
 
   if (!is_std)
     set_resource_polygon_color(geom);
@@ -1604,6 +1714,10 @@ Status make_resource_geom(Geometry &geom, string name)
 
   if (!name.size())
     return Status::error("no name given");
+
+  // if name ends in underscore, don't let it pass
+  if (name.substr(name.size() - 1) == "_")
+    return Status::error("not found (or invalid)");
 
   // common spelling difference for hexe(a)contahedron
   name = std::regex_replace(name, std::regex("hexacon"), "hexecon");
