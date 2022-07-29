@@ -131,7 +131,7 @@ void pg_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":he:E:r:R:l:L::a:A:s:o")) != -1) {
+  while ((c = getopt(argc, argv, ":he:E:r:R:l:L:a:A:s:o")) != -1) {
     if (common_opts(c, optopt))
       continue;
 

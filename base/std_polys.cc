@@ -58,7 +58,7 @@ using namespace ::anti;
 // coordinates)
 typedef void (*std_model_func)(Geometry &, bool is_std);
 
-void normalised_face_list(Geometry &geom)
+void normalized_face_list(Geometry &geom)
 {
   geom.orient(1);
   sort(geom.raw_faces().begin(), geom.raw_faces().end());
@@ -1534,7 +1534,7 @@ static void rh_dodecahedron(Geometry &geom, bool is_std = false)
     geom2.transform(Trans3d::scale(2));
     geom.add_verts(geom2.verts());
     geom.add_hull();
-    normalised_face_list(geom);
+    normalized_face_list(geom);
   }
   else {
     make_resource_uniform(geom, "U7", is_std);
@@ -1552,7 +1552,7 @@ static void rh_triacontahedron(Geometry &geom, bool is_std = false)
     geom2.read_resource("std_dod");
     geom.add_verts(geom2.verts());
     geom.add_hull();
-    normalised_face_list(geom);
+    normalized_face_list(geom);
   }
   else {
     make_resource_uniform(geom, "U24", is_std);
@@ -1570,7 +1570,7 @@ static void rh_enneacontahedron(Geometry &geom, bool is_std = false)
   else
     geom2.transform(Trans3d::scale(1 / geom2.verts(0).len()));
   make_zonohedron(geom, geom2.verts());
-  normalised_face_list(geom);
+  normalized_face_list(geom);
   if (!is_std)
     set_resource_polygon_color(geom);
 }
@@ -1588,7 +1588,7 @@ static void rh_hexecontahedron(Geometry &geom, bool is_std = false)
     geom_face.transform(Trans3d::scale(1 / geom_face.edge_vec(0, 1).len()));
   sym_repeat(geom, geom_face, Symmetry(Symmetry::I));
   merge_coincident_elements(geom, "vef", anti::epsilon);
-  normalised_face_list(geom);
+  normalized_face_list(geom);
   if (!is_std)
     set_resource_polygon_color(geom);
 }

@@ -42,13 +42,13 @@ const char RES_SEPARATOR[] = "_ ";
 /// A basic function type that makes a model.
 typedef void (*model_func)(anti::Geometry &);
 
-/// Put face list into a normalised form.
+/// Put face list into a normalized form.
 /**Sometimes a model is created and the face list may not be consistent
  * between machines, perhaps for numeric reasons. This function puts
  * the list in a consistent form.
  * \param geom the geometry whose faces list will be put into the
  * normalized form */
-void normalised_face_list(anti::Geometry &geom);
+void normalized_face_list(anti::Geometry &geom);
 
 anti::Status make_resource_geom(anti::Geometry &geom, std::string name);
 

@@ -20,10 +20,12 @@ XX-XX-22 Adrian Rossiter <adrian@antiprism.com>
             symmetro: added m3 built in color map for better number of sides
             johnson: updated j84-j92 formula constructions
             uniform: substring search removed
-            help: added altnerate names and wenninger numbering sections
+            polygon: orientation changed for models 2 -s2, 2 -s4, 4, 5, 6, 8 
+            help: added alternate names and wenninger numbering sections
             build: minimum autoconf version changed to 0.69
          Fixes
             resource models: large geodesic duals corrected
+            polygon: fix -L, make 1 -s2 when -a is used 
 
 Version 0.29
 01-11-21 Adrian Rossiter <adrian@antiprism.com>

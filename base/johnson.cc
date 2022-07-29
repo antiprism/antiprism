@@ -531,9 +531,6 @@ geom.read_resource("std_snu2");
   //    Trans3d::rotate(Vec3d(0.0, deg2rad(48.550815452315277), 0.0)));
   geom.append(part3);
 */
-
-  geom.set_hull();
-  normalised_face_list(geom);
 }
 
 // snub square antiprism (elementary)
@@ -582,9 +579,6 @@ geom.read_resource("std_snu4");
   part3.transform(Trans3d::rotate(Vec3d(0.0, 0.0, M_PI / 4.0))); // 45 degrees
   geom.append(part3);
 */
-
-  geom.set_hull();
-  normalised_face_list(geom);
 }
 
 // sphenocorona (elementary)
@@ -658,7 +652,7 @@ void J86(Geometry &geom)
 */
 
   geom.set_hull();
-  normalised_face_list(geom);
+  normalized_face_list(geom);
 }
 
 // augmented sphenocorona
@@ -707,7 +701,7 @@ void J88(Geometry &geom)
   geom.append(part2);
 
   geom.set_hull();
-  normalised_face_list(geom);
+  normalized_face_list(geom);
 }
 
 // hebesphenomegacorona (elementary)
@@ -752,7 +746,7 @@ void J89(Geometry &geom)
   geom.append(part2);
 
   geom.set_hull();
-  normalised_face_list(geom);
+  normalized_face_list(geom);
 }
 
 // disphenocingulum (elementary)
@@ -800,7 +794,7 @@ void J90(Geometry &geom)
   geom.append(part3);
 
   geom.set_hull();
-  normalised_face_list(geom);
+  normalized_face_list(geom);
 }
 
 // bilunabirotunda (elementary)
@@ -835,7 +829,7 @@ void J91(Geometry &geom)
   geom.append(part3);
 
   geom.set_hull();
-  normalised_face_list(geom);
+  normalized_face_list(geom);
 }
 
 // triangular hebesphenorotunda (elementary)
@@ -878,7 +872,7 @@ void J92(Geometry &geom)
   geom.append(part2);
 
   geom.set_hull();
-  normalised_face_list(geom);
+  normalized_face_list(geom);
 }
 // clang-format on
 

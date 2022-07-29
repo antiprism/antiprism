@@ -117,9 +117,10 @@ int Polygon::get_acceptable_params(unsigned int &params,
   switch (type) {
   case prism:
     max_subtype = 3;
-    params |= A0;
     if (subtype == sub_prism_crown)
       params |= A1;
+    else
+      params |= A0;
     break;
   case antiprism:
     max_subtype = 5;
@@ -261,10 +262,8 @@ Status Polygon::make_poly(Geometry &geom)
   else
     stat.set_error(msg_str("unknown type (%d) for polygon-based model", type));
 
-  if (stat) {
-    part.orient();
+  if (stat)
     repeat_part(geom, part);
-  }
 
   return stat;
 }
@@ -339,6 +338,9 @@ Status Polygon::make_prism_crown_part(Geometry &geom)
 
 Status Polygon::make_prism_part(Geometry &geom)
 {
+  if (subtype == sub_prism_crown)
+    return make_prism_crown_part(geom);
+
   double twist_ang = twist_angle[0];
   if (value_is_set(twist_ang) || subtype == sub_prism_trapezohedron ||
       subtype == sub_prism_antiprism) {
@@ -353,8 +355,6 @@ Status Polygon::make_prism_part(Geometry &geom)
     ant.set_twist_angle(0, ang - angle() / 2);
     return ant.make_poly(geom);
   }
-  else if (subtype == sub_prism_crown)
-    return make_prism_crown_part(geom);
 
   double ht;
   if (value_is_set(height[0]))
@@ -419,10 +419,10 @@ Status Polygon::make_antiprism_scal_part(Geometry &geom)
   int apex_idx2 = geom.add_vert(Vec3d(0, 0, -apex_ht));
 
   for (int i = 0; i < num_sides; i++) {
-    geom.add_face({i, i + num_sides, apex_idx1});
-    geom.add_face({i + num_sides, i, apex_idx2});
-    geom.add_face({i + num_sides, (i + 1) % num_sides, apex_idx1});
-    geom.add_face({(i + 1) % num_sides, i + num_sides, apex_idx2});
+    geom.add_face({i + num_sides, i, apex_idx1});
+    geom.add_face({i, i + num_sides, apex_idx2});
+    geom.add_face({(i + 1) % num_sides, i + num_sides, apex_idx1});
+    geom.add_face({i + num_sides, (i + 1) % num_sides, apex_idx2});
   }
 
   return Status::ok();
@@ -437,10 +437,10 @@ static void add_scal_faces(Geometry &geom, int v0, int v1, int v2, int v3,
       vcross(geom.verts(v0) - geom.verts(v2), geom.verts(v3) - geom.verts(v1))
           .unit();
   int ap = geom.add_vert(cent + norm * ht2);
-  geom.add_face({v0, v1, ap});
-  geom.add_face({v1, v2, ap});
-  geom.add_face({v2, v3, ap});
-  geom.add_face({v3, v0, ap});
+  geom.add_face({v1, v0, ap});
+  geom.add_face({v2, v1, ap});
+  geom.add_face({v3, v2, ap});
+  geom.add_face({v0, v3, ap});
 }
 
 Status Polygon::make_antiprism_subscal_part(Geometry &geom)
@@ -625,8 +625,8 @@ Status Polygon::make_pyramid_part(Geometry &geom)
   add_polygon(pyr);
   for (int i = 0; i < num_sides; i++) {
     vector<int> face(3);
-    face[0] = i;
-    face[1] = (i + 1) % num_sides;
+    face[0] = (i + 1) % num_sides;
+    face[1] = i;
     face[2] = num_sides;
     pyr.add_face(face);
   }
@@ -680,40 +680,6 @@ Status Polygon::make_pyramid_part(Geometry &geom)
 }
 
 //--------------------------------------------------------------------
-
-/*
-#include <cmath>
-void dipyramid::make_scal_part(Geometry &geom)
-{
-   double twist_ang = std::isnan(twist_angle) ? 0.0 : twist_angle;
-
-   double edge = get_edge();
-   double ring_ht = 0.0;
-   if(subtype==subtype_scalenohedron)
-      ring_ht = sin(twist_ang) * edge/2;
-
-   double R1 = 0.0;
-   double R2 = 0.0;
-   if(subtype==subtype_scalenohedron)
-      R1 = R2 = radius * cos(twist_ang);
-   else if(subtype==subtype_dip_scalenohedron) {
-      double ang = angle();
-      R1 = edge*cos(ang/2 + twist_ang)/sin(ang);
-      R2 = edge*cos(ang/2 - twist_ang)/sin(ang);
-   }
-
-   dipyramid dip(num_sides, step);
-   dip.set_height(height);
-   dip.set_twist_angle();
-   dip.set_subtype(0);
-   dip.make_poly_part(geom);
-   vector<Vec3d> &verts = geom.raw_verts();
-   for(int i=0; i<num_sides/2; i++) {
-      verts[2*i]   = verts[2*i] * R1 + Vec3d(0,0, ring_ht);
-      verts[2*i+1] = verts[2*i+1]*R2 + Vec3d(0,0,-ring_ht);
-   }
-}
-*/
 
 Status Polygon::make_dipyramid_scal_part(Geometry &geom)
 {
@@ -855,10 +821,11 @@ Status Polygon::make_cupola_part(Geometry &geom)
 
   int v_sz = cup_geom.verts().size();
   add_polygon(cup_geom, ht);
-  int off = 0;
+  auto &last_face = cup_geom.faces(cup_geom.faces().size() - 1);
+  std::reverse(last_face.begin(), last_face.end());
   for (int i = 0; i < 2 * num_sides; i++) {
     vector<int> face;
-    int v = (i + n2 - off) % n2;
+    int v = (i + n2) % n2;
     face.push_back(v);
     face.push_back(v_sz + ((i + 1) / 2) % num_sides);
     if (is_even(i))
@@ -987,6 +954,7 @@ Status Polygon::make_snub_antiprism_part(Geometry &geom)
 
   set_edge(0, 1.0);
   add_polygon(geom, H);
+  geom.orient(4); // reverse orientation of face
   vector<int> bond_face;
   for (int i = 0; i < num_sides; i++) {
     int a = num_sides + 2 * i;
@@ -996,16 +964,16 @@ Status Polygon::make_snub_antiprism_part(Geometry &geom)
                   -r * sin((2 * i + 1) * ang_inc) * Vec3d::Y);
     vector<int> face(3);
     face[0] = i;
-    face[1] = a;
-    face[2] = a + 1;
+    face[2] = a;
+    face[1] = a + 1;
     geom.add_face(face);
     face[0] = i;
     face[1] = (i + 1) % num_sides;
     face[2] = a + 1;
     geom.add_face(face);
-    face[2] = (i + 1) % num_sides;
+    face[1] = (i + 1) % num_sides;
     face[0] = a + 1;
-    face[1] = num_sides + (2 * (i + 1)) % (2 * num_sides);
+    face[2] = num_sides + (2 * (i + 1)) % (2 * num_sides);
     geom.add_face(face);
     bond_face.push_back(a);
     bond_face.push_back(a + 1);

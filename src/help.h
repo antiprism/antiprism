@@ -964,6 +964,7 @@ The class names are
    cup:     cupola
    ort:     orthobicupola
    gyr:     gyrobicupola
+   snu:     snub antiprism
 
    e.g. pri5, pyr7/2)";
 
