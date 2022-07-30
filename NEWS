@@ -18,7 +18,7 @@ XX-XX-22 Adrian Rossiter <adrian@antiprism.com>
             off_color_radial: added -V color and option f
                added -E color and options e,f
             symmetro: added m3 built in color map for better number of sides
-            johnson: updated j84-j92 formula constructions
+            johnson: updated j88-j90 formulas. j90 face number changed.
             uniform: substring search removed
             polygon: orientation changed for models 2 -s2, 2 -s4, 4, 5, 6, 8 
             help: added alternate names and wenninger numbering sections
