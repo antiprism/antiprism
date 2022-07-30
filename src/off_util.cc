@@ -1229,7 +1229,7 @@ const char *get_help(const char *name)
   help["ud_syms"] = help_uniform_dual_syms;
   help["johnson_syms"] = help_johnson_syms;
 
-  auto mi = help.find(to_resource_name(name));
+  auto mi = help.find(name);
   if (mi != help.end())
     return mi->second;
   else

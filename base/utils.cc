@@ -386,15 +386,6 @@ void clear_extra_whitespace(string &str)
   str.resize(strlen(&str[0]));     // resize to the length of the C string
 }
 
-string to_resource_name(const char *from)
-{
-  string res_name(from);
-  clear_extra_whitespace(res_name);
-  for (auto &c : res_name)
-    c = tolower(c);
-  return res_name;
-}
-
 void backslash_to_forward(string &path)
 {
   for (char &si : path)

@@ -195,13 +195,6 @@ int read_line(FILE *file, char **line);
 /**\param str the string to convert. */
 void clear_extra_whitespace(std::string &str);
 
-/// Convert to a normalised resource name
-/** Remove leading and trailing space, convert any whitespace to a
- *  single space, make lowercase
- * \param from the string to convert
- * \return the converted string. */
-std::string to_resource_name(const char *from);
-
 /// Open a support file
 /** Tries to open a file by its name, then tries to open it in
  *  \c $ANTIPRISM_DATA/sub_dir, finally tries to open it in

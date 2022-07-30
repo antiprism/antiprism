@@ -107,7 +107,7 @@ void dome_opts::process_command_line(int argc, char **argv)
     case 't': {
       const char *params = "eden|dual|asm|honeycomb|prism";
       string arg_id;
-      if (!get_arg_id(to_resource_name(optarg).c_str(), &arg_id, params))
+      if (!get_arg_id(optarg, &arg_id, params))
         error(msg_str("invalid layering type '%s'", optarg).c_str(), c);
       type = atoi(arg_id.c_str());
       break;

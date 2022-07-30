@@ -66,6 +66,18 @@ void normalized_face_list(Geometry &geom)
 
 namespace {
 
+/// Convert to a normalised resource name
+/** Remove leading and trailing space, convert any whitespace to a
+ *  single space
+ * \param from the string to convert
+ * \return the converted string. */
+string to_resource_name(string from)
+{
+  string res_name(from);
+  clear_extra_whitespace(res_name);
+  return res_name;
+}
+
 string expand_abbrevs(const string &name, const char *abbrevs[][2], size_t last)
 {
   string expanded;
@@ -596,7 +608,7 @@ std::unordered_map<string, string> u_alt_names = {
     {"yog sothoth","u72"},
     {"azathoth","u74"},
 };
-    
+
 // alternative names for uniform polyhedra duals (for names following ud_)
 // alternative name is lowercase, no abbreviations, words separated by spaces
 std::unordered_map<string, string> ud_alt_names = {
@@ -638,7 +650,7 @@ std::unordered_map<string, string> ud_alt_names = {
     {"pentagrammatic concave trapezohedron","u80"},
     // Wenninger names via Wikipedia
     {"hexahedron","u5"},
-    // other alternate names found in Wikipedia    
+    // other alternate names found in Wikipedia
     {"kistetrahedron","u2"},
     {"tetrahexahedron","u8"},
     {"hextetrahedron","u8"},
@@ -841,19 +853,50 @@ const char *j_abbrevs[][2] = {
 };
 // clang-format on
 
+bool process_letter_dual_prefix(string &name, const char *letters,
+                                bool &is_dual)
+{
+  // Prefix format
+  // letter from list optionally followed by d/D, and no mixed case
+  // on success
+  //    if second character in name is d/D, remove it
+  //    is_dual is set to indicate if second character was d/D
+
+  if (name.size() < 2) // minimum length for a model name
+    return false;
+
+  if (!strchr(letters, name[0])) // does name start with a char from letters
+    return false;
+
+  is_dual = strchr("dD", name[1]); // is the second character d/D
+  if (is_dual) {
+    // is dual model name too short, or has mixed case prefix
+    if (name.size() < 3 || isupper(name[0]) != isupper(name[1]))
+      return false;
+    name.erase(1, 1); // remove second character (d/D) from name
+  }
+
+  return true;
+}
+
 int make_resource_uniform(Geometry &geom, string name, bool is_std,
                           string *error_msg = nullptr)
 {
-  if (name.size() < 2 || !strchr("uUkKwW", name[0]) ||
-      name.find('.') != string::npos)
-    return -1; // not uniform name (the "." indicates a likely local file)
-               // so the name is not handled
+  // Model name formats:
+  //   uNumber,  UNumber,  u_Name
+  //   udNumber, UDNumber, ud_Name
+  //   kNumber,  KNumber,  k_Name
+  //   kdNumber, KDNumber, kd_Name
+  //   wNumber,  WNumber,  w_name
+  //   wdNumber, WDNumber, wd_name
 
-  bool is_dual = strchr("dD", name[1]);
+  bool is_dual;
+  if (!process_letter_dual_prefix(name, "uUkKwW", is_dual))
+    return -1; // unhandled, not uniform name
 
   Uniform uni;
   int sym_no;
-  if (read_int(name.c_str() + 1 + is_dual, &sym_no)) {
+  if (read_int(name.c_str() + 1, &sym_no)) {
     // bypass for wenninger stellations, found in next section
     // still need the dD
     if (strchr("wW", name[0]) &&
@@ -862,9 +905,6 @@ int make_resource_uniform(Geometry &geom, string name, bool is_std,
       return -1;
 
     // Uniform, Kaleido, Coxeter, or Wenninger number
-    if (is_dual)
-      name.erase(1, 1);
-
     sym_no = uni.lookup_sym_no(name, is_dual);
     if (sym_no == -1) {
       if (error_msg)
@@ -873,8 +913,9 @@ int make_resource_uniform(Geometry &geom, string name, bool is_std,
       return 1; // fail
     }
   }
-  // if name starts with "u_" prefix
-  else if (strchr(RES_SEPARATOR, name[1 + is_dual])) {
+  else if (strchr(RES_SEPARATOR, name[1])) {
+    if (isupper(name[0]))
+      return -1; // unhandled, upper case prefix, not UC full name
 
     string expanded;
 
@@ -883,7 +924,7 @@ int make_resource_uniform(Geometry &geom, string name, bool is_std,
                                 sizeof(ud_abbrevs) / sizeof(ud_abbrevs[0]));
 
       // check alternative names
-      auto it = ud_alt_names.find(to_resource_name(expanded.c_str()));
+      auto it = ud_alt_names.find(to_resource_name(expanded));
       if (it != ud_alt_names.end())
         expanded = it->second; // set name to the usual name for the model
     }
@@ -892,7 +933,7 @@ int make_resource_uniform(Geometry &geom, string name, bool is_std,
                                 sizeof(u_abbrevs) / sizeof(u_abbrevs[0]));
 
       // check alternative names
-      auto it = u_alt_names.find(to_resource_name(expanded.c_str()));
+      auto it = u_alt_names.find(to_resource_name(expanded));
       if (it != u_alt_names.end())
         expanded = it->second; // set name to the usual name for the model
     }
@@ -925,14 +966,13 @@ int make_resource_uniform(Geometry &geom, string name, bool is_std,
 int make_resource_wenninger(Geometry &geom, string name, bool is_std,
                             string *error_msg = nullptr)
 {
-  if (name.size() < 2 || !strchr("wW", name[0]) ||
-      name.find('.') != string::npos)
-    return -1; // not wenninger name (the "." indicates a likely local file)
-               // so the name is not handled
+  // Model name formats:
+  //   wNumber,  WNumber
+  //   wdNumber, WDNumber
 
-  bool is_dual = strchr("dD", name[1]);
-  if (is_dual)
-    name.erase(1, 1);
+  bool is_dual;
+  if (!process_letter_dual_prefix(name, "wW", is_dual))
+    return -1; // unhandled, not wenninger name
 
   Wenninger wenn;
   int sym_no;
@@ -987,7 +1027,12 @@ int make_resource_wenninger(Geometry &geom, string name, bool is_std,
 int make_resource_uniform_compound(Geometry &geom, string name, bool is_std,
                                    string *error_msg = nullptr)
 {
-  if (name.size() < 3 || name.substr(0, 2) != "uc")
+  // Model name formats:
+  //   ucNumber,  UCNumber,  uc_Name
+  // any model that takes parameters can be followed by _Parameters
+
+  if (name.size() < 3 ||
+      (name.compare(0, 2, "uc") != 0 && name.compare(0, 2, "UC") != 0))
     return -1; // not uniform compound name
 
   double angle = NAN;
@@ -1021,6 +1066,9 @@ int make_resource_uniform_compound(Geometry &geom, string name, bool is_std,
     }
   }
   else if (strchr(RES_SEPARATOR, name[2])) {
+    if (isupper(name[0]))
+      return -1; // unhandled, upper case prefix, not UC full name
+
     string expanded = expand_abbrevs(
         name, uc_abbrevs, sizeof(uc_abbrevs) / sizeof(uc_abbrevs[0]));
     sym_no = uniform_compounds.lookup_sym_no(expanded.c_str());
@@ -1053,21 +1101,21 @@ int make_resource_uniform_compound(Geometry &geom, string name, bool is_std,
 int make_resource_johnson(Geometry &geom, string name, bool is_std,
                           string *error_msg = nullptr)
 {
+  // Model name formats:
+  //   jNumber,  JNumber,  j_Name
+  //   jdNumber, JDNumber, jd_Name
+  // any of these can be followed by _raw
+
+  bool is_dual;
+  if (!process_letter_dual_prefix(name, "jJ", is_dual))
+    return -1; // unhandled, not johnson name
+
   // If model name ends in _raw then don't symmetry align
   bool sym_align = true;
   if (name.size() > 4 && name.substr(name.size() - 4) == "_raw") {
     name.resize(name.size() - 4);
     sym_align = false;
   }
-
-  if (name.size() < 2 || !strchr("jJ", name[0]) ||
-      name.find('.') != string::npos)
-    return -1; // not johnson name (the "." indicates a likely local file)
-               // so the name is not handled
-
-  bool is_dual = strchr("dD", name[1]);
-  if (is_dual)
-    name.erase(1, 1);
 
   Johnson json;
   int sym_no;
@@ -1080,17 +1128,20 @@ int make_resource_johnson(Geometry &geom, string name, bool is_std,
     }
   }
   else if (strchr(RES_SEPARATOR, name[1])) {
+    if (isupper(name[0]))
+      return -1; // unhandled, upper case prefix, not johnson full name
+
     string expanded = expand_abbrevs(name, j_abbrevs,
                                      sizeof(j_abbrevs) / sizeof(j_abbrevs[0]));
 
     // check alternate names
     if (is_dual) {
-      auto it = jd_alt_names.find(to_resource_name(expanded.c_str()));
+      auto it = jd_alt_names.find(to_resource_name(expanded));
       if (it != jd_alt_names.end())
         expanded = it->second; // set name to the usual name for the model
     }
     else {
-      auto it = j_alt_names.find(to_resource_name(expanded.c_str()));
+      auto it = j_alt_names.find(to_resource_name(expanded));
       if (it != j_alt_names.end())
         expanded = it->second; // set name to the usual name for the model
     }
@@ -1155,10 +1206,8 @@ void res_Coloring::f_all_angles(bool as_values)
 int make_resource_geodesic(Geometry &geom, string name, bool is_std,
                            string *error_msg)
 {
-  if (name.size() < 5 || name.substr(0, 4) != "geo_" ||
-      name.find('.') != string::npos)
-    return -1; // not geodesic name (the "." indicates a likely local file)
-               // so the name is not handled
+  if (name.compare(0, 4, "geo_") != 0)
+    return -1; // unhandled, not geodesic name
 
   Geometry base;
   int offset = 4;
@@ -1329,10 +1378,8 @@ static void get_arrow(Geometry &geom, const Symmetry &sym)
 int make_resource_sym(Geometry &geom, string name, bool is_std,
                       string *error_msg = nullptr)
 {
-  if (name.size() < 5 || name.substr(0, 4) != "sym_" ||
-      name.find('.') != string::npos)
-    return -1; // not sym_ name (the "." indicates a likely local file)
-               // so the name is not handled
+  if (name.compare(0, 4, "sym_") != 0)
+    return -1; // unhandles, not sym_ name
 
   Symmetry sym;
   Status stat = sym.init(name.substr(4), Trans3d());
@@ -1355,9 +1402,8 @@ int make_resource_sym(Geometry &geom, string name, bool is_std,
 int make_resource_pgon(Geometry &geom, string name, bool is_std,
                        string *error_msg)
 {
-  if (name.size() < 4 || name.find('.') != string::npos)
-    return -1; // not polygon res name (the "." indicates a likely local file)
-               // so the name is not handled
+  if (name.size() < 4)
+    return -1; // unhandles, not a polygon res name
 
   int num_sides;
   int step = 1;
@@ -1383,23 +1429,23 @@ int make_resource_pgon(Geometry &geom, string name, bool is_std,
   Polygon pgon(num_sides, step);
   int type;
   int subtype = Polygon::sub_default;
-  if (strcasecmp("pri", pnam) == 0)
+  if (strcmp("pri", pnam) == 0)
     type = Polygon::prism;
-  else if (strcasecmp("ant", pnam) == 0)
+  else if (strcmp("ant", pnam) == 0)
     type = Polygon::antiprism;
-  else if (strcasecmp("pyr", pnam) == 0)
+  else if (strcmp("pyr", pnam) == 0)
     type = Polygon::pyramid;
-  else if (strcasecmp("dip", pnam) == 0)
+  else if (strcmp("dip", pnam) == 0)
     type = Polygon::dipyramid;
-  else if (strcasecmp("cup", pnam) == 0)
+  else if (strcmp("cup", pnam) == 0)
     type = Polygon::cupola;
-  else if (strcasecmp("ort", pnam) == 0)
+  else if (strcmp("ort", pnam) == 0)
     type = Polygon::orthobicupola;
-  else if (strcasecmp("gyr", pnam) == 0)
+  else if (strcmp("gyr", pnam) == 0)
     type = Polygon::gyrobicupola;
-  else if (strcasecmp("snu", pnam) == 0)
+  else if (strcmp("snu", pnam) == 0)
     type = Polygon::snub_antiprism;
-  else if (strcasecmp("pol", pnam) == 0) {
+  else if (strcmp("pol", pnam) == 0) {
     type = Polygon::dihedron;
     subtype = Polygon::sub_dihedron_polygon;
   }
@@ -1424,10 +1470,8 @@ int make_resource_pgon(Geometry &geom, string name, bool is_std,
 int make_resource_schwarz(Geometry &geom, string name, bool is_std,
                           string *error_msg = nullptr)
 {
-  if (name.size() < (7 + 5) || name.substr(0, 7) != "schwarz" ||
-      name.find('.') != string::npos)
-    return -1; // not schwarz name (the "." indicates a likely local file)
-               // so the name is not handled
+  if (name.size() < (7 + 5) || name.compare(0, 7, "schwarz") != 0)
+    return -1; // unhandles, not schwarz name
 
   if (name.find(':') != string::npos || name.find('|') != string::npos) {
     if (error_msg)
@@ -1474,10 +1518,8 @@ int make_resource_schwarz(Geometry &geom, string name, bool is_std,
 static int make_resource_wythoff(Geometry &geom, string name, bool is_std,
                                  string *error_msg = nullptr)
 {
-  if (name.size() < (7 + 5) || name.substr(0, 7) != "wythoff" ||
-      name.find('.') != string::npos)
-    return -1; // not wythoff name (the "." indicates a likely local file)
-               // so the name is not handled
+  if (name.size() < (7 + 5) || name.compare(0, 7, "wythoff") != 0)
+    return -1; // unhandled, not wythoff name
 
   string symbol_str = name.substr(7);
   for (char &i : symbol_str) {
@@ -1675,10 +1717,6 @@ static void szilassi(Geometry &geom, bool is_std = false)
 int make_resource_misc_poly(Geometry &geom, string name, bool is_std,
                             string * /*error_msg = nullptr*/)
 {
-  if (name.find('.') != string::npos)
-    return -1; // not misc poly name (the "." indicates a likely local file)
-               // so the name is not handled
-
    map<string, std_model_func> models;
    models["rhombic_dodecahedron"]        = rh_dodecahedron;
    models["rh_dodecahedron"]             = rh_dodecahedron;
@@ -1735,27 +1773,30 @@ Status make_resource_geom(Geometry &geom, string name)
     name = name.substr(4);
 
   // Look for an internal alternative name
-  auto it = alt_names.find(to_resource_name(name.c_str()));
+  auto it = alt_names.find(to_resource_name(name));
   if (it != alt_names.end()) {
     name = it->second; // set name to the usual name for the model
     process_for_dual(name, make_dual);
   }
 
-  vector<int (*)(Geometry &, string, bool, string *)> make_funcs = {
-      make_resource_misc_poly,        make_resource_pgon,
-      make_resource_uniform,          make_resource_wenninger,
-      make_resource_uniform_compound, make_resource_johnson,
-      make_resource_geodesic,         make_resource_wythoff,
-      make_resource_schwarz,          make_resource_sym};
+  // Only check model name if it has two or more chars, and no '.'
+  if (name.size() > 1 && name.find('.') == string::npos) {
+    vector<int (*)(Geometry &, string, bool, string *)> make_funcs = {
+        make_resource_misc_poly,        make_resource_pgon,
+        make_resource_uniform,          make_resource_wenninger,
+        make_resource_uniform_compound, make_resource_johnson,
+        make_resource_geodesic,         make_resource_wythoff,
+        make_resource_schwarz,          make_resource_sym};
 
-  for (auto make_func : make_funcs) {
-    int ret = make_func(geom, name, is_std, &error_msg);
-    if (ret == 0) {
-      geom_ok = true;
-      break;
+    for (auto make_func : make_funcs) {
+      int ret = make_func(geom, name, is_std, &error_msg);
+      if (ret == 0) {
+        geom_ok = true;
+        break;
+      }
+      else if (ret > 0)
+        return Status::error(error_msg);
     }
-    else if (ret > 0)
-      return Status::error(error_msg);
   }
 
   // Catch any failure to make a valid geometry
