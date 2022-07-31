@@ -428,12 +428,12 @@ Isohedral Deltahedra Options
   -a <ang>  angle (-c c,d,g,h,i,j,k)
   -n <n/d>  n/d (d is optional) (-c a,c,g,h,k,l and -d)
               note: for option -d and compound cases c, k, l:
-              n and d must be such that (6/5 < n/d < 6)
+              n and d must be such that (6/5 <= n/d <= 6)
   -k <int>  in special cases, for number of constituents (-c a,c,g,h,k,l)
   -s <int>  in special cases, for subtypes (default: 1) (-c b,e,f,m,o)
 
 Isohedral Deltahedra Special Cases
-  -d        dipyramid of n/d using -n n/d (infinite set) where 6/5 < n/d < 6
+  -d        dipyramid of n/d using -n n/d (infinite set) where 6/5 <= n/d <= 6
   -c <type> compound cases (a thru f from Shephard's paper)
               a - tetrahedron repeated k times, evenly spaced
                      when k=1 tetrahedron, when k=2 Stella Octangula
