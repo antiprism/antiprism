@@ -433,7 +433,8 @@ Isohedral Deltahedra Options
   -s <int>  in special cases, for subtypes (default: 1) (-c b,e,f,m,o)
 
 Isohedral Deltahedra Special Cases
-  -d        dipyramid of n/d using -n n/d (infinite set)
+  -d        dipyramid of n/d using -n n/d (infinite set) where d is less than n
+              and n/d is greater than 2 and n/d is less than 6
   -c <type> compound cases (a thru f from Shephard's paper)
               a - tetrahedron repeated k times, evenly spaced
                      when k=1 tetrahedron, when k=2 Stella Octangula
