@@ -428,13 +428,12 @@ Isohedral Deltahedra Options
   -a <ang>  angle (-c c,d,g,h,i,j,k)
   -n <n/d>  n/d (d is optional) (-c a,c,g,h,k,l and -d)
               note: for option -d and compound cases c, k, l:
-              n and d must be such that (2 < n/d < 6)
+              n and d must be such that (6/5 < n/d < 6)
   -k <int>  in special cases, for number of constituents (-c a,c,g,h,k,l)
   -s <int>  in special cases, for subtypes (default: 1) (-c b,e,f,m,o)
 
 Isohedral Deltahedra Special Cases
-  -d        dipyramid of n/d using -n n/d (infinite set) where d is less than n
-              and n/d is greater than 2 and n/d is less than 6
+  -d        dipyramid of n/d using -n n/d (infinite set) where 6/5 < n/d < 6
   -c <type> compound cases (a thru f from Shephard's paper)
               a - tetrahedron repeated k times, evenly spaced
                      when k=1 tetrahedron, when k=2 Stella Octangula
@@ -616,8 +615,8 @@ void id_opts::process_command_line(int argc, char **argv)
     double decimal = (double)n / d;
     // report fractional value
     fprintf(stderr, "n/d: %d/%d = %.17lf\n", n, d, decimal);
-    if ((decimal <= 2.0) || (decimal >= 6.0))
-      error("2 < n/d < 6 is enforced", 'n');
+    if ((decimal < 6.0/5.0) || (decimal > 6.0))
+      error("6/5 <= n/d <= 6 is enforced", 'n');
   }
   else if (n != 0)
     warning("n/d is ignored", 'n');
@@ -1017,7 +1016,7 @@ void make_delta_dipyramid(Geometry &geom, const int n, const int d,
   Vec3d C = Vec3d(0, 0, 1);
   double alpha = 1 / (2.0 * sin((M_PI * d) / n));
   double beta = alpha;
-  double gamma = sqrt(1.0 - alpha * alpha);
+  double gamma = (alpha >= 1.0) ? 0.0 : sqrt(1.0 - alpha * alpha);
 
   // force triangle_only, verbose to false
   make_poly(geom, sym_type, true, (triangle_only ? verbose : false), A, B, C,
