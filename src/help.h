@@ -269,8 +269,17 @@ const char *help_wenninger = R"(Wenninger Number
 ================
 Polyhedra can be listed by Wenninger Number and includes Wenninger Stellations
 
-o   WD followed by a W number will produce a dual e.g. wd12
+o   A W number e.g. w8
+
+o   wd followed by a W number will produce a dual e.g. wd12
        except for stellations (w19, w23-w40, w42-w66)
+       
+o   w_ followed by a name (see the list below) Use '_' instead of
+    a space to avoid having to quote the model name.
+    
+o   w_ can take all the abbreviations of the uniform models
+    
+o   wd_ can take all the abbreviations of the uniform duals
 
 Wenninger List:
 
@@ -497,7 +506,7 @@ const char *help_uniform_duals = R"(Uniform Dual Polyhedra
 ======================
 Uniform dual polyhedra can be specified by
 
-o   UD followed by a U number e.g. ud8
+o   ud followed by a U number e.g. ud8
 
 o   ud_ followed by a name (see the list below) Use '_' instead of
     a space to avoid having to quote the model name.
@@ -528,18 +537,16 @@ o   ud_ followed by a name (see the list below) Use '_' instead of
        hexac:    hexacontahedron
        icositet: icositetrahedron
 
-    e.g. u_truncated_octahedron, u_tr_octahedron, u_tr_oct, u_tr_o
+    e.g. ud_triakis_tetrahedron, ud_tri_tetrahedron, ud_tri_tet
 
 o   Common polyhedra can be given by name only (see help for
-    'common_polys' for list) e.g. tet, cube
+    'common_polys' for list) e.g. triakis_tetrahedron, triakis_octahedron
 
-o   Uniform prism are named 'pri' followed by the polygon
-    fraction e.g pri5, pri5/2
+o   Uniform dipyramids are named 'dip' followed by the polygon
+    fraction. dip3, dip4, and dip5 are uniform. n/d are uniform where
+    d is less than n and n/d is greater than 2 and n/d is less than 6
 
-o   Uniform antiprism are named 'ant' followed by the polygon
-    fraction e.g ant5, ant5/2, ant5/3
-
-Uniform List:
+Uniform Dual List:
 
 UD No. Name
 ------ ------------------------
@@ -759,10 +766,10 @@ Johnson polyhedra can be specified by a
 
 o   A J number e.g. j8
 
+o   jd followed by a J number will produce a dual e.g. jd37
+
 o   j_ followed by a name (see the list below) Use '_' instead of
     a space to avoid having to quote the model name.
-    
-o   JD followed by a J number will produce a dual e.g. jd37
 
     When giving a name the following abbreviations can be used
        tri:   triangular
@@ -946,8 +953,7 @@ o   jd_ followed by the name (see the list below) Use '_' instead of
       alternate truncated hexagonal bipyramid          j57_d
       gyroelongated pentagonal bifrustum               j58_d
       elongated gyrobifastigium                        j84_d
-      truncated snub disphenoid                        j90_d
-    )";
+      truncated snub disphenoid                        j90_d)";
 
 const char *help_polygon = R"(Polygon-based Polyhedra
 =======================
