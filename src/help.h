@@ -174,11 +174,11 @@ o   u_ followed by a name (see the list below) Use '_' instead of
 o   Common polyhedra can be given by name only (see help for
     'common_polys' for list) e.g. tet, cube
 
-o   Uniform prism are named 'pri' followed by the polygon
+o   Uniform prisms are named 'pri' followed by the polygon
     fraction e.g pri5, pri5/2
 
-o   Uniform antiprism are named 'ant' followed by the polygon
-    fraction e.g ant5, ant5/2, ant5/3
+o   Uniform antiprisms are named 'ant' followed by the polygon fraction
+    e.g ant5, ant5/2, ant5/3  To be regular, n/d must be greater than 3/2
 
 Uniform List:
 
@@ -270,16 +270,6 @@ const char *help_wenninger = R"(Wenninger Number
 Polyhedra can be listed by Wenninger Number and includes Wenninger Stellations
 
 o   A W number e.g. w8
-
-o   wd followed by a W number will produce a dual e.g. wd12
-       except for stellations (w19, w23-w40, w42-w66)
-       
-o   w_ followed by a name (see the list below) Use '_' instead of
-    a space to avoid having to quote the model name.
-    
-o   w_ can take all the abbreviations of the uniform models
-    
-o   wd_ can take all the abbreviations of the uniform duals
 
 Wenninger List:
 
@@ -542,9 +532,8 @@ o   ud_ followed by a name (see the list below) Use '_' instead of
 o   Common polyhedra can be given by name only (see help for
     'common_polys' for list) e.g. triakis_tetrahedron, triakis_octahedron
 
-o   Uniform dipyramids are named 'dip' followed by the polygon
-    fraction. dip3, dip4, and dip5 are uniform. n/d are uniform where
-    d is less than n and n/d is greater than 2 and n/d is less than 6
+o   Uniform dipyramids are named 'dip' followed by the polygon fraction
+    e.g dip5, dip5/2, dip5/3  To be regular, 6/5 <= n/d <= 6
 
 Uniform Dual List:
 
@@ -765,8 +754,6 @@ triangular hebesphenorotunda (J92)
 Johnson polyhedra can be specified by a
 
 o   A J number e.g. j8
-
-o   jd followed by a J number will produce a dual e.g. jd37
 
 o   j_ followed by a name (see the list below) Use '_' instead of
     a space to avoid having to quote the model name.
