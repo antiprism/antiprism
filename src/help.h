@@ -178,7 +178,7 @@ o   Uniform prisms are named 'pri' followed by the polygon
     fraction e.g pri5, pri5/2
 
 o   Uniform antiprisms are named 'ant' followed by the polygon fraction
-    e.g ant5, ant5/2, ant5/3  To be regular, n/d must be greater than 3/2
+    e.g ant5, ant5/2, ant5/3
 
 Uniform List:
 
@@ -532,8 +532,11 @@ o   ud_ followed by a name (see the list below) Use '_' instead of
 o   Common polyhedra can be given by name only (see help for
     'common_polys' for list) e.g. triakis_tetrahedron, triakis_octahedron
 
-o   Uniform dipyramids are named 'dip' followed by the polygon fraction
-    e.g dip5, dip5/2, dip5/3  To be regular, 6/5 <= n/d <= 6
+o   The duals of uniform prisms are named 'pri' followed by the polygon
+    fraction and ending with '_d' e.g pri5_d, pri5/2_d
+
+o   The duals of uniform antiprisms are named 'ant' followed by the polygon
+    fraction and ending with '_d' e.g ant5_d, ant5/2_d, ant5/3_d
 
 Uniform Dual List:
 
