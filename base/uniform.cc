@@ -202,16 +202,6 @@ void calculate_coords(Geometry &geom, vector<Vec3d> &vlist, int permute_type, in
    }
 }
 
-void add_faces(Geometry &geom, int face_size, int face_count, int faces[])
-{
-   vector<int> face(face_size);
-   for(int i=0; i<face_count; i++) {
-      for(int j=0; j<face_size; j++)
-         face[j] = faces[face_size*i + j];
-      geom.add_face(face);
-   }
-}
-
 // u04 u05
 void octahedron_vertex_set(Geometry &geom)
 {

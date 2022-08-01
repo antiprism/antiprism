@@ -432,6 +432,13 @@ int find_edge_in_edge_list(const std::vector<std::vector<int>> &edges,
  * \return the unmatched edges. */
 std::vector<std::vector<int>> find_unmatched_edges(const Geometry &geom);
 
+/// add a list of faces
+/**\param geom the geometry
+ * \face_size in edges
+ * \face_count number of faces in list
+ * \list of faces
+ * \return the unmatched edges. */
+void add_faces(Geometry &geom, int face_size, int face_count, int faces[]);
 } // namespace anti
 
 #endif // GEOMETRYUTILS_H

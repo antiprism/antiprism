@@ -265,4 +265,14 @@ bool check_convexity(Geometry geom)
   return check_coincidence(geom, geom_hull);
 }
 
+void add_faces(Geometry &geom, int face_size, int face_count, int faces[])
+{
+   vector<int> face(face_size);
+   for(int i=0; i<face_count; i++) {
+      for(int j=0; j<face_size; j++)
+         face[j] = faces[face_size*i + j];
+      geom.add_face(face);
+   }
+}
+
 } // namespace anti

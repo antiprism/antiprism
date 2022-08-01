@@ -53,16 +53,7 @@ using std::vector;
 
 using namespace ::anti;
 
-/// A basic function type that makes a model that has a normal form
-// (e.g. with unit edges) and a standard form (e.g with commonly used
-// coordinates)
 typedef void (*std_model_func)(Geometry &, bool is_std);
-
-void normalized_face_list(Geometry &geom)
-{
-  geom.orient(1);
-  sort(geom.raw_faces().begin(), geom.raw_faces().end());
-}
 
 namespace {
 
@@ -1565,6 +1556,7 @@ static int make_resource_wythoff(Geometry &geom, string name, bool is_std,
 
 }; // anonymous namespace
 
+// clang-format off
 static void rh_dodecahedron(Geometry &geom, bool is_std = false)
 {
   geom.clear_all();
@@ -1575,8 +1567,13 @@ static void rh_dodecahedron(Geometry &geom, bool is_std = false)
     geom2.read_resource("std_oct");
     geom2.transform(Trans3d::scale(2));
     geom.add_verts(geom2.verts());
-    geom.add_hull();
-    normalized_face_list(geom);
+    
+    // faces in order of earlier builds
+    int faces4_0[] = { 6,9,0,11, 9,1,12,7, 8,4,11,2, 3,8,5,12,
+                      9,6,13,1, 0,9,7,10, 4,8,3,13, 8,2,10,5,
+                      6,11,4,13, 11,0,10,2, 12,1,13,3, 7,12,5,10,
+                      };
+    add_faces(geom, 4, 12, faces4_0);
   }
   else {
     make_resource_uniform(geom, "U7", is_std);
@@ -1593,8 +1590,17 @@ static void rh_triacontahedron(Geometry &geom, bool is_std = false)
     geom.add_verts(geom2.verts());
     geom2.read_resource("std_dod");
     geom.add_verts(geom2.verts());
-    geom.add_hull();
-    normalized_face_list(geom);
+    
+    // faces in order of earlier builds
+    int faces4_0[] = { 0,27,8,29, 28,1,31,12, 13,25,2,22, 21,3,26,14,
+                      16,23,4,24, 20,5,30,6, 27,0,25,7, 8,27,15,21,
+                      1,28,17,22, 28,12,26,9, 0,29,18,25, 29,8,21,10,
+                      31,1,22,11, 12,31,19,26, 25,13,23,7, 3,21,15,24,
+                      13,22,17,23, 26,3,24,9, 2,25,18,20, 21,14,30,10,
+                      22,2,20,11, 14,26,19,30, 23,16,27,7, 16,24,15,27,
+                      4,23,17,28, 24,4,28,9, 5,20,18,29, 30,5,29,10,
+                      20,6,31,11, 6,30,19,31, };
+    add_faces(geom, 4, 30, faces4_0);
   }
   else {
     make_resource_uniform(geom, "U24", is_std);
@@ -1612,7 +1618,34 @@ static void rh_enneacontahedron(Geometry &geom, bool is_std = false)
   else
     geom2.transform(Trans3d::scale(1 / geom2.verts(0).len()));
   make_zonohedron(geom, geom2.verts());
-  normalized_face_list(geom);
+
+  geom.clear(FACES);
+  // faces in order of earlier builds
+  int faces4_0[] = { 0,2,5,11, 1,57,55,4, 4,3,11,5, 4,5,2,1,
+                    6,54,34,38, 7,2,0,8, 8,10,23,7, 9,11,36,77,
+                    10,8,76,87, 11,9,8,0, 12,13,24,28, 12,46,32,13,
+                    14,13,53,62, 15,67,68,21, 17,23,69,67, 18,16,2,19,
+                    18,58,57,16, 19,2,7,23, 19,23,17,18, 21,27,26,22,
+                    21,68,70,27, 22,62,64,21, 24,13,14,26, 26,29,28,24,
+                    29,26,25,30, 30,31,28,29, 30,71,86,83, 30,83,82,31,
+                    32,46,35,52, 33,40,38,34, 33,51,52,35, 34,54,51,33,
+                    35,46,48,33, 36,11,41,39, 37,39,41,38, 38,3,4,6,
+                    38,40,45,37, 38,41,11,3, 39,78,77,36, 42,28,31,82,
+                    43,39,37,45, 44,46,49,47, 45,48,46,44, 45,50,79,43,
+                    46,12,28,49, 47,42,82,80, 48,45,40,33, 49,28,42,47,
+                    50,45,44,47, 51,54,56,52, 52,53,13,32, 52,65,62,53,
+                    54,6,4,55, 56,54,59,63, 57,1,2,16, 57,59,54,55,
+                    58,18,20,61, 58,61,66,57, 59,57,66,63, 62,22,26,14,
+                    62,60,61,64, 63,60,62,65, 63,65,52,56, 64,61,15,21,
+                    66,61,60,63, 67,15,61,20, 67,20,18,17, 67,69,73,72,
+                    70,25,26,27, 70,71,30,25, 72,70,68,67, 73,69,23,74,
+                    73,75,70,72, 73,89,86,75, 74,87,89,73, 75,86,71,70,
+                    77,76,8,9, 77,90,87,76, 78,39,43,79, 79,50,47,80,
+                    79,81,77,78, 80,82,84,79, 81,79,84,88, 83,86,91,82,
+                    84,82,91,88, 87,74,23,10, 88,85,87,90, 89,87,85,86,
+                    90,77,81,88, 91,86,85,88, };
+  add_faces(geom, 4, 90, faces4_0);
+
   if (!is_std)
     set_resource_polygon_color(geom);
 }
@@ -1630,12 +1663,31 @@ static void rh_hexecontahedron(Geometry &geom, bool is_std = false)
     geom_face.transform(Trans3d::scale(1 / geom_face.edge_vec(0, 1).len()));
   sym_repeat(geom, geom_face, Symmetry(Symmetry::I));
   merge_coincident_elements(geom, "vef", anti::epsilon);
-  normalized_face_list(geom);
+
+  geom.clear(FACES);
+  // faces in order of earlier builds  
+  int faces4_0[] = { 0,1,14,45, 1,2,39,36, 2,3,52,53, 2,23,20,39,
+                    3,2,1,0, 3,30,55,52, 4,5,10,47, 5,6,43,40,
+                    6,7,48,49, 6,19,16,43, 7,6,5,4, 7,34,51,48,
+                    8,9,38,21, 9,10,41,56, 10,11,46,47, 11,10,9,8,
+                    11,22,33,46, 12,13,42,17, 13,14,37,58, 14,15,44,45,
+                    15,14,13,12, 15,18,29,44, 16,17,42,43, 17,18,15,12,
+                    18,19,26,27, 18,27,28,29, 19,18,17,16, 20,21,38,39,
+                    21,22,11,8, 22,23,24,25, 22,25,32,33, 23,22,21,20,
+                    29,30,45,44, 30,31,59,55, 31,30,29,28, 31,50,60,59,
+                    33,34,47,46, 34,35,61,51, 35,34,33,32, 35,54,60,61,
+                    36,37,14,1, 37,38,57,58, 39,38,37,36, 40,41,10,5,
+                    41,42,57,56, 43,42,41,40, 45,30,3,0, 47,34,7,4,
+                    49,26,19,6, 49,50,27,26, 50,31,28,27, 50,51,61,60,
+                    51,50,49,48, 53,24,23,2, 53,54,25,24, 54,35,32,25,
+                    54,55,59,60, 55,54,53,52, 56,57,38,9, 58,57,42,13,
+                    };
+  add_faces(geom, 4, 60, faces4_0);
+
   if (!is_std)
     set_resource_polygon_color(geom);
 }
 
-// clang-format off
 // http://www.math.unm.edu/~vageli/papers/FLEX/Szilassi.pdf
 static void csaszar(Geometry &geom, bool is_std = false)
 {
