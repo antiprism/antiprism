@@ -330,6 +330,17 @@ Vec3d face_normal_by_type(const Geometry &geom, const int f_idx,
 /// an abbreviated wrapper for planarization with make_regular_faces
 /**\param base_geom geometry to planarize.
  * \param it_ctrl interation control.
+ * \param factor amount of vertex movement which can change
+ * \param factor_max maximum amount of vertex movement
+ * \param initial_point_type c - edge centroids, n - edge near points
+ * \param sym a symmetry to follow which speeds up calculations.
+ * \return status, evaluates to \c true completed, otherwise false.*/
+Status make_canonical(Geometry &geom, IterationControl it_ctrl, double factor,
+                      double factor_max, char initial_point_type, Symmetry sym);
+
+/// an abbreviated wrapper for planarization with make_regular_faces
+/**\param base_geom geometry to planarize.
+ * \param it_ctrl interation control.
  * \param plane_factor small number to scale plane adjustments.
  * \param sym a symmetry to follow which speeds up calculations.
  * \return status, evaluates to \c true completed, otherwise false.*/
