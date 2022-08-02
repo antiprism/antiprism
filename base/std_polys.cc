@@ -215,8 +215,10 @@ std::unordered_map<string, string> alt_names = {
     {"pent_dod", "u25_d"},
     {"deltoidal_hexecontahedron", "u27_d"},
     {"delt_hexec", "u27_d"},
+    {"delt_hexac", "u27_d"},
     {"trapezoidal_hexecontahedron", "u27_d"},
     {"trap_hexec", "u27_d"},
+    {"trap_hexac", "u27_d"},
     {"hexakisicosahedron", "u28_d"},
     {"hexakis_icosahedron", "u28_d"},
     {"hex_ico", "u28_d"},
@@ -225,6 +227,7 @@ std::unordered_map<string, string> alt_names = {
     {"disd_tri", "u28_d"},
     {"pentagonal_hexecontahedron", "u29_d"},
     {"pen_hexec", "u29_d"},
+    {"pen_hexac", "u29_d"},
 
     // Bowers short names for Uniforms
     {"tet", "u1"},
