@@ -13,6 +13,7 @@ XX-XX-22 Adrian Rossiter <adrian@antiprism.com>
             wythoff: -C add vertex colouring, 'value' method removed, 'index'
                method colours by value. Add -m colormap option.
             conway: added element colorings -V n,s,u -E s,v,f and -F v
+               added planarization options make_canonical, no planarization
             miller: added -V f,n
             stellate: added -V f,n
             off_color_radial: added -V color and option f

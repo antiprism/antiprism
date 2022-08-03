@@ -1260,9 +1260,10 @@ Conway Notation Options
               set if seed of Z is detected
   -r        execute operations in reverse order (left to right)
   -u        make final product be of averge unit edge length
-  -p <opt>  planarize method (default: b)
+  -p <opt>  planarize method (default: b, forced to x for open geometry)
                b - base/dual (reciprocate on face centroids magnitude squared)
                c - canonicalize
+               x - none
   -i <itrs> maximum planarize iterations. -1 for unlimited (default: %d)
             WARNING: unstable models may not finish unless -i is set
 
@@ -1419,10 +1420,10 @@ void cn_opts::process_command_line(int argc, char **argv)
     }
 
     case 'p':
-      if (strlen(optarg) == 1 && strchr("bc", int(*optarg)))
+      if (strlen(optarg) == 1 && strchr("bcx", int(*optarg)))
         planarize_method = *optarg;
       else
-        error("planarize method type must be b or c", c);
+        error("planarize method type must be b, c or x", c);
       break;
 
     case 'l':
@@ -1563,7 +1564,7 @@ void cn_opts::process_command_line(int argc, char **argv)
               'g');
       hart_mode = false;
     }
-    planarize_method = 'a';
+    planarize_method = 'x';
   }
 
   if (hart_mode) {
@@ -1724,13 +1725,13 @@ void cn_planarize(Geometry &geom, char planarize_method, const cn_opts &opts)
 {
   // if the model becomes open mid-processing, sand and fill planar works
   GeometryInfo info(geom);
-  if ((planarize_method != 'a') && !info.is_closed()) {
-    planarize_method = 'a';
+  if ((planarize_method != 'x') && !info.is_closed()) {
+    planarize_method = 'x';
   }
 
   Symmetry sym;
   // opts.print_status_or_exit(sym.init(geom), 'y');
-  if (opts.it_ctrl.get_max_iters() != 0) {
+  if ((opts.it_ctrl.get_max_iters() != 0) && (planarize_method != 'x')) {
     verbose("_", opts, (int)geom.faces().size());
     if (planarize_method == 'b')
       planarize_bd(geom, opts.it_ctrl);
@@ -1746,9 +1747,6 @@ void cn_planarize(Geometry &geom, char planarize_method, const cn_opts &opts)
       double factor_max = 50.0;
       make_canonical(geom, opts.it_ctrl, factor / 100, factor_max / 100,
                      initial_point_type, sym);
-    }
-    else if (planarize_method == 'a') {
-      planarize_unit(geom, opts.it_ctrl);
     }
   }
 }
@@ -2151,9 +2149,9 @@ void orient_planar(Geometry &geom, bool &is_orientable,
   is_orientable = info.is_orientable();
   if (!is_orientable) {
     verbose("@", opts);
-    // default planarization method for non-orientable geometry set to unit edge
-    if (opts.planarize_method != 'a') {
-      planarize_method = 'a';
+    // no planarization for non-orientable geometry
+    if (opts.planarize_method != 'x') {
+      planarize_method = 'x';
     }
   }
   else
@@ -2512,8 +2510,8 @@ int main(int argc, char *argv[])
   // if input model is not closed, Base/Dual Planarization will not work.
   // Switch to unit edge
   GeometryInfo info(geom);
-  if ((opts.planarize_method != 'a') && !info.is_closed()) {
-    opts.planarize_method = 'a';
+  if ((opts.planarize_method != 'x') && !info.is_closed()) {
+    opts.planarize_method = 'x';
   }
 
   do_operations(geom, opts);

@@ -72,10 +72,11 @@ execute operations in reverse order (left to right)
 make final product be of averge unit edge length
 .TP
 \fB\-p\fR <opt>
-planarize method (default: b)
+planarize method (default: b, forced to x for open geometry)
 .IP
 b \- base/dual (reciprocate on face centroids magnitude squared)
 c \- canonicalize
+x \- none
 .HP
 \fB\-i\fR <itrs> maximum planarize iterations. \fB\-1\fR for unlimited (default: 1000)
 .IP
