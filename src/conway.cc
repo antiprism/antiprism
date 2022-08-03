@@ -1564,6 +1564,8 @@ void cn_opts::process_command_line(int argc, char **argv)
               'g');
       hart_mode = false;
     }
+    if (planarize_method != 'x')
+      warning("in tile mode, planarization changed to none", 'p');
     planarize_method = 'x';
   }
 
@@ -1723,7 +1725,7 @@ void unitize_vertex_radius(Geometry &geom)
 
 void cn_planarize(Geometry &geom, char planarize_method, const cn_opts &opts)
 {
-  // if the model becomes open mid-processing, sand and fill planar works
+  // if the model becomes open mid-processing, turn off planarization
   GeometryInfo info(geom);
   if ((planarize_method != 'x') && !info.is_closed()) {
     planarize_method = 'x';
@@ -2511,7 +2513,11 @@ int main(int argc, char *argv[])
   // Switch to unit edge
   GeometryInfo info(geom);
   if ((opts.planarize_method != 'x') && !info.is_closed()) {
+    if (opts.planarize_method != 'x')
+      opts.warning("open model detected. planarization changed to none", 'p');
     opts.planarize_method = 'x';
+    // turn on tile mode so truncate works correctly
+    opts.tile_mode = true;
   }
 
   do_operations(geom, opts);
