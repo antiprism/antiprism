@@ -1165,7 +1165,9 @@ int get_winding_number_polygon(const Geometry &polygon,
     psz = pts.size();
   }
 
-  Vec3d norm = face_normal.outward().unit();
+  // translate normal with face center
+  Vec3d fc = pgon.face_cent(0);
+  Vec3d norm = face_normal.outward().unit() + fc;
   double z = 1;
   if (find_direction) {
     double test = 0.0;
@@ -1178,12 +1180,11 @@ int get_winding_number_polygon(const Geometry &polygon,
   }
 
   // rotate polygon to face forward
-  Trans3d trans = Trans3d::rotate(norm + pgon.face_cent(0), Vec3d(0, 0, z));
+  Trans3d trans = Trans3d::rotate(norm - fc, Vec3d(0, 0, z));
   pgon.transform(trans);
 
   // also rotate points per matrix
   Geometry vgeom;
-  ;
   for (unsigned int i = 0; i < psz; i++)
     vgeom.add_vert(pts[i]);
   vgeom.transform(trans);

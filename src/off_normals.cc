@@ -49,6 +49,7 @@ public:
   string ifile;
   string ofile;
 
+  char normal_position = 'p';         // a to translate normals
   bool unit_normals = false;          // use unit normals
   char force_normals_polarity = '\0'; // for a polarity of the normals
   string show_pointing = "oih";       // default to show outward, inward, hemi
@@ -92,7 +93,8 @@ Options
   -o <file> write output to file (default: write to standard output)
 
 Scene Options
-  -u        unit normals  (positional normals otherwise)
+  -t        normal position. t - translate, p - positional (default: p)
+  -u        unit normals
   -e        connect to element centroid (for reference)
   -p <opt>  force polarity. o - outward, i - inward
                r - reverse both inward and outward
@@ -134,11 +136,18 @@ void off_normals_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":huep:i:s:d:c:ax:O:I:H:E:B:C:l:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":ht:uep:i:s:d:c:ax:O:I:H:E:B:C:l:o:")) !=
+         -1) {
     if (common_opts(c, optopt))
       continue;
 
     switch (c) {
+    case 't':
+      if (strlen(optarg) > 1 || !strchr("tp", *optarg))
+        error(msg_str("normal position is '%s', must be t or p", optarg), c);
+      normal_position = *optarg;
+      break;
+
     case 'u':
       unit_normals = true;
       break;
@@ -323,6 +332,9 @@ void add_normals(Geometry &geom, const off_normals_opts &opts)
         if (opts.unit_normals)
           normal = normal.unit();
 
+        if (opts.normal_position == 't')
+          normal += geom.face_cent(i);
+
         ngeom.add_vert(normal, col);
 
         if (opts.elem_normal_vecs) {
@@ -399,6 +411,9 @@ void add_normals(Geometry &geom, const off_normals_opts &opts)
 
       if (opts.unit_normals)
         normal = normal.unit();
+
+      if (opts.normal_position == 't')
+        normal += centroid(geom.verts(), edge);
 
       ngeom.add_vert(normal, col);
 
@@ -479,6 +494,9 @@ void add_normals(Geometry &geom, const off_normals_opts &opts)
 
       if (opts.unit_normals)
         normal = normal.unit();
+
+      if (opts.normal_position == 't')
+        normal += verts[i];
 
       ngeom.add_vert(normal, col);
 

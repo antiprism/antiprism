@@ -1429,31 +1429,26 @@ bool winding_rule_filter(int winding_rule_mode, int winding_rule,
       answer = false;
   }
   else
-      // symbol proceeding integer. Symbols: eq, ne, gt, ge, lt, le"
-      // correspond to 1,2,3,4,5,6 (negative if absolute value)
-      // equal to
-      if (winding_rule_mode == 1)
-    answer = (winding_number == winding_rule) ? true : false;
-  else
-      // not equal to
-      if (winding_rule_mode == 2)
-    answer = (winding_number != winding_rule) ? true : false;
-  else
-      // greater than
-      if (winding_rule_mode == 3)
-    answer = (winding_number > winding_rule) ? true : false;
-  else
-      // greater than or equal to
-      if (winding_rule_mode == 4)
-    answer = (winding_number >= winding_rule) ? true : false;
-  else
-      // less than
-      if (winding_rule_mode == 5)
-    answer = (winding_number < winding_rule) ? true : false;
-  else
-      // less than or equal to
-      if (winding_rule_mode == 6)
-    answer = (winding_number <= winding_rule) ? true : false;
+    // symbol proceeding integer. Symbols: eq, ne, gt, ge, lt, le"
+    // correspond to 1,2,3,4,5,6 (negative if absolute value)
+    // equal to
+    if (winding_rule_mode == 1)
+      answer = (winding_number == winding_rule) ? true : false;
+    // not equal to
+    else if (winding_rule_mode == 2)
+      answer = (winding_number != winding_rule) ? true : false;
+    // greater than
+    else if (winding_rule_mode == 3)
+      answer = (winding_number > winding_rule) ? true : false;
+    // greater than or equal to
+    else if (winding_rule_mode == 4)
+      answer = (winding_number >= winding_rule) ? true : false;
+    // less than
+    else if (winding_rule_mode == 5)
+      answer = (winding_number < winding_rule) ? true : false;
+    // less than or equal to
+    else if (winding_rule_mode == 6)
+      answer = (winding_number <= winding_rule) ? true : false;
 
   return answer;
 }
@@ -1610,10 +1605,9 @@ void sample_colors(Geometry &sgeom, const Geometry &cgeom,
         // out later
         col.set_index(wtotal + std::numeric_limits<int>::max());
     }
-    else
-        // if there is no hit, then that patch is of zero density color. if
-        // file_type 4 then all even numbered patches are also
-        if (!sz || (opts.polygon_fill_type == 4 && !(sz % 2)))
+    // if there is no hit, then that patch is of zero density color. if
+    // file_type 4 then all even numbered patches are also
+    else if (!sz || (opts.polygon_fill_type == 4 && !(sz % 2)))
       col = Color(zero_density_col);
     else
       col = average_color(cols, opts);
@@ -2290,7 +2284,7 @@ void resolve_winding_number_indexes(Geometry &geom,
       if (winding_numbers[i] < min)
         min = winding_numbers[i];
     }
-    min -= 2; // at least 2
+    min -= (!min) ? 100 : 2; // if not tiling, 100, else at least 2
     opts.map_file_negative = msg_str("rng%d_S0V0.5:0", abs(min));
     opts.warning(msg_str("negative winding map used is %s",
                          opts.map_file_negative.c_str()));
