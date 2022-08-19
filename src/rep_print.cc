@@ -127,6 +127,17 @@ void rep_printer::general_sec()
     fprintf(ofile, "n/a (calculated value: %d)", num_parts());
   fprintf(ofile, "\n");
 
+  // Hardcode the precision of the test, maybe make optional if needed
+  auto convexity = get_convexity(geom, anti::epsilon);
+  string conv;
+  if (convexity == Convexity::not_convex)
+    conv = "no";
+  else if (convexity == Convexity::convex_not_strict)
+    conv = "yes (not strict)";
+  else // (convexity == Convexity::convex_strict)
+    conv = "yes (strict)";
+  fprintf(ofile, "convex = %s\n", conv.c_str());
+
   fprintf(ofile, "genus = ");
   if (is_known_genus())
     fprintf(ofile, "%d", genus());

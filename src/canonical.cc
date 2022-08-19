@@ -859,7 +859,8 @@ void convex_hull_test(const Geometry &geom, const cn_opts &opts)
   string s = "creases found";
   s += (opts.it_ctrl.get_sig_digits() < 15) ? " (try raising -l)" : "";
   fprintf(stderr, "convex hull planarity test: %s\n",
-          (check_convexity(geom)) ? "passed" : s.c_str());
+          (get_convexity(geom) == Convexity::not_convex) ? s.c_str()
+                                                         : "passed");
 }
 
 void generate_points(const Geometry &base, const Geometry &dual,

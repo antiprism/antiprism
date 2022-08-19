@@ -254,25 +254,34 @@ vector<vector<int>> find_unmatched_edges(const Geometry &geom)
   return unmatched_edges;
 }
 
-bool check_convexity(Geometry geom)
+Convexity get_convexity(Geometry geom, double eps)
 {
   geom.clear_cols(); // reduce copying and processing
   geom.clear(EDGES); // don't consider explicit edges for coincidence
+  geom.orient(1);
 
   auto geom_hull = geom;
   geom_hull.set_hull();
 
-  return check_coincidence(geom, geom_hull);
+  // is geometry strictly convex
+  if (check_coincidence(geom, geom_hull))
+    return Convexity::convex_strict;
+
+  if (double_eq(geom.get_info().volume() / geom_hull.get_info().volume(), 1,
+                eps))
+    return Convexity::convex_not_strict;
+
+  return Convexity::not_convex;
 }
 
 void add_faces(Geometry &geom, int face_size, int face_count, int faces[])
 {
-   vector<int> face(face_size);
-   for(int i=0; i<face_count; i++) {
-      for(int j=0; j<face_size; j++)
-         face[j] = faces[face_size*i + j];
-      geom.add_face(face);
-   }
+  vector<int> face(face_size);
+  for (int i = 0; i < face_count; i++) {
+    for (int j = 0; j < face_size; j++)
+      face[j] = faces[face_size * i + j];
+    geom.add_face(face);
+  }
 }
 
 } // namespace anti

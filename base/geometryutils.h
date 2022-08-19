@@ -37,6 +37,13 @@
 namespace anti {
 class GeometryInfo;
 
+/// Convexity types
+enum class Convexity {
+  not_convex,        ///< not convex
+  convex_not_strict, ///< convex, but not strictly (has coplanar faces)
+  convex_strict      ///< convex, strictly (no coplanar faces)
+};
+
 /// Get Voronoi cells.
 /**Get all finite Voronoi cells of the vertex points of a geometry
  * \param verts the vertices to find the Voronoi cells for
@@ -285,10 +292,13 @@ void get_coincidence_maps(const Geometry &geom, Trans3d trans,
                           std::vector<std::vector<int>> &elem_maps,
                           double eps = epsilon);
 
-/// Check if a geometry is convex
+/// Get convexity of a geometry
 /**\param geom geometry to check
- * \return \c true if the geometry is convex, otherwise \c false. */
-bool check_convexity(Geometry geom);
+ * \param eps a small number, coordinates differing by less than eps are
+ *  the same.
+ * \return convexity: \c Convexity::not_convex, \c Convexity::convex_not_strict,
+ *  Convexity::convex_strict. */
+Convexity get_convexity(Geometry geom, double eps = epsilon);
 
 /// return the unit normal of all perimeter triangles
 /**\param geom geometry.

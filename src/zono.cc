@@ -142,8 +142,8 @@ void zo_opts::process_command_line(int argc, char **argv)
 
     case 'S': {
       read_or_error(seed_geom, optarg);
-      if (!check_convexity(seed_geom))
-        warning("seed geometry is not convex", c);
+      if (get_convexity(seed_geom) != Convexity::convex_strict)
+        warning("seed geometry is not strictly convex", c);
       break;
     }
 
