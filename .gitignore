@@ -47,6 +47,7 @@ src_extra/dome_layer
 src_extra/poly_weave
 src_extra/mmop_origami
 src_extra/jitterbug
+src_extra/lat_grid
 src_extra/string_art
 src_extra/off2txt
 src_extra/kaleido
@@ -82,7 +83,6 @@ src/kcycle
 src/leonardo
 src/unitile2d
 src/repel
-src/lat_grid
 src/lat_util
 src/canonical
 src/conway
