@@ -234,6 +234,10 @@ void Polygon::add_polygon(Geometry &geom, double ht)
 
 Status Polygon::make_poly(Geometry &geom)
 {
+  // Save values in case they change during construction
+  auto orig_parts = parts;
+  auto orig_num_sides = num_sides;
+
   Geometry part;
   Status stat;
   if (type == prism)
@@ -264,6 +268,10 @@ Status Polygon::make_poly(Geometry &geom)
 
   if (stat)
     repeat_part(geom, part);
+
+  // Restore values, in case they changed during construction
+  parts = orig_parts;
+  num_sides = orig_num_sides;
 
   return stat;
 }
@@ -834,8 +842,44 @@ Status Polygon::make_cupola_part(Geometry &geom)
     cup_geom.add_face(face);
   }
 
-  if (subtype == sub_default || subtype == sub_cupola_cuploid) {
+  if (subtype == sub_default) {
     geom.append(cup_geom);
+  }
+  else if (subtype == sub_cupola_cuploid) {
+    geom.append(cup_geom);
+    if (!even) {
+      vector<int> idx_order(n2);
+      // find index difference between index 0 and previous point
+      // position, by angle, on equator, This difference is the same
+      // between all point indexes and their corresponding previous position
+      // Scanning for it is easier, but less efficient, than using the
+      // extended Euclidean algorithm
+      int diff = 0;
+      for (int i = 0; i < n2; i++) {     // check where each point lies
+        if ((i * step) % n2 == n2 - 1) { // i steps carry to position before 0
+          diff = i;                      // difference (i - 0)
+          break;
+        }
+      }
+      cup_geom.orient(4); // reverse all faces
+      cup_geom.transform(Trans3d::rotate(Vec3d::Z, M_PI / num_sides));
+      for (int i = 0; i < num_sides; i++)
+        geom.add_vert(cup_geom.verts(n2 + i));
+      for (size_t i = 0; i < cup_geom.faces().size(); i++) {
+        auto face = cup_geom.faces(i);
+        for (size_t j = 0; j < face.size(); j++) {
+          // renumber face vertices
+          if (face[j] < n2) // equator (where faces fold back )
+            face[j] = (face[j] + diff) % n2;
+          else // base polygon
+            face[j] += num_sides;
+        }
+        geom.add_face(face);
+      }
+      // Adjust for symmetric repeating
+      num_sides *= 2;
+      parts /= 2;
+    }
   }
   else if (subtype == sub_cupola_elongated) {
     Polygon pri(large);
