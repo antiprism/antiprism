@@ -856,11 +856,14 @@ void planarity_info(Geometry &geom)
 // planarity testing with convex hull
 void convex_hull_test(const Geometry &geom, const cn_opts &opts)
 {
-  string s = "creases found";
-  s += (opts.it_ctrl.get_sig_digits() < 15) ? " (try raising -l)" : "";
-  fprintf(stderr, "convex hull planarity test: %s\n",
-          (get_convexity(geom) == Convexity::not_convex) ? s.c_str()
-                                                         : "passed");
+  string s = "no ";
+  string t = "";
+  if (get_convexity(geom) != Convexity::convex_strict) {
+    s = "";
+    t = (opts.it_ctrl.get_sig_digits() < 15) ? " (try raising -l)" : "";
+  }
+  fprintf(stderr, "%sextra faces produced by convex hull%s\n", s.c_str(),
+          t.c_str());
 }
 
 void generate_points(const Geometry &base, const Geometry &dual,
