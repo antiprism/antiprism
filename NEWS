@@ -29,6 +29,7 @@ XX-XX-22 Adrian Rossiter <adrian@antiprism.com>
          Fixes
             resource models: large geodesic duals corrected
             polygon: fix -L, make 1 -s2 when -a is used 
+            planar/off_report: fixed winding counts algorithm
 
 Version 0.29
 01-11-21 Adrian Rossiter <adrian@antiprism.com>
