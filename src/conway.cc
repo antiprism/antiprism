@@ -874,6 +874,11 @@ ColorMapMap *alloc_default_map(const string map_file, const char m)
     // George Hart had all higher faces at gray (no longer used)
     // col_map->set_col(0, Color(0.5, 0.5, 0.5)); // 13-sided faces and higher
   }
+  else if (map_file == "m3") {
+    col_map->set_col(0, Color(255, 255, 255)); // convex
+    col_map->set_col(1, Color(127, 127, 127)); // coplanar
+    col_map->set_col(2, Color(64, 64, 64));    // nonconvex
+  }
 
   return col_map;
 }
@@ -1278,12 +1283,14 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                s - symmetric coloring
                v - color with average adjacent vertex color (-V colors first)
                f - color with average adjacent face color (-f colors first)
+               d - color by convexity of dihedral angles
   -f <col>  face color. Or use method for using color in map (default: n)
                keyword: none - sets no color
                n - by number of sides
                s - symmetric coloring
                u - unique coloring
                v - color with average adjacent vertex color (-V colors first)
+               d - color by convexity
                o - newly created faces by operation
                w - use wythoff colors (overrides -V and -E)
 %s
@@ -1294,7 +1301,8 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                            white,gray50,black
                keyword m2: red,blue,green,yellow,brown,magenta,purple,grue,
                            gray,orange (from George Hart's original applet)
-               (built in maps start at index 3 when -f n or -v n)
+               keyword m3: white,gray50,gray25 (special map for -f d, -E d)
+               (built in maps start at index 3 when -f n or -V n)
                (no effect when using -f w which uses internal wythoff maps)
 
 )",
@@ -1441,7 +1449,7 @@ void cn_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'f':
-      if (strspn(optarg, "nsuovw") && strlen(optarg) == 1)
+      if (strspn(optarg, "nsuvdow") && strlen(optarg) == 1)
         face_coloring_method = *optarg;
       else {
         print_status_or_exit(face_col.read(optarg), c);
@@ -1468,7 +1476,7 @@ void cn_opts::process_command_line(int argc, char **argv)
     case 'E':
       // unset default edge color
       edge_col = Color();
-      if (strlen(optarg) == 1 && strchr("svf", int(*optarg)))
+      if (strlen(optarg) == 1 && strchr("svfd", int(*optarg)))
         edge_coloring_method = *optarg;
       else
         print_status_or_exit(edge_col.read(optarg), c);
@@ -1588,7 +1596,7 @@ void cn_opts::process_command_line(int argc, char **argv)
   if (!map_file.size())
     map_file = (hart_mode) ? "m2" : "m1";
 
-  if (map_file != "m1" && map_file != "m2")
+  if (map_file != "m1" && map_file != "m2" && map_file != "m3")
     print_status_or_exit(read_colorings(clrngs, map_file.c_str()), 'm');
 
   if ((clrngs[FACES].get_cmaps()).size())
@@ -2469,6 +2477,9 @@ void cn_coloring(Geometry &geom, const cn_opts &opts)
       clrng.f_from_adjacent(VERTS);
       clrng.f_apply_cmap();
     }
+    else if (opts.face_coloring_method == 'd') {
+      color_faces_by_convexity(geom, opts.face_map, opts.eps);
+    }
 
     // color edges 3rd
     if (opts.edge_col.is_set())
@@ -2489,6 +2500,9 @@ void cn_coloring(Geometry &geom, const cn_opts &opts)
       clrng.add_cmap(opts.edge_map.clone());
       clrng.e_from_adjacent(FACES);
       clrng.e_apply_cmap();
+    }
+    else if (opts.face_coloring_method == 'd') {
+      color_edges_by_dihedral(geom, opts.edge_map, opts.eps);
     }
   }
 

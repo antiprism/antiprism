@@ -377,7 +377,7 @@ Options
   -o <file> write output to file (default: write to standard output)
 
 Canonical and Planarization Options
-  -e <opt>  edge distribution (default : none)
+  -e <opt>  edge distribution (default : none, canonicalization only)
                s - project vertices onto a sphere
   -s <opt>  shuffle model indexes
                v - vertices, e - edges, f - faces, a - all (default: none)
@@ -1672,26 +1672,12 @@ int main(int argc, char *argv[])
   Geometry base;
   opts.read_or_error(base, opts.ifile);
 
-  // need global convexity test
+  // the program can take many non-convex input, so no need
   // if (!check_convexity(base))
   //  opts.warning("input model may not be convex");
 
-  if (opts.edge_distribution) {
-    fprintf(stderr, "edge distribution: project onto sphere\n");
-    if (opts.edge_distribution == 's')
-      project_onto_sphere(base);
-  }
-
   if (opts.shuffle_model_indexes.length())
     shuffle_model_indexes(base, opts);
-
-  fprintf(stderr, "\n");
-  fprintf(stderr, "starting radius: average edge near points\n");
-  unitize_nearpoints_radius(base);
-
-  fprintf(stderr, "centering: edge near points centroid moved to origin\n");
-  base.transform(
-      Trans3d::translate(-edge_nearpoints_centroid(base, Vec3d(0, 0, 0))));
 
   Symmetry sym;
   if (opts.use_symmetry) {
@@ -1772,6 +1758,20 @@ int main(int argc, char *argv[])
       canonicalize_str = "moving edge";
     fprintf(stderr, "canonicalize: %s method\n", canonicalize_str.c_str());
 
+    if (opts.edge_distribution) {
+      fprintf(stderr, "edge distribution: project onto sphere\n");
+      if (opts.edge_distribution == 's')
+        project_onto_sphere(base);
+    }
+
+    fprintf(stderr, "\n");
+    fprintf(stderr, "starting radius: average edge near points\n");
+    unitize_nearpoints_radius(base);
+
+    fprintf(stderr, "centering: edge near points centroid moved to origin\n");
+    base.transform(
+        Trans3d::translate(-edge_nearpoints_centroid(base, Vec3d(0, 0, 0))));
+
     bool planarize_only = false;
     opts.it_ctrl.set_max_iters(opts.num_iters_canonical);
     double radius_range_pct =
@@ -1806,9 +1806,6 @@ int main(int argc, char *argv[])
       base = get_dual(base);
     }
 
-    string s = "non-convex";
-    s += (opts.it_ctrl.get_sig_digits() < 15) ? " (try raising -l)" : "";
-
     // report planarity
     planarity_info(base);
     convex_hull_test(base, opts);
@@ -1822,7 +1819,8 @@ int main(int argc, char *argv[])
             epsilon_local);
 
   // standardize model radius if needed since dual is reciprocated on 1
-  reset_model_size(base, epsilon_local);
+  if (opts.canonical_method != 'x')
+    reset_model_size(base, epsilon_local);
 
   // generate dual once
   Geometry dual = get_dual(base);

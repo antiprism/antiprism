@@ -397,3 +397,82 @@ void plane_face(Geometry &polygon)
   polygon.transform(trans.inverse());
 }
 */
+
+// color edges by dihedral angle
+void color_edges_by_dihedral(Geometry &geom, const ColorMapMulti &edge_map,
+                             double eps)
+{
+  GeometryInfo info(geom);
+
+  // if negative volume, orientation reversed, dihedral angles opposite
+  bool reverse = (GeometryInfo(geom).volume() < 0) ? true : false;
+
+  // color all elements convex
+  geom.add_missing_impl_edges();
+  Coloring(&geom).e_one_col(edge_map.get_col(0));
+
+  vector<double> dihedrals = info.get_edge_dihedrals();
+  // assuming edge order is intact
+  for (unsigned int i = 0; i < dihedrals.size(); i++) {
+    bool convexity = true;       // assume true;
+    bool coplanar_found = false; // assume false;
+    double angle = dihedrals[i];
+    if (double_eq(angle, M_PI, eps))
+      coplanar_found = true;
+    else if ((!reverse && (angle > M_PI)) || (reverse && (angle < M_PI)))
+      convexity = false;
+
+    if (convexity && !coplanar_found)
+      continue;
+
+    // if not coplanar then it was nonconvex
+    Color ec = (coplanar_found) ? edge_map.get_col(1) : edge_map.get_col(2);
+
+    geom.colors(EDGES).set(i, ec);
+  }
+}
+
+// color faces by convexity compared to other faces
+void color_faces_by_convexity(Geometry &geom, const ColorMapMulti &face_map,
+                              double eps)
+{
+  const vector<Vec3d> &verts = geom.verts();
+
+  // color all elements convex
+  geom.add_missing_impl_edges();
+  Coloring(&geom).f_one_col(face_map.get_col(0));
+
+  for (unsigned int i = 0; i < geom.faces().size(); i++) {
+    bool coplanar_found = false;
+    bool sign_change = false;
+    int sign = 0;
+
+    vector<int> face = geom.faces(i);
+    Vec3d face_normal = face_norm(geom.verts(), face);
+    // just use one vertex of the face
+    Vec3d face_vert = verts[face[0]];
+    // test against all the other vertices
+    for (int j = 0; j < (int)verts.size(); j++) {
+      // if vertex is in face, don't test it
+      if (*find(face.begin(), face.end(), j) == j)
+        continue;
+      double v_dot = vdot(face_vert - verts[j], face_normal);
+      if (double_eq(v_dot, 0.0, eps))
+        coplanar_found = true;
+      else {
+        if (!sign)
+          sign = (v_dot > 0.0) ? 1 : -1;
+        else if (((sign == 1) && (v_dot < 0.0)) ||
+                 ((sign == -1) && (v_dot > 0.0)))
+          sign_change = true;
+      }
+    }
+
+    if (!sign_change && !coplanar_found)
+      continue;
+
+    // if not coplanar then it was nonconvex
+    Color fc = (coplanar_found) ? face_map.get_col(1) : face_map.get_col(2);
+    geom.colors(FACES).set(i, fc);
+  }
+}

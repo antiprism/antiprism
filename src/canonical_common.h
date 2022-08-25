@@ -91,4 +91,14 @@ bool canonicalize_bd(anti::Geometry &base, anti::IterationControl it_ctrl,
  * \return \c true if success, otherwise \c false */
 bool planarize_bd(anti::Geometry &geom, anti::IterationControl it_ctrl);
 
+// color edges by dihedral angle
+void color_edges_by_dihedral(anti::Geometry &geom,
+                             const anti::ColorMapMulti &edge_map,
+                             double eps = anti::epsilon);
+
+// color faces by convexity compared to other faces
+void color_faces_by_convexity(anti::Geometry &geom,
+                              const anti::ColorMapMulti &face_map,
+                              double eps = anti::epsilon);
+
 #endif // CANONICAL_COMMON_H
