@@ -459,9 +459,9 @@ void color_wheel(Geometry &geom, const vector<Color> &cols,
     vector<int> face(face_sz);
     for (int j = 0; j < num_points + 1; j++) {
       double ang = i * sect_ang + j * ang_inc;
-      geom.add_vert(Vec3d(cos(ang), sin(ang), 0.0));
+      geom.add_vert(Vec3d(cos(ang), sin(ang), 0));
       face[j] = geom.verts().size() - 1;
-      geom.add_vert(Vec3d(cos(ang) / 2, sin(ang) / 2, 0.0));
+      geom.add_vert(Vec3d(cos(ang) / 2, sin(ang) / 2, 0));
       face[face_sz - 1 - j] = geom.verts().size() - 1;
     }
     geom.add_face(face, cols[i]);
@@ -653,7 +653,7 @@ Geometry make_unit_circle(int polygon_size)
 
   double angle = 0.0;
   for (int i = 0; i < polygon_size; i++) {
-    geom.add_vert(Vec3d(cos(angle), sin(angle), 0.0));
+    geom.add_vert(Vec3d(cos(angle), sin(angle), 0));
     geom.add_edge(make_edge(i, (i + 1) % polygon_size));
     angle += arc;
   }
@@ -672,12 +672,12 @@ void make_hsv_container(Geometry &geom, const col_util_opts &opts)
 
   int new_vert = 0;
   if (opts.color_system_mode == 2) {
-    geom.add_vert(Vec3d(0.0, 0.0, 0.5));
+    geom.add_vert(Vec3d(0, 0, 0.5));
     new_vert = geom.verts().size() - 1;
     for (int i = 0; i < polygon_size; i++)
       geom.add_edge(make_edge(i, new_vert));
   }
-  geom.add_vert(Vec3d(0.0, 0.0, (opts.color_system_mode == 2) ? -0.5 : -1.0));
+  geom.add_vert(Vec3d(0, 0, (opts.color_system_mode == 2) ? -0.5 : -1.0));
   new_vert = geom.verts().size() - 1;
   for (int i = 0; i < polygon_size; i++)
     geom.add_edge(make_edge(i, new_vert));
@@ -689,15 +689,15 @@ Geometry make_hsx_container(const col_util_opts &opts)
   if (opts.container == 3) {
     make_hsv_container(geom, opts);
     geom.transform(Trans3d::translate(opts.color_system_mode == 2
-                                          ? Vec3d(0.0, 0.0, 0.5)
-                                          : Vec3d(0.0, 0.0, 1.0)));
+                                          ? Vec3d(0, 0, 0.5)
+                                          : Vec3d(0, 0, 1)));
   }
   else {
     geom = make_unit_circle(60);
     geom.transform(
         Trans3d::translate((opts.color_system_mode == 1 || opts.container == 1)
-                               ? Vec3d(0.0, 0.0, 1.0)
-                               : Vec3d(0.0, 0.0, 0.5)));
+                               ? Vec3d(0, 0, 1)
+                               : Vec3d(0, 0, 0.5)));
     if (opts.container == 1)
       geom.append(make_unit_circle(60));
   }
@@ -893,8 +893,8 @@ void color_grid(Geometry &geom, const vector<Color> &cols,
     for (unsigned int j = 0; j < dim2; j++) {
       Geometry tgeom = sgeom;
       if (k < cols_sz && cols[k].is_index()) {
-        tgeom.add_vert(Vec3d(0.5, 0.45, 0.0), Color(0.0, 0.0, 0.0));
-        tgeom.add_vert(Vec3d(0.5, 0.55, 0.0), Color(1.0, 1.0, 1.0));
+        tgeom.add_vert(Vec3d(0.5, 0.45, 0), Color(0.0, 0.0, 0.0));
+        tgeom.add_vert(Vec3d(0.5, 0.55, 0), Color(1.0, 1.0, 1.0));
         tgeom.add_edge(make_edge(4, 5), Color(0.5, 0.5, 0.5));
       }
       tgeom.transform(Trans3d::translate(Vec3d(i, j, 0)));
@@ -909,7 +909,7 @@ void color_grid(Geometry &geom, const vector<Color> &cols,
   }
   // use anti::epsilon since there is no opts epsilon
   merge_coincident_elements(geom, "ve", anti::epsilon);
-  geom.transform(Trans3d::rotate(Vec3d(0.0, 0.0, deg2rad(-90.0))));
+  geom.transform(Trans3d::rotate(Vec3d(0, 0, deg2rad(-90.0))));
 }
 
 bool cmp_col(const Color &a, const Color &b)

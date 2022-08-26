@@ -1121,20 +1121,20 @@ int symmetro::fill_sym_vec(const char mode, string *error_msg = nullptr)
   if (sym == 'T') {
     if (p == 3 && q == 3) { // K-H mode +120 degrees
       if (sym_id_no == 1) {
-        sym_vec[0] = Vec3d(1.0, 1.0, 1.0);
-        sym_vec[1] = Vec3d(-1.0, -1.0, 1.0);
+        sym_vec[0] = Vec3d(1, 1, 1);
+        sym_vec[1] = Vec3d(-1, -1, 1);
       }
     }
     else if ((p == 3 && q == 2) || (p == 2 && q == 3)) {
       if (sym_id_no == 1) {
-        sym_vec[0] = Vec3d(1.0, 1.0, 1.0);
-        sym_vec[1] = Vec3d(0.0, 0.0, 1.0);
+        sym_vec[0] = Vec3d(1, 1, 1);
+        sym_vec[1] = Vec3d(0, 0, 1);
       }
     }
     else if (p == 2 && q == 2) {
       if (sym_id_no == 1) {
-        sym_vec[0] = Vec3d(0.0, 0.0, 1.0);
-        sym_vec[1] = Vec3d(1.0, 0.0, 0.0);
+        sym_vec[0] = Vec3d(0, 0, 1);
+        sym_vec[1] = Vec3d(1, 0, 0);
       }
     }
     else
@@ -1146,50 +1146,50 @@ int symmetro::fill_sym_vec(const char mode, string *error_msg = nullptr)
   else if (sym == 'O') {
     if (p == 4 && q == 4) {
       if (sym_id_no == 1) {
-        sym_vec[0] = Vec3d(0.0, 0.0, 1.0);
-        sym_vec[1] = Vec3d(1.0, 0.0, 0.0);
+        sym_vec[0] = Vec3d(0, 0, 1);
+        sym_vec[1] = Vec3d(1, 0, 0);
       }
     }
     else if ((p == 4 && q == 3) || (p == 3 && q == 4)) {
       if (sym_id_no == 1) {
-        sym_vec[0] = Vec3d(0.0, 0.0, 1.0);
-        sym_vec[1] = Vec3d(1.0, 1.0, 1.0);
+        sym_vec[0] = Vec3d(0, 0, 1);
+        sym_vec[1] = Vec3d(1, 1, 1);
       }
     }
     else if ((p == 4 && q == 2) || (p == 2 && q == 4)) {
       if (sym_id_no == 1) {
-        sym_vec[0] = Vec3d(0.0, 0.0, 1.0);
-        sym_vec[1] = Vec3d(0.0, 1.0, 1.0);
+        sym_vec[0] = Vec3d(0, 0, 1);
+        sym_vec[1] = Vec3d(0, 1, 1);
       }
       else if (sym_id_no == 2) {
-        sym_vec[0] = Vec3d(0.0, 0.0, 1.0);
-        sym_vec[1] = Vec3d(1.0, 1.0, 0.0);
+        sym_vec[0] = Vec3d(0, 0, 1);
+        sym_vec[1] = Vec3d(1, 1, 0);
       }
     }
     else if (p == 3 && q == 3) {
       if (sym_id_no == 1) {
-        sym_vec[0] = Vec3d(1.0, 1.0, 1.0);
-        sym_vec[1] = Vec3d(1.0, -1.0, 1.0);
+        sym_vec[0] = Vec3d(1, 1, 1);
+        sym_vec[1] = Vec3d(1, -1, 1);
       }
     }
     else if ((p == 3 && q == 2) || (p == 2 && q == 3)) {
       if (sym_id_no == 1) {
-        sym_vec[0] = Vec3d(1.0, 1.0, 1.0);
-        sym_vec[1] = Vec3d(0.0, -1.0, -1.0);
+        sym_vec[0] = Vec3d(1, 1, 1);
+        sym_vec[1] = Vec3d(0, -1, -1);
       }
       else if (sym_id_no == 2) {
-        sym_vec[0] = Vec3d(1.0, 1.0, 1.0);
-        sym_vec[1] = Vec3d(1.0, 0.0, -1.0);
+        sym_vec[0] = Vec3d(1, 1, 1);
+        sym_vec[1] = Vec3d(1, 0, -1);
       }
     }
     else if (p == 2 && q == 2) {
       if (sym_id_no == 1) {
-        sym_vec[0] = Vec3d(0.0, 1.0, 1.0);
-        sym_vec[1] = Vec3d(1.0, 0.0, 1.0);
+        sym_vec[0] = Vec3d(0, 1, 1);
+        sym_vec[1] = Vec3d(1, 0, 1);
       }
       else if (sym_id_no == 2) {
-        sym_vec[0] = Vec3d(0.0, 1.0, 1.0);
-        sym_vec[1] = Vec3d(0.0, 1.0, -1.0);
+        sym_vec[0] = Vec3d(0, 1, 1);
+        sym_vec[1] = Vec3d(0, 1, -1);
       }
     }
     else
@@ -1201,78 +1201,78 @@ int symmetro::fill_sym_vec(const char mode, string *error_msg = nullptr)
   else if (sym == 'I') {
     if (p == 5 && q == 5) {
       if (sym_id_no == 1) {
-        sym_vec[0] = Vec3d(0.0, 1.0, phi);
-        sym_vec[1] = Vec3d(0.0, 1.0, -phi);
+        sym_vec[0] = Vec3d(0, 1, phi);
+        sym_vec[1] = Vec3d(0, 1, -phi);
       }
     }
     else if ((p == 5 && q == 3) || (p == 3 && q == 5)) {
       if (sym_id_no == 1) {
-        sym_vec[0] = Vec3d(0.0, 1.0, phi);
-        sym_vec[1] = Vec3d(1.0, 1.0, 1.0);
+        sym_vec[0] = Vec3d(0, 1, phi);
+        sym_vec[1] = Vec3d(1, 1, 1);
       }
       else if (sym_id_no == 2) {
-        sym_vec[0] = Vec3d(0.0, 1.0, phi);
-        sym_vec[1] = Vec3d(phi, -1.0 / phi, 0.0);
+        sym_vec[0] = Vec3d(0, 1, phi);
+        sym_vec[1] = Vec3d(phi, -1 / phi, 0);
       }
     }
     else if ((p == 5 && q == 2) || (p == 2 && q == 5)) {
       if (sym_id_no == 1) {
-        sym_vec[0] = Vec3d(0.0, 1.0, phi);
-        sym_vec[1] = Vec3d(0.0, 0.0, -1.0);
+        sym_vec[0] = Vec3d(0, 1, phi);
+        sym_vec[1] = Vec3d(0, 0, -1);
       }
       else if (sym_id_no == 2) {
-        sym_vec[0] = Vec3d(0.0, 1.0, phi);
-        sym_vec[1] = Vec3d(1.0, 1.0 / phi, -phi);
+        sym_vec[0] = Vec3d(0, 1, phi);
+        sym_vec[1] = Vec3d(1, 1 / phi, -phi);
       }
       else if (sym_id_no == 3) {
-        sym_vec[0] = Vec3d(0.0, 1.0, phi);
-        sym_vec[1] = Vec3d(1.0, 0.0, 0.0);
+        sym_vec[0] = Vec3d(0, 1, phi);
+        sym_vec[1] = Vec3d(1, 0, 0);
       }
     }
     else if (p == 3 && q == 3) {
       if (sym_id_no == 1) {
-        sym_vec[0] = Vec3d(1.0, 1.0, 1.0);
-        sym_vec[1] = Vec3d(-1.0 / phi, 0.0, -phi);
+        sym_vec[0] = Vec3d(1, 1, 1);
+        sym_vec[1] = Vec3d(-1 / phi, 0, -phi);
       }
       else if (sym_id_no == 2) {
-        sym_vec[0] = Vec3d(1.0, 1.0, 1.0);
-        sym_vec[1] = Vec3d(1.0, -1.0, -1.0);
+        sym_vec[0] = Vec3d(1, 1, 1);
+        sym_vec[1] = Vec3d(1, -1, -1);
       }
     }
     else if ((p == 3 && q == 2) || (p == 2 && q == 3)) {
       if (sym_id_no == 1) {
-        sym_vec[0] = Vec3d(1.0, 1.0, 1.0);
-        sym_vec[1] = Vec3d(-1.0, -1.0 / phi, -phi);
+        sym_vec[0] = Vec3d(1, 1, 1);
+        sym_vec[1] = Vec3d(-1, -1 / phi, -phi);
       }
       else if (sym_id_no == 2) {
-        sym_vec[0] = Vec3d(1.0, 1.0, 1.0);
-        sym_vec[1] = Vec3d(-1.0, 0.0, 0.0);
+        sym_vec[0] = Vec3d(1, 1, 1);
+        sym_vec[1] = Vec3d(-1, 0, 0);
       }
       else if (sym_id_no == 3) {
-        sym_vec[0] = Vec3d(1.0, 1.0, 1.0);
-        sym_vec[1] = Vec3d(1.0, -1.0 / phi, -phi);
+        sym_vec[0] = Vec3d(1, 1, 1);
+        sym_vec[1] = Vec3d(1, -1 / phi, -phi);
       }
       else if (sym_id_no == 4) {
-        sym_vec[0] = Vec3d(1.0, 1.0, 1.0);
-        sym_vec[1] = Vec3d(1.0, 1.0 / phi, -phi);
+        sym_vec[0] = Vec3d(1, 1, 1);
+        sym_vec[1] = Vec3d(1, 1 / phi, -phi);
       }
     }
     else if (p == 2 && q == 2) {
       if (sym_id_no == 1) {
-        sym_vec[0] = Vec3d(0.0, 0.0, 1.0);
-        sym_vec[1] = Vec3d(1.0, 1.0 / phi, phi);
+        sym_vec[0] = Vec3d(0, 0, 1);
+        sym_vec[1] = Vec3d(1, 1 / phi, phi);
       }
       else if (sym_id_no == 2) {
-        sym_vec[0] = Vec3d(0.0, 0.0, 1.0);
-        sym_vec[1] = Vec3d(1.0 / phi, phi, 1.0);
+        sym_vec[0] = Vec3d(0, 0, 1);
+        sym_vec[1] = Vec3d(1 / phi, phi, 1);
       }
       else if (sym_id_no == 3) {
-        sym_vec[0] = Vec3d(0.0, 0.0, 1.0);
-        sym_vec[1] = Vec3d(phi, 1.0, 1.0 / phi);
+        sym_vec[0] = Vec3d(0, 0, 1);
+        sym_vec[1] = Vec3d(phi, 1, 1 / phi);
       }
       else if (sym_id_no == 4) {
-        sym_vec[0] = Vec3d(0.0, 0.0, 1.0);
-        sym_vec[1] = Vec3d(1.0, 0.0, 0.0);
+        sym_vec[0] = Vec3d(0, 0, 1);
+        sym_vec[1] = Vec3d(1, 0, 0);
       }
     }
     else
@@ -1286,12 +1286,12 @@ int symmetro::fill_sym_vec(const char mode, string *error_msg = nullptr)
 
     if (p_tmp == 2 && (sym_id_no <= (dihedral_n / 2))) {
       double a = sym_id_no * M_PI / dihedral_n;
-      sym_vec[0] = Vec3d(1.0, 0.0, 0.0);
+      sym_vec[0] = Vec3d(1, 0, 0);
       sym_vec[1] = Vec3d(cos(a), sin(a), 0);
     }
     else if ((p_tmp == dihedral_n) && (sym_id_no == 1)) {
-      sym_vec[0] = Vec3d(0.0, 0.0, 1.0);
-      sym_vec[1] = Vec3d(1.0, 0.0, 0.0);
+      sym_vec[0] = Vec3d(0, 0, 1);
+      sym_vec[1] = Vec3d(1, 0, 0);
     }
     else
       err_no = 2;
@@ -1303,7 +1303,7 @@ int symmetro::fill_sym_vec(const char mode, string *error_msg = nullptr)
       // D symmetry of option -c included
       if (strchr("SCHVD", sym)) {
     double a = axis_angle(p, d[0]);
-    sym_vec[0] = Vec3d(0.0, 0.0, 1.0);
+    sym_vec[0] = Vec3d(0, 0, 1);
     sym_vec[1] = Vec3d(sin(a), 0, cos(a));
   }
   else
@@ -1476,7 +1476,7 @@ vector<Geometry> symmetro::calc_polygons(
                 Trans3d::rotate(Vec3d(0, 0, 1),
                                 (idx * angle(n, d[j])) + bump_angle) *
                     P +
-                Vec3d(0.0, 0.0, offset));
+                Vec3d(0, 0, offset));
           }
           else if (i == 1) {
             pgeom[j].add_vert(
@@ -1505,7 +1505,7 @@ vector<Geometry> symmetro::calc_polygons(
       // twister_rhomb.py
       // if ( mode == 's' )
       //   pgeom[j].transform(
-      //   Trans3d::rotate(Vec3d(0.0,0.0,deg2rad(180.0/(double)p))) );
+      //   Trans3d::rotate(Vec3d(0, 0, deg2rad(180.0/(double)p))) );
     }
 
     if (!scale[j])
