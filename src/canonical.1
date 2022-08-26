@@ -141,11 +141,14 @@ base incircles color. keyword: f take color of face (default)
 \fB\-R\fR <col>
 dual incircles color. keyword: f take color of face (default)
 .TP
+\fB\-F\fR <col>
+base face color. keyword: d convexity (default: unchanged)
+.TP
 \fB\-D\fR <col>
 dual face color. keyword: b take color from base vertices (default)
 .TP
 \fB\-J\fR <col>
-base edge color (default: unchanged)
+base edge color. keyword: d convexity (default: unchanged)
 .TP
 \fB\-K\fR <col>
 dual edge color (default: unchanged)
@@ -160,6 +163,8 @@ dual vertex color (default: unchanged)
 unit sphere and/or convex hull color (default: white)
 .HP
 \fB\-T\fR <tran> base/dual transparency. range from 0 (invisible) to 255 (opaque)
+.IP
+built in map for convexity (white=convex, gray50=coplanar, gray25=non\-convex)
 .SH "SEE ALSO"
 The full documentation for
 .B canonical

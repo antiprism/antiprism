@@ -7,13 +7,15 @@ XX-XX-22 Adrian Rossiter <adrian@antiprism.com>
          Changes
             canonical:
               -V, W coloring options added
+              -F, -J convexity coloring added
               -Y to realign output
             off_color: add missing adjacent element colourings -f V, E
               and -e V
             wythoff: -C add vertex colouring, 'value' method removed, 'index'
                method colours by value. Add -m colormap option.
-            conway: added element colorings -V n,s,u -E s,v,f and -F v
+            conway: added element colorings -V n,s,u,d -E s,v,f,d and -F v
                added planarization options make_canonical, no planarization
+               added special convexity colorings
             miller: added -V f,n
             stellate: added -V f,n
             off_color_radial: added -V color and option f

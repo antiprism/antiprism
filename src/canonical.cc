@@ -75,13 +75,16 @@ public:
 
   char base_incircles_color_method = 'f'; // take face colors is default
   char dual_incircles_color_method = 'f'; // take face colors is default
+  char base_face_color_method = '\0';     // possible convexity coloring
   char dual_face_color_method = 'b';      // take colors from base vertices
+  char base_edge_color_method = '\0';     // possible convexity coloring
 
   Color ipoints_col = Color(255, 255, 0);              // yellow
   Color base_nearpts_col = Color(255, 0, 0);           // red
   Color dual_nearpts_col = Color(0, 100, 0);           // darkgreen
   Color base_incircles_col = Color();                  // unset
   Color dual_incircles_col = Color();                  // unset
+  Color base_face_col = Color(Color::maximum_index);   // unset
   Color dual_face_col = Color();                       // unset
   Color base_edge_col = Color(Color::maximum_index);   // unset
   Color dual_edge_col = Color(Color::maximum_index);   // unset
@@ -432,13 +435,15 @@ Coloring Options (run 'off_util -H color' for help on color formats)
   -M <col>  dual near points, centroid color (default: darkgreen)
   -S <col>  base incircles color. keyword: f take color of face (default)
   -R <col>  dual incircles color. keyword: f take color of face (default)
+  -F <col>  base face color. keyword: d convexity (default: unchanged)
   -D <col>  dual face color. keyword: b take color from base vertices (default)
-  -J <col>  base edge color (default: unchanged)
+  -J <col>  base edge color. keyword: d convexity (default: unchanged)
   -K <col>  dual edge color (default: unchanged)
   -V <col>  base vertex color (default: unchanged)
   -W <col>  dual vertex color (default: unchanged)
   -U <col>  unit sphere and/or convex hull color (default: white)
   -T <tran> base/dual transparency. range from 0 (invisible) to 255 (opaque)
+  built in map for convexity (white=convex, gray50=coplanar, gray25=non-convex)
 
 )",
       prog_name(), help_ver_text, it_ctrl.get_status_check_and_report_iters(),
@@ -457,9 +462,10 @@ void cn_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv,
-                     ":hHe:s:t:p:i:c:n:yO:q:g:E:P:F:Cd:Yz:I:N:M:S:R:D:J:K:V:W:"
-                     "U:T:l:o:")) != -1) {
+  while (
+      (c = getopt(argc, argv,
+                  ":hHe:s:t:p:i:c:n:yO:q:g:E:P:f:Cd:Yz:I:N:M:S:R:F:D:J:K:V:W:"
+                  "U:T:l:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -558,7 +564,7 @@ void cn_opts::process_command_line(int argc, char **argv)
       }
       break;
 
-    case 'F': {
+    case 'f': {
       vector<double> nums;
       print_status_or_exit(read_double_list(optarg, nums), c);
       if (nums.size() < 1 || nums.size() > 2)
@@ -625,6 +631,14 @@ void cn_opts::process_command_line(int argc, char **argv)
         print_status_or_exit(dual_incircles_col.read(optarg), c);
       break;
 
+    case 'F':
+      base_face_color_method = '\0';
+      if (strchr("d", *optarg))
+        base_face_color_method = *optarg;
+      else
+        print_status_or_exit(base_face_col.read(optarg), c);
+      break;
+
     case 'D':
       dual_face_color_method = '\0';
       if (strchr("b", *optarg))
@@ -634,7 +648,11 @@ void cn_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'J':
-      print_status_or_exit(base_edge_col.read(optarg), c);
+      base_edge_color_method = '\0';
+      if (strchr("d", *optarg))
+        base_edge_color_method = *optarg;
+      else
+        print_status_or_exit(base_edge_col.read(optarg), c);
       break;
 
     case 'K':
@@ -877,10 +895,10 @@ void generate_points(const Geometry &base, const Geometry &dual,
   dual.get_impl_edges(dual_edges);
 
   for (auto &base_edge : base_edges)
-    base_nearpts.push_back(base.edge_nearpt(base_edge, Vec3d(0, 0, 0)));
+    base_nearpts.push_back(base.edge_nearpt(base_edge, Vec3d::zero));
 
   for (auto &dual_edge : dual_edges)
-    dual_nearpts.push_back(dual.edge_nearpt(dual_edge, Vec3d(0, 0, 0)));
+    dual_nearpts.push_back(dual.edge_nearpt(dual_edge, Vec3d::zero));
 
   for (unsigned int i = 0; i < base_edges.size(); i++) {
     Vec3d b0 = base.verts(base_edges[i][0]);
@@ -913,7 +931,7 @@ double edge_nearpoints_error(const Geometry &geom, double &min, double &max,
 
   double nearpt_error = 0;
   for (auto &edge : edges) {
-    Vec3d P = geom.edge_nearpt(edge, Vec3d(0, 0, 0));
+    Vec3d P = geom.edge_nearpt(edge, Vec3d::zero);
     near_pts.push_back(P);
 
     double l = fabs(P.len() - 1.0);
@@ -1026,7 +1044,7 @@ int face_no)
     int v1 = geom.faces(face_no)[i];
     int v2 = geom.faces(face_no)[(i + 1) % fsz];
 
-    Vec3d P = geom.edge_nearpt(make_edge(v1,v2), Vec3d(0, 0, 0));
+    Vec3d P = geom.edge_nearpt(make_edge(v1,v2), Vec3d::zero);
     near_pts.push_back(P);
   }
 
@@ -1091,7 +1109,7 @@ double incircle_radius(const Geometry &geom, Vec3d &center, const int face_no)
     int v1 = geom.faces(face_no)[i];
     int v2 = geom.faces(face_no)[(i + 1) % fsz];
 
-    Vec3d P = geom.edge_nearpt(make_edge(v1, v2), Vec3d(0, 0, 0));
+    Vec3d P = geom.edge_nearpt(make_edge(v1, v2), Vec3d::zero);
     near_pts.push_back(P);
   }
 
@@ -1135,7 +1153,7 @@ Geometry incircles(const Geometry &geom, const char &incircle_color_method,
     incircle.transform(Trans3d::translate(Vec3d(0, 0, depth)));
 
     // rotate incircle into place
-    incircle.transform(Trans3d::rotate(Vec3d(0, 0, 1), center));
+    incircle.transform(Trans3d::rotate(Vec3d::Z, center));
     incircles_geom.append(incircle);
   }
 
@@ -1190,12 +1208,25 @@ void construct_model(Geometry &base, Geometry &dual,
                      vector<Vec3d> &base_nearpts, vector<Vec3d> &dual_nearpts,
                      vector<Vec3d> &ips, const cn_opts &opts)
 {
+  // map for convexity coloring
+  auto *col_map = new ColorMapMap;
+  col_map->set_col(0, Color(255, 255, 255)); // convex
+  col_map->set_col(1, Color(127, 127, 127)); // coplanar
+  col_map->set_col(2, Color(64, 64, 64));    // nonconvex
+  ColorMapMulti conv_map;
+  conv_map.add_cmap(col_map);
+
   // get statistics before model is changed, if needed
   double min = 0;
   double max = 0;
   Vec3d center;
   if (opts.output_parts.find_first_of("uU") != string::npos)
     edge_nearpoints_radius(base, min, max, center);
+
+  if (opts.base_face_color_method == 'd')
+    color_faces_by_convexity(base, conv_map, opts.eps);
+  else if (!opts.base_face_col.is_maximum_index())
+    Coloring(&base).f_one_col(opts.base_face_col);
 
   if (opts.dual_face_color_method != 'b')
     Coloring(&dual).f_one_col(opts.dual_face_col);
@@ -1218,7 +1249,10 @@ void construct_model(Geometry &base, Geometry &dual,
 
   if (opts.output_parts.find_first_of("bC") != string::npos) {
     // set edge and vertex colors here
-    set_edge_colors(base, opts.base_edge_col);
+    if (opts.base_edge_color_method == 'd')
+      color_edges_by_dihedral(base, conv_map, opts.eps);
+    else
+      set_edge_colors(base, opts.base_edge_col);
     set_vertex_colors(base, opts.base_vertex_col);
   }
   else
@@ -1263,7 +1297,7 @@ void construct_model(Geometry &base, Geometry &dual,
 
   // add origin point
   if (opts.output_parts.find("o") != string::npos) {
-    base.add_vert(Vec3d(0, 0, 0), opts.ipoints_col);
+    base.add_vert(Vec3d::zero, opts.ipoints_col);
   }
 
   // apply transparency
@@ -1440,7 +1474,7 @@ bool canonicalize_mm(Geometry &geom, IterationControl it_ctrl,
     if (!planarize_only) {
       vector<Vec3d> near_pts;
       for (auto &edge : edges) {
-        Vec3d P = geom.edge_nearpt(edge, Vec3d(0, 0, 0));
+        Vec3d P = geom.edge_nearpt(edge, Vec3d::zero);
         near_pts.push_back(P);
         Vec3d offset = edge_factor * (P.len() - 1) * P;
         verts[edge[0]] -= offset;
@@ -1459,7 +1493,7 @@ bool canonicalize_mm(Geometry &geom, IterationControl it_ctrl,
     // and away from another
     vector<Vec3d> vs = verts;
     for (auto &v : vs)
-      v = Vec3d(0, 0, 0);
+      v = Vec3d::zero;
 
     for (unsigned int f = 0; f < geom.faces().size(); f++) {
       if (geom.faces(f).size() == 3)
@@ -1560,7 +1594,7 @@ bool canonicalize_unit(Geometry &geom, IterationControl it_ctrl,
       vector<Vec3d> near_pts;
       for (auto &edge : edges) {
         // unit near point
-        Vec3d P = geom.edge_nearpt(edge, Vec3d(0, 0, 0)).unit();
+        Vec3d P = geom.edge_nearpt(edge, Vec3d::zero).unit();
         near_pts.push_back(P);
         move_line_to_point(verts[edge[0]], verts[edge[1]], P);
       }
@@ -1770,7 +1804,7 @@ int main(int argc, char *argv[])
 
     fprintf(stderr, "centering: edge near points centroid moved to origin\n");
     base.transform(
-        Trans3d::translate(-edge_nearpoints_centroid(base, Vec3d(0, 0, 0))));
+        Trans3d::translate(-edge_nearpoints_centroid(base, Vec3d::zero)));
 
     bool planarize_only = false;
     opts.it_ctrl.set_max_iters(opts.num_iters_canonical);
