@@ -1300,14 +1300,14 @@ int symmetro::fill_sym_vec(const char mode, string *error_msg = nullptr)
       swap_vecs(sym_vec[0], sym_vec[1]);
   }
   else
-      // D symmetry of option -c included
-      if (strchr("SCHVD", sym)) {
-    double a = axis_angle(p, d[0]);
-    sym_vec[0] = Vec3d(0, 0, 1);
-    sym_vec[1] = Vec3d(sin(a), 0, cos(a));
-  }
-  else
-    err_no = 3;
+    // D symmetry of option -c included
+    if (strchr("SCHVD", sym)) {
+      double a = axis_angle(p, d[0]);
+      sym_vec[0] = Vec3d(0, 0, 1);
+      sym_vec[1] = Vec3d(sin(a), 0, cos(a));
+    }
+    else
+      err_no = 3;
 
   // sym_vec will only not be set if no id_no was found
   if (!err_no)

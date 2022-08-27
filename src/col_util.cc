@@ -688,9 +688,8 @@ Geometry make_hsx_container(const col_util_opts &opts)
   Geometry geom;
   if (opts.container == 3) {
     make_hsv_container(geom, opts);
-    geom.transform(Trans3d::translate(opts.color_system_mode == 2
-                                          ? Vec3d(0, 0, 0.5)
-                                          : Vec3d(0, 0, 1)));
+    geom.transform(Trans3d::translate(
+        opts.color_system_mode == 2 ? Vec3d(0, 0, 0.5) : Vec3d(0, 0, 1)));
   }
   else {
     geom = make_unit_circle(60);
