@@ -2501,7 +2501,7 @@ void cn_coloring(Geometry &geom, const cn_opts &opts)
       clrng.e_from_adjacent(FACES);
       clrng.e_apply_cmap();
     }
-    else if (opts.face_coloring_method == 'd') {
+    else if (opts.edge_coloring_method == 'd') {
       color_edges_by_dihedral(geom, opts.edge_map, opts.eps);
     }
   }
