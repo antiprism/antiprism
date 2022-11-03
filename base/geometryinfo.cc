@@ -696,7 +696,8 @@ void GeometryInfo::find_dihedral_angles()
   int e_idx = -1;
   for (ei = efpairs.begin(); ei != efpairs.end(); ++ei) {
     e_idx++;
-    if (ei->second[0] >= 0 && ei->second[1] >= 0) { // pair of faces
+    if (ei->second.size() == 2 && ei->second[0] >= 0 &&
+        ei->second[1] >= 0) { // pair of faces
       Vec3d n0;
       Vec3d n1;
       if (is_oriented()) {
