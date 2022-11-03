@@ -563,6 +563,14 @@ string msg_str(const char *fmt, ...)
   return string(vstr.data(), len);
 }
 
+void bool_dump(bool b, const char *var, FILE *file)
+{
+  if (var)
+    fprintf(file, "%s=", var);
+
+  fprintf(file, "%s\n", (b) ? "true" : "false");
+}
+
 namespace {
 int split_line(char *line, vector<char *> &parts, const char *delims,
                bool strict)

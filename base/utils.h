@@ -220,6 +220,12 @@ FILE *open_sup_file(const char *fname, const char *subdir,
  * \return The converted string. */
 std::string msg_str(const char *fmt, ...);
 
+/// dump boolean value
+/**\param b boolean value to dump
+ * \param optional string to name boolean
+ * \param file file stream to print the variable. */
+void bool_dump(bool b, const char *var = "", FILE *file = stderr);
+
 /// Class to split a line into delimited parts
 class Split {
 private:
