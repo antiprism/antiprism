@@ -103,8 +103,10 @@ struct surfaceData {
   int d_surfaces;
   int d_edges;
   int total_surfaces;
+  int total_edges;
   bool nonchiral;
   bool ncon_case2;
+  int compound_parts; // borrow for compounds
 };
 
 #endif
