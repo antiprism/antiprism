@@ -16,8 +16,8 @@ XX-XX-22 Adrian Rossiter <adrian@antiprism.com>
             conway: added element colorings -V n,s,u,d -E s,v,f,d and -F v
                added planarization options make_canonical, no planarization
                added special convexity colorings
-            miller: added -V f,n
-            stellate: added -V f,n
+            miller: added color options -V f,n
+            stellate: added color options -V f,n
             off_color_radial: added -V color and option f
                added -E color and options e,f
             symmetro: added m3 built in color map for better number of sides
@@ -27,6 +27,12 @@ XX-XX-22 Adrian Rossiter <adrian@antiprism.com>
             polygon: orientation changed for models 2 -s2, 2 -s4, 4, 5, 6, 8,
                construction changed for some models 5 -s3
             lat_grid: move to extra programs
+            n_icons: added -b don't split bow-tie faces for twisting
+               added -g make m2 longitudes (-M) invisible instead of deletion
+               added -C color ... circuits with first two colors
+               added -B compound part counts to -L listing options
+               added -D to change d (of n/d) from default of 1
+               -I: added circuit counting and comparison to theoretical values
             help: added alternate names and wenninger numbering sections
             build: minimum autoconf version changed to 0.69
          Fixes

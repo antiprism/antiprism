@@ -152,16 +152,18 @@ flood fill stop. used with circuit or compound coloring (\fB\-f\fR f,c)
 use 0 (default) to flood fill entire model. if \fB\-X\fR is not 0 then
 return 1 from program if entire model has been colored
 .HP
-\fB\-m\fR <maps> color maps to be tried in turn. (default: map_red:darkorange1:
+\fB\-m\fR <maps> color maps to be tried in turn. (default: m1, for \fB\-C\fR, m2)
 .IP
-yellow:darkgreen:cyan:blue:magenta:white:gray50:black,spread)
-optionally followed by elements from v, e or f (default: vef)
+keyword m1: red,darkorange1,yellow,darkgreen,cyan,blue,magenta,
+white,gray50,black
+keyword m2: white,gray50 (special map for \fB\-C\fR)
+optionally followed by elements from e or f (default: ef)
 .PP
-Surface Count Reporting (options above ignored)
+Surface (or Compound) Count Reporting (options above ignored)
 .HP
-\fB\-L\fR <type> list n\-icons with more than one surface. Valid values for type
+\fB\-L\fR <type> types of n\-icons to list. Valid values for type
 .IP
-n = point cut even order n_icons
+p = point cut even order n_icons
 s = side cut even order n\-icons
 o = odd order n_icons
 h = hybrids (all)
@@ -170,9 +172,9 @@ j = hybrids (where N/2 is odd)
 k = hybrids (where N/4 is even)
 l = hybrids (where N/4 is odd)
 .HP
-\fB\-K\fR <k,k2> range of n\-icons to list for multiple surfaces. k > 2
+\fB\-K\fR <k,k2> range of n\-icons to list. k > 2
 .HP
-\fB\-N\fR <n,n2> range of surfaces to list. n > 1 (default: 3,10000)
+\fB\-N\fR <n,n2> range of surfaces (or compounds) to list. n > 1 (default: 3,1000)
 .TP
 \fB\-D\fR <int>
 set d for the report (default: 1)
@@ -181,7 +183,10 @@ set d for the report (default: 1)
 long form report
 .TP
 \fB\-Z\fR
-filter out case 2 types
+filter out case 2 types (surfaces only)
+.TP
+\fB\-B\fR
+list compounds instead of circuits
 .SH "SEE ALSO"
 The full documentation for
 .B n_icons

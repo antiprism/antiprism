@@ -85,21 +85,26 @@ bool angle_on_aligned_polygon(const double angle, const double n,
   return ret;
 }
 
-ColorMapMap *alloc_default_map()
+ColorMapMap *alloc_default_map(const string map_file)
 {
   auto *col_map = new ColorMapMap;
 
-  col_map->set_col(0, Color(255, 0, 0));     // red
-  col_map->set_col(1, Color(255, 127, 0));   // darkorange1
-  col_map->set_col(2, Color(255, 255, 0));   // yellow
-  col_map->set_col(3, Color(0, 100, 0));     // darkgreen
-  col_map->set_col(4, Color(0, 255, 255));   // cyan
-  col_map->set_col(5, Color(0, 0, 255));     // blue
-  col_map->set_col(6, Color(255, 0, 255));   // magenta
-  col_map->set_col(7, Color(255, 255, 255)); // white
-  col_map->set_col(8, Color(127, 127, 127)); // gray50
-  col_map->set_col(9, Color(0, 0, 0));       // black
-
+  if (map_file == "m1") {
+    col_map->set_col(0, Color(255, 0, 0));     // red
+    col_map->set_col(1, Color(255, 127, 0));   // darkorange1
+    col_map->set_col(2, Color(255, 255, 0));   // yellow
+    col_map->set_col(3, Color(0, 100, 0));     // darkgreen
+    col_map->set_col(4, Color(0, 255, 255));   // cyan
+    col_map->set_col(5, Color(0, 0, 255));     // blue
+    col_map->set_col(6, Color(255, 0, 255));   // magenta
+    col_map->set_col(7, Color(255, 255, 255)); // white
+    col_map->set_col(8, Color(127, 127, 127)); // gray50
+    col_map->set_col(9, Color(0, 0, 0));       // black
+  }
+  else if (map_file == "m2") {
+    col_map->set_col(0, Color(255, 255, 255)); // continuous
+    col_map->set_col(1, Color(127, 127, 127)); // discontinuous
+  }
   return col_map;
 }
 
@@ -146,6 +151,7 @@ public:
   vector<int> filter_surfaces; // filter surfaces, 3 to infinity default
   bool long_form = false;      // long form of information
   bool filter_case2 = false;   // filter out case 2 types
+  bool list_compounds = false; // alternatively list compounds
 
   double eps = anti::epsilon;
 
@@ -264,13 +270,15 @@ Coloring Options (run 'off_util -H color' for help on color formats)
   -X <int>  flood fill stop. used with circuit or compound coloring (-f f,c)
                use 0 (default) to flood fill entire model. if -X is not 0 then
                return 1 from program if entire model has been colored
-  -m <maps> color maps to be tried in turn. (default: map_red:darkorange1:
-               yellow:darkgreen:cyan:blue:magenta:white:gray50:black,spread)
-               optionally followed by elements from v, e or f (default: vef)
+  -m <maps> color maps to be tried in turn. (default: m1, for -C, m2)
+               keyword m1: red,darkorange1,yellow,darkgreen,cyan,blue,magenta,
+               white,gray50,black
+               keyword m2: white,gray50 (special map for -C)
+               optionally followed by elements from e or f (default: ef)
 
-Surface Count Reporting (options above ignored)
-  -L <type> list n-icons with more than one surface. Valid values for type
-               n = point cut even order n_icons
+Surface (or Compound) Count Reporting (options above ignored)
+  -L <type> types of n-icons to list. Valid values for type
+               p = point cut even order n_icons
                s = side cut even order n-icons
                o = odd order n_icons
                h = hybrids (all)
@@ -278,11 +286,12 @@ Surface Count Reporting (options above ignored)
                j = hybrids (where N/2 is odd)
                k = hybrids (where N/4 is even)
                l = hybrids (where N/4 is odd)
-  -K <k,k2> range of n-icons to list for multiple surfaces. k > 2
-  -N <n,n2> range of surfaces to list. n > 1 (default: 3,10000)
+  -K <k,k2> range of n-icons to list. k > 2
+  -N <n,n2> range of surfaces (or compounds) to list. n > 1 (default: 3,1000)
   -D <int>  set d for the report (default: 1)
   -J        long form report
-  -Z        filter out case 2 types
+  -Z        filter out case 2 types (surfaces only)
+  -B        list compounds instead of circuits
 )",
           prog_name(), help_ver_text, int(-log(anti::epsilon) / log(10) + 0.5),
           anti::epsilon);
@@ -293,13 +302,15 @@ void ncon_opts::process_command_line(int argc, char **argv)
   opterr = 0;
   int c;
 
+  string map_file;
   Coloring clrngs[3];
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv,
-                     ":hn:t:sHM:gx:Ac:z:a:r:R:bIL:K:N:JZD:m:f:SCT:O:e:U:P:Q:YG:"
-                     "X:Wl:o:")) != -1) {
+  while (
+      (c = getopt(argc, argv,
+                  ":hn:t:sHM:gx:Ac:z:a:r:R:bIL:K:N:JZBD:m:f:SCT:O:e:U:P:Q:YG:"
+                  "X:Wl:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -404,8 +415,8 @@ void ncon_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'L':
-      if (strspn(optarg, "nsohijkl") != strlen(optarg) || strlen(optarg) > 1)
-        error(msg_str("n-icon type is '%s', must be only one of n, s, "
+      if (strspn(optarg, "psohijkl") != strlen(optarg) || strlen(optarg) > 1)
+        error(msg_str("n-icon type is '%s', must be only one of p, s, "
                       "o, h, i, j, k, or l\n",
                       optarg),
               c);
@@ -448,8 +459,12 @@ void ncon_opts::process_command_line(int argc, char **argv)
       filter_case2 = true;
       break;
 
+    case 'B':
+      list_compounds = true;
+      break;
+
     case 'm':
-      print_status_or_exit(read_colorings(clrngs, optarg), c);
+      map_file = optarg;
       break;
 
     case 'f':
@@ -613,13 +628,13 @@ void ncon_opts::process_command_line(int argc, char **argv)
       if (is_even(ncon_range.front()) &&
           ncon_range.front() == ncon_range.back())
         if (strchr(ncon_surf.c_str(), 'o'))
-          error("-K: for odd order n-icons surfaces k must be odd");
+          error("for odd order n-icons surfaces k must be odd", "L");
     }
 
     // set defaults
     if (!filter_surfaces.size()) {
       filter_surfaces.push_back(3);
-      filter_surfaces.push_back(10000);
+      filter_surfaces.push_back(1000);
     }
   }
   // n_icons option processing
@@ -636,6 +651,10 @@ void ncon_opts::process_command_line(int argc, char **argv)
 
     if (filter_case2)
       error("not valid without -L", "Z");
+
+    // can cause ret to be set with -B
+    // if (list_compounds)
+    //  error("not valid without -L", "B");
 
     // default longitudes to use is 36
     if (longitudes.size() == 0) {
@@ -681,8 +700,8 @@ void ncon_opts::process_command_line(int argc, char **argv)
 
       if (((longitudes.back() == 1) ||
            (longitudes.front() - longitudes.back() == 1)) &&
-          (strchr(closure.c_str(), 'v'))) {
-        warning("when method = 1, horizonatal closure when used with -M <m,m2> "
+          (strchr(closure.c_str(), 'h'))) {
+        warning("when method = 1, horizontal closure when used\nwith -M <m,m2> "
                 "needs m2 to be greater than 1 or m-m2 to be greater than 1",
                 "c");
         closure.clear();
@@ -701,20 +720,20 @@ void ncon_opts::process_command_line(int argc, char **argv)
             if (is_even(twist))
               error("for method 2 and d=1, hybrid, inner radius cannot be set "
                     "when twist is even",
-                    'r');
+                    "r");
           }
           else if (!is_even(ncon_order))
             error("for method 2 and d=1, inner radius cannot be set when N is "
                   "odd",
-                  'r');
+                  "r");
           else if (!point_cut)
             error("for method 2 and d=1, inner radius cannot be set when side "
                   "cut",
-                  'r');
+                  "r");
           else if (!is_even(twist))
             error("for method 2 and d=1, inner radius cannot be set when twist "
                   "is odd",
-                  'r');
+                  "r");
         }
         else if (!std::isnan(outer_radius))
           inner_radius = outer_radius;
@@ -791,7 +810,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
         error("hybrids have no twist 0", "t");
 
       if (!point_cut && build_method != 3)
-        error("hybrids and side cut can only be specified for method 3", 's');
+        error("hybrids and side cut can only be specified for method 3", "s");
 
       if (2 * longitudes.back() < longitudes.front()) {
         warning("for hybrids m2 cannot be less than half of full model. "
@@ -874,8 +893,8 @@ void ncon_opts::process_command_line(int argc, char **argv)
       }
 
       if (closure.length()) {
-        closure.clear();
         warning("closure has no effect with transparent longitudes", "g");
+        closure.clear();
       }
     }
   }
@@ -889,7 +908,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
 
   if (add_symmetry_polygon &&
       (face_coloring_method != 'S' && edge_coloring_method != 'S'))
-    warning("adding symmetry polygon only has effect for -f S or -e S", 'W');
+    warning("adding symmetry polygon only has effect for -f S or -e S", "W");
 
   // circuit table works with co-prime n/d
   // if n/d is co-prime (and d>1) angle must be 0
@@ -899,23 +918,23 @@ void ncon_opts::process_command_line(int argc, char **argv)
             "'f'",
             'f');
     if (d > 1 && (gcd(ncon_order, d) == 1) && double_ne(angle, 0.0, eps))
-      error("When n/d is co-prime, angle must be 0. Use 'S' or 'f'", 'f');
+      error("When n/d is co-prime, angle must be 0. Use 'S' or 'f'", "f");
   }
   else if (face_coloring_method == 'f') {
     if (build_method == 1)
-      error("flood fill face coloring is for build method 2 or 3", 'f');
+      error("flood fill face coloring is for build method 2 or 3", "f");
     if (build_method == 3 && (ncon_order == 2 * d))
       error("flood fill will not work in build method 3 and 2N/N polygons",
             'f');
   }
   else if (face_coloring_method == 'c') {
     if (build_method == 1)
-      error("compound coloring is for build method 2 or 3", 'f');
+      error("compound coloring is for build method 2 or 3", "f");
   }
 
   if (edge_coloring_method == 'f') {
     if (build_method == 1)
-      error("flood fill edge coloring is for build method 2 or 3", 'e');
+      error("flood fill edge coloring is for build method 2 or 3", "e");
   }
 
   if (symmetric_coloring && (!(strchr("sfS", face_coloring_method) ||
@@ -951,10 +970,16 @@ void ncon_opts::process_command_line(int argc, char **argv)
             "order n-icons",
             "S");
 
+  if (!map_file.size())
+    map_file = (circuit_coloring) ? "m2" : "m1";
+
+  if (map_file != "m1" && map_file != "m2")
+    print_status_or_exit(read_colorings(clrngs, map_file.c_str()), 'm');
+
   if ((clrngs[FACES].get_cmaps()).size())
     face_map = clrngs[FACES];
   else {
-    face_map.add_cmap(alloc_default_map());
+    face_map.add_cmap(alloc_default_map(map_file));
     ColorMap *spread_map = colormap_from_name("spread");
     face_map.add_cmap(spread_map);
   }
@@ -967,7 +992,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
     if ((clrngs[EDGES].get_cmaps()).size())
       edge_map = clrngs[EDGES];
     else {
-      edge_map.add_cmap(alloc_default_map());
+      edge_map.add_cmap(alloc_default_map(map_file));
       ColorMap *spread_map = colormap_from_name("spread");
       edge_map.add_cmap(spread_map);
     }
@@ -987,7 +1012,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
     if (!point_cut)
       pc = false;
     if ((ncon_order == 2 * d) && pc)
-      error("when polygon 2N/N and point cut, method 3 cannot be used", 'a');
+      error("when polygon 2N/N and point cut, method 3 cannot be used", "a");
   }
 
   // method 2: can't let d > n/2, causes problems
@@ -3334,17 +3359,8 @@ void ncon_info(const int ncon_order, const int d, const bool point_cut,
   }
   sd.total_surfaces = sd.c_surfaces + sd.d_surfaces;
   sd.total_edges = sd.c_edges + sd.d_edges;
-  
+
   sd.compound_parts = 1;
-  if (d > 1) {
-    // if mod(n,d) is not 0 there will be no multiple parts
-    if (!(ncon_order%d)) {
-      // basis for twist 0
-      //if (posi_twist == 0) {
-      //  sd.compound_parts = (int)floor((double)ncon_order + 1) / 2;
-      //}
-    }
-  }
 
   if (d > 1) {
     if (info) {
@@ -3403,11 +3419,14 @@ void ncon_info(const int ncon_order, const int d, const bool point_cut,
             "Odd Order n-icons have the same surface counts as when d = 1\n");
     }
     if (info)
-      fprintf(stderr, "Edge circuit counts are the same as when d = 1\n");
+      fprintf(stderr, "edge circuit counts are the same as when d = 1\n");
 
     // redo totals
     sd.total_surfaces = sd.c_surfaces + sd.d_surfaces;
     sd.total_edges = sd.c_edges + sd.d_edges;
+
+    // if (!(ncon_order % d))
+    //   sd.compound_parts = sd.d_surfaces;
   }
 
   if (info) {
@@ -3675,9 +3694,9 @@ void model_info(Geometry &geom, const ncon_opts &opts)
             (sz == 1 ? " was" : "s were"));
 
     if (strchr("ca", opts.face_coloring_method)) {
-      sdm_compound_parts = true;
+      // sdm_compound_parts = true;
       sdm.compound_parts = sz;
-      
+
       fprintf(
           stderr,
           "compound counts are dependent on enough unique colors in the map\n");
@@ -3861,8 +3880,8 @@ void model_info(Geometry &geom, const ncon_opts &opts)
 
   if (sdm_compound_parts) {
     fprintf(stderr, "total compound parts %s (%+d)\n",
-          ((sdm.compound_parts == sd.compound_parts) ? "Agree" : "DISAGREE"),
-          (sdm.compound_parts - sd.compound_parts));
+            ((sdm.compound_parts == sd.compound_parts) ? "Agree" : "DISAGREE"),
+            (sdm.compound_parts - sd.compound_parts));
   }
 
   if (sdm_surfaces || sdm_edges || sdm_compound_parts)
@@ -6724,37 +6743,86 @@ int ncon_subsystem(Geometry &geom, ncon_opts &opts)
   // elements can be chosen to be eliminated completely
   filter(geom, opts.hide_elems.c_str());
 
+  // find compound part count
+  if (opts.face_coloring_method == 'c' && opts.list_compounds) {
+    // find compound parts count for testing
+    vector<Color> cols;
+    for (unsigned int i = 0; i < geom.faces().size(); i++) {
+      Color c = geom.colors(FACES).get(i);
+      if (c != opts.face_default_color) {
+        cols.push_back(c);
+      }
+    }
+
+    sort(cols.begin(), cols.end());
+    auto li = unique(cols.begin(), cols.end());
+    cols.erase(li, cols.end());
+
+    ret = (int)cols.size();
+  }
+
   return ret;
 }
 
-void surface_subsystem(const ncon_opts &opts)
+void surface_subsystem(ncon_opts &opts)
 {
   vector<surfaceTable *> surface_table;
   surfaceData sd;
 
   char form = opts.ncon_surf[0];
 
+  if (opts.list_compounds) {
+    opts.build_method = 3;
+    opts.face_coloring_method = 'c';
+
+    // generated only small model for counting compound parts
+    opts.longitudes.push_back(4);
+    opts.longitudes.push_back(4);
+    opts.longitudes_save = opts.longitudes.back();
+
+    // need color map for counting colors
+    opts.face_map.add_cmap(alloc_default_map("m1"));
+    ColorMap *spread_map = colormap_from_name("spread");
+    opts.face_map.add_cmap(spread_map);
+  }
+
   fprintf(stderr, "\n");
 
-  fprintf(stderr, "Note: listing only surfaces of %d to %d (option -N)\n",
-          opts.filter_surfaces.front(), opts.filter_surfaces.back());
-
-  if (!opts.filter_case2)
-    fprintf(stderr,
-            "Note: case 2 n-icons are depicted with {curly brackets}\n");
-
-  if ((form != 'o') && (form != 'i'))
-    fprintf(stderr,
-            "Note: non-chiral n-icons are depicted with [square brackets]\n");
-
-  if (form == 'i')
-    fprintf(stderr, "Note: only hybrids such that N/2 is even are shown\n");
+  if (form == 'p')
+    fprintf(stderr, "Only Even Order Point Cut models are listed\n");
+  else if (form == 's')
+    fprintf(stderr, "Only Even Order Side Cut models are listed\n");
+  else if (form == 'o')
+    fprintf(stderr, "Only Odd Order models are listed\n");
+  else if (form == 'h')
+    fprintf(stderr, "Only Hybrid models are listed\n");
+  else if (form == 'i')
+    fprintf(stderr, "Only Hybrids such that N/2 is even are listed\n");
   else if (form == 'j')
-    fprintf(stderr, "Note: only hybrids such that N/2 is odd are shown\n");
+    fprintf(stderr, "Only Hybrids such that N/2 is odd are listed\n");
   else if (form == 'k')
-    fprintf(stderr, "Note: only hybrids such that N/4 is even are shown\n");
+    fprintf(stderr, "Only Hybrids such that N/4 is even are listed\n");
   else if (form == 'l')
-    fprintf(stderr, "Note: only hybrids such that N/4 is odd are shown\n");
+    fprintf(stderr, "Only Hybrids such that N/4 is odd are listed\n");
+
+  fprintf(stderr, "listing twists one %s way round avoids repeats\n",
+          (form == 'o') ? "half" : "quarter");
+
+  fprintf(stderr, "listing only %s of %d to %d (option -N)\n",
+          (!opts.list_compounds ? "surfaces" : "compound parts"),
+          opts.filter_surfaces.front(), opts.filter_surfaces.back());
+  fprintf(stderr, "D is set to %d (option -D)\n", opts.d);
+  if (opts.list_compounds && opts.d == 1)
+    fprintf(stderr, "when d = 1 no n_icons are compounds (option -D)\n");
+
+  if (!opts.list_compounds) {
+    if (!opts.filter_case2)
+      fprintf(stderr, "case 2 n-icons are depicted with {curly brackets}\n");
+
+    if ((form != 'o') && (form != 'i'))
+      fprintf(stderr,
+              "non-chiral n-icons are depicted with [square brackets]\n");
+  }
 
   fprintf(stderr, "\n");
 
@@ -6788,15 +6856,23 @@ void surface_subsystem(const ncon_opts &opts)
   }
 
   if (opts.long_form) {
-    fprintf(stderr,
-            "                       Surfaces                       Edges\n");
-    fprintf(stderr, "                       ------------------------------ "
-                    "------------------------\n");
-    fprintf(stderr, "%s  %s          %s %s %s %s %s\n\n", "Order", "n-icon",
-            "Total", "Continuous", "Discontinuous", "Continuous",
-            "Discontinuous");
+    if (!opts.list_compounds) {
+      fprintf(stderr,
+              "                       Surfaces                       Edges\n");
+      fprintf(stderr, "                       ------------------------------ "
+                      "------------------------\n");
+      fprintf(stderr, "%s  %s          %s %s %s %s %s\n\n", "Order", "n-icon",
+              "Total", "Continuous", "Discontinuous", "Continuous",
+              "Discontinuous");
+    }
+    else {
+      fprintf(stderr, "                       Compound Parts\n");
+      fprintf(stderr, "                       --------------\n");
+      fprintf(stderr, "%s  %s          %s\n\n", "Order", "n-icon", "Parts");
+    }
   }
 
+  int model_count = 0;
   int last = 0;
   for (int ncon_order = ncon_range.front(); ncon_order <= ncon_range.back();
        ncon_order += inc) {
@@ -6813,7 +6889,7 @@ void surface_subsystem(const ncon_opts &opts)
     bool hybrid = false;
     bool info = false;
 
-    if (form == 'n' || form == 'o')
+    if (form == 'p' || form == 'o')
       point_cut = true;
     else if (form == 's')
       point_cut = false;
@@ -6827,33 +6903,70 @@ void surface_subsystem(const ncon_opts &opts)
     else
       fprintf(stderr, "%d: ", ncon_order);
 
-    for (int twist = 2; twist <= last; twist++) {
-      ncon_info(ncon_order, opts.d, point_cut, twist, hybrid, info,
-                surface_table, sd);
+    int twist = (opts.list_compounds) ? ((hybrid) ? 1 : 0) : 2;
+    for (; twist <= last; twist++) {
+      if (!opts.list_compounds)
+        ncon_info(ncon_order, opts.d, point_cut, twist, hybrid, info,
+                  surface_table, sd);
+      else {
+        opts.ncon_order = ncon_order;
+        opts.twist = twist;
+        opts.point_cut = point_cut;
+        opts.hybrid = hybrid;
 
-      if ((sd.total_surfaces >= opts.filter_surfaces.front()) &&
-          (sd.total_surfaces <= opts.filter_surfaces.back())) {
-        if (!sd.ncon_case2 || (sd.ncon_case2 && !opts.filter_case2)) {
+        // variables usually set in normal code
+        opts.mod_twist = std::abs(twist % ncon_order);
+
+        Geometry geom;
+        sd.compound_parts = ncon_subsystem(geom, opts);
+        model_count++;
+      }
+
+      string buffer;
+      string d_part = ((opts.d > 1) ? "/" : "") +
+                      ((opts.d > 1) ? std::to_string(opts.d) : "");
+      if (!opts.list_compounds) {
+        if ((sd.total_surfaces >= opts.filter_surfaces.front()) &&
+            (sd.total_surfaces <= opts.filter_surfaces.back())) {
+          if (!sd.ncon_case2 || (sd.ncon_case2 && !opts.filter_case2)) {
+            if (!none) {
+              if (opts.long_form)
+                fprintf(stderr, "%-5d: ", ncon_order);
+              else
+                fprintf(stderr, ", ");
+            }
+            if (sd.nonchiral)
+              buffer = "[" + std::to_string(ncon_order) + d_part + "+" +
+                       std::to_string(twist) + "]";
+            else if (sd.ncon_case2)
+              buffer = "{" + std::to_string(ncon_order) + d_part + "+" +
+                       std::to_string(twist) + "}";
+            else
+              buffer = "(" + std::to_string(ncon_order) + d_part + "+" +
+                       std::to_string(twist) + ")";
+            if (opts.long_form)
+              fprintf(stderr, "%-15s %5d %10d %13d %10d %13d\n", buffer.c_str(),
+                      sd.total_surfaces, sd.c_surfaces, sd.d_surfaces,
+                      sd.c_edges, sd.d_edges);
+            else
+              fprintf(stderr, "%s", buffer.c_str());
+            none = false;
+          }
+        }
+      }
+      else {
+        if ((sd.compound_parts >= opts.filter_surfaces.front()) &&
+            (sd.compound_parts <= opts.filter_surfaces.back())) {
           if (!none) {
             if (opts.long_form)
               fprintf(stderr, "%-5d: ", ncon_order);
             else
               fprintf(stderr, ", ");
           }
-          string buffer;
-          if (sd.nonchiral)
-            buffer = "[" + std::to_string(ncon_order) + "+" +
-                     std::to_string(twist) + "]";
-          else if (sd.ncon_case2)
-            buffer = "{" + std::to_string(ncon_order) + "+" +
-                     std::to_string(twist) + "}";
-          else
-            buffer = "(" + std::to_string(ncon_order) + "+" +
-                     std::to_string(twist) + ")";
+          buffer = "(" + std::to_string(ncon_order) + d_part + "+" +
+                   std::to_string(twist) + ")";
           if (opts.long_form)
-            fprintf(stderr, "%-15s %5d %10d %13d %10d %13d\n", buffer.c_str(),
-                    sd.total_surfaces, sd.c_surfaces, sd.d_surfaces, sd.c_edges,
-                    sd.d_edges);
+            fprintf(stderr, "%-15s %5d\n", buffer.c_str(), sd.compound_parts);
           else
             fprintf(stderr, "%s", buffer.c_str());
           none = false;
@@ -6869,6 +6982,9 @@ void surface_subsystem(const ncon_opts &opts)
     }
     fprintf(stderr, "\n");
   }
+
+  if (opts.list_compounds)
+    fprintf(stderr, "processed %d models\n\n", model_count);
 }
 
 int main(int argc, char *argv[])
