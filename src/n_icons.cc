@@ -287,7 +287,7 @@ Surface (or Compound) Count Reporting (options above ignored)
                k = hybrids (where N/4 is even)
                l = hybrids (where N/4 is odd)
   -K <k,k2> range of n-icons to list. k > 2
-  -N <n,n2> range of surfaces (or compounds) to list. n > 1 (default: 3,1000)
+  -N <n,n2> range of surfaces (or compounds) to list. n > 1 (default: 2,1000)
   -D <int>  set d for the report (default: 1)
   -J        long form report
   -Z        filter out case 2 types (surfaces only)
@@ -633,7 +633,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
 
     // set defaults
     if (!filter_surfaces.size()) {
-      filter_surfaces.push_back(3);
+      filter_surfaces.push_back(2);
       filter_surfaces.push_back(1000);
     }
   }
@@ -3449,9 +3449,9 @@ void ncon_info(const int ncon_order, const int d, const bool point_cut,
             ((sd.d_edges == 1) ? " is" : "s are"));
     fprintf(stderr, "   %d edge%s total\n", (sd.total_edges),
             (((sd.total_edges) == 1) ? "" : "s"));
-    fprintf(stderr, "----\n");
-    fprintf(stderr, "   %d compound part%s total\n", (sd.compound_parts),
-            (((sd.compound_parts) == 1) ? "" : "s"));
+    // fprintf(stderr, "----\n");
+    // fprintf(stderr, "   %d compound part%s total\n", (sd.compound_parts),
+    //         (((sd.compound_parts) == 1) ? "" : "s"));
   }
 
   if (info) {
@@ -6769,7 +6769,7 @@ void surface_subsystem(ncon_opts &opts)
   vector<surfaceTable *> surface_table;
   surfaceData sd;
 
-  char form = opts.ncon_surf[0];
+  string buffer;
 
   if (opts.list_compounds) {
     opts.build_method = 3;
@@ -6786,8 +6786,13 @@ void surface_subsystem(ncon_opts &opts)
     opts.face_map.add_cmap(spread_map);
   }
 
+  int minimum_n = std::numeric_limits<int>::max();
+  double twist_count = 0;
+  double twist_span = 0;
+
   fprintf(stderr, "\n");
 
+  char form = opts.ncon_surf[0];
   if (form == 'p')
     fprintf(stderr, "Only Even Order Point Cut models are listed\n");
   else if (form == 's')
@@ -6805,13 +6810,16 @@ void surface_subsystem(ncon_opts &opts)
   else if (form == 'l')
     fprintf(stderr, "Only Hybrids such that N/4 is odd are listed\n");
 
-  fprintf(stderr, "listing twists one %s way round avoids repeats\n",
+  fprintf(stderr, "listing twists one %s way round to avoid repeats\n",
           (form == 'o') ? "half" : "quarter");
 
   fprintf(stderr, "listing only %s of %d to %d (option -N)\n",
           (!opts.list_compounds ? "surfaces" : "compound parts"),
           opts.filter_surfaces.front(), opts.filter_surfaces.back());
-  fprintf(stderr, "D is set to %d (option -D)\n", opts.d);
+
+  fprintf(stderr, "d is set to %d (option -D) (only d less than n measured)\n",
+          opts.d);
+
   if (opts.list_compounds && opts.d == 1)
     fprintf(stderr, "when d = 1 no n_icons are compounds (option -D)\n");
 
@@ -6822,6 +6830,29 @@ void surface_subsystem(ncon_opts &opts)
     if ((form != 'o') && (form != 'i'))
       fprintf(stderr,
               "non-chiral n-icons are depicted with [square brackets]\n");
+    else if (form == 's')
+      fprintf(stderr,
+              "all even order side cut n-icons have at least two surfaces\n");
+  }
+  else {
+    if ((form == 'p') && (opts.d == 2)) {
+      fprintf(stderr,
+              "when d=2, all even order (greater than 4) point cut n-icons\n");
+      fprintf(stderr, "will have at least two compound parts\n");
+    }
+    else if (opts.d == 2) {
+      if (form == 'p')
+        buffer = "even order point cut";
+      else if (form == 's')
+        buffer = "even order side cut";
+      else if (form == 'o')
+        buffer = "odd order";
+      else
+        buffer = "hybrid";
+      fprintf(stderr,
+              "when d=2, no %s n-icons will have just two compound parts\n",
+              buffer.c_str());
+    }
   }
 
   fprintf(stderr, "\n");
@@ -6876,14 +6907,6 @@ void surface_subsystem(ncon_opts &opts)
   int last = 0;
   for (int ncon_order = ncon_range.front(); ncon_order <= ncon_range.back();
        ncon_order += inc) {
-    if (is_even(ncon_order)) {
-      if (form == 'h')
-        last = (int)floor((double)(ncon_order + 2) / 4);
-      else
-        last = (int)floor((double)ncon_order / 4);
-    }
-    else
-      last = (int)floor((double)ncon_order / 2);
 
     bool point_cut = false;
     bool hybrid = false;
@@ -6893,8 +6916,13 @@ void surface_subsystem(ncon_opts &opts)
       point_cut = true;
     else if (form == 's')
       point_cut = false;
-    else if (form == 'h')
+    else
       hybrid = true;
+
+    // last twist
+    last = (int)floor((double)ncon_order / ((!is_even(ncon_order)) ? 2 : 4));
+    if (hybrid)
+      last++;
 
     bool none = true;
 
@@ -6903,8 +6931,21 @@ void surface_subsystem(ncon_opts &opts)
     else
       fprintf(stderr, "%d: ", ncon_order);
 
-    int twist = (opts.list_compounds) ? ((hybrid) ? 1 : 0) : 2;
+    int twist = (hybrid) ? 1 : 0;
+    double last_twist = twist;
+    double first_twist = true;
     for (; twist <= last; twist++) {
+      // need list entry but...
+      // now that d>1 is allowed must not allow n/0
+      if (!(opts.d % ncon_order))
+        continue;
+      // don't allow d>n
+      if (opts.d > ncon_order)
+        continue;
+      // bypass digon cases
+      if (ncon_order == 2 * opts.d)
+        continue;
+
       if (!opts.list_compounds)
         ncon_info(ncon_order, opts.d, point_cut, twist, hybrid, info,
                   surface_table, sd);
@@ -6922,7 +6963,6 @@ void surface_subsystem(ncon_opts &opts)
         model_count++;
       }
 
-      string buffer;
       string d_part = ((opts.d > 1) ? "/" : "") +
                       ((opts.d > 1) ? std::to_string(opts.d) : "");
       if (!opts.list_compounds) {
@@ -6970,6 +7010,17 @@ void surface_subsystem(ncon_opts &opts)
           else
             fprintf(stderr, "%s", buffer.c_str());
           none = false;
+
+          if (ncon_order < minimum_n)
+            minimum_n = ncon_order;
+
+          if (!first_twist) {
+            twist_count += 1.0;
+            twist_span += twist - last_twist;
+          }
+          else
+            first_twist = false;
+          last_twist = twist;
         }
       }
     }
@@ -6983,8 +7034,9 @@ void surface_subsystem(ncon_opts &opts)
     fprintf(stderr, "\n");
   }
 
-  if (opts.list_compounds)
+  if (opts.list_compounds) {
     fprintf(stderr, "processed %d models\n\n", model_count);
+  }
 }
 
 int main(int argc, char *argv[])
