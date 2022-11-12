@@ -6786,10 +6786,6 @@ void surface_subsystem(ncon_opts &opts)
     opts.face_map.add_cmap(spread_map);
   }
 
-  int minimum_n = std::numeric_limits<int>::max();
-  double twist_count = 0;
-  double twist_span = 0;
-
   fprintf(stderr, "\n");
 
   char form = opts.ncon_surf[0];
@@ -6932,8 +6928,6 @@ void surface_subsystem(ncon_opts &opts)
       fprintf(stderr, "%d: ", ncon_order);
 
     int twist = (hybrid) ? 1 : 0;
-    double last_twist = twist;
-    double first_twist = true;
     for (; twist <= last; twist++) {
       // need list entry but...
       // now that d>1 is allowed must not allow n/0
@@ -7010,17 +7004,6 @@ void surface_subsystem(ncon_opts &opts)
           else
             fprintf(stderr, "%s", buffer.c_str());
           none = false;
-
-          if (ncon_order < minimum_n)
-            minimum_n = ncon_order;
-
-          if (!first_twist) {
-            twist_count += 1.0;
-            twist_span += twist - last_twist;
-          }
-          else
-            first_twist = false;
-          last_twist = twist;
         }
       }
     }
