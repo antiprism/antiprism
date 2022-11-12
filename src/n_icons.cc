@@ -6899,7 +6899,9 @@ void surface_subsystem(ncon_opts &opts)
     }
   }
 
+  int hit_count = 0;
   int model_count = 0;
+
   int last = 0;
   for (int ncon_order = ncon_range.front(); ncon_order <= ncon_range.back();
        ncon_order += inc) {
@@ -6940,10 +6942,13 @@ void surface_subsystem(ncon_opts &opts)
       if (ncon_order == 2 * opts.d)
         continue;
 
-      if (!opts.list_compounds)
-        ncon_info(ncon_order, opts.d, point_cut, twist, hybrid, info,
-                  surface_table, sd);
-      else {
+      ncon_info(ncon_order, opts.d, point_cut, twist, hybrid, info,
+                surface_table, sd);
+
+      if (opts.list_compounds) {
+        // compounds have to have more than one surface
+        if (sd.total_surfaces == 1)
+          continue;
         opts.ncon_order = ncon_order;
         opts.twist = twist;
         opts.point_cut = point_cut;
@@ -6985,6 +6990,7 @@ void surface_subsystem(ncon_opts &opts)
             else
               fprintf(stderr, "%s", buffer.c_str());
             none = false;
+            hit_count++;
           }
         }
       }
@@ -7004,6 +7010,7 @@ void surface_subsystem(ncon_opts &opts)
           else
             fprintf(stderr, "%s", buffer.c_str());
           none = false;
+          hit_count++;
         }
       }
     }
@@ -7017,9 +7024,12 @@ void surface_subsystem(ncon_opts &opts)
     fprintf(stderr, "\n");
   }
 
-  if (opts.list_compounds) {
-    fprintf(stderr, "processed %d models\n\n", model_count);
-  }
+  fprintf(
+      stderr, "found %d %s\n", hit_count,
+      (opts.list_compounds ? "compounds" : "models with multiple surfaces"));
+  if (opts.list_compounds)
+    fprintf(stderr, "processed %d models\n", model_count);
+  fprintf(stderr, "\n");
 }
 
 int main(int argc, char *argv[])
