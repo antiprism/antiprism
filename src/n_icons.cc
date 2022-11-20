@@ -5984,11 +5984,12 @@ void ncon_face_coloring_by_compound(Geometry &geom, Geometry polar_polygon,
     polar_polygon.transform(Trans3d::scale(1 / scale));
   */
 
+  int n = opts.ncon_order / ((opts.build_method == 2) ? 2 : 1);
+  int t = opts.twist / ((opts.build_method == 2) ? 2 : 1);
+
   axes[0] = Vec3d::Y;
-  axes[1] =
-      Trans3d::rotate(Vec3d::Z, -2 * M_PI * (opts.twist - 0.5 * opts.hybrid) /
-                                    opts.ncon_order) *
-      axes[0];
+  axes[1] = Trans3d::rotate(Vec3d::Z, -2 * M_PI * (t - 0.5 * opts.hybrid) / n) *
+            axes[0];
 
   for (unsigned int i = 0; i < polar_polygon.edges().size(); i++) {
     for (int ax = 0; ax < 2; ax++) {
