@@ -448,6 +448,16 @@ find_edges_with_vertex(const std::vector<std::vector<int>> &edges, int v_idx);
 int find_edge_in_edge_list(const std::vector<std::vector<int>> &edges,
                            const std::vector<int> &edge);
 
+/// Find the index number of an edge with a set of coordinates
+/**\param geom the geometry
+ * \param v0 one edge coordinate
+ * \param v1 other edge coordinate
+ * \param eps a small number, coordinates differing by less than eps are
+ *  the same.
+ * \return The corresponding edge with lowest index number, otherwise -1 */
+int find_edge_by_coords(const Geometry &geom, const Vec3d &v0, const Vec3d &v1,
+                        double eps = epsilon);
+
 /// Find edges which do not correspond to the edge of a face
 /**\param geom the geometry
  * \return the unmatched edges. */

@@ -231,7 +231,7 @@ Scene Options
                two-vertices (edges) and three or more vertices (faces)
                E - if face is invisible, associated edge is made invisible
   -Y        for n/d shells, when showing edges, show indented edges
-  -W        add symmetry polygon (-f S or -e S)
+  -W        add symmetry polygon (-f S,C or -e S)
 
 Coloring Options (run 'off_util -H color' for help on color formats)
   -f <mthd> mthd is face coloring method. The coloring is done before twist
@@ -239,8 +239,8 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                S - color by symmetry polygon (default)
                s - color by circuits algorithm (n/d must be co-prime)
                f - color circuits with flood fill (-z 2,3 any n/d)
-               c - color by compound
-               a - color by compound (by connected faces)
+               C - color by compound
+               c - color by compound with flood fill
                l - color latitudinally
                m - color longitudinally
                b - checkerboard with first two colors in the color list
@@ -471,7 +471,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
       if (!strcasecmp(optarg, "none"))
         // place holder 'zero'
         face_coloring_method = '0';
-      else if (strspn(optarg, "sflmbnxyzocaS") != strlen(optarg) ||
+      else if (strspn(optarg, "sflmbnxyzocCS") != strlen(optarg) ||
                strlen(optarg) > 1)
         error(msg_str("invalid face coloring method '%c'", *optarg), c);
       else
@@ -907,8 +907,8 @@ void ncon_opts::process_command_line(int argc, char **argv)
   }
 
   if (add_symmetry_polygon &&
-      (face_coloring_method != 'S' && edge_coloring_method != 'S'))
-    warning("adding symmetry polygon only has effect for -f S or -e S", "W");
+      (!(strchr("SC", face_coloring_method) && (edge_coloring_method != 'S'))))
+    warning("adding symmetry polygon only has effect for -f S,C or -e S", "W");
 
   // circuit table works with co-prime n/d
   // if n/d is co-prime (and d>1) angle must be 0
@@ -1525,7 +1525,7 @@ void apply_latitudes(const Geometry &geom,
   }
 
   bool do_faces = !(!opts.face_coloring_method ||
-                    !strchr("slbfc", opts.face_coloring_method));
+                    !strchr("slbfcC", opts.face_coloring_method));
   bool do_edges =
       !(!opts.edge_coloring_method || !strchr("l", opts.edge_coloring_method));
   if (do_faces || do_edges) {
@@ -1837,7 +1837,7 @@ void apply_latitudes(const Geometry &geom,
   // find faces connected to edges for latitude assignment
   // optimization: if face lats not needed then bypass
   bool do_faces = !(!opts.face_coloring_method ||
-                    !strchr("slbfc", opts.face_coloring_method));
+                    !strchr("slbfcC", opts.face_coloring_method));
   if (!do_faces)
     return;
 
@@ -2893,7 +2893,7 @@ void ncon_twist(Geometry &geom, const vector<polarOrb *> &polar_orbit,
                 const vector<coordList *> &coordinates,
                 const vector<faceList *> &face_list,
                 const vector<edgeList *> &edge_list, const int ncon_order,
-                const int twist, const vector<int> &longitudes)
+                const int twist, ncon_opts &opts)
 {
   // this function wasn't designed for twist 0
   if (twist == 0)
@@ -2903,8 +2903,8 @@ void ncon_twist(Geometry &geom, const vector<polarOrb *> &polar_orbit,
   vector<vector<int>> &edges = geom.raw_edges();
   vector<Vec3d> &verts = geom.raw_verts();
 
-  double arc = (360.0 / ncon_order) * twist * (+1);
-  Trans3d rot = Trans3d::rotate(0, 0, deg2rad(-arc));
+  opts.twist_angle = (360.0 / ncon_order) * twist * (+1);
+  Trans3d rot = Trans3d::rotate(0, 0, deg2rad(-opts.twist_angle));
 
   for (unsigned int i = 0; i < face_list.size(); i++) {
     if (face_list[i]->rotate) {
@@ -2919,7 +2919,7 @@ void ncon_twist(Geometry &geom, const vector<polarOrb *> &polar_orbit,
 
   // Patch - If an open model, some of the polar circle coordinates are not yet
   // rotated
-  if (!full_model(longitudes))
+  if (!full_model(opts.longitudes))
     for (auto i : polar_orbit) {
       int j = i->coord_no;
       if (!coordinates[j]->rotated) {
@@ -3311,48 +3311,56 @@ void ncon_info(const int ncon_order, const int d, const bool point_cut,
   sd.ncon_case2 = false;
   int case1_twist = 0;
 
+  // on twist 0 or 1, find_surface_count finds no entry
+  find_surface_count(surface_table, posi_twist, sd.c_surfaces, sd.ncon_case2,
+                     case1_twist);
   if (posi_twist == 0) {
     sd.c_surfaces = (int)floor((double)ncon_order + 1) / 2;
-    if (is_even(ncon_order) && !point_cut)
-      sd.c_surfaces++;
-    sd.c_edges = sd.c_surfaces - 1;
-
-    if (!is_even(ncon_order) || !point_cut) {
+    if (is_even(ncon_order) && point_cut)
+      sd.c_edges = sd.c_surfaces - 1;
+    else if (is_even(ncon_order) && !point_cut) {
+      sd.c_surfaces--;
+      sd.d_surfaces += 2;
+      sd.c_edges = sd.c_surfaces + 1;
+    }
+    else if (!is_even(ncon_order)) {
       sd.c_surfaces--;
       sd.d_surfaces++;
-      if (is_even(ncon_order)) {
-        sd.c_surfaces--;
-        sd.d_surfaces++;
-      }
+      sd.c_edges = sd.c_surfaces;
     }
     sd.d_edges = 0;
   }
   else if (hybrid) {
-    find_surface_count(surface_table, posi_twist, sd.c_surfaces, sd.ncon_case2,
-                       case1_twist);
     sd.d_surfaces = 1;
     sd.c_edges = sd.c_surfaces + sd.d_surfaces - 1;
     sd.d_edges = 1;
   }
   else if (is_even(ncon_order) && point_cut) {
-    find_surface_count(surface_table, posi_twist, sd.c_surfaces, sd.ncon_case2,
-                       case1_twist);
+    // point cut always has at least one continuous circuit when d = 1
     if (sd.c_surfaces == 0)
       sd.c_surfaces = 1;
     sd.d_surfaces = 0;
-    sd.c_edges = sd.c_surfaces + sd.d_surfaces - 1;
+    sd.c_edges = sd.c_surfaces - 1;
     sd.d_edges = 2;
+
+    // adjust for d > 1
+    if (is_even(d)) {
+      sd.c_surfaces -= 1;
+      sd.d_surfaces += 2;
+    }
   }
   else if (is_even(ncon_order) && !point_cut) {
-    find_surface_count(surface_table, posi_twist, sd.c_surfaces, sd.ncon_case2,
-                       case1_twist);
     sd.d_surfaces = 2;
     sd.c_edges = sd.c_surfaces + sd.d_surfaces - 1;
     sd.d_edges = 0;
+
+    // adjust for d > 1
+    if (is_even(d)) {
+      sd.c_surfaces += 1;
+      sd.d_surfaces -= 2;
+    }
   }
   else if (!is_even(ncon_order)) {
-    find_surface_count(surface_table, posi_twist, sd.c_surfaces, sd.ncon_case2,
-                       case1_twist);
     sd.c_edges = sd.c_surfaces;
     sd.d_surfaces = 1;
     sd.d_edges = 1;
@@ -3377,37 +3385,25 @@ void ncon_info(const int ncon_order, const int d, const bool point_cut,
         fprintf(stderr, "and d is %s, ", (is_even(d)) ? "even" : "odd");
 
       if (point_cut) {
-        if (info)
+        if (info) {
           fprintf(stderr, "Even Order Point Cut n-icons have\n");
 
-        if (is_even(d)) {
-          sd.c_surfaces -= 1;
-          sd.d_surfaces += 2;
-          if (info) {
+          if (is_even(d))
             fprintf(stderr, "one less continuous surface "
                             "and two additional discontinuous surfaces\n");
-          }
-        }
-        else {
-          if (info)
+          else
             fprintf(stderr, "the same surface counts as when d = 1\n");
         }
       }
       // side cut
       else {
-        if (info)
+        if (info) {
           fprintf(stderr, "Even Order Side Cut n-icons have\n");
 
-        if (is_even(d)) {
-          sd.c_surfaces += 1;
-          sd.d_surfaces -= 2;
-          if (info) {
+          if (is_even(d))
             fprintf(stderr, "one additional continuous surface and "
                             "two less discontinuous surfaces\n");
-          }
-        }
-        else {
-          if (info)
+          else
             fprintf(stderr, "the same surface counts as when d = 1\n");
         }
       }
@@ -3420,13 +3416,6 @@ void ncon_info(const int ncon_order, const int d, const bool point_cut,
     }
     if (info)
       fprintf(stderr, "edge circuit counts are the same as when d = 1\n");
-
-    // redo totals
-    sd.total_surfaces = sd.c_surfaces + sd.d_surfaces;
-    sd.total_edges = sd.c_edges + sd.d_edges;
-
-    // if (!(ncon_order % d))
-    //   sd.compound_parts = sd.d_surfaces;
   }
 
   if (info) {
@@ -3605,6 +3594,8 @@ void model_info(Geometry &geom, const ncon_opts &opts)
   fprintf(stderr, "the model is %sclosed\n", (closed) ? "" : "not ");
   fprintf(stderr, "the model is %scomplete\n",
           (full_model(opts.longitudes)) ? "" : "not ");
+  if (opts.build_method == 2)
+    fprintf(stderr, "circuit counts are not done in method 2\n");
 
   // measured values
   surfaceData sdm;
@@ -3618,14 +3609,16 @@ void model_info(Geometry &geom, const ncon_opts &opts)
   bool sdm_edges = false;
   bool sdm_compound_parts = false;
 
+  bool measure = (!opts.symmetric_coloring && full_model(opts.longitudes) &&
+                  !opts.lon_invisible && opts.build_method != 2);
+
   if (opts.face_coloring_method && strchr("sfSca", opts.face_coloring_method) &&
-      !opts.symmetric_coloring && full_model(opts.longitudes) &&
-      !opts.flood_fill_stop) {
+      !opts.flood_fill_stop && measure) {
     vector<Color> cols;
     vector<pair<Color, int>> col_faces;
     for (unsigned int i = 0; i < geom.faces().size(); i++) {
       Color c = geom.colors(FACES).get(i);
-      if (c != opts.face_default_color) {
+      if (c.is_set() && !c.is_invisible() && (c != opts.face_default_color)) {
         cols.push_back(c);
         col_faces.push_back(make_pair(c, i));
       }
@@ -3705,11 +3698,7 @@ void model_info(Geometry &geom, const ncon_opts &opts)
             if (opts.build_method == 2) {
               fprintf(stderr,
                       "shell models are physically non-compounds (but can be "
-                      "painted as compounds with -f c or -f a)\n");
-              if (opts.face_coloring_method == 'a')
-                fprintf(stderr,
-                        "per actual face connectivity, the compound coloring "
-                        "can be incorrect with -f a\n");
+                      "painted as compounds with -f c)\n");
             }
             else if (opts.build_method == 3) {
               int num_parts = geom.get_info().num_parts();
@@ -3725,7 +3714,7 @@ void model_info(Geometry &geom, const ncon_opts &opts)
   }
 
   if ((opts.edge_coloring_method && strchr("sfS", opts.edge_coloring_method)) &&
-      !opts.symmetric_coloring && full_model(opts.longitudes)) {
+      measure) {
     vector<Color> cols;
     vector<pair<Color, int>> col_edges;
     for (unsigned int i = 0; i < geom.edges().size(); i++) {
@@ -4925,33 +4914,18 @@ void ncon_edge_coloring_by_adjacent_edge(Geometry &geom,
   }
 }
 
-int ncon_face_coloring_by_compound(Geometry &geom,
-                                   const vector<faceList *> &face_list,
-                                   const vector<int> &caps,
-                                   const ncon_opts &opts)
+int ncon_face_coloring_by_compound_flood(Geometry &geom,
+                                         const vector<faceList *> &face_list,
+                                         const vector<int> &caps,
+                                         const ncon_opts &opts)
 {
   int flood_fill_count = 0;
   int ret = 0;
+  int opq = 255;
 
   // all face indexes need to be cleared
   Coloring clrng(&geom);
   clrng.f_one_col(Color());
-
-  int opq = 255;
-
-  /*
-     //test polygon_no
-     for (unsigned int i=0;i<face_list.size();i++) {
-        int face_no = face_list[i]->face_no;
-        int polygon_no = face_list[i]->polygon_no;
-        int lat = face_list[i]->lat;
-        fprintf(stderr,"face_no = %d polygon_no = %d lat = %d\n",
-          face_no, polygon_no, lat);
-        Color c = opts.face_map.get_col(polygon_no);
-        geom.colors(FACES).set(face_no,c);
-     }
-     return ret;
-  */
 
   vector<pair<int, int>> polygon_table;
 
@@ -5018,34 +4992,6 @@ int ncon_face_coloring_by_compound(Geometry &geom,
   return ret;
 }
 
-void ncon_alternate_compound_coloring(Geometry &geom, const ncon_opts &opts)
-{
-  int opq = 255;
-
-  Coloring clrng(&geom);
-  clrng.add_cmap(opts.face_map.clone());
-
-  // color by constituents
-  clrng.f_parts(false);
-
-  int part_count = -1;
-  for (unsigned int i = 0; i < geom.faces().size(); i++) {
-    Color c = geom.colors(FACES).get(i);
-    if (c.is_index()) {
-      int idx = c.get_index();
-      if (idx > part_count)
-        part_count = idx;
-
-      c = opts.face_map.get_col(idx);
-      if (opts.face_opacity > -1)
-        opq = opts.face_pattern[idx % (int)opts.face_pattern.size()] == '1'
-                  ? opts.face_opacity
-                  : 255;
-      set_face_color(geom, i, c, opq);
-    }
-  }
-}
-
 /* unused function to line a face with edges of color col
 void add_edges_to_face(Geometry &geom, vector<int> face, Color col)
 {
@@ -5110,9 +5056,8 @@ void ncon_edge_coloring_from_faces(Geometry &geom, const ncon_opts &opts)
       inv_verts.push_back(i);
   }
 
-  Coloring clrng;
+  Coloring clrng(&geom);
   clrng.add_cmap(opts.face_map.clone());
-  clrng.set_geom(&geom);
   clrng.e_from_adjacent(FACES);
   clrng.v_from_adjacent(FACES);
 
@@ -5469,7 +5414,7 @@ void build_globe(Geometry &geom, vector<coordList *> &coordinates,
       lat_mode = 2;
     // the old apply_latitudes must be used for method 3 compound coloring, new
     // method won't work
-    if (opts.face_coloring_method == 'c')
+    if (strchr("cC", opts.face_coloring_method))
       lat_mode = 2;
     // non-co-prime compounds don't work with new method. Use old method
     // (faster)
@@ -5483,11 +5428,11 @@ void build_globe(Geometry &geom, vector<coordList *> &coordinates,
     lat_mode = 2;
 
   bool do_faces = !(!opts.face_coloring_method ||
-                    !strchr("slbfc", opts.face_coloring_method));
+                    !strchr("slbfcC", opts.face_coloring_method));
   bool do_edges = !(!opts.edge_coloring_method ||
                     !strchr("slbf", opts.edge_coloring_method));
 
-  // latitudes are accessed in methods s,l,b,f,c
+  // latitudes are accessed in methods s,l,b,f,c,C
   // if not these then there is no need to set
   if (!do_faces && !do_edges)
     lat_mode = 0;
@@ -5505,7 +5450,7 @@ void build_globe(Geometry &geom, vector<coordList *> &coordinates,
       apply_latitudes(geom, original_faces, split_face_indexes, face_list,
                       edge_list, pole, opts);
       // old apply_latitudes needs to fix polygon numbers for compound coloring
-      if ((opts.face_coloring_method == 'c') && !double_sweep)
+      if (strchr("cC", opts.face_coloring_method) && !double_sweep)
         fix_polygon_numbers(face_list, opts);
     }
   }
@@ -5773,6 +5718,310 @@ void restore_flood_longitude_faces(Geometry &geom,
   }
 }
 
+void build_compound_polygon(vector<Geometry> &polar_polygons,
+                            const ncon_opts &opts)
+{
+  // duplicate polygon for non-hybrids
+  if (polar_polygons.size() == 1)
+    polar_polygons.push_back(polar_polygons[0]);
+
+  polar_polygons[1].transform(
+      Trans3d::rotate(0, 0, deg2rad(-opts.twist_angle)));
+
+  vector<pair<int, int>> edge_queue;
+  map<int, vector<pair<int, int>>> edge_colors;
+  int edge_map_color = 0;
+
+  // maximum colors
+  unsigned int num_polygons = gcd(opts.ncon_order, opts.d);
+  for (unsigned int i = 0; i < num_polygons; i++) {
+    Color c = opts.face_map.get_col(i);
+    // find starter edges with color c in polygon 0
+    vector<int> edges;
+    for (unsigned int j = 0; j < polar_polygons[0].edges().size(); j++) {
+      if (polar_polygons[0].colors(EDGES).get(j) == c) {
+        // place polygon/edge(s) in unique queue
+        pair<int, int> entry = make_pair(0, j);
+        auto found = find(edge_queue.begin(), edge_queue.end(), entry);
+        if (found == edge_queue.end()) {
+          edge_queue.push_back(entry);
+        }
+      }
+    }
+    // process queue
+    while (edge_queue.size()) {
+      pair<int, int> polygon_pair = edge_queue[0];
+      int polygon_no = polygon_pair.first;
+      int edge_no = polygon_pair.second;
+
+      // for that polygon edge
+      // unset color
+      polar_polygons[polygon_no].colors(EDGES).set(edge_no, Color());
+      // collect edge to color post process
+      edge_colors[edge_map_color].push_back(make_pair(polygon_no, edge_no));
+
+      // find corresponding edge in opposite polygon
+      Vec3d v1 = polar_polygons[polygon_no].verts(
+          polar_polygons[polygon_no].edges(edge_no)[0]);
+      Vec3d v2 = polar_polygons[polygon_no].verts(
+          polar_polygons[polygon_no].edges(edge_no)[1]);
+      int polygon_oppo = (polygon_no) ? 0 : 1;
+      int edge_oppo =
+          find_edge_by_coords(polar_polygons[polygon_oppo], v1, v2, opts.eps);
+      if (edge_oppo == -1)
+        opts.error("build_compound_polygon: unexpected error");
+      // if corresponding edge has color
+      Color c_oppo = polar_polygons[polygon_oppo].colors(EDGES).get(edge_oppo);
+      if (c_oppo.is_set()) {
+        // for edges of that color
+        for (unsigned int j = 0;
+             j < polar_polygons[polygon_oppo].edges().size(); j++) {
+          if (polar_polygons[polygon_oppo].colors(EDGES).get(j) == c_oppo) {
+            // place polygon/edge(s) in unique queue
+            pair<int, int> entry = make_pair(polygon_oppo, j);
+            auto found = find(edge_queue.begin(), edge_queue.end(), entry);
+            if (found == edge_queue.end()) {
+              edge_queue.push_back(entry);
+            }
+          }
+        }
+      }
+
+      // like pop_front();
+      edge_queue.erase(edge_queue.begin());
+    }
+    // next map color for collected edges
+    edge_map_color++;
+  }
+
+  // color polygons as compound polygons
+  map<int, vector<pair<int, int>>>::iterator mi;
+  for (mi = edge_colors.begin(); mi != edge_colors.end(); mi++) {
+    int map_index = mi->first;
+    vector<pair<int, int>> e_indexes = mi->second;
+    for (unsigned int i = 0; i < e_indexes.size(); i++) {
+      pair<int, int> edge_indexes = e_indexes[i];
+      polar_polygons[edge_indexes.first].colors(EDGES).set(
+          edge_indexes.second, opts.face_map.get_col(map_index));
+    }
+  }
+}
+
+// geom copy
+Geometry find_polar_polygon(Geometry geom, const vector<faceList *> &face_list,
+                            const ncon_opts &opts)
+{
+  const vector<vector<int>> &edges = geom.edges();
+  const vector<Vec3d> &verts = geom.verts();
+
+  // some vertices are not right on the z plane
+  double epsilon_local = 1e-8;
+
+  // edges in polygon will be implicit
+  geom.add_missing_impl_edges();
+
+  // clear all colors
+  geom.colors(FACES).clear();
+  geom.colors(EDGES).clear();
+  geom.colors(VERTS).clear();
+
+  // color by polygon number
+  for (unsigned int i = 0; i < face_list.size(); i++) {
+    int face_no = (opts.hybrid) ? i : face_list[i]->face_no;
+    int polygon_no = face_list[i]->polygon_no;
+    // int lat = face_list[i]->lat;
+    // fprintf(stderr,"face_no = %d polygon_no = %d lat = %d\n",
+    //   face_no, polygon_no, lat);
+    Color c = opts.face_map.get_col(polygon_no);
+    geom.colors(FACES).set(face_no, c);
+  }
+
+  vector<int> delete_elem;
+  if (!opts.hybrid) {
+    for (unsigned int i = 0; i < face_list.size(); i++) {
+      int lon = face_list[i]->lon;
+      // if (lon >= (opts.longitudes.front() / 2))
+      if (!(lon == 0 || lon == ((opts.longitudes.front() / 2) - 1)))
+        delete_elem.push_back(i);
+    }
+    geom.del(FACES, delete_elem);
+  }
+
+  // edge and vertex colors from faces
+  Coloring clrng(&geom);
+  clrng.add_cmap(opts.face_map.clone());
+  clrng.e_from_adjacent(FACES);
+
+  Geometry polar_polygon;
+  for (unsigned int i = 0; i < geom.verts().size(); i++) {
+    Vec3d vert = verts[i];
+    // in case of build method 3, some points were set aside so not to get
+    // into twist plane, zero out
+    if ((opts.build_method == 3) && fabs(vert[2]) < opts.eps * 3.0) {
+      vert[2] = 0.0;
+    }
+    polar_polygon.add_vert(vert);
+  }
+  for (unsigned int i = 0; i < edges.size(); i++) {
+    vector<int> edge = edges[i];
+    double z0 = geom.verts(edge[0])[2];
+    double z1 = geom.verts(edge[1])[2];
+    if (geom.colors(EDGES).get(i).is_set() &&
+        double_eq(z0, 0.0, epsilon_local) &&
+        double_eq(z1, 0.0, epsilon_local)) {
+      polar_polygon.add_edge(edges[i], geom.colors(EDGES).get(i));
+    }
+  }
+
+  polar_polygon.del(VERTS, polar_polygon.get_info().get_free_verts());
+
+  // remove inline vertices
+  if (opts.build_method == 3) {
+    vector<int> del_verts;
+    for (unsigned int i = opts.ncon_order; i < polar_polygon.verts().size();
+         i++) {
+      vector<int> es = find_edges_with_vertex(polar_polygon.edges(), i);
+      for (unsigned int j = 0; j < es.size(); j++) {
+        for (unsigned int k = j + 1; k < es.size(); k++) {
+          int e1 = polar_polygon.edges(es[j])[0];
+          int e2 = polar_polygon.edges(es[k])[0];
+          Vec3d v1 = polar_polygon.verts(i);
+          Vec3d v2 = polar_polygon.verts(e1);
+          Vec3d v3 = polar_polygon.verts(e2);
+          // if v1 is in line with v2 and v3 then mark it for deletion
+          if (point_in_segment(v1, v2, v3, opts.eps).is_set()) {
+            // add new edge
+            polar_polygon.add_edge(make_edge(e1, e2),
+                                   polar_polygon.colors(EDGES).get(es[k]));
+            // delete old edges
+            // del_edges.push_back(e1);
+            // del_edges.push_back(e2);
+            del_verts.push_back(i);
+          }
+        }
+      }
+    }
+    // polar_polygon.del(EDGES, del_edges);
+
+    // (some duplicates)
+    sort(del_verts.begin(), del_verts.end());
+    auto dv = unique(del_verts.begin(), del_verts.end());
+    del_verts.resize(dv - del_verts.begin());
+    polar_polygon.del(VERTS, del_verts);
+  }
+
+  return polar_polygon;
+}
+
+struct ht_less {
+  static double get_eps() { return 1e-10; }
+  bool operator()(const double h0, const double h1) const
+  {
+    return double_lt(h0, h1, get_eps());
+  }
+};
+
+void lookup_face_color(Geometry &geom, const int f, const vector<Vec3d> &axes,
+                       vector<map<double, Color, ht_less>> &heights,
+                       const bool other_axis)
+{
+  int ax = double_ge(geom.face_cent(f)[2], 0.0,
+                     ht_less::get_eps()); // z-coordinate determines axis
+  if (other_axis)
+    ax = (!ax) ? 1 : 0;
+  double hts[3];
+  for (int v_idx = 0; v_idx < 3; v_idx++)
+    hts[v_idx] = vdot(geom.face_v(f, v_idx), axes[ax]);
+  // try to select non-horizontal edge
+  int offset = double_eq(hts[0], hts[1], ht_less::get_eps());
+  double ht;
+  if (offset && double_eq(hts[1], hts[2], ht_less::get_eps()))
+    ht = hts[0] / fabs(hts[0]); // horizontal edge (on  horizontal face)
+  else {
+    // Find nearpoint of swept edge line, make unit, get height on axis
+    Vec3d near_pt = nearest_point(Vec3d(0, 0, 0), geom.face_v(f, offset),
+                                  geom.face_v(f, offset + 1));
+    ht = vdot(near_pt.unit(), axes[ax]);
+  }
+  map<double, Color, ht_less>::iterator mi;
+  if ((mi = heights[ax].find(ht)) != heights[ax].end())
+    set_face_color(geom, f, mi->second);
+}
+
+void lookup_edge_color(Geometry &geom, const int e, const vector<Vec3d> &axes,
+                       vector<map<double, Color, ht_less>> &heights,
+                       const bool other_axis)
+{
+  int ax = geom.edge_cent(e)[2] >= 0.0; // z-coordinate determines axis
+  if (other_axis)
+    ax = (!ax) ? 1 : 0;
+  double hts[2];
+  for (int v_idx = 0; v_idx < 2; v_idx++)
+    hts[v_idx] = vdot(geom.edge_v(e, v_idx), axes[ax]);
+  // select horizontal edges that don't intersect the axis
+  if (double_eq(hts[0], hts[1], ht_less::get_eps()) &&
+      !lines_intersection(geom.edge_v(e, 0), geom.edge_v(e, 1), Vec3d(0, 0, 0),
+                          axes[ax], ht_less::get_eps())
+           .is_set()) {
+    double ht = vdot(geom.edge_v(e, 0).unit(), axes[ax]);
+    map<double, Color, ht_less>::iterator mi;
+    if ((mi = heights[ax].find(ht)) != heights[ax].end()) {
+      set_edge_color(geom, e, mi->second);
+    }
+  }
+}
+
+void ncon_face_coloring_by_compound(Geometry &geom, Geometry polar_polygon,
+                                    const ncon_opts &opts)
+{
+  vector<Vec3d> axes(2);
+  vector<map<double, Color, ht_less>> heights(2);
+
+  /*
+    GeometryInfo info(polar_polygon);
+    info.set_center(polar_polygon.centroid());
+    double scale = info.vert_dist_lims().max;
+    polar_polygon.transform(Trans3d::scale(1 / scale));
+  */
+
+  axes[0] = Vec3d::Y;
+  axes[1] =
+      Trans3d::rotate(Vec3d::Z, -2 * M_PI * (opts.twist - 0.5 * opts.hybrid) /
+                                    opts.ncon_order) *
+      axes[0];
+
+  for (unsigned int i = 0; i < polar_polygon.edges().size(); i++) {
+    for (int ax = 0; ax < 2; ax++) {
+      Vec3d near_pt = nearest_point(Vec3d(0, 0, 0), polar_polygon.edge_v(i, 0),
+                                    polar_polygon.edge_v(i, 1));
+      double ht = vdot(near_pt.unit(), axes[ax]);
+      Color c = polar_polygon.colors(EDGES).get(i);
+      if (opts.face_opacity > -1) {
+        int opq = opts.face_pattern[i % opts.face_pattern.size()] == '1'
+                      ? opts.face_opacity
+                      : 255;
+        c = set_opacity(c, opq);
+      }
+      heights[ax][ht] = c;
+    }
+  }
+
+  for (unsigned int f = 0; f < geom.faces().size(); f++) {
+    if (geom.faces(f).size() > 2) {
+      // if, because negative radii, the face center is shifted onto the wrong
+      // axis then no color will be found for look up, try the other axis
+      Color c = geom.colors(FACES).get(f);
+      lookup_face_color(geom, f, axes, heights, false);
+      c = geom.colors(FACES).get(f);
+      if (!c.is_set())
+        lookup_face_color(geom, f, axes, heights, true);
+    }
+  }
+
+  if (opts.add_symmetry_polygon)
+    geom.append(polar_polygon);
+}
+
 // opts is not const since some options are calculated
 int process_hybrid(Geometry &geom, ncon_opts &opts)
 {
@@ -5821,6 +6070,10 @@ int process_hybrid(Geometry &geom, ncon_opts &opts)
               opts.double_sweep, second_half, opts);
   bool radius_inversion_save = opts.radius_inversion;
 
+  vector<Geometry> polar_polygons;
+  if (opts.face_coloring_method == 'C')
+    polar_polygons.push_back(find_polar_polygon(geom_d, face_list, opts));
+
   // delete half the model
   if (opts.build_method == 3)
     delete_unused_longitudes(geom_d, face_list, edge_list, caps, false, true,
@@ -5855,6 +6108,9 @@ int process_hybrid(Geometry &geom, ncon_opts &opts)
               opts.double_sweep, second_half, opts);
   opts.point_cut = point_cut_save;
 
+  if (opts.face_coloring_method == 'C')
+    polar_polygons.push_back(find_polar_polygon(geom, face_list, opts));
+
   // delete half the model
   if (opts.build_method == 3)
     delete_unused_longitudes(geom, face_list, edge_list, caps, true, true,
@@ -5863,15 +6119,15 @@ int process_hybrid(Geometry &geom, ncon_opts &opts)
 
   // we can do the twist by transforming just one part.
   // negative angle because z reflection
-  double twist_angle = hybrid_twist_angle(opts.ncon_order, opts.d, opts.twist,
-                                          opts.build_method);
+  opts.twist_angle = hybrid_twist_angle(opts.ncon_order, opts.d, opts.twist,
+                                        opts.build_method);
   if (opts.build_method == 2 && opts.d == 1 && special_hybrids) {
-    twist_angle = (360.0 / opts.ncon_order) * opts.twist;
+    opts.twist_angle = (360.0 / opts.ncon_order) * opts.twist;
     // swap these back for later use
     swap(opts.inner_radius, opts.outer_radius);
     opts.radius_inversion = radius_inversion_save;
   }
-  geom.transform(Trans3d::rotate(0, 0, deg2rad(-twist_angle)));
+  geom.transform(Trans3d::rotate(0, 0, deg2rad(-opts.twist_angle)));
   // methods 1 and 2 need reflection
   if (opts.build_method < 3)
     geom.transform(Trans3d::reflection(Vec3d(0, 0, 1)));
@@ -5901,9 +6157,11 @@ int process_hybrid(Geometry &geom, ncon_opts &opts)
     ret = ncon_face_coloring_by_adjacent_face(geom, face_list, opts);
   }
   else if (opts.face_coloring_method == 'c')
-    ret = ncon_face_coloring_by_compound(geom, face_list, caps, opts);
-  else if (opts.face_coloring_method == 'a')
-    ncon_alternate_compound_coloring(geom, opts);
+    ret = ncon_face_coloring_by_compound_flood(geom, face_list, caps, opts);
+  else if (opts.face_coloring_method == 'C') {
+    build_compound_polygon(polar_polygons, opts);
+    ncon_face_coloring_by_compound(geom, polar_polygons[0], opts);
+  }
 
   if (opts.edge_coloring_method == 'f') {
     // restore edge longitudes needed for flood fill
@@ -5927,8 +6185,6 @@ int process_hybrid(Geometry &geom, ncon_opts &opts)
   clear_faces(face_list);
   clear_edges(edge_list);
 
-  // for rotation after coloring for accuracy
-  opts.twist_angle = twist_angle;
   return ret;
 }
 
@@ -5957,6 +6213,10 @@ int process_normal(Geometry &geom, ncon_opts &opts)
               opts.inner_radius, opts.outer_radius, opts.radius_inversion,
               opts.double_sweep, second_half, opts);
 
+  vector<Geometry> polar_polygons;
+  if (opts.face_coloring_method == 'C')
+    polar_polygons.push_back(find_polar_polygon(geom, face_list, opts));
+
   // now we do the twisting
   // twist plane is now determined by points landing on z-plane
   vector<polarOrb *> polar_orbit;
@@ -5971,7 +6231,7 @@ int process_normal(Geometry &geom, ncon_opts &opts)
     // in case of build_method 3, polygon may have been doubled. treat like 2N
     int adjust = (opts.double_sweep) ? 2 : 1;
     ncon_twist(geom, polar_orbit, coordinates, face_list, edge_list,
-               opts.ncon_order * adjust, opts.twist * adjust, opts.longitudes);
+               opts.ncon_order * adjust, opts.twist * adjust, opts);
   }
 
   // for build method 3 there are some duplicate vertices and unmatched edges
@@ -5990,9 +6250,11 @@ int process_normal(Geometry &geom, ncon_opts &opts)
   if (opts.build_method > 1 && opts.face_coloring_method == 'f')
     ret = ncon_face_coloring_by_adjacent_face(geom, face_list, opts);
   else if (opts.face_coloring_method == 'c')
-    ret = ncon_face_coloring_by_compound(geom, face_list, caps, opts);
-  else if (opts.face_coloring_method == 'a')
-    ncon_alternate_compound_coloring(geom, opts);
+    ret = ncon_face_coloring_by_compound_flood(geom, face_list, caps, opts);
+  else if (opts.face_coloring_method == 'C') {
+    build_compound_polygon(polar_polygons, opts);
+    ncon_face_coloring_by_compound(geom, polar_polygons[0], opts);
+  }
 
   if (opts.build_method > 1 && opts.edge_coloring_method == 'f')
     ncon_edge_coloring_by_adjacent_edge(geom, edge_list, pole, opts);
@@ -6076,15 +6338,6 @@ void filter(Geometry &geom, const char *elems)
     }
   }
 }
-
-// another coloring method by Adrian Rossiter
-struct ht_less {
-  static double get_eps() { return 1e-10; }
-  bool operator()(const double h0, const double h1) const
-  {
-    return double_lt(h0, h1, get_eps());
-  }
-};
 
 Geometry build_gear_polygon(const int N, const int D, const double o_radius,
                             const double i_radius, const double poly_scale,
@@ -6209,56 +6462,6 @@ void pgon_post_process(Geometry &pgon, vector<Vec3d> &axes, const int N,
       Trans3d::rotate(Vec3d::Z, -2 * M_PI * (t - 0.5 * hyb) / N) * axes[0];
 }
 
-void lookup_face_color(Geometry &geom, const int f, const vector<Vec3d> &axes,
-                       vector<map<double, Color, ht_less>> &heights,
-                       const bool other_axis)
-{
-  int ax = double_ge(geom.face_cent(f)[2], 0.0,
-                     ht_less::get_eps()); // z-coordinate determines axis
-  if (other_axis)
-    ax = (!ax) ? 1 : 0;
-  double hts[3];
-  for (int v_idx = 0; v_idx < 3; v_idx++)
-    hts[v_idx] = vdot(geom.face_v(f, v_idx), axes[ax]);
-  // try to select non-horizontal edge
-  int offset = double_eq(hts[0], hts[1], ht_less::get_eps());
-  double ht;
-  if (offset && double_eq(hts[1], hts[2], ht_less::get_eps()))
-    ht = hts[0] / fabs(hts[0]); // horizontal edge (on  horizontal face)
-  else {
-    // Find nearpoint of swept edge line, make unit, get height on axis
-    Vec3d near_pt = nearest_point(Vec3d(0, 0, 0), geom.face_v(f, offset),
-                                  geom.face_v(f, offset + 1));
-    ht = vdot(near_pt.unit(), axes[ax]);
-  }
-  map<double, Color, ht_less>::iterator mi;
-  if ((mi = heights[ax].find(ht)) != heights[ax].end())
-    set_face_color(geom, f, mi->second);
-}
-
-void lookup_edge_color(Geometry &geom, const int e, const vector<Vec3d> &axes,
-                       vector<map<double, Color, ht_less>> &heights,
-                       const bool other_axis)
-{
-  int ax = geom.edge_cent(e)[2] >= 0.0; // z-coordinate determines axis
-  if (other_axis)
-    ax = (!ax) ? 1 : 0;
-  double hts[2];
-  for (int v_idx = 0; v_idx < 2; v_idx++)
-    hts[v_idx] = vdot(geom.edge_v(e, v_idx), axes[ax]);
-  // select horizontal edges that don't intersect the axis
-  if (double_eq(hts[0], hts[1], ht_less::get_eps()) &&
-      !lines_intersection(geom.edge_v(e, 0), geom.edge_v(e, 1), Vec3d(0, 0, 0),
-                          axes[ax], ht_less::get_eps())
-           .is_set()) {
-    double ht = vdot(geom.edge_v(e, 0).unit(), axes[ax]);
-    map<double, Color, ht_less>::iterator mi;
-    if ((mi = heights[ax].find(ht)) != heights[ax].end()) {
-      set_edge_color(geom, e, mi->second);
-    }
-  }
-}
-
 void rotate_polygon(Geometry &pgon, const int N, const bool pc, const bool hyb,
                     const ncon_opts &opts)
 {
@@ -6294,6 +6497,7 @@ void rotate_polygon(Geometry &pgon, const int N, const bool pc, const bool hyb,
     pgon.transform(Trans3d::reflection(Vec3d(1, 0, 0)));
 }
 
+// another coloring method by Adrian Rossiter
 Geometry color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
 {
   // note: N and D are not pre-doubled here for build_method 2
@@ -6303,6 +6507,9 @@ Geometry color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
   bool hyb = opts.hybrid;
 
   bool pc = opts.point_cut;
+
+  bool pc_original = pc;
+  bool hyb_original = hyb;
   if ((opts.build_method == 2) && opts.radius_inversion)
     pc = !pc;
 
@@ -6314,8 +6521,13 @@ Geometry color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
   if ((opts.build_method == 3) && opts.angle_is_side_cut)
     pc = false;
 
+  if ((pc != pc_original) || (hyb != hyb_original))
+    opts.warning(
+        msg_str("n_icon has changed to %d cut", (pc) ? "point" : "side"));
+
   // if build_method 2, and radius set is such a way that it corresponds to
   // another D then change to that D and use normal radius
+  int original_d = D;
   if ((opts.build_method == 2 && D > 1) && radius_set) {
     double i_radius = opts.inner_radius;
     double o_radius = opts.outer_radius;
@@ -6433,7 +6645,7 @@ Geometry color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
   if ((opts.build_method == 2) && (radius_set || patch)) {
     gear_polygon_used = true;
 
-    if (radius_set &&
+    if (radius_set && (original_d != 1) &&
         double_eq(opts.inner_radius, opts.outer_radius, opts.eps)) {
       twist *= 2;
       // a hybrid becomes a normal of 2N with a twist of 2T-1
@@ -6893,9 +7105,12 @@ void surface_subsystem(ncon_opts &opts)
               "Discontinuous");
     }
     else {
-      fprintf(stderr, "                       Compound Parts\n");
-      fprintf(stderr, "                       --------------\n");
-      fprintf(stderr, "%s  %s          %s\n\n", "Order", "n-icon", "Parts");
+      fprintf(stderr,
+              "                       Compound Parts   Total Surfaces\n");
+      fprintf(stderr,
+              "                       -------------------------------\n");
+      fprintf(stderr, "%s  %s          %s            %s\n\n", "Order", "n-icon",
+              "Parts", "Surfaces");
     }
   }
 
@@ -7006,7 +7221,8 @@ void surface_subsystem(ncon_opts &opts)
           buffer = "(" + std::to_string(ncon_order) + d_part + "+" +
                    std::to_string(twist) + ")";
           if (opts.long_form)
-            fprintf(stderr, "%-15s %5d\n", buffer.c_str(), sd.compound_parts);
+            fprintf(stderr, "%-15s %5d %19d\n", buffer.c_str(),
+                    sd.compound_parts, sd.total_surfaces);
           else
             fprintf(stderr, "%s", buffer.c_str());
           none = false;

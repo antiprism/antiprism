@@ -33,6 +33,8 @@ XX-XX-22 Adrian Rossiter <adrian@antiprism.com>
                added -B compound part counts to -L listing options
                added -D to change d (of n/d) from default of 1
                -I: added circuit counting and comparison to theoretical values
+               added -f C compound coloring with polygon
+               removed -f a compound coloring by parts
             help: added alternate names and wenninger numbering sections
             build: minimum autoconf version changed to 0.69
          Fixes

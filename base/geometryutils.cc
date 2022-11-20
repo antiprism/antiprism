@@ -91,11 +91,11 @@ bool test_points_vs_hull(const vector<Vec3d> &P, const Geometry &hull,
       if ((double_compare(t, D, eps) < 0) && !inside)
         answer = false;
       else
-          // if (t > D+eps && !outside)
-          if ((double_compare(t, D, eps) > 0) && !outside)
-        answer = false;
-      else if (!surface)
-        answer = false;
+        // if (t > D+eps && !outside)
+        if ((double_compare(t, D, eps) > 0) && !outside)
+          answer = false;
+        else if (!surface)
+          answer = false;
 
       if (!answer)
         break;
@@ -221,6 +221,18 @@ int find_edge_in_edge_list(const vector<vector<int>> &edges,
   }
 
   return found;
+}
+
+int find_edge_by_coords(const Geometry &geom, const Vec3d &v0, const Vec3d &v1,
+                        double eps)
+{
+  int v0_idx = find_vert_by_coords(geom, v0, eps);
+  if (v0_idx == -1)
+    return -1;
+  int v1_idx = find_vert_by_coords(geom, v1, eps);
+  if (v1_idx == -1)
+    return -1;
+  return (find_edge_in_edge_list(geom.edges(), make_edge(v0_idx, v1_idx)));
 }
 
 vector<vector<int>> find_unmatched_edges(const Geometry &geom)

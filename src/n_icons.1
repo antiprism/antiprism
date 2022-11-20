@@ -84,7 +84,7 @@ E \- if face is invisible, associated edge is made invisible
 for n/d shells, when showing edges, show indented edges
 .TP
 \fB\-W\fR
-add symmetry polygon (\fB\-f\fR S or \fB\-e\fR S)
+add symmetry polygon (\fB\-f\fR S,C or \fB\-e\fR S)
 .PP
 Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
 .HP
@@ -94,8 +94,8 @@ keyword: none \- sets no color
 S \- color by symmetry polygon (default)
 s \- color by circuits algorithm (n/d must be co\-prime)
 f \- color circuits with flood fill (\fB\-z\fR 2,3 any n/d)
-c \- color by compound
-a \- color by compound (by connected faces)
+C \- color by compound
+c \- color by compound with flood fill
 l \- color latitudinally
 m \- color longitudinally
 b \- checkerboard with first two colors in the color list
