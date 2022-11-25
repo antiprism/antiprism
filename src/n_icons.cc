@@ -159,7 +159,7 @@ public:
   char face_coloring_method = 'S'; // default color by the symmetry algorithm
   int face_opacity = -1;           // tranparency from 0 to 255
   string face_pattern = "1";       // for face transparency patterns
-  char edge_coloring_method = '0'; // edge coloring method is none
+  char edge_coloring_method = 'Q'; // edge coloring method is none
   int edge_opacity = -1;           // transparency from 0 to 255
   string edge_pattern = "1";       // for edge transparency patterns
   bool edge_set_no_color = false;  // to set no edge coloring
@@ -177,6 +177,7 @@ public:
   bool angle_is_side_cut = false; // if -z 3 angle is side cut
   bool double_sweep = false;      // double sweep is set in build_globe
   bool radius_inversion = false;  // if radius inversion occurs
+  bool radius_set = false;        // radius is set by user
   int mod_twist = 0;              // mod of abs(twist)
   double twist_angle = 0;         // for a bug in process_hybrid
   int longitudes_save = 0;        // for longitudes alpha
@@ -469,7 +470,6 @@ void ncon_opts::process_command_line(int argc, char **argv)
 
     case 'f':
       if (!strcasecmp(optarg, "none"))
-        // place holder 'zero'
         face_coloring_method = '0';
       else if (strspn(optarg, "sflmbnxyzocCS") != strlen(optarg) ||
                strlen(optarg) > 1)
@@ -508,7 +508,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
         edge_coloring_method = 'n';
       }
       else if (!strcmp(optarg, "Q"))
-        edge_coloring_method = '\0';
+        edge_coloring_method = 'Q';
       else if (strspn(optarg, "sflmbnxyzoFS") != strlen(optarg) ||
                strlen(optarg) > 1)
         error(msg_str("invalid edge coloring method '%s'", optarg), c);
@@ -714,6 +714,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
     }
 
     if (build_method == 2) {
+      // cases where some twists won't match front and back
       if (d == 1) {
         if (!std::isnan(inner_radius)) {
           if (hybrid) {
@@ -792,7 +793,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
         error("angle is only valid in construction method 3", "a");
     }
 
-    if (!hide_indent && !edge_coloring_method)
+    if (!hide_indent && (edge_coloring_method == 'Q'))
       warning("indented edges will not be shown unless an edge coloring is "
               "used (-e)",
               "Y");
@@ -899,16 +900,11 @@ void ncon_opts::process_command_line(int argc, char **argv)
     }
   }
 
-  // color parameters, defaults...
-  if (face_coloring_method == '0')
-    face_coloring_method = '\0';
-  else if (face_coloring_method == '\0') {
-    face_coloring_method = 'S';
+  if (add_symmetry_polygon) {
+    if (!(strchr("SC", face_coloring_method)) && (edge_coloring_method != 'S'))
+      warning("adding symmetry polygon only has effect for -f S,C or -e S",
+              "W");
   }
-
-  if (add_symmetry_polygon &&
-      (!(strchr("SC", face_coloring_method) && (edge_coloring_method != 'S'))))
-    warning("adding symmetry polygon only has effect for -f S,C or -e S", "W");
 
   // circuit table works with co-prime n/d
   // if n/d is co-prime (and d>1) angle must be 0
@@ -1014,19 +1010,6 @@ void ncon_opts::process_command_line(int argc, char **argv)
     if ((ncon_order == 2 * d) && pc)
       error("when polygon 2N/N and point cut, method 3 cannot be used", "a");
   }
-
-  // method 2: can't let d > n/2, causes problems
-  if ((build_method == 2) && (d > ncon_order / 2))
-    d = ncon_order - d;
-
-  // for build method 2, multiply n and twist by 2
-  // if d == 1, radii will equal
-  if (build_method == 2 && d != 1) {
-    ncon_order *= 2;
-    twist *= 2;
-  }
-
-  mod_twist = std::abs(twist % ncon_order);
 }
 
 // if map index or invisible, alpha cannot be changed
@@ -1524,10 +1507,8 @@ void apply_latitudes(const Geometry &geom,
     }
   }
 
-  bool do_faces = !(!opts.face_coloring_method ||
-                    !strchr("slbfcC", opts.face_coloring_method));
-  bool do_edges =
-      !(!opts.edge_coloring_method || !strchr("l", opts.edge_coloring_method));
+  bool do_faces = strchr("lbsfcC", opts.face_coloring_method);
+  bool do_edges = strchr("lb", opts.edge_coloring_method);
   if (do_faces || do_edges) {
     // put split faces into a map
     map<int, int> split_face_map;
@@ -1836,8 +1817,7 @@ void apply_latitudes(const Geometry &geom,
 
   // find faces connected to edges for latitude assignment
   // optimization: if face lats not needed then bypass
-  bool do_faces = !(!opts.face_coloring_method ||
-                    !strchr("slbfcC", opts.face_coloring_method));
+  bool do_faces = strchr("lbsfc", opts.face_coloring_method);
   if (!do_faces)
     return;
 
@@ -2509,7 +2489,7 @@ void form_globe(Geometry &geom, const vector<int> &prime_meridian,
 
           // always add edge and can be deleted later. logic for method 1
           // unchanged
-          if (opts.edge_coloring_method || opts.build_method > 1)
+          if ((opts.edge_coloring_method != 'Q') || opts.build_method > 1)
             add_edge(geom, edge_list, make_edge(face[0], face[2]), lat, lon);
         }
         else if ((is_even(opts.ncon_order) && point_cut_calc) &&
@@ -2543,7 +2523,7 @@ void form_globe(Geometry &geom, const vector<int> &prime_meridian,
 
           // always add edge and can be deleted later. logic for method 1
           // unchanged
-          if (opts.edge_coloring_method || opts.build_method > 1) {
+          if ((opts.edge_coloring_method != 'Q') || opts.build_method > 1) {
             add_edge(geom, edge_list, make_edge(face[0], face[3]), lat, lon);
 
             // patch with the extra edge below, one rotate flag gets missed
@@ -2560,7 +2540,7 @@ void form_globe(Geometry &geom, const vector<int> &prime_meridian,
 
         if (half_model_marker != 0) {
           face_list.back()->rotate = true;
-          if (opts.edge_coloring_method || opts.build_method > 1)
+          if ((opts.edge_coloring_method != 'Q') || opts.build_method > 1)
             edge_list.back()->rotate = true;
         }
       }
@@ -3594,8 +3574,12 @@ void model_info(Geometry &geom, const ncon_opts &opts)
   fprintf(stderr, "the model is %sclosed\n", (closed) ? "" : "not ");
   fprintf(stderr, "the model is %scomplete\n",
           (full_model(opts.longitudes)) ? "" : "not ");
-  if (opts.build_method == 2)
+  if (opts.build_method == 2) {
     fprintf(stderr, "circuit counts are not done in method 2\n");
+    if (opts.radius_set)
+      fprintf(stderr, "when radius is manually set, circuit calculations may "
+                      "be different\n");
+  }
 
   // measured values
   surfaceData sdm;
@@ -3612,8 +3596,8 @@ void model_info(Geometry &geom, const ncon_opts &opts)
   bool measure = (!opts.symmetric_coloring && full_model(opts.longitudes) &&
                   !opts.lon_invisible && opts.build_method != 2);
 
-  if (opts.face_coloring_method && strchr("sfSca", opts.face_coloring_method) &&
-      !opts.flood_fill_stop && measure) {
+  if (strchr("sfSca", opts.face_coloring_method) && !opts.flood_fill_stop &&
+      measure) {
     vector<Color> cols;
     vector<pair<Color, int>> col_faces;
     for (unsigned int i = 0; i < geom.faces().size(); i++) {
@@ -3624,7 +3608,7 @@ void model_info(Geometry &geom, const ncon_opts &opts)
       }
     }
 
-    if (opts.face_coloring_method && strchr("sfS", opts.face_coloring_method)) {
+    if (strchr("sfS", opts.face_coloring_method)) {
 
       fprintf(
           stderr,
@@ -3713,8 +3697,7 @@ void model_info(Geometry &geom, const ncon_opts &opts)
     fprintf(stderr, "---------\n");
   }
 
-  if ((opts.edge_coloring_method && strchr("sfS", opts.edge_coloring_method)) &&
-      measure) {
+  if ((strchr("sfS", opts.edge_coloring_method)) && measure) {
     vector<Color> cols;
     vector<pair<Color, int>> col_edges;
     for (unsigned int i = 0; i < geom.edges().size(); i++) {
@@ -5315,13 +5298,12 @@ void ncon_coloring(Geometry &geom, const vector<faceList *> &face_list,
 
   // don't do this when circuits use flood fill in methods 2 or 3 as they will
   // be colored later
-  if (opts.face_coloring_method &&
-      !(opts.build_method > 1 && strchr("fcaS", opts.face_coloring_method)))
+  if (!(opts.build_method > 1 && strchr("fcSC", opts.face_coloring_method)))
     ncon_face_coloring(geom, face_list, face_color_table, point_cut_calc, opts);
 
   // don't do this when circuits use flood fill in methods 2 or 3 as they will
   // be colored later
-  if (opts.edge_coloring_method &&
+  if ((opts.edge_coloring_method != 'Q') &&
       !(opts.build_method > 1 && strchr("fS", opts.edge_coloring_method)))
     ncon_edge_coloring(geom, edge_list, pole, edge_color_table, point_cut_calc,
                        opts);
@@ -5413,7 +5395,7 @@ void build_globe(Geometry &geom, vector<coordList *> &coordinates,
     if (double_sweep)
       lat_mode = 2;
     // the old apply_latitudes must be used for method 3 compound coloring, new
-    // method won't work
+    // method won't work. 'C' needed to fire fix_polygon_numbers
     if (strchr("cC", opts.face_coloring_method))
       lat_mode = 2;
     // non-co-prime compounds don't work with new method. Use old method
@@ -5427,12 +5409,10 @@ void build_globe(Geometry &geom, vector<coordList *> &coordinates,
   if (opts.face_coloring_method == 'f')
     lat_mode = 2;
 
-  bool do_faces = !(!opts.face_coloring_method ||
-                    !strchr("slbfcC", opts.face_coloring_method));
-  bool do_edges = !(!opts.edge_coloring_method ||
-                    !strchr("slbf", opts.edge_coloring_method));
+  bool do_faces = strchr("lbsfcC", opts.face_coloring_method);
+  bool do_edges = strchr("lbsf", opts.edge_coloring_method);
 
-  // latitudes are accessed in methods s,l,b,f,c,C
+  // latitudes are accessed in methods l,b,s,f,c
   // if not these then there is no need to set
   if (!do_faces && !do_edges)
     lat_mode = 0;
@@ -5553,7 +5533,7 @@ void delete_unused_longitudes(Geometry &geom, vector<faceList *> &face_list,
     }
     else {
       for (unsigned int i = 0; i < delete_elem.size(); i++) {
-        geom.colors(EDGES).set(delete_elem[i], Color::invisible);
+        set_edge_color(geom, delete_elem[i], Color::invisible, 255);
       }
     }
   }
@@ -5570,17 +5550,6 @@ void delete_unused_longitudes(Geometry &geom, vector<faceList *> &face_list,
         single_verts.push_back(i);
     }
     geom.del(VERTS, single_verts);
-  }
-}
-
-// if edges are not specified they need to be cleared
-void delete_unused_edges(Geometry &geom, vector<edgeList *> &edge_list,
-                         const ncon_opts &opts)
-{
-  if (!opts.edge_coloring_method) {
-    clear_edges(edge_list);
-    geom.clear(EDGES);
-    geom.colors(VERTS).clear();
   }
 }
 
@@ -5881,27 +5850,29 @@ Geometry find_polar_polygon(Geometry geom, const vector<faceList *> &face_list,
     for (unsigned int i = opts.ncon_order; i < polar_polygon.verts().size();
          i++) {
       vector<int> es = find_edges_with_vertex(polar_polygon.edges(), i);
+      Color c = polar_polygon.colors(EDGES).get(es[0]);
+      Vec3d v1 = polar_polygon.verts(i);
+      vector<int> vs;
       for (unsigned int j = 0; j < es.size(); j++) {
-        for (unsigned int k = j + 1; k < es.size(); k++) {
-          int e1 = polar_polygon.edges(es[j])[0];
-          int e2 = polar_polygon.edges(es[k])[0];
-          Vec3d v1 = polar_polygon.verts(i);
-          Vec3d v2 = polar_polygon.verts(e1);
-          Vec3d v3 = polar_polygon.verts(e2);
+        for (unsigned int k = 0; k < 2; k++) {
+          unsigned int v = polar_polygon.edges(es[j])[k];
+          if (v != i)
+            vs.push_back(v);
+        }
+      }
+      for (unsigned int l = 0; l < vs.size(); l++) {
+        for (unsigned int m = l + 1; m < vs.size(); m++) {
+          Vec3d v2 = polar_polygon.verts(vs[l]);
+          Vec3d v3 = polar_polygon.verts(vs[m]);
           // if v1 is in line with v2 and v3 then mark it for deletion
           if (point_in_segment(v1, v2, v3, opts.eps).is_set()) {
             // add new edge
-            polar_polygon.add_edge(make_edge(e1, e2),
-                                   polar_polygon.colors(EDGES).get(es[k]));
-            // delete old edges
-            // del_edges.push_back(e1);
-            // del_edges.push_back(e2);
+            polar_polygon.add_edge(make_edge(vs[m], vs[l]), c);
             del_verts.push_back(i);
           }
         }
       }
     }
-    // polar_polygon.del(EDGES, del_edges);
 
     // (some duplicates)
     sort(del_verts.begin(), del_verts.end());
@@ -6019,6 +5990,7 @@ void ncon_face_coloring_by_compound(Geometry &geom, Geometry polar_polygon,
     }
   }
 
+  // optionally append polygon
   if (opts.add_symmetry_polygon)
     geom.append(polar_polygon);
 }
@@ -6177,7 +6149,6 @@ int process_hybrid(Geometry &geom, ncon_opts &opts)
   // allow for partial open model in hybrids
   delete_unused_longitudes(geom, face_list, edge_list, caps, false, false,
                            opts);
-  delete_unused_edges(geom, edge_list, opts);
 
   caps.clear();
 
@@ -6266,7 +6237,6 @@ int process_normal(Geometry &geom, ncon_opts &opts)
 
   delete_unused_longitudes(geom, face_list, edge_list, caps, false, false,
                            opts);
-  delete_unused_edges(geom, edge_list, opts);
 
   // horizontal closure only works for build method 1 and 2
   if (opts.build_method < 3)
@@ -6287,7 +6257,7 @@ int process_normal(Geometry &geom, ncon_opts &opts)
       for (auto i : edge_list) {
         int j = i->edge_no;
         if (i->lat < 0)
-          set_edge_color(geom, j, Color::invisible, opts.face_opacity);
+          set_edge_color(geom, j, Color::invisible, 255);
       }
     }
   }
@@ -6372,62 +6342,9 @@ Geometry build_gear_polygon(const int N, const int D, const double o_radius,
   return gear;
 }
 
-// transfer colors of the regular polygon to the gear polygon
-void transfer_colors(Geometry &gpgon, const Geometry &pgon, const bool digons,
-                     ncon_opts &opts)
-{
-  map<int, int> v_map;
-  for (unsigned int i = 0; i < pgon.verts().size(); i++) {
-    Vec3d pv = pgon.verts(i);
-    for (unsigned int j = 0; j < gpgon.verts().size(); j++) {
-      Vec3d gv = gpgon.verts(j);
-      if (!compare(pv, gv, opts.eps)) {
-        v_map[i] = j;
-        break;
-      }
-    }
-  }
-
-  // in case polygons don't line up
-  if (!v_map.size()) {
-    // unneeded warning
-    // opts.warning("transfer_colors(): no coincidence found", 'f');
-    return;
-  }
-
-  for (unsigned int i = 0; i < v_map.size(); i++) {
-    int gp_idx = v_map[i];
-    if (opts.hide_indent)
-      gpgon.colors(VERTS).set(gp_idx, pgon.colors(VERTS).get(i));
-    vector<int> gp_edges = find_edges_with_vertex(gpgon.edges(), gp_idx);
-    for (int j : gp_edges) {
-      vector<int> gp_edge = gpgon.edges(j);
-      for (unsigned int k = 0; k < 2; k++) {
-        if (gp_edge[k] != gp_idx) {
-          Vec3d gp_vertex =
-              (!digons) ? gpgon.verts(gp_edge[k]) : gpgon.edge_cent(gp_edge[k]);
-          vector<int> p_edges = find_edges_with_vertex(pgon.edges(), i);
-          for (unsigned int m = 0; m < 2; m++) {
-            Vec3d v1 = pgon.verts(pgon.edges(p_edges[m])[0]);
-            Vec3d v2 = pgon.verts(pgon.edges(p_edges[m])[1]);
-            if ((point_in_segment(gp_vertex, v1, v2, opts.eps)).is_set()) {
-              gpgon.colors(EDGES).set(j, pgon.colors(EDGES).get(p_edges[m]));
-            }
-          }
-        }
-      }
-    }
-  }
-
-  if (opts.hide_indent && (opts.d != 1)) {
-    for (unsigned int i = 1; i < gpgon.verts().size(); i += 2) {
-      gpgon.colors(VERTS).set(i, Color(Color::invisible));
-    }
-  }
-}
-
 void pgon_post_process(Geometry &pgon, vector<Vec3d> &axes, const int N,
-                       const int twist, const bool hyb, const ncon_opts &opts)
+                       const int twist, const bool hybrid,
+                       const ncon_opts &opts)
 {
   int t_mult = opts.symmetric_coloring ? 1 : 2;
 
@@ -6440,7 +6357,7 @@ void pgon_post_process(Geometry &pgon, vector<Vec3d> &axes, const int N,
       t = N / 2;
   }
 
-  int Dih_num = N / gcd(t_mult * t - hyb, N);
+  int Dih_num = N / gcd(t_mult * t - hybrid, N);
   vector<vector<set<int>>> sym_equivs;
   get_equiv_elems(pgon, Symmetry(Symmetry::D, Dih_num).get_trans(),
                   &sym_equivs);
@@ -6460,20 +6377,20 @@ void pgon_post_process(Geometry &pgon, vector<Vec3d> &axes, const int N,
   pgon.transform(Trans3d::rotate(Vec3d::Z, M_PI / 2));
   axes[0] = Vec3d::Y;
   axes[1] =
-      Trans3d::rotate(Vec3d::Z, -2 * M_PI * (t - 0.5 * hyb) / N) * axes[0];
+      Trans3d::rotate(Vec3d::Z, -2 * M_PI * (t - 0.5 * hybrid) / N) * axes[0];
 }
 
-void rotate_polygon(Geometry &pgon, const int N, const bool pc, const bool hyb,
-                    const ncon_opts &opts)
+void rotate_polygon(Geometry &pgon, const int N, const bool point_cut,
+                    const bool hybrid, const ncon_opts &opts)
 {
   // rotate polygons
   double rot_angle = 0;
   if ((opts.build_method == 3) && double_ne(opts.angle, 0, opts.eps)) {
     rot_angle = deg2rad(opts.angle);
-    if (hyb && pc)
+    if (hybrid && point_cut)
       rot_angle += M_PI / N;
   }
-  else if (!is_even(N) || !pc || hyb)
+  else if (!is_even(N) || !point_cut || hybrid)
     rot_angle = M_PI / N;
 
   pgon.transform(Trans3d::rotate(Vec3d::Z, rot_angle));
@@ -6499,96 +6416,71 @@ void rotate_polygon(Geometry &pgon, const int N, const bool pc, const bool hyb,
 }
 
 // another coloring method by Adrian Rossiter
-Geometry color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
+void color_by_symmetry(Geometry &geom, ncon_opts &opts)
 {
   // note: N and D are not pre-doubled here for build_method 2
   int N = opts.ncon_order;
   int D = opts.d;
   int twist = opts.twist;
+  bool pc = opts.point_cut;
   bool hyb = opts.hybrid;
 
-  bool pc = opts.point_cut;
-
+  // keep track of changes
+  int N_original = N;
+  int D_original = D;
+  int twist_original = twist;
   bool pc_original = pc;
   bool hyb_original = hyb;
-  if ((opts.build_method == 2) && opts.radius_inversion)
-    pc = !pc;
-
-  // when D=1, and radii are not equal, hybrids are really point cuts
-  if ((opts.build_method == 2) && (D == 1) && radius_set && hyb) {
-    pc = true;
-    hyb = false;
-  }
-  if ((opts.build_method == 3) && opts.angle_is_side_cut)
-    pc = false;
-
-  if ((pc != pc_original) || (hyb != hyb_original))
-    opts.warning(
-        msg_str("n_icon has changed to %d cut", (pc) ? "point" : "side"));
-
-  // if build_method 2, and radius set is such a way that it corresponds to
-  // another D then change to that D and use normal radius
-  int original_d = D;
-  if ((opts.build_method == 2 && D > 1) && radius_set) {
-    double i_radius = opts.inner_radius;
-    double o_radius = opts.outer_radius;
-    // inner and outer radius must be both positive or negative
-    if ((double_gt(o_radius, 0, opts.eps) &&
-         double_gt(i_radius, 0, opts.eps)) ||
-        (double_lt(o_radius, 0, opts.eps) &&
-         double_lt(i_radius, 0, opts.eps))) {
-      i_radius = fabs(i_radius);
-      o_radius = fabs(o_radius);
-      double ratio = double_gt(o_radius, i_radius, opts.eps)
-                         ? o_radius / i_radius
-                         : i_radius / o_radius;
-      for (int i = 1; i <= N / 2; i++) {
-        i_radius = 0;
-        o_radius = 0;
-        double arc = 0;
-        calc_radii(i_radius, o_radius, arc, N * 2, i, opts, true);
-        double rat = o_radius / i_radius;
-        if (double_eq(rat, ratio, ht_less::get_eps())) {
-          if (D != i) {
-            D = i;
-            if (D == 1)
-              N *= 2;
-            opts.warning(msg_str("radii causes n/d to change to %d/%d", N, D),
-                         'R');
-          }
-          break;
-        }
-      }
-    }
-  }
 
   Geometry pgon;
   vector<Vec3d> axes(2);
   vector<map<double, Color, ht_less>> heights(2);
 
-  bool gear_polygon_used = false;
-  bool digons = (N == 2 * D) ? true : false;
+  // check for change in mode
+  char option = ' ';
+  bool continue_after_rotation = false;
+  if (opts.build_method == 2) {
+    option = 'R';
+    if (opts.radius_set) {
+      if (double_eq(opts.inner_radius, opts.outer_radius, opts.eps)) {
+        if (D > 1) {
+          N *= 2;
+          D = 1;
+          twist *= 2;
+          pc = true;
+          if (hyb) {
+            hyb = false;
+            twist--;
+          }
+        }
+        // D == 1
+        else if (hyb) {
+          hyb = false;
+        }
+      }
+    }
+  }
+  else if (opts.build_method == 3) {
+    option = 'a';
+    if (opts.angle_is_side_cut)
+      pc = false;
+    else if (opts.double_sweep)
+      continue_after_rotation = true;
+  }
 
   // create polygon
   Polygon dih(N, D, Polygon::dihedron);
-  dih.set_edge(1, 1.00);
+  // dih.set_edge(1, 1.00);
+  dih.set_radius(0, GeometryInfo(geom).vert_dist_lims().max);
   dih.make_poly(pgon);
   pgon.add_missing_impl_edges();
+  pgon.clear(FACES);
 
   rotate_polygon(pgon, N, pc, hyb, opts);
 
-  // scale polygon
-  double poly_scale = 1.0;
-  double i_radius = 0;
-  double o_radius = 0;
-  double arc = 0;
-
   // method 3: reflect on Y axis when angled
-  if (opts.build_method == 3) {
-    // 2N/N polygons need polygon resized
-    if (digons)
-      pgon.transform(Trans3d::scale(2.0));
-
+  // done after rotation
+  if (continue_after_rotation) {
     // if it is formed by double sweeping, mirror on Y
     if (opts.double_sweep) {
       Geometry pgon_refl;
@@ -6611,78 +6503,36 @@ Geometry color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
         twist--;
       }
       pc = false;
-      opts.warning(msg_str("n_icon has changed to side cut %d/%d twist %d", N,
-                           D, twist));
     }
   }
 
-  // find inner and outer radius for regular polygon
-  bool patch = false;
-  if (opts.build_method == 2) {
-    int N2 = (D == 1) ? N : N * 2;
-    calc_radii(i_radius, o_radius, arc, N2, D, opts, true);
-
-    // patch for 2N/N or D is 1
-    patch = (digons || D == 1) ? true : false;
-
-    // regular polygon that was generated it needs to be rescaled to overlay
-    // 2N/N polygons need polygon resized
-    if (digons)
-      pgon.transform(Trans3d::scale(o_radius / 0.5));
-
-    poly_scale =
-        (double_gt(fabs(opts.outer_radius), fabs(opts.inner_radius), opts.eps)
-             ? fabs(opts.outer_radius)
-             : fabs(opts.inner_radius)) /
-        o_radius;
-    if (double_ne(poly_scale, 1.0, opts.eps))
-      pgon.transform(Trans3d::scale(poly_scale));
+  // if any changes...
+  if ((N != N_original) || (D != D_original) || (twist != twist_original) ||
+      (pc != pc_original) || (hyb != hyb_original)) {
+    opts.warning(msg_str("n_icon has changed to %d/%d twist %d %s cut", N, D,
+                         twist, (pc) ? "point" : "side"),
+                 option);
   }
 
   pgon_post_process(pgon, axes, N, twist, hyb, opts);
 
-  // if build method 2, build gear polygon and transfer colors and replace pgon
-  // and set radii if they were manually changed
-  if ((opts.build_method == 2) && (radius_set || patch)) {
+  // if build method 2, build gear polygon and replace pgon
+  // set radii if they were manually changed
+  bool rad_set = (opts.radius_set &&
+                  (double_ne(opts.outer_radius, opts.inner_radius, opts.eps)));
+  bool digons = (N == 2 * D) ? true : false;
+  bool gear_polygon_used = false;
+  if ((opts.build_method == 2) && (rad_set || digons)) {
     gear_polygon_used = true;
 
-    if (radius_set && (original_d != 1) &&
-        double_eq(opts.inner_radius, opts.outer_radius, opts.eps)) {
-      twist *= 2;
-      // a hybrid becomes a normal of 2N with a twist of 2T-1
-      if (hyb) {
-        hyb = false;
-        twist--;
-      }
-
-      opts.warning(
-          msg_str("n_icon has changed to point cut %d/1 twist %d", N, twist),
-          'R');
-    }
-
-    // build gear polygon proper
+    // build gear polygon
     Geometry rpgon = build_gear_polygon(N, D, opts.outer_radius,
                                         opts.inner_radius, 1.0, opts.eps);
 
     rotate_polygon(rpgon, N, pc, hyb, opts);
     pgon_post_process(rpgon, axes, N, twist, hyb, opts);
 
-    // build gear polygon as regular polygon
-    Geometry gpgon =
-        build_gear_polygon(N, D, o_radius, i_radius, poly_scale, opts.eps);
-
-    rotate_polygon(gpgon, N, pc, hyb, opts);
-    pgon_post_process(gpgon, axes, N, twist, hyb, opts);
-
-    // transfer colors to the gear polygon
-    transfer_colors(gpgon, pgon, digons, opts);
-
-    // take proper gear polygons vertices
-    vector<Vec3d> &verts = gpgon.raw_verts();
-    for (unsigned int i = 0; i < rpgon.verts().size(); i++)
-      verts[i] = rpgon.verts(i);
-
-    pgon = gpgon;
+    pgon = rpgon;
   }
 
   // special case, if twisted half way, turn upside down (post coloring)
@@ -6711,6 +6561,7 @@ Geometry color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
       }
     }
 
+    bool found = true;
     for (unsigned int f = 0; f < geom.faces().size(); f++) {
       if (geom.faces(f).size() > 2) {
         // if, because negative radii, the face center is shifted onto the wrong
@@ -6722,16 +6573,23 @@ Geometry color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
           continue;
         lookup_face_color(geom, f, axes, heights, false);
         c = geom.colors(FACES).get(f);
-        if (!c.is_set())
+        if (!c.is_set()) {
           lookup_face_color(geom, f, axes, heights, true);
+          c = geom.colors(FACES).get(f);
+          if (!c.is_set())
+            found = false;
+        }
       }
     }
+
+    if (!found)
+      opts.warning("color by symmetry: some faces could not be colored", 'f');
   }
 
   // color edges
   if (opts.edge_coloring_method == 'S') {
     if (opts.build_method == 2 && !opts.hide_indent && !gear_polygon_used) {
-      // build gear polygon proper
+      // build gear polygon for indented edges, if not already built
       pgon = build_gear_polygon(N, D, opts.outer_radius, opts.inner_radius, 1.0,
                                 opts.eps);
 
@@ -6774,8 +6632,9 @@ Geometry color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
       }
     }
 
+    // color marked edges
+    bool found = true;
     for (unsigned int e = 0; e < geom.edges().size(); e++) {
-      // marked edges are the ones to be colored
       Color c = geom.colors(EDGES).get(e);
       if (c.is_maximum_index()) {
         lookup_edge_color(geom, e, axes, heights, false);
@@ -6786,12 +6645,17 @@ Geometry color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
           // not found? try again
           lookup_edge_color(geom, e, axes, heights, true);
           c = geom.colors(EDGES).get(e);
-          // if still not found, give up and make it invisible
-          if (c.is_maximum_index())
-            set_edge_color(geom, e, Color::invisible, 255);
+          // if still not found, unset color, set for warning
+          if (c.is_maximum_index()) {
+            set_edge_color(geom, e, opts.face_default_color, 255);
+            found = false;
+          }
         }
       }
     }
+
+    if (!found)
+      opts.warning("color by symmetry: some edges could not be colored", 'f');
 
     // occasionally some vertices can be missed
     for (unsigned int i = 0; i < geom.verts().size(); i++) {
@@ -6835,7 +6699,7 @@ Geometry color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
   // take colors from attached edge
   if ((opts.build_method == 3) && (opts.face_coloring_method == 'S') &&
       digons) {
-    if (!opts.edge_coloring_method)
+    if (opts.edge_coloring_method == 'Q')
       opts.warning(
           "digons in method 3 are taken from edge coloring. none was specified",
           'e');
@@ -6857,14 +6721,32 @@ Geometry color_by_symmetry(Geometry &geom, bool &radius_set, ncon_opts &opts)
   }
 
   // optionally append polygon
-  return pgon;
+  if (opts.add_symmetry_polygon)
+    geom.append(pgon);
 }
 
 int ncon_subsystem(Geometry &geom, ncon_opts &opts)
 {
   int ret = 0;
 
-  bool point_cut_save = opts.point_cut;
+  // method 2: can't let d > n/2, causes problems
+  if ((opts.build_method == 2) && (opts.d > opts.ncon_order / 2))
+    opts.d = opts.ncon_order - opts.d;
+
+  // for build method 2, multiply n and twist by 2
+  // if d == 1, radii will equal
+  if (opts.build_method == 2 && opts.d != 1) {
+    opts.ncon_order *= 2;
+    opts.twist *= 2;
+  }
+
+  opts.mod_twist = std::abs(opts.twist % opts.ncon_order);
+
+  opts.radius_set =
+      ((opts.build_method == 2) &&
+       (!std::isnan(opts.outer_radius) || !std::isnan(opts.inner_radius)))
+          ? true
+          : false;
 
   // the best way to do side cut with method 3 is angle
   if (opts.build_method == 3 && opts.hybrid && !opts.point_cut) {
@@ -6872,11 +6754,7 @@ int ncon_subsystem(Geometry &geom, ncon_opts &opts)
     opts.angle_is_side_cut = true;
   }
 
-  bool radius_set =
-      ((opts.build_method == 2) &&
-       (!std::isnan(opts.inner_radius) || !std::isnan(opts.outer_radius)))
-          ? true
-          : false;
+  bool point_cut_save = opts.point_cut;
 
   if (opts.info)
     fprintf(stderr, "\nmeasures: ==============================\n");
@@ -6886,28 +6764,17 @@ int ncon_subsystem(Geometry &geom, ncon_opts &opts)
   else
     ret = process_normal(geom, opts);
 
+  opts.point_cut = point_cut_save;
+
   // restore for possible reporting
   if (opts.build_method == 2 && opts.d != 1) {
     opts.ncon_order /= 2;
     opts.twist /= 2;
   }
 
-  opts.point_cut = point_cut_save;
-
-  // if inner radius is greater than outer radius, point cut will change to a
-  // side cut and vice-versa
-  // note: inner and outer radii may not be completely defined until after
-  // construction
-  if (opts.radius_inversion) {
-    // change point_cut for possible reporting in model_info()
-    opts.point_cut = !opts.point_cut;
-    opts.warning(msg_str("manual change in radii changed model to %s cut",
-                         (opts.point_cut ? "point" : "side")));
-  }
-
   Geometry pgon;
   if (opts.face_coloring_method == 'S' || opts.edge_coloring_method == 'S')
-    pgon = color_by_symmetry(geom, radius_set, opts);
+    color_by_symmetry(geom, opts);
 
   // in the case of hybrid and side cut
   // model needs to be rotated into position at side_cut angles
@@ -6919,9 +6786,6 @@ int ncon_subsystem(Geometry &geom, ncon_opts &opts)
 
   if (opts.info)
     model_info(geom, opts);
-
-  if (opts.add_symmetry_polygon)
-    geom.append(pgon);
 
   if (opts.edge_coloring_method == 'F')
     ncon_edge_coloring_from_faces(geom, opts);
@@ -6944,11 +6808,11 @@ int ncon_subsystem(Geometry &geom, ncon_opts &opts)
                            opts.unused_edge_color);
 
   // some edges can remain uncolored
-  if (opts.edge_coloring_method)
+  if (!opts.edge_set_no_color)
     color_uncolored_edges(geom, opts);
 
   // some faces can remain uncolored
-  if (opts.face_coloring_method)
+  if (opts.face_coloring_method != '0')
     color_uncolored_faces(geom, opts);
 
   geom.orient(1); // positive orientation
@@ -7169,9 +7033,6 @@ void surface_subsystem(ncon_opts &opts)
         opts.twist = twist;
         opts.point_cut = point_cut;
         opts.hybrid = hybrid;
-
-        // variables usually set in normal code
-        opts.mod_twist = std::abs(twist % ncon_order);
 
         Geometry geom;
         sd.compound_parts = ncon_subsystem(geom, opts);
