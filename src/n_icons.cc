@@ -5927,6 +5927,9 @@ Geometry find_polar_polygon(Geometry geom, const vector<faceList *> &face_list,
     polar_polygon.del(VERTS, del_verts);
   }
 
+  // don't need face
+  polar_polygon.clear(FACES);
+
   return polar_polygon;
 }
 
@@ -6380,6 +6383,9 @@ Geometry build_gear_polygon(const int N, const int D, const double o_radius,
   if (double_ne(poly_scale, 1.0, eps))
     gear.transform(Trans3d::scale(poly_scale));
 
+  // don't need face
+  gear.clear(FACES);
+
   return gear;
 }
 
@@ -6803,11 +6809,6 @@ int ncon_subsystem(Geometry &geom, ncon_opts &opts)
     color_by_symmetry(geom, opts.polar_polygons[0], opts);
   }
 
-  // clear polygons memory
-  for (unsigned int i = 0; i < opts.polar_polygons.size(); i++)
-    opts.polar_polygons[i].clear_all();
-  opts.polar_polygons.clear();
-
   // in the case of hybrid and side cut
   // model needs to be rotated into position at side_cut angles
   // done after color_by_symmetry for accuracy
@@ -6822,6 +6823,11 @@ int ncon_subsystem(Geometry &geom, ncon_opts &opts)
   // append here so it doesn't interfere with edge counts
   if (opts.add_symmetry_polygon)
     geom.append(opts.polar_polygons[0]);
+
+  // clear polygons memory
+  for (unsigned int i = 0; i < opts.polar_polygons.size(); i++)
+    opts.polar_polygons[i].clear_all();
+  opts.polar_polygons.clear();
 
   if (opts.edge_coloring_method == 'F')
     ncon_edge_coloring_from_faces(geom, opts);
