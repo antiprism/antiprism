@@ -3594,8 +3594,13 @@ void model_info(Geometry &geom, const ncon_opts &opts)
   fprintf(stderr, "the model is %sclosed\n", (closed) ? "" : "not ");
   fprintf(stderr, "the model is %scomplete\n",
           (full_model(opts.longitudes)) ? "" : "not ");
-  if (opts.build_method == 2)
+  if (opts.build_method == 2) {
     fprintf(stderr, "method 2: circuit counts are not measured\n");
+    if (opts.radius_set)
+      fprintf(stderr,
+              "method 2: when radius is manually set, circuit colorings may "
+              "be incorrect\n");
+  }
 
   // measured values
   surfaceData sdm;
