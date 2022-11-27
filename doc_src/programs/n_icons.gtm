@@ -72,9 +72,15 @@ n_icons -n 12/4 -t 2 -f c -z 3 -M 36,27 | antiview
 <<CMDS_END>>
 
 The reporting subsystem is used. A list of even order N-icons with 
-twists between 3 and 30 and more than one surface are listed.
+n between 3 and 30 and more than one surface are listed.
 <<CMDS_START>>
-n_icons -L n -K 3,30 -J
+n_icons -L p -N 3,30 -J
+<<CMDS_END>>
+
+The reporting subsystem is used. A list of hybrid N-icons with 
+n between 3 and 30, d (of n/d) is 3, and two or more compound parts.
+<<CMDS_START>>
+n_icons -L h -N 3,30 -K 2,100 -D 3 -J -B
 <<CMDS_END>>
 <<EXAMPLES_END>>
 
