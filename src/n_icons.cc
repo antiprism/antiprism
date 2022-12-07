@@ -265,7 +265,7 @@ Coloring Options (run 'off_util -H color' for help on color formats)
   -e <mthd> mthd is edge coloring method. The coloring is done before twist
                keyword: none - sets no color
                keyword: Q - defer coloring all edges to option Q  (default)
-                  or use the same letter options specified in -f, except c,a
+                  or use the same letter options specified in -f, except c,
                F - color edges with average adjoining face color
   -U <tran> edge transparency. valid range from 0 (invisible) to 255 (opaque)
   -P <strg> edge transparency pattern string. valid values
@@ -2962,75 +2962,121 @@ void ncon_twist(Geometry &geom, const vector<polarOrb *> &polar_orbit,
       swap(edge[0], edge[1]);
 }
 
-// surfaces, case2, case1_twist are changed
-void find_surface_count(const vector<surfaceTable *> &surface_table,
-                        const int twist, int &surfaces, bool &case2,
-                        int &case1_twist)
+// ncon_order, d, point_cut, hybrid are not from opts
+void find_circuit_count(const int twist, const int ncon_order, const int d,
+                        const bool point_cut, const bool hybrid,
+                        surfaceData &sd)
 {
-  surfaces = 0;
-  case2 = false;
-  case1_twist = 0;
-  for (auto i : surface_table) {
-    if (twist == i->twist) {
-      surfaces = i->surfaces;
-      case2 = i->case2;
-      case1_twist = i->case1_twist;
-      break;
-    }
-  }
-}
+  // twist 0 case
+  if (twist == 0) {
+    sd.c_surfaces = (int)floor((double)ncon_order + 1) / 2;
+    if (is_even(ncon_order) && point_cut) {
+      sd.c_edges = sd.c_surfaces - 1;
 
-// ncon_order, point_cut, hybrid are not from opts
-void build_surface_table(vector<surfaceTable *> &surface_table,
-                         const int max_twist, const int ncon_order,
-                         const bool point_cut, const bool hybrid)
-{
-  // coding idea furnished by Adrian Rossiter
-  int axis_edges = 0;
+      // adjust for d > 1
+      if ((d > 1) && is_even(d)) {
+        sd.c_surfaces -= 1;
+        sd.d_surfaces += 2;
+      }
+    }
+    else if (is_even(ncon_order) && !point_cut) {
+      sd.c_surfaces--;
+      sd.d_surfaces += 2;
+      sd.c_edges = sd.c_surfaces + 1;
+
+      // adjust for d > 1
+      if ((d > 1) && is_even(d)) {
+        sd.c_surfaces += 1;
+        sd.d_surfaces -= 2;
+      }
+    }
+    else if (!is_even(ncon_order)) {
+      sd.c_surfaces--;
+      sd.d_surfaces++;
+      sd.c_edges = sd.c_surfaces;
+    }
+    sd.d_edges = 0;
+
+    sd.total_surfaces = sd.c_surfaces + sd.d_surfaces;
+    sd.total_edges = sd.c_edges + sd.d_edges;
+    return;
+  }
+
+  // coding for total surface counts furnished by Adrian Rossiter
+  int axis_edges = 1;
   int n = ncon_order;
   int t_mod = 0;
 
-  if (!is_even(ncon_order) || hybrid) {
-    axis_edges = 1;
-    if (hybrid) {
-      n *= 2;
-      t_mod = 1;
-    }
+  if (hybrid) {
+    n *= 2;
+    t_mod = 1;
   }
   else if (is_even(ncon_order) && !point_cut)
     axis_edges = 2;
 
-  for (int twist = 2; twist <= max_twist; twist++) {
-    int total_surfaces = (int)((gcd(n, 2 * twist - t_mod) + axis_edges) / 2);
-    // fprintf(stderr,"twist = %d surfaces = %d\n",twist,total_surfaces);
+  sd.total_surfaces = (int)((gcd(n, 2 * twist - t_mod) + axis_edges) / 2);
 
-    // subtract out discontinuous surfaces for table
-    int continuous_surfaces = total_surfaces - axis_edges;
-    bool factor = false;
-    if (hybrid)
-      factor = (n % (2 * twist - 1) == 0) ? true : false;
-    else
-      factor = (n % twist == 0) ? true : false;
-    int case1_twist = total_surfaces;
-    if (is_even(ncon_order) && !point_cut)
-      case1_twist--;
+  // continuous and discontinuous surfaces
+  sd.c_surfaces = sd.total_surfaces - axis_edges;
+  if ((is_even(ncon_order) && point_cut) && !hybrid)
+    sd.c_surfaces++;
+  sd.d_surfaces = sd.total_surfaces - sd.c_surfaces;
 
-    // only store those with more than minimum surface counts
-    if ((continuous_surfaces > 1) ||
-        (continuous_surfaces > 0 &&
-         (!(is_even(ncon_order) && point_cut) || hybrid))) {
-      surface_table.push_back(new surfaceTable(twist, continuous_surfaces,
-                                               (factor ? twist : case1_twist),
-                                               (factor ? false : true)));
+  // edges and adjustments for d
+  if (hybrid) {
+    sd.c_edges = sd.total_surfaces - 1;
+    sd.d_edges = 1;
+  }
+  else if (is_even(ncon_order) && point_cut) {
+    sd.c_edges = sd.c_surfaces - 1;
+    sd.d_edges = 2;
+
+    // adjust for d > 1
+    if ((d > 1) && is_even(d)) {
+      sd.c_surfaces -= 1;
+      sd.d_surfaces += 2;
+      sd.total_surfaces = sd.c_surfaces + sd.d_surfaces;
     }
   }
+  else if (is_even(ncon_order) && !point_cut) {
+    sd.c_edges = sd.total_surfaces - 1;
+    sd.d_edges = 0;
+
+    // adjust for d > 1
+    if ((d > 1) && is_even(d)) {
+      sd.c_surfaces += 1;
+      sd.d_surfaces -= 2;
+      sd.total_surfaces = sd.c_surfaces + sd.d_surfaces;
+    }
+  }
+  else if (!is_even(ncon_order)) {
+    sd.c_edges = sd.c_surfaces;
+    sd.d_edges = 1;
+  }
+  sd.total_edges = sd.c_edges + sd.d_edges;
+
+  // calculate repeat twists
+  int case1_twist = twist;
+  sd.case2 = false;
+  // not for minumum total surfaces
+  // if (sd.total_surfaces > ((is_even(ncon_order) && point_cut) ? 2 : 1)) {
+  if (sd.total_surfaces > 1) {
+    if (hybrid)
+      sd.case2 = (n % (2 * twist - 1) == 0) ? false : true;
+    else
+      sd.case2 = (n % twist == 0) ? false : true;
+    case1_twist = sd.total_surfaces;
+    if (is_even(ncon_order) && !point_cut)
+      case1_twist--;
+  }
+  sd.case1_twist = (sd.case2) ? case1_twist : twist;
 }
 
 // surface_table, sd will be changed
 // ncon_order, point_cut, twist, hybrid, info are not from opts
 void ncon_info(const int ncon_order, const int d, const bool point_cut,
                const int twist, const bool hybrid, const bool info,
-               vector<surfaceTable *> &surface_table, surfaceData &sd)
+               surfaceData &sd)
 {
   int first, last, forms, chiral, nonchiral, unique;
 
@@ -3278,11 +3324,6 @@ void ncon_info(const int ncon_order, const int d, const bool point_cut,
     }
   }
 
-  // if ncon_info() is called multiple times, this keeps surface table from
-  // being called only once
-  if (!surface_table.size())
-    build_surface_table(surface_table, last, ncon_order, point_cut, hybrid);
-
   sd.c_surfaces = 0;
   sd.c_edges = 0;
   sd.d_surfaces = 0;
@@ -3290,78 +3331,10 @@ void ncon_info(const int ncon_order, const int d, const bool point_cut,
   sd.total_surfaces = 0;
   sd.total_edges = 0;
 
-  sd.ncon_case2 = false;
-  int case1_twist = 0;
+  sd.case2 = false;
+  sd.case1_twist = 0;
 
-  // on twist 0 or 1, find_surface_count finds no entry
-  find_surface_count(surface_table, posi_twist, sd.c_surfaces, sd.ncon_case2,
-                     case1_twist);
-  if (posi_twist == 0) {
-    sd.c_surfaces = (int)floor((double)ncon_order + 1) / 2;
-    if (is_even(ncon_order) && point_cut) {
-      sd.c_edges = sd.c_surfaces - 1;
-
-      // adjust for d > 1
-      if (is_even(d)) {
-        sd.c_surfaces -= 1;
-        sd.d_surfaces += 2;
-      }
-    }
-    else if (is_even(ncon_order) && !point_cut) {
-      sd.c_surfaces--;
-      sd.d_surfaces += 2;
-      sd.c_edges = sd.c_surfaces + 1;
-
-      // adjust for d > 1
-      if (is_even(d)) {
-        sd.c_surfaces += 1;
-        sd.d_surfaces -= 2;
-      }
-    }
-    else if (!is_even(ncon_order)) {
-      sd.c_surfaces--;
-      sd.d_surfaces++;
-      sd.c_edges = sd.c_surfaces;
-    }
-    sd.d_edges = 0;
-  }
-  else if (hybrid) {
-    sd.d_surfaces = 1;
-    sd.c_edges = sd.c_surfaces + sd.d_surfaces - 1;
-    sd.d_edges = 1;
-  }
-  else if (is_even(ncon_order) && point_cut) {
-    // point cut always has at least one continuous circuit when d = 1
-    if (sd.c_surfaces == 0)
-      sd.c_surfaces = 1;
-    sd.d_surfaces = 0;
-    sd.c_edges = sd.c_surfaces - 1;
-    sd.d_edges = 2;
-
-    // adjust for d > 1
-    if (is_even(d)) {
-      sd.c_surfaces -= 1;
-      sd.d_surfaces += 2;
-    }
-  }
-  else if (is_even(ncon_order) && !point_cut) {
-    sd.d_surfaces = 2;
-    sd.c_edges = sd.c_surfaces + sd.d_surfaces - 1;
-    sd.d_edges = 0;
-
-    // adjust for d > 1
-    if (is_even(d)) {
-      sd.c_surfaces += 1;
-      sd.d_surfaces -= 2;
-    }
-  }
-  else if (!is_even(ncon_order)) {
-    sd.c_edges = sd.c_surfaces;
-    sd.d_surfaces = 1;
-    sd.d_edges = 1;
-  }
-  sd.total_surfaces = sd.c_surfaces + sd.d_surfaces;
-  sd.total_edges = sd.c_edges + sd.d_edges;
+  find_circuit_count(posi_twist, ncon_order, d, point_cut, hybrid, sd);
 
   sd.compound_parts = 1;
 
@@ -3439,11 +3412,9 @@ void ncon_info(const int ncon_order, const int d, const bool point_cut,
   }
 
   if (info) {
-    if ((sd.c_surfaces > 1) ||
-        (sd.c_surfaces > 0 &&
-         (!(is_even(ncon_order) && point_cut) || hybrid))) {
+    if (sd.total_surfaces > 1) {
       fprintf(stderr, "\n");
-      if (!sd.ncon_case2) {
+      if (!sd.case2) {
         fprintf(stderr, "This is a Case 1 n-icon. Surfaces cannot be colored "
                         "based on an earlier twist\n");
       }
@@ -3459,8 +3430,8 @@ void ncon_info(const int ncon_order, const int d, const bool point_cut,
         char sign = (twist > 0) ? '+' : '-';
         fprintf(stderr,
                 "It can be derived by twisting N%d%cT%d%c %c%d increments\n",
-                ncon_order, sign, case1_twist, ntype, sign,
-                posi_twist - case1_twist);
+                ncon_order, sign, sd.case1_twist, ntype, sign,
+                posi_twist - sd.case1_twist);
       }
     }
     fprintf(stderr, "\n");
@@ -3848,11 +3819,9 @@ void model_info(Geometry &geom, const ncon_opts &opts)
 
   fprintf(stderr, "========================================\n");
 
-  vector<surfaceTable *> surface_table;
   surfaceData sd;
   ncon_info(actual_order, actual_d, actual_cut, actual_twist, actual_hybrid,
-            opts.info, surface_table, sd);
-  surface_table.clear();
+            opts.info, sd);
 
   if (sdm_surfaces || sdm_edges || sdm_compound_parts)
     fprintf(stderr, "comparison: ============================\n");
@@ -7087,7 +7056,6 @@ int ncon_subsystem(Geometry &geom, ncon_opts &opts)
 
 void surface_subsystem(ncon_opts &opts)
 {
-  vector<surfaceTable *> surface_table;
   surfaceData sd;
 
   string buffer;
@@ -7274,8 +7242,7 @@ void surface_subsystem(ncon_opts &opts)
       if (ncon_order == 2 * opts.d)
         continue;
 
-      ncon_info(ncon_order, opts.d, point_cut, twist, hybrid, info,
-                surface_table, sd);
+      ncon_info(ncon_order, opts.d, point_cut, twist, hybrid, info, sd);
 
       if (opts.list_compounds) {
         // compounds have to have more than one surface
@@ -7299,7 +7266,7 @@ void surface_subsystem(ncon_opts &opts)
       if (!opts.list_compounds) {
         if ((sd.total_surfaces >= opts.filter_surfaces.front()) &&
             (sd.total_surfaces <= opts.filter_surfaces.back())) {
-          if (!sd.ncon_case2 || (sd.ncon_case2 && !opts.filter_case2)) {
+          if (!sd.case2 || (sd.case2 && !opts.filter_case2)) {
             if (!none) {
               if (opts.long_form)
                 fprintf(stderr, "%-5d: ", ncon_order);
@@ -7309,7 +7276,7 @@ void surface_subsystem(ncon_opts &opts)
             if (sd.nonchiral)
               buffer = "[" + std::to_string(ncon_order) + d_part + "+" +
                        std::to_string(twist) + "]";
-            else if (sd.ncon_case2)
+            else if (sd.case2)
               buffer = "{" + std::to_string(ncon_order) + d_part + "+" +
                        std::to_string(twist) + "}";
             else
@@ -7347,7 +7314,6 @@ void surface_subsystem(ncon_opts &opts)
         }
       }
     }
-    surface_table.clear();
 
     if (none) {
       fprintf(stderr, "none");

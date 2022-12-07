@@ -85,18 +85,6 @@ public:
   polarOrb(int c) : coord_no(c) {}
 };
 
-class surfaceTable {
-public:
-  int twist;
-  int surfaces;
-  int case1_twist;
-  bool case2;
-  surfaceTable(int t, int s, int c, bool r)
-      : twist(t), surfaces(s), case1_twist(c), case2(r)
-  {
-  }
-};
-
 struct surfaceData {
   int c_surfaces;
   int c_edges;
@@ -105,7 +93,8 @@ struct surfaceData {
   int total_surfaces;
   int total_edges;
   bool nonchiral;
-  bool ncon_case2;
+  int case1_twist;
+  bool case2;
   int compound_parts; // borrow for compounds
 };
 
