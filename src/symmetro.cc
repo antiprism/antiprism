@@ -167,7 +167,8 @@ Options
 Program Options
   -k <s,l,m,n,a> Kaplan-Hart notation. Generate Symmetrohedra based on a study
             by Craig S. Kaplan and George W. Hart (http://www.georgehart.com).
-            Url: http://www.cgl.uwaterloo.ca/~csk/projects/symmetrohedra
+            Url: https://cs.uwaterloo.ca/~csk/Old/projects/symmetrohedra/
+            Pdf: https://web.archive.org/web/20160529133521/http://www.cgl.uwaterloo.ca/csk/papers/kaplan_hart_bridges2001.pdf
             s: symmetry type of Symmetrohedra. sets {p,q,2}
                I-icosahedral {5,3,2} O-octahedral {4,3,2} T-tetrahedral {3,3,2}
             l,m,n: multipliers for axis polygons. Separated by commas, two

@@ -120,12 +120,12 @@ symmetro -k i,2,4,*,1 -f n -m m2 -r 1.05398768021455,1 | antiview -v 0.07
 symmetro -k i,3,1,*,1 -f n -m m2 | antiview -v 0.07
 symmetro -k i,3,2,*,1 -f n -m m2 | antiview -v 0.07
 symmetro -k i,*,2,2,1 -f n -m m2 | antiview -v 0.07
-symmetro -k i,*,1,4,e -f n -m m2 | antiview -v 0.06
+symmetro -k i,*,1,4,e -f n -m m2 -C 3 | antiview -v 0.06
 symmetro -k i,3,4,*,v -f n -m m2 -r 1.5665309813,1 -l 8 | antiview -v 0.03
 symmetro -k i,3,4,*,e -f n -m m2 | antiview -v 0.06
 symmetro -k i,3,5,0,v -f n -m m2 -r 1.3159206178527,1 | antiview -v 0.03 
 symmetro -k i,4,2,*,e -f n -m m2 | antiview -v 0.06
-symmetro -k i,*,1,4,1 -f n -m m2 | antiview -v 0.06
+symmetro -k i,*,1,4,1 -f n -m m2 -C 3 | antiview -v 0.06
 symmetro -k i,1,*,2,1 -f n -m m2 | antiview -v 0.06
 symmetro -k i,1,*,3,e -f n -m m2 | antiview -v 0.06
 symmetro -k i,2,*,3,1 -f n -m m2 | antiview -v 0.06
