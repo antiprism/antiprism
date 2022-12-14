@@ -1252,6 +1252,8 @@ void build_prime_polygon(Geometry &geom, vector<int> &prime_meridian,
 {
   // for finding poles, the accuracy must be less than the default
   double epsilon_local = 1e-8;
+  if (opts.eps > epsilon_local)
+    epsilon_local = opts.eps;
 
   int num_polygons = gcd(opts.ncon_order, opts.d);
   int base_polygon =
@@ -1302,10 +1304,15 @@ void build_prime_polygon(Geometry &geom, vector<int> &prime_meridian,
 
 // reverse polygon indexes of a polygon mirrored on Y
 void reverse_poly_indexes_on_y(Geometry &geom, vector<int> &polygon,
-                               const double eps)
+                               const ncon_opts &opts)
 {
   const vector<Vec3d> &verts = geom.verts();
   vector<bool> swapped(polygon.size());
+
+  // default epsilon too small
+  double epsilon_local = 1e-8;
+  if (opts.eps > epsilon_local)
+    epsilon_local = opts.eps;
 
   for (unsigned int i = 0; i < polygon.size() - 1; i++) {
     if (swapped[i])
@@ -1315,9 +1322,10 @@ void reverse_poly_indexes_on_y(Geometry &geom, vector<int> &polygon,
         continue;
       // if the points have equal Y and have the same fabs(X) then the indexes
       // are mirror/swapped on Y
-      if (double_eq(verts[polygon[i]][1], verts[polygon[j]][1], eps) &&
+      if (double_eq(verts[polygon[i]][1], verts[polygon[j]][1],
+                    epsilon_local) &&
           double_eq(fabs(verts[polygon[i]][0]), fabs(verts[polygon[j]][0]),
-                    eps)) {
+                    epsilon_local)) {
         swap(polygon[i], polygon[j]);
         swapped[i] = true;
         swapped[j] = true;
@@ -1958,7 +1966,7 @@ void form_angular_model(Geometry &geom, const vector<int> &prime_meridian,
       // if full sweep this works
       meridian = prime_meridian;
       if (!opts.double_sweep)
-        reverse_poly_indexes_on_y(geom, meridian, opts.eps);
+        reverse_poly_indexes_on_y(geom, meridian, opts);
     }
     else {
       // add one 'meridian' of points
@@ -2967,40 +2975,7 @@ void find_circuit_count(const int twist, const int ncon_order, const int d,
                         const bool point_cut, const bool hybrid,
                         surfaceData &sd)
 {
-  // twist 0 case
-  if (twist == 0) {
-    sd.c_surfaces = (int)floor((double)ncon_order + 1) / 2;
-    if (is_even(ncon_order) && point_cut) {
-      sd.c_edges = sd.c_surfaces - 1;
-
-      // adjust for d > 1
-      if ((d > 1) && is_even(d)) {
-        sd.c_surfaces -= 1;
-        sd.d_surfaces += 2;
-      }
-    }
-    else if (is_even(ncon_order) && !point_cut) {
-      sd.c_surfaces--;
-      sd.d_surfaces += 2;
-      sd.c_edges = sd.c_surfaces + 1;
-
-      // adjust for d > 1
-      if ((d > 1) && is_even(d)) {
-        sd.c_surfaces += 1;
-        sd.d_surfaces -= 2;
-      }
-    }
-    else if (!is_even(ncon_order)) {
-      sd.c_surfaces--;
-      sd.d_surfaces++;
-      sd.c_edges = sd.c_surfaces;
-    }
-    sd.d_edges = 0;
-
-    sd.total_surfaces = sd.c_surfaces + sd.d_surfaces;
-    sd.total_edges = sd.c_edges + sd.d_edges;
-    return;
-  }
+  bool digons = (ncon_order == 2 * d);
 
   // coding for total surface counts furnished by Adrian Rossiter
   int axis_edges = 1;
@@ -3022,17 +2997,35 @@ void find_circuit_count(const int twist, const int ncon_order, const int d,
     sd.c_surfaces++;
   sd.d_surfaces = sd.total_surfaces - sd.c_surfaces;
 
-  // edges and adjustments for d
+  // for twist 0
+  int posi_twist = std::abs(twist % n);
+
+  // edges. posi_twist 0 has no discontinuous edges
+  // also adjustments for d > 1 and digon cases
   if (hybrid) {
     sd.c_edges = sd.total_surfaces - 1;
     sd.d_edges = 1;
+
+    // adjust for digons
+    if (digons) {
+      sd.c_surfaces = sd.total_surfaces;
+      sd.d_surfaces = 0;
+      sd.total_surfaces = sd.c_surfaces + sd.d_surfaces;
+    }
   }
   else if (is_even(ncon_order) && point_cut) {
     sd.c_edges = sd.c_surfaces - 1;
-    sd.d_edges = 2;
+    sd.d_edges = (posi_twist == 0) ? 0 : 2;
 
     // adjust for d > 1
-    if ((d > 1) && is_even(d)) {
+    if (digons) {
+      sd.c_surfaces = sd.total_surfaces - 1;
+      if (twist > 0)
+        sd.c_surfaces += 2;
+      sd.d_surfaces = 0;
+      sd.total_surfaces = sd.c_surfaces + sd.d_surfaces;
+    }
+    else if ((d > 1) && is_even(d)) {
       sd.c_surfaces -= 1;
       sd.d_surfaces += 2;
       sd.total_surfaces = sd.c_surfaces + sd.d_surfaces;
@@ -3043,7 +3036,12 @@ void find_circuit_count(const int twist, const int ncon_order, const int d,
     sd.d_edges = 0;
 
     // adjust for d > 1
-    if ((d > 1) && is_even(d)) {
+    if (digons) {
+      sd.c_surfaces = sd.total_surfaces - 1;
+      sd.d_surfaces = 0;
+      sd.total_surfaces = sd.c_surfaces + sd.d_surfaces;
+    }
+    else if ((d > 1) && !digons && is_even(d)) {
       sd.c_surfaces += 1;
       sd.d_surfaces -= 2;
       sd.total_surfaces = sd.c_surfaces + sd.d_surfaces;
@@ -3051,7 +3049,7 @@ void find_circuit_count(const int twist, const int ncon_order, const int d,
   }
   else if (!is_even(ncon_order)) {
     sd.c_edges = sd.c_surfaces;
-    sd.d_edges = 1;
+    sd.d_edges = (posi_twist == 0) ? 0 : 1;
   }
   sd.total_edges = sd.c_edges + sd.d_edges;
 
@@ -3059,17 +3057,48 @@ void find_circuit_count(const int twist, const int ncon_order, const int d,
   int case1_twist = twist;
   sd.case2 = false;
   // not for minumum total surfaces
-  // if (sd.total_surfaces > ((is_even(ncon_order) && point_cut) ? 2 : 1)) {
   if (sd.total_surfaces > 1) {
     if (hybrid)
       sd.case2 = (n % (2 * twist - 1) == 0) ? false : true;
     else
-      sd.case2 = (n % twist == 0) ? false : true;
+      // can't allow mod 0
+      sd.case2 = (twist == 0) ? false : ((n % twist == 0) ? false : true);
     case1_twist = sd.total_surfaces;
     if (is_even(ncon_order) && !point_cut)
       case1_twist--;
   }
   sd.case1_twist = (sd.case2) ? case1_twist : twist;
+
+  // compound parts
+  if (hybrid) {
+    n = ncon_order; // not 2n
+    t_mod = d / 2;  // advance by d
+    if (is_even(d))
+      t_mod += 1;
+  }
+  int num_polygons = (int)gcd(n, d);
+  sd.compound_parts = num_polygons;
+  if (num_polygons > 1) {
+    // digons
+    if (n == 2 * d)
+      sd.compound_parts = sd.total_surfaces;
+    else {
+      int np = is_even(num_polygons) ? num_polygons / 2 : num_polygons;
+      sd.compound_parts =
+          (int)gcd(np, twist + t_mod) + ((is_even(n) && point_cut) ? 1 : 0);
+      // hybrid calculations faulty
+      if (hybrid) {
+        sd.compound_parts /= 2;
+        if (!is_even(d) || (sd.compound_parts == 0))
+          sd.compound_parts++;
+      }
+      else if (!is_even(d) || (!is_even(n) && is_even(d))) {
+        sd.compound_parts /= 2;
+        if ((is_even(n) && !point_cut) || !is_even(n))
+          sd.compound_parts++;
+      }
+    }
+  }
 }
 
 // surface_table, sd will be changed
@@ -3079,6 +3108,7 @@ void ncon_info(const int ncon_order, const int d, const bool point_cut,
                surfaceData &sd)
 {
   int first, last, forms, chiral, nonchiral, unique;
+  bool digons = (ncon_order == 2 * d);
 
   if (info) {
     fprintf(stderr, "\n");
@@ -3334,9 +3364,9 @@ void ncon_info(const int ncon_order, const int d, const bool point_cut,
   sd.case2 = false;
   sd.case1_twist = 0;
 
-  find_circuit_count(posi_twist, ncon_order, d, point_cut, hybrid, sd);
+  sd.compound_parts = 0;
 
-  sd.compound_parts = 1;
+  find_circuit_count(posi_twist, ncon_order, d, point_cut, hybrid, sd);
 
   if (!(d == 1 || (ncon_order - d) == 1)) {
     if (info) {
@@ -3344,35 +3374,60 @@ void ncon_info(const int ncon_order, const int d, const bool point_cut,
       fprintf(stderr, "When d(%d) > 1, ", d);
     }
     if (hybrid) {
-      if (info)
+      if (info) {
         fprintf(stderr,
                 "Hybrid n-icons have the same surface counts as when d = 1\n");
+        if (digons)
+          fprintf(stderr,
+                  "But when n/d makes digons, all surfaces are continuous\n");
+      }
     }
     else if (is_even(ncon_order)) {
-      if (info)
-        fprintf(stderr, "and d is %s, ", (is_even(d)) ? "even" : "odd");
+      if (info) {
+        if (digons)
+          fprintf(stderr, "when digons, all surfaces are continuous\n");
+        else
+          fprintf(stderr, "and d is %s, ", (is_even(d)) ? "even" : "odd");
+      }
 
       if (point_cut) {
         if (info) {
-          fprintf(stderr, "Even Order Point Cut n-icons have\n");
-
-          if (is_even(d))
-            fprintf(stderr, "one less continuous surface "
-                            "and two additional discontinuous surfaces\n");
-          else
-            fprintf(stderr, "the same surface counts as when d = 1\n");
+          if (digons) {
+            if (twist == 0)
+              fprintf(stderr,
+                      "when twist is zero, there are two less surfaces\n");
+            else if (ncon_order % 4 == 0)
+              fprintf(stderr,
+                      "when n mod 4, there will be one extra surface\n");
+          }
+          else {
+            fprintf(stderr, "Even Order Point Cut n-icons have\n");
+            if (is_even(d))
+              fprintf(stderr, "one less continuous surface "
+                              "and two additional discontinuous surfaces\n");
+            else
+              fprintf(stderr, "the same surface counts as when d = 1\n");
+          }
         }
       }
       // side cut
       else {
         if (info) {
-          fprintf(stderr, "Even Order Side Cut n-icons have\n");
-
-          if (is_even(d))
-            fprintf(stderr, "one additional continuous surface and "
-                            "two less discontinuous surfaces\n");
-          else
-            fprintf(stderr, "the same surface counts as when d = 1\n");
+          if (digons) {
+            if (twist == 0)
+              fprintf(stderr,
+                      "when twist is zero, there is one less surface\n");
+            else if (ncon_order % 4 == 0)
+              fprintf(stderr, "when n mod 4, there will be one less surface\n");
+          }
+          else {
+            fprintf(stderr, "Even Order Side Cut n-icons have\n");
+            if (is_even(d))
+              fprintf(stderr, "one additional continuous surface and "
+                              "two less discontinuous surfaces\n");
+            else
+              fprintf(stderr, "the same surface counts as when d = 1\n");
+          }
         }
       }
     }
@@ -3382,6 +3437,7 @@ void ncon_info(const int ncon_order, const int d, const bool point_cut,
             stderr,
             "Odd Order n-icons have the same surface counts as when d = 1\n");
     }
+
     if (info)
       fprintf(stderr, "edge circuit counts are the same as when d = 1\n");
   }
@@ -3406,9 +3462,9 @@ void ncon_info(const int ncon_order, const int d, const bool point_cut,
             ((sd.d_edges == 1) ? " is" : "s are"));
     fprintf(stderr, "   %d edge%s total\n", (sd.total_edges),
             (((sd.total_edges) == 1) ? "" : "s"));
-    // fprintf(stderr, "----\n");
-    // fprintf(stderr, "   %d compound part%s total\n", (sd.compound_parts),
-    //         (((sd.compound_parts) == 1) ? "" : "s"));
+    fprintf(stderr, "----\n");
+    fprintf(stderr, "   %d compound part%s total\n", (sd.compound_parts),
+            (((sd.compound_parts) == 1) ? "" : "s"));
   }
 
   if (info) {
@@ -3576,9 +3632,11 @@ void model_info(Geometry &geom, const ncon_opts &opts)
 
   // build method 2 has random coplanar faces
   // for method 2 was: opts.hide_indent && !opts.radius_set);
-  bool measure =
-      (!opts.symmetric_coloring && full_model(opts.longitudes) &&
-       !opts.lon_invisible && !opts.digons && (opts.build_method != 2));
+  bool measure = (!opts.symmetric_coloring && full_model(opts.longitudes) &&
+                  !opts.lon_invisible && (opts.build_method != 2));
+  // when digons, will be miscounted if not edge_coloring_method s,S
+  if (opts.digons && !(strchr("Ss", opts.edge_coloring_method)))
+    measure = false;
 
   if (strchr("sfScC", opts.face_coloring_method) && !opts.flood_fill_stop &&
       measure) {
@@ -3655,7 +3713,7 @@ void model_info(Geometry &geom, const ncon_opts &opts)
             (sz == 1 ? " was" : "s were"));
 
     if (strchr("cC", opts.face_coloring_method)) {
-      // sdm_compound_parts = true;
+      sdm_compound_parts = true;
       sdm.compound_parts = sz;
 
       fprintf(
@@ -3756,7 +3814,8 @@ void model_info(Geometry &geom, const ncon_opts &opts)
 
     string model_str = "model";
     if (opts.hybrid) {
-      actual_twist -= ((opts.twist > 0) ? 1 : -1);
+      if (!aligned)
+        actual_twist -= ((opts.twist > 0) ? 1 : -1);
       model_str = "hybrid";
     }
     fprintf(stderr,
@@ -3845,7 +3904,7 @@ void model_info(Geometry &geom, const ncon_opts &opts)
     fprintf(stderr, "measured discontinuous edges %s (%+d)\n",
             ((sdm.d_edges == sd.d_edges) ? "Agree" : "DISAGREE"),
             (sdm.d_edges - sd.d_edges));
-    fprintf(stderr, "total surfaces %s (%+d)\n",
+    fprintf(stderr, "total edges %s (%+d)\n",
             ((sdm.total_edges == sd.total_edges) ? "Agree" : "DISAGREE"),
             (sdm.total_edges - sd.total_edges));
   }
@@ -5557,68 +5616,56 @@ void delete_unused_longitudes(Geometry &geom, vector<faceList *> &face_list,
 void add_triangles_to_close(Geometry &geom, vector<int> &added_triangles,
                             const ncon_opts &opts)
 {
-  vector<int> face(3);
-  vector<int> face_check(3);
-
-  for (unsigned int i = 0; i < 3; i++)
-    face_check[i] = 0;
-
   vector<vector<int>> unmatched_edges = find_unmatched_edges(geom);
-  while (unmatched_edges.size()) {
-    vector<bool> used(unmatched_edges.size());
-    unsigned int sz = unmatched_edges.size();
-    for (unsigned int i = 0; i < sz - 1; i++) {
-      if (used[i])
-        continue;
-      face[0] = unmatched_edges[i][0];
-      face[1] = unmatched_edges[i][1];
-      bool found = false;
-      for (unsigned int j = i + 1; j < sz; j++) {
-        if (used[j] || unmatched_edges[j][0] < face[1])
+
+  Geometry unmatched = geom;
+  unmatched.clear(FACES);
+  unmatched.clear(EDGES);
+  unmatched.raw_edges() = unmatched_edges;
+
+  double outer_rad = unmatched.verts(0).len();
+
+  vector<int> inner_v;
+  for (unsigned int i = 0; i < unmatched_edges.size(); i++) {
+    for (unsigned int j = 0; j < 2; j++) {
+      int v = unmatched_edges[i][j];
+      if (double_ne(unmatched.verts(v).len(), outer_rad, opts.eps))
+        inner_v.push_back(v);
+    }
+  }
+
+  sort(inner_v.begin(), inner_v.end());
+  auto iv = unique(inner_v.begin(), inner_v.end());
+  inner_v.erase(iv, inner_v.end());
+
+  for (unsigned int i = 0; i < inner_v.size(); i++) {
+    vector<int> edge_idx =
+        find_edges_with_vertex(unmatched.edges(), inner_v[i]);
+    if (!is_even((int)edge_idx.size()))
+      opts.warning(
+          "add_triangles_to_close: unmatched edges group unexpectedly odd");
+    vector<int> outer_v;
+    for (unsigned int j = 0; j < edge_idx.size(); j++) {
+      unsigned int e = edge_idx[j];
+      outer_v.push_back((unmatched.edges(e)[0] == inner_v[i])
+                            ? unmatched.edges(e)[1]
+                            : unmatched.edges(e)[0]);
+    }
+    for (unsigned int j = 0; j < outer_v.size() - 1; j++) {
+      for (unsigned int k = j; k < outer_v.size(); k++) {
+        if (outer_v[j] == outer_v[k])
           continue;
-        if (unmatched_edges[j][0] > face[1])
-          break;
-        face[2] = unmatched_edges[j][1];
-        found = false;
-        if (triangle_zero_area(geom, face[0], face[1], face[2], opts.eps)) {
+        if (triangle_zero_area(geom, inner_v[i], outer_v[j], outer_v[k],
+                               opts.eps)) {
+          vector<int> face;
+          face.push_back(inner_v[i]);
+          face.push_back(outer_v[j]);
+          face.push_back(outer_v[k]);
           geom.add_face(face, Color::invisible);
           added_triangles.push_back(geom.faces().size() - 1);
-          found = true;
-
-          used[i] = true;
-          used[j] = true;
-
-          break;
-        }
-      }
-      if (!found) {
-        if (face[0] == unmatched_edges[i + 1][0]) {
-          face[2] = unmatched_edges[i + 1][1];
-
-          if (triangle_zero_area(geom, face[0], face[1], face[2], opts.eps)) {
-            geom.add_face(face, Color::invisible);
-            added_triangles.push_back(geom.faces().size() - 1);
-          }
-
-          // check for infinite loop
-          if (face[0] == face_check[0] && face[1] == face_check[1] &&
-              face[2] == face_check[2]) {
-            opts.warning(
-                msg_str(
-                    "warning: add_triangles: face %d %d %d failed (method=3)",
-                    face[0], face[1], face[2]),
-                'z');
-            return;
-          }
         }
       }
     }
-
-    face_check[0] = unmatched_edges[0][0];
-    face_check[1] = unmatched_edges[0][1];
-    face_check[2] = unmatched_edges[1][1];
-
-    unmatched_edges = find_unmatched_edges(geom);
   }
 }
 
@@ -5699,12 +5746,21 @@ void build_compound_polygon(vector<Geometry> &polar_polygons,
   polar_polygons[1].transform(
       Trans3d::rotate(0, 0, deg2rad(-opts.twist_angle)));
 
+  unsigned int num_polygons = gcd(opts.ncon_order, opts.d);
+
+  // speed up. if number of polygons is 1 they are all one color
+  if (num_polygons == 1) {
+    for (unsigned int i = 0; i < 2; i++) {
+      Coloring(&(polar_polygons[i])).e_one_col(opts.face_map.get_col(0));
+    }
+    return;
+  }
+
   vector<pair<int, int>> edge_queue;
   map<int, vector<pair<int, int>>> edge_colors;
   int edge_map_color = 0;
 
   // maximum colors
-  unsigned int num_polygons = gcd(opts.ncon_order, opts.d);
   for (unsigned int i = 0; i < num_polygons; i++) {
     Color c = opts.face_map.get_col(i);
     // find starter edges with color c in polygon 0
@@ -5740,8 +5796,9 @@ void build_compound_polygon(vector<Geometry> &polar_polygons,
       int edge_oppo =
           find_edge_by_coords(polar_polygons[polygon_oppo], v1, v2, opts.eps);
       if (edge_oppo == -1) {
-        opts.warning("build_compound_polygon: unexpected error");
-        return;
+        // wasn't found
+        edge_queue.erase(edge_queue.begin());
+        continue;
       }
       // if corresponding edge has color
       Color c_oppo = polar_polygons[polygon_oppo].colors(EDGES).get(edge_oppo);
@@ -5789,6 +5846,8 @@ Geometry find_polar_polygon(Geometry geom, const vector<faceList *> &face_list,
 
   // some vertices are not right on the z plane
   double epsilon_local = 1e-8;
+  if (opts.eps > epsilon_local)
+    epsilon_local = opts.eps;
 
   // edges in polygon will be implicit
   geom.add_missing_impl_edges();
@@ -5901,19 +5960,23 @@ struct ht_less {
 
 void lookup_face_color(Geometry &geom, const int f, const vector<Vec3d> &axes,
                        vector<map<double, Color, ht_less>> &heights,
-                       const bool other_axis)
+                       const bool other_axis, const ncon_opts &opts)
 {
+  double epsilon_local = ht_less::get_eps();
+  if (opts.eps > epsilon_local)
+    epsilon_local = opts.eps;
+
   int ax = double_ge(geom.face_cent(f)[2], 0.0,
-                     ht_less::get_eps()); // z-coordinate determines axis
+                     epsilon_local); // z-coordinate determines axis
   if (other_axis)
     ax = (!ax) ? 1 : 0;
   double hts[3];
   for (int v_idx = 0; v_idx < 3; v_idx++)
     hts[v_idx] = vdot(geom.face_v(f, v_idx), axes[ax]);
   // try to select non-horizontal edge
-  int offset = double_eq(hts[0], hts[1], ht_less::get_eps());
+  int offset = double_eq(hts[0], hts[1], epsilon_local);
   double ht;
-  if (offset && double_eq(hts[1], hts[2], ht_less::get_eps()))
+  if (offset && double_eq(hts[1], hts[2], epsilon_local))
     ht = hts[0] / fabs(hts[0]); // horizontal edge (on  horizontal face)
   else {
     // Find nearpoint of swept edge line, make unit, get height on axis
@@ -5928,8 +5991,12 @@ void lookup_face_color(Geometry &geom, const int f, const vector<Vec3d> &axes,
 
 void lookup_edge_color(Geometry &geom, const int e, const vector<Vec3d> &axes,
                        vector<map<double, Color, ht_less>> &heights,
-                       const bool other_axis)
+                       const bool other_axis, const ncon_opts &opts)
 {
+  double epsilon_local = ht_less::get_eps();
+  if (opts.eps > epsilon_local)
+    epsilon_local = opts.eps;
+
   int ax = geom.edge_cent(e)[2] >= 0.0; // z-coordinate determines axis
   if (other_axis)
     ax = (!ax) ? 1 : 0;
@@ -5937,9 +6004,9 @@ void lookup_edge_color(Geometry &geom, const int e, const vector<Vec3d> &axes,
   for (int v_idx = 0; v_idx < 2; v_idx++)
     hts[v_idx] = vdot(geom.edge_v(e, v_idx), axes[ax]);
   // select horizontal edges that don't intersect the axis
-  if (double_eq(hts[0], hts[1], ht_less::get_eps()) &&
+  if (double_eq(hts[0], hts[1], epsilon_local) &&
       !lines_intersection(geom.edge_v(e, 0), geom.edge_v(e, 1), Vec3d(0, 0, 0),
-                          axes[ax], ht_less::get_eps())
+                          axes[ax], epsilon_local)
            .is_set()) {
     double ht = vdot(geom.edge_v(e, 0).unit(), axes[ax]);
     map<double, Color, ht_less>::iterator mi;
@@ -6043,10 +6110,10 @@ void ncon_face_coloring_by_compound(Geometry &geom,
         continue;
       if ((c == opts.face_default_color) && (opts.build_method != 3))
         continue;
-      lookup_face_color(geom, f, axes, heights, false);
+      lookup_face_color(geom, f, axes, heights, false, opts);
       c = geom.colors(FACES).get(f);
       if (!c.is_set()) {
-        lookup_face_color(geom, f, axes, heights, true);
+        lookup_face_color(geom, f, axes, heights, true, opts);
         c = geom.colors(FACES).get(f);
         if (!c.is_set())
           found = false;
@@ -6760,10 +6827,10 @@ void color_by_symmetry(Geometry &geom, Geometry &pgon, const ncon_opts &opts)
           continue;
         if ((c == opts.face_default_color) && (opts.build_method != 3))
           continue;
-        lookup_face_color(geom, f, axes, heights, false);
+        lookup_face_color(geom, f, axes, heights, false, opts);
         c = geom.colors(FACES).get(f);
         if (!c.is_set()) {
-          lookup_face_color(geom, f, axes, heights, true);
+          lookup_face_color(geom, f, axes, heights, true, opts);
           c = geom.colors(FACES).get(f);
           if (!c.is_set())
             found = false;
@@ -6817,13 +6884,13 @@ void color_by_symmetry(Geometry &geom, Geometry &pgon, const ncon_opts &opts)
     for (unsigned int e = 0; e < geom.edges().size(); e++) {
       Color c = geom.colors(EDGES).get(e);
       if (c.is_maximum_index()) {
-        lookup_edge_color(geom, e, axes, heights, false);
+        lookup_edge_color(geom, e, axes, heights, false, opts);
         c = geom.colors(EDGES).get(e);
         // if, because negative radii, the edge center is shifted onto the wrong
         // axis no color will be found for look up, try the other axis
         if (c.is_maximum_index()) {
           // not found? try again
-          lookup_edge_color(geom, e, axes, heights, true);
+          lookup_edge_color(geom, e, axes, heights, true, opts);
           c = geom.colors(EDGES).get(e);
           // if still not found, unset color, set for warning
           if (c.is_maximum_index()) {
@@ -6835,7 +6902,7 @@ void color_by_symmetry(Geometry &geom, Geometry &pgon, const ncon_opts &opts)
     }
 
     if (!found)
-      opts.warning("color by symmetry: some edges could not be colored", 'f');
+      opts.warning("color by symmetry: some edges could not be colored", 'e');
 
     // occasionally some vertices can be missed
     for (unsigned int i = 0; i < geom.verts().size(); i++) {
@@ -7029,7 +7096,7 @@ int ncon_subsystem(Geometry &geom, ncon_opts &opts)
     vector<Color> cols;
     for (unsigned int i = 0; i < geom.faces().size(); i++) {
       Color c = geom.colors(FACES).get(i);
-      if (c != opts.face_default_color) {
+      if ((c != opts.face_default_color) && !c.is_invisible()) {
         cols.push_back(c);
       }
     }
@@ -7051,20 +7118,21 @@ int ncon_subsystem(Geometry &geom, ncon_opts &opts)
     opts.polar_polygons[i].clear_all();
   opts.polar_polygons.clear();
 
+  GeometryInfo info(geom);
+  if (!info.is_closed())
+    opts.warning("the model is not closed");
+
   return ret;
 }
 
 void surface_subsystem(ncon_opts &opts)
 {
-  surfaceData sd;
-
-  string buffer;
+  int d = opts.d;
 
   if (opts.list_compounds) {
     opts.build_method = 3;
 
     // don't let these set
-    opts.eps = anti::epsilon;
     opts.info = false;
     opts.split_bypass = false;
     opts.hide_elems = "";
@@ -7073,7 +7141,7 @@ void surface_subsystem(ncon_opts &opts)
 
     // polygon coloring is faster than 'c'
     opts.face_coloring_method = 'C';
-    opts.edge_coloring_method = 'n';
+    opts.edge_coloring_method = 'S';
 
     // generated only small model for counting compound parts
     opts.longitudes.clear();
@@ -7087,68 +7155,66 @@ void surface_subsystem(ncon_opts &opts)
     opts.face_map.add_cmap(spread_map);
   }
 
-  fprintf(stderr, "\n");
+  fprintf(stdout, "\n");
 
   char form = opts.ncon_surf[0];
   if (form == 'p')
-    fprintf(stderr, "Only Even Order Point Cut models are listed\n");
+    fprintf(stdout, "Only Even Order Point Cut models are listed\n");
   else if (form == 's')
-    fprintf(stderr, "Only Even Order Side Cut models are listed\n");
+    fprintf(stdout, "Only Even Order Side Cut models are listed\n");
   else if (form == 'o')
-    fprintf(stderr, "Only Odd Order models are listed\n");
+    fprintf(stdout, "Only Odd Order models are listed\n");
   else if (form == 'h')
-    fprintf(stderr, "Only Hybrid models are listed\n");
+    fprintf(stdout, "Only Hybrid models are listed\n");
   else if (form == 'i')
-    fprintf(stderr, "Only Hybrids such that N/2 is even are listed\n");
+    fprintf(stdout, "Only Hybrids such that N/2 is even are listed\n");
   else if (form == 'j')
-    fprintf(stderr, "Only Hybrids such that N/2 is odd are listed\n");
+    fprintf(stdout, "Only Hybrids such that N/2 is odd are listed\n");
   else if (form == 'k')
-    fprintf(stderr, "Only Hybrids such that N/4 is even are listed\n");
+    fprintf(stdout, "Only Hybrids such that N/4 is even are listed\n");
   else if (form == 'l')
-    fprintf(stderr, "Only Hybrids such that N/4 is odd are listed\n");
+    fprintf(stdout, "Only Hybrids such that N/4 is odd are listed\n");
 
-  fprintf(stderr, "listing twists one %s way round to avoid repeats\n",
+  fprintf(stdout, "listing twists one %s way round to avoid repeats\n",
           (form == 'o') ? "half" : "quarter");
 
-  fprintf(stderr, "listing only %s of %d to %d (option -K)\n",
+  fprintf(stdout, "listing only %s of %d to %d (option -K)\n",
           (!opts.list_compounds ? "surfaces" : "compound parts"),
           opts.filter_surfaces.front(), opts.filter_surfaces.back());
 
-  fprintf(stderr, "d is set to %d (option -D) (only n/d are measured)\n",
-          opts.d);
+  fprintf(stdout, "d = %d (option -D) (only n/d are measured)\n", d);
 
-  if (opts.list_compounds && opts.d == 1)
-    fprintf(stderr, "when d = 1 no n_icons are compounds (option -D)\n");
+  if (opts.list_compounds && d == 1)
+    fprintf(stdout, "when d = 1 no n_icons are compounds (option -D)\n");
 
-  if (!opts.list_compounds) {
-    if (!opts.filter_case2)
-      fprintf(stderr, "case 2 n-icons are depicted with {curly brackets}\n");
+  if (!opts.filter_case2)
+    fprintf(stdout, "case 2 n-icons are depicted with {curly brackets}\n");
 
-    if ((form != 'o') && (form != 'i'))
-      fprintf(stderr,
-              "non-chiral n-icons are depicted with [square brackets]\n");
-    else if (form == 's')
-      fprintf(stderr,
-              "all even order side cut n-icons have at least two surfaces\n");
-  }
-  else {
-    if ((form == 'p') && (is_even(opts.d))) {
-      fprintf(stderr, "when d is even, all even order point cut n-icons\n");
-      fprintf(stderr, "will have at least two compound parts\n");
+  if ((form != 'o') && (form != 'i'))
+    fprintf(stdout, "non-chiral n-icons are depicted with [square brackets]\n");
+  else if (form == 's')
+    fprintf(stdout,
+            "all even order side cut n-icons have at least two surfaces\n");
+
+  string buffer;
+  if (opts.list_compounds) {
+    if ((form == 'p') && (is_even(d))) {
+      fprintf(stdout, "when d is even, all even order point cut n-icons\n");
+      fprintf(stdout, "will have at least two compound parts\n");
     }
-    else if (opts.d == 2) {
+    else if (d == 2) {
       if (form == 's')
         buffer = "even order side cut";
       else if (form == 'o')
         buffer = "odd order";
       else
         buffer = "hybrid";
-      fprintf(stderr, "when d=2, no %s n-icons will have compound parts\n",
+      fprintf(stdout, "when d=2, no %s n-icons will have compound parts\n",
               buffer.c_str());
     }
   }
 
-  fprintf(stderr, "\n");
+  fprintf(stdout, "\n");
 
   vector<int> ncon_range = opts.ncon_range;
 
@@ -7181,20 +7247,20 @@ void surface_subsystem(ncon_opts &opts)
 
   if (opts.long_form) {
     if (!opts.list_compounds) {
-      fprintf(stderr,
+      fprintf(stdout,
               "                       Surfaces                       Edges\n");
-      fprintf(stderr, "                       ------------------------------ "
+      fprintf(stdout, "                       ------------------------------ "
                       "------------------------\n");
-      fprintf(stderr, "%s  %s          %s %s %s %s %s\n\n", "Order", "n-icon",
+      fprintf(stdout, "%s  %s          %s %s %s %s %s\n\n", "Order", "n-icon",
               "Total", "Continuous", "Discontinuous", "Continuous",
               "Discontinuous");
     }
     else {
-      fprintf(stderr,
+      fprintf(stdout,
               "                       Compound Parts   Total Surfaces\n");
-      fprintf(stderr,
+      fprintf(stdout,
               "                       -------------------------------\n");
-      fprintf(stderr, "%s  %s          %s            %s\n\n", "Order", "n-icon",
+      fprintf(stdout, "%s  %s          %s            %s\n\n", "Order", "n-icon",
               "Parts", "Surfaces");
     }
   }
@@ -7225,28 +7291,29 @@ void surface_subsystem(ncon_opts &opts)
     bool none = true;
 
     if (opts.long_form)
-      fprintf(stderr, "%-5d: ", ncon_order);
+      fprintf(stdout, "%-5d: ", ncon_order);
     else
-      fprintf(stderr, "%d: ", ncon_order);
+      fprintf(stdout, "%d: ", ncon_order);
+
+    surfaceData sd;
 
     int twist = (hybrid) ? 1 : 0;
     for (; twist <= last; twist++) {
       // need list entry but...
       // now that d>1 is allowed must not allow n/0
-      if (!(opts.d % ncon_order))
+      if (!(d % ncon_order))
         continue;
       // don't allow d>n
-      if (opts.d > ncon_order)
+      if (d > ncon_order)
         continue;
       // bypass digon cases
-      if (ncon_order == 2 * opts.d)
-        continue;
+      // if (ncon_order == 2 * d)
+      //  continue;
 
-      ncon_info(ncon_order, opts.d, point_cut, twist, hybrid, info, sd);
+      ncon_info(ncon_order, d, point_cut, twist, hybrid, info, sd);
 
       if (opts.list_compounds) {
         // compounds have to have more than one surface
-
         // compounds can't have more parts than surfaces
         if (sd.total_surfaces < opts.filter_surfaces.front())
           continue;
@@ -7257,21 +7324,22 @@ void surface_subsystem(ncon_opts &opts)
         opts.hybrid = hybrid;
 
         Geometry geom;
-        sd.compound_parts = ncon_subsystem(geom, opts);
+        // hybrids still require direct measures
+        if (hybrid)
+          sd.compound_parts = ncon_subsystem(geom, opts);
         model_count++;
       }
 
-      string d_part = ((opts.d > 1) ? "/" : "") +
-                      ((opts.d > 1) ? std::to_string(opts.d) : "");
+      string d_part = ((d > 1) ? "/" : "") + ((d > 1) ? std::to_string(d) : "");
       if (!opts.list_compounds) {
         if ((sd.total_surfaces >= opts.filter_surfaces.front()) &&
             (sd.total_surfaces <= opts.filter_surfaces.back())) {
           if (!sd.case2 || (sd.case2 && !opts.filter_case2)) {
             if (!none) {
               if (opts.long_form)
-                fprintf(stderr, "%-5d: ", ncon_order);
+                fprintf(stdout, "%-5d: ", ncon_order);
               else
-                fprintf(stderr, ", ");
+                fprintf(stdout, ", ");
             }
             if (sd.nonchiral)
               buffer = "[" + std::to_string(ncon_order) + d_part + "+" +
@@ -7283,11 +7351,11 @@ void surface_subsystem(ncon_opts &opts)
               buffer = "(" + std::to_string(ncon_order) + d_part + "+" +
                        std::to_string(twist) + ")";
             if (opts.long_form)
-              fprintf(stderr, "%-15s %5d %10d %13d %10d %13d\n", buffer.c_str(),
+              fprintf(stdout, "%-15s %5d %10d %13d %10d %13d\n", buffer.c_str(),
                       sd.total_surfaces, sd.c_surfaces, sd.d_surfaces,
                       sd.c_edges, sd.d_edges);
             else
-              fprintf(stderr, "%s", buffer.c_str());
+              fprintf(stdout, "%s", buffer.c_str());
             none = false;
             hit_count++;
           }
@@ -7298,17 +7366,25 @@ void surface_subsystem(ncon_opts &opts)
             (sd.compound_parts <= opts.filter_surfaces.back())) {
           if (!none) {
             if (opts.long_form)
-              fprintf(stderr, "%-5d: ", ncon_order);
+              fprintf(stdout, "%-5d: ", ncon_order);
             else
-              fprintf(stderr, ", ");
+              fprintf(stdout, ", ");
           }
-          buffer = "(" + std::to_string(ncon_order) + d_part + "+" +
-                   std::to_string(twist) + ")";
-          if (opts.long_form)
-            fprintf(stderr, "%-15s %5d %19d\n", buffer.c_str(),
-                    sd.compound_parts, sd.total_surfaces);
+          if (sd.nonchiral)
+            buffer = "[" + std::to_string(ncon_order) + d_part + "+" +
+                     std::to_string(twist) + "]";
+          else if (sd.case2)
+            buffer = "{" + std::to_string(ncon_order) + d_part + "+" +
+                     std::to_string(twist) + "}";
           else
-            fprintf(stderr, "%s", buffer.c_str());
+            buffer = "(" + std::to_string(ncon_order) + d_part + "+" +
+                     std::to_string(twist) + ")";
+          if (opts.long_form) {
+            fprintf(stdout, "%-15s %5d %19d\n", buffer.c_str(),
+                    sd.compound_parts, sd.total_surfaces);
+          }
+          else
+            fprintf(stdout, "%s", buffer.c_str());
           none = false;
           hit_count++;
         }
@@ -7316,19 +7392,19 @@ void surface_subsystem(ncon_opts &opts)
     }
 
     if (none) {
-      fprintf(stderr, "none");
+      fprintf(stdout, "none");
       if (opts.long_form)
-        fprintf(stderr, "\n");
+        fprintf(stdout, "\n");
     }
-    fprintf(stderr, "\n");
+    fprintf(stdout, "\n");
   }
 
   fprintf(
-      stderr, "found %d %s\n", hit_count,
+      stdout, "found %d %s\n", hit_count,
       (opts.list_compounds ? "compounds" : "models with multiple surfaces"));
   if (opts.list_compounds)
-    fprintf(stderr, "processed %d models\n", model_count);
-  fprintf(stderr, "\n");
+    fprintf(stdout, "processed %d models\n", model_count);
+  fprintf(stdout, "\n");
 }
 
 int main(int argc, char *argv[])
