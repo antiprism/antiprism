@@ -81,7 +81,7 @@ will convert from OFF to VRML.
 The Antiprism <a href="off2pov.html">off2pov</a> program will convert from OFF to POV-Ray POV format.
 
 <h3>Other formats</h3>
-<a href="http://assimp.sourceforge.net/">Assimp</a>
+<a href="http://assimp.org">Assimp</a>
 Assimp will convert from OFF to the following additional formats: STL, PLY
 <p>
 <a href="http://meshlab.sourceforge.net/">Meshlab</a>
