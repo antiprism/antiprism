@@ -3070,29 +3070,49 @@ void find_circuit_count(const int twist, const int ncon_order, const int d,
   sd.case1_twist = (sd.case2) ? case1_twist : twist;
 
   // compound parts
-  if (hybrid) {
-    n = ncon_order; // not 2n
-    t_mod = d / 2;  // advance by d
-    if (is_even(d))
-      t_mod += 1;
-  }
-  int num_polygons = (int)gcd(n, d);
-  sd.compound_parts = num_polygons;
-  if (num_polygons > 1) {
-    // digons
-    if (n == 2 * d)
-      sd.compound_parts = sd.total_surfaces;
-    else {
+  n = ncon_order; // not 2n
+
+  // digons case. may not necessarily be true
+  if (n == 2 * d)
+    sd.compound_parts = sd.total_surfaces;
+  else {
+    int de = (d > (n / 2)) ? n - d : d;
+    int num_polygons = (int)gcd(n, de);
+    sd.compound_parts = num_polygons;
+
+    if (hybrid) {
+      // hybrids which have only 1 part based on d
+      // when d is a power of 2
+      if (ceil(log2(d)) == floor(log2(d)))
+        sd.compound_parts = 1;
+      if (ceil(log2(n - d)) == floor(log2(n - d)))
+        sd.compound_parts = 1;
+      // when gcd(n, d) and d is not a factor of n
+      if ((int)gcd(n, de) == 1)
+        sd.compound_parts = 1;
+
+      // sequence advanced by d
+      // works for odd d
+      t_mod = de / 2;
+
+      // even d will need different approach
+      if (is_even(de))
+        t_mod += 1;
+      // helps but is it always true?
+      if (de % 10 == 0)
+        t_mod += 1;
+    }
+
+    if (sd.compound_parts > 1) {
       int np = is_even(num_polygons) ? num_polygons / 2 : num_polygons;
-      sd.compound_parts =
-          (int)gcd(np, twist + t_mod) + ((is_even(n) && point_cut) ? 1 : 0);
-      // hybrid calculations faulty
+      sd.compound_parts = (int)gcd(np, twist + t_mod) +
+                          (((is_even(n) && point_cut) || hybrid) ? 1 : 0);
       if (hybrid) {
+        // works for odd d
+        // even d will need different approach
         sd.compound_parts /= 2;
-        if (!is_even(d) || (sd.compound_parts == 0))
-          sd.compound_parts++;
       }
-      else if (!is_even(d) || (!is_even(n) && is_even(d))) {
+      else if (!is_even(de) || (!is_even(n) && is_even(de))) {
         sd.compound_parts /= 2;
         if ((is_even(n) && !point_cut) || !is_even(n))
           sd.compound_parts++;
@@ -7271,6 +7291,7 @@ void surface_subsystem(ncon_opts &opts)
   int last = 0;
   for (int ncon_order = ncon_range.front(); ncon_order <= ncon_range.back();
        ncon_order += inc) {
+    // fprintf(stderr,"n = %d\n", ncon_order);
 
     bool point_cut = false;
     bool hybrid = false;
@@ -7299,20 +7320,22 @@ void surface_subsystem(ncon_opts &opts)
 
     int twist = (hybrid) ? 1 : 0;
     for (; twist <= last; twist++) {
-      // need list entry but...
-      // now that d>1 is allowed must not allow n/0
+      // fprintf(stderr,"twist = %d\n", twist);
+      //  need list entry but...
+      //  now that d>1 is allowed must not allow n/0
       if (!(d % ncon_order))
         continue;
       // don't allow d>n
       if (d > ncon_order)
         continue;
-      // bypass digon cases
-      // if (ncon_order == 2 * d)
-      //  continue;
 
       ncon_info(ncon_order, d, point_cut, twist, hybrid, info, sd);
 
       if (opts.list_compounds) {
+        // bypass digon cases
+        if (ncon_order == 2 * d)
+          continue;
+
         // compounds have to have more than one surface
         // compounds can't have more parts than surfaces
         if (sd.total_surfaces < opts.filter_surfaces.front())
