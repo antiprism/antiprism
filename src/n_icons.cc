@@ -213,7 +213,7 @@ Options
 
 Program Options
   -n <n/d>  n-icon of order n. n must be 3 or greater (default: 4)
-               use d to make star n-icon. d less than n
+               use d to make star n-icon. d may not equal n
   -t <twst> number of twists. Can be negative, positive or 0 (default: 1)
   -s        side-cut of even order n-icon (default is point-cut)
   -H        hybrid of even order n-icon
@@ -336,8 +336,15 @@ void ncon_opts::process_command_line(int argc, char **argv)
       if (d < 1)
         error("d must be 1 or greater", "n/d (d part)");
 
-      if (d >= ncon_order)
-        error("d must be less than n", "n/d (d part)");
+      if (d == ncon_order)
+        error("d may not equal n", "n/d (d part)");
+
+      if (d > ncon_order) {
+        d = d % ncon_order;
+        warning(
+            msg_str("d is greater than n is changed to %d/%d", ncon_order, d),
+            "n/d (d part)");
+      }
       break;
     }
 
@@ -3083,12 +3090,18 @@ void find_circuit_count(const int twist, const int ncon_order, const int d,
     if (hybrid) {
       // hybrids which have only 1 part based on d
       // when d is a power of 2
+      // not using de because d<(n/2) needs testing for (n-d) being power of 2
+      // example 56/24 is the same as 56/(56-24) or 56/32
       if (ceil(log2(d)) == floor(log2(d)))
         sd.compound_parts = 1;
       if (ceil(log2(n - d)) == floor(log2(n - d)))
         sd.compound_parts = 1;
+      // n-d covered by de
       // when gcd(n, d) and d is not a factor of n
       if ((int)gcd(n, de) == 1)
+        sd.compound_parts = 1;
+      // when gcd(n, d) is 2, number of polygons is 2
+      if ((int)gcd(n, de) == 2)
         sd.compound_parts = 1;
 
       // sequence advanced by d
