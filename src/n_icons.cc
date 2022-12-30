@@ -3647,7 +3647,7 @@ void model_info(Geometry &geom, const ncon_opts &opts)
   bool closed = info.is_closed();
   fprintf(stderr, "the model is %sclosed\n", (closed) ? "" : "not ");
   fprintf(stderr, "the model is %scomplete\n",
-          (full_model(opts.longitudes)) ? "" : "not ");
+          (full_model(opts.longitudes) || opts.lon_invisible) ? "" : "not ");
   if (opts.build_method == 2)
     fprintf(stderr, "method 2: circuit counts are not measured\n");
 
@@ -3665,8 +3665,9 @@ void model_info(Geometry &geom, const ncon_opts &opts)
 
   // build method 2 has random coplanar faces
   // for method 2 was: opts.hide_indent && !opts.radius_set);
-  bool measure = (!opts.symmetric_coloring && full_model(opts.longitudes) &&
-                  !opts.lon_invisible && (opts.build_method != 2));
+  bool measure = (!opts.symmetric_coloring &&
+                  (full_model(opts.longitudes) || opts.lon_invisible) &&
+                  (opts.build_method != 2));
   // when digons, will be miscounted if not edge_coloring_method s,S
   if (opts.digons && !(strchr("Ss", opts.edge_coloring_method)))
     measure = false;
@@ -6303,7 +6304,8 @@ int process_hybrid(Geometry &geom, ncon_opts &opts)
   }
 
   // if not a full model, added triangles no longer needed
-  if (added_triangles.size() && !full_model(opts.longitudes))
+  if (added_triangles.size() && !full_model(opts.longitudes) &&
+      !opts.lon_invisible)
     geom.del(FACES, added_triangles);
 
   // allow for partial open model in hybrids
@@ -6387,7 +6389,8 @@ int process_normal(Geometry &geom, ncon_opts &opts)
     ncon_edge_coloring_by_adjacent_edge(geom, edge_list, pole, opts);
 
   // if not a full model, added triangles no longer needed
-  if (added_triangles.size() && !full_model(opts.longitudes))
+  if (added_triangles.size() && !full_model(opts.longitudes) &&
+      !opts.lon_invisible)
     geom.del(FACES, added_triangles);
 
   delete_unused_longitudes(geom, face_list, edge_list, caps, false, false,
