@@ -3106,14 +3106,11 @@ void find_circuit_count(const int twist, const int ncon_order, const int d,
 
       // sequence advanced by d
       // works for odd d
-      t_mod = de / 2;
-
-      // even d will need different approach
-      if (is_even(de))
-        t_mod += 1;
-      // helps but is it always true?
-      if (de % 10 == 0)
-        t_mod += 1;
+      t_mod = 0;
+      if (!is_even(d))
+        t_mod = de / 2;
+      else if (d % 4 != 0)
+        t_mod = (d - 2) / 4;
     }
 
     if (sd.compound_parts > 1) {
@@ -3399,7 +3396,9 @@ void ncon_info(const int ncon_order, const int d, const bool point_cut,
 
   sd.compound_parts = 0;
 
-  find_circuit_count(posi_twist, ncon_order, d, point_cut, hybrid, sd);
+  // info will not be set from report subsystem
+  find_circuit_count((info ? posi_twist : twist), ncon_order, d, point_cut,
+                     hybrid, sd);
 
   if (!(d == 1 || (ncon_order - d) == 1)) {
     if (info) {
@@ -7218,8 +7217,6 @@ void surface_subsystem(ncon_opts &opts)
           (!opts.list_compounds ? "surfaces" : "compound parts"),
           opts.filter_surfaces.front(), opts.filter_surfaces.back());
 
-  fprintf(stdout, "d = %d (option -D) (only n/d are measured)\n", d);
-
   if (opts.list_compounds && d == 1)
     fprintf(stdout, "when d = 1 no n_icons are compounds (option -D)\n");
 
@@ -7249,6 +7246,8 @@ void surface_subsystem(ncon_opts &opts)
               buffer.c_str());
     }
   }
+
+  fprintf(stdout, "\nd = %d (option -D) (only n/d are measured)\n", d);
 
   fprintf(stdout, "\n");
 
@@ -7363,8 +7362,8 @@ void surface_subsystem(ncon_opts &opts)
         opts.hybrid = hybrid;
 
         Geometry geom;
-        // hybrids still require direct measures
-        if (hybrid)
+        // hybrids of d mod 4 still require direct measures
+        if (hybrid && (d % 4 == 0))
           sd.compound_parts = ncon_subsystem(geom, opts);
         model_count++;
       }
