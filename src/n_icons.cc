@@ -3089,6 +3089,9 @@ void find_circuit_count(const int twist, const int ncon_order, const int d,
 
     if (hybrid) {
       // hybrids which have only 1 part based on d
+      // when n is a power of 2
+      if (ceil(log2(n)) == floor(log2(n)))
+        sd.compound_parts = 1;
       // when d is a power of 2
       // not using de because d<(n/2) needs testing for (n-d) being power of 2
       // example 56/24 is the same as 56/(56-24) or 56/32
@@ -3105,12 +3108,15 @@ void find_circuit_count(const int twist, const int ncon_order, const int d,
         sd.compound_parts = 1;
 
       // sequence advanced by d
-      // works for odd d
+      // works for most hybrids
       t_mod = 0;
       if (!is_even(d))
         t_mod = de / 2;
       else if (d % 4 != 0)
         t_mod = (d - 2) / 4;
+      // hybrids of d mod 4 still has errors
+      else if (d % 4 == 0)
+        t_mod = (d - 4) / 8;
     }
 
     if (sd.compound_parts > 1) {
@@ -3118,8 +3124,7 @@ void find_circuit_count(const int twist, const int ncon_order, const int d,
       sd.compound_parts = (int)gcd(np, twist + t_mod) +
                           (((is_even(n) && point_cut) || hybrid) ? 1 : 0);
       if (hybrid) {
-        // works for odd d
-        // even d will need different approach
+        // works for most hybrids
         sd.compound_parts /= 2;
       }
       else if (!is_even(de) || (!is_even(n) && is_even(de))) {
