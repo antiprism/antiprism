@@ -213,7 +213,7 @@ Options
 
 Program Options
   -n <n/d>  n-icon of order n. n must be 3 or greater (default: 4)
-               use d to make star n-icon. d less than n
+               use d to make star n-icon. d may not equal n
   -t <twst> number of twists. Can be negative, positive or 0 (default: 1)
   -s        side-cut of even order n-icon (default is point-cut)
   -H        hybrid of even order n-icon
@@ -336,8 +336,15 @@ void ncon_opts::process_command_line(int argc, char **argv)
       if (d < 1)
         error("d must be 1 or greater", "n/d (d part)");
 
-      if (d >= ncon_order)
-        error("d must be less than n", "n/d (d part)");
+      if (d == ncon_order)
+        error("d may not equal n", "n/d (d part)");
+
+      if (d > ncon_order) {
+        d = d % ncon_order;
+        warning(
+            msg_str("d is greater than n is changed to %d/%d", ncon_order, d),
+            "n/d (d part)");
+      }
       break;
     }
 
@@ -3070,29 +3077,57 @@ void find_circuit_count(const int twist, const int ncon_order, const int d,
   sd.case1_twist = (sd.case2) ? case1_twist : twist;
 
   // compound parts
-  if (hybrid) {
-    n = ncon_order; // not 2n
-    t_mod = d / 2;  // advance by d
-    if (is_even(d))
-      t_mod += 1;
-  }
-  int num_polygons = (int)gcd(n, d);
-  sd.compound_parts = num_polygons;
-  if (num_polygons > 1) {
-    // digons
-    if (n == 2 * d)
-      sd.compound_parts = sd.total_surfaces;
-    else {
+  n = ncon_order; // not 2n
+
+  // digons case. may not necessarily be true
+  if (n == 2 * d)
+    sd.compound_parts = sd.total_surfaces;
+  else {
+    int de = (d > (n / 2)) ? n - d : d;
+    int num_polygons = (int)gcd(n, de);
+    sd.compound_parts = num_polygons;
+
+    if (hybrid) {
+      // hybrids which have only 1 part based on d
+      // when n is a power of 2
+      if (ceil(log2(n)) == floor(log2(n)))
+        sd.compound_parts = 1;
+      // when d is a power of 2
+      // not using de because d<(n/2) needs testing for (n-d) being power of 2
+      // example 56/24 is the same as 56/(56-24) or 56/32
+      if (ceil(log2(d)) == floor(log2(d)))
+        sd.compound_parts = 1;
+      if (ceil(log2(n - d)) == floor(log2(n - d)))
+        sd.compound_parts = 1;
+      // n-d covered by de
+      // when gcd(n, d) and d is not a factor of n
+      if ((int)gcd(n, de) == 1)
+        sd.compound_parts = 1;
+      // when gcd(n, d) is 2, number of polygons is 2
+      if ((int)gcd(n, de) == 2)
+        sd.compound_parts = 1;
+
+      // sequence advanced by d
+      // works for most hybrids
+      t_mod = 0;
+      if (!is_even(d))
+        t_mod = de / 2;
+      else if (d % 4 != 0)
+        t_mod = (d - 2) / 4;
+      // hybrids of d mod 4 still has errors
+      else if (d % 4 == 0)
+        t_mod = (d - 4) / 8;
+    }
+
+    if (sd.compound_parts > 1) {
       int np = is_even(num_polygons) ? num_polygons / 2 : num_polygons;
-      sd.compound_parts =
-          (int)gcd(np, twist + t_mod) + ((is_even(n) && point_cut) ? 1 : 0);
-      // hybrid calculations faulty
+      sd.compound_parts = (int)gcd(np, twist + t_mod) +
+                          (((is_even(n) && point_cut) || hybrid) ? 1 : 0);
       if (hybrid) {
+        // works for most hybrids
         sd.compound_parts /= 2;
-        if (!is_even(d) || (sd.compound_parts == 0))
-          sd.compound_parts++;
       }
-      else if (!is_even(d) || (!is_even(n) && is_even(d))) {
+      else if (!is_even(de) || (!is_even(n) && is_even(de))) {
         sd.compound_parts /= 2;
         if ((is_even(n) && !point_cut) || !is_even(n))
           sd.compound_parts++;
@@ -3366,7 +3401,9 @@ void ncon_info(const int ncon_order, const int d, const bool point_cut,
 
   sd.compound_parts = 0;
 
-  find_circuit_count(posi_twist, ncon_order, d, point_cut, hybrid, sd);
+  // info will not be set from report subsystem
+  find_circuit_count((info ? posi_twist : twist), ncon_order, d, point_cut,
+                     hybrid, sd);
 
   if (!(d == 1 || (ncon_order - d) == 1)) {
     if (info) {
@@ -3614,7 +3651,7 @@ void model_info(Geometry &geom, const ncon_opts &opts)
   bool closed = info.is_closed();
   fprintf(stderr, "the model is %sclosed\n", (closed) ? "" : "not ");
   fprintf(stderr, "the model is %scomplete\n",
-          (full_model(opts.longitudes)) ? "" : "not ");
+          (full_model(opts.longitudes) || opts.lon_invisible) ? "" : "not ");
   if (opts.build_method == 2)
     fprintf(stderr, "method 2: circuit counts are not measured\n");
 
@@ -3632,8 +3669,9 @@ void model_info(Geometry &geom, const ncon_opts &opts)
 
   // build method 2 has random coplanar faces
   // for method 2 was: opts.hide_indent && !opts.radius_set);
-  bool measure = (!opts.symmetric_coloring && full_model(opts.longitudes) &&
-                  !opts.lon_invisible && (opts.build_method != 2));
+  bool measure = (!opts.symmetric_coloring &&
+                  (full_model(opts.longitudes) || opts.lon_invisible) &&
+                  (opts.build_method != 2));
   // when digons, will be miscounted if not edge_coloring_method s,S
   if (opts.digons && !(strchr("Ss", opts.edge_coloring_method)))
     measure = false;
@@ -6270,7 +6308,8 @@ int process_hybrid(Geometry &geom, ncon_opts &opts)
   }
 
   // if not a full model, added triangles no longer needed
-  if (added_triangles.size() && !full_model(opts.longitudes))
+  if (added_triangles.size() && !full_model(opts.longitudes) &&
+      !opts.lon_invisible)
     geom.del(FACES, added_triangles);
 
   // allow for partial open model in hybrids
@@ -6354,7 +6393,8 @@ int process_normal(Geometry &geom, ncon_opts &opts)
     ncon_edge_coloring_by_adjacent_edge(geom, edge_list, pole, opts);
 
   // if not a full model, added triangles no longer needed
-  if (added_triangles.size() && !full_model(opts.longitudes))
+  if (added_triangles.size() && !full_model(opts.longitudes) &&
+      !opts.lon_invisible)
     geom.del(FACES, added_triangles);
 
   delete_unused_longitudes(geom, face_list, edge_list, caps, false, false,
@@ -7182,8 +7222,6 @@ void surface_subsystem(ncon_opts &opts)
           (!opts.list_compounds ? "surfaces" : "compound parts"),
           opts.filter_surfaces.front(), opts.filter_surfaces.back());
 
-  fprintf(stdout, "d = %d (option -D) (only n/d are measured)\n", d);
-
   if (opts.list_compounds && d == 1)
     fprintf(stdout, "when d = 1 no n_icons are compounds (option -D)\n");
 
@@ -7213,6 +7251,8 @@ void surface_subsystem(ncon_opts &opts)
               buffer.c_str());
     }
   }
+
+  fprintf(stdout, "\nd = %d (option -D) (only n/d are measured)\n", d);
 
   fprintf(stdout, "\n");
 
@@ -7271,6 +7311,7 @@ void surface_subsystem(ncon_opts &opts)
   int last = 0;
   for (int ncon_order = ncon_range.front(); ncon_order <= ncon_range.back();
        ncon_order += inc) {
+    // fprintf(stderr,"n = %d\n", ncon_order);
 
     bool point_cut = false;
     bool hybrid = false;
@@ -7299,20 +7340,22 @@ void surface_subsystem(ncon_opts &opts)
 
     int twist = (hybrid) ? 1 : 0;
     for (; twist <= last; twist++) {
-      // need list entry but...
-      // now that d>1 is allowed must not allow n/0
+      // fprintf(stderr,"twist = %d\n", twist);
+      //  need list entry but...
+      //  now that d>1 is allowed must not allow n/0
       if (!(d % ncon_order))
         continue;
       // don't allow d>n
       if (d > ncon_order)
         continue;
-      // bypass digon cases
-      // if (ncon_order == 2 * d)
-      //  continue;
 
       ncon_info(ncon_order, d, point_cut, twist, hybrid, info, sd);
 
       if (opts.list_compounds) {
+        // bypass digon cases
+        if (ncon_order == 2 * d)
+          continue;
+
         // compounds have to have more than one surface
         // compounds can't have more parts than surfaces
         if (sd.total_surfaces < opts.filter_surfaces.front())
@@ -7324,8 +7367,8 @@ void surface_subsystem(ncon_opts &opts)
         opts.hybrid = hybrid;
 
         Geometry geom;
-        // hybrids still require direct measures
-        if (hybrid)
+        // hybrids of d mod 4 still require direct measures
+        if (hybrid && (d % 4 == 0))
           sd.compound_parts = ncon_subsystem(geom, opts);
         model_count++;
       }
