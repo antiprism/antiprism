@@ -165,26 +165,26 @@ string estimated_color(Color col)
   else if (v[0] == 0 && v[1] == 0 && v[2] == 255)
     color = "b";
   else
-      // Special case for green. "0,128,0" is exact green would become 0 0 0
-      // Make more dark greens be g instead of using 0 255 0.
-      if (v[0] == 0 && col[1] >= 64 && v[2] == 0)
-    color = "g";
-  else
+    // Special case for green. "0,128,0" is exact green would become 0 0 0
+    // Make more dark greens be g instead of using 0 255 0.
+    if (v[0] == 0 && col[1] >= 64 && v[2] == 0)
+      color = "g";
+    else
       // Hedron has no black so specify cyan
       if (v[0] == 0 && v[1] == 0 && v[2] == 0)
-    color = "c";
-  else if (v[0] == 0 && v[1] == 255 && v[2] == 255)
-    color = "c";
-  else if (v[0] == 255 && v[1] == 0 && v[2] == 0)
-    color = "r";
-  else if (v[0] == 255 && v[1] == 0 && v[2] == 255)
-    color = "m";
-  else if (v[0] == 255 && v[1] == 255 && v[2] == 0)
-    color = "y";
-  else if (v[0] == 255 && v[1] == 255 && v[2] == 255)
-    color = "w";
-  else
-    color = "\0";
+        color = "c";
+      else if (v[0] == 0 && v[1] == 255 && v[2] == 255)
+        color = "c";
+      else if (v[0] == 255 && v[1] == 0 && v[2] == 0)
+        color = "r";
+      else if (v[0] == 255 && v[1] == 0 && v[2] == 255)
+        color = "m";
+      else if (v[0] == 255 && v[1] == 255 && v[2] == 0)
+        color = "y";
+      else if (v[0] == 255 && v[1] == 255 && v[2] == 255)
+        color = "w";
+      else
+        color = "\0";
 
   return (color);
 }

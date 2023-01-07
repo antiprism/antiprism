@@ -88,6 +88,7 @@ benefit from a specified colouring. The following commands show <ul>
   <li>a similar model but the sides are made from several edges</li>
   <li>an open tube model is made with <i>-O</i>, that preserves the original colours, and colours mismatch</li>
   <li>an open tube model is made with <i>-O</i>, and the original colour indices are mapped so they match </li>
+</ul>
 <<CMDS_START>>
 sweep_edges -n 64 -R 0,0,2*ANG/4 -T 3,0,0 -R 0,ANG,0 -m map_red:green pol4 | antiview -t no_tri -x ev
 off_util -g -s pol24 -Dv7- | off_trans -T -3.830648787770195,3.830648787770195,0 | poly_kscope -s C4 -c e | off_util -M a | sweep_edges -n 64 -R 0,0,2*ANG/4 -T 10,0,0 -R 0,ANG,0 | antiview  -t no_tri -x ev

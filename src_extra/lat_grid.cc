@@ -188,7 +188,6 @@ public:
   virtual void make_lattice(anti::Geometry &geom);
 };
 
-
 void int_lat_grid::make_lattice(Geometry &geom)
 {
   if (!centre.is_set())
@@ -225,9 +224,6 @@ void sph_lat_grid::make_lattice(Geometry &geom)
           geom.add_vert(Vec3d(i, j, k));
       }
 }
-
-
-
 
 class lg_opts : public ProgramOpts {
 public:

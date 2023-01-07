@@ -338,7 +338,7 @@ Vec3d face_normal_by_type(const Geometry &geom, const int f_idx,
                           const char normal_type);
 
 /// an abbreviated wrapper for planarization with make_regular_faces
-/**\param base_geom geometry to planarize.
+/**\param geom geometry to planarize.
  * \param it_ctrl interation control.
  * \param factor amount of vertex movement which can change
  * \param factor_max maximum amount of vertex movement
@@ -463,12 +463,11 @@ int find_edge_by_coords(const Geometry &geom, const Vec3d &v0, const Vec3d &v1,
  * \return the unmatched edges. */
 std::vector<std::vector<int>> find_unmatched_edges(const Geometry &geom);
 
-/// add a list of faces
+/// Add a list of faces which have the same number of sides
 /**\param geom the geometry
- * \face_size in edges
- * \face_count number of faces in list
- * \list of faces
- * \return the unmatched edges. */
+ * \param face_size in edges
+ * \param face_count number of faces in list
+ * \param faces list of faces */
 void add_faces(Geometry &geom, int face_size, int face_count, int faces[]);
 } // namespace anti
 

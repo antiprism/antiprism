@@ -157,7 +157,8 @@ public:
   enum { TILES = 0, POINTS = 1, ELEMS_SZ = 2 };
 
   /// Constructor
-  /**\param str colouring method for tiles, can be given as initial substring
+  /**\param clrng_str colouring method for tiles, can be given as initial
+   * substring
    * none: do not colour tiles
    * index, value (default): use the path index
    * association: colour tiles using corresponding base element
@@ -187,17 +188,6 @@ public:
    *  valid, otherwise \c false to indicate an error. */
   // Status read_tile_coloring(const std::string &clrng_str);
   Status read_coloring(const std::string &clrng_str);
-
-  /// Read point colouring
-  /**\param clrng_str colouring method for points, can be given as
-   * initial substring
-   *  none: do not colour points
-   *  index, value: use the point index
-   *  component: colour points using the presence of VEF components (default)
-   *  weight: colour points using barycentric VEF components as RGBA
-   * \return Status, which evaluates to \c true if the coloring was
-   *  valid, otherwise \c false to indicate an error. */
-  // Status read_point_coloring(const std::string &clrng_str);
 
   /// Get option help
   /**\param op_char the option letter
@@ -246,12 +236,6 @@ private:
   // The set functions are private, as no external code uses them
   Status set_coloring(int elem, ColoringType clrng_type, int assoc = -1,
                       Color local = Color());
-  /*  Status set_tile_coloring(ColoringType clrng_type, int elem = -1,
-                           Color local = Color());
-
-    Status set_point_coloring(ColoringType clrng_type, int elem = -1,
-                              Color local = Color());
-  */
   std::vector<ColoringType> coloring_types =
       std::vector<ColoringType>(ELEMS_SZ, ColoringType::index);
   std::vector<int> local_associations = std::vector<int>(ELEMS_SZ, Tile::F);

@@ -9,7 +9,7 @@ endif
 EXTRA_DIST = bootstrap pad_file.xml README.git Doxyfile vers_script.txt \
 				 doc doc_src share debian
 
-distcleancheck_listfiles = \
+override distcleancheck_listfiles = \
         find -type f -exec sh -c 'test -f $(srcdir)/{} || echo {}' ';'
 
 

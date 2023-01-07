@@ -82,7 +82,7 @@ public:
   /// Add prefix to message
   /**\param prefix message prefix
    * \return reference to this status.*/
-  Status &add_prefix(const std::string &msg);
+  Status &add_prefix(const std::string &prefix);
 
   /// Get status message
   /**\return The status message.*/

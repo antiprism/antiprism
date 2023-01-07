@@ -1,15 +1,18 @@
 Antiprism
 =========
 
-Notes for Antiprism 0.29.99
----------------------------
+Notes for Antiprism 0.30
+------------------------
 
-New program sweep_edges, which createa a polygonal surface by sweeping
-edges through transformations. Include various improvements and bug
-fixes. See the NEWS file for more details.
+Changes by Roger Kaufman and Adrian Rossiter. New program sweep_edges
+creates a polygonal surface by sweeping edges through transformations.
+Many programs include extra colouring options and parameters. There are
+various improvements and bug fixes. See the NEWS file for more details.
 
-Please look out for bugs and other issues, and report them to me at
-at: adrian@antiprism.com
+Please look out for bugs and other issues, and report them on the
+Antiprism discussion group
+
+   https://groups.google.com/g/antiprism
 
 Adrian.
 

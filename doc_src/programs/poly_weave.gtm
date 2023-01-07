@@ -36,6 +36,9 @@ poly_weave icosahedron | off_color -f U -e F | antiview -v 0.1 -x f
 
 
 <<NOTES_START>>
+The <i>poly_weave</i> program was a starting point for creating the
+<a href="wythoff.html">wythoff</a>
+tiling program.
 <<NOTES_END>>
 
 #include "<<END>>"

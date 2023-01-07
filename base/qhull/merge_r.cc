@@ -1841,7 +1841,7 @@ void qh_mergecycle_all(qhT *qh, facetT *facetlist, boolT *wasmerge) {
   facetT *facet, *same, *prev, *horizon;
   facetT *samecycle= NULL, *nextfacet, *nextsame;
   vertexT *apex, *vertex, **vertexp;
-  int cycles=0, total=0, facets, nummerge;
+  int cycles=0, /*AR: fix warning: total=0,*/ facets, nummerge;
 
   trace2((qh, qh->ferr, 2031, "qh_mergecycle_all: begin\n"));
   for (facet= facetlist; facet && (nextfacet= facet->next); facet= nextfacet) {
@@ -1890,7 +1890,7 @@ void qh_mergecycle_all(qhT *qh, facetT *facetlist, boolT *wasmerge) {
       else
         horizon->nummerge= (short unsigned int)nummerge;
       zzinc_(Zcyclehorizon);
-      total += facets;
+      // AR: fix warning: total += facets;
       zzadd_(Zcyclefacettot, facets);
       zmax_(Zcyclefacetmax, facets);
     }

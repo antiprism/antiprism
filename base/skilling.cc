@@ -475,7 +475,7 @@ int UniformCompound::parse_uc_args(string &name, double &angle, int &n, int &d,
     string digits_str;
 
     // no digits in string means it is not an operation
-    bool digits_found = false;    
+    bool digits_found = false;
     for (char i : and_the_rest) {
       if (digits.find(i) != string::npos) {
         digits_found = true;
@@ -515,8 +515,8 @@ int UniformCompound::parse_uc_args(string &name, double &angle, int &n, int &d,
           }
           else if (operand != 'a' && (i == '.' || i == '-')) {
             if (error_msg)
-              *error_msg =
-                  msg_str("operator %c should have a positive integer", operand);
+              *error_msg = msg_str("operator %c should have a positive integer",
+                                   operand);
             break;
           }
           if ((digits_str.find('.') != string::npos) && i == '.') {
@@ -538,7 +538,7 @@ int UniformCompound::parse_uc_args(string &name, double &angle, int &n, int &d,
     if (operand) {
       // don't accept "-" or "." at end of string
       if (digits_str[digits_str.length() - 1] == '-' ||
-        digits_str[digits_str.length() - 1] == '.') {
+          digits_str[digits_str.length() - 1] == '.') {
         if (error_msg)
           *error_msg = "decimal point or negative sign at end";
       }

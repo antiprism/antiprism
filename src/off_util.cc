@@ -476,37 +476,39 @@ Status delete_elements(Geometry &geom, vector<string> del_elems, bool keep,
       special_selector = true;
     }
     else
-        // validate and resolve face sides to faces
-        if (selection_type_char == 's') {
-      if (!(stat = get_del_element_list(geom, vi_str, elem_lists_selection,
-                                        edge_parts, face_parts)))
-        return Status(stat);
+      // validate and resolve face sides to faces
+      if (selection_type_char == 's') {
+        if (!(stat = get_del_element_list(geom, vi_str, elem_lists_selection,
+                                          edge_parts, face_parts)))
+          return Status(stat);
 
-      resolve_face_sides_to_faces(geom, elem_lists_selection[2]);
-      // the list is now face indexes
-      selection_type_char = 'f';
-      special_selector = true;
-    }
-    else
+        resolve_face_sides_to_faces(geom, elem_lists_selection[2]);
+        // the list is now face indexes
+        selection_type_char = 'f';
+        special_selector = true;
+      }
+      else
         // validate and resolve colors to elements
         if (selection_type_char == 'x' || selection_type_char == 'y' ||
             selection_type_char == 'z') {
-      // Coloring clrngs[3];
-      // if(!read_Colorings(clrngs, vi_str.substr(1), errmsg))
-      //   return false;
-      if (vi_str.length() <= 1)
-        return Status::error("no color specified");
+          // Coloring clrngs[3];
+          // if(!read_Colorings(clrngs, vi_str.substr(1), errmsg))
+          //   return false;
+          if (vi_str.length() <= 1)
+            return Status::error("no color specified");
 
-      Color c;
-      if (!(stat = c.read(vi_str.substr(1).c_str())))
-        return Status(stat);
-      resolve_color_to_elem(geom, c, selection_type_char, elem_lists_selection);
-      // the list is now element type
-      selection_type_char = (selection_type_char == 'x')
-                                ? 'v'
-                                : ((selection_type_char == 'y') ? 'e' : 'f');
-      special_selector = true;
-    }
+          Color c;
+          if (!(stat = c.read(vi_str.substr(1).c_str())))
+            return Status(stat);
+          resolve_color_to_elem(geom, c, selection_type_char,
+                                elem_lists_selection);
+          // the list is now element type
+          selection_type_char =
+              (selection_type_char == 'x')
+                  ? 'v'
+                  : ((selection_type_char == 'y') ? 'e' : 'f');
+          special_selector = true;
+        }
 
     if (elem_type_char == 'E' || elem_type_char == 'F') {
       // process parts
@@ -950,10 +952,10 @@ Status delete_elements(Geometry &geom, vector<string> del_elems, bool keep,
           elem_lists[i].push_back(j);
       }
       else
-          // if list is full and -D then don't delete any of that element
-          if ((int)elem_lists[i].size() == sz && !keep) {
-        elem_lists[i].clear();
-      }
+        // if list is full and -D then don't delete any of that element
+        if ((int)elem_lists[i].size() == sz && !keep) {
+          elem_lists[i].clear();
+        }
     }
   }
 

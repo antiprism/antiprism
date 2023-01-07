@@ -457,8 +457,8 @@ public:
 
   /// Get index number of edge between two vertices
   /** Look up the edge index in the edge list
-   * \param v_id0 first vertex index number
-   * \param v_id1 second vertex index number
+   * \param v_idx0 first vertex index number
+   * \param v_idx1 second vertex index number
    * \return The edge index number, or -1 if not found. */
   int get_edge_index(int v_idx0, int v_idx1);
 

@@ -96,7 +96,7 @@ using their normalised barycentric coordinates as RGB, and <i>component</i>,
 using the base elements that are involved in their pattern coordinates:
 V=0/red, E=1/green, F=2/blue, VE=3/yellow, EF=4/cyan, FE=5/magenta,
 VEF=6/grey. Set alternative colormaps with </i>option -m</i>, and use
-<i>-m null<\i> to retain the original colour index numbers.
+<i>-m null</i> to retain the original colour index numbers.
 
 <h4>Comparison with corresponding Conway notation operators</h4>
 

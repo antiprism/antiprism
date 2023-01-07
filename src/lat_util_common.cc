@@ -477,12 +477,12 @@ Vec3d sort_Vec3d_chiral(const Vec3d &v, const double eps)
   if (c[1] > c[0] && c[1] > c[2] - eps)
     c = Vec3d(c[1], c[2], c[0]);
   else
-      // if c[2] is maximum rotate to first place: 2,0,1
-      if (c[2] > c[0] && c[2] > c[1] + eps)
-    c = Vec3d(c[2], c[0], c[1]);
-  else
-    // if c[0] is maximum do nothing
-    c = Vec3d(c[0], c[1], c[2]);
+    // if c[2] is maximum rotate to first place: 2,0,1
+    if (c[2] > c[0] && c[2] > c[1] + eps)
+      c = Vec3d(c[2], c[0], c[1]);
+    else
+      // if c[0] is maximum do nothing
+      c = Vec3d(c[0], c[1], c[2]);
 
   // Check whether c is near negative triangle external boundary, and
   // rotate to corresponding positive triangle boundary if so.

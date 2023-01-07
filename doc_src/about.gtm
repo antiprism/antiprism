@@ -46,7 +46,7 @@ fun to play with.
 
 The Antiprism site and project are developed and maintained by
 <a href="http://www.antiprism.com/adrian/">Adrian Rossiter</a>.
-You can contact me by email at
+You can contact me at
 <a href="mailto:<<EMAIL>>"><<EMAIL>></a>.
 <p>
 The 
@@ -74,12 +74,20 @@ file for changes in the Antiprism releases.
 </tr>
 
 <tr class="tbl1" valign="top">
+<td>10/01/2023</td>
+<td>
+Antiprism 0.30 released. Program documentation updated.
+</td>
+</tr>
+
+<tr class="tbl1" valign="top">
 <td>01/11/2021</td>
 <td>
 Antiprism 0.29 released. Program documentation updated.
 </td>
 </tr>
 
+<tr class="tbl1" valign="top">
 <td>13/02/2021</td>
 <td>
 Antiprism 0.28 released. Program documentation updated.

@@ -615,7 +615,7 @@ void id_opts::process_command_line(int argc, char **argv)
     double decimal = (double)n / d;
     // report fractional value
     fprintf(stderr, "n/d: %d/%d = %.17lf\n", n, d, decimal);
-    if ((decimal < 6.0/5.0) || (decimal > 6.0))
+    if ((decimal < 6.0 / 5.0) || (decimal > 6.0))
       error("6/5 <= n/d <= 6 is enforced", 'n');
   }
   else if (n != 0)

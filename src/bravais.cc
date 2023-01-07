@@ -851,17 +851,17 @@ double bravais_volume(string crystal_system, const vector<double> &vecs,
     volume = vecs[0] * vecs[0] * vecs[0] * sqrt(tmp);
   }
   else
-      // incorrect
-      // if ( crystal_system == "hexagonal" )
-      //   volume = (3.0*pow(3.0,(1.0/3.0))*vecs[0]*vecs[0]*vecs[2])/2; //
-      //   (3*cube_rt(3)*a^2*c)/2
-      // else
-      if (crystal_system == "cubic")
-    volume = vecs[0] * vecs[0] * vecs[0]; // a^3
-  else {
-    fprintf(stderr, "error in bravais_volume: unknown crystal system: %s\n",
-            crystal_system.c_str());
-  }
+    // incorrect
+    // if ( crystal_system == "hexagonal" )
+    //   volume = (3.0*pow(3.0,(1.0/3.0))*vecs[0]*vecs[0]*vecs[2])/2; //
+    //   (3*cube_rt(3)*a^2*c)/2
+    // else
+    if (crystal_system == "cubic")
+      volume = vecs[0] * vecs[0] * vecs[0]; // a^3
+    else {
+      fprintf(stderr, "error in bravais_volume: unknown crystal system: %s\n",
+              crystal_system.c_str());
+    }
 
   return volume;
 }
@@ -1043,60 +1043,60 @@ int bravais_check(string &crystal_system, string &centering,
     angles.push_back(gamma);
   }
   else
-      // hexagonal, 120 can be in any position (alpha, beta, gamma are sorted
-      // order)
-      if (angle_rule[crystal_system_index] == 5 &&
-          !(alpha == 90 && beta == 90 && gamma == 120)) {
-    fprintf(stderr,
-            "warning: for crystal system %s, of alpha, beta and gamma, "
-            "two values must be 90 degrees and one value 120 degrees. "
-            "-a ignored\n",
-            crystal_system.c_str());
-    alpha = 90;
-    beta = 90;
-    gamma = 120;
-    angles.clear();
-    angles.push_back(alpha);
-    angles.push_back(beta);
-    angles.push_back(gamma);
-  }
-  else
+    // hexagonal, 120 can be in any position (alpha, beta, gamma are sorted
+    // order)
+    if (angle_rule[crystal_system_index] == 5 &&
+        !(alpha == 90 && beta == 90 && gamma == 120)) {
+      fprintf(stderr,
+              "warning: for crystal system %s, of alpha, beta and gamma, "
+              "two values must be 90 degrees and one value 120 degrees. "
+              "-a ignored\n",
+              crystal_system.c_str());
+      alpha = 90;
+      beta = 90;
+      gamma = 120;
+      angles.clear();
+      angles.push_back(alpha);
+      angles.push_back(beta);
+      angles.push_back(gamma);
+    }
+    else
       // angles can be set to random values for other crystal systems
       if (!angles.size()) {
-    Random ran;
-    ran.time_seed();
+        Random ran;
+        ran.time_seed();
 
-    if (crystal_system == "monoclinic") {
-      alpha = 90.0;
-      beta = 90.0;
-      gamma = 90.0;
-      // don't let beta equal 90
-      while (beta == 90.0)
-        beta = bravais_random_angle(ran, 180.0);
-    }
-    else if (crystal_system == "trigonal") {
-      alpha = bravais_random_angle(ran, 60.0);
-      beta = alpha;
-      gamma = alpha;
-    }
-    else if (crystal_system == "triclinic") {
-      alpha = 360.0;
-      beta = 360.0;
-      gamma = 360.0;
-      while (alpha + beta + gamma >= 360 || gamma >= alpha + beta ||
-             beta >= alpha + gamma || alpha >= beta + gamma) {
-        alpha = bravais_random_angle(ran, 180.0);
-        beta = bravais_random_angle(ran, 180.0);
-        gamma = bravais_random_angle(ran, 180.0);
+        if (crystal_system == "monoclinic") {
+          alpha = 90.0;
+          beta = 90.0;
+          gamma = 90.0;
+          // don't let beta equal 90
+          while (beta == 90.0)
+            beta = bravais_random_angle(ran, 180.0);
+        }
+        else if (crystal_system == "trigonal") {
+          alpha = bravais_random_angle(ran, 60.0);
+          beta = alpha;
+          gamma = alpha;
+        }
+        else if (crystal_system == "triclinic") {
+          alpha = 360.0;
+          beta = 360.0;
+          gamma = 360.0;
+          while (alpha + beta + gamma >= 360 || gamma >= alpha + beta ||
+                 beta >= alpha + gamma || alpha >= beta + gamma) {
+            alpha = bravais_random_angle(ran, 180.0);
+            beta = bravais_random_angle(ran, 180.0);
+            gamma = bravais_random_angle(ran, 180.0);
+          }
+        }
+
+        angles.push_back(alpha);
+        angles.push_back(beta);
+        angles.push_back(gamma);
+
+        fprintf(stderr, "warning: RANDOM angles generated\n");
       }
-    }
-
-    angles.push_back(alpha);
-    angles.push_back(beta);
-    angles.push_back(gamma);
-
-    fprintf(stderr, "warning: RANDOM angles generated\n");
-  }
 
   if (verbose)
     fprintf(stderr, "info: angles alpha = %5.5g, beta = %5.5g, gamma = %5.5g\n",
@@ -1156,35 +1156,35 @@ int bravais_check(string &crystal_system, string &centering,
     vec_case = 1;
   }
   else
-      // monoclinic
-      if ((angle_case == 2) ||                  // vec_case can be any
-          (vec_case == 2 && angle_case == 5)) { // have to allow for hexagonal
-                                                // angles but three unequal
-                                                // vectors
-    csystem = 2;
-    vec_case = 1;
-    angle_case = 2; // in case hex angles were present
-  }
-  else
+    // monoclinic
+    if ((angle_case == 2) ||                  // vec_case can be any
+        (vec_case == 2 && angle_case == 5)) { // have to allow for hexagonal
+                                              // angles but three unequal
+                                              // vectors
+      csystem = 2;
+      vec_case = 1;
+      angle_case = 2; // in case hex angles were present
+    }
+    else
       // orthorhombic
       if (vec_case == 2 && angle_case == 3)
-    csystem = 3;
-  else
-      // tetragonal
-      if (vec_case == 3 && angle_case == 3)
-    csystem = 4;
-  else
-      // trigonal
-      if (vec_case == 4 && angle_case == 4)
-    csystem = 5;
-  else
-      // hexagonal
-      if ((vec_case == 3 || vec_case == 4) && angle_case == 5)
-    csystem = 6;
-  else
-      // cubic
-      if (vec_case == 4 && angle_case == 3)
-    csystem = 7;
+        csystem = 3;
+      else
+        // tetragonal
+        if (vec_case == 3 && angle_case == 3)
+          csystem = 4;
+        else
+          // trigonal
+          if (vec_case == 4 && angle_case == 4)
+            csystem = 5;
+          else
+            // hexagonal
+            if ((vec_case == 3 || vec_case == 4) && angle_case == 5)
+              csystem = 6;
+            else
+              // cubic
+              if (vec_case == 4 && angle_case == 3)
+                csystem = 7;
 
   if (crystal_system_index != csystem) {
     fprintf(stderr, "\n");

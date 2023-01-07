@@ -666,7 +666,7 @@ vector<vector<int>> make_nexorade(Geometry &base_geom, const Symmetry &sym,
        it_ctrl.next_iter()) {
     max_diff = 0.0;
     double dist_sum = 0;
-    double rad_diff_sum = 0;
+    // double rad_diff_sum = 0;
     for (int f_idx : principal_faces) {
       const auto &face = faces[f_idx];
       // Start: make sure vertices are current
@@ -693,7 +693,7 @@ vector<vector<int>> make_nexorade(Geometry &base_geom, const Symmetry &sym,
         lines_nearest_points(v_edge0, v_edge1, v_e_con0, v_e_con1, P, Q);
         auto perp = P - Q; // from connected edge to this edge
         dist_sum += perp.len();
-        rad_diff_sum += fabs(perp.len() / 2 - rad);
+        // rad_diff_sum += fabs(perp.len() / 2 - rad);
 
         const auto perp_dir = perp.unit();
         const auto base_point = v_e_con0 + (v_e_con1 - v_e_con0) * end_fraction;

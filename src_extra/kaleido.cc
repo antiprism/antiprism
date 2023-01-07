@@ -1577,8 +1577,9 @@ int vertices(Polyhedron *P)
           }
         }
         else {
-          P->firstrot[J] =
-              !P->snub[last] ? last : !P->snub[k] ? (k + 1) % P->M : k;
+          P->firstrot[J] = !P->snub[last] ? last
+                           : !P->snub[k]  ? (k + 1) % P->M
+                                          : k;
           P->adj[0][J] = i;
         }
       }
