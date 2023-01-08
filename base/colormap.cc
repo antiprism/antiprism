@@ -165,13 +165,22 @@ public:
   virtual Color get_col(int idx) const { return get_effective_index(idx); }
 };
 
+class UniformRandom : public Random {
+public:
+  UniformRandom() { time_seed(); }
+  using result_type = long unsigned int;
+  static constexpr result_type min() { return 0; }
+  static constexpr result_type max() { return 2147483647; } // 2*31 - 1
+  result_type operator()() { return ranlui(); }
+};
+
 /// A colour map that maps index numbers to shuffled packs of numbers
 class ColorMapDeal : public ColorMap {
 private:
   int map_sz;
   int pack_sz;
   std::vector<int> map_vals;
-  Random rnd;
+  UniformRandom urnd;
 
 public:
   /// Initialise from a string
@@ -236,7 +245,6 @@ Status ColorMapDeal::init(const char *map_name)
       return Status::error("range size: cannot be less than 1");
   }
 
-  rnd.time_seed();
   shuffle();
   return Status::ok();
 }
@@ -255,8 +263,8 @@ void ColorMapDeal::shuffle()
     int off = i * pack_sz;
     for (int j = 0; j < pack_sz; j++)
       map_vals[off + j] = j;
-    std::random_shuffle(map_vals.begin() + off,
-                        map_vals.begin() + off + pack_sz, rnd);
+    std::shuffle(map_vals.begin() + off, map_vals.begin() + off + pack_sz,
+                 urnd);
   }
   map_vals.resize(map_sz);
 }
