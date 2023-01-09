@@ -10,7 +10,7 @@
 <<CONT_S_START>>
 <small><a href="#current">Current Release</a></small>
 <<BARSPACE>>
-<small><a href="#dev">Development Snapshots</a></small>
+<small><a href="#dev">Development Code</a></small>
 <<BARSPACE>>
 <small><a href="#antiprism_python">Antiprism Python</a></small>
 <<CONT_S_END>>
@@ -69,13 +69,10 @@ OpenGL and GLUT development libraries are required to build <i>antiview</i>.
 
 
 <h2><a name="dev">
-Antiprism Snapshot Releases
+Antiprism Development Source Code
 </a></h2>
 
 <p>
-<a href="http://www.antiprism.com/snapshots/">Antiprism snapshot releases</a>
-are available as Windows binaries, Ubuntu packages and source packages.
-</p><p>
 The latest development code is in the
 <a href="https://github.com/antiprism/antiprism">Antiprism Git repository</a>.
 See
