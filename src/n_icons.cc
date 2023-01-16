@@ -3088,46 +3088,79 @@ void find_circuit_count(const int twist, const int ncon_order, const int d,
     sd.compound_parts = num_polygons;
 
     if (hybrid) {
-      // hybrids which have only 1 part based on d
-      // when n is a power of 2
-      if (ceil(log2(n)) == floor(log2(n)))
-        sd.compound_parts = 1;
+      /* these statements are true but no longer needed
+           // hybrids which have only 1 part based on d
+           // when n is a power of 2
+           if (ceil(log2(n)) == floor(log2(n)))
+             sd.compound_parts = 1;
+           // n-d covered by de
+           // when gcd(n, d) and d is not a factor of n
+           if ((int)gcd(n, de) == 1)
+             sd.compound_parts = 1;
+           // when gcd(n, d) is 2, number of polygons is 2
+           if ((int)gcd(n, de) == 2)
+             sd.compound_parts = 1;
+     */
       // when d is a power of 2
-      // not using de because d<(n/2) needs testing for (n-d) being power of 2
+      // not using de because d<(n/2) is tested for (n-d) being power of 2
       // example 56/24 is the same as 56/(56-24) or 56/32
       if (ceil(log2(d)) == floor(log2(d)))
         sd.compound_parts = 1;
       if (ceil(log2(n - d)) == floor(log2(n - d)))
         sd.compound_parts = 1;
-      // n-d covered by de
-      // when gcd(n, d) and d is not a factor of n
-      if ((int)gcd(n, de) == 1)
-        sd.compound_parts = 1;
-      // when gcd(n, d) is 2, number of polygons is 2
-      if ((int)gcd(n, de) == 2)
-        sd.compound_parts = 1;
 
       // sequence advanced by d
-      // works for most hybrids
       t_mod = 0;
       if (!is_even(d))
         t_mod = de / 2;
-      else if (d % 4 != 0)
-        t_mod = (d - 2) / 4;
-      // hybrids of d mod 4 still has errors
-      else if (d % 4 == 0)
-        t_mod = (d - 4) / 8;
+      else {
+        int dl = d;
+        int dh = ncon_order - d;
+        if (dl > dh)
+          swap(dl, dh);
+        de = dl;
+        if ((dl % 4 == 0) && (dh % 4 != 0))
+          de = dh;
+
+        if (de % 4 != 0)
+          t_mod = (de - 2) / 4;
+
+        else if (de % 4 == 0) {
+          // t_mod = (de - 4) / 8;
+          t_mod = 200;
+          for (int k = 1604; k > 8; k -= 8) {
+            if (de % k == 0) {
+              break;
+            }
+            t_mod -= 1;
+          }
+        }
+      }
     }
 
     if (sd.compound_parts > 1) {
       int np = is_even(num_polygons) ? num_polygons / 2 : num_polygons;
-      sd.compound_parts = (int)gcd(np, twist + t_mod) +
-                          (((is_even(n) && point_cut) || hybrid) ? 1 : 0);
+      int gcd_calc = (int)gcd(np, twist + t_mod);
+      sd.compound_parts =
+          gcd_calc + (((is_even(n) && point_cut) || hybrid) ? 1 : 0);
       if (hybrid) {
-        // works for most hybrids
+        // all hybrids get one division
         sd.compound_parts /= 2;
+        // hybrids of d mod 4 still has errors (e.g. n/d >= 144/48)
+        if (de % 4 == 0) {
+          // these cases need a second division
+          if (is_even(twist + t_mod)) {
+            sd.compound_parts = (int)ceil((double)sd.compound_parts / 2);
+            // these cases need a third division
+            // if ((gcd_calc % 4 == 0) && ((twist + t_mod) % np == 0)) {
+            if (gcd_calc % 4 == 0) {
+              sd.compound_parts = (int)ceil((double)sd.compound_parts / 2);
+            }
+          }
+        }
       }
-      else if (!is_even(de) || (!is_even(n) && is_even(de))) {
+      // non-hybrids that have further calculations
+      else if (!is_even(d) || (!is_even(n) && is_even(d))) {
         sd.compound_parts /= 2;
         if ((is_even(n) && !point_cut) || !is_even(n))
           sd.compound_parts++;
@@ -3211,10 +3244,10 @@ void ncon_info(const int ncon_order, const int d, const bool point_cut,
 
     if (is_even(ncon_order) && point_cut) {
       fprintf(stderr, "It has a north and south pole\n");
-      fprintf(
-          stderr,
-          "It is the polyhedral dual of the twist 0 side cut order %d n-icon\n",
-          ncon_order);
+      fprintf(stderr,
+              "It is the polyhedral dual of the twist 0 side cut order %d "
+              "n-icon\n",
+              ncon_order);
     }
     else if (is_even(ncon_order) && !point_cut) {
       fprintf(stderr, "It has two polar caps\n");
@@ -3358,10 +3391,10 @@ void ncon_info(const int ncon_order, const int d, const bool point_cut,
     if (sd.nonchiral)
       fprintf(stderr, "It is not chiral\n");
     else
-      fprintf(
-          stderr,
-          "It is the mirror image of an n-icon of order %d twisted %d time%s\n",
-          ncon_order, -base_twist, ((-base_twist == 1) ? "" : "s"));
+      fprintf(stderr,
+              "It is the mirror image of an n-icon of order %d twisted %d "
+              "time%s\n",
+              ncon_order, -base_twist, ((-base_twist == 1) ? "" : "s"));
   }
 
   if (info) {
@@ -3690,9 +3723,8 @@ void model_info(Geometry &geom, const ncon_opts &opts)
 
     if (strchr("sfS", opts.face_coloring_method)) {
 
-      fprintf(
-          stderr,
-          "circuit counts are dependent on enough unique colors in the map\n");
+      fprintf(stderr, "circuit counts are dependent on enough unique colors "
+                      "in the map\n");
 
       sdm_surfaces = true;
       sort(col_faces.begin(), col_faces.end());
@@ -3754,9 +3786,8 @@ void model_info(Geometry &geom, const ncon_opts &opts)
       sdm_compound_parts = true;
       sdm.compound_parts = sz;
 
-      fprintf(
-          stderr,
-          "compound counts are dependent on enough unique colors in the map\n");
+      fprintf(stderr, "compound counts are dependent on enough unique colors "
+                      "in the map\n");
     }
 
     fprintf(stderr, "---------\n");
@@ -4535,10 +4566,9 @@ vector<int> find_adjacent_face_idx_in_channel(
     }
   }
 
-  // the first time we "prime" so we return faces in both directions. the second
-  // face becomes the "stranded" face
-  // there may be faces which would get pinched off (stranded), so there may be
-  // more than one
+  // the first time we "prime" so we return faces in both directions. the
+  // second face becomes the "stranded" face. there may be faces which would
+  // get pinched off (stranded), so there may be more than one
   for (int &i : adjacent_face_idx) {
     if (prime || !(geom.colors(FACES).get(i)).is_set()) {
       face_idx_ret.push_back(i);
@@ -4694,44 +4724,6 @@ int ncon_face_coloring_by_adjacent_face(Geometry &geom,
       } while (sz);
       fprintf(stderr, "\n");
     }
-
-    /* useful?
-    fprintf(stderr, "flood fill face latitudes:\n");
-    lon = opts.longitudes.front() / 2;
-    for (int l = 0; l < 2; l++) {
-      lat = 0;
-      // lon -= l;
-      do {
-        vector<int> idx = find_face_by_lat_lon(face_list, lat, lon);
-        sz = idx.size();
-        if (sz) {
-          vector<int> face_idx;
-          int lat2 = -1;
-          if (l == 1) {
-            face_idx = find_adjacent_face_idx_in_channel(
-                geom, idx[0], bare_implicit_edges, faces_by_edge, true);
-            sz = face_idx.size();
-            //fprintf(stderr, "face idx0 = %d, face idx1 = %d\n", face_idx[0],
-            //        face_idx[1]);
-            //fprintf(stderr, "sz = %d lat0 = %d lat1 = %d\n", sz,
-            //        face_list[face_idx[0]]->lat, face_list[face_idx[1]]->lat);
-            if (sz) {
-              if (face_idx[1] > (int)face_list.size())
-                face_idx = find_adjacent_face_idx_in_channel(
-                    geom, face_idx[1], bare_implicit_edges, faces_by_edge,
-                    true);
-              lat2 = face_list[face_idx[1]]->lat;
-            }
-          }
-          else
-            lat2 = face_list[idx[0]]->lat;
-          fprintf(stderr, "%d ", lat2);
-        }
-        lat++;
-      } while (sz);
-      fprintf(stderr, "\n");
-    }
-    */
   }
 
   vector<int> color_table;
@@ -4740,7 +4732,8 @@ int ncon_face_coloring_by_adjacent_face(Geometry &geom,
 
   // colors for method 2 and 3 are reversed from method 1
   // accept when it is a 1/2 opts.twist
-  // don't do this with flood fill stop as the colors change as fill gets larger
+  // don't do this with flood fill stop as the colors change as fill gets
+  // larger
   if (!opts.flood_fill_stop) {
     if (opts.posi_twist != 0 && (opts.ncon_order / opts.posi_twist == 2)) {
       reverse(color_table.begin(), color_table.end());
@@ -4951,7 +4944,8 @@ void ncon_edge_coloring_by_adjacent_edge(Geometry &geom,
 
   // colors for method 2 and 3 are reversed from method 1
   // accept when it is a 1/2 opts.twist
-  // don't do this with flood fill stop as the colors change as fill gets larger
+  // don't do this with flood fill stop as the colors change as fill gets
+  // larger
   if (!opts.flood_fill_stop) {
     if (opts.posi_twist != 0 && (opts.ncon_order / opts.posi_twist == 2)) {
       reverse(color_table.begin(), color_table.end());
@@ -5245,13 +5239,13 @@ void build_color_table(map<int, pair<int, int>> &color_table,
   // boolean for testing. this was face coloring options 't'
   bool sequential_colors = true;
 
-  // for the color tables twist is made positive. The positive twist colors work
-  // for negative twists.
+  // for the color tables twist is made positive. The positive twist colors
+  // work for negative twists.
   unsigned int n = ncon_order;
   unsigned int t = std::abs(twist);
 
-  // for even n, twist 0, symmetric coloring does't happen, so temporarily twist
-  // half way
+  // for even n, twist 0, symmetric coloring does't happen, so temporarily
+  // twist half way
   if (symmetric_coloring && is_even(n) && t == 0) {
     int mod_twist = t % n;
     if (!mod_twist)
@@ -5320,9 +5314,9 @@ void ncon_coloring(Geometry &geom, const vector<faceList *> &face_list,
 
   bool hyb = opts.hybrid;
 
-  // works with old method of assigning latitudes with angles in method 3, faces
-  // are actually not a hybrid but a normal point cut of n*2 with a twist of
-  // t*2-1
+  // works with old method of assigning latitudes with angles in method 3,
+  // faces are actually not a hybrid but a normal point cut of n*2 with a
+  // twist of t*2-1
   if (lat_mode == 2 && opts.double_sweep) {
     n *= 2;
     t *= 2;
@@ -5332,8 +5326,8 @@ void ncon_coloring(Geometry &geom, const vector<faceList *> &face_list,
     }
   }
 
-  // fprintf(stderr,"opts.point_cut = %s\n",opts.point_cut ? "point" : "side");
-  // fprintf(stderr,"point_cut_calc = %s (used for
+  // fprintf(stderr,"opts.point_cut = %s\n",opts.point_cut ? "point" :
+  // "side"); fprintf(stderr,"point_cut_calc = %s (used for
   // face_increment)\n",point_cut_calc ? "point" : "side");
 
   bool pc = (!opts.hide_indent || opts.double_sweep || opts.angle_is_side_cut)
@@ -5491,12 +5485,12 @@ void build_globe(Geometry &geom, vector<coordList *> &coordinates,
 
   // old apply_latitudes was specifically for method 3
   if (opts.build_method == 3) {
-    // the old apply_latitudes works for double_sweep so completes working with
-    // d=1
+    // the old apply_latitudes works for double_sweep so completes working
+    // with d=1
     if (double_sweep)
       lat_mode = 2;
-    // the old apply_latitudes must be used for method 3 compound coloring, new
-    // method won't work. 'C' needed to fire fix_polygon_numbers
+    // the old apply_latitudes must be used for method 3 compound coloring,
+    // new method won't work. 'C' needed to fire fix_polygon_numbers
     if (strchr("cC", opts.face_coloring_method))
       lat_mode = 2;
     // non-co-prime compounds don't work with new method. Use old method
@@ -5530,7 +5524,8 @@ void build_globe(Geometry &geom, vector<coordList *> &coordinates,
     if (opts.build_method == 3) {
       apply_latitudes(geom, original_faces, split_face_indexes, face_list,
                       edge_list, pole, opts);
-      // old apply_latitudes needs to fix polygon numbers for compound coloring
+      // old apply_latitudes needs to fix polygon numbers for compound
+      // coloring
       if (strchr("cC", opts.face_coloring_method) && !double_sweep)
         fix_polygon_numbers(face_list, opts);
     }
@@ -6640,8 +6635,8 @@ void pgon_post_process(Geometry &pgon, vector<Vec3d> &axes, const int N,
 {
   int t_mult = opts.symmetric_coloring ? 1 : 2;
 
-  // for even n, twist 0, symmetric coloring does't happen, so temporarily twist
-  // half way. Use absolute value of twist
+  // for even n, twist 0, symmetric coloring does't happen, so temporarily
+  // twist half way. Use absolute value of twist
   int t = std::abs(twist);
   if (opts.symmetric_coloring && is_even(N) && t == 0) {
     int mod_twist = t % N;
@@ -6840,7 +6835,8 @@ void color_by_symmetry(Geometry &geom, Geometry &pgon, const ncon_opts &opts)
   // color faces. if method 3 and digons, bypass for code below
   if ((opts.face_coloring_method == 'S') &&
       !((opts.build_method == 3) && opts.digons)) {
-    // Find nearpoints of polygon edge lines, make unit, get height on each axis
+    // Find nearpoints of polygon edge lines, make unit, get height on each
+    // axis
     for (unsigned int i = 0; i < pgon.edges().size(); i++) {
       for (int ax = 0; ax < 2; ax++) {
         Vec3d near_pt =
@@ -6860,8 +6856,9 @@ void color_by_symmetry(Geometry &geom, Geometry &pgon, const ncon_opts &opts)
     bool found = true;
     for (unsigned int f = 0; f < geom.faces().size(); f++) {
       if (geom.faces(f).size() > 2) {
-        // if, because negative radii, the face center is shifted onto the wrong
-        // axis then no color will be found for look up, try the other axis
+        // if, because negative radii, the face center is shifted onto the
+        // wrong axis then no color will be found for look up, try the other
+        // axis
         Color c = geom.colors(FACES).get(f);
         if (c.is_invisible() && opts.lon_invisible)
           continue;
@@ -6926,8 +6923,8 @@ void color_by_symmetry(Geometry &geom, Geometry &pgon, const ncon_opts &opts)
       if (c.is_maximum_index()) {
         lookup_edge_color(geom, e, axes, heights, false, opts);
         c = geom.colors(EDGES).get(e);
-        // if, because negative radii, the edge center is shifted onto the wrong
-        // axis no color will be found for look up, try the other axis
+        // if, because negative radii, the edge center is shifted onto the
+        // wrong axis no color will be found for look up, try the other axis
         if (c.is_maximum_index()) {
           // not found? try again
           lookup_edge_color(geom, e, axes, heights, true, opts);
@@ -7111,9 +7108,8 @@ int ncon_subsystem(Geometry &geom, ncon_opts &opts)
   else
     // when partial model, some vertices can't be rotated, so out of sync with
     // their edges
-    // when method 2 or 3, front vertices can get back color because of order of
-    // edges in list
-    // faster to just recolor all vertices
+    // when method 2 or 3, front vertices can get back color because of order
+    // of edges in list faster to just recolor all vertices
     reassert_colored_verts(geom, opts.edge_default_color,
                            opts.unused_edge_color);
 
@@ -7367,7 +7363,8 @@ void surface_subsystem(ncon_opts &opts)
         opts.hybrid = hybrid;
 
         Geometry geom;
-        // hybrids of d mod 4 still require direct measures
+        // hybrids of d mod 4 still has errors (e.g. n/d >= 144/48)
+        // use direct measures
         if (hybrid && (d % 4 == 0))
           sd.compound_parts = ncon_subsystem(geom, opts);
         model_count++;
