@@ -1577,7 +1577,7 @@ const set<Symmetry> &Symmetry::get_sub_syms() const
       sym.sym_type = Cs;
       sub_syms.insert(sym);
       sym.init(Cs, 0, Trans3d::rotate(Vec3d(0, 1, 1), axis) * to_std);
-      add_sub_axes(sym);
+      sub_syms.insert(sym);
       sym.init(Dh, 4, to_std);
       add_sub_axes(sym);
       sym.init(Dv, 3, Trans3d::align(A3, Vec3d(1, -1, 0), axis, perp) * to_std);
@@ -1720,8 +1720,8 @@ const set<Symmetry> &Symmetry::get_sub_syms() const
     case Cv:
       if (nfold % 2 == 0) { // nfold even: add second vertical mirror
         sym.init(Cs, 0,
-                 Trans3d::rotate(axis, M_PI / nfold) *
-                     Trans3d::rotate(Vec3d::X, M_PI / 2) * to_std);
+                 Trans3d::rotate(Vec3d::X, M_PI / 2) *
+                     Trans3d::rotate(axis, M_PI / nfold) * to_std);
         sub_syms.insert(sym);
         if (nfold > 2) {
           sym.init(Cv, nfold / 2, Trans3d::rotate(axis, M_PI / nfold) * to_std);
