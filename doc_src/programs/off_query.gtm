@@ -44,10 +44,12 @@ Find the angles between three vertices not on the same face
 off_trans -s e icosahedron | off_query -f 0,1,11 Fa
 <<CMDS_END>>
 
-Find the angles between two vertices and a supplied vertex
+Find the angles between two vertices and a supplied extra vertex. In this
+example an extra face is added which includes the exta vertex, whose index
+is given as x0, and the query prints the angles for this face
 
 <<CMDS_START>>
-off_trans -s e icosahedron | off_query -v 1.0,0.0,0.0 -f 0,E0,11 Fa
+off_trans -s e icosahedron | off_query -v 1.0,0.0,0.0 -f 0,x0,11 Fa
 <<CMDS_END>>
 <<EXAMPLES_END>>
 
