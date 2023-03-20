@@ -1,5 +1,12 @@
 NEWS for Antiprism: http://www.antiprism.com
 
+Version 0.31
+xx-xx-24 Adrian Rossiter <adrian@antiprism.com>
+         New Programs
+         Changes
+         Fixes
+            symmetry: missing Cs subgroup for Oh and Cv
+
 Version 0.30
 10-01-23 Adrian Rossiter <adrian@antiprism.com>
          New Programs
