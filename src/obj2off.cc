@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2014-2021, Roger Kaufman
+   Copyright (c) 2014-2023, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -29,6 +29,9 @@
 */
 
 #include "../base/antiprism.h"
+
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "./tiny_obj_loader.h"
 
 #include <cctype>
 #include <cstdio>
@@ -105,84 +108,85 @@ void obj2off_opts::process_command_line(int argc, char **argv)
     ifile = argv[optind];
 }
 
+// convert obj file to off  https://github.com/tinyobjloader/tinyobjloader
 bool convert_obj_to_off(string &file_name, Geometry &geom,
-                        string *error_msg = nullptr)
+                        const obj2off_opts &opts)
 {
-  FILE *ifile;
-  if (file_name == "" || file_name == "-") {
-    ifile = stdin;
-    file_name = "stdin";
+  // required parameters
+  const char *filename = file_name.c_str();
+  const char *basepath = NULL;
+  bool triangulate = false;
+
+  tinyobj::attrib_t attrib;
+  std::vector<tinyobj::shape_t> shapes;
+  std::vector<tinyobj::material_t> materials;
+
+  std::string warn;
+  std::string err;
+  bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err,
+                              filename, basepath, triangulate);
+
+  if (!warn.empty())
+    opts.warning(warn);
+
+  if (!err.empty())
+    opts.error(err);
+
+  if (!ret) {
+    opts.warning(msg_str("Failed to load/parse %s", filename));
+    return false;
   }
-  else {
-    ifile = fopen(file_name.c_str(), "r");
-    if (!ifile) {
-      if (error_msg)
-        *error_msg =
-            msg_str("could not open input file '%s'", file_name.c_str());
-      return false;
-    }
+
+  // vertices
+  for (size_t v = 0; v < attrib.vertices.size() / 3; v++) {
+    Vec3d vert = Vec3d(attrib.vertices[3 * v + 0], attrib.vertices[3 * v + 1],
+                       attrib.vertices[3 * v + 2]);
+    Color c = Color(attrib.colors[3 * v + 0], attrib.colors[3 * v + 1],
+                    attrib.colors[3 * v + 2]);
+    geom.add_vert(vert, c);
   }
 
-  int offset = 1; // obj files start indexes from 1
-
-  char *line = nullptr;
-  while (read_line(ifile, &line) == 0) {
-    for (char *p = line; *p; p++) // convert whitespace to spaces
-      if (isspace(*p))
-        *p = ' ';
-
-    Split parts(line, " ");
-    unsigned int parts_sz = parts.size();
-
-    char key = '\0';
-    if (strlen(parts[0]))
-      key = parts[0][0];
-
-    if (key == 'v') {
-      // only use x y z
-      double coord[3] = {0};
-      for (unsigned int i = 1; i < parts_sz; i++) {
-        if (!read_double(parts[i], &coord[i - 1])) {
-          if (error_msg)
-            *error_msg = msg_str("invalid coordinate '%s'", parts[i]);
-          return false;
-        }
+  // for each shape
+  for (size_t i = 0; i < shapes.size(); i++) {
+    // for each face
+    size_t index_offset = 0;
+    for (size_t f = 0; f < shapes[i].mesh.num_face_vertices.size(); f++) {
+      size_t fnum = shapes[i].mesh.num_face_vertices[f];
+      // For each vertex in the face
+      vector<int> face;
+      for (size_t v = 0; v < fnum; v++) {
+        tinyobj::index_t idx = shapes[i].mesh.indices[index_offset + v];
+        face.push_back(idx.vertex_index);
       }
-      geom.add_vert(Vec3d(coord[0], coord[1], coord[2]));
+      // face color
+      int material_id = shapes[i].mesh.material_ids[f];
+      Color c = Color();
+      if (material_id > -1)
+        c = Color(materials[material_id].diffuse[0],
+                  materials[material_id].diffuse[1],
+                  materials[material_id].diffuse[2]);
+
+      geom.add_face(face, c);
+
+      index_offset += fnum;
     }
-    else if (key == 'f' || key == 'l') {
-      int idx;
-      vector<int> indexes;
-      for (unsigned int i = 1; i < parts_sz; i++) {
-        if (!read_int(parts[i], &idx)) {
-          if (error_msg)
-            *error_msg = msg_str("invalid face or edge index '%s'", parts[i]);
-          return false;
-        }
-        indexes.push_back(idx - offset);
+
+    // for each edge
+    index_offset = 0;
+    for (size_t e = 0; e < shapes[i].lines.num_line_vertices.size(); e++) {
+      size_t eno = shapes[i].lines.num_line_vertices[e];
+      //  For each vertex in the edge
+      vector<int> edge;
+      for (size_t v = 0; v < eno; v++) {
+        tinyobj::index_t idx = shapes[i].lines.indices[index_offset + v];
+        edge.push_back(idx.vertex_index);
       }
-      if (key == 'f')
-        geom.add_face(indexes);
-      else if (key == 'l')
-        geom.add_edge(indexes);
+
+      geom.add_edge(make_edge(edge[0], edge[1]));
+
+      index_offset += eno;
     }
-    /* RK - The p key only outputs sequential vertex color map numbers
-        else if (key == 'p') {
-          int idx;
-          if (!read_int(parts[1], &idx)) {
-            if (error_msg)
-              *error_msg = msg_str("invalid vertex color index '%s'", parts[1]);
-            return false;
-          }
-          geom.colors(VERTS).set(idx - offset, idx);
-        }
-    */
-
-    free(line);
   }
-
-  if (file_name != "stdin")
-    fclose(ifile);
 
   return true;
 }
@@ -193,13 +197,7 @@ int main(int argc, char *argv[])
   opts.process_command_line(argc, argv);
 
   Geometry geom;
-
-  string error_msg;
-
-  // obj is enough like OFF that it can be parsed and converted in line
-  if (!convert_obj_to_off(opts.ifile, geom, &error_msg))
-    if (!error_msg.empty())
-      opts.error(error_msg);
+  convert_obj_to_off(opts.ifile, geom, opts);
 
   opts.write_or_error(geom, opts.ofile, opts.sig_digits);
 

@@ -4,8 +4,10 @@ Version 0.31
 xx-xx-24 Adrian Rossiter <adrian@antiprism.com>
          New Programs
          Changes
+            obj2off: now uses companion .mtl file to transfer colors to off
          Fixes
             symmetry: missing Cs subgroup for Oh and Cv
+            off2obj: corrected obj file format
 
 Version 0.30
 10-01-23 Adrian Rossiter <adrian@antiprism.com>

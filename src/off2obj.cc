@@ -66,6 +66,7 @@ Convert an OFF file to Wavefront OBJ file format.
 Options
 %s
   -m <file> generate mtl file. file name is hard coded into obj file
+              file is usually the same file name with an .mtl extension
   -d <dgts> number of significant digits (default %d) or if negative
             then the number of digits after the decimal point
   -o <file> write output to file (default: write to standard output)
