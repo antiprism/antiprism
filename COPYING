@@ -1,4 +1,4 @@
-Format: http://dep.debian.net/deps/dep5
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: antiprism
 Upstream-Contact: Adrian Rossiter <adrian@antiprism.com>
 Source: <http://www.antiprism.com>
@@ -7,7 +7,7 @@ License: MIT-and-similar
 
 
 Files: *
-Comments: Bulk of the files, one author or the other
+Comment: Bulk of the files, one author or the other, or both
 Copyright: 2003-2023, Adrian Rossiter <adrian@antiprism.com>
            2006-2023, Roger Kaufman
 License: Expat
@@ -30,11 +30,11 @@ License: Expat
  IN THE SOFTWARE.
 
 
-Files: base/canonic.cc src/canonic.cc src/conway.cc
-Comments: Conway notation, Canonicalization
+Files: src/canonical* src/conway.cc
+Comment: Conway notation, Canonicalization
 Copyright: 2003-2023, Adrian Rossiter <adrian@antiprism.com>
            2006-2023, Roger Kaufman
-License:
+License: Expat_plus
  Includes ideas and algorithms by George W. Hart, http://www.georgehart.com
  .
  Permission is hereby granted, free of charge, to any person obtaining a
@@ -56,7 +56,7 @@ License:
  IN THE SOFTWARE.
 
 
-Files: base/qh_*
+Files: base/qhull/*
 Comment: Qhull - Convex Hulls, Delaunay, Voronoi
 Copyright: Qhull, Copyright (c) 1993-2003
        The National Science and Technology Research Center for
@@ -64,7 +64,7 @@ Copyright: Qhull, Copyright (c) 1993-2003
                         (The Geometry Center)
                        University of Minnesota
                        email: qhull@qhull.org
-License:
+License: Qhull
  This software includes Qhull from The Geometry Center.  Qhull is 
  copyrighted as noted above.  Qhull is free software and may be obtained 
  via http from www.qhull.org.  It may be freely copied, modified, 
@@ -98,8 +98,8 @@ License:
  Only libqhull_r source used. Minor changes made for a clean build as C++.
 
 
-Files: base/utils_ultragetopt.*
-Comments: Ultra-Getopt
+Files: base/getopt.*
+Comment: Ultra-Getopt
 Copyright: 2007, Kevin Locke <kwl7@cornell.edu>
 License: Expat
  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -121,8 +121,8 @@ License: Expat
  IN THE SOFTWARE.
 
 
-Files: base/rand_gen.h
-Comments: Random number generator
+Files: base/random.h
+Comment: Random number generator
 Copyright: public domain
 License: public-domain
  Robin Whittle  rw@firstpr.com.au    2005 September 21 
@@ -130,9 +130,9 @@ License: public-domain
 
 
 Files: base/tesselator/*
-Comments: GLUtesselator
+Comment: GLUtesselator
 Copyright: 1991-2000 Silicon Graphics, Inc.
-License:
+License: SGI
  License Applicability. Except to the extent portions of this file are
  made subject to an alternative license as permitted in the SGI Free
  Software License B, Version 1.1 (the "License"), the contents of this
@@ -167,11 +167,11 @@ License:
  
 
 Files: base/prop_col.*
-Comments: Minimal proper colouring (two licences)
+Comment: Minimal proper colouring (two licences)
 Copyright: 1994 Michael Trick.
            1996-2000 Darko Kirovski, Miodrag Podkonjak and the Regents of
                         the University of California
-License:
+License: Expat_other
  The author of this software is Michael Trick.  Copyright (c) 1994 by 
  Michael Trick.
  .
@@ -215,11 +215,11 @@ License:
 
 
 Files: base/muparser/*
-Comments: muParser - A fast math parser library
+Comment: muParser - A fast math parser library
 Copyright: 2011 Ingo Berg
            Web: muparser.beltoforion.de
            e-mail: muparser@beltoforion.de
-License:
+License: Expat
  Permission is hereby granted, free of charge, to any person obtaining 
  a copy of this software and associated documentation files (the "Software"),
  to deal in the Software without restriction, including without limitation 
@@ -240,9 +240,9 @@ License:
 
 
 Files: src_extra/kaleido.cc
-Comments: kaleido - kaleidoscopic construction of uniform polyhedra
+Comment: kaleido - kaleidoscopic construction of uniform polyhedra
 Copyright: 1991-2002 Dr. Zvi Har'El <rl@math.technion.ac.il>
-License:
+License: Kaleido
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions
  are met:
@@ -274,28 +274,24 @@ License:
          E-Mail: rl@math.technion.ac.il
          
          
-File: src/tiny_obj_loader.h
-Comments: helper code to load an obj file to convert to an off file
+Files: src/tiny_obj_loader.h
+Comment: helper code to load an obj file to convert to an off file
 Copyright: 2012-Present, Syoyo Fujita and many contributors.
-
-The MIT License (MIT)
-
-Copyright (c) 2012-Present, Syoyo Fujita and many contributors.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+License: Expat
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to
+ deal in the Software without restriction, including without limitation the
+ rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ sell copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ .
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ IN THE SOFTWARE.

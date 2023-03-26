@@ -1,6 +1,5 @@
 /*
-   Copyright (c) 2003-2022, Adrian Rossiter, Roger Kaufman
-   Includes ideas and algorithms by George W. Hart, http://www.georgehart.com
+   Copyright (c) 2020-2022, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -26,8 +25,6 @@
 /*
    Name: canonical.cc
    Description: canonicalize a polyhedron
-                Implementation of George Hart's canonicalization algorithm
-                http://library.wolfram.com/infocenter/Articles/2012/
    Project: Antiprism - http://www.antiprism.com
 */
 
