@@ -62,8 +62,10 @@ void obj2off_opts::usage()
   fprintf(stdout, R"(
 Usage: %s [options] [input_file]
 
-Convert files in OBJ format to OFF format. Only v, e and f statements are
-processed. If input_file is not given the program reads from standard input.
+Convert files in OBJ format to OFF format. Only v, e and l statements are
+used. Face colors are take from diffuse coloring (Kd) in the mtl file. OBJ does
+not support edge colors. If input_file is not given the program reads from
+standard input.
 
 Options
 %s

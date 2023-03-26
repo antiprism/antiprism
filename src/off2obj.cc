@@ -61,12 +61,15 @@ void o2o_opts::usage()
   fprintf(stdout, R"(
 Usage: %s [options] [input_file]
 
-Convert an OFF file to Wavefront OBJ file format.
+Convert an OFF file to Wavefront OBJ file format. If input_file is not given
+the program reads from standard input.
+Note: OBJ does not support colored edges. Any edge colors will be lost.
 
 Options
 %s
   -m <file> generate mtl file. file name is hard coded into obj file
               file is usually the same file name with an .mtl extension
+              Note: mtl file perserves face colors
   -d <dgts> number of significant digits (default %d) or if negative
             then the number of digits after the decimal point
   -o <file> write output to file (default: write to standard output)

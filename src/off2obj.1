@@ -6,7 +6,9 @@ off2obj - convert an OFF file to Wavefront OBJ format
 .B off2obj
 [\fI\,options\/\fR] [\fI\,input_file\/\fR]
 .SH DESCRIPTION
-Convert an OFF file to Wavefront OBJ file format.
+Convert an OFF file to Wavefront OBJ file format. If input_file is not given
+the program reads from standard input.
+Note: OBJ does not support colored edges. Any edge colors will be lost.
 .PP
 Options
 .HP
@@ -17,6 +19,7 @@ Options
 \fB\-m\fR <file> generate mtl file. file name is hard coded into obj file
 .IP
 file is usually the same file name with an .mtl extension
+Note: mtl file perserves face and vertex colors
 .HP
 \fB\-d\fR <dgts> number of significant digits (default 16) or if negative
 .IP
