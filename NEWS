@@ -7,6 +7,7 @@ xx-xx-24 Adrian Rossiter <adrian@antiprism.com>
             obj2off: now uses companion .mtl file to transfer colors to off
             build: remove debian packging directory
          Fixes
+            off2txt: change default for -d to -16, decimals only
             symmetry: missing Cs subgroup for Oh and Cv
             off2obj: corrected obj file format
 

@@ -3077,6 +3077,15 @@ void find_circuit_count(const int twist, const int ncon_order, const int d,
   sd.case1_twist = (sd.case2) ? case1_twist : twist;
 
   // compound parts
+  // only formula for hybrids of d mod 4 have issues and only the following
+  // models tested up to n=200 d=200
+  // 144  : {144/48+23}
+  // 192  : {192/48+23}
+  // 192  : {192/48+47}
+  // 144  : {144/96+23}
+  // 192  : {192/144+23}
+  // 192  : {192/144+47}
+
   n = ncon_order; // not 2n
 
   // digons case. may not necessarily be true
