@@ -7,7 +7,7 @@ SUBDIRS += aview
 endif
 
 EXTRA_DIST = bootstrap pad_file.xml README.git Doxyfile vers_script.txt \
-				 doc doc_src share debian
+				 doc doc_src share
 
 override distcleancheck_listfiles = \
         find -type f -exec sh -c 'test -f $(srcdir)/{} || echo {}' ';'
