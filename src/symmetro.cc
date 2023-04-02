@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2014-2021, Roger Kaufman, Adrian Rossiter
+   Copyright (c) 2014-2023, Roger Kaufman, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -766,14 +766,15 @@ void symmetro_opts::process_command_line(int argc, char **argv)
       for (unsigned int i = 0; i < parts_sz; i++) {
         if (i == 0) {
           // see if it is built in amount
-          char ex = optarg[strlen(parts[i]) - 1];
+          string part = parts[i];
+          char ex = part.back();
           if (ex == 'e' || ex == 'x') {
-            optarg[strlen(parts[i]) - 1] = '\0';
+            part.pop_back();
             double num_part = 0;
-            if (strlen(optarg) == 0)
+            if (part.length() == 0)
               num_part = 1.0;
             else
-              print_status_or_exit(read_double(parts[i], &num_part),
+              print_status_or_exit(read_double(part.c_str(), &num_part),
                                    "option a: rotation value");
 
             rotation_as_increment += rad2deg(num_part);
