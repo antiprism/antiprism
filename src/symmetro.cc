@@ -201,7 +201,7 @@ Program Options
   -M <opt>  mirroring (may create compound). Can be x, y or z (default: none)
   -a <a,n>  a in degrees of rotation given to polygon applied to optional
                axis n (default: 0)  radians may be entered as 'rad(a)'
-               keyword: e - +1 radian, x - +1+pi radians
+               optional suffix: e - +1 radian, x - +1+pi radians. example: 2e
   -r <r,n>  set the edge length of the polygon on axis n (default: 0)
                to r. Must be non-negative. The default edge length is 1
   -A <a>    a in degrees is angle between axes (default: calculated)
