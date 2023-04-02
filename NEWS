@@ -10,6 +10,7 @@ xx-xx-24 Adrian Rossiter <adrian@antiprism.com>
             off2txt: change default for -d to -16, decimals only
             symmetry: missing Cs subgroup for Oh and Cv
             off2obj: corrected obj file format
+            unitile2d: correct mobius strip at join
 
 Version 0.30
 10-01-23 Adrian Rossiter <adrian@antiprism.com>

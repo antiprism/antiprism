@@ -355,25 +355,25 @@ void unitile::plane(int lr_join, int tb_join)
   }
   for (auto &vert : verts) {
     if (lr_join == ut_twist &&
-        (vert[0] < -local_epsilon || vert[0] > x_end + local_epsilon))
+        (vert[0] < -local_epsilon || vert[0] > x_end - local_epsilon))
       vert[1] = -vert[1];
     if (lr_join == ut_twist2 &&
-        (vert[0] < -local_epsilon || vert[0] > x_end + local_epsilon))
+        (vert[0] < -local_epsilon || vert[0] > x_end - local_epsilon))
       vert[1] = y_end - vert[1];
     if (lr_join == ut_twist3 &&
-        (vert[0] < -local_epsilon || vert[0] > x_end + local_epsilon))
+        (vert[0] < -local_epsilon || vert[0] > x_end - local_epsilon))
       vert[1] = fmod(1.5 * y_end - vert[1], y_end);
     if (tb_join == ut_twist &&
-        (vert[1] < -local_epsilon || vert[1] > y_end + local_epsilon))
+        (vert[1] < -local_epsilon || vert[1] > y_end - local_epsilon))
       vert[0] = -vert[0];
     if (tb_join == ut_twist2 &&
-        (vert[1] < -local_epsilon || vert[1] > y_end + local_epsilon))
+        (vert[1] < -local_epsilon || vert[1] > y_end - local_epsilon))
       vert[0] = x_end - vert[0];
     if (tb_join == ut_twist3 &&
-        (vert[1] < -local_epsilon || vert[1] > y_end + local_epsilon))
+        (vert[1] < -local_epsilon || vert[1] > y_end - local_epsilon))
       vert[0] = fmod(1.5 * x_end - vert[0], x_end);
     if (tb_join == ut_join2 &&
-        (vert[1] < -local_epsilon || vert[1] > y_end + local_epsilon))
+        (vert[1] < -local_epsilon || vert[1] > y_end - local_epsilon))
       vert[0] = fmod(0.5 * x_end - vert[0], x_end);
     if (lr_join != ut_open) {
       vert[0] = fmod(vert[0] + x_end, x_end - epsilon);
