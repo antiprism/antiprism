@@ -783,7 +783,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
           }
           else {
             // find 'rad' in parts[i], else value is degrees
-            bool rotation_as_inc = (strstr(parts[i], "rad")) ? false : true;
+            bool rotation_as_inc = (strstr(parts[i], "rad")) ? true : false;
             double rot;
             print_status_or_exit(read_double(parts[i], &rot),
                                  "option a: rotation value");
