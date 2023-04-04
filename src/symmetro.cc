@@ -111,7 +111,7 @@ public:
   char sym_mirror = '\0';   // reflection
   int vert_z = std::numeric_limits<int>::max(); // for -c twisters z position
   double rotation = 0;                          // rotation of polygon
-  double rotation_as_increment = 0;             // rotation in radians
+  double rotation_multiplier = 0;               // multiplier for e or x
   bool add_pi = false;                          // add pi to radians rotation
   int rotation_axis = -1;          // axis to apply rotation, defaults to 0
   double angle_between_axes = NAN; // override calculation
@@ -200,8 +200,9 @@ Program Options
                   v of -1 is original position (default: index of largest z)
   -M <opt>  mirroring (may create compound). Can be x, y or z (default: none)
   -a <a,n>  a in degrees of rotation given to polygon applied to optional
-               axis n (default: 0)  radians may be entered as 'rad(a)'
-               optional suffix: e - 1 radian, x - 1+pi radians. example: 2e
+               axis n (default: 0). A suffix of 'e' may be used, where 1.0e is
+               half the central angle of an edge. Then a is a multiplier. For
+               example 2e. A suffix of x is like e but with a half turn offset
   -r <r,n>  set the edge length of the polygon on axis n (default: 0)
                to r. Must be non-negative. The default edge length is 1
   -A <a>    a in degrees is angle between axes (default: calculated)
@@ -388,9 +389,9 @@ void symmetro_opts::process_command_line(int argc, char **argv)
                                           argmatch_add_id_maps),
                                c);
           if (id == "0")
-            rotation_as_increment = rad2deg(1.0);
+            rotation_multiplier = 1;
           else if (id == "1")
-            rotation_as_increment = rad2deg(0.0);
+            rotation_multiplier = 0;
         }
       }
 
@@ -777,20 +778,16 @@ void symmetro_opts::process_command_line(int argc, char **argv)
               print_status_or_exit(read_double(part.c_str(), &num_part),
                                    "option a: rotation value");
 
-            rotation_as_increment += rad2deg(num_part);
+            rotation_multiplier += num_part;
             if (ex == 'x')
               add_pi = true;
           }
           else {
-            // find 'rad' in parts[i], else value is degrees
-            bool rotation_as_inc = (strstr(parts[i], "rad")) ? true : false;
+            // it is an angle
             double rot;
             print_status_or_exit(read_double(parts[i], &rot),
                                  "option a: rotation value");
-            if (rotation_as_inc)
-              rotation_as_increment += rot;
-            else
-              rotation += rot;
+            rotation += rot;
           }
         }
         else if (i == 1) {
@@ -992,7 +989,7 @@ public:
 
   void substitute_polygon(Geometry &geom, const int axis_no);
   vector<Geometry> calc_polygons(const char mode, const double rotation,
-                                 const double rotation_as_increment,
+                                 const double rotation_multiplier,
                                  const bool add_pi, const bool swap_axes,
                                  const double offset, const bool verbose,
                                  double &angle_between_axes, string *error_msg);
@@ -1382,7 +1379,7 @@ void symmetro::substitute_polygon(Geometry &geom, const int axis_no)
 
 // angle_between_axes in radians, is modified
 vector<Geometry> symmetro::calc_polygons(
-    const char mode, const double rotation, const double rotation_as_increment,
+    const char mode, const double rotation, const double rotation_multiplier,
     const bool add_pi, const bool swap_axes, const double offset,
     const bool verbose, double &angle_between_axes, string *error_msg = nullptr)
 {
@@ -1413,9 +1410,8 @@ vector<Geometry> symmetro::calc_polygons(
   Trans3d rot_inv = Trans3d::rotate(Vec3d(0, 1, 0), -angle_between_axes);
 
   double ang = deg2rad(rotation);
-  if (rotation_as_increment)
-    ang +=
-        deg2rad(rotation_as_increment) * angle(getN(axis[0]), d[axis[0]]) / 2.0;
+  if (rotation_multiplier)
+    ang += rotation_multiplier * angle(getN(axis[0]), d[axis[0]]) / 2.0;
   if (add_pi)
     ang += M_PI;
   if (verbose)
@@ -1952,9 +1948,7 @@ int main(int argc, char *argv[])
   // swap axes if we are rotating the axis 1 polygon
   // if -k and p == q then alway use axis 0
   bool swap_axes = false;
-  if (opts.mode == 'k' && opts.p == opts.q)
-    swap_axes = false;
-  else if (opts.rotation_axis == (int)idx[1])
+  if (opts.rotation_axis == (int)idx[1])
     swap_axes = true;
 
   // if convex_hull is not set
@@ -1988,7 +1982,7 @@ int main(int argc, char *argv[])
       opts.error(error_msg);
 
   vector<Geometry> pgeom =
-      s.calc_polygons(opts.mode, opts.rotation, opts.rotation_as_increment,
+      s.calc_polygons(opts.mode, opts.rotation, opts.rotation_multiplier,
                       opts.add_pi, swap_axes, opts.offset, opts.verbose,
                       opts.angle_between_axes, &error_msg);
   if (!error_msg.empty())

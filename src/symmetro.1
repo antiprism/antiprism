@@ -91,11 +91,10 @@ mirroring (may create compound). Can be x, y or z (default: none)
 .TP
 \fB\-a\fR <a,n>
 a in degrees of rotation given to polygon applied to optional
-.TP
-axis n (default: 0)
-radians may be entered as 'rad(a)'
 .IP
-optional suffix: e \- 1 radian, x \- 1+pi radians. example: 2e
+axis n (default: 0). A suffix of 'e' may be used, where 1.0e is
+half the central angle of an edge. Then a is a multiplier. For
+example 2e. A suffix of x is like e but with a half turn offset
 .TP
 \fB\-r\fR <r,n>
 set the edge length of the polygon on axis n (default: 0)
