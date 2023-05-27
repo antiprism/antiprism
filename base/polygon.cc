@@ -117,7 +117,9 @@ int Polygon::get_acceptable_params(unsigned int &params,
   switch (type) {
   case prism:
     max_subtype = 3;
-    if (subtype == sub_prism_crown)
+    if (subtype == sub_default)
+      params |= E1;
+    else if (subtype == sub_prism_crown)
       params |= A1;
     else
       params |= A0;
@@ -125,7 +127,7 @@ int Polygon::get_acceptable_params(unsigned int &params,
   case antiprism:
     max_subtype = 5;
     params |= A0;
-    if (subtype == sub_antiprism_scalenohedron ||
+    if (subtype == sub_default || subtype == sub_antiprism_scalenohedron ||
         subtype == sub_antiprism_subdivided_scalenohedron)
       params |= E1;
     if (subtype == sub_antiprism_crown)
