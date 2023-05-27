@@ -56,8 +56,7 @@ zono -S ico -u -C red tet | antiview
 
 Rhombic torus as a translation surface
 <<CMDS_START>>
-off_util -s std_pol10  | off_trans -R 90,0,0 | zono -T std_pol10 - |
-antiview
+off_util -s std_pol10  | off_trans -R 90,0,0 | zono -T std_pol10 - | antiview
 <<CMDS_END>>
 <<EXAMPLES_END>>
 

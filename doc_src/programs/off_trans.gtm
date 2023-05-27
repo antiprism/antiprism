@@ -23,20 +23,21 @@
 See also,
 <a href="http://www.antiprism.com/examples/200_programs/625_off_trans/imagelist.html">off_trans examples with images</a>.
 <p>
-<i>cube.off</i> is a cube with vertices (&plusmn;1, ,&plusmn;1, &plusmn;1).
+<i>std_cube</i> is a cube with vertices (&plusmn;1, ,&plusmn;1, &plusmn;1).
 To rotate 45 degrees it about the edge running from (1,1,1) to (1,1,-1)
 the cube must be translated so that line passes through the origin,
 roatated 45 degrees about the direction of the line, then translated
 back.
 <<CMDS_START>>
-off_trans -T -1,-1,0 -o cube_a.off cube.off
+off_trans -T -1,-1,0 -o cube_a.off std_cube
 off_trans -R 0,0,1,45 -o cube_b.off cube_a.off
-off_trans -T 1,1,0 -o final_cube.off cubeb.off
+off_trans -T 1,1,0 -o final_cube.off cube_b.off
+antiview final_cube.off
 <<CMDS_END>>
 
 This can be combined as
 <<CMDS_START>>
-off_trans -T 1,1,0 -R 0,0,1,45 -T 1,1,0 -o final_cube.off cube.off
+off_trans -T 1,1,0 -R 0,0,1,45 -T 1,1,0 std_cube | antiview
 <<CMDS_END>>
 <<EXAMPLES_END>>
 

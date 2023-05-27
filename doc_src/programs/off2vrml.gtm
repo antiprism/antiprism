@@ -21,7 +21,7 @@
 <<EXAMPLES_START>>
 Display a ball pack as balls
 <<CMDS_START>>
-packer 2 10 |  off2vrml -xef -v b -o pack.wrl
+lat_grid bcc |  off2vrml -xef -v b -o pack.wrl
 <<CMDS_END>>
 
 Display an icosahedron without its faces
@@ -42,7 +42,7 @@ off2vrml -v 0.01 -e 0.008 -o icosa.wrl icosahedron
 Display a polyhedron with self-intersecting polygons, using
 transparent faces
 <<CMDS_START>>
-polygon -t anti 5/3 | off2vrml -F 0.3,0.6,0.8,0.5 -o anti.wrl
+polygon anti 5/3 | off2vrml -F 0.3,0.6,0.8,0.5 -o anti.wrl
 <<CMDS_END>>
 <<EXAMPLES_END>>
 

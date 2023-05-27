@@ -27,7 +27,7 @@ kcycle -a 40 > kc_tet_90.off
 Ring of 16 icosahedra, each given a proper coloring, rotated 90 degrees,
 and displayed in antiview
 <<CMDS_START>>
-off_color -f P icosahedron | kcycle -i - -n 8 -a 90 0,1,10,11 | antiview -v 0.1
+off_color -f P icosahedron | kcycle -i - -n 8 -a -90 4,9,10,11 | antiview -v 0.1
 <<CMDS_END>>
 <<EXAMPLES_END>>
 

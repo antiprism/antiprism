@@ -19,9 +19,9 @@
 
 
 <<EXAMPLES_START>>
-Display some polyhedra
+Display some polyhedra in OFF files
 <<CMDS_START>>
-antiview poly1.off poly2.off poly3.off
+antiview cube oct ant4
 <<CMDS_END>>
 
 Colour a polyhedron by polygon type and display it

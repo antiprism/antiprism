@@ -26,7 +26,7 @@ lat_grid fcc 6 | antiview -v b
 
 Make a spherical section of a diamond grid
 <<CMDS_START>>
-lat_grid -c s -s 3 diamond 16 > diam.off
+lat_grid -c s -s 3 diamond 16 | antiview
 <<CMDS_END>>
 <<EXAMPLES_END>>
 

@@ -24,18 +24,18 @@ See also,
 <p>
 A Class II icosahedral geodesic sphere with a pattern frequency of 4
 <<CMDS_START>>
-geodesic -c 2 -f 4 ico
+geodesic -c 2 -f 4 ico | antiview
 <<CMDS_END>>
 
 A Class II icosahedral geodesic sphere with a final step frequency of 4
 <<CMDS_START>>
-geodesic -c 2 -F 4 ico
+geodesic -c 2 -F 4 ico | antiview
 <<CMDS_END>>
 
 A planar octahedron with a Class III 1,2 pattern repeated 3 times along
 an edge
 <<CMDS_START>>
-geodesic -m p -c 1,2 -f 3 oct
+geodesic -M p -c 1,2 -f 3 oct | antiview
 <<CMDS_END>>
 <<EXAMPLES_END>>
 

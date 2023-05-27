@@ -22,7 +22,7 @@
 Full report
 
 <<CMDS_START>>
-off_report -S A -C A poly.off
+off_report -S A -C A cube
 <<CMDS_END>>
 
 Volume and area of a unit edged icosahedron

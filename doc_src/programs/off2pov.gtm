@@ -29,12 +29,12 @@
 <<EXAMPLES_START>>
 Draw a ball pack as balls
 <<CMDS_START>>
-off2pov -v b -o pack.pov pack.off
+lat_grid bcc | off2pov -v b -o pack.pov
 <<CMDS_END>>
 
-Draw the other side of it
+Draw the model rotated 45 degrees aboy the y-axisc
 <<CMDS_START>>
-off2pov -v b -R 0,180,0 -o pack.pov pack.off
+lat_grid bcc | off2pov -v b -R 0,45,0 -o pack.pov
 <<CMDS_END>>
 
 Draw an icosahedron without its faces
