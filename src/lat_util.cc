@@ -103,7 +103,6 @@ If the input possesses faces they are stripped by default.
 
 Options
 %s
-  -h        this help message
   -I        verbose output
   -l <lim>  minimum distance for unique vertex locations as negative exponent
                (default: %d giving %.0e)
