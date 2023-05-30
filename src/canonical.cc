@@ -996,14 +996,10 @@ double nearpoint_report(const Geometry &geom, const vector<Vec3d> &nearpts,
 
 void canonical_report(const Geometry &base, const Geometry &dual,
                       vector<Vec3d> &base_nearpts, vector<Vec3d> &dual_nearpts,
-                      vector<Vec3d> &ips, const bool completed,
-                      const double &epsilon_local)
+                      vector<Vec3d> &ips, const double &epsilon_local)
 {
   double max_error = std::numeric_limits<int>::min();
   double err = 0;
-
-  fprintf(stderr, "the canonical algorithm %s\n",
-          (completed ? "completed" : "did not complete"));
 
   // intersection point count is not used in score
   int ip_size = ips.size();
@@ -1031,6 +1027,40 @@ void canonical_report(const Geometry &base, const Geometry &dual,
 
   // fprintf(stderr, "note the midcenter is the origin\n");
   fprintf(stderr, "\n");
+}
+
+// is model already canonical?
+bool precheck(const Geometry &base, const cn_opts &opts)
+{
+  bool perfect_score = true;
+
+  Geometry dual = get_dual(base);
+
+  vector<Vec3d> base_nearpts;
+  vector<Vec3d> dual_nearpts;
+  vector<Vec3d> ips;
+  generate_points(base, dual, base_nearpts, dual_nearpts, ips, opts.eps);
+
+  int ip_size = ips.size();
+  int bn_size = base_nearpts.size();
+  if (ip_size != bn_size) {
+    perfect_score = false;
+    return perfect_score;
+  }
+
+  int base_radius_count = base_nearpts.size();
+  int base_nearpts_size = base_nearpts.size();
+  for (int i = 0; i < base_nearpts_size; i++) {
+    double l = fabs(base_nearpts[i].len() - 1.0);
+    if (double_ne(l, 0.0, opts.eps))
+      base_radius_count--;
+  }
+  if (base_radius_count != base_nearpts_size) {
+    perfect_score = false;
+    return perfect_score;
+  }
+
+  return perfect_score;
 }
 
 /*
@@ -1780,6 +1810,18 @@ int main(int argc, char *argv[])
     fprintf(stderr, "\n");
   }
 
+  // check if model is already canonical
+  bool perfect_score = false;
+  if (opts.canonical_method != 'x') {
+    perfect_score = precheck(base, opts);
+    if (perfect_score) {
+      opts.warning("input model is canonical at the input epsilon\n", 'l');
+      // cancel canonicalization
+      opts.canonical_method = 'x';
+      completed = true;
+    }
+  }
+
   if (opts.canonical_method != 'x') {
     string canonicalize_str;
     if (opts.canonical_method == 'm')
@@ -1846,9 +1888,16 @@ int main(int argc, char *argv[])
     fprintf(stderr, "\n");
   }
 
-  // use fixed epsilon for quality comparisons
-  double epsilon_local = anti::epsilon * 10;
   if (opts.canonical_method != 'x')
+    fprintf(stderr, "the canonical algorithm %s\n\n",
+            (completed ? "completed" : "did not complete"));
+
+  // epsilon setting for checking edge intersections
+  double epsilon_local = opts.eps * 100;
+  // don't let epsilon fall below 1e-11
+  if (epsilon_local > anti::epsilon)
+    epsilon_local = anti::epsilon * 10;
+  if (opts.canonical_method != 'x' || perfect_score)
     fprintf(stderr, "analyzing result at a fixed epsilon of %.0e\n",
             epsilon_local);
 
@@ -1867,8 +1916,8 @@ int main(int argc, char *argv[])
   vector<Vec3d> ips;
   generate_points(base, dual, base_nearpts, dual_nearpts, ips, epsilon_local);
 
-  if (opts.canonical_method != 'x')
-    canonical_report(base, dual, base_nearpts, dual_nearpts, ips, completed,
+  if (opts.canonical_method != 'x' || perfect_score)
+    canonical_report(base, dual, base_nearpts, dual_nearpts, ips,
                      epsilon_local);
 
   if (opts.realign)
