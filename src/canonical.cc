@@ -1030,7 +1030,7 @@ void canonical_report(const Geometry &base, const Geometry &dual,
 }
 
 // is model already canonical?
-bool precheck(const Geometry &base, const cn_opts &opts)
+bool precheck(const Geometry &base, const double &epsilon_local)
 {
   bool perfect_score = true;
 
@@ -1039,7 +1039,7 @@ bool precheck(const Geometry &base, const cn_opts &opts)
   vector<Vec3d> base_nearpts;
   vector<Vec3d> dual_nearpts;
   vector<Vec3d> ips;
-  generate_points(base, dual, base_nearpts, dual_nearpts, ips, opts.eps);
+  generate_points(base, dual, base_nearpts, dual_nearpts, ips, epsilon_local);
 
   int ip_size = ips.size();
   int bn_size = base_nearpts.size();
@@ -1052,7 +1052,7 @@ bool precheck(const Geometry &base, const cn_opts &opts)
   int base_nearpts_size = base_nearpts.size();
   for (int i = 0; i < base_nearpts_size; i++) {
     double l = fabs(base_nearpts[i].len() - 1.0);
-    if (double_ne(l, 0.0, opts.eps))
+    if (double_ne(l, 0.0, epsilon_local))
       base_radius_count--;
   }
   if (base_radius_count != base_nearpts_size) {
@@ -1810,12 +1810,22 @@ int main(int argc, char *argv[])
     fprintf(stderr, "\n");
   }
 
+  // epsilon setting for checking edge intersections
+  double epsilon_local = opts.eps * 100;
+  // don't let epsilon fall below 1e-11
+  if (epsilon_local > anti::epsilon)
+    epsilon_local = anti::epsilon * 10;
+  if (opts.canonical_method != 'x')
+    fprintf(stderr,
+            "analyzing edge intersections at a fixed epsilon of %.0e\n\n",
+            epsilon_local);
+
   // check if model is already canonical
   bool perfect_score = false;
   if (opts.canonical_method != 'x') {
-    perfect_score = precheck(base, opts);
+    perfect_score = precheck(base, epsilon_local);
     if (perfect_score) {
-      opts.warning("input model is canonical at the input epsilon\n", 'l');
+      opts.warning("input model is canonical at the input epsilon", 'l');
       // cancel canonicalization
       opts.canonical_method = 'x';
       completed = true;
@@ -1882,24 +1892,17 @@ int main(int argc, char *argv[])
       base = get_dual(base);
     }
 
-    // report planarity
-    planarity_info(base);
-    convex_hull_test(base, opts);
     fprintf(stderr, "\n");
   }
 
   if (opts.canonical_method != 'x')
-    fprintf(stderr, "the canonical algorithm %s\n\n",
+    fprintf(stderr, "the canonical algorithm %s\n",
             (completed ? "completed" : "did not complete"));
 
-  // epsilon setting for checking edge intersections
-  double epsilon_local = opts.eps * 100;
-  // don't let epsilon fall below 1e-11
-  if (epsilon_local > anti::epsilon)
-    epsilon_local = anti::epsilon * 10;
-  if (opts.canonical_method != 'x' || perfect_score)
-    fprintf(stderr, "analyzing result at a fixed epsilon of %.0e\n",
-            epsilon_local);
+  // report planarity
+  planarity_info(base);
+  convex_hull_test(base, opts);
+  fprintf(stderr, "\n");
 
   // standardize model radius if needed since dual is reciprocated on 1
   if (opts.canonical_method != 'x')
