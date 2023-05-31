@@ -1059,6 +1059,10 @@ bool precheck(const Geometry &base, const double &epsilon_local)
     perfect_score = false;
     return perfect_score;
   }
+  
+  // check if extra faces are produced on a convex hull
+  if (get_convexity(base) != Convexity::convex_strict)
+    perfect_score = false;
 
   return perfect_score;
 }
