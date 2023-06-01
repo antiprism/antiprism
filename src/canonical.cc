@@ -52,7 +52,7 @@ public:
   string ofile;
 
   char edge_distribution = '\0';    // can project onto sphere
-  string shuffle_model_indexes;     // shuffle indexes can be vef
+  string shuffle_model_idxs;        // shuffle indexes can be vef
   char target_model = 'b';          // work on base model is default
   char planarize_method = '\0';     // no algorithm for planar is default
   int num_iters_planar = -1;        // unlimited iterations for planar
@@ -106,7 +106,7 @@ public:
 void extended_help()
 {
   fprintf(stdout, R"(
-Calculating Canonical Polyhedra
+Calculating Canonical Polyhedra (description of mathematica algorithm)
 
 A relaxation algorithm is presented to determine a canonical form for an
 arbitrary convex polyhedron.
@@ -350,7 +350,28 @@ transformation of a processed vertex.
 To avoid calculating all the vertex positions for the centroid, it can be
 calculated as: the centroid of the processed vertices, each projected onto
 the subspace left invariant by the subgroup that fixes it, and weighted by
-the number of vertices in its orbit. 
+the number of vertices in its orbit.
+
+-------------------------------------------------------------------------------
+From George Hart: https://www.georgehart.com/virtual-polyhedra/canonical.html
+
+An interesting theorem states that there exists a "canonical form" of any given
+convex polyhedron. This canonical form is a possibly distorted version of the
+given polyhedron in which the vertices are positioned in space to satisfy the
+following properties:
+
+1) all the edges are tangent to the unit sphere,
+2) the origin is the center of gravity of the points at which the
+   edge touch the sphere,
+3) the faces are flat (i.e. the vertices of each face lie in some plane),
+   but are not necessarily regular.
+
+It follows that a dual to the canonical polyhedron can be constructed which has
+the above three properties as well, and the edges of the canonical polyhedron
+and its dual cross at right angles. The representation is unique except for its
+rotations and reflections.
+
+Note: These properties are measured for successfully making a canonical model
 
 )");
 }
@@ -487,7 +508,7 @@ void cn_opts::process_command_line(int argc, char **argv)
                       "v, e, f, a",
                       optarg),
               c);
-      shuffle_model_indexes = optarg;
+      shuffle_model_idxs = optarg;
       break;
 
     case 't':
@@ -849,7 +870,7 @@ bool check_planarity(const Geometry &geom)
 }
 */
 
-void planarity_info(Geometry &geom)
+void planarity_info(const Geometry &geom)
 {
   GeometryInfo rep(geom);
 
@@ -869,19 +890,6 @@ void planarity_info(Geometry &geom)
   // rep.isoperimetric_quotient());
 
   return;
-}
-
-// planarity testing with convex hull
-void convex_hull_test(const Geometry &geom, const cn_opts &opts)
-{
-  string s = "no ";
-  string t = "";
-  if (get_convexity(geom) != Convexity::convex_strict) {
-    s = "";
-    t = (opts.it_ctrl.get_sig_digits() < 15) ? " (try raising -l)" : "";
-  }
-  fprintf(stderr, "%sextra faces produced by convex hull%s\n", s.c_str(),
-          t.c_str());
 }
 
 void generate_points(const Geometry &base, const Geometry &dual,
@@ -949,13 +957,14 @@ double edge_nearpoints_error(const Geometry &geom, double &min, double &max,
 }
 
 double nearpoint_report(const Geometry &geom, const vector<Vec3d> &nearpts,
-                        string str, const double &epsilon_local)
+                        string str, bool &perfect_score,
+                        const double &epsilon_local)
 {
   double min = 0;
   double max = 0;
   Vec3d center;
   edge_nearpoints_error(geom, min, max, center);
-  fprintf(stderr, "%s range of edge nearpoint error is %.0e to %.0e\n",
+  fprintf(stderr, "%s range of edge nearpoint error is %.0e to %.0e\n\n",
           str.c_str(), min, max);
 
   int radius_count = nearpts.size();
@@ -965,6 +974,8 @@ double nearpoint_report(const Geometry &geom, const vector<Vec3d> &nearpts,
     if (double_ne(l, 0.0, epsilon_local))
       radius_count--;
   }
+  if (radius_count != nearpts_size)
+    perfect_score = false;
 
   double np_pct = radius_count / (double)nearpts_size * 100;
   fprintf(stderr,
@@ -983,8 +994,10 @@ double nearpoint_report(const Geometry &geom, const vector<Vec3d> &nearpts,
     max = max_error;
 
   string lstr = "lies ";
-  if (double_ne(max_error, 0.0, epsilon_local))
+  if (double_ne(max_error, 0.0, epsilon_local)) {
     lstr = "does not lie ";
+    perfect_score = false;
+  }
   fprintf(
       stderr,
       "%s nearpoint centroid (%.0e, %.0e, %.0e) %swithin %.0e of the origin\n",
@@ -994,12 +1007,12 @@ double nearpoint_report(const Geometry &geom, const vector<Vec3d> &nearpts,
   return max;
 }
 
-void canonical_report(const Geometry &base, const Geometry &dual,
-                      vector<Vec3d> &base_nearpts, vector<Vec3d> &dual_nearpts,
+bool canonical_report(const Geometry &base, vector<Vec3d> &base_nearpts,
                       vector<Vec3d> &ips, const double &epsilon_local)
 {
+  bool perfect_score = true;
+
   double max_error = std::numeric_limits<int>::min();
-  double err = 0;
 
   // intersection point count is not used in score
   int ip_size = ips.size();
@@ -1008,25 +1021,31 @@ void canonical_report(const Geometry &base, const Geometry &dual,
   fprintf(stderr,
           "%d out of %d base/dual edge intersection points found (%g%%)\n",
           ip_size, bn_size, pct);
+  if (ip_size != bn_size)
+    perfect_score = false;
 
-  err = nearpoint_report(base, base_nearpts, "base", epsilon_local);
-  if (err > max_error)
-    max_error = err;
-
-  nearpoint_report(dual, dual_nearpts, "dual", epsilon_local);
-  // don't consider dual statistics in score
-  // if (err > max_error)
-  //  max_error = err;
-
+  max_error = nearpoint_report(base, base_nearpts, "base", perfect_score,
+                               epsilon_local);
   fprintf(stderr, "base canonical model maximum error is %.0e\n", max_error);
+
+  // report planarity
+  planarity_info(base);
+  // check if extra faces are produced on a convex hull
+  string s = "no ";
+  if (get_convexity(base) != Convexity::convex_strict) {
+    s = "";
+    perfect_score = false;
+  }
+  fprintf(stderr, "%sextra faces produced by convex hull\n\n", s.c_str());
 
   string str;
   if (is_nonoverlap_single_cover(base))
     str = "no ";
-  fprintf(stderr, "base canonical model has %soverlap error\n", str.c_str());
+  else
+    perfect_score = false;
+  fprintf(stderr, "base canonical model has %soverlap error\n\n", str.c_str());
 
-  // fprintf(stderr, "note the midcenter is the origin\n");
-  fprintf(stderr, "\n");
+  return perfect_score;
 }
 
 // is model already canonical?
@@ -1059,7 +1078,7 @@ bool precheck(const Geometry &base, const double &epsilon_local)
     perfect_score = false;
     return perfect_score;
   }
-  
+
   // check if extra faces are produced on a convex hull
   if (get_convexity(base) != Convexity::convex_strict)
     perfect_score = false;
@@ -1391,12 +1410,14 @@ vector<int> geom_deal(Geometry &geom, const int pack_size)
 
 void shuffle_model_indexes(Geometry &geom, const cn_opts &opts)
 {
+  // Geometry shuffled = geom;
+
   bool shuffle_verts =
-      (opts.shuffle_model_indexes.find_first_of("va") != string::npos);
+      (opts.shuffle_model_idxs.find_first_of("va") != string::npos);
   bool shuffle_faces =
-      (opts.shuffle_model_indexes.find_first_of("fa") != string::npos);
+      (opts.shuffle_model_idxs.find_first_of("fa") != string::npos);
   bool shuffle_edges =
-      (opts.shuffle_model_indexes.find_first_of("ea") != string::npos);
+      (opts.shuffle_model_idxs.find_first_of("ea") != string::npos);
 
   map<int, int> new_verts;
   if (!shuffle_verts) {
@@ -1405,30 +1426,32 @@ void shuffle_model_indexes(Geometry &geom, const cn_opts &opts)
   }
   else {
     fprintf(stderr, "shuffle model indexes: vertices\n");
-    vector<int> deal = geom_deal(geom, geom.verts().size());
+    unsigned int sz = geom.verts().size();
+    vector<int> deal = geom_deal(geom, sz);
     map<int, Color> new_cols;
     vector<Vec3d> shuffled_verts;
-    for (unsigned int i = 0; i < geom.verts().size(); i++) {
+    for (unsigned int i = 0; i < sz; i++) {
       int v_new = deal[i];
       new_verts[v_new] = i;
       shuffled_verts.push_back(geom.verts(v_new));
       new_cols[i] = geom.colors(VERTS).get(v_new);
     }
-    geom.raw_verts() = shuffled_verts;
-    for (unsigned int i = 0; i < geom.verts().size(); i++)
-      geom.colors(VERTS).set(i, new_cols[i]);
+    geom.clear(VERTS);
+    for (unsigned int i = 0; i < sz; i++)
+      geom.add_vert(shuffled_verts[i], new_cols[i]);
   }
 
   if (shuffle_faces || shuffle_verts) {
+    unsigned int sz = geom.faces().size();
     map<int, int> face_order;
     if (!shuffle_faces) {
-      for (unsigned int i = 0; i < geom.faces().size(); i++)
+      for (unsigned int i = 0; i < sz; i++)
         face_order[i] = i;
     }
     else {
       fprintf(stderr, "shuffle model indexes: faces\n");
-      vector<int> deal = geom_deal(geom, geom.faces().size());
-      for (unsigned int i = 0; i < geom.faces().size(); i++)
+      vector<int> deal = geom_deal(geom, sz);
+      for (unsigned int i = 0; i < sz; i++)
         face_order[deal[i]] = i;
     }
     map<int, Color> new_cols;
@@ -1443,29 +1466,30 @@ void shuffle_model_indexes(Geometry &geom, const cn_opts &opts)
       shuffled_faces.push_back(face);
       new_cols[i] = geom.colors(FACES).get(face_order[i]);
     }
-    geom.raw_faces() = shuffled_faces;
-    for (unsigned int i = 0; i < geom.faces().size(); i++)
-      geom.colors(FACES).set(i, new_cols[i]);
+    geom.clear(FACES);
+    for (unsigned int i = 0; i < sz; i++)
+      geom.add_face(shuffled_faces[i], new_cols[i]);
   }
 
   if (!geom.edges().size()) {
     fprintf(stderr, "shuffle model indexes: no explicit edges\n");
   }
   else if (shuffle_edges || shuffle_verts) {
+    unsigned int sz = geom.edges().size();
     map<int, int> edge_order;
     if (!shuffle_edges)
-      for (unsigned int i = 0; i < geom.edges().size(); i++) {
+      for (unsigned int i = 0; i < sz; i++) {
         edge_order[i] = i;
       }
     else {
       fprintf(stderr, "shuffle model indexes: edges\n");
-      vector<int> deal = geom_deal(geom, geom.edges().size());
-      for (unsigned int i = 0; i < geom.edges().size(); i++)
+      vector<int> deal = geom_deal(geom, sz);
+      for (unsigned int i = 0; i < sz; i++)
         edge_order[deal[i]] = i;
     }
     map<int, Color> new_cols;
     vector<vector<int>> shuffled_edges;
-    for (unsigned int i = 0; i < geom.edges().size(); i++) {
+    for (unsigned int i = 0; i < sz; i++) {
       vector<int> edge;
       for (unsigned int j = 0; j < geom.edges(edge_order[i]).size(); j++) {
         int v = geom.edges(edge_order[i])[j];
@@ -1475,10 +1499,11 @@ void shuffle_model_indexes(Geometry &geom, const cn_opts &opts)
       shuffled_edges.push_back(edge);
       new_cols[i] = geom.colors(EDGES).get(edge_order[i]);
     }
-    geom.raw_edges() = shuffled_edges;
-    for (unsigned int i = 0; i < geom.edges().size(); i++)
-      geom.colors(EDGES).set(i, new_cols[i]);
+    geom.clear(EDGES);
+    for (unsigned int i = 0; i < sz; i++)
+      geom.add_edge(shuffled_edges[i], new_cols[i]);
   }
+  fprintf(stderr, "\n");
 }
 
 // Implementation of George Hart's canonicalization algorithm
@@ -1744,7 +1769,17 @@ int main(int argc, char *argv[])
   // if (!check_convexity(base))
   //  opts.warning("input model may not be convex");
 
-  if (opts.shuffle_model_indexes.length())
+  // epsilon setting for checking edge intersections
+  double epsilon_local = opts.eps * 100;
+  // don't let epsilon fall below 1e-11
+  if (epsilon_local > anti::epsilon)
+    epsilon_local = anti::epsilon * 10;
+  if (opts.planarize_method || opts.canonical_method != 'x')
+    opts.message(
+        msg_str("analyzing edge intersections at a fixed epsilon of %.0e\n",
+                epsilon_local));
+
+  if (opts.shuffle_model_idxs.length())
     shuffle_model_indexes(base, opts);
 
   Symmetry sym;
@@ -1765,6 +1800,7 @@ int main(int argc, char *argv[])
     base = get_dual(base);
   }
 
+  bool perfect_score = true;
   bool completed = false;
   if (opts.planarize_method) {
     string planarize_str;
@@ -1810,26 +1846,23 @@ int main(int argc, char *argv[])
 
     // report planarity, report convex hull test only if canonicalizing
     planarity_info(base);
-    convex_hull_test(base, opts);
+    string s = "no ";
+    if (get_convexity(base) != Convexity::convex_strict) {
+      s = "";
+      perfect_score = false;
+    }
+    fprintf(stderr, "%sextra faces produced by convex hull\n", s.c_str());
     fprintf(stderr, "\n");
   }
 
-  // epsilon setting for checking edge intersections
-  double epsilon_local = opts.eps * 100;
-  // don't let epsilon fall below 1e-11
-  if (epsilon_local > anti::epsilon)
-    epsilon_local = anti::epsilon * 10;
-  if (opts.canonical_method != 'x')
-    fprintf(stderr,
-            "analyzing edge intersections at a fixed epsilon of %.0e\n\n",
-            epsilon_local);
-
   // check if model is already canonical
-  bool perfect_score = false;
+  bool input_is_canonical = false;
   if (opts.canonical_method != 'x') {
-    perfect_score = precheck(base, epsilon_local);
-    if (perfect_score) {
-      opts.warning("input model is canonical at the input epsilon", 'l');
+    perfect_score = false;
+    input_is_canonical = precheck(base, epsilon_local);
+    if (input_is_canonical) {
+      opts.warning("input model is canonical at the input epsilon\n", 'l');
+      perfect_score = true;
       // cancel canonicalization
       opts.canonical_method = 'x';
       completed = true;
@@ -1900,13 +1933,8 @@ int main(int argc, char *argv[])
   }
 
   if (opts.canonical_method != 'x')
-    fprintf(stderr, "the canonical algorithm %s\n",
+    fprintf(stderr, "the canonical algorithm %s\n\n",
             (completed ? "completed" : "did not complete"));
-
-  // report planarity
-  planarity_info(base);
-  convex_hull_test(base, opts);
-  fprintf(stderr, "\n");
 
   // standardize model radius if needed since dual is reciprocated on 1
   if (opts.canonical_method != 'x')
@@ -1923,9 +1951,22 @@ int main(int argc, char *argv[])
   vector<Vec3d> ips;
   generate_points(base, dual, base_nearpts, dual_nearpts, ips, epsilon_local);
 
-  if (opts.canonical_method != 'x' || perfect_score)
-    canonical_report(base, dual, base_nearpts, dual_nearpts, ips,
-                     epsilon_local);
+  if (opts.canonical_method != 'x' || input_is_canonical)
+    perfect_score = canonical_report(base, base_nearpts, ips, epsilon_local);
+
+  if (opts.canonical_method != 'x' || input_is_canonical ||
+      opts.planarize_method) {
+    if (perfect_score)
+      fprintf(stderr, "model passed all tests at -l %d\n",
+              opts.it_ctrl.get_sig_digits());
+    else {
+      fprintf(stderr, "model could be improved by raising -l\n");
+      if (opts.it_ctrl.get_sig_digits() == 15)
+        fprintf(stderr, "warning: if -l is raised higher than 15, algorithms "
+                        "may not halt\n");
+    }
+    fprintf(stderr, "\n");
+  }
 
   if (opts.realign)
     realign_output(base);
