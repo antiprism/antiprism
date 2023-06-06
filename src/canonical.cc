@@ -371,7 +371,21 @@ the above three properties as well, and the edges of the canonical polyhedron
 and its dual cross at right angles. The representation is unique except for its
 rotations and reflections.
 
-Note: These properties are measured for successfully making a canonical model
+Antiprism Note: These properties are measured for making a canonical model.
+While the algorithms calculate vertex locations within a distance given by
+-l n, meaning 10 to the -n power, the mathematical error of the measure of
+intersections between the base model and its dual accumulates. The precision
+of the intersections is measured to be within 10 to the -(n-2) power. The
+mathematical error of the planar measure of a face is multiplied by the face's
+number of edges. To achieve a measurably planar model may be beyond precision
+limits of the processor.
+
+Tip: If the dual of a model has faces with less sides, it may easier to achieve
+a planar model by instead working on the dual using option -t c. Face side
+counts can be found with off_report -C s
+
+If a canonical base is produced as an off file, the reciprocal will need to be
+generated using the midsphere with pol_recip -c M
 
 )");
 }
@@ -1086,48 +1100,6 @@ bool precheck(const Geometry &base, const double &epsilon_local)
   return perfect_score;
 }
 
-/*
-Vec3d face_edge_nearpoints_centroid(const Geometry &geom, double &radius, const
-int face_no)
-{
-  vector<Vec3d> near_pts;
-
-  unsigned int fsz = geom.faces(face_no).size();
-  for (unsigned int i = 0; i < fsz; i++) {
-    int v1 = geom.faces(face_no)[i];
-    int v2 = geom.faces(face_no)[(i + 1) % fsz];
-
-    Vec3d P = geom.edge_nearpt(make_edge(v1,v2), Vec3d::zero);
-    near_pts.push_back(P);
-  }
-
-  Vec3d face_edge_nearpt_centroid = centroid(near_pts);
-//  face_edge_nearpt_centroid = geom.face_cent(face_no);
-
-  // get the minimum radius
-  double min = DBL_MAX;
-  for (unsigned int i = 0; i < fsz; i++) {
-    double l = (face_edge_nearpt_centroid - near_pts[i]).len();
-    if (l < min)
-      min = l;
-  }
-  radius = min;
-
-  return face_edge_nearpt_centroid;
-}
-
-vector<Vec3d> face_edge_nearpoints_centroids(const Geometry &base)
-{
-  double rad;
-  Geometry near_pts;
-  unsigned int fsz = base.faces().size();
-  for (unsigned int i = 0; i < fsz; i++)
-    near_pts.add_vert(face_edge_nearpoints_centroid(base, rad, i));
-
-  return(near_pts.verts());
-}
-*/
-
 Geometry unit_circle(int polygon_size, const Color &incircle_color, bool filled)
 {
   Geometry incircle;
@@ -1796,7 +1768,8 @@ int main(int argc, char *argv[])
   }
 
   if (opts.target_model != 'b') {
-    fprintf(stderr, "converting target to dual for planarization\n");
+    fprintf(stderr, "converting target to dual for processing\n");
+    fprintf(stderr, "\n");
     base = get_dual(base);
   }
 
@@ -1840,6 +1813,7 @@ int main(int argc, char *argv[])
     }
 
     if (opts.target_model == 'p') {
+      fprintf(stderr, "\n");
       fprintf(stderr, "converting target back to base after planarization\n");
       base = get_dual(base);
     }
@@ -1857,11 +1831,13 @@ int main(int argc, char *argv[])
 
   // check if model is already canonical
   bool input_is_canonical = false;
-  if (opts.canonical_method != 'x') {
+  if ((opts.canonical_method != 'x') && (opts.num_iters_canonical != 0)) {
     perfect_score = false;
     input_is_canonical = precheck(base, epsilon_local);
     if (input_is_canonical) {
-      opts.warning("input model is canonical at the input epsilon\n", 'l');
+      opts.warning(msg_str("input model IS canonical at the at -l %d\n",
+                           opts.it_ctrl.get_sig_digits()),
+                   'l');
       perfect_score = true;
       // cancel canonicalization
       opts.canonical_method = 'x';
@@ -1869,7 +1845,25 @@ int main(int argc, char *argv[])
     }
   }
 
-  if (opts.canonical_method != 'x') {
+  if ((opts.canonical_method != 'x') && (opts.num_iters_canonical != 0)) {
+    if (opts.edge_distribution) {
+      fprintf(stderr, "edge distribution: project onto sphere\n");
+      if (opts.edge_distribution == 's')
+        project_onto_sphere(base);
+    }
+
+    // make it possible to just measure input
+    if (opts.num_iters_canonical != 0) {
+      fprintf(stderr, "centering: edge near points centroid moved to origin\n");
+      base.transform(
+          Trans3d::translate(-edge_nearpoints_centroid(base, Vec3d::zero)));
+
+      fprintf(stderr, "starting radius: average edge near points to 1\n");
+      unitize_nearpoints_radius(base);
+
+      fprintf(stderr, "\n");
+    }
+
     string canonicalize_str;
     if (opts.canonical_method == 'm')
       canonicalize_str = "mathematica";
@@ -1880,20 +1874,6 @@ int main(int argc, char *argv[])
     else if (opts.canonical_method == 'a')
       canonicalize_str = "moving edge";
     fprintf(stderr, "canonicalize: %s method\n", canonicalize_str.c_str());
-
-    if (opts.edge_distribution) {
-      fprintf(stderr, "edge distribution: project onto sphere\n");
-      if (opts.edge_distribution == 's')
-        project_onto_sphere(base);
-    }
-
-    fprintf(stderr, "\n");
-    fprintf(stderr, "starting radius: average edge near points\n");
-    unitize_nearpoints_radius(base);
-
-    fprintf(stderr, "centering: edge near points centroid moved to origin\n");
-    base.transform(
-        Trans3d::translate(-edge_nearpoints_centroid(base, Vec3d::zero)));
 
     bool planarize_only = false;
     opts.it_ctrl.set_max_iters(opts.num_iters_canonical);
@@ -1923,21 +1903,21 @@ int main(int argc, char *argv[])
                                     planarize_only);
     }
 
-    if (opts.target_model == 'c') {
-      fprintf(stderr,
-              "converting target back to base after canonicalization\n");
-      base = get_dual(base);
-    }
-
     fprintf(stderr, "\n");
   }
 
-  if (opts.canonical_method != 'x')
+  if ((opts.canonical_method != 'x') && (opts.num_iters_canonical != 0))
     fprintf(stderr, "the canonical algorithm %s\n\n",
             (completed ? "completed" : "did not complete"));
 
+  if (opts.target_model == 'c') {
+    fprintf(stderr, "converting target back to base after canonicalization\n");
+    fprintf(stderr, "\n");
+    base = get_dual(base);
+  }
+
   // standardize model radius if needed since dual is reciprocated on 1
-  if (opts.canonical_method != 'x')
+  if ((opts.canonical_method != 'x') && (opts.num_iters_canonical != 0))
     reset_model_size(base, epsilon_local);
 
   // generate dual once
