@@ -11,6 +11,8 @@ xx-xx-24 Adrian Rossiter <adrian@antiprism.com>
             symmetry: missing Cs subgroup for Oh and Cv
             off2obj: corrected obj file format
             unitile2d: correct mobius strip at join
+            canonical: won't change model which is already canonical at -l n
+                       won't change model but will report statistics when -n 0
 
 Version 0.30
 10-01-23 Adrian Rossiter <adrian@antiprism.com>
