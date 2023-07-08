@@ -670,7 +670,8 @@ void set_indexes_to_color(Geometry &geom, const radial_opts &opts)
   string map_name;
   if (opts.map_string == "rng" || opts.map_string == "rainbow") {
     map_name = opts.map_string + std::to_string(max_ridge);
-    opts.message(msg_str("default map used is %s", map_name.c_str()),"option -m");
+    opts.message(msg_str("default map used is %s", map_name.c_str()),
+                 "option -m");
   }
 
   Coloring clrng;

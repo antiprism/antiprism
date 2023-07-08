@@ -1,12 +1,13 @@
 NEWS for Antiprism: http://www.antiprism.com
 
 Version 0.31
-xx-xx-24 Adrian Rossiter <adrian@antiprism.com>
+08-07-23 Adrian Rossiter <adrian@antiprism.com>
          New Programs
          Changes
             obj2off: now uses companion .mtl file to transfer colors to off
             build: remove debian packging directory
          Fixes
+            resource models: corrected std_rd, std_rt, std_re
             off2txt: change default for -d to -16, decimals only
             symmetry: missing Cs subgroup for Oh and Cv
             off2obj: corrected obj file format

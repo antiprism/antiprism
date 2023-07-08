@@ -133,10 +133,18 @@ Links to Complementary Programs
 
 <b>Using OFF format</b>
 <ul>
+<li><a href="https://github.com/antiprism/antiprism_python">Antiprism Python</a>
+    - polyhedron modelling scripts
 <li><a href="http://www.geomview.org/">Geomview</a>
     - 3D viewing and processing
 <li><a href="http://www.javaview.de/">JavaView</a>
     - 3D viewing and processing (Java)
+<li><a href="https://www.interocitors.com/polyhedra/webview/">Webview</a>
+    (by Roger Kaufman)
+    - 3D viewing using a web browser
+<li><a href="https://github.com/Wagyx/simple-off-viewer">simple-off-viewer</a>
+    (by Wagyx)
+    - 3D viewer to embed in a web page
 <li><a href="http://www.springie.com/">Springie</a>
     (by Tim Tyler)
     - 3D viewing and processing (Java)
@@ -149,11 +157,11 @@ Links to Complementary Programs
 <b>Handling Antiprism Export Formats</b>
 <ul>
 <li><a href="http://www.povray.org/">POV-Ray</a>
-    - Persistence of Vision Raytracer using pov format
-<li><a href="http://www.web3d.org/x3d-resources/vrml/tools/viewers_and_browsers/">VRML Viewers</a>
+    - Persistence of Vision Raytracer, using pov format
+<li><a href="https://www.sketchup.com/plans-and-pricing/sketchup-free">Sketchup</a>
+    - CAD program, will import Collada
+<li><a href="https://www.web3d.org/x3d/content/examples/X3dResources.html">VRML Viewers</a>
     - Links to VRML viewers
-<li><a href="http://www.vis.uni-stuttgart.de/~kraus/LiveGraphics3D/">LiveGraphics3D</a>
-    - Java applet for 3D viewing using Mathematica format
 <li><a href="http://www.imagemagick.org/">ImageMagick</a>
     - Image processing, builds animations
 </ul>
