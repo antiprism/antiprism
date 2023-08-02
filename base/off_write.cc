@@ -80,6 +80,9 @@ Status crds_write(string file_name, const Geometry &geom, const char *sep,
   return Status::ok();
 }
 
+// don't export these functions
+namespace {
+
 // RK - color sorting functions
 bool cmp_col(const Color &a, const Color &b)
 {
@@ -105,6 +108,8 @@ public:
     return cmp_col(a, b);
   }
 };
+
+} // namespace
 
 string off_col(Color col)
 {
