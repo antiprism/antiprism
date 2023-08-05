@@ -82,7 +82,7 @@ if test ! x"$no_gl" = x"yes" ; then
    if test ! x"$no_glu" = x"yes" ; then
       FOUND_GLU=1
       GLPROG_LIBS="$GLU_LIBS $GL_LIBS $LIBS"
-      GLPROG_CXXFLAGS="$GLU_CFLAGS $LIBS"
+      GLPROG_CXXFLAGS="$GLU_CFLAGS"
       if test $glut_type = $NO_GLUT ; then
          AX_CHECK_GLUT
          if test ! x"$no_glut" = x"yes" ; then

@@ -1,6 +1,6 @@
 
 LIBS = $(GLPROG_LIBS)
-CXXFLAGS = $(GLPROG_CXXFLAGS)
+AM_CXXFLAGS = $(GLPROG_CXXFLAGS)
 
 .cc.1:
 	$(MAKE) $(AM_MAKEFLAGS) $*$(EXEEXT)
@@ -23,7 +23,7 @@ dist_man1_MANS = antiview.1
 
 antiview_SOURCES = antiview.cc vw_glut.cc \
                    vw_glut.h
-antiview_LDADD = $(GLUT_LIBS) $(LDADD)
+antiview_LDADD = $(LDADD) $(GLUT_LIBS)
 antiview_CXXFLAGS = $(GLUT_CFLAGS) $(GLUT_CXXFLAGS)
 antiview_LDFLAGS = $(GLUT_LDFLAGS)
 
