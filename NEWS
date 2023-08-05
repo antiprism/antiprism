@@ -1,5 +1,12 @@
 NEWS for Antiprism: http://www.antiprism.com
 
+Version 0.32
+XX-XX-23 Adrian Rossiter <adrian@antiprism.com>
+         New Programs
+         Changes
+         Fixes
+           build: antiview CXXFLAGS and library linking order
+
 Version 0.31
 08-07-23 Adrian Rossiter <adrian@antiprism.com>
          New Programs
