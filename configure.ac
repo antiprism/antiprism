@@ -27,19 +27,36 @@ AX_CXX_COMPILE_STDCXX(14)
 gl_LD_VERSION_SCRIPT
 LT_INIT([win32-dll])
 
+AC_CHECK_LIB([m], [acos])
+
+dnl check if building for windows
+AC_MSG_CHECKING([for timeGetTime in winmm (building for Windows))])
+my_ac_save_LIBS="$LIBS"
+LIBS="-lwinmm $LIBS"
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <windef.h>
+  #include <mmsystem.h>
+  ]], [[timeGetTime();]])],[ dnl worked!
+  WIN_BUILD="yes"; AC_MSG_RESULT([yes])
+  ],[ dnl failed, restore LIBS
+  WIN_BUILD="no"; AC_MSG_RESULT(no)])
+LIBS=$my_ac_save_LIBS
+
+
 AC_CHECK_FUNC([gettimeofday], [utimer=1], [utimer=0])
 if test $utimer = 0 ; then
-   AC_MSG_CHECKING([for timeGetTime in winmm])
-   my_ac_save_LIBS=$LIBS
-   LIBS="-lwinmm $LIBS"
-   AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <windef.h>
-             #include <mmsystem.h>
-             ]], [[timeGetTime();]])],[ dnl worked!
-             utimer=2; AC_MSG_RESULT([yes])
-             ],[ dnl failed, restore LIBS
-             LIBS=$my_ac_save_LIBS; utimer=0; AC_MSG_RESULT(no);
-             AC_MSG_ERROR([no suitable subsecond time function found])
-             ])
+  if test x"$WIN_BUILD" = x"yes" ; then
+    utimer=2; LIBS="-lwinmm $LIBS"; AC_MSG_RESULT([using timeGetTime])
+  else
+    AC_MSG_ERROR([no suitable subsecond time function found])
+  fi
+fi
+
+dnl Add windows libraries for GLUT even if not needed
+AC_MSG_CHECKING([Add windows libraries for GLUT even if not needed])
+if test x"$WIN_BUILD" = x"yes" ; then
+    GLUT_EXTRA_LIBS="-lwinmm -lgdi32"; AC_MSG_RESULT([yes])
+else
+    GLUT_EXTRA_LIBS=""; AC_MSG_RESULT([no])
 fi
 
 AC_CHECK_LIB([m], [acos])
@@ -160,6 +177,8 @@ else
    echo "*********************************************"
    echo
 fi
+
+GLUT_LIBS="$GLUT_LIBS $GLUT_EXTRA_LIBS"
 
 AC_SUBST(GLUT_LIBS)
 AC_SUBST(GLUT_CFLAGS)
