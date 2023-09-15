@@ -437,7 +437,7 @@ Isohedral Deltahedra Special Cases
   -c <type> compound cases (a thru f from Shephard's paper)
               a - tetrahedron repeated k times, evenly spaced
                      when k=1 tetrahedron, when k=2 Stella Octangula
-                     Uniform Compound Set UC23 when n/d is 2/1
+                     Uniform Compound Set UC22 when n/d is 2/1 and angle 0
               b - 5 or 10 tetrahedra
                      s=1 icosahedral, s=2 with horizontal reflection
                      Uniform Compounds UC05 and UC06
@@ -457,10 +457,10 @@ Isohedral Deltahedra Special Cases
           additional cases:
               g - 2 tetrahedra using -a angle (default: 45.0)
                      At 45.0 degrees is Uniform Compound UC04
-                     Uniform Compound Set UC23 when n/d is 2/1 and k=1
+                     Uniform Compound Set UC22 when n/d is 2/1 and k=1
               h - 2 tetrahedra repeated k times, evenly spaced
                      using -a angle (default: 1.0)
-                     Uniform Compound Set UC23 when n/d is 2/1 for any k
+                     Uniform Compound Set UC22 when n/d is 2/1 for any k
               i - 6 tetrahedra using -a angle (default: 45.0)
                      Uniform Compound UC01. At 45.0 degrees is UC03
               j - 12 tetrahedra using -a angle (default: 30.0)
@@ -1304,8 +1304,15 @@ void compound_coloring(Geometry &geom, const id_opts &opts)
     clrng.set_geom(&geom);
 
     if (opts.coloring_method == 'c') {
-      // color by constituents
-      clrng.f_parts(true);
+      // cases h and k has doubled parts, but color by compound wipes it out
+      if (opts.case_type == "h" || opts.case_type == "k") {
+        ColorMap *cmap = colormap_from_name("compound");
+        clrng.add_cmap(cmap);
+        clrng.f_apply_cmap();
+      }
+      else
+        // color by constituents
+        clrng.f_parts(true);
     }
     else if (opts.coloring_method == 's') {
       Symmetry sym;

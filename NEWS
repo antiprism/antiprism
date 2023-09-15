@@ -6,6 +6,7 @@ XX-XX-23 Adrian Rossiter <adrian@antiprism.com>
          Changes
          Fixes
            build: antiview CXXFLAGS and library linking order
+           iso_delta: cases h and k parts colored in pairs
 
 Version 0.31
 08-07-23 Adrian Rossiter <adrian@antiprism.com>
