@@ -215,7 +215,7 @@ Options
                      into to values
   -l <file> lights for colouring type L in a file in OFF format, each
             vertex and its colour gives a light direction and colour
-            (default: a set of six lights giving a rainbow colouring
+            (default: a set of six lights giving a rainbow colouring)
   -m <maps> a comma separated list of colour maps used to transform colour
             indexes (default: spread), a part consisting of letters from
             v, e, f, selects the element types to apply the map list to

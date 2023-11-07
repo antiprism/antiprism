@@ -552,7 +552,7 @@ Status Color::read_hexvals(const char *str)
 
 Status Color::read_hsva_vals(const char *str)
 {
-  if (strlen(str) == 0)
+  if (strlen(str) < 2)
     return Status::error("hsva format: no format given");
   if (str[0] != 'h' && str[0] != 'H')
     return Status::error("hsva format: does not start with H or h");

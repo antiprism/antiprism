@@ -1197,7 +1197,8 @@ Red, Green, Blue and Alpha components (RGBA):
    3 or 4 integers separated by commas in the range 0 - 255
        (e.g. orange is '255,128,0')
    x (or X or #) followed by 3 or 4 pairs of hexadecimal integers
-       (e.g. orange is 'xFF8000')
+       (e.g. orange is 'xFF8000', 'x' alone, is transparent black and is
+        a shortcut for 'invisible') 
 Hue, Saturation, Value and Alpha components (HSVA):
    H or h, immediately followed by 3 or 4 decimal numbers separated by
    commas in the range 0.0-1.0. For initial h the hue has range
@@ -1220,8 +1221,9 @@ The names are those used in X11's rgb.txt. The list of colours is also
 given in the Antiprism X11 colour map file included with the
 resources. Other names: 'invisible' corresponds to transparent black,
 and is used to indicate that display elements should be excluded from
-display; 'none' is a colour with no colour data, setting an element to
-this colour removes any colour data for the element
+display (a colour value of 'x' can also be used for 'invisible'); 'none'
+is a colour with no colour data, setting an element to this colour removes
+any colour data for the element
 
 The colour names are (with their integer RGB description):
 
