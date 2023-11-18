@@ -173,14 +173,14 @@ Color Blending Options (for option -d, -M 1,2)
   -y        RYB mode. Blend colors as in Red-Yellow-Blue color wheel
 
 Coloring Options (run 'off_util -H color' for help on color formats)
-  -f <opt>  take face colors from map (processed before -d)
+  -F <opt>  take face colors from map (processed before -d)
                n - unique color for faces with same normals
                p - unique color for faces on same planes only
                o - unique color for faces on same and opposite normals
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
   -Z <col>  color for areas found colorless by winding (default: invisible)
                keyword: b - force a color blend
-  -W <opt>  color by winding number, using maps (overrides option -f)
+  -W <opt>  color by winding number, using maps (overrides option -F)
                w - use actual winding number
                a - absolute value of winding number
                n - negative of absolute value of winding number
@@ -205,7 +205,7 @@ void planar_opts::process_command_line(int argc, char **argv)
 
   while ((c = getopt(
               argc, argv,
-              ":hd:p:w:zVO:HC:SRrIe:E:Db:M:s:t:v:u:a:cyf:T:m:Z:W:n:l:o:")) !=
+              ":hd:p:w:zVO:HC:SRrIe:E:Db:M:s:t:v:u:a:cyF:T:m:Z:W:n:l:o:")) !=
          -1) {
     if (common_opts(c, optopt))
       continue;
@@ -387,7 +387,7 @@ void planar_opts::process_command_line(int argc, char **argv)
       ryb_mode = true;
       break;
 
-    case 'f':
+    case 'F':
       if (strlen(optarg) != 1 || !strchr("npo", *optarg))
         error("color method must be n, p or o", c);
       face_color_method = *optarg;

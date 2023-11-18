@@ -21,12 +21,12 @@
 <<EXAMPLES_START>>
 list of 59 tetrahedra with rational dihedral angles in integer factors
 <<CMDS_START>>
-tetra59 -l int
+tetra59 -L int
 <<CMDS_END>>
 
 list of 59 tetrahedra with rational dihedral angles in degrees
 <<CMDS_START>>
-tetra59 -l deg
+tetra59 -L deg
 <<CMDS_END>>
 
 display a tetrahedra
@@ -36,7 +36,7 @@ tetra59 12 | antiview -v 0.01
 
 display a tetrahedra with a unique color given by its regge class
 <<CMDS_START>>
-tetra59 38 -f r | antiview -v 0.01
+tetra59 48 -F r | antiview -v 0.01
 <<CMDS_END>>
 
 display special case 2 tetrahedron with angle set at 40 degrees

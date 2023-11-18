@@ -21,7 +21,7 @@
 <<EXAMPLES_START>>
 Make truncated cuboctahedron and pass to poly_form to make unit edges
 <<CMDS_START>>
-conway dmO | poly_form -a r |  antiview
+conway dmO | poly_form -a r | antiview
 <<CMDS_END>>
 
 A truncated octahedron passed to canonical
@@ -63,7 +63,7 @@ conway L_2:3aC | antiview -v 0.01
 
 An interesting result with what looks like star polygons
 <<CMDS_START>>
-conway L_2gC -f w | antiview -v 0.01
+conway L_2gC -F w | antiview -v 0.01
 <<CMDS_END>>
 
 <<EXAMPLES_END>>

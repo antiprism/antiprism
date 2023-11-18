@@ -37,38 +37,38 @@ n_icons -H | antiview
 The N-icon of 20 twisted 5 increments. The five surfaces are 
 colored with the default colors. No edges or vertices are shown.
 <<CMDS_START>>
-n_icons -n 20 -t 5 -f s | antiview
+n_icons -n 20 -t 5 -F s | antiview
 <<CMDS_END>>
 
 Same as above but only using colors red, orange, and yellow.
 <<CMDS_START>>
-n_icons -n 20 -t 5 -f s -m map_red:orange:yellow% | antiview
+n_icons -n 20 -t 5 -F s -m map_red:orange:yellow% | antiview
 <<CMDS_END>>
 
 Same as above but 50 percent transparent.
 <<CMDS_START>>
-n_icons -n 20 -t 5 -f s -m map_red:orange:yellow% -T 128 | antiview
+n_icons -n 20 -t 5 -F s -m map_red:orange:yellow% -T 128 | antiview
 <<CMDS_END>>
 
 The N-icon of 30 twisted 5 increments. The faces are colored 
 white and the edges are the default colors.
 <<CMDS_START>>
-n_icons -n 30 -t 5 -f n -m map_white%,f -e s | antiview -e 0.1 -v 0.1
+n_icons -n 30 -t 5 -F n -m map_white%,f -E s | antiview -e 0.1 -v 0.1
 <<CMDS_END>>
 
 The N-icon of 12/4 twisted 2 increments colored by compound.
 <<CMDS_START>>
-n_icons -n 12/4 -t 2 -f c | antiview
+n_icons -n 12/4 -t 2 -F c | antiview
 <<CMDS_END>>
 
 The N-icon of 12/4 twisted 4 increments colored by compound. Shell model is created and 3/4 open to view interior.
 <<CMDS_START>>
-n_icons -n 12/4 -t 2 -f c -z 2 -M 36,27 | antiview
+n_icons -n 12/4 -t 2 -F c -z 2 -M 36,27 | antiview
 <<CMDS_END>>
 
 The N-icon of 12/4 twisted 4 increments colored by compound. Star polygon model is created and 3/4 open to view interior.
 <<CMDS_START>>
-n_icons -n 12/4 -t 2 -f c -z 3 -M 36,27 | antiview
+n_icons -n 12/4 -t 2 -F c -z 3 -M 36,27 | antiview
 <<CMDS_END>>
 
 The reporting subsystem is used. A list of even order N-icons with 

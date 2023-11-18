@@ -29,6 +29,7 @@
 */
 
 #include "../base/antiprism.h"
+#include "color_common.h"
 #include "lat_util_common.h"
 
 #include <string>
@@ -247,65 +248,66 @@ Options
   -H        additional help
   -W        verbose output
   -l <lim>  minimum distance for unique vertex locations as negative exponent
-               (default: %d giving %.0e)
+              (default: %d giving %.0e)
   -o <file> write output to file (default: write to standard output)
 
 Lattice Options
   -v <v,n>  vector lengths, non-zero, in form "a,b,c" (default: calculated)
-               optional fourth number, vectors taken to root n
+              optional fourth number, vectors taken to root n
   -a <angs> angles in the form "alpha,beta,gamma". Ignored for Orthorhombic,
-               Tetragonal, and Cubic. For Hexagonal, any non-90 position may be
-               120. Otherwise, if not supplied then random angles are chosen.
-               Angles cannot be zero or 180. Angles may be negative values.
-               alpha + beta + gamma must be less than 360. Each angle must be
-               less than or equal to the sum of the other two angles
+              Tetragonal, and Cubic. For Hexagonal, any non-90 position may be
+              120. Otherwise, if not supplied then random angles are chosen.
+              Angles cannot be zero or 180. Angles may be negative values.
+              alpha + beta + gamma must be less than 360. Each angle must be
+              less than or equal to the sum of the other two angles
   -g <grid> cell grid array. one or three positive integers separated by commas
-               a - automatic, of sufficient size for radius (-G required)
-               one integer, NxNxN grid. (default: calculated)
-               three integers, IxJxK grid. Combinations for grid center:
-               even,even,even - on cell corner    odd,odd,odd - in cell body
-               even,odd,even - on cell mid-edge   odd,even,odd - on face center
+              a - automatic, of sufficient size for radius (-G required)
+              one integer, NxNxN grid. (default: calculated)
+              three integers, IxJxK grid. Combinations for grid center:
+              even,even,even - on cell corner    odd,odd,odd - in cell body
+              even,odd,even - on cell mid-edge   odd,even,odd - on face center
   -G <type> automatic grid center type (type 8 invalid for cell centering = P):
-               p - corner, i - body, f - face, e - mid-edge, 8 - eighth cell
+              p - corner, i - body, f - face, e - mid-edge, 8 - eighth cell
   -I        inversion (centering type F or I)
   -d <vrts> output dual of lattice based on primitive vectors
-               c - use primitive vectors base on centering type
-               four integers - primitive vectors are determined by four vertex
-                 numbers given by non negative integers. The first vertex
-                 number is the radial point and the next three vertices are the
-                 primitive vectors
+              c - use primitive vectors base on centering type
+              four integers - primitive vectors are determined by four vertex
+                numbers given by non negative integers. The first vertex
+                number is the radial point and the next three vertices are the
+                primitive vectors
   -u        add cell struts. Added to cubic grid before transformation
   -s <s,n>  create struts. s is strut length taken to optional root n
-               use multiple -s parameters for multiple struts
+              use multiple -s parameters for multiple struts
   -D <opt>  Voronoi (a.k.a Dirichlet) cells (Brillouin zones for duals)
-               c - cells only, i - cell(s) touching center only
+              c - cells only, i - cell(s) touching center only
   -A        append the original lattice to the final product
 
 Container Options
   -c <type> container s - sphere (uses radius) (default: none)
   -k <file> container, convex hull of off file or built in model (uses radius)
   -r <c,n>  radius. c is radius taken to optional root n. n = 2 is sqrt
-               or  l - max insphere radius, s - min insphere radius (default)
-               or  k - take radius from container specified by -k
+              or  l - max insphere radius, s - min insphere radius (default)
+              or  k - take radius from container specified by -k
   -p <xyz>  radius to lattice, three comma separated coordinates, 0 for origin
   -q <xyz>  center offset, three comma separated coordinates, 0 for origin
   -C <opt>  c - convex hull only, i - keep interior
 
 Coloring Options (run 'off_util -H color' for help on color formats)
   -V <col>  vertex color, (optional) transparency, (optional) elements
-               transparency: valid range from 0 (invisible) to 255 (opaque)
-               elements to color are l - lattice, c - convex hull, v - voronoi
-                                     h - hex relation (default elements: lcvh)
+              transparency: valid range from 0 (invisible) to 255 (opaque)
+              elements to color are l - lattice, c - convex hull, v - voronoi
+                                    h - hex relation (default elements: lcvh)
   -E <col>  edge color (same format as for vertices)
   -F <col>  face color (same format as for vertices) or
-               keyword: s,S color by symmetry using face normals
-               keyword: c,C color by symmetry using face normals (chiral)
-               lower case outputs map indexes. upper case outputs color values
+              special coloring: calculates color from normals, not maps
+              lower case outputs map indexes. upper case outputs color values
+              y,Y - color by symmetry using face normals
+              z,Z - color by symmetry using face normals (chiral)
   -T <tran> face transparency for color by symmetry. valid range from 0 to 255
 
 Scene Options
   -R <opt>  hexagonal/cubic relation (Cubic P or Trigonal only)
-               o - hex overlay, f - hex fill, O - cube overlay, F - cube fill
+              o - hex overlay, f - hex fill, O - cube overlay, F - cube fill
   -O        translate centroid of final product to origin
   -Z <col>  add centroid vertex to final product in color col
   -K        append cage of container of -k to final product
@@ -313,11 +315,11 @@ Scene Options
 Listing Options
   -B        display the list of Bravais lattices
   -Q <vecs> center for radius calculations in -L (default: centroid)
-               c - original center, o - original center + offset in -q
+              c - original center, o - original center + offset in -q
   -L <opt>  list unique radial distances of points (to standard output)
-               f - full report, v - values only
+              f - full report, v - values only
   -S <opt>  list every possible strut value (to standard output)
-               f - full report, v - values only
+              f - full report, v - values only
 
 )",
           prog_name(), help_ver_text, int(-log(anti::epsilon) / log(10) + 0.5),
@@ -557,7 +559,7 @@ void brav_opts::process_command_line(int argc, char **argv)
 
     case 'F': {
       Split parts(optarg, ",");
-      if ((!strcasecmp(parts[0], "s")) || (!strcasecmp(parts[0], "c")))
+      if (strlen(parts[0]) == 1 && strchr("yYzZ", parts[0][0]))
         color_method = parts[0][0];
       else
         parse_color_string(this, optarg, c, "lcvh", face_col);

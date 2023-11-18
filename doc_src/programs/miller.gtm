@@ -26,7 +26,7 @@ miller 9 | antiview
 
 View the E shell with face and edge connectivity by color
 <<CMDS_START>>
-miller m_E -F C -E C -V e | antiview -v 0.05
+miller m_E -F h -E n -V e | antiview -v 0.05
 <<CMDS_END>>
 <<EXAMPLES_END>>
 

@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2017-2022, Roger Kaufman
+   Copyright (c) 2017-2023, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -29,7 +29,7 @@
 */
 
 #include "../base/antiprism.h"
-#include "stellate_common.h"
+#include "color_common.h"
 
 #include <cstdio>
 #include <map>
@@ -55,17 +55,13 @@ public:
 
   double eps = anti::epsilon;
 
-  char vertex_coloring_method = '\0'; // e
-  char edge_coloring_method = '\0';   // f,C
-  char face_coloring_method = '\0';   // d,s,c,C
+  // map name is used to pass to stellation function
+  string map_string = "compound";
 
-  Color vertex_color = Color::invisible;
-  Color edge_color = Color::invisible;
-  // goldenrod1: Color(255,193,37) ... from George Hart, Color(1.0,0.7,0.1)
-  Color face_color = Color(255, 193, 37);
+  // internal colorings are needed for local coloring
+  OffColor off_color = OffColor(map_string);
 
-  string map_string = "compound"; // default map name
-  int face_opacity = -1;          // transparency from 0 to 255
+  int face_opacity = -1; // tranparency from 0 to 255
 
   miller_opts() : ProgramOpts("miller") {}
 
@@ -87,7 +83,7 @@ Options
 %s
   -L        list models only
   -l <lim>  minimum distance for unique vertex locations as negative exponent
-               (default: %d giving %.0e)
+              (default: %d giving %.0e)
   -o <file> write output to file (default: write to standard output)
 
 Program Options
@@ -98,25 +94,29 @@ Scene Options
   -O <args> output s - stellation, d - diagram (default: s)
 
 Coloring Options (run 'off_util -H color' for help on color formats)
-  -V <col>  vertex color (default: invisible)
-               keyword: none - sets no color
-               e - color with average adjacent edge color
-               f - color with average adjacent face color
-               n - order of vertex
-  -E <col>  edge color (default: invisible)
-               keyword: none - sets no color
-               f - color with average adjacent face color
-               C - edge/face connection count
-  -F <col>  face color. Or use method for using color in map
-               (default: 255,193,37, if compound then c)
-               keyword: none - sets no color
-               d - from diagram
-               s - symmetry
-               c - color by compound
-               C - face/face connection count
+keyword: none - sets no color
+  -F <col>  color the faces according to: (default: 255,193,37, if compound, k)
+              a color value - apply to all faces
+              k - sets of faces connected by face edges (compounds)
+              s - symmetric colouring [,sub_group,conj_type]
+              q - from stellation diagram
+              h - face/face connection count (model is altered with kis)
+  -E <col>  color the edges according to: (default: invisible)
+              a color value - apply to all edges
+              f - color with average adjacent face color
+              n - colour by number of faces connected to each edge
+  -V <col>  color the vertices according to: (default: invisible)
+              a color value - apply to all vertices
+              e - color with average adjacent edge color
+              f - color with average adjacent face color
+              n - color by order of vertex
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
-  -m <maps> color maps. stellation diagram or face symmetry (default: compound)
-
+  -m <maps> a comma separated list of color maps used to transform color
+            indexes (default: compound), a part consisting of letters from
+            v, e, f, selects the element types to apply the map list to
+            (default 'vef'). use map name of 'index' to output index numbers
+              compound:   yellow,red,darkgreen,blue,magenta,cyan,darkorange1
+            
 )",
           prog_name(), help_ver_text, int(-log(anti::epsilon) / log(10) + 0.5),
           anti::epsilon);
@@ -126,6 +126,12 @@ void miller_opts::process_command_line(int argc, char **argv)
 {
   opterr = 0;
   int c;
+
+  Split parts;
+  Color col;
+
+  off_color.set_e_col(Color::invisible);
+  off_color.set_v_col(Color::invisible);
 
   handle_long_opts(argc, argv);
 
@@ -156,35 +162,72 @@ void miller_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'V':
-      if (strlen(optarg) == 1 && strchr("efn", int(*optarg)))
-        vertex_coloring_method = *optarg;
+      if (col.read(optarg)) {
+        off_color.set_v_col(col);
+        break;
+      }
+      parts.init(optarg, ",");
+      if (off_color.v_op_check((char *)parts[0], "efn"))
+        off_color.set_v_col_op(*parts[0]);
       else
-        print_status_or_exit(vertex_color.read(optarg), c);
+        error("invalid coloring", c);
+
+      if (!((strchr("sS", off_color.get_v_col_op()) && parts.size() < 4) ||
+            parts.size() < 2))
+        error("too many comma separated parts", c);
+
+      if (strchr("sS", off_color.get_v_col_op()))
+        off_color.set_v_sub_sym(strlen(optarg) > 2 ? optarg + 2 : "");
       break;
 
     case 'E':
-      if (strlen(optarg) == 1 && strchr("fC", int(*optarg)))
-        edge_coloring_method = *optarg;
+      if (col.read(optarg)) {
+        off_color.set_e_col(col);
+        break;
+      }
+      parts.init(optarg, ",");
+      if (off_color.e_op_check((char *)parts[0], "fn"))
+        off_color.set_e_col_op(*parts[0]);
       else
-        print_status_or_exit(edge_color.read(optarg), c);
+        error("invalid coloring", c);
+
+      if (!((strchr("sS", off_color.get_e_col_op()) && parts.size() < 4) ||
+            parts.size() < 2))
+        error("too many comma separated parts", c);
+
+      if (strchr("sS", off_color.get_e_col_op()))
+        off_color.set_e_sub_sym(strlen(optarg) > 2 ? optarg + 2 : "");
       break;
 
     case 'F':
-      if (strlen(optarg) == 1 && strchr("dscC", int(*optarg)))
-        face_coloring_method = *optarg;
+      if (col.read(optarg)) {
+        off_color.set_f_col(col);
+        break;
+      }
+      parts.init(optarg, ",");
+      if (off_color.f_op_check((char *)parts[0], "ksqh"))
+        off_color.set_f_col_op(*parts[0]);
       else
-        print_status_or_exit(face_color.read(optarg), c);
+        error("invalid coloring", c);
+
+      if (!((strchr("sS", off_color.get_f_col_op()) && parts.size() < 4) ||
+            parts.size() < 2))
+        error("too many comma separated parts", c);
+
+      if (strchr("sS", off_color.get_f_col_op()))
+        off_color.set_f_sub_sym(strlen(optarg) > 2 ? optarg + 2 : "");
       break;
 
     case 'T':
       print_status_or_exit(read_int(optarg, &face_opacity), c);
-      if (face_opacity < 0 || face_opacity > 255) {
+      if (face_opacity < 0 || face_opacity > 255)
         error("face transparency must be between 0 and 255", c);
-      }
       break;
 
     case 'm':
+      // keep map name to pass to stellation function
       map_string = optarg;
+      print_status_or_exit(read_colorings(off_color.clrngs, optarg), c);
       break;
 
     case 'l':
@@ -209,6 +252,30 @@ void miller_opts::process_command_line(int argc, char **argv)
 
   if (argc - optind == 1)
     ifile = argv[optind];
+}
+
+void color_stellation(Geometry &geom, miller_opts &opts)
+{
+  char op = opts.off_color.get_f_col_op();
+
+  // any other color options done by class
+  // will color edges invisible if so set
+  Status stat;
+  if (!(stat = opts.off_color.off_color_main(geom)))
+    opts.error(stat.msg());
+
+  // this must go after off_color_main since 'hH' creates new invisible edges
+  // geom is built with face colors from the diagram, if 'q' do nothing
+  if (op && !strchr("qQ", op)) {
+    if (op && strchr("hH", op))
+      color_faces_by_connection(geom, opts.off_color.clrngs[2], (op == 'H'));
+  }
+
+  if (opts.face_opacity > -1) {
+    Status stat = apply_transparency(geom, opts.face_opacity);
+    if (!stat.is_ok())
+      opts.warning(stat.msg(), 'T');
+  }
 }
 
 struct MillerItem {
@@ -406,14 +473,14 @@ vector<string> decode_cell_string(string cell_str)
   cell["e2-"] = "0,20,51,52";
   cell["f2-"] = "0,16,34"; // same
   cell["g2-"] = "0,5,49,55,64";
-// clang-format off
+  // clang-format on
 
   // code
   vector<string> diagram_list_strings;
-  
+
   int len = cell_str.length();
   int len_cnt = len;
-  
+
   // quick check that only valid characters are in the string
   size_t pos = cell_str.find_first_not_of("ABCDEFGHefg12'+-");
   if (pos != string::npos) {
@@ -423,29 +490,35 @@ vector<string> decode_cell_string(string cell_str)
   }
 
   while (len_cnt > 0) {
-    string cell_substr = cell_str.substr(len-len_cnt);
+    string cell_substr = cell_str.substr(len - len_cnt);
     string part;
     int part_len = 0;
     size_t pos = cell_substr.find_first_of("ABCDEFGH");
     if (pos != string::npos) {
-      if (pos+1 <= cell_substr.size())
-        part_len = (cell_substr.substr(pos+1,1).find_first_of("'+-") != string::npos) ? 2 : 1;
+      if (pos + 1 <= cell_substr.size())
+        part_len = (cell_substr.substr(pos + 1, 1).find_first_of("'+-") !=
+                    string::npos)
+                       ? 2
+                       : 1;
     }
     else {
       pos = cell_substr.find_first_of("efg");
       if (pos != string::npos) {
-        if (pos+2 <= cell_substr.size())
-          part_len = (cell_substr.substr(pos+2,1).find_first_of("'+-") != string::npos) ? 3 : 2;
+        if (pos + 2 <= cell_substr.size())
+          part_len = (cell_substr.substr(pos + 2, 1).find_first_of("'+-") !=
+                      string::npos)
+                         ? 3
+                         : 2;
       }
     }
     if (part_len) {
       if (pos <= cell_substr.size())
-        part = cell_substr.substr(pos,part_len);
-      len_cnt-=part_len;
+        part = cell_substr.substr(pos, part_len);
+      len_cnt -= part_len;
     }
 
-//fprintf(stderr,"part = '%s'\n", part.c_str());
-//fprintf(stderr,"cell[part] = %s\n", cell[part].c_str());
+    // fprintf(stderr,"part = '%s'\n", part.c_str());
+    // fprintf(stderr,"cell[part] = %s\n", cell[part].c_str());
 
     // if not found, return empty string list
     if (!cell[part].length()) {
@@ -461,7 +534,8 @@ vector<string> decode_cell_string(string cell_str)
   return (diagram_list_strings);
 }
 
-int Miller::get_poly(Geometry &geom, int sym, string cell_str, string sym_str, map<int, Geometry> &diagrams, miller_opts &opts)
+int Miller::get_poly(Geometry &geom, int sym, string cell_str, string sym_str,
+                     map<int, Geometry> &diagrams, miller_opts &opts)
 {
   geom.read_resource("ico");
 
@@ -474,7 +548,8 @@ int Miller::get_poly(Geometry &geom, int sym, string cell_str, string sym_str, m
     if (!sym_str.length())
       sym_str = "Ih";
   }
-  fprintf(stderr,"%s,%s\n", cell_str.c_str(), sym_str.c_str()); 
+  fprintf(stderr, "cell string = %s symmetry = %s\n", cell_str.c_str(),
+          sym_str.c_str());
 
   vector<string> diagram_list_strings = decode_cell_string(cell_str);
   // if list is empty, code string was invalid
@@ -482,31 +557,35 @@ int Miller::get_poly(Geometry &geom, int sym, string cell_str, string sym_str, m
   if (!sz)
     return -1;
 
-  vector<vector<int> > idx_lists(sz);
+  vector<vector<int>> idx_lists(sz);
 
   // data sizes are verified
   for (unsigned int i = 0; i < diagram_list_strings.size(); i++) {
     if (!diagram_list_strings[i].length())
       continue;
 
-    read_idx_list((char *)diagram_list_strings[i].c_str(), idx_lists[i], std::numeric_limits<int>::max(), false);
+    read_idx_list((char *)diagram_list_strings[i].c_str(), idx_lists[i],
+                  std::numeric_limits<int>::max(), false);
 
     // stellation face index is in the first position
     int stellation_face_idx = idx_lists[i][0];
 
     // construct the diagrams
     if (!diagrams[stellation_face_idx].verts().size())
-      diagrams[stellation_face_idx] = make_stellation_diagram(geom, stellation_face_idx, sym_str);
+      diagrams[stellation_face_idx] =
+          make_stellation_diagram(geom, stellation_face_idx, sym_str);
   }
 
-  bool merge_faces = (sym > -1) ? Miller_items[sym].merge_faces : opts.merge_faces;
+  bool merge_faces =
+      (sym > -1) ? Miller_items[sym].merge_faces : opts.merge_faces;
   bool remove_inline_verts = Miller_items[sym].remove_inline_verts;
   bool split_pinched = true;
   bool resolve_faces = true;
   bool remove_multiples = true;
 
-  geom = make_stellation(geom, diagrams, idx_lists, sym_str, merge_faces, remove_inline_verts,
-                         split_pinched, resolve_faces, remove_multiples, opts.map_string, opts.eps);
+  geom = make_stellation(geom, diagrams, idx_lists, sym_str, merge_faces,
+                         remove_inline_verts, split_pinched, resolve_faces,
+                         remove_multiples, opts.map_string, opts.eps);
 
   vector<vector<int>> idx_lists_full =
       lists_full(diagrams, idx_lists, remove_multiples);
@@ -548,8 +627,7 @@ int make_resource_miller(Geometry &geom, string name, miller_opts &opts,
   // check if it is just the index number, if so format as m%d
   if (read_int(name.c_str(), &sym_no))
     name = "m" + std::to_string(sym_no);
-  else
-  if (name.size() < 2 || !strchr("mM", name[0])) {
+  else if (name.size() < 2 || !strchr("mM", name[0])) {
     if (error_msg)
       *error_msg = "miller number and name designations start with m";
     return -1; // not miller name
@@ -572,7 +650,7 @@ int make_resource_miller(Geometry &geom, string name, miller_opts &opts,
     cell_str = name.substr(2);
     size_t pos = cell_str.find_first_of(",");
     if (pos != string::npos) {
-      sym_str = cell_str.substr(pos+1);
+      sym_str = cell_str.substr(pos + 1);
       if (sym_str.length()) {
         if (sym_str != "I" && sym_str != "Ih") {
           if (error_msg)
@@ -580,7 +658,7 @@ int make_resource_miller(Geometry &geom, string name, miller_opts &opts,
           return -1; // fail
         }
       }
-      cell_str = cell_str.substr(0,pos);
+      cell_str = cell_str.substr(0, pos);
     }
   }
   else {
@@ -604,19 +682,17 @@ int make_resource_miller(Geometry &geom, string name, miller_opts &opts,
   }
 
   // if coloring method not set
-  if (!opts.face_coloring_method) {
+  if (!opts.off_color.get_f_col_op()) {
     // check if it is a compound
     GeometryInfo info(geom);
     if (info.num_parts() > 1)
-      opts.face_coloring_method = 'c';
+      opts.off_color.set_f_col_op('k');
+    else
+      // goldenrod1: Color(255,193,37) ... from George Hart, Color(1.0,0.7,0.1)
+      opts.off_color.set_f_col(Color(255, 193, 37));
   }
-  
-  color_stellation(geom, opts.face_coloring_method,
-                      opts.edge_coloring_method,
-                      opts.vertex_coloring_method,
-                      opts.face_color, opts.edge_color,
-                      opts.vertex_color, opts.face_opacity,
-                      opts.map_string, "miller");
+
+  color_stellation(geom, opts);
 
   // if only diagram is being output, clear geom
   if (opts.output_parts.find_first_of("s") == string::npos)
@@ -644,7 +720,7 @@ int try_miller(Geometry &geom, miller_opts &opts, string *error_msg = nullptr)
 {
   string name = opts.ifile;
   int idx = make_resource_miller(geom, name, opts, error_msg);
-  return(idx);
+  return (idx);
 }
 
 int main(int argc, char *argv[])

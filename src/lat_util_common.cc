@@ -32,7 +32,6 @@
 #include "../base/antiprism.h"
 
 #include <cstdio>
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -453,102 +452,6 @@ int get_voronoi_geom(Geometry &geom, Geometry &vgeom, const bool central_cells,
   }
 
   return 1;
-}
-
-// Rotational octahedral by Adrian Rossiter
-Vec3d sort_Vec3d_chiral(const Vec3d &v, const double eps)
-{
-  Vec3d c = v;
-  // Rotate into positive octant
-  if (c[0] < 0) {
-    c[0] = -c[0];
-    c[2] = -c[2];
-  }
-  if (c[1] < 0) {
-    c[1] = -c[1];
-    c[2] = -c[2];
-  }
-  if (c[2] < 0) {
-    std::swap(c[0], c[1]);
-    c[2] = -c[2];
-  }
-
-  // if c[1] is maximum rotate to first place: 1,2,0
-  if (c[1] > c[0] && c[1] > c[2] - eps)
-    c = Vec3d(c[1], c[2], c[0]);
-  else
-    // if c[2] is maximum rotate to first place: 2,0,1
-    if (c[2] > c[0] && c[2] > c[1] + eps)
-      c = Vec3d(c[2], c[0], c[1]);
-    else
-      // if c[0] is maximum do nothing
-      c = Vec3d(c[0], c[1], c[2]);
-
-  // Check whether c is near negative triangle external boundary, and
-  // rotate to corresponding positive triangle boundary if so.
-  if (double_eq(c[0], c[1], eps))
-    c = Vec3d(c[1], c[0], c[2]);
-  if (double_eq(c[2], 0, eps))
-    c = Vec3d(c[0], -c[2], c[1]);
-
-  return c;
-}
-
-// sort an absolute value of Vec3d without altering original Vec3d
-Vec3d sort_Vec3d(Vec3d &v)
-{
-  vector<double> c;
-  c.push_back(fabs(v[0]));
-  c.push_back(fabs(v[1]));
-  c.push_back(fabs(v[2]));
-
-  sort(c.begin(), c.end());
-
-  return (Vec3d(c[0], c[1], c[2]));
-}
-
-void color_by_symmetry_normals(Geometry &geom, const char color_method,
-                               const int face_opacity, const double eps)
-{
-  const vector<vector<int>> &faces = geom.faces();
-  const vector<Vec3d> &verts = geom.verts();
-
-  string map_name = "rnd";
-  if (face_opacity > -1)
-    map_name += msg_str("_A%g", (double)face_opacity / 255);
-  std::unique_ptr<ColorMap> cmap(colormap_from_name(map_name.c_str()));
-
-  for (unsigned int i = 0; i < faces.size(); i++) {
-    Vec3d norm = face_norm(verts, faces[i]).unit();
-    if (color_method == 's' || color_method == 'S')
-      norm = sort_Vec3d(norm);
-    else if (color_method == 'c' || color_method == 'C')
-      norm = sort_Vec3d_chiral(norm, eps);
-
-    long idx = (long)(norm[0] * 1000000) + (long)(norm[1] * 10000) +
-               (long)norm[2] * 100;
-    if (color_method == 'S' || color_method == 'C')
-      geom.colors(FACES).set(i, cmap->get_col(idx));
-    else
-      geom.colors(FACES).set(i, idx);
-  }
-}
-
-void color_edges_by_sqrt(Geometry &geom, const char color_method)
-{
-  geom.add_missing_impl_edges();
-
-  std::unique_ptr<ColorMap> cmap(colormap_from_name("rnd"));
-  // e_coloring clrg(&geom);
-  for (unsigned int i = 0; i < geom.edges().size(); i++) {
-    // geom.colors(EDGES).set(i, int(floor(pow(geom.edge_len(i),2)+0.5)));
-    int idx = int(floor(pow(geom.edge_len(i), 2) + 0.5));
-    if (color_method == 'R')
-      geom.colors(EDGES).set(i, cmap->get_col(idx));
-    // geom.colors(EDGES).set(i,clrg.idx_to_rand_val(idx));
-    else
-      geom.colors(EDGES).set(i, idx);
-  }
 }
 
 void convex_hull_report(const Geometry &geom, const bool add_hull)

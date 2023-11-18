@@ -20,7 +20,7 @@ Options
 .HP
 \fB\-\-version\fR version information
 .TP
-\fB\-l\fR
+\fB\-L\fR
 display the list of Isohedral Deltahedra 1 thru 44
 .TP
 \fB\-t\fR
@@ -123,16 +123,37 @@ q \- 5 Excavated Octahedra O6(2)
 relaxed dual of Uniform Compounds UC58
 .PP
 Coloring Options (run 'off_util \fB\-H\fR color' for help on color formats)
-.HP
-\fB\-f\fR <mthd> mthd is face coloring method using color in map (default: c)
-.IP
 keyword: none \- sets no color
-c \- unique coloring for each compound constituent
-s \- symmetric coloring (should always be one color)
+.TP
+\fB\-F\fR <col>
+color the faces according to: (default: k)
+.IP
+a color value \- apply to all faces
+k \- sets of faces connected by face edges (compounds)
+s \- symmetric coloring [,sub_group,conj_type]
+.TP
+\fB\-E\fR <col>
+color the edges according to: (default: f)
+.IP
+a color value \- apply to all edges
+f \- color with average adjacent face color
+s \- symmetric coloring [,sub_group,conj_type]
+.TP
+\fB\-V\fR <col>
+color the vertices according to: (default: e)
+.IP
+a color value \- apply to all vertices
+e \- color with average adjacent edge color
+f \- color with average adjacent face color
+s \- symmetric coloring [,sub_group,conj_type]
 .HP
 \fB\-T\fR <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
 .HP
-\fB\-m\fR <maps> color maps for all elements to be tried in turn (default: compound)
+\fB\-m\fR <maps> a comma separated list of color maps used to transform color
+.IP
+indexes (default: compound), a part consisting of letters from
+v, e, f, selects the element types to apply the map list to
+(default 'vef'). use map name of 'index' to output index numbers
 .SH "SEE ALSO"
 The full documentation for
 .B iso_delta

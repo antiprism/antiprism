@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2008-2021, Roger Kaufman
+   Copyright (c) 2008-2023, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -35,16 +35,15 @@
 */
 
 #include "../base/antiprism.h"
+#include "color_common.h"
 
 #include <cctype>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
-#include <set>
 #include <string>
 #include <vector>
 
-using std::set;
 using std::string;
 using std::swap;
 using std::vector;
@@ -348,10 +347,6 @@ int id_poly::lookup_sym_no(string sym)
   for (int i = 0; i < last_iso_delta; i++) {
     if (sym_norm2 == iso_delta_item_list[i].name)
       return i;
-
-    if (idx < 0 && strncmp(sym_norm2.c_str(), iso_delta_item_list[i].name,
-                           sym_norm2.size()) == 0)
-      idx = i;
   }
 
   return idx;
@@ -391,12 +386,11 @@ public:
   int k = 0;                   // for number of constituents
   int s = 1;                   // for multiple subtypes
 
-  char coloring_method = 'c'; // color method for color by symmetry
-  int face_opacity = -1;      // tranparency from 0 to 255
-
   bool list_polys = false; // output the list of models to the screen
 
-  ColorMapMulti map;
+  OffColor off_color = OffColor("compound");
+
+  int face_opacity = -1; // tranparency from 0 to 255
 
   id_opts() : ProgramOpts("iso_delta") {}
 
@@ -419,7 +413,7 @@ and Adrian Rossiter (http://www.antiprism.com)
 
 Options
 %s
-  -l        display the list of Isohedral Deltahedra 1 thru 44
+  -L        display the list of Isohedral Deltahedra 1 thru 44
   -t        generate triangle only (Isohedral Deltahedra 1 to 44 and option -d)
   -v        verbose output (Isohedral Deltahedra 1 thru 44 and option -d)
   -o <file> write output to file (default: write to standard output)
@@ -454,7 +448,7 @@ Isohedral Deltahedra Special Cases
                           relaxed duals of Uniform Compounds UC34 & UC35
                      5/2: s=3 icosahedral, s=4 with horizontal reflection
                           relaxed duals of Uniform Compounds UC36 & UC37
-          additional cases:
+            additional cases:
               g - 2 tetrahedra using -a angle (default: 45.0)
                      At 45.0 degrees is Uniform Compound UC04
                      Uniform Compound Set UC22 when n/d is 2/1 and k=1
@@ -484,12 +478,25 @@ Isohedral Deltahedra Special Cases
                      relaxed dual of Uniform Compounds UC58
 
 Coloring Options (run 'off_util -H color' for help on color formats)
-  -f <mthd> mthd is face coloring method using color in map (default: c)
-              keyword: none - sets no color
-              c - unique coloring for each compound constituent
-              s - symmetric coloring (should always be one color)
+keyword: none - sets no color
+  -F <col>  color the faces according to: (default: k)
+              a color value - apply to all faces
+              k - sets of faces connected by face edges (compounds)
+              s - symmetric coloring [,sub_group,conj_type]
+  -E <col>  color the edges according to: (default: f)
+              a color value - apply to all edges
+              f - color with average adjacent face color
+              s - symmetric coloring [,sub_group,conj_type]
+  -V <col>  color the vertices according to: (default: e)
+              a color value - apply to all vertices
+              e - color with average adjacent edge color
+              f - color with average adjacent face color
+              s - symmetric coloring [,sub_group,conj_type]
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
-  -m <maps> color maps for all elements to be tried in turn (default: compound)
+  -m <maps> a comma separated list of color maps used to transform color
+            indexes (default: compound), a part consisting of letters from
+            v, e, f, selects the element types to apply the map list to
+            (default 'vef'). use map name of 'index' to output index numbers
 
 )",
           prog_name(), help_ver_text);
@@ -502,17 +509,24 @@ void id_opts::process_command_line(int argc, char **argv)
   opterr = 0;
   int c;
 
+  Split parts;
+  Color col;
+
+  off_color.set_f_col_op('k');
+  off_color.set_e_col_op('f');
+  off_color.set_v_col_op('e');
+
   bool s_is_set = false;
   string map_file;
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hldtvwc:n:a:k:s:f:T:m:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hLdtvwc:n:a:k:s:V:E:F:T:m:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
     switch (c) {
-    case 'l':
+    case 'L':
       list_polys = true;
       break;
 
@@ -576,24 +590,71 @@ void id_opts::process_command_line(int argc, char **argv)
       s_is_set = true;
       break;
 
-    case 'f':
-      if (!strcasecmp(optarg, "none"))
-        coloring_method = '\0';
-      else if (strspn(optarg, "cs") != strlen(optarg) || strlen(optarg) > 1)
-        error(msg_str("invalid Coloring method '%s'", optarg), c);
+    case 'V':
+      if (col.read(optarg)) {
+        off_color.set_v_col(col);
+        break;
+      }
+      parts.init(optarg, ",");
+      if (off_color.v_op_check((char *)parts[0], "efs"))
+        off_color.set_v_col_op(*parts[0]);
       else
-        coloring_method = *optarg;
+        error("invalid coloring", c);
+
+      if (!((strchr("sS", off_color.get_v_col_op()) && parts.size() < 4) ||
+            parts.size() < 2))
+        error("too many comma separated parts", c);
+
+      if (strchr("sS", off_color.get_v_col_op()))
+        off_color.set_v_sub_sym(strlen(optarg) > 2 ? optarg + 2 : "");
+      break;
+
+    case 'E':
+      if (col.read(optarg)) {
+        off_color.set_e_col(col);
+        break;
+      }
+      parts.init(optarg, ",");
+      if (off_color.e_op_check((char *)parts[0], "fs"))
+        off_color.set_e_col_op(*parts[0]);
+      else
+        error("invalid coloring", c);
+
+      if (!((strchr("sS", off_color.get_e_col_op()) && parts.size() < 4) ||
+            parts.size() < 2))
+        error("too many comma separated parts", c);
+
+      if (strchr("sS", off_color.get_e_col_op()))
+        off_color.set_e_sub_sym(strlen(optarg) > 2 ? optarg + 2 : "");
+      break;
+
+    case 'F':
+      if (col.read(optarg)) {
+        off_color.set_f_col(col);
+        break;
+      }
+      parts.init(optarg, ",");
+      if (off_color.f_op_check((char *)parts[0], "ks"))
+        off_color.set_f_col_op(*parts[0]);
+      else
+        error("invalid coloring", c);
+
+      if (!((strchr("sS", off_color.get_f_col_op()) && parts.size() < 4) ||
+            parts.size() < 2))
+        error("too many comma separated parts", c);
+
+      if (strchr("sS", off_color.get_f_col_op()))
+        off_color.set_f_sub_sym(strlen(optarg) > 2 ? optarg + 2 : "");
       break;
 
     case 'T':
       print_status_or_exit(read_int(optarg, &face_opacity), c);
-      if (face_opacity < 0 || face_opacity > 255) {
+      if (face_opacity < 0 || face_opacity > 255)
         error("face transparency must be between 0 and 255", c);
-      }
       break;
 
     case 'm':
-      map_file = optarg;
+      print_status_or_exit(read_colorings(off_color.clrngs, optarg), c);
       break;
 
     case 'o':
@@ -659,16 +720,11 @@ void id_opts::process_command_line(int argc, char **argv)
 
   while (optind < argc) {
     poly += argv[optind];
-    poly += " ";
     optind++;
   }
 
   if (poly.length() != 0 && (case_type.length() || make_dipyramid))
     warning("polyhedron specifier ignored if using -c or -d", "polyhedron");
-
-  if (!map_file.size())
-    map_file = "compound";
-  print_status_or_exit(map.init(map_file.c_str()), 'm');
 }
 
 void verbose_output(const Vec3d &A, const Vec3d &B, const Vec3d &C,
@@ -1290,47 +1346,18 @@ void case_q_5_excavated_octahedra(Geometry &geom, double angle)
   transform_and_repeat(geom, "I", "Oh", Trans3d::rotate(0, angle, 0));
 }
 
-void compound_coloring(Geometry &geom, const id_opts &opts)
+void apply_coloring(Geometry &geom, id_opts &opts)
 {
-  if (!opts.coloring_method) {
-    // no color, strip colors
-    geom.colors(FACES).clear();
-    geom.clear(EDGES);
-    geom.colors(VERTS).clear();
+  // any other color options done by class
+  Status stat;
+  if (!(stat = opts.off_color.off_color_main(geom)))
+    opts.error(stat.msg());
+
+  if (opts.face_opacity > -1) {
+    Status stat = apply_transparency(geom, opts.face_opacity);
+    if (!stat.is_ok())
+      opts.warning(stat.msg(), 'T');
   }
-  else {
-    Coloring clrng;
-    clrng.add_cmap(opts.map.clone());
-    clrng.set_geom(&geom);
-
-    if (opts.coloring_method == 'c') {
-      // cases h and k has doubled parts, but color by compound wipes it out
-      if (opts.case_type == "h" || opts.case_type == "k") {
-        ColorMap *cmap = colormap_from_name("compound");
-        clrng.add_cmap(cmap);
-        clrng.f_apply_cmap();
-      }
-      else
-        // color by constituents
-        clrng.f_parts(true);
-    }
-    else if (opts.coloring_method == 's') {
-      Symmetry sym;
-      vector<vector<set<int>>> sym_equivs;
-      sym.init(geom, &sym_equivs);
-      clrng.f_sets(sym_equivs[2], true);
-    }
-
-    // blend edges from faces
-    geom.add_missing_impl_edges();
-    clrng.e_from_adjacent(FACES);
-    clrng.v_from_adjacent(FACES);
-  }
-
-  // apply transparency
-  Status stat = Coloring(&geom).apply_transparency(opts.face_opacity);
-  if (stat.is_warning())
-    opts.warning(stat.msg(), 'T');
 }
 
 int main(int argc, char *argv[])
@@ -1447,7 +1474,7 @@ int main(int argc, char *argv[])
 
   geom.orient(1); // positive orientation
 
-  compound_coloring(geom, opts);
+  apply_coloring(geom, opts);
 
   opts.write_or_error(geom, opts.ofile);
 

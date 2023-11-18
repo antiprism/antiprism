@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2021, Roger Kaufman
+   Copyright (c) 2021-2023, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -33,16 +33,15 @@
 */
 
 #include "../base/antiprism.h"
+#include "color_common.h"
 
 #include <cctype>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
-#include <set>
 #include <string>
 #include <vector>
 
-using std::set;
 using std::string;
 using std::vector;
 
@@ -165,13 +164,23 @@ void tetra59::list_poly_deg(int idx, FILE *fp)
     deg_term[i] = round(deg_term[i]);
   }
 
-  fprintf(fp, "%2d) (%2g,%4g), (%2g,%4g), (%3g,%4g) %-20s\n", idx + 1,
+  fprintf(fp, "%2d) (%2g,%4g),  (%2g,%4g),  (%3g,%4g) %-20s\n", idx + 1,
           deg_term[0], deg_term[1], deg_term[2], deg_term[3], deg_term[4],
           deg_term[5], tetra59_items[idx].comment.c_str());
 }
 
 void tetra59::list_polys(int style, FILE *fp)
 {
+  fprintf(stderr, "=====================================================\n");
+  if (style == 1) {
+    fprintf(stderr, "Dihedral Angles of faces counted as 1,2,3,4    (Pi/N)\n");
+    fprintf(stderr, "         (a12,a34) (a13,a24) (a14,a23)\n");
+  }
+  else {
+    fprintf(stderr, "Dihedral Angles of faces counted as 1,2,3,4 (Degrees)\n");
+    fprintf(stderr, "    (a12,a34)   (a13,a24)   (a14,a23)\n");
+  }
+  fprintf(stderr, "=====================================================\n");
   int reg_group = 0;
   for (int i = 0; i < last_tetra59; i++) {
     if (reg_group != reg(i)) {
@@ -189,6 +198,7 @@ void tetra59::list_polys(int style, FILE *fp)
           (style == 1) ? "as multiples of pi/N" : "in degrees (rounded)");
   fprintf(fp, "An extra symbol indicates 15 previously known forms from\n");
   fprintf(fp, "V. G. Boltianskii, Hilbert's third problem, 1978\n");
+  fprintf(fp, "Values of terms 5 and 6 from the paper are reversed\n");
   fprintf(fp, "The cases without a symbol are newly discovered forms\n");
   fprintf(fp, "No cases of Regge group 6 were previously known\n");
 }
@@ -234,6 +244,9 @@ int tetra59::lookup_sym_no(string sym)
   int idx = strtol(sym_norm2.c_str(), &endptr, 10);
   if (!*endptr) // all of string is an integer
     return idx - 1;
+  else
+    // rk: there are non-digits in the input
+    return -1;
 
   return idx;
 }
@@ -266,25 +279,28 @@ public:
   string ifile;
   string ofile;
 
-  string poly;               // tetrahedron number 1 to 59
-  int s = 0;                 // for special cases 1 and 2
-  double angle = 45;         // angle for special cases (default 30 degrees)
+  string poly;                                    // tetrahedron number 1 to 59
+  int s = 0;                                      // for special cases 1 and 2
+  double angle = std::numeric_limits<int>::max(); // angle for special cases
+                                                  // (default 45 degrees)
   bool allow_angles = false; // -w switch allows all angles for case s
+
   bool reflect = false;      // make reflection model
   bool scale_volume = false; // scale volume to 1
   char dih_order = 'a';      // order of dihedral pairs
   int show_pair = 0;         // add dihedral pair to model of permutation
-  bool verbose = false;      // output edge math
-  bool verbose_face = false; // output face math
-  int list_polys = 0;        // output the list 0 - integers 1 -degrees
 
-  char coloring_method = 'u'; // color method for color by symmetry
-  int face_opacity = -1;      // tranparency from 0 to 255
+  int list_polys = 0; // output the list 1 - integers 2 -degrees
 
-  Color vert_col = Color(255, 215, 0);   // gold
-  Color edge_col = Color(211, 211, 211); // lightgray
+  // output edge and/or face math
+  bool verbose_edge_math = false;
+  bool verbose_face_math = false;
+  bool verbose_pair_math = false;
 
-  ColorMapMulti map;
+  // maps are managed
+  OffColor off_color = OffColor("");
+
+  int face_opacity = -1; // tranparency from 0 to 255
 
   tetra59_opts() : ProgramOpts("tetra59") {}
 
@@ -364,9 +380,8 @@ The first case was published by M.J.M Hill in 1895. The second case is new.
 Options
 %s
   -H        abstract from the paper and description of regge symmetry
-  -v        verbose output of edge math
-  -b        verbose output of face math
-  -l <int>  display the list of Sporadic Tetrahedra as integer=1, degrees=2
+  -v <opt>  verbose output math: e - edges, f - faces, p - pairs, a - all
+  -L <int>  display the list of Sporadic Tetrahedra as integer=1, degrees=2
   -o <file> write output to file (default: write to standard output)
 
 Scene Options
@@ -386,19 +401,29 @@ Special Cases
               case 2: (5pi/6 - x, pi/6 + x, 2pi/3 - x, 2pi/3 - x, x, x)
                         for pi/6 < x <= pi/3 (30 < x <= 60 degrees)
   -a <ang>  angle in degrees (default: 45)
-  -w        allow any angle for case s (for testing case 2, 60 < x < 90)
-
+  -w        allow any angle for case s (for testing case 2, 60 < x < 90
+              which seems to yield a tetrahedron) 
+           
 Coloring Options (run 'off_util -H color' for help on color formats)
-  -V <col>  vertex color (default: gold)
-  -E <col>  edge color   (default: lightgray)
-  -f <mthd> mthd is face coloring method using color in map (default: u)
-              keyword: none - sets no color
-              u - unique coloring
-              s - symmetric coloring
+keyword: none - sets no color
+  -F <col>  color the faces according to: (default: u)
+              a color value - apply to all faces
+              u - unique color
+              s - symmetric coloring [,sub_group,conj_type]
               r - regge group (1-16) (not for special cases)
+  -E <col>  color the edges according to: (default: lightgray)
+              a color value - apply to all edges
+              s - symmetric coloring [,sub_group,conj_type]
+  -V <col>  color the vertices according to: (default: gold)
+              a color value - apply to all vertices
+              s - symmetric coloring [,sub_group,conj_type]
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
-  -m <maps> color maps for faces to be tried in turn
-              (default for -f r: rainbow16, otherwise compound)
+  -m <maps> a comma separated list of color maps used to transform color
+            indexes (default: compound), a part consisting of letters from
+            v, e, f, selects the element types to apply the map list to
+            (default 'vef'). use map name of 'index' to output index numbers
+              compound:   yellow,red,darkgreen,blue,magenta,cyan,darkorange1
+              rainbow16:  (special map for -F r)
 
 )",
           prog_name(), help_ver_text);
@@ -408,13 +433,20 @@ void tetra59_opts::process_command_line(int argc, char **argv)
 {
   opterr = 0;
   int c;
-
   string arg_id;
-  string map_file;
+  string verbose;
+
+  Split parts;
+  Color col;
+  vector<string> map_files;
+
+  off_color.set_f_col_op('u');
+  off_color.set_e_col(Color(211, 211, 211)); // lightgray
+  off_color.set_v_col(Color(255, 215, 0));   // gold
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hHl:vbrzd:p:s:a:wf:V:E:T:m:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hHL:v:rzd:p:s:a:wV:E:F:T:m:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -423,18 +455,23 @@ void tetra59_opts::process_command_line(int argc, char **argv)
       extended_help();
       exit(0);
 
-    case 'l':
+    case 'L':
       print_status_or_exit(
           get_arg_id(optarg, &arg_id, "int=1|deg=2", argmatch_add_id_maps), c);
       list_polys = atoi(arg_id.c_str());
       break;
 
     case 'v':
-      verbose = true;
-      break;
-
-    case 'b':
-      verbose_face = true;
+      if (strspn(optarg, "efpa") != strlen(optarg))
+        error(msg_str("verbose listings are '%s' must be any or all from "
+                      "e, f, p, a",
+                      optarg),
+              c);
+      verbose = optarg;
+      // set booleans once
+      verbose_face_math = (verbose.find_first_of("fa") != string::npos);
+      verbose_edge_math = (verbose.find_first_of("ea") != string::npos);
+      verbose_pair_math = (verbose.find_first_of("pa") != string::npos);
       break;
 
     case 'r':
@@ -474,32 +511,71 @@ void tetra59_opts::process_command_line(int argc, char **argv)
       warning("using -w allows any angle for case s");
       break;
 
-    case 'f':
-      if (!strcasecmp(optarg, "none"))
-        coloring_method = '\0';
-      else if (strspn(optarg, "rs") != strlen(optarg) || strlen(optarg) > 1)
-        error(msg_str("invalid Coloring method '%s'", optarg), c);
-      else
-        coloring_method = *optarg;
-      break;
-
     case 'V':
-      print_status_or_exit(vert_col.read(optarg), c);
+      if (col.read(optarg)) {
+        off_color.set_v_col(col);
+        break;
+      }
+      parts.init(optarg, ",");
+      if (off_color.v_op_check((char *)parts[0], "s"))
+        off_color.set_v_col_op(*parts[0]);
+      else
+        error("invalid coloring", c);
+
+      if (!((strchr("sS", off_color.get_v_col_op()) && parts.size() < 4) ||
+            parts.size() < 2))
+        error("too many comma separated parts", c);
+
+      if (strchr("sS", off_color.get_v_col_op()))
+        off_color.set_v_sub_sym(strlen(optarg) > 2 ? optarg + 2 : "");
       break;
 
     case 'E':
-      print_status_or_exit(edge_col.read(optarg), c);
+      if (col.read(optarg)) {
+        off_color.set_e_col(col);
+        break;
+      }
+      parts.init(optarg, ",");
+      if (off_color.e_op_check((char *)parts[0], "s"))
+        off_color.set_e_col_op(*parts[0]);
+      else
+        error("invalid coloring", c);
+
+      if (!((strchr("sS", off_color.get_e_col_op()) && parts.size() < 4) ||
+            parts.size() < 2))
+        error("too many comma separated parts", c);
+
+      if (strchr("sS", off_color.get_e_col_op()))
+        off_color.set_e_sub_sym(strlen(optarg) > 2 ? optarg + 2 : "");
+      break;
+
+    case 'F':
+      if (col.read(optarg)) {
+        off_color.set_f_col(col);
+        break;
+      }
+      parts.init(optarg, ",");
+      if (off_color.f_op_check((char *)parts[0], "usr"))
+        off_color.set_f_col_op(*parts[0]);
+      else
+        error("invalid coloring", c);
+
+      if (!((strchr("sS", off_color.get_f_col_op()) && parts.size() < 4) ||
+            parts.size() < 2))
+        error("too many comma separated parts", c);
+
+      if (strchr("sS", off_color.get_f_col_op()))
+        off_color.set_f_sub_sym(strlen(optarg) > 2 ? optarg + 2 : "");
       break;
 
     case 'T':
       print_status_or_exit(read_int(optarg, &face_opacity), c);
-      if (face_opacity < 0 || face_opacity > 255) {
+      if (face_opacity < 0 || face_opacity > 255)
         error("face transparency must be between 0 and 255", c);
-      }
       break;
 
     case 'm':
-      map_file = optarg;
+      map_files.push_back(optarg);
       break;
 
     case 'o':
@@ -509,6 +585,38 @@ void tetra59_opts::process_command_line(int argc, char **argv)
     default:
       error("unknown command line error");
     }
+  }
+
+  if (argc == optind && !list_polys && !s)
+    error("no tetrahedron specified", "tetrahedron");
+
+  if (argc - optind > 1)
+    error("too many arguments");
+
+  if (argc - optind == 1)
+    poly = argv[optind];
+
+  if (s) {
+    // angle default if not set
+    if (angle == std::numeric_limits<int>::max()) {
+      angle = 45;
+      warning("angle default of 45 is set", 'a');
+    }
+
+    if (show_pair)
+      error("make dihedral pair is not valid for special cases", 'p');
+
+    char op = off_color.get_f_col_op();
+    if (op && strchr("rR", op)) {
+      warning("coloring by regge group has no effect for special cases", 'f');
+      off_color.set_f_col_op('u'); // set to default
+    }
+  }
+  else {
+    if (angle != std::numeric_limits<int>::max())
+      warning("angle has no effect for list cases", 'a');
+    if (allow_angles)
+      warning("allow angles has no effect for list cases", 'w');
   }
 
   if (!allow_angles) {
@@ -525,30 +633,26 @@ void tetra59_opts::process_command_line(int argc, char **argv)
   // convert angle to radians
   angle = deg2rad(angle);
 
-  if (argc == optind && !list_polys && !s)
-    error("no tetrahedron specified", "tetrahedron");
+  // set all maps in list
+  for (unsigned int i = 0; i < map_files.size(); i++)
+    print_status_or_exit(read_colorings(off_color.clrngs, map_files[i].c_str()),
+                         'm');
 
-  if (argc - optind > 1)
-    error("too many arguments");
-
-  if (argc - optind == 1)
-    poly = argv[optind];
-
-  if (show_pair && s)
-    error("make dihedral pair is not valid for special cases", 'p');
-
-  if (s && coloring_method == 'r') {
-    warning("coloring by regge group has no effect for special cases", 'f');
-    coloring_method = 'x';
+  // fill in missing maps
+  string default_map_name = "compound";
+  for (unsigned int i = 0; i < 3; i++) {
+    string map_name = default_map_name;
+    // if map is already set, skip
+    if (off_color.clrngs[i].get_cmaps().size())
+      continue;
+    // faces
+    else if (i == 2) {
+      char op = off_color.get_f_col_op();
+      if (op && strchr("rR", op))
+        map_name = "rainbow16";
+    }
+    off_color.clrngs[i].add_cmap(colormap_from_name(map_name.c_str()));
   }
-
-  if (!map_file.size()) {
-    if (coloring_method == 'r')
-      map_file = "rainbow16";
-    else
-      map_file = "compound";
-  }
-  print_status_or_exit(map.init(map_file.c_str()), 'm');
 }
 
 // convert cosine to degrees
@@ -595,7 +699,9 @@ Geometry make_poly(double a12, double a34, double a13, double a24, double a14,
   double angle314 = face_cos_a(a12, a13, a14);
 
   // clang-format off
-  if (opts.verbose_face) {
+  if (opts.verbose_face_math) {
+    fprintf(stderr, "\n====================================================\n");
+    fprintf(stderr, "Face Math:\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "P1 angle213 cos = % .17lf (%g deg)\n", angle213, cos2deg(angle213));
     fprintf(stderr, "P2 angle123 cos = % .17lf (%g deg)\n", angle123, cos2deg(angle123));
@@ -623,7 +729,9 @@ Geometry make_poly(double a12, double a34, double a13, double a24, double a14,
   }
   // clang-format on
 
-  if (opts.verbose) {
+  if (opts.verbose_edge_math) {
+    fprintf(stderr, "\n====================================================\n");
+    fprintf(stderr, "Edge Math:\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "dihedral angles at:\n");
     fprintf(stderr, "x (a12) = %.17lf (%g deg)\n", a12, rad2deg(a12));
@@ -642,7 +750,7 @@ Geometry make_poly(double a12, double a34, double a13, double a24, double a14,
   double edge24 = (edge12 / cos2sin(angle142)) * cos2sin(angle214); // info only
   double edge34 = (edge14 / cos2sin(angle134)) * cos2sin(angle314); // info only
 
-  if (opts.verbose) {
+  if (opts.verbose_edge_math) {
     fprintf(stderr, "\n");
     fprintf(stderr, "edge lengths:\n");
     fprintf(stderr, "x (e12) = %.17lf\n", edge12);
@@ -724,7 +832,7 @@ Geometry case59(int &regge_grp, vector<double> &dih,
   regge_grp = tetra59s.reg(sym_no);
 
   // output terms as reduced fractions of pi
-  if (opts.verbose || opts.verbose_face) {
+  if (opts.verbose_edge_math || opts.verbose_face_math) {
     fprintf(stderr, "\nregge group = %d\n", regge_grp);
 
     vector<int> gds(6);
@@ -750,7 +858,7 @@ Geometry case1(const vector<int> &dihedral_order, const tetra59_opts &opts)
   // (pi/2, pi/2, pi − 2x, pi/3, x, x)
   // for pi/6 < x < pi/2 (30 < x < 90 degrees)
 
-  if (opts.verbose || opts.verbose_face)
+  if (opts.verbose_edge_math || opts.verbose_face_math)
     fprintf(stderr, "\ncase 1: angle = %g\n", rad2deg(opts.angle));
 
   vector<double> term(6);
@@ -775,7 +883,7 @@ Geometry case2(const vector<int> &dihedral_order, const tetra59_opts &opts)
   // (5pi/6 − x, pi/6 + x, 2pi/3 − x, 2pi/3 − x, x, x)
   // for pi/6 < x ≤ pi/3 (30 < x <= 60 degrees)
 
-  if (opts.verbose || opts.verbose_face)
+  if (opts.verbose_edge_math || opts.verbose_face_math)
     fprintf(stderr, "\ncase 2: angle = %g\n", rad2deg(opts.angle));
 
   vector<double> term(6);
@@ -812,44 +920,24 @@ void set_dihedral_order(vector<int> &dihedral_order, const tetra59_opts &opts)
     dihedral_order = {2, 1, 0};
 }
 
-void face_coloring(Geometry &geom, int regge_grp, const tetra59_opts &opts)
+void face_coloring(Geometry &geom, int regge_grp, tetra59_opts &opts)
 {
-  // color by sub-symmetry as map indexes happened by default in sym_repeat()
-  if (!opts.coloring_method) {
-    // no color, strip colors
-    geom.colors(FACES).clear();
-    geom.clear(EDGES);
-    geom.colors(VERTS).clear();
-  }
-  else {
-    Coloring clrng;
-    clrng.add_cmap(opts.map.clone());
-    clrng.set_geom(&geom);
-
-    if (opts.coloring_method == 'u') {
-      clrng.f_unique(true);
-    }
-    else if (opts.coloring_method == 's') {
-      Symmetry sym;
-      vector<vector<set<int>>> sym_equivs;
-      sym.init(geom, &sym_equivs);
-      clrng.f_sets(sym_equivs[2], true);
-    }
-    else if (opts.coloring_method == 'r')
-      clrng.f_one_col(opts.map.get_col(regge_grp - 1));
-
-    // color vertices
-    clrng.v_one_col(opts.vert_col);
-
-    // color edges
-    geom.add_missing_impl_edges();
-    clrng.e_one_col(opts.edge_col);
+  char op = opts.off_color.get_f_col_op();
+  if (op && strchr("rR", op)) {
+    Color col = opts.off_color.clrngs[2].get_col(regge_grp - 1);
+    opts.off_color.set_f_col(col);
   }
 
-  // apply transparency
-  Status stat = Coloring(&geom).apply_transparency(opts.face_opacity);
-  if (stat.is_warning())
-    opts.warning(stat.msg(), 'T');
+  // any other color options done by class
+  Status stat;
+  if (!(stat = opts.off_color.off_color_main(geom)))
+    opts.error(stat.msg());
+
+  if (opts.face_opacity > -1) {
+    Status stat = apply_transparency(geom, opts.face_opacity);
+    if (!stat.is_ok())
+      opts.warning(stat.msg(), 'T');
+  }
 }
 
 void scale_volume_to_one(Geometry &geom, vector<double> &len,
@@ -870,7 +958,7 @@ void scale_volume_to_one(Geometry &geom, vector<double> &len,
     sum += len[i];
   }
 
-  if (opts.verbose) {
+  if (opts.verbose_edge_math) {
     fprintf(stderr, "\nvolume is set to 1. edges have been resized:\n");
 
     for (unsigned int i = 0; i < 6; i++)
@@ -958,123 +1046,126 @@ Geometry make_dihedral_pair(int row_no, int col_no, const vector<double> &dih1,
   vector<double> len2(6);
   scale_volume_to_one(geom, len2, opts);
 
-  fprintf(stderr, "\nmath relations between the two tetrahedra:\n\n");
+  if (opts.verbose_pair_math) {
+    fprintf(stderr, "\n====================================================\n");
+    fprintf(stderr, "math relations between the two tetrahedra:\n\n");
 
-  vector<string> e{"12", "34", "13", "24", "14", "23"};
-  vector<char> v{'x', 'y', 'a', 'b', 'c', 'd'};
+    vector<string> e{"12", "34", "13", "24", "14", "23"};
+    vector<char> v{'x', 'y', 'a', 'b', 'c', 'd'};
 
-  fprintf(stderr, "edge lengths:\n");
-  fprintf(stderr, "%c  (e%s) = %.17lf\n", v[0], e[0].c_str(), len1[0]);
-  fprintf(stderr, "%c  (e%s) = %.17lf\n", v[1], e[1].c_str(), len1[1]);
-  fprintf(stderr, "\n");
-
-  fprintf(stderr, "tetrahedron %s (permutation %c)\n", poly_base.c_str(),
-          dih_order_base);
-  for (unsigned int i = 2; i < 6; i++)
-    fprintf(stderr, "%c  (e%s) = %.17lf\n", v[i], e[i].c_str(), len1[i]);
-  fprintf(stderr, "\n");
-
-  fprintf(stderr, "tetrahedron %s (permutation %c)\n", opts.poly.c_str(),
-          opts.dih_order);
-  for (unsigned int i = 2; i < 6; i++)
-    fprintf(stderr, "%c' (e%s) = %.17lf\n", v[i], e[i].c_str(), len2[i]);
-  fprintf(stderr, "\n");
-
-  double s = 0;
-  for (unsigned int i = 2; i < 6; i++)
-    s += len1[i];
-  s /= 2;
-  fprintf(stderr, "s = (a+b+c+d)/2 = %.17lf\n", s);
-  fprintf(stderr, "\n");
-
-  fprintf(stderr, "tetrahedron %s (permutation %c)\n", poly_base.c_str(),
-          dih_order_base);
-  for (unsigned int i = 2; i < 6; i++)
-    fprintf(stderr, "s-%c  = %.17lf\n", v[i], s - len1[i]);
-  fprintf(stderr, "\n");
-
-  fprintf(stderr, "tetrahedron %s (permutation %c)\n", opts.poly.c_str(),
-          opts.dih_order);
-  for (unsigned int i = 2; i < 6; i++)
-    fprintf(stderr, "s-%c' = %.17lf\n", v[i], s - len2[i]);
-  fprintf(stderr, "\n");
-
-  fprintf(stderr, "difference between a,b,c,d\n");
-  for (unsigned int k = 2; k < 6; k++) {
-    int j = k;
-    for (unsigned int i = 2; i < 6; i++) {
-      if (j > 5)
-        j = 2;
-      else if (j < 2)
-        j = 5;
-      fprintf(stderr, "%c-%c' = % -.17lf\n", v[i], v[j], len1[i] - len2[j]);
-      j += (is_even(k) ? 1 : -1);
-    }
+    fprintf(stderr, "edge lengths:\n");
+    fprintf(stderr, "%c  (e%s) = %.17lf\n", v[0], e[0].c_str(), len1[0]);
+    fprintf(stderr, "%c  (e%s) = %.17lf\n", v[1], e[1].c_str(), len1[1]);
     fprintf(stderr, "\n");
-  }
 
-  vector<char> d{'x', 'y', 'e', 'f', 'g', 'h'};
+    fprintf(stderr, "tetrahedron %s (permutation %c)\n", poly_base.c_str(),
+            dih_order_base);
+    for (unsigned int i = 2; i < 6; i++)
+      fprintf(stderr, "%c  (e%s) = %.17lf\n", v[i], e[i].c_str(), len1[i]);
+    fprintf(stderr, "\n");
 
-  fprintf(stderr, "edge dihedral angles:\n");
-  fprintf(stderr, "%c  (a%s) = %.17lf (deg %g)\n", d[0], e[0].c_str(), dih1[0],
-          rad2deg(dih1[0]));
-  fprintf(stderr, "%c  (a%s) = %.17lf (deg %g)\n", d[1], e[1].c_str(), dih1[1],
-          rad2deg(dih1[1]));
-  fprintf(stderr, "\n");
+    fprintf(stderr, "tetrahedron %s (permutation %c)\n", opts.poly.c_str(),
+            opts.dih_order);
+    for (unsigned int i = 2; i < 6; i++)
+      fprintf(stderr, "%c' (e%s) = %.17lf\n", v[i], e[i].c_str(), len2[i]);
+    fprintf(stderr, "\n");
 
-  fprintf(stderr, "tetrahedron %s (permutation %c)\n", poly_base.c_str(),
-          dih_order_base);
-  for (unsigned int i = 2; i < 6; i++)
-    fprintf(stderr, "%c  (a%s) = %.17lf (deg %g)\n", d[i], e[i].c_str(),
-            dih1[i], rad2deg(dih1[i]));
-  fprintf(stderr, "\n");
+    double s = 0;
+    for (unsigned int i = 2; i < 6; i++)
+      s += len1[i];
+    s /= 2;
+    fprintf(stderr, "s = (a+b+c+d)/2 = %.17lf\n", s);
+    fprintf(stderr, "\n");
 
-  fprintf(stderr, "tetrahedron %s (permutation %c)\n", opts.poly.c_str(),
-          opts.dih_order);
-  for (unsigned int i = 2; i < 6; i++)
-    fprintf(stderr, "%c' (a%s) = %.17lf (deg %g)\n", d[i], e[i].c_str(),
-            dih2[i], rad2deg(dih2[i]));
-  fprintf(stderr, "\n");
+    fprintf(stderr, "tetrahedron %s (permutation %c)\n", poly_base.c_str(),
+            dih_order_base);
+    for (unsigned int i = 2; i < 6; i++)
+      fprintf(stderr, "s-%c  = %.17lf\n", v[i], s - len1[i]);
+    fprintf(stderr, "\n");
 
-  double t = 0;
-  for (unsigned int i = 2; i < 6; i++)
-    t += dih1[i];
-  t /= 2;
-  fprintf(stderr, "t = (e+f+g+h)/2 = %.17lf\n", t);
-  fprintf(stderr, "\n");
+    fprintf(stderr, "tetrahedron %s (permutation %c)\n", opts.poly.c_str(),
+            opts.dih_order);
+    for (unsigned int i = 2; i < 6; i++)
+      fprintf(stderr, "s-%c' = %.17lf\n", v[i], s - len2[i]);
+    fprintf(stderr, "\n");
 
-  fprintf(stderr, "tetrahedron %s (permutation %c)\n", poly_base.c_str(),
-          dih_order_base);
-  for (unsigned int i = 2; i < 6; i++) {
-    double rad = t - dih1[i];
-    double deg = rad2deg(rad);
-    fprintf(stderr, "t-%c  = %.17lf (deg %g)\n", d[i], rad, deg);
-  }
-  fprintf(stderr, "\n");
+    fprintf(stderr, "difference between a,b,c,d\n");
+    for (unsigned int k = 2; k < 6; k++) {
+      int j = k;
+      for (unsigned int i = 2; i < 6; i++) {
+        if (j > 5)
+          j = 2;
+        else if (j < 2)
+          j = 5;
+        fprintf(stderr, "%c-%c' = % -.17lf\n", v[i], v[j], len1[i] - len2[j]);
+        j += (is_even(k) ? 1 : -1);
+      }
+      fprintf(stderr, "\n");
+    }
 
-  fprintf(stderr, "tetrahedron %s (permutation %c)\n", opts.poly.c_str(),
-          opts.dih_order);
-  for (unsigned int i = 2; i < 6; i++) {
-    double rad = t - dih2[i];
-    double deg = rad2deg(rad);
-    fprintf(stderr, "t-%c' = %.17lf (deg %g)\n", d[i], rad, deg);
-  }
-  fprintf(stderr, "\n");
+    vector<char> d{'x', 'y', 'e', 'f', 'g', 'h'};
 
-  fprintf(stderr, "difference between e,f,g,h\n");
-  for (unsigned int k = 2; k < 6; k++) {
-    int j = k;
+    fprintf(stderr, "edge dihedral angles:\n");
+    fprintf(stderr, "%c  (a%s) = %.17lf (deg %g)\n", d[0], e[0].c_str(),
+            dih1[0], rad2deg(dih1[0]));
+    fprintf(stderr, "%c  (a%s) = %.17lf (deg %g)\n", d[1], e[1].c_str(),
+            dih1[1], rad2deg(dih1[1]));
+    fprintf(stderr, "\n");
+
+    fprintf(stderr, "tetrahedron %s (permutation %c)\n", poly_base.c_str(),
+            dih_order_base);
+    for (unsigned int i = 2; i < 6; i++)
+      fprintf(stderr, "%c  (a%s) = %.17lf (deg %g)\n", d[i], e[i].c_str(),
+              dih1[i], rad2deg(dih1[i]));
+    fprintf(stderr, "\n");
+
+    fprintf(stderr, "tetrahedron %s (permutation %c)\n", opts.poly.c_str(),
+            opts.dih_order);
+    for (unsigned int i = 2; i < 6; i++)
+      fprintf(stderr, "%c' (a%s) = %.17lf (deg %g)\n", d[i], e[i].c_str(),
+              dih2[i], rad2deg(dih2[i]));
+    fprintf(stderr, "\n");
+
+    double t = 0;
+    for (unsigned int i = 2; i < 6; i++)
+      t += dih1[i];
+    t /= 2;
+    fprintf(stderr, "t = (e+f+g+h)/2 = %.17lf\n", t);
+    fprintf(stderr, "\n");
+
+    fprintf(stderr, "tetrahedron %s (permutation %c)\n", poly_base.c_str(),
+            dih_order_base);
     for (unsigned int i = 2; i < 6; i++) {
-      if (j > 5)
-        j = 2;
-      else if (j < 2)
-        j = 5;
-      double rad = dih1[i] - dih2[j];
+      double rad = t - dih1[i];
       double deg = rad2deg(rad);
-      fprintf(stderr, "%c-%c' = % -.17lf (deg %g)\n", d[i], d[j], rad, deg);
-      j += (is_even(k) ? 1 : -1);
+      fprintf(stderr, "t-%c  = %.17lf (deg %g)\n", d[i], rad, deg);
     }
     fprintf(stderr, "\n");
+
+    fprintf(stderr, "tetrahedron %s (permutation %c)\n", opts.poly.c_str(),
+            opts.dih_order);
+    for (unsigned int i = 2; i < 6; i++) {
+      double rad = t - dih2[i];
+      double deg = rad2deg(rad);
+      fprintf(stderr, "t-%c' = %.17lf (deg %g)\n", d[i], rad, deg);
+    }
+    fprintf(stderr, "\n");
+
+    fprintf(stderr, "difference between e,f,g,h\n");
+    for (unsigned int k = 2; k < 6; k++) {
+      int j = k;
+      for (unsigned int i = 2; i < 6; i++) {
+        if (j > 5)
+          j = 2;
+        else if (j < 2)
+          j = 5;
+        double rad = dih1[i] - dih2[j];
+        double deg = rad2deg(rad);
+        fprintf(stderr, "%c-%c' = % -.17lf (deg %g)\n", d[i], d[j], rad, deg);
+        j += (is_even(k) ? 1 : -1);
+      }
+      fprintf(stderr, "\n");
+    }
   }
 
   return geom;
@@ -1111,7 +1202,7 @@ int main(int argc, char *argv[])
   if (opts.scale_volume)
     scale_volume_to_one(geom, len1, opts);
 
-  if (opts.verbose || opts.verbose_face) {
+  if ((opts.verbose_edge_math || opts.verbose_face_math) & !opts.show_pair) {
     Symmetry sym(geom);
     fprintf(stderr, "\n");
     fprintf(stderr, "the geometric symmetry of the tetrahedron is %s\n",

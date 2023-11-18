@@ -36,7 +36,7 @@ symmetro -t O[4,3],1,1 -r 2 | antiview
 
 Make an approximate Snub Cube (U12)
 <<CMDS_START>>
-symmetro -k o,1,0,1 -a 28.53243959961367 | antiview
+symmetro -k o,1,0,1 -a 28.53243959961367 -C f | antiview
 symmetro -t O[4,2],1,1 -a 28.53243959961367 -C f | antiview
 <<CMDS_END>>
 
@@ -63,72 +63,72 @@ symmetro -c 5,5,h | antiview
 
 Bowtie models from Kaplan-Hart paper Figure 3 in order of appearance
 <<CMDS_START>>
-symmetro -k t,2,3,*,e | antiview
-symmetro -k o,2,3,*,e | antiview
-symmetro -k o,3,2,*,e | antiview
-symmetro -k i,2,3,*,e | antiview
-symmetro -k i,3,2,*,e | antiview
-symmetro -k t,1,2,*,v | antiview
-symmetro -k o,1,2,*,v | antiview
-symmetro -k o,2,1,*,v | antiview
-symmetro -k i,1,2,*,v | antiview
-symmetro -k i,2,1,*,v | antiview
+symmetro -k t,2,3,*,e -F n -m kaplan | antiview
+symmetro -k o,2,3,*,e -F n -m kaplan | antiview
+symmetro -k o,3,2,*,e -F n -m kaplan | antiview
+symmetro -k i,2,3,*,e -F n -m kaplan | antiview
+symmetro -k i,3,2,*,e -F n -m kaplan | antiview
+symmetro -k t,1,2,*,v -F n -m kaplan | antiview
+symmetro -k o,1,2,*,v -F n -m kaplan | antiview
+symmetro -k o,2,1,*,v -F n -m kaplan | antiview
+symmetro -k i,1,2,*,v -F n -m kaplan | antiview
+symmetro -k i,2,1,*,v -F n -m kaplan | antiview
 <<CMDS_END>>
 
 Jamnitzer models from Kaplan-Hart paper Figure 7 in order of appearance
 <<CMDS_START>>
-symmetro -k o,2,2,0,v -r 1.06680419358835388 -f n -m m2 | antiview
-symmetro -k o,3,3,0,v -r 1.04966777114351 -f n -m m2 | antiview -v 0.03
-symmetro -k i,2,2,0,v -r 1.09818547139510914 -f n -m m2 | antiview -v 0.03
-symmetro -k i,3,3,0,v -r 1.0726110096817 -f n -m m2 | antiview -v 0.05
+symmetro -k o,2,2,0,v -r 1.06680419358835388 -F n -m kaplan | antiview
+symmetro -k o,3,3,0,v -r 1.04966777114351 -F n -m kaplan | antiview -v 0.03
+symmetro -k i,2,2,0,v -r 1.09818547139510914 -F n -m kaplan | antiview -v 0.03
+symmetro -k i,3,3,0,v -r 1.0726110096817 -F n -m kaplan | antiview -v 0.05
 <<CMDS_END>>
 
 LCM models from Kaplan-Hart paper Figure 8 in order of appearance
 <<CMDS_START>>
-symmetro -k t,2,0,3,e -f n -m m2 | antiview
-symmetro -k t,2,0,3,v -f n -m m2 | antiview
-symmetro -k o,1,0,2,v -f n -m m2 | antiview
-symmetro -k o,3,4,*,e -f n -m m2 | antiview
-symmetro -k o,3,4,*,v -f n -m m2 | antiview
-symmetro -k o,*,2,3,e -f n -m m2 | antiview
-symmetro -k o,*,2,3,v -f n -m m2 | antiview
-symmetro -k i,3,5,*,e -f n -m m2 | antiview
-symmetro -k i,3,5,*,v -f n -m m2 | antiview
-symmetro -k i,2,*,5,e -f n -m m2 | antiview
-symmetro -k i,2,*,5,v -f n -m m2 | antiview
-symmetro -k i,*,2,3,e -f n -m m2 | antiview
-symmetro -k i,*,2,3,v -f n -m m2 | antiview
+symmetro -k t,2,0,3,e -F n -m kaplan | antiview
+symmetro -k t,2,0,3,v -F n -m kaplan | antiview
+symmetro -k o,1,0,2,v -F n -m kaplan | antiview
+symmetro -k o,3,4,*,e -F n -m kaplan | antiview
+symmetro -k o,3,4,*,v -F n -m kaplan | antiview
+symmetro -k o,*,2,3,e -F n -m kaplan | antiview
+symmetro -k o,*,2,3,v -F n -m kaplan | antiview
+symmetro -k i,3,5,*,e -F n -m kaplan | antiview
+symmetro -k i,3,5,*,v -F n -m kaplan | antiview
+symmetro -k i,2,*,5,e -F n -m kaplan | antiview
+symmetro -k i,2,*,5,v -F n -m kaplan | antiview
+symmetro -k i,*,2,3,e -F n -m kaplan | antiview
+symmetro -k i,*,2,3,v -F n -m kaplan | antiview
 <<CMDS_END>>
 
 Near miss models from Kaplan-Hart paper Figure 9 in order of appearance
 <<CMDS_START>>
-symmetro -k o,*,3,*,e -f n -m m2 | antiview
-symmetro -k i,1,2,*,v -f n -m m2 -r 1.07046626932,1 | antiview
-symmetro -k i,2,*,3,e -f n -m m2 | antiview
+symmetro -k o,*,3,*,e -F n -m kaplan | antiview
+symmetro -k i,1,2,*,v -F n -m kaplan -r 1.07046626932,1 | antiview
+symmetro -k i,2,*,3,e -F n -m kaplan | antiview
 <<CMDS_END>>
 
 Appealing models from Kaplan-Hart paper Figure 10 in order of appearance
 <<CMDS_START>>
-symmetro -k i,2,2,*,1 -f n -m m2 -r 2.03614784182,1 | antiview -v 0.03
-symmetro -k i,2,1,*,1 -f n -m m2 -r 1.9021130325885 | antiview -v 0.03
-symmetro -k i,2,2,*,1 -f n -m m2 | antiview -v 0.05
-symmetro -k i,4,3,*,e -f n -m m2 | antiview -v 0.07
-symmetro -k i,2,3,*,1 -f n -m m2 | antiview -v 0.05
-symmetro -k i,2,3,*,1 -f n -m m2 -r 1.583841856265,1 | antiview -v 0.05
-symmetro -k i,2,4,*,e -f n -m m2 | antiview -v 0.07
-symmetro -k i,2,4,*,1 -f n -m m2 -r 1.05398768021455,1 | antiview -v 0.07
-symmetro -k i,3,1,*,1 -f n -m m2 | antiview -v 0.07
-symmetro -k i,3,2,*,1 -f n -m m2 | antiview -v 0.07
-symmetro -k i,*,2,2,1 -f n -m m2 | antiview -v 0.07
-symmetro -k i,*,1,4,e -f n -m m2 -C 3 | antiview -v 0.06
-symmetro -k i,3,4,*,v -f n -m m2 -r 1.5665309813,1 -l 8 | antiview -v 0.03
-symmetro -k i,3,4,*,e -f n -m m2 | antiview -v 0.06
-symmetro -k i,3,5,0,v -f n -m m2 -r 1.3159206178527,1 | antiview -v 0.03 
-symmetro -k i,4,2,*,e -f n -m m2 | antiview -v 0.06
-symmetro -k i,*,1,4,1 -f n -m m2 -C 3 | antiview -v 0.06
-symmetro -k i,1,*,2,1 -f n -m m2 | antiview -v 0.06
-symmetro -k i,1,*,3,e -f n -m m2 | antiview -v 0.06
-symmetro -k i,2,*,3,1 -f n -m m2 | antiview -v 0.06
+symmetro -k i,2,2,*,1 -F n -m kaplan -r 2.03614784182,1 | antiview -v 0.03
+symmetro -k i,2,1,*,1 -F n -m kaplan -r 1.9021130325885 | antiview -v 0.03
+symmetro -k i,2,2,*,1 -F n -m kaplan | antiview -v 0.05
+symmetro -k i,4,3,*,e -F n -m kaplan | antiview -v 0.07
+symmetro -k i,2,3,*,1 -F n -m kaplan | antiview -v 0.05
+symmetro -k i,2,3,*,1 -F n -m kaplan -r 1.583841856265,1 | antiview -v 0.05
+symmetro -k i,2,4,*,e -F n -m kaplan | antiview -v 0.07
+symmetro -k i,2,4,*,1 -F n -m kaplan -r 1.05398768021455,1 | antiview -v 0.07
+symmetro -k i,3,1,*,1 -F n -m kaplan | antiview -v 0.07
+symmetro -k i,3,2,*,1 -F n -m kaplan | antiview -v 0.07
+symmetro -k i,*,2,2,1 -F n -m kaplan | antiview -v 0.07
+symmetro -k i,*,1,4,e -F n -m kaplan | antiview -v 0.06
+symmetro -k i,3,4,*,v -F n -m kaplan -r 1.5665309813,1 -l 8 | antiview -v 0.03
+symmetro -k i,3,4,*,e -F n -m kaplan | antiview -v 0.06
+symmetro -k i,3,5,0,v -F n -m kaplan -r 1.3159206178527,1 | antiview -v 0.03 
+symmetro -k i,4,2,*,e -F n -m kaplan | antiview -v 0.06
+symmetro -k i,*,1,4,1 -F n -m kaplan | antiview -v 0.06
+symmetro -k i,1,*,2,1 -F n -m kaplan | antiview -v 0.06
+symmetro -k i,1,*,3,e -F n -m kaplan | antiview -v 0.06
+symmetro -k i,2,*,3,1 -F n -m kaplan | antiview -v 0.06
 <<CMDS_END>>
 
 <<EXAMPLES_END>>

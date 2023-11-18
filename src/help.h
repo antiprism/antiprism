@@ -1551,7 +1551,7 @@ Internal (see below for format):
    rng, range
       A map made by ranging between component values
       (default: size 256, component ranges H0:1S0.9V0.9).
-   remap
+   index, remap
       A map of index numbers to themselves. Use with the map modifiers
       to remap index numbers.
    null
@@ -1573,6 +1573,21 @@ Internal (see below for format):
    compound
       used to colour the uniform compound resource models (applied
       with off_color -f K -v F -e F -m compound)
+      
+   Maps often used in programs can also be for use to color indexed models with
+   off_color or antiview.
+   
+   colorful
+      primary and secondary colors. spread map is appended
+   ghart
+      color map that George Hart used in an online conway notation program.
+      See the Antiprism conway program for details. spread map is appended
+   convexity, circuits
+      a map of shades of gray to color circuits in the n_icons program and
+      convexity where that option is available
+   axes
+      four primary color to color faces by axis in the symmetro program and to
+      color the three types of axes in the off_color_radial program
 
    These maps contain a mapping for every index number (except default for
    rng is 256 entries). Follow the map name immediately by a number to set

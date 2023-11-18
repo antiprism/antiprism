@@ -26,13 +26,13 @@ waterman -r rt20 fcc | antiview
 
 Make a Root 50 Waterman polyhedron, with symmetrically coloured faces
 <<CMDS_START>>
-waterman -r rt100 fcc -F S | antiview
+waterman -r rt100 fcc -F y | antiview
 <<CMDS_END>>
 
 Make a Root 50 Waterman polyhedron centred on an octahedron centre, with
 symmetrically coloured faces
 <<CMDS_START>>
-waterman -q 0.5,0.5,0.5 -r rt100 fcc -F S | antiview
+waterman -q 0.5,0.5,0.5 -r rt100 fcc -F y | antiview
 <<CMDS_END>>
 <<EXAMPLES_END>>
 

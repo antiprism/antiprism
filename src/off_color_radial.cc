@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2017-2021, Roger Kaufman
+   Copyright (c) 2017-2023, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -29,21 +29,45 @@
 */
 
 #include "../base/antiprism.h"
+#include "color_common.h"
 
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
-#include <set>
 #include <string>
 #include <vector>
 
 using std::map;
 using std::pair;
-using std::set;
 using std::string;
 using std::vector;
 
 using namespace anti;
+
+ColorMap *alloc_default_map()
+{
+  // nfold map is same as antiview
+  auto *multi = new ColorMapMulti();
+  auto *col_map = new ColorMapMap;
+  col_map->set_col(0, Color(0.6, 0.3, 0.0));
+  col_map->set_col(1, Color());
+  col_map->set_col(2, Color(0.8, 0.8, 0.2));
+  col_map->set_col(3, Color(0.3, 0.8, 0.3));
+  col_map->set_col(4, Color(0.6, 0.0, 0.0));
+  col_map->set_col(5, Color(0.0, 0.0, 0.6));
+
+  // nfold 6 and higher same color
+  auto *repeat_map = new ColorMapMap;
+  repeat_map->set_col(0, Color(0.6, 0.3, 0.0));
+  repeat_map->set_wrap();
+
+  multi->add_cmap(col_map);
+  multi->add_cmap(repeat_map);
+
+  ColorMap *cmap = multi;
+
+  return cmap;
+}
 
 class radial_opts : public ProgramOpts {
 public:
@@ -61,19 +85,19 @@ public:
 
   double eps = anti::epsilon;
 
-  char vertex_coloring_method = '\0'; // e
-  char edge_coloring_method = '\0';   // f
+  // for face coloring methods
+  int coloring_method = 0;     // color radial or axes or both
+  int axes_coloring = 1;       // color axes by nfold or order
+  int reverse_mapping = false; // reverse mapping of colors from map
 
-  Color vertex_color = Color(Color::maximum_index); // unset
-  Color edge_color = Color(Color::maximum_index);   // unset
+  // map names are controlled by program
+  string map_string_faces;
+  string map_string_axes;
 
-  int coloring_method = 0;   // color radial or axes or both
-  int axes_coloring = 1;     // color axes by nfold or order
-  string map_string = "rng"; // default map name
-  int face_opacity = -1;     // transparency from 0 to 255
+  // maps are managed
+  OffColor off_color = OffColor("");
 
-  ColorMapMulti map;
-  ColorMapMulti map_axes;
+  int face_opacity = -1; // tranparency from 0 to 255
 
   radial_opts() : ProgramOpts("off_color_radial") {}
 
@@ -91,15 +115,15 @@ Color in radial pattern based on symmetry.
 Options
 %s
   -l <lim>  minimum distance change to terminate planarization, as negative
-               exponent (default: %d giving %.0e)
+              exponent (default: %d giving %.0e)
   -o <file> write output to file (default: write to standard output)
 
 Scene Options
   -d <opt>  coloring. radial=1, axes=2 (default: 1)
-               (multiple -d as needed)
+              (multiple -d as needed)
   -a <ax,p> axis order. primary=1, secondary=2, tertiary=3, all=4 (default: 1)
-               p is percent length of the axis. (default: 100 percent)
-               (multiple -a as needed)
+              p is percent length of the axis. (default: 100 percent)
+              (multiple -a as needed)
   -f <list> specify a list of elements, list starts with element letter,
             followed by an index number list, given as index ranges separated
             by commas. range can be one number or two numbers separated by a
@@ -107,21 +131,27 @@ Scene Options
             Index number list will be preceded by f, e, v for faces, edges and
             vertices. Elements resolve to connected faces to be staring point
             for radial coloring. special selector: s for number of face sides
-               (multiple -f as needed, -f overrides -a)
+              (multiple -f as needed, -f overrides -a)
   -s <sym>  symmetry subgroup (Schoenflies notation)
 
 Coloring Options (run 'off_util -H color' for help on color formats)
-  -E <col>  edge color (default: unchanged)
-               keyword: none - sets no color
-               f - color with average adjacent face color
-  -V <col>  vertex color (default: unchanged)
-               keyword: none - sets no color
-               e - color with average adjacent edge color
-               f - color with average adjacent face color
+keyword: none - sets no color
+  -E <col>  color the edges according to: (default: unchanged)
+              a color value - apply to all edges
+              f - color with average adjacent face color
+  -V <col>  color the vertices according to: (default: unchanged)
+              a color value - apply to all vertices
+              e - color with average adjacent edge color
+              f - color with average adjacent face color
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
-  -m <maps> color maps for all elements to be tried in turn (default: rng)
-              rng and rainbow maps without entries specified are calculated 
-  -n <maps> color maps for axes (A=1: calculated, A=2: map_red:blue:yellow)
+  -m <maps> a comma separated list of color maps used to transform color
+            indexes (default: rng), a part consisting of letters from
+            v, e, f, selects the element types to apply the map list to
+            (default 'vef'). use map name of 'index' to output index numbers
+              calculated maps: rng, rainbow, gray, rnd, deal
+              e.g rng will become rngN where N is the number of ridges found
+  -r        use the face map in reverse order
+  -n <maps> color maps for axes (A=1: calculated, A=2: axes)
   -A <opt>  color axes by nfold=1, order=2 (default: 1)
 
 )",
@@ -133,10 +163,13 @@ void radial_opts::process_command_line(int argc, char **argv)
 {
   opterr = 0;
   int c;
+  string id;
 
-  string arg_id;
+  Split parts;
+  Color col;
 
-  string map_string_axes;
+  // color indexes will be mapped to colors
+  off_color.set_f_col_op('M');
 
   handle_long_opts(argc, argv);
 
@@ -150,16 +183,15 @@ void radial_opts::process_command_line(int argc, char **argv)
   axis_percent.push_back(100);
   axis_percent.push_back(100);
 
-  while ((c = getopt(argc, argv, ":hd:f:a:s:E:V:T:m:n:A:l:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hd:f:a:s:E:V:T:m:rn:A:l:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
     switch (c) {
     case 'd': {
       print_status_or_exit(
-          get_arg_id(optarg, &arg_id, "radial=1|axes=2", argmatch_add_id_maps),
-          c);
-      int option = atoi(arg_id.c_str());
+          get_arg_id(optarg, &id, "radial=1|axes=2", argmatch_add_id_maps), c);
+      int option = atoi(id.c_str());
       if (option == 1)
         coloring_method = 1;
       else if (option == 2)
@@ -199,11 +231,11 @@ void radial_opts::process_command_line(int argc, char **argv)
       for (unsigned int i = 0; i < parts_sz; i++) {
         if (i == 0) {
           print_status_or_exit(
-              get_arg_id(parts[i], &arg_id,
+              get_arg_id(parts[i], &id,
                          "primary=1|secondary=2|tertiary=3|all=4",
                          argmatch_add_id_maps),
               c);
-          axis_order = atoi(arg_id.c_str());
+          axis_order = atoi(id.c_str());
           if (axis_order == 4) {
             for (int j = 0; j < 3; j++)
               axis_orders[j] = j;
@@ -238,28 +270,55 @@ void radial_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'V':
-      if (strlen(optarg) == 1 && strchr("ef", int(*optarg)))
-        vertex_coloring_method = *optarg;
+      if (col.read(optarg)) {
+        off_color.set_v_col(col);
+        break;
+      }
+      parts.init(optarg, ",");
+      if (off_color.v_op_check((char *)parts[0], "ef"))
+        off_color.set_v_col_op(*parts[0]);
       else
-        print_status_or_exit(vertex_color.read(optarg), c);
+        error("invalid coloring", c);
+
+      if (!((strchr("sS", off_color.get_v_col_op()) && parts.size() < 4) ||
+            parts.size() < 2))
+        error("too many comma separated parts", c);
+
+      if (strchr("sS", off_color.get_v_col_op()))
+        off_color.set_v_sub_sym(strlen(optarg) > 2 ? optarg + 2 : "");
       break;
 
     case 'E':
-      if (strlen(optarg) == 1 && strchr("f", int(*optarg)))
-        edge_coloring_method = *optarg;
+      if (col.read(optarg)) {
+        off_color.set_e_col(col);
+        break;
+      }
+      parts.init(optarg, ",");
+      if (off_color.e_op_check((char *)parts[0], "f"))
+        off_color.set_e_col_op(*parts[0]);
       else
-        print_status_or_exit(edge_color.read(optarg), c);
+        error("invalid coloring", c);
+
+      if (!((strchr("sS", off_color.get_e_col_op()) && parts.size() < 4) ||
+            parts.size() < 2))
+        error("too many comma separated parts", c);
+
+      if (strchr("sS", off_color.get_e_col_op()))
+        off_color.set_e_sub_sym(strlen(optarg) > 2 ? optarg + 2 : "");
       break;
 
     case 'T':
       print_status_or_exit(read_int(optarg, &face_opacity), c);
-      if (face_opacity < 0 || face_opacity > 255) {
+      if (face_opacity < 0 || face_opacity > 255)
         error("face transparency must be between 0 and 255", c);
-      }
       break;
 
     case 'm':
-      map_string = optarg;
+      map_string_faces = optarg;
+      break;
+
+    case 'r':
+      reverse_mapping = true;
       break;
 
     case 'n':
@@ -268,9 +327,8 @@ void radial_opts::process_command_line(int argc, char **argv)
 
     case 'A':
       print_status_or_exit(
-          get_arg_id(optarg, &arg_id, "nfold=1|order=2", argmatch_add_id_maps),
-          c);
-      axes_coloring = atoi(arg_id.c_str());
+          get_arg_id(optarg, &id, "nfold=1|order=2", argmatch_add_id_maps), c);
+      axes_coloring = atoi(id.c_str());
       break;
 
     case 'l':
@@ -311,33 +369,29 @@ void radial_opts::process_command_line(int argc, char **argv)
     axis_orders_set = true;
   }
 
-  print_status_or_exit(map.init(map_string.c_str()), 'm');
+  // only use map name, strip element types
+  if (map_string_faces.size()) {
+    Split parts(map_string_faces, ",");
+    map_string_faces = (string)parts[0];
+  }
+  else
+    map_string_faces = "rng";
 
-  // default axes map
+  if (map_string_axes.size()) {
+    Split parts(map_string_axes, ",");
+    // append for edges only
+    map_string_axes = (string)parts[0] + ",e";
+  }
+
   if (map_string_axes.size())
-    print_status_or_exit(map_axes.init(map_string_axes.c_str()), 'n');
+    print_status_or_exit(
+        read_colorings(off_color.clrngs, map_string_axes.c_str()), 'n');
   else {
-    if (axes_coloring == 1) {
-      // nfold map is same as antiview
-      auto *col_map0 = new ColorMapMap;
-      col_map0->set_col(0, Color(0.6, 0.3, 0.0));
-      col_map0->set_col(1, Color());
-      col_map0->set_col(2, Color(0.8, 0.8, 0.2));
-      col_map0->set_col(3, Color(0.3, 0.8, 0.3));
-      col_map0->set_col(4, Color(0.6, 0.0, 0.0));
-      col_map0->set_col(5, Color(0.0, 0.0, 0.6));
-      map_axes.add_cmap(col_map0);
-
-      // nfold 6 and higher same color
-      auto *col_map = new ColorMapMap;
-      col_map->set_col(0, Color(0.6, 0.3, 0.0));
-      col_map->set_wrap();
-      map_axes.add_cmap(col_map);
-    }
+    if (axes_coloring == 1)
+      off_color.clrngs[1].add_cmap(alloc_default_map());
     else if (axes_coloring == 2) {
       // match symmetro face colors
-      map_string_axes = "map_red:blue:yellow";
-      print_status_or_exit(map_axes.init(map_string_axes.c_str()), 'n');
+      print_status_or_exit(read_colorings(off_color.clrngs, "axes,e"), 'n');
     }
   }
 
@@ -654,7 +708,7 @@ void compound_parts(Geometry &geom, vector<Geometry> &parts)
   }
 }
 
-void set_indexes_to_color(Geometry &geom, const radial_opts &opts)
+void set_indexes_to_color(Geometry &geom, radial_opts &opts)
 {
   // find maximum index
   int max_ridge = 0;
@@ -667,31 +721,40 @@ void set_indexes_to_color(Geometry &geom, const radial_opts &opts)
 
   // default is to make a rainbow map of number of ridges
   opts.message(msg_str("maximum ridges formed is %d", max_ridge));
-  string map_name;
-  if (opts.map_string == "rng" || opts.map_string == "rainbow") {
-    map_name = opts.map_string + std::to_string(max_ridge);
+  string map_name = opts.map_string_faces;
+  if (map_name == "rng" || map_name == "rainbow" || map_name == "gray" ||
+      map_name == "grey" || map_name == "rnd" || map_name == "deal") {
+    map_name = opts.map_string_faces + std::to_string(max_ridge);
     opts.message(msg_str("default map used is %s", map_name.c_str()),
                  "option -m");
   }
 
-  Coloring clrng;
-  clrng.set_geom(&geom);
-  if (map_name.length()) {
-    ColorMap *cmap = colormap_from_name(map_name.c_str());
-    clrng.add_cmap(cmap);
+  if (opts.reverse_mapping) {
+    map_name += "+" + std::to_string(max_ridge - 1) + "*-1";
+    opts.message(msg_str("reversed map is %s", map_name.c_str()), "option -m");
   }
-  else
-    clrng.add_cmap(opts.map.clone());
-  clrng.f_apply_cmap();
 
-  // apply transparency
-  Status stat = Coloring(&geom).apply_transparency(opts.face_opacity);
-  if (stat.is_warning())
-    opts.warning(stat.msg(), 'T');
+  if (map_name.length()) {
+    map_name = map_name + ",f";
+    opts.print_status_or_exit(
+        read_colorings(opts.off_color.clrngs, map_name.c_str()), 'm');
+  }
+
+  // any other color options done by class
+  // class will color edges and vertices too
+  Status stat;
+  if (!(stat = opts.off_color.off_color_main(geom)))
+    opts.error(stat.msg());
+
+  if (opts.face_opacity > -1) {
+    Status stat = apply_transparency(geom, opts.face_opacity);
+    if (!stat.is_ok())
+      opts.warning(stat.msg(), 'T');
+  }
 }
 
 // for now show_axes is always 2 to display whole axis
-void append_axes(Geometry &geom, Geometry &axes, const radial_opts &opts)
+void append_axes(Geometry &geom, Geometry &axes, radial_opts &opts)
 {
   if (opts.show_axes == 2) {
     // add axes
@@ -722,15 +785,14 @@ void append_axes(Geometry &geom, Geometry &axes, const radial_opts &opts)
 
   Coloring clrng;
   clrng.set_geom(&axes);
-  clrng.add_cmap(opts.map_axes.clone());
+  clrng.add_cmap(opts.off_color.clrngs[EDGES].clone());
   clrng.v_apply_cmap();
   clrng.e_apply_cmap();
 
   geom.append(axes);
 }
 
-void radial_coloring(Geometry &geom, const Geometry &axes,
-                     const radial_opts &opts)
+void radial_coloring(Geometry &geom, const Geometry &axes, radial_opts &opts)
 {
   // centroid needs to be preserved before possible compound break down
   Vec3d cent = centroid(geom.verts());
@@ -763,35 +825,6 @@ void radial_coloring(Geometry &geom, const Geometry &axes,
 
   // now turn all indexes to color
   set_indexes_to_color(geom, opts);
-}
-
-void ev_coloring(Geometry &geom, const radial_opts &opts)
-{
-  geom.add_missing_impl_edges();
-  if (opts.edge_coloring_method == 'f') {
-    // edges take colors from faces
-    Coloring clrng(&geom);
-    clrng.e_from_adjacent(FACES);
-  }
-  // if color hasn't been input let current color unchanged
-  else if (!opts.edge_color.is_maximum_index())
-    // use color selected
-    Coloring(&geom).e_one_col(opts.edge_color);
-
-  if (opts.vertex_coloring_method == 'f') {
-    // edges take colors from edges
-    Coloring clrng(&geom);
-    clrng.v_from_adjacent(FACES);
-  }
-  else if (opts.vertex_coloring_method == 'e') {
-    // edges take colors from edges
-    Coloring clrng(&geom);
-    clrng.v_from_adjacent(EDGES);
-  }
-  // if color hasn't been input let current color unchanged
-  else if (!opts.vertex_color.is_maximum_index())
-    // use color selected
-    Coloring(&geom).v_one_col(opts.vertex_color);
 }
 
 int main(int argc, char *argv[])
@@ -890,10 +923,8 @@ int main(int argc, char *argv[])
     // fprintf(stderr, "axes.size = %d\n", (int)axes.verts().size());
   }
 
-  if (opts.coloring_method == 1) {
+  if (opts.coloring_method == 1)
     radial_coloring(geom, axes, opts);
-    ev_coloring(geom, opts);
-  }
 
   // append axes if set
   if (opts.show_axes)

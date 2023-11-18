@@ -29,6 +29,7 @@
 */
 
 #include "../base/antiprism.h"
+#include "color_common.h"
 
 #include <algorithm>
 #include <cctype>
@@ -42,59 +43,6 @@ using std::swap;
 using std::vector;
 
 using namespace anti;
-
-ColorMapMap *alloc_default_map(const string map_file, const char m)
-{
-  auto *col_map = new ColorMapMap;
-  int n = (m == 'n') ? 3 : 0;
-
-  // color digons gray
-  if (n == 3)
-    col_map->set_col(2, Color(127, 127, 127)); // digons gray50
-
-  if (map_file == "m1") {
-    col_map->set_col(n++, Color(255, 0, 0));   // axis1 red
-    col_map->set_col(n++, Color(0, 0, 255));   // axis2 blue
-    col_map->set_col(n++, Color(255, 255, 0)); // axis3 yellow
-    col_map->set_col(n++, Color(0, 100, 0));   // convex hull darkgreen
-  }
-  else if (map_file == "m2") {
-    // colors from PDF document measured from screen
-    col_map->set_col(n++, Color(130, 95, 34));   // 3-sided faces
-    col_map->set_col(n++, Color(99, 117, 88));   // 4-sided faces
-    col_map->set_col(n++, Color(84, 139, 35));   // 5-sided faces
-    col_map->set_col(n++, Color(96, 109, 28));   // 6-sided faces (wrapping)
-    col_map->set_col(n++, Color(128, 128, 128)); // 7-sided faces
-    col_map->set_col(n++, Color(118, 97, 85));   // 8-sided faces
-    // all polygons with higher sides have the same shade
-    col_map->set_col(n++, Color(128, 144, 79)); // 9-sided faces and higher
-    col_map->set_col(n++, Color(128, 144, 79));
-    col_map->set_col(n++, Color(128, 144, 79));
-    col_map->set_col(n++, Color(128, 144, 79));
-    col_map->set_col(n++, Color(128, 144, 79));
-    col_map->set_col(n++, Color(128, 144, 79));
-    col_map->set_col(n++, Color(128, 144, 79));
-    col_map->set_col(n++, Color(128, 144, 79));
-    col_map->set_col(n++, Color(128, 144, 79));
-    col_map->set_col(n++, Color(128, 144, 79));
-    col_map->set_col(n++, Color(128, 144, 79));
-    col_map->set_col(n++, Color(128, 144, 79)); // 20-sides highest needed
-  }
-  else if (map_file == "m3") {
-    col_map->set_col(n++, Color(255, 0, 0));     // 3-sided red
-    col_map->set_col(n++, Color(255, 127, 0));   // 4-sided darkoranage1
-    col_map->set_col(n++, Color(255, 255, 0));   // 5-sided yellow
-    col_map->set_col(n++, Color(0, 100, 0));     // 6-sided darkgreen
-    col_map->set_col(n++, Color(0, 255, 255));   // 7-sided cyan
-    col_map->set_col(n++, Color(0, 0, 255));     // 8-sided blue
-    col_map->set_col(n++, Color(255, 0, 255));   // 9-sided magenta
-    col_map->set_col(n++, Color(255, 255, 255)); // 10-sided white
-    col_map->set_col(n++, Color(127, 127, 127)); // 11-sided gray50
-    col_map->set_col(n++, Color(0, 0, 0));       // 12-sided black
-  }
-
-  return col_map;
-}
 
 class symmetro_opts : public ProgramOpts {
 public:
@@ -118,21 +66,21 @@ public:
   vector<double> scale;            // control scale of polygons 0,1 or 2
   int scale_axis = -1;             // axis for which to set scale
   int convex_hull = 0;             // mode of convex hull, calculated
-  string frame_elems;              // axis or sectional tiling or both
   double offset = 0;               // to avoid coplanarity if it occurs
   bool remove_free_faces = false;  // unconnected faces can be removed
-  bool verbose = false;            // report math output
   char mode = '\0'; // k - Kaplan, t -twister, s - s symmetry, c - c symmetry
 
   vector<int> col_axis_idx;               // color method a, colors by axis
-  char face_coloring_method = 'a';        // a - by axis, n - by polygon sides
-  int face_opacity = -1;                  // transparency from 0 to 255
   bool color_digons = false;              // add an edge to color the digon
-  Color vert_col = Color(255, 215, 0);    // gold
-  Color edge_col = Color(211, 211, 211);  // lightgray
-  Color face_col = Color();               // not set
+  string frame_elems;                     // axis or sectional tiling or both
   Color frame_col = Color(135, 206, 235); // skyblue3
-  ColorMapMulti map;
+
+  bool verbose = false; // report math output
+
+  // maps are managed, set no map
+  OffColor off_color = OffColor("");
+
+  int face_opacity = -1; // tranparency from 0 to 255
 
   double eps = anti::epsilon;
 
@@ -216,23 +164,32 @@ Scene Options
   -x        remove any free faces that are produced
 
 Coloring Options (run 'off_util -H color' for help on color formats)
-  -V <col>  vertex color (default: gold)
-  -E <col>  edge color   (default: lightgray)
-  -f <col>  face color. Or use method for using color in map (default: a)
-               keyword: none - sets no color
-               a - color by axis number
+keyword: none - sets no color
+  -F <col>  color the faces according to: (default: i)
+               a color value - apply to all faces
                n - color by number of sides
+               s - symmetric coloring [,sub_group,conj_type]
+               i - color by axis number
+  -E <col>  color the edges according to: (default: lightgray)
+               a color value - apply to all edges
+               s - symmetric coloring [,sub_group,conj_type]
+  -V <col>  color the vertices according to: (default: gold)
+               a color value - apply to all vertices
+               s - symmetric coloring [,sub_group,conj_type]
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
+  -m <maps> a comma separated list of color maps used to transform color
+            indexes (default: axes), a part consisting of letters from
+            v, e, f, selects the element types to apply the map list to
+            (default 'vef'). use map name of 'index' to output index numbers
+               axes:       red,blue,yellow,darkgreen
+                  note: position 4 color is for faces added by convex hull
+               kaplan:     approximating colors in the symmetrohedra pdf file
+               colorful:   red,darkorange1,yellow,darkgreen,cyan,blue,magenta,
+                           white,gray50,black (default when -F n)
+               (default internal maps shifted '+-3' when -F n)
   -D        don't cover digons with edge color
   -Q <col>  frame color  (default: skyblue3)
-  -m <maps> color maps for faces to be tried in turn (default: m1)
-               keyword m1: red,blue,yellow,darkgreen
-                  note: position 4 color is for faces added by convex hull
-               keyword m2: approximating colors in the symmetrohedra pdf file
-               keyword m3: red,darkorange1,yellow,darkgreen,cyan,blue,magenta,
-                           white,gray50,black (default when -f n)
-               (built in maps start at index 3 when -f n)
-
+               
 )",
           prog_name(), help_ver_text, int(-log(anti::epsilon) / log(10) + 0.5),
           anti::epsilon);
@@ -260,10 +217,16 @@ void symmetro_opts::process_command_line(int argc, char **argv)
 {
   opterr = 0;
   int c;
-
   string id;
-  string map_file;
   vector<int> n;
+
+  Split parts;
+  Color col;
+  vector<string> map_files;
+
+  off_color.set_f_col_op('i');
+  off_color.set_e_col(Color(211, 211, 211)); // lightgray
+  off_color.set_v_col(Color(255, 215, 0));   // gold
 
   handle_long_opts(argc, argv);
 
@@ -280,7 +243,7 @@ void symmetro_opts::process_command_line(int argc, char **argv)
     scale.push_back(NAN);
 
   while ((c = getopt(argc, argv,
-                     ":hk:t:m:s:c:M:a:r:A:C:q:O:xvf:Q:V:E:DT:l:o:")) != -1) {
+                     ":hk:t:m:s:c:M:a:r:A:C:q:O:xvDQ:V:E:F:T:m:l:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -861,13 +824,8 @@ void symmetro_opts::process_command_line(int argc, char **argv)
       verbose = true;
       break;
 
-    case 'f':
-      if (strspn(optarg, "an") && strlen(optarg) == 1)
-        face_coloring_method = *optarg;
-      else {
-        print_status_or_exit(face_col.read(optarg), c);
-        face_coloring_method = '\0';
-      }
+    case 'D':
+      color_digons = true;
       break;
 
     case 'Q':
@@ -875,26 +833,70 @@ void symmetro_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'V':
-      print_status_or_exit(vert_col.read(optarg));
+      if (col.read(optarg)) {
+        off_color.set_v_col(col);
+        break;
+      }
+      parts.init(optarg, ",");
+      if (off_color.v_op_check((char *)parts[0], "s"))
+        off_color.set_v_col_op(*parts[0]);
+      else
+        error("invalid coloring", c);
+
+      if (!((strchr("sS", off_color.get_v_col_op()) && parts.size() < 4) ||
+            parts.size() < 2))
+        error("too many comma separated parts", c);
+
+      if (strchr("sS", off_color.get_v_col_op()))
+        off_color.set_v_sub_sym(strlen(optarg) > 2 ? optarg + 2 : "");
       break;
 
     case 'E':
-      print_status_or_exit(edge_col.read(optarg));
+      if (col.read(optarg)) {
+        off_color.set_e_col(col);
+        break;
+      }
+      parts.init(optarg, ",");
+      if (off_color.e_op_check((char *)parts[0], "s"))
+        off_color.set_e_col_op(*parts[0]);
+      else
+        error("invalid coloring", c);
+
+      if (!((strchr("sS", off_color.get_e_col_op()) && parts.size() < 4) ||
+            parts.size() < 2))
+        error("too many comma separated parts", c);
+
+      if (strchr("sS", off_color.get_e_col_op()))
+        off_color.set_e_sub_sym(strlen(optarg) > 2 ? optarg + 2 : "");
       break;
 
-    case 'D':
-      color_digons = true;
+    case 'F':
+      if (col.read(optarg)) {
+        off_color.set_f_col(col);
+        break;
+      }
+      parts.init(optarg, ",");
+      if (off_color.f_op_check((char *)parts[0], "ins"))
+        off_color.set_f_col_op(*parts[0]);
+      else
+        error("invalid coloring", c);
+
+      if (!((strchr("sS", off_color.get_f_col_op()) && parts.size() < 4) ||
+            parts.size() < 2))
+        error("too many comma separated parts", c);
+
+      if (strchr("sS", off_color.get_f_col_op()))
+        off_color.set_f_sub_sym(strlen(optarg) > 2 ? optarg + 2 : "");
       break;
 
     case 'T':
       print_status_or_exit(read_int(optarg, &face_opacity), c);
-      if (face_opacity < 0 || face_opacity > 255) {
+      if (face_opacity < 0 || face_opacity > 255)
         error("face transparency must be between 0 and 255", c);
-      }
       break;
 
     case 'm':
-      map_file = optarg;
+      map_files.push_back(optarg);
       break;
 
     case 'l':
@@ -937,19 +939,27 @@ void symmetro_opts::process_command_line(int argc, char **argv)
     }
   }
 
-  if (!map_file.size())
-    map_file = (face_coloring_method == 'n') ? "m3" : "m1";
+  // set all maps in list
+  for (unsigned int i = 0; i < map_files.size(); i++)
+    print_status_or_exit(read_colorings(off_color.clrngs, map_files[i].c_str()),
+                         'm');
 
-  if (map_file != "m1" && map_file != "m2" && map_file != "m3")
-    print_status_or_exit(map.init(map_file.c_str()), 'm');
-  else {
-    map.add_cmap(alloc_default_map(map_file, face_coloring_method));
-    if (map_file == "m1" || map_file == "m2")
-      map.set_wrap();
-    else {
-      ColorMap *spread_map = colormap_from_name("spread");
-      map.add_cmap(spread_map);
+  // fill in missing maps
+  string default_map_name = "axes";
+  for (unsigned int i = 0; i < 3; i++) {
+    string map_name = default_map_name;
+    // if map is already set, skip
+    if (off_color.clrngs[i].get_cmaps().size())
+      continue;
+    // faces
+    else if (i == 2) {
+      char op = off_color.get_f_col_op();
+      if (op && strchr("nN", op)) {
+        // advance the map
+        map_name = "colorful+-3";
+      }
     }
+    off_color.clrngs[i].add_cmap(colormap_from_name(map_name.c_str()));
   }
 }
 
@@ -1647,7 +1657,7 @@ void sym_repeat(Geometry &geom, const symmetro_opts &opts)
   }
 }
 
-Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
+Geometry build_geom(vector<Geometry> &pgeom, symmetro_opts &opts)
 {
   Geometry geom;
 
@@ -1705,9 +1715,9 @@ Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
     if (opts.convex_hull > 1)
       sym_repeat(pgeom[i], opts);
 
-    if (opts.face_coloring_method == 'a') {
+    if (strchr("iI", opts.off_color.get_f_col_op())) {
       Coloring clrng(&pgeom[i]);
-      Color col = opts.map.get_col(opts.col_axis_idx[i]);
+      Color col = opts.off_color.clrngs[2].get_col(opts.col_axis_idx[i]);
       clrng.f_one_col(col);
     }
 
@@ -1736,32 +1746,29 @@ Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
     merge_coincident_elements(geom, "f", opts.eps);
 
     // after sort merge, only new faces from convex hull will be uncolored
-    if (opts.face_coloring_method == 'a') {
+    if (strchr("iI", opts.off_color.get_f_col_op())) {
       Coloring clrng(&geom);
       for (unsigned int i = 0; i < geom.faces().size(); i++) {
         Color col = geom.colors(FACES).get(i);
         if (!col.is_set()) {
           // convex hull color is map position 3
-          col = opts.map.get_col(3);
+          col = opts.off_color.clrngs[2].get_col(3);
           geom.colors(FACES).set(i, col);
         }
       }
     }
   }
 
-  if (opts.face_col.is_set())
-    Coloring(&geom).f_one_col(opts.face_col);
-  else if (opts.face_coloring_method == 'n') {
-    Coloring clrng(&geom);
-    clrng.add_cmap(opts.map.clone());
-    clrng.f_sides(true);
-    clrng.f_apply_cmap();
-  }
+  // any other color options done by class
+  Status stat;
+  if (!(stat = opts.off_color.off_color_main(geom)))
+    opts.error(stat.msg());
 
-  // apply transparency
-  Status stat = Coloring(&geom).apply_transparency(opts.face_opacity);
-  if (stat.is_warning())
-    opts.warning(stat.msg(), 'T');
+  if (opts.face_opacity > -1) {
+    Status stat = apply_transparency(geom, opts.face_opacity);
+    if (!stat.is_ok())
+      opts.warning(stat.msg(), 'T');
+  }
 
   if (opts.remove_free_faces) {
     delete_free_faces(geom);
@@ -1783,10 +1790,7 @@ Geometry build_geom(vector<Geometry> &pgeom, const symmetro_opts &opts)
   }
 
   // color added edges
-  geom.add_missing_impl_edges(opts.edge_col);
-
-  // color vertices
-  Coloring(&geom).v_one_col(opts.vert_col);
+  geom.add_missing_impl_edges(opts.off_color.get_e_col());
 
   geom.orient(1); // positive orientation
 

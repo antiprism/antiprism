@@ -29,6 +29,7 @@
 */
 
 #include "../base/antiprism.h"
+#include "color_common.h"
 #include "lat_util_common.h"
 
 #include <cctype>
@@ -105,7 +106,7 @@ Options
 %s
   -I        verbose output
   -l <lim>  minimum distance for unique vertex locations as negative exponent
-               (default: %d giving %.0e)
+              (default: %d giving %.0e)
   -o <file> write output to file (default: write to standard output)
 
 Scene Options
@@ -113,13 +114,13 @@ Scene Options
   -c <type> container, c - cube (default), s - sphere (uses radius)
   -k <file> container, convex hull of off file or built in model (uses radius)
   -r <c,n>  radius. c is radius taken to optional root n. n = 2 is sqrt
-               or  l - max insphere radius, s - min insphere radius (default)
-               or  k - take radius from container specified by -k
+              or  l - max insphere radius, s - min insphere radius (default)
+              or  k - take radius from container specified by -k
   -q <xyz>  center offset, three comma separated coordinates, 0 for origin
   -s <s,n>  create struts. s is strut length taken to optional root n
-               use multiple -s parameters for multiple struts
+              use multiple -s parameters for multiple struts
   -D <opt>  Voronoi (a.k.a Dirichlet) cells (Brillouin zones for duals)
-               c - cells only, i - cell(s) touching center only
+              c - cells only, i - cell(s) touching center only
   -C <opt>  c - convex hull only, i - keep interior
   -A        append the original lattice to the final product
   -R <fi,s> repeat off file fi at every vertex in lattice. If optional s is
@@ -133,24 +134,26 @@ Scene Options
 
 Listing Options
   -Q <vecs> center for radius calculations in -L (default: centroid)
-               c - original center, o - original center + offset in -q
+              c - original center, o - original center + offset in -q
   -L <opt>  list unique radial distances of points (to standard output)
-               f - full report, v - values only
+              f - full report, v - values only
   -S <opt>  list every possible strut value (to standard output)
-               f - full report, v - values only
+              f - full report, v - values only
 
 Coloring Options (run 'off_util -H color' for help on color formats)
   -V <col>  vertex color, (optional) transparency, (optional) elements
-               transparency: valid range from 0 (invisible) to 255 (opaque)
-               elements to color are l - lattice, c - convex hull, v - voronoi
-                  (default elements: lcv)
-               Note: input element colors from -R input are not changed
-  -E <col>  edge color (same format as for vertices) or
-               keyword: r,R for color edges by root value of final product
-               lower case outputs map indexes. upper case outputs color values
-  -F <col>  face color (same format as for vertices) or
-               keyword: s,S color by symmetry using face normals
-               keyword: c,C color by symmetry using face normals (chiral)
+              transparency: valid range from 0 (invisible) to 255 (opaque)
+              elements to color are l - lattice, c - convex hull, v - voronoi
+                 (default elements: lcv)
+              Note: input element colors from -R input are not changed
+  -E <col>  edge color (same format as for vertices)
+              lower case outputs map indexes. upper case outputs color values
+              t,T - for color edges by root value of final product
+  -F <col>  face color (same format as for vertices)
+              special coloring: calculates color from normals, not maps
+              lower case outputs map indexes. upper case outputs color values
+              y,Y - color by symmetry using face normals
+              z,Z - color by symmetry using face normals (chiral)
   -T <tran> face transparency for color by symmetry. valid range from 0 to 255
 
 )",
@@ -262,7 +265,7 @@ void lutil_opts::process_command_line(int argc, char **argv)
 
     case 'E':
       parts.init(optarg, ",");
-      if (!strcasecmp(parts[0], "r"))
+      if (strlen(parts[0]) == 1 && strchr("tT", parts[0][0]))
         color_edges_by_sqrt = parts[0][0];
       else
         parse_color_string(this, optarg, c, "lcv", edge_col);
@@ -270,7 +273,7 @@ void lutil_opts::process_command_line(int argc, char **argv)
 
     case 'F':
       parts.init(optarg, ",");
-      if ((!strcasecmp(parts[0], "s")) || (!strcasecmp(parts[0], "c")))
+      if (strlen(parts[0]) == 1 && strchr("yYzZ", parts[0][0]))
         color_method = parts[0][0];
       else
         parse_color_string(this, optarg, c, "lcv", face_col);

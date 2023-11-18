@@ -29,6 +29,7 @@
 */
 
 #include "../base/antiprism.h"
+#include "color_common.h"
 #include "lat_util_common.h"
 
 #include <cstdio>
@@ -78,20 +79,22 @@ public:
   Vec3d center;               // default is origin
   bool origin_based = true;   // set true if center is at origin
   int method = 1;             // 1 - sphere-ray intersection  2 - z guess
-  bool fill = false;          // fill interior points
   long scale = 0;             // for precision
   bool tester_defeat = false; // turn off computation testing for method 1
-  bool convex_hull = true;    // do convex hull of result
-  bool add_hull = false;      // add lattice to convex hull
-  bool verbose = false;       // output computational errors
+
+  bool convex_hull = true; // do convex hull of result
+  bool add_hull = false;   // add lattice to convex hull
+  bool fill = false;       // fill interior points
+
+  bool verbose = false; // output computational errors
 
   double eps = anti::epsilon;
 
-  char color_method = '\0'; // color method for color by symmetry
-  int face_opacity = -1;    // transparency from 0 to 255
-  Color vert_col = Color(); // not set
-  Color edge_col = Color(); // not set
-  Color face_col = Color(); // not set
+  OffColor off_color = OffColor("colorful");
+
+  int face_opacity = -1; // tranparency from 0 to 255
+
+  // done locally
   Color fill_col = Color(); // not set
 
   waterman_opts() : ProgramOpts("waterman") {}
@@ -112,14 +115,14 @@ Options
 %s
   -v        verbose output (on computational errors)
   -l <lim>  minimum distance for unique vertex locations as negative exponent
-               (default: %d giving %.0e)
+              (default: %d giving %.0e)
   -o <file> write output to file (default: write to standard output)
 
 Program Options
   -r <r,n>  clip radius. r is radius taken to optional root n. n = 2 is sqrt
   -q <cent> center of lattice, three comma separated coordinates
-               0 for origin  (default: origin)
-  -m <mthd> 1 - sphere-ray intersection  2 - z guess (default: 1)
+              0 for origin  (default: origin)
+  -M <mthd> 1 - sphere-ray intersection  2 - z guess (default: 1)
   -f        fill interior points (not for -C c)
   -t        defeat computational error testing for sphere-ray method
 
@@ -127,15 +130,27 @@ Scene Options
   -C <opt>  c - convex hull only, i - keep interior, s - suppress (default: c)
 
 Coloring Options (run 'off_util -H color' for help on color formats)
-  -V <col>  model vertex color (default: none)
-  -E <col>  edge color (for convex hull, default: none)
-  -F <col>  face color (for convex hull, default: none)
-               lower case outputs map indexes. upper case outputs color values
-               keyword: s,S color by symmetry using face normals
-               keyword: c,C color by symmetry using face normals (chiral)
-  -Z <col>  fill vertex color (default: model vertex color)
+keyword: none - sets no color
+  -F <col>  color the faces according to: (default: n)
+              a color value - apply to all faces
+              n - color by number of sides
+              s - symmetric coloring [,sub_group,conj_type]
+              special coloring: calculates color from normals, not maps
+              y - color by symmetry using face normals
+              z - color by symmetry using face normals (chiral)
+  -E <col>  color the edges according to: (default: lightgray)
+              s - symmetric coloring [,sub_group,conj_type]
+  -V <col>  color the vertices according to: (default: gold)
+              a color value - apply to all vertices
+              s - symmetric coloring [,sub_group,conj_type]
   -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
-
+  -m <maps> a comma separated list of color maps used to transform color
+            indexes (default: colorful), a part consisting of letters from
+            v, e, f, selects the element types to apply the map list to
+            (default 'vef'). use map name of 'index' to output index numbers
+              colorful:   red,darkorange1,yellow,darkgreen,cyan,blue,magenta,
+                          white,gray50,black
+  -Z <col>  fill vertex color (default: model vertex color)
 )",
           prog_name(), help_ver_text, int(-log(anti::epsilon) / log(10) + 0.5),
           anti::epsilon);
@@ -146,14 +161,25 @@ void waterman_opts::process_command_line(int argc, char **argv)
   opterr = 0;
   int c;
 
+  Split parts;
+  Color col;
+
+  off_color.set_f_col_op('n');
+  off_color.set_e_col(Color(211, 211, 211)); // lightgray
+  off_color.set_v_col(Color(255, 215, 0));   // gold
+
+  // fill color default save as vertices
+  fill_col = off_color.get_v_col();
+
   vector<double> double_parms;
+
   double root = 1;
   int cent_num_decs = 0;
   int R_num_decs = 0;
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hr:q:m:ftvC:V:E:F:Z:T:l:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hr:q:M:ftvC:V:E:F:T:m:Z:l:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -198,7 +224,7 @@ void waterman_opts::process_command_line(int argc, char **argv)
         origin_based = false;
       break;
 
-    case 'm':
+    case 'M':
       print_status_or_exit(read_int(optarg, &method), c);
       if (method < 1 || method > 2) {
         error("method must be 1 or 2", c);
@@ -228,29 +254,74 @@ void waterman_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'V':
-      print_status_or_exit(vert_col.read(optarg), c);
+      if (col.read(optarg)) {
+        off_color.set_v_col(col);
+        break;
+      }
+      parts.init(optarg, ",");
+      if (off_color.v_op_check((char *)parts[0], "s"))
+        off_color.set_v_col_op(*parts[0]);
+      else
+        error("invalid coloring", c);
+
+      if (!((strchr("sS", off_color.get_v_col_op()) && parts.size() < 4) ||
+            parts.size() < 2))
+        error("too many comma separated parts", c);
+
+      if (strchr("sS", off_color.get_v_col_op()))
+        off_color.set_v_sub_sym(strlen(optarg) > 2 ? optarg + 2 : "");
       break;
 
     case 'E':
-      print_status_or_exit(edge_col.read(optarg), c);
+      if (col.read(optarg)) {
+        off_color.set_e_col(col);
+        break;
+      }
+      parts.init(optarg, ",");
+      if (off_color.e_op_check((char *)parts[0], "s"))
+        off_color.set_e_col_op(*parts[0]);
+      else
+        error("invalid coloring", c);
+
+      if (!((strchr("sS", off_color.get_e_col_op()) && parts.size() < 4) ||
+            parts.size() < 2))
+        error("too many comma separated parts", c);
+
+      if (strchr("sS", off_color.get_e_col_op()))
+        off_color.set_e_sub_sym(strlen(optarg) > 2 ? optarg + 2 : "");
       break;
 
     case 'F':
-      if (strchr("SsCc", *optarg))
-        color_method = *optarg;
+      if (col.read(optarg)) {
+        off_color.set_f_col(col);
+        break;
+      }
+      parts.init(optarg, ",");
+      if (off_color.f_op_check((char *)parts[0], "nsyz"))
+        off_color.set_f_col_op(*parts[0]);
       else
-        print_status_or_exit(face_col.read(optarg), c);
-      break;
+        error("invalid coloring", c);
 
-    case 'Z':
-      print_status_or_exit(fill_col.read(optarg), c);
+      if (!((strchr("sS", off_color.get_f_col_op()) && parts.size() < 4) ||
+            parts.size() < 2))
+        error("too many comma separated parts", c);
+
+      if (strchr("sS", off_color.get_f_col_op()))
+        off_color.set_f_sub_sym(strlen(optarg) > 2 ? optarg + 2 : "");
       break;
 
     case 'T':
       print_status_or_exit(read_int(optarg, &face_opacity), c);
-      if (face_opacity < 0 || face_opacity > 255) {
+      if (face_opacity < 0 || face_opacity > 255)
         error("face transparency must be between 0 and 255", c);
-      }
+      break;
+
+    case 'm':
+      print_status_or_exit(read_colorings(off_color.clrngs, optarg), c);
+      break;
+
+    case 'Z':
+      print_status_or_exit(fill_col.read(optarg), c);
       break;
 
     case 'l':
@@ -296,27 +367,10 @@ void waterman_opts::process_command_line(int argc, char **argv)
   if (!center.is_set())
     center = Vec3d(0, 0, 0);
 
-  if (face_opacity > -1) {
-    // if no face color is set but there is transparency set, use white
-    if (!face_col.is_set())
-      face_col = Color(255, 255, 255);
-
-    // face color can only be made transparent if not index and not invisible
-    if (!face_col.set_alpha(face_opacity))
-      warning("transparency has no effect on map indexes or invisible", "T");
-
-    if (color_method == 's' || color_method == 'c')
-      warning("when writing indexes transparency setting ignored", "T");
-  }
-
   if (fill && convex_hull && !add_hull) {
     warning("fill cannot be used with -C c", 'f');
     fill = false;
   }
-
-  // fill color vertex default is that of outer vertex color
-  if (vert_col.is_set() && !fill_col.is_set())
-    fill_col = vert_col;
 
   if (tester_defeat) {
     if (method == 1)
@@ -529,32 +583,29 @@ void refine_z_vals(long &z_near, long &z_far, const long x, const long y,
 // Separate function to contain protability problems with abs(long)
 long long_abs(long val) { return std::abs((long)val); }
 
-void sphere_ray_waterman(Geometry &geom, const int lattice_type,
-                         const bool origin_based, const Vec3d &center,
-                         const double radius, const double R_squared,
-                         const long scale, const bool verbose,
-                         const bool tester_defeat, const double eps)
+void sphere_ray_waterman(Geometry &geom, const waterman_opts &opts)
 {
   vector<Vec3d> &verts = geom.raw_verts();
 
   // check if z of center is on integer value
   bool cent_z_int = true;
-  if (!origin_based) {
+  if (!opts.origin_based) {
     double int_part;
-    double fract_part = modf(center[2], &int_part);
-    cent_z_int = double_eq(fract_part, 0.0, eps);
+    double fract_part = modf(opts.center[2], &int_part);
+    cent_z_int = double_eq(fract_part, 0.0, opts.eps);
   }
 
-  long rad_left_x = (long)ceil(center[0] - radius);
-  long rad_right_x = (long)floor(center[0] + radius);
-  long rad_bottom_y = (long)ceil(center[1] - radius);
-  long rad_top_y = (long)floor(center[1] + radius);
+  long rad_left_x = (long)ceil(opts.center[0] - opts.radius);
+  long rad_right_x = (long)floor(opts.center[0] + opts.radius);
+  long rad_bottom_y = (long)ceil(opts.center[1] - opts.radius);
+  long rad_top_y = (long)floor(opts.center[1] + opts.radius);
 
   vector<long> i_center(3);
   for (int i = 0; i < 3; i++)
-    i_center[i] = (long)floor(center[i] * scale + 0.5);
+    i_center[i] = (long)floor(opts.center[i] * opts.scale + 0.5);
 
-  long long i_R2 = (long long)floor(radius * radius * scale * scale + 0.5);
+  long long i_R2 = (long long)floor(
+      opts.radius * opts.radius * opts.scale * opts.scale + 0.5);
 
   long z_near = 0;
   long z_far = 0;
@@ -566,16 +617,17 @@ void sphere_ray_waterman(Geometry &geom, const int lattice_type,
     for (long x = rad_left_x; x <= rad_right_x; x++) {
       // faster miss determination, but using for false miss detection
       bool miss = true;
-      long long xy_contribution =
-          ((long long)x * scale - i_center[0]) * (x * scale - i_center[0]) +
-          ((long long)y * scale - i_center[1]) * (y * scale - i_center[1]);
+      long long xy_contribution = ((long long)x * opts.scale - i_center[0]) *
+                                      (x * opts.scale - i_center[0]) +
+                                  ((long long)y * opts.scale - i_center[1]) *
+                                      (y * opts.scale - i_center[1]);
       if (inside_exact(i_center[2], i_center[2], xy_contribution, i_R2))
         miss = false;
       // continue;
 
-      if (!sphere_ray_z_intersect_points(z_near, z_far, x, y, origin_based,
-                                         center[0], center[1], center[2],
-                                         R_squared, eps)) {
+      if (!sphere_ray_z_intersect_points(
+              z_near, z_far, x, y, opts.origin_based, opts.center[0],
+              opts.center[1], opts.center[2], opts.R_squared, opts.eps)) {
         // fprintf(stderr,"Ray missed the Sphere\n");
         if (!miss) {
           // if (verbose)
@@ -592,25 +644,26 @@ void sphere_ray_waterman(Geometry &geom, const int lattice_type,
       if (!cent_z_int && z_near == z_far)
         continue;
 
-      if (lattice_type != 0) { // lattice type is not equal to SC (type = 0)
+      if (opts.lattice_type !=
+          0) { // lattice type is not equal to SC (type = 0)
         // if z_near is not on the lattice then find if a point 1 layer deeper
         // is on the lattice
-        if (!valid_point(lattice_type, long_abs(x), long_abs(y),
+        if (!valid_point(opts.lattice_type, long_abs(x), long_abs(y),
                          long_abs(z_near))) {
           // if it is a tangent point, there is no valid deeper coordinate. It
           // was on "zero" already.
           // if bcc and z_near-1 is invalid then there is no valid z point
           // (z_far+1 will be invalid as well)
           if (z_near == z_far ||
-              (lattice_type == 2 &&
-               !valid_point(lattice_type, long_abs(x), long_abs(y),
+              (opts.lattice_type == 2 &&
+               !valid_point(opts.lattice_type, long_abs(x), long_abs(y),
                             long_abs(z_near - 1))))
             continue;
           else
             z_near--;
         }
         // if still in the loop, z_far is only advanced if on invalid point
-        if (!valid_point(lattice_type, long_abs(x), long_abs(y),
+        if (!valid_point(opts.lattice_type, long_abs(x), long_abs(y),
                          long_abs(z_far)))
           z_far++;
       }
@@ -618,11 +671,11 @@ void sphere_ray_waterman(Geometry &geom, const int lattice_type,
       // uncommenting next 2 lines forces errors
       // z_near += 5;
       // z_far += 5;
-      if (!tester_defeat && scale) {
+      if (!opts.tester_defeat && opts.scale) {
         long z_near2 = z_near;
         long z_far2 = z_far;
-        refine_z_vals(z_near2, z_far2, x, y, lattice_type, scale, i_center,
-                      i_R2);
+        refine_z_vals(z_near2, z_far2, x, y, opts.lattice_type, opts.scale,
+                      i_center, i_R2);
 
         if (z_near2 != z_near) {
           total_errors++;
@@ -651,29 +704,30 @@ void sphere_ray_waterman(Geometry &geom, const int lattice_type,
     }
   }
 
-  if (verbose && !tester_defeat)
-    fprintf(stderr, "Total computational errors found and corrected: %ld\n",
-            total_errors);
-  if (verbose && total_misses)
-    fprintf(stderr, "Total number of false misses: %ld\n", total_misses);
+  if (opts.verbose && !opts.tester_defeat)
+    opts.message(msg_str("Total computational errors found and corrected: %ld",
+                         total_errors),
+                 "M");
+  if (opts.verbose && total_misses)
+    opts.message(msg_str("Total number of false misses: %ld", total_misses),
+                 "M");
 }
 
-void z_guess_waterman(Geometry &geom, const int lattice_type,
-                      const Vec3d &center, const double radius,
-                      const long scale, const bool verbose)
+void z_guess_waterman(Geometry &geom, const waterman_opts &opts)
 {
   vector<Vec3d> &verts = geom.raw_verts();
 
-  long rad_left_x = (long)ceil(center[0] - radius);
-  long rad_right_x = (long)floor(center[0] + radius);
-  long rad_bottom_y = (long)ceil(center[1] - radius);
-  long rad_top_y = (long)floor(center[1] + radius);
+  long rad_left_x = (long)ceil(opts.center[0] - opts.radius);
+  long rad_right_x = (long)floor(opts.center[0] + opts.radius);
+  long rad_bottom_y = (long)ceil(opts.center[1] - opts.radius);
+  long rad_top_y = (long)floor(opts.center[1] + opts.radius);
 
   vector<long> i_center(3);
   for (int i = 0; i < 3; i++)
-    i_center[i] = (long)floor(center[i] * scale + 0.5);
+    i_center[i] = (long)floor(opts.center[i] * opts.scale + 0.5);
 
-  long long i_R2 = (long long)floor(radius * radius * scale * scale + 0.5);
+  long long i_R2 = (long long)floor(
+      opts.radius * opts.radius * opts.scale * opts.scale + 0.5);
 
   long z_near = 0;
   long z_far = 0;
@@ -684,9 +738,10 @@ void z_guess_waterman(Geometry &geom, const int lattice_type,
   for (long y = rad_bottom_y; y <= rad_top_y; y++) {
     for (long x = rad_left_x; x <= rad_right_x; x++) {
       // see if some z point on this x,y is inside the radius
-      long long xy_contribution =
-          ((long long)x * scale - i_center[0]) * (x * scale - i_center[0]) +
-          ((long long)y * scale - i_center[1]) * (y * scale - i_center[1]);
+      long long xy_contribution = ((long long)x * opts.scale - i_center[0]) *
+                                      (x * opts.scale - i_center[0]) +
+                                  ((long long)y * opts.scale - i_center[1]) *
+                                      (y * opts.scale - i_center[1]);
       if (!inside_exact(i_center[2], i_center[2], xy_contribution, i_R2)) {
         // reset z_near and z_far for next guess
         z_near = 0;
@@ -695,15 +750,15 @@ void z_guess_waterman(Geometry &geom, const int lattice_type,
       }
       else {
         // if we are on a bcc "tunnel" skip this x,y
-        if (lattice_type == 2 &&
-            !valid_point(lattice_type, long_abs(x), long_abs(y), 0) &&
-            !valid_point(lattice_type, long_abs(x), long_abs(y), 1))
+        if (opts.lattice_type == 2 &&
+            !valid_point(opts.lattice_type, long_abs(x), long_abs(y), 0) &&
+            !valid_point(opts.lattice_type, long_abs(x), long_abs(y), 1))
           continue;
 
         long z_near2 = z_near;
         long z_far2 = z_far;
-        refine_z_vals(z_near2, z_far2, x, y, lattice_type, scale, i_center,
-                      i_R2);
+        refine_z_vals(z_near2, z_far2, x, y, opts.lattice_type, opts.scale,
+                      i_center, i_R2);
 
         if (z_near2 != z_near) {
           total_errors++;
@@ -739,9 +794,10 @@ void z_guess_waterman(Geometry &geom, const int lattice_type,
     }
   }
 
-  if (verbose)
-    fprintf(stderr, "Total computational errors found and corrected: %ld\n",
-            total_errors);
+  if (opts.verbose)
+    opts.message(msg_str("Total computational errors found and corrected: %ld",
+                         total_errors),
+                 "M");
   // fprintf(stderr,"Total errors amount: %ld\n",total_amount);
 }
 
@@ -801,21 +857,18 @@ int main(int argc, char *argv[])
   Geometry geom;
 
   if (opts.verbose)
-    fprintf(stderr, "calculating points\n");
+    opts.message("calculating outer points", "M");
 
   if (opts.method == 1)
-    sphere_ray_waterman(geom, opts.lattice_type, opts.origin_based, opts.center,
-                        opts.radius, opts.R_squared, opts.scale, opts.verbose,
-                        opts.tester_defeat, opts.eps);
+    sphere_ray_waterman(geom, opts);
   else
-    z_guess_waterman(geom, opts.lattice_type, opts.center, opts.radius,
-                     opts.scale, opts.verbose);
+    z_guess_waterman(geom, opts);
 
   // interior filling
   Geometry fill_verts;
   if (opts.fill) {
     if (opts.verbose)
-      fprintf(stderr, "filling interior\n");
+      opts.message("generating interior fill points", "f");
 
     fill_verts = fill_interior(geom, opts.lattice_type);
     if (opts.fill_col.is_set())
@@ -825,33 +878,33 @@ int main(int argc, char *argv[])
   // convex hull and coloring
   if (opts.convex_hull) {
     if (opts.verbose)
-      fprintf(stderr, "performing convex hull\n");
+      opts.message("performing convex hull", "C");
 
-    Status stat = (opts.add_hull) ? geom.add_hull() : geom.set_hull();
-    if (stat.is_error()) {
-      if (opts.verbose)
-        fprintf(stderr, "%s\n", stat.c_msg());
-    }
-    else {
-      geom.orient(1); // positive orientation
-      if (opts.verbose)
-        convex_hull_report(geom, opts.add_hull);
+    opts.print_status_or_exit((opts.add_hull) ? geom.add_hull()
+                                              : geom.set_hull());
 
-      if (opts.color_method)
-        color_by_symmetry_normals(geom, opts.color_method, opts.face_opacity,
-                                  opts.eps);
-      else
-        Coloring(&geom).f_one_col(opts.face_col);
+    geom.orient(1); // positive orientation
 
-      if (opts.edge_col.is_set()) {
-        geom.add_missing_impl_edges(opts.edge_col);
-      }
-    }
+    geom.add_missing_impl_edges();
+
+    if (opts.verbose)
+      convex_hull_report(geom, opts.add_hull);
   }
 
-  // color vertices
-  if (opts.vert_col.is_set())
-    Coloring(&geom).v_one_col(opts.vert_col);
+  char op = opts.off_color.get_f_col_op();
+  if (strchr("yYzZ", op))
+    color_by_symmetry_normals(geom, op, opts.face_opacity, opts.eps);
+
+  // any other color options done by class
+  Status stat;
+  if (!(stat = opts.off_color.off_color_main(geom)))
+    opts.error(stat.msg());
+
+  if (opts.face_opacity > -1) {
+    Status stat = apply_transparency(geom, opts.face_opacity);
+    if (!stat.is_ok())
+      opts.warning(stat.msg(), 'T');
+  }
 
   // append fill points
   if (opts.fill)

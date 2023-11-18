@@ -73,11 +73,6 @@ int get_voronoi_geom(anti::Geometry &, anti::Geometry &, const bool, const bool,
 
 // for lat_util.cc, bravais.cc and waterman.cc
 
-void color_by_symmetry_normals(anti::Geometry &, const char, const int,
-                               double eps = anti::epsilon);
-
-void color_edges_by_sqrt(anti::Geometry &, const char);
-
 void convex_hull_report(const anti::Geometry &, const bool);
 
 #endif // LAT_UTIL_COMMON_H
