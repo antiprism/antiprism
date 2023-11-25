@@ -36,9 +36,9 @@ Same as above, but this time merge the faces instead of tiling
 polygon pri 12/4 | off_color -f K | planar -d merge | antiview
 <<CMDS_END>>
 
-Make a compound of four 5/2 star prisms, coloured by compound and blended using RGB. Edges are also blended
+Make a compound of four 5/2 star prisms, coloured by compound and blended using RGB. Edges and vertices are also blended
 <<CMDS_START>>
-planar -d tile -M rgb uc21_n5/2k4 -E e | antiview -v 0.01
+planar -d tile -M rgb uc21_n5/2k4 -E v | antiview -v 0.01
 <<CMDS_END>>
 
 Same as above but edges and vertices are supressed in antiview

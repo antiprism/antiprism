@@ -80,6 +80,11 @@ public:
   // array of private colorings is problematical. public for now
   anti::Coloring clrngs[3];
 
+  /* not sure about this code. direct access for now
+  void set_clrng(anti::Coloring &clrng, int n);
+  anti::Coloring get_clrng(int n);
+  */
+
   // if op_str is not set, all options would be available
   bool v_op_check(char *v_col_op, const char *op_str = "uUpPsSnNaAFEcCLM");
   bool e_op_check(char *e_col_op,
@@ -115,7 +120,11 @@ private:
 };
 
 // global transparency call
-anti::Status apply_transparency(anti::Geometry &geom, const int &face_opacity);
+anti::Status apply_transparency(anti::Geometry &geom, const int opacity,
+                                const int elem = anti::FACES);
+
+// global transparency call
+void apply_transparencies(anti::Geometry &geom, const int (&opacity)[3]);
 
 anti::ColorMapMap *alloc_no_colorMap();
 
@@ -137,5 +146,8 @@ void color_by_symmetry_normals(anti::Geometry &, const char, const int,
                                double eps = anti::epsilon);
 
 void color_edges_by_sqrt(anti::Geometry &, const char);
+
+// duplicate code from stellate and miller
+anti::Status color_stellation(anti::Geometry &geom, OffColor &off_color);
 
 #endif // COLOR_COMMON_H

@@ -96,6 +96,12 @@ char OffColor::get_f_col_op() { return f_col_op; }
 anti::Color OffColor::get_f_col() { return f_col; }
 string OffColor::get_f_sub_sym() { return f_sub_sym; }
 
+/* not sure about this code. direct access for now
+void OffColor::set_clrng(anti::Coloring &clrng, int n) { clrngs[n] = clrng; }
+
+anti::Coloring OffColor::get_clrng(int n) { return clrngs[n]; }
+*/
+
 bool OffColor::v_op_check(char *v_col_op, const char *op_str)
 {
   return ((strlen(v_col_op) == 1) && (strspn(v_col_op, op_str)));
@@ -285,9 +291,31 @@ Status OffColor::off_color_main(Geometry &geom)
   return Status::ok();
 }
 
-Status apply_transparency(Geometry &geom, const int &face_opacity)
+Status apply_transparency(Geometry &geom, const int opacity, const int elem)
 {
-  return (Coloring(&geom).apply_transparency(face_opacity));
+  return (Coloring(&geom).apply_transparency(opacity, elem));
+}
+
+void apply_transparencies(Geometry &geom, const int (&opacity)[3])
+{
+  Status stat;
+
+  for (int i = 0; i < 3; i++) {
+    if (opacity[i] == -1)
+      continue;
+    stat = apply_transparency(geom, opacity[i], i);
+    if (!stat.is_ok()) {
+      string elem_str;
+      if (i == VERTS)
+        elem_str = "vertices";
+      else if (i == EDGES)
+        elem_str = "edges";
+      else if (i == FACES)
+        elem_str = "faces";
+      fprintf(stderr, "apply transparency (%s): %s\n", elem_str.c_str(),
+              stat.c_msg());
+    }
+  }
 }
 
 ColorMapMap *alloc_no_colorMap()
@@ -350,11 +378,9 @@ void color_faces_by_convexity(Geometry &geom, Coloring &clrng, bool apply_map,
   // if negative volume, orientation reversed, dihedral angles opposite
   bool reverse = (GeometryInfo(geom).volume() < 0) ? true : false;
 
-  ColorMapMulti face_map = clrng;
-
   // color all elements convex
   geom.add_missing_impl_edges();
-  Coloring(&geom).f_one_col(apply_map ? face_map.get_col(0) : 0);
+  Coloring(&geom).f_one_col(apply_map ? clrng.get_col(0) : 0);
 
   vector<double> dihedrals = info.get_edge_dihedrals();
   // assuming edge order is intact
@@ -380,17 +406,15 @@ void color_faces_by_convexity(Geometry &geom, Coloring &clrng, bool apply_map,
 
     // if's fail then its convex
     if (coplanar_found)
-      geom.colors(FACES).set(i, (apply_map ? face_map.get_col(1) : 1));
+      geom.colors(FACES).set(i, (apply_map ? clrng.get_col(1) : 1));
     else if (!convexity)
-      geom.colors(FACES).set(i, (apply_map ? face_map.get_col(2) : 2));
+      geom.colors(FACES).set(i, (apply_map ? clrng.get_col(2) : 2));
   }
 }
 
 // uses kis and alters geom
 void color_faces_by_connection(Geometry &geom, Coloring &clrng, bool apply_map)
 {
-  ColorMapMulti face_map = clrng;
-
   // color by connection
   Geometry kis;
   wythoff_make_tiling(kis, geom, "k", true, false);
@@ -436,7 +460,7 @@ void color_faces_by_connection(Geometry &geom, Coloring &clrng, bool apply_map)
         connections += face_idx.size();
     }
     geom.colors(FACES).set(
-        i, (apply_map ? face_map.get_col(connections) : connections));
+        i, (apply_map ? clrng.get_col(connections) : connections));
   }
 }
 
@@ -538,4 +562,54 @@ void color_edges_by_sqrt(Geometry &geom, const char color_method)
     else
       geom.colors(EDGES).set(i, idx);
   }
+}
+
+// duplicate code from stellate and miller
+Status color_stellation(Geometry &geom, OffColor &off_color)
+{
+  char op = off_color.get_f_col_op();
+
+  // geom is built with face colors from the diagram, if 'q' do nothing
+  if (op && !strchr("qQ", op)) {
+    if (op && strchr("hH", op))
+      color_faces_by_connection(geom, off_color.clrngs[FACES], (op == 'H'));
+  }
+
+  // collect invisible elements from kis operation
+  Geometry invisible_elems;
+  if (op && strchr("hH", op)) {
+    invisible_elems = geom;
+    invisible_elems.clear(FACES);
+    vector<int> deleted_elems;
+    for (unsigned int i = 0; i < invisible_elems.edges().size(); i++)
+      if (!(invisible_elems.colors(EDGES).get(i)).is_invisible())
+        deleted_elems.push_back(i);
+    invisible_elems.del(EDGES, deleted_elems);
+  }
+
+  // any other color options done by class
+  // will color edges invisible if so set
+  Status stat;
+  if (!(stat = off_color.off_color_main(geom)))
+    return Status::error(stat.msg());
+
+  // reassert invisible elements from kis operation
+  if (op && strchr("hH", op)) {
+    geom.append(invisible_elems);
+
+    int blend_type = 1; // first color, invisible edges stay
+    merge_coincident_elements(geom, "vf", blend_type, anti::epsilon);
+
+    // vertices from kis must be made invisible in geom
+    for (unsigned int i = 0; i < invisible_elems.verts().size(); i++) {
+      int v_idx =
+          find_vert_by_coords(geom, invisible_elems.verts()[i], anti::epsilon);
+      if (v_idx != -1) {
+        if ((invisible_elems.colors(VERTS).get(i)).is_invisible())
+          geom.colors(VERTS).set(v_idx, Color::invisible);
+      }
+    }
+  }
+
+  return Status::ok();
 }

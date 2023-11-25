@@ -146,8 +146,10 @@ a color value \- apply to all vertices
 e \- color with average adjacent edge color
 f \- color with average adjacent face color
 s \- symmetric coloring [,sub_group,conj_type]
-.HP
-\fB\-T\fR <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
+.TP
+\fB\-T\fR <t,e>
+transparency. from 0 (invisible) to 255 (opaque). element is any
+or all of, v \- vertices, e \- edges, f \- faces, a \- all (default: f)
 .HP
 \fB\-m\fR <maps> a comma separated list of color maps used to transform color
 .IP

@@ -390,7 +390,7 @@ public:
 
   OffColor off_color = OffColor("compound");
 
-  int face_opacity = -1; // tranparency from 0 to 255
+  int opacity[3] = {-1, -1, -1}; // transparency from 0 to 255, for v,e,f
 
   id_opts() : ProgramOpts("iso_delta") {}
 
@@ -492,7 +492,8 @@ keyword: none - sets no color
               e - color with average adjacent edge color
               f - color with average adjacent face color
               s - symmetric coloring [,sub_group,conj_type]
-  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
+  -T <t,e>  transparency. from 0 (invisible) to 255 (opaque). element is any
+            or all of, v - vertices, e - edges, f - faces, a - all (default: f)
   -m <maps> a comma separated list of color maps used to transform color
             indexes (default: compound), a part consisting of letters from
             v, e, f, selects the element types to apply the map list to
@@ -508,6 +509,7 @@ void id_opts::process_command_line(int argc, char **argv)
 {
   opterr = 0;
   int c;
+  int num;
 
   Split parts;
   Color col;
@@ -647,11 +649,36 @@ void id_opts::process_command_line(int argc, char **argv)
         off_color.set_f_sub_sym(strlen(optarg) > 2 ? optarg + 2 : "");
       break;
 
-    case 'T':
-      print_status_or_exit(read_int(optarg, &face_opacity), c);
-      if (face_opacity < 0 || face_opacity > 255)
+    case 'T': {
+      int parts_sz = parts.init(optarg, ",");
+      if (parts_sz > 2)
+        error("the argument has more than 2 parts", c);
+
+      print_status_or_exit(read_int(parts[0], &num), c);
+      if (num < 0 || num > 255)
         error("face transparency must be between 0 and 255", c);
+
+      // if only one part, apply to faces as default
+      if (parts_sz == 1) {
+        opacity[FACES] = num;
+      }
+      else if (parts_sz > 1) {
+        if (strspn(parts[1], "vefa") != strlen(parts[1]))
+          error(msg_str("transparency elements are '%s' must be any or all "
+                        "from  v, e, f, a",
+                        parts[1]),
+                c);
+
+        string str = parts[1];
+        if (str.find_first_of("va") != string::npos)
+          opacity[VERTS] = num;
+        if (str.find_first_of("ea") != string::npos)
+          opacity[EDGES] = num;
+        if (str.find_first_of("fa") != string::npos)
+          opacity[FACES] = num;
+      }
       break;
+    }
 
     case 'm':
       print_status_or_exit(read_colorings(off_color.clrngs, optarg), c);
@@ -1348,16 +1375,21 @@ void case_q_5_excavated_octahedra(Geometry &geom, double angle)
 
 void apply_coloring(Geometry &geom, id_opts &opts)
 {
+  // cases h and k have doubled parts, but color by compound wipes it out
+  // just map colors
+  char op = opts.off_color.get_f_col_op();
+  if (op && strchr("kK", op)) {
+    if (opts.case_type == "h" || opts.case_type == "k")
+      opts.off_color.set_f_col_op('M');
+  }
+
   // any other color options done by class
   Status stat;
   if (!(stat = opts.off_color.off_color_main(geom)))
     opts.error(stat.msg());
 
-  if (opts.face_opacity > -1) {
-    Status stat = apply_transparency(geom, opts.face_opacity);
-    if (!stat.is_ok())
-      opts.warning(stat.msg(), 'T');
-  }
+  // apply all element transparencies
+  apply_transparencies(geom, opts.opacity);
 }
 
 int main(int argc, char *argv[])

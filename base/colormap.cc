@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2008-2021, Adrian Rossiter
+   Copyright (c) 2008-2023, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -276,6 +276,86 @@ Color ColorMapDeal::get_col(int idx) const
     return Color(map_vals[eff_idx]);
   else
     return Color();
+}
+
+//-----------------------------------------------------------------------
+
+/// A colour map that reverses index numbers
+class ColorMapReverse : public ColorMap {
+private:
+  vector<int> switch_idxs = {0, 256};
+
+public:
+  /// Initialise from a string
+  /**\param map_name the map name.
+   * \return status, evaluates to \c true if the map could be initialised
+   *  (possibly with warnings) otherwise \c false. */
+  virtual Status init(const char *map_name);
+
+  /// Get a copy of the map
+  /**\return a pointer to the dynamically allocated copy,
+   *  which must be freed by the caller with \c delete, 0 indicates
+   *  that the clone failed. */
+  ColorMap *clone() const { return new ColorMapReverse(*this); }
+
+  /// Get the colour value for an index number.
+  /**\param idx the index.
+   * \return The colour. */
+  virtual Color get_col(int idx) const;
+};
+
+Status ColorMapReverse::init(const char *map_name)
+{
+  // Make a copy for parsing
+  string name_str(map_name);
+  char *name = &name_str[0];
+
+  Status stat = init_strip(name);
+  if (stat.is_error())
+    return stat;
+
+  Split vals(name, ":", true);
+
+  if (vals.size() > 2)
+    return Status::error("map_name contains more than one ':'");
+
+  // if no N
+  // default
+  switch_idxs = {0, 256};
+
+  if (*vals[0]) {
+    // Formats:
+    // N - Reverse to switch N-1 and 0
+    // I:J - Reverse to switch I and J
+    vector<int> params;
+    int param;
+    for (size_t i = 0; i < vals.size(); i++) {
+      if (vals.size() > i && *vals[i]) {
+        if (!(stat = read_int(vals[i], &param))) {
+          const vector<string> param_names = {"first", "second"};
+          return Status::error(msg_str("%s parameter: '%s' %s",
+                                       param_names[i].c_str(), vals[i],
+                                       stat.c_msg()));
+        }
+        else
+          params.push_back(param);
+      }
+    }
+
+    if (vals.size() == 2) // format I:J
+      switch_idxs = params;
+    else if (vals.size() == 1) // format N
+      switch_idxs = {0, params[0] - 1};
+  }
+
+  return Status::ok();
+}
+
+Color ColorMapReverse::get_col(int idx) const
+{
+  int eff_idx = get_effective_index(idx);
+  int new_idx = switch_idxs[0] + switch_idxs[1] - eff_idx;
+  return Color(new_idx);
 }
 
 //-----------------------------------------------------------------------
@@ -1279,15 +1359,14 @@ static ColorMap *colormap_from_name_generated(const char *map_name,
     }
   }
 
+  // RK - for blending colors, make each two colors blend to different color
+  // than adjacent ones. uses nicer color values for green and orange
   else if (strcmp(name, "compound") == 0) {
     auto *multi = new ColorMapMulti();
     auto *overrides = new ColorMapMap;
     ColorMap *spread_map = colormap_from_name("spread+2");
     if (multi && overrides && spread_map &&
         (*stat = multi->read_params(map_name))) {
-      // RK - for blending colors, make each two colors blend to different color
-      // than adjacent ones
-      // use nicer color values for green and orange
       overrides->set_col(0, Color(255, 255, 0)); // yellow
       overrides->set_col(1, Color(255, 0, 0));   // red
       overrides->set_col(2, Color(0, 100, 0));   // darkgreen (X11)
@@ -1309,16 +1388,15 @@ static ColorMap *colormap_from_name_generated(const char *map_name,
     }
   }
 
+  // RK - a map used in RK's programs. Here for external use.
+  // for using with coloring n faces shift as 'colorful+-3'
+  // use nicer color values for green and orange
   else if (strcmp(name, "colorful") == 0) {
     auto *multi = new ColorMapMulti();
     auto *overrides = new ColorMapMap;
-    // there was no advance of spread when used locally
     ColorMap *spread_map = colormap_from_name("spread");
     if (multi && overrides && spread_map &&
         (*stat = multi->read_params(map_name))) {
-      // RK - a map used in RK's programs. Here for external use.
-      // for using with coloring n faces shift as 'colorful+-3'
-      // use nicer color values for green and orange
       overrides->set_col(0, Color(255, 0, 0));     // 3-sided red
       overrides->set_col(1, Color(255, 127, 0));   // 4-sided darkoranage1 (X11)
       overrides->set_col(2, Color(255, 255, 0));   // 5-sided yellow
@@ -1343,16 +1421,15 @@ static ColorMap *colormap_from_name_generated(const char *map_name,
     }
   }
 
+  // RK - a map used in RK's programs. Here for external use.
+  // source was from from George Hart's original conway applet
+  // for using with coloring n faces shift as 'ghart+-3'
   else if (strcmp(name, "ghart") == 0) {
     auto *multi = new ColorMapMulti();
     auto *overrides = new ColorMapMap;
-    // there was no advance of spread when used locally
     ColorMap *spread_map = colormap_from_name("spread");
     if (multi && overrides && spread_map &&
         (*stat = multi->read_params(map_name))) {
-      // RK - a map used in RK's programs. Here for external use.
-      // source was from from George Hart's original conway applet
-      // for using with coloring n faces shift as 'ghart+-3'
       overrides->set_col(0, Color(0.9, 0.3, 0.3));   // 3-sided red
       overrides->set_col(1, Color(0.4, 0.4, 1.0));   // 4-sided blue
       overrides->set_col(2, Color(0.2, 0.9, 0.3));   // 5-sided green
@@ -1377,64 +1454,17 @@ static ColorMap *colormap_from_name_generated(const char *map_name,
     }
   }
 
-  else if (strcmp(name, "convexity") == 0 || strcmp(name, "circuits") == 0) {
-    auto *multi = new ColorMapMulti();
-    auto *overrides = new ColorMapMap;
-    if (multi && overrides && (*stat = multi->read_params(map_name))) {
-      // RK - a map used in RK's programs. Here for external use.
-      // used to color by convexity of faces and edges
-      // also used for circuits in n_icons
-      overrides->set_col(0, Color(255, 255, 255)); // convex
-      overrides->set_col(1, Color(127, 127, 127)); // coplanar
-      overrides->set_col(2, Color(64, 64, 64));    // nonconvex
-      multi->add_cmap(overrides);
-      if (map_size >= 0)
-        multi->set_map_sz(map_size);
-      multi->set_wrap();
-      cmap = multi;
-    }
-    else {
-      delete multi;
-      delete overrides;
-      cmap = nullptr;
-    }
-  }
-
-  else if (strcmp(name, "axes") == 0) {
-    auto *multi = new ColorMapMulti();
-    auto *overrides = new ColorMapMap;
-    if (multi && overrides && (*stat = multi->read_params(map_name))) {
-      // RK - a map used in RK's programs. Here for external use.
-      // used to color by faces by axis number in the symmetro program
-      overrides->set_col(0, Color(255, 0, 0));   // axis1 red
-      overrides->set_col(1, Color(0, 0, 255));   // axis2 blue
-      overrides->set_col(2, Color(255, 255, 0)); // axis3 yellow
-      overrides->set_col(3, Color(0, 100, 0));   // convex hull darkgreen
-      multi->add_cmap(overrides);
-      if (map_size >= 0)
-        multi->set_map_sz(map_size);
-      multi->set_wrap();
-      cmap = multi;
-    }
-    else {
-      delete multi;
-      delete overrides;
-      cmap = nullptr;
-    }
-  }
-
+  // RK - a map used in RK's programs. Here for external use.
+  // colors matching the models in Kaplan's symmetro paper
+  // colors from PDF document measured from screen
   else if (strcmp(name, "kaplan") == 0) {
     auto *multi = new ColorMapMulti();
     auto *overrides = new ColorMapMap;
-    // RK - a map used in RK's programs. Here for external use.
     // spread map replaced with a repeating color
     // Color(145, 160, 100)); // 9-sided faces and higher
     ColorMap *repeat_map = colormap_from_name("map_x91a064");
     if (multi && overrides && repeat_map &&
         (*stat = multi->read_params(map_name))) {
-      // RK - a map used in RK's programs. Here for external use.
-      // colors matching the models in Kaplan's symmetro paper
-      // colors from PDF document measured from screen
       overrides->set_col(3, Color(141, 108, 47));  // 3-sided faces
       overrides->set_col(4, Color(105, 123, 96));  // 4-sided faces
       overrides->set_col(5, Color(119, 176, 77));  // 5-sided faces
@@ -1456,6 +1486,76 @@ static ColorMap *colormap_from_name_generated(const char *map_name,
     }
   }
 
+  // RK - a map used in RK's programs. Here for external use.
+  // used to color by faces by axis number in the symmetro program
+  // or axes in off_color_radial program
+  else if (strcmp(name, "axes") == 0) {
+    auto *multi = new ColorMapMulti();
+    auto *overrides = new ColorMapMap;
+    if (multi && overrides && (*stat = multi->read_params(map_name))) {
+      overrides->set_col(0, Color(255, 0, 0));   // axis1 red
+      overrides->set_col(1, Color(0, 0, 255));   // axis2 blue
+      overrides->set_col(2, Color(255, 255, 0)); // axis3 yellow
+      overrides->set_col(3, Color(0, 100, 0));   // convex hull darkgreen
+      multi->add_cmap(overrides);
+      if (map_size >= 0)
+        multi->set_map_sz(map_size);
+      multi->set_wrap();
+      cmap = multi;
+    }
+    else {
+      delete multi;
+      delete overrides;
+      cmap = nullptr;
+    }
+  }
+
+  // RK - a map used in RK's programs. Here for external use.
+  // for circuits in n_icons
+  else if (strcmp(name, "circuits") == 0) {
+    auto *multi = new ColorMapMulti();
+    auto *overrides = new ColorMapMap;
+    // required for circuits so that the original coloring has enough colors
+    ColorMap *spread_map = colormap_from_name("spread");
+    if (multi && overrides && (*stat = multi->read_params(map_name))) {
+      overrides->set_col(0, Color(255, 255, 255)); // continuous
+      overrides->set_col(1, Color(64, 64, 64));    // discontinuous
+      multi->add_cmap(overrides);
+      multi->add_cmap(spread_map);
+      if (map_size >= 0)
+        multi->set_map_sz(map_size);
+      cmap = multi;
+    }
+    else {
+      delete multi;
+      delete overrides;
+      delete spread_map;
+      cmap = nullptr;
+    }
+  }
+
+  // RK - a map used in RK's programs. Here for external use.
+  // used to color by convexity of faces and edges
+  else if (strcmp(name, "convexity") == 0) {
+    auto *multi = new ColorMapMulti();
+    auto *overrides = new ColorMapMap;
+    if (multi && overrides && (*stat = multi->read_params(map_name))) {
+      overrides->set_col(0, Color(255, 255, 255)); // convex
+      overrides->set_col(1, Color(127, 127, 127)); // coplanar
+      overrides->set_col(2, Color(64, 64, 64));    // nonconvex
+      multi->add_cmap(overrides);
+      if (map_size >= 0)
+        multi->set_map_sz(map_size);
+      multi->set_wrap();
+      cmap = multi;
+    }
+    else {
+      delete multi;
+      delete overrides;
+      cmap = nullptr;
+    }
+  }
+
   else if (strcmp(name, "index") == 0 || strcmp(name, "remap") == 0) {
     auto *cmr = new ColorMapRemap;
     if (cmr) {
@@ -1468,6 +1568,16 @@ static ColorMap *colormap_from_name_generated(const char *map_name,
 
   else if (strcmp(name, "deal") == 0) {
     auto *cmr = new ColorMapDeal;
+    if (cmr) {
+      if ((*stat = cmr->init(map_name + name_len)))
+        cmap = cmr;
+      else
+        delete cmr;
+    }
+  }
+
+  else if (strcmp(name, "reverse") == 0) {
+    auto *cmr = new ColorMapReverse;
     if (cmr) {
       if ((*stat = cmr->init(map_name + name_len)))
         cmap = cmr;

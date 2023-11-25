@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2007-2021, Roger Kaufman
+   Copyright (c) 2007-2023, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -121,11 +121,7 @@ public:
 
   // coloring
   char face_coloring_method = 's'; // default color by the symmetry algorithm
-  int face_opacity = -1;           // tranparency from 0 to 255
-  string face_pattern = "1";       // for face transparency patterns
   char edge_coloring_method = 'Q'; // edge coloring method is none
-  int edge_opacity = -1;           // transparency from 0 to 255
-  string edge_pattern = "1";       // for edge transparency patterns
   bool edge_set_no_color = false;  // to set no edge coloring
   Color unused_edge_color = Color::invisible; // edges not part of model
   bool symmetric_coloring = false;            // symmetry color for some modes
@@ -135,6 +131,12 @@ public:
   Color edge_default_color = Color(192, 192, 192, 255); // darkgray
 
   Coloring clrngs[3];
+
+  int opacity[3] = {-1, -1, -1}; // transparency from 0 to 255, for v,e,f
+
+  // default of 1 applies transparency to all faces and/or edges
+  string face_pattern = "1"; // for face transparency patterns
+  string edge_pattern = "1"; // for edge transparency patterns
 
   // common variables
   bool angle_is_side_cut = false; // if -z 3 angle is side cut
@@ -181,8 +183,8 @@ Program Options
   -s        side-cut of even order n-icon (default is point-cut)
   -H        hybrid of even order n-icon
   -a        angle (-z 3 only)
-  -r        override inner radius (-z 2 only)
-  -R        override outer radius (-z 2 only)
+  -r <num>  override inner radius (-z 2 only)
+  -R <num>  override outer radius (-z 2 only)
   -b        don't split bowtie faces for twisting (-z 3, -t 0 only)
   -z <mthd> construction method
                1 - n/d must be co-prime. bow-ties can occur (default for d=1)
@@ -204,8 +206,8 @@ Scene Options
   -W        add symmetry polygon (-f s,c or -e s)
 
 Coloring Options (run 'off_util -H color' for help on color formats)
+keyword: none - sets no color or methods. use: map_'color name'%% for one color
   -F <mthd> mthd is face coloring method. The coloring is done before twist
-               keyword: none - sets no color
                s - color by symmetry polygon (default)
                f - color circuits with flood fill (-z 2,3 any n/d)
                c - color by compound
@@ -213,39 +215,37 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                note: the following color options may look better at twist 0
                l - color latitudinally
                m - color longitudinally
-               b - checkerboard with first two colors in the color list
-               n - use each color in succession
+               b - checkerboard with first two colors in the color map
+               n - use each color in map in succession
                x - first two colors based on sign of x
                y - first two colors based on sign of y
                z - first two colors based on sign of z (z is the twist plane)
                o - use first eight colors per xyz octants
-  -S        color circuits symmetrically for coloring method s,f (even n)
-  -C        color continuous and discontinuous circuits with first two colors
-              in the color list (-I required, s,f coloring, no -S, no -z 2)
-  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
-  -O <strg> face transparency pattern string. valid values
-               0 -T value suppressed, 1 -T value applied  (default: '1')
   -E <mthd> mthd is edge coloring method. The coloring is done before twist
-               keyword: none - sets no color
                keyword: Q - defer coloring all edges to option Q  (default)
                   or use the same letter options specified in -f, except c,k
                F - color edges with average adjoining face color
-  -U <tran> edge transparency. valid range from 0 (invisible) to 255 (opaque)
-  -P <strg> edge transparency pattern string. valid values
-               0 -U value suppressed, 1 -U value applied  (default: '1')
-  -Q <col>  color given to uncolored edges and vertices of final model
-               keyword: none - sets no color (default: invisible)
-  -G <c,e>  default color c for uncolored elements e (default: darkgray,ef)
-               keyword: none - sets no color. elements e can include e or f
-  -X <int>  flood fill stop. used with circuit or compound coloring (-f f,k)
-               use 0 (default) to flood fill entire model. if -X is not 0 then
-               return 1 from program if entire model has been colored
+  -T <t,e>  transparency. from 0 (invisible) to 255 (opaque). element is any
+            or all of e - edges, f - faces, a - all (default: f)
   -m <maps> color maps to be tried in turn. (default: colorful, circuits -C)
                optionally followed by elements from e or f (default: ef)
                use map name of 'index' to output index numbers
                colorful:  red,darkorange1,yellow,darkgreen,cyan,blue,magenta,
                           white,gray50,black
-               circuits:  white,gray50 (continuous, discontinuous)
+               circuits:  white,gray50 (continuous, discontinuous no wrapping)
+  -S        color circuits symmetrically for coloring method s,f (even n)
+  -C        color continuous and discontinuous circuits with first two colors
+              in the color list (-I required, s,f coloring, no -S, no -z 2)
+  -O <strg> face transparency pattern string. valid values
+               0 -T n,f value suppressed, 1 -T n,f value applied (default: '1')
+  -P <strg> edge transparency pattern string. valid values
+               0 -T n,e value suppressed, 1 -T n,e value applied (default: '1')
+  -Q <col>  color given to uncolored edges and vertices (default: invisible)
+  -G <c,e>  default color c for uncolored elements e (default: darkgray,ef)
+               elements e can include e or f
+  -X <int>  flood fill stop. used with circuit or compound coloring (-f f,k)
+               use 0 (default) to flood fill entire model. if -X is not 0 then
+               return 1 from program if entire model has been colored
 
 Surface (or Compound) Count Reporting (options above ignored)
   -L <type> types of n-icons to list. Valid values for type
@@ -272,15 +272,17 @@ void ncon_opts::process_command_line(int argc, char **argv)
 {
   opterr = 0;
   int c;
+  int num;
+
+  Split parts;
 
   vector<string> map_files;
 
   handle_long_opts(argc, argv);
 
-  while (
-      (c = getopt(argc, argv,
-                  ":hn:t:sHM:gx:Ac:z:a:r:R:bIL:N:K:JZBD:m:F:SCT:O:E:U:P:Q:YG:"
-                  "X:Wl:o:")) != -1) {
+  while ((c = getopt(argc, argv,
+                     ":hn:t:sHa:r:R:bz:M:gA:c:x:YWISCO:P:Q:G:X:L:N:D:K:JZBF:E:"
+                     "T:m:l:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -323,50 +325,6 @@ void ncon_opts::process_command_line(int argc, char **argv)
       hybrid = true;
       break;
 
-    case 'M':
-      print_status_or_exit(read_int_list(optarg, longitudes, true, 2), c);
-      if (longitudes.front() < 3)
-        error("m must be 3 or greater", c);
-      if (longitudes.size() == 1)
-        longitudes.push_back(longitudes.front());
-      else if (longitudes.size() == 2) {
-        if (longitudes.front() < longitudes.back())
-          error("sides shown (m2) must be less than or equal to longitudes (m)",
-                c);
-        if (longitudes.back() <= 0)
-          error("sides shown (m2) must be at least 1", c);
-      }
-      break;
-
-    case 'g':
-      lon_invisible = true;
-      break;
-
-    case 'x':
-      if (strspn(optarg, "vefE") != strlen(optarg))
-        error(msg_str("elements to hide are '%s' must be from "
-                      "v, e, f and E",
-                      optarg),
-              c);
-      hide_elems = optarg;
-      break;
-
-    case 'A':
-      add_poles = true;
-      break;
-
-    case 'c':
-      if (strspn(optarg, "hv") != strlen(optarg) || strlen(optarg) > 1)
-        error(msg_str("closure is '%s', must be h or v (not both)", optarg), c);
-      closure = optarg;
-      break;
-
-    case 'z':
-      print_status_or_exit(read_int(optarg, &build_method), c);
-      if (build_method < 1 || build_method > 3)
-        error("method must be between 1 and 3", c);
-      break;
-
     case 'a':
       print_status_or_exit(read_double(optarg, &angle), c);
       break;
@@ -387,8 +345,131 @@ void ncon_opts::process_command_line(int argc, char **argv)
       split_bypass = true;
       break;
 
-    case 'I':
-      info = true;
+    case 'z':
+      print_status_or_exit(read_int(optarg, &build_method), c);
+      if (build_method < 1 || build_method > 3)
+        error("method must be between 1 and 3", c);
+      break;
+
+    case 'M':
+      print_status_or_exit(read_int_list(optarg, longitudes, true, 2), c);
+      if (longitudes.front() < 3)
+        error("m must be 3 or greater", c);
+      if (longitudes.size() == 1)
+        longitudes.push_back(longitudes.front());
+      else if (longitudes.size() == 2) {
+        if (longitudes.front() < longitudes.back())
+          error("sides shown (m2) must be less than or equal to longitudes (m)",
+                c);
+        if (longitudes.back() <= 0)
+          error("sides shown (m2) must be at least 1", c);
+      }
+      break;
+
+    case 'g':
+      lon_invisible = true;
+      break;
+
+    case 'A':
+      add_poles = true;
+      break;
+
+    case 'c':
+      if (strspn(optarg, "hv") != strlen(optarg) || strlen(optarg) > 1)
+        error(msg_str("closure is '%s', must be h or v (not both)", optarg), c);
+      closure = optarg;
+      break;
+
+    case 'x':
+      if (strspn(optarg, "vefE") != strlen(optarg))
+        error(msg_str("elements to hide are '%s' must be from "
+                      "v, e, f and E",
+                      optarg),
+              c);
+      hide_elems = optarg;
+      break;
+
+    case 'Y':
+      hide_indent = false;
+      break;
+
+    case 'W':
+      add_symmetry_polygon = true;
+      break;
+
+    case 'S':
+      symmetric_coloring = true;
+      break;
+
+    case 'C':
+      circuit_coloring = true;
+      break;
+
+    case 'O':
+      if (strspn(optarg, "01") != strlen(optarg))
+        error(msg_str("transparency string is '%s', must consist of "
+                      "0 and 1's",
+                      optarg),
+              c);
+      face_pattern = optarg;
+      break;
+
+    case 'P':
+      if (strspn(optarg, "01") != strlen(optarg))
+        error(
+            msg_str("transparency string %s must consist of 0 and 1's", optarg),
+            c);
+      edge_pattern = optarg;
+      break;
+
+    case 'Q':
+      print_status_or_exit(unused_edge_color.read(optarg), c);
+      break;
+
+    case 'G': {
+      Color tmp_color;
+
+      bool set_edge = true;
+      bool set_face = true;
+
+      Split parts(optarg, ",");
+      unsigned int parts_sz = parts.size();
+
+      if (parts_sz > 2)
+        error("excess entries for uncolored elements", c);
+
+      for (unsigned int i = 0; i < parts_sz; i++) {
+        // first argument is color
+        if (i == 0) {
+          print_status_or_exit(tmp_color.read(parts[i]), c);
+        }
+        else if (i == 1) {
+          set_edge = false;
+          set_face = false;
+
+          if (strspn(parts[i], "ef") != strlen(parts[i]))
+            error(msg_str("elements %s must be in e, f", optarg), c);
+
+          if (strchr(parts[i], 'e'))
+            set_edge = true;
+
+          if (strchr(parts[i], 'f'))
+            set_face = true;
+        }
+      }
+
+      if (set_edge)
+        edge_default_color = tmp_color;
+      if (set_face)
+        face_default_color = tmp_color;
+
+      break;
+    }
+
+    case 'X':
+      print_status_or_exit(read_int(optarg, &flood_fill_stop), c);
+      if (flood_fill_stop < 0)
+        error("flood fill stop must be 0 or greater", c);
       break;
 
     case 'L':
@@ -440,10 +521,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
       list_compounds = true;
       break;
 
-    case 'm':
-      map_files.push_back(optarg);
-      break;
-
+    // method q is undocumented as is the old color by circuit algorithm
     case 'F':
       if (!strcasecmp(optarg, "none"))
         face_coloring_method = '0';
@@ -452,30 +530,6 @@ void ncon_opts::process_command_line(int argc, char **argv)
         error(msg_str("invalid face coloring method '%c'", *optarg), c);
       else
         face_coloring_method = *optarg;
-      break;
-
-    case 'S':
-      symmetric_coloring = true;
-      break;
-
-    case 'C':
-      circuit_coloring = true;
-      break;
-
-    case 'T':
-      print_status_or_exit(read_int(optarg, &face_opacity), c);
-      if (face_opacity < 0 || face_opacity > 255) {
-        error("face transparency must be between 0 and 255", c);
-      }
-      break;
-
-    case 'O':
-      if (strspn(optarg, "01") != strlen(optarg))
-        error(msg_str("transparency string is '%s', must consist of "
-                      "0 and 1's",
-                      optarg),
-              c);
-      face_pattern = optarg;
       break;
 
     case 'E':
@@ -492,77 +546,43 @@ void ncon_opts::process_command_line(int argc, char **argv)
         edge_coloring_method = *optarg;
       break;
 
-    case 'U':
-      print_status_or_exit(read_int(optarg, &edge_opacity), c);
-      if (edge_opacity < 0 || edge_opacity > 255) {
-        error("edge transparency must be between 0 and 255", c);
-      }
-      break;
-
-    case 'P':
-      if (strspn(optarg, "01") != strlen(optarg))
-        error(
-            msg_str("transparency string %s must consist of 0 and 1's", optarg),
-            c);
-      edge_pattern = optarg;
-      break;
-
-    case 'Q':
-      print_status_or_exit(unused_edge_color.read(optarg), c);
-      break;
-
-    case 'Y':
-      hide_indent = false;
-      break;
-
-    case 'G': {
-      Color tmp_color;
-
-      bool set_edge = true;
-      bool set_face = true;
-
-      Split parts(optarg, ",");
-      unsigned int parts_sz = parts.size();
-
+    case 'T': {
+      int parts_sz = parts.init(optarg, ",");
       if (parts_sz > 2)
-        error("excess entries for uncolored elements", c);
+        error("the argument has more than 2 parts", c);
 
-      for (unsigned int i = 0; i < parts_sz; i++) {
-        // first argument is color
-        if (i == 0) {
-          print_status_or_exit(tmp_color.read(parts[i]), c);
-        }
-        else if (i == 1) {
-          set_edge = false;
-          set_face = false;
+      print_status_or_exit(read_int(parts[0], &num), c);
+      if (num < 0 || num > 255)
+        error("face transparency must be between 0 and 255", c);
 
-          if (strspn(parts[i], "ef") != strlen(parts[i]))
-            error(msg_str("elements %s must be in e, f", optarg), c);
-
-          if (strchr(parts[i], 'e'))
-            set_edge = true;
-
-          if (strchr(parts[i], 'f'))
-            set_face = true;
-        }
+      // if only one part, apply to faces as default
+      if (parts_sz == 1) {
+        opacity[FACES] = num;
       }
+      else if (parts_sz > 1) {
+        if (strspn(parts[1], "vefa") != strlen(parts[1]))
+          error(msg_str("transparency elements are '%s' must be any or all "
+                        "from  v, e, f, a",
+                        parts[1]),
+                c);
 
-      if (set_edge)
-        edge_default_color = tmp_color;
-      if (set_face)
-        face_default_color = tmp_color;
-
+        string str = parts[1];
+        if (str.find_first_of("va") != string::npos)
+          opacity[VERTS] = num;
+        if (str.find_first_of("ea") != string::npos)
+          opacity[EDGES] = num;
+        if (str.find_first_of("fa") != string::npos)
+          opacity[FACES] = num;
+      }
       break;
     }
 
-    case 'X':
-      print_status_or_exit(read_int(optarg, &flood_fill_stop), c);
-      if (flood_fill_stop < 0)
-        error("flood fill stop must be 0 or greater", c);
+    case 'm':
+      map_files.push_back(optarg);
       break;
 
-    case 'W':
-      add_symmetry_polygon = true;
+    case 'I':
+      info = true;
       break;
 
     case 'l':
@@ -594,17 +614,17 @@ void ncon_opts::process_command_line(int argc, char **argv)
              ncon_range.front() == ncon_range.back()) {
       if (strchr(ncon_surf.c_str(), 'h') || strchr(ncon_surf.c_str(), 'i') ||
           strchr(ncon_surf.c_str(), 'j'))
-        error("for hybrid surfaces n must be even", "N");
+        error("for listing hybrid surfaces n must be even", "N");
       else if (strchr(ncon_surf.c_str(), 'p'))
-        error("for even order n-icon surfaces n must be even", "N");
+        error("for listing even order n-icon surfaces n must be even", "N");
       else if (strchr(ncon_surf.c_str(), 's'))
-        error("for side cut n-icon surfaces n must be even", "N");
+        error("for listing side cut n-icon surfaces n must be even", "N");
     }
     else {
       if (is_even(ncon_range.front()) &&
           ncon_range.front() == ncon_range.back())
         if (strchr(ncon_surf.c_str(), 'o'))
-          error("for odd order n-icons surfaces n must be odd", "N");
+          error("for listing odd order n-icons surfaces n must be odd", "N");
     }
 
     // set defaults
@@ -617,16 +637,16 @@ void ncon_opts::process_command_line(int argc, char **argv)
   else {
     // if these surfaces subsystem parameters are set with ncon_surf, error
     if (filter_surfaces.size() > 0)
-      error("not valid without -L", "K");
+      error("is not valid without -L", "K");
 
     if (ncon_range.size() > 0)
-      error("not valid without -L", "N");
+      error("is not valid without -L", "N");
 
     if (long_form)
-      error("not valid without -L", "J");
+      error("is not valid without -L", "J");
 
     if (filter_case2)
-      error("not valid without -L", "Z");
+      error("is not valid without -L", "Z");
 
     // can cause ret to be set with -B
     // if (list_compounds)
@@ -661,30 +681,34 @@ void ncon_opts::process_command_line(int argc, char **argv)
 
     if (!strchr("fk", face_coloring_method))
       if (flood_fill_stop > 0)
-        error("flood fill stop must not be set when not using flood fill", "X");
+        error(
+            "flood fill stop must not be set if not using flood fill (-F f,k)",
+            "X");
 
     if (build_method == 1) {
       if (gcd(ncon_order, d) != 1)
-        error("when method = 1, n and d must be co-prime", "n");
+        error("when construction method 1 (-z), n and d must be co-prime", "n");
 
       if ((d > 1) && (twist > 1) && (closure.length())) {
-        warning("closure not valid in construction method 1 with d greater "
-                "than 1 and twist greater than 1",
-                "c");
+        error("closure not valid in construction method 1 (-z) with d greater "
+              "than 1 and twist greater than 1",
+              "c");
         closure.clear();
       }
 
       if (((longitudes.back() == 1) ||
            (longitudes.front() - longitudes.back() == 1)) &&
           (strchr(closure.c_str(), 'h'))) {
-        warning("when method = 1, horizontal closure when used\nwith -M <m,m2> "
-                "needs m2 to be greater than 1 or m-m2 to be greater than 1",
-                "c");
+        error("when construction method 1 (-z), horizontal closure when "
+              "used\nwith -M <m,m2> "
+              "needs m2 to be greater than 1 or m-m2 to be greater than 1",
+              "c");
         closure.clear();
       }
 
       if (flood_fill_stop > 0) {
-        warning("flood fill stop has no effect in construction method 1", "X");
+        error("flood fill stop has no effect in construction method 1 (-z)",
+              "X");
         flood_fill_stop = 0;
       }
     }
@@ -717,36 +741,38 @@ void ncon_opts::process_command_line(int argc, char **argv)
       }
 
       if (strchr(closure.c_str(), 'h')) {
-        warning("closure of h not valid in construction method 2", "c");
+        error("closure of h not valid in construction method 2 (-z)", "c");
         closure.clear();
       }
 
       if (add_poles) {
         if (!point_cut) {
-          warning("poles not valid with construction method 2 and side cut",
-                  "A");
+          error("poles not valid with construction method 2 (-z) and side cut "
+                "(-s)",
+                "A");
           add_poles = false;
         }
         else if (!is_even(ncon_order)) {
-          warning("poles not valid with construction method 2 when N is odd",
-                  "A");
+          error("poles not valid with construction method 2 (-z) when N is odd",
+                "A");
           add_poles = false;
         }
       }
     }
     else {
       if (!std::isnan(inner_radius)) {
-        warning("inner radius is only valid in construction method 2", "r");
+        error("inner radius is only valid in construction method 2 (-z)", "r");
         inner_radius = NAN;
       }
 
       if (!std::isnan(outer_radius)) {
-        warning("outer radius is only valid in construction method 2", "R");
+        error("outer radius is only valid in construction method 2 (-z)", "R");
         outer_radius = NAN;
       }
 
       if (!hide_indent) {
-        warning("show indented edges only valid in construction method 2", "Y");
+        error("show indented edges only valid in construction method 2 (-z)",
+              "Y");
         hide_indent = true;
       }
     }
@@ -756,23 +782,23 @@ void ncon_opts::process_command_line(int argc, char **argv)
         error("side cut is not valid when angle is not 0", "s");
 
       if (closure.length()) {
-        warning("closure options not valid with construction method 3", "c");
+        error("closure options not valid with construction method 3 (-z)", "c");
         closure.clear();
       }
 
       // cannot have odd M with this method
       if (!is_even(longitudes.front()))
-        error("-M m must be even with construction method 3", "M");
+        error("-M m must be even with construction method 3 (-z)", "M");
     }
     else {
       if (angle)
-        error("angle is only valid in construction method 3", "a");
+        error("angle is only valid in construction method 3 (-z)", "a");
     }
 
     if (!hide_indent && (edge_coloring_method == 'Q'))
-      warning("indented edges will not be shown unless an edge coloring is "
-              "used (-e)",
-              "Y");
+      error(
+          "indented edges cannot be shown unless without an edge coloring (-E)",
+          "Y");
 
     if (!point_cut) {
       if (!is_even(ncon_order))
@@ -787,7 +813,9 @@ void ncon_opts::process_command_line(int argc, char **argv)
         error("hybrids have no twist 0", "t");
 
       if (!point_cut && build_method != 3)
-        error("hybrids and side cut can only be specified for method 3", "s");
+        error("hybrids and side cut can only be specified for construction "
+              "method 3 (-z)",
+              "s");
 
       if (2 * longitudes.back() < longitudes.front()) {
         warning("for hybrids m2 cannot be less than half of full model. "
@@ -797,12 +825,12 @@ void ncon_opts::process_command_line(int argc, char **argv)
       }
 
       if (closure.length()) {
-        warning("closure options not valid with hybrids -H", "c");
+        error("closure options not valid with hybrids -H", "c");
         closure.clear();
       }
 
       if (add_poles) {
-        warning("poles not valid with hybrids -H", "A");
+        error("poles not valid with hybrids -H", "A");
         add_poles = false;
       }
 
@@ -821,7 +849,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
     // Don't have poles on half or whole side cut models
     if ((half_model(longitudes) || full_model(longitudes)) && !point_cut) {
       if (add_poles)
-        warning("poles not valid with half or full side cut model", "A");
+        error("poles not valid with half or full side cut model", "A");
       add_poles = false;
     }
 
@@ -829,7 +857,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
     if (strchr(closure.c_str(), 'h') &&
         (!point_cut || (!is_even(ncon_order)))) {
       if (add_poles)
-        warning("poles not valid on side cut or when n is odd when -c h", "A");
+        error("poles not valid on side cut or when n is odd when -c h", "A");
       add_poles = false;
     }
 
@@ -838,18 +866,17 @@ void ncon_opts::process_command_line(int argc, char **argv)
       split = true;
       if (add_poles && (!point_cut || (!is_even(ncon_order) ||
                                        (twist != (ncon_order / 2))))) {
-        warning("poles not valid when twist is not 0 or n/2 and point cut",
-                "A");
+        error("poles not valid when twist is not 0 or n/2 and point cut", "A");
         add_poles = false;
       }
     }
 
     if (split_bypass) {
       if (build_method != 3)
-        error("split bypass requires method 3", "b");
+        error("split bypass requires construction method 3 (-z)", "b");
 
       if (twist)
-        error("split bypass requires twist 0", "b");
+        error("split bypass requires twist 0 (-t 0)", "b");
     }
 
     // Full models have no need for closure
@@ -879,8 +906,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
   if (add_symmetry_polygon) {
     if (!(strchr("sc", face_coloring_method)) &&
         (edge_coloring_method != 's')) {
-      warning("adding symmetry polygon only has effect for -f s,c or -e s",
-              "W");
+      error("adding symmetry polygon only has effect for -f s,c or -e s", "W");
       add_symmetry_polygon = false;
     }
   }
@@ -897,16 +923,18 @@ void ncon_opts::process_command_line(int argc, char **argv)
   }
   else if (face_coloring_method == 'f') {
     if (build_method == 1)
-      error("flood fill face coloring is for build method 2 or 3", "f");
+      error("flood fill face coloring is for construction method (-z 2,3)",
+            "f");
   }
   else if (face_coloring_method == 'k') {
     if (build_method == 1)
-      error("compound coloring is for build method 2 or 3", "f");
+      error("compound coloring is for construction method (-z 2,3)", "f");
   }
 
   if (edge_coloring_method == 'f') {
     if (build_method == 1)
-      error("flood fill edge coloring is for build method 2 or 3", "e");
+      error("flood fill edge coloring is for construction method (-z 2,3)",
+            "e");
   }
 
   if (symmetric_coloring && (!(strchr("sfq", face_coloring_method) ||
@@ -922,10 +950,14 @@ void ncon_opts::process_command_line(int argc, char **argv)
       error("circuit coloring will not work with symmetric coloring -S", "C");
 
     if (build_method == 1 && d > 1)
-      error("circuit coloring will not work with method 1 for d > 1", "C");
+      error("circuit coloring will not work for d > 1 with construction method "
+            "1 (-z)",
+            "C");
 
     if (build_method == 2) {
-      warning("circuit coloring will not work when using build method 2", "C");
+      warning("circuit coloring will not work when using construction method 2 "
+              "(-z)",
+              "C");
       warning("switching to build method -z 3", "C");
       build_method = 3;
     }
@@ -958,8 +990,8 @@ void ncon_opts::process_command_line(int argc, char **argv)
 
   // patch for setting edges with no color
   if (edge_set_no_color) {
-    clrngs[1].del_cmap();
-    clrngs[1].add_cmap(alloc_no_colorMap());
+    clrngs[EDGES].del_cmap();
+    clrngs[EDGES].add_cmap(alloc_no_colorMap());
   }
 
   // vertex color map is the same as the edge color map
@@ -980,13 +1012,16 @@ Color set_opacity(Color &c, const int a)
   Color c_bak = c;
   if (!c.set_alpha(a))
     c = c_bak;
+  // possible display problem with opengl with small alpha. set invisible.
+  // else if (!a)
+  //  c = Color::invisible;
   return c;
 }
 
 // safe transparency setting. don't allow alpha set if
 // color is index
 // color is invisible
-// -T or -U have not been set
+// -T has not been set
 // c is not changed
 void set_vert_color(Geometry &geom, const int i, Color c,
                     const int opacity = -1)
@@ -3629,15 +3664,15 @@ void color_circuits(Geometry &geom, const vector<pair<Color, int>> col_elems,
       int j = c.second;
       if (face_elems) {
         opq = opts.face_pattern[n % opts.face_pattern.size()] == '1'
-                  ? opts.face_opacity
+                  ? opts.opacity[FACES]
                   : 255;
-        set_face_color(geom, j, opts.clrngs[2].get_col(n), opq);
+        set_face_color(geom, j, opts.clrngs[FACES].get_col(n), opq);
       }
       else {
         opq = opts.edge_pattern[n % opts.edge_pattern.size()] == '1'
-                  ? opts.edge_opacity
+                  ? opts.opacity[EDGES]
                   : 255;
-        set_edge_color(geom, j, opts.clrngs[1].get_col(n), opq);
+        set_edge_color(geom, j, opts.clrngs[EDGES].get_col(n), opq);
       }
     }
   }
@@ -3651,7 +3686,8 @@ void model_info(Geometry &geom, const ncon_opts &opts)
   fprintf(stderr, "the model is %scomplete\n",
           (full_model(opts.longitudes) || opts.lon_invisible) ? "" : "not ");
   if (opts.build_method == 2)
-    fprintf(stderr, "method 2: circuit counts are not measured\n");
+    opts.warning(
+        "circuit counts are not measured with construction method 2 (-z)");
 
   // measured values
   surfaceData sdm;
@@ -4068,7 +4104,7 @@ void ncon_edge_coloring(Geometry &geom, const vector<edgeList *> &edge_list,
       int lat = i->lat;
 
       if (i->lat < 0) {
-        set_edge_color(geom, j, Color(), opts.edge_opacity);
+        set_edge_color(geom, j, Color(), opts.opacity[EDGES]);
       }
       else {
         int col_idx = 0;
@@ -4081,9 +4117,9 @@ void ncon_edge_coloring(Geometry &geom, const vector<edgeList *> &edge_list,
           circuit_count = col_idx;
 
         opq = opts.edge_pattern[col_idx % opts.edge_pattern.size()] == '1'
-                  ? opts.edge_opacity
+                  ? opts.opacity[EDGES]
                   : 255;
-        set_edge_color(geom, j, opts.clrngs[1].get_col(col_idx), opq);
+        set_edge_color(geom, j, opts.clrngs[EDGES].get_col(col_idx), opq);
       }
     }
 
@@ -4094,9 +4130,9 @@ void ncon_edge_coloring(Geometry &geom, const vector<edgeList *> &edge_list,
           continue;
         int col_idx = edge_color_table[lat].second;
         opq = opts.edge_pattern[col_idx % opts.edge_pattern.size()] == '1'
-                  ? opts.edge_opacity
+                  ? opts.opacity[EDGES]
                   : 255;
-        set_vert_color(geom, pole[i]->idx, opts.clrngs[1].get_col(col_idx),
+        set_vert_color(geom, pole[i]->idx, opts.clrngs[EDGES].get_col(col_idx),
                        opq);
       }
     }
@@ -4105,14 +4141,14 @@ void ncon_edge_coloring(Geometry &geom, const vector<edgeList *> &edge_list,
     for (auto i : edge_list) {
       int j = i->edge_no;
       if (i->lat < 0) {
-        set_edge_color(geom, j, Color(), opts.edge_opacity);
+        set_edge_color(geom, j, Color(), opts.opacity[EDGES]);
       }
       else {
         int lat = i->lat;
         opq = opts.edge_pattern[lat % opts.edge_pattern.size()] == '1'
-                  ? opts.edge_opacity
+                  ? opts.opacity[EDGES]
                   : 255;
-        set_edge_color(geom, j, opts.clrngs[1].get_col(lat), opq);
+        set_edge_color(geom, j, opts.clrngs[EDGES].get_col(lat), opq);
       }
     }
 
@@ -4120,9 +4156,10 @@ void ncon_edge_coloring(Geometry &geom, const vector<edgeList *> &edge_list,
       if (pole[i]->idx > -1) {
         int lat = pole[i]->lat;
         opq = opts.edge_pattern[lat % opts.edge_pattern.size()] == '1'
-                  ? opts.edge_opacity
+                  ? opts.opacity[EDGES]
                   : 255;
-        set_vert_color(geom, pole[i]->idx, opts.clrngs[1].get_col(lat), opq);
+        set_vert_color(geom, pole[i]->idx, opts.clrngs[EDGES].get_col(lat),
+                       opq);
       }
     }
   }
@@ -4130,14 +4167,14 @@ void ncon_edge_coloring(Geometry &geom, const vector<edgeList *> &edge_list,
     for (auto i : edge_list) {
       int j = i->edge_no;
       if (i->lon < 0) {
-        set_edge_color(geom, j, Color(), opts.edge_opacity);
+        set_edge_color(geom, j, Color(), opts.opacity[EDGES]);
       }
       else {
         int lon = i->lon;
         opq = opts.edge_pattern[lon % opts.edge_pattern.size()] == '1'
-                  ? opts.edge_opacity
+                  ? opts.opacity[EDGES]
                   : 255;
-        set_edge_color(geom, j, opts.clrngs[1].get_col(lon), opq);
+        set_edge_color(geom, j, opts.clrngs[EDGES].get_col(lon), opq);
       }
     }
 
@@ -4145,7 +4182,7 @@ void ncon_edge_coloring(Geometry &geom, const vector<edgeList *> &edge_list,
     for (unsigned int i = 0; i < 2; i++) {
       if (pole[i]->idx > -1) {
         set_vert_color(geom, pole[i]->idx, opts.edge_default_color,
-                       opts.edge_opacity);
+                       opts.opacity[EDGES]);
       }
     }
   }
@@ -4153,7 +4190,7 @@ void ncon_edge_coloring(Geometry &geom, const vector<edgeList *> &edge_list,
     for (auto i : edge_list) {
       int j = i->edge_no;
       if (i->lat < 0)
-        set_edge_color(geom, j, Color(), opts.edge_opacity);
+        set_edge_color(geom, j, Color(), opts.opacity[EDGES]);
       else {
         int n = -1;
         if ((is_even(i->lat) && is_even(i->lon)) ||
@@ -4163,9 +4200,9 @@ void ncon_edge_coloring(Geometry &geom, const vector<edgeList *> &edge_list,
           n = 1;
 
         opq = opts.edge_pattern[n % opts.edge_pattern.size()] == '1'
-                  ? opts.edge_opacity
+                  ? opts.opacity[EDGES]
                   : 255;
-        set_edge_color(geom, j, opts.clrngs[1].get_col(n), opq);
+        set_edge_color(geom, j, opts.clrngs[EDGES].get_col(n), opq);
       }
     }
 
@@ -4173,9 +4210,9 @@ void ncon_edge_coloring(Geometry &geom, const vector<edgeList *> &edge_list,
     for (unsigned int i = 0; i < 2; i++) {
       if (pole[i]->idx > -1) {
         opq = opts.edge_pattern[i % opts.edge_pattern.size()] == '1'
-                  ? opts.edge_opacity
+                  ? opts.opacity[EDGES]
                   : 255;
-        set_vert_color(geom, pole[i]->idx, opts.clrngs[1].get_col(i), opq);
+        set_vert_color(geom, pole[i]->idx, opts.clrngs[EDGES].get_col(i), opq);
       }
     }
   }
@@ -4185,9 +4222,9 @@ void ncon_edge_coloring(Geometry &geom, const vector<edgeList *> &edge_list,
     for (unsigned int i = 0; i < edge_list.size(); i++) {
       int j = edge_list[i]->edge_no;
       opq = opts.edge_pattern[i % opts.edge_pattern.size()] == '1'
-                ? opts.edge_opacity
+                ? opts.opacity[EDGES]
                 : 255;
-      set_edge_color(geom, j, opts.clrngs[1].get_col(i), opq);
+      set_edge_color(geom, j, opts.clrngs[EDGES].get_col(i), opq);
       k++;
     }
 
@@ -4195,9 +4232,9 @@ void ncon_edge_coloring(Geometry &geom, const vector<edgeList *> &edge_list,
       int col_idx = k;
       if (pole[i]->idx > -1) {
         opq = opts.edge_pattern[k % opts.edge_pattern.size()] == '1'
-                  ? opts.edge_opacity
+                  ? opts.opacity[EDGES]
                   : 255;
-        set_vert_color(geom, pole[i]->idx, opts.clrngs[1].get_col(col_idx),
+        set_vert_color(geom, pole[i]->idx, opts.clrngs[EDGES].get_col(col_idx),
                        opq);
       }
       k++;
@@ -4228,15 +4265,15 @@ void ncon_edge_coloring(Geometry &geom, const vector<edgeList *> &edge_list,
         n = 1;
       else {
         n = -1;
-        opq = opts.edge_opacity;
+        opq = opts.opacity[EDGES];
         c = opts.edge_default_color;
       }
 
       if (n > -1) {
         opq = opts.edge_pattern[n % opts.edge_pattern.size()] == '1'
-                  ? opts.edge_opacity
+                  ? opts.opacity[EDGES]
                   : 255;
-        c = opts.clrngs[1].get_col(n);
+        c = opts.clrngs[EDGES].get_col(n);
       }
       set_edge_color(geom, j, c, opq);
     }
@@ -4245,7 +4282,7 @@ void ncon_edge_coloring(Geometry &geom, const vector<edgeList *> &edge_list,
     for (unsigned int i = 0; i < 2; i++) {
       if (pole[i]->idx > -1) {
         set_vert_color(geom, pole[i]->idx, opts.edge_default_color,
-                       opts.edge_opacity);
+                       opts.opacity[EDGES]);
       }
     }
   }
@@ -4286,15 +4323,15 @@ void ncon_edge_coloring(Geometry &geom, const vector<edgeList *> &edge_list,
         n = 7;
       else {
         n = -1;
-        opq = opts.edge_opacity;
+        opq = opts.opacity[EDGES];
         c = opts.edge_default_color;
       }
 
       if (n > -1) {
         opq = opts.edge_pattern[n % opts.edge_pattern.size()] == '1'
-                  ? opts.edge_opacity
+                  ? opts.opacity[EDGES]
                   : 255;
-        c = opts.clrngs[1].get_col(n);
+        c = opts.clrngs[EDGES].get_col(n);
       }
       set_edge_color(geom, j, c, opq);
     }
@@ -4303,7 +4340,7 @@ void ncon_edge_coloring(Geometry &geom, const vector<edgeList *> &edge_list,
     for (unsigned int i = 0; i < 2; i++) {
       if (pole[i]->idx > -1) {
         set_vert_color(geom, pole[i]->idx, opts.edge_default_color,
-                       opts.edge_opacity);
+                       opts.opacity[EDGES]);
       }
     }
   }
@@ -4335,7 +4372,7 @@ void ncon_face_coloring(Geometry &geom, const vector<faceList *> &face_list,
       int lat = i->lat;
 
       if (i->lat < 0) {
-        set_face_color(geom, j, Color(), opts.face_opacity);
+        set_face_color(geom, j, Color(), opts.opacity[FACES]);
       }
       else {
         int col_idx = 0;
@@ -4348,9 +4385,9 @@ void ncon_face_coloring(Geometry &geom, const vector<faceList *> &face_list,
           circuit_count = col_idx;
 
         opq = opts.face_pattern[col_idx % opts.face_pattern.size()] == '1'
-                  ? opts.face_opacity
+                  ? opts.opacity[FACES]
                   : 255;
-        set_face_color(geom, j, opts.clrngs[2].get_col(col_idx), opq);
+        set_face_color(geom, j, opts.clrngs[FACES].get_col(col_idx), opq);
       }
     }
   }
@@ -4358,14 +4395,14 @@ void ncon_face_coloring(Geometry &geom, const vector<faceList *> &face_list,
     for (auto i : face_list) {
       int j = i->face_no;
       if (i->lat < 0) {
-        set_face_color(geom, j, Color(), opts.face_opacity);
+        set_face_color(geom, j, Color(), opts.opacity[FACES]);
       }
       else {
         int lat = i->lat;
         opq = opts.face_pattern[lat % opts.face_pattern.size()] == '1'
-                  ? opts.face_opacity
+                  ? opts.opacity[FACES]
                   : 255;
-        set_face_color(geom, j, opts.clrngs[2].get_col(lat), opq);
+        set_face_color(geom, j, opts.clrngs[FACES].get_col(lat), opq);
       }
     }
   }
@@ -4373,14 +4410,14 @@ void ncon_face_coloring(Geometry &geom, const vector<faceList *> &face_list,
     for (auto i : face_list) {
       int j = i->face_no;
       if (i->lon < 0) {
-        set_face_color(geom, j, Color(), opts.face_opacity);
+        set_face_color(geom, j, Color(), opts.opacity[FACES]);
       }
       else {
         int lon = i->lon;
         opq = opts.face_pattern[lon % opts.face_pattern.size()] == '1'
-                  ? opts.face_opacity
+                  ? opts.opacity[FACES]
                   : 255;
-        set_face_color(geom, j, opts.clrngs[2].get_col(lon), opq);
+        set_face_color(geom, j, opts.clrngs[FACES].get_col(lon), opq);
       }
     }
   }
@@ -4388,7 +4425,7 @@ void ncon_face_coloring(Geometry &geom, const vector<faceList *> &face_list,
     for (auto i : face_list) {
       int j = i->face_no;
       if (i->lat < 0)
-        set_face_color(geom, j, Color(), opts.face_opacity);
+        set_face_color(geom, j, Color(), opts.opacity[FACES]);
       else {
         int n = -1;
         if ((is_even(i->lat) && is_even(i->lon)) ||
@@ -4398,9 +4435,9 @@ void ncon_face_coloring(Geometry &geom, const vector<faceList *> &face_list,
           n = 1;
 
         opq = opts.face_pattern[n % opts.face_pattern.size()] == '1'
-                  ? opts.face_opacity
+                  ? opts.opacity[FACES]
                   : 255;
-        set_face_color(geom, j, opts.clrngs[2].get_col(n), opq);
+        set_face_color(geom, j, opts.clrngs[FACES].get_col(n), opq);
       }
     }
   }
@@ -4408,9 +4445,9 @@ void ncon_face_coloring(Geometry &geom, const vector<faceList *> &face_list,
     for (unsigned int i = 0; i < face_list.size(); i++) {
       int j = face_list[i]->face_no;
       opq = opts.face_pattern[i % opts.face_pattern.size()] == '1'
-                ? opts.face_opacity
+                ? opts.opacity[FACES]
                 : 255;
-      set_face_color(geom, j, opts.clrngs[2].get_col(i), opq);
+      set_face_color(geom, j, opts.clrngs[FACES].get_col(i), opq);
     }
   }
   else if (strchr("xyz", opts.face_coloring_method)) {
@@ -4438,15 +4475,15 @@ void ncon_face_coloring(Geometry &geom, const vector<faceList *> &face_list,
         n = 1;
       else {
         n = -1;
-        opq = opts.face_opacity;
+        opq = opts.opacity[FACES];
         c = opts.face_default_color;
       }
 
       if (n > -1) {
         opq = opts.face_pattern[n % opts.face_pattern.size()] == '1'
-                  ? opts.face_opacity
+                  ? opts.opacity[FACES]
                   : 255;
-        c = opts.clrngs[2].get_col(n);
+        c = opts.clrngs[FACES].get_col(n);
       }
       set_face_color(geom, j, c, opq);
     }
@@ -4488,15 +4525,15 @@ void ncon_face_coloring(Geometry &geom, const vector<faceList *> &face_list,
         n = 7;
       else {
         n = -1;
-        opq = opts.face_opacity;
+        opq = opts.opacity[FACES];
         c = opts.face_default_color;
       }
 
       if (n > -1) {
         opq = opts.face_pattern[n % opts.face_pattern.size()] == '1'
-                  ? opts.face_opacity
+                  ? opts.opacity[FACES]
                   : 255;
-        c = opts.clrngs[2].get_col(n);
+        c = opts.clrngs[FACES].get_col(n);
       }
       set_face_color(geom, j, c, opq);
     }
@@ -4727,11 +4764,11 @@ int ncon_face_coloring_by_adjacent_face(Geometry &geom,
     if (c_idx.is_index()) {
       int idx = c_idx.get_index();
       idx = color_table[idx];
-      Color c = opts.clrngs[2].get_col(idx);
+      Color c = opts.clrngs[FACES].get_col(idx);
       int opq = 255;
-      if (opts.face_opacity > -1)
+      if (opts.opacity[FACES] > -1)
         opq = opts.face_pattern[idx % opts.face_pattern.size()] == '1'
-                  ? opts.face_opacity
+                  ? opts.opacity[FACES]
                   : 255;
       set_face_color(geom, i, c, opq);
     }
@@ -4855,9 +4892,9 @@ void ncon_edge_coloring_by_adjacent_edge(Geometry &geom,
   if ((pole[0]->idx != -1) && ((is_even(n) && pc) || opts.build_method == 3) &&
       !opts.hybrid) {
     int opq = opts.edge_pattern[0 % (int)opts.edge_pattern.size()] == '1'
-                  ? opts.edge_opacity
+                  ? opts.opacity[EDGES]
                   : 255;
-    Color c = opts.clrngs[1].get_col(0);
+    Color c = opts.clrngs[EDGES].get_col(0);
     set_vert_color(geom, pole[0]->idx, c, opq);
   }
 
@@ -4866,9 +4903,9 @@ void ncon_edge_coloring_by_adjacent_edge(Geometry &geom,
       !opts.hybrid) {
     int l = (opts.symmetric_coloring && is_even(opts.ncon_order)) ? 0 : lat - 1;
     int opq = opts.edge_pattern[l % (int)opts.edge_pattern.size()] == '1'
-                  ? opts.edge_opacity
+                  ? opts.opacity[EDGES]
                   : 255;
-    Color c = opts.clrngs[1].get_col(l);
+    Color c = opts.clrngs[EDGES].get_col(l);
     set_vert_color(geom, pole[1]->idx, c, opq);
   }
 
@@ -4947,11 +4984,11 @@ void ncon_edge_coloring_by_adjacent_edge(Geometry &geom,
     if (c_idx.is_index()) {
       int idx = c_idx.get_index();
       idx = color_table[idx];
-      Color c = opts.clrngs[1].get_col(idx);
+      Color c = opts.clrngs[EDGES].get_col(idx);
       int opq = 255;
-      if (opts.edge_opacity > -1)
+      if (opts.opacity[EDGES] > -1)
         opq = opts.edge_pattern[idx % opts.edge_pattern.size()] == '1'
-                  ? opts.edge_opacity
+                  ? opts.opacity[EDGES]
                   : 255;
       set_edge_color(geom, edge_no[i], c, opq);
     }
@@ -5009,10 +5046,10 @@ int ncon_face_coloring_by_compound_flood(Geometry &geom,
     if (opts.flood_fill_stop && (flood_fill_count >= opts.flood_fill_stop))
       return 0;
 
-    Color c = opts.clrngs[2].get_col(polygon_no);
-    if (opts.face_opacity > -1)
+    Color c = opts.clrngs[FACES].get_col(polygon_no);
+    if (opts.opacity[FACES] > -1)
       opq = opts.face_pattern[polygon_no % opts.face_pattern.size()] == '1'
-                ? opts.face_opacity
+                ? opts.opacity[FACES]
                 : 255;
     set_face_color(geom, face_no, c, opq);
 
@@ -5031,7 +5068,7 @@ int ncon_face_coloring_by_compound_flood(Geometry &geom,
   if (opts.build_method < 3 && (opts.posi_twist == 0)) {
     for (int cap : caps)
       geom.colors(FACES).set(face_list[cap]->face_no,
-                             opts.clrngs[2].get_col(0));
+                             opts.clrngs[FACES].get_col(0));
   }
 
   return ret;
@@ -5102,7 +5139,7 @@ void ncon_edge_coloring_from_faces(Geometry &geom, const ncon_opts &opts)
   }
 
   Coloring clrng(&geom);
-  clrng.add_cmap(opts.clrngs[2].clone());
+  clrng.add_cmap(opts.clrngs[FACES].clone());
   clrng.e_from_adjacent(FACES);
   clrng.v_from_adjacent(FACES);
 
@@ -5752,7 +5789,7 @@ void build_compound_polygon(vector<Geometry> &polar_polygons,
   // speed up. if number of polygons is 1 they are all one color
   if (num_polygons == 1) {
     for (unsigned int i = 0; i < 2; i++) {
-      Coloring(&(polar_polygons[i])).e_one_col(opts.clrngs[2].get_col(0));
+      Coloring(&(polar_polygons[i])).e_one_col(opts.clrngs[FACES].get_col(0));
     }
     return;
   }
@@ -5763,7 +5800,7 @@ void build_compound_polygon(vector<Geometry> &polar_polygons,
 
   // maximum colors
   for (unsigned int i = 0; i < num_polygons; i++) {
-    Color c = opts.clrngs[2].get_col(i);
+    Color c = opts.clrngs[FACES].get_col(i);
     // find starter edges with color c in polygon 0
     vector<int> edges;
     for (unsigned int j = 0; j < polar_polygons[0].edges().size(); j++) {
@@ -5833,7 +5870,7 @@ void build_compound_polygon(vector<Geometry> &polar_polygons,
     for (unsigned int i = 0; i < e_indexes.size(); i++) {
       pair<int, int> edge_indexes = e_indexes[i];
       polar_polygons[edge_indexes.first].colors(EDGES).set(
-          edge_indexes.second, opts.clrngs[2].get_col(map_index));
+          edge_indexes.second, opts.clrngs[FACES].get_col(map_index));
     }
   }
 }
@@ -5865,7 +5902,7 @@ Geometry find_polar_polygon(Geometry geom, const vector<faceList *> &face_list,
     // int lat = face_list[i]->lat;
     // fprintf(stderr,"face_no = %d polygon_no = %d lat = %d\n",
     //   face_no, polygon_no, lat);
-    Color c = opts.clrngs[2].get_col(polygon_no);
+    Color c = opts.clrngs[FACES].get_col(polygon_no);
     geom.colors(FACES).set(face_no, c);
   }
 
@@ -5882,7 +5919,7 @@ Geometry find_polar_polygon(Geometry geom, const vector<faceList *> &face_list,
 
   // edge and vertex colors from faces
   Coloring clrng(&geom);
-  clrng.add_cmap(opts.clrngs[2].clone());
+  clrng.add_cmap(opts.clrngs[FACES].clone());
   clrng.e_from_adjacent(FACES);
 
   Geometry polar_polygon;
@@ -6091,9 +6128,9 @@ void ncon_face_coloring_by_compound(Geometry &geom,
                                     polar_polygon.edge_v(i, 1));
       double ht = vdot(near_pt.unit(), axes[ax]);
       Color c = polar_polygon.colors(EDGES).get(i);
-      if (opts.face_opacity > -1) {
+      if (opts.opacity[FACES] > -1) {
         int opq = opts.face_pattern[i % opts.face_pattern.size()] == '1'
-                      ? opts.face_opacity
+                      ? opts.opacity[FACES]
                       : 255;
         c = set_opacity(c, opq);
       }
@@ -6376,7 +6413,7 @@ int process_normal(Geometry &geom, ncon_opts &opts)
       for (auto i : face_list) {
         int j = i->face_no;
         if (i->lat < 0)
-          set_face_color(geom, j, opts.face_default_color, opts.face_opacity);
+          set_face_color(geom, j, opts.face_default_color, opts.opacity[FACES]);
       }
     }
 
@@ -6624,12 +6661,12 @@ void pgon_post_process(Geometry &pgon, vector<Vec3d> &axes, const int N,
             GeometryInfo(pgon).get_symmetry_type_name().c_str(), Dih_num);
 
   Coloring e_clrng(&pgon);
-  ColorMap *f_map = opts.clrngs[2].clone();
+  ColorMap *f_map = opts.clrngs[FACES].clone();
   e_clrng.add_cmap(f_map);
   e_clrng.e_sets(sym_equivs[1]);
 
   Coloring v_clrng(&pgon);
-  ColorMap *e_map = opts.clrngs[1].clone();
+  ColorMap *e_map = opts.clrngs[EDGES].clone();
   v_clrng.add_cmap(e_map);
   v_clrng.v_sets(sym_equivs[0]);
 
@@ -6813,9 +6850,9 @@ void color_by_symmetry(Geometry &geom, Geometry &pgon, const ncon_opts &opts)
             nearest_point(Vec3d(0, 0, 0), pgon.edge_v(i, 0), pgon.edge_v(i, 1));
         double ht = vdot(near_pt.unit(), axes[ax]);
         Color c = pgon.colors(EDGES).get(i);
-        if (opts.face_opacity > -1) {
+        if (opts.opacity[FACES] > -1) {
           int opq = opts.face_pattern[i % opts.face_pattern.size()] == '1'
-                        ? opts.face_opacity
+                        ? opts.opacity[FACES]
                         : 255;
           c = set_opacity(c, opq);
         }
@@ -6876,9 +6913,9 @@ void color_by_symmetry(Geometry &geom, Geometry &pgon, const ncon_opts &opts)
       for (int ax = 0; ax < 2; ax++) {
         double ht = vdot(pgon.verts(i).unit(), axes[ax]);
         Color c = pgon.colors(VERTS).get(i);
-        if (opts.edge_opacity > -1) {
+        if (opts.opacity[EDGES] > -1) {
           int opq = opts.edge_pattern[i % opts.edge_pattern.size()] == '1'
-                        ? opts.edge_opacity
+                        ? opts.opacity[EDGES]
                         : 255;
           c = set_opacity(c, opq);
         }

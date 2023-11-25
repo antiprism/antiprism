@@ -32,13 +32,13 @@ geodesic -c 2 ico | canonical -O bd | antiview -v 0.02
 Make a propeller cube, canonicalize it, and cover it with the tranparent
 convex hull of the base and reciprocal
 <<CMDS_START>>
-conway pC | canonical -O C -U 255,255,255,128 | antiview -v 0.01
+conway pC | canonical -O bdc -F white,c,128 | antiview -v 0.01
 <<CMDS_END>>
 
-Make a gyro icosahedron, canonicalize it, make it transparent, and show the
+Make a gyro icosahedron, make it transparent, canonicalize it, and show the
 edge tangent sphere and base edge nearpoints
 <<CMDS_START>>
-conway gI | canonical -O bnU -T 128 | antiview -v 0.01
+conway gI | canonical -O bnU -F u,b,128 | antiview -v 0.01
 <<CMDS_END>>
 
 A nice conway notation model and the same model as base and dual incircle rings

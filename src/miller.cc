@@ -61,7 +61,7 @@ public:
   // internal colorings are needed for local coloring
   OffColor off_color = OffColor(map_string);
 
-  int face_opacity = -1; // tranparency from 0 to 255
+  int opacity[3] = {-1, -1, -1}; // transparency from 0 to 255, for v,e,f
 
   miller_opts() : ProgramOpts("miller") {}
 
@@ -110,7 +110,8 @@ keyword: none - sets no color
               e - color with average adjacent edge color
               f - color with average adjacent face color
               n - color by order of vertex
-  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
+  -T <t,e>  transparency. from 0 (invisible) to 255 (opaque). element is any
+            or all of, v - vertices, e - edges, f - faces, a - all (default: f)
   -m <maps> a comma separated list of color maps used to transform color
             indexes (default: compound), a part consisting of letters from
             v, e, f, selects the element types to apply the map list to
@@ -126,6 +127,7 @@ void miller_opts::process_command_line(int argc, char **argv)
 {
   opterr = 0;
   int c;
+  int num;
 
   Split parts;
   Color col;
@@ -218,11 +220,36 @@ void miller_opts::process_command_line(int argc, char **argv)
         off_color.set_f_sub_sym(strlen(optarg) > 2 ? optarg + 2 : "");
       break;
 
-    case 'T':
-      print_status_or_exit(read_int(optarg, &face_opacity), c);
-      if (face_opacity < 0 || face_opacity > 255)
+    case 'T': {
+      int parts_sz = parts.init(optarg, ",");
+      if (parts_sz > 2)
+        error("the argument has more than 2 parts", c);
+
+      print_status_or_exit(read_int(parts[0], &num), c);
+      if (num < 0 || num > 255)
         error("face transparency must be between 0 and 255", c);
+
+      // if only one part, apply to faces as default
+      if (parts_sz == 1) {
+        opacity[FACES] = num;
+      }
+      else if (parts_sz > 1) {
+        if (strspn(parts[1], "vefa") != strlen(parts[1]))
+          error(msg_str("transparency elements are '%s' must be any or all "
+                        "from  v, e, f, a",
+                        parts[1]),
+                c);
+
+        string str = parts[1];
+        if (str.find_first_of("va") != string::npos)
+          opacity[VERTS] = num;
+        if (str.find_first_of("ea") != string::npos)
+          opacity[EDGES] = num;
+        if (str.find_first_of("fa") != string::npos)
+          opacity[FACES] = num;
+      }
       break;
+    }
 
     case 'm':
       // keep map name to pass to stellation function
@@ -252,30 +279,6 @@ void miller_opts::process_command_line(int argc, char **argv)
 
   if (argc - optind == 1)
     ifile = argv[optind];
-}
-
-void color_stellation(Geometry &geom, miller_opts &opts)
-{
-  char op = opts.off_color.get_f_col_op();
-
-  // any other color options done by class
-  // will color edges invisible if so set
-  Status stat;
-  if (!(stat = opts.off_color.off_color_main(geom)))
-    opts.error(stat.msg());
-
-  // this must go after off_color_main since 'hH' creates new invisible edges
-  // geom is built with face colors from the diagram, if 'q' do nothing
-  if (op && !strchr("qQ", op)) {
-    if (op && strchr("hH", op))
-      color_faces_by_connection(geom, opts.off_color.clrngs[2], (op == 'H'));
-  }
-
-  if (opts.face_opacity > -1) {
-    Status stat = apply_transparency(geom, opts.face_opacity);
-    if (!stat.is_ok())
-      opts.warning(stat.msg(), 'T');
-  }
 }
 
 struct MillerItem {
@@ -692,7 +695,7 @@ int make_resource_miller(Geometry &geom, string name, miller_opts &opts,
       opts.off_color.set_f_col(Color(255, 193, 37));
   }
 
-  color_stellation(geom, opts);
+  color_stellation(geom, opts.off_color);
 
   // if only diagram is being output, clear geom
   if (opts.output_parts.find_first_of("s") == string::npos)
@@ -712,6 +715,9 @@ int make_resource_miller(Geometry &geom, string name, miller_opts &opts,
       geom.transform(trans);
     }
   }
+
+  // apply all element transparencies
+  apply_transparencies(geom, opts.opacity);
 
   return 0; // name found
 }

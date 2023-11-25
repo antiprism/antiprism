@@ -53,7 +53,7 @@ whirl operation repeated twice on a dodecahedron seed and colored radially
 (the operator string is quoted for OSs that treat ^ as a special
 character)
 <<CMDS_START>>
-conway "w^2D" | off_color_radial | antiview -x ve
+conway "w^2D" -i 5000 | off_color_radial | antiview -x ve
 <<CMDS_END>>
 
 The lace operation subscript 2 applied to triangular faces of a cuboctahedron

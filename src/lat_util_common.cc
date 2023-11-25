@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2022, Adrian Rossiter, Roger Kaufman
+   Copyright (c) 2003-2023, Adrian Rossiter, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 

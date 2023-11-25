@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2016, Adrian Rossiter
+   Copyright (c) 2003-2023, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -317,10 +317,11 @@ public:
    * \param face_col face colour. */
   void vef_one_col(Color vert_col, Color edge_col, Color face_col);
 
-  /// Apply transparancy to faces of the geom
+  /// Apply transparancy to elements of the geom
   /** unset color and map indexes cannot be made transparent
-   * \param face_opacity value from 1 to 255 */
-  Status apply_transparency(const int face_opacity);
+   * \param opacity value from 1 to 255
+   * \param elem is FACES, EDGES, VERTS default FACES */
+  Status apply_transparency(const int opacity, const int elem = FACES);
 };
 
 /// Read colourings for vertex, edge and face elements from a string.

@@ -97,7 +97,7 @@ public:
   // maps are managed
   OffColor off_color = OffColor("");
 
-  int face_opacity = -1; // tranparency from 0 to 255
+  int opacity[3] = {-1, -1, -1}; // transparency from 0 to 255, for v,e,f
 
   radial_opts() : ProgramOpts("off_color_radial") {}
 
@@ -143,7 +143,8 @@ keyword: none - sets no color
               a color value - apply to all vertices
               e - color with average adjacent edge color
               f - color with average adjacent face color
-  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
+  -T <t,e>  transparency. from 0 (invisible) to 255 (opaque). element is any
+            or all of, v - vertices, e - edges, f - faces, a - all (default: f)
   -m <maps> a comma separated list of color maps used to transform color
             indexes (default: rng), a part consisting of letters from
             v, e, f, selects the element types to apply the map list to
@@ -163,6 +164,7 @@ void radial_opts::process_command_line(int argc, char **argv)
 {
   opterr = 0;
   int c;
+  int num;
   string id;
 
   Split parts;
@@ -307,11 +309,36 @@ void radial_opts::process_command_line(int argc, char **argv)
         off_color.set_e_sub_sym(strlen(optarg) > 2 ? optarg + 2 : "");
       break;
 
-    case 'T':
-      print_status_or_exit(read_int(optarg, &face_opacity), c);
-      if (face_opacity < 0 || face_opacity > 255)
+    case 'T': {
+      int parts_sz = parts.init(optarg, ",");
+      if (parts_sz > 2)
+        error("the argument has more than 2 parts", c);
+
+      print_status_or_exit(read_int(parts[0], &num), c);
+      if (num < 0 || num > 255)
         error("face transparency must be between 0 and 255", c);
+
+      // if only one part, apply to faces as default
+      if (parts_sz == 1) {
+        opacity[FACES] = num;
+      }
+      else if (parts_sz > 1) {
+        if (strspn(parts[1], "vefa") != strlen(parts[1]))
+          error(msg_str("transparency elements are '%s' must be any or all "
+                        "from  v, e, f, a",
+                        parts[1]),
+                c);
+
+        string str = parts[1];
+        if (str.find_first_of("va") != string::npos)
+          opacity[VERTS] = num;
+        if (str.find_first_of("ea") != string::npos)
+          opacity[EDGES] = num;
+        if (str.find_first_of("fa") != string::npos)
+          opacity[FACES] = num;
+      }
       break;
+    }
 
     case 'm':
       map_string_faces = optarg;
@@ -388,7 +415,7 @@ void radial_opts::process_command_line(int argc, char **argv)
         read_colorings(off_color.clrngs, map_string_axes.c_str()), 'n');
   else {
     if (axes_coloring == 1)
-      off_color.clrngs[1].add_cmap(alloc_default_map());
+      off_color.clrngs[EDGES].add_cmap(alloc_default_map());
     else if (axes_coloring == 2) {
       // match symmetro face colors
       print_status_or_exit(read_colorings(off_color.clrngs, "axes,e"), 'n');
@@ -723,7 +750,8 @@ void set_indexes_to_color(Geometry &geom, radial_opts &opts)
   opts.message(msg_str("maximum ridges formed is %d", max_ridge));
   string map_name = opts.map_string_faces;
   if (map_name == "rng" || map_name == "rainbow" || map_name == "gray" ||
-      map_name == "grey" || map_name == "rnd" || map_name == "deal") {
+      map_name == "gray" || map_name == "rnd" || map_name == "deal" ||
+      map_name == "index") {
     map_name = opts.map_string_faces + std::to_string(max_ridge);
     opts.message(msg_str("default map used is %s", map_name.c_str()),
                  "option -m");
@@ -746,11 +774,8 @@ void set_indexes_to_color(Geometry &geom, radial_opts &opts)
   if (!(stat = opts.off_color.off_color_main(geom)))
     opts.error(stat.msg());
 
-  if (opts.face_opacity > -1) {
-    Status stat = apply_transparency(geom, opts.face_opacity);
-    if (!stat.is_ok())
-      opts.warning(stat.msg(), 'T');
-  }
+  // apply all element transparencies
+  apply_transparencies(geom, opts.opacity);
 }
 
 // for now show_axes is always 2 to display whole axis

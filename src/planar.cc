@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2010-2021, Roger Kaufman
+   Copyright (c) 2010-2023, Roger Kaufman
 
    Antiprism - http://www.antiprism.com
 
@@ -29,6 +29,7 @@
 */
 
 #include "../base/antiprism.h"
+#include "color_common.h"
 
 #include <algorithm>
 #include <cctype>
@@ -90,11 +91,12 @@ public:
   bool cmy_mode = false;                 // complementary colors
   bool ryb_mode = false;                 // Red-Yellow-Blue color wheel
   double brightness_adj = -2.0;          // -1 - black, 1 - white
-  int face_opacity = -1;                 // tranparency from 0 to 255
 
   ColorMapMulti map;
   ColorMapMulti map_negative;
-  string map_file_negative; // negative winding number map name
+  string map_file_negative; // negative winding number map name (calculated)
+
+  int opacity[3] = {-1, -1, -1}; // transparency from 0 to 255, for v,e,f
 
   planar_opts() : ProgramOpts("planar") {}
 
@@ -177,7 +179,8 @@ Coloring Options (run 'off_util -H color' for help on color formats)
                n - unique color for faces with same normals
                p - unique color for faces on same planes only
                o - unique color for faces on same and opposite normals
-  -T <tran> face transparency. valid range from 0 (invisible) to 255 (opaque)
+  -T <t,e>  transparency. from 0 (invisible) to 255 (opaque). element is any
+            or all of, v - vertices, e - edges, f - faces, a - all (default: f)
   -Z <col>  color for areas found colorless by winding (default: invisible)
                keyword: b - force a color blend
   -W <opt>  color by winding number, using maps (overrides option -F)
@@ -197,6 +200,9 @@ void planar_opts::process_command_line(int argc, char **argv)
 {
   opterr = 0;
   int c;
+  int num;
+
+  Split parts;
 
   string arg_id;
   string map_file;
@@ -393,11 +399,36 @@ void planar_opts::process_command_line(int argc, char **argv)
       face_color_method = *optarg;
       break;
 
-    case 'T':
-      print_status_or_exit(read_int(optarg, &face_opacity), c);
-      if (face_opacity < 0 || face_opacity > 255)
+    case 'T': {
+      int parts_sz = parts.init(optarg, ",");
+      if (parts_sz > 2)
+        error("the argument has more than 2 parts", c);
+
+      print_status_or_exit(read_int(parts[0], &num), c);
+      if (num < 0 || num > 255)
         error("face transparency must be between 0 and 255", c);
+
+      // if only one part, apply to faces as default
+      if (parts_sz == 1) {
+        opacity[FACES] = num;
+      }
+      else if (parts_sz > 1) {
+        if (strspn(parts[1], "vefa") != strlen(parts[1]))
+          error(msg_str("transparency elements are '%s' must be any or all "
+                        "from  v, e, f, a",
+                        parts[1]),
+                c);
+
+        string str = parts[1];
+        if (str.find_first_of("va") != string::npos)
+          opacity[VERTS] = num;
+        if (str.find_first_of("ea") != string::npos)
+          opacity[EDGES] = num;
+        if (str.find_first_of("fa") != string::npos)
+          opacity[FACES] = num;
+      }
       break;
+    }
 
     case 'm':
       map_file = optarg;
@@ -2454,10 +2485,8 @@ int main(int argc, char *argv[])
   if (opts.hole_detection)
     make_hole_connectors_invisible(geom);
 
-  // apply transparency
-  Status stat = Coloring(&geom).apply_transparency(opts.face_opacity);
-  if (stat.is_warning())
-    opts.warning(stat.msg(), 'T');
+  // apply all element transparencies
+  apply_transparencies(geom, opts.opacity);
 
   opts.write_or_error(geom, opts.ofile);
 

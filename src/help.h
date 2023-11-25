@@ -1582,12 +1582,19 @@ Internal (see below for format):
    ghart
       color map that George Hart used in an online conway notation program.
       See the Antiprism conway program for details. spread map is appended
-   convexity, circuits
-      a map of shades of gray to color circuits in the n_icons program and
-      convexity where that option is available
+   kaplan
+      an estimated color map that Craig Kaplan used in a paper presenting
+      the symmetro program. See Antiprism symmetro program for details.
    axes
-      four primary color to color faces by axis in the symmetro program and to
-      color the three types of axes in the off_color_radial program
+      four primary color to color the three axes of faces in the Antiprism
+      symmetro program and to color the three types of axes in the Antiprism
+      off_color_radial program. map is wrapped.
+   circuits
+      a map of two shades of gray to color circuits in the Antiprism n_icons
+      program. spread map is appended
+   convexity
+      a map of shades of three shades of gray to color convexity in various
+      Antiprism programs. map is wrapped. 
 
    These maps contain a mapping for every index number (except default for
    rng is 256 entries). Follow the map name immediately by a number to set

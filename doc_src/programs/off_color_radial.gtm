@@ -25,6 +25,16 @@ Also generate symmetry axes with -d axes
 off_color -e white -v white geo_7_4_d | off_color_radial -A 2 | antiview -v 0.01
 <<CMDS_END>>
 
+Same model with colors reversed
+<<CMDS_START>>
+off_color -e white -v white geo_7_4_d | off_color_radial -A 2 -r | antiview -v 0.01
+<<CMDS_END>>
+
+Same model grayscale
+<<CMDS_START>>
+off_color -e white -v white geo_7_4_d | off_color_radial -A 2 -m gray | antiview -v 0.01
+<<CMDS_END>>
+
 Color a figure from conway notation from faces 0 and 3
 <<CMDS_START>>
 conway a^5C | off_color_radial -f f0,3 | antiview -x ve

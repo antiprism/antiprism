@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2021, Adrian Rossiter
+   Copyright (c) 2003-2023, Adrian Rossiter
 
    Antiprism - http://www.antiprism.com
 
@@ -678,33 +678,60 @@ void Coloring::vef_one_col(Color vert_col, Color edge_col, Color face_col)
     f_one_col(face_col);
 }
 
-Status Coloring::apply_transparency(const int face_opacity)
+Status Coloring::apply_transparency(const int opacity, const int elem)
 {
   Status stat;
   string warnings;
 
-  if (face_opacity > -1) {
-    ColorValuesToRangeHsva valmap(msg_str("A%g", (double)face_opacity / 255));
-    valmap.apply(*get_geom(), FACES);
+  if ((elem < VERTS) || (elem > FACES))
+    return stat.set_error("element must be FACES, EDGES, or VERTS");
 
-    for (const auto &kp : get_geom()->colors(FACES).get_properties()) {
+  if (opacity > -1) {
+    ColorValuesToRangeHsva valmap(msg_str("A%g", (double)opacity / 255));
+    valmap.apply(*get_geom(), elem);
+
+    for (const auto &kp : get_geom()->colors(elem).get_properties()) {
       if (kp.second.is_index()) {
         warnings += "map indexes";
         break;
       }
     }
 
-    // check if some faces are not set
-    if (get_geom()->colors(FACES).get_properties().size() <
-        get_geom()->faces().size()) {
+    unsigned int sz = 0;
+    string elem_str;
+    if (elem == FACES) {
+      sz = get_geom()->faces().size();
+      elem_str = "faces";
+    }
+    else if (elem == EDGES) {
+      sz = get_geom()->edges().size();
+      elem_str = "edges";
+    }
+    else if (elem == VERTS) {
+      sz = get_geom()->verts().size();
+      elem_str = "vertices";
+    }
+
+    // check if some element colors are not set
+    if (get_geom()->colors(elem).get_properties().size() < sz) {
       if (!warnings.empty())
         warnings += " and ";
-      warnings += "unset faces";
+      warnings += "unset " + elem_str;
+    }
+
+    // check if some element edges are implicit
+    if (elem == EDGES) {
+      GeometryInfo info(*get_geom());
+      if (sz < info.get_impl_edges().size()) {
+        if (!warnings.empty())
+          warnings += " and ";
+        warnings += "implicit " + elem_str;
+      }
     }
   }
 
   if (!warnings.empty()) {
-    warnings += " cannot be made trasparent";
+    warnings += " cannot be made transparent";
     stat.set_warning(warnings);
   }
 

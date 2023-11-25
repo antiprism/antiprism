@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2003-2022, Adrian Rossiter, Roger Kaufman
+   Copyright (c) 2003-2023, Adrian Rossiter, Roger Kaufman
    Includes ideas and algorithms by George W. Hart, http://www.georgehart.com
 
    Antiprism - http://www.antiprism.com
@@ -34,6 +34,7 @@
 
 #include "../base/antiprism.h"
 #include "canonical_common.h"
+#include "color_common.h"
 
 #include <cstdio>
 #include <string>
@@ -43,6 +44,36 @@ using std::string;
 using std::vector;
 
 using namespace anti;
+
+// constants for color subscripts
+namespace {
+/*
+  -O <args> output b - base, d - dual, i - intersection points (default: b)
+               edge nearpoints, n - base, m - dual; C - base/dual convex hull
+               edge nearpoints centroid, p - base, q - dual; o - origin point
+               tangent sphere, u - minimum, U - maximum
+               incircles, s - base, t - dual; as rings, S - base, T - dual
+*/
+unsigned const col_b = 0;
+unsigned const col_d = 1;
+unsigned const col_i = 2;
+unsigned const col_n = 3;
+unsigned const col_m = 4;
+unsigned const col_c = 5;
+unsigned const col_p = 6;
+unsigned const col_q = 7;
+unsigned const col_o = 8;
+unsigned const col_u = 9;
+unsigned const col_s = 10;
+unsigned const col_t = 11;
+unsigned const col_total = 12;
+}; // namespace
+
+int find_assignment(const string &assignment)
+{
+  string assigned_chars("bdinmcpqoust");
+  return ((int)assigned_chars.find(assignment));
+}
 
 class cn_opts : public ProgramOpts {
 public:
@@ -67,30 +98,13 @@ public:
   double factor_max = NAN;          // maximum adjustment factor
   char initial_point_type = 'c';    // c - edge centroids, n - edge near points
   string output_parts = "b";        // parts of output model
-  int face_opacity = -1;            // transparency
   double offset = 0;                // incircle offset from faces
   int roundness = 8;                // roundness of tangency sphere
 
+  OffColor off_color[col_total] = {OffColor("")}; // for color/operator input
+  int off_opacity[col_total][3]; // for transparency element's operator
+
   double eps = anti::epsilon;
-
-  char base_incircles_color_method = 'f'; // take face colors is default
-  char dual_incircles_color_method = 'f'; // take face colors is default
-  char base_face_color_method = '\0';     // possible convexity coloring
-  char dual_face_color_method = 'b';      // take colors from base vertices
-  char base_edge_color_method = '\0';     // possible convexity coloring
-
-  Color ipoints_col = Color(255, 255, 0);              // yellow
-  Color base_nearpts_col = Color(255, 0, 0);           // red
-  Color dual_nearpts_col = Color(0, 100, 0);           // darkgreen
-  Color base_incircles_col = Color();                  // unset
-  Color dual_incircles_col = Color();                  // unset
-  Color base_face_col = Color(Color::maximum_index);   // unset
-  Color dual_face_col = Color();                       // unset
-  Color base_edge_col = Color(Color::maximum_index);   // unset
-  Color dual_edge_col = Color(Color::maximum_index);   // unset
-  Color base_vertex_col = Color(Color::maximum_index); // unset
-  Color dual_vertex_col = Color(Color::maximum_index); // unset
-  Color sphere_col = Color(255, 255, 255);             // white
 
   cn_opts() : ProgramOpts("canonical")
   {
@@ -101,6 +115,8 @@ public:
 
   void process_command_line(int argc, char **argv);
   void usage();
+
+  void parse_color_string(const char *optarg, const char c);
 };
 
 void extended_help()
@@ -446,7 +462,7 @@ Canonical and Planarization Options
                processing (with -p p, -c c) 
 
 Extra Options
-  -E <perc> percentage to scale edge tangency (default: 50) (-c m)
+  -Q <perc> percentage to scale edge tangency (default: 50) (-c m)
   -P <perc> percentage to scale face planarity (default: 20) (-c m, -p m, -p p)
   -f <adj>  initial percent adjustment factor, optionally followed by a comma
             and a maximum percent adjustment (default: 1,50) (-c c)
@@ -456,7 +472,7 @@ Extra Options
             
 Scene Options
   -O <args> output b - base, d - dual, i - intersection points (default: b)
-               edge nearpoints, n - base, m - dual; C - base/dual convex hull
+               edge nearpoints, n - base, m - dual; c - base/dual convex hull
                edge nearpoints centroid, p - base, q - dual; o - origin point
                tangent sphere, u - minimum, U - maximum
                incircles, s - base, t - dual; as rings, S - base, T - dual
@@ -465,20 +481,27 @@ Scene Options
   -Y        align output model geometry to full symmetry
 
 Coloring Options (run 'off_util -H color' for help on color formats)
-  -I <col>  intersection points and/or origin color (default: yellow)
-  -N <col>  base near points, centroid color (default: red)
-  -M <col>  dual near points, centroid color (default: darkgreen)
-  -S <col>  base incircles color. keyword: f take color of face (default)
-  -R <col>  dual incircles color. keyword: f take color of face (default)
-  -F <col>  base face color. keyword: d convexity (default: unchanged)
-  -D <col>  dual face color. keyword: b take color from base vertices (default)
-  -J <col>  base edge color. keyword: d convexity (default: unchanged)
-  -K <col>  dual edge color (default: unchanged)
-  -V <col>  base vertex color (default: unchanged)
-  -W <col>  dual vertex color (default: unchanged)
-  -U <col>  unit sphere and/or convex hull color (default: white)
-  -T <tran> base/dual transparency. range from 0 (invisible) to 255 (opaque)
-  built in map for convexity (white=convex, gray50=coplanar, gray25=non-convex)
+keyword: none - sets no color, u - input base model, color of element unchanged
+  -F <col>  face color/operation, assignment (required), transparency (optional)
+              assignments to are: b - base, d - dual, i - intersection points
+                edge nearpoints, n - base, m - dual; c - base/dual convex hull
+                edge nearpoints centroid, p - base, q - dual; o - origin point
+                u - tangent sphere, incircles (or rings), s - base, t - dual
+                (one element, required; multiple -F as needed)
+              -F d,b - face color by convexity, -F b,d - color from base verts
+              -F s,f take color from faces, -F t,f take color from faces
+              defaults: b - 'u' unchanged, d - 'b' take color from base verts,
+                i - yellow, n,p - red, m,q - darkgreen, c - white,
+                o - yellow, u - white, s,t - 'f' color of face
+  -E <col>  edge color (same format as for faces) (defaults: unchanged)
+            -E d,b - edge color by convexity
+  -V <col>  vertex color (same format as for faces) (defaults: unchanged)
+            transparency: valid range from 0 (invisible) to 255 (opaque)
+  -m <maps> a comma separated list of color maps used to transform color
+            indexes (default: colorful), a part consisting of letters from
+            v, e, f, selects the element types to apply the map list to
+            (default 'vef'). use map name of 'index' to output index numbers
+               convexity:  white,gray50,gray25 (for -F d,b, -E d,b)
 
 )",
       prog_name(), help_ver_text, it_ctrl.get_status_check_and_report_iters(),
@@ -492,15 +515,35 @@ void cn_opts::process_command_line(int argc, char **argv)
   int c;
   int num;
 
+  Split parts;
+  Color col;
+
   bool p_set = false;
   bool c_set = false;
 
+  off_color[col_d].set_f_col_op('b');
+  off_color[col_s].set_f_col_op('f');               // take colors from faces
+  off_color[col_t].set_f_col_op('f');               // take colors from faces
+  off_color[col_i].set_v_col(Color(255, 255, 0));   // yellow
+  off_color[col_n].set_v_col(Color(255, 0, 0));     // red
+  off_color[col_m].set_v_col(Color(0, 100, 0));     // darkgreen
+  off_color[col_p].set_v_col(Color(255, 0, 0));     // red
+  off_color[col_q].set_v_col(Color(0, 100, 0));     // darkgreen
+  off_color[col_o].set_v_col(Color(255, 255, 0));   // yellow
+  off_color[col_c].set_f_col(Color(255, 255, 255)); // white
+  off_color[col_u].set_f_col(Color(255, 255, 255)); // white
+  off_color[col_u].set_e_col(Color::invisible);     // invisible
+  off_color[col_u].set_v_col(Color::invisible);     // invisible
+
+  // initialize opacity array
+  for (int i = 0; i < 3; i++)
+    std::fill(off_opacity[i], off_opacity[i] + col_total, -1);
+
   handle_long_opts(argc, argv);
 
-  while (
-      (c = getopt(argc, argv,
-                  ":hHe:s:t:p:i:c:n:yO:q:g:E:P:f:Cd:Yz:I:N:M:S:R:F:D:J:K:V:W:"
-                  "U:T:l:o:")) != -1) {
+  while ((c = getopt(argc, argv,
+                     ":hHe:s:t:p:i:c:n:yO:q:g:Q:P:f:Cd:Yz:V:E:F:m:l:o:")) !=
+         -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -518,7 +561,7 @@ void cn_opts::process_command_line(int argc, char **argv)
 
     case 's':
       if (strspn(optarg, "vefa") != strlen(optarg))
-        error(msg_str("suffle parts are '%s' must be any or all from "
+        error(msg_str("shuffle parts are '%s' must be any or all from "
                       "v, e, f, a",
                       optarg),
               c);
@@ -570,9 +613,9 @@ void cn_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'O':
-      if (strspn(optarg, "bdinmopqsStTuUC") != strlen(optarg))
+      if (strspn(optarg, "bdinmopqsStTuUc") != strlen(optarg))
         error(msg_str("output parts are '%s' must be any or all from "
-                      "b, d, i, n, m, o, p, q, s, S, t, T, u, U, C",
+                      "b, d, i, n, m, o, p, q, s, S, t, T, u, U, c",
                       optarg),
               c);
       output_parts = optarg;
@@ -586,7 +629,7 @@ void cn_opts::process_command_line(int argc, char **argv)
       print_status_or_exit(read_int(optarg, &roundness), c);
       break;
 
-    case 'E':
+    case 'Q':
       print_status_or_exit(read_double(optarg, &edge_factor), c);
       if (edge_factor <= 0 || edge_factor >= 100)
         warning("edge factor not inside range 0 to 100", c);
@@ -638,79 +681,20 @@ void cn_opts::process_command_line(int argc, char **argv)
       print_status_or_exit(it_ctrl.set_status_checks(optarg), c);
       break;
 
-    case 'I':
-      print_status_or_exit(ipoints_col.read(optarg), c);
+    case 'V':
+      parse_color_string(optarg, c);
       break;
 
-    case 'N':
-      print_status_or_exit(base_nearpts_col.read(optarg), c);
-      break;
-
-    case 'M':
-      print_status_or_exit(dual_nearpts_col.read(optarg), c);
-      break;
-
-    case 'S':
-      base_incircles_color_method = '\0';
-      if (strchr("f", *optarg))
-        base_incircles_color_method = *optarg;
-      else
-        print_status_or_exit(base_incircles_col.read(optarg), c);
-      break;
-
-    case 'R':
-      dual_incircles_color_method = '\0';
-      if (strchr("f", *optarg))
-        dual_incircles_color_method = *optarg;
-      else
-        print_status_or_exit(dual_incircles_col.read(optarg), c);
+    case 'E':
+      parse_color_string(optarg, c);
       break;
 
     case 'F':
-      base_face_color_method = '\0';
-      if (strchr("d", *optarg))
-        base_face_color_method = *optarg;
-      else
-        print_status_or_exit(base_face_col.read(optarg), c);
+      parse_color_string(optarg, c);
       break;
 
-    case 'D':
-      dual_face_color_method = '\0';
-      if (strchr("b", *optarg))
-        dual_face_color_method = *optarg;
-      else
-        print_status_or_exit(dual_face_col.read(optarg), c);
-      break;
-
-    case 'J':
-      base_edge_color_method = '\0';
-      if (strchr("d", *optarg))
-        base_edge_color_method = *optarg;
-      else
-        print_status_or_exit(base_edge_col.read(optarg), c);
-      break;
-
-    case 'K':
-      print_status_or_exit(dual_edge_col.read(optarg), c);
-      break;
-
-    case 'V':
-      print_status_or_exit(base_vertex_col.read(optarg), c);
-      break;
-
-    case 'W':
-      print_status_or_exit(dual_vertex_col.read(optarg), c);
-      break;
-
-    case 'U':
-      print_status_or_exit(sphere_col.read(optarg), c);
-      break;
-
-    case 'T':
-      print_status_or_exit(read_int(optarg, &face_opacity), c);
-      if (face_opacity < 0 || face_opacity > 255) {
-        error("face transparency must be between 0 and 255", c);
-      }
+    case 'm':
+      print_status_or_exit(read_colorings(off_color[col_b].clrngs, optarg), c);
       break;
 
     case 'l':
@@ -781,7 +765,201 @@ void cn_opts::process_command_line(int argc, char **argv)
   if (argc - optind == 1)
     ifile = argv[optind];
 
+  // fill in missing maps
+  string default_map_name = "convexity";
+  for (unsigned int i = 0; i < 3; i++) {
+    string map_name = default_map_name;
+    // if map is already set, skip
+    if (off_color[col_b].clrngs[i].get_cmaps().size())
+      continue;
+    off_color[col_b].clrngs[i].add_cmap(colormap_from_name(map_name.c_str()));
+  }
+
   eps = it_ctrl.get_test_val();
+}
+
+// parse color entry. assingment is required
+// 2 args - color name/index/operation, assignment
+// 3 args - color name/index/operation, assignment, transparency
+// 4 args - color r,g,b/index/operation, assignment
+// 5 args - color r,g,b/index/operation, assignment, transparency
+// assign color or operation to assingment character in optarg
+// c is parameter character to display if an error is displayed
+void cn_opts::parse_color_string(const char *optarg, const char c)
+{
+  Split parts(optarg, ",");
+  unsigned int parts_sz = parts.size();
+
+  int dummy;
+  Status is_int = read_int(parts[0], &dummy);
+  if (is_int.is_ok()) {
+    if (parts_sz == 3)
+      error("assigment is required, got only color", c);
+    else if (parts_sz > 5)
+      error("the argument is a color value and has more than 5 parts", c);
+  }
+  else if (!is_int.is_ok()) {
+    if (parts_sz == 1)
+      error("assigment is required, got only color", c);
+    else if (parts_sz > 3)
+      error("the argument is a color name and has more than 3 parts", c);
+  }
+
+  Color col;
+  bool valid_entry = false;
+  unsigned int next_parms_idx = 1;
+
+  // see if entry is a valid r,g,b
+  if (parts_sz >= 3) {
+    string color_str_tmp = string(parts[0]) + "," + parts[1] + "," + parts[2];
+    if (col.read(color_str_tmp.c_str())) {
+      if (col.is_set())
+        valid_entry = true;
+      next_parms_idx = 3;
+    }
+  }
+
+  // check to see if it is a valid color name
+  if (!valid_entry) {
+    if (col.read(parts[0])) {
+      if (col.is_set())
+        valid_entry = true;
+      next_parms_idx = 1;
+    }
+  }
+
+  // allow valid operators
+  bool is_operator = false;
+  if (!valid_entry) {
+    // for faces:
+    // u for b
+    // d for b
+    // b for d
+    // f for s
+    // f for t
+    // borrow off_color[0]
+    if (off_color[0].f_op_check((char *)parts[0], "udbf")) {
+      is_operator = true;
+      valid_entry = true; // don't check for color
+    }
+  }
+
+  // if the color is not valid, output error
+  if (!valid_entry)
+    print_status_or_exit(col.read(parts[0]), c);
+
+  // find what entity color or operator is assigned to
+  string assignment;
+  int assign_idx = -1;
+  if (parts_sz > next_parms_idx) {
+    // if the next part is an assignment
+    assignment = parts[next_parms_idx];
+    bool err = false;
+    if (assignment.length() > 1)
+      err = true;
+    else {
+      assign_idx = find_assignment(assignment);
+      if (assign_idx < 0)
+        err = true;
+    }
+    if (err)
+      error(msg_str("assignment is '%s' and must be one character of 'b, c, d, "
+                    "i, n, m, o, p, q, s, t, u'",
+                    assignment.c_str()),
+            c);
+    else
+      next_parms_idx++;
+  }
+
+  if (is_operator) {
+    valid_entry = false; // reset
+    // check for valid operators in context
+    if (c == 'F') {
+      // base colors unchanged
+      if (!strcmp(parts[0], "u") && assignment == "b") {
+        off_color[col_b].set_f_col_op('u');
+        valid_entry = true;
+      }
+      // base color by convexity of faces
+      else if (!strcmp(parts[0], "d") && assignment == "b") {
+        off_color[col_b].set_f_col_op('d');
+        valid_entry = true;
+      }
+      // if dual keeping colors from the base vertices, do nothing
+      else if (!strcmp(parts[0], "b") && assignment == "d") {
+        off_color[col_d].set_f_col_op('\0');
+        valid_entry = true;
+      }
+      // if base incircles take colors from faces
+      else if (!strcmp(parts[0], "f") && assignment == "s") {
+        off_color[col_s].set_f_col_op('f');
+        valid_entry = true;
+      }
+      // if dual incircles take colors from faces
+      else if (!strcmp(parts[0], "f") && assignment == "t") {
+        off_color[col_t].set_f_col_op('f');
+        valid_entry = true;
+      }
+    }
+    else if (c == 'E') {
+      // base colors unchanged
+      if (!strcmp(parts[0], "u") && assignment == "b") {
+        off_color[col_b].set_e_col_op('u');
+        valid_entry = true;
+      }
+      // base color by convexity of edges
+      else if (!strcmp(parts[0], "d") && assignment == "b") {
+        off_color[col_b].set_e_col_op('d');
+        valid_entry = true;
+      }
+    }
+    else if (c == 'V') {
+      // base colors unchanged
+      if (!strcmp(parts[0], "u") && assignment == "b") {
+        off_color[col_b].set_v_col_op('u');
+        valid_entry = true;
+      }
+    }
+
+    if (!valid_entry)
+      error(msg_str("invalid operator '%s' for assignment '%s'", parts[0],
+                    assignment.c_str()),
+            c);
+  }
+
+  // check for transparency
+  int opacity = 255;
+  if (parts_sz > next_parms_idx) {
+    // if the next part is an integer
+    if (read_int(parts[next_parms_idx], &opacity)) {
+      if (opacity < 0 || opacity > 255)
+        error(msg_str("transparency is '%d' and must be between 0 and 255",
+                      opacity),
+              c);
+      if (!col.set_alpha(opacity))
+        warning("transparency has no effect on map indexes or invisible", c);
+      next_parms_idx++;
+    }
+  }
+
+  if (c == 'V') {
+    if (!is_operator)
+      off_color[assign_idx].set_v_col(col);
+    off_opacity[assign_idx][VERTS] = opacity;
+  }
+  else if (c == 'E') {
+    if (!is_operator)
+      off_color[assign_idx].set_e_col(col);
+    off_opacity[assign_idx][EDGES] = opacity;
+  }
+  else if (c == 'F') {
+    if (!is_operator)
+      off_color[assign_idx].set_f_col(col);
+    off_opacity[assign_idx][FACES] = opacity;
+  }
+  else
+    // should never happend
+    error("parse_color_string must be called from 'V', 'E' or 'F'", c);
 }
 
 bool is_nonoverlap_single_cover(const Geometry &geom)
@@ -796,7 +974,8 @@ bool is_nonoverlap_single_cover(const Geometry &geom)
   for (const auto &face : geom.faces()) {
     const auto C = geom.face_cent(face).unit(); // face cent proj onto sphere
     const int f_sz = face.size();
-    // Consider each edge of the face to make a triangle with the face centroid
+    // Consider each edge of the face to make a triangle with the face
+    // centroid
     for (int i = 0; i < f_sz; i++) {
       vector<Vec3d> tri = {verts[face[i]], verts[face[(i + 1) % f_sz]], C};
       // get the three angles and sum them
@@ -884,7 +1063,7 @@ bool check_planarity(const Geometry &geom)
 }
 */
 
-void planarity_info(const Geometry &geom)
+void planarity_info(const Geometry &geom, const cn_opts &opts)
 {
   GeometryInfo rep(geom);
 
@@ -897,8 +1076,7 @@ void planarity_info(const Geometry &geom)
     if (nonplanar > max_nonplanar)
       max_nonplanar = nonplanar;
   }
-  fprintf(stderr, "\n");
-  fprintf(stderr, "maximum nonplanarity = %.0e\n", max_nonplanar);
+  opts.message(msg_str("maximum nonplanarity = %.0e", max_nonplanar));
   // fprintf(stderr, "average_nonplanarity = %.17g\n", sum_nonplanar / sz);
   // fprintf(stderr, "isoperimetric quotient = %.17g\n",
   // rep.isoperimetric_quotient());
@@ -972,14 +1150,14 @@ double edge_nearpoints_error(const Geometry &geom, double &min, double &max,
 
 double nearpoint_report(const Geometry &geom, const vector<Vec3d> &nearpts,
                         string str, bool &perfect_score,
-                        const double &epsilon_local)
+                        const double &epsilon_local, const cn_opts &opts)
 {
   double min = 0;
   double max = 0;
   Vec3d center;
   edge_nearpoints_error(geom, min, max, center);
-  fprintf(stderr, "%s range of edge nearpoint error is %.0e to %.0e\n\n",
-          str.c_str(), min, max);
+  opts.message(msg_str("%s range of edge nearpoint error is %.0e to %.0e",
+                       str.c_str(), min, max));
 
   int radius_count = nearpts.size();
   int nearpts_size = nearpts.size();
@@ -992,10 +1170,10 @@ double nearpoint_report(const Geometry &geom, const vector<Vec3d> &nearpts,
     perfect_score = false;
 
   double np_pct = radius_count / (double)nearpts_size * 100;
-  fprintf(stderr,
-          "%d out of %d %s edge nearpoint radii lie within %.0e of length 1 "
-          "(%g%%)\n",
-          radius_count, nearpts_size, str.c_str(), epsilon_local, np_pct);
+  opts.message(msg_str(
+      "%d out of %d %s edge nearpoint radii lie within %.0e of length 1 "
+      "(%g%%)",
+      radius_count, nearpts_size, str.c_str(), epsilon_local, np_pct));
 
   double max_error = std::numeric_limits<int>::min();
   for (unsigned int i = 0; i < 3; i++) {
@@ -1012,17 +1190,17 @@ double nearpoint_report(const Geometry &geom, const vector<Vec3d> &nearpts,
     lstr = "does not lie ";
     perfect_score = false;
   }
-  fprintf(
-      stderr,
-      "%s nearpoint centroid (%.0e, %.0e, %.0e) %swithin %.0e of the origin\n",
+  opts.message(msg_str(
+      "%s nearpoint centroid (%.0e, %.0e, %.0e) %swithin %.0e of the origin",
       str.c_str(), center[0], center[1], center[2], lstr.c_str(),
-      epsilon_local);
+      epsilon_local));
 
   return max;
 }
 
 bool canonical_report(const Geometry &base, vector<Vec3d> &base_nearpts,
-                      vector<Vec3d> &ips, const double &epsilon_local)
+                      vector<Vec3d> &ips, const double &epsilon_local,
+                      const cn_opts &opts)
 {
   bool perfect_score = true;
 
@@ -1032,32 +1210,34 @@ bool canonical_report(const Geometry &base, vector<Vec3d> &base_nearpts,
   int ip_size = ips.size();
   int bn_size = base_nearpts.size();
   double pct = ip_size / (double)bn_size * 100;
-  fprintf(stderr,
-          "%d out of %d base/dual edge intersection points found (%g%%)\n",
-          ip_size, bn_size, pct);
+  opts.message(
+      msg_str("%d out of %d base/dual edge intersection points found (%g%%)",
+              ip_size, bn_size, pct));
   if (ip_size != bn_size)
     perfect_score = false;
 
   max_error = nearpoint_report(base, base_nearpts, "base", perfect_score,
-                               epsilon_local);
-  fprintf(stderr, "base canonical model maximum error is %.0e\n", max_error);
+                               epsilon_local, opts);
+  opts.message(
+      msg_str("base canonical model maximum error is %.0e", max_error));
 
   // report planarity
-  planarity_info(base);
+  planarity_info(base, opts);
   // check if extra faces are produced on a convex hull
   string s = "no ";
   if (get_convexity(base) != Convexity::convex_strict) {
     s = "";
     perfect_score = false;
   }
-  fprintf(stderr, "%sextra faces produced by convex hull\n\n", s.c_str());
+  opts.message(msg_str("%sextra faces produced by convex hull", s.c_str()));
 
   string str;
   if (is_nonoverlap_single_cover(base))
     str = "no ";
   else
     perfect_score = false;
-  fprintf(stderr, "base canonical model has %soverlap error\n\n", str.c_str());
+  opts.message(
+      msg_str("base canonical model has %soverlap error", str.c_str()));
 
   return perfect_score;
 }
@@ -1149,7 +1329,7 @@ double incircle_radius(const Geometry &geom, Vec3d &center, const int face_no)
   return radius;
 }
 
-Geometry incircles(const Geometry &geom, const char &incircle_color_method,
+Geometry incircles(const Geometry &geom, const char incircle_color_method,
                    const Color &incircle_color, bool filled, double offset)
 {
   Geometry incircles_geom;
@@ -1160,11 +1340,13 @@ Geometry incircles(const Geometry &geom, const char &incircle_color_method,
     Vec3d face_centroid = anti::centroid(geom.verts(), geom.faces(i));
     Vec3d face_normal = face_norm(geom.verts(), geom.faces(i)).unit();
     Vec3d center = face_normal * vdot(face_centroid, face_normal);
-    Color col = geom.colors(FACES).get(i);
 
     // find radius of incircle, and make incircle of radius
     Geometry incircle = circle;
-    if (incircle_color_method == 'f') {
+
+    // color incircles here if based on face color
+    if (incircle_color_method && strchr("fF", incircle_color_method)) {
+      Color col = geom.colors(FACES).get(i);
       Coloring(&incircle).e_one_col(col);
       Coloring(&incircle).f_one_col(col);
     }
@@ -1201,46 +1383,23 @@ void unitize_vertex_radius(Geometry &geom)
 
 // models from incomplete processing and other situations be large or small
 // set radius to 1 for get_dual call, if necessary
-void reset_model_size(Geometry &geom, const double &epsilon_local)
+void reset_model_size(Geometry &geom, const double &epsilon_local,
+                      cn_opts &opts)
 {
   double radius = edge_nearpoints_radius(geom);
   if (double_ne(radius, 1.0, epsilon_local)) {
-    fprintf(stderr,
-            "Resetting base nearpoints average radius to within %.0e of 1\n",
-            epsilon_local);
+    opts.message(
+        msg_str("Resetting base nearpoints average radius to within %.0e of 1",
+                epsilon_local));
     unitize_nearpoints_radius(geom);
   }
 }
 
-void set_edge_colors(Geometry &geom, const Color col)
-{
-  // if color hasn't been input let current color unchanged
-  if (!col.is_maximum_index()) {
-    geom.add_missing_impl_edges();
-    Coloring(&geom).e_one_col(col);
-  }
-}
-
-void set_vertex_colors(Geometry &geom, const Color col)
-{
-  // if color hasn't been input let current color unchanged
-  if (!col.is_maximum_index()) {
-    Coloring(&geom).v_one_col(col);
-  }
-}
-
+// changed base is returned
 void construct_model(Geometry &base, Geometry &dual,
                      vector<Vec3d> &base_nearpts, vector<Vec3d> &dual_nearpts,
-                     vector<Vec3d> &ips, const cn_opts &opts)
+                     vector<Vec3d> &ips, cn_opts &opts)
 {
-  // map for convexity coloring
-  auto *col_map = new ColorMapMap;
-  col_map->set_col(0, Color(255, 255, 255)); // convex
-  col_map->set_col(1, Color(127, 127, 127)); // coplanar
-  col_map->set_col(2, Color(64, 64, 64));    // nonconvex
-  ColorMapMulti conv_map;
-  conv_map.add_cmap(col_map);
-
   // get statistics before model is changed, if needed
   double min = 0;
   double max = 0;
@@ -1248,121 +1407,210 @@ void construct_model(Geometry &base, Geometry &dual,
   if (opts.output_parts.find_first_of("uU") != string::npos)
     edge_nearpoints_radius(base, min, max, center);
 
-  if (opts.base_face_color_method == 'd')
-    color_faces_by_convexity(base, conv_map, opts.eps);
-  else if (!opts.base_face_col.is_maximum_index())
-    Coloring(&base).f_one_col(opts.base_face_col);
+  // base elements
+  char op = opts.off_color[col_b].get_f_col_op();
+  if (op && strchr("uU", op)) {
+    // apply transparency to operation
+    Status stat = apply_transparency(base, opts.off_opacity[col_b][FACES]);
+    if (stat.is_warning())
+      opts.warning(stat.msg(), col_b);
+    // clear operation
+    opts.off_color[col_b].set_f_col_op('\0');
+  }
+  else if (op && strchr("dD", op)) {
+    color_faces_by_convexity(base, opts.off_color[col_b].clrngs[FACES],
+                             (op == 'D'), opts.eps);
+    // apply transparency to operation
+    Status stat = apply_transparency(base, opts.off_opacity[col_b][FACES]);
+    if (stat.is_warning())
+      opts.warning(stat.msg(), col_b);
+    // clear operation
+    opts.off_color[col_b].set_f_col_op('\0');
+  }
 
-  if (opts.dual_face_color_method != 'b')
-    Coloring(&dual).f_one_col(opts.dual_face_col);
+  op = opts.off_color[col_b].get_e_col_op();
+  if (op && strchr("uU", op)) {
+    // apply transparency to operation
+    Status stat =
+        apply_transparency(base, opts.off_opacity[col_b][EDGES], EDGES);
+    if (stat.is_warning())
+      opts.warning(stat.msg(), col_b);
+    // clear operation
+    opts.off_color[col_b].set_e_col_op('\0');
+  }
+  else if (op && strchr("dD", op)) {
+    color_edges_by_dihedral(base, opts.off_color[col_b].clrngs[EDGES],
+                            (op == 'D'), opts.eps);
+    // apply transparency to operation
+    Status stat =
+        apply_transparency(base, opts.off_opacity[col_b][EDGES], EDGES);
+    if (stat.is_warning())
+      opts.warning(stat.msg(), col_b);
+    // clear operation
+    opts.off_color[col_b].set_e_col_op('\0');
+  }
+
+  op = opts.off_color[col_b].get_v_col_op();
+  if (op && strchr("uU", op)) {
+    // apply transparency to operation
+    Status stat =
+        apply_transparency(base, opts.off_opacity[col_b][VERTS], VERTS);
+    if (stat.is_warning())
+      opts.warning(stat.msg(), col_b);
+    // clear operation
+    opts.off_color[col_b].set_v_col_op('\0');
+  }
+
+  opts.off_color[col_b].off_color_main(base);
+
+  // dual elements
+  opts.off_color[col_d].off_color_main(dual);
+  op = opts.off_color[col_d].get_f_col_op();
+  if (op && strchr("bB", op)) {
+    // apply transparency to operation
+    Status stat = apply_transparency(dual, opts.off_opacity[col_d][FACES]);
+    if (stat.is_warning())
+      opts.warning(stat.msg(), col_d);
+    // clear operation
+    opts.off_color[col_d].set_f_col_op('\0');
+  }
 
   // base incircles
+  op = opts.off_color[col_s].get_f_col_op();
+  Color col = opts.off_color[col_s].get_f_col();
   Geometry base_incircles;
   if (opts.output_parts.find_first_of("sS") != string::npos) {
     bool filled = (opts.output_parts.find("s") != string::npos) ? true : false;
-    base_incircles = incircles(base, opts.base_incircles_color_method,
-                               opts.base_incircles_col, filled, opts.offset);
+    base_incircles = incircles(base, op, col, filled, opts.offset);
   }
 
+  // color base incircle elements, if op is f, clear operation
+  if (op && strchr("fF", op)) {
+    // apply transparency to operation
+    Status stat =
+        apply_transparency(base_incircles, opts.off_opacity[col_s][FACES]);
+    if (stat.is_warning())
+      opts.warning(stat.msg(), col_s);
+    opts.off_color[col_s].set_f_col_op('\0');
+  }
+  opts.off_color[col_s].off_color_main(base_incircles);
+
   // dual incircles
+  op = opts.off_color[col_t].get_f_col_op();
+  col = opts.off_color[col_t].get_f_col();
   Geometry dual_incircles;
   if (opts.output_parts.find_first_of("tT") != string::npos) {
     bool filled = (opts.output_parts.find("t") != string::npos) ? true : false;
-    dual_incircles = incircles(dual, opts.dual_incircles_color_method,
-                               opts.dual_incircles_col, filled, opts.offset);
+    dual_incircles = incircles(dual, op, col, filled, opts.offset);
   }
 
-  if (opts.output_parts.find_first_of("bC") != string::npos) {
-    // set edge and vertex colors here
-    if (opts.base_edge_color_method == 'd')
-      color_edges_by_dihedral(base, conv_map, opts.eps);
-    else
-      set_edge_colors(base, opts.base_edge_col);
-    set_vertex_colors(base, opts.base_vertex_col);
-  }
-  else
-    // clear base if not using
-    base.clear_all();
-
-  // append dual
-  if (opts.output_parts.find_first_of("dC") != string::npos) {
-    // set edge colors here
-    set_edge_colors(dual, opts.dual_edge_col);
-    set_vertex_colors(dual, opts.dual_vertex_col);
-    base.append(dual);
+  // color dual incircle elements, if op is f, clear operation
+  if (op && strchr("fF", op)) {
+    // apply transparency to operation
+    Status stat =
+        apply_transparency(dual_incircles, opts.off_opacity[col_t][FACES]);
+    if (stat.is_warning())
+      opts.warning(stat.msg(), col_t);
+    opts.off_color[col_t].set_f_col_op('\0');
   }
 
-  // add intersection points
-  if (opts.output_parts.find("i") != string::npos) {
-    for (auto &ip : ips)
-      base.add_vert(ip, opts.ipoints_col);
-  }
-
-  // add base near points
-  if (opts.output_parts.find("n") != string::npos) {
-    for (auto &base_nearpt : base_nearpts)
-      base.add_vert(base_nearpt, opts.base_nearpts_col);
-  }
-
-  // add dual near points
-  if (opts.output_parts.find("m") != string::npos) {
-    for (auto &dual_nearpt : dual_nearpts)
-      base.add_vert(dual_nearpt, opts.dual_nearpts_col);
-  }
-
-  // add base near points centroid
-  if (opts.output_parts.find("p") != string::npos) {
-    base.add_vert(centroid(base_nearpts), opts.base_nearpts_col);
-  }
-
-  // add dual near points centroid
-  if (opts.output_parts.find("q") != string::npos) {
-    base.add_vert(centroid(dual_nearpts), opts.dual_nearpts_col);
-  }
-
-  // add origin point
-  if (opts.output_parts.find("o") != string::npos) {
-    base.add_vert(Vec3d::zero, opts.ipoints_col);
-  }
-
-  // apply transparency
-  Status stat = Coloring(&base).apply_transparency(opts.face_opacity);
-  if (stat.is_warning())
-    opts.warning(stat.msg(), 'T');
-
-  // add unit sphere on origin
-  if (opts.output_parts.find_first_of("uU") != string::npos) {
-    Geometry sgeom;
-    string geo_str = "geo_" + std::to_string(opts.roundness) + "_" +
-                     std::to_string(opts.roundness);
-    sgeom.read_resource(geo_str);
-    sgeom.transform(Trans3d::translate(-centroid(sgeom.verts())));
-    unitize_vertex_radius(sgeom);
-
-    if (opts.output_parts.find("u") != string::npos)
-      sgeom.transform(Trans3d::scale(min));
-    else
-      sgeom.transform(Trans3d::scale(max));
-
-    Coloring(&sgeom).vef_one_col(Color::invisible, Color::invisible,
-                                 opts.sphere_col);
-    base.append(sgeom);
-  }
-
-  // add convex hull
-  if (opts.output_parts.find("C") != string::npos) {
-    Geometry base_dual = base;
+  // build convex hull of base and dual, color
+  Geometry base_dual = base;
+  if (opts.output_parts.find("c") != string::npos) {
     base_dual.append(dual);
     base_dual.set_hull();
-    Coloring(&base_dual).f_one_col(opts.sphere_col);
-    base.append(base_dual);
+    opts.off_color[col_c].off_color_main(base_dual);
   }
 
+  // build the model...
+
+  // clear base if not using
+  if (opts.output_parts.find_first_of("b") == string::npos)
+    base.clear_all();
+
+  // append incircles, pre-colored
   if (base_incircles.verts().size())
     base.append(base_incircles);
 
   if (dual_incircles.verts().size())
     base.append(dual_incircles);
+
+  // append dual
+  if (opts.output_parts.find_first_of("d") != string::npos)
+    base.append(dual);
+
+  // add intersection points
+  Geometry tmp;
+  if (opts.output_parts.find("i") != string::npos) {
+    for (auto &ip : ips)
+      tmp.add_vert(ip);
+    opts.off_color[col_i].off_color_main(tmp);
+    base.append(tmp);
+  }
+
+  // add base near points
+  tmp.clear_all();
+  if (opts.output_parts.find("n") != string::npos) {
+    for (auto &base_nearpt : base_nearpts)
+      tmp.add_vert(base_nearpt);
+    opts.off_color[col_n].off_color_main(tmp);
+    base.append(tmp);
+  }
+
+  // add dual near points
+  tmp.clear_all();
+  if (opts.output_parts.find("m") != string::npos) {
+    for (auto &dual_nearpt : dual_nearpts)
+      tmp.add_vert(dual_nearpt);
+    opts.off_color[col_m].off_color_main(tmp);
+    base.append(tmp);
+  }
+
+  // add base near points centroid
+  tmp.clear_all();
+  if (opts.output_parts.find("p") != string::npos) {
+    tmp.add_vert(centroid(base_nearpts));
+    opts.off_color[col_p].off_color_main(tmp);
+    base.append(tmp);
+  }
+
+  // add dual near points centroid
+  tmp.clear_all();
+  if (opts.output_parts.find("q") != string::npos) {
+    tmp.add_vert(centroid(dual_nearpts));
+    opts.off_color[col_q].off_color_main(tmp);
+    base.append(tmp);
+  }
+
+  // add origin point
+  tmp.clear_all();
+  if (opts.output_parts.find("o") != string::npos) {
+    tmp.add_vert(Vec3d::zero);
+    opts.off_color[col_o].off_color_main(tmp);
+    base.append(tmp);
+  }
+
+  // add unit sphere on origin
+  tmp.clear_all();
+  if (opts.output_parts.find_first_of("uU") != string::npos) {
+    string geo_str = "geo_" + std::to_string(opts.roundness) + "_" +
+                     std::to_string(opts.roundness);
+    tmp.read_resource(geo_str);
+    tmp.transform(Trans3d::translate(-centroid(tmp.verts())));
+    unitize_vertex_radius(tmp);
+
+    if (opts.output_parts.find("u") != string::npos)
+      tmp.transform(Trans3d::scale(min));
+    else
+      tmp.transform(Trans3d::scale(max));
+
+    opts.off_color[col_u].off_color_main(tmp);
+    base.append(tmp);
+  }
+
+  // append convex hull
+  if (opts.output_parts.find("c") != string::npos)
+    base.append(base_dual);
 }
 
 vector<int> geom_deal(Geometry &geom, const int pack_size)
@@ -1397,7 +1645,7 @@ void shuffle_model_indexes(Geometry &geom, const cn_opts &opts)
       new_verts[i] = i;
   }
   else {
-    fprintf(stderr, "shuffle model indexes: vertices\n");
+    opts.message("shuffle model indexes: vertices", "s");
     unsigned int sz = geom.verts().size();
     vector<int> deal = geom_deal(geom, sz);
     map<int, Color> new_cols;
@@ -1421,7 +1669,7 @@ void shuffle_model_indexes(Geometry &geom, const cn_opts &opts)
         face_order[i] = i;
     }
     else {
-      fprintf(stderr, "shuffle model indexes: faces\n");
+      opts.message("shuffle model indexes: faces", "s");
       vector<int> deal = geom_deal(geom, sz);
       for (unsigned int i = 0; i < sz; i++)
         face_order[deal[i]] = i;
@@ -1444,7 +1692,7 @@ void shuffle_model_indexes(Geometry &geom, const cn_opts &opts)
   }
 
   if (!geom.edges().size()) {
-    fprintf(stderr, "shuffle model indexes: no explicit edges\n");
+    opts.warning("shuffle model indexes: no explicit edges", "s");
   }
   else if (shuffle_edges || shuffle_verts) {
     unsigned int sz = geom.edges().size();
@@ -1454,7 +1702,7 @@ void shuffle_model_indexes(Geometry &geom, const cn_opts &opts)
         edge_order[i] = i;
       }
     else {
-      fprintf(stderr, "shuffle model indexes: edges\n");
+      opts.message("shuffle model indexes: edges", "s");
       vector<int> deal = geom_deal(geom, sz);
       for (unsigned int i = 0; i < sz; i++)
         edge_order[deal[i]] = i;
@@ -1475,7 +1723,6 @@ void shuffle_model_indexes(Geometry &geom, const cn_opts &opts)
     for (unsigned int i = 0; i < sz; i++)
       geom.add_edge(shuffled_edges[i], new_cols[i]);
   }
-  fprintf(stderr, "\n");
 }
 
 // Implementation of George Hart's canonicalization algorithm
@@ -1720,12 +1967,11 @@ bool planarize_unit(Geometry &geom, IterationControl it_ctrl)
   return canonicalize_unit(geom, it_ctrl, radius_range_percent, planarize_only);
 }
 
-void realign_output(Geometry &base)
+void realign_output(Geometry &base, const cn_opts &opts)
 {
   Symmetry sym(base);
-  fprintf(stderr, "the symmetry of output model is %s (realigned)\n",
-          sym.get_symbol().c_str());
-
+  opts.message(msg_str("the symmetry of output model is %s (realigned)\n",
+                       sym.get_symbol().c_str()));
   base.transform(sym.get_to_std());
 }
 
@@ -1748,7 +1994,7 @@ int main(int argc, char *argv[])
     epsilon_local = anti::epsilon * 10;
   if (opts.planarize_method || opts.canonical_method != 'x')
     opts.message(
-        msg_str("analyzing edge intersections at a fixed epsilon of %.0e\n",
+        msg_str("analyzing edge intersections at a fixed epsilon of %.0e",
                 epsilon_local));
 
   if (opts.shuffle_model_idxs.length())
@@ -1768,8 +2014,7 @@ int main(int argc, char *argv[])
   }
 
   if (opts.target_model != 'b') {
-    fprintf(stderr, "converting target to dual for processing\n");
-    fprintf(stderr, "\n");
+    opts.message("converting target to dual for processing", "t");
     base = get_dual(base);
   }
 
@@ -1785,7 +2030,7 @@ int main(int argc, char *argv[])
       planarize_str = "sand and fill";
     else if (opts.planarize_method == 'p')
       planarize_str = "poly_form -a p";
-    fprintf(stderr, "planarize: %s method\n", planarize_str.c_str());
+    opts.message(msg_str("planarize: %s method\n", planarize_str.c_str()), "p");
 
     bool planarize_only = true;
     opts.it_ctrl.set_max_iters(opts.num_iters_planar);
@@ -1812,21 +2057,24 @@ int main(int argc, char *argv[])
       completed = stat.is_ok(); // true if completed;
     }
 
+    fprintf(stderr, "\n");
+    opts.message(msg_str("the plarization algorithm %s",
+                         (completed ? "completed" : "did not complete")),
+                 "p");
+
     if (opts.target_model == 'p') {
-      fprintf(stderr, "\n");
-      fprintf(stderr, "converting target back to base after planarization\n");
+      opts.message("converting target back to base after planarization", "t");
       base = get_dual(base);
     }
 
     // report planarity, report convex hull test only if canonicalizing
-    planarity_info(base);
+    planarity_info(base, opts);
     string s = "no ";
     if (get_convexity(base) != Convexity::convex_strict) {
       s = "";
       perfect_score = false;
     }
-    fprintf(stderr, "%sextra faces produced by convex hull\n", s.c_str());
-    fprintf(stderr, "\n");
+    opts.message(msg_str("%sextra faces produced by convex hull", s.c_str()));
   }
 
   // check if model is already canonical
@@ -1835,7 +2083,7 @@ int main(int argc, char *argv[])
     perfect_score = false;
     input_is_canonical = precheck(base, epsilon_local);
     if (input_is_canonical) {
-      opts.warning(msg_str("input model IS canonical at the at -l %d\n",
+      opts.warning(msg_str("INPUT MODEL IS ALREADY CANONICAL at the at -l %d\n",
                            opts.it_ctrl.get_sig_digits()),
                    'l');
       perfect_score = true;
@@ -1847,21 +2095,19 @@ int main(int argc, char *argv[])
 
   if ((opts.canonical_method != 'x') && (opts.num_iters_canonical != 0)) {
     if (opts.edge_distribution) {
-      fprintf(stderr, "edge distribution: project onto sphere\n");
+      opts.message("edge distribution: project onto sphere", "e");
       if (opts.edge_distribution == 's')
         project_onto_sphere(base);
     }
 
     // make it possible to just measure input
     if (opts.num_iters_canonical != 0) {
-      fprintf(stderr, "centering: edge near points centroid moved to origin\n");
+      opts.message("centering: edge near points centroid moved to origin");
       base.transform(
           Trans3d::translate(-edge_nearpoints_centroid(base, Vec3d::zero)));
 
-      fprintf(stderr, "starting radius: average edge near points to 1\n");
+      opts.message("starting radius: average edge near points to 1");
       unitize_nearpoints_radius(base);
-
-      fprintf(stderr, "\n");
     }
 
     string canonicalize_str;
@@ -1873,7 +2119,8 @@ int main(int argc, char *argv[])
       canonicalize_str = "base/dual";
     else if (opts.canonical_method == 'a')
       canonicalize_str = "moving edge";
-    fprintf(stderr, "canonicalize: %s method\n", canonicalize_str.c_str());
+    opts.message(msg_str("canonicalize: %s method\n", canonicalize_str.c_str()),
+                 "c");
 
     bool planarize_only = false;
     opts.it_ctrl.set_max_iters(opts.num_iters_canonical);
@@ -1902,23 +2149,23 @@ int main(int argc, char *argv[])
       completed = canonicalize_unit(base, opts.it_ctrl, radius_range_pct / 100,
                                     planarize_only);
     }
-
-    fprintf(stderr, "\n");
   }
 
-  if ((opts.canonical_method != 'x') && (opts.num_iters_canonical != 0))
-    fprintf(stderr, "the canonical algorithm %s\n\n",
-            (completed ? "completed" : "did not complete"));
+  if ((opts.canonical_method != 'x') && (opts.num_iters_canonical != 0)) {
+    fprintf(stderr, "\n");
+    opts.message(msg_str("the canonical algorithm %s",
+                         (completed ? "completed" : "did not complete")),
+                 "c");
+  }
 
   if (opts.target_model == 'c') {
-    fprintf(stderr, "converting target back to base after canonicalization\n");
-    fprintf(stderr, "\n");
+    opts.message("converting target back to base after canonicalization", "t");
     base = get_dual(base);
   }
 
   // standardize model radius if needed since dual is reciprocated on 1
   if ((opts.canonical_method != 'x') && (opts.num_iters_canonical != 0))
-    reset_model_size(base, epsilon_local);
+    reset_model_size(base, epsilon_local, opts);
 
   // generate dual once
   Geometry dual = get_dual(base);
@@ -1932,24 +2179,24 @@ int main(int argc, char *argv[])
   generate_points(base, dual, base_nearpts, dual_nearpts, ips, epsilon_local);
 
   if (opts.canonical_method != 'x' || input_is_canonical)
-    perfect_score = canonical_report(base, base_nearpts, ips, epsilon_local);
+    perfect_score =
+        canonical_report(base, base_nearpts, ips, epsilon_local, opts);
 
   if (opts.canonical_method != 'x' || input_is_canonical ||
       opts.planarize_method) {
     if (perfect_score)
-      fprintf(stderr, "model passed all tests at -l %d\n",
-              opts.it_ctrl.get_sig_digits());
+      opts.message(msg_str("model PASSED ALL TESTS at -l %d",
+                           opts.it_ctrl.get_sig_digits()));
     else {
-      fprintf(stderr, "model could be improved by raising -l\n");
-      if (opts.it_ctrl.get_sig_digits() == 15)
-        fprintf(stderr, "warning: if -l is raised higher than 15, algorithms "
-                        "may not halt\n");
+      opts.message("model could be improved by raising -l or raising -n");
+      if (opts.it_ctrl.get_sig_digits() >= 15)
+        opts.warning("if -l is raised higher than 15, algorithms "
+                     "may not halt");
     }
-    fprintf(stderr, "\n");
   }
 
   if (opts.realign)
-    realign_output(base);
+    realign_output(base, opts);
 
   // parts to output
   construct_model(base, dual, base_nearpts, dual_nearpts, ips, opts);
