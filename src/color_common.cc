@@ -415,7 +415,10 @@ void color_faces_by_convexity(Geometry &geom, Coloring &clrng, bool apply_map,
 // uses kis and alters geom
 void color_faces_by_connection(Geometry &geom, Coloring &clrng, bool apply_map)
 {
-  // color by connection
+  // need edges or they'll turn invisible
+  geom.add_missing_impl_edges();
+
+  // do kis operation
   Geometry kis;
   wythoff_make_tiling(kis, geom, "k", true, false);
   // remove digons
@@ -427,41 +430,134 @@ void color_faces_by_connection(Geometry &geom, Coloring &clrng, bool apply_map)
   kis.del(FACES, dels);
   kis.orient(1); // positive orientation
 
-  // make new verts and edges invisible
+  // color edges and vertices invisible
   kis.add_missing_impl_edges();
-  for (unsigned int i = 0; i < kis.verts().size(); i++) {
-    int v_idx = find_vert_by_coords(geom, kis.verts()[i], anti::epsilon);
-    if (v_idx == -1) {
-      kis.colors(VERTS).set(i, Color::invisible);
-      vector<int> edge_idx = find_edges_with_vertex(kis.edges(), i);
-      for (unsigned int j = 0; j < edge_idx.size(); j++)
-        kis.colors(EDGES).set(edge_idx[j], Color::invisible);
+  Coloring(&kis).vef_one_col(Color::invisible, Color::invisible, Color());
+
+  // transfer edge and vertex colors from geom
+  // if elements were invisible, mark them maximum
+  // only non-counted element will remain invisible
+  for (unsigned int i = 0; i < kis.edges().size(); i++) {
+    unsigned int v_idx[2];
+    Vec3d v[2];
+    for (unsigned int j = 0; j < 2; j++) {
+      v_idx[j] = kis.edges(i)[j];
+      v[j] = kis.verts(v_idx[j]);
+    }
+    int geom_edge_no = find_edge_by_coords(geom, v[0], v[1], anti::epsilon);
+    Color col;
+    if (geom_edge_no > -1) {
+      col = geom.colors(EDGES).get(geom_edge_no);
+      if (col.is_invisible())
+        col = Color::maximum_index;
+      else if (!col.is_set())
+        col = Color();
+      kis.colors(EDGES).set(i, col);
+    }
+    for (unsigned int j = 0; j < 2; j++) {
+      int ev = kis.edges(i)[j];
+      int geom_v_idx =
+          find_vert_by_coords(geom, kis.verts()[ev], anti::epsilon);
+      if (geom_v_idx > -1) {
+        col = geom.colors(VERTS).get(geom_v_idx);
+        if (col.is_invisible())
+          col = Color::maximum_index;
+        else if (!col.is_set())
+          col = Color();
+        kis.colors(VERTS).set(ev, col);
+      }
     }
   }
-  // the old faces are cleared and kis faces added
-  geom.clear(FACES);
-  geom.append(kis);
-  int blend_type = 1; // first color, invisible edges stay
-  merge_coincident_elements(geom, "vef", blend_type, anti::epsilon);
 
-  for (unsigned int i = 0; i < geom.faces().size(); i++) {
-    vector<int> face = geom.faces()[i];
+  // color kis faces by connection
+  for (unsigned int i = 0; i < kis.faces().size(); i++) {
+    vector<int> face = kis.faces()[i];
     unsigned int fsz = face.size();
     // face to face
-    // connections with invisible faces are ignored
+    // faces connected by invisible edges are ignored
     int connections = 0;
     for (unsigned int j = 0; j < fsz; j++) {
       int v1 = face[j];
       int v2 = face[(j + 1) % fsz];
       vector<int> edge = make_edge(v1, v2);
-      vector<int> face_idx = find_faces_with_edge(geom.faces(), edge);
-      int edge_no = find_edge_in_edge_list(geom.edges(), edge);
-      if (!(geom.colors(EDGES).get(edge_no)).is_invisible())
+      vector<int> face_idx = find_faces_with_edge(kis.faces(), edge);
+      int edge_no = find_edge_in_edge_list(kis.edges(), edge);
+      if (!(kis.colors(EDGES).get(edge_no)).is_invisible())
         connections += face_idx.size();
     }
-    geom.colors(FACES).set(
+    kis.colors(FACES).set(
         i, (apply_map ? clrng.get_col(connections) : connections));
   }
+
+  // any elements marked maximum were invisible, set them back
+  for (unsigned int i = 0; i < kis.edges().size(); i++) {
+    Color col = kis.colors(EDGES).get(i);
+    if (col.is_maximum_index()) {
+      col = Color::invisible;
+      kis.colors(EDGES).set(i, col);
+    }
+    for (unsigned int j = 0; j < 2; j++) {
+      unsigned int v_idx = kis.edges(i)[j];
+      col = kis.colors(VERTS).get(v_idx);
+      if (col.is_maximum_index()) {
+        col = Color::invisible;
+        kis.colors(VERTS).set(v_idx, col);
+      }
+    }
+  }
+
+  geom = kis;
+}
+
+// duplicate code from stellate and miller
+// color_faces_by_connection(
+Status color_faces_by_connection_vef(Geometry &geom, OffColor &off_color)
+{
+  char op = off_color.get_f_col_op();
+
+  // geom is built with face colors from the diagram, if 'q' do nothing
+  Geometry geom_save;
+  if (op && strchr("hH", op)) {
+    color_faces_by_connection(geom, off_color.clrngs[FACES], (op == 'H'));
+    // save geom to reassert invisible elements from kis operation
+    geom_save = geom;
+  }
+
+  // any other color options done by class
+  // will color edges invisible if so set
+  Status stat;
+  if (!(stat = off_color.off_color_main(geom)))
+    return Status::error(stat.msg());
+
+  // reassert invisible elements from kis operation
+  if (op && strchr("hH", op)) {
+    for (unsigned int i = 0; i < geom.edges().size(); i++) {
+      unsigned int v_idx[2];
+      Vec3d v[2];
+      for (unsigned int j = 0; j < 2; j++) {
+        v_idx[j] = geom.edges(i)[j];
+        v[j] = geom.verts(v_idx[j]);
+      }
+      Color col;
+      int save_edge_no =
+          find_edge_by_coords(geom_save, v[0], v[1], anti::epsilon);
+      if (save_edge_no > -1) {
+        col = geom_save.colors(EDGES).get(save_edge_no);
+        if (col.is_invisible())
+          geom.colors(EDGES).set(i, Color::invisible);
+      }
+      for (unsigned int j = 0; j < 2; j++) {
+        int ev = geom.edges(i)[j];
+        int save_idx =
+            find_vert_by_coords(geom_save, geom.verts()[ev], anti::epsilon);
+        col = geom_save.colors(VERTS).get(save_idx);
+        if (col.is_invisible())
+          geom.colors(VERTS).set(ev, col);
+      }
+    }
+  }
+
+  return Status::ok();
 }
 
 // for lat_util.cc, bravais.cc and waterman.cc
@@ -562,54 +658,4 @@ void color_edges_by_sqrt(Geometry &geom, const char color_method)
     else
       geom.colors(EDGES).set(i, idx);
   }
-}
-
-// duplicate code from stellate and miller
-Status color_stellation(Geometry &geom, OffColor &off_color)
-{
-  char op = off_color.get_f_col_op();
-
-  // geom is built with face colors from the diagram, if 'q' do nothing
-  if (op && !strchr("qQ", op)) {
-    if (op && strchr("hH", op))
-      color_faces_by_connection(geom, off_color.clrngs[FACES], (op == 'H'));
-  }
-
-  // collect invisible elements from kis operation
-  Geometry invisible_elems;
-  if (op && strchr("hH", op)) {
-    invisible_elems = geom;
-    invisible_elems.clear(FACES);
-    vector<int> deleted_elems;
-    for (unsigned int i = 0; i < invisible_elems.edges().size(); i++)
-      if (!(invisible_elems.colors(EDGES).get(i)).is_invisible())
-        deleted_elems.push_back(i);
-    invisible_elems.del(EDGES, deleted_elems);
-  }
-
-  // any other color options done by class
-  // will color edges invisible if so set
-  Status stat;
-  if (!(stat = off_color.off_color_main(geom)))
-    return Status::error(stat.msg());
-
-  // reassert invisible elements from kis operation
-  if (op && strchr("hH", op)) {
-    geom.append(invisible_elems);
-
-    int blend_type = 1; // first color, invisible edges stay
-    merge_coincident_elements(geom, "vf", blend_type, anti::epsilon);
-
-    // vertices from kis must be made invisible in geom
-    for (unsigned int i = 0; i < invisible_elems.verts().size(); i++) {
-      int v_idx =
-          find_vert_by_coords(geom, invisible_elems.verts()[i], anti::epsilon);
-      if (v_idx != -1) {
-        if ((invisible_elems.colors(VERTS).get(i)).is_invisible())
-          geom.colors(VERTS).set(v_idx, Color::invisible);
-      }
-    }
-  }
-
-  return Status::ok();
 }

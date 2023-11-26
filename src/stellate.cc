@@ -120,11 +120,13 @@ keyword: none - sets no color
   -E <col>  color the edges according to: (default: invisible)
               a color value - apply to all edges
               f - color with average adjacent face color
+              q - from stellation diagram
               n - colour by number of faces connected to each edge
   -V <col>  color the vertices according to: (default: invisible)
               a color value - apply to all vertices
               e - color with average adjacent edge color
               f - color with average adjacent face color
+              q - from stellation diagram
               n - color by order of vertex
   -T <t,e>  transparency. from 0 (invisible) to 255 (opaque). element is any
             or all of, v - vertices, e - edges, f - faces, a - all (default: f)
@@ -217,7 +219,7 @@ void stellate_opts::process_command_line(int argc, char **argv)
         break;
       }
       parts.init(optarg, ",");
-      if (off_color.v_op_check((char *)parts[0], "efn"))
+      if (off_color.v_op_check((char *)parts[0], "efqn"))
         off_color.set_v_col_op(*parts[0]);
       else
         error("invalid coloring", c);
@@ -236,7 +238,7 @@ void stellate_opts::process_command_line(int argc, char **argv)
         break;
       }
       parts.init(optarg, ",");
-      if (off_color.e_op_check((char *)parts[0], "fn"))
+      if (off_color.e_op_check((char *)parts[0], "fqn"))
         off_color.set_e_col_op(*parts[0]);
       else
         error("invalid coloring", c);
@@ -437,7 +439,8 @@ Geometry construct_model(Geometry &geom, map<int, Geometry> &diagrams,
 
   // stellation model
   if (opts.output_parts.find("s") != string::npos) {
-    color_stellation(stellation, opts.off_color);
+    // handles face_color_op "hH" if it is set, colors edges and vertices
+    color_faces_by_connection_vef(stellation, opts.off_color);
     model.append(stellation);
   }
 

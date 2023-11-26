@@ -141,13 +141,15 @@ void color_faces_by_convexity(anti::Geometry &geom, anti::Coloring &clrng,
 void color_faces_by_connection(anti::Geometry &geom, anti::Coloring &clrng,
                                bool apply_map = true);
 
+// color faces by connection to other faces
+// when vertices and edges are also handled. wraps off_color_main()
+anti::Status color_faces_by_connection_vef(anti::Geometry &geom,
+                                           OffColor &off_color);
+
 // for lat_util.cc, bravais.cc and waterman.cc
 void color_by_symmetry_normals(anti::Geometry &, const char, const int,
                                double eps = anti::epsilon);
 
 void color_edges_by_sqrt(anti::Geometry &, const char);
-
-// duplicate code from stellate and miller
-anti::Status color_stellation(anti::Geometry &geom, OffColor &off_color);
 
 #endif // COLOR_COMMON_H
