@@ -132,9 +132,9 @@ private:
 
 public:
   tetra59();
-  void list_poly_int(int idx, FILE *fp = stderr);
-  void list_poly_deg(int idx, FILE *fp = stderr);
-  void list_polys(int style, FILE *fp = stderr);
+  void list_poly_int(int idx, FILE *fp = stdout);
+  void list_poly_deg(int idx, FILE *fp = stdout);
+  void list_polys(char style, FILE *fp = stdout);
   int lookup_sym_no(string sym);
   int get_last_tetra59() { return last_tetra59; }
 
@@ -169,25 +169,25 @@ void tetra59::list_poly_deg(int idx, FILE *fp)
           deg_term[5], tetra59_items[idx].comment.c_str());
 }
 
-void tetra59::list_polys(int style, FILE *fp)
+void tetra59::list_polys(char style, FILE *fp)
 {
-  fprintf(stderr, "=====================================================\n");
-  if (style == 1) {
-    fprintf(stderr, "Dihedral Angles of faces counted as 1,2,3,4    (Pi/N)\n");
-    fprintf(stderr, "         (a12,a34) (a13,a24) (a14,a23)\n");
+  fprintf(fp, "=====================================================\n");
+  if (style == 'i') {
+    fprintf(fp, "Dihedral Angles of faces counted as 1,2,3,4    (Pi/N)\n");
+    fprintf(fp, "         (a12,a34) (a13,a24) (a14,a23)\n");
   }
   else {
-    fprintf(stderr, "Dihedral Angles of faces counted as 1,2,3,4 (Degrees)\n");
-    fprintf(stderr, "    (a12,a34)   (a13,a24)   (a14,a23)\n");
+    fprintf(fp, "Dihedral Angles of faces counted as 1,2,3,4 (Degrees)\n");
+    fprintf(fp, "    (a12,a34)   (a13,a24)   (a14,a23)\n");
   }
-  fprintf(stderr, "=====================================================\n");
+  fprintf(fp, "=====================================================\n");
   int reg_group = 0;
   for (int i = 0; i < last_tetra59; i++) {
     if (reg_group != reg(i)) {
       reg_group = reg(i);
-      fprintf(stderr, "Regge group %d\n", reg_group);
+      fprintf(fp, "Regge group %d\n", reg_group);
     }
-    if (style == 1)
+    if (style == 'i')
       list_poly_int(i, fp);
     else
       list_poly_deg(i, fp);
@@ -195,7 +195,7 @@ void tetra59::list_polys(int style, FILE *fp)
   fprintf(fp, "\n");
   fprintf(fp, "Entries are given as six dihedral angles of faces 1,2,3,4\n");
   fprintf(fp, "(a12,a34,a13,a24,a14,a23) %s\n",
-          (style == 1) ? "as multiples of pi/N" : "in degrees (rounded)");
+          (style == 'i') ? "as multiples of pi/N" : "in degrees (rounded)");
   fprintf(fp, "An extra symbol indicates 15 previously known forms from\n");
   fprintf(fp, "V. G. Boltianskii, Hilbert's third problem, 1978\n");
   fprintf(fp, "Values of terms 5 and 6 from the paper are reversed\n");
@@ -280,6 +280,7 @@ public:
   string ofile;
 
   string poly;                                    // tetrahedron number 1 to 59
+  int regge_grp = 0;                              // make global for model
   int s = 0;                                      // for special cases 1 and 2
   double angle = std::numeric_limits<int>::max(); // angle for special cases
                                                   // (default 45 degrees)
@@ -290,7 +291,12 @@ public:
   char dih_order = 'a';      // order of dihedral pairs
   int show_pair = 0;         // add dihedral pair to model of permutation
 
-  int list_polys = 0; // output the list 1 - integers 2 -degrees
+  // expand second polyhedra ability
+  bool allow_outside = false; // allow pairs outside regge group
+  string poly2;
+  char dih_order2;
+
+  char list_polys = '\0'; // output list i - integers, d - degrees, p - pairs
 
   // output edge and/or face math
   bool verbose_edge_math = false;
@@ -380,8 +386,8 @@ The first case was published by M.J.M Hill in 1895. The second case is new.
 Options
 %s
   -H        abstract from the paper and description of regge symmetry
+  -L <opt>  list Sporadic Tetrahedra as i - integer, d - degrees, p - pairs
   -v <opt>  verbose output math: e - edges, f - faces, p - pairs, a - all
-  -L <int>  display the list of Sporadic Tetrahedra as integer=1, degrees=2
   -o <file> write output to file (default: write to standard output)
 
 Scene Options
@@ -389,8 +395,10 @@ Scene Options
             term 1 (a12) for regge symmetry (also permutes special cases) 
             angles permuted as pairs: 1-(a12,a34) 2-(a13,a24) 3-(a14,a23)
             for each pair in position one, there are two arrangements
-            a:1,2,3  b:1,3,2; c:2,1,3  d:2,3,1; e:3,1,2  f:3,2,1 (default:a)
+            (a:1,2,3 b:1,3,2); (c:2,1,3 d:2,3,1); (e:3,1,2 f:3,2,1) (default:a)
   -p <int>  build regge pair if found (1 or 2) not for special cases (sets -z)
+  -P <n,d>  force second pair of model number n, and method d (not with -p)
+  -g        allow pairs outside regge group (affects -p, -L p)
   -r        reflect
   -z        scale volume to 1
 
@@ -447,7 +455,7 @@ void tetra59_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hHL:v:rzd:p:s:a:wV:E:F:T:m:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hHL:v:d:p:P:grzs:a:wV:E:F:T:m:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -457,9 +465,11 @@ void tetra59_opts::process_command_line(int argc, char **argv)
       exit(0);
 
     case 'L':
-      print_status_or_exit(
-          get_arg_id(optarg, &arg_id, "int=1|deg=2", argmatch_add_id_maps), c);
-      list_polys = atoi(arg_id.c_str());
+      if (strspn(optarg, "idp") != strlen(optarg) || strlen(optarg) > 1)
+        error(msg_str("Sporadic Tetrahedra to list is '%s' must be i, d, or p",
+                      optarg),
+              c);
+      list_polys = *optarg;
       break;
 
     case 'v': {
@@ -476,17 +486,10 @@ void tetra59_opts::process_command_line(int argc, char **argv)
       break;
     }
 
-    case 'r':
-      reflect = true;
-      break;
-
-    case 'z':
-      scale_volume = true;
-      break;
-
     case 'd':
       if (strspn(optarg, "abcdef") != strlen(optarg) || strlen(optarg) > 1)
-        error(msg_str("invalid order '%s'", optarg), c);
+        error(msg_str("invalid order '%s' must be one of a,b,c,d,e,f", optarg),
+              c);
       else
         dih_order = *optarg;
       break;
@@ -495,6 +498,43 @@ void tetra59_opts::process_command_line(int argc, char **argv)
       print_status_or_exit(read_int(optarg, &show_pair), c);
       if (show_pair < 1 || show_pair > 2)
         error("must be 1 or 2", c);
+      scale_volume = true;
+      break;
+
+    case 'P': {
+      int parts_sz = parts.init(optarg, ",");
+      if (parts_sz != 2)
+        error("the argument must have 2 parts", c);
+
+      print_status_or_exit(read_int(parts[0], &num), c);
+      if (num < 1 || num > 59)
+        error(
+            msg_str("invalid model number '%s' must be from 1 to 59", parts[0]),
+            c);
+      else
+        poly2 = parts[0];
+
+      if (strspn(parts[1], "abcdef") != strlen(parts[1]) ||
+          strlen(parts[1]) > 1)
+        error(
+            msg_str("invalid order '%s' must be one of a,b,c,d,e,f", parts[1]),
+            c);
+      else
+        dih_order2 = *parts[1];
+
+      scale_volume = true;
+      break;
+    }
+
+    case 'g':
+      allow_outside = true;
+      break;
+
+    case 'r':
+      reflect = true;
+      break;
+
+    case 'z':
       scale_volume = true;
       break;
 
@@ -623,6 +663,9 @@ void tetra59_opts::process_command_line(int argc, char **argv)
   if (argc - optind == 1)
     poly = argv[optind];
 
+  if (poly2.length() && show_pair)
+    error("make dihedral pair is not valid when forcing second model", 'p');
+
   if (s) {
     // angle default if not set
     if (angle == std::numeric_limits<int>::max()) {
@@ -636,7 +679,8 @@ void tetra59_opts::process_command_line(int argc, char **argv)
     char op = off_color.get_f_col_op();
     if (op && strchr("rR", op)) {
       warning("coloring by regge group has no effect for special cases", 'f');
-      off_color.set_f_col_op('u'); // set to default
+      // will set to default in apply_color()
+      // off_color.set_f_col_op('u'); // set to default
     }
   }
   else {
@@ -825,9 +869,9 @@ Geometry make_poly(double a12, double a34, double a13, double a24, double a14,
   return geom;
 }
 
-// returns regge_grp, dihedral_angles returned in dih
-Geometry case59(int &regge_grp, vector<double> &dih,
-                const vector<int> &dihedral_order, const tetra59_opts &opts)
+// returns dihedral_angles returned in dih
+Geometry case59(vector<double> &dih, const vector<int> &dihedral_order,
+                tetra59_opts &opts)
 {
   tetra59 tetra59s;
 
@@ -845,21 +889,21 @@ Geometry case59(int &regge_grp, vector<double> &dih,
   }
 
   int N = tetra59s.N(sym_no);
+  opts.regge_grp = tetra59s.reg(sym_no);
 
   fprintf(stderr,
-          "%2d) N=%2d (%2d,%3d), (%2d,%3d), (%2d,%3d) (permutation %c)\n",
+          "%2d) N=%2d (%2d,%3d), (%2d,%3d), (%2d,%3d) (permutation %c) (regge "
+          "group %d)\n",
           sym_no + 1, N, term[0], term[1], term[2], term[3], term[4], term[5],
-          opts.dih_order);
+          opts.dih_order, opts.regge_grp);
 
   // compute dihedral angles in radians
   for (unsigned int i = 0; i < 6; i++)
     dih[i] = term[i] * M_PI / N;
 
-  regge_grp = tetra59s.reg(sym_no);
-
   // output terms as reduced fractions of pi
   if (opts.verbose_edge_math || opts.verbose_face_math) {
-    fprintf(stderr, "\nregge group = %d\n", regge_grp);
+    fprintf(stderr, "\nregge group = %d\n", opts.regge_grp);
 
     vector<int> gds(6);
     vector<string> numerator(6);
@@ -946,18 +990,28 @@ void set_dihedral_order(vector<int> &dihedral_order, const tetra59_opts &opts)
     dihedral_order = {2, 1, 0};
 }
 
-void face_coloring(Geometry &geom, int regge_grp, tetra59_opts &opts)
+void apply_coloring(Geometry &geom, tetra59_opts &opts)
 {
+  // since function is reused, operation must be reset for "rR"
+  bool reset_regge_op = false;
+
   char op = opts.off_color.get_f_col_op();
   if (op && strchr("rR", op)) {
-    Color col = opts.off_color.clrngs[FACES].get_col(regge_grp - 1);
+    Color col = opts.off_color.clrngs[FACES].get_col(opts.regge_grp - 1);
     opts.off_color.set_f_col(col);
+    // if this is a special case, set operation to default
+    if (opts.s)
+      opts.off_color.set_f_col_op('u');
+    reset_regge_op = true;
   }
 
   // any other color options done by class
   Status stat;
   if (!(stat = opts.off_color.off_color_main(geom)))
     opts.error(stat.msg());
+
+  if (reset_regge_op)
+    opts.off_color.set_f_col_op('r');
 
   // apply all element transparencies
   apply_transparencies(geom, opts.opacity);
@@ -991,12 +1045,12 @@ void scale_volume_to_one(Geometry &geom, vector<double> &len,
 }
 
 void find_pair(int &row_no, int &col_no, const vector<int> &dihedral_order,
-               const tetra59_opts &opts)
+               tetra59_opts &opts)
 {
   tetra59 tetra59s;
 
   int sym_no = tetra59s.lookup_sym_no(opts.poly);
-  int regge_grp = tetra59s.reg(sym_no);
+  opts.regge_grp = tetra59s.reg(sym_no);
 
   vector<int> term(6);
   for (unsigned int i = 0; i < 3; i++) {
@@ -1011,8 +1065,9 @@ void find_pair(int &row_no, int &col_no, const vector<int> &dihedral_order,
 
   int last_tetra59 = tetra59s.get_last_tetra59();
   for (int i = 0; i < last_tetra59; i++) {
-    if (tetra59s.reg(i) != regge_grp)
+    if ((tetra59s.reg(i) != opts.regge_grp) && !opts.allow_outside)
       continue;
+    // don't allow self to pair
     if (i == sym_no)
       continue;
 
@@ -1020,7 +1075,9 @@ void find_pair(int &row_no, int &col_no, const vector<int> &dihedral_order,
       vector<double> col_term(2);
       col_term[0] = tetra59s.term(j * 2, i) * M_PI / tetra59s.N(i);
       col_term[1] = tetra59s.term(j * 2 + 1, i) * M_PI / tetra59s.N(i);
-      if (sym_term[0] == col_term[0] && sym_term[1] == col_term[1]) {
+      // if (sym_term[0] == col_term[0] && sym_term[1] == col_term[1]) {
+      if (double_eq(sym_term[0], col_term[0], anti::epsilon) &&
+          double_eq(sym_term[1], col_term[1], anti::epsilon)) {
         col_no = j + 1;
         break;
       }
@@ -1028,21 +1085,15 @@ void find_pair(int &row_no, int &col_no, const vector<int> &dihedral_order,
 
     if (col_no) {
       row_no = i;
+      // regge group of result
+      opts.regge_grp = tetra59s.reg(row_no);
       break;
     }
   }
 }
 
-// some opts variables are changed
-Geometry make_dihedral_pair(int row_no, int col_no, const vector<double> &dih1,
-                            const vector<double> &len1, tetra59_opts opts)
+void set_pair_args(int col_no, tetra59_opts &opts)
 {
-  string poly_base = opts.poly;
-  char dih_order_base = opts.dih_order;
-
-  // reset opts
-  opts.poly = std::to_string(row_no + 1);
-
   // if using the first permutation tuple, the exact match is the second
   // permutation tuple and vice versa
   string first_tuples = "ace";
@@ -1055,15 +1106,27 @@ Geometry make_dihedral_pair(int row_no, int col_no, const vector<double> &dih1,
     opts.dih_order = (opts.show_pair == 1 ? 'c' : 'd');
   else if (col_no == 3)
     opts.dih_order = (opts.show_pair == 1 ? 'e' : 'f');
+}
+
+Geometry make_dihedral_pair(int row_no, int col_no, const vector<double> &dih1,
+                            const vector<double> &len1, tetra59_opts &opts)
+{
+  string poly_base = opts.poly;
+  char dih_order_base = opts.dih_order;
+
+  // reset opts
+  opts.poly = std::to_string(row_no + 1);
+  opts.regge_grp = 0;
+
+  set_pair_args(col_no, opts);
 
   vector<int> dihedral_order;
   set_dihedral_order(dihedral_order, opts);
 
-  int regge_grp = 0;
   vector<double> dih2(6);
-  Geometry geom = case59(regge_grp, dih2, dihedral_order, opts);
+  Geometry geom = case59(dih2, dihedral_order, opts);
 
-  face_coloring(geom, regge_grp, opts);
+  apply_coloring(geom, opts);
 
   // equal volumes required for comparison
   vector<double> len2(6);
@@ -1194,6 +1257,49 @@ Geometry make_dihedral_pair(int row_no, int col_no, const vector<double> &dih1,
   return geom;
 }
 
+// not part of class
+void list_pairs(tetra59_opts &opts, FILE *fp = stdout)
+{
+  fprintf(fp, "===================================================\n");
+  fprintf(fp, "Order/Pair matching angles ");
+  if (opts.allow_outside)
+    fprintf(fp, "(allow outside groups)\n");
+  else
+    fprintf(fp, "(only within groups)\n");
+  fprintf(fp, "===================================================\n");
+  fprintf(fp, "num  a1  a2  b1  b2  c1  c2  d1  d2  e1  e2  f1  f2\n");
+  fprintf(fp, "---------------------------------------------------\n");
+  // 1 to 59
+  for (unsigned int i = 0; i < 59; i++) {
+    opts.poly = std::to_string(i + 1);
+    fprintf(fp, "%2d) ", i + 1);
+    // a,b,c,d,e,f
+    for (unsigned int j = 0; j < 6; j++) {
+      opts.dih_order = j + 97;
+      vector<int> dihedral_order(3);
+      set_dihedral_order(dihedral_order, opts);
+      for (unsigned int k = 1; k < 3; k++) {
+        opts.show_pair = k;
+
+        int row_no = 0;
+        int col_no = 0;
+        find_pair(row_no, col_no, dihedral_order, opts);
+
+        if (!col_no)
+          fprintf(fp, "xxx ");
+        else {
+          // reset dihedral order for lookup
+          opts.dih_order = j + 97;
+          set_pair_args(col_no, opts);
+
+          fprintf(fp, "%2d%c ", row_no + 1, opts.dih_order);
+        }
+      }
+    }
+    fprintf(fp, "\n");
+  }
+}
+
 int main(int argc, char *argv[])
 {
   tetra59_opts opts;
@@ -1201,7 +1307,10 @@ int main(int argc, char *argv[])
 
   if (opts.list_polys) {
     tetra59 tetra59s;
-    tetra59s.list_polys(opts.list_polys);
+    if (opts.list_polys == 'p')
+      list_pairs(opts);
+    else
+      tetra59s.list_polys(opts.list_polys);
     exit(0);
   }
 
@@ -1209,12 +1318,11 @@ int main(int argc, char *argv[])
   set_dihedral_order(dihedral_order, opts);
 
   Geometry geom;
-  int regge_grp = 0;
   vector<double> dih1(6);
 
   // 59 cases
   if (opts.s == 0)
-    geom = case59(regge_grp, dih1, dihedral_order, opts);
+    geom = case59(dih1, dihedral_order, opts);
   // special cases
   else if (opts.s == 1)
     geom = case1(dihedral_order, opts);
@@ -1232,21 +1340,35 @@ int main(int argc, char *argv[])
             sym.get_symbol().c_str());
   }
 
-  face_coloring(geom, regge_grp, opts);
+  apply_coloring(geom, opts);
 
-  if (opts.show_pair) {
+  // if forcing a second model
+  if (opts.poly2.length()) {
+    // reset opts
+    opts.poly = opts.poly2;
+    opts.dih_order = opts.dih_order2;
+    opts.s = 0;
+    set_dihedral_order(dihedral_order, opts);
+    Geometry dpair = case59(dih1, dihedral_order, opts);
+    scale_volume_to_one(dpair, len1, opts);
+    apply_coloring(dpair, opts);
+    geom.append(dpair);
+  }
+  // otherwise if show_pair, try to find a pair
+  else if (opts.show_pair) {
     int row_no = 0;
     int col_no = 0;
     find_pair(row_no, col_no, dihedral_order, opts);
 
     if (!col_no)
-      fprintf(
-          stderr,
-          "\nno matching pair for: tetrahedron number: %s permutation: %c\n",
-          opts.poly.c_str(), opts.dih_order);
+      opts.message(msg_str(
+          "no matching pair for: tetrahedron number: %s permutation: %c",
+          opts.poly.c_str(), opts.dih_order));
     else {
-      fprintf(stderr, "\nbuilding matching pair:\n");
-      geom.append(make_dihedral_pair(row_no, col_no, dih1, len1, opts));
+      opts.message("building matching pair:");
+      Geometry dpair = make_dihedral_pair(row_no, col_no, dih1, len1, opts);
+      apply_coloring(dpair, opts);
+      geom.append(dpair);
     }
   }
 

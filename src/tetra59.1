@@ -22,11 +22,11 @@ Options
 \fB\-H\fR
 abstract from the paper and description of regge symmetry
 .TP
+\fB\-L\fR <opt>
+list Sporadic Tetrahedra as i \- integer, d \- degrees, p \- pairs
+.TP
 \fB\-v\fR <opt>
 verbose output math: e \- edges, f \- faces, p \- pairs, a \- all
-.TP
-\fB\-L\fR <int>
-display the list of Sporadic Tetrahedra as integer=1, degrees=2
 .HP
 \fB\-o\fR <file> write output to file (default: write to standard output)
 .PP
@@ -37,10 +37,16 @@ Scene Options
 term 1 (a12) for regge symmetry (also permutes special cases)
 angles permuted as pairs: 1\-(a12,a34) 2\-(a13,a24) 3\-(a14,a23)
 for each pair in position one, there are two arrangements
-a:1,2,3  b:1,3,2; c:2,1,3  d:2,3,1; e:3,1,2  f:3,2,1 (default:a)
+(a:1,2,3 b:1,3,2); (c:2,1,3 d:2,3,1); (e:3,1,2 f:3,2,1) (default:a)
 .TP
 \fB\-p\fR <int>
 build regge pair if found (1 or 2) not for special cases (sets \fB\-z\fR)
+.TP
+\fB\-P\fR <n,d>
+force second pair of model number n, and method d (not with \fB\-p\fR)
+.TP
+\fB\-g\fR
+allow pairs outside regge group (affects \fB\-p\fR, \fB\-L\fR p)
 .TP
 \fB\-r\fR
 reflect
