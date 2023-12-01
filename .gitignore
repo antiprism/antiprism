@@ -49,8 +49,6 @@ src_extra/mmop_origami
 src_extra/jitterbug
 src_extra/lat_grid
 src_extra/string_art
-src_extra/off2txt
-src_extra/kaleido
 src_extra/rotegrity
 src_extra/sweep_edges
 src/off2pov
