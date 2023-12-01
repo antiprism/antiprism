@@ -6,12 +6,17 @@ XX-XX-23 Adrian Rossiter <adrian@antiprism.com>
          Changes
            former internal maps now available for all programs
              names: colorful, ghart, kaplan, axes, convexity, circuits
-           conway: now uses canonical for planarization, better convexity
+           reverse color map feature added
            off_color_radial: now works with gray, rnd and deal maps
+             ability to reverse maps
+           conway: now uses canonical for planarization, better convexity
+           tetra59: added report. ability for arbitrary pair. better verbosity
+           off2txt: removed (moving to antiprism_addons maintained by RK)
+           kaleido: removed (moving to antiprism_addons maintained by RK)
          Fixes
            build: antiview CXXFLAGS and library linking order
            iso_delta: cases h and k parts colored in pairs
-           many programs: map handling now work correctly and uniformly
+           many programs: map handling verified and color options are uniform
            minor bug fixes and improvements
 
 Version 0.31
