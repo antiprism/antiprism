@@ -1589,13 +1589,13 @@ Internal (see below for format):
    axes
       four primary color to color the three axes of faces in the Antiprism
       symmetro program and to color the three types of axes in the Antiprism
-      off_color_radial program. map is wrapped.
+      off_color_radial program.
    circuits
       a map of two shades of gray to color circuits in the Antiprism n_icons
       program. spread map is appended
    convexity
       a map of shades of three shades of gray to color convexity in various
-      Antiprism programs. map is wrapped. 
+      Antiprism programs.
 
    These maps contain a mapping for every index number (except default for
    rng is 256 entries). Follow the map name immediately by a number to set
