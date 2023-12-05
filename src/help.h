@@ -1223,7 +1223,7 @@ resources. Other names: 'invisible' corresponds to transparent black,
 and is used to indicate that display elements should be excluded from
 display (a colour value of 'x' can also be used for 'invisible'); 'none'
 is a colour with no colour data, setting an element to this colour removes
-any colour data for the element
+any colour data for the element (cannot be used in maps)
 
 The colour names are (with their integer RGB description):
 
@@ -1545,6 +1545,7 @@ Internal (see below for format):
       by ':' and each entry corresponds to a line in an Antiprism format
       map. Colours given by components may also have the components
       separated by '/' (as spaces will require quoting or escaping).
+      Does not accept a map size parameter.
    rnd, rand, random
       A random map, with colours selected within certain ranges
       (default: component ranges H0:1S0.7:1V0.7:1).
@@ -1553,9 +1554,9 @@ Internal (see below for format):
       (default: size 256, component ranges H0:1S0.9V0.9).
    index, remap
       A map of index numbers to themselves. Use with the map modifiers
-      to remap index numbers.
+      to remap index numbers. Does not accept a map size parameter.
    null
-      An empty map.
+      An empty map. Does not accept a map size parameter.
    deal
       A map (default: size 256) containing a random shuffle of the
       values 0 to packsize-1, packsize is the same as size by default,

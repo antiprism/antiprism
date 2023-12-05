@@ -108,49 +108,11 @@ OFF elements may be coloured by index numbers. Colour maps provide
 a way to convert these index numbers into colour values. As well as
 the Antiprism colour map format the progams also understand
 <i>Gimp Palette</i> format and <i>Fractint</i> colour maps. Colour
-maps are used by <i>off_color -m</i>,  <i>antiview -m</i> and
-<i>n_icons -M</i>.
-
-<dl>
-<dt><i>X11</i> (549 colours)
-<dd>Broad range of named colours from X11's rgb.txt. The names may also be used
-    to specify colours on the command line.
-    <p>
-<dt><i>html</i> (140 colours)
-<dd>Broad range of colours. These are the colours that can be used by
-    name in HTML.
-    <p>
-<dt><i>jumble</i> (100 colours)
-<dd>Broad range of colours, with adjacent colours not alike.
-    <p>
-<dt><i>5levels</i> (125 colours)
-<dd>The combinations of five levels each of red, green and blue
-    <p>
-<dt><i>ms</i> (48 colours)
-<dd>A color map based on the Micosoft color dialog.
-    <p>
-<dt><i>grey16, grey64, grey256</i> (16, 64, 256 colours)
-<dd>Grey scales running from black to white
-    <p>
-<dt><i>grey_wrap16, grey_wrap64, grey_wrap256</i> (16, 64, 256 colours)
-<dd>Grey scales running from black to white and back again.
-    <p>
-<dt><i>rainbow, rainbowg, rainbowc</i> (256 colours)
-<dd>Vivid rainbows that wrap. <i>rainbow</i> has the full range of colours,
-    <i>rainbowg</i> emphasises green and lacks cyan,
-    <i>rainbowc</i> emphasises cyan and lacks green.
-    <p>
-<dt><i>spectrum</i> (401 colours)
-<dd>Colours from the spectrum.
-    <p>
-<dt><i>iscc</i> (267 colours)
-<dd><a href="http://tx4.us/nbs-iscc.htm">NBS/ISCC color system centroids</a>
-     chart of named colours.
-    <p>
-<dt><i>vga</i> (267 colours)
-<dd>Original VGA named colours.
-</dl>
-
+maps are used by <i>off_color -m</i>,  <i>antiview -m</i>,
+<i>n_icons -m</i> and other programs.
+See <tt>off_util -H col_map</tt> for a full list of the internal and
+external colour maps available with Antiprism.
+<p>
 More colour maps are available from
 <a href="http://www.iosart.com/firefox/colorzilla/palettes.html">
 Colorzilla Palettes</a>.
