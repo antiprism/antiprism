@@ -61,13 +61,11 @@ mtimestamp $dd.$MM.$yyyy
 ./programs/sweep_edges.gtm 3 EXTRA: sweep_edges - sweep edges to make a surface
 ./programs/mmop_origami.gtm 3 EXTRA: mmop_origami - multimodular polyhedron origami
 ./programs/poly_weave.gtm 3 EXTRA: poly_weave - weave based on a polyhedron
-./programs/kaleido.gtm 3 EXTRA: kaleido - uniform polyhedra (Zvi Har'El)
 ./programs/spidron.gtm 3 EXTRA: spidron - spidronise a polyhedron
 ./programs/dome_layer.gtm 3 EXTRA: dome_layer - dome strut arrangements
 ./programs/jitterbug.gtm 3 EXTRA: jitterbug - jitterbug transformation
 ./programs/lat_grid.gtm 3 EXTRA: lat_grid - lattices and grids with integer coordinates
 ./programs/string_art.gtm 3 EXTRA: string_art - string figures
-./programs/off2txt.gtm 3 EXTRA: off2txt - convert an OFF file to Hedron format
 
 ./programs/resources.gtm 3 Antiprism Resource Files
 ./programs/extras_readme.gtm 4 Antiprism Resources - Extras
