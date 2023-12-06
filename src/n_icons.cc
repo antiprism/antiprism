@@ -946,6 +946,9 @@ void ncon_opts::process_command_line(int argc, char **argv)
           strchr("sfq", edge_coloring_method)))
       error("circuit coloring is only for coloring methods s,f", "C");
 
+    if (!full_model(longitudes))
+      error("circuit coloring is only for full models (-M is set)", "C");
+
     if (symmetric_coloring)
       error("circuit coloring will not work with symmetric coloring -S", "C");
 

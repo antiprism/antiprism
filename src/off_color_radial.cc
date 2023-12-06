@@ -750,8 +750,7 @@ void set_indexes_to_color(Geometry &geom, radial_opts &opts)
   opts.message(msg_str("maximum ridges formed is %d", max_ridge));
   string map_name = opts.map_string_faces;
   if (map_name == "rng" || map_name == "rainbow" || map_name == "gray" ||
-      map_name == "gray" || map_name == "rnd" || map_name == "deal" ||
-      map_name == "index") {
+      map_name == "gray" || map_name == "rnd" || map_name == "deal") {
     map_name = opts.map_string_faces + std::to_string(max_ridge);
     opts.message(msg_str("default map used is %s", map_name.c_str()),
                  "option -m");

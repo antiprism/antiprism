@@ -1511,7 +1511,7 @@ static ColorMap *colormap_from_name_generated(const char *map_name,
   }
 
   else if (strcmp(name, "index") == 0 || strcmp(name, "remap") == 0) {
-    if (num_len || !specific_params_len)
+    if (num_len || specific_params_len)
       stat->set_error(msg_str(
           "%s map does not accept a map size or map-specific parameters ('%s')",
           name,

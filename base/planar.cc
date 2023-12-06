@@ -511,9 +511,9 @@ void color_stellation_diagram(Geometry &diagram, const Geometry &geom,
 
   // remap uses indexes which will be resolved per program
   Coloring clrng(&diagram);
-  ColorMap *cmap = colormap_from_name("remap");
+  ColorMap *cmap = colormap_from_name("index");
   clrng.add_cmap(cmap);
-  clrng.f_sets(sym_equivs[2], true);
+  clrng.f_sets(sym_equivs[FACES], true);
 }
 
 // facelets have unresolved color map numbers
