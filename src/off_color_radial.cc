@@ -90,6 +90,11 @@ public:
   int axes_coloring = 1;       // color axes by nfold or order
   int reverse_mapping = false; // reverse mapping of colors from map
 
+  // control of map stepping
+  int shift = 1;
+  int step = 1;
+  int map_size = 0;
+
   // map names are controlled by program
   string map_string_faces;
   string map_string_axes;
@@ -151,6 +156,8 @@ keyword: none - sets no color
             (default 'vef'). use map name of 'index' to output index numbers
               calculated maps: rng, rainbow, gray, rnd, deal
               e.g rng will become rngN where N is the number of ridges found
+  -c s,t,n  control map stepping for calculated maps. integers greater than 0.
+              s - shift, t - step, n - map size (default: 1,1,(calculated))
   -r        use the face map in reverse order
   -n <maps> color maps for axes (A=1: calculated, A=2: axes)
   -A <opt>  color axes by nfold=1, order=2 (default: 1)
@@ -185,7 +192,7 @@ void radial_opts::process_command_line(int argc, char **argv)
   axis_percent.push_back(100);
   axis_percent.push_back(100);
 
-  while ((c = getopt(argc, argv, ":hd:f:a:s:E:V:T:m:rn:A:l:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hd:f:a:s:E:V:T:m:c:rn:A:l:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 
@@ -343,6 +350,32 @@ void radial_opts::process_command_line(int argc, char **argv)
     case 'm':
       map_string_faces = optarg;
       break;
+
+    case 'c': {
+      int parts_sz = parts.init(optarg, ",");
+      if (parts_sz > 3)
+        error("the argument has more than 3 parts", c);
+      print_status_or_exit(read_int(parts[0], &num), c);
+      if (num < 1)
+        error("shift must be greater than 0", c);
+      else
+        shift = num;
+      if (parts_sz > 1) {
+        print_status_or_exit(read_int(parts[1], &num), c);
+        if (num < 1)
+          error("step must be greater than 0", c);
+        else
+          step = num;
+      }
+      if (parts_sz > 2) {
+        print_status_or_exit(read_int(parts[2], &num), c);
+        if (num < 1)
+          error("map size must be greater than 0", c);
+        else
+          map_size = num;
+      }
+      break;
+    }
 
     case 'r':
       reverse_mapping = true;
@@ -746,18 +779,40 @@ void set_indexes_to_color(Geometry &geom, radial_opts &opts)
   }
   max_ridge++;
 
+  string map_control_str;
+  if (opts.shift > 1)
+    map_control_str += "+" + std::to_string(opts.shift);
+  if (opts.step > 1)
+    map_control_str += "*" + std::to_string(opts.step);
+
+  if (map_control_str.length()) {
+    int min_size = max_ridge + ((max_ridge - 1) * (opts.step - 1)) + opts.shift;
+    if (opts.map_size) {
+      if (opts.map_size < min_size)
+        opts.warning(msg_str("map size is '%d'. must be at least %d. uncolored "
+                             "areas will result",
+                             opts.map_size, min_size),
+                     'c');
+    }
+    map_control_str =
+        std::to_string((opts.map_size) ? opts.map_size : min_size) +
+        map_control_str;
+  }
+
   // default is to make a rainbow map of number of ridges
   opts.message(msg_str("maximum ridges formed is %d", max_ridge));
   string map_name = opts.map_string_faces;
   if (map_name == "rng" || map_name == "rainbow" || map_name == "gray" ||
-      map_name == "gray" || map_name == "rnd" || map_name == "deal") {
-    map_name = opts.map_string_faces + std::to_string(max_ridge);
-    opts.message(msg_str("default map used is %s", map_name.c_str()),
-                 "option -m");
+      map_name == "grey" || map_name == "rnd" || map_name == "deal") {
+    map_name = opts.map_string_faces + ((map_control_str.length())
+                                            ? map_control_str
+                                            : std::to_string(max_ridge));
+    opts.message(msg_str("map used is %s", map_name.c_str()), "option -m");
   }
 
   if (opts.reverse_mapping) {
-    map_name += "+" + std::to_string(max_ridge - 1) + "*-1";
+    // map_name += "+" + std::to_string(max_ridge - 1) + "*-1";
+    map_name = "reverse" + std::to_string(max_ridge) + "," + map_name;
     opts.message(msg_str("reversed map is %s", map_name.c_str()), "option -m");
   }
 
