@@ -91,9 +91,9 @@ public:
   int reverse_mapping = false; // reverse mapping of colors from map
 
   // control of map stepping
-  int shift = 1;
+  int shift = 0;
   int step = 1;
-  int map_size = 0;
+  int map_size = -1;
 
   // map names are controlled by program
   string map_string_faces;
@@ -154,10 +154,10 @@ keyword: none - sets no color
             indexes (default: rng), a part consisting of letters from
             v, e, f, selects the element types to apply the map list to
             (default 'vef'). use map name of 'index' to output index numbers
-              calculated maps: rng, rainbow, gray, rnd, deal
+              calculated maps: rng, rainbow, gray, grayw, spread, rnd, deal
               e.g rng will become rngN where N is the number of ridges found
-  -c s,t,n  control map stepping for calculated maps. integers greater than 0.
-              s - shift, t - step, n - map size (default: 1,1,(calculated))
+  -c s,t,n  control map stepping for calculated maps. positive or 0.
+              s - shift, t - step, n - map size (default: 0,1,(calculated))
   -r        use the face map in reverse order
   -n <maps> color maps for axes (A=1: calculated, A=2: axes)
   -A <opt>  color axes by nfold=1, order=2 (default: 1)
@@ -356,21 +356,21 @@ void radial_opts::process_command_line(int argc, char **argv)
       if (parts_sz > 3)
         error("the argument has more than 3 parts", c);
       print_status_or_exit(read_int(parts[0], &num), c);
-      if (num < 1)
-        error("shift must be greater than 0", c);
+      if (num < 0)
+        error("shift must be positive or 0", c);
       else
         shift = num;
       if (parts_sz > 1) {
         print_status_or_exit(read_int(parts[1], &num), c);
-        if (num < 1)
-          error("step must be greater than 0", c);
+        if (num < 0)
+          error("step must be positive or 0", c);
         else
           step = num;
       }
       if (parts_sz > 2) {
         print_status_or_exit(read_int(parts[2], &num), c);
-        if (num < 1)
-          error("map size must be greater than 0", c);
+        if (num < 0)
+          error("map size must be positive or 0", c);
         else
           map_size = num;
       }
@@ -780,14 +780,16 @@ void set_indexes_to_color(Geometry &geom, radial_opts &opts)
   max_ridge++;
 
   string map_control_str;
-  if (opts.shift > 1)
+  if (opts.shift > 0)
     map_control_str += "+" + std::to_string(opts.shift);
-  if (opts.step > 1)
+  if (opts.step != 1)
     map_control_str += "*" + std::to_string(opts.step);
 
-  if (map_control_str.length()) {
-    int min_size = max_ridge + ((max_ridge - 1) * (opts.step - 1)) + opts.shift;
-    if (opts.map_size) {
+  if (map_control_str.length() || opts.map_size > -1) {
+    // step must be at least 1 for the min_size calculation
+    int step = (!opts.step) ? 1 : opts.step;
+    int min_size = max_ridge + ((max_ridge - 1) * (step - 1)) + opts.shift;
+    if (opts.map_size > -1) {
       if (opts.map_size < min_size)
         opts.warning(msg_str("map size is '%d'. must be at least %d. uncolored "
                              "areas will result",
@@ -795,7 +797,7 @@ void set_indexes_to_color(Geometry &geom, radial_opts &opts)
                      'c');
     }
     map_control_str =
-        std::to_string((opts.map_size) ? opts.map_size : min_size) +
+        std::to_string((opts.map_size > -1) ? opts.map_size : min_size) +
         map_control_str;
   }
 
@@ -803,7 +805,8 @@ void set_indexes_to_color(Geometry &geom, radial_opts &opts)
   opts.message(msg_str("maximum ridges formed is %d", max_ridge));
   string map_name = opts.map_string_faces;
   if (map_name == "rng" || map_name == "rainbow" || map_name == "gray" ||
-      map_name == "grey" || map_name == "rnd" || map_name == "deal") {
+      map_name == "grey" || map_name == "grayw" || map_name == "greyw" ||
+      map_name == "spread" || map_name == "rnd" || map_name == "deal") {
     map_name = opts.map_string_faces + ((map_control_str.length())
                                             ? map_control_str
                                             : std::to_string(max_ridge));

@@ -60,7 +60,7 @@ colour:       selecting colours for models
 
 const char *help_models = R"(Models
 ======
-Antiprism includes a number of built in models. These may be used by 
+Antiprism includes a number of built in models. These may be used by
 any program that expects an OFF file, by passing the model name instead
 of a file name e.g. antiview u1. Adding _d to a resource model name will
 give the dual of the model. Prefixing std_ to a resource name will give
@@ -81,8 +81,8 @@ See the help topic for each model type for more details
 
 const char *help_common_polys = R"(Common Polyhedra
 ================
-Common polyhedra are given by name only. Some names have their own 
-construction, while others are just a synonym for another resource 
+Common polyhedra are given by name only. Some names have their own
+construction, while others are just a synonym for another resource
 model name
 
    Constructed:
@@ -143,7 +143,7 @@ o   A U number e.g. u8
 
 o   u_ followed by the specific Wythoff Symbol in the list below,
     e.g. 'u_2 4|3', which will be used as a lookup for the
-    corresponding uniform 
+    corresponding uniform
 
 o   wythoff_ followed by a general Wythoff Symbol, where '_' and ':'
     maybe used instead of ' ', and ':', e.g. wythoff_2_4:3. The model
@@ -920,8 +920,8 @@ o   j_ followed by the name (see the list below) Use '_' instead of
 
 o   jd_ followed by the name (see the list below) Use '_' instead of
     a space to avoid having to quote the model name.
-    
-    Synonyms for duals:    
+
+    Synonyms for duals:
       triangular prism                                 j12_d
       pentagonal prism                                 j13_d
       triangular bifrustum                             j14_d
@@ -1198,7 +1198,7 @@ Red, Green, Blue and Alpha components (RGBA):
        (e.g. orange is '255,128,0')
    x (or X or #) followed by 3 or 4 pairs of hexadecimal integers
        (e.g. orange is 'xFF8000', 'x' alone, is transparent black and is
-        a shortcut for 'invisible') 
+        a shortcut for 'invisible')
 Hue, Saturation, Value and Alpha components (HSVA):
    H or h, immediately followed by 3 or 4 decimal numbers separated by
    commas in the range 0.0-1.0. For initial h the hue has range
@@ -1553,15 +1553,25 @@ Internal (see below for format):
       A map made by ranging between component values
       (default: size 256, component ranges H0:1S0.9V0.9).
    index, remap
-      A map of index numbers to themselves. Use with the map modifiers
-      to remap index numbers. Does not accept a map size parameter.
+      Maps index numbers to index numbers. An index number is mapped to
+      the same number processed by the map modifiers. Does not accept a
+      map size parameter.
+   reverse
+      Maps index numbers to index numbers. The map reverses the order
+      of a sequence of index numbers, such that the numbers in a
+      specified range are mapped onto the same numbers in reverse order.
+      Takes one or two parameters (default: reverse256)
+        reverseN   - reversal that maps 0 onto N-1 (reverses a map of size N)
+        reverseI:J - reversal that maps I onto J (reverses a custom range) 
    null
-      An empty map. Does not accept a map size parameter.
+      An empty colour map. Does not accept map modifiers or a map size
+      parameter.
    deal
-      A map (default: size 256) containing a random shuffle of the
-      values 0 to packsize-1, packsize is the same as size by default,
-      but can be changed by adding _packsize (sequential deals are used
-      if this is less than size), e.g. deal100, deal_3 
+      Maps index numbers to index numbers. The map (default: size 256)
+      contains a random shuffle of the values 0 to packsize-1, packsize
+      is the same as size by default, but can be changed by adding _packsize
+      (sequential deals are used if this is less than size), e.g. deal100,
+      deal_3
    grey, greyw
       greyscales (default: size 256), grey runs from black to white
       and greyw is wrappable and runs from black to white to black again.
@@ -1574,10 +1584,10 @@ Internal (see below for format):
    compound
       used to colour the uniform compound resource models (applied
       with off_color -f K -v F -e F -m compound)
-      
+
    Maps often used in programs can also be for use to color indexed models with
    off_color or antiview.
-   
+
    colorful
       primary and secondary colors. spread map is appended
    ghart
@@ -1630,12 +1640,35 @@ External (in resource directory 'col_maps'):
        A colour map based on the Microsoft colour dialog.
    iscc (267 colours)
        Colour centroids (http://tx4.us/nbs-iscc.htm)
-   rainbowc (192 colours)
-       A rainbow map, with cyan but not green
-   rainbowg (192 colours)
-       A rainbow map, with green but not cyan
    spectrum (401 colours)
-       An approximate visible spectrum)";
+       An approximate visible spectrum
+
+Color maps defined in alt_names.txt (in resource directory 'col_maps')
+
+These color maps are of fixed size. To create a similar map with fewer color
+entries, the step operator can be used. e.g. pastel*320 give 7 colors. Wrapping
+is done using the index% modifier. e.g. index%7,pastel*320, would wrap these
+seven colors. To wrap the entire map would be done as index%2240,pastel.
+
+   pastel (2240 colours)
+       A rainbow map, with lighter colors
+   darkened (2240 colours)
+       A rainbow map, with darker colors
+   rainbowc (1920 colours)
+       A rainbow map, emphasises cyan and lacks green
+   rainbowg (1920 colours)
+       A rainbow map, emphasises green and lacks cyan
+   rgb_triangle (1920 colours)
+       Emphasizing primary colors that forms a triangle in an RGB color cube
+   cmy_triangle (1920 colours)
+       Emphasizing secondary colors that forms a triangle in an RGB color cube
+   hexagonal (1920 colours)
+       Color range that forms a hexagon in an RGB color cube
+   heptagonal (2240 colours)
+       A rainbow map, that adds extra shades of orange
+
+More colour maps are available from Colorzilla Palettes:
+http://www.iosart.com/firefox/colorzilla/palettes.html)";
 
 const char *help_symmetry = R"(Symmetry
 ========

@@ -73,13 +73,13 @@ indexes (default: rng), a part consisting of letters from
 v, e, f, selects the element types to apply the map list to
 (default 'vef'). use map name of 'index' to output index numbers
 .IP
-calculated maps: rng, rainbow, gray, rnd, deal
+calculated maps: rng, rainbow, gray, grayw, spread, rnd, deal
 e.g rng will become rngN where N is the number of ridges found
 .TP
 \fB\-c\fR s,t,n
-control map stepping for calculated maps. integers greater than 0.
+control map stepping for calculated maps. positive or 0.
 .IP
-s \- shift, t \- step, n \- map size (default: 1,1,(calculated))
+s \- shift, t \- step, n \- map size (default: 0,1,(calculated))
 .TP
 \fB\-r\fR
 use the face map in reverse order

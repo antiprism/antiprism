@@ -1,14 +1,14 @@
 # map files are of fixed length. but the maps can be repeated via the command
 # structure shown in the example:
-# off_color -f U geo_12 -m remap%224,heptagonal | antiview 
-# off_color -f U geo_12 -m remap%192,rainbowg | antiview
-# col_util -M rgb -m hexagonal*32 | antiview -v 0.02
+# off_color -f U geo_24 -m index%2240,heptagonal | antiview -x ve
+# off_color -f U geo_24 -m index%1920,rainbowg | antiview -x ve
+# col_util -M rgb -m hexagonal*320 | antiview -v 0.02
 #
-rainbowg=rng192_R1:1:1:0:0:1:1G0:0.5:1:1:0:0:0B0:0:0:0:1:1:0
-rainbowc=rng192_R1:1:1:0:0:1:1G0:0.5:1:1:0:0:0B0:0:0:1:1:1:0
-rgb_triangle=rng192_R1:0:0:1G0:1:0:0B0:0:1:0
-cmy_triangle=rng192_R0:1:1:0G1:0:1:1B1:1:0:1
-hexagonal=rng192_R1:1:0.5:0:0:0.5:1G0:0.5:1:1:0.5:0:0B0.5:0:0:0.5:1:1:0.5
-heptagonal=rng224_R1:1:1:0:0:0:1:1G0:0.5:1:1:1:0:0:0B0:0:0:0:1:1:1:0
-#pastel2=rng224_R1:1:1:0.5:0.5:0.5:1:1G0.5:0.75:1:1:1:0.5:0.5:0.5B0.5:0.5:0.5:0.5:1:1:1:0.5
-#darkbow2=rng224_R0.5:0.5:0.5:0:0:0:0.5:0.5G0:0.25:0.5:0.5:0.5:0:0:0B0:0:0:0:0.5:0.5:0.5:0
+pastel=rng2240_R1:1:1:0.5:0.5:0.5:1:1G0.5:0.75:1:1:1:0.5:0.5:0.5B0.5:0.5:0.5:0.5:1:1:1:0.5
+darkened=rng2240_R0.5:0.5:0.5:0:0:0:0.5:0.5G0:0.25:0.5:0.5:0.5:0:0:0B0:0:0:0:0.5:0.5:0.5:0
+rainbowg=rng1920_R1:1:1:0:0:1:1G0:0.5:1:1:0:0:0B0:0:0:0:1:1:0
+rainbowc=rng1920_R1:1:1:0:0:1:1G0:0.5:1:1:0:0:0B0:0:0:1:1:1:0
+rgb_triangle=rng1920_R1:0:0:1G0:1:0:0B0:0:1:0
+cmy_triangle=rng1920_R0:1:1:0G1:0:1:1B1:1:0:1
+hexagonal=rng1920_R1:1:0.5:0:0:0.5:1G0:0.5:1:1:0.5:0:0B0.5:0:0:0.5:1:1:0.5
+heptagonal=rng2240_R1:1:1:0:0:0:1:1G0:0.5:1:1:1:0:0:0B0:0:0:0:1:1:1:0
