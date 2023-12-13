@@ -116,6 +116,7 @@ public:
   bool long_form = false;      // long form of information
   bool filter_case2 = false;   // filter out case 2 types
   bool list_compounds = false; // alternatively list compounds
+  int list_d = 0;              // needs to be a different variable than d
 
   double eps = anti::epsilon;
 
@@ -504,8 +505,8 @@ void ncon_opts::process_command_line(int argc, char **argv)
       break;
 
     case 'D':
-      print_status_or_exit(read_int(optarg, &d), c);
-      if (d < 1)
+      print_status_or_exit(read_int(optarg, &list_d), c);
+      if (list_d < 1)
         error("d must be 1 or greater", 'D');
       break;
 
@@ -626,6 +627,9 @@ void ncon_opts::process_command_line(int argc, char **argv)
         if (strchr(ncon_surf.c_str(), 'o'))
           error("for listing odd order n-icons surfaces n must be odd", "N");
     }
+
+    if (circuit_coloring)
+      error("circuit coloring cannot be used with listings", "C");
 
     // set defaults
     if (!filter_surfaces.size()) {
@@ -7173,7 +7177,7 @@ int ncon_subsystem(Geometry &geom, ncon_opts &opts)
 
 void surface_subsystem(ncon_opts &opts)
 {
-  int d = opts.d;
+  int d = opts.list_d;
 
   if (opts.list_compounds) {
     opts.build_method = 3;
