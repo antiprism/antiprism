@@ -7198,6 +7198,9 @@ void surface_subsystem(ncon_opts &opts)
     opts.longitudes.push_back(4);
     opts.longitudes.push_back(4);
     opts.longitudes_save = opts.longitudes.back();
+    
+    // opts.d needs to be set for d mod 4 hybrid compound counts
+    opts.d = opts.list_d;
 
     // need color map for counting colors
     opts.print_status_or_exit(read_colorings(opts.clrngs, "colorful"));
