@@ -116,7 +116,7 @@ public:
   bool long_form = false;      // long form of information
   bool filter_case2 = false;   // filter out case 2 types
   bool list_compounds = false; // alternatively list compounds
-  int list_d = 0;              // needs to be a different variable than d
+  int list_d = 1;              // needs to be a different variable than d
 
   double eps = anti::epsilon;
 
