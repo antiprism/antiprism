@@ -7179,8 +7179,13 @@ void surface_subsystem(ncon_opts &opts)
 {
   int d = opts.list_d;
 
+  // variables set for d mod 4 hybrid compound counts
   if (opts.list_compounds) {
     opts.build_method = 3;
+    opts.d = opts.list_d;
+
+    // epsilon lowered for large models
+    opts.eps = 1e-11;
 
     // don't let these set
     opts.info = false;
@@ -7198,9 +7203,6 @@ void surface_subsystem(ncon_opts &opts)
     opts.longitudes.push_back(4);
     opts.longitudes.push_back(4);
     opts.longitudes_save = opts.longitudes.back();
-    
-    // opts.d needs to be set for d mod 4 hybrid compound counts
-    opts.d = opts.list_d;
 
     // need color map for counting colors
     opts.print_status_or_exit(read_colorings(opts.clrngs, "colorful"));
