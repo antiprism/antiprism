@@ -119,6 +119,7 @@ public:
   int list_d = 1;              // needs to be a different variable than d
 
   double eps = anti::epsilon;
+  double list_eps = anti::epsilon;
 
   // coloring
   char face_coloring_method = 's'; // default color by the symmetry algorithm
@@ -592,6 +593,7 @@ void ncon_opts::process_command_line(int argc, char **argv)
       if (sig_compare > DEF_SIG_DGTS)
         warning("limit is very small, may not be attainable", c);
       eps = pow(10, -sig_compare);
+      list_eps = eps;
       break;
 
     case 'o':
@@ -3075,15 +3077,8 @@ void find_circuit_count(const int twist, const int ncon_order, const int d,
   sd.case1_twist = (sd.case2) ? case1_twist : twist;
 
   // compound parts
-  // only formula for hybrids of d mod 4 have issues and only the following
-  // models tested up to n=200 d=200
-  // 144  : {144/48+23}
-  // 192  : {192/48+23}
-  // 192  : {192/48+47}
-  // 144  : {144/96+23}
-  // 192  : {192/144+23}
-  // 192  : {192/144+47}
-
+  // non-hybrids tested up to n=200 d=200
+  // hybrids tested up to n=300 d=300
   n = ncon_order; // not 2n
 
   // digons case. may not necessarily be true
@@ -3107,38 +3102,44 @@ void find_circuit_count(const int twist, const int ncon_order, const int d,
            // when gcd(n, d) is 2, number of polygons is 2
            if ((int)gcd(n, de) == 2)
              sd.compound_parts = 1;
-     */
-      // when d is a power of 2
-      // not using de because d<(n/2) is tested for (n-d) being power of 2
-      // example 56/24 is the same as 56/(56-24) or 56/32
-      if (ceil(log2(d)) == floor(log2(d)))
-        sd.compound_parts = 1;
-      if (ceil(log2(n - d)) == floor(log2(n - d)))
-        sd.compound_parts = 1;
+           // when d is a power of 2
+           // not using de because d<(n/2) is tested for (n-d) being power of 2
+           // example 56/24 is the same as 56/(56-24) or 56/32
+           if (ceil(log2(d)) == floor(log2(d)))
+             sd.compound_parts = 1;
+           if (ceil(log2(n - d)) == floor(log2(n - d)))
+             sd.compound_parts = 1;
+      */
 
-      // sequence advanced by d
+      // t_mod advanced is based on d
       t_mod = 0;
       if (!is_even(d))
         t_mod = de / 2;
       else {
+        // dl is d_low, d < n/2
+        // dh is d_high, d > n/2
         int dl = d;
         int dh = ncon_order - d;
         if (dl > dh)
           swap(dl, dh);
+        // use d_low
         de = dl;
+        // if d_high is not d mod 4, use that as it is simpler
         if ((dl % 4 == 0) && (dh % 4 != 0))
           de = dh;
 
+        // if not d mod 4, t_mod is simple
         if (de % 4 != 0)
           t_mod = (de - 2) / 4;
-
+        // if d mod 4, t_mod is calculated base on d mod k
         else if (de % 4 == 0) {
-          // t_mod = (de - 4) / 8;
-          t_mod = 200;
-          for (int k = 1604; k > 8; k -= 8) {
-            if (de % k == 0) {
+          int d_top = de;
+          if (d_top % 8 != 0)
+            d_top += 4;
+          t_mod = int((d_top - 4) / 8);
+          for (int k = (d_top - 4); k > 8; k -= 8) {
+            if (de % k == 0)
               break;
-            }
             t_mod -= 1;
           }
         }
@@ -3147,29 +3148,31 @@ void find_circuit_count(const int twist, const int ncon_order, const int d,
 
     if (sd.compound_parts > 1) {
       int np = is_even(num_polygons) ? num_polygons / 2 : num_polygons;
-      int gcd_calc = (int)gcd(np, twist + t_mod);
+      int twist_mod = twist + t_mod;
+      // if a hybrid and d mod 4, instead start with a previous twist
+      // this is done in all cases, not just when twist goes to 0
+      if (hybrid && (de % 4 == 0)) // && (twist_mod % np == 0))
+        twist_mod = sd.total_surfaces + t_mod;
+      int gcd_calc = (int)gcd(np, twist_mod);
       sd.compound_parts =
           gcd_calc + (((is_even(n) && point_cut) || hybrid) ? 1 : 0);
       if (hybrid) {
         // all hybrids get one division
         sd.compound_parts /= 2;
-        // hybrids of d mod 4 still has errors (e.g. n/d >= 144/48)
         if (de % 4 == 0) {
           // these cases need a second division
-          if (is_even(twist + t_mod)) {
+          if (is_even(twist_mod)) {
             sd.compound_parts = (int)ceil((double)sd.compound_parts / 2);
             // these cases need a third division
-            // if ((gcd_calc % 4 == 0) && ((twist + t_mod) % np == 0)) {
-            if (gcd_calc % 4 == 0) {
+            if (gcd_calc % 4 == 0)
               sd.compound_parts = (int)ceil((double)sd.compound_parts / 2);
-            }
           }
         }
       }
       // non-hybrids that have further calculations
-      else if (!is_even(d) || (!is_even(n) && is_even(d))) {
+      else if (!is_even(d) || (is_even(d) && !is_even(n))) {
         sd.compound_parts /= 2;
-        if ((is_even(n) && !point_cut) || !is_even(n))
+        if (!is_even(n) || (is_even(n) && !point_cut))
           sd.compound_parts++;
       }
     }
@@ -6169,6 +6172,7 @@ void ncon_face_coloring_by_compound(Geometry &geom,
   if (!found && !opts.digons) {
     opts.warning("color by compound: some faces could not be colored", 'f');
     opts.warning("color by compound: try a different method", "z");
+    opts.warning("color by compound: try a different epsilon", "l");
   }
 }
 
@@ -7181,11 +7185,11 @@ void surface_subsystem(ncon_opts &opts)
 
   // variables set for d mod 4 hybrid compound counts
   if (opts.list_compounds) {
+    // counting uses method 3
     opts.build_method = 3;
-    opts.d = opts.list_d;
 
-    // epsilon lowered for large models
-    opts.eps = 1e-11;
+    // set d but -n is set by -N
+    opts.d = opts.list_d;
 
     // don't let these set
     opts.info = false;
@@ -7373,17 +7377,20 @@ void surface_subsystem(ncon_opts &opts)
         // compounds can't have more parts than surfaces
         if (sd.total_surfaces < opts.filter_surfaces.front())
           continue;
+        /*
+                // if hybrids of d mod 4 still has errors use direct measures
+                opts.ncon_order = ncon_order;
+                opts.twist = twist;
+                opts.point_cut = point_cut;
+                opts.hybrid = hybrid;
 
-        opts.ncon_order = ncon_order;
-        opts.twist = twist;
-        opts.point_cut = point_cut;
-        opts.hybrid = hybrid;
+                // epsilon lowered for large models, reset for each run
+                opts.eps = opts.list_eps;
 
-        Geometry geom;
-        // hybrids of d mod 4 still has errors (e.g. n/d >= 144/48)
-        // use direct measures
-        if (hybrid && (d % 4 == 0))
-          sd.compound_parts = ncon_subsystem(geom, opts);
+                Geometry geom;
+                // if (hybrid && (d % 4 == 0))
+                sd.compound_parts = ncon_subsystem(geom, opts);
+        */
         model_count++;
       }
 
