@@ -21,12 +21,17 @@
 <<EXAMPLES_START>>
 list of 59 tetrahedra with rational dihedral angles in integer factors
 <<CMDS_START>>
-tetra59 -L int
+tetra59 -L i
 <<CMDS_END>>
 
 list of 59 tetrahedra with rational dihedral angles in degrees
 <<CMDS_START>>
-tetra59 -L deg
+tetra59 -L d
+<<CMDS_END>>
+
+list of 59 tetrahedra matching pairs
+<<CMDS_START>>
+tetra59 -L p
 <<CMDS_END>>
 
 display a tetrahedra

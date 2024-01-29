@@ -398,7 +398,6 @@ Scene Options
             (a:1,2,3 b:1,3,2); (c:2,1,3 d:2,3,1); (e:3,1,2 f:3,2,1) (default:a)
   -p <int>  build regge pair if found (1 or 2) not for special cases (sets -z)
   -P <n,d>  force second pair of model number n, and method d (not with -p)
-  -g        allow pairs outside regge group (affects -p, -L p)
   -r        reflect
   -z        scale volume to 1
 
@@ -455,7 +454,7 @@ void tetra59_opts::process_command_line(int argc, char **argv)
 
   handle_long_opts(argc, argv);
 
-  while ((c = getopt(argc, argv, ":hHL:v:d:p:P:grzs:a:wV:E:F:T:m:o:")) != -1) {
+  while ((c = getopt(argc, argv, ":hHL:v:d:p:P:rzs:a:wV:E:F:T:m:o:")) != -1) {
     if (common_opts(c, optopt))
       continue;
 

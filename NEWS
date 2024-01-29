@@ -11,6 +11,7 @@ XX-XX-23 Adrian Rossiter <adrian@antiprism.com>
              ability to reverse maps
            conway: now uses canonical for planarization, better convexity
            tetra59: added report. ability for arbitrary pair. better verbosity
+           n_icons: compound parts calculations now work for all n/d
            off2txt: removed (moving to antiprism_addons maintained by RK)
            kaleido: removed (moving to antiprism_addons maintained by RK)
          Fixes
