@@ -69,7 +69,7 @@ tetra59 13 -d c -p 1 | antiview
 <i>tetra59</i> was written by
 <a href="http://www.interocitors.com/polyhedra/">Roger Kaufman</a>.
 Based on a paper by Kiran S. Kedlaya, Alexander Kolpakov, Bjorn Poonen, and
-Mechael Rubinstein: Space Vectors Forming Rational Angles
+Michael Rubinstein: Space Vectors Forming Rational Angles
 <a href="https://arxiv.org/abs/2011.14232">https://arxiv.org/abs/2011.14232</a>.
 <p>
 The following extended help for the program may be displayed with

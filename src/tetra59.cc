@@ -26,7 +26,7 @@
    Name: tetra59.cc
    Description: 59 Tetrahedra with Rational Dihedral Angles
                 Based on a paper by Kiran S. Kedlaya, Alexander Kolpakov,
-                  Bjorn Poonen, and Mechael Rubinstein
+                  Bjorn Poonen, and Michael Rubinstein
                 Space Vectors Forming Rational Angles
                   https://arxiv.org/abs/2011.14232
    Project: Antiprism - http://www.antiprism.com
@@ -292,7 +292,6 @@ public:
   int show_pair = 0;         // add dihedral pair to model of permutation
 
   // expand second polyhedra ability
-  bool allow_outside = false; // allow pairs outside regge group
   string poly2;
   char dih_order2;
 
@@ -378,7 +377,7 @@ Usage: %s [options] tetrahedron
 
 Generate 59 Tetrahedra with Rational Dihedral Angles in off format. The 59
 Sporadic Tetrahedra is from a paper by Kiran S. Kedlaya, Alexander Kolpakov,
-Bjorn Poonen, and Mechael Rubinstein: Space Vectors Forming Rational Angles
+Bjorn Poonen, and Michael Rubinstein: Space Vectors Forming Rational Angles
 The paper can be found at: https://arxiv.org/abs/2011.14232
 There are also two special infinite cases included in the findings
 The first case was published by M.J.M Hill in 1895. The second case is new.
@@ -524,10 +523,6 @@ void tetra59_opts::process_command_line(int argc, char **argv)
       scale_volume = true;
       break;
     }
-
-    case 'g':
-      allow_outside = true;
-      break;
 
     case 'r':
       reflect = true;
@@ -1064,7 +1059,7 @@ void find_pair(int &row_no, int &col_no, const vector<int> &dihedral_order,
 
   int last_tetra59 = tetra59s.get_last_tetra59();
   for (int i = 0; i < last_tetra59; i++) {
-    if ((tetra59s.reg(i) != opts.regge_grp) && !opts.allow_outside)
+    if (tetra59s.reg(i) != opts.regge_grp)
       continue;
     // don't allow self to pair
     if (i == sym_no)
@@ -1260,11 +1255,7 @@ Geometry make_dihedral_pair(int row_no, int col_no, const vector<double> &dih1,
 void list_pairs(tetra59_opts &opts, FILE *fp = stdout)
 {
   fprintf(fp, "===================================================\n");
-  fprintf(fp, "Order/Pair matching angles ");
-  if (opts.allow_outside)
-    fprintf(fp, "(allow outside groups)\n");
-  else
-    fprintf(fp, "(only within groups)\n");
+  fprintf(fp, "Order/Pair matching angles within regge groups\n");
   fprintf(fp, "===================================================\n");
   fprintf(fp, "num  a1  a2  b1  b2  c1  c2  d1  d2  e1  e2  f1  f2\n");
   fprintf(fp, "---------------------------------------------------\n");
