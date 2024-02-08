@@ -119,7 +119,8 @@ General Documentation
 <li><a href="resources.html">Antiprism Resource Files</a>
 <li><a href="import_export.html">Importing and Exporting Models</a>
 <li><a href="named_cols.html">Named Colours in Antiprism</a>
-<li><a href="edges.html">Using edges in Antiprism</a>
+<li><a href="color_maps.html">Colour Maps in Antiprism</a>
+<li><a href="edges.html">Using Edges in Antiprism</a>
 <li><a href="off_format.html">OFF format description</a>
 </ul>
 
@@ -132,14 +133,15 @@ Links to Complementary Programs
 <b>Using OFF format</b>
 <ul>
 <li><a href="https://github.com/antiprism/antiprism_python">Antiprism Python</a>
+    (by Adrian Rositer)
     - polyhedron modelling scripts
+<li><a href="https://www.interocitors.com/polyhedra/antiprism_addons/index.html">Antiprism Addons</a>
+    (by Roger Kaufman)
+    - package of utilities, viewers and modelling programs
 <li><a href="http://www.geomview.org/">Geomview</a>
     - 3D viewing and processing
 <li><a href="http://www.javaview.de/">JavaView</a>
     - 3D viewing and processing (Java)
-<li><a href="https://www.interocitors.com/polyhedra/webview/">Webview</a>
-    (by Roger Kaufman)
-    - 3D viewing using a web browser
 <li><a href="https://github.com/Wagyx/simple-off-viewer">simple-off-viewer</a>
     (by Wagyx)
     - 3D viewer to embed in a web page

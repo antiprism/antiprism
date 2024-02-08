@@ -12,7 +12,7 @@
 <<BARSPACE>>
 <small><a href="#dev">Development Code</a></small>
 <<BARSPACE>>
-<small><a href="#antiprism_python">Antiprism Python</a></small>
+<small><a href="#associated">Associated Projects</a></small>
 <<CONT_S_END>>
 
 
@@ -83,14 +83,13 @@ for information on building the programs.
 </p>
 
 <h2><a name="antiprism_python">
-Antiprism Python
+Associated Projects
 </a></h2>
-
-<a href="https://github.com/antiprism/antiprism_python">Antiprism Python</a>
-is a complementary package of useful modelling programs written in Python.
-See the
-<a href="https://github.com/antiprism/antiprism_python/blob/master/README.rst">Antiprism Python README</a>,
-for program descriptions and installation details.
-
+<ul>
+  <li><a href="https://github.com/antiprism/antiprism_python">Antiprism Python</a>
+    is a supplementary package of modelling programs written in Python (Adrian Rossiter).</li>
+<li><a href="https://www.interocitors.com/polyhedra/antiprism_addons/index.html">Antiprism Addons</a>
+  is a supplementary package of utilities, viewers and modelling programs (Roger Kaufman).</li>
+</ul>
 
 #include "<<END>>"

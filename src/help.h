@@ -1518,7 +1518,7 @@ A map may be given by several maps separated by ',' e.g. 'map1,map2'.
 The maps are tried in order until a conversion is found for an index
 number
 
-Map modifiers
+Map index modifiers
 -------------
 A map may be modified by remapping its own entries. The modifiers
 can be given in any order but the general form is
@@ -1554,8 +1554,8 @@ Internal (see below for format):
       (default: size 256, component ranges H0:1S0.9V0.9).
    index, remap
       Maps index numbers to index numbers. An index number is mapped to
-      the same number processed by the map modifiers. Does not accept a
-      map size parameter.
+      the same number processed by the map index modifiers. Does not accept
+      a map size parameter.
    reverse
       Maps index numbers to index numbers. The map reverses the order
       of a sequence of index numbers, such that the numbers in a
@@ -1564,7 +1564,7 @@ Internal (see below for format):
         reverseN   - reversal that maps 0 onto N-1 (reverses a map of size N)
         reverseI:J - reversal that maps I onto J (reverses a custom range) 
    null
-      An empty colour map. Does not accept map modifiers or a map size
+      An empty colour map. Does not accept map index modifiers or a map size
       parameter.
    deal
       Maps index numbers to index numbers. The map (default: size 256)
