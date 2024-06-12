@@ -74,6 +74,11 @@ couple of forward drags with the mouse (or hold down the the up-arrow
 key for a few seconds) until this plane reaches the model and starts
 slicing into it.
 <p>
+When a model is spinning, press the <i>s</i> key to stop the spinning. Note
+that this will set the viewing control mode to <i>spin</i>. If you wish
+to switch to a different mode then press the key for that mode, e.g. press
+the <i>r</i> key to switch to rotation mode.
+<p>
 Antiview supports a colour map cycling animation by adding a rate
 specifier with the map specifiers, e.g. <i>rng10_H0:1%,5hz</i>
 will cycle the colours in the map rng10_H0:1% at 5 Hz.

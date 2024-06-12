@@ -68,9 +68,9 @@ Options
 %s
 
 Viewing
-There are four main viewing control modes - rotation (default), drag,
-zoom, slice. Select a mode with the following keys, or right-click on
-the window and select from the menu.
+There are five main viewing control modes - rotation (default), drag,
+zoom, spin, slice. Select a mode with the following keys, or right-click
+on the window and select from the menu.
 
 Click and drag on the window with the mouse to move the model, or use the
 arrow keys. The zoom and slice are controlled by forward and backward
@@ -80,7 +80,9 @@ Menu Items
    r - rotate, turn the model about its centre
    d - drag, drag the model around the screen
    z - zoom, Zoom in or out
-   s - spin control, set or stop the model spinning
+   s - spin control (when selected will first stop any spin, and add the
+       current spin rotation to the current static rotation usually set
+       with r)
    S - slice, slice into the model.
    P - projection, toggle display between perspective and orthogonal
    v - show/hide vertices, toggle display of vertex spheres
