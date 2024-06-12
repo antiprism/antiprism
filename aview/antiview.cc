@@ -97,7 +97,7 @@ Menu Items
        mirrors; axes, mirrors and rot-reflection planes; none
    O - show/hide orientation, toggle colouring of the front side of 
        faces white and the back side black
-   r - reset, reset to the initial viewing options 
+   R - reset, reset to the initial viewing options 
    Q - Quit
 
 Other Keys
