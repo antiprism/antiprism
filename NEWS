@@ -1,5 +1,12 @@
 NEWS for Antiprism: http://www.antiprism.com
 
+Version 0.33
+XX-XX-25 Adrian Rossiter <adrian@antiprism.com>
+         New Programs
+         Changes
+           off2pov: AspectRatio calculated (and no override)
+         Fixes
+
 Version 0.32
 16-06-24 Adrian Rossiter <adrian@antiprism.com>
          New Programs
