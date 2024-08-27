@@ -76,10 +76,6 @@ Including files and making changes by hand may easily break some of
 the basic functionality, for example vertex numbering and some stereo
 options.
 <p>
-You can change the default aspect ratio on the POV-Ray command line. A
-square image could be drawn with POV-Ray options
-<i>+H300&nbsp;+W300&nbsp;Declare=AspectRatio=1</i>.
-<p>
 
 <h2><a name="struct">
 POV-Ray File Structure
@@ -127,9 +123,6 @@ appear only once in any set of output.
 <dt><i>MaxTraceLevel</i>
 <dd>POV-Ray's max_trace_level. Use a higher value if black
     areas appear when using transparency.
-<dt><i>AspectRatio</i>
-<dd>Aspect ratio of scene. With square pixels this should match the ratio
-    of the POV-Ray options Width:Height.
 </dl>
 
 A set of default geometry variables may also appear. They have the

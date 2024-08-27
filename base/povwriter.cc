@@ -121,10 +121,8 @@ void PovWriter::scene_header(FILE *ofile, const Scene &scen)
   fprintf(ofile, "// Max Trace Level (10), increase if black areas appear when "
                  "using transparency\n"
                  "#declare MaxTraceLevel = 10; \n\n");
-  fprintf(ofile,
-          "// Aspect Ratio (1.3333) set on command line with "
-          "Declare=AspectRatio=1.3333\n"
-          "#ifndef(AspectRatio) #declare AspectRatio = 1.33333; #end\n\n");
+  fprintf(ofile, "// Aspect Ratio (can no longer be set on the command line)\n"
+                 "#declare AspectRatio = image_width / image_height;\n\n");
 
   fprintf(ofile,
           "// Vertex numbering\n"
