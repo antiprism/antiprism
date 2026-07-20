@@ -687,7 +687,7 @@ namespace mu
   /** \brief Return a map containing the used variables only. */
   const varmap_type& ParserBase::GetUsedVar() const
   {
-    try
+    //try
     {
       m_pTokenReader->IgnoreUndefVar(true);
       CreateRPN(); // try to create bytecode, but don't use it for any further calculations since it
@@ -695,14 +695,14 @@ namespace mu
       m_pParseFormula = &ParserBase::ParseString;
       m_pTokenReader->IgnoreUndefVar(false);
     }
-    catch(exception_type &e)
+    /*catch(exception_type &e)
     {
       // Make sure to stay in string parse mode, dont call ReInit()
       // because it deletes the array with the used variables
       m_pParseFormula = &ParserBase::ParseString;
       m_pTokenReader->IgnoreUndefVar(false);
       throw e;
-    }
+    }*/
     
     return m_pTokenReader->GetUsedVar();
   }
@@ -759,7 +759,7 @@ namespace mu
     generic_fun_type pFunc = a_FunTok.GetFuncAddr();
     assert(pFunc);
 
-    try
+    //try
     {
       // Collect the function arguments from the value stack
       switch(a_FunTok.GetArgCount())
@@ -773,10 +773,10 @@ namespace mu
       default: Error(ecINTERNAL_ERROR);
       }
     }
-    catch(ParserError& /*e*/)
+    /*catch(ParserError& e)
     {
       Error(ecVAL_EXPECTED, m_pTokenReader->GetPos(), a_FunTok.GetAsString());
-    }
+    }*/
 
     // string functions won't be optimized
     m_vRPN.AddStrFun(pFunc, a_FunTok.GetArgCount(), a_vArg.back().GetIdx());
@@ -1441,7 +1441,11 @@ namespace mu
   */
   void  ParserBase::Error(EErrorCodes a_iErrc, int a_iPos, const string_type &a_sTok) const
   {
+#if MUP_NO_EXCEPTIONS
+    abort();
+#else
     throw exception_type(a_iErrc, a_sTok, m_pTokenReader->GetExpr(), a_iPos);
+#endif
   }
 
   //------------------------------------------------------------------------------

@@ -159,9 +159,13 @@ namespace mu
     case cmMUL:  x = x * y;  m_vRPN.pop_back();  break;
     case cmDIV: 
 
-#if defined(MUP_MATH_EXCEPTIONS)
+#if MUP_MATH_EXCEPTIONS
         if (y==0)
+#if MUP_NO_EXCEPTIONS
+          abort();
+#else
           throw ParserError(ecDIV_BY_ZERO);
+#endif
 #endif
 
         x = x / y;   
@@ -459,7 +463,11 @@ namespace mu
   const SToken* ParserByteCode::GetBase() const
   {
     if (m_vRPN.size()==0)
+#if MUP_NO_EXCEPTIONS
+      abort();
+#else
       throw ParserError(ecINTERNAL_ERROR);
+#endif
     else
       return &m_vRPN[0];
   }

@@ -68,7 +68,7 @@ and installed with
 
    sudo make install-strip
 
-See the INSTALL file for more details.
+See the INSTALL.txt file for more details.
 
 If there are errors relating to shared libraries when the
 installed programs are run, it may be necessary to run

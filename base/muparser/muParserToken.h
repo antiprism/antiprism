@@ -242,7 +242,11 @@ namespace mu
       void SetIdx(int a_iIdx)
       {
         if (m_iCode!=cmSTRING || a_iIdx<0)
+#if MUP_NO_EXCEPTIONS
+	        abort();
+#else
 	        throw ParserError(ecINTERNAL_ERROR);
+#endif
         
         m_iIdx = a_iIdx;
       }
@@ -258,7 +262,11 @@ namespace mu
       int GetIdx() const
       {
         if (m_iIdx<0 || m_iCode!=cmSTRING )
-          throw ParserError(ecINTERNAL_ERROR);
+#if MUP_NO_EXCEPTIONS
+	        abort();
+#else
+	        throw ParserError(ecINTERNAL_ERROR);
+#endif
 
         return m_iIdx;
       }
@@ -298,10 +306,18 @@ namespace mu
       int GetPri() const
       {
         if ( !m_pCallback.get())
+#if MUP_NO_EXCEPTIONS
+	        abort();
+#else
 	        throw ParserError(ecINTERNAL_ERROR);
+#endif
             
         if ( m_pCallback->GetCode()!=cmOPRT_BIN && m_pCallback->GetCode()!=cmOPRT_INFIX)
+#if MUP_NO_EXCEPTIONS
+	        abort();
+#else
 	        throw ParserError(ecINTERNAL_ERROR);
+#endif
 
         return m_pCallback->GetPri();
       }
@@ -310,7 +326,11 @@ namespace mu
       EOprtAssociativity GetAssociativity() const
       {
         if (m_pCallback.get()==NULL || m_pCallback->GetCode()!=cmOPRT_BIN)
+#if MUP_NO_EXCEPTIONS
+	        abort();
+#else
 	        throw ParserError(ecINTERNAL_ERROR);
+#endif
 
         return m_pCallback->GetAssociativity();
       }
@@ -347,7 +367,11 @@ namespace mu
         {
           case cmVAL:  return m_fVal;
           case cmVAR:  return *((TBase*)m_pTok);
+#if MUP_NO_EXCEPTIONS
+          default:     abort();
+#else
           default:     throw ParserError(ecVAL_EXPECTED);
+#endif
         }
       }
 
@@ -360,7 +384,11 @@ namespace mu
       TBase* GetVar() const
       {
         if (m_iCode!=cmVAR)
+#if MUP_NO_EXCEPTIONS
+	        abort();
+#else
 	        throw ParserError(ecINTERNAL_ERROR);
+#endif
 
         return (TBase*)m_pTok;
       }
@@ -375,7 +403,11 @@ namespace mu
         assert(m_pCallback.get());
 
         if (!m_pCallback->GetAddr())
+#if MUP_NO_EXCEPTIONS
+	        abort();
+#else
 	        throw ParserError(ecINTERNAL_ERROR);
+#endif
 
         return m_pCallback->GetArgc();
       }

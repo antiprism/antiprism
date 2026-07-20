@@ -98,7 +98,11 @@ int ExpParser::rt_tok(const char *tok, int *pos, double *val)
   double num;
   Status stat = read_double_noparse(num_str.c_str(), &num);
   if (stat.is_error())
+#ifdef ANTIPRISM_CMAKE
+    abort();
+#else
     throw exception_type(string("rt: invalid number: ") + stat.msg());
+#endif
 
   *val = sqrt(num);
   *pos += p;
@@ -145,7 +149,7 @@ Status read_double(const char *str, double *f)
 {
   char msg_type[] = "maths expression";
   Status stat;
-  try {
+  /*try*/ {
     ExpParser p;
 
     p.SetExpr(str);
@@ -160,9 +164,9 @@ Status read_double(const char *str, double *f)
           msg_str("%s: result is not a finite number (division by zero, etc)",
                   msg_type));
   }
-  catch (Parser::exception_type &e) {
+  /*catch (Parser::exception_type &e) {
     stat.set_error(msg_str("%s: %s", msg_type, e.GetMsg().c_str()));
-  }
+  }*/
 
   return stat;
 }

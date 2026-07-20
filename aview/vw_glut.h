@@ -33,6 +33,9 @@
 #include "../config.h"
 #endif
 
+#ifdef HAVE_GLUT_H
+#include <glut.h>
+#else
 #ifdef HAVE_GL_GL_H
 #include <GL/gl.h>
 #elif defined HAVE_OPENGL_GL_H
@@ -44,10 +47,12 @@
 #elif defined HAVE_OPENGL_GLU_H
 #include <OpenGL/glu.h>
 #endif
+#endif
 
 #include "../base/antiprism.h"
 #include "gl_writer.h"
 
+#ifndef HAVE_GLUT_H
 #define FOUND_NO_GLUT 0
 #define FOUND_GLUT 1
 #define FOUND_OPENGLUT 2
@@ -69,6 +74,7 @@
 #undef Status
 #else
 #error "No GLUT library has been specified"
+#endif
 #endif
 
 using namespace anti;

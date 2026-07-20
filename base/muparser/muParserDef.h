@@ -41,8 +41,19 @@
 
 #define MUP_CHARS _T("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
+/** \brief If this macro is defined exceptions will not be thrown. */
+#ifdef MUP_CMAKE
+#ifndef MUP_NO_EXCEPTIONS
+#define MUP_NO_EXCEPTIONS 1
+#endif
+#endif
+
 /** \brief If this macro is defined mathematical exceptions (div by zero) will be thrown as exceptions. */
-//#define MUP_MATH_EXCEPTIONS
+#ifndef MUP_NO_EXCEPTIONS
+#ifndef MUP_MATH_EXCEPTIONS
+//#define MUP_MATH_EXCEPTIONS 1
+#endif
+#endif
 
 /** \brief Define the base datatype for values.
 
@@ -55,7 +66,7 @@
 
   OpenMP is used only in the bulk mode it may increase the performance a bit. 
 */
-//#define MUP_USE_OPENMP
+//#define MUP_USE_OPENMP 1
 
 #if defined(_UNICODE)
   /** \brief Definition of the basic parser string type. */
@@ -87,15 +98,24 @@
         This macro is neutralised in UNICODE builds. It's
         too difficult to translate.
     */
-    #define MUP_ASSERT(COND)                         \
-            if (!(COND))                             \
-            {                                        \
-              stringstream_type ss;                  \
-              ss << _T("Assertion \"") _T(#COND) _T("\" failed: ") \
-                 << __FILE__ << _T(" line ")         \
-                 << __LINE__ << _T(".");             \
-              throw ParserError( ss.str() );         \
-            }
+
+#if MUP_NO_EXCEPTIONS
+     #define MUP_ASSERT(COND)                         \
+             if (!(COND))                             \
+             {                                        \
+               abort();                               \
+             }
+#else
+     #define MUP_ASSERT(COND)                         \
+             if (!(COND))                             \
+             {                                        \
+               stringstream_type ss;                  \
+               ss << _T("Assertion \"") _T(#COND) _T("\" failed: ") \
+                  << __FILE__ << _T(" line ")         \
+                  << __LINE__ << _T(".");             \
+               throw ParserError( ss.str() );         \
+             }
+#endif
 #else
   #define MUP_FAIL(MSG)
   #define MUP_ASSERT(COND)

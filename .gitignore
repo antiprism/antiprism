@@ -1,3 +1,4 @@
+.DS_Store
 Makefile
 Makefile.in
 mkinstalldirs
@@ -110,5 +111,8 @@ python/antiprism_wrap.cc
 /python/distutils/build
 /python/distutils/dist
 /python/distutils/lib_src
+/build
+/install
+/vcpkg
 
 

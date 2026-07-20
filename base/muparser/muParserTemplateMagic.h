@@ -111,6 +111,35 @@ namespace mu
 
   // Create (mostly) dummy math function definitions for integer types. They are mostly
   // empty since they are not applicable for integer values.
+#if MUP_NO_EXCEPTIONS
+#define MAKE_MATH_DUMMY(TYPE)                    \
+  template<>                                     \
+  struct MathImpl<TYPE>                          \
+  {                                              \
+    static TYPE Sin(TYPE)          { abort(); } \
+    static TYPE Cos(TYPE)          { abort(); } \
+    static TYPE Tan(TYPE)          { abort(); } \
+    static TYPE ASin(TYPE)         { abort(); } \
+    static TYPE ACos(TYPE)         { abort(); } \
+    static TYPE ATan(TYPE)         { abort(); } \
+    static TYPE ATan2(TYPE, TYPE)  { abort(); } \
+    static TYPE Sinh(TYPE)         { abort(); } \
+    static TYPE Cosh(TYPE)         { abort(); } \
+    static TYPE Tanh(TYPE)         { abort(); } \
+    static TYPE ASinh(TYPE)        { abort(); } \
+    static TYPE ACosh(TYPE)        { abort(); } \
+    static TYPE ATanh(TYPE)        { abort(); } \
+    static TYPE Log(TYPE)          { abort(); } \
+    static TYPE Log2(TYPE)         { abort(); } \
+    static TYPE Log10(TYPE)        { abort(); } \
+    static TYPE Exp(TYPE)          { abort(); } \
+    static TYPE Abs(TYPE)          { abort(); } \
+    static TYPE Sqrt(TYPE)         { abort(); } \
+    static TYPE Rint(TYPE)         { abort(); } \
+    static TYPE Sign(TYPE v)          { return (TYPE)((v<0) ? -1 : (v>0) ? 1 : 0);     } \
+    static TYPE Pow(TYPE v1, TYPE v2) { return (TYPE)std::pow((double)v1, (double)v2); } \
+  };
+#else
 #define MAKE_MATH_DUMMY(TYPE)                    \
   template<>                                     \
   struct MathImpl<TYPE>                          \
@@ -138,6 +167,7 @@ namespace mu
     static TYPE Sign(TYPE v)          { return (TYPE)((v<0) ? -1 : (v>0) ? 1 : 0);     } \
     static TYPE Pow(TYPE v1, TYPE v2) { return (TYPE)std::pow((double)v1, (double)v2); } \
   };
+#endif
 
   MAKE_MATH_DUMMY(signed char)
   MAKE_MATH_DUMMY(short)

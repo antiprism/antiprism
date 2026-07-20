@@ -32,6 +32,10 @@
 #include "geometryinfo.h"
 #include "utils.h"
 
+#include <algorithm>
+#include <iterator>
+#include <set>
+
 using std::string;
 using std::vector;
 

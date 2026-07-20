@@ -81,7 +81,11 @@ namespace mu
 	    TValueType pop()
       {
         if (empty())
+#if MUP_NO_EXCEPTIONS
+          abort();
+#else
           throw ParserError( _T("stack is empty.") );
+#endif
 
         TValueType el = top();
         m_Stack.pop();

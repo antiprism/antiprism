@@ -34,6 +34,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <functional>
+#include <iterator>
 #include <map>
 #include <string>
 #include <vector>

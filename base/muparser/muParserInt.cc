@@ -78,7 +78,11 @@ value_type ParserInt::UnaryMinus(value_type v)
 value_type ParserInt::Sum(const value_type* a_afArg, int a_iArgc)
 { 
   if (!a_iArgc)	
+#if MUP_NO_EXCEPTIONS
+    abort();
+#else
     throw ParserError(_T("too few arguments for function sum."));
+#endif
 
   value_type fRes=0;
   for (int i=0; i<a_iArgc; ++i) 
@@ -91,7 +95,11 @@ value_type ParserInt::Sum(const value_type* a_afArg, int a_iArgc)
 value_type ParserInt::Min(const value_type* a_afArg, int a_iArgc)
 { 
   if (!a_iArgc)	
+#if MUP_NO_EXCEPTIONS
+    abort();
+#else
     throw ParserError( _T("too few arguments for function min.") );
+#endif
 
   value_type fRes=a_afArg[0];
   for (int i=0; i<a_iArgc; ++i) 
@@ -104,7 +112,11 @@ value_type ParserInt::Min(const value_type* a_afArg, int a_iArgc)
 value_type ParserInt::Max(const value_type* a_afArg, int a_iArgc)
 { 
   if (!a_iArgc)	
-    throw ParserError(_T("too few arguments for function min."));
+#if MUP_NO_EXCEPTIONS
+    abort();
+#else
+    throw ParserError(_T("too few arguments for function max."));
+#endif
 
   value_type fRes=a_afArg[0];
   for (int i=0; i<a_iArgc; ++i) 
@@ -190,7 +202,11 @@ int ParserInt::IsBinVal(const char_type *a_szExpr, int *a_iPos, value_type *a_fV
     return 0;
 
   if (i==iBits)
+#if MUP_NO_EXCEPTIONS
+    abort();
+#else
     throw exception_type(_T("Binary to integer conversion error (overflow)."));
+#endif
 
   *a_fVal = (unsigned)(iVal >> (iBits-i) );
   *a_iPos += i+1;

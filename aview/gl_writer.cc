@@ -34,6 +34,9 @@
 #include "../config.h"
 #endif
 
+#ifdef HAVE_GLUT_H
+#include <glut.h>
+#else
 #ifdef HAVE_GL_GL_H
 #include <GL/gl.h>
 #elif defined HAVE_OPENGL_GL_H
@@ -44,6 +47,7 @@
 #include <GL/glu.h>
 #elif defined HAVE_OPENGL_GLU_H
 #include <OpenGL/glu.h>
+#endif
 #endif
 
 #include "gl_writer.h"
