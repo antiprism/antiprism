@@ -1829,6 +1829,22 @@ int make_resource_misc_poly(Geometry &geom, string name, bool is_std,
 }
 // clang-format on
 
+// A decimal parameter (UC2_a22.5) is part of a model name.
+// Any other dot (model.off) means the string is a file name.
+static bool resource_name_has_file_dot(const string &name)
+{
+  for (size_t i = 0; i < name.size(); i++) {
+    if (name[i] != '.')
+      continue;
+    const bool between_digits =
+        i > 0 && i + 1 < name.size() && name[i - 1] >= '0' &&
+        name[i - 1] <= '9' && name[i + 1] >= '0' && name[i + 1] <= '9';
+    if (!between_digits)
+      return true;
+  }
+  return false;
+}
+
 Status make_resource_geom(Geometry &geom, string name)
 {
   geom.clear_all();
@@ -1862,8 +1878,8 @@ Status make_resource_geom(Geometry &geom, string name)
     process_for_dual(name, make_dual);
   }
 
-  // Only check model name if it has two or more chars, and no '.'
-  if (name.size() > 1 && name.find('.') == string::npos) {
+  // Skip names that look like files. A decimal in a parameter is still a name.
+  if (name.size() > 1 && !resource_name_has_file_dot(name)) {
     vector<int (*)(Geometry &, string, bool, string *)> make_funcs = {
         make_resource_misc_poly,        make_resource_pgon,
         make_resource_uniform,          make_resource_wenninger,

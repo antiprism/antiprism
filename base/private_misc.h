@@ -40,9 +40,9 @@
 namespace anti {
 
 // triangulate.cc
-int triangulate(Geometry &geom, Color inv = Color(),
-                unsigned int winding_rule = TESS_WINDING_NONZERO,
-                std::vector<int> *fmap = nullptr);
+void triangulate(Geometry &geom, Color inv = Color(),
+                 unsigned int winding_rule = TESS_WINDING_NONZERO,
+                 std::vector<int> *fmap = nullptr);
 void triangulate_basic(Geometry &geom, bool sq_diag = true, Color inv = Color(),
                        std::vector<int> *fmap = nullptr);
 
