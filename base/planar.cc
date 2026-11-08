@@ -63,19 +63,27 @@ void find_connections(const Geometry &geom, vector<int> &vcons, const int v_idx)
   }
 }
 
-// idx will be the dimension not included so that 3D -> 2D projection occurs
+// idx will be the dimension not included so that 3D -> 2D projection occurs.
+// Near-equal components are a tie (highest index wins) so a 1-ULP libm
+// difference does not flip the projection and reverse tiled-face winding.
 void project_using_normal(const Vec3d &normal, int &idx, int &sign)
 {
-  vector<pair<double, int>> normal_info(3);
-
-  for (unsigned int i = 0; i < 3; i++) {
-    normal_info[i].second = i;
-    normal_info[i].first = fabs(normal[i]); // absolute value for sorting
+  idx = 0;
+  double best = fabs(normal[0]);
+  for (int i = 1; i < 3; i++) {
+    double a = fabs(normal[i]);
+    double scale = best > 1.0 ? best : 1.0;
+    if (fabs(a - best) <= 1e-12 * scale) {
+      if (i > idx)
+        idx = i;
+      if (a > best)
+        best = a;
+    }
+    else if (a > best) {
+      best = a;
+      idx = i;
+    }
   }
-
-  stable_sort(normal_info.begin(), normal_info.end());
-
-  idx = normal_info[normal_info.size() - 1].second;
   sign = (normal[idx] >= 0.0) ? 1 : -1;
 }
 
@@ -280,9 +288,16 @@ void build_turn_map(const Geometry &geom, map<pair<int, int>, int> &turn_map,
         angles.push_back(make_pair(angle, c));
       }
       // the minimum angle is now the next higher angle than base angle. it will
-      // be at the top of the sort
-      // map that turn for AB -> C
-      sort(angles.begin(), angles.end());
+      // be at the top of the sort. Equal angles take the lower vertex index so
+      // the turn does not depend on std::sort.
+      sort(angles.begin(), angles.end(),
+           [](const pair<double, int> &p, const pair<double, int> &q) {
+             if (p.first < q.first)
+               return true;
+             if (q.first < p.first)
+               return false;
+             return p.second < q.second;
+           });
       turn_map[make_pair(a, b)] = angles[0].second;
     }
   }
